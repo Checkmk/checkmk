@@ -18,6 +18,7 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.graphing import (
     get_temperature_unit,
     graph_spec_from_request,
+    GraphEnvironment,
     graphs_from_api,
     metric_backend_registry,
     metrics_from_api,
@@ -79,14 +80,16 @@ def get_graph(params: Mapping[str, Any]) -> Response:
                 "data_range": reorganize_time_range(body["time_range"]),
                 "consolidation_function": body["reduce"],
             },
-            metrics_from_api,
-            graphs_from_api,
-            UserPermissions.from_config(active_config, permission_registry),
-            debug=active_config.debug,
-            temperature_unit=get_temperature_unit(user, active_config.default_temperature_unit),
-            backend_time_series_fetcher=metric_backend_registry[
-                str(edition(paths.omd_root))
-            ].get_time_series_fetcher(),
+            GraphEnvironment(
+                registered_metrics=metrics_from_api,
+                registered_graphs=graphs_from_api,
+                user_permissions=UserPermissions.from_config(active_config, permission_registry),
+                temperature_unit=get_temperature_unit(user, active_config.default_temperature_unit),
+                backend_time_series_fetcher=metric_backend_registry[
+                    str(edition(paths.omd_root))
+                ].get_time_series_fetcher(),
+                debug=active_config.debug,
+            ),
         )
 
     except MKUserError as e:

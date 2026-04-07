@@ -23,7 +23,6 @@ from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
 from cmk.ccc.user import UserId
 from cmk.ccc.version import edition
-from cmk.graphing.v1 import graphs as graphs_api
 from cmk.gui.color import render_color_icon
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
@@ -43,7 +42,6 @@ from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.popups import MethodAjax
 from cmk.gui.utils.rendering import text_with_links_to_user_translated_html
-from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.temperate_unit import TemperatureUnit
 from cmk.gui.valuespec import Timerange, TimerangeValue
 from cmk.utils import paths
@@ -775,14 +773,9 @@ def host_service_graph_popup_cmk(
     site: SiteId | None,
     host_name: HostName,
     service_description: ServiceName,
-    registered_metrics: Mapping[str, RegisteredMetric],
-    registered_graphs: Mapping[str, graphs_api.Graph | graphs_api.Bidirectional],
-    user_permissions: UserPermissions,
+    env: GraphEnvironment,
     *,
-    debug: bool,
     graph_timeranges: Sequence[GraphTimerange],
-    temperature_unit: TemperatureUnit,
-    backend_time_series_fetcher: FetchTimeSeries | None,
 ) -> None:
     end_time = int(time.time())
     start_time = end_time - 8 * 3600
@@ -813,14 +806,7 @@ def host_service_graph_popup_cmk(
                 height_in_ex=popup_size[1],
             ),
             display_config,
-            GraphEnvironment(
-                registered_metrics=registered_metrics,
-                registered_graphs=registered_graphs,
-                user_permissions=user_permissions,
-                temperature_unit=temperature_unit,
-                backend_time_series_fetcher=backend_time_series_fetcher,
-                debug=debug,
-            ),
+            env,
             size=popup_size,
             graph_timeranges=graph_timeranges,
         )

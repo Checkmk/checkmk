@@ -23,7 +23,6 @@ from cmk import trace
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
 from cmk.ccc.version import edition
-from cmk.graphing.v1 import graphs as graphs_api
 from cmk.gui import pdf
 from cmk.gui.exceptions import MKNotFound, MKUnauthenticatedException, MKUserError
 from cmk.gui.http import Request, response
@@ -34,7 +33,6 @@ from cmk.gui.pages import Page, PageContext
 from cmk.gui.permissions import permission_registry
 from cmk.gui.type_defs import SizePT
 from cmk.gui.utils.roles import UserPermissions
-from cmk.gui.utils.temperate_unit import TemperatureUnit
 from cmk.utils import paths
 
 from ._artwork import (
@@ -43,7 +41,7 @@ from ._artwork import (
     iter_graph_artworks,
 )
 from ._fetch_time_series import fetch_augmented_time_series
-from ._from_api import graphs_from_api, metrics_from_api, RegisteredMetric
+from ._from_api import graphs_from_api, metrics_from_api
 from ._graph_display_config import (
     GraphDisplayConfigImage,
     GraphRenderOptions,
@@ -68,10 +66,7 @@ from ._graph_templates import (
     MKGraphNotFound,
 )
 from ._html_render import GraphDestinations
-from ._metric_backend_registry import (
-    FetchTimeSeries,
-    metric_backend_registry,
-)
+from ._metric_backend_registry import metric_backend_registry
 from ._rrd import get_graph_data_from_livestatus
 from ._unit import get_temperature_unit
 
@@ -97,26 +92,22 @@ class AjaxGraphImagesForNotifications(Page):
 
         _answer_graph_image_request(
             ctx.request,
-            metrics_from_api,
-            graphs_from_api,
-            UserPermissions.from_config(ctx.config, permission_registry),
-            debug=ctx.config.debug,
-            temperature_unit=get_temperature_unit(user, ctx.config.default_temperature_unit),
-            backend_time_series_fetcher=metric_backend_registry[
-                str(edition(paths.omd_root))
-            ].get_time_series_fetcher(),
+            GraphEnvironment(
+                registered_metrics=metrics_from_api,
+                registered_graphs=graphs_from_api,
+                user_permissions=UserPermissions.from_config(ctx.config, permission_registry),
+                temperature_unit=get_temperature_unit(user, ctx.config.default_temperature_unit),
+                backend_time_series_fetcher=metric_backend_registry[
+                    str(edition(paths.omd_root))
+                ].get_time_series_fetcher(),
+                debug=ctx.config.debug,
+            ),
         )
 
 
 def _answer_graph_image_request(
     request: Request,
-    registered_metrics: Mapping[str, RegisteredMetric],
-    registered_graphs: Mapping[str, graphs_api.Graph | graphs_api.Bidirectional],
-    user_permissions: UserPermissions,
-    *,
-    debug: bool,
-    temperature_unit: TemperatureUnit,
-    backend_time_series_fetcher: FetchTimeSeries | None,
+    env: GraphEnvironment,
 ) -> None:
     try:
         site_id = SiteId(raw_site) if (raw_site := request.var("site")) else None
@@ -135,7 +126,7 @@ def _answer_graph_image_request(
                 host_name,
                 service_description,
             )
-            if debug:
+            if env.debug:
                 raise
             return
 
@@ -153,14 +144,6 @@ def _answer_graph_image_request(
         time_range = graph_image_time_range(display_config, start_time, end_time)
         num_graphs = request.get_integer_input("num_graphs")
 
-        env = GraphEnvironment(
-            registered_metrics=registered_metrics,
-            registered_graphs=registered_graphs,
-            user_permissions=user_permissions,
-            temperature_unit=temperature_unit,
-            backend_time_series_fetcher=backend_time_series_fetcher,
-            debug=debug,
-        )
         graphs = []
         for rwo, result in itertools.islice(
             iter_graph_artworks(
@@ -194,7 +177,7 @@ def _answer_graph_image_request(
         logger.error(
             "Call to ajax_graph_images.py failed: %s\n%s", e, "".join(traceback.format_stack())
         )
-        if debug:
+        if env.debug:
             raise
 
 
@@ -272,12 +255,7 @@ def render_graph_png(
 
 def graph_recipes_for_api_request(
     api_request: dict[str, Any],
-    registered_metrics: Mapping[str, RegisteredMetric],
-    registered_graphs: Mapping[str, graphs_api.Graph | graphs_api.Bidirectional],
-    user_permissions: UserPermissions,
-    *,
-    debug: bool,
-    temperature_unit: TemperatureUnit,
+    env: GraphEnvironment,
 ) -> tuple[GraphTimeRange, Sequence[GraphRecipeWithOverrides]]:
     # Get and validate the specification
     if not (raw_graph_spec := api_request.get("specification")):
@@ -309,14 +287,7 @@ def graph_recipes_for_api_request(
 
     try:
         recipes = graph_specification.recipes(
-            GraphEnvironment(
-                registered_metrics=registered_metrics,
-                registered_graphs=registered_graphs,
-                user_permissions=user_permissions,
-                temperature_unit=temperature_unit,
-                backend_time_series_fetcher=None,
-                debug=debug,
-            ),
+            env,
             consolidation_function=api_request.get("consolidation_function", "max"),
         )
 
@@ -376,23 +347,10 @@ def _compute_graph_spec(
 @tracer.instrument("graphing.graph_spec_from_request")
 def graph_spec_from_request(  # type: ignore[misc]
     api_request: dict[str, Any],
-    registered_metrics: Mapping[str, RegisteredMetric],
-    registered_graphs: Mapping[str, graphs_api.Graph | graphs_api.Bidirectional],
-    user_permissions: UserPermissions,
-    *,
-    debug: bool,
-    temperature_unit: TemperatureUnit,
-    backend_time_series_fetcher: FetchTimeSeries | None,
+    env: GraphEnvironment,
 ) -> GraphSpec:
     try:
-        time_range, recipes = graph_recipes_for_api_request(
-            api_request,
-            registered_metrics,
-            registered_graphs,
-            user_permissions,
-            debug=debug,
-            temperature_unit=temperature_unit,
-        )
+        time_range, recipes = graph_recipes_for_api_request(api_request, env)
         recipe = recipes[0].recipe
 
     except PydanticValidationError as e:
@@ -409,12 +367,12 @@ def graph_spec_from_request(  # type: ignore[misc]
         [
             result.ok
             for result in fetch_augmented_time_series(
-                registered_metrics,
+                env.registered_metrics,
                 recipe,
                 time_range,
                 consolidation_function=recipes[0].consolidation_function,
-                temperature_unit=temperature_unit,
-                backend_time_series_fetcher=backend_time_series_fetcher,
+                temperature_unit=env.temperature_unit,
+                backend_time_series_fetcher=env.backend_time_series_fetcher,
             )
             if result.is_ok()
         ],

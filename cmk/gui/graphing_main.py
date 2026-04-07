@@ -30,6 +30,7 @@ from cmk.gui.graphing import (
     check_metrics,
     CheckMetricEntry,
     get_temperature_unit,
+    GraphEnvironment,
     graphs_from_api,
     host_service_graph_popup_cmk,
     metric_backend_registry,
@@ -180,14 +181,16 @@ class PageHostServiceGraphPopup(cmk.gui.pages.Page):
             SiteId(raw_site_id) if (raw_site_id := ctx.request.var("site")) else None,
             ctx.request.get_validated_type_input_mandatory(HostName, "host_name"),
             ServiceName(ctx.request.get_str_input_mandatory("service")),
-            metrics_from_api,
-            graphs_from_api,
-            UserPermissions.from_config(ctx.config, permission_registry),
-            debug=ctx.config.debug,
+            GraphEnvironment(
+                registered_metrics=metrics_from_api,
+                registered_graphs=graphs_from_api,
+                user_permissions=UserPermissions.from_config(ctx.config, permission_registry),
+                temperature_unit=get_temperature_unit(user, ctx.config.default_temperature_unit),
+                backend_time_series_fetcher=metric_backend_registry[
+                    str(edition(paths.omd_root))
+                ].get_time_series_fetcher(),
+                debug=ctx.config.debug,
+            ),
             graph_timeranges=ctx.config.graph_timeranges,
-            temperature_unit=get_temperature_unit(user, ctx.config.default_temperature_unit),
-            backend_time_series_fetcher=metric_backend_registry[
-                str(edition(paths.omd_root))
-            ].get_time_series_fetcher(),
         )
         return None  # for mypy

@@ -23,7 +23,6 @@ interface GraphTitleFormat {
 }
 
 interface GraphDisplayConfigHTML {
-  border_width: number
   color_gradient: number
   editing: boolean
   explicit_title: string | null
@@ -32,7 +31,6 @@ interface GraphDisplayConfigHTML {
   foreground_color: string
   interaction: boolean
   legend_max_height_px: number | null
-  onclick: string | null
   preview: boolean
   resizable: boolean
   show_controls: boolean
@@ -44,7 +42,6 @@ interface GraphDisplayConfigHTML {
   show_time_range_previews: boolean
   show_title: boolean | 'inline'
   show_vertical_axis: boolean
-  size: [number, number]
   title_format: GraphTitleFormat
   vertical_axis_width: 'fixed' | ['explicit', SizePT]
 }
@@ -52,16 +49,27 @@ interface GraphDisplayConfigHTML {
 // eslint-disable-next-line  @typescript-eslint/no-explicit-any
 type GraphRecipe = Record<string, any>
 
-interface GraphTimeRange {
-  time_range: [number, number]
+// All frontend-mutable state; round-tripped on every AJAX call.
+interface GraphInteractionState {
+  graph_id: string
+  consolidation_function: string | null
+  time_start: number
+  time_end: number
+  // For forecast graphs, step is a colon-separated string "[step length]:[rrd point count]"
+  step: number | string
+  value_min: number | null
+  value_max: number | null
+  size_x: number
+  size_y: number
 }
 
-interface GraphContext {
-  graph_id: string
+interface GraphRenderState {
+  interaction: GraphInteractionState
   recipe: GraphRecipe
-  time_range: GraphTimeRange
+  specification: object
   display_config: GraphDisplayConfigHTML
   display_id: string
+  onclick: string | null
 }
 
 interface LayoutedCurveArea {
@@ -129,13 +137,6 @@ interface RequestedTimeRange {
 }
 
 interface GraphArtwork {
-  //optional properties assigned dynamically in javascript
-  id: string
-  canvas_obj: HTMLCanvasElement
-  display_config: GraphDisplayConfigHTML
-  time_origin?: number
-  vertical_origin?: number
-  // Actual data and axes
   curves: LayoutedCurve[]
   horizontal_rules: HorizontalRule[]
   y_axis: YAxis
@@ -151,7 +152,7 @@ interface GraphArtwork {
 export interface AjaxGraph {
   html: string
   graph: GraphArtwork
-  context: GraphContext
+  context: GraphRenderState
   error?: string
   warning?: string
   queries_reached_limit?: GraphLineQuery[]

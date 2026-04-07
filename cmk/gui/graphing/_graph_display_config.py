@@ -85,7 +85,6 @@ class _GraphDisplayConfigBase(BaseModel):
     show_margin: bool = True
     show_time_axis: bool = True
     show_vertical_axis: bool = True
-    size: tuple[float, float] = (70, 16)
     title_format: GraphTitleFormat = _DEFAULT_TITLE_FORMAT
     vertical_axis_width: Literal["fixed"] | tuple[Literal["explicit"], SizePT] = "fixed"
 
@@ -126,6 +125,7 @@ class GraphDisplayConfigHTML(_GraphDisplayConfigBase):
 
 
 class GraphDisplayConfigImage(_GraphDisplayConfigBase):
+    size: tuple[float, float] = (70, 16)
     border_width: SizeMM = 0.05
     show_title: bool = True
     background_color: str = "#f8f4f0"
@@ -139,6 +139,24 @@ class GraphDisplayConfigImage(_GraphDisplayConfigBase):
         options: GraphRenderOptions,
     ) -> Self:
         return cls.model_validate(_set_user_specific_size(options, user).dump_set_fields())
+
+
+_DEFAULT_GRAPH_SIZE: tuple[float, float] = (70.0, 16.0)
+
+
+def resolve_user_size(
+    options: GraphRenderOptions,
+    user: LoggedInUser,
+) -> tuple[float, float]:
+    """Determine the initial canvas size for a new interaction state.
+
+    Priority: GraphRenderOptions.size → user profile → (70, 16) default.
+    """
+    if options.size:
+        return (float(options.size[0]), float(options.size[1]))
+    if user_specific_size := user.load_file("graph_size", None):
+        return (float(user_specific_size[0]), float(user_specific_size[1]))
+    return _DEFAULT_GRAPH_SIZE
 
 
 def _set_user_specific_size(

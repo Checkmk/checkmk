@@ -30,6 +30,7 @@ from cmk.gui.graphing import (
     RegisteredMetric,
     render_deferred_graphs_html,
     render_graphs_html,
+    resolve_user_size,
     vs_graph_render_options,
 )
 from cmk.gui.http import Request, Response, response
@@ -212,10 +213,13 @@ def _paint_time_graph_cmk(
     if options is not None:
         graph_render_options.update(options)
 
+    view_options = GraphRenderOptions.from_graph_render_options_vs(graph_render_options)
+    graph_size = resolve_user_size(view_options, user)
+
     display_config = GraphDisplayConfigHTML.from_user_context_and_options(
         user,
         theme.get(),
-        GraphRenderOptions.from_graph_render_options_vs(graph_render_options),
+        view_options,
     )
 
     now = int(time.time())
@@ -234,10 +238,11 @@ def _paint_time_graph_cmk(
         start=raw_time_range[0],
         end=raw_time_range[1],
         factor=1,
-        height_in_ex=display_config.size[1],
+        height_in_ex=graph_size[1],
     )
 
     if is_mobile(request, response):
+        graph_size = (27.0, 18.0)
         display_config = display_config.model_copy(
             update={
                 "interaction": False,
@@ -246,8 +251,6 @@ def _paint_time_graph_cmk(
                 "show_graph_time": False,
                 "show_time_range_previews": False,
                 "show_legend": False,
-                # Would be much better to autodetect the possible size (like on dashboard)
-                "size": (27, 18),  # ex
             }
         )
 
@@ -292,6 +295,7 @@ def _paint_time_graph_cmk(
             time_range,
             display_config,
             env,
+            size=graph_size,
             graph_timeranges=graph_timeranges,
             display_id=display_id,
         )
@@ -300,6 +304,7 @@ def _paint_time_graph_cmk(
         time_range,
         display_config,
         env,
+        size=graph_size,
         display_id=display_id,
     )
 

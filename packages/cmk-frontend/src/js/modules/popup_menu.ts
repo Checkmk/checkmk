@@ -528,9 +528,17 @@ export function pagetype_add_to_container(page_type: string, page_name: string) 
 }
 
 export function graph_export(page: string) {
+  const render_state = active_popup.data![2] as GraphRenderState
+  const ia = render_state.interaction
   const request = {
-    specification: (active_popup.data![2] as GraphRenderState).specification,
-    data_range: (active_popup.data![2] as GraphRenderState).time_range
+    specification: render_state.specification,
+    data_range: {
+      start: ia.time_start,
+      end: ia.time_end,
+      step: ia.step,
+      vertical_range:
+        ia.value_min !== null && ia.value_max !== null ? [ia.value_min, ia.value_max] : null
+    }
   }
   location.href = page + '.py?request=' + encodeURIComponent(JSON.stringify(request))
 }

@@ -101,6 +101,25 @@ class ExpandableLegendAppearance(Enum):
     FOLDABLE = auto()
 
 
+class GraphInteractionState(BaseModel, frozen=True):
+    """All frontend-mutable graph state; round-tripped on every AJAX call.
+
+    The browser sets graph_id after DOM insertion; all other fields are updated
+    by user interactions (drag, zoom, resize, legend column click).
+    """
+
+    graph_id: str = ""
+    consolidation_function: GraphConsolidationFunction | None = None
+    time_start: int
+    time_end: int
+    # Forecast graphs represent step as str (colon-separated "[step length]:[rrd point count]")
+    step: int | str
+    value_min: float | None = None
+    value_max: float | None = None
+    size_x: float
+    size_y: float
+
+
 # The ajax context will be passed back to us to the page handler ajax_graph() whenever
 # an update of the graph should be done. It must contain everything that we need to
 # create the HTML code of the graph. The entry "graph_id" will be set by the javascript
@@ -108,11 +127,9 @@ class ExpandableLegendAppearance(Enum):
 class GraphRenderState(BaseModel):
     """Round-trip envelope sent to the browser and echoed back on graph updates."""
 
-    graph_id: str = ""
-    consolidation_function: GraphConsolidationFunction | None = None
+    interaction: GraphInteractionState
     recipe: GraphRecipe
     specification: SerializeAsAny[GraphSpecification]
-    time_range: GraphTimeRange
     display_config: GraphDisplayConfigHTML
     display_id: str = ""
     onclick: str | None = None
@@ -368,7 +385,7 @@ def _collect_graph_html(
         # which is the only reliable way to constrain a flex container inside an inline-block and
         # thus allow the title to wrap when title + time info would exceed the canvas width.
         is_inline = display_config.show_title == "inline"
-        graph_width: float = display_config.size[0] * _HTML_SIZE_PER_EX
+        graph_width: float = render_state.interaction.size_x * _HTML_SIZE_PER_EX
         time_text: str | None = None
         if display_config.show_graph_time and not display_config.preview:
             time_text = annotations.x_axis_title or ""
@@ -403,7 +420,7 @@ def _collect_graph_html(
             html.close_div()
 
         # Create canvas where actual graph will be rendered
-        graph_height: float = display_config.size[1] * _HTML_SIZE_PER_EX
+        graph_height: float = render_state.interaction.size_y * _HTML_SIZE_PER_EX
         html.canvas(
             "",
             style="position: relative; width: %dpx; height: %dpx;" % (graph_width, graph_height),
@@ -414,11 +431,12 @@ def _collect_graph_html(
         # Note: due to "omit_zero_metrics" the graph might not have any curves
         if display_config.show_legend and artwork.curves:
             _show_graph_legend(
-                render_state.consolidation_function,
+                render_state.interaction.consolidation_function,
                 artwork,
                 annotations,
                 display_config,
                 expandable_legend_appearance,
+                render_state.interaction.size_x,
             )
 
         if additional_html:
@@ -479,7 +497,6 @@ def _render_time_range_selection(
 
         preview_config = render_state.display_config.model_copy(
             update={
-                "size": (20, 4),
                 "font_size": SizePT(6.0),
                 "fixed_timerange": True,  # Do not follow timerange changes of other graphs
                 "explicit_title": timerange_attrs["title"],
@@ -491,17 +508,27 @@ def _render_time_range_selection(
             }
         )
 
+        preview_size = (20.0, 4.0)
         start, end = now - duration, now
         time_range = make_graph_time_range_html(
             start=start,
             end=end,
             factor=2,
-            height_in_ex=preview_config.size[1],
+            height_in_ex=preview_size[1],
         )
 
+        preview_interaction = render_state.interaction.model_copy(
+            update={
+                "time_start": time_range.start,
+                "time_end": time_range.end,
+                "step": time_range.step,
+                "size_x": preview_size[0],
+                "size_y": preview_size[1],
+            }
+        )
         preview_state = render_state.model_copy(
             update={
-                "time_range": time_range,
+                "interaction": preview_interaction,
                 "display_config": preview_config,
                 "onclick": "cmk.graphs.change_graph_timerange(graph, %d)" % duration,
             }
@@ -510,9 +537,9 @@ def _render_time_range_selection(
         artwork_or_errors = compute_graph_artwork(
             render_state.recipe,
             time_range,
-            preview_config.size,
+            preview_size,
             metrics_from_api,
-            consolidation_function=render_state.consolidation_function,
+            consolidation_function=render_state.interaction.consolidation_function,
             temperature_unit=temperature_unit,
             backend_time_series_fetcher=backend_time_series_fetcher,
             pin_time=_load_graph_pin(),
@@ -564,11 +591,10 @@ def _render_graph_content_html(
                 _("Cannot render complete graph"),
                 class_="error",
             )
-        display_config = display_config.model_copy(
-            update={"size": (display_config.size[0], display_config.size[1] - 6)}
-        )
+        size_y_offset = -6
     else:
         output = HTML.empty()
+        size_y_offset = 0
 
     if show_limits_if_reached and artwork_or_errors.graph_metric_limits_reached:
         if url := render_state.specification.url():
@@ -600,11 +626,16 @@ def _render_graph_content_html(
                 ),
                 class_="warning",
             )
-        display_config = display_config.model_copy(
-            update={"size": (display_config.size[0], display_config.size[1] - 8)}
-        )
+        size_y_offset -= 8
 
-    render_state = render_state.model_copy(update={"display_config": display_config})
+    if size_y_offset != 0:
+        render_state = render_state.model_copy(
+            update={
+                "interaction": render_state.interaction.model_copy(
+                    update={"size_y": render_state.interaction.size_y + size_y_offset}
+                )
+            }
+        )
 
     try:
         output += _create_javascript_graph(
@@ -677,6 +708,7 @@ def render_graphs_html(
     display_config: GraphDisplayConfigHTML,
     env: GraphEnvironment,
     *,
+    size: tuple[float, float],
     graph_timeranges: Sequence[GraphTimerange],
     display_id: str = "",
 ) -> HTML:
@@ -687,11 +719,28 @@ def render_graphs_html(
     output = HTML.empty()
     for recipe_with_overrides in recipes:
         effective_time_range = recipe_with_overrides.time_range or time_range
-        render_state = GraphRenderState(
+        interaction = GraphInteractionState(
             consolidation_function=recipe_with_overrides.consolidation_function,
+            time_start=effective_time_range.start,
+            time_end=effective_time_range.end,
+            step=effective_time_range.step,
+            value_min=(
+                effective_time_range.vertical_range[0]
+                if effective_time_range.vertical_range
+                else None
+            ),
+            value_max=(
+                effective_time_range.vertical_range[1]
+                if effective_time_range.vertical_range
+                else None
+            ),
+            size_x=size[0],
+            size_y=size[1],
+        )
+        render_state = GraphRenderState(
+            interaction=interaction,
             recipe=recipe_with_overrides.recipe,
             specification=recipe_with_overrides.specification,
-            time_range=effective_time_range,
             display_config=display_config.update_from_options(recipe_with_overrides.render_options),
             display_id=display_id,
         )
@@ -700,10 +749,10 @@ def render_graphs_html(
             render_state,
             compute_graph_artwork(
                 render_state.recipe,
-                render_state.time_range,
-                render_state.display_config.size,
+                effective_time_range,
+                (interaction.size_x, interaction.size_y),
                 metrics_from_api,
-                consolidation_function=recipe_with_overrides.consolidation_function,
+                consolidation_function=interaction.consolidation_function,
                 temperature_unit=env.temperature_unit,
                 backend_time_series_fetcher=env.backend_time_series_fetcher,
                 pin_time=_load_graph_pin(),
@@ -737,11 +786,11 @@ def host_service_graph_popup_cmk(
 ) -> None:
     end_time = int(time.time())
     start_time = end_time - 8 * 3600
+    popup_size = (30.0, 10.0)
     display_config = GraphDisplayConfigHTML.from_user_context_and_options(
         user,
         theme.get(),
         GraphRenderOptions(
-            size=(30, 10),
             font_size=SizePT(6.0),
             resizable=False,
             show_controls=False,
@@ -761,7 +810,7 @@ def host_service_graph_popup_cmk(
                 start=start_time,
                 end=end_time,
                 factor=1,
-                height_in_ex=display_config.size[1],
+                height_in_ex=popup_size[1],
             ),
             display_config,
             GraphEnvironment(
@@ -772,6 +821,7 @@ def host_service_graph_popup_cmk(
                 backend_time_series_fetcher=backend_time_series_fetcher,
                 debug=debug,
             ),
+            size=popup_size,
             graph_timeranges=graph_timeranges,
         )
     )
@@ -853,9 +903,11 @@ def _compute_legend_titles(
         yield _LegendTitle("pin", _render_pin_time_label(artwork), False, "")
 
 
-def _compute_graph_legend_styles(display_config: GraphDisplayConfigHTML) -> Iterator[str]:
+def _compute_graph_legend_styles(
+    display_config: GraphDisplayConfigHTML, size_x: float
+) -> Iterator[str]:
     """Render legend that describe the metrics"""
-    graph_width = display_config.size[0] * _HTML_SIZE_PER_EX
+    graph_width = size_x * _HTML_SIZE_PER_EX
 
     if display_config.show_vertical_axis or display_config.show_controls:
         legend_margin_left = 49
@@ -980,10 +1032,11 @@ def _show_graph_legend(
     annotations: GraphArtworkAnnotations,
     display_config: GraphDisplayConfigHTML,
     expandable_legend_appearance: ExpandableLegendAppearance,
+    size_x: float,
 ) -> None:
     font_size_style = "font-size: %dpt;" % display_config.font_size
     legend_titles = list(_compute_legend_titles(consolidation_function, artwork, display_config))
-    graph_legend_styles = list(_compute_graph_legend_styles(display_config))
+    graph_legend_styles = list(_compute_graph_legend_styles(display_config, size_x))
 
     html.open_div(
         class_=["legend_container"],
@@ -1147,9 +1200,8 @@ def render_graph_html(
     additional_html: AdditionalGraphHTML | None = None,
     graph_timeranges: Sequence[GraphTimerange] | None = None,
 ) -> JsonSerializable:
-    time_range = render_state.time_range
+    interaction = render_state.interaction
     display_config = render_state.display_config
-    recipe = render_state.recipe
 
     start_time_var = request.var("start_time")
     end_time_var = request.var("end_time")
@@ -1160,25 +1212,32 @@ def render_graph_html(
         # since step can be relatively small, we round
         step: int | str = int(round(float(step_var)))
     else:
-        start_time, end_time = time_range.start, time_range.end
-        step = time_range.step
+        start_time, end_time = interaction.time_start, interaction.time_end
+        step = interaction.step
 
     resize_x_var = request.var("resize_x")
     resize_y_var = request.var("resize_y")
 
     if resize_x_var is not None and resize_y_var is not None:
-        render_opt_x, render_opt_y = display_config.size
-        size_x = max(_MIN_RESIZE_WIDTH, float(resize_x_var) / _HTML_SIZE_PER_EX + render_opt_x)
-        size_y = max(_MIN_RESIZE_HEIGHT, float(resize_y_var) / _HTML_SIZE_PER_EX + render_opt_y)
+        size_x = max(
+            _MIN_RESIZE_WIDTH, float(resize_x_var) / _HTML_SIZE_PER_EX + interaction.size_x
+        )
+        size_y = max(
+            _MIN_RESIZE_HEIGHT, float(resize_y_var) / _HTML_SIZE_PER_EX + interaction.size_y
+        )
         user.save_file("graph_size", (size_x, size_y))
-        display_config = display_config.model_copy(update={"size": (size_x, size_y)})
+    else:
+        size_x = interaction.size_x
+        size_y = interaction.size_y
 
     range_from_var = request.var("range_from")
     range_to_var = request.var("range_to")
     if range_from_var is not None and range_to_var is not None:
-        vertical_range: tuple[float, float] | None = (float(range_from_var), float(range_to_var))
+        vertical_range_min: float | None = float(range_from_var)
+        vertical_range_max: float | None = float(range_to_var)
     else:
-        vertical_range = None
+        vertical_range_min = interaction.value_min
+        vertical_range_max = interaction.value_max
 
     if request.has_var("pin"):
         _save_graph_pin(request)
@@ -1186,35 +1245,54 @@ def render_graph_html(
     if raw_consolidation_function := request.var("consolidation_function"):
         consolidation_function = _parse_consolidation_function(raw_consolidation_function)
     else:
-        consolidation_function = render_state.consolidation_function
+        consolidation_function = interaction.consolidation_function
 
-    time_range = GraphTimeRange(
-        start=start_time,
-        end=end_time,
-        vertical_range=vertical_range,
+    interaction = GraphInteractionState(
+        graph_id=interaction.graph_id,
+        consolidation_function=consolidation_function,
+        time_start=start_time,
+        time_end=end_time,
         step=step,
+        value_min=vertical_range_min,
+        value_max=vertical_range_max,
+        size_x=size_x,
+        size_y=size_y,
     )
 
     # Persist the current data range for the graph editor.
     if display_config.editing and (render_state.specification.id):
         assert user.id is not None
-        UserGraphTimeRangeStore(user.id).save(render_state.specification.id, time_range)
+        UserGraphTimeRangeStore(user.id).save(
+            render_state.specification.id,
+            GraphTimeRange(
+                start=start_time,
+                end=end_time,
+                step=step,
+                vertical_range=(
+                    (vertical_range_min, vertical_range_max)
+                    if vertical_range_min is not None and vertical_range_max is not None
+                    else None
+                ),
+            ),
+        )
 
-    render_state = render_state.model_copy(
-        update={
-            "recipe": recipe,
-            "time_range": time_range,
-            "display_config": display_config,
-            "consolidation_function": consolidation_function,
-        }
-    )
+    render_state = render_state.model_copy(update={"interaction": interaction})
 
     artwork_or_errors = compute_graph_artwork(
         render_state.recipe,
-        render_state.time_range,
-        render_state.display_config.size,
+        GraphTimeRange(
+            start=interaction.time_start,
+            end=interaction.time_end,
+            step=interaction.step,
+            vertical_range=(
+                (interaction.value_min, interaction.value_max)
+                if interaction.value_min is not None and interaction.value_max is not None
+                else None
+            ),
+        ),
+        (interaction.size_x, interaction.size_y),
         registered_metrics,
-        consolidation_function=consolidation_function,
+        consolidation_function=interaction.consolidation_function,
         temperature_unit=temperature_unit,
         backend_time_series_fetcher=backend_time_series_fetcher,
         pin_time=_load_graph_pin(),
@@ -1309,8 +1387,8 @@ def _render_deferred_graph_html(
     # this does calculate the size of the canvas area and does not take e.g. the legend
     # into account. We would need the artwork to calculate that, but this is something
     # we don't have in this early stage.
-    graph_width = render_state.display_config.size[0] * _HTML_SIZE_PER_EX
-    graph_height = render_state.display_config.size[1] * _HTML_SIZE_PER_EX
+    graph_width = render_state.interaction.size_x * _HTML_SIZE_PER_EX
+    graph_height = render_state.interaction.size_y * _HTML_SIZE_PER_EX
 
     content = HTMLWriter.render_div("", class_="title") + HTMLWriter.render_div(
         "", class_="content", style="width:%dpx;height:%dpx" % (graph_width, graph_height)
@@ -1342,6 +1420,7 @@ def render_deferred_graphs_html(
     display_config: GraphDisplayConfigHTML,
     env: GraphEnvironment,
     *,
+    size: tuple[float, float],
     display_id: str = "",
 ) -> HTML:
     """Render async AJAX loading containers. JavaScript fills them via ajax_render_graph."""
@@ -1350,12 +1429,30 @@ def render_deferred_graphs_html(
 
     output = HTML.empty()
     for recipe_with_overrides in recipes:
+        effective_time_range = recipe_with_overrides.time_range or time_range
+        interaction = GraphInteractionState(
+            consolidation_function=recipe_with_overrides.consolidation_function,
+            time_start=effective_time_range.start,
+            time_end=effective_time_range.end,
+            step=effective_time_range.step,
+            value_min=(
+                effective_time_range.vertical_range[0]
+                if effective_time_range.vertical_range
+                else None
+            ),
+            value_max=(
+                effective_time_range.vertical_range[1]
+                if effective_time_range.vertical_range
+                else None
+            ),
+            size_x=size[0],
+            size_y=size[1],
+        )
         output += _render_deferred_graph_html(
             GraphRenderState(
-                consolidation_function=recipe_with_overrides.consolidation_function,
+                interaction=interaction,
                 recipe=recipe_with_overrides.recipe,
                 specification=recipe_with_overrides.specification,
-                time_range=recipe_with_overrides.time_range or time_range,
                 display_config=display_config.update_from_options(
                     recipe_with_overrides.render_options
                 ),
@@ -1494,9 +1591,22 @@ class AjaxGraphValuesAtTime(Page):
         )
         render_graph_values_at_time(
             render_state.recipe,
-            render_state.time_range,
+            GraphTimeRange(
+                start=render_state.interaction.time_start,
+                end=render_state.interaction.time_end,
+                step=render_state.interaction.step,
+                vertical_range=(
+                    (
+                        render_state.interaction.value_min,
+                        render_state.interaction.value_max,
+                    )
+                    if render_state.interaction.value_min is not None
+                    and render_state.interaction.value_max is not None
+                    else None
+                ),
+            ),
             metrics_from_api,
-            consolidation_function=render_state.consolidation_function,
+            consolidation_function=render_state.interaction.consolidation_function,
             debug=ctx.config.debug,
             hover_time=ctx.request.get_integer_input_mandatory("hover_time"),
             temperature_unit=get_temperature_unit(user, ctx.config.default_temperature_unit),
@@ -1567,8 +1677,6 @@ def host_service_graph_dashlet_cmk(
     else:
         raise MKGraphRecipeNotFoundError(_("Failed to calculate a graph recipe."))
 
-    display_config = display_config.model_copy(update={"size": (width, height)})
-
     time_range = (
         json.loads(request.get_str_input_mandatory("timerange"))
         if time_range is None
@@ -1591,7 +1699,7 @@ def host_service_graph_dashlet_cmk(
             start=start_time,
             end=end_time,
             factor=1,
-            height_in_ex=display_config.size[1],
+            height_in_ex=height,
         )
     except ZeroDivisionError:
         return HTML("", escape=False)
@@ -1599,7 +1707,7 @@ def host_service_graph_dashlet_cmk(
     artwork_or_errors = compute_graph_artwork(
         recipe_with_overrides.recipe,
         graph_time_range,
-        display_config.size,
+        (width, height),
         registered_metrics,
         consolidation_function=recipe_with_overrides.consolidation_function,
         temperature_unit=temperature_unit,
@@ -1638,19 +1746,30 @@ def host_service_graph_dashlet_cmk(
         legend_height_ex = min(estimated_legend_height_ex, max_legend_height_ex)
         height -= legend_height_ex
         display_config = display_config.model_copy(
-            update={
-                "size": (width, height),
-                "legend_max_height_px": int(legend_height_ex * _HTML_SIZE_PER_EX),
-            }
+            update={"legend_max_height_px": int(legend_height_ex * _HTML_SIZE_PER_EX)}
         )
 
+    effective_time_range = recipe_with_overrides.time_range or graph_time_range
+    interaction = GraphInteractionState(
+        consolidation_function=recipe_with_overrides.consolidation_function,
+        time_start=effective_time_range.start,
+        time_end=effective_time_range.end,
+        step=effective_time_range.step,
+        value_min=(
+            effective_time_range.vertical_range[0] if effective_time_range.vertical_range else None
+        ),
+        value_max=(
+            effective_time_range.vertical_range[1] if effective_time_range.vertical_range else None
+        ),
+        size_x=width,
+        size_y=height,
+    )
     return _render_graph_content_html(
         request,
         GraphRenderState(
-            consolidation_function=recipe_with_overrides.consolidation_function,
+            interaction=interaction,
             recipe=recipe_with_overrides.recipe,
             specification=recipe_with_overrides.specification,
-            time_range=recipe_with_overrides.time_range or graph_time_range,
             display_config=display_config.update_from_options(recipe_with_overrides.render_options),
             display_id=display_id,
         ),

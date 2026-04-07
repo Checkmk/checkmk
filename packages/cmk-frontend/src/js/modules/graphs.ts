@@ -53,24 +53,28 @@ interface GraphDisplayConfigHTML {
   show_time_range_previews: boolean
   show_title: boolean | 'inline'
   show_vertical_axis: boolean
-  size: [number, number]
   title_format: GraphTitleFormat
   vertical_axis_width: 'fixed' | ['explicit', SizePT]
 }
 
-interface GraphTimeRange {
-  start: number
-  end: number
+// All frontend-mutable state; round-tripped on every AJAX call.
+interface GraphInteractionState {
+  graph_id: string
+  consolidation_function: string | null
+  time_start: number
+  time_end: number
   // For forecast graphs, step is a colon-separated string "[step length]:[rrd point count]"
   step: number | string
-  vertical_range: [number, number] | null
+  value_min: number | null
+  value_max: number | null
+  size_x: number
+  size_y: number
 }
 
 export interface GraphRenderState {
-  graph_id: string
+  interaction: GraphInteractionState
   recipe: GraphRecipe
   specification: object
-  time_range: GraphTimeRange
   display_config: GraphDisplayConfigHTML
   display_id: string
   onclick: string | null
@@ -337,7 +341,7 @@ export function show_ajax_graph_at_container(ajax_graph: AjaxGraph, container: H
   container.innerHTML = ajax_graph['html']
 
   // Now register and paint the graph
-  ajax_context['graph_id'] = graph_id
+  ajax_context.interaction = { ...ajax_context.interaction, graph_id: graph_id }
   g_ajax_contexts[graph_id] = ajax_context
   const artwork = ajax_graph['graph']
   g_graphs[graph_id] = {
@@ -382,7 +386,7 @@ export function create_graph(
   embedded_script.parentNode.insertBefore(container_div, embedded_script.nextSibling)
 
   // Now register and paint the graph
-  ajax_context['graph_id'] = graph_id
+  ajax_context.interaction = { ...ajax_context.interaction, graph_id: graph_id }
   g_ajax_contexts[graph_id] = ajax_context
   g_graphs[graph_id] = {
     id: graph_id,
@@ -586,8 +590,11 @@ function delayed_graph_renderer() {
 function update_delayed_graphs_timerange(start_time: number, end_time: number) {
   for (let i = 0, len = g_delayed_graphs.length; i < len; i++) {
     const entry = g_delayed_graphs[i]
-    entry.render_state.time_range.start = start_time
-    entry.render_state.time_range.end = end_time
+    entry.render_state.interaction = {
+      ...entry.render_state.interaction,
+      time_start: start_time,
+      time_end: end_time
+    }
   }
 }
 
@@ -2108,7 +2115,7 @@ function handle_graph_update(graph_container: HTMLElement, ajax_response: string
   // {
   //     "html" : html_code,
   //     "graph" : artwork,
-  //     "context" : { "graph_id", "recipe", "time_range", "view", "display_id" }
+  //     "context" : { "interaction", "recipe", "display_config", "display_id" }
   // }
   if (!graph.context) {
     console.error('Graph update response missing context')
@@ -2116,7 +2123,7 @@ function handle_graph_update(graph_container: HTMLElement, ajax_response: string
     g_graph_backoff.report_failure()
     return
   }
-  const graph_id = graph.context.graph_id
+  const graph_id = graph.context.interaction.graph_id
   const new_artwork: GraphArtwork = graph.graph
   const existing = g_graphs[graph_id]
   const view: GraphInstance = {
@@ -2242,10 +2249,10 @@ function set_graph_timerange(graph_id: string, start_time: number, end_time: num
       encodeURIComponent(
         JSON.stringify({
           ...g_ajax_contexts[graph.id],
-          time_range: {
-            ...g_ajax_contexts[graph.id].time_range,
-            start: start_time,
-            end: end_time,
+          interaction: {
+            ...g_ajax_contexts[graph.id].interaction,
+            time_start: start_time,
+            time_end: end_time,
             step: step
           }
         })

@@ -3,6 +3,7 @@ load("@bazel_skylib//rules:build_test.bzl", "build_test")
 load("@cmk_requirements//:requirements.bzl", "requirement")
 load("@rules_python//python:packaging.bzl", "py_wheel")
 load("//bazel/rules:package_wheel.bzl", "package_wheel")
+load("//bazel/rules:py_requirements_test.bzl", "py_requirements_test")
 
 exports_files([
     "dev-requirements.in",
@@ -123,4 +124,10 @@ build_test(
         ":wheel",
         ":wheel_entrypoint_only",
     ],
+)
+
+py_requirements_test(
+    name = "requirements-test",
+    libs = [":cmk-dev-deploy"],
+    requirements_in = "requirements.in",
 )

@@ -3,6 +3,7 @@ load("@bazel_skylib//rules:build_test.bzl", "build_test")
 load("@cmk_requirements//:requirements.bzl", "requirement")
 load("@rules_python//python:packaging.bzl", "py_wheel")
 load("//bazel/rules:package_wheel.bzl", "package_wheel")
+load("//bazel/rules:py_requirements_test.bzl", "py_requirements_test")
 
 exports_files(["requirements.in"])
 
@@ -543,4 +544,105 @@ sh_library(
         "//cmk/gui:wsgi/.f12",
         "//cmk/plugins:shell_scripts",
     ],
+)
+
+_KNOWN_UNDECLARED = [
+    "tinkerforge",  # cmk/plugins/tinkerforge/special_agent/agent_tinkerforge.py
+    "ibm-db",  # cmk/plugins/sql/active_check/check_sql.py
+    "ibm-db-dbi",  # cmk/plugins/sql/active_check/check_sql.py
+    "sqlanydb",  # cmk/plugins/sql/active_check/check_sql.py
+    "rados",  # cmk/plugins/ceph/agents/mk_ceph.py
+    "typeshed",  # shipped with the standard library part of typeshed, which is bundled with mypy
+    "rrdtool",  # is built as part of the project
+    "pytest",  # clarify with CMK-32954
+]
+
+_KNOWN_UNUSED = [
+    # were declared in original requirements tests with or without reason
+    "setuptools",  # pinned transitive dependency
+    "setuptools-scm",
+    "snmpsim",
+    # clarify with CMK-32954
+    "pyghmi",
+    "pysnmp",
+    "tenacity",
+    "pysmi",
+    "vcrpy",
+    "opsgenie-sdk",
+]
+
+py_requirements_test(
+    name = "requirements-test-community",
+    known_undeclared = _KNOWN_UNDECLARED,
+    known_unused = _KNOWN_UNUSED + [
+        # only imported in non-free editions
+        "numpy",
+        "pyjwt",
+        "pypdf",
+        "pysaml2",
+        "roman",
+    ],
+    libs = ["//cmk/editions:community"],
+    requirements_in = "requirements.in",
+    target_compatible_with = select({
+        "@cmk//edition:community": [],
+        "//conditions:default": ["@platforms//:incompatible"],
+    }),
+)
+
+py_requirements_test(
+    name = "requirements-test-pro",
+    known_undeclared = _KNOWN_UNDECLARED,
+    known_unused = _KNOWN_UNUSED + [
+        # only imported in cloud edition
+        "pyjwt",
+    ],
+    libs = ["//cmk/editions/nonfree:pro"],
+    requirements_in = "requirements.in",
+    target_compatible_with = select({
+        "@cmk//edition:pro": [],
+        "//conditions:default": ["@platforms//:incompatible"],
+    }),
+)
+
+py_requirements_test(
+    name = "requirements-test-ultimate",
+    known_undeclared = _KNOWN_UNDECLARED,
+    known_unused = _KNOWN_UNUSED + [
+        # only imported in cloud edition
+        "pyjwt",
+    ],
+    libs = ["//cmk/editions/nonfree:ultimate"],
+    requirements_in = "requirements.in",
+    target_compatible_with = select({
+        "@cmk//edition:ultimate": [],
+        "//conditions:default": ["@platforms//:incompatible"],
+    }),
+)
+
+py_requirements_test(
+    name = "requirements-test-cloud",
+    known_undeclared = _KNOWN_UNDECLARED,
+    known_unused = _KNOWN_UNUSED,
+    libs = ["//cmk/editions/nonfree:cloud"],
+    requirements_in = "requirements.in",
+    target_compatible_with = select({
+        "@cmk//edition:cloud": [],
+        "//conditions:default": ["@platforms//:incompatible"],
+    }),
+)
+
+py_requirements_test(
+    name = "requirements-test-ultimatemt",
+    known_undeclared = _KNOWN_UNDECLARED,
+    known_unused = _KNOWN_UNUSED + [
+        # only imported in cloud edition
+        "pyjwt",
+    ],
+    libs = ["//cmk/editions/nonfree:ultimatemt"],
+    requirements_in = "requirements.in",
+    target_compatible_with = select({
+        "@cmk//edition:ultimatemt": [],
+        "//conditions:default": ["@platforms//:incompatible"],
+    }),
 )

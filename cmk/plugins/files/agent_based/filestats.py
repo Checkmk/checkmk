@@ -109,22 +109,31 @@ def _parse_filestats_load_lines(info: list[str]) -> list[dict[str, Any]]:
 
 def check_filestats_count(
     count: int, params: Mapping[str, Any], show_files: bool, reported_lines: list[dict[str, Any]]
-) -> LegacyResult:
+) -> CheckResult:
     """common check result - used by main and count_only check"""
-    levels = params.get("maxcount", (None, None)) + params.get("mincount", (None, None))
-    result = check_levels_legacy(
-        count,
-        "file_count",
-        levels,
-        infoname="Files in total",
-        human_readable_func=lambda i: "%d" % i,
+    results = list(
+        check_levels(
+            count,
+            levels_upper=_fixed_levels(params.get("maxcount", (None, None))),
+            levels_lower=_fixed_levels(params.get("mincount", (None, None))),
+            metric_name="file_count",
+            label="Files in total",
+            render_func=lambda i: "%d" % i,
+        )
     )
-    state, info, perf = result
-    if not show_files or state == 0:
-        return result
+    result = results[0]
+    assert isinstance(result, Result)
 
-    details = f"{info}\n" + "\n".join([f"[{l['path']}]" for l in reported_lines if l.get("path")])
-    return (state, details, perf)
+    if show_files and result.state != State.OK:
+        file_details = "\n".join(f"[{l['path']}]" for l in reported_lines if l.get("path"))
+        yield Result(
+            state=result.state,
+            summary=result.summary,
+            details=f"{result.summary}\n{file_details}",
+        )
+    else:
+        yield result
+    yield from results[1:]
 
 
 def check_filestats_extremes(
@@ -238,9 +247,7 @@ def check_filestats(
     show_files = bool(params.get("show_all_files", False))
 
     if count is not None:
-        yield from convert_legacy_results(
-            [check_filestats_count(count, params, show_files, reported_lines)]
-        )
+        yield from check_filestats_count(count, params, show_files, reported_lines)
 
     files = [i for i in reported_lines if i.get("type") == "file"]
 

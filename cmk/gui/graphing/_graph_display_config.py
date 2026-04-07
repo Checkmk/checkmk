@@ -86,6 +86,8 @@ class _GraphDisplayConfigBase(BaseModel):
     show_time_axis: bool = True
     show_vertical_axis: bool = True
     size: tuple[float, float] = (70, 16)
+    title_format: GraphTitleFormat = _DEFAULT_TITLE_FORMAT
+    vertical_axis_width: Literal["fixed"] | tuple[Literal["explicit"], SizePT] = "fixed"
 
     def update_from_options(self, options: GraphRenderOptions) -> Self:
         return self.model_copy(
@@ -109,7 +111,6 @@ class GraphDisplayConfigHTML(_GraphDisplayConfigBase):
     show_pin: bool = True
     show_time_range_previews: bool = True
     show_title: bool | Literal["inline"] = True
-    title_format: GraphTitleFormat = _DEFAULT_TITLE_FORMAT
 
     @classmethod
     def from_user_context_and_options(
@@ -127,8 +128,6 @@ class GraphDisplayConfigHTML(_GraphDisplayConfigBase):
 class GraphDisplayConfigImage(_GraphDisplayConfigBase):
     border_width: SizeMM = 0.05
     show_title: bool = True
-    title_format: GraphTitleFormat = _DEFAULT_TITLE_FORMAT
-    vertical_axis_width: Literal["fixed"] | tuple[Literal["explicit"], SizePT] = "fixed"
     background_color: str = "#f8f4f0"
     canvas_color: str = "#ffffff"
     foreground_color: str = "#000000"

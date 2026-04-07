@@ -34,7 +34,6 @@ interface GraphTitleFormat {
 }
 
 interface GraphDisplayConfigHTML {
-  border_width: number
   color_gradient: number
   editing: boolean
   explicit_title: string | null
@@ -62,6 +61,9 @@ interface GraphDisplayConfigHTML {
 interface GraphTimeRange {
   start: number
   end: number
+  // For forecast graphs, step is a colon-separated string "[step length]:[rrd point count]"
+  step: number | string
+  vertical_range: [number, number] | null
 }
 
 export interface GraphRenderState {

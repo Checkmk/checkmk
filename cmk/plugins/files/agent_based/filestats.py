@@ -8,9 +8,6 @@ import re
 from collections.abc import Generator, Mapping
 from typing import Any
 
-from cmk.agent_based.legacy.conversion import convert_legacy_results
-from cmk.agent_based.legacy.v0_unstable import check_levels as check_levels_legacy
-from cmk.agent_based.legacy.v0_unstable import STATE_MARKERS
 from cmk.agent_based.v2 import (
     AgentSection,
     check_levels,
@@ -18,7 +15,6 @@ from cmk.agent_based.v2 import (
     CheckResult,
     DiscoveryResult,
     FixedLevelsT,
-    IgnoreResults,
     Metric,
     render,
     Result,
@@ -136,9 +132,33 @@ def check_filestats_count(
     yield from results[1:]
 
 
+_STATE_MARKERS = {State.OK: "", State.WARN: "(!)", State.CRIT: "(!!)", State.UNKNOWN: "(?)"}
+
+
+def _get_levels(
+    params: Mapping[str, Any], key: str, label: str
+) -> tuple[FixedLevelsT[float] | None, FixedLevelsT[float] | None]:
+    return (
+        _fixed_levels(params.get(f"max{key}_{label}", (None, None))),
+        _fixed_levels(params.get(f"min{key}_{label}", (None, None))),
+    )
+
+
+def _check_state(
+    value: float,
+    levels_upper: FixedLevelsT[float] | None,
+    levels_lower: FixedLevelsT[float] | None,
+) -> State:
+    """Compute the state for a value against levels without yielding results."""
+    for r in check_levels(value, levels_upper=levels_upper, levels_lower=levels_lower):
+        if isinstance(r, Result):
+            return r.state
+    return State.OK
+
+
 def check_filestats_extremes(
     files: list[dict[str, Any]], params: Mapping[str, Any], show_files: bool = False
-) -> Generator[LegacyResult, None, list[str]]:
+) -> Generator[Result | Metric, None, list[str]]:
     """common check result - used by main and extremes_only check"""
     if not files:
         return []
@@ -153,72 +173,43 @@ def check_filestats_extremes(
 
         files_with_metric.sort(key=lambda f: f.get(key, 0))
         for efile, label in ((files_with_metric[0], minlabel), (files_with_metric[-1], maxlabel)):
-            levels = params.get(f"max{key}_{label}", (None, None)) + params.get(
-                f"min{key}_{label}", (None, None)
-            )
-            yield check_levels_legacy(
+            levels_upper, levels_lower = _get_levels(params, key, label)
+            yield from check_levels(
                 efile[key],
-                None,
-                levels,
-                infoname=label.title(),
-                human_readable_func=hr_function,
+                levels_upper=levels_upper,
+                levels_lower=levels_lower,
+                render_func=hr_function,
+                label=label.title(),
             )
 
         if not show_files:
             continue
 
-        min_label_levels = params.get(f"max{key}_{minlabel}", (None, None)) + params.get(
-            f"min{key}_{minlabel}", (None, None)
-        )
+        min_levels_upper, min_levels_lower = _get_levels(params, key, minlabel)
         for efile in files_with_metric:
-            state, _text, _no_perf = check_levels_legacy(
-                efile[key],
-                None,
-                min_label_levels,
-            )
-            if state == 0:
+            state = _check_state(efile[key], min_levels_upper, min_levels_lower)
+            if state == State.OK:
                 break
             if efile["path"] not in long_output:
-                text = "Age: {}, Size: {}{}".format(
+                long_output[efile["path"]] = "Age: {}, Size: {}{}".format(
                     render.timespan(efile["age"]),
                     render.disksize(efile["size"]),
-                    STATE_MARKERS[state],
+                    _STATE_MARKERS[state],
                 )
-                long_output[efile["path"]] = text
 
-        max_label_levels = params.get(f"max{key}_{maxlabel}", (None, None)) + params.get(
-            f"min{key}_{maxlabel}", (None, None)
-        )
+        max_levels_upper, max_levels_lower = _get_levels(params, key, maxlabel)
         for efile in reversed(files_with_metric):
-            state, _text, _no_perf = check_levels_legacy(
-                efile[key],
-                None,
-                max_label_levels,
-            )
-            if state == 0:
+            state = _check_state(efile[key], max_levels_upper, max_levels_lower)
+            if state == State.OK:
                 break
             if efile["path"] not in long_output:
-                text = "Age: {}, Size: {}{}".format(
+                long_output[efile["path"]] = "Age: {}, Size: {}{}".format(
                     render.timespan(efile["age"]),
                     render.disksize(efile["size"]),
-                    STATE_MARKERS[state],
+                    _STATE_MARKERS[state],
                 )
-                long_output[efile["path"]] = text
 
     return [f"[{key}] {text}" for key, text in sorted(long_output.items())]
-
-
-def _yield_from_extremes(
-    files: list[dict[str, Any]], params: Mapping[str, Any], show_files: bool
-) -> Generator[Result | Metric | IgnoreResults, None, list[str]]:
-    """Wrapper that converts legacy results from check_filestats_extremes to v2."""
-    gen = check_filestats_extremes(files, params, show_files)
-    try:
-        while True:
-            legacy_result = next(gen)
-            yield from convert_legacy_results([legacy_result])
-    except StopIteration as e:
-        return e.value  # type: ignore[no-any-return]
 
 
 # .
@@ -276,7 +267,7 @@ def check_filestats(
         else:
             remaining_files.append(efile)
 
-    remaining_files_output = yield from _yield_from_extremes(
+    remaining_files_output = yield from check_filestats_extremes(
         remaining_files,
         params,
         show_files,
@@ -295,7 +286,7 @@ def check_filestats(
                 yield Result(state=State.OK, notice=file_details["display_name"])
             yield Result(state=State.OK, summary=f"Pattern: {file_expression!r}")
             yield Result(state=State.OK, summary=f"Files in total: {file_count}")
-            output = yield from _yield_from_extremes(
+            output = yield from check_filestats_extremes(
                 file_list,
                 file_details["rules"],
                 show_files,

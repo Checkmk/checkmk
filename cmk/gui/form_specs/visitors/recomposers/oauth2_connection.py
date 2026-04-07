@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Sequence
 from typing import Any
 
 from cmk.ccc.exceptions import MKGeneralException
@@ -10,14 +11,16 @@ from cmk.gui.form_specs.unstable import SingleChoiceEditable
 from cmk.gui.form_specs.unstable.legacy_converter import (
     TransformDataForLegacyFormatOrRecomposeFunction,
 )
-from cmk.rulesets.internal.form_specs import OAuth2Connection
+from cmk.gui.logged_in import user
+from cmk.gui.oauth2_connections.watolib.store import load_oauth2_connections
+from cmk.rulesets.internal.form_specs import (
+    OAuth2Connection,
+    SingleChoiceElementExtended,
+    SingleChoiceExtended,
+)
 from cmk.rulesets.v1 import Title
-from cmk.rulesets.v1.form_specs import (
-    FormSpec,
-)
-from cmk.shared_typing.configuration_entity import (
-    ConfigEntityType,
-)
+from cmk.rulesets.v1.form_specs import FormSpec, InputHint
+from cmk.shared_typing.configuration_entity import ConfigEntityType
 
 
 def _oauth2_connection_disk_to_ui(value: object) -> str:
@@ -36,6 +39,33 @@ def _oauth2_connection_ui_to_disk(value: object) -> tuple[str, str, str]:
             raise MKGeneralException("Could not store OAuth2 connection configuration")
 
 
+def _oauth2_elements_for_unprivileged_user() -> Sequence[SingleChoiceElementExtended[str]]:
+    return [
+        SingleChoiceElementExtended(
+            name=ident,
+            title=Title("%s") % entry["title"],
+        )
+        for ident, entry in load_oauth2_connections().items()
+    ]
+
+
+def _wrapped_oauth2_form_spec(form_spec: OAuth2Connection) -> FormSpec[Any]:
+    if user.may("general.oauth2_connections"):
+        return SingleChoiceEditable(
+            title=form_spec.title or Title("OAuth2 connection"),
+            help_text=form_spec.help_text,
+            entity_type=ConfigEntityType.oauth2_connection,
+            entity_type_specifier=form_spec.connector_type,
+            allow_editing_existing_elements=True,
+        )
+    return SingleChoiceExtended(
+        title=form_spec.title or Title("OAuth2 connection"),
+        help_text=form_spec.help_text,
+        elements=_oauth2_elements_for_unprivileged_user,
+        prefill=InputHint(Title("Please select an element")),
+    )
+
+
 def recompose(
     form_spec: FormSpec[Any],
 ) -> TransformDataForLegacyFormatOrRecomposeFunction:
@@ -45,13 +75,7 @@ def recompose(
         )
 
     return TransformDataForLegacyFormatOrRecomposeFunction(
-        wrapped_form_spec=SingleChoiceEditable(
-            title=form_spec.title or Title("OAuth2 connection"),
-            help_text=form_spec.help_text,
-            entity_type=ConfigEntityType.oauth2_connection,
-            entity_type_specifier=form_spec.connector_type,
-            allow_editing_existing_elements=True,
-        ),
+        wrapped_form_spec=lambda: _wrapped_oauth2_form_spec(form_spec),
         from_disk=_oauth2_connection_disk_to_ui,
         to_disk=_oauth2_connection_ui_to_disk,
         custom_validate=form_spec.custom_validate,  # type: ignore[arg-type]

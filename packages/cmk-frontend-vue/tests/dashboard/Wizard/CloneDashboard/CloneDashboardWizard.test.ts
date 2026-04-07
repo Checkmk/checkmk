@@ -182,7 +182,7 @@ describe('CloneDashboardWizard', () => {
     it('should emit "cancel-clone" when the back button in the header is clicked', async () => {
       const onCancelClone = vi.fn()
       await renderWizard({}, { onCancelClone })
-      await fireEvent.click(screen.getByTestId('back-button'))
+      await fireEvent.click(screen.getByRole('button', { name: 'Back' }))
       expect(onCancelClone).toHaveBeenCalledOnce()
     })
   })

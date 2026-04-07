@@ -215,7 +215,7 @@ describe('CreateDashboard', () => {
     it('should emit "cancel-creation" when the close button in the header is clicked', async () => {
       const onCancelCreation = vi.fn()
       await renderWizard({}, { onCancelCreation })
-      await fireEvent.click(screen.getByTestId('close-button'))
+      await fireEvent.click(screen.getByRole('button', { name: 'Close' }))
       expect(onCancelCreation).toHaveBeenCalledOnce()
     })
   })

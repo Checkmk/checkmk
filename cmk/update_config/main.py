@@ -101,7 +101,7 @@ def main_check_config(logger: logging.Logger, conflict: ConflictMode) -> Literal
         if not isinstance(e, MKUserError):
             traceback.print_exc()
         sys.stderr.write(
-            f"\nUpdate aborted with Error: {e}.\nYour site has not been modified.\n"
+            f"\nUpdate aborted with Error: {e}.\n"
             "The update can be retried after the error has been fixed.\n"
         )
         return 1

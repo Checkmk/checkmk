@@ -17,6 +17,7 @@ from cmk.ccc.user import UserId
 from cmk.gui.groups import GroupSpec
 from cmk.gui.log import logger
 from cmk.gui.userdb import (
+    add_internal_attributes,
     create_cmk_automation_user,
     get_user_attributes,
     load_users,
@@ -315,23 +316,24 @@ class ConfigGeneratorInitialAdminUser(SampleConfigGenerator):
         if pw_hash is None:
             raise ValueError("No password found for user 'cmkadmin'")
 
+        admin_user = UserSpec(
+            {
+                "alias": "cmkadmin",
+                "connector": "htpasswd",
+                # The password was set through 'omd create'. Get it so that it is not
+                # removed by Htpasswd.save_users().
+                "password": pw_hash,
+                "locked": False,
+                "roles": ["admin"],
+                "language": "en",
+            }
+        )
+        add_internal_attributes(admin_user)
+
         save_users(
             {
                 **load_users(lock=True),
-                UserId("cmkadmin"): UserSpec(
-                    {
-                        "alias": "cmkadmin",
-                        "connector": "htpasswd",
-                        # The password was set through 'omd create'. Get it so that it is not
-                        # removed by Htpasswd.save_users().
-                        "password": pw_hash,
-                        "locked": False,
-                        "roles": ["admin"],
-                        "language": "en",
-                        "start_url": "welcome.py",
-                        "user_scheme_serial": 1,
-                    }
-                ),
+                UserId("cmkadmin"): admin_user,
             },
             get_user_attributes([]),
             user_connections=[],

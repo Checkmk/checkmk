@@ -331,11 +331,12 @@ def walk_skel(
     ignored_files = [
         # We have removed the unused htpasswd skel file, but we don't want to ask users if they wish
         # to delete their existing htpasswd.
-        "etc/htpasswd",
         "etc/diskspace.conf",
-        "local/lib/python3/cmk/base/plugins/agent_based",
-        "local/lib/python3/cmk/base/plugins",
+        "etc/htpasswd",
+        "local/lib/check_mk",
         "local/lib/python3/cmk/base",
+        "local/lib/python3/cmk/base/plugins",
+        "local/lib/python3/cmk/base/plugins/agent_based",
         "local/lib/python3/cmk/special_agents",
         "local/share/check_mk/agents/special",
         "local/share/check_mk/checkman",

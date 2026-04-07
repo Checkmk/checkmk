@@ -131,7 +131,7 @@ function reset() {
             <a :href="userSettingsUrl" target="_blank"> {{ _t('agent_registration user') }}</a>
             {{ _t(`and paste it into the terminal to continue the registration.`) }}
           </CmkParagraph>
-          <CmkCode :code_txt="regAgentOttCmd" class="code" width="fill" />
+          <CmkCode :code_txt="tab.registrationCmd ?? ''" class="code" width="fill" />
         </CmkIndent>
       </CmkCollapsible>
     </template>

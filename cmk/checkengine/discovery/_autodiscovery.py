@@ -720,14 +720,16 @@ def _node_service_source(
     cluster_name: HostName,
 ) -> _Transition:
     if host_name == cluster_name:
-        return (
-            "ignored"
-            if ignore_plugin(host_name, entry.check_plugin_name) or ignore_service(host_name, entry)
-            else check_source
-        )
+        if check_source != "vanished" and (
+            ignore_plugin(host_name, entry.check_plugin_name) or ignore_service(host_name, entry)
+        ):
+            return "ignored"
+        return check_source
 
     # TODO: this does not make much sense. If the service is clustered, but ignored _on that cluster_, it should be shown there.
-    if ignore_service(cluster_name, entry) or ignore_plugin(cluster_name, entry.check_plugin_name):
+    if check_source != "vanished" and (
+        ignore_service(cluster_name, entry) or ignore_plugin(cluster_name, entry.check_plugin_name)
+    ):
         return "ignored"
 
     if check_source == "vanished":
@@ -744,7 +746,9 @@ def _make_cluster_table(
 ) -> ServicesTable[_Transition]:
     return {
         (sid := entry.newer.id()): ServicesTableEntry(
-            transition="ignored" if is_ignored_on_cluster(entry.newer) else service_transition,
+            transition="ignored"
+            if service_transition != "vanished" and is_ignored_on_cluster(entry.newer)
+            else service_transition,
             autocheck=entry,
             hosts=[
                 hn
@@ -788,6 +792,13 @@ def _get_cluster_services(
             and autochecks_config.effective_host(node_name, entry) == host_name
         )
 
+    def was_on_cluster(node_name: HostName, entry: AutocheckEntry) -> bool:
+        # Like appears_on_cluster but without the ignore filter: a service that
+        # previously existed on this cluster must be included in the preexisting
+        # list even when a disabled rule now matches it, so that it can surface
+        # as "vanished" rather than being silently dropped.
+        return autochecks_config.effective_host(node_name, entry) == host_name
+
     nodes_discovery_results = {
         node: analyse_services(
             existing_services=existing_services[node],
@@ -805,7 +816,7 @@ def _get_cluster_services(
     clusters_discovery_result = QualifiedDiscovery(
         preexisting=merge_cluster_autochecks(
             {hn: q.preexisting for hn, q in nodes_discovery_results.items()},
-            appears_on_cluster,
+            was_on_cluster,
         ),
         current=merge_cluster_autochecks(
             {hn: q.current for hn, q in nodes_discovery_results.items()},

@@ -31,6 +31,7 @@ from typing import assert_never, Final, Literal, NamedTuple
 from pydantic import BaseModel
 
 import cmk.gui.watolib.changes as _changes
+from cmk import trace
 from cmk.automations.results import (
     SerializedResult,
     ServiceDiscoveryPreviewResult,
@@ -77,6 +78,8 @@ from cmk.utils.automation_config import LocalAutomationConfig, RemoteAutomationC
 from cmk.utils.labels import HostLabel, HostLabelValueDict
 from cmk.utils.object_diff import make_diff_text
 from cmk.utils.servicename import Item, ServiceName
+
+tracer = trace.get_tracer()
 
 
 # Would rather use an Enum for this, but this information is exported to javascript
@@ -287,24 +290,26 @@ class Discovery:
             transition := self.compute_discovery_transition(discovery_result, target_host_name)
         ) is not None:
             if transition.need_sync:
-                self._save_host_service_enable_disable_rules(
-                    transition.remove_disabled_rule,
-                    transition.add_disabled_rule,
+                with tracer.span("save_host_service_rules"):
+                    self._save_host_service_enable_disable_rules(
+                        transition.remove_disabled_rule,
+                        transition.add_disabled_rule,
+                        automation_config=automation_config,
+                        pprint_value=pprint_value,
+                        debug=debug,
+                        use_git=use_git,
+                    )
+
+            with tracer.span("save_services"):
+                self._save_services(
+                    target_host_name,
+                    transition.old_autochecks,
+                    transition.new_autochecks,
+                    need_sync=transition.need_sync,
                     automation_config=automation_config,
-                    pprint_value=pprint_value,
                     debug=debug,
                     use_git=use_git,
                 )
-
-            self._save_services(
-                target_host_name,
-                transition.old_autochecks,
-                transition.new_autochecks,
-                need_sync=transition.need_sync,
-                automation_config=automation_config,
-                debug=debug,
-                use_git=use_git,
-            )
 
         return self._apply_transitions(discovery_result)
 
@@ -675,27 +680,28 @@ def perform_fix_all(
     Handle fix all ('Accept All' on UI) discovery action
     """
     with _service_discovery_context(host, pprint_value=pprint_value):
-        _perform_update_host_labels(
-            discovery_result.labels_by_host,
-            automation_config=automation_config,
-            debug=debug,
-            use_git=use_git,
-        )
-        return Discovery(
-            host,
-            DiscoveryAction.FIX_ALL,
-            update_target=None,
-            update_source=None,
-            selected_services=(),  # does not matter in case of "FIX_ALL"
-            user_need_permission=user.need_permission,
-        ).do_discovery(
-            discovery_result,
-            host.name(),
-            automation_config=automation_config,
-            pprint_value=pprint_value,
-            debug=debug,
-            use_git=use_git,
-        )
+        with tracer.span("perform_fix_all", attributes={"cmk.host_name": str(host.name())}):
+            _perform_update_host_labels(
+                discovery_result.labels_by_host,
+                automation_config=automation_config,
+                debug=debug,
+                use_git=use_git,
+            )
+            return Discovery(
+                host,
+                DiscoveryAction.FIX_ALL,
+                update_target=None,
+                update_source=None,
+                selected_services=(),  # does not matter in case of "FIX_ALL"
+                user_need_permission=user.need_permission,
+            ).do_discovery(
+                discovery_result,
+                host.name(),
+                automation_config=automation_config,
+                pprint_value=pprint_value,
+                debug=debug,
+                use_git=use_git,
+            )
 
 
 def perform_host_label_discovery(

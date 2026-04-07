@@ -70,10 +70,9 @@ def page_handler(ctx: PageContext) -> None:
     current_mode = request.get_str_input_mandatory("mode")
     # Backup has to be accessible for remote sites, otherwise the user has no
     # chance to configure a backup for remote sites.
-    # config.current_customer can not be checked with GPL repos
     if (
         cmk_version.edition(paths.omd_root) is cmk_version.Edition.ULTIMATEMT
-        and not customer_api().is_provider(ctx.config.current_customer)
+        and not customer_api().is_provider(ctx.config.raw.get("current_customer", "provider"))
         and not current_mode.startswith(("backup", "edit_backup"))
     ):
         raise MKGeneralException(_("Checkmk can only be configured on the managers central site."))

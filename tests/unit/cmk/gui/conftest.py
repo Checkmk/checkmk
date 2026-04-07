@@ -147,8 +147,10 @@ def set_config(**kwargs: Any) -> Iterator[None]:
     """
 
     def _set_config(config: Config) -> None:
+        config._raw_config = {**config._raw_config, **kwargs}
         for key, val in kwargs.items():
-            setattr(config, key, val)
+            if hasattr(config, key):
+                setattr(config, key, val)
 
     def fake_load_single_global_wato_setting(
         varname: str,
@@ -158,14 +160,21 @@ def set_config(**kwargs: Any) -> Iterator[None]:
 
     try:
         config_module.register_post_config_load_hook(_set_config)
-        if kwargs:
+        patchable = {k: v for k, v in kwargs.items() if hasattr(active_config, k)}
+        if patchable:
             # NOTE: patch.multiple doesn't want to receive an empty kwargs dict and will crash.
             with (
-                mock.patch.multiple(active_config, **kwargs),
+                mock.patch.multiple(active_config, **patchable),
                 mock.patch(
                     "cmk.gui.single_global_setting._load_single_global_wato_setting",
                     new=fake_load_single_global_wato_setting,
                 ),
+            ):
+                yield
+        elif kwargs:
+            with mock.patch(
+                "cmk.gui.single_global_setting._load_single_global_wato_setting",
+                new=fake_load_single_global_wato_setting,
             ):
                 yield
         else:

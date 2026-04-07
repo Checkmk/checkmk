@@ -18,7 +18,6 @@ from pathlib import Path
 from types import ModuleType
 from typing import Any, Final
 
-import cmk.ccc.version as cmk_version
 import cmk.utils.tags
 from cmk import trace
 from cmk.gui import log
@@ -30,19 +29,8 @@ from cmk.gui.plugins.config.base import (  # astrein: disable=cmk-module-layer-v
     CREConfig,
 )
 from cmk.gui.type_defs import RoleName
-from cmk.utils import paths
 from cmk.utils.experimental_config import load_experimental_config
 from cmk.utils.keypair_store import KeypairStore
-
-if cmk_version.edition(paths.omd_root) is not cmk_version.Edition.COMMUNITY:
-    from cmk.gui.nonfree.pro.config import (  # type: ignore[import-not-found, import-untyped, unused-ignore] # astrein: disable=cmk-module-layer-violation
-        CEEConfig,
-    )
-else:
-    # Stub needed for non enterprise edition
-    class CEEConfig:  # type: ignore[no-redef]
-        pass
-
 
 tracer = trace.get_tracer()
 
@@ -70,11 +58,8 @@ builtin_role_ids: Final[list[RoleName]] = [
 
 
 @dataclass
-class Config(CREConfig, CEEConfig):  # type: ignore[misc, unused-ignore]
+class Config(CREConfig):
     """Holds the loaded configuration during GUI processing
-
-    The loaded configuration is then accessible through `from cmk.gui.globals import config`.
-    For built-in config variables type checking and code completion works.
 
     This class is extended by `load_config` to support custom config variables which may
     be introduced by 3rd party extensions. For these variables we don't have the features
@@ -288,7 +273,7 @@ def _get_default_config_from_module_plugins() -> dict[str, Any]:
 
     default_config: dict[str, Any] = {}
     for k, v in config_plugin_vars.items():
-        if k[0] == "_" or k in ("CREConfig", "CEEConfig"):
+        if k[0] == "_" or k in ("CREConfig",):
             continue
 
         if isinstance(v, dict | list):

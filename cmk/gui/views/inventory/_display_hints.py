@@ -92,6 +92,8 @@ from cmk.inventory_ui.v1_unstable import TimeNotation as TimeNotationFromAPI
 from cmk.inventory_ui.v1_unstable import Title as TitleFromAPI
 from cmk.inventory_ui.v1_unstable import Unit as UnitFromAPI
 
+__all__ = ["SDPath"]
+
 from ._paint_functions import inv_paint_generic
 from .registry import (
     inv_paint_funtions,

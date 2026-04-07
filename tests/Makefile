@@ -62,8 +62,7 @@ DOCKERABLE_TESTS := \
 	test-plugins-siteless \
 	test-unit-all \
 	test-unit-testlib \
-	test-werks \
-	test-medium-chain
+	test-werks
 
 .PHONY: clean help prepare-playwright  \
 	$(foreach VERS,$(AGENT_PLUGIN_PYTHON_VERSIONS_DOCKER),test-agent-plugin-unit-py$(VERS)-docker) \
@@ -374,6 +373,9 @@ TEST_DIRS_MEDIUM_CHAIN := $(shell find $(realpath) -mindepth 1 -maxdepth 1 -type
 test-medium-chain:
 	$(PYTEST) --log-cli-level=INFO -m medium_test_chain \
 	$(TEST_DIRS_MEDIUM_CHAIN)
+
+test-medium-chain-docker:
+	$(UVENV) scripts/run-dockerized.py "$(subst -docker,,$@)"
 
 # just list all tests marked for the medium test chain
 # and write them to a file as lines:

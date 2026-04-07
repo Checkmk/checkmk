@@ -43,7 +43,6 @@ class ExplicitGraphSpecification(GraphSpecification, frozen=True):
                 recipe=GraphRecipe(
                     title=self.title,
                     unit_spec=self.unit,
-                    consolidation_function=self.consolidation_function,
                     explicit_vertical_range=FixedVerticalRange(
                         min=self.explicit_vertical_range[0],
                         max=self.explicit_vertical_range[1],
@@ -53,6 +52,7 @@ class ExplicitGraphSpecification(GraphSpecification, frozen=True):
                     metrics=self.metrics,
                 ),
                 specification=self,
+                consolidation_function=self.consolidation_function,
                 mark_requested_end_time=self.mark_requested_end_time,
             )
         ]

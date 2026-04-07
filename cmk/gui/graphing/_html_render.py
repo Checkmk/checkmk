@@ -69,7 +69,7 @@ from ._graph_display_config import (
     GraphDisplayConfigHTML,
     GraphRenderOptions,
 )
-from ._graph_metric_expressions import GraphMetricExpression
+from ._graph_metric_expressions import GraphConsolidationFunction, GraphMetricExpression
 from ._graph_specification import (
     AdditionalGraphHTML,
     GraphEnvironment,
@@ -109,6 +109,7 @@ class GraphRenderState(BaseModel):
     """Round-trip envelope sent to the browser and echoed back on graph updates."""
 
     graph_id: str = ""
+    consolidation_function: GraphConsolidationFunction | None = None
     recipe: GraphRecipe
     specification: SerializeAsAny[GraphSpecification]
     time_range: GraphTimeRange
@@ -413,7 +414,7 @@ def _collect_graph_html(
         # Note: due to "omit_zero_metrics" the graph might not have any curves
         if display_config.show_legend and artwork.curves:
             _show_graph_legend(
-                render_state.recipe,
+                render_state.consolidation_function,
                 artwork,
                 annotations,
                 display_config,
@@ -511,6 +512,7 @@ def _render_time_range_selection(
             time_range,
             preview_config.size,
             metrics_from_api,
+            consolidation_function=render_state.consolidation_function,
             temperature_unit=temperature_unit,
             backend_time_series_fetcher=backend_time_series_fetcher,
             pin_time=_load_graph_pin(),
@@ -684,10 +686,12 @@ def render_graphs_html(
 
     output = HTML.empty()
     for recipe_with_overrides in recipes:
+        effective_time_range = recipe_with_overrides.time_range or time_range
         render_state = GraphRenderState(
+            consolidation_function=recipe_with_overrides.consolidation_function,
             recipe=recipe_with_overrides.recipe,
             specification=recipe_with_overrides.specification,
-            time_range=recipe_with_overrides.time_range or time_range,
+            time_range=effective_time_range,
             display_config=display_config.update_from_options(recipe_with_overrides.render_options),
             display_id=display_id,
         )
@@ -699,6 +703,7 @@ def render_graphs_html(
                 render_state.time_range,
                 render_state.display_config.size,
                 metrics_from_api,
+                consolidation_function=recipe_with_overrides.consolidation_function,
                 temperature_unit=env.temperature_unit,
                 backend_time_series_fetcher=env.backend_time_series_fetcher,
                 pin_time=_load_graph_pin(),
@@ -796,11 +801,10 @@ class _LegendTitle:
 
 
 def _compute_legend_titles(
-    recipe: GraphRecipe,
+    consolidation_function: GraphConsolidationFunction | None,
     artwork: GraphArtwork,
     display_config: GraphDisplayConfigHTML,
 ) -> Generator[_LegendTitle]:
-    consolidation_function = recipe.consolidation_function
     step = artwork.actual_time.step
 
     def _inactive_descr(scalar_type: str) -> str:
@@ -971,14 +975,14 @@ def _compute_legend_curve_rows(
 
 
 def _show_graph_legend(
-    recipe: GraphRecipe,
+    consolidation_function: GraphConsolidationFunction | None,
     artwork: GraphArtwork,
     annotations: GraphArtworkAnnotations,
     display_config: GraphDisplayConfigHTML,
     expandable_legend_appearance: ExpandableLegendAppearance,
 ) -> None:
     font_size_style = "font-size: %dpt;" % display_config.font_size
-    legend_titles = list(_compute_legend_titles(recipe, artwork, display_config))
+    legend_titles = list(_compute_legend_titles(consolidation_function, artwork, display_config))
     graph_legend_styles = list(_compute_graph_legend_styles(display_config))
 
     html.open_div(
@@ -1118,6 +1122,18 @@ def _graph_margin_ex(
     )
 
 
+def _parse_consolidation_function(raw: str | None) -> GraphConsolidationFunction | None:
+    match raw:
+        case "max":
+            return "max"
+        case "min":
+            return "min"
+        case "average":
+            return "average"
+        case _:
+            return None
+
+
 @tracer.instrument("graphing.render_graph_html")
 def render_graph_html(
     request: Request,
@@ -1167,10 +1183,10 @@ def render_graph_html(
     if request.has_var("pin"):
         _save_graph_pin(request)
 
-    if request.has_var("consolidation_function"):
-        recipe = recipe.model_copy(
-            update={"consolidation_function": request.var("consolidation_function")}
-        )
+    if raw_consolidation_function := request.var("consolidation_function"):
+        consolidation_function = _parse_consolidation_function(raw_consolidation_function)
+    else:
+        consolidation_function = render_state.consolidation_function
 
     time_range = GraphTimeRange(
         start=start_time,
@@ -1185,7 +1201,12 @@ def render_graph_html(
         UserGraphTimeRangeStore(user.id).save(render_state.specification.id, time_range)
 
     render_state = render_state.model_copy(
-        update={"recipe": recipe, "time_range": time_range, "display_config": display_config}
+        update={
+            "recipe": recipe,
+            "time_range": time_range,
+            "display_config": display_config,
+            "consolidation_function": consolidation_function,
+        }
     )
 
     artwork_or_errors = compute_graph_artwork(
@@ -1193,6 +1214,7 @@ def render_graph_html(
         render_state.time_range,
         render_state.display_config.size,
         registered_metrics,
+        consolidation_function=consolidation_function,
         temperature_unit=temperature_unit,
         backend_time_series_fetcher=backend_time_series_fetcher,
         pin_time=_load_graph_pin(),
@@ -1330,6 +1352,7 @@ def render_deferred_graphs_html(
     for recipe_with_overrides in recipes:
         output += _render_deferred_graph_html(
             GraphRenderState(
+                consolidation_function=recipe_with_overrides.consolidation_function,
                 recipe=recipe_with_overrides.recipe,
                 specification=recipe_with_overrides.specification,
                 time_range=recipe_with_overrides.time_range or time_range,
@@ -1396,6 +1419,7 @@ def render_graph_values_at_time(
     time_range: GraphTimeRange,
     registered_metrics: Mapping[str, RegisteredMetric],
     *,
+    consolidation_function: GraphConsolidationFunction | None,
     debug: bool,
     hover_time: int,
     temperature_unit: TemperatureUnit,
@@ -1411,6 +1435,7 @@ def render_graph_values_at_time(
                     registered_metrics,
                     recipe,
                     time_range,
+                    consolidation_function=consolidation_function,
                     temperature_unit=temperature_unit,
                     backend_time_series_fetcher=backend_time_series_fetcher,
                 )
@@ -1471,6 +1496,7 @@ class AjaxGraphValuesAtTime(Page):
             render_state.recipe,
             render_state.time_range,
             metrics_from_api,
+            consolidation_function=render_state.consolidation_function,
             debug=ctx.config.debug,
             hover_time=ctx.request.get_integer_input_mandatory("hover_time"),
             temperature_unit=get_temperature_unit(user, ctx.config.default_temperature_unit),
@@ -1575,6 +1601,7 @@ def host_service_graph_dashlet_cmk(
         graph_time_range,
         display_config.size,
         registered_metrics,
+        consolidation_function=recipe_with_overrides.consolidation_function,
         temperature_unit=temperature_unit,
         backend_time_series_fetcher=backend_time_series_fetcher,
         pin_time=_load_graph_pin(),
@@ -1620,6 +1647,7 @@ def host_service_graph_dashlet_cmk(
     return _render_graph_content_html(
         request,
         GraphRenderState(
+            consolidation_function=recipe_with_overrides.consolidation_function,
             recipe=recipe_with_overrides.recipe,
             specification=recipe_with_overrides.specification,
             time_range=recipe_with_overrides.time_range or graph_time_range,

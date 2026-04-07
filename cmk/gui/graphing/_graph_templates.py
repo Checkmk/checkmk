@@ -187,7 +187,6 @@ def _create_graph_recipe_from_translated_metric(
             translated_metric,
         ),
         omit_zero_metrics=False,
-        consolidation_function=consolidation_function,
     )
 
 
@@ -197,7 +196,6 @@ def _create_graph_recipe(
     graph_metrics: Sequence[GraphMetric],
     explicit_vertical_range: FixedVerticalRange | MinimalVerticalRange | None,
     horizontal_rules: Sequence[HorizontalRule],
-    consolidation_function: GraphConsolidationFunction,
 ) -> GraphRecipe:
     units = {m.unit for m in graph_metrics}
 
@@ -221,7 +219,6 @@ def _create_graph_recipe(
         explicit_vertical_range=explicit_vertical_range,
         horizontal_rules=horizontal_rules,
         omit_zero_metrics=False,
-        consolidation_function=consolidation_function,
     )
 
 
@@ -270,7 +267,6 @@ def _compute_graph_recipes(
                         translated_metrics,
                         temperature_unit=temperature_unit,
                     ),
-                    consolidation_function=consolidation_function,
                 ),
             )
 
@@ -300,7 +296,6 @@ def _compute_graph_recipes(
                         user_specific_unit(translated_metric.unit_spec, temperature_unit),
                         translated_metric,
                     ),
-                    consolidation_function=consolidation_function,
                 ),
             )
 
@@ -355,6 +350,7 @@ class TemplateGraphSpecification(GraphSpecification, frozen=True):
         graph_index: int,
         graph_id: str,
         recipe: GraphRecipe,
+        consolidation_function: GraphConsolidationFunction | None = None,
     ) -> GraphRecipeWithOverrides | None:
         return GraphRecipeWithOverrides(
             recipe=GraphRecipe(
@@ -367,7 +363,6 @@ class TemplateGraphSpecification(GraphSpecification, frozen=True):
                 explicit_vertical_range=recipe.explicit_vertical_range,
                 horizontal_rules=recipe.horizontal_rules,
                 omit_zero_metrics=recipe.omit_zero_metrics,
-                consolidation_function=recipe.consolidation_function,
                 metrics=recipe.metrics,
             ),
             specification=self._make_specification(
@@ -378,6 +373,7 @@ class TemplateGraphSpecification(GraphSpecification, frozen=True):
                 graph_id=graph_id,
                 destination=self.destination,
             ),
+            consolidation_function=consolidation_function,
         )
 
     @tracer.instrument("graphing.TemplateGraphSpecification.recipes")
@@ -457,6 +453,7 @@ class TemplateGraphSpecification(GraphSpecification, frozen=True):
                     graph_index=graph_index,
                     graph_id=graph_id,
                     recipe=recipe,
+                    consolidation_function=consolidation_function,
                 )
             )
         ]

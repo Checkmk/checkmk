@@ -592,7 +592,6 @@ class _FakeTemplateGraphSpecification(TemplateGraphSpecification):
                     explicit_vertical_range=None,
                     horizontal_rules=[],
                     omit_zero_metrics=False,
-                    consolidation_function="max",
                     metrics=[
                         GraphMetric(
                             title="Metric1",
@@ -622,7 +621,6 @@ class _FakeTemplateGraphSpecification(TemplateGraphSpecification):
                     explicit_vertical_range=None,
                     horizontal_rules=[],
                     omit_zero_metrics=False,
-                    consolidation_function="max",
                     metrics=[
                         GraphMetric(
                             title="Metric2",
@@ -659,7 +657,6 @@ class _FakeTemplateGraphSpecification(TemplateGraphSpecification):
                     explicit_vertical_range=None,
                     horizontal_rules=[],
                     omit_zero_metrics=False,
-                    consolidation_function="max",
                     metrics=[
                         GraphMetric(
                             title="Metric1",
@@ -702,7 +699,6 @@ class _FakeTemplateGraphSpecification(TemplateGraphSpecification):
                     explicit_vertical_range=None,
                     horizontal_rules=[],
                     omit_zero_metrics=False,
-                    consolidation_function="max",
                     metrics=[
                         GraphMetric(
                             title="Metric2",
@@ -745,7 +741,6 @@ class _FakeTemplateGraphSpecification(TemplateGraphSpecification):
                     explicit_vertical_range=None,
                     horizontal_rules=[],
                     omit_zero_metrics=False,
-                    consolidation_function="max",
                     metrics=[
                         GraphMetric(
                             title="Metric1",
@@ -1117,7 +1112,6 @@ def test__compute_graph_recipes_2(
                     explicit_vertical_range=None,
                     horizontal_rules=[],
                     omit_zero_metrics=False,
-                    consolidation_function="max",
                     metrics=[
                         GraphMetric(
                             title="Outbound messages",
@@ -1279,7 +1273,6 @@ def test__compute_graph_recipes_2(
                     explicit_vertical_range=None,
                     horizontal_rules=[],
                     omit_zero_metrics=False,
-                    consolidation_function="max",
                     metrics=[
                         GraphMetric(
                             title="Outbound messages",
@@ -1326,7 +1319,6 @@ def test__compute_graph_recipes_2(
                     explicit_vertical_range=None,
                     horizontal_rules=[],
                     omit_zero_metrics=False,
-                    consolidation_function="max",
                     metrics=[
                         GraphMetric(
                             title="Foo",
@@ -1364,7 +1356,6 @@ def test__compute_graph_recipes_2(
                         ),
                     ],
                     omit_zero_metrics=False,
-                    consolidation_function="max",
                     metrics=[
                         GraphMetric(
                             title="Prediction of Foo (upper levels)",
@@ -1401,7 +1392,6 @@ def test__compute_graph_recipes_2(
                         ),
                     ],
                     omit_zero_metrics=False,
-                    consolidation_function="max",
                     metrics=[
                         GraphMetric(
                             title="Prediction of Foo (lower levels)",
@@ -2099,7 +2089,6 @@ def test_template_recipes_fs() -> None:
             explicit_vertical_range=MinimalVerticalRange(min=0.0, max=None),
             horizontal_rules=[],
             omit_zero_metrics=False,
-            consolidation_function="max",
             metrics=[
                 GraphMetric(
                     title="Used space",
@@ -2163,7 +2152,6 @@ def test_template_recipes_fs() -> None:
             explicit_vertical_range=None,
             horizontal_rules=[],
             omit_zero_metrics=False,
-            consolidation_function="max",
             metrics=[
                 GraphMetric(
                     title="Growth",

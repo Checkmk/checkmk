@@ -36,6 +36,7 @@ from ._fetch_time_series import fetch_augmented_time_series
 from ._from_api import RegisteredMetric
 from ._graph_metric_expressions import (
     clean_time_series_point,
+    GraphConsolidationFunction,
     LineType,
     QueryDataError,
 )
@@ -322,6 +323,7 @@ def iter_graph_artworks(
                 recipe_with_overrides.time_range or time_range,
                 size,
                 env.registered_metrics,
+                consolidation_function=recipe_with_overrides.consolidation_function,
                 temperature_unit=env.temperature_unit,
                 backend_time_series_fetcher=env.backend_time_series_fetcher,
                 pin_time=pin_time,
@@ -337,6 +339,7 @@ def compute_graph_artwork(
     size: tuple[float, float],
     registered_metrics: Mapping[str, RegisteredMetric],
     *,
+    consolidation_function: GraphConsolidationFunction | None,
     temperature_unit: TemperatureUnit,
     backend_time_series_fetcher: FetchTimeSeries | None,
     pin_time: int | None = None,
@@ -351,6 +354,7 @@ def compute_graph_artwork(
         registered_metrics,
         recipe,
         time_range,
+        consolidation_function=consolidation_function,
         temperature_unit=temperature_unit,
         backend_time_series_fetcher=backend_time_series_fetcher,
     ):

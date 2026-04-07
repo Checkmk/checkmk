@@ -126,6 +126,7 @@ class GraphHoverTokenAuthPage(DashboardTokenAuthenticatedPage):
                 recipes[0].recipe,
                 time_range,
                 metrics_from_api,
+                consolidation_function=recipes[0].consolidation_function,
                 debug=ctx.config.debug,
                 hover_time=ctx.request.get_integer_input_mandatory("hover_time"),
                 temperature_unit=get_temperature_unit(user, ctx.config.default_temperature_unit),

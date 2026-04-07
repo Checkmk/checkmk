@@ -97,7 +97,6 @@ _GRAPH_RECIPE = GraphRecipe(
     explicit_vertical_range=None,
     horizontal_rules=[],
     omit_zero_metrics=False,
-    consolidation_function="max",
 )
 
 _GRAPH_TIME_RANGE = GraphTimeRange(start=1681985455, end=1681999855, step=20)
@@ -117,6 +116,7 @@ def test_fetch_augmented_time_series(
                 {},
                 _GRAPH_RECIPE,
                 _GRAPH_TIME_RANGE,
+                consolidation_function="max",
                 temperature_unit=TemperatureUnit.CELSIUS,
                 backend_time_series_fetcher=lambda *args, **kwargs: _fetch(),
             )
@@ -142,6 +142,7 @@ def test_fetch_augmented_time_series_with_conversion(
                 {},
                 _GRAPH_RECIPE,
                 _GRAPH_TIME_RANGE,
+                consolidation_function="max",
                 temperature_unit=TemperatureUnit.FAHRENHEIT,
                 backend_time_series_fetcher=lambda *args, **kwargs: _fetch(),
             )

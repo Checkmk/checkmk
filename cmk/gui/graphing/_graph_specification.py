@@ -212,7 +212,6 @@ class GraphRecipe(BaseModel, frozen=True):
     explicit_vertical_range: FixedVerticalRange | MinimalVerticalRange | None
     horizontal_rules: Sequence[HorizontalRule]
     omit_zero_metrics: bool
-    consolidation_function: GraphConsolidationFunction | None
     metrics: Sequence[GraphMetric]
 
 
@@ -228,6 +227,7 @@ class GraphRecipeWithOverrides:
 
     recipe: GraphRecipe
     specification: GraphSpecification
+    consolidation_function: GraphConsolidationFunction | None = None
     time_range: GraphTimeRange | None = None
     render_options: GraphRenderOptions = field(default_factory=GraphRenderOptions)
     additional_html: AdditionalGraphHTML | None = None

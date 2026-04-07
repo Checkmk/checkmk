@@ -16,6 +16,7 @@ from ._from_api import RegisteredMetric
 from ._graph_metric_expressions import (
     AugmentedTimeSeries,
     FallbackTimeRange,
+    GraphConsolidationFunction,
     LineType,
     QueryDataError,
     QueryDataKey,
@@ -41,10 +42,10 @@ def fetch_augmented_time_series(
     recipe: GraphRecipe,
     time_range: GraphTimeRange,
     *,
+    consolidation_function: GraphConsolidationFunction | None,
     temperature_unit: TemperatureUnit,
     backend_time_series_fetcher: FetchTimeSeries | None,
 ) -> Iterator[Result[AugmentedTimeSeriesOfGraphMetric, QueryDataError]]:
-    consolidation_function = recipe.consolidation_function
     conversion = user_specific_unit(recipe.unit_spec, temperature_unit).conversion
     start_time = time_range.start
     end_time = time_range.end

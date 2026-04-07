@@ -412,6 +412,7 @@ def graph_spec_from_request(  # type: ignore[misc]
                 registered_metrics,
                 recipe,
                 time_range,
+                consolidation_function=recipes[0].consolidation_function,
                 temperature_unit=temperature_unit,
                 backend_time_series_fetcher=backend_time_series_fetcher,
             )

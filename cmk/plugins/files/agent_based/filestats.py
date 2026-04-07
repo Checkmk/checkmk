@@ -9,12 +9,15 @@ from collections.abc import Generator, Mapping
 from typing import Any
 
 from cmk.agent_based.legacy.conversion import convert_legacy_results
-from cmk.agent_based.legacy.v0_unstable import check_levels, STATE_MARKERS
+from cmk.agent_based.legacy.v0_unstable import check_levels as check_levels_legacy
+from cmk.agent_based.legacy.v0_unstable import STATE_MARKERS
 from cmk.agent_based.v2 import (
     AgentSection,
+    check_levels,
     CheckPlugin,
     CheckResult,
     DiscoveryResult,
+    FixedLevelsT,
     IgnoreResults,
     Metric,
     render,
@@ -40,6 +43,14 @@ from cmk.agent_based.v2 import (
 # 'additional_rules': [('/var/log/sys*', {'maxsize_largest': (1, 2)})]
 
 LegacyResult = tuple[int, str, list[Any]]
+
+
+def _fixed_levels(levels: tuple[float | None, float | None]) -> FixedLevelsT[float] | None:
+    warn, crit = levels
+    if warn is not None and crit is not None:
+        return ("fixed", (warn, crit))
+    return None
+
 
 # .
 #   .--Parsing-------------------------------------------------------------.
@@ -101,7 +112,7 @@ def check_filestats_count(
 ) -> LegacyResult:
     """common check result - used by main and count_only check"""
     levels = params.get("maxcount", (None, None)) + params.get("mincount", (None, None))
-    result = check_levels(
+    result = check_levels_legacy(
         count,
         "file_count",
         levels,
@@ -136,7 +147,7 @@ def check_filestats_extremes(
             levels = params.get(f"max{key}_{label}", (None, None)) + params.get(
                 f"min{key}_{label}", (None, None)
             )
-            yield check_levels(
+            yield check_levels_legacy(
                 efile[key],
                 None,
                 levels,
@@ -151,7 +162,7 @@ def check_filestats_extremes(
             f"min{key}_{minlabel}", (None, None)
         )
         for efile in files_with_metric:
-            state, _text, _no_perf = check_levels(
+            state, _text, _no_perf = check_levels_legacy(
                 efile[key],
                 None,
                 min_label_levels,
@@ -170,7 +181,7 @@ def check_filestats_extremes(
             f"min{key}_{maxlabel}", (None, None)
         )
         for efile in reversed(files_with_metric):
-            state, _text, _no_perf = check_levels(
+            state, _text, _no_perf = check_levels_legacy(
                 efile[key],
                 None,
                 max_label_levels,
@@ -312,21 +323,13 @@ def check_filestats_single(
         if (value := single_stat.get(key)) is None:
             continue
 
-        yield from convert_legacy_results(
-            [
-                check_levels(
-                    value,
-                    key if key == "size" else None,
-                    (
-                        params.get(f"max_{key}", (None, None))[0],
-                        params.get(f"max_{key}", (None, None))[1],
-                        params.get(f"min_{key}", (None, None))[0],
-                        params.get(f"min_{key}", (None, None))[1],
-                    ),
-                    human_readable_func=hr_function,
-                    infoname=key.title(),
-                )
-            ]
+        yield from check_levels(
+            value,
+            levels_upper=_fixed_levels(params.get(f"max_{key}", (None, None))),
+            levels_lower=_fixed_levels(params.get(f"min_{key}", (None, None))),
+            metric_name=key if key == "size" else None,
+            render_func=hr_function,
+            label=key.title(),
         )
 
 

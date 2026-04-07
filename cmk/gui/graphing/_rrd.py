@@ -76,7 +76,7 @@ def get_graph_data_from_livestatus(  # type: ignore[misc]
 @dataclass(frozen=True, kw_only=True)
 class MetricProperties:
     metric_name: str
-    consolidation_function: GraphConsolidationFunction | None  # effective, used for RPN query
+    consolidation_function: GraphConsolidationFunction  # effective, used for RPN query
     key_consolidation_function: GraphConsolidationFunction | None = (
         None  # original, used for rrd_data key
     )
@@ -164,7 +164,7 @@ def _fetch_time_series_of_service(
 def _align_and_resample_rrds(
     rrd_data: RRDData,
     *,
-    consolidation_function: GraphConsolidationFunction | None,
+    consolidation_function: GraphConsolidationFunction,
     target_start: int,
     target_end: int,
     target_step: int,
@@ -266,7 +266,7 @@ def fetch_time_series_rrd(
         target_step = first_rrd_series.step
         _align_and_resample_rrds(
             rrd_data,
-            consolidation_function=consolidation_function,
+            consolidation_function=consolidation_function or "max",
             target_start=target_start,
             target_end=target_end,
             target_step=target_step,

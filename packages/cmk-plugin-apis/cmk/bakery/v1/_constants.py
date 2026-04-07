@@ -13,13 +13,9 @@ class OS(Enum):
     """Describes an operating system in the context of the Bakery API."""
 
     LINUX = "linux"
-    """Describes a Linux target system"""
     SOLARIS = "solaris"
-    """Describes a Solaris target system"""
     AIX = "aix"
-    """Describes an AIX target system"""
     WINDOWS = "windows"
-    """Describes a Windows target system"""
 
     def __str__(self) -> str:
         return str(self.value)
@@ -27,47 +23,45 @@ class OS(Enum):
 
 @unique
 class DebStep(StrEnum):
-    """Describes a step in the processing of a DEB package."""
+    """Describes a step in the processing of a DEB package.
+
+    For details refer to `Maintainer Scripts
+    <https://www.debian.org/doc/debian-policy/ch-maintainerscripts.html>`_.
+    """
 
     PREINST = auto()
-    "Describes a maintainer script, that will be executed before package installation"
     POSTINST = auto()
-    "Describes a maintainer script, that will be executed right after package installation"
     PRERM = auto()
-    "Describes a maintainer script, that will be executed right before package uninstallation"
     POSTRM = auto()
-    "Describes a maintainer script, that will be executed after package uninstallation"
 
 
 @unique
 class RpmStep(StrEnum):
-    """Describes a step in the processing of a RPM package."""
+    """Describes a step in the processing of a RPM package.
+
+    For details refer to `Scriptlets
+    <https://docs.fedoraproject.org/en-US/packaging-guidelines/Scriptlets/>`_.
+    """
 
     PRE = auto()
-    "Describes a scriptlet, that will be executed before package installation"
     POST = auto()
-    "Describes a scriptlet, that will be executed right after package installation"
     PREUN = "preun"
-    "Describes a scriptlet, that will be executed right before package uninstallation"
     POSTUN = auto()
-    "Describes a scriptlet, that will be executed right after package uninstallation"
     PRETRANS = auto()
-    "Describes a scriptlet, that will be executed before a complete package transaction"
     POSTTRANS = auto()
-    "Describes a scriptlet, that will be executed after a complete package transaction"
 
 
 class SolStep(StrEnum):
-    """Describes a step in the processing of a Solaris PKG package."""
+    """Describes a step in the processing of a Solaris PKG package.
+
+    For details refer to `Writing Procedure Scripts
+    <https://docs.oracle.com/cd/E26505_01/html/E28550/ch3enhancepkg-10289.html#ch3enhancepkg-14637>`_.
+    """
 
     PREINSTALL = auto()
-    "Describes an installation script, that will be executed before package installation"
     POSTINSTALL = auto()
-    "Describes an installation script, that will be executed right after package installation"
     PREREMOVE = auto()
-    "Describes an installation script, that will be executed right before package uninstallation"
     POSTREMOVE = auto()
-    "Describes an installation script, that will be executed after package uninstallation"
 
 
 PkgStep = DebStep | RpmStep | SolStep

@@ -39,7 +39,8 @@ from cmk.utils.misc import pnp_cleanup
 
 from ._const import RRD_DEFAULT_CONFIG, RRD_HEARTBEAT
 from ._crash import create_crash_report
-from ._fs import (
+from .config import RRDConfig, RRDObjectConfig
+from .fs import (
     cmc_host_dir,
     cmc_storage,
     MAX_FILENAME_LENGTH,
@@ -49,7 +50,6 @@ from ._fs import (
     pnp_xml_storage,
     Storage,
 )
-from .config import RRDConfig, RRDObjectConfig
 from .interface import RRDInterface
 
 _Seconds = NewType("_Seconds", int)

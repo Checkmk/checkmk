@@ -44,16 +44,6 @@ else:
         pass
 
 
-if cmk_version.edition(paths.omd_root) is cmk_version.Edition.ULTIMATEMT:
-    from cmk.gui.nonfree.ultimatemt.config import (  # type: ignore[import-not-found, import-untyped, unused-ignore] # astrein: disable=cmk-module-layer-violation
-        CMEConfig,
-    )
-else:
-    # Stub needed for non managed services edition
-    class CMEConfig:  # type: ignore[no-redef]
-        pass
-
-
 tracer = trace.get_tracer()
 
 #   .--Declarations--------------------------------------------------------.
@@ -80,7 +70,7 @@ builtin_role_ids: Final[list[RoleName]] = [
 
 
 @dataclass
-class Config(CREConfig, CEEConfig, CMEConfig):  # type: ignore[misc, unused-ignore]
+class Config(CREConfig, CEEConfig):  # type: ignore[misc, unused-ignore]
     """Holds the loaded configuration during GUI processing
 
     The loaded configuration is then accessible through `from cmk.gui.globals import config`.
@@ -298,7 +288,7 @@ def _get_default_config_from_module_plugins() -> dict[str, Any]:
 
     default_config: dict[str, Any] = {}
     for k, v in config_plugin_vars.items():
-        if k[0] == "_" or k in ("CREConfig", "CEEConfig", "CMEConfig"):
+        if k[0] == "_" or k in ("CREConfig", "CEEConfig"):
             continue
 
         if isinstance(v, dict | list):

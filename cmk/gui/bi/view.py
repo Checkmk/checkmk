@@ -113,7 +113,7 @@ class RowTableBIAggregations(RowTable):
         limit: int | None,
         all_active_filters: list[Filter],
     ) -> Rows | tuple[Rows, int]:
-        return table(context, columns, headers, only_sites, limit, all_active_filters)
+        return aggregation_table(context, columns, headers, only_sites, limit, all_active_filters)
 
 
 class DataSourceBIHostAggregations(ABCDataSource):
@@ -246,7 +246,7 @@ class RowTableBIHostnameByGroupAggregations(RowTable):
         )
 
 
-def table(
+def aggregation_table(
     context: VisualContext,
     columns: list[ColumnName],
     query: str,

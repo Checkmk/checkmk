@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+import socket
 import tarfile
 from pathlib import Path
 
@@ -140,3 +141,26 @@ def test_get_exlude_patterns_mixed() -> None:
     assert "var/check_mk/agents/*" in actual_excludes
     assert "var/log/*/*" in actual_excludes
     assert "var/check_mk/rrd/*" not in actual_excludes
+
+
+def test_backup_site_to_tarfile_socket_fail(tmp_path: Path) -> None:
+    site_name = "site"
+    site_home = tmp_path / site_name
+    site_home.mkdir(parents=True, exist_ok=True)
+
+    test_file = site_home / "test_file"
+    server = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+    print(str(test_file))
+    server.bind(str(test_file))
+
+    tar_path = tmp_path / "backup.tar"
+    with pytest.raises(tarfile.TarError, match="Failed to get tarinfo for file '.*test_file.*'"):
+        with tarfile.open(tar_path, mode="w:") as tar:
+            omdlib.backup._backup_site_to_tarfile(
+                site_name,
+                str(site_home),
+                True,
+                tar,
+                BackupExclusions.from_options({}),
+                verbose=False,
+            )

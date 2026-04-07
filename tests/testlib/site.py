@@ -2136,6 +2136,7 @@ class SiteFactory:
         logfile_path: str = "/tmp/sep.out",  # nosec
         timeout: int = 60,
         abort: bool = False,
+        abort_license: bool = False,
         failed_precheck: bool = False,
         disable_extensions: bool = False,
         n_extensions: int = 0,
@@ -2156,6 +2157,8 @@ class SiteFactory:
                                 process.
             abort:              If True, the abort dialog is expected to appear and the update
                                 process will be aborted.
+            abort_license:      If True, the license validation failure dialog is expected to appear
+                                and the update process will be aborted.
             failed_precheck:    If True, the precheck steps are expected to fail and the update
                                 process will be aborted.
             disable_extensions: If True, installed cmk extensions (MKPs) will be disabled if the
@@ -2232,6 +2235,18 @@ class SiteFactory:
                     )
                 ]
             )
+
+        pexpect_dialogs.extend(
+            [
+                PExpectDialog(
+                    expect=(
+                        "A valid and non expired license is needed before updating.*Abort the update process"
+                    ),
+                    send="A\r" if abort_license else "c\r",
+                    optional=not abort_license,
+                )
+            ]
+        )
 
         # Ignore `Ensure sites.mk file exists` pre-action warning.
         # Remove this for 2.6.0

@@ -20,6 +20,7 @@ const { _t } = usei18n()
 const props = defineProps<{
   showErrors: boolean
   bothEndpointsEmpty: boolean
+  portConflict: boolean
   addressPlaceholder: string
   portPlaceholder: string
 }>()
@@ -27,20 +28,23 @@ const props = defineProps<{
 const endpoint = defineModel<EndpointConfig>('endpoint', { required: true })
 
 const errors = computed((): { address: string[]; port: string[] } => {
-  if (!props.showErrors) {
+  if (
+    !props.showErrors ||
+    (!endpoint.value.address.trim() &&
+      endpoint.value.port === undefined &&
+      !props.bothEndpointsEmpty)
+  ) {
     return { address: [], port: [] }
   }
-  const hasInput = !!endpoint.value.address.trim() || endpoint.value.port !== undefined
-  if (!hasInput && !props.bothEndpointsEmpty) {
-    return { address: [], port: [] }
+  const portErrors = validatePort(endpoint.value.port, _t)
+  if (props.portConflict && portErrors.length === 0) {
+    portErrors.push(_t('Port must differ from the other protocol endpoint.'))
   }
   return {
     address: !endpoint.value.address.trim()
-      ? props.bothEndpointsEmpty
-        ? [_t('Enter a valid IP address or host name.')]
-        : []
+      ? [_t('Enter a valid IP address or host name.')]
       : validateAddress(endpoint.value.address, _t),
-    port: hasInput ? validatePort(endpoint.value.port, _t) : []
+    port: portErrors
   }
 })
 </script>

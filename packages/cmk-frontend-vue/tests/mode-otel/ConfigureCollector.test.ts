@@ -403,6 +403,26 @@ describe('ConfigureCollector', () => {
       await screen.findByText('Enter a valid IP address or host name.')
     })
 
+    test('shows both address and port errors together when both endpoints are unconfigured', async () => {
+      mockPasswordsResponse()
+      const { compRef, grpcEndpoint, httpEndpoint } = renderComponent(true, true)
+
+      grpcEndpoint.value.address = ''
+      grpcEndpoint.value.port = undefined
+      httpEndpoint.value.address = ''
+      httpEndpoint.value.port = undefined
+
+      await waitFor(() => expect(compRef.value).toBeDefined())
+      await new Promise((r) => setTimeout(r, 0))
+
+      compRef.value!.validate()
+
+      const addressErrors = await screen.findAllByText('Enter a valid IP address or host name.')
+      const portErrors = await screen.findAllByText('Enter a valid port number (example: 1234).')
+      expect(addressErrors.length).toBeGreaterThan(0)
+      expect(portErrors.length).toBeGreaterThan(0)
+    })
+
     test('validate() returns false when HTTP address is invalid', async () => {
       mockPasswordsResponse()
       const { compRef, httpEndpoint } = renderComponent(true, true)
@@ -416,6 +436,36 @@ describe('ConfigureCollector', () => {
       expect(result).toBe(false)
     })
 
+    test('validate() returns false when HTTP has port but no address', async () => {
+      mockPasswordsResponse()
+      const { compRef, httpEndpoint } = renderComponent(true, true)
+
+      httpEndpoint.value.address = ''
+      httpEndpoint.value.port = 4318
+
+      await waitFor(() => expect(compRef.value).toBeDefined())
+      await new Promise((r) => setTimeout(r, 0))
+
+      const result = compRef.value!.validate()
+      expect(result).toBe(false)
+      await screen.findByText('Enter a valid IP address or host name.')
+    })
+
+    test('validate() returns false when GRPC has port but no address', async () => {
+      mockPasswordsResponse()
+      const { compRef, grpcEndpoint } = renderComponent(true, true)
+
+      grpcEndpoint.value.address = ''
+      grpcEndpoint.value.port = 4317
+
+      await waitFor(() => expect(compRef.value).toBeDefined())
+      await new Promise((r) => setTimeout(r, 0))
+
+      const result = compRef.value!.validate()
+      expect(result).toBe(false)
+      await screen.findByText('Enter a valid IP address or host name.')
+    })
+
     test('validate() returns false when configured GRPC endpoint has undefined port', async () => {
       mockPasswordsResponse()
       const { compRef, grpcEndpoint } = renderComponent(true, true)
@@ -427,6 +477,35 @@ describe('ConfigureCollector', () => {
 
       const result = compRef.value!.validate()
       expect(result).toBe(false)
+    })
+
+    test('validate() returns false when gRPC and HTTP use the same port', async () => {
+      mockPasswordsResponse()
+      const { compRef, grpcEndpoint, httpEndpoint } = renderComponent(true, true)
+
+      grpcEndpoint.value.port = 4317
+      httpEndpoint.value.port = 4317
+
+      await waitFor(() => expect(compRef.value).toBeDefined())
+      await new Promise((r) => setTimeout(r, 0))
+
+      const result = compRef.value!.validate()
+      expect(result).toBe(false)
+      await screen.findByText('Port must differ from the other protocol endpoint.')
+    })
+
+    test('validate() returns true when gRPC and HTTP use different ports', async () => {
+      mockPasswordsResponse()
+      const { compRef, grpcEndpoint, httpEndpoint } = renderComponent(true, true)
+
+      grpcEndpoint.value.port = 4317
+      httpEndpoint.value.port = 4318
+
+      await waitFor(() => expect(compRef.value).toBeDefined())
+      await new Promise((r) => setTimeout(r, 0))
+
+      const result = compRef.value!.validate()
+      expect(result).toBe(true)
     })
 
     test('validate() returns true when endpointConfigAllowed=false regardless of endpoint values', async () => {

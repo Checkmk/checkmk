@@ -89,8 +89,20 @@ onMounted(async () => {
 })
 
 const bothEndpointsEmpty = computed(
-  () => !grpcEndpoint.value.address.trim() && !httpEndpoint.value.address.trim()
+  () => !endpointIsConfigured(grpcEndpoint.value) && !endpointIsConfigured(httpEndpoint.value)
 )
+
+const portsConflict = computed(() => {
+  const grpcPort = grpcEndpoint.value.port
+  const httpPort = httpEndpoint.value.port
+  return (
+    grpcPort !== undefined &&
+    httpPort !== undefined &&
+    isValidPort(grpcPort) &&
+    isValidPort(httpPort) &&
+    grpcPort === httpPort
+  )
+})
 
 function authHasErrors(auth: AuthConfig): boolean {
   return (
@@ -103,11 +115,18 @@ function eventConsoleHasErrors(ec: EventConsoleConfig | null): boolean {
 }
 
 function endpointIsConfigured(endpoint: EndpointConfig): boolean {
-  return !!endpoint.address.trim()
+  return !!endpoint.address.trim() || endpoint.port !== undefined
 }
 
 function configuredEndpointHasErrors(endpoint: EndpointConfig): boolean {
   return !isValidIpOrHostname(endpoint.address) || !isValidPort(endpoint.port)
+}
+
+function endpointHasValidationErrors(endpoint: EndpointConfig, other: EndpointConfig): boolean {
+  if (!endpoint.address.trim()) {
+    return endpoint.port !== undefined || !endpointIsConfigured(other)
+  }
+  return configuredEndpointHasErrors(endpoint)
 }
 
 function tabHasValidationErrors(tab: 'grpc' | 'http'): boolean {
@@ -123,12 +142,13 @@ function tabHasValidationErrors(tab: 'grpc' | 'http'): boolean {
   if (!props.endpointConfigAllowed) {
     return false
   }
+  if (portsConflict.value) {
+    return true
+  }
 
   const endpoint = tab === 'grpc' ? grpcEndpoint.value : httpEndpoint.value
-  if (!endpointIsConfigured(endpoint)) {
-    return false
-  }
-  return configuredEndpointHasErrors(endpoint)
+  const other = tab === 'grpc' ? httpEndpoint.value : grpcEndpoint.value
+  return endpointHasValidationErrors(endpoint, other)
 }
 
 function validate(): boolean {
@@ -141,20 +161,13 @@ function validate(): boolean {
   if (!props.endpointConfigAllowed) {
     isValid = !authHasErrors(grpcAuth.value) && !authHasErrors(httpAuth.value) && ecValid
   } else {
-    const grpcConfigured = endpointIsConfigured(grpcEndpoint.value)
-    const httpConfigured = endpointIsConfigured(httpEndpoint.value)
-    if (!grpcConfigured && !httpConfigured) {
-      isValid = false
-    } else {
-      const grpcValid = !grpcConfigured || !configuredEndpointHasErrors(grpcEndpoint.value)
-      const httpValid = !httpConfigured || !configuredEndpointHasErrors(httpEndpoint.value)
-      isValid =
-        !authHasErrors(grpcAuth.value) &&
-        !authHasErrors(httpAuth.value) &&
-        grpcValid &&
-        httpValid &&
-        ecValid
-    }
+    isValid =
+      !endpointHasValidationErrors(grpcEndpoint.value, httpEndpoint.value) &&
+      !endpointHasValidationErrors(httpEndpoint.value, grpcEndpoint.value) &&
+      !authHasErrors(grpcAuth.value) &&
+      !authHasErrors(httpAuth.value) &&
+      !portsConflict.value &&
+      ecValid
   }
 
   if (!isValid) {
@@ -219,6 +232,7 @@ defineExpose({ validate })
             v-model:endpoint="grpcEndpoint"
             :show-errors="displayErrors"
             :both-endpoints-empty="bothEndpointsEmpty"
+            :port-conflict="portsConflict"
             address-placeholder="0.0.0.0"
             port-placeholder="4317"
           />
@@ -250,6 +264,7 @@ defineExpose({ validate })
             v-model:endpoint="httpEndpoint"
             :show-errors="displayErrors"
             :both-endpoints-empty="bothEndpointsEmpty"
+            :port-conflict="portsConflict"
             address-placeholder="0.0.0.0"
             port-placeholder="4318"
           />

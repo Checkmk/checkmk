@@ -3359,7 +3359,11 @@ main_queries() {
 
     wait
 
-    cat "${ORA_TASKS_TMPDIR}/${_QUERY_PREFIX}/SID"*
+    for file in "${ORA_TASKS_TMPDIR}/${_QUERY_PREFIX}/SID"*; do
+        # in case there are no SID files available (when connecting to a remote database),
+        # $file will hold '/some/path/SID*' and the cat will fail, so we test before.
+        [[ -f $file ]] && cat "$file"
+    done
 
     cleanup_queries() {
         logging "[local] cleaning up intermediate query result directory '${ORA_TASKS_TMPDIR}/${_QUERY_PREFIX}'"

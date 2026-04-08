@@ -1,0 +1,23 @@
+[package]
+name = "package_validator"
+version = "0.1.0"
+edition = "2021"
+
+# Declare this package as its own workspace so cargo doesn't try to merge it
+# into the repo-root workspace where it is not a listed member.
+[workspace]
+
+[dependencies]
+anyhow = "1.0"
+clap = { version = "4.5", features = ["derive"] }
+comfy-table = { version = "7.1", features = ["tty"] }
+dashmap = "6.1"
+goblin = "0.8"
+path-clean = "1.0"
+rayon = "1.8"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+tempfile = "3.10"
+thiserror = "2"
+wait-timeout = "0.2"
+walkdir = "2"

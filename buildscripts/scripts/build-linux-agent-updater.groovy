@@ -77,8 +77,8 @@ void main() {
                 sh("make rpm NEW_VERSION='${cmk_version}'");
                 sh("make deb NEW_VERSION='${cmk_version}'");
             }
-            def package_name_rpm = cmd_output("find ${checkout_dir} -name *.rpm");
-            def package_name_deb = cmd_output("find ${checkout_dir} -name *.deb");
+            def package_name_rpm = cmd_output("find ${checkout_dir} -name *.rpm -not -path '*/fixtures/*'");
+            def package_name_deb = cmd_output("find ${checkout_dir} -name *.deb -not -path '*/fixtures/*'");
             package_helper.sign_package(checkout_dir, package_name_rpm)
             dir("${WORKSPACE}/build") {
                 sh("""

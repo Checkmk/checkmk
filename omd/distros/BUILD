@@ -11,6 +11,7 @@ exports_files([
     "SLES_16.0.mk",
     "UBUNTU_22.04.mk",
     "UBUNTU_24.04.mk",
+    "UBUNTU_26.04.mk",
 ])
 
 write_os_dependencies(
@@ -27,6 +28,7 @@ write_os_dependencies(
             "@cmk//distro:sles-16.0": "SLES_16.0.mk",
             "@cmk//distro:ubuntu-22.04": "UBUNTU_22.04.mk",
             "@cmk//distro:ubuntu-24.04": "UBUNTU_24.04.mk",
+            "@cmk//distro:ubuntu-26.04": "UBUNTU_26.04.mk",
         },
     ),
     out_name = "dependencies.txt",
@@ -52,6 +54,7 @@ genrule(
             "@cmk//distro:sles-16.0": ["SLES_16.0.mk"],
             "@cmk//distro:ubuntu-22.04": ["UBUNTU_22.04.mk"],
             "@cmk//distro:ubuntu-24.04": ["UBUNTU_24.04.mk"],
+            "@cmk//distro:ubuntu-26.04": ["UBUNTU_26.04.mk"],
         },
     ),
     outs = ["distro_version_file.txt"],

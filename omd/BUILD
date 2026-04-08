@@ -648,6 +648,7 @@ pkg_files(
         "@cmk//distro:ubuntu-22.04": ["//omd/distros:UBUNTU_22.04.mk"],
         "@cmk//distro:ubuntu-24.04": ["//omd/distros:UBUNTU_24.04.mk"],
         "@cmk//distro:ubuntu-25.10": ["//omd/distros:UBUNTU_25.10.mk"],
+        "@cmk//distro:ubuntu-26.04": ["//omd/distros:UBUNTU_26.04.mk"],
     }),
     prefix = "share/omd",
     renames = select({
@@ -662,6 +663,7 @@ pkg_files(
         "@cmk//distro:ubuntu-22.04": {"//omd/distros:UBUNTU_22.04.mk": "distro.info"},
         "@cmk//distro:ubuntu-24.04": {"//omd/distros:UBUNTU_24.04.mk": "distro.info"},
         "@cmk//distro:ubuntu-25.10": {"//omd/distros:UBUNTU_25.10.mk": "distro.info"},
+        "@cmk//distro:ubuntu-26.04": {"//omd/distros:UBUNTU_26.04.mk": "distro.info"},
     }),
 )
 
@@ -937,6 +939,7 @@ pkg_name_info(
         "@cmk//distro:ubuntu-22.04": "0.jammy",
         "@cmk//distro:ubuntu-24.04": "0.noble",
         "@cmk//distro:ubuntu-25.10": "0.questing",
+        "@cmk//distro:ubuntu-26.04": "0.resolute",
     }),
 )
 

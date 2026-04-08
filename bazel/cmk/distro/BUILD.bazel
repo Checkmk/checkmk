@@ -18,6 +18,7 @@ string_flag(
         "ubuntu-22.04",
         "ubuntu-24.04",
         "ubuntu-25.10",
+        "ubuntu-26.04",
     ],
 )
 
@@ -102,12 +103,18 @@ config_setting(
     flag_values = {":distro": "ubuntu-25.10"},
 )
 
+config_setting(
+    name = "ubuntu-26.04",
+    flag_values = {":distro": "ubuntu-26.04"},
+)
+
 selects.config_setting_group(
     name = "ubuntu",
     match_any = [
         ":ubuntu-22.04",
         ":ubuntu-24.04",
         ":ubuntu-25.10",
+        ":ubuntu-26.04",
     ],
 )
 

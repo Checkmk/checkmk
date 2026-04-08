@@ -69,8 +69,12 @@ build_binutils() {
     cd binutils-${BINUTILS_VERSION}-build
     # sles-12* had (we don't build it anymore anyways) ancient makeinfo versions, so let's just skip
     # info generation for all distros, we don't really need it.
+    # --disable-gprofng: gprofng/libcollector/iolib.c fails to compile on glibc 2.43+
+    # (Ubuntu 26.04) because strstr is wrapped in a _Generic expression there, which
+    # breaks the CALL_UTIL(strstr)(...) macro.
     MAKEINFO=true ../binutils-${BINUTILS_VERSION}/configure \
-        --prefix="${PREFIX}"
+        --prefix="${PREFIX}" \
+        --disable-gprofng
     make -j4 MAKEINFO=true
     make install MAKEINFO=true
 }

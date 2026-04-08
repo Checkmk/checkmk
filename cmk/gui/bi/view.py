@@ -157,7 +157,9 @@ class _RowTableBIHostAggregations(RowTable):
         limit: int | None,
         all_active_filters: list[Filter],
     ) -> Rows | tuple[Rows, int]:
-        return _host_table(context, columns, headers, only_sites, limit, all_active_filters)
+        return _singlehost_table(
+            context, columns, only_sites, limit, all_active_filters, bygroup=False
+        )
 
 
 class DataSourceBIHostnameAggregations(ABCDataSource):
@@ -201,7 +203,9 @@ class _RowTableBIHostnameAggregations(RowTable):
         limit: int | None,
         all_active_filters: list[Filter],
     ) -> Rows | tuple[Rows, int]:
-        return _hostname_table(context, columns, headers, only_sites, limit, all_active_filters)
+        return _singlehost_table(
+            context, columns, only_sites, limit, all_active_filters, bygroup=False
+        )
 
 
 class DataSourceBIHostnameByGroupAggregations(ABCDataSource):
@@ -244,64 +248,9 @@ class _RowTableBIHostnameByGroupAggregations(RowTable):
         limit: int | None,
         all_active_filters: list[Filter],
     ) -> Rows | tuple[Rows, int]:
-        return _hostname_by_group_table(
-            context, columns, headers, only_sites, limit, all_active_filters
+        return _singlehost_table(
+            context, columns, only_sites, limit, all_active_filters, bygroup=True
         )
-
-
-def _hostname_table(
-    context: VisualContext,
-    columns: list[ColumnName],
-    query: str,
-    only_sites: OnlySites,
-    limit: int | None,
-    all_active_filters: Iterable[Filter],
-) -> Rows:
-    """Table of all host aggregations, i.e. aggregations using data from exactly one host"""
-    return _singlehost_table(
-        context,
-        columns,
-        only_sites,
-        limit,
-        all_active_filters,
-        bygroup=False,
-    )
-
-
-def _hostname_by_group_table(
-    context: VisualContext,
-    columns: list[ColumnName],
-    query: str,
-    only_sites: OnlySites,
-    limit: int | None,
-    all_active_filters: Iterable[Filter],
-) -> Rows:
-    return _singlehost_table(
-        context,
-        columns,
-        only_sites,
-        limit,
-        all_active_filters,
-        bygroup=True,
-    )
-
-
-def _host_table(
-    context: VisualContext,
-    columns: list[ColumnName],
-    query: str,
-    only_sites: OnlySites,
-    limit: int | None,
-    all_active_filters: Iterable[Filter],
-) -> Rows:
-    return _singlehost_table(
-        context,
-        columns,
-        only_sites,
-        limit,
-        all_active_filters,
-        bygroup=False,
-    )
 
 
 def _singlehost_table(

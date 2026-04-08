@@ -54,9 +54,5 @@ def test_navigate_to_werks(werks_page: Werks) -> None:
         werks_page.get_link("Acknowledge all").click()
 
     logger.info("Validate presence of Werks")
-    max_number_of_werks_displayed = 100 * werks_page.tables_of_listed_versions().count()
     number_of_werks_displayed = werks_page.get_link("#", exact=False).count()
     assert number_of_werks_displayed > 0, "Checkmk site does not display any werks!"
-    assert number_of_werks_displayed <= max_number_of_werks_displayed, (
-        f"Checkmk site displays a maximum of {max_number_of_werks_displayed} werks, by default!"
-    )

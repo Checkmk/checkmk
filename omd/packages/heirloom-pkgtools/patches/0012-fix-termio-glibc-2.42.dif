@@ -1,0 +1,20 @@
+diff -Nur heirloom-pkgtools-070227.orig/libadm/getpass.c heirloom-pkgtools-070227/libadm/getpass.c
+--- heirloom-pkgtools-070227.orig/libadm/getpass.c
++++ heirloom-pkgtools-070227/libadm/getpass.c
+@@ -40,7 +40,16 @@
+ #include <stdlib.h>
+ #include <signal.h>
+ #include <unistd.h>
+-#include <termio.h>
++#if defined(__has_include) && __has_include(<termio.h>)
++#include <termio.h>
++#else
++#include <termios.h>
++#include <sys/ioctl.h>
++#define termio termios
++#define TCGETA  TCGETS
++#define TCSETAF TCSETSF
++#define TCSETAW TCSETSW
++#endif
+
+ static void catch(int);

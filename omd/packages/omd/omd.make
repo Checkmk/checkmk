@@ -21,7 +21,7 @@ $(OMD_INSTALL): omdlib-install
 	install -m 755 $(PACKAGE_DIR)/$(OMD)/omd_site_user.py $(DESTDIR)$(OMD_ROOT)/lib/omd/omd_site_user
 	sed -i 's|###OMD_VERSION###|$(OMD_VERSION)|g' $(DESTDIR)$(OMD_ROOT)/lib/omd/omd_site_user
 # SUP-10161: our openssl is incompatible with some system executables on various sles15sp* and el9 and el10
-ifneq ($(filter sles% el9 el10 trixie, $(DISTRO_CODE)),)
+ifneq ($(filter sles% el9 el10 trixie resolute, $(DISTRO_CODE)),)
 	install -m 755 $(PACKAGE_DIR)/$(OMD)/use_system_openssl $(DESTDIR)$(OMD_ROOT)/bin/curl
 	install -m 755 $(PACKAGE_DIR)/$(OMD)/use_system_openssl $(DESTDIR)$(OMD_ROOT)/bin/dig
 	install -m 755 $(PACKAGE_DIR)/$(OMD)/use_system_openssl $(DESTDIR)$(OMD_ROOT)/bin/host

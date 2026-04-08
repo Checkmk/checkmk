@@ -21,6 +21,7 @@ def heirloom_pkgtools_workspace():
             "//omd/packages/heirloom-pkgtools/patches:0008-libfl.dif",
             "//omd/packages/heirloom-pkgtools/patches:0010-fix-missing-makedev.dif",
             "//omd/packages/heirloom-pkgtools/patches:0011-add-fcommon.dif",
+            "//omd/packages/heirloom-pkgtools/patches:0012-fix-termio-glibc-2.42.dif",
         ],
         patch_args = ["-p1"],
         patch_tool = "patch",

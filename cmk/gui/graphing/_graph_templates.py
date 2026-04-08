@@ -367,8 +367,8 @@ class TemplateGraphSpecification(GraphSpecification, frozen=True):
             ),
             specification=self._make_specification(
                 site=site_id,
-                host_name=self.host_name,
-                service_description=self.service_description,
+                host_name=host_name,
+                service_description=service_name,
                 graph_index=graph_index,
                 graph_id=graph_id,
                 destination=self.destination,

@@ -217,7 +217,6 @@ def _areastack(
 # stacking and mirroring (displaying positive values in negative
 # direction).
 def _layout_graph_curves(
-    recipe: GraphRecipe,
     unit_renderer: Callable[[float], str],
     pin_time: int | None,
     augmented_time_series_of_graph_metrics: Sequence[AugmentedTimeSeriesOfGraphMetric],
@@ -366,7 +365,7 @@ def compute_graph_artwork(
 
     # do stacking, mirroring
     layouted_curves, curve_annotations, mirrored = _layout_graph_curves(
-        recipe, unit_spec.formatter.render, pin_time, augmented_time_series_of_graph_metrics
+        unit_spec.formatter.render, pin_time, augmented_time_series_of_graph_metrics
     )
     width, height = size
 

@@ -177,7 +177,6 @@ class PageHostServiceGraphPopup(cmk.gui.pages.Page):
     def page(self, ctx: PageContext) -> PageResult:
         """This page is called for the popup of the graph icon of hosts/services."""
         host_service_graph_popup_cmk(
-            ctx.request,
             SiteId(raw_site_id) if (raw_site_id := ctx.request.var("site")) else None,
             ctx.request.get_validated_type_input_mandatory(HostName, "host_name"),
             ServiceName(ctx.request.get_str_input_mandatory("service")),

@@ -114,7 +114,6 @@ def _extract_metric_names_or_scalars(
     perfometer_plugin: (
         perfometers_api.Perfometer | perfometers_api.Bidirectional | perfometers_api.Stacked
     ),
-    translated_metrics: Mapping[str, TranslatedMetric],
 ) -> _MetricNamesOrScalars:
     match perfometer_plugin:
         case perfometers_api.Perfometer():
@@ -139,9 +138,7 @@ def _perfometer_plugin_matches(
 ) -> bool:
     assert translated_metrics
 
-    metric_names_or_scalars = _extract_metric_names_or_scalars(
-        perfometer_plugin, translated_metrics
-    )
+    metric_names_or_scalars = _extract_metric_names_or_scalars(perfometer_plugin)
 
     if not metric_names_or_scalars.metric_names:
         return False

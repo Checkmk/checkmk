@@ -769,7 +769,6 @@ def render_graphs_html(
 
 @tracer.instrument("graphing.host_service_graph_popup_cmk")
 def host_service_graph_popup_cmk(
-    request: Request,
     site: SiteId | None,
     host_name: HostName,
     service_description: ServiceName,

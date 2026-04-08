@@ -837,6 +837,132 @@ py_library(
     ],
 )
 
+py_library(
+    name = "crash_handler",
+    srcs = ["crash_handler.py"],
+    imports = ["../.."],
+    visibility = [
+        "//cmk:__subpackages__",
+        "//tests:__subpackages__",
+    ],
+    deps = [
+        ":breadcrumb",
+        ":header",
+        ":http",
+        ":i18n",
+        ":log",
+        ":logged_in",
+        "//cmk/gui/htmllib:html",
+        "//cmk/gui/utils:escaping",
+        "//cmk/gui/utils:mobile",
+        "//cmk/gui/utils:urls",
+        "//cmk/utils",
+        "//packages/cmk-ccc:crash-reporting",
+        "//packages/cmk-ccc:site",
+        "//packages/cmk-ccc:version",
+    ],
+)
+
+py_library(
+    name = "pages",
+    srcs = ["pages.py"],
+    imports = ["../.."],
+    visibility = [
+        "//cmk:__subpackages__",
+        "//tests:__subpackages__",
+    ],
+    deps = [
+        ":config",
+        ":crash_handler",
+        ":ctx_stack",
+        ":exceptions",
+        ":http",
+        ":log",
+        "//cmk/gui/htmllib:html",
+        "//cmk/gui/utils:json",
+    ],
+)
+
+py_library(
+    name = "cron",
+    srcs = ["cron.py"],
+    imports = ["../.."],
+    visibility = [
+        "//cmk:__subpackages__",
+        "//tests:__subpackages__",
+    ],
+    deps = [
+        ":config",
+    ],
+)
+
+py_library(
+    name = "agent_commands",
+    srcs = ["agent_commands.py"],
+    imports = ["../.."],
+    visibility = [
+        "//cmk:__subpackages__",
+        "//tests:__subpackages__",
+    ],
+    deps = [
+        ":config",
+        ":logged_in",
+        "//cmk/gui/utils:urls",
+        "//packages/cmk-ccc:hostaddress",
+        "//packages/cmk-ccc:plugin-registry",
+        "//packages/cmk-shared-typing:cmk_shared_typing_py",
+    ],
+)
+
+py_library(
+    name = "default_permissions",
+    srcs = ["default_permissions.py"],
+    imports = ["../.."],
+    visibility = [
+        "//cmk:__subpackages__",
+        "//tests:__subpackages__",
+    ],
+    deps = [
+        ":config",
+        ":i18n",
+        ":permissions",
+    ],
+)
+
+py_library(
+    name = "alarm",
+    srcs = ["alarm.py"],
+    imports = ["../.."],
+    visibility = [
+        "//cmk:__subpackages__",
+        "//tests:__subpackages__",
+    ],
+    deps = [
+        ":ctx_stack",
+        "//cmk/gui/htmllib:html",
+    ],
+)
+
+py_library(
+    name = "query_filters",
+    srcs = ["query_filters.py"],
+    imports = ["../.."],
+    visibility = [
+        "//cmk:__subpackages__",
+        "//tests:__subpackages__",
+    ],
+    deps = [
+        ":exceptions",
+        ":i18n",
+        ":logged_in",
+        ":num_split",
+        ":type_defs",
+        "//cmk/gui/utils:labels",
+        "//cmk/gui/utils:user_errors",
+        "//cmk/utils",
+    ],
+)
+
 # Monolithic target which we extract smaller targets from. As long as we are in the in place
 # extraction process below the cmk.gui module hierarchy, we will have to work with excludes. This
 # will be cleaned up when we move the pieces into their future python module structure.
@@ -845,11 +971,16 @@ py_library(
     srcs = glob(
         include = ["**/*.py"],
         exclude = [
+            "agent_commands.py",
+            "alarm.py",
             "breadcrumb.py",
             "cert_info.py",
             "color.py",
             "config.py",
+            "crash_handler.py",
+            "cron.py",
             "ctx_stack.py",
+            "default_permissions.py",
             "default_name.py",
             "display_options.py",
             "dynamic_icon.py",
@@ -876,6 +1007,7 @@ py_library(
             "ntop.py",
             "num_split.py",
             "page_menu.py",
+            "pages.py",
             "icon_helpers.py",
             "page_menu_entry.py",
             "page_state.py",
@@ -883,6 +1015,7 @@ py_library(
             "permissions.py",
             "pseudo_users.py",
             "role_types.py",
+            "query_filters.py",
             "search_menu.py",
             "single_global_setting.py",
             "site_config.py",
@@ -910,12 +1043,17 @@ py_library(
         "//tests:__subpackages__",
     ],
     deps = [
+        ":agent_commands",
+        ":alarm",
         ":breadcrumb",
         ":cert_info",
         ":color",
         ":config",
+        ":crash_handler",
+        ":cron",
         ":ctx_stack",
         ":default_name",
+        ":default_permissions",
         ":display_options",
         ":dynamic_icon",
         ":exceptions",
@@ -944,9 +1082,11 @@ py_library(
         ":page_menu",
         ":page_menu_entry",
         ":page_state",
+        ":pages",
         ":pdf",
         ":permissions",
         ":pseudo_users",
+        ":query_filters",
         ":role_types",
         ":search_menu",
         ":single_global_setting",

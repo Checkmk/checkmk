@@ -1,0 +1,81 @@
+diff --git a/uv/private/create_venv.sh b/uv/private/create_venv.sh
+index 33501fa..ca010c4 100644
+--- a/uv/private/create_venv.sh
++++ b/uv/private/create_venv.sh
+@@ -34,6 +34,8 @@ if [[ "$target" != /* ]]; then
+   target="$BUILD_WORKSPACE_DIRECTORY/$target"
+ fi
+ 
++{{env}}
++
+ rm -rf "$target"
+ "$UV" venv --quiet "$target" --python "$PYTHON"
+ source "$target/bin/activate"
+diff --git a/uv/private/sync_venv.sh b/uv/private/sync_venv.sh
+index 11e16f4..fb1897d 100644
+--- a/uv/private/sync_venv.sh
++++ b/uv/private/sync_venv.sh
+@@ -30,6 +30,8 @@ then
+   exit -1
+ fi
+ 
++{{env}}
++
+ "$UV" venv "$BUILD_WORKSPACE_DIRECTORY/$target" --python "$PYTHON"  --allow-existing
+ source "$BUILD_WORKSPACE_DIRECTORY/$target/bin/activate"
+ "$UV" pip sync "$REQUIREMENTS_TXT" {{args}}
+diff --git a/uv/private/venv.bzl b/uv/private/venv.bzl
+index 399e8cf..a9ab786 100644
+--- a/uv/private/venv.bzl
++++ b/uv/private/venv.bzl
+@@ -7,6 +7,7 @@ _PY_TOOLCHAIN = "@bazel_tools//tools/python:toolchain_type"
+ 
+ def _uv_template(ctx, template, executable):
+     py_toolchain = ctx.toolchains[_PY_TOOLCHAIN]
++    env_exports = "\n".join(["export {}={}".format(k, v) for k, v in ctx.attr.env.items()])
+     ctx.actions.expand_template(
+         template = template,
+         output = executable,
+@@ -20,6 +21,7 @@ def _uv_template(ctx, template, executable):
+                 ctx.attr.uv_args +
+                 [whl[PyWheelInfo].wheel.short_path for whl in ctx.attr.whls],
+             ),
++            "{{env}}": env_exports,
+         },
+     )
+ 
+@@ -43,6 +45,7 @@ def _venv_impl(ctx):
+ _venv = rule(
+     attrs = {
+         "destination_folder": attr.string(default = "venv"),
++        "env": attr.string_dict(default = {}, doc = "Environment variables to set when running uv pip install. Useful for setting CC, CXX, or other build-related variables."),
+         "site_packages_extra_files": attr.label_list(default = [], doc = "Files to add to the site-packages folder inside the virtual environment. Useful for adding `sitecustomize.py` or `.pth` files", allow_files = True),
+         "requirements_txt": attr.label(mandatory = True, allow_single_file = True),
+         "_uv": attr.label(default = "@multitool//tools/uv", executable = True, cfg = transition_to_target),
+@@ -62,10 +65,12 @@ def create_venv(
+         destination_folder = None,
+         site_packages_extra_files = [],
+         uv_args = [],
+-        whls = []):
++        whls = [],
++        env = {}):
+     _venv(
+         name = name,
+         destination_folder = destination_folder,
++        env = env,
+         site_packages_extra_files = site_packages_extra_files,
+         requirements_txt = requirements_txt or "//:requirements.txt",
+         target_compatible_with = target_compatible_with,
+@@ -74,10 +79,11 @@ def create_venv(
+         template = "@rules_uv//uv/private:create_venv.sh",
+     )
+ 
+-def sync_venv(name, requirements_txt = None, target_compatible_with = None, destination_folder = None, site_packages_extra_files = [], uv_args = []):
++def sync_venv(name, requirements_txt = None, target_compatible_with = None, destination_folder = None, site_packages_extra_files = [], uv_args = [], env = {}):
+     _venv(
+         name = name,
+         destination_folder = destination_folder,
++        env = env,
+         site_packages_extra_files = site_packages_extra_files,
+         requirements_txt = requirements_txt or "//:requirements.txt",
+         target_compatible_with = target_compatible_with,

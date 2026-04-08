@@ -307,6 +307,11 @@ write_file(
 create_venv(
     name = "create_venv",
     destination_folder = ".venv",
+    # uv and therefore rules_uv would prefer clang over gcc, see:
+    # https://github.com/astral-sh/uv/issues/8036
+    # https://github.com/bazel-contrib/rules_uv/issues/163
+    # We use gcc for compiling c extensions though
+    env = {"CC": "gcc"},
     requirements_txt = select({
         "@//:gpl+nonfree_repo": ":requirements.txt",
         "@//:gpl_repo": ":community-requirements.txt",

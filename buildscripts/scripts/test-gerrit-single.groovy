@@ -118,7 +118,7 @@ def main() {
 
     stage(params.CIPARAM_NAME) {
         dir("${checkout_dir}") {
-            inside_container(privileged: false, set_docker_group_id: false) {
+            inside_container(privileged: true, set_docker_group_id: true) {
                 withCredentials(credentials) {
                     withEnv(env_var_list) {
                         catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {

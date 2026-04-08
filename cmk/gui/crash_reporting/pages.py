@@ -588,11 +588,12 @@ class ReportRendererSection(ABCReportRenderer):
             odd=False,
             pre=True,
         )
-        _crash_row(
-            _("Section Content"),
-            pprint.pformat(details.get("section_content")),
-            pre=True,
-        )
+
+        if section_content := details.get("section_content"):
+            _crash_row(
+                _("String Table"),
+                _format_log_output(pprint.pformat(section_content).encode()),
+            )
 
         html.close_table()
 
@@ -678,9 +679,18 @@ class ReportRendererCheck(ABCReportRenderer):
         _crash_row(_("Check item"), details.get("item", "This check has no item."), odd=False)
         _crash_row(_("Description"), details["description"], odd=True)
         if "params" in details:
-            _crash_row(_("Parameters"), format_params(details["params"]), odd=False, pre=True)
+            _crash_row(
+                _("Parameters"),
+                _format_log_output(format_params(details["params"]).encode()),
+                odd=False,
+            )
         else:
             _crash_row(_("Parameters"), "This check has no parameters", odd=False)
+
+        section_keys = [k for k in details if k == "section" or k.startswith("section_")]
+        for key in section_keys:
+            title = _("Section") if key == "section" else _("Section: %s") % key[len("section_") :]
+            _crash_row(title, _format_log_output(pprint.pformat(details[key]).encode()))
 
         html.close_table()
 
@@ -743,6 +753,16 @@ def format_local_vars(local_vars: str) -> str:
 
 def format_params(params: object) -> str:
     return pprint.pformat(params)
+
+
+def _format_log_output(content: bytes) -> HTML:
+    return HTML.without_escaping(
+        '<div class="log_output" style="overflow-x: hidden">'
+        + escaping.escape_attribute(content.decode(errors="surrogateescape"))
+        .replace("\n", "<br>")
+        .replace(" ", "&nbsp;")
+        + "</div>"
+    )
 
 
 def _show_output_box(title: str, content: bytes) -> None:

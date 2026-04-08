@@ -13,7 +13,6 @@ from typing import Any, Literal, TypedDict
 
 import cmk.ccc.debug
 import cmk.ccc.version as cmk_version
-import cmk.utils.encoding
 import cmk.utils.paths
 from cmk.ccc.crash_reporting import (
     ABCCrashReport,
@@ -51,7 +50,6 @@ def create_section_crash_dump(
                     "host_name": host_name,
                 },
             ),
-            snmp_info=_read_snmp_info(host_name),
             agent_output=_read_agent_output(host_name) if rtc_package is None else rtc_package,
         )
         CrashReportStore().save(crash)
@@ -97,7 +95,6 @@ def create_check_crash_dump(
                     **plugin_kwargs,  # type: ignore[typeddict-item]
                 ),
             ),
-            snmp_info=_read_snmp_info(host_name),
             agent_output=_read_agent_output(host_name) if rtc_package is None else rtc_package,
         )
         CrashReportStore().save(crash)
@@ -115,23 +112,17 @@ class CrashReportWithAgentOutput[T](ABCCrashReport[T]):
         *,
         crash_report_base_path: Path,
         crash_info: CrashInfo,
-        snmp_info: bytes | None = None,
         agent_output: bytes | None = None,
     ) -> None:
         super().__init__(crash_report_base_path=crash_report_base_path, crash_info=crash_info)
-        self.snmp_info = snmp_info
         self.agent_output = agent_output
 
     def _serialize_attributes(self) -> dict:
         """Serialize object type specific attributes for transport"""
         attributes = super()._serialize_attributes()
 
-        for key, val in [
-            ("snmp_info", self.snmp_info),
-            ("agent_output", self.agent_output),
-        ]:
-            if val is not None:
-                attributes[key] = val
+        if self.agent_output is not None:
+            attributes["agent_output"] = self.agent_output
 
         return attributes
 
@@ -166,14 +157,6 @@ class CheckCrashReport(CrashReportWithAgentOutput[CheckDetails]):
     @staticmethod
     def type() -> Literal["check"]:
         return "check"
-
-
-def _read_snmp_info(hostname: str) -> bytes | None:
-    try:
-        with (cmk.utils.paths.snmpwalks_dir / hostname).open(mode="rb") as f:
-            return f.read()
-    except OSError:
-        return None
 
 
 def _read_agent_output(hostname: HostName) -> AgentRawData | None:

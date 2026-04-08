@@ -1,0 +1,1 @@
+This is not an ELF file. It's just a text file for testing. Adding more content to ensure it's longer than 64 bytes which is the minimum size for a valid ELF file header.

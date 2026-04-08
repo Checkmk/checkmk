@@ -728,6 +728,8 @@ include("//bazel/module:rust/site.MODULE.bazel")
 
 include("//bazel/module:rust/host.MODULE.bazel")
 
+include("//bazel/module:rust/tools.MODULE.bazel")
+
 include("//bazel/module:gazelle/go.MODULE.bazel")
 
 include("//bazel/module:js.MODULE.bazel")

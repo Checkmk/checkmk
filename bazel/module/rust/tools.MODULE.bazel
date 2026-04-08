@@ -1,0 +1,17 @@
+# tools_crates is for developer tools and test utilities that run on the host.
+# Unlike site_crates and host_crates, each tool is its own standalone Cargo
+# workspace and uses its own Cargo.lock. tools_crates keeps a single Bazel
+# lockfile for all such tools.
+tools_crates = use_extension("@rules_rust//crate_universe:extensions.bzl", "crate")
+tools_crates.from_cargo(
+    name = "tools_crates",
+    cargo_lockfile = "//tests/packaging/package_validator:Cargo.lock",
+    lockfile = "//:tools.Cargo.lock.bazel",
+    manifests = ["//tests/packaging/package_validator:Cargo.toml"],
+    supported_platform_triples = ["x86_64-unknown-linux-gnu"],
+)
+use_repo(tools_crates, "tools_crates")
+tools_crates.splicing_config(
+    repositories = ["tools_crates"],
+    resolver_version = "2",
+)

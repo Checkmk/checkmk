@@ -1,0 +1,59 @@
+load("@bazel_skylib//rules:build_test.bzl", "build_test")
+load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_library", "rust_test")
+load("@tools_crates//:defs.bzl", "aliases", "all_crate_deps")
+
+rust_library(
+    name = "package_validator_lib",
+    srcs = glob(
+        ["src/**/*.rs"],
+        exclude = ["src/main.rs"],
+    ),
+    aliases = aliases(),
+    crate_name = "package_validator",
+    edition = "2021",
+    proc_macro_deps = all_crate_deps(proc_macro = True),
+    deps = all_crate_deps(),
+)
+
+rust_binary(
+    name = "package_validator",
+    srcs = [
+        "src/args.rs",
+        "src/main.rs",
+    ],
+    aliases = aliases(),
+    edition = "2021",
+    proc_macro_deps = all_crate_deps(proc_macro = True),
+    visibility = ["//visibility:public"],
+    deps = all_crate_deps() + [":package_validator_lib"],
+)
+
+rust_test(
+    name = "unit_tests",
+    size = "small",
+    aliases = aliases(),
+    crate = ":package_validator_lib",
+    data = glob(["fixtures/**"]),
+    proc_macro_deps = all_crate_deps(proc_macro = True),
+    deps = all_crate_deps() + ["@rules_rust//tools/runfiles"],
+)
+
+rust_test(
+    name = "integration_tests",
+    size = "small",
+    srcs = ["tests/integration_test.rs"],
+    aliases = aliases(),
+    crate_name = "integration_test",
+    data = glob(["fixtures/**"]),
+    edition = "2021",
+    proc_macro_deps = all_crate_deps(proc_macro = True),
+    deps = all_crate_deps() + [
+        ":package_validator_lib",
+        "@rules_rust//tools/runfiles",
+    ],
+)
+
+build_test(
+    name = "build_test",
+    targets = [":package_validator"],
+)

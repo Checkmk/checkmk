@@ -15,10 +15,10 @@ from typing import Final
 
 from cmk.ccc.exceptions import MKTimeout
 from cmk.ccc.hostaddress import HostAddress, HostName
+from cmk.fetchers._abstract import Fetcher, Mode
 from cmk.helper_interface import AgentRawData, FetcherError
 
-from ._abstract import Fetcher, Mode
-from ._agentprtcl import (
+from .agent_protocol import (
     AgentCtlMessage,
     decrypt_by_agent_protocol,
     TCPEncryptionHandling,

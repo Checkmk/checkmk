@@ -11,9 +11,6 @@ See Also:
 
 from ._abstract import Fetcher as Fetcher
 from ._abstract import Mode as Mode
-from ._agentprtcl import decrypt_by_agent_protocol as decrypt_by_agent_protocol
-from ._agentprtcl import TCPEncryptionHandling as TCPEncryptionHandling
-from ._agentprtcl import TransportProtocol as TransportProtocol
 from ._ipmi import IPMICredentials as IPMICredentials
 from ._ipmi import IPMIFetcher as IPMIFetcher
 from ._metric_backend import MetricBackendFetcher as MetricBackendFetcher
@@ -31,6 +28,7 @@ from ._snmp import SNMPFetcher as SNMPFetcher
 from ._snmp import SNMPFetcherConfig as SNMPFetcherConfig
 from ._snmp import SNMPScanConfig as SNMPScanConfig
 from ._snmp import SNMPSectionMeta as SNMPSectionMeta
+from ._tcp import agent_protocol as agent_protocol
 from ._tcp import TCPFetcher as TCPFetcher
 from ._tcp import TCPFetcherConfig as TCPFetcherConfig
 from ._tcp import TLSConfig as TLSConfig

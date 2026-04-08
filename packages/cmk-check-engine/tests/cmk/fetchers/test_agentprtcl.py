@@ -9,7 +9,7 @@ from zlib import compress
 
 import pytest
 
-from cmk.fetchers._agentprtcl import (
+from cmk.fetchers._tcp.agent_protocol import (
     AgentCtlMessage,
     CompressionType,
     decrypt_by_agent_protocol,

@@ -22,6 +22,7 @@ from cmk.ccc.exceptions import MKTimeout, OnError
 from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.fetchers import (
     ActivatedSecrets,
+    agent_protocol,
     Fetcher,
     IPMIFetcher,
     Mode,
@@ -31,7 +32,6 @@ from cmk.fetchers import (
     SNMPFetcher,
     SNMPScanConfig,
     SNMPSectionMeta,
-    TCPEncryptionHandling,
     TCPFetcher,
     TLSConfig,
 )
@@ -845,7 +845,7 @@ class TestTCPFetcher:
             address=(HostAddress("1.2.3.4"), 6556),
             host_name=HostName("irrelevant_for_this_test"),
             timeout=0.1,
-            encryption_handling=TCPEncryptionHandling.ANY_AND_PLAIN,
+            encryption_handling=agent_protocol.TCPEncryptionHandling.ANY_AND_PLAIN,
             uuid_file=Path("/dev/null"),
             pre_shared_secret=None,
             tls_config=TLSConfig(
@@ -873,7 +873,7 @@ class TestTCPFetcher:
             address=(HostAddress("999.999.999.999"), 6556),
             host_name=HostName("irrelevant_for_this_test"),
             timeout=0.1,
-            encryption_handling=TCPEncryptionHandling.ANY_AND_PLAIN,
+            encryption_handling=agent_protocol.TCPEncryptionHandling.ANY_AND_PLAIN,
             uuid_file=Path("/dev/null"),
             pre_shared_secret=None,
             tls_config=TLSConfig(
@@ -900,7 +900,7 @@ class TestTCPFetcher:
             address=(HostAddress("999.999.999.999"), 6556),
             host_name=HostName("irrelevant_for_this_test"),
             timeout=0.1,
-            encryption_handling=TCPEncryptionHandling.ANY_AND_PLAIN,
+            encryption_handling=agent_protocol.TCPEncryptionHandling.ANY_AND_PLAIN,
             uuid_file=Path("/dev/null"),
             pre_shared_secret=None,
             tls_config=TLSConfig(

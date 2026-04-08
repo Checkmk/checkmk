@@ -59,7 +59,6 @@ py_library(
     srcs = [
         "cmk/fetchers/__init__.py",
         "cmk/fetchers/_abstract.py",
-        "cmk/fetchers/_agentprtcl.py",
         "cmk/fetchers/_ipmi.py",
         "cmk/fetchers/_metric_backend.py",
         "cmk/fetchers/_nofetcher.py",
@@ -68,7 +67,8 @@ py_library(
         "cmk/fetchers/_secrets.py",
         "cmk/fetchers/_snmp.py",
         "cmk/fetchers/_snmpscan.py",
-        "cmk/fetchers/_tcp.py",
+        "cmk/fetchers/_tcp/__init__.py",
+        "cmk/fetchers/_tcp/agent_protocol.py",
         "cmk/fetchers/_trigger.py",
         "cmk/fetchers/config.py",
         "cmk/fetchers/filecache/__init__.py",

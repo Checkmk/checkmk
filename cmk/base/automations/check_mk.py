@@ -175,13 +175,13 @@ from cmk.discover_plugins import discover_families, PluginGroup
 from cmk.fetchers import (
     ActivatedSecrets,
     AdHocSecrets,
+    agent_protocol,
     Mode,
     NoSelectedSNMPSections,
     PlainFetcherTrigger,
     ProgramFetcher,
     SNMPFetcherConfig,
     StoredSecrets,
-    TCPEncryptionHandling,
     TCPFetcher,
     TLSConfig,
 )
@@ -3286,7 +3286,7 @@ def _automation_diag_cmk_agent(
             address=(ipaddress, int(diag_cmk_agent_input.agent_port)),
             timeout=float(diag_cmk_agent_input.timeout),
             host_name=host_name,
-            encryption_handling=TCPEncryptionHandling.ANY_AND_PLAIN,
+            encryption_handling=agent_protocol.TCPEncryptionHandling.ANY_AND_PLAIN,
             uuid_file=cmk.utils.paths.uuid_lookup_dir / host_name,
             pre_shared_secret=None,
             tls_config=tls_config,

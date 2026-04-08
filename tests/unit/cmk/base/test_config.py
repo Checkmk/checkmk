@@ -69,7 +69,7 @@ from cmk.checkengine.plugins import (
 )
 from cmk.checkengine.plugins import CheckPlugin as CheckPluginAPI
 from cmk.discover_plugins import DiscoveredPlugins, PluginLocation
-from cmk.fetchers import Mode, TCPEncryptionHandling
+from cmk.fetchers import agent_protocol, Mode
 from cmk.gui.watolib.sample_config import USE_NEW_DESCRIPTIONS_FOR_SETTING
 from cmk.password_store.v1_unstable import Secret
 from cmk.piggyback import backend as piggyback_backend
@@ -782,12 +782,12 @@ def test_make_tcp_fetcher_config_tcp_connect_timeout(
 @pytest.mark.parametrize(
     "hostname, result",
     [
-        (HostName("testhost1"), TCPEncryptionHandling.ANY_AND_PLAIN),
-        (HostName("testhost2"), TCPEncryptionHandling.TLS_ENCRYPTED_ONLY),
+        (HostName("testhost1"), agent_protocol.TCPEncryptionHandling.ANY_AND_PLAIN),
+        (HostName("testhost2"), agent_protocol.TCPEncryptionHandling.TLS_ENCRYPTED_ONLY),
     ],
 )
 def test_make_tcp_fetcher_config_encryption_handling(
-    monkeypatch: MonkeyPatch, hostname: HostName, result: TCPEncryptionHandling
+    monkeypatch: MonkeyPatch, hostname: HostName, result: agent_protocol.TCPEncryptionHandling
 ) -> None:
     ts = Scenario()
     ts.add_host(hostname)

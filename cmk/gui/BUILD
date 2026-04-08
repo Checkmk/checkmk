@@ -792,6 +792,51 @@ py_library(
     ],
 )
 
+py_library(
+    name = "general_config",
+    srcs = ["general_config.py"],
+    imports = ["../.."],
+    visibility = [
+        "//cmk:__subpackages__",
+        "//tests:__subpackages__",
+    ],
+    deps = [
+        ":role_types",
+        ":type_defs",
+        ":user_connection_config_types",
+        "//cmk/checkengine",
+        "//cmk/gui/utils:temperate_unit",
+        "//cmk/inventory",
+        "//cmk/utils",
+        "//packages/cmk-ccc:version",
+    ],
+)
+
+py_library(
+    name = "config",
+    srcs = ["config.py"],
+    imports = ["../.."],
+    visibility = [
+        "//cmk:__subpackages__",
+        "//non-free/packages/cmk-dcd:__pkg__",
+        "//non-free/packages/cmk-liveproxyd:__pkg__",
+        "//non-free/packages/cmk-otel-collector:__pkg__",
+        "//non-free/packages/cmk-robotmk:__pkg__",
+        "//omd/packages:__subpackages__",
+        "//tests:__subpackages__",
+    ],
+    deps = [
+        ":ctx_stack",
+        ":exceptions",
+        ":general_config",
+        ":i18n",
+        ":legacy_plugins",
+        ":log",
+        ":type_defs",
+        "//cmk/utils",
+    ],
+)
+
 # Monolithic target which we extract smaller targets from. As long as we are in the in place
 # extraction process below the cmk.gui module hierarchy, we will have to work with excludes. This
 # will be cleaned up when we move the pieces into their future python module structure.
@@ -803,6 +848,7 @@ py_library(
             "breadcrumb.py",
             "cert_info.py",
             "color.py",
+            "config.py",
             "ctx_stack.py",
             "default_name.py",
             "display_options.py",
@@ -812,6 +858,7 @@ py_library(
             "figures.py",
             "flask_app.py",
             "forms.py",
+            "general_config.py",
             "global_config.py",
             "groups.py",
             "hooks.py",
@@ -866,6 +913,7 @@ py_library(
         ":breadcrumb",
         ":cert_info",
         ":color",
+        ":config",
         ":ctx_stack",
         ":default_name",
         ":display_options",
@@ -875,6 +923,7 @@ py_library(
         ":figures",
         ":flask_app",
         ":forms",
+        ":general_config",
         ":global_config",
         ":groups",
         ":header",

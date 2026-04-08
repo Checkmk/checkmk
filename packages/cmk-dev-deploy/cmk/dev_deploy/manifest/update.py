@@ -363,9 +363,9 @@ def _discover_config_specs(
         if not entries:
             continue
 
-        src_paths = [src for _, _, src in entries]
-        dest_paths = [dest for dest, _, _ in entries]
-        modes = [mode for _, mode, _ in entries if mode]
+        src_paths = [src for _, _, src, _ in entries]
+        dest_paths = [dest for dest, _, _, _ in entries]
+        modes = [mode for _, mode, _, _ in entries if mode]
 
         # Derive source_prefix
         common_src = os.path.commonpath(src_paths) if src_paths else ""
@@ -411,9 +411,13 @@ def _discover_config_specs(
         # Auto-classify deploy method
         method = _classify_config_method(common_src, target_label)
 
-        # Build files list
-        files = sorted(
-            [{"src": src, "dest": dest, "mode": fmode} for dest, fmode, src in entries],
+        # Build files list — mark generated files (is_source=False) so the
+        # deployer knows to resolve them from bazel-bin instead of the repo.
+        files: list[dict[str, Any]] = sorted(
+            [
+                {"src": src, "dest": dest, "mode": fmode, "generated": not is_source}
+                for dest, fmode, src, is_source in entries
+            ],
             key=lambda f: f["src"],
         )
 
@@ -539,17 +543,18 @@ def format(target):
     label = "//%s:%s" % (target.label.package, target.label.name)
     lines = []
     for dest, src in pfi.dest_src_map.items():
-        lines.append("%s\\t%s\\t%s\\t%s" % (
+        lines.append("%s\\t%s\\t%s\\t%s\\t%s" % (
             label,
             dest,
             mode,
             src.short_path,
+            src.is_source,
         ))
     return "\\n".join(lines)
 """
 
-# Type alias: label -> [(dest_path, mode_str, src_short_path)]
-PackagingTargetIndex = dict[str, list[tuple[str, str, str]]]
+# Type alias: label -> [(dest_path, mode_str, src_short_path, is_source)]
+PackagingTargetIndex = dict[str, list[tuple[str, str, str, bool]]]
 
 
 def _cquery_packaging_targets(
@@ -603,17 +608,17 @@ def _cquery_packaging_targets(
             f"{result.stderr.strip()}"
         )
 
-    # Parse output lines: LABEL\tDEST\tMODE\tSRC_SHORT_PATH
+    # Parse output lines: LABEL\tDEST\tMODE\tSRC_SHORT_PATH\tIS_SOURCE
     grouped: PackagingTargetIndex = {}
     for line in result.stdout.strip().splitlines():
         line = line.strip()
         if not line or "\t" not in line:
             continue
         parts = line.split("\t")
-        if len(parts) != 4:
+        if len(parts) != 5:
             continue
-        label, dest, mode, src_path = parts
-        grouped.setdefault(label, []).append((dest, mode, src_path))
+        label, dest, mode, src_path, is_source_str = parts
+        grouped.setdefault(label, []).append((dest, mode, src_path, is_source_str == "True"))
 
     return grouped
 
@@ -735,9 +740,9 @@ def _enrich_config_specs(
             unresolved.append(spec)
             continue
 
-        src_paths = [src for _, _, src in entries]
-        dest_paths = [dest for dest, _, _ in entries]
-        modes = [mode for _, mode, _ in entries if mode]
+        src_paths = [src for _, _, src, _ in entries]
+        dest_paths = [dest for dest, _, _, _ in entries]
+        modes = [mode for _, mode, _, _ in entries if mode]
 
         # Derive source_prefix (if not explicitly set)
         if not spec.get("source_prefix"):
@@ -759,8 +764,12 @@ def _enrich_config_specs(
             spec["mode"] = int(modes[0], 8)
 
         # Populate files list from PackageFilesInfo
+        enriched_files: list[dict[str, Any]] = [
+            {"src": src, "dest": dest, "mode": mode, "generated": not is_source}
+            for dest, mode, src, is_source in entries
+        ]
         spec["files"] = sorted(
-            [{"src": src, "dest": dest, "mode": mode} for dest, mode, src in entries],
+            enriched_files,
             key=lambda f: f["src"],
         )
 
@@ -858,11 +867,11 @@ def _enrich_install_specs(
             )
             continue
 
-        modes = [mode for _, mode, _ in entries if mode]
+        modes = [mode for _, mode, _, _ in entries if mode]
 
         if len(entries) == 1:
             # Single-file deploy: dest IS the full site_dest path
-            dest_path, _, src_path = entries[0]
+            dest_path, _, src_path, _ = entries[0]
             if not spec.get("site_dest"):
                 spec["site_dest"] = dest_path
             if not spec.get("output_basename"):
@@ -871,7 +880,7 @@ def _enrich_install_specs(
             # Multi-file target: find matching entry by output_basename
             output_basename = spec.get("output_basename", "")
             if output_basename:
-                for dest, _, src in entries:
+                for dest, _, src, _ in entries:
                     if (
                         os.path.basename(dest) == output_basename
                         or os.path.basename(src) == output_basename
@@ -881,7 +890,7 @@ def _enrich_install_specs(
                         break
             elif not spec.get("site_dest"):
                 # No output_basename hint: compute common dest prefix
-                common = os.path.commonpath([d for d, _, _ in entries])
+                common = os.path.commonpath([d for d, _, _, _ in entries])
                 if not common.endswith("/"):
                     common += "/"
                 spec["site_dest"] = common

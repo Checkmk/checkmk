@@ -88,7 +88,10 @@ def _parse_install_spec(raw: dict[str, Any]) -> InstallSpec:
 def _parse_config_spec(raw: dict[str, Any]) -> ConfigDeploySpec:
     """Convert a manifest config_spec dict to a ConfigDeploySpec dataclass."""
     mode_raw = raw["mode"]
-    files = tuple(ConfigFileEntry(src=f["src"], mode=f["mode"]) for f in raw.get("files", []))
+    files = tuple(
+        ConfigFileEntry(src=f["src"], mode=f["mode"], generated=f.get("generated", False))
+        for f in raw.get("files", [])
+    )
     services = tuple(_parse_service_pair(s) for s in raw.get("services", []))
     return ConfigDeploySpec(
         source_prefix=raw["source_prefix"],

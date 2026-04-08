@@ -25,6 +25,7 @@ from cmk.dev_deploy.types import (
     ChangeSet,
     ConfigDeployResult,
     ConfigDeploySpec,
+    ConfigFileEntry,
     DeployMethod,
     SiteInfo,
 )
@@ -69,6 +70,17 @@ def _resolve_mode(entry_mode: str, spec_mode: int | None, file_chmod: str | None
     return mode
 
 
+def _resolve_src(entry: ConfigFileEntry, repo_root: Path) -> Path:
+    """Resolve the source path for a config file entry.
+
+    Generated files (``file_from_flag``, etc.) live under ``bazel-bin/``
+    rather than directly in the repo tree.
+    """
+    if entry.generated:
+        return repo_root / "bazel-bin" / entry.src
+    return repo_root / entry.src
+
+
 def _copy_dir(source: Path, dest: Path, spec: ConfigDeploySpec, repo_root: Path) -> None:
     """Copy a config/data directory to the site using the Bazel-derived file list.
 
@@ -83,7 +95,7 @@ def _copy_dir(source: Path, dest: Path, spec: ConfigDeploySpec, repo_root: Path)
         expected_files: set[str] = set()
 
         for entry in spec.files:
-            src_path = repo_root / entry.src
+            src_path = _resolve_src(entry, repo_root)
             if not src_path.is_file():
                 continue
 
@@ -150,7 +162,7 @@ def _install_files(source: Path, dest: Path, spec: ConfigDeploySpec, repo_root: 
 
     if spec.files:
         for entry in spec.files:
-            src_path = repo_root / entry.src
+            src_path = _resolve_src(entry, repo_root)
             if not src_path.is_file():
                 continue
             dest_file = dest / src_path.name

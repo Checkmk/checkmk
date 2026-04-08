@@ -206,6 +206,8 @@ class ConfigFileEntry:
 
     src: str
     mode: str
+    generated: bool = False
+    """True when the file is a Bazel-generated artifact (``is_source=False``)."""
 
 
 class DeployMethod(StrEnum):

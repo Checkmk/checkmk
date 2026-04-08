@@ -155,7 +155,7 @@ from cmk.gui.watolib.check_mk_automations import (
 )
 from cmk.gui.watolib.global_settings import load_configuration_settings
 from cmk.gui.watolib.hosts_and_folders import folder_preserving_link, make_action_link
-from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
+from cmk.gui.watolib.mode import mode_registry, mode_url, ModeRegistry, redirect, WatoMode
 from cmk.gui.watolib.notification_parameter import notification_parameter_registry
 from cmk.gui.watolib.notifications import (
     load_user_notification_rules,
@@ -4461,9 +4461,12 @@ class ModeEditNotificationRuleQuickSetup(WatoMode):
     def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         search = request.get_str_input("search", "")
         back_mode = request.var("back_mode") or ModeNotifications.name()
+        if back_mode not in mode_registry:
+            back_mode = ModeNotifications.name()
         # Don't forward the search parameter when going back to "test_notifications",
         # so that we don't hide notifications when testing them.
         forward_search = search and back_mode != "test_notifications"
+
         return make_simple_form_page_menu(
             title=_("Notification rule"),
             breadcrumb=breadcrumb,
@@ -4491,6 +4494,8 @@ class ModeEditNotificationRuleQuickSetup(WatoMode):
 
         search = request.get_str_input("search", "")
         back_mode = request.var("back_mode") or ModeNotifications.name()
+        if back_mode not in mode_registry:
+            back_mode = ModeNotifications.name()
         # Don't forward the search parameter when coming from "test_notifications",
         # so that we don't hide notifications when testing them.
         forward_search = search and back_mode != ModeTestNotifications.name()

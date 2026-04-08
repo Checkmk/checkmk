@@ -57,3 +57,15 @@ build_test(
     name = "build_test",
     targets = [":package_validator"],
 )
+
+filegroup(
+    name = "system_dependencies",
+    srcs = ["system-dependencies.txt"],
+    visibility = ["//visibility:public"],
+)
+
+filegroup(
+    name = "ignore_files",
+    srcs = ["ignore-files.txt"],
+    visibility = ["//visibility:public"],
+)

@@ -10,14 +10,17 @@ use std::path::Path;
 
 use args::Args;
 use package_validator::package::Package;
-use package_validator::report::{summarize_report, validate_report, Report, SystemDependencies};
+use package_validator::report::{
+    summarize_report, validate_report, IgnoredFiles, Report, SystemDependencies,
+};
 use std::path::PathBuf;
 
 fn main() -> Result<()> {
     let args = Args::parse();
     let package = extract_package(&args.package)?;
     let system_dependencies = create_system_dependencies(args.system_dependencies.as_ref())?;
-    let report = Report::new(&package, &system_dependencies)?;
+    let ignore_files = create_ignore_files(args.ignore_files.as_ref())?;
+    let report = Report::new(&package, &system_dependencies, &ignore_files)?;
     write_report_to_file(&report, &args.report)?;
     summarize_report(&report);
     validate_report(&report)
@@ -47,6 +50,15 @@ fn create_system_dependencies(path: Option<&PathBuf>) -> Result<SystemDependenci
             .with_context(|| "Failed to read system dependencies file")?)
     } else {
         Ok(SystemDependencies::empty())
+    }
+}
+
+fn create_ignore_files(path: Option<&PathBuf>) -> Result<IgnoredFiles> {
+    if let Some(ignore_files) = path {
+        Ok(IgnoredFiles::from_file(ignore_files)
+            .with_context(|| "Failed to read ignore files file")?)
+    } else {
+        Ok(IgnoredFiles::empty())
     }
 }
 

@@ -1,0 +1,6 @@
+# Files to skip during package validation.
+# These files will not execute on the system running Checkmk (e.g., agent
+# executables deployed to monitored systems). Their dependencies are validated
+# against the target system's environment, not Checkmk's.
+lib/python3/cmk/plugins/oracle/agents/mk-oracle
+lib/python3/cmk/plugins/oracle/agents/mk-oracle.solaris

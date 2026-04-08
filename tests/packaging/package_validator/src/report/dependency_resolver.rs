@@ -10,7 +10,7 @@ use serde::{Deserialize, Serialize, Serializer};
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 
-use crate::package::{Elf, Package};
+use crate::package::{Elf, Package, PackageElfs};
 use crate::report::symlink_resolver::{SymlinkResolutionResult, SymlinkResolver};
 use crate::report::system_dependencies::SystemDependencies;
 use crate::report::ReportDependencies;
@@ -98,10 +98,8 @@ impl<'a, 'b, 'c> DependencyResolver<'a, 'b, 'c> {
         }
     }
 
-    pub(crate) fn dependencies(&self) -> ReportDependencies<'a> {
-        self.package
-            .elfs()
-            .par_iter()
+    pub(crate) fn dependencies(&self, elfs: &PackageElfs<'a>) -> ReportDependencies<'a> {
+        elfs.par_iter()
             .map(|(path, elf)| (*path, self.resolve(path, elf)))
             .collect()
     }

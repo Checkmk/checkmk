@@ -16,9 +16,6 @@ configure_make(
         "--with-loadavg",
         "--with-libwrap",
     ],
-    copts = [
-        "-Wl,--rpath,$ORIGIN_VAR/../lib",
-    ],
     env = {
         "PKG_CONFIG_PATH": ":".join([
             "/usr/lib/pkgconfig",

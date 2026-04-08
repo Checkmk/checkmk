@@ -93,7 +93,7 @@ set_soname = rule(
 )
 
 def _set_runpath_tree_impl(ctx):
-    """Patches ELF .so files within a TreeArtifact with depth-relative RUNPATH."""
+    """Patches ELF files within a TreeArtifact with depth-relative RUNPATH."""
     patchelf = ctx.executable._patchelf
     tool = ctx.executable._tool
     src = ctx.file.src
@@ -119,7 +119,7 @@ set_runpath_tree = rule(
         ),
         "src": attr.label(
             allow_single_file = True,
-            doc = "TreeArtifact directory whose ELF .so files will be patched",
+            doc = "TreeArtifact directory whose ELF files will be patched",
             mandatory = True,
         ),
         "_patchelf": attr.label(
@@ -133,5 +133,5 @@ set_runpath_tree = rule(
             executable = True,
         ),
     },
-    doc = "Sets the RUNPATH of all ELF .so files within a directory TreeArtifact to depth-relative paths",
+    doc = "Sets the RUNPATH of all ELF files within a directory TreeArtifact to depth-relative paths",
 )

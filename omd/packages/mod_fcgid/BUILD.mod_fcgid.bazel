@@ -13,18 +13,14 @@ configure_make(
     args = ["-j4"],
     configure_command = "configure.apxs",
     configure_in_place = True,
-    copts = [
-        "-Wl,--rpath,$ORIGIN_VAR/../lib",
-    ],
     env = {
+        "APXS": "$$(which apxs2 || which apxs)",
+        "CPATH": "/usr/include/apache2-worker",
         "PKG_CONFIG_PATH": ":".join([
             "/usr/lib/pkgconfig",
             "/usr/lib64/pkgconfig",
             "/usr/lib/x86_64-linux-gnu/pkgconfig",
         ]),
-        "ORIGIN_VAR": "\\\\$$\\$$ORIGIN",
-        "APXS": "$$(which apxs2 || which apxs)",
-        "CPATH": "/usr/include/apache2-worker",
     },
     lib_source = ":all_srcs",
     linkopts = ["-Wl,--strip-all"],

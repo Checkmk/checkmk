@@ -1030,6 +1030,42 @@ pkg_rpm_from_tar(
     version = "@cmk//version",
 )
 
+sh_test(
+    name = "validate_deb",
+    srcs = ["validate_package_test.sh"],
+    args = [
+        "$(location :deb)",
+        "$(location //tests/packaging/package_validator:package_validator)",
+        "$(location //tests/packaging/package_validator:system_dependencies)",
+        "$(location //tests/packaging/package_validator:ignore_files)",
+    ],
+    data = [
+        ":deb",
+        "//tests/packaging/package_validator",
+        "//tests/packaging/package_validator:ignore_files",
+        "//tests/packaging/package_validator:system_dependencies",
+    ],
+    tags = ["manual"],
+)
+
+sh_test(
+    name = "validate_rpm",
+    srcs = ["validate_package_test.sh"],
+    args = [
+        "$(location :rpm)",
+        "$(location //tests/packaging/package_validator:package_validator)",
+        "$(location //tests/packaging/package_validator:system_dependencies)",
+        "$(location //tests/packaging/package_validator:ignore_files)",
+    ],
+    data = [
+        ":rpm",
+        "//tests/packaging/package_validator",
+        "//tests/packaging/package_validator:ignore_files",
+        "//tests/packaging/package_validator:system_dependencies",
+    ],
+    tags = ["manual"],
+)
+
 pkg_tar(
     name = "appliance",
     extension = "tar.gz",

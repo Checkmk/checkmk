@@ -82,7 +82,7 @@ class DataSourceBIAggregations(ABCDataSource):
 
     @property
     def table(self) -> RowTable:
-        return RowTableBIAggregations()
+        return _RowTableBIAggregations()
 
     @property
     def infos(self) -> SingleInfos:
@@ -101,7 +101,7 @@ class DataSourceBIAggregations(ABCDataSource):
         return ["aggr_name"]
 
 
-class RowTableBIAggregations(RowTable):
+class _RowTableBIAggregations(RowTable):
     def query(
         self,
         datasource: ABCDataSource,
@@ -113,7 +113,7 @@ class RowTableBIAggregations(RowTable):
         limit: int | None,
         all_active_filters: list[Filter],
     ) -> Rows | tuple[Rows, int]:
-        return aggregation_table(context, columns, headers, only_sites, limit, all_active_filters)
+        return _aggregation_table(context, columns, headers, only_sites, limit, all_active_filters)
 
 
 class DataSourceBIHostAggregations(ABCDataSource):
@@ -127,7 +127,7 @@ class DataSourceBIHostAggregations(ABCDataSource):
 
     @property
     def table(self) -> RowTable:
-        return RowTableBIHostAggregations()
+        return _RowTableBIHostAggregations()
 
     @property
     def infos(self) -> SingleInfos:
@@ -142,7 +142,7 @@ class DataSourceBIHostAggregations(ABCDataSource):
         return ["aggr_name"]
 
 
-class RowTableBIHostAggregations(RowTable):
+class _RowTableBIHostAggregations(RowTable):
     def query(
         self,
         datasource: ABCDataSource,
@@ -154,7 +154,7 @@ class RowTableBIHostAggregations(RowTable):
         limit: int | None,
         all_active_filters: list[Filter],
     ) -> Rows | tuple[Rows, int]:
-        return host_table(context, columns, headers, only_sites, limit, all_active_filters)
+        return _host_table(context, columns, headers, only_sites, limit, all_active_filters)
 
 
 class DataSourceBIHostnameAggregations(ABCDataSource):
@@ -171,7 +171,7 @@ class DataSourceBIHostnameAggregations(ABCDataSource):
 
     @property
     def table(self) -> RowTable:
-        return RowTableBIHostnameAggregations()
+        return _RowTableBIHostnameAggregations()
 
     @property
     def infos(self) -> SingleInfos:
@@ -186,7 +186,7 @@ class DataSourceBIHostnameAggregations(ABCDataSource):
         return ["aggr_name"]
 
 
-class RowTableBIHostnameAggregations(RowTable):
+class _RowTableBIHostnameAggregations(RowTable):
     def query(
         self,
         datasource: ABCDataSource,
@@ -198,7 +198,7 @@ class RowTableBIHostnameAggregations(RowTable):
         limit: int | None,
         all_active_filters: list[Filter],
     ) -> Rows | tuple[Rows, int]:
-        return hostname_table(context, columns, headers, only_sites, limit, all_active_filters)
+        return _hostname_table(context, columns, headers, only_sites, limit, all_active_filters)
 
 
 class DataSourceBIHostnameByGroupAggregations(ABCDataSource):
@@ -214,7 +214,7 @@ class DataSourceBIHostnameByGroupAggregations(ABCDataSource):
 
     @property
     def table(self) -> RowTable:
-        return RowTableBIHostnameByGroupAggregations()
+        return _RowTableBIHostnameByGroupAggregations()
 
     @property
     def infos(self) -> SingleInfos:
@@ -229,7 +229,7 @@ class DataSourceBIHostnameByGroupAggregations(ABCDataSource):
         return ["aggr_name"]
 
 
-class RowTableBIHostnameByGroupAggregations(RowTable):
+class _RowTableBIHostnameByGroupAggregations(RowTable):
     def query(
         self,
         datasource: ABCDataSource,
@@ -241,12 +241,12 @@ class RowTableBIHostnameByGroupAggregations(RowTable):
         limit: int | None,
         all_active_filters: list[Filter],
     ) -> Rows | tuple[Rows, int]:
-        return hostname_by_group_table(
+        return _hostname_by_group_table(
             context, columns, headers, only_sites, limit, all_active_filters
         )
 
 
-def aggregation_table(
+def _aggregation_table(
     context: VisualContext,
     columns: list[ColumnName],
     query: str,
@@ -254,13 +254,13 @@ def aggregation_table(
     limit: int | None,
     all_active_filters: Iterable[Filter],
 ) -> list[dict]:
-    bi_aggregation_filter = compute_bi_aggregation_filter(context, all_active_filters)
+    bi_aggregation_filter = _compute_bi_aggregation_filter(context, all_active_filters)
     bi_manager = BIManager()
     bi_manager.status_fetcher.set_assumed_states(user.bi_assumptions)
     return bi_manager.computer.compute_legacy_result_for_filter(bi_aggregation_filter)
 
 
-def hostname_table(
+def _hostname_table(
     context: VisualContext,
     columns: list[ColumnName],
     query: str,
@@ -269,7 +269,7 @@ def hostname_table(
     all_active_filters: Iterable[Filter],
 ) -> Rows:
     """Table of all host aggregations, i.e. aggregations using data from exactly one host"""
-    return singlehost_table(
+    return _singlehost_table(
         context,
         columns,
         query,
@@ -281,7 +281,7 @@ def hostname_table(
     )
 
 
-def hostname_by_group_table(
+def _hostname_by_group_table(
     context: VisualContext,
     columns: list[ColumnName],
     query: str,
@@ -289,7 +289,7 @@ def hostname_by_group_table(
     limit: int | None,
     all_active_filters: Iterable[Filter],
 ) -> Rows:
-    return singlehost_table(
+    return _singlehost_table(
         context,
         columns,
         query,
@@ -301,7 +301,7 @@ def hostname_by_group_table(
     )
 
 
-def host_table(
+def _host_table(
     context: VisualContext,
     columns: list[ColumnName],
     query: str,
@@ -309,7 +309,7 @@ def host_table(
     limit: int | None,
     all_active_filters: Iterable[Filter],
 ) -> Rows:
-    return singlehost_table(
+    return _singlehost_table(
         context,
         columns,
         query,
@@ -321,7 +321,7 @@ def host_table(
     )
 
 
-def singlehost_table(
+def _singlehost_table(
     context: VisualContext,
     columns: list[ColumnName],
     query: str,
@@ -337,7 +337,7 @@ def singlehost_table(
     rows = []
     bi_manager = BIManager()
     bi_manager.status_fetcher.set_assumed_states(user.bi_assumptions)
-    bi_aggregation_filter = compute_bi_aggregation_filter(context, all_active_filters)
+    bi_aggregation_filter = _compute_bi_aggregation_filter(context, all_active_filters)
     required_aggregations = bi_manager.computer.get_required_aggregations(bi_aggregation_filter)
     bi_manager.status_fetcher.update_states_filtered(
         filterheaders, only_sites, limit, host_columns, bygroup, required_aggregations
@@ -361,7 +361,7 @@ def singlehost_table(
     return rows
 
 
-def compute_bi_aggregation_filter(
+def _compute_bi_aggregation_filter(
     context: VisualContext, all_active_filters: Iterable[Filter]
 ) -> BIAggregationFilter:
     only_hosts: list[HostName] = []
@@ -683,7 +683,7 @@ class PainterAggrOutput(Painter):
         return ("", row["aggr_output"])
 
 
-def paint_aggr_hosts(
+def _paint_aggr_hosts(
     row: Row,
     link_to_view: str,
     *,
@@ -712,7 +712,7 @@ class PainterAggrHosts(Painter):
         return ["aggr_hosts"]
 
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
-        return paint_aggr_hosts(row, "aggr_host", request=self.request)
+        return _paint_aggr_hosts(row, "aggr_host", request=self.request)
 
 
 class PainterAggrHostsServices(Painter):
@@ -731,7 +731,7 @@ class PainterAggrHostsServices(Painter):
         return ["aggr_hosts"]
 
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
-        return paint_aggr_hosts(row, "host", request=self.request)
+        return _paint_aggr_hosts(row, "host", request=self.request)
 
 
 class PainterOptionAggrExpand(PainterOption):
@@ -815,7 +815,7 @@ class PainterOptionAggrWrap(PainterOption):
         )
 
 
-def paint_aggregated_tree_state(
+def _paint_aggregated_tree_state(
     row: Row,
     *,
     painter_options: PainterOptions,
@@ -879,16 +879,16 @@ class PainterAggrTreestate(Painter):
         return ["aggr_expand", "aggr_onlyproblems", "aggr_treetype", "aggr_wrap"]
 
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
-        return paint_aggregated_tree_state(row, painter_options=self._painter_options)
+        return _paint_aggregated_tree_state(row, painter_options=self._painter_options)
 
     def export_for_python(self, row: Row, cell: Cell, user: LoggedInUser) -> dict:
-        return render_tree_json(row, user=user, request=self.request)
+        return _render_tree_json(row, user=user, request=self.request)
 
     def export_for_csv(self, row: Row, cell: Cell, user: LoggedInUser) -> str | HTML:
         raise CSVExportError()
 
     def export_for_json(self, row: Row, cell: Cell, user: LoggedInUser) -> dict:
-        return render_tree_json(row, user=user, request=self.request)
+        return _render_tree_json(row, user=user, request=self.request)
 
 
 class PainterAggrTreestateFrozenDiff(Painter):
@@ -915,18 +915,18 @@ class PainterAggrTreestateFrozenDiff(Painter):
         if frozen_info is None:
             return "", _("Aggregation not configured to be frozen")
 
-        return paint_aggregated_tree_state(
+        return _paint_aggregated_tree_state(
             row, painter_options=self._painter_options, show_frozen_difference=True
         )
 
     def export_for_python(self, row: Row, cell: Cell, user: LoggedInUser) -> dict:
-        return render_tree_json(row, user=user, request=self.request)
+        return _render_tree_json(row, user=user, request=self.request)
 
     def export_for_csv(self, row: Row, cell: Cell, user: LoggedInUser) -> str | HTML:
         raise CSVExportError()
 
     def export_for_json(self, row: Row, cell: Cell, user: LoggedInUser) -> dict:
-        return render_tree_json(row, user=user, request=self.request)
+        return _render_tree_json(row, user=user, request=self.request)
 
 
 @request_memoize()
@@ -955,7 +955,7 @@ def convert_tree_to_frozen_diff_tree(row: Row) -> tuple[Row, bool]:
     aggregations_are_equal = True
     for bi_other_branch in other_aggr.branches:
         if bi_other_branch.properties.title == other_branch:
-            aggregations_are_equal = combine_branches(bi_ref_branch, bi_other_branch)
+            aggregations_are_equal = _combine_branches(bi_ref_branch, bi_other_branch)
 
     required_aggregations = [(bi_ref_aggregation, [bi_ref_branch])]
     required_elements = bi_manager.computer.get_required_elements(required_aggregations)
@@ -966,7 +966,7 @@ def convert_tree_to_frozen_diff_tree(row: Row) -> tuple[Row, bool]:
     return row, aggregations_are_equal
 
 
-def combine_branches(reference_branch: BICompiledRule, other_branch: BICompiledRule) -> bool:
+def _combine_branches(reference_branch: BICompiledRule, other_branch: BICompiledRule) -> bool:
     """Modifies the reference branch inline, returns true/false if the branches are equal"""
     ref_idents = reference_branch.get_identifiers((), set())
     other_idents = other_branch.get_identifiers((), set())
@@ -1047,23 +1047,23 @@ class PainterAggrTreestateBoxed(Painter):
         return ["aggr_treestate", "aggr_hosts"]
 
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
-        return paint_aggregated_tree_state(
+        return _paint_aggregated_tree_state(
             row,
             painter_options=self._painter_options,
             force_renderer_cls=FoldableTreeRendererBoxes,
         )
 
     def export_for_python(self, row: Row, cell: Cell, user: LoggedInUser) -> dict:
-        return render_tree_json(row, user=user, request=self.request)
+        return _render_tree_json(row, user=user, request=self.request)
 
     def export_for_csv(self, row: Row, cell: Cell, user: LoggedInUser) -> str | HTML:
         raise CSVExportError()
 
     def export_for_json(self, row: Row, cell: Cell, user: LoggedInUser) -> dict:
-        return render_tree_json(row, user=user, request=self.request)
+        return _render_tree_json(row, user=user, request=self.request)
 
 
-def render_tree_json(
+def _render_tree_json(
     row: typing.Mapping[str, typing.Any],
     *,
     user: LoggedInUser,
@@ -1113,7 +1113,7 @@ def render_tree_json(
             effective_state = tree[0]
 
         json_node["state"] = effective_state["state"]
-        json_node["output"] = compute_output_message(effective_state, tree[2])
+        json_node["output"] = _compute_output_message(effective_state, tree[2])
         return json_node
 
     def render_subtree_json(
@@ -1138,7 +1138,7 @@ def render_tree_json(
     return render_subtree_json(root_node, [root_node[2]["title"]], len(affected_hosts) > 1)
 
 
-def compute_output_message(effective_state: dict[str, Any], rule: dict[str, Any]) -> str:
+def _compute_output_message(effective_state: dict[str, Any], rule: dict[str, Any]) -> str:
     output = []
     if effective_state["output"]:
         output.append(effective_state["output"])
@@ -1174,14 +1174,14 @@ class CommandGroupAggregations(CommandGroup):
         return 10
 
 
-def command_freeze_aggregation_render(what: str) -> None:
+def _command_freeze_aggregation_render(what: str) -> None:
     html.open_div(class_="group")
     html.button(_button_name(), _("Freeze selected"), cssclass="hot")
     html.button("_cancel", _("Cancel"))
     html.close_div()
 
 
-def command_freeze_aggregation_affected(
+def _command_freeze_aggregation_affected(
     len_action_rows: int, cmdtag: Literal["HOST", "SVC"]
 ) -> HTML:
     return HTML.without_escaping(
@@ -1201,7 +1201,7 @@ def _button_name() -> str:
     return "_freeze_aggregations"
 
 
-def command_freeze_aggregation_action(
+def _command_freeze_aggregation_action(
     command: Command,
     cmdtag: Literal["HOST", "SVC"],
     spec: str,
@@ -1228,7 +1228,7 @@ def command_freeze_aggregation_action(
     return None
 
 
-def command_freeze_aggregation_executor(command: CommandSpec, site: SiteId | None) -> None:
+def _command_freeze_aggregation_executor(command: CommandSpec, site: SiteId | None) -> None:
     """Function that is called to execute this action"""
     assert isinstance(command, Dummy)
     Path(command.arg).unlink(missing_ok=True)
@@ -1246,8 +1246,8 @@ CommandFreezeAggregation = Command(
     group=CommandGroupAggregations,
     tables=["aggr"],
     only_view="aggr_frozen_diff",
-    render=command_freeze_aggregation_render,
-    action=command_freeze_aggregation_action,
-    affected_output_cb=command_freeze_aggregation_affected,
-    executor=command_freeze_aggregation_executor,
+    render=_command_freeze_aggregation_render,
+    action=_command_freeze_aggregation_action,
+    affected_output_cb=_command_freeze_aggregation_affected,
+    executor=_command_freeze_aggregation_executor,
 )

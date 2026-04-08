@@ -367,7 +367,11 @@ class PainterAggrIcons(Painter):
 
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
         single_url = "view.py?" + urlencode_vars(
-            [("view_name", "aggr_single"), ("aggr_name", row["aggr_name"])]
+            [
+                ("view_name", "aggr_single"),
+                ("aggr_name", row["aggr_name"]),
+                ("aggr_group", row["aggr_group"]),
+            ]
         )
         avail_url = single_url + "&mode=availability"
 

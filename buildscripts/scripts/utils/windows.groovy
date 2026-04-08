@@ -68,6 +68,11 @@ void build(Map args) {
                 "call run.cmd --all",
                 "mk-sql.exe"] :
 
+            (args.TARGET == "relay_msi_no_sign") ? [
+                "non-free/packages/cmk-relay-engine/windows-installer",
+                "pwsh -File build-msi.ps1 -ProductVersion ${args.VERSION} -OutputDir ..\\..\\..\\..\\${artifacts_dir}",
+                "CheckmkRelayInstaller.msi"] :
+
             (args.TARGET == "test_integration") ? [
                 "agents/wnx",
                 "call run_tests.cmd --component --integration",

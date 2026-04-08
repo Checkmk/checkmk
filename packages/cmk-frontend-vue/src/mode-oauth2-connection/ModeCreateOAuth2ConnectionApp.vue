@@ -39,17 +39,21 @@ const props = defineProps<{
 const api = new Oauth2ConnectionApi()
 
 async function submit(data: OAuth2FormData): Promise<TranslatedString | null> {
-  const res = props.new
-    ? await api.saveOAuth2Connection(data, props.connector_type)
-    : await api.updateOAuth2Connection(data.ident, data, props.connector_type)
-  if (res.type === 'success') {
-    window.location.href = props.config.urls.back
-    return null
-  } else if (res.type === 'error' && res.validationMessages) {
-    validationRef.value = res.validationMessages
-    return _t(`Please fix the validation errors and try again.`)
+  try {
+    const res = props.new
+      ? await api.saveOAuth2Connection(data, props.connector_type)
+      : await api.updateOAuth2Connection(data.ident, data, props.connector_type)
+    if (res.type === 'success') {
+      window.location.href = props.config.urls.back
+      return null
+    } else if (res.type === 'error' && res.validationMessages) {
+      validationRef.value = res.validationMessages
+      return _t(`Please fix the validation errors and try again.`)
+    }
+    return _t(`Failed to save OAuth2 connection`)
+  } catch {
+    return _t(`Failed to save OAuth2 connection. Please try again.`)
   }
-  return _t(`Failed to save OAuth2 connection`)
 }
 
 const validationRef = ref<ValidationMessages>(props.form_spec.validation ?? [])

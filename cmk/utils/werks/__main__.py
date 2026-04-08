@@ -5,6 +5,7 @@
 
 
 import argparse
+from collections.abc import Sequence
 from pathlib import Path
 
 from cmk.utils.werks.announce import main as main_announce
@@ -24,7 +25,7 @@ def path_dir(value: str) -> Path:
     return result
 
 
-def parse_arguments() -> argparse.Namespace:
+def parse_arguments(argv: Sequence[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser()
     subparsers = parser.add_subparsers(dest="command")
     subparsers.required = True
@@ -89,11 +90,11 @@ def parse_arguments() -> argparse.Namespace:
     )
     parser_mail.set_defaults(func=main_mail)
 
-    return parser.parse_args()
+    return parser.parse_args(argv)
 
 
-def main() -> None:
-    args = parse_arguments()
+def main(argv: Sequence[str] | None = None) -> None:
+    args = parse_arguments(argv)
     args.func(args)
 
 

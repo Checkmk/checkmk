@@ -7,6 +7,7 @@
 # mypy: disable-error-code="no-untyped-def"
 
 import argparse
+from collections.abc import Sequence
 from pathlib import Path
 
 from cmk.ccc.version import __version__, Version
@@ -62,7 +63,7 @@ def main_collect(args: argparse.Namespace) -> None:
     collect(args.flavor, args.path, branches)
 
 
-def parse_arguments() -> argparse.Namespace:
+def parse_arguments(argv: Sequence[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser()
     subparsers = parser.add_subparsers(dest="command")
     subparsers.required = True
@@ -96,11 +97,11 @@ def parse_arguments() -> argparse.Namespace:
     )
     parser_collect.set_defaults(func=main_collect)
 
-    return parser.parse_args()
+    return parser.parse_args(argv)
 
 
-def main():
-    args = parse_arguments()
+def main(argv: Sequence[str] | None = None) -> None:
+    args = parse_arguments(argv)
     args.func(args)
 
 

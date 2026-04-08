@@ -170,7 +170,7 @@ STAGES:
       JENKINS_TEST_RESULT_PATH: "testReport/(root)/"
 
     - NAME: "Python Werks Test"
-      ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_WERK_FILES
+      ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_WERK_FILES,CHANGED_WERK_CODE_FILES,CHANGED_RUN_UVENV_SCRIPT
       DIR: "tests"
       GIT_FETCH_TAGS: true  # expensive
       ENV_VARS:
@@ -189,21 +189,6 @@ STAGES:
       RESULT_CHECK_TYPE: "JUNIT"
       RESULT_CHECK_FILE_PATTERN: "results/werks/**/test.xml"
       JENKINS_TEST_RESULT_PATH: "testReport/"
-
-
-    - NAME: "Python Werks Commands"
-      ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_WERK_CODE_FILES,CHANGED_RUN_UVENV_SCRIPT
-      GIT_FETCH_NOTES: true
-      BAZEL_LOCKS_AMOUNT: 1
-      COMMAND: |
-          bazel run //packages/cmk-werks:utils-bin -- collect cmk $(pwd) --substitute-branches $(git symbolic-ref --short HEAD):HEAD &> ${RESULTS}/werk_commands.txt
-          bazel run //cmk/utils:werks_bin -- announce $(pwd)/.werks $(make print-VERSION) --format md &>> ${RESULTS}/werk_commands.txt
-          bazel run //cmk/utils:werks_bin -- announce $(pwd)/.werks $(make print-VERSION) --format txt &>> ${RESULTS}/werk_commands.txt
-          bazel run //packages/cmk-werks:utils-bin -- precompile $(pwd)/.werks precompiled.json &>> ${RESULTS}/werk_commands.txt
-          bazel run //cmk/utils:werks_bin -- mail $(pwd) HEAD werk_mail --assume-no-notes-but=$(git log --before="$(date --date="4 weeks ago" --iso=seconds)" --format="%H" --max-count=1) &>> ${RESULTS}/werk_commands.txt
-          scripts/run-uvenv werk list &>> ${RESULTS}/werk_commands.txt
-      TEXT_ON_SKIP: "No Werk code files changed"
-      RESULT_CHECK_FILE_PATTERN: "results/werk_commands.txt"
 
     - NAME: "Bazel Lint"
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_BAZEL_FILES

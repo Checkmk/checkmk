@@ -6,11 +6,13 @@ py_test(
     srcs = ["test_validate_werks.py"],
     data = [
         "//:defines.make",
-        "//:werks_group",
+        "//.werks",
+        "//.werks:werks_config",
     ],
     pytest_main = True,
     deps = [
         requirement("pytest"),
+        "//cmk/utils",
         "//packages/cmk-werks",
         "//tests/code_quality:bazel_utils",
     ],
@@ -18,9 +20,14 @@ py_test(
 
 py_test(
     name = "werks",
-    srcs = ["test_werks.py"],
+    srcs = [
+        "test_werks.py",
+        "test_werks_commands.py",
+    ],
     data = [
+        "//:defines.make",
         "//.werks",
+        "//.werks:werks_config",
     ],
     imports = ["../../.."],
     # This test requires git, however, adding git as a dependency

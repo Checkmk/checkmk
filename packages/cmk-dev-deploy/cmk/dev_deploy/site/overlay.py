@@ -46,6 +46,7 @@ _OVERLAY_BASE = Path("/var/tmp/cmk-dev-deploy")  # nosec B108
 # File in the overlay base that records which version was materialized.
 # Used to detect version changes that require re-materialization.
 _VERSION_MARKER = "materialized_version"
+_SITE_INODE_MARKER = "site_inode"
 
 
 def _run_omd_via_sudo(site_name: str, command: str) -> None:
@@ -72,6 +73,46 @@ def _work_dir(site_root: Path) -> Path:
 
 def _site_overlay_dir(site_root: Path) -> Path:
     return _OVERLAY_BASE / site_root.name
+
+
+def _wipe_stale_overlay(site_root: Path) -> bool:
+    """Detect and wipe stale overlay data from a previous site installation.
+
+    Compares the current inode of the site root directory against the stored
+    value.  When they differ, the site was reinstalled (``omd rm`` + ``omd
+    create``), so the old upper/work/markers are stale and must be removed.
+
+    Returns True if stale data was wiped.
+    """
+    site_overlay = _site_overlay_dir(site_root)
+    marker = site_overlay / _SITE_INODE_MARKER
+    if not marker.is_file():
+        return False
+    try:
+        stored_ino = int(marker.read_text().strip())
+    except (ValueError, OSError):
+        return False
+    current_ino = site_root.stat().st_ino
+    if current_ino == stored_ino:
+        return False
+
+    output.warn(
+        f"Site inode changed ({stored_ino} -> {current_ino}), "
+        "wiping stale overlay data from previous installation..."
+    )
+    # Remove everything except the site overlay base dir itself
+    for child in site_overlay.iterdir():
+        if child.is_dir():
+            run_as_root(["rm", "-rf", str(child)])
+        else:
+            child.unlink(missing_ok=True)
+    return True
+
+
+def _save_site_inode(site_root: Path, inode: int) -> None:
+    """Persist the site root directory's inode for reinstall detection."""
+    marker = _site_overlay_dir(site_root) / _SITE_INODE_MARKER
+    marker.write_text(str(inode))
 
 
 def _ensure_overlay_dirs(site_overlay: Path) -> None:
@@ -352,6 +393,13 @@ def ensure_overlay(site_root: Path, state: SSHState) -> None:
     # subsequent file operations (mkdir, marker writes) work without root.
     _ensure_overlay_dirs(site_overlay)
 
+    # Detect site reinstall: if the site root inode changed, the old overlay
+    # data is stale and must be wiped before proceeding.
+    _wipe_stale_overlay(site_root)
+
+    # Capture the bare site inode before mounting (overlay changes st_ino).
+    bare_site_inode = site_root.stat().st_ino
+
     resuming = upper.exists() and any(upper.iterdir())
 
     # Create directories
@@ -416,6 +464,10 @@ def ensure_overlay(site_root: Path, state: SSHState) -> None:
     # Use sudo directly — sshd isn't running yet (it starts with omd).
     output.info(f"Starting site {site_name}...")
     _run_omd_via_sudo(site_name, "start")
+
+    # Persist the bare site inode (captured before mount) so we can detect
+    # reinstalls on the next run.
+    _save_site_inode(site_root, bare_site_inode)
 
     if resuming:
         output.info(f"Overlay resumed on {site_root} (existing changes preserved)")

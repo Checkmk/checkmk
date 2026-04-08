@@ -113,7 +113,10 @@ class _RowTableBIAggregations(RowTable):
         limit: int | None,
         all_active_filters: list[Filter],
     ) -> Rows | tuple[Rows, int]:
-        return _aggregation_table(context, columns, headers, only_sites, limit, all_active_filters)
+        bi_aggregation_filter = _compute_bi_aggregation_filter(context, all_active_filters)
+        bi_manager = BIManager()
+        bi_manager.status_fetcher.set_assumed_states(user.bi_assumptions)
+        return bi_manager.computer.compute_legacy_result_for_filter(bi_aggregation_filter)
 
 
 class DataSourceBIHostAggregations(ABCDataSource):
@@ -244,20 +247,6 @@ class _RowTableBIHostnameByGroupAggregations(RowTable):
         return _hostname_by_group_table(
             context, columns, headers, only_sites, limit, all_active_filters
         )
-
-
-def _aggregation_table(
-    context: VisualContext,
-    columns: list[ColumnName],
-    query: str,
-    only_sites: OnlySites,
-    limit: int | None,
-    all_active_filters: Iterable[Filter],
-) -> list[dict]:
-    bi_aggregation_filter = _compute_bi_aggregation_filter(context, all_active_filters)
-    bi_manager = BIManager()
-    bi_manager.status_fetcher.set_assumed_states(user.bi_assumptions)
-    return bi_manager.computer.compute_legacy_result_for_filter(bi_aggregation_filter)
 
 
 def _hostname_table(

@@ -9,7 +9,6 @@
 # mypy: disable-error-code="type-arg"
 
 import contextlib
-import hashlib
 import warnings
 from collections.abc import Iterator, Sequence
 from dataclasses import is_dataclass
@@ -104,8 +103,8 @@ def _get_json_schema(
             _register_schema(spec, k, v)
 
     name = json_schema.get("title")
-    assert isinstance(name, str), f"Expected title for schema: {json_schema!r}"
-    _register_schema(spec, name, json_schema)
+    if isinstance(name, str):
+        _register_schema(spec, name, json_schema)
 
     return json_schema
 
@@ -314,27 +313,27 @@ class CheckmkPydanticResolver:
         self, maybe_adapter: TypeAdapter | object, direction: Direction
     ) -> object:
         if isinstance(maybe_adapter, TypeAdapter):
-            schema_name, _ = self.get_adapter_schema(maybe_adapter, direction)
-            return {"$ref": f"#/components/schemas/{schema_name}"}
+            _, json_schema = self.get_adapter_schema(maybe_adapter, direction)
+            if "title" in json_schema:
+                return {"$ref": f"#/components/schemas/{json_schema['title']}"}
+            # Titleless schemas (e.g. discriminated unions) are inlined rather than referenced
+            return json_schema
 
         # do not touch other cases, as they should in most cases be Marshmallow schemas
         return maybe_adapter
 
     def get_adapter_schema(
         self, adapter: TypeAdapter, direction: Direction
-    ) -> tuple[str, dict[str, object]]:
+    ) -> tuple[str | None, dict[str, object]]:
         json_schema = _get_json_schema(self.spec, adapter, direction)
         if "title" in json_schema:
             title = json_schema["title"]
             assert isinstance(title, str)
-            schema_name = title
-        else:
-            sha = hashlib.sha256()
-            sha.update(str(json_schema).encode("utf-8"))
-            schema_name = sha.hexdigest()
-            warnings.warn("Pydantic plugin got schema without title, using hash of schema")
+            return title, json_schema
 
-        return schema_name, json_schema
+        # Structural schemas (e.g. discriminated unions) have no title and will be inlined
+        # by resolve_nested_schema, so no name is needed.
+        return None, json_schema
 
     def resolve_schema(self, data: dict[str, Any] | Any, direction: Direction) -> None:
         """Resolves a Pydantic model in an OpenAPI component or header.

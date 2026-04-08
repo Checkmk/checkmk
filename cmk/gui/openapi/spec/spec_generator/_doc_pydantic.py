@@ -56,6 +56,10 @@ from cmk.gui.openapi.spec.spec_generator._doc_utils import (
 from cmk.gui.openapi.spec.spec_generator._type_defs import DocEndpoint, SpecEndpoint
 
 
+def _is_response_subclass(value: object) -> bool:
+    return isinstance(value, type) and issubclass(value, Response)
+
+
 @dataclasses.dataclass(frozen=True, slots=True)
 class PydanticSchemaDefinitions:
     model: EndpointModel
@@ -72,11 +76,12 @@ class PydanticSchemaDefinitions:
     def get_type_adapter(
         self, schema_type: Literal["body", "path", "query", "headers", "response"]
     ) -> TypeAdapter | None:
-        if (type_ := self.get_type(schema_type)) is not None and not issubclass(type_, Response):
-            # TypeAdapter performance: this is only used during spec generation
-            return get_cached_type_adapter(type_)
-
-        return None
+        if (type_ := self.get_type(schema_type)) is None:
+            return None
+        if _is_response_subclass(type_):
+            return None
+        # TypeAdapter performance: this is only used during spec generation
+        return get_cached_type_adapter(type_)
 
 
 def _extract_body_example(body_type: type | None) -> dict[str, object] | None:
@@ -85,7 +90,7 @@ def _extract_body_example(body_type: type | None) -> dict[str, object] | None:
     Returns a dict mapping each field's serialization alias (or name) to its
     example value, or None if body_type is None or no fields have examples.
     """
-    if body_type is None:
+    if body_type is None or not dataclasses.is_dataclass(body_type):
         return None
     result: dict[str, object] = {}
     for field in dataclasses.fields(body_type):

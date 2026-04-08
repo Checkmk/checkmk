@@ -10,6 +10,7 @@
 
 import dataclasses
 import inspect
+import types
 from collections.abc import Callable, Mapping, Sequence
 from functools import lru_cache
 from typing import Annotated, cast, get_args, get_origin, Literal, Self, TypeAliasType, TypedDict
@@ -23,7 +24,7 @@ from cmk.gui.utils.dataclasses import DataclassInstance
 from .._type_adapter import get_cached_type_adapter
 from ._context import ApiContext
 from ._types import HeaderParam, PathParam, QueryParam, RawRequestData
-from ._utils import iter_dataclass_fields
+from ._utils import iter_dataclass_fields, strip_annotated
 from .content_types import convert_request_body
 from .model import api_field
 from .model.response import ApiResponse, TypedResponse
@@ -215,6 +216,20 @@ class _IgnoreExtra:
     """Empty dataclass that includes `extra="ignore"` in the pydantic config."""
 
 
+def _configure_extra_forbid(tp: type) -> None:
+    """Recursively set extra="forbid" on BaseModel/dataclass types, unwrapping Annotated and unions."""
+    stripped = strip_annotated(tp)
+    if get_origin(stripped) is types.UnionType:
+        for member in get_args(stripped):
+            _configure_extra_forbid(member)
+    elif issubclass(stripped, BaseModel):
+        stripped.model_config.setdefault("extra", "forbid")
+    elif dataclasses.is_dataclass(stripped) and isinstance(stripped, type):
+        config = getattr(stripped, "__pydantic_config__", ConfigDict())
+        config.setdefault("extra", "forbid")
+        stripped.__pydantic_config__ = config  # type: ignore[attr-defined]
+
+
 def _build_input_model(parameters: Parameters, request_body_type: type | None) -> ApiInputModel:
     """Build the input model for the endpoint.
 
@@ -225,12 +240,7 @@ def _build_input_model(parameters: Parameters, request_body_type: type | None) -
     Other fields will also be ignored.
     """
     if request_body_type is not None:
-        if isinstance(request_body_type, BaseModel):
-            request_body_type.model_config.setdefault("extra", "forbid")
-        else:
-            config = getattr(request_body_type, "__pydantic_config__", ConfigDict())
-            config.setdefault("extra", "forbid")
-            request_body_type.__pydantic_config__ = config  # type: ignore[attr-defined]
+        _configure_extra_forbid(request_body_type)
         body_type = request_body_type
     else:
         body_type = None

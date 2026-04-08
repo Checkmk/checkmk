@@ -10,7 +10,7 @@ import dataclasses
 import inspect
 import types
 from collections.abc import Iterator, Mapping
-from typing import Annotated, cast, get_args, get_origin
+from typing import cast, get_args, get_origin
 
 from cmk.gui.openapi.restful_objects.type_defs import ErrorStatusCodeInt, StatusCodeInt
 from cmk.gui.openapi.restful_objects.utils import identify_expected_status_codes
@@ -245,11 +245,15 @@ class EndpointValidator:
             if body.annotation is inspect.Parameter.empty:
                 raise ValueError("Missing annotation for request body")
 
-            body_type = body.annotation
-            while get_origin(body_type) is Annotated:
-                body_type = get_args(body_type)[0]
-
-            if not dataclasses.is_dataclass(body_type):
+            body_type = strip_annotated(body.annotation)
+            if get_origin(body_type) is types.UnionType:
+                if not all(
+                    dataclasses.is_dataclass(strip_annotated(arg)) for arg in get_args(body_type)
+                ):
+                    raise ValueError(
+                        "All union members of request body annotation must be dataclasses"
+                    )
+            elif not dataclasses.is_dataclass(body_type):
                 raise ValueError("Request body annotation must be a dataclass")
 
         if "api_context" in signature.parameters:
@@ -299,7 +303,20 @@ class EndpointValidator:
             )
 
         with _with_endpoint_context(endpoint.operation_id):
-            _validate_defaults_model("body", model.request_body_type, other_defaults_allowed=True)
+            body_type = strip_annotated(model.request_body_type)
+            if get_origin(body_type) is types.UnionType:
+                for member in get_args(body_type):
+                    _validate_defaults_model(
+                        f"body.{member.__name__}",
+                        strip_annotated(member),
+                        other_defaults_allowed=True,
+                    )
+            else:
+                _validate_defaults_model(
+                    "body",
+                    strip_annotated(model.request_body_type),
+                    other_defaults_allowed=True,
+                )
 
     @staticmethod
     def _validate_error_schemas(

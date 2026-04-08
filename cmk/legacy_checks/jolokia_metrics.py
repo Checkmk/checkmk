@@ -149,12 +149,11 @@ def check_jolokia_metrics_serv_req(item, params, info):
     except GetRateError:
         return
 
-    yield check_levels(
+    yield from check_levels_v2(
         request_rate,
-        "RequestRate",
-        None,
-        human_readable_func=lambda x: f"{x:.2f}",
-        infoname="Request rate",
+        metric_name="RequestRate",
+        render_func=lambda x: f"{x:.2f}",
+        label="Request rate",
     )
 
 

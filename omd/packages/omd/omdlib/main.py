@@ -1567,7 +1567,7 @@ def config_configure(
     current_menu = "Basic"
 
     # force certain order in main menu
-    menu_choices = ["Basic", "Web GUI", "Add-ons", "Distributed Monitoring"]
+    menu_choices = ["Basic", "Web GUI", "Addons", "Distributed Monitoring"]
 
     while True:
         # Rebuild hook information (values possible changed)

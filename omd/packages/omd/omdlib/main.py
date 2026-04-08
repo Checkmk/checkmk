@@ -111,7 +111,12 @@ from omdlib.tmpfs import (
 from omdlib.type_defs import Config, Replacements, Skeleton
 from omdlib.update import get_conflict_mode_update, get_edition, ManageUpdate, PreFlight
 from omdlib.update_check import check_update_possible, prepare_conflict_resolution
-from omdlib.user_processes import kill_site_user_processes, terminate_site_user_processes
+from omdlib.user_processes import (
+    descriptions_of_processes,
+    kill_site_user_processes,
+    site_user_processes,
+    terminate_site_user_processes,
+)
 from omdlib.users_and_groups import (
     find_processes_of_user,
     group_exists,
@@ -120,7 +125,6 @@ from omdlib.users_and_groups import (
     popen_as_site_user,
     run_as_site_user,
     user_id,
-    user_logged_in,
     user_verify,
     useradd,
     userdel,
@@ -2001,9 +2005,19 @@ def _main_rm(
     reuse = "reuse" in options
     kill = "kill" in options
 
-    if user_logged_in(site_name):
+    if remaining_processes := site_user_processes(site_name):
         if not kill:
-            sys.exit("User '%s' still logged in or running processes." % site_name)
+            if descriptions := list(descriptions_of_processes(remaining_processes)):
+                sys.exit(
+                    "\n".join(
+                        [
+                            f"User '{site_name}' still logged in or running processes.",
+                            *descriptions,
+                        ]
+                    )
+                )
+            # The process vanished in the meantime. Technically, still an error but without the
+            # description we might as well do what the user asked for.
         else:
             kill_site_user_processes(site_name, global_opts.verbose)
 

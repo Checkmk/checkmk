@@ -11,8 +11,6 @@ import subprocess
 from collections.abc import Sequence
 from typing import IO, Literal, overload, TYPE_CHECKING
 
-import psutil
-
 if TYPE_CHECKING:
     from omdlib.contexts import SiteContext
     from omdlib.version_info import VersionInfo
@@ -169,11 +167,6 @@ def group_exists(name: str) -> bool:
 
 def group_id(name: str) -> int:
     return grp.getgrnam(name).gr_gid
-
-
-def user_logged_in(name: str) -> bool:
-    """Check if processes of named user are existing"""
-    return any(p for p in psutil.process_iter() if p.username() == name)
 
 
 def user_verify(

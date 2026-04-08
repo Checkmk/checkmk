@@ -23,7 +23,7 @@ def terminate_site_user_processes(username: str, verbose: bool) -> None:
     the current OMD call terminate.
     """
 
-    processes = _site_user_processes(username)
+    processes = site_user_processes(username) - set(_get_current_and_parent_processes())
     if not processes:
         return
 
@@ -32,7 +32,7 @@ def terminate_site_user_processes(username: str, verbose: bool) -> None:
     timeout_at = time.time() + 5
     sent_terminate = False
     while processes and time.time() < timeout_at:
-        for process in processes[:]:
+        for process in list(processes):
             try:
                 if not sent_terminate:
                     if verbose:
@@ -49,7 +49,7 @@ def terminate_site_user_processes(username: str, verbose: bool) -> None:
         sent_terminate = True
         time.sleep(0.1)
 
-    if remaining_processes_descriptions := list(_descriptions_of_remaining_processes(processes)):
+    if remaining_processes_descriptions := list(descriptions_of_processes(processes)):
         sys.exit(
             "\n".join(
                 [
@@ -63,10 +63,10 @@ def terminate_site_user_processes(username: str, verbose: bool) -> None:
 
 
 def kill_site_user_processes(username: str, verbose: bool) -> None:
-    processes = _site_user_processes(username)
+    processes = site_user_processes(username) - set(_get_current_and_parent_processes())
     tries = 5
     while tries > 0 and processes:
-        for process in processes[:]:
+        for process in list(processes):
             try:
                 if verbose:
                     sys.stdout.write(f"Killing process {process.pid}...")
@@ -79,7 +79,7 @@ def kill_site_user_processes(username: str, verbose: bool) -> None:
         time.sleep(1)
         tries -= 1
 
-    if remaining_processes_descriptions := list(_descriptions_of_remaining_processes(processes)):
+    if remaining_processes_descriptions := list(descriptions_of_processes(processes)):
         sys.exit(
             "\n".join(
                 [
@@ -90,7 +90,7 @@ def kill_site_user_processes(username: str, verbose: bool) -> None:
         )
 
 
-def _descriptions_of_remaining_processes(
+def descriptions_of_processes(
     remaining_processes: Iterable[psutil.Process],
 ) -> Generator[str]:
     for process in remaining_processes:
@@ -108,9 +108,8 @@ def _get_current_and_parent_processes() -> list[psutil.Process]:
     return processes
 
 
-def _site_user_processes(username: str) -> list[psutil.Process]:
-    """Return list of all running site user processes (that are not excluded)"""
-    exclude = set(_get_current_and_parent_processes())
+def site_user_processes(username: str) -> set[psutil.Process]:
+    """Return list of all running site user processes"""
     processes_of_site_user = set()
     for process in psutil.process_iter():
         try:
@@ -119,4 +118,4 @@ def _site_user_processes(username: str) -> list[psutil.Process]:
             continue
         if process_owner == username:
             processes_of_site_user.add(process)
-    return list(processes_of_site_user - exclude)
+    return processes_of_site_user

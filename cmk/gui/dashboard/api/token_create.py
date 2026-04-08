@@ -64,7 +64,7 @@ def create_dashboard_token_v1(
     dashboard["public_token_id"] = token.token_id
     try:
         save_dashboard_to_file(api_context.config.sites, dashboard, body.dashboard_owner)
-    except:
+    except BaseException:
         # rollback token creation
         token_store.delete(token.token_id)
         raise

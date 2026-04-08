@@ -188,8 +188,8 @@ let babel_loader = {
       presets: ['@babel/typescript'],
       plugins: [
         '@babel/plugin-transform-parameters',
-        '@babel/proposal-class-properties',
-        '@babel/proposal-object-rest-spread'
+        '@babel/plugin-transform-class-properties',
+        '@babel/plugin-transform-object-rest-spread'
       ]
     }
   }

@@ -56,11 +56,9 @@ PYTEST_SYSTEM_TEST_ARGS := \
     --log-cli-level=INFO \
     --log-cli-format="%(asctime)s.%(msecs)03d %(levelname)s %(message)s"
 DOCKERABLE_TESTS := \
-	test-code-quality \
 	test-format \
 	test-license-headers \
 	test-mypy \
-	test-requirements \
 	test-plugins-siteless \
 	test-unit-all \
 	test-unit-testlib \
@@ -69,7 +67,6 @@ DOCKERABLE_TESTS := \
 
 .PHONY: clean help prepare-playwright  \
 	$(foreach VERS,$(AGENT_PLUGIN_PYTHON_VERSIONS_DOCKER),test-agent-plugin-unit-py$(VERS)-docker) \
-	test-code-quality test-code-quality-docker
 	test-docker test-docker-docker \
 	test-integration-agent-plugin test-integration-agent-plugin-docker \
 	test-format \
@@ -261,7 +258,7 @@ test-license-headers:
 	--sandbox_debug --keep_going --test_output=errors
 
 test-requirements:
-	$(PYTEST) --log-cli-level=INFO $(realpath code_quality)/test_requirements.py;
+	bazel test --test_tag_filters=requirements //... --//:use_faked_artifacts=true --keep_going --test_output=errors
 
 test-py-extensions:
 	# block 1: no changes file given, test all files
@@ -277,8 +274,6 @@ test-format:
 
 test-werks:
 	$(PYTEST) --log-cli-level=INFO $(realpath code_quality)/test_werks.py;
-
-test-code-quality: test-requirements test-werks
 
 test-mypy: test-mypy-cmk
 

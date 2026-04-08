@@ -139,10 +139,16 @@ STAGES:
     - NAME: "Bazel sanity check"
       # omdlib/__init__.py is checked in in the repo but then overwritten by bazel. No way to lint the checked in file.
       COMMAND: |
-          ./scripts/in_bazel.sh "py" "py_binary|py_library|py_test" \
+          make_rc=0
+          ./scripts/in_bazel.sh ".py" "py_binary|py_library|py_test" \
               --known-offender omd/packages/omd/omdlib/__init__.py \
-              > ${RESULTS}/results.txt || exit 1
-          ./tests/agent-plugin-unit/bootstrap.sh --check-sources >> ${RESULTS}/results.txt
+              > ${RESULTS}/results.txt || make_rc=$?
+          ./scripts/in_bazel.sh "requirements.in" "filegroup" \
+              --path "packages" \
+              --path "non-free/packages" \
+              >> ${RESULTS}/results.txt || make_rc=$?
+          ./tests/agent-plugin-unit/bootstrap.sh --check-sources >> ${RESULTS}/results.txt || make_rc=$?
+          exit $make_rc
       RESULT_CHECK_FILE_PATTERN: "results/results.txt"
       BAZEL_LOCKS_AMOUNT: 1
 
@@ -190,18 +196,6 @@ STAGES:
       RESULT_CHECK_TYPE: "GoogleTest"
       RESULT_CHECK_FILE_PATTERN: "results/cpp/**/test.xml"
       JENKINS_TEST_RESULT_PATH: "testReport/(root)/"
-
-    - NAME: "Python Requirements Test"
-      ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_PYTHON_REQUIREMENTS,CHANGED_FIND_PYTHON_FILES_SCRIPT,CHANGED_PYTHON_FILES
-      DIR: "tests"
-      ENV_VARS:
-          PYTEST_ADDOPTS: "--junitxml=${RESULTS}/python3-requirements-junit.xml --color=no"
-      COMMAND: "make test-requirements"
-      BAZEL_LOCKS_AMOUNT: 1
-      TEXT_ON_SKIP: "Requirements files not changed"
-      RESULT_CHECK_TYPE: "JUNIT"
-      RESULT_CHECK_FILE_PATTERN: "results/python3-requirements-junit.xml"
-      JENKINS_TEST_RESULT_PATH: "testReport/pytest.tests.code_quality/test_requirements/"
 
     - NAME: "Python only Py-Extensions"
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_FIND_PYTHON_FILES_SCRIPT,CHANGED_PYTHON_FILES

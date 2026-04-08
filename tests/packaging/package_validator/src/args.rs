@@ -22,4 +22,13 @@ pub(crate) struct Args {
                 Empty lines and lines starting with # are ignored."
     )]
     pub system_dependencies: Option<PathBuf>,
+
+    #[arg(
+        long,
+        long_help = "Path to a text file of package files to skip during validation.\n\
+                Each line contains suffix of a file path within the package.\n\
+                (e.g. lib/python3/cmk/plugins/oracle/agents/mk-oracle).\n\
+                Empty lines and lines starting with # are ignored."
+    )]
+    pub ignore_files: Option<PathBuf>,
 }

@@ -4,7 +4,7 @@
 use std::path::PathBuf;
 
 use package_validator::package::Package;
-use package_validator::report::{Report, SystemDependencies};
+use package_validator::report::{IgnoredFiles, Report, SystemDependencies};
 
 fn get_examples_dir() -> PathBuf {
     match runfiles::Runfiles::create() {
@@ -45,7 +45,8 @@ fn test_package_integration_report() {
         let system_deps = SystemDependencies::default();
 
         // Generate report
-        let report = Report::new(&package, &system_deps).expect("Should generate report");
+        let report = Report::new(&package, &system_deps, &IgnoredFiles::default())
+            .expect("Should generate report");
 
         // Test JSON output
         let json_str = serde_json::to_string(&report).expect("Should serialize report to JSON");
@@ -93,7 +94,8 @@ fn test_package_discovers_dependencies() {
         let system_deps = SystemDependencies::default();
 
         // Generate report and check ELF/dependency info via JSON
-        let report = Report::new(&package, &system_deps).expect("Should generate report");
+        let report = Report::new(&package, &system_deps, &IgnoredFiles::default())
+            .expect("Should generate report");
         let json: serde_json::Value =
             serde_json::from_str(&serde_json::to_string(&report).unwrap()).unwrap();
 

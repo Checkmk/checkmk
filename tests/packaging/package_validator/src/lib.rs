@@ -15,4 +15,4 @@ pub mod report;
 
 // Re-export key types for convenience
 pub use package::{Elf, ElfType, Package, PackageFile};
-pub use report::{Report, SystemDependencies};
+pub use report::{IgnoredFiles, Report, SystemDependencies};

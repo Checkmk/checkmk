@@ -28,6 +28,7 @@ pkg_files(
 set_runpath(
     name = "lib_runpath",
     srcs = ["@stunnel//:libstunnel.so"],
+    rpaths = ["${ORIGIN}/../../lib"],
 )
 
 pkg_files(

@@ -10,8 +10,18 @@ use anyhow::Result;
 /// Validate the report.
 ///
 /// # Errors
-/// Returns an error if missing/error dependencies are present.
+/// Returns an error if missing/error dependencies are present, or if system
+/// dependencies were found bundled inside the package.
 pub fn validate_report(report: &Report<'_>) -> Result<()> {
+    if !report.errors.is_empty() {
+        for error in &report.errors {
+            eprintln!("ERROR: {}", error);
+        }
+        return Err(anyhow::anyhow!(
+            "System dependencies found in package: {} error(s)",
+            report.errors.len()
+        ));
+    }
     if report.totals.dependencies.error > 0 {
         for (path, dependencies) in &report.dependencies {
             for (dependency, result) in dependencies {

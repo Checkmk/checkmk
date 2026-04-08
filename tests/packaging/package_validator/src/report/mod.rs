@@ -39,7 +39,7 @@ type ReportFiles<'a> = BTreeMap<&'a Path, &'a Elf>;
 pub struct Report<'a> {
     package: String,
     totals: ReportTotals,
-    errors: SystemDependencyResolutionErrors<'a>,
+    pub(super) errors: SystemDependencyResolutionErrors<'a>,
     dependencies: ReportDependencies<'a>,
     files: ReportFiles<'a>,
 }

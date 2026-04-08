@@ -8,6 +8,11 @@
           {
             "type": "command",
             "command": ".claude/hooks/format.sh"
+          },
+          {
+            "type": "command",
+            "command": ".claude/hooks/lint-async.sh",
+            "async": true
           }
         ]
       }

@@ -29,7 +29,7 @@ use crate::ms_sql::sqls;
 use crate::platform::odbc;
 use crate::setup::Env;
 use crate::types::{
-    ComputerName, Edition, HostName, InstanceAlias, InstanceCluster, InstanceEdition, InstanceId,
+    ClusterName, ComputerName, Edition, HostName, InstanceAlias, InstanceEdition, InstanceId,
     InstanceName, InstanceVersion, PiggybackHostName, Port,
 };
 use crate::utils::{self, prepare_error};
@@ -53,7 +53,7 @@ pub struct SqlInstanceBuilder {
     id: Option<InstanceId>,
     edition: Option<InstanceEdition>,
     version: Option<InstanceVersion>,
-    cluster: Option<InstanceCluster>,
+    cluster_name: Option<ClusterName>,
     port: Option<Port>,
     dynamic_port: Option<Port>,
     endpoint: Option<Endpoint>,
@@ -88,8 +88,8 @@ impl SqlInstanceBuilder {
         self.version = Some(version.clone());
         self
     }
-    pub fn cluster(mut self, cluster: Option<InstanceCluster>) -> Self {
-        self.cluster = cluster;
+    pub fn cluster(mut self, cluster_name: Option<ClusterName>) -> Self {
+        self.cluster_name = cluster_name;
         self
     }
     pub fn port(mut self, port: Option<Port>) -> Self {
@@ -173,7 +173,7 @@ impl SqlInstanceBuilder {
             id: self.id.unwrap_or_default(),
             edition: self.edition.unwrap_or_default(),
             version: self.version.unwrap_or_default(),
-            cluster: self.cluster,
+            cluster_name: self.cluster_name,
             port: self.dynamic_port.or(self.port),
             available: None,
             endpoint,
@@ -207,7 +207,7 @@ pub struct SqlInstance {
     pub id: InstanceId,
     pub version: InstanceVersion,
     pub edition: InstanceEdition,
-    pub cluster: Option<InstanceCluster>,
+    pub cluster_name: Option<ClusterName>,
     port: Option<Port>,
     pub available: Option<bool>,
     endpoint: Endpoint,
@@ -244,24 +244,52 @@ impl fmt::Display for SqlInstance {
 impl SqlInstance {
     pub fn dump(&self) -> String {
         format!(
-            "{:30}{:14}{:32}[{:5?}] `{}` id:{:32} '{}' {:3} '{:?}' u: {} <{:?}> @ {}:{:?}",
+            "{:30}{:14}{:32} {:5} {:10} {:16} {:4} {:9} {:10} {:10} {:10?} {:10} {}",
             self.full_name(),
             self.version,
             self.edition,
-            self.port,
-            self.alias.clone().unwrap_or_default(),
+            self.port
+                .clone()
+                .map(|p| p.value().to_string())
+                .unwrap_or("None".to_string()),
+            self.alias.clone().unwrap_or("N/A".to_string().into()),
             &self.id,
-            if self.tcp { "TCP" } else { "---" },
+            if self.tcp { "TCP" } else { "N/A" },
             self.version_table
                 .iter()
                 .map(|v| v.to_string())
                 .collect::<Vec<String>>()
                 .join("."),
-            self.cluster,
+            self.cluster_name
+                .clone()
+                .unwrap_or(ClusterName::from("N/A")),
             self.endpoint.auth().username(),
             self.endpoint.auth().auth_type(),
             self.endpoint.conn().hostname(),
-            self.endpoint.conn().port(),
+            self.endpoint
+                .conn()
+                .port()
+                .map(|p| p.value().to_string())
+                .unwrap_or("None".to_string(),)
+        )
+    }
+
+    pub fn dump_header() -> String {
+        format!(
+            "{:30}{:14}{:32} {:5} {:10} {:16} {:4} {:9} {:10} {:10} {:10} {:10} {}",
+            "Full Name",
+            "Version",
+            "Edition",
+            "Port",
+            "Alias",
+            "Id",
+            "Conn",
+            "Version",
+            "Cluster",
+            "Username",
+            "Auth Type",
+            "hostname",
+            "port",
         )
     }
 
@@ -271,7 +299,7 @@ impl SqlInstance {
             self.mssql_name(),
             self.version,
             self.edition,
-            self.cluster.clone().unwrap_or_default()
+            self.cluster_name.clone().unwrap_or_default()
         )
     }
 
@@ -305,21 +333,21 @@ impl SqlInstance {
             return format!("{}/{}", self.legacy_name_prefix(), self.name);
         }
 
-        if let Some(cluster) = &self.cluster {
+        if let Some(cluster) = &self.cluster_name {
             cluster.clone().into()
         } else {
             "(local)".to_string()
         }
     }
 
-    fn legacy_name_prefix(&self) -> &str {
-        if let Some(cluster) = &self.cluster {
-            return cluster.into();
+    fn legacy_name_prefix(&self) -> String {
+        if let Some(cluster) = &self.cluster_name {
+            return cluster.to_string();
         }
         if let Some(computer_name) = &self.computer_name {
-            computer_name.into()
+            computer_name.to_string()
         } else {
-            ""
+            String::new()
         }
     }
 
@@ -1985,14 +2013,14 @@ async fn generate_data(ms_sql: &config::ms_sql::Config, environment: &Env) -> Re
             .join(", ")
     );
     if environment.detect_only() {
+        let val = SqlInstance::dump_header();
         let rows = instances
             .iter()
             .map(|i| i.dump())
-            .collect::<Vec<String>>()
+            .collect::<Vec<_>>()
             .join("\n");
         return Ok(format!(
-            "{}\nTotal instances found: {}\n",
-            rows,
+            "{val}\n{rows}\nTotal instances found: {}\n",
             instances.len()
         ));
     }
@@ -2758,7 +2786,7 @@ connection:
         assert_eq!(s.id.to_string(), "id");
         assert_eq!(s.name.to_string(), "NAME");
         assert_eq!(s.alias, Some("alias".to_string().into()));
-        assert!(s.cluster.is_none());
+        assert!(s.cluster_name.is_none());
         assert_eq!(s.version.to_string(), "version");
         assert_eq!(s.edition.to_string(), "edition");
         assert_eq!(s.cache_dir, "hash");
@@ -2776,7 +2804,7 @@ connection:
         );
 
         let c = cluster.build(&Endpoint::default());
-        assert_eq!(c.cluster, Some("cluster".to_string().into()));
+        assert_eq!(c.cluster_name, Some("cluster".to_string().into()));
         assert_eq!(c.legacy_name(), "cluster/NAME");
         assert_eq!(
             c.generate_leading_entry('.'),

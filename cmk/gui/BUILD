@@ -963,6 +963,50 @@ py_library(
     ],
 )
 
+py_library(
+    name = "sites",
+    srcs = ["sites.py"],
+    imports = ["../.."],
+    visibility = [
+        "//cmk:__subpackages__",
+        "//tests:__subpackages__",
+    ],
+    deps = [
+        ":config",
+        ":ctx_stack",
+        ":flask_app",
+        ":http",
+        ":i18n",
+        ":log",
+        ":logged_in",
+        ":site_config",
+        "//cmk/gui/utils:compatibility",
+        "//cmk/utils",
+        "//packages/cmk-ccc:site",
+        "//packages/cmk-ccc:user",
+        "//packages/cmk-ccc:version",
+        "//packages/cmk-licensing",
+        "//packages/cmk-livestatus-client",
+    ],
+)
+
+py_library(
+    name = "user_sites",
+    srcs = ["user_sites.py"],
+    imports = ["../.."],
+    visibility = [
+        "//cmk:__subpackages__",
+        "//tests:__subpackages__",
+    ],
+    deps = [
+        ":config",
+        ":logged_in",
+        ":site_config",
+        "//packages/cmk-ccc:site",
+        "//packages/cmk-livestatus-client",
+    ],
+)
+
 # Monolithic target which we extract smaller targets from. As long as we are in the in place
 # extraction process below the cmk.gui module hierarchy, we will have to work with excludes. This
 # will be cleaned up when we move the pieces into their future python module structure.
@@ -1019,12 +1063,14 @@ py_library(
             "search_menu.py",
             "single_global_setting.py",
             "site_config.py",
+            "sites.py",
             "table.py",
             "theme/**/*.py",
             "top_heading.py",
             "type_defs.py",
             "unit_formatter.py",
             "user_connection_config_types.py",
+            "user_sites.py",
             "validate.py",
             "validation_utils.py",
             "view_utils.py",
@@ -1092,12 +1138,14 @@ py_library(
         ":search_menu",
         ":single_global_setting",
         ":site_config",
+        ":sites",
         ":table",
         ":theme",
         ":top_heading",
         ":type_defs",
         ":unit_formatter",
         ":user_connection_config_types",
+        ":user_sites",
         ":validate",
         ":validation_utils",
         ":view_utils",
@@ -1151,6 +1199,7 @@ py_library(
         "//cmk/gui/utils:urls",
         "//cmk/gui/utils:user_errors",
         "//cmk/gui/utils:user_frontend_settings_cookie",
+        "//cmk/gui/valuespec",
         "//cmk/inventory",
         "//cmk/piggyback:backend",
         "//cmk/piggyback:hub",

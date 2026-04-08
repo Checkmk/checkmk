@@ -9,7 +9,7 @@ import { computed, ref, watch } from 'vue'
 
 import usei18n from '@/lib/i18n'
 
-import CmkDialog from '@/components/CmkDialog.vue'
+import CmkAlertBox from '@/components/CmkAlertBox.vue'
 import { useCmkErrorBoundary } from '@/components/CmkErrorBoundary'
 
 import type { ContentPropsRecord } from '@/dashboard/components/DashboardContent/types'
@@ -194,11 +194,12 @@ const enterMissingRuntimeFiltersAction = useInjectMissingRuntimeFiltersAction()
           class="db-responsive-grid__edit-column"
         />
       </div>
-      <CmkDialog
+      <CmkAlertBox
         v-if="enterMissingRuntimeFiltersAction !== null"
-        :message="_t('Runtime filters are required to load data.')"
         class="db-responsive-grid__missing-filters-dialog"
-      />
+      >
+        {{ _t('Runtime filters are required to load data.') }}
+      </CmkAlertBox>
       <GridLayout
         :key="gridKey"
         class="db-responsive-grid__layout"

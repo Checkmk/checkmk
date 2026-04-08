@@ -8,7 +8,7 @@ import { nextTick, onMounted, onUnmounted, ref } from 'vue'
 
 import usei18n from '@/lib/i18n'
 
-import CmkDialog from '@/components/CmkDialog.vue'
+import CmkAlertBox from '@/components/CmkAlertBox.vue'
 
 import type { ContentPropsRecord } from '@/dashboard/components/DashboardContent/types'
 import RelativeWidgetFrame from '@/dashboard/components/RelativeGrid/RelativeWidgetFrame.vue'
@@ -190,11 +190,12 @@ const enterMissingRuntimeFiltersAction = useInjectMissingRuntimeFiltersAction()
 
 <template>
   <div class="simplebar-content">
-    <CmkDialog
+    <CmkAlertBox
       v-if="enterMissingRuntimeFiltersAction !== null"
-      :message="_t('Runtime filters are required to load data.')"
       class="db-relative-grid__missing-filters-dialog"
-    />
+    >
+      {{ _t('Runtime filters are required to load data.') }}
+    </CmkAlertBox>
     <div id="dashboard" ref="dashboard" class="dashboard dashboard_main">
       <div
         v-for="spec of contentProps"

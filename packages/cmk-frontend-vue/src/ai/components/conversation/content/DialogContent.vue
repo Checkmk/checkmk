@@ -7,9 +7,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import { onMounted } from 'vue'
 
-import { untranslated } from '@/lib/i18n'
-
-import CmkDialog from '@/components/CmkDialog.vue'
+import CmkAlertBox from '@/components/CmkAlertBox.vue'
 
 import type {
   DialogConversationElementContent,
@@ -26,15 +24,5 @@ onMounted(() => {
 </script>
 
 <template>
-  <CmkDialog
-    :title="title !== undefined ? untranslated(title) : undefined"
-    :message="untranslated(message)"
-  />
+  <CmkAlertBox :heading="title">{{ message }}</CmkAlertBox>
 </template>
-
-<style scoped>
-.ai-dialog-content {
-  width: 100%;
-  padding-bottom: var(--dimension-4);
-}
-</style>

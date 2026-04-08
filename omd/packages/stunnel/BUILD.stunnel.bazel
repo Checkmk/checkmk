@@ -14,6 +14,7 @@ configure_make(
     configure_options = [
         "--with-ssl=$$EXT_BUILD_DEPS/openssl",
         "--with-bashcompdir=$$INSTALLDIR/share",
+        "LDFLAGS='-static-libstdc++ -static-libgcc'",
     ],
     env = {
         "PKG_CONFIG_PATH": ":".join([

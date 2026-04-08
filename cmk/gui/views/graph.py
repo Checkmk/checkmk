@@ -288,6 +288,7 @@ def _paint_time_graph_cmk(
         temperature_unit=temperature_unit,
         backend_time_series_fetcher=backend_time_series_fetcher,
         debug=debug,
+        show_graph_ids=bool(painter_options.get("show_internal_graph_and_metric_ids")),
     )
     if request.has_var("cmk-token"):
         return "", render_graphs_html(

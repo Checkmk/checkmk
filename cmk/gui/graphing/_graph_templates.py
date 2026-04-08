@@ -20,7 +20,6 @@ from cmk.graphing import v1 as graphing_api
 from cmk.graphing.v1 import graphs as graphs_api
 from cmk.graphing.v1 import metrics as metrics_api
 from cmk.gui.i18n import _, translate_to_current_language
-from cmk.gui.painter_options import PainterOptions
 from cmk.gui.type_defs import Row
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.temperate_unit import TemperatureUnit
@@ -345,7 +344,7 @@ class TemplateGraphSpecification(GraphSpecification, frozen=True):
         site_id: SiteId,
         host_name: HostName,
         service_name: ServiceName,
-        painter_options: PainterOptions,
+        show_graph_ids: bool,
         *,
         graph_index: int,
         graph_id: str,
@@ -355,9 +354,7 @@ class TemplateGraphSpecification(GraphSpecification, frozen=True):
         return GraphRecipeWithOverrides(
             recipe=GraphRecipe(
                 title=(
-                    f"{recipe.title} (Graph ID: {graph_id})"
-                    if painter_options.get("show_internal_graph_and_metric_ids")
-                    else recipe.title
+                    f"{recipe.title} (Graph ID: {graph_id})" if show_graph_ids else recipe.title
                 ),
                 unit_spec=recipe.unit_spec,
                 explicit_vertical_range=recipe.explicit_vertical_range,
@@ -396,7 +393,6 @@ class TemplateGraphSpecification(GraphSpecification, frozen=True):
         site_id = row["site"]
         host_name = row["host_name"]
         service_name = row.get("service_description", "_HOST_")
-        painter_options = PainterOptions.get_instance()
         # Performance graph dashlets already use graph_id, but for example in reports, we still use
         # graph_index. Therefore, this function needs to support both. We should switch to graph_id
         # everywhere (CMK-7308) and remove the support for graph_index. However, note that we cannot
@@ -449,7 +445,7 @@ class TemplateGraphSpecification(GraphSpecification, frozen=True):
                     site_id,
                     host_name,
                     service_name,
-                    painter_options,
+                    env.show_graph_ids,
                     graph_index=graph_index,
                     graph_id=graph_id,
                     recipe=recipe,

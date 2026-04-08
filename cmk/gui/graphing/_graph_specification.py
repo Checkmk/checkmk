@@ -56,6 +56,7 @@ class GraphEnvironment:
     temperature_unit: TemperatureUnit
     backend_time_series_fetcher: FetchTimeSeries | None
     debug: bool = False
+    show_graph_ids: bool = False
 
 
 @dataclass(frozen=True)

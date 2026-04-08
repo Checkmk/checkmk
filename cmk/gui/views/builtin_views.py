@@ -4310,7 +4310,12 @@ builtin_views.update(
             "column_headers": "pergroup",
             "datasource": "bi_aggregations",
             "description": _l("Shows a single aggregation."),
-            "group_painters": [],
+            "group_painters": [
+                ColumnSpec(
+                    name="aggr_group",
+                    link_spec=VisualLinkSpec(type_name="views", name="aggr_group"),
+                ),
+            ],
             "hidden": True,
             "hidebutton": False,
             "icon": "aggr",
@@ -4332,7 +4337,9 @@ builtin_views.update(
             "topic": "bi",
             "user_sortable": True,
             "single_infos": ["aggr"],
-            "context": {},
+            "context": {
+                "aggr_group": {"aggr_group": ""},
+            },
             "link_from": {},
             "add_context_to_title": True,
             "sort_index": 99,

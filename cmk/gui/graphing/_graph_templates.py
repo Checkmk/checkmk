@@ -349,7 +349,7 @@ class TemplateGraphSpecification(GraphSpecification, frozen=True):
         graph_index: int,
         graph_id: str,
         recipe: GraphRecipe,
-        consolidation_function: GraphConsolidationFunction | None = None,
+        consolidation_function: GraphConsolidationFunction,
     ) -> GraphRecipeWithOverrides | None:
         return GraphRecipeWithOverrides(
             recipe=GraphRecipe(

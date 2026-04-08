@@ -7,7 +7,7 @@ GIT_ROOT=$(git rev-parse --show-toplevel)
 find_bazel_package() {
     local dir
     dir=$(dirname "$1")
-    while [[ "$dir" != "." ]]; do
+    while [[ "$dir" != "." && "$dir" != "/" ]]; do
         if [[ -f "${GIT_ROOT}/${dir}/BUILD" || -f "${GIT_ROOT}/${dir}/BUILD.bazel" ]]; then
             echo "//${dir}:all"
             return

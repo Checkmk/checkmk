@@ -397,6 +397,7 @@ py_library(
     imports = [".."],
     deps = [
         ":testlib",
+        "//packages/cmk-plugins:bazel",
         "//packages/cmk-plugins:cisco_prime",
         "//packages/cmk-plugins:elasticsearch",
         "//packages/cmk-plugins:gerrit",

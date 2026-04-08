@@ -256,7 +256,6 @@ filegroup(
         "azure_deprecated/libexec/agent_azure",
         "azure_status/libexec/agent_azure_status",
         "azure_v2/libexec/agent_azure_v2",
-        "bazel/libexec/agent_bazel_cache",
         "checkmk/libexec/agent_bi",
         "checkmk/libexec/check_cmk_inv",
         "cisco_meraki/libexec/agent_cisco_meraki",

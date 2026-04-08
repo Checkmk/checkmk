@@ -8,7 +8,7 @@ from collections.abc import Mapping, Sequence
 import pytest
 
 from cmk.agent_based.v2 import CheckResult, Metric, Result, Service, State, StringTable
-from cmk.legacy_checks.blade_bays import (
+from cmk.plugins.blade.agent_based.blade_bays import (
     check_blade_bays,
     discover_blade_bays,
     parse_blade_bays,

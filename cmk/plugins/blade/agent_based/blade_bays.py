@@ -18,8 +18,9 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
-from cmk.plugins.blade.agent_based.detection import DETECT_BLADE
 from cmk.plugins.lib.elphase import check_elphase, ElPhase
+
+from .detection import DETECT_BLADE
 
 
 class BayData(TypedDict):

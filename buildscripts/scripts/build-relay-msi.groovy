@@ -1,0 +1,36 @@
+#!groovy
+
+/// file: build-relay-msi.groovy
+
+void main() {
+    def edition = params.EDITION ?: "cloud";
+    def version = params.VERSION ?: "daily";
+
+    def allowed_editions = ["cloud", "ultimate", "ultimatemt"];
+    if (!(edition in allowed_editions)) {
+        error("Edition '${edition}' is not supported for the relay MSI build. Allowed editions: ${allowed_editions}.");
+    }
+
+    def windows = load("${checkout_dir}/buildscripts/scripts/utils/windows.groovy");
+    def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
+
+    def branch_name = versioning.safe_branch_name();
+    def branch_version = versioning.get_branch_version(checkout_dir);
+    def cmk_vers_rc_aware = versioning.get_cmk_version(branch_name, branch_version, version);
+    def cmk_version = versioning.strip_rc_number_from_version(cmk_vers_rc_aware);
+
+    // MSI requires strict x.x.x.x numeric version. Extract the numeric base
+    // (e.g. "2.6.0") from whatever form cmk_version takes (e.g. "'2.6.0'-2026.05.20")
+    // and pad to four components.
+    def match = (cmk_version =~ /(\d+\.\d+\.\d+)/);
+    def msi_version = match ? match[0][1] + ".0" : "0.0.0.0";
+
+    dir("${checkout_dir}") {
+        windows.build(
+            TARGET: 'relay_msi_no_sign',
+            VERSION: msi_version,
+        );
+    }
+}
+
+return this;

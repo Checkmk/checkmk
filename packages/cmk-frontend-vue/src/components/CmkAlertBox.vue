@@ -124,7 +124,7 @@ const alertIconColor = computed(() => {
       :aria-label="_t('Close')"
       @click="open = false"
     >
-      <CmkIcon name="close" :size="size ? size : 'medium'" />
+      <CmkIcon name="close" size="small" />
     </button>
   </div>
 </template>

@@ -1,0 +1,5 @@
+type = "Component"
+members_required = 2
+description = """
+- As long as NagVis is in the product, maintain it
+"""

@@ -1,10 +1,5 @@
-
-
-per-file update_core_config.py=file:/component_owners/core_config_generator/OWNERS_DEFINITION
-per-file update_core_config.py=set noparent
-
-per-file nagvis.py=file:/component_owners/nagvis/OWNERS_DEFINITION
-per-file nagvis.py=set noparent
+per-file test_nagvis_action.py=file:/component_owners/nagvis/OWNERS_DEFINITION
+per-file test_nagvis_action.py=set noparent
 
 # Please
 #  - don't add individual owners here but provide a reference to an OWNERS_DEFINITION file instead

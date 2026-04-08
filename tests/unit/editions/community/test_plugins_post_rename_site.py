@@ -15,4 +15,5 @@ def test_load_plugins() -> None:
         "warn_remote_site",
         "warn_about_network_ports",
         "warn_about_configs_to_review",
+        "nagvis_maps",
     }

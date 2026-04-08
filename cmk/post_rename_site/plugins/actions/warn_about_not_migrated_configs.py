@@ -26,7 +26,7 @@ def warn_about_configs_to_review(old_site_id: SiteId, new_site_id: SiteId, logge
             "- Custom bookmarks (in users bookmark lists)\n"
             "- Hard coded site filters in custom dashboards, views, reports\n"
             "- Path in rrdcached journal files\n"
-            "- NagVis maps or custom NagVis backend settings\n"
+            "- NagVis backend references in map files on remote sites (map files on the local site are updated automatically)\n"
             '- Notification rule "site" conditions\n'
             '- Event Console rule "site" conditions\n'
             '- "site" field in "Agent updater (Linux, Windows, Solaris)" rules (Commercial editions only)\n'

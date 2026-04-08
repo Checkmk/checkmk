@@ -10,7 +10,7 @@ use crate::platform;
 use crate::platform::registry::get_instances;
 use crate::platform::InstanceInfo;
 use crate::types::{
-    CertPath, HostName, InstanceAlias, InstanceName, MaxConnections, MaxQueries, Port,
+    CertPath, ClusterName, HostName, InstanceAlias, InstanceName, MaxConnections, MaxQueries, Port,
 };
 use anyhow::{anyhow, bail, Context, Result};
 use std::collections::hash_map::DefaultHasher;
@@ -283,11 +283,9 @@ fn get_additional_registry_instances(
             }
 
             Some(CustomInstance::from_registry(
-                &registry_instance_info.name,
+                &registry_instance_info,
                 auth,
                 conn,
-                &registry_instance_info.final_host(),
-                &registry_instance_info.final_port(),
             ))
         })
         .collect::<Vec<CustomInstance>>()
@@ -724,6 +722,7 @@ pub struct CustomInstance {
     name: InstanceName,
     auth: Authentication,
     conn: Connection,
+    cluster_name: Option<ClusterName>,
     alias: Option<InstanceAlias>,
     piggyback: Option<Piggyback>,
     tcp: bool,
@@ -751,6 +750,7 @@ impl CustomInstance {
             name,
             auth,
             conn,
+            cluster_name: None,
             alias: yaml.get_string(keys::ALIAS).map(InstanceAlias::from),
             piggyback: Piggyback::from_yaml(yaml, sections)?,
             tcp,
@@ -758,21 +758,24 @@ impl CustomInstance {
     }
 
     pub fn from_registry(
-        name: &InstanceName,
+        instance_info: &InstanceInfo,
         main_auth: &Authentication,
         main_conn: &Connection,
-        hostname: &Option<HostName>,
-        port: &Option<Port>,
     ) -> Self {
-        let (auth, conn) =
-            CustomInstance::make_registry_auth_and_conn(main_auth, main_conn, hostname, port);
+        let (auth, conn) = CustomInstance::make_registry_auth_and_conn(
+            main_auth,
+            main_conn,
+            &instance_info.final_host(),
+            &instance_info.final_port(),
+        );
         Self {
-            name: name.clone(),
+            name: instance_info.name.clone(),
             auth,
             conn,
+            cluster_name: instance_info.cluster_name.clone(),
             alias: None,
             piggyback: None,
-            tcp: port.is_some(),
+            tcp: instance_info.final_port().is_some(),
         }
     }
 
@@ -837,6 +840,9 @@ impl CustomInstance {
     }
     pub fn conn(&self) -> &Connection {
         &self.conn
+    }
+    pub fn cluster_name(&self) -> Option<&ClusterName> {
+        self.cluster_name.as_ref()
     }
     pub fn endpoint(&self) -> Endpoint {
         Endpoint::new(&self.auth, &self.conn)

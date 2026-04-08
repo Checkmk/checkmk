@@ -90,7 +90,7 @@ pub fn get_host_tcp_info() -> HostTcpInfo {
 #[derive(Debug, Clone)]
 pub struct InstanceInfo {
     pub name: InstanceName,
-    pub cluster: Option<ClusterName>,
+    pub cluster_name: Option<ClusterName>,
     shared_memory: bool,
     pipe: Option<NamedPipe>,
     tcp: Option<Tcp>,
@@ -228,7 +228,7 @@ mod tests {
     fn test_instance_final_port() {
         let make_i = |port: Option<u16>, dynamic_port: Option<u16>| InstanceInfo {
             name: InstanceName::from("doesn't-matter".to_owned()),
-            cluster: None,
+            cluster_name: None,
             shared_memory: false,
             pipe: None,
             tcp: Some(Tcp {
@@ -525,12 +525,22 @@ pub mod registry {
     fn cluster_name(sql_key: &str, key_name: &str) -> Option<ClusterName> {
         let cluster_key = format!(r"{}{}\Cluster", sql_key, key_name);
         if let Ok(key) = RegKey::predef(HKEY_LOCAL_MACHINE).open_subkey_with_flags(
-            cluster_key,
+            &cluster_key,
             winreg::enums::KEY_READ | winreg::enums::KEY_WOW64_64KEY,
         ) {
             let value: Option<String> = key.get_value("ClusterName").ok();
+            log::info!(
+                "Read cluster name {:?} instance '{}' from registry",
+                value,
+                key_name
+            );
             value.map(ClusterName::from)
         } else {
+            log::trace!(
+                "Can't open cluster key {} instance '{}' from registry",
+                cluster_key,
+                key_name
+            );
             None
         }
     }
@@ -623,7 +633,7 @@ pub mod registry {
     ) -> InstanceInfo {
         InstanceInfo {
             name: InstanceName::from(instance_name),
-            cluster: cluster_name(sql_key, registry_instance_name),
+            cluster_name: cluster_name(sql_key, registry_instance_name),
             shared_memory: get_shared_memory(sql_key, registry_instance_name),
             pipe: get_pipe(sql_key, registry_instance_name).map(NamedPipe),
             tcp: get_tcp(sql_key, registry_instance_name),

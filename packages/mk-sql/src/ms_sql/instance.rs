@@ -244,7 +244,7 @@ impl fmt::Display for SqlInstance {
 impl SqlInstance {
     pub fn dump(&self) -> String {
         format!(
-            "{:30}{:14}{:32} {:5} {:10} {:16} {:4} {:9} {:10} {:10} {:10?} {:10} {}",
+            "{:30}{:14}{:32} {:5} {:10} {:24} {:4} {:9} {:16} {:10} {:10?} {:10} {}",
             self.full_name(),
             self.version,
             self.edition,
@@ -276,7 +276,7 @@ impl SqlInstance {
 
     pub fn dump_header() -> String {
         format!(
-            "{:30}{:14}{:32} {:5} {:10} {:16} {:4} {:9} {:10} {:10} {:10} {:10} {}",
+            "{:30}{:14}{:32} {:5} {:10} {:24} {:4} {:9} {:16} {:10} {:10} {:10} {}",
             "Full Name",
             "Version",
             "Edition",
@@ -2201,7 +2201,7 @@ async fn get_custom_instance_builder(
             log::debug!("Trying to connect to `{instance_name}` using ODBC");
             let b = obtain_properties(&mut client, instance_name)
                 .await
-                .map(|p| to_instance_builder(endpoint, &p));
+                .map(|p| to_instance_builder(builder.to_owned(), endpoint, &p));
             return b;
         } else {
             log::error!("Can't use ODBC for `{instance_name}`");
@@ -2214,7 +2214,7 @@ async fn get_custom_instance_builder(
         Ok(mut client) => {
             let b = obtain_properties(&mut client, instance_name)
                 .await
-                .map(|p| to_instance_builder(endpoint, &p));
+                .map(|p| to_instance_builder(builder.to_owned(), endpoint, &p));
             if b.is_none() {
                 log::info!("Instance `{instance_name}` not found. Try to find it");
                 find_custom_instance(endpoint, instance_name).await
@@ -2240,7 +2240,7 @@ async fn get_custom_instance_builder(
             Ok(mut client) => {
                 let b = obtain_properties(&mut client, instance_name)
                     .await
-                    .map(|p| to_instance_builder(endpoint, &p));
+                    .map(|p| to_instance_builder(builder.to_owned(), endpoint, &p));
                 if b.is_none() {
                     log::error!("Instance `{instance_name}` not found. Impossible.");
                 }
@@ -2277,7 +2277,12 @@ async fn find_custom_instance(
         {
             obtain_properties(&mut client, instance_name)
                 .await
-                .map(|p| to_instance_builder(endpoint, &p).port(detected_port))
+                .map(|p| {
+                    // Fresh builder: this function has no access to the original customized
+                    // builder, so customizations (cluster, alias, piggyback) are not carried
+                    // through here.
+                    to_instance_builder(SqlInstanceBuilder::new(), endpoint, &p).port(detected_port)
+                })
         } else {
             None
         }
@@ -2336,12 +2341,13 @@ pub async fn obtain_properties(
     None
 }
 
-/// converts detected instance and custom instance to SqlInstanceBuilder
+/// Update SqlInstanceBuilder with endpoint and properties obtained from custom connection query
 fn to_instance_builder(
+    builder: SqlInstanceBuilder,
     endpoint: &Endpoint,
     properties: &SqlInstanceProperties,
 ) -> SqlInstanceBuilder {
-    SqlInstanceBuilder::new()
+    builder
         .name(properties.name.clone())
         .computer_name(Some(properties.computer_name.clone()))
         .version(&properties.version)
@@ -2374,7 +2380,7 @@ fn determine_reconnect(
                 }
                 _ => {
                     log::info!(
-                        "Add detected instance {} reconnect not required ",
+                        "Add detected instance {} reconnect not required",
                         &instance_builder.get_name()
                     );
                     (instance_builder, None)
@@ -2387,7 +2393,7 @@ fn determine_reconnect(
         .iter()
         .filter(|&(&k, _)| !found.contains(k))
         .map(|(&name, customization)| {
-            log::info!("Add custom instance {} ", name);
+            log::info!("Add custom instance {}", name);
             let builder = SqlInstanceBuilder::new().name(name.clone());
             (
                 apply_customization(builder, customization),
@@ -2418,6 +2424,7 @@ fn apply_customization(
     builder: SqlInstanceBuilder,
     customization: &CustomInstance,
 ) -> SqlInstanceBuilder {
+    log::debug!("Applying customization for instance {}", builder.get_name());
     builder
         .piggyback(
             customization
@@ -2426,6 +2433,7 @@ fn apply_customization(
                 .map(|h| h.clone().into()),
         )
         .alias(customization.alias())
+        .cluster(customization.cluster_name().cloned())
 }
 
 /// Intelligent async processing of the data

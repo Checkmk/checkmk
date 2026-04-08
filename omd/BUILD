@@ -679,6 +679,30 @@ pkg_tar(
     "cloud",
 ]]
 
+[sh_test(
+    name = "validate_deb_{}".format(edition),
+    srcs = ["validate_package_test.sh"],
+    args = [
+        "$(location :deb_{})".format(edition),
+        "$(location //tests/packaging/package_validator:package_validator)",
+        "$(location //tests/packaging/package_validator:system_dependencies)",
+        "$(location //tests/packaging/package_validator:ignore_files)",
+    ],
+    data = [
+        ":deb_{}".format(edition),
+        "//tests/packaging/package_validator",
+        "//tests/packaging/package_validator:ignore_files",
+        "//tests/packaging/package_validator:system_dependencies",
+    ],
+    tags = ["manual"],
+) for edition in [
+    "community",
+    "ultimate",
+    "pro",
+    "ultimatemt",
+    "cloud",
+]]
+
 write_omd_spec(
     name = "omd_spec",
     apache_conf_dir = select({
@@ -727,7 +751,7 @@ write_omd_spec(
     edition = "@cmk//edition",
     input_tarball = "complete_install_" + edition,
     omd_spec = ":omd_spec",
-    rpm = "cmk_rpm_" + edition,
+    rpm = "cmk_rpm_" + edition + ".rpm",
     tags = ["manual"],
     target_compatible_with = select({
         "@cmk//distro:almalinux": [],
@@ -742,6 +766,33 @@ write_omd_spec(
     "ultimatemt",
     "cloud",
 ]]
+
+[
+    sh_test(
+        name = "validate_rpm_{}".format(edition),
+        srcs = ["validate_package_test.sh"],
+        args = [
+            "$(location :rpm_{})".format(edition),
+            "$(location //tests/packaging/package_validator:package_validator)",
+            "$(location //tests/packaging/package_validator:system_dependencies)",
+            "$(location //tests/packaging/package_validator:ignore_files)",
+        ],
+        data = [
+            ":rpm_{}".format(edition),
+            "//tests/packaging/package_validator",
+            "//tests/packaging/package_validator:ignore_files",
+            "//tests/packaging/package_validator:system_dependencies",
+        ],
+        tags = ["manual"],
+    )
+    for edition in [
+        "community",
+        "ultimate",
+        "pro",
+        "ultimatemt",
+        "cloud",
+    ]
+]
 
 [
     pkg_tar(

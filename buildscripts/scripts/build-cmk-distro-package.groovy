@@ -66,6 +66,7 @@ void main() {
     def package_type = distro_package_type(distro);
     // groovylint-disable-next-line UnusedVariable
     def package_name = "";
+    def license_flag = edition == "community" ? '--//:repo_license="gpl"' : "";
 
     print(
         """
@@ -202,10 +203,6 @@ void main() {
                     ]) {
                         /// Don't use withEnv, see
                         /// https://issues.jenkins.io/browse/JENKINS-43632
-                        def license_flag = ""
-                        if (edition == "community") {
-                            license_flag = '--//:repo_license="gpl"'
-                        }
                         artifacts_helper.withHotCache([
                             download_dest: "~",
                             remove_existing_cache: true,
@@ -240,6 +237,32 @@ void main() {
         }
     }
 
+    stage("Validate package") {
+        catchError(buildResult: 'SUCCESS', stageResult: 'UNSTABLE') {
+            dir("${checkout_dir}") {
+                inside_container(
+                    image: docker.image("${docker_registry_no_http}/${distro}:${docker_tag}"),
+                ) {
+                    def bazel_testlogs = sh(script: "bazel info bazel-testlogs", returnStdout: true).trim();
+                    def log_src = "${bazel_testlogs}/omd/validate_${package_type}_${edition}/test.log";
+                    def report_src = "${bazel_testlogs}/omd/validate_${package_type}_${edition}/test.outputs/report.json";
+                    try {
+                        sh("""
+                            bazel test \
+                                --cmk_version=${cmk_version} \
+                                --cmk_edition=${edition} \
+                                ${license_flag} \
+                        //omd:validate_${package_type}_${edition}
+                        """);
+                    } finally {
+                        sh("cp --no-preserve=mode ${log_src} ${checkout_dir}/package_validator.log");
+                        sh("cp --no-preserve=mode ${report_src} ${checkout_dir}/package_validator.report.json");
+                    }
+                }
+            }
+        }
+    }
+
     stage("Parse cache hits") {
         inside_container(
             image: docker.image("${docker_registry_no_http}/${distro}:${docker_tag}"),
@@ -252,7 +275,12 @@ void main() {
         dir("${checkout_dir}") {
             show_duration("archiveArtifacts") {
                 archiveArtifacts(
-                    artifacts: "*.deb, *.rpm, *.cma, ${bazel_log_prefix}*, omd/bill-of-materials.json, trace_profile.json",
+                    artifacts: [
+                        "*.deb, *.rpm, *.cma, ${bazel_log_prefix}*",
+                        "omd/bill-of-materials.json, trace_profile.json",
+                        "package_validator.log",
+                        "package_validator.report.json",
+                    ].join(", "),
                     fingerprint: true,
                 );
             }

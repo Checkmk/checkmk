@@ -261,11 +261,9 @@ def _hostname_table(
     return _singlehost_table(
         context,
         columns,
-        query,
         only_sites,
         limit,
         all_active_filters,
-        joinbyname=True,
         bygroup=False,
     )
 
@@ -281,11 +279,9 @@ def _hostname_by_group_table(
     return _singlehost_table(
         context,
         columns,
-        query,
         only_sites,
         limit,
         all_active_filters,
-        joinbyname=True,
         bygroup=True,
     )
 
@@ -301,11 +297,9 @@ def _host_table(
     return _singlehost_table(
         context,
         columns,
-        query,
         only_sites,
         limit,
         all_active_filters,
-        joinbyname=False,
         bygroup=False,
     )
 
@@ -313,11 +307,9 @@ def _host_table(
 def _singlehost_table(
     context: VisualContext,
     columns: list[ColumnName],
-    query: str,
     only_sites: OnlySites,
     limit: int | None,
     all_active_filters: Iterable[Filter],
-    joinbyname: bool,
     bygroup: bool,
 ) -> Rows:
     filterheaders = "".join(get_livestatus_filter_headers(context, all_active_filters))

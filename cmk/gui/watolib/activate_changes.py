@@ -67,7 +67,7 @@ from cmk.ccc.user import UserId
 from cmk.crypto.certificate import PersistedCertificateWithPrivateKey
 from cmk.discover_plugins import addons_plugins_local_path, plugins_local_path
 from cmk.gui import hooks, userdb
-from cmk.gui.background_job import (
+from cmk.gui.background_job.job import (
     BackgroundJob,
     BackgroundProcessInterface,
     InitialStatusArgs,

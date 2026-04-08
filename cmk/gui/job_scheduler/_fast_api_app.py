@@ -17,7 +17,7 @@ from fastapi import FastAPI, Request
 from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
 from starlette.responses import Response
 
-from cmk.gui.background_job import (
+from cmk.gui.background_job.job import (
     BackgroundJob,
     BackgroundJobsHealth,
     HealthResponse,

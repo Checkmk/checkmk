@@ -37,8 +37,8 @@ from cmk.gui import (
     welcome,
     werks,
 )
-from cmk.gui.background_job import BackgroundJobRegistry
-from cmk.gui.background_job import registration as background_job_registration
+from cmk.gui.background_job.job import BackgroundJobRegistry
+from cmk.gui.background_job.wato import registration as background_job_registration
 from cmk.gui.bi import registration as bi_registration
 from cmk.gui.cron import CronJobRegistry
 from cmk.gui.dashboard import DashletRegistry

@@ -22,7 +22,7 @@ from cmk.automations.types import AutomationID
 from cmk.ccc import store  # Some braindead "unit" test monkeypatch this like hell :-/
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.version import Version
-from cmk.gui.background_job import (
+from cmk.gui.background_job.job import (
     BackgroundJob,
     BackgroundJobRegistry,
     BackgroundProcessInterface,

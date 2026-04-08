@@ -11,7 +11,7 @@ from collections.abc import Collection, Iterator
 from typing import override
 
 from cmk.gui import gui_background_job
-from cmk.gui.background_job import BackgroundJob, BackgroundStatusSnapshot, job_registry
+from cmk.gui.background_job.job import BackgroundJob, BackgroundStatusSnapshot, job_registry
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import Config
 from cmk.gui.htmllib.html import html

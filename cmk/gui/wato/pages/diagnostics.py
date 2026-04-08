@@ -52,7 +52,7 @@ from cmk.diagnostics import (
     OSWalk,
     serialize_wato_parameters,
 )
-from cmk.gui.background_job import (
+from cmk.gui.background_job.job import (
     BackgroundJob,
     BackgroundJobRegistry,
     BackgroundProcessInterface,

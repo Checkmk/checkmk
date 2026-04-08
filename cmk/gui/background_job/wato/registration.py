@@ -5,6 +5,7 @@
 
 from datetime import timedelta
 
+from cmk.gui.background_job.job._manager import execute_housekeeping_job
 from cmk.gui.cron import CronJob, CronJobRegistry
 from cmk.gui.pages import PageRegistry
 from cmk.gui.watolib.automation_commands import AutomationCommandRegistry
@@ -13,7 +14,6 @@ from cmk.gui.watolib.mode import ModeRegistry
 
 from . import _modes
 from ._automation import AutomationBackgroundJobSnapshot
-from ._manager import execute_housekeeping_job
 
 
 def register(

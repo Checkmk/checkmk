@@ -32,7 +32,7 @@ from cmk.ccc.site import omd_site, SiteId
 from cmk.ccc.version import __version__, omd_version, Version
 from cmk.checkengine.discovery import CheckPreviewEntry
 from cmk.gui.agent_commands import get_agent_slideout, get_server_per_site
-from cmk.gui.background_job import JobStatusStates
+from cmk.gui.background_job.job import JobStatusStates
 from cmk.gui.breadcrumb import Breadcrumb, make_main_menu_breadcrumb
 from cmk.gui.config import active_config, Config
 from cmk.gui.exceptions import MKUserError

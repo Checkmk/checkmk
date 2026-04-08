@@ -84,3 +84,9 @@ class BackgroundStatusSnapshot:
     def from_dict(cls, data: dict) -> "BackgroundStatusSnapshot":
         data["status"] = JobStatusSpec(**data["status"])
         return cls(**data)
+
+
+class BackgroundJobTimedOut(Exception): ...
+
+
+class BackgroundJobFailure(Exception): ...

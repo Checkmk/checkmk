@@ -25,7 +25,7 @@ from cmk import fields
 from cmk.ccc.i18n import _
 from cmk.ccc.site import SiteId
 from cmk.gui import i18n
-from cmk.gui.background_job import AlreadyRunningError
+from cmk.gui.background_job.job import AlreadyRunningError
 from cmk.gui.config import active_config
 from cmk.gui.http import Response
 from cmk.gui.logged_in import user

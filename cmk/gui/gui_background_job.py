@@ -16,9 +16,9 @@ from typing import Literal, override
 import cmk.ccc.plugin_registry
 import cmk.utils.render
 from cmk.ccc.exceptions import MKGeneralException
-from cmk.gui import background_job as background_job
 from cmk.gui import log
-from cmk.gui.background_job import BackgroundJob, BackgroundStatusSnapshot
+from cmk.gui.background_job import job as background_job
+from cmk.gui.background_job.job import BackgroundJob, BackgroundStatusSnapshot
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html

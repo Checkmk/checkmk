@@ -5,7 +5,7 @@
 
 from datetime import timedelta
 
-from cmk.gui.background_job import BackgroundJobRegistry
+from cmk.gui.background_job.job import BackgroundJobRegistry
 from cmk.gui.cron import CronJob, CronJobRegistry
 from cmk.gui.pages import PageEndpoint, PageRegistry
 from cmk.gui.watolib.groups import ContactGroupUsageFinderRegistry

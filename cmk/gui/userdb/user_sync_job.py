@@ -12,7 +12,7 @@ from pydantic import BaseModel
 
 from livestatus import SiteConfigurations
 
-from cmk.gui.background_job import (
+from cmk.gui.background_job.job import (
     BackgroundJob,
     BackgroundProcessInterface,
     InitialStatusArgs,

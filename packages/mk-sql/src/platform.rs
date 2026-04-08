@@ -2,7 +2,7 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
-use crate::types::{HostName, InstanceName, Port};
+use crate::types::{ClusterName, HostName, InstanceName, Port};
 
 pub struct Block {
     pub headline: Vec<String>,
@@ -90,6 +90,7 @@ pub fn get_host_tcp_info() -> HostTcpInfo {
 #[derive(Debug, Clone)]
 pub struct InstanceInfo {
     pub name: InstanceName,
+    pub cluster: Option<ClusterName>,
     shared_memory: bool,
     pipe: Option<NamedPipe>,
     tcp: Option<Tcp>,
@@ -227,6 +228,7 @@ mod tests {
     fn test_instance_final_port() {
         let make_i = |port: Option<u16>, dynamic_port: Option<u16>| InstanceInfo {
             name: InstanceName::from("doesn't-matter".to_owned()),
+            cluster: None,
             shared_memory: false,
             pipe: None,
             tcp: Some(Tcp {
@@ -444,7 +446,7 @@ pub mod odbc {
 #[cfg(windows)]
 pub mod registry {
     use super::{InstanceInfo, NamedPipe, Tcp, TcpPoint};
-    use crate::types::{HostName, InstanceName, Port};
+    use crate::types::{ClusterName, HostName, InstanceName, Port};
     use std::collections::HashMap;
     use winreg::{enums::HKEY_LOCAL_MACHINE, RegKey};
     const MS_SQL_DEFAULT_BRANCH_LOCATION: &str = r"SOFTWARE\";
@@ -483,17 +485,22 @@ pub mod registry {
 
         names_map
             .iter()
-            .filter_map(|x| get_transport(sql_key, x.0, x.1))
+            .map(|x| instance_info(sql_key, x.0, x.1))
             .collect::<Vec<InstanceInfo>>()
+    }
+
+    fn open_subkey(sub_key: impl AsRef<str>) -> Option<RegKey> {
+        RegKey::predef(HKEY_LOCAL_MACHINE)
+            .open_subkey_with_flags(
+                sub_key.as_ref(),
+                winreg::enums::KEY_READ | winreg::enums::KEY_WOW64_64KEY,
+            )
+            .ok()
     }
 
     fn get_shared_memory(sql_key: &str, key_name: &str) -> bool {
         let instance_sm_key = format!(r"{}{}\MSSQLServer\SuperSocketNetLib\Sm", sql_key, key_name);
-        let root_key = RegKey::predef(HKEY_LOCAL_MACHINE);
-        if let Ok(key) = root_key.open_subkey_with_flags(
-            instance_sm_key,
-            winreg::enums::KEY_READ | winreg::enums::KEY_WOW64_64KEY,
-        ) {
+        if let Some(key) = open_subkey(instance_sm_key) {
             key.get_value::<u32, _>("Enabled").unwrap_or_default() != 0
         } else {
             false
@@ -503,17 +510,26 @@ pub mod registry {
     fn get_pipe(sql_key: &str, key_name: &str) -> Option<String> {
         let instance_pipe_key =
             format!(r"{}{}\MSSQLServer\SuperSocketNetLib\Np", sql_key, key_name);
-        let root_key = RegKey::predef(HKEY_LOCAL_MACHINE);
-        if let Ok(key) = root_key.open_subkey_with_flags(
-            instance_pipe_key,
-            winreg::enums::KEY_READ | winreg::enums::KEY_WOW64_64KEY,
-        ) {
+        if let Some(key) = open_subkey(instance_pipe_key) {
             let pipe_enabled: u32 = key.get_value("Enabled").unwrap_or_default();
             if pipe_enabled != 0 {
                 key.get_value("PipeName").ok()
             } else {
                 None
             }
+        } else {
+            None
+        }
+    }
+
+    fn cluster_name(sql_key: &str, key_name: &str) -> Option<ClusterName> {
+        let cluster_key = format!(r"{}{}\Cluster", sql_key, key_name);
+        if let Ok(key) = RegKey::predef(HKEY_LOCAL_MACHINE).open_subkey_with_flags(
+            cluster_key,
+            winreg::enums::KEY_READ | winreg::enums::KEY_WOW64_64KEY,
+        ) {
+            let value: Option<String> = key.get_value("ClusterName").ok();
+            value.map(ClusterName::from)
         } else {
             None
         }
@@ -599,18 +615,19 @@ pub mod registry {
         .collect()
     }
 
-    fn get_transport(
+    /// Ctor
+    fn instance_info(
         sql_key: &str,
         instance_name: &str,
         registry_instance_name: &str,
-    ) -> Option<InstanceInfo> {
-        let x = InstanceInfo {
-            name: InstanceName::from(instance_name.to_owned()),
+    ) -> InstanceInfo {
+        InstanceInfo {
+            name: InstanceName::from(instance_name),
+            cluster: cluster_name(sql_key, registry_instance_name),
             shared_memory: get_shared_memory(sql_key, registry_instance_name),
             pipe: get_pipe(sql_key, registry_instance_name).map(NamedPipe),
             tcp: get_tcp(sql_key, registry_instance_name),
-        };
-        Some(x)
+        }
     }
 
     #[cfg(test)]

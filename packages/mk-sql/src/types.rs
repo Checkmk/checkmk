@@ -43,12 +43,21 @@ pub struct InstanceEdition(String);
 #[derive(PartialEq, From, Clone, Debug, Display, Default, Into)]
 pub struct InstanceVersion(String);
 
-#[derive(PartialEq, From, Clone, Debug, Display, Default, Into)]
-pub struct InstanceCluster(String);
+#[derive(PartialEq, From, Debug, Display, Clone, Default, Into, Hash, Eq)]
+pub struct ClusterName(String);
+
+impl From<&str> for ClusterName {
+    fn from(s: &str) -> Self {
+        ClusterName(s.to_string())
+    }
+}
 
 // used once, may be removed in the future
-impl<'a> From<&'a InstanceCluster> for &'a str {
-    fn from(instance_cluster: &'a InstanceCluster) -> &'a str {
+pub struct _InstanceCluster(String);
+
+// used once, may be removed in the future
+impl<'a> From<&'a _InstanceCluster> for &'a str {
+    fn from(instance_cluster: &'a _InstanceCluster) -> &'a str {
         instance_cluster.0.as_str()
     }
 }

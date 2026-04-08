@@ -157,7 +157,7 @@ class _RowTableBIHostAggregations(RowTable):
         limit: int | None,
         all_active_filters: list[Filter],
     ) -> Rows | tuple[Rows, int]:
-        return _singlehost_table(
+        return _fetch_singlehost_table_rows(
             context, columns, only_sites, limit, all_active_filters, bygroup=False
         )
 
@@ -203,7 +203,7 @@ class _RowTableBIHostnameAggregations(RowTable):
         limit: int | None,
         all_active_filters: list[Filter],
     ) -> Rows | tuple[Rows, int]:
-        return _singlehost_table(
+        return _fetch_singlehost_table_rows(
             context, columns, only_sites, limit, all_active_filters, bygroup=False
         )
 
@@ -248,12 +248,12 @@ class _RowTableBIHostnameByGroupAggregations(RowTable):
         limit: int | None,
         all_active_filters: list[Filter],
     ) -> Rows | tuple[Rows, int]:
-        return _singlehost_table(
+        return _fetch_singlehost_table_rows(
             context, columns, only_sites, limit, all_active_filters, bygroup=True
         )
 
 
-def _singlehost_table(
+def _fetch_singlehost_table_rows(
     context: VisualContext,
     columns: list[ColumnName],
     only_sites: OnlySites,
@@ -1104,14 +1104,14 @@ class CommandGroupAggregations(CommandGroup):
         return 10
 
 
-def _command_freeze_aggregation_render(what: str) -> None:
+def _handle_command_freeze_aggregation_render(what: str) -> None:
     html.open_div(class_="group")
     html.button(_button_name(), _("Freeze selected"), cssclass="hot")
     html.button("_cancel", _("Cancel"))
     html.close_div()
 
 
-def _command_freeze_aggregation_affected(
+def _handle_command_freeze_aggregation_affected(
     len_action_rows: int, cmdtag: Literal["HOST", "SVC"]
 ) -> HTML:
     return HTML.without_escaping(
@@ -1131,7 +1131,7 @@ def _button_name() -> str:
     return "_freeze_aggregations"
 
 
-def _command_freeze_aggregation_action(
+def _handle_command_freeze_aggregation_action(
     command: Command,
     cmdtag: Literal["HOST", "SVC"],
     spec: str,
@@ -1158,7 +1158,7 @@ def _command_freeze_aggregation_action(
     return None
 
 
-def _command_freeze_aggregation_executor(command: CommandSpec, site: SiteId | None) -> None:
+def _handle_command_freeze_aggregation_executor(command: CommandSpec, site: SiteId | None) -> None:
     """Function that is called to execute this action"""
     assert isinstance(command, Dummy)
     Path(command.arg).unlink(missing_ok=True)
@@ -1176,8 +1176,8 @@ CommandFreezeAggregation = Command(
     group=CommandGroupAggregations,
     tables=["aggr"],
     only_view="aggr_frozen_diff",
-    render=_command_freeze_aggregation_render,
-    action=_command_freeze_aggregation_action,
-    affected_output_cb=_command_freeze_aggregation_affected,
-    executor=_command_freeze_aggregation_executor,
+    render=_handle_command_freeze_aggregation_render,
+    action=_handle_command_freeze_aggregation_action,
+    affected_output_cb=_handle_command_freeze_aggregation_affected,
+    executor=_handle_command_freeze_aggregation_executor,
 )

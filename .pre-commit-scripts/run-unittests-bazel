@@ -8,22 +8,8 @@
 # and runs only those packages via bazel test.
 set -e
 
-REPO_PATH="$(git rev-parse --show-toplevel)"
-
-# Walk up the directory tree to find the nearest BUILD / BUILD.bazel file and
-# return the corresponding Bazel package target (e.g. //tests/unit/cmk/foo:all).
-find_bazel_package() {
-    local dir
-    dir=$(dirname "$1")
-    while [[ "$dir" != "." ]]; do
-        if [[ -f "${REPO_PATH}/${dir}/BUILD" || -f "${REPO_PATH}/${dir}/BUILD.bazel" ]]; then
-            echo "//${dir}:all"
-            return
-        fi
-        dir=$(dirname "$dir")
-    done
-    echo "//:all"
-}
+# shellcheck source=.pre-commit-scripts/lib-precommit
+source "$(dirname "$0")/lib-precommit"
 
 declare -a TEST_PACKAGES
 
@@ -39,7 +25,7 @@ for param in "$@"; do
     dir=$(dirname "${param}")
     filename=$(basename "${param}")
     testfile="tests/unit/${dir}/test_${filename}"
-    if [[ -f "${REPO_PATH}/${testfile}" ]]; then
+    if [[ -f "${GIT_ROOT}/${testfile}" ]]; then
         TEST_PACKAGES+=("$(find_bazel_package "$testfile")")
     fi
 done
@@ -52,7 +38,7 @@ fi
 # Deduplicate
 mapfile -t TEST_PACKAGES < <(printf '%s\n' "${TEST_PACKAGES[@]}" | sort -u)
 
-pushd "${REPO_PATH}" >/dev/null
+pushd "${GIT_ROOT}" >/dev/null
 
 set +e
 bazel test \

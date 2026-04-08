@@ -1,6 +1,21 @@
-#!/bin/sh
+#!/bin/bash
 
 GIT_ROOT=$(git rev-parse --show-toplevel)
+
+# Walk up the directory tree to find the nearest BUILD / BUILD.bazel file and
+# return the corresponding Bazel package target (e.g. //cmk/foo:all).
+find_bazel_package() {
+    local dir
+    dir=$(dirname "$1")
+    while [[ "$dir" != "." ]]; do
+        if [[ -f "${GIT_ROOT}/${dir}/BUILD" || -f "${GIT_ROOT}/${dir}/BUILD.bazel" ]]; then
+            echo "//${dir}:all"
+            return
+        fi
+        dir=$(dirname "$dir")
+    done
+    echo "//:all"
+}
 
 python_files() {
     if [ "${1}" -eq 2 ]; then

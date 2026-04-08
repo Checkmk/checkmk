@@ -23,7 +23,6 @@ interface GraphTitleFormat {
 }
 
 interface GraphDisplayConfigHTML {
-  color_gradient: number
   editing: boolean
   explicit_title: string | null
   fixed_timerange: boolean

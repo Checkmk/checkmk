@@ -23,7 +23,6 @@ def _curve_annotation() -> CurveAnnotations:
     return CurveAnnotations(
         scalars=Scalars(
             pin=(None, ""),
-            first=(None, ""),
             last=(None, ""),
             max=(None, ""),
             min=(None, ""),

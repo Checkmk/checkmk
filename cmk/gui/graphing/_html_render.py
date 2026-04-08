@@ -1540,7 +1540,6 @@ def render_graph_values_at_time(
                                 CurveAnnotations(
                                     scalars=Scalars(
                                         pin=(None, ""),
-                                        first=(None, ""),
                                         last=(None, ""),
                                         max=(None, ""),
                                         min=(None, ""),

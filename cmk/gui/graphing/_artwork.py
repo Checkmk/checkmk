@@ -68,7 +68,6 @@ class AxisTick(BaseModel, frozen=True):
 
 class Scalars(TypedDict):
     pin: tuple[float | None, str]
-    first: tuple[float | None, str]
     last: tuple[float | None, str]
     max: tuple[float | None, str]
     min: tuple[float | None, str]
@@ -435,7 +434,6 @@ def _compute_scalars(
     return (
         Scalars(
             pin=pin,
-            first=_render_scalar_value(clean_rrddata[0], unit_renderer),
             last=_render_scalar_value(clean_rrddata[-1], unit_renderer),
             max=_render_scalar_value(max(clean_rrddata), unit_renderer),
             min=_render_scalar_value(min(clean_rrddata), unit_renderer),
@@ -446,7 +444,6 @@ def _compute_scalars(
         if (clean_rrddata := clean_time_series_point(rrddata))
         else Scalars(
             pin=pin,
-            first=(None, _("n/a")),
             last=(None, _("n/a")),
             max=(None, _("n/a")),
             min=(None, _("n/a")),

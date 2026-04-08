@@ -2,24 +2,29 @@
 # Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-"""Patches ELF .so files in a directory tree with depth-relative $ORIGIN rpaths."""
+"""Patches ELF files in a directory tree with depth-relative $ORIGIN rpaths."""
 
 import os
-import re
 import shutil
 import subprocess
 import sys
 
-_SO_PATTERN = re.compile(r"\.so(\.\d+)*$")
+
+def _is_elf(filepath: str) -> bool:
+    try:
+        with open(filepath, "rb") as f:
+            return f.read(4) == b"\x7fELF"
+    except OSError:
+        return False
 
 
 def _patch_elf_files(directory: str, patchelf: str, base_rpath: str) -> None:
     for dirpath, _, filenames in os.walk(directory):
         for filename in filenames:
-            if not _SO_PATTERN.search(filename):
-                continue
             filepath = os.path.join(dirpath, filename)
             if os.path.islink(filepath):
+                continue
+            if not _is_elf(filepath):
                 continue
             rel_dir = os.path.relpath(dirpath, directory)
             depth = len(rel_dir.split(os.sep)) if rel_dir != "." else 0

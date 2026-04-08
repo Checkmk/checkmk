@@ -1,4 +1,5 @@
-load("@//bazel/rules:exclude_from_filegroup.bzl", "exclude_from_filegroup")
+load("@aspect_bazel_lib//lib:copy_to_directory.bzl", "copy_to_directory")
+load("@aspect_bazel_lib//lib:directory_path.bzl", "directory_path")
 load("@rules_pkg//pkg:mappings.bzl", "pkg_attributes", "pkg_files")
 load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
 
@@ -15,19 +16,27 @@ pkg_files(
     tags = ["manual"],
 )
 
-exclude_from_filegroup(
-    name = "share",
-    src = "@heirloom-pkgtools//:share",
-    excludes = ["bin"],
+directory_path(
+    name = "heirloom_share_dir",
+    directory = "@heirloom-pkgtools//:share",
+    path = "share",
+    tags = ["manual"],
+)
+
+copy_to_directory(
+    name = "share_copy",
+    srcs = [":heirloom_share_dir"],
+    include_external_repositories = ["**"],
+    root_paths = ["**/heirloom-pkgtools"],
     tags = ["manual"],
 )
 
 pkg_files(
     name = "share_pkg",
     srcs = [
-        ":share",
+        ":share_copy",
     ],
-    strip_prefix = "rest",
+    strip_prefix = "share_copy",
     tags = ["manual"],
 )
 

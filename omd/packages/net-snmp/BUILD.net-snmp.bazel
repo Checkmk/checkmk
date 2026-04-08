@@ -38,11 +38,9 @@ configure_make(
         "-I$BUILD_TMPDIR/include",
         "-I${EXT_BUILD_DEPS}/python/include/python%s/" % PYTHON_MAJOR_DOT_MINOR,
         "-I$EXT_BUILD_DEPS/python/lib/",
-        "-Wl,--rpath,$ORIGIN_VAR/../lib",
     ],
     env = {
         "LD_LIBRARY_PATH": "$$EXT_BUILD_DEPS/python/lib/",
-        "ORIGIN_VAR": "\\\\$$\\$$ORIGIN",
         "PERL_DIR": "$$(dirname $(execpath @@//omd/packages/perl-modules:perl-modules.tar))/perl-modules",
         "PERL_MODULES_TAR": "$(execpath @@//omd/packages/perl-modules:perl-modules.tar)",
         "PKG_CONFIG_PATH": ":".join([

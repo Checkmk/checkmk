@@ -35,7 +35,7 @@ export function formatError(error: Error | CmkError): string {
 }
 
 export class CmkError<T extends Error = Error> extends Error {
-  cause: T | null
+  override cause: T | null
 
   constructor(message: string, cause: T | null) {
     super(message)

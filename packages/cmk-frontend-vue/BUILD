@@ -28,7 +28,10 @@ js_library(
 
 js_library(
     name = "eslintrc",
-    srcs = ["eslint.config.mjs"],
+    srcs = [
+        "eslint.config.mjs",
+        "//:node_modules/eslint",
+    ],
     tags = ["no-lint"],
     visibility = ["//visibility:public"],
 )

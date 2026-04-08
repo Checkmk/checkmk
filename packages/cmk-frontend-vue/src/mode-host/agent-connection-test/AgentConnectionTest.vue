@@ -445,15 +445,15 @@ interface ContainerValues {
 }
 
 const warnContainerValues = computed<ContainerValues>(() => {
-  let header: string = _t('Agent connection failed')
-  let txt: string,
-    error: string | null = errorDetails.value
-  let buttonOneTitle: string = reTestAgentTitle
-  let buttonOneButton: string = reTestAgentButton
-  let buttonOneClick: () => void | Promise<void> = reTestAgentClick
-  let buttonTwoTitle: string | null = null
-  let buttonTwoButton: string | null = null
-  let buttonTwoClick: () => void | Promise<void> = () => {}
+  let header: string
+  let txt: string
+  let error: string | null = errorDetails.value
+  let buttonOneTitle: string
+  let buttonOneButton: string
+  let buttonOneClick: () => void | Promise<void>
+  let buttonTwoTitle: string | null
+  let buttonTwoButton: string | null
+  let buttonTwoClick: () => void | Promise<void>
 
   if (isNotRegistered.value) {
     header = _t('Agent not registered')

@@ -161,7 +161,7 @@ async function pollActivationStatusUntilComplete(activationId: string) {
     mainMenu.restartBadgeUpdate('changes')
     void fetchPendingChangesAjax()
 
-    throw new Error(`Polling of activation result failed: ${error}`)
+    throw new Error(`Polling of activation result failed: ${error}`, { cause: error })
   }
 }
 
@@ -246,7 +246,7 @@ async function fetchPendingChangesAjax(): Promise<void> {
 
     setSelectedSites()
   } catch (error) {
-    throw new Error(`fetchPendingChangesAjax failed: ${error}`)
+    throw new Error(`fetchPendingChangesAjax failed: ${error}`, { cause: error })
   }
 }
 

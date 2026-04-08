@@ -180,7 +180,7 @@ const _waitForBackgroundJobToFinish = async (
   siteId: string,
   onLogUpdate?: LogWatcher
 ): Promise<void> => {
-  let isActive = true
+  let isActive: boolean
   let lastLog: LogUpdate | null = null
 
   do {

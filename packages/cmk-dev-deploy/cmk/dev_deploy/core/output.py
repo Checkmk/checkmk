@@ -169,12 +169,22 @@ def _deploy_prefix() -> str:
 
 
 def _verbose_only[**P](fn: Callable[P, None]) -> Callable[P, None]:
-    """Decorator that makes a function no-op when verbosity < VERBOSE."""
+    """Decorator that suppresses console output when verbosity < VERBOSE.
+
+    The decorated function still runs at default verbosity so that all
+    output is captured in the log file — only terminal printing is skipped.
+    """
 
     @functools.wraps(fn)
     def wrapper(*args: P.args, **kwargs: P.kwargs) -> None:
         if _config.verbosity >= Verbosity.VERBOSE:
             fn(*args, **kwargs)
+        else:
+            _config.thread_local.log_only = True
+            try:
+                fn(*args, **kwargs)
+            finally:
+                _config.thread_local.log_only = False
 
     return wrapper
 
@@ -217,6 +227,8 @@ def _tty_print(msg: str, *, file: Any = None) -> None:
 
 def _print_locked(msg: str, *, file: Any = None) -> None:
     _log_to_file(msg)
+    if getattr(_config.thread_local, "log_only", False):
+        return
     if getattr(_config.thread_local, "buffering", False):
         _config.thread_local.buffer.append((msg, file))
         return

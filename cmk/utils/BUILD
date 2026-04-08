@@ -26,6 +26,7 @@ py_library(
         "//cmk/utils/werks/announce/templates:j2_templates",
     ],
     visibility = [
+        "//bin:__subpackages__",
         "//cmk:__subpackages__",
         "//non-free/packages:__subpackages__",
         "//omd/packages:__subpackages__",

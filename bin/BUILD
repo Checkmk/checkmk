@@ -159,35 +159,38 @@ py_library(
     name = "cmk_migrate_http_py",
     srcs = ["cmk-migrate-http.py"],
     imports = ["."],
-    tags = ["no-mypy"],
+    deps = ["//cmk/update_config"],
 )
 
 py_library(
     name = "cmk_update_config_py",
     srcs = ["cmk-update-config.py"],
     imports = ["."],
-    tags = ["no-mypy"],
+    deps = ["//cmk/update_config"],
 )
 
 py_library(
     name = "post_rename_site_py",
     srcs = ["post-rename-site.py"],
     imports = ["."],
-    tags = ["no-mypy"],
+    deps = ["//cmk/post_rename_site"],
 )
 
 py_library(
     name = "mkeventd_main",
     srcs = ["mkeventd.py"],
     imports = ["."],
-    tags = ["no-mypy"],
+    deps = [
+        "//cmk/utils",
+        "//packages/cmk-ec",
+    ],
 )
 
 py_library(
     name = "cmk-create-rrd_main",
     srcs = ["cmk-create-rrd.py"],
     imports = ["."],
-    tags = ["no-mypy"],
+    deps = ["//cmk/rrd"],
 )
 
 sh_library(

@@ -12,6 +12,7 @@ py_library(
     ),
     imports = ["../.."],
     visibility = [
+        "//bin:__subpackages__",
         "//cmk:__subpackages__",
         "//tests:__subpackages__",
     ],

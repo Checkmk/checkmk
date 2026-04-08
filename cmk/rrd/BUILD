@@ -4,7 +4,10 @@ py_library(
     name = "rrd",
     srcs = glob(["**/*.py"]),
     imports = ["../.."],
-    visibility = ["//cmk:__subpackages__"],
+    visibility = [
+        "//bin:__subpackages__",
+        "//cmk:__subpackages__",
+    ],
     deps = [
         "//cmk/utils",
         "//packages/cmk-ccc:exceptions",

@@ -8,7 +8,7 @@
 import typing
 from collections.abc import Iterable, Sequence
 from pathlib import Path
-from typing import Any, Literal
+from typing import Any, Final, Literal
 
 from livestatus import OnlySites
 
@@ -69,6 +69,8 @@ from cmk.gui.visuals.filter import Filter
 from cmk.livestatus_client import Dummy
 from cmk.utils.servicename import ServiceName
 from cmk.utils.statename import short_service_state_name
+
+_FREEZE_AGGREGATION_BUTTON_VARNAME: Final = "_freeze_aggregations"
 
 
 class DataSourceBIAggregations(ABCDataSource):
@@ -1106,7 +1108,7 @@ class CommandGroupAggregations(CommandGroup):
 
 def _handle_command_freeze_aggregation_render(what: str) -> None:
     html.open_div(class_="group")
-    html.button(_button_name(), _("Freeze selected"), cssclass="hot")
+    html.button(_FREEZE_AGGREGATION_BUTTON_VARNAME, _("Freeze selected"), cssclass="hot")
     html.button("_cancel", _("Cancel"))
     html.close_div()
 
@@ -1127,10 +1129,6 @@ def _handle_command_freeze_aggregation_affected(
     )
 
 
-def _button_name() -> str:
-    return "_freeze_aggregations"
-
-
 def _handle_command_freeze_aggregation_action(
     command: Command,
     cmdtag: Literal["HOST", "SVC"],
@@ -1139,7 +1137,7 @@ def _handle_command_freeze_aggregation_action(
     row_index: int,
     action_rows: Rows,
 ) -> CommandActionResult:
-    if not request.has_var(_button_name()):
+    if not request.has_var(_FREEZE_AGGREGATION_BUTTON_VARNAME):
         return None
 
     if (compiled_aggregation := row.get("aggr_compiled_aggregation")) is not None:

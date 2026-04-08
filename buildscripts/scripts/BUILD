@@ -81,6 +81,13 @@ py_binary(
     tags = ["manual"],
 )
 
+py_binary(
+    name = "collect_rust_tests",
+    srcs = ["collect_rust_tests.py"],
+    main = "collect_rust_tests.py",
+    tags = ["manual"],
+)
+
 filegroup(
     name = "groovy_files",
     srcs = glob(["**/*.groovy"]),

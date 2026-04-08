@@ -162,6 +162,7 @@ STAGES:
               -- \
               //... || make_rc=$?
           ../buildscripts/scripts/bazel_test_post_archive_xunit.sh || :
+          bazel --run_under="cd $PWD &&" run //buildscripts/scripts:collect_rust_tests -- "../results" "../results" || :
           exit $make_rc
       BAZEL_LOCKS_AMOUNT: 1
       RESULT_CHECK_TYPE: "JUNIT"

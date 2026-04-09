@@ -4,14 +4,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="misc"
-# mypy: disable-error-code="no-untyped-call"
 
 from collections.abc import Mapping, Sequence
 from typing import Any
 
 import pytest
 
-from cmk.agent_based.v2 import StringTable
+from cmk.agent_based.v2 import Metric, Result, Service, State, StringTable
 from cmk.legacy_checks.aws_wafv2_limits import (
     check_aws_wafv2_limits,
     discover_aws_wafv2_limits,
@@ -103,17 +102,19 @@ from cmk.plugins.aws.lib import parse_aws_limits_generic
                     '"us-east-1"]]',
                 ],
             ],
-            [("CloudFront", {}), ("eu-central-1", {}), ("us-east-1", {})],
+            [Service(item="CloudFront"), Service(item="eu-central-1"), Service(item="us-east-1")],
         ),
     ],
 )
 def test_discover_aws_wafv2_limits(
-    info: StringTable, expected_discoveries: Sequence[tuple[str, Mapping[str, Any]]]
+    info: StringTable, expected_discoveries: Sequence[Service]
 ) -> None:
     """Test discovery function for aws_wafv2_limits check."""
     parsed = parse_aws_limits_generic(info)
     result = list(discover_aws_wafv2_limits(parsed))
-    assert sorted(result) == sorted(expected_discoveries)
+    assert sorted(result, key=lambda s: s.item or "") == sorted(
+        expected_discoveries, key=lambda s: s.item or ""
+    )
 
 
 @pytest.mark.parametrize(
@@ -209,20 +210,14 @@ def test_discover_aws_wafv2_limits(
                 ],
             ],
             [
-                (
-                    0,
-                    "No levels reached",
-                    [
-                        ("aws_wafv2_web_acls", 1),
-                        ("aws_wafv2_rule_groups", 1),
-                        ("aws_wafv2_ip_sets", 0),
-                        ("aws_wafv2_regex_pattern_sets", 1),
-                    ],
-                ),
-                (0, "\nIP sets: 0 (of max. 100)"),
-                (0, "\nRegex sets: 1 (of max. 10)"),
-                (0, "\nRule groups: 1 (of max. 100)"),
-                (0, "\nWeb ACLs: 1 (of max. 100)"),
+                Metric("aws_wafv2_web_acls", 1),
+                Result(state=State.OK, notice="Web ACLs: 1 (of max. 100), 1.00%"),
+                Metric("aws_wafv2_rule_groups", 1),
+                Result(state=State.OK, notice="Rule groups: 1 (of max. 100), 1.00%"),
+                Metric("aws_wafv2_ip_sets", 0),
+                Result(state=State.OK, notice="IP sets: 0 (of max. 100), 0%"),
+                Metric("aws_wafv2_regex_pattern_sets", 1),
+                Result(state=State.OK, notice="Regex sets: 1 (of max. 10), 10.00%"),
             ],
         ),
         (
@@ -315,20 +310,14 @@ def test_discover_aws_wafv2_limits(
                 ],
             ],
             [
-                (
-                    0,
-                    "No levels reached",
-                    [
-                        ("aws_wafv2_web_acls", 1),
-                        ("aws_wafv2_rule_groups", 1),
-                        ("aws_wafv2_ip_sets", 1),
-                        ("aws_wafv2_regex_pattern_sets", 1),
-                    ],
-                ),
-                (0, "\nIP sets: 1 (of max. 100)"),
-                (0, "\nRegex sets: 1 (of max. 10)"),
-                (0, "\nRule groups: 1 (of max. 100)"),
-                (0, "\nWeb ACLs: 1 (of max. 100)"),
+                Metric("aws_wafv2_web_acls", 1),
+                Result(state=State.OK, notice="Web ACLs: 1 (of max. 100), 1.00%"),
+                Metric("aws_wafv2_rule_groups", 1),
+                Result(state=State.OK, notice="Rule groups: 1 (of max. 100), 1.00%"),
+                Metric("aws_wafv2_ip_sets", 1),
+                Result(state=State.OK, notice="IP sets: 1 (of max. 100), 1.00%"),
+                Metric("aws_wafv2_regex_pattern_sets", 1),
+                Result(state=State.OK, notice="Regex sets: 1 (of max. 10), 10.00%"),
             ],
         ),
     ],

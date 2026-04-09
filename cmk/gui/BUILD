@@ -5,7 +5,6 @@ exports_files([
     ".f12",
     "openapi/.f12",
     "openapi/spec/spec_generator/generate_api_spec.py",
-    "wsgi/.f12",
 ])
 
 py_library(
@@ -1177,6 +1176,63 @@ py_library(
     ],
 )
 
+py_library(
+    name = "auth",
+    srcs = ["auth.py"],
+    imports = ["../.."],
+    visibility = [
+        "//cmk:__subpackages__",
+        "//tests:__subpackages__",
+    ],
+    deps = [
+        ":config",
+        ":exceptions",
+        ":http",
+        ":i18n",
+        ":log",
+        ":pseudo_users",
+        ":site_config",
+        ":type_defs",
+        "//cmk/gui/userdb",
+        "//cmk/gui/utils:htpasswd",
+        "//cmk/gui/utils:security_log_events",
+        "//cmk/gui/utils:urls",
+        "//cmk/utils",
+        "//packages/cmk-ccc:user",
+        "//packages/cmk-crypto",
+    ],
+)
+
+py_library(
+    name = "session",
+    srcs = ["session.py"],
+    imports = ["../.."],
+    visibility = [
+        "//cmk:__subpackages__",
+        "//tests:__subpackages__",
+    ],
+    deps = [
+        ":auth",
+        ":config",
+        ":exceptions",
+        ":i18n",
+        ":logged_in",
+        ":permissions",
+        ":pseudo_users",
+        ":type_defs",
+        "//cmk/gui/userdb",
+        "//cmk/gui/utils:flashed_messages",
+        "//cmk/gui/utils:roles",
+        "//cmk/gui/utils:security_log_events",
+        "//cmk/gui/wsgi:utils",
+        "//cmk/utils",
+        "//packages/cmk-ccc:exceptions",
+        "//packages/cmk-ccc:site",
+        "//packages/cmk-ccc:user",
+        requirement("flask"),
+    ],
+)
+
 # Monolithic target which we extract smaller targets from. As long as we are in the in place
 # extraction process below the cmk.gui module hierarchy, we will have to work with excludes. This
 # will be cleaned up when we move the pieces into their future python module structure.
@@ -1187,6 +1243,7 @@ py_library(
         exclude = [
             "agent_commands.py",
             "alarm.py",
+            "auth.py",
             "breadcrumb.py",
             "cert_info.py",
             "color.py",
@@ -1236,6 +1293,7 @@ py_library(
             "role_types.py",
             "query_filters.py",
             "search_menu.py",
+            "session.py",
             "single_global_setting.py",
             "site_config.py",
             "sites.py",
@@ -1253,10 +1311,9 @@ py_library(
             "werks.py",
         ],
     ) + [
-        "wsgi/applications/index.wsgi",
-    ] + [
         "//cmk/gui/userdb:gui_srcs",
         "//cmk/gui/watolib:gui_srcs",
+        "//cmk/gui/wsgi:gui_srcs",
     ],
     imports = ["../.."],
     visibility = [
@@ -1272,6 +1329,7 @@ py_library(
     deps = [
         ":agent_commands",
         ":alarm",
+        ":auth",
         ":breadcrumb",
         ":cert_info",
         ":color",
@@ -1321,6 +1379,7 @@ py_library(
         ":query_filters",
         ":role_types",
         ":search_menu",
+        ":session",
         ":single_global_setting",
         ":site_config",
         ":sites",
@@ -1392,6 +1451,7 @@ py_library(
         "//cmk/gui/valuespec",
         "//cmk/gui/watolib:config_infra",
         "//cmk/gui/watolib:registries",
+        "//cmk/gui/wsgi:utils",
         "//cmk/inventory",
         "//cmk/piggyback:backend",
         "//cmk/piggyback:hub",

@@ -5,13 +5,32 @@
 
 from pathlib import Path
 
+import pytest
+
 from cmk.bakery.v1 import OS, Plugin
 from cmk.base.plugins.bakery.vxvm import get_vxvm_files
 
 
-def test_vxvm_files() -> None:
-    result = list(get_vxvm_files(None))
-    expected = [
-        Plugin(base_os=OS.LINUX, source=Path("vxvm")),
-    ]
-    assert result == expected
+@pytest.mark.parametrize(
+    "conf, expected_files",
+    [
+        (
+            {"deployment": ("sync", None)},
+            [Plugin(base_os=OS.LINUX, source=Path("vxvm"), interval=None)],
+        ),
+        (
+            {"deployment": ("cached", 3600.0)},
+            [Plugin(base_os=OS.LINUX, source=Path("vxvm"), interval=3600)],
+        ),
+        (
+            {"deployment": ("do_not_deploy", None)},
+            [],
+        ),
+    ],
+)
+def test_vxvm_files(
+    conf: dict[str, object],
+    expected_files: list[Plugin],
+) -> None:
+    result = list(get_vxvm_files(conf))
+    assert result == expected_files

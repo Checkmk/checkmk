@@ -18,9 +18,8 @@ from cmk.ccc.site import omd_site
 from cmk.ccc.user import UserId
 from cmk.ccc.version import Edition, edition
 from cmk.crypto.password import Password, PasswordPolicy
-from cmk.gui import forms, gui_background_job, userdb
-from cmk.gui.background_job import job as background_job
-from cmk.gui.background_job.job import JobTarget
+from cmk.gui import background_job, forms, gui_background_job, userdb
+from cmk.gui.background_job import JobTarget
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
 from cmk.gui.config import active_config, Config
 from cmk.gui.customer import ABCCustomerAPI, customer_api

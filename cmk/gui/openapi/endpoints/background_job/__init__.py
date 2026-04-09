@@ -16,7 +16,7 @@ from typing import Any
 
 from cmk import fields as gui_fields
 from cmk.ccc.site import omd_site, SiteId
-from cmk.gui.background_job.job import BackgroundJob, BackgroundStatusSnapshot
+from cmk.gui.background_job import BackgroundJob, BackgroundStatusSnapshot
 from cmk.gui.config import active_config
 from cmk.gui.http import Response
 from cmk.gui.logged_in import user

@@ -32,8 +32,7 @@ import cmk.gui.watolib.user_scripts
 import cmk.gui.watolib.utils
 import cmk.utils.paths
 from cmk.ccc.exceptions import MKGeneralException
-from cmk.gui import forms, gui_background_job, sites, userdb, watolib, weblib
-from cmk.gui.background_job import job as background_job
+from cmk.gui import background_job, forms, gui_background_job, sites, userdb, watolib, weblib
 from cmk.gui.hooks import register_hook as register_hook
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _

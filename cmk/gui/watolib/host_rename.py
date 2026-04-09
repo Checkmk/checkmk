@@ -20,7 +20,7 @@ from cmk.ccc.hostaddress import HostName
 from cmk.ccc.plugin_registry import Registry
 from cmk.ccc.site import SiteId
 from cmk.gui import userdb
-from cmk.gui.background_job.job import BackgroundJob, BackgroundProcessInterface
+from cmk.gui.background_job import BackgroundJob, BackgroundProcessInterface
 from cmk.gui.config import active_config, Config
 from cmk.gui.exceptions import MKAuthException
 from cmk.gui.http import Request, request

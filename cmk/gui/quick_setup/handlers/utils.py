@@ -12,7 +12,7 @@ from typing import Any, cast
 
 from pydantic import BaseModel
 
-from cmk.gui.background_job.job import BackgroundProcessInterface
+from cmk.gui.background_job import BackgroundProcessInterface
 from cmk.gui.exceptions import MKInternalError
 from cmk.gui.form_specs import (
     DEFAULT_VALUE,

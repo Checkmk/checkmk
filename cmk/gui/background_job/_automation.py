@@ -6,7 +6,7 @@
 import json
 from typing import override
 
-from cmk.gui.background_job.job import BackgroundJob
+from cmk.gui.background_job import BackgroundJob
 from cmk.gui.config import Config
 from cmk.gui.http import Request
 from cmk.gui.watolib.automation_commands import AutomationCommand

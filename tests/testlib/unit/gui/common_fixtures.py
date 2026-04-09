@@ -83,7 +83,7 @@ def validate_background_job_annotation(
         return
 
     mocker.patch(
-        "cmk.gui.background_job.job._base.BackgroundJob.start",
+        "cmk.gui.background_job._base.BackgroundJob.start",
         side_effect=RuntimeError(validate_background_job_annotation.__doc__),
     )
 

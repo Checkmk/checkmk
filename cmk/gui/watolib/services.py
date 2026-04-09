@@ -42,7 +42,7 @@ from cmk.ccc.store import ObjectStore, TextSerializer
 from cmk.ccc.version import __version__, Version
 from cmk.checkengine.discovery import CheckPreviewEntry, DiscoverySettings
 from cmk.checkengine.plugins import AutocheckEntry, CheckPluginName
-from cmk.gui.background_job.job import (
+from cmk.gui.background_job import (
     BackgroundJob,
     BackgroundProcessInterface,
     InitialStatusArgs,

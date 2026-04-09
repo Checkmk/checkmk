@@ -14,7 +14,7 @@ from _pytest.monkeypatch import MonkeyPatch
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
 from cmk.ccc.user import UserId
-from cmk.gui.background_job.job._interface import BackgroundProcessInterface
+from cmk.gui.background_job._interface import BackgroundProcessInterface
 from cmk.gui.script_helpers import gui_context
 from cmk.gui.watolib import check_mk_automations
 from cmk.gui.watolib.host_attributes import HostAttributes

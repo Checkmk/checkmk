@@ -17,7 +17,7 @@ from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.ccc.resulttype import Result
 from cmk.ccc.site import SiteId
-from cmk.gui.background_job.job import (
+from cmk.gui.background_job import (
     AlreadyRunningError,
     BackgroundJob,
     BackgroundProcessInterface,

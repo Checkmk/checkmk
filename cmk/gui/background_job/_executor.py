@@ -101,9 +101,7 @@ class ThreadedJobExecutor(JobExecutor):
                 # launch the background job with a subprocess instead to get rid of this import
                 # hack.
                 # TODO
-                target=importlib.import_module(
-                    "cmk.gui.background_job.process._process"
-                ).run_process,
+                target=importlib.import_module("cmk.gui.background_job._process").run_process,
                 args=(
                     JobParameters(
                         stop_event=(stop_event := threading.Event()),

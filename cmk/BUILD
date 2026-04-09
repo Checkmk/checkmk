@@ -453,7 +453,6 @@ py_wheel(
         "//cmk/gui:view_utils",
         "//cmk/gui:weblib",
         "//cmk/gui:werks",
-        "//cmk/gui/background_job/job",
         "//cmk/gui/htmllib:debug_vars",
         "//cmk/gui/htmllib:foldable_container",
         "//cmk/gui/htmllib:generator",

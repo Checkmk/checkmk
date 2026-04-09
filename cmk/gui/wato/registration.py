@@ -6,7 +6,7 @@
 
 from collections.abc import Callable
 
-from cmk.gui.background_job.job import BackgroundJobRegistry
+from cmk.gui.background_job import BackgroundJobRegistry
 from cmk.gui.main_menu import MainMenuRegistry
 from cmk.gui.pages import PageEndpoint, PageRegistry
 from cmk.gui.painter.v0 import PainterRegistry

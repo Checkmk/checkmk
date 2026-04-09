@@ -29,7 +29,7 @@ from cmk.checkengine.discovery import (
     DiscoveryValueSpecModel,
     TransitionCounter,
 )
-from cmk.gui.background_job.job import (
+from cmk.gui.background_job import (
     AlreadyRunningError,
     BackgroundJob,
     BackgroundProcessInterface,

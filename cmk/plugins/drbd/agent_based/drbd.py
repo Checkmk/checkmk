@@ -462,6 +462,25 @@ check_plugin_drbd_disk = CheckPlugin(
 )
 
 
+def _parse_drbd_count(raw: str) -> int:
+    """Parse a DRBD counter value.
+
+    DRBD 9.x uses bracket notation for pe and ap fields, e.g. pe:[3;1] ap:[2;5],
+    where the semicolon separates sub-categories of the same counter:
+      pe:[ap_pending;rs_pending] -- application-pending vs resync-pending requests
+      ap:[writes;reads]          -- pending write vs read block I/O requests
+    In DRBD 8.x these were single aggregated integers.
+    See https://github.com/LINBIT/drbd/blob/drbd-9.1/drbd/drbd_debugfs.c#L1706
+    Returns the sum of the sub-values, matching DRBD 8.x single-value semantics.
+    """
+    try:
+        if raw.startswith("[") and raw.endswith("]"):
+            return sum(int(v) for v in raw[1:-1].split(";"))
+        return int(raw)
+    except ValueError:
+        return 0
+
+
 def check_drbd_stats(item: str, section: StringTable) -> Generator[Result | Metric]:
     if (parsed := drbd_get_block(item, section, "drbd.stats")) is None:
         yield Result(state=State.UNKNOWN, summary="Undefined state")
@@ -485,8 +504,8 @@ def check_drbd_stats(item: str, section: StringTable) -> Generator[Result | Metr
         ("oos", "kb out of sync"),
     ]:
         try:
-            value = int(parsed[key])
-        except (KeyError, ValueError):
+            value = _parse_drbd_count(parsed[key])
+        except KeyError:
             value = 0
 
         metric_name = label.replace(" ", "_")

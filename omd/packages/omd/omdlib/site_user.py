@@ -27,9 +27,16 @@ def set_environment(site_name: str, config: Config) -> None:
         f"{site_home}/local/bin:{site_home}/bin:/usr/local/bin:/bin:/usr/bin:/sbin:/usr/sbin"
     )
     os.environ["USER"] = site_name
+    os.environ["HOME"] = site_home
 
     os.environ["LD_LIBRARY_PATH"] = f"{site_home}/local/lib:{site_home}/lib"
-    os.environ["HOME"] = site_home
+
+    # Special agents / active checks environment
+    os.environ["PASSWORD_STORE_SECRET_FILE"] = f"{site_home}/etc/password_store.secret"
+    os.environ["SERVER_SIDE_PROGRAM_STORAGE_PATH"] = (
+        f"{site_home}/var/check_mk/server_side_program_storage"
+    )
+    os.environ["SERVER_SIDE_PROGRAM_CRASHES_PATH"] = f"{site_home}/var/check_mk/crashes"
 
     # allow user to define further environment variable in ~/etc/environment
     envfile = Path(site_home, "etc", "environment")

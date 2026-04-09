@@ -8,7 +8,7 @@ from cmk.ccc.site import omd_site, SiteId
 from cmk.ccc.user import UserId
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.watolib.changes import add_change
-from cmk.gui.watolib.config_domains import ConfigDomainCore
+from cmk.gui.watolib.config_domain_name import config_domain_registry, CORE
 from cmk.gui.watolib.passwords import load_passwords, load_passwords_to_modify, save_password
 from cmk.gui.watolib.simple_config_file import ConfigFileRegistry, WatoSimpleConfigFile
 from cmk.gui.watolib.utils import wato_root_dir
@@ -72,7 +72,7 @@ def save_oauth2_connection(
         action_name="add-oauth2-connection",
         text=f"Added the OAuth2 connection '{ident}'",
         user_id=user_id,
-        domains=[ConfigDomainCore()],
+        domains=[config_domain_registry[CORE]],
         sites=affected_sites,
         use_git=use_git,
     )
@@ -109,7 +109,7 @@ def update_oauth2_connection(
         action_name="update-oauth2-connection",
         text=f"Updated the OAuth2 connection '{ident}'",
         user_id=user_id,
-        domains=[ConfigDomainCore()],
+        domains=[config_domain_registry[CORE]],
         sites=affected_sites,
         use_git=use_git,
     )
@@ -133,7 +133,7 @@ def delete_oauth2_connection(
         action_name="deleted-oauth2-connection",
         text=f"Deleted the OAuth2 connection '{ident}'",
         user_id=user_id,
-        domains=[ConfigDomainCore()],
+        domains=[config_domain_registry[CORE]],
         sites=affected_sites,
         use_git=use_git,
     )

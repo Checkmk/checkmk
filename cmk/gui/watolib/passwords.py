@@ -13,10 +13,11 @@ from cmk.gui.logged_in import user
 from cmk.gui.watolib.changes import add_change
 from cmk.gui.watolib.config_domain_name import (
     ABCConfigDomain,
+    config_domain_registry,
+    CORE,
     PasswordChange,
     SerializedSettings,
 )
-from cmk.gui.watolib.config_domains import ConfigDomainCore
 from cmk.gui.watolib.groups_io import load_contact_group_information
 from cmk.gui.watolib.password_store import PasswordStore
 from cmk.utils.password_store import PasswordConfig
@@ -44,9 +45,9 @@ password_change_effect_registry = PasswordChangeEffectRegistry()
 
 def register_password_change_effect() -> None:
     password_change_effect_registry.register(
-        affected_domains_add=[ConfigDomainCore()],
-        affected_domains_edit=[ConfigDomainCore()],
-        affected_domains_delete=[ConfigDomainCore()],
+        affected_domains_add=[config_domain_registry[CORE]],
+        affected_domains_edit=[config_domain_registry[CORE]],
+        affected_domains_delete=[config_domain_registry[CORE]],
     )
 
 

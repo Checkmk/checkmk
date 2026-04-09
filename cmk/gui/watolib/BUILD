@@ -93,6 +93,64 @@ py_library(
     ],
 )
 
+py_library(
+    name = "password_store",
+    srcs = ["password_store.py"],
+    imports = ["../../.."],
+    visibility = [
+        "//cmk:__subpackages__",
+        "//tests:__subpackages__",
+    ],
+    deps = [
+        ":config_infra",
+        "//cmk/gui:hooks",
+        "//cmk/gui:i18n",
+        "//cmk/gui:logged_in",
+        "//cmk/gui:type_defs",
+        "//cmk/gui/userdb",
+        "//cmk/gui/valuespec",
+        "//cmk/utils",
+        "//packages/cmk-ccc:store",
+    ],
+)
+
+py_library(
+    name = "groups_io",
+    srcs = ["groups_io.py"],
+    imports = ["../../.."],
+    visibility = [
+        "//cmk:__subpackages__",
+        "//tests:__subpackages__",
+    ],
+    deps = [
+        ":config_infra",
+        "//cmk/gui:groups",
+        "//cmk/gui:hooks",
+        "//cmk/gui:sites",
+    ],
+)
+
+py_library(
+    name = "passwords",
+    srcs = ["passwords.py"],
+    imports = ["../../.."],
+    visibility = [
+        "//cmk:__subpackages__",
+        "//tests:__subpackages__",
+    ],
+    deps = [
+        ":config_infra",
+        ":groups_io",
+        ":password_store",
+        "//cmk/gui:exceptions",
+        "//cmk/gui:i18n",
+        "//cmk/gui:logged_in",
+        "//cmk/gui/userdb",
+        "//cmk/utils",
+        "//packages/cmk-ccc:user",
+    ],
+)
+
 # Temporary: watolib files that still belong to the monolithic //cmk/gui target.
 # Remove this filegroup once watolib is fully extracted.
 filegroup(
@@ -106,6 +164,7 @@ filegroup(
             "changes.py",
             "config_domain_name.py",
             "git.py",
+            "groups_io.py",
             "main_menu.py",
             "mode/__init__.py",
             "mode/_base.py",
@@ -113,6 +172,8 @@ filegroup(
             "mode/_registry.py",
             "mode_permissions.py",
             "objref.py",
+            "password_store.py",
+            "passwords.py",
             "paths.py",
             "sidebar_reload.py",
             "simple_config_file.py",

@@ -246,7 +246,7 @@ def register_feature_config_defaults(defaults: dict[str, Any]) -> None:
 
 def get_default_config() -> dict[str, Any]:
     default_config = asdict(Config())  # First apply the built-in config
-    default_config.update(_feature_config_defaults)
+    default_config.update(copy.deepcopy(_feature_config_defaults))
     default_config.update(_get_default_config_from_legacy_plugins())
     default_config.update(_get_default_config_from_module_plugins())
     return default_config

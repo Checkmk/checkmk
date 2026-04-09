@@ -196,6 +196,25 @@ def test_feature_config_defaults_appear_in_default_config() -> None:
         cmk.gui.config._feature_config_defaults.pop("_test_feature_var", None)
 
 
+def test_feature_config_defaults_not_mutated_by_config_loading() -> None:
+    """Verify that get_default_config() deep-copies mutable values from _feature_config_defaults.
+
+    Without deep-copying, exec-based config loading (e.g. agent_signature_keys.update({...}))
+    mutates the module-level defaults, causing stale data to persist across requests (CMK-33375).
+    """
+    cmk.gui.config.register_feature_config_defaults({"_test_mutable_var": {}})
+    try:
+        default_config = cmk.gui.config.get_default_config()
+        default_config["_test_mutable_var"]["injected_key"] = "injected_value"
+
+        assert cmk.gui.config._feature_config_defaults["_test_mutable_var"] == {}
+
+        default_config_2 = cmk.gui.config.get_default_config()
+        assert default_config_2["_test_mutable_var"] == {}
+    finally:
+        cmk.gui.config._feature_config_defaults.pop("_test_mutable_var", None)
+
+
 def test_load_config(request_context: None) -> None:
     config_path = cmk.utils.paths.default_config_dir / "multisite.mk"
     config_path.unlink(missing_ok=True)

@@ -18,7 +18,7 @@ from cmk.gui.config import active_config
 from cmk.gui.i18n import _
 from cmk.gui.page_menu import make_javascript_link, PageMenuEntry
 from cmk.gui.type_defs import IconNames, StaticIcon
-from cmk.gui.watolib.utils import multisite_dir
+from cmk.utils.paths import default_config_dir
 from cmk.utils.servicename import ServiceName
 
 topology_dir = cmk.utils.paths.var_dir / "topology"
@@ -50,7 +50,7 @@ class CMCServiceObject:
 
 
 class BILayoutManagement:
-    _config_file = multisite_dir() / "bi_layouts.mk"
+    _config_file = default_config_dir / "multisite.d/wato" / "bi_layouts.mk"
 
     @classmethod
     def save_layouts(cls) -> None:

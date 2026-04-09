@@ -1767,7 +1767,10 @@ class CrashDumpsDiagnosticsElement(ABCDiagnosticsElement):
             tmpdir = tmp_dump_folder.joinpath("var/check_mk/crashes/%s" % category.name)
             tmpdir.mkdir(parents=True, exist_ok=True)
 
-            sorted_dumps = sorted(category.glob("*"), key=lambda path: int(path.stat().st_mtime))
+            sorted_dumps = sorted(
+                (p for p in category.glob("*") if p.is_dir()),
+                key=lambda path: int(path.stat().st_mtime),
+            )
 
             if sorted_dumps:
                 # Determine the latest file of that category

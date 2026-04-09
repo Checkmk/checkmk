@@ -334,8 +334,26 @@ class TestStatsCheckType:
         assert value == expected
 
 
+class TestParseDrbdCount:
+    @pytest.mark.parametrize(
+        "raw, expected",
+        [
+            ("42", 42),
+            ("0", 0),
+            ("[3;1]", 4),
+            ("[2;5]", 7),
+            ("[0;0]", 0),
+            ("[10;20;30]", 60),
+            ("b", 0),
+            ("[invalid]", 0),
+        ],
+    )
+    def test_parse_drbd_count(self, raw: str, expected: int) -> None:
+        assert drbd._parse_drbd_count(raw) == expected
+
+
 class TestDrbdV9:
-    """Tests for DRBD 9.x format: extra Transports header,
+    """Tests for DRBD 9.x format: extra Transports header, bracket notation,
     extra detail lines between device blocks, and multi-device discovery."""
 
     def test_inventory_discovers_multiple_devices(self) -> None:
@@ -351,3 +369,13 @@ class TestDrbdV9:
             if isinstance(r, Result)
         }
         assert value["bit map updates: 97"].state == State.OK
+
+    def test_check_stats_bracket_notation(self) -> None:
+        """pe:[3;1] and ap:[2;5] are summed to 4 and 7."""
+        value = {
+            r.summary: r
+            for r in drbd.check_drbd_stats("drbd0", SECTION_V9)
+            if isinstance(r, Result)
+        }
+        assert value["pending requests: 4"].state == State.OK
+        assert value["application pending requests: 7"].state == State.OK

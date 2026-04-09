@@ -40,6 +40,10 @@ edition_components = {
         ( "alerts",        "Alert handlers" ),
         ( "ntopng_integration", "Ntopng integration" ),
     ],
+    "ultimate":
+    [
+        ( "relay",         "Relay"),
+    ]
 }
 
 classes = [

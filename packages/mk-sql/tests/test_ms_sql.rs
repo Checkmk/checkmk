@@ -1623,6 +1623,7 @@ fn test_odbc() {
 
     let s = odbc::make_connection_string(
         Some(&HostName::from("127.0.0.1".to_string())),
+        None,
         &InstanceName::from("SQLEXPRESS_NAME"),
         Some("master"),
         None,
@@ -1653,6 +1654,7 @@ fn test_odbc() {
 #[test]
 fn test_odbc_timeout() {
     let s = odbc::make_connection_string(
+        None,
         None,
         &InstanceName::from("SQLEXPRESS_XX"),
         Some("master"),
@@ -1689,7 +1691,9 @@ async fn test_odbc_high_level() {
         )
         .unwrap()
         .unwrap();
-        create_odbc_client(&c, &instance_name, None).await.unwrap()
+        create_odbc_client(&c, None, &instance_name, None)
+            .await
+            .unwrap()
     }
 
     async fn get_props(name: &str, trust: bool) -> Option<SqlInstanceProperties> {

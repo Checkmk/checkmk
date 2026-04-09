@@ -98,7 +98,7 @@ run_binary(
         "--out",
         "$(execpath openapi_spec_internal.yaml)",
     ],
-    tool = "//cmk/gui:generate_api_spec_all_editions",
+    tool = "//cmk/gui/openapi:generate_api_spec_all_editions",
 )
 
 openapi_typescript.openapi_typescript(

@@ -1,10 +1,8 @@
-load("@aspect_rules_py//py:defs.bzl", "py_binary", "py_library")
+load("@aspect_rules_py//py:defs.bzl", "py_library")
 load("@cmk_requirements//:requirements.bzl", "requirement")
 
 exports_files([
     ".f12",
-    "openapi/.f12",
-    "openapi/spec/spec_generator/generate_api_spec.py",
 ])
 
 py_library(
@@ -1312,6 +1310,11 @@ py_library(
         ],
     ) + [
         "//cmk/gui/form_specs:gui_srcs",
+        "//cmk/gui/nodevis:gui_srcs",
+        "//cmk/gui/oauth2_connections:gui_srcs",
+        "//cmk/gui/openapi:gui_srcs",
+        "//cmk/gui/rest_api_types:gui_srcs",
+        "//cmk/gui/rule_specs:gui_srcs",
         "//cmk/gui/search:gui_srcs",
         "//cmk/gui/userdb:gui_srcs",
         "//cmk/gui/watolib:gui_srcs",
@@ -1411,6 +1414,13 @@ py_library(
         "//cmk/gui/htmllib:html",
         "//cmk/gui/htmllib:tag_rendering",
         "//cmk/gui/htmllib:type_defs",
+        "//cmk/gui/nodevis:utils",
+        "//cmk/gui/oauth2_connections:watolib_store",
+        "//cmk/gui/openapi:restful_objects_type_defs",
+        "//cmk/gui/openapi:utils",
+        "//cmk/gui/rest_api_types:notifications",
+        "//cmk/gui/rule_specs:compatibility",
+        "//cmk/gui/rule_specs:loader",
         "//cmk/gui/search:match_items",
         "//cmk/gui/token_auth",
         "//cmk/gui/userdb",
@@ -1542,63 +1552,5 @@ py_library(
         requirement("setproctitle"),
         requirement("uvicorn"),
         requirement("werkzeug"),
-    ],
-)
-
-py_binary(
-    name = "generate_api_spec",
-    srcs = ["openapi/spec/spec_generator/generate_api_spec.py"],
-    main = "openapi/spec/spec_generator/generate_api_spec.py",
-    visibility = ["//:__subpackages__"],
-    deps = select({
-        "@cmk//edition:cloud": [
-            "//cmk/editions:community",
-            "//cmk/editions/nonfree:cloud",
-            "//cmk/editions/nonfree:pro",
-            "//cmk/editions/nonfree:ultimate",
-        ],
-        "@cmk//edition:community": [
-            "//cmk/editions:community",
-        ],
-        "@cmk//edition:pro": [
-            "//cmk/editions:community",
-            "//cmk/editions/nonfree:pro",
-        ],
-        "@cmk//edition:ultimate": [
-            "//cmk/editions:community",
-            "//cmk/editions/nonfree:pro",
-            "//cmk/editions/nonfree:ultimate",
-        ],
-        "@cmk//edition:ultimatemt": [
-            "//cmk/editions:community",
-            "//cmk/editions/nonfree:pro",
-            "//cmk/editions/nonfree:ultimate",
-            "//cmk/editions/nonfree:ultimatemt",
-        ],
-    }) + [
-        requirement("pyyaml"),
-    ],
-)
-
-# Variant of generate_api_spec that always includes at least pro edition
-# modules. Used to generate the internal OpenAPI spec for TypeScript types
-# consumed by cmk-frontend-vue, which ships the same bundle for all editions.
-# Limited to community + pro to avoid pulling in ultimate deps that are not
-# available in all nonfree edition checkouts (e.g. pro builds strip ultimate/).
-py_binary(
-    name = "generate_api_spec_all_editions",
-    srcs = ["openapi/spec/spec_generator/generate_api_spec.py"],
-    main = "openapi/spec/spec_generator/generate_api_spec.py",
-    visibility = ["//:__subpackages__"],
-    deps = select({
-        "@//:gpl+nonfree_repo": [
-            "//cmk/editions:community",
-            "//cmk/editions/nonfree:pro",
-        ],
-        "@//:gpl_repo": [
-            "//cmk/editions:community",
-        ],
-    }) + [
-        requirement("pyyaml"),
     ],
 )

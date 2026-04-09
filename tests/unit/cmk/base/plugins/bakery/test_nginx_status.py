@@ -11,12 +11,12 @@ from cmk.base.plugins.bakery.nginx_status import get_nginx_status_files
 
 
 def test_nginx_status_files_static() -> None:
-    servers = [("myhost", 80)]
-    conf = ("static", servers)
+    servers = [{"protocol": "http", "address": "127.0.0.1", "port": 80}]
+    conf = {"deployment": ("sync", None), "instances": ("static", servers)}
     result = sorted(get_nginx_status_files(conf), key=repr)
     expected = sorted(
         [
-            Plugin(base_os=OS.LINUX, source=Path("nginx_status.py")),
+            Plugin(base_os=OS.LINUX, source=Path("nginx_status.py"), interval=None),
             PluginConfig(
                 base_os=OS.LINUX,
                 lines=["servers = %s" % pformat(servers)],
@@ -29,13 +29,13 @@ def test_nginx_status_files_static() -> None:
     assert result == expected
 
 
-def test_nginx_status_files_auto() -> None:
+def test_nginx_status_files_autodetect() -> None:
     ssl_ports = [443, 8443]
-    conf = ("auto", ssl_ports)
+    conf = {"deployment": ("sync", None), "instances": ("autodetect", ssl_ports)}
     result = sorted(get_nginx_status_files(conf), key=repr)
     expected = sorted(
         [
-            Plugin(base_os=OS.LINUX, source=Path("nginx_status.py")),
+            Plugin(base_os=OS.LINUX, source=Path("nginx_status.py"), interval=None),
             PluginConfig(
                 base_os=OS.LINUX,
                 lines=["ssl_ports = %r" % ssl_ports],
@@ -46,3 +46,14 @@ def test_nginx_status_files_auto() -> None:
         key=repr,
     )
     assert result == expected
+
+
+def test_nginx_status_files_no_instances() -> None:
+    conf = {"deployment": ("sync", None)}
+    result = list(get_nginx_status_files(conf))
+    assert result == [Plugin(base_os=OS.LINUX, source=Path("nginx_status.py"), interval=None)]
+
+
+def test_nginx_status_files_do_not_deploy() -> None:
+    conf = {"deployment": ("do_not_deploy", None)}
+    assert list(get_nginx_status_files(conf)) == []

@@ -175,7 +175,7 @@ def parse_ip_addresses(string_table: Sequence[StringByteTable]) -> Section:
         elif interface_ip.version == 6:
             adapter.inet6.append(interface_ip)
 
-    yield from result.values()
+    return list(result.values())
 
 
 def host_labels_if_snmp(section: Section) -> HostLabelGenerator:

@@ -459,6 +459,7 @@ STAGES:
       COMMAND: "make test-agent-plugin > ${RESULTS}/agent-plugin-unit-junit.txt"
       TEXT_ON_SKIP: "No agent files changed"
       RESULT_CHECK_FILE_PATTERN: "results/agent-plugin-unit-junit.txt"
+      MOUNT_DOCKER_SOCKET: true
 
     - NAME: "Software Documentation Generation"
       ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_SW_DOC_FILES,CHANGED_MAKEFILE

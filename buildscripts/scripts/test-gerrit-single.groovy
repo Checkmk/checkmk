@@ -14,6 +14,7 @@ def main() {
         "CIPARAM_COMMAND",
         "CIPARAM_RESULT_CHECK_FILE_PATTERN",
         "CIPARAM_BAZEL_LOCKS_AMOUNT",
+        "CIPARAM_MOUNT_DOCKER_SOCKET",
         // common-parameters
         "CUSTOM_GIT_REF",
         "CIPARAM_OVERRIDE_BUILD_NODE",
@@ -118,7 +119,7 @@ def main() {
 
     stage(params.CIPARAM_NAME) {
         dir("${checkout_dir}") {
-            inside_container(privileged: false, set_docker_group_id: false) {
+            inside_container(privileged: params.CIPARAM_MOUNT_DOCKER_SOCKET, set_docker_group_id: params.CIPARAM_MOUNT_DOCKER_SOCKET) {
                 withCredentials(credentials) {
                     withEnv(env_var_list) {
                         catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {

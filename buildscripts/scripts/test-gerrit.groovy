@@ -121,6 +121,7 @@ def main_parallel() {
                                 CIPARAM_COMMAND: independent_command,
                                 CIPARAM_RESULT_CHECK_FILE_PATTERN: item.RESULT_CHECK_FILE_PATTERN,
                                 CIPARAM_BAZEL_LOCKS_AMOUNT: item.BAZEL_LOCKS_AMOUNT,
+                                CIPARAM_MOUNT_DOCKER_SOCKET: item.MOUNT_DOCKER_SOCKET,
                             ];
                             break;
                     }
@@ -315,9 +316,9 @@ def main_sequential() {
             def stage_info = load_json("${result_dir}/stages.json");
             def allStagesPassed = true;
             def thisStagePassed = true;
-            // privileged/set_docker_group_id aka mounting the docker is needed for agent plugin tests: they do docker in docker
-            inside_container(privileged: false, set_docker_group_id: false) {
-                stage_info.STAGES.each { item ->
+            stage_info.STAGES.each { item ->
+                // MOUNT_DOCKER_SOCKET controls privileged/set_docker_group_id per stage (e.g. for docker-in-docker tests)
+                inside_container(privileged: item.MOUNT_DOCKER_SOCKET, set_docker_group_id: item.MOUNT_DOCKER_SOCKET) {
                     (thisStagePassed, thisIssues) = test_gerrit_helper.create_stage(item, time_stage_started);
                     allStagesPassed = thisStagePassed && allStagesPassed;
                     if (thisIssues && !thisStagePassed) {

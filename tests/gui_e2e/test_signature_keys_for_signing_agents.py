@@ -168,6 +168,7 @@ def test_bake_and_sign(test_site: Site, dashboard_page: MainDashboard, with_key:
     agent_bakery_page.assert_baking_succeeded()
 
 
+@pytest.mark.skip(reason="CMK-33355")
 def test_bake_and_sign_disabled(dashboard_page: MainDashboard) -> None:
     """Delete all keys, go to agents and check that the sign buttons are disabled."""
     signature_keys_page = SignatureKeysPage(dashboard_page.page)

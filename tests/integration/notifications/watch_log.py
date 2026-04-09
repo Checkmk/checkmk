@@ -8,6 +8,7 @@ import os
 import subprocess
 import sys
 import time
+from pathlib import Path
 
 from psutil import Process
 
@@ -28,8 +29,17 @@ class WatchLog:
         if not self._site.file_exists(self._log_path):
             self._site.write_file(self._log_path, "")
 
+        # Path.resolve() from the test process (running as testuser) cannot follow symlinks
+        # inside the OMD site directory (permission denied). Use readlink -f via site.run() so
+        # the resolution happens as the site user who has full access.
+        # On Ubuntu 25.10, tail -f on a symlink does not work as expected
+        # tailing the resolved real path is required.
+        resolved = Path(
+            self._site.run(["readlink", "-f", self._log_path.as_posix()]).stdout.strip()
+        )
+
         self._tail_process = self._site.execute(
-            ["tail", "-f", self._log_path.as_posix()],
+            ["tail", "-f", resolved.as_posix()],
             stdout=subprocess.PIPE,
             bufsize=1,  # line buffered
         )

@@ -22,15 +22,6 @@
     "vue3-gettext": "4.0.0-beta.1"
   },
   "pnpm": {
-    "onlyBuiltDependencies": [],
-    "overrides": {
-      "typescript-eslint": "8.58.1",
-      "glob": "^11.1.0",
-      "js-yaml": "^4.1.0"
-    }
-  },
-  "// pnpm overrides": {
-    "glob": "CMK-28102",
-    "js-yaml": "CMK-28103"
+    "onlyBuiltDependencies": []
   }
 }

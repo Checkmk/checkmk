@@ -5,3 +5,8 @@ packages:
     - 'packages/cmk-frontend-vue'
     - 'packages/cmk-shared-typing'
     - 'packages/cmk-werks'
+
+overrides:
+  "typescript-eslint": "8.58.1"
+  "glob": "^11.1.0" # "CMK-28102",
+  "js-yaml": "^4.1.0" # "CMK-28103"

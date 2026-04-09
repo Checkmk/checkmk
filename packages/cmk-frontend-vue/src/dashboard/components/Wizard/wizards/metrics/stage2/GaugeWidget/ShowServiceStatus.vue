@@ -14,25 +14,16 @@ import CmkLabel from '@/components/CmkLabel.vue'
 import CmkSpace from '@/components/CmkSpace.vue'
 import CmkCheckbox from '@/components/user-input/CmkCheckbox.vue'
 
-import type { ForStates } from '@/dashboard/components/Wizard/types'
-
-import type { ShowServiceStatusType } from './composables/useGauge'
+import type { ForStates, ShowServiceStatusType } from '@/dashboard/components/Wizard/types'
 
 const { _t } = usei18n()
 
+const enabled = defineModel<boolean>('enabled', { required: true })
 const showServiceStatus = defineModel<ShowServiceStatusType>('showServiceStatus', {
   required: true
 })
-const showServiceStatusSelection = defineModel<ForStates | null>('showServiceStatusSelection', {
+const showServiceStatusSelection = defineModel<ForStates>('showServiceStatusSelection', {
   required: true
-})
-
-const isShowLabel = computed({
-  get: () => showServiceStatus.value !== 'disabled',
-  set: (value: boolean) => {
-    showServiceStatus.value = value ? 'text' : 'disabled'
-    showServiceStatusSelection.value = value ? 'all' : null
-  }
 })
 
 const isShowBackground = computed({
@@ -44,8 +35,8 @@ const isShowBackground = computed({
 </script>
 
 <template>
-  <CmkCheckbox v-model="isShowLabel" :label="_t('Show colored status label')" />
-  <CmkIndent v-if="isShowLabel">
+  <CmkCheckbox v-model="enabled" :label="_t('Show colored status label')" />
+  <CmkIndent v-if="enabled">
     <div class="db-show-service-status__item">
       <CmkLabel>{{ _t('Show label for') }}</CmkLabel> <CmkSpace />
       <CmkDropdown

@@ -93,6 +93,7 @@ const widgetProps = computed(() => handler.value.widgetProps)
         <FieldDescription>{{ _t('Service status') }}</FieldDescription>
         <FieldComponent>
           <ShowServiceStatus
+            v-model:enabled="handler.showServiceStatusEnabled.value"
             v-model:show-service-status="handler.showServiceStatus.value"
             v-model:show-service-status-selection="handler.showServiceStatusSelection.value"
           />

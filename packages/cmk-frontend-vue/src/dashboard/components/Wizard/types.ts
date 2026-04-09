@@ -139,5 +139,6 @@ export type HostState = components['schemas']['HostState']
 export type CombinedGraphContentPresentation =
   components['schemas']['CombinedGraphContent']['presentation']
 export type ForStates = components['schemas']['ForStates']
+export type ShowServiceStatusType = components['schemas']['MetricStatusDisplayModel']['type']
 export type InventoryLinkType = components['schemas']['ApiVisualLink']['type']
 export type LinkContentType = components['schemas']['ApiVisualLink']

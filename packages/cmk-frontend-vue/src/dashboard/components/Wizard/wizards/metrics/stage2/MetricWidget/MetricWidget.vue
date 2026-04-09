@@ -11,7 +11,6 @@ import usei18n from '@/lib/i18n'
 import CmkCatalogPanel from '@/components/CmkCatalogPanel.vue'
 import CmkDropdown from '@/components/CmkDropdown'
 import CmkIndent from '@/components/CmkIndent.vue'
-import CmkCheckbox from '@/components/user-input/CmkCheckbox.vue'
 
 import DashboardPreviewContent from '@/dashboard/components/DashboardPreviewContent.vue'
 import GraphTimeRange from '@/dashboard/components/TimeRange/GraphTimeRange.vue'
@@ -24,6 +23,7 @@ import TableFormRow from '@/dashboard/components/Wizard/components/TableForm/Tab
 import WidgetVisualization from '@/dashboard/components/Wizard/components/WidgetVisualization/WidgetVisualization.vue'
 import type { BaseWidgetProp } from '@/dashboard/components/Wizard/types.ts'
 
+import ShowServiceStatus from '../GaugeWidget/ShowServiceStatus.vue'
 import type { UseMetric } from './composables/useMetric.ts'
 
 const { _t } = usei18n()
@@ -113,9 +113,10 @@ const widgetProps = computed(() => handler.value.widgetProps)
       <TableFormRow>
         <FieldDescription>{{ _t('Service status') }}</FieldDescription>
         <FieldComponent>
-          <CmkCheckbox
-            v-model="handler.showServiceStatus.value"
-            :label="_t('Show service status')"
+          <ShowServiceStatus
+            v-model:enabled="handler.showServiceStatusEnabled.value"
+            v-model:show-service-status="handler.showServiceStatus.value"
+            v-model:show-service-status-selection="handler.showServiceStatusSelection.value"
           />
         </FieldComponent>
       </TableFormRow>

@@ -18,6 +18,7 @@ import {
 import type {
   ForStates,
   GaugeContent,
+  ShowServiceStatusType,
   UseWidgetHandler,
   WidgetProps
 } from '@/dashboard/components/Wizard/types'
@@ -31,7 +32,6 @@ type TimeRangeType = 'current' | 'window'
 
 const CONTENT_TYPE = 'gauge'
 
-export type ShowServiceStatusType = 'disabled' | 'text' | 'background'
 export interface UseGauge extends UseWidgetHandler, UseWidgetVisualizationOptions {
   //Time range
   timeRangeType: Ref<TimeRangeType>
@@ -41,8 +41,9 @@ export interface UseGauge extends UseWidgetHandler, UseWidgetVisualizationOption
   dataRangeSymbol: Ref<string>
   dataRangeMax: Ref<number>
   dataRangeMin: Ref<number>
+  showServiceStatusEnabled: Ref<boolean>
   showServiceStatus: Ref<ShowServiceStatusType>
-  showServiceStatusSelection: Ref<ForStates | null>
+  showServiceStatusSelection: Ref<ForStates>
 }
 
 export const useGauge = async (
@@ -72,11 +73,12 @@ export const useGauge = async (
     currentContent?.display_range?.maximum
   )
 
+  const showServiceStatusEnabled = ref<boolean>(!!currentContent?.status_display)
   const showServiceStatus = ref<ShowServiceStatusType>(
-    currentContent?.status_display?.type ?? 'disabled'
+    currentContent?.status_display?.type ?? 'text'
   )
-  const showServiceStatusSelection = ref<ForStates | null>(
-    currentContent?.status_display?.for_states ?? null
+  const showServiceStatusSelection = ref<ForStates>(
+    currentContent?.status_display?.for_states ?? 'all'
   )
 
   const {
@@ -113,7 +115,7 @@ export const useGauge = async (
             }
     }
 
-    if (showServiceStatus.value !== 'disabled' && showServiceStatusSelection.value) {
+    if (showServiceStatusEnabled.value) {
       content.status_display = {
         type: showServiceStatus.value,
         for_states: showServiceStatusSelection.value
@@ -151,6 +153,7 @@ export const useGauge = async (
       timeRangeType,
       timeRange,
       fixedDataRangeProps,
+      showServiceStatusEnabled,
       showServiceStatus,
       showServiceStatusSelection,
       showWidgetBackground,
@@ -171,6 +174,7 @@ export const useGauge = async (
     dataRangeSymbol,
     dataRangeMax,
     dataRangeMin,
+    showServiceStatusEnabled,
     showServiceStatus,
     showServiceStatusSelection,
 

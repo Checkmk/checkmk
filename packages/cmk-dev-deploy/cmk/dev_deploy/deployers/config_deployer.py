@@ -130,12 +130,15 @@ def _copy_dir(source: Path, dest: Path, spec: ConfigDeploySpec, repo_root: Path)
                         os.chmod(dst, mode)
                     expected_files.add(rel)
 
-        # Delete extra files at dest not present in source
+        # Delete extra files at dest not present in source.
+        # Only clean directories where this spec actually has files — avoid
+        # deleting into subdirectories that are managed by separate specs.
         if spec.delete_extra:
+            expected_dirs = {str(Path(f).parent) for f in expected_files}
             for existing in dest.rglob("*"):
                 if existing.is_file():
                     rel = str(existing.relative_to(dest))
-                    if rel not in expected_files:
+                    if str(Path(rel).parent) in expected_dirs and rel not in expected_files:
                         existing.unlink()
     else:
         # Fallback: copy the full directory

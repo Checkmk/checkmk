@@ -25,8 +25,6 @@ from cmk.agent_based.v2 import (
     StringTable,
 )
 
-from .lib import render_integer
-
 _MAP_NODE_STATES: Final = {
     True: "yes",
     False: "no",
@@ -130,7 +128,7 @@ def check_jenkins_nodes(
                 metric_name="jenkins_num_executors",
                 levels_lower=params[exec_name],
                 levels_upper=params[exec_name + "_upper"],
-                render_func=render_integer,
+                render_func=lambda value: str(int(value)),
                 label="Total number of executors",
             )
 
@@ -158,7 +156,7 @@ def check_jenkins_nodes(
                     metric_name=f"jenkins_{key}_executors",
                     levels_upper=params[f"jenkins_{key}executors"],
                     levels_lower=params[f"jenkins_{key}executors_lower"],
-                    render_func=render_integer,
+                    render_func=lambda value: str(int(value)),
                     label=f"Number of {key} executors",
                 )
 

@@ -31,8 +31,6 @@ from cmk.agent_based.v2 import (
     StringTable,
 )
 
-from .lib import render_integer
-
 
 class ParamsDict(TypedDict):
     queue_length: NotRequired[FixedLevelsT]
@@ -137,7 +135,7 @@ def _check_jenkins_queue(
             amount,
             metric_name=jenkins_value,
             levels_upper=task_levels,
-            render_func=render_integer,
+            render_func=lambda value: str(int(value)),
             label=infotext,
         )
 

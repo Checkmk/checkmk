@@ -36,8 +36,6 @@ from cmk.agent_based.v2 import (
     StringTable,
 )
 
-from .lib import render_integer
-
 
 @dataclass
 class JenkinsJobInfo:
@@ -169,7 +167,7 @@ def _process_job(job: JenkinsJobInfo, params: Mapping[str, Any], now: int | floa
     if job.build_id is not None:
         yield from check_levels(
             job.build_id,
-            render_func=render_integer,
+            render_func=lambda value: str(int(value)),
             label="Build id",
         )
 

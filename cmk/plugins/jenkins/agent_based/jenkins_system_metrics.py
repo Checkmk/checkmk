@@ -22,8 +22,6 @@ from cmk.agent_based.v2 import (
     StringTable,
 )
 
-from .lib import render_integer
-
 Section = Mapping[str, Mapping[str, Any]]
 MetricsItems = Literal["HTTP Requests", "Memory", "Threads"]
 
@@ -81,7 +79,7 @@ def check_jenkins_metrics(
                     counters[counter_identifier]["count"],
                     metric_name=metric_name,
                     levels_upper=params.get(metric_name),
-                    render_func=render_integer,
+                    render_func=lambda value: str(int(value)),
                     label=counter_description,
                 )
         case "Memory":
@@ -145,7 +143,7 @@ def check_jenkins_metrics(
                     metric_value,
                     metric_name=metric_name,
                     levels_upper=params.get(metric_name),
-                    render_func=render_integer,
+                    render_func=lambda value: str(int(value)),
                     label=description,
                 )
         case _:

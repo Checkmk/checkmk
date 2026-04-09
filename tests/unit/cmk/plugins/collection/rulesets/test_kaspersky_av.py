@@ -5,7 +5,7 @@
 
 import pytest
 
-from cmk.gui.plugins.legacy_bakery_rulesets.kaspersky_av import migrate
+from cmk.plugins.collection.rulesets.kaspersky_av import migrate
 
 
 @pytest.mark.parametrize(

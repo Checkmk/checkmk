@@ -24,8 +24,11 @@ class RelayStatusResponse(BaseModel, frozen=True):
     state: RelayState
 
 
+_UUID_PATTERN = r"^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+
+
 class RelayRegistrationRequest(BaseModel, frozen=True):
-    relay_id: Annotated[str, Field(min_length=1)]
+    relay_id: Annotated[str, Field(min_length=1, pattern=_UUID_PATTERN)]
     alias: Annotated[str, Field(min_length=1)]
     csr: str
 

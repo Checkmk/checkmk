@@ -9,7 +9,7 @@ import json
 
 import pytest
 
-from cmk.agent_based.v2 import Metric, Result, Service, State
+from cmk.agent_based.v2 import Metric, Result, Service, ServiceLabel, State
 from cmk.plugins.jenkins.agent_based.jenkins_nodes import (
     CHECK_DEFAULT_PARAMETERS,
     check_jenkins_nodes,
@@ -167,13 +167,18 @@ def _section() -> Section:
                             },
                             "assignedLabels": [
                                 {
+                                    "name": "fra",
                                     "busyExecutors": 0,
                                     "idleExecutors": 1,
                                     "nodes": [
                                         {"_class": "hudson.slaves.DumbSlave", "mode": "EXCLUSIVE"}
                                     ],
                                 },
-                                {"busyExecutors": 0, "idleExecutors": 1},
+                                {
+                                    "name": "ber",
+                                    "busyExecutors": 0,
+                                    "idleExecutors": 1,
+                                },
                             ],
                             "numExecutors": 1,
                             "idle": True,
@@ -194,7 +199,13 @@ def test_discovery(section: Section) -> None:
     expected = [
         Service(item="master"),
         Service(item="Windows"),
-        Service(item="foo"),
+        Service(
+            item="foo",
+            labels=[
+                ServiceLabel("cmk/jenkins_node_label_fra", "yes"),
+                ServiceLabel("cmk/jenkins_node_label_ber", "yes"),
+            ],
+        ),
     ]
     assert value == expected
 
@@ -266,7 +277,7 @@ def test_check_foo_item(section: Section) -> None:
         Metric("jenkins_busy_executors", 0),
         Result(state=State.OK, summary="Number of idle executors: 1"),
         Metric("jenkins_idle_executors", 1),
-        Result(state=State.OK, summary="Mode: Exclusive"),
+        Result(state=State.OK, summary="Mode: Exclusive (Labels: fra ber)"),
         Result(state=State.OK, summary="Offline: no"),
         Result(
             state=State.WARN,

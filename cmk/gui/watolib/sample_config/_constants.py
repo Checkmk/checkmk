@@ -192,6 +192,11 @@ PS_DISCOVERY_RULES: list[RuleSpec[Mapping[str, object]]] = [
             "rrdcached",
             "~/omd/sites/[^/]+/bin/rrdcached",
         ),
+        (
+            "a0a69c72-d9ba-412a-a8cb-7a9a6abb4c6b",
+            "otel-collector",
+            "~/omd/sites/[^/]+/bin/otelcol",
+        ),
     ]
 ]
 

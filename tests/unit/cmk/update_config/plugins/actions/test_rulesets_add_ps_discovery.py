@@ -15,6 +15,7 @@ from cmk.update_config.plugins.actions.rulesets_add_ps_discovery import (
     _NEW_DEFAULT_RULE_IDS,
     add_ps_discovery_rules,
     AUTOMATION_HELPER_RULE_ID,
+    OTEL_COLLECTOR_RULE_ID,
     overwrite_ps_discovery_rules,
     PROXMOX_RULE_IDS,
     PS_DISCOVERY_RULE_NAME,
@@ -70,8 +71,9 @@ def test_update_with_preexisting_ui_job_scheduler() -> None:
     add_ps_discovery_rules(logging.getLogger(), rulesets)
 
     ruleset = rulesets.get_rulesets()[PS_DISCOVERY_RULE_NAME]
-    assert ruleset.num_rules() == 1 + len(PROXMOX_RULE_IDS)
+    assert ruleset.num_rules() == 1 + len(PROXMOX_RULE_IDS) + 1  # +1 for otel-collector
     assert rule_present(ruleset, UI_JOB_SCHEDULER_RULE_ID)
+    assert rule_present(ruleset, OTEL_COLLECTOR_RULE_ID)
 
 
 @pytest.mark.usefixtures("request_context")

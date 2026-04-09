@@ -3,10 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="comparison-overlap"
-
-# mypy: disable-error-code="redundant-expr"
-
 # mypy: disable-error-code="type-arg"
 
 # <<<jenkins_jobs>>>
@@ -249,7 +245,7 @@ def _handle_job_type(data: Iterable, new_dict: dict[str, list], folder: str) -> 
 
             continue
 
-        item_name = job_type["name"] if item_name is None else f"{item_name}{job_type['name']}"
+        item_name = f"{item_name}{job_type['name']}"
 
         job = _handle_single_job(job_type)
 

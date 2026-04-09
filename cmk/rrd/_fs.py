@@ -14,16 +14,23 @@ from cmk.utils.misc import pnp_cleanup
 
 MAX_FILENAME_LENGTH: Final = os.pathconf(paths.omd_root, "PC_NAME_MAX")
 
+# All suffixes that may ever be appended to a Storage path.
+# The stem length must not exceed MAX_FILENAME_LENGTH - max(len(suffix)) so that
+# every variant (.info or .rrd) fits within PC_NAME_MAX.
+_KNOWN_SUFFIXES: Final = (".info", ".rrd")
+MAX_STEM_LENGTH: Final = MAX_FILENAME_LENGTH - max(len(os.fsencode(s)) for s in _KNOWN_SUFFIXES)
+
 
 @dataclass(frozen=True)
 class Storage:
     _path: Path
 
     def path(self, suffix: str) -> Path | None:
-        path = self.get_expected_path(suffix)
-        if len(os.fsencode(path)) >= MAX_FILENAME_LENGTH:
+        # PC_NAME_MAX limits a single filename component (not the full path).
+        # MAX_STEM_LENGTH is derived from known suffixes only — crash on unknown ones is allowed.
+        if len(os.fsencode(self._path.name)) > MAX_STEM_LENGTH:
             return None
-        return path
+        return self.get_expected_path(suffix)
 
     def get_expected_path(self, suffix: str) -> Path:
         return attach_suffix(self._path, suffix)

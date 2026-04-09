@@ -53,11 +53,7 @@ const openAllAgentsPage = (url: string) => {
   window.open(url, '_blank')
 }
 
-const packageFormatRpm = 'rpm'
-const packageFormatDeb = 'deb'
-const packageFormatTgz = 'tgz'
-
-const model = ref(sessionStorage.getItem('slideInModelState') || packageFormatDeb)
+const model = ref(sessionStorage.getItem('slideInModelState') || 'deb')
 sessionStorage.removeItem('slideInModelState')
 sessionStorage.removeItem('slideInTabState')
 
@@ -79,24 +75,16 @@ function tabNeedsToken(tab: AgentSlideOutTabs): boolean {
   if (tab.installCmd) {
     return true
   }
-  if (tab.toggleButtonOptions) {
-    return !!(
-      (model.value === packageFormatDeb && tab.installDebCmd) ||
-      (model.value === packageFormatRpm && tab.installRpmCmd) ||
-      (model.value === packageFormatTgz && tab.installTgzDownloadCmd && tab.installTgzCmd)
-    )
+  if (tab.subTabs) {
+    return !!tab.subTabs.find((st) => st.id === model.value)
   }
   return false
 }
 
 function currentInstallMsg(tab: AgentSlideOutTabs): string {
-  if (
-    tab.installMsgMultiple &&
-    tab.installTgzDownloadCmd &&
-    tab.installTgzCmd &&
-    model.value === packageFormatTgz
-  ) {
-    return tab.installMsgMultiple
+  if (tab.subTabs) {
+    const activeSubTab = tab.subTabs.find((st) => st.id === model.value)
+    return activeSubTab?.installMsg || tab.installMsg || ''
   }
   return tab.installMsg || ''
 }
@@ -152,9 +140,9 @@ function getInitStep() {
     <template #tab-contents>
       <CmkTabContent v-for="tab in tabs" :id="tab.id" :key="tab.id">
         <CmkToggleButtonGroup
-          v-if="tab.toggleButtonOptions"
+          v-if="tab.subTabs && tab.subTabs.length > 1"
           v-model="model"
-          :options="tab.toggleButtonOptions"
+          :options="tab.subTabs.map((st) => ({ label: st.label, value: st.id }))"
         />
         <CmkWizard v-model="currentStep" mode="guided">
           <CmkWizardStep :index="1" :is-completed="() => currentStep > 1 || !saveHost">
@@ -229,7 +217,7 @@ function getInitStep() {
                   <template v-if="ott !== null">
                     <template v-if="tab.installDownloadCmd">
                       <CmkCode
-                        :title="_t('Download agent')"
+                        :title="_t('Download the agent')"
                         :code_txt="installCmdWithToken(tab.installDownloadCmd)"
                         class="code"
                         width="fill"
@@ -238,7 +226,7 @@ function getInitStep() {
                         {{ tab.installWarning }}
                       </CmkAlertBox>
                       <CmkCode
-                        :title="_t('Install agent')"
+                        :title="_t('Install the agent')"
                         :code_txt="tab.installCmd || ''"
                         class="code"
                         width="fill"
@@ -250,41 +238,34 @@ function getInitStep() {
                       class="code"
                       width="fill"
                     />
-                    <CmkCode
-                      v-if="tab.installMsg && tab.installDebCmd && model === packageFormatDeb"
-                      :code_txt="installCmdWithToken(tab.installDebCmd)"
-                      class="code"
-                      width="fill"
-                    />
-                    <CmkCode
-                      v-if="tab.installMsg && tab.installRpmCmd && model === packageFormatRpm"
-                      :code_txt="installCmdWithToken(tab.installRpmCmd)"
-                      class="code"
-                      width="fill"
-                    />
-                    <template
-                      v-if="
-                        tab.installMsg &&
-                        tab.installTgzDownloadCmd &&
-                        tab.installTgzCmd &&
-                        model === packageFormatTgz
-                      "
-                    >
-                      <CmkCode
-                        :title="_t('Download agent')"
-                        :code_txt="installCmdWithToken(tab.installTgzDownloadCmd)"
-                        class="code"
-                        width="fill"
-                      />
-                      <CmkAlertBox v-if="tab.installWarning" variant="warning">
-                        {{ tab.installWarning }}
-                      </CmkAlertBox>
-                      <CmkCode
-                        :title="_t('Install agent')"
-                        :code_txt="tab.installTgzCmd || ''"
-                        class="code"
-                        width="fill"
-                      />
+                    <template v-if="tab.subTabs">
+                      <template v-for="subTab in tab.subTabs" :key="subTab.id">
+                        <template v-if="subTab.id === model">
+                          <template v-if="subTab.downloadCmd">
+                            <CmkCode
+                              :title="_t('Download the agent')"
+                              :code_txt="installCmdWithToken(subTab.downloadCmd)"
+                              class="code"
+                              width="fill"
+                            />
+                            <CmkAlertBox v-if="subTab.installWarning" variant="warning">
+                              {{ subTab.installWarning }}
+                            </CmkAlertBox>
+                            <CmkCode
+                              :title="_t('Install the agent')"
+                              :code_txt="subTab.installCmd"
+                              class="code"
+                              width="fill"
+                            />
+                          </template>
+                          <CmkCode
+                            v-else
+                            :code_txt="installCmdWithToken(subTab.installCmd)"
+                            class="code"
+                            width="fill"
+                          />
+                        </template>
+                      </template>
                     </template>
                   </template>
                 </template>

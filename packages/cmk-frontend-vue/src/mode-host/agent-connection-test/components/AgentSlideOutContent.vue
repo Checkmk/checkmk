@@ -15,7 +15,7 @@ import type { TranslatedString } from '@/lib/i18nString'
 
 import AgentSlideOut from '@/mode-host/agent-connection-test/components/AgentSlideOut.vue'
 
-import type { AgentSlideOutTabs, PackageOptions } from '../lib/type_def'
+import type { AgentSlideOutTabs } from '../lib/type_def'
 
 const props = defineProps<{
   allAgentsUrl: string
@@ -39,12 +39,6 @@ const props = defineProps<{
 const { _t } = usei18n()
 
 const legacyInstallTitle = _t('Install the legacy Checkmk agent')
-
-const toggleButtonOptions: PackageOptions = [
-  { label: 'RPM', value: 'rpm' },
-  { label: 'DEB', value: 'deb' },
-  { label: 'TGZ', value: 'tgz' }
-]
 const emit = defineEmits(['close'])
 const close = () => {
   emit('close')
@@ -97,19 +91,6 @@ const tabs = computed<AgentSlideOutTabs[]>(() => [
   {
     id: 'linux',
     title: _t('Linux'),
-    installMsg: _t(
-      'Run this command on your Linux host to download and install the Checkmk agent.'
-    ),
-    installMsgMultiple: _t(
-      'Run these commands on your Linux host to download and install the Checkmk agent.'
-    ),
-    installWarning: _t(
-      'This command extracts files directly into the root directory (/). Make sure you are executing this command on the correct host.'
-    ),
-    installDebCmd: replaceMacros(props.agentInstallCmds.linux_deb, false),
-    installRpmCmd: replaceMacros(props.agentInstallCmds.linux_rpm, false),
-    installTgzDownloadCmd: replaceMacros(props.agentInstallCmds.linux_tgz_download, false),
-    installTgzCmd: replaceMacros(props.agentInstallCmds.linux_tgz_extract, false),
     installUrl: props.legacyAgentUrl
       ? {
           title: legacyInstallTitle,
@@ -124,7 +105,36 @@ const tabs = computed<AgentSlideOutTabs[]>(() => [
       'After you have installed the agent, run this command on your Linux host to register the Checkmk agent controller.'
     ),
     registrationCmd: replaceMacros(props.agentRegistrationCmds.linux, true),
-    toggleButtonOptions: toggleButtonOptions
+    subTabs: [
+      {
+        id: 'deb',
+        label: 'DEB',
+        installMsg: _t(
+          'Run this command on your Linux host to download and install the Checkmk agent.'
+        ),
+        installCmd: replaceMacros(props.agentInstallCmds.linux_deb, false)
+      },
+      {
+        id: 'rpm',
+        label: 'RPM',
+        installMsg: _t(
+          'Run this command on your Linux host to download and install the Checkmk agent.'
+        ),
+        installCmd: replaceMacros(props.agentInstallCmds.linux_rpm, false)
+      },
+      {
+        id: 'tgz',
+        label: 'TGZ',
+        installMsg: _t(
+          'Run these commands on your Linux host to download and install the Checkmk agent.'
+        ),
+        downloadCmd: replaceMacros(props.agentInstallCmds.linux_tgz_download, false),
+        installWarning: _t(
+          'This command extracts files directly into the root directory (/). Make sure you are executing this command on the correct host.'
+        ),
+        installCmd: replaceMacros(props.agentInstallCmds.linux_tgz_extract, false)
+      }
+    ]
   },
   {
     id: 'solaris',

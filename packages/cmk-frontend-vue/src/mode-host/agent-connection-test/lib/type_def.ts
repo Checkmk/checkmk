@@ -7,28 +7,26 @@ import type { TranslatedString } from '@/lib/i18nString'
 
 import type { SimpleIcons } from '@/components/CmkIcon'
 
-export type PackageOption = {
-  label: 'RPM' | 'DEB' | 'TGZ'
-  value: 'rpm' | 'deb' | 'tgz'
+export interface AgentSlideOutSubTab {
+  id: string
+  label: string
+  installMsg: TranslatedString
+  downloadCmd?: string
+  installCmd: string
+  installWarning?: TranslatedString
 }
-export type PackageOptions = PackageOption[]
 
 export interface AgentSlideOutTabs {
   id: string
   title: string
   installMsg?: TranslatedString
-  installMsgMultiple?: TranslatedString
   installWarning?: TranslatedString
   installCmd?: string | undefined
   installDownloadCmd?: string
-  installDebCmd?: string
-  installRpmCmd?: string
-  installTgzDownloadCmd?: string
-  installTgzCmd?: string | undefined
   registrationMsg?: TranslatedString
   registrationCmd?: string
   installUrl?: InstallUrl | undefined
-  toggleButtonOptions?: PackageOptions
+  subTabs?: AgentSlideOutSubTab[]
 }
 
 export interface InstallUrl {

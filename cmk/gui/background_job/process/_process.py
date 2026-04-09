@@ -29,6 +29,18 @@ from cmk.ccc.exceptions import MKTerminate
 from cmk.ccc.user import UserId
 from cmk.ccc.version import edition
 from cmk.gui import log
+from cmk.gui.background_job.job._defines import BackgroundJobDefines
+from cmk.gui.background_job.job._interface import (
+    BackgroundProcessInterface,
+    JobParameters,
+    JobTarget,
+)
+from cmk.gui.background_job.job._status import (
+    BackgroundJobFailure,
+    BackgroundJobTimedOut,
+    JobStatusStates,
+)
+from cmk.gui.background_job.job._store import JobStatusSpecUpdate, JobStatusStore
 from cmk.gui.crash_handler import create_gui_crash_report
 from cmk.gui.features import features_registry
 from cmk.gui.i18n import _
@@ -47,18 +59,8 @@ from cmk.utils import paths
 from cmk.utils.log import VERBOSE
 
 from ._app import BackgroundJobFlaskApp
-from ._defines import BackgroundJobDefines
-from ._interface import BackgroundProcessInterface, JobParameters, JobTarget
-from ._status import JobStatusStates
-from ._store import JobStatusSpecUpdate, JobStatusStore
 
 tracer = get_tracer()
-
-
-class BackgroundJobTimedOut(Exception): ...
-
-
-class BackgroundJobFailure(Exception): ...
 
 
 def run_process(job_parameters: JobParameters) -> None:

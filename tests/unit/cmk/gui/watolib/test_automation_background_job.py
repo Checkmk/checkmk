@@ -18,7 +18,7 @@ from cmk.automations.results import ABCAutomationResult, ResultTypeRegistry, Ser
 from cmk.automations.types import AutomationID
 from cmk.ccc import store
 from cmk.ccc import version as cmk_version
-from cmk.gui.background_job import BackgroundProcessInterface
+from cmk.gui.background_job.job import BackgroundProcessInterface
 from cmk.gui.http import request
 from cmk.gui.utils.roles import UserPermissionSerializableConfig
 from cmk.gui.watolib import automation_background_job

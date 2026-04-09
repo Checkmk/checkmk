@@ -1339,6 +1339,7 @@ py_library(
         "//cmk/diagnostics",
         "//cmk/diskspace",
         "//cmk/fields",
+        "//cmk/gui/background_job/job",
         "//cmk/gui/htmllib:debug_vars",
         "//cmk/gui/htmllib:foldable_container",
         "//cmk/gui/htmllib:generator",

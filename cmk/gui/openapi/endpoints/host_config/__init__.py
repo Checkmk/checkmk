@@ -17,7 +17,7 @@ from cmk import fields
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
 from cmk.gui import fields as gui_fields
-from cmk.gui.background_job import InitialStatusArgs, JobTarget
+from cmk.gui.background_job.job import InitialStatusArgs, JobTarget
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKAuthException, MKUserError
 from cmk.gui.fields.fields_filter import FieldsFilter, make_filter

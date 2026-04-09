@@ -25,7 +25,7 @@ from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import omd_site, SiteId
 from cmk.crypto.certificate import Certificate, CertificatePEM, NegativeSerialException
 from cmk.crypto.hash import HashAlgorithm
-from cmk.gui.background_job import (
+from cmk.gui.background_job.job import (
     BackgroundJob,
     BackgroundProcessInterface,
     InitialStatusArgs,

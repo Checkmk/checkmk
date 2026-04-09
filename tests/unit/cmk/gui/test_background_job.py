@@ -16,7 +16,7 @@ from pydantic import BaseModel
 import cmk.gui.log
 import cmk.utils.log
 import cmk.utils.paths
-from cmk.gui.background_job import (
+from cmk.gui.background_job.job import (
     BackgroundJob,
     BackgroundJobDefines,
     BackgroundProcessInterface,

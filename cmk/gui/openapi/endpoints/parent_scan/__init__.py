@@ -15,7 +15,7 @@ Additional information about the parents and the parent scan can be found in the
 from collections.abc import Mapping
 from typing import Any, assert_never
 
-from cmk.gui.background_job import BackgroundJob
+from cmk.gui.background_job.job import BackgroundJob
 from cmk.gui.config import active_config
 from cmk.gui.http import Response
 from cmk.gui.logged_in import user

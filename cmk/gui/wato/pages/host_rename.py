@@ -22,7 +22,7 @@ from cmk.ccc.regex import regex
 from cmk.ccc.site import SiteId
 from cmk.ccc.version import edition_supports_nagvis
 from cmk.gui import forms
-from cmk.gui.background_job import BackgroundProcessInterface, InitialStatusArgs, JobTarget
+from cmk.gui.background_job.job import BackgroundProcessInterface, InitialStatusArgs, JobTarget
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import Config
 from cmk.gui.exceptions import FinalizeRequest, MKAuthException, MKUserError

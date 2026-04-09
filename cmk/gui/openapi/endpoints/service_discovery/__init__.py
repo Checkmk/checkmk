@@ -19,7 +19,7 @@ from urllib.parse import urlparse
 from cmk import fields
 from cmk.checkengine.discovery import DiscoverySettings
 from cmk.gui import fields as gui_fields
-from cmk.gui.background_job import BackgroundStatusSnapshot
+from cmk.gui.background_job.job import BackgroundStatusSnapshot
 from cmk.gui.config import active_config
 from cmk.gui.fields.utils import BaseSchema
 from cmk.gui.http import request, Response

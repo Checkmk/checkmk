@@ -41,7 +41,7 @@ from cmk.ccc.site import get_omd_config, SiteId
 from cmk.ccc.store import RealIo
 from cmk.ccc.user import UserId
 from cmk.gui import hooks
-from cmk.gui.background_job import (
+from cmk.gui.background_job.job import (
     BackgroundStatusSnapshot,
     JobStatusSpec,
     JobStatusStates,

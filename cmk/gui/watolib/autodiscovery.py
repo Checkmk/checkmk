@@ -8,7 +8,7 @@ from pydantic import BaseModel
 import cmk.utils.paths
 from cmk.ccc.site import omd_site
 from cmk.checkengine.discovery import DiscoveryReport as SingleHostDiscoveryResult
-from cmk.gui.background_job import (
+from cmk.gui.background_job.job import (
     BackgroundJob,
     BackgroundProcessInterface,
     InitialStatusArgs,

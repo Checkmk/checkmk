@@ -20,7 +20,7 @@ from redis import ConnectionError as RedisConnectionError
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.plugin_registry import Registry
 from cmk.ccc.version import Edition, edition
-from cmk.gui.background_job import (
+from cmk.gui.background_job.job import (
     BackgroundJob,
     BackgroundProcessInterface,
     InitialStatusArgs,

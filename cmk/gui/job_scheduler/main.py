@@ -27,7 +27,7 @@ from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.site import get_omd_config, omd_site
 from cmk.ccc.version import edition
 from cmk.gui import log, main_modules, single_global_setting
-from cmk.gui.background_job import job_registry, ThreadedJobExecutor
+from cmk.gui.background_job.job import job_registry, ThreadedJobExecutor
 from cmk.trace.export import exporter_from_config, init_span_processor
 from cmk.trace.logs import add_span_log_handler
 from cmk.utils import paths

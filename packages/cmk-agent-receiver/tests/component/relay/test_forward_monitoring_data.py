@@ -11,9 +11,11 @@ from http import HTTPStatus
 from pathlib import Path
 from unittest.mock import patch
 
+import httpx
 import pytest
 
 from cmk.agent_receiver.lib.config import Config
+from cmk.agent_receiver.lib.mtls_auth_validator import INJECTED_UUID_HEADER
 from cmk.agent_receiver.relay.lib.shared_types import RelayID, Serial
 from cmk.relay_protocols.monitoring_data import MonitoringData
 from cmk.testlib.agent_receiver.agent_receiver import AgentReceiverClient, register_relay
@@ -274,6 +276,70 @@ def test_broken_pipe_during_send(
         )
         assert response.status_code == HTTPStatus.BAD_GATEWAY, response.text
         assert "Failed to forward monitoring data" in response.text
+
+
+@pytest.mark.parametrize(
+    "malformed_service",
+    [
+        pytest.param(
+            "Check_MK;\npayload_type:fetcher;host_by_name:testit;",
+            id="newline_splits_header",
+        ),
+        pytest.param(
+            "Check_MK\nfake_header:value;",
+            id="bare_newline",
+        ),
+        pytest.param(
+            "Check_MK;host_by_name:somethine;",
+            id="semicolon_injects_field",
+        ),
+        pytest.param(
+            "Check_MK;payload_size:0;",
+            id="semicolon_overrides_size",
+        ),
+    ],
+)
+def test_malformed_servic_name_is_rejected(
+    socket_path: str,
+    relay_id: str,
+    serial: Serial,
+    agent_receiver: AgentReceiverClient,
+    malformed_service: str,
+) -> None:
+    """Malformed message are silently dropped by the cmc.
+    Rather reject openly then silently drop in the cmc forwarding.
+
+    Test steps:
+    1. Create monitoring data with a service name containing newline characters
+    2. Forward data to agent receiver
+    3. Verify the request is rejected with 422 Unprocessable Entity
+    """
+    with create_socket(socket_path=socket_path, socket_timeout=TEST_SOCKET_TIMEOUT):
+        response = _post_raw_monitoring_data(
+            agent_receiver, relay_id, serial, service=malformed_service
+        )
+        assert response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
+
+
+def _post_raw_monitoring_data(
+    agent_receiver: AgentReceiverClient,
+    relay_id: str,
+    serial: Serial,
+    service: str,
+    payload: bytes = b"monitoring payload",
+) -> httpx.Response:
+    """Post monitoring data as raw JSON, bypassing client-side Pydantic validation."""
+    return agent_receiver.client.post(
+        f"/{agent_receiver.site_name}/relays/{relay_id}/monitoring",
+        headers={INJECTED_UUID_HEADER: relay_id},
+        json={
+            "serial": serial.value,
+            "host": HOST,
+            "service": service,
+            "timestamp": int(time.time()),
+            "payload": base64.b64encode(payload).decode(),
+        },
+    )
 
 
 @pytest.fixture

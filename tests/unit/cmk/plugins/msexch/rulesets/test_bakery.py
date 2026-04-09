@@ -5,8 +5,8 @@
 
 import pytest
 
-from cmk.gui.plugins.legacy_bakery_rulesets.msexch_dag import migrate as migrate_dag
-from cmk.gui.plugins.legacy_bakery_rulesets.msexch_database import migrate as migrate_database
+from cmk.plugins.msexch.rulesets.bakery_dag import migrate as migrate_dag
+from cmk.plugins.msexch.rulesets.bakery_db import migrate as migrate_database
 
 
 @pytest.mark.parametrize(

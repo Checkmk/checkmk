@@ -6,7 +6,7 @@
 import dataclasses
 import time
 from collections.abc import Mapping, MutableMapping, Sequence
-from typing import Any, NamedTuple
+from typing import Any
 
 from cmk.agent_based.v2 import (
     CheckPlugin,
@@ -35,43 +35,13 @@ def parse_if64adm(string_table: StringTable) -> If64AdmSection:
     }
 
 
-class UptimePair(NamedTuple):
-    sys_uptime_sec: float | None
-    hr_sys_uptime_sec: float | None
-
-    def __bool__(self) -> bool:
-        return self.hr_sys_uptime_sec is not None or self.sys_uptime_sec is not None
-
-    def to_list(self) -> list[float]:
-        return [
-            value for value in [self.hr_sys_uptime_sec, self.sys_uptime_sec] if value is not None
-        ]
-
-
-# parse_snmp_uptime currently decides on an uptime
-# based on whether it is defined, thus 0 would be preferred over a real uptime
-# in case of bad data. This is a workaround to force parsing of each value.
-def parse_snmp_uptime_pair(string_table: StringTable) -> UptimePair | None:
-    try:
-        sys_uptime_sec = uptime.parse_snmp_uptime([[string_table[0][0], ""]])
-        hr_sys_uptime_sec = uptime.parse_snmp_uptime([["", string_table[0][1]]])
-        return UptimePair(
-            sys_uptime_sec=sys_uptime_sec.uptime_sec if sys_uptime_sec else None,
-            hr_sys_uptime_sec=hr_sys_uptime_sec.uptime_sec if hr_sys_uptime_sec else None,
-        )
-    except TypeError:
-        return None
-    except IndexError:
-        return None
-
-
 def parse_if64_with_uptime(
     string_table: Sequence[StringByteTable],
 ) -> interfaces.Section[interfaces.InterfaceWithCounters]:
     raw_uptime, raw_if64 = string_table
-    parsed_uptimes = parse_snmp_uptime_pair([[str(w) for w in l] for l in raw_uptime])
+    parsed_uptimes = uptime.parse_snmp_uptime_pair([[str(w) for w in l] for l in raw_uptime])
 
-    timestamp = max(parsed_uptimes.to_list()) if parsed_uptimes else time.time()
+    timestamp = parsed_uptimes.max_uptime_sec if parsed_uptimes else time.time()
     return if64.parse_if64(
         raw_if64,
         timestamp,

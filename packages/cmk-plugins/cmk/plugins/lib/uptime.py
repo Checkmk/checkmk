@@ -75,6 +75,50 @@ def check(params: Mapping[str, Any], section: Section) -> CheckResult:
             )
 
 
+class UptimePair(NamedTuple):
+    sys_uptime_sec: float | None
+    hr_sys_uptime_sec: float | None
+
+    @property
+    def max_uptime_sec(self) -> float:
+        return max(
+            [value for value in [self.hr_sys_uptime_sec, self.sys_uptime_sec] if value is not None]
+        )
+
+    def __bool__(self) -> bool:
+        return self.hr_sys_uptime_sec is not None or self.sys_uptime_sec is not None
+
+
+def parse_snmp_uptime_pair(string_table: StringTable) -> UptimePair | None:
+    def parse(raw_value: str) -> int | None:
+        if ":" in raw_value:
+            try:
+                days, h, m, s = raw_value.split(":")
+                return (int(days) * 86400) + (int(h) * 3600) + (int(m) * 60) + int(float(s))
+            except Exception:
+                return None
+
+        if raw_value == "0":
+            return 0
+
+        if len(raw_value) < 3:
+            return None
+
+        try:
+            return int(raw_value[:-2])
+        except Exception:
+            return None
+
+    try:
+        return UptimePair(
+            sys_uptime_sec=parse(string_table[0][0]), hr_sys_uptime_sec=parse(string_table[0][1])
+        )
+    except TypeError:
+        return None
+    except IndexError:
+        return None
+
+
 def parse_snmp_uptime(string_table: StringTable) -> Section | None:
     """
     >>> parse_snmp_uptime([['2297331594', '']])
@@ -87,29 +131,17 @@ def parse_snmp_uptime(string_table: StringTable) -> Section | None:
     Section(uptime_sec=0, message=None)
 
     """
-    if not string_table:
+
+    # internally uses parse_snmp_uptime_pair to keep parsing logic
+    # in one place.
+    uptime_pair = parse_snmp_uptime_pair(string_table)
+    if not uptime_pair:
         return None
 
-    ticks = string_table[0][1] or string_table[0][0]
-
-    if ticks == "0":
-        return Section(0, None)
-
-    if len(ticks) < 3:
-        return None
-
-    try:
-        return Section(int(ticks[:-2]), None)
-    except Exception:
-        pass
-
-    try:
-        days, h, m, s = ticks.split(":")
-        return Section(
-            (int(days) * 86400) + (int(h) * 3600) + (int(m) * 60) + int(float(s)),
-            None,
-        )
-    except Exception:
-        pass
-
-    return None
+    # prefer hr_sys_uptime_sec if possible, even if it may have weird values
+    result = (
+        uptime_pair.hr_sys_uptime_sec
+        if uptime_pair.hr_sys_uptime_sec is not None
+        else uptime_pair.sys_uptime_sec
+    )
+    return Section(result, None)

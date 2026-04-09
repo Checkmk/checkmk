@@ -209,6 +209,38 @@ _CLICKHOUSE_EXAMPLE_DIR = Directory(
             frozenset({Symlink(name="a link", path=Path("../up"))}),
             frozenset({Directory(name=".restore_working_dir")}),
         ),
+        (
+            frozenset(
+                {
+                    Directory(
+                        name="etc",
+                        files=frozenset(
+                            {File("environment", content=b"# Custom environment variables\n")}
+                        ),
+                    ),
+                }
+            ),
+            frozenset(),
+            frozenset(
+                {
+                    # tmp/ is skipped entirely by clear_site_home. Its contents are cleared by
+                    # unmount_tmpfs_without_save (called before clear_site_home), and the directory
+                    # itself must remain as it may be a Docker-managed tmpfs mount point (EBUSY).
+                    Directory(
+                        name="tmp",
+                        directories=frozenset(
+                            {
+                                Directory(
+                                    name="run",
+                                    files=frozenset({File("rrdcached.sock", content=b"")}),
+                                )
+                            }
+                        ),
+                    ),
+                    Directory(name=".restore_working_dir"),
+                }
+            ),
+        ),
     ],
 )
 def test_clear_site_home(directories: Dirs, files: Files, untouched: Dirs, tmp_path: Path) -> None:

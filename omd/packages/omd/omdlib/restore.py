@@ -12,7 +12,7 @@ from omdlib.console import ok
 from omdlib.contexts import SiteContext
 from omdlib.init_scripts import call_init_scripts
 from omdlib.site_paths import SitePaths
-from omdlib.tmpfs import unmount_tmpfs
+from omdlib.tmpfs import unmount_tmpfs_without_save
 from omdlib.user_processes import kill_site_user_processes
 
 
@@ -30,7 +30,8 @@ def prepare_restore_as_site_user(site: SiteContext, kill: bool, verbose: bool) -
     kill_site_user_processes(site.name, verbose)
     ok()
 
-    unmount_tmpfs(site.name, site_home, site.tmp_dir)
+    # We don't need to save the `tmp/` folder, since `clear_site_home` will remove it anyway.
+    unmount_tmpfs_without_save(site.name, site.tmp_dir, output=True, kill=kill)
 
     sys.stdout.write("Deleting existing site data...")
     clear_site_home(Path(site_home))
@@ -76,6 +77,11 @@ def clear_site_home(site_home: Path) -> None:
     with os.scandir(site_home) as scaniter:
         for entry in scaniter:
             if entry.name == restore_working_dir.name:
+                continue
+            elif entry.name == "tmp":
+                # tmp is excluded from backups. The content is cleared by `unmount_tmpfs_without_save`,
+                # but the directory must remain, since it may be a Docker-managed tmpfs mount point
+                # that cannot be removed (EBUSY).
                 continue
             elif entry.is_dir(follow_symlinks=False):
                 shutil.rmtree(entry.path)

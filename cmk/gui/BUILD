@@ -1254,7 +1254,7 @@ py_library(
         ],
     ) + [
         "wsgi/applications/index.wsgi",
-    ],
+    ] + ["//cmk/gui/watolib:gui_srcs"],
     imports = ["../.."],
     visibility = [
         "//cmk:__subpackages__",
@@ -1386,6 +1386,7 @@ py_library(
         "//cmk/gui/utils:user_errors",
         "//cmk/gui/utils:user_frontend_settings_cookie",
         "//cmk/gui/valuespec",
+        "//cmk/gui/watolib:config_infra",
         "//cmk/inventory",
         "//cmk/piggyback:backend",
         "//cmk/piggyback:hub",

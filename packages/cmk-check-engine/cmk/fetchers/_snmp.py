@@ -67,6 +67,7 @@ class SNMPFetcherConfig:
     relative_stored_walk_path: Path
     relative_walk_cache_path: Path
     relative_section_cache_path: Path
+    force_stored_walks: bool = False
 
 
 class WalkCache(MutableMapping[tuple[str, str, bool], SNMPRowInfo]):
@@ -251,6 +252,7 @@ class SNMPFetcher(Fetcher[SNMPRawData]):
         relative_walk_cache_path: Path,
         caching_config: Mapping[SNMPSectionName, int],
         snmp_config: SNMPHostConfig,
+        force_stored_walks: bool,
     ) -> None:
         super().__init__()
         self.sections: Final = sections
@@ -263,6 +265,7 @@ class SNMPFetcher(Fetcher[SNMPRawData]):
         self.relative_section_cache_path: Final = relative_section_cache_path
         self.caching_config: Final = caching_config
         self.snmp_config: Final = snmp_config
+        self.force_stored_walks: Final = force_stored_walks
         self._logger: Final = logging.getLogger("cmk.helper.snmp")
         self._backend: SNMPBackend | None = None
 
@@ -279,6 +282,7 @@ class SNMPFetcher(Fetcher[SNMPRawData]):
             and self.relative_section_cache_path == other.relative_section_cache_path
             and self.caching_config == other.caching_config
             and self.snmp_config == other.snmp_config
+            and self.force_stored_walks == other.force_stored_walks
         )
 
     @property
@@ -307,6 +311,7 @@ class SNMPFetcher(Fetcher[SNMPRawData]):
                     f"relative_walk_cache_path={self.relative_walk_cache_path!r}",
                     f"caching_config={self.caching_config!r}",
                     f"snmp_config={self.snmp_config!r}",
+                    f"force_stored_walks={self.force_stored_walks!r}",
                 )
             )
             + ")"
@@ -316,6 +321,7 @@ class SNMPFetcher(Fetcher[SNMPRawData]):
         self._backend = make_backend(
             self.snmp_config,
             self._logger,
+            use_cache=self.force_stored_walks,
             stored_walk_path=self.base_path / self.relative_stored_walk_path,
         )
 

@@ -415,6 +415,7 @@ class TestSNMPFetcherDeserialization:
             relative_walk_cache_path=tmp_path,
             relative_section_cache_path=Path("tmp/db"),
             caching_config={SNMPSectionName("foobar"): 42},
+            force_stored_walks=False,
         )
 
     def test_repr(self, fetcher: SNMPFetcher) -> None:
@@ -456,6 +457,7 @@ def _create_fetcher(
         relative_walk_cache_path=path,
         relative_section_cache_path=path / "section_cache_path",
         caching_config=caching_config or {},
+        force_stored_walks=False,
     )
 
 
@@ -793,6 +795,7 @@ class TestSNMPFetcherFetchCache:
             relative_walk_cache_path=tmp_path,
             relative_section_cache_path=Path("tmp/db"),
             caching_config={},
+            force_stored_walks=False,
         )
         file_cache = StubFileCache[SNMPRawData](
             base_path=Path("/"),

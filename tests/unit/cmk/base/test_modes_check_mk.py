@@ -181,12 +181,7 @@ class TestModeDumpAgentUseWalk:
         [
             pytest.param({}, ClassicSNMPBackend, id="default"),
             pytest.param({"usewalk": True}, StoredWalkSNMPBackend, id="walk=True"),
-            pytest.param(
-                {"usewalk": False},
-                ClassicSNMPBackend,
-                id="walk=False",
-                marks=pytest.mark.xfail(reason="Unsetting of the global flag is not supported"),
-            ),
+            pytest.param({"usewalk": False}, ClassicSNMPBackend, id="walk=False"),
         ],
     )
     def test_usewalk_creates_expected_backend(

@@ -3913,6 +3913,7 @@ class FetcherFactory:
             caching_config=self._snmp_fetcher_config.caching_config(host_name),
             relative_stored_walk_path=self._snmp_fetcher_config.relative_stored_walk_path,
             relative_walk_cache_path=self._snmp_fetcher_config.relative_walk_cache_path,
+            force_stored_walks=self._snmp_fetcher_config.force_stored_walks,
         )
         return fetcher
 

@@ -329,7 +329,6 @@ def _handle_fetcher_options(
         file_cache_options = dataclasses.replace(file_cache_options, tcp_use_only_cache=True)
 
     if options.get("usewalk", False):
-        snmp_factory.force_stored_walks()
         global _enforce_localhost
         _enforce_localhost = True
 
@@ -741,6 +740,8 @@ def mode_dump_agent(app: CheckmkBaseApp, options: Mapping[str, object], hostname
                         config_cache.ruleset_matcher,
                         config_cache.label_manager.labels_of_host,
                     ),
+                    # Note: 'usewalk' is not in the options of this mode. We use options.get() just for consistency.
+                    force_stored_walks=bool(options.get("usewalk", False)),
                 ),
             ),
             simulation_mode=config.simulation_mode,
@@ -2155,6 +2156,7 @@ def mode_check_discovery(
                 caching_config=make_parsed_snmp_fetch_intervals_config(
                     loaded_config, ruleset_matcher, label_manager.labels_of_host
                 ),
+                force_stored_walks=bool(options.get("usewalk", False)),
             ),
         ),
         plugins=plugins,
@@ -2544,6 +2546,7 @@ def mode_discover(app: CheckmkBaseApp, options: _DiscoveryOptions, args: list[st
                 caching_config=make_parsed_snmp_fetch_intervals_config(
                     loaded_config, ruleset_matcher, label_manager.labels_of_host
                 ),
+                force_stored_walks=bool(options.get("usewalk", False)),
             ),
         ),
         plugins=plugins,
@@ -2817,6 +2820,7 @@ def run_checking(
                 caching_config=make_parsed_snmp_fetch_intervals_config(
                     loaded_config, ruleset_matcher, label_manager.labels_of_host
                 ),
+                force_stored_walks=bool(options.get("usewalk", False)),
             ),
         ),
         plugins=plugins,
@@ -3118,6 +3122,7 @@ def mode_inventory(app: CheckmkBaseApp, options: _InventoryOptions, args: list[s
                 caching_config=make_parsed_snmp_fetch_intervals_config(
                     loaded_config, ruleset_matcher, label_manager.labels_of_host
                 ),
+                force_stored_walks=bool(options.get("usewalk", False)),
             ),
         ),
         plugins=plugins,
@@ -3447,6 +3452,7 @@ def mode_inventorize_marked_hosts(app: CheckmkBaseApp, options: Mapping[str, obj
                 caching_config=make_parsed_snmp_fetch_intervals_config(
                     loaded_config, ruleset_matcher, label_manager.labels_of_host
                 ),
+                force_stored_walks=bool(options.get("usewalk", False)),
             ),
         ),
         plugins=plugins,

@@ -27,28 +27,13 @@ except ImportError:
 __all__ = ["make_backend"]
 
 
-_force_stored_walks = False
-
-
-def force_stored_walks() -> None:
-    global _force_stored_walks
-    _force_stored_walks = True
-
-
-def get_force_stored_walks() -> bool:
-    return _force_stored_walks
-
-
 def make_backend(
     snmp_config: SNMPHostConfig,
     logger: logging.Logger,
     *,
-    use_cache: bool | None = None,
+    use_cache: bool = False,
     stored_walk_path: Path,
 ) -> SNMPBackend:
-    if use_cache is None:
-        use_cache = get_force_stored_walks()
-
     if use_cache or snmp_config.snmp_backend is SNMPBackendEnum.STORED_WALK:
         return StoredWalkSNMPBackend(
             snmp_config, logger, path=stored_walk_path / snmp_config.hostname

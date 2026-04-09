@@ -51,11 +51,11 @@ def _setup_source_host(
 
 @contextmanager
 def _setup_piggyback_host(
-    source_site: Site, site_id_target: str, hostname_piggyback: str
+    central_site: Site, site_id_target: str, hostname_piggyback: str
 ) -> Iterator[None]:
     try:
         LOGGER.info("Creating piggyback host '%s' in site '%s'", hostname_piggyback, site_id_target)
-        source_site.openapi.hosts.create(
+        central_site.openapi.hosts.create(
             hostname=hostname_piggyback,
             attributes={
                 "site": site_id_target,
@@ -64,14 +64,14 @@ def _setup_piggyback_host(
                 "tag_piggyback": "piggyback",
             },
         )
-        source_site.openapi.changes.activate_and_wait_for_completion()
+        central_site.openapi.changes.activate_and_wait_for_completion()
         yield
     finally:
         LOGGER.info(
             "Deleting piggyback host '%s' from site '%s'", hostname_piggyback, site_id_target
         )
-        source_site.openapi.hosts.delete(hostname_piggyback)
-        source_site.openapi.changes.activate_and_wait_for_completion()
+        central_site.openapi.hosts.delete(hostname_piggyback)
+        central_site.openapi.changes.activate_and_wait_for_completion()
 
 
 @contextmanager

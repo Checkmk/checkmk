@@ -33,4 +33,5 @@ export PYTHONNOUSERSITE=1
     --upgrade \
     --force-reinstall \
     --isolated \
+    --disable-pip-version-check \
     "${WHEELS[@]}"

@@ -25,6 +25,7 @@ export PYTHONNOUSERSITE=1
     --upgrade \
     --force-reinstall \
     --isolated \
+    --disable-pip-version-check \
     "$(bazel info workspace)/$(bazel cquery :cmk-livestatus-client_whl --output=starlark --starlark:expr="target.files.to_list()[0].path")" \
     "$(bazel info workspace)/$(bazel cquery :livestatus_whl --output=starlark --starlark:expr="target.files.to_list()[0].path")"
 

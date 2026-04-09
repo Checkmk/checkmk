@@ -25,4 +25,5 @@ export PYTHONNOUSERSITE=1
     --upgrade \
     --force-reinstall \
     --isolated \
+    --disable-pip-version-check \
     "$(bazel info workspace)/$(bazel cquery :wheel --output=starlark --starlark:expr="target.files.to_list()[0].path")"

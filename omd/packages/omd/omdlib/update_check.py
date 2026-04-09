@@ -183,14 +183,14 @@ def check_update_possible(
         and not to_edition_is_ultimatemt
     ):
         sys.exit(
-            f"ERROR: Upgrading from {from_edition.title()} to {to_edition.title()} is not possible. Aborted."
+            f"ERROR: Changing from {from_edition.title()} to {to_edition.title()} is not possible. Aborted."
         )
 
     if (
         resolution.confirm_edition is ConfirmEdition.ASK
         and from_edition != to_edition
         and not dialog_yesno(
-            text=f"You are upgrading from {from_edition.title()} to {to_edition.title()}. Is this intended?",
+            text=f"You are changing your edition from {from_edition.title()} to {to_edition.title()}. Is this intended?",
             default_no=True,
         )
     ):

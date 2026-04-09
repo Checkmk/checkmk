@@ -1312,6 +1312,7 @@ py_library(
         ],
     ) + [
         "//cmk/gui/form_specs:gui_srcs",
+        "//cmk/gui/search:gui_srcs",
         "//cmk/gui/userdb:gui_srcs",
         "//cmk/gui/watolib:gui_srcs",
         "//cmk/gui/wsgi:gui_srcs",
@@ -1410,6 +1411,7 @@ py_library(
         "//cmk/gui/htmllib:html",
         "//cmk/gui/htmllib:tag_rendering",
         "//cmk/gui/htmllib:type_defs",
+        "//cmk/gui/search:match_items",
         "//cmk/gui/token_auth",
         "//cmk/gui/userdb",
         "//cmk/gui/utils:agent",

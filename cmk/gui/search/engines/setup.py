@@ -6,19 +6,17 @@
 from __future__ import annotations
 
 import itertools
-from abc import ABC, abstractmethod
 from collections import defaultdict
 from collections.abc import Awaitable, Callable, Collection, Iterable, Iterator, Mapping
 from dataclasses import dataclass
 from itertools import chain
-from typing import Final, override
+from typing import override
 
 import redis
 from pydantic import BaseModel
 from redis import ConnectionError as RedisConnectionError
 
 from cmk.ccc.exceptions import MKGeneralException
-from cmk.ccc.plugin_registry import Registry
 from cmk.ccc.version import Edition, edition
 from cmk.gui.background_job.job import (
     BackgroundJob,
@@ -41,6 +39,24 @@ from cmk.gui.i18n import (
 from cmk.gui.logged_in import user
 from cmk.gui.pages import get_page_handler, PageContext
 from cmk.gui.permissions import permission_registry
+from cmk.gui.search.match_items import (
+    ABCMatchItemGenerator as ABCMatchItemGenerator,
+)
+from cmk.gui.search.match_items import (
+    match_item_generator_registry as match_item_generator_registry,
+)
+from cmk.gui.search.match_items import (
+    MatchItem as MatchItem,
+)
+from cmk.gui.search.match_items import (
+    MatchItemGeneratorRegistry as MatchItemGeneratorRegistry,
+)
+from cmk.gui.search.match_items import (
+    MatchItems as MatchItems,
+)
+from cmk.gui.search.match_items import (
+    MatchItemsByTopic as MatchItemsByTopic,
+)
 from cmk.gui.session import SuperUserContext
 from cmk.gui.type_defs import SearchQuery, SearchResult, SearchResultsByTopic
 from cmk.gui.utils.loading_transition import LoadingTransition
@@ -64,51 +80,6 @@ from ..legacy_helpers import transform_legacy_results_to_unified
 class IndexNotFoundException(MKGeneralException):
     """Raised when trying to load a non-existing search index file or when the current language is
     missing in the search index"""
-
-
-@dataclass
-class MatchItem:
-    title: str
-    topic: str
-    url: str
-    match_texts: Iterable[str]
-    loading_transition: LoadingTransition | None = None
-
-    def __post_init__(self) -> None:
-        self.match_texts = [match_text.lower() for match_text in self.match_texts]
-
-
-MatchItems = Iterable[MatchItem]
-MatchItemsByTopic = dict[str, MatchItems]
-
-
-class ABCMatchItemGenerator(ABC):
-    def __init__(self, name: str) -> None:
-        self.name: Final[str] = name
-
-    @override
-    def __hash__(self) -> int:
-        return hash(self.name)
-
-    @abstractmethod
-    def generate_match_items(self, user_permissions: UserPermissions) -> MatchItems: ...
-
-    @staticmethod
-    @abstractmethod
-    def is_affected_by_change(change_action_name: str) -> bool: ...
-
-    @property
-    @abstractmethod
-    def is_localization_dependent(self) -> bool: ...
-
-
-class MatchItemGeneratorRegistry(Registry[ABCMatchItemGenerator]):
-    @override
-    def plugin_name(self, instance: ABCMatchItemGenerator) -> str:
-        return instance.name
-
-
-match_item_generator_registry = MatchItemGeneratorRegistry()
 
 
 class IndexBuilder:

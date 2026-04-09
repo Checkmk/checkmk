@@ -3,6 +3,22 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.gui.search.match_items import (
+    ABCMatchItemGenerator as ABCMatchItemGenerator,
+)
+from cmk.gui.search.match_items import (
+    match_item_generator_registry as match_item_generator_registry,
+)
+from cmk.gui.search.match_items import (
+    MatchItem as MatchItem,
+)
+from cmk.gui.search.match_items import (
+    MatchItemGeneratorRegistry as MatchItemGeneratorRegistry,
+)
+from cmk.gui.search.match_items import (
+    MatchItems as MatchItems,
+)
+
 from .engines.monitoring import (
     ABCQuicksearchConductor,
     IncorrectLabelInputError,
@@ -11,15 +27,10 @@ from .engines.monitoring import (
     TooManyRowsError,
 )
 from .engines.setup import (
-    ABCMatchItemGenerator,
     IndexBuilder,
     IndexNotFoundException,
     IndexSearcher,
     launch_requests_processing_background,
-    match_item_generator_registry,
-    MatchItem,
-    MatchItemGeneratorRegistry,
-    MatchItems,
     PermissionsHandler,
     SearchIndexBackgroundJob,
     SetupSearchEngine,

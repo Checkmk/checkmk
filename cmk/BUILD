@@ -464,6 +464,7 @@ py_wheel(
         "//cmk/gui/htmllib:html",
         "//cmk/gui/htmllib:tag_rendering",
         "//cmk/gui/htmllib:type_defs",
+        "//cmk/gui/search:match_items",
         "//cmk/gui/token_auth",
         "//cmk/gui/userdb",
         "//cmk/gui/utils:agent",

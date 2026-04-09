@@ -6,7 +6,7 @@
 
 from cmk.gui.http import request
 from cmk.gui.i18n import _
-from cmk.gui.search import ABCMatchItemGenerator, MatchItem, MatchItems
+from cmk.gui.search.match_items import ABCMatchItemGenerator, MatchItem, MatchItems
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.urls import (
     makeuri_contextless,

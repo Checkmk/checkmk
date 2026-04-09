@@ -219,7 +219,7 @@ let g_current_graph_id = 0
 const HOVER_CACHE_MAX_SIZE = 200
 const HOVER_CACHE_BUCKET_S = 2 // bucket size in seconds for hover timestamps
 interface HoverCacheEntry {
-  data: GraphHover
+  data: GraphValuesAtTime
   timestamp: number
 }
 const g_hover_cache: Map<string, HoverCacheEntry> = new Map()
@@ -229,7 +229,7 @@ function _hover_cache_key(display_id: string, hover_time: number): string {
   return display_id + '|' + bucket
 }
 
-function _hover_cache_get(key: string): GraphHover | null {
+function _hover_cache_get(key: string): GraphValuesAtTime | null {
   const entry = g_hover_cache.get(key)
   if (!entry) return null
   // Evict entries older than 30 seconds
@@ -243,7 +243,7 @@ function _hover_cache_get(key: string): GraphHover | null {
   return entry.data
 }
 
-function _hover_cache_set(key: string, data: GraphHover): void {
+function _hover_cache_set(key: string, data: GraphValuesAtTime): void {
   if (g_hover_cache.size >= HOVER_CACHE_MAX_SIZE) {
     // Evict oldest entry (first key in Map iteration order)
     const oldest_key = g_hover_cache.keys().next().value
@@ -1761,7 +1761,7 @@ function get_event_offset_y(event: MouseEvent) {
 //#   |                      |_|                                           |
 //#   '--------------------------------------------------------------------'
 
-interface GraphHover {
+interface GraphValuesAtTime {
   rendered_hover_time: string
   curves: Curve[]
 }
@@ -1845,9 +1845,9 @@ function handle_graph_hover_popup_update(
   },
   ajax_response: string
 ) {
-  let popup_data: GraphHover
+  let response: { result_code: number; result: GraphValuesAtTime }
   try {
-    popup_data = JSON.parse(ajax_response)
+    response = JSON.parse(ajax_response)
   } catch (e) {
     console.log(e)
     console.error('Failed to parse graph hover update response: ' + ajax_response)
@@ -1855,6 +1855,15 @@ function handle_graph_hover_popup_update(
     g_graph_backoff.report_failure()
     return
   }
+
+  if (response.result_code != 0) {
+    console.error('Graph hover update failed: ' + String(response.result))
+    g_graph_update_in_process = false
+    g_graph_backoff.report_failure()
+    return
+  }
+
+  const popup_data = response.result
 
   if (handler_data.hover_timestamp !== undefined && get_url_param('cmk-token')) {
     const display_id = g_ajax_contexts[handler_data.graph.id]?.display_id || ''

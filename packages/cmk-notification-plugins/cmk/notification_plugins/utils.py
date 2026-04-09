@@ -622,7 +622,7 @@ def render_cmk_graphs(context: dict[str, str], raise_exception: bool = False) ->
         return []
 
     try:
-        base64_strings = response.json()
+        ajax_response = response.json()
     except requests.exceptions.JSONDecodeError as e:
         if response.text == "":
             return []
@@ -632,6 +632,15 @@ def render_cmk_graphs(context: dict[str, str], raise_exception: bool = False) ->
             f"ERROR: Failed to decode graphs: {e}\nURL: {request.url}\nData: {response.text!r}\n"
         )
         return []
+
+    if ajax_response.get("result_code", 0) != 0:
+        msg = ajax_response.get("result", "Unknown error")
+        if raise_exception:
+            raise RuntimeError(f"Graph rendering failed: {msg}")
+        sys.stderr.write(f"ERROR: Graph rendering failed: {msg}\nURL: {request.url}\n")
+        return []
+
+    base64_strings = ajax_response.get("result", [])
 
     file_prefix = _sanitize_filename(f"{context['HOSTNAME']}-{svc_desc}")
     return [

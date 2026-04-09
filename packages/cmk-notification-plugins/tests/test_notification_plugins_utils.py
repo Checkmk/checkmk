@@ -600,21 +600,21 @@ def test_render_cmk_graphs(capsys: pytest.CaptureFixture) -> None:
     with patch(
         "cmk.notification_plugins.utils.requests.Session", new=RequestsSessionMock()
     ) as mock:
-        mock.data = '["foo"]'
+        mock.data = '{"result_code": 0, "result": ["foo"], "severity": "success"}'
         with pytest.raises(binascii.Error):
             utils.render_cmk_graphs(context=context)
 
     with patch(
         "cmk.notification_plugins.utils.requests.Session", new=RequestsSessionMock()
     ) as mock:
-        mock.data = '[""]'
+        mock.data = '{"result_code": 0, "result": [""], "severity": "success"}'
         assert utils.render_cmk_graphs(context=context) == [utils.Graph("heute-_HOST_-0.png", b"")]
         assert capsys.readouterr().err == ""
 
     with patch(
         "cmk.notification_plugins.utils.requests.Session", new=RequestsSessionMock()
     ) as mock:
-        mock.data = '["YQ==", "Yg==", "Yw=="]'
+        mock.data = '{"result_code": 0, "result": ["YQ==", "Yg==", "Yw=="], "severity": "success"}'
         assert utils.render_cmk_graphs(context=context) == [
             utils.Graph("heute-_HOST_-0.png", b"a"),
             utils.Graph("heute-_HOST_-1.png", b"b"),
@@ -627,7 +627,7 @@ def test_render_cmk_graphs(capsys: pytest.CaptureFixture) -> None:
     with patch(
         "cmk.notification_plugins.utils.requests.Session", new=RequestsSessionMock()
     ) as mock:
-        mock.data = '["YQ==", "Yg=="]'
+        mock.data = '{"result_code": 0, "result": ["YQ==", "Yg=="], "severity": "success"}'
         assert utils.render_cmk_graphs(context=context) == [
             utils.Graph("heute-Filesystem_x47boot-0.png", b"a"),
             utils.Graph("heute-Filesystem_x47boot-1.png", b"b"),

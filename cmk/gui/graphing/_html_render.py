@@ -9,7 +9,7 @@ import traceback
 from collections.abc import Callable, Generator, Iterator, Mapping, Sequence
 from dataclasses import asdict, dataclass
 from enum import auto, Enum
-from typing import assert_never, Literal, override
+from typing import assert_never, Literal, override, TypedDict
 from uuid import uuid4
 
 from pydantic import BaseModel, field_validator, SerializeAsAny
@@ -26,16 +26,15 @@ from cmk.ccc.version import edition
 from cmk.gui.color import render_color_icon
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
-from cmk.gui.http import Request, request, response
+from cmk.gui.http import Request, request
 from cmk.gui.i18n import _
-from cmk.gui.log import logger
 from cmk.gui.logged_in import (
     load_user_file,
     save_user_file,
     user,
     UserGraphTimeRangeFileName,
 )
-from cmk.gui.pages import AjaxPage, Page, PageContext, PageResult
+from cmk.gui.pages import AjaxPage, PageContext, PageResult
 from cmk.gui.theme.current_theme import theme
 from cmk.gui.type_defs import GraphTimerange, IconNames, SizePT, StaticIcon
 from cmk.gui.utils.html import HTML
@@ -1538,6 +1537,11 @@ class AjaxRenderGraph(AjaxPage):
 #   '----------------------------------------------------------------------'
 
 
+class GraphValuesAtTime(TypedDict):
+    rendered_hover_time: str
+    curves: list[Curve]
+
+
 @tracer.instrument("graphing.render_graph_values_at_time")
 def render_graph_values_at_time(
     recipe: GraphRecipe,
@@ -1545,78 +1549,60 @@ def render_graph_values_at_time(
     registered_metrics: Mapping[str, RegisteredMetric],
     *,
     consolidation_function: GraphConsolidationFunction | None,
-    debug: bool,
     hover_time: int,
     temperature_unit: TemperatureUnit,
     backend_time_series_fetcher: FetchTimeSeries | None,
-) -> None:
-    """Write the JSON graph hover response for a pre-built recipe and data range."""
-    response.set_content_type("application/json")
-    try:
-        curves = compute_curves_at_timestamp(
-            [
-                result.ok
-                for result in fetch_augmented_time_series(
-                    registered_metrics,
-                    recipe,
-                    time_range,
-                    consolidation_function=consolidation_function,
-                    temperature_unit=temperature_unit,
-                    backend_time_series_fetcher=backend_time_series_fetcher,
-                )
-                if result.is_ok()
-            ],
-            user_specific_unit(recipe.unit_spec, temperature_unit).formatter.render,
-            hover_time,
-        )
-        response.set_data(
-            json.dumps(
-                {
-                    "rendered_hover_time": cmk.utils.render.date_and_time(hover_time),
-                    "curves": [
-                        c
-                        for c, _a in _order_graph_curves_for_legend_and_mouse_hover(
-                            curves,
-                            # TODO Dummy annotations due to zip
-                            [
-                                CurveAnnotations(
-                                    scalars=Scalars(
-                                        pin=(None, ""),
-                                        last=(None, ""),
-                                        max=(None, ""),
-                                        min=(None, ""),
-                                        average=(None, ""),
-                                    ),
-                                    attributes={},
-                                )
-                                for _ in range(len(curves))
-                            ],
-                        )
-                    ],
-                }
+) -> GraphValuesAtTime:
+    """Return the graph hover data for a pre-built recipe and data range."""
+    curves = compute_curves_at_timestamp(
+        [
+            result.ok
+            for result in fetch_augmented_time_series(
+                registered_metrics,
+                recipe,
+                time_range,
+                consolidation_function=consolidation_function,
+                temperature_unit=temperature_unit,
+                backend_time_series_fetcher=backend_time_series_fetcher,
             )
-        )
-    except Exception as e:
-        logger.error(
-            "Ajax call ajax_graph_values_at_time failed: %s\n%s", e, traceback.format_exc()
-        )
-        if debug:
-            raise
-        response.set_data("ERROR: %s" % e)
+            if result.is_ok()
+        ],
+        user_specific_unit(recipe.unit_spec, temperature_unit).formatter.render,
+        hover_time,
+    )
+    return GraphValuesAtTime(
+        rendered_hover_time=cmk.utils.render.date_and_time(hover_time),
+        curves=[
+            c
+            for c, _a in _order_graph_curves_for_legend_and_mouse_hover(
+                curves,
+                # TODO Dummy annotations due to zip
+                [
+                    CurveAnnotations(
+                        scalars=Scalars(
+                            pin=(None, ""),
+                            last=(None, ""),
+                            max=(None, ""),
+                            min=(None, ""),
+                            average=(None, ""),
+                        ),
+                        attributes={},
+                    )
+                    for _ in range(len(curves))
+                ],
+            )
+        ],
+    )
 
 
-# NOTE
-# No AjaxPage, as ajax-pages have a {"result_code": [1|0], "result": ..., ...} result structure,
-# while these functions do not have that. In order to preserve the functionality of the JS side
-# of things, we keep it.
-# TODO: Migrate this to a real AjaxPage
-class AjaxGraphValuesAtTime(Page):
+class AjaxGraphValuesAtTime(AjaxPage):
+    @override
     def page(self, ctx: PageContext) -> PageResult:
         """Registered as `ajax_graph_values_at_time`."""
         hover_request = GraphHoverRequest.model_validate(
             json.loads(ctx.request.get_str_input_mandatory("context"))
         )
-        render_graph_values_at_time(
+        return render_graph_values_at_time(
             hover_request.recipe,
             GraphTimeRange(
                 start=hover_request.interaction.time_start,
@@ -1634,14 +1620,12 @@ class AjaxGraphValuesAtTime(Page):
             ),
             metrics_from_api,
             consolidation_function=hover_request.interaction.consolidation_function,
-            debug=ctx.config.debug,
             hover_time=ctx.request.get_integer_input_mandatory("hover_time"),
             temperature_unit=get_temperature_unit(user, ctx.config.default_temperature_unit),
             backend_time_series_fetcher=metric_backend_registry[
                 str(edition(paths.omd_root))
             ].get_time_series_fetcher(),
         )
-        return None
 
 
 # .

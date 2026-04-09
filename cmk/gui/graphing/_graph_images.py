@@ -7,9 +7,7 @@ This is needed for the graphs sent with mail notifications."""
 
 import base64
 import itertools
-import json
 import time
-import traceback
 from collections.abc import Mapping, Sequence
 from typing import Any, Literal, override, TypedDict
 
@@ -21,11 +19,11 @@ from cmk.ccc.site import SiteId
 from cmk.ccc.version import edition
 from cmk.gui import pdf
 from cmk.gui.exceptions import MKNotFound, MKUnauthenticatedException, MKUserError
-from cmk.gui.http import Request, response
+from cmk.gui.http import Request
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.logged_in import LoggedInSuperUser, user
-from cmk.gui.pages import Page, PageContext
+from cmk.gui.pages import AjaxPage, PageContext, PageResult
 from cmk.gui.permissions import permission_registry
 from cmk.gui.type_defs import SizePT
 from cmk.gui.utils.roles import UserPermissions
@@ -67,24 +65,19 @@ from ._unit import get_temperature_unit
 tracer = trace.get_tracer()
 
 
-# NOTE
-# No AjaxPage, as ajax-pages have a {"result_code": [1|0], "result": ..., ...} result structure,
-# while these functions do not have that. In order to preserve the functionality of the JS side
-# of things, we keep it.
-# TODO: Migrate this to a real AjaxPage
 # Provides a json list containing base64 encoded PNG images of the current 24h graphs
 # of a host or service.
-#    # Needed by mail notification plug-in (-> no authentication from localhost)
-class AjaxGraphImagesForNotifications(Page):
+# Needed by mail notification plug-in (-> no authentication from localhost)
+class AjaxGraphImagesForNotifications(AjaxPage):
     @override
-    def page(self, ctx: PageContext) -> None:
+    def page(self, ctx: PageContext) -> PageResult:
         """Registered as `ajax_graph_images`."""
         if not isinstance(user, LoggedInSuperUser):
             # This page used to be noauth but restricted to local ips.
             # Now we use the SiteInternalSecret for this.
             raise MKUnauthenticatedException(_("You are not allowed to access this page."))
 
-        _answer_graph_image_request(
+        return _answer_graph_image_request(
             ctx.request,
             GraphEnvironment(
                 registered_metrics=metrics_from_api,
@@ -102,71 +95,66 @@ class AjaxGraphImagesForNotifications(Page):
 def _answer_graph_image_request(
     request: Request,
     env: GraphEnvironment,
-) -> None:
+) -> list[str]:
+    site_id = SiteId(raw_site) if (raw_site := request.var("site")) else None
+    host_name = request.get_validated_type_input_mandatory(HostName, "host")
+    service_description = request.get_str_input_mandatory("service", "_HOST_")
+    # FIXME: We should really enforce site here. But it seems that the notification context
+    # has no idea about the site of the host. This could be optimized later.
+    # if not site:
+    #    raise MKGeneralException("Missing mandatory \"site\" parameter")
+    graph_specification = get_template_graph_specification(
+        site_id=None,
+        host_name=host_name,
+        service_name=service_description,
+        graph_index=None,  # all graphs
+        destination=GraphDestinations.notification,
+    )
+
     try:
-        site_id = SiteId(raw_site) if (raw_site := request.var("site")) else None
-        host_name = request.get_validated_type_input_mandatory(HostName, "host")
-        service_description = request.get_str_input_mandatory("service", "_HOST_")
-
-        graph_specification = get_template_graph_specification(
-            site_id=None,
-            host_name=host_name,
-            service_name=service_description,
-            graph_index=None,  # all graphs
-            destination=GraphDestinations.notification,
-        )
-
-        try:
-            rows = graph_specification.fetch_graph_rows(env)
-        except livestatus.MKLivestatusNotFoundError:
-            logger.debug(
-                "Cannot fetch graph data: site: %s, host %s, service %s",
-                site_id,
-                host_name,
-                service_description,
-            )
-            if env.debug:
-                raise
-            return
-
-        # Always use 25h graph in notifications
-        end_time = int(time.time())
-        start_time = end_time - (25 * 3600)
-
-        display_config = GraphDisplayConfigImage.from_user_context_and_options(
-            user,
-            graph_image_render_options(),
-        )
-
-        time_range = graph_image_time_range(display_config, start_time, end_time)
-        num_graphs = request.get_integer_input("num_graphs")
-
-        graphs = []
-        for rwo, result in itertools.islice(
-            iter_graph_artworks(
-                graph_specification.recipes(env, rows), time_range, display_config.size, env
-            ),
-            num_graphs,
-        ):
-            graphs.append(
-                base64.b64encode(
-                    render_graph_png(
-                        result.artwork,
-                        result.annotations,
-                        rwo.recipe.title,
-                        display_config,
-                    )
-                ).decode("ascii")
-            )
-
-        response.set_data(json.dumps(graphs))
-
-    except Exception as e:
-        logger.error(
-            "Call to ajax_graph_images.py failed: %s\n%s", e, "".join(traceback.format_stack())
+        rows = graph_specification.fetch_graph_rows(env)
+    except livestatus.MKLivestatusNotFoundError:
+        logger.debug(
+            "Cannot fetch graph data: site: %s, host %s, service %s",
+            site_id,
+            host_name,
+            service_description,
         )
         if env.debug:
             raise
+        return []
+
+    # Always use 25h graph in notifications
+    end_time = int(time.time())
+    start_time = end_time - (25 * 3600)
+
+    display_config = GraphDisplayConfigImage.from_user_context_and_options(
+        user,
+        graph_image_render_options(),
+    )
+
+    time_range = graph_image_time_range(display_config, start_time, end_time)
+    num_graphs = request.get_integer_input("num_graphs")
+
+    graphs = []
+    for rwo, result in itertools.islice(
+        iter_graph_artworks(
+            graph_specification.recipes(env, rows), time_range, display_config.size, env
+        ),
+        num_graphs,
+    ):
+        graphs.append(
+            base64.b64encode(
+                render_graph_png(
+                    result.artwork,
+                    result.annotations,
+                    rwo.recipe.title,
+                    display_config,
+                )
+            ).decode("ascii")
+        )
+
+    return graphs
 
 
 def graph_image_time_range(

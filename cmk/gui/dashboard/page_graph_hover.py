@@ -22,7 +22,7 @@ from cmk.gui.dashboard.api.model.widget_content.graph import (
 from cmk.gui.dashboard.dashlet.dashlets.graph import ABCGraphDashlet
 from cmk.gui.dashboard.dashlet.registry import dashlet_registry
 from cmk.gui.dashboard.token_util import (
-    DashboardTokenAuthenticatedPage,
+    DashboardTokenAuthenticatedJsonPage,
     get_dashboard_widget_by_id,
     impersonate_dashboard_token_issuer,
     InvalidWidgetError,
@@ -56,7 +56,7 @@ _ALLOWED_GRAPH_TYPES: frozenset[str] = frozenset(
 )
 
 
-class GraphHoverTokenAuthPage(DashboardTokenAuthenticatedPage):
+class GraphHoverTokenAuthPage(DashboardTokenAuthenticatedJsonPage):
     """Graph hover data for shared dashboards via token auth."""
 
     @classmethod
@@ -122,17 +122,14 @@ class GraphHoverTokenAuthPage(DashboardTokenAuthenticatedPage):
                 height_in_ex=height_in_ex,
             )
 
-            render_graph_values_at_time(
+            return render_graph_values_at_time(
                 recipes[0].recipe,
                 time_range,
                 metrics_from_api,
                 consolidation_function=recipes[0].consolidation_function,
-                debug=ctx.config.debug,
                 hover_time=ctx.request.get_integer_input_mandatory("hover_time"),
                 temperature_unit=get_temperature_unit(user, ctx.config.default_temperature_unit),
                 backend_time_series_fetcher=metric_backend_registry[
                     str(edition(paths.omd_root))
                 ].get_time_series_fetcher(),
             )
-
-        return None

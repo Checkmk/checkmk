@@ -17,6 +17,8 @@ from cmk.snmplib import (
     SNMPContextConfig,
     SNMPDetectSpec,
     SNMPHostConfig,
+    SNMPPluginStore,
+    SNMPPluginStoreItem,
     SNMPSectionName,
     SNMPVersion,
     SpecialColumn,
@@ -139,3 +141,15 @@ def test_snmptree_from_frontend() -> None:
 )
 def test_serialize_snmptree(tree: BackendSNMPTree) -> None:
     assert tree.from_json(json.loads(json.dumps(tree.to_json()))) == tree
+
+
+def test_plugin_store_serialization_roundtrip() -> None:
+    store = SNMPPluginStore(
+        {
+            SNMPSectionName("foo"): SNMPPluginStoreItem(
+                trees=[], detect_spec=SNMPDetectSpec(), inventory=True
+            )
+        }
+    )
+
+    assert store == SNMPPluginStore.deserialize(store.serialize())

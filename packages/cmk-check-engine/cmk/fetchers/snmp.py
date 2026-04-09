@@ -6,18 +6,13 @@
 # mypy: disable-error-code="no-any-return"
 
 import logging
-from collections.abc import Iterator, Mapping, Sequence
 from pathlib import Path
 from types import ModuleType
-from typing import Any, Final, NamedTuple
 
 from cmk.snmplib import (
-    BackendSNMPTree,
     SNMPBackend,
     SNMPBackendEnum,
-    SNMPDetectSpec,
     SNMPHostConfig,
-    SNMPSectionName,
 )
 
 from .snmp_backend import ClassicSNMPBackend, StoredWalkSNMPBackend
@@ -29,7 +24,7 @@ except ImportError:
     inline = None
 
 
-__all__ = ["SNMPPluginStoreItem", "SNMPPluginStore", "make_backend"]
+__all__ = ["make_backend"]
 
 
 _force_stored_walks = False
@@ -66,56 +61,3 @@ def make_backend(
         return ClassicSNMPBackend(snmp_config, logger)
 
     raise NotImplementedError(f"Unknown SNMP backend: {snmp_config.snmp_backend}")
-
-
-class SNMPPluginStoreItem(NamedTuple):
-    trees: Sequence[BackendSNMPTree]
-    detect_spec: SNMPDetectSpec
-    inventory: bool
-
-    @classmethod
-    def deserialize(cls, serialized: Mapping[str, Any]) -> "SNMPPluginStoreItem":
-        return cls(
-            [BackendSNMPTree.from_json(tree) for tree in serialized["trees"]],
-            SNMPDetectSpec.from_json(serialized["detect_spec"]),
-            serialized["inventory"],
-        )
-
-    def serialize(self) -> Mapping[str, Any]:
-        return {
-            "trees": [tree.to_json() for tree in self.trees],
-            "detect_spec": self.detect_spec.to_json(),
-            "inventory": self.inventory,
-        }
-
-
-class SNMPPluginStore(Mapping[SNMPSectionName, SNMPPluginStoreItem]):
-    def __init__(
-        self,
-        store: Mapping[SNMPSectionName, SNMPPluginStoreItem] | None = None,
-    ) -> None:
-        self._store: Final[Mapping[SNMPSectionName, SNMPPluginStoreItem]] = store if store else {}
-
-    def __repr__(self) -> str:
-        return f"{type(self).__name__}({self._store!r})"
-
-    def __getitem__(self, key: SNMPSectionName) -> SNMPPluginStoreItem:
-        return self._store.__getitem__(key)
-
-    def __iter__(self) -> Iterator[SNMPSectionName]:
-        return self._store.__iter__()
-
-    def __len__(self) -> int:
-        return self._store.__len__()
-
-    @classmethod
-    def deserialize(cls, serialized: Mapping[str, Any]) -> "SNMPPluginStore":
-        return cls(
-            {
-                SNMPSectionName(k): SNMPPluginStoreItem.deserialize(v)
-                for k, v in serialized["plugin_store"].items()
-            }
-        )
-
-    def serialize(self) -> Mapping[str, Any]:
-        return {"plugin_store": {str(k): v.serialize() for k, v in self.items()}}

@@ -27,6 +27,8 @@ from ._typedefs import SNMPContext as SNMPContext
 from ._typedefs import SNMPContextConfig as SNMPContextConfig
 from ._typedefs import SNMPCredentials as SNMPCredentials
 from ._typedefs import SNMPHostConfig as SNMPHostConfig
+from ._typedefs import SNMPPluginStore as SNMPPluginStore
+from ._typedefs import SNMPPluginStoreItem as SNMPPluginStoreItem
 from ._typedefs import SNMPRawValue as SNMPRawValue
 from ._typedefs import SNMPRowInfo as SNMPRowInfo
 from ._typedefs import SNMPSectionMap as SNMPSectionMap

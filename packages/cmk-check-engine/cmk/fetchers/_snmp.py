@@ -31,6 +31,7 @@ from cmk.snmplib import (
     SNMPBackend,
     SNMPBackendEnum,
     SNMPHostConfig,
+    SNMPPluginStore,
     SNMPRawData,
     SNMPRawDataElem,
     SNMPRowInfo,
@@ -41,7 +42,7 @@ from cmk.snmplib import (
 
 from ._abstract import Fetcher, Mode
 from ._snmpscan import gather_available_raw_section_names, SNMPScanConfig
-from .snmp import make_backend, SNMPPluginStore
+from .snmp import make_backend
 
 __all__ = [
     "SNMPFetcher",

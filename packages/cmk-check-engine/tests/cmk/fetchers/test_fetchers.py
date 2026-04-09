@@ -44,7 +44,6 @@ from cmk.fetchers.filecache import (
     NoCache,
     SNMPFileCache,
 )
-from cmk.fetchers.snmp import SNMPPluginStore, SNMPPluginStoreItem
 from cmk.helper_interface import AgentRawData, FetcherError
 from cmk.snmplib import (
     BackendOIDSpec,
@@ -52,6 +51,8 @@ from cmk.snmplib import (
     SNMPBackendEnum,
     SNMPDetectSpec,
     SNMPHostConfig,
+    SNMPPluginStore,
+    SNMPPluginStoreItem,
     SNMPRawData,
     SNMPSectionMarker,
     SNMPSectionName,

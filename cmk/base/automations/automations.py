@@ -26,8 +26,8 @@ from cmk.ccc.timeout import Timeout
 from cmk.checkengine.plugins import AgentBasedPlugins
 from cmk.discover_plugins import discover_plugins_from_modules
 from cmk.fetchers import Fetcher, FetcherTriggerFactory
-from cmk.fetchers.snmp import SNMPPluginStore
 from cmk.helper_interface import AgentRawData
+from cmk.snmplib import SNMPPluginStore
 from cmk.utils import log, paths
 from cmk.utils.labels import LabelManager, Labels
 from cmk.utils.log import console

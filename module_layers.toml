@@ -341,6 +341,7 @@ allows = [
   "cmk.licensing",
   "cmk.robotmk",
   "cmk.rrd",
+  "cmk.snmplib",
   "cmk.utils",
 ]
 
@@ -360,6 +361,7 @@ allows = [
   "cmk.inventory",
   "cmk.relay_fetcher_trigger",
   "cmk.rrd",
+  "cmk.snmplib",
   "cmk.utils",
 ]
 

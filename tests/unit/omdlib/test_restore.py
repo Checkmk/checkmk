@@ -7,6 +7,7 @@ import os
 import stat
 from collections.abc import Iterable
 from dataclasses import dataclass, field
+from itertools import chain, groupby
 from pathlib import Path
 
 import pytest
@@ -114,8 +115,29 @@ def _merge_file_lists(files1: Files, files2: Files) -> Files:
     return merged
 
 
+def _merge_directories(dirs_one: Iterable[Directory], dirs_two: Iterable[Directory]) -> Dirs:
+    result = set()
+
+    def by_name(dir_: Directory) -> str:
+        return dir_.name
+
+    for name, dirs in groupby(sorted(chain(dirs_one, dirs_two), key=by_name), key=by_name):
+        match list(dirs):
+            case [dir_]:
+                result.add(dir_)
+            case [dir_one, dir_two]:
+                merged_files = _merge_file_lists(dir_one.files, dir_two.files)
+                merged_dirs = _merge_directories(dir_one.directories, dir_two.directories)
+                file_names = {file.name for file in merged_files}
+                assert not any(dir_.name in file_names for dir_ in merged_dirs)
+                result.add(Directory(name=name, files=merged_files, directories=merged_dirs))
+            case _:
+                raise ValueError("duplicate directory names")
+    return frozenset(result)
+
+
 @pytest.mark.parametrize(
-    "directories, files",
+    "directories, files, untouched",
     [
         (
             frozenset(
@@ -129,18 +151,10 @@ def _merge_file_lists(files1: Files, files2: Files) -> Files:
                     Directory(
                         name="var",
                         files=frozenset({File("rand.txt", content=b"abc")}),
-                        directories=frozenset(
-                            {
-                                Directory(
-                                    name="clickhouse-server",
-                                    files=frozenset({File("data", content=b"abc")}),
-                                ),
-                            }
-                        ),
                     ),
-                    Directory(name=".restore_working_dir"),
                 }
             ),
+            frozenset(),
             frozenset(),
         ),
         (
@@ -157,25 +171,60 @@ def _merge_file_lists(files1: Files, files2: Files) -> Files:
                             }
                         ),
                     ),
-                    Directory(name=".restore_working_dir"),
                 }
             ),
             frozenset(),
+            frozenset(),
         ),
         (
-            frozenset(),
+            frozenset({Directory(name=".restore_working_dir")}),
             frozenset({FIFO(name="a pipe")}),
+            frozenset(),
         ),
         (
             frozenset(),
             frozenset({Symlink(name="a link", path=Path("../up"))}),
+            frozenset(),
+        ),
+        (
+            frozenset(
+                {
+                    Directory(
+                        name="etc",
+                        files=frozenset(
+                            {File("environment", content=b"# Custom environment variables\n")}
+                        ),
+                    ),
+                }
+            ),
+            frozenset(),
+            frozenset(
+                {
+                    # tmp/ is skipped entirely by clear_site_home. Its contents are cleared by
+                    # unmount_tmpfs_without_save (called before clear_site_home), and the directory
+                    # itself must remain as it may be a Docker-managed tmpfs mount point (EBUSY).
+                    Directory(
+                        name="tmp",
+                        directories=frozenset(
+                            {
+                                Directory(
+                                    name="run",
+                                    files=frozenset({File("rrdcached.sock", content=b"")}),
+                                )
+                            }
+                        ),
+                    ),
+                }
+            ),
         ),
     ],
 )
-def test_clear_site_home(directories: Dirs, files: Files, tmp_path: Path) -> None:
+def test_clear_site_home(directories: Dirs, files: Files, untouched: Dirs, tmp_path: Path) -> None:
     # Assemble
-    _to_disk(RootDir(path=tmp_path, directories=directories, files=files))
+    _to_disk(
+        RootDir(path=tmp_path, directories=_merge_directories(directories, untouched), files=files)
+    )
     # Act
-    clear_site_home(str(tmp_path))
+    clear_site_home(os.fspath(tmp_path))
     # Assert
-    assert _from_disk(tmp_path) == RootDir(path=tmp_path, directories=frozenset())
+    assert _from_disk(tmp_path) == RootDir(path=tmp_path, directories=untouched)

@@ -60,9 +60,14 @@ def _verify_directory_write_access(site_home: str) -> None:
 
 
 def clear_site_home(site_home: str) -> None:
-    for f in os.listdir(site_home):
-        path = site_home + "/" + f
-        if os.path.islink(path) or not os.path.isdir(path):
-            os.unlink(path)
-        else:
-            shutil.rmtree(path)
+    with os.scandir(site_home) as scaniter:
+        for entry in scaniter:
+            if entry.name == "tmp":
+                # tmp is excluded from backups. The content is cleared by `unmount_tmpfs_without_save`,
+                # but the directory must remain, since it may be a Docker-managed tmpfs mount point
+                # that cannot be removed (EBUSY).
+                continue
+            elif entry.is_dir(follow_symlinks=False):
+                shutil.rmtree(entry.path)
+            else:
+                os.unlink(entry.path)

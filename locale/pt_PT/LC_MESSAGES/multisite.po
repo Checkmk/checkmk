@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2026-04-02 07:41+0000\n"
+"PO-Revision-Date: 2026-04-09 08:48+0000\n"
 "Language-Team: Portuguese (Portugal) <https://translate.checkmk.com/projects/"
 "checkmk/stable/pt_PT/>\n"
 "Language: pt_PT\n"
@@ -14364,8 +14364,8 @@ msgid "Compute REST API specification"
 msgstr "Especificação do SLA"
 
 #, fuzzy
-msgid "Compute a rate"
-msgstr "Taxa de mensagens entregues"
+msgid "Compute a rate (excluding histograms)"
+msgstr "Reclassificar o estado completo"
 
 msgid "Compute average over last "
 msgstr "Calcule a média do último "
@@ -60783,7 +60783,7 @@ msgid ""
 "Some metrics are more meaningful when their rate is considered (such as "
 "dropped network packages, for example). The uptime, for example, would be "
 "reported as '1.0 s/s', which is not too useful. You can override the default "
-"behavior here."
+"behavior here. This does not apply to histograms."
 msgstr ""
 
 msgid ""
@@ -90528,6 +90528,10 @@ msgstr ""
 #, fuzzy
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Use SSL para a conexão."
+
+#, fuzzy
+#~ msgid "Compute a rate"
+#~ msgstr "Taxa de mensagens entregues"
 
 #, fuzzy
 #~ msgid "Capacity"

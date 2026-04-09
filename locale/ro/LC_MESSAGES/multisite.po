@@ -14381,8 +14381,8 @@ msgid "Compute REST API specification"
 msgstr "Specificația API REST Compute"
 
 #, fuzzy
-msgid "Compute a rate"
-msgstr "Rata mesajelor livrate"
+msgid "Compute a rate (excluding histograms)"
+msgstr "Reclasificarea statului complet"
 
 msgid "Compute average over last "
 msgstr "Calculați media pe ultima "
@@ -60935,7 +60935,7 @@ msgid ""
 "Some metrics are more meaningful when their rate is considered (such as "
 "dropped network packages, for example). The uptime, for example, would be "
 "reported as '1.0 s/s', which is not too useful. You can override the default "
-"behavior here."
+"behavior here. This does not apply to histograms."
 msgstr ""
 
 msgid ""
@@ -90847,6 +90847,10 @@ msgstr ""
 #, fuzzy
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Utilizați SSL pentru conexiune."
+
+#, fuzzy
+#~ msgid "Compute a rate"
+#~ msgstr "Rata mesajelor livrate"
 
 #, fuzzy
 #~ msgid "Capacity"

@@ -14365,8 +14365,8 @@ msgid "Compute REST API specification"
 msgstr "SLA-specificatie"
 
 #, fuzzy
-msgid "Compute a rate"
-msgstr "Snelheid afgeleverde berichten"
+msgid "Compute a rate (excluding histograms)"
+msgstr "Herindelen volledige staat"
 
 msgid "Compute average over last "
 msgstr "Bereken gemiddelde over laatste "
@@ -60800,7 +60800,7 @@ msgid ""
 "Some metrics are more meaningful when their rate is considered (such as "
 "dropped network packages, for example). The uptime, for example, would be "
 "reported as '1.0 s/s', which is not too useful. You can override the default "
-"behavior here."
+"behavior here. This does not apply to histograms."
 msgstr ""
 
 msgid ""
@@ -90641,6 +90641,10 @@ msgstr ""
 #, fuzzy
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Gebruik SSL voor de verbinding."
+
+#, fuzzy
+#~ msgid "Compute a rate"
+#~ msgstr "Snelheid afgeleverde berichten"
 
 #, fuzzy
 #~ msgid "Capacity"

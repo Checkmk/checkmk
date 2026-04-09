@@ -236,7 +236,7 @@ def get_exclude_patterns(options: BackupExclusions) -> list[str]:
 
 class _RRDSocket(contextlib.AbstractContextManager["_RRDSocket"]):
     def __init__(self, site_stopped: bool, site_home: str, site_name: str, verbose: bool) -> None:
-        self._rrdcached_socket_path = f"{site_home}/tmp/run/rrdcached.sock"  # nosec B108 # not system /tmp; site_home is owned by the site user
+        self._rrdcached_socket_path = Path(site_home, "tmp/run/rrdcached.sock")  # nosec B108 # not system /tmp; site_home is owned by the site user
         self._site_requires_suspension = not site_stopped and os.path.exists(
             self._rrdcached_socket_path
         )
@@ -292,7 +292,7 @@ class _RRDSocket(contextlib.AbstractContextManager["_RRDSocket"]):
         if self._sock is None:
             sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
             try:
-                sock.connect(self._rrdcached_socket_path)
+                sock.connect(os.fspath(self._rrdcached_socket_path))
             except OSError as e:
                 if self._verbose:
                     sys.stdout.write("skipping rrdcached command (%s)\n" % e)

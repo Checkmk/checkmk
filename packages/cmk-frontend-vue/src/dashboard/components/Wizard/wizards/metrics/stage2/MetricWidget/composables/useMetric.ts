@@ -19,6 +19,8 @@ import {
   useWidgetVisualizationProps
 } from '@/dashboard/components/Wizard/components/WidgetVisualization/useWidgetVisualization'
 import type {
+  ForStates,
+  ShowServiceStatusType,
   SingleMetricContent,
   UseWidgetHandler,
   WidgetProps
@@ -34,7 +36,9 @@ export interface UseMetric extends UseWidgetHandler, UseWidgetVisualizationOptio
   timeRangeType: Ref<TimeRangeType>
   timeRange: Ref<GraphTimerange>
   displayRangeLimits: Ref<boolean>
-  showServiceStatus: Ref<boolean>
+  showServiceStatusEnabled: Ref<boolean>
+  showServiceStatus: Ref<ShowServiceStatusType>
+  showServiceStatusSelection: Ref<ForStates>
 
   dataRangeType: Ref<DataRangeType>
   dataRangeSymbol: Ref<string>
@@ -61,7 +65,13 @@ export const useMetric = async (
     currentContent?.time_range === 'current' ? null : currentContent?.time_range?.window || null
   const { timeRange, widgetProps: generateTimeRangeProps } = useTimeRange(currentTimerange)
   const displayRangeLimits = ref<boolean>(currentContent?.show_display_range_limits ?? true)
-  const showServiceStatus = ref<boolean>(true)
+  const showServiceStatusEnabled = ref<boolean>(!!currentContent?.status_display)
+  const showServiceStatus = ref<ShowServiceStatusType>(
+    currentContent?.status_display?.type ?? 'text'
+  )
+  const showServiceStatusSelection = ref<ForStates>(
+    currentContent?.status_display?.for_states ?? 'all'
+  )
 
   const {
     type: dataRangeType,
@@ -91,7 +101,7 @@ export const useMetric = async (
   }
 
   const _generateContent = (): SingleMetricContent => {
-    return {
+    const content: SingleMetricContent = {
       type: CONTENT_TYPE,
       metric: metric,
       display_range: dataRangeProps.value,
@@ -105,6 +115,15 @@ export const useMetric = async (
               consolidation: 'average'
             }
     }
+
+    if (showServiceStatusEnabled.value) {
+      content.status_display = {
+        type: showServiceStatus.value,
+        for_states: showServiceStatusSelection.value
+      }
+    }
+
+    return content
   }
 
   const _computeWidgetProps = async (): Promise<WidgetProps> => {
@@ -131,7 +150,16 @@ export const useMetric = async (
   }
 
   watch(
-    [timeRangeType, timeRange, dataRangeType, dataRangeProps, widgetGeneralSettings],
+    [
+      timeRangeType,
+      timeRange,
+      dataRangeType,
+      dataRangeProps,
+      showServiceStatusEnabled,
+      showServiceStatus,
+      showServiceStatusSelection,
+      widgetGeneralSettings
+    ],
     useDebounceFn(() => {
       void _updateWidgetProps()
     }, 300),
@@ -148,7 +176,9 @@ export const useMetric = async (
     dataRangeMin,
     dataRangeMax,
     displayRangeLimits,
+    showServiceStatusEnabled,
     showServiceStatus,
+    showServiceStatusSelection,
 
     title,
     showTitle,

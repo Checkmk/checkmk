@@ -10,11 +10,14 @@ from pydantic import Base64Bytes, BaseModel, StringConstraints
 REGEX_HOST_NAME = re.compile(r"^\w[-0-9a-zA-Z_.]*$", re.ASCII)
 Host = Annotated[str, StringConstraints(pattern=REGEX_HOST_NAME)]
 
+REGEX_SERVICE_NAME = re.compile(r"^[^\n;]+$")
+Service = Annotated[str, StringConstraints(min_length=1, pattern=REGEX_SERVICE_NAME)]
+
 
 class MonitoringData(BaseModel):
     serial: int
     host: Host
     timestamp: int
     payload: Base64Bytes
-    service: str
+    service: Service
     version: int = 1

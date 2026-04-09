@@ -5,6 +5,7 @@
 from datetime import datetime, timedelta, UTC
 from http import HTTPStatus
 
+import pytest
 from dateutil.relativedelta import relativedelta
 
 from cmk.agent_receiver.lib.config import Config
@@ -164,3 +165,29 @@ def test_certificate_validity_period(
     assert cert.not_valid_before_utc <= now
     assert cert.not_valid_before_utc >= now - timedelta(minutes=1)
     assert cert.not_valid_after_utc <= now + relativedelta(months=3)
+
+
+@pytest.mark.parametrize(
+    "malformed_relay_id",
+    [
+        pytest.param("../../etc/passwd", id="path_traversal_dotdot"),
+        pytest.param("valid-prefix/../../../etc", id="path_traversal_mixed"),
+        pytest.param("relay;--", id="special_chars"),
+        pytest.param("relay/with/slashes", id="forward_slashes"),
+        pytest.param("not-a-uuid", id="plain_string"),
+    ],
+)
+def test_registration_rejects_non_uuid_relay_id(
+    site: SiteMock,
+    agent_receiver: AgentReceiverClient,
+    malformed_relay_id: str,
+) -> None:
+    """reject relay_id values that are not valid UUIDs.
+
+    Test steps:
+    1. Attempt to register a relay with a non-UUID relay_id
+    2. Verify the request is rejected with 422 Unprocessable Entity
+    """
+    site.set_scenario([], [(malformed_relay_id, OP.ADD)])
+    resp = agent_receiver.register_relay(malformed_relay_id, "relay")
+    assert resp.status_code == HTTPStatus.UNPROCESSABLE_ENTITY

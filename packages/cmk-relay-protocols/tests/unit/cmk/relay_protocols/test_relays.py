@@ -21,9 +21,12 @@ def _generate_valid_test_csr() -> str:
     return csr.public_bytes(serialization.Encoding.PEM).decode()
 
 
+_VALID_UUID = "12345678-1234-1234-1234-123456789abc"
+
+
 def test_valid_csr_registration() -> None:
     csr = _generate_valid_test_csr()
-    request = relays.RelayRegistrationRequest(relay_id="test", alias="bar", csr=csr)
+    request = relays.RelayRegistrationRequest(relay_id=_VALID_UUID, alias="bar", csr=csr)
     assert request.csr == csr
 
 
@@ -35,7 +38,7 @@ def test_valid_csr_rotation() -> None:
 
 def test_invalid_csr_registration() -> None:
     with pytest.raises(ValueError):
-        relays.RelayRegistrationRequest(relay_id="test", alias="bar", csr="foo")
+        relays.RelayRegistrationRequest(relay_id=_VALID_UUID, alias="bar", csr="foo")
 
 
 def test_invalid_csr_rotation() -> None:

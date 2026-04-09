@@ -48,6 +48,96 @@ SECTION = [
 ]
 UNCONFIGURED_SECTION = [*SECTION[:2], ["0:", "cs:Unconfigured", *SECTION[2][2:]], *SECTION[3:]]
 
+# DRBD 9.x output (from /proc/drbd + /sys/kernel/debug/drbd/resources/*/connections/*/*/proc_drbd).
+# Key differences from 8.x relevant to parsing:
+#  - Extra "Transports" header line after GIT-hash
+#  - pe/ap use bracket notation splitting sub-categories: pe:[ap_pending;rs_pending] ap:[writes;reads]
+#    (see https://github.com/LINBIT/drbd/blob/drbd-9.3.1/drbd/drbd_debugfs.c#L1804-L1834)
+#  - Extra detail lines per device block (resync, act_log, blocked on activity log)
+#
+# <<<drbd>>>
+# version: 9.1.22 (api:2/proto:86-121)
+# GIT-hash: f52e5a3545e17fafd548b6b9c483206c32754955 build by mockbuild@, 2024-08-12 20:42:44
+# Transports (api:21): tcp (9.1.22)
+#  0: cs:Established ro:Secondary/Primary ds:UpToDate/UpToDate C r-----
+#     ns:0 nr:916733122 dw:916733122 dr:128 al:0 bm:381 lo:0 pe:[3;1] ua:0 ap:[2;5] ep:1 wo:2 oos:0
+#       resync: used:0/61 hits:9579 misses:749 starving:0 locked:0 changed:373
+#       act_log: used:1/3389 hits:81041094 misses:2038141 starving:0 locked:0 changed:574410
+#       blocked on activity log: 0/0/0
+#  1: cs:Established ro:Secondary/Primary ds:UpToDate/UpToDate C r-----
+#     ns:0 nr:1523239212 dw:1523239212 dr:128 al:0 bm:97 lo:0 pe:[0;0] ua:0 ap:[0;0] ep:1 wo:2 oos:0
+#       resync: used:0/61 hits:3293 misses:194 starving:0 locked:0 changed:97
+#       act_log: used:0/3389 hits:7428972 misses:619450 starving:0 locked:0 changed:427883
+#       blocked on activity log: 0/0/0
+
+SECTION_V9 = [
+    ["version:", "9.1.22", "(api:2/proto:86-121)"],
+    [
+        "GIT-hash:",
+        "f52e5a3545e17fafd548b6b9c483206c32754955",
+        "build",
+        "by",
+        "mockbuild@,",
+        "2024-08-12",
+        "20:42:44",
+    ],
+    ["Transports", "(api:21):", "tcp", "(9.1.22)"],
+    ["0:", "cs:Established", "ro:Secondary/Primary", "ds:UpToDate/UpToDate", "C", "r-----"],
+    [
+        "ns:0",
+        "nr:916733122",
+        "dw:916733122",
+        "dr:128",
+        "al:0",
+        "bm:381",
+        "lo:0",
+        "pe:[3;1]",
+        "ua:0",
+        "ap:[2;5]",
+        "ep:1",
+        "wo:2",
+        "oos:0",
+    ],
+    ["resync:", "used:0/61", "hits:9579", "misses:749", "starving:0", "locked:0", "changed:373"],
+    [
+        "act_log:",
+        "used:1/3389",
+        "hits:81041094",
+        "misses:2038141",
+        "starving:0",
+        "locked:0",
+        "changed:574410",
+    ],
+    ["blocked", "on", "activity", "log:", "0/0/0"],
+    ["1:", "cs:Established", "ro:Secondary/Primary", "ds:UpToDate/UpToDate", "C", "r-----"],
+    [
+        "ns:0",
+        "nr:1523239212",
+        "dw:1523239212",
+        "dr:128",
+        "al:0",
+        "bm:97",
+        "lo:0",
+        "pe:[0;0]",
+        "ua:0",
+        "ap:[0;0]",
+        "ep:1",
+        "wo:2",
+        "oos:0",
+    ],
+    ["resync:", "used:0/61", "hits:3293", "misses:194", "starving:0", "locked:0", "changed:97"],
+    [
+        "act_log:",
+        "used:0/3389",
+        "hits:7428972",
+        "misses:619450",
+        "starving:0",
+        "locked:0",
+        "changed:427883",
+    ],
+    ["blocked", "on", "activity", "log:", "0/0/0"],
+]
+
 
 @pytest.fixture(scope="function")
 def patch_get_value_store_zero_change(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -240,3 +330,22 @@ class TestStatsCheckType:
         value = list(drbd.check_drbd_stats("drbd0", UNCONFIGURED_SECTION))
         expected = [Result(state=State.CRIT, summary='The device is "Unconfigured"')]
         assert value == expected
+
+
+class TestDrbdV9:
+    """Tests for DRBD 9.x format: extra Transports header,
+    extra detail lines between device blocks, and multi-device discovery."""
+
+    def test_inventory_discovers_multiple_devices(self) -> None:
+        value = list(drbd.inventory_drbd(SECTION_V9, "drbd"))
+        assert [item for item, _params in value] == ["drbd0", "drbd1"]
+
+    def test_check_stats_device1_block_extraction(self) -> None:
+        """Device 1 block is correctly extracted past extra detail lines
+        (resync, act_log, blocked) of device 0."""
+        value = {
+            r.summary: r
+            for r in drbd.check_drbd_stats("drbd1", SECTION_V9)
+            if isinstance(r, Result)
+        }
+        assert value["bit map updates: 97"].state == State.OK

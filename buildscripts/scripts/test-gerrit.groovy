@@ -316,7 +316,7 @@ def main_sequential() {
             def allStagesPassed = true;
             def thisStagePassed = true;
             // privileged/set_docker_group_id aka mounting the docker is needed for agent plugin tests: they do docker in docker
-            inside_container(privileged: true, set_docker_group_id: true) {
+            inside_container(privileged: false, set_docker_group_id: false) {
                 stage_info.STAGES.each { item ->
                     (thisStagePassed, thisIssues) = test_gerrit_helper.create_stage(item, time_stage_started);
                     allStagesPassed = thisStagePassed && allStagesPassed;

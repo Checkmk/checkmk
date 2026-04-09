@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="possibly-undefined"
 # mypy: disable-error-code="type-arg"
 
 import json
@@ -69,10 +68,15 @@ agent_section_jenkins_nodes = AgentSection(
 
 def discover_jenkins_nodes(section: Section) -> DiscoveryResult:
     for item, values in section.items():
+        service_labels: list[ServiceLabel] = []
+
         for line in values:
             if (label_data := line.get("assignedLabels")) is None:
                 continue
 
+            # TODO: find out if this is actually a bug. If the `values` var has a length greater
+            # than one, then only the last line will be considered. Find out if that's desired
+            # behavior. If not, implement fix by extending the labels instead of overwriting them.
             service_labels = [
                 ServiceLabel(f"cmk/jenkins_node_label_{label_name}", "yes")
                 for label in label_data

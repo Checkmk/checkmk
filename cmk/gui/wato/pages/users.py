@@ -18,10 +18,9 @@ from cmk.ccc.site import omd_site
 from cmk.ccc.user import UserId
 from cmk.ccc.version import Edition, edition
 from cmk.crypto.password import Password, PasswordPolicy
-from cmk.gui import forms, userdb
+from cmk.gui import forms, gui_background_job, userdb
 from cmk.gui.background_job import job as background_job
 from cmk.gui.background_job.job import JobTarget
-from cmk.gui.background_job.wato import ActionHandler, GUIBackgroundJobManager
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
 from cmk.gui.config import active_config, Config
 from cmk.gui.customer import ABCCustomerAPI, customer_api
@@ -380,7 +379,7 @@ class ModeUsers(WatoMode):
             )
             return redirect(self.mode_url())
 
-        action_handler = ActionHandler(self.breadcrumb())
+        action_handler = gui_background_job.ActionHandler(self.breadcrumb())
         action_handler.handle_actions()
         if action_handler.did_acknowledge_job():
             self._job_snapshot = UserSyncBackgroundJob().get_status_snapshot()
@@ -506,7 +505,7 @@ class ModeUsers(WatoMode):
         else:
             html.h3(_("Result of last synchronization process"))
 
-        job_manager = GUIBackgroundJobManager()
+        job_manager = gui_background_job.GUIBackgroundJobManager()
         job_manager.show_job_details_from_snapshot(job_snapshot=self._job_snapshot)
         html.br()
 

@@ -27,10 +27,10 @@ from cmk.gui.background_job.job import (
     JobStatusSpec,
     JobTarget,
 )
-from cmk.gui.background_job.wato import ActionHandler, JobRenderer
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
 from cmk.gui.config import active_config, Config
 from cmk.gui.exceptions import HTTPRedirect, MKUserError
+from cmk.gui.gui_background_job import ActionHandler, JobRenderer
 from cmk.gui.header import make_header
 from cmk.gui.htmllib.html import html, HTMLGenerator
 from cmk.gui.http import ContentDispositionType, Request, request, response

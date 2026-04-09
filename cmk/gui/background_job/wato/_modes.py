@@ -10,8 +10,8 @@ import traceback
 from collections.abc import Collection, Iterator
 from typing import override
 
+from cmk.gui import gui_background_job
 from cmk.gui.background_job.job import BackgroundJob, BackgroundStatusSnapshot, job_registry
-from cmk.gui.background_job.wato import ActionHandler, GUIBackgroundJobManager
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import Config
 from cmk.gui.htmllib.html import html
@@ -106,14 +106,14 @@ class ModeBackgroundJobsOverview(WatoMode):
 
     @override
     def page(self, config: Config) -> None:
-        job_manager = GUIBackgroundJobManager()
+        job_manager = gui_background_job.GUIBackgroundJobManager()
 
         back_url = makeuri_contextless(request, [("mode", "background_jobs_overview")])
         job_manager.show_status_of_job_classes(job_registry.values(), job_details_back_url=back_url)
 
     @override
     def action(self, config: Config) -> ActionResult:
-        action_handler = ActionHandler(self.breadcrumb())
+        action_handler = gui_background_job.ActionHandler(self.breadcrumb())
         action_handler.handle_actions()
         return None
 
@@ -184,7 +184,7 @@ class ModeBackgroundJobDetails(WatoMode):
         else:
             job_snapshot: BackgroundStatusSnapshot | None = _get_job_snaphot(job)
             if job_snapshot is not None and job.exists():
-                job_manager = GUIBackgroundJobManager()
+                job_manager = gui_background_job.GUIBackgroundJobManager()
                 job_manager.show_job_details_from_snapshot(job_snapshot)
             else:
                 html.show_message(_("Background job info is not available"))
@@ -220,13 +220,13 @@ class ModeAjaxBackgroundJobDetails(AjaxPage):
         if job_snapshot is None:
             return None
 
-        job_manager = GUIBackgroundJobManager()
+        job_manager = gui_background_job.GUIBackgroundJobManager()
         job_manager.show_job_details_from_snapshot(job_snapshot)
         return job_snapshot
 
     def action(self) -> None:
         job_details_page = ModeBackgroundJobDetails()
-        action_handler = ActionHandler(job_details_page.breadcrumb())
+        action_handler = gui_background_job.ActionHandler(job_details_page.breadcrumb())
         action_handler.handle_actions()
         if action_handler.did_delete_job():
             if job_details_page.back_url():

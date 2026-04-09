@@ -16,6 +16,7 @@ from cmk.gui import (
     crash_reporting,
     default_permissions,
     deprecations,
+    gui_background_job,
     help_menu,
     hooks,
     inventory,
@@ -313,10 +314,9 @@ def register(
         mode_registry,
         main_module_registry,
         cron_job_registry,
-        permission_section_registry,
-        permission_registry,
     )
     vue_registration.register()
+    gui_background_job.register(permission_section_registry, permission_registry)
     agent_registration.register(
         permission_section_registry,
         endpoint_family_registry,

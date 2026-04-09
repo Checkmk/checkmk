@@ -9,8 +9,10 @@ See Also:
 
 """
 
+from ._abstract import Deserializer as Deserializer
 from ._abstract import Fetcher as Fetcher
 from ._abstract import Mode as Mode
+from ._abstract import Serializer as Serializer
 from ._ipmi import IPMICredentials as IPMICredentials
 from ._ipmi import IPMIFetcher as IPMIFetcher
 from ._metric_backend import MetricBackendFetcher as MetricBackendFetcher
@@ -19,10 +21,6 @@ from ._nofetcher import NoFetcher as NoFetcher
 from ._nofetcher import NoFetcherError as NoFetcherError
 from ._piggyback import PiggybackFetcher as PiggybackFetcher
 from ._program import ProgramFetcher as ProgramFetcher
-from ._secrets import ActivatedSecrets as ActivatedSecrets
-from ._secrets import AdHocSecrets as AdHocSecrets
-from ._secrets import FetcherSecrets as FetcherSecrets
-from ._secrets import StoredSecrets as StoredSecrets
 from ._snmp import NoSelectedSNMPSections as NoSelectedSNMPSections
 from ._snmp import SNMPFetcher as SNMPFetcher
 from ._snmp import SNMPFetcherConfig as SNMPFetcherConfig
@@ -32,6 +30,10 @@ from ._tcp import agent_protocol as agent_protocol
 from ._tcp import TCPFetcher as TCPFetcher
 from ._tcp import TCPFetcherConfig as TCPFetcherConfig
 from ._tcp import TLSConfig as TLSConfig
-from ._trigger import FetcherTrigger as FetcherTrigger
-from ._trigger import FetcherTriggerFactory as FetcherTriggerFactory
-from ._trigger import PlainFetcherTrigger as PlainFetcherTrigger
+from ._utils.secrets import ActivatedSecrets as ActivatedSecrets
+from ._utils.secrets import AdHocSecrets as AdHocSecrets
+from ._utils.secrets import FetcherSecrets as FetcherSecrets
+from ._utils.secrets import StoredSecrets as StoredSecrets
+from ._utils.trigger import FetcherTrigger as FetcherTrigger
+from ._utils.trigger import FetcherTriggerFactory as FetcherTriggerFactory
+from ._utils.trigger import PlainFetcherTrigger as PlainFetcherTrigger

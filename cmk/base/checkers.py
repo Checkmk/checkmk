@@ -97,7 +97,7 @@ from cmk.fetchers import (
     StoredSecrets,
     TLSConfig,
 )
-from cmk.fetchers.config import make_persisted_section_dir
+from cmk.fetchers._utils.config import make_persisted_section_dir
 from cmk.fetchers.filecache import FileCache, FileCacheOptions, MaxAge, NoCache
 from cmk.helper_interface import AgentRawData, FetcherType, SourceInfo, SourceType
 from cmk.server_side_calls_backend import ExecutableFinder, SpecialAgentCommandLine

@@ -110,7 +110,7 @@ from cmk.fetchers import (
     TCPFetcherConfig,
     TLSConfig,
 )
-from cmk.fetchers.config import make_persisted_section_dir
+from cmk.fetchers._utils.config import make_persisted_section_dir
 from cmk.fetchers.filecache import MaxAge
 from cmk.helper_interface import SourceType
 from cmk.inventory.structured_data import RawIntervalFromConfig

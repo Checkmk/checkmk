@@ -108,7 +108,7 @@ from cmk.fetchers import (
     TLSConfig,
 )
 from cmk.fetchers import Mode as FetchMode
-from cmk.fetchers.config import (
+from cmk.fetchers._utils.config import (
     make_persisted_section_dir,
 )
 from cmk.fetchers.filecache import FileCacheOptions, MaxAge

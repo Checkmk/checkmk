@@ -837,7 +837,31 @@ def _prepare_testuser(container: docker.models.containers.Container, username: s
         check=False,
     )
 
-    _exec_run(container, ["groupadd", "-g", gid, username], check=False)
+    # Ubuntu 24.04+ base images ship with a pre-created 'ubuntu' user at UID/GID 1000.
+    # If the host user runs at that UID/GID, groupadd/useradd would silently fail (check=False),
+    # leaving testuser uncreated and causing the subsequent chown to fail.
+    # Remove any conflicting user/group before proceeding.
+    _exec_run(
+        container,
+        [
+            "bash",
+            "-c",
+            f"existing=$(getent passwd {uid} | cut -d: -f1); "
+            f'[ -n "$existing" ] && userdel -f "$existing" || true',
+        ],
+        check=True,
+    )
+    _exec_run(
+        container,
+        [
+            "bash",
+            "-c",
+            f"existing=$(getent group {gid} | cut -d: -f1); "
+            f'[ -n "$existing" ] && groupdel "$existing" || true',
+        ],
+        check=True,
+    )
+    _exec_run(container, ["groupadd", "-g", gid, username], check=True)
     _exec_run(
         container,
         ["useradd", "-m", "-u", uid, "-g", gid, "-s", "/bin/bash", username],

@@ -8,12 +8,14 @@ from datetime import timedelta
 from cmk.gui.background_job.job._manager import execute_housekeeping_job
 from cmk.gui.cron import CronJob, CronJobRegistry
 from cmk.gui.pages import PageRegistry
+from cmk.gui.permissions import PermissionRegistry, PermissionSectionRegistry
 from cmk.gui.watolib.automation_commands import AutomationCommandRegistry
 from cmk.gui.watolib.main_menu import MainModuleRegistry
 from cmk.gui.watolib.mode import ModeRegistry
 
 from . import _modes
 from ._automation import AutomationBackgroundJobSnapshot
+from ._job_ui import register as _register_job_ui
 
 
 def register(
@@ -22,6 +24,8 @@ def register(
     mode_registry: ModeRegistry,
     main_module_registry: MainModuleRegistry,
     cron_job_registry: CronJobRegistry,
+    permission_section_registry: PermissionSectionRegistry,
+    permission_registry: PermissionRegistry,
 ) -> None:
     automation_command_registry.register(AutomationBackgroundJobSnapshot)
     cron_job_registry.register(
@@ -32,3 +36,4 @@ def register(
         )
     )
     _modes.register(page_registry, mode_registry, main_module_registry)
+    _register_job_ui(permission_section_registry, permission_registry)

@@ -20,6 +20,20 @@ from tests.testlib.version import version_from_env
 logger = logging.getLogger()
 
 
+def pytest_addoption(parser: pytest.Parser) -> None:
+    parser.addoption(
+        "--mk-oracle-binary-path",
+        required=True,
+        help="Path to a pre-built mk-oracle binary.",
+    )
+
+
+@pytest.fixture(name="mk_oracle_binary_path", scope="session")
+def _mk_oracle_binary_path(request: pytest.FixtureRequest) -> Path:
+    value: str = request.config.getoption("--mk-oracle-binary-path")
+    return Path(value)
+
+
 @pytest.fixture(name="client", scope="session")
 def _docker_client() -> docker.DockerClient:
     return docker.DockerClient()

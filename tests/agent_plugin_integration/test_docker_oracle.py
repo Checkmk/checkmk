@@ -10,6 +10,7 @@
 
 import logging
 import os
+import re
 from collections.abc import Iterator
 from pathlib import Path
 from random import randint
@@ -34,6 +35,71 @@ from tests.testlib.docker import (
 
 logger = logging.getLogger()
 
+_SECTION_HEADER_RE = re.compile(r"^<<<([^>:]+)")
+
+
+def _parse_oracle_sections(
+    output: str,
+) -> tuple[list[str], list[str], list[str]]:
+    """Parse mk-oracle agent output and classify sections by their data content.
+
+    Section headers may carry optional modifiers that are stripped when extracting
+    the section name:
+        <<<name>>>
+        <<<name:sep(124)>>>
+        <<<name:cached(ts,age):sep(124)>>>
+
+    A section name can appear multiple times in the output (e.g. ``oracle_instance``
+    is emitted once per database instance).  Classification is based on the union of
+    all occurrences:
+
+    - ``all_sections``       – unique names that appear at least once
+    - ``empty_sections``     – names whose *every* occurrence produced no data lines
+    - ``error_sections``     – names where at least one occurrence contains a line
+                               with ``FAILURE`` or ``ERROR:``
+    - ``non_empty_sections`` – names where at least one occurrence produced data
+                               lines that contain neither ``FAILURE`` nor ``ERROR:``
+    """
+    chunks: list[tuple[str, list[str]]] = []
+    current_name: str | None = None
+    current_data: list[str] = []
+
+    for line in output.splitlines():
+        stripped = line.strip()
+        if stripped.startswith("<<<") and stripped.endswith(">>>"):
+            m = _SECTION_HEADER_RE.match(stripped)
+            if m:
+                if current_name is not None:
+                    chunks.append((current_name, current_data))
+                current_name = m.group(1)
+                current_data = []
+                continue
+        if current_name is not None and stripped:
+            current_data.append(stripped)
+
+    if current_name is not None:
+        chunks.append((current_name, current_data))
+
+    has_non_error_data: set[str] = set()
+    has_error_data: set[str] = set()
+    has_empty: set[str] = set()
+    seen: dict[str, None] = {}  # insertion-ordered unique names
+
+    for name, data in chunks:
+        seen[name] = None
+        if not data:
+            has_empty.add(name)
+        elif any("FAILURE" in ln or "ERROR:" in ln for ln in data):
+            has_error_data.add(name)
+        else:
+            has_non_error_data.add(name)
+
+    all_sections = list(seen)
+    error_sections = [n for n in all_sections if n in has_error_data]
+    non_empty_sections = [n for n in all_sections if n in has_non_error_data]
+
+    return all_sections, error_sections, non_empty_sections
+
 
 class OracleDatabase:
     def __init__(
@@ -42,6 +108,7 @@ class OracleDatabase:
         checkmk: CheckmkApp | None,
         *,  # enforce named arguments
         temp_dir: Path,
+        mk_oracle_binary_path: Path,
         name: str = "oracle",
     ):
         self.client = client
@@ -95,6 +162,17 @@ class OracleDatabase:
         self.cmk_credentials_cfg = self.cmk_cfg_dir / "mk_oracle.credentials.cfg"
         self.cmk_wallet_cfg = self.cmk_cfg_dir / "mk_oracle.wallet.cfg"
         self.cmk_cfg = self.cmk_cfg_dir / "mk_oracle.cfg"
+
+        # New mk-oracle plugin
+        self.new_plugin_binary_path: Path = mk_oracle_binary_path
+        self.new_plugin_binary_name: Final[str] = self.new_plugin_binary_path.name
+        self.new_plugin_dir: Final[Path] = self.cmk_plugin_dir / "packages" / "mk-oracle"
+        self.new_plugin: Final[Path] = self.new_plugin_dir / self.new_plugin_binary_name
+        self.new_plugin_cfg: Final[Path] = self.cmk_cfg_dir / "mk-oracle.yml"
+        self.new_plugin_credentials_cfg: Final[Path] = (
+            self.cmk_cfg_dir / "mk-oracle.credentials.yml"
+        )
+        self.new_plugin_wallet_cfg: Final[Path] = self.cmk_cfg_dir / "mk-oracle.wallet.yml"
 
         self.environment = {
             "ORACLE_SID": self.SID,
@@ -284,6 +362,7 @@ class OracleDatabase:
         )
 
         self._install_oracle_plugin()
+        self._install_new_oracle_plugin()
         self._create_oracle_wallet()
 
         if self.checkmk is not None:
@@ -462,12 +541,127 @@ class OracleDatabase:
         )
         assert rc == 0, f"Failed to copy cfg file: {output.decode('UTF-8')}"
 
+    def _new_plugin_credentials_yml(self) -> str:
+        return "\n".join(
+            [
+                "---",
+                "oracle:",
+                "  main:",
+                "    connection:",
+                "      hostname: localhost",
+                f"      port: {self.PORT}",
+                "    authentication:",
+                f"      username: {self.cmk_username}",
+                f"      password: {self.cmk_password}",
+                "      type: standard",
+                "    discovery:",
+                "      detect: no",
+                "    instances:",
+                f"      - service_name: {self.SID}",
+            ]
+        )
+
+    def _new_plugin_wallet_yml(self) -> str:
+        return "\n".join(
+            [
+                "---",
+                "oracle:",
+                "  main:",
+                "    connection:",
+                "      hostname: localhost",
+                f"      port: {self.PORT}",
+                f"      tns_admin: {self.tns_admin_dir.as_posix()}",
+                "    authentication:",
+                "      type: wallet",
+                "    discovery:",
+                "      detect: no",
+                "    instances:",
+                f"      - alias: {self.SID}",
+            ]
+        )
+
+    def _install_new_oracle_plugin(self) -> None:
+        """Install the mk-oracle (Rust) plugin binary and config templates to the container."""
+
+        logger.info('Creating new plugin target folder "%s"...', self.new_plugin_dir)
+        rc, output = self.container.exec_run(
+            rf'mkdir -p "{self.new_plugin_dir.as_posix()}"', user="root"
+        )
+        assert rc == 0, f'Could not create folder "{self.new_plugin_dir}"! Reason: {output}'
+
+        logger.info(
+            'Installing mk-oracle binary from "%s" to "%s"...',
+            self.new_plugin_binary_path,
+            self.new_plugin,
+        )
+        assert copy_to_container(
+            self.container, str(self.new_plugin_binary_path), self.new_plugin_dir
+        ), "Failed to copy mk-oracle binary!"
+        rc, output = self.container.exec_run(
+            rf'chmod +x "{self.new_plugin.as_posix()}"', user="root"
+        )
+        assert rc == 0, f"Error while setting executable bit: {output.decode('UTF-8')}"
+
+        logger.info("Installing mk-oracle plugin configuration templates...")
+        for name, content in {
+            self.new_plugin_credentials_cfg.name: self._new_plugin_credentials_yml(),
+            self.new_plugin_wallet_cfg.name: self._new_plugin_wallet_yml(),
+        }.items():
+            path = self.ORAENV / name
+            if not os.path.exists(path):
+                with open(path, "w", encoding="UTF-8") as cfg_file:
+                    cfg_file.write(content)
+            assert copy_to_container(self.container, path, self.cmk_cfg_dir), (
+                f'Failed to copy "{name}"!'
+            )
+
+        self.use_new_plugin_credentials()
+
+    def use_new_plugin_credentials(self) -> None:
+        logger.info("Enabling credential-based authentication for mk-oracle...")
+        with open(path := self.ORAENV / "sqlnet.ora", "w", encoding="UTF-8") as oraenv_file:
+            oraenv_file.write("NAMES.DIRECTORY_PATH= (TNSNAMES, EZCONNECT)")
+        assert copy_to_container(self.container, path, self.tns_admin_dir), (
+            f'Failed to copy "{path}"!'
+        )
+        rc, output = self.container.exec_run(
+            rf'cp "{self.new_plugin_credentials_cfg.as_posix()}" "{self.new_plugin_cfg.as_posix()}"',
+            user="root",
+        )
+        assert rc == 0, f"Failed to copy cfg file: {output.decode('UTF-8')}"
+
+    def use_new_plugin_wallet(self) -> None:
+        logger.info("Enabling wallet authentication for mk-oracle...")
+        with open(path := self.ORAENV / "sqlnet.ora", "w", encoding="UTF-8") as oraenv_file:
+            oraenv_file.write(
+                "\n".join(
+                    [
+                        "NAMES.DIRECTORY_PATH= (TNSNAMES, EZCONNECT)",
+                        "SQLNET.WALLET_OVERRIDE = TRUE",
+                        "WALLET_LOCATION =",
+                        "(SOURCE=",
+                        "    (METHOD = FILE)",
+                        f"    (METHOD_DATA = (DIRECTORY={self.wallet_dir.as_posix()}))",
+                        ")",
+                    ]
+                )
+            )
+        assert copy_to_container(self.container, path, self.tns_admin_dir), (
+            f'Failed to copy "{path}"!'
+        )
+        rc, output = self.container.exec_run(
+            rf'cp "{self.new_plugin_wallet_cfg.as_posix()}" "{self.new_plugin_cfg.as_posix()}"',
+            user="root",
+        )
+        assert rc == 0, f"Failed to copy cfg file: {output.decode('UTF-8')}"
+
 
 @pytest.fixture(name="oracle", scope="session")
 def _oracle(
     client: docker.client.DockerClient,
     checkmk: CheckmkApp | None,
     tmp_path_session: Path,
+    mk_oracle_binary_path: Path,
 ) -> Iterator[OracleDatabase]:
     with OracleDatabase(
         client,
@@ -476,6 +670,7 @@ def _oracle(
         if checkmk is not None and checkmk.name
         else f"oracle_{randint(10000000, 99999999)}",
         temp_dir=tmp_path_session,
+        mk_oracle_binary_path=mk_oracle_binary_path,
     ) as oracle_db:
         yield oracle_db
 
@@ -503,12 +698,9 @@ def test_docker_oracle(
     agent_plugin_output = output.decode("utf-8")
     assert rc == 0, f"Oracle plugin failed!\n{agent_plugin_output}"
 
-    raw_sections = [f"<<<{_.strip()}" for _ in agent_plugin_output.split("\n<<<")]
-    section_headers = [_.split("\n", 1)[0].strip() for _ in raw_sections]
-    empty_section_headers = [_.split("\n", 1)[0].strip() for _ in raw_sections if _.endswith(">>>")]
-    non_empty_section_headers = [_ for _ in section_headers if _ not in empty_section_headers]
-    actual_sections = list({_[3:-3].split(":", 1)[0] for _ in section_headers})
-    actual_non_empty_sections = list({_[3:-3].split(":", 1)[0] for _ in non_empty_section_headers})
+    all_sections, error_sections, non_empty_sections = _parse_oracle_sections(agent_plugin_output)
+
+    assert len(error_sections) == 0, f"Sections with errors: {error_sections}"
 
     expected_non_empty_sections = [
         "oracle_instance",
@@ -535,11 +727,11 @@ def test_docker_oracle(
         "oracle_asm_diskgroup",
     ]
 
-    missing_sections = [_ for _ in expected_sections if _ not in actual_sections]
+    missing_sections = [_ for _ in expected_sections if _ not in all_sections]
     assert len(missing_sections) == 0, f"Missing sections from agent output: {missing_sections}"
 
     missing_non_empty_sections = [
-        _ for _ in expected_non_empty_sections if _ not in actual_non_empty_sections
+        _ for _ in expected_non_empty_sections if _ not in non_empty_sections
     ]
     assert len(missing_non_empty_sections) == 0, (
         f"Missing non-empty sections from agent output: {missing_non_empty_sections}"
@@ -596,6 +788,155 @@ def test_docker_oracle(
         if _["extensions"]["description"].upper().startswith(oracle.SERVICE_PREFIX)
         and not _["extensions"]["description"].upper().endswith(" JOB")
     ]
+
+    missing_services = [
+        service["description"]
+        for service in expected_services
+        if service.get("description") not in [_.get("description") for _ in actual_services]
+    ]
+    assert len(missing_services) == 0, f"Missing services: {missing_services}"
+
+    unexpected_services = [
+        service.get("description")
+        for service in actual_services
+        if service.get("description") not in [_.get("description") for _ in expected_services]
+    ]
+    assert len(unexpected_services) == 0, f"Unexpected services: {unexpected_services}"
+
+    invalid_services = [
+        f"{service.get('description')} ({expected_state=}; {actual_state=})"
+        for service in actual_services
+        if (actual_state := service.get("state"))
+        != (
+            expected_state := next(
+                (
+                    _.get("state", 0)
+                    for _ in expected_services
+                    if _.get("description") == service.get("description")
+                ),
+                0,
+            )
+        )
+    ]
+    assert len(invalid_services) == 0, f"Invalid services: {invalid_services}"
+
+
+@pytest.mark.skip_if_not_edition("pro")
+@pytest.mark.parametrize("auth_mode", ["wallet", "credential"])
+def test_docker_oracle_new_plugin(
+    checkmk: CheckmkApp | None,
+    oracle: OracleDatabase,
+    auth_mode: Literal["wallet", "credential"],
+) -> None:
+    if auth_mode == "wallet":
+        oracle.use_new_plugin_wallet()
+    else:
+        oracle.use_new_plugin_credentials()
+
+    run_cmd = [
+        oracle.new_plugin.as_posix(),
+        "-c",
+        oracle.new_plugin_cfg.as_posix(),
+        "--no-spool",
+    ]
+    rc, output = oracle.container.exec_run(run_cmd, user="root")
+    agent_plugin_output = output.decode("utf-8")
+    assert rc == 0, (
+        f"mk-oracle plugin failed with {auth_mode} authentication!\n{agent_plugin_output}"
+    )
+
+    all_sections, error_sections, non_empty_sections = _parse_oracle_sections(agent_plugin_output)
+
+    assert len(error_sections) == 0, f"Sections with errors: {error_sections}"
+
+    expected_non_empty_sections = [
+        "oracle_instance",
+        "oracle_sessions",
+        "oracle_logswitches",
+        "oracle_undostat",
+        "oracle_processes",
+        "oracle_recovery_status",
+        "oracle_longactivesessions",
+        "oracle_performance",
+        "oracle_locks",
+        "oracle_systemparameter",
+        "oracle_ts_quotas",
+    ]
+    expected_sections = expected_non_empty_sections + [
+        "oracle_recovery_area",
+        "oracle_dataguard_stats",
+        "oracle_tablespaces",
+        "oracle_rman",
+        "oracle_jobs",
+        "oracle_resumable",
+        "oracle_iostats",
+        "oracle_asm_diskgroup",
+    ]
+
+    assert len(all_sections) == len(expected_sections)
+
+    missing_sections = [s for s in expected_sections if s not in all_sections]
+    assert not missing_sections, f"Missing sections from agent output: {missing_sections}"
+
+    missing_non_empty_sections = [
+        s for s in expected_non_empty_sections if s not in non_empty_sections
+    ]
+    assert not missing_non_empty_sections, (
+        f"Missing non-empty sections from agent output: {missing_non_empty_sections}"
+    )
+
+    if checkmk is None:
+        return
+
+    expected_services = [
+        {"state": 0} | _
+        for _ in [
+            {"description": f"{oracle.SERVICE_PREFIX}.CDB$ROOT Locks"},
+            {"description": f"{oracle.SERVICE_PREFIX}.CDB$ROOT Long Active Sessions"},
+            {"description": f"{oracle.SERVICE_PREFIX}.CDB$ROOT Performance"},
+            {"description": f"{oracle.SERVICE_PREFIX}.CDB$ROOT Sessions"},
+            {"description": f"{oracle.SERVICE_PREFIX}.{oracle.PDB} Instance"},
+            {"description": f"{oracle.SERVICE_PREFIX}.{oracle.PDB} Locks"},
+            {"description": f"{oracle.SERVICE_PREFIX}.{oracle.PDB} Long Active Sessions"},
+            {"description": f"{oracle.SERVICE_PREFIX}.{oracle.PDB} Performance"},
+            {"description": f"{oracle.SERVICE_PREFIX}.{oracle.PDB} Recovery Status"},
+            {"description": f"{oracle.SERVICE_PREFIX}.{oracle.PDB} Sessions"},
+            {"description": f"{oracle.SERVICE_PREFIX}.{oracle.PDB} Uptime"},
+            {"description": f"{oracle.SERVICE_PREFIX}.{oracle.PDB}.TEMP Tablespace"},
+            {"description": f"{oracle.SERVICE_PREFIX}.{oracle.PDB}.SYSTEM Tablespace"},
+            {"description": f"{oracle.SERVICE_PREFIX}.{oracle.PDB}.SYSAUX Tablespace"},
+            {"description": f"{oracle.SERVICE_PREFIX}.{oracle.PDB}.UNDOTBS1 Tablespace"},
+            {"description": f"{oracle.SERVICE_PREFIX}.{oracle.PDB}.USERS Tablespace"},
+            {"description": f"{oracle.SERVICE_PREFIX} Instance"},
+            {"description": f"{oracle.SERVICE_PREFIX} Locks"},
+            {"description": f"{oracle.SERVICE_PREFIX} Logswitches"},
+            {"description": f"{oracle.SERVICE_PREFIX} Long Active Sessions"},
+            {"description": f"{oracle.SERVICE_PREFIX}.PDB$SEED Instance"},
+            {"description": f"{oracle.SERVICE_PREFIX}.PDB$SEED Performance"},
+            {"description": f"{oracle.SERVICE_PREFIX}.PDB$SEED Recovery Status"},
+            {"description": f"{oracle.SERVICE_PREFIX}.PDB$SEED Uptime"},
+            {"description": f"{oracle.SERVICE_PREFIX} Processes"},
+            {"description": f"{oracle.SERVICE_PREFIX} Recovery Status"},
+            {"description": f"{oracle.SERVICE_PREFIX} Sessions"},
+            {"description": f"{oracle.SERVICE_PREFIX} Undo Retention"},
+            {"description": f"{oracle.SERVICE_PREFIX} Uptime"},
+            {"description": f"{oracle.SERVICE_PREFIX}.CDB$ROOT.TEMP Tablespace"},
+            {"description": f"{oracle.SERVICE_PREFIX}.UNDOTBS1 Tablespace"},
+            {"description": f"{oracle.SERVICE_PREFIX}.SYSAUX Tablespace"},
+            {"description": f"{oracle.SERVICE_PREFIX}.SYSTEM Tablespace"},
+            {"description": f"{oracle.SERVICE_PREFIX}.USERS Tablespace"},
+        ]
+    ]
+
+    actual_services = [
+        _["extensions"]
+        for _ in checkmk.openapi.services.get_host_services(
+            oracle.name, columns=["state", "description"]
+        )
+        if _["extensions"]["description"].upper().startswith(oracle.SERVICE_PREFIX)
+        and not _["extensions"]["description"].upper().endswith(" JOB")
+    ]
+    logger.info(f"All services: {actual_services}")
 
     missing_services = [
         service["description"]

@@ -18,6 +18,7 @@ void main() {
 
     def single_tests = load("${checkout_dir}/buildscripts/scripts/utils/single_tests.groovy");
     def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
+    def package_helper = load("${checkout_dir}/buildscripts/scripts/utils/package_helper.groovy");
 
     def safe_branch_name = versioning.safe_branch_name();
     def branch_version = versioning.get_branch_version(checkout_dir);
@@ -61,6 +62,22 @@ void main() {
         |===================================================
         """.stripMargin());
 
+    def all_stages = package_helper.provide_agent_binaries(
+        version: version,
+        cmk_version: cmk_version,
+        edition: edition,
+        disable_cache: false,
+        bisect_comment: params.CIPARAM_BISECT_COMMENT,
+        artifacts_base_dir: "tmp_artifacts",
+        fake_artifacts: false,
+    );
+
+    inside_container_minimal(safe_branch_name: safe_branch_name) {
+        all_stages["build-mk-oracle-rhel8"]();
+    }
+
+    def mk_oracle_binary_path = "${checkout_dir}/omd/packages/mk-oracle/mk-oracle.rhel8"
+
     // this is a quick fix for FIPS based tests, see CMK-20851
     def build_node = params.CIPARAM_OVERRIDE_BUILD_NODE;
     if (build_node == "fips") {
@@ -91,6 +108,7 @@ void main() {
                         make_target: make_target,
                         test_filter: params.TEST_FILTER,
                         faked_artifacts: params.FAKE_ARTIFACTS,
+                        mk_oracle_binary_path: "--mk-oracle-binary-path=${mk_oracle_binary_path}",
                         // can hit 5min during the heavy chain runs (without wait time)
                         // using FoS of 3
                         timeout: 15,

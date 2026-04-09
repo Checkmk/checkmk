@@ -143,7 +143,8 @@ test-integration-agent-plugin-docker:
 
 test-integration-agent-plugin:
 	$(PYTEST) -x $(realpath agent_plugin_integration) \
-	$(PYTEST_SYSTEM_TEST_ARGS) --session-timeout 3600
+	$(PYTEST_SYSTEM_TEST_ARGS) --session-timeout 3600 \
+	$(MK_ORACLE_BINARY_PATH)
 
 test-performance: prepare-playwright
 	$(UVENV) "$(realpath performance)/perftest.sh"

@@ -6,6 +6,7 @@
 
 # mypy: disable-error-code="type-arg"
 
+import json
 import traceback
 from collections.abc import Sequence
 from pathlib import Path
@@ -27,6 +28,18 @@ from cmk.piggyback.backend import get_messages_for
 from cmk.snmplib import SNMPBackendEnum
 from cmk.utils.servicename import ServiceName
 
+_MAX_SECTION_CONTENT_BYTES = 1024 * 1024  # 1 MB
+
+
+def _truncate_section_content(section_content: Sequence[object]) -> Sequence[object]:
+    """Drop section_content if its JSON size exceeds the limit to prevent oversized crash reports."""
+    try:
+        if len(json.dumps(section_content).encode()) > _MAX_SECTION_CONTENT_BYTES:
+            return [f"[dropped: section content exceeded {_MAX_SECTION_CONTENT_BYTES} bytes]"]
+    except Exception:
+        pass
+    return section_content
+
 
 def create_section_crash_dump(
     *,
@@ -46,7 +59,7 @@ def create_section_crash_dump(
                 cmk_version.get_general_version_infos(cmk.utils.paths.omd_root),
                 details={
                     "section_name": str(section_name),
-                    "section_content": section_content,
+                    "section_content": _truncate_section_content(section_content),
                     "host_name": host_name,
                 },
             ),

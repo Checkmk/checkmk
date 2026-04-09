@@ -208,7 +208,7 @@ allows = [
   "cmk.dcd.gui",
   "cmk.gui",
   "cmk.metric_backend",
-  "cmk.nonfree.ultimate.otel.gui",
+  "cmk.telemetry.gui",
   "cmk.shared_typing.vue_formspec_components",
   "cmk.utils",
 ]
@@ -732,7 +732,7 @@ allows = [
   "cmk.licensing",
   "cmk.liveproxyd.gui",
   "cmk.nonfree.ultimate.metric_backend.gui",
-  "cmk.nonfree.ultimate.otel.gui.register",
+  "cmk.telemetry.gui.register",
   "cmk.otel_collector",
   "cmk.robotmk.gui",
   "cmk.shared_typing",
@@ -764,7 +764,7 @@ allows = [
   "cmk.liveproxyd.gui",
   "cmk.multi_tenancy.shared",
   "cmk.nonfree.ultimate.metric_backend.gui.register",
-  "cmk.nonfree.ultimate.otel.gui.register",
+  "cmk.telemetry.gui.register",
   "cmk.piggyback",
   "cmk.robotmk.gui",
   "cmk.utils.automation_config",
@@ -790,7 +790,7 @@ allows = [
   "cmk.licensing",
   "cmk.liveproxyd.gui",
   "cmk.nonfree.ultimate.metric_backend.gui.register",
-  "cmk.nonfree.ultimate.otel.gui.register",
+  "cmk.telemetry.gui.register",
   "cmk.shared_typing",
   "cmk.utils.agent_registration",
   "cmk.utils.config_warnings",
@@ -1086,6 +1086,18 @@ allows = [
 
 [components."cmk.otel_collector"]
 allows = ["@ccc"]
+
+[components."cmk.otel_collector.gui"]
+allows = [
+  "@ccc",
+  "cmk.cloud",
+  "cmk.gui",
+  "cmk.livestatus_client",
+  "cmk.metric_backend",
+  "cmk.otel_collector",
+  "cmk.rulesets",
+  "cmk.utils",
+]
 
 [components."cmk.relay"]
 allows = [
@@ -1484,7 +1496,7 @@ allows = [
   "cmk.utils.paths",
 ]
 
-[components."cmk.nonfree.ultimate.otel.gui"]
+[components."cmk.telemetry.gui"]
 allows = [
   "@plugin_apis",
   "cmk.fields",

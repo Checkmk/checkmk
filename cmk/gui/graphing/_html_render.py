@@ -507,10 +507,9 @@ def _render_time_range_selection(
         )
 
         preview_size = (20.0, 4.0)
-        start, end = now - duration, now
         time_range = make_graph_time_range_html(
-            start=start,
-            end=end,
+            start=now - duration,
+            end=now,
             factor=2,
             height_in_ex=preview_size[1],
         )

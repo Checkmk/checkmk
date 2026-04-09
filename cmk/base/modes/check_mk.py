@@ -25,7 +25,6 @@ import cmk.base.dump_host
 import cmk.ccc.cleanup
 import cmk.ccc.debug
 import cmk.ccc.version as cmk_version
-import cmk.fetchers.snmp as snmp_factory
 import cmk.utils.password_store
 import cmk.utils.paths
 from cmk import trace
@@ -113,6 +112,7 @@ from cmk.fetchers.config import (
     make_persisted_section_dir,
 )
 from cmk.fetchers.filecache import FileCacheOptions, MaxAge
+from cmk.fetchers.snmp_backend import make_backend
 from cmk.helper_interface import FetcherType, SourceType
 from cmk.inventory.paths import Paths as InventoryPaths
 from cmk.inventory.structured_data import (
@@ -1234,7 +1234,7 @@ def mode_snmpwalk(app: CheckmkBaseApp, options: dict, hostnames: list[str]) -> N
         )
         _do_snmpwalk(
             options,
-            backend=snmp_factory.make_backend(
+            backend=make_backend(
                 snmp_config, log.logger, stored_walk_path=cmk.utils.paths.snmpwalks_dir
             ),
         )
@@ -1335,7 +1335,7 @@ def mode_snmpget(app: CheckmkBaseApp, options: Mapping[str, object], args: Seque
             SourceType.HOST,
             backend_override=snmp_backend_override,
         )
-        backend = snmp_factory.make_backend(
+        backend = make_backend(
             snmp_config, log.logger, stored_walk_path=cmk.utils.paths.snmpwalks_dir
         )
         value = get_single_oid(oid, single_oid_cache={}, backend=backend, log=log.logger.debug)

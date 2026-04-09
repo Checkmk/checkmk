@@ -13,16 +13,16 @@ from pathlib import Path
 import pytest
 
 from cmk.ccc.hostaddress import HostAddress, HostName
-from cmk.fetchers.snmp import make_backend
-from cmk.fetchers.snmp_backend import ClassicSNMPBackend
-from cmk.snmplib import SNMPBackendEnum, SNMPHostConfig, SNMPVersion
+from cmk.fetchers.snmp_backend import ClassicSNMPBackend, make_backend
+from cmk.snmplib import SNMPBackend, SNMPBackendEnum, SNMPHostConfig, SNMPVersion
 
+InlineSNMPBackend: type[SNMPBackend] | None = None
 try:
     from cmk.inline_snmp.inline import (  # type: ignore[import,unused-ignore]
         InlineSNMPBackend,
     )
 except ImportError:
-    InlineSNMPBackend = None  # type: ignore[assignment, misc, unused-ignore]
+    pass
 
 
 @pytest.fixture(name="snmp_config")
@@ -51,13 +51,24 @@ def test_factory_snmp_backend_classic(snmp_config: SNMPHostConfig, tmp_path: Pat
     )
 
 
+@pytest.mark.skipif(InlineSNMPBackend is None, reason="Inline SNMP backend not available")
 def test_factory_snmp_backend_inline(snmp_config: SNMPHostConfig, tmp_path: Path) -> None:
     snmp_config = dataclasses.replace(snmp_config, snmp_backend=SNMPBackendEnum.INLINE)
-    if InlineSNMPBackend is not None:
-        assert isinstance(
-            make_backend(snmp_config, logging.getLogger(), stored_walk_path=tmp_path),
-            InlineSNMPBackend,
-        )
+    assert InlineSNMPBackend is not None  # Just for the benefit of type checking
+    assert isinstance(
+        make_backend(snmp_config, logging.getLogger(), stored_walk_path=tmp_path), InlineSNMPBackend
+    )
+
+
+def test_factory_snmp_backend_inline_unavailable(
+    snmp_config: SNMPHostConfig, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    import cmk.fetchers.snmp_backend as snmp_backend_module
+
+    monkeypatch.setattr(snmp_backend_module, "inline", None)
+    snmp_config = dataclasses.replace(snmp_config, snmp_backend=SNMPBackendEnum.INLINE)
+    with pytest.raises(NotImplementedError, match="Unknown SNMP backend"):
+        make_backend(snmp_config, logging.getLogger(), stored_walk_path=tmp_path)
 
 
 def test_factory_snmp_backend_unknown_backend(snmp_config: SNMPHostConfig, tmp_path: Path) -> None:

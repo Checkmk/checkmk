@@ -42,7 +42,7 @@ from cmk.snmplib import (
 
 from ._abstract import Fetcher, Mode
 from ._snmpscan import gather_available_raw_section_names, SNMPScanConfig
-from .snmp import make_backend
+from .snmp_backend import make_backend
 
 __all__ = [
     "SNMPFetcher",

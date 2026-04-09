@@ -76,7 +76,6 @@ py_library(
         "cmk/fetchers/filecache/_cache.py",
         "cmk/fetchers/filecache/_snmp.py",
         "cmk/fetchers/serializertype.py",
-        "cmk/fetchers/snmp.py",
         "cmk/fetchers/snmp_backend/__init__.py",
         "cmk/fetchers/snmp_backend/_utils.py",
         "cmk/fetchers/snmp_backend/classic.py",

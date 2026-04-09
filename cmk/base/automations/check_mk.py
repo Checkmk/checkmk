@@ -189,7 +189,7 @@ from cmk.fetchers.config import (
     make_persisted_section_dir,
 )
 from cmk.fetchers.filecache import FileCacheOptions, MaxAge, NoCache
-from cmk.fetchers.snmp import make_backend as make_snmp_backend
+from cmk.fetchers.snmp_backend import make_backend as make_snmp_backend
 from cmk.helper_interface import AgentRawData, FetcherError, FetcherType, SourceType
 from cmk.inventory import structured_data
 from cmk.inventory.paths import Paths as InventoryPaths

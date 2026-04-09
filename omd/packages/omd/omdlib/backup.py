@@ -157,7 +157,7 @@ def _backup_site_to_tarfile(
             for glob_pattern in excludes
         )
 
-    with _RRDSocket(site_is_stopped, site_name, verbose) as rrd_socket:
+    with _RRDSocket(site_is_stopped, site_home, site_name, verbose) as rrd_socket:
         # Add the version symlink as first file to be able to
         # check a) the sitename and b) the version before reading
         # the whole tar archive. Important for streaming.
@@ -235,8 +235,8 @@ def get_exclude_patterns(options: BackupExclusions) -> list[str]:
 
 
 class _RRDSocket(contextlib.AbstractContextManager["_RRDSocket"]):
-    def __init__(self, site_stopped: bool, site_name: str, verbose: bool) -> None:
-        self._rrdcached_socket_path = str(Path("site_dir") / "tmp/run/rrdcached.sock")
+    def __init__(self, site_stopped: bool, site_home: str, site_name: str, verbose: bool) -> None:
+        self._rrdcached_socket_path = f"{site_home}/tmp/run/rrdcached.sock"  # nosec B108 # not system /tmp; site_home is owned by the site user
         self._site_requires_suspension = not site_stopped and os.path.exists(
             self._rrdcached_socket_path
         )

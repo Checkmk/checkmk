@@ -1,0 +1,60 @@
+load("@aspect_rules_py//py:defs.bzl", "py_library")
+load("@cmk_requirements//:requirements.bzl", "requirement")
+
+py_library(
+    name = "userdb",
+    srcs = glob(
+        include = ["**/*.py"],
+        exclude = ["registration.py"],
+    ),
+    imports = ["../../.."],
+    visibility = [
+        "//cmk:__subpackages__",
+        "//tests:__subpackages__",
+    ],
+    deps = [
+        "//cmk/gui:config",
+        "//cmk/gui:customer",
+        "//cmk/gui:exceptions",
+        "//cmk/gui:groups",
+        "//cmk/gui:hooks",
+        "//cmk/gui:http",
+        "//cmk/gui:i18n",
+        "//cmk/gui:log",
+        "//cmk/gui:logged_in",
+        "//cmk/gui:pages",
+        "//cmk/gui:permissions",
+        "//cmk/gui:role_types",
+        "//cmk/gui:site_config",
+        "//cmk/gui:theme",
+        "//cmk/gui:type_defs",
+        "//cmk/gui:user_connection_config_types",
+        "//cmk/gui/background_job/job",
+        "//cmk/gui/htmllib:html",
+        "//cmk/gui/utils:htpasswd",
+        "//cmk/gui/utils:misc",
+        "//cmk/gui/utils:roles",
+        "//cmk/gui/utils:security_log_events",
+        "//cmk/gui/utils:temperate_unit",
+        "//cmk/gui/utils:urls",
+        "//cmk/gui/valuespec",
+        "//cmk/gui/watolib:config_infra",
+        "//cmk/utils",
+        "//packages/cmk-ccc:plugin-registry",
+        "//packages/cmk-ccc:site",
+        "//packages/cmk-ccc:store",
+        "//packages/cmk-ccc:user",
+        "//packages/cmk-ccc:version",
+        "//packages/cmk-crypto",
+        "//packages/cmk-livestatus-client:py_livestatus",
+        requirement("pydantic"),
+    ],
+)
+
+# Temporary: userdb files that still belong to the monolithic //cmk/gui target.
+# Remove this filegroup once userdb registration is moved to an appropriate location.
+filegroup(
+    name = "gui_srcs",
+    srcs = ["registration.py"],
+    visibility = ["//cmk/gui:__pkg__"],
+)

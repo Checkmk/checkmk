@@ -1254,7 +1254,10 @@ py_library(
         ],
     ) + [
         "wsgi/applications/index.wsgi",
-    ] + ["//cmk/gui/watolib:gui_srcs"],
+    ] + [
+        "//cmk/gui/userdb:gui_srcs",
+        "//cmk/gui/watolib:gui_srcs",
+    ],
     imports = ["../.."],
     visibility = [
         "//cmk:__subpackages__",
@@ -1347,6 +1350,7 @@ py_library(
         "//cmk/gui/htmllib:tag_rendering",
         "//cmk/gui/htmllib:type_defs",
         "//cmk/gui/token_auth",
+        "//cmk/gui/userdb",
         "//cmk/gui/utils:agent",
         "//cmk/gui/utils:agent_registration",
         "//cmk/gui/utils:autocompleter_config",

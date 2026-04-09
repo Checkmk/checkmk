@@ -1263,18 +1263,6 @@ msgstr ""
 msgid "86% - 1.5 standard deviations"
 msgstr "86% - 1,5 écart-type"
 
-#, fuzzy
-msgid "90th percentile latency over last day"
-msgstr "Niveaux supérieurs d'utilisation des demandes"
-
-#, fuzzy
-msgid "90th percentile latency over last hour"
-msgstr "Niveaux supérieurs d'utilisation des demandes"
-
-#, fuzzy
-msgid "90th percentile latency over last minute"
-msgstr "Niveaux supérieurs d'utilisation des demandes"
-
 #, no-python-format
 msgid "95% - Two standard deviations"
 msgstr "95% - Deux écarts types"
@@ -1282,32 +1270,8 @@ msgstr "95% - Deux écarts types"
 msgid "95th percentile"
 msgstr "95ème percentile"
 
-#, fuzzy
-msgid "95th percentile latency over last day"
-msgstr "Niveaux supérieurs d'utilisation des demandes"
-
-#, fuzzy
-msgid "95th percentile latency over last minute"
-msgstr "Niveaux supérieurs d'utilisation des demandes"
-
-#, fuzzy
-msgid "95th percentile over last hour"
-msgstr "95ème percentile"
-
 msgid "99th percentile"
 msgstr "99ème percentile"
-
-#, fuzzy
-msgid "99th percentile latency over last day"
-msgstr "Niveaux supérieurs d'utilisation des demandes"
-
-#, fuzzy
-msgid "99th percentile latency over last hour"
-msgstr "Niveaux supérieurs d'utilisation des demandes"
-
-#, fuzzy
-msgid "99th percentile latency over last minute"
-msgstr "Niveaux supérieurs d'utilisation des demandes"
 
 #, fuzzy
 msgid "< Remove"
@@ -6713,10 +6677,6 @@ msgstr "Rapport toujours OK"
 msgid "Always build bulks"
 msgstr "Toujours en vrac"
 
-#, fuzzy
-msgid "Always compute the rate (excluding histograms)"
-msgstr "Reclasser l'état complet"
-
 msgid "Always fetch data from Meraki API."
 msgstr ""
 
@@ -8424,18 +8384,6 @@ msgstr "Latence moyenne des demandes PutItem réussies"
 #, fuzzy
 msgid "Average latency of successful query requests"
 msgstr "Latence moyenne des requêtes réussies"
-
-#, fuzzy
-msgid "Average latency over last day"
-msgstr "Latence moyenne pour les demandes de stockage"
-
-#, fuzzy
-msgid "Average latency over last hour"
-msgstr "Latence moyenne pour les demandes de stockage"
-
-#, fuzzy
-msgid "Average latency over last minute"
-msgstr "Latence moyenne pour les demandes de stockage"
 
 #, fuzzy
 msgid ""
@@ -12385,10 +12333,6 @@ msgstr "Utilisation de la file d'attente carbone"
 msgid "Carbon queue usage rate"
 msgstr "Taux d'utilisation de la file d'attente carbone"
 
-#, fuzzy
-msgid "Cardinality reduction aggregation method"
-msgstr "Taux de détection"
-
 msgid "Casa module: CPU temperature"
 msgstr "Module Casa : Température du CPU"
 
@@ -13397,11 +13341,6 @@ msgstr ""
 
 msgid "Checkmk helper usage"
 msgstr "Utilisation de l'aide Checkmk"
-
-msgid ""
-"Checkmk metrics are created from OpenTelemetry datapoints. Configure them "
-"here."
-msgstr ""
 
 #, fuzzy
 msgid "Checkmk overview of Checkmk server"
@@ -15150,10 +15089,6 @@ msgstr "Résultat du calcul : %s - %s"
 msgid "Computation type"
 msgstr "Type de calcul"
 
-#, fuzzy
-msgid "Compute a rate (excluding histograms)"
-msgstr "Reclasser l'état complet"
-
 msgid "Compute average over last "
 msgstr "Calculer la moyenne sur le dernier "
 
@@ -15177,9 +15112,6 @@ msgstr ""
 #, fuzzy
 msgid "Compute range according to displayed data"
 msgstr "Calculer la portée en fonction des données affichées"
-
-msgid "Compute rates for all monotonic counters"
-msgstr ""
 
 msgid "Computing differences"
 msgstr "Différences de calcul"
@@ -15445,14 +15377,6 @@ msgstr ""
 #, fuzzy
 msgid "Configure fallback email address"
 msgstr "Adresse de secours pour le rapport d'accident"
-
-#, fuzzy
-msgid "Configure for all metrics"
-msgstr "Appliquer les codes d'utilisateur en minuscules."
-
-#, fuzzy
-msgid "Configure for specific metrics"
-msgstr "Sites spécifiques"
 
 msgid "Configure grouping of interfaces"
 msgstr "Configurer le regroupement des interfaces"
@@ -19367,17 +19291,6 @@ msgid ""
 msgstr ""
 
 msgid ""
-"Define the metric name to be monitored here as an exact match. Metric names "
-"are calculated from <a href='https://checkmk.com/werk/18209'>Open Telemetry "
-"datapoint attributes</a> or the <a href='https://checkmk.com/werk/"
-"18249'>Open Telemetry metric name</a> and the <a href='https://checkmk.com/"
-"werk/18249'>Open Telemetry metric unit</a> This needs to be an exact match "
-"to the metric name in the service.<br><br>The autocomplete suggestions may "
-"be incomplete. A unknown metric name can be specified manually.<br><br>In "
-"certain cases the autocomplete feature may be unavailable. "
-msgstr ""
-
-msgid ""
 "Define the periodicity in which the repetition of the measured data is "
 "expected (monthly, weekly, daily or hourly)"
 msgstr ""
@@ -22420,10 +22333,6 @@ msgstr "Ne pas supprimer les services disparus correspondants"
 msgid "Don't change parameters for matching services"
 msgstr "Visualiser et modifier les paramètres de ce service"
 
-#, fuzzy
-msgid "Don't compute a rate"
-msgstr "Taux de messages délivrés"
-
 msgid "Don't create a group service for the following groups"
 msgstr "Ne créez pas de service de groupe pour les groupes suivants"
 
@@ -24698,18 +24607,6 @@ msgstr ""
 
 msgid "Error rate"
 msgstr "Taux d'erreur"
-
-#, fuzzy
-msgid "Error rate over the last day"
-msgstr "Une erreur s'est produite lors de la dernière mise à jour"
-
-#, fuzzy
-msgid "Error rate over the last hour"
-msgstr "Événements des 4 dernières heures."
-
-#, fuzzy
-msgid "Error rate over the last minute"
-msgstr "Commutation des journaux au cours des 60 dernières minutes"
 
 msgid "Error rates"
 msgstr "Taux d'erreur"
@@ -34118,11 +34015,6 @@ msgid ""
 "two-factor authentication' in the global settings will override this setting."
 msgstr ""
 
-msgid ""
-"If too many metrics are produced by a service, they will be aggregated. "
-"Configure the aggregation method here."
-msgstr ""
-
 msgid "If value is a tuple it has to have length of two."
 msgstr "Si la valeur est un tuple, elle doit avoir une longueur de deux."
 
@@ -38409,40 +38301,8 @@ msgstr "Dernière durée achevée"
 msgid "Last contact of agent updater"
 msgstr "Dernier contact de l'agent updater"
 
-#, fuzzy
-msgid "Last day error rate"
-msgstr "Taux d'erreur total"
-
-msgid "Last day latency (avg)"
-msgstr ""
-
-msgid "Last day latency (p90)"
-msgstr ""
-
-msgid "Last day latency (p95)"
-msgstr ""
-
-msgid "Last day latency (p99)"
-msgstr ""
-
 msgid "Last day of last month"
 msgstr "Dernier jour du dernier mois"
-
-#, fuzzy
-msgid "Last day request rate"
-msgstr "Taux moyen de demandes"
-
-#, fuzzy
-msgid "Last day requests"
-msgstr "Demandes de Livestatus"
-
-#, fuzzy
-msgid "Last day total errors"
-msgstr "Erreur interne"
-
-#, fuzzy
-msgid "Last day total requests"
-msgstr "Demandes d'ACL sur le Web"
 
 msgid "Last download of agent updater"
 msgstr "Dernier téléchargement de l'agent updater"
@@ -38466,43 +38326,7 @@ msgid "Last host state change"
 msgstr "Dernier changement d'état de l'hôte"
 
 #, fuzzy
-msgid "Last hour error rate"
-msgstr "Niveaux des taux d'erreur"
-
-#, fuzzy
-msgid "Last hour latency (avg)"
-msgstr "Dernier changement d'état de l'hôte"
-
-#, fuzzy
-msgid "Last hour latency (p90)"
-msgstr "Autre latence"
-
-#, fuzzy
-msgid "Last hour latency (p95)"
-msgstr "Autre latence"
-
-#, fuzzy
-msgid "Last hour latency (p99)"
-msgstr "Autre latence"
-
-#, fuzzy
-msgid "Last hour request rate"
-msgstr "Les 25 dernières heures"
-
-#, fuzzy
-msgid "Last hour requests"
-msgstr "Les 25 dernières heures"
-
-#, fuzzy
 msgid "Last hour restarts"
-msgstr "Les 25 dernières heures"
-
-#, fuzzy
-msgid "Last hour total errors"
-msgstr "Les 25 dernières heures"
-
-#, fuzzy
-msgid "Last hour total requests"
 msgstr "Les 25 dernières heures"
 
 msgid "Last known details"
@@ -38511,42 +38335,6 @@ msgstr "Dernières coordonnées connues"
 #, fuzzy
 msgid "Last known plug-in output"
 msgstr "Dernière sortie connue du plugin"
-
-#, fuzzy
-msgid "Last minute error rate"
-msgstr "État d'erreur de l'instance"
-
-#, fuzzy
-msgid "Last minute latency (avg)"
-msgstr "Latence du courrier"
-
-#, fuzzy
-msgid "Last minute latency (p90)"
-msgstr "Latence du courrier"
-
-#, fuzzy
-msgid "Last minute latency (p95)"
-msgstr "Latence du courrier"
-
-#, fuzzy
-msgid "Last minute latency (p99)"
-msgstr "Latence du courrier"
-
-#, fuzzy
-msgid "Last minute request rate"
-msgstr "Taux moyen de demandes"
-
-#, fuzzy
-msgid "Last minute requests"
-msgstr "Demandes d'Instance Spot"
-
-#, fuzzy
-msgid "Last minute total errors"
-msgstr "Erreurs de perte de signal"
-
-#, fuzzy
-msgid "Last minute total requests"
-msgstr "Demandes d'ACL sur le Web"
 
 msgid "Last month"
 msgstr "Le mois dernier"
@@ -38643,23 +38431,7 @@ msgid "Latency"
 msgstr "Latence"
 
 #, fuzzy
-msgid "Latency (avg)"
-msgstr "Latence"
-
-#, fuzzy
 msgid "Latency (ms)"
-msgstr "Latence"
-
-#, fuzzy
-msgid "Latency (p90)"
-msgstr "Latence"
-
-#, fuzzy
-msgid "Latency (p95)"
-msgstr "Latence"
-
-#, fuzzy
-msgid "Latency (p99)"
 msgstr "Latence"
 
 msgid "Latency of GetItem requests"
@@ -38839,11 +38611,6 @@ msgstr "Niveaux d'utilisation du SNAT"
 
 msgid "Levels app gateway"
 msgstr "Passerelle App Levels"
-
-msgid ""
-"Levels are applied to the value as reported by the application, or to the "
-"computed rate (if enabled)."
-msgstr ""
 
 msgid "Levels byte count"
 msgstr "Niveaux Nombre d'octets"
@@ -39149,13 +38916,6 @@ msgstr ""
 
 msgid "Levels for the number of active plugs in a device."
 msgstr "Niveaux pour le nombre de prises actives dans un dispositif."
-
-msgid ""
-"Levels for the number of current connections to a JVM application on the "
-"servlet level"
-msgstr ""
-"Les niveaux pour le nombre de connexions actuelles à une application JVM au "
-"niveau de la servlet"
 
 msgid "Levels for the number of print jobs"
 msgstr "Niveaux du nombre de travaux d'impression"
@@ -40724,26 +40484,6 @@ msgstr "Déconnexion"
 msgid "Logs"
 msgstr "Bûches"
 
-#, fuzzy
-msgid "Logs refused by the Event console"
-msgstr "Accès à la console d'événements"
-
-msgid "Logs refused by the receiver (GRPC receiver)"
-msgstr ""
-
-msgid "Logs refused by the receiver (HTTP receiver)"
-msgstr ""
-
-msgid "Logs successfully received (GRPC receiver)"
-msgstr ""
-
-msgid "Logs successfully received (HTTP receiver)"
-msgstr ""
-
-#, fuzzy
-msgid "Logs successfully sent to Event console"
-msgstr "Accès à la console d'événements"
-
 msgid "Logswitches"
 msgstr "Commutateurs logiques"
 
@@ -40885,18 +40625,6 @@ msgid "Lower level for rate of memory reclaimed by GC"
 msgstr "Niveau supérieur pour le taux de mémoire récupérée par GC"
 
 #, fuzzy
-msgid "Lower level for request rate over last day"
-msgstr "Niveaux inférieurs pour l'utilisation des demandes"
-
-#, fuzzy
-msgid "Lower level for request rate over last hour"
-msgstr "Niveaux inférieurs pour l'utilisation des demandes"
-
-#, fuzzy
-msgid "Lower level for request rate over last minute"
-msgstr "Niveaux inférieurs pour l'utilisation des demandes"
-
-#, fuzzy
 msgid "Lower level for runtime run queue"
 msgstr "Niveau supérieur pour la file d'attente de l'exécution"
 
@@ -40932,18 +40660,6 @@ msgstr "Niveau inférieur pour le nombre total de messages prêts"
 
 msgid "Lower level for total number of unacknowledged messages"
 msgstr "Niveau inférieur pour le nombre total de messages non acquittés"
-
-#, fuzzy
-msgid "Lower level for total requests over last day"
-msgstr "Niveaux inférieurs pour le taux d'erreur total"
-
-#, fuzzy
-msgid "Lower level for total requests over last hour"
-msgstr "Niveaux inférieurs pour le taux d'erreur total"
-
-#, fuzzy
-msgid "Lower level for total requests over last minute"
-msgstr "Niveaux inférieurs pour le taux d'erreur total"
 
 msgid "Lower levels"
 msgstr "Niveaux inférieurs"
@@ -43422,10 +43138,6 @@ msgid "Metric backend of site %s is disabled"
 msgstr "Instances Oracle"
 
 #, fuzzy
-msgid "Metric configuration"
-msgstr "Configuration de l'hôte"
-
-#, fuzzy
 msgid "Metric forecast"
 msgstr "Prévision métrique"
 
@@ -43438,20 +43150,6 @@ msgstr "Étiquette métrique"
 
 msgid "Metric levels"
 msgstr "Niveaux métriques"
-
-#, fuzzy
-msgid "Metric name"
-msgstr "Étiquette métrique"
-
-#, fuzzy
-msgid "Metric name (exact match)"
-msgstr "Nom d'hôte (correspondance exacte)"
-
-#, python-format
-msgid ""
-"Metric names can only be defined once. Found the following keys multiple "
-"times: %s"
-msgstr ""
 
 #, fuzzy
 msgid ""
@@ -43502,19 +43200,6 @@ msgid "Metrics path must start with a '/'."
 msgstr "La connexion n'est pas autorisée sur ce site."
 
 #, fuzzy
-msgid "Metrics refused by data storage"
-msgstr "La valeur doit être une chaîne de caractères"
-
-msgid "Metrics refused by the receiver (GRPC receiver)"
-msgstr ""
-
-msgid "Metrics refused by the receiver (HTTP receiver)"
-msgstr ""
-
-msgid "Metrics refused by the receiver (Prometheus scraper)"
-msgstr ""
-
-#, fuzzy
 msgid "Metrics related to sizing, e.g. number of helpers, hosts, services"
 msgstr ""
 "Performance Données relatives au dimensionnement, par exemple le nombre "
@@ -43523,19 +43208,6 @@ msgstr ""
 #, fuzzy
 msgid "Metrics settings"
 msgstr "Sélection des dossiers"
-
-msgid "Metrics successfully received (GRPC receiver)"
-msgstr ""
-
-msgid "Metrics successfully received (HTTP receiver)"
-msgstr ""
-
-msgid "Metrics successfully received (Prometheus scraper)"
-msgstr ""
-
-#, fuzzy
-msgid "Metrics successfully sent to data storage"
-msgstr "Temps écoulé depuis la dernière construction réussie"
 
 msgid "MiB"
 msgstr "MiB"
@@ -45895,10 +45567,6 @@ msgstr "(jamais)"
 
 msgid "Never analyzed/vacuumed tables"
 msgstr "Tables jamais analysées/vidées"
-
-#, fuzzy
-msgid "Never compute a rate"
-msgstr "Taux de messages délivrés"
 
 msgid "Never do discovery or activate changes in the following time ranges"
 msgstr ""
@@ -48615,10 +48283,6 @@ msgid "OTLP endpoint"
 msgstr "Point d'accès"
 
 #, fuzzy
-msgid "OTel Collector memory usage"
-msgstr "Utilisation de la mémoire de Netscaler"
-
-#, fuzzy
 msgid "OVS bonding"
 msgstr "Collage de Vswitch"
 
@@ -49306,10 +48970,6 @@ msgid "OpenLDAP"
 msgstr "OpenLDAP"
 
 #, fuzzy
-msgid "OpenTelemetry"
-msgstr "Ajouter une configuration d'état"
-
-#, fuzzy
 msgid "OpenTelemetry Collector"
 msgstr "Ajouter une configuration d'état"
 
@@ -49330,23 +48990,7 @@ msgid "OpenTelemetry Quick Setup"
 msgstr "Ajouter une configuration d'état"
 
 #, fuzzy
-msgid "OpenTelemetry RED Errors"
-msgstr "Ajouter une configuration d'état"
-
-#, fuzzy
-msgid "OpenTelemetry RED Requests"
-msgstr "Ajouter une configuration d'état"
-
-#, fuzzy
-msgid "OpenTelemetry RED latency"
-msgstr "Ajouter une configuration d'état"
-
-#, fuzzy
 msgid "OpenTelemetry data"
-msgstr "Ajouter une configuration d'état"
-
-#, fuzzy
-msgid "OpenTelemetry metric name"
 msgstr "Ajouter une configuration d'état"
 
 msgid "OpenVMS processes"
@@ -55231,10 +54875,6 @@ msgstr "Raritan EMX Rack : Température"
 msgid "Raritan PDU: Input Phases"
 msgstr "Raritan PDU : Phases d'entrée"
 
-#, fuzzy
-msgid "Rate computation"
-msgstr "Calcul de la tendance"
-
 msgid "Rate of bytes sent to the Carbon connection"
 msgstr "Taux d'octets envoyés à la connexion Carbon"
 
@@ -56827,10 +56467,6 @@ msgstr "Rejouez cette notification, envoyez-la à nouveau !"
 #, python-format
 msgid "Replayed notification number %d"
 msgstr "Numéro de notification rejoué %d"
-
-#, fuzzy
-msgid "Replica aggregation method"
-msgstr "Nom de l'agrégation"
 
 msgid "Replica available state"
 msgstr "État de la réplique disponible"
@@ -59759,16 +59395,6 @@ msgid "Select from a list of metrics known to Checkmk"
 msgstr ""
 
 msgid "Select from a list of service names known to Checkmk"
-msgstr ""
-
-msgid ""
-"Select how multiple data points from replicas of the same service should be "
-"aggregated. By default, the latest value independent of replica is taken. "
-"With this setting, you can choose alternative aggregation methods (min, max, "
-"sum, average) to apply over all the latest samples of differing replicas for "
-"the same host (e.g. same service.name, different service.instance.id)."
-"<br><br>Aggregations occur only over the set of most recent data points per "
-"replica since the last check."
 msgstr ""
 
 msgid ""
@@ -63201,27 +62827,6 @@ msgstr ""
 "d'arrière-plan. Vous pouvez utiliser ce niveau de journalisation pour "
 "activer individuellement une journalisation plus détaillée pour les tâches "
 "d'arrière-plan."
-
-msgid ""
-"Some metrics are more meaningful when their rate is considered (such as "
-"dropped network packages, for example). By default, the plug-in computes the "
-"rate in case the metric is a monotonic counter. This is of course just a "
-"heuristic and might not work for all metrics: The uptime, for example, would "
-"be reported as '1.0 s/s', which is not too useful. You can override the "
-"default behavior here.<br><br>Histogram and exponential histogram metrics "
-"are not affected by this setting. They always report the average of observed "
-"values within an interval: for delta temporality this is sum / count of the "
-"current reporting interval, and for cumulative temporality this is the "
-"average of new observations since the last check cycle (delta sum / delta "
-"count)."
-msgstr ""
-
-msgid ""
-"Some metrics are more meaningful when their rate is considered (such as "
-"dropped network packages, for example). The uptime, for example, would be "
-"reported as '1.0 s/s', which is not too useful. You can override the default "
-"behavior here. This does not apply to histograms."
-msgstr ""
 
 msgid ""
 "Some of the diagnostics data needs to be collected from the host that "
@@ -70022,10 +69627,6 @@ msgid "The limit has to be bigger than the spike limit."
 msgstr "Le cluster doit avoir au moins un nœud"
 
 #, fuzzy
-msgid "The list needs to have at least one element"
-msgstr "Le cluster doit avoir au moins un nœud"
-
-#, fuzzy
 msgid "The log file"
 msgstr "Ce fichier journal"
 
@@ -70295,6 +69896,15 @@ msgstr ""
 msgid "The message has successfully been sent..."
 msgstr "Le message a été envoyé avec succès..."
 
+msgid ""
+"The metric backend database schema is in an unexpected state: revision "
+"{current_revision_id!r} is applied, but the expected revision is "
+"{head_revision_id!r}. Activation has been blocked to prevent unintended "
+"schema upgrades. To resolve this, upgrade the schema manually as the site "
+"user: `cmk-metric-backend-schema-manager --config default upgrade HEAD` If "
+"the upgrade fails, please contact Checkmk support."
+msgstr ""
+
 msgid "The metric backend snapin shows the number of custom metrics"
 msgstr ""
 
@@ -70306,10 +69916,6 @@ msgstr ""
 "L'étiquette de la métrique est affichée à côté de la valeur demandée dans le "
 "détail de l'état du service résultant. Le nom de la métrique sera pris comme "
 "étiquette si rien n'a été spécifié."
-
-#, fuzzy
-msgid "The metric name cannot be empty"
-msgstr "Clé secrète"
 
 #, python-format
 msgid "The minimum allowed length is %s."
@@ -78839,30 +78445,6 @@ msgstr "Durée totale : "
 msgid "Total error rate"
 msgstr "Taux d'erreur total"
 
-#, fuzzy
-msgid "Total errors (Last day)"
-msgstr "Taux d'erreur total"
-
-#, fuzzy
-msgid "Total errors (Last hour)"
-msgstr "Taux d'erreur total"
-
-#, fuzzy
-msgid "Total errors (Last minute)"
-msgstr "Taux d'erreur total"
-
-#, fuzzy
-msgid "Total errors over the last day"
-msgstr "Taux d'erreur total"
-
-#, fuzzy
-msgid "Total errors over the last hour"
-msgstr "Taux d'erreur total"
-
-#, fuzzy
-msgid "Total errors over the last minute"
-msgstr "Taux d'erreur total"
-
 msgid "Total events count lower levels"
 msgstr "Nombre total d'événements niveaux inférieurs"
 
@@ -79135,18 +78717,6 @@ msgstr "Nom d'hôte utilisé pour les conteneurs"
 #, fuzzy
 msgid "Total reclaimable size upper levels"
 msgstr "Taille totale du fichier journal : Niveaux supérieurs absolus"
-
-#, fuzzy
-msgid "Total requests (Last day)"
-msgstr "demande uniquement"
-
-#, fuzzy
-msgid "Total requests (Last hour)"
-msgstr "demande uniquement"
-
-#, fuzzy
-msgid "Total requests (Last minute)"
-msgstr "demande uniquement"
 
 #, fuzzy
 msgid "Total reservation utilization"
@@ -83057,18 +82627,6 @@ msgstr "Niveau supérieur pour la longueur de la file d'attente"
 msgid "Upper level for rate of memory reclaimed by GC"
 msgstr "Niveau supérieur pour le taux de mémoire récupérée par GC"
 
-#, fuzzy
-msgid "Upper level for request rate over last day"
-msgstr "Niveaux supérieurs d'utilisation des demandes"
-
-#, fuzzy
-msgid "Upper level for request rate over last hour"
-msgstr "Niveaux supérieurs d'utilisation des demandes"
-
-#, fuzzy
-msgid "Upper level for request rate over last minute"
-msgstr "Niveaux supérieurs d'utilisation des demandes"
-
 msgid "Upper level for runtime run queue"
 msgstr "Niveau supérieur pour la file d'attente de l'exécution"
 
@@ -83107,18 +82665,6 @@ msgstr "Niveau supérieur pour le nombre total de messages prêts"
 
 msgid "Upper level for total number of unacknowledged messages"
 msgstr "Niveau supérieur pour le nombre total de messages non acquittés"
-
-#, fuzzy
-msgid "Upper level for total requests over last day"
-msgstr "Niveaux supérieurs de latence totale des demandes"
-
-#, fuzzy
-msgid "Upper level for total requests over last hour"
-msgstr "Niveaux supérieurs de latence totale des demandes"
-
-#, fuzzy
-msgid "Upper level for total requests over last minute"
-msgstr "Niveaux supérieurs de latence totale des demandes"
 
 msgid "Upper levels"
 msgstr "Niveaux supérieurs"
@@ -91632,10 +91178,6 @@ msgstr "Ajouter Application d'Authentification"
 msgid "auto"
 msgstr "auto"
 
-#, fuzzy
-msgid "average"
-msgstr "Moyenne"
-
 msgid "avg. duration"
 msgstr "durée moyenne"
 
@@ -92589,10 +92131,6 @@ msgstr "laserFault"
 msgid "last notification"
 msgstr "dernière notification"
 
-#, fuzzy
-msgid "latest"
-msgstr "tests"
-
 msgid "latin1"
 msgstr "latin1"
 
@@ -92670,10 +92208,6 @@ msgstr "correspond à l'une des expressions rationnelles"
 
 msgid "matches regex"
 msgstr "correspond à un regex"
-
-#, fuzzy
-msgid "max"
-msgstr "maximum"
 
 msgid "max. duration"
 msgstr "durée max"
@@ -93427,10 +92961,6 @@ msgstr "Restreindre tous"
 msgid "sub categories"
 msgstr "sous-catégories"
 
-#, fuzzy
-msgid "sum"
-msgstr "Somme"
-
 msgid "synchronization"
 msgstr "synchronisation"
 
@@ -93835,6 +93365,19 @@ msgid ""
 "{aiTemplate.value.info.provider}. "
 msgstr ""
 
+#, fuzzy
+msgid "Feature temporarily unavailable"
+msgstr "Mémoire SGA libre disponible"
+
+#, fuzzy
+msgid "We are currently experiencing high load. Please try again later."
+msgstr ""
+"Aucune ligne ne correspond. Veuillez essayer un autre terme de recherche."
+
+#, fuzzy
+msgid "Close"
+msgstr "Fermé"
+
 msgid "What would you like the AI to do?"
 msgstr ""
 
@@ -93854,10 +93397,6 @@ msgstr ""
 
 msgid "Toggle accordion item %{item}"
 msgstr ""
-
-#, fuzzy
-msgid "Close"
-msgstr "Fermé"
 
 #, fuzzy
 msgid "Toggle %{ title }"
@@ -95612,6 +95151,10 @@ msgid "The time window used to aggregate data for each point on the chart.<ul>"
 msgstr ""
 
 #, fuzzy
+msgid "Metric name"
+msgstr "Étiquette métrique"
+
+#, fuzzy
 msgid "Aggregation lookback"
 msgstr "Contrôles d'agrégation"
 
@@ -96401,6 +95944,10 @@ msgstr ""
 
 #, fuzzy
 msgid "Failed to save OAuth2 connection"
+msgstr "Ajouter une connexion"
+
+#, fuzzy
+msgid "Failed to save OAuth2 connection. Please try again."
 msgstr "Ajouter une connexion"
 
 #, fuzzy
@@ -97784,6 +97331,373 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "90th percentile latency over last day"
+#~ msgstr "Niveaux supérieurs d'utilisation des demandes"
+
+#, fuzzy
+#~ msgid "90th percentile latency over last hour"
+#~ msgstr "Niveaux supérieurs d'utilisation des demandes"
+
+#, fuzzy
+#~ msgid "90th percentile latency over last minute"
+#~ msgstr "Niveaux supérieurs d'utilisation des demandes"
+
+#, fuzzy
+#~ msgid "95th percentile latency over last day"
+#~ msgstr "Niveaux supérieurs d'utilisation des demandes"
+
+#, fuzzy
+#~ msgid "95th percentile latency over last minute"
+#~ msgstr "Niveaux supérieurs d'utilisation des demandes"
+
+#, fuzzy
+#~ msgid "95th percentile over last hour"
+#~ msgstr "95ème percentile"
+
+#, fuzzy
+#~ msgid "99th percentile latency over last day"
+#~ msgstr "Niveaux supérieurs d'utilisation des demandes"
+
+#, fuzzy
+#~ msgid "99th percentile latency over last hour"
+#~ msgstr "Niveaux supérieurs d'utilisation des demandes"
+
+#, fuzzy
+#~ msgid "99th percentile latency over last minute"
+#~ msgstr "Niveaux supérieurs d'utilisation des demandes"
+
+#, fuzzy
+#~ msgid "Always compute the rate (excluding histograms)"
+#~ msgstr "Reclasser l'état complet"
+
+#, fuzzy
+#~ msgid "Average latency over last day"
+#~ msgstr "Latence moyenne pour les demandes de stockage"
+
+#, fuzzy
+#~ msgid "Average latency over last hour"
+#~ msgstr "Latence moyenne pour les demandes de stockage"
+
+#, fuzzy
+#~ msgid "Average latency over last minute"
+#~ msgstr "Latence moyenne pour les demandes de stockage"
+
+#, fuzzy
+#~ msgid "Cardinality reduction aggregation method"
+#~ msgstr "Taux de détection"
+
+#, fuzzy
+#~ msgid "Compute a rate (excluding histograms)"
+#~ msgstr "Reclasser l'état complet"
+
+#, fuzzy
+#~ msgid "Configure for all metrics"
+#~ msgstr "Appliquer les codes d'utilisateur en minuscules."
+
+#, fuzzy
+#~ msgid "Configure for specific metrics"
+#~ msgstr "Sites spécifiques"
+
+#, fuzzy
+#~ msgid "Don't compute a rate"
+#~ msgstr "Taux de messages délivrés"
+
+#, fuzzy
+#~ msgid "Error rate over the last day"
+#~ msgstr "Une erreur s'est produite lors de la dernière mise à jour"
+
+#, fuzzy
+#~ msgid "Error rate over the last hour"
+#~ msgstr "Événements des 4 dernières heures."
+
+#, fuzzy
+#~ msgid "Error rate over the last minute"
+#~ msgstr "Commutation des journaux au cours des 60 dernières minutes"
+
+#, fuzzy
+#~ msgid "Last day error rate"
+#~ msgstr "Taux d'erreur total"
+
+#, fuzzy
+#~ msgid "Last day request rate"
+#~ msgstr "Taux moyen de demandes"
+
+#, fuzzy
+#~ msgid "Last day requests"
+#~ msgstr "Demandes de Livestatus"
+
+#, fuzzy
+#~ msgid "Last day total errors"
+#~ msgstr "Erreur interne"
+
+#, fuzzy
+#~ msgid "Last day total requests"
+#~ msgstr "Demandes d'ACL sur le Web"
+
+#, fuzzy
+#~ msgid "Last hour error rate"
+#~ msgstr "Niveaux des taux d'erreur"
+
+#, fuzzy
+#~ msgid "Last hour latency (avg)"
+#~ msgstr "Dernier changement d'état de l'hôte"
+
+#, fuzzy
+#~ msgid "Last hour latency (p90)"
+#~ msgstr "Autre latence"
+
+#, fuzzy
+#~ msgid "Last hour latency (p95)"
+#~ msgstr "Autre latence"
+
+#, fuzzy
+#~ msgid "Last hour latency (p99)"
+#~ msgstr "Autre latence"
+
+#, fuzzy
+#~ msgid "Last hour request rate"
+#~ msgstr "Les 25 dernières heures"
+
+#, fuzzy
+#~ msgid "Last hour requests"
+#~ msgstr "Les 25 dernières heures"
+
+#, fuzzy
+#~ msgid "Last hour total errors"
+#~ msgstr "Les 25 dernières heures"
+
+#, fuzzy
+#~ msgid "Last hour total requests"
+#~ msgstr "Les 25 dernières heures"
+
+#, fuzzy
+#~ msgid "Last minute error rate"
+#~ msgstr "État d'erreur de l'instance"
+
+#, fuzzy
+#~ msgid "Last minute latency (avg)"
+#~ msgstr "Latence du courrier"
+
+#, fuzzy
+#~ msgid "Last minute latency (p90)"
+#~ msgstr "Latence du courrier"
+
+#, fuzzy
+#~ msgid "Last minute latency (p95)"
+#~ msgstr "Latence du courrier"
+
+#, fuzzy
+#~ msgid "Last minute latency (p99)"
+#~ msgstr "Latence du courrier"
+
+#, fuzzy
+#~ msgid "Last minute request rate"
+#~ msgstr "Taux moyen de demandes"
+
+#, fuzzy
+#~ msgid "Last minute requests"
+#~ msgstr "Demandes d'Instance Spot"
+
+#, fuzzy
+#~ msgid "Last minute total errors"
+#~ msgstr "Erreurs de perte de signal"
+
+#, fuzzy
+#~ msgid "Last minute total requests"
+#~ msgstr "Demandes d'ACL sur le Web"
+
+#, fuzzy
+#~ msgid "Latency (avg)"
+#~ msgstr "Latence"
+
+#, fuzzy
+#~ msgid "Latency (p90)"
+#~ msgstr "Latence"
+
+#, fuzzy
+#~ msgid "Latency (p95)"
+#~ msgstr "Latence"
+
+#, fuzzy
+#~ msgid "Latency (p99)"
+#~ msgstr "Latence"
+
+#~ msgid ""
+#~ "Levels for the number of current connections to a JVM application on the "
+#~ "servlet level"
+#~ msgstr ""
+#~ "Les niveaux pour le nombre de connexions actuelles à une application JVM "
+#~ "au niveau de la servlet"
+
+#, fuzzy
+#~ msgid "Logs refused by the Event console"
+#~ msgstr "Accès à la console d'événements"
+
+#, fuzzy
+#~ msgid "Logs successfully sent to Event console"
+#~ msgstr "Accès à la console d'événements"
+
+#, fuzzy
+#~ msgid "Lower level for request rate over last day"
+#~ msgstr "Niveaux inférieurs pour l'utilisation des demandes"
+
+#, fuzzy
+#~ msgid "Lower level for request rate over last hour"
+#~ msgstr "Niveaux inférieurs pour l'utilisation des demandes"
+
+#, fuzzy
+#~ msgid "Lower level for request rate over last minute"
+#~ msgstr "Niveaux inférieurs pour l'utilisation des demandes"
+
+#, fuzzy
+#~ msgid "Lower level for total requests over last day"
+#~ msgstr "Niveaux inférieurs pour le taux d'erreur total"
+
+#, fuzzy
+#~ msgid "Lower level for total requests over last hour"
+#~ msgstr "Niveaux inférieurs pour le taux d'erreur total"
+
+#, fuzzy
+#~ msgid "Lower level for total requests over last minute"
+#~ msgstr "Niveaux inférieurs pour le taux d'erreur total"
+
+#, fuzzy
+#~ msgid "Metric configuration"
+#~ msgstr "Configuration de l'hôte"
+
+#, fuzzy
+#~ msgid "Metric name (exact match)"
+#~ msgstr "Nom d'hôte (correspondance exacte)"
+
+#, fuzzy
+#~ msgid "Metrics refused by data storage"
+#~ msgstr "La valeur doit être une chaîne de caractères"
+
+#, fuzzy
+#~ msgid "Metrics successfully sent to data storage"
+#~ msgstr "Temps écoulé depuis la dernière construction réussie"
+
+#, fuzzy
+#~ msgid "Never compute a rate"
+#~ msgstr "Taux de messages délivrés"
+
+#, fuzzy
+#~ msgid "OTel Collector memory usage"
+#~ msgstr "Utilisation de la mémoire de Netscaler"
+
+#, fuzzy
+#~ msgid "OpenTelemetry"
+#~ msgstr "Ajouter une configuration d'état"
+
+#, fuzzy
+#~ msgid "OpenTelemetry RED Errors"
+#~ msgstr "Ajouter une configuration d'état"
+
+#, fuzzy
+#~ msgid "OpenTelemetry RED Requests"
+#~ msgstr "Ajouter une configuration d'état"
+
+#, fuzzy
+#~ msgid "OpenTelemetry RED latency"
+#~ msgstr "Ajouter une configuration d'état"
+
+#, fuzzy
+#~ msgid "OpenTelemetry metric name"
+#~ msgstr "Ajouter une configuration d'état"
+
+#, fuzzy
+#~ msgid "Rate computation"
+#~ msgstr "Calcul de la tendance"
+
+#, fuzzy
+#~ msgid "Replica aggregation method"
+#~ msgstr "Nom de l'agrégation"
+
+#, fuzzy
+#~ msgid "The list needs to have at least one element"
+#~ msgstr "Le cluster doit avoir au moins un nœud"
+
+#, fuzzy
+#~ msgid "The metric name cannot be empty"
+#~ msgstr "Clé secrète"
+
+#, fuzzy
+#~ msgid "Total errors (Last day)"
+#~ msgstr "Taux d'erreur total"
+
+#, fuzzy
+#~ msgid "Total errors (Last hour)"
+#~ msgstr "Taux d'erreur total"
+
+#, fuzzy
+#~ msgid "Total errors (Last minute)"
+#~ msgstr "Taux d'erreur total"
+
+#, fuzzy
+#~ msgid "Total errors over the last day"
+#~ msgstr "Taux d'erreur total"
+
+#, fuzzy
+#~ msgid "Total errors over the last hour"
+#~ msgstr "Taux d'erreur total"
+
+#, fuzzy
+#~ msgid "Total errors over the last minute"
+#~ msgstr "Taux d'erreur total"
+
+#, fuzzy
+#~ msgid "Total requests (Last day)"
+#~ msgstr "demande uniquement"
+
+#, fuzzy
+#~ msgid "Total requests (Last hour)"
+#~ msgstr "demande uniquement"
+
+#, fuzzy
+#~ msgid "Total requests (Last minute)"
+#~ msgstr "demande uniquement"
+
+#, fuzzy
+#~ msgid "Upper level for request rate over last day"
+#~ msgstr "Niveaux supérieurs d'utilisation des demandes"
+
+#, fuzzy
+#~ msgid "Upper level for request rate over last hour"
+#~ msgstr "Niveaux supérieurs d'utilisation des demandes"
+
+#, fuzzy
+#~ msgid "Upper level for request rate over last minute"
+#~ msgstr "Niveaux supérieurs d'utilisation des demandes"
+
+#, fuzzy
+#~ msgid "Upper level for total requests over last day"
+#~ msgstr "Niveaux supérieurs de latence totale des demandes"
+
+#, fuzzy
+#~ msgid "Upper level for total requests over last hour"
+#~ msgstr "Niveaux supérieurs de latence totale des demandes"
+
+#, fuzzy
+#~ msgid "Upper level for total requests over last minute"
+#~ msgstr "Niveaux supérieurs de latence totale des demandes"
+
+#, fuzzy
+#~ msgid "average"
+#~ msgstr "Moyenne"
+
+#, fuzzy
+#~ msgid "latest"
+#~ msgstr "tests"
+
+#, fuzzy
+#~ msgid "max"
+#~ msgstr "maximum"
+
+#, fuzzy
+#~ msgid "sum"
+#~ msgstr "Somme"
 
 #, fuzzy
 #~ msgid "Deploy MTR plug-in asynchronously"
@@ -102188,11 +102102,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Telemetry is enabled"
 #~ msgstr "Ajouter une configuration d'état"
-
-#, fuzzy
-#~ msgid "Error retrieving AI service information. Please try again later."
-#~ msgstr ""
-#~ "Aucune ligne ne correspond. Veuillez essayer un autre terme de recherche."
 
 #, fuzzy
 #~ msgid "OpenTelemetry collector configurations"

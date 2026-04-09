@@ -52,6 +52,47 @@ py_library(
     ],
 )
 
+py_library(
+    name = "registries",
+    srcs = [
+        "automation_commands.py",
+        "main_menu.py",
+        "mode/__init__.py",
+        "mode/_base.py",
+        "mode/_helpers.py",
+        "mode/_registry.py",
+        "mode_permissions.py",
+    ],
+    imports = ["../../.."],
+    visibility = [
+        "//cmk:__subpackages__",
+        "//tests:__subpackages__",
+    ],
+    deps = [
+        "//cmk/gui:breadcrumb",
+        "//cmk/gui:config",
+        "//cmk/gui:exceptions",
+        "//cmk/gui:http",
+        "//cmk/gui:i18n",
+        "//cmk/gui:logged_in",
+        "//cmk/gui:main_menu",
+        "//cmk/gui:page_menu",
+        "//cmk/gui:type_defs",
+        "//cmk/gui/htmllib:html",
+        "//cmk/gui/utils:loading_transition",
+        "//cmk/gui/utils:speaklater",
+        "//cmk/gui/utils:transaction_manager",
+        "//cmk/gui/utils:urls",
+        "//cmk/utils",
+        "//packages/cmk-ccc:plugin-registry",
+        "//packages/cmk-ccc:resulttype",
+        "//packages/cmk-ccc:site",
+        "//packages/cmk-ccc:version",
+        "//packages/cmk-licensing",
+        "//packages/cmk-shared-typing:cmk_shared_typing_py",
+    ],
+)
+
 # Temporary: watolib files that still belong to the monolithic //cmk/gui target.
 # Remove this filegroup once watolib is fully extracted.
 filegroup(
@@ -61,9 +102,16 @@ filegroup(
         exclude = [
             "appendstore.py",
             "audit_log.py",
+            "automation_commands.py",
             "changes.py",
             "config_domain_name.py",
             "git.py",
+            "main_menu.py",
+            "mode/__init__.py",
+            "mode/_base.py",
+            "mode/_helpers.py",
+            "mode/_registry.py",
+            "mode_permissions.py",
             "objref.py",
             "paths.py",
             "sidebar_reload.py",

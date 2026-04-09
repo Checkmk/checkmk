@@ -1387,6 +1387,7 @@ py_library(
         "//cmk/gui/utils:user_frontend_settings_cookie",
         "//cmk/gui/valuespec",
         "//cmk/gui/watolib:config_infra",
+        "//cmk/gui/watolib:registries",
         "//cmk/inventory",
         "//cmk/piggyback:backend",
         "//cmk/piggyback:hub",

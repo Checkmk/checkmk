@@ -502,6 +502,7 @@ py_wheel(
         "//cmk/gui/utils:user_frontend_settings_cookie",
         "//cmk/gui/valuespec",
         "//cmk/gui/watolib:config_infra",
+        "//cmk/gui/watolib:registries",
         "//cmk/inventory",
         "//cmk/inventory:cmk_inventory_main",
         "//cmk/legacy_checks",

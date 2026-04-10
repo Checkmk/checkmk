@@ -67,7 +67,6 @@ from ._graph_templates import (
 )
 from ._html_render import GraphDestinations
 from ._metric_backend_registry import metric_backend_registry
-from ._rrd import fetch_graph_row
 from ._unit import get_temperature_unit
 
 tracer = trace.get_tracer()
@@ -113,12 +112,17 @@ def _answer_graph_image_request(
         site_id = SiteId(raw_site) if (raw_site := request.var("site")) else None
         host_name = request.get_validated_type_input_mandatory(HostName, "host")
         service_description = request.get_str_input_mandatory("service", "_HOST_")
-        # FIXME: We should really enforce site here. But it seems that the notification context
-        # has no idea about the site of the host. This could be optimized later.
-        # if not site:
-        #    raise MKGeneralException("Missing mandatory \"site\" parameter")
+
+        graph_specification = get_template_graph_specification(
+            site_id=None,
+            host_name=host_name,
+            service_name=service_description,
+            graph_index=None,  # all graphs
+            destination=GraphDestinations.notification,
+        )
+
         try:
-            row = fetch_graph_row(site_id, host_name, service_description)
+            rows = graph_specification.fetch_rows(env)
         except livestatus.MKLivestatusNotFoundError:
             logger.debug(
                 "Cannot fetch graph data: site: %s, host %s, service %s",
@@ -129,8 +133,6 @@ def _answer_graph_image_request(
             if env.debug:
                 raise
             return
-
-        site = row.site
 
         # Always use 25h graph in notifications
         end_time = int(time.time())
@@ -147,16 +149,7 @@ def _answer_graph_image_request(
         graphs = []
         for rwo, result in itertools.islice(
             iter_graph_artworks(
-                get_template_graph_specification(
-                    site_id=SiteId(site) if site else None,
-                    host_name=host_name,
-                    service_name=service_description,
-                    graph_index=None,  # all graphs
-                    destination=GraphDestinations.notification,
-                ),
-                time_range,
-                display_config.size,
-                env,
+                graph_specification.recipes(env, rows), time_range, display_config.size, env
             ),
             num_graphs,
         ):

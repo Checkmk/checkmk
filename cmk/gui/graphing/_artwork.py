@@ -47,7 +47,6 @@ from ._graph_specification import (
     GraphMetricLimit,
     GraphRecipe,
     GraphRecipeWithOverrides,
-    GraphSpecification,
     GraphTimeRange,
     HorizontalRule,
     MinimalVerticalRange,
@@ -301,21 +300,15 @@ class GraphArtworkOrErrors:
 
 
 def iter_graph_artworks(
-    graph_specification: GraphSpecification,
+    recipes: Sequence[GraphRecipeWithOverrides],
     time_range: GraphTimeRange,
     size: tuple[float, float],
     env: GraphEnvironment,
     *,
     pin_time: int | None = None,
 ) -> Iterator[tuple[GraphRecipeWithOverrides, GraphArtworkOrErrors]]:
-    """Iterate over artworks for all recipes of a graph specification.
-
-    Combines spec.recipes() + compute_graph_artwork() into a single iterator,
-    applying per-recipe time_range overrides automatically.
-    """
-    for recipe_with_overrides in graph_specification.recipes(
-        env, graph_specification.fetch_rows(env)
-    ):
+    """Iterate over artworks for all recipes of a graph specification."""
+    for recipe_with_overrides in recipes:
         yield (
             recipe_with_overrides,
             compute_graph_artwork(

@@ -1,5 +1,6 @@
-load("@rules_pkg//pkg:mappings.bzl", "REMOVE_BASE_DIRECTORY", "filter_directory", "pkg_attributes", "pkg_files")
+load("@rules_pkg//pkg:mappings.bzl", "REMOVE_BASE_DIRECTORY", "filter_directory", "pkg_attributes", "pkg_filegroup", "pkg_files", "pkg_mklink")
 load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
+load("//bazel/rules:patchelf.bzl", "set_runpath")
 
 filegroup(
     name = "gen_dir",
@@ -29,42 +30,90 @@ filegroup(
     tags = ["manual"],
 )
 
-pkg_files(
-    name = "bin",
+set_runpath(
+    name = "bin_runpath",
     srcs = [
         ":gsf",
         ":gsf-office-thumbnailer",
         ":gsf-vba-dump",
     ],
+    rpaths = ["${ORIGIN}/../lib"],
+    tags = ["manual"],
+)
+
+pkg_files(
+    name = "bin",
+    srcs = [":bin_runpath"],
     attributes = pkg_attributes(
         mode = "0755",
     ),
-    renames = {
-        ":gsf": "bin/gsf",
-        ":gsf-office-thumbnailer": "bin/gsf-office-thumbnailer",
-        ":gsf-vba-dump": "bin/gsf-vba-dump",
-    },
+    prefix = "bin",
+    tags = ["manual"],
+)
+
+filegroup(
+    name = "libgsf-1.so.114.0.44",
+    srcs = ["@libgsf"],
+    output_group = "libgsf-1.so.114.0.44",
+    tags = ["manual"],
+)
+
+set_runpath(
+    name = "lib_runpath",
+    srcs = [":libgsf-1.so.114.0.44"],
+    tags = ["manual"],
+)
+
+pkg_files(
+    name = "libgsf_so_versioned",
+    srcs = [":lib_runpath"],
+    tags = ["manual"],
+)
+
+pkg_mklink(
+    name = "libgsf_so_major_symlink",
+    link_name = "libgsf-1.so.114",
+    tags = ["manual"],
+    target = "libgsf-1.so.114.0.44",
+)
+
+pkg_mklink(
+    name = "libgsf_so_symlink",
+    link_name = "libgsf-1.so",
+    tags = ["manual"],
+    target = "libgsf-1.so.114",
+)
+
+pkg_filegroup(
+    name = "libs",
+    srcs = [
+        ":libgsf_so_major_symlink",
+        ":libgsf_so_symlink",
+        ":libgsf_so_versioned",
+    ],
+    prefix = "lib",
     tags = ["manual"],
 )
 
 filter_directory(
-    name = "without_bin_filter",
+    name = "rest_filter",
     src = ":gen_dir",
     excludes = [
         "bin/gsf",
         "bin/gsf-office-thumbnailer",
         "bin/gsf-vba-dump",
+        "lib/libgsf-1.so",
+        "lib/libgsf-1.so.114",
+        "lib/libgsf-1.so.114.0.44",
     ],
     tags = ["manual"],
 )
 
 pkg_files(
-    name = "without_bin",
-    srcs = [
-        ":without_bin_filter",
-    ],
+    name = "rest",
+    srcs = [":rest_filter"],
     renames = {
-        ":without_bin_filter": REMOVE_BASE_DIRECTORY,
+        ":rest_filter": REMOVE_BASE_DIRECTORY,
     },
     tags = ["manual"],
 )
@@ -73,7 +122,8 @@ pkg_tar(
     name = "libgsf",
     srcs = [
         ":bin",
-        ":without_bin",
+        ":libs",
+        ":rest",
     ],
     stamp = 1,
     tags = ["manual"],

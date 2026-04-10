@@ -49,7 +49,7 @@ from ._graph_specification import (
     MinimalVerticalRange,
 )
 from ._graphs_order import GRAPHS_ORDER
-from ._rrd import get_graph_data_from_livestatus, GraphRow
+from ._rrd import fetch_graph_row, GraphRow
 from ._translated_metrics import compute_translated_metrics, TranslatedMetric
 from ._unit import ConvertibleUnitSpecification, user_specific_unit
 
@@ -310,8 +310,8 @@ class TemplateGraphSpecification(GraphSpecification, frozen=True):
     def graph_type_name() -> Literal["template"]:
         return "template"
 
-    def _get_graph_data_from_livestatus(self) -> GraphRow:
-        return get_graph_data_from_livestatus(
+    def _fetch_graph_row(self) -> GraphRow:
+        return fetch_graph_row(
             self.site,
             self.host_name,
             self.service_description,
@@ -378,7 +378,7 @@ class TemplateGraphSpecification(GraphSpecification, frozen=True):
         env: GraphEnvironment,
         consolidation_function: GraphConsolidationFunction = "max",
     ) -> Sequence[GraphRecipeWithOverrides]:
-        row = self._get_graph_data_from_livestatus()
+        row = self._fetch_graph_row()
         if not (
             translated_metrics := compute_translated_metrics(
                 row.performance_data,

@@ -566,7 +566,7 @@ _HEAP_MEM_GRAPH = {
 
 
 class _FakeTemplateGraphSpecification(TemplateGraphSpecification):
-    def _get_graph_data_from_livestatus(self) -> GraphRow:
+    def _fetch_graph_row(self) -> GraphRow:
         return GraphRow(
             site=SiteId("site_id"),
             host_name=HostName("host_name"),
@@ -1993,7 +1993,7 @@ def test_conflicting_metrics(
 
 
 class _FakeTemplateGraphSpecificationFS(TemplateGraphSpecification):
-    def _get_graph_data_from_livestatus(self) -> GraphRow:
+    def _fetch_graph_row(self) -> GraphRow:
         return GraphRow(
             site=SiteId("site_id"),
             host_name=HostName("host_name"),

@@ -62,8 +62,8 @@ class GraphRow:
     check_command: str
 
 
-@tracer.instrument("graphing.get_graph_data_from_livestatus")
-def get_graph_data_from_livestatus(
+@tracer.instrument("graphing.fetch_graph_row")
+def fetch_graph_row(
     site_id: list[SiteId] | SiteId | None,
     host_name: HostName,
     service_description: ServiceName,

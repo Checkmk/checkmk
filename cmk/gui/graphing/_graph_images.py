@@ -67,7 +67,7 @@ from ._graph_templates import (
 )
 from ._html_render import GraphDestinations
 from ._metric_backend_registry import metric_backend_registry
-from ._rrd import get_graph_data_from_livestatus
+from ._rrd import fetch_graph_row
 from ._unit import get_temperature_unit
 
 tracer = trace.get_tracer()
@@ -118,7 +118,7 @@ def _answer_graph_image_request(
         # if not site:
         #    raise MKGeneralException("Missing mandatory \"site\" parameter")
         try:
-            row = get_graph_data_from_livestatus(site_id, host_name, service_description)
+            row = fetch_graph_row(site_id, host_name, service_description)
         except livestatus.MKLivestatusNotFoundError:
             logger.debug(
                 "Cannot fetch graph data: site: %s, host %s, service %s",

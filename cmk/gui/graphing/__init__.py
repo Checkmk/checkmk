@@ -73,7 +73,7 @@ from ._perfometer import get_first_matching_perfometer
 from ._rrd import (
     _reverse_translate_into_all_potentially_relevant_metrics_cached,
     all_rrd_columns_potentially_relevant_for_metric,
-    get_graph_data_from_livestatus,
+    fetch_graph_row,
     GraphRow,
     translate_and_merge_rrd_columns,
 )
@@ -152,7 +152,7 @@ __all__ = [
     "iter_graph_artworks",
     "compute_pdf_graph_time_range",
     "get_first_matching_perfometer",
-    "get_graph_data_from_livestatus",
+    "fetch_graph_row",
     "get_graph_plugin_and_single_metric_choices",
     "get_graph_plugin_choices",
     "get_metric_spec",

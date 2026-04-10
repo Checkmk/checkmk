@@ -81,7 +81,6 @@ from ._translated_metrics import (
     lookup_metric_translations_for_check_command,
     parse_perf_data,
     translate_metrics,
-    translated_metrics_from_row,
     TranslatedMetric,
 )
 from ._unit import (
@@ -181,7 +180,6 @@ __all__ = [
     "render_plain_graph_title",
     "translate_and_merge_rrd_columns",
     "translate_metrics",
-    "translated_metrics_from_row",
     "user_specific_unit",
     "vs_graph_render_option_elements",
     "vs_graph_render_options",

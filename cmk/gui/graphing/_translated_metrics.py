@@ -14,7 +14,7 @@ from typing import Literal, TypedDict
 import cmk.ccc.regex
 from cmk import trace
 from cmk.gui.log import logger
-from cmk.gui.type_defs import Perfdata, PerfDataTuple, Row
+from cmk.gui.type_defs import Perfdata, PerfDataTuple
 from cmk.gui.utils.temperate_unit import TemperatureUnit
 from cmk.utils.metrics import MetricName
 from cmk.utils.misc import pnp_cleanup
@@ -326,29 +326,5 @@ def available_metrics_translated(
         check_command,
         registered_metrics,
         explicit_color,
-        temperature_unit=temperature_unit,
-    )
-
-
-@tracer.instrument("graphing.translated_metrics_from_row")
-def translated_metrics_from_row(
-    row: Row,
-    registered_metrics: Mapping[str, RegisteredMetric],
-    explicit_color: str = "",
-    *,
-    debug: bool,
-    temperature_unit: TemperatureUnit,
-) -> Mapping[str, TranslatedMetric]:
-    what = "service" if "service_check_command" in row else "host"
-    perf_data_string = row[what + "_perf_data"]
-    rrd_metrics = row[what + "_metrics"]
-    check_command = row[what + "_check_command"]
-    return available_metrics_translated(
-        perf_data_string,
-        rrd_metrics,
-        check_command,
-        registered_metrics,
-        explicit_color,
-        debug=debug,
         temperature_unit=temperature_unit,
     )

@@ -116,12 +116,12 @@ function getInitStep() {
     {{ closeButtonTitle }}
   </CmkButton>
   <CmkButton
-    :title="_t('View all agents')"
+    :title="hostExists ? _t('View host agents') : _t('View all agents')"
     class="all_agents"
     @click="() => openAllAgentsPage(allAgentsUrl)"
   >
     <CmkIcon name="frameurl" />
-    {{ _t('View all agents') }}
+    {{ hostExists ? _t('View host agents') : _t('View all agents') }}
   </CmkButton>
   <CmkDialog
     :message="dialogMsg"

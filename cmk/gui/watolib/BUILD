@@ -151,6 +151,22 @@ py_library(
     ],
 )
 
+py_library(
+    name = "tag_config_file",
+    srcs = ["tag_config_file.py"],
+    imports = ["../../.."],
+    visibility = [
+        "//cmk:__subpackages__",
+        "//tests:__subpackages__",
+    ],
+    deps = [
+        ":config_infra",
+        "//cmk/gui:hooks",
+        "//cmk/utils",
+        "//packages/cmk-ccc:store",
+    ],
+)
+
 # Temporary: watolib files that still belong to the monolithic //cmk/gui target.
 # Remove this filegroup once watolib is fully extracted.
 filegroup(
@@ -178,6 +194,7 @@ filegroup(
             "sidebar_reload.py",
             "simple_config_file.py",
             "site_changes.py",
+            "tag_config_file.py",
             "utils.py",
         ],
     ),

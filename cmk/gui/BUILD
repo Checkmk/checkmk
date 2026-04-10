@@ -1458,6 +1458,7 @@ py_library(
         "//cmk/gui/watolib:password_store",
         "//cmk/gui/watolib:passwords",
         "//cmk/gui/watolib:registries",
+        "//cmk/gui/watolib:tag_config_file",
         "//cmk/gui/wsgi:utils",
         "//cmk/inventory",
         "//cmk/piggyback:backend",

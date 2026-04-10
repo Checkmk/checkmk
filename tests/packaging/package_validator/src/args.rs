@@ -20,10 +20,12 @@ pub(crate) struct Args {
     #[arg(
         long,
         long_help = "Path to a text file of known system dependencies.\n\
+                Can be specified multiple times to merge dependencies from several files\n\
+                (e.g. one shared base file and one distro-specific file).\n\
                 Each line contains an exact dependency name.\n\
                 Empty lines and lines starting with # are ignored."
     )]
-    pub system_dependencies: Option<PathBuf>,
+    pub system_dependencies: Vec<PathBuf>,
 
     #[arg(
         long,

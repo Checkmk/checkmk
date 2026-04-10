@@ -28,13 +28,14 @@ def discover_podman_container_memory(
 def check_podman_container_memory(
     params: Mapping[str, tuple[float, float] | int], section: SectionPodmanContainerStats
 ) -> CheckResult:
-    yield from check_mem_used(
-        params=params,
-        section=SectionMemUsed(
-            MemFree=section.mem_total - section.mem_used,
-            MemTotal=section.mem_total,
-        ),
-    )
+    if section.mem_total > 0:
+        yield from check_mem_used(
+            params=params,
+            section=SectionMemUsed(
+                MemFree=section.mem_total - section.mem_used,
+                MemTotal=section.mem_total,
+            ),
+        )
 
 
 check_plugin_podman_container_memory = CheckPlugin(

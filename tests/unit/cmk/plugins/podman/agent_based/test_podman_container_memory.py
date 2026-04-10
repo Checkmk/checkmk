@@ -4,9 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.agent_based.v2 import Metric, Result, Service, State
-from cmk.plugins.podman.agent_based.lib import (
-    SectionPodmanContainerStats,
-)
+from cmk.plugins.podman.agent_based.lib import SectionPodmanContainerStats
 from cmk.plugins.podman.agent_based.podman_container_memory import (
     check_podman_container_memory,
     discover_podman_container_memory,
@@ -47,3 +45,17 @@ def test_check_podman_container_memory() -> None:
             boundaries=(0.0, 16483930112.0),
         ),
     ]
+
+
+def test_check_podman_container_memory_no_memory() -> None:
+    assert (
+        list(
+            check_podman_container_memory(
+                params={
+                    "levels": (150.0, 200.0),
+                },
+                section=SECTION_CONTAINER_STATS_0_MEMORY,
+            )
+        )
+        == []
+    )

@@ -1,0 +1,16 @@
+title: APC NetShelter PDU: Outlet Status
+agents: snmp
+catalog: hw/power/apc
+license: GPLv2
+distribution: check_mk
+description:
+ This check monitors the outlet status of APC NetShelter Advanced Rack PDU
+ units (APDU series, OID subtree .318.1.1.32).
+
+ It reports {OK} when the outlet is on and {WARN} when it is off.
+
+item:
+ The outlet index
+
+discovery:
+ One service is created for each outlet that is in state "on" at discovery time

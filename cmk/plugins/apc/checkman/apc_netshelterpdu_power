@@ -1,0 +1,26 @@
+title: APC NetShelter PDU: Power and Current
+agents: snmp
+catalog: hw/power/apc
+license: GPLv2
+distribution: check_mk
+description:
+ This check monitors the electrical current, power consumption, and total load
+ of APC NetShelter Advanced Rack PDU units (APDU series, OID subtree .318.1.1.32).
+
+ At the device level it reports total power consumption and load as a percentage
+ of rated capacity (default thresholds: {WARN} at 80%, {CRIT} at 90%).
+
+ At the phase level it reports current draw and power. The device provides
+ current thresholds which are applied automatically. If a threshold is
+ exceeded the service goes {WARN} or {CRIT}.
+
+ At the bank level it reports current draw.
+
+ Thresholds can be overridden using the "Parameters for input phases of
+ UPSs and PDUs" ruleset.
+
+item:
+ The device name, phase number, or bank name
+
+discovery:
+ One service is created for the device, one for each phase, and one for each bank

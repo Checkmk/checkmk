@@ -889,6 +889,24 @@ pkg_deb(
     version_file = "//omd/distros:distro_version_file",
 )
 
+sh_test(
+    name = "validate_deb",
+    srcs = ["validate_package_test.sh"],
+    args = [
+        "$(location :deb)",
+        "$(location //tests/packaging/package_validator:package_validator)",
+        "$(location //tests/packaging/package_validator:system_dependencies)",
+        "$(location //tests/packaging/package_validator:ignore_files)",
+    ],
+    data = [
+        ":deb",
+        "//tests/packaging/package_validator",
+        "//tests/packaging/package_validator:ignore_files",
+        "//tests/packaging/package_validator:system_dependencies",
+    ],
+    tags = ["manual"],
+)
+
 write_omd_spec(
     name = "omd_spec",
     apache_conf_dir = select({
@@ -937,7 +955,7 @@ pkg_rpm_from_tar(
     edition = "@cmk//edition",
     input_tarball = "complete_install",
     omd_spec = ":omd_spec",
-    rpm = "cmk_rpm",
+    rpm = "cmk.rpm",
     tags = ["manual"],
     target_compatible_with = select({
         "@cmk//distro:almalinux": [],
@@ -945,24 +963,6 @@ pkg_rpm_from_tar(
         "//conditions:default": ["@platforms//:incompatible"],
     }),
     version = "@cmk//version",
-)
-
-sh_test(
-    name = "validate_deb",
-    srcs = ["validate_package_test.sh"],
-    args = [
-        "$(location :deb)",
-        "$(location //tests/packaging/package_validator:package_validator)",
-        "$(location //tests/packaging/package_validator:system_dependencies)",
-        "$(location //tests/packaging/package_validator:ignore_files)",
-    ],
-    data = [
-        ":deb",
-        "//tests/packaging/package_validator",
-        "//tests/packaging/package_validator:ignore_files",
-        "//tests/packaging/package_validator:system_dependencies",
-    ],
-    tags = ["manual"],
 )
 
 sh_test(

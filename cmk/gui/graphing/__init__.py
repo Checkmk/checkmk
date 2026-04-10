@@ -74,6 +74,7 @@ from ._rrd import (
     _reverse_translate_into_all_potentially_relevant_metrics_cached,
     all_rrd_columns_potentially_relevant_for_metric,
     get_graph_data_from_livestatus,
+    GraphRow,
     translate_and_merge_rrd_columns,
 )
 from ._translated_metrics import (
@@ -124,6 +125,7 @@ __all__ = [
     "GraphPluginChoice",
     "GraphRecipe",
     "GraphRecipeWithOverrides",
+    "GraphRow",
     "GraphEnvironment",
     "GraphDisplayConfigHTML",
     "GraphDisplayConfigImage",

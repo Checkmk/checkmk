@@ -25,6 +25,7 @@ from cmk.gui.graphing._graph_templates import (
     _compute_graph_recipes,
     TemplateGraphSpecification,
 )
+from cmk.gui.graphing._rrd import GraphRow
 from cmk.gui.graphing._translated_metrics import (
     translate_metrics,
 )
@@ -33,7 +34,7 @@ from cmk.gui.graphing._unit import (
     DecimalNotation,
     IECNotation,
 )
-from cmk.gui.type_defs import Perfdata, PerfDataTuple, Row
+from cmk.gui.type_defs import Perfdata, PerfDataTuple
 from cmk.gui.unit_formatter import AutoPrecision
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.temperate_unit import TemperatureUnit
@@ -565,15 +566,15 @@ _HEAP_MEM_GRAPH = {
 
 
 class _FakeTemplateGraphSpecification(TemplateGraphSpecification):
-    def _get_graph_data_from_livestatus(self) -> Row:
-        return {
-            "site": "site_id",
-            "service_perf_data": "metric1=163651.992188;;;; metric2=313848.039062;;;",
-            "service_metrics": ["metric1", "metric2"],
-            "service_check_command": "check_mk-foo",
-            "host_name": "host_name",
-            "service_description": "service_name",
-        }
+    def _get_graph_data_from_livestatus(self) -> GraphRow:
+        return GraphRow(
+            site=SiteId("site_id"),
+            host_name=HostName("host_name"),
+            service_name=ServiceName("service_name"),
+            performance_data="metric1=163651.992188;;;; metric2=313848.039062;;;",
+            metrics=["metric1", "metric2"],
+            check_command="check_mk-foo",
+        )
 
 
 @pytest.mark.parametrize(
@@ -1992,15 +1993,15 @@ def test_conflicting_metrics(
 
 
 class _FakeTemplateGraphSpecificationFS(TemplateGraphSpecification):
-    def _get_graph_data_from_livestatus(self) -> Row:
-        return {
-            "site": "site_id",
-            "service_perf_data": "fs_used=163651.992188;;;; fs_free=313848.039062;;; fs_size=477500.03125;;;; growth=-1280.489081;;;;",
-            "service_metrics": ["fs_used", "fs_free", "fs_size", "growth"],
-            "service_check_command": "check_mk-df",
-            "host_name": "host_name",
-            "service_description": "service_name",
-        }
+    def _get_graph_data_from_livestatus(self) -> GraphRow:
+        return GraphRow(
+            site=SiteId("site_id"),
+            host_name=HostName("host_name"),
+            service_name=ServiceName("service_name"),
+            performance_data="fs_used=163651.992188;;;; fs_free=313848.039062;;; fs_size=477500.03125;;;; growth=-1280.489081;;;;",
+            metrics=["fs_used", "fs_free", "fs_size", "growth"],
+            check_command="check_mk-df",
+        )
 
 
 def test_template_recipes_fs() -> None:

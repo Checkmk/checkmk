@@ -130,7 +130,7 @@ def _answer_graph_image_request(
                 raise
             return
 
-        site = row["site"]
+        site = row.site
 
         # Always use 25h graph in notifications
         end_time = int(time.time())

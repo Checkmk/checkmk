@@ -27,7 +27,7 @@ from cmk.ccc.site import SiteId
 from cmk.ccc.version import parse_check_mk_version
 from cmk.gui import sites
 from cmk.gui.i18n import _
-from cmk.gui.type_defs import ColumnName, Row
+from cmk.gui.type_defs import ColumnName
 from cmk.gui.utils.temperate_unit import TemperatureUnit
 from cmk.utils.metrics import MetricName
 from cmk.utils.servicename import ServiceName
@@ -52,25 +52,39 @@ from ._unit import user_specific_unit
 tracer = trace.get_tracer()
 
 
+@dataclass(frozen=True)
+class GraphRow:
+    site: SiteId
+    host_name: HostName
+    service_name: ServiceName  # "_HOST_" for host checks
+    performance_data: str
+    metrics: list[MetricName]
+    check_command: str
+
+
 @tracer.instrument("graphing.get_graph_data_from_livestatus")
-def get_graph_data_from_livestatus(  # type: ignore[misc]
+def get_graph_data_from_livestatus(
     site_id: list[SiteId] | SiteId | None,
     host_name: HostName,
     service_description: ServiceName,
-) -> Row:
+) -> GraphRow:
     columns = ["perf_data", "metrics", "check_command"]
     query = livestatus_lql([host_name], columns, service_description)
     what = "host" if service_description == "_HOST_" else "service"
-    labels = ["site"] + [f"{what}_{col}" for col in columns]
+    labels = [f"{what}_{col}" for col in columns]
 
     with sites.only_sites(site_id), sites.prepend_site():
-        info = dict(zip(labels, sites.live().query_row(query)))
+        site, *values = sites.live().query_row(query)
 
-    info["host_name"] = host_name
-    if what == "service":
-        info["service_description"] = service_description
-
-    return info
+    raw = dict(zip(labels, values))
+    return GraphRow(
+        site=SiteId(site),
+        host_name=host_name,
+        service_name=service_description,
+        performance_data=raw[f"{what}_perf_data"],
+        metrics=raw[f"{what}_metrics"],
+        check_command=raw[f"{what}_check_command"],
+    )
 
 
 @dataclass(frozen=True, kw_only=True)

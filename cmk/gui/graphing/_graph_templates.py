@@ -20,7 +20,6 @@ from cmk.graphing import v1 as graphing_api
 from cmk.graphing.v1 import graphs as graphs_api
 from cmk.graphing.v1 import metrics as metrics_api
 from cmk.gui.i18n import _, translate_to_current_language
-from cmk.gui.type_defs import Row
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.temperate_unit import TemperatureUnit
 from cmk.utils.servicename import ServiceName
@@ -50,7 +49,7 @@ from ._graph_specification import (
     MinimalVerticalRange,
 )
 from ._graphs_order import GRAPHS_ORDER
-from ._rrd import get_graph_data_from_livestatus
+from ._rrd import get_graph_data_from_livestatus, GraphRow
 from ._translated_metrics import compute_translated_metrics, TranslatedMetric
 from ._unit import ConvertibleUnitSpecification, user_specific_unit
 
@@ -311,7 +310,7 @@ class TemplateGraphSpecification(GraphSpecification, frozen=True):
     def graph_type_name() -> Literal["template"]:
         return "template"
 
-    def _get_graph_data_from_livestatus(self) -> Row:
+    def _get_graph_data_from_livestatus(self) -> GraphRow:
         return get_graph_data_from_livestatus(
             self.site,
             self.host_name,
@@ -380,12 +379,11 @@ class TemplateGraphSpecification(GraphSpecification, frozen=True):
         consolidation_function: GraphConsolidationFunction = "max",
     ) -> Sequence[GraphRecipeWithOverrides]:
         row = self._get_graph_data_from_livestatus()
-        what = "service" if "service_check_command" in row else "host"
         if not (
             translated_metrics := compute_translated_metrics(
-                row[what + "_perf_data"],
-                row[what + "_metrics"],
-                row[what + "_check_command"],
+                row.performance_data,
+                row.metrics,
+                row.check_command,
                 env.registered_metrics,
                 debug=env.debug,
                 temperature_unit=env.temperature_unit,
@@ -393,9 +391,9 @@ class TemplateGraphSpecification(GraphSpecification, frozen=True):
         ):
             return []
 
-        site_id = row["site"]
-        host_name = row["host_name"]
-        service_name = row.get("service_description", "_HOST_")
+        site_id = row.site
+        host_name = row.host_name
+        service_name = row.service_name
         # Performance graph dashlets already use graph_id, but for example in reports, we still use
         # graph_index. Therefore, this function needs to support both. We should switch to graph_id
         # everywhere (CMK-7308) and remove the support for graph_index. However, note that we cannot

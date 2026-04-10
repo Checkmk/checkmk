@@ -27,7 +27,7 @@ from cmk.ccc.site import SiteId
 from cmk.ccc.version import parse_check_mk_version
 from cmk.gui import sites
 from cmk.gui.i18n import _
-from cmk.gui.type_defs import ColumnName
+from cmk.gui.type_defs import ColumnName, Perfdata
 from cmk.gui.utils.temperate_unit import TemperatureUnit
 from cmk.utils.metrics import MetricName
 from cmk.utils.servicename import ServiceName
@@ -46,7 +46,7 @@ from ._legacy import (
 )
 from ._metrics import get_metric_spec
 from ._time_series import TimeSeries
-from ._translated_metrics import find_matching_translation, TranslationSpec
+from ._translated_metrics import find_matching_translation, parse_perf_data, TranslationSpec
 from ._unit import user_specific_unit
 
 tracer = trace.get_tracer()
@@ -57,7 +57,7 @@ class GraphRow:
     site: SiteId
     host_name: HostName
     service_name: ServiceName  # "_HOST_" for host checks
-    performance_data: str
+    performance_data: Perfdata
     metrics: list[MetricName]
     check_command: str
 
@@ -77,13 +77,16 @@ def fetch_graph_row(
         site, *values = sites.live().query_row(query)
 
     raw = dict(zip(labels, values))
+    perf_data, check_command = parse_perf_data(
+        raw[f"{what}_perf_data"], raw[f"{what}_check_command"], debug=False
+    )
     return GraphRow(
         site=SiteId(site),
         host_name=host_name,
         service_name=service_description,
-        performance_data=raw[f"{what}_perf_data"],
+        performance_data=perf_data,
         metrics=raw[f"{what}_metrics"],
-        check_command=raw[f"{what}_check_command"],
+        check_command=check_command,
     )
 
 

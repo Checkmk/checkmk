@@ -291,7 +291,7 @@ def translate_metrics(
 
 @tracer.instrument("graphing.compute_translated_metrics")
 def compute_translated_metrics(
-    perf_data_string: str,
+    perf_data: Perfdata,
     rrd_metrics: list[MetricName],
     check_command: str,
     registered_metrics: Mapping[str, RegisteredMetric],
@@ -304,7 +304,6 @@ def compute_translated_metrics(
     if not rrd_metrics:
         return {}
 
-    perf_data, check_command = parse_perf_data(perf_data_string, check_command, debug=debug)
     rrd_perf_data, check_command = parse_perf_data(
         " ".join(
             f'"{m}"=1' if " " in m else f"{m}=1"
@@ -318,12 +317,13 @@ def compute_translated_metrics(
         check_command,
         debug=debug,
     )
-    current_variables = [p.metric_name for p in perf_data]
+    current_variables = {p.metric_name for p in perf_data}
+    all_perf_data = list(perf_data)
     for p in rrd_perf_data:
         if p.metric_name not in current_variables:
-            perf_data.append(p)
+            all_perf_data.append(p)
     return translate_metrics(
-        perf_data,
+        all_perf_data,
         check_command,
         registered_metrics,
         explicit_color,

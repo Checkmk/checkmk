@@ -37,6 +37,7 @@ from cmk.gui.graphing import (
     GraphSpecification,
     metrics_from_api,
     MKCombinedGraphLimitExceededError,
+    parse_perf_data,
     RegisteredMetric,
     TemplateGraphSpecification,
 )
@@ -382,6 +383,9 @@ def _graph_and_single_metric_templates_choices_for_context(
         context,
         ["service_check_command", "service_perf_data", "service_metrics"],
     ):
+        perf_data, check_command = parse_perf_data(
+            row["service_perf_data"], row["service_check_command"], debug=debug
+        )
         graph_template_choices_for_row, single_metric_template_choices_for_row = (
             get_graph_plugin_and_single_metric_choices(
                 registered_metrics,
@@ -390,9 +394,9 @@ def _graph_and_single_metric_templates_choices_for_context(
                 HostName(context["host"]["host"]),
                 ServiceName(context["service"]["service"]),
                 compute_translated_metrics(
-                    row["service_perf_data"],
+                    perf_data,
                     row["service_metrics"],
-                    row["service_check_command"],
+                    check_command,
                     registered_metrics,
                     debug=debug,
                     temperature_unit=temperature_unit,

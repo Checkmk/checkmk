@@ -733,6 +733,9 @@ rule_spec_oracle_bakelet = AgentConfig(
     parameter_form=_agent_config_mk_oracle,
     help_text=Help(
         "This will deploy the agent plug-in <tt>mk_oracle</tt> on your target system.<br>"
-        "ARM architecture is not supported."
+        "ARM architecture is not supported.<br>"
+        "<b>Note:</b> This plugin cannot be used together with "
+        "'Oracle databases (Linux, Solaris, AIX, Windows)'. "
+        "Please configure only one of the two."
     ),
 )

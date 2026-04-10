@@ -7,7 +7,7 @@ from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from typing import Any, Self
 
-from cmk.agent_based.v2 import check_levels, CheckResult, render, Result, State
+from cmk.agent_based.v2 import check_levels, CheckResult, LevelsT, render, Result, State
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -84,10 +84,44 @@ class ElPhase:
         raise TypeError(value)
 
 
+def _to_levels(levels: object) -> LevelsT[float] | None:
+    """Normalize levels to the format expected by check_levels.
+
+    Accepts both old-style plain (warn, crit) tuples and new-style rulesets v1
+    ("fixed", (warn, crit)) tuples. Returns the canonical ("fixed", (w, c))
+    format or None.
+    """
+    if levels is None:
+        return None
+    if isinstance(levels, tuple) and len(levels) == 2:
+        kind, values = levels
+        if kind == "fixed" and isinstance(values, tuple) and len(values) == 2:
+            return ("fixed", (float(values[0]), float(values[1])))
+        if kind == "no_levels":
+            return ("no_levels", None)
+        if isinstance(kind, (int, float)) and isinstance(values, (int, float)):
+            return ("fixed", (float(kind), float(values)))
+    return None
+
+
+def _scale_levels(levels: LevelsT[float] | None, factor: float) -> LevelsT[float] | None:
+    """Scale fixed level values by a factor (e.g. mA to A conversion)."""
+    match levels:
+        case ("fixed", (float(warn), float(crit))):
+            return ("fixed", (warn * factor, crit * factor))
+        case _:
+            return levels
+
+
 def check_elphase(
     params: Mapping[str, Any],
     elphase: ElPhase,
 ) -> CheckResult:
+    """Check electrical phase readings against thresholds.
+
+    Accepts params in both old-style plain (warn, crit) tuples and new-style
+    rulesets v1 ("fixed", (warn, crit)) format.
+    """
     if elphase.name:
         yield Result(
             state=State.OK,
@@ -123,7 +157,7 @@ def check_elphase(
             elphase.voltage,
             label="Voltage",
             metric_name="voltage",
-            lower_levels=params.get("voltage"),
+            lower_levels=_to_levels(params.get("voltage")),
             upper_levels=None,
             render_func=lambda x: f"{x:.1f} V",
         )
@@ -134,7 +168,7 @@ def check_elphase(
             label="Current",
             metric_name="current",
             lower_levels=None,
-            upper_levels=params.get("current"),
+            upper_levels=_to_levels(params.get("current")),
             render_func=lambda x: f"{x:.1f} A",
         )
 
@@ -144,7 +178,7 @@ def check_elphase(
             label="Load",
             metric_name="output_load",
             lower_levels=None,
-            upper_levels=params.get("output_load"),
+            upper_levels=_to_levels(params.get("output_load")),
             render_func=render.percent,
         )
 
@@ -154,7 +188,7 @@ def check_elphase(
             label="Power",
             metric_name="power",
             lower_levels=None,
-            upper_levels=params.get("power"),
+            upper_levels=_to_levels(params.get("power")),
             render_func=lambda x: f"{x:.1f} W",
         )
 
@@ -164,7 +198,7 @@ def check_elphase(
             label="Apparent Power",
             metric_name="appower",
             lower_levels=None,
-            upper_levels=params.get("appower"),
+            upper_levels=_to_levels(params.get("appower")),
             render_func=lambda x: f"{x:.1f} VA",
         )
 
@@ -189,8 +223,8 @@ def check_elphase(
             elphase.frequency,
             label="Frequency",
             metric_name="frequency",
-            lower_levels=lower_frequency_levels,
-            upper_levels=upper_frequency_levels,
+            lower_levels=_to_levels(lower_frequency_levels),
+            upper_levels=_to_levels(upper_frequency_levels),
             render_func=lambda x: f"{x:.1f} Hz",
         )
 
@@ -200,11 +234,7 @@ def check_elphase(
             label="Differential current AC",
             metric_name="differential_current_ac",
             lower_levels=None,
-            upper_levels=(
-                (upper_levels[0] * 1e-3, upper_levels[1] * 1e-3)
-                if (upper_levels := params.get("differential_current_ac"))
-                else None
-            ),
+            upper_levels=_scale_levels(_to_levels(params.get("differential_current_ac")), 1e-3),
             render_func=lambda x: f"{(x * 1e3):.1f} mA",
         )
 
@@ -214,11 +244,7 @@ def check_elphase(
             label="Differential current DC",
             metric_name="differential_current_dc",
             lower_levels=None,
-            upper_levels=(
-                (upper_levels[0] * 1e-3, upper_levels[1] * 1e-3)
-                if (upper_levels := params.get("differential_current_dc"))
-                else None
-            ),
+            upper_levels=_scale_levels(_to_levels(params.get("differential_current_dc")), 1e-3),
             render_func=lambda x: f"{(x * 1e3):.1f} mA",
         )
 
@@ -228,15 +254,15 @@ def _check_reading(
     *,
     label: str,
     metric_name: str,
-    lower_levels: tuple[float, float] | None,
-    upper_levels: tuple[float, float] | None,
+    lower_levels: LevelsT[float] | None,
+    upper_levels: LevelsT[float] | None,
     render_func: Callable[[float], str],
 ) -> CheckResult:
     yield from check_levels(
         reading.value,
         metric_name=metric_name,
-        levels_lower=("fixed", lower_levels) if lower_levels else None,
-        levels_upper=("fixed", upper_levels) if upper_levels else None,
+        levels_lower=lower_levels,
+        levels_upper=upper_levels,
         render_func=render_func,
         label=label,
     )

@@ -35,7 +35,6 @@ from typing import (
 
 import omdlib
 import omdlib.backup
-import omdlib.utils
 from omdlib.args_site_user import args_to_command_line, Copy, Move, Restore
 from omdlib.buffer import BufferWithCopy
 from omdlib.config_choices import ConfigChoiceHasError
@@ -1996,6 +1995,12 @@ def _main_rm(
     global_opts: GlobalOptions,
     options: CommandOptions,
 ) -> None:
+    site_home = SitePaths.from_site_name(site_name).home
+    if os.path.ismount(site_home):
+        sys.exit(
+            f"Cannot delete {site_name}: Site home '{site_home}' is mounted. Please unmount it first and then retry."
+        )
+
     # omd rm is called as root but the init scripts need to be called as
     # site user but later steps need root privilegies. So a simple user
     # switch to the site user would not work. Better create a subprocess
@@ -2021,7 +2026,6 @@ def _main_rm(
         else:
             kill_site_user_processes(site_name, global_opts.verbose)
 
-    site_home = SitePaths.from_site_name(site_name).home
     site = SiteContext(site_name)
     if tmpfs_mounted(site_name):
         unmount_tmpfs_as_root(site_name, kill=kill, capture_output=False)
@@ -2164,6 +2168,11 @@ def main_mv_or_cp(
     args: Arguments,
     options: CommandOptions,
 ) -> None:
+    old_site_home = SitePaths.from_site_name(old_site_name).home
+    if command_type is CommandType.move and os.path.ismount(old_site_home):
+        sys.exit(
+            f"Cannot rename {old_site_name}: Site home '{old_site_home}' is mounted. Please unmount it first and then retry."
+        )
     conflict_mode = _get_conflict_mode(options)
     action = "rename" if command_type is CommandType.move else "copy"
 
@@ -2211,7 +2220,6 @@ def main_mv_or_cp(
     if not reuse:
         useradd(version_info, new_site, uid, gid)  # None for uid/gid means: let Linux decide
 
-    old_site_home = SitePaths.from_site_name(old_site.name).home
     if command_type is CommandType.move and not reuse:
         # Rename base directory and apache config
         os.rename(old_site_home, new_site_home)

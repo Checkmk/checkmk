@@ -2,7 +2,7 @@ load("@bazel_skylib//rules:copy_directory.bzl", "copy_directory")
 load("@rules_pkg//pkg:mappings.bzl", "pkg_attributes", "pkg_filegroup", "pkg_files", "pkg_mkdirs", "pkg_mklink", "strip_prefix")
 load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
 load("//bazel/rules:package_wheel.bzl", "package_wheel")
-load("//bazel/rules:patchelf.bzl", "set_runpath")
+load("//bazel/rules:patchelf.bzl", "set_runpath", "set_runpath_tree")
 
 exports_files(["skel.permissions"])
 
@@ -104,10 +104,17 @@ copy_directory(
     tags = ["manual"],
 )
 
+set_runpath_tree(
+    name = "rrdtool_perl_bindings_runpath",
+    src = ":rrdtool_bindings_workaround",
+    rpath = "$ORIGIN",
+    tags = ["manual"],
+)
+
 pkg_files(
     name = "rrdtool_perl_bindings_files",
-    srcs = [":rrdtool_bindings_workaround"],
-    strip_prefix = strip_prefix.from_pkg("perl_bindings_dir"),
+    srcs = [":rrdtool_perl_bindings_runpath"],
+    strip_prefix = strip_prefix.from_pkg("rrdtool_perl_bindings_runpath"),
     tags = ["manual"],
     visibility = ["//visibility:public"],
 )

@@ -58,7 +58,6 @@ configure_make(
     ],
     env = {
         "CFLAGS": "'-Dredacted=\"redacted\"'",
-        "ORIGIN_VAR": "\\\\$$\\$$ORIGIN",
         "PERL_DIR": "$$EXT_BUILD_DEPS/omd/packages/perl-modules",
         "RANLIB": "ranlib",
         "top_builddir": ".",

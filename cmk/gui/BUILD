@@ -1313,7 +1313,6 @@ py_library(
         "//cmk/gui/nodevis:gui_srcs",
         "//cmk/gui/oauth2_connections:gui_srcs",
         "//cmk/gui/openapi:gui_srcs",
-        "//cmk/gui/rest_api_types:gui_srcs",
         "//cmk/gui/rule_specs:gui_srcs",
         "//cmk/gui/search:gui_srcs",
         "//cmk/gui/userdb:gui_srcs",

@@ -5,6 +5,7 @@ py_library(
     srcs = [
         "notifications_rule_types.py",
         "notifications_types.py",
+        "site_connection.py",
     ],
     imports = ["../../.."],
     visibility = [
@@ -16,18 +17,4 @@ py_library(
         "//cmk/utils",
         "//packages/cmk-ec",
     ],
-)
-
-# Temporary: rest_api_types files that still belong to the monolithic //cmk/gui target.
-# Remove this filegroup once rest_api_types is fully extracted.
-filegroup(
-    name = "gui_srcs",
-    srcs = glob(
-        include = ["**/*.py"],
-        exclude = [
-            "notifications_rule_types.py",
-            "notifications_types.py",
-        ],
-    ),
-    visibility = ["//cmk/gui:__pkg__"],
 )

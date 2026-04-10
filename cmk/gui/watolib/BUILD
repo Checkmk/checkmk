@@ -365,6 +365,7 @@ filegroup(
             "hosts_and_folders.py",
             "__init__.py",
             "notification_parameter/_base.py",
+            "notifications.py",
             "parent_scan.py",
             "piggyback_hub.py",
             "predefined_conditions.py",

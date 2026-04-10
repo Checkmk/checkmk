@@ -29,10 +29,10 @@ class DeploymentConditionFactory(ModelFactory):
 def deployments_api_sections() -> set[str]:
     return {
         "kube_pod_resources_v1",
-        "kube_memory_resources_v1",
+        "kube_memory_resources_v2",
         "kube_deployment_info_v1",
         "kube_deployment_conditions_v1",
-        "kube_cpu_resources_v1",
+        "kube_cpu_resources_v2",
         "kube_update_strategy_v1",
         "kube_deployment_replicas_v1",
         "kube_controller_spec_v1",

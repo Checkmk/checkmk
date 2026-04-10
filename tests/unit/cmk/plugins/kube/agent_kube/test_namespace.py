@@ -38,8 +38,8 @@ def test_namespace_create_api_sections() -> None:
     assert {s.section_name for s in sections} == {
         "kube_namespace_info_v1",
         "kube_pod_resources_v1",
-        "kube_memory_resources_v1",
-        "kube_cpu_resources_v1",
+        "kube_memory_resources_v2",
+        "kube_cpu_resources_v2",
     }
 
 

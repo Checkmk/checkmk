@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import logging
+from typing import Any
 
 import pytest
 
@@ -48,11 +49,34 @@ SKIPPED_CHECKS = [
 ]
 
 
+@pytest.fixture(name="collect_test_site_base_data", scope="function")
+def _collect_test_site_base_data(
+    create_periodic_service_discovery_rule: Site,
+) -> tuple[Site, list[dict[str, Any]], dict[str, Any], dict[str, Any]]:
+    """Collect hostnames and corresponding service states from the un-updated site.
+
+    Before the site is updated to the Checkmk package under test.
+    """
+    test_site_base = create_periodic_service_discovery_rule
+    psd_rules_base = test_site_base.openapi.rules.get_all("periodic_discovery")
+    base_data = {}
+    base_data_status_ok = {}
+    for host_name in (_ for _ in get_host_names() if _ not in SKIPPED_DUMPS):
+        with setup_host(test_site_base, host_name, skip_cleanup=True):
+            base_data[host_name] = test_site_base.get_host_services(host_name)
+
+            for skipped_check in SKIPPED_CHECKS:
+                if skipped_check in base_data[host_name]:
+                    base_data[host_name].pop(skipped_check)
+
+            base_data_status_ok[host_name] = get_services_with_status(base_data[host_name], 0)
+    return test_site_base, psd_rules_base, base_data, base_data_status_ok
+
+
 @pytest.mark.skip(reason="CMK-33568")
 def test_plugin_update(
-    test_site_update: Site,
-    site_factory_update: SiteFactory,
-    create_periodic_service_discovery_rule: None,
+    site_factory_base: SiteFactory,
+    collect_test_site_base_data: tuple[Site, list[dict[str, Any]], dict[str, Any], dict[str, Any]],
 ) -> None:
     """Test performing the following steps:
 
@@ -63,23 +87,12 @@ def test_plugin_update(
     * Re-discover services and compare services found before and after such discovery;
     * Check the number of rules in the ruleset 'periodic_discovery' and compare with the expected.
     """
-    psd_rules_base = test_site_update.openapi.rules.get_all("periodic_discovery")
-    base_data = {}
-    base_data_status_0 = {}
-    for host_name in (_ for _ in get_host_names() if _ not in SKIPPED_DUMPS):
-        with setup_host(test_site_update, host_name, skip_cleanup=True):
-            base_data[host_name] = test_site_update.get_host_services(host_name)
-
-            for skipped_check in SKIPPED_CHECKS:
-                if skipped_check in base_data[host_name]:
-                    base_data[host_name].pop(skipped_check)
-
-            base_data_status_0[host_name] = get_services_with_status(base_data[host_name], 0)
-    test_site_update = site_factory_update.update_as_site_user(test_site_update)
+    test_site_base, psd_rules_base, base_data, base_data_status_ok = collect_test_site_base_data
+    test_site_update = site_factory_base.update_as_site_user(test_site_base)
     test_site_update.openapi.changes.activate_and_wait_for_completion()
 
     target_data = {}
-    target_data_status_0 = {}
+    target_data_status_ok = {}
     for host_name in get_host_names(test_site_update):
         target_data[host_name] = test_site_update.get_host_services(host_name)
 
@@ -87,23 +100,23 @@ def test_plugin_update(
             if skipped_check in target_data[host_name]:
                 target_data[host_name].pop(skipped_check)
 
-        target_data_status_0[host_name] = get_services_with_status(target_data[host_name], 0)
+        target_data_status_ok[host_name] = get_services_with_status(target_data[host_name], 0)
 
         not_found_services = [
             service for service in base_data[host_name] if service not in target_data[host_name]
         ]
-        not_found_status_0_services = [
+        not_found_status_ok_services = [
             service
-            for service in base_data_status_0[host_name]
-            if service not in target_data_status_0[host_name]
+            for service in base_data_status_ok[host_name]
+            if service not in target_data_status_ok[host_name]
         ]
         assert len(base_data[host_name]) <= len(target_data[host_name]), (
             f"The following services are found in {host_name} in base-version but not in "
             f"target-version: {not_found_services}"
         )
-        assert base_data_status_0[host_name].issubset(target_data_status_0[host_name]), (
+        assert base_data_status_ok[host_name].issubset(target_data_status_ok[host_name]), (
             f"The following services are found in state=0 in {host_name} in base-version but not "
-            f"in target-version: {not_found_status_0_services}"
+            f"in target-version: {not_found_status_ok_services}"
         )
 
     test_site_update.openapi.service_discovery.run_bulk_discovery_and_wait_for_completion(
@@ -112,29 +125,29 @@ def test_plugin_update(
     test_site_update.openapi.changes.activate_and_wait_for_completion()
 
     target_data_sd = {}
-    target_data_sd_status_0 = {}
+    target_data_sd_status_ok = {}
     for host_name in get_host_names(test_site_update):
         target_data_sd[host_name] = test_site_update.get_host_services(host_name)
-        target_data_sd_status_0[host_name] = get_services_with_status(target_data_sd[host_name], 0)
+        target_data_sd_status_ok[host_name] = get_services_with_status(target_data_sd[host_name], 0)
 
         not_found_services_sd = [
             service
             for service in target_data[host_name]
             if service not in target_data_sd[host_name]
         ]
-        not_found_status_0_services_sd = [
+        not_found_status_ok_services_sd = [
             service
-            for service in target_data_status_0[host_name]
-            if service not in target_data_sd_status_0[host_name]
+            for service in target_data_status_ok[host_name]
+            if service not in target_data_sd_status_ok[host_name]
         ]
 
         assert len(target_data[host_name]) <= len(target_data_sd[host_name]), (
             f"The following services are found in {host_name} in target-version before "
             f"service-discovery but not after: {not_found_services_sd}"
         )
-        assert target_data_status_0[host_name].issubset(target_data_sd_status_0[host_name]), (
+        assert target_data_status_ok[host_name].issubset(target_data_sd_status_ok[host_name]), (
             f"The following services are found in state=0 in {host_name} target-version before "
-            f"service-discovery but not after: {not_found_status_0_services_sd}"
+            f"service-discovery but not after: {not_found_status_ok_services_sd}"
         )
 
     psd_rules_update = test_site_update.openapi.rules.get_all("periodic_discovery")

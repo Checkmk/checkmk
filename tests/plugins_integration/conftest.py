@@ -158,21 +158,21 @@ def _get_site_piggyback(request: pytest.FixtureRequest) -> Iterator[Site]:
             yield site
 
 
-@pytest.fixture(name="site_factory_update", scope="session")
+@pytest.fixture(name="site_factory_base", scope="session")
 def _get_sf_update():
     base_version = CMKVersion(get_min_version().version, Edition.CEE)
     return get_site_factory(prefix="update_", version=base_version)
 
 
-@pytest.fixture(name="test_site_update", scope="session")
+@pytest.fixture(name="test_site_base", scope="session")
 def _get_site_update(
-    site_factory_update: SiteFactory, request: pytest.FixtureRequest
+    site_factory_base: SiteFactory, request: pytest.FixtureRequest
 ) -> Iterator[Site]:
     """Setup test-site and perform cleanup after test execution."""
     with exit_pytest_on_exceptions(
         exit_msg=f"Failure in site creation using fixture '{__file__}::{request.fixturename}'!"
     ):
-        for site in site_factory_update.get_test_site(auto_cleanup=not checks.config.skip_cleanup):
+        for site in site_factory_base.get_test_site(auto_cleanup=not checks.config.skip_cleanup):
             dump_path = site.path("var/check_mk/dumps").as_posix()
             checks.setup_site(site, dump_path)
 
@@ -219,20 +219,20 @@ def _periodic_service_discovery_rule() -> dict:
 
 
 @pytest.fixture(name="create_periodic_service_discovery_rule", scope="function")
-def _create_periodic_service_discovery_rule(test_site_update: Site) -> Iterator[None]:
+def _create_periodic_service_discovery_rule(test_site_base: Site) -> Iterator[Site]:
     existing_rules_ids = []
-    for rule in test_site_update.openapi.rules.get_all("periodic_discovery"):
+    for rule in test_site_base.openapi.rules.get_all("periodic_discovery"):
         existing_rules_ids.append(rule["id"])
 
-    test_site_update.openapi.rules.create(
+    test_site_base.openapi.rules.create(
         ruleset_name="periodic_discovery",
         value=_periodic_service_discovery_rule(),
     )
-    test_site_update.openapi.changes.activate_and_wait_for_completion()
+    test_site_base.openapi.changes.activate_and_wait_for_completion()
 
-    yield
+    yield test_site_base
 
-    for rule in test_site_update.openapi.rules.get_all("periodic_discovery"):
+    for rule in test_site_base.openapi.rules.get_all("periodic_discovery"):
         if rule["id"] not in existing_rules_ids:
-            test_site_update.openapi.rules.delete(rule["id"])
-    test_site_update.openapi.changes.activate_and_wait_for_completion(force_foreign_changes=True)
+            test_site_base.openapi.rules.delete(rule["id"])
+    test_site_base.openapi.changes.activate_and_wait_for_completion(force_foreign_changes=True)

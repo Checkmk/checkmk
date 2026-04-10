@@ -16,6 +16,7 @@ from ._graph_specification import (
     GraphSpecification,
     HorizontalRule,
 )
+from ._rrd import HostGraphRow, ServiceGraphRow
 from ._unit import ConvertibleUnitSpecification
 
 
@@ -33,9 +34,13 @@ class ExplicitGraphSpecification(GraphSpecification, frozen=True):
     def graph_type_name() -> Literal["explicit"]:
         return "explicit"
 
+    def fetch_rows(self, env: GraphEnvironment) -> Sequence[HostGraphRow | ServiceGraphRow]:
+        return []
+
     def recipes(
         self,
         env: GraphEnvironment,
+        rows: Sequence[HostGraphRow | ServiceGraphRow],
         consolidation_function: GraphConsolidationFunction = "max",
     ) -> Sequence[GraphRecipeWithOverrides]:
         return [

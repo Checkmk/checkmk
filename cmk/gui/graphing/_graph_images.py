@@ -288,6 +288,7 @@ def graph_recipes_for_api_request(
     try:
         recipes = graph_specification.recipes(
             env,
+            graph_specification.fetch_rows(env),
             consolidation_function=api_request.get("consolidation_function", "max"),
         )
 

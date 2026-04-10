@@ -678,7 +678,7 @@ def _compute_recipes(
     env: GraphEnvironment,
 ) -> Sequence[GraphRecipeWithOverrides] | HTML:
     try:
-        return graph_specification.recipes(env)
+        return graph_specification.recipes(env, graph_specification.fetch_rows(env))
     except MKLivestatusNotFoundError:
         return render_graph_error_html(
             title=_("Cannot calculate graph recipes"),

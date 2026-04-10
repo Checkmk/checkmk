@@ -38,6 +38,7 @@ from ._graph_metric_expressions import (
     parse_graph_metric_expression,
 )
 from ._metric_backend_registry import FetchTimeSeries
+from ._rrd import HostGraphRow, ServiceGraphRow
 from ._translated_metrics import TranslatedMetric
 from ._unit import (
     ConvertibleUnitSpecification,
@@ -141,9 +142,13 @@ class GraphSpecification(BaseModel, ABC, frozen=True):
     def graph_type_name() -> str: ...
 
     @abstractmethod
+    def fetch_rows(self, env: GraphEnvironment) -> Sequence[HostGraphRow | ServiceGraphRow]: ...
+
+    @abstractmethod
     def recipes(
         self,
         env: GraphEnvironment,
+        rows: Sequence[HostGraphRow | ServiceGraphRow],
         consolidation_function: GraphConsolidationFunction = "max",
     ) -> Sequence[GraphRecipeWithOverrides]: ...
 

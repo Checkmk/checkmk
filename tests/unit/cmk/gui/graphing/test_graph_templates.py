@@ -567,18 +567,20 @@ _HEAP_MEM_GRAPH = {
 
 
 class _FakeTemplateGraphSpecification(TemplateGraphSpecification):
-    def _fetch_graph_row(self) -> HostGraphRow | ServiceGraphRow:
+    def fetch_rows(self, env: GraphEnvironment) -> Sequence[HostGraphRow | ServiceGraphRow]:
         perf_data, check_command = parse_perf_data(
             "metric1=163651.992188;;;; metric2=313848.039062;;;", "check_mk-foo", debug=False
         )
-        return ServiceGraphRow(
-            site=SiteId("site_id"),
-            host_name=HostName("host_name"),
-            service_name=ServiceName("service_name"),
-            performance_data=perf_data,
-            metrics=["metric1", "metric2"],
-            check_command=check_command,
-        )
+        return [
+            ServiceGraphRow(
+                site=SiteId("site_id"),
+                host_name=HostName("host_name"),
+                service_name=ServiceName("service_name"),
+                performance_data=perf_data,
+                metrics=["metric1", "metric2"],
+                check_command=check_command,
+            )
+        ]
 
 
 @pytest.mark.parametrize(
@@ -782,54 +784,53 @@ def test_template_recipes_matching(
     graph_index: int | None,
     expected: Sequence[GraphRecipe],
 ) -> None:
+    graph_specification = _FakeTemplateGraphSpecification(
+        site=SiteId("site_id"),
+        host_name=HostName("host_name"),
+        service_description=ServiceName("service_name"),
+        graph_id=graph_id,
+        graph_index=graph_index,
+    )
+    env = GraphEnvironment(
+        registered_metrics={
+            "metric1": RegisteredMetric(
+                name="metric1",
+                title_localizer=lambda _localizer: "Metric1",
+                unit_spec=ConvertibleUnitSpecification(
+                    notation=DecimalNotation(symbol=""),
+                    precision=AutoPrecision(digits=2),
+                ),
+                color="#0080c0",
+            ),
+            "metric2": RegisteredMetric(
+                name="metric2",
+                title_localizer=lambda _localizer: "Metric2",
+                unit_spec=ConvertibleUnitSpecification(
+                    notation=DecimalNotation(symbol=""),
+                    precision=AutoPrecision(digits=2),
+                ),
+                color="#0080c0",
+            ),
+        },
+        registered_graphs={
+            "graph1": graphs_api.Graph(
+                name="graph1",
+                title=Title("Graph 1"),
+                simple_lines=["metric1"],
+            ),
+            "graph2": graphs_api.Graph(
+                name="graph2",
+                title=Title("Graph 2"),
+                simple_lines=["metric2"],
+            ),
+        },
+        user_permissions=UserPermissions({}, {}, {}, []),
+        temperature_unit=TemperatureUnit.CELSIUS,
+        backend_time_series_fetcher=None,
+        debug=False,
+    )
     assert [
-        r.recipe
-        for r in _FakeTemplateGraphSpecification(
-            site=SiteId("site_id"),
-            host_name=HostName("host_name"),
-            service_description=ServiceName("service_name"),
-            graph_id=graph_id,
-            graph_index=graph_index,
-        ).recipes(
-            GraphEnvironment(
-                registered_metrics={
-                    "metric1": RegisteredMetric(
-                        name="metric1",
-                        title_localizer=lambda _localizer: "Metric1",
-                        unit_spec=ConvertibleUnitSpecification(
-                            notation=DecimalNotation(symbol=""),
-                            precision=AutoPrecision(digits=2),
-                        ),
-                        color="#0080c0",
-                    ),
-                    "metric2": RegisteredMetric(
-                        name="metric2",
-                        title_localizer=lambda _localizer: "Metric2",
-                        unit_spec=ConvertibleUnitSpecification(
-                            notation=DecimalNotation(symbol=""),
-                            precision=AutoPrecision(digits=2),
-                        ),
-                        color="#0080c0",
-                    ),
-                },
-                registered_graphs={
-                    "graph1": graphs_api.Graph(
-                        name="graph1",
-                        title=Title("Graph 1"),
-                        simple_lines=["metric1"],
-                    ),
-                    "graph2": graphs_api.Graph(
-                        name="graph2",
-                        title=Title("Graph 2"),
-                        simple_lines=["metric2"],
-                    ),
-                },
-                user_permissions=UserPermissions({}, {}, {}, []),
-                temperature_unit=TemperatureUnit.CELSIUS,
-                backend_time_series_fetcher=None,
-                debug=False,
-            )
-        )
+        r.recipe for r in graph_specification.recipes(env, graph_specification.fetch_rows(env))
     ] == expected
 
 
@@ -1997,98 +1998,99 @@ def test_conflicting_metrics(
 
 
 class _FakeTemplateGraphSpecificationFS(TemplateGraphSpecification):
-    def _fetch_graph_row(self) -> HostGraphRow | ServiceGraphRow:
+    def fetch_rows(self, env: GraphEnvironment) -> Sequence[HostGraphRow | ServiceGraphRow]:
         perf_data, check_command = parse_perf_data(
             "fs_used=163651.992188;;;; fs_free=313848.039062;;; fs_size=477500.03125;;;; growth=-1280.489081;;;;",
             "check_mk-df",
             debug=False,
         )
-        return ServiceGraphRow(
-            site=SiteId("site_id"),
-            host_name=HostName("host_name"),
-            service_name=ServiceName("service_name"),
-            performance_data=perf_data,
-            metrics=["fs_used", "fs_free", "fs_size", "growth"],
-            check_command=check_command,
-        )
+        return [
+            ServiceGraphRow(
+                site=SiteId("site_id"),
+                host_name=HostName("host_name"),
+                service_name=ServiceName("service_name"),
+                performance_data=perf_data,
+                metrics=["fs_used", "fs_free", "fs_size", "growth"],
+                check_command=check_command,
+            )
+        ]
 
 
 def test_template_recipes_fs() -> None:
+    graph_specification = _FakeTemplateGraphSpecificationFS(
+        site=SiteId("site_id"),
+        host_name=HostName("host_name"),
+        service_description="service_name",
+    )
+    env = GraphEnvironment(
+        registered_metrics={
+            "fs_growth": RegisteredMetric(
+                name="fs_growth",
+                title_localizer=lambda _localizer: "Growth",
+                unit_spec=ConvertibleUnitSpecification(
+                    notation=IECNotation(symbol="B/d"),
+                    precision=AutoPrecision(digits=2),
+                ),
+                color="#1ee6e6",
+            ),
+            "fs_used": RegisteredMetric(
+                name="fs_used",
+                title_localizer=lambda _localizer: "Used space",
+                unit_spec=ConvertibleUnitSpecification(
+                    notation=IECNotation(symbol="B"),
+                    precision=AutoPrecision(digits=2),
+                ),
+                color="#1e90ff",
+            ),
+            "fs_free": RegisteredMetric(
+                name="fs_free",
+                title_localizer=lambda _localizer: "Free space",
+                unit_spec=ConvertibleUnitSpecification(
+                    notation=IECNotation(symbol="B"),
+                    precision=AutoPrecision(digits=2),
+                ),
+                color="#d28df6",
+            ),
+            "fs_size": RegisteredMetric(
+                name="fs_size",
+                title_localizer=lambda _localizer: "Total size",
+                unit_spec=ConvertibleUnitSpecification(
+                    notation=IECNotation(symbol="B"),
+                    precision=AutoPrecision(digits=2),
+                ),
+                color="#37fa37",
+            ),
+        },
+        registered_graphs={
+            "fs_used": graphs.Graph(
+                name="fs_used",
+                title=Title("Size and used space"),
+                minimal_range=graphs.MinimalRange(
+                    0,
+                    metrics.MaximumOf(
+                        "fs_used",
+                        metrics.Color.GRAY,
+                    ),
+                ),
+                compound_lines=[
+                    "fs_used",
+                    "fs_free",
+                ],
+                simple_lines=[
+                    "fs_size",
+                    metrics.WarningOf("fs_used"),
+                    metrics.CriticalOf("fs_used"),
+                ],
+                conflicting=["reserved"],
+            ),
+        },
+        user_permissions=UserPermissions({}, {}, {}, []),
+        temperature_unit=TemperatureUnit.CELSIUS,
+        backend_time_series_fetcher=None,
+        debug=False,
+    )
     assert [
-        r.recipe
-        for r in _FakeTemplateGraphSpecificationFS(
-            site=SiteId("site_id"),
-            host_name=HostName("host_name"),
-            service_description="service_name",
-        ).recipes(
-            GraphEnvironment(
-                registered_metrics={
-                    "fs_growth": RegisteredMetric(
-                        name="fs_growth",
-                        title_localizer=lambda _localizer: "Growth",
-                        unit_spec=ConvertibleUnitSpecification(
-                            notation=IECNotation(symbol="B/d"),
-                            precision=AutoPrecision(digits=2),
-                        ),
-                        color="#1ee6e6",
-                    ),
-                    "fs_used": RegisteredMetric(
-                        name="fs_used",
-                        title_localizer=lambda _localizer: "Used space",
-                        unit_spec=ConvertibleUnitSpecification(
-                            notation=IECNotation(symbol="B"),
-                            precision=AutoPrecision(digits=2),
-                        ),
-                        color="#1e90ff",
-                    ),
-                    "fs_free": RegisteredMetric(
-                        name="fs_free",
-                        title_localizer=lambda _localizer: "Free space",
-                        unit_spec=ConvertibleUnitSpecification(
-                            notation=IECNotation(symbol="B"),
-                            precision=AutoPrecision(digits=2),
-                        ),
-                        color="#d28df6",
-                    ),
-                    "fs_size": RegisteredMetric(
-                        name="fs_size",
-                        title_localizer=lambda _localizer: "Total size",
-                        unit_spec=ConvertibleUnitSpecification(
-                            notation=IECNotation(symbol="B"),
-                            precision=AutoPrecision(digits=2),
-                        ),
-                        color="#37fa37",
-                    ),
-                },
-                registered_graphs={
-                    "fs_used": graphs.Graph(
-                        name="fs_used",
-                        title=Title("Size and used space"),
-                        minimal_range=graphs.MinimalRange(
-                            0,
-                            metrics.MaximumOf(
-                                "fs_used",
-                                metrics.Color.GRAY,
-                            ),
-                        ),
-                        compound_lines=[
-                            "fs_used",
-                            "fs_free",
-                        ],
-                        simple_lines=[
-                            "fs_size",
-                            metrics.WarningOf("fs_used"),
-                            metrics.CriticalOf("fs_used"),
-                        ],
-                        conflicting=["reserved"],
-                    ),
-                },
-                user_permissions=UserPermissions({}, {}, {}, []),
-                temperature_unit=TemperatureUnit.CELSIUS,
-                backend_time_series_fetcher=None,
-                debug=False,
-            )
-        )
+        r.recipe for r in graph_specification.recipes(env, graph_specification.fetch_rows(env))
     ] == [
         GraphRecipe(
             title="Size and used space",

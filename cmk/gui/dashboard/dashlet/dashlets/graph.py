@@ -196,16 +196,15 @@ class ABCGraphDashlet[T: ABCGraphDashletConfig, TGraphSpec: GraphSpecification](
         graph_specification: TGraphSpec, config: Config
     ) -> Sequence[GraphRecipeWithOverrides]:
         try:
-            return graph_specification.recipes(
-                GraphEnvironment(
-                    registered_metrics=metrics_from_api,
-                    registered_graphs=graphs_from_api,
-                    user_permissions=UserPermissions.from_config(config, permission_registry),
-                    temperature_unit=get_temperature_unit(user, config.default_temperature_unit),
-                    backend_time_series_fetcher=None,
-                    debug=config.debug,
-                )
+            env = GraphEnvironment(
+                registered_metrics=metrics_from_api,
+                registered_graphs=graphs_from_api,
+                user_permissions=UserPermissions.from_config(config, permission_registry),
+                temperature_unit=get_temperature_unit(user, config.default_temperature_unit),
+                backend_time_series_fetcher=None,
+                debug=config.debug,
             )
+            return graph_specification.recipes(env, graph_specification.fetch_rows(env))
         except MKMissingDataError:
             raise
         except livestatus.MKLivestatusNotFoundError:

@@ -310,12 +310,8 @@ class TemplateGraphSpecification(GraphSpecification, frozen=True):
     def graph_type_name() -> Literal["template"]:
         return "template"
 
-    def _fetch_graph_row(self) -> HostGraphRow | ServiceGraphRow:
-        return fetch_graph_row(
-            self.site,
-            self.host_name,
-            self.service_description,
-        )
+    def fetch_rows(self, env: GraphEnvironment) -> Sequence[HostGraphRow | ServiceGraphRow]:
+        return [fetch_graph_row(self.site, self.host_name, self.service_description)]
 
     @classmethod
     def _make_specification(
@@ -376,9 +372,12 @@ class TemplateGraphSpecification(GraphSpecification, frozen=True):
     def recipes(
         self,
         env: GraphEnvironment,
+        rows: Sequence[HostGraphRow | ServiceGraphRow],
         consolidation_function: GraphConsolidationFunction = "max",
     ) -> Sequence[GraphRecipeWithOverrides]:
-        row = self._fetch_graph_row()
+        if not rows:
+            return []
+        row = rows[0]
         if not (
             translated_metrics := compute_translated_metrics(
                 row.performance_data,

@@ -9,7 +9,7 @@ from typing import Any
 import pytest
 
 from cmk.agent_based.v2 import Metric, Result, Service, State, StringTable
-from cmk.legacy_checks.tplink_cpu import (
+from cmk.plugins.tplink.agent_based.tplink_cpu import (
     check_tplink_cpu_,
     discover_tplink_cpu,
     parse_tplink_cpu,

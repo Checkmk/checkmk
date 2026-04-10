@@ -73,12 +73,13 @@ def check_jenkins_instance(params: dict, section: JenkinsInstance) -> CheckResul
         ("quietingDown", False, "Quieting Down"),
         ("useSecurity", True, "Security used"),
     ]:
-        parsed_data = section.get(key)
-
-        # TODO: if we want to support unknown state here, we need to remove this assertion.
-        assert isinstance(parsed_data, bool), f"Expected boolean value for {key}"
-
-        state = State.OK if parsed_data == desired_value else State.WARN
+        match parsed_data := section.get(key):
+            case None:
+                state = State.UNKNOWN
+            case bool(value) if value == desired_value:
+                state = State.OK
+            case _:
+                state = State.WARN
 
         yield Result(state=state, summary=f"{infotext}: {MAP_INSTANCE_STATE[parsed_data]}")
 

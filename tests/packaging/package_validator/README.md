@@ -1,14 +1,14 @@
 # Package Validator
 
-A Rust tool for validating `RPATH`/`RUNPATH` settings in `DEB` and `RPM` packages.
+A Rust tool for validating `RPATH`/`RUNPATH` settings in `DEB`, `RPM`, and `CMA` packages.
 
 ## Overview
 
-`package_validator` analyzes Linux package files (`.deb` and `.rpm`) to validate that `ELF` binaries and shared libraries have correctly configured `RPATH` or `RUNPATH` settings. It extracts packages, identifies `ELF` files, checks their dynamic dependencies, and verifies that all required shared libraries can be resolved through the configured `RPATH`/`RUNPATH` entries.
+`package_validator` analyzes Linux package files (`.deb`, `.rpm`, and `.cma`) to validate that `ELF` binaries and shared libraries have correctly configured `RPATH` or `RUNPATH` settings. It extracts packages, identifies `ELF` files, checks their dynamic dependencies, and verifies that all required shared libraries can be resolved through the configured `RPATH`/`RUNPATH` entries.
 
 ## Features
 
-- **Package Extraction**: Supports both `DEB` and `RPM` package formats
+- **Package Extraction**: Supports `DEB`, `RPM`, and `CMA` package formats
 - **ELF Analysis**: Automatically finds and analyzes all `ELF` file types:
   - Executable binaries
   - Shared libraries (.so files)
@@ -44,6 +44,7 @@ The tool requires system utilities for package extraction:
 
 - **For DEB packages**: `dpkg-deb` (usually provided by `dpkg` package)
 - **For RPM packages**: `rpm2cpio` and `cpio` (usually provided by `rpm` package)
+- **For CMA packages**: `tar` (usually pre-installed)
 
 On Debian/Ubuntu:
 
@@ -61,7 +62,7 @@ package_validator <PACKAGE> <REPORT>
 
 Where:
 
-- `<PACKAGE>`: Path to the package file (`.deb` or `.rpm`) to validate
+- `<PACKAGE>`: Path to the package file (`.deb`, `.rpm`, or `.cma`) to validate
 - `<REPORT>`: Path to the file where the JSON report will be written
 
 ### Options
@@ -80,6 +81,12 @@ package_validator check-mk-community-2.5.0.deb report.json
 
 ```bash
 package_validator check-mk-ultimatemt-2.5.0.rpm report.json
+```
+
+**Validate a CMA package:**
+
+```bash
+package_validator check-mk-pro-2.5.0-4-x86_64.cma report.json
 ```
 
 **Validate with system dependencies file:**
@@ -273,6 +280,7 @@ package_validator/
 │   ├── args.rs          # CLI argument parsing
 │   ├── package/         # Package extraction and analysis
 │   │   ├── mod.rs       # Package struct and public API
+│   │   ├── cma.rs       # CMA package extraction
 │   │   ├── deb.rs       # DEB package extraction
 │   │   ├── rpm.rs       # RPM package extraction
 │   │   ├── extractor.rs # Package extraction trait
@@ -314,7 +322,7 @@ cargo test test_package_integration_report
 
 ### How RPATH Validation Works
 
-1. **Package Extraction**: The package is extracted to a temporary directory using system tools (`dpkg-deb` for DEB, `rpm2cpio`/`cpio` for RPM). The temporary directory is cleaned up after analysis.
+1. **Package Extraction**: The package is extracted to a temporary directory using system tools (`dpkg-deb` for DEB, `rpm2cpio`/`cpio` for RPM, `tar` for CMA). The temporary directory is cleaned up after analysis.
 
 2. **ELF Discovery**: All files are scanned in parallel to identify ELF files of all types (executables, shared libraries, relocatable objects, core files, etc.).
 

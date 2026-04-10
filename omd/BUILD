@@ -817,7 +817,7 @@ write_omd_spec(
 [
     pkg_cma_from_tar(
         name = "cma_" + edition,
-        cma = "cma_file_" + edition,
+        cma = "cma_file_" + edition + ".cma",
         distro_code = select({
             # CMA 4 is based on Debian 12
             "@cmk//distro:debian-12": "4",
@@ -831,6 +831,31 @@ write_omd_spec(
             "//conditions:default": ["@platforms//:incompatible"],
         }),
         version = "@cmk//version",
+    )
+    for edition in [
+        "pro",
+        "ultimate",
+        "ultimatemt",
+    ]
+]
+
+[
+    sh_test(
+        name = "validate_cma_{}".format(edition),
+        srcs = ["validate_package_test.sh"],
+        args = [
+            "$(location :cma_{})".format(edition),
+            "$(location //tests/packaging/package_validator:package_validator)",
+            "$(location //tests/packaging/package_validator:system_dependencies)",
+            "$(location //tests/packaging/package_validator:ignore_files)",
+        ],
+        data = [
+            ":cma_{}".format(edition),
+            "//tests/packaging/package_validator",
+            "//tests/packaging/package_validator:ignore_files",
+            "//tests/packaging/package_validator:system_dependencies",
+        ],
+        tags = ["manual"],
     )
     for edition in [
         "pro",

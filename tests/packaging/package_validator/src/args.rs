@@ -7,9 +7,11 @@ use std::path::PathBuf;
 #[derive(Parser)]
 #[command(name = "package_validator")]
 #[command(version)]
-#[command(about = "Validates dependencies for binaries and shared libraries in deb/rpm packages")]
+#[command(
+    about = "Validates dependencies for binaries and shared libraries in deb/rpm/cma packages"
+)]
 pub(crate) struct Args {
-    /// Path to the package file (deb or rpm) to validate.
+    /// Path to the package file (deb, rpm, or cma) to validate.
     pub package: PathBuf,
 
     /// Path to the file to write the validation results in JSON format.

@@ -15,25 +15,20 @@ fn get_examples_dir() -> PathBuf {
     }
 }
 
-/// Load a package, returning None if the fixture doesn't exist.
-fn load_package(package_file: &str) -> Option<Package> {
+fn load_package(package_file: &str) -> Package {
     let package_path = get_examples_dir().join(package_file);
-    if !package_path.exists() {
-        eprintln!("Skipping test for {}: fixture not found.", package_file);
-        return None;
-    }
-    Some(Package::new(package_path).expect("Should extract package"))
+    assert!(
+        package_path.exists(),
+        "Fixture not found: {}. All package fixtures must be present for integration tests.",
+        package_path.display()
+    );
+    Package::new(package_path).expect("Should extract package")
 }
 
 #[test]
 fn test_package_integration_report() {
-    let mut tested_any = false;
-
-    for package_file in ["test.deb", "test.rpm"] {
-        let Some(package) = load_package(package_file) else {
-            continue;
-        };
-        tested_any = true;
+    for package_file in ["test.deb", "test.rpm", "test.cma"] {
+        let package = load_package(package_file);
 
         assert!(
             !package.files().is_empty(),
@@ -68,21 +63,12 @@ fn test_package_integration_report() {
             total_files
         );
     }
-
-    if !tested_any {
-        eprintln!("Warning: No package fixtures were available for testing");
-    }
 }
 
 #[test]
 fn test_package_discovers_dependencies() {
-    let mut tested_any = false;
-
-    for package_file in ["test.deb", "test.rpm"] {
-        let Some(package) = load_package(package_file) else {
-            continue;
-        };
-        tested_any = true;
+    for package_file in ["test.deb", "test.rpm", "test.cma"] {
+        let package = load_package(package_file);
 
         assert!(
             !package.files().is_empty(),
@@ -143,9 +129,5 @@ fn test_package_discovers_dependencies() {
             "{}: Dependency counts should sum to total",
             package_file
         );
-    }
-
-    if !tested_any {
-        eprintln!("Warning: No package fixtures were available for testing");
     }
 }

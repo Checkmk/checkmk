@@ -1,7 +1,7 @@
 #!/bin/bash
-# Validates RPATH/RUNPATH correctness in a built DEB or RPM package.
+# Validates RPATH/RUNPATH correctness in a built DEB, RPM, or CMA package.
 # Arguments are supplied by the sh_test rule via $(location ...) expansion:
-#   $1  path to the package file (.deb or .rpm)
+#   $1  path to the package file (.deb, .rpm, or .cma)
 #   $2  path to the package_validator binary
 #   $3  path to the system-dependencies file
 #   $4  path to the ignore-files file (optional)

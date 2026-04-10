@@ -8,7 +8,7 @@ from collections.abc import Mapping, Sequence
 import pytest
 
 from cmk.agent_based.v2 import CheckResult, Metric, Result, Service, State, StringTable
-from cmk.legacy_checks.tplink_poe_summary import (
+from cmk.plugins.tplink.agent_based.tplink_poe_summary import (
     check_tplink_poe_summary,
     discover_tplink_poe_summary,
     parse_tplink_poe_summary,

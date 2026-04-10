@@ -74,8 +74,9 @@ from ._rrd import (
     _reverse_translate_into_all_potentially_relevant_metrics_cached,
     all_rrd_columns_potentially_relevant_for_metric,
     fetch_graph_row,
-    GraphRow,
+    HostGraphRow,
     make_graph_row,
+    ServiceGraphRow,
     translate_and_merge_rrd_columns,
 )
 from ._translated_metrics import (
@@ -126,7 +127,8 @@ __all__ = [
     "GraphPluginChoice",
     "GraphRecipe",
     "GraphRecipeWithOverrides",
-    "GraphRow",
+    "HostGraphRow",
+    "ServiceGraphRow",
     "GraphEnvironment",
     "GraphDisplayConfigHTML",
     "GraphDisplayConfigImage",

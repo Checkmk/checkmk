@@ -25,7 +25,7 @@ from cmk.gui.graphing._graph_templates import (
     _compute_graph_recipes,
     TemplateGraphSpecification,
 )
-from cmk.gui.graphing._rrd import GraphRow
+from cmk.gui.graphing._rrd import HostGraphRow, ServiceGraphRow
 from cmk.gui.graphing._translated_metrics import (
     parse_perf_data,
     translate_metrics,
@@ -567,11 +567,11 @@ _HEAP_MEM_GRAPH = {
 
 
 class _FakeTemplateGraphSpecification(TemplateGraphSpecification):
-    def _fetch_graph_row(self) -> GraphRow:
+    def _fetch_graph_row(self) -> HostGraphRow | ServiceGraphRow:
         perf_data, check_command = parse_perf_data(
             "metric1=163651.992188;;;; metric2=313848.039062;;;", "check_mk-foo", debug=False
         )
-        return GraphRow(
+        return ServiceGraphRow(
             site=SiteId("site_id"),
             host_name=HostName("host_name"),
             service_name=ServiceName("service_name"),
@@ -1997,13 +1997,13 @@ def test_conflicting_metrics(
 
 
 class _FakeTemplateGraphSpecificationFS(TemplateGraphSpecification):
-    def _fetch_graph_row(self) -> GraphRow:
+    def _fetch_graph_row(self) -> HostGraphRow | ServiceGraphRow:
         perf_data, check_command = parse_perf_data(
             "fs_used=163651.992188;;;; fs_free=313848.039062;;; fs_size=477500.03125;;;; growth=-1280.489081;;;;",
             "check_mk-df",
             debug=False,
         )
-        return GraphRow(
+        return ServiceGraphRow(
             site=SiteId("site_id"),
             host_name=HostName("host_name"),
             service_name=ServiceName("service_name"),

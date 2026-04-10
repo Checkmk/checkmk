@@ -49,7 +49,7 @@ from ._graph_specification import (
     MinimalVerticalRange,
 )
 from ._graphs_order import GRAPHS_ORDER
-from ._rrd import fetch_graph_row, GraphRow
+from ._rrd import fetch_graph_row, HostGraphRow, ServiceGraphRow
 from ._translated_metrics import compute_translated_metrics, TranslatedMetric
 from ._unit import ConvertibleUnitSpecification, user_specific_unit
 
@@ -310,7 +310,7 @@ class TemplateGraphSpecification(GraphSpecification, frozen=True):
     def graph_type_name() -> Literal["template"]:
         return "template"
 
-    def _fetch_graph_row(self) -> GraphRow:
+    def _fetch_graph_row(self) -> HostGraphRow | ServiceGraphRow:
         return fetch_graph_row(
             self.site,
             self.host_name,

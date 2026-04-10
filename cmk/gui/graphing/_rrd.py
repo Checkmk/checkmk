@@ -46,17 +46,34 @@ from ._legacy import (
 )
 from ._metrics import get_metric_spec
 from ._time_series import TimeSeries
-from ._translated_metrics import find_matching_translation, parse_perf_data, TranslationSpec
+from ._translated_metrics import (
+    find_matching_translation,
+    parse_perf_data,
+    TranslationSpec,
+)
 from ._unit import user_specific_unit
 
 tracer = trace.get_tracer()
 
 
 @dataclass(frozen=True)
-class GraphRow:
+class HostGraphRow:
     site: SiteId
     host_name: HostName
-    service_name: ServiceName  # "_HOST_" for host checks
+    performance_data: Perfdata
+    metrics: list[MetricName]
+    check_command: str
+
+    @property
+    def service_name(self) -> ServiceName:
+        return ServiceName("_HOST_")
+
+
+@dataclass(frozen=True)
+class ServiceGraphRow:
+    site: SiteId
+    host_name: HostName
+    service_name: ServiceName
     performance_data: Perfdata
     metrics: list[MetricName]
     check_command: str
@@ -67,7 +84,7 @@ def fetch_graph_row(
     site_id: list[SiteId] | SiteId | None,
     host_name: HostName,
     service_description: ServiceName,
-) -> GraphRow:
+) -> HostGraphRow | ServiceGraphRow:
     columns = ["perf_data", "metrics", "check_command"]
     query = livestatus_lql([host_name], columns, service_description)
     what = "host" if service_description == "_HOST_" else "service"
@@ -80,12 +97,20 @@ def fetch_graph_row(
     perf_data, check_command = parse_perf_data(
         raw[f"{what}_perf_data"], raw[f"{what}_check_command"], debug=False
     )
-    return GraphRow(
+    if what == "host":
+        return HostGraphRow(
+            site=SiteId(site),
+            host_name=host_name,
+            performance_data=perf_data,
+            metrics=raw["host_metrics"],
+            check_command=check_command,
+        )
+    return ServiceGraphRow(
         site=SiteId(site),
         host_name=host_name,
         service_name=service_description,
         performance_data=perf_data,
-        metrics=raw[f"{what}_metrics"],
+        metrics=raw["service_metrics"],
         check_command=check_command,
     )
 
@@ -99,11 +124,19 @@ def make_graph_row(
     metrics: list[MetricName],
     check_command: str,
     debug: bool,
-) -> GraphRow:
+) -> HostGraphRow | ServiceGraphRow:
     perf_data, normalized_check_command = parse_perf_data(
         perf_data_string, check_command, debug=debug
     )
-    return GraphRow(
+    if service_name == "_HOST_":
+        return HostGraphRow(
+            site=site,
+            host_name=host_name,
+            performance_data=perf_data,
+            metrics=metrics,
+            check_command=normalized_check_command,
+        )
+    return ServiceGraphRow(
         site=site,
         host_name=host_name,
         service_name=service_name,

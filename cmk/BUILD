@@ -457,6 +457,7 @@ py_wheel(
         "//cmk/gui:werks",
         "//cmk/gui/background_job/job",
         "//cmk/gui/background_job/process",
+        "//cmk/gui/form_specs",
         "//cmk/gui/htmllib:debug_vars",
         "//cmk/gui/htmllib:foldable_container",
         "//cmk/gui/htmllib:generator",

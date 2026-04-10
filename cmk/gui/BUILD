@@ -1311,6 +1311,7 @@ py_library(
             "werks.py",
         ],
     ) + [
+        "//cmk/gui/form_specs:gui_srcs",
         "//cmk/gui/userdb:gui_srcs",
         "//cmk/gui/watolib:gui_srcs",
         "//cmk/gui/wsgi:gui_srcs",
@@ -1402,6 +1403,7 @@ py_library(
         "//cmk/diskspace",
         "//cmk/fields",
         "//cmk/gui/background_job/job",
+        "//cmk/gui/form_specs",
         "//cmk/gui/htmllib:debug_vars",
         "//cmk/gui/htmllib:foldable_container",
         "//cmk/gui/htmllib:generator",

@@ -31,12 +31,12 @@ def create_api_sections(
         ),
         WriteableSection(
             piggyback_name=piggyback_name,
-            section_name=SectionName("kube_memory_resources_v1"),
+            section_name=SectionName("kube_memory_resources_v2"),
             section=api_daemonset.memory_resources(),
         ),
         WriteableSection(
             piggyback_name=piggyback_name,
-            section_name=SectionName("kube_cpu_resources_v1"),
+            section_name=SectionName("kube_cpu_resources_v2"),
             section=api_daemonset.cpu_resources(),
         ),
         WriteableSection(

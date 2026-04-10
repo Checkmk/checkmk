@@ -17,6 +17,8 @@ from cmk.agent_based.v2 import (
     SNMPTree,
     StringTable,
 )
+
+# TODO: migrate pse_poe to packages/cmk-plugins and update this import to cmk.plugins.lib.poe
 from cmk.plugins.poe.lib import check_poe_data, PoeStatus, PoeValues
 
 # We fetch the following columns from SNMP:

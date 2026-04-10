@@ -16,7 +16,7 @@ from cmk.agent_based.v2 import (
     SNMPTree,
     StringTable,
 )
-from cmk.plugins.poe.lib import check_poe_data, PoeStatus, PoeValues
+from cmk.plugins.lib.poe import check_poe_data, PoeStatus, PoeValues
 from cmk.plugins.tplink.lib import DETECT_TPLINK
 
 Section = Mapping[str, PoeValues]

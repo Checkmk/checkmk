@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import argparse
 import atexit
+import os
 import sys
 import termios
 from pathlib import Path
@@ -794,6 +795,9 @@ def _guard_terminal_settings() -> None:
 
 def main(argv: list[str] | None = None) -> int:
     """Run the cmk-dev-deploy CLI."""
+    if os.getuid() == 0:
+        output.error("cmk-dev-deploy must not be run as root.")
+        return 1
     _guard_terminal_settings()
     args = parse_args(argv)
     output.set_verbosity(args.verbose)

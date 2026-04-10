@@ -2,13 +2,38 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-"""Unit tests for cmk.dev_deploy.cli (argument parsing)."""
+"""Unit tests for cmk.dev_deploy.cli (argument parsing) and main() guards."""
 
 from __future__ import annotations
 
+from unittest.mock import patch
+
 import pytest
 
+from cmk.dev_deploy.__main__ import main
 from cmk.dev_deploy.cli import parse_args
+
+# ---------------------------------------------------------------------------
+# Root guard
+# ---------------------------------------------------------------------------
+
+
+class TestRootGuard:
+    """main() must refuse to run as root (UID 0)."""
+
+    def test_exits_when_root(self, capsys: pytest.CaptureFixture[str]) -> None:
+        with patch("os.getuid", return_value=0):
+            rc = main([])
+        assert rc == 1
+        captured = capsys.readouterr()
+        assert "root" in (captured.err + captured.out).lower()
+
+    def test_does_not_block_non_root(self, capsys: pytest.CaptureFixture[str]) -> None:
+        with patch("os.getuid", return_value=1000):
+            main([])
+        captured = capsys.readouterr()
+        assert "root" not in (captured.err + captured.out).lower()
+
 
 # ---------------------------------------------------------------------------
 # Default values

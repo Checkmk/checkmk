@@ -238,7 +238,7 @@ void main() {
     }
 
     stage("Validate package") {
-        catchError(buildResult: 'SUCCESS', stageResult: 'UNSTABLE') {
+        catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
             dir("${checkout_dir}") {
                 inside_container(
                     image: docker.image("${docker_registry_no_http}/${distro}:${docker_tag}"),

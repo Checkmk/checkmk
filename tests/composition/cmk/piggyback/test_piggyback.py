@@ -199,7 +199,7 @@ def test_config_sync_source_remote_diff_customer(central_site: Site, remote_site
         _check_update_config_timestamps([central_site, remote_site], timestamps_dict)
 
 
-@pytest.mark.skip_if_not_edition("managed")
+@pytest.mark.skip_if_not_edition("ultimatemt")
 def test_config_sync_source_remote_remote_diff_customer(
     piggyback_env_three_site_setup: tuple[Site, Site, Site],
 ) -> None:

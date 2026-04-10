@@ -4,6 +4,7 @@
 
 //! Manages package lifecycle including extraction directory. Provides API for accessing package files, ELF files, and symlinks.
 
+mod cma;
 mod deb;
 mod elf;
 mod extractor;
@@ -16,6 +17,7 @@ use std::{
 };
 use tempfile::TempDir;
 
+use cma::CmaExtractor;
 use deb::DebExtractor;
 pub use elf::{Elf, ElfType};
 use extractor::PackageExtractor;
@@ -93,6 +95,7 @@ impl Package {
         let result = match extension {
             DebExtractor::EXTENSION => DebExtractor::extract(path, &dest),
             RpmExtractor::EXTENSION => RpmExtractor::extract(path, &dest),
+            CmaExtractor::EXTENSION => CmaExtractor::extract(path, &dest),
             _ => {
                 return Err(PackageError::UnsupportedPackageType {
                     extension: extension.to_string(),

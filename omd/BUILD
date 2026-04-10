@@ -1089,7 +1089,7 @@ pkg_tar(
 
 pkg_cma_from_tar(
     name = "cma",
-    cma = "cma_file",
+    cma = "cmk.cma",
     distro_code = select({
         # CMA 4 is based on Debian 12
         "@cmk//distro:debian-12": "4",
@@ -1103,6 +1103,24 @@ pkg_cma_from_tar(
         "//conditions:default": ["@platforms//:incompatible"],
     }),
     version = "@cmk//version",
+)
+
+sh_test(
+    name = "validate_cma",
+    srcs = ["validate_package_test.sh"],
+    args = [
+        "$(location :cma)",
+        "$(location //tests/packaging/package_validator:package_validator)",
+        "$(location //tests/packaging/package_validator:system_dependencies)",
+        "$(location //tests/packaging/package_validator:ignore_files)",
+    ],
+    data = [
+        ":cma",
+        "//tests/packaging/package_validator",
+        "//tests/packaging/package_validator:ignore_files",
+        "//tests/packaging/package_validator:system_dependencies",
+    ],
+    tags = ["manual"],
 )
 
 sh_library(

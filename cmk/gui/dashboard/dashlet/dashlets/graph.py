@@ -23,6 +23,7 @@ from cmk.gui.dashboard.exceptions import WidgetRenderError
 from cmk.gui.dashboard.type_defs import ABCGraphDashletConfig
 from cmk.gui.exceptions import MKMissingDataError, MKUserError
 from cmk.gui.graphing import (
+    available_metrics_translated,
     get_graph_plugin_and_single_metric_choices,
     get_graph_plugin_choices,
     get_metric_spec,
@@ -38,7 +39,6 @@ from cmk.gui.graphing import (
     MKCombinedGraphLimitExceededError,
     RegisteredMetric,
     TemplateGraphSpecification,
-    translated_metrics_from_row,
 )
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
@@ -389,8 +389,10 @@ def _graph_and_single_metric_templates_choices_for_context(
                 row["site"],
                 HostName(context["host"]["host"]),
                 ServiceName(context["service"]["service"]),
-                translated_metrics_from_row(
-                    row,
+                available_metrics_translated(
+                    row["service_perf_data"],
+                    row["service_metrics"],
+                    row["service_check_command"],
                     registered_metrics,
                     debug=debug,
                     temperature_unit=temperature_unit,

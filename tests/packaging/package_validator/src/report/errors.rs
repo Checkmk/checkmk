@@ -36,7 +36,6 @@ pub(crate) fn scan_for_errors<'a>(
     symlink_resolver: &SymlinkResolver<'a>,
     system_dependencies: &'a SystemDependencies,
 ) -> SystemDependencyResolutionErrors<'a> {
-    let system_dependencies = system_dependencies.dependencies();
     // Map file name to paths, and including only system dependencies.
     package
         .files()
@@ -45,7 +44,7 @@ pub(crate) fn scan_for_errors<'a>(
             path.file_name()
                 .and_then(|f| f.to_str())
                 // Any system dependency included in the package is an error.
-                .filter(|name| system_dependencies.contains(*name))
+                .filter(|name| system_dependencies.contains(name))
                 // Except if it is a symlink to a file outside of the package.
                 .filter(|_| {
                     symlink_resolver
@@ -137,7 +136,7 @@ mod tests {
             ("/usr/bin/myapp", PackageFile::File),
             ("/usr/lib/myapp.so", PackageFile::File),
         ]);
-        let system_deps = create_system_dependencies(&["libm.so.6", "libc.so.6"]);
+        let system_deps = create_system_dependencies(&["libm.so", "libc.so"]);
         let symlink_resolver = SymlinkResolver::new(&package);
 
         let errors = scan_for_errors(&package, &symlink_resolver, &system_deps);
@@ -150,7 +149,7 @@ mod tests {
             ("/usr/bin/myapp", PackageFile::File),
             ("/usr/lib/libm.so.6", PackageFile::File),
         ]);
-        let system_deps = create_system_dependencies(&["libm.so.6"]);
+        let system_deps = create_system_dependencies(&["libm.so"]);
         let symlink_resolver = SymlinkResolver::new(&package);
 
         let errors = scan_for_errors(&package, &symlink_resolver, &system_deps);
@@ -165,7 +164,7 @@ mod tests {
             ("/usr/lib/x86_64-linux-gnu/libm.so.6", PackageFile::File),
             ("/opt/lib/libm.so.6", PackageFile::File),
         ]);
-        let system_deps = create_system_dependencies(&["libm.so.6"]);
+        let system_deps = create_system_dependencies(&["libm.so"]);
         let symlink_resolver = SymlinkResolver::new(&package);
 
         let errors = scan_for_errors(&package, &symlink_resolver, &system_deps);
@@ -189,8 +188,7 @@ mod tests {
             ("/usr/lib/libpthread.so.0", PackageFile::File),
             ("/usr/bin/myapp", PackageFile::File),
         ]);
-        let system_deps =
-            create_system_dependencies(&["libm.so.6", "libc.so.6", "libpthread.so.0"]);
+        let system_deps = create_system_dependencies(&["libm.so", "libc.so", "libpthread.so"]);
         let symlink_resolver = SymlinkResolver::new(&package);
 
         let errors = scan_for_errors(&package, &symlink_resolver, &system_deps);
@@ -203,19 +201,23 @@ mod tests {
     }
 
     #[test]
-    fn test_filename_matching_exact_only() {
+    fn test_filename_matching_base_so_name() {
+        // All versioned variants of a .so match the base entry
         let package = create_test_package(vec![
             ("/usr/lib/libm.so", PackageFile::File),
             ("/usr/lib/libm.so.6", PackageFile::File),
             ("/usr/lib/libm.so.6.0", PackageFile::File),
         ]);
-        // Only libm.so.6 is a system dependency
-        let system_deps = create_system_dependencies(&["libm.so.6"]);
+        let system_deps = create_system_dependencies(&["libm.so"]);
         let symlink_resolver = SymlinkResolver::new(&package);
 
         let errors = scan_for_errors(&package, &symlink_resolver, &system_deps);
-        assert_eq!(errors.len(), 1);
-        assert_error_matches(&errors[0], "libm.so.6", &["/usr/lib/libm.so.6"]);
+        // All three filenames strip to "libm.so" and therefore all match
+        assert_eq!(errors.len(), 3);
+        let error_deps = get_error_dependencies(&errors);
+        assert!(error_deps.contains(&"libm.so"));
+        assert!(error_deps.contains(&"libm.so.6"));
+        assert!(error_deps.contains(&"libm.so.6.0"));
     }
 
     #[test]
@@ -225,7 +227,7 @@ mod tests {
             ("/usr/lib/x86_64-linux-gnu/libm.so.6", PackageFile::File),
             ("/opt/custom/libm.so.6", PackageFile::File),
         ]);
-        let system_deps = create_system_dependencies(&["libm.so.6"]);
+        let system_deps = create_system_dependencies(&["libm.so"]);
         let symlink_resolver = SymlinkResolver::new(&package);
 
         let errors = scan_for_errors(&package, &symlink_resolver, &system_deps);
@@ -260,7 +262,7 @@ mod tests {
             ("/usr/lib/libm.so.6", PackageFile::File),
             ("/opt/lib/libm.so.6", PackageFile::File),
         ]);
-        let system_deps = create_system_dependencies(&["libm.so.6"]);
+        let system_deps = create_system_dependencies(&["libm.so"]);
         let symlink_resolver = SymlinkResolver::new(&package);
 
         let errors = scan_for_errors(&package, &symlink_resolver, &system_deps);
@@ -280,7 +282,7 @@ mod tests {
             ("/etc/libm.so.6", PackageFile::File),
             ("/tmp/libm.so.6", PackageFile::File),
         ]);
-        let system_deps = create_system_dependencies(&["libm.so.6"]);
+        let system_deps = create_system_dependencies(&["libm.so"]);
         let symlink_resolver = SymlinkResolver::new(&package);
 
         let errors = scan_for_errors(&package, &symlink_resolver, &system_deps);
@@ -299,7 +301,7 @@ mod tests {
             "/usr/lib/libm.so.6",
             PackageFile::Symlink(PathBuf::from("/lib/x86_64-linux-gnu/libm.so.6")),
         )]);
-        let system_deps = create_system_dependencies(&["libm.so.6"]);
+        let system_deps = create_system_dependencies(&["libm.so"]);
         let symlink_resolver = SymlinkResolver::new(&package);
 
         let errors = scan_for_errors(&package, &symlink_resolver, &system_deps);
@@ -309,15 +311,16 @@ mod tests {
 
     #[test]
     fn test_symlink_pointing_inside_package_generates_error() {
-        // Symlink pointing to a file inside the package SHOULD generate an error
+        // Symlink pointing to a file inside the package SHOULD generate an error.
+        // Use a non-.so target name to avoid it being independently flagged as a dependency.
         let package = create_test_package(vec![
-            ("/usr/lib/libm.so.6.actual", PackageFile::File),
+            ("/usr/lib/libm-actual", PackageFile::File),
             (
                 "/usr/lib/libm.so.6",
-                PackageFile::Symlink(PathBuf::from("/usr/lib/libm.so.6.actual")),
+                PackageFile::Symlink(PathBuf::from("/usr/lib/libm-actual")),
             ),
         ]);
-        let system_deps = create_system_dependencies(&["libm.so.6"]);
+        let system_deps = create_system_dependencies(&["libm.so"]);
         let symlink_resolver = SymlinkResolver::new(&package);
 
         let errors = scan_for_errors(&package, &symlink_resolver, &system_deps);
@@ -335,7 +338,7 @@ mod tests {
                 PackageFile::Symlink(PathBuf::from("/lib/x86_64-linux-gnu/libc.so.6")),
             ),
         ]);
-        let system_deps = create_system_dependencies(&["libm.so.6", "libc.so.6"]);
+        let system_deps = create_system_dependencies(&["libm.so", "libc.so"]);
         let symlink_resolver = SymlinkResolver::new(&package);
 
         let errors = scan_for_errors(&package, &symlink_resolver, &system_deps);
@@ -346,16 +349,17 @@ mod tests {
 
     #[test]
     fn test_mixed_regular_file_and_symlink_inside() {
-        // Both regular file and symlink pointing inside should generate errors
+        // Both regular file and symlink pointing inside should generate errors.
+        // Use a non-.so target name to avoid it being independently flagged as a dependency.
         let package = create_test_package(vec![
             ("/usr/lib/libm.so.6", PackageFile::File),
-            ("/usr/lib/libc.so.6.actual", PackageFile::File),
+            ("/usr/lib/libc-actual", PackageFile::File),
             (
                 "/usr/lib/libc.so.6",
-                PackageFile::Symlink(PathBuf::from("/usr/lib/libc.so.6.actual")),
+                PackageFile::Symlink(PathBuf::from("/usr/lib/libc-actual")),
             ),
         ]);
-        let system_deps = create_system_dependencies(&["libm.so.6", "libc.so.6"]);
+        let system_deps = create_system_dependencies(&["libm.so", "libc.so"]);
         let symlink_resolver = SymlinkResolver::new(&package);
 
         let errors = scan_for_errors(&package, &symlink_resolver, &system_deps);
@@ -368,19 +372,20 @@ mod tests {
 
     #[test]
     fn test_symlink_chain_pointing_inside() {
-        // Symlink chain A -> B -> file, where file is in package, should generate error
+        // Symlink chain A -> B -> file, where file is in package, should generate error.
+        // Use non-.so names for intermediate/target to avoid spurious matches.
         let package = create_test_package(vec![
-            ("/usr/lib/libm.so.6.actual", PackageFile::File),
+            ("/usr/lib/libm-actual", PackageFile::File),
             (
-                "/usr/lib/libm.so.6.intermediate",
-                PackageFile::Symlink(PathBuf::from("/usr/lib/libm.so.6.actual")),
+                "/usr/lib/libm-intermediate",
+                PackageFile::Symlink(PathBuf::from("/usr/lib/libm-actual")),
             ),
             (
                 "/usr/lib/libm.so.6",
-                PackageFile::Symlink(PathBuf::from("/usr/lib/libm.so.6.intermediate")),
+                PackageFile::Symlink(PathBuf::from("/usr/lib/libm-intermediate")),
             ),
         ]);
-        let system_deps = create_system_dependencies(&["libm.so.6"]);
+        let system_deps = create_system_dependencies(&["libm.so"]);
         let symlink_resolver = SymlinkResolver::new(&package);
 
         let errors = scan_for_errors(&package, &symlink_resolver, &system_deps);
@@ -391,18 +396,19 @@ mod tests {
 
     #[test]
     fn test_symlink_chain_pointing_outside() {
-        // Symlink chain A -> B -> file, where file is NOT in package, should NOT generate error
+        // Symlink chain A -> B -> file, where file is NOT in package, should NOT generate error.
+        // Use a non-.so intermediate name to avoid spurious matches.
         let package = create_test_package(vec![
             (
-                "/usr/lib/libm.so.6.intermediate",
+                "/usr/lib/libm-intermediate",
                 PackageFile::Symlink(PathBuf::from("/lib/x86_64-linux-gnu/libm.so.6")),
             ),
             (
                 "/usr/lib/libm.so.6",
-                PackageFile::Symlink(PathBuf::from("/usr/lib/libm.so.6.intermediate")),
+                PackageFile::Symlink(PathBuf::from("/usr/lib/libm-intermediate")),
             ),
         ]);
-        let system_deps = create_system_dependencies(&["libm.so.6"]);
+        let system_deps = create_system_dependencies(&["libm.so"]);
         let symlink_resolver = SymlinkResolver::new(&package);
 
         let errors = scan_for_errors(&package, &symlink_resolver, &system_deps);

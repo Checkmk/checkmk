@@ -15,7 +15,7 @@ use anyhow::Result;
 pub fn validate_report(report: &Report<'_>) -> Result<()> {
     if !report.errors.is_empty() {
         for error in &report.errors {
-            eprintln!("ERROR: {}", error);
+            eprintln!("ERROR: {error}");
         }
         return Err(anyhow::anyhow!(
             "System dependencies found in package: {} error(s)",

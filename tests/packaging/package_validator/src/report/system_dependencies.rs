@@ -2,14 +2,14 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
-//! Resolves system dependencies using exact name matching from a configuration file.
+//! Resolves system dependencies by matching the base `.so` name from a configuration file.
 
 use anyhow::{Context, Result};
 use std::collections::HashSet;
 use std::fs;
 use std::path::Path;
 
-/// Resolves system dependencies by matching exact dependency names.
+/// Resolves system dependencies by matching the base `.so` name (version suffix ignored).
 #[derive(Default)]
 pub struct SystemDependencies {
     dependencies: HashSet<String>,
@@ -24,10 +24,10 @@ impl SystemDependencies {
         Self::default()
     }
 
-    /// Create a new `SystemDependencyResolver` from a file containing exact dependency names.
+    /// Create a new `SystemDependencyResolver` from a file containing base `.so` names.
     ///
-    /// Each line in the file is treated as an exact dependency name. Empty lines and lines
-    /// starting with `#` are ignored.
+    /// Each line in the file is treated as a base dependency name (e.g. `libcairo.so`).
+    /// Empty lines and lines starting with `#` are ignored.
     ///
     /// # Errors
     /// Returns an error if the file cannot be read.
@@ -49,17 +49,24 @@ impl SystemDependencies {
         Ok(Self { dependencies })
     }
 
-    /// Get the system dependencies.
-    #[must_use]
-    pub(crate) fn dependencies(&self) -> &HashSet<String> {
-        &self.dependencies
-    }
-
-    /// Check if a dependency name exactly matches any of the system dependencies.
+    /// Check if a dependency matches any system dependency by base `.so` name.
+    ///
+    /// The version suffix is stripped before matching, so `libcairo.so.2` matches
+    /// a `libcairo.so` entry. Names with no version suffix match directly.
     #[must_use]
     pub(crate) fn contains(&self, dependency: &str) -> bool {
-        self.dependencies.contains(dependency)
+        self.dependencies.contains(so_base_name(dependency))
     }
+}
+
+/// Extract the base `.so` name by stripping any trailing version suffix.
+///
+/// For example: `"libcairo.so.2"` → `"libcairo.so"`, `"libm.so.6.0"` → `"libm.so"`.
+/// Names already without a version suffix are returned unchanged.
+fn so_base_name(name: &str) -> &str {
+    name.split_once(".so")
+        .filter(|(_, suffix)| suffix.is_empty() || suffix.starts_with('.'))
+        .map_or(name, |(prefix, _)| &name[..prefix.len() + ".so".len()])
 }
 
 #[cfg(test)]
@@ -77,21 +84,22 @@ mod tests {
     #[test]
     fn test_simple_pattern() {
         let mut file = NamedTempFile::new().unwrap();
-        writeln!(file, "libm.so.6").unwrap();
+        writeln!(file, "libm.so").unwrap();
         file.flush().unwrap();
 
         let dependencies = SystemDependencies::from_file(file.path()).unwrap();
+        // Versioned names on disk match the base .so entry
         assert!(dependencies.contains("libm.so.6"));
-        assert!(!dependencies.contains("libm.so"));
+        assert!(dependencies.contains("libm.so"));
         assert!(!dependencies.contains("libc.so.6"));
     }
 
     #[test]
     fn test_multiple_patterns() {
         let mut file = NamedTempFile::new().unwrap();
-        writeln!(file, "libm.so.6").unwrap();
-        writeln!(file, "libc.so.6").unwrap();
-        writeln!(file, "libpthread.so.0").unwrap();
+        writeln!(file, "libm.so").unwrap();
+        writeln!(file, "libc.so").unwrap();
+        writeln!(file, "libpthread.so").unwrap();
         file.flush().unwrap();
 
         let dependencies = SystemDependencies::from_file(file.path()).unwrap();
@@ -106,9 +114,9 @@ mod tests {
         let mut file = NamedTempFile::new().unwrap();
         writeln!(file, "# This is a comment").unwrap();
         writeln!(file, "").unwrap();
-        writeln!(file, "libm.so.6").unwrap();
+        writeln!(file, "libm.so").unwrap();
         writeln!(file, "  # Another comment").unwrap();
-        writeln!(file, "libc.so.6").unwrap();
+        writeln!(file, "libc.so").unwrap();
         file.flush().unwrap();
 
         let dependencies = SystemDependencies::from_file(file.path()).unwrap();
@@ -126,16 +134,28 @@ mod tests {
     #[test]
     fn test_trimming() {
         let mut file = NamedTempFile::new().unwrap();
-        writeln!(file, "  libm.so.6  ").unwrap();
-        writeln!(file, "libc.so.6").unwrap();
-        writeln!(file, "\tlibpthread.so.0\t").unwrap();
+        writeln!(file, "  libm.so  ").unwrap();
+        writeln!(file, "libc.so").unwrap();
+        writeln!(file, "\tlibpthread.so\t").unwrap();
         file.flush().unwrap();
 
         let dependencies = SystemDependencies::from_file(file.path()).unwrap();
-        // Lines are trimmed when reading, so exact matches work
+        // Lines are trimmed when reading; versioned names on disk match base entries
         assert!(dependencies.contains("libm.so.6"));
         assert!(!dependencies.contains("  libm.so.6  "));
         assert!(dependencies.contains("libc.so.6"));
         assert!(dependencies.contains("libpthread.so.0"));
+    }
+
+    #[test]
+    fn test_so_base_name_version_stripping() {
+        assert_eq!(so_base_name("libcairo.so.2"), "libcairo.so");
+        assert_eq!(so_base_name("libm.so.6"), "libm.so");
+        assert_eq!(so_base_name("libbz2.so.1.0"), "libbz2.so");
+        assert_eq!(so_base_name("libpcap.so.0.8"), "libpcap.so");
+        // Names without a version suffix are unchanged
+        assert_eq!(so_base_name("libperl.so"), "libperl.so");
+        assert_eq!(so_base_name("libtcl8.6.so"), "libtcl8.6.so");
+        assert_eq!(so_base_name("libnspr4.so"), "libnspr4.so");
     }
 }

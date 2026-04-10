@@ -41,7 +41,7 @@ get_candidates_from_filesystem() {
     if [ -d "omd/non-free/packages" ]; then
         SEARCH+=" omd/non-free/packages"
     fi
-    SEARCH+=" omd/dependency_management"
+    SEARCH+=" omd/license_sources"
     SEARCH+=" omd/packages/appliance"
     SEARCH+=" omd/packages/maintenance"
     SEARCH+=" omd/packages/omd"

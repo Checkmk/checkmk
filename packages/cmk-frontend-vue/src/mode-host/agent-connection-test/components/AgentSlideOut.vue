@@ -57,9 +57,6 @@ const packageFormatDeb = 'deb'
 const packageFormatTgz = 'tgz'
 
 const model = ref(sessionStorage.getItem('slideInModelState') || packageFormatDeb)
-watch(model, (newValue) => {
-  model.value = newValue
-})
 sessionStorage.removeItem('slideInModelState')
 sessionStorage.removeItem('slideInTabState')
 
@@ -73,6 +70,9 @@ function saveHostAction() {
   cmk.page_menu.form_submit('edit_host', 'save_and_edit')
 }
 const ott = ref<string | null | Error>(null)
+watch([openedTab, model], () => {
+  ott.value = null
+})
 
 function tabNeedsToken(tab: AgentSlideOutTabs): boolean {
   if (tab.installCmd) {

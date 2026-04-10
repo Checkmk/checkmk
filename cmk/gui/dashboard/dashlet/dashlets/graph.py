@@ -23,7 +23,7 @@ from cmk.gui.dashboard.exceptions import WidgetRenderError
 from cmk.gui.dashboard.type_defs import ABCGraphDashletConfig
 from cmk.gui.exceptions import MKMissingDataError, MKUserError
 from cmk.gui.graphing import (
-    compute_translated_metrics,
+    fetch_graph_row,
     get_graph_plugin_and_single_metric_choices,
     get_graph_plugin_choices,
     get_metric_spec,
@@ -37,7 +37,6 @@ from cmk.gui.graphing import (
     GraphSpecification,
     metrics_from_api,
     MKCombinedGraphLimitExceededError,
-    parse_perf_data,
     RegisteredMetric,
     TemplateGraphSpecification,
 )
@@ -60,7 +59,6 @@ from cmk.gui.valuespec import (
 from cmk.gui.visuals import (
     get_only_sites_from_context,
     get_singlecontext_vars,
-    livestatus_query_bare,
 )
 from cmk.utils.servicename import ServiceName
 
@@ -374,38 +372,34 @@ def _graph_and_single_metric_templates_choices_for_context(
     debug: bool,
     temperature_unit: TemperatureUnit,
 ) -> tuple[list[GraphPluginChoice], list[GraphPluginChoice]]:
-    graph_template_choices: list[GraphPluginChoice] = []
-    single_metric_template_choices: list[GraphPluginChoice] = []
+    if "host" not in context or "service" not in context:
+        return [], []
 
-    for row in livestatus_query_bare(
-        "service",
-        context,
-        ["service_check_command", "service_perf_data", "service_metrics"],
-    ):
-        perf_data, check_command = parse_perf_data(
-            row["service_perf_data"], row["service_check_command"], debug=debug
-        )
-        graph_template_choices_for_row, single_metric_template_choices_for_row = (
-            get_graph_plugin_and_single_metric_choices(
-                registered_metrics,
-                registered_graphs,
-                row["site"],
-                HostName(context["host"]["host"]),
-                ServiceName(context["service"]["service"]),
-                compute_translated_metrics(
-                    perf_data,
-                    row["service_metrics"],
-                    check_command,
-                    registered_metrics,
-                    debug=debug,
-                    temperature_unit=temperature_unit,
-                ),
-            )
-        )
-        graph_template_choices.extend(graph_template_choices_for_row)
-        single_metric_template_choices.extend(single_metric_template_choices_for_row)
+    only_sites = get_only_sites_from_context(context)
+    site_id = only_sites[0] if only_sites and len(only_sites) == 1 else None
+    host_name = HostName(context["host"]["host"])
+    service_name = ServiceName(context["service"]["service"])
 
-    return graph_template_choices, single_metric_template_choices
+    try:
+        graph_row = fetch_graph_row(
+            site_id,
+            host_name,
+            service_name,
+            registered_metrics,
+            debug=debug,
+            temperature_unit=temperature_unit,
+        )
+    except livestatus.MKLivestatusNotFoundError:
+        return [], []
+
+    return get_graph_plugin_and_single_metric_choices(
+        registered_metrics,
+        registered_graphs,
+        graph_row.site,
+        graph_row.host_name,
+        graph_row.service_name,
+        graph_row.translated_metrics,
+    )
 
 
 def _sorted_matching_graph_template_choices(

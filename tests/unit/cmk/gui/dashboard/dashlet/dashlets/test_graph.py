@@ -47,17 +47,18 @@ def test_graph_templates_autocompleter_testable_constrained_by_host_and_service(
                 {
                     "host_name": "my-host",
                     "service_description": "my-service",
-                    "service_check_command": "check_command",
-                    "service_perf_data": "metric1=1.35;;;; metric2=2.89;;;;",
-                    "service_metrics": ["metric1", "metric2"],
+                    "check_command": "check_command",
+                    "perf_data": "metric1=1.35;;;; metric2=2.89;;;;",
+                    "metrics": ["metric1", "metric2"],
                 }
             ],
         )
         mock_livestatus.expect_query(
             """GET services
-Columns: service_check_command service_perf_data service_metrics
+Columns: perf_data metrics check_command
 Filter: host_name = my-host
 Filter: service_description = my-service
+ColumnHeaders: off
 
 """
         )
@@ -98,17 +99,18 @@ def test_graph_templates_autocompleter_testable_constrained_by_host_and_service_
                 {
                     "host_name": "my-host",
                     "service_description": "my-service",
-                    "service_check_command": "check_command",
-                    "service_perf_data": "metric1=1.35;;;; metric2=2.89;;;;",
-                    "service_metrics": ["metric1", "metric2"],
+                    "check_command": "check_command",
+                    "perf_data": "metric1=1.35;;;; metric2=2.89;;;;",
+                    "metrics": ["metric1", "metric2"],
                 }
             ],
         )
         mock_livestatus.expect_query(
             """GET services
-Columns: service_check_command service_perf_data service_metrics
+Columns: perf_data metrics check_command
 Filter: host_name = my-host
 Filter: service_description = my-service
+ColumnHeaders: off
 
 """
         )

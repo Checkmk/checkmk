@@ -1,0 +1,9 @@
+# System dependencies for Checkmk application (Agents should be excluded with ignore-files.txt).
+libimagequant.so
+liblber.so
+libldap.so
+liblz4.so
+libsystemd.so
+libwebp.so
+libwebpdemux.so
+libwebpmux.so

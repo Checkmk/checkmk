@@ -32,20 +32,34 @@ impl SystemDependencies {
     /// # Errors
     /// Returns an error if the file cannot be read.
     pub fn from_file<P: AsRef<Path>>(path: P) -> Result<Self> {
-        let content = fs::read_to_string(path.as_ref()).with_context(|| {
-            format!(
-                "Failed to read system deps file: {}",
-                path.as_ref().display()
-            )
-        })?;
+        Self::from_files(std::slice::from_ref(&path))
+    }
 
-        let dependencies: HashSet<String> = content
-            .lines()
-            .map(str::trim)
-            .filter(|line| !line.is_empty() && !line.starts_with('#'))
-            .map(std::string::ToString::to_string)
-            .collect();
-
+    /// Create a new `SystemDependencyResolver` by merging one or more files.
+    ///
+    /// Each file follows the same format as [`from_file`](Self::from_file).
+    /// Dependencies from all files are unioned into a single set, so distro-specific
+    /// files can extend a shared base file without duplication.
+    ///
+    /// # Errors
+    /// Returns an error if any file cannot be read.
+    pub fn from_files<P: AsRef<Path>>(paths: &[P]) -> Result<Self> {
+        let mut dependencies = HashSet::new();
+        for path in paths {
+            let content = fs::read_to_string(path.as_ref()).with_context(|| {
+                format!(
+                    "Failed to read system deps file: {}",
+                    path.as_ref().display()
+                )
+            })?;
+            dependencies.extend(
+                content
+                    .lines()
+                    .map(str::trim)
+                    .filter(|line| !line.is_empty() && !line.starts_with('#'))
+                    .map(std::string::ToString::to_string),
+            );
+        }
         Ok(Self { dependencies })
     }
 
@@ -122,6 +136,31 @@ mod tests {
         let dependencies = SystemDependencies::from_file(file.path()).unwrap();
         assert!(dependencies.contains("libm.so.6"));
         assert!(dependencies.contains("libc.so.6"));
+    }
+
+    #[test]
+    fn test_from_files_merges_dependencies() {
+        let mut file1 = NamedTempFile::new().unwrap();
+        writeln!(file1, "libm.so").unwrap();
+        writeln!(file1, "libc.so").unwrap();
+        file1.flush().unwrap();
+
+        let mut file2 = NamedTempFile::new().unwrap();
+        writeln!(file2, "libssl.so").unwrap();
+        writeln!(file2, "libc.so").unwrap(); // duplicate — should not double-count
+        file2.flush().unwrap();
+
+        let dependencies = SystemDependencies::from_files(&[file1.path(), file2.path()]).unwrap();
+        assert!(dependencies.contains("libm.so.6"));
+        assert!(dependencies.contains("libc.so.6"));
+        assert!(dependencies.contains("libssl.so.1"));
+        assert!(!dependencies.contains("libpthread.so"));
+    }
+
+    #[test]
+    fn test_from_files_empty_slice() {
+        let dependencies = SystemDependencies::from_files::<&str>(&[]).unwrap();
+        assert!(!dependencies.contains("libm.so"));
     }
 
     #[test]

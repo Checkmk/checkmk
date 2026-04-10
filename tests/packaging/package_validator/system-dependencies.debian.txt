@@ -1,0 +1,15 @@
+# System dependencies for Checkmk application (Agents should be excluded with ignore-files.txt).
+libgnutls.so
+libgsf-1.so
+libnspr4.so
+libnss3.so
+libnssutil3.so
+libplc4.so
+libplds4.so
+libsmime3.so
+libssl3.so
+libtcl8.6.so
+libtk8.6.so
+libwebp.so
+libwebpdemux.so
+libwebpmux.so

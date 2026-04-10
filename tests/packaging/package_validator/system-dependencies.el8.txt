@@ -1,0 +1,5 @@
+# System dependencies for Checkmk application (Agents should be excluded with ignore-files.txt).
+libdb-5.3.so
+liblber-2.4.so
+libldap-2.4.so
+libutil.so

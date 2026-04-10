@@ -59,8 +59,104 @@ build_test(
 )
 
 filegroup(
-    name = "system_dependencies",
-    srcs = ["system-dependencies.txt"],
+    name = "system_dependencies_all",
+    srcs = ["system-dependencies.all.txt"],
+    visibility = ["//visibility:public"],
+)
+
+filegroup(
+    name = "system_dependencies_ubuntu",
+    srcs = ["system-dependencies.ubuntu.txt"],
+    visibility = ["//visibility:public"],
+)
+
+filegroup(
+    name = "system_dependencies_debian",
+    srcs = ["system-dependencies.debian.txt"],
+    visibility = ["//visibility:public"],
+)
+
+filegroup(
+    name = "system_dependencies_el",
+    srcs = ["system-dependencies.el.txt"],
+    visibility = ["//visibility:public"],
+)
+
+filegroup(
+    name = "system_dependencies_sles",
+    srcs = ["system-dependencies.sles.txt"],
+    visibility = ["//visibility:public"],
+)
+
+filegroup(
+    name = "system_dependencies_noble",
+    srcs = ["system-dependencies.noble.txt"],
+    visibility = ["//visibility:public"],
+)
+
+filegroup(
+    name = "system_dependencies_jammy",
+    srcs = ["system-dependencies.jammy.txt"],
+    visibility = ["//visibility:public"],
+)
+
+filegroup(
+    name = "system_dependencies_questing",
+    srcs = ["system-dependencies.questing.txt"],
+    visibility = ["//visibility:public"],
+)
+
+filegroup(
+    name = "system_dependencies_trixie",
+    srcs = ["system-dependencies.trixie.txt"],
+    visibility = ["//visibility:public"],
+)
+
+filegroup(
+    name = "system_dependencies_bookworm",
+    srcs = ["system-dependencies.bookworm.txt"],
+    visibility = ["//visibility:public"],
+)
+
+filegroup(
+    name = "system_dependencies_el8",
+    srcs = ["system-dependencies.el8.txt"],
+    visibility = ["//visibility:public"],
+)
+
+filegroup(
+    name = "system_dependencies_el9",
+    srcs = ["system-dependencies.el9.txt"],
+    visibility = ["//visibility:public"],
+)
+
+filegroup(
+    name = "system_dependencies_el10",
+    srcs = ["system-dependencies.el10.txt"],
+    visibility = ["//visibility:public"],
+)
+
+filegroup(
+    name = "system_dependencies_sles15sp6",
+    srcs = ["system-dependencies.sles15sp6.txt"],
+    visibility = ["//visibility:public"],
+)
+
+filegroup(
+    name = "system_dependencies_sles15sp7",
+    srcs = ["system-dependencies.sles15sp7.txt"],
+    visibility = ["//visibility:public"],
+)
+
+filegroup(
+    name = "system_dependencies_sles16_0",
+    srcs = ["system-dependencies.sles16.0.txt"],
+    visibility = ["//visibility:public"],
+)
+
+filegroup(
+    name = "system_dependencies_cma",
+    srcs = ["system-dependencies.cma.txt"],
     visibility = ["//visibility:public"],
 )
 

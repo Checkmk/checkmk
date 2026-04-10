@@ -1,0 +1,3 @@
+# System dependencies for Checkmk application (Agents should be excluded with ignore-files.txt).
+liblber-2.4.so
+libldap_r-2.4.so

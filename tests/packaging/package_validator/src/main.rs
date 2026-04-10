@@ -18,7 +18,7 @@ use std::path::PathBuf;
 fn main() -> Result<()> {
     let args = Args::parse();
     let package = extract_package(&args.package)?;
-    let system_dependencies = create_system_dependencies(args.system_dependencies.as_ref())?;
+    let system_dependencies = create_system_dependencies(&args.system_dependencies)?;
     let ignore_files = create_ignore_files(args.ignore_files.as_ref())?;
     let report = Report::new(&package, &system_dependencies, &ignore_files)?;
     write_report_to_file(&report, &args.report)?;
@@ -44,12 +44,12 @@ fn extract_package(path: &Path) -> Result<Package> {
     Ok(package)
 }
 
-fn create_system_dependencies(path: Option<&PathBuf>) -> Result<SystemDependencies> {
-    if let Some(system_dependencies) = path {
-        Ok(SystemDependencies::from_file(system_dependencies)
-            .with_context(|| "Failed to read system dependencies file")?)
-    } else {
+fn create_system_dependencies(paths: &[PathBuf]) -> Result<SystemDependencies> {
+    if paths.is_empty() {
         Ok(SystemDependencies::empty())
+    } else {
+        SystemDependencies::from_files(paths)
+            .with_context(|| "Failed to read system dependencies file(s)")
     }
 }
 

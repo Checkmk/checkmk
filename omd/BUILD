@@ -980,15 +980,57 @@ sh_test(
     args = [
         "$(location :deb)",
         "$(location //tests/packaging/package_validator:package_validator)",
-        "$(location //tests/packaging/package_validator:system_dependencies)",
         "$(location //tests/packaging/package_validator:ignore_files)",
-    ],
+        "$(location //tests/packaging/package_validator:system_dependencies_all)",
+    ] + select({
+        "@cmk//distro:debian-12": [
+            "$(location //tests/packaging/package_validator:system_dependencies_debian)",
+            "$(location //tests/packaging/package_validator:system_dependencies_bookworm)",
+        ],
+        "@cmk//distro:debian-13": [
+            "$(location //tests/packaging/package_validator:system_dependencies_debian)",
+            "$(location //tests/packaging/package_validator:system_dependencies_trixie)",
+        ],
+        "@cmk//distro:ubuntu-22.04": [
+            "$(location //tests/packaging/package_validator:system_dependencies_ubuntu)",
+            "$(location //tests/packaging/package_validator:system_dependencies_jammy)",
+        ],
+        "@cmk//distro:ubuntu-24.04": [
+            "$(location //tests/packaging/package_validator:system_dependencies_ubuntu)",
+            "$(location //tests/packaging/package_validator:system_dependencies_noble)",
+        ],
+        "@cmk//distro:ubuntu-25.10": [
+            "$(location //tests/packaging/package_validator:system_dependencies_ubuntu)",
+            "$(location //tests/packaging/package_validator:system_dependencies_questing)",
+        ],
+    }),
     data = [
         ":deb",
         "//tests/packaging/package_validator",
         "//tests/packaging/package_validator:ignore_files",
-        "//tests/packaging/package_validator:system_dependencies",
-    ],
+        "//tests/packaging/package_validator:system_dependencies_all",
+    ] + select({
+        "@cmk//distro:debian-12": [
+            "//tests/packaging/package_validator:system_dependencies_bookworm",
+            "//tests/packaging/package_validator:system_dependencies_debian",
+        ],
+        "@cmk//distro:debian-13": [
+            "//tests/packaging/package_validator:system_dependencies_debian",
+            "//tests/packaging/package_validator:system_dependencies_trixie",
+        ],
+        "@cmk//distro:ubuntu-22.04": [
+            "//tests/packaging/package_validator:system_dependencies_jammy",
+            "//tests/packaging/package_validator:system_dependencies_ubuntu",
+        ],
+        "@cmk//distro:ubuntu-24.04": [
+            "//tests/packaging/package_validator:system_dependencies_noble",
+            "//tests/packaging/package_validator:system_dependencies_ubuntu",
+        ],
+        "@cmk//distro:ubuntu-25.10": [
+            "//tests/packaging/package_validator:system_dependencies_questing",
+            "//tests/packaging/package_validator:system_dependencies_ubuntu",
+        ],
+    }),
     tags = ["manual"],
 )
 
@@ -1056,16 +1098,71 @@ sh_test(
     args = [
         "$(location :rpm)",
         "$(location //tests/packaging/package_validator:package_validator)",
-        "$(location //tests/packaging/package_validator:system_dependencies)",
         "$(location //tests/packaging/package_validator:ignore_files)",
-    ],
+        "$(location //tests/packaging/package_validator:system_dependencies_all)",
+    ] + select({
+        "@cmk//distro:almalinux-10": [
+            "$(location //tests/packaging/package_validator:system_dependencies_el)",
+            "$(location //tests/packaging/package_validator:system_dependencies_el10)",
+        ],
+        "@cmk//distro:almalinux-8": [
+            "$(location //tests/packaging/package_validator:system_dependencies_el)",
+            "$(location //tests/packaging/package_validator:system_dependencies_el8)",
+        ],
+        "@cmk//distro:almalinux-9": [
+            "$(location //tests/packaging/package_validator:system_dependencies_el)",
+            "$(location //tests/packaging/package_validator:system_dependencies_el9)",
+        ],
+        "@cmk//distro:sles-15sp6": [
+            "$(location //tests/packaging/package_validator:system_dependencies_sles)",
+            "$(location //tests/packaging/package_validator:system_dependencies_sles15sp6)",
+        ],
+        "@cmk//distro:sles-15sp7": [
+            "$(location //tests/packaging/package_validator:system_dependencies_sles)",
+            "$(location //tests/packaging/package_validator:system_dependencies_sles15sp7)",
+        ],
+        "@cmk//distro:sles-16.0": [
+            "$(location //tests/packaging/package_validator:system_dependencies_sles)",
+            "$(location //tests/packaging/package_validator:system_dependencies_sles16_0)",
+        ],
+    }),
     data = [
         ":rpm",
         "//tests/packaging/package_validator",
         "//tests/packaging/package_validator:ignore_files",
-        "//tests/packaging/package_validator:system_dependencies",
-    ],
+        "//tests/packaging/package_validator:system_dependencies_all",
+    ] + select({
+        "@cmk//distro:almalinux-10": [
+            "//tests/packaging/package_validator:system_dependencies_el",
+            "//tests/packaging/package_validator:system_dependencies_el10",
+        ],
+        "@cmk//distro:almalinux-8": [
+            "//tests/packaging/package_validator:system_dependencies_el",
+            "//tests/packaging/package_validator:system_dependencies_el8",
+        ],
+        "@cmk//distro:almalinux-9": [
+            "//tests/packaging/package_validator:system_dependencies_el",
+            "//tests/packaging/package_validator:system_dependencies_el9",
+        ],
+        "@cmk//distro:sles-15sp6": [
+            "//tests/packaging/package_validator:system_dependencies_sles",
+            "//tests/packaging/package_validator:system_dependencies_sles15sp6",
+        ],
+        "@cmk//distro:sles-15sp7": [
+            "//tests/packaging/package_validator:system_dependencies_sles",
+            "//tests/packaging/package_validator:system_dependencies_sles15sp7",
+        ],
+        "@cmk//distro:sles-16.0": [
+            "//tests/packaging/package_validator:system_dependencies_sles",
+            "//tests/packaging/package_validator:system_dependencies_sles16_0",
+        ],
+    }),
     tags = ["manual"],
+    target_compatible_with = select({
+        "@cmk//distro:almalinux": [],
+        "@cmk//distro:sles": [],
+        "//conditions:default": ["@platforms//:incompatible"],
+    }),
 )
 
 pkg_tar(
@@ -1111,14 +1208,16 @@ sh_test(
     args = [
         "$(location :cma)",
         "$(location //tests/packaging/package_validator:package_validator)",
-        "$(location //tests/packaging/package_validator:system_dependencies)",
         "$(location //tests/packaging/package_validator:ignore_files)",
+        "$(location //tests/packaging/package_validator:system_dependencies_all)",
+        "$(location //tests/packaging/package_validator:system_dependencies_cma)",
     ],
     data = [
         ":cma",
         "//tests/packaging/package_validator",
         "//tests/packaging/package_validator:ignore_files",
-        "//tests/packaging/package_validator:system_dependencies",
+        "//tests/packaging/package_validator:system_dependencies_all",
+        "//tests/packaging/package_validator:system_dependencies_cma",
     ],
     tags = ["manual"],
 )

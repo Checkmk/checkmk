@@ -289,7 +289,8 @@ def translate_metrics(
     return translated_metrics
 
 
-def available_metrics_translated(
+@tracer.instrument("graphing.compute_translated_metrics")
+def compute_translated_metrics(
     perf_data_string: str,
     rrd_metrics: list[MetricName],
     check_command: str,

@@ -51,7 +51,7 @@ from ._graph_specification import (
 )
 from ._graphs_order import GRAPHS_ORDER
 from ._rrd import get_graph_data_from_livestatus
-from ._translated_metrics import available_metrics_translated, TranslatedMetric
+from ._translated_metrics import compute_translated_metrics, TranslatedMetric
 from ._unit import ConvertibleUnitSpecification, user_specific_unit
 
 tracer = trace.get_tracer()
@@ -382,7 +382,7 @@ class TemplateGraphSpecification(GraphSpecification, frozen=True):
         row = self._get_graph_data_from_livestatus()
         what = "service" if "service_check_command" in row else "host"
         if not (
-            translated_metrics := available_metrics_translated(
+            translated_metrics := compute_translated_metrics(
                 row[what + "_perf_data"],
                 row[what + "_metrics"],
                 row[what + "_check_command"],

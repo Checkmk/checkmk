@@ -77,7 +77,7 @@ from ._rrd import (
     translate_and_merge_rrd_columns,
 )
 from ._translated_metrics import (
-    available_metrics_translated,
+    compute_translated_metrics,
     lookup_metric_translations_for_check_command,
     parse_perf_data,
     translate_metrics,
@@ -144,7 +144,7 @@ __all__ = [
     "ValuesWithUnits",
     "_reverse_translate_into_all_potentially_relevant_metrics_cached",
     "all_rrd_columns_potentially_relevant_for_metric",
-    "available_metrics_translated",
+    "compute_translated_metrics",
     "check_metrics",
     "compute_graph_artwork",
     "iter_graph_artworks",

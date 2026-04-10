@@ -23,7 +23,7 @@ from cmk.gui.dashboard.exceptions import WidgetRenderError
 from cmk.gui.dashboard.type_defs import ABCGraphDashletConfig
 from cmk.gui.exceptions import MKMissingDataError, MKUserError
 from cmk.gui.graphing import (
-    available_metrics_translated,
+    compute_translated_metrics,
     get_graph_plugin_and_single_metric_choices,
     get_graph_plugin_choices,
     get_metric_spec,
@@ -389,7 +389,7 @@ def _graph_and_single_metric_templates_choices_for_context(
                 row["site"],
                 HostName(context["host"]["host"]),
                 ServiceName(context["service"]["service"]),
-                available_metrics_translated(
+                compute_translated_metrics(
                     row["service_perf_data"],
                     row["service_metrics"],
                     row["service_check_command"],

@@ -44,12 +44,12 @@ def create_namespace_api_sections(
         ),
         WriteableSection(
             piggyback_name=piggyback_name,
-            section_name=SectionName("kube_memory_resources_v1"),
+            section_name=SectionName("kube_memory_resources_v2"),
             section=collect_memory_resources_from_api_pods(namespace_api_pods),
         ),
         WriteableSection(
             piggyback_name=piggyback_name,
-            section_name=SectionName("kube_cpu_resources_v1"),
+            section_name=SectionName("kube_cpu_resources_v2"),
             section=collect_cpu_resources_from_api_pods(namespace_api_pods),
         ),
     )

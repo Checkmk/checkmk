@@ -22,8 +22,8 @@ from cmk.plugins.kube.kube_resources import (
 )
 from cmk.plugins.kube.schemata.section import AllocatableResource, PerformanceUsage, Resources
 
-agent_section_kube_memory_resources_v1 = AgentSection(
-    name="kube_memory_resources_v1",
+agent_section_kube_memory_resources_v2 = AgentSection(
+    name="kube_memory_resources_v2",
     parse_function=parse_resources,
     parsed_section_name="kube_memory_resources",
 )

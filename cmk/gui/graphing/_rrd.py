@@ -88,6 +88,11 @@ def fetch_graph_row(
     site_id: list[SiteId] | SiteId | None,
     host_name: HostName,
     service_description: ServiceName,
+    registered_metrics: Mapping[str, RegisteredMetric],
+    explicit_color: str = "",
+    *,
+    debug: bool,
+    temperature_unit: TemperatureUnit,
 ) -> HostGraphRow | ServiceGraphRow:
     columns = ["perf_data", "metrics", "check_command"]
     query = livestatus_lql([host_name], columns, service_description)
@@ -99,7 +104,16 @@ def fetch_graph_row(
 
     raw = dict(zip(labels, values))
     perf_data, check_command = parse_perf_data(
-        raw[f"{what}_perf_data"], raw[f"{what}_check_command"], debug=False
+        raw[f"{what}_perf_data"], raw[f"{what}_check_command"], debug=debug
+    )
+    translated = compute_translated_metrics(
+        perf_data,
+        raw[f"{what}_metrics"],
+        check_command,
+        registered_metrics,
+        explicit_color,
+        debug=debug,
+        temperature_unit=temperature_unit,
     )
     if what == "host":
         return HostGraphRow(
@@ -108,6 +122,7 @@ def fetch_graph_row(
             performance_data=perf_data,
             metrics=raw["host_metrics"],
             check_command=check_command,
+            translated_metrics=translated,
         )
     return ServiceGraphRow(
         site=SiteId(site),
@@ -116,6 +131,7 @@ def fetch_graph_row(
         performance_data=perf_data,
         metrics=raw["service_metrics"],
         check_command=check_command,
+        translated_metrics=translated,
     )
 
 

@@ -27,6 +27,7 @@ from cmk.gui.graphing._graph_templates import (
 )
 from cmk.gui.graphing._rrd import HostGraphRow, ServiceGraphRow
 from cmk.gui.graphing._translated_metrics import (
+    compute_translated_metrics,
     parse_perf_data,
     translate_metrics,
 )
@@ -579,6 +580,14 @@ class _FakeTemplateGraphSpecification(TemplateGraphSpecification):
                 performance_data=perf_data,
                 metrics=["metric1", "metric2"],
                 check_command=check_command,
+                translated_metrics=compute_translated_metrics(
+                    perf_data,
+                    ["metric1", "metric2"],
+                    check_command,
+                    env.registered_metrics,
+                    debug=env.debug,
+                    temperature_unit=env.temperature_unit,
+                ),
             )
         ]
 
@@ -2004,14 +2013,23 @@ class _FakeTemplateGraphSpecificationFS(TemplateGraphSpecification):
             "check_mk-df",
             debug=False,
         )
+        metrics_list = ["fs_used", "fs_free", "fs_size", "growth"]
         return [
             ServiceGraphRow(
                 site=SiteId("site_id"),
                 host_name=HostName("host_name"),
                 service_name=ServiceName("service_name"),
                 performance_data=perf_data,
-                metrics=["fs_used", "fs_free", "fs_size", "growth"],
+                metrics=metrics_list,
                 check_command=check_command,
+                translated_metrics=compute_translated_metrics(
+                    perf_data,
+                    metrics_list,
+                    check_command,
+                    env.registered_metrics,
+                    debug=env.debug,
+                    temperature_unit=env.temperature_unit,
+                ),
             )
         ]
 

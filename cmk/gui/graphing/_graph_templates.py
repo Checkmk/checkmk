@@ -50,7 +50,7 @@ from ._graph_specification import (
 )
 from ._graphs_order import GRAPHS_ORDER
 from ._rrd import fetch_graph_row, HostGraphRow, ServiceGraphRow
-from ._translated_metrics import compute_translated_metrics, TranslatedMetric
+from ._translated_metrics import TranslatedMetric
 from ._unit import ConvertibleUnitSpecification, user_specific_unit
 
 tracer = trace.get_tracer()
@@ -311,7 +311,16 @@ class TemplateGraphSpecification(GraphSpecification, frozen=True):
         return "template"
 
     def fetch_rows(self, env: GraphEnvironment) -> Sequence[HostGraphRow | ServiceGraphRow]:
-        return [fetch_graph_row(self.site, self.host_name, self.service_description)]
+        return [
+            fetch_graph_row(
+                self.site,
+                self.host_name,
+                self.service_description,
+                env.registered_metrics,
+                debug=env.debug,
+                temperature_unit=env.temperature_unit,
+            )
+        ]
 
     @classmethod
     def _make_specification(
@@ -377,17 +386,9 @@ class TemplateGraphSpecification(GraphSpecification, frozen=True):
     ) -> Sequence[GraphRecipeWithOverrides]:
         if not rows:
             return []
+
         row = rows[0]
-        if not (
-            translated_metrics := compute_translated_metrics(
-                row.performance_data,
-                row.metrics,
-                row.check_command,
-                env.registered_metrics,
-                debug=env.debug,
-                temperature_unit=env.temperature_unit,
-            )
-        ):
+        if not row.translated_metrics:
             return []
 
         site_id = row.site
@@ -402,7 +403,7 @@ class TemplateGraphSpecification(GraphSpecification, frozen=True):
         if (
             isinstance(self.graph_id, str)
             and self.graph_id.startswith("METRIC_")
-            and self.graph_id[7:] in translated_metrics
+            and self.graph_id[7:] in row.translated_metrics
         ):
             recipes = [
                 (
@@ -413,7 +414,7 @@ class TemplateGraphSpecification(GraphSpecification, frozen=True):
                         host_name,
                         service_name,
                         consolidation_function,
-                        translated_metrics[self.graph_id[7:]],
+                        row.translated_metrics[self.graph_id[7:]],
                         temperature_unit=env.temperature_unit,
                     ),
                 )
@@ -428,7 +429,7 @@ class TemplateGraphSpecification(GraphSpecification, frozen=True):
                         site_id,
                         host_name,
                         service_name,
-                        translated_metrics,
+                        row.translated_metrics,
                         consolidation_function=consolidation_function,
                         temperature_unit=env.temperature_unit,
                     )

@@ -25,7 +25,7 @@ impl PackageExtractor for CmaExtractor {
     /// Returns an error if the package cannot be extracted.
     ///
     /// # Timeout
-    /// This function enforces a timeout of 30 seconds for the `tar` subprocess.
+    /// This function enforces a timeout of 3 minutes for the `tar` subprocess.
     /// If extraction takes longer, the process will be killed and a `CommandTimeout`
     /// error will be returned.
     fn extract(package: &Path, dest: &TempDir) -> PackageResult<PackageFiles> {

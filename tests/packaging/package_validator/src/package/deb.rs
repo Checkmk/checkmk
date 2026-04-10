@@ -23,7 +23,7 @@ impl PackageExtractor for DebExtractor {
     /// Returns an error if the package cannot be extracted.
     ///
     /// # Timeout
-    /// This function enforces a timeout of 30 seconds for the `dpkg-deb` subprocess.
+    /// This function enforces a timeout of 3 minutes for the `dpkg-deb` subprocess.
     /// If extraction takes longer, the process will be killed and a `CommandTimeout`
     /// error will be returned.
     fn extract(package: &Path, dest: &TempDir) -> PackageResult<PackageFiles> {

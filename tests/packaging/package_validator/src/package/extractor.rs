@@ -17,8 +17,8 @@ use super::elf::ElfError;
 use super::files::PackageFile;
 use super::PackageFiles;
 
-/// Default timeout for package extraction commands (30 seconds).
-pub(crate) const DEFAULT_EXTRACTION_TIMEOUT: Duration = Duration::from_secs(30);
+/// Default timeout for package extraction commands (3 minutes).
+pub(crate) const DEFAULT_EXTRACTION_TIMEOUT: Duration = Duration::from_secs(180);
 
 /// Result type for package operations.
 pub type PackageResult<T> = std::result::Result<T, PackageError>;

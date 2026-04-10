@@ -70,6 +70,9 @@ def _collect_test_site_base_data(
                     base_data[host_name].pop(skipped_check)
 
             base_data_status_ok[host_name] = get_services_with_status(base_data[host_name], 0)
+    # Record crash reports. Such crash reports are ignored during per-test validations
+    # performed in tests.conftest::pytest_runtest_teardown
+    test_site_base.known_crashes.update(test_site_base.crash_reports_dirs())
     return test_site_base, psd_rules_base, base_data, base_data_status_ok
 
 

@@ -137,6 +137,23 @@ def fixture_new_browser_context_and_page(
     return context, get_new_page(context)
 
 
+def pytest_collection_modifyitems(items: list[pytest.Item]) -> None:
+    """Work around playwright-pytest#195: group tests by function, not by browser session.
+
+    Link: https://github.com/microsoft/playwright-pytest/issues/195
+
+    playwright-pytest parametrizes 'browser_name' at session scope, which causes pytest
+    to interleave parametrized test cases across functions. This stable sort restores the
+    expected behavior of running all cases for one function before moving to the next.
+    """
+    items.sort(
+        key=lambda item: (
+            str(item.fspath),
+            getattr(item, "originalname", item.name.split("[")[0]),
+        )
+    )
+
+
 def pytest_addoption(parser: pytest.Parser) -> None:
     parser.addoption(
         "--update-rules",

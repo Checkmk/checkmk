@@ -65,6 +65,8 @@ py_library(
         "cmk/fetchers/_piggyback.py",
         "cmk/fetchers/_program.py",
         "cmk/fetchers/_snmp/__init__.py",
+        "cmk/fetchers/_snmp/_cache.py",
+        "cmk/fetchers/_snmp/_fetcher.py",
         "cmk/fetchers/_snmp/_scan.py",
         "cmk/fetchers/_tcp/__init__.py",
         "cmk/fetchers/_tcp/agent_protocol.py",

@@ -17,7 +17,7 @@ from pyghmi.exceptions import IpmiException  # type: ignore[import-untyped,unuse
 from pytest import MonkeyPatch
 
 import cmk.ccc.resulttype as result
-import cmk.fetchers._snmp as snmp
+import cmk.fetchers._snmp._fetcher as snmp
 from cmk.ccc.exceptions import MKTimeout, OnError
 from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.fetchers import (

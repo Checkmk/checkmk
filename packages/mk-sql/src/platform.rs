@@ -268,6 +268,7 @@ mod tests {
 #[cfg(windows)]
 pub mod odbc {
     use super::Block;
+    use crate::types::ClusterName;
     use anyhow::Result;
     use odbc_api::{
         buffers::{ColumnarBuffer, TextColumn, TextRowSet},
@@ -310,15 +311,22 @@ pub mod odbc {
     /// always SSPI = Trusted connection, but TrustServerCertificate depends
     pub fn make_connection_string(
         hostname: Option<&HostName>,
+        cluster_name: Option<&ClusterName>,
         instance: &InstanceName,
         database: Option<&str>,
         driver: Option<&str>,
         trust_server_certificate: bool,
     ) -> String {
+        let server = match cluster_name {
+            Some(c) => c.to_string(),
+            None => hostname
+                .map(|h| h.to_string())
+                .unwrap_or_else(|| "(local)".to_string()),
+        };
         format!(
             "Driver={{{}}};SERVER={}{};Database={};Integrated Security=SSPI;Trusted_Connection=yes;Encrypt=yes;TrustServerCertificate={};",
             driver.unwrap_or(&ODBC_DRIVER.clone()),
-            hostname.map(|h| h.to_string()).unwrap_or("(local)".to_string()),
+            server,
             if instance.to_string().to_uppercase() == *"MSSQLSERVER" {
                 "".to_string()
             } else {
@@ -413,11 +421,12 @@ pub mod odbc {
     #[cfg(test)]
     mod tests {
         use crate::platform::odbc::{self, ODBC_DRIVER};
-        use crate::types::{HostName, InstanceName};
+        use crate::types::{ClusterName, HostName, InstanceName};
 
         #[test]
         fn test_make_connection_string() {
             assert_eq!( odbc::make_connection_string(
+                None,
                 None,
                 &InstanceName::from("SQLEXPRESS_NAME"),
                 None,
@@ -426,6 +435,7 @@ pub mod odbc {
             assert_eq!(
                 odbc::make_connection_string(
                     Some(&HostName::from("host".to_string())),
+                    None,
                     &InstanceName::from("Instance"),
                     Some("db"),
                     Some("driver"),
@@ -433,8 +443,20 @@ pub mod odbc {
                 ),
                 "Driver={driver};SERVER=host\\Instance;Database=db;Integrated Security=SSPI;Trusted_Connection=yes;Encrypt=yes;TrustServerCertificate=yes;"
             );
+            assert_eq!(
+                odbc::make_connection_string(
+                    Some(&HostName::from("host".to_string())),
+                    Some(&ClusterName::from("cluster".to_string())),
+                    &InstanceName::from("Instance"),
+                    Some("db"),
+                    Some("driver"),
+                    true
+                ),
+                "Driver={driver};SERVER=cluster\\Instance;Database=db;Integrated Security=SSPI;Trusted_Connection=yes;Encrypt=yes;TrustServerCertificate=yes;"
+            );
             assert_eq!( odbc::make_connection_string(
                 Some(&HostName::from("host".to_string())),
+                None,
                 &InstanceName::from("mssqlserver"),
                     None,
                     None, false),

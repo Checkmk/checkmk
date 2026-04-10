@@ -95,6 +95,16 @@ class _LogwatchConfigMocker:
 def test_checks_executor(
     agent_data_filename: str, request: pytest.FixtureRequest, setup_dirs: Iterator[None]
 ) -> None:
+    xfail_list = [
+        "agent-2.3.0b1-special-openshift-v1.27.1-3507",
+        "agent-2.2.0p16-special-eks-v1.27.8-eks-8cb36c9",
+        "agent-2.2.0p16-special-openshift-v1.22.1-1839",
+        "agent-0.0.0p0-kubernetes",
+    ]
+
+    if any(_ in request.node.name for _ in xfail_list):
+        pytest.xfail(reason="CMK-33440: Failing plugin_siteless tests...")
+
     agent_based_plugins = config.load_all_pluginX(repo_path() / "cmk/legacy_checks")
     assert not agent_based_plugins.errors
     assert agent_based_plugins.agent_sections

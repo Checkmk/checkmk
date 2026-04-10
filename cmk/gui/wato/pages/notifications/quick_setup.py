@@ -2095,6 +2095,7 @@ quick_setup_notifications = QuickSetup(
             label=_("Apply & create another rule"),
             icon=QuickSetupActionButtonIcon(name="checkmark-plus"),
             action=save_and_new_action,
+            modes=[QuickSetupActionMode.SAVE],
         ),
         QuickSetupAction(
             id=ActionId("apply_and_view"),

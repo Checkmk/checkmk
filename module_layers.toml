@@ -732,7 +732,7 @@ allows = [
   "cmk.licensing",
   "cmk.liveproxyd.gui",
   "cmk.nonfree.ultimate.metric_backend.gui",
-  "cmk.telemetry.gui.register",
+  "cmk.telemetry.gui",
   "cmk.otel_collector",
   "cmk.robotmk.gui",
   "cmk.shared_typing",
@@ -1498,6 +1498,7 @@ allows = [
 
 [components."cmk.telemetry.gui"]
 allows = [
+  "@livestatus_client",
   "@plugin_apis",
   "cmk.fields",
   "cmk.gui",

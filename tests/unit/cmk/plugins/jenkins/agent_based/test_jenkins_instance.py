@@ -4,45 +4,66 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
-
-import pytest
+from collections.abc import Mapping
 
 from cmk.agent_based.v2 import Result, Service, State
 from cmk.plugins.jenkins.agent_based.jenkins_instance import (
     check_jenkins_instance,
     discover_jenkins_instance,
-    JenkinsInstance,
     parse_jenkins_instance,
 )
 
 
-@pytest.fixture(scope="module", name="section")
-def _section() -> JenkinsInstance:
-    return parse_jenkins_instance(
-        [
-            [
-                json.dumps(
-                    {
-                        "quietingDown": False,
-                        "nodeDescription": "the master Jenkins node",
-                        "numExecutors": 10,
-                        "mode": "NORMAL",
-                        "_class": "hudson.model.Hudson",
-                        "useSecurity": True,
-                    }
-                )
-            ]
-        ]
-    )
+def test_parse_jenkins_instance() -> None:
+    payload = _build_test_payload()
+    string_table = [[json.dumps(payload)]]
+
+    value = parse_jenkins_instance(string_table)
+    expected = {
+        "_class": "hudson.model.Hudson",
+        "mode": "NORMAL",
+        "nodeDescription": "the master Jenkins node",
+        "numExecutors": 10,
+        "quietingDown": False,
+        "useSecurity": True,
+    }
+
+    assert value == expected
 
 
-def test_discovery(section: JenkinsInstance) -> None:
-    assert list(discover_jenkins_instance(section)) == [Service()]
+def test_discovery_jenkins_instance() -> None:
+    payload = _build_test_payload()
+    string_table = [[json.dumps(payload)]]
+    section = parse_jenkins_instance(string_table)
+
+    value = list(discover_jenkins_instance(section))
+    expected = [Service()]
+
+    assert value == expected
 
 
-def test_check_jenkins_instance(section: JenkinsInstance) -> None:
-    assert list(check_jenkins_instance({}, section)) == [
+def test_check_jenkins_instance() -> None:
+    payload = _build_test_payload()
+    string_table = [[json.dumps(payload)]]
+    section = parse_jenkins_instance(string_table)
+
+    value = list(check_jenkins_instance({}, section))
+    expected = [
         Result(state=State.OK, summary="Description: The Master Jenkins Node"),
         Result(state=State.OK, summary="Quieting Down: no"),
         Result(state=State.OK, summary="Security used: yes"),
     ]
+
+    assert value == expected
+
+
+def _build_test_payload(**kwargs: object) -> Mapping[str, object]:
+    defaults = {
+        "quietingDown": False,
+        "nodeDescription": "the master Jenkins node",
+        "numExecutors": 10,
+        "mode": "NORMAL",
+        "_class": "hudson.model.Hudson",
+        "useSecurity": True,
+    }
+    return {**defaults, **kwargs}

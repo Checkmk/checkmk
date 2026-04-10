@@ -25,7 +25,7 @@ impl PackageExtractor for RpmExtractor {
     /// Returns an error if the package cannot be extracted.
     ///
     /// # Timeout
-    /// This function enforces a total timeout of 30 seconds for the `rpm2cpio` and
+    /// This function enforces a total timeout of 3 minutes for the `rpm2cpio` and
     /// `cpio` pipeline. If extraction takes longer, the processes will be killed and
     /// a `CommandTimeout` error will be returned.
     fn extract(package: &Path, dest: &TempDir) -> PackageResult<PackageFiles> {

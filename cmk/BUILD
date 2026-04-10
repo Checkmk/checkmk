@@ -514,6 +514,7 @@ py_wheel(
         "//cmk/gui/utils:user_errors",
         "//cmk/gui/utils:user_frontend_settings_cookie",
         "//cmk/gui/valuespec",
+        "//cmk/gui/watolib",
         "//cmk/gui/watolib:config_infra",
         "//cmk/gui/watolib:groups_io",
         "//cmk/gui/watolib:password_store",

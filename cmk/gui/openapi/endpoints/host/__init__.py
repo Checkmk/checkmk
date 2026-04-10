@@ -126,23 +126,6 @@ def _list_hosts(params: Mapping[str, Any]) -> Response:
     )
 
 
-# TODO: DEPRECATED(17003) - remove in 2.5, still used for the "REST API exports" in the UI
-@Endpoint(
-    constructors.collection_href("host"),
-    ".../collection",
-    method="get",
-    tag_group="Monitoring",
-    blacklist_in=["swagger-ui"],
-    query_params=[HostParameters],
-    response_schema=response_schemas.DomainObjectCollection,
-    permissions_required=PERMISSIONS,
-    deprecated_urls={"/domain-types/host/collections/all": 17003},
-)
-def list_hosts_deprecated(params: Mapping[str, Any]) -> Response:
-    """Show hosts of specific condition"""
-    return _list_hosts(params)
-
-
 @Endpoint(
     constructors.collection_href("host"),
     "cmk/list",
@@ -231,6 +214,5 @@ def fixup_inventory_column(
 
 
 def register(endpoint_registry: EndpointRegistry) -> None:
-    endpoint_registry.register(list_hosts_deprecated)
     endpoint_registry.register(list_hosts)
     endpoint_registry.register(show_host)

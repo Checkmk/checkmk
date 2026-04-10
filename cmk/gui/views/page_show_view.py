@@ -12,16 +12,11 @@
 from __future__ import annotations
 
 import functools
-import json
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from itertools import chain
 from typing import Any
-from urllib.parse import quote_plus
-
-import livestatus
 
 from cmk.ccc.cpu_tracking import CPUTracker, Snapshot
-from cmk.ccc.site import omd_site, SiteId
 from cmk.ccc.user import UserId
 from cmk.gui import log, visuals
 from cmk.gui.config import Config
@@ -34,20 +29,18 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.http import Request, request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
-from cmk.gui.page_menu import make_external_link, PageMenuDropdown, PageMenuEntry, PageMenuTopic
+from cmk.gui.page_menu import PageMenuDropdown
 from cmk.gui.pages import PageContext
 from cmk.gui.painter.v0 import Cell, columns_of_cells
 from cmk.gui.painter_options import PainterOptions
 from cmk.gui.permissions import permission_registry
 from cmk.gui.type_defs import (
     ColumnName,
-    IconNames,
     PainterParameters,
     Row,
     Rows,
     SorterName,
     SorterSpec,
-    StaticIcon,
     ViewSpec,
 )
 from cmk.gui.utils.roles import UserPermissions
@@ -60,7 +53,6 @@ from cmk.gui.visuals import (
     get_only_sites_from_context,
 )
 from cmk.gui.visuals.filter import Filter
-from cmk.livestatus_client.queries import Query
 
 from . import availability
 from .row_post_processing import post_process_rows
@@ -208,91 +200,18 @@ def _process_regular_view(
     view_renderer: ABCViewRenderer, user_permissions: UserPermissions, config: Config
 ) -> None:
     all_active_filters = get_all_active_filters(view_renderer.view)
-    with livestatus.intercept_queries() as queries:
-        unfiltered_amount_of_rows, rows = _get_view_rows(
-            view_renderer.view,
-            all_active_filters,
-            config,
-            only_count=False,
-        )
-        intercepted_queries = queries
+    unfiltered_amount_of_rows, rows = _get_view_rows(
+        view_renderer.view,
+        all_active_filters,
+        config,
+        only_count=False,
+    )
 
     if html.output_format != "html":
         _export_view(view_renderer.view, rows, user_permissions)
         return
 
-    _add_rest_api_menu_entries(view_renderer, intercepted_queries)
     _show_view(view_renderer, unfiltered_amount_of_rows, rows, user_permissions, config=config)
-
-
-def _add_rest_api_menu_entries(view_renderer: ABCViewRenderer, queries: list[str]) -> None:
-    entries: list[PageMenuEntry] = []
-    for text_query in set(queries):
-        if "\nStats:" in text_query:
-            continue
-        try:
-            query = Query.from_string(text_query)
-        except ValueError:
-            continue
-        try:
-            url = _create_url(omd_site(), query)
-        except ValueError:
-            continue
-        table = query.table.__tablename__
-        entries.append(
-            PageMenuEntry(
-                title=_("Query %s resource") % (table,),
-                icon_name=StaticIcon(IconNames.filter),
-                item=make_external_link(url),
-            )
-        )
-    view_renderer.append_menu_topic(
-        dropdown="export",
-        topic=PageMenuTopic(
-            title="REST API",
-            entries=entries,
-        ),
-    )
-
-
-def _create_url(site: SiteId, query: Query) -> str:
-    """Create a REST-API query URL.
-
-    Examples:
-
-        >>> _create_url('heute',
-        ...            Query.from_string("GET hosts\\nColumns: name\\nFilter: name = heute"))
-        '/heute/check_mk/api/1.0/domain-types/host/collections/all?query=%7B%22op%22%3A+%22%3D%22%2C+%22left%22%3A+%22hosts.name%22%2C+%22right%22%3A+%22heute%22%7D'
-
-    Args:
-        site:
-            A valid site-name.
-
-        query:
-            The Query() instance which the endpoint shall create again.
-
-    Returns:
-        The URL.
-
-    Raises:
-        A ValueError when no URL could be created.
-
-    """
-    table = query.table.__tablename__
-    try:
-        domain_type = {
-            "hosts": "host",
-            "services": "service",
-        }[table]
-    except KeyError:
-        raise ValueError(f"Could not find a domain-type for table {table}.")
-    url = f"/{site}/check_mk/api/1.0/domain-types/{domain_type}/collections/all"
-    query_dict = query.dict_repr()
-    if query_dict:
-        query_string_value = quote_plus(json.dumps(query_dict))
-        url += f"?query={query_string_value}"
-
-    return url
 
 
 def _process_availability_view(view_renderer: ABCViewRenderer, config: Config) -> None:

@@ -1477,7 +1477,6 @@ class PasswordClient(RestApiClient):
         password: str,
         shared: Sequence[str],
         editable_by: str | None = None,
-        _owner: str | None = None,
         comment: str | None = None,
         customer: str | None = None,
         expect_ok: bool = True,
@@ -1489,7 +1488,6 @@ class PasswordClient(RestApiClient):
                 "password": password,
                 "shared": shared,
                 "editable_by": editable_by,
-                "owner": _owner,
                 "comment": comment,
             }
         )
@@ -1965,21 +1963,6 @@ class HostClient(RestApiClient):
         return self.request(
             "get",
             url=url,
-            expect_ok=expect_ok,
-        )
-
-    # TODO: DEPRECATED(17003) - remove in 2.5
-    def get_all(
-        self,
-        query: dict[str, Any],
-        columns: Sequence[str] = ("name",),
-        expect_ok: bool = True,
-    ) -> Response:
-        params = {"query": json.dumps(query), "columns": columns}
-        return self.request(
-            "get",
-            url="/domain-types/host/collections/all",
-            query_params=params,
             expect_ok=expect_ok,
         )
 

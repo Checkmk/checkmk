@@ -6,7 +6,7 @@
 import logging
 from typing import NoReturn
 
-import cmk.fetchers._snmpscan as snmp_scan
+import cmk.fetchers._snmp._scan as snmp_scan
 from cmk.ccc.exceptions import OnError
 from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.snmplib import (

@@ -18441,12 +18441,6 @@ msgstr "Inotifyプラグインをデプロイする"
 msgid "Deploy Kaspersky Anti-Virus plug-in"
 msgstr "Kaspersky Anti-Virusプラグインをデプロイする"
 
-msgid "Deploy LVM plug-in"
-msgstr "LVMプラグインをデプロイする"
-
-msgid "Deploy Linux file system quota plug-in"
-msgstr "Linuxファイルシステムクォータプラグインをデプロイする"
-
 msgid "Deploy MS Office 365 plug-in"
 msgstr "MS Office 365プラグインをデプロイする"
 
@@ -18458,9 +18452,6 @@ msgstr "Mailmanプラグインをデプロイする"
 
 msgid "Deploy MegaRAID plug-in"
 msgstr "MegaRAIDプラグインをデプロイする"
-
-msgid "Deploy NFS4 exports plug-in"
-msgstr "NFS4エクスポートプラグインをデプロイする"
 
 msgid "Deploy OpenHardwareMonitor (headless)"
 msgstr "OpenHardwareMonitorのデプロイ(ヘッドレス)"
@@ -18485,18 +18476,6 @@ msgstr "SUSEConnectプラグインをデプロイする"
 
 msgid "Deploy StorCLI plug-in"
 msgstr "StorCLIプラグインをデプロイする"
-
-msgid "Deploy Symantec Anti Virus plug-in"
-msgstr "Symantec AntiVirusプラグインをデプロイします"
-
-msgid "Deploy Unitrends plug-ins"
-msgstr "Unitrendsプラグインをデプロイする"
-
-msgid "Deploy VxVM plug-in"
-msgstr "VxVMプラグインをデプロイする"
-
-msgid "Deploy Windows McAfee AV client plug-in"
-msgstr "Windows McAfee AVクライアントプラグインをデプロイする"
 
 msgid "Deploy Windows Multipath plug-in"
 msgstr "Windowsマルチパスプラグインをデプロイする"
@@ -18534,23 +18513,14 @@ msgstr "mk_mongodb.pyを認証なしでデプロイします。"
 msgid "Deploy plug-in for Ceph"
 msgstr "Ceph用プラグインを展開する"
 
-msgid "Deploy plug-in for DAG"
-msgstr "DAG用のプラグインをデプロイする"
-
 msgid "Deploy plug-in for DB2"
 msgstr "DB2用のプラグインをデプロイする"
 
 msgid "Deploy plug-in for Hyper-V VM Guest Information"
 msgstr "Hyper-V VMゲスト情報用のプラグインをデプロイする"
 
-msgid "Deploy plug-in for Hyper-V VMs"
-msgstr "Hyper-V VM用のプラグインをデプロイする"
-
 msgid "Deploy plug-in for JAR signatures"
 msgstr "JAR署名用のプラグインをデプロイする"
-
-msgid "Deploy plug-in for MS Exchange database latency"
-msgstr "MS Exchangeデータベースレイテンシーのプラグインをデプロイする"
 
 msgid "Deploy plug-in for MS IIS Application Pool States"
 msgstr "MS IIS Application Pool States のプラグインをデプロイする"
@@ -18646,6 +18616,16 @@ msgstr ""
 "エージェントプラグイン <tt>citrix_xenapp</tt> をターゲットシステムにデプロイ"
 "します。"
 
+#, fuzzy
+msgid "Deploy the agent plug-in <tt>hyperv_vms</tt> on your target system."
+msgstr ""
+"エージェントプラグイン <tt>zorp</tt>をターゲットシステムにデプロイします。"
+
+#, fuzzy
+msgid "Deploy the agent plug-in <tt>lvm</tt> on your target system."
+msgstr ""
+"エージェントプラグイン <tt>zorp</tt>をターゲットシステムにデプロイします。"
+
 msgid ""
 "Deploy the agent plug-in <tt>mk_postgres</tt>. This will create information "
 "necessary for all <tt>postgres_*</tt> checks."
@@ -18666,6 +18646,20 @@ msgstr ""
 "対象システムにエージェントプラグイン <tt>mtr</tt> を展開してください。なお、"
 "<tt>mtr</tt> は監視対象のシステムにインストールされている必要があります。"
 
+#, fuzzy
+msgid ""
+"Deploy the agent plug-in <tt>netstat</tt> on your target system. This plug-"
+"in uses the command <tt>netstat</tt> in order to output information about "
+"established TCP (and UDP) connections."
+msgstr ""
+"対象システムにエージェントプラグイン <tt>mtr</tt> を展開してください。なお、"
+"<tt>mtr</tt> は監視対象のシステムにインストールされている必要があります。"
+
+#, fuzzy
+msgid "Deploy the agent plug-in <tt>nfsexports</tt> on your target system."
+msgstr ""
+"エージェントプラグイン <tt>zorp</tt>をターゲットシステムにデプロイします。"
+
 msgid "Deploy the agent plug-in <tt>rds_licenses</tt> on your target system."
 msgstr ""
 "エージェントプラグイン <tt>rds_licenses</tt> をターゲットシステムにデプロイし"
@@ -18682,11 +18676,16 @@ msgstr ""
 "ターゲットシステムに、エージェントプラグイン <tt>plesk_backups</tt> および "
 "<tt>plesk_domains</tt> をデプロイします。"
 
+#, fuzzy
+msgid ""
+"Deploy the agent plug-ins <tt>unitrends_backup</tt> and "
+"<tt>unitrends_replication</tt> on your target system."
+msgstr ""
+"ターゲットシステムに、エージェントプラグイン <tt>plesk_backups</tt> および "
+"<tt>plesk_domains</tt> をデプロイします。"
+
 msgid "Deploy the mk_filehandler plug-in"
 msgstr "mk_filehandlerプラグインをデプロイする"
-
-msgid "Deploy the netstat plug-in"
-msgstr "netstatプラグインをデプロイする"
 
 msgid "Deploy the nvidia_smi agent plug-in"
 msgstr "nvidia_smi エージェントプラグインをデプロイする"
@@ -20014,20 +20013,11 @@ msgstr "Inotifyプラグインをデプロイしないでください"
 msgid "Do not deploy Kaspersky Anti-Virus plug-in"
 msgstr "Kaspersky Anti-Virusプラグインをデプロイしないでください"
 
-msgid "Do not deploy LVM plug-in"
-msgstr "LVMプラグインをデプロイしないでください"
-
-msgid "Do not deploy Linux file system quota plug-in"
-msgstr "Linuxファイルシステムクォータプラグインをデプロイしないでください"
-
 msgid "Do not deploy MSSQL Server plug-in"
 msgstr "MySQLプラグインをデプロイしないでください"
 
 msgid "Do not deploy Mailman plug-in"
 msgstr "Mailmanプラグインをデプロイしないでください"
-
-msgid "Do not deploy NFS4 exports plug-in"
-msgstr "NFS4エクスポートプラグインをデプロイしないでください"
 
 msgid "Do not deploy OpenHardwareMonitor (headless)"
 msgstr "OpenHardwareMonitor (headless)をデプロイしないでください"
@@ -20044,20 +20034,8 @@ msgstr "SMARTプラグインをデプロイしないでください"
 msgid "Do not deploy SUSEConnect plug-in"
 msgstr "SUSEConnectプラグインをデプロイしないでください"
 
-msgid "Do not deploy Symantec Anti Virus plug-in"
-msgstr "Symantec AntiVirusプラグインをデプロイしないでください"
-
-msgid "Do not deploy Unitrends plug-ins"
-msgstr "Unitrendsプラグインをデプロイしないでください"
-
-msgid "Do not deploy VxVM plug-in"
-msgstr "VxVMプラグインをデプロイしないでください"
-
 msgid "Do not deploy Windows License plug-in"
 msgstr "Windowsライセンスプラグインを展開しないでください"
-
-msgid "Do not deploy Windows McAfee AV client plug-in"
-msgstr "Windows McAfee AVクライアントプラグインをデプロイしないでください"
 
 msgid "Do not deploy Windows Multipath plug-in"
 msgstr "Windowsマルチパスプラグインを展開しないでください"
@@ -20080,20 +20058,11 @@ msgstr "ログインしたユーザーのプラグインをデプロイしない
 msgid "Do not deploy mk_mongodb.py plug-in"
 msgstr "mk_mongodb.pyプラグインをデプロイしないでください"
 
-msgid "Do not deploy plug-in for DAG"
-msgstr "DAGのプラグインをデプロイしないでください"
-
 msgid "Do not deploy plug-in for Hyper-V VM Guest Information"
 msgstr "Hyper-V VMゲスト情報のプラグインをデプロイしないでください"
 
-msgid "Do not deploy plug-in for Hyper-V VMs"
-msgstr "Hyper-V VM用のプラグインをデプロイしないでください"
-
 msgid "Do not deploy plug-in for JAR signatures"
 msgstr "JAR署名用のプラグインをデプロイしないでください"
-
-msgid "Do not deploy plug-in for MS Exchange database latency"
-msgstr "MS Exchangeデータベース遅延用のプラグインをデプロイしないでください"
 
 msgid "Do not deploy plug-in for MS IIS Application Pool States"
 msgstr "MS IIS Application Pool Statesのプラグインをデプロイしないでください"
@@ -20174,9 +20143,6 @@ msgstr "MegaRAIDプラグインをデプロイしないでください"
 msgid "Do not deploy the MySQL plug-in"
 msgstr "MySQLプラグインをデプロイしないでください"
 
-msgid "Do not deploy the NGINX status plug-in"
-msgstr "NGINXステータスプラグインをデプロイしないでください"
-
 msgid "Do not deploy the Redis plug-in"
 msgstr "Redisプラグインをデプロイしないでください"
 
@@ -20203,9 +20169,6 @@ msgstr "Zypperプラグインをデプロイしないでください"
 
 msgid "Do not deploy the mk_filehandler plug-in"
 msgstr "mk_filehandlerプラグインをデプロイしない"
-
-msgid "Do not deploy the netstat plug-in"
-msgstr "netstatプラグインをデプロイしないでください"
 
 msgid "Do not deploy the nvidia_smi agent plug-in"
 msgstr "nvidia_smiエージェントプラグインをデプロイしない"
@@ -26824,6 +26787,10 @@ msgstr "HTTP: アクティブリクエスト"
 msgid "HTTPS"
 msgstr "HTTPS"
 
+#, fuzzy
+msgid "HTTPS port"
+msgstr "TCPポート"
+
 msgid "HW Information"
 msgstr "HW情報"
 
@@ -29572,14 +29539,6 @@ msgid "Hosts colored according to state (host group)"
 msgstr "状態に応じて色分けされたホスト(ホストグループ)"
 
 msgid ""
-"Hosts configured via this rule get the <tt>lnx_quota</tt> plug-in deployed. "
-"This is only useful if you have file system quotas setup on the host."
-msgstr ""
-"このルールを介して構成されたホストは <tt>lnx_quota</tt> プラグインがデプロイ"
-"されます。これは、ホストにファイルシステムクォータが設定されている場合にのみ"
-"有効です。"
-
-msgid ""
 "Hosts configured via this rule get the <tt>mk_filehandler</tt> plug-in "
 "deployed."
 msgstr ""
@@ -29608,6 +29567,15 @@ msgstr ""
 "されます。 <tt>smartmontools</tt>,をインストールした場合、ローカルのハード"
 "ディスクの温度とエラーが監視されます。レガシープラグイン <tt>smart</tt> は非"
 "推奨なので、もう使用しないでください。 "
+
+#, fuzzy
+msgid ""
+"Hosts configured via this rule get the lnx_quota plug-in deployed. This is "
+"only useful if you have file system quotas setup on the host."
+msgstr ""
+"このルールを介して構成されたホストは <tt>lnx_quota</tt> プラグインがデプロイ"
+"されます。これは、ホストにファイルシステムクォータが設定されている場合にのみ"
+"有効です。"
 
 msgid ""
 "Hosts configured via this rule get the plug-in <tt>db2_mem</tt> deployed. "
@@ -68555,10 +68523,6 @@ msgid "This plug-in monitors channels, managers and queues of IBM MQ."
 msgstr ""
 "このプラグインは、IBM MQのチャネル、マネージャー、およびキューを監視します。"
 
-msgid "This plug-in monitors the NFS version 4 exports of a Linux host."
-msgstr ""
-"このプラグインは、LinuxホストのNFSバージョン4のエクスポートを監視します。"
-
 msgid ""
 "This plug-in monitors the number of print jobs in the printer queues and the "
 "printer states"
@@ -68572,9 +68536,6 @@ msgid ""
 msgstr ""
 "このプラグインは、McAfeeアンチウイルスソフトウェアを使用しているWindowsシステ"
 "ムの署名日付を監視します"
-
-msgid "This plug-in monitors the state of Hyper-V VMs on Window hosts."
-msgstr "このプラグインは、Windowsホスト上のHyper-V VMの状態を監視します。"
 
 msgid "This plug-in monitors various aspects of VxVM."
 msgstr "このプラグインは、VxVMのさまざまな側面を監視します。"
@@ -68617,16 +68578,6 @@ msgstr ""
 "このプラグインは、<tt>nslookup</tt> を使用して1つまたは複数のホスト名を検索す"
 "ることにより、ローカルのDNSリゾルバをテストします。このツールはターゲットマ"
 "シ ンにインストールされていることが期待されています。"
-
-msgid ""
-"This plug-in uses the command <tt>netstat</tt> in order to output "
-"information about established TCP (and UDP) connections. The according check "
-"then allows you to make sure that certain TCP connections are always "
-"established."
-msgstr ""
-"このプラグインは、確立されたTCP（およびUDP）接続に関する情報を出力するため"
-"に、<tt>netstat</tt> コマンドを使用します。このチェックに従って、特定のTCP接"
-"続が常に確立されていることを確認できます。"
 
 msgid ""
 "This plug-in uses the command line tool <tt>MegaCli.exe</tt> in order to "
@@ -69623,13 +69574,6 @@ msgid "This rule set is for configuring levels for global packet counters."
 msgstr ""
 "このルールセットは、グローバルパケットカウンタのレベルを設定するためのもので"
 "す。"
-
-msgid ""
-"This rule set is for deploying two plug-ins for monitoring Unitrends "
-"software."
-msgstr ""
-"このルールセットは、Unitrendsソフトウェアを監視するための2つのプラグインをデ"
-"プロイするためのものです。"
 
 msgid ""
 "This rule set is relevant for Kubernetes replicas. You can set a maximum "
@@ -86887,9 +86831,6 @@ msgstr "表示される値の制限を表示する"
 msgid "Don't show information of limits"
 msgstr "制限の情報を表示しない"
 
-msgid "Show service status"
-msgstr "サービスステータスを表示する"
-
 msgid "Color of the scattered dots"
 msgstr "散らばった点の色"
 
@@ -88254,24 +88195,6 @@ msgid "Password is required but not specified."
 msgstr "%s は必須だが指定はない。"
 
 #, fuzzy
-msgid "Your input is not a valid host name or IP address."
-msgstr "入力された内容は、有効なホスト名またはIPアドレスではありません。"
-
-msgid "GRPC"
-msgstr "GRPC"
-
-msgid ""
-"Configure a GRPC-based OTLP receiver that will collect OpenTelemetry data."
-msgstr ""
-"OpenTelemetry データを収集する GRPC ベースの OTLP レシーバーを設定します。"
-
-msgid "0.0.0.0"
-msgstr "0.0.0.0"
-
-msgid "4317"
-msgstr "4317"
-
-#, fuzzy
 msgid "Select password"
 msgstr "新しいパスワード"
 
@@ -88283,17 +88206,21 @@ msgstr "利用可能なユーザーはいません"
 msgid "Send log messages to event console"
 msgstr "ログメッセージをイベントコンソールに送信"
 
-#, fuzzy
-msgid "service.name"
-msgstr "サービス名"
+msgid "Port must differ from the other protocol endpoint."
+msgstr ""
+
+msgid "GRPC"
+msgstr "GRPC"
+
+msgid ""
+"Configure a GRPC-based OTLP receiver that will collect OpenTelemetry data."
+msgstr ""
+"OpenTelemetry データを収集する GRPC ベースの OTLP レシーバーを設定します。"
 
 msgid ""
 "Configure an HTTP-based OTLP receiver that will collect OpenTelemetry data."
 msgstr ""
 "OpenTelemetry データを収集する HTTP ベースの OTLP レシーバーを設定します。"
-
-msgid "4318"
-msgstr "4318"
 
 #, fuzzy
 msgid "Failed to load sites. Please try again."
@@ -88330,13 +88257,6 @@ msgstr "ジョブの名前を入力してください。"
 msgid "Metrics path is required but not specified."
 msgstr "%s は必須だが指定はない。"
 
-msgid "Port must be a whole number."
-msgstr "ポート番号は整数でなければなりません。"
-
-#, fuzzy
-msgid "Port must be between 1 and 65535."
-msgstr "ポートは0から65535の間でなければならない。"
-
 #, fuzzy
 msgid ""
 "The IP address or host name the OpenTelemetry Collector should listen on. To "
@@ -88346,9 +88266,6 @@ msgstr ""
 "受信側がリッスンするIPアドレスまたはホスト名。ローカルのみをリッスンする場合"
 "は'127.0.0.1'または'::1'を使用します。すべてのインターフェースをリッスンする"
 "場合は'0.0.0.0'または'::'を使用します。"
-
-msgid "IP address or hostname"
-msgstr "IPアドレスまたはホスト名"
 
 #, fuzzy
 msgid "Unexpected form data shape."
@@ -89512,6 +89429,129 @@ msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
 "後で「ヘルプ」＞「Checkmkの学習」＞「ウェルカムページ」からアクセスできます"
+
+#~ msgid "Deploy LVM plug-in"
+#~ msgstr "LVMプラグインをデプロイする"
+
+#~ msgid "Deploy Linux file system quota plug-in"
+#~ msgstr "Linuxファイルシステムクォータプラグインをデプロイする"
+
+#~ msgid "Deploy NFS4 exports plug-in"
+#~ msgstr "NFS4エクスポートプラグインをデプロイする"
+
+#~ msgid "Deploy Symantec Anti Virus plug-in"
+#~ msgstr "Symantec AntiVirusプラグインをデプロイします"
+
+#~ msgid "Deploy Unitrends plug-ins"
+#~ msgstr "Unitrendsプラグインをデプロイする"
+
+#~ msgid "Deploy VxVM plug-in"
+#~ msgstr "VxVMプラグインをデプロイする"
+
+#~ msgid "Deploy Windows McAfee AV client plug-in"
+#~ msgstr "Windows McAfee AVクライアントプラグインをデプロイする"
+
+#~ msgid "Deploy plug-in for DAG"
+#~ msgstr "DAG用のプラグインをデプロイする"
+
+#~ msgid "Deploy plug-in for Hyper-V VMs"
+#~ msgstr "Hyper-V VM用のプラグインをデプロイする"
+
+#~ msgid "Deploy plug-in for MS Exchange database latency"
+#~ msgstr "MS Exchangeデータベースレイテンシーのプラグインをデプロイする"
+
+#~ msgid "Deploy the netstat plug-in"
+#~ msgstr "netstatプラグインをデプロイする"
+
+#~ msgid "Do not deploy LVM plug-in"
+#~ msgstr "LVMプラグインをデプロイしないでください"
+
+#~ msgid "Do not deploy Linux file system quota plug-in"
+#~ msgstr "Linuxファイルシステムクォータプラグインをデプロイしないでください"
+
+#~ msgid "Do not deploy NFS4 exports plug-in"
+#~ msgstr "NFS4エクスポートプラグインをデプロイしないでください"
+
+#~ msgid "Do not deploy Symantec Anti Virus plug-in"
+#~ msgstr "Symantec AntiVirusプラグインをデプロイしないでください"
+
+#~ msgid "Do not deploy Unitrends plug-ins"
+#~ msgstr "Unitrendsプラグインをデプロイしないでください"
+
+#~ msgid "Do not deploy VxVM plug-in"
+#~ msgstr "VxVMプラグインをデプロイしないでください"
+
+#~ msgid "Do not deploy Windows McAfee AV client plug-in"
+#~ msgstr "Windows McAfee AVクライアントプラグインをデプロイしないでください"
+
+#~ msgid "Do not deploy plug-in for DAG"
+#~ msgstr "DAGのプラグインをデプロイしないでください"
+
+#~ msgid "Do not deploy plug-in for Hyper-V VMs"
+#~ msgstr "Hyper-V VM用のプラグインをデプロイしないでください"
+
+#~ msgid "Do not deploy plug-in for MS Exchange database latency"
+#~ msgstr "MS Exchangeデータベース遅延用のプラグインをデプロイしないでください"
+
+#~ msgid "Do not deploy the NGINX status plug-in"
+#~ msgstr "NGINXステータスプラグインをデプロイしないでください"
+
+#~ msgid "Do not deploy the netstat plug-in"
+#~ msgstr "netstatプラグインをデプロイしないでください"
+
+#~ msgid "This plug-in monitors the NFS version 4 exports of a Linux host."
+#~ msgstr ""
+#~ "このプラグインは、LinuxホストのNFSバージョン4のエクスポートを監視します。"
+
+#~ msgid "This plug-in monitors the state of Hyper-V VMs on Window hosts."
+#~ msgstr "このプラグインは、Windowsホスト上のHyper-V VMの状態を監視します。"
+
+#~ msgid ""
+#~ "This plug-in uses the command <tt>netstat</tt> in order to output "
+#~ "information about established TCP (and UDP) connections. The according "
+#~ "check then allows you to make sure that certain TCP connections are "
+#~ "always established."
+#~ msgstr ""
+#~ "このプラグインは、確立されたTCP（およびUDP）接続に関する情報を出力するため"
+#~ "に、<tt>netstat</tt> コマンドを使用します。このチェックに従って、特定のTCP"
+#~ "接続が常に確立されていることを確認できます。"
+
+#~ msgid ""
+#~ "This rule set is for deploying two plug-ins for monitoring Unitrends "
+#~ "software."
+#~ msgstr ""
+#~ "このルールセットは、Unitrendsソフトウェアを監視するための2つのプラグインを"
+#~ "デプロイするためのものです。"
+
+#~ msgid "Show service status"
+#~ msgstr "サービスステータスを表示する"
+
+#, fuzzy
+#~ msgid "Your input is not a valid host name or IP address."
+#~ msgstr "入力された内容は、有効なホスト名またはIPアドレスではありません。"
+
+#~ msgid "0.0.0.0"
+#~ msgstr "0.0.0.0"
+
+#~ msgid "4317"
+#~ msgstr "4317"
+
+#, fuzzy
+#~ msgid "service.name"
+#~ msgstr "サービス名"
+
+#~ msgid "4318"
+#~ msgstr "4318"
+
+#~ msgid "Port must be a whole number."
+#~ msgstr "ポート番号は整数でなければなりません。"
+
+#, fuzzy
+#~ msgid "Port must be between 1 and 65535."
+#~ msgstr "ポートは0から65535の間でなければならない。"
+
+#~ msgid "IP address or hostname"
+#~ msgstr "IPアドレスまたはホスト名"
 
 #~ msgid "90th percentile latency over last day"
 #~ msgstr "過去24時間の90パーセンタイル遅延"
@@ -94414,10 +94454,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Dashboard url"
 #~ msgstr "ダッシュボード"
-
-#, fuzzy
-#~ msgid "HTTPS port"
-#~ msgstr "TCPポート"
 
 #, fuzzy
 #~ msgid "Levels for custom query monitoring"

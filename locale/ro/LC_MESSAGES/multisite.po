@@ -19850,14 +19850,6 @@ msgid "Deploy Kaspersky Anti-Virus plug-in"
 msgstr "Implementați pluginul Kaspersky Anti-Virus"
 
 #, fuzzy
-msgid "Deploy LVM plug-in"
-msgstr "Implementați pluginul LVM"
-
-#, fuzzy
-msgid "Deploy Linux file system quota plug-in"
-msgstr "Implementați plugin-ul de cote pentru sistemul de fișiere Linux"
-
-#, fuzzy
 msgid "Deploy MS Office 365 plug-in"
 msgstr "Implementarea pluginului MS Office 365"
 
@@ -19872,10 +19864,6 @@ msgstr "Implementați plugin-ul Mailman"
 #, fuzzy
 msgid "Deploy MegaRAID plug-in"
 msgstr "Implementarea pluginului MegaRAID"
-
-#, fuzzy
-msgid "Deploy NFS4 exports plug-in"
-msgstr "Implementarea plugin-ului de export NFS4"
 
 msgid "Deploy OpenHardwareMonitor (headless)"
 msgstr "Implementați OpenHardwareMonitor (fără cap)"
@@ -19907,22 +19895,6 @@ msgstr "Implementați pluginul SUSEConnect"
 #, fuzzy
 msgid "Deploy StorCLI plug-in"
 msgstr "Implementarea pluginului StorCLI"
-
-#, fuzzy
-msgid "Deploy Symantec Anti Virus plug-in"
-msgstr "Implementarea plugin-ului Symantec Anti Virus"
-
-#, fuzzy
-msgid "Deploy Unitrends plug-ins"
-msgstr "Implementarea plugin-urilor Unitrends"
-
-#, fuzzy
-msgid "Deploy VxVM plug-in"
-msgstr "Implementarea plugin-ului VxVM"
-
-#, fuzzy
-msgid "Deploy Windows McAfee AV client plug-in"
-msgstr "Implementați pluginul pentru clientul Windows McAfee AV"
 
 #, fuzzy
 msgid "Deploy Windows Multipath plug-in"
@@ -19971,10 +19943,6 @@ msgid "Deploy plug-in for Ceph"
 msgstr "Implementarea plugin-ului pentru DAG"
 
 #, fuzzy
-msgid "Deploy plug-in for DAG"
-msgstr "Implementarea plugin-ului pentru DAG"
-
-#, fuzzy
 msgid "Deploy plug-in for DB2"
 msgstr "Implementarea plugin-ului pentru DB2"
 
@@ -19984,16 +19952,8 @@ msgstr ""
 "Implementarea pluginului pentru informațiile despre oaspeții VM Hyper-V"
 
 #, fuzzy
-msgid "Deploy plug-in for Hyper-V VMs"
-msgstr "Implementarea pluginului pentru VM Hyper-V"
-
-#, fuzzy
 msgid "Deploy plug-in for JAR signatures"
 msgstr "Implementarea plugin-ului pentru semnăturile JAR"
-
-#, fuzzy
-msgid "Deploy plug-in for MS Exchange database latency"
-msgstr "Implementarea plugin-ului pentru latența bazei de date MS Exchange"
 
 #, fuzzy
 msgid "Deploy plug-in for MS IIS Application Pool States"
@@ -20114,6 +20074,14 @@ msgid "Deploy the agent plug-in <tt>citrix_xenapp</tt> on your target system."
 msgstr "Implementați pluginul agent <tt>zorp</tt> pe sistemul țintă."
 
 #, fuzzy
+msgid "Deploy the agent plug-in <tt>hyperv_vms</tt> on your target system."
+msgstr "Implementați pluginul agent <tt>zorp</tt> pe sistemul țintă."
+
+#, fuzzy
+msgid "Deploy the agent plug-in <tt>lvm</tt> on your target system."
+msgstr "Implementați pluginul agent <tt>zorp</tt> pe sistemul țintă."
+
+#, fuzzy
 msgid ""
 "Deploy the agent plug-in <tt>mk_postgres</tt>. This will create information "
 "necessary for all <tt>postgres_*</tt> checks."
@@ -20139,6 +20107,20 @@ msgstr ""
 "operare."
 
 #, fuzzy
+msgid ""
+"Deploy the agent plug-in <tt>netstat</tt> on your target system. This plug-"
+"in uses the command <tt>netstat</tt> in order to output information about "
+"established TCP (and UDP) connections."
+msgstr ""
+"Aceasta va implementa pluginul agent <tt>mk_oracle</tt> pe sistemul țintă. "
+"În prezent, nu toate opțiunile sunt disponibile în toate sistemele de "
+"operare."
+
+#, fuzzy
+msgid "Deploy the agent plug-in <tt>nfsexports</tt> on your target system."
+msgstr "Implementați pluginul agent <tt>zorp</tt> pe sistemul țintă."
+
+#, fuzzy
 msgid "Deploy the agent plug-in <tt>rds_licenses</tt> on your target system."
 msgstr "Implementați pluginul agent <tt>zorp</tt> pe sistemul țintă."
 
@@ -20155,12 +20137,16 @@ msgstr ""
 "<tt>plesk_domain</tt>, utilizate pentru monitorizarea Plesk."
 
 #, fuzzy
-msgid "Deploy the mk_filehandler plug-in"
-msgstr "Implementați plugin-ul mk_filehandler"
+msgid ""
+"Deploy the agent plug-ins <tt>unitrends_backup</tt> and "
+"<tt>unitrends_replication</tt> on your target system."
+msgstr ""
+"Aceasta va implementa cele două plugin-uri agent <tt>plesk_backup</tt> și "
+"<tt>plesk_domain</tt>, utilizate pentru monitorizarea Plesk."
 
 #, fuzzy
-msgid "Deploy the netstat plug-in"
-msgstr "Implementați plugin-ul netstat"
+msgid "Deploy the mk_filehandler plug-in"
+msgstr "Implementați plugin-ul mk_filehandler"
 
 #, fuzzy
 msgid "Deploy the nvidia_smi agent plug-in"
@@ -21619,24 +21605,12 @@ msgid "Do not deploy Kaspersky Anti-Virus plug-in"
 msgstr "Nu implementați pluginul Kaspersky Anti-Virus"
 
 #, fuzzy
-msgid "Do not deploy LVM plug-in"
-msgstr "Nu implementați pluginul LVM"
-
-#, fuzzy
-msgid "Do not deploy Linux file system quota plug-in"
-msgstr "Nu implementați pluginul de cote pentru sistemele de fișiere Linux"
-
-#, fuzzy
 msgid "Do not deploy MSSQL Server plug-in"
 msgstr "Nu implementați pluginul Check SQL Server"
 
 #, fuzzy
 msgid "Do not deploy Mailman plug-in"
 msgstr "Nu implementați plugin-ul Mailman"
-
-#, fuzzy
-msgid "Do not deploy NFS4 exports plug-in"
-msgstr "Nu implementați pluginul pentru exporturi NFS4"
 
 msgid "Do not deploy OpenHardwareMonitor (headless)"
 msgstr "Nu implementați OpenHardwareMonitor (fără cap)"
@@ -21658,24 +21632,8 @@ msgid "Do not deploy SUSEConnect plug-in"
 msgstr "Nu implementați pluginul SUSEConnect"
 
 #, fuzzy
-msgid "Do not deploy Symantec Anti Virus plug-in"
-msgstr "Nu implementați plugin-ul Symantec Anti Virus"
-
-#, fuzzy
-msgid "Do not deploy Unitrends plug-ins"
-msgstr "Nu implementați plugin-uri Unitrends"
-
-#, fuzzy
-msgid "Do not deploy VxVM plug-in"
-msgstr "Nu implementați pluginul VxVM"
-
-#, fuzzy
 msgid "Do not deploy Windows License plug-in"
 msgstr "Nu implementați pluginul de licență Windows"
-
-#, fuzzy
-msgid "Do not deploy Windows McAfee AV client plug-in"
-msgstr "Nu implementați pluginul pentru clientul Windows McAfee AV"
 
 #, fuzzy
 msgid "Do not deploy Windows Multipath plug-in"
@@ -21706,25 +21664,13 @@ msgid "Do not deploy mk_mongodb.py plug-in"
 msgstr "Nu implementați pluginul mk_mongodb.py"
 
 #, fuzzy
-msgid "Do not deploy plug-in for DAG"
-msgstr "Nu implementați plugin pentru DAG"
-
-#, fuzzy
 msgid "Do not deploy plug-in for Hyper-V VM Guest Information"
 msgstr ""
 "Nu implementați pluginul pentru informațiile despre oaspeții VM Hyper-V VM"
 
 #, fuzzy
-msgid "Do not deploy plug-in for Hyper-V VMs"
-msgstr "Nu implementați pluginul pentru VM Hyper-V"
-
-#, fuzzy
 msgid "Do not deploy plug-in for JAR signatures"
 msgstr "Nu implementați plugin-ul pentru semnăturile JAR"
-
-#, fuzzy
-msgid "Do not deploy plug-in for MS Exchange database latency"
-msgstr "Nu implementați plugin-ul pentru latența bazei de date MS Exchange"
 
 #, fuzzy
 msgid "Do not deploy plug-in for MS IIS Application Pool States"
@@ -21831,10 +21777,6 @@ msgid "Do not deploy the MySQL plug-in"
 msgstr "Nu implementați plugin-ul MySQL"
 
 #, fuzzy
-msgid "Do not deploy the NGINX status plug-in"
-msgstr "Nu implementați plugin-ul NGINX Status"
-
-#, fuzzy
 msgid "Do not deploy the Redis plug-in"
 msgstr "Nu implementați extensia Redis"
 
@@ -21869,10 +21811,6 @@ msgstr "Nu implementați plugin-ul Zypper"
 #, fuzzy
 msgid "Do not deploy the mk_filehandler plug-in"
 msgstr "Nu implementați plugin-ul mk_filehandler"
-
-#, fuzzy
-msgid "Do not deploy the netstat plug-in"
-msgstr "Nu implementați plugin-ul netstat"
 
 #, fuzzy
 msgid "Do not deploy the nvidia_smi agent plug-in"
@@ -28896,6 +28834,10 @@ msgstr "Cereri DHCP primite"
 msgid "HTTPS"
 msgstr "HTTPS"
 
+#, fuzzy
+msgid "HTTPS port"
+msgstr "Port TCP"
+
 msgid "HW Information"
 msgstr "Informații HW"
 
@@ -32079,15 +32021,6 @@ msgstr "Gazde colorate în funcție de stare (grup de gazde)"
 
 #, fuzzy
 msgid ""
-"Hosts configured via this rule get the <tt>lnx_quota</tt> plug-in deployed. "
-"This is only useful if you have file system quotas setup on the host."
-msgstr ""
-"Gazdele configurate prin această regulă primesc pluginul <tt>lnxx_quota</tt> "
-"implementat. Acest lucru este util numai dacă aveți configurate cote de "
-"sistem de fișiere pe gazdă."
-
-#, fuzzy
-msgid ""
 "Hosts configured via this rule get the <tt>mk_filehandler</tt> plug-in "
 "deployed."
 msgstr ""
@@ -32118,6 +32051,15 @@ msgstr ""
 "Gazdele configurate prin această regulă primesc pluginul <tt>smart</tt> "
 "implementat. Presupunând că ați instalat <tt>smartmontools</tt>, harddisk-"
 "urile locale vor fi monitorizate pentru temperatură și erori."
+
+#, fuzzy
+msgid ""
+"Hosts configured via this rule get the lnx_quota plug-in deployed. This is "
+"only useful if you have file system quotas setup on the host."
+msgstr ""
+"Gazdele configurate prin această regulă primesc pluginul <tt>lnxx_quota</tt> "
+"implementat. Acest lucru este util numai dacă aveți configurate cote de "
+"sistem de fișiere pe gazdă."
 
 #, fuzzy
 msgid ""
@@ -74156,11 +74098,6 @@ msgstr ""
 "IBM MQ."
 
 #, fuzzy
-msgid "This plug-in monitors the NFS version 4 exports of a Linux host."
-msgstr ""
-"Acest plugin monitorizează exporturile NFS versiunea 4 ale unei gazde Linux."
-
-#, fuzzy
 msgid ""
 "This plug-in monitors the number of print jobs in the printer queues and the "
 "printer states"
@@ -74175,12 +74112,6 @@ msgid ""
 msgstr ""
 "Acest plugin monitorizează data semnăturii unui sistem Windows care "
 "utilizează software-ul McAfee Anti-Virus"
-
-#, fuzzy
-msgid "This plug-in monitors the state of Hyper-V VMs on Window hosts."
-msgstr ""
-"Acest plugin monitorizează starea mașinilor virtuale Hyper-V pe gazdele "
-"Window."
 
 #, fuzzy
 msgid "This plug-in monitors various aspects of VxVM."
@@ -74227,17 +74158,6 @@ msgstr ""
 "Acest plugin testează rezolvatorul DNS local prin căutarea unuia sau mai "
 "multor nume de gazdă folosind <tt>nslookup</tt>. Se așteaptă ca acest "
 "instrument să fie instalat pe mașina țintă."
-
-#, fuzzy
-msgid ""
-"This plug-in uses the command <tt>netstat</tt> in order to output "
-"information about established TCP (and UDP) connections. The according check "
-"then allows you to make sure that certain TCP connections are always "
-"established."
-msgstr ""
-"Acest plugin utilizează comanda <tt>netstat</tt> pentru a afișa informații "
-"despre conexiunile TCP (și UDP) stabilite. Verificarea conformă vă permite "
-"apoi să vă asigurați că anumite conexiuni TCP sunt întotdeauna stabilite."
 
 #, fuzzy
 msgid ""
@@ -75280,14 +75200,6 @@ msgid "This rule set is for configuring levels for global packet counters."
 msgstr ""
 "Acest set de reguli este destinat configurării nivelurilor pentru contoarele "
 "globale de pachete."
-
-#, fuzzy
-msgid ""
-"This rule set is for deploying two plug-ins for monitoring Unitrends "
-"software."
-msgstr ""
-"Acest set de reguli este destinat implementării a două plugin-uri pentru "
-"monitorizarea software-ului Unitrends."
 
 #, fuzzy
 msgid ""
@@ -94216,9 +94128,6 @@ msgstr "Afișarea limitelor valorilor afișate"
 msgid "Don't show information of limits"
 msgstr "Nu afișați informații privind limitele"
 
-msgid "Show service status"
-msgstr "Afișați starea serviciului"
-
 msgid "Color of the scattered dots"
 msgstr "Culoarea punctelor împrăștiate"
 
@@ -95529,23 +95438,6 @@ msgid "Password is required but not specified."
 msgstr "credențiale JSON pentru contul de servicii"
 
 #, fuzzy
-msgid "Your input is not a valid host name or IP address."
-msgstr "Datele introduse nu sunt o adresă de e-mail validă."
-
-msgid "GRPC"
-msgstr ""
-
-msgid ""
-"Configure a GRPC-based OTLP receiver that will collect OpenTelemetry data."
-msgstr ""
-
-msgid "0.0.0.0"
-msgstr ""
-
-msgid "4317"
-msgstr ""
-
-#, fuzzy
 msgid "Select password"
 msgstr "Parolă nouă"
 
@@ -95557,15 +95449,18 @@ msgstr "Porturi disponibile"
 msgid "Send log messages to event console"
 msgstr "Trimiterea evenimentelor către consola locală de evenimente"
 
-#, fuzzy
-msgid "service.name"
-msgstr "Denumirea serviciului"
+msgid "Port must differ from the other protocol endpoint."
+msgstr ""
+
+msgid "GRPC"
+msgstr ""
+
+msgid ""
+"Configure a GRPC-based OTLP receiver that will collect OpenTelemetry data."
+msgstr ""
 
 msgid ""
 "Configure an HTTP-based OTLP receiver that will collect OpenTelemetry data."
-msgstr ""
-
-msgid "4318"
 msgstr ""
 
 #, fuzzy
@@ -95606,23 +95501,11 @@ msgstr ""
 msgid "Metrics path is required but not specified."
 msgstr "credențiale JSON pentru contul de servicii"
 
-#, fuzzy
-msgid "Port must be a whole number."
-msgstr "Data trebuie să fie o valoare numerică"
-
-#, fuzzy
-msgid "Port must be between 1 and 65535."
-msgstr "Valoarea pentru %s trebuie să fie cuprinsă între %d și %d."
-
 msgid ""
 "The IP address or host name the OpenTelemetry Collector should listen on. To "
 "listen only locally, use '127.0.0.1' or '::1'. To listen on all interfaces, "
 "use '0.0.0.0' or '::'."
 msgstr ""
-
-#, fuzzy
-msgid "IP address or hostname"
-msgstr "Adresa IP a gazdei"
 
 #, fuzzy
 msgid "Unexpected form data shape."
@@ -96646,6 +96529,153 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Deploy LVM plug-in"
+#~ msgstr "Implementați pluginul LVM"
+
+#, fuzzy
+#~ msgid "Deploy Linux file system quota plug-in"
+#~ msgstr "Implementați plugin-ul de cote pentru sistemul de fișiere Linux"
+
+#, fuzzy
+#~ msgid "Deploy NFS4 exports plug-in"
+#~ msgstr "Implementarea plugin-ului de export NFS4"
+
+#, fuzzy
+#~ msgid "Deploy Symantec Anti Virus plug-in"
+#~ msgstr "Implementarea plugin-ului Symantec Anti Virus"
+
+#, fuzzy
+#~ msgid "Deploy Unitrends plug-ins"
+#~ msgstr "Implementarea plugin-urilor Unitrends"
+
+#, fuzzy
+#~ msgid "Deploy VxVM plug-in"
+#~ msgstr "Implementarea plugin-ului VxVM"
+
+#, fuzzy
+#~ msgid "Deploy Windows McAfee AV client plug-in"
+#~ msgstr "Implementați pluginul pentru clientul Windows McAfee AV"
+
+#, fuzzy
+#~ msgid "Deploy plug-in for DAG"
+#~ msgstr "Implementarea plugin-ului pentru DAG"
+
+#, fuzzy
+#~ msgid "Deploy plug-in for Hyper-V VMs"
+#~ msgstr "Implementarea pluginului pentru VM Hyper-V"
+
+#, fuzzy
+#~ msgid "Deploy plug-in for MS Exchange database latency"
+#~ msgstr "Implementarea plugin-ului pentru latența bazei de date MS Exchange"
+
+#, fuzzy
+#~ msgid "Deploy the netstat plug-in"
+#~ msgstr "Implementați plugin-ul netstat"
+
+#, fuzzy
+#~ msgid "Do not deploy LVM plug-in"
+#~ msgstr "Nu implementați pluginul LVM"
+
+#, fuzzy
+#~ msgid "Do not deploy Linux file system quota plug-in"
+#~ msgstr "Nu implementați pluginul de cote pentru sistemele de fișiere Linux"
+
+#, fuzzy
+#~ msgid "Do not deploy NFS4 exports plug-in"
+#~ msgstr "Nu implementați pluginul pentru exporturi NFS4"
+
+#, fuzzy
+#~ msgid "Do not deploy Symantec Anti Virus plug-in"
+#~ msgstr "Nu implementați plugin-ul Symantec Anti Virus"
+
+#, fuzzy
+#~ msgid "Do not deploy Unitrends plug-ins"
+#~ msgstr "Nu implementați plugin-uri Unitrends"
+
+#, fuzzy
+#~ msgid "Do not deploy VxVM plug-in"
+#~ msgstr "Nu implementați pluginul VxVM"
+
+#, fuzzy
+#~ msgid "Do not deploy Windows McAfee AV client plug-in"
+#~ msgstr "Nu implementați pluginul pentru clientul Windows McAfee AV"
+
+#, fuzzy
+#~ msgid "Do not deploy plug-in for DAG"
+#~ msgstr "Nu implementați plugin pentru DAG"
+
+#, fuzzy
+#~ msgid "Do not deploy plug-in for Hyper-V VMs"
+#~ msgstr "Nu implementați pluginul pentru VM Hyper-V"
+
+#, fuzzy
+#~ msgid "Do not deploy plug-in for MS Exchange database latency"
+#~ msgstr "Nu implementați plugin-ul pentru latența bazei de date MS Exchange"
+
+#, fuzzy
+#~ msgid "Do not deploy the NGINX status plug-in"
+#~ msgstr "Nu implementați plugin-ul NGINX Status"
+
+#, fuzzy
+#~ msgid "Do not deploy the netstat plug-in"
+#~ msgstr "Nu implementați plugin-ul netstat"
+
+#, fuzzy
+#~ msgid "This plug-in monitors the NFS version 4 exports of a Linux host."
+#~ msgstr ""
+#~ "Acest plugin monitorizează exporturile NFS versiunea 4 ale unei gazde "
+#~ "Linux."
+
+#, fuzzy
+#~ msgid "This plug-in monitors the state of Hyper-V VMs on Window hosts."
+#~ msgstr ""
+#~ "Acest plugin monitorizează starea mașinilor virtuale Hyper-V pe gazdele "
+#~ "Window."
+
+#, fuzzy
+#~ msgid ""
+#~ "This plug-in uses the command <tt>netstat</tt> in order to output "
+#~ "information about established TCP (and UDP) connections. The according "
+#~ "check then allows you to make sure that certain TCP connections are "
+#~ "always established."
+#~ msgstr ""
+#~ "Acest plugin utilizează comanda <tt>netstat</tt> pentru a afișa "
+#~ "informații despre conexiunile TCP (și UDP) stabilite. Verificarea "
+#~ "conformă vă permite apoi să vă asigurați că anumite conexiuni TCP sunt "
+#~ "întotdeauna stabilite."
+
+#, fuzzy
+#~ msgid ""
+#~ "This rule set is for deploying two plug-ins for monitoring Unitrends "
+#~ "software."
+#~ msgstr ""
+#~ "Acest set de reguli este destinat implementării a două plugin-uri pentru "
+#~ "monitorizarea software-ului Unitrends."
+
+#~ msgid "Show service status"
+#~ msgstr "Afișați starea serviciului"
+
+#, fuzzy
+#~ msgid "Your input is not a valid host name or IP address."
+#~ msgstr "Datele introduse nu sunt o adresă de e-mail validă."
+
+#, fuzzy
+#~ msgid "service.name"
+#~ msgstr "Denumirea serviciului"
+
+#, fuzzy
+#~ msgid "Port must be a whole number."
+#~ msgstr "Data trebuie să fie o valoare numerică"
+
+#, fuzzy
+#~ msgid "Port must be between 1 and 65535."
+#~ msgstr "Valoarea pentru %s trebuie să fie cuprinsă între %d și %d."
+
+#, fuzzy
+#~ msgid "IP address or hostname"
+#~ msgstr "Adresa IP a gazdei"
 
 #, fuzzy
 #~ msgid "90th percentile latency over last day"
@@ -101048,10 +101078,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Dashboard url"
 #~ msgstr "Tabloul de bord"
-
-#, fuzzy
-#~ msgid "HTTPS port"
-#~ msgstr "Port TCP"
 
 #, fuzzy
 #~ msgid "Levels for custom query monitoring"

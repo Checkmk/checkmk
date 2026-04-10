@@ -19692,14 +19692,6 @@ msgid "Deploy Kaspersky Anti-Virus plug-in"
 msgstr "Distribuire il plugin di Kaspersky Anti-Virus"
 
 #, fuzzy
-msgid "Deploy LVM plug-in"
-msgstr "Distribuire il plugin LVM"
-
-#, fuzzy
-msgid "Deploy Linux file system quota plug-in"
-msgstr "Distribuire il plugin per le quote del filesystem Linux"
-
-#, fuzzy
 msgid "Deploy MS Office 365 plug-in"
 msgstr "Distribuire il plugin di MS Office 365"
 
@@ -19714,10 +19706,6 @@ msgstr "Distribuire il plugin Mailman"
 #, fuzzy
 msgid "Deploy MegaRAID plug-in"
 msgstr "Distribuire il plugin MegaRAID"
-
-#, fuzzy
-msgid "Deploy NFS4 exports plug-in"
-msgstr "Distribuire il plugin per le esportazioni NFS4"
 
 msgid "Deploy OpenHardwareMonitor (headless)"
 msgstr "Distribuire OpenHardwareMonitor (senza testa)"
@@ -19749,22 +19737,6 @@ msgstr "Distribuire il plugin SUSEConnect"
 #, fuzzy
 msgid "Deploy StorCLI plug-in"
 msgstr "Distribuire il plugin StorCLI"
-
-#, fuzzy
-msgid "Deploy Symantec Anti Virus plug-in"
-msgstr "Distribuire il plugin Symantec Anti Virus"
-
-#, fuzzy
-msgid "Deploy Unitrends plug-ins"
-msgstr "Distribuire i plugin di Unitrends"
-
-#, fuzzy
-msgid "Deploy VxVM plug-in"
-msgstr "Distribuire il plugin VxVM"
-
-#, fuzzy
-msgid "Deploy Windows McAfee AV client plug-in"
-msgstr "Distribuire il plugin del client McAfee AV di Windows"
 
 #, fuzzy
 msgid "Deploy Windows Multipath plug-in"
@@ -19812,10 +19784,6 @@ msgid "Deploy plug-in for Ceph"
 msgstr "Distribuire il plugin per DAG"
 
 #, fuzzy
-msgid "Deploy plug-in for DAG"
-msgstr "Distribuire il plugin per DAG"
-
-#, fuzzy
 msgid "Deploy plug-in for DB2"
 msgstr "Distribuire il plugin per DB2"
 
@@ -19824,16 +19792,8 @@ msgid "Deploy plug-in for Hyper-V VM Guest Information"
 msgstr "Distribuire il plugin per Hyper-V VM Guest Information"
 
 #, fuzzy
-msgid "Deploy plug-in for Hyper-V VMs"
-msgstr "Distribuire il plugin per le VM di Hyper-V"
-
-#, fuzzy
 msgid "Deploy plug-in for JAR signatures"
 msgstr "Distribuire il plugin per le firme JAR"
-
-#, fuzzy
-msgid "Deploy plug-in for MS Exchange database latency"
-msgstr "Distribuire il plugin per la latenza del database di MS Exchange"
 
 #, fuzzy
 msgid "Deploy plug-in for MS IIS Application Pool States"
@@ -19957,6 +19917,18 @@ msgstr ""
 "destinazione."
 
 #, fuzzy
+msgid "Deploy the agent plug-in <tt>hyperv_vms</tt> on your target system."
+msgstr ""
+"Distribuite il plugin agente <tt>zorp</tt> sul vostro sistema di "
+"destinazione."
+
+#, fuzzy
+msgid "Deploy the agent plug-in <tt>lvm</tt> on your target system."
+msgstr ""
+"Distribuite il plugin agente <tt>zorp</tt> sul vostro sistema di "
+"destinazione."
+
+#, fuzzy
 msgid ""
 "Deploy the agent plug-in <tt>mk_postgres</tt>. This will create information "
 "necessary for all <tt>postgres_*</tt> checks."
@@ -19982,6 +19954,22 @@ msgstr ""
 "sistemi operativi."
 
 #, fuzzy
+msgid ""
+"Deploy the agent plug-in <tt>netstat</tt> on your target system. This plug-"
+"in uses the command <tt>netstat</tt> in order to output information about "
+"established TCP (and UDP) connections."
+msgstr ""
+"Questo distribuirà il plugin agente <tt>mk_oracle</tt> sul sistema di "
+"destinazione. Attualmente non tutte le opzioni sono disponibili in tutti i "
+"sistemi operativi."
+
+#, fuzzy
+msgid "Deploy the agent plug-in <tt>nfsexports</tt> on your target system."
+msgstr ""
+"Distribuite il plugin agente <tt>zorp</tt> sul vostro sistema di "
+"destinazione."
+
+#, fuzzy
 msgid "Deploy the agent plug-in <tt>rds_licenses</tt> on your target system."
 msgstr ""
 "Distribuite il plugin agente <tt>zorp</tt> sul vostro sistema di "
@@ -20002,12 +19990,16 @@ msgstr ""
 "<tt>plesk_domain</tt>, usati per monitorare Plesk."
 
 #, fuzzy
-msgid "Deploy the mk_filehandler plug-in"
-msgstr "Distribuire il plugin mk_filehandler"
+msgid ""
+"Deploy the agent plug-ins <tt>unitrends_backup</tt> and "
+"<tt>unitrends_replication</tt> on your target system."
+msgstr ""
+"Questo distribuirà i due plugin agente <tt>plesk_backup</tt> e "
+"<tt>plesk_domain</tt>, usati per monitorare Plesk."
 
 #, fuzzy
-msgid "Deploy the netstat plug-in"
-msgstr "Distribuire il plugin netstat"
+msgid "Deploy the mk_filehandler plug-in"
+msgstr "Distribuire il plugin mk_filehandler"
 
 #, fuzzy
 msgid "Deploy the nvidia_smi agent plug-in"
@@ -21458,24 +21450,12 @@ msgid "Do not deploy Kaspersky Anti-Virus plug-in"
 msgstr "Non distribuire il plugin di Kaspersky Anti-Virus"
 
 #, fuzzy
-msgid "Do not deploy LVM plug-in"
-msgstr "Non distribuire il plugin LVM"
-
-#, fuzzy
-msgid "Do not deploy Linux file system quota plug-in"
-msgstr "Non distribuire il plugin di quota del filesystem Linux"
-
-#, fuzzy
 msgid "Do not deploy MSSQL Server plug-in"
 msgstr "Non distribuire il plugin Check SQL Server"
 
 #, fuzzy
 msgid "Do not deploy Mailman plug-in"
 msgstr "Non distribuire il plugin Mailman"
-
-#, fuzzy
-msgid "Do not deploy NFS4 exports plug-in"
-msgstr "Non distribuire il plugin delle esportazioni NFS4"
 
 msgid "Do not deploy OpenHardwareMonitor (headless)"
 msgstr "Non distribuire OpenHardwareMonitor (senza testa)"
@@ -21497,24 +21477,8 @@ msgid "Do not deploy SUSEConnect plug-in"
 msgstr "Non distribuire il plugin SUSEConnect"
 
 #, fuzzy
-msgid "Do not deploy Symantec Anti Virus plug-in"
-msgstr "Non distribuire il plugin Symantec Anti Virus"
-
-#, fuzzy
-msgid "Do not deploy Unitrends plug-ins"
-msgstr "Non distribuire i plugin di Unitrends"
-
-#, fuzzy
-msgid "Do not deploy VxVM plug-in"
-msgstr "Non distribuire il plugin VxVM"
-
-#, fuzzy
 msgid "Do not deploy Windows License plug-in"
 msgstr "Non distribuire il plugin di licenza di Windows"
-
-#, fuzzy
-msgid "Do not deploy Windows McAfee AV client plug-in"
-msgstr "Non distribuire il plugin del client Windows McAfee AV"
 
 #, fuzzy
 msgid "Do not deploy Windows Multipath plug-in"
@@ -21545,24 +21509,12 @@ msgid "Do not deploy mk_mongodb.py plug-in"
 msgstr "Non distribuire il plugin mk_mongodb.py"
 
 #, fuzzy
-msgid "Do not deploy plug-in for DAG"
-msgstr "Non distribuire il plugin per DAG"
-
-#, fuzzy
 msgid "Do not deploy plug-in for Hyper-V VM Guest Information"
 msgstr "Non distribuire il plugin per Hyper-V VM Guest Information"
 
 #, fuzzy
-msgid "Do not deploy plug-in for Hyper-V VMs"
-msgstr "Non distribuire il plugin per le macchine virtuali Hyper-V"
-
-#, fuzzy
 msgid "Do not deploy plug-in for JAR signatures"
 msgstr "Non distribuire il plugin per le firme JAR"
-
-#, fuzzy
-msgid "Do not deploy plug-in for MS Exchange database latency"
-msgstr "Non distribuire il plugin per la latenza del database di MS Exchange"
 
 #, fuzzy
 msgid "Do not deploy plug-in for MS IIS Application Pool States"
@@ -21670,10 +21622,6 @@ msgid "Do not deploy the MySQL plug-in"
 msgstr "Non distribuire il plugin MySQL"
 
 #, fuzzy
-msgid "Do not deploy the NGINX status plug-in"
-msgstr "Non distribuire il plugin NGINX Status"
-
-#, fuzzy
 msgid "Do not deploy the Redis plug-in"
 msgstr "Non distribuire il plugin Redis"
 
@@ -21708,10 +21656,6 @@ msgstr "Non distribuire il plugin Zypper"
 #, fuzzy
 msgid "Do not deploy the mk_filehandler plug-in"
 msgstr "Non distribuire il plugin mk_filehandler"
-
-#, fuzzy
-msgid "Do not deploy the netstat plug-in"
-msgstr "Non distribuire il plugin netstat"
 
 #, fuzzy
 msgid "Do not deploy the nvidia_smi agent plug-in"
@@ -28718,6 +28662,10 @@ msgstr "Richieste DHCP ricevute"
 msgid "HTTPS"
 msgstr "HTTPS"
 
+#, fuzzy
+msgid "HTTPS port"
+msgstr "Porta TCP"
+
 msgid "HW Information"
 msgstr "Informazioni HW"
 
@@ -31886,15 +31834,6 @@ msgstr "Host colorati in base allo stato (gruppo di host)"
 
 #, fuzzy
 msgid ""
-"Hosts configured via this rule get the <tt>lnx_quota</tt> plug-in deployed. "
-"This is only useful if you have file system quotas setup on the host."
-msgstr ""
-"Gli host configurati tramite questa regola ottengono il plugin "
-"<tt>lnx_quota</tt> distribuito. Questo è utile solo se si hanno quote di "
-"filesystem impostate sull'host."
-
-#, fuzzy
-msgid ""
 "Hosts configured via this rule get the <tt>mk_filehandler</tt> plug-in "
 "deployed."
 msgstr ""
@@ -31925,6 +31864,15 @@ msgstr ""
 "Gli host configurati tramite questa regola ottengono il plugin <tt>smart</"
 "tt> distribuito. Assumendo che tu abbia installato <tt>smartmontools</tt>, i "
 "tuoi hard disk locali saranno monitorati per temperatura ed errori."
+
+#, fuzzy
+msgid ""
+"Hosts configured via this rule get the lnx_quota plug-in deployed. This is "
+"only useful if you have file system quotas setup on the host."
+msgstr ""
+"Gli host configurati tramite questa regola ottengono il plugin "
+"<tt>lnx_quota</tt> distribuito. Questo è utile solo se si hanno quote di "
+"filesystem impostate sull'host."
 
 #, fuzzy
 msgid ""
@@ -73789,11 +73737,6 @@ msgid "This plug-in monitors channels, managers and queues of IBM MQ."
 msgstr "Questo plugin controlla i canali, i manager e le code di IBM MQ."
 
 #, fuzzy
-msgid "This plug-in monitors the NFS version 4 exports of a Linux host."
-msgstr ""
-"Questo plugin controlla le esportazioni NFS versione 4 di un host Linux."
-
-#, fuzzy
 msgid ""
 "This plug-in monitors the number of print jobs in the printer queues and the "
 "printer states"
@@ -73808,10 +73751,6 @@ msgid ""
 msgstr ""
 "Questo plugin controlla la data della firma di un sistema Windows che "
 "utilizza il software McAfee Anti-Virus"
-
-#, fuzzy
-msgid "This plug-in monitors the state of Hyper-V VMs on Window hosts."
-msgstr "Questo plugin controlla lo stato delle VM Hyper-V sugli host Window."
 
 #, fuzzy
 msgid "This plug-in monitors various aspects of VxVM."
@@ -73859,17 +73798,6 @@ msgstr ""
 "Questo plugin testa il resolver DNS locale cercando uno o più nomi di host "
 "usando <tt>nslookup</tt>. Ci si aspetta che questo strumento sia installato "
 "sulla macchina di destinazione."
-
-#, fuzzy
-msgid ""
-"This plug-in uses the command <tt>netstat</tt> in order to output "
-"information about established TCP (and UDP) connections. The according check "
-"then allows you to make sure that certain TCP connections are always "
-"established."
-msgstr ""
-"Questo plugin utilizza il comando <tt>netstat</tt> per fornire informazioni "
-"sulle connessioni TCP (e UDP) stabilite. Il secondo controllo permette "
-"quindi di assicurarsi che certe connessioni TCP siano sempre stabilite."
 
 #, fuzzy
 msgid ""
@@ -74902,14 +74830,6 @@ msgid "This rule set is for configuring levels for global packet counters."
 msgstr ""
 "Questo set di regole serve a configurare i livelli per i contatori di "
 "pacchetti globali."
-
-#, fuzzy
-msgid ""
-"This rule set is for deploying two plug-ins for monitoring Unitrends "
-"software."
-msgstr ""
-"Questo insieme di regole serve a distribuire due plugin per il monitoraggio "
-"del software Unitrends."
 
 #, fuzzy
 msgid ""
@@ -93769,9 +93689,6 @@ msgstr "Mostra i limiti dei valori visualizzati"
 msgid "Don't show information of limits"
 msgstr "Non mostrare informazioni sui limiti"
 
-msgid "Show service status"
-msgstr "Mostra lo stato del servizio"
-
 msgid "Color of the scattered dots"
 msgstr "Colore dei punti sparsi"
 
@@ -95074,23 +94991,6 @@ msgid "Password is required but not specified."
 msgstr "%s è richiesto ma non è stato specificato."
 
 #, fuzzy
-msgid "Your input is not a valid host name or IP address."
-msgstr "L'indirizzo immesso non è un indirizzo e-mail valido."
-
-msgid "GRPC"
-msgstr ""
-
-msgid ""
-"Configure a GRPC-based OTLP receiver that will collect OpenTelemetry data."
-msgstr ""
-
-msgid "0.0.0.0"
-msgstr ""
-
-msgid "4317"
-msgstr ""
-
-#, fuzzy
 msgid "Select password"
 msgstr "Nuova password"
 
@@ -95102,15 +95002,18 @@ msgstr "Porte disponibili"
 msgid "Send log messages to event console"
 msgstr "Invia gli eventi alla console eventi locale"
 
-#, fuzzy
-msgid "service.name"
-msgstr "nome del servizio"
+msgid "Port must differ from the other protocol endpoint."
+msgstr ""
+
+msgid "GRPC"
+msgstr ""
+
+msgid ""
+"Configure a GRPC-based OTLP receiver that will collect OpenTelemetry data."
+msgstr ""
 
 msgid ""
 "Configure an HTTP-based OTLP receiver that will collect OpenTelemetry data."
-msgstr ""
-
-msgid "4318"
 msgstr ""
 
 #, fuzzy
@@ -95150,23 +95053,11 @@ msgstr ""
 msgid "Metrics path is required but not specified."
 msgstr "%s è richiesto ma non è stato specificato."
 
-#, fuzzy
-msgid "Port must be a whole number."
-msgstr "La data deve essere un valore numerico"
-
-#, fuzzy
-msgid "Port must be between 1 and 65535."
-msgstr "Il valore di %s deve essere tra %d e %d"
-
 msgid ""
 "The IP address or host name the OpenTelemetry Collector should listen on. To "
 "listen only locally, use '127.0.0.1' or '::1'. To listen on all interfaces, "
 "use '0.0.0.0' or '::'."
 msgstr ""
-
-#, fuzzy
-msgid "IP address or hostname"
-msgstr "Indirizzo IP dell'host"
 
 #, fuzzy
 msgid "Unexpected form data shape."
@@ -96188,6 +96079,152 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Deploy LVM plug-in"
+#~ msgstr "Distribuire il plugin LVM"
+
+#, fuzzy
+#~ msgid "Deploy Linux file system quota plug-in"
+#~ msgstr "Distribuire il plugin per le quote del filesystem Linux"
+
+#, fuzzy
+#~ msgid "Deploy NFS4 exports plug-in"
+#~ msgstr "Distribuire il plugin per le esportazioni NFS4"
+
+#, fuzzy
+#~ msgid "Deploy Symantec Anti Virus plug-in"
+#~ msgstr "Distribuire il plugin Symantec Anti Virus"
+
+#, fuzzy
+#~ msgid "Deploy Unitrends plug-ins"
+#~ msgstr "Distribuire i plugin di Unitrends"
+
+#, fuzzy
+#~ msgid "Deploy VxVM plug-in"
+#~ msgstr "Distribuire il plugin VxVM"
+
+#, fuzzy
+#~ msgid "Deploy Windows McAfee AV client plug-in"
+#~ msgstr "Distribuire il plugin del client McAfee AV di Windows"
+
+#, fuzzy
+#~ msgid "Deploy plug-in for DAG"
+#~ msgstr "Distribuire il plugin per DAG"
+
+#, fuzzy
+#~ msgid "Deploy plug-in for Hyper-V VMs"
+#~ msgstr "Distribuire il plugin per le VM di Hyper-V"
+
+#, fuzzy
+#~ msgid "Deploy plug-in for MS Exchange database latency"
+#~ msgstr "Distribuire il plugin per la latenza del database di MS Exchange"
+
+#, fuzzy
+#~ msgid "Deploy the netstat plug-in"
+#~ msgstr "Distribuire il plugin netstat"
+
+#, fuzzy
+#~ msgid "Do not deploy LVM plug-in"
+#~ msgstr "Non distribuire il plugin LVM"
+
+#, fuzzy
+#~ msgid "Do not deploy Linux file system quota plug-in"
+#~ msgstr "Non distribuire il plugin di quota del filesystem Linux"
+
+#, fuzzy
+#~ msgid "Do not deploy NFS4 exports plug-in"
+#~ msgstr "Non distribuire il plugin delle esportazioni NFS4"
+
+#, fuzzy
+#~ msgid "Do not deploy Symantec Anti Virus plug-in"
+#~ msgstr "Non distribuire il plugin Symantec Anti Virus"
+
+#, fuzzy
+#~ msgid "Do not deploy Unitrends plug-ins"
+#~ msgstr "Non distribuire i plugin di Unitrends"
+
+#, fuzzy
+#~ msgid "Do not deploy VxVM plug-in"
+#~ msgstr "Non distribuire il plugin VxVM"
+
+#, fuzzy
+#~ msgid "Do not deploy Windows McAfee AV client plug-in"
+#~ msgstr "Non distribuire il plugin del client Windows McAfee AV"
+
+#, fuzzy
+#~ msgid "Do not deploy plug-in for DAG"
+#~ msgstr "Non distribuire il plugin per DAG"
+
+#, fuzzy
+#~ msgid "Do not deploy plug-in for Hyper-V VMs"
+#~ msgstr "Non distribuire il plugin per le macchine virtuali Hyper-V"
+
+#, fuzzy
+#~ msgid "Do not deploy plug-in for MS Exchange database latency"
+#~ msgstr ""
+#~ "Non distribuire il plugin per la latenza del database di MS Exchange"
+
+#, fuzzy
+#~ msgid "Do not deploy the NGINX status plug-in"
+#~ msgstr "Non distribuire il plugin NGINX Status"
+
+#, fuzzy
+#~ msgid "Do not deploy the netstat plug-in"
+#~ msgstr "Non distribuire il plugin netstat"
+
+#, fuzzy
+#~ msgid "This plug-in monitors the NFS version 4 exports of a Linux host."
+#~ msgstr ""
+#~ "Questo plugin controlla le esportazioni NFS versione 4 di un host Linux."
+
+#, fuzzy
+#~ msgid "This plug-in monitors the state of Hyper-V VMs on Window hosts."
+#~ msgstr ""
+#~ "Questo plugin controlla lo stato delle VM Hyper-V sugli host Window."
+
+#, fuzzy
+#~ msgid ""
+#~ "This plug-in uses the command <tt>netstat</tt> in order to output "
+#~ "information about established TCP (and UDP) connections. The according "
+#~ "check then allows you to make sure that certain TCP connections are "
+#~ "always established."
+#~ msgstr ""
+#~ "Questo plugin utilizza il comando <tt>netstat</tt> per fornire "
+#~ "informazioni sulle connessioni TCP (e UDP) stabilite. Il secondo "
+#~ "controllo permette quindi di assicurarsi che certe connessioni TCP siano "
+#~ "sempre stabilite."
+
+#, fuzzy
+#~ msgid ""
+#~ "This rule set is for deploying two plug-ins for monitoring Unitrends "
+#~ "software."
+#~ msgstr ""
+#~ "Questo insieme di regole serve a distribuire due plugin per il "
+#~ "monitoraggio del software Unitrends."
+
+#~ msgid "Show service status"
+#~ msgstr "Mostra lo stato del servizio"
+
+#, fuzzy
+#~ msgid "Your input is not a valid host name or IP address."
+#~ msgstr "L'indirizzo immesso non è un indirizzo e-mail valido."
+
+#, fuzzy
+#~ msgid "service.name"
+#~ msgstr "nome del servizio"
+
+#, fuzzy
+#~ msgid "Port must be a whole number."
+#~ msgstr "La data deve essere un valore numerico"
+
+#, fuzzy
+#~ msgid "Port must be between 1 and 65535."
+#~ msgstr "Il valore di %s deve essere tra %d e %d"
+
+#, fuzzy
+#~ msgid "IP address or hostname"
+#~ msgstr "Indirizzo IP dell'host"
 
 #, fuzzy
 #~ msgid "90th percentile latency over last day"
@@ -100421,10 +100458,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Dashboard url"
 #~ msgstr "Dashboard"
-
-#, fuzzy
-#~ msgid "HTTPS port"
-#~ msgstr "Porta TCP"
 
 #, fuzzy
 #~ msgid "Levels for custom query monitoring"

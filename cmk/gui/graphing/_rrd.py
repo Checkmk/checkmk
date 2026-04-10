@@ -90,6 +90,29 @@ def fetch_graph_row(
     )
 
 
+def make_graph_row(
+    *,
+    site: SiteId,
+    host_name: HostName,
+    service_name: ServiceName,
+    perf_data_string: str,
+    metrics: list[MetricName],
+    check_command: str,
+    debug: bool,
+) -> GraphRow:
+    perf_data, normalized_check_command = parse_perf_data(
+        perf_data_string, check_command, debug=debug
+    )
+    return GraphRow(
+        site=site,
+        host_name=host_name,
+        service_name=service_name,
+        performance_data=perf_data,
+        metrics=metrics,
+        check_command=normalized_check_command,
+    )
+
+
 @dataclass(frozen=True, kw_only=True)
 class MetricProperties:
     metric_name: str

@@ -75,6 +75,7 @@ from ._rrd import (
     all_rrd_columns_potentially_relevant_for_metric,
     fetch_graph_row,
     GraphRow,
+    make_graph_row,
     translate_and_merge_rrd_columns,
 )
 from ._translated_metrics import (
@@ -153,6 +154,7 @@ __all__ = [
     "compute_pdf_graph_time_range",
     "get_first_matching_perfometer",
     "fetch_graph_row",
+    "make_graph_row",
     "get_graph_plugin_and_single_metric_choices",
     "get_graph_plugin_choices",
     "get_metric_spec",

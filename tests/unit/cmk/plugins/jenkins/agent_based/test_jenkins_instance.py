@@ -79,6 +79,21 @@ def test_check_jenkins_instance_use_security_missing() -> None:
     assert expected in value
 
 
+def test_check_jenkins_instance_boolean_expectation_mismatch() -> None:
+    payload = _build_test_payload(quietingDown=True, useSecurity=False)
+    string_table = [[json.dumps(payload)]]
+    section = parse_jenkins_instance(string_table)
+
+    value = list(check_jenkins_instance({}, section))
+    expected = [
+        Result(state=State.OK, summary="Description: The Master Jenkins Node"),
+        Result(state=State.WARN, summary="Quieting Down: yes"),
+        Result(state=State.WARN, summary="Security used: no"),
+    ]
+
+    assert value == expected
+
+
 def _build_test_payload(**kwargs: object) -> Mapping[str, object]:
     defaults = {
         "quietingDown": False,

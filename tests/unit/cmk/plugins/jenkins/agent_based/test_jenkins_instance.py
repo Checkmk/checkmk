@@ -6,6 +6,8 @@
 import json
 from collections.abc import Mapping
 
+import pytest
+
 from cmk.agent_based.v2 import Result, Service, State
 from cmk.plugins.jenkins.agent_based.jenkins_instance import (
     check_jenkins_instance,
@@ -55,6 +57,30 @@ def test_check_jenkins_instance() -> None:
     ]
 
     assert value == expected
+
+
+@pytest.mark.xfail(strict=True, reason="Assertion in place when missing.")
+def test_check_jenkins_instance_quieting_down_missing() -> None:
+    payload = _build_test_payload(quietingDown=None)
+    string_table = [[json.dumps(payload)]]
+    section = parse_jenkins_instance(string_table)
+
+    value = list(check_jenkins_instance({}, section))
+    expected = Result(state=State.UNKNOWN, summary="Quieting Down: N/A")
+
+    assert expected in value
+
+
+@pytest.mark.xfail(strict=True, reason="Assertion in place when missing.")
+def test_check_jenkins_instance_use_security_missing() -> None:
+    payload = _build_test_payload(useSecurity=None)
+    string_table = [[json.dumps(payload)]]
+    section = parse_jenkins_instance(string_table)
+
+    value = list(check_jenkins_instance({}, section))
+    expected = Result(state=State.UNKNOWN, summary="Security used: N/A")
+
+    assert expected in value
 
 
 def _build_test_payload(**kwargs: object) -> Mapping[str, object]:

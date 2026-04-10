@@ -214,7 +214,9 @@ def _valuespec_agent_config_mk_oracle() -> Dictionary:
         title=_("Oracle databases (Linux, Solaris, AIX, Windows)"),
         help=_(
             "This will deploy the agent plug-in <tt>mk_oracle</tt> on your target system. "
-            "Currently not all options are available in all operating systems."
+            "Currently not all options are available in all operating systems.<br>"
+            "<b>Note:</b> This plugin cannot be used together with the "
+            "'Unified Oracle Plugin (Beta)'. Please configure only one of the two."
         ),
         elements=[
             (

@@ -111,6 +111,16 @@ def _parameter_valuespec_el_inphase():
         elements=_phase_elements()
         + [
             (
+                "output_load",
+                Tuple(
+                    title=_("Load"),
+                    elements=[
+                        Integer(title=_("warning at"), unit="%", default_value=80),
+                        Integer(title=_("critical at"), unit="%", default_value=90),
+                    ],
+                ),
+            ),
+            (
                 "map_device_states",
                 ListOf(
                     valuespec=Tuple(elements=[TextInput(size=10), MonitoringState()]),

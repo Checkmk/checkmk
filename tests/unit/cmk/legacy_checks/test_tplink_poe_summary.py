@@ -3,15 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="misc"
-# mypy: disable-error-code="no-untyped-call"
-
 from collections.abc import Mapping, Sequence
-from typing import Any
 
 import pytest
 
-from cmk.agent_based.v2 import StringTable
+from cmk.agent_based.v2 import CheckResult, Metric, Result, Service, State, StringTable
 from cmk.legacy_checks.tplink_poe_summary import (
     check_tplink_poe_summary,
     discover_tplink_poe_summary,
@@ -20,30 +16,64 @@ from cmk.legacy_checks.tplink_poe_summary import (
 
 
 @pytest.mark.parametrize(
-    "string_table, expected_discoveries",
+    "string_table, expected_services",
     [
-        ([["150"]], [(None, {})]),
+        ([["150"]], [Service()]),
+        ([["0"]], []),
+        ([], []),
     ],
 )
 def test_discover_tplink_poe_summary(
-    string_table: StringTable, expected_discoveries: Sequence[tuple[str, Mapping[str, Any]]]
+    string_table: StringTable, expected_services: Sequence[Service]
 ) -> None:
-    """Test discovery function for tplink_poe_summary check."""
     parsed = parse_tplink_poe_summary(string_table)
-    result = list(discover_tplink_poe_summary(parsed))
-    assert sorted(result) == sorted(expected_discoveries)
+    assert list(discover_tplink_poe_summary(parsed)) == expected_services
 
 
 @pytest.mark.parametrize(
-    "item, params, string_table, expected_results",
+    "params, string_table, expected_results",
     [
-        (None, {}, [["150"]], [0, "15.00 W", [("power", 15.0, None, None)]]),
+        (
+            {},
+            [["150"]],
+            [
+                Result(state=State.OK, summary="15.00 W"),
+                Metric("power", 15.0),
+            ],
+        ),
+        (
+            {},
+            [],
+            [],
+        ),
+        (
+            {"levels": (10.0, 20.0)},
+            [["150"]],
+            [
+                Result(
+                    state=State.WARN,
+                    summary="15.00 W (warn/crit at 10.00 W/20.00 W)",
+                ),
+                Metric("power", 15.0, levels=(10.0, 20.0)),
+            ],
+        ),
+        (
+            {"levels": (10.0, 20.0)},
+            [["250"]],
+            [
+                Result(
+                    state=State.CRIT,
+                    summary="25.00 W (warn/crit at 10.00 W/20.00 W)",
+                ),
+                Metric("power", 25.0, levels=(10.0, 20.0)),
+            ],
+        ),
     ],
 )
 def test_check_tplink_poe_summary(
-    item: str, params: Mapping[str, Any], string_table: StringTable, expected_results: Sequence[Any]
+    params: Mapping[str, tuple[float, float]],
+    string_table: StringTable,
+    expected_results: CheckResult,
 ) -> None:
-    """Test check function for tplink_poe_summary check."""
     parsed = parse_tplink_poe_summary(string_table)
-    result = list(check_tplink_poe_summary(item, params, parsed))
-    assert result == expected_results
+    assert list(check_tplink_poe_summary(params, parsed)) == expected_results

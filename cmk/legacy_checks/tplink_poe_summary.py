@@ -3,42 +3,57 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
+from collections.abc import Mapping
+from typing import Any
 
-
-from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
-from cmk.agent_based.v2 import SNMPTree, StringTable
+from cmk.agent_based.v1 import check_levels as check_levels_v1
+from cmk.agent_based.v2 import (
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Service,
+    SimpleSNMPSection,
+    SNMPTree,
+    StringTable,
+)
 from cmk.plugins.tplink.lib import DETECT_TPLINK
-
-check_info = {}
-
-
-def discover_tplink_poe_summary(info):
-    if info and info[0][0] != "0":
-        return [(None, {})]
-    return []
-
-
-def check_tplink_poe_summary(_no_item, params, info):
-    deci_watt = float(info[0][0])
-    watt = deci_watt / 10
-    return check_levels(
-        watt, "power", params.get("levels"), human_readable_func=lambda x: f"{x:.2f} W"
-    )
 
 
 def parse_tplink_poe_summary(string_table: StringTable) -> StringTable:
     return string_table
 
 
-check_info["tplink_poe_summary"] = LegacyCheckDefinition(
+snmp_section_tplink_poe_summary = SimpleSNMPSection(
     name="tplink_poe_summary",
-    parse_function=parse_tplink_poe_summary,
     detect=DETECT_TPLINK,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.11863.6.56.1.1.1",
         oids=["3"],
     ),
+    parse_function=parse_tplink_poe_summary,
+)
+
+
+def discover_tplink_poe_summary(section: StringTable) -> DiscoveryResult:
+    if section and section[0][0] != "0":
+        yield Service()
+
+
+def check_tplink_poe_summary(params: Mapping[str, Any], section: StringTable) -> CheckResult:
+    if not section:
+        return
+
+    watt = float(section[0][0]) / 10
+    yield from check_levels_v1(
+        watt,
+        metric_name="power",
+        levels_upper=params.get("levels"),
+        render_func=lambda x: f"{x:.2f} W",
+    )
+
+
+check_plugin_tplink_poe_summary = CheckPlugin(
+    name="tplink_poe_summary",
     service_name="POE Power",
     discovery_function=discover_tplink_poe_summary,
     check_function=check_tplink_poe_summary,

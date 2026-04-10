@@ -1002,6 +1002,21 @@ export function makeLoadingTransition(
   }, delay || 0)
 }
 
+// If the user cancels a beforeunload dialog (e.g. "Leave page?"), the pending
+// transition must be cancelled — otherwise the skeleton gets injected into a
+// page the user chose to stay on.  When navigation proceeds the page unloads,
+// so this is a harmless no-op in that case.
+window.addEventListener('beforeunload', cancelLoadingTransition)
+
+export function cancelLoadingTransition(): void {
+  const body = getContentBody()
+  if (!body) {
+    return
+  }
+  body.removeAttribute('data-prepare-loading-transition')
+  body.style.cursor = ''
+}
+
 export function replaceIcon(img: Element, new_icon: string) {
   const imgData = img.getAttribute('data')
   if (imgData) {

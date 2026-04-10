@@ -13,7 +13,7 @@ import collections
 import contextlib
 import time
 from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from functools import lru_cache
 
 import livestatus
@@ -47,8 +47,10 @@ from ._legacy import (
 from ._metrics import get_metric_spec
 from ._time_series import TimeSeries
 from ._translated_metrics import (
+    compute_translated_metrics,
     find_matching_translation,
     parse_perf_data,
+    TranslatedMetric,
     TranslationSpec,
 )
 from ._unit import user_specific_unit
@@ -63,6 +65,7 @@ class HostGraphRow:
     performance_data: Perfdata
     metrics: list[MetricName]
     check_command: str
+    translated_metrics: Mapping[str, TranslatedMetric] = field(default_factory=dict)
 
     @property
     def service_name(self) -> ServiceName:
@@ -77,6 +80,7 @@ class ServiceGraphRow:
     performance_data: Perfdata
     metrics: list[MetricName]
     check_command: str
+    translated_metrics: Mapping[str, TranslatedMetric] = field(default_factory=dict)
 
 
 @tracer.instrument("graphing.fetch_graph_row")
@@ -116,17 +120,29 @@ def fetch_graph_row(
 
 
 def make_graph_row(
-    *,
     site: SiteId,
     host_name: HostName,
     service_name: ServiceName,
     perf_data_string: str,
     metrics: list[MetricName],
     check_command: str,
+    registered_metrics: Mapping[str, RegisteredMetric],
+    explicit_color: str = "",
+    *,
     debug: bool,
+    temperature_unit: TemperatureUnit,
 ) -> HostGraphRow | ServiceGraphRow:
     perf_data, normalized_check_command = parse_perf_data(
         perf_data_string, check_command, debug=debug
+    )
+    translated = compute_translated_metrics(
+        perf_data,
+        metrics,
+        check_command,
+        registered_metrics,
+        explicit_color,
+        debug=debug,
+        temperature_unit=temperature_unit,
     )
     if service_name == "_HOST_":
         return HostGraphRow(
@@ -135,6 +151,7 @@ def make_graph_row(
             performance_data=perf_data,
             metrics=metrics,
             check_command=normalized_check_command,
+            translated_metrics=translated,
         )
     return ServiceGraphRow(
         site=site,
@@ -143,6 +160,7 @@ def make_graph_row(
         performance_data=perf_data,
         metrics=metrics,
         check_command=normalized_check_command,
+        translated_metrics=translated,
     )
 
 

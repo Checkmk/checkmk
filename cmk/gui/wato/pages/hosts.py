@@ -373,7 +373,12 @@ class ABCHostMode(WatoMode, abc.ABC):
         except MKUserError:
             host_name = None
         folder = folder_from_request(request.var("folder"), host_name)
-        all_agents_url = folder.url([("mode", "agents")])
+        if Host.host_exists(self._host.name()):
+            all_agents_url = folder_preserving_link(
+                [("mode", "agent_of_host"), ("host", self._host.name())]
+            )
+        else:
+            all_agents_url = folder.url([("mode", "agents")])
         locked_hosts = folder.locked_hosts()
         if locked_hosts:
             if locked_hosts is True:

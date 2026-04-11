@@ -5,7 +5,7 @@
 
 import pytest
 
-from cmk.gui.plugins.legacy_bakery_rulesets.mk_cups_queues import migrate
+from cmk.plugins.cups.rulesets.bakery import migrate
 
 
 @pytest.mark.parametrize(

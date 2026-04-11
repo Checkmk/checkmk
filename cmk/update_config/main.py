@@ -68,6 +68,8 @@ def main(
         tty.yellow,
         tty.normal,
     )
+    main_modules.register(edition(paths.omd_root))
+
     with _force_automations_cli_interface():
         exit_code = main_check_config(logger, arguments.conflict)
         if exit_code != 0 or arguments.dry_run:

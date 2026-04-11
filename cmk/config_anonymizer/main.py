@@ -10,13 +10,15 @@ import sys
 from collections.abc import Sequence
 from types import ModuleType
 
+from cmk.ccc.version import edition
 from cmk.config_anonymizer.interface import AnonInterface
 from cmk.config_anonymizer.step import AnonymizeStep
-from cmk.gui import main_modules as main_modules
+from cmk.gui import main_modules
 from cmk.gui.config import active_config
 from cmk.gui.log import init_logging, logger
 from cmk.gui.session import SuperUserContext
 from cmk.gui.utils.script_helpers import gui_context
+from cmk.utils import paths
 from cmk.utils.redis import disable_redis
 
 
@@ -70,6 +72,12 @@ def main(argv: Sequence[str]) -> None:
     init_logging()
 
     try:
+        main_modules.register(edition(paths.omd_root))
+
+        if errors := main_modules.get_failed_plugins():
+            logger.error("The following errors occurred during plug-in loading: %r", errors)
+            return
+
         with disable_redis(), gui_context(), SuperUserContext():
             interface = AnonInterface(args.target_dirname, logger)
             plugins = load_plugins(logger, raise_errors=args.debug)

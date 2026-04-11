@@ -6,7 +6,7 @@ from collections.abc import Sequence
 from pathlib import Path
 
 from cmk.ccc.debug import enabled as debug_enabled
-from cmk.ccc.version import edition
+from cmk.ccc.version import Edition
 from cmk.gui.log import logger
 from cmk.gui.utils import add_failed_plugin
 from cmk.gui.utils.rule_specs.loader import load_api_v1_rule_specs, LoadedRuleSpec
@@ -14,16 +14,16 @@ from cmk.gui.utils.rule_specs.registering import register_plugin
 from cmk.gui.watolib.notification_parameter import NotificationParameterRegistry
 from cmk.gui.watolib.rulespecs import RulespecRegistry
 from cmk.rulesets.v1.rule_specs import NotificationParameters
-from cmk.utils.paths import omd_root
 
 
 def register(
+    edition: Edition,
     rulespec_registry: RulespecRegistry,
     notification_parameter_registry: NotificationParameterRegistry,
 ) -> None:
     errors, loaded_rule_specs = load_api_v1_rule_specs(
         raise_errors=debug_enabled(),
-        edition=edition(omd_root),
+        edition=edition,
     )
     if errors:
         logger.error("Error loading rulespecs: %s", errors)

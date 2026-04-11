@@ -8,7 +8,7 @@
 from collections.abc import Callable
 
 import cmk.gui.help
-from cmk.ccc.version import edition
+from cmk.ccc.version import Edition
 from cmk.gui import (
     activate_menu,
     agent_registration,
@@ -107,11 +107,11 @@ from cmk.gui.watolib.notification_parameter import notification_parameter_regist
 from cmk.gui.watolib.rulespecs import RulespecGroupRegistry, RulespecRegistry
 from cmk.gui.watolib.simple_config_file import ConfigFileRegistry
 from cmk.gui.watolib.timeperiods import TimeperiodUsageFinderRegistry
-from cmk.utils import paths
 from cmk.utils.licensing.registry import register_cre_licensing_handler
 
 
 def register(
+    edition: Edition,
     main_menu_registry: MainMenuRegistry,
     job_registry: BackgroundJobRegistry,
     permission_section_registry: PermissionSectionRegistry,
@@ -234,7 +234,7 @@ def register(
         filter_registry,
     )
     watolib_registration.register(
-        edition(paths.omd_root),
+        edition,
         rulespec_group_registry,
         automation_command_registry,
         job_registry,
@@ -349,7 +349,7 @@ def register(
     user_config.register(config_file_registry)
     configuration_bundle_store.register(config_file_registry)
     deprecations.register(cron_job_registry)
-    rulespec.register(rulespec_registry, notification_parameter_registry)
+    rulespec.register(edition, rulespec_registry, notification_parameter_registry)
     welcome.register(page_registry, snapin_registry)
     search_registration.register(page_registry)
     register_oauth2_connections(

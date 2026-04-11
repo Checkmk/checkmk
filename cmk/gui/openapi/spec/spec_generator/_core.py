@@ -404,6 +404,7 @@ from apispec.ext.marshmallow import MarshmallowPlugin
 from cmk.ccc import store
 from cmk.ccc import version as cmk_version
 from cmk.ccc.site import omd_site, SiteId
+from cmk.ccc.version import edition
 from cmk.gui import main_modules
 from cmk.gui.openapi.framework.api_config import APIVersion
 from cmk.gui.openapi.framework.registry import (
@@ -432,6 +433,8 @@ Ident = tuple[str, str]
 
 
 def main(version: APIVersion) -> int:
+    main_modules.register(edition(omd_root))
+
     if errors := main_modules.get_failed_plugins():
         raise Exception(f"The following errors occurred during plug-in loading: {errors}")
 

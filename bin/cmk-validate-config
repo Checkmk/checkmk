@@ -20,6 +20,8 @@ from cmk.validate_config import validate_mk_files
 
 def main() -> int:
     try:
+        main_modules.register(edition(paths.omd_root))
+
         if errors := main_modules.get_failed_plugins():
             sys.stderr.write(f"The following errors occurred during plug-in loading: {errors!r}\n")
             return 1

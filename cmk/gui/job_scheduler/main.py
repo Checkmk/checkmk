@@ -25,7 +25,8 @@ from cmk.ccc.crash_reporting import make_crash_report_base_path
 from cmk.ccc.daemon import daemonize, pid_file_lock
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.site import get_omd_config, omd_site, resource_attributes_from_config
-from cmk.gui import log, single_global_setting
+from cmk.ccc.version import edition
+from cmk.gui import log, main_modules, single_global_setting
 from cmk.gui.background_job import job_registry, ThreadedJobExecutor
 from cmk.trace.export import exporter_from_config, init_span_processor
 from cmk.trace.logs import add_span_log_handler
@@ -100,9 +101,9 @@ def main(crash_report_callback: Callable[[Exception], str]) -> int:
 
             loaded_at = int(time.time())
 
-            # The import and load_pugins take a few seconds and we don't want to delay the
+            # The registration and load_pugins take a few seconds and we don't want to delay the
             # pre-daemonize phase with this, because it also slows down "omd start" significantly.
-            from cmk.gui import main_modules
+            main_modules.register(edition(omd_root))
 
             if errors := main_modules.get_failed_plugins():
                 logger.error("The following errors occurred during plug-in loading: %r", errors)

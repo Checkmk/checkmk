@@ -20,6 +20,7 @@ from cmk.base.config import (  # astrein: disable=cmk-module-layer-violation
 )
 from cmk.ccc import debug
 from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.version import edition
 from cmk.checkengine.checkresults import (  # astrein: disable=cmk-module-layer-violation
     ActiveCheckResult,
 )
@@ -377,6 +378,7 @@ def _validate_rule_spec_usage(plugins: AgentBasedPlugins) -> ActiveCheckResult:
 
 
 def validate_plugins() -> ActiveCheckResult:
+    main_modules.register(edition(paths.omd_root))
     plugins, loading_subresult = _validate_agent_based_plugin_loading()
     sub_results = [
         loading_subresult,

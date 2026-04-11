@@ -5,9 +5,11 @@
 
 import sys
 
+from cmk.ccc.version import edition
 from cmk.post_rename_site.main import load_plugins
 from cmk.post_rename_site.registry import rename_action_registry
+from cmk.utils import paths
 
-load_plugins()
+load_plugins(edition(paths.omd_root))
 
 sys.stdout.write(f"{'test' in rename_action_registry}\n")

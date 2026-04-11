@@ -7,8 +7,10 @@ from collections.abc import Sequence
 
 import pytest
 
+from cmk.ccc.version import edition
 from cmk.post_rename_site import main
 from cmk.post_rename_site.registry import rename_action_registry
+from cmk.utils import paths
 from tests.testlib.common.repo import is_pro_repo, is_ultimate_repo
 
 
@@ -43,5 +45,5 @@ def fixture_expected_plugins() -> list[str]:
 def test_load_plugins(expected_plugins: Sequence[str]) -> None:
     """The test changes a global variable `rename_action_registry`.
     We can't reliably monkey patch this variable - must use separate module for testing"""
-    main.load_plugins()
+    main.load_plugins(edition(paths.omd_root))
     assert sorted(rename_action_registry.keys()) == sorted(expected_plugins)

@@ -196,9 +196,14 @@ class RulespecGroupRegistry(cmk.ccc.plugin_registry.Registry[type[RulespecBaseGr
 
     def registration_hook(self, instance: type[RulespecBaseGroup]) -> None:
         if issubclass(instance, RulespecSubGroup):
-            self._sub_groups_by_main_group.setdefault(instance().main_group, []).append(instance)
+            sub_inst = instance()
+            sub_groups = self._sub_groups_by_main_group.setdefault(sub_inst.main_group, [])
+            if not any(sg().name == sub_inst.name for sg in sub_groups):
+                sub_groups.append(instance)
         elif issubclass(instance, RulespecGroup):
-            self._main_groups.append(instance)
+            main_inst = instance()
+            if not any(mg().name == main_inst.name for mg in self._main_groups):
+                self._main_groups.append(instance)
         else:
             raise TypeError('Got invalid type "%s"' % instance.__name__)
 

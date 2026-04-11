@@ -18,6 +18,8 @@ from typing import Literal
 
 import cmk.utils.paths
 from cmk.ccc.site import SiteId
+from cmk.ccc.version import edition
+from cmk.gui import main_modules
 from cmk.utils.certs import (
     agent_root_ca_path,
     cert_dir,
@@ -164,6 +166,8 @@ def _run_rotate(
     finalize: bool,
 ) -> None:
     # we import the expensive GUI module only if we really need it
+    main_modules.register(edition(omd_root))
+
     import cmk.gui.cmkcert_rotate as rotate
 
     if not (old_cert := _certificate_path(omd_root, site_id, target_certificate)).exists():

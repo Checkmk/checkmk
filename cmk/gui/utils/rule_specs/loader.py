@@ -85,35 +85,45 @@ def load_api_v1_rule_specs(
             if plugin.stem != "__init__":
                 not_yet_moved_plugins.add(f"cmk.gui.plugins.wato.check_parameters.{plugin.stem}")
 
-    try:
-        import cmk.gui.nonfree.pro.plugins.wato.agent_bakery.rulespecs  # type: ignore[import-not-found, import-untyped, unused-ignore] # astrein: disable=cmk-module-layer-violation
+    match edition:
+        case Edition.COMMUNITY:
+            pass
+        case Edition.PRO:
+            import cmk.gui.nonfree.pro.plugins.wato.agent_bakery.rulespecs  # type: ignore[import-not-found, import-untyped, unused-ignore] # astrein: disable=cmk-module-layer-violation
 
-        pro_bakery_ruleset_paths = set(
-            cmk.gui.nonfree.pro.plugins.wato.agent_bakery.rulespecs.__path__
-        )
-        for pro_bakery_ruleset_path in pro_bakery_ruleset_paths:
-            for plugin in Path(pro_bakery_ruleset_path).glob("*.py"):
-                if plugin.stem != "__init__":
-                    not_yet_moved_plugins.add(
-                        f"cmk.gui.nonfree.pro.plugins.wato.agent_bakery.rulespecs.{plugin.stem}"
-                    )
-    except ModuleNotFoundError:
-        pass
+            pro_bakery_ruleset_paths = set(
+                cmk.gui.nonfree.pro.plugins.wato.agent_bakery.rulespecs.__path__
+            )
+            for pro_bakery_ruleset_path in pro_bakery_ruleset_paths:
+                for plugin in Path(pro_bakery_ruleset_path).glob("*.py"):
+                    if plugin.stem != "__init__":
+                        not_yet_moved_plugins.add(
+                            f"cmk.gui.nonfree.pro.plugins.wato.agent_bakery.rulespecs.{plugin.stem}"
+                        )
+        case Edition.ULTIMATE | Edition.ULTIMATEMT | Edition.CLOUD:
+            import cmk.gui.nonfree.pro.plugins.wato.agent_bakery.rulespecs  # type: ignore[import-not-found, import-untyped, unused-ignore] # astrein: disable=cmk-module-layer-violation
 
-    try:
-        import cmk.gui.nonfree.ultimate.plugins.wato.check_parameters  # type: ignore[import-not-found, import-untyped, unused-ignore] # astrein: disable=cmk-module-layer-violation
+            pro_bakery_ruleset_paths = set(
+                cmk.gui.nonfree.pro.plugins.wato.agent_bakery.rulespecs.__path__
+            )
+            for pro_bakery_ruleset_path in pro_bakery_ruleset_paths:
+                for plugin in Path(pro_bakery_ruleset_path).glob("*.py"):
+                    if plugin.stem != "__init__":
+                        not_yet_moved_plugins.add(
+                            f"cmk.gui.nonfree.pro.plugins.wato.agent_bakery.rulespecs.{plugin.stem}"
+                        )
 
-        ultimate_check_parameters_paths = set(
-            cmk.gui.nonfree.ultimate.plugins.wato.check_parameters.__path__
-        )
-        for ultimate_check_parameters_path in ultimate_check_parameters_paths:
-            for plugin in Path(ultimate_check_parameters_path).glob("*.py"):
-                if plugin.stem != "__init__":
-                    not_yet_moved_plugins.add(
-                        f"cmk.gui.nonfree.ultimate.plugins.wato.check_parameters.{plugin.stem}"
-                    )
-    except ModuleNotFoundError:
-        pass
+            import cmk.gui.nonfree.ultimate.plugins.wato.check_parameters  # type: ignore[import-not-found, import-untyped, unused-ignore] # astrein: disable=cmk-module-layer-violation
+
+            ultimate_check_parameters_paths = set(
+                cmk.gui.nonfree.ultimate.plugins.wato.check_parameters.__path__
+            )
+            for ultimate_check_parameters_path in ultimate_check_parameters_paths:
+                for plugin in Path(ultimate_check_parameters_path).glob("*.py"):
+                    if plugin.stem != "__init__":
+                        not_yet_moved_plugins.add(
+                            f"cmk.gui.nonfree.ultimate.plugins.wato.check_parameters.{plugin.stem}"
+                        )
 
     if not_yet_moved_plugins:
         more_discovered_plugins = discover_plugins_from_modules(

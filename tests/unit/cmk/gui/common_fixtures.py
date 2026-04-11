@@ -16,6 +16,7 @@ import cmk.gui.config as config_module
 import cmk.gui.watolib.password_store
 import cmk.utils.log
 from cmk.ccc.user import UserId
+from cmk.ccc.version import Edition
 from cmk.gui import hooks, http, main_modules
 from cmk.gui.utils.script_helpers import session_wsgi_app
 from tests.unit.cmk.web_test_app import (
@@ -105,6 +106,8 @@ def perform_load_config() -> Iterator[config_module.Config]:
     cmk.utils.log.logger.setLevel(old_root_log_level)
 
 
-def perform_load_plugins() -> None:
+def perform_load_plugins(edition: Edition) -> None:
+    main_modules.register(edition)
+
     if errors := main_modules.get_failed_plugins():
         raise Exception(f"The following errors occured during plug-in loading: {errors}")

@@ -13,7 +13,8 @@ from collections.abc import Generator
 from contextlib import contextmanager
 from typing import NamedTuple
 
-from cmk.gui import main_modules as _  # noqa: F401
+from cmk.ccc.version import edition
+from cmk.gui import main_modules
 from cmk.gui.config import active_config
 from cmk.gui.utils import gen_id
 from cmk.gui.watolib.automations import ENV_VARIABLE_FORCE_CLI_INTERFACE
@@ -32,6 +33,9 @@ from cmk.update_config.https.render import (
     print_summary_write,
 )
 from cmk.update_config.https.search import select, with_allrulesets
+from cmk.utils import paths
+
+main_modules.register(edition(paths.omd_root))
 
 
 class _Count(NamedTuple):

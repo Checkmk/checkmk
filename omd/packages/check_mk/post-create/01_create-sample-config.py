@@ -9,11 +9,12 @@
 import argparse
 import sys
 
+from cmk.ccc.version import edition
 from cmk.gui import main_modules
 from cmk.gui.session import SuperUserContext
 from cmk.gui.utils.script_helpers import gui_context
 from cmk.gui.watolib.sample_config import init_wato_datastructures
-from cmk.utils import log
+from cmk.utils import log, paths
 
 
 def parse_arguments(args: list[str]) -> argparse.Namespace:
@@ -33,6 +34,8 @@ def main(args: list[str]) -> int:
     arguments = parse_arguments(args)
     log.setup_console_logging()
     log.logger.setLevel(log.verbosity_to_log_level(arguments.verbose))
+
+    main_modules.register(edition(paths.omd_root))
 
     if errors := main_modules.get_failed_plugins():
         log.logger.error("The following errors occurred during plug-in loading: %r", errors)

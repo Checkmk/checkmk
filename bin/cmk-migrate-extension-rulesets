@@ -15,6 +15,7 @@ from cmk.discover_plugins import (
     discover_plugins_from_modules,
     PluginGroup,
 )
+from cmk.ccc.version import edition
 from cmk.gui import main_modules
 from cmk.gui.config import active_config
 from cmk.gui.rulespec import register_plugins
@@ -171,6 +172,8 @@ def _discover_load_plugins(modules: set[str]) -> set[str]:
 
 
 def _load_and_transform_rulesets(discovered_names: set[str]) -> None:
+    main_modules.register(edition(paths.omd_root))
+
     if errors := main_modules.get_failed_plugins():
         logger.error("The following errors occurred during plug-in loading: %r", errors)
 

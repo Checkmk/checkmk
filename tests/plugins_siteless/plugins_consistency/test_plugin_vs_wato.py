@@ -14,6 +14,7 @@ from typing import Generic, NamedTuple, Protocol, TypeVar
 import pytest
 
 from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.version import Edition
 from cmk.checkengine.plugins import AgentBasedPlugins, CheckPlugin, InventoryPlugin
 from cmk.gui.form_specs import get_visitor, RawDiskData, VisitorOptions
 from cmk.gui.inventory import RulespecGroupInventory
@@ -41,7 +42,7 @@ TC = TypeVar("TC", bound=CheckPlugin | InventoryPlugin)
 
 @pytest.fixture(autouse=True)
 def load_plugins() -> None:
-    perform_load_plugins()
+    perform_load_plugins(Edition.ULTIMATEMT)
 
 
 class MergeKey(NamedTuple):

@@ -10,8 +10,9 @@ from contextlib import contextmanager
 from dataclasses import dataclass
 
 import cmk.ccc.debug
+import cmk.ccc.version as cmk_version
 from cmk.ccc.site import omd_site, SiteId
-from cmk.ccc.version import Edition, edition
+from cmk.ccc.version import Edition
 
 # This special script needs persistence and conversion code from different places of Checkmk. We may
 # centralize the conversion and move the persistence to a specific layer in the future, but for the
@@ -73,7 +74,14 @@ def main(args: Sequence[str]) -> int:
         logger.info("OLD_SITE_ID is equal to current OMD_SITE - Nothing to do.")
         return 0
 
-    load_plugins()
+    # Do the loading here so that run() can be tested without any additional loading
+    logger.debug("Initializing application...")
+    main_modules.register(edition := cmk_version.edition(paths.omd_root))
+    if errors := main_modules.get_failed_plugins():
+        logger.error("The following errors occurred during plug-in loading: %r", errors)
+        return 1
+
+    load_plugins(edition)
 
     try:
         has_errors = run(arguments.debug, arguments.old_site_id, new_site_id)
@@ -88,18 +96,18 @@ def main(args: Sequence[str]) -> int:
     return 1 if has_errors else 0
 
 
-def load_plugins() -> None:
-    for plugin, exc in _load_plugins():
+def load_plugins(edition: Edition) -> None:
+    for plugin, exc in _load_plugins(edition):
         logger.error("Error in action plug-in %s: %s\n", plugin, exc)
         if cmk.ccc.debug.enabled():
             raise exc
 
 
-def _load_plugins() -> PluginFailures:
+def _load_plugins(edition: Edition) -> PluginFailures:
     yield from load_plugins_with_exceptions("cmk.post_rename_site.plugins.actions")
-    if edition(paths.omd_root) is not Edition.COMMUNITY:
+    if edition is not Edition.COMMUNITY:
         yield from load_plugins_with_exceptions("cmk.post_rename_site.nonfree.pro.plugins.actions")
-    if edition(paths.omd_root) in (Edition.ULTIMATEMT, Edition.ULTIMATE):
+    if edition in (Edition.ULTIMATEMT, Edition.ULTIMATE):
         yield from load_plugins_with_exceptions(
             "cmk.post_rename_site.nonfree.ultimate.plugins.actions"
         )
@@ -107,12 +115,6 @@ def _load_plugins() -> PluginFailures:
 
 def run(debug: bool, old_site_id: SiteId, new_site_id: SiteId) -> bool:
     has_errors = False
-    logger.debug("Initializing application...")
-
-    if errors := main_modules.get_failed_plugins():
-        logger.error("The following errors occurred during plug-in loading: %r", errors)
-        return True
-
     with _force_automations_cli_interface(), gui_context(), SuperUserContext():
         logger.debug("Starting actions...")
         actions = sorted(rename_action_registry.values(), key=lambda a: a.sort_index)

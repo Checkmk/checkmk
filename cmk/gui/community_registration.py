@@ -136,6 +136,7 @@ def register(edition: Edition, *, ignore_duplicate_endpoints: bool = False) -> N
     roles.register(mode_registry)
     login.register(page_registry)
     common_registration(
+        edition,
         main_menu_registry,
         job_registry,
         permission_section_registry,

@@ -10,10 +10,12 @@ from flask import Flask
 from pytest_mock import MockerFixture
 
 from cmk.ccc.user import UserId
+from cmk.ccc.version import edition
 from cmk.gui import login
 from cmk.gui.config import Config
 from cmk.gui.permissions import permission_registry
 from cmk.gui.utils.roles import UserPermissions
+from cmk.utils import paths
 from tests.unit.cmk.gui.common_fixtures import (
     create_flask_app,
     create_wsgi_app,
@@ -50,7 +52,7 @@ def load_config(request_context: None) -> Iterator[Config]:
 
 @pytest.fixture(scope="session", autouse=True)
 def load_plugins() -> None:
-    perform_load_plugins()
+    perform_load_plugins(edition(paths.omd_root))
 
 
 @pytest.fixture()

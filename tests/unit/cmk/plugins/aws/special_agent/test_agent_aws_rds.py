@@ -135,17 +135,17 @@ rds_params = [
     ),
     (
         None,
-        ([["FOO"]], [["BAR"]]),
+        (["FOO"], ["BAR"]),
         [],
     ),
     (
         None,
-        ([["Key-0"]], [["Value-0"]]),
+        (["Key-0"], ["Value-0"]),
         ["DBInstanceIdentifier-0", "DBInstanceIdentifier-1"],
     ),
     (
         None,
-        ([["Key-0", "Foo"]], [["Value-0", "Bar"]]),
+        (["Key-0", "Key-0"], ["Value-0", "Bar"]),
         ["DBInstanceIdentifier-0", "DBInstanceIdentifier-1"],
     ),
     (
@@ -165,7 +165,7 @@ rds_params = [
     ),
     (
         ["DBInstanceIdentifier-0", "DBInstanceIdentifier-2"],
-        ([["FOO"]], [["BAR"]]),
+        (["FOO"], ["BAR"]),
         ["DBInstanceIdentifier-0", "DBInstanceIdentifier-2"],
     ),
 ]

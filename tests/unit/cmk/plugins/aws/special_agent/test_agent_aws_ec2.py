@@ -165,12 +165,12 @@ def get_ec2_sections() -> EC2Sections:
 
 ec2_params = [
     (None, (None, None), 3, 1),
-    (None, ([["Key-0"]], [["Value-0"]]), 1, 1),
-    (None, ([["Key-X"]], [["Value-0"]]), 0, 0),
-    (None, ([["Key-0"]], [["Value-X"]]), 0, 0),
-    (None, ([["Key-0"]], [["Value-1"]]), 0, 0),
-    (None, ([["Key-1"]], [["Value-0", "Value-1"]]), 1, 1),
-    (None, ([["Key-0"]], [["Value-0", "Value-1"]]), 1, 1),
+    (None, (["Key-0"], ["Value-0"]), 1, 1),
+    (None, (["Key-X"], ["Value-0"]), 0, 0),
+    (None, (["Key-0"], ["Value-X"]), 0, 0),
+    (None, (["Key-0"], ["Value-1"]), 0, 0),
+    (None, (["Key-1", "Key-1"], ["Value-0", "Value-1"]), 1, 1),
+    (None, (["Key-0", "Key-0"], ["Value-0", "Value-1"]), 1, 1),
     (["InstanceId-0"], (None, None), 1, 1),
     (["InstanceId-0", "Foo", "Bar"], (None, None), 1, 1),
     (["InstanceId-0", "InstanceId-1"], (None, None), 2, 1),

@@ -141,17 +141,17 @@ dynamodb_params = [
     ),
     (
         None,
-        ([["FOO"]], [["BAR"]]),
+        (["FOO"], ["BAR"]),
         [],
     ),
     (
         None,
-        ([["Key-0"]], [["Value-0"]]),
+        (["Key-0"], ["Value-0"]),
         ["TableName-0", "TableName-1"],
     ),
     (
         None,
-        ([["Key-0", "Foo"]], [["Value-0", "Bar"]]),
+        (["Key-0", "Key-0"], ["Value-0", "Bar"]),
         ["TableName-0", "TableName-1"],
     ),
     (
@@ -171,7 +171,7 @@ dynamodb_params = [
     ),
     (
         ["TableName-0", "TableName-2"],
-        ([["FOO"]], [["BAR"]]),
+        (["FOO"], ["BAR"]),
         ["TableName-0", "TableName-2"],
     ),
 ]

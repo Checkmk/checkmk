@@ -196,9 +196,9 @@ sns_params = [
         (None, None),
         ["TopicName-1 [eu-west-1]", "TopicName-4.fifo [eu-west-1]"],
     ),
-    (None, ([["test-tag-key-0"]], [["test-tag-value-0"]]), ["TopicName-3.fifo [eu-west-1]"]),
-    (None, ([["test-tag-key-0"]], [["wrong-tag-value"]]), []),
-    (None, ([["wrong-tag-key"]], [["test-tag-value-0"]]), []),
+    (None, (["test-tag-key-0"], ["test-tag-value-0"]), ["TopicName-3.fifo [eu-west-1]"]),
+    (None, (["test-tag-key-0"], ["wrong-tag-value"]), []),
+    (None, (["wrong-tag-key"], ["test-tag-value-0"]), []),
     (["NONEXISTINGID"], (None, None), []),
 ]
 
@@ -237,9 +237,9 @@ sns_sms_params = [
         (None, None),
         ["eu-west-1"],
     ),
-    (None, ([["test-tag-key-0"]], [["test-tag-value-0"]]), ["eu-west-1"]),
-    (None, ([["test-tag-key-0"]], [["wrong-tag-value"]]), ["eu-west-1"]),
-    (None, ([["wrong-tag-key"]], [["test-tag-value-0"]]), ["eu-west-1"]),
+    (None, (["test-tag-key-0"], ["test-tag-value-0"]), ["eu-west-1"]),
+    (None, (["test-tag-key-0"], ["wrong-tag-value"]), ["eu-west-1"]),
+    (None, (["wrong-tag-key"], ["test-tag-value-0"]), ["eu-west-1"]),
     (["NONEXISTINGID"], (None, None), ["eu-west-1"]),
 ]
 

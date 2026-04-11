@@ -143,7 +143,7 @@ summary_params = [
     ),
     (
         None,
-        ([["Tag-0"]], [["Value-0"]]),
+        (["Tag-0"], ["Value-0"]),
         [
             "FunctionName-0",
         ],

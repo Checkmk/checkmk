@@ -91,11 +91,11 @@ glacier_params = [
     (["VaultName-0", "VaultName-1", "VaultName-2"], (None, None), 3),
     (["VaultName-0", "VaultName-1", "VaultName-2", "string4"], (None, None), 3),
     (["VaultName-0", "VaultName-1", "VaultName-2", "FOOBAR"], (None, None), 3),
-    (None, ([["Tag-1"]], [["Value-0"]]), 0),
-    (None, ([["Tag-1"]], [["Value-1"]]), 1),
-    (None, ([["Tag-0"]], [["Value-0"]]), 2),
-    (None, ([["Tag-0"]], [["Value-0", "Value-1"]]), 2),
-    (None, ([["Tag-0", "unknown-tag"]], [["Value-0", "Value-1"], ["unknown-val"]]), 2),
+    (None, (["Tag-1"], ["Value-0"]), 0),
+    (None, (["Tag-1"], ["Value-1"]), 1),
+    (None, (["Tag-0"], ["Value-0"]), 2),
+    (None, (["Tag-0", "Tag-0"], ["Value-0", "Value-1"]), 2),
+    (None, (["Tag-0", "Tag-0"], ["Value-0", "Value-1"]), 2),
 ]
 
 

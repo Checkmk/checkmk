@@ -118,102 +118,16 @@ s3_params = [
     (["Name-0", "Name-1", "Name-2"], (None, None), 3),
     (["Name-0", "Name-1", "Name-2", "string4"], (None, None), 3),
     (["Name-0", "Name-1", "Name-2", "FOOBAR"], (None, None), 3),
-    (["Name-0"], ([["Key-0", "unknown-tag"]], [["Value-0", "Value-1"], ["unknown-val"]]), 1),
-    (
-        ["Name-0", "Name-1"],
-        ([["Key-0", "unknown-tag"]], [["Value-0", "Value-1"], ["unknown-val"]]),
-        2,
-    ),
-    (
-        ["Name-0", "Name-1", "Name-2"],
-        ([["Key-0", "unknown-tag"]], [["Value-0", "Value-1"], ["unknown-val"]]),
-        3,
-    ),
-    (
-        ["Name-0", "Name-1", "Name-2", "string4"],
-        ([["Key-0", "unknown-tag"]], [["Value-0", "Value-1"], ["unknown-val"]]),
-        3,
-    ),
-    (
-        ["Name-0", "Name-1", "Name-2", "FOOBAR"],
-        ([["Key-0", "unknown-tag"]], [["Value-0", "Value-1"], ["unknown-val"]]),
-        3,
-    ),
-    (
-        None,
-        (
-            [
-                ["Key-1"],
-            ],
-            [
-                [
-                    "Value-0",
-                ],
-            ],
-        ),
-        0,
-    ),
-    (
-        None,
-        (
-            [
-                ["Key-1"],
-            ],
-            [
-                [
-                    "Value-1",
-                ],
-            ],
-        ),
-        1,
-    ),
-    (
-        None,
-        (
-            [
-                ["Key-0"],
-            ],
-            [
-                [
-                    "Value-0",
-                ],
-            ],
-        ),
-        2,
-    ),
-    (
-        None,
-        (
-            [
-                ["Key-0"],
-            ],
-            [
-                [
-                    "Value-0",
-                    "Value-1",
-                ],
-            ],
-        ),
-        2,
-    ),
-    (
-        None,
-        (
-            [
-                ["Key-0", "unknown-tag"],
-            ],
-            [
-                [
-                    "Value-0",
-                    "Value-1",
-                ],
-                [
-                    "unknown-val",
-                ],
-            ],
-        ),
-        2,
-    ),
+    (["Name-0"], (["Key-0"], ["Value-0"]), 1),
+    (["Name-0", "Name-1"], (["Key-0"], ["Value-0"]), 2),
+    (["Name-0", "Name-1", "Name-2"], (["Key-0"], ["Value-0"]), 3),
+    (["Name-0", "Name-1", "Name-2", "string4"], (["Key-0"], ["Value-0"]), 3),
+    (["Name-0", "Name-1", "Name-2", "FOOBAR"], (["Key-0"], ["Value-0"]), 3),
+    (None, (["Key-1"], ["Value-0"]), 0),
+    (None, (["Key-1"], ["Value-1"]), 1),
+    (None, (["Key-0"], ["Value-0"]), 2),
+    (None, (["Key-0", "Key-0"], ["Value-0", "Value-1"]), 2),
+    (None, (["Key-0", "Key-0"], ["Value-0", "Value-1"]), 2),
 ]
 
 

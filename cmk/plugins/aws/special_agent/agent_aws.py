@@ -326,7 +326,7 @@ class AWSConfig:
     def add_service_tags(self, tags_key: str, tags: OverallTags) -> None:
         """Convert commandline input
         from
-            ([['foo'], ['aaa'], ...], [['bar', 'baz'], ['bbb', 'ccc'], ...])
+            (['foo', 'foo', 'aaa', 'aaa', ...], ['bar', 'baz', 'bbb', 'ccc', ...])
         to
             Filters=[{'Name': 'tag:foo', 'Values': ['bar', 'baz']},
                      {'Name': 'tag:aaa', 'Values': ['bbb', 'ccc']}, ...]
@@ -347,7 +347,10 @@ class AWSConfig:
         if keys is None or values is None:
             return None
 
-        return [{"Name": "tag:%s" % k, "Values": v} for k, v in zip([k[0] for k in keys], values)]
+        grouped: dict[str, list[str]] = {}
+        for k, v in zip(keys, values):
+            grouped.setdefault(k, []).append(v)
+        return [{"Name": f"tag:{k}", "Values": v} for k, v in grouped.items()]
 
     def add_single_service_config(self, key: str, value: object | None) -> None:
         self.service_config.setdefault(key, value)
@@ -7334,19 +7337,22 @@ def parse_arguments(argv: Sequence[str] | None) -> argparse.Namespace:
         "--external-id", help="Unique identifier to assume a role in another account"
     )
     parser.add_argument(
-        "--regions",
-        nargs="+",
+        "--region",
+        dest="regions",
+        action="append",
         help="Regions to use:\n%s" % "\n".join(["%-15s %s" % e for e in AWSRegions]),
     )
     parser.add_argument(
-        "--global-services",
-        nargs="+",
+        "--global-service",
+        dest="global_services",
+        action="append",
         help="Global services to monitor:\n%s"
         % "\n".join(["%-15s %s" % (e.key, e.title) for e in AWSServices if e.global_service]),
     )
     parser.add_argument(
-        "--services",
-        nargs="+",
+        "--service",
+        dest="services",
+        action="append",
         help="Services per region to monitor:\n%s"
         % "\n".join(["%-15s %s" % (e.key, e.title) for e in AWSServices if not e.global_service]),
     )
@@ -7355,10 +7361,22 @@ def parse_arguments(argv: Sequence[str] | None) -> argparse.Namespace:
         action="store_true",
         help="You have to enable requests metrics in AWS/S3 console. This is a paid feature.",
     )
-    parser.add_argument("--cloudwatch-alarms", nargs="*")
-    parser.add_argument("--overall-tag-key", nargs=1, action="append", help="Overall tag key")
     parser.add_argument(
-        "--overall-tag-values", nargs="+", action="append", help="Overall tag values"
+        "--cloudwatch-alarm",
+        dest="cloudwatch_alarms",
+        action="append",
+    )
+    parser.add_argument(
+        "--overall-tag-key",
+        dest="overall_tag_keys",
+        action="append",
+        help="Overall tag key",
+    )
+    parser.add_argument(
+        "--overall-tag-value",
+        dest="overall_tag_values",
+        action="append",
+        help="Overall tag values",
     )
     parser.add_argument(
         "--wafv2-cloudfront",
@@ -7404,18 +7422,21 @@ def parse_arguments(argv: Sequence[str] | None) -> argparse.Namespace:
     for service in AWSServices:
         if service.filter_by_names:
             parser.add_argument(
-                "--%s-names" % service.key, nargs="+", help="Names for %s" % service.title
+                f"--{service.key}-name",
+                dest=f"{service.key}_names",
+                action="append",
+                help=f"Names for {service.title}",
             )
         if service.filter_by_tags:
             parser.add_argument(
-                "--%s-tag-key" % service.key,
-                nargs=1,
+                f"--{service.key}-tag-key",
+                dest=f"{service.key}_tag_keys",
                 action="append",
                 help="Tag key for %s" % service.title,
             )
             parser.add_argument(
-                "--%s-tag-values" % service.key,
-                nargs="+",
+                f"--{service.key}-tag-value",
+                dest=f"{service.key}_tag_values",
                 action="append",
                 help="Tag values for %s" % service.title,
             )
@@ -7612,49 +7633,59 @@ def _configure_aws(args: argparse.Namespace) -> AWSConfig:
     aws_config = AWSConfig(
         args.hostname,
         args,
-        (args.overall_tag_key, args.overall_tag_values),
+        (args.overall_tag_keys, args.overall_tag_values),
         args.piggyback_naming_convention,
         args.tag_key_pattern,
     )
     for service_key, service_names, service_tags, service_limits in [
-        ("ec2", args.ec2_names, (args.ec2_tag_key, args.ec2_tag_values), args.ec2_limits),
-        ("ebs", args.ebs_names, (args.ebs_tag_key, args.ebs_tag_values), args.ebs_limits),
-        ("s3", args.s3_names, (args.s3_tag_key, args.s3_tag_values), args.s3_limits),
+        ("ec2", args.ec2_names, (args.ec2_tag_keys, args.ec2_tag_values), args.ec2_limits),
+        ("ebs", args.ebs_names, (args.ebs_tag_keys, args.ebs_tag_values), args.ebs_limits),
+        ("s3", args.s3_names, (args.s3_tag_keys, args.s3_tag_values), args.s3_limits),
         (
             "glacier",
             args.glacier_names,
-            (args.glacier_tag_key, args.glacier_tag_values),
+            (args.glacier_tag_keys, args.glacier_tag_values),
             args.glacier_limits,
         ),
-        ("elb", args.elb_names, (args.elb_tag_key, args.elb_tag_values), args.elb_limits),
-        ("elbv2", args.elbv2_names, (args.elbv2_tag_key, args.elbv2_tag_values), args.elbv2_limits),
-        ("rds", args.rds_names, (args.rds_tag_key, args.rds_tag_values), args.rds_limits),
+        ("elb", args.elb_names, (args.elb_tag_keys, args.elb_tag_values), args.elb_limits),
+        (
+            "elbv2",
+            args.elbv2_names,
+            (args.elbv2_tag_keys, args.elbv2_tag_values),
+            args.elbv2_limits,
+        ),
+        ("rds", args.rds_names, (args.rds_tag_keys, args.rds_tag_values), args.rds_limits),
         (
             "dynamodb",
             args.dynamodb_names,
-            (args.dynamodb_tag_key, args.dynamodb_tag_values),
+            (args.dynamodb_tag_keys, args.dynamodb_tag_values),
             args.dynamodb_limits,
         ),
-        ("wafv2", args.wafv2_names, (args.wafv2_tag_key, args.wafv2_tag_values), args.wafv2_limits),
+        (
+            "wafv2",
+            args.wafv2_names,
+            (args.wafv2_tag_keys, args.wafv2_tag_values),
+            args.wafv2_limits,
+        ),
         (
             "lambda",
             args.lambda_names,
-            (args.lambda_tag_key, args.lambda_tag_values),
+            (args.lambda_tag_keys, args.lambda_tag_values),
             args.lambda_limits,
         ),
-        ("route53", args.route53_names, (args.route53_tag_key, args.route53_tag_values), None),
-        ("sns", args.sns_names, (args.sns_tag_key, args.sns_tag_values), args.sns_limits),
+        ("route53", args.route53_names, (args.route53_tag_keys, args.route53_tag_values), None),
+        ("sns", args.sns_names, (args.sns_tag_keys, args.sns_tag_values), args.sns_limits),
         (
             "cloudfront",
             args.cloudfront_names,
-            (args.cloudfront_tag_key, args.cloudfront_tag_values),
+            (args.cloudfront_tag_keys, args.cloudfront_tag_values),
             None,
         ),
-        ("ecs", args.ecs_names, (args.ecs_tag_key, args.ecs_tag_values), args.ecs_limits),
+        ("ecs", args.ecs_names, (args.ecs_tag_keys, args.ecs_tag_values), args.ecs_limits),
         (
             "elasticache",
             args.elasticache_names,
-            (args.elasticache_tag_key, args.elasticache_tag_values),
+            (args.elasticache_tag_keys, args.elasticache_tag_values),
             args.elasticache_limits,
         ),
     ]:

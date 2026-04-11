@@ -71,25 +71,27 @@ class AwsParams(BaseModel):
 
 
 def _get_tag_options(tags: list[Tag], prefix: str) -> Sequence[str]:
-    options = []
+    options: list[str] = []
     for key, values in tags:
-        options.append("--%s-tag-key" % prefix)
-        options.append(key)
-        options.append("--%s-tag-values" % prefix)
-        options += values
+        for value in values:
+            # NOTE: We expect that each value must come with its key before it.
+            options.extend((f"--{prefix}-tag-key", key))
+            options.extend((f"--{prefix}-tag-value", value))
     return options
 
 
-def _get_services_args(services: Mapping[str, ServiceConfig]) -> Sequence[str]:
+def _get_services_args(
+    services: Mapping[str, ServiceConfig], global_services: bool
+) -> Sequence[str]:
     # '--services': {
     #   's3': {'selection': ('tags', [('KEY', ['VAL1', 'VAL2'])])},
     #   'ec2': {'selection': 'all'},
     #   'ebs': {'selection': ('names', ['ebs1', 'ebs2'])},
     # }
-    service_names: list[str] = []
     service_args: list[str] = []
+    service_flag = "--global-service" if global_services else "--service"
     for service_name, service_config in services.items():
-        service_names.append(service_name)
+        service_args.extend((service_flag, service_name))
         if service_config is None:
             continue
 
@@ -99,9 +101,10 @@ def _get_services_args(services: Mapping[str, ServiceConfig]) -> Sequence[str]:
         if service_name == "cloudwatch_alarms" and (alarms := service_config.get("alarms")):
             # {'alarms': 'all'} is handled by no additionally specified names
             names = (alarms[1] if isinstance(alarms, tuple) else []) or []
-            if not all(isinstance(name, str) for name in names):
-                raise ValueError(f"Invalid value for {service_name} alarms: {names}")
-            service_args.extend(("--cloudwatch-alarms", *names))
+            for name in names:
+                if not isinstance(name, str):
+                    raise ValueError(f"Invalid value for {service_name} alarms: {names}")
+                service_args.extend(("--cloudwatch-alarm", name))
             continue
 
         selection = service_config.get("selection")
@@ -116,12 +119,14 @@ def _get_services_args(services: Mapping[str, ServiceConfig]) -> Sequence[str]:
         if not selection_values:
             continue
         if selection_type == "names":
-            service_args.extend((f"--{service_name}-names", *selection_values))
+            for name in selection_values:
+                # Raise ValueError like the other cases?
+                service_args.extend((f"--{service_name}-name", str(name)))
         elif selection_type == "tags":
             if not all(isinstance(tag, tuple) for tag in selection_values):
                 raise ValueError(f"Invalid value for {service_name} tags: {selection_values}")
             service_args += _get_tag_options(cast(list[Tag], selection_values), service_name)
-    return [*sorted(service_names), *service_args]
+    return service_args
 
 
 def _proxy_args(details: ProxyDetails) -> list[str | Secret]:
@@ -175,14 +180,14 @@ def aws_arguments(
     if global_service_region := access.global_service_region:
         args.extend(("--global-service-region", global_service_region))
 
-    if params.regions:
-        args.extend(("--regions", *params.regions))
+    for region in params.regions or []:
+        args.extend(("--region", region))
     global_services = params.global_services or {}
-    if global_service_args := _get_services_args(global_services):
-        args.extend(("--global-services", *global_service_args))
+    if global_service_args := _get_services_args(global_services, global_services=True):
+        args.extend(global_service_args)
     services = params.regional_services or {}
-    if service_args := _get_services_args(services):
-        args.extend(("--services", *service_args))
+    if service_args := _get_services_args(services, global_services=False):
+        args.extend(service_args)
     if "requests" in (services.get("s3", {}) or {}):
         args.append("--s3-requests")
     if "cloudfront" in (services.get("wafv2", {}) or {}):

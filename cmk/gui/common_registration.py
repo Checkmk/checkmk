@@ -241,7 +241,6 @@ def register(
         timeperiod_usage_finder_registry,
         config_variable_group_registry,
         autocompleter_registry,
-        match_item_generator_registry,
         replication_path_registry,
         folder_validators_registry,
         cron_job_registry,
@@ -343,7 +342,12 @@ def register(
     deprecations.register(cron_job_registry)
     rulespec.register(edition, rulespec_registry, notification_parameter_registry)
     welcome.register(page_registry, snapin_registry)
-    search_registration.register(page_registry)
+    search_registration.register(
+        page_registry,
+        job_registry,
+        match_item_generator_registry,
+        rulespec_group_registry,
+    )
     register_oauth2_connections(
         mode_registry, page_registry, main_module_registry, permission_registry
     )

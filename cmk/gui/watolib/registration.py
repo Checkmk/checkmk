@@ -13,11 +13,6 @@ from cmk.ccc import version
 from cmk.gui import hooks
 from cmk.gui.background_job.job import BackgroundJobRegistry
 from cmk.gui.cron import CronJob, CronJobRegistry
-from cmk.gui.search import (
-    launch_requests_processing_background,
-    MatchItemGeneratorRegistry,
-    SearchIndexBackgroundJob,
-)
 from cmk.gui.valuespec import AutocompleterRegistry
 
 from . import (
@@ -62,14 +57,12 @@ from .host_attributes import (
     HostAttributeTopicRegistry,
 )
 from .host_label_sync import AutomationDiscoveredHostLabelSync
-from .host_match_item_generator import MatchItemGeneratorHosts
 from .host_rename import (
     AutomationRenameHostsUUIDLink,
     RenameHostBackgroundJob,
     RenameHostsBackgroundJob,
 )
 from .hosts_and_folders import (
-    collect_all_hosts,
     find_usages_of_contact_group_in_hosts_and_folders,
     FolderValidators,
     FolderValidatorsRegistry,
@@ -80,13 +73,11 @@ from .notifications import (
     find_usages_of_contact_group_in_notification_rules,
 )
 from .parent_scan import ParentScanBackgroundJob
-from .rule_match_item_generator import MatchItemGeneratorRules
 from .rulesets import (
     find_timeperiod_usage_in_host_and_service_rules,
     find_timeperiod_usage_in_time_specific_parameters,
 )
 from .rulespecs import (
-    rulespec_registry,
     RulespecGroupEnforcedServices,
     RulespecGroupRegistry,
 )
@@ -115,7 +106,6 @@ def register(
     timeperiod_usage_finder_registry: TimeperiodUsageFinderRegistry,
     config_variable_group_registry: ConfigVariableGroupRegistry,
     autocompleter_registry: AutocompleterRegistry,
-    match_item_generator_registry: MatchItemGeneratorRegistry,
     replication_path_registry: ReplicationPathRegistry,
     folder_validators_registry: FolderValidatorsRegistry,
     cron_job_registry: CronJobRegistry,
@@ -164,22 +154,8 @@ def register(
     config_variable_groups.register(config_variable_group_registry)
     autocompleter_registry.register_autocompleter("config_hostname", config_hostname_autocompleter)
     automation_background_job.register(job_registry, automation_command_registry)
-    hooks.register_builtin("request-start", launch_requests_processing_background)
     hooks.register_builtin("validate-host", builtin_attributes.validate_host_parents)
     hooks.register_builtin("ldap-sync-finished", handle_ldap_sync_finished)
-    match_item_generator_registry.register(
-        MatchItemGeneratorRules(
-            "rules",
-            rulespec_group_registry,
-            rulespec_registry,
-        )
-    )
-    match_item_generator_registry.register(
-        MatchItemGeneratorHosts(
-            "hosts",
-            collect_all_hosts,
-        )
-    )
 
 
 def _register_automation_commands(automation_command_registry: AutomationCommandRegistry) -> None:
@@ -197,7 +173,6 @@ def _register_gui_background_jobs(job_registry: BackgroundJobRegistry) -> None:
     job_registry.register(config_domains.OMDConfigChangeBackgroundJob)
     job_registry.register(autodiscovery.AutodiscoveryBackgroundJob)
     job_registry.register(BulkDiscoveryBackgroundJob)
-    job_registry.register(SearchIndexBackgroundJob)
     job_registry.register(ActivateChangesSchedulerBackgroundJob)
     job_registry.register(ParentScanBackgroundJob)
     job_registry.register(RenameHostsBackgroundJob)

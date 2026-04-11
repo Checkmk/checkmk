@@ -19829,10 +19829,6 @@ msgid "Deploy Inotify plug-in"
 msgstr "Inotify plugin uitrollen"
 
 #, fuzzy
-msgid "Deploy Kaspersky Anti-Virus plug-in"
-msgstr "Implementeer Kaspersky Anti-Virus plugin"
-
-#, fuzzy
 msgid "Deploy MS Office 365 plug-in"
 msgstr "MS Office 365 plugin implementeren"
 
@@ -19894,6 +19890,14 @@ msgstr "Windows Updates plugin implementeren"
 #, fuzzy
 msgid "Deploy Windows license plug-in"
 msgstr "Windows Licentie plugin implementeren"
+
+#, fuzzy
+msgid ""
+"Deploy a plug-in for monitoring the quarantine queue, tasks and updates of "
+"Kaspersky Anti-Virus."
+msgstr ""
+"Hier kunt u een plugin implementeren voor het monitoren van de quarantaine "
+"wachtrij, taken en updates van Kaspersky Anti Virus."
 
 msgid "Deploy agents"
 msgstr "Agenten inzetten"
@@ -21566,10 +21570,6 @@ msgstr "Implementeer geen ISC DHCP-Daemon plugin"
 #, fuzzy
 msgid "Do not deploy Inotify plug-in"
 msgstr "Inotify plugin niet implementeren"
-
-#, fuzzy
-msgid "Do not deploy Kaspersky Anti-Virus plug-in"
-msgstr "Implementeer geen Kaspersky Anti-Virus plugin"
 
 #, fuzzy
 msgid "Do not deploy MSSQL Server plug-in"
@@ -29441,14 +29441,6 @@ msgstr ""
 "Hier kunt u bepalen, welk zoekresultaat moet worden gebruikt. U kunt het "
 "aantal zoekresultaten tonen (aantal) of de opgetelde of gemiddelde waarden "
 "van een bepaald numeriek veld."
-
-#, fuzzy
-msgid ""
-"Here you can deploy a plug-in for monitoring the quarantine queue, tasks and "
-"updates of Kaspersky Anti Virus."
-msgstr ""
-"Hier kunt u een plugin implementeren voor het monitoren van de quarantaine "
-"wachtrij, taken en updates van Kaspersky Anti Virus."
 
 #, fuzzy
 msgid ""
@@ -53925,10 +53917,6 @@ msgstr "Zoekopdrachten per seconde"
 msgid "Query"
 msgstr "Vraag"
 
-#, python-format
-msgid "Query %s resource"
-msgstr "Bron %s opvragen"
-
 msgid "Query Timeout"
 msgstr "Time-out zoekopdracht"
 
@@ -65588,6 +65576,9 @@ msgstr "SSL-certificaat validatie"
 #, fuzzy
 msgid "TLS certificate verification"
 msgstr "SSL-certificaat verificatie"
+
+msgid "TLS encryption must be enabled when using basic authentication."
+msgstr ""
 
 #, fuzzy
 msgid "TLS processed bytes"
@@ -96368,6 +96359,18 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Deploy Kaspersky Anti-Virus plug-in"
+#~ msgstr "Implementeer Kaspersky Anti-Virus plugin"
+
+#, fuzzy
+#~ msgid "Do not deploy Kaspersky Anti-Virus plug-in"
+#~ msgstr "Implementeer geen Kaspersky Anti-Virus plugin"
+
+#, python-format
+#~ msgid "Query %s resource"
+#~ msgstr "Bron %s opvragen"
 
 #, fuzzy
 #~ msgid "Deploy LVM plug-in"

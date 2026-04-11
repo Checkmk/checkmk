@@ -19973,10 +19973,6 @@ msgid "Deploy Inotify plug-in"
 msgstr "Déployer le plugin Inotify"
 
 #, fuzzy
-msgid "Deploy Kaspersky Anti-Virus plug-in"
-msgstr "Déployer le plugin Kaspersky Anti-Virus"
-
-#, fuzzy
 msgid "Deploy MS Office 365 plug-in"
 msgstr "Déployer le plugin MS Office 365"
 
@@ -20038,6 +20034,14 @@ msgstr "Déployer le plugin Windows Updates"
 #, fuzzy
 msgid "Deploy Windows license plug-in"
 msgstr "Déployer le plugin de licence Windows"
+
+#, fuzzy
+msgid ""
+"Deploy a plug-in for monitoring the quarantine queue, tasks and updates of "
+"Kaspersky Anti-Virus."
+msgstr ""
+"Vous pouvez déployer ici un plugin pour surveiller la file d'attente de la "
+"quarantaine, les tâches et les mises à jour de Kaspersky Anti Virus."
 
 msgid "Deploy agents"
 msgstr "Déployer des agents"
@@ -21728,10 +21732,6 @@ msgstr "Ne pas déployer le plugin ISC DHCP-Daemon"
 #, fuzzy
 msgid "Do not deploy Inotify plug-in"
 msgstr "Ne pas déployer le plugin Inotify"
-
-#, fuzzy
-msgid "Do not deploy Kaspersky Anti-Virus plug-in"
-msgstr "Ne pas déployer le plugin Kaspersky Anti-Virus"
 
 #, fuzzy
 msgid "Do not deploy MSSQL Server plug-in"
@@ -29683,14 +29683,6 @@ msgstr ""
 "Vous pouvez définir ici quel résultat de recherche doit être utilisé. Vous "
 "pouvez afficher le nombre de résultats de recherche (count) ou les valeurs "
 "totales ou moyennes d'un champ numérique donné."
-
-#, fuzzy
-msgid ""
-"Here you can deploy a plug-in for monitoring the quarantine queue, tasks and "
-"updates of Kaspersky Anti Virus."
-msgstr ""
-"Vous pouvez déployer ici un plugin pour surveiller la file d'attente de la "
-"quarantaine, les tâches et les mises à jour de Kaspersky Anti Virus."
 
 #, fuzzy
 msgid ""
@@ -54365,10 +54357,6 @@ msgstr "Requêtes par seconde"
 msgid "Query"
 msgstr "Requête"
 
-#, python-format
-msgid "Query %s resource"
-msgstr "Requête de la ressource %s"
-
 msgid "Query Timeout"
 msgstr "Délai d'interrogation"
 
@@ -66150,6 +66138,9 @@ msgstr "Validation du certificat SSL"
 #, fuzzy
 msgid "TLS certificate verification"
 msgstr "Vérification du certificat SSL"
+
+msgid "TLS encryption must be enabled when using basic authentication."
+msgstr ""
 
 #, fuzzy
 msgid "TLS processed bytes"
@@ -97215,6 +97206,18 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Deploy Kaspersky Anti-Virus plug-in"
+#~ msgstr "Déployer le plugin Kaspersky Anti-Virus"
+
+#, fuzzy
+#~ msgid "Do not deploy Kaspersky Anti-Virus plug-in"
+#~ msgstr "Ne pas déployer le plugin Kaspersky Anti-Virus"
+
+#, python-format
+#~ msgid "Query %s resource"
+#~ msgstr "Requête de la ressource %s"
 
 #, fuzzy
 #~ msgid "Deploy LVM plug-in"

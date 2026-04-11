@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2026-04-10 10:56+0000\n"
+"PO-Revision-Date: 2026-04-11 05:35+0000\n"
 "Language-Team: Portuguese (Portugal) <https://translate.checkmk.com/projects/"
 "checkmk/dev/pt_PT/>\n"
 "Language: pt_PT\n"
@@ -19833,10 +19833,6 @@ msgid "Deploy Inotify plug-in"
 msgstr "Implantar plugin de Inotificação"
 
 #, fuzzy
-msgid "Deploy Kaspersky Anti-Virus plug-in"
-msgstr "Implementar o plug-in Kaspersky Anti-Virus"
-
-#, fuzzy
 msgid "Deploy MS Office 365 plug-in"
 msgstr "Implementar o plug-in MS Office 365"
 
@@ -19898,6 +19894,14 @@ msgstr "Implementar o plugin Windows Updates"
 #, fuzzy
 msgid "Deploy Windows license plug-in"
 msgstr "Implementar o plugin Windows License"
+
+#, fuzzy
+msgid ""
+"Deploy a plug-in for monitoring the quarantine queue, tasks and updates of "
+"Kaspersky Anti-Virus."
+msgstr ""
+"Aqui você pode implantar um plugin para monitorar a fila de quarentena, "
+"tarefas e atualizações do Kaspersky Anti Virus."
 
 msgid "Deploy agents"
 msgstr "Implantar agentes"
@@ -21576,10 +21580,6 @@ msgstr "Não implante o plugin ISC DHCP-Daemon"
 #, fuzzy
 msgid "Do not deploy Inotify plug-in"
 msgstr "Não implante o plugin Inotifique"
-
-#, fuzzy
-msgid "Do not deploy Kaspersky Anti-Virus plug-in"
-msgstr "Não implante o plug-in Kaspersky Anti-Virus"
 
 #, fuzzy
 msgid "Do not deploy MSSQL Server plug-in"
@@ -29455,14 +29455,6 @@ msgstr ""
 "Aqui você pode definir que resultado de pesquisa deve ser usado. Você pode "
 "mostrar o número de resultados da pesquisa (contagem) ou os valores somados "
 "ou médios de um determinado campo numérico."
-
-#, fuzzy
-msgid ""
-"Here you can deploy a plug-in for monitoring the quarantine queue, tasks and "
-"updates of Kaspersky Anti Virus."
-msgstr ""
-"Aqui você pode implantar um plugin para monitorar a fila de quarentena, "
-"tarefas e atualizações do Kaspersky Anti Virus."
 
 #, fuzzy
 msgid ""
@@ -53917,10 +53909,6 @@ msgstr "Consultas por segundo"
 msgid "Query"
 msgstr "Consulta"
 
-#, python-format
-msgid "Query %s resource"
-msgstr "Consulta %s recurso"
-
 msgid "Query Timeout"
 msgstr "Tempo limite da consulta"
 
@@ -65601,6 +65589,9 @@ msgstr "Validação de certificados SSL"
 #, fuzzy
 msgid "TLS certificate verification"
 msgstr "verificação do certificado SSL"
+
+msgid "TLS encryption must be enabled when using basic authentication."
+msgstr ""
 
 #, fuzzy
 msgid "TLS processed bytes"
@@ -96272,6 +96263,18 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Deploy Kaspersky Anti-Virus plug-in"
+#~ msgstr "Implementar o plug-in Kaspersky Anti-Virus"
+
+#, fuzzy
+#~ msgid "Do not deploy Kaspersky Anti-Virus plug-in"
+#~ msgstr "Não implante o plug-in Kaspersky Anti-Virus"
+
+#, python-format
+#~ msgid "Query %s resource"
+#~ msgstr "Consulta %s recurso"
 
 #, fuzzy
 #~ msgid "Deploy LVM plug-in"

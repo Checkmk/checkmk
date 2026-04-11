@@ -18438,9 +18438,6 @@ msgstr "ISC DHCP-Daemonプラグインをデプロイする"
 msgid "Deploy Inotify plug-in"
 msgstr "Inotifyプラグインをデプロイする"
 
-msgid "Deploy Kaspersky Anti-Virus plug-in"
-msgstr "Kaspersky Anti-Virusプラグインをデプロイする"
-
 msgid "Deploy MS Office 365 plug-in"
 msgstr "MS Office 365プラグインをデプロイする"
 
@@ -18488,6 +18485,14 @@ msgstr "WindowsUpdateプラグインをデプロイする"
 
 msgid "Deploy Windows license plug-in"
 msgstr "Windowsライセンスプラグインをデプロイする"
+
+#, fuzzy
+msgid ""
+"Deploy a plug-in for monitoring the quarantine queue, tasks and updates of "
+"Kaspersky Anti-Virus."
+msgstr ""
+"ここでは、Kaspersky Anti Virusの検疫キュー、タスク、更新を監視するためのプラ"
+"グインをデプロイすることができます。"
 
 msgid "Deploy agents"
 msgstr "エージェントを展開する"
@@ -20009,9 +20014,6 @@ msgstr "ISC DHCP-Daemonプラグインをデプロイしないでください"
 
 msgid "Do not deploy Inotify plug-in"
 msgstr "Inotifyプラグインをデプロイしないでください"
-
-msgid "Do not deploy Kaspersky Anti-Virus plug-in"
-msgstr "Kaspersky Anti-Virusプラグインをデプロイしないでください"
 
 msgid "Do not deploy MSSQL Server plug-in"
 msgstr "MySQLプラグインをデプロイしないでください"
@@ -27393,13 +27395,6 @@ msgid ""
 msgstr ""
 "ここでは、どのような検索結果を使用するかを定義することができます。検索結果の"
 "数（count）、数値フィールドの合計値や平均値を表示することができます。"
-
-msgid ""
-"Here you can deploy a plug-in for monitoring the quarantine queue, tasks and "
-"updates of Kaspersky Anti Virus."
-msgstr ""
-"ここでは、Kaspersky Anti Virusの検疫キュー、タスク、更新を監視するためのプラ"
-"グインをデプロイすることができます。"
 
 msgid ""
 "Here you can deploy a plug-in for monitoring the quarantine queue, tasks and "
@@ -49703,10 +49698,6 @@ msgstr "1秒あたりのクエリ"
 msgid "Query"
 msgstr "クエリ"
 
-#, python-format
-msgid "Query %s resource"
-msgstr "%s リソースをクエリ"
-
 msgid "Query Timeout"
 msgstr "クエリのタイムアウト"
 
@@ -60553,6 +60544,9 @@ msgstr "TLS 証明書の検証"
 
 msgid "TLS certificate verification"
 msgstr "TLS 証明書の検証"
+
+msgid "TLS encryption must be enabled when using basic authentication."
+msgstr ""
 
 msgid "TLS processed bytes"
 msgstr "TLS処理されたバイト"
@@ -89429,6 +89423,16 @@ msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
 "後で「ヘルプ」＞「Checkmkの学習」＞「ウェルカムページ」からアクセスできます"
+
+#~ msgid "Deploy Kaspersky Anti-Virus plug-in"
+#~ msgstr "Kaspersky Anti-Virusプラグインをデプロイする"
+
+#~ msgid "Do not deploy Kaspersky Anti-Virus plug-in"
+#~ msgstr "Kaspersky Anti-Virusプラグインをデプロイしないでください"
+
+#, python-format
+#~ msgid "Query %s resource"
+#~ msgstr "%s リソースをクエリ"
 
 #~ msgid "Deploy LVM plug-in"
 #~ msgstr "LVMプラグインをデプロイする"

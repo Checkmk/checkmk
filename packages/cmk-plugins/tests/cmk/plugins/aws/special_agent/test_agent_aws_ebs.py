@@ -120,10 +120,10 @@ def get_ebs_sections() -> EBSSections:
 
 ebs_params = [
     (None, (None, None), 3),
-    (None, ([["Key-0"]], [["Value-0"]]), 3),
-    (None, ([["Key-0"]], [["Value-X"]]), 0),
-    (None, ([["Key-X"]], [["Value-X"]]), 0),
-    (None, ([["Key-0"]], [["Value-0", "Value-X"]]), 3),
+    (None, (["Key-0"], ["Value-0"]), 3),
+    (None, (["Key-0"], ["Value-X"]), 0),
+    (None, (["Key-X"], ["Value-X"]), 0),
+    (None, (["Key-0", "Key-0"], ["Value-0", "Value-X"]), 3),
     (["VolumeId-0"], (None, None), 1),
     (["VolumeId-0", "VolumeId-1"], (None, None), 2),
     (["VolumeId-0", "Foobar"], (None, None), 1),

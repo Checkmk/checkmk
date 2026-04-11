@@ -512,7 +512,7 @@ CLUSTER3 = {
         ),
         (
             None,
-            ([["tag1"]], [["value1"]]),
+            (["tag1"], ["value1"]),
             [CLUSTER2],
         ),
     ],
@@ -555,7 +555,7 @@ def test_agent_aws_elasticache_summary(
         ),
         (
             None,
-            ([["tag2"]], [["value2"]]),
+            (["tag2"], ["value2"]),
             [CLUSTER3],
         ),
     ],

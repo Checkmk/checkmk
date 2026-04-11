@@ -369,7 +369,7 @@ def test_agent_aws_ecs_summary(
         ),
         (
             None,
-            ([["tag1"]], [["false"]]),
+            (["tag1"], ["false"]),
             [CLUSTER2],
         ),
     ],

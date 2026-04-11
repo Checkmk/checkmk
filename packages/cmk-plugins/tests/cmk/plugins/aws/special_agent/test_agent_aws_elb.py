@@ -134,16 +134,16 @@ elb_params = [
         ["LoadBalancerName-0", "LoadBalancerName-1", "LoadBalancerName-2"],
         ["LoadBalancerName-0", "LoadBalancerName-1"],
     ),
-    (None, ([["FOO"]], [["BAR"]]), [], []),
+    (None, (["FOO"], ["BAR"]), [], []),
     (
         None,
-        ([["Key-0"]], [["Value-0"]]),
+        (["Key-0"], ["Value-0"]),
         ["LoadBalancerName-0", "LoadBalancerName-1"],
         ["LoadBalancerName-0", "LoadBalancerName-1"],
     ),
     (
         None,
-        ([["Key-0", "Foo"]], [["Value-0", "Bar"]]),
+        (["Key-0", "Key-0"], ["Value-0", "Bar"]),
         ["LoadBalancerName-0", "LoadBalancerName-1"],
         ["LoadBalancerName-0", "LoadBalancerName-1"],
     ),
@@ -166,7 +166,7 @@ elb_params = [
         ["LoadBalancerName-0", "LoadBalancerName-2"],
         ["LoadBalancerName-0"],
     ),
-    (["LoadBalancerName-2"], ([["FOO"]], [["BAR"]]), ["LoadBalancerName-2"], []),
+    (["LoadBalancerName-2"], (["FOO"], ["BAR"]), ["LoadBalancerName-2"], []),
 ]
 
 

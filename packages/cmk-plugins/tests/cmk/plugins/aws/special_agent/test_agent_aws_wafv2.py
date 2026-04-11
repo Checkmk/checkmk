@@ -166,17 +166,17 @@ wafv2_params = [
     ),
     (
         None,
-        ([["FOO"]], [["BAR"]]),
+        (["FOO"], ["BAR"]),
         [],
     ),
     (
         None,
-        ([["Key-0"]], [["Value-0"]]),
+        (["Key-0"], ["Value-0"]),
         ["Name-0", "Name-1"],
     ),
     (
         None,
-        ([["Key-0", "Foo"]], [["Value-0", "Bar"]]),
+        (["Key-0", "Key-0"], ["Value-0", "Bar"]),
         ["Name-0", "Name-1"],
     ),
     (
@@ -196,7 +196,7 @@ wafv2_params = [
     ),
     (
         ["Name-0", "Name-2"],
-        ([["FOO"]], [["BAR"]]),
+        (["FOO"], ["BAR"]),
         ["Name-0", "Name-2"],
     ),
 ]

@@ -6,7 +6,6 @@ py_library(
     srcs = glob(
         include = ["**/*.py"],
         exclude = [
-            "generators/folder.py",
             "generators/host_attributes_selection.py",
             "generators/timeperiod_selection.py",
             "registration.py",
@@ -61,7 +60,6 @@ py_library(
 filegroup(
     name = "gui_srcs",
     srcs = [
-        "generators/folder.py",
         "generators/host_attributes_selection.py",
         "generators/timeperiod_selection.py",
         "registration.py",

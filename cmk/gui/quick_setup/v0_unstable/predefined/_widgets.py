@@ -10,7 +10,6 @@ import re
 import cmk.ccc.regex
 from cmk.gui.default_name import unique_default_name_suggestion
 from cmk.gui.fields.definitions import HOST_NAME_REGEXP
-from cmk.gui.form_specs.generators.folder import create_full_path_folder_choice
 from cmk.gui.form_specs.unstable.two_column_dictionary import TwoColumnDictionary
 from cmk.gui.i18n import translate_to_current_language
 from cmk.gui.quick_setup.v0_unstable.definitions import (
@@ -23,6 +22,7 @@ from cmk.gui.quick_setup.v0_unstable.definitions import (
 from cmk.gui.quick_setup.v0_unstable.widgets import FormSpecId, FormSpecWrapper
 from cmk.gui.user_sites import get_configured_site_choices, site_attribute_default_value
 from cmk.gui.watolib.configuration_bundle_store import ConfigBundleStore
+from cmk.gui.watolib.form_spec_generators import create_full_path_folder_choice
 from cmk.gui.watolib.hosts_and_folders import folder_tree
 from cmk.rulesets.v1 import Help, Message, Title
 from cmk.rulesets.v1.form_specs import (

@@ -12,9 +12,9 @@ from cmk.gui.form_specs import (
     RawFrontendData,
     VisitorOptions,
 )
-from cmk.gui.form_specs.generators.folder import create_full_path_folder_choice
 from cmk.gui.form_specs.unstable import Catalog, Topic, TopicElement
 from cmk.gui.form_specs.unstable.validators import not_empty
+from cmk.gui.watolib.form_spec_generators import create_full_path_folder_choice
 from cmk.gui.watolib.hosts_and_folders import find_available_folder_name, Folder, FolderTree
 from cmk.rulesets.v1 import Help, Message, Title
 from cmk.rulesets.v1.form_specs import String

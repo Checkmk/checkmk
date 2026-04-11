@@ -3,42 +3,79 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Mapping
 
-from cmk.gui.agent_bakery import RulespecGroupMonitoringAgentsAgentPlugins
-from cmk.gui.i18n import _
-from cmk.gui.plugins.wato.utils import HostRulespec, rulespec_registry
-from cmk.gui.valuespec import Age, Alternative, Dictionary, FixedValue
-from cmk.utils.rulesets.definition import RuleGroup
+from cmk.rulesets.v1 import Help, Title
+from cmk.rulesets.v1.form_specs import (
+    CascadingSingleChoice,
+    CascadingSingleChoiceElement,
+    DefaultValue,
+    DictElement,
+    Dictionary,
+    FixedValue,
+    TimeMagnitude,
+    TimeSpan,
+)
+from cmk.rulesets.v1.rule_specs import AgentConfig, Topic
 
 
-def _valuespec_agent_config_mk_cups_queues() -> Alternative:
-    return Alternative(
-        title=_("CUPS Printer Queues"),
-        elements=[
-            Dictionary(
-                title=_("Deploy the Checkmk CUPS queues plug-in"),
-                elements=[
-                    (
-                        "interval",
-                        Age(title=_("Interval for collecting data")),
+def migrate(value: object) -> Mapping[str, object]:
+    if isinstance(value, dict) and "deployment" in value:
+        return value
+    if value is None:
+        return {"deployment": ("do_not_deploy", None)}
+    if isinstance(value, dict):
+        interval = value["interval"]
+        if isinstance(interval, (int, float)) and interval > 60:
+            return {"deployment": ("cached", float(interval))}
+        return {"deployment": ("sync", None)}
+    raise ValueError(f"Unexpected value for mk_cups_queues migration: {value!r}")
+
+
+def _valuespec_agent_config_mk_cups_queues() -> Dictionary:
+    return Dictionary(
+        help_text=Help(
+            "This will deploy the agent plug-in <tt>mk_cups_queues</tt>"
+            " to monitor CUPS printer queues on Linux."
+        ),
+        elements={
+            "deployment": DictElement(
+                required=True,
+                parameter_form=CascadingSingleChoice(
+                    title=Title("Deployment type"),
+                    elements=(
+                        CascadingSingleChoiceElement(
+                            name="sync",
+                            title=Title("Deploy the plug-in and run it synchronously"),
+                            parameter_form=FixedValue(value=None),
+                        ),
+                        CascadingSingleChoiceElement(
+                            name="cached",
+                            title=Title("Deploy the plug-in and run it asynchronously"),
+                            parameter_form=TimeSpan(
+                                displayed_magnitudes=(
+                                    TimeMagnitude.HOUR,
+                                    TimeMagnitude.MINUTE,
+                                )
+                            ),
+                        ),
+                        CascadingSingleChoiceElement(
+                            name="do_not_deploy",
+                            title=Title("Do not deploy the plug-in"),
+                            parameter_form=FixedValue(value=None),
+                        ),
                     ),
-                ],
-                optional_keys=False,
+                    prefill=DefaultValue("sync"),
+                ),
             ),
-            FixedValue(
-                value=None,
-                title=_("Do not deploy the Checkmk CUPS queues plug-in"),
-                totext=_("(disabled)"),
-            ),
-        ],
-        default_value={"interval": 60},
+        },
+        migrate=migrate,
     )
 
 
-rulespec_registry.register(
-    HostRulespec(
-        group=RulespecGroupMonitoringAgentsAgentPlugins,
-        name=RuleGroup.AgentConfig("mk_cups_queues"),
-        valuespec=_valuespec_agent_config_mk_cups_queues,
-    )
+rule_spec_mk_cups_queues = AgentConfig(
+    title=Title("CUPS Printer Queues (Linux)"),
+    name="mk_cups_queues",
+    topic=Topic.APPLICATIONS,
+    parameter_form=_valuespec_agent_config_mk_cups_queues,
 )

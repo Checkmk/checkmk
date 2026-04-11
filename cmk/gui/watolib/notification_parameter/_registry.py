@@ -38,8 +38,19 @@ from cmk.rulesets.v1.rule_specs import NotificationParameters, Topic
 from cmk.utils.paths import omd_root
 from cmk.utils.rulesets.definition import RuleGroup
 
+RegisterPluginCallback = Callable[["_rulespecs.RulespecRegistry", LoadedRuleSpec], None]
+
 
 class NotificationParameterRegistry(Registry[NotificationParameter | NotificationParameters]):
+    """Registry for notification parameters.
+
+    The `register_form_spec_plugin` callback must be set before registering
+    NotificationParameter plugins that use FormSpecs. It is injected at
+    startup to avoid a circular dependency on rule_specs.registering.
+    """
+
+    register_form_spec_plugin: RegisterPluginCallback | None = None
+
     def plugin_name(self, instance: NotificationParameter | NotificationParameters) -> str:
         return instance.ident if isinstance(instance, NotificationParameter) else instance.name
 
@@ -62,20 +73,20 @@ class NotificationParameterRegistry(Registry[NotificationParameter | Notificatio
                 )
             )
         else:
-            from cmk.gui.rule_specs.registering import register_plugin
-
             # legacy NotificationParameter with new FormSpec
             # We create a v1 RuleSpec around the FormSpec that gets converted to a legacy RuleSpec
             # for registration into the rulespec_registry.
             # Directly creating a legacy rulespec here would necessitate calling the
             # plugin._form_spec -> "RuntimeError: Working outside of request context."
+            if self.register_form_spec_plugin is None:
+                return
             loaded_rulespec = NotificationParameters(
                 title=Title("%s") % notification_script_title(plugin.ident),
                 name=plugin.ident,
                 topic=Topic.NOTIFICATIONS,
                 parameter_form=plugin.form_spec,
             )
-            register_plugin(
+            self.register_form_spec_plugin(
                 _rulespecs.rulespec_registry,
                 LoadedRuleSpec(rule_spec=loaded_rulespec, edition_only=edition(omd_root)),
             )

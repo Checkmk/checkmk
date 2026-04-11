@@ -1316,7 +1316,6 @@ py_library(
         "//cmk/gui/openapi:gui_srcs",
         "//cmk/gui/rule_specs:gui_srcs",
         "//cmk/gui/userdb:gui_srcs",
-        "//cmk/gui/watolib:gui_srcs",
         "//cmk/gui/wsgi:gui_srcs",
     ],
     imports = ["../.."],

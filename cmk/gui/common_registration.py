@@ -57,6 +57,7 @@ from cmk.gui.painter_options import PainterOptionRegistry
 from cmk.gui.permissions import PermissionRegistry, PermissionSectionRegistry
 from cmk.gui.quick_setup import registration as quick_setup_registration
 from cmk.gui.quick_setup.v0_unstable._registry import QuickSetupRegistry
+from cmk.gui.rule_specs.registering import register_plugin
 from cmk.gui.search import MatchItemGeneratorRegistry
 from cmk.gui.search import registration as search_registration
 from cmk.gui.sidebar import SnapinRegistry
@@ -165,6 +166,7 @@ def register(
     builtin_pagetype_topic_registry: pagetypes.BuiltinPagetypeTopicRegistry,
 ) -> None:
     hooks.register_thread_cache_cleanup()
+    notification_parameter_registry.register_form_spec_plugin = register_plugin
     pagetypes.register(main_menu_registry, builtin_pagetype_topic_registry)
     search_menu.register(main_menu_registry)
     help_menu.register(

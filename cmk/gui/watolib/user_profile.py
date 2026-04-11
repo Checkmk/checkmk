@@ -5,7 +5,7 @@
 
 import ast
 import time
-from collections.abc import Mapping, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from datetime import datetime
 from logging import Logger
 from multiprocessing import TimeoutError as mp_TimeoutError
@@ -19,7 +19,6 @@ from cmk.ccc.site import SiteId
 from cmk.ccc.user import UserId
 from cmk.gui import sites, userdb
 from cmk.gui.config import Config
-from cmk.gui.dashboard.store import migrate_dashboard_config
 from cmk.gui.exceptions import RequestTimeout
 from cmk.gui.http import Request
 from cmk.gui.i18n import _, _l
@@ -40,6 +39,11 @@ from cmk.gui.watolib.automations import (
 )
 from cmk.gui.watolib.changes import add_change
 from cmk.utils.automation_config import RemoteAutomationConfig
+
+# Callback for dashboard migration — injected at startup from
+# cmk.gui.common_registration to avoid a circular dependency on
+# cmk.gui.dashboard.store.
+migrate_dashboard_config: Callable[..., Any] | None = None
 
 # In case the sync is done on the master of a distributed setup the auth serial
 # is increased on the master, but not on the slaves. The user can not access the
@@ -294,7 +298,7 @@ class PushUserProfilesToSite(AutomationCommand[PushUserProfilesRequest]):
                             continue
 
                         dashboards = {
-                            dashboard_name: migrate_dashboard_config(dashboard)
+                            dashboard_name: dashboard
                             for dashboard_name, dashboard in visuals.items()
                         }
                         save_user_file(file_name, dashboards, user_id)

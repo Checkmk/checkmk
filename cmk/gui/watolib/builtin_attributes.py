@@ -10,12 +10,12 @@ from collections.abc import Callable, Mapping, Sequence
 from typing import Any, Literal
 
 from marshmallow import ValidationError
+from marshmallow.fields import Field
 
 import cmk.utils.tags
 from cmk import fields
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.user import UserId
-from cmk.gui import fields as gui_fields
 from cmk.gui import hooks, userdb
 from cmk.gui.config import active_config, Config
 from cmk.gui.exceptions import MKUserError
@@ -99,6 +99,8 @@ from cmk.rulesets.v1.form_specs import (
 )
 from cmk.utils.tags import TagGroupID, TagID
 
+from . import openapi_fields
+
 
 class HostAttributeAlias(ABCHostAttributeNagiosText):
     @property
@@ -133,7 +135,7 @@ class HostAttributeAlias(ABCHostAttributeNagiosText):
     def show_in_folder(self) -> bool:
         return False
 
-    def openapi_field(self) -> gui_fields.Field:
+    def openapi_field(self) -> Field:
         return fields.String(description=self.help())
 
 
@@ -196,7 +198,7 @@ class HostAttributeIPv4Address(ABCHostAttributeValueSpec):
             allow_ipv6_address=False,
         )
 
-    def openapi_field(self) -> gui_fields.Field:
+    def openapi_field(self) -> Field:
         return fields.String(
             description="An IPv4 address.",
             validate=fields.ValidateAnyOfValidators(
@@ -267,7 +269,7 @@ class HostAttributeIPv6Address(ABCHostAttributeValueSpec):
             allow_ipv4_address=False,
         )
 
-    def openapi_field(self) -> gui_fields.Field:
+    def openapi_field(self) -> Field:
         return fields.String(
             description="An IPv6 address.",
             validate=fields.ValidateAnyOfValidators(
@@ -325,7 +327,7 @@ class HostAttributeAdditionalIPv4Addresses(ABCHostAttributeValueSpec):
             element_template=create_host_address(allow_empty=False, allow_ipv6_address=False),
         )
 
-    def openapi_field(self) -> gui_fields.Field:
+    def openapi_field(self) -> Field:
         return fields.List(
             fields.String(
                 validate=fields.ValidateAnyOfValidators(
@@ -385,7 +387,7 @@ class HostAttributeAdditionalIPv6Addresses(ABCHostAttributeValueSpec):
             element_template=create_host_address(allow_empty=False, allow_ipv4_address=False),
         )
 
-    def openapi_field(self) -> gui_fields.Field:
+    def openapi_field(self) -> Field:
         return fields.List(
             fields.String(
                 validate=fields.ValidateAnyOfValidators(
@@ -445,9 +447,9 @@ class HostAttributeSNMPCommunity(ABCHostAttributeValueSpec):
             default_value="community",
         )
 
-    def openapi_field(self) -> gui_fields.Field:
+    def openapi_field(self) -> Field:
         return fields.Nested(
-            gui_fields.SNMPCredentials,
+            openapi_fields.SNMPCredentials,
             description=(
                 "The SNMP access configuration. A configured SNMP v1/v2 community here "
                 "will have precedence over any configured SNMP community rule. For this "
@@ -510,9 +512,9 @@ class HostAttributeParents(ABCHostAttributeValueSpec):
             string_spec=MonitoredHost(title=Title("Host")),
         )
 
-    def openapi_field(self) -> gui_fields.Field:
+    def openapi_field(self) -> Field:
         return fields.List(
-            gui_fields.HostField(should_exist=True, skip_validation_on_view=True),
+            openapi_fields.HostField(should_exist=True, skip_validation_on_view=True),
             description="A list of parents of this host.",
         )
 
@@ -625,9 +627,9 @@ class HostAttributeNetworkScan(ABCHostAttributeValueSpec):
             default_text=_("Not configured."),
         )
 
-    def openapi_field(self) -> gui_fields.Field:
+    def openapi_field(self) -> Field:
         return fields.Nested(
-            gui_fields.NetworkScan,
+            openapi_fields.NetworkScan,
             description=(
                 "Configuration for automatic network scan. Pings will be"
                 "sent to each IP address in the configured ranges to check"
@@ -872,9 +874,9 @@ class HostAttributeNetworkScanResult(ABCHostAttributeValueSpec):
     def openapi_editable(self) -> bool:
         return False
 
-    def openapi_field(self) -> gui_fields.Field:
+    def openapi_field(self) -> Field:
         return fields.Nested(
-            gui_fields.NetworkScanResult,
+            openapi_fields.NetworkScanResult,
             description="Read only access to the network scan result",
         )
 
@@ -989,7 +991,7 @@ class HostAttributeManagementAddress(ABCHostAttributeValueSpec):
             allow_empty=False,
         )
 
-    def openapi_field(self) -> gui_fields.Field:
+    def openapi_field(self) -> Field:
         return fields.String(
             description="Address (IPv4, IPv6 or host name) under which the management board can be reached.",
             validate=fields.ValidateAnyOfValidators(
@@ -1051,8 +1053,8 @@ class HostAttributeManagementProtocol(ABCHostAttributeValueSpec):
             ],
         )
 
-    def openapi_field(self) -> gui_fields.Field:
-        return gui_fields.HostAttributeManagementBoardField()
+    def openapi_field(self) -> Field:
+        return openapi_fields.HostAttributeManagementBoardField()
 
 
 class HostAttributeManagementSNMPCommunity(ABCHostAttributeValueSpec):
@@ -1084,9 +1086,9 @@ class HostAttributeManagementSNMPCommunity(ABCHostAttributeValueSpec):
             allow_none=True,
         )
 
-    def openapi_field(self) -> gui_fields.Field:
+    def openapi_field(self) -> Field:
         return fields.Nested(
-            gui_fields.SNMPCredentials,
+            openapi_fields.SNMPCredentials,
             description="SNMP credentials",
             allow_none=True,
         )
@@ -1155,9 +1157,9 @@ class HostAttributeManagementIPMICredentials(ABCHostAttributeValueSpec):
             parameter_form=create_ipmi_parameters(),
         )
 
-    def openapi_field(self) -> gui_fields.Field:
+    def openapi_field(self) -> Field:
         return fields.Nested(
-            gui_fields.IPMIParameters,
+            openapi_fields.IPMIParameters,
             description="IPMI credentials",
             required=False,
             allow_none=True,
@@ -1218,8 +1220,8 @@ class HostAttributeSite(ABCHostAttributeValueSpec):
             ),
         )
 
-    def openapi_field(self) -> gui_fields.Field:
-        return gui_fields.SiteField(
+    def openapi_field(self) -> Field:
+        return openapi_fields.SiteField(
             description="The site that should monitor this host.",
             presence="might_not_exist_on_view",
         )
@@ -1277,7 +1279,7 @@ class HostAttributeLockedBy(ABCHostAttributeValueSpec):
 
     def openapi_field(self) -> fields.Field:
         return fields.Nested(
-            gui_fields.LockedBy,
+            openapi_fields.LockedBy,
             description=(
                 "Identity of the entity which locked the locked_attributes. "
                 "The identity is built out of the Site ID, the program name and the connection ID."
@@ -1359,7 +1361,7 @@ class HostAttributeLockedAttributes(ABCHostAttributeValueSpec):
             text_if_empty=_("Not locked"),
         )
 
-    def openapi_field(self) -> gui_fields.Field:
+    def openapi_field(self) -> Field:
         return fields.List(
             fields.String(),
             description="Name of host attributes which are locked in the UI.",
@@ -1456,9 +1458,9 @@ class HostAttributeMetaData(ABCHostAttributeValueSpec):
             optional_keys=[],
         )
 
-    def openapi_field(self) -> gui_fields.Field:
+    def openapi_field(self) -> Field:
         return fields.Nested(
-            gui_fields.MetaData, description="Read only access to configured metadata."
+            openapi_fields.MetaData, description="Read only access to configured metadata."
         )
 
 
@@ -1504,7 +1506,7 @@ class HostAttributeDiscoveryFailed(ABCHostAttributeValueSpec):
             default_value=False,
         )
 
-    def openapi_field(self) -> gui_fields.Field:
+    def openapi_field(self) -> Field:
         return fields.Boolean(
             example=False,
             required=False,
@@ -1560,7 +1562,7 @@ class HostAttributeWaitingForDiscovery(ABCHostAttributeValueSpec):
             default_value=False,
         )
 
-    def openapi_field(self) -> gui_fields.Field:
+    def openapi_field(self) -> Field:
         return fields.Boolean(
             example=False,
             required=False,
@@ -1611,7 +1613,7 @@ class HostAttributeLabels(ABCHostAttributeValueSpec):
             world=fs_labels.World.CONFIG, label_source=fs_labels.Source.EXPLICIT
         )
 
-    def openapi_field(self) -> gui_fields.Field:
+    def openapi_field(self) -> Field:
         return fields.Dict(
             description=self.help(),
             keys=fields.String(description="The host label key", validate=self._validate_label_key),

@@ -49,6 +49,8 @@ from cmk.utils import paths
 from cmk.utils.notify_types import EventRule
 from cmk.utils.timeperiod import timeperiod_spec_alias
 
+from .openapi_fields import HostContactGroup
+
 ContactGroupUsageFinder = Callable[[GroupName, GlobalSettings], list[tuple[str, str]]]
 
 
@@ -523,10 +525,7 @@ class HostAttributeContactGroups(ABCHostAttribute):
         self._vs_contactgroups().validate_value(value.get("groups", []), varprefix)
 
     def openapi_field(self) -> fields.Nested:
-        # FIXME: due to cyclical imports which, when fixed, expose even more cyclical imports.
-        from cmk.gui import fields as gui_fields
-
         return fields.Nested(
-            gui_fields.HostContactGroup,
+            HostContactGroup,
             description=self.help(),
         )

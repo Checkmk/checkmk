@@ -5,7 +5,7 @@
 
 import pytest
 
-from cmk.gui.plugins.legacy_bakery_rulesets.isc_dhcpd import migrate
+from cmk.plugins.collection.rulesets.isc_dhcpd import migrate
 
 
 @pytest.mark.parametrize(

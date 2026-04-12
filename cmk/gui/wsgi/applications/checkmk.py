@@ -28,7 +28,7 @@ from cmk.crypto import MKCryptoException
 from cmk.gui import pages, sites
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
 from cmk.gui.config import active_config
-from cmk.gui.dashboard.page_show_shared_dashboard import page_dashboard_token_invalid
+from cmk.gui.dashboard.page_token_error import page_dashboard_token_invalid
 from cmk.gui.exceptions import (
     FinalizeRequest,
     HTTPRedirect,

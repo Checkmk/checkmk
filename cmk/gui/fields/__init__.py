@@ -29,22 +29,16 @@ from cmk.gui.fields.attributes import (
 )
 from cmk.gui.fields.custom_fields import (
     AuxTagIDField,
-    CertPrivateKey,
-    CertPublicKey,
     ContactGroupField,
     GlobalHTTPProxyField,
     IPField,
-    LDAPConnectionID,
-    NetworkPortNumber,
     PasswordStoreIDField,
     RelativeUrl,
-    SAMLConnectionID,
     ServiceLevelField,
     SplunkURLField,
     TagGroupIDField,
     Timeout,
     TimePeriodIDField,
-    UnixPath,
 )
 from cmk.gui.fields.definitions import (
     bake_agent_field,
@@ -72,8 +66,6 @@ from cmk.gui.fields.definitions import (
 __all__ = [
     "AuxTagIDField",
     "bake_agent_field",
-    "CertPublicKey",
-    "CertPrivateKey",
     "column_field",
     "ContactGroupField",
     "customer_field",
@@ -97,7 +89,6 @@ __all__ = [
     "NetworkScan",
     "NetworkScanResult",
     "PasswordStoreIDField",
-    "LDAPConnectionID",
     "LockedBy",
     "PasswordEditableBy",
     "PasswordIdent",
@@ -107,7 +98,6 @@ __all__ = [
     "ServiceLevelField",
     "SiteField",
     "SplunkURLField",
-    "SAMLConnectionID",
     "SNMPCredentials",
     "Timeout",
     "TimePeriodIDField",

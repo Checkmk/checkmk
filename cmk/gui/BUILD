@@ -1309,7 +1309,6 @@ py_library(
             "werks.py",
         ],
     ) + [
-        "//cmk/gui/fields:gui_srcs",
         "//cmk/gui/form_specs:gui_srcs",
         "//cmk/gui/nodevis:gui_srcs",
         "//cmk/gui/oauth2_connections:gui_srcs",
@@ -1405,6 +1404,7 @@ py_library(
         "//cmk/diskspace",
         "//cmk/fields",
         "//cmk/gui/background_job/job",
+        "//cmk/gui/fields",
         "//cmk/gui/fields:base",
         "//cmk/gui/form_specs",
         "//cmk/gui/graphing",

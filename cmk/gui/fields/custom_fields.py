@@ -4,17 +4,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from os import path
 from typing import Any, Literal, override
 
 from marshmallow import validate, ValidationError
 
 from cmk import fields
-from cmk.crypto import certificate, keys
 from cmk.fields import validators
 from cmk.gui.config import active_config
-from cmk.gui.ldap_integration.ldap_connector import LDAPUserConnector
-from cmk.gui.userdb import connection_choices, get_saml_connections
 from cmk.gui.watolib.config_domains import ConfigDomainCore
 from cmk.gui.watolib.groups_io import load_contact_group_information
 from cmk.gui.watolib.password_store import PasswordStore
@@ -124,186 +120,6 @@ class Timeout(fields.Float):
 
         if value < 0:
             raise self.make_error("negative_value", value=value)
-
-
-class UnixPath(fields.String):
-    default_error_messages = {
-        "should_exist": "The path {path!r} should exist but it doesn't.",
-        "should_not_exist": "The path {path!r} should not exist but it does.",
-    }
-
-    def __init__(
-        self,
-        presence: Literal["should_exist", "should_not_exist", "ignore"] = "ignore",
-        required: bool = True,
-        description: str = "A unix path",
-        **kwargs: Any,
-    ) -> None:
-        super().__init__(required=required, description=description, **kwargs)
-        self.presence = presence
-
-    @override
-    def _validate(self, value: str) -> None:
-        super()._validate(value)
-
-        if self.presence == "should_exist":
-            if not path.exists(value):
-                raise self.make_error("should_exist", path=value)
-
-        if self.presence == "should_not_exist":
-            if path.exists(value):
-                raise self.make_error("should_not_exist", path=value)
-
-
-class NetworkPortNumber(fields.Integer):
-    def __init__(self, **kwargs: Any) -> None:
-        if "description" not in kwargs:
-            kwargs["description"] = "A valid network port number between 1 - 65535."
-        super().__init__(
-            minimum=1,
-            maximum=65535,
-            example=6790,
-            **kwargs,
-        )
-
-
-class LDAPConnectionSuffix(fields.String):
-    default_error_messages = {
-        "should_exist": "The LDAP connection suffix {path!r} should exist but it doesn't.",
-        "should_not_exist": "The LDAP connection suffix {path!r} should not exist but it does.",
-    }
-
-    def __init__(
-        self,
-        presence: Literal["should_exist", "should_not_exist", "ignore"] = "ignore",
-        required: bool = True,
-        description: str = "The LDAP connection suffix can be used to distinguish equal named objects"
-        " (name conflicts), for example user accounts, from different LDAP connections.",
-        **kwargs: Any,
-    ) -> None:
-        super().__init__(required=required, description=description, **kwargs)
-        self.presence = presence
-
-    @override
-    def _validate(self, value: str) -> None:
-        super()._validate(value)
-
-        if self.presence == "should_exist":
-            if value not in LDAPUserConnector.get_connection_suffixes():
-                raise self.make_error("should_exist", path=value)
-
-        if self.presence == "should_not_exist":
-            if value in LDAPUserConnector.get_connection_suffixes():
-                raise self.make_error("should_not_exist", path=value)
-
-
-class LDAPConnectionID(fields.String):
-    default_error_messages = {
-        "should_exist": "The LDAP connection {path!r} should exist but it doesn't.",
-        "should_not_exist": "The LDAP connection {path!r} should not exist but it does.",
-    }
-
-    def __init__(
-        self,
-        presence: Literal["should_exist", "should_not_exist", "ignore"] = "ignore",
-        required: bool = True,
-        description: str = "An LDAP connection ID string.",
-        **kwargs: Any,
-    ) -> None:
-        super().__init__(required=required, description=description, **kwargs)
-        self.presence = presence
-
-    @override
-    def _validate(self, value: str) -> None:
-        super()._validate(value)
-
-        ldap_connection_ids = [cnx_id for cnx_id, _ in connection_choices()]
-
-        if self.presence == "should_exist":
-            if value not in ldap_connection_ids:
-                raise self.make_error("should_exist", path=value)
-
-        if self.presence == "should_not_exist":
-            if value in ldap_connection_ids:
-                raise self.make_error("should_not_exist", path=value)
-
-
-class SAMLConnectionID(fields.String):
-    default_error_messages = {
-        "should_exist": "The SAML connection {path!r} should exist but it doesn't.",
-        "should_not_exist": "The SAML connection {path!r} should not exist but it does.",
-    }
-
-    def __init__(
-        self,
-        presence: Literal["should_exist", "should_not_exist", "ignore"] = "ignore",
-        required: bool = True,
-        description: str = "A SAML connection ID string.",
-        minLength: int = 1,
-        **kwargs: Any,
-    ) -> None:
-        super().__init__(required=required, description=description, minLength=minLength, **kwargs)
-        self.presence = presence
-
-    @override
-    def _validate(self, value: str) -> None:
-        super()._validate(value)
-
-        if self.presence == "should_exist":
-            if value not in get_saml_connections():
-                raise self.make_error("should_exist", path=value)
-
-        elif self.presence == "should_not_exist":
-            if value in get_saml_connections():
-                raise self.make_error("should_not_exist", path=value)
-
-
-class CertPublicKey(fields.String):
-    default_error_messages = {
-        "invalid_key": "Invalid certificate",
-    }
-
-    def __init__(
-        self,
-        description: str = "Public key in PEM format. Must be a single certificate, not a chain.",
-        **kwargs: Any,
-    ) -> None:
-        super().__init__(description=description, **kwargs)
-
-    @override
-    def _validate(self, value: str) -> None:
-        super()._validate(value)
-
-        try:
-            certificate.Certificate.load_pem(certificate.CertificatePEM(value))
-        except Exception:
-            raise self.make_error("invalid_key")
-
-
-class CertPrivateKey(fields.String):
-    default_error_messages = {
-        "encrypted_key": "Encrypted private keys are not supported",
-        "invalid_key": "Invalid private key",
-    }
-
-    def __init__(
-        self,
-        description: str = "Private key in PEM format.",
-        **kwargs: Any,
-    ) -> None:
-        super().__init__(description=description, **kwargs)
-
-    @override
-    def _validate(self, value: str) -> None:
-        super()._validate(value)
-
-        if value.startswith("-----BEGIN ENCRYPTED PRIVATE KEY"):
-            raise self.make_error("encrypted_key")
-
-        try:
-            keys.PrivateKey.load_pem(keys.PlaintextPrivateKeyPEM(value))
-        except Exception:
-            raise self.make_error("invalid_key")
 
 
 class AuxTagIDField(fields.String):

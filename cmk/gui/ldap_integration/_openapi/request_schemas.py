@@ -15,10 +15,10 @@ from marshmallow import INCLUDE, post_load, pre_load, ValidationError
 from marshmallow_oneofschema.one_of_schema import OneOfSchema
 
 from cmk import fields
-from cmk.gui.fields import LDAPConnectionID, Timestamp
+from cmk.gui.fields import Timestamp
 from cmk.gui.fields.base import ValueTypedDictSchema
-from cmk.gui.fields.custom_fields import LDAPConnectionSuffix
 from cmk.gui.fields.utils import BaseSchema
+from cmk.gui.ldap_integration._openapi._fields import LDAPConnectionID, LDAPConnectionSuffix
 from cmk.gui.openapi.endpoints.utils import mutually_exclusive_fields
 from cmk.gui.userdb import get_ldap_connections, UserRolesConfigFile
 from cmk.gui.watolib.custom_attributes import load_custom_attrs_from_mk_file

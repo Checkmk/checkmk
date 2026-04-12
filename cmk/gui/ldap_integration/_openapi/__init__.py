@@ -25,9 +25,9 @@ from typing import Any
 
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.fields.custom_fields import LDAPConnectionID
 from cmk.gui.http import Response
 from cmk.gui.i18n import _
+from cmk.gui.ldap_integration._openapi._fields import LDAPConnectionID
 from cmk.gui.ldap_integration._openapi.error_schemas import GETLdapConnection404
 from cmk.gui.ldap_integration._openapi.internal_to_restapi_interface import (
     LDAPConnectionInterface,

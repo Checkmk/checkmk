@@ -18432,9 +18432,6 @@ msgstr "Hyper-V 監視プラグインをデプロイする"
 msgid "Deploy IBM MQ plug-in"
 msgstr "IBMMQプラグインをデプロイする"
 
-msgid "Deploy ISC DHCP-Daemon plug-in"
-msgstr "ISC DHCP-Daemonプラグインをデプロイする"
-
 msgid "Deploy Inotify plug-in"
 msgstr "Inotifyプラグインをデプロイする"
 
@@ -18529,9 +18526,6 @@ msgstr "JAR署名用のプラグインをデプロイする"
 
 msgid "Deploy plug-in for MS IIS Application Pool States"
 msgstr "MS IIS Application Pool States のプラグインをデプロイする"
-
-msgid "Deploy plug-in for NFS IO Stats"
-msgstr "NFS IO Statsのプラグインをデプロイする"
 
 msgid "Deploy plug-in for Veeam backup status"
 msgstr "Veeamバックアップステータス用のプラグインをデプロイする"
@@ -20009,9 +20003,6 @@ msgstr "DB2メモリー・プラグインをデプロイしないでください
 msgid "Do not deploy Hyper-V plug-ins"
 msgstr "Hyper-Vプラグインをデプロイしないでください"
 
-msgid "Do not deploy ISC DHCP-Daemon plug-in"
-msgstr "ISC DHCP-Daemonプラグインをデプロイしないでください"
-
 msgid "Do not deploy Inotify plug-in"
 msgstr "Inotifyプラグインをデプロイしないでください"
 
@@ -20074,9 +20065,6 @@ msgstr "MS Office365のプラグインをデプロイしないでください"
 
 msgid "Do not deploy plug-in for Microsoft SQL Server"
 msgstr "Microsoft SQL Serverのプラグインをデプロイしないでください"
-
-msgid "Do not deploy plug-in for NFS IO Stats"
-msgstr "NFS IO Statsのプラグインをデプロイしないでください"
 
 msgid "Do not deploy plug-in for Veeam backup status"
 msgstr "Veeamバックアップステータスのプラグインをデプロイしないでください"
@@ -89423,6 +89411,18 @@ msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
 "後で「ヘルプ」＞「Checkmkの学習」＞「ウェルカムページ」からアクセスできます"
+
+#~ msgid "Deploy ISC DHCP-Daemon plug-in"
+#~ msgstr "ISC DHCP-Daemonプラグインをデプロイする"
+
+#~ msgid "Deploy plug-in for NFS IO Stats"
+#~ msgstr "NFS IO Statsのプラグインをデプロイする"
+
+#~ msgid "Do not deploy ISC DHCP-Daemon plug-in"
+#~ msgstr "ISC DHCP-Daemonプラグインをデプロイしないでください"
+
+#~ msgid "Do not deploy plug-in for NFS IO Stats"
+#~ msgstr "NFS IO Statsのプラグインをデプロイしないでください"
 
 #~ msgid "Deploy Kaspersky Anti-Virus plug-in"
 #~ msgstr "Kaspersky Anti-Virusプラグインをデプロイする"

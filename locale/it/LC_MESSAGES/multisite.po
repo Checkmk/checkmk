@@ -19680,10 +19680,6 @@ msgid "Deploy IBM MQ plug-in"
 msgstr "Distribuire il plugin IBM MQ"
 
 #, fuzzy
-msgid "Deploy ISC DHCP-Daemon plug-in"
-msgstr "Distribuire il plugin ISC DHCP-Daemon"
-
-#, fuzzy
 msgid "Deploy Inotify plug-in"
 msgstr "Distribuire il plugin Inotify"
 
@@ -19802,10 +19798,6 @@ msgstr "Distribuire il plugin per le firme JAR"
 #, fuzzy
 msgid "Deploy plug-in for MS IIS Application Pool States"
 msgstr "Distribuzione del plugin per gli Stati del pool di applicazioni MS IIS"
-
-#, fuzzy
-msgid "Deploy plug-in for NFS IO Stats"
-msgstr "Distribuire il plugin per le statistiche NFS IO"
 
 #, fuzzy
 msgid "Deploy plug-in for Veeam backup status"
@@ -21442,10 +21434,6 @@ msgid "Do not deploy Hyper-V plug-ins"
 msgstr "Non distribuire il plugin Zypper"
 
 #, fuzzy
-msgid "Do not deploy ISC DHCP-Daemon plug-in"
-msgstr "Non distribuire il plugin ISC DHCP-Daemon"
-
-#, fuzzy
 msgid "Do not deploy Inotify plug-in"
 msgstr "Non distribuire il plugin Inotify"
 
@@ -21528,10 +21516,6 @@ msgstr "Non distribuire il plugin per MS Office 365"
 #, fuzzy
 msgid "Do not deploy plug-in for Microsoft SQL Server"
 msgstr "Non distribuire il plugin per Microsoft SQL Server"
-
-#, fuzzy
-msgid "Do not deploy plug-in for NFS IO Stats"
-msgstr "Non distribuire il plugin per le statistiche NFS IO"
 
 #, fuzzy
 msgid "Do not deploy plug-in for Veeam backup status"
@@ -96070,6 +96054,22 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Deploy ISC DHCP-Daemon plug-in"
+#~ msgstr "Distribuire il plugin ISC DHCP-Daemon"
+
+#, fuzzy
+#~ msgid "Deploy plug-in for NFS IO Stats"
+#~ msgstr "Distribuire il plugin per le statistiche NFS IO"
+
+#, fuzzy
+#~ msgid "Do not deploy ISC DHCP-Daemon plug-in"
+#~ msgstr "Non distribuire il plugin ISC DHCP-Daemon"
+
+#, fuzzy
+#~ msgid "Do not deploy plug-in for NFS IO Stats"
+#~ msgstr "Non distribuire il plugin per le statistiche NFS IO"
 
 #, fuzzy
 #~ msgid "Deploy Kaspersky Anti-Virus plug-in"

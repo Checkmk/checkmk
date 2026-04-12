@@ -19838,10 +19838,6 @@ msgid "Deploy IBM MQ plug-in"
 msgstr "Implementarea plugin-ului IBM MQ"
 
 #, fuzzy
-msgid "Deploy ISC DHCP-Daemon plug-in"
-msgstr "Implementați pluginul ISC DHCP-Daemon"
-
-#, fuzzy
 msgid "Deploy Inotify plug-in"
 msgstr "Implementați plugin-ul Inotify"
 
@@ -19962,10 +19958,6 @@ msgstr "Implementarea plugin-ului pentru semnăturile JAR"
 #, fuzzy
 msgid "Deploy plug-in for MS IIS Application Pool States"
 msgstr "Implementarea plugin-ului pentru MS IIS Application Pool States"
-
-#, fuzzy
-msgid "Deploy plug-in for NFS IO Stats"
-msgstr "Implementarea plugin-ului pentru NFS IO Stats"
 
 #, fuzzy
 msgid "Deploy plug-in for Veeam backup status"
@@ -21597,10 +21589,6 @@ msgid "Do not deploy Hyper-V plug-ins"
 msgstr "Nu implementați plugin-ul Zypper"
 
 #, fuzzy
-msgid "Do not deploy ISC DHCP-Daemon plug-in"
-msgstr "Nu implementați pluginul ISC DHCP-Daemon"
-
-#, fuzzy
 msgid "Do not deploy Inotify plug-in"
 msgstr "Nu implementați pluginul Inotify"
 
@@ -21683,10 +21671,6 @@ msgstr "Nu implementați pluginul pentru MS Office 365"
 #, fuzzy
 msgid "Do not deploy plug-in for Microsoft SQL Server"
 msgstr "Nu implementați pluginul pentru Microsoft SQL Server"
-
-#, fuzzy
-msgid "Do not deploy plug-in for NFS IO Stats"
-msgstr "Nu implementați plugin-ul pentru NFS IO Stats"
 
 #, fuzzy
 msgid "Do not deploy plug-in for Veeam backup status"
@@ -96520,6 +96504,22 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Deploy ISC DHCP-Daemon plug-in"
+#~ msgstr "Implementați pluginul ISC DHCP-Daemon"
+
+#, fuzzy
+#~ msgid "Deploy plug-in for NFS IO Stats"
+#~ msgstr "Implementarea plugin-ului pentru NFS IO Stats"
+
+#, fuzzy
+#~ msgid "Do not deploy ISC DHCP-Daemon plug-in"
+#~ msgstr "Nu implementați pluginul ISC DHCP-Daemon"
+
+#, fuzzy
+#~ msgid "Do not deploy plug-in for NFS IO Stats"
+#~ msgstr "Nu implementați plugin-ul pentru NFS IO Stats"
 
 #, fuzzy
 #~ msgid "Deploy Kaspersky Anti-Virus plug-in"

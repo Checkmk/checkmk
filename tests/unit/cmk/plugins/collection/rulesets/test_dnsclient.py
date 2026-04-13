@@ -5,7 +5,7 @@
 
 import pytest
 
-from cmk.gui.plugins.legacy_bakery_rulesets.dnsclient import migrate
+from cmk.plugins.collection.rulesets.dnsclient import migrate
 
 
 @pytest.mark.parametrize(

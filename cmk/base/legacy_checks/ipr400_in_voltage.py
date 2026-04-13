@@ -16,16 +16,29 @@ def inventory_ipr400_in_voltage(info):
 
 
 def check_ipr400_in_voltage(item, params, info):
-    warn, crit = params["levels_lower"]
+    warn_lower, crit_lower = params["levels_lower"]
+    warn_upper, crit_upper = params.get("levels_upper", (None, None))
     power = int(info[0][0]) / 1000.0  # appears to be in mV
-    perfdata = [("in_voltage", power, warn, crit)]
+    perfdata = [
+        (
+            "in_voltage",
+            power,
+            warn_upper if warn_upper is not None else warn_lower,
+            crit_upper if crit_upper is not None else crit_lower,
+        )
+    ]
     infotext = "in voltage: %.1fV" % power
-    limitstext = "(warn/crit below %dV/%dV)" % (warn, crit)
+    lower_text = "(warn/crit below %sV/%sV)" % (warn_lower, crit_lower)
+    upper_text = "(warn/crit at or above %sV/%sV)" % (warn_upper, crit_upper)
 
-    if power <= crit:
-        return 2, infotext + ", " + limitstext, perfdata
-    if power <= warn:
-        return 1, infotext + ", " + limitstext, perfdata
+    if power <= crit_lower:
+        return 2, infotext + ", " + lower_text, perfdata
+    if crit_upper is not None and power >= crit_upper:
+        return 2, infotext + ", " + upper_text, perfdata
+    if power <= warn_lower:
+        return 1, infotext + ", " + lower_text, perfdata
+    if warn_upper is not None and power >= warn_upper:
+        return 1, infotext + ", " + upper_text, perfdata
     return 0, infotext, perfdata
 
 

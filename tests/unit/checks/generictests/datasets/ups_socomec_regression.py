@@ -24,7 +24,7 @@ checks = {
             [
                 (
                     0,
-                    "in voltage: 230V, (warn/crit at 210V/180V)",
+                    "in voltage: 230V",
                     [("in_voltage", 230, 210, 180, 150, None)],
                 )
             ],

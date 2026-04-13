@@ -3,19 +3,7 @@ load("@cmk_requirements//:requirements.bzl", "requirement")
 
 py_library(
     name = "form_specs",
-    srcs = glob(
-        include = ["**/*.py"],
-        exclude = [
-            "registration.py",
-            "visitors/password.py",
-            "visitors/recomposers/__init__.py",
-            "visitors/recomposers/internal_proxy.py",
-            "visitors/recomposers/proxy.py",
-            "visitors/recomposers/time_period.py",
-            "visitors/single_choice_editable.py",
-            "visitors/time_specific.py",
-        ],
-    ),
+    srcs = glob(include = ["**/*.py"]),
     imports = ["../../.."],
     visibility = [
         "//cmk:__subpackages__",
@@ -48,21 +36,4 @@ py_library(
         requirement("python-dateutil"),
         requirement("werkzeug"),
     ],
-)
-
-# Temporary: form_specs files that still belong to the monolithic //cmk/gui target.
-# Remove this filegroup once the form_specs ↔ watolib cycle is fully resolved.
-filegroup(
-    name = "gui_srcs",
-    srcs = [
-        "registration.py",
-        "visitors/password.py",
-        "visitors/recomposers/__init__.py",
-        "visitors/recomposers/internal_proxy.py",
-        "visitors/recomposers/proxy.py",
-        "visitors/recomposers/time_period.py",
-        "visitors/single_choice_editable.py",
-        "visitors/time_specific.py",
-    ],
-    visibility = ["//cmk/gui:__pkg__"],
 )

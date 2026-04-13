@@ -6,25 +6,25 @@ import dataclasses
 from collections.abc import Sequence
 from typing import Any, override, TypedDict, TypeGuard
 
-from cmk.gui.form_specs.unstable.time_specific import TimeSpecific
-from cmk.gui.i18n import _
-from cmk.gui.watolib.form_spec_generators import create_timeperiod_selection
-from cmk.rulesets.v1 import Help, Title
-from cmk.rulesets.v1.form_specs import DictElement, Dictionary, List
-from cmk.shared_typing import vue_formspec_components as shared_type_defs
-
-from ._base import FormSpecVisitor
-from ._registry import get_visitor
-from ._type_defs import (
+from cmk.gui.form_specs import (
+    compute_validators,
     DEFAULT_VALUE,
     DefaultValue,
+    FormSpecVisitor,
+    get_title_and_help,
+    get_visitor,
     IncomingData,
     InvalidValue,
     RawDiskData,
     RawFrontendData,
 )
-from ._utils import compute_validators, get_title_and_help
-from .validators import build_vue_validators
+from cmk.gui.form_specs.unstable.time_specific import TimeSpecific
+from cmk.gui.form_specs.visitors.validators import build_vue_validators
+from cmk.gui.i18n import _
+from cmk.gui.watolib.form_spec_generators import create_timeperiod_selection
+from cmk.rulesets.v1 import Help, Title
+from cmk.rulesets.v1.form_specs import DictElement, Dictionary, List
+from cmk.shared_typing import vue_formspec_components as shared_type_defs
 
 _default_value_key = shared_type_defs.TimeSpecific.default_value_key
 _ts_values_key = shared_type_defs.TimeSpecific.time_specific_values_key

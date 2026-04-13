@@ -26,7 +26,7 @@ PasswordOnDisk = tuple[
 ]
 
 
-@patch("cmk.gui.form_specs.visitors.password.passwordstore_choices", return_value=[])
+@patch("cmk.gui.watolib.password_visitor.passwordstore_choices", return_value=[])
 def test_password_encrypts_password(
     patch_pwstore: None,
     request_context: None,
@@ -44,7 +44,7 @@ def test_password_encrypts_password(
     assert disk_value[2][1] == password
 
 
-@patch("cmk.gui.form_specs.visitors.password.passwordstore_choices", return_value=[])
+@patch("cmk.gui.watolib.password_visitor.passwordstore_choices", return_value=[])
 @pytest.mark.parametrize(
     "value",
     [
@@ -60,7 +60,7 @@ def test_password_masks_password(
     assert masked_password == "******"
 
 
-@patch("cmk.gui.form_specs.visitors.password.passwordstore_choices", return_value=[])
+@patch("cmk.gui.watolib.password_visitor.passwordstore_choices", return_value=[])
 @pytest.mark.parametrize(
     "value",
     [
@@ -78,7 +78,7 @@ def test_nested_password_gets_masked(
     assert masked_password == "******"
 
 
-@patch("cmk.gui.form_specs.visitors.password.passwordstore_choices", return_value=[])
+@patch("cmk.gui.watolib.password_visitor.passwordstore_choices", return_value=[])
 @pytest.mark.parametrize(
     ["old", "new"],
     [

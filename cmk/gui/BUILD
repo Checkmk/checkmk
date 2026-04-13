@@ -1310,7 +1310,6 @@ py_library(
         ],
     ) + [
         "//cmk/gui/dashboard:gui_srcs",
-        "//cmk/gui/form_specs:gui_srcs",
         "//cmk/gui/nodevis:gui_srcs",
         "//cmk/gui/oauth2_connections:gui_srcs",
         "//cmk/gui/openapi:gui_srcs",

@@ -6,7 +6,6 @@
 from .cascading_single_choice import recompose as recompose_cascading_single_choice
 from .dictionary import recompose as recompose_dictionary
 from .host_state import recompose as recompose_host_state
-from .internal_proxy import recompose as recompose_internal_proxy
 from .levels import recompose as recompose_levels
 from .list import recompose as recompose_list
 from .metric import recompose as recompose_metric
@@ -15,12 +14,10 @@ from .monitored_service import recompose as recompose_monitored_service
 from .multiple_choice import recompose as recompose_multiple_choice
 from .passwordstore_password import recompose as recompose_passwordstore_password
 from .percentage import recompose as recompose_percentage
-from .proxy import recompose as recompose_proxy
 from .regular_expression import recompose as recompose_regular_expression
 from .service_state import recompose as recompose_service_state
 from .single_choice import recompose as recompose_single_choice
 from .string import recompose as recompose_string
-from .time_period import recompose as recompose_time_period
 from .user_selection import recompose as recompose_user_selection
 
 __all__ = [
@@ -35,12 +32,9 @@ __all__ = [
     "recompose_multiple_choice",
     "recompose_passwordstore_password",
     "recompose_percentage",
-    "recompose_proxy",
-    "recompose_internal_proxy",
     "recompose_regular_expression",
     "recompose_service_state",
     "recompose_single_choice",
     "recompose_string",
-    "recompose_time_period",
     "recompose_user_selection",
 ]

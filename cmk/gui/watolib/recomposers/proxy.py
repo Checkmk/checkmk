@@ -9,6 +9,7 @@ import urllib.parse
 from typing import Any, Literal
 
 from cmk.ccc.exceptions import MKGeneralException
+from cmk.gui.form_specs import DefaultValue as FrontendDefaultValue
 from cmk.gui.form_specs.unstable.legacy_converter import (
     TransformDataForLegacyFormatOrRecomposeFunction,
 )
@@ -27,8 +28,6 @@ from cmk.rulesets.v1.form_specs import (
 )
 from cmk.rulesets.v1.form_specs.validators import LengthInRange, ValidationError
 from cmk.utils.urls import is_allowed_url
-
-from .._type_defs import DefaultValue as FrontendDefaultValue
 
 
 def _validate_proxy_scheme(allowed_schemes: frozenset[ProxySchema], value: str) -> None:

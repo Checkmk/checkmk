@@ -13,7 +13,12 @@ from cmk.ccc import version
 from cmk.gui import hooks
 from cmk.gui.background_job.job import BackgroundJobRegistry
 from cmk.gui.cron import CronJob, CronJobRegistry
+from cmk.gui.form_specs.unstable import SingleChoiceEditable
+from cmk.gui.form_specs.unstable.time_specific import TimeSpecific
+from cmk.gui.form_specs.visitors import register_recomposer_function, register_visitor_class
 from cmk.gui.valuespec import AutocompleterRegistry
+from cmk.rulesets.internal.form_specs import InternalProxy
+from cmk.rulesets.v1.form_specs import Password, Proxy, TimePeriod
 
 from . import (
     _sync_remote_sites,
@@ -73,6 +78,10 @@ from .notifications import (
     find_usages_of_contact_group_in_notification_rules,
 )
 from .parent_scan import ParentScanBackgroundJob
+from .password_visitor import PasswordVisitor
+from .recomposers.internal_proxy import recompose as recompose_internal_proxy
+from .recomposers.proxy import recompose as recompose_proxy
+from .recomposers.time_period import recompose as recompose_time_period
 from .rulesets import (
     find_timeperiod_usage_in_host_and_service_rules,
     find_timeperiod_usage_in_time_specific_parameters,
@@ -89,6 +98,8 @@ from .sample_config import (
     ConfigGeneratorRegistrationUser,
 )
 from .services import ServiceDiscoveryBackgroundJob
+from .single_choice_editable_visitor import SingleChoiceEditableVisitor
+from .time_specific_visitor import TimeSpecificVisitor
 from .timeperiods import TimeperiodUsageFinderRegistry
 from .user_profile import handle_ldap_sync_finished, PushUserProfilesToSite
 
@@ -156,6 +167,7 @@ def register(
     automation_background_job.register(job_registry, automation_command_registry)
     hooks.register_builtin("validate-host", builtin_attributes.validate_host_parents)
     hooks.register_builtin("ldap-sync-finished", handle_ldap_sync_finished)
+    _register_form_specs()
 
 
 def _register_automation_commands(automation_command_registry: AutomationCommandRegistry) -> None:
@@ -245,3 +257,12 @@ def _register_cronjobs(cron_job_registry: CronJobRegistry) -> None:
             interval=timedelta(minutes=5),
         )
     )
+
+
+def _register_form_specs() -> None:
+    register_visitor_class(SingleChoiceEditable, SingleChoiceEditableVisitor)
+    register_visitor_class(TimeSpecific, TimeSpecificVisitor)
+    register_visitor_class(Password, PasswordVisitor)
+    register_recomposer_function(Proxy, recompose_proxy)
+    register_recomposer_function(TimePeriod, recompose_time_period)
+    register_recomposer_function(InternalProxy, recompose_internal_proxy)

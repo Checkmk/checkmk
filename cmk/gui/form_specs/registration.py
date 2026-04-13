@@ -17,9 +17,7 @@ from cmk.gui.form_specs.unstable import (
     LegacyValueSpec,
     ListUniqueSelection,
     OptionalChoice,
-    SingleChoiceEditable,
     TimePicker,
-    TimeSpecific,
 )
 from cmk.gui.form_specs.unstable.legacy_converter import (
     TransformDataForLegacyFormatOrRecomposeFunction,
@@ -35,7 +33,6 @@ from cmk.gui.form_specs.visitors.recomposers import (
     recompose_cascading_single_choice,
     recompose_dictionary,
     recompose_host_state,
-    recompose_internal_proxy,
     recompose_levels,
     recompose_list,
     recompose_metric,
@@ -44,17 +41,14 @@ from cmk.gui.form_specs.visitors.recomposers import (
     recompose_multiple_choice,
     recompose_passwordstore_password,
     recompose_percentage,
-    recompose_proxy,
     recompose_regular_expression,
     recompose_service_state,
     recompose_single_choice,
     recompose_string,
-    recompose_time_period,
     recompose_user_selection,
 )
 from cmk.rulesets.internal.form_specs import (
     DictionaryExtended,
-    InternalProxy,
     ListExtended,
     ListOfStrings,
     MultipleChoiceExtended,
@@ -80,15 +74,12 @@ from cmk.rulesets.v1.form_specs import (
     MonitoredService,
     MultilineText,
     MultipleChoice,
-    Password,
     Percentage,
-    Proxy,
     RegularExpression,
     ServiceState,
     SimpleLevels,
     SingleChoice,
     String,
-    TimePeriod,
     TimeSpan,
 )
 
@@ -115,14 +106,11 @@ from .visitors.list_unique_selection import ListUniqueSelectionVisitor
 from .visitors.multiline_text import MultilineTextVisitor
 from .visitors.multiple_choice import MultipleChoiceVisitor
 from .visitors.optional_choice import OptionalChoiceVisitor
-from .visitors.password import PasswordVisitor
 from .visitors.simple_password import SimplePasswordVisitor
 from .visitors.single_choice import SingleChoiceVisitor
-from .visitors.single_choice_editable import SingleChoiceEditableVisitor
 from .visitors.string import StringVisitor
 from .visitors.time_picker import TimePickerVisitor
 from .visitors.time_span import TimeSpanVisitor
-from .visitors.time_specific import TimeSpecificVisitor
 from .visitors.transform import TransformVisitor
 from .visitors.tuple import TupleVisitor
 from .visitors.two_column_dictionary import TwoColumnDictionaryVisitor
@@ -149,8 +137,6 @@ def register_form_specs() -> None:
     register_visitor_class(String, StringVisitor)
     register_visitor_class(Float, FloatVisitor)
     register_visitor_class(SingleChoiceExtended, SingleChoiceVisitor)
-    register_visitor_class(SingleChoiceEditable, SingleChoiceEditableVisitor)
-    register_visitor_class(Password, PasswordVisitor)
     register_visitor_class(CascadingSingleChoiceExtended, CascadingSingleChoiceVisitor)
     register_visitor_class(LegacyValueSpec, LegacyValuespecVisitor)
     register_visitor_class(FixedValue, FixedValueVisitor)
@@ -172,7 +158,6 @@ def register_form_specs() -> None:
     register_visitor_class(ListOfStrings, ListOfStringsVisitor)
     register_visitor_class(MultipleChoiceExtended, MultipleChoiceVisitor)
     register_visitor_class(Labels, LabelsVisitor)
-    register_visitor_class(TimeSpecific, TimeSpecificVisitor)
     register_visitor_class(FileUpload, FileUploadVisitor)
     register_visitor_class(DatePicker, DatePickerVisitor)
     register_visitor_class(TimePicker, TimePickerVisitor)
@@ -195,9 +180,6 @@ def register_form_specs() -> None:
     register_recomposer_function(UserSelection, recompose_user_selection)
     register_recomposer_function(Dictionary, recompose_dictionary)
     register_recomposer_function(CascadingSingleChoice, recompose_cascading_single_choice)
-    register_recomposer_function(Proxy, recompose_proxy)
-    register_recomposer_function(TimePeriod, recompose_time_period)
-    register_recomposer_function(InternalProxy, recompose_internal_proxy)
 
 
 def register_validators() -> None:

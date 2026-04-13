@@ -6,7 +6,19 @@
 from collections.abc import Callable, Sequence
 from typing import override
 
+from cmk.gui.form_specs import (
+    compute_title_input_hint,
+    compute_validators,
+    DefaultValue,
+    FormSpecVisitor,
+    get_prefill_default,
+    get_title_and_help,
+    IncomingData,
+    InvalidValue,
+    localize,
+)
 from cmk.gui.form_specs.unstable.single_choice_editable import SingleChoiceEditable
+from cmk.gui.form_specs.visitors.validators import build_vue_validators
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.watolib.configuration_entity.configuration_entity import (
@@ -17,17 +29,6 @@ from cmk.rulesets.v1 import Message
 from cmk.rulesets.v1.form_specs.validators import ValidationError
 from cmk.shared_typing import vue_formspec_components as shared_type_defs
 from cmk.shared_typing.configuration_entity import ConfigEntityType
-
-from ._base import FormSpecVisitor
-from ._type_defs import DefaultValue, IncomingData, InvalidValue
-from ._utils import (
-    compute_title_input_hint,
-    compute_validators,
-    get_prefill_default,
-    get_title_and_help,
-    localize,
-)
-from .validators import build_vue_validators
 
 _ParsedValueModel = str | None
 _FallbackModel = str | None

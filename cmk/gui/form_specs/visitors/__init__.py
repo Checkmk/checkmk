@@ -18,21 +18,34 @@ from ._type_defs import (
     RawFrontendData,
     VisitorOptions,
 )
-from ._utils import create_validation_error, get_title_and_help
+from ._utils import (
+    compute_title_input_hint,
+    compute_validators,
+    create_validation_error,
+    get_prefill_default,
+    get_title_and_help,
+    localize,
+    optional_validation,
+)
 
 __all__ = [
+    "compute_title_input_hint",
+    "compute_validators",
     "create_validation_error",
     "DEFAULT_VALUE",
     "DefaultValue",
     "FormSpecValidationError",
     "FormSpecVisitor",
+    "get_prefill_default",
     "get_title_and_help",
     "get_visitor",
+    "localize",
     "IncomingData",
     "InvalidValue",
     "RawDiskData",
     "RawFrontendData",
     "register_recomposer_function",
+    "optional_validation",
     "register_visitor_class",
     "VisitorOptions",
 ]

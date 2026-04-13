@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Iterable, Sequence
+from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
 
 from cmk.agent_based.v2 import (
@@ -24,6 +24,32 @@ from cmk.plugins.lib.inventory_interfaces import Interface, inventorize_interfac
 class SectionInvIf:
     interfaces: Sequence[Interface]
     n_interfaces_total: int
+
+
+# IF-MIB (RFC 2863) defines ifAdminStatus and ifOperStatus as INTEGER values,
+# but some SNMP devices report them as the textual names instead. Map the known
+# text labels back to their numeric IF-MIB values; unknown values fall through
+# to None.
+_IF_ADMIN_STATUS_MAP: Mapping[str, int] = {
+    "up": 1,
+    "down": 2,
+    "testing": 3,
+}
+_IF_OPER_STATUS_MAP: Mapping[str, int] = {
+    "up": 1,
+    "down": 2,
+    "testing": 3,
+    "unknown": 4,
+    "dormant": 5,
+    "notPresent": 6,
+    "lowerLayerDown": 7,
+}
+
+
+def _parse_if_status(value: str, text_map: Mapping[str, int]) -> int | None:
+    if value.isdigit():
+        return int(value)
+    return text_map.get(value)
 
 
 def _process_last_change(last_change_str: str) -> float:
@@ -91,9 +117,9 @@ def _process_sub_table(sub_table: Sequence[str | Sequence[int]]) -> Iterable[Int
         alias=alias,
         type=type_,
         speed=int(high_speed) * 1000 * 1000 if high_speed else int(speed),
-        oper_status=int(oper_status) if oper_status.isdigit() else None,
+        oper_status=_parse_if_status(oper_status, _IF_OPER_STATUS_MAP),
         phys_address=render_mac_address(sub_table[-2]),
-        admin_status=int(admin_status) if admin_status else None,
+        admin_status=_parse_if_status(admin_status, _IF_ADMIN_STATUS_MAP),
         last_change=_process_last_change(last_change),
     )
 

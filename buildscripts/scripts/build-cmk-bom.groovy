@@ -89,11 +89,22 @@ void main() {
             }
         }
 
+        dir("${checkout_dir}") {
+            stage("Create bill-of-materials.csv") {
+                inside_container() {
+                    sh("""
+                        bazel build //omd:generate_bom_csv
+                        cp bazel-bin/omd/bill-of-materials.csv omd/
+                    """);
+                }
+            }
+        }
+
         // remember: only one archiveArtifacts step per job allowed
         dir("${checkout_dir}") {
             show_duration("archiveArtifacts") {
                 archiveArtifacts(
-                    artifacts: "${relative_bom_path}",
+                    artifacts: "${relative_bom_path}, omd/bill-of-materials.csv",
                     fingerprint: true,
                 );
             }

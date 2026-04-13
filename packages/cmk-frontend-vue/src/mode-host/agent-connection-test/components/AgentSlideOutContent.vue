@@ -34,6 +34,7 @@ const props = defineProps<{
   setupError: boolean
   agentInstalled: boolean
   isPushMode: boolean
+  canDownloadBakedAgents: boolean
 }>()
 
 const { _t } = usei18n()
@@ -181,6 +182,7 @@ const tabs = computed<AgentSlideOutTabs[]>(() => [
     :host-name="hostName"
     :is-push-mode="isPushMode"
     :agent-receiver-port-is-default="agentReceiverPortIsDefault"
+    :can-download-baked-agents="canDownloadBakedAgents"
     @close="close"
   />
 </template>

@@ -170,6 +170,7 @@ def get_agent_slideout(
     agent_install_cls: type[SetupAgentInstallCmds | ModeHostAgentInstallCmds],
     agent_registration_cls: type[SetupAgentRegistrationCmds | ModeHostAgentRegistrationCmds],
     version: str,
+    can_download_baked_agents: bool,
 ) -> SetupAgentSlideout: ...
 
 
@@ -184,6 +185,7 @@ def get_agent_slideout(
     agent_install_cls: type[SetupAgentInstallCmds | ModeHostAgentInstallCmds],
     agent_registration_cls: type[SetupAgentRegistrationCmds | ModeHostAgentRegistrationCmds],
     version: str,
+    can_download_baked_agents: bool,
 ) -> ModeHostAgentSlideout: ...
 
 
@@ -197,6 +199,7 @@ def get_agent_slideout(
     agent_install_cls: type,
     agent_registration_cls: type,
     version: str,
+    can_download_baked_agents: bool,
 ) -> Any:
     return agent_slideout_cls(
         all_agents_url=all_agents_url,
@@ -211,4 +214,5 @@ def get_agent_slideout(
         legacy_agent_url=agent_commands_registry["agent_commands"].legacy_agent_url(),
         save_host=save_host,
         host_exists=host_exists,
+        can_download_baked_agents=can_download_baked_agents,
     )

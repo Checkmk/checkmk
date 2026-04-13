@@ -130,6 +130,7 @@ const triggerRescan = () => {
       :setup-error="false"
       :agent-installed="isNotRegistered"
       :is-push-mode="isPushMode"
+      :can-download-baked-agents="agentSlideout.can_download_baked_agents"
       @close="((slideInOpen = false), (tooltipHidden = true), triggerRescan())"
     />
   </CmkSlideInDialog>

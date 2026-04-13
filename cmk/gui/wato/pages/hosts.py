@@ -460,6 +460,11 @@ class ABCHostMode(WatoMode, abc.ABC):
                         version=version,
                     ),
                     host_name=hostname,
+                    is_auto_registered=(
+                        self._host.labels().get("cmk/agent_auto_registered") == "yes"
+                        if self._mode == "edit"
+                        else False
+                    ),
                 )
             ),
         )

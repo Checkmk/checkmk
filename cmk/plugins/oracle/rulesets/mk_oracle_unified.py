@@ -308,7 +308,11 @@ def _descriptor_entry() -> Dictionary:
                         "The Oracle service name used to connect to the "
                         "database. A service name typically represents a "
                         "database and can map to one or more instances in "
-                        "a RAC environment."
+                        "a RAC environment. "
+                        "To monitor a Pluggable Database (PDB), specify its "
+                        "service name here — each PDB exposes its own service "
+                        "name that can be used to connect to and monitor it "
+                        "independently."
                     ),
                 ),
             ),

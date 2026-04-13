@@ -22,8 +22,7 @@ BAZEL_EXTRA_TAG_FILTERS="-cpp" buildscripts/scripts/bazel_test_ci.sh \
     --test_verbose_timeout_warnings \
     --test_env=TZ='America/Chicago' \
     --cmk_edition=ultimate \
-    -- \
-    //... || make_rc=\$?
+    -- //... || make_rc=\$?
 buildscripts/scripts/bazel_test_post_archive_xunit.sh || :
 exit \$make_rc""",
                 container_name: "ubuntu-2404-${container_safe_branch_name}-latest",

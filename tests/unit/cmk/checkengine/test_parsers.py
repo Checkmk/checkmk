@@ -89,7 +89,7 @@ class TestAgentParser:
         assert ahs.piggybacked_raw_data == {}
         assert not store.load()
 
-    def test_piggy_name_as_hostname_is_not_piggybacked(
+    def test_piggy_name_as_hostname_is_piggybacked(
         self,
         parser: AgentParser,
         store: SectionStore[Sequence[AgentRawDataSectionElem]],
@@ -100,6 +100,7 @@ class TestAgentParser:
             b"\n".join(
                 (
                     b"<<<<%s>>>>" % host_name_bytes,
+                    b"<<<some_section>>>",
                     b"line0",
                     b"line1",
                     b"line2",
@@ -110,7 +111,8 @@ class TestAgentParser:
         ahs = parser.parse(raw_data, selection=NO_SELECTION)
         assert ahs.sections == {}
         assert ahs.cache_info == {}
-        assert ahs.piggybacked_raw_data == {}
+        assert hostname in ahs.piggybacked_raw_data
+        assert any(b"some_section" in chunk for chunk in ahs.piggybacked_raw_data[hostname])
         assert not store.load()
 
     def test_no_section_header_after_piggyback(

@@ -272,9 +272,6 @@ class NOOPParser(ParserState):
         return self
 
     def on_piggyback_header(self, piggyback_header: PiggybackMarker) -> ParserState:
-        if piggyback_header.hostname == self.hostname:
-            # Unpiggybacked "normal" host
-            return self
         if piggyback_header.should_be_ignored():
             return self.to_piggyback_ignore_parser()
         return self.to_piggyback_parser(piggyback_header)
@@ -317,9 +314,6 @@ class PiggybackParser(ParserState):
         return self
 
     def on_piggyback_header(self, piggyback_header: PiggybackMarker) -> ParserState:
-        if piggyback_header.hostname == self.hostname:
-            # Unpiggybacked "normal" host
-            return self.to_noop_parser()
         if piggyback_header.should_be_ignored():
             return self.to_piggyback_ignore_parser()
         return self.to_piggyback_parser(piggyback_header)
@@ -405,9 +399,6 @@ class PiggybackNOOPParser(ParserState):
         return self
 
     def on_piggyback_header(self, piggyback_header: PiggybackMarker) -> ParserState:
-        if piggyback_header.hostname == self.hostname:
-            # Unpiggybacked "normal" host
-            return self.to_noop_parser()
         if piggyback_header.should_be_ignored():
             return self.to_piggyback_ignore_parser()
         return self.to_piggyback_parser(piggyback_header)
@@ -428,9 +419,6 @@ class PiggybackIgnoreParser(ParserState):
         return self
 
     def on_piggyback_header(self, piggyback_header: PiggybackMarker) -> ParserState:
-        if piggyback_header.hostname == self.hostname:
-            # Unpiggybacked "normal" host
-            return self.to_noop_parser()
         if piggyback_header.should_be_ignored():
             return self.to_piggyback_ignore_parser()
         return self.to_piggyback_parser(piggyback_header)
@@ -474,9 +462,6 @@ class HostSectionParser(ParserState):
         return self
 
     def on_piggyback_header(self, piggyback_header: PiggybackMarker) -> ParserState:
-        if piggyback_header.hostname == self.hostname:
-            # Unpiggybacked "normal" host
-            return self
         if piggyback_header.should_be_ignored():
             return self.to_piggyback_ignore_parser()
         return self.to_piggyback_parser(piggyback_header)

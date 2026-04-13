@@ -119,7 +119,7 @@ def test_filesystem_email_notifications(
             notification_configuration_page.page, rule_position=0
         )
         default_notification_rule_page.check_disable_rule(True)
-        default_notification_rule_page.apply_and_create_another_rule_button.click()
+        default_notification_rule_page.apply_button.click()
 
         logger.info(
             (
@@ -207,7 +207,7 @@ def test_filesystem_email_notifications(
             navigate_to_notification_configuration=False,
         )
         default_notification_rule_page.check_disable_rule(False)
-        default_notification_rule_page.apply_and_create_another_rule_button.click()
+        default_notification_rule_page.apply_button.click()
 
         email_manager.clean_emails(expected_notification_subject)
 

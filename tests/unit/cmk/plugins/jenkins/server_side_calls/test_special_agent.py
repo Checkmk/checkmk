@@ -7,7 +7,7 @@ from collections.abc import Mapping, Sequence
 
 import pytest
 
-from cmk.plugins.jenkins.server_side_calls.jenkins import special_agent_jenkins
+from cmk.plugins.jenkins.server_side_calls.special_agent import special_agent_jenkins
 from cmk.server_side_calls.v1 import HostConfig, IPv4Config, Secret, SpecialAgentCommand
 
 HOST_CONFIG = HostConfig(

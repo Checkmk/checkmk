@@ -16,7 +16,6 @@ from cmk.gui.form_specs.unstable import (
     Labels,
     LegacyValueSpec,
     ListUniqueSelection,
-    MetricExtended,
     OptionalChoice,
     SingleChoiceEditable,
     TimePicker,
@@ -33,7 +32,6 @@ from cmk.gui.form_specs.visitors.binary_condition_choices import (
     BinaryConditionChoicesVisitor,
 )
 from cmk.gui.form_specs.visitors.condition_choices import ConditionChoicesVisitor
-from cmk.gui.form_specs.visitors.metric import MetricVisitor
 from cmk.gui.form_specs.visitors.recomposers import (
     recompose_cascading_single_choice,
     recompose_dictionary,
@@ -161,7 +159,6 @@ def register_form_specs() -> None:
     register_visitor_class(LegacyValueSpec, LegacyValuespecVisitor)
     register_visitor_class(FixedValue, FixedValueVisitor)
     register_visitor_class(BooleanChoice, BooleanChoiceVisitor)
-    register_visitor_class(MetricExtended, MetricVisitor)
     register_visitor_class(MultilineText, MultilineTextVisitor)
     register_visitor_class(CommentTextArea, CommentTextAreaVisitor)
     register_visitor_class(DataSize, DataSizeVisitor)

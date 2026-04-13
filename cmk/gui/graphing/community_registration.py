@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from cmk.ccc.version import Edition
+from cmk.gui.form_specs.unstable import MetricExtended
+from cmk.gui.form_specs.visitors import register_visitor_class
 from cmk.gui.pages import PageEndpoint, PageRegistry
 from cmk.gui.type_defs import Choices
 from cmk.gui.valuespec import AutocompleterRegistry
@@ -25,6 +27,7 @@ from ._metric_backend_registry import (
     metric_backend_registry,
     MetricBackend,
 )
+from ._metric_visitor import MetricVisitor
 from ._settings import ConfigVariableGraphTimeranges
 from ._valuespecs import LivestatusQueryFunc, PageVsAutocomplete
 
@@ -61,3 +64,5 @@ def register(
     graph_specification_registry.register(TemplateGraphSpecification)
 
     metric_backend_registry.register(MetricBackend(edition=edition))
+
+    register_visitor_class(MetricExtended, MetricVisitor)

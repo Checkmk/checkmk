@@ -5,15 +5,11 @@
 from dataclasses import asdict
 from typing import override
 
+from cmk.gui.form_specs import create_validation_error, InvalidValue
+from cmk.gui.form_specs.visitors.string import StringVisitor
 from cmk.gui.graphing import metrics_from_api, registered_metric_ids_and_titles
 from cmk.gui.i18n import _
 from cmk.shared_typing import vue_formspec_components as shared_type_defs
-
-from ._type_defs import InvalidValue
-from ._utils import (
-    create_validation_error,
-)
-from .string import StringVisitor
 
 
 class MetricVisitor(StringVisitor):

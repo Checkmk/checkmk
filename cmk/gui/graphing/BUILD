@@ -25,6 +25,7 @@ py_library(
         "//cmk/gui:type_defs",
         "//cmk/gui:unit_formatter",
         "//cmk/gui:view_utils",
+        "//cmk/gui/form_specs",
         "//cmk/gui/htmllib:generator",
         "//cmk/gui/htmllib:html",
         "//cmk/gui/utils:autocompleter_config",

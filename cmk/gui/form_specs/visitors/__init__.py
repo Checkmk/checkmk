@@ -2,6 +2,7 @@
 # Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from ._base import FormSpecVisitor
 from ._registry import (
     get_visitor,
     register_recomposer_function,
@@ -17,11 +18,14 @@ from ._type_defs import (
     RawFrontendData,
     VisitorOptions,
 )
+from ._utils import create_validation_error
 
 __all__ = [
+    "create_validation_error",
     "DEFAULT_VALUE",
     "DefaultValue",
     "FormSpecValidationError",
+    "FormSpecVisitor",
     "get_visitor",
     "IncomingData",
     "InvalidValue",
@@ -29,6 +33,5 @@ __all__ = [
     "RawFrontendData",
     "register_recomposer_function",
     "register_visitor_class",
-    "VisitorOptions",
     "VisitorOptions",
 ]

@@ -345,7 +345,7 @@ just to signal that real build script was not called -->
                 <File Id="filF71A5557521BC78DCADD3FBD0A4664FD" KeyPath="yes" Source="..\..\windows\plugins\mssql.vbs" DiskId="1"  />
             </Component>
             <Component Id="cmp3823AD91DED5D234942D302869EA2459" Guid="{9DB98C17-62EA-4F57-91E6-137BDC88F02D}">
-                <File Id="fil53CEAB102B917C0FF7143AA4E2BB5DB6" KeyPath="yes" Source="..\..\windows\plugins\netstat_an.bat" DiskId="1"  />
+                <File Id="fil53CEAB102B917C0FF7143AA4E2BB5DB6" KeyPath="yes" Source="..\..\..\cmk\plugins\tcp\agents\netstat_an.bat" DiskId="1"  />
             </Component>
             <Component Id="cmpB18CE5A6AC9A49BB9022E4BE3321C54B" Guid="{C5EB0C29-A3DB-46B9-8C36-2399178A6C6F}">
                 <File Id="fil0071C3D02B87474E923658217B2F323B" KeyPath="yes" Source="$(var.EncryptedPluginsFolder)\rds_licenses.ps1" DiskId="1"  />

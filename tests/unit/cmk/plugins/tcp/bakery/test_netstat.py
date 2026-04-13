@@ -5,13 +5,18 @@
 
 from pathlib import Path
 
-from cmk.bakery.v1 import OS, Plugin
-from cmk.base.plugins.bakery.netstat import get_netstat_files
+from cmk.bakery.v2_unstable import OS, Plugin
+from cmk.plugins.tcp.bakery.netstat import bakery_plugin_netstat
+
+
+def test_no_deploy() -> None:
+    conf = bakery_plugin_netstat.parameter_parser({"deployment": ("do_not_deploy", None)})
+    assert not list(bakery_plugin_netstat.files_function(conf))
 
 
 def test_netstat_files_with_interval() -> None:
-    conf = {"deployment": ("cached", 120.0)}
-    result = sorted(get_netstat_files(conf), key=repr)
+    conf = bakery_plugin_netstat.parameter_parser({"deployment": ("cached", 120.0)})
+    result = sorted(bakery_plugin_netstat.files_function(conf), key=repr)
     expected = sorted(
         [
             Plugin(
@@ -39,8 +44,8 @@ def test_netstat_files_with_interval() -> None:
 
 
 def test_netstat_files_without_interval() -> None:
-    conf = {"deployment": ("sync", None)}
-    result = sorted(get_netstat_files(conf), key=repr)
+    conf = bakery_plugin_netstat.parameter_parser({"deployment": ("sync", None)})
+    result = sorted(bakery_plugin_netstat.files_function(conf), key=repr)
     expected = sorted(
         [
             Plugin(

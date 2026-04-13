@@ -18,7 +18,7 @@ from cmk.snmplib import SNMPBackend, SNMPBackendEnum, SNMPHostConfig, SNMPVersio
 
 InlineSNMPBackend: type[SNMPBackend] | None = None
 try:
-    from cmk.inline_snmp.inline import (  # type: ignore[import,unused-ignore]
+    from cmk.inline_snmp.inline import (  # type: ignore[import,unused-ignore,no-redef]
         InlineSNMPBackend,
     )
 except ImportError:

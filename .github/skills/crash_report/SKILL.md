@@ -206,6 +206,96 @@ def test_parse_output_crashes_on_empty_input() -> None:
 
 ---
 
+### Step 6.5: Jira Ticket
+
+Run **before the fix commit** in both the manual workflow (Step 7) and the auto-fix pipeline (between `(h) Werk` and `(j) Commit 2`). In auto-fix `--dry-run` mode: skip this step entirely.
+
+**6.5.a. Lookup existing link.**
+Re-use the `group <group_id>` output already fetched in Step 5. If the `Jira:` line is present and non-empty, record the key (e.g. `CMK-12345`) and jump to **6.5.f**. Otherwise continue with 6.5.b.
+
+**6.5.b. Determine component.**
+Collect the Checkmk-relative source paths from the crash traceback and ask the component owners tool:
+
+```bash
+cmk-components owners-for <path1> <path2> ...
+```
+
+Pick the most frequent component across the paths. If `cmk-components` is not installed or returns nothing, fall back to the compass-based match used by `jira-create-ticket` (run `.venv/bin/python .github/skills/jira-create-ticket/create_ticket.py --guess --summary "<drafted summary>"` and pick the closest match).
+
+**6.5.c. Gather assignee + team.**
+Auto-detect defaults:
+
+- **Assignee** — the currently authenticated Jira user:
+
+  ```bash
+  .venv/bin/python -c 'import os; from jira import JIRA; \
+      j=JIRA(server="https://jira.lan.tribe29.com", token_auth=os.environ["JIRA_API_TOKEN"]); \
+      print(j.myself()["name"])'
+  ```
+
+- **Team** — the first team listed by compass for the component chosen in 6.5.b.
+
+Always use `AskUserQuestion` to confirm / override both values — never commit these silently.
+
+**6.5.d. Create the ticket.**
+Chain to the existing helper:
+
+```bash
+.venv/bin/python .github/skills/jira-create-ticket/create_ticket.py \
+  --summary "Fix crash in <component> (<exc_type>)" \
+  --description "<Bug template: crash-group URL + anonymized traceback + observed/expected>" \
+  --issue-type Bug \
+  --component "<component>" \
+  --developer-team "<team>"
+```
+
+Parse the `Created: CMK-XXXXX — <url>` line from stdout to capture the new key.
+
+**6.5.e. Wire up assignee, story points, sprint, and "In Progress".**
+Run a single inline python block (no file created) that uses the `jira` library to apply four updates. Wrap each call in its own try/except — one failure must not block the others. On failure, print `WARN: <field> update failed for <key>: <err>` and continue. Never abort the commit because of a Jira wire-up failure.
+
+```bash
+.venv/bin/python - <<'PY'
+import os
+from jira import JIRA
+
+KEY = "<CMK-XXXXX>"
+ASSIGNEE = "<assignee-username>"
+TEAM = "<developer-team>"
+STORY_POINTS_FIELD = "customfield_10106"
+
+j = JIRA(server="https://jira.lan.tribe29.com", token_auth=os.environ["JIRA_API_TOKEN"])
+
+try:
+    j.assign_issue(KEY, ASSIGNEE)
+except Exception as e:
+    print(f"WARN: assignee update failed for {KEY}: {e}")
+
+try:
+    j.issue(KEY).update(fields={STORY_POINTS_FIELD: 2})
+except Exception as e:
+    print(f"WARN: story-points update failed for {KEY}: {e}")
+
+try:
+    boards = j.boards(name=TEAM)
+    sprints = j.sprints(boards[0].id, state="active")
+    j.add_issues_to_sprint(sprints[0].id, [KEY])
+except Exception as e:
+    print(f"WARN: sprint update failed for {KEY}: {e}")
+
+try:
+    tid = next(t["id"] for t in j.transitions(KEY) if t["name"] == "In Progress")
+    j.transition_issue(KEY, tid)
+except Exception as e:
+    print(f"WARN: transition update failed for {KEY}: {e}")
+PY
+```
+
+**6.5.f. Record the ticket for the commit trailer.**
+Remember the Jira key — it will be added as a `Jira:` trailer on the fix commit (see Step 7 / auto-fix Commit 2).
+
+---
+
 ### Step 7: Fix the Issue
 
 After the explain step and the unit test commit, implement the fix:
@@ -218,12 +308,15 @@ After the explain step and the unit test commit, implement the fix:
 
 4. **Create a werk** (changelog entry) via `/werk`.
 
-5. **Create the second commit** containing the fix, the unmarked test, and the werk. This is the only content in this commit — the xfail test was already committed in Step 6. Use a `Crash-Group-ID:` trailer in the commit body:
+5. **Run Step 6.5 (Jira Ticket)** to look up or create the tracking ticket before committing. Capture the resulting `CMK-XXXXX` key for the commit trailer.
+
+6. **Create the second commit** containing the fix, the unmarked test, and the werk. This is the only content in this commit — the xfail test was already committed in Step 6. Use `Crash-Group-ID:` and `Jira:` trailers in the commit body:
 
    ```
    <werk_id>: Fix crash in <component> (<crash_type>)
 
    Crash-Group-ID: <group_id>
+   Jira: CMK-XXXXX
    ```
 
 ---
@@ -277,20 +370,23 @@ The arguments after `auto-fix` are passed directly to the `popular` or `search` 
 
    h. **Werk.** Create a werk via `/werk` with class `fix`, level `1`, and the appropriate component inferred from the crash type and file path.
 
-   i. **Confidence check.** Before committing, self-assess the fix confidence as **high**, **medium**, or **low**:
+   i. **Jira ticket.** Execute Step 6.5 (Jira Ticket) to look up or create the tracking ticket. Capture the resulting `CMK-XXXXX` key for the commit trailer. Skip this sub-step entirely when `--dry-run` is active.
+
+   j. **Confidence check.** Before committing, self-assess the fix confidence as **high**, **medium**, or **low**:
    - **High:** The crash has a clear root cause, the fix is a small localized change, and all tests pass.
    - **Medium:** The fix is reasonable but touches non-trivial logic, or the crash context is ambiguous.
    - **Low:** The fix is speculative, involves multiple files, or the agent is unsure about side effects.
 
-   j. **Commit 2 (fix + unmarked test + werk).** Stage the fix, the unmarked test, and the werk, then commit with a `Crash-Group-ID:` trailer:
+   k. **Commit 2 (fix + unmarked test + werk).** Stage the fix, the unmarked test, and the werk, then commit with `Crash-Group-ID:` and `Jira:` trailers:
 
    ```
    <werk_id>: Fix crash in <component> (<crash_type>)
 
    Crash-Group-ID: <group_id>
+   Jira: CMK-XXXXX
    ```
 
-   k. **Push (high confidence only).** If confidence is **high**, push to Gerrit:
+   l. **Push (high confidence only).** If confidence is **high**, push to Gerrit:
 
    ```bash
    git push -u origin <branch>
@@ -298,7 +394,7 @@ The arguments after `auto-fix` are passed directly to the `popular` or `search` 
 
    If confidence is **medium** or **low**, do NOT push. The branch is committed locally. The summary table reports these as "Local only (medium confidence)" or "Local only (low confidence)" so the user can review before pushing.
 
-   l. **Return.** Switch back to master for the next group:
+   m. **Return.** Switch back to master for the next group:
 
    ```bash
    git checkout master

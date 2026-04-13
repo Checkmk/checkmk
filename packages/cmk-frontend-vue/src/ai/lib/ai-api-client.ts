@@ -106,7 +106,7 @@ export class AiApiClient extends Api {
       ['Content-Type', 'application/json'],
       ['Accept', 'application/json'],
       ['x-checkmk-site-name', siteName]
-      // Uncomment the next two lines for local testing,
+      // Uncomment these headers for local testing,
       // in production the reverse proxy will set the correct host header:
       // ,['x-forwarded-host', 'localhost:3000']
       // ,['x-forwarded-proto', 'http']

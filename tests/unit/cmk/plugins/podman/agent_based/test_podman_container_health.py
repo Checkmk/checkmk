@@ -30,9 +30,11 @@ _DEFAULT_PARAMS = Params(
 )
 
 SECTION_NO_HEALTHCHECK = SectionPodmanContainerInspect(
+    Name="test-container",
     State=SectionPodmanContainerState(
         Status="running",
         StartedAt="2025-08-01T13:00:00+02:00",
+        FinishedAt="0001-01-01T00:00:00Z",
         ExitCode=0,
         Health=ContainerHealth(
             Log=[HealthCheckLog(Output="testOutput", ExitCode=0)],

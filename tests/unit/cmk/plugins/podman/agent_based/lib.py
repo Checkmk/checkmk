@@ -14,9 +14,11 @@ from cmk.plugins.podman.agent_based.lib import (
 )
 
 SECTION_RUNNING = SectionPodmanContainerInspect(
+    Name="test-container",
     State=SectionPodmanContainerState(
         Status="running",
         StartedAt="2025-08-01T13:00:00+02:00",
+        FinishedAt="0001-01-01T00:00:00Z",
         ExitCode=0,
         Health=ContainerHealth(
             Log=[HealthCheckLog(Output="testOutput", ExitCode=0)],
@@ -44,9 +46,11 @@ SECTION_RUNNING = SectionPodmanContainerInspect(
 )
 
 SECTION_PAUSED = SectionPodmanContainerInspect(
+    Name="test-container",
     State=SectionPodmanContainerState(
         Status="paused",
         StartedAt="2025-08-01T13:00:00+02:00",
+        FinishedAt="0001-01-01T00:00:00Z",
         ExitCode=0,
         Health=ContainerHealth(
             Log=[HealthCheckLog(Output="testOutput", ExitCode=0)],

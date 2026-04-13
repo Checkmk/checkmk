@@ -29,6 +29,7 @@ class ContainerHealth(BaseModel, frozen=True):
 class SectionPodmanContainerState(BaseModel, frozen=True):
     status: str = Field(alias="Status")
     started_at: str = Field(alias="StartedAt")
+    finished_at: str = Field(alias="FinishedAt")
     exit_code: int = Field(alias="ExitCode", description="Exit code of the container.")
     health: ContainerHealth | None = Field(
         default=None,
@@ -66,6 +67,7 @@ class PodmanContainerNetworkSettings(BaseModel, frozen=True):
 
 
 class SectionPodmanContainerInspect(BaseModel, frozen=True):
+    name: str = Field(alias="Name", description="The name of the container.")
     state: SectionPodmanContainerState = Field(alias="State")
     restarts: int = Field(alias="RestartCount", description="Number of restarts of the container.")
     pod: str = Field(alias="Pod", description="The pod this container is part of, if any.")

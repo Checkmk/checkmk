@@ -26,9 +26,11 @@ from cmk.plugins.podman.agent_based.podman_container_status import (
 from .lib import SECTION_PAUSED, SECTION_RUNNING
 
 SECTION_EXITED_WITH_ZERO = SectionPodmanContainerInspect(
+    Name="test-container",
     State=SectionPodmanContainerState(
         Status="exited",
         StartedAt="2025-08-01T13:00:00+02:00",
+        FinishedAt="2026-03-09T22:14:05Z",
         ExitCode=0,
         Health=ContainerHealth(
             Log=[HealthCheckLog(Output="testOutput", ExitCode=0)],
@@ -55,9 +57,11 @@ SECTION_EXITED_WITH_ZERO = SectionPodmanContainerInspect(
 )
 
 SECTION_EXITED_WITH_NON_ZERO = SectionPodmanContainerInspect(
+    Name="test-container",
     State=SectionPodmanContainerState(
         Status="exited",
         StartedAt="2025-08-01T13:00:00+02:00",
+        FinishedAt="2026-03-09T22:14:05Z",
         ExitCode=1,
         Health=ContainerHealth(
             Log=[HealthCheckLog(Output="testOutput", ExitCode=0)],
@@ -103,7 +107,10 @@ def test_discover_podman_container_status() -> None:
             SECTION_EXITED_WITH_ZERO,
             DEFAULT_CHECK_PARAMETERS,
             [
-                Result(state=State.OK, summary="Exited with zero"),
+                Result(
+                    state=State.OK,
+                    summary="Container test-container exited at 2026-03-09 22:14 UTC (code 0)",
+                ),
                 Result(state=State.OK, summary="Pod: Pod1"),
             ],
             id="Exited with zero -> OK. Contains Pod",
@@ -112,7 +119,10 @@ def test_discover_podman_container_status() -> None:
             SECTION_EXITED_WITH_NON_ZERO,
             DEFAULT_CHECK_PARAMETERS,
             [
-                Result(state=State.CRIT, summary="Exited with non zero"),
+                Result(
+                    state=State.CRIT,
+                    summary="Container test-container exited at 2026-03-09 22:14 UTC (code 1)",
+                ),
                 Result(state=State.OK, summary="Pod: Pod1"),
             ],
             id="Exited with non zero -> CRIT. Contains Pod",

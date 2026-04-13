@@ -38,6 +38,7 @@ void main() {
         |safe_branch_name:.... │${safe_branch_name}│
         |job_names:........... │${job_names}│
         |branch_base_folder:.. │${checkout_dir}│
+        |force_build:......... │${force_build}│
         |===================================================
         """.stripMargin());
 
@@ -49,7 +50,7 @@ void main() {
                 smart_build(
                     // see global-defaults.yml, needs to run in minimal container
                     use_upstream_build: true,
-                    force_build: env.DISABLE_JENKINS_CACHE == "true",
+                    force_build: force_build,
                     relative_job_name: "${branch_base_folder}/heavy/${job_name}",
                     build_params: [
                         CUSTOM_GIT_REF: effective_git_ref,

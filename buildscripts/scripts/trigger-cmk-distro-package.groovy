@@ -23,6 +23,7 @@ void main() {
     def edition = params.EDITION;
     def version = params.VERSION;
     def disable_cache = params.DISABLE_CACHE;
+    def force_build = params.DISABLE_JENKINS_CACHE == true;
 
     def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
     def package_helper = load("${checkout_dir}/buildscripts/scripts/utils/package_helper.groovy");
@@ -52,6 +53,8 @@ void main() {
         |safe_branch_name:......... │${safe_branch_name}│
         |checkout_dir:............. │${checkout_dir}│
         |triggerd_by:.............. │${triggerd_by}│
+        |disable_cache:............ │${disable_cache}│
+        |force_build:.............. │${force_build}│
         |===================================================
         """.stripMargin());
 
@@ -82,7 +85,7 @@ void main() {
                     smart_build(
                         // see global-defaults.yml, needs to run in minimal container
                         use_upstream_build: true,
-                        force_build: env.DISABLE_JENKINS_CACHE == "true",
+                        force_build: force_build,
                         relative_job_name: "${branch_base_folder}/builders/build-cmk-bom",
                         build_params: [
                             CUSTOM_GIT_REF: effective_git_ref,
@@ -123,7 +126,7 @@ void main() {
             smart_build(
                 // see global-defaults.yml, needs to run in minimal container
                 use_upstream_build: true,
-                force_build: env.DISABLE_JENKINS_CACHE == "true",
+                force_build: force_build,
                 relative_job_name: "${branch_base_folder}/builders/build-cmk-distro-package",
                 build_params: [
                     CUSTOM_GIT_REF: effective_git_ref,
@@ -153,7 +156,7 @@ void main() {
             signing_build_instance = smart_build(
                 // see global-defaults.yml, needs to run in minimal container
                 use_upstream_build: true,
-                force_build: env.DISABLE_JENKINS_CACHE == "true",
+                force_build: force_build,
                 relative_job_name: "${branch_base_folder}/builders/sign-cmk-distro-package",
                 build_params: [
                     CUSTOM_GIT_REF: effective_git_ref,

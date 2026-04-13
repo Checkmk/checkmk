@@ -18,32 +18,31 @@ void main() {
 
     /// This will get us the location to e.g. "checkmk/master" or "Testing/<name>/checkmk/master"
     def branch_base_folder = package_helper.branch_base_folder(true);
-
-    // TODO: we should always use USE_CASE directly from the job parameters
-    def use_case = (USE_CASE == "fips") ? USE_CASE : "daily_tests";
+    def use_case = (params.USE_CASE == "fips") ? params.USE_CASE : "daily_tests";
     def all_distros = versioning.get_distros(override: "all");
     def selected_distros = versioning.get_distros(
-        edition: EDITION,
+        edition: params.EDITION,
         use_case: use_case,
-        override: OVERRIDE_DISTROS
+        override: params.OVERRIDE_DISTROS
     );
     def safe_branch_name = versioning.safe_branch_name();
     def branch_version = versioning.get_branch_version(checkout_dir);
     // When building from a git tag (VERSION != "daily"), we cannot get the branch name from the scm so used defines.make instead.
     // this is save on master as there are no tags/versions built other than daily
-    def branch_name = (VERSION == "daily") ? safe_branch_name : branch_version;
-    def cmk_version_rc_aware = versioning.get_cmk_version(safe_branch_name, branch_version, VERSION);
+    def branch_name = (params.VERSION == "daily") ? safe_branch_name : branch_version;
+    def cmk_version_rc_aware = versioning.get_cmk_version(safe_branch_name, branch_version, params.VERSION);
     def cmk_version = versioning.strip_rc_number_from_version(cmk_version_rc_aware);
     def docker_tag = versioning.select_docker_tag(
-        CIPARAM_OVERRIDE_DOCKER_TAG_BUILD,  // 'build tag'
+        params.CIPARAM_OVERRIDE_DOCKER_TAG_BUILD,  // 'build tag'
         safe_branch_name,                   // 'branch' returns '<BRANCH>-latest'
     );
+    def force_build = params.DISABLE_JENKINS_CACHE == true;
 
     currentBuild.description += (
         """
         |Run GUI E2E tests for<br>
-        |VERSION: ${VERSION}<br>
-        |EDITION: ${EDITION}<br>
+        |VERSION: ${params.VERSION}<br>
+        |EDITION: ${params.EDITION}<br>
         |selected_distros: ${selected_distros}<br>
         """.stripMargin());
 
@@ -57,6 +56,7 @@ void main() {
         |cmk_version_rc_aware:..... │${cmk_version_rc_aware}│
         |branch_version:........... │${branch_version}│
         |docker_tag:............... │${docker_tag}│
+        |force_build:.............. │${force_build}│
         |===================================================
         """.stripMargin());
 
@@ -84,20 +84,20 @@ void main() {
                 build_instance = smart_build(
                     // see global-defaults.yml, needs to run in minimal container
                     use_upstream_build: true,
-                    force_build: env.DISABLE_JENKINS_CACHE == "true",
+                    force_build: force_build,
                     relative_job_name: relative_job_name,
                     build_params: [
                         DISTRO: distro,
-                        EDITION: EDITION,
-                        VERSION: VERSION,
+                        EDITION: params.EDITION,
+                        VERSION: params.VERSION,
                         DOCKER_TAG: docker_tag,
                         CUSTOM_GIT_REF: effective_git_ref,
                         FAKE_ARTIFACTS: params.FAKE_ARTIFACTS,
                         // FIPS node specifier has to be respected
-                        CIPARAM_OVERRIDE_BUILD_NODE: (USE_CASE == "fips") ? "fips" : CIPARAM_OVERRIDE_BUILD_NODE,
+                        CIPARAM_OVERRIDE_BUILD_NODE: (params.USE_CASE == "fips") ? "fips" : params.CIPARAM_OVERRIDE_BUILD_NODE,
                     ],
                     build_params_no_check: [
-                        CIPARAM_CLEANUP_WORKSPACE: CIPARAM_CLEANUP_WORKSPACE,
+                        CIPARAM_CLEANUP_WORKSPACE: params.CIPARAM_CLEANUP_WORKSPACE,
                         CIPARAM_BISECT_COMMENT: params.CIPARAM_BISECT_COMMENT,
 
                     ],

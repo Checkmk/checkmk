@@ -36,6 +36,7 @@ void main() {
         CIPARAM_BISECT_COMMENT: params.CIPARAM_BISECT_COMMENT,
         CIPARAM_OVERRIDE_BUILD_NODE: params.CIPARAM_OVERRIDE_BUILD_NODE,
     ];
+    def force_build = params.DISABLE_JENKINS_CACHE == true;
 
     print(
         """
@@ -44,7 +45,8 @@ void main() {
         |version:............... │${params.VERSION}│
         |safe_branch_name:...... │${safe_branch_name}│
         |override_distros:...... │${params.OVERRIDE_DISTROS}│
-        |fake_artifacts: │${params.FAKE_ARTIFACTS}│
+        |fake_artifacts:........ │${params.FAKE_ARTIFACTS}│
+        |force_build:........... │${force_build}│
         |custom_git_ref:........ │${effective_git_ref}│
         |safe_branch_name:...... │${safe_branch_name}│
         |===================================================
@@ -61,7 +63,7 @@ void main() {
                 raiseOnError: false,) {
             smart_build(
                 use_upstream_build: true,
-                force_build: env.DISABLE_JENKINS_CACHE == "true",
+                force_build: force_build,
                 relative_job_name: "${branch_base_folder}/fips/test-composition-fips",
                 build_params: job_parameters,
                 build_params_no_check: job_parameters_no_check,
@@ -75,7 +77,7 @@ void main() {
                 raiseOnError: false,) {
             smart_build(
                 use_upstream_build: true,
-                force_build: env.DISABLE_JENKINS_CACHE == "true",
+                force_build: force_build,
                 relative_job_name: "${branch_base_folder}/fips/test-gui-e2e-fips",
                 build_params: job_parameters,
                 build_params_no_check: job_parameters_no_check,
@@ -89,7 +91,7 @@ void main() {
                 raiseOnError: false,) {
             smart_build(
                 use_upstream_build: true,
-                force_build: env.DISABLE_JENKINS_CACHE == "true",
+                force_build: force_build,
                 relative_job_name: "${branch_base_folder}/fips/test-integration-fips",
                 build_params: job_parameters,
                 build_params_no_check: job_parameters_no_check,

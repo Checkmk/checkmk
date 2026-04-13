@@ -13,10 +13,10 @@ void main() {
     currentBuild.description += (
         """
         |Run composition tests for<br>
-        |ACTION: ${ACTION}<br>
-        |EDITION: ${EDITION}<br>
-        |DRY_RUN: ${DRY_RUN}<br>
-        |TAG_TO_DELETE: ${TAG_TO_DELETE}<br>
+        |ACTION: ${params.ACTION}<br>
+        |EDITION: ${params.EDITION}<br>
+        |DRY_RUN: ${params.DRY_RUN}<br>
+        |TAG_TO_DELETE: ${params.TAG_TO_DELETE}<br>
         """.stripMargin());
 
     def helper = load("${checkout_dir}/buildscripts/scripts/utils/test_helper.groovy");
@@ -28,7 +28,7 @@ void main() {
         ) {
             withCredentials([
                 usernamePassword(
-                    credentialsId: helper.registry_credentials_id(EDITION),
+                    credentialsId: helper.registry_credentials_id(params.EDITION),
                     passwordVariable: 'DOCKER_PASSPHRASE',
                     usernameVariable: 'DOCKER_USERNAME'),
                 usernamePassword(
@@ -40,16 +40,16 @@ void main() {
                     dir("${checkout_dir}") {
                         def command = """scripts/run-uvenv \
                         buildscripts/scripts/unpublish-container-image.py \
-                        --editions_file editions.yml --edition ${EDITION} \
-                        ${ACTION}
+                        --editions_file editions.yml --edition ${params.EDITION} \
+                        ${params.ACTION}
                         """;
 
-                        if (ACTION == "delete") {
-                            if (DRY_RUN) {
+                        if (params.ACTION == "delete") {
+                            if (params.DRY_RUN) {
                                 command += " --dry-run";
                             }
 
-                            command += " --image-tag ${TAG_TO_DELETE}";
+                            command += " --image-tag ${params.TAG_TO_DELETE}";
                         }
 
                         sh(script: command);

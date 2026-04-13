@@ -4,6 +4,7 @@
 
 import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
 
+// groovylint-disable MethodSize
 void main() {
     check_job_parameters([
         "VERSION",
@@ -31,7 +32,7 @@ void main() {
         selected_distros = versioning.get_distros(
             edition: edition,
             use_case: "daily_update_tests",
-            override: OVERRIDE_DISTROS
+            override: params.OVERRIDE_DISTROS
         );
     }
 
@@ -45,11 +46,12 @@ void main() {
     def cmk_version = versioning.strip_rc_number_from_version(cmk_version_rc_aware);
 
     def docker_tag = versioning.select_docker_tag(
-        CIPARAM_OVERRIDE_DOCKER_TAG_BUILD,  // 'build tag'
+        params.CIPARAM_OVERRIDE_DOCKER_TAG_BUILD,  // 'build tag'
         safe_branch_name,                   // 'branch' returns '<BRANCH>-latest'
     );
     def cross_edition_target = params.CROSS_EDITION_TARGET ?: "";
     def deliverables_dir = "${checkout_dir}/test-results";
+    def force_build = params.DISABLE_JENKINS_CACHE == true;
 
     print(
         """
@@ -68,6 +70,7 @@ void main() {
         |cross_edition_target:..... │${cross_edition_target}|
         |checkout_dir:............. │${checkout_dir}│
         |branch_base_folder:....... │${branch_base_folder}│
+        |force_build:.............. │${force_build}│
         |===================================================
         """.stripMargin());
 
@@ -107,7 +110,7 @@ void main() {
                 smart_build(
                     // see global-defaults.yml, needs to run in minimal container
                     use_upstream_build: true,
-                    force_build: env.DISABLE_JENKINS_CACHE == "true",
+                    force_build: force_build,
                     relative_job_name: relative_job_name,
                     build_params: [
                         DISTRO: distro,

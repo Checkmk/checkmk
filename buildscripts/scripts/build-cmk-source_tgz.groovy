@@ -18,9 +18,10 @@ void main() {
     def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
     def package_helper = load("${checkout_dir}/buildscripts/scripts/utils/package_helper.groovy");
 
-    def edition = EDITION;
-    def version = VERSION;
-    def disable_cache = DISABLE_CACHE;
+    def edition = params.EDITION;
+    def version = params.VERSION;
+    def disable_cache = params.DISABLE_CACHE;
+    def force_build = params.DISABLE_JENKINS_CACHE == true;
     def safe_branch_name = versioning.safe_branch_name();
     def branch_version = versioning.get_branch_version(checkout_dir);
     def branch_base_folder = package_helper.branch_base_folder(false);
@@ -32,6 +33,7 @@ void main() {
         |===== CONFIGURATION ===============================
         |checkout_dir:............. │${checkout_dir}│
         |safe_branch_name:......... │${safe_branch_name}│
+        |force_build:.............. │${force_build}│
         |branch_version:........... │${branch_version}│
         |cmk_version:.............. │${cmk_version}│
         |edition:.................. │${edition}│
@@ -62,7 +64,7 @@ void main() {
                 smart_build(
                     // see global-defaults.yml, needs to run in minimal container
                     use_upstream_build: true,
-                    force_build: env.DISABLE_JENKINS_CACHE == "true",
+                    force_build: force_build,
                     relative_job_name: "${branch_base_folder}/builders/build-cmk-bom",
                     build_params: [
                         CUSTOM_GIT_REF: effective_git_ref,

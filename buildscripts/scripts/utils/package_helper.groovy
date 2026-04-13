@@ -226,7 +226,7 @@ void provide_agent_binaries(Map args) {
             ) {
                 def this_parameters = [
                     use_upstream_build: true,
-                    force_build: env.DISABLE_JENKINS_CACHE == "true",
+                    force_build: params.DISABLE_JENKINS_CACHE == "true",
                     relative_job_name: details.relative_job_name,
                     download: false,
                 ];

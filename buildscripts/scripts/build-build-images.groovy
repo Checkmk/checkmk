@@ -29,12 +29,12 @@ void main() {
 
     def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
     def all_distros = versioning.get_distros(override: "all")
-    def distros = versioning.get_distros(edition: "all", use_case: "all", override: OVERRIDE_DISTROS);
+    def distros = versioning.get_distros(edition: "all", use_case: "all", override: params.OVERRIDE_DISTROS);
 
     def vers_tag = params.CIPARAM_OVERRIDE_DOCKER_TAG_BUILD ?: versioning.get_docker_tag(checkout_dir);
     def safe_branch_name = versioning.safe_branch_name();
     def branch_version = versioning.get_branch_version(checkout_dir);
-    def publish_images = PUBLISH_IMAGES == 'true';  // FIXME should be case sensitive
+    def publish_images = params.PUBLISH_IMAGES == 'true';  // FIXME should be case sensitive
     def publish_special_images = params.PUBLISH_SPECIAL_IMAGES_WITH_CUSTOM_GIT_REF;
     if ("${params.CUSTOM_GIT_REF}" == "") {
         // if the build is started without a specific CUSTOM_GIT_REF (default case) publish the special images

@@ -45,7 +45,7 @@ void main() {
     def cmk_version = versioning.strip_rc_number_from_version(cmk_version_rc_aware);
 
     def docker_tag = versioning.select_docker_tag(
-        CIPARAM_OVERRIDE_DOCKER_TAG_BUILD,  // 'build tag'
+        params.CIPARAM_OVERRIDE_DOCKER_TAG_BUILD,  // 'build tag'
         safe_branch_name,                   // 'branch' returns '<BRANCH>-latest'
     );
 
@@ -67,6 +67,7 @@ void main() {
     def package_name = "";
     def license_flag = edition == "community" ? '--//:repo_license="gpl"' : "";
     def fake_artifacts = params.FAKE_ARTIFACTS ? "--//:use_faked_artifacts=true" : ""
+    def force_build = params.DISABLE_JENKINS_CACHE == true;
 
     print(
         """
@@ -75,6 +76,7 @@ void main() {
         |edition:.................. │${edition}│
         |cmk_version:.............. │${cmk_version}│
         |safe_branch_name:......... │${safe_branch_name}│
+        |force_build:.............. │${force_build}│
         |omd_env_vars:............. │${omd_env_vars}│
         |docker_tag:............... │${docker_tag}│
         |checkout_dir:............. │${checkout_dir}│
@@ -120,7 +122,7 @@ void main() {
                 build_instance = smart_build(
                     // see global-defaults.yml, needs to run in minimal container
                     use_upstream_build: true,
-                    force_build: env.DISABLE_JENKINS_CACHE == "true",
+                    force_build: force_build,
                     relative_job_name: "${branch_base_folder}/builders/build-cmk-bom",
                     build_params: [
                         CUSTOM_GIT_REF: effective_git_ref,

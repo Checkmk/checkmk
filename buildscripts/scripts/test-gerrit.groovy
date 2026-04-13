@@ -14,6 +14,7 @@ void main() {
     def time_job_started = new Date();
     def time_stage_started = time_job_started;
     def safe_branch_name = versioning.safe_branch_name();
+    def force_build = params.DISABLE_JENKINS_CACHE == true;
 
     def branch_base_folder = package_helper.branch_base_folder(true);
     def stage_info = null;
@@ -159,7 +160,7 @@ void main() {
                         build_instance = smart_build(
                             // see global-defaults.yml, needs to run in minimal container
                             use_upstream_build: true,
-                            force_build: env.DISABLE_JENKINS_CACHE == "true",
+                            force_build: force_build,
                             relative_job_name: relative_job_name,
                             build_params: build_params,
                             build_params_no_check: [

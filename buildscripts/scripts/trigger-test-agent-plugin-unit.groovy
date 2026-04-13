@@ -21,6 +21,7 @@ void main() {
     /// Without this we end up with a capped build overview matrix in the job view (Jenkins doesn't
     /// like changing order or amount of stages, which will happen with stages started `via parallel()`
     def timeOffsetForOrder = 0;
+    def force_build = params.DISABLE_JENKINS_CACHE == true;
 
     stage("Preparation") {
         dir("${checkout_dir}") {
@@ -41,7 +42,7 @@ void main() {
                 smart_build(
                     // see global-defaults.yml, needs to run in minimal container
                     use_upstream_build: true,
-                    force_build: env.DISABLE_JENKINS_CACHE == "true",
+                    force_build: force_build,
                     relative_job_name: relative_job_name,
                     build_params: [
                         CUSTOM_GIT_REF: effective_git_ref,

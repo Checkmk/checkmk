@@ -35,6 +35,7 @@ void main() {
     if (override_editions) {
         editions_to_test = override_editions.replaceAll(',', ' ').split(' ').grep();
     }
+    def force_build = params.DISABLE_JENKINS_CACHE == true;
 
     print(
         """
@@ -45,6 +46,7 @@ void main() {
         |job_parameters_no_check:│${job_parameters_no_check}│
         |fixed_node:............ |${params.TRIGGER_CIPARAM_OVERRIDE_BUILD_NODE}|
         |safe_branch_name:...... │${safe_branch_name}│
+        |force_build:........... │${force_build}│
         |===================================================
         """.stripMargin());
 
@@ -65,7 +67,7 @@ void main() {
             ) {
                 smart_build(
                     use_upstream_build: true,
-                    force_build: env.DISABLE_JENKINS_CACHE == "true",
+                    force_build: force_build,
                     relative_job_name: "${branch_base_folder}/trigger-cmk-build-chain-${edition}",
                     build_params: job_parameters,
                     build_params_no_check: job_parameters_no_check,
@@ -82,7 +84,7 @@ void main() {
         ) {
             smart_build(
                 use_upstream_build: true,
-                force_build: env.DISABLE_JENKINS_CACHE == "true",
+                force_build: force_build,
                 relative_job_name: "${branch_base_folder}/builders/build-cmk-relay-image",
                 build_params: job_parameters,
                 build_params_no_check: job_parameters_no_check,

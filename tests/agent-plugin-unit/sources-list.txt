@@ -14,11 +14,11 @@ agents/plugins/mk_podman.py
 agents/plugins/mk_postgres.py
 agents/plugins/mk_sap.py
 agents/plugins/mk_tinkerforge.py
-agents/plugins/mtr.py
 agents/plugins/nginx_status.py
 agents/plugins/plesk_backups.py
 agents/plugins/plesk_domains.py
 agents/plugins/unitrends_replication.py
+cmk/plugins/mtr/agents/mtr.py
 tests/agent-plugin-unit/datasets/mk_filestats/subdir/testfile2.html
 tests/agent-plugin-unit/datasets/mk_filestats/testfile1.txt
 tests/agent-plugin-unit/datasets/mk_logwatch/test_append.log
@@ -44,7 +44,7 @@ tests/agent-plugin-unit/test_mk_mongodb.py
 tests/agent-plugin-unit/test_mk_podman.py
 tests/agent-plugin-unit/test_mk_postgres.py
 tests/agent-plugin-unit/test_mk_sap.py
-tests/agent-plugin-unit/test_mtr.py
 tests/agent-plugin-unit/test_nginx_status.py
 tests/agent-plugin-unit/test_plesk_backups.py
 tests/agent-plugin-unit/test_plesk_domains.py
+tests/unit/cmk/plugins/mtr/agents/test_mtr.py

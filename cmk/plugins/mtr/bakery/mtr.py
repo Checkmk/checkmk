@@ -9,7 +9,7 @@ from typing import Any, Literal
 
 from pydantic import BaseModel
 
-from .bakery_api.v1 import FileGenerator, OS, Plugin, PluginConfig, register
+from cmk.bakery.v2_unstable import BakeryPlugin, OS, Plugin, PluginConfig
 
 
 class _Config(BaseModel):
@@ -17,19 +17,14 @@ class _Config(BaseModel):
     mtr_config: list[dict[str, Any]]
 
 
-def get_mtr_files(conf: Mapping[str, object]) -> FileGenerator:
-    config = _Config.model_validate(conf)
-    if config.deployment[0] == "do_not_deploy":
+def get_mtr_files(conf: _Config) -> Iterable[Plugin | PluginConfig]:
+    if conf.deployment[0] == "do_not_deploy":
         return
 
-    yield Plugin(
-        base_os=OS.LINUX,
-        source=Path("mtr.py"),
-        interval=None if (v := config.deployment[1]) is None else int(v),
-    )
+    yield Plugin(base_os=OS.LINUX, source=Path("mtr.py"), interval=conf.deployment[1])
     yield PluginConfig(
         base_os=OS.LINUX,
-        lines=list(_get_mtr_config(config.mtr_config)),
+        lines=list(_get_mtr_config(conf.mtr_config)),
         target=Path("mtr.cfg"),
         include_header=True,
     )
@@ -79,7 +74,9 @@ def _get_mtr_config(mtr_settings: Iterable[Mapping[str, Any]]) -> Iterable[str]:
         yield ""
 
 
-register.bakery_plugin(
+bakery_plugin_mtr = BakeryPlugin(
     name="mtr",
+    parameter_parser=_Config.model_validate,
+    default_parameters=None,
     files_function=get_mtr_files,
 )

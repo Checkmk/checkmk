@@ -5,18 +5,27 @@
 
 from pathlib import Path
 
-from cmk.bakery.v1 import OS, Plugin, PluginConfig
-from cmk.base.plugins.bakery.mtr import get_mtr_files
+from cmk.bakery.v2_unstable import OS, Plugin, PluginConfig
+from cmk.plugins.mtr.bakery.mtr import bakery_plugin_mtr
+
+
+def test_no_deploy() -> None:
+    conf = bakery_plugin_mtr.parameter_parser(
+        {"deployment": ("do_not_deploy", None), "mtr_config": []}
+    )
+    assert not list(bakery_plugin_mtr.files_function(conf))
 
 
 def test_mtr_files_basic() -> None:
-    conf = {
-        "deployment": ("cached", 600.0),
-        "mtr_config": [
-            {"hostname": "example.com"},
-        ],
-    }
-    result = sorted(get_mtr_files(conf), key=repr)
+    conf = bakery_plugin_mtr.parameter_parser(
+        {
+            "deployment": ("cached", 600.0),
+            "mtr_config": [
+                {"hostname": "example.com"},
+            ],
+        }
+    )
+    result = sorted(bakery_plugin_mtr.files_function(conf), key=repr)
     expected = sorted(
         [
             Plugin(base_os=OS.LINUX, source=Path("mtr.py"), interval=600),
@@ -51,22 +60,23 @@ def test_mtr_files_basic() -> None:
 
 
 def test_mtr_files_with_options() -> None:
-    conf = {
-        "deployment": ("cached", 300.0),
-        "mtr_config": [
-            {
-                "hostname": "10.0.0.1",
-                "type": "tcp",
-                "count": 5,
-                "port": 443,
-                "dns": 1,
-                "enforce_what": "ipv4",
-            },
-        ],
-    }
-    result = list(get_mtr_files(conf))
+    conf = bakery_plugin_mtr.parameter_parser(
+        {
+            "deployment": ("cached", 300.0),
+            "mtr_config": [
+                {
+                    "hostname": "10.0.0.1",
+                    "type": "tcp",
+                    "count": 5,
+                    "port": 443,
+                    "dns": 1,
+                    "enforce_what": "ipv4",
+                },
+            ],
+        }
+    )
+    result = list(bakery_plugin_mtr.files_function(conf))
     plugin_config = [r for r in result if isinstance(r, PluginConfig)][0]
-    # Check that lines for the host section contain the expected settings
     lines = plugin_config.lines
     assert "[10.0.0.1]" in lines
     assert "type = tcp" in lines

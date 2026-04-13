@@ -663,7 +663,6 @@ AGENT_PLUGINS_PREFIX = [
     "mk_postgres",
     "mk_sap",
     "mk_tinkerforge",
-    "mtr",
     "nginx_status",
     "plesk_backups",
     "plesk_domains",

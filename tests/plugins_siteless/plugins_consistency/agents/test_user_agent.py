@@ -47,7 +47,7 @@ def test_expected_agent_and_user_string_count() -> None:
     # That might be fine if you're not making http requests. Just update the number
     # below then.
     # If you do make requests, however, please consider following the convention.
-    assert len(agents_wo_user_agent) == 1
+    assert len(agents_wo_user_agent) == 2
 
 
 def test_user_agent_strings() -> None:

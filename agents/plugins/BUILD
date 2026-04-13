@@ -50,7 +50,6 @@ py_library(
         "mk_postgres.py",
         "mk_sap.py",
         "mk_tinkerforge.py",
-        "mtr.py",
         "nginx_status.py",
         "plesk_backups.py",
         "plesk_domains.py",

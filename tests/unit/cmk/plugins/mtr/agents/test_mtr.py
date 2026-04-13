@@ -7,7 +7,7 @@
 
 import pytest
 
-from agents.plugins import mtr
+from cmk.plugins.mtr.agents import mtr
 
 
 @pytest.mark.parametrize(

@@ -282,8 +282,18 @@ class SNMPTrapTranslator:
             # Indicate if we wish to load DESCRIPTION and other texts from MIBs
             builder.loadTexts = load_texts
 
-            # This loads all or specified pysnmp MIBs into memory
-            builder.loadModules()
+            # Load each MIB module individually so that a single failure doesn't
+            # prevent the remaining modules from being loaded.
+            for mib_source in builder.getMibSources():
+                for module_name in mib_source.listdir():
+                    try:
+                        builder.loadModule(module_name)
+                    except pysnmp.smi.error.MibNotFoundError as e:
+                        logger.warning(
+                            "Skipping MIB module %s: missing dependency (%s)", module_name, e
+                        )
+                    except pysnmp.smi.error.SmiError:
+                        logger.warning("Failed to load MIB module %s", module_name, exc_info=True)
 
             loaded_mib_module_names = list(builder.mibSymbols.keys())
             logger.info("Loaded %d SNMP MIB modules", len(loaded_mib_module_names))

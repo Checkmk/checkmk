@@ -108,8 +108,6 @@ def get_check_preview(
     """
 
     fetched = fetcher(host_name, ip_address=ip_address)
-    parsed = parser((f[0], f[1]) for f in fetched)
-
     host_sections = parser((f[0], f[1]) for f in fetched)
     host_sections_by_host = group_by_host(
         ((HostKey(s.hostname, s.source_type), r.ok) for s, r in host_sections if r.is_ok()),
@@ -219,7 +217,8 @@ def get_check_preview(
         table={h: [*passive_rows] for h, passive_rows in passive_rows_by_host.items()},
         labels=host_labels,
         source_results={
-            src.ident: result for (src, _sections), result in zip(parsed, summarizer(parsed))
+            src.ident: result
+            for (src, _sections), result in zip(host_sections, summarizer(host_sections))
         },
         kept_labels=kept_labels,
     )

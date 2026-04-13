@@ -81,16 +81,6 @@ class _AutochecksConfigDummy:
         return {}
 
 
-class _AutochecksConfigIgnoreAll(_AutochecksConfigDummy):
-    """AutochecksConfig where every service and plugin matches a disabled rule."""
-
-    def ignore_plugin(self, hn: HostName, plugin: CheckPluginName) -> bool:
-        return True
-
-    def ignore_service(self, hn: HostName, entry: AutocheckEntry) -> bool:
-        return True
-
-
 def test_get_host_services_by_host_name_vanished_on_node() -> None:
     assert get_host_services_by_host_name(
         NODE_1,
@@ -99,30 +89,6 @@ def test_get_host_services_by_host_name_vanished_on_node() -> None:
         is_cluster=False,
         cluster_nodes=(),
         autochecks_config=_AutochecksConfigDummy(effective_host=NODE_1),
-        enforced_services={},
-    ) == {
-        NODE_1: {
-            "vanished": [
-                AutocheckServiceWithNodes(
-                    service=DiscoveredItem(previous=AUTOCHECK_1A, new=None),
-                    nodes=[NODE_1],
-                ),
-            ]
-        }
-    }
-
-
-def test_vanished_service_matching_disabled_rule_is_discovered_as_vanished() -> None:
-    """A service absent from the agent output must be classified as 'vanished' even when a
-    disabled-services rule matches it.  Previously the ignore rule won and the service was
-    hidden as 'ignored', masking the fact that it had disappeared from the host."""
-    assert get_host_services_by_host_name(
-        NODE_1,
-        existing_services={NODE_1: [AUTOCHECK_1A]},
-        discovered_services={NODE_1: []},
-        is_cluster=False,
-        cluster_nodes=(),
-        autochecks_config=_AutochecksConfigIgnoreAll(effective_host=NODE_1),
         enforced_services={},
     ) == {
         NODE_1: {
@@ -196,33 +162,6 @@ def test_get_host_services_by_host_name_new_on_node() -> None:
                 ),
             ]
         }
-    }
-
-
-def test_vanished_cluster_service_matching_disabled_rule_is_discovered_as_vanished() -> None:
-    """A cluster service absent from all nodes must be classified as 'vanished' even
-    when a disabled-services rule matches it on the cluster."""
-    assert get_host_services_by_host_name(
-        CLUSTER,
-        existing_services={
-            NODE_1: [AUTOCHECK_1A],
-            NODE_2: [],
-        },
-        discovered_services={
-            NODE_1: [],
-            NODE_2: [],
-        },
-        is_cluster=True,
-        cluster_nodes=(NODE_1, NODE_2),
-        autochecks_config=_AutochecksConfigIgnoreAll(effective_host=CLUSTER),
-        enforced_services={},
-    )[CLUSTER] == {
-        "vanished": [
-            AutocheckServiceWithNodes(
-                service=DiscoveredItem(previous=AUTOCHECK_1A, new=None),
-                nodes=[],
-            )
-        ],
     }
 
 

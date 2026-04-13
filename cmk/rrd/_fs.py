@@ -14,11 +14,19 @@ from cmk.utils.misc import pnp_cleanup
 
 MAX_FILENAME_LENGTH: Final = os.pathconf(paths.omd_root, "PC_NAME_MAX")
 
+# We need to add some space for the RRD backend temporary file
+# rrd_create.c:
+#   strcpy(tmpfilename, outfilename);
+#   strcat(tmpfilename, "XXXXXX");
+_RRD_GUARD: Final = 6
+
 # All suffixes that may ever be appended to a Storage path.
-# The stem length must not exceed MAX_FILENAME_LENGTH - max(len(suffix)) so that
-# every variant (.info or .rrd) fits within PC_NAME_MAX.
+# The stem length must not exceed MAX_FILENAME_LENGTH - max(len(suffix)) - _RRD_GUARD
+# so that every variant (.info or .rrd) + the RRD backend temp suffix fits within PC_NAME_MAX.
 _KNOWN_SUFFIXES: Final = (".info", ".rrd")
-MAX_STEM_LENGTH: Final = MAX_FILENAME_LENGTH - max(len(os.fsencode(s)) for s in _KNOWN_SUFFIXES)
+MAX_STEM_LENGTH: Final = (
+    MAX_FILENAME_LENGTH - max(len(os.fsencode(s)) for s in _KNOWN_SUFFIXES) - _RRD_GUARD
+)
 
 
 @dataclass(frozen=True)

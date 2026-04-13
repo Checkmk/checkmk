@@ -104,13 +104,7 @@ void main() {
             }
             finally {
                 stage("Archive / process test reports") {
-                    show_duration("archiveArtifacts") {
-                        archiveArtifacts(
-                            allowEmptyArchive: true,
-                            artifacts: "test-results/**",
-                            fingerprint: true,
-                        );
-                    }
+                    single_tests.archive_and_process_reports(test_results: "test-results/**");
                 }
             }
         }

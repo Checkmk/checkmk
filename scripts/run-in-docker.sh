@@ -161,6 +161,7 @@ docker run -a stdout -a stderr \
     -e PYTHON_FILES \
     -e CHANGED_FILES \
     -e RESULTS \
+    -e RESULT_PATH \
     -e RUFF_OUTPUT_FORMAT \
     -e GERRIT_BRANCH \
     -e DOCKER_REGISTRY_NO_HTTPS \

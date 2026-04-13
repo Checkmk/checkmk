@@ -18,7 +18,7 @@ from ._type_defs import (
     RawFrontendData,
     VisitorOptions,
 )
-from ._utils import create_validation_error
+from ._utils import create_validation_error, get_title_and_help
 
 __all__ = [
     "create_validation_error",
@@ -26,6 +26,7 @@ __all__ = [
     "DefaultValue",
     "FormSpecValidationError",
     "FormSpecVisitor",
+    "get_title_and_help",
     "get_visitor",
     "IncomingData",
     "InvalidValue",

@@ -34,11 +34,9 @@ from cmk.gui.form_specs.unstable import (
 )
 from cmk.gui.form_specs.unstable.legacy_converter import Tuple
 from cmk.gui.form_specs.unstable.passwordstore_password import PasswordStorePassword
-from cmk.gui.form_specs.visitors.recomposers.oauth2_connection import (
-    recompose as recompose_oauth2_connection,
-)
 from cmk.gui.graphing import MetricName
 from cmk.gui.i18n import translate_to_current_language
+from cmk.gui.oauth2_connections.recomposer import recompose as recompose_oauth2_connection
 from cmk.gui.oauth2_connections.watolib.store import load_oauth2_connections
 from cmk.gui.rule_specs.types import RuleSpec as APIV1RuleSpec
 from cmk.gui.userdb._user_selection import UserSelection as LegacyUserSelection

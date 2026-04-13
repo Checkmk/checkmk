@@ -25,7 +25,6 @@ from cmk.gui.form_specs.unstable.legacy_converter import (
     TransformDataForLegacyFormatOrRecomposeFunction,
     Tuple,
 )
-from cmk.gui.form_specs.unstable.oauth2_connection_setup import OAuth2ConnectionSetup
 from cmk.gui.form_specs.unstable.passwordstore_password import PasswordStorePassword
 from cmk.gui.form_specs.unstable.two_column_dictionary import TwoColumnDictionary
 from cmk.gui.form_specs.visitors.binary_condition_choices import (
@@ -43,7 +42,6 @@ from cmk.gui.form_specs.visitors.recomposers import (
     recompose_monitored_host,
     recompose_monitored_service,
     recompose_multiple_choice,
-    recompose_oauth2_connection,
     recompose_passwordstore_password,
     recompose_percentage,
     recompose_proxy,
@@ -60,7 +58,6 @@ from cmk.rulesets.internal.form_specs import (
     ListExtended,
     ListOfStrings,
     MultipleChoiceExtended,
-    OAuth2Connection,
     SimplePassword,
     SingleChoiceExtended,
     StringAutocompleter,
@@ -117,7 +114,6 @@ from .visitors.list_of_strings import ListOfStringsVisitor
 from .visitors.list_unique_selection import ListUniqueSelectionVisitor
 from .visitors.multiline_text import MultilineTextVisitor
 from .visitors.multiple_choice import MultipleChoiceVisitor
-from .visitors.oauth2_connection_setup import OAuth2ConnectionSetupVisitor
 from .visitors.optional_choice import OptionalChoiceVisitor
 from .visitors.password import PasswordVisitor
 from .visitors.simple_password import SimplePasswordVisitor
@@ -180,7 +176,6 @@ def register_form_specs() -> None:
     register_visitor_class(FileUpload, FileUploadVisitor)
     register_visitor_class(DatePicker, DatePickerVisitor)
     register_visitor_class(TimePicker, TimePickerVisitor)
-    register_visitor_class(OAuth2ConnectionSetup, OAuth2ConnectionSetupVisitor)
 
     # Recomposed
     register_recomposer_function(RegularExpression, recompose_regular_expression)
@@ -203,7 +198,6 @@ def register_form_specs() -> None:
     register_recomposer_function(Proxy, recompose_proxy)
     register_recomposer_function(TimePeriod, recompose_time_period)
     register_recomposer_function(InternalProxy, recompose_internal_proxy)
-    register_recomposer_function(OAuth2Connection, recompose_oauth2_connection)
 
 
 def register_validators() -> None:

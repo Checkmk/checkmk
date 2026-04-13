@@ -7,14 +7,14 @@ from collections.abc import Mapping
 from dataclasses import asdict
 from typing import override
 
-from cmk.gui.form_specs import get_visitor
-from cmk.gui.form_specs.unstable.oauth2_connection_setup import OAuth2ConnectionSetup
-from cmk.gui.form_specs.visitors._base import FormSpecVisitor
-from cmk.gui.form_specs.visitors._type_defs import (
+from cmk.gui.form_specs import (
+    FormSpecVisitor,
+    get_title_and_help,
+    get_visitor,
     IncomingData,
     InvalidValue,
 )
-from cmk.gui.form_specs.visitors._utils import get_title_and_help
+from cmk.gui.form_specs.unstable.oauth2_connection_setup import OAuth2ConnectionSetup
 from cmk.gui.form_specs.visitors.validators import build_vue_validators
 from cmk.gui.oauth2_connections.wato._modes import (
     get_authority_mapping,

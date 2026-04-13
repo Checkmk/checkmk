@@ -11,7 +11,7 @@ from cmk.checkengine.plugins import AgentBasedPlugins
 
 
 @pytest.fixture(scope="session")
-def agent_based_plugins(tmp_path_factory: pytest.TempPathFactory) -> Generator[AgentBasedPlugins]:
+def agent_based_plugins() -> Generator[AgentBasedPlugins]:
     # Local import to have faster pytest initialization
     from cmk.base import config
 

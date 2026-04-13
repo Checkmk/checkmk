@@ -35,6 +35,33 @@ concat_files(
     visibility = ["//visibility:public"],
 )
 
+py_library(
+    name = "all_families",
+    visibility = ["//cmk:__subpackages__"],
+    deps = [
+        "//packages/cmk-plugins/cmk/plugins/%s:%s" % (family, family)
+        for family in FAMILIES
+    ],
+)
+
+filegroup(
+    name = "checkman_all",
+    srcs = [
+        "//packages/cmk-plugins/cmk/plugins/%s:checkman" % family
+        for family in FAMILIES
+    ],
+    visibility = ["//cmk:__subpackages__"],
+)
+
+filegroup(
+    name = "libexec_all",
+    srcs = [
+        "//packages/cmk-plugins/cmk/plugins/%s:libexec" % family
+        for family in FAMILIES
+    ],
+    visibility = ["//cmk:__subpackages__"],
+)
+
 [py_wheel(
     name = "wheel-for-f12-%s" % family,
     distribution = "cmk-plugins-%s-f12" % family,

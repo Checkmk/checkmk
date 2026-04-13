@@ -9,7 +9,7 @@
 import pytest
 
 # Do not add new stuff here.
-# The future lies in tests/plugins-siteless/plugins_consistency/agents.
+# The future lies in tests/plugins_consistency/agents.
 import apache_status  # type: ignore[import-not-found,unused-ignore]
 import nginx_status  # type: ignore[import-not-found,unused-ignore]
 from cmk.ccc import version

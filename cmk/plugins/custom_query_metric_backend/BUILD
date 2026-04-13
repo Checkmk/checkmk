@@ -26,8 +26,15 @@ py_library(
 )
 
 filegroup(
+    name = "checkman",
+    srcs = glob(["**/checkman/**"]),
+    visibility = ["//cmk/plugins:__pkg__"],
+)
+
+filegroup(
     name = "libexec",
     srcs = glob(["**/libexec/*"]),
+    visibility = ["//cmk/plugins:__pkg__"],
 )
 
 pkg_files(

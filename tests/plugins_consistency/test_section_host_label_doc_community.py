@@ -19,9 +19,8 @@ from cmk.checkengine.plugins import (
     SectionName,
     SNMPSectionPlugin,
 )
-from tests.testlib.common.repo import is_non_free_repo
 
-CRE_DOCUMENTED_BUILTIN_HOST_LABELS: Final = {
+DOCUMENTED_BUILTIN_HOST_LABELS: Final = {
     "cmk/azure/resource_group",
     "cmk/azure/subscription_id",
     "cmk/azure/subscription_name",
@@ -87,18 +86,6 @@ CRE_DOCUMENTED_BUILTIN_HOST_LABELS: Final = {
     "cmk/podman/user:{user}",
 }
 
-CEE_DOCUMENTED_BUILTIN_HOST_LABELS: Final = {
-    "cmk/rmk/node_type",
-    "cmk/otel/metrics",  # CCE, actually.
-}
-
-
-def all_documented_builtin_host_labels() -> set[str]:
-    if is_non_free_repo():
-        return CEE_DOCUMENTED_BUILTIN_HOST_LABELS | CRE_DOCUMENTED_BUILTIN_HOST_LABELS
-    return CEE_DOCUMENTED_BUILTIN_HOST_LABELS
-
-
 KNOWN_NON_BUILTIN_LABEL_PRODUCERS: Final = {
     "labels",
     "ps",
@@ -145,7 +132,7 @@ def test_all_sections_have_host_labels_documented(
             assert doc.header is not None, f"header in {section.name} not set"
             encountered_labels[doc.header][section.name] = doc.lines
 
-    assert all_documented_builtin_host_labels() == set(encountered_labels.keys())
+    assert DOCUMENTED_BUILTIN_HOST_LABELS == set(encountered_labels.keys())
 
     for label_name, section_to_lines in encountered_labels.items():
         if len({" ".join(lines) for lines in section_to_lines.values()}) != 1:
@@ -157,7 +144,7 @@ def test_all_sections_have_host_labels_documented(
 
 
 def test_builtin_labels_start_with_cmk() -> None:
-    assert all(l.startswith("cmk/") for l in all_documented_builtin_host_labels())
+    assert all(l.startswith("cmk/") for l in DOCUMENTED_BUILTIN_HOST_LABELS)
 
 
 class _TextSection:

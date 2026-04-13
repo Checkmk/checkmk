@@ -21,6 +21,4 @@ bazel lint --fix $LIBS $TESTS || exit $?
 bazel build --config=mypy $LIBS $TESTS || exit $?
 
 # shellcheck disable=SC2086  # we want word splitting here
-bazel test $TESTS || exit $?
-
-make -C tests test-plugins-consistency
+bazel test "//tests/plugins_consistency" $TESTS || exit $?

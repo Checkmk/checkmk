@@ -18,7 +18,6 @@ from cmk.graphing.v1 import metrics as metrics_api
 from cmk.graphing.v1 import perfometers as perfometers_api
 from cmk.graphing.v1 import translations as translations_api
 from cmk.gui.graphing_main import _load_graphing_plugins
-from tests.testlib.common.repo import is_non_free_repo
 
 
 def test_load_graphing_plugins() -> None:
@@ -315,24 +314,11 @@ def test_bundles() -> None:
             " template definitions."
         )
 
-    allowed_but_not_offending_modules = _ALLOWED_BUNDLE_VIOLATIONS - {
-        module for module, _ in offenders
-    }
-    assert not allowed_but_not_offending_modules, (
-        "The followin modules are allowed to violate our graphing module but they don't do so:\n"
-        f"{', '.join(sorted(allowed_but_not_offending_modules))}\n"
-        "Please remove them from the list of allowed violations."
-    )
 
-
-_ALLOWED_BUNDLE_VIOLATIONS = (
-    {
-        # we cannot have sub-modules below the cee folder, so we have to allow the following violations
-        "cmk.plugins.azure_v2.graphing.nonfree",
-    }
-    if is_non_free_repo()
-    else set()
-)
+_ALLOWED_BUNDLE_VIOLATIONS = {
+    # we cannot have sub-modules below the cee folder, so we have to allow the following violations
+    "cmk.plugins.azure_v2.graphing.nonfree",
+}
 
 
 _ALLOWED_DUPLICATE_METRIC_TITLES = {

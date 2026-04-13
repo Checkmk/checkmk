@@ -15,9 +15,9 @@ from cmk.checkengine.plugins import AgentBasedPlugins
 from cmk.discover_plugins import discover_all_plugins, discover_families, PluginGroup
 from cmk.server_side_calls_backend import load_active_checks
 from cmk.utils import man_pages
-from tests.testlib.common.repo import repo_path
+from tests.code_quality.bazel_utils import bazel_repo_root as repo_path
 
-_NONFREE_INDICATORS = {"nonfree", "non-free"}
+_NONFREE_INDICATORS = {"nonfree", "non-free", "custom_query_metric_backend"}
 _NONFREE_LICENSE = "Checkmk Enterprise License"
 _FREE_LICENSE = "GPLv2"
 
@@ -184,8 +184,10 @@ def test_man_page_consistency(
         | {f"check_{plugin.name}" for plugin in load_active_checks(raise_errors=False).values()}
         | {"check-mk", "check-mk-inventory"}
     )
-    assert not set(all_pages).difference(expected_man_pages)
-    assert not expected_man_pages.difference(all_pages)
+    missing_manpages = expected_man_pages - set(all_pages)
+    assert not missing_manpages
+    unexpected_manpages = set(all_pages) - expected_man_pages
+    assert not unexpected_manpages
 
 
 def test_cluster_check_functions_match_manpages_cluster_sections(

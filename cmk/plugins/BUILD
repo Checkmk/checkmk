@@ -108,6 +108,10 @@ py_library(
         ],
     ),
     imports = ["../.."],
+    visibility = [
+        "//cmk:__subpackages__",
+        "//tests:__subpackages__",
+    ],
     deps = [
         ":plugins",
         ":plugins_community",
@@ -160,6 +164,11 @@ py_library(
         allow_empty = True,
     ),
     imports = ["../.."],
+    visibility = [
+        "//cmk:__pkg__",
+        "//cmk/editions/nonfree:__subpackages__",
+        "//tests:__subpackages__",
+    ],
     deps = [
         ":plugins",
         ":plugins_community",
@@ -177,6 +186,10 @@ filegroup(
             "**/checkman/nonfree/**",
         ],
     ),
+    visibility = [
+        "//cmk:__subpackages__",
+        "//tests:__subpackages__",
+    ],
 )
 
 filegroup(
@@ -199,6 +212,7 @@ filegroup(
     ) + [
         ":checkman_community",
         ":checkman_pro",
+        "//cmk/plugins/custom_query_metric_backend:checkman",
     ],
 )
 
@@ -242,8 +256,14 @@ filegroup(
         [
             "**/libexec/*",
         ],
-    ),
-    visibility = ["//omd:__subpackages__"],
+    ) + [
+        "//cmk/plugins/custom_query_metric_backend:libexec",
+    ],
+    visibility = [
+        "//cmk:__subpackages__",
+        "//omd:__subpackages__",
+        "//tests:__subpackages__",
+    ],
 )
 
 filegroup(

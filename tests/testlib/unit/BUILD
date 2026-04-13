@@ -8,8 +8,7 @@ py_library(
     imports = ["../../.."],
     visibility = [
         "//non-free/packages/cmk-robotmk:__pkg__",
-        "//tests:__pkg__",
-        "//tests/unit:__subpackages__",
+        "//tests:__subpackages__",
     ],
     deps = [
         "//cmk/base:app",

@@ -4,7 +4,10 @@ py_library(
     name = "server_side_calls_backend",
     srcs = glob(["**/*.py"]),
     imports = ["../.."],
-    visibility = ["//cmk:__subpackages__"],
+    visibility = [
+        "//cmk:__subpackages__",
+        "//tests:__subpackages__",
+    ],
     deps = [
         "//cmk/utils",
         "//packages/cmk-plugin-apis:discover_plugins",

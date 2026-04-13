@@ -88,6 +88,7 @@ void provide_agent_binaries(Map args) {
             relative_job_name: "${branch_base_folder(false)}/builders/build-linux-agent-updater",
             /// no Linux agent updaters for community edition..
             condition: ! test_binaries_only,
+            retry: 1,
             dependency_paths_hash: all_dependency_paths_hashes["build-linux-agent-updater"],
             additional_build_params: [],
             install_cmd: """\
@@ -106,6 +107,7 @@ void provide_agent_binaries(Map args) {
             dependency_paths_hash: all_dependency_paths_hashes["build-mk-oracle"],
             additional_build_params: [],
             condition: ! test_binaries_only,
+            retry: 1,
             install_cmd: """\
                 cp mk-oracle.{aix,solaris} ${checkout_dir}/omd/packages/mk-oracle/
                 """.stripIndent(),
@@ -114,6 +116,7 @@ void provide_agent_binaries(Map args) {
             relative_job_name: "${branch_base_folder(false)}/builders/build-cmk-package-mk-oracle-k8s",
             dependency_paths_hash: all_dependency_paths_hashes["build-mk-oracle"],
             condition: ! test_binaries_only,
+            retry: 1,
             additional_build_params: [
                 PACKAGE_PATH: "packages/mk-oracle",
                 DISTRO: "almalinux-8",
@@ -130,6 +133,7 @@ void provide_agent_binaries(Map args) {
             relative_job_name: "${branch_base_folder(false)}/builders/build-cmk-package-mk-oracle-k8s",
             dependency_paths_hash: all_dependency_paths_hashes["build-mk-oracle"],
             condition: test_binaries_only,
+            retry: 1,
             additional_build_params: [
                 PACKAGE_PATH: "packages/mk-oracle",
                 DISTRO: "almalinux-8",
@@ -152,6 +156,7 @@ void provide_agent_binaries(Map args) {
             relative_job_name: "${branch_base_folder(false)}/winagt-build",
             dependency_paths_hash: all_dependency_paths_hashes["winagt-build"],
             condition: ! test_binaries_only,
+            retry: 3,
             additional_build_params: [],
             install_cmd: """\
                 cp \
@@ -188,6 +193,7 @@ void provide_agent_binaries(Map args) {
             relative_job_name: "${branch_base_folder(false)}/winagt-build-modules",
             dependency_paths_hash: all_dependency_paths_hashes["winagt-build-modules"],
             condition: ! test_binaries_only,
+            retry: 3,
             additional_build_params: [],
             install_cmd: """\
                 cp \
@@ -210,6 +216,7 @@ void provide_agent_binaries(Map args) {
                 name: job_name,
                 condition: run_condition,
                 raiseOnError: true,
+                retry: details.retry ?: 1,
             ) {
                 def this_parameters = [
                     use_upstream_build: true,

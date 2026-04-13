@@ -168,6 +168,27 @@ py_library(
 )
 
 py_library(
+    name = "timeperiods",
+    srcs = ["timeperiods.py"],
+    imports = ["../../.."],
+    visibility = [
+        "//cmk:__subpackages__",
+        "//tests:__subpackages__",
+    ],
+    deps = [
+        ":config_infra",
+        "//cmk/gui:hooks",
+        "//cmk/gui:http",
+        "//cmk/gui:i18n",
+        "//cmk/gui/utils:urls",
+        "//cmk/gui/valuespec",
+        "//cmk/utils",
+        "//packages/cmk-ccc:plugin-registry",
+        "//packages/cmk-ccc:user",
+    ],
+)
+
+py_library(
     name = "watolib",
     srcs = glob(
         include = ["**/*.py"],
@@ -198,6 +219,7 @@ py_library(
             "password_store.py",
             "passwords.py",
             "tag_config_file.py",
+            "timeperiods.py",
         ],
     ),
     imports = ["../../.."],
@@ -212,6 +234,7 @@ py_library(
         ":passwords",
         ":registries",
         ":tag_config_file",
+        ":timeperiods",
         "//cmk/automations",
         "//cmk/bi",
         "//cmk/diagnostics",

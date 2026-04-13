@@ -6,7 +6,7 @@
 import abc
 import collections
 import json
-from collections.abc import Callable, Iterable, Iterator, Sequence
+from collections.abc import Callable, Iterator, Sequence
 from typing import override
 
 import cmk.ccc.version as cmk_version
@@ -769,26 +769,27 @@ class GUIViewRenderer(ABCViewRenderer):
             if not group.teleport_to_menu:
                 continue
 
-            dropdown = menu[group.teleport_to_menu]
+            visible_entries = []
+            for command in commands:
+                entry = self._get_page_menu_entry_by_command(info_name, command, rows)
+                if str(command.title).strip():
+                    visible_entries.append(entry)
+                elif isinstance(entry.item, PageMenuVue):
+                    menu.hidden_vue_items.append(entry.item)
 
+            if not visible_entries:
+                continue
+
+            dropdown = menu[group.teleport_to_menu]
             dropdown.topics.insert(
                 group.teleport_menu_index,
                 PageMenuTopic(
                     title=group.title,
-                    entries=list(self._get_teleported_command_items(info_name, commands, rows)),
+                    entries=visible_entries,
                 ),
             )
 
         return menu
-
-    def _get_teleported_command_items(
-        self,
-        info_name: InfoName,
-        commands: Iterable[Command],
-        rows: Rows,
-    ) -> Iterator[PageMenuEntry]:
-        for command in commands:
-            yield self._get_page_menu_entry_by_command(info_name, command, rows)
 
 
 def _add_command_doc_references(menu: PageMenu) -> None:

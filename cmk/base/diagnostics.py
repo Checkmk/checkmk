@@ -20,7 +20,7 @@ import textwrap
 import traceback
 import urllib.parse
 import uuid
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from contextlib import redirect_stderr, redirect_stdout
 from dataclasses import dataclass
 from datetime import datetime
@@ -111,7 +111,7 @@ SUFFIX = ".tar.gz"
 
 
 def mode_create_diagnostics_dump(
-    core_performance_settings: Callable[[LoadedConfigFragment], dict[str, int]],
+    core_performance_settings: Callable[[LoadedConfigFragment], Mapping[str, int]],
 ) -> Mode:
     return Mode(
         long_option="create-diagnostics-dump",
@@ -126,7 +126,7 @@ def mode_create_diagnostics_dump(
 
 
 def _make_mode_create_diagnostics_dump(
-    core_performance_settings: Callable[[LoadedConfigFragment], dict[str, int]],
+    core_performance_settings: Callable[[LoadedConfigFragment], Mapping[str, int]],
 ) -> Callable[[CheckmkBaseApp, DiagnosticsModesParameters], None]:
     def handler(app: CheckmkBaseApp, options: DiagnosticsModesParameters) -> None:
         # NOTE: All the stuff is logged on this level only, which is below the default WARNING level.
@@ -267,7 +267,7 @@ automation_create_diagnostics_dump = Automation(
 def create_diagnostics_dump(
     loaded_config: LoadedConfigFragment,
     parameters: DiagnosticsOptionalParameters | None,
-    core_performance_settings: Callable[[LoadedConfigFragment], dict[str, int]],
+    core_performance_settings: Callable[[LoadedConfigFragment], Mapping[str, int]],
     omd_config: site.OMDConfig,
     omd_root: Path,
 ) -> None:
@@ -343,7 +343,7 @@ class DiagnosticsDump:
     def __init__(
         self,
         loaded_config: LoadedConfigFragment,
-        core_performance_settings: Callable[[LoadedConfigFragment], dict[str, int]],
+        core_performance_settings: Callable[[LoadedConfigFragment], Mapping[str, int]],
         omd_config: site.OMDConfig,
         omd_root: Path,
         parameters: DiagnosticsOptionalParameters | None = None,
@@ -378,7 +378,7 @@ class DiagnosticsDump:
     def _get_fixed_elements(
         self,
         loaded_config: LoadedConfigFragment,
-        core_performance_settings: Callable[[LoadedConfigFragment], dict[str, int]],
+        core_performance_settings: Callable[[LoadedConfigFragment], Mapping[str, int]],
         parameters: DiagnosticsOptionalParameters | None,
     ) -> list[ABCDiagnosticsElement]:
         fixed_elements = [
@@ -916,7 +916,7 @@ class PerfDataDiagnosticsElement(ABCDiagnosticsElementJSONDump):
         self,
         omd_root: Path,
         load_config: LoadedConfigFragment,
-        core_performance_settings: Callable[[LoadedConfigFragment], dict[str, int]],
+        core_performance_settings: Callable[[LoadedConfigFragment], Mapping[str, int]],
     ) -> None:
         super().__init__(omd_root)
         self._loaded_config: Final = load_config

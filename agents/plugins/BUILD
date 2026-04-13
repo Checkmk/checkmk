@@ -51,8 +51,6 @@ py_library(
         "mk_sap.py",
         "mk_tinkerforge.py",
         "nginx_status.py",
-        "plesk_backups.py",
-        "plesk_domains.py",
     ],
     imports = ["."],
     visibility = ["//tests:__subpackages__"],

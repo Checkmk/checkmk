@@ -9,7 +9,7 @@
 import pytest
 from _pytest.capture import CaptureFixture  # python 3.4 ...
 
-from agents.plugins.plesk_backups import connect
+from cmk.plugins.plesk.agents.plesk_backups import connect
 
 
 def test_import_module(capfd: CaptureFixture) -> None:

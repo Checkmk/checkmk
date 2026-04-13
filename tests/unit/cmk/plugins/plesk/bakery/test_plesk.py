@@ -5,12 +5,18 @@
 
 from pathlib import Path
 
-from cmk.bakery.v1 import OS, Plugin
-from cmk.base.plugins.bakery.plesk import get_plesk_files
+from cmk.bakery.v2_unstable import OS, Plugin
+from cmk.plugins.plesk.bakery.plesk import bakery_plugin_plesk
+
+
+def test_do_not_deploy() -> None:
+    conf = bakery_plugin_plesk.parameter_parser({"deployment": ("do_not_deploy", None)})
+    assert not list(bakery_plugin_plesk.files_function(conf))
 
 
 def test_plesk_files() -> None:
-    result = sorted(get_plesk_files({"deployment": ("cached", 3600.0)}), key=repr)
+    conf = bakery_plugin_plesk.parameter_parser({"deployment": ("cached", 3600.0)})
+    result = sorted(bakery_plugin_plesk.files_function(conf), key=repr)
     expected = sorted(
         [
             Plugin(base_os=OS.LINUX, source=Path("plesk_backups.py"), interval=3600),

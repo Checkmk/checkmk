@@ -14,7 +14,10 @@ py_library(
             "**/community/**",
             "**/nonfree/**",
         ],
-    ) + ["//cmk/plugins/mtr/agents"],
+    ) + [
+        "//cmk/plugins/mtr/agents",
+        "//cmk/plugins/plesk/agents",
+    ],
     imports = ["../.."],
     visibility = [
         "//cmk:__subpackages__",

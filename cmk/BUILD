@@ -669,6 +669,7 @@ _KNOWN_UNDECLARED = [
     "ibm-db-dbi",  # cmk/plugins/sql/active_check/check_sql.py
     "sqlanydb",  # cmk/plugins/sql/active_check/check_sql.py
     "rados",  # cmk/plugins/ceph/agents/mk_ceph.py
+    "mysqldb",  # cmk/plugins/plesk/agents/plesk_backups.py
     "typeshed",  # shipped with the standard library part of typeshed, which is bundled with mypy
     "rrdtool",  # is built as part of the project
 ]

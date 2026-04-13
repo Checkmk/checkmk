@@ -1784,7 +1784,6 @@ allows = [
 "bin/cmk-convert-rrds" = "cmk.rrd"
 "bin/cmk-create-rrd.py" = "cmk.rrd"
 "bin/cmk-migrate-extension-rulesets" = "cmk.update_config"
-"bin/cmk-migrate-http" = "cmk.update_config"
 "bin/cmk-passwd" = "cmk.cmkpasswd"
 "bin/cmk-ui-job-scheduler" = "cmk.gui"
 "bin/cmk-update-config" = "cmk.update_config"

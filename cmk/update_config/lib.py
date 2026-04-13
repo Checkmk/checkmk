@@ -17,3 +17,4 @@ class ExpiryVersion(Enum):
 
     NEVER = auto()
     CMK_300 = auto()
+    CMK_310 = auto()

@@ -27,6 +27,7 @@ const props = defineProps<{
   agent_connection_modes: Array<ModeHostAgentConnectionMode>
   agent_slideout: AgentSlideout
   host_name: string
+  is_auto_registered: boolean
 }>()
 
 const setupError: Ref<boolean> = ref(!!document.querySelector('.wato .error'))
@@ -203,5 +204,6 @@ function getElementBySelector<T>(selector: string): T {
     :agent-connection-modes="agent_connection_modes"
     :agent-slideout="agent_slideout"
     :setup-error="setupError"
+    :is-auto-registered="is_auto_registered"
   ></AgentConnectionTest>
 </template>

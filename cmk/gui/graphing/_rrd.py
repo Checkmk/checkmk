@@ -27,7 +27,7 @@ from cmk.ccc.site import SiteId
 from cmk.ccc.version import parse_check_mk_version
 from cmk.gui import sites
 from cmk.gui.i18n import _
-from cmk.gui.type_defs import ColumnName, Perfdata
+from cmk.gui.type_defs import ColumnName
 from cmk.gui.utils.temperate_unit import TemperatureUnit
 from cmk.utils.metrics import MetricName
 from cmk.utils.servicename import ServiceName
@@ -62,8 +62,6 @@ tracer = trace.get_tracer()
 class HostGraphRow:
     site: SiteId
     host_name: HostName
-    performance_data: Perfdata
-    metrics: list[MetricName]
     check_command: str
     translated_metrics: Mapping[str, TranslatedMetric] = field(default_factory=dict)
 
@@ -77,8 +75,6 @@ class ServiceGraphRow:
     site: SiteId
     host_name: HostName
     service_name: ServiceName
-    performance_data: Perfdata
-    metrics: list[MetricName]
     check_command: str
     translated_metrics: Mapping[str, TranslatedMetric] = field(default_factory=dict)
 
@@ -119,8 +115,6 @@ def fetch_graph_row(
         return HostGraphRow(
             site=SiteId(site),
             host_name=host_name,
-            performance_data=perf_data,
-            metrics=raw["host_metrics"],
             check_command=check_command,
             translated_metrics=translated,
         )
@@ -128,8 +122,6 @@ def fetch_graph_row(
         site=SiteId(site),
         host_name=host_name,
         service_name=service_description,
-        performance_data=perf_data,
-        metrics=raw["service_metrics"],
         check_command=check_command,
         translated_metrics=translated,
     )
@@ -164,8 +156,6 @@ def make_graph_row(
         return HostGraphRow(
             site=site,
             host_name=host_name,
-            performance_data=perf_data,
-            metrics=metrics,
             check_command=normalized_check_command,
             translated_metrics=translated,
         )
@@ -173,8 +163,6 @@ def make_graph_row(
         site=site,
         host_name=host_name,
         service_name=service_name,
-        performance_data=perf_data,
-        metrics=metrics,
         check_command=normalized_check_command,
         translated_metrics=translated,
     )

@@ -577,8 +577,6 @@ class _FakeTemplateGraphSpecification(TemplateGraphSpecification):
                 site=SiteId("site_id"),
                 host_name=HostName("host_name"),
                 service_name=ServiceName("service_name"),
-                performance_data=perf_data,
-                metrics=["metric1", "metric2"],
                 check_command=check_command,
                 translated_metrics=compute_translated_metrics(
                     perf_data,
@@ -2019,8 +2017,6 @@ class _FakeTemplateGraphSpecificationFS(TemplateGraphSpecification):
                 site=SiteId("site_id"),
                 host_name=HostName("host_name"),
                 service_name=ServiceName("service_name"),
-                performance_data=perf_data,
-                metrics=metrics_list,
                 check_command=check_command,
                 translated_metrics=compute_translated_metrics(
                     perf_data,

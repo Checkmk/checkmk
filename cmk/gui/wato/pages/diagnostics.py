@@ -3,17 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="comparison-overlap"
-
-# mypy: disable-error-code="type-arg"
-
 import json
 import os
 import tarfile
 import uuid
 from collections.abc import Collection, Iterator, Sequence
 from pathlib import Path
-from typing import override
+from typing import Any, override
 
 from pydantic import BaseModel
 
@@ -139,7 +135,7 @@ def register(
     job_registry.register(DiagnosticsDumpBackgroundJob)
 
 
-class ModeDiagnostics(WatoMode):
+class ModeDiagnostics(WatoMode[object]):
     @classmethod
     def name(cls) -> str:
         return "diagnostics"
@@ -241,7 +237,6 @@ class ModeDiagnostics(WatoMode):
             return redirect(self._job.detail_url())
 
         params = self._diagnostics_parameters
-        assert params is not None
         site = params["site"]
         site_config = config.sites[site]
         automation_config = make_automation_config(site_config)
@@ -431,8 +426,8 @@ class ModeDiagnostics(WatoMode):
             optional_keys=False,
         )
 
-    def _get_optional_information_elements(self) -> list[tuple[str, ValueSpec]]:
-        elements: list[tuple[str, ValueSpec]] = [
+    def _get_optional_information_elements(self) -> list[tuple[str, ValueSpec[object]]]:
+        elements: list[tuple[str, ValueSpec[object]]] = [
             (
                 OPT_LOCAL_FILES,
                 FixedValue(
@@ -541,8 +536,8 @@ class ModeDiagnostics(WatoMode):
 
         return elements
 
-    def _get_component_specific_elements(self) -> list[tuple[str, ValueSpec]]:
-        elements: list[tuple[str, ValueSpec]] = [
+    def _get_component_specific_elements(self) -> list[tuple[str, ValueSpec[dict[str, Any]]]]:
+        elements: list[tuple[str, ValueSpec[dict[str, Any]]]] = [
             (
                 OPT_COMP_GLOBAL_SETTINGS,
                 Dictionary(
@@ -635,7 +630,7 @@ class ModeDiagnostics(WatoMode):
             )
         return elements
 
-    def _get_bi_runtime_data(self) -> list[tuple[str, ValueSpec]]:
+    def _get_bi_runtime_data(self) -> list[tuple[str, ValueSpec[object]]]:
         return [
             (
                 OPT_BI_RUNTIME_DATA,
@@ -658,7 +653,7 @@ class ModeDiagnostics(WatoMode):
         element_id: str,
         element_title: str,
         files_map: CheckmkFilesMap,
-    ) -> Iterator[tuple[str, ValueSpec]]:
+    ) -> Iterator[tuple[str, ValueSpec[object]]]:
         files = [
             (f, fi)
             for f in files_map
@@ -676,8 +671,8 @@ class ModeDiagnostics(WatoMode):
 
     def _get_component_specific_checkmk_files_elements(
         self, component: str
-    ) -> list[tuple[str, ValueSpec]]:
-        elements: list[tuple[str, ValueSpec]] = []
+    ) -> list[tuple[str, ValueSpec[object]]]:
+        elements: list[tuple[str, ValueSpec[object]]] = []
         for filetype in [
             (
                 "config_files",
@@ -715,7 +710,7 @@ class ModeDiagnostics(WatoMode):
         self,
         title: str,
         checkmk_files: list[tuple[str, CheckmkFileInfo]],
-    ) -> ValueSpec:
+    ) -> ValueSpec[Any]:
         sorted_checkmk_files = sorted(checkmk_files, key=lambda t: t[0])
         high_sensitive_files = [
             f

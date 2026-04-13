@@ -3,10 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="comparison-overlap"
-
-# mypy: disable-error-code="unreachable"
-
 import re
 from collections.abc import Callable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
@@ -239,10 +235,7 @@ def _extract_list_of_files(value: tuple[str, list[str]] | None) -> set[str]:
 def deserialize_cl_parameters(
     cl_parameters: DiagnosticsCLParameters,
 ) -> DiagnosticsOptionalParameters:
-    if cl_parameters is None:
-        return {}
-
-    deserialized_parameters: DiagnosticsOptionalParameters = {}
+    deserialized_parameters = DiagnosticsOptionalParameters()
     parameters = iter(cl_parameters)
     while True:
         try:

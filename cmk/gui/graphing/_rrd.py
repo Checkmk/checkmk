@@ -447,9 +447,6 @@ def translate_and_merge_rrd_columns(
     *,
     temperature_unit: TemperatureUnit,
 ) -> TimeSeries:
-    def scaler(scale: float) -> Callable[[float], float]:
-        return lambda v: v * scale
-
     relevant_ts = []
 
     for column_name, data in rrd_columns:
@@ -461,32 +458,35 @@ def translate_and_merge_rrd_columns(
         metric_name = MetricName(column_name.split(":")[1])
         metric_translation = find_matching_translation(metric_name, translations)
 
-        if metric_translation.name == target_metric:
-            if not data or data[0] is None or data[1] is None or data[2] is None:
-                raise ValueError(data)
-            relevant_ts.append(
-                TimeSeries(
-                    start=int(data[0]),
-                    end=int(data[1]),
-                    step=int(data[2]),
-                    values=data[3:],
-                    conversion=scaler(metric_translation.scale),
-                )
+        if metric_translation.name != target_metric:
+            continue
+
+        if data[0] is None or data[1] is None or data[2] is None:
+            raise ValueError(data)
+
+        def _scale(v: float, s: float = metric_translation.scale) -> float:
+            return v * s
+
+        relevant_ts.append(
+            TimeSeries(
+                start=int(data[0]),
+                end=int(data[1]),
+                step=int(data[2]),
+                values=data[3:],
+                conversion=_scale,
             )
+        )
 
     if not relevant_ts:
         return TimeSeries(start=0, end=0, step=0, values=[])
 
-    timeseries = relevant_ts[0]
     _op_title, op_func = time_series_operators()["MERGE"]
-    single_value_series = [op_func_wrapper(op_func, list(tsp)) for tsp in zip(*relevant_ts)]
-
     return TimeSeries(
-        start=timeseries.start,
-        end=timeseries.end,
-        step=timeseries.step,
-        values=single_value_series,
+        start=relevant_ts[0].start,
+        end=relevant_ts[0].end,
+        step=relevant_ts[0].step,
+        values=[op_func_wrapper(op_func, list(tsp)) for tsp in zip(*relevant_ts)],
         conversion=user_specific_unit(
-            get_metric_spec(metric_name, registered_metrics).unit_spec, temperature_unit
+            get_metric_spec(target_metric, registered_metrics).unit_spec, temperature_unit
         ).conversion,
     )

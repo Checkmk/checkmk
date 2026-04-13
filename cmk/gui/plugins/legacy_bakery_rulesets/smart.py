@@ -3,48 +3,93 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Mapping
 
-from typing import Literal
-
-from cmk.gui.agent_bakery import RulespecGroupMonitoringAgentsAgentPlugins
-from cmk.gui.i18n import _
-from cmk.gui.plugins.wato.utils import HostRulespec, rulespec_registry
-from cmk.gui.valuespec import DropdownChoice, Migrate
-from cmk.utils.rulesets.definition import RuleGroup
-
-
-def _migrate(
-    value: Literal["smart_posix", "smart", True] | None,
-) -> Literal["smart_posix", "smart"] | None:
-    if value is True:
-        return "smart"
-    return value
+from cmk.rulesets.v1 import Help, Label, Title
+from cmk.rulesets.v1.form_specs import (
+    BooleanChoice,
+    CascadingSingleChoice,
+    CascadingSingleChoiceElement,
+    DefaultValue,
+    DictElement,
+    Dictionary,
+    FixedValue,
+    TimeMagnitude,
+    TimeSpan,
+)
+from cmk.rulesets.v1.rule_specs import AgentConfig, Topic
 
 
-def _valuespec_agent_config_smart() -> Migrate[Literal["smart_posix", "smart"] | None]:
-    return Migrate(
-        migrate=_migrate,
-        valuespec=DropdownChoice[Literal["smart_posix", "smart"] | None](
-            title=_("SMART hard disk monitoring (Linux)"),
-            help=_(
-                "Hosts configured via this rule get the <tt>smart_posix</tt> plug-in "
-                "deployed. Assuming you have installed <tt>smartmontools</tt>, "
-                "your local hard disks will be monitored for temperature and errors. "
-                "The legacy plug-in <tt>smart</tt> is deprecated and should not be used anymore. "
-            ),
-            choices=[
-                ("smart_posix", _("Deploy SMART Posix plug-in")),
-                ("smart", _("Deploy SMART legacy plug-in")),
-                (None, _("Do not deploy SMART plug-in")),
-            ],
+def migrate(value: object) -> Mapping[str, object]:
+    if isinstance(value, dict) and "deployment" in value:
+        dep = value["deployment"]
+        if isinstance(dep, (tuple, list)) and dep[0] in ("sync", "cached", "do_not_deploy"):
+            return value
+        if isinstance(dep, (tuple, list)) and dep[0] == "smart_posix":
+            return {"deployment": ("sync", None)}
+        if isinstance(dep, (tuple, list)) and dep[0] == "smart":
+            return {"deployment": ("sync", None), "use_legacy_plugin": True}
+    if value is None:
+        return {"deployment": ("do_not_deploy", None)}
+    if value == "smart_posix":
+        return {"deployment": ("sync", None)}
+    if value in ("smart", True):
+        return {"deployment": ("sync", None), "use_legacy_plugin": True}
+    raise ValueError(f"Unexpected value: {value!r}")
+
+
+def _valuespec_agent_config_smart() -> Dictionary:
+    return Dictionary(
+        help_text=Help(
+            "Hosts configured via this rule get the <tt>smart_posix</tt> or <tt>smart</tt> "
+            "plug-in deployed. Assuming you have installed <tt>smartmontools</tt>, "
+            "your local hard disks will be monitored for temperature and errors. "
+            "The legacy plug-in <tt>smart</tt> is deprecated and should not be used anymore."
         ),
+        elements={
+            "deployment": DictElement(
+                required=True,
+                parameter_form=CascadingSingleChoice(
+                    title=Title("Deployment type"),
+                    elements=(
+                        CascadingSingleChoiceElement(
+                            name="sync",
+                            title=Title("Deploy the plug-in and run it synchronously"),
+                            parameter_form=FixedValue(value=None),
+                        ),
+                        CascadingSingleChoiceElement(
+                            name="cached",
+                            title=Title("Deploy the plug-in and run it asynchronously"),
+                            parameter_form=TimeSpan(
+                                displayed_magnitudes=(
+                                    TimeMagnitude.HOUR,
+                                    TimeMagnitude.MINUTE,
+                                )
+                            ),
+                        ),
+                        CascadingSingleChoiceElement(
+                            name="do_not_deploy",
+                            title=Title("Do not deploy the SMART plug-in"),
+                            parameter_form=FixedValue(value=None),
+                        ),
+                    ),
+                    prefill=DefaultValue("sync"),
+                ),
+            ),
+            "use_legacy_plugin": DictElement(
+                parameter_form=BooleanChoice(
+                    label=Label("Use deprecated legacy SMART plug-in (not recommended)"),
+                    prefill=DefaultValue(False),
+                ),
+            ),
+        },
+        migrate=migrate,
     )
 
 
-rulespec_registry.register(
-    HostRulespec(
-        group=RulespecGroupMonitoringAgentsAgentPlugins,
-        name=RuleGroup.AgentConfig("smart"),
-        valuespec=_valuespec_agent_config_smart,
-    )
+rule_spec_smart = AgentConfig(
+    title=Title("SMART hard disk monitoring (Linux)"),
+    name="smart",
+    topic=Topic.STORAGE,
+    parameter_form=_valuespec_agent_config_smart,
 )

@@ -99,31 +99,17 @@ def fetch_graph_row(
         site, *values = sites.live().query_row(query)
 
     raw = dict(zip(labels, values))
-    perf_data, check_command = parse_perf_data(
-        raw[f"{what}_perf_data"], raw[f"{what}_check_command"], debug=debug
-    )
-    translated = compute_translated_metrics(
-        perf_data,
+    return make_graph_row(
+        SiteId(site),
+        host_name,
+        service_description,
+        raw[f"{what}_perf_data"],
         raw[f"{what}_metrics"],
-        check_command,
+        raw[f"{what}_check_command"],
         registered_metrics,
         explicit_color,
         debug=debug,
         temperature_unit=temperature_unit,
-    )
-    if what == "host":
-        return HostGraphRow(
-            site=SiteId(site),
-            host_name=host_name,
-            check_command=check_command,
-            translated_metrics=translated,
-        )
-    return ServiceGraphRow(
-        site=SiteId(site),
-        host_name=host_name,
-        service_name=service_description,
-        check_command=check_command,
-        translated_metrics=translated,
     )
 
 

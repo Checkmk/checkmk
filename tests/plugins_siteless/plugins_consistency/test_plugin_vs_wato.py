@@ -38,6 +38,7 @@ logger = logging.getLogger(__name__)
 
 @pytest.fixture(autouse=True)
 def load_plugins() -> None:
+    # hardcode to ultimate MT to load _all_ plugins.
     perform_load_plugins(Edition.ULTIMATEMT)
 
 

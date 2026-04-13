@@ -18,9 +18,9 @@ void main() {
     def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
     def package_helper = load("${checkout_dir}/buildscripts/scripts/utils/package_helper.groovy");
 
-    def edition = EDITION;
-    def version = VERSION;
-    def disable_cache = DISABLE_CACHE;
+    def edition = params.EDITION;
+    def version = params.VERSION;
+    def disable_cache = params.DISABLE_CACHE;
     def safe_branch_name = versioning.safe_branch_name();
     def branch_version = versioning.get_branch_version(checkout_dir);
     def branch_base_folder = package_helper.branch_base_folder(false);

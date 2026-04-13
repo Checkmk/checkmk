@@ -29,8 +29,8 @@ void main() {
     def branch_version = versioning.get_branch_version(checkout_dir);
     // When building from a git tag (VERSION != "daily"), we cannot get the branch name from the scm so used defines.make instead.
     // this is save on master as there are no tags/versions built other than daily
-    def branch_name = (VERSION == "daily") ? safe_branch_name : branch_version;
-    def cmk_version_rc_aware = versioning.get_cmk_version(safe_branch_name, branch_version, VERSION);
+    def branch_name = (params.VERSION == "daily") ? safe_branch_name : branch_version;
+    def cmk_version_rc_aware = versioning.get_cmk_version(safe_branch_name, branch_version, params.VERSION);
 
     def make_target = "test-docker-docker";
     def package_dir = "${checkout_dir}/downloaded_packages_for_docker_tests";
@@ -40,7 +40,7 @@ void main() {
 
     def relative_job_name = "${branch_base_folder}/builders/trigger-cmk-distro-package";
     def setup_values = single_tests.common_prepare(
-        version: VERSION,
+        version: params.VERSION,
         make_target: make_target,
         docker_tag: params.CIPARAM_OVERRIDE_DOCKER_TAG_BUILD
     );

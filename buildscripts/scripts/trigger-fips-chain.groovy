@@ -46,7 +46,7 @@ void main() {
         |version:............... │${params.VERSION}│
         |safe_branch_name:...... │${safe_branch_name}│
         |override_distros:...... │${params.OVERRIDE_DISTROS}│
-        |fake_artifacts: │${params.FAKE_ARTIFACTS}│
+        |fake_artifacts:........ │${params.FAKE_ARTIFACTS}│
         |custom_git_ref:........ │${effective_git_ref}│
         |safe_branch_name:...... │${safe_branch_name}│
         |===================================================

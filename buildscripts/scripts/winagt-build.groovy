@@ -10,7 +10,7 @@ void main() {
 
     def branch_name = versioning.safe_branch_name();
     def branch_version = versioning.get_branch_version(checkout_dir);
-    def cmk_vers_rc_aware = versioning.get_cmk_version(branch_name, branch_version, VERSION);
+    def cmk_vers_rc_aware = versioning.get_cmk_version(branch_name, branch_version, params.VERSION);
     def cmk_version = versioning.strip_rc_number_from_version(cmk_vers_rc_aware);
 
     dir("${checkout_dir}") {

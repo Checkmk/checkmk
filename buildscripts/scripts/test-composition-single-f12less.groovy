@@ -24,8 +24,6 @@ void main() {
     def distro = params.DISTRO;
     def edition = params.EDITION;
     def fake_artifacts = params.FAKE_ARTIFACTS;
-
-    // TODO: we should always use USE_CASE directly from the job parameters
     def use_case = (params.USE_CASE == "fips") ? params.USE_CASE : "daily_tests";
     test_jenkins_helper.assert_fips_testing(use_case, NODE_LABELS);
 

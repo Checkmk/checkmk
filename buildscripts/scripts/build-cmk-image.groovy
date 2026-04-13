@@ -39,15 +39,15 @@ void main() {
     def branch_version = versioning.get_branch_version(checkout_dir);
     // When building from a git tag (VERSION != "daily"), we cannot get the branch name from the scm so used defines.make instead.
     // this is save on master as there are no tags/versions built other than daily
-    def branch_name = (VERSION == "daily") ? safe_branch_name : branch_version;
-    def cmk_version_rc_aware = versioning.get_cmk_version(branch_name, branch_version, VERSION);
+    def branch_name = (params.VERSION == "daily") ? safe_branch_name : branch_version;
+    def cmk_version_rc_aware = versioning.get_cmk_version(branch_name, branch_version, params.VERSION);
     def cmk_version = versioning.strip_rc_number_from_version(cmk_version_rc_aware);
 
     def package_dir = "${checkout_dir}/download";
     def source_dir = package_dir + "/" + cmk_version_rc_aware;
 
-    def push_to_registry = PUSH_TO_REGISTRY == 'true';
-    def build_image = PUSH_TO_REGISTRY_ONLY != 'true';
+    def push_to_registry = params.PUSH_TO_REGISTRY == 'true';
+    def build_image = params.PUSH_TO_REGISTRY_ONLY != 'true';
 
     print(
         """
@@ -171,7 +171,7 @@ void main() {
     ) {
         withCredentials([
             usernamePassword(
-                credentialsId: test_helper.registry_credentials_id(EDITION),
+                credentialsId: test_helper.registry_credentials_id(params.EDITION),
                 passwordVariable: 'DOCKER_PASSPHRASE',
                 usernameVariable: 'DOCKER_USERNAME'),
             usernamePassword(
@@ -189,13 +189,13 @@ void main() {
                         scripts/run-uvenv python \
                         buildscripts/scripts/build-cmk-container.py \
                         --branch=${branch_name} \
-                        --edition=${EDITION} \
+                        --edition=${params.EDITION} \
                         --version=${cmk_version} \
                         --source_path=${source_dir} \
-                        --set_latest_tag=${SET_LATEST_TAG} \
-                        --set_branch_latest_tag=${SET_BRANCH_LATEST_TAG} \
-                        --no_cache=${BUILD_IMAGE_WITHOUT_CACHE} \
-                        --image_cmk_base=${CUSTOM_CMK_BASE_IMAGE} \
+                        --set_latest_tag=${params.SET_LATEST_TAG} \
+                        --set_branch_latest_tag=${params.SET_BRANCH_LATEST_TAG} \
+                        --no_cache=${params.BUILD_IMAGE_WITHOUT_CACHE} \
+                        --image_cmk_base=${params.CUSTOM_CMK_BASE_IMAGE} \
                         --action=build \
                         -vvv
                     """);
@@ -279,7 +279,7 @@ void main() {
                             scripts/run-uvenv python \
                             buildscripts/scripts/build-cmk-container.py \
                             --branch=${branch_name} \
-                            --edition=${EDITION} \
+                            --edition=${params.EDITION} \
                             --version=${cmk_version} \
                             --version_rc_aware=${cmk_version_rc_aware} \
                             --source_path=${source_dir} \
@@ -294,13 +294,13 @@ void main() {
                         scripts/run-uvenv python \
                         buildscripts/scripts/build-cmk-container.py \
                         --branch=${branch_name} \
-                        --edition=${EDITION} \
+                        --edition=${params.EDITION} \
                         --version=${cmk_version} \
                         --source_path=${source_dir} \
-                        --set_latest_tag=${SET_LATEST_TAG} \
-                        --set_branch_latest_tag=${SET_BRANCH_LATEST_TAG} \
-                        --no_cache=${BUILD_IMAGE_WITHOUT_CACHE} \
-                        --image_cmk_base=${CUSTOM_CMK_BASE_IMAGE} \
+                        --set_latest_tag=${params.SET_LATEST_TAG} \
+                        --set_branch_latest_tag=${params.SET_BRANCH_LATEST_TAG} \
+                        --no_cache=${params.BUILD_IMAGE_WITHOUT_CACHE} \
+                        --image_cmk_base=${params.CUSTOM_CMK_BASE_IMAGE} \
                         --action=push \
                         -vvv
                     """);

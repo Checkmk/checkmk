@@ -296,6 +296,7 @@ test-plugins-piggyback:
 
 test-plugins-siteless:
 	$(PYTEST) --log-cli-level=INFO $(realpath plugins_siteless) \
+	$(if $(RESULT_PATH),--junitxml="$(RESULT_PATH)/junit.xml") \
 	--session-timeout 1800
 
 test-plugins-consistency:

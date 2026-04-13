@@ -59,6 +59,15 @@ _Section = Mapping[str, _ElasticIndex]
 
 
 def parse_elasticsearch_indices(string_table: StringTable) -> _Section:
+    if not string_table or not string_table[0]:
+        return {}
+    try:
+        raw_indices = json.loads(string_table[0][0])
+    except json.JSONDecodeError:
+        # The section is expected to contain a single JSON payload produced by
+        # the current special agent. If we encounter a different (e.g. legacy
+        # or custom) format we silently drop the section rather than crashing.
+        return {}
     return {
         index_name: _ElasticIndex(
             count=index_response.primaries.docs.count,
@@ -66,7 +75,7 @@ def parse_elasticsearch_indices(string_table: StringTable) -> _Section:
         )
         for index_name, index_response in (
             (index_name, _IndexResponse.model_validate(raw_dict))
-            for index_name, raw_dict in json.loads(string_table[0][0]).items()
+            for index_name, raw_dict in raw_indices.items()
         )
     }
 

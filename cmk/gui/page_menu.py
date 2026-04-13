@@ -311,6 +311,7 @@ class PageMenu:
     breadcrumb: Breadcrumb | None = None
     inpage_search: PageMenuSearch | None = None
     enable_suggestions: bool = True
+    hidden_vue_items: list[PageMenuVue] = field(default_factory=list)
 
     def __post_init__(self) -> None:
         # Add the display options dropdown
@@ -1018,6 +1019,12 @@ class PageMenuPopupsRenderer:
         for entry in menu.popups:
             self._show_popup(entry)
         html.close_div()
+
+        for vue_item in menu.hidden_vue_items:
+            html.vue_component(
+                component_name=vue_item.component_name,
+                data=asdict(vue_item.data),
+            )
 
     def _show_popup(self, entry: PageMenuEntry) -> None:
         assert isinstance(entry.item, PageMenuPopup)

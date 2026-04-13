@@ -3,6 +3,8 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
+import * as fs from 'fs'
+import * as path from 'path'
 import * as vscode from 'vscode'
 
 import { type SettingsEntry, buildEffectiveSettings } from '../../build/settings'
@@ -39,6 +41,23 @@ export function getExtensionHealth(extensionsConfig?: ExtensionSets | null): Ext
   return families
 }
 
+/**
+ * Read `.vscode/settings.json` once and return the parsed top-level keys.
+ * VS Code's `inspect()` returns undefined for keys whose owning extension
+ * isn't installed, so we consult the file itself as the source of truth.
+ */
+function readFolderSettingsFile(wsFolder: vscode.Uri | undefined): Record<string, unknown> {
+  if (!wsFolder) return {}
+  const settingsPath = path.join(wsFolder.fsPath, '.vscode', 'settings.json')
+  try {
+    const raw = fs.readFileSync(settingsPath, 'utf-8')
+    if (raw.trim() === '') return {}
+    return JSON.parse(raw) as Record<string, unknown>
+  } catch {
+    return {}
+  }
+}
+
 export function getSettingsMismatches(
   settingsConfig?: Record<string, SettingsEntry> | null,
   extensionsConfig?: ExtensionSets | null
@@ -49,21 +68,27 @@ export function getSettingsMismatches(
   const mismatches: SettingsMismatch[] = []
 
   const isFolderWorkspace = vscode.workspace.workspaceFile === undefined
+  const folderFileSettings = readFolderSettingsFile(vscode.workspace.workspaceFolders?.[0]?.uri)
 
   type Inspection = ReturnType<vscode.WorkspaceConfiguration['inspect']>
   const SCOPE_CONFIG = [
     {
       scope: 'folder' as const,
       label: 'folder',
-      getter: (i: Inspection) => i?.workspaceFolderValue
+      getter: (i: Inspection, key: string) => i?.workspaceFolderValue ?? folderFileSettings[key]
     },
     {
       scope: 'workspace' as const,
       label: 'workspace',
-      getter: (i: Inspection) =>
-        i?.workspaceValue ?? (isFolderWorkspace ? i?.workspaceFolderValue : undefined)
+      getter: (i: Inspection, key: string) =>
+        i?.workspaceValue ??
+        (isFolderWorkspace ? (i?.workspaceFolderValue ?? folderFileSettings[key]) : undefined)
     },
-    { scope: 'user' as const, label: 'user', getter: (i: Inspection) => i?.globalValue }
+    {
+      scope: 'user' as const,
+      label: 'user',
+      getter: (i: Inspection, _key: string) => i?.globalValue
+    }
   ]
 
   const seen = new Set<string>()
@@ -97,7 +122,7 @@ export function getSettingsMismatches(
 
         const expected = resolveVariables(rawExpected)
         const inspection = cfg.inspect(key)
-        const actual = getter(inspection)
+        const actual = getter(inspection, key)
 
         if (actual === undefined) {
           mismatches.push({ key, expected, actual: undefined, family: displayName, scope: label })
@@ -156,25 +181,116 @@ export function getSettingsMismatches(
   return mismatches
 }
 
+/**
+ * Write all folder-scoped mismatches in a single JSON merge-and-write to
+ * `.vscode/settings.json`. Returns the keys that were NOT batched (e.g. file
+ * is JSONC with comments and couldn't be parsed) so the caller can fall back
+ * to the per-key API for those.
+ */
+async function writeFolderBatch(
+  wsFolder: vscode.Uri,
+  entries: Array<{ key: string; value: unknown }>
+): Promise<{ batched: number; unbatched: Array<{ key: string; value: unknown }> }> {
+  if (entries.length === 0) return { batched: 0, unbatched: [] }
+  const settingsPath = path.join(wsFolder.fsPath, '.vscode', 'settings.json')
+  let raw = '{}'
+  try {
+    raw = fs.readFileSync(settingsPath, 'utf-8')
+    if (raw.trim() === '') raw = '{}'
+  } catch {
+    /* file doesn't exist yet */
+  }
+  let parsed: Record<string, unknown>
+  try {
+    parsed = JSON.parse(raw) as Record<string, unknown>
+  } catch {
+    // JSONC with comments/trailing commas — caller falls back per key
+    return { batched: 0, unbatched: entries }
+  }
+  for (const { key, value } of entries) {
+    if (value === undefined) delete parsed[key]
+    else parsed[key] = value
+  }
+  fs.mkdirSync(path.dirname(settingsPath), { recursive: true })
+  fs.writeFileSync(settingsPath, JSON.stringify(parsed, null, 2) + '\n')
+  return { batched: entries.length, unbatched: [] }
+}
+
+/**
+ * Apply many mismatches efficiently. Folder-scoped writes are coalesced into
+ * a single file write (avoiding per-key format-on-save cascades when the
+ * settings file is open in an editor); other scopes go through the API.
+ */
+export async function writeMismatchSettingsBatch(
+  mismatches: Array<{ key: string; expected: unknown; scope: string }>
+): Promise<{ applied: number; failed: string[] }> {
+  const wsFolder = vscode.workspace.workspaceFolders?.[0]?.uri
+  const folderEntries: Array<{ key: string; value: unknown }> = []
+  const others: typeof mismatches = []
+  for (const m of mismatches) {
+    if (m.scope === 'folder' && wsFolder) {
+      folderEntries.push({ key: m.key, value: m.expected })
+    } else {
+      others.push(m)
+    }
+  }
+
+  let applied = 0
+  const failed: string[] = []
+
+  if (wsFolder && folderEntries.length > 0) {
+    try {
+      const { batched, unbatched } = await writeFolderBatch(wsFolder, folderEntries)
+      applied += batched
+      for (const { key, value } of unbatched) others.push({ key, expected: value, scope: 'folder' })
+    } catch {
+      for (const e of folderEntries) others.push({ key: e.key, expected: e.value, scope: 'folder' })
+    }
+  }
+
+  for (const m of others) {
+    try {
+      await writeMismatchSetting(m.key, m.expected, m.scope)
+      applied++
+    } catch {
+      failed.push(m.key)
+    }
+  }
+
+  return { applied, failed }
+}
+
 export async function writeMismatchSetting(
   key: string,
   value: unknown,
   scope: string
 ): Promise<void> {
   const target =
-    scope === 'user' ? vscode.ConfigurationTarget.Global : vscode.ConfigurationTarget.Workspace
+    scope === 'user'
+      ? vscode.ConfigurationTarget.Global
+      : scope === 'folder'
+        ? vscode.ConfigurationTarget.WorkspaceFolder
+        : vscode.ConfigurationTarget.Workspace
+  const wsFolder = vscode.workspace.workspaceFolders?.[0]?.uri
+  // For folder scope, write directly to .vscode/settings.json. The VS Code
+  // API rejects updates for keys whose owning extension isn't loaded
+  // (e.g. djlint.useVenv when monosans.djlint isn't installed yet).
+  if (scope === 'folder' && wsFolder) {
+    const { unbatched } = await writeFolderBatch(wsFolder, [{ key, value }])
+    if (unbatched.length === 0) return
+  }
+  const resource = target === vscode.ConfigurationTarget.WorkspaceFolder ? wsFolder : undefined
   const dot = key.lastIndexOf('.')
   if (dot > 0) {
     const section = key.substring(0, dot)
     const leaf = key.substring(dot + 1)
     try {
-      await vscode.workspace.getConfiguration(section).update(leaf, value, target)
+      await vscode.workspace.getConfiguration(section, resource).update(leaf, value, target)
     } catch {
-      const wsFolder = vscode.workspace.workspaceFolders?.[0]?.uri
-      await vscode.workspace.getConfiguration(undefined, wsFolder).update(key, value, target)
+      await vscode.workspace.getConfiguration(undefined, resource).update(key, value, target)
     }
   } else {
-    await vscode.workspace.getConfiguration().update(key, value, target)
+    await vscode.workspace.getConfiguration(undefined, resource).update(key, value, target)
   }
 }
 
@@ -207,16 +323,7 @@ export async function handleMessage(
         notifyInfo(`CMK ▸ IDE: All ${family} settings already match.`)
         return true
       }
-      let applied = 0
-      const failed: string[] = []
-      for (const m of mismatches) {
-        try {
-          await writeMismatchSetting(m.key, m.expected, m.scope)
-          applied++
-        } catch {
-          failed.push(m.key)
-        }
-      }
+      const { applied, failed } = await writeMismatchSettingsBatch(mismatches)
       if (failed.length > 0) {
         notifyWarn(
           `CMK ▸ IDE: Applied ${applied} ${family} settings, ${failed.length} failed`,
@@ -234,16 +341,7 @@ export async function handleMessage(
         notifyInfo('CMK ▸ IDE: All settings already match.')
         return true
       }
-      let applied = 0
-      const failed: string[] = []
-      for (const m of mismatches) {
-        try {
-          await writeMismatchSetting(m.key, m.expected, m.scope)
-          applied++
-        } catch {
-          failed.push(m.key)
-        }
-      }
+      const { applied, failed } = await writeMismatchSettingsBatch(mismatches)
       if (failed.length > 0) {
         notifyWarn(
           `CMK ▸ IDE: Applied ${applied} settings, ${failed.length} failed`,

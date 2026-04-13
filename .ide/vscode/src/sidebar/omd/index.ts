@@ -9,6 +9,7 @@ import * as vscode from 'vscode'
 import { shellEscape } from '../../core/config'
 import { log } from '../../core/log'
 import { waitForTask } from '../../core/tasks'
+import { hasLogsForService, showServiceLogs, showSiteLogs } from '../../omd/logs'
 import { createSite, omdServiceCommand } from '../../omd/omd'
 import { KNOWN_SOCKETS, promptAndStartProxy, promptSocketProxy, stopProxy } from '../../omd/proxy'
 import { esc, getNonce, wrap } from '../html'
@@ -55,6 +56,14 @@ export async function handleMessage(
       const term = vscode.window.createTerminal({ name: `OMD: ${msg.site}` })
       term.show()
       term.sendText(`sudo omd su ${shellEscape(msg.site as string)}`)
+      return true
+    }
+    case 'omdLogs': {
+      await showSiteLogs(msg.site as string)
+      return true
+    }
+    case 'omdSvcLogs': {
+      await showServiceLogs(msg.site as string, msg.service as string)
       return true
     }
     case 'omdAuth':
@@ -195,6 +204,7 @@ export function render(state: StateCache, codiconUri?: vscode.Uri, cspSource?: s
         ? `<button class="btn btn-small btn-icon" data-action="omd-proxy-site" data-site="${esc(site.name)}" title="Socket proxy"><span class="codicon codicon-debug-disconnect"></span></button>`
         : ''
       const consoleBtn = `<button class="btn btn-small btn-icon" data-action="omd-console" data-site="${esc(site.name)}" title="Open site console"><span class="codicon codicon-terminal"></span></button>`
+      const logsBtn = `<button class="btn btn-small btn-icon" data-action="omd-logs" data-site="${esc(site.name)}" title="View logs"><span class="codicon codicon-file-text"></span></button>`
       const deleteBtn = `<button class="btn btn-small btn-icon btn-danger" data-action="omd-delete-site" data-site="${esc(site.name)}" title="Delete site"><span class="codicon codicon-trash"></span></button>`
       const svcRows = site.status.services
         .map((svc) => {
@@ -214,7 +224,10 @@ export function render(state: StateCache, codiconUri?: vscode.Uri, cspSource?: s
           const actions = svc.running
             ? `<button class="btn btn-small btn-icon" data-action="omd-service-action" data-omd-action="stop" data-site="${esc(site.name)}" data-service="${esc(svc.name)}" title="Stop"><span class="codicon codicon-debug-stop"></span></button><button class="btn btn-small btn-icon" data-action="omd-service-action" data-omd-action="restart" data-site="${esc(site.name)}" data-service="${esc(svc.name)}" title="Restart"><span class="codicon codicon-debug-restart"></span></button>`
             : `<button class="btn btn-small btn-icon" data-action="omd-service-action" data-omd-action="start" data-site="${esc(site.name)}" data-service="${esc(svc.name)}" title="Start"><span class="codicon codicon-play"></span></button>`
-          return `<div class="svc-row ${sCls}"><span class="svc-icon">${sIcon}</span><span class="svc-name">${esc(svc.name)}</span><span class="svc-actions">${proxyBtn}${actions}</span></div>`
+          const svcLogBtn = hasLogsForService(svc.name)
+            ? `<button class="btn btn-small btn-icon" data-action="omd-svc-logs" data-site="${esc(site.name)}" data-service="${esc(svc.name)}" title="View ${esc(svc.name)} logs"><span class="codicon codicon-file-text"></span></button>`
+            : ''
+          return `<div class="svc-row ${sCls}"><span class="svc-icon">${sIcon}</span><span class="svc-name">${esc(svc.name)}</span><span class="svc-actions">${proxyBtn}${svcLogBtn}${actions}</span></div>`
         })
         .join('')
       const siteActions = `<div class="omd-site-actions">
@@ -231,6 +244,7 @@ export function render(state: StateCache, codiconUri?: vscode.Uri, cspSource?: s
         ${badge}
         ${toggleBtn}
         ${proxyBtn}
+        ${logsBtn}
         ${consoleBtn}
         ${browserBtn}
         ${deleteBtn}

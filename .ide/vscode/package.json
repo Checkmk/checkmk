@@ -2,7 +2,7 @@
   "name": "cmk-vscode",
   "displayName": "CMK Dev Tools for VS Code",
   "description": "Build commands and helpers for Checkmk development",
-  "version": "0.1.52",
+  "version": "0.1.55",
   "publisher": "checkmk",
   "engines": {
     "vscode": "^1.85.0"
@@ -148,6 +148,16 @@
         "title": "CMK ▸ OMD: Socket Proxy"
       },
       {
+        "command": "cmk.omdLogRefresh",
+        "title": "CMK ▸ OMD: Refresh Log Snapshot",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "cmk.omdLogTail",
+        "title": "CMK ▸ OMD: Tail Log in Terminal",
+        "icon": "$(debug-console)"
+      },
+      {
         "command": "cmk.buildVenv",
         "title": "CMK ▸ Cmd: Build venv"
       },
@@ -287,6 +297,18 @@
           "group": "navigation"
         }
       ],
+      "editor/title": [
+        {
+          "command": "cmk.omdLogRefresh",
+          "when": "resourceScheme == cmk-omd-log",
+          "group": "navigation"
+        },
+        {
+          "command": "cmk.omdLogTail",
+          "when": "resourceScheme == cmk-omd-log",
+          "group": "navigation"
+        }
+      ],
       "scm/title": [
         {
           "command": "cmk.pushToGerrit",
@@ -377,6 +399,14 @@
         {
           "command": "cmk.installDevSite",
           "when": "false"
+        },
+        {
+          "command": "cmk.omdLogRefresh",
+          "when": "resourceScheme == cmk-omd-log"
+        },
+        {
+          "command": "cmk.omdLogTail",
+          "when": "resourceScheme == cmk-omd-log"
         }
       ]
     }

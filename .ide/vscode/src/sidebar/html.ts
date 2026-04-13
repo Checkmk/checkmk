@@ -62,7 +62,10 @@ export function wrap(
   .codicon-symbol-property::before { content: "\\eb65"; }
   .codicon-run-all::before { content: "\\eb9e"; }
   .codicon-empty-window::before { content: "\\eae4"; }
-  .codicon-circle-slash::before { content: "\\eabd"; }`
+  .codicon-circle-slash::before { content: "\\eabd"; }
+  .codicon-output::before { content: "\\eb9d"; }
+  .codicon-file::before { content: "\\ea7b"; }
+  .codicon-file-text::before { content: "\\ec5e"; }`
     : ''
   return `<!DOCTYPE html>
 <html lang="en">
@@ -133,6 +136,8 @@ ${body}
       case 'omd-open-browser': vscode.postMessage({ type: 'omdOpenBrowser', url: el.dataset.url }); break;
       case 'omd-auth': vscode.postMessage({ type: 'omdAuth' }); break;
       case 'omd-console': vscode.postMessage({ type: 'omdConsole', site: el.dataset.site }); break;
+      case 'omd-logs': vscode.postMessage({ type: 'omdLogs', site: el.dataset.site }); break;
+      case 'omd-svc-logs': vscode.postMessage({ type: 'omdSvcLogs', site: el.dataset.site, service: el.dataset.service }); break;
       case 'omd-delete-site': vscode.postMessage({ type: 'omdDeleteSite', site: el.dataset.site }); break;
       case 'omd-create-site': vscode.postMessage({ type: 'omdCreateSite' }); break;
       case 'omd-install-devsite': vscode.postMessage({ type: 'omdInstallDevSite' }); break;

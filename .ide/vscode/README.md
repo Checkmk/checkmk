@@ -144,11 +144,12 @@ On first use, an **onboarding checklist** guides you through the initial setup s
 Displays all detected OMD sites with live status. Each site header shows:
 
 - **Play/Stop** button — starts or stops the site (contextual based on current state)
+- **Logs** button — pick from all log files in `/omd/sites/<site>/var/log/` and tail the chosen file live in a terminal (`sudo tail -F`)
 - **Terminal** button — opens a `sudo omd su <site>` console
 - **Browser** button — opens the site in the browser (if port is configured)
 - **Delete** button — removes the site (with confirmation)
 
-Expanding a site shows individual service status with per-service start/stop/restart controls.
+Expanding a site shows individual service status with per-service start/stop/restart controls. Services that have logs in the catalog (`cmc`, `apache`, `mkeventd`, `rrdcached`, `redis`, `stunnel`, `liveproxyd`, `dcd`, `rabbitmq`, `jaeger`, `agent-receiver`, `automation-helper`, `piggyback-hub`, `ui-job-scheduler`, `xinetd`, `mknotifyd`) also show a per-service **Logs** button — opens the matching log directly, or a scoped picker if multiple files are mapped (e.g. `apache-logs` + `web.log` + `security.log` for apache).
 
 **Create Site:** If `cmk-dev-site` is installed, a **+** button in the OMD section title bar lets you create new sites. The extension also checks PyPI daily for `cmk-dev-site` updates and prompts to upgrade when a newer version is available.
 

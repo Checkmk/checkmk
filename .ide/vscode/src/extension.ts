@@ -18,6 +18,7 @@ import { error, log, notifyInfo, registerErrorHandlers } from './core/log'
 import { checkVersionMismatch } from './core/versionCheck'
 import { registerGerritPush } from './gerrit'
 import { checkForUpdates, isInstalled as isDevSiteInstalled } from './omd/devSiteTools'
+import { registerLogs } from './omd/logs'
 import { createSite, registerOmd } from './omd/omd'
 import {
   generatePrettierConfig,
@@ -98,6 +99,7 @@ export function activate(context: vscode.ExtensionContext): void {
   registerIdePickers(context, extensionSets, settingsSets)
   registerGerritPush(context)
   registerOmd(context, refreshAll, refreshOmd)
+  registerLogs(context)
 
   // cmk-dev-site: create site command + update check
   vscode.commands.executeCommand('setContext', 'cmk.devSiteInstalled', isDevSiteInstalled())

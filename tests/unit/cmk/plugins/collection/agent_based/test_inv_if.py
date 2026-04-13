@@ -6,6 +6,7 @@
 import datetime
 from zoneinfo import ZoneInfo
 
+import pytest
 import time_machine
 
 from cmk.agent_based.v2 import Attributes, TableRow
@@ -1320,3 +1321,33 @@ def test_inventory_if() -> None:
                 ),
             ]
         )
+
+
+@pytest.mark.xfail(
+    strict=True,
+    reason="Crash report 7a607904-3714-11f1-8517-cedea331bb6f: ValueError",
+)
+def test_parse_inv_if_handles_non_numeric_admin_status() -> None:
+    # Reproduction from crash group 4671: some SNMP devices report
+    # ifAdminStatus/ifOperStatus as textual values ('up', 'down',
+    # 'notPresent', ...) instead of the IF-MIB integer states. int('up')
+    # raises ValueError in the parser.
+    section = parse_inv_if(
+        [
+            [
+                [
+                    "1",
+                    "Unit: 1 Slot: 0 Port: 1",
+                    "",
+                    "ethernetCsmacd",
+                    "4294967295",
+                    "",
+                    "up",
+                    "up",
+                    [116, 218, 136, 88, 22, 17],
+                    "5300",
+                ],
+            ],
+        ],
+    )
+    assert len(section.interfaces) == 1

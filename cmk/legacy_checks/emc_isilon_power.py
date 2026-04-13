@@ -41,14 +41,26 @@ def check_emc_isilon_power(
 
             infotext = "%.1f V" % volt
             warn_lower, crit_lower = params["levels_lower"]
-            levelstext = f" (warn/crit below {warn_lower:.1f}/{crit_lower:.1f} V)"
+            warn_upper, crit_upper = params.get("levels_upper", (None, None))
+            lower_text = f" (warn/crit below {warn_lower:.1f}/{crit_lower:.1f} V)"
+            upper_text = (
+                f" (warn/crit at or above {warn_upper:.1f}/{crit_upper:.1f} V)"
+                if warn_upper is not None
+                else ""
+            )
 
             if volt < crit_lower:
                 state = 2
-                infotext += levelstext
+                infotext += lower_text
+            elif crit_upper is not None and volt >= crit_upper:
+                state = 2
+                infotext += upper_text
             elif volt < warn_lower:
                 state = 1
-                infotext += levelstext
+                infotext += lower_text
+            elif warn_upper is not None and volt >= warn_upper:
+                state = 1
+                infotext += upper_text
             else:
                 state = 0
 

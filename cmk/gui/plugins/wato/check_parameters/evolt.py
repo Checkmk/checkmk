@@ -27,6 +27,7 @@ def _parameter_valuespec_evolt() -> Migrate[dict[str, Any]]:
                 (
                     "levels_lower",
                     Tuple(
+                        title=_("Lower voltage levels"),
                         help=_(
                             "Voltage levels for devices like UPS or PDUs. "
                             "Several phases may be addressed independently."
@@ -37,8 +38,22 @@ def _parameter_valuespec_evolt() -> Migrate[dict[str, Any]]:
                         ],
                     ),
                 ),
+                (
+                    "levels_upper",
+                    Tuple(
+                        title=_("Upper voltage levels"),
+                        help=_(
+                            "Upper voltage levels for devices like UPS or PDUs. "
+                            "Leave unset on installations where over-voltage is not a concern."
+                        ),
+                        elements=[
+                            Float(title=_("Warning at/above"), unit="V"),
+                            Float(title=_("Critical at/above"), unit="V"),
+                        ],
+                    ),
+                ),
             ],
-            optional_keys=(),
+            optional_keys=("levels_lower", "levels_upper"),
         ),
         migrate=lambda p: (
             p if isinstance(p, dict) else {"levels_lower": (float(p[0]), float(p[1]))}

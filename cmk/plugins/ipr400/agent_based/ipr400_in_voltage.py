@@ -31,17 +31,31 @@ def check_ipr400_in_voltage(
     item: str, params: Mapping[str, Any], section: StringTable
 ) -> CheckResult:
     warn, crit = params["levels_lower"]
+    warn_upper, crit_upper = params.get("levels_upper", (None, None))
     power = int(section[0][0]) / 1000.0  # appears to be in mV
     infotext = f"in voltage: {power:.1f}V"
-    limitstext = f"(warn/crit below {warn}V/{crit}V)"
 
     if power <= crit:
-        yield Result(state=State.CRIT, summary=f"{infotext}, {limitstext}")
+        yield Result(state=State.CRIT, summary=f"{infotext}, (warn/crit below {warn}V/{crit}V)")
+    elif crit_upper is not None and power >= crit_upper:
+        yield Result(
+            state=State.CRIT,
+            summary=f"{infotext}, (warn/crit at or above {warn_upper}V/{crit_upper}V)",
+        )
     elif power <= warn:
-        yield Result(state=State.WARN, summary=f"{infotext}, {limitstext}")
+        yield Result(state=State.WARN, summary=f"{infotext}, (warn/crit below {warn}V/{crit}V)")
+    elif warn_upper is not None and power >= warn_upper:
+        yield Result(
+            state=State.WARN,
+            summary=f"{infotext}, (warn/crit at or above {warn_upper}V/{crit_upper}V)",
+        )
     else:
         yield Result(state=State.OK, summary=infotext)
-    yield Metric("in_voltage", power, levels=(warn, crit))
+    yield Metric(
+        "in_voltage",
+        power,
+        levels=(warn_upper, crit_upper) if warn_upper is not None else (warn, crit),
+    )
 
 
 def parse_ipr400_in_voltage(string_table: StringTable) -> StringTable:

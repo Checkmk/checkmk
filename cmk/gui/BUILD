@@ -1407,6 +1407,7 @@ py_library(
         "//cmk/gui/background_job/job",
         "//cmk/gui/fields:base",
         "//cmk/gui/form_specs",
+        "//cmk/gui/graphing",
         "//cmk/gui/htmllib:debug_vars",
         "//cmk/gui/htmllib:foldable_container",
         "//cmk/gui/htmllib:generator",

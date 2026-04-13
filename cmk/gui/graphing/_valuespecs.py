@@ -11,7 +11,7 @@
 
 import json
 import re
-from collections.abc import Iterator, Mapping, Sequence
+from collections.abc import Callable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
 from typing import Any, assert_never, Literal, override, TypedDict
 
@@ -49,7 +49,6 @@ from cmk.gui.valuespec import (
     ValueSpecHelp,
     ValueSpecValidateFunc,
 )
-from cmk.gui.visuals import livestatus_query_bare
 from cmk.utils.metrics import MetricName as MetricName_
 
 from ._from_api import metrics_from_api, RegisteredMetric
@@ -72,6 +71,10 @@ from ._unit import (
     TimeNotation,
     user_specific_unit,
 )
+
+type LivestatusQueryFunc = Callable[
+    [Literal["host", "service"], VisualContext, list[str]], list[dict[str, Any]]
+]
 
 
 def migrate_graph_render_options_title_format(
@@ -549,6 +552,7 @@ def _metric_choices(
 def metrics_of_query(
     context: VisualContext,
     registered_metrics: Mapping[str, RegisteredMetric],
+    livestatus_query: LivestatusQueryFunc,
 ) -> Iterator[Choice]:
     # Fetch host data with the *same* query. This saves one round trip. And head
     # host has at least one service
@@ -562,7 +566,7 @@ def metrics_of_query(
     ]
 
     row = {}
-    for row in livestatus_query_bare("service", context, columns):
+    for row in livestatus_query("service", context, columns):
         perf_data, check_command = parse_perf_data(
             row["service_perf_data"], row["service_check_command"], debug=active_config.debug
         )

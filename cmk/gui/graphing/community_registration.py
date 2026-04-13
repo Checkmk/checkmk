@@ -2,9 +2,9 @@
 # Copyright (C) 2023 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
 from cmk.ccc.version import Edition
 from cmk.gui.pages import PageEndpoint, PageRegistry
+from cmk.gui.type_defs import Choices
 from cmk.gui.valuespec import AutocompleterRegistry
 from cmk.gui.watolib.config_domain_name import ConfigVariableRegistry
 
@@ -26,7 +26,7 @@ from ._metric_backend_registry import (
     MetricBackend,
 )
 from ._settings import ConfigVariableGraphTimeranges
-from ._valuespecs import PageVsAutocomplete
+from ._valuespecs import LivestatusQueryFunc, PageVsAutocomplete
 
 
 def register(
@@ -34,6 +34,7 @@ def register(
     page_registry: PageRegistry,
     config_variable_registry: ConfigVariableRegistry,
     autocompleter_registry: AutocompleterRegistry,
+    livestatus_query: LivestatusQueryFunc,
 ) -> None:
     page_registry.register(PageEndpoint("ajax_graph_values_at_time", AjaxGraphValuesAtTime()))
     page_registry.register(PageEndpoint("ajax_graph_images", AjaxGraphImagesForNotifications()))
@@ -42,7 +43,14 @@ def register(
 
     config_variable_registry.register(ConfigVariableGraphTimeranges)
 
-    autocompleter_registry.register_autocompleter("monitored_metrics", metrics_autocompleter)
+    def wrapped_autocompleter(
+        config: object,
+        value: str,
+        params: dict,  # type: ignore[type-arg]
+    ) -> Choices:
+        return metrics_autocompleter(value, params, livestatus_query=livestatus_query)
+
+    autocompleter_registry.register_autocompleter("monitored_metrics", wrapped_autocompleter)
 
     graph_metric_expression_registry.register(GraphMetricConstant)
     graph_metric_expression_registry.register(GraphMetricConstantNA)

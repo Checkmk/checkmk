@@ -70,7 +70,7 @@ from cmk.gui.views.icon import icon_and_action_registry
 from cmk.gui.views.layout import layout_registry
 from cmk.gui.views.row_post_processing import row_post_processor_registry
 from cmk.gui.views.sorter import sorter_registry
-from cmk.gui.visuals import default_site_filter_heading_info
+from cmk.gui.visuals import default_site_filter_heading_info, livestatus_query_bare
 from cmk.gui.visuals.filter import filter_registry
 from cmk.gui.visuals.info import visual_info_registry
 from cmk.gui.visuals.type import visual_type_registry
@@ -325,11 +325,13 @@ def register(edition: Edition) -> None:
         BuiltinViewExtender(str(edition), noop_builtin_view_extender)
     )
     agent_commands.register(agent_commands_registry)
+
     graphing_community_registration.register(
         edition,
         page_registry,
         config_variable_registry,
         autocompleter_registry,
+        livestatus_query=livestatus_query_bare,
     )
     plugins.register()
 

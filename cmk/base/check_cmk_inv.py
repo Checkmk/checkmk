@@ -296,7 +296,7 @@ def _inventory_as_check(
 
 
 def load_checks() -> AgentBasedPlugins:
-    plugins = config.load_all_pluginX(cmk.utils.paths.checks_dir)
+    plugins = config.load_all_pluginX()
     if sys.stderr.isatty():
         for error_msg in plugins.errors:
             console.error(error_msg, file=sys.stderr)

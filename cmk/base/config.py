@@ -1308,7 +1308,7 @@ service_rule_groups = {"temperature"}
 #   '----------------------------------------------------------------------'
 
 
-def load_all_pluginX(checks_dir: Path) -> AgentBasedPlugins:
+def load_all_pluginX() -> AgentBasedPlugins:
     with tracer.span("load_legacy_check_plugins"):
         with tracer.span("discover_legacy_check_plugins"):
             module_names = find_legacy_check_modules()

@@ -28,7 +28,6 @@ from cmk.ccc import tty
 from cmk.ccc import version as cmk_version
 from cmk.ccc.site import SiteId
 from cmk.checkengine.plugins import AgentBasedPlugins
-from cmk.utils import paths
 from cmk.utils.labels import Labels
 from cmk.utils.log import logger as cmk_logger
 
@@ -69,7 +68,7 @@ class _State:
             # We might be running under the debug flag. In that case
             # we *must* be in the try/except block.
             if self.plugins is None:
-                self.plugins = config.load_all_pluginX(paths.checks_dir)
+                self.plugins = config.load_all_pluginX()
 
             # Do not yet set `self.last_reload_at`. We don't know if we succeed.
             time_right_before_reload = time.time()

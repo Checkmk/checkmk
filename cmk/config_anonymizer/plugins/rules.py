@@ -431,7 +431,7 @@ class RulesStep(AnonymizeStep):
         builtin_host_labels_callable = make_app(edition(paths.omd_root)).get_builtin_host_labels
         builtin_host_labels = builtin_host_labels_callable(omd_site())
 
-        all_plugins = load_all_pluginX(paths.checks_dir)
+        all_plugins = load_all_pluginX()
 
         # TODO pass in loaded_config_result
         loaded_config_result = load(

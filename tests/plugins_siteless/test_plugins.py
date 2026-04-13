@@ -43,7 +43,6 @@ from tests.plugins_siteless.helpers import (
     summarizer,
 )
 from tests.testlib.common.empty_config import EMPTY_CONFIG
-from tests.testlib.common.repo import repo_path
 
 os.environ["OMD_SITE"] = ""
 HOSTNAME = HostName("test_host")
@@ -105,7 +104,7 @@ def test_checks_executor(
     if any(_ in request.node.name for _ in xfail_list):
         pytest.xfail(reason="CMK-33440: Failing plugin_siteless tests...")
 
-    agent_based_plugins = config.load_all_pluginX(repo_path() / "cmk/legacy_checks")
+    agent_based_plugins = config.load_all_pluginX()
     assert not agent_based_plugins.errors
     assert agent_based_plugins.agent_sections
 

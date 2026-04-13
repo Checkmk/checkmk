@@ -27,7 +27,7 @@ def main() -> int:
             return 1
 
         with disable_redis(), gui_context():
-            plugins = config.load_all_pluginX(paths.checks_dir)
+            plugins = config.load_all_pluginX()
             # Watch out: always load the plugins before loading the config.
             # The validation step will not be executed otherwise.
             config.load(

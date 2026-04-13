@@ -28,7 +28,7 @@ from cmk.discover_plugins import discover_plugins_from_modules
 from cmk.fetchers import Fetcher, FetcherTriggerFactory
 from cmk.helper_interface import AgentRawData
 from cmk.snmplib import SNMPPluginStore
-from cmk.utils import log, paths
+from cmk.utils import log
 from cmk.utils.labels import LabelManager, Labels
 from cmk.utils.log import console
 from cmk.utils.rulesets import RuleSetName
@@ -212,7 +212,7 @@ def load_plugins() -> AgentBasedPlugins:
         redirect_stdout(open(os.devnull, "w")),
     ):
         log.setup_console_logging()
-        return config.load_all_pluginX(paths.checks_dir)
+        return config.load_all_pluginX()
 
 
 def load_config(

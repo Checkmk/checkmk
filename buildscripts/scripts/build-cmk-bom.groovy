@@ -93,8 +93,8 @@ void main() {
             stage("Create bill-of-materials.csv") {
                 inside_container() {
                     sh("""
-                        bazel build //omd:generate_bom_csv
-                        cp bazel-bin/omd/bill-of-materials.csv omd/
+                        bazel build //omd/dependency_management:generate_bom_csv
+                        cp bazel-bin/omd//dependency_management/bill-of-materials.csv omd/
                     """);
                 }
             }

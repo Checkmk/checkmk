@@ -244,14 +244,14 @@ def main():
     args = _parse_args()
 
     path_omd = Path(__file__).resolve().parent.parent
-    path_license_texts = path_omd / "license_sources/license_texts/"
+    path_license_texts = path_omd / "dependency_management/license_texts/"
     path_pdf = args.pdf
-    path_logo = path_omd / "license_sources/checkmk_logo.svg"
+    path_logo = path_omd / "dependency_management/checkmk_logo.svg"
     path_licenses_csv = args.csv
 
     dependencies = read_license_csv(path_licenses_csv)
 
-    registerFont(TTFont("Calibri", path_omd / "license_sources" / "Calibri.ttf"))
+    registerFont(TTFont("Calibri", path_omd / "dependency_management" / "Calibri.ttf"))
 
     doc, story = setup_document(path_pdf, path_logo)
 

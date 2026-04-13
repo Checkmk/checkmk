@@ -1,7 +1,4 @@
-load("@aspect_rules_py//py:defs.bzl", "py_binary")
 load("@bazel_skylib//rules:run_binary.bzl", "run_binary")
-load("@bazel_skylib//rules:write_file.bzl", "write_file")
-load("@cmk_requirements//:requirements.bzl", "requirement")
 load("@rules_gzip//gzip/compress:defs.bzl", "gzip_compress")
 load("@rules_pkg//pkg:deb.bzl", "pkg_deb")
 load("@rules_pkg//pkg:mappings.bzl", "pkg_attributes", "pkg_files", "pkg_mkdirs", "strip_prefix")
@@ -18,6 +15,7 @@ load("//bazel/rules:write_omd_spec.bzl", "write_omd_spec")
 
 exports_files([
     "requirements.txt",
+    "bill-of-materials.json",
 ])
 
 py_binary(
@@ -761,7 +759,7 @@ pkg_tar(
         "//packages/unixcat:unixcat_tar",
         ":agents_scripts_super_server",
         ":agents_windows",
-        ":license_info",
+        "//omd/dependency_management:license_info",
     ] + select({
         "@cmk//distro:almalinux": ["//omd/packages/xinetd"],
         "@cmk//distro:sles": [
@@ -830,89 +828,6 @@ pkg_files(
     srcs = [":skel_permissions"],
     prefix = "share/omd",
     renames = {"skel_permissions": "skel.permissions"},
-)
-
-py_binary(
-    name = "generate_bom_csv_py",
-    srcs = ["license_sources/generate_bom_csv.py"],
-    tags = ["manual"],
-)
-
-run_binary(
-    name = "generate_bom_csv",
-    srcs = ["bill-of-materials.json"],
-    outs = ["bill-of-materials.csv"],
-    args = [
-        "--bom",
-        "$(location bill-of-materials.json)",
-        "--out",
-        "$(location bill-of-materials.csv)",
-    ],
-    tags = ["manual"],
-    tool = ":generate_bom_csv_py",
-)
-
-filegroup(
-    name = "license_texts",
-    srcs = glob([
-        "license_sources/license_texts/*.txt",
-    ]),
-    tags = ["manual"],
-)
-
-py_binary(
-    name = "build_bom_texts_pdf_py",
-    srcs = ["license_sources/build_bom_texts_pdf.py"],
-    data = [
-        "license_sources/Calibri.ttf",
-        "license_sources/checkmk_logo.svg",
-        ":license_texts",
-    ],
-    tags = ["manual"],
-    deps = [
-        requirement("reportlab"),
-        requirement("svglib"),
-    ],
-)
-
-run_binary(
-    name = "build_bom_texts_pdf",
-    srcs = [":generate_bom_csv"],
-    outs = ["License_texts.pdf"],
-    args = [
-        "--pdf",
-        "$(location License_texts.pdf)",
-        "--csv",
-        "$(location :generate_bom_csv)",
-    ],
-    tags = ["manual"],
-    tool = ":build_bom_texts_pdf_py",
-)
-
-BOM_ARTIFACTS = [
-    "bill-of-materials.json",
-    "bill-of-materials.csv",
-    "License_texts.pdf",
-]
-
-[write_file(
-    name = file + "_write",
-    out = file + ".faked",
-    content = ["This artifact was faked during the build process by bazel."],
-    visibility = ["//omd:__subpackages__"],
-) for file in BOM_ARTIFACTS]
-
-pkg_tar(
-    name = "license_info",
-    srcs = select({
-        # ToDo: Build BOM in the same Workspace
-        "@//:use_fake_artifacts_enabled": [file + ".faked" for file in BOM_ARTIFACTS],
-        "//conditions:default": BOM_ARTIFACTS,
-    }),
-    package_dir = "share/doc/",
-    package_file_name = "license_info_archive.tar",
-    stamp = 1,
-    tags = ["manual"],
 )
 
 pkg_name_info(

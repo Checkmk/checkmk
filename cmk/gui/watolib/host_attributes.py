@@ -731,7 +731,7 @@ def config_based_tag_group_attributes(
                 ),
                 {
                     "_tag_group": tag_group,
-                    "help": lambda _: tag_group.help,
+                    "help": lambda self: self._tag_group.help,
                     "_topic": _declare_host_attribute_topic(topic_id, topic_spec)
                     if topic_id not in host_attribute_topic_registry
                     else host_attribute_topic_registry[topic_id],

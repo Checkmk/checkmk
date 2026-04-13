@@ -108,8 +108,10 @@ export class AiApiClient extends Api {
       ['x-checkmk-site-name', siteName]
       // Uncomment the next two lines for local testing,
       // in production the reverse proxy will set the correct host header:
-      // ,['x-forwarded-host', 'localhost:3000'],
-      // ['x-forwarded-proto', 'http']
+      // ,['x-forwarded-host', 'localhost:3000']
+      // ,['x-forwarded-proto', 'http']
+      // ,['x-checkmk-tenant-id', 'my-local-test-tenant']
+      // ,['x-checkmk-ai-product-tier', 'subscription']
     ]
 
     super('ai-service/api/v1/', headers)

@@ -1,0 +1,4094 @@
+Add pre-generated encoding/type headers extracted from the upstream release
+tarball (freetds-1.4.22.tar.gz from freetds.org).  These files are produced
+by Perl scripts + gperf during a repository build, but are distributed
+pre-built in release tarballs.  When HAVE_PERL_SOURCES=false (i.e. gperf is
+not available) the Makefile expects them to already be present.
+
+--- /dev/null
++++ b/include/freetds/encodings.h
+@@ -0,0 +1,565 @@
++/*
++ * This file produced from ./encodings.pl on Wed Jul 24 09:01:34 2024
++ */
++#ifdef TDS_ICONV_ENCODING_TABLES
++
++static const TDS_ENCODING canonic_charsets[] = {
++	{        "ISO-8859-1",	1, 1,   0},	/*   0 */
++	{             "UTF-8",	1, 4,   1},	/*   1 */
++	{           "UCS-2LE",	2, 2,   2},	/*   2 */
++	{           "UCS-2BE",	2, 2,   3},	/*   3 */
++	{          "UTF-16LE",	2, 4,   4},	/*   4 */
++	{          "UTF-16BE",	2, 4,   5},	/*   5 */
++	{           "UCS-4LE",	4, 4,   6},	/*   6 */
++	{           "UCS-4BE",	4, 4,   7},	/*   7 */
++	{          "UTF-32LE",	4, 4,   8},	/*   8 */
++	{          "UTF-32BE",	4, 4,   9},	/*   9 */
++	{         "ARMSCII-8",	1, 1,  10},	/*  10 */
++	{             "BIG-5",	1, 2,  11},	/*  11 */
++	{        "BIG5-HKSCS",	1, 2,  12},	/*  12 */
++	{               "C99",	1, 1,  13},	/*  13 */
++	{           "CHINESE",	1, 1,  14},	/*  14 */
++	{                "CN",	1, 1,  15},	/*  15 */
++	{             "CN-GB",	1, 2,  16},	/*  16 */
++	{    "CN-GB-ISOIR165",	1, 1,  17},	/*  17 */
++	{            "CP1133",	1, 1,  18},	/*  18 */
++	{            "CP1250",	1, 1,  19},	/*  19 */
++	{            "CP1251",	1, 1,  20},	/*  20 */
++	{            "CP1252",	1, 1,  21},	/*  21 */
++	{            "CP1253",	1, 1,  22},	/*  22 */
++	{            "CP1254",	1, 1,  23},	/*  23 */
++	{            "CP1255",	1, 1,  24},	/*  24 */
++	{            "CP1256",	1, 1,  25},	/*  25 */
++	{            "CP1257",	1, 1,  26},	/*  26 */
++	{            "CP1258",	1, 1,  27},	/*  27 */
++	{            "CP1361",	1, 2,  28},	/*  28 */
++	{             "CP437",	1, 1,  29},	/*  29 */
++	{             "CP850",	1, 1,  30},	/*  30 */
++	{             "CP862",	1, 1,  31},	/*  31 */
++	{             "CP866",	1, 1,  32},	/*  32 */
++	{             "CP874",	1, 1,  33},	/*  33 */
++	{             "CP932",	1, 2,  34},	/*  34 */
++	{             "CP936",	1, 2,  35},	/*  35 */
++	{             "CP949",	1, 2,  36},	/*  36 */
++	{             "CP950",	1, 2,  37},	/*  37 */
++	{            "EUC-JP",	1, 3,  38},	/*  38 */
++	{            "EUC-KR",	1, 2,  39},	/*  39 */
++	{            "EUC-TW",	1, 4,  40},	/*  40 */
++	{           "GB18030",	1, 4,  41},	/*  41 */
++	{  "GEORGIAN-ACADEMY",	1, 1,  42},	/*  42 */
++	{       "GEORGIAN-PS",	1, 1,  43},	/*  43 */
++	{                "HZ",	1, 1,  44},	/*  44 */
++	{       "ISO-2022-CN",	1, 4,  45},	/*  45 */
++	{   "ISO-2022-CN-EXT",	1, 4,  46},	/*  46 */
++	{       "ISO-2022-JP",	1, 1,  47},	/*  47 */
++	{     "ISO-2022-JP-1",	1, 1,  48},	/*  48 */
++	{     "ISO-2022-JP-2",	1, 1,  49},	/*  49 */
++	{       "ISO-2022-KR",	1, 2,  50},	/*  50 */
++	{       "ISO-8859-10",	1, 1,  51},	/*  51 */
++	{       "ISO-8859-13",	1, 1,  52},	/*  52 */
++	{       "ISO-8859-14",	1, 1,  53},	/*  53 */
++	{       "ISO-8859-15",	1, 1,  54},	/*  54 */
++	{       "ISO-8859-16",	1, 1,  55},	/*  55 */
++	{        "ISO-8859-2",	1, 1,  56},	/*  56 */
++	{        "ISO-8859-3",	1, 1,  57},	/*  57 */
++	{        "ISO-8859-4",	1, 1,  58},	/*  58 */
++	{        "ISO-8859-5",	1, 1,  59},	/*  59 */
++	{        "ISO-8859-6",	1, 1,  60},	/*  60 */
++	{        "ISO-8859-7",	1, 1,  61},	/*  61 */
++	{        "ISO-8859-8",	1, 1,  62},	/*  62 */
++	{        "ISO-8859-9",	1, 1,  63},	/*  63 */
++	{         "ISO-IR-14",	1, 1,  64},	/*  64 */
++	{        "ISO-IR-149",	1, 1,  65},	/*  65 */
++	{        "ISO-IR-159",	1, 1,  66},	/*  66 */
++	{        "ISO-IR-166",	1, 1,  67},	/*  67 */
++	{         "ISO-IR-87",	1, 1,  68},	/*  68 */
++	{              "JAVA",	1, 1,  69},	/*  69 */
++	{     "JISX0201-1976",	1, 1,  70},	/*  70 */
++	{            "KOI8-R",	1, 1,  71},	/*  71 */
++	{           "KOI8-RU",	1, 1,  72},	/*  72 */
++	{            "KOI8-T",	1, 1,  73},	/*  73 */
++	{            "KOI8-U",	1, 1,  74},	/*  74 */
++	{               "MAC",	1, 1,  75},	/*  75 */
++	{         "MACARABIC",	1, 1,  76},	/*  76 */
++	{  "MACCENTRALEUROPE",	1, 1,  77},	/*  77 */
++	{       "MACCROATIAN",	1, 1,  78},	/*  78 */
++	{       "MACCYRILLIC",	1, 1,  79},	/*  79 */
++	{          "MACGREEK",	1, 1,  80},	/*  80 */
++	{         "MACHEBREW",	1, 1,  81},	/*  81 */
++	{        "MACICELAND",	1, 1,  82},	/*  82 */
++	{        "MACROMANIA",	1, 1,  83},	/*  83 */
++	{           "MACTHAI",	1, 1,  84},	/*  84 */
++	{        "MACTURKISH",	1, 1,  85},	/*  85 */
++	{        "MACUKRAINE",	1, 1,  86},	/*  86 */
++	{         "MULELAO-1",	1, 1,  87},	/*  87 */
++	{          "NEXTSTEP",	1, 1,  88},	/*  88 */
++	{            "ROMAN8",	1, 1,  89},	/*  89 */
++	{              "SJIS",	1, 2,  90},	/*  90 */
++	{              "TCVN",	1, 1,  91},	/*  91 */
++	{          "US-ASCII",	1, 1,  92},	/*  92 */
++	{             "UTF-7",	1, 4,  93},	/*  93 */
++	{            "VISCII",	1, 1,  94},	/*  94 */
++};
++
++static const CHARACTER_SET_ALIAS iconv_aliases[] = {
++	{                    "646",   92 },
++	{                    "850",   30 },
++	{                    "862",   31 },
++	{                    "866",   32 },
++	{         "ANSI_X3.4-1968",   92 },
++	{         "ANSI_X3.4-1986",   92 },
++	{                 "ARABIC",   60 },
++	{              "ARMSCII-8",   10 },
++	{                  "ASCII",   92 },
++	{               "ASMO-708",   60 },
++	{                  "BIG-5",   11 },
++	{               "BIG-FIVE",   11 },
++	{                   "BIG5",   11 },
++	{             "BIG5-HKSCS",   12 },
++	{              "BIG5HKSCS",   12 },
++	{                "BIGFIVE",   11 },
++	{                    "C99",   13 },
++	{                "CHINESE",   14 },
++	{                     "CN",   15 },
++	{                "CN-BIG5",   11 },
++	{                  "CN-GB",   16 },
++	{         "CN-GB-ISOIR165",   17 },
++	{                 "CP1133",   18 },
++	{                 "CP1250",   19 },
++	{                 "CP1251",   20 },
++	{                 "CP1252",   21 },
++	{                 "CP1253",   22 },
++	{                 "CP1254",   23 },
++	{                 "CP1255",   24 },
++	{                 "CP1256",   25 },
++	{                 "CP1257",   26 },
++	{                 "CP1258",   27 },
++	{                 "CP1361",   28 },
++	{                  "CP367",   92 },
++	{                  "CP437",   29 },
++	{                "CP65001",    1 },
++	{                  "CP819",    0 },
++	{                  "CP850",   30 },
++	{                  "CP862",   31 },
++	{                  "CP866",   32 },
++	{                  "CP874",   33 },
++	{                  "CP932",   34 },
++	{                  "CP936",   35 },
++	{                  "CP949",   36 },
++	{                  "CP950",   37 },
++	{                "CSASCII",   92 },
++	{                 "CSBIG5",   11 },
++	{                "CSEUCKR",   39 },
++	{    "CSEUCPKDFMTJAPANESE",   38 },
++	{                "CSEUCTW",   40 },
++	{               "CSGB2312",   16 },
++	{    "CSHALFWIDTHKATAKANA",   70 },
++	{             "CSHPROMAN8",   89 },
++	{               "CSIBM866",   32 },
++	{      "CSISO14JISC6220RO",   64 },
++	{   "CSISO159JISX02121990",   66 },
++	{            "CSISO2022CN",   45 },
++	{            "CSISO2022JP",   47 },
++	{           "CSISO2022JP2",   49 },
++	{            "CSISO2022KR",   50 },
++	{          "CSISO57GB1988",   15 },
++	{        "CSISO58GB231280",   14 },
++	{        "CSISO87JISX0208",   68 },
++	{            "CSISOLATIN1",    0 },
++	{            "CSISOLATIN2",   56 },
++	{            "CSISOLATIN3",   57 },
++	{            "CSISOLATIN4",   58 },
++	{            "CSISOLATIN5",   63 },
++	{            "CSISOLATIN6",   51 },
++	{       "CSISOLATINARABIC",   60 },
++	{     "CSISOLATINCYRILLIC",   59 },
++	{        "CSISOLATINGREEK",   61 },
++	{       "CSISOLATINHEBREW",   62 },
++	{                "CSKOI8R",   71 },
++	{          "CSKSC56011987",   65 },
++	{            "CSMACINTOSH",   75 },
++	{    "CSPC850MULTILINGUAL",   30 },
++	{     "CSPC862LATINHEBREW",   31 },
++	{             "CSSHIFTJIS",   90 },
++	{            "CSUNICODE11",    3 },
++	{        "CSUNICODE11UTF7",   93 },
++	{               "CSVISCII",   94 },
++	{               "CYRILLIC",   59 },
++	{               "ECMA-114",   60 },
++	{               "ECMA-118",   61 },
++	{               "ELOT_928",   61 },
++	{                 "EUC-CN",   16 },
++	{                 "EUC-JP",   38 },
++	{                 "EUC-KR",   39 },
++	{                 "EUC-TW",   40 },
++	{                  "EUCCN",   16 },
++	{                  "EUCJP",   38 },
++	{                  "EUCKR",   39 },
++	{                  "EUCTW",   40 },
++	{"EXTENDED_UNIX_CODE_PACKED_FORMAT_FOR_JAPANESE",   38 },
++	{                "GB18030",   41 },
++	{                 "GB2312",   16 },
++	{                    "GBK",   35 },
++	{             "GB_1988-80",   15 },
++	{             "GB_2312-80",   14 },
++	{       "GEORGIAN-ACADEMY",   42 },
++	{            "GEORGIAN-PS",   43 },
++	{                  "GREEK",   61 },
++	{                 "GREEK8",   61 },
++	{                 "HEBREW",   62 },
++	{              "HP-ROMAN8",   89 },
++	{                     "HZ",   44 },
++	{             "HZ-GB-2312",   44 },
++	{             "IBM-CP1133",   18 },
++	{                 "IBM367",   92 },
++	{                 "IBM437",   29 },
++	{                 "IBM819",    0 },
++	{                 "IBM850",   30 },
++	{                 "IBM862",   31 },
++	{                 "IBM866",   32 },
++	{            "ISO-2022-CN",   45 },
++	{        "ISO-2022-CN-EXT",   46 },
++	{            "ISO-2022-JP",   47 },
++	{          "ISO-2022-JP-1",   48 },
++	{          "ISO-2022-JP-2",   49 },
++	{            "ISO-2022-KR",   50 },
++	{             "ISO-8859-1",    0 },
++	{            "ISO-8859-10",   51 },
++	{            "ISO-8859-13",   52 },
++	{            "ISO-8859-14",   53 },
++	{            "ISO-8859-15",   54 },
++	{            "ISO-8859-16",   55 },
++	{             "ISO-8859-2",   56 },
++	{             "ISO-8859-3",   57 },
++	{             "ISO-8859-4",   58 },
++	{             "ISO-8859-5",   59 },
++	{             "ISO-8859-6",   60 },
++	{             "ISO-8859-7",   61 },
++	{             "ISO-8859-8",   62 },
++	{             "ISO-8859-9",   63 },
++	{             "ISO-CELTIC",   53 },
++	{             "ISO-IR-100",    0 },
++	{             "ISO-IR-101",   56 },
++	{             "ISO-IR-109",   57 },
++	{             "ISO-IR-110",   58 },
++	{             "ISO-IR-126",   61 },
++	{             "ISO-IR-127",   60 },
++	{             "ISO-IR-138",   62 },
++	{              "ISO-IR-14",   64 },
++	{             "ISO-IR-144",   59 },
++	{             "ISO-IR-148",   63 },
++	{             "ISO-IR-149",   65 },
++	{             "ISO-IR-157",   51 },
++	{             "ISO-IR-159",   66 },
++	{             "ISO-IR-165",   17 },
++	{             "ISO-IR-166",   67 },
++	{             "ISO-IR-179",   52 },
++	{             "ISO-IR-199",   53 },
++	{             "ISO-IR-203",   54 },
++	{             "ISO-IR-226",   55 },
++	{              "ISO-IR-57",   15 },
++	{              "ISO-IR-58",   14 },
++	{               "ISO-IR-6",   92 },
++	{              "ISO-IR-87",   68 },
++	{              "ISO646-CN",   15 },
++	{              "ISO646-JP",   64 },
++	{              "ISO646-US",   92 },
++	{              "ISO8859-1",    0 },
++	{             "ISO8859-10",   51 },
++	{             "ISO8859-15",   54 },
++	{              "ISO8859-2",   56 },
++	{              "ISO8859-4",   58 },
++	{              "ISO8859-5",   59 },
++	{              "ISO8859-6",   60 },
++	{              "ISO8859-7",   61 },
++	{              "ISO8859-8",   62 },
++	{              "ISO8859-9",   63 },
++	{       "ISO_646.IRV:1991",   92 },
++	{             "ISO_8859-1",    0 },
++	{            "ISO_8859-10",   51 },
++	{       "ISO_8859-10:1992",   51 },
++	{            "ISO_8859-13",   52 },
++	{            "ISO_8859-14",   53 },
++	{       "ISO_8859-14:1998",   53 },
++	{            "ISO_8859-15",   54 },
++	{       "ISO_8859-15:1998",   54 },
++	{            "ISO_8859-16",   55 },
++	{       "ISO_8859-16:2000",   55 },
++	{        "ISO_8859-1:1987",    0 },
++	{             "ISO_8859-2",   56 },
++	{        "ISO_8859-2:1987",   56 },
++	{             "ISO_8859-3",   57 },
++	{        "ISO_8859-3:1988",   57 },
++	{             "ISO_8859-4",   58 },
++	{        "ISO_8859-4:1988",   58 },
++	{             "ISO_8859-5",   59 },
++	{        "ISO_8859-5:1988",   59 },
++	{             "ISO_8859-6",   60 },
++	{        "ISO_8859-6:1987",   60 },
++	{             "ISO_8859-7",   61 },
++	{        "ISO_8859-7:1987",   61 },
++	{             "ISO_8859-8",   62 },
++	{        "ISO_8859-8:1988",   62 },
++	{             "ISO_8859-9",   63 },
++	{        "ISO_8859-9:1989",   63 },
++	{                   "JAVA",   69 },
++	{                "JIS0208",   68 },
++	{          "JISX0201-1976",   70 },
++	{      "JIS_C6220-1969-RO",   64 },
++	{         "JIS_C6226-1983",   68 },
++	{              "JIS_X0201",   70 },
++	{              "JIS_X0208",   68 },
++	{         "JIS_X0208-1983",   68 },
++	{         "JIS_X0208-1990",   68 },
++	{              "JIS_X0212",   66 },
++	{         "JIS_X0212-1990",   66 },
++	{       "JIS_X0212.1990-0",   66 },
++	{                  "JOHAB",   28 },
++	{                     "JP",   64 },
++	{                 "KOI8-R",   71 },
++	{                "KOI8-RU",   72 },
++	{                 "KOI8-T",   73 },
++	{                 "KOI8-U",   74 },
++	{                 "KOREAN",   65 },
++	{               "KSC_5601",   65 },
++	{         "KS_C_5601-1987",   65 },
++	{         "KS_C_5601-1989",   65 },
++	{                     "L1",    0 },
++	{                     "L2",   56 },
++	{                     "L3",   57 },
++	{                     "L4",   58 },
++	{                     "L5",   63 },
++	{                     "L6",   51 },
++	{                     "L7",   52 },
++	{                     "L8",   53 },
++	{                 "LATIN1",    0 },
++	{                 "LATIN2",   56 },
++	{                 "LATIN3",   57 },
++	{                 "LATIN4",   58 },
++	{                 "LATIN5",   63 },
++	{                 "LATIN6",   51 },
++	{                 "LATIN7",   52 },
++	{                 "LATIN8",   53 },
++	{                    "MAC",   75 },
++	{              "MACARABIC",   76 },
++	{       "MACCENTRALEUROPE",   77 },
++	{            "MACCROATIAN",   78 },
++	{            "MACCYRILLIC",   79 },
++	{               "MACGREEK",   80 },
++	{              "MACHEBREW",   81 },
++	{             "MACICELAND",   82 },
++	{              "MACINTOSH",   75 },
++	{               "MACROMAN",   75 },
++	{             "MACROMANIA",   83 },
++	{                "MACTHAI",   84 },
++	{             "MACTURKISH",   85 },
++	{             "MACUKRAINE",   86 },
++	{                "MS-ANSI",   21 },
++	{                "MS-ARAB",   25 },
++	{                "MS-CYRL",   20 },
++	{                  "MS-EE",   19 },
++	{               "MS-GREEK",   22 },
++	{                "MS-HEBR",   24 },
++	{                "MS-TURK",   23 },
++	{               "MS_KANJI",   90 },
++	{              "MULELAO-1",   87 },
++	{               "NEXTSTEP",   88 },
++	{                     "R8",   89 },
++	{                 "ROMAN8",   89 },
++	{              "SHIFT-JIS",   90 },
++	{              "SHIFT_JIS",   90 },
++	{                   "SJIS",   90 },
++	{                   "TCVN",   91 },
++	{              "TCVN-5712",   91 },
++	{             "TCVN5712-1",   91 },
++	{        "TCVN5712-1:1993",   91 },
++	{                "TIS-620",   67 },
++	{                 "TIS620",   67 },
++	{               "TIS620-0",   67 },
++	{          "TIS620.2529-1",   67 },
++	{          "TIS620.2533-0",   67 },
++	{          "TIS620.2533-1",   67 },
++	{                "UCS-2BE",    3 },
++	{                "UCS-2LE",    2 },
++	{                "UCS-4BE",    7 },
++	{                "UCS-4LE",    6 },
++	{                    "UHC",   36 },
++	{            "UNICODE-1-1",    3 },
++	{      "UNICODE-1-1-UTF-7",   93 },
++	{             "UNICODEBIG",    3 },
++	{          "UNICODELITTLE",    2 },
++	{                     "US",   92 },
++	{               "US-ASCII",   92 },
++	{               "UTF-16BE",    5 },
++	{               "UTF-16LE",    4 },
++	{               "UTF-32BE",    9 },
++	{               "UTF-32LE",    8 },
++	{                  "UTF-7",   93 },
++	{                  "UTF-8",    1 },
++	{                   "UTF7",   93 },
++	{                   "UTF8",    1 },
++	{                 "VISCII",   94 },
++	{            "VISCII1.1-1",   94 },
++	{             "WINBALTRIM",   26 },
++	{           "WINDOWS-1250",   19 },
++	{           "WINDOWS-1251",   20 },
++	{           "WINDOWS-1252",   21 },
++	{           "WINDOWS-1253",   22 },
++	{           "WINDOWS-1254",   23 },
++	{           "WINDOWS-1255",   24 },
++	{           "WINDOWS-1256",   25 },
++	{           "WINDOWS-1257",   26 },
++	{           "WINDOWS-1258",   27 },
++	{            "WINDOWS-874",   33 },
++	{                  "X0201",   70 },
++	{                  "X0208",   68 },
++	{                  "X0212",   66 },
++	{                   "big5",   11 },
++	{                 "cp1250",   19 },
++	{                 "cp1251",   20 },
++	{                 "cp1252",   21 },
++	{                 "cp1253",   22 },
++	{                 "cp1254",   23 },
++	{                 "cp1255",   24 },
++	{                 "cp1256",   25 },
++	{                 "cp1257",   26 },
++	{                 "cp1258",   27 },
++	{                  "cp437",   29 },
++	{                  "cp850",   30 },
++	{                  "cp862",   31 },
++	{                  "cp866",   32 },
++	{                  "cp874",   33 },
++	{                  "eucJP",   38 },
++	{                  "eucKR",   39 },
++	{                  "eucTW",   40 },
++	{                 "hp15CN",   14 },
++	{                  "iso81",    0 },
++	{                 "iso815",   54 },
++	{                  "iso82",   56 },
++	{                  "iso83",   57 },
++	{                  "iso84",   58 },
++	{                  "iso85",   59 },
++	{                  "iso86",   60 },
++	{                  "iso87",   61 },
++	{                  "iso88",   62 },
++	{               "iso88591",    0 },
++	{              "iso885915",   54 },
++	{               "iso88592",   56 },
++	{               "iso88593",   57 },
++	{               "iso88594",   58 },
++	{               "iso88595",   59 },
++	{               "iso88596",   60 },
++	{               "iso88597",   61 },
++	{               "iso88598",   62 },
++	{               "iso88599",   63 },
++	{                  "iso89",   63 },
++	{                  "roma8",   89 },
++	{                 "roman8",   89 },
++	{                   "sjis",   90 },
++	{                  "thai8",   67 },
++	{                 "tis620",   67 },
++	{                   "utf8",    1 },
++	{NULL,	0}
++};
++
++#endif
++
++enum {
++	        TDS_CHARSET_ISO_8859_1 =   0,
++	             TDS_CHARSET_UTF_8 =   1,
++	           TDS_CHARSET_UCS_2LE =   2,
++	           TDS_CHARSET_UCS_2BE =   3,
++	          TDS_CHARSET_UTF_16LE =   4,
++	          TDS_CHARSET_UTF_16BE =   5,
++	           TDS_CHARSET_UCS_4LE =   6,
++	           TDS_CHARSET_UCS_4BE =   7,
++	          TDS_CHARSET_UTF_32LE =   8,
++	          TDS_CHARSET_UTF_32BE =   9,
++	         TDS_CHARSET_ARMSCII_8 =  10,
++	             TDS_CHARSET_BIG_5 =  11,
++	        TDS_CHARSET_BIG5_HKSCS =  12,
++	               TDS_CHARSET_C99 =  13,
++	           TDS_CHARSET_CHINESE =  14,
++	                TDS_CHARSET_CN =  15,
++	             TDS_CHARSET_CN_GB =  16,
++	    TDS_CHARSET_CN_GB_ISOIR165 =  17,
++	            TDS_CHARSET_CP1133 =  18,
++	            TDS_CHARSET_CP1250 =  19,
++	            TDS_CHARSET_CP1251 =  20,
++	            TDS_CHARSET_CP1252 =  21,
++	            TDS_CHARSET_CP1253 =  22,
++	            TDS_CHARSET_CP1254 =  23,
++	            TDS_CHARSET_CP1255 =  24,
++	            TDS_CHARSET_CP1256 =  25,
++	            TDS_CHARSET_CP1257 =  26,
++	            TDS_CHARSET_CP1258 =  27,
++	            TDS_CHARSET_CP1361 =  28,
++	             TDS_CHARSET_CP437 =  29,
++	             TDS_CHARSET_CP850 =  30,
++	             TDS_CHARSET_CP862 =  31,
++	             TDS_CHARSET_CP866 =  32,
++	             TDS_CHARSET_CP874 =  33,
++	             TDS_CHARSET_CP932 =  34,
++	             TDS_CHARSET_CP936 =  35,
++	             TDS_CHARSET_CP949 =  36,
++	             TDS_CHARSET_CP950 =  37,
++	            TDS_CHARSET_EUC_JP =  38,
++	            TDS_CHARSET_EUC_KR =  39,
++	            TDS_CHARSET_EUC_TW =  40,
++	           TDS_CHARSET_GB18030 =  41,
++	  TDS_CHARSET_GEORGIAN_ACADEMY =  42,
++	       TDS_CHARSET_GEORGIAN_PS =  43,
++	                TDS_CHARSET_HZ =  44,
++	       TDS_CHARSET_ISO_2022_CN =  45,
++	   TDS_CHARSET_ISO_2022_CN_EXT =  46,
++	       TDS_CHARSET_ISO_2022_JP =  47,
++	     TDS_CHARSET_ISO_2022_JP_1 =  48,
++	     TDS_CHARSET_ISO_2022_JP_2 =  49,
++	       TDS_CHARSET_ISO_2022_KR =  50,
++	       TDS_CHARSET_ISO_8859_10 =  51,
++	       TDS_CHARSET_ISO_8859_13 =  52,
++	       TDS_CHARSET_ISO_8859_14 =  53,
++	       TDS_CHARSET_ISO_8859_15 =  54,
++	       TDS_CHARSET_ISO_8859_16 =  55,
++	        TDS_CHARSET_ISO_8859_2 =  56,
++	        TDS_CHARSET_ISO_8859_3 =  57,
++	        TDS_CHARSET_ISO_8859_4 =  58,
++	        TDS_CHARSET_ISO_8859_5 =  59,
++	        TDS_CHARSET_ISO_8859_6 =  60,
++	        TDS_CHARSET_ISO_8859_7 =  61,
++	        TDS_CHARSET_ISO_8859_8 =  62,
++	        TDS_CHARSET_ISO_8859_9 =  63,
++	         TDS_CHARSET_ISO_IR_14 =  64,
++	        TDS_CHARSET_ISO_IR_149 =  65,
++	        TDS_CHARSET_ISO_IR_159 =  66,
++	        TDS_CHARSET_ISO_IR_166 =  67,
++	         TDS_CHARSET_ISO_IR_87 =  68,
++	              TDS_CHARSET_JAVA =  69,
++	     TDS_CHARSET_JISX0201_1976 =  70,
++	            TDS_CHARSET_KOI8_R =  71,
++	           TDS_CHARSET_KOI8_RU =  72,
++	            TDS_CHARSET_KOI8_T =  73,
++	            TDS_CHARSET_KOI8_U =  74,
++	               TDS_CHARSET_MAC =  75,
++	         TDS_CHARSET_MACARABIC =  76,
++	  TDS_CHARSET_MACCENTRALEUROPE =  77,
++	       TDS_CHARSET_MACCROATIAN =  78,
++	       TDS_CHARSET_MACCYRILLIC =  79,
++	          TDS_CHARSET_MACGREEK =  80,
++	         TDS_CHARSET_MACHEBREW =  81,
++	        TDS_CHARSET_MACICELAND =  82,
++	        TDS_CHARSET_MACROMANIA =  83,
++	           TDS_CHARSET_MACTHAI =  84,
++	        TDS_CHARSET_MACTURKISH =  85,
++	        TDS_CHARSET_MACUKRAINE =  86,
++	         TDS_CHARSET_MULELAO_1 =  87,
++	          TDS_CHARSET_NEXTSTEP =  88,
++	            TDS_CHARSET_ROMAN8 =  89,
++	              TDS_CHARSET_SJIS =  90,
++	              TDS_CHARSET_TCVN =  91,
++	          TDS_CHARSET_US_ASCII =  92,
++	             TDS_CHARSET_UTF_7 =  93,
++	            TDS_CHARSET_VISCII =  94,
++	              TDS_NUM_CHARSETS =  95
++};
++
+--- /dev/null
++++ b/include/freetds/charset_lookup.h
+@@ -0,0 +1,1888 @@
++/* ANSI-C code produced by gperf version 3.1 */
++/* Command-line: /usr/pkg/bin/gperf -m 100 -C -K alias_pos -t -F ,-1 -P -H hash_charset -N charset_lookup -L ANSI-C --enum charset_lookup.gperf  */
++/* Computed positions: -k'1,3-11,$' */
++
++#if !((' ' == 32) && ('!' == 33) && ('"' == 34) && ('#' == 35) \
++      && ('%' == 37) && ('&' == 38) && ('\'' == 39) && ('(' == 40) \
++      && (')' == 41) && ('*' == 42) && ('+' == 43) && (',' == 44) \
++      && ('-' == 45) && ('.' == 46) && ('/' == 47) && ('0' == 48) \
++      && ('1' == 49) && ('2' == 50) && ('3' == 51) && ('4' == 52) \
++      && ('5' == 53) && ('6' == 54) && ('7' == 55) && ('8' == 56) \
++      && ('9' == 57) && (':' == 58) && (';' == 59) && ('<' == 60) \
++      && ('=' == 61) && ('>' == 62) && ('?' == 63) && ('A' == 65) \
++      && ('B' == 66) && ('C' == 67) && ('D' == 68) && ('E' == 69) \
++      && ('F' == 70) && ('G' == 71) && ('H' == 72) && ('I' == 73) \
++      && ('J' == 74) && ('K' == 75) && ('L' == 76) && ('M' == 77) \
++      && ('N' == 78) && ('O' == 79) && ('P' == 80) && ('Q' == 81) \
++      && ('R' == 82) && ('S' == 83) && ('T' == 84) && ('U' == 85) \
++      && ('V' == 86) && ('W' == 87) && ('X' == 88) && ('Y' == 89) \
++      && ('Z' == 90) && ('[' == 91) && ('\\' == 92) && (']' == 93) \
++      && ('^' == 94) && ('_' == 95) && ('a' == 97) && ('b' == 98) \
++      && ('c' == 99) && ('d' == 100) && ('e' == 101) && ('f' == 102) \
++      && ('g' == 103) && ('h' == 104) && ('i' == 105) && ('j' == 106) \
++      && ('k' == 107) && ('l' == 108) && ('m' == 109) && ('n' == 110) \
++      && ('o' == 111) && ('p' == 112) && ('q' == 113) && ('r' == 114) \
++      && ('s' == 115) && ('t' == 116) && ('u' == 117) && ('v' == 118) \
++      && ('w' == 119) && ('x' == 120) && ('y' == 121) && ('z' == 122) \
++      && ('{' == 123) && ('|' == 124) && ('}' == 125) && ('~' == 126))
++/* The character set is not based on ISO-646.  */
++#error "gperf generated tables don't work with this execution character set. Please report a bug to <bug-gperf@gnu.org>."
++#endif
++
++#line 3 "charset_lookup.gperf"
++
++static const struct charset_alias *charset_lookup(register const char *str, register size_t len);
++#line 2 "charset_lookup.gperf"
++struct charset_alias { short int alias_pos; short int canonic; };
++/* maximum key range = 1038, duplicates = 0 */
++
++#ifdef __GNUC__
++__inline
++#else
++#ifdef __cplusplus
++inline
++#endif
++#endif
++static unsigned int
++hash_charset (register const char *str, register size_t len)
++{
++  static const unsigned short asso_values[] =
++    {
++      1070, 1070, 1070, 1070, 1070, 1070, 1070, 1070, 1070, 1070,
++      1070, 1070, 1070, 1070, 1070, 1070, 1070, 1070, 1070, 1070,
++      1070, 1070, 1070, 1070, 1070, 1070, 1070, 1070, 1070, 1070,
++      1070, 1070, 1070, 1070, 1070, 1070, 1070, 1070, 1070, 1070,
++      1070, 1070, 1070, 1070, 1070,    8,  113, 1070,   34,    7,
++        83,  104,   36,    9,   20,   85,    8,   10,  330, 1070,
++      1070, 1070, 1070, 1070, 1070,   50,  186,   97,    7,   84,
++        66,   32,   73,    7,   17,  186,   27,  183,    9,    7,
++       106, 1070,   51,    7,   11,  117,  229,  151,  339,   22,
++        10, 1070, 1070, 1070, 1070,   24, 1070,   13,    7,  179,
++      1070,    7,    9,   13,   27,    7, 1070,    7, 1070,    8,
++         7,    7, 1070, 1070,    8,    8,    7,   10, 1070, 1070,
++      1070,   12, 1070, 1070, 1070, 1070, 1070, 1070, 1070, 1070,
++      1070, 1070, 1070, 1070, 1070, 1070, 1070, 1070, 1070, 1070,
++      1070, 1070, 1070, 1070, 1070, 1070, 1070, 1070, 1070, 1070,
++      1070, 1070, 1070, 1070, 1070, 1070, 1070, 1070, 1070, 1070,
++      1070, 1070, 1070, 1070, 1070, 1070, 1070, 1070, 1070, 1070,
++      1070, 1070, 1070, 1070, 1070, 1070, 1070, 1070, 1070, 1070,
++      1070, 1070, 1070, 1070, 1070, 1070, 1070, 1070, 1070, 1070,
++      1070, 1070, 1070, 1070, 1070, 1070, 1070, 1070, 1070, 1070,
++      1070, 1070, 1070, 1070, 1070, 1070, 1070, 1070, 1070, 1070,
++      1070, 1070, 1070, 1070, 1070, 1070, 1070, 1070, 1070, 1070,
++      1070, 1070, 1070, 1070, 1070, 1070, 1070, 1070, 1070, 1070,
++      1070, 1070, 1070, 1070, 1070, 1070, 1070, 1070, 1070, 1070,
++      1070, 1070, 1070, 1070, 1070, 1070, 1070, 1070, 1070, 1070,
++      1070, 1070, 1070, 1070, 1070, 1070
++    };
++  register unsigned int hval = len;
++
++  switch (hval)
++    {
++      default:
++        hval += asso_values[(unsigned char)str[10]];
++      /*FALLTHROUGH*/
++      case 10:
++        hval += asso_values[(unsigned char)str[9]];
++      /*FALLTHROUGH*/
++      case 9:
++        hval += asso_values[(unsigned char)str[8]];
++      /*FALLTHROUGH*/
++      case 8:
++        hval += asso_values[(unsigned char)str[7]];
++      /*FALLTHROUGH*/
++      case 7:
++        hval += asso_values[(unsigned char)str[6]];
++      /*FALLTHROUGH*/
++      case 6:
++        hval += asso_values[(unsigned char)str[5]];
++      /*FALLTHROUGH*/
++      case 5:
++        hval += asso_values[(unsigned char)str[4]];
++      /*FALLTHROUGH*/
++      case 4:
++        hval += asso_values[(unsigned char)str[3]];
++      /*FALLTHROUGH*/
++      case 3:
++        hval += asso_values[(unsigned char)str[2]];
++      /*FALLTHROUGH*/
++      case 2:
++      case 1:
++        hval += asso_values[(unsigned char)str[0]];
++        break;
++    }
++  return hval + asso_values[(unsigned char)str[len - 1]];
++}
++
++struct stringpool_t
++  {
++    char stringpool_str32[sizeof("SJIS")];
++    char stringpool_str34[sizeof("koi8")];
++    char stringpool_str35[sizeof("sjis")];
++    char stringpool_str36[sizeof("L1")];
++    char stringpool_str37[sizeof("L8")];
++    char stringpool_str38[sizeof("L5")];
++    char stringpool_str39[sizeof("utf8")];
++    char stringpool_str41[sizeof("iso81")];
++    char stringpool_str42[sizeof("big5")];
++    char stringpool_str43[sizeof("iso88")];
++    char stringpool_str44[sizeof("iso15")];
++    char stringpool_str45[sizeof("iso85")];
++    char stringpool_str47[sizeof("iso89")];
++    char stringpool_str48[sizeof("thai8")];
++    char stringpool_str49[sizeof("L6")];
++    char stringpool_str50[sizeof("roma8")];
++    char stringpool_str51[sizeof("866")];
++    char stringpool_str53[sizeof("iso815")];
++    char stringpool_str56[sizeof("greek8")];
++    char stringpool_str57[sizeof("iso_1")];
++    char stringpool_str58[sizeof("roman8")];
++    char stringpool_str61[sizeof("R8")];
++    char stringpool_str63[sizeof("646")];
++    char stringpool_str65[sizeof("L4")];
++    char stringpool_str67[sizeof("iso86")];
++    char stringpool_str71[sizeof("iso88591")];
++    char stringpool_str73[sizeof("iso88598")];
++    char stringpool_str74[sizeof("LATIN1")];
++    char stringpool_str75[sizeof("iso88595")];
++    char stringpool_str76[sizeof("LATIN8")];
++    char stringpool_str77[sizeof("iso88599")];
++    char stringpool_str78[sizeof("LATIN5")];
++    char stringpool_str79[sizeof("850")];
++    char stringpool_str80[sizeof("ISO8859-1")];
++    char stringpool_str82[sizeof("ISO8859-8")];
++    char stringpool_str83[sizeof("iso885915")];
++    char stringpool_str84[sizeof("ISO8859-5")];
++    char stringpool_str85[sizeof("HZ")];
++    char stringpool_str86[sizeof("ISO8859-9")];
++    char stringpool_str89[sizeof("ISO-8859-1")];
++    char stringpool_str91[sizeof("ISO-8859-8")];
++    char stringpool_str92[sizeof("ISO8859-15")];
++    char stringpool_str93[sizeof("ISO-8859-5")];
++    char stringpool_str94[sizeof("iso10")];
++    char stringpool_str95[sizeof("ISO-8859-9")];
++    char stringpool_str97[sizeof("iso88596")];
++    char stringpool_str98[sizeof("iso14")];
++    char stringpool_str99[sizeof("iso84")];
++    char stringpool_str100[sizeof("LATIN6")];
++    char stringpool_str101[sizeof("ISO-8859-15")];
++    char stringpool_str105[sizeof("ISO_8859-1")];
++    char stringpool_str106[sizeof("ISO8859-6")];
++    char stringpool_str107[sizeof("ISO_8859-8")];
++    char stringpool_str108[sizeof("CN")];
++    char stringpool_str109[sizeof("ISO_8859-5")];
++    char stringpool_str111[sizeof("ISO_8859-9")];
++    char stringpool_str112[sizeof("L2")];
++    char stringpool_str114[sizeof("L7")];
++    char stringpool_str115[sizeof("ISO-8859-6")];
++    char stringpool_str116[sizeof("iso646")];
++    char stringpool_str117[sizeof("ISO_8859-15")];
++    char stringpool_str120[sizeof("C99")];
++    char stringpool_str121[sizeof("ISO_8859-15:1998")];
++    char stringpool_str122[sizeof("ISO-IR-58")];
++    char stringpool_str123[sizeof("ISO-8859-16")];
++    char stringpool_str125[sizeof("JP")];
++    char stringpool_str126[sizeof("US")];
++    char stringpool_str129[sizeof("iso88594")];
++    char stringpool_str131[sizeof("ISO_8859-6")];
++    char stringpool_str132[sizeof("LATIN4")];
++    char stringpool_str133[sizeof("L3")];
++    char stringpool_str134[sizeof("ISO-IR-159")];
++    char stringpool_str135[sizeof("ISO-IR-199")];
++    char stringpool_str136[sizeof("ISO-IR-6")];
++    char stringpool_str137[sizeof("CP819")];
++    char stringpool_str138[sizeof("ISO8859-4")];
++    char stringpool_str139[sizeof("ISO_8859-16")];
++    char stringpool_str142[sizeof("ISO8859-10")];
++    char stringpool_str143[sizeof("ISO-IR-165")];
++    char stringpool_str146[sizeof("SHIFT-JIS")];
++    char stringpool_str147[sizeof("ISO-8859-4")];
++    char stringpool_str148[sizeof("ISO_8859-14:1998")];
++    char stringpool_str151[sizeof("ISO-8859-10")];
++    char stringpool_str153[sizeof("ISO-IR-101")];
++    char stringpool_str155[sizeof("ISO-8859-14")];
++    char stringpool_str157[sizeof("ISO-IR-148")];
++    char stringpool_str158[sizeof("ISO_8859-16:2000")];
++    char stringpool_str159[sizeof("ISO-IR-109")];
++    char stringpool_str161[sizeof("ISO-IR-149")];
++    char stringpool_str162[sizeof("SHIFT_JIS")];
++    char stringpool_str163[sizeof("ISO_8859-4")];
++    char stringpool_str164[sizeof("hp15CN")];
++    char stringpool_str165[sizeof("ISO-IR-166")];
++    char stringpool_str167[sizeof("ISO_8859-10")];
++    char stringpool_str168[sizeof("CP949")];
++    char stringpool_str170[sizeof("CP866")];
++    char stringpool_str171[sizeof("ISO_8859-14")];
++    char stringpool_str173[sizeof("ASCII")];
++    char stringpool_str176[sizeof("ISO-IR-14")];
++    char stringpool_str177[sizeof("862")];
++    char stringpool_str180[sizeof("ISO-IR-110")];
++    char stringpool_str183[sizeof("GB_1988-80")];
++    char stringpool_str187[sizeof("CP850")];
++    char stringpool_str189[sizeof("CP950")];
++    char stringpool_str192[sizeof("tis620")];
++    char stringpool_str193[sizeof("iso82")];
++    char stringpool_str195[sizeof("TIS620")];
++    char stringpool_str197[sizeof("iso87")];
++    char stringpool_str198[sizeof("JIS0208")];
++    char stringpool_str203[sizeof("UTF8")];
++    char stringpool_str204[sizeof("TIS-620")];
++    char stringpool_str207[sizeof("ISO-IR-100")];
++    char stringpool_str210[sizeof("ISO-IR-179")];
++    char stringpool_str212[sizeof("UTF-8")];
++    char stringpool_str213[sizeof("ISO-IR-144")];
++    char stringpool_str215[sizeof("CP65001")];
++    char stringpool_str216[sizeof("CP1251")];
++    char stringpool_str218[sizeof("CP1258")];
++    char stringpool_str220[sizeof("CP1255")];
++    char stringpool_str221[sizeof("ISO_8859-10:1992")];
++    char stringpool_str222[sizeof("ISO646-CN")];
++    char stringpool_str223[sizeof("iso88592")];
++    char stringpool_str225[sizeof("ISO-IR-138")];
++    char stringpool_str226[sizeof("LATIN2")];
++    char stringpool_str227[sizeof("iso88597")];
++    char stringpool_str228[sizeof("ISO-IR-126")];
++    char stringpool_str229[sizeof("CSISO159JISX02121990")];
++    char stringpool_str230[sizeof("LATIN7")];
++    char stringpool_str231[sizeof("IBM819")];
++    char stringpool_str232[sizeof("ISO8859-2")];
++    char stringpool_str233[sizeof("macturk")];
++    char stringpool_str234[sizeof("iso13")];
++    char stringpool_str235[sizeof("iso83")];
++    char stringpool_str236[sizeof("ISO8859-7")];
++    char stringpool_str237[sizeof("KOI8-T")];
++    char stringpool_str238[sizeof("ISO646-US")];
++    char stringpool_str239[sizeof("TIS620-0")];
++    char stringpool_str240[sizeof("BIG5")];
++    char stringpool_str241[sizeof("ISO-8859-2")];
++    char stringpool_str242[sizeof("CP1256")];
++    char stringpool_str243[sizeof("ELOT_928")];
++    char stringpool_str244[sizeof("macgreek")];
++    char stringpool_str245[sizeof("ISO-8859-7")];
++    char stringpool_str247[sizeof("CSISOLATIN1")];
++    char stringpool_str248[sizeof("CP1361")];
++    char stringpool_str249[sizeof("BIG-5")];
++    char stringpool_str250[sizeof("cp949")];
++    char stringpool_str251[sizeof("CSISOLATIN5")];
++    char stringpool_str252[sizeof("cp866")];
++    char stringpool_str253[sizeof("ascii_8")];
++    char stringpool_str255[sizeof("macthai")];
++    char stringpool_str256[sizeof("CP936")];
++    char stringpool_str257[sizeof("ISO_8859-2")];
++    char stringpool_str260[sizeof("GB18030")];
++    char stringpool_str261[sizeof("ISO_8859-7")];
++    char stringpool_str262[sizeof("TCVN")];
++    char stringpool_str264[sizeof("IBM866")];
++    char stringpool_str265[sizeof("iso88593")];
++    char stringpool_str267[sizeof("CP874")];
++    char stringpool_str268[sizeof("LATIN3")];
++    char stringpool_str269[sizeof("cp850")];
++    char stringpool_str270[sizeof("CP1250")];
++    char stringpool_str271[sizeof("cp950")];
++    char stringpool_str273[sizeof("CSISOLATIN6")];
++    char stringpool_str274[sizeof("CP1254")];
++    char stringpool_str275[sizeof("ISO-IR-87")];
++    char stringpool_str276[sizeof("ISO-IR-57")];
++    char stringpool_str278[sizeof("MS-ANSI")];
++    char stringpool_str279[sizeof("CSASCII")];
++    char stringpool_str281[sizeof("IBM850")];
++    char stringpool_str283[sizeof("ISO-8859-3")];
++    char stringpool_str284[sizeof("ISO-IR-157")];
++    char stringpool_str291[sizeof("ISO-8859-13")];
++    char stringpool_str296[sizeof("CP862")];
++    char stringpool_str298[sizeof("cp1251")];
++    char stringpool_str299[sizeof("ISO_8859-3")];
++    char stringpool_str300[sizeof("cp1258")];
++    char stringpool_str301[sizeof("EUCCN")];
++    char stringpool_str302[sizeof("cp1255")];
++    char stringpool_str304[sizeof("ISO-IR-226")];
++    char stringpool_str305[sizeof("CSISOLATIN4")];
++    char stringpool_str307[sizeof("ISO_8859-13")];
++    char stringpool_str308[sizeof("US-ASCII")];
++    char stringpool_str309[sizeof("CSSHIFTJIS")];
++    char stringpool_str310[sizeof("EUC-CN")];
++    char stringpool_str313[sizeof("CSISO14JISC6220RO")];
++    char stringpool_str314[sizeof("UHC")];
++    char stringpool_str315[sizeof("ROMAN8")];
++    char stringpool_str317[sizeof("KOI8-R")];
++    char stringpool_str324[sizeof("cp1256")];
++    char stringpool_str327[sizeof("GEORGIAN-PS")];
++    char stringpool_str336[sizeof("ISO646-JP")];
++    char stringpool_str338[sizeof("cp936")];
++    char stringpool_str346[sizeof("CSBIG5")];
++    char stringpool_str349[sizeof("cp874")];
++    char stringpool_str350[sizeof("JAVA")];
++    char stringpool_str352[sizeof("cp1250")];
++    char stringpool_str355[sizeof("CN-BIG5")];
++    char stringpool_str356[sizeof("cp1254")];
++    char stringpool_str357[sizeof("UTF7")];
++    char stringpool_str358[sizeof("ISO-IR-127")];
++    char stringpool_str360[sizeof("VISCII")];
++    char stringpool_str363[sizeof("ECMA-118")];
++    char stringpool_str366[sizeof("UTF-7")];
++    char stringpool_str367[sizeof("UNICODE-1-1")];
++    char stringpool_str368[sizeof("CP1252")];
++    char stringpool_str369[sizeof("mac")];
++    char stringpool_str370[sizeof("UCS-4LE")];
++    char stringpool_str372[sizeof("CP1257")];
++    char stringpool_str378[sizeof("cp862")];
++    char stringpool_str379[sizeof("CHINESE")];
++    char stringpool_str380[sizeof("MAC")];
++    char stringpool_str381[sizeof("GEORGIAN-ACADEMY")];
++    char stringpool_str382[sizeof("CP932")];
++    char stringpool_str384[sizeof("ARMSCII-8")];
++    char stringpool_str385[sizeof("CSISOLATINARABIC")];
++    char stringpool_str390[sizeof("IBM862")];
++    char stringpool_str391[sizeof("ASMO-708")];
++    char stringpool_str392[sizeof("KSC_5601")];
++    char stringpool_str395[sizeof("KOREAN")];
++    char stringpool_str396[sizeof("CP367")];
++    char stringpool_str398[sizeof("GB2312")];
++    char stringpool_str399[sizeof("CSISOLATIN2")];
++    char stringpool_str404[sizeof("JIS_C6220-1969-RO")];
++    char stringpool_str406[sizeof("HP-ROMAN8")];
++    char stringpool_str407[sizeof("GBK")];
++    char stringpool_str408[sizeof("GREEK8")];
++    char stringpool_str409[sizeof("MULELAO-1")];
++    char stringpool_str410[sizeof("CP1253")];
++    char stringpool_str412[sizeof("CP437")];
++    char stringpool_str414[sizeof("CSKOI8R")];
++    char stringpool_str415[sizeof("EUCJP")];
++    char stringpool_str417[sizeof("UCS-2LE")];
++    char stringpool_str418[sizeof("CYRILLIC")];
++    char stringpool_str419[sizeof("ECMA-114")];
++    char stringpool_str420[sizeof("eucJP")];
++    char stringpool_str421[sizeof("UTF-16LE")];
++    char stringpool_str422[sizeof("MS-CYRL")];
++    char stringpool_str423[sizeof("ISO-IR-203")];
++    char stringpool_str424[sizeof("EUC-JP")];
++    char stringpool_str425[sizeof("mac_cyr")];
++    char stringpool_str427[sizeof("GB_2312-80")];
++    char stringpool_str429[sizeof("CP1133")];
++    char stringpool_str433[sizeof("CN-GB-ISOIR165")];
++    char stringpool_str434[sizeof("CSISOLATINCYRILLIC")];
++    char stringpool_str435[sizeof("MACTHAI")];
++    char stringpool_str439[sizeof("ISO-2022-CN")];
++    char stringpool_str440[sizeof("KS_C_5601-1989")];
++    char stringpool_str441[sizeof("CSISOLATIN3")];
++    char stringpool_str442[sizeof("ISO_8859-8:1988")];
++    char stringpool_str443[sizeof("ISO_8859-5:1988")];
++    char stringpool_str445[sizeof("ISO-2022-CN-EXT")];
++    char stringpool_str446[sizeof("ISO_8859-9:1989")];
++    char stringpool_str448[sizeof("MS-EE")];
++    char stringpool_str449[sizeof("KOI8-U")];
++    char stringpool_str450[sizeof("cp1252")];
++    char stringpool_str451[sizeof("UNICODE-1-1-UTF-7")];
++    char stringpool_str452[sizeof("ISO-CELTIC")];
++    char stringpool_str454[sizeof("cp1257")];
++    char stringpool_str455[sizeof("CSISOLATINGREEK")];
++    char stringpool_str456[sizeof("ISO-2022-JP-1")];
++    char stringpool_str457[sizeof("CSUNICODE11")];
++    char stringpool_str458[sizeof("WINDOWS-1251")];
++    char stringpool_str459[sizeof("WINDOWS-1258")];
++    char stringpool_str460[sizeof("WINDOWS-1255")];
++    char stringpool_str462[sizeof("CSISOLATINHEBREW")];
++    char stringpool_str464[sizeof("cp932")];
++    char stringpool_str465[sizeof("TCVN5712-1")];
++    char stringpool_str466[sizeof("CSVISCII")];
++    char stringpool_str468[sizeof("CSISO57GB1988")];
++    char stringpool_str470[sizeof("ISO_8859-4:1988")];
++    char stringpool_str471[sizeof("WINDOWS-1256")];
++    char stringpool_str472[sizeof("UNICODELITTLE")];
++    char stringpool_str473[sizeof("TIS620.2529-1")];
++    char stringpool_str474[sizeof("EUCKR")];
++    char stringpool_str475[sizeof("X0201")];
++    char stringpool_str476[sizeof("MACINTOSH")];
++    char stringpool_str477[sizeof("X0208")];
++    char stringpool_str479[sizeof("eucKR")];
++    char stringpool_str483[sizeof("EUC-KR")];
++    char stringpool_str484[sizeof("JIS_C6226-1983")];
++    char stringpool_str485[sizeof("WINDOWS-1250")];
++    char stringpool_str487[sizeof("WINDOWS-1254")];
++    char stringpool_str490[sizeof("IBM367")];
++    char stringpool_str491[sizeof("MS_KANJI")];
++    char stringpool_str492[sizeof("cp1253")];
++    char stringpool_str493[sizeof("ARABIC")];
++    char stringpool_str494[sizeof("cp437")];
++    char stringpool_str499[sizeof("EUCTW")];
++    char stringpool_str501[sizeof("KOI8-RU")];
++    char stringpool_str504[sizeof("eucTW")];
++    char stringpool_str506[sizeof("IBM437")];
++    char stringpool_str507[sizeof("VISCII1.1-1")];
++    char stringpool_str508[sizeof("EUC-TW")];
++    char stringpool_str514[sizeof("CN-GB")];
++    char stringpool_str515[sizeof("KS_C_5601-1987")];
++    char stringpool_str516[sizeof("WINDOWS-874")];
++    char stringpool_str517[sizeof("JOHAB")];
++    char stringpool_str518[sizeof("ISO_8859-1:1987")];
++    char stringpool_str527[sizeof("CSISO2022CN")];
++    char stringpool_str529[sizeof("UCS-4BE")];
++    char stringpool_str531[sizeof("ISO_8859-6:1987")];
++    char stringpool_str532[sizeof("ISO-2022-JP-2")];
++    char stringpool_str533[sizeof("TCVN-5712")];
++    char stringpool_str534[sizeof("WINDOWS-1252")];
++    char stringpool_str536[sizeof("WINDOWS-1257")];
++    char stringpool_str537[sizeof("ISO_646.IRV:1991")];
++    char stringpool_str538[sizeof("ISO_8859-3:1988")];
++    char stringpool_str539[sizeof("CSUNICODE11UTF7")];
++    char stringpool_str549[sizeof("CSIBM866")];
++    char stringpool_str553[sizeof("ISO-2022-JP")];
++    char stringpool_str555[sizeof("WINDOWS-1253")];
++    char stringpool_str561[sizeof("JIS_X0201")];
++    char stringpool_str563[sizeof("JIS_X0208")];
++    char stringpool_str565[sizeof("EXTENDED_UNIX_CODE_PACKED_FORMAT_FOR_JAPANESE")];
++    char stringpool_str572[sizeof("CSKSC56011987")];
++    char stringpool_str576[sizeof("UCS-2BE")];
++    char stringpool_str577[sizeof("GREEK")];
++    char stringpool_str578[sizeof("MACICELAND")];
++    char stringpool_str579[sizeof("JISX0201-1976")];
++    char stringpool_str580[sizeof("UTF-16BE")];
++    char stringpool_str581[sizeof("UTF-32LE")];
++    char stringpool_str582[sizeof("MACCROATIAN")];
++    char stringpool_str586[sizeof("UNICODEBIG")];
++    char stringpool_str588[sizeof("TIS620.2533-1")];
++    char stringpool_str589[sizeof("CSISO58GB231280")];
++    char stringpool_str594[sizeof("ISO_8859-2:1987")];
++    char stringpool_str596[sizeof("ISO_8859-7:1987")];
++    char stringpool_str597[sizeof("MACROMAN")];
++    char stringpool_str600[sizeof("X0212")];
++    char stringpool_str602[sizeof("CSHPROMAN8")];
++    char stringpool_str604[sizeof("CSISO87JISX0208")];
++    char stringpool_str609[sizeof("JIS_X0208-1990")];
++    char stringpool_str612[sizeof("ISO-2022-KR")];
++    char stringpool_str613[sizeof("BIG5HKSCS")];
++    char stringpool_str615[sizeof("TIS620.2533-0")];
++    char stringpool_str619[sizeof("CSISO2022JP2")];
++    char stringpool_str622[sizeof("BIG5-HKSCS")];
++    char stringpool_str625[sizeof("CSMACINTOSH")];
++    char stringpool_str631[sizeof("CSHALFWIDTHKATAKANA")];
++    char stringpool_str641[sizeof("CSISO2022JP")];
++    char stringpool_str643[sizeof("MS-HEBR")];
++    char stringpool_str657[sizeof("JIS_X0212-1990")];
++    char stringpool_str675[sizeof("CSPC862LATINHEBREW")];
++    char stringpool_str677[sizeof("HZ-GB-2312")];
++    char stringpool_str679[sizeof("JIS_X0208-1983")];
++    char stringpool_str681[sizeof("NEXTSTEP")];
++    char stringpool_str683[sizeof("CSGB2312")];
++    char stringpool_str686[sizeof("JIS_X0212")];
++    char stringpool_str690[sizeof("CSEUCKR")];
++    char stringpool_str695[sizeof("BIGFIVE")];
++    char stringpool_str697[sizeof("MACROMANIA")];
++    char stringpool_str700[sizeof("CSISO2022KR")];
++    char stringpool_str702[sizeof("HEBREW")];
++    char stringpool_str704[sizeof("BIG-FIVE")];
++    char stringpool_str715[sizeof("CSEUCTW")];
++    char stringpool_str717[sizeof("ANSI_X3.4-1968")];
++    char stringpool_str721[sizeof("MS-ARAB")];
++    char stringpool_str723[sizeof("MACCYRILLIC")];
++    char stringpool_str729[sizeof("ANSI_X3.4-1986")];
++    char stringpool_str735[sizeof("CSPC850MULTILINGUAL")];
++    char stringpool_str737[sizeof("IBM-CP1133")];
++    char stringpool_str740[sizeof("UTF-32BE")];
++    char stringpool_str749[sizeof("MS-TURK")];
++    char stringpool_str764[sizeof("JIS_X0212.1990-0")];
++    char stringpool_str793[sizeof("MACCENTRALEUROPE")];
++    char stringpool_str815[sizeof("MACTURKISH")];
++    char stringpool_str822[sizeof("MS-GREEK")];
++    char stringpool_str827[sizeof("MACARABIC")];
++    char stringpool_str868[sizeof("WINBALTRIM")];
++    char stringpool_str878[sizeof("MACUKRAINE")];
++    char stringpool_str897[sizeof("TCVN5712-1:1993")];
++    char stringpool_str911[sizeof("MACGREEK")];
++    char stringpool_str1057[sizeof("CSEUCPKDFMTJAPANESE")];
++    char stringpool_str1069[sizeof("MACHEBREW")];
++  };
++static const struct stringpool_t stringpool_contents =
++  {
++    "SJIS",
++    "koi8",
++    "sjis",
++    "L1",
++    "L8",
++    "L5",
++    "utf8",
++    "iso81",
++    "big5",
++    "iso88",
++    "iso15",
++    "iso85",
++    "iso89",
++    "thai8",
++    "L6",
++    "roma8",
++    "866",
++    "iso815",
++    "greek8",
++    "iso_1",
++    "roman8",
++    "R8",
++    "646",
++    "L4",
++    "iso86",
++    "iso88591",
++    "iso88598",
++    "LATIN1",
++    "iso88595",
++    "LATIN8",
++    "iso88599",
++    "LATIN5",
++    "850",
++    "ISO8859-1",
++    "ISO8859-8",
++    "iso885915",
++    "ISO8859-5",
++    "HZ",
++    "ISO8859-9",
++    "ISO-8859-1",
++    "ISO-8859-8",
++    "ISO8859-15",
++    "ISO-8859-5",
++    "iso10",
++    "ISO-8859-9",
++    "iso88596",
++    "iso14",
++    "iso84",
++    "LATIN6",
++    "ISO-8859-15",
++    "ISO_8859-1",
++    "ISO8859-6",
++    "ISO_8859-8",
++    "CN",
++    "ISO_8859-5",
++    "ISO_8859-9",
++    "L2",
++    "L7",
++    "ISO-8859-6",
++    "iso646",
++    "ISO_8859-15",
++    "C99",
++    "ISO_8859-15:1998",
++    "ISO-IR-58",
++    "ISO-8859-16",
++    "JP",
++    "US",
++    "iso88594",
++    "ISO_8859-6",
++    "LATIN4",
++    "L3",
++    "ISO-IR-159",
++    "ISO-IR-199",
++    "ISO-IR-6",
++    "CP819",
++    "ISO8859-4",
++    "ISO_8859-16",
++    "ISO8859-10",
++    "ISO-IR-165",
++    "SHIFT-JIS",
++    "ISO-8859-4",
++    "ISO_8859-14:1998",
++    "ISO-8859-10",
++    "ISO-IR-101",
++    "ISO-8859-14",
++    "ISO-IR-148",
++    "ISO_8859-16:2000",
++    "ISO-IR-109",
++    "ISO-IR-149",
++    "SHIFT_JIS",
++    "ISO_8859-4",
++    "hp15CN",
++    "ISO-IR-166",
++    "ISO_8859-10",
++    "CP949",
++    "CP866",
++    "ISO_8859-14",
++    "ASCII",
++    "ISO-IR-14",
++    "862",
++    "ISO-IR-110",
++    "GB_1988-80",
++    "CP850",
++    "CP950",
++    "tis620",
++    "iso82",
++    "TIS620",
++    "iso87",
++    "JIS0208",
++    "UTF8",
++    "TIS-620",
++    "ISO-IR-100",
++    "ISO-IR-179",
++    "UTF-8",
++    "ISO-IR-144",
++    "CP65001",
++    "CP1251",
++    "CP1258",
++    "CP1255",
++    "ISO_8859-10:1992",
++    "ISO646-CN",
++    "iso88592",
++    "ISO-IR-138",
++    "LATIN2",
++    "iso88597",
++    "ISO-IR-126",
++    "CSISO159JISX02121990",
++    "LATIN7",
++    "IBM819",
++    "ISO8859-2",
++    "macturk",
++    "iso13",
++    "iso83",
++    "ISO8859-7",
++    "KOI8-T",
++    "ISO646-US",
++    "TIS620-0",
++    "BIG5",
++    "ISO-8859-2",
++    "CP1256",
++    "ELOT_928",
++    "macgreek",
++    "ISO-8859-7",
++    "CSISOLATIN1",
++    "CP1361",
++    "BIG-5",
++    "cp949",
++    "CSISOLATIN5",
++    "cp866",
++    "ascii_8",
++    "macthai",
++    "CP936",
++    "ISO_8859-2",
++    "GB18030",
++    "ISO_8859-7",
++    "TCVN",
++    "IBM866",
++    "iso88593",
++    "CP874",
++    "LATIN3",
++    "cp850",
++    "CP1250",
++    "cp950",
++    "CSISOLATIN6",
++    "CP1254",
++    "ISO-IR-87",
++    "ISO-IR-57",
++    "MS-ANSI",
++    "CSASCII",
++    "IBM850",
++    "ISO-8859-3",
++    "ISO-IR-157",
++    "ISO-8859-13",
++    "CP862",
++    "cp1251",
++    "ISO_8859-3",
++    "cp1258",
++    "EUCCN",
++    "cp1255",
++    "ISO-IR-226",
++    "CSISOLATIN4",
++    "ISO_8859-13",
++    "US-ASCII",
++    "CSSHIFTJIS",
++    "EUC-CN",
++    "CSISO14JISC6220RO",
++    "UHC",
++    "ROMAN8",
++    "KOI8-R",
++    "cp1256",
++    "GEORGIAN-PS",
++    "ISO646-JP",
++    "cp936",
++    "CSBIG5",
++    "cp874",
++    "JAVA",
++    "cp1250",
++    "CN-BIG5",
++    "cp1254",
++    "UTF7",
++    "ISO-IR-127",
++    "VISCII",
++    "ECMA-118",
++    "UTF-7",
++    "UNICODE-1-1",
++    "CP1252",
++    "mac",
++    "UCS-4LE",
++    "CP1257",
++    "cp862",
++    "CHINESE",
++    "MAC",
++    "GEORGIAN-ACADEMY",
++    "CP932",
++    "ARMSCII-8",
++    "CSISOLATINARABIC",
++    "IBM862",
++    "ASMO-708",
++    "KSC_5601",
++    "KOREAN",
++    "CP367",
++    "GB2312",
++    "CSISOLATIN2",
++    "JIS_C6220-1969-RO",
++    "HP-ROMAN8",
++    "GBK",
++    "GREEK8",
++    "MULELAO-1",
++    "CP1253",
++    "CP437",
++    "CSKOI8R",
++    "EUCJP",
++    "UCS-2LE",
++    "CYRILLIC",
++    "ECMA-114",
++    "eucJP",
++    "UTF-16LE",
++    "MS-CYRL",
++    "ISO-IR-203",
++    "EUC-JP",
++    "mac_cyr",
++    "GB_2312-80",
++    "CP1133",
++    "CN-GB-ISOIR165",
++    "CSISOLATINCYRILLIC",
++    "MACTHAI",
++    "ISO-2022-CN",
++    "KS_C_5601-1989",
++    "CSISOLATIN3",
++    "ISO_8859-8:1988",
++    "ISO_8859-5:1988",
++    "ISO-2022-CN-EXT",
++    "ISO_8859-9:1989",
++    "MS-EE",
++    "KOI8-U",
++    "cp1252",
++    "UNICODE-1-1-UTF-7",
++    "ISO-CELTIC",
++    "cp1257",
++    "CSISOLATINGREEK",
++    "ISO-2022-JP-1",
++    "CSUNICODE11",
++    "WINDOWS-1251",
++    "WINDOWS-1258",
++    "WINDOWS-1255",
++    "CSISOLATINHEBREW",
++    "cp932",
++    "TCVN5712-1",
++    "CSVISCII",
++    "CSISO57GB1988",
++    "ISO_8859-4:1988",
++    "WINDOWS-1256",
++    "UNICODELITTLE",
++    "TIS620.2529-1",
++    "EUCKR",
++    "X0201",
++    "MACINTOSH",
++    "X0208",
++    "eucKR",
++    "EUC-KR",
++    "JIS_C6226-1983",
++    "WINDOWS-1250",
++    "WINDOWS-1254",
++    "IBM367",
++    "MS_KANJI",
++    "cp1253",
++    "ARABIC",
++    "cp437",
++    "EUCTW",
++    "KOI8-RU",
++    "eucTW",
++    "IBM437",
++    "VISCII1.1-1",
++    "EUC-TW",
++    "CN-GB",
++    "KS_C_5601-1987",
++    "WINDOWS-874",
++    "JOHAB",
++    "ISO_8859-1:1987",
++    "CSISO2022CN",
++    "UCS-4BE",
++    "ISO_8859-6:1987",
++    "ISO-2022-JP-2",
++    "TCVN-5712",
++    "WINDOWS-1252",
++    "WINDOWS-1257",
++    "ISO_646.IRV:1991",
++    "ISO_8859-3:1988",
++    "CSUNICODE11UTF7",
++    "CSIBM866",
++    "ISO-2022-JP",
++    "WINDOWS-1253",
++    "JIS_X0201",
++    "JIS_X0208",
++    "EXTENDED_UNIX_CODE_PACKED_FORMAT_FOR_JAPANESE",
++    "CSKSC56011987",
++    "UCS-2BE",
++    "GREEK",
++    "MACICELAND",
++    "JISX0201-1976",
++    "UTF-16BE",
++    "UTF-32LE",
++    "MACCROATIAN",
++    "UNICODEBIG",
++    "TIS620.2533-1",
++    "CSISO58GB231280",
++    "ISO_8859-2:1987",
++    "ISO_8859-7:1987",
++    "MACROMAN",
++    "X0212",
++    "CSHPROMAN8",
++    "CSISO87JISX0208",
++    "JIS_X0208-1990",
++    "ISO-2022-KR",
++    "BIG5HKSCS",
++    "TIS620.2533-0",
++    "CSISO2022JP2",
++    "BIG5-HKSCS",
++    "CSMACINTOSH",
++    "CSHALFWIDTHKATAKANA",
++    "CSISO2022JP",
++    "MS-HEBR",
++    "JIS_X0212-1990",
++    "CSPC862LATINHEBREW",
++    "HZ-GB-2312",
++    "JIS_X0208-1983",
++    "NEXTSTEP",
++    "CSGB2312",
++    "JIS_X0212",
++    "CSEUCKR",
++    "BIGFIVE",
++    "MACROMANIA",
++    "CSISO2022KR",
++    "HEBREW",
++    "BIG-FIVE",
++    "CSEUCTW",
++    "ANSI_X3.4-1968",
++    "MS-ARAB",
++    "MACCYRILLIC",
++    "ANSI_X3.4-1986",
++    "CSPC850MULTILINGUAL",
++    "IBM-CP1133",
++    "UTF-32BE",
++    "MS-TURK",
++    "JIS_X0212.1990-0",
++    "MACCENTRALEUROPE",
++    "MACTURKISH",
++    "MS-GREEK",
++    "MACARABIC",
++    "WINBALTRIM",
++    "MACUKRAINE",
++    "TCVN5712-1:1993",
++    "MACGREEK",
++    "CSEUCPKDFMTJAPANESE",
++    "MACHEBREW"
++  };
++#define stringpool ((const char *) &stringpool_contents)
++const struct charset_alias *
++charset_lookup (register const char *str, register size_t len)
++{
++  enum
++    {
++      TOTAL_KEYWORDS = 375,
++      MIN_WORD_LENGTH = 2,
++      MAX_WORD_LENGTH = 45,
++      MIN_HASH_VALUE = 32,
++      MAX_HASH_VALUE = 1069
++    };
++
++  static const struct charset_alias wordlist[] =
++    {
++      {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1},
++      {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1},
++      {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1},
++      {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1},
++      {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1},
++      {-1,-1}, {-1,-1},
++#line 273 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str32), 90},
++      {-1,-1},
++#line 376 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str34), 71},
++#line 360 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str35), 90},
++#line 229 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str36), 0},
++#line 236 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str37), 53},
++#line 233 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str38), 63},
++#line 363 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str39), 1},
++      {-1,-1},
++#line 338 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str41), 0},
++#line 319 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str42), 11},
++#line 346 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str43), 62},
++#line 373 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str44), 54},
++#line 343 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str45), 59},
++      {-1,-1},
++#line 357 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str47), 63},
++#line 361 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str48), 67},
++#line 234 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str49), 51},
++#line 358 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str50), 89},
++#line 10 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str51), 32},
++      {-1,-1},
++#line 339 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str53), 54},
++      {-1,-1}, {-1,-1},
++#line 369 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str56), 61},
++#line 375 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str57), 0},
++#line 359 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str58), 89},
++      {-1,-1}, {-1,-1},
++#line 269 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str61), 89},
++      {-1,-1},
++#line 7 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str63), 92},
++      {-1,-1},
++#line 232 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str65), 58},
++      {-1,-1},
++#line 344 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str67), 60},
++      {-1,-1}, {-1,-1}, {-1,-1},
++#line 347 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str71), 0},
++      {-1,-1},
++#line 355 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str73), 62},
++#line 237 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str74), 0},
++#line 352 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str75), 59},
++#line 244 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str76), 53},
++#line 356 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str77), 63},
++#line 241 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str78), 63},
++#line 8 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str79), 30},
++#line 169 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str80), 0},
++      {-1,-1},
++#line 177 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str82), 62},
++#line 348 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str83), 54},
++#line 174 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str84), 59},
++#line 113 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str85), 44},
++#line 178 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str86), 63},
++      {-1,-1}, {-1,-1},
++#line 128 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str89), 0},
++      {-1,-1},
++#line 140 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str91), 62},
++#line 171 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str92), 54},
++#line 137 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str93), 59},
++#line 370 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str94), 51},
++#line 141 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str95), 63},
++      {-1,-1},
++#line 353 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str97), 60},
++#line 372 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str98), 53},
++#line 342 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str99), 58},
++#line 242 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str100), 51},
++#line 132 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str101), 54},
++      {-1,-1}, {-1,-1}, {-1,-1},
++#line 180 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str105), 0},
++#line 175 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str106), 60},
++#line 203 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str107), 62},
++#line 25 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str108), 15},
++#line 197 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str109), 59},
++      {-1,-1},
++#line 205 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str111), 63},
++#line 230 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str112), 56},
++      {-1,-1},
++#line 235 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str114), 52},
++#line 138 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str115), 60},
++#line 374 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str116), 92},
++#line 186 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str117), 54},
++      {-1,-1}, {-1,-1},
++#line 23 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str120), 13},
++#line 187 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str121), 54},
++#line 163 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str122), 14},
++#line 133 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str123), 55},
++      {-1,-1},
++#line 220 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str125), 64},
++#line 293 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str126), 92},
++      {-1,-1}, {-1,-1},
++#line 351 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str129), 58},
++      {-1,-1},
++#line 199 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str131), 60},
++#line 240 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str132), 58},
++#line 231 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str133), 57},
++#line 155 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str134), 66},
++#line 159 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str135), 53},
++#line 164 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str136), 92},
++#line 43 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str137), 0},
++#line 173 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str138), 58},
++#line 188 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str139), 55},
++      {-1,-1}, {-1,-1},
++#line 170 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str142), 51},
++#line 156 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str143), 17},
++      {-1,-1}, {-1,-1},
++#line 271 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str146), 90},
++#line 136 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str147), 58},
++#line 185 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str148), 53},
++      {-1,-1}, {-1,-1},
++#line 129 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str151), 51},
++      {-1,-1},
++#line 144 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str153), 56},
++      {-1,-1},
++#line 131 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str155), 53},
++      {-1,-1},
++#line 152 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str157), 63},
++#line 189 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str158), 55},
++#line 145 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str159), 57},
++      {-1,-1},
++#line 153 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str161), 65},
++#line 272 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str162), 90},
++#line 195 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str163), 58},
++#line 337 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str164), 14},
++#line 157 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str165), 67},
++      {-1,-1},
++#line 181 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str167), 51},
++#line 50 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str168), 36},
++      {-1,-1},
++#line 46 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str170), 32},
++#line 184 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str171), 53},
++      {-1,-1},
++#line 15 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str173), 92},
++      {-1,-1}, {-1,-1},
++#line 150 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str176), 64},
++#line 9 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str177), 31},
++      {-1,-1}, {-1,-1},
++#line 146 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str180), 58},
++      {-1,-1}, {-1,-1},
++#line 105 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str183), 15},
++      {-1,-1}, {-1,-1}, {-1,-1},
++#line 44 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str187), 30},
++      {-1,-1},
++#line 51 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str189), 37},
++      {-1,-1}, {-1,-1},
++#line 362 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str192), 67},
++#line 340 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str193), 56},
++      {-1,-1},
++#line 279 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str195), 67},
++      {-1,-1},
++#line 345 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str197), 61},
++#line 208 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str198), 68},
++      {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1},
++#line 302 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str203), 1},
++#line 278 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str204), 67},
++      {-1,-1}, {-1,-1},
++#line 143 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str207), 0},
++      {-1,-1}, {-1,-1},
++#line 158 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str210), 52},
++      {-1,-1},
++#line 300 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str212), 1},
++#line 151 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str213), 59},
++      {-1,-1},
++#line 42 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str215), 1},
++#line 31 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str216), 20},
++      {-1,-1},
++#line 38 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str218), 27},
++      {-1,-1},
++#line 35 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str220), 24},
++#line 182 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str221), 51},
++#line 166 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str222), 15},
++#line 349 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str223), 56},
++      {-1,-1},
++#line 149 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str225), 62},
++#line 238 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str226), 56},
++#line 354 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str227), 61},
++#line 147 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str228), 61},
++#line 62 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str229), 66},
++#line 243 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str230), 52},
++#line 118 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str231), 0},
++#line 172 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str232), 56},
++#line 381 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str233), 85},
++#line 371 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str234), 52},
++#line 341 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str235), 57},
++#line 176 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str236), 61},
++#line 223 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str237), 73},
++#line 168 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str238), 92},
++#line 280 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str239), 67},
++#line 19 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str240), 11},
++#line 134 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str241), 56},
++#line 36 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str242), 25},
++#line 92 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str243), 61},
++#line 379 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str244), 80},
++#line 139 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str245), 61},
++      {-1,-1},
++#line 70 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str247), 0},
++#line 39 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str248), 28},
++#line 17 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str249), 11},
++#line 367 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str250), 36},
++#line 74 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str251), 63},
++#line 332 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str252), 32},
++#line 364 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str253), 0},
++      {-1,-1},
++#line 380 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str255), 84},
++#line 49 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str256), 35},
++#line 191 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str257), 56},
++      {-1,-1}, {-1,-1},
++#line 102 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str260), 41},
++#line 201 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str261), 61},
++#line 274 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str262), 91},
++      {-1,-1},
++#line 121 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str264), 32},
++#line 350 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str265), 57},
++      {-1,-1},
++#line 47 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str267), 33},
++#line 239 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str268), 57},
++#line 330 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str269), 30},
++#line 30 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str270), 19},
++#line 368 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str271), 37},
++      {-1,-1},
++#line 75 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str273), 51},
++#line 34 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str274), 23},
++#line 165 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str275), 68},
++#line 162 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str276), 15},
++      {-1,-1},
++#line 259 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str278), 21},
++#line 52 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str279), 92},
++      {-1,-1},
++#line 119 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str281), 30},
++      {-1,-1},
++#line 135 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str283), 57},
++#line 154 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str284), 51},
++      {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1},
++#line 130 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str291), 52},
++      {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1},
++#line 45 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str296), 31},
++      {-1,-1},
++#line 321 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str298), 20},
++#line 193 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str299), 57},
++#line 328 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str300), 27},
++#line 97 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str301), 16},
++#line 325 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str302), 24},
++      {-1,-1},
++#line 161 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str304), 55},
++#line 73 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str305), 58},
++      {-1,-1},
++#line 183 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str307), 52},
++#line 294 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str308), 92},
++#line 85 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str309), 90},
++#line 93 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str310), 16},
++      {-1,-1}, {-1,-1},
++#line 61 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str313), 64},
++#line 288 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str314), 36},
++#line 270 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str315), 89},
++      {-1,-1},
++#line 221 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str317), 71},
++      {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1},
++#line 326 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str324), 25},
++      {-1,-1}, {-1,-1},
++#line 108 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str327), 43},
++      {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1},
++      {-1,-1}, {-1,-1},
++#line 167 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str336), 64},
++      {-1,-1},
++#line 366 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str338), 35},
++      {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1},
++      {-1,-1},
++#line 53 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str346), 11},
++      {-1,-1}, {-1,-1},
++#line 333 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str349), 33},
++#line 207 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str350), 69},
++      {-1,-1},
++#line 320 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str352), 19},
++      {-1,-1}, {-1,-1},
++#line 26 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str355), 11},
++#line 324 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str356), 23},
++#line 301 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str357), 93},
++#line 148 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str358), 60},
++      {-1,-1},
++#line 303 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str360), 94},
++      {-1,-1}, {-1,-1},
++#line 91 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str363), 61},
++      {-1,-1}, {-1,-1},
++#line 299 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str366), 93},
++#line 289 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str367), 3},
++#line 32 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str368), 21},
++#line 377 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str369), 75},
++#line 287 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str370), 6},
++      {-1,-1},
++#line 37 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str372), 26},
++      {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1},
++#line 331 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str378), 31},
++#line 24 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str379), 14},
++#line 245 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str380), 75},
++#line 107 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str381), 42},
++#line 48 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str382), 34},
++      {-1,-1},
++#line 14 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str384), 10},
++#line 76 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str385), 60},
++      {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1},
++#line 120 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str390), 31},
++#line 16 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str391), 60},
++#line 226 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str392), 65},
++      {-1,-1}, {-1,-1},
++#line 225 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str395), 65},
++#line 40 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str396), 92},
++      {-1,-1},
++#line 103 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str398), 16},
++#line 71 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str399), 56},
++      {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1},
++#line 210 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str404), 64},
++      {-1,-1},
++#line 112 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str406), 89},
++#line 104 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str407), 35},
++#line 110 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str408), 61},
++#line 267 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str409), 87},
++#line 33 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str410), 22},
++      {-1,-1},
++#line 41 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str412), 29},
++      {-1,-1},
++#line 80 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str414), 71},
++#line 98 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str415), 38},
++      {-1,-1},
++#line 285 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str417), 2},
++#line 89 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str418), 59},
++#line 90 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str419), 60},
++#line 334 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str420), 38},
++#line 296 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str421), 4},
++#line 261 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str422), 20},
++#line 160 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str423), 54},
++#line 94 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str424), 38},
++#line 378 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str425), 79},
++      {-1,-1},
++#line 106 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str427), 14},
++      {-1,-1},
++#line 29 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str429), 18},
++      {-1,-1}, {-1,-1}, {-1,-1},
++#line 28 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str433), 17},
++#line 77 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str434), 59},
++#line 256 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str435), 84},
++      {-1,-1}, {-1,-1}, {-1,-1},
++#line 122 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str439), 45},
++#line 228 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str440), 65},
++#line 72 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str441), 57},
++#line 204 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str442), 62},
++#line 198 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str443), 59},
++      {-1,-1},
++#line 123 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str445), 46},
++#line 206 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str446), 63},
++      {-1,-1},
++#line 262 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str448), 19},
++#line 224 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str449), 74},
++#line 322 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str450), 21},
++#line 290 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str451), 93},
++#line 142 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str452), 53},
++      {-1,-1},
++#line 327 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str454), 26},
++#line 78 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str455), 61},
++#line 125 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str456), 48},
++#line 86 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str457), 3},
++#line 307 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str458), 20},
++#line 314 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str459), 27},
++#line 311 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str460), 24},
++      {-1,-1},
++#line 79 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str462), 62},
++      {-1,-1},
++#line 365 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str464), 34},
++#line 276 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str465), 91},
++#line 88 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str466), 94},
++      {-1,-1},
++#line 67 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str468), 15},
++      {-1,-1},
++#line 196 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str470), 58},
++#line 312 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str471), 25},
++#line 292 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str472), 2},
++#line 281 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str473), 67},
++#line 99 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str474), 39},
++#line 316 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str475), 70},
++#line 253 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str476), 75},
++#line 317 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str477), 68},
++      {-1,-1},
++#line 335 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str479), 39},
++      {-1,-1}, {-1,-1}, {-1,-1},
++#line 95 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str483), 39},
++#line 211 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str484), 68},
++#line 306 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str485), 19},
++      {-1,-1},
++#line 310 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str487), 23},
++      {-1,-1}, {-1,-1},
++#line 116 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str490), 92},
++#line 266 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str491), 90},
++#line 323 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str492), 22},
++#line 13 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str493), 60},
++#line 329 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str494), 29},
++      {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1},
++#line 100 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str499), 40},
++      {-1,-1},
++#line 222 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str501), 72},
++      {-1,-1}, {-1,-1},
++#line 336 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str504), 40},
++      {-1,-1},
++#line 117 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str506), 29},
++#line 304 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str507), 94},
++#line 96 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str508), 40},
++      {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1},
++#line 27 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str514), 16},
++#line 227 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str515), 65},
++#line 315 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str516), 33},
++#line 219 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str517), 28},
++#line 190 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str518), 0},
++      {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1},
++      {-1,-1}, {-1,-1},
++#line 63 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str527), 45},
++      {-1,-1},
++#line 286 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str529), 7},
++      {-1,-1},
++#line 200 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str531), 60},
++#line 126 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str532), 49},
++#line 275 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str533), 91},
++#line 308 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str534), 21},
++      {-1,-1},
++#line 313 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str536), 26},
++#line 179 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str537), 92},
++#line 194 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str538), 57},
++#line 87 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str539), 93},
++      {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1},
++      {-1,-1}, {-1,-1}, {-1,-1},
++#line 60 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str549), 32},
++      {-1,-1}, {-1,-1}, {-1,-1},
++#line 124 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str553), 47},
++      {-1,-1},
++#line 309 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str555), 22},
++      {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1},
++#line 212 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str561), 70},
++      {-1,-1},
++#line 213 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str563), 68},
++      {-1,-1},
++#line 101 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str565), 38},
++      {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1},
++#line 81 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str572), 65},
++      {-1,-1}, {-1,-1}, {-1,-1},
++#line 284 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str576), 3},
++#line 109 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str577), 61},
++#line 252 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str578), 82},
++#line 209 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str579), 70},
++#line 295 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str580), 5},
++#line 298 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str581), 8},
++#line 248 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str582), 78},
++      {-1,-1}, {-1,-1}, {-1,-1},
++#line 291 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str586), 3},
++      {-1,-1},
++#line 283 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str588), 67},
++#line 68 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str589), 14},
++      {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1},
++#line 192 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str594), 56},
++      {-1,-1},
++#line 202 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str596), 61},
++#line 254 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str597), 75},
++      {-1,-1}, {-1,-1},
++#line 318 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str600), 66},
++      {-1,-1},
++#line 59 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str602), 89},
++      {-1,-1},
++#line 69 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str604), 68},
++      {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1},
++#line 215 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str609), 68},
++      {-1,-1}, {-1,-1},
++#line 127 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str612), 50},
++#line 21 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str613), 12},
++      {-1,-1},
++#line 282 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str615), 67},
++      {-1,-1}, {-1,-1}, {-1,-1},
++#line 65 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str619), 49},
++      {-1,-1}, {-1,-1},
++#line 20 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str622), 12},
++      {-1,-1}, {-1,-1},
++#line 82 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str625), 75},
++      {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1},
++#line 58 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str631), 70},
++      {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1},
++      {-1,-1}, {-1,-1}, {-1,-1},
++#line 64 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str641), 47},
++      {-1,-1},
++#line 264 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str643), 24},
++      {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1},
++      {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1},
++      {-1,-1},
++#line 217 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str657), 66},
++      {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1},
++      {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1},
++      {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1},
++#line 84 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str675), 31},
++      {-1,-1},
++#line 114 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str677), 44},
++      {-1,-1},
++#line 214 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str679), 68},
++      {-1,-1},
++#line 268 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str681), 88},
++      {-1,-1},
++#line 57 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str683), 16},
++      {-1,-1}, {-1,-1},
++#line 216 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str686), 66},
++      {-1,-1}, {-1,-1}, {-1,-1},
++#line 54 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str690), 39},
++      {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1},
++#line 22 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str695), 11},
++      {-1,-1},
++#line 255 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str697), 83},
++      {-1,-1}, {-1,-1},
++#line 66 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str700), 50},
++      {-1,-1},
++#line 111 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str702), 62},
++      {-1,-1},
++#line 18 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str704), 11},
++      {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1},
++      {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1},
++#line 56 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str715), 40},
++      {-1,-1},
++#line 11 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str717), 92},
++      {-1,-1}, {-1,-1}, {-1,-1},
++#line 260 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str721), 25},
++      {-1,-1},
++#line 249 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str723), 79},
++      {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1},
++#line 12 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str729), 92},
++      {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1},
++#line 83 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str735), 30},
++      {-1,-1},
++#line 115 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str737), 18},
++      {-1,-1}, {-1,-1},
++#line 297 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str740), 9},
++      {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1},
++      {-1,-1}, {-1,-1},
++#line 265 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str749), 23},
++      {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1},
++      {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1},
++      {-1,-1}, {-1,-1},
++#line 218 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str764), 66},
++      {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1},
++      {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1},
++      {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1},
++      {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1},
++      {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1},
++#line 247 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str793), 77},
++      {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1},
++      {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1},
++      {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1},
++      {-1,-1}, {-1,-1}, {-1,-1},
++#line 257 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str815), 85},
++      {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1},
++#line 263 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str822), 22},
++      {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1},
++#line 246 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str827), 76},
++      {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1},
++      {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1},
++      {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1},
++      {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1},
++      {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1},
++      {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1},
++      {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1},
++#line 305 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str868), 26},
++      {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1},
++      {-1,-1}, {-1,-1}, {-1,-1},
++#line 258 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str878), 86},
++      {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1},
++      {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1},
++      {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1},
++#line 277 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str897), 91},
++      {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1},
++      {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1},
++      {-1,-1},
++#line 250 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str911), 80},
++      {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1},
++      {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1},
++      {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1},
++      {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1},
++      {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1},
++      {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1},
++      {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1},
++      {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1},
++      {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1},
++      {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1},
++      {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1},
++      {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1},
++      {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1},
++      {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1},
++      {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1},
++      {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1},
++      {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1},
++      {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1},
++      {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1},
++      {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1},
++      {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1},
++      {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1},
++      {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1},
++      {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1},
++      {-1,-1},
++#line 55 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str1057), 38},
++      {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1},
++      {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1}, {-1,-1},
++#line 251 "charset_lookup.gperf"
++      {(int)offsetof(struct stringpool_t, stringpool_str1069), 81}
++    };
++
++  if (len <= MAX_WORD_LENGTH && len >= MIN_WORD_LENGTH)
++    {
++      register unsigned int key = hash_charset (str, len);
++
++      if (key <= MAX_HASH_VALUE)
++        {
++          register int o = wordlist[key].alias_pos;
++          if (o >= 0)
++            {
++              register const char *s = o + stringpool;
++
++              if (*str == *s && !strcmp (str + 1, s + 1))
++                return &wordlist[key];
++            }
++        }
++    }
++  return 0;
++}
++#line 382 "charset_lookup.gperf"
++
+--- /dev/null
++++ b/src/tds/num_limits.h
+@@ -0,0 +1,377 @@
++#define LIMIT_INDEXES_ADJUST 4
++
++static const signed char limit_indexes[79]= {
++	0,	/*  0 */
++	-3,	/*  1 */
++	-6,	/*  2 */
++	-9,	/*  3 */
++	-12,	/*  4 */
++	-15,	/*  5 */
++	-18,	/*  6 */
++	-21,	/*  7 */
++	-24,	/*  8 */
++	-27,	/*  9 */
++	-30,	/* 10 */
++	-32,	/* 11 */
++	-34,	/* 12 */
++	-36,	/* 13 */
++	-38,	/* 14 */
++	-40,	/* 15 */
++	-42,	/* 16 */
++	-44,	/* 17 */
++	-46,	/* 18 */
++	-48,	/* 19 */
++	-50,	/* 20 */
++	-51,	/* 21 */
++	-52,	/* 22 */
++	-53,	/* 23 */
++	-54,	/* 24 */
++	-55,	/* 25 */
++	-56,	/* 26 */
++	-57,	/* 27 */
++	-58,	/* 28 */
++	-59,	/* 29 */
++	-59,	/* 30 */
++	-59,	/* 31 */
++	-59,	/* 32 */
++	-60,	/* 33 */
++	-61,	/* 34 */
++	-62,	/* 35 */
++	-63,	/* 36 */
++	-64,	/* 37 */
++	-65,	/* 38 */
++	-66,	/* 39 */
++	-66,	/* 40 */
++	-66,	/* 41 */
++	-66,	/* 42 */
++	-66,	/* 43 */
++	-66,	/* 44 */
++	-66,	/* 45 */
++	-66,	/* 46 */
++	-66,	/* 47 */
++	-66,	/* 48 */
++	-66,	/* 49 */
++	-65,	/* 50 */
++	-64,	/* 51 */
++	-63,	/* 52 */
++	-62,	/* 53 */
++	-61,	/* 54 */
++	-60,	/* 55 */
++	-59,	/* 56 */
++	-58,	/* 57 */
++	-57,	/* 58 */
++	-55,	/* 59 */
++	-53,	/* 60 */
++	-51,	/* 61 */
++	-49,	/* 62 */
++	-47,	/* 63 */
++	-45,	/* 64 */
++	-44,	/* 65 */
++	-43,	/* 66 */
++	-42,	/* 67 */
++	-41,	/* 68 */
++	-39,	/* 69 */
++	-37,	/* 70 */
++	-35,	/* 71 */
++	-33,	/* 72 */
++	-31,	/* 73 */
++	-29,	/* 74 */
++	-27,	/* 75 */
++	-25,	/* 76 */
++	-23,	/* 77 */
++	-21,	/* 78 */
++};
++
++static const TDS_WORD limits[]= {
++	0x00000001u,	/*   0 */
++	0x0000000au,	/*   1 */
++	0x00000064u,	/*   2 */
++	0x000003e8u,	/*   3 */
++	0x00002710u,	/*   4 */
++	0x000186a0u,	/*   5 */
++	0x000f4240u,	/*   6 */
++	0x00989680u,	/*   7 */
++	0x05f5e100u,	/*   8 */
++	0x3b9aca00u,	/*   9 */
++	0x00000002u,	/*  10 */
++	0x540be400u,	/*  11 */
++	0x00000017u,	/*  12 */
++	0x4876e800u,	/*  13 */
++	0x000000e8u,	/*  14 */
++	0xd4a51000u,	/*  15 */
++	0x00000918u,	/*  16 */
++	0x4e72a000u,	/*  17 */
++	0x00005af3u,	/*  18 */
++	0x107a4000u,	/*  19 */
++	0x00038d7eu,	/*  20 */
++	0xa4c68000u,	/*  21 */
++	0x002386f2u,	/*  22 */
++	0x6fc10000u,	/*  23 */
++	0x01634578u,	/*  24 */
++	0x5d8a0000u,	/*  25 */
++	0x0de0b6b3u,	/*  26 */
++	0xa7640000u,	/*  27 */
++	0x8ac72304u,	/*  28 */
++	0x89e80000u,	/*  29 */
++	0x00000005u,	/*  30 */
++	0x6bc75e2du,	/*  31 */
++	0x63100000u,	/*  32 */
++	0x00000036u,	/*  33 */
++	0x35c9adc5u,	/*  34 */
++	0xdea00000u,	/*  35 */
++	0x0000021eu,	/*  36 */
++	0x19e0c9bau,	/*  37 */
++	0xb2400000u,	/*  38 */
++	0x0000152du,	/*  39 */
++	0x02c7e14au,	/*  40 */
++	0xf6800000u,	/*  41 */
++	0x0000d3c2u,	/*  42 */
++	0x1bceccedu,	/*  43 */
++	0xa1000000u,	/*  44 */
++	0x00084595u,	/*  45 */
++	0x16140148u,	/*  46 */
++	0x4a000000u,	/*  47 */
++	0x0052b7d2u,	/*  48 */
++	0xdcc80cd2u,	/*  49 */
++	0xe4000000u,	/*  50 */
++	0x033b2e3cu,	/*  51 */
++	0x9fd0803cu,	/*  52 */
++	0xe8000000u,	/*  53 */
++	0x204fce5eu,	/*  54 */
++	0x3e250261u,	/*  55 */
++	0x10000000u,	/*  56 */
++	0x00000001u,	/*  57 */
++	0x431e0faeu,	/*  58 */
++	0x6d7217cau,	/*  59 */
++	0xa0000000u,	/*  60 */
++	0x0000000cu,	/*  61 */
++	0x9f2c9cd0u,	/*  62 */
++	0x4674edeau,	/*  63 */
++	0x40000000u,	/*  64 */
++	0x0000007eu,	/*  65 */
++	0x37be2022u,	/*  66 */
++	0xc0914b26u,	/*  67 */
++	0x80000000u,	/*  68 */
++	0x000004eeu,	/*  69 */
++	0x2d6d415bu,	/*  70 */
++	0x85acef81u,	/*  71 */
++	0x0000314du,	/*  72 */
++	0xc6448d93u,	/*  73 */
++	0x38c15b0au,	/*  74 */
++	0x0001ed09u,	/*  75 */
++	0xbead87c0u,	/*  76 */
++	0x378d8e64u,	/*  77 */
++	0x00134261u,	/*  78 */
++	0x72c74d82u,	/*  79 */
++	0x2b878fe8u,	/*  80 */
++	0x00c097ceu,	/*  81 */
++	0x7bc90715u,	/*  82 */
++	0xb34b9f10u,	/*  83 */
++	0x0785ee10u,	/*  84 */
++	0xd5da46d9u,	/*  85 */
++	0x00f436a0u,	/*  86 */
++	0x4b3b4ca8u,	/*  87 */
++	0x5a86c47au,	/*  88 */
++	0x098a2240u,	/*  89 */
++	0x00000002u,	/*  90 */
++	0xf050fe93u,	/*  91 */
++	0x8943acc4u,	/*  92 */
++	0x5f655680u,	/*  93 */
++	0x0000001du,	/*  94 */
++	0x6329f1c3u,	/*  95 */
++	0x5ca4bfabu,	/*  96 */
++	0xb9f56100u,	/*  97 */
++	0x00000125u,	/*  98 */
++	0xdfa371a1u,	/*  99 */
++	0x9e6f7cb5u,	/* 100 */
++	0x4395ca00u,	/* 101 */
++	0x00000b7au,	/* 102 */
++	0xbc627050u,	/* 103 */
++	0x305adf14u,	/* 104 */
++	0xa3d9e400u,	/* 105 */
++	0x000072cbu,	/* 106 */
++	0x5bd86321u,	/* 107 */
++	0xe38cb6ceu,	/* 108 */
++	0x6682e800u,	/* 109 */
++	0x00047bf1u,	/* 110 */
++	0x9673df52u,	/* 111 */
++	0xe37f2410u,	/* 112 */
++	0x011d1000u,	/* 113 */
++	0x002cd76fu,	/* 114 */
++	0xe086b93cu,	/* 115 */
++	0xe2f768a0u,	/* 116 */
++	0x0b22a000u,	/* 117 */
++	0x01c06a5eu,	/* 118 */
++	0xc5433c60u,	/* 119 */
++	0xddaa1640u,	/* 120 */
++	0x6f5a4000u,	/* 121 */
++	0x118427b3u,	/* 122 */
++	0xb4a05bc8u,	/* 123 */
++	0xa8a4de84u,	/* 124 */
++	0x59868000u,	/* 125 */
++	0xaf298d05u,	/* 126 */
++	0x0e4395d6u,	/* 127 */
++	0x9670b12bu,	/* 128 */
++	0x7f410000u,	/* 129 */
++	0x00000006u,	/* 130 */
++	0xd79f8232u,	/* 131 */
++	0x8ea3da61u,	/* 132 */
++	0xe066ebb2u,	/* 133 */
++	0xf88a0000u,	/* 134 */
++	0x00000044u,	/* 135 */
++	0x6c3b15f9u,	/* 136 */
++	0x926687d2u,	/* 137 */
++	0xc40534fdu,	/* 138 */
++	0xb5640000u,	/* 139 */
++	0x000002acu,	/* 140 */
++	0x3a4edbbfu,	/* 141 */
++	0xb8014e3bu,	/* 142 */
++	0xa83411e9u,	/* 143 */
++	0x15e80000u,	/* 144 */
++	0x00001abau,	/* 145 */
++	0x4714957du,	/* 146 */
++	0x300d0e54u,	/* 147 */
++	0x9208b31au,	/* 148 */
++	0xdb100000u,	/* 149 */
++	0x00010b46u,	/* 150 */
++	0xc6cdd6e3u,	/* 151 */
++	0xe0828f4du,	/* 152 */
++	0xb456ff0cu,	/* 153 */
++	0x8ea00000u,	/* 154 */
++	0x000a70c3u,	/* 155 */
++	0xc40a64e6u,	/* 156 */
++	0xc5199909u,	/* 157 */
++	0x0b65f67du,	/* 158 */
++	0x92400000u,	/* 159 */
++	0x006867a5u,	/* 160 */
++	0xa867f103u,	/* 161 */
++	0xb2fffa5au,	/* 162 */
++	0x71fba0e7u,	/* 163 */
++	0xb6800000u,	/* 164 */
++	0x04140c78u,	/* 165 */
++	0x940f6a24u,	/* 166 */
++	0xfdffc788u,	/* 167 */
++	0x73d4490du,	/* 168 */
++	0x21000000u,	/* 169 */
++	0x28c87cb5u,	/* 170 */
++	0xc89a2571u,	/* 171 */
++	0xebfdcb54u,	/* 172 */
++	0x864ada83u,	/* 173 */
++	0x4a000000u,	/* 174 */
++	0x00000001u,	/* 175 */
++	0x97d4df19u,	/* 176 */
++	0xd6057673u,	/* 177 */
++	0x37e9f14du,	/* 178 */
++	0x3eec8920u,	/* 179 */
++	0xe4000000u,	/* 180 */
++	0x0000000fu,	/* 181 */
++	0xee50b702u,	/* 182 */
++	0x5c36a080u,	/* 183 */
++	0x2f236d04u,	/* 184 */
++	0x753d5b48u,	/* 185 */
++	0xe8000000u,	/* 186 */
++	0x0000009fu,	/* 187 */
++	0x4f272617u,	/* 188 */
++	0x9a224501u,	/* 189 */
++	0xd762422cu,	/* 190 */
++	0x946590d9u,	/* 191 */
++	0x10000000u,	/* 192 */
++	0x00000639u,	/* 193 */
++	0x17877cecu,	/* 194 */
++	0x0556b212u,	/* 195 */
++	0x69d695bdu,	/* 196 */
++	0xcbf7a87au,	/* 197 */
++	0xa0000000u,	/* 198 */
++	0x00003e3au,	/* 199 */
++	0xeb4ae138u,	/* 200 */
++	0x3562f4b8u,	/* 201 */
++	0x2261d969u,	/* 202 */
++	0xf7ac94cau,	/* 203 */
++	0x40000000u,	/* 204 */
++	0x00026e4du,	/* 205 */
++	0x30eccc32u,	/* 206 */
++	0x15dd8f31u,	/* 207 */
++	0x57d27e23u,	/* 208 */
++	0xacbdcfe6u,	/* 209 */
++	0x80000000u,	/* 210 */
++	0x00184f03u,	/* 211 */
++	0xe93ff9f4u,	/* 212 */
++	0xdaa797edu,	/* 213 */
++	0x6e38ed64u,	/* 214 */
++	0xbf6a1f01u,	/* 215 */
++	0x00f31627u,	/* 216 */
++	0x1c7fc390u,	/* 217 */
++	0x8a8bef46u,	/* 218 */
++	0x4e3945efu,	/* 219 */
++	0x7a25360au,	/* 220 */
++	0x097edd87u,	/* 221 */
++	0x1cfda3a5u,	/* 222 */
++	0x697758bfu,	/* 223 */
++	0x0e3cbb5au,	/* 224 */
++	0xc5741c64u,	/* 225 */
++	0x5ef4a747u,	/* 226 */
++	0x21e86476u,	/* 227 */
++	0x1ea97776u,	/* 228 */
++	0x8e5f518bu,	/* 229 */
++	0xb6891be8u,	/* 230 */
++	0x00000003u,	/* 231 */
++	0xb58e88c7u,	/* 232 */
++	0x5313ec9du,	/* 233 */
++	0x329eaaa1u,	/* 234 */
++	0x8fb92f75u,	/* 235 */
++	0x215b1710u,	/* 236 */
++	0x00000025u,	/* 237 */
++	0x179157c9u,	/* 238 */
++	0x3ec73e23u,	/* 239 */
++	0xfa32aa4fu,	/* 240 */
++	0x9d3bda93u,	/* 241 */
++	0x4d8ee6a0u,	/* 242 */
++	0x00000172u,	/* 243 */
++	0xebad6ddcu,	/* 244 */
++	0x73c86d67u,	/* 245 */
++	0xc5faa71cu,	/* 246 */
++	0x245689c1u,	/* 247 */
++	0x07950240u,	/* 248 */
++	0x00000e7du,	/* 249 */
++	0x34c64a9cu,	/* 250 */
++	0x85d4460du,	/* 251 */
++	0xbbca8719u,	/* 252 */
++	0x6b61618au,	/* 253 */
++	0x4bd21680u,	/* 254 */
++	0x000090e4u,	/* 255 */
++	0x0fbeea1du,	/* 256 */
++	0x3a4abc89u,	/* 257 */
++	0x55e946feu,	/* 258 */
++	0x31cdcf66u,	/* 259 */
++	0xf634e100u,	/* 260 */
++	0x0005a8e8u,	/* 261 */
++	0x9d752524u,	/* 262 */
++	0x46eb5d5du,	/* 263 */
++	0x5b1cc5edu,	/* 264 */
++	0xf20a1a05u,	/* 265 */
++	0x9e10ca00u,	/* 266 */
++	0x00389916u,	/* 267 */
++	0x2693736au,	/* 268 */
++	0xc531a5a5u,	/* 269 */
++	0x8f1fbb4bu,	/* 270 */
++	0x74650438u,	/* 271 */
++	0x2ca7e400u,	/* 272 */
++	0x0235faddu,	/* 273 */
++	0x81c2822bu,	/* 274 */
++	0xb3f07877u,	/* 275 */
++	0x973d50f2u,	/* 276 */
++	0x8bf22a31u,	/* 277 */
++	0xbe8ee800u,	/* 278 */
++	0x161bcca7u,	/* 279 */
++	0x119915b5u,	/* 280 */
++	0x0764b4abu,	/* 281 */
++	0xe8652979u,	/* 282 */
++	0x7775a5f1u,	/* 283 */
++	0x71951000u,	/* 284 */
++	0xdd15fe86u,	/* 285 */
++	0xaffad912u,	/* 286 */
++	0x49ef0eb7u,	/* 287 */
++	0x13f39ebeu,	/* 288 */
++	0xaa987b6eu,	/* 289 */
++	0x6fd2a000u,	/* 290 */
++};
+--- /dev/null
++++ b/src/tds/tds_types.h
+@@ -0,0 +1,967 @@
++/*
++ * This file produced from ./types.pl
++ */
++
++/**
++ * Return the number of bytes needed by specified type.
++ */
++int
++tds_get_size_by_type(TDS_SERVER_TYPE servertype)
++{
++	switch (servertype) {
++	case SYBVOID:
++		return 0;
++	case SYBBIT:
++	case SYBBITN:
++	case SYBINT1:
++	case SYBSINT1:
++	case SYBUINT1:
++		return 1;
++	case SYBINT2:
++	case SYBUINT2:
++		return 2;
++	case SYBMSDATE:
++		return 3;
++	case SYBDATE:
++	case SYBDATEN:
++	case SYBDATETIME4:
++	case SYBINT4:
++	case SYBMONEY4:
++	case SYBREAL:
++	case SYBTIME:
++	case SYBTIMEN:
++	case SYBUINT4:
++		return 4;
++	case SYB5BIGDATETIME:
++	case SYB5BIGTIME:
++	case SYB5INT8:
++	case SYBDATETIME:
++	case SYBFLT8:
++	case SYBINT8:
++	case SYBINTERVAL:
++	case SYBMONEY:
++	case SYBUINT8:
++		return 8;
++	case SYBUNIQUE:
++		return 16;
++	default:
++		return 0;
++	}
++}
++
++/**
++ * tds_get_varint_size() returns the size of a variable length integer
++ * returned in a result string
++ */
++int
++tds_get_varint_size(TDSCONNECTION * conn, int datatype)
++{
++	switch (datatype) {
++	case SYBBIT:
++	case SYBDATETIME:
++	case SYBDATETIME4:
++	case SYBFLT8:
++	case SYBINT1:
++	case SYBINT2:
++	case SYBINT4:
++	case SYBMONEY:
++	case SYBMONEY4:
++	case SYBREAL:
++	case SYBVOID:
++		return 0;
++	case SYBIMAGE:
++	case SYBTEXT:
++		return 4;
++	}
++
++	if (IS_TDS7_PLUS(conn)) {
++		switch (datatype) {
++		case SYBINT8:
++			return 0;
++		case XSYBBINARY:
++		case XSYBCHAR:
++		case XSYBNCHAR:
++		case XSYBNVARCHAR:
++		case XSYBVARBINARY:
++		case XSYBVARCHAR:
++			return 2;
++		case SYBNTEXT:
++		case SYBVARIANT:
++			return 4;
++		case SYBMSUDT:
++		case SYBMSXML:
++			return 8;
++		}
++	} else if (IS_TDS50(conn)) {
++		switch (datatype) {
++		case SYB5INT8:
++		case SYBDATE:
++		case SYBINTERVAL:
++		case SYBSINT1:
++		case SYBTIME:
++		case SYBUINT1:
++		case SYBUINT2:
++		case SYBUINT4:
++		case SYBUINT8:
++			return 0;
++		case SYBUNITEXT:
++		case SYBXML:
++			return 4;
++		case SYBLONGBINARY:
++		case SYBLONGCHAR:
++			return 5;
++		}
++	}
++	return 1;
++}
++
++/**
++ * Return type suitable for conversions (convert all nullable types to fixed type)
++ * @param srctype type to convert
++ * @param colsize size of type
++ * @result type for conversion
++ */
++TDS_SERVER_TYPE
++tds_get_conversion_type(TDS_SERVER_TYPE srctype, int colsize)
++{
++	switch (srctype) {
++	case SYBBITN:
++		return SYBBIT;
++	case SYBDATEN:
++		return SYBDATE;
++	case SYBDATETIMN:
++		switch (colsize) {
++		case 8:
++			return SYBDATETIME;
++		case 4:
++			return SYBDATETIME4;
++		}
++		break;
++	case SYBFLTN:
++		switch (colsize) {
++		case 8:
++			return SYBFLT8;
++		case 4:
++			return SYBREAL;
++		}
++		break;
++	case SYBINTN:
++		switch (colsize) {
++		case 8:
++			return SYBINT8;
++		case 4:
++			return SYBINT4;
++		case 2:
++			return SYBINT2;
++		case 1:
++			return SYBINT1;
++		}
++		break;
++	case SYBMONEYN:
++		switch (colsize) {
++		case 8:
++			return SYBMONEY;
++		case 4:
++			return SYBMONEY4;
++		}
++		break;
++	case SYBTIMEN:
++		return SYBTIME;
++	case SYBUINTN:
++		switch (colsize) {
++		case 8:
++			return SYBUINT8;
++		case 4:
++			return SYBUINT4;
++		case 2:
++			return SYBUINT2;
++		case 1:
++			return SYBUINT1;
++		}
++		break;
++	case SYB5INT8:
++		return SYBINT8;
++	default:
++		break;
++	}
++	return srctype;
++}
++
++const uint16_t tds_type_flags_ms[256] = {
++	/*   0 empty                */	TDS_TYPEFLAG_INVALID,
++	/*   1 empty                */	TDS_TYPEFLAG_INVALID,
++	/*   2 empty                */	TDS_TYPEFLAG_INVALID,
++	/*   3 empty                */	TDS_TYPEFLAG_INVALID,
++	/*   4 empty                */	TDS_TYPEFLAG_INVALID,
++	/*   5 empty                */	TDS_TYPEFLAG_INVALID,
++	/*   6 empty                */	TDS_TYPEFLAG_INVALID,
++	/*   7 empty                */	TDS_TYPEFLAG_INVALID,
++	/*   8 empty                */	TDS_TYPEFLAG_INVALID,
++	/*   9 empty                */	TDS_TYPEFLAG_INVALID,
++	/*  10 empty                */	TDS_TYPEFLAG_INVALID,
++	/*  11 empty                */	TDS_TYPEFLAG_INVALID,
++	/*  12 empty                */	TDS_TYPEFLAG_INVALID,
++	/*  13 empty                */	TDS_TYPEFLAG_INVALID,
++	/*  14 empty                */	TDS_TYPEFLAG_INVALID,
++	/*  15 empty                */	TDS_TYPEFLAG_INVALID,
++	/*  16 empty                */	TDS_TYPEFLAG_INVALID,
++	/*  17 empty                */	TDS_TYPEFLAG_INVALID,
++	/*  18 empty                */	TDS_TYPEFLAG_INVALID,
++	/*  19 empty                */	TDS_TYPEFLAG_INVALID,
++	/*  20 empty                */	TDS_TYPEFLAG_INVALID,
++	/*  21 empty                */	TDS_TYPEFLAG_INVALID,
++	/*  22 empty                */	TDS_TYPEFLAG_INVALID,
++	/*  23 empty                */	TDS_TYPEFLAG_INVALID,
++	/*  24 empty                */	TDS_TYPEFLAG_INVALID,
++	/*  25 empty                */	TDS_TYPEFLAG_INVALID,
++	/*  26 empty                */	TDS_TYPEFLAG_INVALID,
++	/*  27 empty                */	TDS_TYPEFLAG_INVALID,
++	/*  28 empty                */	TDS_TYPEFLAG_INVALID,
++	/*  29 empty                */	TDS_TYPEFLAG_INVALID,
++	/*  30 empty                */	TDS_TYPEFLAG_INVALID,
++	/*  31 SYBVOID              */	TDS_TYPEFLAG_FIXED,
++	/*  32 empty                */	TDS_TYPEFLAG_INVALID,
++	/*  33 empty                */	TDS_TYPEFLAG_INVALID,
++	/*  34 SYBIMAGE             */	TDS_TYPEFLAG_NULLABLE|TDS_TYPEFLAG_VARIABLE|TDS_TYPEFLAG_BINARY,
++	/*  35 SYBTEXT              */	TDS_TYPEFLAG_NULLABLE|TDS_TYPEFLAG_VARIABLE|TDS_TYPEFLAG_COLLATE|TDS_TYPEFLAG_ASCII,
++	/*  36 SYBUNIQUE            */	TDS_TYPEFLAG_NULLABLE|TDS_TYPEFLAG_FIXED|TDS_TYPEFLAG_VARIANT,
++	/*  37 SYBVARBINARY         */	TDS_TYPEFLAG_NULLABLE|TDS_TYPEFLAG_VARIABLE|TDS_TYPEFLAG_BINARY|TDS_TYPEFLAG_VARIANT,
++	/*  38 SYBINTN              */	TDS_TYPEFLAG_NULLABLE|TDS_TYPEFLAG_VARIANT,
++	/*  39 SYBVARCHAR           */	TDS_TYPEFLAG_NULLABLE|TDS_TYPEFLAG_VARIABLE|TDS_TYPEFLAG_ASCII|TDS_TYPEFLAG_VARIANT,
++	/*  40 SYBMSDATE            */	TDS_TYPEFLAG_NULLABLE|TDS_TYPEFLAG_FIXED|TDS_TYPEFLAG_DATETIME|TDS_TYPEFLAG_VARIANT,
++	/*  41 SYBMSTIME            */	TDS_TYPEFLAG_NULLABLE|TDS_TYPEFLAG_DATETIME|TDS_TYPEFLAG_VARIANT,
++	/*  42 SYBMSDATETIME2       */	TDS_TYPEFLAG_NULLABLE|TDS_TYPEFLAG_DATETIME|TDS_TYPEFLAG_VARIANT,
++	/*  43 SYBMSDATETIMEOFFSET  */	TDS_TYPEFLAG_NULLABLE|TDS_TYPEFLAG_DATETIME|TDS_TYPEFLAG_VARIANT,
++	/*  44 empty                */	TDS_TYPEFLAG_INVALID,
++	/*  45 SYBBINARY            */	TDS_TYPEFLAG_VARIABLE|TDS_TYPEFLAG_BINARY|TDS_TYPEFLAG_VARIANT,
++	/*  46 empty                */	TDS_TYPEFLAG_INVALID|TDS_TYPEFLAG_FIXED,
++	/*  47 SYBCHAR              */	TDS_TYPEFLAG_VARIABLE|TDS_TYPEFLAG_ASCII|TDS_TYPEFLAG_VARIANT,
++	/*  48 SYBINT1              */	TDS_TYPEFLAG_FIXED|TDS_TYPEFLAG_VARIANT,
++	/*  49 empty                */	TDS_TYPEFLAG_INVALID|TDS_TYPEFLAG_FIXED|TDS_TYPEFLAG_DATETIME,
++	/*  50 SYBBIT               */	TDS_TYPEFLAG_FIXED|TDS_TYPEFLAG_VARIANT,
++	/*  51 empty                */	TDS_TYPEFLAG_INVALID|TDS_TYPEFLAG_FIXED|TDS_TYPEFLAG_DATETIME,
++	/*  52 SYBINT2              */	TDS_TYPEFLAG_FIXED|TDS_TYPEFLAG_VARIANT,
++	/*  53 empty                */	TDS_TYPEFLAG_INVALID,
++	/*  54 empty                */	TDS_TYPEFLAG_INVALID,
++	/*  55 empty                */	TDS_TYPEFLAG_INVALID,
++	/*  56 SYBINT4              */	TDS_TYPEFLAG_FIXED|TDS_TYPEFLAG_VARIANT,
++	/*  57 empty                */	TDS_TYPEFLAG_INVALID,
++	/*  58 SYBDATETIME4         */	TDS_TYPEFLAG_FIXED|TDS_TYPEFLAG_DATETIME|TDS_TYPEFLAG_VARIANT,
++	/*  59 SYBREAL              */	TDS_TYPEFLAG_FIXED|TDS_TYPEFLAG_VARIANT,
++	/*  60 SYBMONEY             */	TDS_TYPEFLAG_FIXED|TDS_TYPEFLAG_VARIANT,
++	/*  61 SYBDATETIME          */	TDS_TYPEFLAG_FIXED|TDS_TYPEFLAG_DATETIME|TDS_TYPEFLAG_VARIANT,
++	/*  62 SYBFLT8              */	TDS_TYPEFLAG_FIXED|TDS_TYPEFLAG_VARIANT,
++	/*  63 empty                */	TDS_TYPEFLAG_INVALID,
++	/*  64 empty                */	TDS_TYPEFLAG_INVALID|TDS_TYPEFLAG_FIXED,
++	/*  65 empty                */	TDS_TYPEFLAG_INVALID|TDS_TYPEFLAG_FIXED,
++	/*  66 empty                */	TDS_TYPEFLAG_INVALID|TDS_TYPEFLAG_FIXED,
++	/*  67 empty                */	TDS_TYPEFLAG_INVALID|TDS_TYPEFLAG_FIXED,
++	/*  68 empty                */	TDS_TYPEFLAG_INVALID|TDS_TYPEFLAG_NULLABLE,
++	/*  69 empty                */	TDS_TYPEFLAG_INVALID,
++	/*  70 empty                */	TDS_TYPEFLAG_INVALID,
++	/*  71 empty                */	TDS_TYPEFLAG_INVALID,
++	/*  72 empty                */	TDS_TYPEFLAG_INVALID,
++	/*  73 empty                */	TDS_TYPEFLAG_INVALID,
++	/*  74 empty                */	TDS_TYPEFLAG_INVALID,
++	/*  75 empty                */	TDS_TYPEFLAG_INVALID,
++	/*  76 empty                */	TDS_TYPEFLAG_INVALID,
++	/*  77 empty                */	TDS_TYPEFLAG_INVALID,
++	/*  78 empty                */	TDS_TYPEFLAG_INVALID,
++	/*  79 empty                */	TDS_TYPEFLAG_INVALID,
++	/*  80 empty                */	TDS_TYPEFLAG_INVALID,
++	/*  81 empty                */	TDS_TYPEFLAG_INVALID,
++	/*  82 empty                */	TDS_TYPEFLAG_INVALID,
++	/*  83 empty                */	TDS_TYPEFLAG_INVALID,
++	/*  84 empty                */	TDS_TYPEFLAG_INVALID,
++	/*  85 empty                */	TDS_TYPEFLAG_INVALID,
++	/*  86 empty                */	TDS_TYPEFLAG_INVALID,
++	/*  87 empty                */	TDS_TYPEFLAG_INVALID,
++	/*  88 empty                */	TDS_TYPEFLAG_INVALID,
++	/*  89 empty                */	TDS_TYPEFLAG_INVALID,
++	/*  90 empty                */	TDS_TYPEFLAG_INVALID,
++	/*  91 empty                */	TDS_TYPEFLAG_INVALID,
++	/*  92 empty                */	TDS_TYPEFLAG_INVALID,
++	/*  93 empty                */	TDS_TYPEFLAG_INVALID,
++	/*  94 empty                */	TDS_TYPEFLAG_INVALID,
++	/*  95 empty                */	TDS_TYPEFLAG_INVALID,
++	/*  96 empty                */	TDS_TYPEFLAG_INVALID,
++	/*  97 empty                */	TDS_TYPEFLAG_INVALID,
++	/*  98 SYBVARIANT           */	TDS_TYPEFLAG_NULLABLE|TDS_TYPEFLAG_VARIABLE,
++	/*  99 SYBNTEXT             */	TDS_TYPEFLAG_NULLABLE|TDS_TYPEFLAG_VARIABLE|TDS_TYPEFLAG_COLLATE|TDS_TYPEFLAG_UNICODE,
++	/* 100 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 101 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 102 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 103 SYBNVARCHAR          */	TDS_TYPEFLAG_NULLABLE|TDS_TYPEFLAG_VARIABLE|TDS_TYPEFLAG_UNICODE|TDS_TYPEFLAG_VARIANT,
++	/* 104 SYBBITN              */	TDS_TYPEFLAG_NULLABLE|TDS_TYPEFLAG_VARIANT,
++	/* 105 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 106 SYBDECIMAL           */	TDS_TYPEFLAG_NUMERIC|TDS_TYPEFLAG_VARIANT,
++	/* 107 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 108 SYBNUMERIC           */	TDS_TYPEFLAG_NUMERIC|TDS_TYPEFLAG_VARIANT,
++	/* 109 SYBFLTN              */	TDS_TYPEFLAG_NULLABLE|TDS_TYPEFLAG_VARIANT,
++	/* 110 SYBMONEYN            */	TDS_TYPEFLAG_NULLABLE|TDS_TYPEFLAG_VARIANT,
++	/* 111 SYBDATETIMN          */	TDS_TYPEFLAG_NULLABLE|TDS_TYPEFLAG_DATETIME|TDS_TYPEFLAG_VARIANT,
++	/* 112 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 113 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 114 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 115 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 116 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 117 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 118 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 119 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 120 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 121 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 122 SYBMONEY4            */	TDS_TYPEFLAG_FIXED|TDS_TYPEFLAG_VARIANT,
++	/* 123 empty                */	TDS_TYPEFLAG_INVALID|TDS_TYPEFLAG_NULLABLE|TDS_TYPEFLAG_DATETIME,
++	/* 124 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 125 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 126 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 127 SYBINT8              */	TDS_TYPEFLAG_FIXED|TDS_TYPEFLAG_VARIANT,
++	/* 128 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 129 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 130 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 131 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 132 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 133 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 134 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 135 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 136 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 137 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 138 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 139 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 140 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 141 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 142 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 143 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 144 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 145 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 146 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 147 empty                */	TDS_TYPEFLAG_INVALID|TDS_TYPEFLAG_NULLABLE|TDS_TYPEFLAG_DATETIME,
++	/* 148 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 149 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 150 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 151 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 152 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 153 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 154 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 155 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 156 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 157 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 158 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 159 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 160 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 161 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 162 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 163 empty                */	TDS_TYPEFLAG_INVALID|TDS_TYPEFLAG_NULLABLE|TDS_TYPEFLAG_VARIABLE,
++	/* 164 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 165 XSYBVARBINARY        */	TDS_TYPEFLAG_NULLABLE|TDS_TYPEFLAG_VARIABLE|TDS_TYPEFLAG_BINARY|TDS_TYPEFLAG_VARIANT,
++	/* 166 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 167 XSYBVARCHAR          */	TDS_TYPEFLAG_NULLABLE|TDS_TYPEFLAG_VARIABLE|TDS_TYPEFLAG_COLLATE|TDS_TYPEFLAG_ASCII|TDS_TYPEFLAG_VARIANT,
++	/* 168 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 169 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 170 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 171 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 172 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 173 XSYBBINARY           */	TDS_TYPEFLAG_NULLABLE|TDS_TYPEFLAG_VARIABLE|TDS_TYPEFLAG_BINARY|TDS_TYPEFLAG_VARIANT,
++	/* 174 empty                */	TDS_TYPEFLAG_INVALID|TDS_TYPEFLAG_NULLABLE|TDS_TYPEFLAG_VARIABLE|TDS_TYPEFLAG_UNICODE,
++	/* 175 XSYBCHAR             */	TDS_TYPEFLAG_NULLABLE|TDS_TYPEFLAG_VARIABLE|TDS_TYPEFLAG_COLLATE|TDS_TYPEFLAG_ASCII|TDS_TYPEFLAG_VARIANT,
++	/* 176 empty                */	TDS_TYPEFLAG_INVALID|TDS_TYPEFLAG_FIXED,
++	/* 177 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 178 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 179 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 180 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 181 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 182 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 183 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 184 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 185 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 186 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 187 empty                */	TDS_TYPEFLAG_INVALID|TDS_TYPEFLAG_NULLABLE|TDS_TYPEFLAG_DATETIME,
++	/* 188 empty                */	TDS_TYPEFLAG_INVALID|TDS_TYPEFLAG_NULLABLE|TDS_TYPEFLAG_DATETIME,
++	/* 189 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 190 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 191 empty                */	TDS_TYPEFLAG_INVALID|TDS_TYPEFLAG_FIXED,
++	/* 192 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 193 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 194 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 195 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 196 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 197 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 198 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 199 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 200 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 201 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 202 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 203 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 204 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 205 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 206 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 207 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 208 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 209 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 210 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 211 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 212 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 213 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 214 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 215 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 216 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 217 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 218 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 219 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 220 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 221 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 222 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 223 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 224 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 225 empty                */	TDS_TYPEFLAG_INVALID|TDS_TYPEFLAG_NULLABLE|TDS_TYPEFLAG_VARIABLE|TDS_TYPEFLAG_BINARY,
++	/* 226 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 227 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 228 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 229 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 230 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 231 XSYBNVARCHAR         */	TDS_TYPEFLAG_NULLABLE|TDS_TYPEFLAG_VARIABLE|TDS_TYPEFLAG_COLLATE|TDS_TYPEFLAG_UNICODE|TDS_TYPEFLAG_VARIANT,
++	/* 232 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 233 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 234 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 235 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 236 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 237 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 238 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 239 XSYBNCHAR            */	TDS_TYPEFLAG_NULLABLE|TDS_TYPEFLAG_VARIABLE|TDS_TYPEFLAG_COLLATE|TDS_TYPEFLAG_UNICODE|TDS_TYPEFLAG_VARIANT,
++	/* 240 SYBMSUDT             */	TDS_TYPEFLAG_NULLABLE|TDS_TYPEFLAG_VARIABLE,
++	/* 241 SYBMSXML             */	TDS_TYPEFLAG_NULLABLE|TDS_TYPEFLAG_VARIABLE|TDS_TYPEFLAG_UNICODE,
++	/* 242 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 243 SYBMSTABLE           */	0,
++	/* 244 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 245 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 246 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 247 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 248 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 249 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 250 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 251 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 252 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 253 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 254 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 255 empty                */	TDS_TYPEFLAG_INVALID,
++};
++
++#if 0
++const uint16_t tds_type_flags_syb[256] = {
++	/*   0 empty                */	TDS_TYPEFLAG_INVALID,
++	/*   1 empty                */	TDS_TYPEFLAG_INVALID,
++	/*   2 empty                */	TDS_TYPEFLAG_INVALID,
++	/*   3 empty                */	TDS_TYPEFLAG_INVALID,
++	/*   4 empty                */	TDS_TYPEFLAG_INVALID,
++	/*   5 empty                */	TDS_TYPEFLAG_INVALID,
++	/*   6 empty                */	TDS_TYPEFLAG_INVALID,
++	/*   7 empty                */	TDS_TYPEFLAG_INVALID,
++	/*   8 empty                */	TDS_TYPEFLAG_INVALID,
++	/*   9 empty                */	TDS_TYPEFLAG_INVALID,
++	/*  10 empty                */	TDS_TYPEFLAG_INVALID,
++	/*  11 empty                */	TDS_TYPEFLAG_INVALID,
++	/*  12 empty                */	TDS_TYPEFLAG_INVALID,
++	/*  13 empty                */	TDS_TYPEFLAG_INVALID,
++	/*  14 empty                */	TDS_TYPEFLAG_INVALID,
++	/*  15 empty                */	TDS_TYPEFLAG_INVALID,
++	/*  16 empty                */	TDS_TYPEFLAG_INVALID,
++	/*  17 empty                */	TDS_TYPEFLAG_INVALID,
++	/*  18 empty                */	TDS_TYPEFLAG_INVALID,
++	/*  19 empty                */	TDS_TYPEFLAG_INVALID,
++	/*  20 empty                */	TDS_TYPEFLAG_INVALID,
++	/*  21 empty                */	TDS_TYPEFLAG_INVALID,
++	/*  22 empty                */	TDS_TYPEFLAG_INVALID,
++	/*  23 empty                */	TDS_TYPEFLAG_INVALID,
++	/*  24 empty                */	TDS_TYPEFLAG_INVALID,
++	/*  25 empty                */	TDS_TYPEFLAG_INVALID,
++	/*  26 empty                */	TDS_TYPEFLAG_INVALID,
++	/*  27 empty                */	TDS_TYPEFLAG_INVALID,
++	/*  28 empty                */	TDS_TYPEFLAG_INVALID,
++	/*  29 empty                */	TDS_TYPEFLAG_INVALID,
++	/*  30 empty                */	TDS_TYPEFLAG_INVALID,
++	/*  31 SYBVOID              */	TDS_TYPEFLAG_FIXED,
++	/*  32 empty                */	TDS_TYPEFLAG_INVALID,
++	/*  33 empty                */	TDS_TYPEFLAG_INVALID,
++	/*  34 SYBIMAGE             */	TDS_TYPEFLAG_NULLABLE|TDS_TYPEFLAG_VARIABLE|TDS_TYPEFLAG_BINARY,
++	/*  35 SYBTEXT              */	TDS_TYPEFLAG_NULLABLE|TDS_TYPEFLAG_VARIABLE|TDS_TYPEFLAG_COLLATE|TDS_TYPEFLAG_ASCII,
++	/*  36 empty                */	TDS_TYPEFLAG_INVALID|TDS_TYPEFLAG_FIXED|TDS_TYPEFLAG_NULLABLE,
++	/*  37 SYBVARBINARY         */	TDS_TYPEFLAG_NULLABLE|TDS_TYPEFLAG_VARIABLE|TDS_TYPEFLAG_BINARY|TDS_TYPEFLAG_VARIANT,
++	/*  38 SYBINTN              */	TDS_TYPEFLAG_NULLABLE|TDS_TYPEFLAG_VARIANT,
++	/*  39 SYBVARCHAR           */	TDS_TYPEFLAG_NULLABLE|TDS_TYPEFLAG_VARIABLE|TDS_TYPEFLAG_ASCII|TDS_TYPEFLAG_VARIANT,
++	/*  40 empty                */	TDS_TYPEFLAG_INVALID|TDS_TYPEFLAG_FIXED|TDS_TYPEFLAG_NULLABLE|TDS_TYPEFLAG_DATETIME,
++	/*  41 empty                */	TDS_TYPEFLAG_INVALID|TDS_TYPEFLAG_NULLABLE|TDS_TYPEFLAG_DATETIME,
++	/*  42 empty                */	TDS_TYPEFLAG_INVALID|TDS_TYPEFLAG_NULLABLE|TDS_TYPEFLAG_DATETIME,
++	/*  43 empty                */	TDS_TYPEFLAG_INVALID|TDS_TYPEFLAG_NULLABLE|TDS_TYPEFLAG_DATETIME,
++	/*  44 empty                */	TDS_TYPEFLAG_INVALID,
++	/*  45 SYBBINARY            */	TDS_TYPEFLAG_VARIABLE|TDS_TYPEFLAG_BINARY|TDS_TYPEFLAG_VARIANT,
++	/*  46 SYBINTERVAL          */	TDS_TYPEFLAG_FIXED,
++	/*  47 SYBCHAR              */	TDS_TYPEFLAG_VARIABLE|TDS_TYPEFLAG_ASCII|TDS_TYPEFLAG_VARIANT,
++	/*  48 SYBINT1              */	TDS_TYPEFLAG_FIXED|TDS_TYPEFLAG_VARIANT,
++	/*  49 SYBDATE              */	TDS_TYPEFLAG_FIXED|TDS_TYPEFLAG_DATETIME,
++	/*  50 SYBBIT               */	TDS_TYPEFLAG_FIXED|TDS_TYPEFLAG_VARIANT,
++	/*  51 SYBTIME              */	TDS_TYPEFLAG_FIXED|TDS_TYPEFLAG_DATETIME,
++	/*  52 SYBINT2              */	TDS_TYPEFLAG_FIXED|TDS_TYPEFLAG_VARIANT,
++	/*  53 empty                */	TDS_TYPEFLAG_INVALID,
++	/*  54 empty                */	TDS_TYPEFLAG_INVALID,
++	/*  55 empty                */	TDS_TYPEFLAG_INVALID,
++	/*  56 SYBINT4              */	TDS_TYPEFLAG_FIXED|TDS_TYPEFLAG_VARIANT,
++	/*  57 empty                */	TDS_TYPEFLAG_INVALID,
++	/*  58 SYBDATETIME4         */	TDS_TYPEFLAG_FIXED|TDS_TYPEFLAG_DATETIME|TDS_TYPEFLAG_VARIANT,
++	/*  59 SYBREAL              */	TDS_TYPEFLAG_FIXED|TDS_TYPEFLAG_VARIANT,
++	/*  60 SYBMONEY             */	TDS_TYPEFLAG_FIXED|TDS_TYPEFLAG_VARIANT,
++	/*  61 SYBDATETIME          */	TDS_TYPEFLAG_FIXED|TDS_TYPEFLAG_DATETIME|TDS_TYPEFLAG_VARIANT,
++	/*  62 SYBFLT8              */	TDS_TYPEFLAG_FIXED|TDS_TYPEFLAG_VARIANT,
++	/*  63 empty                */	TDS_TYPEFLAG_INVALID,
++	/*  64 SYBUINT1             */	TDS_TYPEFLAG_FIXED,
++	/*  65 SYBUINT2             */	TDS_TYPEFLAG_FIXED,
++	/*  66 SYBUINT4             */	TDS_TYPEFLAG_FIXED,
++	/*  67 SYBUINT8             */	TDS_TYPEFLAG_FIXED,
++	/*  68 SYBUINTN             */	TDS_TYPEFLAG_NULLABLE,
++	/*  69 empty                */	TDS_TYPEFLAG_INVALID,
++	/*  70 empty                */	TDS_TYPEFLAG_INVALID,
++	/*  71 empty                */	TDS_TYPEFLAG_INVALID,
++	/*  72 empty                */	TDS_TYPEFLAG_INVALID,
++	/*  73 empty                */	TDS_TYPEFLAG_INVALID,
++	/*  74 empty                */	TDS_TYPEFLAG_INVALID,
++	/*  75 empty                */	TDS_TYPEFLAG_INVALID,
++	/*  76 empty                */	TDS_TYPEFLAG_INVALID,
++	/*  77 empty                */	TDS_TYPEFLAG_INVALID,
++	/*  78 empty                */	TDS_TYPEFLAG_INVALID,
++	/*  79 empty                */	TDS_TYPEFLAG_INVALID,
++	/*  80 empty                */	TDS_TYPEFLAG_INVALID,
++	/*  81 empty                */	TDS_TYPEFLAG_INVALID,
++	/*  82 empty                */	TDS_TYPEFLAG_INVALID,
++	/*  83 empty                */	TDS_TYPEFLAG_INVALID,
++	/*  84 empty                */	TDS_TYPEFLAG_INVALID,
++	/*  85 empty                */	TDS_TYPEFLAG_INVALID,
++	/*  86 empty                */	TDS_TYPEFLAG_INVALID,
++	/*  87 empty                */	TDS_TYPEFLAG_INVALID,
++	/*  88 empty                */	TDS_TYPEFLAG_INVALID,
++	/*  89 empty                */	TDS_TYPEFLAG_INVALID,
++	/*  90 empty                */	TDS_TYPEFLAG_INVALID,
++	/*  91 empty                */	TDS_TYPEFLAG_INVALID,
++	/*  92 empty                */	TDS_TYPEFLAG_INVALID,
++	/*  93 empty                */	TDS_TYPEFLAG_INVALID,
++	/*  94 empty                */	TDS_TYPEFLAG_INVALID,
++	/*  95 empty                */	TDS_TYPEFLAG_INVALID,
++	/*  96 empty                */	TDS_TYPEFLAG_INVALID,
++	/*  97 empty                */	TDS_TYPEFLAG_INVALID,
++	/*  98 empty                */	TDS_TYPEFLAG_INVALID|TDS_TYPEFLAG_NULLABLE|TDS_TYPEFLAG_VARIABLE,
++	/*  99 empty                */	TDS_TYPEFLAG_INVALID|TDS_TYPEFLAG_NULLABLE|TDS_TYPEFLAG_VARIABLE|TDS_TYPEFLAG_UNICODE,
++	/* 100 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 101 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 102 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 103 SYBSENSITIVITY       */	TDS_TYPEFLAG_NULLABLE|TDS_TYPEFLAG_VARIABLE|TDS_TYPEFLAG_ASCII,
++	/* 104 SYBBOUNDARY          */	TDS_TYPEFLAG_NULLABLE|TDS_TYPEFLAG_VARIABLE|TDS_TYPEFLAG_ASCII,
++	/* 105 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 106 SYBDECIMAL           */	TDS_TYPEFLAG_NUMERIC|TDS_TYPEFLAG_VARIANT,
++	/* 107 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 108 SYBNUMERIC           */	TDS_TYPEFLAG_NUMERIC|TDS_TYPEFLAG_VARIANT,
++	/* 109 SYBFLTN              */	TDS_TYPEFLAG_NULLABLE|TDS_TYPEFLAG_VARIANT,
++	/* 110 SYBMONEYN            */	TDS_TYPEFLAG_NULLABLE|TDS_TYPEFLAG_VARIANT,
++	/* 111 SYBDATETIMN          */	TDS_TYPEFLAG_NULLABLE|TDS_TYPEFLAG_DATETIME|TDS_TYPEFLAG_VARIANT,
++	/* 112 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 113 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 114 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 115 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 116 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 117 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 118 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 119 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 120 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 121 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 122 SYBMONEY4            */	TDS_TYPEFLAG_FIXED|TDS_TYPEFLAG_VARIANT,
++	/* 123 SYBDATEN             */	TDS_TYPEFLAG_NULLABLE|TDS_TYPEFLAG_DATETIME,
++	/* 124 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 125 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 126 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 127 empty                */	TDS_TYPEFLAG_INVALID|TDS_TYPEFLAG_FIXED,
++	/* 128 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 129 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 130 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 131 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 132 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 133 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 134 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 135 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 136 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 137 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 138 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 139 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 140 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 141 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 142 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 143 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 144 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 145 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 146 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 147 SYBTIMEN             */	TDS_TYPEFLAG_NULLABLE|TDS_TYPEFLAG_DATETIME,
++	/* 148 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 149 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 150 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 151 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 152 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 153 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 154 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 155 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 156 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 157 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 158 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 159 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 160 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 161 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 162 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 163 SYBXML               */	TDS_TYPEFLAG_NULLABLE|TDS_TYPEFLAG_VARIABLE,
++	/* 164 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 165 empty                */	TDS_TYPEFLAG_INVALID|TDS_TYPEFLAG_NULLABLE|TDS_TYPEFLAG_VARIABLE|TDS_TYPEFLAG_BINARY,
++	/* 166 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 167 empty                */	TDS_TYPEFLAG_INVALID|TDS_TYPEFLAG_NULLABLE|TDS_TYPEFLAG_VARIABLE,
++	/* 168 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 169 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 170 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 171 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 172 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 173 empty                */	TDS_TYPEFLAG_INVALID|TDS_TYPEFLAG_NULLABLE|TDS_TYPEFLAG_VARIABLE|TDS_TYPEFLAG_BINARY,
++	/* 174 SYBUNITEXT           */	TDS_TYPEFLAG_NULLABLE|TDS_TYPEFLAG_VARIABLE|TDS_TYPEFLAG_UNICODE,
++	/* 175 SYBLONGCHAR          */	TDS_TYPEFLAG_NULLABLE|TDS_TYPEFLAG_VARIABLE|TDS_TYPEFLAG_ASCII,
++	/* 176 SYBSINT1             */	TDS_TYPEFLAG_FIXED,
++	/* 177 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 178 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 179 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 180 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 181 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 182 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 183 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 184 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 185 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 186 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 187 SYB5BIGDATETIME      */	TDS_TYPEFLAG_NULLABLE|TDS_TYPEFLAG_DATETIME,
++	/* 188 SYB5BIGTIME          */	TDS_TYPEFLAG_NULLABLE|TDS_TYPEFLAG_DATETIME,
++	/* 189 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 190 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 191 SYB5INT8             */	TDS_TYPEFLAG_FIXED,
++	/* 192 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 193 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 194 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 195 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 196 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 197 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 198 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 199 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 200 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 201 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 202 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 203 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 204 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 205 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 206 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 207 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 208 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 209 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 210 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 211 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 212 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 213 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 214 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 215 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 216 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 217 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 218 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 219 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 220 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 221 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 222 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 223 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 224 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 225 SYBLONGBINARY        */	TDS_TYPEFLAG_NULLABLE|TDS_TYPEFLAG_VARIABLE|TDS_TYPEFLAG_BINARY,
++	/* 226 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 227 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 228 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 229 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 230 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 231 empty                */	TDS_TYPEFLAG_INVALID|TDS_TYPEFLAG_NULLABLE|TDS_TYPEFLAG_VARIABLE|TDS_TYPEFLAG_UNICODE,
++	/* 232 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 233 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 234 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 235 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 236 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 237 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 238 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 239 empty                */	TDS_TYPEFLAG_INVALID|TDS_TYPEFLAG_NULLABLE|TDS_TYPEFLAG_VARIABLE|TDS_TYPEFLAG_UNICODE,
++	/* 240 empty                */	TDS_TYPEFLAG_INVALID|TDS_TYPEFLAG_NULLABLE|TDS_TYPEFLAG_VARIABLE,
++	/* 241 empty                */	TDS_TYPEFLAG_INVALID|TDS_TYPEFLAG_NULLABLE|TDS_TYPEFLAG_VARIABLE|TDS_TYPEFLAG_UNICODE,
++	/* 242 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 243 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 244 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 245 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 246 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 247 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 248 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 249 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 250 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 251 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 252 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 253 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 254 empty                */	TDS_TYPEFLAG_INVALID,
++	/* 255 empty                */	TDS_TYPEFLAG_INVALID,
++};
++
++const char *const tds_type_names[256] = {
++	/*   0 */	"",
++	/*   1 */	"",
++	/*   2 */	"",
++	/*   3 */	"",
++	/*   4 */	"",
++	/*   5 */	"",
++	/*   6 */	"",
++	/*   7 */	"",
++	/*   8 */	"",
++	/*   9 */	"",
++	/*  10 */	"",
++	/*  11 */	"",
++	/*  12 */	"",
++	/*  13 */	"",
++	/*  14 */	"",
++	/*  15 */	"",
++	/*  16 */	"",
++	/*  17 */	"",
++	/*  18 */	"",
++	/*  19 */	"",
++	/*  20 */	"",
++	/*  21 */	"",
++	/*  22 */	"",
++	/*  23 */	"",
++	/*  24 */	"",
++	/*  25 */	"",
++	/*  26 */	"",
++	/*  27 */	"",
++	/*  28 */	"",
++	/*  29 */	"",
++	/*  30 */	"",
++	/*  31 */	"SYBVOID",
++	/*  32 */	"",
++	/*  33 */	"",
++	/*  34 */	"SYBIMAGE",
++	/*  35 */	"SYBTEXT",
++	/*  36 */	"SYBUNIQUE",
++	/*  37 */	"SYBVARBINARY",
++	/*  38 */	"SYBINTN",
++	/*  39 */	"SYBVARCHAR",
++	/*  40 */	"SYBMSDATE",
++	/*  41 */	"SYBMSTIME",
++	/*  42 */	"SYBMSDATETIME2",
++	/*  43 */	"SYBMSDATETIMEOFFSET",
++	/*  44 */	"",
++	/*  45 */	"SYBBINARY",
++	/*  46 */	"SYBINTERVAL",
++	/*  47 */	"SYBCHAR",
++	/*  48 */	"SYBINT1",
++	/*  49 */	"SYBDATE",
++	/*  50 */	"SYBBIT",
++	/*  51 */	"SYBTIME",
++	/*  52 */	"SYBINT2",
++	/*  53 */	"",
++	/*  54 */	"",
++	/*  55 */	"",
++	/*  56 */	"SYBINT4",
++	/*  57 */	"",
++	/*  58 */	"SYBDATETIME4",
++	/*  59 */	"SYBREAL",
++	/*  60 */	"SYBMONEY",
++	/*  61 */	"SYBDATETIME",
++	/*  62 */	"SYBFLT8",
++	/*  63 */	"",
++	/*  64 */	"SYBUINT1",
++	/*  65 */	"SYBUINT2",
++	/*  66 */	"SYBUINT4",
++	/*  67 */	"SYBUINT8",
++	/*  68 */	"SYBUINTN",
++	/*  69 */	"",
++	/*  70 */	"",
++	/*  71 */	"",
++	/*  72 */	"",
++	/*  73 */	"",
++	/*  74 */	"",
++	/*  75 */	"",
++	/*  76 */	"",
++	/*  77 */	"",
++	/*  78 */	"",
++	/*  79 */	"",
++	/*  80 */	"",
++	/*  81 */	"",
++	/*  82 */	"",
++	/*  83 */	"",
++	/*  84 */	"",
++	/*  85 */	"",
++	/*  86 */	"",
++	/*  87 */	"",
++	/*  88 */	"",
++	/*  89 */	"",
++	/*  90 */	"",
++	/*  91 */	"",
++	/*  92 */	"",
++	/*  93 */	"",
++	/*  94 */	"",
++	/*  95 */	"",
++	/*  96 */	"",
++	/*  97 */	"",
++	/*  98 */	"SYBVARIANT",
++	/*  99 */	"SYBNTEXT",
++	/* 100 */	"",
++	/* 101 */	"",
++	/* 102 */	"",
++	/* 103 */	"SYBNVARCHAR or SYBSENSITIVITY",
++	/* 104 */	"SYBBITN or SYBBOUNDARY",
++	/* 105 */	"",
++	/* 106 */	"SYBDECIMAL",
++	/* 107 */	"",
++	/* 108 */	"SYBNUMERIC",
++	/* 109 */	"SYBFLTN",
++	/* 110 */	"SYBMONEYN",
++	/* 111 */	"SYBDATETIMN",
++	/* 112 */	"",
++	/* 113 */	"",
++	/* 114 */	"",
++	/* 115 */	"",
++	/* 116 */	"",
++	/* 117 */	"",
++	/* 118 */	"",
++	/* 119 */	"",
++	/* 120 */	"",
++	/* 121 */	"",
++	/* 122 */	"SYBMONEY4",
++	/* 123 */	"SYBDATEN",
++	/* 124 */	"",
++	/* 125 */	"",
++	/* 126 */	"",
++	/* 127 */	"SYBINT8",
++	/* 128 */	"",
++	/* 129 */	"",
++	/* 130 */	"",
++	/* 131 */	"",
++	/* 132 */	"",
++	/* 133 */	"",
++	/* 134 */	"",
++	/* 135 */	"",
++	/* 136 */	"",
++	/* 137 */	"",
++	/* 138 */	"",
++	/* 139 */	"",
++	/* 140 */	"",
++	/* 141 */	"",
++	/* 142 */	"",
++	/* 143 */	"",
++	/* 144 */	"",
++	/* 145 */	"",
++	/* 146 */	"",
++	/* 147 */	"SYBTIMEN",
++	/* 148 */	"",
++	/* 149 */	"",
++	/* 150 */	"",
++	/* 151 */	"",
++	/* 152 */	"",
++	/* 153 */	"",
++	/* 154 */	"",
++	/* 155 */	"",
++	/* 156 */	"",
++	/* 157 */	"",
++	/* 158 */	"",
++	/* 159 */	"",
++	/* 160 */	"",
++	/* 161 */	"",
++	/* 162 */	"",
++	/* 163 */	"SYBXML",
++	/* 164 */	"",
++	/* 165 */	"XSYBVARBINARY",
++	/* 166 */	"",
++	/* 167 */	"XSYBVARCHAR",
++	/* 168 */	"",
++	/* 169 */	"",
++	/* 170 */	"",
++	/* 171 */	"",
++	/* 172 */	"",
++	/* 173 */	"XSYBBINARY",
++	/* 174 */	"SYBUNITEXT",
++	/* 175 */	"XSYBCHAR or SYBLONGCHAR",
++	/* 176 */	"SYBSINT1",
++	/* 177 */	"",
++	/* 178 */	"",
++	/* 179 */	"",
++	/* 180 */	"",
++	/* 181 */	"",
++	/* 182 */	"",
++	/* 183 */	"",
++	/* 184 */	"",
++	/* 185 */	"",
++	/* 186 */	"",
++	/* 187 */	"SYB5BIGDATETIME",
++	/* 188 */	"SYB5BIGTIME",
++	/* 189 */	"",
++	/* 190 */	"",
++	/* 191 */	"SYB5INT8",
++	/* 192 */	"",
++	/* 193 */	"",
++	/* 194 */	"",
++	/* 195 */	"",
++	/* 196 */	"",
++	/* 197 */	"",
++	/* 198 */	"",
++	/* 199 */	"",
++	/* 200 */	"",
++	/* 201 */	"",
++	/* 202 */	"",
++	/* 203 */	"",
++	/* 204 */	"",
++	/* 205 */	"",
++	/* 206 */	"",
++	/* 207 */	"",
++	/* 208 */	"",
++	/* 209 */	"",
++	/* 210 */	"",
++	/* 211 */	"",
++	/* 212 */	"",
++	/* 213 */	"",
++	/* 214 */	"",
++	/* 215 */	"",
++	/* 216 */	"",
++	/* 217 */	"",
++	/* 218 */	"",
++	/* 219 */	"",
++	/* 220 */	"",
++	/* 221 */	"",
++	/* 222 */	"",
++	/* 223 */	"",
++	/* 224 */	"",
++	/* 225 */	"SYBLONGBINARY",
++	/* 226 */	"",
++	/* 227 */	"",
++	/* 228 */	"",
++	/* 229 */	"",
++	/* 230 */	"",
++	/* 231 */	"XSYBNVARCHAR",
++	/* 232 */	"",
++	/* 233 */	"",
++	/* 234 */	"",
++	/* 235 */	"",
++	/* 236 */	"",
++	/* 237 */	"",
++	/* 238 */	"",
++	/* 239 */	"XSYBNCHAR",
++	/* 240 */	"SYBMSUDT",
++	/* 241 */	"SYBMSXML",
++	/* 242 */	"",
++	/* 243 */	"SYBMSTABLE",
++	/* 244 */	"",
++	/* 245 */	"",
++	/* 246 */	"",
++	/* 247 */	"",
++	/* 248 */	"",
++	/* 249 */	"",
++	/* 250 */	"",
++	/* 251 */	"",
++	/* 252 */	"",
++	/* 253 */	"",
++	/* 254 */	"",
++	/* 255 */	"",
++};
++#endif
+--- /dev/null
++++ b/src/tds/tds_willconvert.h
+@@ -0,0 +1,276 @@
++/*** Please do not edit this file!                                       ***/
++/*** It was generated with 'perl tds_willconvert.pl > tds_willconvert.h' ***/
++/*** It is much easier to edit the __DATA__ table than this file.        ***/
++/***                                                                     ***/
++/***                                                          Thank you. ***/
++
++static const uint8_t type2category[256] = {
++	0, /* 0 */
++	0, /* 1 */
++	0, /* 2 */
++	0, /* 3 */
++	0, /* 4 */
++	0, /* 5 */
++	0, /* 6 */
++	0, /* 7 */
++	0, /* 8 */
++	0, /* 9 */
++	0, /* 10 */
++	0, /* 11 */
++	0, /* 12 */
++	0, /* 13 */
++	0, /* 14 */
++	0, /* 15 */
++	0, /* 16 */
++	0, /* 17 */
++	0, /* 18 */
++	0, /* 19 */
++	0, /* 20 */
++	0, /* 21 */
++	0, /* 22 */
++	0, /* 23 */
++	0, /* 24 */
++	0, /* 25 */
++	0, /* 26 */
++	0, /* 27 */
++	0, /* 28 */
++	0, /* 29 */
++	0, /* 30 */
++	0, /* SYBVOID */
++	0, /* 32 */
++	0, /* 33 */
++	2, /* SYBIMAGE */
++	7, /* SYBTEXT */
++	8, /* SYBBLOB */
++	2, /* SYBVARBINARY */
++	0, /* SYBINTN */
++	7, /* SYBVARCHAR */
++	4, /* SYBMSDATE */
++	4, /* SYBMSTIME */
++	4, /* SYBMSDATETIME2 */
++	4, /* SYBMSDATETIMEOFFSET */
++	0, /* 44 */
++	2, /* SYBBINARY */
++	0, /* SYBINTERVAL */
++	7, /* SYBCHAR */
++	3, /* SYBINT1 */
++	4, /* SYBDATE */
++	1, /* SYBBIT */
++	4, /* SYBTIME */
++	3, /* SYBINT2 */
++	0, /* 53 */
++	0, /* 54 */
++	0, /* 55 */
++	3, /* SYBINT4 */
++	0, /* 57 */
++	4, /* SYBDATETIME4 */
++	3, /* SYBREAL */
++	3, /* SYBMONEY */
++	4, /* SYBDATETIME */
++	3, /* SYBFLT8 */
++	0, /* 63 */
++	3, /* SYBUINT1 */
++	3, /* SYBUINT2 */
++	3, /* SYBUINT4 */
++	3, /* SYBUINT8 */
++	0, /* SYBUINTN */
++	0, /* 69 */
++	0, /* 70 */
++	0, /* 71 */
++	0, /* 72 */
++	0, /* 73 */
++	0, /* 74 */
++	0, /* 75 */
++	0, /* 76 */
++	0, /* 77 */
++	0, /* 78 */
++	0, /* 79 */
++	0, /* 80 */
++	0, /* 81 */
++	0, /* 82 */
++	0, /* 83 */
++	0, /* 84 */
++	0, /* 85 */
++	0, /* 86 */
++	0, /* 87 */
++	0, /* 88 */
++	0, /* 89 */
++	0, /* 90 */
++	0, /* 91 */
++	0, /* 92 */
++	0, /* 93 */
++	0, /* 94 */
++	0, /* 95 */
++	0, /* 96 */
++	0, /* 97 */
++	0, /* SYBVARIANT */
++	0, /* SYBNTEXT */
++	0, /* 100 */
++	0, /* 101 */
++	0, /* 102 */
++	6, /* SYBSENSITIVITY */
++	1, /* SYBBOUNDARY */
++	0, /* 105 */
++	1, /* SYBDECIMAL */
++	0, /* 107 */
++	1, /* SYBNUMERIC */
++	0, /* SYBFLTN */
++	0, /* SYBMONEYN */
++	0, /* SYBDATETIMN */
++	0, /* 112 */
++	0, /* 113 */
++	0, /* 114 */
++	0, /* 115 */
++	0, /* 116 */
++	0, /* 117 */
++	0, /* 118 */
++	0, /* 119 */
++	0, /* 120 */
++	0, /* 121 */
++	3, /* SYBMONEY4 */
++	0, /* SYBDATEN */
++	0, /* 124 */
++	0, /* 125 */
++	0, /* 126 */
++	3, /* SYBINT8 */
++	0, /* 128 */
++	0, /* 129 */
++	0, /* 130 */
++	0, /* 131 */
++	0, /* 132 */
++	0, /* 133 */
++	0, /* 134 */
++	0, /* 135 */
++	0, /* 136 */
++	0, /* 137 */
++	0, /* 138 */
++	0, /* 139 */
++	0, /* 140 */
++	0, /* 141 */
++	0, /* 142 */
++	0, /* 143 */
++	0, /* 144 */
++	0, /* 145 */
++	0, /* 146 */
++	0, /* SYBTIMEN */
++	0, /* 148 */
++	0, /* 149 */
++	0, /* 150 */
++	0, /* 151 */
++	0, /* 152 */
++	0, /* 153 */
++	0, /* 154 */
++	0, /* 155 */
++	0, /* 156 */
++	0, /* 157 */
++	0, /* 158 */
++	0, /* 159 */
++	0, /* 160 */
++	0, /* 161 */
++	0, /* 162 */
++	0, /* SYBXML */
++	0, /* 164 */
++	2, /* XSYBVARBINARY */
++	0, /* 166 */
++	7, /* XSYBVARCHAR */
++	0, /* 168 */
++	0, /* 169 */
++	0, /* 170 */
++	0, /* 171 */
++	0, /* 172 */
++	2, /* XSYBBINARY */
++	0, /* SYBUNITEXT */
++	7, /* SYBLONGCHAR */
++	0, /* SYBSINT1 */
++	0, /* 177 */
++	0, /* 178 */
++	0, /* 179 */
++	0, /* 180 */
++	0, /* 181 */
++	0, /* 182 */
++	0, /* 183 */
++	0, /* 184 */
++	0, /* 185 */
++	0, /* 186 */
++	4, /* SYB5BIGDATETIME */
++	4, /* SYB5BIGTIME */
++	0, /* 189 */
++	0, /* 190 */
++	0, /* SYB5INT8 */
++	0, /* 192 */
++	0, /* 193 */
++	0, /* 194 */
++	0, /* 195 */
++	0, /* 196 */
++	0, /* 197 */
++	0, /* 198 */
++	0, /* 199 */
++	0, /* 200 */
++	0, /* 201 */
++	0, /* 202 */
++	0, /* 203 */
++	0, /* 204 */
++	0, /* 205 */
++	0, /* 206 */
++	0, /* 207 */
++	0, /* 208 */
++	0, /* 209 */
++	0, /* 210 */
++	0, /* 211 */
++	0, /* 212 */
++	0, /* 213 */
++	0, /* 214 */
++	0, /* 215 */
++	0, /* 216 */
++	0, /* 217 */
++	0, /* 218 */
++	0, /* 219 */
++	0, /* 220 */
++	0, /* 221 */
++	0, /* 222 */
++	0, /* 223 */
++	0, /* 224 */
++	2, /* SYBLONGBINARY */
++	0, /* 226 */
++	0, /* 227 */
++	0, /* 228 */
++	0, /* 229 */
++	0, /* 230 */
++	0, /* XSYBNVARCHAR */
++	0, /* 232 */
++	0, /* 233 */
++	0, /* 234 */
++	0, /* 235 */
++	0, /* 236 */
++	0, /* 237 */
++	0, /* 238 */
++	0, /* XSYBNCHAR */
++	0, /* SYBMSUDT */
++	0, /* SYBMSXML */
++	0, /* 242 */
++	5, /* SYBMSTABLE */
++	0, /* 244 */
++	0, /* 245 */
++	0, /* 246 */
++	0, /* 247 */
++	0, /* 248 */
++	0, /* 249 */
++	0, /* 250 */
++	0, /* 251 */
++	0, /* 252 */
++	0, /* 253 */
++	0, /* 254 */
++	0, /* 255 */
++};
++
++static const uint32_t category_conversion[] = {
++	0,
++	142,	/* SYBBIT */
++	140,	/* SYBIMAGE */
++	142,	/* SYBINT1 */
++	148,	/* SYBMSDATE */
++	32,	/* SYBMSTABLE */
++	0,	/* SYBSENSITIVITY */
++	414,	/* SYBTEXT */
++	388,	/* SYBUNIQUE */
++};

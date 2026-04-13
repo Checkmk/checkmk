@@ -13,7 +13,9 @@ filegroup(
 configure_make(
     name = "freetds",
     args = ["DESTDIR=$BUILD_TMPDIR/$INSTALL_PREFIX"],
-    configure_command = "configure",
+    # GitHub source archive (unlike the old freetds.org tarball) does not include
+    # pre-generated autotools artefacts, so we must run autogen.sh first.
+    autogen = True,
     configure_in_place = True,
     configure_options = [
         "--enable-msdblib",

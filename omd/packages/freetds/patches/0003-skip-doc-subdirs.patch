@@ -1,0 +1,16 @@
+The doc/ build runs 'git log' to stamp the user guide, which fails in the
+Bazel sandbox (no git repository present).  We ship no documentation, so
+remove doc, samples, win32, vms and misc from the top-level SUBDIRS.  The
+resulting build covers include/ and src/ — sufficient to produce the shared
+libraries and public headers we actually package.
+
+--- a/Makefile.am
++++ b/Makefile.am
+@@ -1,7 +1,7 @@
+ ## SUBDIRS determines in which directories automake will generate a Makefile
+ ## See also AC_OUTPUT in configure.ac
+
+-SUBDIRS	=	include src doc samples win32 vms misc
++SUBDIRS	=	include src
+
+ ACLOCAL_AMFLAGS = -I m4

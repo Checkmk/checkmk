@@ -1,0 +1,29 @@
+The GitHub source archive includes git-only source files (e.g. num_limits.pl,
+encodings.pl) that are absent from the upstream release tarball.  configure.ac
+requires gperf whenever num_limits.pl is present, but gperf is only needed to
+regenerate encoding tables — tables that are pre-generated in release tarballs.
+
+Change the hard error into a graceful fallback: when gperf is not found, emit
+a warning and set HAVE_PERL_SOURCES=false so the Makefile uses the
+pre-generated headers provided by patch 0002 instead of trying to regenerate
+them.
+
+--- a/configure.ac
++++ b/configure.ac
+@@ -145,13 +145,14 @@
+ # otherwise the Makefile will (correctly) assume that the
+ # generated file is already present.
+ #
++have_perl_sources=false
+ if test -f "${srcdir}/src/tds/num_limits.pl"; then
+-	AM_CONDITIONAL(HAVE_PERL_SOURCES, true)
+ 	AC_PATH_PROG(GPERF, gperf)
+-	AS_IF([test "x$GPERF" = x], [AC_MSG_ERROR([required program 'gperf' not found.])])
+-else
+-	AM_CONDITIONAL(HAVE_PERL_SOURCES, false)
++	AS_IF([test "x$GPERF" != x],
++		[have_perl_sources=true],
++		[AC_MSG_WARN([gperf not found; using pre-generated encoding tables])])
+ fi
++AM_CONDITIONAL([HAVE_PERL_SOURCES], [test "x$have_perl_sources" = xtrue])
+ AC_SUBST(HAVE_PERL_SOURCES)

@@ -87,7 +87,6 @@ sh_library(
         "kaspersky_av",
         "lnx_container_host_if.linux",
         "lnx_quota",
-        "lvm",
         "mailman3_lists",
         "mk_apt",
         "mk_cups_queues",

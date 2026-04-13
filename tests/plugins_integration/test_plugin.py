@@ -26,7 +26,18 @@ def test_plugin(
     host_name: str,
     tmp_path_factory: pytest.TempPathFactory,
     pytestconfig: pytest.Config,
+    request: pytest.FixtureRequest,
 ) -> None:
+    xfail_list = [
+        "special-openshift-v1.27.1-3507",
+        "special-eks-v1.27.8-eks-8cb36c9",
+        "special-openshift-v1.22.1-1839",
+        "kubernetes",
+    ]
+
+    if any(_ in request.node.name for _ in xfail_list):
+        pytest.xfail(reason="CMK-33440")
+
     with setup_host(test_site, host_name):
         disk_dump = read_disk_dump(host_name)
         dump_type = "snmp" if disk_dump[0] == "." else "agent"

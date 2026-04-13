@@ -34,7 +34,7 @@ class ExplicitGraphSpecification(GraphSpecification, frozen=True):
     def graph_type_name() -> Literal["explicit"]:
         return "explicit"
 
-    def fetch_rows(self, env: GraphEnvironment) -> Sequence[HostGraphRow | ServiceGraphRow]:
+    def fetch_graph_rows(self, env: GraphEnvironment) -> Sequence[HostGraphRow | ServiceGraphRow]:
         return []
 
     def recipes(

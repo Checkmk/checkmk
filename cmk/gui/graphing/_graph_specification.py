@@ -142,7 +142,9 @@ class GraphSpecification(BaseModel, ABC, frozen=True):
     def graph_type_name() -> str: ...
 
     @abstractmethod
-    def fetch_rows(self, env: GraphEnvironment) -> Sequence[HostGraphRow | ServiceGraphRow]: ...
+    def fetch_graph_rows(
+        self, env: GraphEnvironment
+    ) -> Sequence[HostGraphRow | ServiceGraphRow]: ...
 
     @abstractmethod
     def recipes(

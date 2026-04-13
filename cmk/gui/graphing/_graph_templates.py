@@ -310,7 +310,7 @@ class TemplateGraphSpecification(GraphSpecification, frozen=True):
     def graph_type_name() -> Literal["template"]:
         return "template"
 
-    def fetch_rows(self, env: GraphEnvironment) -> Sequence[HostGraphRow | ServiceGraphRow]:
+    def fetch_graph_rows(self, env: GraphEnvironment) -> Sequence[HostGraphRow | ServiceGraphRow]:
         return [
             fetch_graph_row(
                 self.site,

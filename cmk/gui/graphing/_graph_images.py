@@ -122,7 +122,7 @@ def _answer_graph_image_request(
         )
 
         try:
-            rows = graph_specification.fetch_rows(env)
+            rows = graph_specification.fetch_graph_rows(env)
         except livestatus.MKLivestatusNotFoundError:
             logger.debug(
                 "Cannot fetch graph data: site: %s, host %s, service %s",
@@ -281,7 +281,7 @@ def graph_recipes_for_api_request(
     try:
         recipes = graph_specification.recipes(
             env,
-            graph_specification.fetch_rows(env),
+            graph_specification.fetch_graph_rows(env),
             consolidation_function=api_request.get("consolidation_function", "max"),
         )
 

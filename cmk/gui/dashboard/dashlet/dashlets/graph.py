@@ -202,7 +202,7 @@ class ABCGraphDashlet[T: ABCGraphDashletConfig, TGraphSpec: GraphSpecification](
                 backend_time_series_fetcher=None,
                 debug=config.debug,
             )
-            return graph_specification.recipes(env, graph_specification.fetch_rows(env))
+            return graph_specification.recipes(env, graph_specification.fetch_graph_rows(env))
         except MKMissingDataError:
             raise
         except livestatus.MKLivestatusNotFoundError:

@@ -568,7 +568,7 @@ _HEAP_MEM_GRAPH = {
 
 
 class _FakeTemplateGraphSpecification(TemplateGraphSpecification):
-    def fetch_rows(self, env: GraphEnvironment) -> Sequence[HostGraphRow | ServiceGraphRow]:
+    def fetch_graph_rows(self, env: GraphEnvironment) -> Sequence[HostGraphRow | ServiceGraphRow]:
         perf_data, check_command = parse_perf_data(
             "metric1=163651.992188;;;; metric2=313848.039062;;;", "check_mk-foo", debug=False
         )
@@ -837,7 +837,8 @@ def test_template_recipes_matching(
         debug=False,
     )
     assert [
-        r.recipe for r in graph_specification.recipes(env, graph_specification.fetch_rows(env))
+        r.recipe
+        for r in graph_specification.recipes(env, graph_specification.fetch_graph_rows(env))
     ] == expected
 
 
@@ -2005,7 +2006,7 @@ def test_conflicting_metrics(
 
 
 class _FakeTemplateGraphSpecificationFS(TemplateGraphSpecification):
-    def fetch_rows(self, env: GraphEnvironment) -> Sequence[HostGraphRow | ServiceGraphRow]:
+    def fetch_graph_rows(self, env: GraphEnvironment) -> Sequence[HostGraphRow | ServiceGraphRow]:
         perf_data, check_command = parse_perf_data(
             "fs_used=163651.992188;;;; fs_free=313848.039062;;; fs_size=477500.03125;;;; growth=-1280.489081;;;;",
             "check_mk-df",
@@ -2104,7 +2105,8 @@ def test_template_recipes_fs() -> None:
         debug=False,
     )
     assert [
-        r.recipe for r in graph_specification.recipes(env, graph_specification.fetch_rows(env))
+        r.recipe
+        for r in graph_specification.recipes(env, graph_specification.fetch_graph_rows(env))
     ] == [
         GraphRecipe(
             title="Size and used space",

@@ -96,7 +96,7 @@ from cmk.gui.watolib.config_domain_name import (
     sample_config_generator_registry,
 )
 from cmk.gui.watolib.config_sync import replication_path_registry
-from cmk.gui.watolib.groups import contact_group_usage_finder_registry
+from cmk.gui.watolib.groups_io import contact_group_usage_finder_registry
 from cmk.gui.watolib.host_attributes import (
     host_attribute_registry,
     host_attribute_topic_registry,

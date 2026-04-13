@@ -24,7 +24,7 @@ from cmk.gui.watolib.config_domain_name import (
     SampleConfigGeneratorRegistry,
 )
 from cmk.gui.watolib.config_sync import ReplicationPathRegistry
-from cmk.gui.watolib.groups import ContactGroupUsageFinderRegistry
+from cmk.gui.watolib.groups_io import ContactGroupUsageFinderRegistry
 from cmk.gui.watolib.main_menu import MainModuleRegistry
 from cmk.gui.watolib.mode import ModeRegistry
 from cmk.gui.watolib.notification_parameter import NotificationParameterRegistry

@@ -127,6 +127,8 @@ py_library(
         "//cmk/gui:groups",
         "//cmk/gui:hooks",
         "//cmk/gui:sites",
+        "//cmk/gui:type_defs",
+        "//packages/cmk-ccc:plugin-registry",
     ],
 )
 

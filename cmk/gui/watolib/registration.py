@@ -55,7 +55,7 @@ from .config_domain_name import (
 )
 from .config_hostname import config_hostname_autocompleter
 from .config_sync import ReplicationPathRegistry
-from .groups import ContactGroupUsageFinderRegistry as ContactGroupUsageFinderRegistry
+from .groups_io import ContactGroupUsageFinderRegistry
 from .host_attributes import (
     ABCHostAttribute,
     HostAttributeRegistry,

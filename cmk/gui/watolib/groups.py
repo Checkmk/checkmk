@@ -5,13 +5,11 @@
 
 import copy
 import re
-from collections.abc import Callable
 from typing import Any, Literal
 
 import cmk.ccc.version as cmk_version
 from cmk import fields
 from cmk.ccc.hostaddress import HostName
-from cmk.ccc.plugin_registry import Registry
 from cmk.ccc.regex import GROUP_NAME_PATTERN
 from cmk.gui import hooks
 from cmk.gui.config import Config
@@ -23,7 +21,6 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _, _l
 from cmk.gui.logged_in import user
-from cmk.gui.type_defs import GlobalSettings
 from cmk.gui.userdb import load_roles
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.speaklater import LazyString
@@ -32,6 +29,7 @@ from cmk.gui.valuespec import DualListChoice
 from cmk.gui.watolib.changes import add_change
 from cmk.gui.watolib.global_settings import load_configuration_settings
 from cmk.gui.watolib.groups_io import (
+    contact_group_usage_finder_registry,
     load_contact_group_information,
     load_group_information,
     save_group_information,
@@ -50,16 +48,6 @@ from cmk.utils.notify_types import EventRule
 from cmk.utils.timeperiod import timeperiod_spec_alias
 
 from .openapi_fields import HostContactGroup
-
-ContactGroupUsageFinder = Callable[[GroupName, GlobalSettings], list[tuple[str, str]]]
-
-
-class ContactGroupUsageFinderRegistry(Registry[ContactGroupUsageFinder]):
-    def plugin_name(self, instance: ContactGroupUsageFinder) -> str:
-        return instance.__name__
-
-
-contact_group_usage_finder_registry = ContactGroupUsageFinderRegistry()
 
 
 def add_group(

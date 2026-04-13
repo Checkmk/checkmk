@@ -5,15 +5,27 @@
 
 # mypy: disable-error-code="misc"
 
-from collections.abc import Mapping, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from pathlib import Path
 from typing import Any, cast, Literal, NotRequired, TypedDict
 
+from cmk.ccc.plugin_registry import Registry
 from cmk.gui.groups import AllGroupSpecs, GroupName, GroupSpec, GroupSpecs, GroupType
 from cmk.gui.hooks import request_memoize
 from cmk.gui.sites import live
+from cmk.gui.type_defs import GlobalSettings
 from cmk.gui.watolib.simple_config_file import ConfigFileRegistry, WatoMultiConfigFile
 from cmk.utils import paths
+
+ContactGroupUsageFinder = Callable[[GroupName, GlobalSettings], list[tuple[str, str]]]
+
+
+class ContactGroupUsageFinderRegistry(Registry[ContactGroupUsageFinder]):
+    def plugin_name(self, instance: ContactGroupUsageFinder) -> str:
+        return instance.__name__
+
+
+contact_group_usage_finder_registry = ContactGroupUsageFinderRegistry()
 
 NothingOrChoices = Literal["nothing"] | tuple[Literal["choices"], Sequence[str]]
 

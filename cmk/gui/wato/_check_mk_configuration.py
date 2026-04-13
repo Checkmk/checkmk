@@ -89,8 +89,10 @@ from cmk.gui.watolib.config_variable_groups import (
     ConfigVariableGroupUserInterface,
     ConfigVariableGroupWATO,
 )
-from cmk.gui.watolib.groups import ContactGroupUsageFinderRegistry
-from cmk.gui.watolib.groups_io import load_contact_group_information
+from cmk.gui.watolib.groups_io import (
+    ContactGroupUsageFinderRegistry,
+    load_contact_group_information,
+)
 from cmk.gui.watolib.host_rename import RenameHostInRuleValue, RenameHostInRuleValueRegistry
 from cmk.gui.watolib.hosts_and_folders import folder_preserving_link
 from cmk.gui.watolib.rulesets import Rule

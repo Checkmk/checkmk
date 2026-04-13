@@ -14,7 +14,7 @@ from cmk.gui.token_auth import (
 )
 from cmk.gui.valuespec import AutocompleterRegistry
 from cmk.gui.visuals.type import VisualTypeRegistry
-from cmk.gui.watolib.groups import ContactGroupUsageFinderRegistry
+from cmk.gui.watolib.groups_io import ContactGroupUsageFinderRegistry
 
 from ._find_group_usage import find_usages_of_contact_group_in_dashboards
 from .api import register_endpoints

@@ -8,7 +8,7 @@ from datetime import timedelta
 from cmk.gui.background_job.job import BackgroundJobRegistry
 from cmk.gui.cron import CronJob, CronJobRegistry
 from cmk.gui.pages import PageEndpoint, PageRegistry
-from cmk.gui.watolib.groups import ContactGroupUsageFinderRegistry
+from cmk.gui.watolib.groups_io import ContactGroupUsageFinderRegistry
 from cmk.gui.watolib.timeperiods import TimeperiodUsageFinderRegistry
 
 from . import user_attributes

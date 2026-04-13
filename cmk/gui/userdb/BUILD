@@ -3,10 +3,7 @@ load("@cmk_requirements//:requirements.bzl", "requirement")
 
 py_library(
     name = "userdb",
-    srcs = glob(
-        include = ["**/*.py"],
-        exclude = ["registration.py"],
-    ),
+    srcs = glob(include = ["**/*.py"]),
     imports = ["../../.."],
     visibility = [
         "//cmk:__subpackages__",
@@ -14,6 +11,7 @@ py_library(
     ],
     deps = [
         "//cmk/gui:config",
+        "//cmk/gui:cron",
         "//cmk/gui:customer",
         "//cmk/gui:exceptions",
         "//cmk/gui:groups",
@@ -39,6 +37,8 @@ py_library(
         "//cmk/gui/utils:urls",
         "//cmk/gui/valuespec",
         "//cmk/gui/watolib:config_infra",
+        "//cmk/gui/watolib:groups_io",
+        "//cmk/gui/watolib:timeperiods",
         "//cmk/utils",
         "//packages/cmk-ccc:plugin-registry",
         "//packages/cmk-ccc:site",
@@ -49,12 +49,4 @@ py_library(
         "//packages/cmk-livestatus-client:py_livestatus",
         requirement("pydantic"),
     ],
-)
-
-# Temporary: userdb files that still belong to the monolithic //cmk/gui target.
-# Remove this filegroup once userdb registration is moved to an appropriate location.
-filegroup(
-    name = "gui_srcs",
-    srcs = ["registration.py"],
-    visibility = ["//cmk/gui:__pkg__"],
 )

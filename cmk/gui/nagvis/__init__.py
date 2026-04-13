@@ -16,7 +16,7 @@ from cmk.gui.type_defs import Users
 from cmk.gui.userdb import UserRolesConfigFile
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.watolib.config_domains import ConfigDomainGUI
-from cmk.gui.watolib.groups import (
+from cmk.gui.watolib.groups_io import (
     ContactGroupUsageFinderRegistry as ContactGroupUsageFinderRegistry,
 )
 

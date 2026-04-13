@@ -124,7 +124,7 @@ class SNMPFetcher(Fetcher[SNMPRawData]):
             and self.base_path == other.base_path
             and self.relative_section_cache_path == other.relative_section_cache_path
             and self.relative_walk_cache_path == other.relative_walk_cache_path
-            and self.relative_section_cache_path == other.relative_section_cache_path
+            and self.relative_stored_walk_path == other.relative_stored_walk_path
             and self.caching_config == other.caching_config
             and self.snmp_config == other.snmp_config
             and self.force_stored_walks == other.force_stored_walks

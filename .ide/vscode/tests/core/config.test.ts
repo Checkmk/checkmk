@@ -119,30 +119,24 @@ describe('isDefaultPicked', () => {
 // getDisableSettings now reads from settings config via loadConfig — tested via integration
 
 describe('resolveVariables', () => {
-  it('replaces ${workspaceFolder} in strings', () => {
-    expect(resolveVariables('${workspaceFolder}/src')).toBe('/mock/workspace/src')
-  })
-
-  it('replaces ${HOME} in strings', () => {
-    const result = resolveVariables('${HOME}/.config')
-    expect(result).toMatch(/^\/.+\/\.config$/)
-    expect(result).not.toContain('${HOME}')
+  it('replaces ${cmk-ext:workspaceFolder} in strings', () => {
+    expect(resolveVariables('${cmk-ext:workspaceFolder}/src')).toBe('/mock/workspace/src')
   })
 
   it('replaces multiple variables in one string', () => {
-    const result = resolveVariables('${workspaceFolder}/foo/${workspaceFolder}/bar')
+    const result = resolveVariables('${cmk-ext:workspaceFolder}/foo/${cmk-ext:workspaceFolder}/bar')
     expect(result).toBe('/mock/workspace/foo//mock/workspace/bar')
   })
 
   it('recurses into arrays', () => {
-    expect(resolveVariables(['${workspaceFolder}/a', 'plain'])).toEqual([
+    expect(resolveVariables(['${cmk-ext:workspaceFolder}/a', 'plain'])).toEqual([
       '/mock/workspace/a',
       'plain'
     ])
   })
 
   it('recurses into objects', () => {
-    expect(resolveVariables({ path: '${workspaceFolder}/lib', count: 42 })).toEqual({
+    expect(resolveVariables({ path: '${cmk-ext:workspaceFolder}/lib', count: 42 })).toEqual({
       path: '/mock/workspace/lib',
       count: 42
     })

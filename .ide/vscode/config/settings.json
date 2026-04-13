@@ -139,7 +139,7 @@
       "vitest.filesWatcherInclude": "packages/cmk-frontend-vue/**/*"
     },
     "workspace": {
-      "vitest.rootConfig": "${workspaceFolder}/packages/cmk-frontend-vue/vite.config.ts",
+      "vitest.rootConfig": "${cmk-ext:workspaceFolder}/packages/cmk-frontend-vue/vite.config.ts",
       "vitest.configSearchPatternExclude": "{**/node_modules/**,**/vendor/**,**/.*/**,**/*.d.ts,**/*bazel*/*}",
       "js/ts.tsdk.path": "packages/cmk-frontend-vue/node_modules/typescript/lib"
     },

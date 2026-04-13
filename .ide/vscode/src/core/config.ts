@@ -85,8 +85,7 @@ export function resolveVariables(value: SettingValue): SettingValue {
   if (!wsPath) return value
   if (typeof value === 'string') {
     return value
-      .replace(/\$\{workspaceFolder\}/g, wsPath)
-      .replace(/\$\{HOME\}/g, os.homedir())
+      .replace(/\$\{cmk-ext:workspaceFolder\}/g, wsPath)
       .replace(/\$\{which:([^}]+)\}/g, (_m, bin) => shellExec(`which ${bin}`))
   }
   if (Array.isArray(value)) {

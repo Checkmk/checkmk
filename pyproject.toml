@@ -94,6 +94,11 @@ ignore = [
   "UP032", # PEP 498 (Literal String Interpolation) is a Python 3.6 feature
   "UP041", # socket.timeout is an alias of TimeoutError only for Python >= 3.10
 ]
+"cmk/plugins/*/agents/*.py" = [
+  "UP007", # PEP 604 (Allow writing union types as X | Y) is a Python 3.10 feature
+  "UP032", # PEP 498 (Literal String Interpolation) is a Python 3.6 feature
+  "UP041", # socket.timeout is an alias of TimeoutError only for Python >= 3.10
+]
 "tests/agent-plugin-unit/*" = [
   "UP006", # PEP 585 (Type Hinting Generics In Standard Collections) is a Python 3.9 feature
   "UP007", # PEP 604 (Allow writing union types as X | Y) is a Python 3.10 feature

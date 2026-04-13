@@ -17,7 +17,6 @@ agents/plugins/mk_tinkerforge.py
 agents/plugins/nginx_status.py
 agents/plugins/plesk_backups.py
 agents/plugins/plesk_domains.py
-agents/plugins/unitrends_replication.py
 cmk/plugins/mtr/agents/mtr.py
 tests/agent-plugin-unit/datasets/mk_filestats/subdir/testfile2.html
 tests/agent-plugin-unit/datasets/mk_filestats/testfile1.txt

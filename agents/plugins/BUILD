@@ -53,7 +53,6 @@ py_library(
         "nginx_status.py",
         "plesk_backups.py",
         "plesk_domains.py",
-        "unitrends_replication.py",
     ],
     imports = ["."],
     visibility = ["//tests:__subpackages__"],

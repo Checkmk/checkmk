@@ -14,6 +14,7 @@ from cmk.discover_plugins import discover_families
 _AGENTS_WITHOUT_USER_AGENT = {
     "cmk.plugins.ceph.agents.mk_ceph",
     "cmk.plugins.mtr.agents.mtr",
+    "cmk.plugins.unitrends.agents.unitrends_replication",
 }
 
 

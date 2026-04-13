@@ -40,7 +40,7 @@ class ExplicitGraphSpecification(GraphSpecification, frozen=True):
     def recipes(
         self,
         env: GraphEnvironment,
-        rows: Sequence[HostGraphRow | ServiceGraphRow],
+        graph_rows: Sequence[HostGraphRow | ServiceGraphRow],
         consolidation_function: GraphConsolidationFunction = "max",
     ) -> Sequence[GraphRecipeWithOverrides]:
         return [

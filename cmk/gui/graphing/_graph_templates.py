@@ -381,19 +381,19 @@ class TemplateGraphSpecification(GraphSpecification, frozen=True):
     def recipes(
         self,
         env: GraphEnvironment,
-        rows: Sequence[HostGraphRow | ServiceGraphRow],
+        graph_rows: Sequence[HostGraphRow | ServiceGraphRow],
         consolidation_function: GraphConsolidationFunction = "max",
     ) -> Sequence[GraphRecipeWithOverrides]:
-        if not rows:
+        if not graph_rows:
             return []
 
-        row = rows[0]
-        if not row.translated_metrics:
+        graph_row = graph_rows[0]
+        if not graph_row.translated_metrics:
             return []
 
-        site_id = row.site
-        host_name = row.host_name
-        service_name = row.service_name
+        site_id = graph_row.site
+        host_name = graph_row.host_name
+        service_name = graph_row.service_name
         # Performance graph dashlets already use graph_id, but for example in reports, we still use
         # graph_index. Therefore, this function needs to support both. We should switch to graph_id
         # everywhere (CMK-7308) and remove the support for graph_index. However, note that we cannot
@@ -403,7 +403,7 @@ class TemplateGraphSpecification(GraphSpecification, frozen=True):
         if (
             isinstance(self.graph_id, str)
             and self.graph_id.startswith("METRIC_")
-            and self.graph_id[7:] in row.translated_metrics
+            and self.graph_id[7:] in graph_row.translated_metrics
         ):
             recipes = [
                 (
@@ -414,7 +414,7 @@ class TemplateGraphSpecification(GraphSpecification, frozen=True):
                         host_name,
                         service_name,
                         consolidation_function,
-                        row.translated_metrics[self.graph_id[7:]],
+                        graph_row.translated_metrics[self.graph_id[7:]],
                         temperature_unit=env.temperature_unit,
                     ),
                 )
@@ -429,7 +429,7 @@ class TemplateGraphSpecification(GraphSpecification, frozen=True):
                         site_id,
                         host_name,
                         service_name,
-                        row.translated_metrics,
+                        graph_row.translated_metrics,
                         consolidation_function=consolidation_function,
                         temperature_unit=env.temperature_unit,
                     )

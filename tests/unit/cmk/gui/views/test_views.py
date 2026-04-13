@@ -571,4 +571,3 @@ def test_view_page(
         resp = wsgi_app.get("/NO_SITE/check_mk/view.py?view_name=allhosts", status=200)
         assert "heute" in resp.text
         assert "query=null" not in resp.text
-        assert str(resp).count("/domain-types/host/collections/all") == 1

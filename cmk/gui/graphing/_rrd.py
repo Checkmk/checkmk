@@ -441,7 +441,7 @@ def all_rrd_columns_potentially_relevant_for_metric(
 @tracer.instrument("graphing.translate_and_merge_rrd_columns")
 def translate_and_merge_rrd_columns(
     target_metric: MetricName,
-    rrd_columms: Iterable[tuple[str, Sequence[float | None]]],
+    rrd_columns: Iterable[tuple[str, Sequence[float | None]]],
     translations: Mapping[MetricName, TranslationSpec],
     registered_metrics: Mapping[str, RegisteredMetric],
     *,
@@ -452,7 +452,7 @@ def translate_and_merge_rrd_columns(
 
     relevant_ts = []
 
-    for column_name, data in rrd_columms:
+    for column_name, data in rrd_columns:
         if data is None:
             raise MKGeneralException(_("Cannot retrieve historic data with Nagios core"))
         if len(data) <= 3:

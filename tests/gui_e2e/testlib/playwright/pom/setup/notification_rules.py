@@ -200,6 +200,10 @@ class BaseNotificationPage(QuickSetupPage):
         return self._recipient_group.locator("button").filter(has_text="Select user")
 
     @property
+    def apply_button(self) -> Locator:
+        return self.main_area.locator().locator("button").filter(has_text=re.compile(r"^Apply$"))
+
+    @property
     def apply_and_create_another_rule_button(self) -> Locator:
         return self.main_area.locator().get_by_text("Apply & create another rule")
 
@@ -314,15 +318,11 @@ class BaseNotificationPage(QuickSetupPage):
         self.description_text_field.fill(description)
 
         logger.info("Save the changes")
-        self.apply_and_create_another_rule_button.click()
+        self.apply_button.click()
 
-        self.validate_page()
-
-        success_message = "Notification rule successfully edited!"
-        expect(
-            self.main_area.page_menu_popups,
-            message=f"'{success_message}' message not displayed",
-        ).to_contain_text(success_message)
+        self.page.wait_for_url(
+            url=re.compile(quote_plus("wato.py?mode=notifications")), wait_until="load"
+        )
 
 
 class EditNotificationRule(BaseNotificationPage):

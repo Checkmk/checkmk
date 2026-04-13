@@ -337,16 +337,17 @@ def test_check(
     )
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="Crash report 3fe22c64-3714-11f1-868a-0e350313818f: JSONDecodeError",
-)
 def test_parse_elasticsearch_indices_handles_non_json_input() -> None:
     # Reproduction from crash group 3368: the section was emitted as plain
     # tab-separated rows [name, count_avg, size_avg] instead of a single JSON
-    # string, causing json.loads() to raise JSONDecodeError.
+    # string. The parser now returns an empty section rather than crashing
+    # with JSONDecodeError.
     string_table = [
         ["logs", "0.0", "450.0"],
         ["it", "1549902.38", "2435877510.88"],
     ]
     assert parse_elasticsearch_indices(string_table) == {}
+
+
+def test_parse_elasticsearch_indices_handles_empty_input() -> None:
+    assert parse_elasticsearch_indices([]) == {}

@@ -5,13 +5,13 @@
 
 # mypy: disable-error-code="possibly-undefined"
 
-from collections.abc import Iterable, Mapping
+from collections.abc import Iterable
 from pathlib import Path
 from typing import Any, Literal
 
 from pydantic import BaseModel
 
-from .bakery_api.v1 import FileGenerator, OS, Plugin, PluginConfig, register
+from cmk.bakery.v2_unstable import BakeryPlugin, OS, Plugin, PluginConfig
 
 
 class _Config(BaseModel):
@@ -19,22 +19,21 @@ class _Config(BaseModel):
     instances_settings: dict[str, Any] | None = None
 
 
-def get_mk_postgres_files(conf: Mapping[str, object]) -> FileGenerator:
-    config = _Config.model_validate(conf)
-    if config.deployment[0] == "do_not_deploy":
+def get_mk_postgres_files(conf: _Config) -> Iterable[Plugin | PluginConfig]:
+    if conf.deployment[0] == "do_not_deploy":
         return
 
-    interval = None if (v := config.deployment[1]) is None else int(v)
+    interval = conf.deployment[1]
 
     for current_os in (OS.LINUX, OS.WINDOWS):
         yield Plugin(base_os=current_os, source=Path("mk_postgres.py"), interval=interval)
 
-        if config.instances_settings is None:
+        if conf.instances_settings is None:
             continue
 
         yield PluginConfig(
             base_os=current_os,
-            lines=list(_get_mk_postgres_config(config.instances_settings, current_os)),
+            lines=list(_get_mk_postgres_config(conf.instances_settings, current_os)),
             target=Path("postgres.cfg"),
             include_header=True,
         )
@@ -61,7 +60,9 @@ def _get_mk_postgres_config(instances_settings: dict[str, Any], os: OS) -> Itera
         )
 
 
-register.bakery_plugin(
+bakery_plugin_mk_postgres = BakeryPlugin(
     name="mk_postgres",
+    parameter_parser=_Config.model_validate,
+    default_parameters=None,
     files_function=get_mk_postgres_files,
 )

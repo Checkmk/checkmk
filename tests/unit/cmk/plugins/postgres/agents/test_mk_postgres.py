@@ -14,7 +14,7 @@ from unittest.mock import Mock, patch
 import pytest
 from _pytest.monkeypatch import MonkeyPatch
 
-from agents.plugins import mk_postgres
+from cmk.plugins.postgres.agents import mk_postgres
 
 #   .--defines-------------------------------------------------------------.
 #   |                      _       __ _                                    |

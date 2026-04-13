@@ -660,7 +660,6 @@ AGENT_PLUGINS_PREFIX = [
     "mk_inotify",
     "mk_logwatch",
     "mk_mongodb",
-    "mk_postgres",
     "mk_sap",
     "mk_tinkerforge",
     "nginx_status",

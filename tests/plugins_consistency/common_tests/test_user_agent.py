@@ -16,6 +16,7 @@ _AGENTS_WITHOUT_USER_AGENT = {
     "cmk.plugins.plesk.agents.plesk_backups",
     "cmk.plugins.plesk.agents.plesk_domains",
     "cmk.plugins.mtr.agents.mtr",
+    "cmk.plugins.postgres.agents.mk_postgres",
     "cmk.plugins.unitrends.agents.unitrends_replication",
 }
 

@@ -76,7 +76,6 @@ pkg_files(
         ":cmk-transform-inventory-trees",
         ":cmk-ui-job-scheduler",
         ":cmk-ui-job-scheduler-health",
-        ":cmk-update-config.py",
         ":cmk-update-license-usage",
         ":cmk-validate-config",
         ":cmk-validate-plugins",
@@ -93,7 +92,6 @@ pkg_files(
     ),
     prefix = "bin",
     renames = {
-        "cmk-update-config.py": "cmk-update-config",
         "post-rename-site.py": "post-rename-site",
     },
 )
@@ -153,13 +151,6 @@ pkg_files(
 
 # Not shipped — only exists so that static analysis tools (ruff, …)
 # can discover these .py files via Bazel.
-py_library(
-    name = "cmk_update_config_py",
-    srcs = ["cmk-update-config.py"],
-    imports = ["."],
-    deps = ["//cmk/update_config"],
-)
-
 py_library(
     name = "post_rename_site_py",
     srcs = ["post-rename-site.py"],

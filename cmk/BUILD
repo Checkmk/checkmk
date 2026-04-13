@@ -110,7 +110,6 @@ py_library(
         "//cmk/rrd",
         "//cmk/server_side_calls_backend",
         "//cmk/special_agents",
-        "//cmk/update_config",
         "//cmk/utils",
         "//packages/cmk-agent-receiver",
         "//packages/cmk-ccc:archive",

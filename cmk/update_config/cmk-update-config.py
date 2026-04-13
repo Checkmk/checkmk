@@ -5,7 +5,7 @@
 
 import sys
 
-from cmk.update_config.main import (  # astrein: disable=cmk-module-layer-violation
+from cmk.update_config.main import (
     ensure_site_is_stopped,
     main,
 )

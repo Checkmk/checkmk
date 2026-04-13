@@ -1786,7 +1786,6 @@ allows = [
 "bin/cmk-migrate-extension-rulesets" = "cmk.update_config"
 "bin/cmk-passwd" = "cmk.cmkpasswd"
 "bin/cmk-ui-job-scheduler" = "cmk.gui"
-"bin/cmk-update-config" = "cmk.update_config"
 "bin/cmk-validate-config" = "cmk.validate_config"
 "bin/cmk-validate-plugins" = "cmk.validate_plugins"
 "bin/mkeventd" = "cmk.ec"

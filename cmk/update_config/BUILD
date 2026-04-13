@@ -1,5 +1,27 @@
-load("@aspect_rules_py//py:defs.bzl", "py_library")
+load("@aspect_rules_py//py:defs.bzl", "py_binary", "py_library")
 load("@cmk_requirements//:requirements.bzl", "requirement")
+load("@rules_pkg//pkg:mappings.bzl", "pkg_attributes", "pkg_files")
+
+# Only for static analysis.
+py_binary(
+    name = "cmk-update-config",
+    srcs = ["cmk-update-config.py"],
+    main = "cmk-update-config.py",
+    deps = [":update_config"],
+)
+
+pkg_files(
+    name = "cmk-update-config-pkg",
+    srcs = ["cmk-update-config.py"],
+    attributes = pkg_attributes(
+        mode = "0755",
+    ),
+    prefix = "bin",
+    renames = {"cmk-update-config.py": "cmk-update-config"},
+    visibility = [
+        "//omd:__pkg__",
+    ],
+)
 
 py_library(
     name = "update_config",
@@ -8,6 +30,7 @@ py_library(
         exclude = [
             "**/community/**",
             "**/nonfree/**",
+            "cmk-update-config.py",
         ],
     ),
     imports = ["../.."],

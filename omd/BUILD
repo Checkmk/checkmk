@@ -687,6 +687,7 @@ pkg_tar(
         ":share_doc_check-mk_agents",
         ":share_doc_check-mk_documentation",
         ":skel_permissions_pkg",
+        "//cmk/update_config:cmk-update-config-pkg",
         "//omd/packages/freetds:freetds_pkg",
         "//omd/packages/protobuf",
         "//packages/check-http:check_http_pkg",

@@ -40,6 +40,7 @@ def serialize_password(ident: str, details: PasswordConfig) -> PasswordObject:
             comment=details_with_customer.get("comment", ApiOmitted()),
             documentation_url=details_with_customer.get("docu_url", ApiOmitted()),
             editable_by=details_with_customer.get("owned_by") or ApiOmitted(),
+            owned_by=details_with_customer.get("owned_by") or ApiOmitted(),
             shared_with=details_with_customer.get("shared_with", ApiOmitted()),
             customer=details_with_customer.get("customer") or ApiOmitted(),
         ),

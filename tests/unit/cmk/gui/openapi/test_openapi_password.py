@@ -46,6 +46,7 @@ def test_openapi_password(clients: ClientRegistry) -> None:
     extensions = resp.json["extensions"]
     assert extensions["comment"] == "Something but nothing random"
     assert extensions["documentation_url"] == ""
+    assert extensions["owned_by"] == "admin"
     assert extensions["editable_by"] == "admin"
     assert extensions["shared"] == ["all"]
 
@@ -53,6 +54,26 @@ def test_openapi_password(clients: ClientRegistry) -> None:
 @pytest.mark.usefixtures("suppress_remote_automation_calls", "mock_password_file_regeneration")
 def test_openapi_password_editable_by(clients: ClientRegistry) -> None:
     clients.ContactGroup.create("group1", "group1")
+
+    clients.Password.create(
+        ident="test",
+        title="Checkmk",
+        password="tt",
+        shared=[],
+        editable_by="group1",
+        _owner="group1",
+        expect_ok=False,
+    ).assert_status_code(400)
+
+    resp = clients.Password.create(
+        ident="test_1",
+        title="Checkmk",
+        password="tt",
+        shared=[],
+        _owner="group1",
+    )
+    assert resp.json["extensions"]["editable_by"] == "group1"
+    assert resp.json["extensions"]["owned_by"] == "group1"
 
     resp = clients.Password.create(
         ident="test_2",
@@ -62,6 +83,7 @@ def test_openapi_password_editable_by(clients: ClientRegistry) -> None:
         editable_by="group1",
     )
     assert resp.json["extensions"]["editable_by"] == "group1"
+    assert resp.json["extensions"]["owned_by"] == "group1"
 
     resp = clients.Password.create(
         ident="test_3",
@@ -71,9 +93,11 @@ def test_openapi_password_editable_by(clients: ClientRegistry) -> None:
         editable_by=None,  # default should be admin
     )
     assert resp.json["extensions"]["editable_by"] == "admin"
+    assert resp.json["extensions"]["owned_by"] == "admin"
 
     resp = clients.Password.edit("test_3", editable_by="group1")
     assert resp.json["extensions"]["editable_by"] == "group1"
+    assert resp.json["extensions"]["owned_by"] == "group1"
 
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls", "mock_password_file_regeneration")
@@ -144,7 +168,7 @@ def test_password_with_newlines(clients: ClientRegistry) -> None:
 
 
 @pytest.mark.usefixtures("mock_password_file_regeneration")
-def test_openapi_password_without_editor_regression(clients: ClientRegistry) -> None:
+def test_openapi_password_without_owner_regression(clients: ClientRegistry) -> None:
     clients.Password.create(
         ident="so_secret",
         title="so_secret",
@@ -154,7 +178,7 @@ def test_openapi_password_without_editor_regression(clients: ClientRegistry) -> 
     )
 
     resp = clients.Password.get("so_secret")
-    assert resp.json["extensions"].get("editable_by") is not None
+    assert resp.json["extensions"].get("owned_by") is not None
 
 
 def test_password_min_length_create(clients: ClientRegistry) -> None:

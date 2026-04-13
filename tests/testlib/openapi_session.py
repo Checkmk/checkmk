@@ -989,10 +989,8 @@ class ServicesAPI(BaseAPI):
                 columns = ["has_been_checked"]
             elif "has_been_checked" not in columns:
                 columns.append("has_been_checked")
-        body = {}
-        if columns:
-            body["columns"] = columns
-        response = self.session.post(f"/objects/host/{hostname}/collections/services", json=body)
+        query_string = "?columns=" + "&columns=".join(columns) if columns else ""
+        response = self.session.get(f"/objects/host/{hostname}/collections/services{query_string}")
         if response.status_code != 200:
             raise UnexpectedResponse.from_response(response)
         value: list[dict[str, Any]] = response.json()["value"]

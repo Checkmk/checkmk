@@ -26,6 +26,13 @@ class PasswordExtension:
         description="A URL pointing to documentation or any other page.",
         default_factory=ApiOmitted,
     )
+    # TODO: DEPRECATED(17274) - remove in 2.5
+    owned_by: str | ApiOmitted = api_field(
+        example="admin",
+        description="Deprecated - use `editable_by` instead. The owner of the password who is able to edit, delete and use existing passwords.",
+        default_factory=ApiOmitted,
+        deprecated=True,
+    )
     editable_by: str | ApiOmitted = api_field(
         example="admin",
         description="The owner of the password who is able to edit, delete and use existing passwords.",

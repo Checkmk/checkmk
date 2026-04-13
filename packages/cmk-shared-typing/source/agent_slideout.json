@@ -12,7 +12,8 @@
     "user_settings_url": { "type": "string" },
     "legacy_agent_url": { "type": "string" },
     "save_host": { "type": "boolean" },
-    "host_exists": { "type": "boolean" }
+    "host_exists": { "type": "boolean" },
+    "can_download_baked_agents": { "type": "boolean" }
   },
   "required": [
     "agent_install_cmds",
@@ -20,7 +21,8 @@
     "host_name",
     "all_agents_url",
     "user_settings_url",
-    "save_host"
+    "save_host",
+    "can_download_baked_agents"
   ],
   "$defs": {
     "agent_install_cmds": {

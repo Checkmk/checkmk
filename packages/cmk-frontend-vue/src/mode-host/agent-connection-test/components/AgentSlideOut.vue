@@ -38,6 +38,7 @@ const props = defineProps<{
   isPushMode: boolean
   hostName: string
   agentReceiverPortIsDefault: boolean
+  canDownloadBakedAgents: boolean
 }>()
 
 const { _t } = usei18n()
@@ -198,7 +199,7 @@ function getInitStep() {
             </template>
             <template #content>
               <div v-if="currentStep === 2" class="download_install__content">
-                <template v-if="tabNeedsToken(tab)">
+                <template v-if="tabNeedsToken(tab) && canDownloadBakedAgents">
                   <div class="download_install__token">
                     <CmkParagraph>{{ currentInstallMsg(tab) }}</CmkParagraph>
                     <GenerateToken
@@ -278,12 +279,27 @@ function getInitStep() {
                     :open-in-new-tab="true"
                   />
                 </div>
+                <CmkAlertBox
+                  v-else-if="tabNeedsToken(tab) && !canDownloadBakedAgents"
+                  variant="warning"
+                >
+                  {{
+                    _t(
+                      'You do not have the required permissions to download monitoring agents. ' +
+                        'Please ask your administrator to grant you the required permissions, or ask them to install the agent on this host.'
+                    )
+                  }}
+                </CmkAlertBox>
               </div>
             </template>
             <template v-if="currentStep === 2" #actions>
               <CmkWizardButton
                 type="next"
-                :disabled="tabNeedsToken(tab) && (ott === null || ott instanceof Error)"
+                :disabled="
+                  tabNeedsToken(tab) &&
+                  canDownloadBakedAgents &&
+                  (ott === null || ott instanceof Error)
+                "
                 :override-label="_t('Next step: Register agent')"
               />
               <CmkWizardButton type="previous" />

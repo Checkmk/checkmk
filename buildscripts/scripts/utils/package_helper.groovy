@@ -51,6 +51,7 @@ def provide_agent_binaries(Map args) {
             relative_job_name: "${branch_base_folder(false)}/builders/build-linux-agent-updater",
             /// no Linux agent updaters for raw edition..
             condition: true, // edition != "raw",  // FIXME!
+            retry: 1,
             dependency_paths: [
                 "agents",
                 "non-free/cmk-update-agent",
@@ -74,6 +75,7 @@ def provide_agent_binaries(Map args) {
             //       As 'soon' as this problem does not exist anymore we could run
             //       relatively from 'builders/..'
             relative_job_name: "${branch_base_folder(false)}/winagt-build",
+            retry: 3,
             dependency_paths: [
                 "agents",
                 "packages/host/cmk-agent-ctl",
@@ -109,6 +111,7 @@ def provide_agent_binaries(Map args) {
             //       As 'soon' as this problem does not exist anymore we could run
             //       relatively from 'builders/..'
             relative_job_name: "${branch_base_folder(false)}/winagt-build-modules",
+            retry: 3,
             dependency_paths: [
                 "agents/modules/windows",
             ],
@@ -133,6 +136,7 @@ def provide_agent_binaries(Map args) {
                 name: job_name,
                 condition: run_condition,
                 raiseOnError: true,
+                retry: details.retry ?: 1,
             ) {
                 def this_parameters = [
                     use_upstream_build: true,

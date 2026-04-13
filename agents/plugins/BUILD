@@ -115,8 +115,6 @@ sh_library(
         "mk_suseconnect",
         "mk_tsm",
         "mk_zypper",
-        "nfsexports",
-        "nfsexports.solaris",
         "nvidia_smi",
         "runas",
         "smart",

@@ -7,7 +7,13 @@ import * as vscode from 'vscode'
 
 import { type CommandEntry, createStatusBar } from './build/buildStatus'
 import { type SettingsEntry, registerBuildCommands, updateContextKeys } from './build/settings'
-import { type ExtensionSets, getDisableSettings, loadConfig, writeSetting } from './core/config'
+import {
+  type ExtensionSets,
+  type ScopedSetting,
+  getDisableSettings,
+  loadConfig,
+  writeSetting
+} from './core/config'
 import { error, log, notifyInfo, registerErrorHandlers } from './core/log'
 import { checkVersionMismatch } from './core/versionCheck'
 import { registerGerritPush } from './gerrit'
@@ -32,10 +38,10 @@ import { registerIdePickers } from './setup/idePicker'
 import { registerTemplates } from './setup/templates'
 import { refreshAll, refreshOmd, registerSidebar } from './sidebar'
 
-function toggleSettings(disableSettings: Record<string, unknown>): vscode.Disposable {
+function toggleSettings(disableSettings: ScopedSetting[]): vscode.Disposable {
   ;(async () => {
     try {
-      for (const [key, disabledValue] of Object.entries(disableSettings)) {
+      for (const { key, value: disabledValue, target } of disableSettings) {
         const dot = key.lastIndexOf('.')
         let currentValue: unknown
         if (dot > 0) {
@@ -46,7 +52,7 @@ function toggleSettings(disableSettings: Record<string, unknown>): vscode.Dispos
           currentValue = vscode.workspace.getConfiguration().get(key)
         }
         if (JSON.stringify(currentValue) === JSON.stringify(disabledValue)) {
-          await writeSetting(key, undefined)
+          await writeSetting(key, undefined, target)
         }
       }
     } catch (err) {
@@ -57,8 +63,8 @@ function toggleSettings(disableSettings: Record<string, unknown>): vscode.Dispos
     dispose: () => {
       ;(async () => {
         try {
-          for (const [key, value] of Object.entries(disableSettings)) {
-            await writeSetting(key, value)
+          for (const { key, value, target } of disableSettings) {
+            await writeSetting(key, value, target)
           }
         } catch (err) {
           error(`Failed to write disable-settings: ${(err as Error).message}`)
@@ -132,7 +138,7 @@ export function activate(context: vscode.ExtensionContext): void {
 
   // --- Family-gated features ---
 
-  const pythonDisable = getDisableSettings(extensionSets, 'python')
+  const pythonDisable = getDisableSettings('python')
   profileManager.register(
     'python',
     (ctx) => {
@@ -153,7 +159,7 @@ export function activate(context: vscode.ExtensionContext): void {
     pythonDisable
   )
 
-  const frontendDisable = getDisableSettings(extensionSets, 'frontend')
+  const frontendDisable = getDisableSettings('frontend')
   profileManager.register(
     'frontend',
     () => {
@@ -162,7 +168,7 @@ export function activate(context: vscode.ExtensionContext): void {
     frontendDisable
   )
 
-  const rustDisable = getDisableSettings(extensionSets, 'rust')
+  const rustDisable = getDisableSettings('rust')
   profileManager.register(
     'rust',
     () => {

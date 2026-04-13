@@ -22,7 +22,6 @@ export interface CommandConfig {
 export interface ExtensionFamilyConfig {
   extensions: string[]
   required?: boolean
-  disableSettings?: Record<string, unknown>
   defaultPicked?: boolean
 }
 
@@ -47,18 +46,20 @@ export type SettingsSets = Record<string, SettingsScopeEntry>
 
 // ── Functions ──
 
-export async function writeSetting(key: string, value: unknown): Promise<void> {
+export async function writeSetting(
+  key: string,
+  value: unknown,
+  target: vscode.ConfigurationTarget = vscode.ConfigurationTarget.Workspace
+): Promise<void> {
+  const wsFolder = vscode.workspace.workspaceFolders?.[0]?.uri
+  const resource = target === vscode.ConfigurationTarget.WorkspaceFolder ? wsFolder : undefined
   const dot = key.lastIndexOf('.')
   if (dot > 0) {
     const section = key.substring(0, dot)
     const leaf = key.substring(dot + 1)
-    await vscode.workspace
-      .getConfiguration(section)
-      .update(leaf, value, vscode.ConfigurationTarget.Workspace)
+    await vscode.workspace.getConfiguration(section, resource).update(leaf, value, target)
   } else {
-    await vscode.workspace
-      .getConfiguration()
-      .update(key, value, vscode.ConfigurationTarget.Workspace)
+    await vscode.workspace.getConfiguration(undefined, resource).update(key, value, target)
   }
 }
 
@@ -125,11 +126,25 @@ export function isDefaultPicked(extensionSets: ExtensionSets, name: string): boo
   return entry?.defaultPicked !== false
 }
 
-export function getDisableSettings(
-  extensionSets: ExtensionSets,
-  name: string
-): Record<string, unknown> {
-  const entry = extensionSets[name]
-  if (Array.isArray(entry)) return {}
-  return entry?.disableSettings || {}
+export interface ScopedSetting {
+  key: string
+  value: unknown
+  target: vscode.ConfigurationTarget
+}
+
+export function getDisableSettings(name: string): ScopedSetting[] {
+  const settings = loadConfig<Record<string, Record<string, Record<string, unknown>>>>('settings')
+  const entry = settings[name]
+  if (!entry) return []
+  const result: ScopedSetting[] = []
+  for (const [key, value] of Object.entries(entry.disableFolder || {})) {
+    result.push({ key, value, target: vscode.ConfigurationTarget.WorkspaceFolder })
+  }
+  for (const [key, value] of Object.entries(entry.disableWorkspace || {})) {
+    result.push({ key, value, target: vscode.ConfigurationTarget.Workspace })
+  }
+  for (const [key, value] of Object.entries(entry.disableUser || {})) {
+    result.push({ key, value, target: vscode.ConfigurationTarget.Global })
+  }
+  return result
 }

@@ -10,12 +10,7 @@
       "charliermarsh.ruff",
       "matangover.mypy",
       "monosans.djlint"
-    ],
-    "disableSettings": {
-      "python.languageServer": "None",
-      "mypy.enabled": false,
-      "python.testing.pytestEnabled": false
-    }
+    ]
   },
   "frontend": {
     "extensions": [
@@ -24,21 +19,11 @@
       "esbenp.prettier-vscode",
       "stylelint.vscode-stylelint",
       "vitest.explorer"
-    ],
-    "disableSettings": {
-      "eslint.enable": false,
-      "stylelint.enable": false,
-      "prettier.enable": false,
-      "vitest.enable": false
-    }
+    ]
   },
   "rust": {
     "extensions": ["rust-lang.rust-analyzer", "swellaby.vscode-rust-test-adapter"],
-    "defaultPicked": false,
-    "disableSettings": {
-      "rust-analyzer.initializeStopped": true,
-      "rustTestExplorer.enable": false
-    }
+    "defaultPicked": false
   },
   "general": {
     "extensions": [],

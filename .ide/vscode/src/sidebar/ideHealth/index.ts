@@ -109,25 +109,46 @@ export function getSettingsMismatches(
   }
 
   const wsFolder = vscode.workspace.workspaceFolders?.[0]?.uri
-  const wsCfg = vscode.workspace.getConfiguration(undefined, wsFolder)
-  for (const [family, config] of Object.entries(extensionSets)) {
+  for (const [family, settingsEntry] of Object.entries(settingsSets)) {
     if (!profileManager.isActive(family)) continue
-    const ds = Array.isArray(config) ? {} : config.disableSettings || {}
     const displayName = FAMILY_DISPLAY[family] || family
-    for (const [key, disabledValue] of Object.entries(ds)) {
-      const dedupeKey = `${key}@workspace`
-      if (seen.has(dedupeKey)) continue
-      const inspection = wsCfg.inspect(key)
-      const actual = inspection?.workspaceFolderValue ?? inspection?.workspaceValue
-      if (actual !== undefined && JSON.stringify(actual) === JSON.stringify(disabledValue)) {
-        seen.add(dedupeKey)
-        mismatches.push({
-          key,
-          expected: undefined,
-          actual,
-          family: displayName,
-          scope: 'workspace'
-        })
+    const disableScopes = [
+      {
+        settings: settingsEntry.disableFolder || {},
+        label: 'folder',
+        getter: (i: Inspection) => i?.workspaceFolderValue
+      },
+      {
+        settings: settingsEntry.disableWorkspace || {},
+        label: 'workspace',
+        getter: (i: Inspection) =>
+          i?.workspaceValue ?? (isFolderWorkspace ? i?.workspaceFolderValue : undefined)
+      },
+      {
+        settings: settingsEntry.disableUser || {},
+        label: 'user',
+        getter: (i: Inspection) => i?.globalValue
+      }
+    ]
+    for (const { settings: ds, label, getter } of disableScopes) {
+      if (!ds || Object.keys(ds).length === 0) continue
+      const resource = label === 'folder' ? wsFolder : undefined
+      const cfg = vscode.workspace.getConfiguration(undefined, resource)
+      for (const [key, disabledValue] of Object.entries(ds)) {
+        const dedupeKey = `${key}@${label}`
+        if (seen.has(dedupeKey)) continue
+        const inspection = cfg.inspect(key)
+        const actual = getter(inspection)
+        if (actual !== undefined && JSON.stringify(actual) === JSON.stringify(disabledValue)) {
+          seen.add(dedupeKey)
+          mismatches.push({
+            key,
+            expected: undefined,
+            actual,
+            family: displayName,
+            scope: label
+          })
+        }
       }
     }
   }

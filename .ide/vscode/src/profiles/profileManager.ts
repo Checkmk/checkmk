@@ -5,7 +5,7 @@
  */
 import * as vscode from 'vscode'
 
-import { writeSetting } from '../core/config'
+import { type ScopedSetting, writeSetting } from '../core/config'
 import { FAMILY_DISPLAY, PROFILE_LABELS } from '../core/constants'
 import { log, notifyInfo } from '../core/log'
 
@@ -30,7 +30,7 @@ export interface ProfileInfo {
 
 interface FamilyState {
   activate: ActivateFn | null
-  disableSettings: Record<string, unknown>
+  disableSettings: ScopedSetting[]
   disposables: vscode.Disposable[]
   active: boolean
   hasIssues: boolean
@@ -41,7 +41,7 @@ interface FamilyState {
 const families: Record<string, FamilyState> = {
   python: {
     activate: null,
-    disableSettings: {},
+    disableSettings: [],
     disposables: [],
     active: false,
     hasIssues: false,
@@ -50,7 +50,7 @@ const families: Record<string, FamilyState> = {
   },
   frontend: {
     activate: null,
-    disableSettings: {},
+    disableSettings: [],
     disposables: [],
     active: false,
     hasIssues: false,
@@ -59,7 +59,7 @@ const families: Record<string, FamilyState> = {
   },
   rust: {
     activate: null,
-    disableSettings: {},
+    disableSettings: [],
     disposables: [],
     active: false,
     hasIssues: false,
@@ -78,11 +78,11 @@ export function setOnRefresh(fn: () => void): void {
 export function register(
   name: string,
   activateFn: ActivateFn,
-  disableSettings?: Record<string, unknown>
+  disableSettings?: ScopedSetting[]
 ): void {
   if (families[name]) {
     families[name].activate = activateFn
-    families[name].disableSettings = disableSettings || {}
+    families[name].disableSettings = disableSettings || []
   }
 }
 
@@ -257,9 +257,9 @@ async function applyInactiveDisableSettings(): Promise<void> {
   log('Apply inactive disable-settings')
   for (const name of Object.keys(families)) {
     if (families[name].active) continue
-    for (const [key, value] of Object.entries(families[name].disableSettings)) {
+    for (const { key, value, target } of families[name].disableSettings) {
       try {
-        await writeSetting(key, value)
+        await writeSetting(key, value, target)
       } catch (err) {
         log(`Disable-setting failed: ${name} ${key} — ${(err as Error).message}`)
       }

@@ -138,6 +138,9 @@ export interface SettingsEntry {
   folder?: Record<string, SettingValue>
   workspace?: Record<string, SettingValue>
   user?: Record<string, SettingValue>
+  disableFolder?: Record<string, SettingValue>
+  disableWorkspace?: Record<string, SettingValue>
+  disableUser?: Record<string, SettingValue>
 }
 
 export function buildEffectiveSettings(
@@ -153,19 +156,10 @@ export function buildEffectiveSettings(
   const workspaceSettings: Record<string, SettingValue> = { ...(settingsEntry.workspace || {}) }
   const userSettings: Record<string, SettingValue> = { ...(settingsEntry.user || {}) }
 
-  if (extensionSets) {
-    for (const [family, config] of Object.entries(extensionSets)) {
-      if (profileManager.isActive(family)) continue
-      const ds = Array.isArray(config) ? {} : config.disableSettings || {}
-      for (const [key, value] of Object.entries(ds)) {
-        if (key in folderSettings) {
-          folderSettings[key] = value as SettingValue
-        }
-        if (key in workspaceSettings) {
-          workspaceSettings[key] = value as SettingValue
-        }
-      }
-    }
+  if (!profileManager.isActive(setName)) {
+    Object.assign(folderSettings, settingsEntry.disableFolder || {})
+    Object.assign(workspaceSettings, settingsEntry.disableWorkspace || {})
+    Object.assign(userSettings, settingsEntry.disableUser || {})
   }
 
   return { folderSettings, workspaceSettings, userSettings }

@@ -72,6 +72,14 @@
       "python.condaPath": "",
       "python.poetryPath": "",
       "python.pipenvPath": ""
+    },
+    "disableFolder": {
+      "mypy.enabled": false,
+      "python.testing.pytestEnabled": false
+    },
+    "disableWorkspace": {
+      "python.languageServer": "None",
+      "ruff.enable": false
     }
   },
   "frontend": {
@@ -134,6 +142,12 @@
       "vitest.rootConfig": "${workspaceFolder}/packages/cmk-frontend-vue/vite.config.ts",
       "vitest.configSearchPatternExclude": "{**/node_modules/**,**/vendor/**,**/.*/**,**/*.d.ts,**/*bazel*/*}",
       "js/ts.tsdk.path": "packages/cmk-frontend-vue/node_modules/typescript/lib"
+    },
+    "disableFolder": {
+      "eslint.enable": false,
+      "stylelint.enable": false,
+      "prettier.enable": false,
+      "vitest.enable": false
     }
   },
   "rust": {
@@ -151,6 +165,9 @@
         "${workspaceFolder}/packages/mk-sql/Cargo.toml"
       ],
       "rust-analyzer.check.command": "clippy"
+    },
+    "disableWorkspace": {
+      "rust-analyzer.initializeStopped": true
     }
   },
   "bazel": {

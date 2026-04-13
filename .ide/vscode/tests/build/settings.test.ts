@@ -38,58 +38,61 @@ describe('buildEffectiveSettings', () => {
   it('preserves settings for active profiles', () => {
     mockedIsActive.mockReturnValue(true)
 
-    const extensionSets = {
-      python: {
-        extensions: ['ms-python.python'],
-        disableSettings: { 'python.analysis.enabled': false }
-      }
+    const entry: SettingsEntry = {
+      ...baseEntry,
+      disableFolder: { 'python.analysis.enabled': false as any }
     }
 
-    const result = buildEffectiveSettings(baseEntry, 'test', extensionSets)
+    const result = buildEffectiveSettings(entry, 'test', null)
     expect(result.folderSettings['python.analysis.enabled']).toBe(true)
   })
 
-  it('applies disable-settings for inactive profiles', () => {
+  it('applies disableFolder for inactive profiles', () => {
     mockedIsActive.mockReturnValue(false)
 
-    const extensionSets = {
-      python: {
-        extensions: ['ms-python.python'],
-        disableSettings: { 'python.analysis.enabled': false }
-      }
+    const entry: SettingsEntry = {
+      ...baseEntry,
+      disableFolder: { 'python.analysis.enabled': false as any }
     }
 
-    const result = buildEffectiveSettings(baseEntry, 'test', extensionSets)
+    const result = buildEffectiveSettings(entry, 'test', null)
     expect(result.folderSettings['python.analysis.enabled']).toBe(false)
   })
 
-  it('only overrides keys that exist in the original settings', () => {
+  it('applies disableWorkspace for inactive profiles', () => {
     mockedIsActive.mockReturnValue(false)
 
-    const extensionSets = {
-      python: {
-        extensions: ['ms-python.python'],
-        disableSettings: { 'python.analysis.enabled': false, 'python.linting': false }
-      }
+    const entry: SettingsEntry = {
+      ...baseEntry,
+      disableWorkspace: { 'files.autoSave': 'off' as any }
     }
 
-    const result = buildEffectiveSettings(baseEntry, 'test', extensionSets)
-    expect(result.folderSettings['python.analysis.enabled']).toBe(false)
-    expect(result.folderSettings).not.toHaveProperty('python.linting')
+    const result = buildEffectiveSettings(entry, 'test', null)
+    expect(result.workspaceSettings['files.autoSave']).toBe('off')
   })
 
-  it('handles array extension entries (no disableSettings)', () => {
+  it('applies disableUser for inactive profiles', () => {
     mockedIsActive.mockReturnValue(false)
 
-    const extensionSets = {
-      bazel: ['bazelbuild.vscode-bazel']
+    const entry: SettingsEntry = {
+      ...baseEntry,
+      disableUser: { 'editor.theme': 'light' as any }
     }
 
-    const result = buildEffectiveSettings(baseEntry, 'test', extensionSets as any)
-    expect(result.folderSettings).toEqual({
-      'editor.fontSize': 14,
-      'python.analysis.enabled': true
-    })
+    const result = buildEffectiveSettings(entry, 'test', null)
+    expect(result.userSettings['editor.theme']).toBe('light')
+  })
+
+  it('adds new keys from disable settings', () => {
+    mockedIsActive.mockReturnValue(false)
+
+    const entry: SettingsEntry = {
+      ...baseEntry,
+      disableFolder: { 'python.linting': false as any }
+    }
+
+    const result = buildEffectiveSettings(entry, 'test', null)
+    expect(result.folderSettings['python.linting']).toBe(false)
   })
 
   it('handles empty settings entry', () => {

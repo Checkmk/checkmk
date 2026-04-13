@@ -7,7 +7,6 @@ import { describe, expect, it } from 'vitest'
 
 import {
   type ExtensionSets,
-  getDisableSettings,
   getExtensionIds,
   getOptionalFamilies,
   getRequiredFamilies,
@@ -42,8 +41,7 @@ describe('shellEscape', () => {
 const FIXTURE: ExtensionSets = {
   python: {
     extensions: ['ms-python.python', 'ms-python.vscode-pylance'],
-    required: true,
-    disableSettings: { 'python.analysis.enabled': false }
+    required: true
   },
   frontend: {
     extensions: ['vue.volar'],
@@ -118,21 +116,7 @@ describe('isDefaultPicked', () => {
   })
 })
 
-describe('getDisableSettings', () => {
-  it('returns disableSettings from config', () => {
-    expect(getDisableSettings(FIXTURE, 'python')).toEqual({
-      'python.analysis.enabled': false
-    })
-  })
-
-  it('returns empty object for array entries', () => {
-    expect(getDisableSettings(FIXTURE, 'bazel')).toEqual({})
-  })
-
-  it('returns empty object when disableSettings is not set', () => {
-    expect(getDisableSettings(FIXTURE, 'frontend')).toEqual({})
-  })
-})
+// getDisableSettings now reads from settings config via loadConfig — tested via integration
 
 describe('resolveVariables', () => {
   it('replaces ${workspaceFolder} in strings', () => {

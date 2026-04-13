@@ -4,8 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import logging
 
-import pytest
-
 from tests.testlib.site import Site, SiteFactory
 from tests.testlib.utils import get_services_with_status
 
@@ -30,6 +28,11 @@ SKIPPED_DUMPS = [
     "agent-2.2.0p8-ceph-17.2.6",
     "agent-2.2.0p14-proxmox",
     "snmp-enviromux-sems-e2d",
+    # No backwards compatibility
+    "agent-2.4.0p26-kubernetes",
+    "agent-2.4.0p26-special-openshift-v1.22.1-1839",
+    "agent-2.4.0p26-special-eks-v1.27.8-eks-8cb36c9",
+    "agent-2.4.0p26-special-openshift-v1.27.1-3507",
 ]
 
 # * The 'Postfix status' service has been renamed into 'Postfix status default'.
@@ -48,7 +51,6 @@ SKIPPED_CHECKS = [
 ]
 
 
-@pytest.mark.skip(reason="CMK-33440")
 def test_plugin_update(
     test_site_update: Site,
     site_factory_update: SiteFactory,

@@ -402,6 +402,7 @@ py_library(
         "//packages/cmk-plugins:elasticsearch",
         "//packages/cmk-plugins:gerrit",
         "//packages/cmk-plugins:ipmi",
+        "//packages/cmk-plugins:jenkins",
         "//packages/cmk-plugins:kube",
         "//packages/cmk-plugins:netapp",
         "//packages/cmk-plugins:proxmox_ve",

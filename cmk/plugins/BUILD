@@ -275,7 +275,6 @@ filegroup(
         "hpe_3par/libexec/agent_three_par",
         "ibmsvc/libexec/agent_ibmsvc",
         "innovaphone/libexec/agent_innovaphone",
-        "jenkins/libexec/agent_jenkins",
         "jira/libexec/agent_jira",
         "jolokia/libexec/agent_jolokia",
         "mobileiron/libexec/agent_mobileiron",

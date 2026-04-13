@@ -3,33 +3,75 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Mapping
 
-from cmk.gui.agent_bakery import RulespecGroupMonitoringAgentsAgentPlugins
-from cmk.gui.i18n import _
-from cmk.gui.plugins.wato.utils import HostRulespec, rulespec_registry
-from cmk.gui.valuespec import DropdownChoice
-from cmk.utils.rulesets.definition import RuleGroup
+from cmk.rulesets.v1 import Help, Title
+from cmk.rulesets.v1.form_specs import (
+    CascadingSingleChoice,
+    CascadingSingleChoiceElement,
+    DefaultValue,
+    DictElement,
+    Dictionary,
+    FixedValue,
+    TimeMagnitude,
+    TimeSpan,
+)
+from cmk.rulesets.v1.rule_specs import AgentConfig, Topic
 
 
-def _valuespec_agent_config_db2_mem() -> DropdownChoice[bool | None]:
-    return DropdownChoice(
-        title=_("Memory usage of DB2 (Linux, AIX, Solaris)"),
-        help=_(
+def migrate(value: object) -> Mapping[str, object]:
+    if isinstance(value, dict) and "deployment" in value:
+        return value
+    if value is None:
+        return {"deployment": ("do_not_deploy", None)}
+    return {"deployment": ("sync", None)}
+
+
+def _valuespec_agent_config_db2_mem() -> Dictionary:
+    return Dictionary(
+        help_text=Help(
             "Hosts configured via this rule get the plug-in <tt>db2_mem</tt> "
             "deployed. This will create one service for the memory consumption "
             "of every running DB2 instance found on the system."
         ),
-        choices=[
-            (True, _("Deploy DB2 memory plug-in")),
-            (None, _("Do not deploy DB2 memory plug-in")),
-        ],
+        elements={
+            "deployment": DictElement(
+                required=True,
+                parameter_form=CascadingSingleChoice(
+                    title=Title("Deployment type"),
+                    elements=(
+                        CascadingSingleChoiceElement(
+                            name="sync",
+                            title=Title("Deploy the plug-in and run it synchronously"),
+                            parameter_form=FixedValue(value=None),
+                        ),
+                        CascadingSingleChoiceElement(
+                            name="cached",
+                            title=Title("Deploy the plug-in and run it asynchronously"),
+                            parameter_form=TimeSpan(
+                                displayed_magnitudes=(
+                                    TimeMagnitude.HOUR,
+                                    TimeMagnitude.MINUTE,
+                                )
+                            ),
+                        ),
+                        CascadingSingleChoiceElement(
+                            name="do_not_deploy",
+                            title=Title("Do not deploy the DB2 memory plug-in"),
+                            parameter_form=FixedValue(value=None),
+                        ),
+                    ),
+                    prefill=DefaultValue("sync"),
+                ),
+            ),
+        },
+        migrate=migrate,
     )
 
 
-rulespec_registry.register(
-    HostRulespec(
-        group=RulespecGroupMonitoringAgentsAgentPlugins,
-        name=RuleGroup.AgentConfig("db2_mem"),
-        valuespec=_valuespec_agent_config_db2_mem,
-    )
+rule_spec_db2_mem = AgentConfig(
+    title=Title("Memory usage of DB2 (Linux, AIX, Solaris)"),
+    name="db2_mem",
+    topic=Topic.DATABASES,
+    parameter_form=_valuespec_agent_config_db2_mem,
 )

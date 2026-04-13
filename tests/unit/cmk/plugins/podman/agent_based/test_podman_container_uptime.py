@@ -17,9 +17,7 @@ from cmk.plugins.podman.agent_based.lib import (
     SectionPodmanContainerInspect,
     SectionPodmanContainerState,
 )
-from cmk.plugins.podman.agent_based.podman_container_inspect import (
-    parse_podman_container_inspect,
-)
+from cmk.plugins.podman.agent_based.podman_container_inspect import parse_podman_container_inspect
 from cmk.plugins.podman.agent_based.podman_container_uptime import (
     calculate_uptime,
     check_podman_container_uptime,
@@ -78,9 +76,11 @@ def test_check_podman_container_uptime_no_running_container() -> None:
     [
         pytest.param(
             SectionPodmanContainerInspect(
+                Name="test-container",
                 State=SectionPodmanContainerState(
                     Status="running",
                     StartedAt="2025-06-01T13:00:00+02:00",
+                    FinishedAt="0001-01-01T00:00:00Z",
                     ExitCode=0,
                     Health=ContainerHealth(
                         Log=[HealthCheckLog(Output="testOutput", ExitCode=0)],
@@ -110,9 +110,11 @@ def test_check_podman_container_uptime_no_running_container() -> None:
         ),
         pytest.param(
             SectionPodmanContainerInspect(
+                Name="test-container",
                 State=SectionPodmanContainerState(
                     Status="running",
                     StartedAt="2025-06-01T13:00:00+00:00",
+                    FinishedAt="0001-01-01T00:00:00Z",
                     ExitCode=0,
                     Health=ContainerHealth(
                         Log=[HealthCheckLog(Output="testOutput", ExitCode=0)],
@@ -142,9 +144,11 @@ def test_check_podman_container_uptime_no_running_container() -> None:
         ),
         pytest.param(
             SectionPodmanContainerInspect(
+                Name="test-container",
                 State=SectionPodmanContainerState(
                     Status="running",
                     StartedAt="2025-06-01T13:00:00-01:00",
+                    FinishedAt="0001-01-01T00:00:00Z",
                     ExitCode=0,
                     Health=ContainerHealth(
                         Log=[HealthCheckLog(Output="testOutput", ExitCode=0)],

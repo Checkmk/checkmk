@@ -10,7 +10,7 @@ from typing import Literal
 
 from pydantic import BaseModel
 
-from cmk.rulesets.v1 import form_specs, Help, Label, Message, Title
+from cmk.rulesets.v1 import Help, Label, Message, Title
 from cmk.rulesets.v1.form_specs import (
     BooleanChoice,
     CascadingSingleChoice,
@@ -258,8 +258,8 @@ def _auth_options(is_default_options: bool = True) -> Dictionary:
     )
 
 
-def _alias_entry() -> form_specs.Dictionary:
-    return form_specs.Dictionary(
+def _alias_entry() -> Dictionary:
+    return Dictionary(
         title=Title("Alias Value"),
         help_text=Help(
             "A TNS alias as defined in the <tt>tnsnames.ora</tt> file. "
@@ -267,16 +267,16 @@ def _alias_entry() -> form_specs.Dictionary:
             "via the TNS_ADMIN directory path."
         ),
         elements={
-            "alias": form_specs.DictElement(
+            "alias": DictElement(
                 required=True,
-                parameter_form=form_specs.String(),
+                parameter_form=String(),
             ),
         },
     )
 
 
-def _sid_entry() -> form_specs.Dictionary:
-    return form_specs.Dictionary(
+def _sid_entry() -> Dictionary:
+    return Dictionary(
         title=Title("SID"),
         help_text=Help(
             "The Oracle System Identifier (SID) that identifies "
@@ -287,21 +287,21 @@ def _sid_entry() -> form_specs.Dictionary:
             "the service name takes precedence."
         ),
         elements={
-            "sid": form_specs.DictElement(
+            "sid": DictElement(
                 required=True,
-                parameter_form=form_specs.String(),
+                parameter_form=String(),
             ),
         },
     )
 
 
-def _descriptor_entry() -> form_specs.Dictionary:
-    return form_specs.Dictionary(
+def _descriptor_entry() -> Dictionary:
+    return Dictionary(
         title=Title("Oracle Service Name"),
         elements={
-            "service_name": form_specs.DictElement(
+            "service_name": DictElement(
                 required=True,
-                parameter_form=form_specs.String(
+                parameter_form=String(
                     title=Title("Service Name"),
                     help_text=Help(
                         "The Oracle service name used to connect to the "
@@ -311,9 +311,9 @@ def _descriptor_entry() -> form_specs.Dictionary:
                     ),
                 ),
             ),
-            "instance_name": form_specs.DictElement(
+            "instance_name": DictElement(
                 required=False,
-                parameter_form=form_specs.String(
+                parameter_form=String(
                     title=Title("Instance name"),
                     help_text=Help(
                         "The Oracle instance name (ORACLE_SID running instance) to connect to. "
@@ -324,9 +324,9 @@ def _descriptor_entry() -> form_specs.Dictionary:
                     ),
                 ),
             ),
-            "sid": form_specs.DictElement(
+            "sid": DictElement(
                 required=False,
-                parameter_form=form_specs.String(
+                parameter_form=String(
                     title=Title("SID"),
                     help_text=Help(
                         "The Oracle System Identifier (SID) that identifies "
@@ -342,17 +342,17 @@ def _oracle_id() -> CascadingSingleChoice:
     return CascadingSingleChoice(
         title=Title("Oracle Database Identification"),
         elements=[
-            form_specs.CascadingSingleChoiceElement(
+            CascadingSingleChoiceElement(
                 name="alias",
                 title=Title("Alias"),
                 parameter_form=_alias_entry(),
             ),
-            form_specs.CascadingSingleChoiceElement(
+            CascadingSingleChoiceElement(
                 name="descriptor",
                 title=Title("Service Name"),
                 parameter_form=_descriptor_entry(),
             ),
-            form_specs.CascadingSingleChoiceElement(
+            CascadingSingleChoiceElement(
                 name="sid",
                 title=Title("SID"),
                 parameter_form=_sid_entry(),

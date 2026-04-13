@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Callable, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from typing import Final
 
 from cmk.base.configlib.loaded_config import LoadedConfigFragment
@@ -59,6 +59,7 @@ class CheckmkBaseApp:
             Fetcher[AgentRawData] | None,
         ],
         get_builtin_host_labels: Callable[[SiteId], Labels],
+        core_performance_settings: Callable[[LoadedConfigFragment], Mapping[str, int]],
     ) -> None:
         self.edition: Final = edition
         self.modes: Final = modes
@@ -69,3 +70,4 @@ class CheckmkBaseApp:
         self.make_fetcher_trigger: Final = make_fetcher_trigger
         self.make_metric_backend_fetcher: Final = make_metric_backend_fetcher
         self.get_builtin_host_labels: Final = get_builtin_host_labels
+        self.core_performance_settings: Final = core_performance_settings

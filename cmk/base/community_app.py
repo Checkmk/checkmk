@@ -42,6 +42,7 @@ def make_app() -> CheckmkBaseApp:
         make_fetcher_trigger=lambda *a, **kw: PlainFetcherTrigger(omd_root=omd_root),
         make_metric_backend_fetcher=lambda *args: None,
         get_builtin_host_labels=get_builtin_host_labels,
+        core_performance_settings=lambda _: {},
     )
 
 

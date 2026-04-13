@@ -88,12 +88,6 @@ from cmk.utils import log
 from cmk.utils.local_secrets import SiteInternalSecret
 from cmk.utils.log import console, section
 
-try:
-    from cmk.base.nonfree.diagnostics import (  # type: ignore[import-not-found, unused-ignore]
-        cmc_specific_attrs as core_performance_settings,
-    )
-except ImportError:
-    core_performance_settings = lambda *_, **__: {}
 # TODO: why is there localization in this module?
 
 
@@ -244,7 +238,7 @@ def handler(
         log.logger.setLevel(logging.INFO)
         dump = DiagnosticsDump(
             loading_result.loaded_config,
-            core_performance_settings,
+            ctx.core_performance_settings,
             omd_config,
             cmk.utils.paths.omd_root,
             deserialize_cl_parameters(args),

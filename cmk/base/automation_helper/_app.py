@@ -293,6 +293,7 @@ def _execute_automation_endpoint(
                     make_fetcher_trigger=app.make_fetcher_trigger,
                     make_metric_backend_fetcher=app.make_metric_backend_fetcher,
                     get_builtin_host_labels=app.get_builtin_host_labels,
+                    core_performance_settings=app.core_performance_settings,
                 ),
                 payload.name,
                 list(payload.args),

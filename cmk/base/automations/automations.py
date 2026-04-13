@@ -6,7 +6,7 @@
 import enum
 import os
 import sys
-from collections.abc import Callable, Iterable, Sequence
+from collections.abc import Callable, Iterable, Mapping, Sequence
 from contextlib import nullcontext, redirect_stdout, suppress
 from dataclasses import dataclass
 from typing import assert_never
@@ -74,6 +74,7 @@ class AutomationContext:
         Fetcher[AgentRawData] | None,
     ]
     get_builtin_host_labels: Callable[[SiteId], Labels]
+    core_performance_settings: Callable[[LoadedConfigFragment], Mapping[str, int]]
 
 
 @dataclass(frozen=True)

@@ -13,6 +13,13 @@ import { log } from '../core/log'
 import { safeExec } from '../core/shell'
 import { runCommand, waitForTask } from '../core/tasks'
 import { promptSocketProxy, registerProxyCleanup } from './proxy'
+import {
+  BRIDGE_DIR,
+  KEEPALIVE_READY,
+  clearKeepaliveReady,
+  runInKeepaliveTerminal,
+  setKeepaliveTerminal
+} from './sudoBridge'
 
 // ── Types ──
 
@@ -48,6 +55,21 @@ const STATUS_DIR = path.join(os.tmpdir(), 'cmk-omd-status')
  *  site names, controlled paths). */
 function sudoSh(inner: string): string {
   return `sudo sh -c "${inner.replace(/"/g, '\\"')}"`
+}
+
+/**
+ * Run a sudo-requiring OMD command, preferring the authenticated keepalive
+ * terminal (no re-prompt) and falling back to a dedicated task terminal.
+ * Returns the exit code, or -1 if the command could not be launched.
+ */
+export async function runOmdSudo(label: string, inner: string): Promise<number> {
+  const bridged = await runInKeepaliveTerminal(inner, 60_000)
+  if (bridged) return bridged.exitCode
+  const exec = runCommand(label, sudoSh(inner))
+  if (!exec) return -1
+  const execution = await (exec as unknown as Promise<vscode.TaskExecution>)
+  const rc = await waitForTask(execution)
+  return rc ?? -1
 }
 
 // ── Site discovery (no sudo required) ──
@@ -153,6 +175,11 @@ export async function forceRefreshOmdStatusFiles(): Promise<void> {
         `omd status --bare ${s.name} > ${path.join(STATUS_DIR, `${s.name}.status`)} 2>&1 || true`
     )
     .join(' ; ')
+
+  // Prefer the keepalive bridge — no new TTY, no re-prompt.
+  const bridged = await runInKeepaliveTerminal(statusInner, 10_000)
+  if (bridged) return
+
   const exec = runCommand('OMD Status Refresh', sudoSh(statusInner))
   if (exec) await waitForTask(exec)
 }
@@ -248,13 +275,13 @@ export function registerOmd(
     /* ignore */
   }
 
-  const cmds: [string, (site: string) => string][] = [
-    ['cmk.omdStart', (site) => `sudo omd start ${shellEscape(site)}`],
-    ['cmk.omdStop', (site) => `sudo omd stop ${shellEscape(site)}`],
-    ['cmk.omdRestart', (site) => `sudo omd restart ${shellEscape(site)}`]
+  const cmds: [string, string][] = [
+    ['cmk.omdStart', 'start'],
+    ['cmk.omdStop', 'stop'],
+    ['cmk.omdRestart', 'restart']
   ]
 
-  for (const [id, cmdFn] of cmds) {
+  for (const [id, action] of cmds) {
     context.subscriptions.push(
       vscode.commands.registerCommand(id, async (siteName?: string) => {
         if (!siteName) {
@@ -264,19 +291,23 @@ export function registerOmd(
         }
         const label = id.replace('cmk.omd', 'OMD ')
         log(`${label}: ${siteName}`)
-        const exec = runCommand(`${label} ${siteName}`, cmdFn(siteName))
-        if (exec) {
-          await waitForTask(exec)
-          triggerRefresh()
-        }
+        await omdServiceCommand(action, siteName, '')
+        triggerRefresh()
       })
     )
+  }
+
+  try {
+    fs.mkdirSync(BRIDGE_DIR, { recursive: true })
+  } catch {
+    /* ignore */
   }
 
   let _keepaliveTerm: vscode.Terminal | null = null
   context.subscriptions.push(
     vscode.commands.registerCommand('cmk.omdAuth', () => {
       log('OMD sudo authenticate')
+      clearKeepaliveReady()
       if (_keepaliveTerm) {
         try {
           _keepaliveTerm.dispose()
@@ -287,6 +318,7 @@ export function registerOmd(
 
       const term = vscode.window.createTerminal({ name: 'OMD: sudo keepalive' })
       _keepaliveTerm = term
+      setKeepaliveTerminal(term)
       term.show()
 
       const sites = detectOmdSites()
@@ -298,11 +330,17 @@ export function registerOmd(
         .join(' ; ')
       const statusCmds = sudoSh(statusInner)
 
+      // Background the refresh loop so the foreground shell returns to an
+      // interactive prompt — sendText() can then drive sudo commands without
+      // re-prompting (they inherit this TTY's sudo ticket). zsh rejects
+      // `cmd & && next`, so wrap the backgrounded subshell in `{ … & }` to
+      // produce a compound command with exit status 0 that can chain via &&.
       const loopCmd = [
+        `sudo -v`,
         `${statusCmds}`,
-        `echo "✓ sudo authenticated — keepalive running (2 min interval, 1h)"`,
-        `for i in $(seq 1 30); do sleep 120 && sudo -v && ${statusCmds} && echo "✓ sudo refreshed ($i/30)"; done`,
-        `echo "keepalive expired" && exit`
+        `{ (for i in $(seq 1 30); do sleep 120 && sudo -n -v 2>/dev/null && ${statusCmds}; done) & }`,
+        `touch ${shellEscape(KEEPALIVE_READY)}`,
+        `echo "✓ sudo authenticated — keepalive running in background (1h). This shell is free for OMD bridge commands."`
       ].join(' && ')
       term.sendText(loopCmd)
 
@@ -313,6 +351,8 @@ export function registerOmd(
         if (closedTerm === term) {
           disposable.dispose()
           _keepaliveTerm = null
+          setKeepaliveTerminal(null)
+          clearKeepaliveReady()
           triggerRefresh()
         }
       })
@@ -368,12 +408,17 @@ const ALLOWED_OMD_ACTIONS = new Set([
   'disable'
 ])
 
-export function omdServiceCommand(
+/**
+ * Run an OMD action (start/stop/restart/rm/enable/disable) via the sudo
+ * bridge when possible, falling back to a task terminal. Returns the exit
+ * code of the underlying shell, or -1 if the action couldn't be launched.
+ */
+export async function omdServiceCommand(
   action: string,
   siteName: string,
   serviceName: string
-): ReturnType<typeof runCommand> {
-  if (!ALLOWED_OMD_ACTIONS.has(action)) return
+): Promise<number> {
+  if (!ALLOWED_OMD_ACTIONS.has(action)) return -1
   const target = serviceName ? `${serviceName} (${siteName})` : siteName
   const label = `OMD ${action} ${target}`
   let omdAction: string
@@ -388,6 +433,5 @@ export function omdServiceCommand(
   }
   const statusFile = path.join(STATUS_DIR, `${siteName}.status`)
   const inner = `${omdAction} ; omd status --bare ${siteName} > ${statusFile} 2>&1 || true`
-  const cmd = sudoSh(inner)
-  return runCommand(label, cmd)
+  return runOmdSudo(label, inner)
 }

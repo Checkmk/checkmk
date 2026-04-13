@@ -8,7 +8,6 @@ import * as vscode from 'vscode'
 
 import { shellEscape } from '../../core/config'
 import { log } from '../../core/log'
-import { waitForTask } from '../../core/tasks'
 import { hasLogsForService, showServiceLogs, showSiteLogs } from '../../omd/logs'
 import { createSite, omdServiceCommand } from '../../omd/omd'
 import { KNOWN_SOCKETS, promptAndStartProxy, promptSocketProxy, stopProxy } from '../../omd/proxy'
@@ -23,23 +22,13 @@ export async function handleMessage(
   switch (msg.type) {
     case 'omdSiteAction': {
       log(`OMD site ${msg.action}: ${msg.site}`)
-      const exec = omdServiceCommand(msg.action as string, msg.site as string, '')
-      if (exec) {
-        await waitForTask(exec)
-      }
+      await omdServiceCommand(msg.action as string, msg.site as string, '')
       refreshAll()
       return true
     }
     case 'omdServiceAction': {
       log(`OMD service ${msg.action}: ${msg.service} on ${msg.site}`)
-      const exec = omdServiceCommand(
-        msg.action as string,
-        msg.site as string,
-        msg.service as string
-      )
-      if (exec) {
-        await waitForTask(exec)
-      }
+      await omdServiceCommand(msg.action as string, msg.site as string, msg.service as string)
       refreshAll()
       return true
     }
@@ -106,11 +95,8 @@ export async function handleMessage(
       )
       if (confirm === 'Delete') {
         showSectionLoading('omd')
-        const exec = omdServiceCommand('rm', msg.site as string, '')
-        if (exec) {
-          await waitForTask(exec)
-          refreshAll()
-        }
+        await omdServiceCommand('rm', msg.site as string, '')
+        refreshAll()
       }
       return true
     }

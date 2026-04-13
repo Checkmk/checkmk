@@ -12,6 +12,7 @@ import { shellEscape } from '../core/config'
 import { log } from '../core/log'
 import { safeExec } from '../core/shell'
 import { runCommand, waitForTask } from '../core/tasks'
+import { ensureKeepaliveAuth, hasKeepalive, runInKeepaliveTerminal } from './sudoBridge'
 
 const LOG_LIST_DIR = path.join(os.tmpdir(), 'cmk-omd-logs')
 
@@ -124,27 +125,37 @@ interface SiteLogListing {
 
 /**
  * Enumerate every regular file under `/omd/sites/<site>/var/log/`.
- * Tries direct → `sudo -n` → terminal task fallback. The terminal task is
- * needed because `tty_tickets` makes the keepalive terminal's sudo cache
- * invisible to Node `execSync` — only a fresh tty can prompt for auth.
+ * Prefers the keepalive terminal's authenticated sudo session (no re-prompt).
+ * Falls back to a fresh `runCommand` terminal task if the bridge is unavailable
+ * or times out.
  */
 async function listAllSiteLogFiles(site: string): Promise<SiteLogListing> {
   const baseDir = `/omd/sites/${site}/var/log`
-  const cmd = `find ${shellEscape(baseDir)} -type f -print 2>/dev/null`
-  const direct = safeExec(cmd, { timeout: 5000 })
+  const findCmd = `find ${shellEscape(baseDir)} -type f -print 2>/dev/null`
+
+  // Fast paths that don't need sudo or run via the caller's TTY
+  const direct = safeExec(findCmd, { timeout: 5000 })
   if (direct) return { files: direct.split('\n').filter(Boolean), failed: false }
-  const sudoN = safeExec(`sudo -n ${cmd}`, { timeout: 5000 })
+  const sudoN = safeExec(`sudo -n ${findCmd}`, { timeout: 5000 })
   if (sudoN) return { files: sudoN.split('\n').filter(Boolean), failed: false }
 
+  // Prefer the keepalive bridge. If no session is active, auto-prompt auth.
+  if (!hasKeepalive()) {
+    const authed = await ensureKeepaliveAuth()
+    if (!authed) return { files: [], failed: true }
+  }
+  const bridged = await runInKeepaliveTerminal(findCmd)
+  if (bridged) {
+    const files = bridged.output.split('\n').filter((l) => l.startsWith('/'))
+    return { files, failed: bridged.exitCode !== 0 && files.length === 0 }
+  }
+
+  // Bridge unavailable / timed out → fall back to a dedicated task terminal.
   fs.mkdirSync(LOG_LIST_DIR, { recursive: true })
   const listFile = path.join(LOG_LIST_DIR, `${site}.list`)
   const inner =
     `find ${shellEscape(baseDir)} -type f -print > ${shellEscape(listFile)} 2>&1 ; ` +
     `chmod 644 ${shellEscape(listFile)}`
-  // runCommand declares its return as TaskExecution but actually returns a
-  // Thenable<TaskExecution>; we MUST await it so waitForTask's identity
-  // comparison (`e.execution === execution`) can match — otherwise it sits
-  // idle until the 10-minute fallback timeout.
   const execMaybe = runCommand(`OMD ${site}: discover logs`, sudoSh(inner))
   if (!execMaybe) return { files: [], failed: true }
   const execution = await (execMaybe as unknown as Promise<vscode.TaskExecution>)

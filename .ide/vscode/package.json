@@ -2,7 +2,7 @@
   "name": "cmk-vscode",
   "displayName": "CMK Dev Tools for VS Code",
   "description": "Build commands and helpers for Checkmk development",
-  "version": "0.1.55",
+  "version": "0.1.56",
   "publisher": "checkmk",
   "engines": {
     "vscode": "^1.85.0"

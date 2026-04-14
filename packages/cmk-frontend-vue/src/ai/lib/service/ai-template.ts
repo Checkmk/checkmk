@@ -233,14 +233,6 @@ export class AiTemplateService extends ServiceBase {
 
   public async execUserActionButton(userAction: AiActionButton) {
     if (Array.isArray(this.config.userActions?.actionButtons)) {
-      this.config.userActions.actionButtons?.map((a) => {
-        if (a.action_id === userAction.action_id) {
-          a.executed = true
-        }
-
-        return a
-      })
-
       this.addElement({
         role: AiRole.user,
         content: [

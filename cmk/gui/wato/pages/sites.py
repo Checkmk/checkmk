@@ -1624,7 +1624,7 @@ class ModeEditSiteGlobals(ABCGlobalSettingsMode):
         )
 
         if not is_wato_slave_site():
-            if not has_wato_slave_sites():
+            if not has_wato_slave_sites() and not self._current_settings:
                 html.show_error(
                     _(
                         "You can not configure site specific global settings "

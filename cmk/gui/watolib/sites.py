@@ -742,7 +742,8 @@ def site_globals_editable(site_id: SiteId, site: SiteConfiguration) -> bool:
 
     # Local site: Don't enable site specific locals when no remote sites configured
     if not has_wato_slave_sites():
-        return False
+        # Show the site specific globals only for the central site if it includes changes
+        return bool(site.get("globals"))
 
     return is_replication_enabled(site) or site_is_local(active_config, site_id)
 

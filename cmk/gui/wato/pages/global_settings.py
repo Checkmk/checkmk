@@ -38,7 +38,7 @@ from cmk.gui.page_menu import (
     PageMenuSearch,
     PageMenuTopic,
 )
-from cmk.gui.site_config import configured_sites
+from cmk.gui.site_config import configured_sites, has_wato_slave_sites
 from cmk.gui.type_defs import ActionResult, GlobalSettings, PermissionName
 from cmk.gui.utils import escaping
 from cmk.gui.utils.csrf_token import check_csrf_token
@@ -415,6 +415,13 @@ class ABCEditGlobalSettingMode(WatoMode):
                 domain.ident(): {"need_apache_reload": self._config_variable.need_apache_reload()}
             },
         )
+
+        if (
+            self.name() == "edit_site_configvar"
+            and not has_wato_slave_sites()
+            and not self._current_settings
+        ):
+            return redirect(mode_url("sites"))
 
         return redirect(self._back_url())
 

@@ -1,0 +1,8 @@
+src/**
+node_modules/**
+.vscode/**
+tsconfig.json
+esbuild.js
+package-lock.json
+BUILD
+*.vsix

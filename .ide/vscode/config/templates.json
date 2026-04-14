@@ -1,0 +1,24 @@
+{
+  "Check Plugin": {
+    "description": "Agent-based check plugin with section, discovery, and check function",
+    "targetDir": "cmk/plugins/${name}/agent_based",
+    "files": {
+      "check_plugin.py": "snippets:CMK Check Plugin",
+      "agent_section.py": "snippets:CMK Agent Section"
+    }
+  },
+  "Special Agent": {
+    "description": "Special agent with argument parsing and section output",
+    "targetDir": "cmk/plugins/${name}/special_agent",
+    "files": {
+      "agent_${name}.py": "snippets:CMK Special Agent"
+    }
+  },
+  "Form Spec (Check Parameters)": {
+    "description": "Check parameter form spec for the ruleset UI",
+    "targetDir": "cmk/plugins/${name}/rulesets",
+    "files": {
+      "${name}.py": "snippets:CMK Check Parameters (Form Spec)"
+    }
+  }
+}

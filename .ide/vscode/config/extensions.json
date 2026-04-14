@@ -1,0 +1,39 @@
+{
+  "bazel": {
+    "extensions": ["BazelBuild.vscode-bazel"],
+    "required": true
+  },
+  "python": {
+    "extensions": [
+      "ms-python.python",
+      "ms-python.vscode-pylance",
+      "charliermarsh.ruff",
+      "matangover.mypy",
+      "monosans.djlint"
+    ]
+  },
+  "frontend": {
+    "extensions": [
+      "Vue.volar",
+      "dbaeumer.vscode-eslint",
+      "esbenp.prettier-vscode",
+      "stylelint.vscode-stylelint",
+      "vitest.explorer"
+    ]
+  },
+  "rust": {
+    "extensions": ["rust-lang.rust-analyzer", "swellaby.vscode-rust-test-adapter"],
+    "defaultPicked": false
+  },
+  "general": {
+    "extensions": [],
+    "required": true
+  },
+  "markdown": {
+    "extensions": ["davidanson.vscode-markdownlint", "esbenp.prettier-vscode"]
+  },
+  "cspell": {
+    "extensions": ["streetsidesoftware.code-spell-checker"],
+    "defaultPicked": false
+  }
+}

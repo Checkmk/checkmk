@@ -90,11 +90,10 @@ def test_check_oracle_instance_uptime_error() -> None:
         )
 
 
-@pytest.mark.xfail(strict=True, reason="Crash group 3653: ValueError on negative up_seconds")
 def test_check_oracle_instance_uptime_negative_uptime() -> None:
-    """Negative up_seconds from Oracle causes ValueError in render.timespan."""
+    """Negative up_seconds from Oracle should produce a warning, not crash."""
     with time_machine.travel(datetime.datetime.fromtimestamp(1643360266, tz=ZoneInfo("UTC"))):
-        results = list(
+        assert list(
             check_plugin_oracle_instance_uptime.check_function(
                 item="OBIP",
                 params={},
@@ -108,9 +107,9 @@ def test_check_oracle_instance_uptime_negative_uptime() -> None:
                     ),
                 },
             )
-        )
-        # Should not crash — negative uptime is an anomaly but should be handled gracefully
-        assert any(isinstance(r, Result) for r in results)
+        ) == [
+            Result(state=State.WARN, summary="Uptime: invalid negative value (-6689s)"),
+        ]
 
 
 def test_check_oracle_instance_uptime_pdb_mounted() -> None:

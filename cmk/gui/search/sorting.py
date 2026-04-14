@@ -42,14 +42,12 @@ def _get_alphabetical_sorter(items: list[UnifiedSearchResultItem]) -> None:
 # is out-of-scope.
 def _get_weighted_index_sorter(query: str) -> Sorter:
     query_ = query.lower()
-    topic_ranking_map = {topic: rank for rank, topic in enumerate(_TOPIC_RANKING)}
-    unranked_topic = max(topic_ranking_map.values()) + 1
 
     def algorithm(item: UnifiedSearchResultItem) -> tuple[int, _MatchRank, bool, str, str]:
         title_ = item.title.lower()
         topic_ = item.topic.lower()
 
-        topic_rank = topic_ranking_map.get(topic_, unranked_topic)
+        topic_rank = _get_topic_ranking(topic_)
         title_match_rank = _get_title_match_rank(title_, query_)
         deprecation_rank = _get_deprecation_rank(title_)
 
@@ -74,6 +72,13 @@ _TOPIC_RANKING = (
     "vm, cloud, container",
     "enforced services",
 )
+
+
+def _get_topic_ranking(topic: str) -> int:
+    if topic in _TOPIC_RANKING:
+        return _TOPIC_RANKING.index(topic)
+
+    return len(_TOPIC_RANKING)
 
 
 class _MatchRank(enum.IntEnum):

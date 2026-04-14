@@ -212,7 +212,6 @@ def test_save_text_to_file(tmp_path: Path, data: str) -> None:
     assert store.load_text_from_file(path) == data
 
 
-@pytest.mark.xfail(strict=True, reason="Crash group 3380: SyntaxError on null bytes in file")
 def test_load_object_from_file_null_bytes(tmp_path: Path) -> None:
     """A file containing null bytes should return default, not crash with SyntaxError."""
     path = tmp_path / "corrupted.mk"

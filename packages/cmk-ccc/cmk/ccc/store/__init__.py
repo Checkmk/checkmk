@@ -192,7 +192,11 @@ def load_object_from_file(path: Path, *, default: Any, lock: bool = False) -> An
         tracer.simple_span("load_object_from_file", path),
         _leave_locked_unless_exception(path) if lock else nullcontext(),
     ):
-        return ObjectStore(path, serializer=DimSerializer()).read_obj(default=default)
+        try:
+            return ObjectStore(path, serializer=DimSerializer()).read_obj(default=default)
+        except (SyntaxError, ValueError):
+            logger.warning("Failed to deserialize %s, returning default", path)
+            return default
 
 
 def load_object_from_pickle_file(path: Path, *, default: Any, lock: bool = False) -> Any:

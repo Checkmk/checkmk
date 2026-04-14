@@ -14,8 +14,17 @@ description:
  Unless mails get moved between mailboxes, the least recenly modified mail should also
  be the oldest one and the most recently modified mail should be the newest.
 
- As for EWS the mailbox to be contacted can be specified by an email address which in contrast to
- IMAP might be different from the username provided with legacy OAuth credentials (but doesn't
- have to be). For that case as well as for (non-legacy) OAuth2 credentials using ClientID and
- TenantID this email address (a.k.a. 'PrimarySmtpAddress') can/must be specified in the setup
- for this check (available for EWS only).
+ The following protocols and authentication methods are supported for fetching:
+
+ IMAP: Username/password (basic authentication).
+
+ EWS (Exchange Web Services): Username/password (basic authentication) or OAuth2 using
+ ClientID, TenantID, and a client secret. When using EWS, the mailbox can optionally be
+ identified by an email address (a.k.a. 'PrimarySmtpAddress') instead of the username.
+
+ Microsoft Exchange Online (Graph API): Microsoft Entra ID authentication via an OAuth2
+ connection. The connection can be configured directly in the check rule or managed centrally
+ via Setup > Microsoft Entra ID connections and then referenced in the rule. In distributed
+ environments, the OAuth2 connection can be created on the central site while the OAuth2
+ authentication process (redirect URI) is handled by a different remote site. The site used
+ for the authentication redirect can be selected when configuring the OAuth2 connection.

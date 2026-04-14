@@ -8,10 +8,25 @@ item:
  The name of the device
 
 description:
- Sends out special emails to a defined mail address using either the SMTP protocol or an
- EWS connection and then tries to receive these mails back by querying the inbox of an IMAP,
- POP3 or EWS mailbox.
+ Sends out special emails to a defined mail address and then tries to receive these mails back
+ by querying the inbox of a mailbox. With this check you can verify that your whole mail
+ delivery process is working.
 
- With this check you can verify that your whole mail delivery progress is working.
+ The following protocols and authentication methods are supported for sending:
+
+ SMTP: Username/password (basic authentication).
+
+ EWS (Exchange Web Services): Username/password (basic authentication) or OAuth2 using
+ ClientID, TenantID, and a client secret.
+
+ Microsoft Exchange Online (Graph API): Microsoft Entra ID authentication via an OAuth2
+ connection. The connection can be configured directly in the check rule or managed centrally
+ via Setup > Microsoft Entra ID connections and then referenced in the rule. In distributed
+ environments, the OAuth2 connection can be created on the central site while the OAuth2
+ authentication process (redirect URI) is handled by a different remote site. The site used
+ for the authentication redirect can be selected when configuring the OAuth2 connection.
+
+ The same protocols (except SMTP) and authentication methods are supported for receiving,
+ with IMAP and POP3 added as additional options (basic authentication only).
 
  This check can be configured using WATO.

@@ -1202,6 +1202,23 @@ py_library(
 )
 
 py_library(
+    name = "autocompleters",
+    srcs = ["autocompleters.py"],
+    imports = ["../.."],
+    visibility = [
+        "//cmk:__subpackages__",
+        "//tests:__subpackages__",
+    ],
+    deps = [
+        ":exceptions",
+        ":i18n",
+        ":pages",
+        ":type_defs",
+        "//cmk/gui/valuespec",
+    ],
+)
+
+py_library(
     name = "session",
     srcs = ["session.py"],
     imports = ["../.."],
@@ -1242,6 +1259,7 @@ py_library(
             "agent_commands.py",
             "alarm.py",
             "auth.py",
+            "autocompleters.py",
             "breadcrumb.py",
             "cert_info.py",
             "color.py",
@@ -1335,6 +1353,7 @@ py_library(
         ":agent_commands",
         ":alarm",
         ":auth",
+        ":autocompleters",
         ":breadcrumb",
         ":cert_info",
         ":color",

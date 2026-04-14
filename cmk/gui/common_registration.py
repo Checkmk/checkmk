@@ -286,7 +286,8 @@ def register(
         endpoint_family_registry,
     )
     valuespec.register(page_registry)
-    autocompleters.register(page_registry, autocompleter_registry)
+    autocompleters.register(page_registry)
+    _register_visuals_autocompleters(autocompleter_registry)
     werks.register(page_registry)
     message.register(page_registry, cron_job_registry)
     cmk.gui.help.register(page_registry)
@@ -353,3 +354,27 @@ def register(
     register_oauth2_connections(
         mode_registry, page_registry, main_module_registry, permission_registry
     )
+
+
+def _register_visuals_autocompleters(
+    autocompleter_registry: AutocompleterRegistry,
+) -> None:
+    from cmk.gui.visuals._autocompleters import (
+        check_command_autocompleter,
+        kubernetes_labels_autocompleter,
+        label_autocompleter,
+        monitored_hostname_autocompleter,
+        monitored_service_description_autocompleter,
+    )
+
+    autocompleter_registry.register_autocompleter(
+        "monitored_hostname", monitored_hostname_autocompleter
+    )
+    autocompleter_registry.register_autocompleter("check_cmd", check_command_autocompleter)
+    autocompleter_registry.register_autocompleter(
+        "monitored_service_description", monitored_service_description_autocompleter
+    )
+    autocompleter_registry.register_autocompleter(
+        "kubernetes_labels", kubernetes_labels_autocompleter
+    )
+    autocompleter_registry.register_autocompleter("label", label_autocompleter)

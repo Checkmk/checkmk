@@ -392,6 +392,7 @@ py_wheel(
         "//cmk/gui:agent_commands",
         "//cmk/gui:alarm",
         "//cmk/gui:auth",
+        "//cmk/gui:autocompleters",
         "//cmk/gui:breadcrumb",
         "//cmk/gui:cert_info",
         "//cmk/gui:color",

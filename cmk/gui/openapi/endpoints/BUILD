@@ -6,8 +6,7 @@ py_library(
     srcs = glob(
         include = ["**/*.py"],
         exclude = [
-            # Kept in monolithic gui: imported by community_registration / ldap_integration
-            "autocomplete/**/*.py",
+            # Kept in monolithic gui: imported by community_registration
             "metric/**/*.py",
             # Blocked: needs cmk.gui.quick_setup (monolithic, needs cmk.plugins)
             "quick_setup/**/*.py",
@@ -19,6 +18,7 @@ py_library(
         "//tests:__subpackages__",
     ],
     deps = [
+        "//cmk/gui:autocompleters",
         "//cmk/gui:config",
         "//cmk/gui:customer",
         "//cmk/gui:default_permissions",
@@ -81,7 +81,6 @@ py_library(
 filegroup(
     name = "gui_srcs",
     srcs = glob(include = [
-        "autocomplete/**/*.py",
         "metric/**/*.py",
         "quick_setup/**/*.py",
     ]),

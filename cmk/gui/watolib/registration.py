@@ -164,6 +164,7 @@ def register(
     timeperiod_usage_finder_registry.register(find_timeperiod_usage_in_notification_rules)
     config_variable_groups.register(config_variable_group_registry)
     autocompleter_registry.register_autocompleter("config_hostname", config_hostname_autocompleter)
+    _register_autocompleters(autocompleter_registry)
     automation_background_job.register(job_registry, automation_command_registry)
     hooks.register_builtin("validate-host", builtin_attributes.validate_host_parents)
     hooks.register_builtin("ldap-sync-finished", handle_ldap_sync_finished)
@@ -266,3 +267,17 @@ def _register_form_specs() -> None:
     register_recomposer_function(Proxy, recompose_proxy)
     register_recomposer_function(TimePeriod, recompose_time_period)
     register_recomposer_function(InternalProxy, recompose_internal_proxy)
+
+
+def _register_autocompleters(autocompleter_registry: AutocompleterRegistry) -> None:
+    from ._autocompleters import (
+        check_types_autocompleter,
+        hostgroup_autocompleter,
+        tag_group_autocompleter,
+        tag_group_opt_autocompleter,
+    )
+
+    autocompleter_registry.register_autocompleter("allgroups", hostgroup_autocompleter)
+    autocompleter_registry.register_autocompleter("tag_groups", tag_group_autocompleter)
+    autocompleter_registry.register_autocompleter("tag_groups_opt", tag_group_opt_autocompleter)
+    autocompleter_registry.register_autocompleter("check_types", check_types_autocompleter)

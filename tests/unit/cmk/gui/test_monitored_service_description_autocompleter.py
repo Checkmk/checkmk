@@ -3,8 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.gui.autocompleters import monitored_service_description_autocompleter
 from cmk.gui.config import Config
+from cmk.gui.visuals._autocompleters import monitored_service_description_autocompleter
 from cmk.livestatus_client.testing import MockLiveStatusConnection
 
 

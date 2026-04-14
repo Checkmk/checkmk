@@ -26,6 +26,7 @@ from ._add_to_visual import get_visual_choices as get_visual_choices
 from ._add_to_visual import page_menu_dropdown_add_to_visual as page_menu_dropdown_add_to_visual
 from ._add_to_visual import page_menu_topic_add_to as page_menu_topic_add_to
 from ._add_to_visual import set_page_context as set_page_context
+from ._autocompleters import live_query_to_choices as live_query_to_choices
 from ._breadcrumb import visual_page_breadcrumb as visual_page_breadcrumb
 from ._filter_context import active_context_from_request as active_context_from_request
 from ._filter_context import collect_filters as collect_filters

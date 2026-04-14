@@ -37,18 +37,19 @@ const normalizedData = computed(() =>
         role="row"
       >
         <div class="ucl-accessibility-table__table-cell" role="cell">
-          <span
-            v-for="(group, groupIdx) in item.keys"
-            :key="`${groupIdx}-${group.join('+')}`"
-            class="ucl-accessibility-table__key-group"
-          >
-            <template v-for="(keyName, keyIdx) in group" :key="`${keyIdx}-${keyName}`">
-              <span class="ucl-accessibility-table__key-pill">{{ keyName }}</span>
-              <span v-if="keyIdx < group.length - 1" class="ucl-accessibility-table__key-separator"
-                >+</span
-              >
-            </template>
-          </span>
+          <template v-for="(group, groupIdx) in item.keys" :key="`${groupIdx}-${group.join('+')}`">
+            <span v-if="groupIdx > 0" class="ucl-accessibility-table__key-separator">or</span>
+            <span class="ucl-accessibility-table__key-group">
+              <template v-for="(keyName, keyIdx) in group" :key="`${keyIdx}-${keyName}`">
+                <span class="ucl-accessibility-table__key-pill">{{ keyName }}</span>
+                <span
+                  v-if="keyIdx < group.length - 1"
+                  class="ucl-accessibility-table__key-separator"
+                  >+</span
+                >
+              </template>
+            </span>
+          </template>
         </div>
         <div class="ucl-accessibility-table__table-cell" role="cell">
           {{ item.description }}
@@ -109,6 +110,7 @@ const normalizedData = computed(() =>
 .ucl-accessibility-table__key-pill {
   background: var(--ucl-detail-table-pill-bg-color);
   border-radius: 4px;
+  margin: 2px 0;
   padding: 4px 8px;
   color: var(--ucl-cta-banner-title-color);
   display: inline-block;

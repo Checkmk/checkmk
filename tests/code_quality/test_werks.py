@@ -103,8 +103,6 @@ def test_write_precompiled_werks(werks_loader_empty: WerksLoader) -> None:
     assert len(cce_werks) > 10
     cmk.werks.utils.write_precompiled_werks(werks_loader_empty.base_dir / "werks-cloud", cce_werks)
 
-    # We currently don't have cse werks (yet)
-    assert len(cse_werks) == 0
     cmk.werks.utils.write_precompiled_werks(werks_loader_empty.base_dir / "werks-saas", cse_werks)
 
     werks_loaded = werks_loader_empty.load()

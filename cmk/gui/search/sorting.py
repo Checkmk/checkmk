@@ -49,23 +49,21 @@ def _get_weighted_index_sorter(query: str) -> Sorter:
         title_ = item.title.lower()
         topic_ = item.topic.lower()
 
-        # TODO: once metadata is factored out of code, introduce a "deprecated" attribute.
-        # NOTE: need to check for both translated and untranslated patterns since some titles are
-        # don't have translations.
-        is_deprecated = any(pattern in title_ for pattern in ("(deprecated)", _("(deprecated)")))
-
         if query_ == title_:
             match_rank = _MatchRank.EXACT_TITLE
         elif f"({query_})" in title_:
             match_rank = _MatchRank.EXACT_TITLE_IN_PARENTHESES
         elif title_.startswith(query_):
             match_rank = _MatchRank.TITLE_STARTS_WITH_QUERY
-        elif is_deprecated:
-            match_rank = _MatchRank.DEPRECATED_RESULT_ITEM
         else:
             match_rank = _MatchRank.DEFAULT_RANK
 
         topic_rank = topic_ranking_map.get(topic_, unranked_topic)
+
+        # TODO: once metadata is factored out of code, introduce a "deprecated" attribute.
+        # NOTE: need to check for both translated and untranslated patterns since some titles are
+        # don't have translations.
+        is_deprecated = any(pattern in title_ for pattern in ("(deprecated)", _("(deprecated)")))
 
         # TODO: try and figure out if we can improve shared typing to account for non-Optional str
         # type with a blank string as default (original behavior).
@@ -95,4 +93,3 @@ class _MatchRank(enum.IntEnum):
     EXACT_TITLE_IN_PARENTHESES = 1
     TITLE_STARTS_WITH_QUERY = 2
     DEFAULT_RANK = 3
-    DEPRECATED_RESULT_ITEM = 4

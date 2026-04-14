@@ -15,10 +15,11 @@ from pydantic import BaseModel
 from livestatus import SiteConfiguration
 
 import cmk.utils.paths
-from cmk.ccc import store
+from cmk.ccc import store, version
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.plugin_registry import Registry
 from cmk.ccc.site import SiteId
+from cmk.ccc.version import edition_supports_nagvis
 from cmk.gui import userdb
 from cmk.gui.background_job.job import BackgroundJob, BackgroundProcessInterface
 from cmk.gui.config import active_config, Config
@@ -28,6 +29,7 @@ from cmk.gui.i18n import _, _l
 from cmk.gui.logged_in import user
 from cmk.gui.type_defs import CustomUserAttrSpec
 from cmk.gui.userdb import get_user_attributes
+from cmk.gui.utils.roles import UserPermissionSerializableConfig
 from cmk.gui.utils.urls import makeuri
 from cmk.gui.watolib.automations import (
     make_automation_config,
@@ -46,6 +48,7 @@ from .hosts_and_folders import (
     call_hook_hosts_changed,
     Folder,
     folder_tree,
+    FolderTree,
     Host,
     rename_host_in_list,
 )
@@ -576,3 +579,139 @@ class RenameHostBackgroundJob(RenameHostsBackgroundJob):
 
     def _back_url(self) -> str:
         return self._host.folder().url()
+
+
+class RenameHostsJobArgs(BaseModel, frozen=True):
+    renamings: Sequence[tuple[str, AnnotatedHostName, AnnotatedHostName]]
+    pprint_value: bool
+    use_git: bool
+    debug: bool
+    site_configs: Mapping[SiteId, SiteConfiguration]
+    custom_user_attributes: Sequence[CustomUserAttrSpec]
+    user_permission_config: UserPermissionSerializableConfig
+
+
+def rename_hosts_job_entry_point(
+    job_interface: BackgroundProcessInterface,
+    args: RenameHostsJobArgs,
+) -> None:
+    from cmk.gui.i18n import ungettext
+    from cmk.gui.permissions import permission_registry
+    from cmk.gui.utils.roles import UserPermissions
+    from cmk.gui.watolib.activate_changes import ActivateChanges
+
+    with job_interface.gui_context(
+        UserPermissions.from_serialized_config(args.user_permission_config, permission_registry)
+    ):
+        renamings = _renamings_from_job_args(folder_tree(), args.renamings)
+
+        actions, auth_problems = _rename_hosts(
+            renamings,
+            job_interface,
+            custom_user_attributes=args.custom_user_attributes,
+            site_configs=args.site_configs,
+            pprint_value=args.pprint_value,
+            use_git=args.use_git,
+            debug=args.debug,
+        )  # Already activates the changes!
+
+        for site_id in group_renamings_by_site(renamings):
+            ActivateChanges.confirm_site_changes(site_id)
+
+        action_txt = "".join(["<li>%s</li>" % a for a in actions])
+        message = _("Renamed %d %s at the following places:<br><ul>%s</ul>") % (
+            len(renamings),
+            ungettext("host", "hosts", len(renamings)),
+            action_txt,
+        )
+        if auth_problems:
+            message += _(
+                "The following hosts could not be renamed because of missing permissions: %s"
+            ) % ", ".join([f"{host_name} ({reason})" for (host_name, reason) in auth_problems])
+        job_interface.send_result_message(message)
+
+
+def _renamings_from_job_args(
+    tree: FolderTree,
+    rename_args: Sequence[tuple[str, HostName, HostName]],
+) -> Sequence[tuple[Folder, HostName, HostName]]:
+    return [
+        (tree.folder(folder_path), old_name, new_name)
+        for folder_path, old_name, new_name in rename_args
+    ]
+
+
+def _rename_hosts(
+    renamings: Sequence[tuple[Folder, HostName, HostName]],
+    job_interface: BackgroundProcessInterface,
+    *,
+    custom_user_attributes: Sequence[CustomUserAttrSpec],
+    site_configs: Mapping[SiteId, SiteConfiguration],
+    pprint_value: bool,
+    use_git: bool,
+    debug: bool,
+) -> tuple[list[str], list[tuple[HostName, MKAuthException]]]:
+    action_counts, auth_problems = perform_rename_hosts(
+        renamings,
+        job_interface,
+        custom_user_attributes=custom_user_attributes,
+        site_configs=site_configs,
+        pprint_value=pprint_value,
+        use_git=use_git,
+        debug=debug,
+    )
+    action_texts = render_renaming_actions(action_counts)
+    return action_texts, auth_problems
+
+
+def render_renaming_actions(action_counts: Mapping[str, int]) -> list[str]:
+    action_titles = {
+        "folder": _("Folder"),
+        "notify_user": _("Users' notification rule"),
+        "notify_global": _("Global notification rule"),
+        "wato_rules": _("Host and service configuration rule"),
+        "alert_rules": _("Alert handler rule"),
+        "parents": _("Parent definition"),
+        "cluster_nodes": _("Cluster node definition"),
+        "bi": _("BI rule or aggregation"),
+        "favorites": _("Favorite entry of user"),
+        "cache": _("Cached output of monitoring agent"),
+        "counters": _("File with performance counter"),
+        "agent": _("Baked host-specific agent"),
+        "agent_deployment": _("Agent deployment status"),
+        "piggyback-load": _("Piggyback information from other host"),
+        "piggyback-pig": _("Piggyback information for other hosts"),
+        "autochecks": _("Disovered services of the host"),
+        "host-labels": _("Disovered host labels of the host"),
+        "logwatch": _("Log file information of logwatch plug-in"),
+        "snmpwalk": _("A stored SNMP walk"),
+        "rrd": _("RRD databases with metrics"),
+        "rrdcached": _("RRD updates in journal of RRD Cache"),
+        "pnpspool": _("Spool files of PNP4Nagios"),
+        "history": _("Monitoring history entries (events and availability)"),
+        "retention": _("The current monitoring state (including acknowledgments and downtimes)"),
+        "inv": _("HW/SW inventory"),
+        "invarch": _("HW/SW inventory history"),
+        "uuid_link": _("UUID links for TLS-encrypting agent communication"),
+    }
+
+    if edition_supports_nagvis(version.edition(cmk.utils.paths.omd_root)):
+        action_titles["nagvis"] = _("NagVis map")
+
+    texts = []
+    for what, count in sorted(action_counts.items()):
+        if what.startswith("dnsfail-"):
+            text = (
+                _(
+                    "<b>Warning: </b> the IP address lookup of <b>%s</b> has failed. The core has been started by using the address <tt>0.0.0.0</tt> for the while. Please update your DNS or configure an IP address for the affected host."
+                )
+                % what.split("-", 1)[1]
+            )
+        else:
+            text = action_titles.get(what, what)
+
+        if count > 1:
+            text += _(" (%d times)") % count
+        texts.append(text)
+
+    return texts

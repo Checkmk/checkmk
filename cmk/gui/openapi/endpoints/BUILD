@@ -9,9 +9,6 @@ py_library(
             # Kept in monolithic gui: imported by community_registration / ldap_integration
             "autocomplete/**/*.py",
             "metric/**/*.py",
-            # Blocked: needs cmk.gui.wato.pages.host_rename (monolithic)
-            "folder_config/__init__.py",
-            "host_config/__init__.py",
             # Blocked: needs cmk.gui.quick_setup (monolithic, needs cmk.plugins)
             "quick_setup/**/*.py",
         ],
@@ -83,10 +80,7 @@ py_library(
 # Temporary: endpoint files that still belong to the monolithic //cmk/gui target.
 filegroup(
     name = "gui_srcs",
-    srcs = [
-        "folder_config/__init__.py",
-        "host_config/__init__.py",
-    ] + glob(include = [
+    srcs = glob(include = [
         "autocomplete/**/*.py",
         "metric/**/*.py",
         "quick_setup/**/*.py",

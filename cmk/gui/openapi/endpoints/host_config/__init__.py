@@ -50,13 +50,17 @@ from cmk.gui.openapi.shared_endpoint_families.host_config import HOST_CONFIG_FAM
 from cmk.gui.openapi.utils import EXT, problem, serve_json
 from cmk.gui.utils import permission_verification as permissions
 from cmk.gui.utils.roles import UserPermissionSerializableConfig
-from cmk.gui.wato.pages.host_rename import rename_hosts_job_entry_point, RenameHostsJobArgs
 from cmk.gui.watolib import bakery
 from cmk.gui.watolib.activate_changes import ActivateChanges
 from cmk.gui.watolib.check_mk_automations import delete_hosts
 from cmk.gui.watolib.configuration_bundle_store import is_locked_by_quick_setup
 from cmk.gui.watolib.host_attributes import HostAttributes
-from cmk.gui.watolib.host_rename import RenameHostBackgroundJob, RenameHostsBackgroundJob
+from cmk.gui.watolib.host_rename import (
+    rename_hosts_job_entry_point,
+    RenameHostBackgroundJob,
+    RenameHostsBackgroundJob,
+    RenameHostsJobArgs,
+)
 from cmk.gui.watolib.hosts_and_folders import (
     Folder,
     folder_tree,

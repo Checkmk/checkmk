@@ -8,21 +8,14 @@
 # mypy: disable-error-code="type-arg"
 
 import socket
-from collections.abc import Collection, Iterable, Mapping, Sequence
+from collections.abc import Collection, Iterable, Sequence
 from typing import Any
 
-from pydantic import BaseModel
-
-from livestatus import SiteConfiguration
-
-from cmk.ccc import version
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.regex import regex
-from cmk.ccc.site import SiteId
-from cmk.ccc.version import edition_supports_nagvis
 from cmk.gui import forms
-from cmk.gui.background_job.job import BackgroundProcessInterface, InitialStatusArgs, JobTarget
+from cmk.gui.background_job.job import InitialStatusArgs, JobTarget
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import Config
 from cmk.gui.exceptions import FinalizeRequest, MKAuthException, MKUserError
@@ -40,10 +33,8 @@ from cmk.gui.page_menu import (
     PageMenuEntry,
     PageMenuTopic,
 )
-from cmk.gui.permissions import permission_registry
 from cmk.gui.type_defs import (
     ActionResult,
-    CustomUserAttrSpec,
     IconNames,
     PermissionName,
     StaticIcon,
@@ -52,7 +43,7 @@ from cmk.gui.utils.confirm_with_preview import confirm_with_preview
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.html import HTML
-from cmk.gui.utils.roles import UserPermissions, UserPermissionSerializableConfig
+from cmk.gui.utils.roles import UserPermissionSerializableConfig
 from cmk.gui.valuespec import (
     CascadingDropdown,
     Checkbox,
@@ -68,24 +59,20 @@ from cmk.gui.wato.pages._html_elements import wato_html_head
 from cmk.gui.wato.pages.folders import ModeFolder
 from cmk.gui.wato.pages.hosts import ModeEditHost, page_menu_host_entries
 from cmk.gui.watolib.activate_changes import ActivateChanges
-from cmk.gui.watolib.automations import AnnotatedHostName
 from cmk.gui.watolib.configuration_bundle_store import is_locked_by_quick_setup
 from cmk.gui.watolib.host_rename import (
-    group_renamings_by_site,
-    perform_rename_hosts,
+    rename_hosts_job_entry_point,
     RenameHostBackgroundJob,
     RenameHostsBackgroundJob,
+    RenameHostsJobArgs,
 )
 from cmk.gui.watolib.hosts_and_folders import (
     Folder,
     folder_from_request,
-    folder_tree,
-    FolderTree,
     Host,
     validate_host_uniqueness,
 )
 from cmk.gui.watolib.mode import ModeRegistry, redirect, WatoMode
-from cmk.utils import paths
 
 
 def register(mode_registry: ModeRegistry) -> None:
@@ -456,51 +443,6 @@ def _confirm(html_title: str, message: str | HTML) -> bool | None:
     return confirm_with_preview(message, confirm_options)
 
 
-class RenameHostsJobArgs(BaseModel, frozen=True):
-    renamings: Sequence[tuple[str, AnnotatedHostName, AnnotatedHostName]]
-    pprint_value: bool
-    use_git: bool
-    debug: bool
-    site_configs: Mapping[SiteId, SiteConfiguration]
-    custom_user_attributes: Sequence[CustomUserAttrSpec]
-    user_permission_config: UserPermissionSerializableConfig
-
-
-def rename_hosts_job_entry_point(
-    job_interface: BackgroundProcessInterface,
-    args: RenameHostsJobArgs,
-) -> None:
-    with job_interface.gui_context(
-        UserPermissions.from_serialized_config(args.user_permission_config, permission_registry)
-    ):
-        renamings = _renamings_from_job_args(folder_tree(), args.renamings)
-
-        actions, auth_problems = _rename_hosts(
-            renamings,
-            job_interface,
-            custom_user_attributes=args.custom_user_attributes,
-            site_configs=args.site_configs,
-            pprint_value=args.pprint_value,
-            use_git=args.use_git,
-            debug=args.debug,
-        )  # Already activates the changes!
-
-        for site_id in group_renamings_by_site(renamings):
-            ActivateChanges.confirm_site_changes(site_id)
-
-        action_txt = "".join(["<li>%s</li>" % a for a in actions])
-        message = _("Renamed %d %s at the following places:<br><ul>%s</ul>") % (
-            len(renamings),
-            ungettext("host", "hosts", len(renamings)),
-            action_txt,
-        )
-        if auth_problems:
-            message += _(
-                "The following hosts could not be renamed because of missing permissions: %s"
-            ) % ", ".join([f"{host_name} ({reason})" for (host_name, reason) in auth_problems])
-        job_interface.send_result_message(message)
-
-
 class ModeRenameHost(WatoMode):
     @classmethod
     def name(cls) -> str:
@@ -673,89 +615,3 @@ def _renamings_to_job_args(
     renamings: Sequence[tuple[Folder, HostName, HostName]],
 ) -> Sequence[tuple[str, HostName, HostName]]:
     return [(folder.path(), old_name, new_name) for folder, old_name, new_name in renamings]
-
-
-def _renamings_from_job_args(
-    tree: FolderTree,
-    rename_args: Sequence[tuple[str, HostName, HostName]],
-) -> Sequence[tuple[Folder, HostName, HostName]]:
-    return [
-        (tree.folder(folder_path), old_name, new_name)
-        for folder_path, old_name, new_name in rename_args
-    ]
-
-
-def _rename_hosts(
-    renamings: Sequence[tuple[Folder, HostName, HostName]],
-    job_interface: BackgroundProcessInterface,
-    *,
-    custom_user_attributes: Sequence[CustomUserAttrSpec],
-    site_configs: Mapping[SiteId, SiteConfiguration],
-    pprint_value: bool,
-    use_git: bool,
-    debug: bool,
-) -> tuple[list[str], list[tuple[HostName, MKAuthException]]]:
-    action_counts, auth_problems = perform_rename_hosts(
-        renamings,
-        job_interface,
-        custom_user_attributes=custom_user_attributes,
-        site_configs=site_configs,
-        pprint_value=pprint_value,
-        use_git=use_git,
-        debug=debug,
-    )
-    action_texts = render_renaming_actions(action_counts)
-    return action_texts, auth_problems
-
-
-def render_renaming_actions(action_counts: Mapping[str, int]) -> list[str]:
-    action_titles = {
-        "folder": _("Folder"),
-        "notify_user": _("Users' notification rule"),
-        "notify_global": _("Global notification rule"),
-        "wato_rules": _("Host and service configuration rule"),
-        "alert_rules": _("Alert handler rule"),
-        "parents": _("Parent definition"),
-        "cluster_nodes": _("Cluster node definition"),
-        "bi": _("BI rule or aggregation"),
-        "favorites": _("Favorite entry of user"),
-        "cache": _("Cached output of monitoring agent"),
-        "counters": _("File with performance counter"),
-        "agent": _("Baked host-specific agent"),
-        "agent_deployment": _("Agent deployment status"),
-        "piggyback-load": _("Piggyback information from other host"),
-        "piggyback-pig": _("Piggyback information for other hosts"),
-        "autochecks": _("Disovered services of the host"),
-        "host-labels": _("Disovered host labels of the host"),
-        "logwatch": _("Log file information of logwatch plug-in"),
-        "snmpwalk": _("A stored SNMP walk"),
-        "rrd": _("RRD databases with metrics"),
-        "rrdcached": _("RRD updates in journal of RRD Cache"),
-        "pnpspool": _("Spool files of PNP4Nagios"),
-        "history": _("Monitoring history entries (events and availability)"),
-        "retention": _("The current monitoring state (including acknowledgments and downtimes)"),
-        "inv": _("HW/SW inventory"),
-        "invarch": _("HW/SW inventory history"),
-        "uuid_link": _("UUID links for TLS-encrypting agent communication"),
-    }
-
-    if edition_supports_nagvis(version.edition(paths.omd_root)):
-        action_titles["nagvis"] = _("NagVis map")
-
-    texts = []
-    for what, count in sorted(action_counts.items()):
-        if what.startswith("dnsfail-"):
-            text = (
-                _(
-                    "<b>Warning: </b> the IP address lookup of <b>%s</b> has failed. The core has been started by using the address <tt>0.0.0.0</tt> for the while. Please update your DNS or configure an IP address for the affected host."
-                )
-                % what.split("-", 1)[1]
-            )
-        else:
-            text = action_titles.get(what, what)
-
-        if count > 1:
-            text += _(" (%d times)") % count
-        texts.append(text)
-
-    return texts

@@ -248,6 +248,9 @@ test('FormString with autocompleter updates value to title', async () => {
   })
 
   const element = screen.getByRole<HTMLInputElement>('combobox', { name: 'ut_label' })
+  await waitFor(() => {
+    expect(element.textContent).toContain('Value 1')
+  })
   await fireEvent.click(element)
 
   const option = await screen.findByRole('option', { name: 'Value 2' })

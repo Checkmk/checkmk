@@ -124,65 +124,28 @@ def kube_object_namespace_name(kube_object: KubeNamespacedObj) -> NamespaceName:
 
 
 def aggregate_resources(
-    resource_type: Literal["memory", "cpu"], pods: Sequence[api.Pod]
+    resource_type: Literal["memory", "cpu"], containers: Collection[api.ContainerSpec]
 ) -> section.Resources:
-    # requests
-    total_request = 0.0  # sum of all requests (pod-level or container-level)
-    count_unspecified_requests = 0  # containers without a request set
-    count_total_requests = 0  # containers from pods using container-level requests
-    count_pods_pod_level_request = 0  # pods with a non-zero pod-level request
+    specified_requests = [
+        request
+        for c in containers
+        if (request := getattr(c.resources.requests, resource_type)) is not None
+    ]
+    specified_limits = [
+        limit
+        for c in containers
+        if (limit := getattr(c.resources.limits, resource_type)) is not None
+    ]
 
-    # limits
-    total_limit = 0.0  # sum of all limits (pod-level or container-level)
-    count_unspecified_limits = 0  # containers without a limit set
-    count_zeroed_limits = 0  # containers with limit==0 (unlimited)
-    count_total_limits = 0  # containers from pods using container-level limits
-    count_pods_pod_level_limit = 0  # pods with a non-zero pod-level limit
-
-    for pod in pods:
-        pod_request = getattr(pod.spec.resources.requests, resource_type)
-        pod_limit = getattr(pod.spec.resources.limits, resource_type)
-        containers = pod.spec.containers
-
-        if pod_request is not None and pod_request:  # also handles: 0 -> unlimited
-            total_request += pod_request
-            count_pods_pod_level_request += 1
-        else:
-            specified_requests = [
-                request
-                for c in containers
-                if (request := getattr(c.resources.requests, resource_type)) is not None
-            ]
-            total_request += sum(specified_requests)
-            count_unspecified_requests += len(containers) - len(specified_requests)
-            count_total_requests += len(containers)
-
-        if pod_limit is not None and pod_limit:  # also handles: 0 -> unlimited
-            total_limit += pod_limit
-            count_pods_pod_level_limit += 1
-        else:
-            specified_limits = [
-                limit
-                for c in containers
-                if (limit := getattr(c.resources.limits, resource_type)) is not None
-            ]
-            total_limit += sum(specified_limits)
-            count_unspecified_limits += len(containers) - len(specified_limits)
-            count_zeroed_limits += sum(1 for x in specified_limits if x == 0)
-            count_total_limits += len(containers)
+    count_total = len(containers)
 
     return section.Resources(
-        request=total_request,
-        limit=total_limit,
-        # requests
-        count_unspecified_requests=count_unspecified_requests,
-        count_total_requests=count_total_requests,
-        count_pods_pod_level_request=count_pods_pod_level_request,
-        # limits
-        count_unspecified_limits=count_unspecified_limits,
-        count_zeroed_limits=count_zeroed_limits,
-        count_total_limits=count_total_limits,
-        count_pods_pod_level_limit=count_pods_pod_level_limit,
+        request=sum(specified_requests),
+        limit=sum(specified_limits),
+        count_unspecified_requests=count_total - len(specified_requests),
+        count_unspecified_limits=count_total - len(specified_limits),
+        count_zeroed_limits=sum(1 for x in specified_limits if x == 0),
+        count_total=count_total,
     )
 
 
@@ -198,11 +161,11 @@ def thin_containers(pods: Collection[api.Pod]) -> section.ThinContainers:
 
 
 def collect_memory_resources_from_api_pods(pods: Sequence[api.Pod]) -> section.Resources:
-    return aggregate_resources("memory", pods)
+    return aggregate_resources("memory", [c for pod in pods for c in pod.spec.containers])
 
 
 def collect_cpu_resources_from_api_pods(pods: Sequence[api.Pod]) -> section.Resources:
-    return aggregate_resources("cpu", pods)
+    return aggregate_resources("cpu", [c for pod in pods for c in pod.spec.containers])
 
 
 def pod_resources_from_api_pods(pods: Sequence[api.Pod]) -> section.PodResources:

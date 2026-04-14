@@ -36,28 +36,14 @@ def parse_performance_usage(string_table: StringTable) -> PerformanceUsage:
 
 
 def count_overview(resources: Resources, requirement: RequirementType) -> str:
-    if requirement == "request":
-        specified = resources.count_total_requests - resources.count_unspecified_requests
-        total = resources.count_total_requests
-        pod_level = resources.count_pods_pod_level_request
-    else:
-        specified = (
-            resources.count_total_limits
-            - resources.count_unspecified_limits
-            - resources.count_zeroed_limits
-        )
-        total = resources.count_total_limits
-        pod_level = resources.count_pods_pod_level_limit
-
-    container_part = f"{specified}/{total} containers with {requirement}s"
-    if pod_level == 0:
-        return container_part
-
-    pod_part = f"{pod_level} pod{'s' if pod_level > 1 else ''} with pod-level {requirement}s"
-    if total == 0:
-        return pod_part
-
-    return f"{container_part}, {pod_part}"
+    ignored = (
+        resources.count_unspecified_requests
+        if requirement == "request"
+        else resources.count_unspecified_limits + resources.count_zeroed_limits
+    )
+    return (
+        f"{resources.count_total - ignored}/{resources.count_total} containers with {requirement}s"
+    )
 
 
 def parse_resources(string_table: StringTable) -> Resources:
@@ -65,13 +51,10 @@ def parse_resources(string_table: StringTable) -> Resources:
     >>> parse_resources([['{"request": 209715200.0,'
     ... '"limit": 104857600.0,'
     ... '"count_unspecified_requests": 0,'
-    ... '"count_total_requests": 1,'
-    ... '"count_pods_pod_level_request": 0,'
     ... '"count_unspecified_limits": 0,'
     ... '"count_zeroed_limits": 1,'
-    ... '"count_total_limits": 1,'
-    ... '"count_pods_pod_level_limit": 0}']])
-    Resources(request=209715200.0, limit=104857600.0, count_unspecified_requests=0, count_total_requests=1, count_pods_pod_level_request=0, count_unspecified_limits=0, count_zeroed_limits=1, count_total_limits=1, count_pods_pod_level_limit=0)
+    ... '"count_total": 1}']])
+    Resources(request=209715200.0, limit=104857600.0, count_unspecified_requests=0, count_unspecified_limits=0, count_zeroed_limits=1, count_total=1)
     """
     return Resources.model_validate_json(string_table[0][0])
 

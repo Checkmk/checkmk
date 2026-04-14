@@ -348,7 +348,7 @@ run_binary(
         "dict",
     ],
     tags = ["manual"],
-    tool = "//cmk/gui/openapi/spec:generate_api_spec",
+    tool = "//cmk/gui/openapi/spec/spec_generator:generate_api_spec",
 )
 
 run_binary(
@@ -368,7 +368,7 @@ run_binary(
         "dict",
     ],
     tags = ["manual"],
-    tool = "//cmk/gui/openapi/spec:generate_api_spec",
+    tool = "//cmk/gui/openapi/spec/spec_generator:generate_api_spec",
 )
 
 run_binary(
@@ -388,7 +388,7 @@ run_binary(
         "dict",
     ],
     tags = ["manual"],
-    tool = "//cmk/gui/openapi/spec:generate_api_spec",
+    tool = "//cmk/gui/openapi/spec/spec_generator:generate_api_spec",
 )
 
 run_binary(
@@ -408,7 +408,7 @@ run_binary(
         "dict",
     ],
     tags = ["manual"],
-    tool = "//cmk/gui/openapi/spec:generate_api_spec",
+    tool = "//cmk/gui/openapi/spec/spec_generator:generate_api_spec",
 )
 
 pkg_files(

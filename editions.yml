@@ -4,7 +4,6 @@ common: &common
     - "debian-13"
     - "ubuntu-22.04"
     - "ubuntu-24.04"
-    - "ubuntu-25.10"
     - "ubuntu-26.04"
     - "almalinux-8"
     - "almalinux-9"
@@ -21,7 +20,6 @@ daily_reduced: &daily_reduced
     - "debian-13"
     - "ubuntu-22.04"
     - "ubuntu-24.04"
-    - "ubuntu-25.10"
     - "ubuntu-26.04"
     - "sles-16.0"
 

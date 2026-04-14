@@ -645,7 +645,6 @@ pkg_files(
         "@cmk//distro:sles-16.0": ["//omd/distros:SLES_16.0.mk"],
         "@cmk//distro:ubuntu-22.04": ["//omd/distros:UBUNTU_22.04.mk"],
         "@cmk//distro:ubuntu-24.04": ["//omd/distros:UBUNTU_24.04.mk"],
-        "@cmk//distro:ubuntu-25.10": ["//omd/distros:UBUNTU_25.10.mk"],
         "@cmk//distro:ubuntu-26.04": ["//omd/distros:UBUNTU_26.04.mk"],
     }),
     prefix = "share/omd",
@@ -660,7 +659,6 @@ pkg_files(
         "@cmk//distro:sles-16.0": {"//omd/distros:SLES_16.0.mk": "distro.info"},
         "@cmk//distro:ubuntu-22.04": {"//omd/distros:UBUNTU_22.04.mk": "distro.info"},
         "@cmk//distro:ubuntu-24.04": {"//omd/distros:UBUNTU_24.04.mk": "distro.info"},
-        "@cmk//distro:ubuntu-25.10": {"//omd/distros:UBUNTU_25.10.mk": "distro.info"},
         "@cmk//distro:ubuntu-26.04": {"//omd/distros:UBUNTU_26.04.mk": "distro.info"},
     }),
 )
@@ -853,7 +851,6 @@ pkg_name_info(
         "@cmk//distro:sles-16.0": "sles16.0",
         "@cmk//distro:ubuntu-22.04": "0.jammy",
         "@cmk//distro:ubuntu-24.04": "0.noble",
-        "@cmk//distro:ubuntu-25.10": "0.questing",
         "@cmk//distro:ubuntu-26.04": "0.resolute",
     }),
 )
@@ -917,6 +914,10 @@ sh_test(
             "$(location //tests/packaging/package_validator:system_dependencies_ubuntu)",
             "$(location //tests/packaging/package_validator:system_dependencies_noble)",
         ],
+        "@cmk//distro:ubuntu-26.04": [
+            "$(location //tests/packaging/package_validator:system_dependencies_ubuntu)",
+            "$(location //tests/packaging/package_validator:system_dependencies_resolute)",
+        ],
     }),
     data = [
         ":deb",
@@ -938,6 +939,10 @@ sh_test(
         ],
         "@cmk//distro:ubuntu-24.04": [
             "//tests/packaging/package_validator:system_dependencies_noble",
+            "//tests/packaging/package_validator:system_dependencies_ubuntu",
+        ],
+        "@cmk//distro:ubuntu-26.04": [
+            "//tests/packaging/package_validator:system_dependencies_resolute",
             "//tests/packaging/package_validator:system_dependencies_ubuntu",
         ],
     }),

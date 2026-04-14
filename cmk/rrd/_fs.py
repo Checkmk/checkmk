@@ -6,21 +6,37 @@
 import os
 from dataclasses import dataclass, field
 from pathlib import Path
+from typing import Final
 
 from cmk.ccc.hostaddress import HostName
 from cmk.utils.misc import pnp_cleanup
+
+# We need to add some space for the RRD backend temporary file
+# rrd_create.c:
+#   strcpy(tmpfilename, outfilename);
+#   strcat(tmpfilename, "XXXXXX");
+_RRD_GUARD: Final = 6
+
+# All suffixes that may ever be appended to a Storage path.
+# The stem length must not exceed max_filename_length - max(len(suffix)) - _RRD_GUARD
+# so that every variant (.info or .rrd) + the RRD backend temp suffix fits within PC_NAME_MAX.
+_KNOWN_SUFFIXES: Final = (".info", ".rrd")
+
+RESERVED_FILENAME_LENGTH: Final = max(len(os.fsencode(s)) for s in _KNOWN_SUFFIXES) + _RRD_GUARD
 
 
 @dataclass(frozen=True)
 class Storage:
     _path: Path
-    max_filename_length: int = field(kw_only=True)
+    _max_filename_length: int = field(kw_only=True)
 
     def path(self, suffix: str) -> Path | None:
-        path = self.get_expected_path(suffix)
-        if len(os.fsencode(path)) >= self.max_filename_length:
+        # PC_NAME_MAX limits a single filename component (not the full path).
+        # MAX_STEM_LENGTH is derived from known suffixes only — crash on unknown ones is allowed.
+        max_stem = self._max_filename_length - RESERVED_FILENAME_LENGTH
+        if len(os.fsencode(self._path.name)) > max_stem:
             return None
-        return path
+        return self.get_expected_path(suffix)
 
     def get_expected_path(self, suffix: str) -> Path:
         return attach_suffix(self._path, suffix)
@@ -34,7 +50,7 @@ def attach_suffix(p: Path, suffix: str) -> Path:
 class RRDPaths:
     rrd_multiple_dir: Path
     rrd_single_dir: Path
-    max_filename_length: int
+    _max_filename_length: int
 
     @classmethod
     def from_omd_root(cls, omd_root: Path) -> "RRDPaths":
@@ -42,11 +58,11 @@ class RRDPaths:
         return cls(
             rrd_multiple_dir=opt_root / "var/pnp4nagios/perfdata",
             rrd_single_dir=opt_root / "var/check_mk/rrd",
-            max_filename_length=os.pathconf(omd_root, "PC_NAME_MAX"),
+            _max_filename_length=os.pathconf(omd_root, "PC_NAME_MAX"),
         )
 
     def _storage(self, path: Path) -> Storage:
-        return Storage(path, max_filename_length=self.max_filename_length)
+        return Storage(path, _max_filename_length=self._max_filename_length)
 
     def pnp_host_dir(self, hostname: HostName) -> Path:
         # We need /opt here because of bug in rrdcached

@@ -72,12 +72,19 @@ def _get_topic_ranking(topic: str) -> int:
 
 def _get_topics_to_promote() -> tuple[str, ...]:
     return (
+        # provider topics
         _("Setup"),
         _("Monitor"),
+        # additional agent configuration
+        _("HTTP, TCP, email, ..."),
+        _("VM, cloud, container"),
+        _("Other integrations"),
+        _("Agent rules"),
+        # common rule configuration
         _("Host monitoring rules"),
         _("Notification parameter"),
         _("Service monitoring rules"),
-        _("VM, cloud, container"),
+        _("Service discovery rules"),
     )
 
 

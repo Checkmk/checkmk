@@ -437,7 +437,7 @@ filter_tests = [
         request_vars=[
             ("hostnameoralias", "abc"),
         ],
-        expected_filters=("Filter: host_name ~~ abc\n" "Filter: alias ~~ abc\n" "Or: 2\n"),
+        expected_filters=("Filter: host_name ~~ abc\n" "Filter: host_alias ~~ abc\n" "Or: 2\n"),
     ),
     FilterTest(
         ident="hosts_having_service_problems",
@@ -590,7 +590,7 @@ filter_tests = [
     FilterTest(
         ident="hostnameoralias",
         request_vars=[("hostnameoralias", "horst")],
-        expected_filters="Filter: host_name ~~ horst\nFilter: alias ~~ horst\nOr: 2\n",
+        expected_filters="Filter: host_name ~~ horst\nFilter: host_alias ~~ horst\nOr: 2\n",
     ),
     # Testing FilterCommaSeparatedStringList
     FilterTest(

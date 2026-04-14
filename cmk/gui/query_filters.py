@@ -525,7 +525,9 @@ class HostnameOrAliasQuery(TextQuery):
     def _filter(self, value: FilterHTTPVariables) -> FilterHeader:
         host = livestatus.lqencode(value[self.request_vars[0]])
 
-        return lq_logic("Filter:", [f"host_name {self.op} {host}", f"alias {self.op} {host}"], "Or")
+        return lq_logic(
+            "Filter:", [f"host_name {self.op} {host}", f"host_alias {self.op} {host}"], "Or"
+        )
 
 
 class OptEventEffectiveContactgroupQuery(TextQuery):

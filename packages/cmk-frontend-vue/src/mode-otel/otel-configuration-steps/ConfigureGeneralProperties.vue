@@ -170,7 +170,7 @@ defineExpose({ validate })
     <CmkInput
       v-model="configName"
       type="text"
-      field-size="FILL"
+      field-size="MEDIUM"
       :placeholder="props.configNamePlaceholder"
       :external-errors="configNameErrors"
     />
@@ -183,7 +183,6 @@ defineExpose({ validate })
         :options="{ type: 'fixed', suggestions: siteOptions }"
         :input-hint="isLoading ? _t('Loading...') : _t('Select site')"
         :label="_t('Site selection')"
-        width="fill"
         :disabled="isLoading"
         :form-validation="siteErrors.length > 0"
       />

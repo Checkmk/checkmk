@@ -56,9 +56,9 @@ def test_weighted_index_sorting_with_notifications_query() -> None:
     value = [(result.title, result.topic) for result in results]
     expected = [
         ("Notifications", "Setup"),
-        ("Notifications of host & services", "Monitor"),
         ("Analyze recent notifications", "Setup"),
         ("Test notifications", "Setup"),
+        ("Notifications of host & services", "Monitor"),
         ("Failed notifications", "Monitor"),
         ("Delay host notifications", "Host monitoring rules"),
         ("Enable/disable notifications for hosts", "Host monitoring rules"),

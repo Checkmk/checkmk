@@ -43,7 +43,6 @@ def test_weighted_index_sorting_with_view_query() -> None:
 
     value = [(result.title, result.topic) for result in results]
     expected = [
-        ("Views", "Visualization"),  # customize
         ("Certificate overview", "Setup"),
         ("Cisco Meraki Organisation Licenses Overview", "Service monitoring rules"),
         ("Couchbase Node: Size of couch views", "Service monitoring rules"),
@@ -55,6 +54,7 @@ def test_weighted_index_sorting_with_view_query() -> None:
         ("Cisco Meraki Organisation Licenses Overview", "Enforced services"),
         ("Couchbase Node: Size of couch views", "Enforced services"),
         ("Couchbase Node: Size of spacial views", "Enforced services"),
+        ("Views", "Visualization"),  # customize
     ]
 
     assert value == expected

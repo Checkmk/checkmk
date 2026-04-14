@@ -45,7 +45,7 @@ def _get_weighted_index_sorter(query: str) -> Sorter:
     topic_ranking_map = {topic: rank for rank, topic in enumerate(_TOPIC_RANKING)}
     unranked_topic = max(topic_ranking_map.values()) + 1
 
-    def algorithm(item: UnifiedSearchResultItem) -> tuple[_MatchRank, int, bool, str, str]:
+    def algorithm(item: UnifiedSearchResultItem) -> tuple[int, _MatchRank, bool, str, str]:
         title_ = item.title.lower()
         topic_ = item.topic.lower()
 
@@ -55,7 +55,7 @@ def _get_weighted_index_sorter(query: str) -> Sorter:
 
         # TODO: try and figure out if we can improve shared typing to account for non-Optional str
         # type with a blank string as default (original behavior).
-        return title_match_rank, topic_rank, deprecation_rank, item.title, item.context or ""
+        return topic_rank, title_match_rank, deprecation_rank, item.title, item.context or ""
 
     def sorter(items: list[UnifiedSearchResultItem]) -> None:
         items.sort(key=algorithm)

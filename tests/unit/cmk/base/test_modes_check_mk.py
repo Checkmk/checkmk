@@ -106,8 +106,10 @@ class TestModeDumpAgent:
     def test_success(
         self, hostname: HostName, raw_data: bytes, capsys: pytest.CaptureFixture[str]
     ) -> None:
-        app = make_app(Edition.COMMUNITY)
-        app.make_fetcher_trigger = lambda *args: _MockFetcherTrigger(raw_data)
+        app = replace(
+            make_app(Edition.COMMUNITY),
+            make_fetcher_trigger=lambda *args: _MockFetcherTrigger(raw_data),
+        )
         check_mk.mode_dump_agent(app, {}, hostname)
         assert capsys.readouterr().out == raw_data.decode()
 
@@ -210,8 +212,10 @@ class TestModeDumpAgentUseWalk:
 
         monkeypatch.setattr(_sources_module.SNMPSource, "__init__", capturing_snmp_source_init)
 
-        app = make_app(Edition.COMMUNITY)
-        app.make_fetcher_trigger = lambda *args: _MockFetcherTrigger(b"")
+        app = replace(
+            make_app(Edition.COMMUNITY),
+            make_fetcher_trigger=lambda *args: _MockFetcherTrigger(b""),
+        )
         check_mk.mode_dump_agent(app, options, hostname)
 
         # Open the SNMP fetcher manually to drive make_backend

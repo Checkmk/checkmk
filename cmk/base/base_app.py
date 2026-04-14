@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Callable, Mapping, Sequence
-from typing import Final
+from dataclasses import dataclass
 
 from cmk.base.configlib.loaded_config import LoadedConfigFragment
 from cmk.base.core.interface import MonitoringCore
@@ -24,50 +24,38 @@ from .config import ConfigCache, LoadingResult, ObjectAttributes
 from .modes.modes import Modes
 
 
+@dataclass(frozen=True)
 class CheckmkBaseApp:
     """Provide features to the runtime
 
     Hold the features available to the runtime based on the context (edition) the app is created for.
     """
 
-    def __init__(
-        self,
-        edition: Edition,
-        modes: Modes,
-        automations: Automations,
-        make_bake_on_restart: Callable[[LoadingResult, Sequence[HostAddress]], Callable[[], None]],
-        create_core: Callable[
-            [
-                Edition,
-                RulesetMatcher,
-                LabelManager,
-                LoadedConfigFragment,
-                SNMPPluginStore,
-                ConfigCache,
-                AgentBasedPlugins,
-            ],
-            MonitoringCore,
+    edition: Edition
+    modes: Modes
+    automations: Automations
+    make_bake_on_restart: Callable[[LoadingResult, Sequence[HostAddress]], Callable[[], None]]
+    create_core: Callable[
+        [
+            Edition,
+            RulesetMatcher,
+            LabelManager,
+            LoadedConfigFragment,
+            SNMPPluginStore,
+            ConfigCache,
+            AgentBasedPlugins,
         ],
-        licensing_handler_type: type[LicensingHandler],
-        make_fetcher_trigger: FetcherTriggerFactory,
-        make_metric_backend_fetcher: Callable[
-            [
-                HostAddress,
-                Callable[[HostAddress], ObjectAttributes],
-                Callable[[HostAddress], float],
-            ],
-            Fetcher[AgentRawData] | None,
+        MonitoringCore,
+    ]
+    licensing_handler_type: type[LicensingHandler]
+    make_fetcher_trigger: FetcherTriggerFactory
+    make_metric_backend_fetcher: Callable[
+        [
+            HostAddress,
+            Callable[[HostAddress], ObjectAttributes],
+            Callable[[HostAddress], float],
         ],
-        get_builtin_host_labels: Callable[[SiteId], Labels],
-        core_performance_settings: Callable[[LoadedConfigFragment], Mapping[str, int]],
-    ) -> None:
-        self.edition: Final = edition
-        self.modes: Final = modes
-        self.automations: Final = automations
-        self.make_bake_on_restart: Final = make_bake_on_restart
-        self.create_core: Final = create_core
-        self.licensing_handler_type: Final = licensing_handler_type
-        self.make_fetcher_trigger: Final = make_fetcher_trigger
-        self.make_metric_backend_fetcher: Final = make_metric_backend_fetcher
-        self.get_builtin_host_labels: Final = get_builtin_host_labels
-        self.core_performance_settings: Final = core_performance_settings
+        Fetcher[AgentRawData] | None,
+    ]
+    get_builtin_host_labels: Callable[[SiteId], Labels]
+    core_performance_settings: Callable[[LoadedConfigFragment], Mapping[str, int]]

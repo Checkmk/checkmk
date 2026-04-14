@@ -12,7 +12,7 @@ from pathlib import Path
 import livestatus
 
 
-def usage():
+def usage() -> None:
     sys.stdout.write(
         """usage: check_notify_count OPTIONS
 

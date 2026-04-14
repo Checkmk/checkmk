@@ -61,7 +61,7 @@ pkg_files(
         ":cmk-convert-rrds",
         ":cmk-general-version-infos",
         ":cmk-generate-api-spec",
-        ":cmk-migrate-extension-rulesets",
+        ":cmk-migrate-extension-rulesets.py",
         ":cmk-monitor-apache",
         ":cmk-monitor-broker",
         ":cmk-monitor-core",
@@ -78,13 +78,13 @@ pkg_files(
         ":cmk-ui-job-scheduler-health",
         ":cmk-update-license-usage.py",
         ":cmk-validate-config.py",
-        ":cmk-validate-plugins",
+        ":cmk-validate-plugins.py",
         ":init-redis.py",
         ":livedump",
         ":message-broker-certs",
         ":mkbackup.py",
         ":mkevent",
-        ":mkp",
+        ":mkp.py",
     ],
     attributes = pkg_attributes(
         mode = "0755",
@@ -94,11 +94,14 @@ pkg_files(
         "check_mk.py": "check_mk",
         "cmk-automation-helper.py": "cmk-automation-helper",
         "cmk-broker-test.py": "cmk-broker-test",
+        "cmk-migrate-extension-rulesets.py": "cmk-migrate-extension-rulesets",
         "cmk-ui-job-scheduler.py": "cmk-ui-job-scheduler",
         "cmk-update-license-usage.py": "cmk-update-license-usage",
         "cmk-validate-config.py": "cmk-validate-config",
+        "cmk-validate-plugins.py": "cmk-validate-plugins",
         "init-redis.py": "init-redis",
         "mkbackup.py": "mkbackup",
+        "mkp.py": "mkp",
     },
 )
 
@@ -203,6 +206,21 @@ py_library(
 )
 
 py_library(
+    name = "cmk_migrate_extension_rulesets_py",
+    srcs = ["cmk-migrate-extension-rulesets.py"],
+    imports = ["."],
+    deps = [
+        "//cmk/gui",
+        "//cmk/update_config",
+        "//cmk/utils",
+        "//packages/cmk-ccc:version",
+        "//packages/cmk-mkp-tool",
+        "//packages/cmk-plugin-apis:discover_plugins",
+        "//packages/cmk-plugin-apis:rulesets",
+    ],
+)
+
+py_library(
     name = "cmk_ui_job_scheduler_py",
     srcs = ["cmk-ui-job-scheduler.py"],
     imports = ["."],
@@ -214,6 +232,13 @@ py_library(
     srcs = ["cmk-validate-config.py"],
     imports = ["."],
     tags = ["no-mypy"],
+)
+
+py_library(
+    name = "cmk_validate_plugins_py",
+    srcs = ["cmk-validate-plugins.py"],
+    imports = ["."],
+    deps = ["//cmk:validate_plugins"],
 )
 
 py_library(
@@ -242,6 +267,20 @@ py_library(
     srcs = ["cmk-passwd"],
     imports = ["."],
     deps = ["//cmk:cmkpasswd"],
+)
+
+py_library(
+    name = "mkp_py",
+    srcs = ["mkp.py"],
+    imports = ["."],
+    deps = [
+        "//cmk/utils",
+        "//packages/cmk-ccc:store",
+        "//packages/cmk-ccc:version",
+        "//packages/cmk-ec",
+        "//packages/cmk-mkp-tool",
+        "//packages/cmk-plugin-apis:discover_plugins",
+    ],
 )
 
 sh_library(

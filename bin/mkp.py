@@ -6,20 +6,30 @@
 import sys
 from typing import Final
 
-import cmk.ccc.store
+import cmk.ccc.store  # astrein: disable=cmk-module-layer-violation
 import cmk.ec.export as ec  # astrein: disable=cmk-module-layer-violation
-from cmk.ccc.version import __version__, parse_check_mk_version
-from cmk.discover_plugins import addons_plugins_local_path, plugins_local_path
-from cmk.mkp_tool import (
+from cmk.ccc.version import (  # astrein: disable=cmk-module-layer-violation
+    __version__,
+    parse_check_mk_version,
+)
+from cmk.discover_plugins import (  # astrein: disable=cmk-module-layer-violation
+    addons_plugins_local_path,
+    plugins_local_path,
+)
+from cmk.mkp_tool import (  # astrein: disable=cmk-module-layer-violation
     cli,
     make_post_package_change_actions,
     PackageStore,
     PathConfig,
     reload_services_affected_by_mkp_changes,
 )
-from cmk.utils import paths
-from cmk.utils.setup_search_index import request_index_rebuild
-from cmk.utils.visuals import invalidate_visuals_cache
+from cmk.utils import paths  # astrein: disable=cmk-module-layer-violation
+from cmk.utils.setup_search_index import (  # astrein: disable=cmk-module-layer-violation
+    request_index_rebuild,
+)
+from cmk.utils.visuals import (  # astrein: disable=cmk-module-layer-violation
+    invalidate_visuals_cache,
+)
 
 
 def make_path_config() -> PathConfig | None:

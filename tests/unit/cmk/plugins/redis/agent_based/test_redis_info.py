@@ -201,7 +201,6 @@ def test_discover_redis_info_persistence(section, expected):
                 Result(state=State.CRIT, summary="Last AOF rewrite operation: faulty"),
             ],
             id="persistence_faulty",
-            marks=pytest.mark.xfail,
         ),
     ],
 )

@@ -63,22 +63,17 @@ def cluster_api_sections() -> set[str]:
 @pytest.mark.parametrize("cluster_pods", [0, 10, 20])
 def test_cluster_resources(cluster_pods: int) -> None:
     pod_containers_count = 2
-    unset_resources = api.ResourceRequirements(
-        limits=api.ResourceRequirement(), requests=api.ResourceRequirement()
-    )
     pods = [
         APIPodFactory.build(
             spec=PodSpecFactory.build(
-                node=None,
-                containers=ContainerSpecFactory.batch(pod_containers_count),
-                resources=unset_resources,
+                node=None, containers=ContainerSpecFactory.batch(pod_containers_count)
             )
         )
         for _ in range(cluster_pods)
     ]
     cluster = Cluster.from_api_resources((), APIDataFactory.build(pods=pods))
-    assert _memory_resources(cluster).count_total_requests == cluster_pods * pod_containers_count
-    assert _cpu_resources(cluster).count_total_requests == cluster_pods * pod_containers_count
+    assert _memory_resources(cluster).count_total == cluster_pods * pod_containers_count
+    assert _cpu_resources(cluster).count_total == cluster_pods * pod_containers_count
     assert sum(len(pods) for _phase, pods in _pod_resources(cluster)) == cluster_pods
 
 
@@ -292,15 +287,10 @@ def test_cluster_usage_resources(
     node_podcount_roles: Sequence[tuple[str, int, Sequence[str]]],
 ) -> None:
     total = sum(count for _, count, roles in node_podcount_roles if excluded_node_role not in roles)
-    unset_resources = api.ResourceRequirements(
-        limits=api.ResourceRequirement(), requests=api.ResourceRequirement()
-    )
     pods = [
         pod
         for node, count, _ in node_podcount_roles
-        for pod in APIPodFactory.batch(
-            count, spec=PodSpecFactory.build(node=node, resources=unset_resources)
-        )
+        for pod in APIPodFactory.batch(count, spec=PodSpecFactory.build(node=node))
     ]
     nodes = [
         APINodeFactory.build(
@@ -315,9 +305,8 @@ def test_cluster_usage_resources(
         APIDataFactory.build(pods=pods, nodes=nodes),
     )
 
-    ref_pod = APIPodFactory.build(spec=PodSpecFactory.build(resources=unset_resources))
-    assert _memory_resources(cluster).count_total_requests == len(ref_pod.spec.containers) * total
-    assert _cpu_resources(cluster).count_total_requests == len(ref_pod.spec.containers) * total
+    assert _memory_resources(cluster).count_total == len(APIPodFactory.build().containers) * total
+    assert _cpu_resources(cluster).count_total == len(APIPodFactory.build().containers) * total
     assert sum(len(pods) for _, pods in _pod_resources(cluster)) == total
 
 

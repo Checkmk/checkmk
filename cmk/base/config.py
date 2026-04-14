@@ -753,6 +753,9 @@ def _perform_post_config_loading_actions(
         cmc_pnp_update_on_restart=cmc_pnp_update_on_restart,
         max_long_output_size=max_long_output_size,
         influxdb_connections=influxdb_connections,
+        cmc_graphite=cmc_graphite,
+        alert_handler_event_types=alert_handler_event_types,
+        alert_handler_rules=alert_handler_rules,
     )
 
     config_cache = ConfigCache(loaded_config, get_builtin_host_labels, edition).initialize(

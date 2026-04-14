@@ -120,6 +120,9 @@ EMPTY_CONFIG = LoadedConfigFragment(
     cmc_pnp_update_on_restart=False,
     max_long_output_size=2000,
     influxdb_connections={},
+    cmc_graphite=[],
+    alert_handler_event_types=["statechange"],
+    alert_handler_rules=[],
 )
 
 

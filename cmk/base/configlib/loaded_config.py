@@ -17,6 +17,7 @@ import cmk.utils
 import cmk.utils.tags
 from cmk.base.default_config.cmc import (
     CMCAuthorization,
+    CMCGraphiteConnection,
     CMCInitialScheduling,
     LogCmkHelpers,
     RealTimeChecks,
@@ -149,3 +150,6 @@ class LoadedConfigFragment:
     cmc_pnp_update_on_restart: bool
     max_long_output_size: int
     influxdb_connections: Mapping[str, dict[str, Any]]
+    cmc_graphite: Sequence[CMCGraphiteConnection]
+    alert_handler_event_types: Sequence[Literal["statechange", "checkresult"]]
+    alert_handler_rules: Sequence[object]

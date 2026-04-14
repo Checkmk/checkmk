@@ -3,26 +3,44 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Mapping
 from pathlib import Path
+from pprint import pformat
+from typing import Literal
+
+from pydantic import BaseModel
 
 from .bakery_api.v1 import FileGenerator, OS, Plugin, PluginConfig, register
 
 
-def get_apache_status_files(conf: list[str]) -> FileGenerator:
-    yield Plugin(base_os=OS.LINUX, source=Path("apache_status.py"))
-
-    yield PluginConfig(
-        base_os=OS.LINUX,
-        lines=get_apache_status_lines(conf),
-        target=Path("apache_status.cfg"),
-        include_header=True,
-    )
+class _Config(BaseModel):
+    deployment: tuple[Literal["do_not_deploy", "sync", "cached"], float | None]
+    instances: tuple[Literal["autodetect", "static"], object] | None = None
 
 
-def get_apache_status_lines(conf: list[str]) -> list[str]:
-    if conf[0] == "static":
-        return ["servers = %r" % conf[1]]
-    return ["ssl_ports = %r" % conf[1]]
+def get_apache_status_files(conf: Mapping[str, object]) -> FileGenerator:
+    config = _Config.model_validate(conf)
+
+    if config.deployment[0] == "do_not_deploy":
+        return
+
+    interval = None if (v := config.deployment[1]) is None else int(v)
+    yield Plugin(base_os=OS.LINUX, source=Path("apache_status.py"), interval=interval)
+
+    if config.instances is not None:
+        mode, data = config.instances
+        yield PluginConfig(
+            base_os=OS.LINUX,
+            lines=_get_apache_status_config(mode, data),
+            target=Path("apache_status.cfg"),
+            include_header=True,
+        )
+
+
+def _get_apache_status_config(mode: str, data: object) -> list[str]:
+    if mode == "static":
+        return ["servers = %s" % pformat(data)]
+    return ["ssl_ports = %r" % (data,)]
 
 
 register.bakery_plugin(

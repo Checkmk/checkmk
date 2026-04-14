@@ -47,6 +47,10 @@ void main() {
                     variable: "CI_ORA2_DB_TEST_PASSWORD",
                 ),
                 string(
+                    credentialsId: "CI_ORA_TEST_PASSWORD",
+                    variable: "CI_ORA_TEST_PASSWORD",
+                ),
+                string(
                     credentialsId: "CI_ORA2_DB_TEST_SERVER",
                     variable: "SERVER",
                 ),

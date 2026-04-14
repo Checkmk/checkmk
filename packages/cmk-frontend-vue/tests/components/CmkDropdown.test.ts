@@ -432,6 +432,7 @@ test('dropdown option immediate focus and filtering', async () => {
       options: {
         type: 'filtered',
         suggestions: [
+          { title: 'aaaaaaaa', name: 'aaaaaaa' },
           { title: 'Option 1', name: 'option1' },
           { title: 'Option 2', name: 'option2' }
         ]
@@ -448,11 +449,22 @@ test('dropdown option immediate focus and filtering', async () => {
   const dropdown = screen.getByRole('combobox', { name: 'some aria label' })
   await user.click(dropdown)
 
-  await user.keyboard('2[Enter]')
+  await user.keyboard('Option 2[Enter]')
   expect(selectedOption).toBe('option2')
 
   await user.click(dropdown)
-  await user.keyboard('2[Backspace][Enter]')
+  await user.keyboard('Option 2[Backspace][Enter]')
+  expect(selectedOption).toBe('option1')
+
+  // reset
+  await user.keyboard('Option 2[Enter]')
+  expect(selectedOption).toBe('option2')
+
+  // same test, but lets wait to load suggestions for Option 2
+  await user.click(dropdown)
+  await user.keyboard('Option 2')
+  await screen.findByRole('option', { name: 'Option 2' })
+  await user.keyboard('[Backspace][Enter]')
   expect(selectedOption).toBe('option1')
 })
 
@@ -951,45 +963,42 @@ test('callback-filtered dropdown debounces querySuggestions while typing', async
   vi.useRealTimers()
 })
 
-test.fails(
-  'callback-filtered dropdown makes only one request when reopened after selection',
-  async () => {
-    vi.useFakeTimers()
-    try {
-      const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
-      const querySuggestions = vi.fn(async (_: string) => {
-        return new Response([
-          { name: 'option1', title: 'Option 1' },
-          { name: 'option2', title: 'Option 2' }
-        ])
-      })
+test('callback-filtered dropdown makes only one request when reopened after selection', async () => {
+  vi.useFakeTimers()
+  try {
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
+    const querySuggestions = vi.fn(async (_: string) => {
+      return new Response([
+        { name: 'option1', title: 'Option 1' },
+        { name: 'option2', title: 'Option 2' }
+      ])
+    })
 
-      render(CmkDropdown, {
-        props: {
-          options: { type: 'callback-filtered', querySuggestions },
-          selectedOption: null,
-          inputHint: 'Select an option',
-          label: 'some aria label'
-        }
-      })
+    render(CmkDropdown, {
+      props: {
+        options: { type: 'callback-filtered', querySuggestions },
+        selectedOption: null,
+        inputHint: 'Select an option',
+        label: 'some aria label'
+      }
+    })
 
-      const dropdown = screen.getByRole('combobox', { name: 'some aria label' })
-      await user.click(dropdown)
-      await user.click(await screen.findByRole('option', { name: 'Option 2' }))
+    const dropdown = screen.getByRole('combobox', { name: 'some aria label' })
+    await user.click(dropdown)
+    await user.click(await screen.findByRole('option', { name: 'Option 2' }))
 
-      querySuggestions.mockClear()
+    querySuggestions.mockClear()
 
-      await user.click(dropdown)
-      await screen.findByRole('option', { name: 'Option 1' })
-      // Advance past the debounce delay (300ms) to flush any pending filter-change requests
-      await vi.advanceTimersByTimeAsync(1000)
+    await user.click(dropdown)
+    await screen.findByRole('option', { name: 'Option 1' })
+    // Advance past the debounce delay (300ms) to flush any pending filter-change requests
+    await vi.advanceTimersByTimeAsync(1000)
 
-      expect(querySuggestions).toHaveBeenCalledTimes(1)
-    } finally {
-      vi.useRealTimers()
-    }
+    expect(querySuggestions).toHaveBeenCalledTimes(1)
+  } finally {
+    vi.useRealTimers()
   }
-)
+})
 
 test('dropdown with filtered options does not prefill filter input', async () => {
   const user = userEvent.setup()

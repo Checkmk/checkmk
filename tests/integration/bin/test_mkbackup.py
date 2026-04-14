@@ -39,6 +39,21 @@ def site(site_factory: SiteFactory, request: pytest.FixtureRequest) -> Generator
         )
 
 
+def _cleanup_restore_lock(site: Site) -> None:
+    """Remove the restore-state file left behind by mkbackup restore.
+
+    mkbackup restore writes /tmp/restore-<site_id>.state and never removes it.
+    When a site is recreated under the same name (e.g. across test runs) the file
+    may be owned by a different UID, causing the next restore attempt to fail with
+    a permission conflict.  Removing it unconditionally before *and* after every
+    test that touches the site keeps things clean regardless of test ordering or
+    whether a previous run was interrupted.
+    """
+    restore_lock_path = Path(f"/tmp/restore-{site.id}.state")
+    if restore_lock_path.exists():
+        subprocess.run(["/usr/bin/sudo", "rm", str(restore_lock_path)], check=True)
+
+
 @contextmanager
 def simulate_backup_lock(site_for_mkbackup_tests: Site) -> Iterator[None]:
     lock_path = mkbackup_lock_dir / f"mkbackup-{site_for_mkbackup_tests.id}.lock"
@@ -69,26 +84,6 @@ def simulate_backup_lock(site_for_mkbackup_tests: Site) -> Iterator[None]:
 
     assert not further_stdout, "No further output expected from file locking process"
     assert not stderr, "No stderr output expected from file locking process"
-
-
-@pytest.fixture(name="cleanup_restore_lock")
-def cleanup_restore_lock_fixture(site_for_mkbackup_tests: Site) -> Iterator[None]:
-    """Prevent conflict with file from other test runs
-
-    The restore lock is left behind after the restore. In case a new site
-    is created with the same name, there will be a permission conflict
-    resulting in a test failure."""
-
-    def rm() -> None:
-        restore_lock_path = Path(f"/tmp/restore-{site_for_mkbackup_tests.id}.state")
-        if restore_lock_path.exists():
-            subprocess.run(["/usr/bin/sudo", "rm", str(restore_lock_path)], check=True)
-
-    rm()
-    try:
-        yield
-    finally:
-        rm()
 
 
 @pytest.fixture(name="backup_path")
@@ -137,6 +132,7 @@ def backup_lock_dir_fixture(
 
 @pytest.fixture(name="test_cfg", scope="function")
 def test_cfg_fixture(site_for_mkbackup_tests: Site, backup_path: str) -> Iterator[None]:
+    _cleanup_restore_lock(site_for_mkbackup_tests)
     site_for_mkbackup_tests.ensure_running()
 
     cfg = {
@@ -357,6 +353,7 @@ OX8nmEKiFXoov7nHZwxn5qYhZsm9y/QS6oP6A6y1vBqt34+GtX2bitk=
     site_for_mkbackup_tests.delete_file("etc/check_mk/backup_keys.mk")
     site_for_mkbackup_tests.delete_file("etc/check_mk/backup.mk")
     site_for_mkbackup_tests.ensure_running()
+    _cleanup_restore_lock(site_for_mkbackup_tests)
 
 
 def _execute_backup(site_for_mkbackup_tests: Site, job_id: str = "testjob") -> str:
@@ -459,14 +456,12 @@ def test_mkbackup_list_jobs(site_for_mkbackup_tests: Site) -> None:
     assert "Tästjob" in p.stdout
 
 
-@pytest.mark.skip(reason="CMK-26691; investigating ...")
 @pytest.mark.usefixtures("test_cfg", "backup_lock_dir")
 def test_mkbackup_simple_backup(site_for_mkbackup_tests: Site) -> None:
     _execute_backup(site_for_mkbackup_tests)
 
 
-@pytest.mark.skip(reason="CMK-26691; investigating ...")
-@pytest.mark.usefixtures("test_cfg", "cleanup_restore_lock")
+@pytest.mark.usefixtures("test_cfg")
 def test_mkbackup_simple_restore(site_for_mkbackup_tests: Site) -> None:
     backup_id = _execute_backup(site_for_mkbackup_tests)
     _execute_restore(site_for_mkbackup_tests, backup_id)
@@ -477,8 +472,7 @@ def test_mkbackup_encrypted_backup(site_for_mkbackup_tests: Site) -> None:
     _execute_backup(site_for_mkbackup_tests, job_id="testjob-encrypted")
 
 
-@pytest.mark.skip(reason="CMK-26691; investigating ...")
-@pytest.mark.usefixtures("test_cfg", "cleanup_restore_lock")
+@pytest.mark.usefixtures("test_cfg")
 @pytest.mark.skipif(
     os.environ.get("DISTRO") in DISTROS_MISSING_WHITELIST_ENVIRONMENT_FOR_SU,
     reason="This test would use preserve-env, which needs --white-list-environment under alma-8, which is not available",
@@ -492,8 +486,7 @@ def test_mkbackup_encrypted_backup_and_restore(site_for_mkbackup_tests: Site) ->
     _execute_restore(site_for_mkbackup_tests, backup_id, env)
 
 
-@pytest.mark.skip(reason="CMK-26691; investigating ...")
-@pytest.mark.usefixtures("test_cfg", "cleanup_restore_lock")
+@pytest.mark.usefixtures("test_cfg")
 @pytest.mark.skipif(
     os.environ.get("DISTRO") in DISTROS_MISSING_WHITELIST_ENVIRONMENT_FOR_SU,
     reason="This test would use preserve-env, which needs --white-list-environment under alma-8, which is not available",
@@ -512,15 +505,13 @@ def test_mkbackup_encrypted_backup_and_restore_expired(site_for_mkbackup_tests: 
     _execute_restore(site_for_mkbackup_tests, backup_id, env)
 
 
-@pytest.mark.skip(reason="CMK-26691; investigating ...")
-@pytest.mark.usefixtures("test_cfg", "cleanup_restore_lock")
+@pytest.mark.usefixtures("test_cfg")
 def test_mkbackup_compressed_backup_and_restore(site_for_mkbackup_tests: Site) -> None:
     backup_id = _execute_backup(site_for_mkbackup_tests, job_id="testjob-compressed")
     _execute_restore(site_for_mkbackup_tests, backup_id)
 
 
-@pytest.mark.skip(reason="CMK-26691; investigating ...")
-@pytest.mark.usefixtures("test_cfg", "cleanup_restore_lock")
+@pytest.mark.usefixtures("test_cfg")
 def test_mkbackup_no_history_backup_and_restore(
     site_for_mkbackup_tests: Site, backup_path: str
 ) -> None:
@@ -544,7 +535,7 @@ def test_mkbackup_no_history_backup_and_restore(
     _execute_restore(site_for_mkbackup_tests, backup_id)
 
 
-@pytest.mark.usefixtures("test_cfg", "cleanup_restore_lock")
+@pytest.mark.usefixtures("test_cfg")
 def test_mkbackup_locking(site_for_mkbackup_tests: Site) -> None:
     backup_id = _execute_backup(site_for_mkbackup_tests, job_id="testjob-no-history")
     with simulate_backup_lock(site_for_mkbackup_tests):

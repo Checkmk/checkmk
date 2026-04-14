@@ -146,7 +146,7 @@ class ModuleLayersChecker(ASTVisitorChecker):
         rules in the cmk namespace. Dependencies of the package's tests are managed through
         bazel dependencies. We feel no need to enforce cmk module layer rules there.
         """
-        base_paths = ["packages", "non-free/packages"]
+        base_paths = ["tests", "packages", "non-free/packages"]
         for base_path in base_paths:
             if relative_path.is_below(base_path):
                 relative_to_pkg = ModulePath(*relative_path.relative_to(base_path).parts[1:])

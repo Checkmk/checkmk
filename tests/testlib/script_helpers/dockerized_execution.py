@@ -220,12 +220,12 @@ def _get_registry_data(
 
 
 def _handle_api_error(exc: docker.errors.APIError) -> None:
-    if "no basic auth" in "%s" % exc:
-        raise Exception(
-            "No authentication information stored for %s. You will have to login to the "
+    if exc.status_code == 401 or (exc.status_code == 500 and "no basic auth" in f"{exc}"):
+        raise RuntimeError(
+            'Could not authenticate against "%s". You will have to login to the '
             'registry using "docker login %s" to be able to execute the tests.'
             % (_DOCKER_REGISTRY, _DOCKER_REGISTRY_URL)
-        )
+        ) from exc
     if "request canceled while waiting for connection" in "%s" % exc:
         return None
     if "dial tcp: lookup " in "%s" % exc:

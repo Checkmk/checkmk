@@ -8,11 +8,13 @@ from typing import get_args, get_type_hints
 import pytest
 
 from cmk.ccc.user import UserId
-from cmk.gui.dashboard import get_all_dashboards
+from cmk.gui.dashboard import DashletConfig, get_all_dashboards
 from cmk.gui.dashboard.api._utils import INTERNAL_TO_API_TYPE_NAME
 from cmk.gui.dashboard.api.model.constants import RESPONSIVE_GRID_BREAKPOINTS
+from cmk.gui.dashboard.api.model.widget import WidgetTitle
 from cmk.gui.dashboard.api.model.widget_content import _CONTENT_TYPES
 from cmk.gui.dashboard.api.model.widget_content._base import BaseWidgetContent
+from cmk.gui.openapi.framework.model import ApiOmitted
 from cmk.gui.type_defs import ColumnSpec, DashboardEmbeddedViewSpec, SorterSpec, VisualLinkSpec
 from cmk.gui.views.icon.registry import all_icons
 from cmk.livestatus_client.testing import MockLiveStatusConnection
@@ -22,6 +24,38 @@ from tests.testlib.unit.gui.dashboard_api_test_helper import (
     create_widget,
 )
 from tests.testlib.unit.rest_api_client import ClientRegistry
+
+
+@pytest.mark.parametrize(
+    "title_url,expected_url",
+    [
+        pytest.param("javascript:alert(1)", None, id="javascript scheme blocked"),
+        pytest.param("data:text/html,<script>alert(1)</script>", None, id="data scheme blocked"),
+        pytest.param("vbscript:msgbox(1)", None, id="vbscript scheme blocked"),
+        pytest.param("http://example.com", "http://example.com", id="http allowed"),
+        pytest.param("https://example.com", "https://example.com", id="https allowed"),
+        pytest.param(
+            "view.py?view_name=allhosts", "view.py?view_name=allhosts", id="relative URL allowed"
+        ),
+        pytest.param(
+            "view.py?label=cmk/os:linux",
+            "view.py?label=cmk/os:linux",
+            id="colon in query params allowed",
+        ),
+        pytest.param(None, None, id="None omitted"),
+    ],
+)
+def test_widget_title_from_internal_sanitizes_title_url(
+    title_url: str | None, expected_url: str | None
+) -> None:
+    config: DashletConfig = {"show_title": True, "type": "test"}
+    if title_url is not None:
+        config["title_url"] = title_url
+    result = WidgetTitle.from_internal(config)
+    if expected_url is None:
+        assert isinstance(result.url, ApiOmitted)
+    else:
+        assert result.url == expected_url
 
 
 @pytest.mark.parametrize("widget_api_model", _CONTENT_TYPES)

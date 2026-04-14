@@ -14,6 +14,7 @@ from cmk.gui.dashboard.type_defs import DashletConfig, DashletPosition, DashletS
 from cmk.gui.openapi.framework import ApiContext
 from cmk.gui.openapi.framework.model import api_field, api_model, ApiOmitted
 from cmk.gui.type_defs import DashboardEmbeddedViewSpec, VisualContext
+from cmk.utils.urls import is_allowed_url
 
 from .type_defs import AnnotatedInfoName
 from .widget_content import content_from_internal, WidgetContent
@@ -55,9 +56,14 @@ class WidgetTitle:
 
     @classmethod
     def from_internal(cls, config: DashletConfig) -> Self:
+        raw_url = config.get("title_url")
+        if raw_url is not None and not is_allowed_url(
+            raw_url, cross_domain=True, schemes=["http", "https"]
+        ):
+            raw_url = None
         return cls(
             text=config.get("title", "$DEFAULT_TITLE$"),
-            url=config.get("title_url", ApiOmitted()),
+            url=raw_url if raw_url is not None else ApiOmitted(),
             render_mode=cls._render_mode_from_internal(config.get("show_title", True)),
         )
 

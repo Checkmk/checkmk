@@ -75,7 +75,7 @@ export async function runInKeepaliveTerminal(
   while (Date.now() < deadline) {
     if (fs.existsSync(donePath)) {
       let output = ''
-      let exitCode = 0
+      let exitCode: number
       try {
         output = fs.readFileSync(outPath, 'utf-8')
       } catch {

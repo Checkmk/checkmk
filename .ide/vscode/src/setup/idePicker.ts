@@ -149,7 +149,7 @@ export function registerIdePickers(
       log(`Configure settings: ${selected.join(', ')}`)
       for (const name of selected) {
         if (settingsSets[name]) {
-          await applySettings(displayName(name), settingsSets[name], false, extensionSets)
+          await applySettings(displayName(name), settingsSets[name], false)
         }
       }
     })
@@ -163,7 +163,7 @@ export function registerIdePickers(
       for (const name of selected) {
         await installExtensions(displayName(name), getExtensionIds(extensionSets, name))
         if (settingsSets[name]) {
-          await applySettings(displayName(name), settingsSets[name], false, extensionSets)
+          await applySettings(displayName(name), settingsSets[name], false)
         }
       }
     })

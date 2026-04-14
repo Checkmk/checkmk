@@ -20,13 +20,13 @@ beforeEach(() => {
 
 describe('buildEffectiveSettings', () => {
   const baseEntry: SettingsEntry = {
-    folder: { 'editor.fontSize': 14 as any, 'python.analysis.enabled': true as any },
-    workspace: { 'files.autoSave': 'afterDelay' as any },
-    user: { 'editor.theme': 'dark' as any }
+    folder: { 'editor.fontSize': 14, 'python.analysis.enabled': true },
+    workspace: { 'files.autoSave': 'afterDelay' },
+    user: { 'editor.theme': 'dark' }
   }
 
   it('returns settings unchanged when extensionSets is null', () => {
-    const result = buildEffectiveSettings(baseEntry, 'test', null)
+    const result = buildEffectiveSettings(baseEntry, 'test')
     expect(result.folderSettings).toEqual({
       'editor.fontSize': 14,
       'python.analysis.enabled': true
@@ -40,10 +40,10 @@ describe('buildEffectiveSettings', () => {
 
     const entry: SettingsEntry = {
       ...baseEntry,
-      disableFolder: { 'python.analysis.enabled': false as any }
+      disableFolder: { 'python.analysis.enabled': false }
     }
 
-    const result = buildEffectiveSettings(entry, 'test', null)
+    const result = buildEffectiveSettings(entry, 'test')
     expect(result.folderSettings['python.analysis.enabled']).toBe(true)
   })
 
@@ -52,10 +52,10 @@ describe('buildEffectiveSettings', () => {
 
     const entry: SettingsEntry = {
       ...baseEntry,
-      disableFolder: { 'python.analysis.enabled': false as any }
+      disableFolder: { 'python.analysis.enabled': false }
     }
 
-    const result = buildEffectiveSettings(entry, 'test', null)
+    const result = buildEffectiveSettings(entry, 'test')
     expect(result.folderSettings['python.analysis.enabled']).toBe(false)
   })
 
@@ -64,10 +64,10 @@ describe('buildEffectiveSettings', () => {
 
     const entry: SettingsEntry = {
       ...baseEntry,
-      disableWorkspace: { 'files.autoSave': 'off' as any }
+      disableWorkspace: { 'files.autoSave': 'off' }
     }
 
-    const result = buildEffectiveSettings(entry, 'test', null)
+    const result = buildEffectiveSettings(entry, 'test')
     expect(result.workspaceSettings['files.autoSave']).toBe('off')
   })
 
@@ -76,10 +76,10 @@ describe('buildEffectiveSettings', () => {
 
     const entry: SettingsEntry = {
       ...baseEntry,
-      disableUser: { 'editor.theme': 'light' as any }
+      disableUser: { 'editor.theme': 'light' }
     }
 
-    const result = buildEffectiveSettings(entry, 'test', null)
+    const result = buildEffectiveSettings(entry, 'test')
     expect(result.userSettings['editor.theme']).toBe('light')
   })
 
@@ -88,15 +88,15 @@ describe('buildEffectiveSettings', () => {
 
     const entry: SettingsEntry = {
       ...baseEntry,
-      disableFolder: { 'python.linting': false as any }
+      disableFolder: { 'python.linting': false }
     }
 
-    const result = buildEffectiveSettings(entry, 'test', null)
+    const result = buildEffectiveSettings(entry, 'test')
     expect(result.folderSettings['python.linting']).toBe(false)
   })
 
   it('handles empty settings entry', () => {
-    const result = buildEffectiveSettings({}, 'test', null)
+    const result = buildEffectiveSettings({}, 'test')
     expect(result.folderSettings).toEqual({})
     expect(result.workspaceSettings).toEqual({})
     expect(result.userSettings).toEqual({})

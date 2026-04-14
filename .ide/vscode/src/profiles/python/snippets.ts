@@ -14,7 +14,7 @@ interface SnippetConfig {
   scope: string
 }
 
-export function registerSnippets(context: vscode.ExtensionContext): vscode.Disposable[] {
+export function registerSnippets(): vscode.Disposable[] {
   const snippets = loadConfig<Record<string, SnippetConfig>>('snippets')
 
   const provider = vscode.languages.registerCompletionItemProvider(

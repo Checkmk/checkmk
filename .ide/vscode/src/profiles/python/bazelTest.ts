@@ -55,7 +55,7 @@ function queryBazelTarget(filePath: string, wsPath: string): string | null {
   }
 }
 
-export function registerBazelTestRunner(context: vscode.ExtensionContext): vscode.Disposable[] {
+export function registerBazelTestRunner(): vscode.Disposable[] {
   const disposables: vscode.Disposable[] = []
 
   disposables.push(

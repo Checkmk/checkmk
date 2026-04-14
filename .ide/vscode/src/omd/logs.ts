@@ -305,7 +305,7 @@ export function hasLogsForService(service: string): boolean {
   return LOG_CATALOG.some((e) => e.service === service)
 }
 
-export function registerLogs(_context: vscode.ExtensionContext): void {
+export function registerLogs(): void {
   // Live tailing is delivered via terminals from openLog(); no document
   // provider or commands need to be registered here.
 }

@@ -1,36 +1,36 @@
-genrule(
-    name = "test",
-    srcs = glob(
-        [
-            "src/**",
-            "tests/**",
-            "config/**",
-        ],
-        allow_empty = True,
-        exclude = [
-            "node_modules/**",
-            "out/**",
-        ],
-    ) + [
-        "package.json",
-        "package-lock.json",
+load("@aspect_rules_js//js:defs.bzl", "js_library")
+load("@npm//:defs.bzl", "npm_link_all_packages")
+load("@npm//:vitest/package_json.bzl", vitest_bin = "bin")
+load("@rules_python//python:defs.bzl", "py_binary")
+
+npm_link_all_packages(name = "node_modules")
+
+js_library(
+    name = "src_ts",
+    srcs = glob([
+        "src/**/*.ts",
+        "src/**/*.css",
+    ]) + ["tsconfig.json"],
+)
+
+js_library(
+    name = "test_ts",
+    srcs = glob(["tests/**/*.ts"]) + [
         "tsconfig.json",
         "vitest.config.ts",
     ],
-    outs = ["test_result.txt"],
-    cmd = """
-        ROOT=$$PWD
-        EXT_DIR=$$(dirname $(location package.json))
-        cd "$$EXT_DIR"
-        npm ci --ignore-scripts 2>&1
-        npx vitest run 2>&1 | tee "$$ROOT/$@"
-        test $${PIPESTATUS[0]} -eq 0
-    """,
-    local = True,
-    tags = [
-        "manual",
-        "no-remote",
-    ],
+)
+
+vitest_bin.vitest_test(
+    name = "test",
+    args = ["run"],
+    chdir = package_name(),
+    data = [
+        ":node_modules/@types",
+        ":src_ts",
+        ":test_ts",
+        "//:node_modules/vitest",
+    ] + glob(["config/**"]),
 )
 
 py_binary(
@@ -55,7 +55,6 @@ genrule(
         ],
     ) + [
         "package.json",
-        "package-lock.json",
         "tsconfig.json",
         "esbuild.js",
         ".vscodeignore",
@@ -69,7 +68,6 @@ genrule(
         ROOT=$$PWD
         EXT_DIR=$$(dirname $(location package.json))
         cd "$$EXT_DIR"
-        npm ci --ignore-scripts 2>&1
         node esbuild.js
         npx @vscode/vsce package --no-dependencies -o cmk-vscode.vsix 2>&1
         mkdir -p $$(dirname "$$ROOT/$@")

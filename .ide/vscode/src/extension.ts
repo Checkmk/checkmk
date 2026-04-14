@@ -99,7 +99,7 @@ export function activate(context: vscode.ExtensionContext): void {
   registerIdePickers(context, extensionSets, settingsSets)
   registerGerritPush(context)
   registerOmd(context, refreshAll, refreshOmd)
-  registerLogs(context)
+  registerLogs()
 
   // cmk-dev-site: create site command + update check
   vscode.commands.executeCommand('setContext', 'cmk.devSiteInstalled', isDevSiteInstalled())
@@ -143,12 +143,12 @@ export function activate(context: vscode.ExtensionContext): void {
   const pythonDisable = getDisableSettings('python')
   profileManager.register(
     'python',
-    (ctx) => {
+    () => {
       return [
         ...registerMypyConfigWatcher(),
-        ...registerInterpreterResolver(ctx),
-        ...registerSnippets(ctx),
-        ...registerBazelTestRunner(ctx),
+        ...registerInterpreterResolver(),
+        ...registerSnippets(),
+        ...registerBazelTestRunner(),
         toggleSettings(pythonDisable),
         { dispose: () => killAllDmypyDaemons() },
         {

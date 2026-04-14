@@ -23,7 +23,7 @@ function resolveInterpreterPath(): void {
   }
 }
 
-export function registerInterpreterResolver(context: vscode.ExtensionContext): vscode.Disposable[] {
+export function registerInterpreterResolver(): vscode.Disposable[] {
   const cmd = vscode.commands.registerCommand('cmk.resolveInterpreter', resolveInterpreterPath)
   return [cmd]
 }

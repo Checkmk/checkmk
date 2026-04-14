@@ -3,6 +3,7 @@ bazel/thirdparty/modules
 .venv
 
 node_modules
+.ide/vscode/node_modules
 bazel/tools/node_modules
 packages/cmk-frontend/node_modules
 packages/cmk-frontend-vue/node_modules

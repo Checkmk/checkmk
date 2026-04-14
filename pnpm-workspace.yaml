@@ -1,4 +1,5 @@
 packages:
+    - '.ide/vscode'
     - 'bazel/tools'
     - 'packages/cmk-frontend'
     - 'packages/cmk-frontend-vue'

@@ -59,12 +59,10 @@ function readFolderSettingsFile(wsFolder: vscode.Uri | undefined): Record<string
 }
 
 export function getSettingsMismatches(
-  settingsConfig?: Record<string, SettingsEntry> | null,
-  extensionsConfig?: ExtensionSets | null
+  settingsConfig?: Record<string, SettingsEntry> | null
 ): SettingsMismatch[] {
   const settingsSets: Record<string, SettingsEntry> =
     settingsConfig || loadConfig<Record<string, SettingsEntry>>('settings')
-  const extensionSets: ExtensionSets = extensionsConfig || loadConfig<ExtensionSets>('extensions')
   const mismatches: SettingsMismatch[] = []
 
   const isFolderWorkspace = vscode.workspace.workspaceFile === undefined
@@ -87,7 +85,7 @@ export function getSettingsMismatches(
     {
       scope: 'user' as const,
       label: 'user',
-      getter: (i: Inspection, _key: string) => i?.globalValue
+      getter: (i: Inspection) => i?.globalValue
     }
   ]
 
@@ -97,8 +95,7 @@ export function getSettingsMismatches(
     const displayName = FAMILY_DISPLAY[family] || family
     const { folderSettings, workspaceSettings, userSettings } = buildEffectiveSettings(
       settingsEntry,
-      family,
-      extensionSets
+      family
     )
 
     const scopeSettings = {

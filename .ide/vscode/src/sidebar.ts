@@ -61,10 +61,7 @@ function refreshStateCache(): StateCache {
     const pythonEnvsActive = !!pyEnvsExt && pyEnvsExt.isActive
     const environment = environmentSection.getEnvironmentInfo(wsPath)
     const extensionHealth = ideHealthSection.getExtensionHealth(_extensionsConfig)
-    const settingsMismatches = ideHealthSection.getSettingsMismatches(
-      _settingsConfig,
-      _extensionsConfig
-    )
+    const settingsMismatches = ideHealthSection.getSettingsMismatches(_settingsConfig)
     const omdSites = detectOmdSites().map((site) => {
       const status = getOmdStatus(site.name)
       return { ...site, status }

@@ -145,8 +145,7 @@ export interface SettingsEntry {
 
 export function buildEffectiveSettings(
   settingsEntry: SettingsEntry,
-  setName: string,
-  extensionSets: ExtensionSets | null
+  setName: string
 ): {
   folderSettings: Record<string, SettingValue>
   workspaceSettings: Record<string, SettingValue>
@@ -168,13 +167,11 @@ export function buildEffectiveSettings(
 export async function applySettings(
   setName: string,
   settingsEntry: SettingsEntry,
-  skipConfirm = false,
-  extensionSets: ExtensionSets | null = null
+  skipConfirm = false
 ): Promise<void> {
   const { folderSettings, workspaceSettings, userSettings } = buildEffectiveSettings(
     settingsEntry,
-    setName,
-    extensionSets
+    setName
   )
 
   const folderChanges = collectChanges(folderSettings, vscode.ConfigurationTarget.WorkspaceFolder)

@@ -101,6 +101,12 @@ EMPTY_CONFIG = LoadedConfigFragment(
     cmc_initial_scheduling={"burst": 10, "spread_cmk": 1200, "spread_generic": 150},
     cmc_housekeeping_interval=1000,
     cmc_state_retention_interval=600,
+    cmc_debug_notifications=False,
+    cmc_dump_core=False,
+    cmc_log_microtime=False,
+    cmc_log_rotation_method=3,
+    cmc_log_limit=50 * 1024 * 1024,
+    cmc_log_cmk_helpers={"log_level": 0, "debug": False},
 )
 
 

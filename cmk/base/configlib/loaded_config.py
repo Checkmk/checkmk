@@ -15,7 +15,7 @@ from typing import (
 
 import cmk.utils
 import cmk.utils.tags
-from cmk.base.default_config.cmc import CMCInitialScheduling, RealTimeChecks
+from cmk.base.default_config.cmc import CMCInitialScheduling, LogCmkHelpers, RealTimeChecks
 from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.rrd.config import RRDObjectConfig
 from cmk.utils.host_storage import FolderAttributesForBase
@@ -124,3 +124,9 @@ class LoadedConfigFragment:
     cmc_initial_scheduling: CMCInitialScheduling
     cmc_housekeeping_interval: int
     cmc_state_retention_interval: int
+    cmc_debug_notifications: bool
+    cmc_dump_core: bool
+    cmc_log_microtime: bool
+    cmc_log_rotation_method: int
+    cmc_log_limit: int
+    cmc_log_cmk_helpers: LogCmkHelpers

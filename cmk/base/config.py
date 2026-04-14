@@ -734,6 +734,12 @@ def _perform_post_config_loading_actions(
         cmc_initial_scheduling=cmc_initial_scheduling,
         cmc_housekeeping_interval=cmc_housekeeping_interval,
         cmc_state_retention_interval=cmc_state_retention_interval,
+        cmc_debug_notifications=cmc_debug_notifications,
+        cmc_dump_core=cmc_dump_core,
+        cmc_log_microtime=cmc_log_microtime,
+        cmc_log_rotation_method=cmc_log_rotation_method,
+        cmc_log_limit=cmc_log_limit,
+        cmc_log_cmk_helpers=cmc_log_cmk_helpers,
     )
 
     config_cache = ConfigCache(loaded_config, get_builtin_host_labels, edition).initialize(

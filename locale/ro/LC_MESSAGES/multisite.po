@@ -5753,6 +5753,10 @@ msgstr "Algoritm"
 msgid "Alias"
 msgstr "Alias"
 
+#, fuzzy
+msgid "Alias Value"
+msgstr "Alias"
+
 msgid "Alias for created gateway hosts"
 msgstr "Alias pentru gazdele de gateway create"
 
@@ -6664,7 +6668,7 @@ msgstr "Afișați întotdeauna casetele de selectare"
 msgid "Always use and expect piggyback data"
 msgstr "Folosiți întotdeauna și așteptați-vă la date piggyback"
 
-msgid "Always use host libraries (force host)"
+msgid "Always use host client (ignore agent-local client)"
 msgstr ""
 
 msgid "Always use service level from rule"
@@ -11746,7 +11750,8 @@ msgstr "Timpi de așteptare CTIO"
 msgid "CTIO transmission errors"
 msgstr "Erori de transmisie CTIO"
 
-msgid "CUPS Printer Queues"
+#, fuzzy
+msgid "CUPS Printer Queues (Linux)"
 msgstr "Cozile de așteptare a imprimantelor CUPS"
 
 msgid "CUPS Queue"
@@ -13093,6 +13098,10 @@ msgstr "Checkmk"
 
 msgid "Checkmk $PERIODNAME$ '$TITLE$'"
 msgstr "Verifică $PERIODNAME$ '$TITLE$'"
+
+#, fuzzy
+msgid "Checkmk AI feature usage notice"
+msgstr "Utilizarea Checkmk fetcher"
 
 # georgem ##############
 #, fuzzy
@@ -16258,11 +16267,21 @@ msgstr "Controler"
 msgid "Controller version"
 msgstr "Versiunea controlerului"
 
+#, python-brace-format
 msgid ""
-"Controls usage of host Oracle Instant Client. Allowed values: 'auto' (auto-"
-"detect, fallback to bundled), 'never' (force bundled), 'always' (force "
-"host), or an absolute path to an OCI library directory (e.g. /usr/lib/"
-"oracle/...)."
+"Controls which Oracle Instant Client the plugin uses to connect to "
+"databases. Two sources are available: the <b>agent-local client</b> — Oracle "
+"Instant Client libraries manually installed alongside the Checkmk agent "
+"under <tt>$MK_LIBDIR/packages/mk-oracle/</tt> — and the <b>host client</b> — "
+"an Oracle installation already present on the monitored host. Note: Checkmk "
+"does <b>not</b> deploy Oracle Instant Client automatically; you must install "
+"it manually if you want to use the agent-local client. <b>Auto-detect</b>: "
+"tries the host client first, falls back to the agent-local client. <b>Never "
+"use host client</b>: uses only the agent-local client, ignores any host "
+"installation. <b>Always use host client</b>: uses only the host client, "
+"ignores the agent-local client. <b>Custom path</b>: uses the Oracle Instant "
+"Client at the specified path; supports environment variable expansion (e.g. "
+"<tt>${ORACLE_HOME}/lib</tt>)."
 msgstr ""
 
 msgid "Convert FQHN"
@@ -19826,10 +19845,6 @@ msgid "Deploy Arcserve plug-in"
 msgstr "Implementarea plugin-ului Arcserve"
 
 #, fuzzy
-msgid "Deploy DB2 memory plug-in"
-msgstr "Implementarea plugin-ului de memorie DB2"
-
-#, fuzzy
 msgid "Deploy Hyper-V monitoring plug-ins"
 msgstr "Implementarea plugin-urilor Unitrends"
 
@@ -19871,14 +19886,6 @@ msgstr "Implementarea plugin-ului Arcserve"
 #, fuzzy
 msgid "Deploy Podman plug-in"
 msgstr "Implementați plugin-ul Mailman"
-
-#, fuzzy
-msgid "Deploy SMART Posix plug-in"
-msgstr "Implementați pluginul SMART"
-
-#, fuzzy
-msgid "Deploy SMART legacy plug-in"
-msgstr "Implementați pluginul SMART"
 
 #, fuzzy
 msgid "Deploy SUSEConnect plug-in"
@@ -19927,10 +19934,6 @@ msgstr "Distribuie fișiere personalizate cu agentul"
 #, fuzzy
 msgid "Deploy iptables plug-in"
 msgstr "Implementați plugin-ul iptables"
-
-#, fuzzy
-msgid "Deploy logged in users plug-in"
-msgstr "Implementați plugin-ul pentru utilizatorii conectați"
 
 msgid "Deploy mk_mongodb.py with authentication."
 msgstr "Implementați mk_mongodb.py cu autentificare."
@@ -19995,14 +19998,6 @@ msgstr "Implementați pluginul %s și configurația acestuia"
 #, fuzzy, python-format
 msgid "Deploy the %s plug-in without configuration"
 msgstr "Implementați plugin-ul %s fără configurare"
-
-#, fuzzy
-msgid "Deploy the APT plug-in"
-msgstr "Implementați plugin-ul APT"
-
-#, fuzzy
-msgid "Deploy the Checkmk CUPS queues plug-in"
-msgstr "Implementați plugin-ul Checkmk CUPS Queues"
 
 #, fuzzy
 msgid "Deploy the Checkmk EMC ScaleIO plug-in"
@@ -21501,9 +21496,6 @@ msgstr "Efectuați o replicare la fiecare"
 msgid "Do actions"
 msgstr "Faceți acțiuni"
 
-msgid "Do an <tt>apt-get update</tt> before the check"
-msgstr "Efectuați o actualizare <tt>apt-get</tt> înainte de verificare"
-
 msgid "Do cancelling actions"
 msgstr "Efectuați acțiuni de anulare"
 
@@ -21581,10 +21573,6 @@ msgid "Do not deploy AD-Replication plug-in"
 msgstr "Nu implementați pluginul AD-Replication"
 
 #, fuzzy
-msgid "Do not deploy DB2 memory plug-in"
-msgstr "Nu implementați pluginul de memorie DB2"
-
-#, fuzzy
 msgid "Do not deploy Hyper-V plug-ins"
 msgstr "Nu implementați plugin-ul Zypper"
 
@@ -21610,10 +21598,6 @@ msgstr "Nu implementați plugin-ul pentru baze de date ORACLE"
 #, fuzzy
 msgid "Do not deploy Oracle plug-in"
 msgstr "Nu implementați plugin-ul iptables"
-
-#, fuzzy
-msgid "Do not deploy SMART plug-in"
-msgstr "Nu implementați pluginul SMART"
 
 #, fuzzy
 msgid "Do not deploy SUSEConnect plug-in"
@@ -21642,10 +21626,6 @@ msgstr "Nu implementați pluginul de actualizare automată a agentului"
 #, fuzzy
 msgid "Do not deploy iptables plug-in"
 msgstr "Nu implementați plugin-ul iptables"
-
-#, fuzzy
-msgid "Do not deploy logged in users plug-in"
-msgstr "Nu implementați plugin-ul pentru utilizatorii conectați"
 
 #, fuzzy
 msgid "Do not deploy mk_mongodb.py plug-in"
@@ -21701,20 +21681,12 @@ msgid "Do not deploy the %s plug-in"
 msgstr "Nu implementați plugin-ul %s."
 
 #, fuzzy
-msgid "Do not deploy the APT plug-in"
-msgstr "Nu implementați extensia APT"
-
-#, fuzzy
 msgid "Do not deploy the Apache Status plug-in"
 msgstr "Nu implementați pluginul Apache Status"
 
 #, fuzzy
 msgid "Do not deploy the Arcserve plug-in"
 msgstr "Nu implementați extensia Arcserve"
-
-#, fuzzy
-msgid "Do not deploy the Checkmk CUPS queues plug-in"
-msgstr "Nu implementați plugin-ul Checkmk CUPS Queues"
 
 #, fuzzy
 msgid "Do not deploy the Checkmk EMC ScaleIO plug-in"
@@ -21727,6 +21699,10 @@ msgstr "Nu implementați pluginul Checkmk Inventory"
 #, fuzzy
 msgid "Do not deploy the Checkmk site objects plug-in"
 msgstr "Nu implementați plugin-ul Checkmk site objects"
+
+#, fuzzy
+msgid "Do not deploy the DB2 memory plug-in"
+msgstr "Nu implementați pluginul de memorie DB2"
 
 #, fuzzy
 msgid "Do not deploy the DB2 plug-in"
@@ -21775,6 +21751,10 @@ msgstr "Nu implementați extensia SAP R/3"
 #, fuzzy
 msgid "Do not deploy the SAP router plug-in"
 msgstr "Nu implementați plugin-ul routerului SAP"
+
+#, fuzzy
+msgid "Do not deploy the SMART plug-in"
+msgstr "Nu implementați extensia APT"
 
 #, fuzzy
 msgid "Do not deploy the SSH daemon configuration plug-in"
@@ -32012,17 +31992,18 @@ msgstr ""
 
 #, fuzzy
 msgid ""
-"Hosts configured via this rule get the <tt>mk_logins</tt> plug-in deployed."
+"Hosts configured via this rule get the <tt>mk_logins</tt> plug-in deployed. "
+"This plug-in counts the number of logged in users on Linux hosts."
 msgstr ""
 "Gazdele configurate prin această regulă primesc pluginul <tt>mk_logins</tt> "
 "implementat."
 
 #, fuzzy
 msgid ""
-"Hosts configured via this rule get the <tt>smart_posix</tt> plug-in "
-"deployed. Assuming you have installed <tt>smartmontools</tt>, your local "
-"hard disks will be monitored for temperature and errors. The legacy plug-in "
-"<tt>smart</tt> is deprecated and should not be used anymore. "
+"Hosts configured via this rule get the <tt>smart_posix</tt> or <tt>smart</"
+"tt> plug-in deployed. Assuming you have installed <tt>smartmontools</tt>, "
+"your local hard disks will be monitored for temperature and errors. The "
+"legacy plug-in <tt>smart</tt> is deprecated and should not be used anymore."
 msgstr ""
 "Gazdele configurate prin această regulă primesc pluginul <tt>smart</tt> "
 "implementat. Presupunând că ați instalat <tt>smartmontools</tt>, harddisk-"
@@ -35971,10 +35952,6 @@ msgid "Instance ID"
 msgstr "ID-ul instanței"
 
 #, fuzzy
-msgid "Instance Name"
-msgstr "Numele instanței"
-
-#, fuzzy
 msgid "Instance discovery"
 msgstr "Rulați descoperirea serviciilor"
 
@@ -36297,7 +36274,7 @@ msgid "Invalid CRCs"
 msgstr "CRC-uri invalide"
 
 #, fuzzy, python-format
-msgid "Invalid CSRF token (%r) for session (%r)"
+msgid "Invalid CSRF token (%r)"
 msgstr "Token CSRF invalid (%r) pentru sesiune (%r)"
 
 #, fuzzy
@@ -45229,7 +45206,7 @@ msgstr "Nu eliminați niciodată fișiere mai noi decât"
 msgid "Never synchronized"
 msgstr "sincronizare"
 
-msgid "Never use host libraries (force bundled)"
+msgid "Never use host client (only agent-local client)"
 msgstr ""
 
 msgid "Never use piggyback data"
@@ -48894,6 +48871,10 @@ msgid "Oracle Data-Guard Stats"
 msgstr "Statistici Oracle Data-Guard"
 
 #, fuzzy
+msgid "Oracle Database Identification"
+msgstr "Configurație implicită"
+
+#, fuzzy
 msgid "Oracle IOSTAT IO"
 msgstr "ORACLE IOSTAT IOs"
 
@@ -48988,6 +48969,10 @@ msgstr "Statistici de memorie ORACLE SGA"
 #, fuzzy
 msgid "Oracle SID of the remote database"
 msgstr "ORACLE SID al bazei de date la distanță"
+
+#, fuzzy
+msgid "Oracle Service Name"
+msgstr "Denumirea serviciului"
 
 #, fuzzy
 msgid "Oracle Wait Class (FG lines are downside)"
@@ -49212,10 +49197,6 @@ msgstr "ORACLE Total de octeți mici de scriere"
 #, fuzzy
 msgid "Oracle data pump dump file small writes"
 msgstr "ORACLE Total scrieri mici"
-
-#, fuzzy
-msgid "Oracle database identification"
-msgstr "Configurație implicită"
 
 #, fuzzy
 msgid "Oracle databases (Linux, Solaris, AIX, Windows)"
@@ -52230,6 +52211,11 @@ msgstr "Vă rugăm să introduceți un număr valid"
 msgid "Please enter a valid time of day range"
 msgstr "Vă rugăm să introduceți un interval orar valid al zilei"
 
+msgid ""
+"Please enter an absolute path or a path starting with an environment "
+"variable (e.g. $VAR/lib)."
+msgstr ""
+
 #, fuzzy
 msgid "Please enter an absolute path."
 msgstr "Vă rugăm să specificați un nume de cale absolută"
@@ -53980,6 +53966,10 @@ msgstr "Interogări pe secundă"
 
 msgid "Query"
 msgstr "Interogare"
+
+#, python-format
+msgid "Query %s resource"
+msgstr "Consultați resursa %s"
 
 msgid "Query Timeout"
 msgstr "Timeout de interogare"
@@ -58701,9 +58691,6 @@ msgstr "Cheia secretă"
 msgid "Section"
 msgstr "Secțiunea"
 
-msgid "Section Content"
-msgstr "Conținutul secțiunii"
-
 msgid "Section Name"
 msgstr "Denumirea secțiunii"
 
@@ -58717,6 +58704,10 @@ msgid "Section(s) cannot be disabled and enabled at the same time:"
 msgstr ""
 "Secțiunea (secțiunile) nu poate (pot) fi dezactivată(e) și activată(e) în "
 "același timp:"
+
+#, fuzzy, python-format
+msgid "Section: %s"
+msgstr "Secțiuni"
 
 msgid "Sections"
 msgstr "Secțiuni"
@@ -64864,6 +64855,10 @@ msgid "String (STR)"
 msgstr "Șir de caractere (STR)"
 
 #, fuzzy
+msgid "String Table"
+msgstr "Șir de caractere (STR)"
+
+#, fuzzy
 msgid "String to be sent in HTTP header as \"User agent\""
 msgstr ""
 "Șir de caractere care urmează să fie trimis în antetul http ca \"User Agent\""
@@ -65682,9 +65677,6 @@ msgstr "Validarea certificatului SSL"
 msgid "TLS certificate verification"
 msgstr "Verificarea certificatului SSL"
 
-msgid "TLS encryption must be enabled when using basic authentication."
-msgstr ""
-
 msgid "TLS processed bytes"
 msgstr "Byte procesați TLS"
 
@@ -65703,10 +65695,6 @@ msgstr "Dezactivați TLS/SSL"
 
 msgid "TLS/SSL/Https disabled"
 msgstr "TLS/SSL/Https dezactivat"
-
-#, fuzzy
-msgid "TNS Alias"
-msgstr "Alias TNS %s"
 
 #, python-format
 msgid "TNS Alias %s"
@@ -67036,6 +67024,12 @@ msgid ""
 "\"Dynamic host management\" to sort the host in location specific folders."
 msgstr ""
 
+#, fuzzy
+msgid ""
+"The Oracle System Identifier (SID) that identifies a specific database "
+"instance on the host. "
+msgstr "Identificatorul senzorului."
+
 msgid ""
 "The Oracle System Identifier (SID) that identifies a specific database "
 "instance on the host. Use SID-based connections for older Oracle "
@@ -67054,7 +67048,9 @@ msgstr ""
 msgid ""
 "The Oracle service name used to connect to the database. A service name "
 "typically represents a database and can map to one or more instances in a "
-"RAC environment."
+"RAC environment. To monitor a Pluggable Database (PDB), specify its service "
+"name here — each PDB exposes its own service name that can be used to "
+"connect to and monitor it independently."
 msgstr ""
 
 #, no-python-format
@@ -68364,6 +68360,15 @@ msgid ""
 msgstr ""
 "Opțiunea de rezervă încearcă să stabilească o conexiune TLS criptată. În "
 "cazul în care celălalt site nu o acceptă, se utilizează textul simplu."
+
+#, python-brace-format
+msgid ""
+"The feature \"Explain with AI\" uses a Large Language Model (LLM) [{models}] "
+"of [{provider}] to generate its output. Generated content (output) may "
+"contain errors or inaccuracies. Ensure all output generated is carefully "
+"reviewed and checked by a human for factual correctness before being used in "
+"any way. For further information visit our "
+msgstr ""
 
 msgid ""
 "The fetcher usage is below 50%, you may decrease the number of fetchers to "
@@ -72727,6 +72732,13 @@ msgstr ""
 "Notă: această funcție este destinată valorilor aberante și, prin urmare, nu "
 "este potrivită pentru configurarea subgrupurilor. "
 
+#, python-brace-format
+msgid ""
+"This feature uses {models} by {provider}. The generated output can contain "
+"errors or inaccuracies and must be carefully reviewed by a human for factual "
+"correctness. "
+msgstr ""
+
 msgid ""
 "This field declares the end date of the forecast, which starts on the last "
 "day given by the previous field of \"Consider history of\". Keep in mind "
@@ -76411,6 +76423,14 @@ msgstr ""
 "Acest lucru va implementa pluginul agent <tt>mk_apt</tt>. Aceasta va activa "
 "verificarea <tt>apt</tt> pe gazdele bazate pe DEB (cum ar fi Debian și "
 "Ubuntu) și va monitoriza actualizările normale și de securitate în așteptare."
+
+#, fuzzy
+msgid ""
+"This will deploy the agent plug-in <tt>mk_cups_queues</tt> to monitor CUPS "
+"printer queues on Linux."
+msgstr ""
+"Acest lucru va implementa pluginul agent <tt>mk_tsm</tt>. Acesta va furniza "
+"mai multe verificări referitoare la TSM."
 
 #, fuzzy
 msgid ""
@@ -82880,6 +82900,9 @@ msgstr "Utilizați modul de scalare implicit"
 
 msgid "Use default topic"
 msgstr "Utilizați tema implicită"
+
+msgid "Use deprecated legacy SMART plug-in (not recommended)"
+msgstr ""
 
 msgid "Use description"
 msgstr "Descrierea utilizării"
@@ -92497,28 +92520,6 @@ msgstr ""
 msgid "{} - {}"
 msgstr ""
 
-msgid ""
-"The feature \"Explain with AI\" uses a Large Language Model (LLM) [$"
-"{aiTemplate.value.info.models.join(', ')}] of [$"
-"{aiTemplate.value.info.provider}] to generate its output. "
-msgstr ""
-
-msgid "Generated content (output) may contain errors or inaccuracies. "
-msgstr ""
-
-msgid ""
-"Ensure all output generated is carefully reviewed and checked by a human for "
-"factual correctness before being used in any way. "
-msgstr ""
-
-#, fuzzy
-msgid "For further information visit our "
-msgstr "Colectați informații despre..."
-
-#, fuzzy
-msgid "Checkmk AI feature usage notice"
-msgstr "Utilizarea Checkmk fetcher"
-
 #, fuzzy
 msgid "Privacy Policy"
 msgstr "Protocol de confidențialitate"
@@ -92551,11 +92552,6 @@ msgstr "Coduri copiate"
 #, fuzzy
 msgid "Copy response"
 msgstr "Timpii de răspuns la hopuri"
-
-msgid ""
-"This feature uses ${aiTemplate.value.info.models.join(', ')} by $"
-"{aiTemplate.value.info.provider}. "
-msgstr ""
 
 #, fuzzy
 msgid "Feature temporarily unavailable"
@@ -94761,10 +94757,6 @@ msgid "Re-test agent connection"
 msgstr "Solicitări per conexiune"
 
 #, fuzzy
-msgid "Agent connection failed"
-msgstr "Modul de conectare a agentului Checkmk"
-
-#, fuzzy
 msgid "Agent not registered"
 msgstr "Neînregistrat"
 
@@ -94842,6 +94834,10 @@ msgstr "Timeout de conectare"
 #, fuzzy
 msgid "Close & test connection"
 msgstr "Conexiune de testare"
+
+#, fuzzy
+msgid "View host agents"
+msgstr "Vezi tabelul"
 
 #, fuzzy
 msgid "View all agents"
@@ -96506,6 +96502,64 @@ msgid ""
 msgstr ""
 
 #, fuzzy
+#~ msgid "Deploy DB2 memory plug-in"
+#~ msgstr "Implementarea plugin-ului de memorie DB2"
+
+#, fuzzy
+#~ msgid "Deploy SMART Posix plug-in"
+#~ msgstr "Implementați pluginul SMART"
+
+#, fuzzy
+#~ msgid "Deploy SMART legacy plug-in"
+#~ msgstr "Implementați pluginul SMART"
+
+#, fuzzy
+#~ msgid "Deploy logged in users plug-in"
+#~ msgstr "Implementați plugin-ul pentru utilizatorii conectați"
+
+#, fuzzy
+#~ msgid "Deploy the APT plug-in"
+#~ msgstr "Implementați plugin-ul APT"
+
+#, fuzzy
+#~ msgid "Deploy the Checkmk CUPS queues plug-in"
+#~ msgstr "Implementați plugin-ul Checkmk CUPS Queues"
+
+#~ msgid "Do an <tt>apt-get update</tt> before the check"
+#~ msgstr "Efectuați o actualizare <tt>apt-get</tt> înainte de verificare"
+
+#, fuzzy
+#~ msgid "Do not deploy SMART plug-in"
+#~ msgstr "Nu implementați pluginul SMART"
+
+#, fuzzy
+#~ msgid "Do not deploy logged in users plug-in"
+#~ msgstr "Nu implementați plugin-ul pentru utilizatorii conectați"
+
+#, fuzzy
+#~ msgid "Do not deploy the Checkmk CUPS queues plug-in"
+#~ msgstr "Nu implementați plugin-ul Checkmk CUPS Queues"
+
+#, fuzzy
+#~ msgid "Instance Name"
+#~ msgstr "Numele instanței"
+
+#~ msgid "Section Content"
+#~ msgstr "Conținutul secțiunii"
+
+#, fuzzy
+#~ msgid "TNS Alias"
+#~ msgstr "Alias TNS %s"
+
+#, fuzzy
+#~ msgid "For further information visit our "
+#~ msgstr "Colectați informații despre..."
+
+#, fuzzy
+#~ msgid "Agent connection failed"
+#~ msgstr "Modul de conectare a agentului Checkmk"
+
+#, fuzzy
 #~ msgid "Deploy ISC DHCP-Daemon plug-in"
 #~ msgstr "Implementați pluginul ISC DHCP-Daemon"
 
@@ -96528,10 +96582,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Do not deploy Kaspersky Anti-Virus plug-in"
 #~ msgstr "Nu implementați pluginul Kaspersky Anti-Virus"
-
-#, python-format
-#~ msgid "Query %s resource"
-#~ msgstr "Consultați resursa %s"
 
 #, fuzzy
 #~ msgid "Deploy LVM plug-in"
@@ -100800,10 +100850,6 @@ msgstr ""
 #~ msgstr "Identificatorul senzorului."
 
 #, fuzzy
-#~ msgid "Oracle Service Name"
-#~ msgstr "Denumirea serviciului"
-
-#, fuzzy
 #~ msgid "Oracle Service Name of the database instance."
 #~ msgstr "Identificatorul senzorului."
 
@@ -101137,10 +101183,6 @@ msgstr ""
 
 #~ msgid "Lower levels for remaining expiration time of licenses"
 #~ msgstr "Niveluri mai mici pentru perioada de expirare rămasă a licențelor"
-
-#, fuzzy
-#~ msgid "Oracle System Identifier of the database instance."
-#~ msgstr "Identificatorul senzorului."
 
 #, fuzzy, python-format
 #~ msgid "Please contact the Checkmk sales team at %s and renew your license."

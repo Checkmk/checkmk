@@ -5743,6 +5743,10 @@ msgstr "Algoritme"
 msgid "Alias"
 msgstr "Alias"
 
+#, fuzzy
+msgid "Alias Value"
+msgstr "Alias"
+
 msgid "Alias for created gateway hosts"
 msgstr "Alias voor aangemaakte gateway hosts"
 
@@ -6647,7 +6651,7 @@ msgstr "Toon altijd de checkboxes"
 msgid "Always use and expect piggyback data"
 msgstr "Gebruik en verwacht altijd piggyback data"
 
-msgid "Always use host libraries (force host)"
+msgid "Always use host client (ignore agent-local client)"
 msgstr ""
 
 msgid "Always use service level from rule"
@@ -11726,7 +11730,8 @@ msgstr "CTIO timeouts"
 msgid "CTIO transmission errors"
 msgstr "Fouten in de CTIO-overdracht"
 
-msgid "CUPS Printer Queues"
+#, fuzzy
+msgid "CUPS Printer Queues (Linux)"
 msgstr "CUPS Printer wachtrijen"
 
 msgid "CUPS Queue"
@@ -13086,6 +13091,10 @@ msgstr "Checkmk"
 
 msgid "Checkmk $PERIODNAME$ '$TITLE$'"
 msgstr "Checkmk $PERIODNAME$ '$TITLE$'"
+
+#, fuzzy
+msgid "Checkmk AI feature usage notice"
+msgstr "Checkmk fetcher gebruik"
 
 #, fuzzy
 msgid "Checkmk Cloud is not allowed in distributed monitoring."
@@ -16251,11 +16260,21 @@ msgstr "Controller"
 msgid "Controller version"
 msgstr "Controller Versie"
 
+#, python-brace-format
 msgid ""
-"Controls usage of host Oracle Instant Client. Allowed values: 'auto' (auto-"
-"detect, fallback to bundled), 'never' (force bundled), 'always' (force "
-"host), or an absolute path to an OCI library directory (e.g. /usr/lib/"
-"oracle/...)."
+"Controls which Oracle Instant Client the plugin uses to connect to "
+"databases. Two sources are available: the <b>agent-local client</b> — Oracle "
+"Instant Client libraries manually installed alongside the Checkmk agent "
+"under <tt>$MK_LIBDIR/packages/mk-oracle/</tt> — and the <b>host client</b> — "
+"an Oracle installation already present on the monitored host. Note: Checkmk "
+"does <b>not</b> deploy Oracle Instant Client automatically; you must install "
+"it manually if you want to use the agent-local client. <b>Auto-detect</b>: "
+"tries the host client first, falls back to the agent-local client. <b>Never "
+"use host client</b>: uses only the agent-local client, ignores any host "
+"installation. <b>Always use host client</b>: uses only the host client, "
+"ignores the agent-local client. <b>Custom path</b>: uses the Oracle Instant "
+"Client at the specified path; supports environment variable expansion (e.g. "
+"<tt>${ORACLE_HOME}/lib</tt>)."
 msgstr ""
 
 msgid "Convert FQHN"
@@ -19809,10 +19828,6 @@ msgid "Deploy Arcserve plug-in"
 msgstr "Inzet Arcserve plugin"
 
 #, fuzzy
-msgid "Deploy DB2 memory plug-in"
-msgstr "DB2 geheugen plugin implementeren"
-
-#, fuzzy
 msgid "Deploy Hyper-V monitoring plug-ins"
 msgstr "Unitrends plugins implementeren"
 
@@ -19854,14 +19869,6 @@ msgstr "Inzet Arcserve plugin"
 #, fuzzy
 msgid "Deploy Podman plug-in"
 msgstr "Implementeer Mailman plugin"
-
-#, fuzzy
-msgid "Deploy SMART Posix plug-in"
-msgstr "SMART plugin implementeren"
-
-#, fuzzy
-msgid "Deploy SMART legacy plug-in"
-msgstr "SMART plugin implementeren"
 
 #, fuzzy
 msgid "Deploy SUSEConnect plug-in"
@@ -19908,10 +19915,6 @@ msgstr "Aangepaste bestanden uitrollen met agent"
 #, fuzzy
 msgid "Deploy iptables plug-in"
 msgstr "Deploy iptables plugin"
-
-#, fuzzy
-msgid "Deploy logged in users plug-in"
-msgstr "Ingelogde gebruikers plugin implementeren"
 
 msgid "Deploy mk_mongodb.py with authentication."
 msgstr "Zet mk_mongodb.py in met authenticatie."
@@ -19974,14 +19977,6 @@ msgstr "Implementeer de %s plugin en zijn configuratie"
 #, fuzzy, python-format
 msgid "Deploy the %s plug-in without configuration"
 msgstr "Zet de %s plugin in zonder configuratie"
-
-#, fuzzy
-msgid "Deploy the APT plug-in"
-msgstr "De APT plugin implementeren"
-
-#, fuzzy
-msgid "Deploy the Checkmk CUPS queues plug-in"
-msgstr "Implementeer de Checkmk CUPS wachtrij plugin"
 
 #, fuzzy
 msgid "Deploy the Checkmk EMC ScaleIO plug-in"
@@ -21469,9 +21464,6 @@ msgstr "Doe een replicatie elke"
 msgid "Do actions"
 msgstr "Acties ondernemen"
 
-msgid "Do an <tt>apt-get update</tt> before the check"
-msgstr "Doe een <tt>apt-get update</tt> voor de controle"
-
 msgid "Do cancelling actions"
 msgstr "Doe annulerende acties"
 
@@ -21548,10 +21540,6 @@ msgid "Do not deploy AD-Replication plug-in"
 msgstr "Implementeer geen AD-Replicatie plugin"
 
 #, fuzzy
-msgid "Do not deploy DB2 memory plug-in"
-msgstr "Implementeer geen DB2 geheugen plugin"
-
-#, fuzzy
 msgid "Do not deploy Hyper-V plug-ins"
 msgstr "Zet de Zypper plugin niet in"
 
@@ -21577,10 +21565,6 @@ msgstr "Zet geen ORACLE databases plugin in"
 #, fuzzy
 msgid "Do not deploy Oracle plug-in"
 msgstr "Geen iptables plugin implementeren"
-
-#, fuzzy
-msgid "Do not deploy SMART plug-in"
-msgstr "SMART plugin niet implementeren"
 
 #, fuzzy
 msgid "Do not deploy SUSEConnect plug-in"
@@ -21609,10 +21593,6 @@ msgstr "Implementeer geen automatische agent update plugin"
 #, fuzzy
 msgid "Do not deploy iptables plug-in"
 msgstr "Geen iptables plugin implementeren"
-
-#, fuzzy
-msgid "Do not deploy logged in users plug-in"
-msgstr "Gebruik de plugin voor ingelogde gebruikers niet"
 
 #, fuzzy
 msgid "Do not deploy mk_mongodb.py plug-in"
@@ -21667,20 +21647,12 @@ msgid "Do not deploy the %s plug-in"
 msgstr "Implementeer de %s plugin niet"
 
 #, fuzzy
-msgid "Do not deploy the APT plug-in"
-msgstr "Implementeer de APT plugin niet"
-
-#, fuzzy
 msgid "Do not deploy the Apache Status plug-in"
 msgstr "Implementeer de Apache Status plugin niet"
 
 #, fuzzy
 msgid "Do not deploy the Arcserve plug-in"
 msgstr "De Arcserve-plugin niet implementeren"
-
-#, fuzzy
-msgid "Do not deploy the Checkmk CUPS queues plug-in"
-msgstr "Implementeer de Checkmk CUPS wachtrij plugin niet"
 
 #, fuzzy
 msgid "Do not deploy the Checkmk EMC ScaleIO plug-in"
@@ -21693,6 +21665,10 @@ msgstr "Implementeer de Checkmk Inventory plugin niet"
 #, fuzzy
 msgid "Do not deploy the Checkmk site objects plug-in"
 msgstr "Implementeer de Checkmk-siteobjecten-plugin niet"
+
+#, fuzzy
+msgid "Do not deploy the DB2 memory plug-in"
+msgstr "Implementeer geen DB2 geheugen plugin"
 
 #, fuzzy
 msgid "Do not deploy the DB2 plug-in"
@@ -21741,6 +21717,10 @@ msgstr "Implementeer de SAP R/3 plugin niet"
 #, fuzzy
 msgid "Do not deploy the SAP router plug-in"
 msgstr "Implementeer de SAP router plugin niet"
+
+#, fuzzy
+msgid "Do not deploy the SMART plug-in"
+msgstr "Implementeer de APT plugin niet"
 
 #, fuzzy
 msgid "Do not deploy the SSH daemon configuration plug-in"
@@ -31957,17 +31937,18 @@ msgstr ""
 
 #, fuzzy
 msgid ""
-"Hosts configured via this rule get the <tt>mk_logins</tt> plug-in deployed."
+"Hosts configured via this rule get the <tt>mk_logins</tt> plug-in deployed. "
+"This plug-in counts the number of logged in users on Linux hosts."
 msgstr ""
 "Hosts die via deze regel zijn geconfigureerd krijgen de <tt>mk_logins</tt> "
 "plugin uitgerold."
 
 #, fuzzy
 msgid ""
-"Hosts configured via this rule get the <tt>smart_posix</tt> plug-in "
-"deployed. Assuming you have installed <tt>smartmontools</tt>, your local "
-"hard disks will be monitored for temperature and errors. The legacy plug-in "
-"<tt>smart</tt> is deprecated and should not be used anymore. "
+"Hosts configured via this rule get the <tt>smart_posix</tt> or <tt>smart</"
+"tt> plug-in deployed. Assuming you have installed <tt>smartmontools</tt>, "
+"your local hard disks will be monitored for temperature and errors. The "
+"legacy plug-in <tt>smart</tt> is deprecated and should not be used anymore."
 msgstr ""
 "Hosts die via deze regel zijn geconfigureerd krijgen de <tt>smart</tt> "
 "plugin uitgerold. Ervan uitgaande dat u <tt>smartmontools</tt> heeft "
@@ -35874,10 +35855,6 @@ msgid "Instance ID"
 msgstr "Instantie-ID"
 
 #, fuzzy
-msgid "Instance Name"
-msgstr "Instantie naam"
-
-#, fuzzy
 msgid "Instance discovery"
 msgstr "Service discovery uitvoeren"
 
@@ -36194,7 +36171,7 @@ msgid "Invalid CRCs"
 msgstr "Ongeldige CRC's"
 
 #, fuzzy, python-format
-msgid "Invalid CSRF token (%r) for session (%r)"
+msgid "Invalid CSRF token (%r)"
 msgstr "Ongeldig CSRF token (%r) voor Sessie (%r)"
 
 #, fuzzy
@@ -45140,7 +45117,7 @@ msgstr "Verwijder nooit bestanden die nieuwer zijn dan"
 msgid "Never synchronized"
 msgstr "synchroniseren"
 
-msgid "Never use host libraries (force bundled)"
+msgid "Never use host client (only agent-local client)"
 msgstr ""
 
 msgid "Never use piggyback data"
@@ -48814,6 +48791,10 @@ msgid "Oracle Data-Guard Stats"
 msgstr "Oracle Data-Guard Stats"
 
 #, fuzzy
+msgid "Oracle Database Identification"
+msgstr "Standaard configuratie"
+
+#, fuzzy
 msgid "Oracle IOSTAT IO"
 msgstr "ORACLE IOSTAT IO's"
 
@@ -48908,6 +48889,10 @@ msgstr "ORACLE SGA-geheugenstatistieken"
 #, fuzzy
 msgid "Oracle SID of the remote database"
 msgstr "ORACLE SID van de database op afstand"
+
+#, fuzzy
+msgid "Oracle Service Name"
+msgstr "Naam van de dienst"
 
 #, fuzzy
 msgid "Oracle Wait Class (FG lines are downside)"
@@ -49132,10 +49117,6 @@ msgstr "ORACLE Totaal kleine schrijf bytes"
 #, fuzzy
 msgid "Oracle data pump dump file small writes"
 msgstr "ORACLE Totaal kleine schrijffouten"
-
-#, fuzzy
-msgid "Oracle database identification"
-msgstr "Standaard configuratie"
 
 #, fuzzy
 msgid "Oracle databases (Linux, Solaris, AIX, Windows)"
@@ -52158,6 +52139,11 @@ msgstr "Voer een geldig nummer in"
 msgid "Please enter a valid time of day range"
 msgstr "Voer een geldig tijdstip in"
 
+msgid ""
+"Please enter an absolute path or a path starting with an environment "
+"variable (e.g. $VAR/lib)."
+msgstr ""
+
 #, fuzzy
 msgid "Please enter an absolute path."
 msgstr "Geef een absolute padnaam op"
@@ -53900,6 +53886,10 @@ msgstr "Zoekopdrachten per seconde"
 
 msgid "Query"
 msgstr "Vraag"
+
+#, python-format
+msgid "Query %s resource"
+msgstr "Bron %s opvragen"
 
 msgid "Query Timeout"
 msgstr "Time-out zoekopdracht"
@@ -58618,9 +58608,6 @@ msgstr "Geheime sleutel"
 msgid "Section"
 msgstr "Sectie"
 
-msgid "Section Content"
-msgstr "Sectie Inhoud"
-
 msgid "Section Name"
 msgstr "Naam van de sectie"
 
@@ -58633,6 +58620,10 @@ msgstr "Sectie van te controleren bestanden"
 msgid "Section(s) cannot be disabled and enabled at the same time:"
 msgstr ""
 "Sectie(s) kunnen niet tegelijkertijd worden uitgeschakeld en ingeschakeld:"
+
+#, fuzzy, python-format
+msgid "Section: %s"
+msgstr "Secties"
 
 msgid "Sections"
 msgstr "Secties"
@@ -64731,6 +64722,10 @@ msgid "String (STR)"
 msgstr "String (STR)"
 
 #, fuzzy
+msgid "String Table"
+msgstr "String (STR)"
+
+#, fuzzy
 msgid "String to be sent in HTTP header as \"User agent\""
 msgstr ""
 "String die in de http header moet worden meegestuurd als \"User Agent\""
@@ -65561,9 +65556,6 @@ msgstr "SSL-certificaat validatie"
 msgid "TLS certificate verification"
 msgstr "SSL-certificaat verificatie"
 
-msgid "TLS encryption must be enabled when using basic authentication."
-msgstr ""
-
 #, fuzzy
 msgid "TLS processed bytes"
 msgstr "TLS Verwerkte bytes"
@@ -65584,10 +65576,6 @@ msgstr "Schakel TLS/SSL uit"
 
 msgid "TLS/SSL/Https disabled"
 msgstr "TLS/SSL/Https uitgeschakeld"
-
-#, fuzzy
-msgid "TNS Alias"
-msgstr "TNS Alias %s"
 
 #, python-format
 msgid "TNS Alias %s"
@@ -66924,6 +66912,12 @@ msgid ""
 "\"Dynamic host management\" to sort the host in location specific folders."
 msgstr ""
 
+#, fuzzy
+msgid ""
+"The Oracle System Identifier (SID) that identifies a specific database "
+"instance on the host. "
+msgstr "De identificatiecode van de sensor."
+
 msgid ""
 "The Oracle System Identifier (SID) that identifies a specific database "
 "instance on the host. Use SID-based connections for older Oracle "
@@ -66942,7 +66936,9 @@ msgstr ""
 msgid ""
 "The Oracle service name used to connect to the database. A service name "
 "typically represents a database and can map to one or more instances in a "
-"RAC environment."
+"RAC environment. To monitor a Pluggable Database (PDB), specify its service "
+"name here — each PDB exposes its own service name that can be used to "
+"connect to and monitor it independently."
 msgstr ""
 
 #, no-python-format
@@ -68246,6 +68242,15 @@ msgstr ""
 "De terugvaloptie probeert een versleutelde TLS-verbinding tot stand te "
 "brengen. Als de andere site dit niet ondersteunt, wordt platte tekst "
 "gebruikt."
+
+#, python-brace-format
+msgid ""
+"The feature \"Explain with AI\" uses a Large Language Model (LLM) [{models}] "
+"of [{provider}] to generate its output. Generated content (output) may "
+"contain errors or inaccuracies. Ensure all output generated is carefully "
+"reviewed and checked by a human for factual correctness before being used in "
+"any way. For further information visit our "
+msgstr ""
 
 msgid ""
 "The fetcher usage is below 50%, you may decrease the number of fetchers to "
@@ -72588,6 +72593,13 @@ msgstr ""
 "uitschieters, en is daarom niet geschikt voor het configureren van "
 "subgroepen. "
 
+#, python-brace-format
+msgid ""
+"This feature uses {models} by {provider}. The generated output can contain "
+"errors or inaccuracies and must be carefully reviewed by a human for factual "
+"correctness. "
+msgstr ""
+
 msgid ""
 "This field declares the end date of the forecast, which starts on the last "
 "day given by the previous field of \"Consider history of\". Keep in mind "
@@ -76216,6 +76228,14 @@ msgstr ""
 "Dit zal de agent plugin <tt>mk_apt</tt> implementeren. Deze zal de controle "
 "<tt>apt</tt> activeren op DEB-gebaseerde hosts (zoals Debian en Ubuntu) en "
 "in afwachting zijnde normale en beveiligingsupdates controleren."
+
+#, fuzzy
+msgid ""
+"This will deploy the agent plug-in <tt>mk_cups_queues</tt> to monitor CUPS "
+"printer queues on Linux."
+msgstr ""
+"Dit zal de agent plugin <tt>mk_tsm</tt> implementeren. Deze zal "
+"verschillende controles uitvoeren met betrekking tot TSM."
 
 #, fuzzy
 msgid ""
@@ -82761,6 +82781,9 @@ msgstr "Gebruik standaard schalingsmodus"
 
 msgid "Use default topic"
 msgstr "Gebruik standaard onderwerp"
+
+msgid "Use deprecated legacy SMART plug-in (not recommended)"
+msgstr ""
 
 msgid "Use description"
 msgstr "Beschrijving van het gebruik"
@@ -92363,28 +92386,6 @@ msgstr ""
 msgid "{} - {}"
 msgstr ""
 
-msgid ""
-"The feature \"Explain with AI\" uses a Large Language Model (LLM) [$"
-"{aiTemplate.value.info.models.join(', ')}] of [$"
-"{aiTemplate.value.info.provider}] to generate its output. "
-msgstr ""
-
-msgid "Generated content (output) may contain errors or inaccuracies. "
-msgstr ""
-
-msgid ""
-"Ensure all output generated is carefully reviewed and checked by a human for "
-"factual correctness before being used in any way. "
-msgstr ""
-
-#, fuzzy
-msgid "For further information visit our "
-msgstr "Verzamel informatie over..."
-
-#, fuzzy
-msgid "Checkmk AI feature usage notice"
-msgstr "Checkmk fetcher gebruik"
-
 #, fuzzy
 msgid "Privacy Policy"
 msgstr "Privacy-protocol"
@@ -92417,11 +92418,6 @@ msgstr "Code Grootte"
 #, fuzzy
 msgid "Copy response"
 msgstr "Hop responstijden"
-
-msgid ""
-"This feature uses ${aiTemplate.value.info.models.join(', ')} by $"
-"{aiTemplate.value.info.provider}. "
-msgstr ""
 
 #, fuzzy
 msgid "Feature temporarily unavailable"
@@ -94617,10 +94613,6 @@ msgid "Re-test agent connection"
 msgstr "Aanvragen per verbinding"
 
 #, fuzzy
-msgid "Agent connection failed"
-msgstr "Checkmk agent verbindingsmodus"
-
-#, fuzzy
 msgid "Agent not registered"
 msgstr "Niet-geregistreerd"
 
@@ -94698,6 +94690,10 @@ msgstr "Time-out verbinden"
 #, fuzzy
 msgid "Close & test connection"
 msgstr "Deze verbinding"
+
+#, fuzzy
+msgid "View host agents"
+msgstr "Tabel bekijken"
 
 #, fuzzy
 msgid "View all agents"
@@ -96345,6 +96341,64 @@ msgid ""
 msgstr ""
 
 #, fuzzy
+#~ msgid "Deploy DB2 memory plug-in"
+#~ msgstr "DB2 geheugen plugin implementeren"
+
+#, fuzzy
+#~ msgid "Deploy SMART Posix plug-in"
+#~ msgstr "SMART plugin implementeren"
+
+#, fuzzy
+#~ msgid "Deploy SMART legacy plug-in"
+#~ msgstr "SMART plugin implementeren"
+
+#, fuzzy
+#~ msgid "Deploy logged in users plug-in"
+#~ msgstr "Ingelogde gebruikers plugin implementeren"
+
+#, fuzzy
+#~ msgid "Deploy the APT plug-in"
+#~ msgstr "De APT plugin implementeren"
+
+#, fuzzy
+#~ msgid "Deploy the Checkmk CUPS queues plug-in"
+#~ msgstr "Implementeer de Checkmk CUPS wachtrij plugin"
+
+#~ msgid "Do an <tt>apt-get update</tt> before the check"
+#~ msgstr "Doe een <tt>apt-get update</tt> voor de controle"
+
+#, fuzzy
+#~ msgid "Do not deploy SMART plug-in"
+#~ msgstr "SMART plugin niet implementeren"
+
+#, fuzzy
+#~ msgid "Do not deploy logged in users plug-in"
+#~ msgstr "Gebruik de plugin voor ingelogde gebruikers niet"
+
+#, fuzzy
+#~ msgid "Do not deploy the Checkmk CUPS queues plug-in"
+#~ msgstr "Implementeer de Checkmk CUPS wachtrij plugin niet"
+
+#, fuzzy
+#~ msgid "Instance Name"
+#~ msgstr "Instantie naam"
+
+#~ msgid "Section Content"
+#~ msgstr "Sectie Inhoud"
+
+#, fuzzy
+#~ msgid "TNS Alias"
+#~ msgstr "TNS Alias %s"
+
+#, fuzzy
+#~ msgid "For further information visit our "
+#~ msgstr "Verzamel informatie over..."
+
+#, fuzzy
+#~ msgid "Agent connection failed"
+#~ msgstr "Checkmk agent verbindingsmodus"
+
+#, fuzzy
 #~ msgid "Deploy ISC DHCP-Daemon plug-in"
 #~ msgstr "Implementeer ISC DHCP-Daemon plugin"
 
@@ -96367,10 +96421,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Do not deploy Kaspersky Anti-Virus plug-in"
 #~ msgstr "Implementeer geen Kaspersky Anti-Virus plugin"
-
-#, python-format
-#~ msgid "Query %s resource"
-#~ msgstr "Bron %s opvragen"
 
 #, fuzzy
 #~ msgid "Deploy LVM plug-in"
@@ -100146,10 +100196,6 @@ msgstr ""
 #~ msgstr "De identificatiecode van de sensor."
 
 #, fuzzy
-#~ msgid "Oracle Service Name"
-#~ msgstr "Naam van de dienst"
-
-#, fuzzy
 #~ msgid "Oracle Service Name of the database instance."
 #~ msgstr "De identificatiecode van de sensor."
 
@@ -100476,10 +100522,6 @@ msgstr ""
 
 #~ msgid "Lower levels for remaining expiration time of licenses"
 #~ msgstr "Lagere niveaus voor de resterende looptijd van licenties"
-
-#, fuzzy
-#~ msgid "Oracle System Identifier of the database instance."
-#~ msgstr "De identificatiecode van de sensor."
 
 #, fuzzy, python-format
 #~ msgid "Please contact the Checkmk sales team at %s and renew your license."

@@ -9,6 +9,7 @@ import { ref } from 'vue'
 import CmkDropdown from '@/components/CmkDropdown'
 import CmkDropdownButton from '@/components/CmkDropdown/CmkDropdownButton.vue'
 import { ErrorResponse, Response } from '@/components/CmkSuggestions'
+import { type Suggestions } from '@/components/CmkSuggestions/CmkSuggestions.vue'
 
 defineProps<{ screenshotMode: boolean }>()
 
@@ -22,6 +23,7 @@ const defaultEmpty5 = ref<string | null>(null)
 const defaultEmpty6 = ref<string | null>(null)
 const defaultEmpty7 = ref<string | null>(null)
 const defaultEmpty8 = ref<string | null>(null)
+const defaultEmpty9 = ref<string | null>(null)
 const errorCase = ref<string | null>('invalid_backend_value')
 const callCount = ref<number>(0)
 
@@ -70,6 +72,35 @@ const startResize = (e: MouseEvent) => {
 
   document.addEventListener('mousemove', onMouseMove)
   document.addEventListener('mouseup', onMouseUp)
+}
+
+const slowProgressClass = ref<string>('')
+const slowOptions: Suggestions = {
+  type: 'callback-filtered',
+  querySuggestions: async (query) => {
+    slowProgressClass.value = 'ucl-cmk-dropdown-dev__action'
+    await new Promise((resolve) => setTimeout(resolve, 1500))
+    slowProgressClass.value = ''
+
+    let pool = [
+      { name: 'NAME-one', title: 'title-one' },
+      { name: 'NAME-two', title: 'title-two' },
+      { name: 'NAME-three', title: 'title-three' },
+      { name: 'NAME-four', title: 'title-four' }
+    ]
+
+    // title = label, human readable
+    // name = id which gets sent to the backend
+
+    pool = pool.filter((e) => e.name.includes(query) || e.title.includes(query))
+
+    const directHit = pool.filter((e) => e.name === query).length === 1
+    if (query !== '' && !directHit) {
+      pool.splice(0, 0, { name: query, title: query })
+    }
+
+    return new Response(pool)
+  }
 }
 </script>
 
@@ -314,6 +345,21 @@ const startResize = (e: MouseEvent) => {
     Current width: {{ truncateDivWidth }}px (drag the right edge to resize)
   </p>
 
+  <h2>very slow callback</h2>
+  <CmkDropdown
+    v-model:selected-option="defaultEmpty9"
+    :options="slowOptions"
+    input-hint="long dropdown"
+    no-results-hint="no results hint"
+    label="some label"
+    required
+  />
+  value: {{ defaultEmpty9 }}
+  <button @click.prevent="defaultEmpty9 = defaultEmpty9 === 'NAME-two' ? 'NAME-four' : 'NAME-two'">
+    set value
+  </button>
+  <div class="ucl-cmk-dropdown-dev__progress" :class="slowProgressClass"></div>
+
   <h1>CmkDropdownButton</h1>
   <h2>button</h2>
   <CmkDropdownButton>default button</CmkDropdownButton>
@@ -383,5 +429,36 @@ const startResize = (e: MouseEvent) => {
 <style scoped>
 h1 {
   margin-top: 2rem;
+}
+
+.ucl-cmk-dropdown-dev__progress {
+  width: 100px;
+  height: 20px;
+  display: inline-block;
+  vertical-align: center;
+  background-color: lightgrey;
+  overflow: hidden;
+  border-radius: 10px;
+  border: 1px solid #222;
+  margin-left: 1em;
+}
+
+div.ucl-cmk-dropdown-dev__action::after {
+  content: '';
+  display: block;
+  width: 100%;
+  height: 100%;
+  background-color: darkgrey;
+  animation: slide 1.5s linear forwards;
+}
+
+@keyframes slide {
+  from {
+    transform: translateX(-100%);
+  }
+
+  to {
+    transform: translateX(0);
+  }
 }
 </style>

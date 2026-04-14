@@ -1,0 +1,95 @@
+load("@aspect_rules_py//py:defs.bzl", "py_library")
+load("@cmk_requirements//:requirements.bzl", "requirement")
+
+py_library(
+    name = "endpoints",
+    srcs = glob(
+        include = ["**/*.py"],
+        exclude = [
+            # Kept in monolithic gui: imported by community_registration / ldap_integration
+            "autocomplete/**/*.py",
+            "metric/**/*.py",
+            # Blocked: needs cmk.gui.wato.pages.host_rename (monolithic)
+            "folder_config/__init__.py",
+            "host_config/__init__.py",
+            # Blocked: needs cmk.gui.quick_setup (monolithic, needs cmk.plugins)
+            "quick_setup/**/*.py",
+        ],
+    ),
+    imports = ["../../../.."],
+    visibility = [
+        "//cmk:__subpackages__",
+        "//tests:__subpackages__",
+    ],
+    deps = [
+        "//cmk/gui:config",
+        "//cmk/gui:customer",
+        "//cmk/gui:default_permissions",
+        "//cmk/gui:exceptions",
+        "//cmk/gui:groups",
+        "//cmk/gui:http",
+        "//cmk/gui:i18n",
+        "//cmk/gui:job_scheduler_client",
+        "//cmk/gui:log",
+        "//cmk/gui:logged_in",
+        "//cmk/gui:permissions",
+        "//cmk/gui:session",
+        "//cmk/gui:site_config",
+        "//cmk/gui:type_defs",
+        "//cmk/gui/agent_registration",
+        "//cmk/gui/background_job/job",
+        "//cmk/gui/fields",
+        "//cmk/gui/fields:base",
+        "//cmk/gui/form_specs",
+        "//cmk/gui/graphing",
+        "//cmk/gui/livestatus_utils/commands",
+        "//cmk/gui/openapi:utils",
+        "//cmk/gui/openapi/framework",
+        "//cmk/gui/openapi/framework:core",
+        "//cmk/gui/openapi/restful_objects",
+        "//cmk/gui/openapi/restful_objects:type_defs",
+        "//cmk/gui/openapi/shared_endpoint_families",
+        "//cmk/gui/openapi/spec:utils",
+        "//cmk/gui/rest_api_types:notifications",
+        "//cmk/gui/userdb",
+        "//cmk/gui/utils:agent",
+        "//cmk/gui/utils:urls",
+        "//cmk/gui/valuespec",
+        "//cmk/gui/watolib",
+        "//cmk/gui/watolib:config_infra",
+        "//cmk/gui/watolib:groups_io",
+        "//cmk/gui/watolib:password_store",
+        "//cmk/gui/watolib:passwords",
+        "//cmk/gui/watolib:registries",
+        "//cmk/gui/watolib:timeperiods",
+        "//cmk/utils",
+        "//packages/cmk-ccc:exceptions",
+        "//packages/cmk-ccc:hostaddress",
+        "//packages/cmk-ccc:site",
+        "//packages/cmk-ccc:store",
+        "//packages/cmk-ccc:user",
+        "//packages/cmk-ccc:version",
+        "//packages/cmk-crypto",
+        "//packages/cmk-livestatus-client:py_livestatus",
+        requirement("cryptography"),
+        requirement("marshmallow"),
+        requirement("marshmallow-oneofschema"),
+        requirement("python-dateutil"),
+        requirement("urllib3"),
+        requirement("werkzeug"),
+    ],
+)
+
+# Temporary: endpoint files that still belong to the monolithic //cmk/gui target.
+filegroup(
+    name = "gui_srcs",
+    srcs = [
+        "folder_config/__init__.py",
+        "host_config/__init__.py",
+    ] + glob(include = [
+        "autocomplete/**/*.py",
+        "metric/**/*.py",
+        "quick_setup/**/*.py",
+    ]),
+    visibility = ["//cmk/gui:__pkg__"],
+)

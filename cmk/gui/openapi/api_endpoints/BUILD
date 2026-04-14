@@ -1,0 +1,73 @@
+load("@aspect_rules_py//py:defs.bzl", "py_library")
+load("@cmk_requirements//:requirements.bzl", "requirement")
+
+py_library(
+    name = "api_endpoints",
+    srcs = glob(
+        include = ["**/*.py"],
+        exclude = [
+            # Blocked: needs cmk.gui.pagetypes (monolithic)
+            "pagetype_topic/**/*.py",
+            # Blocked: needs cmk.gui.sidebar (monolithic)
+            "sidebar_element/**/*.py",
+        ],
+    ),
+    imports = ["../../../.."],
+    visibility = [
+        "//cmk:__subpackages__",
+        "//tests:__subpackages__",
+    ],
+    deps = [
+        "//cmk/gui:config",
+        "//cmk/gui:exceptions",
+        "//cmk/gui:groups",
+        "//cmk/gui:http",
+        "//cmk/gui:icons",
+        "//cmk/gui:logged_in",
+        "//cmk/gui:permissions",
+        "//cmk/gui:role_types",
+        "//cmk/gui:site_config",
+        "//cmk/gui:theme",
+        "//cmk/gui:type_defs",
+        "//cmk/gui/agent_registration",
+        "//cmk/gui/fields",
+        "//cmk/gui/fields:base",
+        "//cmk/gui/oauth2_connections:watolib_store",
+        "//cmk/gui/openapi:utils",
+        "//cmk/gui/openapi/endpoints",
+        "//cmk/gui/openapi/framework",
+        "//cmk/gui/openapi/framework:core",
+        "//cmk/gui/openapi/restful_objects",
+        "//cmk/gui/openapi/restful_objects:type_defs",
+        "//cmk/gui/rest_api_types:notifications",
+        "//cmk/gui/token_auth",
+        "//cmk/gui/userdb",
+        "//cmk/gui/utils:agent",
+        "//cmk/gui/utils:agent_registration",
+        "//cmk/gui/utils:urls",
+        "//cmk/gui/watolib",
+        "//cmk/gui/watolib:config_infra",
+        "//cmk/gui/watolib:groups_io",
+        "//cmk/gui/watolib:password_store",
+        "//cmk/gui/watolib:passwords",
+        "//cmk/gui/watolib:registries",
+        "//cmk/gui/watolib:timeperiods",
+        "//cmk/utils",
+        "//packages/cmk-ccc:hostaddress",
+        "//packages/cmk-ccc:site",
+        "//packages/cmk-ccc:store",
+        "//packages/cmk-ccc:user",
+        "//packages/cmk-ccc:version",
+        requirement("python-dateutil"),
+    ],
+)
+
+# Temporary: api_endpoint files that still belong to the monolithic //cmk/gui target.
+filegroup(
+    name = "gui_srcs",
+    srcs = glob(include = [
+        "pagetype_topic/**/*.py",
+        "sidebar_element/**/*.py",
+    ]),
+    visibility = ["//cmk/gui:__pkg__"],
+)

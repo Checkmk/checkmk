@@ -8,6 +8,8 @@ import logging
 import re
 import time
 from collections.abc import Mapping
+from concurrent.futures import as_completed, ThreadPoolExecutor
+from dataclasses import dataclass
 from typing import Any, cast, get_args, override
 
 from pydantic import BaseModel
@@ -29,7 +31,7 @@ from cmk.gui.config import active_config, Config
 from cmk.gui.i18n import _, _l
 from cmk.gui.logged_in import user
 from cmk.gui.permissions import permission_registry
-from cmk.gui.type_defs import AnnotatedUserId, VisualTypeName
+from cmk.gui.type_defs import AnnotatedUserId, UserSpec, VisualTypeName
 from cmk.gui.utils.roles import UserPermissions, UserPermissionSerializableConfig
 from cmk.gui.watolib.activate_changes import ACTIVATION_TIME_PROFILE_SYNC, update_activation_time
 from cmk.gui.watolib.automations import remote_automation_config_from_site_config
@@ -50,6 +52,72 @@ def _load_raw_visuals_of_a_user(
             path, default={}, temp_dir=cmk.utils.paths.tmp_dir, root_dir=cmk.utils.paths.omd_root
         ),
     )
+
+
+@dataclass(frozen=True)
+class _ReplicationSuccess:
+    site_id: SiteId
+    duration: float
+
+
+@dataclass(frozen=True)
+class _ReplicationFailure:
+    site_id: SiteId
+    error: str
+
+
+_SiteReplicationResult = _ReplicationSuccess | _ReplicationFailure
+
+
+def _replicate_to_one_site(
+    site_id: SiteId,
+    automation_config: RemoteAutomationConfig,
+    user_id: UserId,
+    user_profile: UserSpec,
+    visuals_of_user: Mapping[VisualTypeName, Any],
+    *,
+    debug: bool,
+) -> _SiteReplicationResult:
+    start = time.time()
+    try:
+        result = push_user_profiles_to_site_transitional_wrapper(
+            automation_config,
+            {user_id: user_profile},
+            {user_id: visuals_of_user},
+            debug=debug,
+        )
+    except Exception as e:
+        return _ReplicationFailure(site_id=site_id, error=str(e))
+    duration = time.time() - start
+    if result is not True:
+        return _ReplicationFailure(site_id=site_id, error=result)
+    return _ReplicationSuccess(site_id=site_id, duration=duration)
+
+
+def _replicate_to_sites_parallel(
+    user_id: UserId,
+    user_profile: UserSpec,
+    visuals_of_user: Mapping[VisualTypeName, Any],
+    automation_configs: Mapping[SiteId, RemoteAutomationConfig],
+    *,
+    debug: bool,
+) -> list[_SiteReplicationResult]:
+    # One thread per site — all work is network I/O so the GIL is released for
+    # each call.  Results arrive in completion order (fastest site first).
+    with ThreadPoolExecutor(max_workers=len(automation_configs)) as executor:
+        futures = {
+            executor.submit(
+                _replicate_to_one_site,
+                site_id,
+                automation_config,
+                user_id,
+                user_profile,
+                visuals_of_user,
+                debug=debug,
+            ): site_id
+            for site_id, automation_config in automation_configs.items()
+        }
+        return [future.result() for future in as_completed(futures)]
 
 
 def add_profile_replication_change(site_id: SiteId, result: bool | str) -> None:
@@ -126,34 +194,31 @@ class ProfileReplicationBackgroundJob(BackgroundJob):
         }
 
         num_sites = len(args.automation_configs)
-        for idx, (site_id, automation_config) in enumerate(args.automation_configs.items(), 1):
-            job_interface.send_progress_update(
-                _("[%d/%d] Replicating to site %s...") % (idx, num_sites, site_id)
-            )
-            start = time.time()
-            try:
-                result = push_user_profiles_to_site_transitional_wrapper(
-                    automation_config,
-                    {args.user_id: users[args.user_id]},
-                    {args.user_id: visuals_of_user},
-                    debug=args.debug,
-                )
-            except Exception as e:
-                duration = time.time() - start
-                add_profile_replication_change(site_id, str(e))
-                job_interface.send_progress_update(_("Replication to %s failed: %s") % (site_id, e))
-                continue
-            duration = time.time() - start
-            update_activation_time(site_id, ACTIVATION_TIME_PROFILE_SYNC, duration)
+        job_interface.send_progress_update(
+            _("Replicating profile to %d site(s) in parallel...") % num_sites
+        )
 
-            if result is not True:
-                add_profile_replication_change(site_id, result)
+        results = _replicate_to_sites_parallel(
+            args.user_id,
+            users[args.user_id],
+            visuals_of_user,
+            args.automation_configs,
+            debug=args.debug,
+        )
+
+        for site_result in results:
+            if isinstance(site_result, _ReplicationFailure):
+                add_profile_replication_change(site_result.site_id, site_result.error)
                 job_interface.send_progress_update(
-                    _("Replication to %s failed: %s") % (site_id, result)
+                    _("Replication to %s failed: %s") % (site_result.site_id, site_result.error)
                 )
             else:
+                update_activation_time(
+                    site_result.site_id, ACTIVATION_TIME_PROFILE_SYNC, site_result.duration
+                )
                 job_interface.send_progress_update(
-                    _("Replication to %s successful (%.1fs)") % (site_id, duration)
+                    _("Replication to %s successful (%.1fs)")
+                    % (site_result.site_id, site_result.duration)
                 )
 
         job_interface.send_result_message(_("Profile replication completed"))

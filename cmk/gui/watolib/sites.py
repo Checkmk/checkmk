@@ -777,7 +777,8 @@ def site_globals_editable(all_sites: SiteConfigurations, site: SiteConfiguration
 
     # Local site: Don't enable site specific locals when no remote sites configured
     if not has_distributed_setup_remote_sites(all_sites):
-        return False
+        # Show the site specific globals only for the central site if it includes changes
+        return bool(site.get("globals"))
 
     return is_replication_enabled(site) or site_is_local(site)
 

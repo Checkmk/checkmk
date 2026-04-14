@@ -94,6 +94,7 @@ py_wheel(
     strip_path_prefixes = ["packages/cmk-logwatch"],
     tags = ["manual"],
     version = "1.0.0",
+    visibility = ["//visibility:public"],
     deps = [
         ":checkman",
         ":config",

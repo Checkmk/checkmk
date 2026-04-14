@@ -82,6 +82,7 @@ filegroup(
     strip_path_prefixes = ["packages/cmk-plugins"],
     tags = ["manual"],
     version = "1.0.0",
+    visibility = ["//visibility:public"],
     deps = [
         "//packages/cmk-plugins/cmk/plugins/%s" % family,
         "//packages/cmk-plugins/cmk/plugins/%s:agent" % family,

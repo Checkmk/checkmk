@@ -146,6 +146,7 @@ py_wheel(
     strip_path_prefixes = ["packages/cmk-check-engine"],
     # Keep in sync with pyproject.toml
     version = "1.0.0",
+    visibility = ["//visibility:public"],
     deps = [
         ":fetchers",
         ":helper-interface",

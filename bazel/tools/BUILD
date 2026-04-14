@@ -105,6 +105,7 @@ filegroup(
 alias(
     name = "uv",
     actual = "@multitool//tools/uv",
+    visibility = ["//visibility:public"],
 )
 
 bazel_env(

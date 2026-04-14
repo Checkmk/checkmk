@@ -486,6 +486,7 @@ py_wheel(
     strip_path_prefixes = ["packages/cmk-ccc"],
     # TODO: Duplicated from pyproject.toml
     version = "1.0.0",
+    visibility = ["//visibility:public"],
     deps = _ALL + [
         ":py_typed",
     ],

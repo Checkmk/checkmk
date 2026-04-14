@@ -62,6 +62,7 @@ py_wheel(
     distribution = "cmk-relay-protocols",
     strip_path_prefixes = ["packages/cmk-relay-protocols"],
     version = "1.0.0",
+    visibility = ["//visibility:public"],
     deps = [
         ":cmk-relay-protocols",
         ":py_typed",

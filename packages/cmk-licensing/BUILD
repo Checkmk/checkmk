@@ -43,6 +43,7 @@ py_wheel(
     strip_path_prefixes = ["packages/cmk-licensing"],
     # TODO: Duplicated from pyproject.toml
     version = "1.0.0",
+    visibility = ["//visibility:public"],
     deps = [
         ":cmk-licensing",
         "//packages/cmk-licensing/cmk/licensing/basics",

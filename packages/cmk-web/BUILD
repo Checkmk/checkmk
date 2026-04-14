@@ -48,6 +48,7 @@ py_wheel(
     strip_path_prefixes = ["packages/cmk-web"],
     # TODO: Duplicated from pyproject.toml
     version = "1.0.0",
+    visibility = ["//visibility:public"],
     deps = [
         ":cmk-web",
         "//packages/cmk-web/cmk/web/htmllib",

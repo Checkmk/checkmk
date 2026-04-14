@@ -129,6 +129,7 @@ py_wheel(
     strip_path_prefixes = ["packages/cmk-livestatus-client"],
     # TODO: VERSION is duplicated in pyproject.toml
     version = "1.0.0",
+    visibility = ["//visibility:public"],
     deps = [
         ":cmk-livestatus-client",
         ":cmk-livestatus-client-main",
@@ -154,6 +155,7 @@ py_wheel(
     strip_path_prefixes = ["packages/cmk-livestatus-client"],
     # TODO: VERSION is duplicated in pyproject.toml
     version = "1.0.0",
+    visibility = ["//visibility:public"],
     deps = [
         ":livestatus_py_typed",
         ":py_livestatus",

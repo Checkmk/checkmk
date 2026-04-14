@@ -65,6 +65,7 @@ py_wheel(
     strip_path_prefixes = ["packages/cmk-messaging"],
     # TODO: Duplicated from pyproject.toml
     version = "0.1.0",
+    visibility = ["//visibility:public"],
     deps = [
         "py_typed",
         ":cmk-messaging",

@@ -171,6 +171,7 @@ py_wheel(
     strip_path_prefixes = ["packages/cmk-agent-receiver"],
     # TODO: Duplicated from pyproject.toml
     version = "1.0.0",
+    visibility = ["//visibility:public"],
     deps = [
         ":cmk-agent-receiver",
         ":py_typed",

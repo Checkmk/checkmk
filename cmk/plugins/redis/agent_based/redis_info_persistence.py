@@ -92,7 +92,7 @@ def check_redis_info_persistence(
         if value is not None:
             state = State.OK
             if value != "ok":
-                state = State[params["%s_state" % duration]]
+                state = State(params["%s_state" % duration])
                 infotext += "faulty"
             else:
                 infotext += "successful"

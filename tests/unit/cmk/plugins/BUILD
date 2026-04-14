@@ -53,3 +53,14 @@ py_test(
         requirement("vcrpy"),
     ],
 )
+
+py_library(
+    name = "gcp_testlib",
+    srcs = ["gcp/testlib.py"],
+    visibility = ["//tests:__subpackages__"],
+    deps = [
+        requirement("google-cloud-monitoring"),
+        requirement("pytest"),
+        "//cmk/plugins",
+    ],
+)

@@ -20,7 +20,7 @@ from cmk.plugins.gcp.agent_based.gcp_assets import parse_assets
 from cmk.plugins.gcp.agent_based.gcp_filestore import check, check_summary, discover, parse
 from cmk.plugins.gcp.lib import gcp
 from cmk.plugins.gcp.special_agents.agent_gcp import FILESTORE
-from cmk.plugins.gcp.testlib import DiscoverTester, generate_stringtable, Plugin
+from tests.unit.cmk.plugins.gcp.testlib import DiscoverTester, generate_stringtable, Plugin
 
 
 @pytest.fixture

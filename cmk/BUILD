@@ -606,7 +606,6 @@ _KNOWN_UNDECLARED = [
     "rados",  # cmk/plugins/ceph/agents/mk_ceph.py
     "typeshed",  # shipped with the standard library part of typeshed, which is bundled with mypy
     "rrdtool",  # is built as part of the project
-    "pytest",  # clarify with CMK-32954
 ]
 
 _KNOWN_UNUSED = [

@@ -26,7 +26,7 @@ from cmk.plugins.gcp.agent_based.gcp_gcs import (
 )
 from cmk.plugins.gcp.lib import gcp
 from cmk.plugins.gcp.special_agents.agent_gcp import GCS
-from cmk.plugins.gcp.testlib import DiscoverTester, generate_stringtable, Plugin
+from tests.unit.cmk.plugins.gcp.testlib import DiscoverTester, generate_stringtable, Plugin
 
 ASSET_TABLE = [
     [f'{{"project":"backup-255820", "config":["{GCS.name}"]}}'],

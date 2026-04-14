@@ -560,7 +560,6 @@ def _container_env(package_info: CMKPackageInfo) -> dict[str, str]:
 
 
 class CreateContainerKwargs(TypedDict, total=False):
-    image: str
     command: str | list[str]
     hostname: str
     user: str | int
@@ -589,18 +588,18 @@ class CreateContainerKwargs(TypedDict, total=False):
 
 @contextmanager
 def _start(
-    client: docker.DockerClient, **kwargs: Unpack[CreateContainerKwargs]
+    client: docker.DockerClient, image: str, **kwargs: Unpack[CreateContainerKwargs]
 ) -> Iterator[docker.models.containers.Container]:
-    logger.info("Start new container from [%s] (Args: %s)", kwargs["image"], kwargs)
+    logger.info("Start new container from [%s] (Args: %s)", image, kwargs)
 
     try:
-        client.images.get(kwargs["image"])
+        client.images.get(image)
     except docker.errors.ImageNotFound:
-        raise Exception("Image [%s] could not be found locally" % kwargs["image"])
+        raise Exception("Image [%s] could not be found locally" % image)
 
     # Start the container with lowlevel API to be able to attach with a debug shell
     # after initialization
-    container_id = client.api.create_container(**kwargs)["Id"]
+    container_id = client.api.create_container(image=image, **kwargs)["Id"]
     client.api.start(container_id)
     c = client.containers.get(container_id)
 

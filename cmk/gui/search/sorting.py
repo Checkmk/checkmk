@@ -43,7 +43,7 @@ def _get_alphabetical_sorter(items: list[UnifiedSearchResultItem]) -> None:
 def _get_weighted_index_sorter(query: str) -> Sorter:
     query_ = query.lower()
 
-    def algorithm(item: UnifiedSearchResultItem) -> tuple[int, _MatchRank, bool, str, str]:
+    def algorithm(item: UnifiedSearchResultItem) -> tuple[int, _TitleRank, bool, str, str]:
         title_ = item.title.lower()
 
         topic_rank = _get_topic_ranking(item.topic)
@@ -102,24 +102,24 @@ def _get_topics_to_demote() -> tuple[str, ...]:
     )
 
 
-class _MatchRank(enum.IntEnum):
-    EXACT_TITLE = 0
-    EXACT_TITLE_IN_PARENTHESES = 1
-    TITLE_STARTS_WITH_QUERY = 2
-    TITLE_CONTAINS_QUERY = 3
-    DEFAULT_RANK = 4
+class _TitleRank(enum.IntEnum):
+    EXACT_MATCH = 0
+    EXACT_MATCH_IN_PARENTHESES = 1
+    STARTS_WITH_QUERY = 2
+    CONTAINS_QUERY = 3
+    DEFAULT = 4
 
 
-def _get_title_match_rank(title: str, query: str) -> _MatchRank:
+def _get_title_match_rank(title: str, query: str) -> _TitleRank:
     if query == title:
-        return _MatchRank.EXACT_TITLE
+        return _TitleRank.EXACT_MATCH
     if f"({query})" in title:
-        return _MatchRank.EXACT_TITLE_IN_PARENTHESES
+        return _TitleRank.EXACT_MATCH_IN_PARENTHESES
     if title.startswith(query):
-        return _MatchRank.TITLE_STARTS_WITH_QUERY
+        return _TitleRank.STARTS_WITH_QUERY
     if query in title:
-        return _MatchRank.TITLE_CONTAINS_QUERY
-    return _MatchRank.DEFAULT_RANK
+        return _TitleRank.CONTAINS_QUERY
+    return _TitleRank.DEFAULT
 
 
 def _get_deprecation_rank(title: str) -> bool:

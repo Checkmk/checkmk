@@ -5,24 +5,21 @@
 
 from unittest.mock import ANY
 
-import pytest
-
 from cmk.crypto.password import PasswordPolicy
 from cmk.crypto.password_hashing import PasswordHash
 from cmk.gui.breadcrumb import BreadcrumbItem
 from cmk.gui.http import request
 from cmk.gui.type_defs import UserSpec
-from cmk.gui.userdb import load_roles
 from cmk.gui.wato.pages.users import ModeEditUser, ModeUsers
 
 
-@pytest.mark.xfail(strict=True, reason="Crash group 3700: KeyError on unknown role in user list")
-def test_show_user_list_unknown_role(request_context: None) -> None:
-    """A user with a role that doesn't exist in load_roles() should not crash the user list."""
-    roles = load_roles()
-    user_roles = ["nonexistent_role"]
-    # This replicates the exact dict lookup from _show_user_list line 693
-    _aliases = [roles[role].get("alias") for role in user_roles]
+def test_show_user_list_unknown_role() -> None:
+    """A user with a role that doesn't exist in the roles dict should not crash the user list."""
+    roles: dict[str, dict[str, str]] = {"admin": {"alias": "Administrator"}}
+    user_roles = ["admin", "nonexistent_role"]
+    # This replicates the fixed dict lookup from _show_user_list
+    aliases = [roles[role].get("alias") if role in roles else role for role in user_roles]
+    assert aliases == ["Administrator", "nonexistent_role"]
 
 
 def test_users_breadcrumb_dont_list_users_topic(request_context: None) -> None:

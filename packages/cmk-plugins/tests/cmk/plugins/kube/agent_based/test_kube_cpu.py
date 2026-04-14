@@ -9,7 +9,6 @@
 
 import itertools
 
-import pytest
 from polyfactory.factories.pydantic_factory import ModelFactory
 
 import cmk.plugins.kube.kube
@@ -67,13 +66,14 @@ def test_discovery() -> None:
 
 
 def test_check_if_no_resources() -> None:
-    """Crashing is expected, because section_kube_cpu is only missing, if data from the api
-    server missing."""
+    """
+    No results expected when section_kube_cpu is missing,
+    e.g. if the API server is unreachable or during upgrades.
+    """
     check_result = kube_cpu._check_kube_cpu(
         PARAMS, USAGE_SECTION, None, ALLOCATABLE_RESOURCE_SECTION, 1.0, {}
     )
-    with pytest.raises(AssertionError):
-        list(check_result)
+    assert list(check_result) == []
 
 
 def test_performance_cpu() -> None:

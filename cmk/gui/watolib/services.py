@@ -1048,10 +1048,7 @@ def _case_ignored(
         DiscoveryState.VANISHED,
     ]:
         remove_disabled_rule.add(descr)
-    if table_target in [
-        DiscoveryState.MONITORED,
-        DiscoveryState.IGNORED,
-    ]:
+    if table_target == DiscoveryState.MONITORED:
         autochecks_to_save[key] = value
         saved_services.add(descr)
     if table_target == DiscoveryState.IGNORED:
@@ -1071,10 +1068,10 @@ def _case_clustered(
     # for adding, removing, etc. of this service on the cluster. Therefore we
     # do not allow any operation for this clustered service on the related node.
     # We just display the clustered service state (OLD, NEW, VANISHED).
-    autochecks_to_save[key] = value
     # But if the user wants to disable the service on the host, this is what we do.
     # Ideally, there would be no service discovery on the cluster hosts at all.
-    if table_target != "ignored":
+    if table_target != DiscoveryState.IGNORED:
+        autochecks_to_save[key] = value
         saved_services.add(descr)
 
 

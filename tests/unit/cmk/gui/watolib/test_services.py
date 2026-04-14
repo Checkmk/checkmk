@@ -7,6 +7,7 @@
 # mypy: disable-error-code="no-untyped-def"
 
 import dataclasses
+from collections import defaultdict
 from collections.abc import Generator, Mapping, Sequence
 from unittest.mock import call, MagicMock, patch
 
@@ -14,7 +15,9 @@ import pytest
 from pytest_mock import MockerFixture
 
 from cmk.automations.results import (
+    AnalyzeServiceRuleMatchesResult,
     DeleteHostsResult,
+    GetServicesLabelsResult,
     ServiceDiscoveryPreviewResult,
     SetAutochecksInput,
     SetAutochecksV2Result,
@@ -379,6 +382,397 @@ def test_perform_discovery_fix_all_with_previous_discovery_result(
     assert [
         log_entry.text for log_entry in store.read() if log_entry.action == "update-host-labels"
     ] == [f"Updated discovered host labels of '{sample_host_name}' with 2 labels"]
+
+
+@pytest.mark.usefixtures("inline_background_jobs")
+def test_perform_discovery_fix_all_removes_vanished_service(
+    mocker: MockerFixture,
+    sample_host_name: HostName,
+    sample_host: Host,
+    mock_set_autochecks: MagicMock,
+) -> None:
+    """Vanished services must be dropped from the result after fix_all, not re-introduced as new."""
+    mocker.patch("cmk.gui.watolib.services.update_host_labels", return_value={})
+    mock_discovery_preview = mocker.patch(
+        "cmk.gui.watolib.services.local_discovery_preview",
+        return_value=ServiceDiscoveryPreviewResult(
+            output="",
+            check_table=[
+                CheckPreviewEntry(
+                    check_source="unchanged",
+                    check_plugin_name="cpu_loads",
+                    ruleset_name="cpu_load",
+                    discovery_ruleset_name=None,
+                    item=None,
+                    old_discovered_parameters={},
+                    new_discovered_parameters={},
+                    effective_parameters={},
+                    description="CPU load",
+                    state=0,
+                    output="",
+                    metrics=[],
+                    old_labels={},
+                    new_labels={},
+                    found_on_nodes=[sample_host_name],
+                ),
+            ],
+            nodes_check_table={},
+            host_labels={},
+            new_labels={},
+            vanished_labels={},
+            changed_labels={},
+            source_results={},
+            labels_by_host={},
+            config_warnings=[],
+        ),
+    )
+    previous_discovery_result = DiscoveryResult(
+        job_status={
+            "state": "finished",
+            "started": 1654006465.892057,
+            "pid": None,
+            "loginfo": {"JobProgressUpdate": [], "JobResult": [], "JobException": []},
+            "is_active": False,
+        },
+        check_table_created=1654006465,
+        check_table=[
+            CheckPreviewEntry(
+                check_source="vanished",
+                check_plugin_name="lnx_if",
+                ruleset_name="interfaces",
+                discovery_ruleset_name=None,
+                item="1",
+                old_discovered_parameters={},
+                new_discovered_parameters={},
+                effective_parameters={},
+                description="Interface 1",
+                state=2,
+                output="Interface vanished",
+                metrics=[],
+                old_labels={},
+                new_labels={},
+                found_on_nodes=[sample_host_name],
+            ),
+            CheckPreviewEntry(
+                check_source="unchanged",
+                check_plugin_name="cpu_loads",
+                ruleset_name="cpu_load",
+                discovery_ruleset_name=None,
+                item=None,
+                old_discovered_parameters={},
+                new_discovered_parameters={},
+                effective_parameters={},
+                description="CPU load",
+                state=0,
+                output="",
+                metrics=[],
+                old_labels={},
+                new_labels={},
+                found_on_nodes=[sample_host_name],
+            ),
+        ],
+        nodes_check_table={},
+        host_labels={},
+        new_labels={},
+        vanished_labels={},
+        changed_labels={},
+        sources={},
+        labels_by_host={sample_host_name: []},
+        config_warnings=(),
+    )
+
+    discovery_result = perform_fix_all(
+        discovery_result=initial_discovery_result(
+            action=DiscoveryAction.FIX_ALL,
+            host=sample_host,
+            previous_discovery_result=previous_discovery_result,
+            automation_config=LocalAutomationConfig(),
+            user_permission_config=UserPermissionSerializableConfig({}, {}, []),
+            raise_errors=True,
+            debug=False,
+            use_git=False,
+        ),
+        host=sample_host,
+        automation_config=LocalAutomationConfig(),
+        pprint_value=False,
+        debug=False,
+        use_git=False,
+        raise_errors=True,
+        user_permission_config=UserPermissionSerializableConfig({}, {}, []),
+    )
+
+    mock_discovery_preview.assert_called_once()
+    assert len(discovery_result.check_table) == 1
+    (kept,) = discovery_result.check_table
+    assert kept.check_source == "unchanged"
+    assert kept.check_plugin_name == "cpu_loads"
+
+
+@pytest.mark.usefixtures("inline_background_jobs")
+def test_perform_fix_all_clears_host_labels_without_service_changes(
+    mocker: MockerFixture,
+    sample_host_name: HostName,
+    sample_host: Host,
+    mock_set_autochecks: MagicMock,
+) -> None:
+    """Vanished/changed host labels must be cleared after fix_all even when no service changes."""
+    mocker.patch("cmk.gui.watolib.services.update_host_labels", return_value={})
+    mock_discovery_preview = mocker.patch(
+        "cmk.gui.watolib.services.local_discovery_preview",
+        return_value=ServiceDiscoveryPreviewResult(
+            output="",
+            check_table=[
+                CheckPreviewEntry(
+                    check_source="unchanged",
+                    check_plugin_name="df",
+                    ruleset_name="filesystem",
+                    discovery_ruleset_name=None,
+                    item="/opt/omd/sites/heute/tmp",
+                    old_discovered_parameters={
+                        "mountpoint_for_block_devices": "volume_name",
+                        "item_appearance": "mountpoint",
+                    },
+                    new_discovered_parameters={
+                        "mountpoint_for_block_devices": "volume_name",
+                        "item_appearance": "mountpoint",
+                    },
+                    effective_parameters={
+                        "levels": (80.0, 90.0),
+                        "magic_normsize": 20,
+                        "levels_low": (50.0, 60.0),
+                        "trend_range": 24,
+                        "trend_perfdata": True,
+                        "show_levels": "onmagic",
+                        "inodes_levels": (10.0, 5.0),
+                        "show_inodes": "onlow",
+                        "show_reserved": False,
+                        "mountpoint_for_block_devices": "volume_name",
+                        "item_appearance": "mountpoint",
+                    },
+                    description="Filesystem /opt/omd/sites/heute/tmp",
+                    state=0,
+                    output="0.04% used (5.59 MB of 15.54 GB), trend: -89.23 kB / 24 hours\n0.04% used (5.59 MB of 15.54 GB)\ntrend: -89.23 kB / 24 hours",
+                    metrics=[],
+                    old_labels={},
+                    new_labels={},
+                    found_on_nodes=[HostName("TODAY")],
+                ),
+            ],
+            nodes_check_table={},
+            host_labels={
+                "cmk/check_mk_server": {"value": "yes", "plugin_name": "omd_info"},
+                "cmk/os_family": {"value": "linux", "plugin_name": "check_mk"},
+            },
+            new_labels={},
+            vanished_labels={},
+            changed_labels={},
+            source_results={"agent": (0, "Success")},
+            labels_by_host={
+                HostName("TODAY"): [
+                    HostLabel("cmk/check_mk_server", "yes", SectionName("omd_info")),
+                    HostLabel("cmk/os_family", "linux", SectionName("check_mk")),
+                ],
+            },
+            config_warnings=["The end is near."],
+        ),
+    )
+    previous_discovery_result = DiscoveryResult(
+        job_status={
+            "state": "finished",
+            "started": 1654006465.892057,
+            "pid": None,
+            "loginfo": {"JobProgressUpdate": [], "JobResult": [], "JobException": []},
+            "is_active": False,
+        },
+        check_table_created=1654006465,
+        check_table=[
+            CheckPreviewEntry(
+                check_source="unchanged",
+                check_plugin_name="cpu_loads",
+                ruleset_name="cpu_load",
+                discovery_ruleset_name=None,
+                item=None,
+                old_discovered_parameters={},
+                new_discovered_parameters={},
+                effective_parameters={},
+                description="CPU load",
+                state=0,
+                output="",
+                metrics=[],
+                old_labels={},
+                new_labels={},
+                found_on_nodes=[sample_host_name],
+            ),
+        ],
+        nodes_check_table={},
+        host_labels={},
+        new_labels={},
+        vanished_labels={"cmk/os_family": {"value": "linux", "plugin_name": "check_mk"}},
+        changed_labels={"cmk/check_mk_server": {"value": "yes", "plugin_name": "omd_info"}},
+        sources={},
+        labels_by_host={sample_host_name: []},
+        config_warnings=(),
+    )
+
+    discovery_result = perform_fix_all(
+        discovery_result=initial_discovery_result(
+            action=DiscoveryAction.FIX_ALL,
+            host=sample_host,
+            previous_discovery_result=previous_discovery_result,
+            automation_config=LocalAutomationConfig(),
+            user_permission_config=UserPermissionSerializableConfig({}, {}, []),
+            raise_errors=True,
+            debug=False,
+            use_git=False,
+        ),
+        host=sample_host,
+        automation_config=LocalAutomationConfig(),
+        pprint_value=False,
+        debug=False,
+        use_git=False,
+        raise_errors=True,
+        user_permission_config=UserPermissionSerializableConfig({}, {}, []),
+    )
+
+    mock_discovery_preview.assert_called_once()
+    assert discovery_result.vanished_labels == {}
+    assert discovery_result.changed_labels == {}
+
+
+@pytest.mark.usefixtures("inline_background_jobs")
+def test_perform_fix_all_does_not_write_ignored_services_to_autochecks(
+    mocker: MockerFixture,
+    sample_host_name: HostName,
+    sample_host: Host,
+    mock_set_autochecks: MagicMock,
+) -> None:
+    """Services matched by a 'Disabled services' rule must not end up in the autochecks file.
+
+    Scenario:
+
+    * a broad disabled-services rule exists.
+    * 'CPU load' and 'Memory' are both matched by the rule; neither belongs in autochecks.
+    * An unrelated new service 'Interface 1' causes apply_changes=True and therefore triggers
+      the autochecks save.
+    """
+    mocker.patch("cmk.gui.watolib.services.update_host_labels", return_value={})
+    mocker.patch(
+        "cmk.gui.watolib.rulesets.get_services_labels",
+        return_value=GetServicesLabelsResult(labels=defaultdict(dict)),
+    )
+    mocker.patch(
+        "cmk.gui.watolib.rulesets.analyze_service_rule_matches",
+        return_value=AnalyzeServiceRuleMatchesResult({}),
+    )
+    mocker.patch(
+        "cmk.gui.watolib.services.local_discovery_preview",
+        return_value=ServiceDiscoveryPreviewResult(
+            output="",
+            check_table=[],
+            nodes_check_table={},
+            host_labels={},
+            new_labels={},
+            vanished_labels={},
+            changed_labels={},
+            source_results={},
+            labels_by_host={},
+            config_warnings=[],
+        ),
+    )
+    perform_fix_all(
+        discovery_result=initial_discovery_result(
+            action=DiscoveryAction.FIX_ALL,
+            host=sample_host,
+            previous_discovery_result=DiscoveryResult(
+                job_status={
+                    "state": "finished",
+                    "started": 1654006465.0,
+                    "pid": None,
+                    "loginfo": {"JobProgressUpdate": [], "JobResult": [], "JobException": []},
+                    "is_active": False,
+                },
+                check_table_created=1654006465,
+                check_table=[
+                    CheckPreviewEntry(
+                        check_source="ignored",
+                        check_plugin_name="cpu_loads",
+                        ruleset_name="cpu_load",
+                        discovery_ruleset_name=None,
+                        item=None,
+                        old_discovered_parameters={},
+                        new_discovered_parameters={},
+                        effective_parameters={},
+                        description="CPU load",
+                        state=0,
+                        output="",
+                        metrics=[],
+                        old_labels={},
+                        new_labels={},
+                        found_on_nodes=[sample_host_name],
+                    ),
+                    CheckPreviewEntry(
+                        check_source="ignored",
+                        check_plugin_name="mem_linux",
+                        ruleset_name="memory_linux",
+                        discovery_ruleset_name=None,
+                        item=None,
+                        old_discovered_parameters={},
+                        new_discovered_parameters={},
+                        effective_parameters={},
+                        description="Memory",
+                        state=0,
+                        output="",
+                        metrics=[],
+                        old_labels={},
+                        new_labels={},
+                        found_on_nodes=[sample_host_name],
+                    ),
+                    CheckPreviewEntry(
+                        check_source="new",
+                        check_plugin_name="lnx_if",
+                        ruleset_name="interfaces",
+                        discovery_ruleset_name=None,
+                        item="1",
+                        old_discovered_parameters={},
+                        new_discovered_parameters={},
+                        effective_parameters={},
+                        description="Interface 1",
+                        state=0,
+                        output="",
+                        metrics=[],
+                        old_labels={},
+                        new_labels={},
+                        found_on_nodes=[sample_host_name],
+                    ),
+                ],
+                nodes_check_table={},
+                host_labels={},
+                new_labels={},
+                vanished_labels={},
+                changed_labels={},
+                sources={},
+                labels_by_host={sample_host_name: []},
+                config_warnings=(),
+            ),
+            automation_config=LocalAutomationConfig(),
+            user_permission_config=UserPermissionSerializableConfig({}, {}, []),
+            raise_errors=True,
+            debug=False,
+            use_git=False,
+        ),
+        host=sample_host,
+        automation_config=LocalAutomationConfig(),
+        pprint_value=False,
+        debug=False,
+        use_git=False,
+        raise_errors=True,
+        user_permission_config=UserPermissionSerializableConfig({}, {}, []),
+    )
+
+    saved_input = mock_set_autochecks.call_args.args[1]
+    assert "Interface 1" in saved_input.target_services  # new service accepted normally
+    assert "CPU load" not in saved_input.target_services  # rule-matched → must not be written
+    assert "Memory" not in saved_input.target_services  # rule-matched → must not be written
 
 
 @pytest.mark.usefixtures("inline_background_jobs")

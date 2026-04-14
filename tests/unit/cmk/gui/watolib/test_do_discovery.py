@@ -167,8 +167,8 @@ known_results = {
         {MOCK_DESC},
     ),
     (DiscoveryState.IGNORED, DiscoveryState.IGNORED): (
-        {MOCK_KEY: MOCK_VALUE},
-        {MOCK_DESC},
+        {},
+        set(),
         {MOCK_DESC},
         set(),
     ),
@@ -352,13 +352,6 @@ empty_result: RESULT = (
 def test_apply_state_change() -> None:
     for table_source, table_target in _get_combinations():
         result: RESULT = {}, set(), set(), set()
-        _apply_state_change(
-            table_source,
-            table_target,
-            MOCK_KEY,
-            MOCK_VALUE,
-            MOCK_DESC,
-            *result,
-        )
+        _apply_state_change(table_source, table_target, MOCK_KEY, MOCK_VALUE, MOCK_DESC, *result)
         error_msg = f"Error while applying changes from {table_source} to {table_target}"
         assert known_results.get((table_source, table_target), empty_result) == result, error_msg

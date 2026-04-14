@@ -22,8 +22,8 @@ from cmk.plugins.lib.kube_resources import (
     parse_resources,
 )
 
-agent_section_kube_memory_resources_v2 = AgentSection(
-    name="kube_memory_resources_v2",
+agent_section_kube_memory_resources_v1 = AgentSection(
+    name="kube_memory_resources_v1",
     parse_function=parse_resources,
     parsed_section_name="kube_memory_resources",
 )

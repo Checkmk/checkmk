@@ -2,6 +2,25 @@
 
 /// file: notify.groovy
 
+void notify_maintainer_of_package(maintainers, package_name, build_url) {
+    try {
+        mail(
+            to: maintainers.join(","),  // TODO: Add the commmiter
+            cc: maintainers.join(","),
+            bcc: "",
+            from: "\"CI\" <${JENKINS_MAIL}>",
+            replyTo: "${TEAM_CI_MAIL}",
+            subject: "[${package_name} failed]",
+            body: ("""
+    |The following package has failed - check the console log here:
+    |    ${build_url}
+    |""".stripMargin()),
+        );
+    } catch (Exception exc) {    // groovylint-disable CatchException
+        println("Could not sent mail to package owner - got ${exc}");
+    }
+}
+
 def notify_error(error) {
     // It seems the option "Allowed domains" is not working properly.
     // See: https://ci.lan.tribe29.com/configure

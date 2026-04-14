@@ -485,6 +485,7 @@ py_wheel(
         "//cmk/gui/openapi/framework:core",
         "//cmk/gui/openapi/restful_objects",
         "//cmk/gui/openapi/restful_objects:type_defs",
+        "//cmk/gui/openapi/restful_objects:versioned_endpoint_map",
         "//cmk/gui/openapi/shared_endpoint_families",
         "//cmk/gui/openapi/spec:utils",
         "//cmk/gui/rest_api_types:notifications",

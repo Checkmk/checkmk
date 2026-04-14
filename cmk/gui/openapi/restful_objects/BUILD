@@ -20,7 +20,6 @@ py_library(
     srcs = glob(
         include = ["**/*.py"],
         exclude = [
-            "request_schemas.py",
             "type_defs.py",
             "versioned_endpoint_map.py",
         ],
@@ -38,6 +37,7 @@ py_library(
         "//cmk/gui:http",
         "//cmk/gui/fields",
         "//cmk/gui/fields:base",
+        "//cmk/gui/livestatus_utils/commands",
         "//cmk/gui/openapi:permission_tracking",
         "//cmk/gui/openapi:utils",
         "//cmk/gui/openapi/framework:core",
@@ -59,12 +59,18 @@ py_library(
     ],
 )
 
-# Temporary: restful_objects files that still belong to the monolithic //cmk/gui target.
-filegroup(
-    name = "gui_srcs",
-    srcs = [
-        "request_schemas.py",
-        "versioned_endpoint_map.py",
+py_library(
+    name = "versioned_endpoint_map",
+    srcs = ["versioned_endpoint_map.py"],
+    imports = ["../../../.."],
+    visibility = [
+        "//cmk:__subpackages__",
+        "//tests:__subpackages__",
     ],
-    visibility = ["//cmk/gui:__pkg__"],
+    deps = [
+        ":restful_objects",
+        "//cmk/gui:hooks",
+        "//cmk/gui/openapi/framework",
+        "//cmk/gui/openapi/framework:core",
+    ],
 )

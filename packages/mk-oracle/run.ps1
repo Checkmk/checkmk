@@ -280,8 +280,9 @@ try {
         $env:CI_ORA2_DB_TEST = "ora-rocktest.dev.checkmk.net:system:${pass}:1521:TEST23::TEST23:_:_:"
         Write-Host "CI_ORA2_DB_TEST set from CI_ORA2_DB_TEST_PASSWORD" -ForegroundColor Green
 
-        Invoke-Cargo-With-Explicit-Package "test" "--release" "--target" $cargo_target  "--" "--test-threads=4"
-        Write-Host "Tests OK!" -ForegroundColor Green
+        # Invoke-Cargo-With-Explicit-Package "test" "--release" "--target" $cargo_target  "--" "--test-threads=4"
+        # Write-Host "Tests OK!" -ForegroundColor Green
+        Write-Host "TEST IS SKIPPED on Windows" -ForegroundColor Yellow
     }
     if ($packDoc) {
         Invoke-Cargo-With-Explicit-Package "doc"

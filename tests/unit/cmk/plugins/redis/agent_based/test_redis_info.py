@@ -180,6 +180,26 @@ def test_discover_redis_info_persistence(section, expected):
             ],
             id="full_persistence",
         ),
+        pytest.param(
+            "127.0.0.1:6379",
+            {"rdb_last_bgsave_state": 1, "aof_last_rewrite_state": 2},
+            {
+                "127.0.0.1:6379": {
+                    "Persistence": {
+                        "rdb_last_bgsave_status": "err",
+                        "aof_last_bgrewrite_status": "err",
+                    },
+                    "host": "127.0.0.1",
+                    "port": "6379",
+                }
+            },
+            [
+                Result(state=State.WARN, summary="Last RDB save operation: faulty"),
+                Result(state=State.CRIT, summary="Last AOF rewrite operation: faulty"),
+            ],
+            id="persistence_faulty",
+            marks=pytest.mark.xfail,
+        ),
     ],
 )
 def test_check_redis_info_persistence(

@@ -143,3 +143,9 @@ class LoadedConfigFragment:
     cmc_authorization: CMCAuthorization
     cmc_smartping_check_interval: int
     cmc_smartping_tuning: SmartPingTuning
+    mkeventd_enabled: bool
+    pnp4nagios_enabled: bool
+    cmc_pnp_update_delay: int
+    cmc_pnp_update_on_restart: bool
+    max_long_output_size: int
+    influxdb_connections: Mapping[str, dict[str, Any]]

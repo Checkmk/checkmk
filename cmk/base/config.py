@@ -747,6 +747,12 @@ def _perform_post_config_loading_actions(
         cmc_authorization=cmc_authorization,
         cmc_smartping_check_interval=cmc_smartping_check_interval,
         cmc_smartping_tuning=cmc_smartping_tuning,
+        mkeventd_enabled=mkeventd_enabled,
+        pnp4nagios_enabled=pnp4nagios_enabled,
+        cmc_pnp_update_delay=cmc_pnp_update_delay,
+        cmc_pnp_update_on_restart=cmc_pnp_update_on_restart,
+        max_long_output_size=max_long_output_size,
+        influxdb_connections=influxdb_connections,
     )
 
     config_cache = ConfigCache(loaded_config, get_builtin_host_labels, edition).initialize(

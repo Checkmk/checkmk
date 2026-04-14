@@ -114,6 +114,12 @@ EMPTY_CONFIG = LoadedConfigFragment(
     cmc_authorization={"host": 0, "group": 0},
     cmc_smartping_check_interval=500,
     cmc_smartping_tuning={"omit_payload": False, "num_sockets": 8, "ignore_rst": False},
+    mkeventd_enabled=False,
+    pnp4nagios_enabled=True,
+    cmc_pnp_update_delay=3600,
+    cmc_pnp_update_on_restart=False,
+    max_long_output_size=2000,
+    influxdb_connections={},
 )
 
 

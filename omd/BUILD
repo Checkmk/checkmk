@@ -999,10 +999,6 @@ sh_test(
             "$(location //tests/packaging/package_validator:system_dependencies_ubuntu)",
             "$(location //tests/packaging/package_validator:system_dependencies_noble)",
         ],
-        "@cmk//distro:ubuntu-25.10": [
-            "$(location //tests/packaging/package_validator:system_dependencies_ubuntu)",
-            "$(location //tests/packaging/package_validator:system_dependencies_questing)",
-        ],
     }),
     data = [
         ":deb",
@@ -1024,10 +1020,6 @@ sh_test(
         ],
         "@cmk//distro:ubuntu-24.04": [
             "//tests/packaging/package_validator:system_dependencies_noble",
-            "//tests/packaging/package_validator:system_dependencies_ubuntu",
-        ],
-        "@cmk//distro:ubuntu-25.10": [
-            "//tests/packaging/package_validator:system_dependencies_questing",
             "//tests/packaging/package_validator:system_dependencies_ubuntu",
         ],
     }),

@@ -11,6 +11,7 @@ import type { TranslatedString } from '@/lib/i18nString'
 import useClickOutside from '@/lib/useClickOutside'
 import { immediateWatch } from '@/lib/watch'
 
+import CmkLoading from '@/components/CmkLoading.vue'
 import CmkSuggestions, {
   ErrorResponse,
   type Suggestion,
@@ -57,6 +58,8 @@ const vClickOutside = useClickOutside()
 const selectedOption = defineModel<string | null>('selectedOption', { required: true })
 const buttonLabel = ref<TranslatedString>(inputHint)
 const callbackFilteredErrorMessage = ref<string | null>(null)
+const callbackFilteredLoading = ref<boolean>(false)
+const internallyDisabled = ref<boolean>(false)
 
 immediateWatch(
   () => ({
@@ -64,6 +67,7 @@ immediateWatch(
     newOptions: options
   }),
   async ({ newValue, newOptions }) => {
+    callbackFilteredLoading.value = false
     const label = await getButtonLabel(newOptions, newValue)
     // Only update if the selected option hasn't changed again while awaiting
     if (newValue === selectedOption.value) {
@@ -96,7 +100,12 @@ async function getButtonLabel(
       if (selected === null) {
         return inputHint
       }
+      callbackFilteredLoading.value = true
+      internallyDisabled.value = true
       const result = await options.querySuggestions(selected)
+      callbackFilteredLoading.value = false
+      internallyDisabled.value = false
+
       if (result instanceof ErrorResponse) {
         callbackFilteredErrorMessage.value = result.error
         return untranslated(selected)
@@ -116,6 +125,9 @@ async function getButtonLabel(
 }
 
 const canOpenDropdown = computed(() => {
+  if (internallyDisabled.value === true) {
+    return false
+  }
   if (options.type === 'filtered' || options.type === 'fixed') {
     if (!noResultsHint && options.suggestions.length === 0) {
       return false
@@ -208,9 +220,13 @@ const group = computed<ButtonVariants['group']>(() => {
       :class="{ 'cmk-dropdown__validation-error': formValidation }"
       @click="showSuggestions"
     >
-      <span v-if="buttonLabel" style="display: contents"><TruncateText :text="buttonLabel" /></span
+      <template v-if="callbackFilteredLoading">
+        <CmkLoading />
+      </template>
+      <span v-if="!callbackFilteredLoading && buttonLabel" style="display: contents"
+        ><TruncateText :text="buttonLabel" /></span
       ><CmkLabelRequired :show="required && selectedOption === null" :space="'before'" />
-      <template v-if="!buttonLabel">&nbsp;</template>
+      <template v-if="!callbackFilteredLoading && !buttonLabel">&nbsp;</template>
       <ArrowDown
         class="cmk-dropdown--arrow"
         :class="{ rotated: suggestionsShown, disabled: disabled || !canOpenDropdown }"

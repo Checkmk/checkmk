@@ -4,8 +4,22 @@ catalog: agentless
 license: GPLv2
 distribution: check_mk
 description:
- Logs in into an IMAP, POP3 or EWS mailbox to monitor whether or not the login is possible.
- An extended, optional, feature is, that the check can fetch all (or just some) mails
- from the mailbox and forward them as events to the Event Console.
+ Logs in into an IMAP, POP3, EWS, or Microsoft Exchange Online mailbox to monitor whether
+ or not the login is possible. An extended, optional, feature is, that the check can fetch
+ all (or just some) mails from the mailbox and forward them as events to the Event Console.
+
+ The following protocols and authentication methods are supported:
+
+ IMAP and POP3: Username/password (basic authentication).
+
+ EWS (Exchange Web Services): Username/password (basic authentication) or OAuth2 using
+ ClientID, TenantID, and a client secret.
+
+ Microsoft Exchange Online (Graph API): Microsoft Entra ID authentication via an OAuth2
+ connection. The connection can be configured directly in the check rule or managed centrally
+ via Setup > Microsoft Entra ID connections and then referenced in the rule. In distributed
+ environments, the OAuth2 connection can be created on the central site while the OAuth2
+ authentication process (redirect URI) is handled by a different remote site. The site used
+ for the authentication redirect can be selected when configuring the OAuth2 connection.
 
  This check can be configured using WATO.

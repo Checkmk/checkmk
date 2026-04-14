@@ -59,7 +59,7 @@ from ._graph_specification import (
     GraphEnvironment,
     GraphRecipeWithOverrides,
     GraphTimeRange,
-    parse_raw_graph_specification,
+    parse_graph_specification,
 )
 from ._graph_templates import (
     get_template_graph_specification,
@@ -254,7 +254,7 @@ def graph_recipes_for_api_request(
     if not (raw_graph_spec := api_request.get("specification")):
         raise MKUserError(None, _("The graph specification is missing"))
 
-    graph_specification = parse_raw_graph_specification(raw_graph_spec)
+    graph_specification = parse_graph_specification(raw_graph_spec)
 
     # Default to 25h view
     default_time_range = ((now := int(time.time())) - (25 * 3600), now)

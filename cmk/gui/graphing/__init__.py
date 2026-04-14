@@ -43,7 +43,7 @@ from ._graph_specification import (
     GraphRecipeWithOverrides,
     GraphSpecification,
     GraphTimeRange,
-    parse_raw_graph_specification,
+    parse_graph_specification,
 )
 from ._graph_templates import (
     get_graph_plugin_and_single_metric_choices,
@@ -176,7 +176,7 @@ __all__ = [
     "migrate_graph_render_options_title_format",
     "parse_metric_from_api",
     "parse_perf_data",
-    "parse_raw_graph_specification",
+    "parse_graph_specification",
     "perfometers_from_api",
     "registered_metric_ids_and_titles",
     "render_graph_pdf",

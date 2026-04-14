@@ -75,9 +75,11 @@ from ._graph_specification import (
     GraphRecipeWithOverrides,
     GraphSpecification,
     GraphTimeRange,
-    parse_raw_graph_specification,
+    parse_graph_specification,
 )
-from ._graph_templates import get_template_graph_specification
+from ._graph_templates import (
+    get_template_graph_specification,
+)
 from ._graph_title import iter_graph_title_elements
 from ._metric_backend_registry import (
     FetchTimeSeries,
@@ -137,7 +139,7 @@ class GraphRenderState(BaseModel):
     def _parse_specification(cls, value: object) -> GraphSpecification:
         if isinstance(value, GraphSpecification):
             return value
-        return parse_raw_graph_specification(value)
+        return parse_graph_specification(value)
 
 
 def _load_graph_pin() -> int | None:

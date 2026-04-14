@@ -175,15 +175,15 @@ class GraphSpecificationRegistry(Registry[type[GraphSpecification]]):
 graph_specification_registry = GraphSpecificationRegistry()
 
 
-def parse_raw_graph_specification(raw: object) -> GraphSpecification:
-    match raw:
+def parse_graph_specification(graph_specification: object) -> GraphSpecification:
+    match graph_specification:
         case GraphSpecification():
-            return raw
+            return graph_specification
         case {"graph_type": str(graph_type), **rest}:
             return graph_specification_registry[graph_type].model_validate(rest)
         case dict():
             raise ValueError("Missing 'graph_type' key in graph specification")
-    raise TypeError(raw)
+    raise TypeError(graph_specification)
 
 
 class FixedVerticalRange(BaseModel, frozen=True):

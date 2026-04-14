@@ -35,7 +35,6 @@ from cmk.gui.http import Request
 from cmk.gui.i18n import localize
 from cmk.gui.logged_in import user
 from cmk.gui.permissions import permission_registry
-from cmk.gui.quick_setup.config_setups import register as register_config_setups
 from cmk.gui.quick_setup.handlers.utils import (
     Action,
     BackgroundJobException,
@@ -392,7 +391,6 @@ class QuickSetupStageActionBackgroundJob(BackgroundJob):
     ) -> None:
         job_interface.send_progress_update(_("Starting Quick stage action..."))
 
-        register_config_setups(quick_setup_registry)
         quick_setup = quick_setup_registry[self._quick_setup_id]
         built_stages_up_to_index = [
             stage() for stage in quick_setup.stages[: self._stage_index + 1]

@@ -26,7 +26,6 @@ from cmk.gui.exceptions import MKInternalError, MKUserError
 from cmk.gui.i18n import _, translate_to_current_language
 from cmk.gui.logged_in import user
 from cmk.gui.permissions import permission_registry
-from cmk.gui.quick_setup.config_setups import register as register_config_setups
 from cmk.gui.quick_setup.handlers.stage import (
     NextStageStructure,
     validate_stage_formspecs,
@@ -412,7 +411,6 @@ class QuickSetupActionBackgroundJob(BackgroundJob):
     ) -> None:
         job_interface.send_progress_update(_("Starting Quick Setup action..."))
 
-        register_config_setups(quick_setup_registry)
         quick_setup = quick_setup_registry[self._quick_setup_id]
         action_result = verify_custom_validators_and_complete_quick_setup(
             quick_setup=quick_setup,

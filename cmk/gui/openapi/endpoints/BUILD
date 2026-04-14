@@ -3,13 +3,7 @@ load("@cmk_requirements//:requirements.bzl", "requirement")
 
 py_library(
     name = "endpoints",
-    srcs = glob(
-        include = ["**/*.py"],
-        exclude = [
-            # Blocked: needs cmk.gui.quick_setup (monolithic, needs cmk.plugins)
-            "quick_setup/**/*.py",
-        ],
-    ),
+    srcs = glob(include = ["**/*.py"]),
     imports = ["../../../.."],
     visibility = [
         "//cmk:__subpackages__",
@@ -45,6 +39,7 @@ py_library(
         "//cmk/gui/openapi/restful_objects:type_defs",
         "//cmk/gui/openapi/shared_endpoint_families",
         "//cmk/gui/openapi/spec:utils",
+        "//cmk/gui/quick_setup",
         "//cmk/gui/rest_api_types:notifications",
         "//cmk/gui/userdb",
         "//cmk/gui/utils:agent",
@@ -74,13 +69,4 @@ py_library(
         requirement("urllib3"),
         requirement("werkzeug"),
     ],
-)
-
-# Temporary: endpoint files that still belong to the monolithic //cmk/gui target.
-filegroup(
-    name = "gui_srcs",
-    srcs = glob(include = [
-        "quick_setup/**/*.py",
-    ]),
-    visibility = ["//cmk/gui:__pkg__"],
 )

@@ -94,8 +94,7 @@ build_gcc() {
         --program-suffix=-"${GCC_MAJOR}" \
         --enable-linker-build-id \
         --disable-multilib \
-        --enable-languages=c,c++ \
-        --disable-libsanitizer
+        --enable-languages=c,c++
     make -j4
     make install
 }

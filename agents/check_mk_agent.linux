@@ -1924,7 +1924,7 @@ run_mrpe() {
     shift
 
     PLUGIN="${1%% *}"
-    OUTPUT="$(eval "${MK_DEFINE_LOG_SECTION_TIME}; _log_section_time $*")"
+    OUTPUT="$(eval "${MK_DEFINE_LOG_SECTION_TIME}; _log_section_time $*" </dev/null)"
     STATUS="$?"
 
     printf "<<<mrpe>>>\n"

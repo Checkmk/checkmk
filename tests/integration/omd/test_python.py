@@ -210,8 +210,8 @@ def test_python_optimized_and_lto_enable(site: Site) -> None:
     [
         pytest.param(
             "cmk.base.config",
-            f"lib/python{PYVER.major}/cmk/base/config.py",
-            f"lib/python{PYVER.major}/cmk/base/__pycache__/config.cpython-{PYVER.major}{PYVER.minor}.pyc",
+            f"lib/python{PYVER.major}.{PYVER.minor}/site-packages/cmk/base/config.py",
+            f"lib/python{PYVER.major}.{PYVER.minor}/site-packages/cmk/base/__pycache__/config.cpython-{PYVER.major}{PYVER.minor}.pyc",
             id="pyc for imports from the big monolith cmk namespace",
         ),
         pytest.param(

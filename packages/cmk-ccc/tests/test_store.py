@@ -210,6 +210,15 @@ def test_save_text_to_file(tmp_path: Path, data: str) -> None:
     assert store.load_text_from_file(path) == data
 
 
+@pytest.mark.xfail(strict=True, reason="Crash group 3380: SyntaxError on null bytes in file")
+def test_load_object_from_file_null_bytes(tmp_path: Path) -> None:
+    """A file containing null bytes should return default, not crash with SyntaxError."""
+    path = tmp_path / "corrupted.mk"
+    path.write_bytes(b"\x00" * 100)
+    data = store.load_object_from_file(path, default=[])
+    assert data == []
+
+
 @pytest.mark.parametrize("permissions", [0o002, 0o666, 0o777])
 def test_load_world_writable_file(tmp_path: Path, permissions: int) -> None:
     path = tmp_path / "writeme.txt"

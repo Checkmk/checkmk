@@ -101,8 +101,8 @@ filegroup(
 )
 
 filegroup(
-    name = "system_dependencies_questing",
-    srcs = ["system-dependencies.questing.txt"],
+    name = "system_dependencies_resolute",
+    srcs = ["system-dependencies.resolute.txt"],
     visibility = ["//visibility:public"],
 )
 

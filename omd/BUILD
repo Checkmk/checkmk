@@ -704,9 +704,9 @@ pkg_tar(
             "$(location //tests/packaging/package_validator:system_dependencies_ubuntu)",
             "$(location //tests/packaging/package_validator:system_dependencies_noble)",
         ],
-        "@cmk//distro:ubuntu-25.10": [
+        "@cmk//distro:ubuntu-26.04": [
             "$(location //tests/packaging/package_validator:system_dependencies_ubuntu)",
-            "$(location //tests/packaging/package_validator:system_dependencies_questing)",
+            "$(location //tests/packaging/package_validator:system_dependencies_resolute)",
         ],
     }),
     data = [
@@ -731,8 +731,8 @@ pkg_tar(
             "//tests/packaging/package_validator:system_dependencies_noble",
             "//tests/packaging/package_validator:system_dependencies_ubuntu",
         ],
-        "@cmk//distro:ubuntu-25.10": [
-            "//tests/packaging/package_validator:system_dependencies_questing",
+        "@cmk//distro:ubuntu-26.04": [
+            "//tests/packaging/package_validator:system_dependencies_resolute",
             "//tests/packaging/package_validator:system_dependencies_ubuntu",
         ],
     }),

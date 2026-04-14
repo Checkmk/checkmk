@@ -497,6 +497,8 @@ http_archive(
         "//omd/packages/freetds:patches/0001-remove-spurious-gperf-check.patch",
         "//omd/packages/freetds:patches/0002-pregenerated-headers.patch",
         "//omd/packages/freetds:patches/0003-skip-doc-subdirs.patch",
+        "//omd/packages/freetds:patches/0004-vendor-am-iconv-m4-macro.patch",
+        "//omd/packages/freetds:patches/0005-pregenerate-iconv_charsets.patch",
     ],
     sha256 = "fee2dafa7138485528ecccb727dc161c6fed576d0ab405d2ed3b3eff81fa2ca4",
     strip_prefix = "freetds-1.4.22",

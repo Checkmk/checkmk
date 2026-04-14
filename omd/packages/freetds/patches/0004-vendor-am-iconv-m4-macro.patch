@@ -1,0 +1,49 @@
+The GitHub source archive ships without a pre-generated configure script, so
+autoreconf must run at build time.  autoreconf looks for the AM_ICONV macro in
+the system aclocal path; on AlmaLinux 10 (and other builds that lack
+gettext-devel) the macro is absent and the build fails with:
+
+  configure.ac:123: error: possibly undefined macro: AM_ICONV
+
+Fix this by vendoring a minimal m4/iconv.m4 stub directly in the source tree.
+On Linux/glibc iconv is always provided by libc itself, so LIBICONV and
+LTLIBICONV can safely be empty and the only real work is confirming that
+iconv_open() is reachable.
+
+--- /dev/null
++++ b/m4/iconv.m4
+@@ -0,0 +1,34 @@
++# iconv.m4 - Minimal vendor stub so autoreconf works without gettext-devel.
++#
++# On Linux/glibc iconv is part of libc; no -liconv flag is needed.
++# Platforms that ship a separate libiconv (macOS, FreeBSD, …) are not
++# targeted by this build, so the full gettext AM_ICONV logic is not required.
++
++AC_DEFUN([AM_ICONV_LINKFLAGS_BODY],
++[
++  LIBICONV=
++  LTLIBICONV=
++  AC_SUBST([LIBICONV])
++  AC_SUBST([LTLIBICONV])
++])
++
++AC_DEFUN([AM_ICONV_LINK],
++[
++  AM_ICONV_LINKFLAGS_BODY
++  LIBS="$LIBS $LIBICONV"
++])
++
++AC_DEFUN([AM_ICONV],
++[
++  AM_ICONV_LINK
++  if test "$am_cv_func_iconv" != yes; then
++    AC_CACHE_CHECK([for iconv], [am_cv_func_iconv],
++    [AC_LINK_IFELSE(
++      [AC_LANG_PROGRAM([[#include <stdlib.h>
++#include <iconv.h>]], [[iconv_t cd = iconv_open("",""); iconv(cd,NULL,NULL,NULL,NULL); iconv_close(cd);]])],
++      [am_cv_func_iconv=yes],
++      [am_cv_func_iconv=no])])
++  fi
++  ICONV_CONST=
++  AC_SUBST([ICONV_CONST])
++])

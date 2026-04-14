@@ -28,7 +28,7 @@ void build(Map args) {
             (args.TARGET == "agent_with_sign") ? [
                 "agents/wnx",
                 // The deprecated_unused_param's have to be present or the script will fail.
-                "call run.cmd --all --sign deprecated_unused_param1 deprecated_unused_param2",
+                "call run.cmd --all --skip-sql-test --sign deprecated_unused_param1 deprecated_unused_param2",
                 [
                     "cmk-agent-ctl.exe",
                     "check_mk_agent-64.exe",

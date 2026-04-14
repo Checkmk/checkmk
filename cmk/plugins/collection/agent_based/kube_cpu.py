@@ -82,8 +82,8 @@ agent_section_kube_performance_cpu_v1 = AgentSection(
 )
 
 
-agent_section_kube_cpu_resources_v2 = AgentSection(
-    name="kube_cpu_resources_v2",
+agent_section_kube_cpu_resources_v1 = AgentSection(
+    name="kube_cpu_resources_v1",
     parsed_section_name="kube_cpu_resources",
     parse_function=parse_resources,
 )

@@ -72,12 +72,12 @@ def create_api_sections(
             piggyback_name=piggyback_name,
         ),
         WriteableSection(
-            section_name=SectionName("kube_cpu_resources_v2"),
+            section_name=SectionName("kube_cpu_resources_v1"),
             section=api_node.cpu_resources(),
             piggyback_name=piggyback_name,
         ),
         WriteableSection(
-            section_name=SectionName("kube_memory_resources_v2"),
+            section_name=SectionName("kube_memory_resources_v1"),
             section=api_node.memory_resources(),
             piggyback_name=piggyback_name,
         ),

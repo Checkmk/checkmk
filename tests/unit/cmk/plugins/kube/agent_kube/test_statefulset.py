@@ -21,8 +21,8 @@ from cmk.plugins.kube.special_agents import agent_kube
 def statefulsets_api_sections() -> set[str]:
     return {
         "kube_pod_resources_v1",
-        "kube_memory_resources_v2",
-        "kube_cpu_resources_v2",
+        "kube_memory_resources_v1",
+        "kube_cpu_resources_v1",
         "kube_statefulset_info_v1",
         "kube_update_strategy_v1",
         "kube_statefulset_replicas_v1",

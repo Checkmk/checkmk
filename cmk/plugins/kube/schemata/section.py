@@ -196,7 +196,7 @@ class CollectorProcessingLogs(Section):
 # choosing a name, other section BaseModel names like AllocatableResource and PerformanceUsage
 # be taken into account
 class Resources(Section):
-    """sections: "[kube_memory_resources_v2, kube_cpu_resources_v2]"""
+    """sections: "[kube_memory_resources_v1, kube_cpu_resources_v1]"""
 
     request: float
     limit: float

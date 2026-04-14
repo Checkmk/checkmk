@@ -42,12 +42,12 @@ def create_api_sections(api_cluster: Cluster, cluster_name: str) -> Iterator[Wri
         ),
         WriteableSection(
             piggyback_name="",
-            section_name=SectionName("kube_memory_resources_v2"),
+            section_name=SectionName("kube_memory_resources_v1"),
             section=_memory_resources(api_cluster),
         ),
         WriteableSection(
             piggyback_name="",
-            section_name=SectionName("kube_cpu_resources_v2"),
+            section_name=SectionName("kube_cpu_resources_v1"),
             section=_cpu_resources(api_cluster),
         ),
         WriteableSection(

@@ -6,8 +6,6 @@ py_library(
     srcs = glob(
         include = ["**/*.py"],
         exclude = [
-            # Kept in monolithic gui: imported by community_registration
-            "metric/**/*.py",
             # Blocked: needs cmk.gui.quick_setup (monolithic, needs cmk.plugins)
             "quick_setup/**/*.py",
         ],
@@ -59,6 +57,7 @@ py_library(
         "//cmk/gui/watolib:passwords",
         "//cmk/gui/watolib:registries",
         "//cmk/gui/watolib:timeperiods",
+        "//cmk/product_usage",
         "//cmk/utils",
         "//packages/cmk-ccc:exceptions",
         "//packages/cmk-ccc:hostaddress",
@@ -81,7 +80,6 @@ py_library(
 filegroup(
     name = "gui_srcs",
     srcs = glob(include = [
-        "metric/**/*.py",
         "quick_setup/**/*.py",
     ]),
     visibility = ["//cmk/gui:__pkg__"],

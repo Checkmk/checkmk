@@ -1137,7 +1137,6 @@ httpx==0.28.1 \
     #   -c requirements.txt
     #   -r non-free/packages/cmk-relay-engine/requirements.in
     #   -r packages/cmk-agent-receiver/requirements.in
-    #   -r packages/cmk-werks/requirements.in
 icalendar==6.3.2 \
     --hash=sha256:d400e9c9bb8c025e5a3c77c236941bb690494be52528a0b43cc7e8b7c9505064 \
     --hash=sha256:e0c10ecbfcebe958d33af7d491f6e6b7580d11d475f2eeb29532d0424f9110a1
@@ -3374,7 +3373,6 @@ rich==14.3.2 \
     # via
     #   -c requirements.txt
     #   -r non-free/packages/cmk-relay-engine/requirements.in
-    #   -r packages/cmk-werks/requirements.in
 robotframework==7.4.1 \
     --hash=sha256:3f75cae8a24797f1953efdb51399569767d742bb31f549ee9856db5545062728 \
     --hash=sha256:d645487248a86db1e1a865ce792502792edf5342873f4e4f35d333219cd246c5

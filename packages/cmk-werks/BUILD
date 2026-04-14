@@ -146,10 +146,6 @@ py_binary(
 
 py_requirements_test(
     name = "requirements-test",
-    known_unused = [
-        "httpx",
-        "rich",
-    ],
     libs = [
         ":cmk-werks",
     ],

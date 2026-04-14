@@ -1591,7 +1591,6 @@ httpx==0.28.1 \
     # via
     #   -r non-free/packages/cmk-relay-engine/requirements.in
     #   -r packages/cmk-agent-receiver/requirements.in
-    #   -r packages/cmk-werks/requirements.in
 hypothesis==6.151.7 \
     --hash=sha256:d1a3a3bba940677737e5d2e784653f2e6fa572af5ddf95093d9c73349cc3de9b \
     --hash=sha256:d57bfed05fddc61aaea04c7316c6a5a7776b325244c2670c9e9b3fa706fcfd04
@@ -4710,7 +4709,6 @@ rich==14.3.2 \
     --hash=sha256:e712f11c1a562a11843306f5ed999475f09ac31ffb64281f73ab29ffdda8b3b8
     # via
     #   -r non-free/packages/cmk-relay-engine/requirements.in
-    #   -r packages/cmk-werks/requirements.in
     #   bandit
     #   checkmk-dev-tools
     #   textual

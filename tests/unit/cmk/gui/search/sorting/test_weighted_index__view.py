@@ -47,14 +47,14 @@ def test_weighted_index_sorting_with_view_query() -> None:
         ("Cisco Meraki Organisation Licenses Overview", "Service monitoring rules"),
         ("Couchbase Node: Size of couch views", "Service monitoring rules"),
         ("Couchbase Node: Size of spacial views", "Service monitoring rules"),
+        ("Views", "Visualization"),  # customize
+        ("Cisco Meraki Organisation Licenses Overview", "Enforced services"),
+        ("Couchbase Node: Size of couch views", "Enforced services"),
+        ("Couchbase Node: Size of spacial views", "Enforced services"),
         ("Hide hosttags in Setup folder view", "Global settings"),
         ("Limit the number of rows in View tables", "Global settings"),
         ("Sounds in Views", "Global settings"),
         ("Threshold for slow views", "Global settings"),
-        ("Cisco Meraki Organisation Licenses Overview", "Enforced services"),
-        ("Couchbase Node: Size of couch views", "Enforced services"),
-        ("Couchbase Node: Size of spacial views", "Enforced services"),
-        ("Views", "Visualization"),  # customize
     ]
 
     assert value == expected

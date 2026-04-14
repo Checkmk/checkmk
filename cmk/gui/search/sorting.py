@@ -68,9 +68,7 @@ _TOPIC_RANKING = (
     "host monitoring rules",
     "notification parameter",
     "service monitoring rules",
-    "global settings",
     "vm, cloud, container",
-    "enforced services",
 )
 
 

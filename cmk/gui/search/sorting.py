@@ -51,15 +51,11 @@ def _get_weighted_index_sorter(query: str) -> Sorter:
 
         topic_rank = topic_ranking_map.get(topic_, unranked_topic)
         title_match_rank = _get_title_match_rank(title_, query_)
-
-        # TODO: once metadata is factored out of code, introduce a "deprecated" attribute.
-        # NOTE: need to check for both translated and untranslated patterns since some titles are
-        # don't have translations.
-        is_deprecated = any(pattern in title_ for pattern in ("(deprecated)", _("(deprecated)")))
+        deprecation_rank = _get_deprecation_rank(title_)
 
         # TODO: try and figure out if we can improve shared typing to account for non-Optional str
         # type with a blank string as default (original behavior).
-        return title_match_rank, topic_rank, is_deprecated, item.title, item.context or ""
+        return title_match_rank, topic_rank, deprecation_rank, item.title, item.context or ""
 
     def sorter(items: list[UnifiedSearchResultItem]) -> None:
         items.sort(key=algorithm)
@@ -98,3 +94,10 @@ def _get_title_match_rank(title: str, query: str) -> _MatchRank:
     if query in title:
         return _MatchRank.TITLE_CONTAINS_QUERY
     return _MatchRank.DEFAULT_RANK
+
+
+def _get_deprecation_rank(title: str) -> bool:
+    # TODO: once metadata is factored out of code, introduce a "deprecated" attribute.
+    # NOTE: need to check for both translated and untranslated patterns since some titles are
+    # don't have translations.
+    return any(pattern in title for pattern in ("(deprecated)", _("(deprecated)")))

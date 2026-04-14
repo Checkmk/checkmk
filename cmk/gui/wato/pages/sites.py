@@ -1750,7 +1750,10 @@ class ModeEditSiteGlobals(ABCGlobalSettingsMode):
         )
 
         if not is_distributed_setup_remote_site(self._configured_sites):
-            if not has_distributed_setup_remote_sites(self._configured_sites):
+            if (
+                not has_distributed_setup_remote_sites(self._configured_sites)
+                and not self._current_settings
+            ):
                 html.show_error(
                     _(
                         "You cannot configure site-specific global settings "

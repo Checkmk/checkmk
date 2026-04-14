@@ -50,6 +50,7 @@ from cmk.gui.search import (
     MatchItemGeneratorRegistry,
     MatchItems,
 )
+from cmk.gui.site_config import has_distributed_setup_remote_sites
 from cmk.gui.type_defs import ActionResult, GlobalSettings, IconNames, PermissionName, StaticIcon
 from cmk.gui.utils import escaping
 from cmk.gui.utils.csrf_token import check_csrf_token
@@ -436,6 +437,13 @@ class ABCEditGlobalSettingMode(WatoMode):
             sites=self._affected_sites(),
             use_git=config.wato_use_git,
         )
+
+        if (
+            self.name() == "edit_site_configvar"
+            and not has_distributed_setup_remote_sites(active_config.sites)
+            and not self._current_settings
+        ):
+            return redirect(mode_url("sites"))
 
         return redirect(self._back_url())
 

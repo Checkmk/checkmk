@@ -17,6 +17,11 @@ Foo_Application (ignored=parameter) mrpe_plugin1 -w 60 -c 80
 Bar_Extender mrpe_plugin2 -s -X -w 4:5
 EOF
 
+    STDIN_CONFIGFILE="${SHUNIT_TMPDIR}/mrpe_stdin.cfg"
+    cat >"${STDIN_CONFIGFILE}" <<EOF
+First_Check mrpe_plugin_reads_stdin
+Second_Check mrpe_plugin2
+EOF
 }
 
 mrpe_plugin1() {
@@ -29,6 +34,12 @@ mrpe_plugin2() {
     echo "this is OK"
 }
 
+mrpe_plugin_reads_stdin() {
+    # Simulate a plugin that reads from stdin.
+    read -r _ignored || true
+    echo "this is OK"
+}
+
 test_run_remote_plugins() {
     expected="$(printf "<<<mrpe>>>
 (mrpe_plugin1) Foo_Application 2 this is criticalYcmdline parameters: -w 60 -c 80
@@ -37,6 +48,18 @@ test_run_remote_plugins() {
 " | tr 'Y' '\1')"
 
     assertEquals "${expected}" "$(run_remote_plugins "${CONFIGFILE}")"
+}
+
+test_run_remote_plugins_stdin_does_not_steal_entries() {
+    # A plugin that reads from stdin must not consume subsequent mrpe.cfg lines
+    # from the pipe, which would cause later entries to be skipped.
+    expected="$(printf "<<<mrpe>>>
+(mrpe_plugin_reads_stdin) First_Check 0 this is OK
+<<<mrpe>>>
+(mrpe_plugin2) Second_Check 0 this is OK
+")"
+
+    assertEquals "${expected}" "$(run_remote_plugins "${STDIN_CONFIGFILE}")"
 }
 
 test__mrpe_get_interval() {

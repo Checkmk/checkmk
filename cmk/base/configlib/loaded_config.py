@@ -24,7 +24,7 @@ from cmk.base.default_config.cmc import (
     SmartPingTuning,
 )
 from cmk.ccc.hostaddress import HostAddress, HostName
-from cmk.rrd.config import RRDObjectConfig
+from cmk.rrd import RRDObjectConfig
 from cmk.utils.host_storage import FolderAttributesForBase
 from cmk.utils.http_proxy_config import HTTPProxySpec
 from cmk.utils.oauth2_connection import OAuth2Connection

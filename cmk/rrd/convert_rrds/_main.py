@@ -8,10 +8,8 @@ from collections.abc import Sequence
 from pathlib import Path
 
 from cmk.ccc.hostaddress import HostName
-from cmk.rrd.config import read_hostnames, RRDConfig
-from cmk.rrd.fs import RRDPaths
-from cmk.rrd.interface import RRDInterface
-from cmk.rrd.rrd import RRDConverter
+
+from .. import read_hostnames, RRDConfig, RRDConverter, RRDInterface, RRDPaths
 
 
 def convert_rrds(

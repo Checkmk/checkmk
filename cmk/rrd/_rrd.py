@@ -37,11 +37,11 @@ from cmk.utils.log import console
 from cmk.utils.metrics import MetricName
 from cmk.utils.misc import pnp_cleanup
 
+from ._config import RRDConfig, RRDObjectConfig
 from ._const import RRD_DEFAULT_CONFIG, RRD_HEARTBEAT
 from ._crash import create_crash_report
-from .config import RRDConfig, RRDObjectConfig
-from .fs import RRDPaths, Storage
-from .interface import RRDInterface
+from ._fs import RRDPaths, Storage
+from ._interface import RRDInterface
 
 _Seconds = NewType("_Seconds", int)
 

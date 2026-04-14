@@ -10,11 +10,11 @@ from pathlib import Path
 
 import rrdtool  # type: ignore[import-not-found]
 
-# NOTE: rrdtool is missing type hints
 from cmk.ccc.hostaddress import HostName  # astrein: disable=cmk-module-layer-violation
-from cmk.rrd import RRDPaths
-from cmk.rrd.convert_rrds.main import convert_rrds  # astrein: disable=cmk-module-layer-violation
 from cmk.utils.log import verbosity_to_log_level  # astrein: disable=cmk-module-layer-violation
+
+from .. import RRDPaths
+from ._main import convert_rrds
 
 
 def _set_log_level(verbosity: int) -> None:

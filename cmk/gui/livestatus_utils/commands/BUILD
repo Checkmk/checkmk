@@ -11,11 +11,9 @@ py_library(
     deps = [
         "//cmk/gui:exceptions",
         "//cmk/gui:logged_in",
-        "//cmk/utils",
         "//packages/cmk-ccc:hostaddress",
         "//packages/cmk-ccc:site",
         "//packages/cmk-ccc:user",
-        "//packages/cmk-ec",
         "//packages/cmk-livestatus-client:py_livestatus",
     ],
 )

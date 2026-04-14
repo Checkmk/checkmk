@@ -11,9 +11,9 @@ import cmk.ec.export as ec  # astrein: disable=cmk-module-layer-violation
 from cmk import fields
 from cmk.gui.fields import SiteField, Timestamp
 from cmk.gui.fields.utils import BaseSchema
-from cmk.gui.livestatus_utils.commands.event_console import ServiceLevelType
 from cmk.gui.openapi.restful_objects.response_schemas import DomainObject, DomainObjectCollection
 
+from .commands import ServiceLevelType
 from .common_fields import HostNameField, PhaseField, StateField
 
 

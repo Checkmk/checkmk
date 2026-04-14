@@ -32,7 +32,15 @@ from cmk.gui import fields as gui_fields
 from cmk.gui import sites
 from cmk.gui.fields.utils import BaseSchema
 from cmk.gui.http import Response
-from cmk.gui.livestatus_utils.commands.event_console import (
+from cmk.gui.logged_in import user
+from cmk.gui.openapi.restful_objects import constructors, Endpoint
+from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
+from cmk.gui.openapi.restful_objects.type_defs import DomainObject
+from cmk.gui.openapi.utils import problem, serve_json
+from cmk.gui.utils import permission_verification as permissions
+from cmk.livestatus_client.tables.eventconsoleevents import Eventconsoleevents
+
+from .commands import (
     archive_events,
     change_state,
     ECEvent,
@@ -42,14 +50,6 @@ from cmk.gui.livestatus_utils.commands.event_console import (
     get_single_event_by_id,
     update_and_acknowledge,
 )
-from cmk.gui.logged_in import user
-from cmk.gui.openapi.restful_objects import constructors, Endpoint
-from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
-from cmk.gui.openapi.restful_objects.type_defs import DomainObject
-from cmk.gui.openapi.utils import problem, serve_json
-from cmk.gui.utils import permission_verification as permissions
-from cmk.livestatus_client.tables.eventconsoleevents import Eventconsoleevents
-
 from .common_fields import ApplicationField, EventIDField, HostNameField, PhaseField, StateField
 from .request_schemas import (
     ChangeEventState,

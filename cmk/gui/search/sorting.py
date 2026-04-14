@@ -63,11 +63,17 @@ def _get_weighted_index_sorter(query: str) -> Sorter:
 def _get_topic_ranking(topic: str) -> int:
     # TODO: the topics ranking should not live in code.
     topics_to_promote = _get_topics_to_promote()
+    topics_to_demote = _get_topics_to_demote()
 
     if topic in topics_to_promote:
         return topics_to_promote.index(topic)
 
-    return len(topics_to_promote)
+    unranked_topic = len(topics_to_promote)
+
+    if topic in topics_to_demote:
+        return (unranked_topic + 1) + topics_to_demote.index(topic)
+
+    return unranked_topic
 
 
 def _get_topics_to_promote() -> tuple[str, ...]:
@@ -85,6 +91,14 @@ def _get_topics_to_promote() -> tuple[str, ...]:
         _("Notification parameter"),
         _("Service monitoring rules"),
         _("Service discovery rules"),
+    )
+
+
+def _get_topics_to_demote() -> tuple[str, ...]:
+    return (
+        _("Global settings"),
+        _("Enforced services"),
+        _("Deprecated rule sets"),
     )
 
 

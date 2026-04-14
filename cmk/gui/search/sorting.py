@@ -84,7 +84,8 @@ class _MatchRank(enum.IntEnum):
     EXACT_TITLE = 0
     EXACT_TITLE_IN_PARENTHESES = 1
     TITLE_STARTS_WITH_QUERY = 2
-    DEFAULT_RANK = 3
+    TITLE_CONTAINS_QUERY = 3
+    DEFAULT_RANK = 4
 
 
 def _get_title_match_rank(title: str, query: str) -> _MatchRank:
@@ -94,4 +95,6 @@ def _get_title_match_rank(title: str, query: str) -> _MatchRank:
         return _MatchRank.EXACT_TITLE_IN_PARENTHESES
     if title.startswith(query):
         return _MatchRank.TITLE_STARTS_WITH_QUERY
+    if query in title:
+        return _MatchRank.TITLE_CONTAINS_QUERY
     return _MatchRank.DEFAULT_RANK

@@ -70,11 +70,11 @@ def test_weighted_index_sorting_with_notifications_query() -> None:
         ("Push Notifications (using Pushover)", "Service monitoring rules"),
         ("Fallback email address for notifications", "Global settings"),
         ("Interval for checking for ripe bulk notifications", "Global settings"),
-        ("Logging of the notification mechanics", "Global settings"),
         ("Send notifications to Event Console", "Global settings"),
         ("Send notifications to remote Event Console", "Global settings"),
         ("Store notifications for rule analysis", "Global settings"),
         ("Syslog facility for Event console notifications", "Global settings"),
+        ("Logging of the notification mechanics", "Global settings"),
     ]
 
     assert value == expected

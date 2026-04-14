@@ -57,7 +57,9 @@ def check_kube_memory(
     section_kube_memory_resources: Resources | None,
     section_kube_allocatable_memory_resource: AllocatableResource | None,
 ) -> CheckResult:
-    assert section_kube_memory_resources is not None
+    if section_kube_memory_resources is None:
+        return
+
     yield from check_resource(
         params,
         section_kube_performance_memory,

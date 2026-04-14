@@ -59,7 +59,9 @@ def _check_kube_cpu(
     current_timestamp: float,
     host_value_store: MutableMapping[str, Any],
 ) -> CheckResult:
-    assert section_kube_cpu_resources is not None
+    if section_kube_cpu_resources is None:
+        return
+
     yield from check_resource(
         params,
         performance_cpu(

@@ -303,18 +303,22 @@ def test_check_kube_memory(
         ),
     ],
 )
-def test_crashes_if_no_resources(
+def test_no_results_if_no_resources(
     section_kube_performance_memory: PerformanceUsage | None,
 ) -> None:
-    with pytest.raises(AssertionError):
-        list(
-            check_kube_memory(
-                DEFAULT_PARAMS,
-                section_kube_performance_memory,
-                None,
-                AllocatableResource(context="node", value=35917989.0),
-            )
+    """
+    No results expected when section_kube_memory is missing,
+    e.g. if the API server is unreachable or during upgrades.
+    """
+    result = list(
+        check_kube_memory(
+            DEFAULT_PARAMS,
+            section_kube_performance_memory,
+            None,
+            AllocatableResource(context="node", value=35917989.0),
         )
+    )
+    assert result == []
 
 
 @pytest.mark.parametrize(

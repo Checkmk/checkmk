@@ -194,6 +194,13 @@ def check_oracle_instance_uptime(
     if data.up_seconds is None:
         return
 
+    if data.up_seconds < 0:
+        yield Result(
+            state=State.WARN,
+            summary=f"Uptime: invalid negative value ({data.up_seconds}s)",
+        )
+        return
+
     yield Result(
         state=State.OK, summary=f"Up since {render.datetime(time.time() - data.up_seconds)}"
     )

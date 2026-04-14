@@ -11,12 +11,12 @@ from datetime import timedelta
 
 from cmk.ccc import version
 from cmk.gui import hooks
+from cmk.gui.autocompleters import AutocompleterRegistry
 from cmk.gui.background_job.job import BackgroundJobRegistry
 from cmk.gui.cron import CronJob, CronJobRegistry
 from cmk.gui.form_specs.unstable import SingleChoiceEditable
 from cmk.gui.form_specs.unstable.time_specific import TimeSpecific
 from cmk.gui.form_specs.visitors import register_recomposer_function, register_visitor_class
-from cmk.gui.valuespec import AutocompleterRegistry
 from cmk.rulesets.internal.form_specs import InternalProxy
 from cmk.rulesets.v1.form_specs import Password, Proxy, TimePeriod
 

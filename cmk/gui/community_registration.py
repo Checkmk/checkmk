@@ -10,6 +10,7 @@ from cmk.ccc.version import Edition
 from cmk.gui import agent_commands, login, nagvis, sidebar, visuals
 from cmk.gui import plugin_registration as plugins
 from cmk.gui.agent_commands import agent_commands_registry
+from cmk.gui.autocompleters import autocompleter_registry
 from cmk.gui.background_job.job import job_registry
 from cmk.gui.backup.registration import backup_register
 from cmk.gui.common_registration import register as common_registration
@@ -58,7 +59,6 @@ from cmk.gui.sidebar import snapin_registry
 from cmk.gui.sites import site_choices
 from cmk.gui.token_auth import token_authenticated_page_registry
 from cmk.gui.userdb import user_attribute_registry, user_connector_registry
-from cmk.gui.valuespec import autocompleter_registry
 from cmk.gui.views import graph
 from cmk.gui.views.builtin_views import (
     builtin_view_extender_registry,

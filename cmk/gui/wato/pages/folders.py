@@ -16,6 +16,7 @@ from typing import override, TypeVar
 import cmk.gui.view_utils
 from cmk.ccc.hostaddress import HostName
 from cmk.gui import forms, sites
+from cmk.gui.autocompleters import autocompleter_registry
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
 from cmk.gui.config import active_config, Config
 from cmk.gui.exceptions import MKUserError
@@ -74,7 +75,6 @@ from cmk.gui.utils.urls import (
 )
 from cmk.gui.valuespec import (
     AjaxDropdownChoice,
-    autocompleter_registry,
     DropdownChoice,
     FixedValue,
     TextInput,

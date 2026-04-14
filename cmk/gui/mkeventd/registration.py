@@ -5,6 +5,7 @@
 
 from collections.abc import Callable
 
+from cmk.gui.autocompleters import AutocompleterRegistry
 from cmk.gui.data_source import DataSourceRegistry
 from cmk.gui.openapi.framework.registry import VersionedEndpointRegistry
 from cmk.gui.openapi.restful_objects.endpoint_family import EndpointFamilyRegistry
@@ -14,7 +15,6 @@ from cmk.gui.painter.v0 import PainterRegistry
 from cmk.gui.permissions import PermissionRegistry, PermissionSectionRegistry
 from cmk.gui.search import match_item_generator_registry
 from cmk.gui.sidebar import SnapinRegistry
-from cmk.gui.valuespec import AutocompleterRegistry
 from cmk.gui.views.command import CommandRegistry
 from cmk.gui.views.icon import IconRegistry
 from cmk.gui.views.sorter import SorterRegistry

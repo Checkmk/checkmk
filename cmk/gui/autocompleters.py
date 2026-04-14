@@ -3,15 +3,35 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-"""Autocompleter infrastructure: AJAX handler and page registration."""
+"""Autocompleter infrastructure: registry, AJAX handler, and page registration."""
 
+# mypy: disable-error-code="type-arg"
+
+from collections.abc import Callable
 from typing import override
 
+from cmk.ccc.plugin_registry import Registry
+from cmk.gui.config import Config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
 from cmk.gui.pages import AjaxPage, PageContext, PageEndpoint, PageRegistry, PageResult
 from cmk.gui.type_defs import Choices
-from cmk.gui.valuespec import autocompleter_registry
+
+AutocompleterFunc = Callable[[Config, str, dict[str, object]], Choices]
+
+
+class AutocompleterRegistry(Registry[AutocompleterFunc]):
+    def plugin_name(self, instance: AutocompleterFunc) -> str:
+        return instance._ident  # type: ignore[attr-defined, no-any-return]
+
+    def register_autocompleter(self, ident: str, func: AutocompleterFunc) -> None:
+        if not callable(func):
+            raise TypeError()
+        func._ident = ident  # type: ignore[attr-defined]
+        self.register(func)
+
+
+autocompleter_registry = AutocompleterRegistry()
 
 
 class AutocompleterBackendWarning(Exception):

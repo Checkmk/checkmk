@@ -5,7 +5,7 @@
 
 import pytest
 
-from cmk.gui.valuespec import autocompleter_registry
+from cmk.gui.autocompleters import autocompleter_registry
 from cmk.livestatus_client.testing import MockLiveStatusConnection
 from tests.testlib.unit.rest_api_client import ClientRegistry
 

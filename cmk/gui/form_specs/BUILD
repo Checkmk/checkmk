@@ -10,6 +10,7 @@ py_library(
         "//tests:__subpackages__",
     ],
     deps = [
+        "//cmk/gui:autocompleters",
         "//cmk/gui:config",
         "//cmk/gui:exceptions",
         "//cmk/gui:hooks",

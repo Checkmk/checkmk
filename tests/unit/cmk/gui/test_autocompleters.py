@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.gui.valuespec import autocompleter_registry
+from cmk.gui.autocompleters import autocompleter_registry
 
 
 def test_builtin_autocompleters_registered() -> None:

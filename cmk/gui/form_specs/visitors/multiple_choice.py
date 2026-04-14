@@ -6,9 +6,9 @@
 from collections.abc import Sequence
 from typing import assert_never, override, TypedDict
 
+from cmk.gui.autocompleters import autocompleter_registry
 from cmk.gui.config import active_config
 from cmk.gui.i18n import _, translate_to_current_language
-from cmk.gui.valuespec import autocompleter_registry
 from cmk.rulesets.internal.form_specs import MultipleChoiceExtended, MultipleChoiceExtendedLayout
 from cmk.rulesets.internal.form_specs._extended import Autocompleter
 from cmk.shared_typing import vue_formspec_components as shared_type_defs

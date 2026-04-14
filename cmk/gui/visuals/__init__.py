@@ -7,13 +7,13 @@ from collections.abc import Callable
 
 from cmk.ccc import store
 from cmk.gui import hooks
+from cmk.gui.autocompleters import AutocompleterRegistry
 from cmk.gui.config import Config
 from cmk.gui.legacy_plugins import load_web_plugins
 from cmk.gui.openapi.framework import VersionedEndpointRegistry
 from cmk.gui.openapi.restful_objects.endpoint_family import EndpointFamilyRegistry
 from cmk.gui.pages import PageEndpoint, PageRegistry
 from cmk.gui.type_defs import FilterHTTPVariables
-from cmk.gui.valuespec import AutocompleterRegistry
 from cmk.utils import paths
 
 from . import _filters, _site_filters, info

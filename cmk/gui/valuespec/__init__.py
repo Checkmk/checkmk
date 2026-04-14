@@ -2,7 +2,6 @@
 # Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from .autocompleter import autocompleter_registry, AutocompleterRegistry
 from .definitions import (
     _CAorCAChain,
     AbsoluteDate,
@@ -165,8 +164,6 @@ __all__ = [
     "AlternativeModel",
     "AndOrNotDropdown",
     "AndOrNotDropdownValue",
-    "autocompleter_registry",
-    "AutocompleterRegistry",
     "AutoTimestamp",
     "Bounds",
     "_CAorCAChain",

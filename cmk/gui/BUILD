@@ -1210,11 +1210,12 @@ py_library(
         "//tests:__subpackages__",
     ],
     deps = [
+        ":config",
         ":exceptions",
         ":i18n",
         ":pages",
         ":type_defs",
-        "//cmk/gui/valuespec",
+        "//packages/cmk-ccc:plugin-registry",
     ],
 )
 

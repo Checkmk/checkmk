@@ -36,6 +36,7 @@ from cmk.gui import (
     welcome,
     werks,
 )
+from cmk.gui.autocompleters import AutocompleterRegistry
 from cmk.gui.background_job.job import BackgroundJobRegistry
 from cmk.gui.background_job.wato import registration as background_job_registration
 from cmk.gui.bi import registration as bi_registration
@@ -67,7 +68,6 @@ from cmk.gui.userdb import register_userroles_config_file as register_userroles
 from cmk.gui.userdb import registration as userdb_registration
 from cmk.gui.userdb import UserConnectorRegistry
 from cmk.gui.userdb._user_attribute._registry import UserAttributeRegistry
-from cmk.gui.valuespec import AutocompleterRegistry
 from cmk.gui.views import registration as views_registration
 from cmk.gui.views.command import CommandGroupRegistry, CommandRegistry
 from cmk.gui.views.icon import IconRegistry

@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.gui.autocompleters import AutocompleterRegistry
 from cmk.gui.i18n import _
 from cmk.gui.openapi.framework import VersionedEndpointRegistry
 from cmk.gui.openapi.restful_objects.endpoint_family import EndpointFamilyRegistry
@@ -12,7 +13,6 @@ from cmk.gui.token_auth import (
     TokenAuthenticatedEndpoint,
     TokenAuthenticatedPageRegistry,
 )
-from cmk.gui.valuespec import AutocompleterRegistry
 from cmk.gui.visuals.type import VisualTypeRegistry
 from cmk.gui.watolib.groups_io import ContactGroupUsageFinderRegistry
 

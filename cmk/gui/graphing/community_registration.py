@@ -3,11 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from cmk.ccc.version import Edition
+from cmk.gui.autocompleters import AutocompleterRegistry
 from cmk.gui.form_specs.unstable import MetricExtended
 from cmk.gui.form_specs.visitors import register_visitor_class
 from cmk.gui.pages import PageEndpoint, PageRegistry
 from cmk.gui.type_defs import Choices
-from cmk.gui.valuespec import AutocompleterRegistry
 from cmk.gui.watolib.config_domain_name import ConfigVariableRegistry
 
 from ._autocompleter import metrics_autocompleter

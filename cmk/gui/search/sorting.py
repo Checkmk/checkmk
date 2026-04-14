@@ -45,9 +45,8 @@ def _get_weighted_index_sorter(query: str) -> Sorter:
 
     def algorithm(item: UnifiedSearchResultItem) -> tuple[int, _MatchRank, bool, str, str]:
         title_ = item.title.lower()
-        topic_ = item.topic.lower()
 
-        topic_rank = _get_topic_ranking(topic_)
+        topic_rank = _get_topic_ranking(item.topic)
         title_match_rank = _get_title_match_rank(title_, query_)
         deprecation_rank = _get_deprecation_rank(title_)
 
@@ -61,22 +60,25 @@ def _get_weighted_index_sorter(query: str) -> Sorter:
     return sorter
 
 
-# TODO: move this out of the code; it 't belongs somewhere where it's easy to adjust.
-_TOPIC_RANKING = (
-    "setup",
-    "monitor",
-    "host monitoring rules",
-    "notification parameter",
-    "service monitoring rules",
-    "vm, cloud, container",
-)
-
-
 def _get_topic_ranking(topic: str) -> int:
-    if topic in _TOPIC_RANKING:
-        return _TOPIC_RANKING.index(topic)
+    # TODO: the topics ranking should not live in code.
+    topics_to_promote = _get_topics_to_promote()
 
-    return len(_TOPIC_RANKING)
+    if topic in topics_to_promote:
+        return topics_to_promote.index(topic)
+
+    return len(topics_to_promote)
+
+
+def _get_topics_to_promote() -> tuple[str, ...]:
+    return (
+        _("Setup"),
+        _("Monitor"),
+        _("Host monitoring rules"),
+        _("Notification parameter"),
+        _("Service monitoring rules"),
+        _("VM, cloud, container"),
+    )
 
 
 class _MatchRank(enum.IntEnum):

@@ -15,7 +15,13 @@ from typing import (
 
 import cmk.utils
 import cmk.utils.tags
-from cmk.base.default_config.cmc import CMCInitialScheduling, LogCmkHelpers, RealTimeChecks
+from cmk.base.default_config.cmc import (
+    CMCAuthorization,
+    CMCInitialScheduling,
+    LogCmkHelpers,
+    RealTimeChecks,
+    SmartPingTuning,
+)
 from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.rrd.config import RRDObjectConfig
 from cmk.utils.host_storage import FolderAttributesForBase
@@ -130,3 +136,10 @@ class LoadedConfigFragment:
     cmc_log_rotation_method: int
     cmc_log_limit: int
     cmc_log_cmk_helpers: LogCmkHelpers
+    cmc_livestatus_threads: int
+    cmc_max_response_size: int
+    cmc_livestatus_logcache_size: int
+    cmc_livestatus_lines_per_file: int
+    cmc_authorization: CMCAuthorization
+    cmc_smartping_check_interval: int
+    cmc_smartping_tuning: SmartPingTuning

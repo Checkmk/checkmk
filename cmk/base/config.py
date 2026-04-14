@@ -740,6 +740,13 @@ def _perform_post_config_loading_actions(
         cmc_log_rotation_method=cmc_log_rotation_method,
         cmc_log_limit=cmc_log_limit,
         cmc_log_cmk_helpers=cmc_log_cmk_helpers,
+        cmc_livestatus_threads=cmc_livestatus_threads,
+        cmc_max_response_size=cmc_max_response_size,
+        cmc_livestatus_logcache_size=cmc_livestatus_logcache_size,
+        cmc_livestatus_lines_per_file=cmc_livestatus_lines_per_file,
+        cmc_authorization=cmc_authorization,
+        cmc_smartping_check_interval=cmc_smartping_check_interval,
+        cmc_smartping_tuning=cmc_smartping_tuning,
     )
 
     config_cache = ConfigCache(loaded_config, get_builtin_host_labels, edition).initialize(

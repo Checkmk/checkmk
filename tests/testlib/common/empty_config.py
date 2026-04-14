@@ -107,6 +107,13 @@ EMPTY_CONFIG = LoadedConfigFragment(
     cmc_log_rotation_method=3,
     cmc_log_limit=50 * 1024 * 1024,
     cmc_log_cmk_helpers={"log_level": 0, "debug": False},
+    cmc_livestatus_threads=20,
+    cmc_max_response_size=100,
+    cmc_livestatus_logcache_size=500000,
+    cmc_livestatus_lines_per_file=1000000,
+    cmc_authorization={"host": 0, "group": 0},
+    cmc_smartping_check_interval=500,
+    cmc_smartping_tuning={"omit_payload": False, "num_sockets": 8, "ignore_rst": False},
 )
 
 

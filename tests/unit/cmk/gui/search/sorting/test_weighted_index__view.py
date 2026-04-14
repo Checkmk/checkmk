@@ -43,11 +43,11 @@ def test_weighted_index_sorting_with_view_query() -> None:
 
     value = [(result.title, result.topic) for result in results]
     expected = [
-        ("Views", "Visualization"),  # customize
         ("Certificate overview", "Setup"),
         ("Cisco Meraki Organisation Licenses Overview", "Service monitoring rules"),
         ("Couchbase Node: Size of couch views", "Service monitoring rules"),
         ("Couchbase Node: Size of spacial views", "Service monitoring rules"),
+        ("Views", "Visualization"),  # customize
         ("Hide hosttags in Setup folder view", "Global settings"),
         ("Limit the number of rows in View tables", "Global settings"),
         ("Sounds in Views", "Global settings"),

@@ -42,34 +42,17 @@ def _get_alphabetical_sorter(items: list[UnifiedSearchResultItem]) -> None:
 # is out-of-scope.
 def _get_weighted_index_sorter(query: str) -> Sorter:
     query_ = query.lower()
-    topic_ranking_map = {topic: rank for rank, topic in enumerate(_TOPIC_RANKING)}
-    unranked_topic = max(topic_ranking_map.values()) + 1
 
-    def algorithm(item: UnifiedSearchResultItem) -> tuple[_MatchRank, int, bool, str, str]:
+    def algorithm(item: UnifiedSearchResultItem) -> tuple[int, _TitleRank, bool, str, str]:
         title_ = item.title.lower()
-        topic_ = item.topic.lower()
 
-        # TODO: once metadata is factored out of code, introduce a "deprecated" attribute.
-        # NOTE: need to check for both translated and untranslated patterns since some titles are
-        # don't have translations.
-        is_deprecated = any(pattern in title_ for pattern in ("(deprecated)", _("(deprecated)")))
-
-        if query_ == title_:
-            match_rank = _MatchRank.EXACT_TITLE
-        elif f"({query_})" in title_:
-            match_rank = _MatchRank.EXACT_TITLE_IN_PARENTHESES
-        elif title_.startswith(query_):
-            match_rank = _MatchRank.TITLE_STARTS_WITH_QUERY
-        elif is_deprecated:
-            match_rank = _MatchRank.DEPRECATED_RESULT_ITEM
-        else:
-            match_rank = _MatchRank.DEFAULT_RANK
-
-        topic_rank = topic_ranking_map.get(topic_, unranked_topic)
+        topic_rank = _get_topic_ranking(item.topic)
+        title_match_rank = _get_title_match_rank(title_, query_)
+        deprecation_rank = _get_deprecation_rank(title_)
 
         # TODO: try and figure out if we can improve shared typing to account for non-Optional str
         # type with a blank string as default (original behavior).
-        return match_rank, topic_rank, is_deprecated, item.title, item.context or ""
+        return topic_rank, title_match_rank, deprecation_rank, item.title, item.context or ""
 
     def sorter(items: list[UnifiedSearchResultItem]) -> None:
         items.sort(key=algorithm)
@@ -77,22 +60,70 @@ def _get_weighted_index_sorter(query: str) -> Sorter:
     return sorter
 
 
-# TODO: move this out of the code; it 't belongs somewhere where it's easy to adjust.
-_TOPIC_RANKING = (
-    "setup",
-    "monitor",
-    "host monitoring rules",
-    "notification parameter",
-    "service monitoring rules",
-    "global settings",
-    "vm, cloud, container",
-    "enforced services",
-)
+def _get_topic_ranking(topic: str) -> int:
+    # TODO: the topics ranking should not live in code.
+    topics_to_promote = _get_topics_to_promote()
+    topics_to_demote = _get_topics_to_demote()
+
+    if topic in topics_to_promote:
+        return topics_to_promote.index(topic)
+
+    unranked_topic = len(topics_to_promote)
+
+    if topic in topics_to_demote:
+        return (unranked_topic + 1) + topics_to_demote.index(topic)
+
+    return unranked_topic
 
 
-class _MatchRank(enum.IntEnum):
-    EXACT_TITLE = 0
-    EXACT_TITLE_IN_PARENTHESES = 1
-    TITLE_STARTS_WITH_QUERY = 2
-    DEFAULT_RANK = 3
-    DEPRECATED_RESULT_ITEM = 4
+def _get_topics_to_promote() -> tuple[str, ...]:
+    return (
+        # provider topics
+        _("Setup"),
+        _("Monitor"),
+        # additional agent configuration
+        _("HTTP, TCP, email, ..."),
+        _("VM, cloud, container"),
+        _("Other integrations"),
+        _("Agent rules"),
+        # common rule configuration
+        _("Host monitoring rules"),
+        _("Notification parameter"),
+        _("Service monitoring rules"),
+        _("Service discovery rules"),
+    )
+
+
+def _get_topics_to_demote() -> tuple[str, ...]:
+    return (
+        _("Global settings"),
+        _("Enforced services"),
+        _("Deprecated rule sets"),
+    )
+
+
+class _TitleRank(enum.IntEnum):
+    EXACT_MATCH = 0
+    EXACT_MATCH_IN_PARENTHESES = 1
+    STARTS_WITH_QUERY = 2
+    CONTAINS_QUERY = 3
+    DEFAULT = 4
+
+
+def _get_title_match_rank(title: str, query: str) -> _TitleRank:
+    if query == title:
+        return _TitleRank.EXACT_MATCH
+    if f"({query})" in title:
+        return _TitleRank.EXACT_MATCH_IN_PARENTHESES
+    if title.startswith(query):
+        return _TitleRank.STARTS_WITH_QUERY
+    if query in title:
+        return _TitleRank.CONTAINS_QUERY
+    return _TitleRank.DEFAULT
+
+
+def _get_deprecation_rank(title: str) -> bool:
+    # TODO: once metadata is factored out of code, introduce a "deprecated" attribute.
+    # NOTE: need to check for both translated and untranslated patterns since some titles are
+    # don't have translations.
+    return any(pattern in title for pattern in ("(deprecated)", _("(deprecated)")))

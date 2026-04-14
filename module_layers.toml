@@ -330,6 +330,7 @@ allows = [
   "cmk.base.config",
   "cmk.base.configlib",
   "cmk.base.core",
+  "cmk.base.default_config.cmc",
   "cmk.base.nonfree",
   "cmk.checkengine",
   "cmk.core_client",

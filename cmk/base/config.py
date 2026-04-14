@@ -727,6 +727,13 @@ def _perform_post_config_loading_actions(
         check_periods=check_periods,
         relays=relays,
         cmc_config_multiprocessing=cmc_config_multiprocessing,
+        cmc_check_helpers=cmc_check_helpers,
+        cmc_fetcher_helpers=cmc_fetcher_helpers,
+        cmc_checker_helpers=cmc_checker_helpers,
+        cmc_real_time_helpers=cmc_real_time_helpers,
+        cmc_initial_scheduling=cmc_initial_scheduling,
+        cmc_housekeeping_interval=cmc_housekeeping_interval,
+        cmc_state_retention_interval=cmc_state_retention_interval,
     )
 
     config_cache = ConfigCache(loaded_config, get_builtin_host_labels, edition).initialize(

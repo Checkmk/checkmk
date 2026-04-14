@@ -94,6 +94,13 @@ EMPTY_CONFIG = LoadedConfigFragment(
     check_periods=(),
     relays={},
     cmc_config_multiprocessing={"use_multiprocessing": True},
+    cmc_check_helpers=5,
+    cmc_fetcher_helpers=13,
+    cmc_checker_helpers=4,
+    cmc_real_time_helpers=1,
+    cmc_initial_scheduling={"burst": 10, "spread_cmk": 1200, "spread_generic": 150},
+    cmc_housekeeping_interval=1000,
+    cmc_state_retention_interval=600,
 )
 
 

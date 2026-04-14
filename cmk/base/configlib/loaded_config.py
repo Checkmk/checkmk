@@ -15,7 +15,7 @@ from typing import (
 
 import cmk.utils
 import cmk.utils.tags
-from cmk.base.default_config.cmc import RealTimeChecks
+from cmk.base.default_config.cmc import CMCInitialScheduling, RealTimeChecks
 from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.rrd.config import RRDObjectConfig
 from cmk.utils.host_storage import FolderAttributesForBase
@@ -117,3 +117,10 @@ class LoadedConfigFragment:
     check_periods: Sequence[RuleSpec[object]]
     relays: object  # see above
     cmc_config_multiprocessing: object
+    cmc_check_helpers: int
+    cmc_fetcher_helpers: int
+    cmc_checker_helpers: int
+    cmc_real_time_helpers: int
+    cmc_initial_scheduling: CMCInitialScheduling
+    cmc_housekeeping_interval: int
+    cmc_state_retention_interval: int

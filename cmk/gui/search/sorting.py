@@ -49,16 +49,8 @@ def _get_weighted_index_sorter(query: str) -> Sorter:
         title_ = item.title.lower()
         topic_ = item.topic.lower()
 
-        if query_ == title_:
-            match_rank = _MatchRank.EXACT_TITLE
-        elif f"({query_})" in title_:
-            match_rank = _MatchRank.EXACT_TITLE_IN_PARENTHESES
-        elif title_.startswith(query_):
-            match_rank = _MatchRank.TITLE_STARTS_WITH_QUERY
-        else:
-            match_rank = _MatchRank.DEFAULT_RANK
-
         topic_rank = topic_ranking_map.get(topic_, unranked_topic)
+        title_match_rank = _get_title_match_rank(title_, query_)
 
         # TODO: once metadata is factored out of code, introduce a "deprecated" attribute.
         # NOTE: need to check for both translated and untranslated patterns since some titles are
@@ -67,7 +59,7 @@ def _get_weighted_index_sorter(query: str) -> Sorter:
 
         # TODO: try and figure out if we can improve shared typing to account for non-Optional str
         # type with a blank string as default (original behavior).
-        return match_rank, topic_rank, is_deprecated, item.title, item.context or ""
+        return title_match_rank, topic_rank, is_deprecated, item.title, item.context or ""
 
     def sorter(items: list[UnifiedSearchResultItem]) -> None:
         items.sort(key=algorithm)
@@ -93,3 +85,13 @@ class _MatchRank(enum.IntEnum):
     EXACT_TITLE_IN_PARENTHESES = 1
     TITLE_STARTS_WITH_QUERY = 2
     DEFAULT_RANK = 3
+
+
+def _get_title_match_rank(title: str, query: str) -> _MatchRank:
+    if query == title:
+        return _MatchRank.EXACT_TITLE
+    if f"({query})" in title:
+        return _MatchRank.EXACT_TITLE_IN_PARENTHESES
+    if title.startswith(query):
+        return _MatchRank.TITLE_STARTS_WITH_QUERY
+    return _MatchRank.DEFAULT_RANK

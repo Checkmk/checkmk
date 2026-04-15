@@ -7,7 +7,7 @@
 //#   | Floating popup menus with content fetched via AJAX calls           |
 //#   '--------------------------------------------------------------------'
 import { call_ajax } from './ajax'
-import type { GraphRenderState } from './graphs'
+import type { GraphExportRequest } from './graphs'
 import type { Nullable } from './utils'
 import {
   add_class,
@@ -528,18 +528,7 @@ export function pagetype_add_to_container(page_type: string, page_name: string) 
 }
 
 export function graph_export(page: string) {
-  const render_state = active_popup.data![2] as GraphRenderState
-  const ia = render_state.interaction
-  const request = {
-    specification: render_state.specification,
-    data_range: {
-      start: ia.time_start,
-      end: ia.time_end,
-      step: ia.step,
-      vertical_range:
-        ia.value_min !== null && ia.value_max !== null ? [ia.value_min, ia.value_max] : null
-    }
-  }
+  const request = active_popup.data![2] as GraphExportRequest
   location.href = page + '.py?request=' + encodeURIComponent(JSON.stringify(request))
 }
 

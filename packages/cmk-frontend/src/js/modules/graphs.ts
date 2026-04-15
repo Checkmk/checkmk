@@ -79,6 +79,15 @@ export interface GraphRenderState {
   onclick: string | null
 }
 
+// Stored as popup_data[2]; sent directly as the ?request= parameter
+// to graph_export.py and graph_image.py.
+export interface GraphExportRequest {
+  specification: object
+  consolidation_function: string
+  time_start: number
+  time_end: number
+}
+
 // Slim payload sent to ajax_graph_values_at_time.
 // Only recipe and interaction are needed to compute hover values;
 // the full GraphRenderState is not sent for this endpoint.

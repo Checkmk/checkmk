@@ -5,8 +5,6 @@
 """Render Checkmk graphs as PNG images.
 This is needed for the graphs sent with mail notifications."""
 
-# mypy: disable-error-code="no-untyped-call"
-
 import base64
 import itertools
 import json
@@ -14,8 +12,6 @@ import time
 import traceback
 from collections.abc import Mapping, Sequence
 from typing import Any, Literal, override, TypedDict
-
-from pydantic import ValidationError as PydanticValidationError
 
 import livestatus
 
@@ -59,13 +55,12 @@ from ._graph_specification import (
     GraphEnvironment,
     GraphRecipeWithOverrides,
     GraphTimeRange,
-    parse_graph_specification,
 )
 from ._graph_templates import (
     get_template_graph_specification,
     MKGraphNotFound,
 )
-from ._html_render import GraphDestinations
+from ._html_render import GraphDestinations, GraphExportRequest
 from ._metric_backend_registry import metric_backend_registry
 from ._unit import get_temperature_unit
 
@@ -246,43 +241,21 @@ def render_graph_png(
     return pdf.pdf2png(pdf_graph)
 
 
-def graph_recipes_for_api_request(
-    api_request: dict[str, Any],
+def graph_recipes_from_request(
+    export_request: GraphExportRequest,
     env: GraphEnvironment,
 ) -> tuple[GraphTimeRange, Sequence[GraphRecipeWithOverrides]]:
-    # Get and validate the specification
-    if not (raw_graph_spec := api_request.get("specification")):
-        raise MKUserError(None, _("The graph specification is missing"))
-
-    graph_specification = parse_graph_specification(raw_graph_spec)
-
-    # Default to 25h view
-    default_time_range = ((now := int(time.time())) - (25 * 3600), now)
-
-    # Get and validate the data range
-    raw_graph_time_range = api_request.get("data_range", {})
-    raw_graph_time_range.setdefault("start", default_time_range[0])
-    raw_graph_time_range.setdefault("end", default_time_range[1])
-
-    time_range = (raw_graph_time_range["start"], raw_graph_time_range["end"])
+    now = int(time.time())
+    start = (
+        export_request.time_start if export_request.time_start is not None else now - (25 * 3600)
+    )
+    end = export_request.time_end if export_request.time_end is not None else now
 
     try:
-        float(time_range[0])
-    except ValueError:
-        raise MKUserError(None, _("Invalid start time given"))
-
-    try:
-        float(time_range[1])
-    except ValueError:
-        raise MKUserError(None, _("Invalid end time given"))
-
-    raw_graph_time_range["step"] = 60
-
-    try:
-        recipes = graph_specification.recipes(
+        recipes = export_request.specification.recipes(
             env,
-            graph_specification.fetch_graph_rows(env),
-            consolidation_function=api_request.get("consolidation_function", "max"),
+            export_request.specification.fetch_graph_rows(env),
+            consolidation_function=export_request.consolidation_function,
         )
 
     except MKGraphNotFound:
@@ -291,7 +264,7 @@ def graph_recipes_for_api_request(
     except livestatus.MKLivestatusNotFoundError as e:
         raise MKUserError(None, _("Cannot calculate graph recipes: %s") % e)
 
-    return GraphTimeRange.model_validate(raw_graph_time_range), recipes
+    return GraphTimeRange(start=start, end=end, step=60), recipes
 
 
 class Curves(TypedDict):
@@ -339,16 +312,13 @@ def _compute_graph_spec(
 
 
 @tracer.instrument("graphing.graph_spec_from_request")
-def graph_spec_from_request(  # type: ignore[misc]
-    api_request: dict[str, Any],
+def graph_spec_from_request(
+    export_request: GraphExportRequest,
     env: GraphEnvironment,
 ) -> GraphSpec:
     try:
-        time_range, recipes = graph_recipes_for_api_request(api_request, env)
+        time_range, recipes = graph_recipes_from_request(export_request, env)
         recipe = recipes[0].recipe
-
-    except PydanticValidationError as e:
-        raise MKUserError(None, str(e))
 
     except MKGraphNotFound:
         raise MKNotFound()

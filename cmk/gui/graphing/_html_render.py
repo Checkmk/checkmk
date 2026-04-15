@@ -154,6 +154,32 @@ class GraphHoverRequest(BaseModel):
     interaction: GraphInteractionState
 
 
+class GraphExportRequest(BaseModel, frozen=True):
+    """Typed model for the request sent to graph_export.py and graph_image.py.
+
+    Also stored as popup_data[2] for the graph 'Add to' and export actions.
+    The browser forwards the whole object as the ?request= parameter when the
+    user picks "Export as JSON" or "Export as PNG"; add-to backends (dashboard,
+    report, graph collection, custom graph) only consume specification.
+    """
+
+    # Identifies which graph to render; consumed by every backend.
+    specification: SerializeAsAny[GraphSpecification]
+    # Forwarded to graph_export/graph_image; unused by add-to backends.
+    consolidation_function: GraphConsolidationFunction = "max"
+    # Forwarded to graph_export/graph_image; defaults to 25 h ago when None.
+    time_start: int | None = None
+    # Forwarded to graph_export/graph_image; defaults to now when None.
+    time_end: int | None = None
+
+    @field_validator("specification", mode="before")
+    @classmethod
+    def _parse_specification(cls, value: object) -> GraphSpecification:
+        if isinstance(value, GraphSpecification):
+            return value
+        return parse_graph_specification(value)
+
+
 def _load_graph_pin() -> int | None:
     raw_pin_time = user.load_file("graph_pin", None)
     return None if raw_pin_time is None else int(raw_pin_time)
@@ -380,7 +406,14 @@ def _collect_graph_html(
                 data=[
                     "pnpgraph",
                     None,
-                    render_state.model_dump(),
+                    GraphExportRequest(
+                        specification=render_state.specification,
+                        consolidation_function=(
+                            render_state.interaction.consolidation_function or "max"
+                        ),
+                        time_start=render_state.interaction.time_start,
+                        time_end=render_state.interaction.time_end,
+                    ).model_dump(),
                 ],
                 style="z-index:2",
             )  # Ensures that graph canvas does not cover it

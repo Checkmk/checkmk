@@ -19,9 +19,11 @@ from cmk.gui.graphing import (
     get_temperature_unit,
     graph_spec_from_request,
     GraphEnvironment,
+    GraphExportRequest,
     graphs_from_api,
     metric_backend_registry,
     metrics_from_api,
+    TemplateGraphSpecification,
 )
 from cmk.gui.http import request, Response
 from cmk.gui.log import logger
@@ -69,17 +71,16 @@ def get_graph(params: Mapping[str, Any]) -> Response:
 
     try:
         result = graph_spec_from_request(
-            {
-                "specification": {
-                    "graph_type": "template",
-                    "site": body.get("site", ""),
-                    "host_name": body["host_name"],
-                    "service_description": body["service_description"],
-                    "graph_id": graph_id_from_request(body),
-                },
-                "data_range": reorganize_time_range(body["time_range"]),
-                "consolidation_function": body["reduce"],
-            },
+            GraphExportRequest(
+                specification=TemplateGraphSpecification(
+                    site=body.get("site") or None,
+                    host_name=body["host_name"],
+                    service_description=body["service_description"],
+                    graph_id=graph_id_from_request(body),
+                ),
+                **(reorganize_time_range(body["time_range"]) or {}),
+                consolidation_function=body["reduce"],
+            ),
             GraphEnvironment(
                 registered_metrics=metrics_from_api,
                 registered_graphs=graphs_from_api,

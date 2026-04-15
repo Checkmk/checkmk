@@ -23,7 +23,11 @@ from ._graph_display_config import (
     GraphRenderOptions,
     resolve_user_size,
 )
-from ._graph_images import graph_spec_from_request, GraphSpec, render_graph_png
+from ._graph_images import (
+    graph_spec_from_request,
+    GraphSpec,
+    render_graph_png,
+)
 from ._graph_metric_expressions import (
     GraphConsolidationFunction,
     GraphMetricConstant,
@@ -55,6 +59,7 @@ from ._graph_templates import (
 from ._graph_title import render_plain_graph_title
 from ._html_render import (
     GraphDestinations,
+    GraphExportRequest,
     GraphRenderState,
     host_service_graph_dashlet_cmk,
     host_service_graph_popup_cmk,
@@ -164,6 +169,7 @@ __all__ = [
     "get_temperature_unit",
     "get_template_graph_specification",
     "graph_spec_from_request",
+    "GraphExportRequest",
     "graphs_from_api",
     "host_service_graph_dashlet_cmk",
     "host_service_graph_popup_cmk",

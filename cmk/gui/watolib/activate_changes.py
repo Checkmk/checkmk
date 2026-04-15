@@ -512,20 +512,6 @@ class PendingChangesInfo:
         return match.groups()[1].strip()
 
 
-@dataclass()
-class ActivationStatus:
-    site_id: SiteId
-    activation_id: ActivationId
-    phase: Phase
-    time_started: float
-    time_end: float
-    time_updated: float
-    expected_duration: float
-    state: State
-    status_text: str
-    status_details: str | None
-
-
 def get_activation_times(site_id: SiteId) -> dict[str, float]:
     repl_status = _load_site_replication_status(site_id)
     return repl_status.get("times", {})
@@ -1614,7 +1600,7 @@ class ActivateChangesManager:
     A single object cares about one activation for all affected sites.
 
     It is used to execute an activation using ActivateChangesManager.start().  During execution it
-    persists it's activation information. This makes it possible to gather the activation state
+    persists its activation information. This makes it possible to gather the activation state
     asynchronously.
 
     Prepares the snapshots for synchronization and handles all the objects that manage the

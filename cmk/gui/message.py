@@ -55,6 +55,7 @@ from cmk.gui.utils.html import HTML
 from cmk.gui.utils.misc import gen_id
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.valuespec import AbsoluteDate
+from cmk.rulesets.internal.form_specs import MultipleChoiceElementExtended, MultipleChoiceExtended
 from cmk.rulesets.v1 import Help, Label, Title
 from cmk.rulesets.v1 import Message as FSMessage
 from cmk.rulesets.v1.form_specs import (
@@ -386,9 +387,9 @@ def _message_spec(users: Sequence[_MessageRecipient]) -> Dictionary:
                             CascadingSingleChoiceElement(
                                 name="list",
                                 title=Title("A list of specific users"),
-                                parameter_form=MultipleChoice(
+                                parameter_form=MultipleChoiceExtended(
                                     elements=[
-                                        MultipleChoiceElement(
+                                        MultipleChoiceElementExtended(
                                             name=recipient.user_id,
                                             title=Title(  # astrein: disable=localization-checker
                                                 recipient.alias

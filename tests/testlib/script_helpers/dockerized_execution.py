@@ -137,7 +137,7 @@ def execute_tests_in_container(
                     "-",
                     _TESTUSER,
                     "-c",
-                    "source /git/.venv/bin/activate; bash",
+                    "cd /git; source /git/.venv/bin/activate; bash",
                 ],
             )
 

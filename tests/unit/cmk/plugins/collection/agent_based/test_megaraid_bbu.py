@@ -4,12 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="misc"
-# mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
-
 
 import pytest
 
+from cmk.agent_based.v2 import Result, Service, State
 from cmk.legacy_checks.megaraid_bbu import (
     check_megaraid_bbu,
     discover_megaraid_bbu,
@@ -18,7 +16,7 @@ from cmk.legacy_checks.megaraid_bbu import (
 
 
 @pytest.fixture(scope="function", name="section")
-def _get_section():
+def _get_section() -> dict[str, dict[str, str]]:
     return megaraid_bbu_parse(
         [
             line.split()
@@ -58,22 +56,22 @@ Remaining reserve space : 0
     )
 
 
-def test_discovery(section: object) -> None:
-    assert list(discover_megaraid_bbu(section)) == [("/c0", {})]
+def test_discovery(section: dict[str, dict[str, str]]) -> None:
+    assert list(discover_megaraid_bbu(section)) == [Service(item="/c0")]
 
 
-def test_check_ok(section: object) -> None:
-    result = list(check_megaraid_bbu("/c0", {}, section))
+def test_check_ok(section: dict[str, dict[str, str]]) -> None:
+    result = list(check_megaraid_bbu("/c0", section))
     assert result == [
-        (0, "Charge: not reported for this controller"),
-        (0, "All states as expected"),
+        Result(state=State.OK, summary="Charge: not reported for this controller"),
+        Result(state=State.OK, summary="All states as expected"),
     ]
 
 
 def test_check_low_cap(section: dict[str, dict[str, str]]) -> None:
     section["0"]["Remaining Capacity Low"] = "Yes"
-    result = list(check_megaraid_bbu("/c0", {}, section))
+    result = list(check_megaraid_bbu("/c0", section))
     assert result == [
-        (0, "Charge: not reported for this controller"),
-        (1, "Remaining capacity low: Yes (expected: No)"),
+        Result(state=State.OK, summary="Charge: not reported for this controller"),
+        Result(state=State.WARN, summary="Remaining capacity low: Yes (expected: No)"),
     ]

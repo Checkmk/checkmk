@@ -3,18 +3,19 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="comparison-overlap"
-
-# mypy: disable-error-code="no-untyped-def"
-
-
-# mypy: disable-error-code="var-annotated"
-
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import State
+from cmk.agent_based.v2 import (
+    AgentSection,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Result,
+    Service,
+    State,
+    StringTable,
+)
 from cmk.plugins.broadcom_storage.lib.megaraid import check_state
 
-check_info = {}
+Section = dict[str, dict[str, str]]
 
 # Agent output not included since it has almost 100 lines
 # it's available in our archive or fh's bitbucket
@@ -39,9 +40,9 @@ megaraid_bbu_refvalues = {
 }
 
 
-def megaraid_bbu_parse(string_table):
-    controllers = {}
-    current_hba = None
+def megaraid_bbu_parse(string_table: StringTable) -> Section:
+    controllers: Section = {}
+    current_hba: dict[str, str] | None = None
     for line in string_table:
         joined = " ".join(line)
         if ":" not in joined:
@@ -66,25 +67,25 @@ def megaraid_bbu_parse(string_table):
     return controllers
 
 
-def discover_megaraid_bbu(section):
+def discover_megaraid_bbu(section: Section) -> DiscoveryResult:
     # Items changed from e.g. '2' to '/c2' for consistency.
     # Only discover the new-style items.
     # The old items are kept in section, so that old services using them will still produce results
-    yield from ((name, {}) for name in section if name.startswith("/c"))
+    yield from (Service(item=name) for name in section if name.startswith("/c"))
 
 
-def check_megaraid_bbu(item, _no_params, section):
+def check_megaraid_bbu(item: str, section: Section) -> CheckResult:
     if (controller := section.get(item)) is None:
         return
 
     # get current charge level
     charge_level = controller.get("Relative State of Charge", "not reported for this controller")
-    yield 0, f"Charge: {charge_level}"
+    yield Result(state=State.OK, summary=f"Charge: {charge_level}")
     if (capacity := controller.get("Full Charge Capacity")) is not None:
-        yield 0, f"Capacity: {capacity}"
+        yield Result(state=State.OK, summary=f"Capacity: {capacity}")
 
     if controller.get("Learn Cycle Active") == "Yes":
-        yield 0, "No states to check (controller is in learn cycle)"
+        yield Result(state=State.OK, summary="No states to check (controller is in learn cycle)")
         return
 
     yielded = False
@@ -107,15 +108,20 @@ def check_megaraid_bbu(item, _no_params, section):
         r = check_state(State(refstate), varname, value, refvalue)
         if r.state is not State.OK:
             yielded = True
-            yield int(r.state), r.summary
+            yield Result(state=r.state, summary=r.summary)
 
     if not yielded:
-        yield 0, "All states as expected"
+        yield Result(state=State.OK, summary="All states as expected")
 
 
-check_info["megaraid_bbu"] = LegacyCheckDefinition(
+agent_section_megaraid_bbu = AgentSection(
     name="megaraid_bbu",
     parse_function=megaraid_bbu_parse,
+)
+
+
+check_plugin_megaraid_bbu = CheckPlugin(
+    name="megaraid_bbu",
     service_name="RAID BBU %s",
     discovery_function=discover_megaraid_bbu,
     check_function=check_megaraid_bbu,

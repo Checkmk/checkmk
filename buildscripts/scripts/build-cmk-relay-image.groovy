@@ -20,7 +20,7 @@ void main() {
     def cmk_version_rc_aware = versioning.get_cmk_version(branch_name, branch_version, params.VERSION)
     def cmk_version = versioning.strip_rc_number_from_version(cmk_version_rc_aware)
 
-    def push_to_registry = params.PUSH_TO_REGISTRY == 'true'
+    def push_to_registry = params.PUSH_TO_REGISTRY == true;
 
     def artifact_directory = "${checkout_dir}/artifacts"
     def is_release_candidate = cmk_version_rc_aware.contains("-rc")

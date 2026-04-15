@@ -46,8 +46,8 @@ void main() {
     def package_dir = "${checkout_dir}/download";
     def source_dir = package_dir + "/" + cmk_version_rc_aware;
 
-    def push_to_registry = params.PUSH_TO_REGISTRY == 'true';
-    def build_image = params.PUSH_TO_REGISTRY_ONLY != 'true';
+    def push_to_registry = params.PUSH_TO_REGISTRY == true;
+    def build_image = params.PUSH_TO_REGISTRY_ONLY != true;
     def force_build = params.DISABLE_JENKINS_CACHE == true;
 
     print(

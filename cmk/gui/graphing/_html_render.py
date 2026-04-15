@@ -142,6 +142,18 @@ class GraphRenderState(BaseModel):
         return parse_graph_specification(value)
 
 
+class GraphHoverRequest(BaseModel):
+    """Slim request model for ajax_graph_values_at_time.
+
+    Only the recipe and interaction are needed to serve hover data; the
+    specification, display_config and other fields carried by GraphRenderState
+    are irrelevant and are no longer sent by the browser for this endpoint.
+    """
+
+    recipe: GraphRecipe
+    interaction: GraphInteractionState
+
+
 def _load_graph_pin() -> int | None:
     raw_pin_time = user.load_file("graph_pin", None)
     return None if raw_pin_time is None else int(raw_pin_time)
@@ -1571,27 +1583,27 @@ def render_graph_values_at_time(
 class AjaxGraphValuesAtTime(Page):
     def page(self, ctx: PageContext) -> PageResult:
         """Registered as `ajax_graph_values_at_time`."""
-        render_state = GraphRenderState.model_validate(
+        hover_request = GraphHoverRequest.model_validate(
             json.loads(ctx.request.get_str_input_mandatory("context"))
         )
         render_graph_values_at_time(
-            render_state.recipe,
+            hover_request.recipe,
             GraphTimeRange(
-                start=render_state.interaction.time_start,
-                end=render_state.interaction.time_end,
-                step=render_state.interaction.step,
+                start=hover_request.interaction.time_start,
+                end=hover_request.interaction.time_end,
+                step=hover_request.interaction.step,
                 vertical_range=(
                     (
-                        render_state.interaction.value_min,
-                        render_state.interaction.value_max,
+                        hover_request.interaction.value_min,
+                        hover_request.interaction.value_max,
                     )
-                    if render_state.interaction.value_min is not None
-                    and render_state.interaction.value_max is not None
+                    if hover_request.interaction.value_min is not None
+                    and hover_request.interaction.value_max is not None
                     else None
                 ),
             ),
             metrics_from_api,
-            consolidation_function=render_state.interaction.consolidation_function,
+            consolidation_function=hover_request.interaction.consolidation_function,
             debug=ctx.config.debug,
             hover_time=ctx.request.get_integer_input_mandatory("hover_time"),
             temperature_unit=get_temperature_unit(user, ctx.config.default_temperature_unit),

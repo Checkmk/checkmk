@@ -79,6 +79,14 @@ export interface GraphRenderState {
   onclick: string | null
 }
 
+// Slim payload sent to ajax_graph_values_at_time.
+// Only recipe and interaction are needed to compute hover values;
+// the full GraphRenderState is not sent for this endpoint.
+interface GraphHoverContext {
+  recipe: GraphRecipe
+  interaction: GraphInteractionState
+}
+
 export interface AjaxGraph {
   html: string
   graph: GraphArtwork
@@ -1794,7 +1802,11 @@ function update_graph_hover_popup(event: Event, graph: GraphInstance): boolean |
     post_data += '&cmk-token=' + encodeURIComponent(cmk_token)
     post_data += '&widget_id=' + encodeURIComponent(display_id)
   } else {
-    post_data += '&context=' + encodeURIComponent(JSON.stringify(g_ajax_contexts[graph.id]))
+    const hover_ctx: GraphHoverContext = {
+      recipe: g_ajax_contexts[graph.id].recipe,
+      interaction: g_ajax_contexts[graph.id].interaction
+    }
+    post_data += '&context=' + encodeURIComponent(JSON.stringify(hover_ctx))
   }
 
   g_graph_update_in_process = true

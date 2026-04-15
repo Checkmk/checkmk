@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Mapping
 from pathlib import Path
 from unittest.mock import ANY
 
@@ -13,16 +14,34 @@ from cmk.crypto.password_hashing import PasswordHash
 from cmk.gui.breadcrumb import BreadcrumbItem
 from cmk.gui.http import request
 from cmk.gui.type_defs import UserSpec
-from cmk.gui.wato.pages.users import ModeEditUser, ModeUsers
+from cmk.gui.wato.pages.users import (
+    _get_user_role_links,
+    _RoleAlias,
+    _RoleLinkSpec,
+    ModeEditUser,
+    ModeUsers,
+)
 
 
-def test_show_user_list_unknown_role() -> None:
-    """A user with a role that doesn't exist in the roles dict should not crash the user list."""
-    roles: dict[str, dict[str, str]] = {"admin": {"alias": "Administrator"}}
+@pytest.mark.usefixtures("request_context")
+def test_get_user_role_links() -> None:
+    """If a user role doesn't exist in the roles mapping, do not crash when building urls."""
+    roles: Mapping[str, _RoleAlias] = {"admin": {"alias": "Administrator"}}
     user_roles = ["admin", "nonexistent_role"]
-    # This replicates the fixed dict lookup from _show_user_list
-    aliases = [roles[role].get("alias") if role in roles else role for role in user_roles]
-    assert aliases == ["Administrator", "nonexistent_role"]
+
+    value = _get_user_role_links(user_roles, roles)
+    expected = [
+        _RoleLinkSpec(
+            alias="Administrator",
+            url="wato.py?edit=admin&folder=&mode=edit_role",
+        ),
+        _RoleLinkSpec(
+            alias="nonexistent_role",  # falls back to the user role
+            url="wato.py?edit=nonexistent_role&folder=&mode=edit_role",
+        ),
+    ]
+
+    assert value == expected
 
 
 @pytest.mark.usefixtures("request_context")

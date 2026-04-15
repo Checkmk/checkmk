@@ -12,7 +12,7 @@ import base64
 import time
 import traceback
 from collections.abc import Collection, Iterable, Iterator, Mapping, Sequence
-from typing import cast, Literal, overload
+from typing import cast, Literal, NamedTuple, overload, TypedDict
 
 from cmk.ccc.site import omd_site
 from cmk.ccc.user import UserId
@@ -686,17 +686,10 @@ class ModeUsers(WatoMode):
 
                 # Roles
                 table.cell(_("Roles"))
-                if user_spec.get("roles", []):
-                    role_links = [
-                        (
-                            folder_preserving_link([("mode", "edit_role"), ("edit", role)]),
-                            roles[role]["alias"] if role in roles else role,
-                        )
-                        for role in user_spec["roles"]
-                    ]
+                if role_links := _get_user_role_links(user_spec.get("roles", []), roles):
                     html.write_html(
                         HTML.without_escaping(", ").join(
-                            HTMLWriter.render_a(alias, href=link) for (link, alias) in role_links
+                            HTMLWriter.render_a(link.alias, href=link.url) for link in role_links
                         )
                     )
 
@@ -757,6 +750,27 @@ class ModeUsers(WatoMode):
                 "notifications."
             )
             html.close_div()
+
+
+class _RoleAlias(TypedDict):
+    alias: str
+
+
+class _RoleLinkSpec(NamedTuple):
+    alias: str
+    url: str
+
+
+def _get_user_role_links(
+    user_roles: list[str], roles: Mapping[str, _RoleAlias]
+) -> Sequence[_RoleLinkSpec]:
+    return [
+        _RoleLinkSpec(
+            alias=roles[user_role]["alias"] if user_role in roles else user_role,
+            url=folder_preserving_link([("mode", "edit_role"), ("edit", user_role)]),
+        )
+        for user_role in user_roles
+    ]
 
 
 # TODO: Create separate ModeCreateUser()

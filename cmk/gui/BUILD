@@ -1249,6 +1249,24 @@ py_library(
     ],
 )
 
+py_library(
+    name = "user_async_replication",
+    srcs = ["user_async_replication.py"],
+    imports = ["../.."],
+    visibility = [
+        "//cmk:__subpackages__",
+        "//tests:__subpackages__",
+    ],
+    deps = [
+        ":config",
+        ":i18n",
+        ":logged_in",
+        "//cmk/gui/htmllib:html",
+        "//cmk/gui/watolib",
+        "//packages/cmk-ccc:site",
+    ],
+)
+
 # Monolithic target which we extract smaller targets from. As long as we are in the in place
 # extraction process below the cmk.gui module hierarchy, we will have to work with excludes. This
 # will be cleaned up when we move the pieces into their future python module structure.
@@ -1302,8 +1320,10 @@ py_library(
             "icon_helpers.py",
             "page_menu_entry.py",
             "page_state.py",
+            "pagetypes/**/*.py",
             "painter_options.py",
             "pdf.py",
+            "plugins/visuals/**/*.py",
             "permissions.py",
             "product_usage_analytics_popup.py",
             "pseudo_users.py",
@@ -1319,11 +1339,13 @@ py_library(
             "top_heading.py",
             "type_defs.py",
             "unit_formatter.py",
+            "user_async_replication.py",
             "user_connection_config_types.py",
             "user_sites.py",
             "validate.py",
             "validation_utils.py",
             "view_utils.py",
+            "visuals/**/*.py",
             "weblib.py",
             "werks.py",
         ],
@@ -1410,6 +1432,7 @@ py_library(
         ":top_heading",
         ":type_defs",
         ":unit_formatter",
+        ":user_async_replication",
         ":user_connection_config_types",
         ":user_sites",
         ":validate",
@@ -1455,6 +1478,7 @@ py_library(
         "//cmk/gui/openapi/spec:utils",
         "//cmk/gui/openapi/spec/spec_generator",
         "//cmk/gui/pagetypes",
+        "//cmk/gui/plugins/visuals",
         "//cmk/gui/quick_setup",
         "//cmk/gui/rest_api_types:notifications",
         "//cmk/gui/rule_specs:compatibility",
@@ -1502,6 +1526,7 @@ py_library(
         "//cmk/gui/utils:user_errors",
         "//cmk/gui/utils:user_frontend_settings_cookie",
         "//cmk/gui/valuespec",
+        "//cmk/gui/visuals",
         "//cmk/gui/watolib",
         "//cmk/gui/watolib:config_infra",
         "//cmk/gui/watolib:groups_io",

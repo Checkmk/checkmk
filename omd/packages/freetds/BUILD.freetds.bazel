@@ -24,6 +24,7 @@ configure_make(
         "--disable-server",
         "--disable-pool",
         "--disable-odbc",
+        "--with-openssl=$$EXT_BUILD_DEPS/openssl",
     ],
     copts = [
         # will be prepended to executable and appended to dynamic libraries,
@@ -76,7 +77,7 @@ configure_make(
         "install",
     ],
     visibility = ["//visibility:public"],
-    deps = [],
+    deps = ["@openssl"],
 )
 
 filegroup(

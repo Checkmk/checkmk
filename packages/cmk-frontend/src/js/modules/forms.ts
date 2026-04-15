@@ -232,7 +232,7 @@ function enable_label_input_fields(container: HTMLElement | HTMLDocument | null)
           ' is already used.'
       } else {
         message =
-          'Labels need to be in the format <tt>[KEY]:[VALUE]</tt>. For example <tt>os:windows</tt>.</div>'
+          'Labels need to be in the format <tt>[KEY]:[VALUE]</tt>. For example <tt>os:windows</tt> or <tt>net:ip:v4</tt>.</div>'
       }
 
       $('div.label_error').remove() // Remove all previous errors

@@ -12,7 +12,6 @@
 import datetime as dt
 import re
 from collections.abc import Sequence
-from dataclasses import dataclass
 from ipaddress import IPv4Network
 from typing import Annotated, Literal, Self
 
@@ -710,38 +709,31 @@ class FolderCustomHostAttributesAndTagGroupsModel(WithDynamicFields):
     )
 
 
-@dataclass(slots=True)
-class _LabelValidator:
-    kind: Literal["key", "value"]
+def _validate_label_key(value: str) -> str:
+    """Validate a label key.
 
-    def __call__(self, value: str) -> str:
-        """Validate a label key or value.
+    Label keys may not contain ``:`` since the character is used as the
+    separator between key and value. Label values, on the other hand, may
+    contain ``:`` (for example ``net:ip:v4``).
 
-        Examples:
-            >>> _LabelValidator(kind="key")("my_label")
-            'my_label'
-            >>> _LabelValidator(kind="value")("my_value")
-            'my_value'
-            >>> _LabelValidator(kind="key")("error:")
-            Traceback (most recent call last):
-                ...
-            ValueError: Invalid label key: 'error:'
-            >>> _LabelValidator(kind="value")("error:")
-            Traceback (most recent call last):
-                ...
-            ValueError: Invalid label value: 'error:'
-        """
-        if ":" in value:
-            raise ValueError(f"Invalid label {self.kind}: {value!r}")
+    Examples:
+        >>> _validate_label_key("my_label")
+        'my_label'
+        >>> _validate_label_key("error:")
+        Traceback (most recent call last):
+            ...
+        ValueError: Invalid label key: 'error:'
+    """
+    if ":" in value:
+        raise ValueError(f"Invalid label key: {value!r}")
 
-        return value
+    return value
 
 
 HostLabels = dict[
-    Annotated[str, AfterValidator(_LabelValidator(kind="key"))],
+    Annotated[str, AfterValidator(_validate_label_key)],
     Annotated[
         str,
-        AfterValidator(_LabelValidator(kind="value")),
         WithJsonSchema({"type": "string", "description": "The host label value"}),
     ],
 ]

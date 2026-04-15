@@ -1023,16 +1023,18 @@ def test_openapi_host_with_invalid_labels(clients: ClientRegistry) -> None:
     clients.HostConfig.create(
         folder="/",
         host_name="example.com",
-        attributes={"labels": {"label": "va:lue"}},
-        expect_ok=False,
-    ).assert_status_code(400)
-
-    clients.HostConfig.create(
-        folder="/",
-        host_name="example.com",
         attributes={"labels": {"la:bel": "value"}},
         expect_ok=False,
     ).assert_status_code(400)
+
+
+def test_openapi_host_with_multi_colon_label_value(clients: ClientRegistry) -> None:
+    resp = clients.HostConfig.create(
+        folder="/",
+        host_name="example.com",
+        attributes={"labels": {"net": "ip:v4"}},
+    )
+    assert resp.json["extensions"]["attributes"]["labels"] == {"net": "ip:v4"}
 
 
 def test_openapi_host_non_existent_site(clients: ClientRegistry) -> None:

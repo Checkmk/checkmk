@@ -51,7 +51,7 @@ const spec: FormSpec.Labels = {
     remove_label: 'i18n remove_label',
     add_some_labels: 'Add some labels',
     key_value_format_error:
-      'Labels need to be in the format [KEY]:[VALUE]. For example os:windows.',
+      'Labels need to be in the format [KEY]:[VALUE]. For example os:windows or net:ip:v4.',
     max_labels_reached: 'You can only add up to 10 labels.',
     uniqueness_error: 'Labels need to be unique.'
   },
@@ -98,6 +98,25 @@ describe('FormLabels', () => {
     await userEvent.keyboard('[Enter]')
 
     expect(getCurrentData()).toBe('{"key1":"value1","key2":"value2","key3":"value3"}')
+  })
+
+  test('should add new label with a multi-colon value', async () => {
+    const { getCurrentData } = await renderForm({
+      spec,
+      data: {},
+      backendValidation: []
+    })
+
+    const dropdown = screen.getByRole('combobox')
+    await userEvent.click(dropdown)
+    const labelInput = screen.getByRole('textbox', { name: 'filter' })
+    await userEvent.type(labelInput, 'net:ip:v4')
+
+    await screen.findByText('net:ip:v4')
+
+    await userEvent.keyboard('[Enter]')
+
+    expect(getCurrentData()).toBe('{"net":"ip:v4"}')
   })
 
   test('should remove label on clicking on remove button', async () => {

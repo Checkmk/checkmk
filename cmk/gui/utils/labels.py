@@ -192,7 +192,8 @@ def encode_labels_for_http(labels: Labels | Iterable[tuple[str, str]]) -> str:
 
 def label_help_text() -> str:
     return _(
-        "Labels need to be in the format <tt>[KEY]:[VALUE]</tt>. For example <tt>cmk/os_family:linux</tt>."
+        "Labels need to be in the format <tt>[KEY]:[VALUE]</tt>. For example"
+        " <tt>cmk/os_family:linux</tt> or <tt>net:ip:v4</tt>."
     )
 
 

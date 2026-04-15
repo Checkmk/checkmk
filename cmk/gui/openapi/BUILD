@@ -63,9 +63,20 @@ py_library(
     ],
 )
 
-# Temporary: openapi files that still belong to the monolithic //cmk/gui target.
-filegroup(
-    name = "gui_srcs",
+py_library(
+    name = "registration",
     srcs = ["registration.py"],
-    visibility = ["//cmk/gui:__pkg__"],
+    imports = ["../../.."],
+    visibility = [
+        "//cmk:__subpackages__",
+        "//tests:__subpackages__",
+    ],
+    deps = [
+        "//cmk/gui/background_job/job",
+        "//cmk/gui/openapi/api_endpoints",
+        "//cmk/gui/openapi/endpoints",
+        "//cmk/gui/openapi/framework",
+        "//cmk/gui/openapi/restful_objects",
+        "//cmk/gui/openapi/shared_endpoint_families",
+    ],
 )

@@ -478,6 +478,7 @@ py_wheel(
         "//cmk/gui/openapi:_type_adapter",
         "//cmk/gui/openapi:openapi_init",
         "//cmk/gui/openapi:permission_tracking",
+        "//cmk/gui/openapi:registration",
         "//cmk/gui/openapi:utils",
         "//cmk/gui/openapi/api_endpoints",
         "//cmk/gui/openapi/endpoints",

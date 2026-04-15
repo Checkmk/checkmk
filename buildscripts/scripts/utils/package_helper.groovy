@@ -229,6 +229,9 @@ void provide_agent_binaries(Map args) {
                     force_build: params.DISABLE_JENKINS_CACHE == "true",
                     relative_job_name: details.relative_job_name,
                     download: false,
+                    // set allow_retry true if retry is desired
+                    // smart_build would swallow the self-raised error and not cause a retry
+                    allow_retry: details.retry ? true : false,
                 ];
 
                 if (details.dependency_paths_hash) {

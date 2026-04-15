@@ -2,20 +2,21 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
-# mypy: disable-error-code="no-untyped-def"
-# mypy: disable-error-code="type-arg"
-
-from collections.abc import Iterator, Mapping
+from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import Any
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import SNMPTree, StringTable
-from cmk.legacy_includes.mem import check_memory_element
+from cmk.agent_based.v2 import (
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Service,
+    SimpleSNMPSection,
+    SNMPTree,
+    StringTable,
+)
 from cmk.plugins.juniper.lib import DETECT_JUNIPER_SCREENOS, DETECT_JUNIPER_TRPZ
-
-check_info = {}
+from cmk.plugins.lib import memory
 
 
 @dataclass(frozen=True)
@@ -32,16 +33,15 @@ def parse_juniper_trpz_mem(string_table: StringTable) -> Section | None:
     )
 
 
-def discover_juniper_mem_generic(section: Section) -> Iterator[tuple[None, dict]]:
-    yield None, {}
+def discover_juniper_mem_generic(section: Section) -> DiscoveryResult:
+    yield Service()
 
 
 def check_juniper_mem_generic(
-    _no_item: None,
     params: Mapping[str, Any],
     section: Section,
-) -> tuple[int, str, list]:
-    return check_memory_element(
+) -> CheckResult:
+    yield from memory.check_element(
         label="Used",
         used=section.used,
         total=section.total,
@@ -50,15 +50,19 @@ def check_juniper_mem_generic(
     )
 
 
-check_info["juniper_trpz_mem"] = LegacyCheckDefinition(
+snmp_section_juniper_trpz_mem = SimpleSNMPSection(
     name="juniper_trpz_mem",
     detect=DETECT_JUNIPER_TRPZ,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.14525.4.8.1.1",
         oids=["12.1", "6"],
     ),
-    service_name="Memory",
     parse_function=parse_juniper_trpz_mem,
+)
+
+check_plugin_juniper_trpz_mem = CheckPlugin(
+    name="juniper_trpz_mem",
+    service_name="Memory",
     discovery_function=discover_juniper_mem_generic,
     check_function=check_juniper_mem_generic,
     check_ruleset_name="juniper_mem",
@@ -68,7 +72,7 @@ check_info["juniper_trpz_mem"] = LegacyCheckDefinition(
 )
 
 
-def parse_juniper_screenos_mem(string_table):
+def parse_juniper_screenos_mem(string_table: StringTable) -> Section | None:
     if not string_table:
         return None
     used = int(string_table[0][0])
@@ -76,7 +80,7 @@ def parse_juniper_screenos_mem(string_table):
     return Section(used, used + free)
 
 
-check_info["juniper_screenos_mem"] = LegacyCheckDefinition(
+snmp_section_juniper_screenos_mem = SimpleSNMPSection(
     name="juniper_screenos_mem",
     detect=DETECT_JUNIPER_SCREENOS,
     fetch=SNMPTree(
@@ -84,6 +88,10 @@ check_info["juniper_screenos_mem"] = LegacyCheckDefinition(
         oids=["1.0", "2.0"],
     ),
     parse_function=parse_juniper_screenos_mem,
+)
+
+check_plugin_juniper_screenos_mem = CheckPlugin(
+    name="juniper_screenos_mem",
     service_name="Memory",
     discovery_function=discover_juniper_mem_generic,
     check_function=check_juniper_mem_generic,

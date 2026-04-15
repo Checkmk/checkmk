@@ -22,6 +22,15 @@ pub fn validate_report(report: &Report<'_>) -> Result<()> {
             report.errors.len()
         ));
     }
+    if !report.dlopen_runpath_errors.is_empty() {
+        for error in &report.dlopen_runpath_errors {
+            eprintln!("ERROR: {error}");
+        }
+        return Err(anyhow::anyhow!(
+            "ELF files with DT_RUNPATH and dlopen/libltdl: {} error(s)",
+            report.dlopen_runpath_errors.len()
+        ));
+    }
     if report.totals.dependencies.error > 0 {
         for (path, dependencies) in &report.dependencies {
             for (dependency, result) in dependencies {

@@ -77,11 +77,6 @@ impl<'a> SymlinkResolver<'a> {
             SymlinkResolutionResult::Found(target_path)
         }
     }
-
-    #[cfg(test)]
-    fn symlinks(&self) -> &SymlinkResolutionResults<'a> {
-        &self.symlinks
-    }
 }
 
 #[cfg(test)]
@@ -90,6 +85,12 @@ mod tests {
     use crate::package::{Package, PackageFile};
     use std::collections::HashMap;
     use std::path::PathBuf;
+
+    impl<'a> SymlinkResolver<'a> {
+        fn symlinks(&self) -> &SymlinkResolutionResults<'a> {
+            &self.symlinks
+        }
+    }
 
     fn create_test_package(files: HashMap<PathBuf, PackageFile>) -> Package {
         Package::new_for_testing(PathBuf::from("/test/package.deb"), files)

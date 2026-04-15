@@ -124,6 +124,23 @@ def test_format_var_for_export(input_: object, output: object) -> None:
     assert format_var_for_export(input_, maxsize=20) == output
 
 
+def test_format_var_for_export_broken_repr() -> None:
+    """format_var_for_export must not propagate exceptions from __repr__.
+
+    Regression test for CMK-32623: the crash handler crashed itself when
+    pprint.pformat() called repr() on a timeseries object whose __repr__
+    raised an exception.
+    """
+
+    class BrokenRepr:
+        def __repr__(self) -> str:
+            raise RuntimeError("repr is broken")
+
+    result = format_var_for_export({"x": BrokenRepr()})
+    assert isinstance(result, dict)
+    assert "repr raised an exception" in result["x"]
+
+
 class UnitTestDetails(TypedDict):
     vars: Mapping[str, str]
 

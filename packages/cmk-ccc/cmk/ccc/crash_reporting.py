@@ -285,8 +285,8 @@ def _get_local_vars_of_last_exception() -> str:
     try:
         local_vars = format_var_for_export(inspect.trace()[-1][0].f_locals, maxdepth=5)
     except IndexError:
-        # Suppressing to handle case where sys.exc_info has no crash information
-        # (https://docs.python.org/2/library/sys.html#sys.exc_info)
+        # inspect.trace() returns [] when called outside an active exception handler,
+        # making [-1] raise IndexError.
         return ""
 
     # This needs to be encoded as the local vars might contain binary data which can not be
@@ -340,8 +340,18 @@ def format_var_for_export(val: object, maxdepth: int = 4, maxsize: int = 1024 * 
         case str():
             return _truncate_str(val, maxsize)
 
-        case _:
+        # Preserve JSON-safe scalars as-is; pprint.pformat() handles them without calling
+        # any user-defined __repr__.
+        case None | bool() | int() | float() | bytes():
             return val
+
+        case _:
+            # Convert unknown objects to a safe string representation so that a later
+            # pprint.pformat() call cannot crash on a broken __repr__ implementation.
+            try:
+                return repr(val)
+            except Exception:
+                return f"<{type(val).__name__} (repr raised an exception)>"
 
 
 def _key_indicates_sensitivity(key: object) -> bool:

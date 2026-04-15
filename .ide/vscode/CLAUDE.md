@@ -131,6 +131,7 @@ Each section lives in its own folder under `src/sidebar/` with an `index.ts` (re
 | `setup/idePicker.ts`                  | Multi-select QuickPick for IDE setup families                            |
 | `setup/templates.ts`                  | File template creation                                                   |
 | `gerrit.ts`                           | Gerrit push integration                                                  |
+| `whatsNew.ts`                         | "What's New" markdown preview on version upgrade (reads `changelog/v*.md`) |
 
 ### Configuration (`config/`)
 
@@ -325,6 +326,21 @@ clearing the spinner. `showSectionLoading()` is reserved for destructive or full
 ## Commits
 
 Bump the patch version in `package.json` with every commit.
+
+After bumping the version (and after each `git commit --amend` that changes the
+version-bump commit), run:
+
+```sh
+bazel run //.ide/vscode:generate_changelog
+git add .ide/vscode/changelog/v<new-version>.md
+git commit --amend --no-edit
+```
+
+This writes/refreshes `.ide/vscode/changelog/v<new-version>.md` from the commit
+message. The `tests/changelog.test.ts` vitest enforces this — it fails if no
+changelog file exists for the current `package.json` version. The bundled
+changelog files drive the in-extension "What's New" markdown preview shown to
+users on version upgrade (see `src/whatsNew.ts`).
 
 Use conventional commit format with `(vscode)` scope. First line must be **≤ 50 chars**.
 Second line is the new extension version. Third line is the Jira ticket ID.

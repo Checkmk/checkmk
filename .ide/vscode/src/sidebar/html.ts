@@ -65,7 +65,8 @@ export function wrap(
   .codicon-circle-slash::before { content: "\\eabd"; }
   .codicon-output::before { content: "\\eb9d"; }
   .codicon-file::before { content: "\\ea7b"; }
-  .codicon-file-text::before { content: "\\ec5e"; }`
+  .codicon-file-text::before { content: "\\ec5e"; }
+  .codicon-history::before { content: "\\ea82"; }`
     : ''
   return `<!DOCTYPE html>
 <html lang="en">

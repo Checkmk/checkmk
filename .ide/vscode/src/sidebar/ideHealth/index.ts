@@ -372,6 +372,9 @@ export function render(state: StateCache, codiconUri?: vscode.Uri, cspSource?: s
     ? `<div class="env-row">
         <span class="env-label">Extension</span>
         <span class="env-value">v${esc(installedVersion)}</span>
+        <button class="btn btn-small btn-icon" data-action="exec" data-id="cmk.pickChangelog" title="Browse changelog">
+          <span class="codicon codicon-history"></span>
+        </button>
       </div>`
     : ''
 

@@ -26,16 +26,25 @@ vitest_bin.vitest_test(
     args = ["run"],
     chdir = package_name(),
     data = [
+        "package.json",
         ":node_modules/@types",
         ":src_ts",
         ":test_ts",
         "//:node_modules/vitest",
-    ] + glob(["config/**"]),
+    ] + glob(["config/**"]) + glob(
+        ["changelog/**"],
+        allow_empty = True,
+    ),
 )
 
 py_binary(
     name = "update_confluence_vscode_page",
     srcs = ["scripts/update_confluence_vscode_page.py"],
+)
+
+py_binary(
+    name = "generate_changelog",
+    srcs = ["scripts/generate_changelog.py"],
 )
 
 genrule(
@@ -47,7 +56,9 @@ genrule(
             "icons/**",
             "docs/**",
             "scripts/**",
+            "changelog/**",
         ],
+        allow_empty = True,
         exclude = [
             "node_modules/**",
             "out/**",

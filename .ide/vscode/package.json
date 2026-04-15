@@ -2,7 +2,7 @@
   "name": "cmk-vscode",
   "displayName": "CMK Dev Tools for VS Code",
   "description": "Build commands and helpers for Checkmk development",
-  "version": "0.1.56",
+  "version": "0.1.57",
   "publisher": "checkmk",
   "engines": {
     "vscode": "^1.85.0"
@@ -229,6 +229,18 @@
       {
         "command": "cmk.bazelTestFunction",
         "title": "CMK ▸ Test: Run Function at Cursor (Bazel)"
+      },
+      {
+        "command": "cmk.showWhatsNew",
+        "title": "CMK ▸ Show What's New"
+      },
+      {
+        "command": "cmk.pickChangelog",
+        "title": "CMK ▸ Pick Changelog Version"
+      },
+      {
+        "command": "cmk.whatsNew.reset",
+        "title": "CMK ▸ Dev: Reset What's New marker"
       }
     ],
     "configuration": {

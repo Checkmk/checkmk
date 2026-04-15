@@ -8,8 +8,30 @@ import * as fs from 'fs'
 import * as path from 'path'
 import * as vscode from 'vscode'
 
-import { notifyInfo } from '../../core/log'
+import { error, notifyInfo } from '../../core/log'
 import { versionAtLeast } from '../../core/version'
+
+const PACKAGE_BASE_DIRS = ['packages', 'non-free/packages']
+
+const TOP_LEVEL_TEST_TREES = [
+  'tests/unit',
+  'tests/integration',
+  'tests/composition',
+  'tests/gui_e2e',
+  'tests/gui_crawl',
+  'tests/code_quality',
+  'tests/agent-plugin-unit',
+  'tests/agent_plugin_integration',
+  'tests/agent-integration',
+  'tests/extension_compatibility',
+  'tests/integration_redfish',
+  'tests/packaging'
+]
+
+// agents/plugins is Python 3.4+ compatible — strict mypy (configured for
+// Python 3.13) will surface modern-syntax findings here. We include it
+// because the strict checks reflect the project's intent.
+const SPECIAL_TARGETS = ['omd/packages/omd/omdlib', 'agents/plugins', 'scripts']
 
 interface MypyConfig {
   mypy_path?: string
@@ -45,6 +67,166 @@ const VERSION_GATED_ERROR_CODES: Record<string, string> = {
   'exhaustive-match': '1.20'
 }
 
+function discoverPackageRoots(wsPath: string): string[] {
+  const roots: string[] = []
+  for (const baseDir of PACKAGE_BASE_DIRS) {
+    const fullBase = path.join(wsPath, baseDir)
+    if (!fs.existsSync(fullBase)) continue
+    for (const name of fs.readdirSync(fullBase).sort()) {
+      const pkgDir = path.join(fullBase, name)
+      const hasCmk = fs.existsSync(path.join(pkgDir, 'cmk'))
+      const hasPyproject = fs.existsSync(path.join(pkgDir, 'pyproject.toml'))
+      if (hasCmk && hasPyproject) {
+        roots.push(`${baseDir}/${name}`)
+      }
+    }
+  }
+  return roots
+}
+
+export function discoverMypyTargets(wsPath: string): string[] {
+  const targets: string[] = []
+  const tryAdd = (rel: string): void => {
+    if (fs.existsSync(path.join(wsPath, rel))) {
+      targets.push(rel)
+    }
+  }
+
+  tryAdd('cmk')
+
+  for (const baseDir of PACKAGE_BASE_DIRS) {
+    const fullBase = path.join(wsPath, baseDir)
+    if (!fs.existsSync(fullBase)) continue
+    for (const name of fs.readdirSync(fullBase).sort()) {
+      const pkgDir = path.join(fullBase, name)
+      if (!fs.existsSync(path.join(pkgDir, 'pyproject.toml'))) continue
+      const cmkRel = `${baseDir}/${name}/cmk`
+      if (fs.existsSync(path.join(wsPath, cmkRel))) targets.push(cmkRel)
+      const testsRel = `${baseDir}/${name}/tests`
+      const testsAbs = path.join(wsPath, testsRel)
+      // Skip per-package tests dirs that contain __init__.py: they all resolve
+      // to a top-level module named "tests", and a single mypy daemon can't
+      // distinguish them ("Duplicate module named 'tests'"). Bazel still
+      // covers them via per-target mypy invocations. Namespace-package tests
+      // (no __init__.py) coexist fine.
+      if (fs.existsSync(testsAbs) && !fs.existsSync(path.join(testsAbs, '__init__.py'))) {
+        targets.push(testsRel)
+      }
+    }
+  }
+
+  for (const tree of TOP_LEVEL_TEST_TREES) tryAdd(tree)
+  for (const tree of SPECIAL_TARGETS) tryAdd(tree)
+
+  return targets
+}
+
+async function applyDynamicMypyTargets(wsPath: string): Promise<void> {
+  const targets = discoverMypyTargets(wsPath)
+  const wsFolder = vscode.workspace.workspaceFolders?.[0]?.uri
+  await vscode.workspace
+    .getConfiguration('mypy', wsFolder)
+    .update('targets', targets, vscode.ConfigurationTarget.WorkspaceFolder)
+}
+
+const PY_WALK_SKIP_DIRS = new Set([
+  '__pycache__',
+  '.venv',
+  'node_modules',
+  '.git',
+  'bazel-bin',
+  'bazel-out',
+  'bazel-testlogs'
+])
+
+function walkPyFiles(wsPath: string, rel: string, out: string[]): void {
+  const full = path.join(wsPath, rel)
+  let entries: fs.Dirent[]
+  try {
+    entries = fs.readdirSync(full, { withFileTypes: true })
+  } catch {
+    return
+  }
+  for (const entry of entries) {
+    if (PY_WALK_SKIP_DIRS.has(entry.name)) continue
+    if (entry.name.startsWith('.') && entry.name !== '__init__.py') continue
+    const sub = rel ? `${rel}/${entry.name}` : entry.name
+    if (entry.isDirectory()) {
+      walkPyFiles(wsPath, sub, out)
+    } else if (entry.isFile() && entry.name.endsWith('.py')) {
+      out.push(sub)
+    }
+  }
+}
+
+function computeModuleName(wsPath: string, fileRel: string, sortedRoots: string[]): string | null {
+  for (const root of sortedRoots) {
+    const prefix = `${root}/`
+    if (fileRel.startsWith(prefix)) {
+      let stripped = fileRel.substring(prefix.length)
+      if (stripped.endsWith('/__init__.py')) {
+        stripped = stripped.substring(0, stripped.length - '/__init__.py'.length)
+      } else {
+        stripped = stripped.substring(0, stripped.length - '.py'.length)
+      }
+      return stripped.replace(/\//g, '.') || null
+    }
+  }
+  // No mypy_path base matched: fall back to __init__.py chain
+  const parts: string[] = []
+  let current: string
+  if (fileRel.endsWith('/__init__.py')) {
+    current = fileRel.substring(0, fileRel.length - '/__init__.py'.length)
+    if (!current) return null
+  } else {
+    parts.push(path.basename(fileRel).slice(0, -3))
+    current = path.dirname(fileRel)
+  }
+  while (current && current !== '.') {
+    if (!fs.existsSync(path.join(wsPath, current, '__init__.py'))) break
+    parts.unshift(path.basename(current))
+    const parent = path.dirname(current)
+    if (parent === current) break
+    current = parent
+  }
+  return parts.join('.') || null
+}
+
+function detectModuleCollisions(
+  wsPath: string,
+  targets: string[],
+  mypyPathRoots: string[]
+): string[] {
+  const sortedRoots = [...mypyPathRoots].sort((a, b) => b.length - a.length)
+  const filesByModule = new Map<string, string[]>()
+  const seen = new Set<string>()
+  for (const target of targets) {
+    const files: string[] = []
+    walkPyFiles(wsPath, target, files)
+    for (const file of files) {
+      if (seen.has(file)) continue
+      seen.add(file)
+      const mod = computeModuleName(wsPath, file, sortedRoots)
+      if (!mod) continue
+      if (!filesByModule.has(mod)) filesByModule.set(mod, [])
+      filesByModule.get(mod)!.push(file)
+    }
+  }
+  const excludes: string[] = []
+  for (const [, files] of filesByModule) {
+    if (files.length < 2) continue
+    files.sort()
+    for (let i = 1; i < files.length; i++) excludes.push(files[i])
+  }
+  return excludes.sort()
+}
+
+function buildExcludeRegex(paths: string[]): string {
+  if (paths.length === 0) return ''
+  const escaped = paths.map((p) => p.replace(/[.+?^${}()|[\]\\]/g, '\\$&'))
+  return `(^|/)(${escaped.join('|')})$`
+}
+
 function parsePyprojectToml(wsPath: string): Promise<MypyConfig | null> {
   const bin = path.join(wsPath, '.venv', 'bin', 'python')
   const script = `import tomllib,json,sys;data=tomllib.load(open('pyproject.toml','rb'));json.dump(data.get('tool',{}).get('mypy',{}),sys.stdout)`
@@ -65,7 +247,12 @@ function parsePyprojectToml(wsPath: string): Promise<MypyConfig | null> {
   })
 }
 
-export function buildMypyIniContent(version: string, config: MypyConfig, wsPath?: string): string {
+export function buildMypyIniContent(
+  version: string,
+  config: MypyConfig,
+  wsPath?: string,
+  excludeRegex?: string
+): string {
   const lines: string[] = [
     `# AUTO-GENERATED by CMK Dev Tools for VS Code`,
     `# Source: pyproject.toml [tool.mypy]`,
@@ -96,17 +283,7 @@ export function buildMypyIniContent(version: string, config: MypyConfig, wsPath?
         .map((p) => p.trim())
         .filter(Boolean)
       if (wsPath) {
-        const packagesDir = path.join(wsPath, 'packages')
-        if (fs.existsSync(packagesDir)) {
-          for (const name of fs.readdirSync(packagesDir).sort()) {
-            const pkgDir = path.join(packagesDir, name)
-            const hasCmk = fs.existsSync(path.join(pkgDir, 'cmk'))
-            const hasPyproject = fs.existsSync(path.join(pkgDir, 'pyproject.toml'))
-            if (hasCmk && hasPyproject) {
-              cleaned.push(`packages/${name}`)
-            }
-          }
-        }
+        cleaned.push(...discoverPackageRoots(wsPath))
       }
       lines.push(`mypy_path = ${cleaned.join(':')}`)
       continue
@@ -145,6 +322,10 @@ export function buildMypyIniContent(version: string, config: MypyConfig, wsPath?
     }
   }
 
+  if (excludeRegex) {
+    lines.push(`exclude = ${excludeRegex}`)
+  }
+
   if (config.overrides) {
     for (const override of config.overrides) {
       const modules = override.module || []
@@ -172,8 +353,21 @@ export async function generateAndWriteMypyConfig(wsPath: string): Promise<boolea
   if (!version) return false
   const config = await parsePyprojectToml(wsPath)
   if (!config) return false
-  const content = buildMypyIniContent(version, config, wsPath)
-  return writeMypyIniIfChanged(wsPath, content)
+  const targets = discoverMypyTargets(wsPath)
+  const mypyPathRoots = (typeof config.mypy_path === 'string' ? config.mypy_path : '')
+    .replace(/\$MYPY_CONFIG_FILE_DIR\//g, '')
+    .split(':')
+    .map((p) => p.trim())
+    .filter(Boolean)
+    .concat(discoverPackageRoots(wsPath))
+  const collisions = detectModuleCollisions(wsPath, targets, mypyPathRoots)
+  const excludeRegex = buildExcludeRegex(collisions)
+  const content = buildMypyIniContent(version, config, wsPath, excludeRegex)
+  const changed = writeMypyIniIfChanged(wsPath, content)
+  if (changed) {
+    killDmypyDaemons(wsPath, { killAll: true })
+  }
+  return changed
 }
 
 function writeMypyIniIfChanged(wsPath: string, content: string): boolean {
@@ -191,18 +385,6 @@ function writeMypyIniIfChanged(wsPath: string, content: string): boolean {
 
   fs.writeFileSync(outputPath, content, 'utf8')
   return true
-}
-
-function needsGeneration(wsPath: string): boolean {
-  const iniPath = path.join(wsPath, '.vscode', '.mypy.ini')
-  const pyprojectPath = path.join(wsPath, 'pyproject.toml')
-
-  if (!fs.existsSync(iniPath)) return true
-  if (!fs.existsSync(pyprojectPath)) return false
-
-  const iniStat = fs.statSync(iniPath)
-  const pyprojectStat = fs.statSync(pyprojectPath)
-  return pyprojectStat.mtimeMs > iniStat.mtimeMs
 }
 
 function killDmypyDaemons(wsPath: string, { killAll = false } = {}): void {
@@ -273,13 +455,15 @@ export function registerMypyConfigWatcher(): vscode.Disposable[] {
     }
   })
 
-  if (needsGeneration(wsPath)) {
-    generateAndWriteMypyConfig(wsPath).then((changed) => {
-      if (changed) {
-        notifyInfo('CMK: Regenerated .vscode/.mypy.ini from pyproject.toml')
-      }
-    })
-  }
+  generateAndWriteMypyConfig(wsPath).then((changed) => {
+    if (changed) {
+      notifyInfo('CMK: Regenerated .vscode/.mypy.ini from pyproject.toml')
+    }
+  })
+
+  applyDynamicMypyTargets(wsPath).catch((err) =>
+    error(`Failed to apply mypy.targets: ${(err as Error).message}`)
+  )
 
   const watcher = vscode.workspace.createFileSystemWatcher(
     new vscode.RelativePattern(wsPath, 'pyproject.toml')
@@ -294,6 +478,23 @@ export function registerMypyConfigWatcher(): vscode.Disposable[] {
   })
 
   disposables.push(watcher)
+
+  const packageWatcher = vscode.workspace.createFileSystemWatcher(
+    new vscode.RelativePattern(wsPath, '{packages,non-free/packages}/*/pyproject.toml')
+  )
+  const refreshOnPackageChange = (): void => {
+    applyDynamicMypyTargets(wsPath).catch((err) =>
+      error(`Failed to apply mypy.targets: ${(err as Error).message}`)
+    )
+    generateAndWriteMypyConfig(wsPath).then((changed) => {
+      if (changed) {
+        notifyInfo('CMK: Regenerated .vscode/.mypy.ini after package change')
+      }
+    })
+  }
+  packageWatcher.onDidCreate(refreshOnPackageChange)
+  packageWatcher.onDidDelete(refreshOnPackageChange)
+  disposables.push(packageWatcher)
 
   return disposables
 }

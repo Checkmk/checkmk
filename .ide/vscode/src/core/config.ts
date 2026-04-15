@@ -146,3 +146,28 @@ export function getDisableSettings(name: string): ScopedSetting[] {
   }
   return result
 }
+
+// Returns the "active" values for keys that also appear in disableFolder/Workspace/User.
+// These should be applied automatically on profile activation so the editor reflects the
+// recommended state without requiring the user to click "Apply" in the dashboard.
+export function getEnableSettings(name: string): ScopedSetting[] {
+  const settings = loadConfig<Record<string, Record<string, Record<string, unknown>>>>('settings')
+  const entry = settings[name]
+  if (!entry) return []
+  const result: ScopedSetting[] = []
+  const pairs: Array<[string, string, vscode.ConfigurationTarget]> = [
+    ['folder', 'disableFolder', vscode.ConfigurationTarget.WorkspaceFolder],
+    ['workspace', 'disableWorkspace', vscode.ConfigurationTarget.Workspace],
+    ['user', 'disableUser', vscode.ConfigurationTarget.Global]
+  ]
+  for (const [activeSec, disableSec, target] of pairs) {
+    const active = entry[activeSec] || {}
+    const disabled = entry[disableSec] || {}
+    for (const key of Object.keys(disabled)) {
+      if (key in active) {
+        result.push({ key, value: resolveVariables(active[key] as SettingValue), target })
+      }
+    }
+  }
+  return result
+}

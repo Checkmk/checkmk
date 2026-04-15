@@ -11,6 +11,7 @@ import {
   type ExtensionSets,
   type ScopedSetting,
   getDisableSettings,
+  getEnableSettings,
   loadConfig,
   writeSetting
 } from './core/config'
@@ -38,8 +39,12 @@ import { registerSnippets } from './profiles/python/snippets'
 import { registerIdePickers } from './setup/idePicker'
 import { registerTemplates } from './setup/templates'
 import { refreshAll, refreshOmd, registerSidebar } from './sidebar'
+import { registerWhatsNew, showWhatsNewIfNeeded } from './whatsNew'
 
-function toggleSettings(disableSettings: ScopedSetting[]): vscode.Disposable {
+function toggleSettings(
+  disableSettings: ScopedSetting[],
+  enableSettings: ScopedSetting[] = []
+): vscode.Disposable {
   ;(async () => {
     try {
       for (const { key, value: disabledValue, target } of disableSettings) {
@@ -56,8 +61,11 @@ function toggleSettings(disableSettings: ScopedSetting[]): vscode.Disposable {
           await writeSetting(key, undefined, target)
         }
       }
+      for (const { key, value, target } of enableSettings) {
+        await writeSetting(key, value, target)
+      }
     } catch (err) {
-      error(`Failed to remove disable-settings: ${(err as Error).message}`)
+      error(`Failed to apply profile-active settings: ${(err as Error).message}`)
     }
   })()
   return {
@@ -141,6 +149,7 @@ export function activate(context: vscode.ExtensionContext): void {
   // --- Family-gated features ---
 
   const pythonDisable = getDisableSettings('python')
+  const pythonEnable = getEnableSettings('python')
   profileManager.register(
     'python',
     () => {
@@ -149,7 +158,7 @@ export function activate(context: vscode.ExtensionContext): void {
         ...registerInterpreterResolver(),
         ...registerSnippets(),
         ...registerBazelTestRunner(),
-        toggleSettings(pythonDisable),
+        toggleSettings(pythonDisable, pythonEnable),
         { dispose: () => killAllDmypyDaemons() },
         {
           dispose: () => {
@@ -162,20 +171,22 @@ export function activate(context: vscode.ExtensionContext): void {
   )
 
   const frontendDisable = getDisableSettings('frontend')
+  const frontendEnable = getEnableSettings('frontend')
   profileManager.register(
     'frontend',
     () => {
-      return [...registerPrettierConfigWatcher(), toggleSettings(frontendDisable)]
+      return [...registerPrettierConfigWatcher(), toggleSettings(frontendDisable, frontendEnable)]
     },
     frontendDisable
   )
 
   const rustDisable = getDisableSettings('rust')
+  const rustEnable = getEnableSettings('rust')
   profileManager.register(
     'rust',
     () => {
       return [
-        toggleSettings(rustDisable),
+        toggleSettings(rustDisable, rustEnable),
         {
           dispose: () => {
             vscode.commands.executeCommand('rust-analyzer.stopServer')
@@ -191,6 +202,11 @@ export function activate(context: vscode.ExtensionContext): void {
   profileManager.init(context)
   registerProfileDetector(context)
   checkVersionMismatch(context)
+
+  context.subscriptions.push(...registerWhatsNew(context))
+  showWhatsNewIfNeeded(context).catch((err) =>
+    error(`What's new failed: ${(err as Error).message}`)
+  )
 
   // --- First-run wizard ---
   const SETUP_DONE_KEY = 'cmk.setupWizardDismissed'

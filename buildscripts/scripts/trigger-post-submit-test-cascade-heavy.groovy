@@ -10,6 +10,7 @@ void main() {
 
     /// This will get us the location to e.g. "checkmk/master" or "Testing/<name>/checkmk/master"
     def branch_base_folder = package_helper.branch_base_folder(true);
+    def force_build = params.DISABLE_JENKINS_CACHE == true;
 
     def job_names = [
         "test-composition-single-f12less",

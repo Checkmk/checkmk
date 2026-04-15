@@ -23,6 +23,7 @@ import usei18n from '@/lib/i18n'
 import useDragging from '@/lib/useDragging'
 import { useTheme } from '@/lib/useTheme'
 
+import CmkAlertBox from '@/components/CmkAlertBox.vue'
 import CmkButton from '@/components/CmkButton.vue'
 import CmkColorPicker from '@/components/CmkColorPicker.vue'
 import CmkDropdown from '@/components/CmkDropdown'
@@ -979,21 +980,46 @@ function validateMetricGraphLine(graphLine: GraphLine): ValidationMessages {
   return messages
 }
 
+const hasSubmitError = ref<boolean>(false)
+
+function explicitRangeHasError() {
+  const range = convertFromExplicitVerticalRange(dataExplicitVerticalRange.value)
+  if (range === 'auto') {
+    return false
+  }
+  if (typeof range.lower !== 'number' || typeof range.upper !== 'number') {
+    return true
+  }
+  return range.lower > range.upper
+}
+
+watch(
+  () => [dataExplicitVerticalRange.value],
+  async () => {
+    // Reset "submit error" banner when a user corrected the range values
+    if (!explicitRangeHasError()) {
+      hasSubmitError.value = false
+    }
+  },
+  { deep: true }
+)
+
 window.addEventListener('submit', (event) => {
-  if (
-    graphLines.value.some((graphLine: GraphLine) => {
-      if (graphLine.type === 'query') {
-        return validateFormMetricBackendCustomQuery(undefined, graphLine).length > 0
-      }
-      if (graphLine.type === 'metric' || graphLine.type === 'scalar') {
-        return validateMetricGraphLine(graphLine).length > 0
-      }
-      return false
-    })
-  ) {
+  const hasGraphLineErrors = graphLines.value.some((graphLine: GraphLine) => {
+    if (graphLine.type === 'query') {
+      return validateFormMetricBackendCustomQuery(undefined, graphLine).length > 0
+    }
+    if (graphLine.type === 'metric' || graphLine.type === 'scalar') {
+      return validateMetricGraphLine(graphLine).length > 0
+    }
+    return false
+  })
+  if (hasGraphLineErrors || explicitRangeHasError()) {
+    hasSubmitError.value = true
     event.preventDefault()
     return
   }
+  hasSubmitError.value = false
   handlePreventLeaving(false)
 })
 
@@ -1010,6 +1036,9 @@ const graphDesignerContentAsJson = computed(() => {
 </script>
 
 <template>
+  <CmkAlertBox v-if="hasSubmitError" variant="error">
+    {{ _t('Cannot save the form because it contains errors.') }}
+  </CmkAlertBox>
   <div ref="graphContainerRef"></div>
   <table class="data oddeven graph_designer_metrics">
     <thead class="gd__thead">

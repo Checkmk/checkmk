@@ -274,7 +274,7 @@ def check_mail(args: Args) -> CheckResult:
             result = forward_to_ec(args, ec_messages)
 
             # (Copy and) Delete the forwarded mails if configured
-            if args.cleanup:
+            if args.cleanup and fetched_mails:
                 if args.cleanup != "delete":
                     if not isinstance(connection, IMAP | EWS | GraphApi):
                         raise CleanupMailboxError(

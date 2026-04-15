@@ -198,8 +198,8 @@ def _get_or_load_image(
         return image
     except docker.errors.NotFound:
         logger.info("  Not available from registry")
-    except docker.errors.APIError as e:
-        _handle_api_error(e)
+    except docker.errors.APIError as exc:
+        _handle_api_error(exc)
 
     return None
 
@@ -214,24 +214,24 @@ def _get_registry_data(
     except docker.errors.NotFound:
         logger.info("  Not available from registry")
         return None
-    except docker.errors.APIError as e:
-        _handle_api_error(e)
+    except docker.errors.APIError as exc:
+        _handle_api_error(exc)
         return None
 
 
-def _handle_api_error(e: docker.errors.APIError) -> None:
-    if "no basic auth" in "%s" % e:
+def _handle_api_error(exc: docker.errors.APIError) -> None:
+    if "no basic auth" in "%s" % exc:
         raise Exception(
             "No authentication information stored for %s. You will have to login to the "
             'registry using "docker login %s" to be able to execute the tests.'
             % (_DOCKER_REGISTRY, _DOCKER_REGISTRY_URL)
         )
-    if "request canceled while waiting for connection" in "%s" % e:
+    if "request canceled while waiting for connection" in "%s" % exc:
         return None
-    if "dial tcp: lookup " in "%s" % e:
+    if "dial tcp: lookup " in "%s" % exc:
         # May happen when offline on ubuntu
         return None
-    raise e
+    raise exc
 
 
 def check_for_local_package(package_info: CMKPackageInfo, distro_name: str) -> bool:
@@ -414,9 +414,9 @@ def _create_cmk_image(
                 )
                 client.images.push(image_name_with_tag)
                 logger.info("  Upload complete")
-            except docker.errors.APIError as e:
+            except docker.errors.APIError as exc:
                 logger.warning("  An error occurred")
-                _handle_api_error(e)
+                _handle_api_error(exc)
         else:
             logger.info("Skipping upload to registry (%s)", image.short_id)
 

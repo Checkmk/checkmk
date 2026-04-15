@@ -6,6 +6,8 @@
 from pathlib import Path
 from unittest.mock import ANY
 
+import pytest
+
 from cmk.crypto.password import PasswordPolicy
 from cmk.crypto.password_hashing import PasswordHash
 from cmk.gui.breadcrumb import BreadcrumbItem
@@ -23,13 +25,15 @@ def test_show_user_list_unknown_role() -> None:
     assert aliases == ["Administrator", "nonexistent_role"]
 
 
-def test_users_breadcrumb_dont_list_users_topic(request_context: None) -> None:
+@pytest.mark.usefixtures("request_context")
+def test_users_breadcrumb_dont_list_users_topic() -> None:
     assert list(ModeUsers().breadcrumb()) == [
         BreadcrumbItem(title="Users", url="wato.py?mode=users"),
     ]
 
 
-def test_edituser_breadcrumb_dont_list_users_topic(request_context: None) -> None:
+@pytest.mark.usefixtures("request_context")
+def test_edituser_breadcrumb_dont_list_users_topic() -> None:
     request.set_var("user", "testuser")
     assert list(ModeEditUser().breadcrumb()) == [
         BreadcrumbItem(title="Users", url="wato.py?mode=users"),
@@ -37,7 +41,8 @@ def test_edituser_breadcrumb_dont_list_users_topic(request_context: None) -> Non
     ]
 
 
-def test_password_user_choose_secret_wo_secret(request_context: None) -> None:
+@pytest.mark.usefixtures("request_context")
+def test_password_user_choose_secret_wo_secret() -> None:
     request.set_var("authmethod", "secret")
     mode = ModeEditUser()
 
@@ -52,7 +57,8 @@ def test_password_user_choose_secret_wo_secret(request_context: None) -> None:
     }
 
 
-def test_password_user_choose_secret_w_secret(request_context: None) -> None:
+@pytest.mark.usefixtures("request_context")
+def test_password_user_choose_secret_w_secret() -> None:
     request.set_var("authmethod", "secret")
     request.set_var("_auth_secret", "secret")
     mode = ModeEditUser()
@@ -73,7 +79,8 @@ def test_password_user_choose_secret_w_secret(request_context: None) -> None:
     }
 
 
-def test_automation_user_choose_secret_wo_secret(request_context: None) -> None:
+@pytest.mark.usefixtures("request_context")
+def test_automation_user_choose_secret_wo_secret() -> None:
     request.set_var("authmethod", "secret")
     mode = ModeEditUser()
 
@@ -94,7 +101,8 @@ def test_automation_user_choose_secret_wo_secret(request_context: None) -> None:
     }
 
 
-def test_automation_user_choose_password_wo_pw(request_context: None) -> None:
+@pytest.mark.usefixtures("request_context")
+def test_automation_user_choose_password_wo_pw() -> None:
     request.set_var("authmethod", "password")
     mode = ModeEditUser()
 
@@ -114,7 +122,8 @@ def test_automation_user_choose_password_wo_pw(request_context: None) -> None:
     }
 
 
-def test_automation_user_choose_password_w_pw(request_context: None) -> None:
+@pytest.mark.usefixtures("request_context")
+def test_automation_user_choose_password_w_pw() -> None:
     mode = ModeEditUser()
     request.set_var("authmethod", "password")
     request.set_var("_password_" + mode._pw_suffix(), "longer_than_12")

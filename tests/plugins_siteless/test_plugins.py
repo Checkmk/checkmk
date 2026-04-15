@@ -85,7 +85,7 @@ def test_checks_executor(
     ]
 
     if any(_ in request.node.name for _ in xfail_list):
-        pytest.xfail(reason="CMK-33440: Failing plugin_siteless tests...")
+        pytest.xfail(reason="CMK-33568: Failing plugin_siteless tests...")
 
     agent_based_plugins = config.load_all_pluginX(repo_path() / "cmk/base/legacy_checks")
     assert not agent_based_plugins.errors

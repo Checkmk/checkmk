@@ -37,8 +37,6 @@ use mk_oracle::setup::{create_plugin, detect_host_runtime, detect_runtime, Env};
 use mk_oracle::types::{EnvVarName, SqlQuery};
 
 use mk_oracle::config::connection::setup_wallet_environment;
-#[cfg(windows)]
-use mk_oracle::types::InstanceAlias;
 use mk_oracle::types::{
     ConnectionStringType, Credentials, InstanceName, InstanceNumVersion, InstanceVersion,
     ServiceName, Tenant, UseHostClient,
@@ -50,8 +48,12 @@ use std::sync::LazyLock;
 
 pub static ORA_TEST_ENDPOINTS: &str = include_str!("files/endpoints.txt");
 
-pub fn get_instance(endpoint: &SqlDbEndpoint) -> String {
+pub fn get_sid(endpoint: &SqlDbEndpoint) -> String {
     endpoint.instance_name.clone().unwrap()
+}
+
+pub fn get_service_name(endpoint: &SqlDbEndpoint) -> String {
+    endpoint.service_name.clone().to_uppercase()
 }
 
 static ORA_TEST_INSTANCE_DATA: &str = r"
@@ -251,7 +253,7 @@ fn test_local_connection() {
     }
     add_runtime_to_path();
     let endpoint = r.unwrap();
-    let instance_name = get_instance(&endpoint);
+    let instance_name = get_sid(&endpoint);
 
     let config = make_base_config(
         &Credentials {
@@ -375,9 +377,11 @@ async fn test_absent_remote_custom_instance_connection() {
 }
 
 // TODO: Remove windows tag when TNS_ADMIN is properly supported on non-Windows platforms
-#[cfg(windows)]
+//#[cfg(windows)]
 #[tokio::test(flavor = "multi_thread")]
 async fn test_remote_tns_custom_instance_connection() {
+    use mk_oracle::types::InstanceAlias;
+
     add_runtime_to_path();
     log::warn!(
         "TNS_ADMIN='{}'",
@@ -399,10 +403,10 @@ async fn test_remote_tns_custom_instance_connection() {
     let rows: Vec<&str> = table[1].split("\n").collect();
     assert_eq!(rows[0], "<<<oracle_instance:sep(124)>>>");
     for r in rows[1..].iter() {
+        let expected_sid = get_sid(&endpoint);
         assert!(
-            r.starts_with("TEST23"),
-            "Row does not start with TEST23: {}",
-            r
+            r.starts_with(expected_sid.as_str()),
+            "Row does not start with {expected_sid}: {r}"
         );
     }
 }
@@ -435,10 +439,10 @@ fn test_remote_mini_connection_version() {
         let instances_old = system::WorkInstances::new(&conn, Some(INSTANCE_INFO_SQL_TEXT_FAIL));
         let r_new = instances_new
             .unwrap()
-            .get_full_version(&InstanceName::from(get_instance(endpoint)));
+            .get_full_version(&InstanceName::from(get_sid(endpoint)));
         let r_old = instances_old
             .unwrap()
-            .get_full_version(&InstanceName::from(get_instance(endpoint)));
+            .get_full_version(&InstanceName::from(get_sid(endpoint)));
         let version_ok = r_new.unwrap();
         let version_old = r_old.unwrap();
         //check that both methods return the same values
@@ -509,6 +513,7 @@ fn connect_and_query(
     version: Option<InstanceNumVersion>,
 ) -> Vec<String> {
     let config = make_mini_config(endpoint);
+    eprintln!("Connecting to {:#?}", endpoint);
 
     let spot = backend::make_spot(&config.endpoint()).unwrap();
     let conn = spot.connect(None).unwrap();
@@ -542,7 +547,7 @@ fn test_ts_quotas() {
         println!("endpoint.host = {}", &endpoint.host);
         let rows = connect_and_query(endpoint, sqls::Id::TsQuotas, None);
         assert!(!rows.is_empty());
-        let expected = format!("{}||||", get_instance(endpoint));
+        let expected = format!("{}||||", get_service_name(endpoint));
         assert_eq!(rows[0], expected);
     }
 }
@@ -562,7 +567,7 @@ fn test_jobs() {
                 "Row does not have enough columns: {}",
                 r
             );
-            assert_eq!(line[0], get_instance(endpoint).as_str());
+            assert_eq!(line[0], get_sid(endpoint).as_str());
             assert!(
                 [1, 2, 3, 4, 6, 7, 8]
                     .iter()
@@ -588,7 +593,7 @@ fn test_jobs_old() {
         rows.iter().for_each(|r| {
             let line: Vec<&str> = r.split("|").collect();
             assert_eq!(line.len(), 10, "Row does not have enough columns: {}", r);
-            assert_eq!(line[0], get_instance(endpoint).as_str());
+            assert_eq!(line[0], get_service_name(endpoint));
             assert!(
                 [1, 2, 3, 5, 6].iter().all(|i| { !line[*i].is_empty() }),
                 "Columns 1, 2, 3, 5, 6 should be NOT empty: {:?}",
@@ -638,7 +643,7 @@ fn test_undo_stats() {
                 "Row does not have enough columns: {}",
                 r,
             );
-            assert_eq!(line[0], get_instance(endpoint));
+            assert_eq!(line[0], get_sid(endpoint));
             assert!(
                 [2, 3, 4, 5]
                     .iter()
@@ -671,7 +676,7 @@ fn test_locks_last() {
         // or
         // FREE|||||||||||||||||
         // Let's QA team checks correctness
-        let inst = get_instance(endpoint);
+        let inst = get_sid(endpoint);
         let instance_name = inst.as_str();
         assert!(
             rows[0].starts_with(format!("{}.CDB$ROOT|", instance_name).as_str()),
@@ -716,7 +721,7 @@ fn test_locks_old() {
         // or
         // FREE|||||||||||||||||
         // Let's QA team checks correctness
-        assert!(rows[0].starts_with(format!("{}|", get_instance(endpoint)).as_str()));
+        assert!(rows[0].starts_with(format!("{}|", get_sid(endpoint)).as_str()));
     }
 }
 
@@ -740,7 +745,7 @@ fn test_log_switches() {
         });
         assert!(!rows.is_empty());
         // we only check that instance name is correct
-        assert!(rows[0].starts_with(format!("{}|", get_instance(endpoint)).as_str()));
+        assert!(rows[0].starts_with(format!("{}|", get_sid(endpoint)).as_str()));
     }
 }
 
@@ -764,11 +769,11 @@ fn test_long_active_sessions_last() {
             );
         });
 
-        let inst = get_instance(endpoint);
+        let inst = get_sid(endpoint);
         assert_eq!(rows[0], format!("{}.CDB$ROOT||||||||", inst));
         // may contain something like
-        // "TEST23.PDB23_1||||||||"
-        // "TEST23.TEST23PDB1||||||||"
+        // "SIDD23.PDB23_1||||||||"
+        // "SID23.SID23PDB1||||||||"
         // <inst>.<anything>PDB<anything>1||||||||
         let re = Regex::new(&format!(
             r"^{}\..*PDB.*1\|\|\|\|\|\|\|\|$",
@@ -792,7 +797,7 @@ fn test_long_active_sessions_old() {
             Some(InstanceNumVersion::from(12_00_00_00)),
         );
         assert!(!rows.is_empty());
-        assert_eq!(rows[0], format!("{}||||||||", get_instance(endpoint)));
+        assert_eq!(rows[0], format!("{}||||||||", get_sid(endpoint)));
     }
 }
 
@@ -810,7 +815,7 @@ fn test_processes() {
             "Row does not have enough columns: {}",
             rows.len()
         );
-        assert_eq!(array[0], get_instance(endpoint).as_str());
+        assert_eq!(array[0], get_sid(endpoint).as_str());
         assert!(array[1].parse::<u32>().is_ok());
         assert!(array[2].parse::<u32>().is_ok());
     }
@@ -831,12 +836,9 @@ fn test_recovery_status_last() {
                     .collect::<Vec<_>>()
                     .len(),
             );
-            assert!(array[0].starts_with(get_instance(endpoint).as_str()));
+            assert!(array[0].starts_with(get_service_name(endpoint).as_str()));
             // column 1 contains uniq database name which may differ in casing from SID/Instance
-            assert_eq!(
-                array[1].to_lowercase(),
-                get_instance(endpoint).as_str().to_lowercase()
-            );
+            assert_eq!(array[1].to_uppercase(), get_service_name(endpoint).as_str());
             assert!(!array[2].is_empty());
             assert!(!array[3].is_empty());
             assert!(array[4].parse::<u32>().is_ok());
@@ -863,12 +865,9 @@ fn test_recovery_status_old() {
         for r in rows {
             let array = r.split('|').collect::<Vec<&str>>();
             assert_eq!(array.len(), 11);
-            assert_eq!(array[0], get_instance(endpoint).as_str());
+            assert_eq!(array[0], get_service_name(endpoint).as_str());
             // column 1 contains uniq database name which may differ in casing from SID/Instance
-            assert_eq!(
-                array[1].to_lowercase(),
-                get_instance(endpoint).as_str().to_lowercase()
-            );
+            assert_eq!(array[1].to_uppercase(), get_service_name(endpoint));
             assert!(!array[2].is_empty());
             assert!(!array[3].is_empty());
             assert!(array[4].parse::<u32>().is_ok());
@@ -912,7 +911,7 @@ fn test_sessions_last() {
         println!("endpoint.host = {}", &endpoint.host);
         let rows = connect_and_query(endpoint, sqls::Id::Sessions, None);
         assert_eq!(rows.len(), 3);
-        let start = get_instance(endpoint) + ".";
+        let start = get_sid(endpoint) + ".";
         for n in [0, 1] {
             let r = rows[n].clone();
             assert!(r.starts_with(start.as_str()));
@@ -981,7 +980,7 @@ fn test_system_parameter() {
                     .collect::<Vec<_>>()
                     .len(),
             );
-            assert_eq!(line[0], get_instance(endpoint).as_str());
+            assert_eq!(line[0], get_sid(endpoint).as_str());
             assert!(!line[1].is_empty());
             assert!(
                 line[3] == "TRUE" || line[3] == "FALSE",
@@ -1008,8 +1007,12 @@ fn test_table_spaces() {
                     .collect::<Vec<_>>()
                     .len(),
             );
-            // TEST23 or TEST23.CDB$ROOT or TEST23.PDBXXX
-            assert!(line[0].starts_with(get_instance(endpoint).as_str()));
+            // SID23 or SID23.CDB$ROOT or SID23.PDBXXX
+            assert!(
+                line[0].starts_with(get_service_name(endpoint).as_str()),
+                "{}",
+                line[0]
+            );
             assert!(
                 line[1].to_uppercase().ends_with(".DBF"),
                 "File name does not end with .DBF: {}",
@@ -1054,8 +1057,8 @@ fn test_table_spaces_old() {
         rows.iter().for_each(|r| {
             let line: Vec<&str> = r.split("|").collect();
             assert_eq!(line.len(), 15);
-            // TEST23 or TEST23.CDB$ROOT or TEST23.PDBXXX
-            assert!(line[0].starts_with(get_instance(endpoint).as_str()));
+            // SID23 or SID23.CDB$ROOT or SID23.PDBXXX or dbtest23
+            assert!(line[0].starts_with(get_service_name(endpoint).as_str()));
             assert!(
                 line[1].to_uppercase().ends_with(".DBF"),
                 "File name does not end with .DBF: {}",
@@ -1110,7 +1113,7 @@ fn test_instance() {
                 line.len(),
                 ORA_TEST_INSTANCE_DATA.split('|').collect::<Vec<_>>().len(),
             );
-            assert_eq!(line[0], get_instance(endpoint).as_str());
+            assert_eq!(line[0], get_sid(endpoint).as_str());
             assert!(
                 convert_to_num_version(&InstanceVersion::from(line[1].to_string())).is_some(),
                 "1 is not a valid instance name: {}",
@@ -1184,7 +1187,7 @@ fn test_instance_old() {
         let r = rows[0].clone();
         let line: Vec<&str> = r.split("|").collect();
         assert_eq!(line.len(), 13);
-        assert_eq!(line[0], get_instance(endpoint).as_str());
+        assert_eq!(line[0], get_sid(endpoint).as_str());
         assert!(
             line[1].ends_with(".0.0.0"),
             "1 is not a valid instance version: {}",
@@ -1217,7 +1220,7 @@ fn test_asm_instance_new() {
         let r = rows[0].clone();
         let line: Vec<&str> = r.split("|").collect();
         assert_eq!(line.len(), 12);
-        assert_eq!(line[0], get_instance(endpoint).as_str());
+        assert_eq!(line[0], get_sid(endpoint).as_str());
         assert!(
             !line[1].ends_with(".0.0.0.0"),
             "1 is not a valid instance version: {}",
@@ -1310,7 +1313,7 @@ fn test_performance_new() {
                 ),
                 _ => panic!("Unknown category: {} in line {}", line[1], r),
             }
-            assert!(line[0].starts_with(format!("{}.", get_instance(endpoint).as_str()).as_str()));
+            assert!(line[0].starts_with(format!("{}.", get_sid(endpoint).as_str()).as_str()));
             assert!(
                 [4, 5, 7, 9, 10].contains(&line.len()),
                 "Row has wrong quantities of columns: {} {}",
@@ -1331,7 +1334,7 @@ fn test_performance_new() {
                 r,
                 line[2]
             );
-            assert!(line[0].starts_with(get_instance(endpoint).as_str()));
+            assert!(line[0].starts_with(get_sid(endpoint).as_str()));
         });
     }
 }
@@ -1348,7 +1351,7 @@ fn test_performance_old() {
         assert!(rows.len() > 30);
         rows.iter().for_each(|r| {
             let line: Vec<&str> = r.split("|").collect();
-            assert!(line[0].starts_with(get_instance(endpoint).as_str()));
+            assert!(line[0].starts_with(get_sid(endpoint).as_str()));
             assert!(
                 [4, 5, 7, 9, 10].contains(&line.len()),
                 "Row has wrong quantities of columns: {} {}",

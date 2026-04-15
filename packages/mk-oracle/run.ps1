@@ -39,6 +39,14 @@ $work_dir = "$pwd"
 $cargo_toolchain = "1.90.0" # to be in sync with rust toolchain/bazel/etc
 $cargo_target = "x86_64-pc-windows-msvc"
 
+# Oracle Test Database Params
+$test_host = "oracle-rocky-ci.lan.checkmk.net"
+$test_port = 1521
+$test_service = "testdb23"
+$test_instance = "testdb23"
+$test_sid = "SID23"
+$test_user = "system"
+
 $packBuild = $false
 $packClippy = $false
 $packFormat = $false
@@ -273,12 +281,13 @@ try {
         # for local test you may add this
         # $env:CI_ORA1_DB_TEST="localhost:SYS:Oracle-dba:1521:XE:sysdba::_:_:"
         Write-Host "Component test!" -Foreground White
-        if ($env:CI_ORA2_DB_TEST_PASSWORD -eq "") {
-            Write-Host "CI_ORA2_DB_TEST_PASSWORD is absent, component testing may fail" -ForegroundColor Red
+        if ($env:CI_ORA_TEST_PASSWORD -eq "") {
+            Write-Host "CI_ORA_TEST_PASSWORD is absent, component testing may fail" -ForegroundColor Red
+            exit 1
         }
-        $pass = $env:CI_ORA2_DB_TEST_PASSWORD
-        $env:CI_ORA2_DB_TEST = "ora-rocktest.dev.checkmk.net:system:${pass}:1521:TEST23::TEST23:_:_:"
-        Write-Host "CI_ORA2_DB_TEST set from CI_ORA2_DB_TEST_PASSWORD" -ForegroundColor Green
+        $pass = $env:CI_ORA_TEST_PASSWORD
+        $env:CI_ORA2_DB_TEST = "${test_host}:${test_user}:${pass}:${test_port}:${test_instance}::${test_service}:${test_sid}:_:"
+        Write-Host "CI_ORA2_DB_TEST set from CI_ORA_TEST_PASSWORD" -ForegroundColor Green
 
         # Invoke-Cargo-With-Explicit-Package "test" "--release" "--target" $cargo_target  "--" "--test-threads=4"
         # Write-Host "Tests OK!" -ForegroundColor Green

@@ -14,12 +14,12 @@ oracle:
       - instance: # special section
     discovery: # optional, defines instances to be monitored
       detect: no # optional
-      include: ["TEST23"] # optional
+      include: ["DOESNTMATTER SID23"] # optional
       exclude: [] # optional
     instances: # optional
-      - service_name: TEST23
+      - service_name: dbtest23
         connection: # mandatory
-          hostname: ora-rocktest.dev.checkmk.net
+          hostname: oracle-rocky-ci.lan.checkmk.net
           port: 1521
         authentication: # mandatory
           username: $CI_ORA2_DB_TEST

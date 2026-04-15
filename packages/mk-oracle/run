@@ -20,6 +20,14 @@ set -e
 JOBS=6
 readonly ALL_LINTERS=clippy
 
+# Oracle Test Database Params
+test_host=oracle-rocky-ci.lan.checkmk.net
+test_port=1521
+test_service=dbtest23
+test_instance=dbtest23
+test_sid=SID23
+test_user=system
+
 if
     getopt --test >/dev/null 2>&1
     [ $? -eq 4 ]
@@ -199,10 +207,10 @@ setup_tests() {
 }
 
 run_test_component() {
-    if [[ -z "${CI_ORA2_DB_TEST_PASSWORD}" ]]; then
-        failure "CI_ORA2_DB_TEST_PASSWORD is not set in the environment, component testing will fail."
+    if [[ -z "${CI_ORA_TEST_PASSWORD}" ]]; then
+        failure "CI_ORA_TEST_PASSWORD is not set in the environment, component testing will fail."
     fi
-    export CI_ORA2_DB_TEST="ora-rocktest.dev.checkmk.net:system:$CI_ORA2_DB_TEST_PASSWORD:1521:TEST23::TEST23:_:_:"
+    export CI_ORA2_DB_TEST="$test_host:$test_user:$CI_ORA_TEST_PASSWORD:$test_port:$test_instance::$test_service:$test_sid:_:"
     echo "CI_ORA2_DB_TEST is constructed and exported"
     setup_tests
 

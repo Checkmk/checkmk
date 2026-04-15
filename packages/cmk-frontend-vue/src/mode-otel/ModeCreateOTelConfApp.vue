@@ -5,7 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 
 <script setup lang="ts">
-import { ref, useTemplateRef } from 'vue'
+import { computed, ref, useTemplateRef } from 'vue'
 
 import usei18n from '@/lib/i18n'
 
@@ -24,7 +24,7 @@ import type {
   EventConsoleConfig
 } from './otel-configuration-steps/ConfigureCollector.vue'
 import ConfigureGeneralProperties from './otel-configuration-steps/ConfigureGeneralProperties.vue'
-import ConfigureHosts from './otel-configuration-steps/ConfigureHosts.vue'
+import ConfigureInstrumentation from './otel-configuration-steps/ConfigureInstrumentation.vue'
 
 const props = defineProps<{
   no_auth_allowed: boolean
@@ -67,6 +67,11 @@ const grpcEncryption = ref<boolean>(false)
 const httpEncryption = ref<boolean>(false)
 const grpcEventConsole = ref<EventConsoleConfig | null>(null)
 const httpEventConsole = ref<EventConsoleConfig | null>(null)
+
+// Cloud has event_console_allowed=false so both refs stay null there.
+const sendLogsToEc = computed(
+  () => grpcEventConsole.value !== null || httpEventConsole.value !== null
+)
 
 const close = () => {
   // TODO: trigger activate changes
@@ -139,12 +144,42 @@ const close = () => {
     <CmkWizardStep :index="3" :is-completed="() => currentStep > 3">
       <template #header>
         <CmkHeading>
-          {{ _t('Configure host folder') }}
+          {{ _t('Adjust your OpenTelemetry instrumentation') }}
         </CmkHeading>
+
+        <CmkParagraph>{{
+          _t(
+            'This step guides the user through configuring their OpenTelemetry instrumentation so that telemetry data can be sent to Checkmk.'
+          )
+        }}</CmkParagraph>
       </template>
       <template #content>
-        <ConfigureHosts />
+        <ConfigureInstrumentation
+          :site-name="siteId ?? ''"
+          :grpc-endpoint="grpcEndpoint"
+          :http-endpoint="httpEndpoint"
+          :grpc-tls-enabled="grpcEncryption"
+          :http-tls-enabled="httpEncryption"
+          :grpc-auth="grpcAuth"
+          :http-auth="httpAuth"
+          :send-logs-to-ec="sendLogsToEc"
+        />
       </template>
+
+      <template #actions>
+        <CmkWizardButton type="next" :validation-cb="validateCollector" />
+        <CmkWizardButton type="previous" />
+      </template>
+    </CmkWizardStep>
+    <CmkWizardStep :index="4" :is-completed="() => currentStep > 4">
+      <template #header>
+        <CmkHeading>
+          {{ _t('Finalize configuration') }}
+        </CmkHeading>
+
+        <CmkParagraph>{{ _t('Get your configuration ready to be applied.') }}</CmkParagraph>
+      </template>
+      <template #content> </template>
       <template #actions>
         <CmkWizardButton
           type="finish"

@@ -2621,7 +2621,7 @@ run_cached() {
     }
 
     # Time to refresh cache file and new job not yet running?
-    if [ $((NOW - MTIME)) -gt "${REFRESH_INTERVAL}" ] && [ ! -e "$(_cfile_in_use)" ]; then
+    if [ $((NOW - MTIME)) -ge "${REFRESH_INTERVAL}" ] && [ ! -e "$(_cfile_in_use)" ]; then
         THIS_SHELL="$(ps -o args= -p $$ | sed -e 's/^-//' -e 's/\ .*//')"
         # Start it. If the command fails the output is thrown away
         if $MK_ORA_DEBUG; then

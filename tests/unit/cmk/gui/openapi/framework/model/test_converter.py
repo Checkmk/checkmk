@@ -12,7 +12,6 @@ from pytest_mock import MockerFixture
 
 from cmk.ccc.user import UserId
 from cmk.gui.config import active_config
-from cmk.gui.exceptions import MKAuthException
 from cmk.gui.groups import GroupType
 from cmk.gui.openapi.framework.model import ApiOmitted, json_dump_without_omitted
 from cmk.gui.openapi.framework.model.converter import (
@@ -303,7 +302,7 @@ class TestHostConverter:
     ) -> None:
         with (
             UserContext(UserId("made-up"), UserPermissions({}, {}, {}, [])),
-            pytest.raises(MKAuthException),
+            pytest.raises(ValueError, match="Host .* not found"),
         ):
             HostConverter(permission_type=permission_type).host_name(sample_host)
 

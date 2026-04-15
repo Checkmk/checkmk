@@ -17,6 +17,7 @@ from cmk.ccc.user import UserId
 from cmk.gui import sites, userdb
 from cmk.gui.config import active_config, builtin_role_ids
 from cmk.gui.customer import customer_api
+from cmk.gui.exceptions import MKAuthException
 from cmk.gui.groups import GroupName, GroupType
 from cmk.gui.logged_in import user
 from cmk.gui.openapi.framework.model import ApiOmitted
@@ -142,7 +143,11 @@ class HostConverter:
         if self.permission_type == "monitor":
             return
 
-        host.permissions.need_permission("read")
+        try:
+            host.permissions.need_permission("read")
+        except MKAuthException:
+            raise ValueError(f"Host {host.name()!r} not found or access denied")
+
         if self.permission_type == "setup_write":
             host.permissions.need_permission("write")
 

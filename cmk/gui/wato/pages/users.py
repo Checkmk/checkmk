@@ -690,7 +690,7 @@ class ModeUsers(WatoMode):
                     role_links = [
                         (
                             folder_preserving_link([("mode", "edit_role"), ("edit", role)]),
-                            roles[role].get("alias") if role in roles else role,
+                            roles[role]["alias"] if role in roles else role,
                         )
                         for role in user_spec["roles"]
                     ]

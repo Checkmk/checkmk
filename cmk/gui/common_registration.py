@@ -53,6 +53,7 @@ from cmk.gui.openapi.framework.registry import VersionedEndpointRegistry
 from cmk.gui.openapi.restful_objects.endpoint_family import EndpointFamilyRegistry
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.pages import PageRegistry
+from cmk.gui.pagetypes import registration as pagetypes_registration
 from cmk.gui.painter.v0 import PainterRegistry
 from cmk.gui.painter_options import PainterOptionRegistry
 from cmk.gui.permissions import PermissionRegistry, PermissionSectionRegistry
@@ -167,7 +168,12 @@ def register(
 ) -> None:
     hooks.register_thread_cache_cleanup()
     notification_parameter_registry.register_form_spec_plugin = register_plugin
-    pagetypes.register(main_menu_registry, builtin_pagetype_topic_registry)
+    pagetypes_registration.register(
+        main_menu_registry,
+        builtin_pagetype_topic_registry,
+        versioned_endpoint_registry,
+        endpoint_family_registry,
+    )
     search_menu.register(main_menu_registry)
     help_menu.register(
         main_menu_registry,

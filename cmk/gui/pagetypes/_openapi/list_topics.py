@@ -23,7 +23,7 @@ from cmk.gui.openapi.framework.model.base_models import (
     LinkModel,
 )
 from cmk.gui.openapi.restful_objects.constructors import collection_href
-from cmk.gui.pagetypes import PagetypeTopics
+from cmk.gui.pagetypes._core import PagetypeTopics
 from cmk.gui.utils import permission_verification as permissions
 
 from ._family import PAGETYPE_TOPIC_FAMILY

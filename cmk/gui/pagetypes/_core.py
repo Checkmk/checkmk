@@ -71,7 +71,6 @@ from cmk.gui.page_menu import (
 )
 from cmk.gui.pages import Page, page_registry, PageContext, PageEndpoint, PageHandler
 from cmk.gui.permissions import (
-    declare_dynamic_permissions,
     declare_permission_section,
     Permission,
     permission_registry,
@@ -2421,9 +2420,6 @@ class PagetypeTopics(Overridable[PagetypeTopicConfig]):
         return [cls.default_topic()]
 
 
-declare(PagetypeTopics)
-
-
 def _no_bi_aggregate_active() -> bool:
     return bool(
         not store.load_object_from_file(
@@ -2585,6 +2581,3 @@ def _load_pagetype_permissions() -> None:
     user_permissions = UserPermissions.from_config(active_config, permission_registry)
     for pagetype in all_page_types().values():
         pagetype.load(user_permissions)
-
-
-declare_dynamic_permissions(_load_pagetype_permissions)

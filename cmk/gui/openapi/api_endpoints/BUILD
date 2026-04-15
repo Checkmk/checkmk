@@ -3,13 +3,7 @@ load("@cmk_requirements//:requirements.bzl", "requirement")
 
 py_library(
     name = "api_endpoints",
-    srcs = glob(
-        include = ["**/*.py"],
-        exclude = [
-            # Blocked: needs cmk.gui.pagetypes (monolithic)
-            "pagetype_topic/**/*.py",
-        ],
-    ),
+    srcs = glob(include = ["**/*.py"]),
     imports = ["../../../.."],
     visibility = [
         "//cmk:__subpackages__",
@@ -58,13 +52,4 @@ py_library(
         "//packages/cmk-ccc:version",
         requirement("python-dateutil"),
     ],
-)
-
-# Temporary: api_endpoint files that still belong to the monolithic //cmk/gui target.
-filegroup(
-    name = "gui_srcs",
-    srcs = glob(include = [
-        "pagetype_topic/**/*.py",
-    ]),
-    visibility = ["//cmk/gui:__pkg__"],
 )

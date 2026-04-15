@@ -490,6 +490,7 @@ py_wheel(
         "//cmk/gui/openapi/spec",
         "//cmk/gui/openapi/spec:utils",
         "//cmk/gui/openapi/spec/spec_generator",
+        "//cmk/gui/pagetypes",
         "//cmk/gui/quick_setup",
         "//cmk/gui/rest_api_types:notifications",
         "//cmk/gui/rule_specs:compatibility",

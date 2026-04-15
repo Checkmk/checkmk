@@ -37,7 +37,7 @@ from cmk.gui.openapi.endpoints import (
 )
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 
-from .api_endpoints import agent_download, icon, pagetype_topic, site_management
+from .api_endpoints import agent_download, icon, site_management
 from .api_endpoints import host_config as api_host_config
 from .api_endpoints import host_config_internal as api_host_config_internal
 from .api_endpoints.graph_timerange import registration as api_graph_timerange
@@ -102,10 +102,6 @@ def register(
         endpoint_family_registry=endpoint_family_registry,
     )
     api_graph_timerange.register(
-        versioned_endpoint_registry=versioned_endpoint_registry,
-        endpoint_family_registry=endpoint_family_registry,
-    )
-    pagetype_topic.register(
         versioned_endpoint_registry=versioned_endpoint_registry,
         endpoint_family_registry=endpoint_family_registry,
     )

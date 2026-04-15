@@ -1,6 +1,8 @@
-load("@aspect_rules_js//js:defs.bzl", "js_library")
+load("@aspect_bazel_lib//lib:copy_to_directory.bzl", "copy_to_directory")
+load("@aspect_rules_js//js:defs.bzl", "js_binary", "js_library", "js_run_binary")
 load("@npm//:defs.bzl", "npm_link_all_packages")
 load("@npm//:vitest/package_json.bzl", vitest_bin = "bin")
+load("@npm//.ide/vscode:@vscode/vsce/package_json.bzl", vsce_bin = "bin")
 load("@rules_python//python:defs.bzl", "py_binary")
 
 npm_link_all_packages(name = "node_modules")
@@ -47,46 +49,56 @@ py_binary(
     srcs = ["scripts/generate_changelog.py"],
 )
 
-genrule(
-    name = "vsix",
-    srcs = glob(
-        [
-            "src/**",
-            "config/**",
-            "icons/**",
-            "docs/**",
-            "scripts/**",
-            "changelog/**",
-        ],
-        allow_empty = True,
-        exclude = [
-            "node_modules/**",
-            "out/**",
-            "*.vsix",
-        ],
-    ) + [
-        "package.json",
-        "tsconfig.json",
-        "esbuild.js",
+js_binary(
+    name = "esbuild_bundler",
+    data = [":node_modules/esbuild"],
+    entry_point = "esbuild.js",
+)
+
+js_run_binary(
+    name = "bundle",
+    srcs = [":src_ts"],
+    chdir = package_name(),
+    out_dirs = ["out"],
+    tool = ":esbuild_bundler",
+)
+
+copy_to_directory(
+    name = "vsix_staging",
+    srcs = [
         ".vscodeignore",
         "CLAUDE.md",
         "README.md",
         "icon.png",
         "icon.svg",
-    ],
+        "package.json",
+        ":bundle",
+    ] + glob(
+        [
+            "config/**",
+            "docs/**",
+            "icons/**",
+            "scripts/**",
+            "changelog/**",
+        ],
+        allow_empty = True,
+    ),
+    root_paths = [package_name()],
+)
+
+vsce_bin.vsce(
+    name = "vsix",
+    srcs = [":vsix_staging"],
     outs = ["cmk-vscode.vsix"],
-    cmd = """
-        ROOT=$$PWD
-        EXT_DIR=$$(dirname $(location package.json))
-        cd "$$EXT_DIR"
-        node esbuild.js
-        npx @vscode/vsce package --no-dependencies -o cmk-vscode.vsix 2>&1
-        mkdir -p $$(dirname "$$ROOT/$@")
-        cp cmk-vscode.vsix "$$ROOT/$@"
-    """,
-    local = True,
-    tags = [
-        "manual",
-        "no-remote",
+    args = [
+        "package",
+        "--no-dependencies",
+        # Skip secretlint scan — it can't resolve its rules from the pnpm
+        # node_modules layout. The extension source is public anyway.
+        "--allow-package-all-secrets",
+        "--allow-package-env-file",
+        "-o",
+        "../cmk-vscode.vsix",
     ],
+    chdir = package_name() + "/vsix_staging",
 )

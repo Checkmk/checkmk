@@ -49,7 +49,7 @@ Always run both steps together. Never skip the install step.
 
 - **TypeScript** (`tsconfig.json`): Target ES2022, strict mode, CommonJS output to `out/`
 - **esbuild** (`esbuild.js`): Bundles `src/extension.ts` → `out/extension.js`, CSS imported as text via `loader: { '.css': 'text' }`, `vscode` marked external
-- **Bazel** (`BUILD`): genrule runs `npm ci` → `node esbuild.js` → `npx @vscode/vsce package`
+- **Bazel** (`BUILD`): `js_run_binary` runs `esbuild.js` (bundles to `out/extension.js`), then `vsce_bin.vsce` packages a staged copy into `cmk-vscode.vsix`. Deps come from the root pnpm workspace; no `npm ci` at build time.
 - **CSS type declarations**: `src/css.d.ts` allows `import css from './style.css'` as string
 
 ### Entry Point (`src/extension.ts`)

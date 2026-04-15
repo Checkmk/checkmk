@@ -19,9 +19,9 @@ mkdir -p "$MK_VARDIR" >/dev/null 2>&1
 export TNS_ADMIN="${MK_CONFDIR}"
 
 export DB_USER="system"
-export DB_PASSWORD="${CI_ORA2_DB_TEST_PASSWORD}"
-export DB_HOST="ora-rocktest.dev.checkmk.net"
-export DB_SERVICE_NAME="TEST23"
+export DB_PASSWORD="${CI_ORA_TEST_PASSWORD}"
+export DB_HOST="oracle-rocky-ci.lan.checkmk.net"
+export DB_SERVICE_NAME="dbtest23"
 export DB_SECTION="${DB_SECTION:-instance}"
 envsubst <"${MK_CONFDIR}/mk_oracle.cfg.conf" >"${MK_CONFDIR}/mk_oracle.cfg"
 

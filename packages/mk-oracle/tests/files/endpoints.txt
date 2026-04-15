@@ -25,4 +25,4 @@
 # * service_name and instance_name can be the same
 # * you may set CI_ORA2_DB_TEST manually too#
 #
-$CI_ORA2_DB_TEST # typically "oracle-win.dev.checkmk.net:<user>:<password>:1521:FREE::FREE.oratest:_:_"
+$CI_ORA2_DB_TEST # typically "oracle-rocky-ci.lan.checkmk.net:<user>:<password>:1521:dbtest23::SID23:_:_"

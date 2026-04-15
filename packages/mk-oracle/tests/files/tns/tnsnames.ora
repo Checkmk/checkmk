@@ -13,10 +13,10 @@ ora_local =
 ora_remote =
   (DESCRIPTION =
   (ADDRESS_LIST =
-  (ADDRESS = (PROTOCOL = TCP)(HOST =  ora-rocktest.dev.checkmk.net)(PORT = 1521))
+  (ADDRESS = (PROTOCOL = TCP)(HOST =  oracle-rocky-ci.lan.checkmk.net)(PORT = 1521))
   )
   (CONNECT_DATA =
-  (SID = TEST23)
+  (SID = SID23)
   (SERVER = DEDICATED)
   )
   )

@@ -32,7 +32,7 @@ const SQL_DB_ENDPOINT_SID: usize = 7;
 // See ticket CMK-23904 for details on the format of this environment variable.
 // CI_ORA1_DB_TEST=ora1.lan.tribe29.net:system:ABcd#1234:1521:XE:sysdba:_:_:_
 #[allow(dead_code)]
-#[derive(Debug, PartialEq, Clone)]
+#[derive(PartialEq, Clone)]
 pub struct SqlDbEndpoint {
     pub host: String,
     pub user: String,
@@ -42,6 +42,21 @@ pub struct SqlDbEndpoint {
     pub service_name: String,
     pub instance_name: Option<String>,
     pub sid: Option<String>,
+}
+
+impl fmt::Debug for SqlDbEndpoint {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        f.debug_struct("SqlDbEndpoint")
+            .field("host", &self.host)
+            .field("user", &self.user)
+            .field("pwd", &"***")
+            .field("port", &self.port)
+            .field("role", &self.role)
+            .field("service_name", &self.service_name)
+            .field("instance_name", &self.instance_name)
+            .field("sid", &self.sid)
+            .finish()
+    }
 }
 
 impl SqlDbEndpoint {

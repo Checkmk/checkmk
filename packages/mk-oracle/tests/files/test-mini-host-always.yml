@@ -5,9 +5,9 @@ oracle:
     options: # optional
       use_host_client: never # optional, default: no, values: auto, never, always, "path-to-oci-lib"
     connection: # mandatory
-      hostname: ora-rocktest.dev.checkmk.net
+      hostname: oracle-rocky-ci.lan.checkmk.net
       port: 1521
-      service_name: TEST23
+      service_name: dbtest23
     authentication: # mandatory
       username: $CI_ORA2_DB_TEST
       password: $CI_ORA2_DB_TEST

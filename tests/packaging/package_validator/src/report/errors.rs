@@ -5,12 +5,14 @@
 //! Defines error types for report validation (e.g., system dependencies found in package).
 
 use serde::Serialize;
-use std::collections::HashMap;
-use std::path::Path;
+use std::collections::{BTreeMap, HashMap, HashSet, VecDeque};
+use std::fmt;
+use std::path::{Path, PathBuf};
 use thiserror::Error;
 
+use super::dependency_resolver::{DependencyKind, DependencyResolverResult, DependencyStatus};
 use super::system_dependencies::SystemDependencies;
-use crate::package::Package;
+use crate::package::{Package, PackageElfs};
 use crate::report::symlink_resolver::{SymlinkResolutionResult, SymlinkResolver};
 
 pub(crate) type SystemDependencyResolutionErrors<'a> = Vec<ReportError<'a>>;
@@ -25,6 +27,86 @@ pub(crate) enum ReportError<'a> {
         dependency: &'a str,
         paths: Vec<&'a Path>,
     },
+}
+
+/// An ELF binary has `DT_RUNPATH` but uses `dlopen()` or `libltdl` to load
+/// plugins at runtime. `DT_RUNPATH` is not inherited by `dlopen()` calls in the
+/// process; `DT_RPATH` is required to make the bundled library path available to
+/// runtime-loaded modules.
+#[derive(Debug, Serialize)]
+pub(crate) struct DlopenRunpathError<'a> {
+    pub(crate) path: &'a Path,
+}
+
+impl fmt::Display for DlopenRunpathError<'_> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "{}: has DT_RUNPATH but uses dlopen() or libltdl — \
+             dynamic modules won't be found via RUNPATH at runtime; \
+             use DT_RPATH instead (set force_rpath = True in set_runpath)",
+            self.path.display()
+        )
+    }
+}
+
+pub(crate) type DlopenRunpathErrors<'a> = Vec<DlopenRunpathError<'a>>;
+
+/// Scans for ELF files that have `DT_RUNPATH` but transitively use `dlopen()` or
+/// `libltdl` via any bundled dependency. Such binaries need `DT_RPATH` because
+/// `DT_RUNPATH` is not inherited by `dlopen()` calls anywhere in the process.
+pub(crate) fn scan_for_runpath_dlopen_conflicts<'a>(
+    elfs: &PackageElfs<'a>,
+    dependencies: &BTreeMap<&'a Path, HashMap<&'a str, DependencyResolverResult>>,
+) -> DlopenRunpathErrors<'a> {
+    let mut errors: Vec<_> = elfs
+        .iter()
+        .filter(|(_, elf)| {
+            !elf.runpath().is_empty() && elf.rpath().is_empty() && elf.has_interpreter()
+        })
+        .filter(|(path, _)| transitive_uses_dlopen(path, elfs, dependencies))
+        .map(|(path, _)| DlopenRunpathError { path })
+        .collect();
+    errors.sort_by_key(|e| e.path);
+    errors
+}
+
+/// BFS over bundled deps of `root`. Returns `true` if any reachable ELF uses
+/// `dlopen()` or `libltdl`. Only `DependencyKind::Package` deps are walked;
+/// system deps are excluded because they're not in the package.
+fn transitive_uses_dlopen<'a>(
+    root: &Path,
+    elfs: &PackageElfs<'a>,
+    dependencies: &BTreeMap<&'a Path, HashMap<&'a str, DependencyResolverResult>>,
+) -> bool {
+    let mut visited: HashSet<PathBuf> = HashSet::new();
+    let mut queue: VecDeque<PathBuf> = VecDeque::new();
+    queue.push_back(root.to_path_buf());
+
+    while let Some(current) = queue.pop_front() {
+        if !visited.insert(current.clone()) {
+            continue;
+        }
+        let Some(elf) = elfs.get(current.as_path()) else {
+            continue;
+        };
+        if elf.uses_dlopen() {
+            return true;
+        }
+        // Enqueue bundled (Package) deps that resolved to a known path.
+        if let Some(dep_map) = dependencies.get(current.as_path()) {
+            for result in dep_map.values() {
+                if result.kind == DependencyKind::Package
+                    && result.status == DependencyStatus::Found
+                {
+                    if let Some(dep_path) = &result.path {
+                        queue.push_back(dep_path.clone());
+                    }
+                }
+            }
+        }
+    }
+    false
 }
 
 /// Scans a package for errors.
@@ -76,7 +158,11 @@ pub(crate) fn scan_for_errors<'a>(
 mod tests {
     use super::*;
     use crate::package::{Package, PackageFile, PackageFiles};
+    use crate::report::dependency_resolver::{
+        DependencyKind, DependencyResolverResult, DependencyStatus,
+    };
     use crate::report::symlink_resolver::SymlinkResolver;
+    use std::collections::BTreeMap;
     use std::io::Write;
     use std::path::{Path, PathBuf};
     use tempfile::NamedTempFile;
@@ -413,6 +499,252 @@ mod tests {
 
         let errors = scan_for_errors(&package, &symlink_resolver, &system_deps);
         // The symlink chain resolves to a file outside the package, so it should NOT generate an error
+        assert!(errors.is_empty());
+    }
+
+    // ---- scan_for_runpath_dlopen_conflicts tests ----
+
+    /// Make a main executable (has PT_INTERP).
+    fn make_elf(rpath: Vec<&str>, runpath: Vec<&str>, uses_dlopen: bool) -> PackageFile {
+        use crate::package::{Elf, ElfType};
+        PackageFile::Elf(Elf::new_for_testing(
+            ElfType::Executable,
+            Vec::new(),
+            rpath.into_iter().map(String::from).collect(),
+            runpath.into_iter().map(String::from).collect(),
+            uses_dlopen,
+            true, // has_interpreter — executables have PT_INTERP
+        ))
+    }
+
+    /// Make a shared library (no PT_INTERP).
+    fn make_lib(rpath: Vec<&str>, runpath: Vec<&str>, uses_dlopen: bool) -> PackageFile {
+        use crate::package::{Elf, ElfType};
+        PackageFile::Elf(Elf::new_for_testing(
+            ElfType::SharedObject,
+            Vec::new(),
+            rpath.into_iter().map(String::from).collect(),
+            runpath.into_iter().map(String::from).collect(),
+            uses_dlopen,
+            false, // has_interpreter — shared libs do not have PT_INTERP
+        ))
+    }
+
+    #[test]
+    fn test_no_error_when_elf_has_no_runpath() {
+        let package = create_test_package(vec![(
+            "/bin/myapp",
+            make_elf(vec!["/usr/lib"], vec![], false),
+        )]);
+        let elfs = package.elfs();
+        let errors = scan_for_runpath_dlopen_conflicts(&elfs, &BTreeMap::new());
+        assert!(errors.is_empty());
+    }
+
+    #[test]
+    fn test_no_error_when_elf_has_rpath_not_runpath() {
+        // DT_RPATH is fine — it IS inherited by dlopen()
+        let package = create_test_package(vec![(
+            "/bin/myapp",
+            make_elf(vec!["$ORIGIN/../lib"], vec![], true),
+        )]);
+        let elfs = package.elfs();
+        let errors = scan_for_runpath_dlopen_conflicts(&elfs, &BTreeMap::new());
+        assert!(errors.is_empty());
+    }
+
+    #[test]
+    fn test_no_error_when_elf_has_runpath_but_no_dlopen() {
+        let package = create_test_package(vec![(
+            "/bin/myapp",
+            make_elf(vec![], vec!["$ORIGIN/../lib"], false),
+        )]);
+        let elfs = package.elfs();
+        let errors = scan_for_runpath_dlopen_conflicts(&elfs, &BTreeMap::new());
+        assert!(errors.is_empty());
+    }
+
+    #[test]
+    fn test_error_when_elf_has_runpath_and_uses_dlopen() {
+        let package = create_test_package(vec![(
+            "/bin/myapp",
+            make_elf(vec![], vec!["$ORIGIN/../lib"], true),
+        )]);
+        let elfs = package.elfs();
+        let errors = scan_for_runpath_dlopen_conflicts(&elfs, &BTreeMap::new());
+        assert_eq!(errors.len(), 1);
+        assert_eq!(errors[0].path, Path::new("/bin/myapp"));
+        assert!(errors[0].to_string().contains("DT_RUNPATH"));
+        assert!(errors[0].to_string().contains("force_rpath"));
+    }
+
+    #[test]
+    fn test_multiple_flagged_files() {
+        let package = create_test_package(vec![
+            ("/bin/app_a", make_elf(vec![], vec!["$ORIGIN/../lib"], true)),
+            (
+                "/bin/app_b",
+                make_elf(vec![], vec!["$ORIGIN/../lib"], false),
+            ),
+            ("/bin/app_c", make_elf(vec![], vec!["$ORIGIN/../lib"], true)),
+        ]);
+        let elfs = package.elfs();
+        let errors = scan_for_runpath_dlopen_conflicts(&elfs, &BTreeMap::new());
+        assert_eq!(errors.len(), 2);
+        let paths: Vec<_> = errors.iter().map(|e| e.path).collect();
+        assert!(paths.contains(&Path::new("/bin/app_a")));
+        assert!(paths.contains(&Path::new("/bin/app_c")));
+    }
+
+    #[test]
+    fn test_error_message_mentions_key_details() {
+        let package = create_test_package(vec![(
+            "/bin/xmlsec1",
+            make_elf(vec![], vec!["$ORIGIN/../lib"], true),
+        )]);
+        let elfs = package.elfs();
+        let errors = scan_for_runpath_dlopen_conflicts(&elfs, &BTreeMap::new());
+        let msg = errors[0].to_string();
+        assert!(msg.contains("xmlsec1"), "should mention the binary path");
+        assert!(msg.contains("DT_RUNPATH"), "should name DT_RUNPATH");
+        assert!(msg.contains("DT_RPATH"), "should name DT_RPATH as the fix");
+        assert!(msg.contains("force_rpath"), "should mention force_rpath");
+    }
+
+    // ---- transitive dependency walk tests ----
+
+    fn make_package_dep(path: PathBuf) -> DependencyResolverResult {
+        DependencyResolverResult::new(
+            DependencyStatus::Found,
+            DependencyKind::Package,
+            vec![],
+            path,
+        )
+    }
+
+    fn make_system_dep() -> DependencyResolverResult {
+        DependencyResolverResult::new(
+            DependencyStatus::Found,
+            DependencyKind::System,
+            vec![],
+            None,
+        )
+    }
+
+    #[test]
+    fn test_transitive_dlopen_via_one_hop_bundled_dep() {
+        // Root has RUNPATH but no direct dlopen; its bundled dep does → root flagged.
+        let dep_path = PathBuf::from("/lib/libpluginhost.so.1");
+        let package = create_test_package(vec![
+            (
+                "/bin/myapp",
+                make_elf(vec![], vec!["$ORIGIN/../lib"], false),
+            ),
+            ("/lib/libpluginhost.so.1", make_lib(vec![], vec![], true)),
+        ]);
+        let elfs = package.elfs();
+
+        let mut root_deps: HashMap<&str, DependencyResolverResult> = HashMap::new();
+        root_deps.insert("libpluginhost.so.1", make_package_dep(dep_path));
+        let mut dependencies: BTreeMap<&Path, HashMap<&str, DependencyResolverResult>> =
+            BTreeMap::new();
+        dependencies.insert(Path::new("/bin/myapp"), root_deps);
+
+        let errors = scan_for_runpath_dlopen_conflicts(&elfs, &dependencies);
+        assert_eq!(errors.len(), 1);
+        assert_eq!(errors[0].path, Path::new("/bin/myapp"));
+    }
+
+    #[test]
+    fn test_transitive_dlopen_two_hops() {
+        // Root → dep → dep2 (uses dlopen, two hops) → root flagged.
+        let dep_path = PathBuf::from("/lib/libmiddle.so.1");
+        let dep2_path = PathBuf::from("/lib/libdluser.so.1");
+        let package = create_test_package(vec![
+            (
+                "/bin/myapp",
+                make_elf(vec![], vec!["$ORIGIN/../lib"], false),
+            ),
+            ("/lib/libmiddle.so.1", make_lib(vec![], vec![], false)),
+            ("/lib/libdluser.so.1", make_lib(vec![], vec![], true)),
+        ]);
+        let elfs = package.elfs();
+
+        let mut root_deps: HashMap<&str, DependencyResolverResult> = HashMap::new();
+        root_deps.insert("libmiddle.so.1", make_package_dep(dep_path.clone()));
+        let mut middle_deps: HashMap<&str, DependencyResolverResult> = HashMap::new();
+        middle_deps.insert("libdluser.so.1", make_package_dep(dep2_path));
+        let mut dependencies: BTreeMap<&Path, HashMap<&str, DependencyResolverResult>> =
+            BTreeMap::new();
+        dependencies.insert(Path::new("/bin/myapp"), root_deps);
+        dependencies.insert(Path::new("/lib/libmiddle.so.1"), middle_deps);
+
+        let errors = scan_for_runpath_dlopen_conflicts(&elfs, &dependencies);
+        assert_eq!(errors.len(), 1);
+        assert_eq!(errors[0].path, Path::new("/bin/myapp"));
+    }
+
+    #[test]
+    fn test_no_transitive_error_for_system_dep() {
+        // Root has RUNPATH; its only dep is System kind → not walked, no flag.
+        let package = create_test_package(vec![(
+            "/bin/myapp",
+            make_elf(vec![], vec!["$ORIGIN/../lib"], false),
+        )]);
+        let elfs = package.elfs();
+
+        let mut root_deps: HashMap<&str, DependencyResolverResult> = HashMap::new();
+        root_deps.insert("libltdl.so.7", make_system_dep());
+        let mut dependencies: BTreeMap<&Path, HashMap<&str, DependencyResolverResult>> =
+            BTreeMap::new();
+        dependencies.insert(Path::new("/bin/myapp"), root_deps);
+
+        let errors = scan_for_runpath_dlopen_conflicts(&elfs, &dependencies);
+        assert!(errors.is_empty());
+    }
+
+    #[test]
+    fn test_transitive_dep_graph_cycle_terminates() {
+        // A → B → A (cycle), neither uses dlopen → should terminate without hanging.
+        let path_a = PathBuf::from("/lib/liba.so.1");
+        let path_b = PathBuf::from("/lib/libb.so.1");
+        let package = create_test_package(vec![
+            (
+                "/bin/myapp",
+                make_elf(vec![], vec!["$ORIGIN/../lib"], false),
+            ),
+            ("/lib/liba.so.1", make_lib(vec![], vec![], false)),
+            ("/lib/libb.so.1", make_lib(vec![], vec![], false)),
+        ]);
+        let elfs = package.elfs();
+
+        let mut root_deps: HashMap<&str, DependencyResolverResult> = HashMap::new();
+        root_deps.insert("liba.so.1", make_package_dep(path_a.clone()));
+        let mut a_deps: HashMap<&str, DependencyResolverResult> = HashMap::new();
+        a_deps.insert("libb.so.1", make_package_dep(path_b.clone()));
+        let mut b_deps: HashMap<&str, DependencyResolverResult> = HashMap::new();
+        b_deps.insert("liba.so.1", make_package_dep(path_a));
+        let mut dependencies: BTreeMap<&Path, HashMap<&str, DependencyResolverResult>> =
+            BTreeMap::new();
+        dependencies.insert(Path::new("/bin/myapp"), root_deps);
+        dependencies.insert(Path::new("/lib/liba.so.1"), a_deps);
+        dependencies.insert(Path::new("/lib/libb.so.1"), b_deps);
+
+        let errors = scan_for_runpath_dlopen_conflicts(&elfs, &dependencies);
+        assert!(errors.is_empty());
+    }
+
+    #[test]
+    fn test_no_error_for_shared_lib_with_runpath_and_dlopen() {
+        // A shared library (no PT_INTERP) with DT_RUNPATH + uses_dlopen must NOT be
+        // flagged. Only the main executable's DT_RPATH matters for process-wide dlopen
+        // search; setting DT_RPATH on a shared library is not the fix.
+        let package = create_test_package(vec![(
+            "/lib/libxmlsec1.so.1",
+            make_lib(vec![], vec!["$ORIGIN/../lib"], true),
+        )]);
+        let elfs = package.elfs();
+        let errors = scan_for_runpath_dlopen_conflicts(&elfs, &BTreeMap::new());
         assert!(errors.is_empty());
     }
 }

@@ -27,7 +27,10 @@ use std::path::Path;
 
 use crate::package::{Elf, Package, PackageElfs};
 use dependency_resolver::{DependencyResolver, DependencyResolverResult};
-use errors::{scan_for_errors, SystemDependencyResolutionErrors};
+use errors::{
+    scan_for_errors, scan_for_runpath_dlopen_conflicts, DlopenRunpathErrors,
+    SystemDependencyResolutionErrors,
+};
 use symlink_resolver::SymlinkResolver;
 use totals::ReportTotals;
 
@@ -40,6 +43,7 @@ pub struct Report<'a> {
     package: String,
     totals: ReportTotals,
     pub(super) errors: SystemDependencyResolutionErrors<'a>,
+    pub(super) dlopen_runpath_errors: DlopenRunpathErrors<'a>,
     dependencies: ReportDependencies<'a>,
     files: ReportFiles<'a>,
 }
@@ -81,6 +85,7 @@ impl<'a> Report<'a> {
                 .to_string(),
             totals,
             errors: scan_for_errors(package, &symlink_resolver, system_dependencies),
+            dlopen_runpath_errors: scan_for_runpath_dlopen_conflicts(&active_elfs, &dependencies),
             dependencies,
             // Only interested in the non-ignored ELF files for the report.
             // Using sequential iteration here since parallel collection into BTreeMap

@@ -107,11 +107,17 @@ impl Package {
             .map_err(|e| PackageError::TempDirFailed { source: e })?;
         result
     }
+}
 
-    #[cfg(test)]
-    /// Create a test package with the given files.
-    /// This is only available in test builds.
-    pub(crate) fn new_for_testing(path: PathBuf, files: PackageFiles) -> Self {
-        Self { path, files }
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    impl Package {
+        /// Create a test package with the given files.
+        /// This is only available in test builds.
+        pub(crate) fn new_for_testing(path: PathBuf, files: PackageFiles) -> Self {
+            Self { path, files }
+        }
     }
 }

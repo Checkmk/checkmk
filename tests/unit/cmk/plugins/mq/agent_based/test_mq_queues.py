@@ -11,7 +11,11 @@ from typing import Any
 import pytest
 
 from cmk.agent_based.v2 import Metric, Result, Service, State, StringTable
-from cmk.legacy_checks.mq_queues import check_mq_queues, discover_mq_queues, parse_mq_queues
+from cmk.plugins.mq.agent_based.mq_queues import (
+    check_mq_queues,
+    discover_mq_queues,
+    parse_mq_queues,
+)
 
 
 @pytest.mark.parametrize(

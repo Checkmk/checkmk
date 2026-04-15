@@ -7,6 +7,7 @@ from collections.abc import Sequence
 from dataclasses import asdict
 from typing import Final, override
 
+from cmk.ccc.version import Edition
 from cmk.gui.http import Request
 from cmk.gui.i18n import _
 from cmk.gui.pages import AjaxPage, PageContext, PageResult
@@ -31,6 +32,9 @@ _MONITORING_ENGINE_ROW_LIMIT: Final = 500
 
 
 class PageUnifiedSearch(AjaxPage):
+    def __init__(self, edition: Edition) -> None:
+        self._edition = edition
+
     @override
     def page(self, ctx: PageContext) -> PageResult:
         query = ctx.request.get_str_input_mandatory("q")
@@ -39,7 +43,7 @@ class PageUnifiedSearch(AjaxPage):
         collapser_disabled = self._parse_disabled_collapser(ctx.request)
 
         unified_search_engine = UnifiedSearch(
-            setup_engine=SetupSearchEngine(ctx.config, ctx.request),
+            setup_engine=SetupSearchEngine(self._edition, ctx.config, ctx.request),
             monitoring_engine=MonitoringSearchEngine(
                 ctx.config,
                 ctx.request,

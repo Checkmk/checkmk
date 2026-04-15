@@ -15,6 +15,7 @@ from typing import override, TypeVar
 
 import cmk.gui.view_utils
 from cmk.ccc.hostaddress import HostName
+from cmk.ccc.version import Edition
 from cmk.gui import forms, sites
 from cmk.gui.autocompleters import autocompleter_registry
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
@@ -172,8 +173,8 @@ class ModeFolder(WatoMode):
     def static_permissions() -> Collection[PermissionName]:
         return ["hosts"]
 
-    def __init__(self) -> None:
-        super().__init__()
+    def __init__(self, edition: Edition) -> None:
+        super().__init__(edition)
         try:
             host_name = request.get_ascii_input("host")
         except MKUserError:
@@ -1436,8 +1437,8 @@ class ABCFolderMode(WatoMode, abc.ABC):
     def parent_mode(cls) -> type[WatoMode] | None:
         return ModeFolder
 
-    def __init__(self, is_new: bool) -> None:
-        super().__init__()
+    def __init__(self, edition: Edition, is_new: bool) -> None:
+        super().__init__(edition)
         self._is_new = is_new
         self._folder = self._init_folder()
 
@@ -1588,8 +1589,8 @@ class ModeEditFolder(ABCFolderMode):
     def static_permissions() -> Collection[PermissionName]:
         return ["hosts"]
 
-    def __init__(self) -> None:
-        super().__init__(is_new=False)
+    def __init__(self, edition: Edition) -> None:
+        super().__init__(edition, is_new=False)
 
     @override
     def _init_folder(self) -> Folder:
@@ -1623,8 +1624,8 @@ class ModeCreateFolder(ABCFolderMode):
     def static_permissions() -> Collection[PermissionName]:
         return ["hosts", "manage_folders"]
 
-    def __init__(self) -> None:
-        super().__init__(is_new=True)
+    def __init__(self, edition: Edition) -> None:
+        super().__init__(edition, is_new=True)
 
     @override
     def _init_folder(self) -> Folder:

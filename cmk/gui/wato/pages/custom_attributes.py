@@ -12,6 +12,7 @@ from collections.abc import Collection, Iterable, Sequence
 from datetime import datetime
 
 import cmk.gui.watolib.changes as _changes
+from cmk.ccc.version import Edition
 from cmk.gui import forms
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import active_config, Config
@@ -440,8 +441,8 @@ class ModeEditCustomHostAttr(ModeEditCustomAttr[CustomHostAttrSpec]):
 
 
 class ModeCustomAttrs[T_CustomAttrSpec: CustomAttrSpec](WatoMode):
-    def __init__(self) -> None:
-        super().__init__()
+    def __init__(self, edition: Edition) -> None:
+        super().__init__(edition)
         # TODO: Inappropriate Intimacy: custom host attributes should not now about
         #       custom user attributes and vice versa. The only reason they now about
         #       each other now is that they are stored in one file.

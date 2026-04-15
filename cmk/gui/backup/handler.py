@@ -31,6 +31,7 @@ import cmk.ccc.version as cmk_version
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.plugin_registry import Registry
 from cmk.ccc.site import omd_site
+from cmk.ccc.version import Edition
 from cmk.crypto.hash import HashAlgorithm
 from cmk.crypto.password import Password as PasswordType
 from cmk.crypto.pem import PEMDecodingError
@@ -453,8 +454,8 @@ class ModeBackup(WatoMode[object]):
     def title(self) -> str:
         return _("Site backup")
 
-    def __init__(self, key_store: keypair_store.KeypairStore) -> None:
-        super().__init__()
+    def __init__(self, edition: Edition, key_store: keypair_store.KeypairStore) -> None:
+        super().__init__(edition)
         self.key_store = key_store
 
     def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
@@ -746,8 +747,8 @@ class ModeBackup(WatoMode[object]):
 
 
 class ModeEditBackupJob(WatoMode[object]):
-    def __init__(self, key_store: keypair_store.KeypairStore) -> None:
-        super().__init__()
+    def __init__(self, edition: Edition, key_store: keypair_store.KeypairStore) -> None:
+        super().__init__(edition)
         self.key_store = key_store
         job_ident = request.get_str_input("job")
         self._received_data_from_frontend = False
@@ -1125,8 +1126,8 @@ def show_job_details(job: MKBackupJob) -> None:
 
 
 class ModeBackupJobState(WatoMode[object]):
-    def __init__(self) -> None:
-        super().__init__()
+    def __init__(self, edition: Edition) -> None:
+        super().__init__(edition)
         self._from_vars()
 
     def _from_vars(self) -> None:
@@ -1838,8 +1839,8 @@ class ModeBackupTargets(WatoMode[object]):
 
 
 class ModeEditBackupTarget(WatoMode[object]):
-    def __init__(self) -> None:
-        super().__init__()
+    def __init__(self, edition: Edition) -> None:
+        super().__init__(edition)
         target_ident = request.var("target")
 
         self._received_data_from_frontend = False
@@ -2166,8 +2167,8 @@ class RestoreJob(MKBackupJob):
 
 
 class ModeBackupRestore(WatoMode[object]):
-    def __init__(self, key_store: keypair_store.KeypairStore) -> None:
-        super().__init__()
+    def __init__(self, edition: Edition, key_store: keypair_store.KeypairStore) -> None:
+        super().__init__(edition)
         self.key_store = key_store
         self._load_target()
         if self._target:

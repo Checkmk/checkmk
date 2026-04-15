@@ -266,7 +266,8 @@ type VisibilityCheck = Callable[[str], bool]
 
 
 class PermissionsHandler:
-    def __init__(self, config: Config, request: Request) -> None:
+    def __init__(self, edition: Edition, config: Config, request: Request) -> None:
+        self._edition = edition
         self._config = config
         self._request = request
         self._category_permissions = {
@@ -323,7 +324,7 @@ class PermissionsHandler:
 
         try:
             if mode:
-                mode_registry[mode]().ensure_permissions()
+                mode_registry[mode](self._edition).ensure_permissions()
             else:
                 self._check_if_handling_page_triggers_exception(file_name)
             return True
@@ -668,6 +669,7 @@ class SearchIndexBackgroundJob(BackgroundJob):
 class SetupSearchEngine:
     def __init__(
         self,
+        edition: Edition,
         config: Config,
         request: Request,
         *,
@@ -677,7 +679,7 @@ class SetupSearchEngine:
         self._legacy_engine = IndexSearcher(
             config=config,
             redis_client=redis_client or get_redis_client(),
-            permissions_handler=permissions_handler or PermissionsHandler(config, request),
+            permissions_handler=permissions_handler or PermissionsHandler(edition, config, request),
         )
 
     def search(self, query: str) -> Iterable[UnifiedSearchResultItem]:

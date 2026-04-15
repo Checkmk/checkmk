@@ -11,6 +11,7 @@ from collections.abc import Collection, Sequence
 
 from cmk.ccc.site import SiteId
 from cmk.ccc.user import UserId
+from cmk.ccc.version import Edition
 from cmk.gui.config import Config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.html import html
@@ -89,8 +90,9 @@ class ModePasswords(SimpleListMode[PasswordConfig]):
     def static_permissions() -> Collection[PermissionName]:
         return ["passwords"]
 
-    def __init__(self) -> None:
+    def __init__(self, edition: Edition) -> None:
         super().__init__(
+            edition,
             mode_type=PasswordStoreModeType(),
             store=PasswordStore(),
         )
@@ -240,9 +242,10 @@ class ModeEditPassword(SimpleEditMode[PasswordConfig]):
     def parent_mode(cls) -> type[WatoMode] | None:
         return ModePasswords
 
-    def __init__(self) -> None:
+    def __init__(self, edition: Edition) -> None:
         self._clone_source: PasswordConfig | None = None
         super().__init__(
+            edition,
             mode_type=PasswordStoreModeType(),
             store=PasswordStore(),
         )

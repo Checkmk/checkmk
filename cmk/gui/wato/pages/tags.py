@@ -17,6 +17,7 @@ from typing import cast
 import cmk.gui.watolib.changes as _changes
 import cmk.utils.tags
 from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.version import Edition
 from cmk.gui import forms
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import active_config, Config
@@ -91,8 +92,8 @@ def register(mode_registry: ModeRegistry) -> None:
 
 
 class ABCTagMode(WatoMode, abc.ABC):
-    def __init__(self) -> None:
-        super().__init__()
+    def __init__(self, edition: Edition) -> None:
+        super().__init__(edition)
         self._tag_config_file = TagConfigFile()
         self._load_effective_config()
 
@@ -480,8 +481,8 @@ class ABCEditTagMode(ABCTagMode, abc.ABC):
     def static_permissions() -> Collection[PermissionName]:
         return ["hosttags"]
 
-    def __init__(self) -> None:
-        super().__init__()
+    def __init__(self, edition: Edition) -> None:
+        super().__init__(edition)
         self._id = self._get_id()
         self._new = self._is_new_tag()
 
@@ -704,8 +705,8 @@ class ModeEditAuxtag(ABCEditTagMode):
     def parent_mode(cls) -> type[WatoMode] | None:
         return ModeTags
 
-    def __init__(self) -> None:
-        super().__init__()
+    def __init__(self, edition: Edition) -> None:
+        super().__init__(edition)
 
         if self._new:
             self._aux_tag = cmk.utils.tags.AuxTag(tag_id=TagID(""), title="", topic=None, help=None)
@@ -786,8 +787,8 @@ class ModeEditTagGroup(ABCEditTagMode):
     def parent_mode(cls) -> type[WatoMode] | None:
         return ModeTags
 
-    def __init__(self) -> None:
-        super().__init__()
+    def __init__(self, edition: Edition) -> None:
+        super().__init__(edition)
 
         tg = self._tag_config.get_tag_group(TagGroupID(self._id) if self._id else TagGroupID(""))
         self._untainted_tag_group = (

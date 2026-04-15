@@ -10,6 +10,7 @@ from collections.abc import Collection
 from typing import override
 
 import cmk.utils.paths
+from cmk.ccc.version import Edition
 from cmk.crypto.password import Password
 from cmk.gui.backup import handler
 from cmk.gui.config import active_config
@@ -21,8 +22,8 @@ from cmk.gui.watolib.audit_log import log_audit
 from cmk.gui.watolib.mode import ModeRegistry, WatoMode
 
 
-def register(page_registry: PageRegistry, mode_registry: ModeRegistry) -> None:
-    page_registry.register(PageEndpoint("ajax_backup_job_state", PageAjaxBackupJobState()))
+def register(edition: Edition, page_registry: PageRegistry, mode_registry: ModeRegistry) -> None:
+    page_registry.register(PageEndpoint("ajax_backup_job_state", PageAjaxBackupJobState(edition)))
     mode_registry.register(ModeBackup)
     mode_registry.register(ModeBackupTargets)
     mode_registry.register(ModeEditBackupTarget)
@@ -44,8 +45,8 @@ class ModeBackup(handler.ModeBackup):
     def static_permissions() -> Collection[PermissionName]:
         return ["backups"]
 
-    def __init__(self) -> None:
-        super().__init__(key_store=make_site_backup_keypair_store())
+    def __init__(self, edition: Edition) -> None:
+        super().__init__(edition, key_store=make_site_backup_keypair_store())
 
     def title(self) -> str:
         return _("Site backup")
@@ -92,8 +93,8 @@ class ModeEditBackupJob(handler.ModeEditBackupJob):
     def parent_mode(cls) -> type[WatoMode] | None:
         return ModeBackup
 
-    def __init__(self) -> None:
-        super().__init__(key_store=make_site_backup_keypair_store())
+    def __init__(self, edition: Edition) -> None:
+        super().__init__(edition, key_store=make_site_backup_keypair_store())
 
 
 class ModeBackupJobState(handler.ModeBackupJobState):
@@ -111,6 +112,9 @@ class ModeBackupJobState(handler.ModeBackupJobState):
 
 
 class PageAjaxBackupJobState(AjaxPage):
+    def __init__(self, edition: Edition) -> None:
+        self._edition = edition
+
     # TODO: Better use AjaxPage.handle_page() for standard AJAX call error handling. This
     # would need larger refactoring of the generic html.popup_trigger() mechanism.
     @override
@@ -123,7 +127,7 @@ class PageAjaxBackupJobState(AjaxPage):
         handler.show_job_details(
             handler.PageBackupRestoreState().job
             if ctx.request.var("job") == "restore"
-            else ModeBackupJobState().job
+            else ModeBackupJobState(self._edition).job
         )
         return None
 
@@ -145,8 +149,8 @@ class ModeBackupKeyManagement(handler.ModeBackupKeyManagement):
     def parent_mode(cls) -> type[WatoMode] | None:
         return ModeBackup
 
-    def __init__(self) -> None:
-        super().__init__(key_store=make_site_backup_keypair_store())
+    def __init__(self, edition: Edition) -> None:
+        super().__init__(edition, key_store=make_site_backup_keypair_store())
 
 
 class ModeBackupEditKey(handler.ModeBackupEditKey):
@@ -179,8 +183,8 @@ class ModeBackupUploadKey(handler.ModeBackupUploadKey):
     def parent_mode(cls) -> type[WatoMode] | None:
         return ModeBackupKeyManagement
 
-    def __init__(self) -> None:
-        super().__init__(key_store=make_site_backup_keypair_store())
+    def __init__(self, edition: Edition) -> None:
+        super().__init__(edition, key_store=make_site_backup_keypair_store())
 
     def _upload_key(self, key_file: str, alias: str, passphrase: Password) -> None:
         log_audit(
@@ -205,8 +209,8 @@ class ModeBackupDownloadKey(handler.ModeBackupDownloadKey):
     def parent_mode(cls) -> type[WatoMode] | None:
         return ModeBackupKeyManagement
 
-    def __init__(self) -> None:
-        super().__init__(key_store=make_site_backup_keypair_store())
+    def __init__(self, edition: Edition) -> None:
+        super().__init__(edition, key_store=make_site_backup_keypair_store())
 
 
 class ModeBackupRestore(handler.ModeBackupRestore):
@@ -222,5 +226,5 @@ class ModeBackupRestore(handler.ModeBackupRestore):
     def parent_mode(cls) -> type[WatoMode] | None:
         return ModeBackup
 
-    def __init__(self) -> None:
-        super().__init__(key_store=make_site_backup_keypair_store())
+    def __init__(self, edition: Edition) -> None:
+        super().__init__(edition, key_store=make_site_backup_keypair_store())

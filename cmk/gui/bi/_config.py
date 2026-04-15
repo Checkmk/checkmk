@@ -21,6 +21,7 @@ from cmk.bi.packs import BIAggregationPack, BIPackConfig
 from cmk.bi.rule import BIRule, BIRuleSchema
 from cmk.bi.type_defs import AggrConfigDict
 from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.version import Edition
 from cmk.gui import forms
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import active_config, Config
@@ -226,8 +227,8 @@ class MainModuleBI(ABCMainModule):
 
 
 class ABCBIMode(WatoMode):
-    def __init__(self) -> None:
-        super().__init__()
+    def __init__(self, edition: Edition) -> None:
+        super().__init__(edition)
         self._bi_packs = get_cached_bi_packs()
         self._bi_pack = None
 
@@ -493,8 +494,8 @@ class ModeBIEditPack(ABCBIMode):
 
 
 class ModeBIPacks(ABCBIMode):
-    def __init__(self) -> None:
-        super().__init__()
+    def __init__(self, edition: Edition) -> None:
+        super().__init__(edition)
         self._contact_group_names = load_contact_group_information()
 
     @classmethod
@@ -691,8 +692,8 @@ class ModeBIRules(ABCBIMode):
     def mode_url(cls, **kwargs: str) -> str:
         return super().mode_url(**kwargs)
 
-    def __init__(self) -> None:
-        super().__init__()
+    def __init__(self, edition: Edition) -> None:
+        super().__init__(edition)
         self._view_type = request.var("view", "list")
 
     @classmethod
@@ -1153,8 +1154,8 @@ class ModeBIEditRule(ABCBIMode):
     def static_permissions() -> Collection[PermissionName]:
         return ["bi_rules"]
 
-    def __init__(self) -> None:
-        super().__init__()
+    def __init__(self, edition: Edition) -> None:
+        super().__init__(edition)
         self._rule_id = request.get_str_input("id")
         self._new = self._rule_id is None
 
@@ -1719,8 +1720,8 @@ class BIModeEditAggregation(ABCBIMode):
     def static_permissions() -> Collection[PermissionName]:
         return ["bi_rules"]
 
-    def __init__(self) -> None:
-        super().__init__()
+    def __init__(self, edition: Edition) -> None:
+        super().__init__(edition)
         aggr_id = request.get_str_input_mandatory("id", "")
         clone_id = request.get_str_input_mandatory("clone", "")
         self._new = False
@@ -2415,8 +2416,8 @@ class ModeBIRuleTree(ABCBIMode):
     def parent_mode(cls) -> type[WatoMode] | None:
         return ModeBIPacks
 
-    def __init__(self) -> None:
-        super().__init__()
+    def __init__(self, edition: Edition) -> None:
+        super().__init__(edition)
         self._rule_id = request.get_str_input_mandatory("id")
         if not (rule_tree_bi_pack := self._bi_packs.get_pack_of_rule(self._rule_id)):
             raise MKUserError("id", _("This BI rule does not exist"))

@@ -23,6 +23,7 @@ import cmk.gui.pages
 from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostName
+from cmk.ccc.version import Edition
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import active_config, Config
 from cmk.gui.exceptions import MKAuthException, MKUserError
@@ -371,8 +372,8 @@ class ModeBulkImport(WatoMode):
     def parent_mode(cls) -> type[WatoMode] | None:
         return ModeFolder
 
-    def __init__(self) -> None:
-        super().__init__()
+    def __init__(self, edition: Edition) -> None:
+        super().__init__(edition)
         self._params: dict[str, Any] | None = None
 
     @property
@@ -666,7 +667,7 @@ class ModeBulkImport(WatoMode):
         with html.form_context("preview", method="POST"):
             self._preview_form()
 
-            custom_host_attrs = ModeCustomHostAttrs().get_attributes()
+            custom_host_attrs = ModeCustomHostAttrs(self._edition).get_attributes()
             attributes = _attribute_choices(tag_groups, custom_host_attrs)
 
             # first line could be missing in situation of import error

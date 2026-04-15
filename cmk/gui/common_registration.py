@@ -318,6 +318,7 @@ def register(
         job_registry,
     )
     background_job_registration.register(
+        edition,
         automation_command_registry,
         page_registry,
         mode_registry,
@@ -354,6 +355,7 @@ def register(
     rulespec.register(edition, rulespec_registry, notification_parameter_registry)
     welcome.register(page_registry, snapin_registry)
     search_registration.register(
+        edition,
         page_registry,
         job_registry,
         match_item_generator_registry,

@@ -5,6 +5,7 @@
 
 from collections.abc import Callable
 
+from cmk.ccc.version import Edition
 from cmk.gui.autocompleters import AutocompleterRegistry
 from cmk.gui.data_source import DataSourceRegistry
 from cmk.gui.openapi.framework.registry import VersionedEndpointRegistry
@@ -51,6 +52,7 @@ from .permission_section import PERMISSION_SECTION_EVENT_CONSOLE
 
 
 def register(
+    edition: Edition,
     permission_section_registry: PermissionSectionRegistry,
     permission_registry: PermissionRegistry,
     data_source_registry: DataSourceRegistry,
@@ -89,6 +91,7 @@ def register(
     )
     icon_registry.register(MkeventdIcon)
     wato.register(
+        edition,
         permission_registry,
         sample_config_generator_registry,
         mode_registry,

@@ -19,6 +19,7 @@ from werkzeug.test import create_environ
 
 from cmk.automations.results import GetConfigurationResult
 from cmk.ccc.hostaddress import HostName
+from cmk.ccc.version import Edition
 from cmk.gui.config import Config
 from cmk.gui.http import Request
 from cmk.gui.i18n import localize
@@ -208,8 +209,10 @@ def fixture_http_request() -> Request:
 
 
 @pytest.fixture(name="permissions_handler")
-def fixture_permissions_handler(config: Config, http_request: Request) -> PermissionsHandler:
-    return PermissionsHandler(config, http_request)
+def fixture_permissions_handler(
+    config: Config, http_request: Request, test_edition: Edition
+) -> PermissionsHandler:
+    return PermissionsHandler(test_edition, config, http_request)
 
 
 @pytest.fixture(name="index_searcher")
@@ -344,32 +347,40 @@ class TestPermissionHandler:
         return "wato.py?folder=&host=host&mode=edit_host"
 
     @pytest.mark.usefixtures("with_admin_login")
-    def test_may_see_category(self, config: Config, http_request: Request) -> None:
-        permissions_handler = PermissionsHandler(config, http_request)
+    def test_may_see_category(
+        self, config: Config, http_request: Request, test_edition: Edition
+    ) -> None:
+        permissions_handler = PermissionsHandler(test_edition, config, http_request)
         for category in permissions_handler._category_permissions:
             assert permissions_handler.may_see_category(category)
 
     @pytest.mark.usefixtures("request_context")
-    def test_may_see_url_false(self, config: Config, http_request: Request) -> None:
-        permissions_handler = PermissionsHandler(config, http_request)
+    def test_may_see_url_false(
+        self, config: Config, http_request: Request, test_edition: Edition
+    ) -> None:
+        permissions_handler = PermissionsHandler(test_edition, config, http_request)
         visibility_check = permissions_handler.get_visibility_check("setup")
         assert not visibility_check("wato.py?folder=&mode=service_groups")
 
     @pytest.mark.usefixtures("with_admin_login")
-    def test_may_see_url_true(self, config: Config, http_request: Request) -> None:
-        permissions_handler = PermissionsHandler(config, http_request)
+    def test_may_see_url_true(
+        self, config: Config, http_request: Request, test_edition: Edition
+    ) -> None:
+        permissions_handler = PermissionsHandler(test_edition, config, http_request)
         visibility_check = permissions_handler.get_visibility_check("setup")
         assert visibility_check("wato.py?folder=&mode=service_groups")
 
     @pytest.mark.usefixtures("with_admin_login")
-    def test_may_see_url_host_true(self, config: Config, created_host_url: str) -> None:
+    def test_may_see_url_host_true(
+        self, config: Config, created_host_url: str, test_edition: Edition
+    ) -> None:
         # NOTE: unfortunately, a test request fixture is difficult to create here since the host and
         # folders code relies heavily on adapting the global request proxy. For now, we will just
         # import the global proxy here explicitly as it's implicitly shared by the
         # `created_host_url` fixture.
         from cmk.gui.http import request
 
-        permissions_handler = PermissionsHandler(config, request)
+        permissions_handler = PermissionsHandler(test_edition, config, request)
         visibility_check = permissions_handler.get_visibility_check("setup")
         assert visibility_check(created_host_url)
 
@@ -379,11 +390,12 @@ class TestPermissionHandler:
         config: Config,
         http_request: Request,
         created_host_url: str,
+        test_edition: Edition,
     ) -> None:
         # NOTE: the created host is not visible because it was not created with the passed request
         # context. This is because the host and folders code relies heavily on adapting the global
         # request proxy.
-        permissions_handler = PermissionsHandler(config, http_request)
+        permissions_handler = PermissionsHandler(test_edition, config, http_request)
         visibility_check = permissions_handler.get_visibility_check("setup")
         assert not visibility_check(created_host_url)
 

@@ -19,6 +19,7 @@ from collections.abc import Collection
 import cmk.utils.paths
 from cmk.ccc import store
 from cmk.ccc.site import SiteId
+from cmk.ccc.version import Edition
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import active_config, Config
 from cmk.gui.exceptions import MKUserError
@@ -65,8 +66,8 @@ class ModeAnalyzeConfig(WatoMode):
     def static_permissions() -> Collection[PermissionName]:
         return ["analyze_config"]
 
-    def __init__(self) -> None:
-        super().__init__()
+    def __init__(self, edition: Edition) -> None:
+        super().__init__(edition)
         self._logger = logger.getChild("analyze-config")
         self._acks = self._load_acknowledgements()
 

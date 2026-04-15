@@ -34,6 +34,7 @@ from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostName, HostNameValidationError
 from cmk.ccc.regex import escape_regex_chars
 from cmk.ccc.site import SiteId
+from cmk.ccc.version import Edition
 from cmk.gui import deprecations, forms
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
 from cmk.gui.config import active_config, Config
@@ -276,8 +277,8 @@ class ABCRulesetMode(WatoMode):
     def static_permissions() -> Collection[PermissionName]:
         return ["rulesets"]
 
-    def __init__(self) -> None:
-        super().__init__()
+    def __init__(self, edition: Edition) -> None:
+        super().__init__(edition)
         self._page_type = self._get_page_type(self._search_options)
 
         self._title: str = ""
@@ -310,7 +311,7 @@ class ABCRulesetMode(WatoMode):
             request.set_var("search_p_rule_folder_1", DropdownChoice.option_id(True))
             request.set_var("search_p_rule_folder_USE", "on")
 
-        self._search_options: SearchOptions = ModeRuleSearchForm().search_options
+        self._search_options: SearchOptions = ModeRuleSearchForm(self._edition).search_options
 
     def _group_name_from_vars(self) -> str | None:
         # Transform group argument to the "rule search arguments"
@@ -910,8 +911,8 @@ class ModeEditRuleset(WatoMode):
             request.set_var("group", self._rulespec.main_group_name)
             return super().breadcrumb()
 
-    def __init__(self) -> None:
-        super().__init__()
+    def __init__(self, edition: Edition) -> None:
+        super().__init__(edition)
         store = PredefinedConditionStore()
         self._predefined_conditions = store.filter_usable_entries(store.load_for_reading())
 
@@ -1266,7 +1267,7 @@ class ModeEditRuleset(WatoMode):
             html.div(_("There are no rules defined in this set."), class_="info")
             return
 
-        search_options: SearchOptions = ModeRuleSearchForm().search_options
+        search_options: SearchOptions = ModeRuleSearchForm(self._edition).search_options
 
         rule_effectiveness = (
             analyze_host_rule_effectiveness(
@@ -1727,9 +1728,9 @@ class ModeRuleSearchForm(WatoMode):
     def parent_mode(cls) -> type[WatoMode] | None:
         return ModeRuleSearch
 
-    def __init__(self) -> None:
+    def __init__(self, edition: Edition) -> None:
         self.back_mode = request.get_ascii_input_mandatory("back_mode", "rulesets")
-        super().__init__()
+        super().__init__(edition)
 
     def title(self) -> str:
         if self.search_options:
@@ -2066,8 +2067,8 @@ class ABCEditRuleMode(WatoMode):
     VAR_RULE_SPEC_NAME: Final = "varname"
     VAR_RULE_ID: Final = "rule_id"
 
-    def __init__(self) -> None:
-        super().__init__()
+    def __init__(self, edition: Edition) -> None:
+        super().__init__(edition)
         self._locked_conditions = (
             LockedConditions(
                 instance_id=self._rule.locked_by["instance_id"],

@@ -15,6 +15,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from cmk.ccc.resulttype import Error, OK, Result
+from cmk.ccc.version import Edition
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import Config
 from cmk.gui.display_options import display_options
@@ -153,8 +154,8 @@ class ModeAuditLog(WatoMode[AuditLogRequestData]):
     def static_permissions() -> Collection[PermissionName]:
         return ["auditlog"]
 
-    def __init__(self) -> None:
-        super().__init__()
+    def __init__(self, edition: Edition) -> None:
+        super().__init__(edition)
         options = get_visitor(
             self._audit_log_options_fs(), VisitorOptions(migrate_values=False, mask_values=False)
         ).to_disk(DEFAULT_VALUE)

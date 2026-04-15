@@ -6,6 +6,7 @@
 
 from collections.abc import Callable
 
+from cmk.ccc.version import Edition
 from cmk.gui.background_job.job import BackgroundJobRegistry
 from cmk.gui.main_menu import MainMenuRegistry
 from cmk.gui.pages import PageEndpoint, PageRegistry
@@ -66,6 +67,7 @@ from .views import (
 
 
 def register(
+    edition: Edition,
     page_registry: PageRegistry,
     painter_registry: PainterRegistry,
     sorter_registry: SorterRegistry,
@@ -114,6 +116,7 @@ def register(
 
     filters.register(filter_registry)
     wato_pages.register(
+        edition,
         page_registry,
         mode_registry,
         quick_setup_registry,

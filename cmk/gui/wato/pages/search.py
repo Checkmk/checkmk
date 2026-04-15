@@ -8,6 +8,7 @@
 
 from collections.abc import Collection
 
+from cmk.ccc.version import Edition
 from cmk.gui import forms
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import Config
@@ -44,8 +45,8 @@ class ModeSearch(WatoMode):
     def parent_mode(cls) -> type[WatoMode] | None:
         return ModeFolder
 
-    def __init__(self) -> None:
-        super().__init__()
+    def __init__(self, edition: Edition) -> None:
+        super().__init__(edition)
         self._folder = folder_from_request(request.var("folder"), request.get_ascii_input("host"))
 
     def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:

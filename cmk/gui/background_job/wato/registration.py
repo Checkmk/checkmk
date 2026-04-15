@@ -5,6 +5,7 @@
 
 from datetime import timedelta
 
+from cmk.ccc.version import Edition
 from cmk.gui.background_job.job._manager import execute_housekeeping_job
 from cmk.gui.cron import CronJob, CronJobRegistry
 from cmk.gui.pages import PageRegistry
@@ -19,6 +20,7 @@ from ._job_ui import register as _register_job_ui
 
 
 def register(
+    edition: Edition,
     automation_command_registry: AutomationCommandRegistry,
     page_registry: PageRegistry,
     mode_registry: ModeRegistry,
@@ -35,5 +37,5 @@ def register(
             interval=timedelta(minutes=1),
         )
     )
-    _modes.register(page_registry, mode_registry, main_module_registry)
+    _modes.register(edition, page_registry, mode_registry, main_module_registry)
     _register_job_ui(permission_section_registry, permission_registry)

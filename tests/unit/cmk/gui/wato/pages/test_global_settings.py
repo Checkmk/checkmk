@@ -7,6 +7,7 @@ from collections.abc import Iterable
 
 from pytest import MonkeyPatch
 
+from cmk.ccc.version import Edition
 from cmk.gui.i18n import _l
 from cmk.gui.search import MatchItem
 from cmk.gui.utils.roles import UserPermissions
@@ -19,6 +20,7 @@ from cmk.gui.watolib.config_domains import ConfigDomainCore
 def test_match_item_generator_settings(
     monkeypatch: MonkeyPatch,
     request_context: None,
+    test_edition: Edition,
 ) -> None:
     group = ConfigVariableGroup(
         title=_l("xyz"),
@@ -49,7 +51,7 @@ def test_match_item_generator_settings(
         MatchItemGeneratorSettings(
             "settings",
             "Settings",
-            SomeSettingsMode,
+            lambda: SomeSettingsMode(test_edition),
         ).generate_match_items(UserPermissions({}, {}, {}, []))
     ) == [
         MatchItem(

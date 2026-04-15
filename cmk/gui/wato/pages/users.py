@@ -156,11 +156,11 @@ class ModeUsers(WatoMode):
     def static_permissions() -> Collection[PermissionName]:
         return ["users"]
 
-    def __init__(self) -> None:
-        super().__init__()
+    def __init__(self, edition: Edition) -> None:
+        super().__init__(edition)
         self._job = UserSyncBackgroundJob()
         self._job_snapshot = UserSyncBackgroundJob().get_status_snapshot()
-        self._can_create_and_delete_users = edition(paths.omd_root) != Edition.CLOUD
+        self._can_create_and_delete_users = edition != Edition.CLOUD
 
     def title(self) -> str:
         return _("Users")
@@ -805,8 +805,8 @@ class ModeEditUser(WatoMode):
         assert self._user_id is not None
         return self.mode_url(edit=self._user_id)
 
-    def __init__(self) -> None:
-        super().__init__()
+    def __init__(self, edition: Edition) -> None:
+        super().__init__(edition)
 
         # Load data that is referenced - in order to display dropdown
         # boxes and to check for validity.
@@ -817,7 +817,7 @@ class ModeEditUser(WatoMode):
 
         self._vs_customer = customer_api().vs_customer()
 
-        self._can_edit_users = edition(paths.omd_root) != Edition.CLOUD
+        self._can_edit_users = edition != Edition.CLOUD
 
     def _from_vars(self) -> None:
         # TODO: Should we turn the both fields below into UserId | None?

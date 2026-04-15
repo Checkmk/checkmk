@@ -9,6 +9,7 @@
 
 from collections.abc import Collection
 
+from cmk.ccc.version import Edition
 from cmk.gui import userdb
 from cmk.gui.config import Config
 from cmk.gui.exceptions import MKUserError
@@ -106,8 +107,9 @@ class ModePredefinedConditions(SimpleListMode[PredefinedConditionSpec]):
     def static_permissions() -> Collection[PermissionName]:
         return ["rulesets"]
 
-    def __init__(self) -> None:
+    def __init__(self, edition: Edition) -> None:
         super().__init__(
+            edition,
             mode_type=PredefinedConditionModeType(),
             store=PredefinedConditionStore(),
         )
@@ -225,8 +227,9 @@ class ModeEditPredefinedCondition(SimpleEditMode[PredefinedConditionSpec]):
     def parent_mode(cls) -> type[WatoMode] | None:
         return ModePredefinedConditions
 
-    def __init__(self) -> None:
+    def __init__(self, edition: Edition) -> None:
         super().__init__(
+            edition,
             mode_type=PredefinedConditionModeType(),
             store=PredefinedConditionStore(),
         )

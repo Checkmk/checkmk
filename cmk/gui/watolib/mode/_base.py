@@ -9,6 +9,7 @@ import abc
 from collections.abc import Collection, Iterable
 
 from cmk.ccc.resulttype import Error, Result
+from cmk.ccc.version import Edition
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
 from cmk.gui.config import Config
 from cmk.gui.http import Request, request
@@ -26,8 +27,9 @@ from cmk.shared_typing.main_menu import NavItem
 class WatoMode[RequestOK](abc.ABC):
     _request_data: Result[RequestOK, None]
 
-    def __init__(self) -> None:
+    def __init__(self, edition: Edition) -> None:
         super().__init__()
+        self._edition = edition
         self._from_vars()
         self._request_data = self._parse_data_from_request(request)
 
@@ -93,7 +95,7 @@ class WatoMode[RequestOK](abc.ABC):
         """
 
         if parent_cls := self.parent_mode():
-            breadcrumb = parent_cls().breadcrumb()
+            breadcrumb = parent_cls(self._edition).breadcrumb()
         else:
             breadcrumb = Breadcrumb()
 

@@ -323,8 +323,8 @@ class NotificationRuleLinks(NamedTuple):
 
 
 class ABCNotificationsMode(ABCEventsMode[EventRule]):
-    def __init__(self) -> None:
-        super().__init__()
+    def __init__(self, edition: Edition) -> None:
+        super().__init__(edition)
 
         declare_notification_plugin_permissions()
 
@@ -852,8 +852,8 @@ class ModeNotifications(ABCNotificationsMode):
     def static_permissions() -> Collection[PermissionName]:
         return ["notifications"]
 
-    def __init__(self) -> None:
-        super().__init__()
+    def __init__(self, edition: Edition) -> None:
+        super().__init__(edition)
         options = user.load_file("notification_display_options", {})
         self._show_user_rules = options.get("show_user_rules", False)
 
@@ -1379,8 +1379,8 @@ def _get_ruleset_infos(entries: dict[str, list[str]]) -> list[RuleTopic]:
 
 
 class ModeAnalyzeNotifications(ModeNotifications):
-    def __init__(self) -> None:
-        super().__init__()
+    def __init__(self, edition: Edition) -> None:
+        super().__init__(edition)
         options = user.load_file("analyze_notification_display_options", {})
         self._show_bulks = options.get("show_bulks", False)
         self._show_user_rules = options.get("show_user_rules", False)
@@ -1760,8 +1760,8 @@ class AdvancedTestOptions(TypedDict):
 
 
 class ModeTestNotifications(ModeNotifications):
-    def __init__(self) -> None:
-        super().__init__()
+    def __init__(self, edition: Edition) -> None:
+        super().__init__(edition)
         options = user.load_file("test_notification_display_options", {})
         self._show_user_rules = options.get("show_user_rules", False)
 
@@ -2699,6 +2699,9 @@ def _validate_general_opts(general_test_options: GeneralTestOptions, varprefix: 
 
 
 class ABCUserNotificationsMode(ABCNotificationsMode):
+    def __init__(self, edition: Edition) -> None:
+        super().__init__(edition)
+
     def _from_vars(self) -> None:
         self._users = userdb.load_users(
             lock=transactions.is_transaction() or request.has_var("_move")
@@ -2886,8 +2889,8 @@ class ModePersonalUserNotifications(ABCUserNotificationsMode):
     def static_permissions() -> None:
         return None
 
-    def __init__(self) -> None:
-        super().__init__()
+    def __init__(self, edition: Edition) -> None:
+        super().__init__(edition)
         user.need_permission("general.edit_notifications")
 
     def main_menu(self) -> NavItem:
@@ -2974,6 +2977,9 @@ class ModePersonalUserNotifications(ABCUserNotificationsMode):
 
 
 class ABCEditNotificationRuleMode(ABCNotificationsMode):
+    def __init__(self, edition: Edition) -> None:
+        super().__init__(edition)
+
     @abc.abstractmethod
     def _load_rules(self) -> list[EventRule]:
         raise NotImplementedError()
@@ -3691,8 +3697,8 @@ class ModeEditPersonalNotificationRule(ABCEditNotificationRuleMode):
     def static_permissions() -> None:
         return None
 
-    def __init__(self) -> None:
-        super().__init__()
+    def __init__(self, edition: Edition) -> None:
+        super().__init__(edition)
         user.need_permission("general.edit_notifications")
 
     def _user_id(self) -> UserId:

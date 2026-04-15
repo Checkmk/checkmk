@@ -12,6 +12,7 @@ from typing import override
 
 import pytest
 
+from cmk.ccc.version import Edition
 from cmk.gui.breadcrumb import BreadcrumbItem
 from cmk.gui.config import Config
 from cmk.gui.type_defs import DynamicIcon, DynamicIconName, PermissionName
@@ -81,8 +82,9 @@ class TestWatoMode:
         self,
         request_context,
         main_module_registry,
+        test_edition: Edition,
     ):
-        assert list(SomeWatoMode().breadcrumb()) == [
+        assert list(SomeWatoMode(test_edition).breadcrumb()) == [
             BreadcrumbItem(title="Hosts", url=None),
             BreadcrumbItem(title="(Untitled module)", url="wato.py?mode=some_wato_mode"),
         ]
@@ -92,6 +94,7 @@ class TestWatoMode:
         monkeypatch,
         request_context,
         main_module_registry,
+        test_edition: Edition,
     ):
         def additional_breadcrumb_items() -> Iterable[BreadcrumbItem]:
             yield BreadcrumbItem(
@@ -108,7 +111,7 @@ class TestWatoMode:
             "additional_breadcrumb_items",
             additional_breadcrumb_items,
         )
-        assert list(SomeWatoMode().breadcrumb()) == [
+        assert list(SomeWatoMode(test_edition).breadcrumb()) == [
             BreadcrumbItem(title="Hosts", url=None),
             BreadcrumbItem(title="In between 1", url=None),
             BreadcrumbItem(title="In between 2", url="123"),

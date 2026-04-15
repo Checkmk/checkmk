@@ -11,6 +11,7 @@ from unittest import mock
 import pytest
 
 from cmk.ccc.hostaddress import HostAddress
+from cmk.ccc.version import Edition
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.http import request
@@ -174,12 +175,13 @@ server01;192.168.1.101
 def test_bulk_import_csv_parsing(
     csvtext: str,
     has_title_line: bool,
+    test_edition: Edition,
 ) -> None:
     csv_bulk_import = CSVBulkImport(handle=StringIO(csvtext), has_title_line=has_title_line)
     host_attributes = all_host_attributes(
         active_config.wato_host_attrs, active_config.tags.get_tag_groups_by_topic()
     )
-    mode_bulk_import = ModeBulkImport()
+    mode_bulk_import = ModeBulkImport(test_edition)
     request.set_var("attribute_0", "host_name")
     request.set_var("attribute_1", "ipaddress")
 

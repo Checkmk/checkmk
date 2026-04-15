@@ -229,6 +229,7 @@ def register(edition: Edition) -> None:
         endpoint_family_registry=endpoint_family_registry,
     )
     wato_registration.register(
+        edition,
         page_registry,
         painter_registry,
         sorter_registry,
@@ -283,11 +284,13 @@ def register(edition: Edition) -> None:
     register_pages()
     register_painters()
     backup_register(
+        edition,
         page_registry,
         mode_registry,
         main_module_registry,
     )
     mkeventd_registration.register(
+        edition,
         permission_section_registry,
         permission_registry,
         data_source_registry,

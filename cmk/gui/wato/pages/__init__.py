@@ -5,6 +5,7 @@
 
 from collections.abc import Callable
 
+from cmk.ccc.version import Edition
 from cmk.gui.background_job.job import BackgroundJobRegistry
 from cmk.gui.main_menu import MainMenuRegistry
 from cmk.gui.pages import PageRegistry
@@ -66,6 +67,7 @@ from ._password_store_valuespecs import (
 
 
 def register(
+    edition: Edition,
     page_registry: PageRegistry,
     mode_registry: ModeRegistry,
     quick_setup_registry: QuickSetupRegistry,
@@ -88,7 +90,7 @@ def register(
     download_agents.register(mode_registry)
     fetch_agent_output.register(page_registry, automation_command_registry, job_registry)
     folders.register(page_registry, mode_registry)
-    global_settings.register(mode_registry, match_item_generator_registry)
+    global_settings.register(edition, mode_registry, match_item_generator_registry)
     groups.register(mode_registry)
     gui_timings.register(page_registry)
     host_diagnose.register(page_registry, mode_registry)
@@ -110,7 +112,7 @@ def register(
     read_only.register(mode_registry)
     rulesets.register(mode_registry, match_item_generator_registry)
     search.register(mode_registry)
-    services.register(page_registry, mode_registry, automation_command_registry)
+    services.register(edition, page_registry, mode_registry, automation_command_registry)
     sites.register(page_registry, mode_registry)
     tags.register(mode_registry)
     timeperiods.register(mode_registry)

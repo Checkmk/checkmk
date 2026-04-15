@@ -22,6 +22,7 @@ from typing import Any, cast
 import cmk.gui.watolib.changes as _changes
 from cmk.ccc.site import SiteId
 from cmk.ccc.user import UserId
+from cmk.ccc.version import Edition
 from cmk.gui import forms
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import active_config, Config
@@ -167,7 +168,9 @@ class _SimpleWatoModeBase[T: Mapping[str, Any]](WatoMode):
     classes. It should not be used directly by specific mode classes.
     """
 
-    def __init__(self, mode_type: SimpleModeType[T], store: WatoSimpleConfigFile[T]) -> None:
+    def __init__(
+        self, edition: Edition, mode_type: SimpleModeType[T], store: WatoSimpleConfigFile[T]
+    ) -> None:
         self._mode_type = mode_type
         self._store = store
 
@@ -175,7 +178,7 @@ class _SimpleWatoModeBase[T: Mapping[str, Any]](WatoMode):
         # to be set before it is executed. Therefore we execute the super constructor
         # here.
         # TODO: Make the _from_vars() mechanism more explicit
-        super().__init__()
+        super().__init__(edition)
 
     def _add_change(
         self,
@@ -386,11 +389,13 @@ class SimpleListMode[T: Mapping[str, Any]](_SimpleWatoModeBase[T]):
 class SimpleEditMode[T: Mapping[str, Any]](_SimpleWatoModeBase[T]):
     """Base class for edit modes"""
 
-    def __init__(self, mode_type: SimpleModeType[T], store: WatoSimpleConfigFile[T]):
+    def __init__(
+        self, edition: Edition, mode_type: SimpleModeType[T], store: WatoSimpleConfigFile[T]
+    ):
         self._ident: str | None = None
         self._clone: str | None = None
         self._new: bool = True
-        super().__init__(mode_type, store)
+        super().__init__(edition, mode_type, store)
 
     def _vs_individual_elements(self) -> list[DictionaryEntry]:
         raise NotImplementedError()

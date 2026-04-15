@@ -243,7 +243,7 @@ class ModeCheckPluginTopic(WatoMode):
         parent_cls = self.parent_mode()
         assert parent_cls is not None
         breadcrumb = _add_breadcrumb_topic_items(
-            parent_cls().breadcrumb(), self._titles, self._path
+            parent_cls(self._edition).breadcrumb(), self._titles, self._path
         )
         breadcrumb.append(self._breadcrumb_item())
         return breadcrumb

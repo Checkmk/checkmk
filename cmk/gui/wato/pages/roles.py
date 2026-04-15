@@ -18,6 +18,7 @@ configuration of all roles.
 from collections.abc import Collection
 
 import cmk.gui.watolib.changes as _changes
+from cmk.ccc.version import Edition
 from cmk.gui import forms, userdb
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import active_config, Config
@@ -224,8 +225,8 @@ class ModeRoleTwoFactor(WatoMode):
     def parent_mode(cls) -> type[WatoMode] | None:
         return ModeRoles
 
-    def __init__(self) -> None:
-        super().__init__()
+    def __init__(self, edition: Edition) -> None:
+        super().__init__(edition)
         load_dynamic_permissions()
 
     def _from_vars(self) -> None:
@@ -301,8 +302,8 @@ class ModeEditRole(WatoMode):
     def parent_mode(cls) -> type[WatoMode] | None:
         return ModeRoles
 
-    def __init__(self) -> None:
-        super().__init__()
+    def __init__(self, edition: Edition) -> None:
+        super().__init__(edition)
 
         # Make sure that all dynamic permissions are available (e.g. those for custom
         # views)

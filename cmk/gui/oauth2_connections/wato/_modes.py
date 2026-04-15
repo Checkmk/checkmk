@@ -10,6 +10,7 @@ from dataclasses import asdict
 from typing import override
 
 from cmk.ccc.site import omd_site
+from cmk.ccc.version import Edition
 from cmk.gui import userdb
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import active_config, Config
@@ -455,8 +456,11 @@ class ModeOAuth2Connections(SimpleListMode[OAuth2Connection]):
     def _connector_type(cls) -> str | None:
         return None
 
-    def __init__(self, mode_type: SimpleModeType[OAuth2Connection] | None = None) -> None:
+    def __init__(
+        self, edition: Edition, mode_type: SimpleModeType[OAuth2Connection] | None = None
+    ) -> None:
         super().__init__(
+            edition,
             mode_type=mode_type or OAuth2ModeType(),
             store=OAuth2ConnectionsConfigFile(),
         )
@@ -628,8 +632,8 @@ class ModeOAuth2Connections(SimpleListMode[OAuth2Connection]):
 
 
 class ModeMicrosoftEntraIdConnections(ModeOAuth2Connections):
-    def __init__(self) -> None:
-        super().__init__(mode_type=MicrosoftEntraIdModeType())
+    def __init__(self, edition: Edition) -> None:
+        super().__init__(edition, mode_type=MicrosoftEntraIdModeType())
 
     @classmethod
     @override
@@ -652,8 +656,11 @@ class ModeCreateOAuth2Connection(SimpleEditMode[OAuth2Connection]):
     def name(cls) -> str:
         return "edit_oauth2_connection"
 
-    def __init__(self, mode_type: SimpleModeType[OAuth2Connection] | None = None) -> None:
+    def __init__(
+        self, edition: Edition, mode_type: SimpleModeType[OAuth2Connection] | None = None
+    ) -> None:
         super().__init__(
+            edition,
             mode_type=mode_type or OAuth2ModeType(),
             store=OAuth2ConnectionsConfigFile(),
         )
@@ -784,8 +791,8 @@ class ModeCreateOAuth2Connection(SimpleEditMode[OAuth2Connection]):
 
 
 class ModeCreateMicrosoftEntraIdConnection(ModeCreateOAuth2Connection):
-    def __init__(self) -> None:
-        super().__init__(mode_type=MicrosoftEntraIdModeType())
+    def __init__(self, edition: Edition) -> None:
+        super().__init__(edition, mode_type=MicrosoftEntraIdModeType())
 
     @classmethod
     @override

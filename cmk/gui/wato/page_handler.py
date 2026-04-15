@@ -70,14 +70,15 @@ def page_handler(ctx: PageContext) -> None:
     current_mode = request.get_str_input_mandatory("mode")
     # Backup has to be accessible for remote sites, otherwise the user has no
     # chance to configure a backup for remote sites.
+    edition = cmk_version.edition(paths.omd_root)
     if (
-        cmk_version.edition(paths.omd_root) is cmk_version.Edition.ULTIMATEMT
+        edition is cmk_version.Edition.ULTIMATEMT
         and not customer_api().is_provider(ctx.config.raw.get("current_customer", "provider"))
         and not current_mode.startswith(("backup", "edit_backup"))
     ):
         raise MKGeneralException(_("Checkmk can only be configured on the managers central site."))
 
-    mode_instance = mode_registry.get(current_mode, ModeNotImplemented)()
+    mode_instance = mode_registry.get(current_mode, ModeNotImplemented)(edition)
     mode_instance.ensure_permissions()
 
     display_options.load_from_html(request, html)

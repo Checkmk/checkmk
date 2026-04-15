@@ -14,6 +14,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
+from cmk.ccc.version import Edition
 from cmk.gui.valuespec import Dictionary, DictionaryEntry, TextInput
 from cmk.gui.wato.pages._simple_modes import SimpleEditMode, SimpleModeType
 from cmk.gui.watolib.config_domain_name import ABCConfigDomain
@@ -64,8 +65,13 @@ class SomeStore(WatoSimpleConfigFile[SomeSpec]):
 
 
 class SomeEditMode(SimpleEditMode[SomeSpec]):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(
+        self,
+        edition: Edition,
+        mode_type: SimpleModeType[SomeSpec],
+        store: WatoSimpleConfigFile[SomeSpec],
+    ):
+        super().__init__(edition, mode_type, store)
         self.mock = MagicMock(spec=Dictionary)
 
     def valuespec(self) -> Dictionary:
@@ -93,7 +99,11 @@ class SomeEditMode(SimpleEditMode[SomeSpec]):
 )
 @pytest.mark.usefixtures("request_context")
 def test_page_form_render_entry_valuespec(
-    new: bool, clone: str | None, expected_form: bool, monkeypatch: pytest.MonkeyPatch
+    new: bool,
+    clone: str | None,
+    expected_form: bool,
+    monkeypatch: pytest.MonkeyPatch,
+    test_edition: Edition,
 ) -> None:
     mode_type = SomeModeType()
     store = SomeStore(
@@ -107,7 +117,7 @@ def test_page_form_render_entry_valuespec(
         )
     )
 
-    mode = SomeEditMode(mode_type, store)
+    mode = SomeEditMode(test_edition, mode_type, store)
     mode._entry = store._value
     mode._new = new
     mode._clone = clone

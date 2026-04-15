@@ -29,7 +29,7 @@ import cmk.utils.render
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import omd_site, SiteId
-from cmk.ccc.version import __version__, omd_version, Version
+from cmk.ccc.version import __version__, Edition, omd_version, Version
 from cmk.checkengine.discovery import CheckPreviewEntry
 from cmk.gui.agent_commands import get_agent_slideout, get_server_per_site
 from cmk.gui.background_job.job import JobStatusStates
@@ -165,11 +165,14 @@ class ChangedEntry:
 
 
 def register(
+    edition: Edition,
     page_registry: PageRegistry,
     mode_registry: ModeRegistry,
     automation_command_registry: AutomationCommandRegistry,
 ) -> None:
-    page_registry.register(PageEndpoint("ajax_service_discovery", ModeAjaxServiceDiscovery()))
+    page_registry.register(
+        PageEndpoint("ajax_service_discovery", ModeAjaxServiceDiscovery(edition))
+    )
     page_registry.register(
         PageEndpoint("ajax_popup_service_action_menu", ajax_popup_service_action_menu)
     )
@@ -345,6 +348,9 @@ class AutomationServiceDiscoveryJob(AutomationCommand[_AutomationServiceDiscover
 
 
 class ModeAjaxServiceDiscovery(AjaxPage):
+    def __init__(self, edition: Edition) -> None:
+        self._edition = edition
+
     @override
     def page(self, ctx: PageContext) -> PageResult:
         check_csrf_token()
@@ -641,7 +647,7 @@ class ModeAjaxServiceDiscovery(AjaxPage):
     def _get_discovery_breadcrumb(self, host: Host) -> Breadcrumb:
         with request.stashed_vars():
             request.set_var("host", host.name())
-            mode = ModeDiscovery()
+            mode = ModeDiscovery(self._edition)
             return make_main_menu_breadcrumb(mode.main_menu()) + mode.breadcrumb()
 
     def _get_status_message(

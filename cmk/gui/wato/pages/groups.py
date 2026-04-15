@@ -11,7 +11,7 @@ from collections.abc import Collection, Iterator, Sequence
 import cmk.utils.paths
 from cmk.ccc import version
 from cmk.ccc.user import UserId
-from cmk.ccc.version import edition_supports_nagvis
+from cmk.ccc.version import Edition, edition_supports_nagvis
 from cmk.gui import forms, userdb
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import active_config, Config
@@ -82,8 +82,8 @@ class ModeGroups(WatoMode, abc.ABC):
     def _rules_url(self) -> str:
         raise NotImplementedError()
 
-    def __init__(self) -> None:
-        super().__init__()
+    def __init__(self, edition: Edition) -> None:
+        super().__init__(edition)
         self._groups = self._load_groups()
 
     def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
@@ -228,13 +228,13 @@ class ABCModeEditGroup(WatoMode, abc.ABC):
     def _load_groups(self) -> dict[GroupName, GroupSpec]:
         raise NotImplementedError()
 
-    def __init__(self) -> None:
+    def __init__(self, edition: Edition) -> None:
         self._name: GroupName | None = None
         self._new = False
         self.group: GroupSpec = {}
         self._groups: dict[GroupName, GroupSpec] = self._load_groups()
 
-        super().__init__()
+        super().__init__(edition)
 
     def _from_vars(self) -> None:
         edit_group = request.get_ascii_input("edit")  # missing -> new group

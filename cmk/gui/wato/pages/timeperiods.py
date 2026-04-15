@@ -22,6 +22,7 @@ import recurring_ical_events
 from icalendar import Calendar, Event
 from icalendar.prop import vDDDTypes
 
+from cmk.ccc.version import Edition
 from cmk.gui import forms, watolib
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import active_config, Config
@@ -214,8 +215,8 @@ class ModeTimeperiods(WatoMode):
     def static_permissions() -> Collection[PermissionName]:
         return ["timeperiods"]
 
-    def __init__(self) -> None:
-        super().__init__()
+    def __init__(self, edition: Edition) -> None:
+        super().__init__(edition)
         self._timeperiods = load_timeperiods()
 
     def title(self) -> str:
@@ -372,7 +373,7 @@ class ModeTimeperiodImportICal(WatoMode):
                 button_name="upload",
                 save_title=_("Import"),
             )
-        return ModeEditTimeperiod().page_menu(config, breadcrumb)
+        return ModeEditTimeperiod(self._edition).page_menu(config, breadcrumb)
 
     def _vs_ical(self) -> Dictionary:
         return Dictionary(
@@ -508,7 +509,7 @@ class ModeTimeperiodImportICal(WatoMode):
 
         request.set_var("mode", "edit_timeperiod")
 
-        ModeEditTimeperiod().page(config)
+        ModeEditTimeperiod(self._edition).page(config)
 
 
 class ModeEditTimeperiod(WatoMode):

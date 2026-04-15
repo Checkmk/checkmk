@@ -30,7 +30,7 @@ from cmk.automations.results import (
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import get_agent_receiver_port, omd_site, SiteId
-from cmk.ccc.version import omd_version
+from cmk.ccc.version import Edition, omd_version
 from cmk.gui import forms, user_sites
 from cmk.gui.agent_commands import (
     get_agent_slideout,
@@ -184,10 +184,10 @@ class ABCHostMode(WatoMode, abc.ABC):
     @abc.abstractmethod
     def _init_host(self) -> Host: ...
 
-    def __init__(self) -> None:
+    def __init__(self, edition: Edition) -> None:
         self._host = self._init_host()
         self._mode: Literal["edit", "new", "clone", "prefill"] = "edit"
-        super().__init__()
+        super().__init__(edition)
 
     def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         menu = make_simple_form_page_menu(_("Host"), breadcrumb)

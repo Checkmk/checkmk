@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.ccc.version import Edition
 from cmk.gui import hooks
 from cmk.gui.background_job.job import BackgroundJobRegistry
 from cmk.gui.pages import PageEndpoint, PageRegistry
@@ -17,12 +18,13 @@ from .pages import PageUnifiedSearch
 
 
 def register(
+    edition: Edition,
     page_registry: PageRegistry,
     job_registry: BackgroundJobRegistry,
     match_item_generator_registry: MatchItemGeneratorRegistry,
     rulespec_group_registry: RulespecGroupRegistry,
 ) -> None:
-    page_registry.register(PageEndpoint("ajax_unified_search", PageUnifiedSearch()))
+    page_registry.register(PageEndpoint("ajax_unified_search", PageUnifiedSearch(edition)))
     hooks.register_builtin("request-start", launch_requests_processing_background)
     job_registry.register(SearchIndexBackgroundJob)
     match_item_generator_registry.register(

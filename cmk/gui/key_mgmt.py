@@ -12,6 +12,7 @@ from dateutil.relativedelta import relativedelta
 import cmk.utils.render
 from cmk.ccc.site import omd_site, SiteId
 from cmk.ccc.user import UserId
+from cmk.ccc.version import Edition
 from cmk.crypto.certificate import Certificate, CertificateWithPrivateKey
 from cmk.crypto.hash import HashAlgorithm
 from cmk.crypto.password import Password as PasswordType
@@ -55,8 +56,8 @@ class ModeKeyManagement(WatoMode[object]):
     upload_mode = "upload_key"
     download_mode = "download_key"
 
-    def __init__(self, key_store: KeypairStore) -> None:
-        super().__init__()
+    def __init__(self, edition: Edition, key_store: KeypairStore) -> None:
+        super().__init__(edition)
         self.key_store = key_store
 
     def title(self) -> str:
@@ -301,8 +302,8 @@ class ModeEditKey(WatoMode[object]):
 class ModeUploadKey(WatoMode[object]):
     back_mode: str
 
-    def __init__(self, key_store: KeypairStore) -> None:
-        super().__init__()
+    def __init__(self, edition: Edition, key_store: KeypairStore) -> None:
+        super().__init__(edition)
         self.key_store = key_store
 
     def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
@@ -468,8 +469,8 @@ class ModeUploadKey(WatoMode[object]):
 class ModeDownloadKey(WatoMode[object]):
     back_mode: str
 
-    def __init__(self, key_store: KeypairStore) -> None:
-        super().__init__()
+    def __init__(self, edition: Edition, key_store: KeypairStore) -> None:
+        super().__init__(edition)
         self.key_store = key_store
 
     def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:

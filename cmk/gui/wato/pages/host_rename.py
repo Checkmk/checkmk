@@ -14,6 +14,7 @@ from typing import Any
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.regex import regex
+from cmk.ccc.version import Edition
 from cmk.gui import forms
 from cmk.gui.background_job.job import InitialStatusArgs, JobTarget
 from cmk.gui.breadcrumb import Breadcrumb
@@ -99,8 +100,8 @@ class ModeBulkRenameHost(WatoMode):
     def parent_mode(cls) -> type[WatoMode] | None:
         return ModeFolder
 
-    def __init__(self) -> None:
-        super().__init__()
+    def __init__(self, edition: Edition) -> None:
+        super().__init__(edition)
 
         if not user.may("wato.rename_hosts"):
             raise MKGeneralException(_("You don't have the right to rename hosts"))

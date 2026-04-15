@@ -10,6 +10,7 @@ import traceback
 from collections.abc import Collection, Iterator
 from typing import override
 
+from cmk.ccc.version import Edition
 from cmk.gui.background_job.job import BackgroundJob, BackgroundStatusSnapshot, job_registry
 from cmk.gui.background_job.wato import ActionHandler, GUIBackgroundJobManager
 from cmk.gui.breadcrumb import Breadcrumb
@@ -35,12 +36,13 @@ from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
 
 
 def register(
+    edition: Edition,
     page_registry: PageRegistry,
     mode_registry: ModeRegistry,
     main_module_registry: MainModuleRegistry,
 ) -> None:
     page_registry.register(
-        PageEndpoint("ajax_background_job_details", ModeAjaxBackgroundJobDetails())
+        PageEndpoint("ajax_background_job_details", ModeAjaxBackgroundJobDetails(edition))
     )
     mode_registry.register(ModeBackgroundJobsOverview)
     mode_registry.register(ModeBackgroundJobDetails)
@@ -193,6 +195,9 @@ class ModeBackgroundJobDetails(WatoMode):
 class ModeAjaxBackgroundJobDetails(AjaxPage):
     """AJAX handler for supporting the background job state update"""
 
+    def __init__(self, edition: Edition) -> None:
+        self._edition = edition
+
     @override
     def handle_page(self, ctx: PageContext) -> None:
         self.action()
@@ -225,7 +230,7 @@ class ModeAjaxBackgroundJobDetails(AjaxPage):
         return job_snapshot
 
     def action(self) -> None:
-        job_details_page = ModeBackgroundJobDetails()
+        job_details_page = ModeBackgroundJobDetails(self._edition)
         action_handler = ActionHandler(job_details_page.breadcrumb())
         action_handler.handle_actions()
         if action_handler.did_delete_job():

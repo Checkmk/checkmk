@@ -19,7 +19,7 @@ from livestatus import SiteConfigurations
 
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.site import omd_site, SiteId
-from cmk.ccc.version import edition
+from cmk.ccc.version import Edition, edition
 from cmk.gui import forms
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import active_config, Config
@@ -87,6 +87,7 @@ from cmk.utils.paths import log_dir, omd_root, var_dir
 
 
 def register(
+    edition: Edition,
     mode_registry: ModeRegistry,
     match_item_generator_registry: MatchItemGeneratorRegistry,
 ) -> None:
@@ -94,19 +95,17 @@ def register(
     mode_registry.register(DefaultModeEditGlobalSetting)
     match_item_generator_registry.register(
         MatchItemGeneratorSettings(
-            "global_settings",
-            _("Global settings"),
-            DefaultModeEditGlobals,
+            "global_settings", _("Global settings"), lambda: DefaultModeEditGlobals(edition)
         )
     )
 
 
 class ABCGlobalSettingsMode(WatoMode):
-    def __init__(self) -> None:
+    def __init__(self, edition: Edition) -> None:
         self._search: None | str = None
         self._show_only_modified = False
 
-        super().__init__()
+        super().__init__(edition)
 
         self._default_values = ABCConfigDomain.get_all_default_globals()
         self._global_settings: GlobalSettings = {}
@@ -323,8 +322,8 @@ class ABCGlobalSettingsMode(WatoMode):
 
 
 class ABCEditGlobalSettingMode(WatoMode):
-    def __init__(self) -> None:
-        super().__init__()
+    def __init__(self, edition: Edition) -> None:
+        super().__init__(edition)
         # Don't call this in _from_vars. make_global_settings_context might rely on the object
         # being fully initialized.
         self._valuespec = self._config_variable.valuespec(
@@ -563,11 +562,12 @@ class ModeEditGlobals(ABCGlobalSettingsMode):
 
     def __init__(
         self,
+        edition: Edition,
         page_menu_dropdowns_postprocess: Callable[
             [Sequence[PageMenuDropdown]], list[PageMenuDropdown]
         ],
     ) -> None:
-        super().__init__()
+        super().__init__(edition)
         self._current_settings = dict(load_configuration_settings())
         self._page_menu_dropdowns_postprocess = page_menu_dropdowns_postprocess
 
@@ -657,8 +657,8 @@ class ModeEditGlobals(ABCGlobalSettingsMode):
 
 
 class DefaultModeEditGlobals(ModeEditGlobals):
-    def __init__(self) -> None:
-        super().__init__(list)
+    def __init__(self, edition: Edition) -> None:
+        super().__init__(edition, list)
 
 
 class ModeEditGlobalSetting(ABCEditGlobalSettingMode):
@@ -715,11 +715,11 @@ class MatchItemGeneratorSettings(ABCMatchItemGenerator):
         # RuntimeError("Working outside of request context.")
         # when registering below due to
         # ABCGlobalSettingsMode.__init__ --> _from_vars --> get_search_expression)
-        mode_class: type[ABCGlobalSettingsMode],
+        create_mode: Callable[[], ABCGlobalSettingsMode],
     ) -> None:
         super().__init__(name)
         self._topic: Final[str] = topic
-        self._mode_class: Final[type[ABCGlobalSettingsMode]] = mode_class
+        self._create_mode: Final = create_mode
 
     def _config_variable_to_match_item(
         self,
@@ -741,7 +741,7 @@ class MatchItemGeneratorSettings(ABCMatchItemGenerator):
         )
 
     def generate_match_items(self, user_permissions: UserPermissions) -> MatchItems:
-        mode = self._mode_class()
+        mode = self._create_mode()
         yield from (
             self._config_variable_to_match_item(
                 config_variable,

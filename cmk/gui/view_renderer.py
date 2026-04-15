@@ -247,7 +247,11 @@ class GUIViewRenderer(ABCViewRenderer):
                 html.open_div(class_="info")
                 html.icon("toggle_details")
                 html.span(
-                    _(' To view content, click on "<b>Apply filters</b>" in the "Filters" panel.')
+                    _(
+                        ' To view content, click on "<b>Apply filters</b>" in the "Filters" panel.<br><br>'
+                        'To display content by default, disable the "Show data only on search" setting in the View configuration. <br>'
+                        'This removes the need to click "Apply filters"'
+                    )
                 )
                 html.close_div()
 

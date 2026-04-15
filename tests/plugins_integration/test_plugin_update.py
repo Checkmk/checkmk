@@ -76,7 +76,6 @@ def _collect_test_site_base_data(
     return test_site_base, psd_rules_base, base_data, base_data_status_ok
 
 
-@pytest.mark.skip(reason="CMK-33568")
 def test_plugin_update(
     site_factory_base: SiteFactory,
     collect_test_site_base_data: tuple[Site, list[dict[str, Any]], dict[str, Any], dict[str, Any]],

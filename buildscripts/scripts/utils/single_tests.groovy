@@ -152,6 +152,65 @@ void run_make_target(Map args) {
     }
 }
 
+void run_make_target_k8s(Map args) {
+    withAugmentedTimeout([
+        timeout: args.timeout,
+        message: args.message,
+    ]) {
+        def faked_artifacts = args.faked_artifacts ? "--package-contains-faked-artifacts" : "";
+        def mk_oracle_binary_path_arg = args.mk_oracle_binary_path ? "MK_ORACLE_BINARY_PATH='${args.mk_oracle_binary_path}'" : "";
+        def working_dir = "${checkout_dir}";
+
+        if (args.prepare_fake_git_overlay) {
+            sh("""
+                # prepare a fake git "overlay"
+                time cp -r . /git
+
+                # prevent unsafe directory warnings
+                git config --global --add safe.directory /git
+            """);
+            working_dir = "/git";
+        }
+
+        // use try-finally to always perform required chmod command
+        try {
+            // no inline bash comments are allowed in this sh call
+            sh("""
+                mkdir -p ${args.result_path}
+                cd ${working_dir} || exit 1
+
+                # PTYTEST_ADDOPTS have been added by _container_env in dockerized_execution.py
+                PYTEST_ADDOPTS="--junitxml=${args.result_path}/junit.xml" \
+                RESULT_PATH='${args.result_path}' \
+                EDITION='${args.edition}' \
+                DOCKER_TAG='${args.docker_tag}' \
+                VERSION='${args.version}' \
+                DISTRO='${args.distro}' \
+                BRANCH='${args.branch_name}' \
+                TEST_FILTER='${args.test_filter}' \
+                FAKED_ARTIFACTS='${faked_artifacts}' \
+                CI_NODE_NAME='${env.NODE_NAME}' \
+                CI_WORKSPACE='${env.WORKSPACE}' \
+                CI_JOB_NAME='${env.JOB_NAME}' \
+                CI_BUILD_NUMBER='${env.BUILD_NUMBER}' \
+                CI_BUILD_URL='${env.BUILD_URL}' \
+                OTEL_SDK_DISABLED='${env.OTEL_SDK_DISABLED}' \
+                OTEL_EXPORTER_OTLP_ENDPOINT='${env.OTEL_EXPORTER_OTLP_ENDPOINT}' \
+                ${mk_oracle_binary_path_arg} \
+                make ${args.make_target}
+            """);
+        } finally {
+            // these lines are mandatory to prevent a broken archiveArtifacts step
+            if (args.prepare_fake_git_overlay) {
+                sh("""
+                    cd ${checkout_dir}
+                    chmod -R 555 ${args.result_path}
+                """);
+            }
+        }
+    }
+}
+
 void archive_and_process_reports(Map args) {
     show_duration("archiveArtifacts") {
         archiveArtifacts(

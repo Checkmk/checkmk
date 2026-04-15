@@ -3,6 +3,24 @@
 /// file: tests_helper.groovy
 
 // execute tests, catch error and output log
+// General parameters
+// @name: The name of the stage to run all of this in
+// @container_name: The container to use in k8s other than the default "minimal-ubuntu-checkmk-<BRANCH>"
+// @disable_hot_cache: Disable the hot cache usage
+//
+// Archive related parameters
+// @output_file: A single output file which will contain the output of cmd captured by tee. It will be archived
+// @archive_pattern: A pattern of files or folders to archive after executing cmd or callback
+//
+// Execution specific parameters
+// @cmd: The bash command to execute
+// @callback: A groovy function callback to call after a may specified cmd
+//
+// Credentials specific patterns
+// @credentialsLocation: Target location of a credential as file
+// @credentialsFileId: Name of a Jenkins file credential to use, together with credentialsLocation
+// @credentialsUsernameId: Name of a Jenkins username/password credential to use, together with credentialsLocation
+//
 void execute_test(Map config = [:]) {
     def artifacts_helper = load("${checkout_dir}/buildscripts/scripts/utils/upload_artifacts.groovy");
     def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
@@ -27,13 +45,12 @@ void execute_test(Map config = [:]) {
         // catch any error, set stage + build result to failure,
         // but continue in order to execute the publishIssues function
         catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
-            def cmd = defaultDict.cmd;
             if (defaultDict.output_file) {
-                cmd += " 2>&1 | tee ${defaultDict.output_file}";
+                defaultDict.cmd += " 2>&1 | tee ${defaultDict.output_file}";
             }
 
             if (kubernetes_inherit_from == "UNSET") {
-                run_sh_command(cmd);
+                run_this(defaultDict);
             } else {
                 container(defaultDict.container_name) {
                     println("'execute_test' is using k8s container '${defaultDict.container_name}'");
@@ -52,15 +69,23 @@ void execute_test(Map config = [:]) {
                         ] + (env.MOUNT_SHARED_REPOSITORY_CACHE == "1" ? [] : ['WORKSPACE', 'MODULE.bazel.lock']),
                         disable_hot_cache: env.USE_STASHED_BAZEL_FOLDER == "0" || defaultDict.disable_hot_cache,
                     ]) {
-                        run_sh_command(cmd);
-                    }
-
-                    if (defaultDict.output_file) {
-                        archiveArtifacts(
-                            allowEmptyArchive: true,
-                            artifacts: defaultDict.output_file,
-                            fingerprint: true,
-                        );
+                        if (defaultDict.credentialsFileId) {
+                            withCredentialFileAtLocation(
+                                credentialsId: defaultDict.credentialsFileId,
+                                location: defaultDict.credentialsLocation,
+                            ) {
+                                run_this(defaultDict);
+                            }
+                        } else if (defaultDict.credentialsUsernameId) {
+                            withCredentialUsernamePasswordAtLocation(
+                                credentialsId: defaultDict.credentialsUsernameId,
+                                location: defaultDict.credentialsLocation,
+                            ) {
+                                run_this(defaultDict);
+                            }
+                        } else {
+                            run_this(defaultDict);
+                        }
                     }
                 }
             }
@@ -68,7 +93,39 @@ void execute_test(Map config = [:]) {
     }
 }
 
-void run_sh_command(cmd) {
+// This function does run a specified cmd and/or callback function
+// and finally archive any defined output file and/or archive pattern unconditionally
+// of the result of the executed command or callback.
+void run_this(Map args) {
+    try {
+        if (args.cmd) {
+            run_sh_command(args.cmd);
+        }
+        if (args.callback) {
+            args.callback(args);
+        }
+    }
+    finally {
+        if (args.output_file || args.archive_pattern) {
+            def artifacts_to_archive = [
+                args.output_file ?: "",
+                args.archive_pattern ?: "",
+            ].findAll({
+                it != ""
+            }).join(",");
+
+            if (artifacts_to_archive) {
+                archiveArtifacts(
+                    allowEmptyArchive: true,
+                    artifacts: artifacts_to_archive,
+                    fingerprint: true,
+                );
+            }
+        }
+    }
+}
+
+void run_sh_command(String cmd) {
     sh("""
         set -o pipefail
         ${cmd}

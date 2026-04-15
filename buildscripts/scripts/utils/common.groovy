@@ -81,3 +81,21 @@ withCredentialFileAtLocation = { Map args, Closure body ->
         cmd_output("${rm_cmd} ${args.location}");
     }
 };
+
+withCredentialUsernamePasswordAtLocation = { Map args, Closure body ->
+    body.resolveStrategy = Closure.OWNER_FIRST;
+    body.delegate = [:];
+    def rm_cmd = onWindows ? "pwsh -c rm -Force" : "rm -f"
+
+    try {
+        withCredentials([usernamePassword(credentialsId: args.credentialsId, usernameVariable: "USER", passwordVariable: "PASSWORD")]) {
+            sh("""
+                echo "${USER}:${PASSWORD}" > ${args.location}
+            """);
+            body();
+        }
+        return true;
+    } finally {
+        cmd_output("${rm_cmd} ${args.location}");
+    }
+};

@@ -126,7 +126,7 @@ async function pollActivationStatusUntilComplete(activationId: string) {
         }
       })
       numberOfChangesLastActivation.value = response.extensions.changes.length
-      await fetchPendingChangesAjax()
+      await fetchPendingChangesAjax(activationId)
       if (sitesWithWarningsOrErrors.value) {
         showActivationResultWarningsErrors.value = true
       }
@@ -231,11 +231,12 @@ function setSelectedSites() {
     .map((site: Site) => site.siteId)
 }
 
-async function fetchPendingChangesAjax(): Promise<void> {
+async function fetchPendingChangesAjax(activationId?: string): Promise<void> {
   try {
-    const dataAsJson = (await ajaxCall.get(
-      'ajax_sidebar_get_sites_and_changes.py'
-    )) as SitesAndChanges
+    const url = activationId
+      ? `ajax_sidebar_get_sites_and_changes.py?activation_id=${encodeURIComponent(activationId)}`
+      : 'ajax_sidebar_get_sites_and_changes.py'
+    const dataAsJson = (await ajaxCall.get(url)) as SitesAndChanges
 
     if (Array.isArray(dataAsJson.pendingChanges)) {
       dataAsJson.pendingChanges = dataAsJson.pendingChanges

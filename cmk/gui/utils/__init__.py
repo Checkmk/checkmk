@@ -42,6 +42,22 @@ def gen_id() -> str:
     return str(uuid.uuid4())
 
 
+def validate_uuid_str(raw: str | None) -> str | None:
+    """Return *raw* if it is a valid UUID string in the canonical lowercase form
+    produced by :func:`gen_id`, otherwise ``None``.
+
+    Parses *raw* via ``uuid.UUID`` and re-serializes it. If the result differs
+    from *raw* (e.g. uppercase input) or parsing raises ``ValueError`` (malformed
+    input), ``None`` is returned.
+    """
+    if not raw:
+        return None
+    try:
+        return raw if str(uuid.UUID(raw)) == raw else None
+    except ValueError:
+        return None
+
+
 # This may not be moved to g, because this needs to be request independent
 # TODO: Move to cmk.gui.modules once load_web_plugins is dropped
 _failed_plugins: dict[Path, tuple[str, str, BaseException]] = {}

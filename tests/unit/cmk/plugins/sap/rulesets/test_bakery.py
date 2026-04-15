@@ -5,7 +5,7 @@
 
 import pytest
 
-from cmk.gui.plugins.legacy_bakery_rulesets.mk_sap import migrate, migrate_instance
+from cmk.plugins.sap.rulesets.bakery import migrate, migrate_instance
 
 INSTANCES = [
     {

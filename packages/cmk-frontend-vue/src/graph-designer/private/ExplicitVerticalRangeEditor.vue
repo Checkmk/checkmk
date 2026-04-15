@@ -43,16 +43,20 @@ const explicitVerticalRangeSuggestions: Suggestion[] = [
 
 const validateLower = (value: number | undefined) => {
   if (typeof value !== 'number' || typeof dataExplicitVerticalRangeUpper.value !== 'number') {
-    return []
+    return [_t('The lower bound must be a number')]
   }
-  return value > dataExplicitVerticalRangeUpper.value ? ['Must be less than upper bound'] : []
+  return value > dataExplicitVerticalRangeUpper.value
+    ? [_t('The lower bound must be less than the upper bound')]
+    : []
 }
 
 const validateUpper = (value: number | undefined) => {
   if (typeof value !== 'number' || typeof dataExplicitVerticalRangeLower.value !== 'number') {
-    return []
+    return [_t('The upper bound must be a number')]
   }
-  return value < dataExplicitVerticalRangeLower.value ? ['Must be more than lower bound'] : []
+  return value < dataExplicitVerticalRangeLower.value
+    ? [_t('The upper bound must be greater than the lower bound')]
+    : []
 }
 
 const emit = defineEmits<{

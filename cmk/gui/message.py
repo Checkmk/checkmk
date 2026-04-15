@@ -33,6 +33,10 @@ from cmk.gui.form_specs.generators.dict_to_catalog import (
     create_flat_catalog_from_dictionary,
 )
 from cmk.gui.form_specs.unstable import LegacyValueSpec, OptionalChoice
+from cmk.gui.form_specs.unstable.multiple_choice import (
+    MultipleChoiceElementExtended,
+    MultipleChoiceExtended,
+)
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.header import make_header
 from cmk.gui.htmllib.html import html
@@ -359,9 +363,9 @@ def _message_spec(users: Mapping[str, UserSpec]) -> Dictionary:
                             CascadingSingleChoiceElement(
                                 name="list",
                                 title=Title("A list of specific users"),
-                                parameter_form=MultipleChoice(
+                                parameter_form=MultipleChoiceExtended(
                                     elements=[
-                                        MultipleChoiceElement(
+                                        MultipleChoiceElementExtended(
                                             name=key,
                                             title=Title(  # astrein: disable=localization-checker
                                                 value

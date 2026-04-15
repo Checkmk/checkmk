@@ -48,7 +48,7 @@ SKIPPED_CHECKS = [
 ]
 
 
-@pytest.mark.skip(reason="CMK-33440")
+@pytest.mark.skip(reason="CMK-33568")
 def test_plugin_update(
     test_site_update: Site,
     site_factory_update: SiteFactory,

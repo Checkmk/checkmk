@@ -36,7 +36,7 @@ def test_plugin(
     ]
 
     if any(_ in request.node.name for _ in xfail_list):
-        pytest.xfail(reason="CMK-33440")
+        pytest.xfail(reason="CMK-33568")
 
     with setup_host(test_site, host_name):
         disk_dump = read_disk_dump(host_name)

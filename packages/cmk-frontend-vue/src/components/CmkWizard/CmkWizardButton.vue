@@ -19,6 +19,7 @@ export interface CmkWizardButtonProps {
   iconRotate?: number
   overrideLabel?: TranslatedString
   validationCb?: () => Promise<boolean>
+  disabled?: boolean | undefined
 }
 
 const { _t } = usei18n()
@@ -26,6 +27,9 @@ const context = getWizardContext()
 const props = defineProps<CmkWizardButtonProps>()
 
 async function onClick() {
+  if (props.disabled) {
+    return
+  }
   switch (props.type) {
     case 'next':
       if (props.validationCb) {
@@ -106,7 +110,12 @@ const buttonConfig = getButtonConfig(props.type, props.iconName, props.iconRotat
 </script>
 
 <template>
-  <CmkButton class="cmk-wizard-button" :variant="buttonConfig.variant" @click="onClick">
+  <CmkButton
+    class="cmk-wizard-button"
+    :variant="buttonConfig.variant"
+    :disabled="props.disabled"
+    @click="onClick"
+  >
     <CmkIcon
       :name="buttonConfig.icon.name"
       :size="buttonConfig.iconSize"

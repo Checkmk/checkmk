@@ -8,7 +8,7 @@
 import pytest
 
 from cmk.agent_based.v2 import Result, Service, State
-from cmk.legacy_checks.megaraid_bbu import (
+from cmk.plugins.broadcom_storage.agent_based.megaraid_bbu import (
     check_megaraid_bbu,
     discover_megaraid_bbu,
     megaraid_bbu_parse,

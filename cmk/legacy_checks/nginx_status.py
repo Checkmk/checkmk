@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
-
 # Example output:
 # <<<nginx_status>>>
 # 127.0.0.1 80 Active connections: 1
@@ -14,20 +12,37 @@
 
 
 import time
+from collections.abc import Mapping
+from typing import Any
 
-from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
-from cmk.agent_based.v2 import get_rate, get_value_store
+from cmk.agent_based.legacy.conversion import (
+    # Temporary compatibility layer until we migrate the corresponding ruleset.
+    check_levels_legacy_compatible as check_levels,
+)
+from cmk.agent_based.v2 import (
+    AgentSection,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    get_rate,
+    get_value_store,
+    Metric,
+    Result,
+    Service,
+    State,
+    StringTable,
+)
 
-check_info = {}
+Section = dict[str, dict[str, int]]
 
 
-def parse_nginx_status(string_table):
+def parse_nginx_status(string_table: StringTable) -> Section:
     if len(string_table) % 4 != 0:
         # Every instance block consists of four lines
-        # Multiple block may occur.
+        # Multiple blocks may occur.
         return {}
 
-    data = {}
+    data: Section = {}
     for i, line in enumerate(string_table):
         address, port = line[:2]
         if len(line) < 3:
@@ -49,68 +64,85 @@ def parse_nginx_status(string_table):
     return data
 
 
-def check_nginx_status(item, params, parsed):
-    if not (data := parsed.get(item)):
+def check_nginx_status(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
+    if not (data := section.get(item)):
         return
-    if params is None:
-        params = {}
 
     # Add some more values, derived from the raw ones...
-    computed_values = {}
-    computed_values["requests_per_conn"] = 1.0 * data["requests"] / data["handled"]
+    requests_per_conn = 1.0 * data["requests"] / data["handled"]
 
     this_time = int(time.time())
     value_store = get_value_store()
 
-    for key in ["accepted", "handled", "requests"]:
-        per_sec = get_rate(
+    rates: dict[str, float] = {}
+    for key in ("accepted", "handled", "requests"):
+        rates[key] = get_rate(
             value_store, f"nginx_status.{key}", this_time, data[key], raise_overflow=True
         )
-        computed_values["%s_per_sec" % key] = per_sec
 
-    state, txt, perf = check_levels(
-        data["active"],
-        "active",
-        params.get("active_connections"),
-        infoname="Active",
-        human_readable_func=lambda i: "%d" % i,
+    # Active connections with levels
+    active_results = list(
+        check_levels(
+            data["active"],
+            "active",
+            params.get("active_connections"),
+            infoname="Active",
+            human_readable_func=lambda i: "%d" % i,
+        )
     )
-    txt += " (%d reading, %d writing, %d waiting)" % (
-        data["reading"],
-        data["writing"],
-        data["waiting"],
+    for r in active_results:
+        if isinstance(r, Result):
+            yield Result(
+                state=r.state,
+                summary=f"{r.summary} ({data['reading']} reading, {data['writing']} writing, {data['waiting']} waiting)",
+            )
+        else:
+            yield r
+
+    yield Metric("reading", data["reading"])
+    yield Metric("writing", data["writing"])
+    yield Metric("waiting", data["waiting"])
+
+    # Requests rate
+    request_results = list(
+        check_levels(
+            rates["requests"],
+            "requests",
+            None,
+            human_readable_func=lambda x: f"{x:.2f}/s",
+            infoname="Requests",
+        )
     )
-    yield state, txt, perf
-    yield 0, "", [(key, data[key]) for key in ("reading", "writing", "waiting")]
+    for r in request_results:
+        if isinstance(r, Result):
+            yield Result(
+                state=r.state,
+                summary=f"{r.summary} ({requests_per_conn:.2f}/Connection)",
+            )
+        else:
+            yield r
 
-    requests_rate = computed_values["requests_per_sec"]
-    state, txt, perf = check_levels(
-        requests_rate,
-        "requests",
-        None,
-        human_readable_func=lambda x: f"{x:.2f}/s",
-        infoname="Requests",
-    )
-    txt += " (%0.2f/Connection)" % computed_values["requests_per_conn"]
-    yield state, txt, perf
-
-    yield (
-        0,
-        "Accepted: %0.2f/s" % computed_values["accepted_per_sec"],
-        [("accepted", data["accepted"])],
-    )
-    yield 0, "Handled: %0.2f/s" % computed_values["handled_per_sec"], [("handled", data["handled"])]
+    yield Result(state=State.OK, summary=f"Accepted: {rates['accepted']:.2f}/s")
+    yield Metric("accepted", data["accepted"])
+    yield Result(state=State.OK, summary=f"Handled: {rates['handled']:.2f}/s")
+    yield Metric("handled", data["handled"])
 
 
-def discover_nginx_status(section):
-    yield from ((item, {}) for item in section)
+def discover_nginx_status(section: Section) -> DiscoveryResult:
+    yield from (Service(item=item) for item in section)
 
 
-check_info["nginx_status"] = LegacyCheckDefinition(
+agent_section_nginx_status = AgentSection(
     name="nginx_status",
     parse_function=parse_nginx_status,
+)
+
+
+check_plugin_nginx_status = CheckPlugin(
+    name="nginx_status",
     service_name="Nginx %s Status",
     discovery_function=discover_nginx_status,
     check_function=check_nginx_status,
     check_ruleset_name="nginx_status",
+    check_default_parameters={},
 )

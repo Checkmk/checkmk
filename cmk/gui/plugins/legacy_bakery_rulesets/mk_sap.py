@@ -3,168 +3,178 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Mapping
 
-from cmk.gui.agent_bakery import RulespecGroupMonitoringAgentsAgentPlugins
-from cmk.gui.i18n import _
-from cmk.gui.plugins.wato.utils import HostRulespec, rulespec_registry
-from cmk.gui.valuespec import (
-    Alternative,
+from cmk.rulesets.v1 import Help, Label, Title
+from cmk.rulesets.v1.form_specs import (
+    CascadingSingleChoice,
+    CascadingSingleChoiceElement,
+    DefaultValue,
+    DictElement,
     Dictionary,
     FixedValue,
-    ListOf,
-    ListOfStrings,
-    TextInput,
+    List,
+    migrate_to_password,
+    Password,
+    String,
+    TimeMagnitude,
+    TimeSpan,
+    validators,
 )
-from cmk.gui.wato import MigrateToIndividualOrStoredPassword
-from cmk.utils.rulesets.definition import RuleGroup
+from cmk.rulesets.v1.rule_specs import AgentConfig, Topic
 
 
-def _valuespec_agent_config_mk_sap() -> Alternative:
-    return Alternative(
-        title=_("SAP R/3 monitoring plug-in"),
-        help=_(
-            "This rule set will deploy the agent plug-in <tt>mk_sap</tt> for (locally) monitoring "
-            "SAP R/3 instances. Note: you still need to manually deploy the SAP NetWeaver RFCSDK (nwrfcsdk) "
-            "and the Python module sapnwrfc."
-        ),
-        default_value={
-            "instances": [
-                {
-                    "ashost": "localhost",
-                    "sysnr": "00",
-                    "client": "100",
-                    "user": "cmk-user",
-                    "passwd": "thiswontworkanyway",
-                    "trace": "3",
-                    "lang": "EN",
-                }
-            ],
-            "paths": [
-                "SAP BI Monitors/BI Monitor",
-                "SAP BI Monitors/BI Monitor/*/Oracle/Performance",
-                "SAP CCMS Monitor Templates/Operating System/OperatingSystem/CPU/*",
-                "SAP CCMS Monitor Templates/Operating System/OperatingSystem/CPU/CPU_Utilization",
-            ],
+def migrate_instance(value: object) -> Mapping[str, object]:
+    if not isinstance(value, dict):
+        raise ValueError(f"Unexpected value: {value!r}")
+    return {**value, "passwd": migrate_to_password(value["passwd"])}
+
+
+def migrate(value: object) -> Mapping[str, object]:
+    if isinstance(value, dict) and "deployment" in value:
+        return value
+    if value is None:
+        return {"deployment": ("do_not_deploy", None)}
+    if isinstance(value, dict):
+        return {"deployment": ("sync", None), **value}
+    raise ValueError(f"Unexpected value: {value!r}")
+
+
+def _instance_form() -> Dictionary:
+    return Dictionary(
+        title=Title("SAP R/3 instance"),
+        migrate=migrate_instance,
+        elements={
+            "ashost": DictElement(
+                required=True,
+                parameter_form=String(
+                    title=Title("Host name"),
+                    prefill=DefaultValue("localhost"),
+                    custom_validate=(validators.LengthInRange(min_value=1),),
+                ),
+            ),
+            "sysnr": DictElement(
+                required=True,
+                parameter_form=String(
+                    title=Title("System Number"),
+                    prefill=DefaultValue("00"),
+                    custom_validate=(validators.MatchRegex(r"^[0-9][0-9]$"),),
+                ),
+            ),
+            "client": DictElement(
+                required=True,
+                parameter_form=String(
+                    title=Title("SAP-Client"),
+                    prefill=DefaultValue("100"),
+                    custom_validate=(validators.MatchRegex(r"^[0-9]{3}$"),),
+                ),
+            ),
+            "user": DictElement(
+                required=True,
+                parameter_form=String(
+                    title=Title("User for login"),
+                    prefill=DefaultValue("cmk-user"),
+                    custom_validate=(validators.LengthInRange(min_value=1),),
+                ),
+            ),
+            "passwd": DictElement(
+                required=True,
+                parameter_form=Password(title=Title("Password for login")),
+            ),
+            "trace": DictElement(
+                required=True,
+                parameter_form=String(
+                    title=Title("Trace level"),
+                    prefill=DefaultValue("3"),
+                    custom_validate=(validators.MatchRegex(r"^[1-9]$"),),
+                ),
+            ),
+            "lang": DictElement(
+                required=True,
+                parameter_form=String(
+                    title=Title("Language"),
+                    prefill=DefaultValue("EN"),
+                    custom_validate=(validators.MatchRegex(r"^[A-Z][A-Z]$"),),
+                ),
+            ),
+            "host_prefix": DictElement(
+                parameter_form=String(
+                    title=Title("Prefix for piggyback host name"),
+                ),
+            ),
         },
-        elements=[
-            Dictionary(
-                title=_("Deploy the SAP R/3 plug-in"),
-                optional_keys=False,
-                elements=[
-                    (
-                        "instances",
-                        ListOf(
-                            valuespec=Dictionary(
-                                optional_keys=["host_prefix"],
-                                elements=[
-                                    (
-                                        "ashost",
-                                        TextInput(
-                                            title=_("Host name"),
-                                            default_value="localhost",
-                                            allow_empty=False,
-                                        ),
-                                    ),
-                                    (
-                                        "sysnr",
-                                        TextInput(
-                                            title=_("System Number"),
-                                            size=2,
-                                            default_value="00",
-                                            regex="^[0-9][0-9]$",
-                                            regex_error=_("The system number is two digits"),
-                                        ),
-                                    ),
-                                    (
-                                        "client",
-                                        TextInput(
-                                            title=_("SAP-Client"),
-                                            size=3,
-                                            default_value="100",
-                                            allow_empty=False,
-                                        ),
-                                    ),
-                                    (
-                                        "user",
-                                        TextInput(
-                                            title=_("User for login"),
-                                            default_value="cmk-user",
-                                            allow_empty=False,
-                                        ),
-                                    ),
-                                    (
-                                        "passwd",
-                                        MigrateToIndividualOrStoredPassword(
-                                            title=_("Password for login"),
-                                            allow_empty=False,
-                                        ),
-                                    ),
-                                    (
-                                        "trace",
-                                        TextInput(
-                                            title=_("Trace level"),
-                                            size=1,
-                                            default_value="3",
-                                            regex="^[1-9]$",
-                                            regex_error=_("Allowed is 1 ... 9"),
-                                        ),
-                                    ),
-                                    # ( 'loglevel': 'warn', ), # hard coded to "warn" currently. Found no docu about other levels
-                                    (
-                                        "lang",
-                                        TextInput(
-                                            title=_("Language"),
-                                            size=2,
-                                            default_value="EN",
-                                            regex="^[A-Z][A-Z]$",
-                                            regex_error=_(
-                                                "Specify two upper case letters like <tt>EN</tt> or <tt>DE</tt>."
-                                            ),
-                                        ),
-                                    ),
-                                    (
-                                        "host_prefix",
-                                        TextInput(title=_("Prefix for piggyback host name")),
-                                    ),
-                                ],
-                            ),
-                            title=_("Instances to monitor"),
-                            add_label=_("Add instance to monitor"),
-                            movable=False,
-                        ),
-                    ),
-                    (
-                        "paths",
-                        ListOfStrings(
-                            title=_("CCMS paths to monitor"),
-                            help=_(
-                                "Specify the paths in CCMS that you want to monitor. Each entry must match the full path to one or"
-                                " several monitor objects. We use Unix shell patterns during matching, so"
-                                " you can use several chars as placeholders:<ul>"
-                                "<li><tt>* </tt> matches everything</li>"
-                                "<li><tt>?</tt> matches any single character</li>"
-                                "<li><tt>[seq]</tt> matches any character in seq</li>"
-                                "<li><tt>[!seq]</tt> matches any character not in seq</li>"
-                                "</ul>"
-                            ),
-                            size=100,
-                        ),
-                    ),
-                ],
-            ),
-            FixedValue(
-                value=None,
-                title=_("Do not deploy the SAP R/3 plug-in"),
-                totext=_("disabled"),
-            ),
-        ],
     )
 
 
-rulespec_registry.register(
-    HostRulespec(
-        group=RulespecGroupMonitoringAgentsAgentPlugins,
-        name=RuleGroup.AgentConfig("mk_sap"),
-        valuespec=_valuespec_agent_config_mk_sap,
+def _valuespec_agent_config_mk_sap() -> Dictionary:
+    return Dictionary(
+        help_text=Help(
+            "This rule set will deploy the agent plug-in <tt>mk_sap</tt> for (locally) monitoring "
+            "SAP R/3 instances. Note: you still need to manually deploy the SAP NetWeaver RFCSDK "
+            "(nwrfcsdk) and the Python module sapnwrfc."
+        ),
+        elements={
+            "deployment": DictElement(
+                required=True,
+                parameter_form=CascadingSingleChoice(
+                    title=Title("Deployment type"),
+                    elements=(
+                        CascadingSingleChoiceElement(
+                            name="sync",
+                            title=Title("Deploy the plug-in and run it synchronously"),
+                            parameter_form=FixedValue(value=None),
+                        ),
+                        CascadingSingleChoiceElement(
+                            name="cached",
+                            title=Title("Deploy the plug-in and run it asynchronously"),
+                            parameter_form=TimeSpan(
+                                displayed_magnitudes=(
+                                    TimeMagnitude.HOUR,
+                                    TimeMagnitude.MINUTE,
+                                ),
+                            ),
+                        ),
+                        CascadingSingleChoiceElement(
+                            name="do_not_deploy",
+                            title=Title("Do not deploy the SAP R/3 plug-in"),
+                            parameter_form=FixedValue(value=None),
+                        ),
+                    ),
+                    prefill=DefaultValue("sync"),
+                ),
+            ),
+            "instances": DictElement(
+                parameter_form=List(
+                    title=Title("Instances to monitor"),
+                    add_element_label=Label("Add instance to monitor"),
+                    element_template=_instance_form(),
+                ),
+            ),
+            "paths": DictElement(
+                parameter_form=List(
+                    title=Title("CCMS paths to monitor"),
+                    help_text=Help(
+                        "Specify the paths in CCMS that you want to monitor. Each entry must match"
+                        " the full path to one or several monitor objects. Unix shell patterns are"
+                        " supported: * matches everything, ? matches any single character,"
+                        " [seq] matches any character in seq, [!seq] matches any character not in seq."
+                        " If left empty, the following default paths are used:"
+                        " SAP BI Monitors/BI Monitor,"
+                        " SAP BI Monitors/BI Monitor/*/Oracle/Performance,"
+                        " SAP CCMS Monitor Templates/Operating System/OperatingSystem/CPU/*,"
+                        " SAP CCMS Monitor Templates/Operating System/OperatingSystem/CPU/CPU_Utilization."
+                    ),
+                    element_template=String(),
+                ),
+            ),
+        },
+        migrate=migrate,
     )
+
+
+rule_spec_mk_sap = AgentConfig(
+    title=Title("SAP R/3 monitoring plug-in"),
+    name="mk_sap",
+    topic=Topic.APPLICATIONS,
+    parameter_form=_valuespec_agent_config_mk_sap,
 )

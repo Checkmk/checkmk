@@ -39,7 +39,7 @@ from cmk.utils.user import UserId
 from cmk.gui import sites
 from cmk.gui.config import builtin_role_ids
 from cmk.gui.customer import customer_api, SCOPE_GLOBAL
-from cmk.gui.exceptions import MKUserError
+from cmk.gui.exceptions import MKAuthException, MKUserError
 from cmk.gui.fields.base import BaseSchema, MultiNested, ValueTypedDictSchema
 from cmk.gui.fields.utils import attr_openapi_schema, ObjectContext, ObjectType, tree_to_expr
 from cmk.gui.groups import GroupName, GroupType
@@ -569,6 +569,7 @@ class HostField(base.String):
 
     default_error_messages = {
         "should_exist": "Host not found: {host_name!r}",
+        "not_found_or_no_permission": "Host not found or access denied: {host_name!r}",
         "should_not_exist": "Host {host_name!r} already exists.",
         "should_be_monitored": "Host {host_name!r} should be monitored but it's not. "
         "Activate the configuration?",
@@ -614,11 +615,13 @@ class HostField(base.String):
             return
 
         if host:
-            host._user_needs_permission("read")
+            try:
+                host._user_needs_permission("read")
+            except MKAuthException:
+                raise self.make_error("not_found_or_no_permission", host_name=host.name())
+
             if self._permission_type == "setup_write":
                 host._user_needs_permission("write")
-
-        return
 
     def _deserialize(
         self,

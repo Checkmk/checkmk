@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
-
 # Example output from agent:
 # [[SINGLE_ITEM_EXPORT_int_jens]]
 # 0 0 0 0
@@ -17,49 +15,57 @@
 # [[EDATA_SERIALNUMBERQUERY_INBOX]]
 # 0 0 0 0
 
+from collections.abc import Mapping
+from typing import Any
 
-# mypy: disable-error-code="var-annotated"
+from cmk.agent_based.legacy.conversion import (
+    # Temporary compatibility layer until we migrate the corresponding ruleset.
+    check_levels_legacy_compatible as check_levels,
+)
+from cmk.agent_based.v2 import (
+    AgentSection,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Result,
+    Service,
+    State,
+    StringTable,
+)
 
-from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
-from cmk.agent_based.v2 import StringTable
 
-check_info = {}
-
-
-def discover_mq_queues(info):
-    inventory = []
-    for line in info:
+def discover_mq_queues(section: StringTable) -> DiscoveryResult:
+    for line in section:
         if line[0].startswith("[["):
-            item = line[0][2:-2]
-            inventory.append((item, {}))
-    return inventory
+            yield Service(item=line[0][2:-2])
 
 
-def check_mq_queues(item, params, info):
+def check_mq_queues(item: str, params: Mapping[str, Any], section: StringTable) -> CheckResult:
     found = False
-    for line in info:
-        if found is True:
-            size, consumerCount, enqueueCount, dequeueCount = map(int, line)
-            consumer_count_upper_levels = params["consumer_count_levels_upper"] or (None, None)
-            consumer_count_lower_levels = params["consumer_count_levels_lower"] or (None, None)
-            if (
-                count_result := check_levels(
-                    consumerCount,
+    for line in section:
+        if found:
+            size, consumer_count, enqueue_count, dequeue_count = map(int, line)
+            upper = params["consumer_count_levels_upper"] or (None, None)
+            lower = params["consumer_count_levels_lower"] or (None, None)
+            count_results = list(
+                check_levels(
+                    consumer_count,
                     None,
-                    consumer_count_upper_levels + consumer_count_lower_levels,
+                    upper + lower,
                     infoname="Consuming connections",
                     human_readable_func=str,
                 )
-            )[0]:
-                yield count_result
-            yield check_levels(
+            )
+            if any(isinstance(r, Result) and r.state != State.OK for r in count_results):
+                yield from count_results
+            yield from check_levels(
                 size, "queue", params["size"], infoname="Queue size", human_readable_func=str
             )
-            yield check_levels(
-                enqueueCount, "enque", None, infoname="Enqueue count", human_readable_func=str
+            yield from check_levels(
+                enqueue_count, "enque", None, infoname="Enqueue count", human_readable_func=str
             )
-            yield check_levels(
-                dequeueCount, "deque", None, infoname="Dequeue count", human_readable_func=str
+            yield from check_levels(
+                dequeue_count, "deque", None, infoname="Dequeue count", human_readable_func=str
             )
             return
 
@@ -71,9 +77,14 @@ def parse_mq_queues(string_table: StringTable) -> StringTable:
     return string_table
 
 
-check_info["mq_queues"] = LegacyCheckDefinition(
+agent_section_mq_queues = AgentSection(
     name="mq_queues",
     parse_function=parse_mq_queues,
+)
+
+
+check_plugin_mq_queues = CheckPlugin(
+    name="mq_queues",
     service_name="Queue %s",
     discovery_function=discover_mq_queues,
     check_function=check_mq_queues,

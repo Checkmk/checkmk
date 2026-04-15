@@ -4,30 +4,31 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="misc"
-# mypy: disable-error-code="no-untyped-call"
 
 from collections.abc import Mapping, Sequence
 from typing import Any
 
 import pytest
 
-from cmk.agent_based.v2 import StringTable
+from cmk.agent_based.v2 import Metric, Result, Service, State, StringTable
 from cmk.legacy_checks.mq_queues import check_mq_queues, discover_mq_queues, parse_mq_queues
 
 
 @pytest.mark.parametrize(
     "string_table, expected_discoveries",
     [
-        ([["[[Queue_App1_App2]]"], ["1", "2", "3", "4"]], [("Queue_App1_App2", {})]),
+        ([["[[Queue_App1_App2]]"], ["1", "2", "3", "4"]], [Service(item="Queue_App1_App2")]),
     ],
 )
 def test_discover_mq_queues(
-    string_table: StringTable, expected_discoveries: Sequence[tuple[str, Mapping[str, Any]]]
+    string_table: StringTable, expected_discoveries: Sequence[Service]
 ) -> None:
     """Test discovery function for mq_queues check."""
     parsed = parse_mq_queues(string_table)
     result = list(discover_mq_queues(parsed))
-    assert sorted(result) == sorted(expected_discoveries)
+    assert sorted(result, key=lambda s: s.item or "") == sorted(
+        expected_discoveries, key=lambda s: s.item or ""
+    )
 
 
 @pytest.mark.parametrize(
@@ -42,9 +43,12 @@ def test_discover_mq_queues(
             },
             [["[[Queue_App1_App2]]"], ["1", "2", "3", "4"]],
             [
-                (0, "Queue size: 1", [("queue", 1, None, None)]),
-                (0, "Enqueue count: 3", [("enque", 3, None, None)]),
-                (0, "Dequeue count: 4", [("deque", 4, None, None)]),
+                Result(state=State.OK, summary="Queue size: 1"),
+                Metric("queue", 1),
+                Result(state=State.OK, summary="Enqueue count: 3"),
+                Metric("enque", 3),
+                Result(state=State.OK, summary="Dequeue count: 4"),
+                Metric("deque", 4),
             ],
         ),
         (
@@ -56,14 +60,16 @@ def test_discover_mq_queues(
             },
             [["[[M2M_DC_MGMT]]"], ["0", "12", "9193", "9193"]],
             [
-                (
-                    2,
-                    "Consuming connections: 12 (warn/crit at 5/9)",
-                    [],
+                Result(
+                    state=State.CRIT,
+                    summary="Consuming connections: 12 (warn/crit at 5/9)",
                 ),
-                (0, "Queue size: 0", [("queue", 0, 6, 10)]),
-                (0, "Enqueue count: 9193", [("enque", 9193, None, None)]),
-                (0, "Dequeue count: 9193", [("deque", 9193, None, None)]),
+                Result(state=State.OK, summary="Queue size: 0"),
+                Metric("queue", 0, levels=(6.0, 10.0)),
+                Result(state=State.OK, summary="Enqueue count: 9193"),
+                Metric("enque", 9193),
+                Result(state=State.OK, summary="Dequeue count: 9193"),
+                Metric("deque", 9193),
             ],
         ),
         (
@@ -75,14 +81,16 @@ def test_discover_mq_queues(
             },
             [["[[M2M_DATA_RESPONSE]]"], ["0", "1", "9193", "9193"]],
             [
-                (
-                    1,
-                    "Consuming connections: 1 (warn/crit below 3/1)",
-                    [],
+                Result(
+                    state=State.WARN,
+                    summary="Consuming connections: 1 (warn/crit below 3/1)",
                 ),
-                (0, "Queue size: 0", [("queue", 0, 6, 10)]),
-                (0, "Enqueue count: 9193", [("enque", 9193, None, None)]),
-                (0, "Dequeue count: 9193", [("deque", 9193, None, None)]),
+                Result(state=State.OK, summary="Queue size: 0"),
+                Metric("queue", 0, levels=(6.0, 10.0)),
+                Result(state=State.OK, summary="Enqueue count: 9193"),
+                Metric("enque", 9193),
+                Result(state=State.OK, summary="Dequeue count: 9193"),
+                Metric("deque", 9193),
             ],
         ),
         (
@@ -94,14 +102,16 @@ def test_discover_mq_queues(
             },
             [["[[IIS_NMS_MGMT]]"], ["0", "12", "9193", "9193"]],
             [
-                (
-                    2,
-                    "Consuming connections: 12 (warn/crit at 5/9)",
-                    [],
+                Result(
+                    state=State.CRIT,
+                    summary="Consuming connections: 12 (warn/crit at 5/9)",
                 ),
-                (0, "Queue size: 0", [("queue", 0, 6, 10)]),
-                (0, "Enqueue count: 9193", [("enque", 9193, None, None)]),
-                (0, "Dequeue count: 9193", [("deque", 9193, None, None)]),
+                Result(state=State.OK, summary="Queue size: 0"),
+                Metric("queue", 0, levels=(6.0, 10.0)),
+                Result(state=State.OK, summary="Enqueue count: 9193"),
+                Metric("enque", 9193),
+                Result(state=State.OK, summary="Dequeue count: 9193"),
+                Metric("deque", 9193),
             ],
         ),
         (
@@ -113,20 +123,25 @@ def test_discover_mq_queues(
             },
             [["[[IIS_FW_UPGRADE_DWNLD]]"], ["0", "4", "9193", "9193"]],
             [
-                (
-                    2,
-                    "Consuming connections: 4 (warn/crit below 13/5)",
-                    [],
+                Result(
+                    state=State.CRIT,
+                    summary="Consuming connections: 4 (warn/crit below 13/5)",
                 ),
-                (0, "Queue size: 0", [("queue", 0, 6, 10)]),
-                (0, "Enqueue count: 9193", [("enque", 9193, None, None)]),
-                (0, "Dequeue count: 9193", [("deque", 9193, None, None)]),
+                Result(state=State.OK, summary="Queue size: 0"),
+                Metric("queue", 0, levels=(6.0, 10.0)),
+                Result(state=State.OK, summary="Enqueue count: 9193"),
+                Metric("enque", 9193),
+                Result(state=State.OK, summary="Dequeue count: 9193"),
+                Metric("deque", 9193),
             ],
         ),
     ],
 )
 def test_check_mq_queues(
-    item: str, params: Mapping[str, Any], string_table: StringTable, expected_results: Sequence[Any]
+    item: str,
+    params: Mapping[str, Any],
+    string_table: StringTable,
+    expected_results: Sequence[Result | Metric],
 ) -> None:
     """Test check function for mq_queues check."""
     parsed = parse_mq_queues(string_table)

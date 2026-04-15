@@ -73,3 +73,11 @@ configure_make(
         "lib/engines-3",
     ],
 )
+
+filegroup(
+    name = "gen_dir",
+    srcs = [":openssl"],
+    output_group = "gen_dir",
+    visibility = ["//visibility:public"],
+)
+

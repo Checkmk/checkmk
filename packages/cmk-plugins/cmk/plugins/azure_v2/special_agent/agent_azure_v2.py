@@ -91,7 +91,7 @@ class UniqueHostnamesConfig:
     def __bool__(self):
         return bool(self.enabled)
 
-    def enabled_for_resource_type(self, type: str):
+    def enabled_for_resource_type(self, type: str):  # noqa: A002
         if type.lower() == "microsoft.compute/virtualmachines" and self.exclude_vms:
             return False
         return bool(self.enabled)
@@ -175,7 +175,7 @@ class _AzureEntity(ABC):
 
     @property
     def piggytarget(self) -> str:
-        if (type := self.info.get("type")) is not None:
+        if (type := self.info.get("type")) is not None:  # noqa: A001
             use_unique_hostnames = self.unique_hostnames_config.enabled_for_resource_type(type)
         else:
             use_unique_hostnames = bool(self.unique_hostnames_config)
@@ -234,7 +234,7 @@ class _AzureEntity(ABC):
 class AzureSubscription(_AzureEntity):
     def __init__(
         self,
-        id: str,
+        id: str,  # noqa: A002
         name: str,
         tags: Mapping[str, str],
         unique_hostnames_config: UniqueHostnamesConfig,
@@ -268,7 +268,7 @@ class AzureSubscription(_AzureEntity):
 
 
 class AzureTenant(_AzureEntity):
-    def __init__(self, id: str, name: str) -> None:
+    def __init__(self, id: str, name: str) -> None:  # noqa: A002
         super().__init__(
             entity_name=name or id,
             section="tenant",
@@ -1847,7 +1847,7 @@ class MetricCache(AzureAsyncCache):
 
         if self.group_metrics_definitions.dimension_filters:
             # build the filter for the azure getBatch api
-            filter = " and ".join(
+            filter = " and ".join(  # noqa: A001
                 f"{df.name} eq '{df.value}'"
                 for df in self.group_metrics_definitions.dimension_filters
             )

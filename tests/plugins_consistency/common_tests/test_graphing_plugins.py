@@ -289,19 +289,17 @@ def _metric_names_by_module(
 @pytest.mark.skip_if_edition("community")
 def test_bundles() -> None:
     offenders = [
-        (module, metric_names)
+        (module, metric_names, bundles)
         for module, metric_names in _metric_names_by_module(
             _load_graphing_plugins().plugins
         ).items()
         if (bundles := metric_names.bundles)
         and (len(bundles) > 1 or set(metric_names.from_metrics) != set(bundles[0]))
+        and module not in _ALLOWED_BUNDLE_VIOLATIONS
     ]
 
-    for module, metric_names in (
-        (module, metric_names)
-        for module, metric_names in offenders
-        if module not in _ALLOWED_BUNDLE_VIOLATIONS
-    ):
+    assert not [m for m, *_ in offenders]
+    for module, metric_names, bundles in offenders:
         assert len(bundles) <= 1, (
             f"The module {module} defines multiple bundles. Our graphing modules are allowed to"
             " contain either standalone metric definitions or exactly one cohesive bundle of"
@@ -316,8 +314,17 @@ def test_bundles() -> None:
 
 
 _ALLOWED_BUNDLE_VIOLATIONS = {
-    # we cannot have sub-modules below the cee folder, so we have to allow the following violations
-    "cmk.plugins.azure_v2.graphing.nonfree",
+    # FIXME CMK-33780
+    "cmk.plugins.azure_v2_extended.graphing.azure_natgateways_packets",
+    "cmk.plugins.azure_v2_extended.graphing.azure_cosmosdb_database_container_throughput",
+    "cmk.plugins.azure_v2_extended.graphing.azure_cosmosdb_storage",
+    "cmk.plugins.azure_v2_extended.graphing.azure_cosmosdb_database_container_requests",
+    "cmk.plugins.azure_v2_extended.graphing.azure_cosmosdb_database_requests",
+    "cmk.plugins.azure_v2_extended.graphing.azure_natgateways_throughput",
+    "cmk.plugins.azure_v2_extended.graphing.azure_natgateways_connections",
+    "cmk.plugins.azure_v2_extended.graphing.azure_cosmosdb_throughput",
+    "cmk.plugins.azure_v2_extended.graphing.azure_cosmosdb_database_throughput",
+    "cmk.plugins.azure_v2_extended.graphing.azure_cosmosdb_requests",
 }
 
 

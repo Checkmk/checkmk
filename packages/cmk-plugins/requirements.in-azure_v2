@@ -1,0 +1,4 @@
+aiohttp
+msal
+pydantic
+requests

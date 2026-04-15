@@ -15,13 +15,13 @@ from cmk.rulesets.v1.form_specs import (
 
 def average_dict_element(also_has_extended_param: bool) -> DictElement[tuple[str, object]]:
     if also_has_extended_param:
-        help = Help(
+        help = Help(  # noqa: A001
             "Average the instantaneous value over the specified number of minutes. "
             'Note: This does NOT affect "Levels over an extended period of time", which always '
             "checks the instantaneous value."
         )
     else:
-        help = Help("Average the instantaneous value over the specified number of minutes.")
+        help = Help("Average the instantaneous value over the specified number of minutes.")  # noqa: A001
 
     return DictElement(
         required=False,

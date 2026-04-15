@@ -112,7 +112,7 @@ def get_mgmt_authority_urls(
             "https://login.partner.microsoftonline.cn",
             "https://management.chinacloudapi.cn",
             f"https://management.chinacloudapi.cn/subscriptions/{subscription}/",
-            lambda r: f"https://metrics.monitor.azure.cn/subscriptions/{subscription}/",
+            lambda r: f"https://metrics.monitor.azure.cn/subscriptions/{subscription}/",  # noqa: ARG005
         )
     raise ValueError("Unknown authority %r" % authority)
 

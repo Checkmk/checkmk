@@ -211,8 +211,8 @@ def test_get_resource_host_labels_section(
 ) -> None:
     labels_section = get_resource_host_labels_section(resource, group_tags)
 
-    assert labels_section._cont == expected_result[0]
-    assert labels_section._piggytargets == expected_result[1]
+    assert labels_section._cont == expected_result[0]  # noqa: SLF001
+    assert labels_section._piggytargets == expected_result[1]  # noqa: SLF001
 
 
 @pytest.mark.parametrize(
@@ -285,8 +285,8 @@ def test_resource_with_custom_labels(
     resource.labels.update(custom_labels)
 
     labels_section = get_resource_host_labels_section(resource, group_tags)
-    assert labels_section._cont[0] == expected_labels_line
-    assert labels_section._piggytargets == [resource.piggytarget]
+    assert labels_section._cont[0] == expected_labels_line  # noqa: SLF001
+    assert labels_section._piggytargets == [resource.piggytarget]  # noqa: SLF001
 
 
 RESOURCE_GROUPS_RESPONSE = [

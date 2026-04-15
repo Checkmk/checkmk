@@ -146,6 +146,7 @@ py_library(
         "//packages/cmk-plugin-apis:rulesets",
         "//packages/cmk-plugin-apis:server_side_calls",
         "//packages/cmk-plugin-apis:server_side_programs",
+        "//packages/cmk-plugins:azure_v2",  # quick_setup
         "//packages/cmk-plugins:graylog",
         "//packages/cmk-plugins:lib",
         "//packages/cmk-shared-typing:cmk_shared_typing_py",

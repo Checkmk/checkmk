@@ -2,5 +2,6 @@ boto3-stubs[logs]  # used for type checking, keep version in sync with boto3
 botocore-stubs  # used for type checking, keep version in sync with botocore
 polyfactory
 pytest
+pytest-asyncio
 responses
 time-machine

@@ -27,7 +27,7 @@ _ADDED_IMPORTS = (
     "from typing import Any",
     (
         "from cmk.agent_based.legacy.conversion import (\n"
-        "    # Temporary compatibility layer untile we migrate the corresponding ruleset.\n"
+        "    # Temporary compatibility layer until we migrate the corresponding ruleset.\n"
         "    check_levels_legacy_compatible as check_levels,\n"
         ")"
     ),

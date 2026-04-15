@@ -146,5 +146,66 @@ def test_ac_check_mail_prepare_messages_for_ec(
         assert message.endswith(expected_message)
 
 
+def test_cleanup_not_called_on_empty_mailbox() -> None:
+    """Regression: copy/delete must not be called when mailbox is empty (werk 16630).
+
+    Calling IMAP COPY with an empty message set causes servers to return
+    'BAD Command Argument Error', crashing the check.
+    """
+
+    class StubConnection:
+        def __enter__(self) -> "StubConnection":
+            return self
+
+        def __exit__(self, *args: object) -> None:
+            pass
+
+        def copy(self, *args: object, **kwargs: object) -> None:
+            raise AssertionError("copy must not be called on an empty mailbox")
+
+        def delete(self, *args: object, **kwargs: object) -> None:
+            raise AssertionError("delete must not be called on an empty mailbox")
+
+    args = Args(
+        fetch_server="host",
+        fetch_protocol="IMAP",
+        fetch_username="user",
+        fetch_password="pass",
+        fetch_password_reference=None,
+        fetch_port=None,
+        fetch_tls=False,
+        fetch_disable_cert_validation=False,
+        fetch_authority="global",
+        fetch_email_address=None,
+        fetch_client_id=None,
+        fetch_client_secret=None,
+        fetch_client_secret_reference=None,
+        fetch_tenant_id=None,
+        fetch_initial_access_token=None,
+        fetch_initial_access_token_reference=None,
+        fetch_initial_refresh_token=None,
+        fetch_initial_refresh_token_reference=None,
+        fetch_storage_id=None,
+        forward_ec=True,
+        match_subject=None,
+        cleanup="archive",
+        connect_timeout=10,
+        forward_method="spool:",
+        forward_host="localhost",
+        forward_facility=2,
+        forward_app=None,
+        body_limit=1000,
+    )
+
+    with (
+        mock.patch(
+            "cmk.plugins.emailchecks.lib.check_mail.make_fetch_connection",
+            return_value=StubConnection(),
+        ),
+        mock.patch("cmk.plugins.emailchecks.lib.check_mail.fetch_mails", return_value={}),
+    ):
+        check_mail.check_mail(args)
+
+
 if __name__ == "__main__":
     pytest.main(["-svv", __file__])

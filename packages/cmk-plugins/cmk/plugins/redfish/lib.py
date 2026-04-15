@@ -66,6 +66,10 @@ REDFISH_SECTIONS = (
         name="SimpleStorage",
         title=Title("Simple Storage Collection (tbd)"),
     ),
+    Section(name="Sensors", title=Title("Sensors")),
+    Section(name="ThermalSubsystem", title=Title("Thermal Subsystem")),
+    Section(name="PowerSubsystem", title=Title("Power Subsystem")),
+    Section(name="EnvironmentMetrics", title=Title("Environment Metrics")),
 )
 
 
@@ -227,6 +231,19 @@ capturing information for debugging.",
     return dev_state, ", ".join(dev_msg)
 
 
+def _threshold_value(
+    entry: Mapping[str, Any],
+    flat_key: str,
+    thresholds: Mapping[str, Any],
+    nested_key: str,
+) -> float | None:
+    """Read a threshold value, preferring the legacy flat field over the modern nested one."""
+    flat = _try_convert_to_float(entry.get(flat_key))
+    if flat is not None:
+        return flat
+    return _try_convert_to_float(thresholds.get(nested_key, {}).get("Reading"))
+
+
 def process_redfish_perfdata(entry: Mapping[str, Any]) -> None | Perfdata:
     """Redfish performance data to monitoring performance data"""
     value = None
@@ -242,10 +259,13 @@ def process_redfish_perfdata(entry: Mapping[str, Any]) -> None | Perfdata:
 
     min_range = _try_convert_to_float(entry.get("MinReadingRange", None))
     max_range = _try_convert_to_float(entry.get("MaxReadingRange", None))
-    min_warn = _try_convert_to_float(entry.get("LowerThresholdNonCritical", None))
-    min_crit = _try_convert_to_float(entry.get("LowerThresholdCritical", None))
-    upper_warn = _try_convert_to_float(entry.get("UpperThresholdNonCritical", None))
-    upper_crit = _try_convert_to_float(entry.get("UpperThresholdCritical", None))
+
+    # Thresholds: try legacy flat fields first, fall back to modern nested Thresholds object.
+    thresholds = entry.get("Thresholds", {})
+    min_warn = _threshold_value(entry, "LowerThresholdNonCritical", thresholds, "LowerCaution")
+    min_crit = _threshold_value(entry, "LowerThresholdCritical", thresholds, "LowerCritical")
+    upper_warn = _threshold_value(entry, "UpperThresholdNonCritical", thresholds, "UpperCaution")
+    upper_crit = _threshold_value(entry, "UpperThresholdCritical", thresholds, "UpperCritical")
 
     if min_warn is None and min_crit is not None:
         min_warn = min_crit

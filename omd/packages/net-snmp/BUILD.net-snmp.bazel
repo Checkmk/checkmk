@@ -32,6 +32,7 @@ configure_make(
         "--with-defaults",
         "--disable-scripts",
         r'--with-mibdirs="\\$$\\HOME/local/share/snmp/mibs:\\$$\\HOME/share/snmp/mibs:/usr/share/snmp/mibs"',
+        "--with-openssl=$$EXT_BUILD_DEPS/openssl",
     ],
     copts = [
         "-I$BUILD_TMPDIR/include",
@@ -96,7 +97,9 @@ configure_make(
         tar xf ${PYTHON_MODULES_TAR} -C $(dirname ${PYTHON_MODULES_TAR});
         mkdir -p lib/python
         cd python && \
-            CFLAGS="-Wno-incompatible-pointer-types" ${EXT_BUILD_DEPS}/python/bin/python3 setup.py install \
+            CFLAGS="-Wno-incompatible-pointer-types" \
+            LDFLAGS="-L${EXT_BUILD_DEPS}/openssl/lib" \
+            ${EXT_BUILD_DEPS}/python/bin/python3 setup.py install \
                 --basedir=.. \
                 --root=${INSTALLDIR} \
                 --prefix='' \
@@ -120,7 +123,10 @@ configure_make(
         "-C mibs DESTDIR='/' mibsinstall",
     ],
     visibility = ["//visibility:public"],
-    deps = ["@python"],
+    deps = [
+        "@openssl",
+        "@python",
+    ],
 )
 
 filegroup(

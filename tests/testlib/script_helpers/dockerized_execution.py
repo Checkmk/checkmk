@@ -17,6 +17,7 @@ import shlex
 import subprocess
 import sys
 import tarfile
+import textwrap
 import time
 from collections.abc import Iterable, Iterator, Mapping, Sequence
 from contextlib import contextmanager
@@ -97,31 +98,27 @@ def execute_tests_in_container(
         _reuse_persisted_virtual_environment(container, container_env, _TESTUSER)
 
         if interactive:
-            logger.info("+-------------------------------------------------")
-            logger.info("| Next steps: Start the test of your choice, for example:")
-            logger.info("| ")
-            logger.info("| make -C tests test-integration")
-            logger.info("| ")
-            logger.info("|   Execute all integration tests")
-            logger.info("| ")
-            logger.info("| pytest tests/integration/livestatus/test_livestatus.py")
-            logger.info("| ")
-            logger.info("|   Execute some integration tests")
-            logger.info("| ")
-            logger.info(
-                "| pytest tests/integration/livestatus/test_livestatus.py "
-                "-k test_service_custom_variables "
+            print(
+                textwrap.dedent("""
+                Next steps: Start the test of your choice, for example:
+
+                Run all integration tests:
+                    make -C tests test-integration
+
+                Run all integration tests in a module:
+                    pytest tests/integration/livestatus/test_livestatus.py
+
+                Run a specific test in a module:
+                    pytest tests/integration/livestatus/test_livestatus.py -k test_service_custom_variables
+
+                NOTE:
+                * The version of Checkmk you test against is set using the VERSION environment variable
+                    and defaults to the current daily build of your branch.
+                * If you want to test a patched version, you need to patch it before running tests.
+                * If you install a site manually and want to access the UI, you need to run this:
+                    sudo apache2ctl start
+                """)
             )
-            logger.info("| ")
-            logger.info("|   Execute a single test")
-            logger.info("| ")
-            logger.info("| !!!WARNING!!!")
-            logger.info("| The version of Checkmk you test against is set using the VERSION ")
-            logger.info("| environment variable and defaults to the current daily build of ")
-            logger.info("| your branch.")
-            logger.info("| If you want to test a patched version, you need patch it before ")
-            logger.info("| running tests.")
-            logger.info("+-------------------------------------------------")
 
             if command:
                 dockerpty.exec_command(  # type: ignore[no-untyped-call,unused-ignore]

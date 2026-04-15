@@ -138,6 +138,8 @@ class ABCPackageManager(abc.ABC):
         package_name = self.package_name(edition, version)
         build_system_path = self._build_system_package_path(version, package_name)
         packages_dir = Path(__file__).parent.parent.parent / "package_download"
+        logger.info("Check for %s/%s", packages_dir, package_name)
+
         if (package_path := packages_dir / package_name).exists():
             logger.info("Install from locally available package %s", package_path)
             self._write_package_hash(version, edition, package_path)
@@ -150,6 +152,9 @@ class ABCPackageManager(abc.ABC):
 
         else:
             # Install from tstbuild or portal
+            logger.info(
+                "No matching package found, install from tstbuild or portal (%s)", package_info
+            )
             package_path = self.download(package_info)
             self._write_package_hash(version, edition, package_path)
             self._install_package(package_path)

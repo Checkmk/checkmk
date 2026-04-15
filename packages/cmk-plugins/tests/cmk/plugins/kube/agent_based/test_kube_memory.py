@@ -412,3 +412,17 @@ def test_count_overview_pod_level(
     expected: str,
 ) -> None:
     assert count_overview(resources, requirement) == expected
+
+
+def test_parse_resources_legacy_v1_format() -> None:
+    """Old agent output used count_total instead of count_total_requests/count_total_limits."""
+    old_json = (
+        '{"request": 13120704.0, "limit": 28120704.0,'
+        ' "count_unspecified_requests": 0, "count_total": 2,'
+        ' "count_unspecified_limits": 0, "count_zeroed_limits": 0}'
+    )
+    resources = Resources.model_validate_json(old_json)
+    assert resources.count_total_requests == 2
+    assert resources.count_total_limits == 2
+    assert resources.count_pods_pod_level_request == 0
+    assert resources.count_pods_pod_level_limit == 0

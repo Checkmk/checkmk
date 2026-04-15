@@ -7,16 +7,24 @@
 
 
 import time
-from collections.abc import Iterable, Mapping, Sequence
+from collections.abc import Mapping, Sequence
+from typing import Any
 
-from cmk.agent_based.legacy.v0_unstable import (
-    check_levels,
-    LegacyCheckDefinition,
-    LegacyCheckResult,
+from cmk.agent_based.legacy.conversion import (
+    # Temporary compatibility layer until we migrate the corresponding ruleset.
+    check_levels_legacy_compatible as check_levels,
 )
-from cmk.agent_based.v2 import render, StringTable
-
-check_info = {}
+from cmk.agent_based.v2 import (
+    AgentSection,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    render,
+    Result,
+    Service,
+    State,
+    StringTable,
+)
 
 Section = Mapping[str, Sequence[str]]
 
@@ -38,26 +46,30 @@ def parse_plesk_backups(string_table: StringTable) -> Section:
     return {line[0]: line for line in string_table}
 
 
-def discover_plesk_backups(section: Section) -> Iterable[tuple[str, Mapping]]:
-    yield from ((item, {}) for item in section)
+def discover_plesk_backups(section: Section) -> DiscoveryResult:
+    yield from (Service(item=item) for item in section)
 
 
-def check_plesk_backups(
-    item: str, params: Mapping[str, object], section: Section
-) -> LegacyCheckResult:
+def check_plesk_backups(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
     if (line := section.get(item)) is None:
         return
 
     if len(line) != 5 or line[1] != "0":
         match line[1]:
             case "2":
-                yield 3, "Error in agent (%s)" % " ".join(line[1:])
+                yield Result(state=State.UNKNOWN, summary=f"Error in agent ({' '.join(line[1:])})")
             case "4":
-                yield int(params.get("no_backup_configured_state", 1)), "No backup configured"  # type: ignore[call-overload]
+                yield Result(
+                    state=State(int(params.get("no_backup_configured_state", 1))),
+                    summary="No backup configured",
+                )
             case "5":
-                yield int(params.get("no_backup_found_state", 1)), "No backup found"  # type: ignore[call-overload]
+                yield Result(
+                    state=State(int(params.get("no_backup_found_state", 1))),
+                    summary="No backup found",
+                )
             case _:
-                yield 3, "Unexpected line %r" % line
+                yield Result(state=State.UNKNOWN, summary=f"Unexpected line {line!r}")
         return
 
     _domain, _rc, r_timestamp, r_size, r_total_size = line
@@ -66,7 +78,7 @@ def check_plesk_backups(
     timestamp = saveint(r_timestamp)
 
     # 1. check last backup size not 0 bytes
-    yield check_levels(
+    yield from check_levels(
         size,
         "last_backup_size",
         (None, None, 0, 0),
@@ -75,28 +87,35 @@ def check_plesk_backups(
     )
     # 2. check age of last backup < 24h
     age_seconds = int(time.time()) - timestamp
-    yield check_levels(
+    yield from check_levels(
         age_seconds,
         "last_backup_age",
         params.get("backup_age"),
         infoname="Age",
         human_readable_func=render.timespan,
     )
-    yield 0, "Backup time: %s" % time.strftime("%c", time.localtime(timestamp))
+    yield Result(
+        state=State.OK,
+        summary=f"Backup time: {time.strftime('%c', time.localtime(timestamp))}",
+    )
     # 3. check total size of directory above configured threshold
-    yield check_levels(
+    yield from check_levels(
         total_size,
         "total_size",
         params.get("total_size"),
         infoname="Total size",
         human_readable_func=render.disksize,
     )
-    return
 
 
-check_info["plesk_backups"] = LegacyCheckDefinition(
+agent_section_plesk_backups = AgentSection(
     name="plesk_backups",
     parse_function=parse_plesk_backups,
+)
+
+
+check_plugin_plesk_backups = CheckPlugin(
+    name="plesk_backups",
     service_name="Plesk Backup %s",
     discovery_function=discover_plesk_backups,
     check_function=check_plesk_backups,

@@ -30,8 +30,8 @@ const props = defineProps<{
 const { lower, upper } = extractExplicitVerticalRangeBounds(
   props.graph_options?.explicit_vertical_range ?? 'auto'
 )
-const dataExplicitVerticalRangeLower = ref<number>(lower ?? 1.0)
-const dataExplicitVerticalRangeUpper = ref<number>(upper ?? 2.0)
+const dataExplicitVerticalRangeLower = ref<number>(lower ?? 0.0)
+const dataExplicitVerticalRangeUpper = ref<number>(upper ?? 1.0)
 
 const dataExplicitVerticalRange = ref<string>(
   props.graph_options?.explicit_vertical_range === 'auto' ? 'auto' : 'explicit'

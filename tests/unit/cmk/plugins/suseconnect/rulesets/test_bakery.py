@@ -5,7 +5,7 @@
 
 import pytest
 
-from cmk.gui.plugins.legacy_bakery_rulesets.mk_suseconnect import migrate
+from cmk.plugins.suseconnect.rulesets.bakery import migrate
 
 
 @pytest.mark.parametrize(

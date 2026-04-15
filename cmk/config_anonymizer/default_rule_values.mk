@@ -130,7 +130,7 @@ active_checks['smtp'] = [
 active_checks.setdefault('sql', [])
 
 active_checks['sql'] = [
-{'id': '7142e053-7fe8-4e8f-8b5b-33561c91c83b', 'value': {'description': 'example', 'dbms': 'postgres', 'name': 'example', 'user': 'example', 'password': ('cmk_postprocessed', 'explicit_password', ('uuid6f65e4ec-cd2f-42c1-83b8-0615447b69d9', '')), 'sql': 'GET'}, 'condition': {}, 'options': {'disabled': False}},
+{'id': '7142e053-7fe8-4e8f-8b5b-33561c91c83b', 'value': {'description': 'example', 'dbms': 'postgres', 'name': 'example', 'user': 'example', 'password': ('cmk_postprocessed', 'explicit_password', ('uuid6f65e4ec-cd2f-42c1-83b8-0615447b69d9', 'example')), 'sql': 'GET'}, 'condition': {}, 'options': {'disabled': False}},
 ] + active_checks['sql']
 
 
@@ -1026,14 +1026,14 @@ check_periods = [
 checkgroup_parameters.setdefault('acme_certificates', [])
 
 checkgroup_parameters['acme_certificates'] = [
-{'id': '9b111b70-cb4e-424e-a6b1-ca8b6631a374', 'value': {}, 'condition': {}, 'options': {'disabled': False}},
+{'id': '9b111b70-cb4e-424e-a6b1-ca8b6631a374', 'value': {'expire_lower': ('fixed', (604800.0, 2592000.0))}, 'condition': {}, 'options': {'disabled': False}},
 ] + checkgroup_parameters['acme_certificates']
 
 
 checkgroup_parameters.setdefault('acme_sbc_snmp', [])
 
 checkgroup_parameters['acme_sbc_snmp'] = [
-{'id': 'e6633739-9256-49cf-b2c8-73dbba90ed59', 'value': {'levels_lower': (99, 75)}, 'condition': {}, 'options': {'disabled': False}},
+{'id': 'e6633739-9256-49cf-b2c8-73dbba90ed59', 'value': {'lower_levels': ('fixed', (99, 75))}, 'condition': {}, 'options': {'disabled': False}},
 ] + checkgroup_parameters['acme_sbc_snmp']
 
 
@@ -2762,7 +2762,7 @@ checkgroup_parameters['f5_connections'] = [
 checkgroup_parameters.setdefault('f5_pools', [])
 
 checkgroup_parameters['f5_pools'] = [
-{'id': '9f7c3cd7-2fe3-46ff-af62-6a6e1ee53db9', 'value': {'levels_lower': None}, 'condition': {}, 'options': {'disabled': False}},
+{'id': '9f7c3cd7-2fe3-46ff-af62-6a6e1ee53db9', 'value': {'levels_lower': ('fixed', (2, 1))}, 'condition': {}, 'options': {'disabled': False}},
 ] + checkgroup_parameters['f5_pools']
 
 
@@ -3497,7 +3497,7 @@ checkgroup_parameters['iis_app_pool_state'] = [
 checkgroup_parameters.setdefault('informix_dbspaces', [])
 
 checkgroup_parameters['informix_dbspaces'] = [
-{'id': '0c1d9332-46ea-44e7-8462-34aecc1932cf', 'value': {}, 'condition': {}, 'options': {'disabled': False}},
+{'id': '0c1d9332-46ea-44e7-8462-34aecc1932cf', 'value': {'levels': ('no_levels', None), 'levels_perc': ('fixed', (80.0, 85.0))}, 'condition': {}, 'options': {'disabled': False}},
 ] + checkgroup_parameters['informix_dbspaces']
 
 
@@ -4015,7 +4015,7 @@ checkgroup_parameters['memory_pagefile_win'] = [
 checkgroup_parameters.setdefault('memory_percentage_used', [])
 
 checkgroup_parameters['memory_percentage_used'] = [
-{'id': 'baef242f-3c2e-499c-be87-87db4115dc52', 'value': {'levels': (70.0, 80.0)}, 'condition': {}, 'options': {'disabled': False}},
+{'id': 'baef242f-3c2e-499c-be87-87db4115dc52', 'value': {'levels': ('fixed', (70.0, 80.0))}, 'condition': {}, 'options': {'disabled': False}},
 ] + checkgroup_parameters['memory_percentage_used']
 
 
@@ -5310,14 +5310,14 @@ checkgroup_parameters['safenet_hsm_operstats'] = [
 checkgroup_parameters.setdefault('safenet_ntls_clients', [])
 
 checkgroup_parameters['safenet_ntls_clients'] = [
-{'id': '681913c1-49f6-4cca-bf83-59a2c37f2f32', 'value': {'levels': (0.0, 0.0)}, 'condition': {}, 'options': {'disabled': False}},
+{'id': '681913c1-49f6-4cca-bf83-59a2c37f2f32', 'value': {'levels': ('fixed', (1000, 2000))}, 'condition': {}, 'options': {'disabled': False}},
 ] + checkgroup_parameters['safenet_ntls_clients']
 
 
 checkgroup_parameters.setdefault('safenet_ntls_links', [])
 
 checkgroup_parameters['safenet_ntls_links'] = [
-{'id': '83b69a50-4718-4bf6-9dd6-6377939edf7e', 'value': {'levels': (0.0, 0.0)}, 'condition': {}, 'options': {'disabled': False}},
+{'id': '83b69a50-4718-4bf6-9dd6-6377939edf7e', 'value': {'levels': ('fixed', (1000, 2000))}, 'condition': {}, 'options': {'disabled': False}},
 ] + checkgroup_parameters['safenet_ntls_links']
 
 
@@ -6080,7 +6080,7 @@ checkgroup_parameters['wut_webio'] = [
 checkgroup_parameters.setdefault('zorp_connections', [])
 
 checkgroup_parameters['zorp_connections'] = [
-{'id': '2826f2bc-3ad5-4c70-bc11-54b8b504a56b', 'value': {'levels': (15, 20)}, 'condition': {}, 'options': {'disabled': False}},
+{'id': '2826f2bc-3ad5-4c70-bc11-54b8b504a56b', 'value': {'levels': ('fixed', (15, 20))}, 'condition': {}, 'options': {'disabled': False}},
 ] + checkgroup_parameters['zorp_connections']
 
 
@@ -7294,28 +7294,28 @@ special_agents['vnx_quotas'] = [
 special_agents.setdefault('zerto', [])
 
 special_agents['zerto'] = [
-{'id': '64b16341-2d83-48f5-a7f3-9ac262a54002', 'value': {'username': 'admin', 'password': ('cmk_postprocessed', 'explicit_password', ('uuide72c0d4c-7474-47e2-a9f4-8bdae3619f2d', 'example'))}, 'condition': {}, 'options': {'disabled': False}},
+{'id': '64b16341-2d83-48f5-a7f3-9ac262a54002', 'value': {'username': 'admin', 'password': ('cmk_postprocessed', 'explicit_password', ('uuide72c0d4c-7474-47e2-a9f4-8bdae3619f2d', 'example')), 'cert_verification': ('insecure', {'verify': False})}, 'condition': {}, 'options': {'disabled': False}},
 ] + special_agents['zerto']
 
 
 static_checks.setdefault('acme_certificates', [])
 
 static_checks['acme_certificates'] = [
-{'id': 'c450919d-0fd5-47fa-9673-73d8395c9618', 'value': ('acme_certificates', 'example', {}), 'condition': {}, 'options': {'disabled': False}},
+{'id': 'c450919d-0fd5-47fa-9673-73d8395c9618', 'value': ('acme_certificates', 'example', {'expire_lower': ('fixed', (604800.0, 2592000.0))}), 'condition': {}, 'options': {'disabled': False}},
 ] + static_checks['acme_certificates']
 
 
 static_checks.setdefault('acme_sbc_snmp', [])
 
 static_checks['acme_sbc_snmp'] = [
-{'id': '4fadb64c-dc23-4c3e-a0d5-95ff948f96d5', 'value': ('acme_sbc_snmp', None, {'levels_lower': (99, 75)}), 'condition': {}, 'options': {'disabled': False}},
+{'id': '4fadb64c-dc23-4c3e-a0d5-95ff948f96d5', 'value': ('acme_sbc_snmp', None, {'lower_levels': ('fixed', (75, 50))}), 'condition': {}, 'options': {'disabled': False}},
 ] + static_checks['acme_sbc_snmp']
 
 
 static_checks.setdefault('ad_replication', [])
 
 static_checks['ad_replication'] = [
-{'id': '4ab17f2f-e6cf-421c-8651-41974b5e03fb', 'value': ('ad_replication', '', {'failure_levels': (0, 0)}), 'condition': {}, 'options': {'disabled': False}},
+{'id': '4ab17f2f-e6cf-421c-8651-41974b5e03fb', 'value': ('ad_replication', 'example', {'failure_levels': (0, 0)}), 'condition': {}, 'options': {'disabled': False}},
 ] + static_checks['ad_replication']
 
 
@@ -7371,7 +7371,7 @@ static_checks['antivir_update_age'] = [
 static_checks.setdefault('apache_status', [])
 
 static_checks['apache_status'] = [
-{'id': 'c4dc5c8a-14f9-4575-8629-179c5a1fa0a7', 'value': ('apache_status', '', {}), 'condition': {}, 'options': {'disabled': False}},
+{'id': 'c4dc5c8a-14f9-4575-8629-179c5a1fa0a7', 'value': ('apache_status', 'example', {}), 'condition': {}, 'options': {'disabled': False}},
 ] + static_checks['apache_status']
 
 
@@ -7413,7 +7413,7 @@ static_checks['aws_cloudwatch_alarms_limits'] = [
 static_checks.setdefault('aws_costs_and_usage', [])
 
 static_checks['aws_costs_and_usage'] = [
-{'id': 'e423b516-61c2-4eba-8894-0db84c20eb47', 'value': ('aws_costs_and_usage', '', {}), 'condition': {}, 'options': {'disabled': False}},
+{'id': 'e423b516-61c2-4eba-8894-0db84c20eb47', 'value': ('aws_costs_and_usage', 'example', {}), 'condition': {}, 'options': {'disabled': False}},
 ] + static_checks['aws_costs_and_usage']
 
 
@@ -7434,14 +7434,14 @@ static_checks['aws_dynamodb_latency'] = [
 static_checks.setdefault('aws_dynamodb_limits', [])
 
 static_checks['aws_dynamodb_limits'] = [
-{'id': '7fd5a6f1-7f4b-4522-a025-a4927995ef64', 'value': ('aws_dynamodb_limits', '', {}), 'condition': {}, 'options': {'disabled': False}},
+{'id': '7fd5a6f1-7f4b-4522-a025-a4927995ef64', 'value': ('aws_dynamodb_limits', 'example', {}), 'condition': {}, 'options': {'disabled': False}},
 ] + static_checks['aws_dynamodb_limits']
 
 
 static_checks.setdefault('aws_ebs_burst_balance', [])
 
 static_checks['aws_ebs_burst_balance'] = [
-{'id': '82c8d06b-ca1d-4d3b-ba7c-0713cdb1aebe', 'value': ('aws_ebs_burst_balance', '', {}), 'condition': {}, 'options': {'disabled': False}},
+{'id': '82c8d06b-ca1d-4d3b-ba7c-0713cdb1aebe', 'value': ('aws_ebs_burst_balance', 'example', {}), 'condition': {}, 'options': {'disabled': False}},
 ] + static_checks['aws_ebs_burst_balance']
 
 
@@ -7525,7 +7525,7 @@ static_checks['aws_elbv2_limits'] = [
 static_checks.setdefault('aws_elbv2_target_errors', [])
 
 static_checks['aws_elbv2_target_errors'] = [
-{'id': '08753fc5-3d79-4b9e-994c-72f03e4ff077', 'value': ('aws_elbv2_application_target_groups_http', '', {}), 'condition': {}, 'options': {'disabled': False}},
+{'id': '08753fc5-3d79-4b9e-994c-72f03e4ff077', 'value': ('aws_elbv2_application_target_groups_http', 'example', {}), 'condition': {}, 'options': {'disabled': False}},
 ] + static_checks['aws_elbv2_target_errors']
 
 
@@ -7539,7 +7539,7 @@ static_checks['aws_glacier_limits'] = [
 static_checks.setdefault('aws_glacier_vault_archives', [])
 
 static_checks['aws_glacier_vault_archives'] = [
-{'id': '0f2f633e-df00-4aad-a308-eff1f80cdf89', 'value': ('aws_glacier', '', {}), 'condition': {}, 'options': {'disabled': False}},
+{'id': '0f2f633e-df00-4aad-a308-eff1f80cdf89', 'value': ('aws_glacier', 'example', {}), 'condition': {}, 'options': {'disabled': False}},
 ] + static_checks['aws_glacier_vault_archives']
 
 
@@ -7602,21 +7602,21 @@ static_checks['aws_s3_buckets'] = [
 static_checks.setdefault('aws_s3_buckets_objects', [])
 
 static_checks['aws_s3_buckets_objects'] = [
-{'id': '6c4d86be-5946-425e-80e3-a11c39d5bd01', 'value': ('aws_s3', '', {}), 'condition': {}, 'options': {'disabled': False}},
+{'id': '6c4d86be-5946-425e-80e3-a11c39d5bd01', 'value': ('aws_s3', 'example', {}), 'condition': {}, 'options': {'disabled': False}},
 ] + static_checks['aws_s3_buckets_objects']
 
 
 static_checks.setdefault('aws_s3_http_errors', [])
 
 static_checks['aws_s3_http_errors'] = [
-{'id': '93d39e14-e5cd-42ce-8e8c-aff2fef5d236', 'value': ('aws_s3_requests_http_errors', '', {}), 'condition': {}, 'options': {'disabled': False}},
+{'id': '93d39e14-e5cd-42ce-8e8c-aff2fef5d236', 'value': ('aws_s3_requests_http_errors', 'example', {}), 'condition': {}, 'options': {'disabled': False}},
 ] + static_checks['aws_s3_http_errors']
 
 
 static_checks.setdefault('aws_s3_latency', [])
 
 static_checks['aws_s3_latency'] = [
-{'id': '2cb64a6b-e1bc-429c-9f75-12cc417571e9', 'value': ('aws_s3_requests_latency', '', {}), 'condition': {}, 'options': {'disabled': False}},
+{'id': '2cb64a6b-e1bc-429c-9f75-12cc417571e9', 'value': ('aws_s3_requests_latency', 'example', {}), 'condition': {}, 'options': {'disabled': False}},
 ] + static_checks['aws_s3_latency']
 
 
@@ -7630,7 +7630,7 @@ static_checks['aws_s3_limits'] = [
 static_checks.setdefault('aws_s3_requests', [])
 
 static_checks['aws_s3_requests'] = [
-{'id': 'b1139ebb-59ae-4770-9c76-329d23da8538', 'value': ('aws_s3_requests', '', {}), 'condition': {}, 'options': {'disabled': False}},
+{'id': 'b1139ebb-59ae-4770-9c76-329d23da8538', 'value': ('aws_s3_requests', 'example', {}), 'condition': {}, 'options': {'disabled': False}},
 ] + static_checks['aws_s3_requests']
 
 
@@ -7651,7 +7651,7 @@ static_checks['aws_wafv2_web_acl'] = [
 static_checks.setdefault('azure_ad', [])
 
 static_checks['azure_ad'] = [
-{'id': '0572d887-0626-400b-95fa-7c6b128d462a', 'value': ('azure_ad_sync', '', {}), 'condition': {}, 'options': {'disabled': False}},
+{'id': '0572d887-0626-400b-95fa-7c6b128d462a', 'value': ('azure_ad_sync', 'example', {}), 'condition': {}, 'options': {'disabled': False}},
 ] + static_checks['azure_ad']
 
 
@@ -7959,7 +7959,7 @@ static_checks['checkpoint_vsx_connections'] = [
 static_checks.setdefault('checkpoint_vsx_packets', [])
 
 static_checks['checkpoint_vsx_packets'] = [
-{'id': 'c6450ed7-ce34-46ac-8ac9-bb5c258ba05c', 'value': ('checkpoint_vsx_packets', '', {}), 'condition': {}, 'options': {'disabled': False}},
+{'id': 'c6450ed7-ce34-46ac-8ac9-bb5c258ba05c', 'value': ('checkpoint_vsx_packets', 'example', {}), 'condition': {}, 'options': {'disabled': False}},
 ] + static_checks['checkpoint_vsx_packets']
 
 
@@ -8022,7 +8022,7 @@ static_checks['cisco_meraki_org_device_status'] = [
 static_checks.setdefault('cisco_meraki_org_device_status_ps', [])
 
 static_checks['cisco_meraki_org_device_status_ps'] = [
-{'id': '2f9c5ea6-a6da-46a5-a003-5b2188c97ba6', 'value': ('cisco_meraki_org_device_status_ps', '', {}), 'condition': {}, 'options': {'disabled': False}},
+{'id': '2f9c5ea6-a6da-46a5-a003-5b2188c97ba6', 'value': ('cisco_meraki_org_device_status_ps', 'example', {}), 'condition': {}, 'options': {'disabled': False}},
 ] + static_checks['cisco_meraki_org_device_status_ps']
 
 
@@ -8708,7 +8708,7 @@ static_checks['f5_connections'] = [
 static_checks.setdefault('f5_pools', [])
 
 static_checks['f5_pools'] = [
-{'id': 'd203be56-40d7-4bb9-98ae-6fe070fbbbc4', 'value': ('f5_bigip_pool', 'example', {'levels_lower': None}), 'condition': {}, 'options': {'disabled': False}},
+{'id': 'd203be56-40d7-4bb9-98ae-6fe070fbbbc4', 'value': ('f5_bigip_pool', 'example', {}), 'condition': {}, 'options': {'disabled': False}},
 ] + static_checks['f5_pools']
 
 
@@ -9303,7 +9303,7 @@ static_checks['hw_fans'] = [
 static_checks.setdefault('hw_fans_perc', [])
 
 static_checks['hw_fans_perc'] = [
-{'id': '5dd55a8a-a9ee-40f4-9f36-6aad06d68b70', 'value': ('acme_fan', 'example', {}), 'condition': {}, 'options': {'disabled': False}},
+{'id': '5dd55a8a-a9ee-40f4-9f36-6aad06d68b70', 'value': ('blade_bx_powerfan', 'example', {}), 'condition': {}, 'options': {'disabled': False}},
 ] + static_checks['hw_fans_perc']
 
 
@@ -9401,7 +9401,7 @@ static_checks['iis_app_pool_state'] = [
 static_checks.setdefault('informix_dbspaces', [])
 
 static_checks['informix_dbspaces'] = [
-{'id': 'f265961e-fd40-4425-9b2e-65b801a05c82', 'value': ('informix_dbspaces', 'example', {}), 'condition': {}, 'options': {'disabled': False}},
+{'id': 'f265961e-fd40-4425-9b2e-65b801a05c82', 'value': ('informix_dbspaces', 'example', {'levels': ('no_levels', None), 'levels_perc': ('fixed', (80.0, 85.0))}), 'condition': {}, 'options': {'disabled': False}},
 ] + static_checks['informix_dbspaces']
 
 
@@ -9807,7 +9807,7 @@ static_checks['lsnat'] = [
 static_checks.setdefault('lvm_lvs_pools', [])
 
 static_checks['lvm_lvs_pools'] = [
-{'id': '9d38fe24-ac63-4934-a9c7-23ed6e59c48a', 'value': ('lvm_lvs', '', {}), 'condition': {}, 'options': {'disabled': False}},
+{'id': '9d38fe24-ac63-4934-a9c7-23ed6e59c48a', 'value': ('lvm_lvs', 'example', {}), 'condition': {}, 'options': {'disabled': False}},
 ] + static_checks['lvm_lvs_pools']
 
 
@@ -9919,7 +9919,7 @@ static_checks['memory_pagefile_win'] = [
 static_checks.setdefault('memory_percentage_used', [])
 
 static_checks['memory_percentage_used'] = [
-{'id': 'd7974994-45f7-4f88-aa71-424d39041c91', 'value': ('tplink_mem', None, {'levels': (70.0, 80.0)}), 'condition': {}, 'options': {'disabled': False}},
+{'id': 'd7974994-45f7-4f88-aa71-424d39041c91', 'value': ('memory_utilization', None, {'levels': ('fixed', (70.0, 80.0))}), 'condition': {}, 'options': {'disabled': False}},
 ] + static_checks['memory_percentage_used']
 
 
@@ -11074,14 +11074,14 @@ static_checks['safenet_hsm_operstats'] = [
 static_checks.setdefault('safenet_ntls_clients', [])
 
 static_checks['safenet_ntls_clients'] = [
-{'id': 'fada08cf-f007-4f6e-adf8-750aac9a811b', 'value': ('safenet_ntls_clients', None, {'levels': (0.0, 0.0)}), 'condition': {}, 'options': {'disabled': False}},
+{'id': 'fada08cf-f007-4f6e-adf8-750aac9a811b', 'value': ('safenet_ntls_clients', None, {'levels': ('fixed', (1000, 2000))}), 'condition': {}, 'options': {'disabled': False}},
 ] + static_checks['safenet_ntls_clients']
 
 
 static_checks.setdefault('safenet_ntls_links', [])
 
 static_checks['safenet_ntls_links'] = [
-{'id': '889c4367-297b-4ca7-8c98-9fc02f56064d', 'value': ('safenet_ntls_links', None, {'levels': (0.0, 0.0)}), 'condition': {}, 'options': {'disabled': False}},
+{'id': '889c4367-297b-4ca7-8c98-9fc02f56064d', 'value': ('safenet_ntls_links', None, {'levels': ('fixed', (1000, 2000))}), 'condition': {}, 'options': {'disabled': False}},
 ] + static_checks['safenet_ntls_links']
 
 
@@ -11725,7 +11725,7 @@ static_checks['vm_heartbeat'] = [
 static_checks.setdefault('vm_snapshots', [])
 
 static_checks['vm_snapshots'] = [
-{'id': '2c143748-166c-497b-acf6-8791e0b6df18', 'value': ('esx_vsphere_vm_snapshots', None, {}), 'condition': {}, 'options': {'disabled': False}},
+{'id': '2c143748-166c-497b-acf6-8791e0b6df18', 'value': ('hyperv_checkpoints', None, {}), 'condition': {}, 'options': {'disabled': False}},
 ] + static_checks['vm_snapshots']
 
 
@@ -11851,7 +11851,7 @@ static_checks['zertificon_mail_queues'] = [
 static_checks.setdefault('zorp_connections', [])
 
 static_checks['zorp_connections'] = [
-{'id': '3ac8b36d-1c58-4d2e-a255-9a66bd2fb024', 'value': ('zorp_connections', None, {'levels': (15, 20)}), 'condition': {}, 'options': {'disabled': False}},
+{'id': '3ac8b36d-1c58-4d2e-a255-9a66bd2fb024', 'value': ('zorp_connections', None, {'levels': ('fixed', (15, 20))}), 'condition': {}, 'options': {'disabled': False}},
 ] + static_checks['zorp_connections']
 
 

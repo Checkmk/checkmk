@@ -152,8 +152,6 @@ def main(argv: Sequence[str]) -> None:
             return
 
         with disable_redis(), gui_context(), SuperUserContext():
-            # TODO create unit test that check if the default values are still valid
-
             rule_defaults = store.load_mk_file(
                 Path(__file__).parent / "default_rule_values.mk",
                 default={

@@ -1,12 +1,21 @@
 load("@aspect_rules_py//py:defs.bzl", "py_library")
 
-exports_files([".f12"])
+exports_files(
+    [
+        ".f12",
+        "default_rule_values.mk",
+    ],
+)
 
 py_library(
     name = "config_anonymizer",
     srcs = glob(["**/*.py"]),
+    data = ["default_rule_values.mk"],
     imports = ["../.."],
-    visibility = ["//cmk:__subpackages__"],
+    visibility = [
+        "//cmk:__subpackages__",
+        "//tests:__subpackages__",
+    ],
     deps = [
         "//cmk/base:app",
         "//cmk/base:base-app",

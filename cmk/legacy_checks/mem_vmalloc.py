@@ -6,13 +6,18 @@
 # mypy: disable-error-code="no-untyped-def"
 
 
-from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
+from collections.abc import Mapping
+from typing import Any
+
+from cmk.agent_based.legacy.conversion import (
+    # Temporary compatibility layer until we migrate the corresponding ruleset.
+    check_levels_legacy_compatible as check_levels,
+)
+from cmk.agent_based.v2 import CheckPlugin, CheckResult, DiscoveryResult, Result, Service, State
 from cmk.plugins.lib import memory
 
-check_info = {}
 
-
-def discover_mem_vmalloc(section):
+def discover_mem_vmalloc(section: Any) -> DiscoveryResult:
     if memory.is_linux_section(section):
         return  # handled by new Linux memory check
 
@@ -24,35 +29,35 @@ def discover_mem_vmalloc(section):
         # Do not checks this on 64 Bit systems. They have almost
         # infinitive vmalloc
         if section["VmallocTotal"] < 4 * 1024**2:
-            yield None, {}
+            yield Service()
 
 
-def check_mem_vmalloc(_item, params, section):
+def check_mem_vmalloc(params: Mapping[str, Any], section: Any) -> CheckResult:
     total_mb = section["VmallocTotal"] / 1024.0**2
     used_mb = section["VmallocUsed"] / 1024.0**2
     chunk_mb = section["VmallocChunk"] / 1024.0**2
     used_warn_perc, used_crit_perc = params["levels_used_perc"]
 
-    yield 0, f"Total: {total_mb:.1f} MB"
-    yield check_levels(
+    yield Result(state=State.OK, summary=f"Total: {total_mb:.1f} MB")
+    yield from check_levels(
         used_mb,
-        dsname="used",
-        params=(total_mb * used_warn_perc / 100, total_mb * used_crit_perc / 100),
+        "used",
+        (total_mb * used_warn_perc / 100, total_mb * used_crit_perc / 100),
         human_readable_func=lambda v: f"{v:.1f} MB",
         infoname="Used",
         boundaries=(0, total_mb),
     )
-    yield check_levels(
+    yield from check_levels(
         chunk_mb,
-        dsname="chunk",
-        params=(None, None) + params["levels_lower_chunk_mb"],
+        "chunk",
+        (None, None) + params["levels_lower_chunk_mb"],
         human_readable_func=lambda v: f"{v:.1f} MB",
         infoname="Largest chunk",
         boundaries=(0, total_mb),
     )
 
 
-check_info["mem.vmalloc"] = LegacyCheckDefinition(
+check_plugin_mem_vmalloc = CheckPlugin(
     name="mem_vmalloc",
     service_name="Vmalloc address space",
     sections=["mem"],

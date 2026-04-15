@@ -98,7 +98,7 @@ from cmk.gui.userdb import get_user_attributes, load_users, user_sync_default_co
 from cmk.gui.userdb.htpasswd import HtpasswdUserConnector
 from cmk.gui.userdb.store import load_users_uncached, save_users
 from cmk.gui.utils import escaping
-from cmk.gui.utils.misc import gen_id
+from cmk.gui.utils.misc import gen_id, validate_uuid_str
 from cmk.gui.utils.request_context import copy_request_context
 from cmk.gui.utils.roles import (
     UserPermissions,
@@ -203,7 +203,8 @@ var_dir = cmk.utils.paths.var_dir / "wato"
 GENERAL_DIR_EXCLUDE = "__pycache__"
 
 ConfigWarnings = dict[ConfigDomainName, list[str]]
-ActivationId = str
+ActivationId = str  # UUID
+
 SiteActivationState = dict[str, Any]
 ActivationState = dict[str, SiteActivationState]
 FileFilterFunc = Callable[[str], bool] | None
@@ -1327,8 +1328,24 @@ class ActivateChanges:
         return self._changes_by_site_until[site_id]
 
     def get_all_data_required_for_activation_popout(
-        self, sites: SiteConfigurations
+        self, sites: SiteConfigurations, activation_id: ActivationId | None
     ) -> ActivationChangesSummary:
+        """Collect all data needed to render the "Quick activation of changes" slideout.
+
+        Loads pending changes and builds a summary containing per-site information
+        as well as the full list of pending changes and any licensing messages/blocks.
+
+        Args:
+            sites: The full site configurations to consider for activation.
+            activation_id: When provided, the live temporary activation state
+                files are consulted first to reflect an in-progress activation.
+                If the files are absent/incomplete or this argument is not provided,
+                falls back to the persisted state (last completed activation).
+
+        Returns:
+            An :class:`ActivationChangesSummary` with sites, pending changes,
+            and licensing information.
+        """
         self.load(list(activation_sites(sites)))
 
         def _get_site_version(site_id: SiteId) -> str:
@@ -1341,8 +1358,24 @@ class ActivateChanges:
             return site_version
 
         def _get_last_activation_status(site_id: SiteId) -> StatusPerSite | None:
-            """Get the last persisted activation status for a site, if any"""
-            last_state = self.last_activation_state(site_id)
+            """Get the last activation status for a site, if any.
+
+            When an activation_id is provided, reads from the live temporary state
+            file (as the REST endpoint does) instead of the persisted fallback copy.
+            Falls back to the persisted state if the temporary file is absent.
+            """
+            if activation_id:
+                live_state: SiteActivationState = store.load_object_from_file(
+                    Path(ActivateChangesManager.site_state_path(activation_id, site_id)),
+                    default={},
+                )
+                last_state = (
+                    live_state
+                    if "_state" in live_state and "_phase" in live_state
+                    else self.last_activation_state(site_id)
+                )
+            else:
+                last_state = self.last_activation_state(site_id)
             if last_state and "_state" in last_state and "_phase" in last_state:
                 raw_status_details = last_state.get("_status_details")
                 # Apply the same HTML stripping and unescaping as
@@ -1797,7 +1830,7 @@ class ActivateChangesManager:
                 raise MKUserError("sites", _('The site "%s" does not exist.') % site_id)
 
     def _info_path(self, activation_id: str) -> str:
-        if not re.match(r"^[\d\-a-fA-F]+$", activation_id):
+        if not validate_uuid_str(activation_id):
             raise MKUserError(
                 None,
                 _("Invalid activation_id"),

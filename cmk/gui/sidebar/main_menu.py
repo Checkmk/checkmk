@@ -14,7 +14,7 @@ import dataclasses
 from typing import override, TypedDict
 
 from cmk.gui import message
-from cmk.gui.exceptions import MKAuthException
+from cmk.gui.exceptions import MKAuthException, MKUserError
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import Request, request, response
 from cmk.gui.i18n import _, ungettext
@@ -25,6 +25,7 @@ from cmk.gui.main_menu_types import ConfigurableMainMenuItem, MainMenuItem, Main
 from cmk.gui.pages import AjaxPage, PageContext, PageResult
 from cmk.gui.search_menu import get_unified_search_props
 from cmk.gui.user_sites import activation_sites
+from cmk.gui.utils.misc import validate_uuid_str
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.watolib.activate_changes import ActivateChanges
 from cmk.gui.werks import may_acknowledge, num_unacknowledged_incompatible_werks
@@ -252,8 +253,34 @@ class PageAjaxSidebarChangesMenu(AjaxPage):
 class PageAjaxSitesAndChanges(AjaxPage):
     @override
     def page(self, ctx: PageContext) -> PageResult:
+        """Return all data required to render the "Quick activation of changes" slideout.
+
+        Accepts an optional ``activation_id`` query parameter (UUID). When present, the
+        live temporary activation state files are consulted first to reflect an in-progress
+        activation. If those files are absent or incomplete, or the parameter is omitted,
+        falls back to the persisted state of the last completed activation.
+
+        Returns:
+            A dict (serialized :class:`~cmk.shared_typing.changes.SitesAndChanges`)
+            containing per-site status, the list of pending changes, and any
+            licensing information.
+
+        Raises:
+            MKUserError: If ``activation_id`` is present but not a valid UUID string.
+        """
+        # validate_uuid_str rejects non-UUID strings; the value is used to
+        # construct file paths so validation guards against path traversal.
+        raw_activation_id = ctx.request.get_ascii_input("activation_id")
+        if raw_activation_id is None:
+            activation_id = None
+        elif validate_uuid_str(raw_activation_id) is None:
+            raise MKUserError("activation_id", _("Invalid activation_id"))
+        else:
+            activation_id = raw_activation_id
         return dataclasses.asdict(
-            ActivateChanges().get_all_data_required_for_activation_popout(ctx.config.sites)
+            ActivateChanges().get_all_data_required_for_activation_popout(
+                ctx.config.sites, activation_id
+            )
         )
 
 

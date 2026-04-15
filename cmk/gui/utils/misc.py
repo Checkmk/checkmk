@@ -28,3 +28,19 @@ def saveint(x: Any) -> int:
 def gen_id() -> str:
     """Generates a unique id"""
     return str(uuid.uuid4())
+
+
+def validate_uuid_str(raw: str | None) -> str | None:
+    """Return *raw* if it is a valid UUID string in the canonical lowercase form
+    produced by :func:`gen_id`, otherwise ``None``.
+
+    Parses *raw* via ``uuid.UUID`` and re-serializes it. If the result differs
+    from *raw* (e.g. uppercase input) or parsing raises ``ValueError`` (malformed
+    input), ``None`` is returned.
+    """
+    if not raw:
+        return None
+    try:
+        return raw if str(uuid.UUID(raw)) == raw else None
+    except ValueError:
+        return None

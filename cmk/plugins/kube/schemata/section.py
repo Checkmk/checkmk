@@ -15,7 +15,7 @@ from collections.abc import Mapping, Sequence
 from typing import assert_never, Literal, NewType
 
 import requests
-from pydantic import BaseModel, ConfigDict, Field, ValidationError
+from pydantic import BaseModel, computed_field, ConfigDict, Field, model_validator, ValidationError
 
 from cmk.plugins.kube import prometheus_api, query
 from cmk.plugins.kube.schemata import api
@@ -196,14 +196,45 @@ class CollectorProcessingLogs(Section):
 # choosing a name, other section BaseModel names like AllocatableResource and PerformanceUsage
 # be taken into account
 class Resources(Section):
-    """sections: "[kube_memory_resources_v1, kube_cpu_resources_v1]"""
+    """sections: [kube_memory_resources_v1, kube_cpu_resources_v1]"""
 
     request: float
     limit: float
+
+    # requests
     count_unspecified_requests: int
+    count_total_requests: int
+    count_pods_pod_level_request: int = 0
+
+    # limits
     count_unspecified_limits: int
     count_zeroed_limits: int
-    count_total: int
+    count_total_limits: int
+    count_pods_pod_level_limit: int = 0
+
+    @computed_field(repr=False)  # type: ignore[prop-decorator]
+    @property
+    def count_total(self) -> int:
+        """Backwards-compatible field for old Checkmk installations.
+
+        Old agents emitted a single count_total used for both requests and limits display.
+        New agents emit count_total_requests and count_total_limits separately. This field
+        allows old Checkmk servers to parse new agent output without crashing. It only affects
+        the display string (e.g. "2/2 containers with requests") - never emitted as a metric.
+        """
+        return self.count_total_requests
+
+    @model_validator(mode="before")
+    @classmethod
+    def _handle_legacy_count_total(cls, data: object) -> object:
+        """Support old agent output that used count_total instead of separate request/limit totals."""
+        if isinstance(data, dict) and "count_total" in data:
+            count_total = data["count_total"]
+            if "count_total_requests" not in data:
+                data = {**data, "count_total_requests": count_total}
+            if "count_total_limits" not in data:
+                data = {**data, "count_total_limits": count_total}
+        return data
 
 
 class AllocatableResource(Section):

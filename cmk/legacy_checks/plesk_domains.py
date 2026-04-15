@@ -3,34 +3,47 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
+from cmk.agent_based.v2 import (
+    AgentSection,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Result,
+    Service,
+    State,
+    StringTable,
+)
 
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import StringTable
-
-check_info = {}
-
-
-def discover_plesk_domains(info):
-    if info and info[0]:
-        return [(None, None)]
-    return None
+def discover_plesk_domains(section: StringTable) -> DiscoveryResult:
+    if section and section[0]:
+        yield Service()
 
 
-def check_plesk_domains(_no_item, _no_params, info):
-    if not info:
-        return (1, "No domains configured")
-    return (0, "%s" % ",\n".join([i[0] for i in info]))
+def check_plesk_domains(section: StringTable) -> CheckResult:
+    if not section:
+        yield Result(state=State.WARN, summary="No domains configured")
+        return
+    yield Result(
+        state=State.OK,
+        summary=section[0][0],
+        details="\n".join([i[0] for i in section]),
+    )
+    return
 
 
 def parse_plesk_domains(string_table: StringTable) -> StringTable:
     return string_table
 
 
-check_info["plesk_domains"] = LegacyCheckDefinition(
+agent_section_plesk_domains = AgentSection(
     name="plesk_domains",
     parse_function=parse_plesk_domains,
+)
+
+
+check_plugin_plesk_domains = CheckPlugin(
+    name="plesk_domains",
     service_name="Plesk Domains",
     discovery_function=discover_plesk_domains,
     check_function=check_plesk_domains,

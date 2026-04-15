@@ -1019,7 +1019,6 @@ def _vs_mkeventd_rule(site_configs: SiteConfigurations, customer: str | None = N
                                 (900, _("15 minutes")),
                                 (300, _("5 minutes")),
                                 (60, _("minute")),
-                                (10, _("10 seconds")),
                             ],
                             default_value=3600,
                         ),

@@ -25,6 +25,7 @@ from cmk.gui.openapi.endpoints._common.host_attribute_schemas import (
     BaseHostAttribute,
     BaseHostTagGroup,
 )
+from cmk.gui.openapi.framework import APIVersion
 from cmk.gui.type_defs import CustomHostAttrSpec
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.watolib.configuration_bundle_store import BundleId, ConfigBundleStore
@@ -1180,9 +1181,104 @@ def test_openapi_host_config_show_host_disregards_contact_groups(
 
     clients.Host.set_credentials("unable_to_see_host", "supersecretish")
 
-    resp = clients.HostConfig.get("heute", expect_ok=False).assert_status_code(403)
-    assert resp.json["title"] == "Forbidden"
-    assert "heute" in resp.json["detail"]
+    clients.HostConfig.get("heute", expect_ok=False).assert_status_code(404)
+
+
+@pytest.mark.parametrize("api_version", [APIVersion.V1, APIVersion.UNSTABLE])
+def test_show_host_accessible_to_folder_contact(
+    clients: ClientRegistry,
+    api_version: APIVersion,
+) -> None:
+    """A user who is a member of the folder's contact group can fetch the host config
+    even without the 'wato.see_all_folders' permission (which is only held by admins)."""
+    clients.ContactGroup.create("folder_cg", alias="folder_cg")
+    clients.User.create(
+        username="folder_member",
+        fullname="folder_member",
+        customer=None,
+        contactgroups=["folder_cg"],
+        auth_option={"auth_type": "password", "password": "supersecretish"},
+    )
+    clients.Folder.create(
+        title="restricted_folder",
+        parent="/",
+        folder_name="restricted_folder",
+        attributes={"contactgroups": {"groups": ["folder_cg"], "recurse_perms": True}},
+    )
+    clients.HostConfig.create(host_name="restricted_host", folder="/restricted_folder")
+
+    clients.HostConfig.set_credentials("folder_member", "supersecretish")
+
+    resp = clients.HostConfig.request(
+        "get",
+        url="/objects/host_config/restricted_host",
+        api_version=api_version,
+    )
+    resp.assert_status_code(200)
+    assert resp.json["id"] == "restricted_host"
+
+
+@pytest.mark.parametrize("api_version", [APIVersion.V1, APIVersion.UNSTABLE])
+def test_show_host_inaccessible_to_non_folder_contact(
+    clients: ClientRegistry,
+    api_version: APIVersion,
+) -> None:
+    """A user who is NOT a member of the folder's contact group gets 404, indistinguishable
+    from a host that does not exist, so that host existence is not leaked."""
+    clients.ContactGroup.create("correct_cg", alias="correct_cg")
+    clients.ContactGroup.create("wrong_cg", alias="wrong_cg")
+    clients.User.create(
+        username="wrong_member",
+        fullname="wrong_member",
+        customer=None,
+        contactgroups=["wrong_cg"],
+        auth_option={"auth_type": "password", "password": "supersecretish"},
+    )
+    clients.Folder.create(
+        title="restricted_folder",
+        parent="/",
+        folder_name="restricted_folder",
+        attributes={"contactgroups": {"groups": ["correct_cg"], "recurse_perms": True}},
+    )
+    clients.HostConfig.create(host_name="restricted_host", folder="/restricted_folder")
+
+    clients.HostConfig.set_credentials("wrong_member", "supersecretish")
+
+    resp = clients.HostConfig.request(
+        "get",
+        url="/objects/host_config/restricted_host",
+        api_version=api_version,
+        expect_ok=False,
+    )
+    resp.assert_status_code(404)
+
+
+@pytest.mark.usefixtures("with_host")
+@pytest.mark.parametrize("api_version", [APIVersion.V1, APIVersion.UNSTABLE])
+def test_show_host_requires_permission_cmk_25482(
+    clients: ClientRegistry,
+    api_version: APIVersion,
+) -> None:
+    """Regression test for CMK-25482: show_host must not be accessible to users without
+    any host-read permission (no wato.see_all_folders, no contact group membership)."""
+    clients.User.create(
+        username="no_permission_user",
+        fullname="no_permission_user",
+        customer=None,
+        roles=["guest"],
+        contactgroups=[],
+        auth_option={"auth_type": "password", "password": "supersecretish"},
+    )
+
+    clients.HostConfig.set_credentials("no_permission_user", "supersecretish")
+
+    resp = clients.HostConfig.request(
+        "get",
+        url="/objects/host_config/heute",
+        api_version=api_version,
+        expect_ok=False,
+    )
+    resp.assert_status_code(404)
 
 
 def test_openapi_list_hosts_does_not_show_inaccessible_hosts(

@@ -8,8 +8,6 @@ py_library(
         exclude = [
             # Blocked: needs cmk.gui.pagetypes (monolithic)
             "pagetype_topic/**/*.py",
-            # Blocked: needs cmk.gui.sidebar (monolithic)
-            "sidebar_element/**/*.py",
         ],
     ),
     imports = ["../../../.."],
@@ -67,7 +65,6 @@ filegroup(
     name = "gui_srcs",
     srcs = glob(include = [
         "pagetype_topic/**/*.py",
-        "sidebar_element/**/*.py",
     ]),
     visibility = ["//cmk/gui:__pkg__"],
 )

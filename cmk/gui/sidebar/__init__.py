@@ -34,6 +34,8 @@ from cmk.gui.legacy_plugins import load_web_plugins
 from cmk.gui.log import logger
 from cmk.gui.logged_in import LoggedInUser, user
 from cmk.gui.main_menu import main_menu_registry, MainMenuRegistry
+from cmk.gui.openapi.framework.registry import VersionedEndpointRegistry
+from cmk.gui.openapi.restful_objects.endpoint_family import EndpointFamilyRegistry
 from cmk.gui.page_menu import PageMenu, PageMenuDropdown, PageMenuTopic
 from cmk.gui.pages import AjaxPage, PageContext, PageEndpoint, PageRegistry, PageResult
 from cmk.gui.permissions import permission_registry, PermissionSectionRegistry
@@ -52,6 +54,7 @@ from cmk.shared_typing.sidebar import SidebarConfig
 from cmk.shared_typing.sidebar import SidebarSnapin as SidebarSnapinConfig
 
 from . import _snapin
+from ._openapi.registration import register as register_openapi_endpoints
 from ._snapin import all_snapins as all_snapins
 from ._snapin import begin_footnote_links as begin_footnote_links
 from ._snapin import bulletlink as bulletlink
@@ -99,6 +102,8 @@ def register(
     dashlet_registry: DashletRegistry,
     main_menu_registry_: MainMenuRegistry,
     view_menu_topics: Callable[[UserPermissions], list[NavItemTopic]],
+    versioned_endpoint_registry: VersionedEndpointRegistry,
+    endpoint_family_registry: EndpointFamilyRegistry,
 ) -> None:
     page_registry.register(PageEndpoint("sidebar_fold", AjaxFoldSnapin()))
     page_registry.register(PageEndpoint("sidebar_openclose", AjaxOpenCloseSnapin()))
@@ -133,6 +138,11 @@ def register(
     dashlet_registry.register(SnapinDashlet)
     pagetypes.declare(CustomSnapins)
     pagetypes.declare(BookmarkList)
+
+    register_openapi_endpoints(
+        versioned_endpoint_registry=versioned_endpoint_registry,
+        endpoint_family_registry=endpoint_family_registry,
+    )
 
     _register_pre_21_plugin_api()
     load_web_plugins("sidebar", globals())

@@ -42,7 +42,6 @@ from .api_endpoints import host_config as api_host_config
 from .api_endpoints import host_config_internal as api_host_config_internal
 from .api_endpoints.graph_timerange import registration as api_graph_timerange
 from .api_endpoints.password import registration as api_password
-from .api_endpoints.sidebar_element import registration as sidebar_element
 from .api_endpoints.user_role import registration as api_user_role
 from .framework.registry import VersionedEndpointRegistry
 from .restful_objects.endpoint_family import EndpointFamilyRegistry
@@ -107,10 +106,6 @@ def register(
         endpoint_family_registry=endpoint_family_registry,
     )
     pagetype_topic.register(
-        versioned_endpoint_registry=versioned_endpoint_registry,
-        endpoint_family_registry=endpoint_family_registry,
-    )
-    sidebar_element.register(
         versioned_endpoint_registry=versioned_endpoint_registry,
         endpoint_family_registry=endpoint_family_registry,
     )

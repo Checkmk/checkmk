@@ -225,6 +225,8 @@ def register(edition: Edition) -> None:
         dashlet_registry,
         main_menu_registry,
         view_menu_topics=sidebar.default_view_menu_topics,
+        versioned_endpoint_registry=versioned_endpoint_registry,
+        endpoint_family_registry=endpoint_family_registry,
     )
     wato_registration.register(
         page_registry,

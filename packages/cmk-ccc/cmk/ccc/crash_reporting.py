@@ -293,8 +293,8 @@ def _get_generic_crash_info(
 def _get_local_vars_of_last_exception() -> str:
     local_vars = {}
 
-    # Suppressing to handle case where sys.exc_info has no crash information
-    # (https://docs.python.org/2/library/sys.html#sys.exc_info)
+    # inspect.trace() returns [] when called outside an active exception handler,
+    # making [-1] raise IndexError.
     with suppress(IndexError):
         for key, val in inspect.trace()[-1][0].f_locals.items():
             local_vars[key] = _format_var_for_export(val)
@@ -345,7 +345,11 @@ def _format_var_for_export(val: Any, maxdepth: int = 4, maxsize: int = 1024 * 10
         if size > maxsize:
             val = val[:maxsize] + f"... ({(size - maxsize)} bytes stripped)"
 
-    return val
+    try:
+        repr(val)
+        return val
+    except Exception:
+        return f"<{type(val).__name__} (repr raised an exception)>"
 
 
 class CrashReportRegistry(cmk.ccc.plugin_registry.Registry[type[ABCCrashReport]]):

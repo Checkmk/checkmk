@@ -3938,6 +3938,10 @@ msgstr "Adaugă %s"
 msgid "Add Aggregation"
 msgstr "Adăugați agregarea"
 
+#, fuzzy
+msgid "Add Apache instance"
+msgstr "Adăugați instanța NGINX"
+
 msgid "Add BI Pack"
 msgstr "Adăugați BI Pack"
 
@@ -6731,7 +6735,8 @@ msgstr ""
 "Prin urmare, vă recomandăm să utilizați opțiunea URL atunci când este "
 "posibil."
 
-msgid "An absolute path to a CA certificate"
+#, fuzzy
+msgid "An absolute path to a CA certificate (only relevant for HTTPS)"
 msgstr "O cale absolută către un certificat CA"
 
 #, fuzzy
@@ -7961,9 +7966,6 @@ msgstr "Instanțe de autodetecție"
 msgid "Autodetect instances, expect HTTPS on the following ports:"
 msgstr ""
 "Instanțele de autodetecție se așteaptă la HTTPS pe următoarele porturi:"
-
-msgid "Autodetect instances, expect HTTPs on the following ports:"
-msgstr "Instanțele de autodetecție se așteaptă la HTTP pe următoarele porturi:"
 
 msgid "Autodiscovery"
 msgstr "Descoperire automată"
@@ -13099,6 +13101,7 @@ msgstr "Checkmk"
 msgid "Checkmk $PERIODNAME$ '$TITLE$'"
 msgstr "Verifică $PERIODNAME$ '$TITLE$'"
 
+#. weblate-flags: read-only
 #, fuzzy
 msgid "Checkmk AI feature usage notice"
 msgstr "Utilizarea Checkmk fetcher"
@@ -21681,10 +21684,6 @@ msgid "Do not deploy the %s plug-in"
 msgstr "Nu implementați plugin-ul %s."
 
 #, fuzzy
-msgid "Do not deploy the Apache Status plug-in"
-msgstr "Nu implementați pluginul Apache Status"
-
-#, fuzzy
 msgid "Do not deploy the Arcserve plug-in"
 msgstr "Nu implementați extensia Arcserve"
 
@@ -21707,10 +21706,6 @@ msgstr "Nu implementați pluginul de memorie DB2"
 #, fuzzy
 msgid "Do not deploy the DB2 plug-in"
 msgstr "Nu implementați extensia DB2"
-
-#, fuzzy
-msgid "Do not deploy the DNS client plug-in"
-msgstr "Nu implementați plugin-ul client DNS"
 
 #, fuzzy
 msgid "Do not deploy the Docker container plug-in"
@@ -22156,9 +22151,6 @@ msgstr "Nu folosiți TLS/SSL/Https (nesigur)"
 msgid "Don't use a namespace prefix"
 msgstr "Nu folosiți un prefix de spațiu de nume"
 
-msgid "Don't use custom port"
-msgstr "Nu folosiți port personalizat"
-
 msgid "Don't use password"
 msgstr "Nu folosiți parola"
 
@@ -22302,10 +22294,6 @@ msgstr "Comentariu privind timpul de nefuncționare"
 msgid "Downtime comment (regex)"
 msgstr "Comentariu privind timpul de întrerupere (regex)"
 
-#, fuzzy
-msgid "Downtime date picker"
-msgstr "Datepicker pentru timpul de întrerupere"
-
 msgid "Downtime duration (if flexible)"
 msgstr "Durata timpului de oprire (dacă este flexibil)"
 
@@ -22344,10 +22332,6 @@ msgstr "Ora de începere a timpului de oprire"
 
 msgid "Downtime stopped"
 msgstr "Timpul de oprire a oprit"
-
-#, fuzzy
-msgid "Downtime time picker"
-msgstr "Timepicker pentru timpul de nefuncționare"
 
 msgid "Downtime will not start anymore after"
 msgstr "Timpul de nefuncționare nu va mai începe după"
@@ -45497,9 +45481,6 @@ msgstr "Nu verificați plugin-urile care utilizează API-ul depreciat"
 msgid "No broken extensions were found."
 msgstr "Nu au fost găsite extensii rupte."
 
-msgid "No certificate"
-msgstr "Fără certificat"
-
 #, fuzzy
 msgid "No check man pages using the deprecated API"
 msgstr "Nu verificați plugin-urile care utilizează API-ul depreciat"
@@ -51090,9 +51071,6 @@ msgstr "Baza de date pentru PostgreSQL"
 #, fuzzy
 msgid "Path to Unix socket"
 msgstr "Calea către socket-ul unix"
-
-msgid "Path to a CA certificate"
-msgstr "Cale de acces la un certificat CA"
 
 msgid "Path to categories"
 msgstr "Calea către categorii"
@@ -65581,9 +65559,6 @@ msgstr "Distribuția stegulețelor TCP"
 msgid "TCP Port"
 msgstr "Port TCP"
 
-msgid "TCP Port Number"
-msgstr "Numărul portului TCP"
-
 msgid "TCP Port number"
 msgstr "Numărul portului TCP"
 
@@ -76484,7 +76459,9 @@ msgstr ""
 #, fuzzy
 msgid ""
 "This will deploy the agent plug-in <tt>mk_oracle</tt> on your target system. "
-"Currently not all options are available in all operating systems."
+"Currently not all options are available in all operating systems.<br><b>Note:"
+"</b> This plugin cannot be used together with the 'Unified Oracle Plugin "
+"(Beta)'. Please configure only one of the two."
 msgstr ""
 "Aceasta va implementa pluginul agent <tt>mk_oracle</tt> pe sistemul țintă. "
 "În prezent, nu toate opțiunile sunt disponibile în toate sistemele de "
@@ -76493,7 +76470,9 @@ msgstr ""
 #, fuzzy
 msgid ""
 "This will deploy the agent plug-in <tt>mk_oracle</tt> on your target system."
-"<br>ARM architecture is not supported."
+"<br>ARM architecture is not supported.<br><b>Note:</b> This plugin cannot be "
+"used together with 'Oracle databases (Linux, Solaris, AIX, Windows)'. Please "
+"configure only one of the two."
 msgstr "Implementați pluginul agent <tt>zorp</tt> pe sistemul țintă."
 
 #, fuzzy
@@ -82891,9 +82870,6 @@ msgstr "Utilizați date din OpenShift"
 
 msgid "Use default layout"
 msgstr "Utilizați aspectul implicit"
-
-msgid "Use default port"
-msgstr "Utilizați portul implicit"
 
 msgid "Use default scaling mode"
 msgstr "Utilizați modul de scalare implicit"
@@ -92601,6 +92577,34 @@ msgid "Copy to clipboard failed with error: "
 msgstr ""
 
 #, fuzzy
+msgid "Open calendar"
+msgstr "Clienți OpenVPN"
+
+#, fuzzy
+msgid "Previous month"
+msgstr "Descoperit anterior"
+
+#, fuzzy
+msgid "Select month and year"
+msgstr "(selectați folderul țintă)"
+
+#, fuzzy
+msgid "Next month"
+msgstr "Luna trecută"
+
+#, fuzzy
+msgid "Previous year"
+msgstr "Descoperit anterior"
+
+#, fuzzy
+msgid "Next year"
+msgstr "Următoarea verificare"
+
+#, fuzzy
+msgid "Open time picker"
+msgstr "Timepicker pentru timpul de nefuncționare"
+
+#, fuzzy
 msgid "selected"
 msgstr "Selectată"
 
@@ -94887,12 +94891,17 @@ msgid ""
 msgstr ""
 
 #, fuzzy
-msgid "Download agent"
+msgid "Download the agent"
 msgstr "Agent descărcat"
 
 #, fuzzy
-msgid "Install agent"
+msgid "Install the agent"
 msgstr "Agent instalat"
+
+#, fuzzy
+msgid ""
+"You do not have the required permissions to download monitoring agents. "
+msgstr "Nu aveți permisiunile necesare pentru a edita acest %s"
 
 #, fuzzy
 msgid "Next step: Register agent"
@@ -94920,11 +94929,6 @@ msgid ""
 msgstr ""
 
 msgid ""
-"Run this command on your Linux host to download and install the Checkmk "
-"agent."
-msgstr ""
-
-msgid ""
 "If you want to install the Checkmk agent on Linux, please read how to "
 "install the legacy agent"
 msgstr ""
@@ -94932,6 +94936,21 @@ msgstr ""
 msgid ""
 "After you have installed the agent, run this command on your Linux host to "
 "register the Checkmk agent controller."
+msgstr ""
+
+msgid ""
+"Run this command on your Linux host to download and install the Checkmk "
+"agent."
+msgstr ""
+
+msgid ""
+"Run these commands on your Linux host to download and install the Checkmk "
+"agent."
+msgstr ""
+
+msgid ""
+"This command extracts files directly into the root directory (/). Make sure "
+"you are executing this command on the correct host."
 msgstr ""
 
 msgid "Run this command on your Solaris host to download the Checkmk agent."
@@ -94948,7 +94967,8 @@ msgid ""
 msgstr ""
 
 msgid ""
-"Run this command on your AIX host to download and install the Checkmk agent."
+"Run these commands on your AIX host to download and install the Checkmk "
+"agent."
 msgstr ""
 
 msgid ""
@@ -96500,6 +96520,45 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#~ msgid "Autodetect instances, expect HTTPs on the following ports:"
+#~ msgstr ""
+#~ "Instanțele de autodetecție se așteaptă la HTTP pe următoarele porturi:"
+
+#, fuzzy
+#~ msgid "Do not deploy the Apache Status plug-in"
+#~ msgstr "Nu implementați pluginul Apache Status"
+
+#, fuzzy
+#~ msgid "Do not deploy the DNS client plug-in"
+#~ msgstr "Nu implementați plugin-ul client DNS"
+
+#~ msgid "Don't use custom port"
+#~ msgstr "Nu folosiți port personalizat"
+
+#, fuzzy
+#~ msgid "Downtime date picker"
+#~ msgstr "Datepicker pentru timpul de întrerupere"
+
+#~ msgid "No certificate"
+#~ msgstr "Fără certificat"
+
+#~ msgid "Path to a CA certificate"
+#~ msgstr "Cale de acces la un certificat CA"
+
+#~ msgid "TCP Port Number"
+#~ msgstr "Numărul portului TCP"
+
+#~ msgid "Use default port"
+#~ msgstr "Utilizați portul implicit"
+
+#, fuzzy
+#~ msgid "Download agent"
+#~ msgstr "Agent descărcat"
+
+#, fuzzy
+#~ msgid "Install agent"
+#~ msgstr "Agent instalat"
 
 #, fuzzy
 #~ msgid "Deploy DB2 memory plug-in"
@@ -100330,10 +100389,6 @@ msgstr ""
 #~ msgstr "Numărul așteptat de descriptori de fișiere deschise"
 
 #, fuzzy
-#~ msgid "Next cycle"
-#~ msgstr "Următoarea verificare"
-
-#, fuzzy
 #~ msgid "No next cycle available"
 #~ msgstr "nu este disponibil"
 
@@ -100380,10 +100435,6 @@ msgstr ""
 
 #~ msgid "Prevent host deletion after initialization"
 #~ msgstr "Împiedicați ștergerea gazdei după inițializare"
-
-#, fuzzy
-#~ msgid "Previous cycle"
-#~ msgstr "Descoperit anterior"
 
 #~ msgid "REST API communication"
 #~ msgstr "Comunicarea REST API"

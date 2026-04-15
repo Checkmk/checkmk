@@ -3944,6 +3944,10 @@ msgstr "Añadir %s"
 msgid "Add Aggregation"
 msgstr "Añadir agregación"
 
+#, fuzzy
+msgid "Add Apache instance"
+msgstr "Añadir instancia NGINX"
+
 msgid "Add BI Pack"
 msgstr "Añadir paquete BI"
 
@@ -6775,7 +6779,8 @@ msgstr ""
 "actualización debe realizarse manualmente. Por lo tanto, recomendamos "
 "utilizar la opción de URL siempre que sea posible."
 
-msgid "An absolute path to a CA certificate"
+#, fuzzy
+msgid "An absolute path to a CA certificate (only relevant for HTTPS)"
 msgstr "Una ruta absoluta a un certificado CA"
 
 #, fuzzy
@@ -8025,10 +8030,6 @@ msgstr "Instancias de autodetección"
 msgid "Autodetect instances, expect HTTPS on the following ports:"
 msgstr ""
 "Las instancias de autodetección, esperan HTTPS en los siguientes puertos:"
-
-msgid "Autodetect instances, expect HTTPs on the following ports:"
-msgstr ""
-"Las instancias de autodetección, esperan HTTPs en los siguientes puertos:"
 
 #, fuzzy
 msgid "Autodiscovery"
@@ -13190,6 +13191,7 @@ msgstr "Checkmk"
 msgid "Checkmk $PERIODNAME$ '$TITLE$'"
 msgstr "Checkmk $PERIODNAME$ '$TITLE$'"
 
+#. weblate-flags: read-only
 #, fuzzy
 msgid "Checkmk AI feature usage notice"
 msgstr "Utilización de la herramienta Checkmk"
@@ -21822,10 +21824,6 @@ msgid "Do not deploy the %s plug-in"
 msgstr "No despliegue el plugin %s"
 
 #, fuzzy
-msgid "Do not deploy the Apache Status plug-in"
-msgstr "No despliegue el plugin Apache Status"
-
-#, fuzzy
 msgid "Do not deploy the Arcserve plug-in"
 msgstr "No despliegue el plugin de Arcserve"
 
@@ -21848,10 +21846,6 @@ msgstr "No implementar el plugin de memoria de DB2"
 #, fuzzy
 msgid "Do not deploy the DB2 plug-in"
 msgstr "No despliegue el plugin de DB2"
-
-#, fuzzy
-msgid "Do not deploy the DNS client plug-in"
-msgstr "No despliegue el plugin de cliente DNS"
 
 #, fuzzy
 msgid "Do not deploy the Docker container plug-in"
@@ -22299,9 +22293,6 @@ msgstr "No utilice TLS/SSL/Https (inseguro)"
 msgid "Don't use a namespace prefix"
 msgstr "No utilice un prefijo de espacio de nombres"
 
-msgid "Don't use custom port"
-msgstr "No utilice el puerto personalizado"
-
 msgid "Don't use password"
 msgstr "No utilice la contraseña"
 
@@ -22450,10 +22441,6 @@ msgstr "Comentario sobre el tiempo de inactividad"
 msgid "Downtime comment (regex)"
 msgstr "Comentario sobre el tiempo de inactividad"
 
-#, fuzzy
-msgid "Downtime date picker"
-msgstr "Hora de finalización del tiempo de inactividad"
-
 msgid "Downtime duration (if flexible)"
 msgstr "Duración del tiempo de inactividad (si es flexible)"
 
@@ -22493,10 +22480,6 @@ msgstr "Hora de inicio del tiempo de inactividad"
 
 msgid "Downtime stopped"
 msgstr "El tiempo de inactividad se detuvo"
-
-#, fuzzy
-msgid "Downtime time picker"
-msgstr "Hora de finalización del tiempo de inactividad"
 
 msgid "Downtime will not start anymore after"
 msgstr "El tiempo de inactividad no se iniciará más después de"
@@ -45768,9 +45751,6 @@ msgstr "No comprobar los plugins que utilizan la API obsoleta"
 msgid "No broken extensions were found."
 msgstr "No se han encontrado extensiones rotas."
 
-msgid "No certificate"
-msgstr "Sin certificado"
-
 #, fuzzy
 msgid "No check man pages using the deprecated API"
 msgstr "No comprobar los plugins que utilizan la API obsoleta"
@@ -51412,9 +51392,6 @@ msgstr "Base de datos para PostgreSQL"
 #, fuzzy
 msgid "Path to Unix socket"
 msgstr "Ruta al socket unix"
-
-msgid "Path to a CA certificate"
-msgstr "Ruta de acceso a un certificado CA"
 
 msgid "Path to categories"
 msgstr "Camino a las categorías"
@@ -66026,9 +66003,6 @@ msgstr "Distribución de banderas TCP"
 msgid "TCP Port"
 msgstr "Puerto TCP"
 
-msgid "TCP Port Number"
-msgstr "Número de puerto TCP"
-
 msgid "TCP Port number"
 msgstr "Número de puerto TCP"
 
@@ -76923,7 +76897,9 @@ msgstr ""
 #, fuzzy
 msgid ""
 "This will deploy the agent plug-in <tt>mk_oracle</tt> on your target system. "
-"Currently not all options are available in all operating systems."
+"Currently not all options are available in all operating systems.<br><b>Note:"
+"</b> This plugin cannot be used together with the 'Unified Oracle Plugin "
+"(Beta)'. Please configure only one of the two."
 msgstr ""
 "Esto desplegará el plugin de agente <tt>mk_oracle</tt> en su sistema de "
 "destino. Actualmente no todas las opciones están disponibles en todos los "
@@ -76932,7 +76908,9 @@ msgstr ""
 #, fuzzy
 msgid ""
 "This will deploy the agent plug-in <tt>mk_oracle</tt> on your target system."
-"<br>ARM architecture is not supported."
+"<br>ARM architecture is not supported.<br><b>Note:</b> This plugin cannot be "
+"used together with 'Oracle databases (Linux, Solaris, AIX, Windows)'. Please "
+"configure only one of the two."
 msgstr ""
 "Implemente el complemento de agente <tt>zorp</tt> en su sistema de destino."
 
@@ -83440,9 +83418,6 @@ msgstr "Utilizar datos de OpenShift"
 
 msgid "Use default layout"
 msgstr "Utilizar el diseño por defecto"
-
-msgid "Use default port"
-msgstr "Utilizar el puerto por defecto"
 
 msgid "Use default scaling mode"
 msgstr "Utilizar el modo de escala por defecto"
@@ -93181,6 +93156,34 @@ msgid "Copy to clipboard failed with error: "
 msgstr ""
 
 #, fuzzy
+msgid "Open calendar"
+msgstr "Clientes OpenVPN"
+
+#, fuzzy
+msgid "Previous month"
+msgstr "Descubrimiento del proceso"
+
+#, fuzzy
+msgid "Select month and year"
+msgstr "(seleccione carpeta de destino)"
+
+#, fuzzy
+msgid "Next month"
+msgstr "El mes pasado"
+
+#, fuzzy
+msgid "Previous year"
+msgstr "Descubrimiento del proceso"
+
+#, fuzzy
+msgid "Next year"
+msgstr "Próxima comprobación"
+
+#, fuzzy
+msgid "Open time picker"
+msgstr "Hora de finalización del tiempo de inactividad"
+
+#, fuzzy
 msgid "selected"
 msgstr "Seleccionado"
 
@@ -95465,12 +95468,17 @@ msgid ""
 msgstr ""
 
 #, fuzzy
-msgid "Download agent"
+msgid "Download the agent"
 msgstr "Agente descargado"
 
 #, fuzzy
-msgid "Install agent"
+msgid "Install the agent"
 msgstr "Agente instalado"
+
+#, fuzzy
+msgid ""
+"You do not have the required permissions to download monitoring agents. "
+msgstr "No tienes permisos para editar este %s"
 
 #, fuzzy
 msgid "Next step: Register agent"
@@ -95498,11 +95506,6 @@ msgid ""
 msgstr ""
 
 msgid ""
-"Run this command on your Linux host to download and install the Checkmk "
-"agent."
-msgstr ""
-
-msgid ""
 "If you want to install the Checkmk agent on Linux, please read how to "
 "install the legacy agent"
 msgstr ""
@@ -95510,6 +95513,21 @@ msgstr ""
 msgid ""
 "After you have installed the agent, run this command on your Linux host to "
 "register the Checkmk agent controller."
+msgstr ""
+
+msgid ""
+"Run this command on your Linux host to download and install the Checkmk "
+"agent."
+msgstr ""
+
+msgid ""
+"Run these commands on your Linux host to download and install the Checkmk "
+"agent."
+msgstr ""
+
+msgid ""
+"This command extracts files directly into the root directory (/). Make sure "
+"you are executing this command on the correct host."
 msgstr ""
 
 msgid "Run this command on your Solaris host to download the Checkmk agent."
@@ -95526,7 +95544,8 @@ msgid ""
 msgstr ""
 
 msgid ""
-"Run this command on your AIX host to download and install the Checkmk agent."
+"Run these commands on your AIX host to download and install the Checkmk "
+"agent."
 msgstr ""
 
 msgid ""
@@ -97068,6 +97087,45 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#~ msgid "Autodetect instances, expect HTTPs on the following ports:"
+#~ msgstr ""
+#~ "Las instancias de autodetección, esperan HTTPs en los siguientes puertos:"
+
+#, fuzzy
+#~ msgid "Do not deploy the Apache Status plug-in"
+#~ msgstr "No despliegue el plugin Apache Status"
+
+#, fuzzy
+#~ msgid "Do not deploy the DNS client plug-in"
+#~ msgstr "No despliegue el plugin de cliente DNS"
+
+#~ msgid "Don't use custom port"
+#~ msgstr "No utilice el puerto personalizado"
+
+#, fuzzy
+#~ msgid "Downtime date picker"
+#~ msgstr "Hora de finalización del tiempo de inactividad"
+
+#~ msgid "No certificate"
+#~ msgstr "Sin certificado"
+
+#~ msgid "Path to a CA certificate"
+#~ msgstr "Ruta de acceso a un certificado CA"
+
+#~ msgid "TCP Port Number"
+#~ msgstr "Número de puerto TCP"
+
+#~ msgid "Use default port"
+#~ msgstr "Utilizar el puerto por defecto"
+
+#, fuzzy
+#~ msgid "Download agent"
+#~ msgstr "Agente descargado"
+
+#, fuzzy
+#~ msgid "Install agent"
+#~ msgstr "Agente instalado"
 
 #, fuzzy
 #~ msgid "Deploy DB2 memory plug-in"
@@ -100518,10 +100576,6 @@ msgstr ""
 #~ msgstr "Número esperado de descriptores de archivo abiertos"
 
 #, fuzzy
-#~ msgid "Next cycle"
-#~ msgstr "Próxima comprobación"
-
-#, fuzzy
 #~ msgid "No next cycle available"
 #~ msgstr "no disponible"
 
@@ -100569,10 +100623,6 @@ msgstr ""
 
 #~ msgid "Prevent host deletion after initialization"
 #~ msgstr "Evitar el borrado de hosts tras la inicialización"
-
-#, fuzzy
-#~ msgid "Previous cycle"
-#~ msgstr "Descubrimiento del proceso"
 
 #~ msgid "REST API communication"
 #~ msgstr "Comunicación API REST"

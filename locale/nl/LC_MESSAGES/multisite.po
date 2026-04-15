@@ -3920,6 +3920,10 @@ msgstr "Toevoegen %s"
 msgid "Add Aggregation"
 msgstr "Aggregatie toevoegen"
 
+#, fuzzy
+msgid "Add Apache instance"
+msgstr "NGINX instantie toevoegen"
+
 msgid "Add BI Pack"
 msgstr "BI-pakket toevoegen"
 
@@ -6712,7 +6716,8 @@ msgstr ""
 "dat dit betekent dat eventuele updates handmatig moeten worden uitgevoerd. "
 "We raden daarom aan de URL optie te gebruiken waar mogelijk."
 
-msgid "An absolute path to a CA certificate"
+#, fuzzy
+msgid "An absolute path to a CA certificate (only relevant for HTTPS)"
 msgstr "Een absoluut pad naar een CA-certificaat"
 
 #, fuzzy
@@ -7955,9 +7960,6 @@ msgstr "Autodetect instanties"
 
 msgid "Autodetect instances, expect HTTPS on the following ports:"
 msgstr "Autodetectie instanties, verwachten HTTPS op de volgende poorten:"
-
-msgid "Autodetect instances, expect HTTPs on the following ports:"
-msgstr "Autodetect instances, verwacht HTTP's op de volgende poorten:"
 
 #, fuzzy
 msgid "Autodiscovery"
@@ -13092,6 +13094,7 @@ msgstr "Checkmk"
 msgid "Checkmk $PERIODNAME$ '$TITLE$'"
 msgstr "Checkmk $PERIODNAME$ '$TITLE$'"
 
+#. weblate-flags: read-only
 #, fuzzy
 msgid "Checkmk AI feature usage notice"
 msgstr "Checkmk fetcher gebruik"
@@ -21647,10 +21650,6 @@ msgid "Do not deploy the %s plug-in"
 msgstr "Implementeer de %s plugin niet"
 
 #, fuzzy
-msgid "Do not deploy the Apache Status plug-in"
-msgstr "Implementeer de Apache Status plugin niet"
-
-#, fuzzy
 msgid "Do not deploy the Arcserve plug-in"
 msgstr "De Arcserve-plugin niet implementeren"
 
@@ -21673,10 +21672,6 @@ msgstr "Implementeer geen DB2 geheugen plugin"
 #, fuzzy
 msgid "Do not deploy the DB2 plug-in"
 msgstr "Implementeer de DB2 plugin niet"
-
-#, fuzzy
-msgid "Do not deploy the DNS client plug-in"
-msgstr "Implementeer de DNS client plugin niet"
 
 #, fuzzy
 msgid "Do not deploy the Docker container plug-in"
@@ -22125,9 +22120,6 @@ msgstr "Gebruik geen TLS/SSL/Https (onveilig)"
 msgid "Don't use a namespace prefix"
 msgstr "Gebruik geen namespace voorvoegsel"
 
-msgid "Don't use custom port"
-msgstr "Gebruik geen aangepaste poort"
-
 msgid "Don't use password"
 msgstr "Gebruik geen wachtwoord"
 
@@ -22274,10 +22266,6 @@ msgstr "Commentaar bij stilstand"
 msgid "Downtime comment (regex)"
 msgstr "Commentaar bij stilstand"
 
-#, fuzzy
-msgid "Downtime date picker"
-msgstr "Eindtijd downtime"
-
 msgid "Downtime duration (if flexible)"
 msgstr "Duur van de stilstand (indien flexibel)"
 
@@ -22317,10 +22305,6 @@ msgstr "Begintijd downtime"
 
 msgid "Downtime stopped"
 msgstr "Downtime gestopt"
-
-#, fuzzy
-msgid "Downtime time picker"
-msgstr "Eindtijd downtime"
 
 msgid "Downtime will not start anymore after"
 msgstr "Downtime zal niet meer starten na"
@@ -45409,9 +45393,6 @@ msgstr "Geen controleplugins die de verouderde API gebruiken"
 msgid "No broken extensions were found."
 msgstr "Er werden geen gebroken extensies gevonden."
 
-msgid "No certificate"
-msgstr "Geen certificaat"
-
 #, fuzzy
 msgid "No check man pages using the deprecated API"
 msgstr "Geen controleplugins die de verouderde API gebruiken"
@@ -51012,9 +50993,6 @@ msgstr "Database voor PostgreSQL"
 #, fuzzy
 msgid "Path to Unix socket"
 msgstr "Pad naar unix socket"
-
-msgid "Path to a CA certificate"
-msgstr "Pad naar een CA-certificaat"
 
 msgid "Path to categories"
 msgstr "Pad naar categorieën"
@@ -65457,9 +65435,6 @@ msgstr "TCP Vlaggen Verdeling"
 msgid "TCP Port"
 msgstr "TCP-poort"
 
-msgid "TCP Port Number"
-msgstr "TCP-poortnummer"
-
 msgid "TCP Port number"
 msgstr "TCP-poortnummer"
 
@@ -76289,7 +76264,9 @@ msgstr ""
 #, fuzzy
 msgid ""
 "This will deploy the agent plug-in <tt>mk_oracle</tt> on your target system. "
-"Currently not all options are available in all operating systems."
+"Currently not all options are available in all operating systems.<br><b>Note:"
+"</b> This plugin cannot be used together with the 'Unified Oracle Plugin "
+"(Beta)'. Please configure only one of the two."
 msgstr ""
 "Dit zal de agent plugin <tt>mk_oracle</tt> op uw doelsysteem implementeren. "
 "Momenteel zijn niet alle opties beschikbaar in alle besturingssystemen."
@@ -76297,7 +76274,9 @@ msgstr ""
 #, fuzzy
 msgid ""
 "This will deploy the agent plug-in <tt>mk_oracle</tt> on your target system."
-"<br>ARM architecture is not supported."
+"<br>ARM architecture is not supported.<br><b>Note:</b> This plugin cannot be "
+"used together with 'Oracle databases (Linux, Solaris, AIX, Windows)'. Please "
+"configure only one of the two."
 msgstr "Implementeer de agent plugin <tt>zorp</tt> op uw doelsysteem."
 
 #, fuzzy
@@ -82772,9 +82751,6 @@ msgstr "Gebruik gegevens van OpenShift"
 
 msgid "Use default layout"
 msgstr "Standaard lay-out gebruiken"
-
-msgid "Use default port"
-msgstr "Gebruik standaard poort"
 
 msgid "Use default scaling mode"
 msgstr "Gebruik standaard schalingsmodus"
@@ -92461,6 +92437,34 @@ msgid "Copy to clipboard failed with error: "
 msgstr ""
 
 #, fuzzy
+msgid "Open calendar"
+msgstr "OpenVPN-clients"
+
+#, fuzzy
+msgid "Previous month"
+msgstr "Proces ontdekking"
+
+#, fuzzy
+msgid "Select month and year"
+msgstr "(selecteer doel map)"
+
+#, fuzzy
+msgid "Next month"
+msgstr "Vorige maand"
+
+#, fuzzy
+msgid "Previous year"
+msgstr "Proces ontdekking"
+
+#, fuzzy
+msgid "Next year"
+msgstr "Volgende controle"
+
+#, fuzzy
+msgid "Open time picker"
+msgstr "Eindtijd downtime"
+
+#, fuzzy
 msgid "selected"
 msgstr "Geselecteerd"
 
@@ -94743,12 +94747,17 @@ msgid ""
 msgstr ""
 
 #, fuzzy
-msgid "Download agent"
+msgid "Download the agent"
 msgstr "Gedownloade Agent"
 
 #, fuzzy
-msgid "Install agent"
+msgid "Install the agent"
 msgstr "Geïnstalleerde agent"
+
+#, fuzzy
+msgid ""
+"You do not have the required permissions to download monitoring agents. "
+msgstr "U heeft niet de rechten om deze %s te bewerken"
 
 #, fuzzy
 msgid "Next step: Register agent"
@@ -94776,11 +94785,6 @@ msgid ""
 msgstr ""
 
 msgid ""
-"Run this command on your Linux host to download and install the Checkmk "
-"agent."
-msgstr ""
-
-msgid ""
 "If you want to install the Checkmk agent on Linux, please read how to "
 "install the legacy agent"
 msgstr ""
@@ -94788,6 +94792,21 @@ msgstr ""
 msgid ""
 "After you have installed the agent, run this command on your Linux host to "
 "register the Checkmk agent controller."
+msgstr ""
+
+msgid ""
+"Run this command on your Linux host to download and install the Checkmk "
+"agent."
+msgstr ""
+
+msgid ""
+"Run these commands on your Linux host to download and install the Checkmk "
+"agent."
+msgstr ""
+
+msgid ""
+"This command extracts files directly into the root directory (/). Make sure "
+"you are executing this command on the correct host."
 msgstr ""
 
 msgid "Run this command on your Solaris host to download the Checkmk agent."
@@ -94804,7 +94823,8 @@ msgid ""
 msgstr ""
 
 msgid ""
-"Run this command on your AIX host to download and install the Checkmk agent."
+"Run these commands on your AIX host to download and install the Checkmk "
+"agent."
 msgstr ""
 
 msgid ""
@@ -96339,6 +96359,44 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#~ msgid "Autodetect instances, expect HTTPs on the following ports:"
+#~ msgstr "Autodetect instances, verwacht HTTP's op de volgende poorten:"
+
+#, fuzzy
+#~ msgid "Do not deploy the Apache Status plug-in"
+#~ msgstr "Implementeer de Apache Status plugin niet"
+
+#, fuzzy
+#~ msgid "Do not deploy the DNS client plug-in"
+#~ msgstr "Implementeer de DNS client plugin niet"
+
+#~ msgid "Don't use custom port"
+#~ msgstr "Gebruik geen aangepaste poort"
+
+#, fuzzy
+#~ msgid "Downtime date picker"
+#~ msgstr "Eindtijd downtime"
+
+#~ msgid "No certificate"
+#~ msgstr "Geen certificaat"
+
+#~ msgid "Path to a CA certificate"
+#~ msgstr "Pad naar een CA-certificaat"
+
+#~ msgid "TCP Port Number"
+#~ msgstr "TCP-poortnummer"
+
+#~ msgid "Use default port"
+#~ msgstr "Gebruik standaard poort"
+
+#, fuzzy
+#~ msgid "Download agent"
+#~ msgstr "Gedownloade Agent"
+
+#, fuzzy
+#~ msgid "Install agent"
+#~ msgstr "Geïnstalleerde agent"
 
 #, fuzzy
 #~ msgid "Deploy DB2 memory plug-in"
@@ -99681,10 +99739,6 @@ msgstr ""
 #~ msgstr "Verwacht aantal open file descriptors"
 
 #, fuzzy
-#~ msgid "Next cycle"
-#~ msgstr "Volgende controle"
-
-#, fuzzy
 #~ msgid "No next cycle available"
 #~ msgstr "niet beschikbaar"
 
@@ -99731,10 +99785,6 @@ msgstr ""
 
 #~ msgid "Prevent host deletion after initialization"
 #~ msgstr "Voorkom verwijderen van host na initialisatie"
-
-#, fuzzy
-#~ msgid "Previous cycle"
-#~ msgstr "Proces ontdekking"
 
 #~ msgid "REST API communication"
 #~ msgstr "REST API communicatie"

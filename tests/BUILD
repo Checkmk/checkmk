@@ -62,6 +62,7 @@ py_library(
             "//cmk/editions/nonfree:cloud",
             "//non-free/packages/cmk-licensing-nonfree",
             "//non-free/packages/cmk-metric-backend",
+            "//non-free/packages/cmk-metric-backend:testlib",
         ],
         "//:gpl_repo": [],
     }),
@@ -147,7 +148,10 @@ py_library(
         requirement("pyyaml"),
         requirement("requests"),
     ] + select({
-        "//:gpl+nonfree_repo": ["//cmk/editions/nonfree:cloud"],
+        "//:gpl+nonfree_repo": [
+            "//cmk/editions/nonfree:cloud",
+            "//non-free/packages/cmk-metric-backend:testlib",
+        ],
         "//:gpl_repo": [],
     }),
 )

@@ -1137,6 +1137,9 @@ allows = [
 [components."cmk.testlib.agent_receiver"]
 allows = ["@relay_protocols", "cmk.agent_receiver"]
 
+[components."cmk.testlib.metric_backend"]
+allows = ["cmk.metric_backend"]
+
 [components."cmk.testlib.relay"]
 allows = [
   "@ccc",
@@ -1604,6 +1607,7 @@ allows = [
   "cmk.gui",
   "cmk.licensing",
   "cmk.shared_typing",
+  "cmk.testlib.metric_backend",
   "cmk.utils",
 ]
 

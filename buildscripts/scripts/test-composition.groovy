@@ -46,6 +46,7 @@ void main() {
         safe_branch_name,                   // 'branch' returns '<BRANCH>-latest'
     );
     def deliverables_dir = "${checkout_dir}/test-results";
+    def force_build = params.DISABLE_JENKINS_CACHE == true;
 
     currentBuild.description += (
         """

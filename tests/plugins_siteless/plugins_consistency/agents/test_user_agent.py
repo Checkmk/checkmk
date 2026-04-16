@@ -11,6 +11,11 @@ from types import ModuleType
 from cmk.ccc import version
 from cmk.discover_plugins import discover_families
 
+_AGENTS_WITHOUT_USER_AGENT = {
+    "cmk.plugins.ceph.agents.mk_ceph",
+    "cmk.plugins.mtr.agents.mtr",
+}
+
 
 def _collect_agents() -> Iterable[tuple[str, ModuleType]]:
     for family in discover_families(raise_errors=True):
@@ -44,10 +49,10 @@ def test_expected_agent_and_user_string_count() -> None:
     agents_wo_user_agent = {n for n, _ in agent_plugins if n not in agent_plugins_with_user_agent}
 
     # If this fails, you added an agent plugin without a USER_AGENT attribute.
-    # That might be fine if you're not making http requests. Just update the number
-    # below then.
+    # That might be fine if you're not making http requests. Just update the
+    # constant used below then.
     # If you do make requests, however, please consider following the convention.
-    assert len(agents_wo_user_agent) == 2
+    assert agents_wo_user_agent == _AGENTS_WITHOUT_USER_AGENT
 
 
 def test_user_agent_strings() -> None:

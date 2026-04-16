@@ -36,6 +36,7 @@ import traceback
 import uuid
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from contextlib import suppress
+from dataclasses import dataclass, field
 from functools import partial
 from pathlib import Path
 from typing import cast, Literal
@@ -141,9 +142,36 @@ Contacts = list[Contact]
 ConfigContacts = dict[ContactName, Contact]
 ContactNames = frozenset[ContactName]  # Must be hasable
 
-NotificationKey = tuple[ContactNames, NotificationPluginNameStr]
-NotificationValue = tuple[bool, NotifyPluginParamsDict, NotifyBulkParameters | None]
-Notifications = dict[NotificationKey, NotificationValue]
+
+# Keys injected per matching rule by _rbn_finalize_plugin_parameters.
+# These differ per rule and must be excluded when comparing notifications
+# for deduplication.
+_PER_RULE_PARAM_KEYS = frozenset({"matching_rule_nr", "matching_rule_text"})
+
+
+def _strip_per_rule_metadata(parameters: NotifyPluginParamsDict) -> NotifyPluginParamsDict:
+    return {k: v for k, v in parameters.items() if k not in _PER_RULE_PARAM_KEYS}
+
+
+@dataclass
+class NotificationEntry:
+    """A single notification to be sent: one unique combination of
+    (plugin, locked, parameters, bulk) with accumulated contacts."""
+
+    plugin_name: NotificationPluginNameStr
+    locked: bool
+    parameters: NotifyPluginParamsDict
+    bulk: NotifyBulkParameters | None
+    contacts: set[ContactName] = field(default_factory=set)
+    # parameters without per-rule metadata, used for deduplication only
+    comparable_parameters: NotifyPluginParamsDict | None = field(default=None, repr=False)
+
+    def __post_init__(self) -> None:
+        if self.comparable_parameters is None:
+            self.comparable_parameters = _strip_per_rule_metadata(self.parameters)
+
+
+Notifications = list[NotificationEntry]
 
 _FallbackFormat = tuple[NotificationPluginNameStr, NotifyPluginParamsDict]
 
@@ -1083,18 +1111,13 @@ def _notify_rulebased(
     dispatch: str = "",
     timeperiods_active: _CoreTimeperiodsActive,
 ) -> NotifyAnalysisInfo:
-    # First step: go through all rules and construct our table of
-    # notification plugins to call. This is a dict from (users, plugin) to
-    # a triple of (locked, parameters, bulk). If locked is True, then a user
-    # cannot cancel this notification via his personal notification rules.
-    # Example:
-    # notifications = {
-    #  ( frozenset({"aa", "hh", "ll"}), "email" ) : ( False, [], None ),
-    #  ( frozenset({"hh"}), "sms"   ) : ( True, [ "0171737337", "bar", {
-    #       'groupby': 'host', 'interval': 60} ] ),
-    # }
+    # First step: go through all rules and construct our list of
+    # notification entries. Each entry identifies a unique notification
+    # by (plugin, locked, parameters, bulk) and accumulates the contacts
+    # that should receive it. If locked is True, then a user cannot
+    # cancel this notification via his personal notification rules.
 
-    notifications: Notifications = {}
+    notifications: Notifications = []
     num_rule_matches = 0
     rule_info = []
 
@@ -1158,6 +1181,62 @@ def _get_contact_info_text(rule: EventRule) -> str:
     return "Global rule '%s'..." % rule["description"]
 
 
+def _add_or_merge_notification(
+    notifications: Notifications,
+    *,
+    plugin_name: NotificationPluginNameStr,
+    locked: bool,
+    parameters: NotifyPluginParamsDict,
+    bulk: NotifyBulkParameters | None,
+    contacts: ContactNames,
+    comparable_parameters: NotifyPluginParamsDict,
+    is_user_rule: bool,
+    contactstxt: str,
+    plugintxt: str,
+) -> None:
+    """Find a matching notification entry and merge contacts, or create a new one.
+
+    Locked entries cannot be modified by user rules. Contacts already covered
+    by a locked entry are excluded when creating a new entry for a user rule.
+    """
+    locked_contacts: set[ContactName] = set()
+    for entry in notifications:
+        if (
+            entry.plugin_name == plugin_name
+            and entry.bulk == bulk
+            and entry.comparable_parameters == comparable_parameters
+        ):
+            if entry.locked and is_user_rule:
+                logger.info(
+                    "   - cannot modify notification of %s via %s: it is locked",
+                    contactstxt,
+                    plugintxt,
+                )
+                locked_contacts |= entry.contacts
+                continue
+            logger.info(
+                "   - merging contacts into notification of %s via %s",
+                contactstxt,
+                plugintxt,
+            )
+            entry.contacts |= contacts
+            break
+    else:
+        remaining_contacts = set(contacts) - locked_contacts
+        if remaining_contacts:
+            logger.info("   - adding notification of %s via %s", contactstxt, plugintxt)
+            notifications.append(
+                NotificationEntry(
+                    plugin_name=plugin_name,
+                    locked=locked,
+                    parameters=parameters,
+                    bulk=bulk,
+                    contacts=remaining_contacts,
+                    comparable_parameters=comparable_parameters,
+                )
+            )
+
+
 def _create_notifications(
     enriched_context: EnrichedEventContext,
     rule: EventRule,
@@ -1183,24 +1262,16 @@ def _create_notifications(
 
     plugintxt = plugin_name
 
-    key = contacts, plugin_name
     if plugin_parameter_id is None:  # cancelling
-        # FIXME: In Python 2, notifications.keys() already produces a
-        # copy of the keys, while in Python 3 it is only a view of the
-        # underlying dict (modifications would result in an exception).
-        # To be explicit and future-proof, we make this hack explicit.
-        # Anyway, this is extremely ugly and an anti-patter, and it
-        # should be rewritten to something more sane.
-        for notify_key in list(notifications):
-            notify_contacts, notify_plugin = notify_key
-
-            overlap = notify_contacts.intersection(contacts)
-            if plugin_name != notify_plugin or not overlap:
+        for entry in notifications:
+            if entry.plugin_name != plugin_name:
                 continue
 
-            locked, _plugin_parameters, bulk = notifications[notify_key]
+            overlap = entry.contacts & contacts
+            if not overlap:
+                continue
 
-            if locked and "contact" in rule:
+            if entry.locked and "contact" in rule:
                 logger.info(
                     "   - cannot cancel notification of %s via %s: it is locked",
                     contactstxt,
@@ -1209,27 +1280,10 @@ def _create_notifications(
                 continue
 
             logger.info("   - cancelling notification of %s via %s", ", ".join(overlap), plugintxt)
+            entry.contacts -= overlap
 
-            remaining = notify_contacts.difference(contacts)
-            if not remaining:
-                del notifications[notify_key]
-            else:
-                new_key = remaining, plugin_name
-                notifications[new_key] = notifications.pop(notify_key)
+        notifications[:] = [e for e in notifications if e.contacts]
     elif contacts:
-        if key in notifications:
-            locked = notifications[key][0]
-            if locked and "contact" in rule:
-                logger.info(
-                    "   - cannot modify notification of %s via %s: it is locked",
-                    contactstxt,
-                    plugintxt,
-                )
-                return notifications, rule_info
-            logger.info("   - modifying notification of %s via %s", contactstxt, plugintxt)
-        else:
-            logger.info("   - adding notification of %s via %s", contactstxt, plugintxt)
-
         bulk = _rbn_get_bulk_params(rule, timeperiods_active)
 
         # TODO CMK-20135 use old format for user notifications for now
@@ -1247,7 +1301,21 @@ def _create_notifications(
             rule_matching_nr=rule_nr,
             rule_matching_text=rule["description"],
         )
-        notifications[key] = (not rule.get("allow_disable"), final_parameters, bulk)
+        locked = not rule.get("allow_disable")
+        comparable_parameters = _strip_per_rule_metadata(final_parameters)
+
+        _add_or_merge_notification(
+            notifications,
+            plugin_name=plugin_name,
+            locked=locked,
+            parameters=final_parameters,
+            bulk=bulk,
+            contacts=contacts,
+            comparable_parameters=comparable_parameters,
+            is_user_rule="contact" in rule,
+            contactstxt=contactstxt,
+            plugintxt=plugintxt,
+        )
 
     rule_info.append(("match", rule, ""))
     return notifications, rule_info
@@ -1308,34 +1376,36 @@ def _process_notifications(
     else:
         # Now do the actual notifications
         logger.info("Executing %d notifications:", len(notifications))
-        for (contacts, plugin_name), (_locked, params, bulk) in sorted(notifications.items()):
-            would_notify = analyse and plugin_name != dispatch
+        for entry in sorted(notifications, key=lambda e: (e.plugin_name, sorted(e.contacts))):
+            would_notify = analyse and entry.plugin_name != dispatch
             verb = "would notify" if would_notify else "notifying"
-            contactstxt = ", ".join(contacts)
-            plugintxt = plugin_name
+            contactstxt = ", ".join(entry.contacts)
             # Hack for "Call with the following..." find a better solution
+            params = entry.parameters
             if (called_parameter := params.get("params")) is not None:
                 params = called_parameter  # type: ignore[assignment]
             paramtxt = ", ".join(params) if params else "(no parameters)"
-            bulktxt = "yes" if bulk else "no"
+            bulktxt = "yes" if entry.bulk else "no"
             logger.info(
                 "  * %s %s via %s, parameters: %s, bulk: %s",
                 verb,
                 contactstxt,
-                plugintxt,
+                entry.plugin_name,
                 paramtxt,
                 bulktxt,
             )
 
             try:
                 plugin_context = create_plugin_context(enriched_context, params, get_http_proxy)
-                rbn_add_contact_information(plugin_context, contacts, config_contacts)
+                rbn_add_contact_information(
+                    plugin_context, frozenset(entry.contacts), config_contacts
+                )
 
                 # params can be a list (e.g. for custom notificatios)
                 split_contexts = (
-                    plugin_name not in ["", "mail", "asciimail", "slack"]
+                    entry.plugin_name not in ["", "mail", "asciimail", "slack"]
                     or (isinstance(params, dict) and params.get("disable_multiplexing"))
-                    or bulk
+                    or entry.bulk
                 )
                 if not split_contexts:
                     plugin_contexts = [plugin_context]
@@ -1343,23 +1413,27 @@ def _process_notifications(
                     plugin_contexts = rbn_split_plugin_context(plugin_context)
 
                 for context in plugin_contexts:
-                    plugin_info.append((context["CONTACTNAME"], plugin_name, params, bulk))
+                    plugin_info.append(
+                        (context["CONTACTNAME"], entry.plugin_name, params, entry.bulk)
+                    )
 
                     if analyse and would_notify:
                         continue
-                    if bulk:
-                        do_bulk_notify(plugin_name, params, context, bulk)
+                    if entry.bulk:
+                        do_bulk_notify(entry.plugin_name, params, context, entry.bulk)
                     elif spooling in ("local", "both"):
                         create_spool_file(
                             logger,
                             notification_spooldir,
-                            NotificationViaPlugin({"context": context, "plugin": plugin_name}),
+                            NotificationViaPlugin(
+                                {"context": context, "plugin": entry.plugin_name}
+                            ),
                         )
                     else:
-                        if dispatch and plugin_name != dispatch:
+                        if dispatch and entry.plugin_name != dispatch:
                             continue
                         call_notification_script(
-                            plugin_name, context, plugin_timeout=plugin_timeout
+                            entry.plugin_name, context, plugin_timeout=plugin_timeout
                         )
 
             except Exception as e:
@@ -1368,7 +1442,7 @@ def _process_notifications(
                 logger.exception("    ERROR:")
                 log_to_history(
                     notification_result_message(
-                        plugin=NotificationPluginName(plugin_name),
+                        plugin=NotificationPluginName(entry.plugin_name),
                         context=plugin_context,
                         exit_code=NotificationResultCode(2),
                         output=[str(e)],
@@ -1410,7 +1484,8 @@ def _rbn_finalize_plugin_parameters(
     if plugin_name == "mail":
         parameters.setdefault("graphs_per_notification", 5)
         parameters.setdefault("notifications_with_graphs", 5)
-        # Added in 2.4.0 for HTML Mail templates
+        # Added in 2.4.0 for HTML Mail templates.
+        # When adding keys here, also update _PER_RULE_PARAM_KEYS.
         parameters.setdefault("matching_rule_nr", rule_matching_nr)
         parameters.setdefault("matching_rule_text", rule_matching_text)
 

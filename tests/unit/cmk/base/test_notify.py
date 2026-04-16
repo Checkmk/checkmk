@@ -910,20 +910,12 @@ def test__rbn_match_rule_passes_minimal() -> None:
 def test_create_notifications_custom_script_with_call_parameters() -> None:
     """Regression test custom notification scripts with
     'Call with the following parameters'"""
-    rule: EventRule = {
-        "rule_id": NotificationRuleID("test_custom"),
-        "allow_disable": False,
-        "contact_all": False,
-        "contact_all_with_email": False,
-        "contact_object": False,
-        "description": "Custom script rule",
-        "disabled": False,
-        # In user notification rules with custom scripts and "Call with the following
-        # parameters", the plugin_parameter_id is a list of strings, not a
-        # NotificationParameterID string.
-        "notify_plugin": ("my_custom_script", ["param1", "param2"]),  # type: ignore[typeddict-item]
-        "contact_users": ["testuser"],
-    }
+    # In user notification rules with custom scripts and "Call with the following
+    # parameters", the plugin_parameter_id is a list of strings, not a
+    # NotificationParameterID string. This bypasses the normal typed parameter path.
+    rule = _make_rule()
+    rule["notify_plugin"] = ("my_custom_script", ["param1", "param2"])  # type: ignore[typeddict-item]
+    rule["contact_users"] = ["testuser"]
     config_contacts = {
         ContactName("testuser"): Contact({"email": "test@example.com"}),
     }
@@ -931,7 +923,7 @@ def test_create_notifications_custom_script_with_call_parameters() -> None:
         enriched_context=EnrichedEventContext({"HOSTNAME": HostName("testhost"), "WHAT": "HOST"}),
         rule=rule,
         parameters={},
-        notifications={},
+        notifications=[],
         rule_info=[],
         host_parameters_cb=lambda _host, _plugin: {},
         config_contacts=config_contacts,
@@ -941,8 +933,12 @@ def test_create_notifications_custom_script_with_call_parameters() -> None:
     )
     # Should create exactly one notification without raising ValueError
     assert len(notifications) == 1
-    _locked, final_params, _bulk = next(iter(notifications.values()))
-    assert final_params["params"] == ["param1", "param2"]  # type: ignore[typeddict-item]
+    assert notifications[0].parameters["params"] == ["param1", "param2"]  # type: ignore[typeddict-item]
+
+
+def _count_contact_occurrences(notifications: notify.Notifications, contact: ContactName) -> int:
+    """Count how many notification entries contain a given contact."""
+    return sum(1 for entry in notifications if contact in entry.contacts)
 
 
 _TEST_PLUGIN = CustomPluginName("my_script")
@@ -991,15 +987,6 @@ def _make_cancel_rule(
     return rule
 
 
-def _count_contact_occurrences(notifications: notify.Notifications, contact: ContactName) -> int:
-    """Count how many notification entries contain a given contact."""
-    count = 0
-    for contacts_set, _plugin in notifications:
-        if contact in contacts_set:
-            count += 1
-    return count
-
-
 def test_cancellation_removes_contacts() -> None:
     """A cancel rule removes contacts from an existing notification entry."""
     config_contacts = {
@@ -1012,7 +999,7 @@ def test_cancellation_removes_contacts() -> None:
         enriched_context=enriched_context,
         rule=_make_add_rule(contact_users=["userX", "userY"]),
         parameters=_TEST_PARAMETERS,
-        notifications={},
+        notifications=[],
         rule_info=[],
         host_parameters_cb=lambda _host, _plugin: {},
         config_contacts=config_contacts,
@@ -1051,7 +1038,7 @@ def test_cancellation_of_all_contacts_removes_entry() -> None:
         enriched_context=enriched_context,
         rule=_make_add_rule(contact_users=["userX"]),
         parameters=_TEST_PARAMETERS,
-        notifications={},
+        notifications=[],
         rule_info=[],
         host_parameters_cb=lambda _host, _plugin: {},
         config_contacts=config_contacts,
@@ -1088,7 +1075,7 @@ def test_locked_notification_cannot_be_cancelled_by_user_rule() -> None:
         enriched_context=enriched_context,
         rule=_make_add_rule(allow_disable=False, contact_users=["userX"]),
         parameters=_TEST_PARAMETERS,
-        notifications={},
+        notifications=[],
         rule_info=[],
         host_parameters_cb=lambda _host, _plugin: {},
         config_contacts=config_contacts,
@@ -1132,7 +1119,7 @@ def test_different_plugins_create_separate_entries() -> None:
         enriched_context=enriched_context,
         rule=_make_add_rule(contact_users=["userX"], plugin=plugin_a),
         parameters=parameters,
-        notifications={},
+        notifications=[],
         rule_info=[],
         host_parameters_cb=lambda _host, _plugin: {},
         config_contacts=config_contacts,
@@ -1156,7 +1143,6 @@ def test_different_plugins_create_separate_entries() -> None:
     assert len(notifications) == 2
 
 
-@pytest.mark.xfail(reason="Bug: (contacts, plugin) key causes duplicate notifications")
 def test_no_duplicate_notifications_for_overlapping_contacts() -> None:
     """User X is in two contact groups. Two rules target these groups with the
     same plugin and params. X should get exactly one notification."""
@@ -1171,7 +1157,7 @@ def test_no_duplicate_notifications_for_overlapping_contacts() -> None:
         enriched_context=enriched_context,
         rule=_make_add_rule(contact_users=["userX", "userY"]),
         parameters=_TEST_PARAMETERS,
-        notifications={},
+        notifications=[],
         rule_info=[],
         host_parameters_cb=lambda _host, _plugin: {},
         config_contacts=config_contacts,
@@ -1196,7 +1182,6 @@ def test_no_duplicate_notifications_for_overlapping_contacts() -> None:
     assert _count_contact_occurrences(notifications, ContactName("userX")) == 1
 
 
-@pytest.mark.xfail(reason="Bug: same (contacts, plugin) key overwrites earlier rule's parameters")
 def test_no_parameter_overwrite_for_same_contacts_and_plugin() -> None:
     """Two rules for the same contacts and plugin but different params.
     Both notifications should be preserved."""
@@ -1223,7 +1208,7 @@ def test_no_parameter_overwrite_for_same_contacts_and_plugin() -> None:
         enriched_context=enriched_context,
         rule=_make_add_rule(contact_users=["userX"], param_id=param_alpha),
         parameters=parameters,
-        notifications={},
+        notifications=[],
         rule_info=[],
         host_parameters_cb=lambda _host, _plugin: {},
         config_contacts=config_contacts,
@@ -1247,7 +1232,6 @@ def test_no_parameter_overwrite_for_same_contacts_and_plugin() -> None:
     assert len(notifications) == 2
 
 
-@pytest.mark.xfail(reason="Bug: overlapping contacts get duplicate bulk notifications")
 def test_no_duplicate_bulk_notifications_for_overlapping_contacts() -> None:
     """Same as contact dedup test but with bulk enabled.
     Contact X should appear in exactly one bulk notification entry."""
@@ -1265,7 +1249,7 @@ def test_no_duplicate_bulk_notifications_for_overlapping_contacts() -> None:
         enriched_context=enriched_context,
         rule=bulk_rule,
         parameters=_TEST_PARAMETERS,
-        notifications={},
+        notifications=[],
         rule_info=[],
         host_parameters_cb=lambda _host, _plugin: {},
         config_contacts=config_contacts,
@@ -1290,6 +1274,268 @@ def test_no_duplicate_bulk_notifications_for_overlapping_contacts() -> None:
     )
 
     assert _count_contact_occurrences(notifications, ContactName("userX")) == 1
+
+
+def test_identical_rules_merge_contacts() -> None:
+    """Two separate rules with identical config should merge their contacts."""
+    config_contacts = {
+        ContactName("userX"): Contact({"email": "x@example.com"}),
+        ContactName("userY"): Contact({"email": "y@example.com"}),
+    }
+    enriched_context = EnrichedEventContext({"HOSTNAME": HostName("testhost"), "WHAT": "HOST"})
+
+    notifications, rule_info = notify._create_notifications(
+        enriched_context=enriched_context,
+        rule=_make_add_rule(contact_users=["userX"]),
+        parameters=_TEST_PARAMETERS,
+        notifications=[],
+        rule_info=[],
+        host_parameters_cb=lambda _host, _plugin: {},
+        config_contacts=config_contacts,
+        fallback_email="",
+        rule_nr=0,
+        timeperiods_active={},
+    )
+    notifications, rule_info = notify._create_notifications(
+        enriched_context=enriched_context,
+        rule=_make_add_rule(contact_users=["userY"]),
+        parameters=_TEST_PARAMETERS,
+        notifications=notifications,
+        rule_info=rule_info,
+        host_parameters_cb=lambda _host, _plugin: {},
+        config_contacts=config_contacts,
+        fallback_email="",
+        rule_nr=1,
+        timeperiods_active={},
+    )
+
+    assert len(notifications) == 1
+    assert notifications[0].contacts == {ContactName("userX"), ContactName("userY")}
+
+
+def test_identical_rules_same_contact_no_duplicate() -> None:
+    """Two rules with identical config targeting the same contact
+    should result in exactly one notification for that contact."""
+    config_contacts = {
+        ContactName("userX"): Contact({"email": "x@example.com"}),
+    }
+    enriched_context = EnrichedEventContext({"HOSTNAME": HostName("testhost"), "WHAT": "HOST"})
+
+    notifications, rule_info = notify._create_notifications(
+        enriched_context=enriched_context,
+        rule=_make_add_rule(contact_users=["userX"]),
+        parameters=_TEST_PARAMETERS,
+        notifications=[],
+        rule_info=[],
+        host_parameters_cb=lambda _host, _plugin: {},
+        config_contacts=config_contacts,
+        fallback_email="",
+        rule_nr=0,
+        timeperiods_active={},
+    )
+    notifications, rule_info = notify._create_notifications(
+        enriched_context=enriched_context,
+        rule=_make_add_rule(contact_users=["userX"]),
+        parameters=_TEST_PARAMETERS,
+        notifications=notifications,
+        rule_info=rule_info,
+        host_parameters_cb=lambda _host, _plugin: {},
+        config_contacts=config_contacts,
+        fallback_email="",
+        rule_nr=1,
+        timeperiods_active={},
+    )
+
+    assert len(notifications) == 1
+    assert notifications[0].contacts == {ContactName("userX")}
+
+
+def test_cancellation_removes_contact_from_all_matching_entries() -> None:
+    """A cancel rule removes a contact from ALL entries for the same plugin,
+    even if they have different parameters."""
+    config_contacts = {
+        ContactName("userX"): Contact({"email": "x@example.com"}),
+    }
+    enriched_context = EnrichedEventContext({"HOSTNAME": HostName("testhost"), "WHAT": "HOST"})
+    param_alpha = NotificationParameterID("alpha")
+    param_beta = NotificationParameterID("beta")
+    parameters: NotificationParameterSpecs = {
+        _TEST_PLUGIN: {
+            param_alpha: {
+                "general": _TEST_GENERAL,
+                "parameter_properties": {"mode": "alpha"},
+            },
+            param_beta: {
+                "general": _TEST_GENERAL,
+                "parameter_properties": {"mode": "beta"},
+            },
+        }
+    }
+
+    notifications, rule_info = notify._create_notifications(
+        enriched_context=enriched_context,
+        rule=_make_add_rule(contact_users=["userX"], param_id=param_alpha),
+        parameters=parameters,
+        notifications=[],
+        rule_info=[],
+        host_parameters_cb=lambda _host, _plugin: {},
+        config_contacts=config_contacts,
+        fallback_email="",
+        rule_nr=0,
+        timeperiods_active={},
+    )
+    notifications, rule_info = notify._create_notifications(
+        enriched_context=enriched_context,
+        rule=_make_add_rule(contact_users=["userX"], param_id=param_beta),
+        parameters=parameters,
+        notifications=notifications,
+        rule_info=rule_info,
+        host_parameters_cb=lambda _host, _plugin: {},
+        config_contacts=config_contacts,
+        fallback_email="",
+        rule_nr=1,
+        timeperiods_active={},
+    )
+    assert len(notifications) == 2
+
+    notifications, rule_info = notify._create_notifications(
+        enriched_context=enriched_context,
+        rule=_make_cancel_rule(contact_users=["userX"]),
+        parameters=parameters,
+        notifications=notifications,
+        rule_info=rule_info,
+        host_parameters_cb=lambda _host, _plugin: {},
+        config_contacts=config_contacts,
+        fallback_email="",
+        rule_nr=2,
+        timeperiods_active={},
+    )
+
+    assert len(notifications) == 0
+
+
+def test_user_rule_creates_separate_entry_when_locked_entry_exists() -> None:
+    """A user rule cannot merge into a locked notification, but should
+    create a separate entry so the user still gets notified."""
+    config_contacts = {
+        ContactName("userX"): Contact({"email": "x@example.com"}),
+        ContactName("userY"): Contact({"email": "y@example.com"}),
+    }
+    enriched_context = EnrichedEventContext({"HOSTNAME": HostName("testhost"), "WHAT": "HOST"})
+
+    notifications, rule_info = notify._create_notifications(
+        enriched_context=enriched_context,
+        rule=_make_add_rule(allow_disable=False, contact_users=["userX"]),
+        parameters=_TEST_PARAMETERS,
+        notifications=[],
+        rule_info=[],
+        host_parameters_cb=lambda _host, _plugin: {},
+        config_contacts=config_contacts,
+        fallback_email="",
+        rule_nr=0,
+        timeperiods_active={},
+    )
+    assert len(notifications) == 1
+
+    notifications, rule_info = notify._create_notifications(
+        enriched_context=enriched_context,
+        # User rule (allow_disable=True → locked=False) targets userY
+        rule=_make_add_rule(allow_disable=True, contact="userY", contact_users=["userY"]),
+        parameters=_TEST_PARAMETERS,
+        notifications=notifications,
+        rule_info=rule_info,
+        host_parameters_cb=lambda _host, _plugin: {},
+        config_contacts=config_contacts,
+        fallback_email="",
+        rule_nr=1,
+        timeperiods_active={},
+    )
+
+    # Locked entry stays untouched, user gets a separate entry
+    assert len(notifications) == 2
+    assert notifications[0].contacts == {ContactName("userX")}
+    assert notifications[1].contacts == {ContactName("userY")}
+
+
+def test_user_rule_for_same_contact_as_locked_entry_is_suppressed() -> None:
+    """A user rule targeting the same contact as a locked entry should not
+    create a duplicate — the contact is already covered by the locked entry."""
+    config_contacts = {
+        ContactName("userX"): Contact({"email": "x@example.com"}),
+    }
+    enriched_context = EnrichedEventContext({"HOSTNAME": HostName("testhost"), "WHAT": "HOST"})
+
+    notifications, rule_info = notify._create_notifications(
+        enriched_context=enriched_context,
+        rule=_make_add_rule(allow_disable=False, contact_users=["userX"]),
+        parameters=_TEST_PARAMETERS,
+        notifications=[],
+        rule_info=[],
+        host_parameters_cb=lambda _host, _plugin: {},
+        config_contacts=config_contacts,
+        fallback_email="",
+        rule_nr=0,
+        timeperiods_active={},
+    )
+
+    # User rule (allow_disable=True → locked=False) targets same contact
+    notifications, rule_info = notify._create_notifications(
+        enriched_context=enriched_context,
+        rule=_make_add_rule(allow_disable=True, contact="userX", contact_users=["userX"]),
+        parameters=_TEST_PARAMETERS,
+        notifications=notifications,
+        rule_info=rule_info,
+        host_parameters_cb=lambda _host, _plugin: {},
+        config_contacts=config_contacts,
+        fallback_email="",
+        rule_nr=1,
+        timeperiods_active={},
+    )
+
+    # userX is already covered by the locked entry — no duplicate
+    assert len(notifications) == 1
+    assert notifications[0].contacts == {ContactName("userX")}
+
+
+def test_user_rule_partial_overlap_with_locked_entry() -> None:
+    """A user rule targeting contacts partially overlapping with a locked entry
+    should only create a new entry for the non-overlapping contacts."""
+    config_contacts = {
+        ContactName("userX"): Contact({"email": "x@example.com"}),
+        ContactName("userY"): Contact({"email": "y@example.com"}),
+    }
+    enriched_context = EnrichedEventContext({"HOSTNAME": HostName("testhost"), "WHAT": "HOST"})
+
+    notifications, rule_info = notify._create_notifications(
+        enriched_context=enriched_context,
+        rule=_make_add_rule(allow_disable=False, contact_users=["userX"]),
+        parameters=_TEST_PARAMETERS,
+        notifications=[],
+        rule_info=[],
+        host_parameters_cb=lambda _host, _plugin: {},
+        config_contacts=config_contacts,
+        fallback_email="",
+        rule_nr=0,
+        timeperiods_active={},
+    )
+
+    notifications, rule_info = notify._create_notifications(
+        enriched_context=enriched_context,
+        # User rule (allow_disable=True → locked=False) targets both userX and userY
+        rule=_make_add_rule(allow_disable=True, contact="userY", contact_users=["userX", "userY"]),
+        parameters=_TEST_PARAMETERS,
+        notifications=notifications,
+        rule_info=rule_info,
+        host_parameters_cb=lambda _host, _plugin: {},
+        config_contacts=config_contacts,
+        fallback_email="",
+        rule_nr=1,
+        timeperiods_active={},
+    )
+
+    assert len(notifications) == 2
+    assert notifications[0].contacts == {ContactName("userX")}
+    assert notifications[1].contacts == {ContactName("userY")}
 
 
 def test__rbn_match_rule_escalation_blocked() -> None:

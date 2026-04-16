@@ -35,7 +35,6 @@ pkg_files(
         "skel/etc/mk-livestatus/livestatus.socket",
         "skel/etc/mk-livestatus/livestatus@.service",
         "skel/etc/mk-livestatus/nagios.cfg",
-        "skel/etc/mk-livestatus/xinetd.conf",
         "skel/etc/stunnel/conf.d/01-livestatus.conf",
     ],
     strip_prefix = strip_prefix.from_pkg(""),

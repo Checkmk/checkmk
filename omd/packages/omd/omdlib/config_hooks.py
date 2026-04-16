@@ -48,6 +48,55 @@ ConfigHookChoiceItem = tuple[str, str]
 ConfigHookChoices = Pattern[str] | list[ConfigHookChoiceItem] | ConfigChoiceHasError
 ConfigHookResult = tuple[int, str]
 
+LIVESTATUS_CONFIG_HEADER = """# This file is managed by OMD
+# Do not change anything in this file. Use omd config instead.
+"""
+LIVESTATUS_CONFIG_TEMPLATE = """service livestatus
+{{
+        # ----------------------------------------------------------
+        # Livestatus-specific connection parameters that cannot
+        # currently be modified by omd config
+        type = UNLISTED
+        socket_type = stream
+        protocol = tcp
+        wait = no
+        # Disable TCP delay to make connection more responsive.
+        flags = NODELAY
+
+        # ----------------------------------------------------------
+        # These parameters can be controlled by omd config.
+        # For details, please see `man 5 xinetd.conf`.
+
+        # Limit the maximum number of connections per second. A cps of
+        # "X Y" limits to X connections per second and disables the
+        # service for Y seconds, if this threshold has been reached.
+        cps             = 100 3
+
+        # Set the number of maximum allowed parallel instances of this
+        # server. Please make sure that this value is at least as high
+        # as the number of threads defined with num_client_threads in
+        # etc/mk-livestatus/nagios.cfg.
+        instances       = 500
+
+        # Limit the maximum number of simultaneous connections from
+        # each distinct source IP address.
+        per_source      = 250
+
+        # Restrict access to the listed remote hosts. The value is a
+        # space-separated list of IPv4 or IPv6 addresses. If unset,
+        # any host may connect.
+        only_from       = {LIVESTATUS_TCP_ONLY_FROM}
+
+        # TCP port number this service will listen on.
+        port = {LIVESTATUS_TCP_PORT}
+        # ----------------------------------------------------------
+
+        user		= {OMD_SITE}
+        server		= {OMD_ROOT}/bin/unixcat
+        server_args     = {OMD_ROOT}/tmp/run/live-tcp
+}}
+"""
+
 
 class _Error: ...
 
@@ -328,11 +377,14 @@ def _config_set(
     omd_path: Path = Path("/omd/"),
 ) -> None:
     value = config[hook_name]
+    output: str | _Error | None = None
     match hook_name:
+        case "LIVESTATUS_TCP":
+            output = _set_livestatus_tcp(site.name, config, omd_path, value)
+            if isinstance(output, _Error):
+                return
         case "LIVESTATUS_TCP_PORT":
-            site_configs = _build_site_configs(site.name, omd_path)
-            _report_error("LIVESTATUS_TCP_PORT", site_configs.sites_with_unreadable_configs)
-            output = _set_livestatus_tcp_port(site.name, value, site_configs.configs, omd_path)
+            output = _set_livestatus_tcp_port(site.name, config, omd_path, value)
             if isinstance(output, _Error):
                 return
         case "LIVESTATUS_TCP_TLS":
@@ -343,7 +395,7 @@ def _config_set(
             # tmpfs may not be available during hook execution.
             return
         case "LIVESTATUS_TCP_ONLY_FROM":
-            output = _set_livestatus_tcp_only_from(site.name, value, omd_path)
+            output = _set_livestatus_tcp_only_from(site.name, config, omd_path, value)
             if isinstance(output, _Error):
                 return
         case _:
@@ -394,51 +446,89 @@ def _next_free_port(
     return start_port
 
 
-def _set_livestatus_tcp_port(
-    site_name: str, value: str, site_configs: Mapping[str, Config], omd_path: Path = Path("/omd/")
-) -> str | _Error:
-    site_home = SitePaths.from_site_name(site_name, omd_path).home
+def _set_livestatus_tcp(site_name: str, config: Config, omd_path: Path, value: str) -> str | _Error:
     try:
-        new_value = str(_next_free_port("LIVESTATUS_TCP_PORT", site_name, int(value), site_configs))
-        pattern = re.compile(r"^(\s*port\s*=\s*)([0-9]+)")
-        xinetd_conf = os.path.join(site_home, "etc/mk-livestatus/xinetd.conf")
-        if value != new_value:
-            sys.stderr.write(
-                f"Livestatus port {value} is in use. I've chosen {new_value} instead.\n"
-            )
-
-        with open(xinetd_conf) as file:
-            lines = file.readlines()
-
-        with open(xinetd_conf, "w") as file:
-            for line in lines:
-                new_line = pattern.sub(rf"\g<1>{new_value}", line)
-                file.write(new_line)
-    except Exception:
-        traceback.print_exc()
-        return _Error()
-    return new_value
-
-
-def _set_livestatus_tcp_only_from(
-    site_name: str, value: str, omd_path: Path = Path("/omd/")
-) -> str | _Error:
-    site_home = SitePaths.from_site_name(site_name, omd_path).home
-    try:
-        pattern = re.compile(r"^#?(\s*only_from\s*=\s*)(.*)")
-        xinetd_conf = os.path.join(site_home, "etc/mk-livestatus/xinetd.conf")
-
-        with open(xinetd_conf) as file:
-            lines = file.readlines()
-
-        with open(xinetd_conf, "w") as file:
-            for line in lines:
-                new_line = pattern.sub(rf"\g<1>{value}", line)
-                file.write(new_line)
+        _write_livestatus_xinetd_conf_file(
+            site_name,
+            value,
+            config["LIVESTATUS_TCP_ONLY_FROM"],
+            config["LIVESTATUS_TCP_PORT"],
+            omd_path,
+        )
     except Exception:
         traceback.print_exc()
         return _Error()
     return value
+
+
+def _write_livestatus_xinetd_conf_file(
+    site_name: str,
+    livestatus_tcp: str,
+    livestatus_tcp_only_from: str,
+    livestatus_tcp_port: str,
+    omd_path: Path = Path("/omd/"),
+) -> None:
+    site_home = SitePaths.from_site_name(site_name, omd_path).home
+    match livestatus_tcp:
+        case "off":
+            content = LIVESTATUS_CONFIG_HEADER
+        case "on":
+            content = LIVESTATUS_CONFIG_HEADER + LIVESTATUS_CONFIG_TEMPLATE.format(
+                LIVESTATUS_TCP_ONLY_FROM=livestatus_tcp_only_from,
+                LIVESTATUS_TCP_PORT=livestatus_tcp_port,
+                OMD_SITE=site_name,
+                OMD_ROOT=site_home,
+            )
+        case _:
+            raise NotImplementedError(f"Invalid value for LIVESTATUS_TCP: {livestatus_tcp}")
+
+    conf_path = Path(site_home, "etc/xinetd.d/livestatusv1")
+    conf_path.parent.mkdir(parents=True, exist_ok=True)
+    with conf_path.open("w", encoding="utf-8") as livestatus_xinetd_conf:
+        livestatus_xinetd_conf.write(content)
+
+
+def _set_livestatus_tcp_only_from(
+    site_name: str, config: Config, omd_path: Path, value: str
+) -> str | _Error:
+    try:
+        _write_livestatus_xinetd_conf_file(
+            site_name,
+            config["LIVESTATUS_TCP"],
+            value,
+            config["LIVESTATUS_TCP_PORT"],
+            omd_path,
+        )
+    except Exception:
+        traceback.print_exc()
+        return _Error()
+    return value
+
+
+def _set_livestatus_tcp_port(
+    site_name: str, config: Config, omd_path: Path, value: str
+) -> str | _Error:
+    site_configs = _build_site_configs(site_name, omd_path)
+    _report_error("LIVESTATUS_TCP_PORT", site_configs.sites_with_unreadable_configs)
+    try:
+        new_value = str(
+            _next_free_port("LIVESTATUS_TCP_PORT", site_name, int(value), site_configs.configs)
+        )
+        if value != new_value:
+            sys.stderr.write(
+                f"Livestatus port {value} is in use. I've chosen {new_value} instead.\n"
+            )
+        _write_livestatus_xinetd_conf_file(
+            site_name,
+            config["LIVESTATUS_TCP"],
+            config["LIVESTATUS_TCP_ONLY_FROM"],
+            new_value,
+            omd_path,
+        )
+    except Exception:
+        traceback.print_exc()
+        return _Error()
+    return new_value
 
 
 def config_set_value(

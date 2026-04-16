@@ -13,8 +13,8 @@ from omdlib.config_hooks import (
     _Error,
     _next_free_port,
     _report_error,
-    _set_livestatus_tcp_only_from,
     _set_livestatus_tcp_port,
+    _write_livestatus_xinetd_conf_file,
 )
 
 
@@ -66,36 +66,18 @@ def test_next_free_port_missing_config_current_site(tmp_path: Path) -> None:
     assert _next_free_port("APACHE_TCP_PORT", "newsite", 5000, site_configs.configs) == 5000
 
 
-def _make_xinetd_conf(site_dir: Path, port: int) -> Path:
-    conf = site_dir / "etc/mk-livestatus/xinetd.conf"
-    conf.parent.mkdir(parents=True, exist_ok=True)
-    conf.write_text(f"service livestatus\n{{\n\tport\t\t= {port}\n}}\n")
-    return conf
-
-
-def _make_xinetd_conf_with_only_from(site_dir: Path, only_from: str | None) -> Path:
-    conf = site_dir / "etc/mk-livestatus/xinetd.conf"
-    conf.parent.mkdir(parents=True, exist_ok=True)
-    if only_from is None:
-        # default: commented out, as in the shipped template
-        only_from_line = "#\tonly_from       = 127.0.0.1\n"
-    else:
-        only_from_line = f"\tonly_from       = {only_from}\n"
-    conf.write_text(f"service livestatus\n{{\n\tport\t\t= 6557\n{only_from_line}}}\n")
-    return conf
-
-
 def test_set_livestatus_tcp_port_no_conflict(tmp_path: Path) -> None:
     # Port is free. xinetd.conf is rewritten with the same port, value returned.
     site_dir = tmp_path / "sites/mysite"
     _make_site(site_dir.parent, "mysite", "CONFIG_LIVESTATUS_TCP_PORT='6557'\n")
-    conf = _make_xinetd_conf(site_dir, 6557)
+    config = {"LIVESTATUS_TCP": "on", "LIVESTATUS_TCP_ONLY_FROM": ""}
+    conf = site_dir / "etc/xinetd.d/livestatusv1"
 
-    site_configs = _build_site_configs("mysite", tmp_path)
-    result = _set_livestatus_tcp_port("mysite", "6557", site_configs.configs, tmp_path)
+    result = _set_livestatus_tcp_port("mysite", config, tmp_path, "6557")
+    assert isinstance(result, str)
 
     assert result == "6557"
-    assert "\tport\t\t= 6557" in conf.read_text()
+    assert "port = 6557" in conf.read_text()
 
 
 def test_set_livestatus_tcp_port_conflict(
@@ -105,75 +87,72 @@ def test_set_livestatus_tcp_port_conflict(
     site_dir = tmp_path / "sites/mysite"
     _make_site(site_dir.parent, "other", "CONFIG_LIVESTATUS_TCP_PORT='6557'\n")
     _make_site(site_dir.parent, "mysite", "")
-    conf = _make_xinetd_conf(site_dir, 6557)
+    config = {"LIVESTATUS_TCP": "on", "LIVESTATUS_TCP_ONLY_FROM": ""}
+    conf = site_dir / "etc/xinetd.d/livestatusv1"
 
-    site_configs = _build_site_configs("mysite", tmp_path)
-    result = _set_livestatus_tcp_port("mysite", "6557", site_configs.configs, tmp_path)
+    result = _set_livestatus_tcp_port("mysite", config, tmp_path, "6557")
+    assert isinstance(result, str)
 
     assert result == "6558"
-    assert "\tport\t\t= 6558" in conf.read_text()
+    assert "port = 6558" in conf.read_text()
+    assert "port = 6557" not in conf.read_text()
     err = capsys.readouterr().err
     assert "6557" in err
     assert "6558" in err
 
 
-def test_set_livestatus_tcp_port_missing_xinetd_conf(tmp_path: Path) -> None:
-    # Missing xinetd.conf. `omd config` just continues, which might be a mistake.
-    site_dir = tmp_path / "sites/mysite"
-    _make_site(site_dir.parent, "mysite", "")
+def test_set_livestatus_tcp_port_invalid_value(tmp_path: Path) -> None:
+    # Non-integer port value causes _Error.
+    _make_site(tmp_path / "sites", "mysite", "")
+    config = {"LIVESTATUS_TCP": "on", "LIVESTATUS_TCP_ONLY_FROM": ""}
 
-    site_configs = _build_site_configs("mysite", tmp_path)
-    result = _set_livestatus_tcp_port("mysite", "6557", site_configs.configs, tmp_path)
+    result = _set_livestatus_tcp_port("mysite", config, tmp_path, "not-a-port")
 
     assert isinstance(result, _Error)
 
 
-def test_set_livestatus_tcp_only_from_commented_default(tmp_path: Path) -> None:
-    # The shipped template has only_from commented out. Setting a value must uncomment
-    # and replace it.
+def test_write_livestatus_xinetd_conf_file_with_only_from(tmp_path: Path) -> None:
+    # The only_from line is always present; the value must match what was passed.
     site_dir = tmp_path / "sites/mysite"
     _make_site(site_dir.parent, "mysite", "")
-    conf = _make_xinetd_conf_with_only_from(site_dir, None)
+    _write_livestatus_xinetd_conf_file("mysite", "on", "192.168.0.0/24", "6557", tmp_path)
+    conf = site_dir / "etc/xinetd.d/livestatusv1"
 
-    result = _set_livestatus_tcp_only_from("mysite", "192.168.0.0/24", tmp_path)
-
-    assert result == "192.168.0.0/24"
     text = conf.read_text()
-    assert "\tonly_from       = 192.168.0.0/24" in text
+    assert "only_from       = 192.168.0.0/24" in text
     assert text.count("only_from") == 1
 
 
-def test_set_livestatus_tcp_only_from_existing_value(tmp_path: Path) -> None:
+def test_write_livestatus_xinetd_conf_file_update_only_from(tmp_path: Path) -> None:
     # An already-set value is replaced.
     site_dir = tmp_path / "sites/mysite"
     _make_site(site_dir.parent, "mysite", "")
-    conf = _make_xinetd_conf_with_only_from(site_dir, "10.0.0.1")
+    _write_livestatus_xinetd_conf_file("mysite", "on", "10.0.0.2 10.0.0.3", "6557", tmp_path)
+    conf = site_dir / "etc/xinetd.d/livestatusv1"
 
-    result = _set_livestatus_tcp_only_from("mysite", "10.0.0.2 10.0.0.3", tmp_path)
-
-    assert result == "10.0.0.2 10.0.0.3"
-    assert "\tonly_from       = 10.0.0.2 10.0.0.3" in conf.read_text()
+    assert "only_from       = 10.0.0.2 10.0.0.3" in conf.read_text()
+    assert "10.0.0.1" not in conf.read_text()
 
 
-@pytest.mark.xfail(reason="only_from absent from xinetd.conf is silently ignored", strict=True)
-def test_set_livestatus_tcp_only_from_no_only_from_line(tmp_path: Path) -> None:
+def test_write_livestatus_xinetd_conf_file_without_only_from(tmp_path: Path) -> None:
+    # When only_from is empty, the line is still written with an empty value.
     site_dir = tmp_path / "sites/mysite"
     _make_site(site_dir.parent, "mysite", "")
-    conf = _make_xinetd_conf(site_dir, 6557)  # no only_from line
+    _write_livestatus_xinetd_conf_file("mysite", "on", "", "6557", tmp_path)
+    conf = site_dir / "etc/xinetd.d/livestatusv1"
 
-    _set_livestatus_tcp_only_from("mysite", "10.0.0.1", tmp_path)
-
-    assert "only_from" in conf.read_text()
+    assert "only_from       = " in conf.read_text()
 
 
-def test_set_livestatus_tcp_only_from_missing_xinetd_conf(tmp_path: Path) -> None:
-    # Missing xinetd.conf returns _Error without raising.
+def test_write_livestatus_xinetd_conf_file_off_writes_header_only(tmp_path: Path) -> None:
+    # When LIVESTATUS_TCP is "off", a header-only file is written (no service block).
     site_dir = tmp_path / "sites/mysite"
     _make_site(site_dir.parent, "mysite", "")
+    conf = site_dir / "etc/xinetd.d/livestatusv1"
 
-    result = _set_livestatus_tcp_only_from("mysite", "10.0.0.1", tmp_path)
-
-    assert isinstance(result, _Error)
+    _write_livestatus_xinetd_conf_file("mysite", "off", "", "6557", tmp_path)
+    assert conf.exists()
+    assert "service livestatus" not in conf.read_text()
 
 
 def test_default_APACHE_TCP_PORT_cross_key_conflict(tmp_path: Path) -> None:

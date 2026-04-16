@@ -16,13 +16,6 @@ case "$1" in
         echo "on: enable"
         echo "off: disable"
         ;;
-    set)
-        if [ "$2" == "on" ]; then
-            ln -sfn ../mk-livestatus/xinetd.conf $OMD_ROOT/etc/xinetd.d/mk-livestatus
-        else
-            rm -f $OMD_ROOT/etc/xinetd.d/mk-livestatus
-        fi
-        ;;
     depends)
         [ "$CONFIG_CORE" != none ]
         ;;

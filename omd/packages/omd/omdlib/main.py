@@ -336,6 +336,7 @@ def walk_skel(
         # to delete their existing htpasswd.
         "etc/diskspace.conf",
         "etc/htpasswd",
+        "etc/mk-livestatus/xinetd.conf",
         "local/lib/check_mk",
         "local/lib/python3/cmk/base",
         "local/lib/python3/cmk/base/plugins",

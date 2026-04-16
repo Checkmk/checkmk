@@ -42,7 +42,7 @@ from cmk.ccc import store
 from cmk.ccc.cpu_tracking import CPUTracker
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
-from cmk.gui.bi import BIManager
+from cmk.gui.bi.bi_manager import BIManager
 from cmk.gui.data_source import query_livestatus
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.http import request

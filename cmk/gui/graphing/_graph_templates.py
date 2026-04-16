@@ -310,6 +310,10 @@ class TemplateGraphSpecification(GraphSpecification, frozen=True):
     def graph_type_name() -> Literal["template"]:
         return "template"
 
+    @classmethod
+    def add_visual_type(cls) -> Literal["pnpgraph"]:
+        return "pnpgraph"
+
     def fetch_graph_rows(self, env: GraphEnvironment) -> Sequence[HostGraphRow | ServiceGraphRow]:
         return [
             fetch_graph_row(

@@ -395,16 +395,13 @@ def _collect_graph_html(
         )
 
         if display_config.show_controls:
-            # Data will be transferred via URL and Javascript magic eventually
-            # to our function popup_add_element (htdocs/reporting.py)
-            # argument report_name --> provided by popup system
-            # further arguments:
+            add_type = render_state.specification.add_visual_type()
             html.popup_trigger(
                 content=html.render_static_icon(StaticIcon(IconNames.menu), title=_("Add to ...")),
                 ident="add_visual",
-                method=MethodAjax(endpoint="add_visual", url_vars=[("add_type", "pnpgraph")]),
+                method=MethodAjax(endpoint="add_visual", url_vars=[("add_type", add_type)]),
                 data=[
-                    "pnpgraph",
+                    add_type,
                     None,
                     GraphExportRequest(
                         specification=render_state.specification,

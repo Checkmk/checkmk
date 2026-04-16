@@ -123,7 +123,7 @@ class VisualTypeDashboards(VisualType):
             # Exceptions do not work here.
             return
 
-        if add_type == "pnpgraph" and context is None:
+        if add_type in ("pnpgraph", "custom_graph", "combined_graph") and context is None:
             # Checkmk Community graphs are added correctly by htdocs/js/checkmk.js create_pnp_graph().
             # Commercial editions graphs:
             #

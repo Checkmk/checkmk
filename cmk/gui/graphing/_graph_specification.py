@@ -166,6 +166,10 @@ class GraphSpecification(BaseModel, ABC, frozen=True):
     def url(self) -> str:
         return ""
 
+    @classmethod
+    def add_visual_type(cls) -> str:
+        raise NotImplementedError(f"{cls.__name__} does not support add-to-visual")
+
 
 class GraphSpecificationRegistry(Registry[type[GraphSpecification]]):
     def plugin_name(self, instance: type[GraphSpecification]) -> str:

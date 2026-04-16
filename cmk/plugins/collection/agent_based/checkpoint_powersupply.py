@@ -55,9 +55,10 @@ check_plugin_checkpoint_powersupply = CheckPlugin(
     discovery_function=discover_checkpoint_powersupply,
     check_function=check_checkpoint_powersupply,
     # for possible device statuses see SUP-27826
-    # only "Present" seems officially supported, but we've also seen "up"
+    # only "Present" seems officially supported, but we've also seen "up" and "ok"
     check_default_parameters={
         "up": State.OK.value,
+        "ok": State.OK.value,
         "present": State.CRIT.value,
     },
     check_ruleset_name="checkpoint_powersupply",

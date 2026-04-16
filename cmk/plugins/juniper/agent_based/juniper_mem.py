@@ -3,15 +3,21 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="type-arg"
+from collections.abc import Mapping
 
-from collections.abc import Iterable, Mapping
-
-from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
-from cmk.agent_based.v2 import render, SNMPTree, StringTable
+from cmk.agent_based.v2 import (
+    check_levels,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    LevelsT,
+    render,
+    Service,
+    SimpleSNMPSection,
+    SNMPTree,
+    StringTable,
+)
 from cmk.plugins.juniper.lib import DETECT_JUNIPER
-
-check_info = {}
 
 # .1.3.6.1.4.1.2636.3.1.13.1.5.9.1.0.0 Routing Engine 0 --> JUNIPER-MIB::jnxOperatingDescr.9.1.0.0
 # .1.3.6.1.4.1.2636.3.1.13.1.5.9.2.0.0 Routing Engine 1 --> JUNIPER-MIB::jnxOperatingDescr.9.2.0.0
@@ -21,34 +27,38 @@ check_info = {}
 
 Section = Mapping[str, float]
 
-DiscoveryResult = Iterable[tuple[str, Mapping]]
-CheckResult = Iterable[tuple[int, str, list]]
-
 
 def parse_juniper_mem(string_table: StringTable) -> Section:
     return {k: float(v) for k, v in string_table}
 
 
 def discover_juniper_mem(section: Section) -> DiscoveryResult:
-    yield from ((k, {}) for k in section)
+    for k in section:
+        yield Service(item=k)
 
 
-def check_juniper_mem(
-    item: str, params: Mapping[str, tuple[float, float]], section: Section
-) -> CheckResult:
+def _migrate_levels(levels: object) -> LevelsT[float] | None:
+    # Legacy rules stored bare tuples (warn, crit); v2 API requires tagged tuples.
+    # TODO (mr) migrate juniper_mem_modules.py.
+    if isinstance(levels, tuple) and len(levels) == 2 and isinstance(levels[0], float):
+        return ("fixed", levels)
+    return levels  # type: ignore[return-value]
+
+
+def check_juniper_mem(item: str, params: Mapping[str, object], section: Section) -> CheckResult:
     if (memory_percent := section.get(item)) is None:
         return
 
-    yield check_levels(
+    yield from check_levels(
         memory_percent,
-        "mem_used_percent",
-        params["levels"],
-        human_readable_func=render.percent,
-        infoname="Used",
+        metric_name="mem_used_percent",
+        levels_upper=_migrate_levels(params.get("levels")),
+        render_func=render.percent,
+        label="Used",
     )
 
 
-check_info["juniper_mem"] = LegacyCheckDefinition(
+snmp_section_juniper_mem = SimpleSNMPSection(
     name="juniper_mem",
     detect=DETECT_JUNIPER,
     fetch=SNMPTree(
@@ -56,6 +66,10 @@ check_info["juniper_mem"] = LegacyCheckDefinition(
         oids=["5.9", "11.9"],
     ),
     parse_function=parse_juniper_mem,
+)
+
+check_plugin_juniper_mem = CheckPlugin(
+    name="juniper_mem",
     service_name="Memory %s",
     discovery_function=discover_juniper_mem,
     check_function=check_juniper_mem,

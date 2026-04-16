@@ -16,6 +16,7 @@ import time_machine
 from pytest import MonkeyPatch
 
 import cmk.gui.availability.annotations
+import cmk.gui.availability.computation
 import cmk.utils.render
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
@@ -212,7 +213,8 @@ def test_reclassify_by_annotations(
     annotations: availability.AVAnnotations,
     result: availability.AVRawData,
 ) -> None:
-    monkeypatch.setattr(availability, "load_annotations", lambda: annotations)
+
+    monkeypatch.setattr(cmk.gui.availability.computation, "load_annotations", lambda: annotations)
     assert availability.reclassify_by_annotations("service", av_rawdata) == result
 
 

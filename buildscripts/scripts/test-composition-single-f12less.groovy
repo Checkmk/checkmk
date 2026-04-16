@@ -30,6 +30,7 @@ void main() {
     // Use the directory also used by tests/testlib/containers.py to have it find
     // the downloaded package.
     def download_dir = "package_download";
+    def result_dir = "test-results";
     def make_target = "test-composition-docker";
 
     def setup_values = single_tests.common_prepare(
@@ -43,6 +44,13 @@ void main() {
     // todo: build progress mins?
 
     dir("${checkout_dir}") {
+        stage("Prepare workspace") {
+            sh("""
+                rm -rf ${result_dir} ${download_dir}
+                mkdir -p ${result_dir} ${download_dir}
+            """);
+        }
+
         stage("Fetch Checkmk package") {
             single_tests.fetch_package(
                 edition: edition,
@@ -68,7 +76,7 @@ void main() {
                 stage("Run `make ${make_target}`") {
                     dir("${checkout_dir}/tests") {
                         single_tests.run_make_target(
-                            result_path: "${checkout_dir}/test-results/${distro}",
+                            result_path: "${checkout_dir}/${result_dir}/${distro}",
                             edition: edition,
                             docker_tag: setup_values.docker_tag,
                             version: setup_values.cmk_version,
@@ -86,7 +94,7 @@ void main() {
                 }
             } finally {
                 stage("Archive / process test reports") {
-                    single_tests.archive_and_process_reports(test_results: "test-results/**");
+                    single_tests.archive_and_process_reports(test_results: "${result_dir}/**");
                 }
             }
         }

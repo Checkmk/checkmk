@@ -65,6 +65,7 @@ void main() {
     }
     def make_target = build_make_target(edition, cross_edition_target);
     def download_dir = "package_download";
+    def result_dir = "test-results";
 
     def setup_values = single_tests.common_prepare(
         version: params.VERSION,
@@ -77,6 +78,13 @@ void main() {
     // todo: build progress mins?
 
     dir("${checkout_dir}") {
+        stage("Prepare workspace") {
+            sh("""
+                rm -rf ${result_dir} ${download_dir}
+                mkdir -p ${result_dir} ${download_dir}
+            """);
+        }
+
         stage("Fetch Checkmk package") {
             single_tests.fetch_package(
                 // use the cross edition target or fall back to the value of edition
@@ -103,7 +111,7 @@ void main() {
                 stage("Run `make ${make_target}`") {
                     dir("${checkout_dir}/tests") {
                         single_tests.run_make_target(
-                            result_path: "${checkout_dir}/test-results/${distro}",
+                            result_path: "${checkout_dir}/${result_dir}/${distro}",
                             // use the cross edition target or fall back to the value of edition
                             edition: cross_edition_target ?: edition,
                             docker_tag: setup_values.docker_tag,
@@ -122,7 +130,7 @@ void main() {
                 }
             } finally {
                 stage("Archive / process test reports") {
-                    single_tests.archive_and_process_reports(test_results: "test-results/**");
+                    single_tests.archive_and_process_reports(test_results: "${result_dir}/**");
                 }
             }
         }

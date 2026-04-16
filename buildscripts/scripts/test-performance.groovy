@@ -11,7 +11,7 @@ void main() {
 
     def single_tests = load("${checkout_dir}/buildscripts/scripts/utils/single_tests.groovy");
     def test_jenkins_helper = load("${checkout_dir}/buildscripts/scripts/utils/test_helper.groovy");
-    def result_dir = "${checkout_dir}/results";
+    def result_dir = "results";
     def distro = params.DISTRO;
     def edition = params.EDITION;
     def fake_artifacts = params.FAKE_ARTIFACTS;
@@ -30,8 +30,8 @@ void main() {
     dir("${checkout_dir}") {
         stage("Prepare workspace") {
             sh("""
-                rm -rf "${result_dir}"
-                mkdir -p "${result_dir}"
+                rm -rf ${result_dir} ${download_dir}
+                mkdir -p ${result_dir} ${download_dir}
             """);
         }
 
@@ -88,7 +88,7 @@ void main() {
     }
 
     stage("Archive / process test reports") {
-        dir("${result_dir}") {
+        dir("${checkout_dir}/${result_dir}") {
             show_duration("archiveArtifacts") {
                 archiveArtifacts(
                     artifacts: "**",

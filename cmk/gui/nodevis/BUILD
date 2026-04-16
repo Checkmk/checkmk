@@ -76,19 +76,39 @@ py_library(
     ],
 )
 
-# Temporary: nodevis files that still belong to the monolithic //cmk/gui target.
-# Remove this filegroup once nodevis is fully extracted.
-filegroup(
-    name = "gui_srcs",
-    srcs = glob(
-        include = ["**/*.py"],
-        exclude = [
-            "filters.py",
-            "frontend_texts.py",
-            "topology.py",
-            "type_defs.py",
-            "utils.py",
-        ],
-    ),
-    visibility = ["//cmk/gui:__pkg__"],
+py_library(
+    name = "nodevis",
+    srcs = [
+        "__init__.py",
+        "aggregation.py",
+        "nodevis.py",
+    ],
+    imports = ["../../.."],
+    visibility = [
+        "//cmk:__subpackages__",
+        "//tests:__subpackages__",
+    ],
+    deps = [
+        ":topology",
+        ":utils",
+        "//cmk/bi",
+        "//cmk/gui:breadcrumb",
+        "//cmk/gui:config",
+        "//cmk/gui:cron",
+        "//cmk/gui:header",
+        "//cmk/gui:i18n",
+        "//cmk/gui:logged_in",
+        "//cmk/gui:main_menu",
+        "//cmk/gui:page_menu",
+        "//cmk/gui:pages",
+        "//cmk/gui:theme",
+        "//cmk/gui:type_defs",
+        "//cmk/gui/bi",
+        "//cmk/gui/htmllib:html",
+        "//cmk/gui/utils:csrf_token",
+        "//cmk/gui/views:icon",
+        "//cmk/gui/views:store",
+        "//cmk/gui/visuals",
+        "//packages/cmk-ccc:user",
+    ],
 )

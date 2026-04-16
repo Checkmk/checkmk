@@ -230,6 +230,10 @@ class ViewDashletConfig(ABCViewDashletConfig):
     modified_at: NotRequired[str]  # timestamp in ISO format
 
 
+class SnapinDashletConfig(DashletConfig):
+    snapin: str
+
+
 class NtopAlertsDashletConfig(DashletConfig): ...
 
 

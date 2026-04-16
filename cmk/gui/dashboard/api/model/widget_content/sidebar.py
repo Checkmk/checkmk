@@ -6,9 +6,10 @@ from typing import Annotated, Literal, override, Self
 
 from pydantic import AfterValidator
 
+from cmk.gui.dashboard.type_defs import SnapinDashletConfig
 from cmk.gui.openapi.framework.model import api_field, api_model
 from cmk.gui.openapi.framework.model.converter import RegistryConverter
-from cmk.gui.sidebar import all_snapins, SnapinDashletConfig
+from cmk.gui.sidebar._snapin._registry import all_snapins
 
 from ._base import BaseWidgetContent
 

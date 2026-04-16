@@ -8,7 +8,8 @@ from collections.abc import Iterator
 from typing import override
 
 from cmk.gui.config import active_config, Config
-from cmk.gui.dashboard import DashletConfig, IFrameDashlet
+from cmk.gui.dashboard.dashlet.base import IFrameDashlet
+from cmk.gui.dashboard.type_defs import SnapinDashletConfig
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
@@ -20,10 +21,6 @@ from cmk.gui.utils.roles import UserPermissions
 
 from ..dashboard.dashlet.base import RelativeLayoutConstraints, WidgetSize
 from ._snapin import all_snapins, SidebarSnapin
-
-
-class SnapinDashletConfig(DashletConfig):
-    snapin: str
 
 
 class SnapinDashlet(IFrameDashlet[SnapinDashletConfig]):

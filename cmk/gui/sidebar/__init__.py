@@ -25,6 +25,7 @@ from cmk.gui import pagetypes, sites
 from cmk.gui.breadcrumb import Breadcrumb, make_simple_page_breadcrumb
 from cmk.gui.config import active_config, Config
 from cmk.gui.dashboard import DashletRegistry
+from cmk.gui.dashboard.type_defs import SnapinDashletConfig as SnapinDashletConfig
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.header import make_header
 from cmk.gui.htmllib.html import html
@@ -81,7 +82,6 @@ from ._snapin import VisualMenuItem as VisualMenuItem
 from ._snapin import write_snapin_exception as write_snapin_exception
 from ._snapin._bookmarks import BookmarkList
 from ._snapin_dashlet import SnapinDashlet, SnapinWidgetIFramePage
-from ._snapin_dashlet import SnapinDashletConfig as SnapinDashletConfig
 from .main_menu import (
     ajax_message_read,
     MainMenuConfigCreator,

@@ -513,6 +513,7 @@ py_wheel(
         "//cmk/gui/painter:v0_base",
         "//cmk/gui/painter:v0_impl",
         "//cmk/gui/painter:v1",
+        "//cmk/gui/plugins/bi",
         "//cmk/gui/plugins/dashboard",
         "//cmk/gui/plugins/sidebar",
         "//cmk/gui/plugins/views",

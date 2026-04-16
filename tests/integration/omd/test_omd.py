@@ -9,6 +9,8 @@
 import tempfile
 from pathlib import Path
 
+import pytest
+
 from tests.testlib.common.utils import wait_until
 from tests.testlib.common.utils2 import run
 from tests.testlib.site import Site, SiteFactory
@@ -596,6 +598,23 @@ def test_run_omd_status_auto_with_autostart_disabled(site: Site) -> None:
         site.stop()
         site.set_config("AUTOSTART", autostart_orig, with_restart=False)
         site.omd("start")
+
+
+@pytest.mark.xfail(reason="omd diff shows entries on a fresh site. CMK-26713")
+def test_run_omd_diff_empty_on_fresh_site() -> None:
+    """Test 'omd diff' shows no entries on a fresh site."""
+    package = CMKPackageInfo(version_from_env(), edition_from_env())
+    site_factory = SiteFactory(package=package, prefix="")
+    site = None
+    try:
+        site = site_factory.get_site("test_omd_diff", create=False)
+        run(["omd", "create", str(site.id)], sudo=True)
+        p = site.omd("diff", check=False)
+        assert not p.stderr
+        assert not p.stdout, "Expected no differences on a fresh site"
+    finally:
+        if site is not None and site.exists():
+            site.rm()
 
 
 # TODO: Add tests for these modes (also check -h of each mode)

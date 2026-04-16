@@ -264,10 +264,24 @@ py_library(
     ],
 )
 
-# _pre_21_plugin_api.py stays in the monolithic gui because it imports from
-# cmk.gui.plugins.wato (498 files) that still live there.
-filegroup(
-    name = "gui_srcs",
+# Pre-2.1 plugin API compatibility shim. Separate target to break the
+# wato:wato <-> plugins/wato cycle: this target depends on both, while
+# wato:wato itself does not depend on plugins/wato.
+py_library(
+    name = "pre_21_plugin_api",
     srcs = ["_pre_21_plugin_api.py"],
-    visibility = ["//cmk/gui:__pkg__"],
+    imports = ["../../.."],
+    visibility = [
+        "//cmk:__subpackages__",
+        "//tests:__subpackages__",
+    ],
+    deps = [
+        ":base",
+        ":wato",
+        "//cmk/gui:hooks",
+        "//cmk/gui/plugins/wato",
+        "//cmk/gui/valuespec",
+        "//cmk/gui/watolib",
+        "//cmk/gui/watolib:config_infra",
+    ],
 )

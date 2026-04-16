@@ -28,6 +28,6 @@ py_test(
         ":__test__",
         requirement("marshmallow"),
         requirement("pytest"),
-        "//cmk/plugins/mtr/agents:mtr",
+        "//cmk/plugins/mtr/agents",
     ],
 )

@@ -1,7 +1,10 @@
 load("@aspect_rules_py//py:defs.bzl", "py_library")
 
 py_library(
-    name = "mtr",
+    name = "agents",
     srcs = ["mtr.py"],
-    visibility = ["//tests:__subpackages__"],
+    visibility = [
+        "//cmk/plugins:__subpackages__",
+        "//tests:__subpackages__",
+    ],
 )

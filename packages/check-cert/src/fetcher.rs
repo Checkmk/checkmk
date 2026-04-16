@@ -139,7 +139,7 @@ fn build_proxy_stream<T: Read + Write>(
     let mut reader = BufReader::new(stream);
     let mut status_line = String::new();
     reader.read_line(&mut status_line)?;
-    if !status_line.starts_with("HTTP/1.1 200") {
+    if !status_line.starts_with("HTTP/1.1 200") && !status_line.starts_with("HTTP/1.0 200") {
         return Err(anyhow!("Proxy CONNECT failed: {status_line}"));
     }
     // Drain remaining response headers until the blank line
@@ -311,6 +311,86 @@ mod test_parse_proxy_env_var {
     #[test]
     fn test_empty_proxy_url_returns_none() {
         assert!(parse_proxy_env_var("").is_none());
+    }
+}
+
+#[cfg(test)]
+mod test_build_proxy_stream {
+    use super::{build_proxy_stream, ProxyAuth};
+
+    #[test]
+    fn test_http_1_1_200_succeeds() {
+        let response = b"HTTP/1.1 200 Connection established\r\n\r\n";
+        let mut rw = ReadWriteBuf::new(response.to_vec());
+        assert!(build_proxy_stream(&mut rw, None, "example.com", 443).is_ok());
+    }
+
+    #[test]
+    fn test_http_1_0_200_succeeds() {
+        let response = b"HTTP/1.0 200 connected\r\n\r\n";
+        let mut rw = ReadWriteBuf::new(response.to_vec());
+        assert!(build_proxy_stream(&mut rw, None, "example.com", 443).is_ok());
+    }
+
+    #[test]
+    fn test_http_407_fails() {
+        let response = b"HTTP/1.1 407 Proxy Authentication Required\r\n\r\n";
+        let mut rw = ReadWriteBuf::new(response.to_vec());
+        let err = build_proxy_stream(&mut rw, None, "example.com", 443).unwrap_err();
+        assert!(err.to_string().contains("Proxy CONNECT failed"));
+    }
+
+    #[test]
+    fn test_connect_request_format() {
+        let response = b"HTTP/1.1 200 OK\r\n\r\n";
+        let mut rw = ReadWriteBuf::new(response.to_vec());
+        build_proxy_stream(&mut rw, None, "example.com", 443).unwrap();
+        let sent = String::from_utf8(rw.written).unwrap();
+        assert!(sent.starts_with("CONNECT example.com:443 HTTP/1.1\r\n"));
+        assert!(sent.contains("Host: example.com:443\r\n"));
+    }
+
+    #[test]
+    fn test_connect_request_with_auth() {
+        let response = b"HTTP/1.1 200 OK\r\n\r\n";
+        let mut rw = ReadWriteBuf::new(response.to_vec());
+        let auth = ProxyAuth::builder()
+            .username("user".to_string())
+            .password("pass".to_string())
+            .build();
+        build_proxy_stream(&mut rw, Some(auth), "example.com", 443).unwrap();
+        let sent = String::from_utf8(rw.written).unwrap();
+        assert!(sent.contains("Proxy-Authorization: Basic "));
+    }
+
+    struct ReadWriteBuf {
+        read_data: std::io::Cursor<Vec<u8>>,
+        written: Vec<u8>,
+    }
+
+    impl ReadWriteBuf {
+        fn new(read_data: Vec<u8>) -> Self {
+            Self {
+                read_data: std::io::Cursor::new(read_data),
+                written: Vec::new(),
+            }
+        }
+    }
+
+    impl std::io::Read for ReadWriteBuf {
+        fn read(&mut self, buf: &mut [u8]) -> std::io::Result<usize> {
+            self.read_data.read(buf)
+        }
+    }
+
+    impl std::io::Write for ReadWriteBuf {
+        fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
+            self.written.extend_from_slice(buf);
+            Ok(buf.len())
+        }
+        fn flush(&mut self) -> std::io::Result<()> {
+            Ok(())
+        }
     }
 }
 

@@ -16,7 +16,7 @@ from typing import cast, Literal, NamedTuple, overload, TypedDict
 
 from cmk.ccc.site import omd_site
 from cmk.ccc.user import UserId
-from cmk.ccc.version import Edition, edition
+from cmk.ccc.version import Edition
 from cmk.crypto.password import Password, PasswordPolicy
 from cmk.gui import forms, userdb
 from cmk.gui.background_job import job as background_job
@@ -134,11 +134,12 @@ def register(_mode_registry: ModeRegistry) -> None:
 
 
 def has_customer(
+    edition: Edition,
     user_cxn: UserConnector | None,
     cust_api: ABCCustomerAPI,
     user_spec: UserSpec,
 ) -> str | None:
-    if edition(paths.omd_root) is not Edition.ULTIMATEMT:
+    if edition is not Edition.ULTIMATEMT:
         return None
 
     if isinstance(user_cxn, LDAPUserConnector):
@@ -627,7 +628,10 @@ class ModeUsers(WatoMode):
                         html.write_text_permissive(_("Never"))
 
                 if cust := has_customer(
-                    user_cxn=connection, cust_api=customer, user_spec=user_spec
+                    edition=self._edition,
+                    user_cxn=connection,
+                    cust_api=customer,
+                    user_spec=user_spec,
                 ):
                     table.cell(_("Customer"), cust)
 
@@ -1022,7 +1026,7 @@ class ModeEditUser(WatoMode):
         # Pager
         user_attrs["pager"] = request.get_str_input_mandatory("pager", "").strip()
 
-        if edition(paths.omd_root) is Edition.ULTIMATEMT:
+        if self._edition is Edition.ULTIMATEMT:
             customer = self._vs_customer.from_html_vars("customer")
             self._vs_customer.validate_value(customer, "customer")
 
@@ -1157,7 +1161,7 @@ class ModeEditUser(WatoMode):
         self._handle_auth_attributes(user_attrs, password_policy)
 
         # Roles
-        if edition(paths.omd_root) != Edition.CLOUD:
+        if self._edition != Edition.CLOUD:
             user_attrs["roles"] = [
                 role for role in self._roles.keys() if html.get_checkbox("role_" + role)
             ]
@@ -1347,7 +1351,7 @@ class ModeEditUser(WatoMode):
         self._lockable_input("pager", "")
         html.help(_("The pager address is optional "))
 
-        if edition(paths.omd_root) is Edition.ULTIMATEMT:
+        if self._edition is Edition.ULTIMATEMT:
             forms.section(self._vs_customer.title())
             self._vs_customer.render_input("customer", customer_api().get_customer_id(self._user))
 

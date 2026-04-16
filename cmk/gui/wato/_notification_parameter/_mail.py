@@ -7,7 +7,7 @@
 from collections.abc import Mapping
 from typing import Any
 
-from cmk.ccc.version import Edition, edition
+from cmk.ccc.version import Edition
 from cmk.gui.http import request
 from cmk.rulesets.internal.form_specs import (
     DictGroupExtended,
@@ -30,16 +30,15 @@ from cmk.rulesets.v1.form_specs import (
     String,
 )
 from cmk.rulesets.v1.form_specs.validators import EmailAddress as ValidateEmailAddress
-from cmk.utils import paths
 
 from ._helpers import _get_url_prefix_setting
 
 
-def form_spec_mail() -> DictionaryExtended:
+def form_spec_mail(edition: Edition) -> DictionaryExtended:
     # TODO register CSE specific version
     return DictionaryExtended(
         title=Title("HTML email parameters"),
-        elements=_parameter_elements(is_cse=edition(paths.omd_root) == Edition.CLOUD),
+        elements=_parameter_elements(is_cse=edition == Edition.CLOUD),
         ignored_elements=("no_floating_graphs",),
     )
 
@@ -68,10 +67,10 @@ def _url_prefix_setting(is_cse: bool) -> dict[str, DictElement[Any]]:
     }
 
 
-def form_spec_asciimail() -> DictionaryExtended:
+def form_spec_asciimail(edition: Edition) -> DictionaryExtended:
     return DictionaryExtended(
         title=Title("Legacy email (ASCII) parameters"),
-        elements=_elements_ascii(is_cse=edition(paths.omd_root) == Edition.CLOUD),
+        elements=_elements_ascii(is_cse=edition == Edition.CLOUD),
     )
 
 

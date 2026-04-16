@@ -11,7 +11,7 @@ from typing import Literal
 
 from livestatus import SiteConfigurations
 
-from cmk.ccc.version import Edition, edition
+from cmk.ccc.version import Edition
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.userdb import UserSelection
@@ -30,7 +30,6 @@ from cmk.gui.valuespec import (
 from cmk.gui.watolib.hosts_and_folders import folder_tree
 from cmk.gui.watolib.mode import WatoMode
 from cmk.gui.watolib.timeperiods import TimeperiodSelection
-from cmk.utils import paths
 from cmk.utils.notify_types import EventRule
 
 from .._check_plugin_selection import CheckPluginSelection
@@ -43,6 +42,7 @@ class ABCEventsMode[T_EventSpec: EventRule | dict](WatoMode, abc.ABC):
     @abc.abstractmethod
     def _rule_match_conditions(
         cls,
+        edition: Edition,
         sites: SiteConfigurations,
         service_levels: Sequence[tuple[int, str]],
     ) -> list[DictionaryEntry | tuple[str, ListChoice]]:
@@ -118,6 +118,7 @@ class ABCEventsMode[T_EventSpec: EventRule | dict](WatoMode, abc.ABC):
     @classmethod
     def _generic_rule_match_conditions(
         cls,
+        edition: Edition,
         sites: SiteConfigurations,
         service_levels: Sequence[tuple[int, str]],
     ) -> list[DictionaryEntry]:
@@ -284,7 +285,7 @@ class ABCEventsMode[T_EventSpec: EventRule | dict](WatoMode, abc.ABC):
                     choices=sorted_contact_group_choices,
                 ),
             ),
-            *cls._match_service_level_elements(service_levels),
+            *cls._match_service_level_elements(edition, service_levels),
             (
                 "match_timeperiod",
                 TimeperiodSelection(
@@ -299,9 +300,9 @@ class ABCEventsMode[T_EventSpec: EventRule | dict](WatoMode, abc.ABC):
 
     @classmethod
     def _match_service_level_elements(
-        cls, service_levels: Sequence[tuple[int, str]]
+        cls, edition: Edition, service_levels: Sequence[tuple[int, str]]
     ) -> list[DictionaryEntry]:
-        if edition(paths.omd_root) is Edition.CLOUD:  # disabled in CSE
+        if edition is Edition.CLOUD:  # disabled in CSE
             return []
         return [
             (

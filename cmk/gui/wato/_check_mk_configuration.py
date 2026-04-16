@@ -15,7 +15,7 @@ from typing import Any, Literal
 
 import cmk.utils.paths
 from cmk.ccc.hostaddress import HostName
-from cmk.ccc.version import Edition, edition
+from cmk.ccc.version import Edition
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKConfigError, MKUserError
 from cmk.gui.groups import GroupName
@@ -139,6 +139,7 @@ from ._http_proxy import HTTPProxyInput
 
 
 def register(
+    edition: Edition,
     config_variable_registry: ConfigVariableRegistry,
     config_variable_group_registry: ConfigVariableGroupRegistry,
     contact_group_usage_finder_registry: ContactGroupUsageFinderRegistry,
@@ -148,7 +149,7 @@ def register(
     config_variable_registry.register(ConfigVariableDefaultLanguage)
     config_variable_registry.register(ConfigVariableShowMoreMode)
     config_variable_registry.register(ConfigVariableBulkDiscoveryDefaultSettings)
-    config_variable_registry.register(ConfigVariableLogLevels)
+    config_variable_registry.register(ConfigVariableLogLevels(edition))
     config_variable_registry.register(ConfigVariableSlowViewsDurationThreshold)
     config_variable_registry.register(ConfigVariableDebug)
     config_variable_registry.register(ConfigVariableGUIProfile)
@@ -251,7 +252,7 @@ def register(
     rulespec_registry.register(ExtraHostConfCheckInterval)
     rulespec_registry.register(ExtraHostConfRetryInterval)
     rulespec_registry.register(ExtraHostConfCheckPeriod)
-    rulespec_registry.register(HostCheckCommands)
+    rulespec_registry.register(HostCheckCommands(edition))
     rulespec_registry.register(ExtraHostConfNotificationsEnabled)
     rulespec_registry.register(ExtraServiceConfNotificationsEnabled)
     rulespec_registry.register(ExtraHostConfNotificationOptions)
@@ -280,7 +281,7 @@ def register(
     rulespec_registry.register(ExtraServiceConfServicePeriod)
     rulespec_registry.register(ExtraServiceConfDisplayName)
     rulespec_registry.register(ExtraServiceConfNotesUrl)
-    rulespec_registry.register(AutomaticHostRemoval)
+    rulespec_registry.register(AutomaticHostRemoval(edition))
     rulespec_registry.register(ExtraHostConfIconImage)
     rulespec_registry.register(ExtraServiceConfIconImage)
     rulespec_registry.register(HostIconsAndActions)
@@ -408,7 +409,7 @@ def _add_job_scheduler_log_level(params: dict[str, int]) -> dict[str, int]:
     return params
 
 
-def _valuespec_log_levels(context: GlobalSettingsContext) -> Migrate:
+def _valuespec_log_levels(edition: Edition, context: GlobalSettingsContext) -> Migrate:
     return Migrate(
         valuespec=Dictionary(
             title=_("Logging"),
@@ -416,22 +417,23 @@ def _valuespec_log_levels(context: GlobalSettingsContext) -> Migrate:
                 "This setting decides which types of messages to log into the web log <tt>%s</tt>."
             )
             % (context.site_neutral_log_dir / "web.log"),
-            elements=_web_log_level_elements(),
+            elements=_web_log_level_elements(edition),
             optional_keys=[],
         ),
         migrate=_add_job_scheduler_log_level,
     )
 
 
-ConfigVariableLogLevels = ConfigVariable(
-    group=ConfigVariableGroupUserInterface,
-    primary_domain=ConfigDomainGUI,
-    ident="log_levels",
-    valuespec=_valuespec_log_levels,
-)
+def ConfigVariableLogLevels(edition: Edition) -> ConfigVariable:
+    return ConfigVariable(
+        group=ConfigVariableGroupUserInterface,
+        primary_domain=ConfigDomainGUI,
+        ident="log_levels",
+        valuespec=lambda context: _valuespec_log_levels(edition, context),
+    )
 
 
-def _web_log_level_elements() -> list[tuple[str, DropdownChoice]]:
+def _web_log_level_elements(edition: Edition) -> list[tuple[str, DropdownChoice]]:
     loggers = [
         (
             "cmk.web",
@@ -494,7 +496,7 @@ def _web_log_level_elements() -> list[tuple[str, DropdownChoice]]:
         ),
     ]
 
-    if edition(cmk.utils.paths.omd_root) is not Edition.COMMUNITY:
+    if edition is not Edition.COMMUNITY:
         loggers.extend(
             [
                 (
@@ -3651,7 +3653,9 @@ ExtraHostConfCheckPeriod = HostRulespec(
 )
 
 
-def _host_check_commands_host_check_command_choices() -> list[CascadingDropdownChoice]:
+def _host_check_commands_host_check_command_choices(
+    edition: Edition,
+) -> list[CascadingDropdownChoice]:
     choices: list[CascadingDropdownChoice] = [
         ("ping", _("Ping (active check with ICMP echo request)")),
         ("smart", _("Smart PING (only with Checkmk Micro Core)")),
@@ -3675,7 +3679,7 @@ def _host_check_commands_host_check_command_choices() -> list[CascadingDropdownC
             ),
         ),
     ]
-    if edition(cmk.utils.paths.omd_root) is Edition.CLOUD:
+    if edition is Edition.CLOUD:
         return choices
 
     choices.append(
@@ -3733,7 +3737,7 @@ def monitoring_macro_help() -> str:
     )
 
 
-def _valuespec_host_check_commands() -> CascadingDropdown:
+def _valuespec_host_check_commands(edition: Edition) -> CascadingDropdown:
     return CascadingDropdown(
         title=_("Host check command"),
         help=_(
@@ -3745,7 +3749,7 @@ def _valuespec_host_check_commands() -> CascadingDropdown:
             "The option to use a custom command can only be configured with the permission "
             '"Can add or modify executables".'
         ),
-        choices=_host_check_commands_host_check_command_choices,
+        choices=lambda: _host_check_commands_host_check_command_choices(edition),
         default_value=(
             "smart" if ConfigDomainOMD().default_globals()["site_core"] == "cmc" else "ping"
         ),
@@ -3753,11 +3757,12 @@ def _valuespec_host_check_commands() -> CascadingDropdown:
     )
 
 
-HostCheckCommands = HostRulespec(
-    group=RulespecGroupHostsMonitoringRulesHostChecks,
-    name="host_check_commands",
-    valuespec=_valuespec_host_check_commands,
-)
+def HostCheckCommands(edition: Edition) -> HostRulespec:
+    return HostRulespec(
+        group=RulespecGroupHostsMonitoringRulesHostChecks,
+        name="host_check_commands",
+        valuespec=lambda: _valuespec_host_check_commands(edition),
+    )
 
 
 def _valuespec_extra_host_conf_notifications_enabled() -> DropdownChoice:
@@ -5089,7 +5094,7 @@ ExtraServiceConfNotesUrl = ServiceRulespec(
 )
 
 
-def _valuespec_automatic_host_removal() -> CascadingDropdown:
+def _valuespec_automatic_host_removal(edition: Edition) -> CascadingDropdown:
     return CascadingDropdown(
         title=_("Automatic host removal"),
         help=_("Configure the automatic removal of monitored hosts.")
@@ -5106,7 +5111,7 @@ def _valuespec_automatic_host_removal() -> CascadingDropdown:
                     filename="wato.py",
                 )
             )
-            if edition(cmk.utils.paths.omd_root) in (Edition.ULTIMATEMT, Edition.ULTIMATE)
+            if edition in (Edition.ULTIMATEMT, Edition.ULTIMATE)
             else ""
         ),
         sorted=False,
@@ -5143,11 +5148,12 @@ def _valuespec_automatic_host_removal() -> CascadingDropdown:
     )
 
 
-AutomaticHostRemoval = HostRulespec(
-    group=RulespecGroupHostsMonitoringRulesVarious,
-    name="automatic_host_removal",
-    valuespec=_valuespec_automatic_host_removal,
-)
+def AutomaticHostRemoval(edition: Edition) -> HostRulespec:
+    return HostRulespec(
+        group=RulespecGroupHostsMonitoringRulesVarious,
+        name="automatic_host_removal",
+        valuespec=lambda: _valuespec_automatic_host_removal(edition),
+    )
 
 
 # .

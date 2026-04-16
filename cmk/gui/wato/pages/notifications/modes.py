@@ -33,7 +33,7 @@ from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException, MKTimeout
 from cmk.ccc.site import SiteId
 from cmk.ccc.user import UserId
-from cmk.ccc.version import Edition, edition
+from cmk.ccc.version import Edition
 from cmk.gui import forms, permissions, sites, userdb
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import active_config, Config
@@ -194,7 +194,6 @@ from cmk.shared_typing.notifications import (
     RuleSection,
     RuleTopic,
 )
-from cmk.utils import paths
 from cmk.utils.automation_config import LocalAutomationConfig
 from cmk.utils.labels import Labels
 from cmk.utils.notify import NotificationContext
@@ -331,17 +330,18 @@ class ABCNotificationsMode(ABCEventsMode[EventRule]):
     @classmethod
     def _rule_match_conditions(
         cls,
+        edition: Edition,
         sites: SiteConfigurations,
         service_levels: Sequence[tuple[int, str]],
     ) -> list[DictionaryEntry | tuple[str, ListChoice]]:
         return (
-            cls._generic_rule_match_conditions(sites, service_levels)
+            cls._generic_rule_match_conditions(edition, sites, service_levels)
             + cls._event_rule_match_conditions(flavour="notify")
-            + cls._notification_rule_match_conditions()
+            + cls._notification_rule_match_conditions(edition)
         )
 
     @classmethod
-    def _notification_rule_match_conditions(cls) -> list[DictionaryEntry]:
+    def _notification_rule_match_conditions(cls, edition: Edition) -> list[DictionaryEntry]:
         return [
             (
                 "match_escalation",
@@ -410,11 +410,11 @@ class ABCNotificationsMode(ABCEventsMode[EventRule]):
                     mode=RegExp.prefix,
                 ),
             ),
-        ] + cls._match_event_console_elements()
+        ] + cls._match_event_console_elements(edition)
 
     @classmethod
-    def _match_event_console_elements(cls) -> list[DictionaryEntry]:
-        if edition(paths.omd_root) is Edition.CLOUD:  # disabled in CSE
+    def _match_event_console_elements(cls, edition: Edition) -> list[DictionaryEntry]:
+        if edition is Edition.CLOUD:  # disabled in CSE
             return []
 
         def migrate_ec_rule_id_match(val: list[TextInput] | TextInput) -> list[TextInput]:
@@ -526,6 +526,7 @@ class ABCNotificationsMode(ABCEventsMode[EventRule]):
 
         vs_match_conditions = Dictionary(
             elements=self._rule_match_conditions(
+                self._edition,
                 config.sites,
                 config.mkeventd_service_levels,
             )
@@ -705,7 +706,7 @@ class ABCNotificationsMode(ABCEventsMode[EventRule]):
                     ("ec_contact", _("Event Console contact")),
                     ("ec_comment", _("Event Console comment")),
                 ]
-                if edition(paths.omd_root) is not Edition.CLOUD  # disabled in CSE
+                if self._edition is not Edition.CLOUD  # disabled in CSE
                 else []
             ),
             default_value=["host"],
@@ -2934,7 +2935,7 @@ class ModePersonalUserNotifications(ABCUserNotificationsMode):
                         )
                     ],
                 ),
-                page_menu_dropdown_user_related("user_notifications_p"),
+                page_menu_dropdown_user_related(self._edition, "user_notifications_p"),
             ],
             breadcrumb=breadcrumb,
             inpage_search=PageMenuSearch(),
@@ -3327,7 +3328,7 @@ class ABCEditNotificationRuleMode(ABCNotificationsMode):
             title=_("Rule Properties"),
             elements=rule_option_elements()
             + section_override
-            + self._rule_match_conditions(sites, service_levels)
+            + self._rule_match_conditions(self._edition, sites, service_levels)
             + section_contacts
             + [
                 (
@@ -3426,7 +3427,7 @@ class ABCEditNotificationRuleMode(ABCNotificationsMode):
                 "contact_match_macros",
                 "contact_match_groups",
             ],
-            hidden_keys=(["contact_emails"] if edition(paths.omd_root) == Edition.CLOUD else []),
+            hidden_keys=(["contact_emails"] if self._edition == Edition.CLOUD else []),
             headers=headers_part1 + contact_headers + headers_part2,
             render="form",
             form_narrow=True,

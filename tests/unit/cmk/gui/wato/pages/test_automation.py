@@ -97,14 +97,16 @@ class TestPageAutomation:
         "patch_edition",
         "fix_secret_checking",
     )
-    def test_execute_cmk_automation_current_version(self, monkeypatch: pytest.MonkeyPatch) -> None:
+    def test_execute_cmk_automation_current_version(
+        self, monkeypatch: pytest.MonkeyPatch, test_edition: cmk_version.Edition
+    ) -> None:
         with monkeypatch.context() as m:
             m.setattr(
                 request,
                 "headers",
                 {"x-checkmk-version": cmk_version.__version__, "x-checkmk-edition": "cee"},
             )
-            automation.PageAutomation()._execute_cmk_automation(debug=False)
+            automation.PageAutomation(test_edition)._execute_cmk_automation(debug=False)
             assert response.get_data() == b"((1, 2), 'this field was not sent by version N-1')"
 
     @pytest.mark.usefixtures(
@@ -115,14 +117,16 @@ class TestPageAutomation:
         "fix_secret_checking",
         "patch_edition",
     )
-    def test_execute_cmk_automation_previous_version(self, monkeypatch: pytest.MonkeyPatch) -> None:
+    def test_execute_cmk_automation_previous_version(
+        self, monkeypatch: pytest.MonkeyPatch, test_edition: cmk_version.Edition
+    ) -> None:
         with monkeypatch.context() as m:
             m.setattr(
                 request,
                 "headers",
                 {"x-checkmk-version": "2.4.0p13", "x-checkmk-edition": "cee"},
             )
-            automation.PageAutomation()._execute_cmk_automation(debug=False)
+            automation.PageAutomation(test_edition)._execute_cmk_automation(debug=False)
             assert response.get_data() == b"((1, 2),)"
 
     @pytest.mark.usefixtures(
@@ -134,7 +138,7 @@ class TestPageAutomation:
         "patch_edition",
     )
     def test_execute_cmk_automation_previous_version_incompatible(
-        self, monkeypatch: pytest.MonkeyPatch
+        self, monkeypatch: pytest.MonkeyPatch, test_edition: cmk_version.Edition
     ) -> None:
         with monkeypatch.context() as m:
             m.setattr(
@@ -143,7 +147,7 @@ class TestPageAutomation:
                 {"x-checkmk-version": "2.4.0b1", "x-checkmk-edition": "cee"},
             )
             with pytest.raises(MKGeneralException, match="not compatible"):
-                automation.PageAutomation()._handle_http_request()
+                automation.PageAutomation(test_edition)._handle_http_request()
 
     @pytest.mark.parametrize(
         "incomp_version",
@@ -161,7 +165,10 @@ class TestPageAutomation:
         "patch_edition",
     )
     def test_execute_cmk_automation_incompatible(
-        self, incomp_version: str, monkeypatch: pytest.MonkeyPatch
+        self,
+        incomp_version: str,
+        monkeypatch: pytest.MonkeyPatch,
+        test_edition: cmk_version.Edition,
     ) -> None:
         with monkeypatch.context() as m:
             m.setattr(
@@ -170,7 +177,7 @@ class TestPageAutomation:
                 {"x-checkmk-version": incomp_version, "x-checkmk-edition": "cee"},
             )
             with pytest.raises(MKGeneralException, match="not compatible"):
-                automation.PageAutomation()._handle_http_request()
+                automation.PageAutomation(test_edition)._handle_http_request()
 
     @pytest.mark.usefixtures(
         "request_context",

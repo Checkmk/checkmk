@@ -5,7 +5,7 @@
 
 from collections.abc import Iterator
 
-import cmk.ccc.version as cmk_version
+from cmk.ccc.version import Edition
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.http import request
 from cmk.gui.i18n import _
@@ -20,19 +20,18 @@ from cmk.gui.page_menu import (
 )
 from cmk.gui.type_defs import IconNames, StaticIcon
 from cmk.gui.utils.urls import requested_file_name
-from cmk.utils import paths
 
 
-def user_profile_page_menu(breadcrumb: Breadcrumb) -> PageMenu:
+def user_profile_page_menu(edition: Edition, breadcrumb: Breadcrumb) -> PageMenu:
     menu = make_simple_form_page_menu(
         _("Profile"), breadcrumb, form_name="profile", button_name="_save"
     )
-    menu.dropdowns.insert(1, page_menu_dropdown_user_related(requested_file_name(request)))
+    menu.dropdowns.insert(1, page_menu_dropdown_user_related(edition, requested_file_name(request)))
     return menu
 
 
 def page_menu_dropdown_user_related(
-    page_name: str, show_shortcuts: bool = True
+    edition: Edition, page_name: str, show_shortcuts: bool = True
 ) -> PageMenuDropdown:
     return PageMenuDropdown(
         name="related",
@@ -40,16 +39,16 @@ def page_menu_dropdown_user_related(
         topics=[
             PageMenuTopic(
                 title=_("User"),
-                entries=list(_page_menu_entries_related(page_name, show_shortcuts)),
+                entries=list(_page_menu_entries_related(edition, page_name, show_shortcuts)),
             ),
         ],
     )
 
 
 def _page_menu_entries_related(
-    page_name: str, show_shortcuts: bool = True
+    edition: Edition, page_name: str, show_shortcuts: bool = True
 ) -> Iterator[PageMenuEntry]:
-    is_cse_edition = cmk_version.edition(paths.omd_root) == cmk_version.Edition.CLOUD
+    is_cse_edition = edition == Edition.CLOUD
 
     must_change_password = request.get_ascii_input("reason") in ("expired", "enforced")
 

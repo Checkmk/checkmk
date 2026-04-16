@@ -19,7 +19,7 @@ from livestatus import SiteConfigurations
 
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.site import omd_site, SiteId
-from cmk.ccc.version import Edition, edition
+from cmk.ccc.version import Edition
 from cmk.gui import forms
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import active_config, Config
@@ -83,7 +83,7 @@ from cmk.gui.watolib.hosts_and_folders import folder_preserving_link
 from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
 from cmk.gui.watolib.piggyback_hub import validate_piggyback_hub_config
 from cmk.gui.watolib.utils import site_neutral_path
-from cmk.utils.paths import log_dir, omd_root, var_dir
+from cmk.utils.paths import log_dir, var_dir
 
 
 def register(
@@ -650,10 +650,7 @@ class ModeEditGlobals(ABCGlobalSettingsMode):
 
     @override
     def make_global_settings_context(self, config: Config) -> GlobalSettingsContext:
-        return make_global_settings_context(
-            omd_site(),
-            config,
-        )
+        return make_global_settings_context(self._edition, omd_site(), config)
 
 
 class DefaultModeEditGlobals(ModeEditGlobals):
@@ -685,10 +682,7 @@ class ModeEditGlobalSetting(ABCEditGlobalSettingMode):
 
     @override
     def make_global_settings_context(self, config: Config) -> GlobalSettingsContext:
-        return make_global_settings_context(
-            omd_site(),
-            config,
-        )
+        return make_global_settings_context(self._edition, omd_site(), config)
 
 
 class DefaultModeEditGlobalSetting(ModeEditGlobalSetting):
@@ -763,10 +757,12 @@ class MatchItemGeneratorSettings(ABCMatchItemGenerator):
         return True
 
 
-def make_global_settings_context(target_site_id: SiteId, config: Config) -> GlobalSettingsContext:
+def make_global_settings_context(
+    edition: Edition, target_site_id: SiteId, config: Config
+) -> GlobalSettingsContext:
     return GlobalSettingsContext(
         target_site_id=target_site_id,
-        edition_of_local_site=edition(omd_root),
+        edition_of_local_site=edition,
         site_neutral_log_dir=site_neutral_path(log_dir),
         site_neutral_var_dir=site_neutral_path(var_dir),
         configured_sites=config.sites,

@@ -10,9 +10,9 @@ from typing import Any, Literal, NewType
 
 from livestatus import SiteConfigurations
 
-import cmk.ccc.version as cmk_version
 import cmk.gui.watolib.changes as _changes
 from cmk.ccc.site import SiteId
+from cmk.ccc.version import Edition
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import active_config
 from cmk.gui.customer import customer_api, SCOPE_GLOBAL
@@ -40,7 +40,6 @@ from cmk.gui.watolib.audit_log import LogMessage
 from cmk.gui.watolib.config_domains import ConfigDomainGUI
 from cmk.gui.watolib.hosts_and_folders import folder_preserving_link, make_action_link
 from cmk.gui.watolib.mode import redirect
-from cmk.utils import paths
 
 DisplayIndex = NewType("DisplayIndex", int)
 RealIndex = NewType("RealIndex", int)
@@ -136,7 +135,7 @@ def _connections_by_gui_index(
 
 
 def render_connections_page(
-    connection_type: str, edit_mode_path: str, config_mode_path: str
+    edition: Edition, connection_type: str, edit_mode_path: str, config_mode_path: str
 ) -> None:
     customer = customer_api()
     with table_element(limit=active_config.table_row_limit) as table:
@@ -190,7 +189,7 @@ def render_connections_page(
             table.cell(_("ID"), connection_id)
             table.cell(_("Name"), connection.get("name", connection_id))
 
-            if cmk_version.edition(paths.omd_root) is cmk_version.Edition.ULTIMATEMT:
+            if edition is Edition.ULTIMATEMT:
                 table.cell(_("Customer"), customer.get_customer_name(connection))
 
             table.cell(_("Description"))
@@ -218,9 +217,9 @@ def add_change(*, action_name: str, text: LogMessage, sites: list[SiteId], use_g
 
 
 def get_affected_sites(
-    site_configs: SiteConfigurations, connection: ConfigurableUserConnectionSpec
+    edition: Edition, site_configs: SiteConfigurations, connection: ConfigurableUserConnectionSpec
 ) -> list[SiteId]:
-    if cmk_version.edition(paths.omd_root) is cmk_version.Edition.ULTIMATEMT:
+    if edition is Edition.ULTIMATEMT:
         # TODO CMK-14203
         _customer_api = customer_api()
         customer: str | None = connection.get("customer", SCOPE_GLOBAL)
@@ -233,6 +232,7 @@ def get_affected_sites(
 
 def _delete_connection(
     *,
+    edition: Edition,
     index: int,
     connection_type: Literal["ldap", "saml2"],
     custom_config_dirs: Iterable[Path],
@@ -254,7 +254,7 @@ def _delete_connection(
         cfg=connections,
         connection_id=connection_id,
         connection_type=connection_type,
-        sites=get_affected_sites(site_configs, connection),
+        sites=get_affected_sites(edition, site_configs, connection),
         domains=[ConfigDomainGUI()],
         pprint_value=active_config.wato_pprint_config,
         use_git=use_git,
@@ -268,6 +268,7 @@ def _remove_custom_files(cert_dir: Path) -> None:
 
 
 def _move_connection(
+    edition: Edition,
     from_index: int,
     to_index: int,
     connection_type: Literal["ldap", "saml2"],
@@ -286,7 +287,7 @@ def _move_connection(
         connection_id=connection["id"],
         connection_type=connection_type,
         to_index=to_index,
-        sites=get_affected_sites(site_configs, connection),
+        sites=get_affected_sites(edition, site_configs, connection),
         domains=[ConfigDomainGUI()],
         pprint_value=active_config.wato_pprint_config,
         use_git=use_git,
@@ -307,6 +308,7 @@ def _gui_index_to_real_index(
 
 
 def connection_actions(
+    edition: Edition,
     config_mode_url: str,
     connection_type: Literal["ldap", "saml2"],
     custom_config_dirs: Iterable[Path],
@@ -319,6 +321,7 @@ def connection_actions(
 
     if request.has_var("_delete"):
         _delete_connection(
+            edition=edition,
             index=request.get_integer_input_mandatory("_delete"),
             connection_type=connection_type,
             custom_config_dirs=custom_config_dirs,
@@ -328,6 +331,7 @@ def connection_actions(
 
     elif request.has_var("_move"):
         _move_connection(
+            edition,
             from_index=request.get_integer_input_mandatory("_move"),
             to_index=_gui_index_to_real_index(
                 request.get_ascii_input_mandatory("_connection_type"),

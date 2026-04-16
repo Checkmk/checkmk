@@ -8,6 +8,7 @@ from collections.abc import Sequence
 from datetime import datetime
 from typing import override
 
+from cmk.ccc.version import Edition
 from cmk.crypto.password import Password, PasswordPolicy
 from cmk.gui import forms, userdb
 from cmk.gui.breadcrumb import make_simple_page_breadcrumb
@@ -47,11 +48,14 @@ from .page_menu import user_profile_page_menu
 from .verify_requirements import verify_requirements
 
 
-def register(page_registry: PageRegistry) -> None:
-    page_registry.register(PageEndpoint("user_change_pw", UserChangePasswordPage()))
+def register(edition: Edition, page_registry: PageRegistry) -> None:
+    page_registry.register(PageEndpoint("user_change_pw", UserChangePasswordPage(edition)))
 
 
 class UserChangePasswordPage(Page):
+    def __init__(self, edition: Edition) -> None:
+        self._edition = edition
+
     def _page_title(self) -> str:
         return _("Change password")
 
@@ -190,7 +194,7 @@ class UserChangePasswordPage(Page):
             html,
             title,
             breadcrumb,
-            user_profile_page_menu(breadcrumb),
+            user_profile_page_menu(self._edition, breadcrumb),
             debug=ctx.config.debug,
             lang=user.language,
             inject_js_profiling_code=ctx.config.inject_js_profiling_code,

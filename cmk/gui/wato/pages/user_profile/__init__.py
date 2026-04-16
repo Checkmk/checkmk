@@ -5,6 +5,7 @@
 
 from collections.abc import Callable
 
+from cmk.ccc.version import Edition
 from cmk.gui.background_job.job import BackgroundJobRegistry
 from cmk.gui.main_menu import MainMenuRegistry
 from cmk.gui.pages import PageRegistry
@@ -24,14 +25,15 @@ from . import (
 
 
 def register(
+    edition: Edition,
     page_registry: PageRegistry,
     main_menu_registry: MainMenuRegistry,
     user_menu_topics: Callable[[UserPermissions], list[NavItemTopic]],
     job_registry: BackgroundJobRegistry,
 ) -> None:
     main_menu.register(page_registry, main_menu_registry, user_menu_topics)
-    two_factor.register(page_registry)
-    edit_profile.register(page_registry)
-    change_password.register(page_registry)
+    two_factor.register(edition, page_registry)
+    edit_profile.register(edition, page_registry)
+    change_password.register(edition, page_registry)
     replicate.register(page_registry)
     profile_replication.register(job_registry)

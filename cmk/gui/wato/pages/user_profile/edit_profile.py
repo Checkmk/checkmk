@@ -10,6 +10,7 @@ from collections.abc import Iterable, Sequence
 from datetime import datetime
 from typing import Any, override
 
+from cmk.ccc.version import Edition
 from cmk.gui import forms, userdb
 from cmk.gui.breadcrumb import make_simple_page_breadcrumb
 from cmk.gui.config import Config
@@ -43,11 +44,14 @@ def _get_input(valuespec: ValueSpec, varprefix: str) -> Any:
     return value
 
 
-def register(page_registry: PageRegistry) -> None:
-    page_registry.register(PageEndpoint("user_profile", UserProfile()))
+def register(edition: Edition, page_registry: PageRegistry) -> None:
+    page_registry.register(PageEndpoint("user_profile", UserProfile(edition)))
 
 
 class UserProfile(Page):
+    def __init__(self, edition: Edition) -> None:
+        self._edition = edition
+
     def _page_title(self) -> str:
         return _("Edit profile")
 
@@ -126,7 +130,7 @@ class UserProfile(Page):
             html,
             title,
             breadcrumb,
-            user_profile_page_menu(breadcrumb),
+            user_profile_page_menu(self._edition, breadcrumb),
             debug=ctx.config.debug,
             lang=user.language,
             inject_js_profiling_code=ctx.config.inject_js_profiling_code,

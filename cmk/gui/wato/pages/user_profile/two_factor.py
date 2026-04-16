@@ -39,6 +39,7 @@ from livestatus import SiteConfigurations
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.site import omd_site
 from cmk.ccc.user import UserId
+from cmk.ccc.version import Edition
 from cmk.crypto.password import Password
 from cmk.crypto.password_hashing import PasswordHash
 from cmk.crypto.totp import TOTP
@@ -268,9 +269,9 @@ def _save_credentials_all_sites(
 overview_page_name: str = "user_two_factor_overview"
 
 
-def register(page_registry: PageRegistry) -> None:
-    page_registry.register(PageEndpoint(overview_page_name, UserTwoFactorOverview()))
-    page_registry.register(PageEndpoint("user_two_factor_enforce", UserTwoFactorEnforce()))
+def register(edition: Edition, page_registry: PageRegistry) -> None:
+    page_registry.register(PageEndpoint(overview_page_name, UserTwoFactorOverview(edition)))
+    page_registry.register(PageEndpoint("user_two_factor_enforce", UserTwoFactorEnforce(edition)))
     page_registry.register(PageEndpoint("user_two_factor_edit_credential", EditCredentialAlias()))
     page_registry.register(
         PageEndpoint("user_webauthn_register_begin", UserWebAuthnRegisterBegin())
@@ -287,6 +288,9 @@ def register(page_registry: PageRegistry) -> None:
 
 
 class UserTwoFactorOverview(Page):
+    def __init__(self, edition: Edition) -> None:
+        self._edition = edition
+
     def _page_title(self) -> str:
         return _("Two-factor authentication")
 
@@ -450,7 +454,9 @@ class UserTwoFactorOverview(Page):
                         ),
                     ],
                 ),
-                page_menu_dropdown_user_related(page_name=overview_page_name, show_shortcuts=False),
+                page_menu_dropdown_user_related(
+                    self._edition, page_name=overview_page_name, show_shortcuts=False
+                ),
             ],
             breadcrumb=breadcrumb,
         )
@@ -673,6 +679,9 @@ class UserTwoFactorOverview(Page):
 
 
 class UserTwoFactorEnforce(Page):
+    def __init__(self, edition: Edition) -> None:
+        self._edition = edition
+
     def _page_title(self) -> str:
         return _("Two-factor authentication")
 
@@ -720,7 +729,9 @@ class UserTwoFactorEnforce(Page):
                         ),
                     ],
                 ),
-                page_menu_dropdown_user_related(page_name=overview_page_name, show_shortcuts=False),
+                page_menu_dropdown_user_related(
+                    self._edition, page_name=overview_page_name, show_shortcuts=False
+                ),
             ],
             breadcrumb=breadcrumb,
         )

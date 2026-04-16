@@ -277,8 +277,10 @@ def register(edition: Edition) -> None:
     notification_parameter_registry.register(
         NotificationParameter(
             ident="mail",
-            spec=lambda: convert_dictionary_formspec_to_valuespec(mail.form_spec_mail),
-            form_spec=mail.form_spec_mail,
+            spec=lambda: convert_dictionary_formspec_to_valuespec(
+                lambda: mail.form_spec_mail(edition)
+            ),
+            form_spec=lambda: mail.form_spec_mail(edition),
         )
     )
     register_pages()

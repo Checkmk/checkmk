@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.ccc.version import Edition
 from cmk.gui.rule_specs.legacy_converter import convert_dictionary_formspec_to_valuespec
 from cmk.gui.watolib.notification_parameter import (
     NotificationParameter,
@@ -23,7 +24,10 @@ from . import _spectrum as spectrum
 from . import _victorops as victorops
 
 
-def register(notification_parameter_registry: NotificationParameterRegistry) -> None:
+def register(
+    edition: Edition,
+    notification_parameter_registry: NotificationParameterRegistry,
+) -> None:
     notification_parameter_registry.register(
         NotificationParameter(
             ident="slack",
@@ -62,8 +66,10 @@ def register(notification_parameter_registry: NotificationParameterRegistry) -> 
     notification_parameter_registry.register(
         NotificationParameter(
             ident="asciimail",
-            spec=lambda: convert_dictionary_formspec_to_valuespec(mail.form_spec_asciimail),
-            form_spec=mail.form_spec_asciimail,
+            spec=lambda: convert_dictionary_formspec_to_valuespec(
+                lambda: mail.form_spec_asciimail(edition)
+            ),
+            form_spec=lambda: mail.form_spec_asciimail(edition),
         )
     )
     notification_parameter_registry.register(

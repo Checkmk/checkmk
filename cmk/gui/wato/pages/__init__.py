@@ -80,7 +80,7 @@ def register(
     activate_changes.register(page_registry, mode_registry, automation_command_registry)
     analyze_configuration.register(mode_registry)
     audit_log.register(mode_registry)
-    automation.register(page_registry)
+    automation.register(edition, page_registry)
     bulk_discovery.register(mode_registry)
     bulk_edit.register(mode_registry)
     bulk_import.register(mode_registry)
@@ -98,6 +98,7 @@ def register(
     hosts.register(mode_registry, page_registry)
     not_implemented.register(mode_registry)
     notifications.register(
+        edition,
         mode_registry,
         quick_setup_registry,
         match_item_generator_registry,
@@ -117,7 +118,13 @@ def register(
     tags.register(mode_registry)
     timeperiods.register(mode_registry)
     user_migrate.register(mode_registry)
-    user_profile.register(page_registry, main_menu_registry, user_menu_topics, job_registry)
+    user_profile.register(
+        edition,
+        page_registry,
+        main_menu_registry,
+        user_menu_topics,
+        job_registry,
+    )
     users.register(mode_registry)
     certificate_overview.register(mode_registry)
     certificate_rotation.register(automation_command_registry)

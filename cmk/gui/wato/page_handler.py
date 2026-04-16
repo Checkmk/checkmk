@@ -3,11 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="type-arg"
-
-import cmk.ccc.version as cmk_version
 from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.version import Edition
 from cmk.gui.breadcrumb import make_main_menu_breadcrumb
 from cmk.gui.config import Config
 from cmk.gui.customer import customer_api
@@ -25,7 +23,6 @@ from cmk.gui.watolib.activate_changes import update_config_generation
 from cmk.gui.watolib.git import do_git_commit
 from cmk.gui.watolib.mode import mode_registry, WatoMode
 from cmk.gui.watolib.sidebar_reload import is_sidebar_reload_needed
-from cmk.utils import paths
 from cmk.utils.paths import configuration_lockfile
 
 from .pages._html_elements import initialize_wato_html_head, wato_html_footer, wato_html_head
@@ -56,7 +53,7 @@ from .pages.not_implemented import ModeNotImplemented
 #   `----------------------------------------------------------------------'
 
 
-def page_handler(ctx: PageContext) -> None:
+def page_handler(edition: Edition, ctx: PageContext) -> None:
     initialize_wato_html_head()
 
     if not ctx.config.wato_enabled:
@@ -70,9 +67,8 @@ def page_handler(ctx: PageContext) -> None:
     current_mode = request.get_str_input_mandatory("mode")
     # Backup has to be accessible for remote sites, otherwise the user has no
     # chance to configure a backup for remote sites.
-    edition = cmk_version.edition(paths.omd_root)
     if (
-        edition is cmk_version.Edition.ULTIMATEMT
+        edition is Edition.ULTIMATEMT
         and not customer_api().is_provider(ctx.config.raw.get("current_customer", "provider"))
         and not current_mode.startswith(("backup", "edit_backup"))
     ):
@@ -94,7 +90,7 @@ def page_handler(ctx: PageContext) -> None:
         _wato_page_handler(ctx.config, current_mode, mode_instance)
 
 
-def _wato_page_handler(config: Config, current_mode: str, mode: WatoMode) -> None:
+def _wato_page_handler(config: Config, current_mode: str, mode: WatoMode[object]) -> None:
     # Do actions (might switch mode)
     if transactions.is_transaction():
         try:

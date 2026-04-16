@@ -13,11 +13,11 @@ from typing import Any, override
 
 from pydantic import BaseModel
 
-import cmk.ccc.version as cmk_version
 import cmk.utils.paths
 from cmk.automations.results import CreateDiagnosticsDumpResult
 from cmk.ccc.archive import CheckmkTarArchive
 from cmk.ccc.site import omd_site, SiteId
+from cmk.ccc.version import Edition
 from cmk.diagnostics import (
     CheckmkFileInfo,
     CheckmkFileSensitivity,
@@ -517,7 +517,7 @@ class ModeDiagnostics(WatoMode[object]):
             ),
         ]
 
-        if cmk_version.edition(cmk.utils.paths.omd_root) is not cmk_version.Edition.COMMUNITY:
+        if self._edition is not Edition.COMMUNITY:
             elements.append(
                 (
                     OPT_PERFORMANCE_GRAPHS,
@@ -592,7 +592,7 @@ class ModeDiagnostics(WatoMode[object]):
             ),
         ]
 
-        if cmk_version.edition(cmk.utils.paths.omd_root) is not cmk_version.Edition.COMMUNITY:
+        if self._edition is not Edition.COMMUNITY:
             elements.append(
                 (
                     OPT_COMP_CMC,

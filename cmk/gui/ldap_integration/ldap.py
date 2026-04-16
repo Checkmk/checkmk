@@ -719,6 +719,7 @@ class ModeLDAPConfig(WatoMode):
     @override
     def action(self, config: Config) -> ActionResult:
         return connection_actions(
+            self._edition,
             config_mode_url=self.mode_url(),
             connection_type=self.type,
             custom_config_dirs=(),
@@ -729,6 +730,7 @@ class ModeLDAPConfig(WatoMode):
     @override
     def page(self, config: Config) -> None:
         render_connections_page(
+            edition=self._edition,
             connection_type=self.type,
             edit_mode_path="edit_ldap_connection",
             config_mode_path="ldap_config",
@@ -853,7 +855,7 @@ class ModeEditLDAPConnection(WatoMode):
                 user_id=user.id,
                 cfg=connection_list,
                 connection_type="ldap",
-                sites=get_affected_sites(config.sites, connection_cfg),
+                sites=get_affected_sites(self._edition, config.sites, connection_cfg),
                 domains=[ConfigDomainGUI()],
                 pprint_value=config.wato_use_git,
                 use_git=config.wato_use_git,
@@ -868,7 +870,7 @@ class ModeEditLDAPConnection(WatoMode):
                 cfg=connection_list,
                 connection_id=connection_cfg["id"],
                 connection_type="ldap",
-                sites=get_affected_sites(config.sites, connection_cfg),
+                sites=get_affected_sites(self._edition, config.sites, connection_cfg),
                 domains=[ConfigDomainGUI()],
                 pprint_value=config.wato_use_git,
                 use_git=config.wato_use_git,

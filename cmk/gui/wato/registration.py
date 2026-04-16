@@ -106,7 +106,7 @@ def register(
     icon_registry.register(DownloadSnmpWalkIcon)
     icon_registry.register(WatoIcon)
 
-    page_registry.register(PageEndpoint("wato", page_handler))
+    page_registry.register(PageEndpoint("wato", lambda ctx: page_handler(edition, ctx)))
     page_registry.register(PageEndpoint("ajax_popup_host_action_menu", ajax_popup_host_action_menu))
     page_registry.register(
         PageEndpoint(
@@ -128,8 +128,9 @@ def register(
     )
     _permissions.register(permission_section_registry, permission_registry)
     _main_module_topics.register(main_module_topic_registry)
-    _main_modules.register(main_module_registry)
+    _main_modules.register(edition, main_module_registry)
     _check_mk_configuration.register(
+        edition,
         config_variable_registry,
         config_variable_group_registry,
         contact_group_usage_finder_registry,
@@ -144,6 +145,6 @@ def register(
     _tracing.register(config_variable_registry)
     _snapins.register(snapin_registry, match_item_generator_registry, main_menu_registry)
     _notification_settings.register(config_variable_registry)
-    _notification_parameter_registration.register(notification_parameter_registry)
+    _notification_parameter_registration.register(edition, notification_parameter_registry)
     snapin_registry.register(VirtualHostTree)
     piggyback_hub.register(config_variable_registry)

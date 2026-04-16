@@ -29,6 +29,7 @@ from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.site import omd_site
 from cmk.ccc.user import UserId
+from cmk.ccc.version import Edition
 from cmk.crypto.password import Password
 from cmk.gui import userdb
 from cmk.gui.config import active_config, Config
@@ -58,9 +59,9 @@ from cmk.utils.paths import configuration_lockfile
 tracer = trace.get_tracer()
 
 
-def register(page_registry: PageRegistry) -> None:
-    page_registry.register(PageEndpoint("automation_login", PageAutomationLogin()))
-    page_registry.register(PageEndpoint("noauth:automation", PageAutomation()))
+def register(edition: Edition, page_registry: PageRegistry) -> None:
+    page_registry.register(PageEndpoint("automation_login", PageAutomationLogin(edition)))
+    page_registry.register(PageEndpoint("noauth:automation", PageAutomation(edition)))
 
 
 def _store_central_site_info() -> None:
@@ -88,6 +89,9 @@ class PageAutomationLogin(AjaxPage):
     done be exchanging a login secret. If such a secret is not yet present it
     is created on the fly."""
 
+    def __init__(self, edition: Edition) -> None:
+        self._edition = edition
+
     # TODO: Better use AjaxPage.handle_page() for standard AJAX call error handling. This
     # would need larger refactoring of the generic html.popup_trigger() mechanism.
     @override
@@ -101,7 +105,7 @@ class PageAutomationLogin(AjaxPage):
             raise MKAuthException(_("This account has no permission for automation."))
 
         response.set_content_type("text/plain")
-        _set_version_headers()
+        _set_version_headers(self._edition)
 
         # Parameter was added with 1.5.0p10
         if not request.has_var("_version"):
@@ -115,7 +119,7 @@ class PageAutomationLogin(AjaxPage):
             repr(
                 {
                     "version": cmk_version.__version__,
-                    "edition_short": cmk_version.edition(cmk.utils.paths.omd_root).short,
+                    "edition_short": self._edition.short,
                     "login_secret": DistributedSetupSecret().read_or_create().raw,
                 }
             )
@@ -130,9 +134,12 @@ class PageAutomation(AjaxPage):
     login secret that has previously been exchanged during "site login" (see above).
     """
 
+    def __init__(self, edition: Edition) -> None:
+        self._edition = edition
+
     def _handle_http_request(self) -> None:
         self._authenticate()
-        _set_version_headers()
+        _set_version_headers(self._edition)
         self._command = request.get_str_input_mandatory("command")
         # licensing information has to be distributed before checking for compatibility
         # to deal with remote sites in license state "free"
@@ -308,13 +315,13 @@ class PageAutomation(AjaxPage):
             response.set_data(_("Internal automation error: %s\n%s") % (e, traceback.format_exc()))
 
 
-def _set_version_headers() -> None:
+def _set_version_headers(edition: Edition) -> None:
     """Add the x-checkmk-version, x-checkmk-edition headers to the HTTP response
 
     Has been added with 2.0.0p13.
     """
     response.headers["x-checkmk-version"] = cmk_version.__version__
-    response.headers["x-checkmk-edition"] = cmk_version.edition(cmk.utils.paths.omd_root).short
+    response.headers["x-checkmk-edition"] = edition.short
 
 
 def _get_login_secret(create_on_demand: bool = False) -> str | None:

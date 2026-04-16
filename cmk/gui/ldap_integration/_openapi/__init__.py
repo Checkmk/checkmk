@@ -23,6 +23,9 @@ Documentation: https://docs.checkmk.com/latest/en/ldap.html.
 from collections.abc import Mapping
 from typing import Any
 
+import cmk.utils.paths
+from cmk.ccc.site import SiteId
+from cmk.ccc.version import edition
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.http import Response
@@ -57,7 +60,11 @@ from cmk.gui.openapi.restful_objects.constructors import (
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.openapi.restful_objects.type_defs import DomainObject
 from cmk.gui.openapi.utils import ProblemException, serve_json
-from cmk.gui.user_connection_config_types import LDAPUserConnectionConfig, SAMLUserConnectionConfig
+from cmk.gui.user_connection_config_types import (
+    ConfigurableUserConnectionSpec,
+    LDAPUserConnectionConfig,
+    SAMLUserConnectionConfig,
+)
 from cmk.gui.userdb import get_ldap_connections, UserConnectionConfigFile
 from cmk.gui.utils import permission_verification as permissions
 from cmk.gui.wato.pages.userdb_common import get_affected_sites
@@ -160,13 +167,17 @@ def delete_ldap_connection(params: Mapping[str, Any]) -> Response:
             cfg=updated_connections,
             connection_id=ldap_id,
             connection_type="ldap",
-            sites=get_affected_sites(active_config.sites, deleted_connection),
+            sites=_get_affected_sites(deleted_connection),
             domains=[ConfigDomainGUI()],
             pprint_value=active_config.wato_pprint_config,
             use_git=active_config.wato_use_git,
         )
 
     return Response(status=204)
+
+
+def _get_affected_sites(connection: ConfigurableUserConnectionSpec) -> list[SiteId]:
+    return get_affected_sites(edition(cmk.utils.paths.omd_root), active_config.sites, connection)
 
 
 @Endpoint(
@@ -195,7 +206,7 @@ def create_ldap_connection(params: Mapping[str, Any]) -> Response:
         user_id=user.id,
         cfg=all_connections,
         connection_type="ldap",
-        sites=get_affected_sites(active_config.sites, connection.to_mk_format()),
+        sites=_get_affected_sites(connection.to_mk_format()),
         domains=[ConfigDomainGUI()],
         pprint_value=active_config.wato_pprint_config,
         use_git=active_config.wato_use_git,
@@ -259,7 +270,7 @@ def edit_ldap_connection(params: Mapping[str, Any]) -> Response:
             cfg=modified_connections,
             connection_id=ldap_id,
             connection_type="ldap",
-            sites=get_affected_sites(active_config.sites, updated_connection),
+            sites=_get_affected_sites(updated_connection),
             domains=[ConfigDomainGUI()],
             pprint_value=active_config.wato_pprint_config,
             use_git=active_config.wato_use_git,

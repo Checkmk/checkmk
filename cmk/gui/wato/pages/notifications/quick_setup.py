@@ -8,10 +8,9 @@ from typing import assert_never, cast, Final, get_args, Literal
 
 from livestatus import SiteConfiguration
 
-import cmk.utils.paths
 from cmk.ccc.site import SiteId
 from cmk.ccc.user import UserId
-from cmk.ccc.version import Edition, edition
+from cmk.ccc.version import Edition
 from cmk.gui.config import active_config
 from cmk.gui.form_specs.unstable import (
     Autocompleter,
@@ -1460,7 +1459,7 @@ def custom_macros_cannot_be_empty(custom_macros: Sequence[tuple[str, str]]) -> N
             raise ValidationError(Message("A regular expression is required"))
 
 
-def recipient() -> QuickSetupStage:
+def recipient(edition: Edition) -> QuickSetupStage:
     def _components() -> Sequence[Widget]:
         recipient_elements = [
             UniqueCascadingSingleChoiceElement(
@@ -1497,7 +1496,7 @@ def recipient() -> QuickSetupStage:
             ),
         ]
 
-        if edition(cmk.utils.paths.omd_root) != Edition.CLOUD:
+        if edition != Edition.CLOUD:
             recipient_elements.append(
                 UniqueCascadingSingleChoiceElement(
                     parameter_form=CascadingSingleChoiceElementExtended(
@@ -2030,8 +2029,8 @@ def _save_or_edit(
     return result_msg
 
 
-def register(quick_setup_registry: QuickSetupRegistry) -> None:
-    quick_setup_registry.register(quick_setup_notifications)
+def register(edition: Edition, quick_setup_registry: QuickSetupRegistry) -> None:
+    quick_setup_registry.register(quick_setup_notifications(edition))
 
 
 def _save(all_stages_form_data: ParsedFormData, *, use_git: bool, pprint_value: bool) -> None:
@@ -2075,36 +2074,37 @@ def load_notifications(object_id: str) -> ParsedFormData:
     return {}
 
 
-quick_setup_notifications = QuickSetup(
-    title=_("Notification rule"),
-    id=QuickSetupId("notification_rule"),
-    stages=[
-        triggering_events,
-        filter_for_hosts_and_services,
-        notification_method,
-        recipient,
-        sending_conditions,
-        general_properties,
-    ],
-    actions=[
-        QuickSetupAction(
-            id=ActionId("apply_and_test"),
-            label=_("Apply & test notification rule"),
-            action=save_and_test_action,
-        ),
-        QuickSetupAction(
-            id=ActionId("apply_and_create_new"),
-            label=_("Apply & create another rule"),
-            icon=QuickSetupActionButtonIcon(name="checkmark-plus"),
-            action=save_and_new_action,
-            modes=[QuickSetupActionMode.SAVE],
-        ),
-        QuickSetupAction(
-            id=ActionId("apply_and_view"),
-            label=_("Apply"),
-            action=save_and_view_action,
-            modes=[QuickSetupActionMode.EDIT],
-        ),
-    ],
-    load_data=load_notifications,
-)
+def quick_setup_notifications(edition: Edition) -> QuickSetup:
+    return QuickSetup(
+        title=_("Notification rule"),
+        id=QuickSetupId("notification_rule"),
+        stages=[
+            triggering_events,
+            filter_for_hosts_and_services,
+            notification_method,
+            lambda: recipient(edition),
+            sending_conditions,
+            general_properties,
+        ],
+        actions=[
+            QuickSetupAction(
+                id=ActionId("apply_and_test"),
+                label=_("Apply & test notification rule"),
+                action=save_and_test_action,
+            ),
+            QuickSetupAction(
+                id=ActionId("apply_and_create_new"),
+                label=_("Apply & create another rule"),
+                icon=QuickSetupActionButtonIcon(name="checkmark-plus"),
+                action=save_and_new_action,
+                modes=[QuickSetupActionMode.SAVE],
+            ),
+            QuickSetupAction(
+                id=ActionId("apply_and_view"),
+                label=_("Apply"),
+                action=save_and_view_action,
+                modes=[QuickSetupActionMode.EDIT],
+            ),
+        ],
+        load_data=load_notifications,
+    )

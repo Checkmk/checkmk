@@ -22,7 +22,7 @@ import cmk.gui.watolib.changes as _changes
 from cmk.ccc.archive import CheckmkTarArchive
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
-from cmk.ccc.version import Edition, edition, edition_has_enforced_licensing
+from cmk.ccc.version import Edition, edition_has_enforced_licensing
 from cmk.gui import forms
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import active_config, Config
@@ -543,7 +543,7 @@ class ModeActivateChanges(WatoMode):
         return True
 
     def _license_allows_activation(self) -> bool:
-        if edition(paths.omd_root) in (Edition.ULTIMATEMT, Edition.ULTIMATE):
+        if self._edition in (Edition.ULTIMATEMT, Edition.ULTIMATE):
             # TODO: move to CCE handler to avoid is_ultimate_edition check
             license_usage_report_valid = (
                 self._license_usage_report_validity
@@ -698,7 +698,7 @@ class ModeActivateChanges(WatoMode):
             )
             return
 
-        if edition_has_enforced_licensing(edition(paths.omd_root)):
+        if edition_has_enforced_licensing(self._edition):
             if (
                 self._license_usage_report_validity
                 == LicenseUsageReportValidity.older_than_five_days

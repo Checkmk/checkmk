@@ -10,7 +10,7 @@
 import time
 from collections.abc import Iterable, Sequence
 
-import cmk.ccc.version as cmk_version
+from cmk.ccc.version import Edition
 from cmk.gui.breadcrumb import BreadcrumbItem
 from cmk.gui.http import request
 from cmk.gui.i18n import _
@@ -18,7 +18,6 @@ from cmk.gui.type_defs import DynamicIcon, IconNames, StaticIcon
 from cmk.gui.utils.loading_transition import LoadingTransition
 from cmk.gui.utils.urls import makeuri_contextless, makeuri_contextless_rulespec_group
 from cmk.gui.watolib.main_menu import ABCMainModule, MainModuleRegistry, MainModuleTopic
-from cmk.utils import paths
 
 from ._main_module_topics import (
     MainModuleTopicAgents,
@@ -31,7 +30,7 @@ from ._main_module_topics import (
 )
 
 
-def register(main_module_registry: MainModuleRegistry) -> None:
+def register(edition: Edition, main_module_registry: MainModuleRegistry) -> None:
     main_module_registry.register(MainModuleFolder)
     main_module_registry.register(MainModuleTags)
     main_module_registry.register(MainModuleGlobalSettings)
@@ -47,7 +46,7 @@ def register(main_module_registry: MainModuleRegistry) -> None:
     main_module_registry.register(MainModuleHostCustomAttributes)
     main_module_registry.register(MainModuleServiceGroups)
     main_module_registry.register(MainModuleUsers)
-    if cmk_version.edition(paths.omd_root) is not cmk_version.Edition.CLOUD:  # disabled in CSE
+    if edition is not Edition.CLOUD:  # disabled in CSE
         main_module_registry.register(MainModuleRoles)
         main_module_registry.register(MainModuleLDAP)
         main_module_registry.register(MainModuleSites)
@@ -74,7 +73,7 @@ def register(main_module_registry: MainModuleRegistry) -> None:
 
     # Register the built-in agent download page on the top level of Setup only when the Agent Bakery
     # does not exist (e.g. when using Checkmk Community)
-    if cmk_version.edition(paths.omd_root) in (cmk_version.Edition.COMMUNITY,):
+    if edition in (Edition.COMMUNITY,):
         main_module_registry.register(MainModuleAgentsWindows)
         main_module_registry.register(MainModuleAgentsLinux)
 

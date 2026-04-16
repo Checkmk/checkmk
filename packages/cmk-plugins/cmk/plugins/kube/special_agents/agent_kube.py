@@ -9,7 +9,7 @@
 Checkmk special agent for monitoring Kubernetes clusters.
 This agent is required for monitoring data provided by the Kubernetes API and the Checkmk collectors,
 which can optionally be deployed within a cluster.
-The agent requires Kubernetes version v1.26 or higher.
+The agent requires Kubernetes version v1.30 or higher.
 Moreover, read access to the Kubernetes API endpoints monitored by Checkmk must be provided.
 """
 

@@ -1386,7 +1386,7 @@ py_library(
 
 py_library(
     name = "availability",
-    srcs = ["availability.py"],
+    srcs = glob(["availability/**/*.py"]),
     imports = ["../.."],
     visibility = [
         "//cmk:__subpackages__",
@@ -1603,7 +1603,7 @@ py_library(
             "user_sites.py",
             "validate.py",
             "validation_utils.py",
-            "availability.py",
+            "availability/**/*.py",
             "data_source/**/*.py",
             "exporter.py",
             "painter/**/*.py",

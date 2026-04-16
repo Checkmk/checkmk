@@ -39,9 +39,7 @@ def _core_api() -> CoreAPI:
 
 
 CALL_API = "cmk.plugins.kube.api_server.send_request"
-SUPPORTED_VERSION_STR = (
-    "Supported versions are v1.26, v1.27, v1.28, v1.29, v1.30, v1.31, v1.32, v1.33."
-)
+SUPPORTED_VERSION_STR = "Supported versions are v1.30, v1.31, v1.32, v1.33."
 
 
 def test_raw_api_get_healthz_ok(core_api: CoreAPI) -> None:
@@ -303,11 +301,11 @@ def test_decompose_git_version(
             ],
         ),
         (
-            api.KubernetesVersion(git_version=api.GitVersion("v1.26.2"), major=1, minor=26),
+            api.KubernetesVersion(git_version=api.GitVersion("v1.30.2"), major=1, minor=30),
             [],
         ),
         (
-            api.KubernetesVersion(git_version=api.GitVersion("v1.27.0"), major=1, minor=27),
+            api.KubernetesVersion(git_version=api.GitVersion("v1.31.0"), major=1, minor=31),
             [],
         ),
         (

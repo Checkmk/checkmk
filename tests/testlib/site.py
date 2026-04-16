@@ -860,8 +860,13 @@ class Site:
             raise excp
         return Path(stdout.strip())
 
-    def file_exists(self, rel_path: str | Path) -> bool:
-        p = self.run(["test", "-e", self.path(rel_path).as_posix()], check=False)
+    def file_exists(self, rel_path: str | Path, strict: bool = False) -> bool:
+        """Check whether file exists within the site.
+
+        `strict` can be used to validate files with non-zero sizes.
+        """
+        option = "-s" if strict else "-e"
+        p = self.run(["test", option, self.path(rel_path).as_posix()], check=False)
         return p.returncode == 0
 
     def is_file(self, rel_path: str | Path) -> bool:

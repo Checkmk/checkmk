@@ -22,6 +22,7 @@ from tests.integration.openapi.rules.helpers.rule_configs import (
     DEFAULT_LEVELS,
     DEFAULT_PERIOD,
 )
+from tests.testlib.common.utils import wait_until
 from tests.testlib.common.utils2 import is_cleanup_enabled
 from tests.testlib.site import Site
 
@@ -83,6 +84,7 @@ def create_and_verify_rule_with_levels(
             "comment": comment,
         },
     )
+    site.openapi.changes.activate_and_wait_for_completion()
     logger.info(f"Created '{rule_type}' rule with ID: {rule_id}")
     # Basic validation
     assert rule_id is not None, "Rule ID should not be None"
@@ -144,7 +146,25 @@ def managed_rule_with_levels(
     try:
         yield rule_id
     finally:
+        hosts_pkl_exists(site)
         site.openapi.rules.delete(rule_id)
+        site.openapi.changes.activate_and_wait_for_completion()
+
+
+def hosts_pkl_exists(site: Site) -> None:
+    """CMK-33417: validate populated 'hosts.pkl' files.
+
+    Crash report with 'KeyError: all hosts' is generated, when a rule assigned to a host is deleted.
+    This leads to failing test teardown.
+    """
+
+    def _pkl_exists() -> bool:
+        folder_pkl = f"etc/check_mk/conf.d/wato/{FOLDER_PATH}/hosts.pkl"
+        main_pkl = "etc/check_mk/conf.d/wato/hosts.pkl"
+        # files exist with a non-zero size.
+        return site.file_exists(folder_pkl, strict=True) and site.file_exists(main_pkl, strict=True)
+
+    wait_until(_pkl_exists, timeout=10, condition_name="Check for 'hosts.pkl'")
 
 
 @contextmanager

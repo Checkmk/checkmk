@@ -204,6 +204,8 @@ def test_perl_rrds_links_against_omd_rrd_so(site: Site) -> None:
     assert len(linked_rrd_libs) == 1, (
         f"RRDs.so should link to exactly one librrd but ldd returned: {linked_rrd_libs}"
     )
-    assert linked_rrd_libs[0].path == Path(site.root) / "lib/librrd.so.8", (
+    rrd_path = linked_rrd_libs[0].path
+    assert rrd_path is not None, "librrd should be found by ldd"
+    assert Path(os.path.normpath(rrd_path)) == Path(site.root) / "lib/librrd.so.8", (
         "RRDs.so should link against a librrd which is shipped with omd."
     )

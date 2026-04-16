@@ -325,6 +325,13 @@ class ModeParentScan(WatoMode):
         html.open_tr()
         html.open_td()
         html.write_text(_("Number of PING probes") + ":")
+        html.close_td()
+        html.open_td()
+        html.text_input("ping_probes", str(self._settings.ping_probes), size=2, cssclass="number")
+        html.close_td()
+        html.close_tr()
+        html.close_table()
+
         html.help(
             _(
                 "After a gateway has been found, Checkmk checks if it is reachable "
@@ -333,12 +340,6 @@ class ModeParentScan(WatoMode):
                 "the number of PING probes to 0."
             )
         )
-        html.close_td()
-        html.open_td()
-        html.text_input("ping_probes", str(self._settings.ping_probes), size=2, cssclass="number")
-        html.close_td()
-        html.close_tr()
-        html.close_table()
 
         # Configuring parent
         forms.section(_("Configuration"))

@@ -490,6 +490,7 @@ py_wheel(
         "//cmk/gui/htmllib:tag_rendering",
         "//cmk/gui/htmllib:type_defs",
         "//cmk/gui/inventory",
+        "//cmk/gui/ldap_integration",
         "//cmk/gui/livestatus_utils/commands",
         "//cmk/gui/nodevis:topology",
         "//cmk/gui/nodevis:utils",

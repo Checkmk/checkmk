@@ -67,9 +67,7 @@ from cmk.gui.valuespec import (
     Tuple,
     ValueSpec,
 )
-from cmk.gui.wato.pages._password_store_valuespecs import (
-    MigrateNotUpdatedToIndividualOrStoredPassword,
-)
+from cmk.gui.wato import MigrateNotUpdatedToIndividualOrStoredPassword
 from cmk.gui.wato.pages.userdb_common import (
     add_connections_page_menu,
     connection_actions,

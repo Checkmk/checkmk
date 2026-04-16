@@ -35,6 +35,7 @@ void main() {
 
     /// This will get us the location to e.g. "checkmk/master" or "Testing/<name>/checkmk/master"
     def branch_base_folder = package_helper.branch_base_folder(true);
+    def force_build = params.DISABLE_JENKINS_CACHE == true;
 
     // When building from a git tag (VERSION != "daily"), we cannot get the branch name from the scm so used defines.make instead.
     // this is save on master as there are no tags/versions built other than daily

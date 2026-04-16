@@ -116,10 +116,6 @@ export default defineConfig(({ command }) => {
     // we are in serve mode here, supporting auto hot reload
     return {
       ...resultBuild,
-      resolve: {
-        ...resultBuild.resolve,
-        preserveSymlinks: true // bazel ...
-      },
       plugins: [
         ...(resultBuild.plugins ?? []),
         ...(!process.env.VITEST

@@ -15,7 +15,7 @@ from collections.abc import Iterator
 import cmk.ccc.version as cmk_version
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
-from cmk.gui import availability, bi
+from cmk.gui import availability
 from cmk.gui.availability import (
     AVAnnotationKey,
     AVAnnotations,
@@ -34,6 +34,7 @@ from cmk.gui.availability import (
     AVTimelineStyle,
     AVTimeRange,
 )
+from cmk.gui.bi.foldable_tree_renderer import FoldableTreeRendererTree
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
 from cmk.gui.config import active_config
 from cmk.gui.display_options import display_options
@@ -951,7 +952,7 @@ def show_bi_availability(
                     "aggr_group": request.var("aggr_group"),
                 }
 
-                renderer = bi.FoldableTreeRendererTree(
+                renderer = FoldableTreeRendererTree(
                     row,
                     omit_root=False,
                     expansion_level=user.bi_expansion_level,

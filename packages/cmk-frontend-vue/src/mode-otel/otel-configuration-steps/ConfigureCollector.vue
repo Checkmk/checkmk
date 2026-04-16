@@ -3,29 +3,6 @@ Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
 This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 conditions defined in the file COPYING, which is part of this source code package.
 -->
-<script lang="ts">
-export type AuthMethod = 'none' | 'basicauth'
-
-export interface Credential {
-  username: string
-  password: string | null // password store ID
-}
-
-export interface AuthConfig {
-  method: AuthMethod
-  credential: Credential | null
-}
-
-export interface EndpointConfig {
-  address: string
-  port: number | undefined
-}
-
-export interface EventConsoleConfig {
-  resourceAttribute: string
-}
-</script>
-
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 
@@ -41,6 +18,7 @@ import CollectorAuthConfig from './CollectorAuthConfig.vue'
 import CollectorConnectionOptions from './CollectorConnectionOptions.vue'
 import CollectorEndpointConfig from './CollectorEndpointConfig.vue'
 import PasswordStoreSlideIn from './PasswordStoreSlideIn.vue'
+import type { AuthConfig, EndpointConfig, EventConsoleConfig } from './otelTypes'
 import type { PasswordConfig } from './password_store_password.types.ts'
 import { isValidIpOrHostname, isValidPort } from './validation.ts'
 

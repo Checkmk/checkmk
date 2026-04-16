@@ -13,7 +13,7 @@ import CmkCheckbox from '@/components/user-input/CmkCheckbox.vue'
 import CmkInput from '@/components/user-input/CmkInput.vue'
 import CmkLabelRequired from '@/components/user-input/CmkLabelRequired.vue'
 
-import type { EventConsoleConfig } from './ConfigureCollector.vue'
+import type { EventConsoleConfig } from './otelTypes'
 
 const { _t } = usei18n()
 

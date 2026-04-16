@@ -17,7 +17,7 @@ import CmkLabelRequired from '@/components/user-input/CmkLabelRequired.vue'
 
 import FormButton from '@/form/private/FormButton.vue'
 
-import type { AuthConfig } from './ConfigureCollector.vue'
+import type { AuthConfig } from './otelTypes'
 
 const { _t } = usei18n()
 

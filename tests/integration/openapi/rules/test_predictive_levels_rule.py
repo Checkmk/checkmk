@@ -37,6 +37,7 @@ from tests.integration.openapi.rules.helpers import (
     TestRuleConfig,
     verify_rule_conversion,
 )
+from tests.integration.openapi.rules.helpers.rule_helpers import hosts_pkl_exists
 from tests.testlib.site import Site
 
 logger = logging.getLogger(__name__)
@@ -138,6 +139,7 @@ def test_update_predictive_levels_rule(site: Site) -> None:
             }
         },
     )
+    site.openapi.changes.activate_and_wait_for_completion()
     logger.info(f"Created rule with ID: {rule_id}")
 
     try:
@@ -155,6 +157,7 @@ def test_update_predictive_levels_rule(site: Site) -> None:
             value_raw=updated_value,
             properties={"comment": "Updated via API test"},
         )
+        site.openapi.changes.activate_and_wait_for_completion()
 
         logger.info(f"Read updated rule {rule_id}")
         result = site.openapi.rules.get(rule_id)
@@ -183,7 +186,9 @@ def test_update_predictive_levels_rule(site: Site) -> None:
 
         logger.info("Successfully updated predictive levels rule")
     finally:
+        hosts_pkl_exists(site)
         site.openapi.rules.delete(rule_id)
+        site.openapi.changes.activate_and_wait_for_completion()
 
 
 @pytest.mark.skip_if_edition("cloud")
@@ -289,6 +294,8 @@ def test_fixed_to_predictive_conversion(site: Site) -> None:
             value_raw=predictive_config,
             properties={"comment": "API Test: Converted to Predictive Levels"},
         )
+        site.openapi.changes.activate_and_wait_for_completion()
+
         logger.info(f"Verifying converted rule {rule_id} with predictive levels")
         verify_rule_conversion(
             site,
@@ -310,6 +317,8 @@ def test_fixed_to_predictive_conversion(site: Site) -> None:
             value_raw=final_fixed,
             properties={"comment": "API Test: Converted back to Fixed Levels"},
         )
+        site.openapi.changes.activate_and_wait_for_completion()
+
         logger.info(f"Verifying converted rule {rule_id} with fixed levels")
         verify_rule_conversion(
             site,

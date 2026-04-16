@@ -16,6 +16,7 @@ from pytest_mock import MockerFixture
 
 from cmk.ccc.site import SiteId
 from cmk.ccc.user import UserId
+from cmk.gui.script_helpers import gui_context
 from cmk.gui.utils.html import HTML
 from cmk.gui.watolib.audit_log import AuditLogStore, log_audit
 from cmk.gui.watolib.changes import ActivateChangesWriter, add_change
@@ -244,17 +245,7 @@ def test_log_audit_with_html_message() -> None:
 def test_disable_activate_changes_writer(mocker: MockerFixture) -> None:
     add_to_site_mock = mocker.patch.object(ActivateChangesWriter, "_add_change_to_site")
 
-    add_change(
-        action_name="ding",
-        text="dong",
-        user_id=UserId("calvin"),
-        sites=[SiteId("a")],
-        use_git=False,
-    )
-    add_to_site_mock.assert_called_once()
-    add_to_site_mock.reset_mock()
-
-    with ActivateChangesWriter.disable():
+    with gui_context():
         add_change(
             action_name="ding",
             text="dong",
@@ -262,14 +253,25 @@ def test_disable_activate_changes_writer(mocker: MockerFixture) -> None:
             sites=[SiteId("a")],
             use_git=False,
         )
-    add_to_site_mock.assert_not_called()
-    add_to_site_mock.reset_mock()
+        add_to_site_mock.assert_called_once()
+        add_to_site_mock.reset_mock()
 
-    add_change(
-        action_name="ding",
-        text="dong",
-        user_id=UserId("calvin"),
-        sites=[SiteId("a")],
-        use_git=False,
-    )
-    add_to_site_mock.assert_called_once()
+        with ActivateChangesWriter.disable():
+            add_change(
+                action_name="ding",
+                text="dong",
+                user_id=UserId("calvin"),
+                sites=[SiteId("a")],
+                use_git=False,
+            )
+        add_to_site_mock.assert_not_called()
+        add_to_site_mock.reset_mock()
+
+        add_change(
+            action_name="ding",
+            text="dong",
+            user_id=UserId("calvin"),
+            sites=[SiteId("a")],
+            use_git=False,
+        )
+        add_to_site_mock.assert_called_once()

@@ -10,7 +10,7 @@ from contextlib import contextmanager
 
 import cmk.gui.watolib.git
 import cmk.gui.watolib.sidebar_reload
-from cmk.ccc.site import SiteId
+from cmk.ccc.site import omd_site, SiteId
 from cmk.ccc.user import UserId
 from cmk.gui.config import active_config
 from cmk.gui.site_config import site_is_local
@@ -112,11 +112,22 @@ class ActivateChangesWriter:
 
         # All replication sites in case no specific site is given
         if sites is None:
-            sites = activation_sites(active_config.sites).keys()
+            changed_sites = set(activation_sites(active_config.sites).keys())
+        else:
+            # On a remote site, we might get invalid SiteID entries here
+            # Try to filter them out by only allowing sites that are part of the activation sites
+            valid_sites = set(activation_sites(active_config.sites).keys())
+
+            specified_sites = set(sites)  # Resolve iterable
+            changed_sites = {s for s in specified_sites if s in valid_sites}
+            if len(changed_sites) != len(specified_sites):
+                # Always include the local site if we have invalid site ids in the list
+                # of changed sites, otherwise we would not log the change at all
+                changed_sites.add(omd_site())
 
         change_id = self._new_change_id()
 
-        for site_id in sites:
+        for site_id in changed_sites:
             self._add_change_to_site(
                 site_id,
                 change_id,

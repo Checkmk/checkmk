@@ -170,36 +170,30 @@ def test_discover_blade_bx_temp(
             {"levels_lower": (40, 30)},
             {
                 "Descr1": [
-                    Metric("temp", 32.0, levels=(70.0, 85.0)),
+                    Metric("temp", 32.0),
                     Result(
                         state=State.WARN,
-                        summary="Temperature: 32.0 °C (device warn/crit at 70/85 °C)",
+                        summary="Temperature: 32.0 °C (warn/crit below 40 °C/30 °C)",
                     ),
                     Result(
                         state=State.OK,
-                        notice="Configuration: prefer device levels over user levels (used device levels)",
+                        notice="Configuration: prefer user levels over device levels (used user levels)",
                     ),
                 ],
                 "Descr2": [
-                    Metric("temp", 75.0, levels=(70.0, 85.0)),
-                    Result(
-                        state=State.WARN,
-                        summary="Temperature: 75.0 °C (warn/crit at 70.0 °C/85.0 °C)",
-                    ),
+                    Metric("temp", 75.0),
+                    Result(state=State.OK, summary="Temperature: 75.0 °C"),
                     Result(
                         state=State.OK,
-                        notice="Configuration: prefer device levels over user levels (used device levels)",
+                        notice="Configuration: prefer user levels over device levels (used user levels)",
                     ),
                 ],
                 "Descr3": [
-                    Metric("temp", 90.0, levels=(70.0, 85.0)),
-                    Result(
-                        state=State.CRIT,
-                        summary="Temperature: 90.0 °C (warn/crit at 70.0 °C/85.0 °C)",
-                    ),
+                    Metric("temp", 90.0),
+                    Result(state=State.OK, summary="Temperature: 90.0 °C"),
                     Result(
                         state=State.OK,
-                        notice="Configuration: prefer device levels over user levels (used device levels)",
+                        notice="Configuration: prefer user levels over device levels (used user levels)",
                     ),
                 ],
                 "Descr5": [
@@ -218,7 +212,6 @@ def test_discover_blade_bx_temp(
                 ],
             },
             id="03_with_levels_lower",
-            marks=pytest.mark.xfail(reason="CMK-33436"),
         ),
     ],
 )

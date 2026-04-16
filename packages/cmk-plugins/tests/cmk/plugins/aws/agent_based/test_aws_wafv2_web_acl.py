@@ -11,7 +11,7 @@ from typing import Any
 import pytest
 
 from cmk.agent_based.v2 import Metric, Result, Service, State, StringTable
-from cmk.legacy_checks.aws_wafv2_web_acl import (
+from cmk.plugins.aws.agent_based.aws_wafv2_web_acl import (
     check_aws_wafv2_web_acl,
     discover_aws_wafv2_web_acl,
     parse_aws_wafv2_web_acl,

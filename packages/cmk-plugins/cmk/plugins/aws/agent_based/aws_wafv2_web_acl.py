@@ -18,8 +18,11 @@ from cmk.agent_based.v2 import (
     render,
     Service,
 )
-from cmk.legacy_includes.aws import aws_get_counts_rate_human_readable
-from cmk.plugins.aws.lib import extract_aws_metrics_by_labels, parse_aws
+from cmk.plugins.aws.lib import (
+    aws_get_counts_rate_human_readable,
+    extract_aws_metrics_by_labels,
+    parse_aws,
+)
 
 
 def parse_aws_wafv2_web_acl(string_table: list[list[str]]) -> Mapping[str, float]:

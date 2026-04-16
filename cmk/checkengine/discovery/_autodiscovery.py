@@ -531,7 +531,7 @@ def _may_rediscover(
     if not set(rediscovery_parameters) >= {"excluded_time", "group_time"}:
         return "automatic discovery disabled for this host"
 
-    now = time.gmtime(reference_time)
+    now = time.localtime(reference_time)
     for start_hours_mins, end_hours_mins in rediscovery_parameters["excluded_time"]:
         start_time = time.struct_time(
             (

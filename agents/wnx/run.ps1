@@ -521,9 +521,10 @@ function Start-BazelSigning {
     try {
         $env:BAZELISK_BASE_URL = "https://github.com/aspect-build/aspect-cli/releases/download"
         $env:USE_BAZEL_VERSION = "aspect/2025.11.0"
+        $signed_dir = (bazel info bazel-bin 2>$null).Trim()                                                                       
+        Write-Host "dir with files is $signed_dir"
         &bazel build //agents/windows/plugins:all
         if ($LASTEXITCODE -eq 0) {
-            $signed_dir = (&bazel info bazel-bin )
             Write-Host "Signed files are located in $signed_dir"
         }
         else {

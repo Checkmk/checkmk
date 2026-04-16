@@ -29,6 +29,9 @@ copy_file(
 set_runpath(
     name = "xmlsec1_deployable_bin",
     srcs = [":xmlsec1_bin_copy"],
+    # xmlsec1 uses libltdl to dlopen() its crypto backend (libxmlsec1-openssl).
+    # DT_RUNPATH is not searched for dlopen() calls; DT_RPATH is required.
+    force_rpath = True,
     rpaths = ["$ORIGIN/../lib"],
     tags = ["manual"],
 )

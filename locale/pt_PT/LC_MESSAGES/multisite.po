@@ -4,7 +4,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
+"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
 "PO-Revision-Date: 2026-04-15 06:31+0000\n"
 "Language-Team: Portuguese (Portugal) <https://translate.checkmk.com/projects/"
@@ -1074,9 +1074,6 @@ msgstr "1 ano"
 
 msgid "1.0 - 2.0 ms"
 msgstr "1.0 - 2.0 ms"
-
-msgid "10 seconds"
-msgstr "10 segundos"
 
 msgid "10 years"
 msgstr "10 anos"
@@ -20040,10 +20037,6 @@ msgid "Deploy the TSM plug-in and run it synchronously"
 msgstr "Implantar o plugin MTR de forma assíncrona"
 
 #, fuzzy
-msgid "Deploy the Zypper plug-in"
-msgstr "Implantar o plugin Zypper"
-
-#, fuzzy
 msgid ""
 "Deploy the agent plug-in <tt>citrix_licenses</tt> on your target system."
 msgstr "Implante o plugin de agente <tt>zorp</tt> no seu sistema alvo."
@@ -21738,10 +21731,6 @@ msgstr "Não implante o plugin StorCLI"
 #, fuzzy
 msgid "Do not deploy the TSM plug-in"
 msgstr "Não implante o plugin TSM"
-
-#, fuzzy
-msgid "Do not deploy the Zypper plug-in"
-msgstr "Não implante o plugin Zypper"
 
 #, fuzzy
 msgid "Do not deploy the mk_filehandler plug-in"
@@ -36118,9 +36107,6 @@ msgstr "Intervalo no qual para <b>send</b> batimentos cardíacos regulares"
 
 msgid "Interval for checking for ripe bulk notifications"
 msgstr "Intervalo para verificação de notificações a granel maduras"
-
-msgid "Interval for checking for updates:"
-msgstr "Intervalo para verificação de atualizações:"
 
 msgid "Interval for collecting data"
 msgstr "Intervalo para recolha de dados"
@@ -90298,7 +90284,6 @@ msgstr "contando"
 msgid "cp437"
 msgstr "cp437"
 
-#, fuzzy
 msgid "crash report"
 msgid_plural "crash reports"
 msgstr[0] ""
@@ -90800,7 +90785,6 @@ msgstr "os anfitriões estão de pé e não têm problemas de serviço"
 msgid "hosts in total"
 msgstr "anfitriões no total"
 
-#, fuzzy
 msgid "hour"
 msgid_plural "hours"
 msgstr[0] ""
@@ -94118,6 +94102,22 @@ msgid "Auto"
 msgstr "Automático"
 
 #, fuzzy
+msgid "The lower bound must be a number"
+msgstr "O agrupamento deve ter pelo menos um nó"
+
+#, fuzzy
+msgid "The lower bound must be less than the upper bound"
+msgstr "O agrupamento deve ter pelo menos um nó"
+
+#, fuzzy
+msgid "The upper bound must be a number"
+msgstr "O agrupamento deve ter pelo menos um nó"
+
+#, fuzzy
+msgid "The upper bound must be greater than the lower bound"
+msgstr "O agrupamento deve ter pelo menos um nó"
+
+#, fuzzy
 msgid "Strict"
 msgstr "Métrica"
 
@@ -96263,6 +96263,20 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#~ msgid "10 seconds"
+#~ msgstr "10 segundos"
+
+#, fuzzy
+#~ msgid "Deploy the Zypper plug-in"
+#~ msgstr "Implantar o plugin Zypper"
+
+#, fuzzy
+#~ msgid "Do not deploy the Zypper plug-in"
+#~ msgstr "Não implante o plugin Zypper"
+
+#~ msgid "Interval for checking for updates:"
+#~ msgstr "Intervalo para verificação de atualizações:"
 
 #~ msgid "Autodetect instances, expect HTTPs on the following ports:"
 #~ msgstr ""

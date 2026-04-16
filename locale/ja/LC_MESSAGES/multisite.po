@@ -1059,9 +1059,6 @@ msgstr "1年"
 msgid "1.0 - 2.0 ms"
 msgstr "1.0 - 2.0 ms"
 
-msgid "10 seconds"
-msgstr "10秒"
-
 msgid "10 years"
 msgstr "10年"
 
@@ -18601,9 +18598,6 @@ msgstr "TSMプラグインをデプロイし非同期実行する"
 msgid "Deploy the TSM plug-in and run it synchronously"
 msgstr "TSMプラグインをデプロイし、同期実行する"
 
-msgid "Deploy the Zypper plug-in"
-msgstr "Zypperプラグインをデプロイする"
-
 msgid ""
 "Deploy the agent plug-in <tt>citrix_licenses</tt> on your target system."
 msgstr ""
@@ -20137,9 +20131,6 @@ msgstr "StorCLIプラグインをデプロイしないでください"
 
 msgid "Do not deploy the TSM plug-in"
 msgstr "TSMプラグインをデプロイしないでください"
-
-msgid "Do not deploy the Zypper plug-in"
-msgstr "Zypperプラグインをデプロイしないでください"
 
 msgid "Do not deploy the mk_filehandler plug-in"
 msgstr "mk_filehandlerプラグインをデプロイしない"
@@ -33480,9 +33471,6 @@ msgstr "定期的なハートビートを<b>送信</b>する間隔"
 
 msgid "Interval for checking for ripe bulk notifications"
 msgstr "ライプ一括通知をチェックする間隔"
-
-msgid "Interval for checking for updates:"
-msgstr "更新を確認する間隔:"
 
 msgid "Interval for collecting data"
 msgstr "データ収集の間隔"
@@ -87073,6 +87061,22 @@ msgstr "集約グループ"
 msgid "Auto"
 msgstr "自動"
 
+#, fuzzy
+msgid "The lower bound must be a number"
+msgstr "下限は０より大きくなければなりません。"
+
+#, fuzzy
+msgid "The lower bound must be less than the upper bound"
+msgstr "下限は上限よりも大きいです。"
+
+#, fuzzy
+msgid "The upper bound must be a number"
+msgstr "上限は0より大きくなければなりません。"
+
+#, fuzzy
+msgid "The upper bound must be greater than the lower bound"
+msgstr "上限は0より大きくなければなりません。"
+
 msgid "Strict"
 msgstr "制限"
 
@@ -89442,6 +89446,18 @@ msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
 "後で「ヘルプ」＞「Checkmkの学習」＞「ウェルカムページ」からアクセスできます"
+
+#~ msgid "10 seconds"
+#~ msgstr "10秒"
+
+#~ msgid "Deploy the Zypper plug-in"
+#~ msgstr "Zypperプラグインをデプロイする"
+
+#~ msgid "Do not deploy the Zypper plug-in"
+#~ msgstr "Zypperプラグインをデプロイしないでください"
+
+#~ msgid "Interval for checking for updates:"
+#~ msgstr "更新を確認する間隔:"
 
 #~ msgid "Autodetect instances, expect HTTPs on the following ports:"
 #~ msgstr "インスタンスを自動検出します。次のポートでHTTPを予期します。"

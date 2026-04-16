@@ -1068,9 +1068,6 @@ msgstr "1 jaar"
 msgid "1.0 - 2.0 ms"
 msgstr "1.0 - 2.0 ms"
 
-msgid "10 seconds"
-msgstr "10 seconden"
-
 msgid "10 years"
 msgstr "10 jaar"
 
@@ -20034,10 +20031,6 @@ msgid "Deploy the TSM plug-in and run it synchronously"
 msgstr "MTR plugin asynchroon implementeren"
 
 #, fuzzy
-msgid "Deploy the Zypper plug-in"
-msgstr "Zet de Zypper plugin in"
-
-#, fuzzy
 msgid ""
 "Deploy the agent plug-in <tt>citrix_licenses</tt> on your target system."
 msgstr "Implementeer de agent plugin <tt>zorp</tt> op uw doelsysteem."
@@ -21728,10 +21721,6 @@ msgstr "De StorCLI plugin niet implementeren"
 #, fuzzy
 msgid "Do not deploy the TSM plug-in"
 msgstr "Implementeer de TSM plugin niet"
-
-#, fuzzy
-msgid "Do not deploy the Zypper plug-in"
-msgstr "Zet de Zypper plugin niet in"
 
 #, fuzzy
 msgid "Do not deploy the mk_filehandler plug-in"
@@ -36108,9 +36097,6 @@ msgstr "Interval waarmee regelmatige hartslagen moeten worden <b>verzonden</b>"
 
 msgid "Interval for checking for ripe bulk notifications"
 msgstr "Interval voor controle op rijpe bulkmeldingen"
-
-msgid "Interval for checking for updates:"
-msgstr "Interval voor controle op updates:"
 
 msgid "Interval for collecting data"
 msgstr "Interval voor het verzamelen van gegevens"
@@ -94216,6 +94202,22 @@ msgid "Auto"
 msgstr "Automatisch"
 
 #, fuzzy
+msgid "The lower bound must be a number"
+msgstr "Het cluster moet ten minste één knooppunt hebben"
+
+#, fuzzy
+msgid "The lower bound must be less than the upper bound"
+msgstr "Het cluster moet ten minste één knooppunt hebben"
+
+#, fuzzy
+msgid "The upper bound must be a number"
+msgstr "Het cluster moet ten minste één knooppunt hebben"
+
+#, fuzzy
+msgid "The upper bound must be greater than the lower bound"
+msgstr "Het cluster moet ten minste één knooppunt hebben"
+
+#, fuzzy
 msgid "Strict"
 msgstr "Metrisch"
 
@@ -96359,6 +96361,20 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#~ msgid "10 seconds"
+#~ msgstr "10 seconden"
+
+#, fuzzy
+#~ msgid "Deploy the Zypper plug-in"
+#~ msgstr "Zet de Zypper plugin in"
+
+#, fuzzy
+#~ msgid "Do not deploy the Zypper plug-in"
+#~ msgstr "Zet de Zypper plugin niet in"
+
+#~ msgid "Interval for checking for updates:"
+#~ msgstr "Interval voor controle op updates:"
 
 #~ msgid "Autodetect instances, expect HTTPs on the following ports:"
 #~ msgstr "Autodetect instances, verwacht HTTP's op de volgende poorten:"

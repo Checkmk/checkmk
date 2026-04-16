@@ -1080,9 +1080,6 @@ msgstr "1 an"
 msgid "1.0 - 2.0 ms"
 msgstr "1,0 - 2,0 ms"
 
-msgid "10 seconds"
-msgstr "10 secunde"
-
 msgid "10 years"
 msgstr "10 ani"
 
@@ -20055,10 +20052,6 @@ msgid "Deploy the TSM plug-in and run it synchronously"
 msgstr "Implementarea pluginului MTR în mod asincron"
 
 #, fuzzy
-msgid "Deploy the Zypper plug-in"
-msgstr "Implementați plugin-ul Zypper"
-
-#, fuzzy
 msgid ""
 "Deploy the agent plug-in <tt>citrix_licenses</tt> on your target system."
 msgstr "Implementați pluginul agent <tt>zorp</tt> pe sistemul țintă."
@@ -21762,10 +21755,6 @@ msgstr "Nu implementați extensia StorCLI"
 #, fuzzy
 msgid "Do not deploy the TSM plug-in"
 msgstr "Nu implementați extensia TSM"
-
-#, fuzzy
-msgid "Do not deploy the Zypper plug-in"
-msgstr "Nu implementați plugin-ul Zypper"
 
 #, fuzzy
 msgid "Do not deploy the mk_filehandler plug-in"
@@ -36209,9 +36198,6 @@ msgstr "Intervalul la care să <b>trimiteți</b> bătăile regulate ale inimii"
 
 msgid "Interval for checking for ripe bulk notifications"
 msgstr "Intervalul de verificare a notificărilor în masă coapte"
-
-msgid "Interval for checking for updates:"
-msgstr "Intervalul de verificare a actualizărilor:"
 
 msgid "Interval for collecting data"
 msgstr "Intervalul de colectare a datelor"
@@ -94360,6 +94346,22 @@ msgid "Auto"
 msgstr "Automat"
 
 #, fuzzy
+msgid "The lower bound must be a number"
+msgstr "Clusterul trebuie să aibă cel puțin un nod"
+
+#, fuzzy
+msgid "The lower bound must be less than the upper bound"
+msgstr "Clusterul trebuie să aibă cel puțin un nod"
+
+#, fuzzy
+msgid "The upper bound must be a number"
+msgstr "Clusterul trebuie să aibă cel puțin un nod"
+
+#, fuzzy
+msgid "The upper bound must be greater than the lower bound"
+msgstr "Clusterul trebuie să aibă cel puțin un nod"
+
+#, fuzzy
 msgid "Strict"
 msgstr "Metric"
 
@@ -96520,6 +96522,20 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#~ msgid "10 seconds"
+#~ msgstr "10 secunde"
+
+#, fuzzy
+#~ msgid "Deploy the Zypper plug-in"
+#~ msgstr "Implementați plugin-ul Zypper"
+
+#, fuzzy
+#~ msgid "Do not deploy the Zypper plug-in"
+#~ msgstr "Nu implementați plugin-ul Zypper"
+
+#~ msgid "Interval for checking for updates:"
+#~ msgstr "Intervalul de verificare a actualizărilor:"
 
 #~ msgid "Autodetect instances, expect HTTPs on the following ports:"
 #~ msgstr ""

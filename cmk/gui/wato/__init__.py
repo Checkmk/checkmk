@@ -72,7 +72,6 @@ from cmk.gui.wato._main_module_topics import (
 )
 from cmk.gui.wato._main_module_topics import MainModuleTopicServices as MainModuleTopicServices
 from cmk.gui.wato._main_module_topics import MainModuleTopicUsers as MainModuleTopicUsers
-from cmk.gui.wato.page_handler import page_handler
 from cmk.gui.watolib.activate_changes import update_config_generation
 from cmk.gui.watolib.hosts_and_folders import ajax_popup_host_action_menu
 from cmk.gui.watolib.main_menu import MenuItem, register_modules, WatoModule
@@ -157,14 +156,18 @@ from ._http_proxy import HTTPProxyReference as HTTPProxyReference
 from ._levels import Levels as Levels
 from ._levels import PredictiveLevels as PredictiveLevels
 from ._permissions import PERMISSION_SECTION_WATO as PERMISSION_SECTION_WATO
-from .pages import IndividualOrStoredPassword as IndividualOrStoredPassword
-from .pages import (
-    MigrateNotUpdatedToIndividualOrStoredPassword as MigrateNotUpdatedToIndividualOrStoredPassword,
-)
-from .pages import MigrateToIndividualOrStoredPassword as MigrateToIndividualOrStoredPassword
 from .pages._match_conditions import FullPathFolderChoice as FullPathFolderChoice
 from .pages._match_conditions import (
     multifolder_host_rule_match_conditions as multifolder_host_rule_match_conditions,
+)
+from .pages._password_store_valuespecs import (
+    IndividualOrStoredPassword as IndividualOrStoredPassword,
+)
+from .pages._password_store_valuespecs import (
+    MigrateNotUpdatedToIndividualOrStoredPassword as MigrateNotUpdatedToIndividualOrStoredPassword,
+)
+from .pages._password_store_valuespecs import (
+    MigrateToIndividualOrStoredPassword as MigrateToIndividualOrStoredPassword,
 )
 from .pages._password_store_valuespecs import PasswordFromStore as PasswordFromStore
 from .pages._rule_conditions import DictHostTagCondition as DictHostTagCondition

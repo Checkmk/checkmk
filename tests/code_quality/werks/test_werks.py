@@ -24,8 +24,14 @@ from tests.code_quality.bazel_utils import bazel_repo_root
 
 @lru_cache
 def git_dir() -> Path:
-    # Note on the `Path.resolve()` call.  The `BUILD` file tags these tests as `"no-sandbox"`
-    # but experiment shown that this is not honored.  More investigation is required here.
+    # Note on the `Path.resolve()` call.
+    #
+    # The `BUILD` file tags these tests as `"no-sandbox"` to
+    # simplify access to `.git`, however, if "no-sandbox"
+    # removes filesystem isolation, it doesn't prevent Bazel
+    # from calling the code from the runfiles.  We therefore need
+    # to jump out of the runfiles and into the actual repo with
+    # the `Path.resolved()` call as well.
     for parent in Path(__file__).resolve().parents:
         if (parent / ".git").exists():
             real_git = parent / ".git"

@@ -5,7 +5,6 @@
 
 
 import os
-import sys
 
 import pytest
 
@@ -28,7 +27,4 @@ def test_site_context_replacements(monkeypatch: pytest.MonkeyPatch) -> None:
     assert replacements["###SITE###"] == "dingeling"
     assert replacements["###ROOT###"] == "/omd/sites/dingeling"
     assert replacements["###EDITION###"] == "pro"
-    assert (
-        replacements["###PYTHON_MAJOR_MINOR###"]
-        == f"{sys.version_info.major}.{sys.version_info.minor}"
-    )
+    assert len(replacements) == 3

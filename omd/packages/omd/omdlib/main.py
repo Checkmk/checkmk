@@ -408,7 +408,6 @@ def patch_skeleton_files(
         "###SITE###": old_site_name,
         "###ROOT###": SitePaths.from_site_name(old_site_name).home,
         "###EDITION###": new_replacements["###EDITION###"],
-        "###PYTHON_MAJOR_MINOR###": new_replacements["###PYTHON_MAJOR_MINOR###"],
     }
     skelroot = "/omd/versions/%s/skel" % omdlib.__version__
     with contextlib.chdir(skelroot):  # make relative paths
@@ -926,7 +925,6 @@ def update_file(
     new_skel = "/omd/versions/%s/skel" % new_version
 
     site_home = SitePaths.from_site_name(site.name).home
-    python_major_minor = f"{sys.version_info.major}.{sys.version_info.minor}"
     new_replacements = {
         "###SITE###": site.name,
         "###ROOT###": site_home,
@@ -934,14 +932,12 @@ def update_file(
         # the original edition, because we are still in the update prcedure and the version symlink
         # has not been changed yet.
         "###EDITION###": new_edition,
-        "###PYTHON_MAJOR_MINOR###": python_major_minor,
     }
 
     old_replacements = {
         "###SITE###": site.name,
         "###ROOT###": site_home,
         "###EDITION###": old_edition,
-        "###PYTHON_MAJOR_MINOR###": python_major_minor,
     }
 
     old_path = old_skel + "/" + relpath

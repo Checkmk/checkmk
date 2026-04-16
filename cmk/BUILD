@@ -577,6 +577,7 @@ build_test(
 
 package_wheel(
     name = "cmk_tar",
+    prefix = "lib/python3",
     visibility = ["//visibility:public"],
     whl = "whl",
 )

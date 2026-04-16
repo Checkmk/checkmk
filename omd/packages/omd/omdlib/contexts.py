@@ -5,7 +5,6 @@
 
 
 import os
-import sys
 from pathlib import Path
 
 from omdlib.init_scripts import check_status
@@ -62,7 +61,6 @@ class SiteContext:
             "###SITE###": self.name,
             "###ROOT###": self._paths.home,
             "###EDITION###": version.split(".")[-1],
-            "###PYTHON_MAJOR_MINOR###": f"{sys.version_info.major}.{sys.version_info.minor}",
         }
 
     def set_config(self, config: Config) -> None:

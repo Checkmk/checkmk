@@ -3,31 +3,34 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
-# mypy: disable-error-code="type-arg"
 
+from collections.abc import Mapping
+from typing import Any
 
-from collections.abc import Iterable, Mapping
-
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
+from cmk.agent_based.v2 import (
+    AgentSection,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Result,
+    Service,
+    State,
+)
 from cmk.plugins.aws.constants import AWS_REGIONS
 from cmk.plugins.aws.lib import GenericAWSSection, parse_aws
-
-check_info = {}
-
 
 _REGIONS: Mapping[str, str] = dict(AWS_REGIONS)
 
 
-def discover_aws_wafv2_summary(section: GenericAWSSection) -> Iterable[tuple[None, dict]]:
+def discover_aws_wafv2_summary(section: GenericAWSSection) -> DiscoveryResult:
     if section:
-        yield None, {}
+        yield Service()
 
 
-def check_aws_wafv2_summary(item, params, parsed):
-    web_acls_by_region: dict[str, dict] = {}
+def check_aws_wafv2_summary(section: GenericAWSSection) -> CheckResult:
+    web_acls_by_region: dict[str, dict[str, dict[str, Any]]] = {}
 
-    for web_acl in parsed:
+    for web_acl in section:
         try:
             region_key = _REGIONS[web_acl["Region"]]
         except KeyError:
@@ -37,14 +40,14 @@ def check_aws_wafv2_summary(item, params, parsed):
     regions_sorted = sorted(web_acls_by_region.keys())
     long_output = []
 
-    yield 0, "Total number of Web ACLs: %s" % len(parsed)
+    yield Result(state=State.OK, summary=f"Total number of Web ACLs: {len(section)}")
 
     for region in regions_sorted:
         web_acls_region = web_acls_by_region[region]
-        yield 0, f"{region}: {len(web_acls_region)}"
+        yield Result(state=State.OK, summary=f"{region}: {len(web_acls_region)}")
 
         web_acl_names_sorted = sorted(web_acls_region.keys())
-        long_output.append("%s:" % region)
+        long_output.append(f"{region}:")
 
         for web_acl_name in web_acl_names_sorted:
             web_acl = web_acls_region[web_acl_name]
@@ -54,18 +57,31 @@ def check_aws_wafv2_summary(item, params, parsed):
                 description = "[no description]"
 
             long_output.append(
-                "{} -- Description: {}, Number of rules and rule groups: {}".format(
-                    web_acl_name, description, len(web_acl["Rules"])
-                )
+                f"{web_acl_name} -- Description: {description},"
+                f" Number of rules and rule groups: {len(web_acl['Rules'])}"
             )
 
     if long_output:
-        yield 0, "\n%s" % "\n".join(long_output)
+        # Reproduces the legacy convert_legacy_results summary text for an output
+        # starting with "\n" (i.e. "details only"). The user-visible service summary
+        # kept this text in the legacy plug-in, so we keep it here to avoid a
+        # behaviour change.
+        detail_count = len(long_output)
+        yield Result(
+            state=State.OK,
+            summary=f"{detail_count} additional detail{'' if detail_count == 1 else 's'} available",
+            details="\n".join(long_output),
+        )
 
 
-check_info["aws_wafv2_summary"] = LegacyCheckDefinition(
+agent_section_aws_wafv2_summary = AgentSection(
     name="aws_wafv2_summary",
     parse_function=parse_aws,
+)
+
+
+check_plugin_aws_wafv2_summary = CheckPlugin(
+    name="aws_wafv2_summary",
     service_name="AWS/WAFV2 Summary",
     discovery_function=discover_aws_wafv2_summary,
     check_function=check_aws_wafv2_summary,

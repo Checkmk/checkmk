@@ -4,14 +4,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="misc"
-# mypy: disable-error-code="no-untyped-call"
 
-from collections.abc import Mapping, Sequence
-from typing import Any
+from collections.abc import Sequence
 
 import pytest
 
-from cmk.agent_based.v2 import StringTable
+from cmk.agent_based.v2 import Result, Service, State, StringTable
 from cmk.legacy_checks.aws_wafv2_summary import (
     check_aws_wafv2_summary,
     discover_aws_wafv2_summary,
@@ -129,25 +127,23 @@ from cmk.plugins.aws.lib import parse_aws
                     '"us-east-1"}]',
                 ],
             ],
-            [(None, {})],
+            [Service()],
         ),
     ],
 )
 def test_discover_aws_wafv2_summary(
-    info: StringTable, expected_discoveries: Sequence[tuple[str | None, Mapping[str, Any]]]
+    info: StringTable, expected_discoveries: Sequence[Service]
 ) -> None:
     """Test discovery function for aws_wafv2_summary check."""
 
     result = list(discover_aws_wafv2_summary(info))
-    assert sorted(result) == sorted(expected_discoveries)
+    assert result == expected_discoveries
 
 
 @pytest.mark.parametrize(
-    "item, params, info, expected_results",
+    "info, expected_results",
     [
         (
-            None,
-            {},
             [
                 [
                     '[{"Name":',
@@ -255,22 +251,21 @@ def test_discover_aws_wafv2_summary(
                 ],
             ],
             [
-                (0, "Total number of Web ACLs: 3"),
-                (0, "CloudFront: 1"),
-                (0, "Europe (Frankfurt): 1"),
-                (0, "US East (N. Virginia): 1"),
-                (
-                    0,
-                    "\nCloudFront:\njoerg-herbel-acl-global -- Description: [no description], Number of rules and rule groups: 1\nEurope (Frankfurt):\njoerg-herbel-acl -- Description: [no description], Number of rules and rule groups: 1\nUS East (N. Virginia):\nus-acl -- Description: America, Number of rules and rule groups: 0",
+                Result(state=State.OK, summary="Total number of Web ACLs: 3"),
+                Result(state=State.OK, summary="CloudFront: 1"),
+                Result(state=State.OK, summary="Europe (Frankfurt): 1"),
+                Result(state=State.OK, summary="US East (N. Virginia): 1"),
+                Result(
+                    state=State.OK,
+                    summary="6 additional details available",
+                    details="CloudFront:\njoerg-herbel-acl-global -- Description: [no description], Number of rules and rule groups: 1\nEurope (Frankfurt):\njoerg-herbel-acl -- Description: [no description], Number of rules and rule groups: 1\nUS East (N. Virginia):\nus-acl -- Description: America, Number of rules and rule groups: 0",
                 ),
             ],
         ),
     ],
 )
-def test_check_aws_wafv2_summary(
-    item: str, params: Mapping[str, Any], info: StringTable, expected_results: Sequence[Any]
-) -> None:
+def test_check_aws_wafv2_summary(info: StringTable, expected_results: Sequence[Result]) -> None:
     """Test check function for aws_wafv2_summary check."""
     parsed = parse_aws(info)
-    result = list(check_aws_wafv2_summary(item, params, parsed))
+    result = list(check_aws_wafv2_summary(parsed))
     assert result == expected_results

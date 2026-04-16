@@ -1249,6 +1249,29 @@ py_library(
     ],
 )
 
+py_library(
+    name = "visual_link",
+    srcs = ["visual_link.py"],
+    imports = ["../.."],
+    visibility = [
+        "//cmk:__subpackages__",
+        "//tests:__subpackages__",
+    ],
+    deps = [
+        ":display_options",
+        ":hooks",
+        ":http",
+        ":type_defs",
+        "//cmk/gui/data_source",
+        "//cmk/gui/htmllib:generator",
+        "//cmk/gui/utils:html",
+        "//cmk/gui/utils:mobile",
+        "//cmk/gui/utils:roles",
+        "//cmk/gui/utils:urls",
+        "//cmk/gui/visuals",
+    ],
+)
+
 # Monolithic target which we extract smaller targets from. As long as we are in the in place
 # extraction process below the cmk.gui module hierarchy, we will have to work with excludes. This
 # will be cleaned up when we move the pieces into their future python module structure.
@@ -1325,7 +1348,10 @@ py_library(
             "user_sites.py",
             "validate.py",
             "validation_utils.py",
+            "data_source/**/*.py",
+            "painter/**/*.py",
             "view_utils.py",
+            "visual_link.py",
             "visuals/**/*.py",
             "weblib.py",
             "werks.py",
@@ -1418,6 +1444,7 @@ py_library(
         ":validate",
         ":validation_utils",
         ":view_utils",
+        ":visual_link",
         ":weblib",
         ":werks",
         "//cmk/automations",
@@ -1429,6 +1456,7 @@ py_library(
         "//cmk/gui/agent_registration",
         "//cmk/gui/background_job/job",
         "//cmk/gui/dashboard:page_token_error",
+        "//cmk/gui/data_source",
         "//cmk/gui/fields",
         "//cmk/gui/fields:base",
         "//cmk/gui/form_specs",
@@ -1458,6 +1486,9 @@ py_library(
         "//cmk/gui/openapi/spec:utils",
         "//cmk/gui/openapi/spec/spec_generator",
         "//cmk/gui/pagetypes",
+        "//cmk/gui/painter:v0_base",
+        "//cmk/gui/painter:v0_impl",
+        "//cmk/gui/painter:v1",
         "//cmk/gui/plugins/visuals",
         "//cmk/gui/quick_setup",
         "//cmk/gui/rest_api_types:notifications",

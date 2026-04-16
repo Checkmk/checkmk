@@ -1031,6 +1031,8 @@ class Site:
         # Checkmk configuration files and want to be sure they are used once the core
         # starts.
         self._update_cmk_core_config()
+        if os.environ.get("POD_LABEL"):
+            self.set_config("TMPFS", "off")
 
         self.openapi.port = self.apache_port
         # set the sites timezone according to TZ
@@ -1236,6 +1238,10 @@ class Site:
             self.ensure_running()
         else:
             logger.info("Site is already running")
+
+        if os.environ.get("POD_LABEL"):
+            # on k8s there is no need to have an mounted overlay filesystem
+            return
 
         assert self.path("tmp").is_mount(), (
             "The site does not have a tmpfs mounted! We require this for good performing tests"

@@ -73,6 +73,7 @@ py_test(
         "//cmk/gui/job_scheduler",
         "//cmk/gui/openapi/spec/spec_generator",
         "//cmk/gui/openapi/spec/spec_generator:_core",
+        "//cmk/gui/utils:html_tag_balance",
         "//omd/packages/omd:omdlib",
         "//tests/testlib/common:empty_config",
         "//tests/testlib/common:utils",

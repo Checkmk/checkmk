@@ -100,6 +100,16 @@ py_library(
 )
 
 py_library(
+    name = "html_tag_balance",
+    srcs = ["html_tag_balance.py"],
+    imports = ["../../.."],
+    visibility = [
+        "//cmk:__subpackages__",
+        "//tests:__subpackages__",
+    ],
+)
+
+py_library(
     name = "autocompleter_config",
     srcs = ["autocompleter_config.py"],
     imports = ["../../.."],

@@ -339,17 +339,17 @@ class ModeParentScan(WatoMode):
         html.open_tr()
         html.open_td()
         html.write_text_permissive(_("Number of ping probes") + ":")
-        html.help(
-            _(
-                "After a gateway has been found, Checkmk checks if it is reachable via ping. If not, it is skipped and the next gateway nearer to the monitoring core is being tried. You can disable this check by setting the number of ping probes to 0."
-            )
-        )
         html.close_td()
         html.open_td()
         html.text_input("ping_probes", str(self._settings.ping_probes), size=2, cssclass="number")
         html.close_td()
         html.close_tr()
         html.close_table()
+        html.help(
+            _(
+                "After a gateway has been found, Checkmk checks if it is reachable via ping. If not, it is skipped and the next gateway nearer to the monitoring core is being tried. You can disable this check by setting the number of ping probes to 0."
+            )
+        )
 
         # Configuring parent
         forms.section(_("Configuration"))

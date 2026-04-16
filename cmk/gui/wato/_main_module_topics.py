@@ -12,7 +12,6 @@ from cmk.gui.watolib.main_menu import MainModuleTopic, MainModuleTopicRegistry
 
 
 def register(main_module_topic_registry: MainModuleTopicRegistry) -> None:
-    main_module_topic_registry.register(MainModuleTopicQuickSetup)
     main_module_topic_registry.register(MainModuleTopicHosts)
     main_module_topic_registry.register(MainModuleTopicServices)
     main_module_topic_registry.register(MainModuleTopicAgents)
@@ -42,13 +41,6 @@ MainModuleTopicAgents = MainModuleTopic(
     title=_l("Agents"),
     icon_name=DynamicIconName("topic_agents"),
     sort_index=40,
-)
-
-MainModuleTopicQuickSetup = MainModuleTopic(
-    name="quick_setups",
-    title=_l("Quick Setup"),
-    icon_name=DynamicIconName("topic_quick_setups"),
-    sort_index=45,
 )
 
 MainModuleTopicEvents = MainModuleTopic(

@@ -18,7 +18,7 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
-from cmk.gui.i18n import _
+from cmk.gui.i18n import _, _l
 from cmk.gui.logged_in import user
 from cmk.gui.page_menu import (
     make_simple_form_page_menu,
@@ -49,10 +49,6 @@ from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import make_confirm_delete_link
 from cmk.gui.valuespec import Dictionary, DictionaryEntry, FixedValue, RuleComment, TextInput
 from cmk.gui.wato import TileMenuRenderer
-from cmk.gui.wato._main_module_topics import MainModuleTopicQuickSetup
-from cmk.gui.wato.pages.hosts import ModeEditHost
-from cmk.gui.wato.pages.password_store import ModeEditPassword
-from cmk.gui.wato.pages.rulesets import ModeEditRule
 from cmk.gui.watolib.changes import add_change
 from cmk.gui.watolib.configuration_bundle_store import (
     BundleId,
@@ -70,13 +66,24 @@ from cmk.gui.watolib.configuration_bundles import (
     valid_special_agent_bundle,
 )
 from cmk.gui.watolib.hosts_and_folders import make_action_link
-from cmk.gui.watolib.main_menu import ABCMainModule, MainModuleRegistry, MainModuleTopic, MenuItem
+from cmk.gui.watolib.main_menu import (
+    ABCMainModule,
+    MainModuleRegistry,
+    MainModuleTopic,
+    MainModuleTopicRegistry,
+    MenuItem,
+)
 from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
 from cmk.gui.watolib.rulespecs import rulespec_registry
 from cmk.utils.rulesets.definition import RuleGroup, RuleGroupType
 
 
-def register(main_module_registry: MainModuleRegistry, mode_registry: ModeRegistry) -> None:
+def register(
+    main_module_topic_registry: MainModuleTopicRegistry,
+    main_module_registry: MainModuleRegistry,
+    mode_registry: ModeRegistry,
+) -> None:
+    main_module_topic_registry.register(MainModuleTopicQuickSetup)
     mode_registry.register(ModeConfigurationBundle)
     mode_registry.register(ModeEditConfigurationBundles)
     mode_registry.register(ModeQuickSetupSpecialAgent)
@@ -84,6 +91,14 @@ def register(main_module_registry: MainModuleRegistry, mode_registry: ModeRegist
     main_module_registry.register(MainModuleQuickSetupAzure)
     main_module_registry.register(MainModuleQuickSetupAzureV2)
     main_module_registry.register(MainModuleQuickSetupGCP)
+
+
+MainModuleTopicQuickSetup = MainModuleTopic(
+    name="quick_setups",
+    title=_l("Quick Setup"),
+    icon_name=DynamicIconName("topic_quick_setups"),
+    sort_index=45,
+)
 
 
 class ModeQuickSetupSpecialAgent(WatoMode):
@@ -781,7 +796,8 @@ class ModeConfigurationBundle(WatoMode):
 
         bundle_entity_links = [
             MenuItem(
-                mode_or_url=ModeEditRule.mode_url(
+                mode_or_url=mode_url(
+                    "edit_rule",
                     varname=RuleGroup.SpecialAgents(self._bundle_group.split(":")[1]),
                     rule_id=rule.id,
                 ),
@@ -795,7 +811,7 @@ class ModeConfigurationBundle(WatoMode):
                 ).format(rule_title=rule.ruleset.title()),
             ),
             MenuItem(
-                mode_or_url=ModeEditHost.mode_url(host=host.name()),
+                mode_or_url=mode_url("edit_host", host=host.name()),
                 title=_("Host"),
                 icon=StaticIcon(IconNames.folder),
                 permission="hosts",
@@ -823,7 +839,7 @@ class ModeConfigurationBundle(WatoMode):
             password_id, password = self._bundle_references.passwords[0]
             bundle_entity_links.append(
                 MenuItem(
-                    mode_or_url=ModeEditPassword.mode_url(ident=password_id),
+                    mode_or_url=mode_url("edit_password", ident=password_id),
                     title=_("Password"),
                     icon=StaticIcon(IconNames.passwords),
                     permission="passwords",

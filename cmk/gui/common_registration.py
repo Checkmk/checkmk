@@ -310,6 +310,7 @@ def register(
     )
     quick_setup_registration.register(
         automation_command_registry,
+        main_module_topic_registry,
         main_module_registry,
         mode_registry,
         quick_setup_registry,

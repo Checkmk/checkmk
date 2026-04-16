@@ -582,6 +582,7 @@ py_wheel(
         "//cmk/gui/views:sorter",
         "//cmk/gui/views:store",
         "//cmk/gui/visuals",
+        "//cmk/gui/wato:base",
         "//cmk/gui/watolib",
         "//cmk/gui/watolib:config_infra",
         "//cmk/gui/watolib:groups_io",

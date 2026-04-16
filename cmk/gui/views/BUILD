@@ -337,10 +337,11 @@ py_library(
     ],
 )
 
-# Page handlers and core views logic (all deps are extracted targets).
+# All remaining views files: page handlers, registration, __init__.
 py_library(
     name = "views",
     srcs = [
+        "__init__.py",
         "_join_service_rows.py",
         "_permissions.py",
         "availability.py",
@@ -350,6 +351,7 @@ py_library(
         "page_edit_view.py",
         "page_edit_views.py",
         "page_show_view.py",
+        "registration.py",
         "visual_type.py",
     ],
     imports = ["../../.."],
@@ -358,10 +360,14 @@ py_library(
         "//tests:__subpackages__",
     ],
     deps = [
+        ":_openapi",
         ":command",
+        ":graph",
+        ":icon",
         ":inventory",
         ":layout",
         ":page_ajax_filters",
+        ":perfometer",
         ":row_post_processing",
         ":sorter",
         ":store",
@@ -375,6 +381,7 @@ py_library(
         "//cmk/gui:header",
         "//cmk/gui:http",
         "//cmk/gui:i18n",
+        "//cmk/gui:legacy_plugins",
         "//cmk/gui:log",
         "//cmk/gui:logged_in",
         "//cmk/gui:page_menu",
@@ -392,13 +399,19 @@ py_library(
         "//cmk/gui/bi:foldable_tree_renderer",
         "//cmk/gui/dashboard:type_defs",
         "//cmk/gui/data_source",
+        "//cmk/gui/graphing",
         "//cmk/gui/htmllib:generator",
         "//cmk/gui/htmllib:html",
         "//cmk/gui/inventory",
+        "//cmk/gui/openapi/framework",
+        "//cmk/gui/openapi/framework:core",
+        "//cmk/gui/openapi/restful_objects",
         "//cmk/gui/painter:v0_base",
+        "//cmk/gui/plugins/views",
         "//cmk/gui/utils:csrf_token",
         "//cmk/gui/utils:escaping",
         "//cmk/gui/utils:html",
+        "//cmk/gui/utils:labels",
         "//cmk/gui/utils:output_funnel",
         "//cmk/gui/utils:roles",
         "//cmk/gui/utils:selection_id",
@@ -409,17 +422,8 @@ py_library(
         "//cmk/gui/visuals",
         "//cmk/utils",
         "//packages/cmk-ccc:hostaddress",
+        "//packages/cmk-ccc:plugin-registry",
         "//packages/cmk-ccc:site",
         "//packages/cmk-ccc:version",
     ],
-)
-
-# Registration + __init__ — depend on cmk.gui.plugins.views (monolithic).
-filegroup(
-    name = "gui_srcs",
-    srcs = [
-        "__init__.py",
-        "registration.py",
-    ],
-    visibility = ["//cmk/gui:__pkg__"],
 )

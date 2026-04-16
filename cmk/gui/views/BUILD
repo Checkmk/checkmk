@@ -162,7 +162,7 @@ py_library(
 
 py_library(
     name = "sorter",
-    srcs = glob(include = ["sorter/**/*.py"]),
+    srcs = glob(include = ["sorter/**/*.py"]) + ["sort_url.py"],
     imports = ["../../.."],
     visibility = [
         "//cmk:__subpackages__",
@@ -252,6 +252,27 @@ py_library(
     ],
 )
 
+py_library(
+    name = "page_ajax_filters",
+    srcs = ["page_ajax_filters.py"],
+    imports = ["../../.."],
+    visibility = [
+        "//cmk:__subpackages__",
+        "//tests:__subpackages__",
+    ],
+    deps = [
+        ":store",
+        "//cmk/gui:exceptions",
+        "//cmk/gui:http",
+        "//cmk/gui:i18n",
+        "//cmk/gui:pages",
+        "//cmk/gui:type_defs",
+        "//cmk/gui/data_source",
+        "//cmk/gui/utils:output_funnel",
+        "//cmk/gui/visuals",
+    ],
+)
+
 # Remaining views root files that form the core orchestration layer.
 # These depend on the subdirectory targets above.
 filegroup(
@@ -265,7 +286,9 @@ filegroup(
             "graph.py",
             "icon/**/*.py",
             "layout/**/*.py",
+            "page_ajax_filters.py",
             "perfometer/**/*.py",
+            "sort_url.py",
             "sorter/**/*.py",
             "store.py",
             "view_choices.py",

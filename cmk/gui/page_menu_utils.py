@@ -8,7 +8,7 @@ from collections.abc import Iterator
 import cmk.ccc.version as cmk_version
 from cmk.ccc.user import UserId
 from cmk.gui import pagetypes, visuals
-from cmk.gui.bi import is_part_of_aggregation
+from cmk.gui.bi._compiler import is_part_of_aggregation
 from cmk.gui.config import active_config
 from cmk.gui.data_source import ABCDataSource
 from cmk.gui.http import request

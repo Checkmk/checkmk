@@ -19,11 +19,30 @@ py_library(
     ],
 )
 
+py_library(
+    name = "_compiler",
+    srcs = ["_compiler.py"],
+    imports = ["../../.."],
+    visibility = [
+        "//cmk:__subpackages__",
+        "//tests:__subpackages__",
+    ],
+    deps = [
+        ":bi_manager",
+        "//cmk/bi",
+        "//cmk/gui:hooks",
+        "//cmk/gui:i18n",
+    ],
+)
+
 filegroup(
     name = "gui_srcs",
     srcs = glob(
         include = ["**/*.py"],
-        exclude = ["bi_manager.py"],
+        exclude = [
+            "_compiler.py",
+            "bi_manager.py",
+        ],
     ),
     visibility = ["//cmk/gui:__pkg__"],
 )

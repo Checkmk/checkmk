@@ -12,7 +12,7 @@ import CmkLabel from '@/components/CmkLabel.vue'
 import CmkInput from '@/components/user-input/CmkInput.vue'
 import CmkLabelRequired from '@/components/user-input/CmkLabelRequired.vue'
 
-import type { EndpointConfig } from './ConfigureCollector.vue'
+import type { EndpointConfig } from './otelTypes'
 import { validateAddress, validatePort } from './validation.ts'
 
 const { _t } = usei18n()

@@ -16,7 +16,7 @@ import CmkInlineValidation from '@/components/user-input/CmkInlineValidation.vue
 import CmkInput from '@/components/user-input/CmkInput.vue'
 import CmkLabelRequired from '@/components/user-input/CmkLabelRequired.vue'
 
-import type { AuthConfig } from './ConfigureCollector.vue'
+import type { AuthConfig } from './otelTypes'
 
 const { _t } = usei18n()
 

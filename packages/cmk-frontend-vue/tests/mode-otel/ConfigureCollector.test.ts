@@ -13,7 +13,7 @@ import type {
   AuthConfig,
   EndpointConfig,
   EventConsoleConfig
-} from '@/mode-otel/otel-configuration-steps/ConfigureCollector.vue'
+} from '@/mode-otel/otel-configuration-steps/otelTypes'
 import type { PasswordConfig } from '@/mode-otel/otel-configuration-steps/password_store_password.types.ts'
 
 function mockPasswordsResponse(passwords: { id: string; title: string }[] = []) {

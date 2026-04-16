@@ -3,6 +3,9 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
+import type { AuthConfig, Credential, EndpointConfig } from './otelTypes'
+
+export type { AuthConfig, Credential }
 
 export interface CollectorSnippetInput {
   siteName: string
@@ -17,18 +20,8 @@ export interface CollectorSnippets {
   service: string
 }
 
-export interface Credential {
-  username: string
-  password: string | null // password store ID
-}
-
-export interface AuthConfig {
-  method: 'none' | 'basicauth'
-  credential: Credential | null
-}
-
 export interface ExporterConfig {
-  endpoint: { address: string; port: number | undefined }
+  endpoint: EndpointConfig
   tlsEnabled: boolean
   auth: AuthConfig
 }

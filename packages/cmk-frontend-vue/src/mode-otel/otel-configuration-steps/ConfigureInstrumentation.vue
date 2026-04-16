@@ -13,8 +13,8 @@ import CmkTabs, { CmkTab, CmkTabContent } from '@/components/CmkTabs'
 import CmkHeading from '@/components/typography/CmkHeading.vue'
 import CmkParagraph from '@/components/typography/CmkParagraph.vue'
 
-import type { AuthConfig, EndpointConfig } from './ConfigureCollector.vue'
 import { type CollectorSnippetInput, buildCollectorSnippets } from './otelSnippets'
+import type { AuthConfig, EndpointConfig } from './otelTypes'
 
 const { _t } = usei18n()
 

@@ -18,16 +18,16 @@ import CmkHeading from '@/components/typography/CmkHeading.vue'
 import CmkParagraph from '@/components/typography/CmkParagraph.vue'
 
 import ConfigureCollector from './otel-configuration-steps/ConfigureCollector.vue'
-import type {
-  AuthConfig,
-  EndpointConfig,
-  EventConsoleConfig
-} from './otel-configuration-steps/ConfigureCollector.vue'
 import ConfigureGeneralProperties from './otel-configuration-steps/ConfigureGeneralProperties.vue'
 import ConfigureInstrumentation from './otel-configuration-steps/ConfigureInstrumentation.vue'
 import FinalizeConfiguration, {
   type FinalizeState
 } from './otel-configuration-steps/FinalizeConfiguration.vue'
+import type {
+  AuthConfig,
+  EndpointConfig,
+  EventConsoleConfig
+} from './otel-configuration-steps/otelTypes'
 import type { PasswordConfig } from './otel-configuration-steps/password_store_password.types.ts'
 
 const props = defineProps<{

@@ -91,7 +91,7 @@ py_library(
         "//cmk/gui/pagetypes",
         "//cmk/gui/painter:v0_base",
         "//cmk/gui/plugins/dashboard",
-        "//cmk/gui/sidebar:snapin_registry",
+        "//cmk/gui/sidebar/_snapin:snapin_registry",
         "//cmk/gui/token_auth",
         "//cmk/gui/userdb",
         "//cmk/gui/utils:csrf_token",

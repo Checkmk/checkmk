@@ -520,7 +520,7 @@ py_wheel(
         "//cmk/gui/rule_specs:types",
         "//cmk/gui/search",
         "//cmk/gui/search:match_items",
-        "//cmk/gui/sidebar:snapin_registry",
+        "//cmk/gui/sidebar/_snapin:snapin_registry",
         "//cmk/gui/token_auth",
         "//cmk/gui/userdb",
         "//cmk/gui/utils:agent",

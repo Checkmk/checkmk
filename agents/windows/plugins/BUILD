@@ -20,6 +20,9 @@ filegroup(
     visibility = ["//visibility:public"],
 )
 
+# May contain local file target labels, or cross package labels
+# from migrated bakery plugins under cmk/plugins/<family>/
+# In the latter case, the file target must be exposed to this package.
 TO_SIGN_SCRIPTS = [
     "arcserve_backup.ps1",
     "citrix_farm.ps1",
@@ -48,9 +51,11 @@ TO_SIGN_SCRIPTS = [
 
 [
     genrule(
-        name = "sign_" + n,
+        # n may be a cross-package label; strip the package prefix for
+        # the rule name and output path.
+        name = "sign_" + n.split(":")[-1],
         srcs = [n],
-        outs = ["signed/" + n],
+        outs = ["signed/" + n.split(":")[-1]],
         cmd_bat = "$(execpath scripts/signer.bat) $< $@",
         executable = True,
         target_compatible_with = ["@platforms//os:windows"],

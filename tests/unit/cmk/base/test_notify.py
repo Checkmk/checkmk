@@ -16,8 +16,12 @@ from cmk.utils.http_proxy_config import EnvironmentProxyConfig
 from cmk.utils.notify_types import (
     Contact,
     ContactName,
+    CustomPluginName,
     EventRule,
     NotificationContext,
+    NotificationParameterGeneralInfos,
+    NotificationParameterID,
+    NotificationParameterSpecs,
     NotificationRuleID,
     NotifyPluginParamsDict,
 )
@@ -938,6 +942,217 @@ def test_create_notifications_custom_script_with_call_parameters() -> None:
     assert len(notifications) == 1
     _locked, final_params, _bulk = next(iter(notifications.values()))
     assert final_params["params"] == ["param1", "param2"]  # type: ignore[typeddict-item]
+
+
+_TEST_PLUGIN = CustomPluginName("my_script")
+_TEST_PARAM_ID = NotificationParameterID("test_params")
+_TEST_GENERAL = NotificationParameterGeneralInfos(description="test", comment="", docu_url="")
+_TEST_PARAMETERS: NotificationParameterSpecs = {
+    _TEST_PLUGIN: {
+        _TEST_PARAM_ID: {
+            "general": _TEST_GENERAL,
+            "parameter_properties": {},
+        }
+    }
+}
+
+
+def _make_add_rule(
+    *,
+    contact_users: list[str],
+    plugin: CustomPluginName = _TEST_PLUGIN,
+    param_id: NotificationParameterID = _TEST_PARAM_ID,
+    allow_disable: bool = True,
+    contact: str | None = None,
+) -> EventRule:
+    """Create a notification rule for adding notifications using proper types."""
+    rule = _make_rule()
+    rule["notify_plugin"] = (plugin, param_id)
+    rule["contact_users"] = contact_users
+    rule["allow_disable"] = allow_disable
+    if contact is not None:
+        rule["contact"] = contact
+    return rule
+
+
+def _make_cancel_rule(
+    *,
+    contact_users: list[str],
+    plugin: CustomPluginName = _TEST_PLUGIN,
+    contact: str | None = None,
+) -> EventRule:
+    """Create a notification rule for cancelling notifications."""
+    rule = _make_rule()
+    rule["notify_plugin"] = (plugin, None)
+    rule["contact_users"] = contact_users
+    if contact is not None:
+        rule["contact"] = contact
+    return rule
+
+
+def _count_contact_occurrences(notifications: notify.Notifications, contact: ContactName) -> int:
+    """Count how many notification entries contain a given contact."""
+    count = 0
+    for contacts_set, _plugin in notifications:
+        if contact in contacts_set:
+            count += 1
+    return count
+
+
+def test_cancellation_removes_contacts() -> None:
+    """A cancel rule removes contacts from an existing notification entry."""
+    config_contacts = {
+        ContactName("userX"): Contact({"email": "x@example.com"}),
+        ContactName("userY"): Contact({"email": "y@example.com"}),
+    }
+    enriched_context = EnrichedEventContext({"HOSTNAME": HostName("testhost"), "WHAT": "HOST"})
+
+    notifications, rule_info = notify._create_notifications(
+        enriched_context=enriched_context,
+        rule=_make_add_rule(contact_users=["userX", "userY"]),
+        parameters=_TEST_PARAMETERS,
+        notifications={},
+        rule_info=[],
+        host_parameters_cb=lambda _host, _plugin: {},
+        config_contacts=config_contacts,
+        fallback_email="",
+        rule_nr=0,
+        timeperiods_active={},
+    )
+    assert len(notifications) == 1
+
+    notifications, rule_info = notify._create_notifications(
+        enriched_context=enriched_context,
+        rule=_make_cancel_rule(contact_users=["userX"]),
+        parameters=_TEST_PARAMETERS,
+        notifications=notifications,
+        rule_info=rule_info,
+        host_parameters_cb=lambda _host, _plugin: {},
+        config_contacts=config_contacts,
+        fallback_email="",
+        rule_nr=1,
+        timeperiods_active={},
+    )
+
+    assert len(notifications) == 1
+    assert _count_contact_occurrences(notifications, ContactName("userX")) == 0
+    assert _count_contact_occurrences(notifications, ContactName("userY")) == 1
+
+
+def test_cancellation_of_all_contacts_removes_entry() -> None:
+    """Cancelling all contacts removes the notification entry entirely."""
+    config_contacts = {
+        ContactName("userX"): Contact({"email": "x@example.com"}),
+    }
+    enriched_context = EnrichedEventContext({"HOSTNAME": HostName("testhost"), "WHAT": "HOST"})
+
+    notifications, rule_info = notify._create_notifications(
+        enriched_context=enriched_context,
+        rule=_make_add_rule(contact_users=["userX"]),
+        parameters=_TEST_PARAMETERS,
+        notifications={},
+        rule_info=[],
+        host_parameters_cb=lambda _host, _plugin: {},
+        config_contacts=config_contacts,
+        fallback_email="",
+        rule_nr=0,
+        timeperiods_active={},
+    )
+    assert len(notifications) == 1
+
+    notifications, rule_info = notify._create_notifications(
+        enriched_context=enriched_context,
+        rule=_make_cancel_rule(contact_users=["userX"]),
+        parameters=_TEST_PARAMETERS,
+        notifications=notifications,
+        rule_info=rule_info,
+        host_parameters_cb=lambda _host, _plugin: {},
+        config_contacts=config_contacts,
+        fallback_email="",
+        rule_nr=1,
+        timeperiods_active={},
+    )
+
+    assert len(notifications) == 0
+
+
+def test_locked_notification_cannot_be_cancelled_by_user_rule() -> None:
+    """A user rule cannot cancel a locked notification from a global rule."""
+    config_contacts = {
+        ContactName("userX"): Contact({"email": "x@example.com"}),
+    }
+    enriched_context = EnrichedEventContext({"HOSTNAME": HostName("testhost"), "WHAT": "HOST"})
+
+    notifications, rule_info = notify._create_notifications(
+        enriched_context=enriched_context,
+        rule=_make_add_rule(allow_disable=False, contact_users=["userX"]),
+        parameters=_TEST_PARAMETERS,
+        notifications={},
+        rule_info=[],
+        host_parameters_cb=lambda _host, _plugin: {},
+        config_contacts=config_contacts,
+        fallback_email="",
+        rule_nr=0,
+        timeperiods_active={},
+    )
+    assert len(notifications) == 1
+
+    notifications, rule_info = notify._create_notifications(
+        enriched_context=enriched_context,
+        rule=_make_cancel_rule(contact="userX", contact_users=["userX"]),
+        parameters=_TEST_PARAMETERS,
+        notifications=notifications,
+        rule_info=rule_info,
+        host_parameters_cb=lambda _host, _plugin: {},
+        config_contacts=config_contacts,
+        fallback_email="",
+        rule_nr=1,
+        timeperiods_active={},
+    )
+
+    assert len(notifications) == 1
+    assert _count_contact_occurrences(notifications, ContactName("userX")) == 1
+
+
+def test_different_plugins_create_separate_entries() -> None:
+    """Same contacts with different plugins should create separate entries."""
+    config_contacts = {
+        ContactName("userX"): Contact({"email": "x@example.com"}),
+    }
+    enriched_context = EnrichedEventContext({"HOSTNAME": HostName("testhost"), "WHAT": "HOST"})
+    plugin_a = CustomPluginName("plugin_a")
+    plugin_b = CustomPluginName("plugin_b")
+    parameters: NotificationParameterSpecs = {
+        plugin_a: {_TEST_PARAM_ID: {"general": _TEST_GENERAL, "parameter_properties": {}}},
+        plugin_b: {_TEST_PARAM_ID: {"general": _TEST_GENERAL, "parameter_properties": {}}},
+    }
+
+    notifications, rule_info = notify._create_notifications(
+        enriched_context=enriched_context,
+        rule=_make_add_rule(contact_users=["userX"], plugin=plugin_a),
+        parameters=parameters,
+        notifications={},
+        rule_info=[],
+        host_parameters_cb=lambda _host, _plugin: {},
+        config_contacts=config_contacts,
+        fallback_email="",
+        rule_nr=0,
+        timeperiods_active={},
+    )
+    notifications, rule_info = notify._create_notifications(
+        enriched_context=enriched_context,
+        rule=_make_add_rule(contact_users=["userX"], plugin=plugin_b),
+        parameters=parameters,
+        notifications=notifications,
+        rule_info=rule_info,
+        host_parameters_cb=lambda _host, _plugin: {},
+        config_contacts=config_contacts,
+        fallback_email="",
+        rule_nr=1,
+        timeperiods_active={},
+    )
+
+    assert len(notifications) == 2
 
 
 def test__rbn_match_rule_escalation_blocked() -> None:

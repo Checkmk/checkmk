@@ -30,8 +30,7 @@ def git_dir() -> Path:
         if (parent / ".git").exists():
             real_git = parent / ".git"
             return real_git
-    else:
-        raise RuntimeError("Could not find .git directory")
+    raise RuntimeError("Could not find .git directory")
 
 
 @pytest.fixture(scope="module")

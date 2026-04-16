@@ -31,6 +31,37 @@ py_library(
 )
 
 py_library(
+    name = "legacy_converter",
+    srcs = ["legacy_converter.py"],
+    imports = ["../../.."],
+    visibility = [
+        "//cmk:__subpackages__",
+        "//tests:__subpackages__",
+    ],
+    deps = [
+        ":compatibility",
+        ":types",
+        "//cmk/gui:agent_bakery",
+        "//cmk/gui:exceptions",
+        "//cmk/gui:i18n",
+        "//cmk/gui/form_specs",
+        "//cmk/gui/graphing",
+        "//cmk/gui/inventory",
+        "//cmk/gui/oauth2_connections",
+        "//cmk/gui/oauth2_connections:watolib_store",
+        "//cmk/gui/userdb",
+        "//cmk/gui/utils:autocompleter_config",
+        "//cmk/gui/utils:urls",
+        "//cmk/gui/valuespec",
+        "//cmk/gui/watolib",
+        "//cmk/utils",
+        "//packages/cmk-ccc:user",
+        "//packages/cmk-ccc:version",
+        "//packages/cmk-plugin-apis:rulesets",
+    ],
+)
+
+py_library(
     name = "compatibility",
     srcs = ["compatibility.py"],
     imports = ["../../.."],
@@ -53,6 +84,7 @@ filegroup(
         include = ["**/*.py"],
         exclude = [
             "compatibility.py",
+            "legacy_converter.py",
             "loader.py",
             "types.py",
         ],

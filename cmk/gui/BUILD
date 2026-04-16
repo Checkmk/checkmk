@@ -1250,6 +1250,20 @@ py_library(
 )
 
 py_library(
+    name = "agent_bakery",
+    srcs = ["agent_bakery.py"],
+    imports = ["../.."],
+    visibility = [
+        "//cmk:__subpackages__",
+        "//tests:__subpackages__",
+    ],
+    deps = [
+        ":i18n",
+        "//cmk/gui/watolib",
+    ],
+)
+
+py_library(
     name = "message",
     srcs = ["message.py"],
     imports = ["../.."],
@@ -1531,6 +1545,7 @@ py_library(
     srcs = glob(
         include = ["**/*.py"],
         exclude = [
+            "agent_bakery.py",
             "agent_commands.py",
             "alarm.py",
             "auth.py",
@@ -1618,6 +1633,7 @@ py_library(
             "dashboard/**/*.py",
             "inventory/**/*.py",
             "ldap_integration/**/*.py",
+            "mkeventd/**/*.py",
             "sidebar/**/*.py",
             "views/**/*.py",
             "wato/**/*.py",
@@ -1633,7 +1649,6 @@ py_library(
     ) + [
         "//cmk/gui/bi:gui_srcs",
         "//cmk/gui/nodevis:gui_srcs",
-        "//cmk/gui/oauth2_connections:gui_srcs",
         "//cmk/gui/openapi/spec/spec_generator:gui_srcs",
         "//cmk/gui/quick_setup:gui_srcs",
         "//cmk/gui/rule_specs:gui_srcs",
@@ -1652,6 +1667,7 @@ py_library(
         "//tests:__subpackages__",
     ],
     deps = [
+        ":agent_bakery",
         ":agent_commands",
         ":alarm",
         ":auth",
@@ -1760,8 +1776,10 @@ py_library(
         "//cmk/gui/inventory",
         "//cmk/gui/ldap_integration",
         "//cmk/gui/livestatus_utils/commands",
+        "//cmk/gui/mkeventd",
         "//cmk/gui/nodevis:topology",
         "//cmk/gui/nodevis:utils",
+        "//cmk/gui/oauth2_connections",
         "//cmk/gui/oauth2_connections:watolib_store",
         "//cmk/gui/openapi:openapi_init",
         "//cmk/gui/openapi:permission_tracking",

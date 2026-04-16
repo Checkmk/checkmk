@@ -1,4 +1,5 @@
 load("@aspect_rules_py//py:defs.bzl", "py_library")
+load("@cmk_requirements//:requirements.bzl", "requirement")
 
 py_library(
     name = "watolib_store",
@@ -18,13 +19,47 @@ py_library(
     ],
 )
 
-# Temporary: oauth2_connections files that still belong to the monolithic //cmk/gui target.
-# Remove this filegroup once oauth2_connections is fully extracted.
-filegroup(
-    name = "gui_srcs",
+py_library(
+    name = "oauth2_connections",
     srcs = glob(
         include = ["**/*.py"],
         exclude = ["watolib/store.py"],
     ),
-    visibility = ["//cmk/gui:__pkg__"],
+    imports = ["../../.."],
+    visibility = [
+        "//cmk:__subpackages__",
+        "//tests:__subpackages__",
+    ],
+    deps = [
+        ":watolib_store",
+        "//cmk/gui:breadcrumb",
+        "//cmk/gui:config",
+        "//cmk/gui:default_permissions",
+        "//cmk/gui:exceptions",
+        "//cmk/gui:http",
+        "//cmk/gui:i18n",
+        "//cmk/gui:logged_in",
+        "//cmk/gui:page_menu",
+        "//cmk/gui:pages",
+        "//cmk/gui:permissions",
+        "//cmk/gui:site_config",
+        "//cmk/gui:table",
+        "//cmk/gui:type_defs",
+        "//cmk/gui:user_sites",
+        "//cmk/gui/form_specs",
+        "//cmk/gui/htmllib:html",
+        "//cmk/gui/utils:csrf_token",
+        "//cmk/gui/utils:flashed_messages",
+        "//cmk/gui/utils:html",
+        "//cmk/gui/utils:transaction_manager",
+        "//cmk/gui/utils:urls",
+        "//cmk/gui/wato:base",
+        "//cmk/gui/watolib",
+        "//cmk/gui/watolib:config_infra",
+        "//cmk/gui/watolib:passwords",
+        "//cmk/utils",
+        "//packages/cmk-ccc:site",
+        "//packages/cmk-ccc:user",
+        requirement("requests"),
+    ],
 )

@@ -26,7 +26,7 @@ from cmk.gui.valuespec import (
     Transform,
     Tuple,
 )
-from cmk.gui.wato import RulespecGroupCheckParametersApplications
+from cmk.gui.watolib.rulespec_groups import RulespecGroupCheckParametersApplications
 from cmk.gui.watolib.rulespecs import (
     CheckParameterRulespecWithoutItem,
     HostRulespec,

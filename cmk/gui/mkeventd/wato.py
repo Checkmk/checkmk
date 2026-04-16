@@ -129,10 +129,7 @@ from cmk.gui.valuespec import (
     Tuple,
     ValueSpec,
 )
-from cmk.gui.wato import (
-    ContactGroupSelection,
-    MainModuleTopicEvents,
-)
+from cmk.gui.wato import ContactGroupSelection, MainModuleTopicEvents
 from cmk.gui.wato.pages.global_settings import (
     ABCEditGlobalSettingMode,
     ABCGlobalSettingsMode,

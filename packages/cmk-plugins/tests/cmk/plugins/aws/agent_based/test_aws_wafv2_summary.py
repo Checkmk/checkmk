@@ -10,7 +10,7 @@ from collections.abc import Sequence
 import pytest
 
 from cmk.agent_based.v2 import Result, Service, State, StringTable
-from cmk.legacy_checks.aws_wafv2_summary import (
+from cmk.plugins.aws.agent_based.aws_wafv2_summary import (
     check_aws_wafv2_summary,
     discover_aws_wafv2_summary,
 )

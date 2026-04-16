@@ -19,6 +19,8 @@ ENV \
 
 ARG ADDITIONAL_ARGS
 
+RUN sed -i "s|http://.*.ubuntu.com/ubuntu|http://apt.lan.checkmk.net/ubuntu|g" /etc/apt/sources.list.d/ubuntu.sources
+
 # used by install scripts
 COPY scripts/.bazelversion /opt/
 COPY scripts/defines.make /opt/

@@ -3,23 +3,32 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
+from collections.abc import Mapping
 
-
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import any_of, SNMPTree, startswith
-from cmk.legacy_includes.temperature import check_temperature
-
-check_info = {}
+from cmk.agent_based.v2 import (
+    any_of,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    get_value_store,
+    Service,
+    SimpleSNMPSection,
+    SNMPTree,
+    startswith,
+    StringTable,
+)
+from cmk.plugins.lib.temperature import check_temperature, TempParamType
 
 # .1.3.6.1.4.1.2636.3.1.13.1.5.7.1.0.0 FPC: EX3300 48-Port @ 0/*/* --> SNMPv2-SMI::enterprises.2636.3.1.13.1.5.7.1.0.0
 # .1.3.6.1.4.1.2636.3.1.13.1.5.7.2.0.0 FPC: EX3300 48-Port @ 1/*/* --> SNMPv2-SMI::enterprises.2636.3.1.13.1.5.7.2.0.0
 # .1.3.6.1.4.1.2636.3.1.13.1.7.7.1.0.0 45 --> SNMPv2-SMI::enterprises.2636.3.1.13.1.7.7.1.0.0
 # .1.3.6.1.4.1.2636.3.1.13.1.7.7.2.0.0 43 --> SNMPv2-SMI::enterprises.2636.3.1.13.1.7.7.2.0.0
 
+Section = Mapping[str, float]
 
-def parse_juniper_temp(string_table):
-    parsed = {}
+
+def parse_juniper_temp(string_table: StringTable) -> Section:
+    parsed: dict[str, float] = {}
     for description, reading_str in string_table:
         temperature = float(reading_str)
         if temperature > 0:
@@ -28,17 +37,23 @@ def parse_juniper_temp(string_table):
     return parsed
 
 
-def discover_juniper_temp(parsed):
-    return [(description, {}) for description in parsed]
+def discover_juniper_temp(section: Section) -> DiscoveryResult:
+    for description in section:
+        yield Service(item=description)
 
 
-def check_juniper_temp(item, params, parsed):
-    if item in parsed:
-        return check_temperature(parsed[item], params, "juniper_temp_%s" % item)
-    return None
+def check_juniper_temp(item: str, params: TempParamType, section: Section) -> CheckResult:
+    if item not in section:
+        return
+    yield from check_temperature(
+        reading=section[item],
+        params=params,
+        unique_name="juniper_temp_%s" % item,
+        value_store=get_value_store(),
+    )
 
 
-check_info["juniper_temp"] = LegacyCheckDefinition(
+snmp_section_juniper_temp = SimpleSNMPSection(
     name="juniper_temp",
     detect=any_of(
         startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.2636.1.1.1.2"),
@@ -49,6 +64,10 @@ check_info["juniper_temp"] = LegacyCheckDefinition(
         oids=["5.7", "7.7"],
     ),
     parse_function=parse_juniper_temp,
+)
+
+check_plugin_juniper_temp = CheckPlugin(
+    name="juniper_temp",
     service_name="Temperature %s",
     discovery_function=discover_juniper_temp,
     check_function=check_juniper_temp,

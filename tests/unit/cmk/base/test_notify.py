@@ -14,6 +14,7 @@ from cmk.base import notify
 from cmk.events.event_context import EnrichedEventContext, EventContext, HostName
 from cmk.utils.http_proxy_config import EnvironmentProxyConfig
 from cmk.utils.notify_types import (
+    AlwaysBulkParameters,
     Contact,
     ContactName,
     CustomPluginName,
@@ -1153,6 +1154,142 @@ def test_different_plugins_create_separate_entries() -> None:
     )
 
     assert len(notifications) == 2
+
+
+@pytest.mark.xfail(reason="Bug: (contacts, plugin) key causes duplicate notifications")
+def test_no_duplicate_notifications_for_overlapping_contacts() -> None:
+    """User X is in two contact groups. Two rules target these groups with the
+    same plugin and params. X should get exactly one notification."""
+    config_contacts = {
+        ContactName("userX"): Contact({"email": "x@example.com"}),
+        ContactName("userY"): Contact({"email": "y@example.com"}),
+        ContactName("userZ"): Contact({"email": "z@example.com"}),
+    }
+    enriched_context = EnrichedEventContext({"HOSTNAME": HostName("testhost"), "WHAT": "HOST"})
+
+    notifications, rule_info = notify._create_notifications(
+        enriched_context=enriched_context,
+        rule=_make_add_rule(contact_users=["userX", "userY"]),
+        parameters=_TEST_PARAMETERS,
+        notifications={},
+        rule_info=[],
+        host_parameters_cb=lambda _host, _plugin: {},
+        config_contacts=config_contacts,
+        fallback_email="",
+        rule_nr=0,
+        timeperiods_active={},
+    )
+    notifications, rule_info = notify._create_notifications(
+        enriched_context=enriched_context,
+        rule=_make_add_rule(contact_users=["userX", "userZ"]),
+        parameters=_TEST_PARAMETERS,
+        notifications=notifications,
+        rule_info=rule_info,
+        host_parameters_cb=lambda _host, _plugin: {},
+        config_contacts=config_contacts,
+        fallback_email="",
+        rule_nr=1,
+        timeperiods_active={},
+    )
+
+    assert len(notifications) == 1
+    assert _count_contact_occurrences(notifications, ContactName("userX")) == 1
+
+
+@pytest.mark.xfail(reason="Bug: same (contacts, plugin) key overwrites earlier rule's parameters")
+def test_no_parameter_overwrite_for_same_contacts_and_plugin() -> None:
+    """Two rules for the same contacts and plugin but different params.
+    Both notifications should be preserved."""
+    config_contacts = {
+        ContactName("userX"): Contact({"email": "x@example.com"}),
+    }
+    enriched_context = EnrichedEventContext({"HOSTNAME": HostName("testhost"), "WHAT": "HOST"})
+    param_alpha = NotificationParameterID("alpha")
+    param_beta = NotificationParameterID("beta")
+    parameters: NotificationParameterSpecs = {
+        _TEST_PLUGIN: {
+            param_alpha: {
+                "general": _TEST_GENERAL,
+                "parameter_properties": {"mode": "alpha"},
+            },
+            param_beta: {
+                "general": _TEST_GENERAL,
+                "parameter_properties": {"mode": "beta"},
+            },
+        }
+    }
+
+    notifications, rule_info = notify._create_notifications(
+        enriched_context=enriched_context,
+        rule=_make_add_rule(contact_users=["userX"], param_id=param_alpha),
+        parameters=parameters,
+        notifications={},
+        rule_info=[],
+        host_parameters_cb=lambda _host, _plugin: {},
+        config_contacts=config_contacts,
+        fallback_email="",
+        rule_nr=0,
+        timeperiods_active={},
+    )
+    notifications, rule_info = notify._create_notifications(
+        enriched_context=enriched_context,
+        rule=_make_add_rule(contact_users=["userX"], param_id=param_beta),
+        parameters=parameters,
+        notifications=notifications,
+        rule_info=rule_info,
+        host_parameters_cb=lambda _host, _plugin: {},
+        config_contacts=config_contacts,
+        fallback_email="",
+        rule_nr=1,
+        timeperiods_active={},
+    )
+
+    assert len(notifications) == 2
+
+
+@pytest.mark.xfail(reason="Bug: overlapping contacts get duplicate bulk notifications")
+def test_no_duplicate_bulk_notifications_for_overlapping_contacts() -> None:
+    """Same as contact dedup test but with bulk enabled.
+    Contact X should appear in exactly one bulk notification entry."""
+    config_contacts = {
+        ContactName("userX"): Contact({"email": "x@example.com"}),
+        ContactName("userY"): Contact({"email": "y@example.com"}),
+        ContactName("userZ"): Contact({"email": "z@example.com"}),
+    }
+    enriched_context = EnrichedEventContext({"HOSTNAME": HostName("testhost"), "WHAT": "HOST"})
+
+    bulk_params = AlwaysBulkParameters(interval=60, count=10, groupby=[])
+    bulk_rule = _make_add_rule(contact_users=["userX", "userY"])
+    bulk_rule["bulk"] = ("always", bulk_params)
+    notifications, rule_info = notify._create_notifications(
+        enriched_context=enriched_context,
+        rule=bulk_rule,
+        parameters=_TEST_PARAMETERS,
+        notifications={},
+        rule_info=[],
+        host_parameters_cb=lambda _host, _plugin: {},
+        config_contacts=config_contacts,
+        fallback_email="",
+        rule_nr=0,
+        timeperiods_active={"24X7": True},
+    )
+
+    bulk_rule2 = _make_add_rule(contact_users=["userX", "userZ"])
+    bulk_rule2["bulk"] = ("always", bulk_params)
+    notifications, rule_info = notify._create_notifications(
+        enriched_context=enriched_context,
+        rule=bulk_rule2,
+        parameters=_TEST_PARAMETERS,
+        notifications=notifications,
+        rule_info=rule_info,
+        host_parameters_cb=lambda _host, _plugin: {},
+        config_contacts=config_contacts,
+        fallback_email="",
+        rule_nr=1,
+        timeperiods_active={"24X7": True},
+    )
+
+    assert _count_contact_occurrences(notifications, ContactName("userX")) == 1
 
 
 def test__rbn_match_rule_escalation_blocked() -> None:

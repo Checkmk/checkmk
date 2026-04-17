@@ -1,12 +1,15 @@
 #!/usr/bin/env python3
-# Copyright (C) 2023 Checkmk GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.agent_based.internal import evaluate_snmp_detection
 from cmk.agent_based.v2 import Result, Service, State, StringTable
-from cmk.legacy_checks.juniper_fru import check_juniper_fru, discover_juniper_fru
-from cmk.plugins.juniper.agent_based.juniper_fru_section import snmp_section_juniper_fru
+from cmk.plugins.juniper.agent_based.juniper_fru import check_juniper_fru, discover_juniper_fru
+from cmk.plugins.juniper.agent_based.juniper_fru_section import (
+    parse_juniper_fru,
+    snmp_section_juniper_fru,
+)
 
 # SUP-13184
 TABLE_DATA_0: StringTable = [
@@ -57,6 +60,41 @@ DATA_1: dict[str, str] = {
     ".1.3.6.1.2.1.1.2.0": ".1.3.6.1.4.1.2636.1.1.1.2.25",
     ".1.3.6.1.4.1.2636.3.1.15.1.5.2.1.0.0": "PEM 0",
 }
+
+_SECTION = {
+    "Power Supply 0": {"fru_type": "7", "fru_state": "6"},
+    "Power Supply 1": {"fru_type": "7", "fru_state": "3"},
+    "Fan Tray 0 Fan 0": {"fru_type": "13", "fru_state": "6"},
+    "Fan Tray 0 Fan 1": {"fru_type": "13", "fru_state": "6"},
+    "Fan Tray 1 Fan 0": {"fru_type": "13", "fru_state": "6"},
+    "Fan Tray 1 Fan 1": {"fru_type": "13", "fru_state": "6"},
+    "Fan Tray 2 Fan 0": {"fru_type": "13", "fru_state": "6"},
+    "Fan Tray 2 Fan 1": {"fru_type": "13", "fru_state": "6"},
+    "FPC: QFX10002-72Q 0": {"fru_type": "3", "fru_state": "6"},
+    "PIC: 72X40G 0/0": {"fru_type": "11", "fru_state": "6"},
+    "Routing Engine 0": {"fru_type": "6", "fru_state": "6"},
+}
+
+
+def test_parse_juniper_fru() -> None:
+    assert (
+        parse_juniper_fru(
+            [
+                ["Power Supply 0", "7", "6"],
+                ["Power Supply 1", "7", "3"],
+                ["Fan Tray 0 Fan 0", "13", "6"],
+                ["Fan Tray 0 Fan 1", "13", "6"],
+                ["Fan Tray 1 Fan 0", "13", "6"],
+                ["Fan Tray 1 Fan 1", "13", "6"],
+                ["Fan Tray 2 Fan 0", "13", "6"],
+                ["Fan Tray 2 Fan 1", "13", "6"],
+                ["FPC: QFX10002-72Q @ 0/*/*", "3", "6"],
+                ["PIC: 72X40G @ 0/0/*", "11", "6"],
+                ["Routing Engine 0", "6", "6"],
+            ]
+        )
+        == _SECTION
+    )
 
 
 def test_detect_juniper_fru_with_data_0() -> None:
@@ -124,6 +162,18 @@ def test_discover_juniper_fru_with_type_18_data() -> None:
         Service(item="PSM 7"),
         Service(item="PSM 7 INP0"),
         Service(item="PSM 7 INP1"),
+    ]
+
+
+def test_check_juniper_fru_online() -> None:
+    assert list(check_juniper_fru("Power Supply 0", _SECTION)) == [
+        Result(state=State.OK, summary="Operational status: online"),
+    ]
+
+
+def test_check_juniper_fru_present() -> None:
+    assert list(check_juniper_fru("Power Supply 1", _SECTION)) == [
+        Result(state=State.WARN, summary="Operational status: present"),
     ]
 
 

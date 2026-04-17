@@ -715,6 +715,7 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
         "cmk.utils.agent_registration",
         "cmk.utils.nonfree.pro",
         "cmk.utils.config_warnings",
+        "cmk.utils.experimental_config",
         "cmk.utils.labels",
         "cmk.utils.macros",
         "cmk.utils.password_store",

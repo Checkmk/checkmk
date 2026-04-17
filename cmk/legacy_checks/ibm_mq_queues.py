@@ -3,21 +3,26 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
-
-
-# mypy: disable-error-code="var-annotated"
 
 import re
+from collections.abc import Mapping
+from datetime import datetime
+from typing import TypedDict
 
 import dateutil.parser
 
-from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
-from cmk.agent_based.v2 import render
+from cmk.agent_based.v2 import (
+    check_levels,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Metric,
+    render,
+    Result,
+    Service,
+    State,
+)
 from cmk.legacy_includes.ibm_mq import is_ibm_mq_service_vanished
-
-check_info = {}
 
 # <<<ibm_mq_queues:sep(10)>>>
 # QMNAME(MY.TEST)                                           STATUS(RUNNING)
@@ -49,152 +54,185 @@ check_info = {}
 # All valid MQSC commands were processed.
 
 
-def discover_ibm_mq_queues(parsed):
-    for service_name in parsed:
+Section = Mapping[str, Mapping[str, str]]
+
+
+class _ProcLevels(TypedDict, total=False):
+    upper: tuple[int, int]
+    lower: tuple[int, int]
+
+
+class _QueueParams(TypedDict, total=False):
+    curdepth: tuple[int | None, int | None]
+    curdepth_perc: tuple[float | None, float | None]
+    msgage: tuple[int, int]
+    lgetage: tuple[int, int]
+    lputage: tuple[int, int]
+    ipprocs: _ProcLevels
+    opprocs: _ProcLevels
+
+
+def discover_ibm_mq_queues(section: Section) -> DiscoveryResult:
+    for service_name in section:
         if ":" not in service_name:
             # Do not show queue manager entry in inventory
             continue
-        yield service_name, {}
+        yield Service(item=service_name)
 
 
 QTIME_PATTERN = re.compile(r"^([0-9]*),[\s]*([0-9]*)$")
 
 
-def check_ibm_mq_queues(item, params, parsed):
-    if is_ibm_mq_service_vanished(item, parsed):
+def check_ibm_mq_queues(item: str, params: _QueueParams, section: Section) -> CheckResult:
+    if is_ibm_mq_service_vanished(item, section):
         return
-    data = parsed[item]
+    data = section[item]
 
     if "CURDEPTH" in data:
         cur_depth = data.get("CURDEPTH")
         max_depth = data.get("MAXDEPTH")
-        yield ibm_mq_depth(cur_depth, max_depth, params)
+        yield from ibm_mq_depth(cur_depth, max_depth, params)
 
     if "MSGAGE" in data:
         msg_age = data.get("MSGAGE")
-        yield ibm_mq_msg_age(msg_age, params)
+        yield from ibm_mq_msg_age(msg_age, params)
 
     if "LGETDATE" in data:
         mq_date = data.get("LGETDATE")
         mq_time = data.get("LGETTIME")
-        agent_timestamp = ibm_mq_agent_timestamp(item, parsed)
-        yield ibm_mq_last_age(mq_date, mq_time, agent_timestamp, "Last get", "lgetage", params)
+        agent_timestamp = ibm_mq_agent_timestamp(item, section)
+        yield from ibm_mq_last_age(
+            mq_date, mq_time, agent_timestamp, "Last get", params.get("lgetage")
+        )
 
     if "LPUTDATE" in data:
         mq_date = data.get("LPUTDATE")
         mq_time = data.get("LPUTTIME")
-        agent_timestamp = ibm_mq_agent_timestamp(item, parsed)
-        yield ibm_mq_last_age(mq_date, mq_time, agent_timestamp, "Last put", "lputage", params)
+        agent_timestamp = ibm_mq_agent_timestamp(item, section)
+        yield from ibm_mq_last_age(
+            mq_date, mq_time, agent_timestamp, "Last put", params.get("lputage")
+        )
 
     if "IPPROCS" in data:
         cnt = data["IPPROCS"]
-        yield ibm_mq_procs(cnt, "Open input handles", "ipprocs", "ipprocs", params)
+        yield from ibm_mq_procs(cnt, "Open input handles", params.get("ipprocs"), "ipprocs")
 
     if "OPPROCS" in data:
         cnt = data["OPPROCS"]
-        yield ibm_mq_procs(cnt, "Open output handles", "opprocs", "opprocs", params)
+        yield from ibm_mq_procs(cnt, "Open output handles", params.get("opprocs"), "opprocs")
 
     if "QTIME" in data:
         qtimes = data["QTIME"]
         if qtimes_match := QTIME_PATTERN.match(qtimes):
             qtime_short = qtimes_match.group(1)
             qtime_long = qtimes_match.group(2)
-            yield ibm_mq_get_qtime(qtime_short, "Qtime short", "qtime_short")
-            yield ibm_mq_get_qtime(qtime_long, "Qtime long", "qtime_long")
+            yield from ibm_mq_get_qtime(qtime_short, "Qtime short", "qtime_short")
+            yield from ibm_mq_get_qtime(qtime_long, "Qtime long", "qtime_long")
 
 
-def ibm_mq_depth(cur_depth, max_depth, params):
-    if cur_depth:
-        cur_depth = int(cur_depth)
-    if max_depth:
-        max_depth = int(max_depth)
+def ibm_mq_depth(cur_depth: str | None, max_depth: str | None, params: _QueueParams) -> CheckResult:
+    cur_depth_int = int(cur_depth) if cur_depth else None
+    max_depth_int = int(max_depth) if max_depth else None
 
-    infotext = "Queue depth: %d" % cur_depth
-    levelstext = []
-    state = 0
+    val = cur_depth_int if cur_depth_int is not None else 0
+    boundaries = (0, max_depth_int) if max_depth_int is not None else None
 
-    warn, crit = params.get("curdepth", (None, None))
-    if warn is not None or crit is not None:
-        if cur_depth >= crit:
-            state = 2
-        elif cur_depth >= warn:
-            state = 1
-        if state:
-            levelstext.append("%d/%d" % (warn, crit))
-    perfdata = [("curdepth", cur_depth, warn, crit, 0, max_depth)]
+    raw_abs = params.get("curdepth")
+    abs_warn, abs_crit = raw_abs if raw_abs else (None, None)
+    abs_level_pair: tuple[int, int] | None = (
+        (abs_warn, abs_crit) if abs_warn is not None and abs_crit is not None else None
+    )
 
-    if cur_depth and max_depth:
-        state_perc = 0
-        used_perc = float(cur_depth) / max_depth * 100
-        infotext += " (%.1f%%)" % used_perc
-        warn_perc, crit_perc = params.get("curdepth_perc", (None, None))
-        if warn_perc is not None or crit_perc is not None:
-            if used_perc >= crit_perc:
-                state_perc = 2
-            elif used_perc >= warn_perc:
-                state_perc = 1
-            if state_perc:
-                levelstext.append(f"{warn_perc}%/{crit_perc}%")
-            state = max(state, state_perc)
+    yield from check_levels(
+        val,
+        label="Queue depth",
+        levels_upper=("fixed", abs_level_pair)
+        if abs_level_pair is not None
+        else ("no_levels", None),
+        metric_name="curdepth",
+        render_func=str,
+        boundaries=boundaries,
+    )
 
-    if state:
-        infotext += " (warn/crit at %s)" % " and ".join(levelstext)
+    if cur_depth_int and max_depth_int:
+        raw_perc = params.get("curdepth_perc")
+        if raw_perc:
+            perc_warn, perc_crit = raw_perc
+            if perc_warn is not None and perc_crit is not None:
+                used_perc = float(cur_depth_int) / max_depth_int * 100
+                yield from check_levels(
+                    used_perc,
+                    label="Queue depth",
+                    levels_upper=("fixed", (perc_warn, perc_crit)),
+                    render_func=render.percent,
+                    notice_only=True,
+                )
 
-    return state, infotext, perfdata
 
-
-def ibm_mq_msg_age(msg_age, params):
+def ibm_mq_msg_age(msg_age: str | None, params: _QueueParams) -> CheckResult:
     label = "Oldest message"
     if not msg_age:
-        return (0, label + ": n/a", [])
-    return check_levels(
+        yield Result(state=State.OK, summary=f"{label}: n/a")
+        return
+    msgage_levels = params.get("msgage")
+    yield from check_levels(
         int(msg_age),
-        "msgage",
-        params.get("msgage"),
-        human_readable_func=render.timespan,
-        infoname=label,
+        label=label,
+        levels_upper=("fixed", msgage_levels) if msgage_levels else ("no_levels", None),
+        metric_name="msgage",
+        render_func=render.timespan,
     )
 
 
-def ibm_mq_agent_timestamp(item, parsed):
+def ibm_mq_agent_timestamp(item: str, parsed: Section) -> datetime:
     qmgr_name = item.split(":", 1)[0]
-    now = dateutil.parser.isoparse(parsed[qmgr_name]["NOW"])
-    return now
+    return dateutil.parser.isoparse(parsed[qmgr_name]["NOW"])
 
 
-def ibm_mq_last_age(mq_date, mq_time, agent_timestamp, label, key, params):
+def ibm_mq_last_age(
+    mq_date: str | None,
+    mq_time: str | None,
+    agent_timestamp: datetime,
+    label: str,
+    levels: tuple[int, int] | None,
+) -> CheckResult:
     if not (mq_date and mq_time):
-        return (0, label + ": n/a", [])
+        yield Result(state=State.OK, summary=f"{label}: n/a")
+        return
     mq_datetime = "{} {}".format(mq_date, mq_time.replace(".", ":"))
     input_time = dateutil.parser.parse(mq_datetime, default=agent_timestamp)
     age = abs((agent_timestamp - input_time).total_seconds())
-    return check_levels(
-        age, None, params.get(key), human_readable_func=render.timespan, infoname=label
+    yield from check_levels(
+        age,
+        label=label,
+        levels_upper=("fixed", levels) if levels else ("no_levels", None),
+        render_func=render.timespan,
     )
 
 
-def ibm_mq_procs(cnt, label, levels_key, metric, params):
-    wato = params.get(levels_key)
-    levels = tuple()
-    if wato:
-        levels += wato.get("upper", (None, None))
-        levels += wato.get("lower", (None, None))
-    return check_levels(int(cnt), metric, levels, human_readable_func=int, infoname=label)
+def ibm_mq_procs(cnt: str, label: str, wato: _ProcLevels | None, metric: str) -> CheckResult:
+    yield from check_levels(
+        int(cnt),
+        label=label,
+        levels_upper=("fixed", wato["upper"]) if wato and "upper" in wato else ("no_levels", None),
+        levels_lower=("fixed", wato["lower"]) if wato and "lower" in wato else ("no_levels", None),
+        metric_name=metric,
+        render_func=str,
+    )
 
 
-def ibm_mq_get_qtime(qtime, label, key):
+def ibm_mq_get_qtime(qtime: str, label: str, key: str) -> CheckResult:
     if not qtime or qtime == "999999999":
         time_in_seconds = 0.0
         info_value = "n/a"
     else:
         time_in_seconds = int(qtime) / 1000000
         info_value = render.timespan(time_in_seconds)
-    infotext = f"{label}: {info_value}"
-    perfdata = [(key, time_in_seconds, None, None)]
-    return (0, infotext, perfdata)
+    yield Result(state=State.OK, summary=f"{label}: {info_value}")
+    yield Metric(key, time_in_seconds)
 
 
-check_info["ibm_mq_queues"] = LegacyCheckDefinition(
+check_plugin_ibm_mq_queues = CheckPlugin(
     name="ibm_mq_queues",
     service_name="IBM MQ Queue %s",
     discovery_function=discover_ibm_mq_queues,

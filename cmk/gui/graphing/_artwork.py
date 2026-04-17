@@ -120,13 +120,15 @@ class RequestedTimeRange(BaseModel, frozen=True):
 
 
 class YAxis(TypedDict):
-    range: tuple[float, float]
+    min: float
+    max: float
     labels: Sequence[AxisTick]
 
 
 class XAxis(TypedDict):
     labels: Sequence[AxisTick]
-    range: tuple[int, int]
+    start: int
+    end: int
 
 
 class Curve(TypedDict):
@@ -616,10 +618,8 @@ def _compute_graph_v_axis(
         AxisTick(position=label.position, text=label.text, line_width=2) for label in labels
     ]
     return YAxis(
-        range=(
-            min(v_axis_min, *(t.position for t in rendered_labels)),
-            max(v_axis_max, *(t.position for t in rendered_labels)),
-        ),
+        min=min(v_axis_min, *(t.position for t in rendered_labels)),
+        max=max(v_axis_max, *(t.position for t in rendered_labels)),
         labels=rendered_labels,
     )
 
@@ -841,7 +841,7 @@ def _compute_graph_t_axis(
         )
 
     return (
-        XAxis(labels=labels, range=(start_time, end_time)),
+        XAxis(labels=labels, start=start_time, end=end_time),
         _add_step_to_title(title_label, step),
     )
 

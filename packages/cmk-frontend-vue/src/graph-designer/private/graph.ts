@@ -111,7 +111,8 @@ interface AxisTick {
 }
 
 interface YAxis {
-  range: [number, number]
+  min: number
+  max: number
   labels: AxisTick[]
   //dynamic
   pixels_per_unit: number
@@ -119,7 +120,8 @@ interface YAxis {
 
 interface XAxis {
   labels: AxisTick[]
-  range: [number, number]
+  start: number
+  end: number
 }
 
 //this type is from cmk/gui/plugins/metrics/artwork.py:82

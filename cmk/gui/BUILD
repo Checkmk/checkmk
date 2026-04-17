@@ -1932,6 +1932,21 @@ py_library(
 )
 
 py_library(
+    name = "main_modules",
+    srcs = ["main_modules.py"],
+    imports = ["../.."],
+    visibility = [
+        "//cmk:__subpackages__",
+        "//tests:__subpackages__",
+    ],
+    deps = [
+        ":community_registration",
+        ":legacy_plugins",
+        "//packages/cmk-ccc:version",
+    ],
+)
+
+py_library(
     name = "plugin_registration",
     srcs = ["plugin_registration.py"],
     imports = ["../.."],
@@ -2099,6 +2114,7 @@ py_library(
             "graphing_main.py",
             "login.py",
             "main.py",
+            "main_modules.py",
             "plugin_registration.py",
             "help_menu.py",
             "prediction.py",
@@ -2171,6 +2187,7 @@ py_library(
         ":main",
         ":main_menu",
         ":main_menu_types",
+        ":main_modules",
         ":message",
         ":notifications",
         ":ntop",

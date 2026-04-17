@@ -439,6 +439,7 @@ py_wheel(
         "//cmk/gui:main",
         "//cmk/gui:main_menu",
         "//cmk/gui:main_menu_types",
+        "//cmk/gui:main_modules",
         "//cmk/gui:message",
         "//cmk/gui:notifications",
         "//cmk/gui:ntop",

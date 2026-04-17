@@ -742,6 +742,7 @@ allows = [
   "cmk.utils.automation_config",
   "cmk.utils.certs",
   "cmk.utils.config_warnings",
+  "cmk.utils.experimental_config",
   "cmk.utils.global_ident_type",
   "cmk.utils.labels",
   "cmk.utils.macros",

@@ -4,12 +4,18 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from collections.abc import Iterable, Mapping, Sequence
+from collections.abc import Mapping, Sequence
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition, LegacyResult
+from cmk.agent_based.v2 import (
+    AgentSection,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Result,
+    Service,
+    State,
+)
 from cmk.legacy_includes.ibm_svc import parse_ibm_svc_with_header
-
-check_info = {}
 
 # Example output from agent:
 # <<<ibm_svc_array:sep(58)>>>
@@ -46,39 +52,40 @@ def parse_ibm_svc_array(
     return parsed
 
 
-def check_ibm_svc_array(
-    item: str, _no_params: object, parsed: Mapping[str, Mapping[str, str]]
-) -> Iterable[LegacyResult]:
-    if not (data := parsed.get(item)):
+def check_ibm_svc_array(item: str, section: Mapping[str, Mapping[str, str]]) -> CheckResult:
+    if not (data := section.get(item)):
         return
     raid_status = data["raid_status"]
     raid_level = data["raid_level"]
     tier = data["tier"]
 
-    # Check raid_status
-    message = "Status: %s" % raid_status
     if raid_status == "online":
-        status = 0
+        state = State.OK
     elif raid_status in ("offline", "degraded"):
-        status = 2
+        state = State.CRIT
     else:
-        status = 1
+        state = State.WARN
 
-    # add information
-    message += f", RAID Level: {raid_level}, Tier: {tier}"
-
-    yield status, message
+    yield Result(
+        state=state,
+        summary=f"Status: {raid_status}, RAID Level: {raid_level}, Tier: {tier}",
+    )
 
 
 def discover_ibm_svc_array(
     section: Mapping[str, Mapping[str, str]],
-) -> Iterable[tuple[str, dict[str, object]]]:
-    yield from ((item, {}) for item in section)
+) -> DiscoveryResult:
+    yield from (Service(item=item) for item in section)
 
 
-check_info["ibm_svc_array"] = LegacyCheckDefinition(
+agent_section_ibm_svc_array = AgentSection(
     name="ibm_svc_array",
     parse_function=parse_ibm_svc_array,
+)
+
+
+check_plugin_ibm_svc_array = CheckPlugin(
+    name="ibm_svc_array",
     service_name="RAID Array %s",
     discovery_function=discover_ibm_svc_array,
     check_function=check_ibm_svc_array,

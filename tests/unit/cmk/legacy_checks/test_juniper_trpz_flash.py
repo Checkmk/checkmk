@@ -3,56 +3,43 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="misc"
-# mypy: disable-error-code="no-untyped-call"
-
-from collections.abc import Mapping, Sequence
-from typing import Any
-
-import pytest
-
-from cmk.agent_based.v2 import StringTable
+from cmk.agent_based.v2 import Metric, Result, Service, State
 from cmk.legacy_checks.juniper_trpz_flash import (
     check_juniper_trpz_flash,
     discover_juniper_trpz_flash,
     parse_juniper_trpz_flash,
+    Section,
 )
 
 
-@pytest.mark.parametrize(
-    "string_table, expected_discoveries",
-    [
-        ([["51439616", "62900224"]], [(None, {})]),
-    ],
-)
-def test_discover_juniper_trpz_flash(
-    string_table: StringTable, expected_discoveries: Sequence[tuple[str, Mapping[str, Any]]]
-) -> None:
-    """Test discovery function for juniper_trpz_flash check."""
-    parsed = parse_juniper_trpz_flash(string_table)
-    result = list(discover_juniper_trpz_flash(parsed))
-    assert sorted(result) == sorted(expected_discoveries)
+def test_parse_juniper_trpz_flash_returns_none_on_empty() -> None:
+    assert parse_juniper_trpz_flash([]) is None
 
 
-@pytest.mark.parametrize(
-    "item, params, string_table, expected_results",
-    [
-        (
-            None,
-            {"levels": (90.0, 95.0)},
-            [["51439616", "62900224"]],
-            [
-                0,
-                "Used: 49.1 MiB of 60.0 MiB ",
-                [("used", 51439616.0, 56610201.6, 59755212.8, 0, 62900224.0)],
-            ],
+def test_parse_juniper_trpz_flash_returns_section() -> None:
+    assert parse_juniper_trpz_flash([["51439616", "62900224"]]) == Section(
+        used=51439616.0, total=62900224.0
+    )
+
+
+def test_discover_juniper_trpz_flash() -> None:
+    assert list(discover_juniper_trpz_flash(Section(used=51439616.0, total=62900224.0))) == [
+        Service()
+    ]
+
+
+def test_check_juniper_trpz_flash_ok() -> None:
+    results = list(
+        check_juniper_trpz_flash(
+            {"levels": (90.0, 95.0)}, Section(used=51439616.0, total=62900224.0)
+        )
+    )
+    assert results == [
+        Result(state=State.OK, summary="Used: 49.1 MiB of 60.0 MiB "),
+        Metric(
+            "used",
+            51439616.0,
+            levels=(56610201.6, 59755212.8),
+            boundaries=(0, 62900224.0),
         ),
-    ],
-)
-def test_check_juniper_trpz_flash(
-    item: str, params: Mapping[str, Any], string_table: StringTable, expected_results: Sequence[Any]
-) -> None:
-    """Test check function for juniper_trpz_flash check."""
-    parsed = parse_juniper_trpz_flash(string_table)
-    result = list(check_juniper_trpz_flash(item, params, parsed))
-    assert result == expected_results
+    ]

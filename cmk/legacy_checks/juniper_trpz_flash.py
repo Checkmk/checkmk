@@ -3,69 +3,85 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
+from collections.abc import Mapping
+from typing import Any, NamedTuple
 
-
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import render, SNMPTree, StringTable
+from cmk.agent_based.v2 import (
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Metric,
+    render,
+    Result,
+    Service,
+    SimpleSNMPSection,
+    SNMPTree,
+    State,
+    StringTable,
+)
 from cmk.plugins.juniper.lib import DETECT_JUNIPER_TRPZ
 
-check_info = {}
+
+class Section(NamedTuple):
+    used: float
+    total: float
 
 
-def savefloat(f: str) -> float:
-    """Tries to cast a string to an float and return it. In case this fails,
-    it returns 0.0.
-
-    Advice: Please don't use this function in new code. It is understood as
-    bad style these days, because in case you get 0.0 back from this function,
-    you can not know whether it is really 0.0 or something went wrong."""
-    try:
-        return float(f)
-    except (TypeError, ValueError):
-        return 0.0
+def parse_juniper_trpz_flash(string_table: StringTable) -> Section | None:
+    if not string_table:
+        return None
+    used, total = string_table[0]
+    return Section(used=float(used), total=float(total))
 
 
-def discover_juniper_trpz_flash(info):
-    yield None, {}
+def discover_juniper_trpz_flash(section: Section) -> DiscoveryResult:
+    yield Service()
 
 
-def check_juniper_trpz_flash(_no_item, params, info):
+def check_juniper_trpz_flash(params: Mapping[str, Any], section: Section) -> CheckResult:
     warn, crit = params["levels"]
-    used, total = map(savefloat, info[0])
-    message = f"Used: {render.bytes(used)} of {render.bytes(total)} "
-    perc_used = (used / total) * 100  # fixed: true-division
+    message = f"Used: {render.bytes(section.used)} of {render.bytes(section.total)} "
+    perc_used = (section.used / section.total) * 100
     if isinstance(crit, float):
-        a_warn = (warn / 100.0) * total
-        a_crit = (crit / 100.0) * total
-        perf = [("used", used, a_warn, a_crit, 0, total)]
+        a_warn = (warn / 100.0) * section.total
+        a_crit = (crit / 100.0) * section.total
         levels = f"Levels Warn/Crit are ({warn:.2f}%, {crit:.2f}%)"
         if perc_used > crit:
-            return 2, message + levels, perf
-        if perc_used > warn:
-            return 1, message + levels, perf
+            yield Result(state=State.CRIT, summary=message + levels)
+        elif perc_used > warn:
+            yield Result(state=State.WARN, summary=message + levels)
+        else:
+            yield Result(state=State.OK, summary=message)
+        yield Metric("used", section.used, levels=(a_warn, a_crit), boundaries=(0, section.total))
     else:
-        perf = [("used", used, warn, crit, 0, total)]
         levels = f"Levels Warn/Crit are ({render.bytes(warn)}, {render.bytes(crit)})"
-        if used > crit:
-            return 2, message + levels, perf
-        if used > warn:
-            return 1, message + levels, perf
-    return 0, message, perf
+        if section.used > crit:
+            yield Result(state=State.CRIT, summary=message + levels)
+        elif section.used > warn:
+            yield Result(state=State.WARN, summary=message + levels)
+        else:
+            yield Result(state=State.OK, summary=message)
+        yield Metric(
+            "used",
+            section.used,
+            levels=(float(warn), float(crit)),
+            boundaries=(0, section.total),
+        )
 
 
-def parse_juniper_trpz_flash(string_table: StringTable) -> StringTable | None:
-    return string_table or None
-
-
-check_info["juniper_trpz_flash"] = LegacyCheckDefinition(
+snmp_section_juniper_trpz_flash = SimpleSNMPSection(
     name="juniper_trpz_flash",
-    parse_function=parse_juniper_trpz_flash,
     detect=DETECT_JUNIPER_TRPZ,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.14525.4.8.1.1",
         oids=["3", "4"],
     ),
+    parse_function=parse_juniper_trpz_flash,
+)
+
+
+check_plugin_juniper_trpz_flash = CheckPlugin(
+    name="juniper_trpz_flash",
     service_name="Flash",
     discovery_function=discover_juniper_trpz_flash,
     check_function=check_juniper_trpz_flash,

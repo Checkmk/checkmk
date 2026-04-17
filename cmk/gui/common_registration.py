@@ -79,6 +79,7 @@ from cmk.gui.views.store import multisite_builtin_views
 from cmk.gui.visuals.filter import FilterRegistry
 from cmk.gui.visuals.info import VisualInfoRegistry
 from cmk.gui.visuals.type import VisualTypeRegistry
+from cmk.gui.wato import _pre_21_plugin_api
 from cmk.gui.watolib import broker_connections as broker_connections_config
 from cmk.gui.watolib import configuration_bundle_store, groups_io, password_store
 from cmk.gui.watolib import notifications as notifications_config
@@ -361,6 +362,7 @@ def register(
     register_oauth2_connections(
         mode_registry, page_registry, main_module_registry, permission_registry
     )
+    _pre_21_plugin_api.register()
 
 
 def _register_visuals_autocompleters(

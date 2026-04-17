@@ -1,0 +1,36 @@
+load("@aspect_rules_py//py:defs.bzl", "py_library")
+
+py_library(
+    name = "wato",
+    srcs = glob(include = ["**/*.py"]),
+    imports = ["../../../.."],
+    visibility = [
+        "//cmk:__subpackages__",
+        "//tests:__subpackages__",
+    ],
+    deps = [
+        "//cmk/gui:breadcrumb",
+        "//cmk/gui:config",
+        "//cmk/gui:cron",
+        "//cmk/gui:http",
+        "//cmk/gui:i18n",
+        "//cmk/gui:log",
+        "//cmk/gui:logged_in",
+        "//cmk/gui:page_menu",
+        "//cmk/gui:pages",
+        "//cmk/gui:permissions",
+        "//cmk/gui:type_defs",
+        "//cmk/gui/background_job/job",
+        "//cmk/gui/htmllib:generator",
+        "//cmk/gui/htmllib:html",
+        "//cmk/gui/utils:html",
+        "//cmk/gui/utils:output_funnel",
+        "//cmk/gui/utils:transaction_manager",
+        "//cmk/gui/utils:urls",
+        "//cmk/gui/wato:base",
+        "//cmk/gui/watolib",
+        "//cmk/gui/watolib:config_infra",
+        "//cmk/utils",
+        "//packages/cmk-ccc:exceptions",
+    ],
+)

@@ -45,6 +45,7 @@ import type { PasswordConfig } from './password_store_password.types.ts'
 import { isValidIpOrHostname, isValidPort } from './validation.ts'
 
 const { _t } = usei18n()
+const createdSuffix = _t(' | created')
 
 const props = defineProps<{
   noAuthAllowed: boolean
@@ -65,6 +66,9 @@ const grpcEventConsole = defineModel<EventConsoleConfig | null>('grpcEventConsol
 const httpEventConsole = defineModel<EventConsoleConfig | null>('httpEventConsole', {
   required: true
 })
+const newlyCreatedPasswords = defineModel<Map<string, PasswordConfig>>('newlyCreatedPasswords', {
+  required: true
+})
 
 const activeTab = ref('grpc')
 const availablePasswords = ref<Suggestion[]>([])
@@ -79,10 +83,15 @@ onMounted(async () => {
       'GET'
     )
     const data = await response.json()
-    availablePasswords.value = data.value.map((p: { id: string; title: string }) => ({
+    const fetched: Suggestion[] = data.value.map((p: { id: string; title: string }) => ({
       name: p.id,
       title: p.title
     }))
+    const created: Suggestion[] = Array.from(newlyCreatedPasswords.value.values()).map((p) => ({
+      name: p.general_props.id,
+      title: `${p.general_props.title}${createdSuffix}` as TranslatedString
+    }))
+    availablePasswords.value = fetched.concat(created)
   } catch {
     // password store unavailable — leave list empty
   }
@@ -204,10 +213,10 @@ function openPasswordSlideIn(target: 'grpc' | 'http') {
 
 function onPasswordCreated(password: PasswordConfig) {
   passwordStoreSlideInOpen.value = false
-  // TODO: properly handle the created password
+  newlyCreatedPasswords.value.set(password.general_props.id, password)
   availablePasswords.value.push({
     name: password.general_props.id,
-    title: password.general_props.title as TranslatedString
+    title: `${password.general_props.title}${createdSuffix}` as TranslatedString
   })
   const triggeringAuth = passwordTargetAuth.value === 'grpc' ? grpcAuth.value : httpAuth.value
   if (triggeringAuth.credential !== null) {
@@ -219,7 +228,7 @@ function onPasswordCreated(password: PasswordConfig) {
   }
 }
 
-defineExpose({ validate })
+defineExpose({ validate, onPasswordCreated })
 </script>
 
 <template>

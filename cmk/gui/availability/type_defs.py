@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="type-arg"
-
 from collections.abc import Callable
 from typing import Any, Literal
 
@@ -19,7 +17,7 @@ from cmk.utils.servicename import ServiceName
 AVMode = str  # TODO: Improve this type
 AVObjectType = Literal["host", "service", "bi"]
 AVOptions = dict[str, Any]  # TODO: Improve this type
-AVOptionValueSpecs = list[tuple[str, Literal["double", "single"], bool, ValueSpec]]
+AVOptionValueSpecs = list[tuple[str, Literal["double", "single"], bool, ValueSpec[Any]]]
 AVBIObjectSpec = tuple[None, None, str]
 AVHostOrServiceObjectSpec = tuple[SiteId, HostName, ServiceName]
 AVObjectSpec = None | AVBIObjectSpec | AVHostOrServiceObjectSpec

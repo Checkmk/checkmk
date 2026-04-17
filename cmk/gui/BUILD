@@ -2121,9 +2121,7 @@ py_library(
             "rulespec.py",
             "saml2_login.py",
         ],
-    ) + [
-        "//cmk/gui/wsgi:gui_srcs",
-    ],
+    ),
     imports = ["../.."],
     visibility = [
         "//cmk:__subpackages__",
@@ -2372,6 +2370,7 @@ py_library(
         "//cmk/gui/watolib:registries",
         "//cmk/gui/watolib:tag_config_file",
         "//cmk/gui/welcome",
+        "//cmk/gui/wsgi",
         "//cmk/gui/wsgi:utils",
         "//cmk/inventory",
         "//cmk/piggyback:backend",

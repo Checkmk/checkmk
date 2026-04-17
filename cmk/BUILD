@@ -626,6 +626,7 @@ py_wheel(
         "//cmk/gui/watolib:tag_config_file",
         "//cmk/gui/watolib:timeperiods",
         "//cmk/gui/welcome",
+        "//cmk/gui/wsgi",
         "//cmk/gui/wsgi:utils",
         "//cmk/inventory",
         "//cmk/inventory:cmk_inventory_main",

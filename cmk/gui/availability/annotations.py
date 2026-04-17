@@ -3,12 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-any-return"
-
 import itertools
 import time
 from collections.abc import Callable
-from typing import Any, NamedTuple
+from typing import Any, cast, NamedTuple
 
 import cmk.utils.paths
 import cmk.utils.render
@@ -38,7 +36,7 @@ def load_annotations(lock: bool = False) -> AVAnnotations:
         # Support legacy old wrong name-clashing path
         path = cmk.utils.paths.var_dir / "web/statehist_annotations.mk"
 
-    return store.load_object_from_file(path, default={}, lock=lock)
+    return cast(AVAnnotations, store.load_object_from_file(path, default={}, lock=lock))
 
 
 def update_annotations(

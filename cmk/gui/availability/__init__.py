@@ -14,7 +14,7 @@ import functools
 import itertools
 import time
 from collections.abc import Callable, Generator, Iterator, Sequence
-from typing import Any, Literal, NamedTuple
+from typing import Any, NamedTuple
 
 from livestatus import (
     LivestatusRow,
@@ -79,116 +79,59 @@ from cmk.gui.watolib.groups_io import all_groups
 from cmk.utils import dateutils
 from cmk.utils.servicename import ServiceName
 
-AVMode = str  # TODO: Improve this type
-AVObjectType = Literal["host", "service", "bi"]
-AVOptions = dict[str, Any]  # TODO: Improve this type
-AVOptionValueSpecs = list[tuple[str, Literal["double", "single"], bool, ValueSpec]]
-AVBIObjectSpec = tuple[None, None, str]
-AVHostOrServiceObjectSpec = tuple[SiteId, HostName, ServiceName]
-AVObjectSpec = None | AVBIObjectSpec | AVHostOrServiceObjectSpec
-AVOutageStatisticsAggregations = list[Literal["min", "max", "avg", "cnt"]]
-AVOutageStatisticsStates = list[
-    Literal[
-        "ok",
-        "warn",
-        "crit",
-        "unknown",
-        "flapping",
-        "host_down",
-        "in_downtime",
-        "outof_notification_period",
-    ]
-]
-AVOutageStatistics = tuple[AVOutageStatisticsAggregations, AVOutageStatisticsStates]
-AVSpan = dict[str, Any]  # TODO: Improve this type
-SiteHost = tuple[SiteId, HostName]
-AVRawServices = dict[ServiceName, list[AVSpan]]
-AVRawData = dict[SiteHost, AVRawServices]
-AVEntry = dict[str, Any]
-AVData = list[AVEntry]
-AVTimelineSpan = tuple[int | None, str, float, CSSClass]
-AVObjectCells = list[tuple[str, str]]
-AVRowCells = list[tuple[HTML | str, CSSClass]]
-AVGroups = list[tuple[str | None, AVData]]
-HostOrServiceGroupName = str
-AVGroupKey = SiteHost | HostOrServiceGroupName | None
-AVGroupIds = list[SiteHost] | set[HostOrServiceGroupName] | None
-AVTimeStamp = float
-AVTimeRange = tuple[AVTimeStamp, AVTimeStamp]
-AVTimeFormats = list[tuple[str, Callable[[AVTimeStamp, int], str]]]
-AVRangeSpec = tuple[AVTimeRange, str]
-AVTimeformatSpecLegacy = Literal[
-    "percentage_0",
-    "percentage_1",
-    "percentage_2",
-    "percentage_3",
-    "seconds",
-    "minutes",
-    "hours",
-    "hhmmss",
-]
-AVTimeformatSpec = (
-    AVTimeformatSpecLegacy
-    | tuple[
-        Literal["both", "perc", "time"],
-        Literal["percentage_0", "percentage_1", "percentage_2", "percentage_3"],
-        Literal["seconds", "minutes", "hours", "hhmmss"],
-    ]
+from .type_defs import (
+    _ColumnSpec,
+    AVAnnotationEntry,
+    AVAnnotationKey,
+    AVAnnotations,
+    AVBIObjectSpec,
+    AVBIPhaseData,
+    AVBIPhases,
+    AVBITimelineState,
+    AVBITimelineStates,
+    AVData,
+    AVEntry,
+    AVGroupIds,
+    AVGroupKey,
+    AVGroups,
+    AVHostOrServiceObjectSpec,
+    AVIconSpec,
+    AVLayoutTable,
+    AVLayoutTableRow,
+    AVLayoutTimeline,
+    AVLayoutTimelineRow,
+    AVLevels,
+    AVMode,
+    AVObjectCells,
+    AVObjectSpec,
+    AVObjectType,
+    AVOptions,
+    AVOptionValueSpecs,
+    AVOutageStatistics,
+    AVOutageStatisticsAggregations,
+    AVOutageStatisticsStates,
+    AVRangeSpec,
+    AVRawData,
+    AVRawServices,
+    AVRowCells,
+    AVSpan,
+    AVTimeFormats,
+    AVTimeformatSpec,
+    AVTimeformatSpecLegacy,
+    AVTimelineLabelling,
+    AVTimelineRow,
+    AVTimelineRows,
+    AVTimelineSpan,
+    AVTimelineStateName,
+    AVTimelineStates,
+    AVTimelineStatistics,
+    AVTimelineStyle,
+    AVTimeRange,
+    AVTimeStamp,
+    HostOrServiceGroupName,
+    SiteHost,
+    SiteHostSvc,
 )
-AVTimelineLabelling = Literal[
-    "omit_headers",
-    "omit_host",
-    "show_alias",
-    "use_display_name",
-    "omit_buttons",
-    "omit_timeline_plugin_output",
-    "timeline_long_output",
-    "display_timeline_legend",
-    "omit_av_levels",
-]
-AVIconSpec = tuple[str, str, str]
-
-AVTimelineStateName = str
-AVTimelineRow = tuple[AVSpan, AVTimelineStateName]
-AVTimelineRows = list[AVTimelineRow]
-AVTimelineStates = dict[AVTimelineStateName, int]
-AVTimelineStatistics = dict[AVTimelineStateName, tuple[int, int, int]]
-AVTimelineStyle = Literal["standalone", "inline"]
-
-
-# Example for annotations:
-# {
-#   ( "mysite", "foohost", "myservice" ) : # service might be None
-#       [
-#         {
-#            "from"       : 1238288548,
-#            "until"      : 1238292845,
-#            "text"       : u"Das ist ein Text über mehrere Zeilen, oder was weiß ich",
-#            "date"       : 12348854885, # Time of entry
-#            "author"     : "mk",
-#            "downtime"   : True, # Can also be False or None or missing. None is like missing
-#         },
-#         # ... further entries
-#      ]
-# }
-AVAnnotationKey = tuple[SiteId, HostName, ServiceName | None]
-AVAnnotationEntry = dict[str, Any]
-AVAnnotations = dict[AVAnnotationKey, list[AVAnnotationEntry]]
-
-AVLayoutTimeline = dict[str, Any]  # TODO: Improve this type
-AVLayoutTimelineRow = dict[str, Any]  # TODO: Improve this type
-AVLayoutTable = dict[str, Any]  # TODO: Improve this type
-AVLayoutTableRow = dict[str, Any]  # TODO: Improve this type
-
-AVBIPhaseData = dict[tuple[HostName, ServiceName], Row]
-AVBIPhases = list[tuple[int, AVBIPhaseData]]
-AVBITimelineState = tuple[int, str, bool, bool]  # state, output, in_downtime, in_service_period
-AVBITimelineStates = dict[tuple[SiteId, HostName, ServiceName], AVBITimelineState]
-AVLevels = tuple[float, float]
-
-_ColumnSpec = tuple[str, str, str, str | None]
-
-SiteHostSvc = tuple[SiteId, HostName, ServiceName | None]
 
 #   .--Declarations--------------------------------------------------------.
 #   |       ____            _                 _   _                        |
@@ -2371,7 +2314,6 @@ BIAggregationTitle = str
 BITreeState = Any
 BITimelineEntry = Any
 
-
 DEFAULT_MAX_TIME_RANGE = 31 * 24 * 60 * 60  # One month
 
 
@@ -2977,3 +2919,60 @@ def history_url_of(av_object: AVHostOrServiceObjectSpec, time_range: AVTimeRange
         ]
 
     return "view.py?" + urlencode_vars(history_url_vars)
+
+
+__all__ = [
+    "AVAnnotationEntry",
+    "AVAnnotationKey",
+    "AVAnnotations",
+    "AVBIObjectSpec",
+    "AVBIPhaseData",
+    "AVBIPhases",
+    "AVBITimelineState",
+    "AVBITimelineStates",
+    "AVData",
+    "AVEntry",
+    "AVGroupIds",
+    "AVGroupKey",
+    "AVGroups",
+    "AVHostOrServiceObjectSpec",
+    "AVIconSpec",
+    "AVLayoutTable",
+    "AVLayoutTableRow",
+    "AVLayoutTimeline",
+    "AVLayoutTimelineRow",
+    "AVLevels",
+    "AVMode",
+    "AVObjectCells",
+    "AVObjectSpec",
+    "AVObjectType",
+    "AVOptionValueSpecs",
+    "AVOptions",
+    "AVOutageStatistics",
+    "AVOutageStatisticsAggregations",
+    "AVOutageStatisticsStates",
+    "AVRangeSpec",
+    "AVRawData",
+    "AVRawServices",
+    "AVRowCells",
+    "AVSpan",
+    "AVTimeFormats",
+    "AVTimeRange",
+    "AVTimeStamp",
+    "AVTimeformatSpec",
+    "AVTimeformatSpecLegacy",
+    "AVTimelineLabelling",
+    "AVTimelineRow",
+    "AVTimelineRows",
+    "AVTimelineSpan",
+    "AVTimelineStateName",
+    "AVTimelineStates",
+    "AVTimelineStatistics",
+    "AVTimelineStyle",
+    "CSSClass",
+    "HTML",
+    "HostOrServiceGroupName",
+    "SiteHost",
+    "SiteHostSvc",
+    "ValueSpec",
+]

@@ -15,7 +15,7 @@ from cmk.gui.utils.urls import makeuri, urlencode_vars
 from cmk.utils import dateutils
 from cmk.utils.servicename import ServiceName
 
-from .columns import AvailabilityColumns
+from .columns import availability_columns
 from .computation import cell_active, check_av_levels, history_url_of
 from .options import get_outage_statistic_options, prepare_avo_timeformats
 from .type_defs import (
@@ -92,14 +92,13 @@ def layout_availability_table(
         "rows": [],
     }
 
-    availability_columns = AvailabilityColumns()
     # Titles for the columns that specify the object
     av_table["object_titles"] = object_column_titles(labelling, what)
 
     # Headers for availability cells
     os_aggrs, os_states = get_outage_statistic_options(avoptions)
     av_table["cell_titles"] = _availability_cell_headers(
-        availability_columns, avoptions, os_aggrs, os_states, timeformats, what
+        avoptions, os_aggrs, os_states, timeformats, what
     )
 
     summary["ok_level"] = 0
@@ -132,7 +131,7 @@ def layout_availability_table(
         row["cells"] = cells
 
         for timeformat, render_number in timeformats:
-            for sid, css, _sname, _help_txt in availability_columns[what]:
+            for sid, css, _sname, _help_txt in availability_columns(what):
                 if not cell_active(sid, avoptions):
                     continue
 
@@ -200,7 +199,7 @@ def layout_availability_table(
         summary_cells: AVRowCells = []
 
         for timeformat, render_number in timeformats:
-            for sid, css, _sname, _help_txt in availability_columns[what]:
+            for sid, css, _sname, _help_txt in availability_columns(what):
                 ssid = f"{sid}-{timeformat}"
                 if not cell_active(sid, avoptions):
                     continue
@@ -312,7 +311,6 @@ def object_column_titles(labelling: AVTimelineLabelling, what: AVObjectType) -> 
 
 
 def _availability_cell_headers(
-    availability_columns: AvailabilityColumns,
     avoptions: AVOptions,
     os_aggrs: AVOutageStatisticsAggregations,
     os_states: AVOutageStatisticsStates,
@@ -327,7 +325,7 @@ def _availability_cell_headers(
     }
     cell_titles = []
     for _timeformat, _render in timeformats:
-        for sid, _css, sname, help_txt in availability_columns[what]:
+        for sid, _css, sname, help_txt in availability_columns(what):
             if not cell_active(sid, avoptions):
                 continue
             if avoptions["av_mode"]:
@@ -399,8 +397,6 @@ def layout_timeline(
     time_range: AVTimeRange = avoptions["range"][0]
     from_time, until_time = time_range
     total_duration = until_time - from_time
-    availability_columns = AvailabilityColumns()
-
     # Timeformat: show date only if the displayed time range spans over
     # more than one day.
     time_format = "%H:%M:%S"
@@ -477,7 +473,7 @@ def layout_timeline(
         until_text = render_date(this_until_time)
         duration_text = apply_render_number_functions(row["duration"], considered_duration)
 
-        for sid, css, sname, help_txt in availability_columns[what]:
+        for sid, css, sname, help_txt in availability_columns(what):
             if sid != state_id:
                 continue
 

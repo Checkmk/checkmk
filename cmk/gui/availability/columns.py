@@ -10,23 +10,8 @@ from cmk.gui.i18n import _
 from .type_defs import _ColumnSpec, AVObjectType
 
 
-class AvailabilityColumns:
-    def __init__(self) -> None:
-        super().__init__()
-        self.host = self._host_availability_columns()
-        self.service = self._service_availability_columns()
-        self.bi = self._bi_availability_columns()
-
-    # TODO: Nuke this abomination!
-    def __getitem__(self, key: AVObjectType) -> Sequence[_ColumnSpec]:
-        columns: dict[AVObjectType, Sequence[_ColumnSpec]] = {
-            "host": self.host,
-            "service": self.service,
-            "bi": self.bi,
-        }
-        return columns[key]
-
-    def _host_availability_columns(self) -> Sequence[_ColumnSpec]:
+def availability_columns(what: AVObjectType) -> Sequence[_ColumnSpec]:
+    if what == "host":
         return [
             ("up", "state0", _("UP"), None),
             ("down", "state2", _("DOWN"), None),
@@ -42,8 +27,7 @@ class AvailabilityColumns:
                 _("During this time period no monitoring data is available"),
             ),
         ]
-
-    def _service_availability_columns(self) -> Sequence[_ColumnSpec]:
+    if what == "service":
         return [
             ("ok", "state0", _("OK"), None),
             ("warn", "state1", _("WARN"), None),
@@ -66,23 +50,21 @@ class AvailabilityColumns:
                 _("During this time period no monitoring data is available"),
             ),
         ]
-
-    def _bi_availability_columns(self) -> Sequence[_ColumnSpec]:
-        return [
-            ("ok", "state0", _("OK"), None),
-            ("warn", "state1", _("WARN"), None),
-            ("crit", "state2", _("CRIT"), None),
-            ("unknown", "state3", _("UNKNOWN"), None),
-            (
-                "in_downtime",
-                "downtime",
-                _("Downtime"),
-                _("The aggregate was in a scheduled downtime"),
-            ),
-            (
-                "unmonitored",
-                "unmonitored",
-                _("N/A"),
-                _("During this time period no monitoring data is available"),
-            ),
-        ]
+    return [
+        ("ok", "state0", _("OK"), None),
+        ("warn", "state1", _("WARN"), None),
+        ("crit", "state2", _("CRIT"), None),
+        ("unknown", "state3", _("UNKNOWN"), None),
+        (
+            "in_downtime",
+            "downtime",
+            _("Downtime"),
+            _("The aggregate was in a scheduled downtime"),
+        ),
+        (
+            "unmonitored",
+            "unmonitored",
+            _("N/A"),
+            _("During this time period no monitoring data is available"),
+        ),
+    ]

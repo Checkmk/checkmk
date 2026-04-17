@@ -34,7 +34,7 @@ from .bi import (
     split_time_range,
     TimelineContainer,
 )
-from .columns import AvailabilityColumns
+from .columns import availability_columns
 from .computation import (
     cell_active,
     check_av_levels,
@@ -176,7 +176,7 @@ __all__ = [
     "AVTimelineStates",
     "AVTimelineStatistics",
     "AVTimelineStyle",
-    "AvailabilityColumns",
+    "availability_columns",
     "BIAggregationGroupTitle",
     "BIAggregationTitle",
     "BITimelineEntry",

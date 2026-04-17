@@ -1749,6 +1749,31 @@ py_library(
     ],
 )
 
+py_library(
+    name = "main",
+    srcs = ["main.py"],
+    imports = ["../.."],
+    visibility = [
+        "//cmk:__subpackages__",
+        "//tests:__subpackages__",
+    ],
+    deps = [
+        ":config",
+        ":exceptions",
+        ":http",
+        ":logged_in",
+        ":pages",
+        ":permissions",
+        "//cmk/gui/htmllib:generator",
+        "//cmk/gui/sidebar",
+        "//cmk/gui/utils:mobile",
+        "//cmk/gui/utils:roles",
+        "//cmk/gui/utils:urls",
+        "//cmk/utils",
+        "//packages/cmk-ccc:site",
+    ],
+)
+
 # Monolithic target which we extract smaller targets from. As long as we are in the in place
 # extraction process below the cmk.gui module hierarchy, we will have to work with excludes. This
 # will be cleaned up when we move the pieces into their future python module structure.
@@ -1867,6 +1892,7 @@ py_library(
             "product_usage_analytics/**/*.py",
             "activate_menu.py",
             "graphing_main.py",
+            "main.py",
             "help_menu.py",
             "prediction.py",
             "rulespec.py",
@@ -1932,6 +1958,7 @@ py_library(
         ":log",
         ":logged_in",
         ":logwatch",
+        ":main",
         ":main_menu",
         ":main_menu_types",
         ":message",

@@ -10,10 +10,11 @@ py_library(
         "//tests:__subpackages__",
     ],
     deps = [
-        "//cmk/gui",
         "//cmk/gui:config",
         "//cmk/gui:cron",
         "//cmk/gui:log",
+        "//cmk/gui:main_modules",
+        "//cmk/gui:script_helpers",
         "//cmk/gui:session",
         "//cmk/gui:single_global_setting",
         "//cmk/gui/background_job/job",

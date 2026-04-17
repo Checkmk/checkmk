@@ -1,8 +1,6 @@
 load("@aspect_rules_py//py:defs.bzl", "py_library")
 
-# Tiny testing helper. Depends on //cmk/gui for cmk.gui.script_helpers
-# (application_and_request_context). Nothing in the monolith imports
-# livestatus_utils.testing, so this does not form a cycle.
+# Tiny testing helper.
 py_library(
     name = "livestatus_utils",
     testonly = True,
@@ -16,7 +14,7 @@ py_library(
         "//tests:__subpackages__",
     ],
     deps = [
-        "//cmk/gui",
+        "//cmk/gui:script_helpers",
         "//cmk/gui:session",
         "//cmk/gui:sites",
         "//packages/cmk-ccc:site",

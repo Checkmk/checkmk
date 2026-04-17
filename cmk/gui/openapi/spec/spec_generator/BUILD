@@ -38,9 +38,6 @@ py_library(
     ],
 )
 
-# Depends on monolithic //cmk/gui for main_modules + script_helpers used in main().
-# Kept separate from :spec_generator so //cmk/gui itself does not have to depend
-# on spec_generator (which would form a cycle).
 py_library(
     name = "_core",
     srcs = ["_core.py"],
@@ -51,7 +48,8 @@ py_library(
     ],
     deps = [
         ":spec_generator",
-        "//cmk/gui",
+        "//cmk/gui:main_modules",
+        "//cmk/gui:script_helpers",
         "//cmk/gui:session",
         "//cmk/gui/openapi/framework",
         "//cmk/gui/openapi/framework:core",

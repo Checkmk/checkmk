@@ -9,7 +9,8 @@ py_library(
     ],
     visibility = [":__subpackages__"],
     deps = [
-        "//cmk/gui",
+        "//cmk/gui:config",
+        "//cmk/gui:http",
         "//packages/cmk-ccc:user",
         "//tests/testlib/unit",
         requirement("flask"),

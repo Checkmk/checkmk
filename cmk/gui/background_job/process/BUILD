@@ -13,14 +13,13 @@ py_library(
         "//cmk/gui:crash_handler",
         "//cmk/gui:features",
         "//cmk/gui:flask_app",
+        "//cmk/gui:http",
         "//cmk/gui:i18n",
         "//cmk/gui:log",
+        "//cmk/gui:session",
         "//cmk/gui:single_global_setting",
         "//cmk/gui/background_job/job",
-        # session.py is still in the monolithic gui target. No cycle since
-        # nothing in the monolithic gui imports from this process/ package
-        # (it is invoked at runtime via importlib.import_module).
-        "//cmk/gui",
+        "//cmk/gui/utils:roles",
         "//cmk/utils",
         "//packages/cmk-ccc:exceptions",
         "//packages/cmk-ccc:store",

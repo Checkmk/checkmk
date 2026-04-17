@@ -3,36 +3,44 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-
-from collections.abc import Iterable
-
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import SNMPTree, StringTable
+from cmk.agent_based.v2 import (
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Result,
+    Service,
+    SimpleSNMPSection,
+    SNMPTree,
+    State,
+    StringTable,
+)
 from cmk.plugins.juniper.lib import DETECT_JUNIPER_SCREENOS
 
-check_info = {}
+Section = dict[str, str]
 
 
-def discover_juniper_screenos_vpn(info: StringTable) -> Iterable[tuple[str, None]]:
-    return [(line[0], None) for line in info]
+def discover_juniper_screenos_vpn(section: Section) -> DiscoveryResult:
+    for vpn_id in section:
+        yield Service(item=vpn_id)
 
 
-def check_juniper_screenos_vpn(item: str, params: None, info: StringTable) -> tuple[int, str]:
-    for vpn_id, vpn_status in info:
-        if vpn_id == item:
-            if vpn_status == "1":
-                return (0, "VPN Status %s is active" % vpn_id)
-            if vpn_status == "0":
-                return (2, "VPN Status %s inactive" % vpn_id)
-            return (1, "Unknown vpn status %s" % vpn_status)
-    return (2, "VPN name not found in SNMP data")
+def check_juniper_screenos_vpn(item: str, section: Section) -> CheckResult:
+    if item not in section:
+        return
+    vpn_status = section[item]
+    if vpn_status == "1":
+        yield Result(state=State.OK, summary=f"VPN Status {item} is active")
+    elif vpn_status == "0":
+        yield Result(state=State.CRIT, summary=f"VPN Status {item} inactive")
+    else:
+        yield Result(state=State.WARN, summary=f"Unknown vpn status {vpn_status}")
 
 
-def parse_juniper_screenos_vpn(string_table: StringTable) -> StringTable:
-    return string_table
+def parse_juniper_screenos_vpn(string_table: StringTable) -> Section:
+    return {line[0]: line[1] for line in string_table}
 
 
-check_info["juniper_screenos_vpn"] = LegacyCheckDefinition(
+snmp_section_juniper_screenos_vpn = SimpleSNMPSection(
     name="juniper_screenos_vpn",
     parse_function=parse_juniper_screenos_vpn,
     detect=DETECT_JUNIPER_SCREENOS,
@@ -40,6 +48,10 @@ check_info["juniper_screenos_vpn"] = LegacyCheckDefinition(
         base=".1.3.6.1.4.1.3224.4.1.1.1",
         oids=["4", "23"],
     ),
+)
+
+check_plugin_juniper_screenos_vpn = CheckPlugin(
+    name="juniper_screenos_vpn",
     service_name="VPN %s",
     discovery_function=discover_juniper_screenos_vpn,
     check_function=check_juniper_screenos_vpn,

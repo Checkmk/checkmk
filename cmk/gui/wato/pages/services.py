@@ -419,6 +419,7 @@ class ModeAjaxServiceDiscovery(AjaxPage):
                 discovery_result = perform_fix_all(
                     discovery_result=discovery_result,
                     host=host,
+                    raise_errors=raise_errors,
                 )
             case DiscoveryAction.UPDATE_HOST_LABELS:
                 discovery_result = perform_host_label_discovery(
@@ -442,6 +443,7 @@ class ModeAjaxServiceDiscovery(AjaxPage):
                     update_target=update_target,
                     host=host,
                     selected_services=selected_services,
+                    raise_errors=raise_errors,
                 )
             case DiscoveryAction.UPDATE_SERVICES:
                 discovery_result = perform_service_discovery(
@@ -451,6 +453,7 @@ class ModeAjaxServiceDiscovery(AjaxPage):
                     update_target=None,
                     host=host,
                     selected_services=selected_services,
+                    raise_errors=raise_errors,
                 )
             case _:
                 raise MKUserError("discovery", f"Unknown discovery action: {action}")

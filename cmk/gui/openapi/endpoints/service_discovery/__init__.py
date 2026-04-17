@@ -444,6 +444,7 @@ def _execute_service_discovery(api_discovery_action: APIDiscoveryAction, host: H
                 update_target="unchanged",
                 host=host,
                 selected_services=EVERYTHING,
+                raise_errors=False,
             )
         case APIDiscoveryAction.remove:
             discovery_result = perform_service_discovery(
@@ -453,11 +454,13 @@ def _execute_service_discovery(api_discovery_action: APIDiscoveryAction, host: H
                 update_target="removed",
                 host=host,
                 selected_services=EVERYTHING,
+                raise_errors=False,
             )
         case APIDiscoveryAction.fix_all:
             discovery_result = perform_fix_all(
                 discovery_result=discovery_result,
                 host=host,
+                raise_errors=False,
             )
         case APIDiscoveryAction.refresh | APIDiscoveryAction.tabula_rasa:
             discovery_run = _discovery_wait_for_completion_link(host.name())
@@ -479,6 +482,7 @@ def _execute_service_discovery(api_discovery_action: APIDiscoveryAction, host: H
                 update_target="unchanged",
                 host=host,
                 selected_services=EVERYTHING,
+                raise_errors=False,
             )
 
         case _:

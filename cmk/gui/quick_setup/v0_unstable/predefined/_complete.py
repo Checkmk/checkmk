@@ -423,4 +423,5 @@ def _run_service_discovery(host_name: str, site_id: SiteId, is_local: bool) -> N
     perform_fix_all(
         discovery_result=_get_service_discovery_result(is_local, host, host_name, site_id),
         host=host,
+        raise_errors=False,
     )

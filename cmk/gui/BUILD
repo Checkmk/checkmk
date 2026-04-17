@@ -1856,6 +1856,45 @@ py_library(
 )
 
 py_library(
+    name = "cmkcert",
+    srcs = ["cmkcert.py"],
+    imports = ["../.."],
+    visibility = [
+        "//cmk:__subpackages__",
+        "//tests:__subpackages__",
+    ],
+    deps = [
+        ":cmkcert_rotate",
+        ":main_modules",
+        "//cmk/utils",
+        "//packages/cmk-ccc:site",
+        "//packages/cmk-ccc:version",
+    ],
+)
+
+py_library(
+    name = "cmkcert_rotate",
+    srcs = ["cmkcert_rotate.py"],
+    imports = ["../.."],
+    visibility = [
+        "//cmk:__subpackages__",
+        "//tests:__subpackages__",
+    ],
+    deps = [
+        ":config",
+        ":main_modules",
+        ":script_helpers",
+        ":site_config",
+        "//cmk/gui/watolib",
+        "//cmk/gui/watolib:config_infra",
+        "//cmk/utils",
+        "//packages/cmk-ccc:site",
+        "//packages/cmk-crypto",
+        requirement("python-dateutil"),
+    ],
+)
+
+py_library(
     name = "common_registration",
     srcs = ["common_registration.py"],
     imports = ["../.."],
@@ -2127,6 +2166,8 @@ py_library(
             "user_message/**/*.py",
             "product_usage_analytics/**/*.py",
             "activate_menu.py",
+            "cmkcert.py",
+            "cmkcert_rotate.py",
             "common_registration.py",
             "community_registration.py",
             "graphing_main.py",
@@ -2162,6 +2203,8 @@ py_library(
         ":availability",
         ":breadcrumb",
         ":cert_info",
+        ":cmkcert",
+        ":cmkcert_rotate",
         ":color",
         ":common_registration",
         ":community_registration",

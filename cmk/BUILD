@@ -397,6 +397,8 @@ py_wheel(
         "//cmk/gui:availability",
         "//cmk/gui:breadcrumb",
         "//cmk/gui:cert_info",
+        "//cmk/gui:cmkcert",
+        "//cmk/gui:cmkcert_rotate",
         "//cmk/gui:color",
         "//cmk/gui:common_registration",
         "//cmk/gui:community_registration",

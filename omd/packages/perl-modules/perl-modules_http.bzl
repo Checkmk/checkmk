@@ -297,9 +297,9 @@ PERL_MODULES_LIST_2 = {
         "sha256": "0a5188686e6b71ef3464a0d74f18bda62912b8e35aeb714483ab5f0b157a7b5e",
         "url": "https://src.fedoraproject.org/repo/extras/perl-Socket/Socket-2.019.tar.gz/8afec24ac4e084e0da0600c2018ccead/Socket-2.019.tar.gz",
     },
-    "XML-Parser-2.46.tar.gz": {
-        "sha256": "d331332491c51cccfb4cb94ffc44f9cd73378e618498d4a37df9e043661c515d",
-        "url": "https://www.cpan.org/modules/by-module/XML/XML-Parser-2.46.tar.gz",
+    "XML-Parser-2.47.tar.gz": {
+        "sha256": "ad4aae643ec784f489b956abe952432871a622d4e2b5c619e8855accbfc4d1d8",
+        "url": "https://www.cpan.org/modules/by-module/XML/XML-Parser-2.47.tar.gz",
     },
     "XML-Twig-3.52.tar.gz": {
         "sha256": "fef75826c24f2b877d0a0d2645212fc4fb9756ed4d2711614ac15c497e8680ad",

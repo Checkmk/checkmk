@@ -1,0 +1,36 @@
+load("@aspect_rules_py//py:defs.bzl", "py_library")
+
+py_library(
+    name = "user_message",
+    srcs = glob(["**/*.py"]),
+    imports = ["../../.."],
+    visibility = [
+        "//cmk:__subpackages__",
+        "//tests:__subpackages__",
+    ],
+    deps = [
+        "//cmk/gui:breadcrumb",
+        "//cmk/gui:forms",
+        "//cmk/gui:header",
+        "//cmk/gui:http",
+        "//cmk/gui:i18n",
+        "//cmk/gui:logged_in",
+        "//cmk/gui:main_menu",
+        "//cmk/gui:message",
+        "//cmk/gui:page_menu",
+        "//cmk/gui:pages",
+        "//cmk/gui:type_defs",
+        "//cmk/gui/dashboard",
+        "//cmk/gui/htmllib:html",
+        "//cmk/gui/openapi:utils",
+        "//cmk/gui/openapi/framework",
+        "//cmk/gui/openapi/framework:core",
+        "//cmk/gui/openapi/restful_objects",
+        "//cmk/gui/token_auth",
+        "//cmk/gui/utils:csrf_token",
+        "//cmk/gui/utils:flashed_messages",
+        "//cmk/gui/utils:html",
+        "//cmk/gui/utils:transaction_manager",
+        "//cmk/gui/utils:urls",
+    ],
+)

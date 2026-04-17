@@ -283,7 +283,6 @@ py_wheel(
             "//cmk/plugins:checkman_cloud",
             "//cmk/plugins:plugins_cloud",
             "//cmk/plugins:plugins_ultimate",
-            "//cmk/plugins/custom_query_metric_backend",
             "//cmk/post_rename_site/nonfree/ultimate/plugins",
             "//cmk/update_config/nonfree/pro",
             "//cmk/update_config/nonfree/ultimate",
@@ -291,6 +290,7 @@ py_wheel(
             "//non-free/packages/cmc-protocols:py_config_proto",
             "//non-free/packages/cmc-protocols:py_cycletime_proto",
             "//non-free/packages/cmc-protocols:py_state_proto",
+            "//non-free/packages/cmk-telemetry:plugins-custom-query",
         ],
         "@cmk//edition:community": [
             "//cmk/plugins:checkman_community",
@@ -325,7 +325,6 @@ py_wheel(
             "//cmk/nonfree/ultimate/metric_backend",
             "//cmk/plugins:checkman_ultimate",
             "//cmk/plugins:plugins_ultimate",
-            "//cmk/plugins/custom_query_metric_backend",
             "//cmk/post_rename_site/nonfree/ultimate/plugins",
             "//cmk/update_config/nonfree/pro",
             "//cmk/update_config/nonfree/ultimate",
@@ -334,6 +333,7 @@ py_wheel(
             "//non-free/packages/cmc-protocols:py_config_proto",
             "//non-free/packages/cmc-protocols:py_cycletime_proto",
             "//non-free/packages/cmc-protocols:py_state_proto",
+            "//non-free/packages/cmk-telemetry:plugins-custom-query",
         ],
         "@cmk//edition:ultimatemt": [
             "//cmk/base/cee:plugins-bakery-cee",
@@ -351,7 +351,6 @@ py_wheel(
             "//cmk/plugins:checkman_ultimatemt",
             "//cmk/plugins:plugins_ultimate",
             "//cmk/plugins:plugins_ultimatemt",
-            "//cmk/plugins/custom_query_metric_backend",
             "//cmk/post_rename_site/nonfree/ultimate/plugins",
             "//cmk/update_config/nonfree/pro",
             "//cmk/update_config/nonfree/ultimate",
@@ -362,6 +361,7 @@ py_wheel(
             "//non-free/packages/cmc-protocols:py_cycletime_proto",
             "//non-free/packages/cmc-protocols:py_state_proto",
             "//non-free/packages/cmk-multi-tenancy",
+            "//non-free/packages/cmk-telemetry:plugins-custom-query",
         ],
     }) + [
         ":cmkpasswd",

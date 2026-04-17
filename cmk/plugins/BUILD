@@ -216,7 +216,7 @@ filegroup(
     ) + [
         ":checkman_community",
         ":checkman_pro",
-        "//cmk/plugins/custom_query_metric_backend:checkman",
+        "//non-free/packages/cmk-telemetry:checkman",
     ],
 )
 
@@ -261,7 +261,7 @@ filegroup(
             "**/libexec/*",
         ],
     ) + [
-        "//cmk/plugins/custom_query_metric_backend:libexec",
+        "//non-free/packages/cmk-telemetry:libexec",
     ],
     visibility = [
         "//cmk:__subpackages__",

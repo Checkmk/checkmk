@@ -11,7 +11,6 @@ from collections.abc import Collection, Iterable
 from cmk.ccc.resulttype import Error, Result
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
 from cmk.gui.config import Config
-from cmk.gui.htmllib.html import html
 from cmk.gui.http import Request, request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
@@ -157,12 +156,12 @@ class WatoMode[RequestOK](abc.ABC):
         """Returns the data structure representing the page menu for this mode"""
         return PageMenu(breadcrumb=breadcrumb)
 
-    def buttons(self) -> None: ...
+    def action(self, config: Config) -> ActionResult:
+        pass  # Yes, there are various modes without an action.
 
-    def action(self, config: Config) -> ActionResult: ...
-
+    @abc.abstractmethod
     def page(self, config: Config) -> None:
-        html.show_message(_("(This module is not yet implemented)"))
+        raise NotImplementedError()
 
     def handle_page(self, config: Config) -> None:
         return self.page(config)

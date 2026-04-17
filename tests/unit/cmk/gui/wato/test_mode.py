@@ -8,10 +8,12 @@
 # mypy: disable-error-code="type-arg"
 
 from collections.abc import Collection, Iterable
+from typing import override
 
 import pytest
 
 from cmk.gui.breadcrumb import BreadcrumbItem
+from cmk.gui.config import Config
 from cmk.gui.type_defs import DynamicIcon, DynamicIconName, PermissionName
 from cmk.gui.wato import MainModuleTopicHosts
 from cmk.gui.watolib.main_menu import ABCMainModule, MainModuleRegistry, MainModuleTopic
@@ -28,6 +30,10 @@ class SomeWatoMode(WatoMode):
     @classmethod
     def name(cls) -> str:
         return "some_wato_mode"
+
+    @override
+    def page(self, config: Config) -> None:
+        pass
 
 
 @module_registry.register

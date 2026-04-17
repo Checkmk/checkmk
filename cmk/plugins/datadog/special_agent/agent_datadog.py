@@ -113,27 +113,30 @@ def parse_arguments(argv: Sequence[str] | None) -> argparse.Namespace:
         ),
     )
     parser.add_argument(
-        "--sections",
+        "--section",
         type=str,
-        nargs="*",
-        metavar="SECTION1 SECTION2 ...",
+        action="append",
+        dest="sections",
+        metavar="SECTION",
         help="Sections to be produced",
         choices=["monitors", "events", "logs"],
         default=[],
     )
     parser.add_argument(
-        "--monitor_tags",
+        "--monitor_tag",
         type=str,
-        nargs="*",
-        metavar="TAG1 TAG2 ...",
+        action="append",
+        dest="monitor_tags",
+        metavar="TAG",
         help="Restrict fetched monitors to tags",
         default=[],
     )
     parser.add_argument(
-        "--monitor_monitor_tags",
+        "--monitor_monitor_tag",
         type=str,
-        nargs="*",
-        metavar="TAG1 TAG2 ...",
+        action="append",
+        dest="monitor_monitor_tags",
+        metavar="TAG",
         help="Restrict fetched monitors to monitor tags",
         default=[],
     )
@@ -145,18 +148,20 @@ def parse_arguments(argv: Sequence[str] | None) -> argparse.Namespace:
         default=600,
     )
     parser.add_argument(
-        "--event_tags",
+        "--event_tag",
         type=str,
-        nargs="*",
-        metavar="TAG1 TAG2 ...",
+        action="append",
+        dest="event_tags",
+        metavar="TAG",
         help="Restrict fetched events to tags",
         default=[],
     )
     parser.add_argument(
-        "--event_tags_show",
+        "--event_tag_show",
         type=str,
-        nargs="*",
-        metavar="REGEX1 REGEX2 ...",
+        action="append",
+        dest="event_tags_show",
+        metavar="REGEX",
         help=(
             "Any tag of a fetched event matching one of these regular expressions will be shown "
             "in the EC"
@@ -198,20 +203,22 @@ def parse_arguments(argv: Sequence[str] | None) -> argparse.Namespace:
     )
     parser.add_argument("--log_query", type=str, help="filter logs by this query.", default="")
     parser.add_argument(
-        "--log_indexes",
+        "--log_index",
         type=str,
-        nargs="*",
-        metavar="IDX1 IDX2 ...",
+        action="append",
+        dest="log_indexes",
+        metavar="IDX",
         help="Indexes to search",
-        default="*",
+        default=[],
     )
     parser.add_argument(
-        "--log_text",
+        "--log_text_element",
         type=LogMessageElement.from_arg,
-        nargs="*",
-        metavar="name:key other:nested.key ...",
+        action="append",
+        dest="log_text",
+        metavar="name:key",
         help="Value from message to use for event text",
-        default="message:message",
+        default=[],
     )
     parser.add_argument(
         "--log_syslog_facility",

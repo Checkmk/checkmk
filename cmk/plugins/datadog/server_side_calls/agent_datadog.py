@@ -86,21 +86,21 @@ def agent_datadog_arguments(
     sections = []
     if params.monitors:
         sections.append("monitors")
-        args += [
-            "--monitor_tags",
-            *params.monitors.tags,
-            "--monitor_monitor_tags",
-            *params.monitors.monitor_tags,
-        ]
+        for tag in params.monitors.tags:
+            args += ["--monitor_tag", tag]
+        for tag in params.monitors.monitor_tags:
+            args += ["--monitor_monitor_tag", tag]
     if params.events:
         sections.append("events")
         args += [
             "--event_max_age",
             str(int(params.events.max_age)),
-            "--event_tags",
-            *params.events.tags,
-            "--event_tags_show",
-            *params.events.tags_to_show,
+        ]
+        for tag in params.events.tags:
+            args += ["--event_tag", tag]
+        for tag in params.events.tags_to_show:
+            args += ["--event_tag_show", tag]
+        args += [
             "--event_syslog_facility",
             str(params.events.syslog_facility[1]),
             "--event_syslog_priority",
@@ -117,16 +117,19 @@ def agent_datadog_arguments(
             str(int(params.logs.max_age)),
             "--log_query",
             params.logs.query,
-            "--log_indexes",
-            *params.logs.indexes,
-            "--log_text",
-            *_to_text_args(params.logs.text),
+        ]
+        for idx in params.logs.indexes:
+            args += ["--log_index", idx]
+        for text_arg in _to_text_args(params.logs.text):
+            args += ["--log_text_element", text_arg]
+        args += [
             "--log_syslog_facility",
             str(params.logs.syslog_facility[1]),
             "--log_service_level",
             str(params.logs.service_level[1]),
         ]
-    args += ["--sections"] + sections
+    for section in sections:
+        args += ["--section", section]
 
     yield SpecialAgentCommand(command_arguments=args)
 

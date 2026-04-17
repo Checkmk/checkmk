@@ -1650,7 +1650,6 @@ py_library(
         "//cmk/gui/bi:gui_srcs",
         "//cmk/gui/nodevis:gui_srcs",
         "//cmk/gui/openapi/spec/spec_generator:gui_srcs",
-        "//cmk/gui/quick_setup:gui_srcs",
         "//cmk/gui/rule_specs:gui_srcs",
         "//cmk/gui/wato:gui_srcs",
         "//cmk/gui/wsgi:gui_srcs",

@@ -5,7 +5,7 @@
 
 import pytest
 
-from cmk.plugins.collection.rulesets.plesk import migrate
+from cmk.plugins.plesk.rulesets.plesk import migrate
 
 
 @pytest.mark.parametrize(

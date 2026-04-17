@@ -9,12 +9,12 @@ from collections.abc import Sequence
 import pytest
 
 from cmk.agent_based.v2 import IgnoreResultsError, Metric, Result, Service, State
-from cmk.legacy_checks.ibm_mq_queues import (
+from cmk.plugins.ibm.agent_based.ibm_mq_queues import parse_ibm_mq_queues
+from cmk.plugins.ibm_mq.agent_based.ibm_mq_queues import (
     _QueueParams,
     check_ibm_mq_queues,
     discover_ibm_mq_queues,
 )
-from cmk.plugins.ibm.agent_based.ibm_mq_queues import parse_ibm_mq_queues
 
 pytestmark = pytest.mark.checks
 

@@ -22,7 +22,7 @@ from cmk.agent_based.v2 import (
     Service,
     State,
 )
-from cmk.legacy_includes.ibm_mq import is_ibm_mq_service_vanished
+from cmk.plugins.ibm_mq.lib import is_ibm_mq_service_vanished
 
 # <<<ibm_mq_queues:sep(10)>>>
 # QMNAME(MY.TEST)                                           STATUS(RUNNING)

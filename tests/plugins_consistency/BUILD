@@ -15,7 +15,10 @@ py_library(
 
 py_test(
     name = "community",
-    srcs = glob(["**/*.py"]),
+    srcs = glob(
+        include = ["**/*.py"],
+        exclude = ["conftest.py"],
+    ),
     pytest_main = True,
     deps = [
         ":conftest",

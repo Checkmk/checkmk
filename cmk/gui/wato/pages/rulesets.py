@@ -2536,6 +2536,7 @@ class VSExplicitConditions(Transform):
         if value.startswith("~"):
             try:
                 re.compile(value[1:])
+                return  # valid regex
             except re.error as e:
                 raise MKUserError(varprefix, _("Invalid regex pattern: %s") % str(e))
         try:

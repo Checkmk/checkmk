@@ -73,6 +73,76 @@ REDFISH_SECTIONS = (
 )
 
 
+@dataclass
+class Vendor:
+    """Vendor data object"""
+
+    name: str
+    version: str | None = None
+    firmware_version: str | None = None
+    expand_string: str | None = None
+
+
+def detect_vendor(root_data: Mapping[str, Any]) -> Vendor:
+    """Extract Vendor information from base data"""
+    vendor_string = ""
+    if root_data.get("Oem"):
+        if len(root_data["Oem"]) > 0:
+            vendor_string = list(root_data["Oem"])[0]
+    if vendor_string == "" and root_data.get("Vendor") is not None:
+        vendor_string = root_data["Vendor"]
+
+    match vendor_string:
+        case "Hpe" | "Hp":
+            vendor_data = Vendor(name="HPE", expand_string="?$expand=.")
+            if vendor_string in ["Hp"]:
+                vendor_data.expand_string = ""
+            manager_data = root_data.get("Oem", {}).get(vendor_string, {}).get("Manager", [])
+            if manager_data:
+                manager_data = manager_data[0]
+            if isinstance(manager_data, dict):
+                vendor_data.version = manager_data.get("ManagerType")
+                if vendor_data.version is None:
+                    vendor_data.version = (
+                        root_data.get("Oem", {})
+                        .get(vendor_string, {})
+                        .get("Moniker", {})
+                        .get("PRODGEN")
+                    )
+                vendor_data.firmware_version = manager_data.get("ManagerFirmwareVersion")
+                if vendor_data.firmware_version is None:
+                    vendor_data.firmware_version = manager_data.get("Languages", {})[0].get(
+                        "Version"
+                    )
+            return vendor_data
+
+        case "Lenovo":
+            return Vendor(name="Lenovo", version="xClarity", expand_string="?$expand=*")
+
+        case "Dell":
+            return Vendor(name="Dell", version="iDRAC", expand_string="?$expand=*($levels=1)")
+
+        case "Huawei":
+            return Vendor(name="Huawei", version="BMC", expand_string="?$expand=.%28$levels=1%29")
+
+        case "ts_fujitsu":
+            return Vendor(name="Fujitsu", version="iRMC", expand_string="?$expand=Members")
+
+        case "Cisco" | "Cisco Systems Inc.":
+            return Vendor(name="Cisco", version="CIMC")
+
+        case "Ami" | "Supermicro" | "Seagate" as name:
+            return Vendor(name=name)
+
+        case "NVIDIA":
+            return Vendor(name="NVIDIA", expand_string="?$expand=*($levels=1)")
+
+        case _:
+            pass
+
+    return Vendor(name="Generic")
+
+
 class Perfdata(NamedTuple):
     """normal monitoring performance data"""
 

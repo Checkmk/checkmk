@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+import dataclasses
 import json
 from collections.abc import Generator, Mapping, Sequence
 from unittest.mock import call, MagicMock, patch
@@ -365,6 +366,8 @@ def test_perform_discovery_fix_all_with_previous_discovery_result(
         ),
         host=sample_host,
         automation_config=LocalAutomationConfig(),
+        user_permission_config=UserPermissionSerializableConfig({}, {}, []),
+        raise_errors=True,
         pprint_value=False,
         debug=False,
         use_git=False,
@@ -381,7 +384,7 @@ def test_perform_discovery_fix_all_with_previous_discovery_result(
         ),
         debug=False,
     )
-    mock_discovery_preview.assert_not_called()
+    mock_discovery_preview.assert_called_once()
     assert [entry.check_source for entry in discovery_result.check_table] == [
         "unchanged",
         "active",
@@ -392,96 +395,6 @@ def test_perform_discovery_fix_all_with_previous_discovery_result(
     assert [
         log_entry.text for log_entry in store.read() if log_entry.action == "update-host-labels"
     ] == [f"Updated discovered host labels of '{sample_host_name}' with 2 labels"]
-
-
-@pytest.mark.usefixtures("inline_background_jobs")
-def test_perform_discovery_fix_all_removes_vanished_service(
-    mocker: MockerFixture,
-    sample_host_name: HostName,
-    sample_host: Host,
-    mock_set_autochecks: MagicMock,
-) -> None:
-    """Vanished services must be dropped from the result after fix_all, not re-introduced as new."""
-    mocker.patch("cmk.gui.watolib.services.update_host_labels", return_value={})
-    mock_discovery_preview = mocker.patch("cmk.gui.watolib.services.local_discovery_preview")
-    previous_discovery_result = DiscoveryResult(
-        job_status={
-            "state": "finished",
-            "started": 1654006465.892057,
-            "pid": None,
-            "loginfo": {"JobProgressUpdate": [], "JobResult": [], "JobException": []},
-            "is_active": False,
-        },
-        check_table_created=1654006465,
-        check_table=[
-            CheckPreviewEntry(
-                check_source="vanished",
-                check_plugin_name="lnx_if",
-                ruleset_name="interfaces",
-                discovery_ruleset_name=None,
-                item="1",
-                old_discovered_parameters={},
-                new_discovered_parameters={},
-                effective_parameters={},
-                description="Interface 1",
-                state=2,
-                output="Interface vanished",
-                metrics=[],
-                old_labels={},
-                new_labels={},
-                found_on_nodes=[sample_host_name],
-            ),
-            CheckPreviewEntry(
-                check_source="unchanged",
-                check_plugin_name="cpu_loads",
-                ruleset_name="cpu_load",
-                discovery_ruleset_name=None,
-                item=None,
-                old_discovered_parameters={},
-                new_discovered_parameters={},
-                effective_parameters={},
-                description="CPU load",
-                state=0,
-                output="",
-                metrics=[],
-                old_labels={},
-                new_labels={},
-                found_on_nodes=[sample_host_name],
-            ),
-        ],
-        nodes_check_table={},
-        host_labels={},
-        new_labels={},
-        vanished_labels={},
-        changed_labels={},
-        sources={},
-        labels_by_host={sample_host_name: []},
-        config_warnings=(),
-    )
-
-    discovery_result = perform_fix_all(
-        discovery_result=initial_discovery_result(
-            action=DiscoveryAction.FIX_ALL,
-            host=sample_host,
-            previous_discovery_result=previous_discovery_result,
-            automation_config=LocalAutomationConfig(),
-            user_permission_config=UserPermissionSerializableConfig({}, {}, []),
-            raise_errors=True,
-            debug=False,
-            use_git=False,
-        ),
-        host=sample_host,
-        automation_config=LocalAutomationConfig(),
-        pprint_value=False,
-        debug=False,
-        use_git=False,
-    )
-
-    mock_discovery_preview.assert_not_called()
-    assert len(discovery_result.check_table) == 1
-    (kept,) = discovery_result.check_table
-    assert kept.check_source == "unchanged"
-    assert kept.check_plugin_name == "cpu_loads"
 
 
 @pytest.mark.usefixtures("inline_background_jobs")
@@ -718,7 +631,9 @@ def test_perform_discovery_single_update(
         update_source="new",
         update_target="unchanged",
         host=sample_host,
+        raise_errors=True,
         automation_config=LocalAutomationConfig(),
+        user_permission_config=UserPermissionSerializableConfig({}, {}, []),
         pprint_value=False,
         debug=False,
         use_git=False,
@@ -736,7 +651,12 @@ def test_perform_discovery_single_update(
         ),
         debug=False,
     )
-    mock_discovery_preview.assert_not_called()
+    mock_discovery_preview.assert_called_with(
+        sample_host_name,
+        prevent_fetching=True,
+        raise_errors=False,
+        debug=False,
+    )
     assert [
         entry.check_source
         for entry in discovery_result.check_table
@@ -914,7 +834,9 @@ def test_perform_discovery_single_update__ignore(
         update_source="unchanged",
         update_target="ignored",
         host=sample_host,
+        raise_errors=True,
         automation_config=LocalAutomationConfig(),
+        user_permission_config=UserPermissionSerializableConfig({}, {}, []),
         pprint_value=False,
         debug=False,
         use_git=False,
@@ -1051,7 +973,9 @@ class TestPerformDiscoverySingleUpdate:
             update_source=update_source,
             update_target=update_target,
             host=sample_host,
+            raise_errors=True,
             automation_config=LocalAutomationConfig(),
+            user_permission_config=UserPermissionSerializableConfig({}, {}, []),
             pprint_value=False,
             debug=False,
             use_git=False,
@@ -1206,6 +1130,8 @@ class TestPerformDiscoverySingleUpdate:
             pprint_value=False,
             debug=False,
             use_git=False,
+            raise_errors=True,
+            user_permission_config=UserPermissionSerializableConfig({}, {}, []),
         )
 
         mock_save_function.assert_called_once()
@@ -1403,7 +1329,9 @@ def test_perform_discovery_action_update_services(
         update_source=None,
         update_target=None,
         host=sample_host,
+        raise_errors=True,
         automation_config=LocalAutomationConfig(),
+        user_permission_config=UserPermissionSerializableConfig({}, {}, []),
         pprint_value=False,
         debug=False,
         use_git=False,
@@ -1428,7 +1356,12 @@ def test_perform_discovery_action_update_services(
         ),
         debug=False,
     )
-    mock_discovery_preview.assert_not_called()
+    mock_discovery_preview.assert_called_with(
+        sample_host_name,
+        prevent_fetching=True,
+        raise_errors=False,
+        debug=False,
+    )
     assert [entry.check_source for entry in discovery_result.check_table] == ["unchanged"]
 
     store = AuditLogStore()
@@ -1775,47 +1708,47 @@ def test_perform_discovery_bulk_update__ignored_service_set_to_undecided(
         "cmk.gui.watolib.services.Discovery._save_host_service_enable_disable_rules",
         return_value=None,
     )
-    check_table = [
-        CheckPreviewEntry(
-            check_source="ignored",
-            check_plugin_name="some_plugin",
-            ruleset_name="some_rule",
-            discovery_ruleset_name=None,
-            item="A",
-            old_discovered_parameters={},
-            new_discovered_parameters={},
-            effective_parameters={},
-            description="Disabled Service",
-            state=0,
-            output="",
-            metrics=[],
-            old_labels={},
-            new_labels={},
-            found_on_nodes=[sample_host_name],
-        ),
-        CheckPreviewEntry(
-            check_source="unchanged",
-            check_plugin_name="other_plugin",
-            ruleset_name="other_rule",
-            discovery_ruleset_name=None,
-            item=None,
-            old_discovered_parameters={},
-            new_discovered_parameters={},
-            effective_parameters={},
-            description="Running Service",
-            state=0,
-            output="",
-            metrics=[],
-            old_labels={},
-            new_labels={},
-            found_on_nodes=[sample_host_name],
-        ),
-    ]
+    other_entry = CheckPreviewEntry(
+        check_source="unchanged",
+        check_plugin_name="other_plugin",
+        ruleset_name="other_rule",
+        discovery_ruleset_name=None,
+        item=None,
+        old_discovered_parameters={},
+        new_discovered_parameters={},
+        effective_parameters={},
+        description="Running Service",
+        state=0,
+        output="",
+        metrics=[],
+        old_labels={},
+        new_labels={},
+        found_on_nodes=[sample_host_name],
+    )
+    ignored_entry = CheckPreviewEntry(
+        check_source="ignored",
+        check_plugin_name="some_plugin",
+        ruleset_name="some_rule",
+        discovery_ruleset_name=None,
+        item="A",
+        old_discovered_parameters={},
+        new_discovered_parameters={},
+        effective_parameters={},
+        description="Disabled Service",
+        state=0,
+        output="",
+        metrics=[],
+        old_labels={},
+        new_labels={},
+        found_on_nodes=[sample_host_name],
+    )
+    # After the disabled rule is removed, re-running discovery returns the service as "new".
+    post_transition_entry = dataclasses.replace(ignored_entry, check_source="new")
     mocker.patch(
         "cmk.gui.watolib.services.local_discovery_preview",
         return_value=ServiceDiscoveryPreviewResult(
             output="",
-            check_table=check_table,
+            check_table=[post_transition_entry, other_entry],
             nodes_check_table={},
             host_labels={},
             new_labels={},
@@ -1837,7 +1770,7 @@ def test_perform_discovery_bulk_update__ignored_service_set_to_undecided(
                 "is_active": False,
             },
             check_table_created=0,
-            check_table=check_table,
+            check_table=[ignored_entry, other_entry],
             nodes_check_table={},
             host_labels={},
             new_labels={},
@@ -1855,6 +1788,8 @@ def test_perform_discovery_bulk_update__ignored_service_set_to_undecided(
         pprint_value=False,
         debug=False,
         use_git=False,
+        raise_errors=True,
+        user_permission_config=UserPermissionSerializableConfig({}, {}, []),
     )
 
     mock_save_function.assert_called_once()

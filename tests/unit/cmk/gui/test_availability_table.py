@@ -160,7 +160,7 @@ from cmk.gui.availability import layout_availability_table
 def test_availability_percentage_only_option(
     monkeypatch, what, group_title, availability_table, avoptions, result
 ):
-    monkeypatch.setattr("cmk.gui.availability.get_object_cells", lambda what, av, lab: 0)
+    monkeypatch.setattr("cmk.gui.availability.layout.get_object_cells", lambda what, av, lab: 0)
     assert layout_availability_table(what, group_title, availability_table, avoptions) == result
 
 
@@ -325,5 +325,5 @@ def test_availability_percentage_only_option(
 def test_availability_time_only_option(
     monkeypatch, what, group_title, availability_table, avoptions, result
 ):
-    monkeypatch.setattr("cmk.gui.availability.get_object_cells", lambda what, av, lab: 0)
+    monkeypatch.setattr("cmk.gui.availability.layout.get_object_cells", lambda what, av, lab: 0)
     assert layout_availability_table(what, group_title, availability_table, avoptions) == result

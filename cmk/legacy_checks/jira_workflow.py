@@ -10,15 +10,20 @@ import json
 from collections.abc import Mapping
 from typing import Any
 
-from cmk.agent_based.legacy.v0_unstable import (
-    check_levels,
-    LegacyCheckDefinition,
-    LegacyCheckResult,
-    LegacyDiscoveryResult,
+from cmk.agent_based.legacy.conversion import (
+    # Temporary compatibility layer until we migrate the corresponding ruleset.
+    check_levels_legacy_compatible as check_levels,
 )
-from cmk.agent_based.v2 import StringTable
-
-check_info = {}
+from cmk.agent_based.v2 import (
+    AgentSection,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Result,
+    Service,
+    State,
+    StringTable,
+)
 
 Section = dict[str, dict[str, int | str]]
 
@@ -49,15 +54,17 @@ def parse_jira_workflow(string_table: StringTable) -> Section:
     return parsed
 
 
-def check_jira_workflow(item: str, params: Mapping[str, Any], parsed: Section) -> LegacyCheckResult:
-    if not (item_data := parsed.get(item)):
-        return
-    if not item_data:
+def check_jira_workflow(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
+    if not (item_data := section.get(item)):
         return
 
     msg_error = item_data.get("error")
     if msg_error is not None:
-        yield 2, "Jira error while searching (see long output for details)\n%s" % msg_error
+        yield Result(
+            state=State.CRIT,
+            summary="Jira error while searching (see long output for details)",
+            details=f"Jira error while searching (see long output for details)\n{msg_error}",
+        )
         return
 
     for _workflow, issue_count in item_data.items():
@@ -65,7 +72,7 @@ def check_jira_workflow(item: str, params: Mapping[str, Any], parsed: Section) -
             continue
         issue_nr_levels = params.get("workflow_count_upper", (None, None))
         issue_nr_levels_lower = params.get("workflow_count_lower", (None, None))
-        yield check_levels(
+        yield from check_levels(
             issue_count,
             "jira_count",
             issue_nr_levels + issue_nr_levels_lower,
@@ -74,15 +81,21 @@ def check_jira_workflow(item: str, params: Mapping[str, Any], parsed: Section) -
         )
 
 
-def discover_jira_workflow(section: Section) -> LegacyDiscoveryResult:
-    yield from ((item, {}) for item in section)
+def discover_jira_workflow(section: Section) -> DiscoveryResult:
+    yield from (Service(item=item) for item in section)
 
 
-check_info["jira_workflow"] = LegacyCheckDefinition(
+agent_section_jira_workflow = AgentSection(
     name="jira_workflow",
     parse_function=parse_jira_workflow,
+)
+
+
+check_plugin_jira_workflow = CheckPlugin(
+    name="jira_workflow",
     service_name="Jira Workflow %s",
     discovery_function=discover_jira_workflow,
     check_function=check_jira_workflow,
     check_ruleset_name="jira_workflow",
+    check_default_parameters={},
 )

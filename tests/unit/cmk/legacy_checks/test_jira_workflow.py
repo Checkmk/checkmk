@@ -10,7 +10,7 @@ from typing import Any
 
 import pytest
 
-from cmk.agent_based.v2 import StringTable
+from cmk.agent_based.v2 import Metric, Result, Service, State, StringTable
 from cmk.legacy_checks.jira_workflow import (
     check_jira_workflow,
     discover_jira_workflow,
@@ -36,20 +36,21 @@ from cmk.legacy_checks.jira_workflow import (
                 ]
             ],
             [
-                ("My_Project1/In Progress", {}),
-                ("My_Project1/Need Help", {}),
-                ("My_Project1/Waiting", {}),
+                Service(item="My_Project1/In Progress"),
+                Service(item="My_Project1/Need Help"),
+                Service(item="My_Project1/Waiting"),
             ],
         ),
     ],
 )
 def test_discover_jira_workflow(
-    string_table: StringTable, expected_discoveries: Sequence[tuple[str, Mapping[str, Any]]]
+    string_table: StringTable, expected_discoveries: Sequence[Service]
 ) -> None:
     """Test discovery function for jira_workflow check."""
     parsed = parse_jira_workflow(string_table)
-    result = list(discover_jira_workflow(parsed))
-    assert sorted(result) == sorted(expected_discoveries)
+    result = sorted(list(discover_jira_workflow(parsed)), key=lambda s: s.item or "")
+    expected = sorted(expected_discoveries, key=lambda s: s.item or "")
+    assert result == expected
 
 
 @pytest.mark.parametrize(
@@ -71,7 +72,10 @@ def test_discover_jira_workflow(
                     "42}}",
                 ]
             ],
-            [(0, "Total number of issues: 16", [("jira_count", 16, None, None)])],
+            [
+                Result(state=State.OK, summary="Total number of issues: 16"),
+                Metric("jira_count", 16),
+            ],
         ),
         (
             "My_Project1/Need Help",
@@ -89,7 +93,10 @@ def test_discover_jira_workflow(
                     "42}}",
                 ]
             ],
-            [(0, "Total number of issues: 42", [("jira_count", 42, None, None)])],
+            [
+                Result(state=State.OK, summary="Total number of issues: 42"),
+                Metric("jira_count", 42),
+            ],
         ),
         (
             "My_Project1/Waiting",
@@ -107,12 +114,18 @@ def test_discover_jira_workflow(
                     "42}}",
                 ]
             ],
-            [(0, "Total number of issues: 56", [("jira_count", 56, None, None)])],
+            [
+                Result(state=State.OK, summary="Total number of issues: 56"),
+                Metric("jira_count", 56),
+            ],
         ),
     ],
 )
 def test_check_jira_workflow(
-    item: str, params: Mapping[str, Any], string_table: StringTable, expected_results: Sequence[Any]
+    item: str,
+    params: Mapping[str, Any],
+    string_table: StringTable,
+    expected_results: Sequence[Result | Metric],
 ) -> None:
     """Test check function for jira_workflow check."""
     parsed = parse_jira_workflow(string_table)

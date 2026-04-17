@@ -35,7 +35,6 @@ opentelemetry-instrumentation-requests
 opentelemetry-instrumentation-wsgi
 opentelemetry-sdk
 opentelemetry-semantic-conventions
-opsgenie-sdk
 oracledb
 paho-mqtt
 paramiko
@@ -46,7 +45,6 @@ psycopg2-binary
 pyasn1
 pydantic
 pydantic_core
-pyghmi
 pyjwt[crypto]
 pymssql
 pymysql
@@ -57,7 +55,6 @@ pyprof2calltree
 pysaml2
 pysmb
 pysmi
-pysnmp
 python-active-directory
 python-dateutil
 python-ldap
@@ -74,9 +71,7 @@ setuptools
 setuptools-scm
 snmpsim
 starlette
-tenacity
 urllib3
 uvicorn
-vcrpy
 watchdog
 werkzeug

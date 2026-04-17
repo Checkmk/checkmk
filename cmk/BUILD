@@ -204,7 +204,6 @@ py_wheel(
         "opentelemetry-instrumentation-wsgi",
         "opentelemetry-sdk",
         "opentelemetry-semantic-conventions",
-        "opsgenie-sdk",
         "paho-mqtt",
         "paramiko",
         "pillow",
@@ -215,7 +214,6 @@ py_wheel(
         "pyasn1",
         "pydantic",
         "pydantic_core",
-        "pyghmi",
         "pyjwt",
         "pymongo",
         "pymssql",
@@ -227,7 +225,6 @@ py_wheel(
         "pysaml2",
         "pysmb",
         "pysmi",
-        "pysnmp",
         "python-active-directory",  # missing wheel
         "python-dateutil",
         "python-ldap",  # missing wheel
@@ -246,10 +243,8 @@ py_wheel(
         "setuptools",
         "setuptools-scm",
         "snmpsim",
-        "tenacity",
         "urllib3",
         "uvicorn",
-        "vcrpy",
         "watchdog",
         "werkzeug",
     ],
@@ -705,17 +700,10 @@ _KNOWN_UNDECLARED = [
 ]
 
 _KNOWN_UNUSED = [
-    # were declared in original requirements tests with or without reason
     "setuptools",  # pinned transitive dependency
     "setuptools-scm",
     "snmpsim",
-    # clarify with CMK-32954
-    "pyghmi",
-    "pysnmp",
-    "tenacity",
-    "pysmi",
-    "vcrpy",
-    "opsgenie-sdk",
+    "pysmi",  # used outside of cmk/ in omd/packages/net-snmp/compile_mibs.py
 ]
 
 py_requirements_test(

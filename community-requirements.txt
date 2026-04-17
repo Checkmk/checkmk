@@ -3225,7 +3225,6 @@ opsgenie-sdk==2.1.5 \
     --hash=sha256:fe0af399030a91ec5755ecfb899965bf18fcb46e17fd2d3a4d71fa68999947e9
     # via
     #   -c requirements.txt
-    #   -r cmk/requirements.in
     #   -r packages/cmk-notification-plugins/requirements.in
 oracledb==3.4.2 \
     --hash=sha256:00c79448017f367bb7ab6900efe0706658a53768abea2b4519a4c9b2d5743890 \
@@ -3977,7 +3976,6 @@ pyghmi==1.6.13 \
     --hash=sha256:dd02dca001c5f7681ee770bfde1d3cb2f57f0f94a2559ac95c943902213936c5
     # via
     #   -c requirements.txt
-    #   -r cmk/requirements.in
     #   -r packages/cmk-check-engine/requirements.in
 pygments==2.19.2 \
     --hash=sha256:636cb2477cec7f8952536970bc533bc43743542f70392ae026374600add5b887 \
@@ -4220,7 +4218,6 @@ pysnmp==7.1.22 \
     --hash=sha256:57e704a6ba2bbf571d16cd5dc08b89bb3fa0ebeb5f4f26b87fececad3b3de7a6
     # via
     #   -c requirements.txt
-    #   -r cmk/requirements.in
     #   -r packages/cmk-ec/requirements.in
     #   snmpsim
 pyspnego==0.12.0 \
@@ -5449,7 +5446,6 @@ tenacity==9.1.4 \
     --hash=sha256:adb31d4c263f2bd041081ab33b498309a57c77f9acf2db65aadf0898179cf93a
     # via
     #   -c requirements.txt
-    #   -r cmk/requirements.in
     #   -r packages/cmk-agent-receiver/requirements.in
     #   -r packages/cmk-notification-plugins/requirements.in
     #   opsgenie-sdk
@@ -5913,7 +5909,6 @@ vcrpy==8.1.1 \
     --hash=sha256:58e3053e33b423f3594031cb758c3f4d1df931307f1e67928e30cf352df7709f
     # via
     #   -c requirements.txt
-    #   -r cmk/requirements.in
     #   -r packages/cmk-plugin-apis/requirements.in
     #   cmk-werk-zeug
 virtualenv==20.36.1 \

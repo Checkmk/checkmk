@@ -3089,9 +3089,7 @@ opentelemetry-util-http==0.60b1 \
 opsgenie-sdk==2.1.5 \
     --hash=sha256:c38a2f0c7acbcbeb9202ced80ec857b5eda2d99919392fed4083bdfa7be32669 \
     --hash=sha256:fe0af399030a91ec5755ecfb899965bf18fcb46e17fd2d3a4d71fa68999947e9
-    # via
-    #   -r cmk/requirements.in
-    #   -r packages/cmk-notification-plugins/requirements.in
+    # via -r packages/cmk-notification-plugins/requirements.in
 oracledb==3.4.2 \
     --hash=sha256:00c79448017f367bb7ab6900efe0706658a53768abea2b4519a4c9b2d5743890 \
     --hash=sha256:0e16fe3d057e0c41a23ad2ae95bfa002401690773376d476be608f79ac74bf05 \
@@ -3815,9 +3813,7 @@ pyenchant==3.3.0 \
 pyghmi==1.6.13 \
     --hash=sha256:a998a25a8a5e8222d207dd38dad1f2a46675cc254ed54010a79ff46c0dc368ad \
     --hash=sha256:dd02dca001c5f7681ee770bfde1d3cb2f57f0f94a2559ac95c943902213936c5
-    # via
-    #   -r cmk/requirements.in
-    #   -r packages/cmk-check-engine/requirements.in
+    # via -r packages/cmk-check-engine/requirements.in
 pygls==2.0.1 \
     --hash=sha256:2f774a669fbe2ece977d302786f01f9b0c5df7d0204ea0fa371ecb08288d6b86 \
     --hash=sha256:d29748042cea5bedc98285eb3e2c0c60bf3fc73786319519001bf72bbe8f36cc
@@ -4047,7 +4043,6 @@ pysnmp==7.1.22 \
     --hash=sha256:37ac595c7f0c1c00514505939b4dcf5b4fd5a9ffe51b0349f60bb640c11b0f77 \
     --hash=sha256:57e704a6ba2bbf571d16cd5dc08b89bb3fa0ebeb5f4f26b87fececad3b3de7a6
     # via
-    #   -r cmk/requirements.in
     #   -r packages/cmk-ec/requirements.in
     #   snmpsim
 pyspnego==0.12.0 \
@@ -5218,7 +5213,6 @@ tenacity==9.1.4 \
     --hash=sha256:6095a360c919085f28c6527de529e76a06ad89b23659fa881ae0649b867a9d55 \
     --hash=sha256:adb31d4c263f2bd041081ab33b498309a57c77f9acf2db65aadf0898179cf93a
     # via
-    #   -r cmk/requirements.in
     #   -r non-free/packages/cmk-metric-backend/requirements.in
     #   -r non-free/packages/cmk-relay-engine/dev-requirements.in
     #   -r packages/cmk-agent-receiver/requirements.in
@@ -5651,7 +5645,6 @@ vcrpy==8.1.1 \
     --hash=sha256:2d16f31ad56493efb6165182dd99767207031b0da3f68b18f975545ede8ac4b9 \
     --hash=sha256:58e3053e33b423f3594031cb758c3f4d1df931307f1e67928e30cf352df7709f
     # via
-    #   -r cmk/requirements.in
     #   -r packages/cmk-plugin-apis/requirements.in
     #   cmk-werk-zeug
     #   pytest-recording

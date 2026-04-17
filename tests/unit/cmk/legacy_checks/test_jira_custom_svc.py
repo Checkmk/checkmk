@@ -4,8 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="misc"
-# mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 
 from collections.abc import Mapping, Sequence
 from typing import Any
@@ -13,7 +11,7 @@ from unittest.mock import patch
 
 import pytest
 
-from cmk.agent_based.v2 import StringTable
+from cmk.agent_based.v2 import Metric, Result, Service, State, StringTable
 from cmk.legacy_checks.jira_custom_svc import (
     check_jira_custom_svc,
     discover_jira_custom_svc,
@@ -124,22 +122,23 @@ from cmk.legacy_checks.jira_custom_svc import (
                 ],
             ],
             [
-                ("Custom Avg", {}),
-                ("Custom Error", {}),
-                ("Custom Service", {}),
-                ("Custom Sum", {}),
-                ("Jira Custom 2", {}),
+                Service(item="Custom Avg"),
+                Service(item="Custom Error"),
+                Service(item="Custom Service"),
+                Service(item="Custom Sum"),
+                Service(item="Jira Custom 2"),
             ],
         ),
     ],
 )
 def test_discover_jira_custom_svc(
-    string_table: StringTable, expected_discoveries: Sequence[tuple[str, Mapping[str, Any]]]
+    string_table: StringTable, expected_discoveries: Sequence[Service]
 ) -> None:
     """Test discovery function for jira_custom_svc check."""
     parsed = parse_jira_custom_svc(string_table)
-    result = list(discover_jira_custom_svc(parsed))
-    assert sorted(result) == sorted(expected_discoveries)
+    result = sorted(list(discover_jira_custom_svc(parsed)), key=lambda s: s.item or "")
+    expected = sorted(expected_discoveries, key=lambda s: s.item or "")
+    assert result == expected
 
 
 @pytest.mark.parametrize(
@@ -247,8 +246,12 @@ def test_discover_jira_custom_svc(
                 ],
             ],
             [
-                (0, "Average value: 0.74", [("jira_avg", 0.74, None, None)]),
-                (0, "(Summed up values: 37.0 / Total search results: 50)"),
+                Result(state=State.OK, summary="Average value: 0.74"),
+                Metric("jira_avg", 0.74),
+                Result(
+                    state=State.OK,
+                    summary="(Summed up values: 37.0 / Total search results: 50)",
+                ),
             ],
         ),
         (
@@ -353,9 +356,10 @@ def test_discover_jira_custom_svc(
                 ],
             ],
             [
-                (
-                    2,
-                    "Jira error while searching (see long output for details)\nJira error 400: Error in the JQL Query: Expecting operator but got 'closed'. The valid operators are '=', '!=', '<', '>', '<=', '>=', '~', '!~', 'IN', 'NOT IN', 'IS' and 'IS NOT'. (line 1, character 30)",
+                Result(
+                    state=State.CRIT,
+                    summary="Jira error while searching (see long output for details)",
+                    details="Jira error while searching (see long output for details)\nJira error 400: Error in the JQL Query: Expecting operator but got 'closed'. The valid operators are '=', '!=', '<', '>', '<=', '>=', '~', '!~', 'IN', 'NOT IN', 'IS' and 'IS NOT'. (line 1, character 30)",
                 )
             ],
         ),
@@ -461,9 +465,10 @@ def test_discover_jira_custom_svc(
                 ],
             ],
             [
-                (
-                    2,
-                    "Jira error while searching (see long output for details)\nJira error 400: Error in the JQL Query: 'for' is a reserved JQL word. You must surround it in quotation marks to use it in a query. (line 1, character 40)",
+                Result(
+                    state=State.CRIT,
+                    summary="Jira error while searching (see long output for details)",
+                    details="Jira error while searching (see long output for details)\nJira error 400: Error in the JQL Query: 'for' is a reserved JQL word. You must surround it in quotation marks to use it in a query. (line 1, character 40)",
                 )
             ],
         ),
@@ -569,8 +574,10 @@ def test_discover_jira_custom_svc(
                 ],
             ],
             [
-                (0, "Result of summed up values: 37", [("jira_sum", 37.0, None, None)]),
-                (0, "Difference last 7 days 0 hours: 0.00", [("jira_diff", 0, None, None)]),
+                Result(state=State.OK, summary="Result of summed up values: 37"),
+                Metric("jira_sum", 37.0),
+                Result(state=State.OK, summary="Difference last 7 days 0 hours: 0.00"),
+                Metric("jira_diff", 0),
             ],
         ),
         (
@@ -675,14 +682,22 @@ def test_discover_jira_custom_svc(
                 ],
             ],
             [
-                (0, "Total number of issues: 414", [("jira_count", 414, None, None)]),
-                (0, "Difference last 7 days 0 hours: 0.00", [("jira_diff", 0, None, None)]),
+                Result(state=State.OK, summary="Total number of issues: 414"),
+                Metric("jira_count", 414),
+                Result(state=State.OK, summary="Difference last 7 days 0 hours: 0.00"),
+                Metric("jira_diff", 0),
             ],
         ),
     ],
 )
 @patch("cmk.legacy_checks.jira_custom_svc.get_value_store")
-def test_check_jira_custom_svc(mock_value_store, item, params, string_table, expected_results):
+def test_check_jira_custom_svc(
+    mock_value_store: Any,
+    item: str,
+    params: Mapping[str, Any],
+    string_table: StringTable,
+    expected_results: Sequence[Result | Metric],
+) -> None:
     """Test check function for jira_custom_svc check."""
     # Mock the value store for diff calculation
     mock_store: dict[str, str] = {}

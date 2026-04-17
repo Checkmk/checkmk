@@ -3,28 +3,36 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
-
 # <<<jira_custom_svc>>>
 # {"Jira custom 2": {"count": 3200}, "Custom avg": {"avg_sum": 42.0,
 # "avg_total": 50, "avg": "0.84"}} {"Custom Service Count": {"count": 270},
 # "Custom Service Sum": {"sum": 17.0}, "Custom Service AVG": {"avg": "0.34"}}
 
-
-# mypy: disable-error-code="var-annotated"
-
 import json
 import time
+from collections.abc import Mapping
+from typing import Any
 
-from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
-from cmk.agent_based.v2 import get_value_store, render
+from cmk.agent_based.legacy.conversion import (
+    # Temporary compatibility layer until we migrate the corresponding ruleset.
+    check_levels_legacy_compatible as check_levels,
+)
+from cmk.agent_based.v2 import (
+    AgentSection,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    get_value_store,
+    render,
+    Result,
+    Service,
+    State,
+    StringTable,
+)
 
-check_info = {}
 
-
-def parse_jira_custom_svc(string_table):
-    parsed = {}
+def parse_jira_custom_svc(string_table: StringTable) -> dict[str, dict[str, Any]]:
+    parsed: dict[str, dict[str, Any]] = {}
 
     for line in string_table:
         custom_svc = json.loads(" ".join(line))
@@ -35,22 +43,26 @@ def parse_jira_custom_svc(string_table):
                 continue
 
             try:
-                parsed.setdefault("%s" % service.title(), {}).update(svc_values)
+                parsed.setdefault(service.title(), {}).update(svc_values)
             except KeyError:
                 pass
 
     return parsed
 
 
-def check_jira_custom_svc(item, params, parsed):
-    if not (item_data := parsed.get(item)):
-        return
-    if not item_data:
+def check_jira_custom_svc(
+    item: str, params: Mapping[str, Any], section: dict[str, dict[str, Any]]
+) -> CheckResult:
+    if not (item_data := section.get(item)):
         return
 
     msg_error = item_data.get("error")
     if msg_error is not None:
-        yield 2, "Jira error while searching (see long output for details)\n%s" % msg_error
+        yield Result(
+            state=State.CRIT,
+            summary="Jira error while searching (see long output for details)",
+            details=f"Jira error while searching (see long output for details)\n{msg_error}",
+        )
         return
 
     for computation, infotext, hr_func in [
@@ -65,12 +77,12 @@ def check_jira_custom_svc(item, params, parsed):
         if computation == "avg":
             svc_value = float(svc_value)
 
-        upper_level = params.get("custom_svc_%s_upper" % computation, (None, None))
-        lower_level = params.get("custom_svc_%s_lower" % computation, (None, None))
+        upper_level = params.get(f"custom_svc_{computation}_upper", (None, None))
+        lower_level = params.get(f"custom_svc_{computation}_lower", (None, None))
 
-        yield check_levels(
+        yield from check_levels(
             svc_value,
-            "jira_%s" % computation,
+            f"jira_{computation}",
             upper_level + lower_level,
             human_readable_func=hr_func,
             infoname=infotext,
@@ -80,25 +92,28 @@ def check_jira_custom_svc(item, params, parsed):
             avg_total = item_data.get("avg_total")
             avg_sum = item_data.get("avg_sum")
             if avg_total is not None and avg_sum is not None:
-                yield 0, f"(Summed up values: {avg_sum} / Total search results: {avg_total})"
+                yield Result(
+                    state=State.OK,
+                    summary=f"(Summed up values: {avg_sum} / Total search results: {avg_total})",
+                )
 
         else:
-            diff_key = "%s_diff" % computation
+            diff_key = f"{computation}_diff"
             timespan = params.get(diff_key, 604800)
-            diff_levels_upper = params.get("%s_upper" % diff_key, (None, None))
-            diff_levels_lower = params.get("%s_lower" % diff_key, (None, None))
+            diff_levels_upper = params.get(f"{diff_key}_upper", (None, None))
+            diff_levels_lower = params.get(f"{diff_key}_lower", (None, None))
 
-            diff = _get_value_diff("jira_%s" % diff_key, svc_value, timespan)
+            diff = _get_value_diff(f"jira_{diff_key}", svc_value, timespan)
 
-            yield check_levels(
+            yield from check_levels(
                 diff,
                 "jira_diff",
                 diff_levels_upper + diff_levels_lower,
-                infoname="Difference last %s" % render.time_offset(timespan),
+                infoname=f"Difference last {render.time_offset(timespan)}",
             )
 
 
-def _get_value_diff(diff_name, svc_value, timespan):
+def _get_value_diff(diff_name: str, svc_value: int | float, timespan: int) -> int | float:
     this_time = time.time()
     value_store = get_value_store()
 
@@ -122,15 +137,21 @@ def _get_value_diff(diff_name, svc_value, timespan):
     return diff_val
 
 
-def discover_jira_custom_svc(section):
-    yield from ((item, {}) for item in section)
+def discover_jira_custom_svc(section: dict[str, dict[str, Any]]) -> DiscoveryResult:
+    yield from (Service(item=item) for item in section)
 
 
-check_info["jira_custom_svc"] = LegacyCheckDefinition(
+agent_section_jira_custom_svc = AgentSection(
     name="jira_custom_svc",
     parse_function=parse_jira_custom_svc,
+)
+
+
+check_plugin_jira_custom_svc = CheckPlugin(
+    name="jira_custom_svc",
     service_name="Jira %s",
     discovery_function=discover_jira_custom_svc,
     check_function=check_jira_custom_svc,
     check_ruleset_name="jira_custom_svc",
+    check_default_parameters={},
 )

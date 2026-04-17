@@ -4,7 +4,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
+"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
 "PO-Revision-Date: 2026-04-16 07:27+0000\n"
 "Language-Team: Portuguese (Portugal) <https://translate.checkmk.com/projects/"
@@ -88577,7 +88577,6 @@ msgstr "contando"
 msgid "cp437"
 msgstr "cp437"
 
-#, fuzzy
 msgid "crash report"
 msgid_plural "crash reports"
 msgstr[0] ""
@@ -89087,7 +89086,6 @@ msgstr "Os anfitriões estão a postos mas têm os serviços em estado de alerta
 msgid "hosts in total"
 msgstr "anfitriões no total"
 
-#, fuzzy
 msgid "hour"
 msgid_plural "hours"
 msgstr[0] ""

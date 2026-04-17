@@ -1707,6 +1707,7 @@ py_library(
             "wato/**/*.py",
             "bi/**/*.py",
             "nodevis/**/*.py",
+            "rule_specs/**/*.py",
             "visual_link.py",
             "visuals/**/*.py",
             "weblib.py",
@@ -1714,7 +1715,6 @@ py_library(
         ],
     ) + [
         "//cmk/gui/openapi/spec/spec_generator:gui_srcs",
-        "//cmk/gui/rule_specs:gui_srcs",
         "//cmk/gui/wsgi:gui_srcs",
     ],
     imports = ["../.."],
@@ -1877,6 +1877,7 @@ py_library(
         "//cmk/gui/rest_api_types:notifications",
         "//cmk/gui/rule_specs:compatibility",
         "//cmk/gui/rule_specs:loader",
+        "//cmk/gui/rule_specs:registering",
         "//cmk/gui/search",
         "//cmk/gui/search:match_items",
         "//cmk/gui/sidebar",

@@ -536,6 +536,7 @@ py_wheel(
         "//cmk/gui/rule_specs:compatibility",
         "//cmk/gui/rule_specs:legacy_converter",
         "//cmk/gui/rule_specs:loader",
+        "//cmk/gui/rule_specs:registering",
         "//cmk/gui/rule_specs:types",
         "//cmk/gui/search",
         "//cmk/gui/search:match_items",

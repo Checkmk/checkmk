@@ -76,18 +76,21 @@ py_library(
     ],
 )
 
-# Temporary: rule_specs files that still belong to the monolithic //cmk/gui target.
-# Remove this filegroup once rule_specs is fully extracted.
-filegroup(
-    name = "gui_srcs",
-    srcs = glob(
-        include = ["**/*.py"],
-        exclude = [
-            "compatibility.py",
-            "legacy_converter.py",
-            "loader.py",
-            "types.py",
-        ],
-    ),
-    visibility = ["//cmk/gui:__pkg__"],
+py_library(
+    name = "registering",
+    srcs = ["registering.py"],
+    imports = ["../../.."],
+    visibility = [
+        "//cmk:__subpackages__",
+        "//tests:__subpackages__",
+    ],
+    deps = [
+        ":legacy_converter",
+        ":loader",
+        "//cmk/gui:i18n",
+        "//cmk/gui:legacy_plugins",
+        "//cmk/gui:log",
+        "//cmk/gui/watolib",
+        "//packages/cmk-ccc:debug",
+    ],
 )

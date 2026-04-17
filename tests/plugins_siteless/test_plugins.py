@@ -89,7 +89,6 @@ class _LogwatchConfigMocker:
         return ()
 
 
-@pytest.mark.medium_test_chain
 @pytest.mark.parametrize("agent_data_filename", get_agent_data_filenames())
 def test_checks_executor(
     agent_data_filename: str, request: pytest.FixtureRequest, setup_dirs: Iterator[None]

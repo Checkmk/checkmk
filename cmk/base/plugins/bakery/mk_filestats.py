@@ -3,44 +3,64 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="type-arg"
-
 from collections.abc import Iterable, Mapping, Sequence
 from pathlib import Path
-from typing import Literal, TypedDict
+from typing import Literal
+
+from pydantic import BaseModel, Field
 
 from .bakery_api.v1 import FileGenerator, OS, Plugin, PluginConfig, register
 
-PLUGIN_ONLY = "plugin_only"
-WITH_CONFIGURATION = "with_configuration"
+
+class _Grouping(BaseModel):
+    group_name: str
+    condition: tuple[str, str]
 
 
-class MkFilestatsConfig(TypedDict, total=False):
-    deployment: None | Literal["plugin_only", "with_configuration"]
-    DEFAULT: Mapping
-    subgroups_delimiter: str
-    sections: Sequence[Mapping]
+class _Section(BaseModel):
+    input_patterns: str = ""
+    filter_regex: str = ""
+    filter_regex_inverse: str = ""
+    filter_size: str = ""
+    filter_age: str = ""
+    output: str = ""
+    grouping: list[_Grouping] = Field(default_factory=list)
 
 
-def get_mk_filestats_files(conf: MkFilestatsConfig) -> FileGenerator:
-    if (deployment := conf.get("deployment")) is None:
+class _NamedSection(_Section):
+    name: str
+
+
+class _Config(BaseModel):
+    deployment: tuple[Literal["do_not_deploy", "sync", "cached"], float | None]
+    deploy_config: bool = True
+    default: _Section = Field(default_factory=_Section)
+    subgroups_delimiter: str = "@"
+    sections: list[_NamedSection] = Field(default_factory=list)
+
+
+def get_mk_filestats_files(conf: Mapping[str, object]) -> FileGenerator:
+    config = _Config.model_validate(conf)
+    if config.deployment[0] == "do_not_deploy":
         return
+
+    interval = None if (v := config.deployment[1]) is None else int(v)
 
     for base_os in (OS.LINUX, OS.SOLARIS):
-        yield Plugin(base_os=base_os, source=Path("mk_filestats.py"))
+        yield Plugin(base_os=base_os, source=Path("mk_filestats.py"), interval=interval)
 
-    if deployment == PLUGIN_ONLY:
+    if not config.deploy_config:
         return
 
-    sections = conf.get("sections", [])
-    default = conf.get("DEFAULT", {})
-    if not (default or sections):
+    sections = config.sections
+    default = config.default
+    if not (default.model_dump(exclude_defaults=True) or sections):
         return
     lines = list(
         _get_mk_filestats_config(
             sections,
             default,
-            conf.get("subgroups_delimiter", "@"),
+            config.subgroups_delimiter,
         )
     )
 
@@ -54,55 +74,42 @@ def get_mk_filestats_files(conf: MkFilestatsConfig) -> FileGenerator:
 
 
 def _get_mk_filestats_config(
-    sections: Sequence[Mapping],
-    default: Mapping,
+    sections: Sequence[_NamedSection],
+    default: _Section,
     subgroups_delimiter: str = "@",
 ) -> Iterable[str]:
     yield "[DEFAULT]"
-    yield "subgroups_delimiter: %s" % subgroups_delimiter
-    for option in default.items():
-        if option[0] == "grouping":
-            yield from _parse_grouping_options(
-                "DEFAULT",
-                subgroups_delimiter,
-                option[1],
-            )
-            continue
-        yield "%s: %s" % option
+    yield f"subgroups_delimiter: {subgroups_delimiter}"
+    default_dict = default.model_dump(exclude_defaults=True)
+    default_dict.pop("grouping", None)
+    for key, value in default_dict.items():
+        yield f"{key}: {value}"
+    if default.grouping:
+        yield from _parse_grouping_options("DEFAULT", subgroups_delimiter, default.grouping)
 
     yield ""
 
     for section in sections:
-        yield "[%s]" % section["name"]
-        grouping_options = None
-        for option in section.items():
-            if option[0] == "grouping":
-                grouping_options = option[1]
-                continue
-            if option[0] != "name":
-                yield "%s: %s" % option
-
-        if grouping_options:
-            yield from _parse_grouping_options(
-                section["name"],
-                subgroups_delimiter,
-                grouping_options,
-            )
-
+        yield f"[{section.name}]"
+        section_dict = section.model_dump(exclude_defaults=True)
+        section_dict.pop("grouping", None)
+        section_dict.pop("name", None)
+        for key, value in section_dict.items():
+            yield f"{key}: {value}"
+        if section.grouping:
+            yield from _parse_grouping_options(section.name, subgroups_delimiter, section.grouping)
         yield ""
 
 
 def _parse_grouping_options(
     section_name: str,
     subgroups_delimiter: str,
-    grouping_options: list[tuple],
+    grouping_options: Sequence[_Grouping],
 ) -> Iterable[str]:
-    for group_name, (option_type, rule) in grouping_options:
-        # write out each grouping option as a separate section to config file
-        # in order to make it more easily configurable for users who create
-        # config files manually
+    for group_item in grouping_options:
+        option_type, rule = group_item.condition
         yield ""
-        yield f"[{section_name}{subgroups_delimiter}{group_name}]"
+        yield f"[{section_name}{subgroups_delimiter}{group_item.group_name}]"
         yield f"grouping_{option_type}: {rule}"
 
 

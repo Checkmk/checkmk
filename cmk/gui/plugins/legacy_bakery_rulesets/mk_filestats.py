@@ -3,254 +3,299 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="type-arg"
+from collections.abc import Mapping, Sequence
+from typing import Any
 
-from collections.abc import Mapping
-
-from cmk.gui.agent_bakery import RulespecGroupMonitoringAgentsAgentPlugins
-from cmk.gui.i18n import _
-from cmk.gui.plugins.wato.utils import HostRulespec, rulespec_registry
-from cmk.gui.valuespec import (
-    Alternative,
-    CascadingDropdown,
+from cmk.rulesets.v1 import Help, Message, Title
+from cmk.rulesets.v1.form_specs import (
+    BooleanChoice,
+    CascadingSingleChoice,
+    CascadingSingleChoiceElement,
+    DefaultValue,
+    DictElement,
     Dictionary,
-    DictionaryElements,
-    DropdownChoice,
+    FieldSize,
     FixedValue,
-    ListOf,
-    Migrate,
-    RegExp,
-    TextInput,
-    Tuple,
+    List,
+    MatchingScope,
+    RegularExpression,
+    SingleChoice,
+    SingleChoiceElement,
+    String,
+    TimeMagnitude,
+    TimeSpan,
+    validators,
 )
-from cmk.utils.rulesets.definition import RuleGroup
-
-PLUGIN_ONLY = "plugin_only"
-WITH_CONFIGURATION = "with_configuration"
+from cmk.rulesets.v1.rule_specs import AgentConfig, Topic
 
 
-def _agent_config_mk_filestats_grouping_choices() -> list[tuple[str, str, RegExp]]:
-    return [
-        (
-            "regex",
-            _("Regular expression"),
-            RegExp(
-                help=_("Group files based on a regular expression pattern."),
-                mode="prefix",
-                allow_empty=False,
-                size=70,
+def _migrate_grouping_item(item: object) -> Mapping[str, object]:
+    if isinstance(item, dict):
+        return item
+    seq = item if isinstance(item, (list, tuple)) else list(item)  # type: ignore[call-overload]
+    group_name, condition = seq[0], seq[1]
+    return {"group_name": group_name, "condition": condition}
+
+
+def _migrate_section(section: object) -> Mapping[str, object]:
+    if not isinstance(section, dict):
+        raise ValueError(f"Unexpected section value: {section!r}")
+    if "grouping" not in section:
+        return section
+    grouping = section["grouping"]
+    if not isinstance(grouping, (list, tuple)):
+        raise ValueError(f"Unexpected grouping value: {grouping!r}")
+    return {**section, "grouping": [_migrate_grouping_item(g) for g in grouping]}
+
+
+def migrate(value: object) -> Mapping[str, object]:
+    if isinstance(value, dict) and "deployment" in value:
+        dep = value["deployment"]
+        if isinstance(dep, (tuple, list)) and dep[0] in ("sync", "cached", "do_not_deploy"):
+            if "DEFAULT" in value:
+                result: dict[str, object] = {
+                    k if k != "DEFAULT" else "default": v for k, v in value.items()
+                }
+                result["default"] = _migrate_section(result["default"])
+                return result
+            return value
+        if dep is None:
+            return {"deployment": ("do_not_deploy", None)}
+        result = {k if k != "DEFAULT" else "default": v for k, v in value.items()}
+        result["deployment"] = ("sync", None)
+        if dep == "plugin_only":
+            result["deploy_config"] = False
+        if "sections" in result:
+            raw_sections = result["sections"]
+            sections: Sequence[object] = (
+                raw_sections if isinstance(raw_sections, (list, tuple)) else []
+            )
+            result["sections"] = [_migrate_section(s) for s in sections]
+        if "default" in result:
+            result["default"] = _migrate_section(result["default"])
+        return result
+    if value is None:
+        return {"deployment": ("do_not_deploy", None)}
+    raise ValueError(f"Unexpected value: {value!r}")
+
+
+def _grouping_elements() -> Mapping[str, DictElement[Any]]:
+    return {
+        "group_name": DictElement(
+            required=True,
+            parameter_form=String(
+                title=Title("Group name"),
+                help_text=Help(
+                    "The section and the group name will be included in the item name."
+                    " To use the single file aggregation, add <tt>%s</tt> to the group name."
+                ),
+                field_size=FieldSize.LARGE,
+                custom_validate=(validators.LengthInRange(min_value=1),),
             ),
         ),
-    ]
+        "condition": DictElement(
+            required=True,
+            parameter_form=CascadingSingleChoice(
+                title=Title("Grouping condition"),
+                elements=(
+                    CascadingSingleChoiceElement(
+                        name="regex",
+                        title=Title("Regular expression"),
+                        parameter_form=RegularExpression(
+                            predefined_help_text=MatchingScope.PREFIX,
+                            help_text=Help("Group files based on a regular expression pattern."),
+                        ),
+                    ),
+                ),
+                prefill=DefaultValue("regex"),
+            ),
+        ),
+    }
 
 
-def _agent_config_mk_filestats_mk_filestats_section_elements() -> DictionaryElements:
-    return [
-        (
-            "input_patterns",
-            TextInput(
-                title=_("Globbing pattern for input files"),
-                help=_(
+def _section_filter_elements() -> Mapping[str, DictElement[Any]]:
+    return {
+        "input_patterns": DictElement(
+            required=True,
+            parameter_form=String(
+                title=Title("Globbing pattern for input files"),
+                help_text=Help(
                     "The plug-in will process anything that is matched by this"
                     " globbing pattern. If it's a directory, recursively"
                     " process all of its content."
                 ),
-                allow_empty=False,
-                size=70,
+                field_size=FieldSize.LARGE,
+                custom_validate=(validators.LengthInRange(min_value=1),),
             ),
         ),
-        (
-            "filter_regex",
-            TextInput(
-                title=_("Filter files by matching regular expression"),
-                help=_(
+        "filter_regex": DictElement(
+            parameter_form=String(
+                title=Title("Filter files by matching regular expression"),
+                help_text=Help(
                     "This will result in all files whose full file path does not match"
                     " the regular expression being dismissed."
                 ),
-                allow_empty=False,
-                size=70,
+                field_size=FieldSize.LARGE,
+                custom_validate=(validators.LengthInRange(min_value=1),),
             ),
         ),
-        (
-            "filter_regex_inverse",
-            TextInput(
-                title=_("Filter files by not matching regular expression"),
-                help=_(
+        "filter_regex_inverse": DictElement(
+            parameter_form=String(
+                title=Title("Filter files by not matching regular expression"),
+                help_text=Help(
                     "This will result in all files whose full file path does match"
                     " the regular expression being dismissed."
                 ),
-                allow_empty=False,
-                size=70,
+                field_size=FieldSize.LARGE,
+                custom_validate=(validators.LengthInRange(min_value=1),),
             ),
         ),
-        (
-            "filter_size",
-            TextInput(
-                title=_("Filter files by size"),
-                help=_(
+        "filter_size": DictElement(
+            parameter_form=String(
+                title=Title("Filter files by size"),
+                help_text=Help(
                     "This will result in all files with sizes not matching the"
                     " specification being dismissed. Specifications are in the"
                     " format [OPERATOR][SIZE_IN_BYTES], e.g. '>=1024'."
                 ),
-                regex="^[<=>]+[0-9]+$",
-                regex_error=_("Size filter specification must be of the format [OPERATOR][INT]."),
+                custom_validate=(
+                    validators.MatchRegex(
+                        "^[<=>]+[0-9]+$",
+                        Message("Size filter specification must be of the format [OPERATOR][INT]."),
+                    ),
+                ),
             ),
         ),
-        (
-            "filter_age",
-            TextInput(
-                title=_("Filter files by age"),
-                help=_(
+        "filter_age": DictElement(
+            parameter_form=String(
+                title=Title("Filter files by age"),
+                help_text=Help(
                     "This will result in all files with ages not matching the"
                     " specification being dismissed. Specifications are in the"
                     " format [OPERATOR][AGE_IN_SECONDS], e.g. '>=3600'."
                 ),
-                regex="^[<=>]+[0-9]+$",
-                regex_error=_("Age filter specification must be of the format [OPERATOR][INT]."),
+                custom_validate=(
+                    validators.MatchRegex(
+                        "^[<=>]+[0-9]+$",
+                        Message("Age filter specification must be of the format [OPERATOR][INT]."),
+                    ),
+                ),
             ),
         ),
-        (
-            "output",
-            DropdownChoice(
-                title=_("Output aggregation"),
-                help=_(
+        "output": DictElement(
+            parameter_form=SingleChoice(
+                title=Title("Output aggregation"),
+                help_text=Help(
                     "Choose what kind of output data is sent to the Checkmk server: "
-                    "Only count the files, only report count and extrem files (i.e. "
+                    "Only count the files, only report count and extremes files (i.e. "
                     "the oldest, newest, largest and smallest), report the "
-                    "full stats on all files, or sent information about a single file only."
+                    "full stats on all files, or send information about a single file only."
                 ),
-                choices=[
-                    ("count_only", _("Count only")),
-                    ("extremes_only", _("Extremes only")),
-                    ("file_stats", _("Full stats")),
-                    ("single_file", _("Single file")),
-                ],
+                elements=(
+                    SingleChoiceElement(name="count_only", title=Title("Count only")),
+                    SingleChoiceElement(name="extremes_only", title=Title("Extremes only")),
+                    SingleChoiceElement(name="file_stats", title=Title("Full stats")),
+                    SingleChoiceElement(name="single_file", title=Title("Single file")),
+                ),
             ),
         ),
-        (
-            "grouping",
-            ListOf(
-                valuespec=Tuple(
-                    elements=[
-                        TextInput(
-                            title=_("Group name"),
-                            help="The section and the group name will be included in the item name."
-                            " To use the single file aggregation, add <tt>%s</tt> to the group name.",
-                            allow_empty=False,
-                        ),
-                        CascadingDropdown(
-                            title=_("Grouping condition"),
-                            choices=_agent_config_mk_filestats_grouping_choices(),
-                        ),
-                    ]
-                ),
-                title=_("File grouping"),
-                help=_(
+        "grouping": DictElement(
+            parameter_form=List(
+                title=Title("File grouping"),
+                help_text=Help(
                     "Group files within a file group further into subgroups."
                     " Specify a name for the subgroup, and a condition by which"
                     " files are grouped. Files associated with a subgroup are"
                     " excluded from the main file group. One service is created for"
                     " each subgroup."
                 ),
-                magic="#groups#",
+                element_template=Dictionary(elements=_grouping_elements()),
             ),
         ),
-    ]
+    }
 
 
-def _valuespec_agent_config_mk_filestats() -> Migrate:
-    return Migrate(
-        valuespec=_mk_filestats_dict(),
-        migrate=_migrate_mk_filestats,
-    )
-
-
-def _mk_filestats_dict() -> Dictionary:
+def _valuespec_agent_config_mk_filestats() -> Dictionary:
     return Dictionary(
-        title=_("Count, size and age of files - mk_filestats (Linux/Solaris)"),
-        help=_(
+        help_text=Help(
             "The agent plug-in <tt>mk_filestats</tt> monitors a configured set"
             " of files for their number, size and age. Files are grouped according"
             " to the configured section. Also a single file can be monitored."
             " If no sections are specified, the plug-in does not produce output."
         ),
-        required_keys=["sections"],
-        elements=[
-            (
-                "deployment",
-                Alternative(
-                    title=_("Deployment"),
-                    help=_(
-                        "Do not forget to activate the plug-in (i.e., deploy with or without "
-                        "configuration in at least one of your rules. "
-                        "It can be useful to create rules that are only partially filled out. "
-                        "Since the rule execution is done on a <i>per parameter</i> base "
-                        "you can for example create one rule at the top of your list that "
-                        "just sets the activation to <i>no</i> for just some of your hosts without "
-                        "setting any of the other parameters."
+        elements={
+            "deployment": DictElement(
+                required=True,
+                parameter_form=CascadingSingleChoice(
+                    title=Title("Deployment type"),
+                    elements=(
+                        CascadingSingleChoiceElement(
+                            name="sync",
+                            title=Title("Deploy the plug-in and run it synchronously"),
+                            parameter_form=FixedValue(value=None),
+                        ),
+                        CascadingSingleChoiceElement(
+                            name="cached",
+                            title=Title("Deploy the plug-in and run it asynchronously"),
+                            parameter_form=TimeSpan(
+                                displayed_magnitudes=(
+                                    TimeMagnitude.HOUR,
+                                    TimeMagnitude.MINUTE,
+                                ),
+                            ),
+                        ),
+                        CascadingSingleChoiceElement(
+                            name="do_not_deploy",
+                            title=Title("Do not deploy the plug-in"),
+                            parameter_form=FixedValue(value=None),
+                        ),
                     ),
-                    elements=[
-                        FixedValue(
-                            value=None,
-                            title=_("Do not deploy the %s plug-in") % "Filestats",
-                            totext=_("(disabled)"),
-                        ),
-                        FixedValue(
-                            value=WITH_CONFIGURATION,
-                            title=_("Deploy the %s plug-in and its configuration") % "Filestats",
-                            totext=_("Deploy %s") % "/etc/check_mk/filestats.cfg",
-                        ),
-                        FixedValue(
-                            value=PLUGIN_ONLY,
-                            title=_("Deploy the %s plug-in without configuration") % "Filestats",
-                            help=_(
-                                "The file %s needs to be created and maintained manually.<br>"
-                                "Configuration entries provided with this rule will be ignored."
-                            )
-                            % "<tt>/etc/check_mk/filestats.cfg</tt>",
-                            totext=_("manually configure %s") % "/etc/check_mk/filestats.cfg",
-                        ),
-                    ],
+                    prefill=DefaultValue("sync"),
                 ),
             ),
-            (
-                "sections",
-                ListOf(
-                    title="Sections",
-                    valuespec=Dictionary(
-                        title=_("Section of files to monitor"),
-                        elements=[
-                            (
-                                "name",
-                                TextInput(
-                                    title=_("Section name"),
-                                    help=_(
+            "deploy_config": DictElement(
+                parameter_form=BooleanChoice(
+                    title=Title("Deploy configuration file"),
+                    help_text=Help(
+                        "When disabled, the plug-in is deployed without its configuration file."
+                        " The file <tt>/etc/check_mk/filestats.cfg</tt> must then be created"
+                        " and maintained manually."
+                    ),
+                    prefill=DefaultValue(True),
+                ),
+            ),
+            "sections": DictElement(
+                parameter_form=List(
+                    title=Title("Sections"),
+                    element_template=Dictionary(
+                        title=Title("Section of files to monitor"),
+                        elements={
+                            "name": DictElement(
+                                required=True,
+                                parameter_form=String(
+                                    title=Title("Section name"),
+                                    help_text=Help(
                                         "The section name will be included in the item name."
-                                        " To use the single file aggregation, add <tt>%s</tt> to the section name."
+                                        " To use the single file aggregation, add"
+                                        " <tt>%s</tt> to the section name."
                                     ),
                                 ),
                             ),
-                            *_agent_config_mk_filestats_mk_filestats_section_elements(),
-                        ],
-                        required_keys=["name", "input_patterns"],
+                            **_section_filter_elements(),
+                        },
                     ),
-                    default_value=[{"name": "", "input_patterns": ""}],
-                    magic="#sections#",
                 ),
             ),
-            (
-                "DEFAULT",
-                Dictionary(
-                    title=_("Set default values for all sections"),
-                    elements=_agent_config_mk_filestats_mk_filestats_section_elements(),
-                    required_keys=[],
+            "default": DictElement(
+                parameter_form=Dictionary(
+                    title=Title("Set default values for all sections"),
+                    elements=_section_filter_elements(),
                 ),
             ),
-            (
-                "subgroups_delimiter",
-                TextInput(
-                    title=_("Delimiter for file grouping"),
-                    help=_(
+            "subgroups_delimiter": DictElement(
+                parameter_form=String(
+                    title=Title("Delimiter for file grouping"),
+                    help_text=Help(
                         "This option is only relevant if you have file grouping enabled and you wish"
                         ' to use the character "@" in any of your subgroup names.'
                         " If this is the case, please choose any ASCII character that is NOT used in any"
@@ -259,27 +304,17 @@ def _mk_filestats_dict() -> Dictionary:
                         " from the main section name in the configuration file."
                         " For example: [My Subgroup@My Main Section]."
                     ),
-                    default_value="@",
+                    prefill=DefaultValue("@"),
                 ),
             ),
-        ],
+        },
+        migrate=migrate,
     )
 
 
-def _migrate_mk_filestats(value: Mapping) -> Mapping:
-    """
-    >>> _migrate_mk_filestats({"deployment": None})
-    {'sections': [], 'deployment': None}
-    >>> _migrate_mk_filestats({"sections": [{"name": "", "input_patterns": ""}]})
-    {'sections': [{'name': '', 'input_patterns': ''}]}
-    """
-    return {"sections": []} | dict(value)
-
-
-rulespec_registry.register(
-    HostRulespec(
-        group=RulespecGroupMonitoringAgentsAgentPlugins,
-        name=RuleGroup.AgentConfig("mk_filestats"),
-        valuespec=_valuespec_agent_config_mk_filestats,
-    )
+rule_spec_mk_filestats = AgentConfig(
+    title=Title("Count, size and age of files - mk_filestats (Linux/Solaris)"),
+    name="mk_filestats",
+    topic=Topic.STORAGE,
+    parameter_form=_valuespec_agent_config_mk_filestats,
 )

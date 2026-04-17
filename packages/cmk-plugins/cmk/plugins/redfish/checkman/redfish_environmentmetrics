@@ -1,0 +1,15 @@
+title: Redfish Environment Metrics
+agents: agent_redfish
+catalog: hw/server/redfish
+license: GPLv2
+distribution: check_mk
+description:
+ This check monitors aggregate environment metrics of Redfish devices that
+ use the newer Sensor resource model. It reports system power consumption
+ and, if available, fan speeds and temperatures as performance data.
+
+discovery:
+ One service is created for each chassis environment metrics resource.
+
+item:
+ The ID of the environment metrics resource.

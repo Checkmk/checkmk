@@ -15,6 +15,7 @@ import pytest
 import time_machine
 from pytest import MonkeyPatch
 
+import cmk.gui.availability.annotations
 import cmk.utils.render
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
@@ -233,7 +234,9 @@ def test_relevant_annotation_times(
 ) -> None:
     with time_machine.travel(datetime.datetime.fromtimestamp(1572253746, tz=ZoneInfo("CET"))):
         assert (
-            availability._annotation_affects_time_range(annotation_from, annotation_until, 30, 60)
+            cmk.gui.availability.annotations._annotation_affects_time_range(
+                annotation_from, annotation_until, 30, 60
+            )
             == result
         )
 

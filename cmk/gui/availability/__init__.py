@@ -8,10 +8,7 @@
 # mypy: disable-error-code="redundant-expr"
 # mypy: disable-error-code="type-arg"
 
-from __future__ import annotations
-
 import functools
-import itertools
 import time
 from collections.abc import Callable, Generator, Iterator, Sequence
 from typing import Any, NamedTuple
@@ -26,7 +23,6 @@ from livestatus import (
     QuerySpecification,
 )
 
-import cmk.utils.paths
 from cmk.bi.lib import (
     BIHostSpec,
     BIHostStatusInfoRow,
@@ -37,7 +33,6 @@ from cmk.bi.lib import (
     NodeResultBundle,
 )
 from cmk.bi.trees import BICompiledAggregation, BICompiledRule, CompiledAggrTree
-from cmk.ccc import store
 from cmk.ccc.cpu_tracking import CPUTracker
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
@@ -63,6 +58,15 @@ from cmk.gui.watolib.groups_io import all_groups
 from cmk.utils import dateutils
 from cmk.utils.servicename import ServiceName
 
+from .annotations import (
+    delete_annotation,
+    find_annotation,
+    get_annotation_date_render_function,
+    get_relevant_annotations,
+    load_annotations,
+    save_annotations,
+    update_annotations,
+)
 from .columns import AvailabilityColumns
 from .options import (
     get_av_computation_options,
@@ -751,160 +755,6 @@ def melt_short_intervals(entries: AVTimelineRows, duration: int, dont_merge: boo
 
 
 # .
-#   .--Annotations---------------------------------------------------------.
-#   |         _                      _        _   _                        |
-#   |        / \   _ __  _ __   ___ | |_ __ _| |_(_) ___  _ __  ___        |
-#   |       / _ \ | '_ \| '_ \ / _ \| __/ _` | __| |/ _ \| '_ \/ __|       |
-#   |      / ___ \| | | | | | | (_) | || (_| | |_| | (_) | | | \__ \       |
-#   |     /_/   \_\_| |_|_| |_|\___/ \__\__,_|\__|_|\___/|_| |_|___/       |
-#   |                                                                      |
-#   +----------------------------------------------------------------------+
-#   |  This code deals with retrospective annotations and downtimes.       |
-#   '----------------------------------------------------------------------'
-
-# Example for annotations:
-# {
-#   ( "mysite", "foohost", "myservice" ) : # service might be None
-#       [
-#         {
-#            "service_state"  : 1,
-#            "from"           : 1238288548,
-#            "until"          : 1238292845,
-#            "text"           : u"Das ist ein Text über mehrere Zeilen, oder was weiß ich",
-#            "date"           : 12348854885, # Time of entry
-#            "author"         : "mk",
-#            "downtime"       : True, # Can also be False or None or missing. None is like missing
-#         },
-#         # ... further entries
-#      ]
-# }
-
-
-def save_annotations(annotations: AVAnnotations) -> None:
-    store.save_object_to_file(cmk.utils.paths.var_dir / "availability_annotations.mk", annotations)
-
-
-def load_annotations(lock: bool = False) -> AVAnnotations:
-    path = cmk.utils.paths.var_dir / "availability_annotations.mk"
-    if not path.exists():
-        # Support legacy old wrong name-clashing path
-        path = cmk.utils.paths.var_dir / "web/statehist_annotations.mk"
-
-    return store.load_object_from_file(path, default={}, lock=lock)
-
-
-def update_annotations(
-    site_host_svc: AVAnnotationKey,
-    annotation: AVAnnotationEntry,
-    replace_existing: AVAnnotationEntry | None,
-) -> None:
-    annotations = load_annotations(lock=True)
-    entries = annotations.get(site_host_svc, [])
-    new_entries = []
-    for entry in entries:
-        if entry == replace_existing:
-            continue  # Skip existing entries with same identity
-        new_entries.append(entry)
-    new_entries.append(annotation)
-    annotations[site_host_svc] = new_entries
-    save_annotations(annotations)
-
-
-def find_annotation(
-    annotations: AVAnnotations,
-    site_host_svc: AVAnnotationKey,
-    host_state: str | None,
-    service_state: str | None,
-    fromtime: AVTimeStamp,
-    untiltime: AVTimeStamp,
-) -> AVAnnotationEntry | None:
-    entries = annotations.get(site_host_svc)
-    if not entries:
-        return None
-    for annotation in entries:
-        if annotation["from"] == fromtime and annotation["until"] == untiltime:
-            return annotation
-    return None
-
-
-def delete_annotation(
-    annotations: AVAnnotations,
-    site_host_svc: AVAnnotationKey,
-    host_state: str | None,
-    service_state: str | None,
-    fromtime: AVTimeStamp,
-    untiltime: AVTimeStamp,
-) -> None:
-    entries = annotations.get(site_host_svc)
-    if not entries:
-        return
-
-    found = None
-    for nr, annotation in enumerate(entries):
-        if annotation["from"] == fromtime and annotation["until"] == untiltime:
-            found = nr
-            break
-
-    if found is not None:
-        del entries[found]
-
-
-def get_relevant_annotations(
-    annotations: AVAnnotations, by_host: AVRawData, what: AVObjectType, avoptions: AVOptions
-) -> list[tuple[SiteHostSvc, AVAnnotationEntry]]:
-    time_range: AVTimeRange = avoptions["range"][0]
-    from_time, until_time = time_range
-
-    annos_to_render: list[tuple[SiteHostSvc, AVAnnotationEntry]] = []
-    annos_rendered: set[int] = set()
-
-    for site_host, avail_entries in by_host.items():
-        for service in avail_entries.keys():
-            for search_what in ["host", "service"]:
-                if what == "host" and search_what == "service":
-                    continue  # Service annotations are not relevant for host
-
-                if search_what == "host":
-                    site_host_svc: SiteHostSvc = site_host[0], site_host[1], None
-                else:
-                    site_host_svc = site_host[0], site_host[1], service  # service can be None
-
-                for annotation in annotations.get(site_host_svc, []):
-                    if _annotation_affects_time_range(
-                        annotation["from"], annotation["until"], from_time, until_time
-                    ):
-                        if id(annotation) not in annos_rendered:
-                            annos_to_render.append((site_host_svc, annotation))
-                            annos_rendered.add(id(annotation))
-
-    return annos_to_render
-
-
-def get_annotation_date_render_function(
-    annotations: list[tuple[SiteHostSvc, AVAnnotationEntry]], avoptions: AVOptions
-) -> Callable[[float | None], str]:
-    timestamps = list(
-        itertools.chain.from_iterable(
-            [(a[1]["from"], a[1]["until"]) for a in annotations] + [avoptions["range"][0]]
-        )
-    )
-
-    multi_day = len({time.localtime(t)[:3] for t in timestamps}) > 1
-    if multi_day:
-        return cmk.utils.render.date_and_time
-    return cmk.utils.render.time_of_day
-
-
-def _annotation_affects_time_range(
-    annotation_from: AVTimeStamp,
-    annotation_until: AVTimeStamp,
-    from_time: AVTimeStamp,
-    until_time: AVTimeStamp,
-) -> bool:
-    return not (annotation_until < from_time or annotation_from > until_time)
-
-
-# .
 #   .--Layout--------------------------------------------------------------.
 #   |                  _                            _                      |
 #   |                 | |    __ _ _   _  ___  _   _| |_                    |
@@ -1566,7 +1416,7 @@ DEFAULT_MAX_TIME_RANGE = 31 * 24 * 60 * 60  # One month
 
 def get_bi_availability(
     avoptions: AVOptions, aggr_rows: Rows, timewarp: AVTimeStamp | None
-) -> tuple[list[TimelineContainer], AVRawData, bool]:
+) -> "tuple[list[TimelineContainer], AVRawData, bool]":
     logrow_limit = avoptions["logrow_limit"]
     if logrow_limit == 0:
         livestatus_limit = None
@@ -1603,7 +1453,7 @@ def get_timeline_containers(
     avoptions: AVOptions,
     timewarp: AVTimeStamp | None,
     livestatus_limit: int | None,
-) -> tuple[list[TimelineContainer], int]:
+) -> "tuple[list[TimelineContainer], int]":
     time_range: AVTimeRange = avoptions["range"][0]
     phases_list, timeline_containers, fetched_rows = get_bi_leaf_history(
         aggr_rows, time_range, livestatus_limit
@@ -1668,7 +1518,7 @@ def get_bi_leaf_history(
     time_range: AVTimeRange,
     livestatus_limit: int | None,
     max_time_range: int = DEFAULT_MAX_TIME_RANGE,
-) -> tuple[AVBIPhases, list[TimelineContainer], int]:
+) -> "tuple[AVBIPhases, list[TimelineContainer], int]":
     """Get state history of all hosts and services contained in the tree.
     In order to simplify the query, we always fetch the information for all hosts of the aggregates.
     """
@@ -2223,12 +2073,19 @@ __all__ = [
     "SiteHost",
     "SiteHostSvc",
     "ValueSpec",
+    "delete_annotation",
+    "find_annotation",
+    "get_annotation_date_render_function",
     "get_av_computation_options",
     "get_av_display_options",
     "get_availability_options_from_request",
     "get_default_avoptions",
     "get_outage_statistic_options",
+    "get_relevant_annotations",
+    "load_annotations",
     "prepare_avo_timeformats",
     "render_number_function",
+    "save_annotations",
+    "update_annotations",
     "vs_rangespec",
 ]

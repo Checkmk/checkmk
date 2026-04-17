@@ -2844,7 +2844,11 @@ class VSExplicitConditions(Transform):
     def _validate_explicit_host(self, value: str, varprefix: str) -> None:
         self._validate_list_entry(value, varprefix)
         if value.startswith("~"):
-            return
+            try:
+                re.compile(value[1:])
+                return  # valid regex
+            except re.error as e:
+                raise MKUserError(varprefix, _("Invalid regex pattern: %s") % str(e))
         try:
             HostName(value)
         except ValueError as e:

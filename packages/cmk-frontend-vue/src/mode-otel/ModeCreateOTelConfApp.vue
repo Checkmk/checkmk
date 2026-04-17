@@ -25,6 +25,7 @@ import type {
 } from './otel-configuration-steps/ConfigureCollector.vue'
 import ConfigureGeneralProperties from './otel-configuration-steps/ConfigureGeneralProperties.vue'
 import ConfigureInstrumentation from './otel-configuration-steps/ConfigureInstrumentation.vue'
+import type { PasswordConfig } from './otel-configuration-steps/password_store_password.types.ts'
 
 const props = defineProps<{
   no_auth_allowed: boolean
@@ -67,6 +68,7 @@ const grpcEncryption = ref<boolean>(false)
 const httpEncryption = ref<boolean>(false)
 const grpcEventConsole = ref<EventConsoleConfig | null>(null)
 const httpEventConsole = ref<EventConsoleConfig | null>(null)
+const newlyCreatedPasswords = ref<Map<string, PasswordConfig>>(new Map())
 
 // Cloud has event_console_allowed=false so both refs stay null there.
 const sendLogsToEc = computed(
@@ -130,6 +132,7 @@ const close = () => {
           v-model:http-encryption="httpEncryption"
           v-model:grpc-event-console="grpcEventConsole"
           v-model:http-event-console="httpEventConsole"
+          v-model:newly-created-passwords="newlyCreatedPasswords"
           :no-auth-allowed="no_auth_allowed"
           :endpoint-config-allowed="endpoint_config_allowed"
           :encryption-allowed="encryption_allowed"

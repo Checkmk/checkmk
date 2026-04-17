@@ -12,7 +12,7 @@ from unittest.mock import patch
 import pytest
 
 from cmk.agent_based.v2 import Metric, Result, Service, State, StringTable
-from cmk.legacy_checks.jira_custom_svc import (
+from cmk.plugins.jira.agent_based.jira_custom_svc import (
     check_jira_custom_svc,
     discover_jira_custom_svc,
     parse_jira_custom_svc,
@@ -690,7 +690,7 @@ def test_discover_jira_custom_svc(
         ),
     ],
 )
-@patch("cmk.legacy_checks.jira_custom_svc.get_value_store")
+@patch("cmk.plugins.jira.agent_based.jira_custom_svc.get_value_store")
 def test_check_jira_custom_svc(
     mock_value_store: Any,
     item: str,

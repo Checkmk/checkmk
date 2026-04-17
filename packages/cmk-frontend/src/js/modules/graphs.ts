@@ -147,7 +147,6 @@ type GraphRecipe = Record<string, any>
 
 interface YAxis {
   range: [number, number]
-  unit_label: string | null
   labels: AxisTick[]
 }
 

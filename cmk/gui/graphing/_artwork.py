@@ -121,7 +121,6 @@ class RequestedTimeRange(BaseModel, frozen=True):
 
 class YAxis(TypedDict):
     range: tuple[float, float]
-    unit_label: str | None
     labels: Sequence[AxisTick]
 
 
@@ -621,7 +620,6 @@ def _compute_graph_v_axis(
             min(v_axis_min, *(t.position for t in rendered_labels)),
             max(v_axis_max, *(t.position for t in rendered_labels)),
         ),
-        unit_label=None,
         labels=rendered_labels,
     )
 

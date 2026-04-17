@@ -414,10 +414,6 @@ def _collect_graph_html(
                 style="z-index:2",
             )  # Ensures that graph canvas does not cover it
 
-        v_axis_label = artwork.y_axis["unit_label"]
-        if v_axis_label:
-            html.div(v_axis_label, class_="v_axis_label")
-
         if display_config.show_controls and display_config.resizable:
             html.img(src=theme.detect_icon_path("resize_graph", prefix=""), class_="resize")
 

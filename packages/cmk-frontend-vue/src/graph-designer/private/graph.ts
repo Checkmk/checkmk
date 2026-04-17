@@ -112,7 +112,6 @@ interface AxisTick {
 
 interface YAxis {
   range: [number, number]
-  unit_label: string | null
   labels: AxisTick[]
   //dynamic
   pixels_per_unit: number

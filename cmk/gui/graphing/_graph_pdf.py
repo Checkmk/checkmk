@@ -114,9 +114,6 @@ def render_graph_pdf(
     # Regular title (above graph area)
     if display_config.show_title is True:
         title_left_margin = left + right_margin
-        if vertical_axis_label := artwork.y_axis.get("unit_label"):
-            title_left_margin = left + left_border + left_margin
-
         pdf_document.render_aligned_text(
             title_left_margin,
             top - title_height,
@@ -256,22 +253,6 @@ def render_graph_pdf(
             bold=True,
             color=foreground_color,
         )
-
-    # Paint the vertical axis
-    if display_config.show_vertical_axis:
-        # Render optional vertical axis label
-        vertical_axis_label = artwork.y_axis["unit_label"]
-        if vertical_axis_label:
-            pdf_document.render_aligned_text(
-                left + left_margin,
-                top - title_height,
-                left_border,
-                title_height,
-                vertical_axis_label,
-                align="center",
-                valign="middle",
-                color=foreground_color,
-            )
 
     for v_axis_label in artwork.y_axis["labels"]:
         if v_axis_label.line_width > 0:

@@ -2,7 +2,7 @@
   "name": "cmk-vscode",
   "displayName": "CMK Dev Tools for VS Code",
   "description": "Build commands and helpers for Checkmk development",
-  "version": "0.1.57",
+  "version": "0.1.58",
   "publisher": "checkmk",
   "engines": {
     "vscode": "^1.85.0"
@@ -212,10 +212,6 @@
       {
         "command": "cmk.regenerateMypyConfig",
         "title": "CMK ▸ Cmd: Regenerate mypy config"
-      },
-      {
-        "command": "cmk.regeneratePrettierConfig",
-        "title": "CMK ▸ Cmd: Regenerate prettier config"
       },
       {
         "command": "cmk.pushToGerrit",

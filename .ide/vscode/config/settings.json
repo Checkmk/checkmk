@@ -111,7 +111,7 @@
       "stylelint.configFile": "",
       "stylelint.enable": true,
       "prettier.useEditorConfig": false,
-      "prettier.configPath": ".vscode/.prettier.config.cjs",
+      "prettier.configPath": "bazel/tools/prettier.config.cjs",
       "prettier.prettierPath": "./node_modules/prettier",
       "vitest.disableWorkspaceWarning": true,
       "vitest.filesWatcherInclude": "packages/cmk-frontend-vue/**/*"

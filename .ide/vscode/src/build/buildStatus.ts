@@ -31,12 +31,7 @@ export function checkBuildStatus(wsPath: string): BuildStatus {
     sharedTypingTs: { ok: false, label: 'shared-typing (TS)', commandId: 'cmk.buildSharedTyping' },
     sharedTypingPy: { ok: false, label: 'shared-typing (PY)', commandId: 'cmk.buildVenv' },
     cmkFrontend: { ok: false, label: 'cmk-frontend', commandId: 'cmk.buildCmkFrontend' },
-    mypyConfig: { ok: false, label: 'mypy config', commandId: 'cmk.regenerateMypyConfig' },
-    prettierConfig: {
-      ok: false,
-      label: 'prettier config',
-      commandId: 'cmk.regeneratePrettierConfig'
-    }
+    mypyConfig: { ok: false, label: 'mypy config', commandId: 'cmk.regenerateMypyConfig' }
   }
 
   const venvCfg = path.join(wsPath, '.venv', 'pyvenv.cfg')
@@ -85,7 +80,6 @@ export function checkBuildStatus(wsPath: string): BuildStatus {
   }
 
   status.mypyConfig.ok = fs.existsSync(path.join(wsPath, '.vscode', '.mypy.ini'))
-  status.prettierConfig.ok = fs.existsSync(path.join(wsPath, '.vscode', '.prettier.config.cjs'))
 
   return status
 }
@@ -263,8 +257,7 @@ export function createStatusBar(
       }
 
       const configCommands: { id: string; name: string }[] = [
-        { id: 'cmk.regenerateMypyConfig', name: 'Regenerate mypy config' },
-        { id: 'cmk.regeneratePrettierConfig', name: 'Regenerate prettier config' }
+        { id: 'cmk.regenerateMypyConfig', name: 'Regenerate mypy config' }
       ]
       for (const cmd of configCommands) {
         const isStale = stale.some((s) => s.commandId === cmd.id)

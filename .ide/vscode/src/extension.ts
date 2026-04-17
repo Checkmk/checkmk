@@ -21,10 +21,6 @@ import { registerGerritPush } from './gerrit'
 import { checkForUpdates, isInstalled as isDevSiteInstalled } from './omd/devSiteTools'
 import { registerLogs } from './omd/logs'
 import { createSite, registerOmd } from './omd/omd'
-import {
-  generatePrettierConfig,
-  registerPrettierConfigWatcher
-} from './profiles/frontend/prettierConfig'
 import { registerProfileDetector } from './profiles/profileDetector'
 import * as profileManager from './profiles/profileManager'
 import { registerBazelTestRunner } from './profiles/python/bazelTest'
@@ -130,10 +126,6 @@ export function activate(context: vscode.ExtensionContext): void {
         } else {
           notifyInfo('CMK: .vscode/.mypy.ini is already up to date')
         }
-      }),
-      vscode.commands.registerCommand('cmk.regeneratePrettierConfig', () => {
-        generatePrettierConfig(wsPath)
-        notifyInfo('CMK: Regenerated .vscode/.prettier.config.cjs')
       })
     )
   }
@@ -175,7 +167,7 @@ export function activate(context: vscode.ExtensionContext): void {
   profileManager.register(
     'frontend',
     () => {
-      return [...registerPrettierConfigWatcher(), toggleSettings(frontendDisable, frontendEnable)]
+      return [toggleSettings(frontendDisable, frontendEnable)]
     },
     frontendDisable
   )

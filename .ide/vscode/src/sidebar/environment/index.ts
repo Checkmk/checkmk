@@ -219,7 +219,7 @@ export function render(state: StateCache, codiconUri?: vscode.Uri, cspSource?: s
     )
     .join('')
 
-  const configCommands = new Set(['cmk.regenerateMypyConfig', 'cmk.regeneratePrettierConfig'])
+  const configCommands = new Set(['cmk.regenerateMypyConfig'])
   const staleTargets = Object.values(buildStatus).filter((s) => !s.ok)
   const staleBanner =
     staleTargets.length > 0

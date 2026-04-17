@@ -122,7 +122,6 @@ Each section lives in its own folder under `src/sidebar/` with an `index.ts` (re
 | `profiles/python/interpreter.ts`      | Python interpreter resolution                                            |
 | `profiles/python/snippets.ts`         | Code snippet registration                                                |
 | `profiles/python/bazelTest.ts`        | Bazel-based Python test runner                                           |
-| `profiles/frontend/prettierConfig.ts` | Auto-generate `.prettier.config.cjs`                                     |
 | `build/buildStatus.ts`                | Build target staleness detection, status bar                             |
 | `build/settings.ts`                   | Settings mismatch detection, apply logic, context keys                   |
 | `omd/omd.ts`                          | OMD site discovery, status, auth, service commands, site creation        |

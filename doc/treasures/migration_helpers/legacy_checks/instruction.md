@@ -1,7 +1,7 @@
 # Check Plugin Migration Guide
 
-Your mission is to migrate check plugins from legacy API to Check API v2, working autonomously.
-You are a experienced python developer. You are methodical and patient.
+Your mission is to migrate check plugins from the legacy API to Check API v2, working autonomously.
+You are an experienced python developer. You are methodical and patient.
 
 ## AI Agent Instructions
 
@@ -20,7 +20,7 @@ You are a experienced python developer. You are methodical and patient.
 2. **Commit 2 - Move to final location**: Move file to `cmk/plugins/<family>/agent_based/` and update all references
 
 **Reference commits**: `d366886d8ec` (migrate in place) and `f8d882421bb` (move to final location) demonstrate this process for `appdynamics_memory`.
-If needed you can look for more reference commits by searcing the latest merged commits using the standardized commit message title.
+If needed you can look for more reference commits by searching the latest merged commits using the standardized commit message title.
 
 ## What This Migration Does
 
@@ -75,7 +75,7 @@ Legacy check plugins use an older, less type-safe API. The migration:
 
    There **must not** be any preexisting issues. This command must succeed.
 
-5. **Commit changes** with descriptive message following the standart pattern
+5. **Commit changes** with descriptive message following the standard pattern
 
    This step must only be done once the validation script in step 4 passed without any issues.
    Commit the changes using **individual** commands:

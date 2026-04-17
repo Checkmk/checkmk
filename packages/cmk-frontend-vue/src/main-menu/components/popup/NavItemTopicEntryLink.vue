@@ -55,6 +55,7 @@ defineProps<{
         :color="entry.toggle.color || 'default'"
         variant="fill"
         size="small"
+        class="mm-nav-item-topic-entry-link__toggle-button-chip"
       />
     </div>
   </a>
@@ -119,6 +120,15 @@ a {
   .mm-nav-item-topic-entry-link__toggle-button {
     flex-grow: 1;
     text-align: right;
+
+    .mm-nav-item-topic-entry-link__toggle-button-chip {
+      display: inline-flex;
+      min-width: 50px;
+      box-sizing: border-box;
+      height: 16px;
+      align-items: center;
+      justify-content: center;
+    }
   }
 }
 </style>

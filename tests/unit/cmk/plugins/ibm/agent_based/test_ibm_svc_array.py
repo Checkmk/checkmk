@@ -5,12 +5,10 @@
 
 # mypy: disable-error-code="misc"
 
-from collections.abc import Sequence
-
 import pytest
 
 from cmk.agent_based.v2 import Result, Service, State, StringTable
-from cmk.legacy_checks.ibm_svc_array import (
+from cmk.plugins.ibm.agent_based.ibm_svc_array import (
     check_ibm_svc_array,
     discover_ibm_svc_array,
     parse_ibm_svc_array,
@@ -120,7 +118,7 @@ def test_discover_ibm_svc_array() -> None:
         ),
     ],
 )
-def test_check_ibm_svc_array(item: str, expected_results: Sequence[Result]) -> None:
+def test_check_ibm_svc_array(item: str, expected_results: list[Result]) -> None:
     parsed = parse_ibm_svc_array(_STRING_TABLE)
     result = list(check_ibm_svc_array(item, parsed))
     assert result == expected_results

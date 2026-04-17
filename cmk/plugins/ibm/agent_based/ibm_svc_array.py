@@ -15,7 +15,7 @@ from cmk.agent_based.v2 import (
     Service,
     State,
 )
-from cmk.legacy_includes.ibm_svc import parse_ibm_svc_with_header
+from cmk.plugins.ibm.lib_svc import parse_ibm_svc_with_header
 
 # Example output from agent:
 # <<<ibm_svc_array:sep(58)>>>

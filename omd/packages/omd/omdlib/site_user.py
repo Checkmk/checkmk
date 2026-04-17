@@ -29,7 +29,7 @@ def set_environment(site_name: str, config: Config) -> None:
     os.environ["USER"] = site_name
     os.environ["HOME"] = site_home
 
-    os.environ["LD_LIBRARY_PATH"] = f"{site_home}/local/lib"
+    os.environ["LD_LIBRARY_PATH"] = f"{site_home}/local/lib:{site_home}/lib"
 
     # Special agents / active checks environment
     os.environ["PASSWORD_STORE_SECRET_FILE"] = f"{site_home}/etc/password_store.secret"

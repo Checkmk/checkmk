@@ -79,10 +79,9 @@ build_cmd = """
     # Python binary supplied by bazel build process
     export PYTHON_EXECUTABLE=$$PWD/$$EXT_DEPS_PATH/{python_dir}/python/bin/python3
 
-    # Workaround for git execution issue: pip may call git for VCS deps, but LD_LIBRARY_PATH
-    # is set to our OpenSSL which conflicts with system git. The wrapper unsets it.
+    # Workaround for git execution issue
     mkdir -p $$TMPDIR/workdir/$$MODULE_NAME
-    install -m 755 "$(execpath :git_wrapper)" "$$TMPDIR/workdir/$$MODULE_NAME/git"
+    install -m 755 "$(execpath @omd_packages//omd/packages/omd:use_system_openssl)" "$$TMPDIR/workdir/$$MODULE_NAME/git"
     export PATH="$$TMPDIR/workdir/$$MODULE_NAME:$$PATH"
 
     # Build directory

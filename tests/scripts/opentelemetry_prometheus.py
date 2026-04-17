@@ -34,11 +34,15 @@ DEFAULT_OTEL_COLLECTOR_PROMETHEUS_METRIC_COUNT = 5  # metrics the site collector
 DEFAULT_PROMETHEUS_METRIC_COUNT = 10  # metrics the client sdk adds
 DEFAULT_CMK_SERVICE_COUNT = 2  # Check_MK and Check_MK Discovery
 PROMETHEUS_METRIC_COUNT = 1  # only one Counter metric is used in this script
+# Since otel-collector-contrib v0.144.0 (#45291) the prometheus receiver associates
+# scraped `<metric>_created` text lines with the metric family's start timestamp
+# instead of emitting them as a standalone series, so a Counter contributes one
+# service (`_total`) rather than two.
 EXPECTED_PROMETHEUS_SERVICE_COUNT = (
     DEFAULT_OTEL_COLLECTOR_PROMETHEUS_METRIC_COUNT
     + DEFAULT_PROMETHEUS_METRIC_COUNT
     + DEFAULT_CMK_SERVICE_COUNT
-    + PROMETHEUS_METRIC_COUNT * 2
+    + PROMETHEUS_METRIC_COUNT
 )
 
 CERTFILE: Path = Path("server.crt")

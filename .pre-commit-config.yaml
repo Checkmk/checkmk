@@ -60,14 +60,6 @@ repos:
             types: [file, python]
             require_serial: true
             stages: [pre-commit, manual]
-          - id: omd-python-modules
-            name: Check Python modules in OMD
-            entry: .pre-commit-scripts/check-omd-python-modules
-            language: script
-            files: omd/packages/python3?-modules
-            types: [file]
-            require_serial: true
-            stages: [pre-commit, manual]
           - id: licence
             name: Check licence headers
             entry: .pre-commit-scripts/check-licence

@@ -1793,6 +1793,27 @@ py_library(
 )
 
 py_library(
+    name = "plugin_registration",
+    srcs = ["plugin_registration.py"],
+    imports = ["../.."],
+    visibility = [
+        "//cmk:__subpackages__",
+        "//tests:__subpackages__",
+    ],
+    deps = [
+        ":graphing_main",
+        ":hooks",
+        ":legacy_plugins",
+        ":log",
+        "//cmk/gui/dashboard",
+        "//cmk/gui/views",
+        "//cmk/gui/wato",
+        "//cmk/utils",
+        "//packages/cmk-trace",
+    ],
+)
+
+py_library(
     name = "main",
     srcs = ["main.py"],
     imports = ["../.."],
@@ -1937,6 +1958,7 @@ py_library(
             "graphing_main.py",
             "login.py",
             "main.py",
+            "plugin_registration.py",
             "help_menu.py",
             "prediction.py",
             "rulespec.py",
@@ -2018,6 +2040,7 @@ py_library(
         ":painter_options",
         ":pdf",
         ":permissions",
+        ":plugin_registration",
         ":prediction",
         ":product_usage_analytics_popup",
         ":pseudo_users",

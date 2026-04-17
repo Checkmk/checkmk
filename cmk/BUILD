@@ -452,6 +452,7 @@ py_wheel(
         "//cmk/gui:painter_options",
         "//cmk/gui:pdf",
         "//cmk/gui:permissions",
+        "//cmk/gui:plugin_registration",
         "//cmk/gui:prediction",
         "//cmk/gui:product_usage_analytics_popup",
         "//cmk/gui:pseudo_users",

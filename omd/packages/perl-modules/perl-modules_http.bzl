@@ -261,9 +261,9 @@ PERL_MODULES_LIST_2 = {
         "sha256": "4c44fe0ea255a9fd00741ee545063f6692d2a28e7ef2fbaad1b24a92803362a4",
         "url": "https://www.cpan.org/modules/by-module/XML/ZEFRAM/Module-Runtime-0.014.tar.gz",
     },
-    "YAML-Tiny-1.67.tar.gz": {
-        "sha256": "4f54e6e5ae08f0765801e3c3edc44d29a21e54c1789d12b44250cda19aba8d4b",
-        "url": "https://mirror.sobukus.de/files/cpan/YAML/YAML-Tiny-1.67.tar.gz",
+    "YAML-Tiny-1.76.tar.gz": {
+        "sha256": "a8d584394cf069bf8f17cba3dd5099003b097fce316c31fb094f1b1c171c08a3",
+        "url": "https://cpan.metacpan.org/authors/id/E/ET/ETHER/YAML-Tiny-1.76.tar.gz",
     },
     "Module-Install-1.16.tar.gz": {
         "sha256": "afac1264255f4d822d44f84df1aa9affad207f9ae805e803d93c845fa120025e",
@@ -301,9 +301,13 @@ PERL_MODULES_LIST_2 = {
         "sha256": "0a5188686e6b71ef3464a0d74f18bda62912b8e35aeb714483ab5f0b157a7b5e",
         "url": "https://src.fedoraproject.org/repo/extras/perl-Socket/Socket-2.019.tar.gz/8afec24ac4e084e0da0600c2018ccead/Socket-2.019.tar.gz",
     },
-    "XML-Parser-2.46.tar.gz": {
-        "sha256": "d331332491c51cccfb4cb94ffc44f9cd73378e618498d4a37df9e043661c515d",
-        "url": "https://www.cpan.org/modules/by-module/XML/XML-Parser-2.46.tar.gz",
+    "File-ShareDir-Install-0.14.tar.gz": {
+        "sha256": "8f9533b198f2d4a9a5288cbc7d224f7679ad05a7a8573745599789428bc5aea0",
+        "url": "https://cpan.metacpan.org/authors/id/E/ET/ETHER/File-ShareDir-Install-0.14.tar.gz",
+    },
+    "XML-Parser-2.57.tar.gz": {
+        "sha256": "a846bf77032e953e8344989780fa6a885e2a5226ebcaa93dae1d3df9b184e9cf",
+        "url": "https://cpan.metacpan.org/authors/id/T/TO/TODDR/XML-Parser-2.57.tar.gz",
     },
     "XML-Twig-3.52.tar.gz": {
         "sha256": "fef75826c24f2b877d0a0d2645212fc4fb9756ed4d2711614ac15c497e8680ad",

@@ -70,6 +70,7 @@ py_test(
         "//cmk:validate_config",
         "//cmk/bi",
         "//cmk/gui",
+        "//cmk/gui/job_scheduler",
         "//cmk/gui/openapi/spec/spec_generator",
         "//cmk/gui/openapi/spec/spec_generator:_core",
         "//omd/packages/omd:omdlib",

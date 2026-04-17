@@ -23,6 +23,7 @@ py_library(
         "//cmk/base:config",
         "//cmk/checkengine",
         "//cmk/gui",
+        "//cmk/gui/job_scheduler",
         "//cmk/utils",
         "//packages/cmk-ccc:debug",
         "//packages/cmk-ccc:exceptions",

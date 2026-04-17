@@ -7,9 +7,18 @@ import userEvent from '@testing-library/user-event'
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/vue'
 import type { CreateRelay } from 'cmk-shared-typing/typescript/create_relay'
 
+import { Api } from '@/lib/api-client'
 import * as relayClient from '@/lib/rest-api-client/relay/client'
 
 import ModeCreateRelayApp from '@/mode-relay/ModeCreateRelayApp.vue'
+
+/** Fake token API response used to simulate successful OTT generation. */
+const mockTokenResponse = {
+  id: 'mock-token-abc',
+  title: 'Token',
+  domainType: 'relay_registration_token',
+  extensions: { comment: '', issued_at: new Date(), expires_at: null, host_name: '' }
+}
 
 const mockProps: CreateRelay = {
   alias_validation: {
@@ -70,6 +79,22 @@ async function navigateToVerifyRegistrationStep(relayAlias = 'test-relay') {
   await navigateToExecuteScriptStep(relayAlias)
   await fireEvent.click(screen.getByRole('button', { name: /next step/i }))
   await screen.findByText('Registration results')
+}
+
+/**
+ * Helper: navigate to the Windows "Run the MSI installer" step (step 4).
+ * Assumes the component is already rendered with exp_add_windows_relay_enabled: true.
+ */
+async function navigateToWindowsRunMsiStep(relayAlias = 'test-relay') {
+  await userEvent.click(screen.getByText('Windows'))
+  await screen.findByText('Download the MSI installer')
+  await fireEvent.click(screen.getByRole('button', { name: /next step/i }))
+  await screen.findByText('Name the relay')
+  await fillRelayAlias(relayAlias)
+  await fireEvent.click(screen.getByRole('button', { name: /next step/i }))
+  await screen.findByText('Install WSL2')
+  await fireEvent.click(screen.getByRole('button', { name: /next step/i }))
+  await screen.findByText('Run the MSI installer')
 }
 
 describe('ModeCreateRelayApp', () => {
@@ -377,5 +402,161 @@ describe('ModeCreateRelayApp', () => {
     await fireEvent.click(screen.getByRole('button', { name: /generate one-time token/i }))
     await screen.findByText(/error generating one-time token/i)
     expect(screen.queryByTestId('run-relay-install-script')).not.toBeInTheDocument()
+  })
+
+  describe('Windows relay registration feature flag', () => {
+    test('does not show OS selector when exp_add_windows_relay_enabled is false', () => {
+      render(ModeCreateRelayApp, {
+        props: { ...mockProps, exp_add_windows_relay_enabled: false }
+      })
+      expect(screen.queryByText('Linux')).not.toBeInTheDocument()
+      expect(screen.queryByText('Windows')).not.toBeInTheDocument()
+    })
+
+    test('does not show OS selector when exp_add_windows_relay_enabled is not set', () => {
+      render(ModeCreateRelayApp, { props: mockProps })
+      expect(screen.queryByText('Linux')).not.toBeInTheDocument()
+      expect(screen.queryByText('Windows')).not.toBeInTheDocument()
+    })
+
+    test('shows OS toggle buttons when exp_add_windows_relay_enabled is true', () => {
+      render(ModeCreateRelayApp, {
+        props: { ...mockProps, exp_add_windows_relay_enabled: true }
+      })
+      expect(screen.getByText('Linux')).toBeInTheDocument()
+      expect(screen.getByText('Windows')).toBeInTheDocument()
+    })
+
+    test('starts on Linux steps by default when exp_add_windows_relay_enabled is true', () => {
+      render(ModeCreateRelayApp, {
+        props: { ...mockProps, exp_add_windows_relay_enabled: true }
+      })
+      // Linux is the default — first wizard step is shown immediately
+      expect(screen.getByText('Download the Relay installation script')).toBeInTheDocument()
+    })
+
+    test('shows Windows steps when Windows is selected', async () => {
+      render(ModeCreateRelayApp, {
+        props: { ...mockProps, exp_add_windows_relay_enabled: true }
+      })
+      await userEvent.click(screen.getByText('Windows'))
+      await screen.findByText('Download the MSI installer')
+    })
+
+    test('shows WSL2 installation step in Windows path', async () => {
+      render(ModeCreateRelayApp, {
+        props: { ...mockProps, exp_add_windows_relay_enabled: true }
+      })
+      await userEvent.click(screen.getByText('Windows'))
+      // Step 1: Download MSI
+      await screen.findByText('Download the MSI installer')
+      // Download MSI → Name relay
+      await fireEvent.click(screen.getByRole('button', { name: /next step/i }))
+      await screen.findByText('Name the relay')
+      // Name relay → Install WSL2
+      await fillRelayAlias('test-relay')
+      await fireEvent.click(screen.getByRole('button', { name: /next step/i }))
+      await screen.findByText('Install WSL2')
+      expect(screen.getByTestId('install-wsl2-command')).toBeInTheDocument()
+    })
+
+    test('Windows RunMsiInstaller step shows administrator privileges notice', async () => {
+      render(ModeCreateRelayApp, {
+        props: { ...mockProps, exp_add_windows_relay_enabled: true }
+      })
+      await navigateToWindowsRunMsiStep()
+      expect(
+        screen.getByText(/Note that the installation requires administrator privileges\./)
+      ).toBeInTheDocument()
+      // Confirm we are NOT showing the Linux "root privileges" text
+      expect(screen.queryByText(/root privileges/)).not.toBeInTheDocument()
+    })
+
+    test('Windows RunMsiInstaller hides command before token is generated', async () => {
+      render(ModeCreateRelayApp, {
+        props: { ...mockProps, exp_add_windows_relay_enabled: true }
+      })
+      await navigateToWindowsRunMsiStep()
+      expect(screen.queryByTestId('run-msi-installer-command')).not.toBeInTheDocument()
+    })
+
+    test('Windows RunMsiInstaller hides command when token generation fails', async () => {
+      render(ModeCreateRelayApp, {
+        props: { ...mockProps, exp_add_windows_relay_enabled: true }
+      })
+      await navigateToWindowsRunMsiStep()
+      await fireEvent.click(screen.getByRole('button', { name: /generate one-time token/i }))
+      await screen.findByText(/error generating one-time token/i)
+      expect(screen.queryByTestId('run-msi-installer-command')).not.toBeInTheDocument()
+    })
+
+    test('Windows RunMsiInstaller shows command after successful token generation', async () => {
+      vi.spyOn(Api.prototype, 'post').mockResolvedValue(mockTokenResponse)
+      render(ModeCreateRelayApp, {
+        props: { ...mockProps, exp_add_windows_relay_enabled: true }
+      })
+      await navigateToWindowsRunMsiStep()
+      await fireEvent.click(screen.getByRole('button', { name: /generate one-time token/i }))
+      await screen.findByText(/This token remains valid for/)
+      expect(screen.getByTestId('run-msi-installer-command')).toBeInTheDocument()
+    })
+
+    test('Windows verify registration step shows loading state initially', async () => {
+      vi.spyOn(Api.prototype, 'post').mockResolvedValue(mockTokenResponse)
+      render(ModeCreateRelayApp, {
+        props: { ...mockProps, exp_add_windows_relay_enabled: true }
+      })
+      // Navigate to step 4 using the default resolving mock so NameRelay.validate() can complete.
+      // Only block getRelayCollection after navigation so VerifyRegistration shows the loading state.
+      await navigateToWindowsRunMsiStep()
+      getRelayCollectionSpy.mockReturnValue(new Promise(() => {}))
+      await fireEvent.click(screen.getByRole('button', { name: /generate one-time token/i }))
+      await screen.findByText(/This token remains valid for/)
+      await fireEvent.click(screen.getByRole('button', { name: /next step/i }))
+      await screen.findByText('Registration results')
+      expect(screen.getAllByText(/Verifying the registration\.\.\./).length).toBeGreaterThan(0)
+    })
+
+    test('complete Windows wizard flow from start to verification', async () => {
+      vi.spyOn(Api.prototype, 'post').mockResolvedValue(mockTokenResponse)
+      getRelayCollectionSpy.mockResolvedValue([
+        {
+          id: 'relay-win-1',
+          alias: 'win-relay',
+          siteid: 'site-1',
+          num_fetchers: 1,
+          log_level: 'info'
+        }
+      ])
+      render(ModeCreateRelayApp, {
+        props: { ...mockProps, exp_add_windows_relay_enabled: true }
+      })
+
+      // Step 1: Download MSI
+      await userEvent.click(screen.getByText('Windows'))
+      await screen.findByText('Download the MSI installer')
+
+      // Step 1 → 2
+      await fireEvent.click(screen.getByRole('button', { name: /next step/i }))
+      await screen.findByText('Name the relay')
+
+      // Step 2: fill alias → 3
+      await fillRelayAlias('win-relay')
+      await fireEvent.click(screen.getByRole('button', { name: /next step/i }))
+      await screen.findByText('Install WSL2')
+
+      // Step 3 → 4
+      await fireEvent.click(screen.getByRole('button', { name: /next step/i }))
+      await screen.findByText('Run the MSI installer')
+
+      // Step 4: generate token → command visible
+      await fireEvent.click(screen.getByRole('button', { name: /generate one-time token/i }))
+      await screen.findByText(/This token remains valid for/)
+      expect(screen.getByTestId('run-msi-installer-command')).toBeInTheDocument()
+
+      // Step 4 → 5
+      await fireEvent.click(screen.getByRole('button', { name: /next step/i }))
+      await screen.findByText('Registration results')
+    })
   })
 })

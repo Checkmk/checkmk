@@ -44,12 +44,13 @@ from cmk.gui.valuespec import (
     TextAreaUnicode,
     TextInput,
 )
+from cmk.gui.watolib.mode import WatoMode
 from cmk.utils.certs import CertManagementEvent
 from cmk.utils.keypair_store import Key, KeyAlreadyExists, KeyId, KeypairMap, KeypairStore
 from cmk.utils.security_event import log_security_event
 
 
-class PageKeyManagement:
+class ModeKeyManagement(WatoMode[object]):
     edit_mode = "edit_key"
     upload_mode = "upload_key"
     download_mode = "download_key"
@@ -198,7 +199,7 @@ class PageKeyManagement:
                 table.cell(_("Key ID"), key_id)
 
 
-class PageEditKey:
+class ModeEditKey(WatoMode[object]):
     back_mode: str
 
     def __init__(self, key_store: KeypairStore) -> None:
@@ -297,7 +298,7 @@ class PageEditKey:
         raise NotImplementedError()
 
 
-class PageUploadKey:
+class ModeUploadKey(WatoMode[object]):
     back_mode: str
 
     def __init__(self, key_store: KeypairStore) -> None:
@@ -464,7 +465,7 @@ class PageUploadKey:
         raise NotImplementedError()
 
 
-class PageDownloadKey:
+class ModeDownloadKey(WatoMode[object]):
     back_mode: str
 
     def __init__(self, key_store: KeypairStore) -> None:

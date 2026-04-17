@@ -1088,6 +1088,7 @@ py_library(
         "//cmk/gui/utils:transaction_manager",
         "//cmk/gui/utils:urls",
         "//cmk/gui/valuespec",
+        "//cmk/gui/watolib:registries",
         "//cmk/utils",
         "//packages/cmk-ccc:site",
         "//packages/cmk-ccc:user",

@@ -10,13 +10,12 @@ import pytest
 import cmk.utils.paths
 from cmk.ccc.user import UserId
 from cmk.crypto.password import Password
-from cmk.gui.backup.handler import BackupConfig, PageEditBackupJob
+from cmk.gui.backup.handler import BackupConfig, ModeEditBackupJob
 from cmk.gui.backup.pages import ModeBackupEditKey
 from cmk.gui.logged_in import user
 from cmk.utils.backup.config import CMASystemConfig, Config, SiteConfig
 from cmk.utils.backup.targets import TargetId
 from cmk.utils.backup.targets.config import LocalTargetConfig, TargetConfig
-from cmk.utils.keypair_store import KeypairStore
 
 
 @pytest.mark.usefixtures("request_context")
@@ -44,10 +43,7 @@ def test_backup_key_create_web(monkeypatch: pytest.MonkeyPatch) -> None:
         store_path.unlink()
 
 
-@pytest.mark.usefixtures("request_context")
-def test_backup_target_choices_with_hyphenated_ident(
-    tmp_path: Path,
-) -> None:
+def test_backup_target_choices_with_hyphenated_ident(tmp_path: Path) -> None:
     """Regression test for CMK-32749: backup target IDs with hyphens must not raise ValueError.
 
     Before the fix, SingleChoiceElement validated that 'name' was a valid Python identifier,
@@ -68,11 +64,8 @@ def test_backup_target_choices_with_hyphenated_ident(
     )
     backup_config = BackupConfig(raw_config)
 
-    key_store = KeypairStore(tmp_path / "backup_keys.mk", "keys")
-    page = PageEditBackupJob(key_store)
-
     # Must not raise ValueError
-    choices = page.backup_target_choices(backup_config)
+    choices = ModeEditBackupJob.backup_target_choices(backup_config)
 
     assert len(choices) == 1
     assert choices[0].name == "backup-local"

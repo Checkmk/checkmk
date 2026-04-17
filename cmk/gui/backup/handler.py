@@ -84,6 +84,7 @@ from cmk.gui.utils.urls import (
 )
 from cmk.gui.utils.user_errors import user_errors
 from cmk.gui.valuespec import AbsoluteDirname, ID, SchedulePeriod
+from cmk.gui.watolib.mode import WatoMode
 from cmk.rulesets.internal.form_specs import (
     ListExtended,
     SimplePassword,
@@ -448,7 +449,7 @@ class Job(MKBackupJob):
         return "mkbackup backup %s >/dev/null" % self.ident
 
 
-class PageBackup:
+class ModeBackup(WatoMode[object]):
     def title(self) -> str:
         return _("Site backup")
 
@@ -744,7 +745,7 @@ class PageBackup:
                     )
 
 
-class PageEditBackupJob:
+class ModeEditBackupJob(WatoMode[object]):
     def __init__(self, key_store: keypair_store.KeypairStore) -> None:
         super().__init__()
         self.key_store = key_store
@@ -999,8 +1000,9 @@ class PageEditBackupJob:
             for ident, title in self.key_store.choices()
         ]
 
+    @classmethod
     def backup_target_choices(
-        self, backup_config: BackupConfig
+        cls, backup_config: BackupConfig
     ) -> Sequence[SingleChoiceElementExtended[str]]:
         return [
             SingleChoiceElementExtended(
@@ -1122,7 +1124,7 @@ def show_job_details(job: MKBackupJob) -> None:
     html.close_table()
 
 
-class PageBackupJobState:
+class ModeBackupJobState(WatoMode[object]):
     def __init__(self) -> None:
         super().__init__()
         self._from_vars()
@@ -1767,7 +1769,7 @@ def _show_target_list(targets: Iterable[Target], targets_are_cma: bool) -> None:
             table.cell(_("Destination"), target.render_destination())
 
 
-class PageBackupTargets:
+class ModeBackupTargets(WatoMode[object]):
     def title(self) -> str:
         return _("Site backup targets")
 
@@ -1835,7 +1837,7 @@ class PageBackupTargets:
         _show_site_and_system_targets(BackupConfig.load())
 
 
-class PageEditBackupTarget:
+class ModeEditBackupTarget(WatoMode[object]):
     def __init__(self) -> None:
         super().__init__()
         target_ident = request.var("target")
@@ -2007,7 +2009,7 @@ class BackupKeypairStore(keypair_store.KeypairStore):
     pass
 
 
-class PageBackupKeyManagement(key_mgmt.PageKeyManagement):
+class ModeBackupKeyManagement(key_mgmt.ModeKeyManagement):
     edit_mode = "backup_edit_key"
     upload_mode = "backup_upload_key"
     download_mode = "backup_download_key"
@@ -2042,7 +2044,7 @@ class PageBackupKeyManagement(key_mgmt.PageKeyManagement):
         return "backup encryption keys"
 
 
-class PageBackupEditKey(key_mgmt.PageEditKey):
+class ModeBackupEditKey(key_mgmt.ModeEditKey):
     back_mode = "backup_keys"
 
     def title(self) -> str:
@@ -2062,7 +2064,7 @@ class PageBackupEditKey(key_mgmt.PageEditKey):
         return "backup encryption keys"
 
 
-class PageBackupUploadKey(key_mgmt.PageUploadKey):
+class ModeBackupUploadKey(key_mgmt.ModeUploadKey):
     back_mode = "backup_keys"
 
     def title(self) -> str:
@@ -2082,7 +2084,7 @@ class PageBackupUploadKey(key_mgmt.PageUploadKey):
         return "backup encryption keys"
 
 
-class PageBackupDownloadKey(key_mgmt.PageDownloadKey):
+class ModeBackupDownloadKey(key_mgmt.ModeDownloadKey):
     back_mode = "backup_keys"
 
     def title(self) -> str:
@@ -2163,7 +2165,7 @@ class RestoreJob(MKBackupJob):
         super().start(**env_updates)
 
 
-class PageBackupRestore:
+class ModeBackupRestore(WatoMode[object]):
     def __init__(self, key_store: keypair_store.KeypairStore) -> None:
         super().__init__()
         self.key_store = key_store

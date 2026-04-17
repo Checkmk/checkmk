@@ -35,7 +35,7 @@ def register(page_registry: PageRegistry, mode_registry: ModeRegistry) -> None:
     mode_registry.register(ModeBackupRestore)
 
 
-class ModeBackup(handler.PageBackup, WatoMode):
+class ModeBackup(handler.ModeBackup):
     @classmethod
     def name(cls) -> str:
         return "backup"
@@ -51,7 +51,7 @@ class ModeBackup(handler.PageBackup, WatoMode):
         return _("Site backup")
 
 
-class ModeBackupTargets(handler.PageBackupTargets, WatoMode):
+class ModeBackupTargets(handler.ModeBackupTargets):
     @classmethod
     def name(cls) -> str:
         return "backup_targets"
@@ -65,7 +65,7 @@ class ModeBackupTargets(handler.PageBackupTargets, WatoMode):
         return ModeBackup
 
 
-class ModeEditBackupTarget(handler.PageEditBackupTarget, WatoMode):
+class ModeEditBackupTarget(handler.ModeEditBackupTarget):
     @classmethod
     def name(cls) -> str:
         return "edit_backup_target"
@@ -79,7 +79,7 @@ class ModeEditBackupTarget(handler.PageEditBackupTarget, WatoMode):
         return ModeBackupTargets
 
 
-class ModeEditBackupJob(handler.PageEditBackupJob, WatoMode):
+class ModeEditBackupJob(handler.ModeEditBackupJob):
     @classmethod
     def name(cls) -> str:
         return "edit_backup_job"
@@ -96,7 +96,7 @@ class ModeEditBackupJob(handler.PageEditBackupJob, WatoMode):
         super().__init__(key_store=make_site_backup_keypair_store())
 
 
-class ModeBackupJobState(handler.PageBackupJobState, WatoMode):
+class ModeBackupJobState(handler.ModeBackupJobState):
     @classmethod
     def name(cls) -> str:
         return "backup_job_state"
@@ -132,7 +132,7 @@ def make_site_backup_keypair_store() -> handler.BackupKeypairStore:
     return handler.BackupKeypairStore(cmk.utils.paths.default_config_dir / "backup_keys.mk", "keys")
 
 
-class ModeBackupKeyManagement(handler.PageBackupKeyManagement, WatoMode):
+class ModeBackupKeyManagement(handler.ModeBackupKeyManagement):
     @classmethod
     def name(cls) -> str:
         return "backup_keys"
@@ -149,7 +149,7 @@ class ModeBackupKeyManagement(handler.PageBackupKeyManagement, WatoMode):
         super().__init__(key_store=make_site_backup_keypair_store())
 
 
-class ModeBackupEditKey(handler.PageBackupEditKey, WatoMode):
+class ModeBackupEditKey(handler.ModeBackupEditKey):
     @classmethod
     def name(cls) -> str:
         return "backup_edit_key"
@@ -166,7 +166,7 @@ class ModeBackupEditKey(handler.PageBackupEditKey, WatoMode):
         super().__init__(key_store=make_site_backup_keypair_store())
 
 
-class ModeBackupUploadKey(handler.PageBackupUploadKey, WatoMode):
+class ModeBackupUploadKey(handler.ModeBackupUploadKey):
     @classmethod
     def name(cls) -> str:
         return "backup_upload_key"
@@ -192,7 +192,7 @@ class ModeBackupUploadKey(handler.PageBackupUploadKey, WatoMode):
         super()._upload_key(key_file, alias, passphrase)
 
 
-class ModeBackupDownloadKey(handler.PageBackupDownloadKey, WatoMode):
+class ModeBackupDownloadKey(handler.ModeBackupDownloadKey):
     @classmethod
     def name(cls) -> str:
         return "backup_download_key"
@@ -209,7 +209,7 @@ class ModeBackupDownloadKey(handler.PageBackupDownloadKey, WatoMode):
         super().__init__(key_store=make_site_backup_keypair_store())
 
 
-class ModeBackupRestore(handler.PageBackupRestore, WatoMode):
+class ModeBackupRestore(handler.ModeBackupRestore):
     @classmethod
     def name(cls) -> str:
         return "backup_restore"

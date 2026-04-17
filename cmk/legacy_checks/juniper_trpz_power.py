@@ -3,34 +3,32 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
+from collections.abc import Mapping
 
-
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import SNMPTree, StringTable
+from cmk.agent_based.v2 import (
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Result,
+    Service,
+    SimpleSNMPSection,
+    SNMPTree,
+    State,
+    StringTable,
+)
 from cmk.plugins.juniper.lib import DETECT_JUNIPER_TRPZ
 
-check_info = {}
+Section = Mapping[str, int]
 
 
-def saveint(i: str) -> int:
-    """Tries to cast a string to an integer and return it. In case this
-    fails, it returns 0.
-
-    Advice: Please don't use this function in new code. It is understood as
-    bad style these days, because in case you get 0 back from this function,
-    you can not know whether it is really 0 or something went wrong."""
-    try:
-        return int(i)
-    except (TypeError, ValueError):
-        return 0
+def discover_juniper_trpz_power(section: Section) -> DiscoveryResult:
+    for line in section:
+        yield Service(item=line)
 
 
-def discover_juniper_trpz_power(info):
-    return [(line[0], None) for line in info]
-
-
-def check_juniper_trpz_power(item, _no_params, info):
+def check_juniper_trpz_power(item: str, section: Section) -> CheckResult:
+    if item not in section:
+        return
     states = {
         1: "other",
         2: "unknown",
@@ -38,23 +36,21 @@ def check_juniper_trpz_power(item, _no_params, info):
         4: "dc-failed",
         5: "ac-ok-dc-ok",
     }
-    for line in info:
-        if line[0] == item:
-            state = saveint(line[1])
-            message = "Current state: %s" % states[state]
-            if state in [2, 3, 4]:
-                return 2, message
-            if state == 1:
-                return 1, message
-            return 0, message
-    return None
+    state = section[item]
+
+    message = f"Current state: {states[state]}"
+    if state in [2, 3, 4]:
+        yield Result(state=State.CRIT, summary=message)
+    if state == 1:
+        yield Result(state=State.WARN, summary=message)
+    yield Result(state=State.OK, summary=message)
 
 
-def parse_juniper_trpz_power(string_table: StringTable) -> StringTable:
-    return string_table
+def parse_juniper_trpz_power(string_table: StringTable) -> Section:
+    return {line[0]: int(line[1]) for line in string_table}
 
 
-check_info["juniper_trpz_power"] = LegacyCheckDefinition(
+snmp_section_juniper_trpz_power = SimpleSNMPSection(
     name="juniper_trpz_power",
     parse_function=parse_juniper_trpz_power,
     detect=DETECT_JUNIPER_TRPZ,
@@ -62,6 +58,10 @@ check_info["juniper_trpz_power"] = LegacyCheckDefinition(
         base=".1.3.6.1.4.1.14525.4.8.1.1.13.1.2.1",
         oids=["3", "2"],
     ),
+)
+
+check_plugin_juniper_trpz_power = CheckPlugin(
+    name="juniper_trpz_power",
     service_name="PSU %s",
     discovery_function=discover_juniper_trpz_power,
     check_function=check_juniper_trpz_power,

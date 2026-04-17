@@ -9,7 +9,3 @@ templates with source code examples. These are put into the spec
 by the decorator. The examples are specific to the Redoc documentation
 generator library.
 """
-
-from ._core import main
-
-__all__ = ["main"]

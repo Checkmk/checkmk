@@ -6,6 +6,7 @@ exports_files(["generate_api_spec.py"])
 py_library(
     name = "spec_generator",
     srcs = [
+        "__init__.py",
         "_code_examples.py",
         "_doc_marshmallow.py",
         "_doc_pydantic.py",
@@ -34,6 +35,38 @@ py_library(
         requirement("marshmallow"),
         requirement("pydantic"),
         requirement("werkzeug"),
+    ],
+)
+
+# Depends on monolithic //cmk/gui for main_modules + script_helpers used in main().
+# Kept separate from :spec_generator so //cmk/gui itself does not have to depend
+# on spec_generator (which would form a cycle).
+py_library(
+    name = "_core",
+    srcs = ["_core.py"],
+    imports = ["../../../../.."],
+    visibility = [
+        "//cmk:__subpackages__",
+        "//tests:__subpackages__",
+    ],
+    deps = [
+        ":spec_generator",
+        "//cmk/gui",
+        "//cmk/gui:session",
+        "//cmk/gui/openapi/framework",
+        "//cmk/gui/openapi/framework:core",
+        "//cmk/gui/openapi/restful_objects",
+        "//cmk/gui/openapi/restful_objects:type_defs",
+        "//cmk/gui/openapi/restful_objects:versioned_endpoint_map",
+        "//cmk/gui/openapi/spec",
+        "//cmk/gui/openapi/spec:utils",
+        "//cmk/utils",
+        "//packages/cmk-ccc:site",
+        "//packages/cmk-ccc:store",
+        "//packages/cmk-ccc:version",
+        requirement("apispec"),
+        requirement("apispec-oneofschema"),
+        requirement("openapi-spec-validator"),
     ],
 )
 
@@ -68,6 +101,7 @@ py_binary(
             "//cmk/editions/nonfree:ultimatemt",
         ],
     }) + [
+        ":_core",
         requirement("pyyaml"),
     ],
 )
@@ -86,17 +120,7 @@ py_binary(
             "//cmk/editions:community",
         ],
     }) + [
+        ":_core",
         requirement("pyyaml"),
     ],
-)
-
-# Temporary: spec_generator files that still belong to the monolithic //cmk/gui target.
-# _core.py needs cmk.gui.main_modules and cmk.gui.script_helpers (monolithic).
-filegroup(
-    name = "gui_srcs",
-    srcs = [
-        "__init__.py",
-        "_core.py",
-    ],
-    visibility = ["//cmk/gui:__pkg__"],
 )

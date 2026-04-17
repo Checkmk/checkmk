@@ -1714,7 +1714,6 @@ py_library(
             "werks.py",
         ],
     ) + [
-        "//cmk/gui/openapi/spec/spec_generator:gui_srcs",
         "//cmk/gui/wsgi:gui_srcs",
     ],
     imports = ["../.."],
@@ -1861,7 +1860,6 @@ py_library(
         "//cmk/gui/openapi/shared_endpoint_families",
         "//cmk/gui/openapi/spec",
         "//cmk/gui/openapi/spec:utils",
-        "//cmk/gui/openapi/spec/spec_generator",
         "//cmk/gui/pagetypes",
         "//cmk/gui/painter:v0_base",
         "//cmk/gui/painter:v0_impl",

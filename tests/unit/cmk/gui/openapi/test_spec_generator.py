@@ -8,8 +8,8 @@ import pytest
 
 from cmk.gui.openapi.framework import APIVersion
 from cmk.gui.openapi.restful_objects.type_defs import TagGroup
-from cmk.gui.openapi.spec.spec_generator import main as generate_spec
 from cmk.gui.openapi.spec.spec_generator._core import _redoc_spec
+from cmk.gui.openapi.spec.spec_generator._core import main as generate_spec
 
 
 def test_redoc_spec_tag_group_completness() -> None:

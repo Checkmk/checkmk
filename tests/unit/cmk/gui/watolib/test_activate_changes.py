@@ -22,12 +22,17 @@ from livestatus import SiteConfiguration, SiteConfigurations
 import cmk.ccc.version as cmk_version
 import cmk.gui.watolib.utils
 import cmk.utils.paths
+from cmk.ccc import store as ccc_store
 from cmk.ccc.site import SiteId
+from cmk.ccc.user import UserId
 from cmk.gui.config import Config
 from cmk.gui.http import Request
+from cmk.gui.sites import SiteStatus
 from cmk.gui.userdb import get_user_attributes
 from cmk.gui.watolib import activate_changes
 from cmk.gui.watolib.activate_changes import (
+    ActivateChanges,
+    ActivateChangesManager,
     ActivationCleanupJob,
     ConfigSyncFileInfo,
     default_rabbitmq_definitions,
@@ -37,6 +42,7 @@ from cmk.gui.watolib.config_sync import (
     ReplicationPath,
     ReplicationPathType,
 )
+from cmk.gui.watolib.site_changes import ChangeSpec, SiteChanges
 from cmk.livestatus_client import (
     BrokerConnection,
     BrokerConnections,
@@ -1304,3 +1310,371 @@ def test_default_rabbitmq_definitions(
 ) -> None:
     actual_definitions = default_rabbitmq_definitions(site_configs, peer_to_peer_connections)
     assert dict(actual_definitions) == expected_definitions
+
+
+def _make_local_site_config(site_id: SiteId, disabled: bool = False) -> SiteConfiguration:
+    return SiteConfiguration(
+        id=site_id,
+        alias=f"Site {site_id}",
+        socket=("local", None),
+        disable_wato=True,
+        disabled=disabled,
+        insecure=False,
+        url_prefix=f"/{site_id}/",
+        multisiteurl="",
+        persist=False,
+        replicate_ec=False,
+        replicate_mkps=False,
+        replication=None,
+        timeout=5,
+        user_login=True,
+        proxy=None,
+        user_sync="all",
+        status_host=None,
+        message_broker_port=5672,
+        is_trusted=False,
+    )
+
+
+def _make_change_spec(
+    change_id: str,
+    user_id: str = "cmkadmin",
+    has_been_activated: bool = False,
+) -> ChangeSpec:
+    return {
+        "id": change_id,
+        "action_name": "edit-host",
+        "text": f"Changed host {change_id}",
+        "object": None,
+        "user_id": user_id,
+        "domains": ["check_mk"],
+        "time": 1720800176.0,
+        "need_sync": True,
+        "need_restart": True,
+        "has_been_activated": has_been_activated,
+        "prevent_discard_changes": False,
+    }
+
+
+class _NoLicenseEffect:
+    header = None
+    block = None
+
+
+class TestGetAllDataRequiredForActivationPopout:
+    SITE_ID = SiteId("popout_test_site")
+
+    @pytest.fixture(autouse=True)
+    def _patch_externals(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        """Suppress license checks and livestatus calls by default.
+
+        Also re-patch the module-level path constants that were computed at import
+        time (before the conftest had a chance to redirect cmk.utils.paths), so
+        that state files land in the test-scoped temp directory even when running
+        with pytest directly.
+        """
+        monkeypatch.setattr(
+            activate_changes,
+            "ACTIVATION_PERISTED_DIR",
+            str(cmk.utils.paths.var_dir / "wato/activation"),
+        )
+        monkeypatch.setattr(
+            activate_changes,
+            "ACTIVATION_TMP_BASE_DIR",
+            str(cmk.utils.paths.tmp_dir / "wato/activation"),
+        )
+        monkeypatch.setattr(
+            activate_changes,
+            "get_licensing_user_effect",
+            lambda *args, **kwargs: _NoLicenseEffect(),
+        )
+        monkeypatch.setattr(activate_changes, "_get_license_block_effect", lambda: None)
+        monkeypatch.setattr(
+            activate_changes,
+            "get_status_for_site",
+            lambda site_id, site: (
+                SiteStatus({"state": "disabled"})
+                if site.get("disabled")
+                else SiteStatus({"state": "online"})
+            ),
+        )
+
+    def test_no_pending_changes_returns_empty_summary(self, with_admin_login: UserId) -> None:
+        sites = SiteConfigurations({self.SITE_ID: _make_local_site_config(self.SITE_ID)})
+
+        result = ActivateChanges().get_all_data_required_for_activation_popout(sites, None)
+
+        assert result.pendingChanges == []
+        assert len(result.sites) == 1
+        assert result.sites[0].siteId == self.SITE_ID
+        assert result.sites[0].changes == 0
+        assert result.sites[0].lastActivationStatus is None
+
+    def test_pending_change_appears_in_summary(self, with_admin_login: UserId) -> None:
+        change = _make_change_spec("change-001", user_id=str(with_admin_login))
+        site_changes = SiteChanges(self.SITE_ID)
+        site_changes.append(change)
+        try:
+            sites = SiteConfigurations({self.SITE_ID: _make_local_site_config(self.SITE_ID)})
+            result = ActivateChanges().get_all_data_required_for_activation_popout(sites, None)
+
+            assert len(result.pendingChanges) == 1
+            pending = result.pendingChanges[0]
+            assert pending.changeId == "change-001"
+            assert pending.changeText == "Changed host change-001"
+            assert pending.user == str(with_admin_login)
+            assert pending.time == 1720800176.0
+            assert pending.foreignChange is False
+        finally:
+            site_changes.clear()
+
+    def test_activated_change_excluded_from_pending(self, with_admin_login: UserId) -> None:
+        site_changes = SiteChanges(self.SITE_ID)
+        site_changes.append(_make_change_spec("change-activated", has_been_activated=True))
+        site_changes.append(_make_change_spec("change-pending"))
+        try:
+            sites = SiteConfigurations({self.SITE_ID: _make_local_site_config(self.SITE_ID)})
+            result = ActivateChanges().get_all_data_required_for_activation_popout(sites, None)
+
+            assert len(result.pendingChanges) == 1
+            assert result.pendingChanges[0].changeId == "change-pending"
+        finally:
+            site_changes.clear()
+
+    def test_site_change_counter_counts_only_pending(self, with_admin_login: UserId) -> None:
+        site_changes = SiteChanges(self.SITE_ID)
+        site_changes.append(_make_change_spec("c-1"))
+        site_changes.append(_make_change_spec("c-2"))
+        site_changes.append(_make_change_spec("c-activated", has_been_activated=True))
+        try:
+            sites = SiteConfigurations({self.SITE_ID: _make_local_site_config(self.SITE_ID)})
+            result = ActivateChanges().get_all_data_required_for_activation_popout(sites, None)
+
+            assert result.sites[0].changes == 2
+        finally:
+            site_changes.clear()
+
+    def test_foreign_change_flag(self, with_admin_login: UserId) -> None:
+        site_changes = SiteChanges(self.SITE_ID)
+        site_changes.append(_make_change_spec("c-foreign", user_id="other_user"))
+        site_changes.append(_make_change_spec("c-own", user_id=str(with_admin_login)))
+        try:
+            sites = SiteConfigurations({self.SITE_ID: _make_local_site_config(self.SITE_ID)})
+            result = ActivateChanges().get_all_data_required_for_activation_popout(sites, None)
+
+            by_id = {c.changeId: c for c in result.pendingChanges}
+            assert by_id["c-foreign"].foreignChange is True
+            assert by_id["c-own"].foreignChange is False
+        finally:
+            site_changes.clear()
+
+    def test_which_sites_all_sites_when_single_site(self, with_admin_login: UserId) -> None:
+        site_changes = SiteChanges(self.SITE_ID)
+        site_changes.append(_make_change_spec("c-1"))
+        try:
+            sites = SiteConfigurations({self.SITE_ID: _make_local_site_config(self.SITE_ID)})
+            result = ActivateChanges().get_all_data_required_for_activation_popout(sites, None)
+
+            assert result.pendingChanges[0].whichSites == ["All sites"]
+        finally:
+            site_changes.clear()
+
+    def test_which_sites_specific_when_only_one_of_two_sites_affected(
+        self, with_admin_login: UserId
+    ) -> None:
+        site_a = SiteId("popout_site_a")
+        site_b = SiteId("popout_site_b")
+        site_changes_a = SiteChanges(site_a)
+        site_changes_a.append(_make_change_spec("c-1"))
+        try:
+            sites = SiteConfigurations(
+                {
+                    site_a: _make_local_site_config(site_a),
+                    site_b: _make_local_site_config(site_b),
+                }
+            )
+            result = ActivateChanges().get_all_data_required_for_activation_popout(sites, None)
+
+            assert result.pendingChanges[0].whichSites == [site_a]
+        finally:
+            site_changes_a.clear()
+
+    def test_last_activation_status_is_none_without_persisted_state(
+        self, with_admin_login: UserId
+    ) -> None:
+        sites = SiteConfigurations({self.SITE_ID: _make_local_site_config(self.SITE_ID)})
+        result = ActivateChanges().get_all_data_required_for_activation_popout(sites, None)
+
+        assert result.sites[0].lastActivationStatus is None
+
+    def test_last_activation_status_from_persisted_state(self, with_admin_login: UserId) -> None:
+        persisted_path = Path(ActivateChangesManager.persisted_site_state_path(self.SITE_ID))
+        persisted_path.parent.mkdir(parents=True, exist_ok=True)
+        ccc_store.save_object_to_file(
+            persisted_path,
+            {
+                "_phase": "done",
+                "_state": "success",
+                "_status_text": "Success",
+                "_status_details": "Finished at 12:00:00.",
+                "_time_started": 1720800192.0,
+                "_time_ended": 1720800197.0,
+            },
+        )
+        try:
+            sites = SiteConfigurations({self.SITE_ID: _make_local_site_config(self.SITE_ID)})
+            result = ActivateChanges().get_all_data_required_for_activation_popout(sites, None)
+
+            last = result.sites[0].lastActivationStatus
+            assert last is not None
+            assert last.phase == "done"
+            assert last.state == "success"
+            assert last.status_text == "Success"
+            assert last.status_details == "Finished at 12:00:00."
+            assert last.start_time == 1720800192.0
+            assert last.end_time == 1720800197.0
+        finally:
+            persisted_path.unlink(missing_ok=True)
+
+    def test_last_activation_status_with_activation_id_reads_live_state(
+        self, with_admin_login: UserId
+    ) -> None:
+        activation_id = "abcdef12-1234-1234-1234-abcdef123456"
+        live_path = Path(ActivateChangesManager.site_state_path(activation_id, self.SITE_ID))
+        live_path.parent.mkdir(parents=True, exist_ok=True)
+        ccc_store.save_object_to_file(
+            live_path,
+            {
+                "_phase": "sync",
+                "_state": "success",
+                "_status_text": "Synchronizing",
+                "_status_details": None,
+                "_time_started": 1720800200.0,
+                "_time_ended": 0.0,
+            },
+        )
+        try:
+            sites = SiteConfigurations({self.SITE_ID: _make_local_site_config(self.SITE_ID)})
+            result = ActivateChanges().get_all_data_required_for_activation_popout(
+                sites, activation_id
+            )
+
+            last = result.sites[0].lastActivationStatus
+            assert last is not None
+            assert last.phase == "sync"
+            assert last.status_text == "Synchronizing"
+        finally:
+            live_path.unlink(missing_ok=True)
+
+    def test_last_activation_status_falls_back_to_persisted_when_live_absent(
+        self, with_admin_login: UserId
+    ) -> None:
+        activation_id = "fallback12-1234-1234-1234-abcdef123456"
+        persisted_path = Path(ActivateChangesManager.persisted_site_state_path(self.SITE_ID))
+        persisted_path.parent.mkdir(parents=True, exist_ok=True)
+        ccc_store.save_object_to_file(
+            persisted_path,
+            {
+                "_phase": "done",
+                "_state": "success",
+                "_status_text": "Success",
+                "_status_details": "",
+                "_time_started": 1720800192.0,
+                "_time_ended": 1720800197.0,
+            },
+        )
+        try:
+            sites = SiteConfigurations({self.SITE_ID: _make_local_site_config(self.SITE_ID)})
+            # Live file does NOT exist for this activation_id; must fall back to persisted state.
+            result = ActivateChanges().get_all_data_required_for_activation_popout(
+                sites, activation_id
+            )
+
+            last = result.sites[0].lastActivationStatus
+            assert last is not None
+            assert last.phase == "done"
+            assert last.state == "success"
+        finally:
+            persisted_path.unlink(missing_ok=True)
+
+    def test_html_stripped_from_status_details(self, with_admin_login: UserId) -> None:
+        persisted_path = Path(ActivateChangesManager.persisted_site_state_path(self.SITE_ID))
+        persisted_path.parent.mkdir(parents=True, exist_ok=True)
+        ccc_store.save_object_to_file(
+            persisted_path,
+            {
+                "_phase": "done",
+                "_state": "error",
+                "_status_text": "Failed",
+                "_status_details": "Error: <b>host not found</b> &amp; more",
+                "_time_started": 1720800192.0,
+                "_time_ended": 1720800197.0,
+            },
+        )
+        try:
+            sites = SiteConfigurations({self.SITE_ID: _make_local_site_config(self.SITE_ID)})
+            result = ActivateChanges().get_all_data_required_for_activation_popout(sites, None)
+
+            last = result.sites[0].lastActivationStatus
+            assert last is not None
+            assert "<b>" not in last.status_details
+            assert "host not found" in last.status_details
+            assert "& more" in last.status_details
+        finally:
+            persisted_path.unlink(missing_ok=True)
+
+    def test_site_version_strips_build_suffix(
+        self, with_admin_login: UserId, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        monkeypatch.setattr(
+            activate_changes,
+            "get_status_for_site",
+            lambda site_id, site: SiteStatus({"livestatus_version": "2.4.0p1-20250101"}),
+        )
+        sites = SiteConfigurations({self.SITE_ID: _make_local_site_config(self.SITE_ID)})
+        result = ActivateChanges().get_all_data_required_for_activation_popout(sites, None)
+
+        assert result.sites[0].version == "2.4.0p1"
+
+    def test_disabled_site_returns_empty_version(self, with_admin_login: UserId) -> None:
+        sites = SiteConfigurations(
+            {self.SITE_ID: _make_local_site_config(self.SITE_ID, disabled=True)}
+        )
+        result = ActivateChanges().get_all_data_required_for_activation_popout(sites, None)
+
+        assert result.sites[0].version == ""
+
+    def test_license_message_included_in_summary(
+        self, with_admin_login: UserId, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        class _FakeHeader:
+            message_html = "Your license is expiring soon."
+
+        class _FakeLicenseEffect:
+            header = _FakeHeader()
+
+        monkeypatch.setattr(
+            activate_changes,
+            "get_licensing_user_effect",
+            lambda *args, **kwargs: _FakeLicenseEffect(),
+        )
+        monkeypatch.setattr(activate_changes, "_get_license_block_effect", lambda: None)
+
+        sites = SiteConfigurations({self.SITE_ID: _make_local_site_config(self.SITE_ID)})
+        result = ActivateChanges().get_all_data_required_for_activation_popout(sites, None)
+
+        assert result.licenseMessage == "Your license is expiring soon."
+        assert result.licenseIsBlocking is False
+
+    def test_license_is_blocking_when_block_effect_present(
+        self, with_admin_login: UserId, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        class _FakeBlock:
+            pass
+
+        monkeypatch.setattr(activate_changes, "_get_license_block_effect", _FakeBlock)
+
+        sites = SiteConfigurations({self.SITE_ID: _make_local_site_config(self.SITE_ID)})
+        result = ActivateChanges().get_all_data_required_for_activation_popout(sites, None)
+
+        assert result.licenseIsBlocking is True

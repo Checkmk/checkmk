@@ -435,6 +435,7 @@ py_wheel(
         "//cmk/gui:legacy_plugins",
         "//cmk/gui:log",
         "//cmk/gui:logged_in",
+        "//cmk/gui:login",
         "//cmk/gui:logwatch",
         "//cmk/gui:main",
         "//cmk/gui:main_menu",

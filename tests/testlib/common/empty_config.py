@@ -123,6 +123,8 @@ EMPTY_CONFIG = LoadedConfigFragment(
     cmc_graphite=[],
     alert_handler_event_types=["statechange"],
     alert_handler_rules=[],
+    alert_handler_timeout=60,
+    alert_logging=20,
 )
 
 

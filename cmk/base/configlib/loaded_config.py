@@ -27,6 +27,7 @@ from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.rrd import RRDObjectConfig
 from cmk.utils.host_storage import FolderAttributesForBase
 from cmk.utils.http_proxy_config import HTTPProxySpec
+from cmk.utils.notify_types import EventRule
 from cmk.utils.oauth2_connection import OAuth2Connection
 from cmk.utils.rulesets import ruleset_matcher, RuleSetName
 from cmk.utils.rulesets.ruleset_matcher import RuleSpec
@@ -152,4 +153,6 @@ class LoadedConfigFragment:
     influxdb_connections: Mapping[str, dict[str, Any]]
     cmc_graphite: Sequence[CMCGraphiteConnection]
     alert_handler_event_types: Sequence[Literal["statechange", "checkresult"]]
-    alert_handler_rules: Sequence[object]
+    alert_handler_rules: Sequence[EventRule]
+    alert_handler_timeout: int
+    alert_logging: int

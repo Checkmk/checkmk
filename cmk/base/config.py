@@ -756,6 +756,8 @@ def _perform_post_config_loading_actions(
         cmc_graphite=cmc_graphite,
         alert_handler_event_types=alert_handler_event_types,
         alert_handler_rules=alert_handler_rules,
+        alert_handler_timeout=alert_handler_timeout,
+        alert_logging=alert_logging,
     )
 
     config_cache = ConfigCache(loaded_config, get_builtin_host_labels, edition).initialize(

@@ -3,11 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-any-return"
-# mypy: disable-error-code="possibly-undefined"
-# mypy: disable-error-code="redundant-expr"
-# mypy: disable-error-code="type-arg"
-
 from livestatus import (
     lqencode,
     OnlySites,
@@ -305,6 +300,8 @@ def compute_availability(
             timeline_rows: AVTimelineRows = []
             total_duration = 0
             considered_duration = 0
+            display_name: str = service
+            host_alias: str = site_host[1]
             for span in service_entry:
                 # Information about host/service groups are in the actual entries
                 if grouping in ["host_groups", "service_groups"] and what != "bi":
@@ -315,6 +312,7 @@ def compute_availability(
                 state = span["state"]
                 host_alias = span.get("host_alias", site_host[1])
                 consider = True
+                s: str
 
                 if avoptions["service_period"] != "ignore" and (
                     (span["in_service_period"] and avoptions["service_period"] != "honor")
@@ -501,6 +499,7 @@ def compute_availability_groups(
     all_group_ids = get_av_groups(av_data, avoptions)
 
     # 2. Compute names for the groups and sort according to these names
+    group_titles: dict[str, str] = {}
     if grouping != "host":
         group_titles = dict(all_groups(grouping[:-7]))
 

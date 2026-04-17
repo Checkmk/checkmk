@@ -3,9 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="possibly-undefined"
-# mypy: disable-error-code="type-arg"
-
 import json
 import time
 from collections.abc import Iterator
@@ -115,7 +112,7 @@ def _show_availability_options(
         for name, height, _show_in_reporting, vs in valuespecs:
 
             def renderer(
-                name: str = name, vs: ValueSpec = vs, avoptions: AVOptions = avoptions
+                name: str = name, vs: ValueSpec[object] = vs, avoptions: AVOptions = avoptions
             ) -> None:
                 vs.render_input("avo_" + name, avoptions.get(name))
 
@@ -253,6 +250,9 @@ def show_availability_page(
     _save_availability_options_after_update(avoptions)
 
     # Now compute all data, we need this also for CSV export
+    av_rawdata: AVRawData = {}
+    av_data: AVData = []
+    has_reached_logrow_limit: bool = False
     if not user_errors:
         include_long_output = (
             av_mode == "timeline" and "timeline_long_output" in avoptions["labelling"]

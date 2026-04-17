@@ -8,6 +8,7 @@ import { computed } from 'vue'
 
 import usei18n from '@/lib/i18n'
 
+import CmkDropdown from '@/components/CmkDropdown/CmkDropdown.vue'
 import CmkLabel from '@/components/CmkLabel.vue'
 import CmkInput from '@/components/user-input/CmkInput.vue'
 import CmkLabelRequired from '@/components/user-input/CmkLabelRequired.vue'
@@ -21,15 +22,21 @@ const props = defineProps<{
   showErrors: boolean
   bothEndpointsEmpty: boolean
   portConflict: boolean
-  addressPlaceholder: string
-  portPlaceholder: string
+  defaultPort: number
 }>()
 
 const endpoint = defineModel<EndpointConfig>('endpoint', { required: true })
 
+const socketAddressOptions = computed(() => [
+  { name: 'default_ipv4', title: _t(`Default IPv4 (0.0.0.0:${props.defaultPort})`) },
+  { name: 'default_ipv6', title: _t(`Default IPv6 ([::]:${props.defaultPort})`) },
+  { name: 'custom', title: _t('Custom') }
+])
+
 const errors = computed((): { address: string[]; port: string[] } => {
   if (
     !props.showErrors ||
+    endpoint.value.socketAddressType !== 'custom' ||
     (!endpoint.value.address.trim() &&
       endpoint.value.port === undefined &&
       !props.bothEndpointsEmpty)
@@ -50,19 +57,42 @@ const errors = computed((): { address: string[]; port: string[] } => {
 </script>
 
 <template>
-  <CmkLabel>{{ _t('IP address or host name') }} <CmkLabelRequired /></CmkLabel>
-  <CmkInput
-    v-model="endpoint.address"
-    type="text"
-    field-size="MEDIUM"
-    :placeholder="addressPlaceholder"
-    :external-errors="errors.address"
+  <CmkLabel>{{ _t('Socket address to listen on') }}</CmkLabel>
+  <CmkDropdown
+    v-model:selected-option="endpoint.socketAddressType"
+    :options="{ type: 'fixed', suggestions: socketAddressOptions }"
+    :label="_t('Socket address to listen on')"
   />
-  <CmkLabel>{{ _t('Port') }} <CmkLabelRequired /></CmkLabel>
-  <CmkInput
-    v-model="endpoint.port"
-    type="number"
-    :placeholder="portPlaceholder"
-    :external-errors="errors.port"
-  />
+
+  <template v-if="endpoint.socketAddressType === 'custom'">
+    <span />
+    <div class="mode-otel-collector-endpoint-config__sub-field">
+      <CmkLabel>{{ _t('IP address or host name') }} <CmkLabelRequired /></CmkLabel>
+      <CmkInput
+        v-model="endpoint.address"
+        type="text"
+        field-size="MEDIUM"
+        placeholder="0.0.0.0"
+        :external-errors="errors.address"
+      />
+      <CmkLabel>{{ _t('Port') }} <CmkLabelRequired /></CmkLabel>
+      <CmkInput
+        v-model="endpoint.port"
+        type="number"
+        :placeholder="defaultPort"
+        :external-errors="errors.port"
+      />
+    </div>
+  </template>
 </template>
+
+<style scoped>
+.mode-otel-collector-endpoint-config__sub-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing) var(--dimension-6);
+  margin-left: var(--spacing);
+  border-left: var(--button-form-border-color) 1px solid;
+  padding-left: var(--spacing);
+}
+</style>

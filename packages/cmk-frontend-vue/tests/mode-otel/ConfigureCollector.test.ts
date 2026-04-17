@@ -31,7 +31,9 @@ function renderComponent(
   noAuthAllowed = true,
   endpointConfigAllowed = true,
   encryptionAllowed = true,
-  eventConsoleAllowed = true
+  eventConsoleAllowed = true,
+  grpcDefaultPort = 4317,
+  httpDefaultPort = 4318
 ) {
   const grpcAuth = ref<AuthConfig>({
     method: noAuthAllowed ? 'none' : 'basicauth',
@@ -41,8 +43,16 @@ function renderComponent(
     method: noAuthAllowed ? 'none' : 'basicauth',
     credential: null
   })
-  const grpcEndpoint = ref<EndpointConfig>({ address: '0.0.0.0', port: 4317 })
-  const httpEndpoint = ref<EndpointConfig>({ address: '0.0.0.0', port: 4318 })
+  const grpcEndpoint = ref<EndpointConfig>({
+    socketAddressType: 'custom',
+    address: '0.0.0.0',
+    port: 4317
+  })
+  const httpEndpoint = ref<EndpointConfig>({
+    socketAddressType: 'custom',
+    address: '0.0.0.0',
+    port: 4318
+  })
   const grpcEncryption = ref<boolean>(false)
   const httpEncryption = ref<boolean>(false)
   const grpcEventConsole = ref<EventConsoleConfig | null>(null)
@@ -67,9 +77,11 @@ function renderComponent(
         noAuthAllowed,
         endpointConfigAllowed,
         encryptionAllowed,
-        eventConsoleAllowed
+        eventConsoleAllowed,
+        grpcDefaultPort,
+        httpDefaultPort
       }),
-      template: `<ConfigureCollector ref="compRef" :no-auth-allowed="noAuthAllowed" :endpoint-config-allowed="endpointConfigAllowed" :encryption-allowed="encryptionAllowed" :event-console-allowed="eventConsoleAllowed" v-model:grpc-auth="grpcAuth" v-model:http-auth="httpAuth" v-model:grpc-endpoint="grpcEndpoint" v-model:http-endpoint="httpEndpoint" v-model:grpc-encryption="grpcEncryption" v-model:http-encryption="httpEncryption" v-model:grpc-event-console="grpcEventConsole" v-model:http-event-console="httpEventConsole" v-model:newly-created-passwords="newlyCreatedPasswords" />`
+      template: `<ConfigureCollector ref="compRef" :no-auth-allowed="noAuthAllowed" :endpoint-config-allowed="endpointConfigAllowed" :encryption-allowed="encryptionAllowed" :event-console-allowed="eventConsoleAllowed" :grpc-default-port="grpcDefaultPort" :http-default-port="httpDefaultPort" v-model:grpc-auth="grpcAuth" v-model:http-auth="httpAuth" v-model:grpc-endpoint="grpcEndpoint" v-model:http-endpoint="httpEndpoint" v-model:grpc-encryption="grpcEncryption" v-model:http-encryption="httpEncryption" v-model:grpc-event-console="grpcEventConsole" v-model:http-event-console="httpEventConsole" v-model:newly-created-passwords="newlyCreatedPasswords" />`
     })
   )
 

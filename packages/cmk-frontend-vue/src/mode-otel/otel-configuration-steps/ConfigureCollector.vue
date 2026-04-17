@@ -30,6 +30,8 @@ const props = defineProps<{
   endpointConfigAllowed: boolean
   encryptionAllowed: boolean
   eventConsoleAllowed: boolean
+  grpcDefaultPort: number
+  httpDefaultPort: number
 }>()
 
 const grpcAuth = defineModel<AuthConfig>('grpcAuth', { required: true })
@@ -79,16 +81,17 @@ const bothEndpointsEmpty = computed(
   () => !endpointIsConfigured(grpcEndpoint.value) && !endpointIsConfigured(httpEndpoint.value)
 )
 
+function getEffectivePort(endpoint: EndpointConfig, defaultPort: number): number | undefined {
+  if (endpoint.socketAddressType !== 'custom') {
+    return defaultPort
+  }
+  return isValidPort(endpoint.port) ? endpoint.port : undefined
+}
+
 const portsConflict = computed(() => {
-  const grpcPort = grpcEndpoint.value.port
-  const httpPort = httpEndpoint.value.port
-  return (
-    grpcPort !== undefined &&
-    httpPort !== undefined &&
-    isValidPort(grpcPort) &&
-    isValidPort(httpPort) &&
-    grpcPort === httpPort
-  )
+  const grpcPort = getEffectivePort(grpcEndpoint.value, props.grpcDefaultPort)
+  const httpPort = getEffectivePort(httpEndpoint.value, props.httpDefaultPort)
+  return grpcPort !== undefined && httpPort !== undefined && grpcPort === httpPort
 })
 
 function authHasErrors(auth: AuthConfig): boolean {
@@ -102,14 +105,23 @@ function eventConsoleHasErrors(ec: EventConsoleConfig | null): boolean {
 }
 
 function endpointIsConfigured(endpoint: EndpointConfig): boolean {
+  if (endpoint.socketAddressType !== 'custom') {
+    return true
+  }
   return !!endpoint.address.trim() || endpoint.port !== undefined
 }
 
 function configuredEndpointHasErrors(endpoint: EndpointConfig): boolean {
+  if (endpoint.socketAddressType !== 'custom') {
+    return false
+  }
   return !isValidIpOrHostname(endpoint.address) || !isValidPort(endpoint.port)
 }
 
 function endpointHasValidationErrors(endpoint: EndpointConfig, other: EndpointConfig): boolean {
+  if (endpoint.socketAddressType !== 'custom') {
+    return false
+  }
   if (!endpoint.address.trim()) {
     return endpoint.port !== undefined || !endpointIsConfigured(other)
   }
@@ -220,8 +232,7 @@ defineExpose({ validate, onPasswordCreated })
             :show-errors="displayErrors"
             :both-endpoints-empty="bothEndpointsEmpty"
             :port-conflict="portsConflict"
-            address-placeholder="0.0.0.0"
-            port-placeholder="4317"
+            :default-port="grpcDefaultPort"
           />
           <CollectorAuthConfig
             v-model:auth="grpcAuth"
@@ -252,8 +263,7 @@ defineExpose({ validate, onPasswordCreated })
             :show-errors="displayErrors"
             :both-endpoints-empty="bothEndpointsEmpty"
             :port-conflict="portsConflict"
-            address-placeholder="0.0.0.0"
-            port-placeholder="4318"
+            :default-port="httpDefaultPort"
           />
           <CollectorAuthConfig
             v-model:auth="httpAuth"

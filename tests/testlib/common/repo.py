@@ -64,6 +64,7 @@ def add_python_paths() -> None:
     if is_ultimatemt_repo():
         sys.path.insert(0, os.path.join(repo_path(), "non-free", "packages", "cmk-multi-tenancy"))
     sys.path.insert(0, os.path.join(repo_path(), "omd/packages/omd"))
+    sys.path.insert(0, os.path.join(repo_path(), "agents/plugins"))
 
 
 def add_protocols_path() -> None:

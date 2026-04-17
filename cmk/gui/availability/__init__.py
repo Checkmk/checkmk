@@ -8,9 +8,6 @@
 # mypy: disable-error-code="redundant-expr"
 # mypy: disable-error-code="type-arg"
 
-from livestatus import OnlySites
-
-from cmk.gui.type_defs import FilterHeader, ViewProcessTracking, VisualContext
 from cmk.gui.utils.html import HTML
 from cmk.gui.valuespec import ValueSpec
 from cmk.gui.view_utils import CSSClass
@@ -82,6 +79,7 @@ from .options import (
     render_number_function,
     vs_rangespec,
 )
+from .rawdata import get_availability_rawdata
 from .type_defs import (
     AVAnnotationEntry,
     AVAnnotationKey,
@@ -211,6 +209,7 @@ __all__ = [
     "get_av_display_options",
     "get_av_groups",
     "get_availability_options_from_request",
+    "get_availability_rawdata",
     "get_bi_availability",
     "get_bi_availability_rawdata",
     "get_bi_leaf_history",
@@ -247,37 +246,3 @@ __all__ = [
     "update_annotations",
     "vs_rangespec",
 ]
-
-
-# Dispatcher: routes to bi or host/service rawdata fetch.
-# Lives here (not in computation.py) to avoid a circular import between
-# computation and bi (bi imports spans_by_object from computation).
-def get_availability_rawdata(
-    what: AVObjectType,
-    context: VisualContext,
-    filterheaders: FilterHeader,
-    only_sites: OnlySites,
-    av_object: AVObjectSpec,
-    include_output: bool,
-    include_long_output: bool,
-    avoptions: AVOptions,
-    view_process_tracking: ViewProcessTracking | None = None,
-) -> tuple[AVRawData, bool]:
-    from .bi import get_bi_availability_rawdata
-    from .computation import get_host_service_availability_rawdata
-
-    if what == "bi":
-        return get_bi_availability_rawdata(
-            filterheaders, only_sites, av_object, include_output, avoptions
-        )
-    return get_host_service_availability_rawdata(
-        what,
-        context,
-        filterheaders,
-        only_sites,
-        av_object,
-        include_output,
-        include_long_output,
-        avoptions,
-        view_process_tracking,
-    )

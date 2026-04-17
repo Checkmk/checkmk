@@ -79,8 +79,8 @@ from cmk.gui.watolib.groups_io import all_groups
 from cmk.utils import dateutils
 from cmk.utils.servicename import ServiceName
 
+from .columns import AvailabilityColumns
 from .type_defs import (
-    _ColumnSpec,
     AVAnnotationEntry,
     AVAnnotationKey,
     AVAnnotations,
@@ -132,89 +132,6 @@ from .type_defs import (
     SiteHost,
     SiteHostSvc,
 )
-
-#   .--Declarations--------------------------------------------------------.
-#   |       ____            _                 _   _                        |
-#   |      |  _ \  ___  ___| | __ _ _ __ __ _| |_(_) ___  _ __  ___        |
-#   |      | | | |/ _ \/ __| |/ _` | '__/ _` | __| |/ _ \| '_ \/ __|       |
-#   |      | |_| |  __/ (__| | (_| | | | (_| | |_| | (_) | | | \__ \       |
-#   |      |____/ \___|\___|_|\__,_|_|  \__,_|\__|_|\___/|_| |_|___/       |
-#   |                                                                      |
-#   '----------------------------------------------------------------------'
-
-
-class AvailabilityColumns:
-    def __init__(self) -> None:
-        super().__init__()
-        self.host = self._host_availability_columns()
-        self.service = self._service_availability_columns()
-        self.bi = self._bi_availability_columns()
-
-    # TODO: Nuke this abomination!
-    def __getitem__(self, key: AVObjectType) -> Sequence[_ColumnSpec]:
-        return getattr(self, key)
-
-    def _host_availability_columns(self) -> Sequence[_ColumnSpec]:
-        return [
-            ("up", "state0", _("UP"), None),
-            ("down", "state2", _("DOWN"), None),
-            ("unreach", "state3", _("UNREACH"), None),
-            ("flapping", "flapping", _("Flapping"), None),
-            ("in_downtime", "downtime", _("Downtime"), _("The host was in a scheduled downtime")),
-            ("outof_notification_period", "", _("OO/Notif"), _("Out of Notification Period")),
-            ("outof_service_period", "ooservice", _("OO/Service"), _("Out of service period")),
-            (
-                "unmonitored",
-                "unmonitored",
-                _("N/A"),
-                _("During this time period no monitoring data is available"),
-            ),
-        ]
-
-    def _service_availability_columns(self) -> Sequence[_ColumnSpec]:
-        return [
-            ("ok", "state0", _("OK"), None),
-            ("warn", "state1", _("WARN"), None),
-            ("crit", "state2", _("CRIT"), None),
-            ("unknown", "state3", _("UNKNOWN"), None),
-            ("flapping", "flapping", _("Flapping"), None),
-            ("host_down", "hostdown", _("H.Down"), _("The host was down")),
-            (
-                "in_downtime",
-                "downtime",
-                _("Downtime"),
-                _("The host or service was in a scheduled downtime"),
-            ),
-            ("outof_notification_period", "", _("OO/Notif"), _("Out of Notification Period")),
-            ("outof_service_period", "ooservice", _("OO/Service"), _("Out of service period")),
-            (
-                "unmonitored",
-                "unmonitored",
-                _("N/A"),
-                _("During this time period no monitoring data is available"),
-            ),
-        ]
-
-    def _bi_availability_columns(self) -> Sequence[_ColumnSpec]:
-        return [
-            ("ok", "state0", _("OK"), None),
-            ("warn", "state1", _("WARN"), None),
-            ("crit", "state2", _("CRIT"), None),
-            ("unknown", "state3", _("UNKNOWN"), None),
-            (
-                "in_downtime",
-                "downtime",
-                _("Downtime"),
-                _("The aggregate was in a scheduled downtime"),
-            ),
-            (
-                "unmonitored",
-                "unmonitored",
-                _("N/A"),
-                _("During this time period no monitoring data is available"),
-            ),
-        ]
-
 
 # .
 #   .--Options-------------------------------------------------------------.
@@ -2969,6 +2886,7 @@ __all__ = [
     "AVTimelineStates",
     "AVTimelineStatistics",
     "AVTimelineStyle",
+    "AvailabilityColumns",
     "CSSClass",
     "HTML",
     "HostOrServiceGroupName",

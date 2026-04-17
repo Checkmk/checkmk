@@ -3,11 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-call"
-
-
-import pytest
-
+from cmk.agent_based.v2 import Result, State
 from cmk.legacy_checks.juniper_fru import check_juniper_fru
 from cmk.plugins.juniper.agent_based.juniper_fru_section import parse_juniper_fru
 
@@ -47,23 +43,13 @@ def test_parse_juniper_fru() -> None:
     )
 
 
-@pytest.mark.parametrize(
-    "item, expected_result",
-    [
-        pytest.param(
-            "Power Supply 0",
-            (0, "Operational status: online"),
-            id="online",
-        ),
-        pytest.param(
-            "Power Supply 1",
-            (1, "Operational status: present"),
-            id="present",
-        ),
-    ],
-)
-def test_check_juniper_fru(
-    item: str,
-    expected_result: tuple[int, str],
-) -> None:
-    assert check_juniper_fru(item, None, _SECTION) == expected_result
+def test_check_juniper_fru_online() -> None:
+    assert list(check_juniper_fru("Power Supply 0", _SECTION)) == [
+        Result(state=State.OK, summary="Operational status: online"),
+    ]
+
+
+def test_check_juniper_fru_present() -> None:
+    assert list(check_juniper_fru("Power Supply 1", _SECTION)) == [
+        Result(state=State.WARN, summary="Operational status: present"),
+    ]

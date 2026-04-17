@@ -1947,6 +1947,24 @@ py_library(
 )
 
 py_library(
+    name = "script_helpers",
+    srcs = ["script_helpers.py"],
+    imports = ["../.."],
+    visibility = [
+        "//cmk:__subpackages__",
+        "//tests:__subpackages__",
+    ],
+    deps = [
+        ":http",
+        "//cmk/gui/wsgi",
+        "//cmk/utils",
+        "//packages/cmk-ccc:version",
+        requirement("flask"),
+        requirement("werkzeug"),
+    ],
+)
+
+py_library(
     name = "plugin_registration",
     srcs = ["plugin_registration.py"],
     imports = ["../.."],
@@ -2120,6 +2138,7 @@ py_library(
             "prediction.py",
             "rulespec.py",
             "saml2_login.py",
+            "script_helpers.py",
         ],
     ),
     imports = ["../.."],
@@ -2206,6 +2225,7 @@ py_library(
         ":role_types",
         ":rulespec",
         ":saml2_login",
+        ":script_helpers",
         ":search_menu",
         ":session",
         ":single_global_setting",

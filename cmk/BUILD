@@ -460,6 +460,7 @@ py_wheel(
         "//cmk/gui:role_types",
         "//cmk/gui:rulespec",
         "//cmk/gui:saml2_login",
+        "//cmk/gui:script_helpers",
         "//cmk/gui:search_menu",
         "//cmk/gui:session",
         "//cmk/gui:single_global_setting",

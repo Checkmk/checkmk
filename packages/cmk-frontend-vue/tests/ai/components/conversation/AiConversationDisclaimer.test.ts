@@ -24,6 +24,10 @@ function makeTemplate(
     persistDisclaimerShown: vi.fn(),
     onInfoLoaded: vi.fn(),
     info: null,
+    legal: {
+      disclaimer_title: 'Checkmk AI feature usage notice',
+      disclaimer_body_template: '[{models}] of [{provider}]'
+    },
     ...overrides
   }
 }

@@ -31,6 +31,11 @@ const CONTEXT_DATA = { host: 'myhost', service: 'myservice' } as any
 const SITE_NAME = 'test-site'
 
 const ACTION: AiActionButton = { action_id: 'explain', action_name: 'Explain' }
+const LEGAL = {
+  disclaimer_title: 'AI feature usage notice',
+  disclaimer_body_template: '[{models}] of [{provider}]',
+  footer_text_template: ''
+}
 
 let mockGetInfo: ReturnType<typeof vi.fn>
 let mockGetUserActions: ReturnType<typeof vi.fn>
@@ -70,7 +75,7 @@ function captureStreamCallbacks(): StreamCallbacks {
 }
 
 function makeService(): AiTemplateService {
-  return new AiTemplateService(TEMPLATE_ID, USER_ID, CONTEXT_DATA, SITE_NAME)
+  return new AiTemplateService(TEMPLATE_ID, USER_ID, CONTEXT_DATA, SITE_NAME, LEGAL)
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

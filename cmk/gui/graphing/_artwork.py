@@ -613,16 +613,14 @@ def _compute_graph_v_axis(
         min_y=v_axis_min,
         max_y=v_axis_max,
     )
-    label_positions = [label.position for label in labels]
-    label_range = (
-        min([v_axis_min, *label_positions]),
-        max([v_axis_max, *label_positions]),
-    )
     rendered_labels = [
         AxisTick(position=label.position, text=label.text, line_width=2) for label in labels
     ]
     return YAxis(
-        range=label_range,
+        range=(
+            min(v_axis_min, *(t.position for t in rendered_labels)),
+            max(v_axis_max, *(t.position for t in rendered_labels)),
+        ),
         unit_label=None,
         labels=rendered_labels,
     )

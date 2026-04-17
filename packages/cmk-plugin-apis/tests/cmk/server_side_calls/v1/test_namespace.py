@@ -34,6 +34,7 @@ from cmk.server_side_calls import v1
                 "IPv6Config",
                 "noop_parser",
                 "NoProxy",
+                "repeated_flag",
                 "replace_macros",
                 "Secret",
                 "SpecialAgentCommand",

@@ -291,6 +291,27 @@ class Secret(NamedTuple):
         return self.__class__(id=self.id, pass_safely=False, format=template)
 
 
+def repeated_flag(flag: str, values: Sequence[str]) -> list[str]:
+    """
+    Build safe CLI args by repeating a flag for each value, avoiding nargs injection.
+
+    Use this instead of ``[flag, *values]`` when passing list-typed parameters
+    to active checks or special agents.  The corresponding argparse argument
+    should use ``action="append"`` (not ``nargs``).
+
+    Args:
+        flag: The CLI flag to repeat (e.g. ``"--region"``)
+        values: The values to pass
+
+    Example:
+
+    >>> repeated_flag("--region", ["us-east-1", "eu-west-1"])
+    ['--region', 'us-east-1', '--region', 'eu-west-1']
+
+    """
+    return [x for v in values for x in (flag, v)]
+
+
 def noop_parser(params: Mapping[str, object]) -> Mapping[str, object]:
     # NOTE: please do not add a TypeVar here. The only intended use case is Mapping[str, object],
     # and using a TypeVar in the return type hinders mypy's type inference at the callsites.

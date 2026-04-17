@@ -17363,6 +17363,10 @@ msgstr "Critico all'uso di"
 msgid "Critical at usage of"
 msgstr "Critico all'uso di"
 
+#, fuzzy
+msgid "Critical at/above"
+msgstr "Critico sopra"
+
 msgid "Critical at/below"
 msgstr "Critico a/al di sotto"
 
@@ -24109,6 +24113,10 @@ msgid "Env creation"
 msgstr "Creazione"
 
 #, fuzzy
+msgid "Environment Metrics"
+msgstr "Variabili d'ambiente"
+
+#, fuzzy
 msgid "Environment Sensors"
 msgstr "Variabili d'ambiente"
 
@@ -28111,15 +28119,6 @@ msgstr "Opzioni di rendering dei grafici"
 #, python-format
 msgid "Graph specification '%s' is insufficient for dashboard."
 msgstr "La specifica del grafico '%s' non è sufficiente per la dashboard."
-
-#, fuzzy, python-format
-msgid ""
-"Graph specification '%s' is insufficient for dashboard. Please save your "
-"graph as a custom graph first, then add that one to the dashboard."
-msgstr ""
-"La specifica del grafico '%s' non è sufficiente per il cruscotto. Salvare "
-"prima il grafico come grafico personalizzato e poi aggiungerlo alla "
-"dashboard."
 
 msgid "Graph template"
 msgstr "Modello di grafico"
@@ -34789,19 +34788,6 @@ msgstr ""
 
 #, fuzzy
 msgid ""
-"In order to activate your changes available on all remote sites, your user "
-"profile needs to be replicated to the remote sites. This is done on this "
-"page now. Each site is being represented by a single image which is first "
-"shown gray and then fills to green during synchronization."
-msgstr ""
-"Per attivare le tue modifiche disponibili su tutti i siti remoti, il tuo "
-"profilo utente deve essere replicato nei siti remoti. Questo viene fatto in "
-"questa pagina ora. Ogni sito è rappresentato da una singola immagine che "
-"prima è mostrata in grigio e poi si riempie di verde durante la "
-"sincronizzazione."
-
-#, fuzzy
-msgid ""
 "In order to avoid large timeouts in case of oversized history log files the "
 "core limits the number of lines read from history log files. The limit is on "
 "a per-file-base and can be configured here. Exceeding lines are simply "
@@ -36177,9 +36163,6 @@ msgstr "Formato di data non valido: %s"
 msgid "Invalid date format: %s"
 msgstr "Formato di data non valido: %s"
 
-msgid "Invalid end time given"
-msgstr "Orario di fine non valido dato"
-
 #, python-format
 msgid "Invalid expected callable for %s at idx %d: %r"
 msgstr "Callable non valido previsto per %s a idx %d: %r"
@@ -36393,9 +36376,6 @@ msgstr "Istantanea non valida (file mancante: %s)"
 
 msgid "Invalid snapshot (too small)"
 msgstr "Istantanea non valida (troppo piccola)"
-
-msgid "Invalid start time given"
-msgstr "Ora di inizio non valida indicata"
 
 #, fuzzy
 msgid "Invalid state change for host"
@@ -40222,6 +40202,10 @@ msgstr "Definire livelli inferiori per il numero di contenitori totali"
 
 msgid "Lower thresholds on mail transfer threads"
 msgstr ""
+
+#, fuzzy
+msgid "Lower voltage levels"
+msgstr "Livelli di salute più bassi"
 
 msgid "Lowest: No notification, update badge number"
 msgstr "Più basso: Nessuna notifica, aggiornamento del numero di badge"
@@ -46257,9 +46241,6 @@ msgstr "Notifica rinviata"
 
 msgid "Notification"
 msgstr "Notifica"
-
-msgid "Notification Rules"
-msgstr "Regole di notifica"
 
 msgid "Notification Script"
 msgstr "Script di notifica"
@@ -52661,6 +52642,10 @@ msgid "Power"
 msgstr "Potenza"
 
 #, fuzzy
+msgid "Power Subsystem"
+msgstr "Sistema di nodi"
+
+#, fuzzy
 msgid "Power Supplies"
 msgstr "Alimentatori"
 
@@ -53183,6 +53168,14 @@ msgstr "Profilo"
 #, python-format
 msgid "Profile changed (sync failed: %s)"
 msgstr "Profilo cambiato (sincronizzazione fallita: %s)"
+
+#, fuzzy
+msgid "Profile replication"
+msgstr "Abilita la replica"
+
+#, fuzzy
+msgid "Profile replication completed"
+msgstr "Percentuale di deduplicazione completata"
 
 msgid "Profile requests"
 msgstr "Richieste di profilo"
@@ -55703,9 +55696,6 @@ msgstr "Replicare le estensioni"
 msgid "Replicate extensions (MKPs and files in <tt>~/local/</tt>)"
 msgstr "Replicare le estensioni (MKPs e file in <tt>~/local/</tt>)"
 
-msgid "Replicate user profile"
-msgstr "Replicare il profilo utente"
-
 msgid "Replication"
 msgstr "Replica"
 
@@ -55714,9 +55704,6 @@ msgstr "Lag di replica"
 
 msgid "Replication Partner"
 msgstr "Partner di replica"
-
-msgid "Replication States"
-msgstr "Stati di replica"
 
 msgid ""
 "Replication allows you to manage several monitoring sites with a logically "
@@ -55729,12 +55716,6 @@ msgstr ""
 "configurazione dai siti centrali. Nota: i siti remoti non necessitano di "
 "alcuna configurazione di replica. Saranno controllati a distanza dai siti "
 "centrali."
-
-msgid "Replication completed successfully."
-msgstr "Replica completata con successo."
-
-msgid "Replication in progress"
-msgstr "Replica in corso"
 
 msgid "Replication interval"
 msgstr "Intervallo di replicazione"
@@ -55761,6 +55742,14 @@ msgstr "Utilizzo del disco dello slot di replica"
 
 msgid "Replication synchronization"
 msgstr "Sincronizzazione della replica"
+
+#, fuzzy, python-format
+msgid "Replication to %s failed: %s"
+msgstr "Verifica fallita: %s"
+
+#, fuzzy, python-format
+msgid "Replication to %s successful (%.1fs)"
+msgstr "Replica completata con successo."
 
 #, fuzzy
 msgid "Reply-to: email address"
@@ -67967,6 +67956,7 @@ msgstr ""
 "L'opzione di ripiego cerca di stabilire una connessione TLS crittografata. "
 "Se l'altro sito non lo supporta, viene utilizzato il testo normale."
 
+#. weblate-flags: read-only
 #, python-brace-format
 msgid ""
 "The feature \"Explain with AI\" uses a Large Language Model (LLM) [{models}] "
@@ -68260,9 +68250,6 @@ msgstr "L'impostazione globale \"%s\" non esiste."
 
 msgid "The graph specification is"
 msgstr "La specifica del grafico è"
-
-msgid "The graph specification is missing"
-msgstr "Manca la specifica del grafico"
 
 #, python-format
 msgid "The graph template id '%s' is disabled"
@@ -70406,9 +70393,6 @@ msgstr ""
 "L'id del sito deve essere composto solo da lettere, cifre e il trattino "
 "basso."
 
-msgid "The site is marked as dead. Not trying to replicate."
-msgstr "Il sito è segnato come morto. Non cerca di replicare."
-
 msgid "The site of the status host does not exist."
 msgstr "Il sito dell'host di stato non esiste."
 
@@ -71216,6 +71200,10 @@ msgstr "È disponibile un solo connettore utente attivo"
 #, python-format
 msgid "There job \"%s\" is not encrypted"
 msgstr "Il lavoro \"%s\" non è criptato"
+
+#, fuzzy
+msgid "Thermal Subsystem"
+msgstr "L'ID del sistema SAP."
 
 msgid "Thermal information"
 msgstr "Informazioni termiche"
@@ -72342,6 +72330,7 @@ msgstr ""
 "funzione è intesa per gli outlier, e non è quindi adatta a configurare i "
 "sottogruppi. "
 
+#. weblate-flags: read-only
 #, python-brace-format
 msgid ""
 "This feature uses {models} by {provider}. The generated output can contain "
@@ -82200,6 +82189,18 @@ msgstr "oltre la soglia"
 msgid "Upper thresholds on mail transfer threads"
 msgstr ""
 
+#, fuzzy
+msgid "Upper voltage levels"
+msgstr "Livelli assoluti superiori"
+
+#, fuzzy
+msgid ""
+"Upper voltage levels for devices like UPS or PDUs. Leave unset on "
+"installations where over-voltage is not a concern."
+msgstr ""
+"Livelli di tensione per dispositivi come UPS o PDU. Diverse fasi possono "
+"essere affrontate in modo indipendente."
+
 msgid "Uptime"
 msgstr "Uptime"
 
@@ -85134,9 +85135,6 @@ msgstr "In attesa dell'inizializzazione del nuovo master"
 msgid "Waiting for other switches to come online"
 msgstr "Aspettando che altri interruttori siano online"
 
-msgid "Waiting for replication to start"
-msgstr "In attesa dell'avvio della replica"
-
 msgid "Waiting to acquire lock"
 msgstr ""
 
@@ -85282,6 +85280,10 @@ msgstr "Attenzione all'uso di"
 
 msgid "Warning at usage of"
 msgstr "Attenzione all'uso di"
+
+#, fuzzy
+msgid "Warning at/above"
+msgstr "Avvertimento di cui sopra"
 
 msgid "Warning at/below"
 msgstr "Avvertenza a/al di sotto"
@@ -89755,6 +89757,10 @@ msgstr "Aggiornamenti Zypper"
 
 msgid "Zypper normal and security updates (Linux)"
 msgstr "Zypper normale e aggiornamenti di sicurezza (Linux)"
+
+#, python-format
+msgid "[%d/%d] Replicating to site %s..."
+msgstr ""
 
 #, fuzzy, python-format
 msgid "[%s] - OAuth2 connection"
@@ -96072,6 +96078,55 @@ msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
 
+#, fuzzy, python-format
+#~ msgid ""
+#~ "Graph specification '%s' is insufficient for dashboard. Please save your "
+#~ "graph as a custom graph first, then add that one to the dashboard."
+#~ msgstr ""
+#~ "La specifica del grafico '%s' non è sufficiente per il cruscotto. Salvare "
+#~ "prima il grafico come grafico personalizzato e poi aggiungerlo alla "
+#~ "dashboard."
+
+#, fuzzy
+#~ msgid ""
+#~ "In order to activate your changes available on all remote sites, your "
+#~ "user profile needs to be replicated to the remote sites. This is done on "
+#~ "this page now. Each site is being represented by a single image which is "
+#~ "first shown gray and then fills to green during synchronization."
+#~ msgstr ""
+#~ "Per attivare le tue modifiche disponibili su tutti i siti remoti, il tuo "
+#~ "profilo utente deve essere replicato nei siti remoti. Questo viene fatto "
+#~ "in questa pagina ora. Ogni sito è rappresentato da una singola immagine "
+#~ "che prima è mostrata in grigio e poi si riempie di verde durante la "
+#~ "sincronizzazione."
+
+#~ msgid "Invalid end time given"
+#~ msgstr "Orario di fine non valido dato"
+
+#~ msgid "Invalid start time given"
+#~ msgstr "Ora di inizio non valida indicata"
+
+#~ msgid "Notification Rules"
+#~ msgstr "Regole di notifica"
+
+#~ msgid "Replicate user profile"
+#~ msgstr "Replicare il profilo utente"
+
+#~ msgid "Replication States"
+#~ msgstr "Stati di replica"
+
+#~ msgid "Replication in progress"
+#~ msgstr "Replica in corso"
+
+#~ msgid "The graph specification is missing"
+#~ msgstr "Manca la specifica del grafico"
+
+#~ msgid "The site is marked as dead. Not trying to replicate."
+#~ msgstr "Il sito è segnato come morto. Non cerca di replicare."
+
+#~ msgid "Waiting for replication to start"
+#~ msgstr "In attesa dell'avvio della replica"
+
 #~ msgid "10 seconds"
 #~ msgstr "10 secondi"
 
@@ -102212,9 +102267,6 @@ msgstr ""
 
 #~ msgid "Deduplication efficiency savings"
 #~ msgstr "Risparmi sull'efficienza della deduplicazione"
-
-#~ msgid "Deduplication percent completed"
-#~ msgstr "Percentuale di deduplicazione completata"
 
 #~ msgid "Deduplication remaining size"
 #~ msgstr "Dimensione residua della deduplicazione"

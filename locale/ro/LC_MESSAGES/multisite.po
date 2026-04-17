@@ -17513,6 +17513,10 @@ msgstr "Critic la utilizarea de"
 msgid "Critical at usage of"
 msgstr "Critic la utilizarea de"
 
+#, fuzzy
+msgid "Critical at/above"
+msgstr "Critic de mai sus"
+
 msgid "Critical at/below"
 msgstr "Critic la/sub"
 
@@ -24270,6 +24274,10 @@ msgid "Env creation"
 msgstr "Creație"
 
 #, fuzzy
+msgid "Environment Metrics"
+msgstr "Variabile de mediu"
+
+#, fuzzy
 msgid "Environment Sensors"
 msgstr "Variabile de mediu"
 
@@ -28287,15 +28295,6 @@ msgstr "Opțiuni de redare grafică"
 #, fuzzy, python-format
 msgid "Graph specification '%s' is insufficient for dashboard."
 msgstr "Specificarea graficului '%s' este insuficientă pentru Dashboard."
-
-#, fuzzy, python-format
-msgid ""
-"Graph specification '%s' is insufficient for dashboard. Please save your "
-"graph as a custom graph first, then add that one to the dashboard."
-msgstr ""
-"Specificarea graficului '%s' este insuficientă pentru Dashboard. Vă rugăm să "
-"salvați mai întâi graficul ca grafic personalizat, apoi adăugați-l la "
-"tabloul de bord."
 
 msgid "Graph template"
 msgstr "Șablon grafic"
@@ -35004,19 +35003,6 @@ msgstr ""
 
 #, fuzzy
 msgid ""
-"In order to activate your changes available on all remote sites, your user "
-"profile needs to be replicated to the remote sites. This is done on this "
-"page now. Each site is being represented by a single image which is first "
-"shown gray and then fills to green during synchronization."
-msgstr ""
-"Pentru a activa modificările disponibile pe toate site-urile la distanță, "
-"profilul dvs. de utilizator trebuie să fie replicat pe site-urile la "
-"distanță. Acest lucru se face acum pe această pagină. Fiecare site este "
-"reprezentat de o singură imagine care este afișată mai întâi în gri și apoi "
-"se umple în verde în timpul sincronizării."
-
-#, fuzzy
-msgid ""
 "In order to avoid large timeouts in case of oversized history log files the "
 "core limits the number of lines read from history log files. The limit is on "
 "a per-file-base and can be configured here. Exceeding lines are simply "
@@ -36405,9 +36391,6 @@ msgstr "Format de dată invalid: %s"
 msgid "Invalid date format: %s"
 msgstr "Format de dată invalid: %s"
 
-msgid "Invalid end time given"
-msgstr "Ora de încheiere invalidă dată"
-
 #, python-format
 msgid "Invalid expected callable for %s at idx %d: %r"
 msgstr "Callable așteptat nevalabil pentru %s la idx %d: %r"
@@ -36619,9 +36602,6 @@ msgstr "Instantanee invalidă (fișier lipsă: %s)"
 
 msgid "Invalid snapshot (too small)"
 msgstr "Instantaneu invalid (prea mic)"
-
-msgid "Invalid start time given"
-msgstr "Ora de începere invalidă dată"
 
 #, fuzzy
 msgid "Invalid state change for host"
@@ -40453,6 +40433,10 @@ msgstr "Definirea nivelurilor inferioare pentru numărul total de containere"
 
 msgid "Lower thresholds on mail transfer threads"
 msgstr ""
+
+#, fuzzy
+msgid "Lower voltage levels"
+msgstr "Niveluri de sănătate mai scăzute"
 
 msgid "Lowest: No notification, update badge number"
 msgstr "Cel mai mic: Nici o notificare, actualizarea numărului de legitimație"
@@ -46523,9 +46507,6 @@ msgstr "Notificare amânată"
 
 msgid "Notification"
 msgstr "Notificare"
-
-msgid "Notification Rules"
-msgstr "Reguli de notificare"
 
 msgid "Notification Script"
 msgstr "Script de notificare"
@@ -52944,6 +52925,10 @@ msgid "Power"
 msgstr "Putere"
 
 #, fuzzy
+msgid "Power Subsystem"
+msgstr "Sistem de noduri"
+
+#, fuzzy
 msgid "Power Supplies"
 msgstr "Surse de alimentare"
 
@@ -53469,6 +53454,14 @@ msgstr "Profil"
 #, python-format
 msgid "Profile changed (sync failed: %s)"
 msgstr "Profil schimbat (sincronizare eșuată: %s)"
+
+#, fuzzy
+msgid "Profile replication"
+msgstr "Activați replicarea"
+
+#, fuzzy
+msgid "Profile replication completed"
+msgstr "Procentul de deduplicare finalizat"
 
 msgid "Profile requests"
 msgstr "Cereri de profil"
@@ -55990,9 +55983,6 @@ msgstr "Replicați extensiile"
 msgid "Replicate extensions (MKPs and files in <tt>~/local/</tt>)"
 msgstr "Replicați extensiile (MKP și fișierele din <tt>~/local/</tt>)"
 
-msgid "Replicate user profile"
-msgstr "Replicați profilul utilizatorului"
-
 msgid "Replication"
 msgstr "Replicare"
 
@@ -56001,9 +55991,6 @@ msgstr "Lag de replicare"
 
 msgid "Replication Partner"
 msgstr "Partener de replicare"
-
-msgid "Replication States"
-msgstr "Stări de replicare"
 
 msgid ""
 "Replication allows you to manage several monitoring sites with a logically "
@@ -56016,12 +56003,6 @@ msgstr ""
 "distanță primesc configurația lor de la site-urile centrale. <br><br>Notă: "
 "Site-urile de la distanță nu au nevoie de nicio configurație de replicare. "
 "Acestea vor fi controlate de la distanță de către site-urile centrale."
-
-msgid "Replication completed successfully."
-msgstr "Replicarea s-a încheiat cu succes."
-
-msgid "Replication in progress"
-msgstr "Replicare în curs de desfășurare"
 
 msgid "Replication interval"
 msgstr "Interval de replicare"
@@ -56048,6 +56029,14 @@ msgstr "Utilizarea discului de replicare a slotului de replicare"
 
 msgid "Replication synchronization"
 msgstr "Sincronizarea replicării"
+
+#, fuzzy, python-format
+msgid "Replication to %s failed: %s"
+msgstr "Verificarea a eșuat: %s"
+
+#, fuzzy, python-format
+msgid "Replication to %s successful (%.1fs)"
+msgstr "Replicarea s-a încheiat cu succes."
 
 #, fuzzy
 msgid "Reply-to: email address"
@@ -68322,6 +68311,7 @@ msgstr ""
 "Opțiunea de rezervă încearcă să stabilească o conexiune TLS criptată. În "
 "cazul în care celălalt site nu o acceptă, se utilizează textul simplu."
 
+#. weblate-flags: read-only
 #, python-brace-format
 msgid ""
 "The feature \"Explain with AI\" uses a Large Language Model (LLM) [{models}] "
@@ -68621,9 +68611,6 @@ msgstr "Setarea globală \"%s\" nu există."
 
 msgid "The graph specification is"
 msgstr "Specificația graficului este"
-
-msgid "The graph specification is missing"
-msgstr "Lipsește specificația grafică"
 
 #, python-format
 msgid "The graph template id '%s' is disabled"
@@ -70736,9 +70723,6 @@ msgid "The site id must consist only of letters, digit and the underscore."
 msgstr ""
 "ID-ul site-ului trebuie să fie format numai din litere, cifre și subliniere."
 
-msgid "The site is marked as dead. Not trying to replicate."
-msgstr "Site-ul este marcat ca fiind mort. Nu încerc să reproduc."
-
 msgid "The site of the status host does not exist."
 msgstr "Site-ul gazdei de stare nu există."
 
@@ -71545,6 +71529,10 @@ msgstr "Este disponibil un singur conector de utilizator activ"
 #, python-format
 msgid "There job \"%s\" is not encrypted"
 msgstr "Acolo jobul \"%s\" nu este criptat"
+
+#, fuzzy
+msgid "Thermal Subsystem"
+msgstr "ID-ul sistemului SAP."
 
 msgid "Thermal information"
 msgstr "Informații termice"
@@ -72693,6 +72681,7 @@ msgstr ""
 "Notă: această funcție este destinată valorilor aberante și, prin urmare, nu "
 "este potrivită pentru configurarea subgrupurilor. "
 
+#. weblate-flags: read-only
 #, python-brace-format
 msgid ""
 "This feature uses {models} by {provider}. The generated output can contain "
@@ -82587,6 +82576,18 @@ msgstr "peste treshold"
 msgid "Upper thresholds on mail transfer threads"
 msgstr ""
 
+#, fuzzy
+msgid "Upper voltage levels"
+msgstr "Niveluri superioare absolute"
+
+#, fuzzy
+msgid ""
+"Upper voltage levels for devices like UPS or PDUs. Leave unset on "
+"installations where over-voltage is not a concern."
+msgstr ""
+"Nivelurile de tensiune pentru dispozitive precum UPS sau PDU. Mai multe faze "
+"pot fi abordate în mod independent."
+
 msgid "Uptime"
 msgstr "Timp de funcționare"
 
@@ -85533,9 +85534,6 @@ msgstr "Așteptarea inițializării noului maestru"
 msgid "Waiting for other switches to come online"
 msgstr "Așteptând ca alte comutatoare să fie puse în funcțiune"
 
-msgid "Waiting for replication to start"
-msgstr "Așteptare pentru începerea replicării"
-
 msgid "Waiting to acquire lock"
 msgstr ""
 
@@ -85685,6 +85683,10 @@ msgstr "Avertisment la utilizarea de"
 
 msgid "Warning at usage of"
 msgstr "Avertisment la utilizarea de"
+
+#, fuzzy
+msgid "Warning at/above"
+msgstr "Avertismentul de mai sus"
 
 msgid "Warning at/below"
 msgstr "Avertisment la/sub"
@@ -90145,6 +90147,10 @@ msgstr "Actualizări Zypper"
 
 msgid "Zypper normal and security updates (Linux)"
 msgstr "Zypper normal și actualizări de securitate (Linux)"
+
+#, python-format
+msgid "[%d/%d] Replicating to site %s..."
+msgstr ""
 
 #, fuzzy, python-format
 msgid "[%s] - OAuth2 connection"
@@ -96523,6 +96529,55 @@ msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
 
+#, fuzzy, python-format
+#~ msgid ""
+#~ "Graph specification '%s' is insufficient for dashboard. Please save your "
+#~ "graph as a custom graph first, then add that one to the dashboard."
+#~ msgstr ""
+#~ "Specificarea graficului '%s' este insuficientă pentru Dashboard. Vă rugăm "
+#~ "să salvați mai întâi graficul ca grafic personalizat, apoi adăugați-l la "
+#~ "tabloul de bord."
+
+#, fuzzy
+#~ msgid ""
+#~ "In order to activate your changes available on all remote sites, your "
+#~ "user profile needs to be replicated to the remote sites. This is done on "
+#~ "this page now. Each site is being represented by a single image which is "
+#~ "first shown gray and then fills to green during synchronization."
+#~ msgstr ""
+#~ "Pentru a activa modificările disponibile pe toate site-urile la distanță, "
+#~ "profilul dvs. de utilizator trebuie să fie replicat pe site-urile la "
+#~ "distanță. Acest lucru se face acum pe această pagină. Fiecare site este "
+#~ "reprezentat de o singură imagine care este afișată mai întâi în gri și "
+#~ "apoi se umple în verde în timpul sincronizării."
+
+#~ msgid "Invalid end time given"
+#~ msgstr "Ora de încheiere invalidă dată"
+
+#~ msgid "Invalid start time given"
+#~ msgstr "Ora de începere invalidă dată"
+
+#~ msgid "Notification Rules"
+#~ msgstr "Reguli de notificare"
+
+#~ msgid "Replicate user profile"
+#~ msgstr "Replicați profilul utilizatorului"
+
+#~ msgid "Replication States"
+#~ msgstr "Stări de replicare"
+
+#~ msgid "Replication in progress"
+#~ msgstr "Replicare în curs de desfășurare"
+
+#~ msgid "The graph specification is missing"
+#~ msgstr "Lipsește specificația grafică"
+
+#~ msgid "The site is marked as dead. Not trying to replicate."
+#~ msgstr "Site-ul este marcat ca fiind mort. Nu încerc să reproduc."
+
+#~ msgid "Waiting for replication to start"
+#~ msgstr "Așteptare pentru începerea replicării"
+
 #~ msgid "10 seconds"
 #~ msgstr "10 secunde"
 
@@ -102846,9 +102901,6 @@ msgstr ""
 
 #~ msgid "Deduplication efficiency savings"
 #~ msgstr "Economii de eficiență a deduplicării"
-
-#~ msgid "Deduplication percent completed"
-#~ msgstr "Procentul de deduplicare finalizat"
 
 #~ msgid "Deduplication remaining size"
 #~ msgstr "Dimensiunea rămasă a deduplicării"

@@ -3,11 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-any-return"
-# mypy: disable-error-code="possibly-undefined"
-# mypy: disable-error-code="redundant-expr"
-# mypy: disable-error-code="type-arg"
-
 import time
 from collections.abc import Callable
 
@@ -587,10 +582,12 @@ def prepare_avo_timeformats(timeformat: AVTimeformatSpec) -> AVTimeFormats:
             this_timeformat = [(timeformat[1], render_number_function(timeformat[1]))]
         elif timeformat[0] == "time":
             this_timeformat = [(timeformat[2], render_number_function(timeformat[2]))]
-    elif isinstance(timeformat, str) and (
-        timeformat.startswith("percentage_")
-        or timeformat in ["seconds", "minutes", "hours", "hhmmss"]
-    ):
+    elif timeformat.startswith("percentage_") or timeformat in [
+        "seconds",
+        "minutes",
+        "hours",
+        "hhmmss",
+    ]:
         # Old style
         this_timeformat = [(timeformat, render_number_function(timeformat))]
     return this_timeformat

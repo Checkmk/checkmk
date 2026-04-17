@@ -9,8 +9,6 @@
 import tempfile
 from pathlib import Path
 
-import pytest
-
 from tests.testlib.common.utils import wait_until
 from tests.testlib.common.utils2 import run
 from tests.testlib.site import Site, SiteFactory
@@ -600,7 +598,6 @@ def test_run_omd_status_auto_with_autostart_disabled(site: Site) -> None:
         site.omd("start")
 
 
-@pytest.mark.xfail(reason="omd diff shows entries on a fresh site. CMK-26713")
 def test_run_omd_diff_empty_on_fresh_site() -> None:
     """Test 'omd diff' shows no entries on a fresh site."""
     package = CMKPackageInfo(version_from_env(), edition_from_env())

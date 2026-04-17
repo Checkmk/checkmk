@@ -11,7 +11,7 @@ from typing import Any
 import pytest
 
 from cmk.agent_based.v2 import Metric, Result, Service, State, StringTable
-from cmk.legacy_checks.jira_workflow import (
+from cmk.plugins.jira.agent_based.jira_workflow import (
     check_jira_workflow,
     discover_jira_workflow,
     parse_jira_workflow,

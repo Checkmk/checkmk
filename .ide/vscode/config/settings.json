@@ -22,7 +22,7 @@
       "python.testing.autoTestDiscoverOnSaveEnabled": true,
       "python.terminal.activateEnvInCurrentTerminal": true,
       "python.testing.unittestEnabled": false,
-      "python.testing.pytestArgs": ["tests/unit"],
+      "python.testing.pytestArgs": ["--import-mode=importlib", "tests/unit"],
       "python.analysis.indexing": true,
       "python.analysis.autoImportCompletions": true,
       "python.analysis.diagnosticMode": "openFilesOnly",

@@ -63,7 +63,7 @@ from cmk.gui.utils.loading_transition import LoadingTransition
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.roles import UserPermissions, UserPermissionSerializableConfig
 from cmk.gui.utils.urls import file_name_and_query_vars_from_url
-from cmk.gui.watolib.mode_permissions import mode_permissions_ensurance_registry
+from cmk.gui.watolib.mode import mode_registry
 from cmk.gui.watolib.rulesets import may_edit_ruleset
 from cmk.shared_typing.unified_search import ProviderName, UnifiedSearchResultItem
 from cmk.utils import paths
@@ -323,7 +323,7 @@ class PermissionsHandler:
 
         try:
             if mode:
-                mode_permissions_ensurance_registry[mode]().ensure_permissions()
+                mode_registry[mode]().ensure_permissions()
             else:
                 self._check_if_handling_page_triggers_exception(file_name)
             return True

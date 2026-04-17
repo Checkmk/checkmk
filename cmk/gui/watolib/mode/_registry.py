@@ -6,7 +6,6 @@
 # mypy: disable-error-code="type-arg"
 
 from cmk.ccc.plugin_registry import Registry
-from cmk.gui.watolib.mode_permissions import mode_permissions_ensurance_registry
 
 from ._base import WatoMode
 
@@ -14,11 +13,6 @@ from ._base import WatoMode
 class ModeRegistry(Registry[type[WatoMode]]):
     def plugin_name(self, instance: type[WatoMode]) -> str:
         return instance.name()
-
-    def register(self, instance: type[WatoMode]) -> type[WatoMode]:
-        super().register(instance)
-        mode_permissions_ensurance_registry.register(instance)
-        return instance
 
 
 mode_registry = ModeRegistry()

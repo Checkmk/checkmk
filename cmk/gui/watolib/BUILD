@@ -61,7 +61,6 @@ py_library(
         "mode/_base.py",
         "mode/_helpers.py",
         "mode/_registry.py",
-        "mode_permissions.py",
     ],
     imports = ["../../.."],
     visibility = [
@@ -214,7 +213,6 @@ py_library(
             "mode/_base.py",
             "mode/_helpers.py",
             "mode/_registry.py",
-            "mode_permissions.py",
             # Already in other leaf targets
             "config_domain_core.py",
             "groups_io.py",

@@ -4,18 +4,23 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
+from collections.abc import Callable
 from typing import Any
 
-from cmk.agent_based.v2 import StringTable
+import pytest
+
+from cmk.agent_based.v2 import Metric, Result, StringTable
 from cmk.plugins.redfish.agent_based.redfish_sensors import (
+    _check_sensor_levels,
     discovery_redfish_sensors,
 )
 from cmk.plugins.redfish.lib import (
     _threshold_value,
+    detect_vendor,
     parse_redfish_multiple,
+    Perfdata,
     process_redfish_perfdata,
 )
-from cmk.plugins.redfish.special_agents.agent_redfish import detect_vendor
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -145,7 +150,7 @@ class TestProcessRedfishPerfdata:
 
 
 # ---------------------------------------------------------------------------
-# detect_vendor — NVIDIA
+# detect_vendor
 # ---------------------------------------------------------------------------
 
 
@@ -160,6 +165,11 @@ class TestDetectVendor:
         root_data: dict[str, Any] = {"Oem": {"Dell": {}}}
         vendor = detect_vendor(root_data)
         assert vendor.name == "Dell"
+
+    def test_generic_fallback(self) -> None:
+        root_data: dict[str, Any] = {"Oem": {}, "Vendor": "SomeNewVendor"}
+        vendor = detect_vendor(root_data)
+        assert vendor.name == "Generic"
 
 
 # ---------------------------------------------------------------------------
@@ -209,3 +219,47 @@ class TestThresholdValue:
 
     def test_neither_present(self) -> None:
         assert _threshold_value({}, "UpperThresholdCritical", {}, "UpperCritical") is None
+
+
+# ---------------------------------------------------------------------------
+# _check_sensor_levels — new ReadingType metrics
+# ---------------------------------------------------------------------------
+
+
+class TestCheckSensorLevels:
+    @pytest.mark.parametrize(
+        "metric_name, label, render_func, value, expected_summary_contains",
+        [
+            ("fan", "Speed", lambda v: f"{v:.0f} rpm", 3720.0, "3720 rpm"),
+            ("voltage", "Voltage", lambda v: f"{v:.1f} V", 12.1, "12.1 V"),
+            ("current", "Current", lambda v: f"{v:.1f} A", 2.5, "2.5 A"),
+            ("power", "Power", lambda v: f"{v:.1f} W", 174.0, "174.0 W"),
+            ("frequency", "Frequency", lambda v: f"{v:.1f} Hz", 50.0, "50.0 Hz"),
+        ],
+    )
+    def test_produces_metric_and_result(
+        self,
+        metric_name: str,
+        label: str,
+        render_func: Callable[[float], str],
+        value: float,
+        expected_summary_contains: str,
+    ) -> None:
+        perfdata = Perfdata(
+            value=value,
+            levels_upper=None,
+            levels_lower=None,
+            boundaries=(None, None),
+        )
+        results = list(
+            _check_sensor_levels(
+                perfdata, metric_name=metric_name, label=label, render_func=render_func
+            )
+        )
+        result_items = [r for r in results if isinstance(r, Result)]
+        metric_items = [r for r in results if isinstance(r, Metric)]
+        assert len(result_items) >= 1
+        assert len(metric_items) >= 1
+        assert metric_items[0].name == metric_name
+        assert metric_items[0].value == value
+        assert expected_summary_contains in result_items[0].summary

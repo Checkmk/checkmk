@@ -27,7 +27,7 @@ from redfish.rest.v1 import (  # type: ignore[import-untyped]
 
 from cmk.utils import password_store, paths
 
-from cmk.plugins.redfish.lib import REDFISH_SECTIONS
+from cmk.plugins.redfish.lib import detect_vendor, REDFISH_SECTIONS, Vendor
 from cmk.special_agents.v0_unstable.agent_common import (
     CannotRecover,
     SectionManager,
@@ -68,16 +68,6 @@ class CachedSectionWriter(SectionManager):
             f"<<<{section_name}{f':sep({ord(separator)})' if separator else ''}"
             f"{f':cached({cachetime},{validity})' if cachetime else ''}>>>"
         )
-
-
-@dataclass
-class Vendor:
-    """Vendor data object"""
-
-    name: str
-    version: str | None = None
-    firmware_version: str | None = None
-    expand_string: str | None = None
 
 
 class ClientSession:
@@ -449,64 +439,6 @@ def process_result(redfishobj: RedfishData) -> None:
                     w.append_json(result.get(element))
 
 
-def detect_vendor(root_data: Mapping[str, Any]) -> Vendor:
-    """Extract Vendor information from base data"""
-    vendor_string = ""
-    if root_data.get("Oem"):
-        if len(root_data["Oem"]) > 0:
-            vendor_string = list(root_data["Oem"])[0]
-    if vendor_string == "" and root_data.get("Vendor") is not None:
-        vendor_string = root_data["Vendor"]
-
-    match vendor_string:
-        case "Hpe" | "Hp":
-            vendor_data = Vendor(name="HPE", expand_string="?$expand=.")
-            if vendor_string in ["Hp"]:
-                vendor_data.expand_string = ""
-            manager_data = root_data.get("Oem", {}).get(vendor_string, {}).get("Manager", [])
-            if manager_data:
-                manager_data = manager_data[0]
-            if isinstance(manager_data, dict):
-                vendor_data.version = manager_data.get("ManagerType")
-                if vendor_data.version is None:
-                    vendor_data.version = (
-                        root_data.get("Oem", {})
-                        .get(vendor_string, {})
-                        .get("Moniker", {})
-                        .get("PRODGEN")
-                    )
-                vendor_data.firmware_version = manager_data.get("ManagerFirmwareVersion")
-                if vendor_data.firmware_version is None:
-                    vendor_data.firmware_version = manager_data.get("Languages", {})[0].get(
-                        "Version"
-                    )
-            return vendor_data
-
-        case "Lenovo":
-            return Vendor(name="Lenovo", version="xClarity", expand_string="?$expand=*")
-
-        case "Dell":
-            return Vendor(name="Dell", version="iDRAC", expand_string="?$expand=*($levels=1)")
-
-        case "Huawei":
-            return Vendor(name="Huawei", version="BMC", expand_string="?$expand=.%28$levels=1%29")
-
-        case "ts_fujitsu":
-            return Vendor(name="Fujitsu", version="iRMC", expand_string="?$expand=Members")
-
-        case "Cisco" | "Cisco Systems Inc.":
-            return Vendor(name="Cisco", version="CIMC")
-
-        case "Ami" | "Supermicro" | "Seagate" as name:
-            return Vendor(name=name)
-
-        case "NVIDIA":
-            return Vendor(name="NVIDIA", expand_string="?$expand=*($levels=1)")
-
-    # TODO: why not use the vendor string here?
-    return Vendor(name="Generic")
-
-
 def get_information(redfishobj: RedfishData) -> Literal[0]:  # pylint: disable=too-many-branches
     """get a the information from the Redfish management interface"""
     load_section_data(redfishobj)
@@ -703,6 +635,23 @@ def get_information(redfishobj: RedfishData) -> Literal[0]:  # pylint: disable=t
     resulting_sections = list(set(chassis_sections).intersection(redfishobj.sections))
     for chassis in chassis_data:
         fetch_sections(redfishobj, resulting_sections, redfishobj.sections, chassis)
+
+    # Traverse PowerSubsystem → PowerSupplies (similar to Storage → Drives)
+    for ps_entry in redfishobj.section_data.get("PowerSubsystem", []):
+        if ps_entry.get("error"):
+            continue
+        ps_supplies = ps_entry.get("PowerSupplies", {})
+        if not isinstance(ps_supplies, dict) or "@odata.id" not in ps_supplies:
+            continue
+        supplies_data = fetch_data(
+            redfishobj.redfish_connection, ps_supplies["@odata.id"], "PowerSupplies"
+        )
+        if "Collection" not in supplies_data.get("@odata.type", ""):
+            continue
+        members = fetch_collection(redfishobj.redfish_connection, supplies_data, "PowerSupplies")
+        if members:
+            redfishobj.section_data.setdefault("PowerSupplies", []).extend(members)
+
     process_result(redfishobj)
     store_section_data(redfishobj)
     return 0

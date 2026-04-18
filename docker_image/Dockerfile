@@ -50,6 +50,8 @@ RUN set -e \
     && echo "exit 101" > /usr/sbin/policy-rc.d \
     && chmod +x /usr/sbin/policy-rc.d \
     && export DEBIAN_FRONTEND=noninteractive \
+    && cp /etc/apt/sources.list /etc/apt/sources.list.bak \
+    && sed -i "s|http://.*.ubuntu.com/ubuntu|http://apt.lan.checkmk.net/ubuntu|g" /etc/apt/sources.list \
     && apt-get update \
     && apt-get upgrade -y \
     && apt-get install -y --no-install-recommends \
@@ -68,7 +70,8 @@ RUN set -e \
     && apt-get clean \
     && rm /usr/sbin/policy-rc.d \
     && rm -rf /var/lib/apt/lists/* \
-    && rm needed-packages
+    && rm needed-packages \
+    && mv /etc/apt/sources.list.bak /etc/apt/sources.list
 
 # Pure build time variable declarations (docker build --build-arg KEY=val)
 ARG CMK_VERSION="2.5.0b5"

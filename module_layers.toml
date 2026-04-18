@@ -143,7 +143,6 @@ allows = ["@ccc", "cmk.dcd", "cmk.gui.config", "cmk.post_rename_site.internal"]
 allows = [
   "@ccc",
   "cmk.gui.config",
-  "cmk.gui.nonfree.ultimate.otel_collector",
   "cmk.gui.watolib.changes",
   "cmk.otel_collector.gui",
   "cmk.post_rename_site.internal",

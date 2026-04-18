@@ -476,6 +476,7 @@ py_wheel(
         "//cmk/gui/background_job/process",
         "//cmk/gui/background_job/wato",
         "//cmk/gui/backup",
+        "//cmk/gui/bi",
         "//cmk/gui/bi:_compiler",
         "//cmk/gui/bi:bi_manager",
         "//cmk/gui/bi:foldable_tree_renderer",

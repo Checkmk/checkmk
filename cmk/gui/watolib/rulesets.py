@@ -1098,7 +1098,12 @@ class Ruleset:
     def move_rule_to(self, rule: Rule, *, index: int, use_git: bool) -> int:
         rules = self._rules[rule.folder.path()]
         old_index = rules.index(rule)
-        index = self.get_index_for_move(rule.folder, rule, index)
+
+        if index == Ruleset.BOTTOM:
+            index = len(rules) - 1
+        else:
+            index = self.get_index_for_move(rule.folder, rule, index)
+
         if old_index == index:
             return index
 

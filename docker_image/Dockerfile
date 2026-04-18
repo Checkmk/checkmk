@@ -35,10 +35,6 @@ COPY docker-entrypoint.sh /
 # Starts the entrypoint script and hands over CMD by default
 ENTRYPOINT ["/docker-entrypoint.sh"]
 
-# Use internal apt mirror
-# hadolint ignore=DL3059
-RUN sed -i "s|http://.*.ubuntu.com/ubuntu|http://apt.lan.checkmk.net/ubuntu|g" /etc/apt/sources.list.d/ubuntu.sources
-
 # Make the list of required packages available to the following command
 COPY needed-packages /needed-packages
 

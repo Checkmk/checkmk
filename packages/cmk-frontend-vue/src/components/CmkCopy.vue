@@ -73,6 +73,7 @@ const handlePointerDownOutside = () => {
         side="top"
         align="center"
         as-child
+        :avoid-collisions="true"
         @pointer-down-outside="handlePointerDownOutside"
       >
         <div class="cmk-copy__tooltip-content" :class="{ 'cmk-copy__error': !!errorMessage }">

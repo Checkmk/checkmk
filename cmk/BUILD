@@ -499,6 +499,7 @@ py_wheel(
         "//cmk/gui/ldap_integration",
         "//cmk/gui/livestatus_utils/commands",
         "//cmk/gui/mkeventd",
+        "//cmk/gui/nodevis",
         "//cmk/gui/nodevis:topology",
         "//cmk/gui/nodevis:utils",
         "//cmk/gui/oauth2_connections",

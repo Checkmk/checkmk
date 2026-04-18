@@ -16841,6 +16841,10 @@ msgid "Critical at usage of"
 msgstr "Critique à l'utilisation de"
 
 #, fuzzy
+msgid "Critical at/above"
+msgstr "Critique ci-dessus"
+
+#, fuzzy
 msgid "Critical at/below"
 msgstr "Critique ci-dessous"
 
@@ -23776,6 +23780,10 @@ msgstr "Entrées"
 
 msgid "Entry"
 msgstr "Entrée"
+
+#, fuzzy
+msgid "Environment Metrics"
+msgstr "Variables d'environnement"
 
 #, fuzzy
 msgid "Environment Sensors"
@@ -39884,6 +39892,10 @@ msgstr ""
 msgid "Lower limit of expected interfaces"
 msgstr "Liste des fichiers journaux attendus"
 
+#, fuzzy
+msgid "Lower voltage levels"
+msgstr "Des niveaux de santé plus bas"
+
 msgid "Lowest: No notification, update badge number"
 msgstr "Plus bas : Pas de notification, mise à jour du numéro de badge"
 
@@ -52092,6 +52104,10 @@ msgstr "Puissance"
 
 msgid "Power Presence Sensors"
 msgstr "Capteurs de présence d'énergie"
+
+#, fuzzy
+msgid "Power Subsystem"
+msgstr "État du nœud"
 
 #, fuzzy
 msgid "Power Supplies"
@@ -70650,6 +70666,10 @@ msgstr "Il n'y a qu'un seul connecteur d'utilisateur actif disponible"
 msgid "There job \"%s\" is not encrypted"
 msgstr "Le travail \"%s\" n'est pas crypté"
 
+#, fuzzy
+msgid "Thermal Subsystem"
+msgstr "L'ID du système SAP."
+
 msgid "Thermal information"
 msgstr "Informations thermiques"
 
@@ -81455,6 +81475,18 @@ msgid "Upper percentual levels for the logs usage size"
 msgstr ""
 "Niveaux supérieurs de pourcentage pour la taille d'utilisation des journaux"
 
+#, fuzzy
+msgid "Upper voltage levels"
+msgstr "Niveaux absolus supérieurs"
+
+#, fuzzy
+msgid ""
+"Upper voltage levels for devices like UPS or PDUs. Leave unset on "
+"installations where over-voltage is not a concern."
+msgstr ""
+"Niveaux de tension pour les dispositifs tels que les UPS ou les PDUs. "
+"Plusieurs phases peuvent être traitées indépendamment."
+
 msgid "Uptime"
 msgstr "Temps de fonctionnement"
 
@@ -84618,6 +84650,10 @@ msgstr "Avertissement à ou sous"
 
 msgid "Warning at usage of"
 msgstr "Avertissement lors de l'utilisation de"
+
+#, fuzzy
+msgid "Warning at/above"
+msgstr "Avertissement ci-dessus"
 
 #, fuzzy
 msgid "Warning at/below"

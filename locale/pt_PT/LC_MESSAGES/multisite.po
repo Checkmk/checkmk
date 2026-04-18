@@ -4,9 +4,9 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
+"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2026-04-16 07:27+0000\n"
+"PO-Revision-Date: 2026-04-18 16:42+0000\n"
 "Language-Team: Portuguese (Portugal) <https://translate.checkmk.com/projects/"
 "checkmk/stable/pt_PT/>\n"
 "Language: pt_PT\n"
@@ -16697,6 +16697,10 @@ msgstr "Crítico no estrato"
 msgid "Critical at usage of"
 msgstr "Crítico no uso de"
 
+#, fuzzy
+msgid "Critical at/above"
+msgstr "Crítico acima"
+
 msgid "Critical at/below"
 msgstr "Crítico em/abaixo de"
 
@@ -23570,6 +23574,10 @@ msgstr "Entradas por linha"
 
 msgid "Entry"
 msgstr "Entrada"
+
+#, fuzzy
+msgid "Environment Metrics"
+msgstr "Variáveis de ambiente"
 
 #, fuzzy
 msgid "Environment Sensors"
@@ -39537,6 +39545,10 @@ msgstr ""
 msgid "Lower limit of expected interfaces"
 msgstr "Lista de ficheiros de registo esperados"
 
+#, fuzzy
+msgid "Lower voltage levels"
+msgstr "Níveis de saúde mais baixos"
+
 msgid "Lowest: No notification, update badge number"
 msgstr "O mais baixo: Sem notificação, atualizar número do crachá"
 
@@ -51619,6 +51631,10 @@ msgstr "Energia"
 
 msgid "Power Presence Sensors"
 msgstr "Sensores de presença de energia"
+
+#, fuzzy
+msgid "Power Subsystem"
+msgstr "Estado do nó"
 
 #, fuzzy
 msgid "Power Supplies"
@@ -69973,6 +69989,10 @@ msgstr "Só existe um conector de utilizador activo disponível"
 msgid "There job \"%s\" is not encrypted"
 msgstr "Há trabalho \"%s\" não é criptografado"
 
+#, fuzzy
+msgid "Thermal Subsystem"
+msgstr "O ID do sistema SAP."
+
 msgid "Thermal information"
 msgstr "Informação térmica"
 
@@ -80651,6 +80671,18 @@ msgid "Upper percentual levels for the logs usage size"
 msgstr ""
 "Níveis percentuais superiores para o tamanho de utilização dos registos"
 
+#, fuzzy
+msgid "Upper voltage levels"
+msgstr "Níveis absolutos superiores"
+
+#, fuzzy
+msgid ""
+"Upper voltage levels for devices like UPS or PDUs. Leave unset on "
+"installations where over-voltage is not a concern."
+msgstr ""
+"Níveis de tensão para dispositivos como UPS ou PDUs. Várias fases podem ser "
+"tratadas de forma independente."
+
 msgid "Uptime"
 msgstr "Horário de funcionamento"
 
@@ -83755,6 +83787,10 @@ msgstr "Alerta em ou abaixo"
 
 msgid "Warning at usage of"
 msgstr "Advertência no uso de"
+
+#, fuzzy
+msgid "Warning at/above"
+msgstr "Advertência acima"
 
 msgid "Warning at/below"
 msgstr "Aviso em/abaixo de"
@@ -88577,6 +88613,7 @@ msgstr "contando"
 msgid "cp437"
 msgstr "cp437"
 
+#, fuzzy
 msgid "crash report"
 msgid_plural "crash reports"
 msgstr[0] ""
@@ -89086,6 +89123,7 @@ msgstr "Os anfitriões estão a postos mas têm os serviços em estado de alerta
 msgid "hosts in total"
 msgstr "anfitriões no total"
 
+#, fuzzy
 msgid "hour"
 msgid_plural "hours"
 msgstr[0] ""

@@ -16810,6 +16810,10 @@ msgid "Critical at usage of"
 msgstr "Crítica al uso de"
 
 #, fuzzy
+msgid "Critical at/above"
+msgstr "Crítico arriba"
+
+#, fuzzy
 msgid "Critical at/below"
 msgstr "Crítico abajo"
 
@@ -23751,6 +23755,10 @@ msgstr "Entradas"
 
 msgid "Entry"
 msgstr "Entrada"
+
+#, fuzzy
+msgid "Environment Metrics"
+msgstr "Variables de entorno"
 
 #, fuzzy
 msgid "Environment Sensors"
@@ -39845,6 +39853,10 @@ msgstr ""
 msgid "Lower limit of expected interfaces"
 msgstr "Lista de archivos de registro esperados"
 
+#, fuzzy
+msgid "Lower voltage levels"
+msgstr "Niveles de salud más bajos"
+
 msgid "Lowest: No notification, update badge number"
 msgstr "Lo más bajo: No se notifica, se actualiza el número de placa"
 
@@ -52051,6 +52063,10 @@ msgstr "Potencia"
 
 msgid "Power Presence Sensors"
 msgstr "Sensores de presencia de energía"
+
+#, fuzzy
+msgid "Power Subsystem"
+msgstr "Estado del nodo"
 
 #, fuzzy
 msgid "Power Supplies"
@@ -70585,6 +70601,10 @@ msgstr "Sólo hay un conector de usuario activo disponible"
 msgid "There job \"%s\" is not encrypted"
 msgstr "El trabajo \"%s\" no está encriptado"
 
+#, fuzzy
+msgid "Thermal Subsystem"
+msgstr "El ID del sistema SAP."
+
 msgid "Thermal information"
 msgstr "Información térmica"
 
@@ -81359,6 +81379,18 @@ msgstr ""
 msgid "Upper percentual levels for the logs usage size"
 msgstr "Niveles porcentuales superiores para el tamaño de uso de los registros"
 
+#, fuzzy
+msgid "Upper voltage levels"
+msgstr "Niveles absolutos superiores"
+
+#, fuzzy
+msgid ""
+"Upper voltage levels for devices like UPS or PDUs. Leave unset on "
+"installations where over-voltage is not a concern."
+msgstr ""
+"Niveles de tensión para dispositivos como SAIs o PDUs. Pueden abordarse "
+"varias fases de forma independiente."
+
 msgid "Uptime"
 msgstr "Tiempo de funcionamiento"
 
@@ -84504,6 +84536,10 @@ msgstr "Advertencia en o por debajo de"
 
 msgid "Warning at usage of"
 msgstr "Advertencia sobre el uso de"
+
+#, fuzzy
+msgid "Warning at/above"
+msgstr "Advertencia anterior"
 
 #, fuzzy
 msgid "Warning at/below"

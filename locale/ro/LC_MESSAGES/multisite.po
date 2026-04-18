@@ -16721,6 +16721,10 @@ msgstr "Critic la nivelul stratului"
 msgid "Critical at usage of"
 msgstr "Critic la utilizarea de"
 
+#, fuzzy
+msgid "Critical at/above"
+msgstr "Critic de mai sus"
+
 msgid "Critical at/below"
 msgstr "Critic la/sub"
 
@@ -23623,6 +23627,10 @@ msgstr "Intrări pe rând"
 
 msgid "Entry"
 msgstr "Intrare"
+
+#, fuzzy
+msgid "Environment Metrics"
+msgstr "Variabile de mediu"
 
 #, fuzzy
 msgid "Environment Sensors"
@@ -39621,6 +39629,10 @@ msgstr ""
 msgid "Lower limit of expected interfaces"
 msgstr "Lista fișierelor de jurnal așteptate"
 
+#, fuzzy
+msgid "Lower voltage levels"
+msgstr "Niveluri de sănătate mai scăzute"
+
 msgid "Lowest: No notification, update badge number"
 msgstr "Cel mai mic: Nici o notificare, actualizarea numărului de legitimație"
 
@@ -51726,6 +51738,10 @@ msgstr "Putere"
 
 msgid "Power Presence Sensors"
 msgstr "Senzori de prezență de putere"
+
+#, fuzzy
+msgid "Power Subsystem"
+msgstr "Sistem de noduri"
 
 #, fuzzy
 msgid "Power Supplies"
@@ -70208,6 +70224,10 @@ msgstr "Este disponibil un singur conector de utilizator activ"
 msgid "There job \"%s\" is not encrypted"
 msgstr "Acolo jobul \"%s\" nu este criptat"
 
+#, fuzzy
+msgid "Thermal Subsystem"
+msgstr "ID-ul sistemului SAP."
+
 msgid "Thermal information"
 msgstr "Informații termice"
 
@@ -80893,6 +80913,18 @@ msgid "Upper percentual levels for the logs usage size"
 msgstr ""
 "Niveluri procentuale superioare pentru dimensiunea de utilizare a jurnalelor"
 
+#, fuzzy
+msgid "Upper voltage levels"
+msgstr "Niveluri superioare absolute"
+
+#, fuzzy
+msgid ""
+"Upper voltage levels for devices like UPS or PDUs. Leave unset on "
+"installations where over-voltage is not a concern."
+msgstr ""
+"Nivelurile de tensiune pentru dispozitive precum UPS sau PDU. Mai multe faze "
+"pot fi abordate în mod independent."
+
 msgid "Uptime"
 msgstr "Timp de funcționare"
 
@@ -84018,6 +84050,10 @@ msgstr "Avertisment la sau sub"
 
 msgid "Warning at usage of"
 msgstr "Avertisment la utilizarea de"
+
+#, fuzzy
+msgid "Warning at/above"
+msgstr "Avertismentul de mai sus"
 
 msgid "Warning at/below"
 msgstr "Avertisment la/sub"

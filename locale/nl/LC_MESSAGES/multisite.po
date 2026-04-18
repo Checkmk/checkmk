@@ -16702,6 +16702,10 @@ msgid "Critical at usage of"
 msgstr "Kritisch op het gebruik van"
 
 #, fuzzy
+msgid "Critical at/above"
+msgstr "Kritisch boven"
+
+#, fuzzy
 msgid "Critical at/below"
 msgstr "Kritisch onder"
 
@@ -23574,6 +23578,10 @@ msgstr "Inzendingen"
 
 msgid "Entry"
 msgstr "Ingang"
+
+#, fuzzy
+msgid "Environment Metrics"
+msgstr "Omgevingsvariabelen"
 
 #, fuzzy
 msgid "Environment Sensors"
@@ -39555,6 +39563,10 @@ msgstr ""
 msgid "Lower limit of expected interfaces"
 msgstr "Lijst van verwachte logfiles"
 
+#, fuzzy
+msgid "Lower voltage levels"
+msgstr "Lagere gezondheidsniveaus"
+
 msgid "Lowest: No notification, update badge number"
 msgstr "Laagste: Geen kennisgeving, update badge nummer"
 
@@ -51654,6 +51666,10 @@ msgstr "Vermogen"
 
 msgid "Power Presence Sensors"
 msgstr "Stroom Aanwezigheid Sensoren"
+
+#, fuzzy
+msgid "Power Subsystem"
+msgstr "Toestand knooppunt"
 
 #, fuzzy
 msgid "Power Supplies"
@@ -70025,6 +70041,10 @@ msgstr "Er is slechts één actieve gebruikersconnector beschikbaar"
 msgid "There job \"%s\" is not encrypted"
 msgstr "Er job \"%s\" is niet gecodeerd"
 
+#, fuzzy
+msgid "Thermal Subsystem"
+msgstr "De SAP-systeem-ID."
+
 msgid "Thermal information"
 msgstr "Thermische informatie"
 
@@ -80712,6 +80732,18 @@ msgstr "Bovenste percentuele niveaus voor de DB-ruimtedimensie"
 msgid "Upper percentual levels for the logs usage size"
 msgstr "Maximale percentuele niveaus voor de omvang van het loggebruik"
 
+#, fuzzy
+msgid "Upper voltage levels"
+msgstr "Absolute bovengrenzen"
+
+#, fuzzy
+msgid ""
+"Upper voltage levels for devices like UPS or PDUs. Leave unset on "
+"installations where over-voltage is not a concern."
+msgstr ""
+"Spanningsniveaus voor apparaten zoals UPS of PDUs. Verschillende fasen "
+"kunnen onafhankelijk worden aangesproken."
+
 msgid "Uptime"
 msgstr "Uptime"
 
@@ -83830,6 +83862,10 @@ msgstr "Waarschuwing op of onder"
 
 msgid "Warning at usage of"
 msgstr "Waarschuwing bij gebruik van"
+
+#, fuzzy
+msgid "Warning at/above"
+msgstr "Waarschuwing boven"
 
 #, fuzzy
 msgid "Warning at/below"

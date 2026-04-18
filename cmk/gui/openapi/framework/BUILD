@@ -22,9 +22,7 @@ py_library(
         "//tests:__subpackages__",
     ],
     deps = [
-        "//cmk/gui:http",
         "//cmk/gui/openapi:_type_adapter",
-        "//cmk/gui/openapi:utils",
         "//cmk/gui/openapi/restful_objects:type_defs",
         "//cmk/gui/utils:dataclasses",
         "//packages/cmk-ccc:version",

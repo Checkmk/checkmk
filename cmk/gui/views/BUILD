@@ -247,7 +247,6 @@ py_library(
         "//cmk/gui/painter:v1",
         "//cmk/gui/utils:escaping",
         "//cmk/gui/utils:html",
-        "//cmk/utils",
         "//packages/cmk-ccc:exceptions",
     ],
 )

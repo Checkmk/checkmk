@@ -9,8 +9,6 @@ py_library(
         "//tests:__subpackages__",
     ],
     deps = [
-        "//cmk/gui/openapi/framework",
         "//cmk/gui/openapi/restful_objects",
-        "//cmk/gui/watolib",
     ],
 )

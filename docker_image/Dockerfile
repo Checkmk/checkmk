@@ -30,10 +30,6 @@ ARG DISTRO_CODENAME="jammy"
 # Used e.g. for omd update
 ENV CMK_CONTAINERIZED="TRUE"
 
-# Use internal apt mirror
-# hadolint ignore=DL3059
-RUN sed -i "s|http://.*.ubuntu.com/ubuntu|http://apt.lan.checkmk.net/ubuntu|g" /etc/apt/sources.list.d/ubuntu.sources
-
 # Make the list of required packages available to the following command
 COPY needed-packages /needed-packages
 

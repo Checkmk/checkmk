@@ -32,7 +32,6 @@ py_library(
         "//cmk/gui/fields:base",
         "//cmk/gui/openapi:_type_adapter",
         "//cmk/gui/openapi/framework:core",
-        "//cmk/gui/openapi/restful_objects:type_defs",
         requirement("apispec"),
         requirement("marshmallow"),
         requirement("marshmallow-oneofschema"),

@@ -45,6 +45,8 @@ RUN set -e \
     && echo "exit 101" > /usr/sbin/policy-rc.d \
     && chmod +x /usr/sbin/policy-rc.d \
     && export DEBIAN_FRONTEND=noninteractive \
+    && cp /etc/apt/sources.list /etc/apt/sources.list.bak \
+    && sed -i "s|http://.*.ubuntu.com/ubuntu|http://apt.lan.checkmk.net/ubuntu|g" /etc/apt/sources.list \
     && apt-get update \
     && apt-get upgrade -y \
     && apt-get install -y --no-install-recommends \
@@ -63,7 +65,8 @@ RUN set -e \
     && apt-get clean \
     && rm /usr/sbin/policy-rc.d \
     && rm -rf /var/lib/apt/lists/* \
-    && rm needed-packages
+    && rm needed-packages \
+    && mv /etc/apt/sources.list.bak /etc/apt/sources.list
 
 # Optionally copy an existing Checkmk debian package to the container. In case the file is
 # available that is later used by the build procedure the file will not be downloaded.

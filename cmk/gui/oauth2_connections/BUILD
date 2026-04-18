@@ -48,8 +48,6 @@ py_library(
         "//cmk/gui:user_sites",
         "//cmk/gui/form_specs",
         "//cmk/gui/htmllib:html",
-        "//cmk/gui/utils:csrf_token",
-        "//cmk/gui/utils:flashed_messages",
         "//cmk/gui/utils:html",
         "//cmk/gui/utils:transaction_manager",
         "//cmk/gui/utils:urls",

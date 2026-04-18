@@ -46,7 +46,6 @@ py_library(
         "//cmk/gui/pagetypes",
         "//cmk/gui/plugins/sidebar",
         "//cmk/gui/sidebar/_snapin",
-        "//cmk/gui/sidebar/_snapin:snapin_registry",
         "//cmk/gui/userdb",
         "//cmk/gui/utils:csrf_token",
         "//cmk/gui/utils:html",

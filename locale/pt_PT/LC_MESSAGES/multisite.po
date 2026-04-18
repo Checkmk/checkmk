@@ -4,9 +4,9 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
+"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2026-04-16 07:27+0000\n"
+"PO-Revision-Date: 2026-04-18 16:42+0000\n"
 "Language-Team: Portuguese (Portugal) <https://translate.checkmk.com/projects/"
 "checkmk/dev/pt_PT/>\n"
 "Language: pt_PT\n"
@@ -5567,12 +5567,6 @@ msgstr "Alarmes"
 msgid "Alert"
 msgstr "Alerta"
 
-msgid "Alert after being at or above the threshold for"
-msgstr ""
-
-msgid "Alert after being at or below the threshold for"
-msgstr ""
-
 msgid "Alert handler"
 msgstr "Manipulador de alertas"
 
@@ -6379,9 +6373,6 @@ msgstr "Duração permitida desde a última NTPMessage"
 #, fuzzy
 msgid "Allowed duration since last synchronization"
 msgstr "Duração permitida desde a última sincronização"
-
-msgid "Allowed is 1 ... 9"
-msgstr "Permitido é 1 ... 9"
 
 #, fuzzy, python-format
 msgid "Allowed lengths range from %s to %s."
@@ -9047,38 +9038,6 @@ msgstr "Gateway de Aplicação do Azure"
 msgid "Azure Blob Storage"
 msgstr "Armazenamento de Blobs do Azure"
 
-#, fuzzy
-msgid "Azure Cosmos DB Availability"
-msgstr "Disponibilidade do BI"
-
-#, fuzzy
-msgid "Azure Cosmos DB Database Container Requests"
-msgstr "Pedidos de Web ACL"
-
-#, fuzzy
-msgid "Azure Cosmos DB Database Container Throughput"
-msgstr "Pedidos de Web ACL"
-
-#, fuzzy
-msgid "Azure Cosmos DB Database Requests"
-msgstr "Pedidos de Web ACL"
-
-#, fuzzy
-msgid "Azure Cosmos DB Database Throughput"
-msgstr "Pedidos de Web ACL"
-
-#, fuzzy
-msgid "Azure Cosmos DB Requests"
-msgstr "Pedidos de Web ACL"
-
-#, fuzzy
-msgid "Azure Cosmos DB Storage"
-msgstr "Armazenamento de BD do Azure"
-
-#, fuzzy
-msgid "Azure Cosmos DB Throughput"
-msgstr "Pedidos de Web ACL"
-
 msgid "Azure DB Storage"
 msgstr "Armazenamento de BD do Azure"
 
@@ -9127,56 +9086,8 @@ msgid "Azure Load Balancer health (deprecated)"
 msgstr "Integridade do balanceador de carga do Azure"
 
 #, fuzzy
-msgid "Azure NAT Gateways Connections"
-msgstr "Ligações à base de dados"
-
-#, fuzzy
-msgid "Azure NAT Gateways Packets"
-msgstr "Ligações à base de dados"
-
-#, fuzzy
-msgid "Azure NAT Gateways Throughput"
-msgstr "Unidade de rendimento da base de dados"
-
-#, fuzzy
-msgid "Azure NAT Gateways datapath availability"
-msgstr "Ver a disponibilidade"
-
-#, fuzzy
 msgid "Azure Network IO"
 msgstr "IO de rede"
-
-#, fuzzy
-msgid "Azure Redis CPU utilization"
-msgstr "Utilização da CPU do GCP/Redis"
-
-#, fuzzy
-msgid "Azure Redis Cache effectiveness"
-msgstr "Ligações à base de dados"
-
-#, fuzzy
-msgid "Azure Redis Connections"
-msgstr "Ligações à base de dados"
-
-#, fuzzy
-msgid "Azure Redis Latency"
-msgstr "Latência média do disco"
-
-#, fuzzy
-msgid "Azure Redis Memory"
-msgstr "Memória livre absoluta"
-
-#, fuzzy
-msgid "Azure Redis Replication"
-msgstr "Ligações à base de dados"
-
-#, fuzzy
-msgid "Azure Redis Server load"
-msgstr "Nome do servidor Redis"
-
-#, fuzzy
-msgid "Azure Redis Throughput"
-msgstr "Ler o rendimento"
 
 #, fuzzy
 msgid "Azure SQL database CPU usage"
@@ -9318,10 +9229,6 @@ msgid "Azure overview"
 msgstr "Visão geral dos alertas"
 
 #, fuzzy
-msgid "Azure recovery services vault backup"
-msgstr "Cofre de serviços de recuperação"
-
-#, fuzzy
 msgid "Azure resource group"
 msgstr "Adicionar grupo de recursos"
 
@@ -9382,10 +9289,6 @@ msgstr "Servidores web Azure (IIS)"
 #, fuzzy
 msgid "Azure web servers (IIS) (deprecated)"
 msgstr "Servidores web Azure (IIS)"
-
-#, fuzzy
-msgid "Azure/Cosmos DB Database Container"
-msgstr "Pedidos de Web ACL"
 
 msgid "B"
 msgstr "B"
@@ -11539,10 +11442,6 @@ msgstr "CPU utilizada"
 msgid "CPU utilization"
 msgstr "utilização da CPU"
 
-#, fuzzy
-msgid "CPU utilization %"
-msgstr "utilização da CPU"
-
 msgid "CPU utilization & Kernel performance"
 msgstr "Utilização da CPU e desempenho do Kernel"
 
@@ -11786,10 +11685,6 @@ msgstr "Cache %s"
 msgid "Cache hits for pass"
 msgstr "acessos para o passe"
 
-#, fuzzy
-msgid "Cache internode latency"
-msgstr "Criar a Latência da Conferência"
-
 msgid "Cache interval"
 msgstr "Intervalo de cache"
 
@@ -11805,24 +11700,12 @@ msgid "Cache per resource"
 msgstr "Recursos para programadores"
 
 #, fuzzy
-msgid "Cache read throughput (/sec)"
-msgstr "Ler o rendimento"
-
-#, fuzzy
-msgid "Cache requests"
-msgstr "Pedidos falhados"
-
-#, fuzzy
 msgid "Cache size"
 msgstr "Tamanho da Cache"
 
 #, fuzzy
 msgid "Cache this section"
 msgstr "desactivar esta secção"
-
-#, fuzzy
-msgid "Cache write throughput (/sec)"
-msgstr "Escreva o rendimento"
 
 msgid "Cached"
 msgstr "Cached"
@@ -15031,10 +14914,6 @@ msgstr "Calcule o intervalo de acordo com os dados exibidos"
 msgid "Computing differences"
 msgstr "Diferenças informáticas"
 
-#, fuzzy
-msgid "Concurrent connections"
-msgstr "Ligações actuais"
-
 msgid "Concurrent executions"
 msgstr "Execuções simultâneas"
 
@@ -15804,10 +15683,6 @@ msgstr "Ligue"
 msgid "Connected Relay configurations"
 msgstr "Configuração RRA"
 
-#, fuzzy
-msgid "Connected clients"
-msgstr "Número de clientes conectados"
-
 msgid "Connecter and connectee sites must be different."
 msgstr ""
 
@@ -15916,18 +15791,6 @@ msgstr "Tipo de ligação"
 msgid "Connections"
 msgstr "Ligações"
 
-#, fuzzy
-msgid "Connections (Azure, Redis)"
-msgstr "Ligações abertas"
-
-#, fuzzy
-msgid "Connections closed rate"
-msgstr "A conexão caiu tarde"
-
-#, fuzzy
-msgid "Connections created rate"
-msgstr "A conexão caiu tarde"
-
 msgid "Connections dropped"
 msgstr "Ligações soltas"
 
@@ -15950,10 +15813,6 @@ msgid "Connections per second"
 msgstr "Conexões por segundo"
 
 msgid "Connectivity"
-msgstr "Conectividade"
-
-#, fuzzy
-msgid "Connectivity lag"
 msgstr "Conectividade"
 
 msgid "Connector outlets"
@@ -16432,124 +16291,6 @@ msgstr "Arquivos corrompidos no Spool"
 
 msgid "Cosmic"
 msgstr "Cósmico"
-
-#, fuzzy
-msgid "Cosmos DB container failed requests (404)"
-msgstr "Pedidos falhados"
-
-#, fuzzy
-msgid "Cosmos DB container normalized RU consumption"
-msgstr "Consumo de IO do armazenamento"
-
-#, fuzzy
-msgid "Cosmos DB container requests"
-msgstr "Pedidos de Web ACL"
-
-#, fuzzy
-msgid "Cosmos DB container throttled requests (429)"
-msgstr "Pedidos estrangulados"
-
-#, fuzzy
-msgid "Cosmos DB container throttled requests ratio"
-msgstr "Pedidos estrangulados"
-
-#, fuzzy
-msgid "Cosmos DB container throughput"
-msgstr "Pedidos de Web ACL"
-
-msgid "Cosmos DB container total RUs"
-msgstr ""
-
-#, fuzzy
-msgid "Cosmos DB container total requests"
-msgstr "Pedidos de Web ACL"
-
-#, fuzzy
-msgid "Cosmos DB data usage"
-msgstr "Utilização de dados"
-
-#, fuzzy
-msgid "Cosmos DB database failed requests (404)"
-msgstr "Pedidos de Web ACL"
-
-#, fuzzy
-msgid "Cosmos DB database normalized RU consumption"
-msgstr "Consumo de IO do armazenamento"
-
-#, fuzzy
-msgid "Cosmos DB database requests"
-msgstr "Pedidos de Web ACL"
-
-#, fuzzy
-msgid "Cosmos DB database throttled requests (429)"
-msgstr "Pedidos estrangulados"
-
-#, fuzzy
-msgid "Cosmos DB database throttled requests ratio"
-msgstr "Pedidos estrangulados"
-
-#, fuzzy
-msgid "Cosmos DB database throughput"
-msgstr "Pedidos de Web ACL"
-
-#, fuzzy
-msgid "Cosmos DB database total RUs"
-msgstr "Pedidos de Web ACL"
-
-#, fuzzy
-msgid "Cosmos DB database total requests"
-msgstr "Pedidos de Web ACL"
-
-#, fuzzy
-msgid "Cosmos DB documents"
-msgstr "Pedidos de Web ACL"
-
-#, fuzzy
-msgid "Cosmos DB failed requests (404)"
-msgstr "Pedidos falhados"
-
-#, fuzzy
-msgid "Cosmos DB index overhead"
-msgstr "Índices a pesquisar"
-
-#, fuzzy
-msgid "Cosmos DB index usage"
-msgstr "Custos e utilização (CE)"
-
-#, fuzzy
-msgid "Cosmos DB normalized RU consumption"
-msgstr "Consumo de IO do armazenamento"
-
-#, fuzzy
-msgid "Cosmos DB service availability"
-msgstr "Disponibilidade do Serviço"
-
-#, fuzzy
-msgid "Cosmos DB storage"
-msgstr "Armazenamento de BD do Azure"
-
-#, fuzzy
-msgid "Cosmos DB throttled requests (429)"
-msgstr "Pedidos estrangulados"
-
-#, fuzzy
-msgid "Cosmos DB throttled requests ratio"
-msgstr "Pedidos estrangulados"
-
-#, fuzzy
-msgid "Cosmos DB total RUs"
-msgstr "Armazenamento de BD do Azure"
-
-#, fuzzy
-msgid "Cosmos DB total requests"
-msgstr "Pedidos de Web ACL"
-
-#, fuzzy
-msgid "Cosmos DB total storage"
-msgstr "Armazenamento de BD do Azure"
-
-msgid "CosmosDb"
-msgstr ""
 
 #, fuzzy
 msgid "Cost per month"
@@ -18703,10 +18444,6 @@ msgstr "Tamanho dos arquivos de dados"
 msgid "Dataguard statistics"
 msgstr "Estatísticas do Dataguard"
 
-#, fuzzy
-msgid "Datapath availability %"
-msgstr "Disponibilidade do percurso de dados níveis inferiores"
-
 msgid "Datastores"
 msgstr "Datastores"
 
@@ -19879,10 +19616,6 @@ msgid "Deploy Podman plug-in"
 msgstr "Implementar o plugin Mailman"
 
 #, fuzzy
-msgid "Deploy SUSEConnect plug-in"
-msgstr "Implantar o plugin SUSEConnect"
-
-#, fuzzy
 msgid "Deploy StorCLI plug-in"
 msgstr "Implantar plugin StorCLI"
 
@@ -19921,10 +19654,6 @@ msgstr ""
 
 msgid "Deploy custom files with agent"
 msgstr "Implantar arquivos personalizados com o agente"
-
-#, fuzzy
-msgid "Deploy iptables plug-in"
-msgstr "Implantar o plugin iptables"
 
 msgid "Deploy mk_mongodb.py with authentication."
 msgstr "Implementar mk_mongodb.py sem autenticação."
@@ -20021,10 +19750,6 @@ msgid "Deploy the SAP HANA plug-in"
 msgstr "Implantar o plug-in SAP HANA"
 
 #, fuzzy
-msgid "Deploy the SAP R/3 plug-in"
-msgstr "Implantar o plug-in SAP R/3"
-
-#, fuzzy
 msgid "Deploy the SAP router plug-in"
 msgstr "Implantar o plug-in de roteador SAP"
 
@@ -20068,10 +19793,6 @@ msgstr ""
 #, fuzzy
 msgid "Deploy the agent plug-in <tt>mk_sshd_config</tt>."
 msgstr "Implementar o plugin de agente <tt>mk_sshd_config</tt>."
-
-#, fuzzy
-msgid "Deploy the agent plug-in <tt>mk_suseconnect</tt>."
-msgstr "Implantar o plugin de agente <tt>mk_suseconnect</tt>."
 
 #, fuzzy
 msgid ""
@@ -21577,10 +21298,6 @@ msgid "Do not deploy Oracle plug-in"
 msgstr "Não implante o plugin iptables"
 
 #, fuzzy
-msgid "Do not deploy SUSEConnect plug-in"
-msgstr "Não implante o plugin SUSEConnect"
-
-#, fuzzy
 msgid "Do not deploy Windows License plug-in"
 msgstr "Não implante o plugin Windows License"
 
@@ -21599,10 +21316,6 @@ msgstr "Não implante o plugin Windows Updates"
 #, fuzzy
 msgid "Do not deploy automatic agent update plug-in"
 msgstr "Não implantar plug-in de atualização automática de agente"
-
-#, fuzzy
-msgid "Do not deploy iptables plug-in"
-msgstr "Não implante o plugin iptables"
 
 #, fuzzy
 msgid "Do not deploy mk_mongodb.py plug-in"
@@ -22348,10 +22061,6 @@ msgstr ""
 "Eliminar parte do domínio (<tt>host123.foobar.de</tt> → <tt>host123</tt>)"
 
 msgid "Dropped messages"
-msgstr "Mensagens deixadas cair"
-
-#, fuzzy
-msgid "Dropped packets"
 msgstr "Mensagens deixadas cair"
 
 msgid "Dropped work requests"
@@ -24723,10 +24432,6 @@ msgstr ""
 msgid "Every week on..."
 msgstr "Todas as semanas em..."
 
-#, fuzzy
-msgid "Evicted keys"
-msgstr "Número de chaves despejadas"
-
 msgid "Evictions"
 msgstr "Despejos"
 
@@ -25188,10 +24893,6 @@ msgstr "Expira"
 msgid "Expired %s"
 msgstr "Expira"
 
-#, fuzzy
-msgid "Expired keys"
-msgstr "Objetos expirados"
-
 msgid "Expired objects"
 msgstr "Objetos expirados"
 
@@ -25204,6 +24905,10 @@ msgstr "Expira"
 
 #, fuzzy
 msgid "Explain with AI"
+msgstr "Continuar a pesquisa"
+
+#, fuzzy
+msgid "Explain with AI manifest"
 msgstr "Continuar a pesquisa"
 
 msgid "Explanation for event action"
@@ -25625,10 +25330,6 @@ msgstr "Chamadas falhadas causadas por interação inesperada de proxy"
 
 msgid "Failed certificate validations"
 msgstr "Falha nas validações de certificados"
-
-#, fuzzy
-msgid "Failed concurrent connections"
-msgstr "Conexões falhadas"
 
 msgid "Failed connections"
 msgstr "Conexões falhadas"
@@ -28005,10 +27706,6 @@ msgstr "Editar conexão"
 #, fuzzy
 msgid "Gerrit instance to query."
 msgstr "Jenkins exemplo a consultar."
-
-#, fuzzy
-msgid "Get commands"
-msgstr "nenhum comando"
 
 msgid "Get file from SFTP server"
 msgstr "Obter ficheiro a partir do servidor SFTP"
@@ -31932,6 +31629,14 @@ msgstr ""
 
 #, fuzzy
 msgid ""
+"Hosts configured via this rule get the <tt>mk_suseconnect</tt> plug-in "
+"deployed."
+msgstr ""
+"Os hosts configurados através desta regra obtêm o plug-in "
+"<tt>mk_filehandler</tt> implementado."
+
+#, fuzzy
+msgid ""
 "Hosts configured via this rule get the <tt>smart_posix</tt> or <tt>smart</"
 "tt> plug-in deployed. Assuming you have installed <tt>smartmontools</tt>, "
 "your local hard disks will be monitored for temperature and errors. The "
@@ -35238,14 +34943,6 @@ msgstr "eventos por segundo"
 msgid "Inbound messages"
 msgstr "Mensagens de entrada"
 
-#, fuzzy
-msgid "Inbound throughput lower levels (/sec)"
-msgstr "5 Volts de saída Níveis inferiores"
-
-#, fuzzy
-msgid "Inbound throughput upper levels (/sec)"
-msgstr "12 Volts de saída Níveis superiores"
-
 msgid "Include WAFs in front of CloudFront resources in the monitoring."
 msgstr "Incluir WAFs à frente dos recursos do CloudFront na monitorização."
 
@@ -35447,10 +35144,6 @@ msgstr "Falha no índice nos níveis superiores do intervalo de tempo definido"
 
 msgid "Index hitratio"
 msgstr "Índice de acertos"
-
-#, fuzzy
-msgid "Index overhead"
-msgstr "Índices a pesquisar"
 
 msgid "Index percentage bloat levels"
 msgstr "Níveis de inchaço percentual do índice"
@@ -36718,7 +36411,8 @@ msgstr "Ipmisensors"
 msgid "Ipmitool"
 msgstr "Ipmitool"
 
-msgid "Iptables filter configuration"
+#, fuzzy
+msgid "Iptables filter configuration (Linux)"
 msgstr "Configuração do filtro Iptables"
 
 msgid "Is CA"
@@ -37705,8 +37399,9 @@ msgstr "Etiquetas"
 msgid ""
 "Labels allow you to flexibly group your hosts in order to refer to them "
 "later at other places in Checkmk, e.g. in rule chains.<br><b>Label format:</"
-"b> key:value<br><br>Neither the key nor the value can contain ‘:’. Checkmk "
-"does not perform any other validation on the labels you use."
+"b> key:value<br><br>The key cannot contain ‘:’. The value may contain ‘:’ "
+"(for example <tt>net:ip:v4</tt>). Checkmk does not perform any other "
+"validation on the labels you use."
 msgstr ""
 "As etiquetas permitem-lhe agrupar de forma flexível os seus anfitriões de "
 "modo a referi-los mais tarde noutros locais do Checkmk, por exemplo, em "
@@ -37721,9 +37416,10 @@ msgstr ""
 "As etiquetas devem ter o formato \"[KEY]:[VALUE]\". Por exemplo, "
 "\"os:windows\"."
 
+#, fuzzy
 msgid ""
 "Labels need to be in the format <tt>[KEY]:[VALUE]</tt>. For example <tt>cmk/"
-"os_family:linux</tt>."
+"os_family:linux</tt> or <tt>net:ip:v4</tt>."
 msgstr ""
 "Os rótulos precisam estar no formato <tt>[KEY]:[VALUE]</tt>. Por exemplo, "
 "<tt>cmk/os_family:linux</tt>."
@@ -38753,11 +38449,6 @@ msgstr "Níveis de capacidade usada em bytes"
 
 msgid "Levels on write capacity"
 msgstr "Níveis de capacidade de escrita"
-
-#, fuzzy
-msgid "Levels over an extended period of time"
-msgstr ""
-"Níveis durante um período de tempo alargado sobre o atraso de replicação"
 
 msgid "Levels over an extended time period on a single core CPU utilization"
 msgstr ""
@@ -41817,10 +41508,6 @@ msgstr "% máxima de conexões"
 msgid "Maximum connections per second"
 msgstr "Máximo de conexões por segundo"
 
-#, fuzzy
-msgid "Maximum connectivity lag"
-msgstr "Conectividade do site"
-
 msgid "Maximum count"
 msgstr "Contagem máxima"
 
@@ -42268,10 +41955,6 @@ msgid "Memory"
 msgstr "Memória"
 
 #, fuzzy
-msgid "Memory (Azure, Redis)"
-msgstr "Recursos de memória"
-
-#, fuzzy
 msgid "Memory (Kube)"
 msgstr "Memória utilizada"
 
@@ -42460,10 +42143,6 @@ msgstr "Utilização da memória (95º percentil)"
 
 msgid "Memory utilization (99th percentile)"
 msgstr "Utilização da memória (percentil 99)"
-
-#, fuzzy
-msgid "Memory utilization (Azure, Redis)"
-msgstr "Utilização da memória"
 
 #, fuzzy
 msgid "Memory utilization (percentiles)"
@@ -44031,82 +43710,6 @@ msgstr "NAS DB path"
 #, fuzzy
 msgid "NAS DB username"
 msgstr "Nome de usuário do NAS DB"
-
-#, fuzzy
-msgid "NAT Gateway inbound data"
-msgstr "Dados cartografados"
-
-#, fuzzy
-msgid "NAT Gateway outbound data"
-msgstr "Regra de saída"
-
-#, fuzzy
-msgid "NAT Gateway total data"
-msgstr "Gateway vNet"
-
-#, fuzzy
-msgid "NAT Gateways"
-msgstr "Gateway vNet"
-
-#, fuzzy
-msgid "NAT gateway attempted concurrent connections"
-msgstr "Número de ligações actuais"
-
-#, fuzzy
-msgid "NAT gateway concurrent SNAT connections"
-msgstr "Ligações actuais"
-
-#, fuzzy
-msgid "NAT gateway datapath availability"
-msgstr "Ver a disponibilidade"
-
-#, fuzzy
-msgid "NAT gateway datapath availability (average)"
-msgstr "Disponibilidade do percurso de dados níveis inferiores"
-
-#, fuzzy
-msgid "NAT gateway dropped packets"
-msgstr "Taxa máxima de pacotes descartados"
-
-#, fuzzy
-msgid "NAT gateway failed concurrent connections"
-msgstr "Conexões falhadas"
-
-#, fuzzy
-msgid "NAT gateway inbound packets"
-msgstr "Ligações à base de dados"
-
-#, fuzzy
-msgid "NAT gateway outbound packets"
-msgstr "Pacotes de saída"
-
-#, fuzzy
-msgid "NAT gateway packets (in/out)"
-msgstr "Chamar uma regra"
-
-#, fuzzy
-msgid "NAT gateway throughput"
-msgstr "Unidade de rendimento da base de dados"
-
-#, fuzzy
-msgid "NAT gateway total SNAT connections"
-msgstr "ligação normal"
-
-#, fuzzy
-msgid "NAT gateway total active connections"
-msgstr "ligação normal"
-
-#, fuzzy
-msgid "NAT gateway total concurrent connections"
-msgstr "Ligações actuais"
-
-#, fuzzy
-msgid "NAT gateway total data transmitted"
-msgstr "Sem dados de nenhum site"
-
-#, fuzzy
-msgid "NAT gateway total packets"
-msgstr "Ligações à base de dados"
 
 msgid "NFS"
 msgstr "NFS"
@@ -46002,14 +45605,6 @@ msgstr "Intervalo de verificação normal/entrada"
 
 msgid "Normal: Regular push notification (default)"
 msgstr "Normal: Notificação push regular (padrão)"
-
-#, fuzzy
-msgid "Normalized RU consumption lower levels"
-msgstr "Consumo de IO do armazenamento"
-
-#, fuzzy
-msgid "Normalized RU consumption upper levels"
-msgstr "Consumo de IO do armazenamento"
 
 msgid ""
 "Normally a user can login to the GUI from unlimited number of clients at the "
@@ -49785,10 +49380,6 @@ msgstr "Regra de saída"
 msgid "Outbound rules"
 msgstr "Regras de saída"
 
-#, fuzzy
-msgid "Outbound throughput upper levels (/sec)"
-msgstr "eventos por segundo"
-
 msgid "Outcome & Action"
 msgstr "Resultados & Ação"
 
@@ -50479,14 +50070,6 @@ msgstr "Velocidade do pacote asic"
 
 msgid "Packets"
 msgstr "Pacotes"
-
-#, fuzzy
-msgid "Packets (dropped)"
-msgstr "Pacotes abandonados"
-
-#, fuzzy
-msgid "Packets (total)"
-msgstr "Detalhes da licença"
 
 msgid "Packets Dropped"
 msgstr "Pacotes Deixados cair"
@@ -54782,35 +54365,11 @@ msgstr "Destinatário"
 msgid "Redirect URL (has to be https)"
 msgstr "URL redireccionada (tem de ser https)"
 
-#, fuzzy
-msgid "Redis Caches"
-msgstr "Clientes Redis"
-
-#, fuzzy
-msgid "Redis cache hit ratio"
-msgstr "L2 cache hit ratio"
-
-#, fuzzy
-msgid "Redis cache hits"
-msgstr "Clientes Redis"
-
-#, fuzzy
-msgid "Redis cache misses"
-msgstr "Tamanho da Cache"
-
 msgid "Redis clients"
 msgstr "Clientes Redis"
 
-#, fuzzy
-msgid "Redis connected clients"
-msgstr "Número de clientes conectados"
-
 msgid "Redis databases"
 msgstr "Bases de dados Redis"
-
-#, fuzzy
-msgid "Redis hit ratio"
-msgstr "Taxa de acerto de regras"
 
 msgid "Redis info"
 msgstr "Redis info"
@@ -54818,27 +54377,11 @@ msgstr "Redis info"
 msgid "Redis is not reachable, terminating"
 msgstr "O Redis não é contactável, terminando"
 
-#, fuzzy
-msgid "Redis memory utilization"
-msgstr "Utilização de memória GCP/Redis"
-
 msgid "Redis persistence"
 msgstr "Redis persistência"
 
-#, fuzzy
-msgid "Redis read throughput"
-msgstr "Ler o rendimento"
-
 msgid "Redis server name"
 msgstr "Nome do servidor Redis"
-
-#, fuzzy
-msgid "Redis throughput"
-msgstr "Ler o rendimento"
-
-#, fuzzy
-msgid "Redis write throughput"
-msgstr "Escreva o rendimento"
 
 msgid "Redis/Hitratio"
 msgstr "Redis/Hitratio"
@@ -57564,6 +57107,10 @@ msgid "SAP R/3 grouped values discovery"
 msgstr "Descoberta de valores agrupados do SAP R/3"
 
 #, fuzzy
+msgid "SAP R/3 instance"
+msgstr "Adicionar instância NGINX"
+
+#, fuzzy
 msgid "SAP R/3 monitoring plug-in"
 msgstr "Plug-in de monitorização SAP R/3"
 
@@ -59329,22 +58876,6 @@ msgstr "Ligações do servidor"
 msgid "Server latency"
 msgstr "Latência do servidor"
 
-#, fuzzy
-msgid "Server load"
-msgstr "Carga do servidor Citrix"
-
-#, fuzzy
-msgid "Server load %"
-msgstr "Carga do servidor Citrix"
-
-#, fuzzy
-msgid "Server load (average)"
-msgstr "Armazenamento de registos do servidor"
-
-#, fuzzy
-msgid "Server load levels"
-msgstr "Nível de serviço"
-
 msgid "Server log storage"
 msgstr "Armazenamento de registos do servidor"
 
@@ -59364,10 +58895,6 @@ msgstr "Tempo do servidor"
 #, python-format
 msgid "Server time (currently: %s)"
 msgstr ""
-
-#, fuzzy
-msgid "Server-side command latency"
-msgstr "Latência do servidor"
 
 msgid "Service"
 msgstr "Serviço"
@@ -59887,10 +59414,6 @@ msgstr "Estados de serviço"
 
 msgid "Service statistics"
 msgstr "Estatísticas de serviços"
-
-#, fuzzy
-msgid "Service status when geo-replication link is unhealthy"
-msgstr "Estado quando o estado de replicação está ativo"
 
 msgid "Service tags"
 msgstr "Etiquetas de serviço"
@@ -60478,11 +60001,6 @@ msgstr "Mudar \"%s\" para \"%s\""
 #, fuzzy
 msgid "Set upper levels"
 msgstr "Definir níveis superiores"
-
-msgid ""
-"Set upper levels for the index overhead percentage. The index overhead is "
-"the ratio of index usage to total storage (index + data)."
-msgstr ""
 
 msgid ""
 "Set upper levels of active sessions relative to max. number of sessions. "
@@ -63017,23 +62535,16 @@ msgstr ""
 msgid "Specify the password to be used to bind to the LDAP directory."
 msgstr "Especifique a senha a ser usada para se ligar ao diretório LDAP."
 
-#, fuzzy
 msgid ""
 "Specify the paths in CCMS that you want to monitor. Each entry must match "
-"the full path to one or several monitor objects. We use Unix shell patterns "
-"during matching, so you can use several chars as placeholders:<ul><li><tt>* "
-"</tt> matches everything</li><li><tt>?</tt> matches any single character</"
-"li><li><tt>[seq]</tt> matches any character in seq</li><li><tt>[!seq]</tt> "
-"matches any character not in seq</li></ul>"
+"the full path to one or several monitor objects. Unix shell patterns are "
+"supported: * matches everything, ? matches any single character, [seq] "
+"matches any character in seq, [!seq] matches any character not in seq. If "
+"left empty, the following default paths are used: SAP BI Monitors/BI "
+"Monitor, SAP BI Monitors/BI Monitor/*/Oracle/Performance, SAP CCMS Monitor "
+"Templates/Operating System/OperatingSystem/CPU/*, SAP CCMS Monitor Templates/"
+"Operating System/OperatingSystem/CPU/CPU_Utilization."
 msgstr ""
-"Especificar os caminhos no CCMS que se pretende monitorizar. Cada entrada "
-"deve corresponder ao caminho completo para um ou mais objectos do monitor. "
-"Utilizamos padrões da shell unix durante a correspondência, pelo que pode "
-"utilizar vários caracteres como marcadores de posição:<ul><li><tt>* </tt> "
-"corresponde a tudo</li><li><tt>?      </tt> corresponde a qualquer caractere "
-"único</li><li><tt>[seq] </tt> corresponde a qualquer caractere em seq</"
-"li><li><tt>[!seq] </tt> corresponde a qualquer caractere que não esteja em "
-"seq</li></ul>"
 
 msgid "Specify the protocol used to connect to the management board."
 msgstr "Especifique o protocolo utilizado para se ligar ao quadro de gestão."
@@ -63149,9 +62660,6 @@ msgstr ""
 "execução elevada para uma função, fragmentos insuficientes num fluxo, erros "
 "de invocação, tamanho de lote insuficiente. Essa métrica só é relatada para "
 "invocações baseadas em fluxo."
-
-msgid "Specify two upper case letters like <tt>EN</tt> or <tt>DE</tt>."
-msgstr "Especifique duas letras maiúsculas como <tt>EN</tt> ou <tt>DE</tt>."
 
 #, fuzzy
 msgid ""
@@ -65518,6 +65026,9 @@ msgstr "Validação de certificados SSL"
 #, fuzzy
 msgid "TLS certificate verification"
 msgstr "verificação do certificado SSL"
+
+msgid "TLS encryption must be enabled when using basic authentication."
+msgstr ""
 
 #, fuzzy
 msgid "TLS processed bytes"
@@ -70714,9 +70225,6 @@ msgstr ""
 msgid "The syslog tag"
 msgstr "A etiqueta syslog"
 
-msgid "The system number is two digits"
-msgstr "O número do sistema é de dois dígitos"
-
 msgid ""
 "The tablespace levels will never be raise above these values, when using the "
 "magic factor and the tablespace is very small."
@@ -75150,38 +74658,6 @@ msgstr ""
 
 #, fuzzy
 msgid ""
-"This ruleset allows you to configure levels for Azure Cosmos DB database "
-"container throughput metrics"
-msgstr ""
-"Esta regra permite que você configure níveis de inchaço para um espaço de "
-"tabela e espaço de índice em bancos de dados."
-
-#, fuzzy
-msgid ""
-"This ruleset allows you to configure levels for Azure Cosmos DB database "
-"throughput metrics"
-msgstr ""
-"Esta regra permite que você configure níveis de inchaço para um espaço de "
-"tabela e espaço de índice em bancos de dados."
-
-#, fuzzy
-msgid ""
-"This ruleset allows you to configure levels for Azure Cosmos DB service "
-"availability"
-msgstr ""
-"Esta regra permite que você configure níveis de inchaço para um espaço de "
-"tabela e espaço de índice em bancos de dados."
-
-#, fuzzy
-msgid ""
-"This ruleset allows you to configure levels for Azure Cosmos DB throughput "
-"metrics"
-msgstr ""
-"Esta regra permite que você configure níveis de inchaço para um espaço de "
-"tabela e espaço de índice em bancos de dados."
-
-#, fuzzy
-msgid ""
 "This ruleset allows you to configure levels for Azure Firewall SNAT port "
 "utilization monitoring"
 msgstr ""
@@ -75207,101 +74683,6 @@ msgstr ""
 #, fuzzy
 msgid ""
 "This ruleset allows you to configure levels for Azure Firewall throughput "
-"monitoring"
-msgstr ""
-"Esta regra permite que você configure níveis de inchaço para um espaço de "
-"tabela e espaço de índice em bancos de dados."
-
-#, fuzzy
-msgid ""
-"This ruleset allows you to configure levels for Azure NAT Gateways "
-"connections monitoring"
-msgstr ""
-"Esta regra permite que você configure níveis de inchaço para um espaço de "
-"tabela e espaço de índice em bancos de dados."
-
-#, fuzzy
-msgid ""
-"This ruleset allows you to configure levels for Azure NAT Gateways health "
-"monitoring"
-msgstr ""
-"Esta regra permite que você configure níveis de inchaço para um espaço de "
-"tabela e espaço de índice em bancos de dados."
-
-#, fuzzy
-msgid ""
-"This ruleset allows you to configure levels for Azure NAT Gateways packets, "
-"including thresholds for dropped packets."
-msgstr ""
-"Esta regra permite que você configure níveis de inchaço para um espaço de "
-"tabela e espaço de índice em bancos de dados."
-
-#, fuzzy
-msgid ""
-"This ruleset allows you to configure levels for Azure NAT Gateways "
-"throughput monitoring"
-msgstr ""
-"Esta regra permite que você configure níveis de inchaço para um espaço de "
-"tabela e espaço de índice em bancos de dados."
-
-#, fuzzy
-msgid ""
-"This ruleset allows you to configure levels for Azure Redis CPU utilization "
-"monitoring"
-msgstr ""
-"Esta regra permite que você configure níveis de inchaço para um espaço de "
-"tabela e espaço de índice em bancos de dados."
-
-#, fuzzy
-msgid ""
-"This ruleset allows you to configure levels for Azure Redis Cache "
-"effectiveness monitoring"
-msgstr ""
-"Esta regra permite que você configure níveis de inchaço para um espaço de "
-"tabela e espaço de índice em bancos de dados."
-
-#, fuzzy
-msgid ""
-"This ruleset allows you to configure levels for Azure Redis connections "
-"monitoring"
-msgstr ""
-"Esta regra permite que você configure níveis de inchaço para um espaço de "
-"tabela e espaço de índice em bancos de dados."
-
-#, fuzzy
-msgid ""
-"This ruleset allows you to configure levels for Azure Redis latency "
-"monitoring"
-msgstr ""
-"Esta regra permite que você configure níveis de inchaço para um espaço de "
-"tabela e espaço de índice em bancos de dados."
-
-#, fuzzy
-msgid ""
-"This ruleset allows you to configure levels for Azure Redis memory monitoring"
-msgstr ""
-"Esta regra permite que você configure níveis de inchaço para um espaço de "
-"tabela e espaço de índice em bancos de dados."
-
-#, fuzzy
-msgid ""
-"This ruleset allows you to configure levels for Azure Redis replication "
-"monitoring"
-msgstr ""
-"Esta regra permite que você configure níveis de inchaço para um espaço de "
-"tabela e espaço de índice em bancos de dados."
-
-#, fuzzy
-msgid ""
-"This ruleset allows you to configure levels for Azure Redis server load "
-"monitoring"
-msgstr ""
-"Esta regra permite que você configure níveis de inchaço para um espaço de "
-"tabela e espaço de índice em bancos de dados."
-
-#, fuzzy
-msgid ""
-"This ruleset allows you to configure levels for Azure Redis throughput "
 "monitoring"
 msgstr ""
 "Esta regra permite que você configure níveis de inchaço para um espaço de "
@@ -75377,36 +74758,6 @@ msgstr ""
 msgid ""
 "This ruleset allows you to configure levels for the used storage space in "
 "percent"
-msgstr ""
-"Esta regra permite que você configure níveis de inchaço para um espaço de "
-"tabela e espaço de índice em bancos de dados."
-
-#, fuzzy
-msgid "This ruleset allows you to configure limits for Azure Cosmos DB storage"
-msgstr ""
-"Esta regra permite que você configure níveis de inchaço para um espaço de "
-"tabela e espaço de índice em bancos de dados."
-
-#, fuzzy
-msgid ""
-"This ruleset allows you to configure upper limits for Azure Cosmos DB "
-"database container throttled requests ratio"
-msgstr ""
-"Esta regra permite que você configure níveis de inchaço para um espaço de "
-"tabela e espaço de índice em bancos de dados."
-
-#, fuzzy
-msgid ""
-"This ruleset allows you to configure upper limits for Azure Cosmos DB "
-"database throttled requests ratio"
-msgstr ""
-"Esta regra permite que você configure níveis de inchaço para um espaço de "
-"tabela e espaço de índice em bancos de dados."
-
-#, fuzzy
-msgid ""
-"This ruleset allows you to configure upper limits for Azure Cosmos DB "
-"throttled requests ratio"
 msgstr ""
 "Esta regra permite que você configure níveis de inchaço para um espaço de "
 "tabela e espaço de índice em bancos de dados."
@@ -76421,10 +75772,6 @@ msgid "Throttle periodic notifications"
 msgstr "Acelerar as notificações periódicas"
 
 msgid "Throttled requests"
-msgstr "Pedidos estrangulados"
-
-#, fuzzy
-msgid "Throttled requests ratio"
 msgstr "Pedidos estrangulados"
 
 #, fuzzy
@@ -77485,14 +76832,6 @@ msgstr "Total de RAM utilizável"
 msgid "Total RAM + Swap installed"
 msgstr "Total de RAM + Swap instalado"
 
-#, fuzzy
-msgid "Total RUs lower levels"
-msgstr "Contentores de níveis inferiores"
-
-#, fuzzy
-msgid "Total RUs upper levels"
-msgstr "Contentores níveis superiores"
-
 msgid "Total Throughput Optimized HDD space"
 msgstr "Rendimento total Espaço HDD optimizado"
 
@@ -77539,15 +76878,7 @@ msgid "Total connections"
 msgstr "ligação normal"
 
 #, fuzzy
-msgid "Total connections lower limit"
-msgstr "Total de ligações Máximo"
-
-#, fuzzy
 msgid "Total connections maximum"
-msgstr "Total de ligações Máximo"
-
-#, fuzzy
-msgid "Total connections upper limit"
 msgstr "Total de ligações Máximo"
 
 msgid "Total containers"
@@ -80165,22 +79496,10 @@ msgstr "Contentores níveis superiores"
 msgid "Total slots"
 msgstr "Total de slots"
 
-#, fuzzy
-msgid "Total storage"
-msgstr "Tamanho total"
-
 msgid "Total swap space"
 msgstr "Espaço swap total"
 
-#, fuzzy
-msgid "Total throughput lower levels (/sec)"
-msgstr "Taxa de transferência total por segundo"
-
 msgid "Total throughput per second"
-msgstr "Taxa de transferência total por segundo"
-
-#, fuzzy
-msgid "Total throughput upper levels (/sec)"
 msgstr "Taxa de transferência total por segundo"
 
 msgid "Total timeout of check"
@@ -83445,14 +82764,6 @@ msgstr "Ficheiros de registo usados: Níveis superiores absolutos ou relativos"
 
 msgid "Used logical space"
 msgstr "Espaço lógico utilizado"
-
-#, fuzzy
-msgid "Used memory"
-msgstr "Memória de CPU usada"
-
-#, fuzzy
-msgid "Used memory RSS"
-msgstr "Memória de CPU usada"
 
 msgid "Used meta data"
 msgstr "Metadados usados"
@@ -90290,6 +89601,7 @@ msgstr "contando"
 msgid "cp437"
 msgstr "cp437"
 
+#, fuzzy
 msgid "crash report"
 msgid_plural "crash reports"
 msgstr[0] ""
@@ -90791,6 +90103,7 @@ msgstr "os anfitriões estão de pé e não têm problemas de serviço"
 msgid "hosts in total"
 msgstr "anfitriões no total"
 
+#, fuzzy
 msgid "hour"
 msgid_plural "hours"
 msgstr[0] ""
@@ -95151,8 +94464,21 @@ msgid "Configure at least one OpenTelemetry Collector receiver."
 msgstr "Adicionar configuração do estado"
 
 #, fuzzy
-msgid "Configure host folder"
-msgstr "Configure"
+msgid "Adjust your OpenTelemetry instrumentation"
+msgstr "Adicionar nova configuração de usuário"
+
+msgid ""
+"This step guides the user through configuring their OpenTelemetry "
+"instrumentation so that telemetry data can be sent to Checkmk."
+msgstr ""
+
+#, fuzzy
+msgid "Finalize configuration"
+msgstr "Analisar a configuração"
+
+#, fuzzy
+msgid "Get your configuration ready to be applied."
+msgstr "Configuração central recarregada"
 
 #, fuzzy
 msgid "Save & Go to Activate Changes"
@@ -95174,6 +94500,10 @@ msgstr "Configurar a barra lateral"
 #, fuzzy
 msgid "Specify the Prometheus target you want to scrape."
 msgstr "Selecione o tipo de elemento de conteúdo"
+
+#, fuzzy
+msgid "Configure host folder"
+msgstr "Configure"
 
 #, fuzzy
 msgid "Username is required but not specified."
@@ -95238,6 +94568,93 @@ msgid "Select the folder your host(s) will be created in."
 msgstr ""
 "Especificar o período de tempo em que um novo arquivo para o histórico do "
 "evento será criado."
+
+msgid ""
+"OpenTelemetry instrumentation can be set up in two ways, depending on your "
+"environment:"
+msgstr ""
+
+msgid ""
+"A vendor-agnostic proxy service that receives, processes, and forwards "
+"telemetry data. Use this when you want a centralised point to collect data "
+"from multiple sources before forwarding it to Checkmk."
+msgstr ""
+
+msgid "SDKs (Software Development Kits)"
+msgstr ""
+
+msgid ""
+"Language-specific libraries (e.g. for Python, Java, Go) that you integrate "
+"directly into your application code to generate and export telemetry data. "
+"Use this when you want to instrument your application directly without an "
+"intermediary."
+msgstr ""
+
+msgid ""
+"Both options are supported. This step provides a ready-to-use configuration "
+"snippet for each, pre-filled with the correct IP address and port for your "
+"environment."
+msgstr ""
+
+msgid "SDKs"
+msgstr ""
+
+#, fuzzy
+msgid "Configuration for OpenTelemetry Collector"
+msgstr "Adicionar configuração do estado"
+
+msgid ""
+"The configuration snippets provided for the OpenTelemetry Collector option "
+"can be copied directly into your Collector's configuration file (typically "
+"config.yaml)."
+msgstr ""
+
+#, fuzzy
+msgid "Exporters configuration"
+msgstr "Configuração remota"
+
+#, fuzzy
+msgid "Extension configuration"
+msgstr "Configuração da notificação"
+
+#, fuzzy
+msgid "Service configuration"
+msgstr "Configuração do anfitrião"
+
+#, fuzzy
+msgid "Configuration for SDKs"
+msgstr "Ficheiros de configuração"
+
+msgid "Update your settings directly in your code."
+msgstr ""
+
+#, fuzzy
+msgid "Headers"
+msgstr "Cabeçalhos de Coluna"
+
+msgid "Set Authorization to \"Basic {base64-encoded-credentials}\""
+msgstr ""
+
+msgid "Note: The exact syntax depends on the language SDK."
+msgstr ""
+
+msgid "How to generate your Authorization header?"
+msgstr ""
+
+msgid ""
+"The Basic auth format requires a Base64-encoded string of your "
+"username:password."
+msgstr ""
+
+msgid ""
+"To generate this string, open a terminal and run the following command "
+"(replace the placeholders with your actual Checkmk credentials):"
+msgstr ""
+
+msgid ""
+"if your username is \"admin\" and password is \"secret\", the command output "
+"would be YWRtaW46c2VjcmV0. Your header would then look like:"
+msgstr ""
 
 msgid "Enter a name for your job."
 msgstr ""
@@ -96270,6 +95687,713 @@ msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
 
+#~ msgid "Allowed is 1 ... 9"
+#~ msgstr "Permitido é 1 ... 9"
+
+#, fuzzy
+#~ msgid "Azure Cosmos DB Availability"
+#~ msgstr "Disponibilidade do BI"
+
+#, fuzzy
+#~ msgid "Azure Cosmos DB Database Container Requests"
+#~ msgstr "Pedidos de Web ACL"
+
+#, fuzzy
+#~ msgid "Azure Cosmos DB Database Container Throughput"
+#~ msgstr "Pedidos de Web ACL"
+
+#, fuzzy
+#~ msgid "Azure Cosmos DB Database Requests"
+#~ msgstr "Pedidos de Web ACL"
+
+#, fuzzy
+#~ msgid "Azure Cosmos DB Database Throughput"
+#~ msgstr "Pedidos de Web ACL"
+
+#, fuzzy
+#~ msgid "Azure Cosmos DB Requests"
+#~ msgstr "Pedidos de Web ACL"
+
+#, fuzzy
+#~ msgid "Azure Cosmos DB Storage"
+#~ msgstr "Armazenamento de BD do Azure"
+
+#, fuzzy
+#~ msgid "Azure Cosmos DB Throughput"
+#~ msgstr "Pedidos de Web ACL"
+
+#, fuzzy
+#~ msgid "Azure NAT Gateways Connections"
+#~ msgstr "Ligações à base de dados"
+
+#, fuzzy
+#~ msgid "Azure NAT Gateways Packets"
+#~ msgstr "Ligações à base de dados"
+
+#, fuzzy
+#~ msgid "Azure NAT Gateways Throughput"
+#~ msgstr "Unidade de rendimento da base de dados"
+
+#, fuzzy
+#~ msgid "Azure NAT Gateways datapath availability"
+#~ msgstr "Ver a disponibilidade"
+
+#, fuzzy
+#~ msgid "Azure Redis CPU utilization"
+#~ msgstr "Utilização da CPU do GCP/Redis"
+
+#, fuzzy
+#~ msgid "Azure Redis Cache effectiveness"
+#~ msgstr "Ligações à base de dados"
+
+#, fuzzy
+#~ msgid "Azure Redis Connections"
+#~ msgstr "Ligações à base de dados"
+
+#, fuzzy
+#~ msgid "Azure Redis Latency"
+#~ msgstr "Latência média do disco"
+
+#, fuzzy
+#~ msgid "Azure Redis Memory"
+#~ msgstr "Memória livre absoluta"
+
+#, fuzzy
+#~ msgid "Azure Redis Replication"
+#~ msgstr "Ligações à base de dados"
+
+#, fuzzy
+#~ msgid "Azure Redis Server load"
+#~ msgstr "Nome do servidor Redis"
+
+#, fuzzy
+#~ msgid "Azure Redis Throughput"
+#~ msgstr "Ler o rendimento"
+
+#, fuzzy
+#~ msgid "Azure recovery services vault backup"
+#~ msgstr "Cofre de serviços de recuperação"
+
+#, fuzzy
+#~ msgid "Azure/Cosmos DB Database Container"
+#~ msgstr "Pedidos de Web ACL"
+
+#, fuzzy
+#~ msgid "CPU utilization %"
+#~ msgstr "utilização da CPU"
+
+#, fuzzy
+#~ msgid "Cache internode latency"
+#~ msgstr "Criar a Latência da Conferência"
+
+#, fuzzy
+#~ msgid "Cache read throughput (/sec)"
+#~ msgstr "Ler o rendimento"
+
+#, fuzzy
+#~ msgid "Cache requests"
+#~ msgstr "Pedidos falhados"
+
+#, fuzzy
+#~ msgid "Cache write throughput (/sec)"
+#~ msgstr "Escreva o rendimento"
+
+#, fuzzy
+#~ msgid "Concurrent connections"
+#~ msgstr "Ligações actuais"
+
+#, fuzzy
+#~ msgid "Connected clients"
+#~ msgstr "Número de clientes conectados"
+
+#, fuzzy
+#~ msgid "Connections (Azure, Redis)"
+#~ msgstr "Ligações abertas"
+
+#, fuzzy
+#~ msgid "Connections closed rate"
+#~ msgstr "A conexão caiu tarde"
+
+#, fuzzy
+#~ msgid "Connections created rate"
+#~ msgstr "A conexão caiu tarde"
+
+#, fuzzy
+#~ msgid "Connectivity lag"
+#~ msgstr "Conectividade"
+
+#, fuzzy
+#~ msgid "Cosmos DB container failed requests (404)"
+#~ msgstr "Pedidos falhados"
+
+#, fuzzy
+#~ msgid "Cosmos DB container normalized RU consumption"
+#~ msgstr "Consumo de IO do armazenamento"
+
+#, fuzzy
+#~ msgid "Cosmos DB container requests"
+#~ msgstr "Pedidos de Web ACL"
+
+#, fuzzy
+#~ msgid "Cosmos DB container throttled requests (429)"
+#~ msgstr "Pedidos estrangulados"
+
+#, fuzzy
+#~ msgid "Cosmos DB container throttled requests ratio"
+#~ msgstr "Pedidos estrangulados"
+
+#, fuzzy
+#~ msgid "Cosmos DB container throughput"
+#~ msgstr "Pedidos de Web ACL"
+
+#, fuzzy
+#~ msgid "Cosmos DB container total requests"
+#~ msgstr "Pedidos de Web ACL"
+
+#, fuzzy
+#~ msgid "Cosmos DB data usage"
+#~ msgstr "Utilização de dados"
+
+#, fuzzy
+#~ msgid "Cosmos DB database failed requests (404)"
+#~ msgstr "Pedidos de Web ACL"
+
+#, fuzzy
+#~ msgid "Cosmos DB database normalized RU consumption"
+#~ msgstr "Consumo de IO do armazenamento"
+
+#, fuzzy
+#~ msgid "Cosmos DB database requests"
+#~ msgstr "Pedidos de Web ACL"
+
+#, fuzzy
+#~ msgid "Cosmos DB database throttled requests (429)"
+#~ msgstr "Pedidos estrangulados"
+
+#, fuzzy
+#~ msgid "Cosmos DB database throttled requests ratio"
+#~ msgstr "Pedidos estrangulados"
+
+#, fuzzy
+#~ msgid "Cosmos DB database throughput"
+#~ msgstr "Pedidos de Web ACL"
+
+#, fuzzy
+#~ msgid "Cosmos DB database total RUs"
+#~ msgstr "Pedidos de Web ACL"
+
+#, fuzzy
+#~ msgid "Cosmos DB database total requests"
+#~ msgstr "Pedidos de Web ACL"
+
+#, fuzzy
+#~ msgid "Cosmos DB documents"
+#~ msgstr "Pedidos de Web ACL"
+
+#, fuzzy
+#~ msgid "Cosmos DB failed requests (404)"
+#~ msgstr "Pedidos falhados"
+
+#, fuzzy
+#~ msgid "Cosmos DB index overhead"
+#~ msgstr "Índices a pesquisar"
+
+#, fuzzy
+#~ msgid "Cosmos DB index usage"
+#~ msgstr "Custos e utilização (CE)"
+
+#, fuzzy
+#~ msgid "Cosmos DB normalized RU consumption"
+#~ msgstr "Consumo de IO do armazenamento"
+
+#, fuzzy
+#~ msgid "Cosmos DB service availability"
+#~ msgstr "Disponibilidade do Serviço"
+
+#, fuzzy
+#~ msgid "Cosmos DB storage"
+#~ msgstr "Armazenamento de BD do Azure"
+
+#, fuzzy
+#~ msgid "Cosmos DB throttled requests (429)"
+#~ msgstr "Pedidos estrangulados"
+
+#, fuzzy
+#~ msgid "Cosmos DB throttled requests ratio"
+#~ msgstr "Pedidos estrangulados"
+
+#, fuzzy
+#~ msgid "Cosmos DB total RUs"
+#~ msgstr "Armazenamento de BD do Azure"
+
+#, fuzzy
+#~ msgid "Cosmos DB total requests"
+#~ msgstr "Pedidos de Web ACL"
+
+#, fuzzy
+#~ msgid "Cosmos DB total storage"
+#~ msgstr "Armazenamento de BD do Azure"
+
+#, fuzzy
+#~ msgid "Datapath availability %"
+#~ msgstr "Disponibilidade do percurso de dados níveis inferiores"
+
+#, fuzzy
+#~ msgid "Deploy SUSEConnect plug-in"
+#~ msgstr "Implantar o plugin SUSEConnect"
+
+#, fuzzy
+#~ msgid "Deploy iptables plug-in"
+#~ msgstr "Implantar o plugin iptables"
+
+#, fuzzy
+#~ msgid "Deploy the SAP R/3 plug-in"
+#~ msgstr "Implantar o plug-in SAP R/3"
+
+#, fuzzy
+#~ msgid "Deploy the agent plug-in <tt>mk_suseconnect</tt>."
+#~ msgstr "Implantar o plugin de agente <tt>mk_suseconnect</tt>."
+
+#, fuzzy
+#~ msgid "Do not deploy SUSEConnect plug-in"
+#~ msgstr "Não implante o plugin SUSEConnect"
+
+#, fuzzy
+#~ msgid "Do not deploy iptables plug-in"
+#~ msgstr "Não implante o plugin iptables"
+
+#, fuzzy
+#~ msgid "Dropped packets"
+#~ msgstr "Mensagens deixadas cair"
+
+#, fuzzy
+#~ msgid "Evicted keys"
+#~ msgstr "Número de chaves despejadas"
+
+#, fuzzy
+#~ msgid "Expired keys"
+#~ msgstr "Objetos expirados"
+
+#, fuzzy
+#~ msgid "Failed concurrent connections"
+#~ msgstr "Conexões falhadas"
+
+#, fuzzy
+#~ msgid "Get commands"
+#~ msgstr "nenhum comando"
+
+#, fuzzy
+#~ msgid "Inbound throughput lower levels (/sec)"
+#~ msgstr "5 Volts de saída Níveis inferiores"
+
+#, fuzzy
+#~ msgid "Inbound throughput upper levels (/sec)"
+#~ msgstr "12 Volts de saída Níveis superiores"
+
+#, fuzzy
+#~ msgid "Index overhead"
+#~ msgstr "Índices a pesquisar"
+
+#, fuzzy
+#~ msgid "Levels over an extended period of time"
+#~ msgstr ""
+#~ "Níveis durante um período de tempo alargado sobre o atraso de replicação"
+
+#, fuzzy
+#~ msgid "Maximum connectivity lag"
+#~ msgstr "Conectividade do site"
+
+#, fuzzy
+#~ msgid "Memory (Azure, Redis)"
+#~ msgstr "Recursos de memória"
+
+#, fuzzy
+#~ msgid "Memory utilization (Azure, Redis)"
+#~ msgstr "Utilização da memória"
+
+#, fuzzy
+#~ msgid "NAT Gateway inbound data"
+#~ msgstr "Dados cartografados"
+
+#, fuzzy
+#~ msgid "NAT Gateway outbound data"
+#~ msgstr "Regra de saída"
+
+#, fuzzy
+#~ msgid "NAT Gateway total data"
+#~ msgstr "Gateway vNet"
+
+#, fuzzy
+#~ msgid "NAT Gateways"
+#~ msgstr "Gateway vNet"
+
+#, fuzzy
+#~ msgid "NAT gateway attempted concurrent connections"
+#~ msgstr "Número de ligações actuais"
+
+#, fuzzy
+#~ msgid "NAT gateway concurrent SNAT connections"
+#~ msgstr "Ligações actuais"
+
+#, fuzzy
+#~ msgid "NAT gateway datapath availability"
+#~ msgstr "Ver a disponibilidade"
+
+#, fuzzy
+#~ msgid "NAT gateway datapath availability (average)"
+#~ msgstr "Disponibilidade do percurso de dados níveis inferiores"
+
+#, fuzzy
+#~ msgid "NAT gateway dropped packets"
+#~ msgstr "Taxa máxima de pacotes descartados"
+
+#, fuzzy
+#~ msgid "NAT gateway failed concurrent connections"
+#~ msgstr "Conexões falhadas"
+
+#, fuzzy
+#~ msgid "NAT gateway inbound packets"
+#~ msgstr "Ligações à base de dados"
+
+#, fuzzy
+#~ msgid "NAT gateway outbound packets"
+#~ msgstr "Pacotes de saída"
+
+#, fuzzy
+#~ msgid "NAT gateway packets (in/out)"
+#~ msgstr "Chamar uma regra"
+
+#, fuzzy
+#~ msgid "NAT gateway throughput"
+#~ msgstr "Unidade de rendimento da base de dados"
+
+#, fuzzy
+#~ msgid "NAT gateway total SNAT connections"
+#~ msgstr "ligação normal"
+
+#, fuzzy
+#~ msgid "NAT gateway total active connections"
+#~ msgstr "ligação normal"
+
+#, fuzzy
+#~ msgid "NAT gateway total concurrent connections"
+#~ msgstr "Ligações actuais"
+
+#, fuzzy
+#~ msgid "NAT gateway total data transmitted"
+#~ msgstr "Sem dados de nenhum site"
+
+#, fuzzy
+#~ msgid "NAT gateway total packets"
+#~ msgstr "Ligações à base de dados"
+
+#, fuzzy
+#~ msgid "Normalized RU consumption lower levels"
+#~ msgstr "Consumo de IO do armazenamento"
+
+#, fuzzy
+#~ msgid "Normalized RU consumption upper levels"
+#~ msgstr "Consumo de IO do armazenamento"
+
+#, fuzzy
+#~ msgid "Outbound throughput upper levels (/sec)"
+#~ msgstr "eventos por segundo"
+
+#, fuzzy
+#~ msgid "Packets (dropped)"
+#~ msgstr "Pacotes abandonados"
+
+#, fuzzy
+#~ msgid "Packets (total)"
+#~ msgstr "Detalhes da licença"
+
+#, fuzzy
+#~ msgid "Redis Caches"
+#~ msgstr "Clientes Redis"
+
+#, fuzzy
+#~ msgid "Redis cache hit ratio"
+#~ msgstr "L2 cache hit ratio"
+
+#, fuzzy
+#~ msgid "Redis cache hits"
+#~ msgstr "Clientes Redis"
+
+#, fuzzy
+#~ msgid "Redis cache misses"
+#~ msgstr "Tamanho da Cache"
+
+#, fuzzy
+#~ msgid "Redis connected clients"
+#~ msgstr "Número de clientes conectados"
+
+#, fuzzy
+#~ msgid "Redis hit ratio"
+#~ msgstr "Taxa de acerto de regras"
+
+#, fuzzy
+#~ msgid "Redis memory utilization"
+#~ msgstr "Utilização de memória GCP/Redis"
+
+#, fuzzy
+#~ msgid "Redis read throughput"
+#~ msgstr "Ler o rendimento"
+
+#, fuzzy
+#~ msgid "Redis throughput"
+#~ msgstr "Ler o rendimento"
+
+#, fuzzy
+#~ msgid "Redis write throughput"
+#~ msgstr "Escreva o rendimento"
+
+#, fuzzy
+#~ msgid "Server load"
+#~ msgstr "Carga do servidor Citrix"
+
+#, fuzzy
+#~ msgid "Server load %"
+#~ msgstr "Carga do servidor Citrix"
+
+#, fuzzy
+#~ msgid "Server load (average)"
+#~ msgstr "Armazenamento de registos do servidor"
+
+#, fuzzy
+#~ msgid "Server load levels"
+#~ msgstr "Nível de serviço"
+
+#, fuzzy
+#~ msgid "Server-side command latency"
+#~ msgstr "Latência do servidor"
+
+#, fuzzy
+#~ msgid "Service status when geo-replication link is unhealthy"
+#~ msgstr "Estado quando o estado de replicação está ativo"
+
+#, fuzzy
+#~ msgid ""
+#~ "Specify the paths in CCMS that you want to monitor. Each entry must match "
+#~ "the full path to one or several monitor objects. We use Unix shell "
+#~ "patterns during matching, so you can use several chars as placeholders:"
+#~ "<ul><li><tt>* </tt> matches everything</li><li><tt>?</tt> matches any "
+#~ "single character</li><li><tt>[seq]</tt> matches any character in seq</"
+#~ "li><li><tt>[!seq]</tt> matches any character not in seq</li></ul>"
+#~ msgstr ""
+#~ "Especificar os caminhos no CCMS que se pretende monitorizar. Cada entrada "
+#~ "deve corresponder ao caminho completo para um ou mais objectos do "
+#~ "monitor. Utilizamos padrões da shell unix durante a correspondência, pelo "
+#~ "que pode utilizar vários caracteres como marcadores de posição:"
+#~ "<ul><li><tt>* </tt> corresponde a tudo</li><li><tt>?      </tt> "
+#~ "corresponde a qualquer caractere único</li><li><tt>[seq] </tt> "
+#~ "corresponde a qualquer caractere em seq</li><li><tt>[!seq] </tt> "
+#~ "corresponde a qualquer caractere que não esteja em seq</li></ul>"
+
+#~ msgid "Specify two upper case letters like <tt>EN</tt> or <tt>DE</tt>."
+#~ msgstr "Especifique duas letras maiúsculas como <tt>EN</tt> ou <tt>DE</tt>."
+
+#~ msgid "The system number is two digits"
+#~ msgstr "O número do sistema é de dois dígitos"
+
+#, fuzzy
+#~ msgid ""
+#~ "This ruleset allows you to configure levels for Azure Cosmos DB database "
+#~ "container throughput metrics"
+#~ msgstr ""
+#~ "Esta regra permite que você configure níveis de inchaço para um espaço de "
+#~ "tabela e espaço de índice em bancos de dados."
+
+#, fuzzy
+#~ msgid ""
+#~ "This ruleset allows you to configure levels for Azure Cosmos DB database "
+#~ "throughput metrics"
+#~ msgstr ""
+#~ "Esta regra permite que você configure níveis de inchaço para um espaço de "
+#~ "tabela e espaço de índice em bancos de dados."
+
+#, fuzzy
+#~ msgid ""
+#~ "This ruleset allows you to configure levels for Azure Cosmos DB service "
+#~ "availability"
+#~ msgstr ""
+#~ "Esta regra permite que você configure níveis de inchaço para um espaço de "
+#~ "tabela e espaço de índice em bancos de dados."
+
+#, fuzzy
+#~ msgid ""
+#~ "This ruleset allows you to configure levels for Azure Cosmos DB "
+#~ "throughput metrics"
+#~ msgstr ""
+#~ "Esta regra permite que você configure níveis de inchaço para um espaço de "
+#~ "tabela e espaço de índice em bancos de dados."
+
+#, fuzzy
+#~ msgid ""
+#~ "This ruleset allows you to configure levels for Azure NAT Gateways "
+#~ "connections monitoring"
+#~ msgstr ""
+#~ "Esta regra permite que você configure níveis de inchaço para um espaço de "
+#~ "tabela e espaço de índice em bancos de dados."
+
+#, fuzzy
+#~ msgid ""
+#~ "This ruleset allows you to configure levels for Azure NAT Gateways health "
+#~ "monitoring"
+#~ msgstr ""
+#~ "Esta regra permite que você configure níveis de inchaço para um espaço de "
+#~ "tabela e espaço de índice em bancos de dados."
+
+#, fuzzy
+#~ msgid ""
+#~ "This ruleset allows you to configure levels for Azure NAT Gateways "
+#~ "packets, including thresholds for dropped packets."
+#~ msgstr ""
+#~ "Esta regra permite que você configure níveis de inchaço para um espaço de "
+#~ "tabela e espaço de índice em bancos de dados."
+
+#, fuzzy
+#~ msgid ""
+#~ "This ruleset allows you to configure levels for Azure NAT Gateways "
+#~ "throughput monitoring"
+#~ msgstr ""
+#~ "Esta regra permite que você configure níveis de inchaço para um espaço de "
+#~ "tabela e espaço de índice em bancos de dados."
+
+#, fuzzy
+#~ msgid ""
+#~ "This ruleset allows you to configure levels for Azure Redis CPU "
+#~ "utilization monitoring"
+#~ msgstr ""
+#~ "Esta regra permite que você configure níveis de inchaço para um espaço de "
+#~ "tabela e espaço de índice em bancos de dados."
+
+#, fuzzy
+#~ msgid ""
+#~ "This ruleset allows you to configure levels for Azure Redis Cache "
+#~ "effectiveness monitoring"
+#~ msgstr ""
+#~ "Esta regra permite que você configure níveis de inchaço para um espaço de "
+#~ "tabela e espaço de índice em bancos de dados."
+
+#, fuzzy
+#~ msgid ""
+#~ "This ruleset allows you to configure levels for Azure Redis connections "
+#~ "monitoring"
+#~ msgstr ""
+#~ "Esta regra permite que você configure níveis de inchaço para um espaço de "
+#~ "tabela e espaço de índice em bancos de dados."
+
+#, fuzzy
+#~ msgid ""
+#~ "This ruleset allows you to configure levels for Azure Redis latency "
+#~ "monitoring"
+#~ msgstr ""
+#~ "Esta regra permite que você configure níveis de inchaço para um espaço de "
+#~ "tabela e espaço de índice em bancos de dados."
+
+#, fuzzy
+#~ msgid ""
+#~ "This ruleset allows you to configure levels for Azure Redis memory "
+#~ "monitoring"
+#~ msgstr ""
+#~ "Esta regra permite que você configure níveis de inchaço para um espaço de "
+#~ "tabela e espaço de índice em bancos de dados."
+
+#, fuzzy
+#~ msgid ""
+#~ "This ruleset allows you to configure levels for Azure Redis replication "
+#~ "monitoring"
+#~ msgstr ""
+#~ "Esta regra permite que você configure níveis de inchaço para um espaço de "
+#~ "tabela e espaço de índice em bancos de dados."
+
+#, fuzzy
+#~ msgid ""
+#~ "This ruleset allows you to configure levels for Azure Redis server load "
+#~ "monitoring"
+#~ msgstr ""
+#~ "Esta regra permite que você configure níveis de inchaço para um espaço de "
+#~ "tabela e espaço de índice em bancos de dados."
+
+#, fuzzy
+#~ msgid ""
+#~ "This ruleset allows you to configure levels for Azure Redis throughput "
+#~ "monitoring"
+#~ msgstr ""
+#~ "Esta regra permite que você configure níveis de inchaço para um espaço de "
+#~ "tabela e espaço de índice em bancos de dados."
+
+#, fuzzy
+#~ msgid ""
+#~ "This ruleset allows you to configure limits for Azure Cosmos DB storage"
+#~ msgstr ""
+#~ "Esta regra permite que você configure níveis de inchaço para um espaço de "
+#~ "tabela e espaço de índice em bancos de dados."
+
+#, fuzzy
+#~ msgid ""
+#~ "This ruleset allows you to configure upper limits for Azure Cosmos DB "
+#~ "database container throttled requests ratio"
+#~ msgstr ""
+#~ "Esta regra permite que você configure níveis de inchaço para um espaço de "
+#~ "tabela e espaço de índice em bancos de dados."
+
+#, fuzzy
+#~ msgid ""
+#~ "This ruleset allows you to configure upper limits for Azure Cosmos DB "
+#~ "database throttled requests ratio"
+#~ msgstr ""
+#~ "Esta regra permite que você configure níveis de inchaço para um espaço de "
+#~ "tabela e espaço de índice em bancos de dados."
+
+#, fuzzy
+#~ msgid ""
+#~ "This ruleset allows you to configure upper limits for Azure Cosmos DB "
+#~ "throttled requests ratio"
+#~ msgstr ""
+#~ "Esta regra permite que você configure níveis de inchaço para um espaço de "
+#~ "tabela e espaço de índice em bancos de dados."
+
+#, fuzzy
+#~ msgid "Throttled requests ratio"
+#~ msgstr "Pedidos estrangulados"
+
+#, fuzzy
+#~ msgid "Total RUs lower levels"
+#~ msgstr "Contentores de níveis inferiores"
+
+#, fuzzy
+#~ msgid "Total RUs upper levels"
+#~ msgstr "Contentores níveis superiores"
+
+#, fuzzy
+#~ msgid "Total connections lower limit"
+#~ msgstr "Total de ligações Máximo"
+
+#, fuzzy
+#~ msgid "Total connections upper limit"
+#~ msgstr "Total de ligações Máximo"
+
+#, fuzzy
+#~ msgid "Total storage"
+#~ msgstr "Tamanho total"
+
+#, fuzzy
+#~ msgid "Total throughput lower levels (/sec)"
+#~ msgstr "Taxa de transferência total por segundo"
+
+#, fuzzy
+#~ msgid "Total throughput upper levels (/sec)"
+#~ msgstr "Taxa de transferência total por segundo"
+
+#, fuzzy
+#~ msgid "Used memory"
+#~ msgstr "Memória de CPU usada"
+
+#, fuzzy
+#~ msgid "Used memory RSS"
+#~ msgstr "Memória de CPU usada"
+
 #, fuzzy, python-format
 #~ msgid ""
 #~ "Graph specification '%s' is insufficient for dashboard. Please save your "
@@ -96829,10 +96953,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Lower level for total requests over last minute"
 #~ msgstr "Níveis mais baixos para a taxa de erro total"
-
-#, fuzzy
-#~ msgid "Metric configuration"
-#~ msgstr "Configuração do anfitrião"
 
 #, fuzzy
 #~ msgid "Metric name (exact match)"
@@ -98344,10 +98464,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Execute plan as a specific user"
 #~ msgstr "Programação da execução"
-
-#, fuzzy
-#~ msgid "Execution configuration"
-#~ msgstr "Configuração da notificação"
 
 #, fuzzy
 #~ msgid "Grace period before scheduler starts"

@@ -1,5 +1,5 @@
 {
-  "checksum": "d209e18fe3d3b50d7d022608318c2d6cc26353f6687b7835b784d7e8711a464f",
+  "checksum": "b6a4b37bc71cfae0f69e8bd21e5b340d9dd289467afe54af89057af185ac4733",
   "crates": {
     "addr2line 0.24.2": {
       "name": "addr2line",
@@ -11415,6 +11415,14 @@
               }
             ],
             "cfg(windows)": [
+              {
+                "id": "is_elevated 0.1.2",
+                "target": "is_elevated"
+              },
+              {
+                "id": "winapi 0.3.9",
+                "target": "winapi"
+              },
               {
                 "id": "winreg 0.52.0",
                 "target": "winreg"

@@ -447,20 +447,19 @@ pub fn reset_env(old_path: &Path, mut_env: Option<String>) {
 /// library from it. Dispatches to the platform-specific implementation.
 ///
 /// On Linux the path and, if it is a directory, its subtree must be
-/// only-root-modifiable whenever the plugin runs as root — otherwise a
-/// non-root user could swap in a malicious `.so`. On Windows the check is
-/// not yet implemented.
+/// only-root-modifiable whenever the plugin runs as root. On Windows the
+/// path's DACL must grant write access only to privileged SIDs (SYSTEM,
+/// built-in Administrators, Domain Admins, Enterprise Admins) whenever the
+/// plugin runs elevated. In both cases a non-privileged caller always
+/// passes.
 pub fn validate_permissions(p: &Path) -> bool {
     #[cfg(unix)]
     {
-        println!("Validating permissions for path {:?} on Unix", p);
         crate::permissions_linux::validate(p)
     }
     #[cfg(windows)]
     {
-        // TODO: implement in permissions_windows.rs
-        log::warn!("CHECK PERMISSIONS is not implemented yet, {p:?} is allowed to be used");
-        true
+        crate::permissions_windows::validate(p)
     }
 }
 

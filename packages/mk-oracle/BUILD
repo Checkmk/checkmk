@@ -39,6 +39,7 @@ rust_library(
         "src/ora_sql/sqls.rs",
         "src/ora_sql/system.rs",
         "src/ora_sql/types.rs",
+        "src/permissions_linux.rs",
         "src/platform.rs",
         "src/setup.rs",
         "src/types.rs",

@@ -42,6 +42,9 @@ yaml-rust2.workspace = true
 regex = "1.12.2"
 sysinfo = "0.38.0"
 
+[target.'cfg(unix)'.dependencies]
+libc = "0.2"
+
 [target.'cfg(windows)'.dependencies]
 winreg.workspace = true
 

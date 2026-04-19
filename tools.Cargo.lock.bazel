@@ -1,5 +1,5 @@
 {
-  "checksum": "595b5301b7cadf24cb2da181ad579e4bd190fc09756837768503cffc7d6a1b44",
+  "checksum": "3b04d12d6ad41e7796c889d60d49e50fb95de9a85bfe538de025632ba6918178",
   "crates": {
     "anstream 0.6.21": {
       "name": "anstream",
@@ -2166,18 +2166,6 @@
               ]
             }
           }
-        },
-        {
-          "BuildScript": {
-            "crate_name": "build_script_build",
-            "crate_root": "build.rs",
-            "srcs": {
-              "allow_empty": true,
-              "include": [
-                "**/*.rs"
-              ]
-            }
-          }
         }
       ],
       "library_target_name": "package_validator",
@@ -2206,10 +2194,6 @@
             {
               "id": "goblin 0.8.2",
               "target": "goblin"
-            },
-            {
-              "id": "package_validator 0.1.0",
-              "target": "build_script_build"
             },
             {
               "id": "path-clean 1.0.1",
@@ -2248,17 +2232,6 @@
         },
         "edition": "2021",
         "version": "0.1.0"
-      },
-      "build_script_attrs": {
-        "compile_data_glob": [
-          "**"
-        ],
-        "compile_data_glob_excludes": [
-          "**/*.rs"
-        ],
-        "data_glob": [
-          "**"
-        ]
       },
       "license": null,
       "license_ids": [],

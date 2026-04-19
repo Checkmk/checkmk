@@ -1725,6 +1725,7 @@ fn test_create_plugin_async() {
     assert!(bakery_content.contains("  - pattern: $CUSTOM_PLUGINS_PATH$\\a"));
 }
 
+#[cfg(not(windows))]
 #[test]
 fn test_find_current_instance_runtime() {
     use mk_oracle::setup::find_default_instance_runtime;

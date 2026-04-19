@@ -31,6 +31,7 @@ def create_core(
     match loaded_config.monitoring_core:
         case "nagios":
             from cmk.base.core.nagios import NagiosCore
+            from cmk.base.core.nagios._create_config import NagiosCoreConfig
 
             return NagiosCore(
                 NagiosClient(
@@ -42,6 +43,21 @@ def create_core(
                 ),
                 CommunityLicensingHandler,
                 get_all_timeperiods(loaded_config.timeperiods),
+                NagiosCoreConfig(
+                    delay_precompile=loaded_config.delay_precompile,
+                    host_template=loaded_config.host_template,
+                    cluster_template=loaded_config.cluster_template,
+                    pingonly_template=loaded_config.pingonly_template,
+                    active_service_template=loaded_config.active_service_template,
+                    passive_service_template_perf=loaded_config.passive_service_template_perf,
+                    inventory_check_template=loaded_config.inventory_check_template,
+                    service_dependency_template=loaded_config.service_dependency_template,
+                    generate_hostconf=loaded_config.generate_hostconf,
+                    generate_dummy_commands=loaded_config.generate_dummy_commands,
+                    dummy_check_commandline=loaded_config.dummy_check_commandline,
+                    default_host_group=loaded_config.default_host_group,
+                    extra_nagios_conf=loaded_config.extra_nagios_conf,
+                ),
             )
         case "cmc":
             raise RuntimeError("The Microcore is not available in this edition")

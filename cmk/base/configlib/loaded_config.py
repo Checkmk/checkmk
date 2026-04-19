@@ -156,3 +156,16 @@ class LoadedConfigFragment:
     alert_handler_rules: Sequence[EventRule]
     alert_handler_timeout: int
     alert_logging: int
+    host_template: str
+    cluster_template: str
+    pingonly_template: str
+    active_service_template: str
+    passive_service_template_perf: str
+    inventory_check_template: str
+    service_dependency_template: str
+    generate_hostconf: bool
+    generate_dummy_commands: bool
+    dummy_check_commandline: str
+    delay_precompile: bool
+    default_host_group: str
+    extra_nagios_conf: str

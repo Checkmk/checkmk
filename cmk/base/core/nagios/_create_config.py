@@ -14,6 +14,7 @@ import sys
 from collections import Counter
 from collections.abc import Callable, Mapping, Sequence
 from contextlib import suppress
+from dataclasses import dataclass
 from io import StringIO
 from pathlib import Path
 from socket import AddressFamily
@@ -81,16 +82,34 @@ _ContactgroupName = str
 ObjectSpec = dict[str, Any]
 
 
+@dataclass(frozen=True)
+class NagiosCoreConfig:
+    delay_precompile: bool
+    host_template: str
+    cluster_template: str
+    pingonly_template: str
+    active_service_template: str
+    passive_service_template_perf: str
+    inventory_check_template: str
+    service_dependency_template: str
+    generate_hostconf: bool
+    generate_dummy_commands: bool
+    dummy_check_commandline: str
+    default_host_group: str
+    extra_nagios_conf: str
+
+
 class NagiosCore(MonitoringCore):
     def __init__(
         self,
         core_client: NagiosClient,
         licensing_handler_factory: Callable[[], LicensingHandler],
-        # we should consider passing a NagiosConfig here, in analogy to CmcPb
         timeperiods: TimeperiodSpecs,
+        nagios_core_config: NagiosCoreConfig,
     ) -> None:
         super().__init__(core_client, licensing_handler_factory)
         self.timeperiods: Final = timeperiods
+        self.nagios_core_config: Final = nagios_core_config
 
     @classmethod
     def name(cls) -> Literal["nagios"]:
@@ -149,7 +168,9 @@ class NagiosCore(MonitoringCore):
             get_ip_stack_config,
             ip_address_of,
             precompile_mode=(
-                PrecompileMode.DELAYED if config.delay_precompile else PrecompileMode.INSTANT
+                PrecompileMode.DELAYED
+                if self.nagios_core_config.delay_precompile
+                else PrecompileMode.INSTANT
             ),
         )
 
@@ -187,6 +208,7 @@ class NagiosCore(MonitoringCore):
         notify_host_files = create_config(
             config_buffer,
             self._config_cache,
+            self.nagios_core_config,
             final_service_name_config,
             passive_service_name_config,
             enforced_services_table,
@@ -295,6 +317,7 @@ def _validate_licensing(
 def create_config(
     outfile: IO[str],
     config_cache: ConfigCache,
+    nagios_core_config: NagiosCoreConfig,
     final_service_name_config: Callable[
         [HostName, ServiceName, Callable[[HostName], Labels]], ServiceName
     ],
@@ -325,6 +348,7 @@ def create_config(
         all_notify_host_configs[hostname] = _create_nagios_config_host(
             cfg,
             config_cache,
+            nagios_core_config,
             final_service_name_config,
             passive_service_name_config,
             enforced_services_table,
@@ -346,15 +370,17 @@ def create_config(
     _create_nagios_config_contacts(cfg)
     if hostnames:
         _create_nagios_check_mk_notify_contact(cfg)
-    _create_nagios_config_hostgroups(cfg)
+    _create_nagios_config_hostgroups(cfg, nagios_core_config.default_host_group)
     _create_nagios_config_servicegroups(cfg)
     _create_nagios_config_contactgroups(cfg)
-    create_nagios_config_commands(cfg)
+    create_nagios_config_commands(
+        cfg, nagios_core_config.generate_dummy_commands, nagios_core_config.dummy_check_commandline
+    )
     _create_nagios_config_timeperiods(cfg)
 
-    if config.extra_nagios_conf:
+    if nagios_core_config.extra_nagios_conf:
         cfg.write_str("\n# extra_nagios_conf\n\n")
-        cfg.write_str(config.extra_nagios_conf)
+        cfg.write_str(nagios_core_config.extra_nagios_conf)
 
     return notify_host_files
 
@@ -372,6 +398,7 @@ def _output_conf_header(cfg: NagiosConfig) -> None:
 def _create_nagios_config_host(
     cfg: NagiosConfig,
     config_cache: ConfigCache,
+    nagios_core_config: NagiosCoreConfig,
     final_service_name_config: Callable[
         [HostName, ServiceName, Callable[[HostName], Labels]], ServiceName
     ],
@@ -395,9 +422,15 @@ def _create_nagios_config_host(
     cfg.write_str("# ----------------------------------------------------\n")
 
     host_attrs = config_cache.get_host_attributes(hostname, host_ip_family, ip_address_of)
-    if config.generate_hostconf:
+    if nagios_core_config.generate_hostconf:
         host_spec = create_nagios_host_spec(
-            cfg, config_cache, hostname, host_ip_family, host_attrs, ip_address_of
+            cfg,
+            config_cache,
+            nagios_core_config,
+            hostname,
+            host_ip_family,
+            host_attrs,
+            ip_address_of,
         )
         cfg.write_object("host", host_spec)
 
@@ -406,6 +439,7 @@ def _create_nagios_config_host(
         service_labels=create_nagios_servicedefs(
             cfg,
             config_cache,
+            nagios_core_config,
             final_service_name_config,
             passive_service_name_config,
             enforced_services_table,
@@ -427,6 +461,7 @@ def _create_nagios_config_host(
 def create_nagios_host_spec(
     cfg: NagiosConfig,
     config_cache: ConfigCache,
+    nagios_core_config: NagiosCoreConfig,
     hostname: HostName,
     host_ip_family: Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6],
     attrs: ObjectAttributes,
@@ -458,9 +493,9 @@ def create_nagios_host_spec(
     host_spec = {
         "host_name": hostname,
         "use": (
-            config.cluster_template
+            nagios_core_config.cluster_template
             if hostname in config_cache.hosts_config.clusters
-            else config.host_template
+            else nagios_core_config.host_template
         ),
         "address": (ip if ip else ip_lookup.fallback_ip_for(host_ip_family)),
         "alias": attrs["alias"],
@@ -512,7 +547,7 @@ def create_nagios_host_spec(
         host_spec["check_command"] = command
 
     hostgroups = config_cache.hostgroups(hostname)
-    if config.define_hostgroups or hostgroups == [config.default_host_group]:
+    if config.define_hostgroups or hostgroups == [nagios_core_config.default_host_group]:
         cfg.hostgroups_to_define.update(hostgroups)
     host_spec["hostgroups"] = ",".join(sorted(hostgroups))
 
@@ -569,6 +604,7 @@ _ServiceLabels = dict[ServiceName, Labels]
 def _process_services_data(
     cfg: NagiosConfig,
     config_cache: ConfigCache,
+    nagios_core_config: NagiosCoreConfig,
     passive_service_name_config: Callable[[HostName, ServiceID, str | None], ServiceName],
     enforced_services_table: Callable[
         [HostName], Mapping[ServiceID, tuple[object, ConfiguredService]]
@@ -614,7 +650,14 @@ def _process_services_data(
         services_ids[service.description] = service.id()
 
         # Services Dependencies for autochecks
-        cfg.write_str(_get_dependencies(service_depends_on, hostname, service.description))
+        cfg.write_str(
+            _get_dependencies(
+                service_depends_on,
+                hostname,
+                service.description,
+                nagios_core_config.service_dependency_template,
+            )
+        )
 
         passive_service_attributes = _to_nagios_core_attributes(
             get_cmk_passive_service_attributes(
@@ -630,7 +673,7 @@ def _process_services_data(
 
         service_spec = (
             {
-                "use": config.passive_service_template_perf,
+                "use": nagios_core_config.passive_service_template_perf,
                 "host_name": hostname,
                 "service_description": service.description,
                 "check_command": "check_mk-%s" % service.check_plugin_name,
@@ -654,6 +697,7 @@ _PingServiceNames = Literal["PING", "PING IPv4", "PING IPv6"]
 def create_nagios_servicedefs(
     cfg: NagiosConfig,
     config_cache: ConfigCache,
+    nagios_core_config: NagiosCoreConfig,
     final_service_name_config: Callable[
         [HostName, ServiceName, Callable[[HostName], Labels]], ServiceName
     ],
@@ -681,6 +725,7 @@ def create_nagios_servicedefs(
     services_ids, service_labels = _process_services_data(
         cfg,
         config_cache,
+        nagios_core_config,
         passive_service_name_config,
         enforced_services_table,
         service_depends_on,
@@ -694,7 +739,7 @@ def create_nagios_servicedefs(
     if config_cache.checkmk_check_parameters(hostname, for_relay=for_relay).enabled:
         service_spec = (
             {
-                "use": config.active_service_template,
+                "use": nagios_core_config.active_service_template,
                 "host_name": hostname,
                 "service_description": "Check_MK",
             }
@@ -783,7 +828,12 @@ def create_nagios_servicedefs(
         for service_spec in active_services:
             cfg.write_object("service", service_spec)
             cfg.write_str(
-                _get_dependencies(service_depends_on, hostname, service_spec["service_description"])
+                _get_dependencies(
+                    service_depends_on,
+                    hostname,
+                    service_spec["service_description"],
+                    nagios_core_config.service_dependency_template,
+                )
             )
 
     # Legacy checks via custom_checks
@@ -795,6 +845,7 @@ def create_nagios_servicedefs(
                 entry,
                 cfg,
                 config_cache,
+                nagios_core_config,
                 final_service_name_config,
                 hostname,
                 license_counter,
@@ -809,7 +860,7 @@ def create_nagios_servicedefs(
         labels = _get_service_labels(config_cache.label_manager, hostname, service_discovery_name)
         service_spec = (
             {
-                "use": config.inventory_check_template,
+                "use": nagios_core_config.inventory_check_template,
                 "host_name": hostname,
                 "service_description": service_discovery_name,
             }
@@ -830,7 +881,7 @@ def create_nagios_servicedefs(
             cfg.write_object(
                 "servicedependency",
                 {
-                    "use": config.service_dependency_template,
+                    "use": nagios_core_config.service_dependency_template,
                     "host_name": hostname,
                     "service_description": "Check_MK",
                     "dependent_host_name": hostname,
@@ -853,7 +904,14 @@ def create_nagios_servicedefs(
 
     for ping_service in ping_services:
         _add_ping_service(
-            cfg, config_cache, hostname, host_ip_family, host_attrs, ping_service, license_counter
+            cfg,
+            config_cache,
+            hostname,
+            host_ip_family,
+            host_attrs,
+            ping_service,
+            license_counter,
+            nagios_core_config.pingonly_template,
         )
 
     return service_labels
@@ -863,6 +921,7 @@ def _create_custom_check(
     entry: dict[str, Any],
     cfg: NagiosConfig,
     config_cache: ConfigCache,
+    nagios_core_config: NagiosCoreConfig,
     final_service_name_config: Callable[
         [HostName, ServiceName, Callable[[HostName], Labels]], ServiceName
     ],
@@ -954,7 +1013,14 @@ def _create_custom_check(
     license_counter["services"] += 1
 
     # write service dependencies for custom checks
-    cfg.write_str(_get_dependencies(service_depends_on, hostname, description))
+    cfg.write_str(
+        _get_dependencies(
+            service_depends_on,
+            hostname,
+            description,
+            nagios_core_config.service_dependency_template,
+        )
+    )
 
 
 def _get_service_labels(
@@ -980,12 +1046,13 @@ def _get_dependencies(
     service_depends_on: Callable[[HostAddress, ServiceName], Sequence[ServiceName]],
     hostname: HostName,
     service_name: ServiceName,
+    service_dependency_template: str,
 ) -> str:
     return "".join(
         _format_nagios_object(
             "servicedependency",
             {
-                "use": config.service_dependency_template,
+                "use": service_dependency_template,
                 "host_name": hostname,
                 "service_description": dep,
                 "dependent_host_name": hostname,
@@ -1004,6 +1071,7 @@ def _add_ping_service(
     host_attrs: Mapping[str, Any],
     ping_service: _PingServiceNames,
     licensing_counter: Counter,
+    pingonly_template: str,
 ) -> None:
     service_labels = _get_service_labels(config_cache.label_manager, host_name, ping_service)
     family: Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6]
@@ -1031,7 +1099,7 @@ def _add_ping_service(
         arguments += " " + ipaddress
 
     service_spec = _make_ping_only_spec(
-        cfg, config_cache, host_name, ping_service, arguments, service_labels
+        cfg, config_cache, host_name, ping_service, arguments, service_labels, pingonly_template
     )
 
     cfg.write_object("service", service_spec)
@@ -1045,11 +1113,12 @@ def _make_ping_only_spec(
     service_name: ServiceName,
     arguments: str,
     service_labels: Labels,
+    pingonly_template: str,
 ) -> dict[str, str | HostAddress]:
     ping_command = "check-mk-ping"
     return (
         {
-            "use": config.pingonly_template,
+            "use": pingonly_template,
             "host_name": host_name,
             "service_description": service_name,
             "check_command": f"{ping_command}!{arguments}",
@@ -1089,7 +1158,7 @@ def _simulate_command(cfg: NagiosConfig, command: CoreCommand) -> CoreCommand:
     return command
 
 
-def _create_nagios_config_hostgroups(cfg: NagiosConfig) -> None:
+def _create_nagios_config_hostgroups(cfg: NagiosConfig, default_host_group: str) -> None:
     if config.define_hostgroups:
         cfg.write_str("\n# ------------------------------------------------------------\n")
         cfg.write_str("# Host groups (controlled by define_hostgroups)\n")
@@ -1104,11 +1173,11 @@ def _create_nagios_config_hostgroups(cfg: NagiosConfig) -> None:
             )
 
     # No creation of host groups but we need to define default host group
-    elif config.default_host_group in cfg.hostgroups_to_define:
+    elif default_host_group in cfg.hostgroups_to_define:
         cfg.write_object(
             "hostgroup",
             {
-                "hostgroup_name": config.default_host_group,
+                "hostgroup_name": default_host_group,
                 "alias": "Check_MK default hostgroup",
             },
         )
@@ -1146,8 +1215,10 @@ def _create_nagios_config_contactgroups(cfg: NagiosConfig) -> None:
         cfg.write_object("contactgroup", contactgroup_spec)
 
 
-def create_nagios_config_commands(cfg: NagiosConfig) -> None:
-    if config.generate_dummy_commands:
+def create_nagios_config_commands(
+    cfg: NagiosConfig, generate_dummy_commands: bool, dummy_check_commandline: str
+) -> None:
+    if generate_dummy_commands:
         cfg.write_str("\n# ------------------------------------------------------------\n")
         cfg.write_str("# Dummy check commands and active check commands\n")
         cfg.write_str("# ------------------------------------------------------------\n\n")
@@ -1156,7 +1227,7 @@ def create_nagios_config_commands(cfg: NagiosConfig) -> None:
                 "command",
                 {
                     "command_name": "check_mk-%s" % checkname,
-                    "command_line": config.dummy_check_commandline,
+                    "command_line": dummy_check_commandline,
                 },
             )
 

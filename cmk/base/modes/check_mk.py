@@ -1494,6 +1494,7 @@ _FLUSH_MODE = Mode(
 
 def mode_dump_nagios_config(app: CheckmkBaseApp, args: Sequence[HostName]) -> None:
     from cmk.base.core.nagios import create_config
+    from cmk.base.core.nagios._create_config import NagiosCoreConfig
 
     plugins = load_checks()
     loading_result = load_config(
@@ -1535,6 +1536,21 @@ def mode_dump_nagios_config(app: CheckmkBaseApp, args: Sequence[HostName]) -> No
     _notify_host_files = create_config(
         sys.stdout,
         config_cache,
+        NagiosCoreConfig(
+            delay_precompile=loaded_config.delay_precompile,
+            host_template=loaded_config.host_template,
+            cluster_template=loaded_config.cluster_template,
+            pingonly_template=loaded_config.pingonly_template,
+            active_service_template=loaded_config.active_service_template,
+            passive_service_template_perf=loaded_config.passive_service_template_perf,
+            inventory_check_template=loaded_config.inventory_check_template,
+            service_dependency_template=loaded_config.service_dependency_template,
+            generate_hostconf=loaded_config.generate_hostconf,
+            generate_dummy_commands=loaded_config.generate_dummy_commands,
+            dummy_check_commandline=loaded_config.dummy_check_commandline,
+            default_host_group=loaded_config.default_host_group,
+            extra_nagios_conf=loaded_config.extra_nagios_conf,
+        ),
         final_service_name_config,
         service_name_config,
         config.EnforcedServicesTable(

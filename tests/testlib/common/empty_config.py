@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.base.configlib.loaded_config import LoadedConfigFragment
+from cmk.base.core.nagios._create_config import NagiosCoreConfig
 from cmk.utils.labels import ABCLabelConfig, LabelManager, Labels
 from cmk.utils.rulesets.ruleset_matcher import RulesetMatcher
 
@@ -125,6 +126,42 @@ EMPTY_CONFIG = LoadedConfigFragment(
     alert_handler_rules=[],
     alert_handler_timeout=60,
     alert_logging=20,
+    host_template="check_mk_host",
+    cluster_template="check_mk_cluster",
+    pingonly_template="check_mk_pingonly",
+    active_service_template="check_mk_active",
+    passive_service_template_perf="check_mk_passive_perf",
+    inventory_check_template="check_mk_inventory",
+    service_dependency_template="check_mk",
+    generate_hostconf=True,
+    generate_dummy_commands=True,
+    dummy_check_commandline=(
+        'echo "ERROR - you did an active check on this service - please disable active checks" '
+        "&& exit 1"
+    ),
+    delay_precompile=False,
+    default_host_group="check_mk",
+    extra_nagios_conf="",
+)
+
+
+EMPTY_NAGIOS_CORE_CONFIG = NagiosCoreConfig(
+    delay_precompile=False,
+    host_template="check_mk_host",
+    cluster_template="check_mk_cluster",
+    pingonly_template="check_mk_pingonly",
+    active_service_template="check_mk_active",
+    passive_service_template_perf="check_mk_passive_perf",
+    inventory_check_template="check_mk_inventory",
+    service_dependency_template="check_mk",
+    generate_hostconf=True,
+    generate_dummy_commands=True,
+    dummy_check_commandline=(
+        'echo "ERROR - you did an active check on this service - please disable active checks" '
+        "&& exit 1"
+    ),
+    default_host_group="check_mk",
+    extra_nagios_conf="",
 )
 
 

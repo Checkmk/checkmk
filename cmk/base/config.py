@@ -758,6 +758,19 @@ def _perform_post_config_loading_actions(
         alert_handler_rules=alert_handler_rules,
         alert_handler_timeout=alert_handler_timeout,
         alert_logging=alert_logging,
+        host_template=host_template,
+        cluster_template=cluster_template,
+        pingonly_template=pingonly_template,
+        active_service_template=active_service_template,
+        passive_service_template_perf=passive_service_template_perf,
+        inventory_check_template=inventory_check_template,
+        service_dependency_template=service_dependency_template,
+        generate_hostconf=generate_hostconf,
+        generate_dummy_commands=generate_dummy_commands,
+        dummy_check_commandline=dummy_check_commandline,
+        delay_precompile=delay_precompile,
+        default_host_group=default_host_group,
+        extra_nagios_conf=extra_nagios_conf,
     )
 
     config_cache = ConfigCache(loaded_config, get_builtin_host_labels, edition).initialize(

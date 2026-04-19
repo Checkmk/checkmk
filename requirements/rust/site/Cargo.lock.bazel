@@ -1,5 +1,5 @@
 {
-  "checksum": "c1cae41a1234a7bf62bc288fd5dcadb3f9507e916fdae2a5c7552781b1949636",
+  "checksum": "4183d72380d7d5772b29b4a3d242dc26d3e65a3c4c219cd67b2553f35cad61e8",
   "crates": {
     "addr2line 0.24.2": {
       "name": "addr2line",
@@ -4500,7 +4500,7 @@
               "target": "hyper_util"
             },
             {
-              "id": "rustls 0.23.23",
+              "id": "rustls 0.23.28",
               "target": "rustls"
             },
             {
@@ -8825,7 +8825,7 @@
               "alias": "native_tls_crate"
             },
             {
-              "id": "rustls 0.23.23",
+              "id": "rustls 0.23.28",
               "target": "rustls"
             },
             {
@@ -9335,14 +9335,14 @@
       ],
       "license_file": "LICENSE-APACHE"
     },
-    "rustls 0.23.23": {
+    "rustls 0.23.28": {
       "name": "rustls",
-      "version": "0.23.23",
+      "version": "0.23.28",
       "package_url": "https://github.com/rustls/rustls",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/rustls/0.23.23/download",
-          "sha256": "47796c98c480fce5406ef69d1c76378375492c3b0a0de587be0c1d9feb12f395"
+          "url": "https://static.crates.io/crates/rustls/0.23.28/download",
+          "sha256": "7160e3e10bf4535308537f3c4e1641468cd0e485175d6163087c0393c7d46643"
         }
       },
       "targets": [
@@ -9395,7 +9395,7 @@
               "target": "ring"
             },
             {
-              "id": "rustls 0.23.23",
+              "id": "rustls 0.23.28",
               "target": "build_script_build"
             },
             {
@@ -9404,7 +9404,7 @@
               "alias": "pki_types"
             },
             {
-              "id": "rustls-webpki 0.102.8",
+              "id": "rustls-webpki 0.103.3",
               "target": "webpki"
             },
             {
@@ -9419,7 +9419,7 @@
           "selects": {}
         },
         "edition": "2021",
-        "version": "0.23.23"
+        "version": "0.23.28"
       },
       "build_script_attrs": {
         "compile_data_glob": [
@@ -9622,14 +9622,14 @@
       ],
       "license_file": "LICENSE-APACHE"
     },
-    "rustls-webpki 0.102.8": {
+    "rustls-webpki 0.103.3": {
       "name": "rustls-webpki",
-      "version": "0.102.8",
+      "version": "0.103.3",
       "package_url": "https://github.com/rustls/webpki",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/rustls-webpki/0.102.8/download",
-          "sha256": "64ca1bc8749bd4cf37b5ce386cc146580777b4e8572c7b97baf22c83f444bee9"
+          "url": "https://static.crates.io/crates/rustls-webpki/0.103.3/download",
+          "sha256": "e4a72fe2bcf7a6ac6fd7d0b9e5cb68aeb7d4c0a0271730218b3e92d43b4eb435"
         }
       },
       "targets": [
@@ -9678,7 +9678,7 @@
           "selects": {}
         },
         "edition": "2021",
-        "version": "0.102.8"
+        "version": "0.103.3"
       },
       "license": "ISC",
       "license_ids": [
@@ -12372,7 +12372,7 @@
         "deps": {
           "common": [
             {
-              "id": "rustls 0.23.23",
+              "id": "rustls 0.23.28",
               "target": "rustls"
             },
             {

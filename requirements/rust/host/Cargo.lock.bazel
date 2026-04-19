@@ -1,5 +1,5 @@
 {
-  "checksum": "d4916b5c3e7f1a79406103f1bee0957011807013b8fa7eacddde6ef4d1d95564",
+  "checksum": "1faa478ea04fcd99c14e72476ec8a6439597f9a05ffc32791e8f048386c5966a",
   "crates": {
     "addr2line 0.24.2": {
       "name": "addr2line",
@@ -10233,6 +10233,12 @@
             }
           ],
           "selects": {
+            "cfg(unix)": [
+              {
+                "id": "libc 0.2.175",
+                "target": "libc"
+              }
+            ],
             "cfg(windows)": [
               {
                 "id": "winreg 0.52.0",
@@ -28063,6 +28069,7 @@
     "ipnet 2.11.0",
     "is_elevated 0.1.2",
     "lazy_static 1.5.0",
+    "libc 0.2.175",
     "log 0.4.27",
     "mail_slot 0.1.3",
     "nix 0.29.0",

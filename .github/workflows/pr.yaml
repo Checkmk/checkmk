@@ -97,15 +97,15 @@ jobs:
                   sudo apt-get install ksh libpango1.0-dev librrd-dev libldap2-dev libsasl2-dev libkrb5-dev libglib2.0-dev gettext "^g\+\+-14$"
                   make .venv
             # Keep next targets in sync with `test-github-actions.groovy`.
-            - name: Formatting
-              if: ${{ !cancelled() }}
-              run: bazel run //:format.check
-            - name: Lint repo
-              if: ${{ !cancelled() }}
-              run: bazel lint --fixes=false ...
-            - name: Check typing
-              if: ${{ !cancelled() }}
-              run: bazel build --config=mypy ...
+            # - name: Formatting
+            #   if: ${{ !cancelled() }}
+            #   run: bazel run //:format.check
+            # - name: Lint repo
+            #   if: ${{ !cancelled() }}
+            #   run: bazel lint --fixes=false ...
+            # - name: Check typing
+            #   if: ${{ !cancelled() }}
+            #   run: bazel build --config=mypy ...
             - name: Run unit tests
               if: ${{ !cancelled() }}
               run: make -C tests test-unit

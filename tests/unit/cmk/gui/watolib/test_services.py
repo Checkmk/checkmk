@@ -2176,7 +2176,7 @@ def test_perform_discovery_bulk_update__ignored_service_set_to_undecided(
     assert len(add_disabled_rule) == 0
 
     # The entry transitions to 'new' (undecided) in the result view.
-    (transitioned,) = [e for e in result.check_table if e.check_plugin_name == "some_plugin"]
+    (transitioned,) = (e for e in result.check_table if e.check_plugin_name == "some_plugin")
     assert transitioned.check_source == "new"
 
     # The service was removed from autochecks (it was present as 'ignored'; now it is gone).

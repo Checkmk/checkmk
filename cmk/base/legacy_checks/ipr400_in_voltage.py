@@ -30,8 +30,8 @@ def check_ipr400_in_voltage(item, params, info):
         )
     ]
     infotext = "in voltage: %.1fV" % power
-    lower_text = "(warn/crit below %sV/%sV)" % (warn_lower, crit_lower)
-    upper_text = "(warn/crit at or above %sV/%sV)" % (warn_upper, crit_upper)
+    lower_text = f"(warn/crit below {warn_lower}V/{crit_lower}V)"
+    upper_text = f"(warn/crit at or above {warn_upper}V/{crit_upper}V)"
 
     if power <= crit_lower:
         return 2, infotext + ", " + lower_text, perfdata

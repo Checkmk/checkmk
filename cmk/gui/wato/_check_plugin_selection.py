@@ -47,7 +47,10 @@ class _CheckTypeHostSelection(DualListChoice):
         super().__init__(rows=25, title=title)
 
     def get_elements(self) -> Sequence[ListChoiceChoice]:
-        checks = get_check_information_cached(debug=active_config.debug)
+        try:
+            checks = get_check_information_cached(debug=active_config.debug)
+        except Exception:
+            return []
         return [
             (str(cn), (str(cn) + " - " + c["title"])[:60])
             for (cn, c) in checks.items()
@@ -61,7 +64,10 @@ class _CheckTypeMgmtSelection(DualListChoice):
         super().__init__(rows=25, title=title)
 
     def get_elements(self) -> Sequence[ListChoiceChoice]:
-        checks = get_check_information_cached(debug=active_config.debug)
+        try:
+            checks = get_check_information_cached(debug=active_config.debug)
+        except Exception:
+            return []
         return [
             (str(cn.create_basic_name()), (str(cn) + " - " + c["title"])[:60])
             for (cn, c) in checks.items()

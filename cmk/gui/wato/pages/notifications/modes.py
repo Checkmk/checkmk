@@ -1573,7 +1573,11 @@ class ModeAnalyzeNotifications(ModeNotifications):
             self._render_bulks(only_ripe=True, debug=debug)
 
     def _render_bulks(self, *, only_ripe: bool, debug: bool) -> bool:
-        bulks = notification_get_bulks(only_ripe=only_ripe, debug=debug).result
+        try:
+            bulks = notification_get_bulks(only_ripe=only_ripe, debug=debug).result
+        except Exception as exc:
+            html.show_error(_("Could not retrieve bulk notifications: %s") % exc)
+            return False
         if not bulks:
             return False
 

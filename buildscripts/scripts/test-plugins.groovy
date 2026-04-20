@@ -94,9 +94,9 @@ def main() {
                             branch_name: setup_values.safe_branch_name,
                             make_target: make_target,
                             test_filter: params.TEST_FILTER,
-                            // can hit 20min during the heavy chain runs (without wait time)
-                            // using FoS of 3
-                            timeout: 60,
+                            // can hit 60min during the heavy chain runs (with wait time)
+                            // using FoS of 1.5
+                            timeout: 90,
                         );
                     }
                 }

@@ -65,6 +65,10 @@ described by the following four phases:
     * ``grouping_regex: regular_expression''
       Assign a file to a subgroup if its full path matches the given regular
       expression.
+    * ``grouping_name_template: template''
+      (Optional) Build the subgroup name dynamically when the regex matches.
+      Placeholders like ``$1`` reference regex capture groups. When omitted,
+      the static subgroup name from the configuration section is used.
     A separate service is created for each subgroup, prefixed with its parent
     group name (i.e. <parent group name> <subgroup name>). The order in which
     subgroups and corresponding patterns are specified matters: rules are
@@ -121,6 +125,8 @@ def ensure_text(s):
 DEFAULT_CFG_FILE = os.path.join(os.getenv("MK_CONFDIR", ""), "filestats.cfg")
 
 DEFAULT_CFG_SECTION = {"output": "file_stats", "subgroups_delimiter": "@"}
+
+GROUPING_TEMPLATE_PLACEHOLDER_RE = re.compile(r"\$(\d+)")
 
 FILTER_SPEC_PATTERN = re.compile("(?P<operator>[<>=]+)(?P<value>.+)")
 
@@ -408,18 +414,36 @@ def parse_grouping_config(
 ):
     parent_group_name, child_group_name = raw_config_section_name.split(subgroups_delimiter, 1)
 
+    grouping_type = None
+    grouping_rule = None
+    name_template = None
     for option in options:
-        if option.startswith("grouping_"):
-            grouping_type = option.split("_", 1)[1]
-            grouping_rule = config.get(raw_config_section_name, option)
+        if not option.startswith("grouping_"):
+            continue
+        option_suffix = option.split("_", 1)[1]
+        option_value = config.get(raw_config_section_name, option)
+        if option_suffix == "name_template":
+            name_template = option_value
+            continue
+        grouping_type = option_suffix
+        grouping_rule = option_value
+
+    if grouping_type is None or grouping_rule is None:
+        raise ValueError(
+            "missing grouping rule in section %r" % raw_config_section_name
+        )
+
+    grouping_config = {
+        "type": grouping_type,
+        "rule": grouping_rule,
+    }
+    if name_template is not None:
+        grouping_config["name_template"] = name_template
 
     LOGGER.info("found subgroup: %s", raw_config_section_name)
     return parent_group_name, (
         child_group_name,
-        {
-            "type": grouping_type,
-            "rule": grouping_rule,
-        },
+        grouping_config,
     )
 
 
@@ -451,10 +475,31 @@ def _grouping_construct_group_name(parent_group_name, child_group_name=""):
     ).strip()
 
 
+def _substitute_group_name(template, match):
+    def _replace(placeholder_match):
+        group_index = int(placeholder_match.group(1))
+        if group_index == 0:
+            return match.group(0)
+        try:
+            return match.group(group_index) or ""
+        except IndexError:
+            return ""
+
+    return GROUPING_TEMPLATE_PLACEHOLDER_RE.sub(_replace, template)
+
+
 def _get_matching_child_group(single_file, grouping_conditions):
     for child_group_name, grouping_condition in grouping_conditions:
-        if re.match(grouping_condition["rule"], single_file.file_path):
-            return child_group_name
+        regex_match = re.match(grouping_condition["rule"], single_file.file_path)
+        if not regex_match:
+            continue
+
+        template = grouping_condition.get("name_template")
+        if template:
+            dynamic_name = _substitute_group_name(template, regex_match)
+            if dynamic_name:
+                return dynamic_name
+        return child_group_name
     return ""
 
 
@@ -468,10 +513,10 @@ def grouping_multiple_groups(config_section_name, files_iter, grouping_condition
     grouped_files = {
         "": [],  # parent
     }  # type: dict[str, list[FileStat]]
-    grouped_files.update({g[0]: [] for g in grouping_conditions})
+    grouped_files.update({g[0]: [] for g in grouping_conditions if "name_template" not in g[1]})
     for single_file in files_iter:
         matching_child_group = _get_matching_child_group(single_file, grouping_conditions)
-        grouped_files[matching_child_group].append(single_file)
+        grouped_files.setdefault(matching_child_group, []).append(single_file)
 
     for matching_child_group, files in grouped_files.items():
         yield _grouping_construct_group_name(parent_group_name, matching_child_group), files

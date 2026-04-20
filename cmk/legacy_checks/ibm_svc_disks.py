@@ -3,21 +3,23 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
-# mypy: disable-error-code="type-arg"
 
+from collections.abc import Mapping, Sequence
+from typing import TypedDict
 
-from collections.abc import Iterable, Mapping, Sequence
-
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.legacy_includes.filerdisks import (
-    check_filer_disks,
-    FILER_DISKS_CHECK_DEFAULT_PARAMETERS,
+from cmk.agent_based.v2 import (
+    AgentSection,
+    check_levels,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Metric,
+    render,
+    Result,
+    Service,
+    State,
 )
-from cmk.legacy_includes.ibm_svc import parse_ibm_svc_with_header
-
-check_info = {}
+from cmk.plugins.ibm.lib_svc import parse_ibm_svc_with_header
 
 # Agent output:
 # <<<ibm_svc_disk:sep(58)>>>
@@ -46,10 +48,19 @@ check_info = {}
 # 0:online::member:sas_hdd:558.4GB:7:V7RZ_mdisk8:4:1:24:::inactive
 # 1:online::member:sas_hdd:558.4GB:7:V7RZ_mdisk8:3:1:23:::inactive
 
-Section = Sequence
+Section = Sequence[Mapping[str, str]]
 
 
-def parse_ibm_svc_disks(string_table):
+class _RequiredDiskParams(TypedDict):
+    failed_spare_ratio: tuple[float, float]
+    offline_spare_ratio: tuple[float, float]
+
+
+class _DiskParams(_RequiredDiskParams, total=False):
+    number_of_spare_disks: tuple[int, int]
+
+
+def parse_ibm_svc_disks(string_table: Sequence[Sequence[str]]) -> Section:
     dflt_header = [
         "id",
         "status",
@@ -65,29 +76,27 @@ def parse_ibm_svc_disks(string_table):
         "auto_manage",
         "drive_class_id",
     ]
-    parsed = list[Mapping[str, str]]()
+    parsed: list[Mapping[str, str]] = []
     for rows in parse_ibm_svc_with_header(string_table, dflt_header).values():
         parsed.extend(rows)
     return parsed
 
 
-def discover_ibm_svc_disks(section: Section) -> Iterable[tuple[None, dict]]:
+def discover_ibm_svc_disks(section: Section) -> DiscoveryResult:
     if section:
-        yield None, {}
+        yield Service()
 
 
-def check_ibm_svc_disks(_no_item, params, parsed):
-    disks = []
-    for data in parsed:
+def check_ibm_svc_disks(params: _DiskParams, section: Section) -> CheckResult:
+    disks: list[dict[str, str | float]] = []
+    for data in section:
         status = data["status"]
         use = data["use"]
         capacity = data["capacity"]
 
         disk: dict[str, str | float] = {}
-        disk["identifier"] = "Enclosure: {}, Slot: {}, Type: {}".format(
-            data["enclosure_id"],
-            data["slot_id"],
-            data["tech_type"],
+        disk["identifier"] = (
+            f"Enclosure: {data['enclosure_id']}, Slot: {data['slot_id']}, Type: {data['tech_type']}"
         )
 
         if capacity.endswith("GB"):
@@ -97,24 +106,117 @@ def check_ibm_svc_disks(_no_item, params, parsed):
         elif capacity.endswith("PB"):
             disk["capacity"] = float(capacity[:-2]) * 1024 * 1024 * 1024 * 1024 * 1024
 
-        # Failure State can be found here, also spare is a state here
+        # Failure state is from "use" field; "spare" is also a state here
         disk["state"] = use
         if status == "offline" and use != "failed":
             disk["state"] = "offline"
 
-        disk["type"] = ""  # We dont have a type
+        disk["type"] = ""  # No type available for IBM SVC disks
 
         disks.append(disk)
 
-    return check_filer_disks(disks, params)
+    yield from _check_filer_disks(disks, params)
 
 
-check_info["ibm_svc_disks"] = LegacyCheckDefinition(
+def _check_filer_disks(disks: list[dict[str, str | float]], params: _DiskParams) -> CheckResult:
+    disks_in_state: dict[str, list[dict[str, str | float]]] = {
+        "prefailed": [],
+        "failed": [],
+        "offline": [],
+        "spare": [],
+    }
+    total_capacity = 0.0
+    for disk in disks:
+        total_capacity += float(disk.get("capacity", 0))
+        for what, disk_list in disks_in_state.items():
+            if disk["state"] == what:
+                disk_list.append(disk)
+
+    yield Result(state=State.OK, summary=f"Total raw capacity: {render.disksize(total_capacity)}")
+    yield Metric("total_disk_capacity", total_capacity)
+
+    unavail_disks = (
+        len(disks_in_state["prefailed"])
+        + len(disks_in_state["failed"])
+        + len(disks_in_state["offline"])
+    )
+    yield Result(state=State.OK, summary=f"Total disks: {len(disks) - unavail_disks}")
+    yield Metric("total_disks", len(disks))
+
+    spare_disks = len(disks_in_state["spare"])
+    spare_disk_levels = params.get("number_of_spare_disks")
+    yield from check_levels(
+        spare_disks,
+        label="Spare disks",
+        levels_lower=("fixed", spare_disk_levels) if spare_disk_levels else ("no_levels", None),
+        metric_name="spare_disks",
+        render_func=str,
+    )
+
+    parity_disks = [disk for disk in disks if disk["type"] == "parity"]
+    prefailed_parity = [disk for disk in parity_disks if disk["state"] == "prefailed"]
+    if parity_disks:
+        yield Result(
+            state=State.OK,
+            summary=f"Parity disks: {len(parity_disks)} ({len(prefailed_parity)} prefailed)",
+        )
+
+    yield Result(state=State.OK, summary=f"Failed disks: {unavail_disks}")
+    yield Metric("failed_disks", unavail_disks)
+
+    for name, disk_type in [("Data", "data"), ("Parity", "parity")]:
+        total_type_disks = [disk for disk in disks if disk["type"] == disk_type]
+        prefailed_disks = [disk for disk in total_type_disks if disk["state"] == "prefailed"]
+        if total_type_disks:
+            info_text = f"{len(total_type_disks)} disks"
+            if prefailed_disks:
+                info_text += f" ({len(prefailed_disks)} prefailed)"
+            yield Result(state=State.OK, summary=info_text)
+            info_texts = [str(disk["identifier"]) for disk in prefailed_disks]
+            if info_texts:
+                yield Result(
+                    state=State.OK,
+                    summary=f"{name} Disk Details: {' / '.join(info_texts)}",
+                )
+
+    for disk_state, ratio_levels in [
+        ("failed", params["failed_spare_ratio"]),
+        ("offline", params["offline_spare_ratio"]),
+    ]:
+        info_texts = [str(disk["identifier"]) for disk in disks_in_state[disk_state]]
+        if info_texts:
+            yield Result(
+                state=State.OK,
+                summary=f"{disk_state} Disk Details: {' / '.join(info_texts)}",
+            )
+            ratio = (
+                float(len(disks_in_state[disk_state]))
+                / (len(disks_in_state[disk_state]) + len(disks_in_state["spare"]))
+                * 100
+            )
+            yield from check_levels(
+                ratio,
+                label=f"Too many {disk_state} disks",
+                levels_upper=("fixed", ratio_levels),
+                render_func=render.percent,
+                notice_only=True,
+            )
+
+
+agent_section_ibm_svc_disks = AgentSection(
     name="ibm_svc_disks",
     parse_function=parse_ibm_svc_disks,
+)
+
+
+check_plugin_ibm_svc_disks = CheckPlugin(
+    name="ibm_svc_disks",
     service_name="Disk Summary",
     discovery_function=discover_ibm_svc_disks,
     check_function=check_ibm_svc_disks,
     check_ruleset_name="netapp_disks",
-    check_default_parameters=FILER_DISKS_CHECK_DEFAULT_PARAMETERS,
+    check_default_parameters={
+        "failed_spare_ratio": (1.0, 50.0),
+        "offline_spare_ratio": (1.0, 50.0),
+    },
 )

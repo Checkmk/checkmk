@@ -48,13 +48,7 @@ class _TagBalanceChecker(HTMLParser):
 
     @staticmethod
     def _fmt(attrs: dict[str, str | None]) -> str:
-        parts: list[str] = []
-        for k, v in attrs.items():
-            if v is None:
-                parts.append(f" {k}")
-            else:
-                parts.append(f' {k}="{v}"')
-        return "".join(parts)
+        return "".join(f" {k}" if v is None else f" {k}={v!r}" for k, v in attrs.items())
 
     def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
         if tag not in _VOID_ELEMENTS:

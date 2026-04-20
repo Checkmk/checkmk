@@ -15,6 +15,7 @@ py_pytest_main(
 py_test(
     name = "utils",
     size = "small",
+    timeout = "moderate",
     srcs = ["__test__.py"] + glob(["**/*.py"]),
     args = [
         "--config-file=$(location @//:pyproject.toml)",

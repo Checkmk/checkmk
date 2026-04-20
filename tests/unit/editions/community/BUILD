@@ -13,6 +13,7 @@ py_pytest_main(
 py_test(
     name = "community",
     size = "small",
+    timeout = "moderate",
     srcs = ["__test__.py"] + glob(["**/*.py"]),
     args = [
         "--config-file=$(location @//:pyproject.toml)",

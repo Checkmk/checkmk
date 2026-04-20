@@ -105,6 +105,7 @@ from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import (
     doc_reference_url,
     DocReference,
+    DocReferenceUtm,
     make_confirm_delete_link,
     makeuri,
     makeuri_contextless,
@@ -2788,7 +2789,11 @@ class VSExplicitConditions(Transform):
                     _("documentation"),
                     # TODO: change this doc reference from "labels#views" to "labels#conditions" once
                     #       the corresponding article is updated to the new label group conditions
-                    href=doc_reference_url(user.language, DocReference.WATO_RULES_LABELS),
+                    href=doc_reference_url(
+                        user.language,
+                        DocReferenceUtm(campaign="inline_help", content="setup.rule_labels"),
+                        DocReference.WATO_RULES_LABELS,
+                    ),
                     target="_blank",
                 )
             )

@@ -52,7 +52,7 @@ from cmk.gui.quick_setup.v0_unstable.widgets import (
     Text,
     Widget,
 )
-from cmk.gui.utils.urls import doc_reference_url, DocReference, makeuri_contextless
+from cmk.gui.utils.urls import doc_reference_url, DocReference, DocReferenceUtm, makeuri_contextless
 from cmk.rulesets.v1 import Title
 from cmk.rulesets.v1.form_specs import Dictionary
 from cmk.utils.rulesets.definition import RuleGroup
@@ -240,7 +240,11 @@ def _save_and_activate_recap(title: str, parsed_data: ParsedFormData) -> Sequenc
                     )
                     % HTMLWriter.render_a(
                         _("documentation"),
-                        href=doc_reference_url(user.language, DocReference.AWS_MANUAL_VM),
+                        href=doc_reference_url(
+                            user.language,
+                            DocReferenceUtm(campaign="setup_wizard", content="quick_setup.aws"),
+                            DocReference.AWS_MANUAL_VM,
+                        ),
                     )
                 )
             )

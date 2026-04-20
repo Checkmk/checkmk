@@ -41,6 +41,7 @@ from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.urls import (
     doc_reference_url,
     DocReference,
+    DocReferenceUtm,
     werk_reference_url,
     WerkReference,
 )
@@ -1321,7 +1322,11 @@ class ACTestDeprecatedV1CheckPlugins(ACTest):
             "/".join(local_agent_based_plugins_dir.parts[-4:]),
             werk_reference_url(WerkReference.DECOMMISSION_V1_API),
             WerkReference.DECOMMISSION_V1_API.ref(),
-            doc_reference_url(user.language, DocReference.DEVEL_CHECK_PLUGINS),
+            doc_reference_url(
+                user.language,
+                DocReferenceUtm(campaign="error_help", content="setup.deprecated_v1_plugins"),
+                DocReference.DEVEL_CHECK_PLUGINS,
+            ),
         )
 
     def _get_files(self) -> Sequence[Path]:
@@ -1369,7 +1374,11 @@ class ACTestDeprecatedCheckPlugins(ACTest):
             " More information can be found in our <a href='%s'>User Guide</a>."
         ) % (
             "/".join(local_checks_dir.parts[-4:]),
-            doc_reference_url(user.language, DocReference.DEVEL_CHECK_PLUGINS),
+            doc_reference_url(
+                user.language,
+                DocReferenceUtm(campaign="error_help", content="setup.deprecated_plugins"),
+                DocReference.DEVEL_CHECK_PLUGINS,
+            ),
         )
 
     def _get_files(self) -> Sequence[Path]:

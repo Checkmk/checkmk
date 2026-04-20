@@ -11,7 +11,7 @@ from cmk.ccc.hostaddress import HostName
 from cmk.ccc.plugin_registry import Registry
 from cmk.gui.config import Config
 from cmk.gui.logged_in import user
-from cmk.gui.utils.urls import doc_reference_url, DocReference
+from cmk.gui.utils.urls import doc_reference_url, DocReference, DocReferenceUtm
 from cmk.shared_typing.agent_slideout import (
     AgentInstallCmds,
     AgentRegistrationCmds,
@@ -176,7 +176,9 @@ def register(registry: AgentCommandsRegistry) -> None:
             registration_cmds=build_agent_registration_cmds,
             status_cmds=build_agent_status_cmds,
             legacy_agent_url=lambda: doc_reference_url(
-                user.language, DocReference.AGENT_LINUX_LEGACY
+                user.language,
+                DocReferenceUtm(campaign="inline_help", content="setup.agent_linux_legacy"),
+                DocReference.AGENT_LINUX_LEGACY,
             ),
         )
     )

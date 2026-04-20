@@ -46,7 +46,7 @@ from cmk.gui.quick_setup.v0_unstable.widgets import (
     Text,
     Widget,
 )
-from cmk.gui.utils.urls import doc_reference_url, DocReference
+from cmk.gui.utils.urls import doc_reference_url, DocReference, DocReferenceUtm
 from cmk.plugins.gcp.rulesets import gcp  # astrein: disable=cmk-module-layer-violation
 from cmk.rulesets.v1 import Title
 from cmk.rulesets.v1.form_specs import Dictionary
@@ -212,7 +212,11 @@ class _GCERecapMessage:
             "Hosts for virtual machines need to be created manually, please check the %s."
         ) % HTMLWriter.render_a(
             _("documentation"),
-            href=doc_reference_url(user.language, DocReference.GCP_MANUAL_VM),
+            href=doc_reference_url(
+                user.language,
+                DocReferenceUtm(campaign="setup_wizard", content="quick_setup.gcp"),
+                DocReference.GCP_MANUAL_VM,
+            ),
         )
 
     message: Callable[[], str] = _cre_message

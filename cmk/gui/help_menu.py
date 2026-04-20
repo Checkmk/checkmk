@@ -15,7 +15,7 @@ from cmk.gui.main_menu_types import MainMenuItem
 from cmk.gui.type_defs import IconNames
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.roles import UserPermissions
-from cmk.gui.utils.urls import doc_reference_url, DocReference, makeuri_contextless
+from cmk.gui.utils.urls import doc_reference_url, DocReference, DocReferenceUtm, makeuri_contextless
 from cmk.gui.welcome.utils import WELCOME_PERMISSIONS
 from cmk.licensing.registry import get_license_message
 from cmk.shared_typing.main_menu import (
@@ -74,7 +74,11 @@ def default_learning_entries() -> list[NavItemTopicEntry]:
         NavItemTopicEntry(
             id="beginners_guide",
             title=_("Beginner's Guide"),
-            url=doc_reference_url(user.language, DocReference.INTRO_SETUP),
+            url=doc_reference_url(
+                user.language,
+                DocReferenceUtm(campaign="help_menu", content="help.beginners_guide"),
+                DocReference.INTRO_SETUP,
+            ),
             target="_blank",
             sort_index=20,
             icon=DefaultIcon(id=IconNames.learning_beginner),
@@ -82,7 +86,10 @@ def default_learning_entries() -> list[NavItemTopicEntry]:
         NavItemTopicEntry(
             id="user_manual",
             title=_("User Guide"),
-            url=doc_reference_url(user.language),
+            url=doc_reference_url(
+                user.language,
+                DocReferenceUtm(campaign="help_menu", content="help.user_guide"),
+            ),
             target="_blank",
             sort_index=30,
             icon=DefaultIcon(id=IconNames.learning_guide),
@@ -131,7 +138,11 @@ def default_developer_entries() -> list[NavItemTopicEntry]:
         NavItemTopicEntry(
             id="plugin_api_introduction",
             title=_("Check plug-in API introduction"),
-            url=doc_reference_url(user.language, DocReference.DEVEL_CHECK_PLUGINS),
+            url=doc_reference_url(
+                user.language,
+                DocReferenceUtm(campaign="help_menu", content="help.check_plugin_api"),
+                DocReference.DEVEL_CHECK_PLUGINS,
+            ),
             target="_blank",
             sort_index=10,
             icon=EmblemIcon(
@@ -164,7 +175,11 @@ def rest_api_menu_items() -> NavItemTopicEntry:
             NavItemTopicEntry(
                 id="rest_api_introduction",
                 title=_("Introduction"),
-                url=doc_reference_url(user.language, DocReference.REST_API),
+                url=doc_reference_url(
+                    user.language,
+                    DocReferenceUtm(campaign="help_menu", content="help.rest_api"),
+                    DocReference.REST_API,
+                ),
                 target="_blank",
                 sort_index=10,
                 icon=EmblemIcon(

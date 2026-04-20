@@ -50,7 +50,7 @@ from cmk.gui.utils.misc import gen_id
 from cmk.gui.utils.output_funnel import OutputFunnel
 from cmk.gui.utils.popups import PopupMethod
 from cmk.gui.utils.transaction_manager import transactions
-from cmk.gui.utils.urls import doc_reference_url, DocReference, requested_file_name
+from cmk.gui.utils.urls import doc_reference_url, DocReference, DocReferenceUtm, requested_file_name
 from cmk.gui.utils.user_errors import user_errors
 from cmk.shared_typing.icon import DynamicIconAppProps, StaticIconAppProps
 
@@ -186,7 +186,13 @@ class HTMLGenerator(HTMLWriter):
             for match in matches:
                 try:
                     doc_ref: DocReference = DocReference(match[1])
-                    urls.append(doc_reference_url(get_current_language(), doc_ref=doc_ref))
+                    urls.append(
+                        doc_reference_url(
+                            get_current_language(),
+                            DocReferenceUtm(campaign="inline_help", content="unknown.htmllib.html"),
+                            doc_ref=doc_ref,
+                        )
+                    )
                 except ValueError:
                     urls.append(None)
 

@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
+from cmk.gui.breadcrumb import Breadcrumb, breadcrumb_to_utm_content, BreadcrumbItem
 
 
 def test_breadcrumb_item_creation() -> None:
@@ -44,3 +44,36 @@ def test_breadcrumb_add() -> None:
     assert len(b1) == 1
     assert len(b2) == 1
     assert len(b3) == 2
+
+
+def test_breadcrumb_to_utm_content_uses_ids() -> None:
+    breadcrumb = Breadcrumb(
+        [
+            BreadcrumbItem(title="Einstellungen", url=None, id="setup"),
+            BreadcrumbItem(title="Hosts & Services", url=None, id="hosts"),
+            BreadcrumbItem(title="Should be ignored", url=None, id="deep"),
+        ]
+    )
+    # Only the first two items contribute, and the stable ids are used
+    # rather than the translated titles.
+    assert breadcrumb_to_utm_content(breadcrumb) == "setup.hosts"
+
+
+def test_breadcrumb_to_utm_content_skips_missing_ids() -> None:
+    breadcrumb = Breadcrumb(
+        [
+            BreadcrumbItem(title="Setup", url=None, id="setup"),
+            BreadcrumbItem(title="Some topic without id", url=None, id=None),
+        ]
+    )
+    assert breadcrumb_to_utm_content(breadcrumb) == "setup"
+
+
+def test_breadcrumb_to_utm_content_empty_without_ids() -> None:
+    breadcrumb = Breadcrumb(
+        [
+            BreadcrumbItem(title="Setup", url=None, id=None),
+            BreadcrumbItem(title="Hosts", url=None, id=None),
+        ]
+    )
+    assert breadcrumb_to_utm_content(breadcrumb) == ""

@@ -8,7 +8,7 @@
 import pytest
 
 from cmk.agent_based.v2 import Metric, Result, Service, State, StringTable
-from cmk.legacy_checks.ibm_svc_disks import (
+from cmk.plugins.ibm.agent_based.ibm_svc_disks import (
     _DiskParams,
     check_ibm_svc_disks,
     discover_ibm_svc_disks,

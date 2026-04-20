@@ -120,11 +120,11 @@ class PageAjaxBackupJobState(AjaxPage):
     @override
     def page(self, ctx: PageContext) -> PageResult:
         user.need_permission("wato.backups")
-        if ctx.request.var("job") == "restore":
-            page: handler.PageAbstractMKBackupJobState = handler.PageBackupRestoreState()
-        else:
-            page = ModeBackupJobState()
-        page.show_job_details()
+        handler.show_job_details(
+            handler.PageBackupRestoreState().job
+            if ctx.request.var("job") == "restore"
+            else ModeBackupJobState().job
+        )
         return None
 
 

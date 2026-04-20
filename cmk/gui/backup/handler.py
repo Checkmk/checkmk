@@ -1062,96 +1062,70 @@ class PageEditBackupJob:
             html.hidden_fields()
 
 
-class PageAbstractMKBackupJobState[TBackupJob: MKBackupJob](abc.ABC):
-    @property
-    @abc.abstractmethod
-    def ident(self) -> str: ...
-
-    @property
-    @abc.abstractmethod
-    def job(self) -> TBackupJob: ...
-
-    def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
-        return PageMenu(dropdowns=[], breadcrumb=breadcrumb)
-
-    def page(self, config: Config) -> None:
-        html.open_div(id_="job_details")
-        self.show_job_details()
-        html.close_div()
-        html.javascript(
-            "cmk.backup.refresh_job_details('{}', '{}', {})".format(
-                self._update_url(), self.ident, "true"
-            )
-        )
-
-    def _update_url(self) -> str:
-        return "ajax_backup_job_state.py?job=%s" % self.ident
-
-    def show_job_details(self) -> None:
-        state = self.job.state()
-
-        html.open_table(class_=["data", "backup_job"])
-
-        if state.state is None:
-            css = []
-            state_txt = self.job.state_name(state.state)
-        elif state.state != "finished":
-            css = ["state0"]
-            state_txt = self.job.state_name(state.state)
-        elif state.success:
-            css = ["state0"]
-            state_txt = _("Finished")
-        else:
-            css = ["state2"]
-            state_txt = _("Failed")
-
-        html.open_tr(class_=["data", "even0"])
-        html.td(_("State"), class_=["left", "legend"])
-        html.td(state_txt, class_=["state"] + css)
-        html.close_tr()
-
-        html.open_tr(class_=["data", "odd0"])
-        html.td(_("Runtime"), class_="left")
-        html.open_td()
-        if state.started:
-            html.write_text_permissive(_("Started at %s") % render.date_and_time(state.started))
-            duration = time.time() - state.started
-            if state.state == "finished":
-                assert state.finished is not None
-                html.write_text_permissive(", Finished at %s" % render.date_and_time(state.started))
-                duration = state.finished - state.started
-
-            html.write_text_permissive(_(" (duration: %s)") % render.timespan(duration))
-        html.close_td()
-        html.close_tr()
-
-        html.open_tr(class_=["data", "even0"])
-        html.td(_("Output"), class_=["left", "legend"])
-        html.open_td()
-        html.open_div(class_="log_output", style="height: 400px;", id_="progress_log")
-        html.pre(state.output)
-        html.close_div()
-        html.close_td()
-        html.close_tr()
-
-        html.close_table()
+def job_page(job: MKBackupJob, ident: str) -> None:
+    html.open_div(id_="job_details")
+    show_job_details(job)
+    html.close_div()
+    update_url = f"ajax_backup_job_state.py?job={ident}"
+    html.javascript(
+        "cmk.backup.refresh_job_details('{}', '{}', {})".format(update_url, ident, "true")
+    )
 
 
-class PageBackupJobState(PageAbstractMKBackupJobState[Job]):
+def show_job_details(job: MKBackupJob) -> None:
+    state = job.state()
+
+    html.open_table(class_=["data", "backup_job"])
+
+    if state.state is None:
+        css = []
+        state_txt = job.state_name(state.state)
+    elif state.state != "finished":
+        css = ["state0"]
+        state_txt = job.state_name(state.state)
+    elif state.success:
+        css = ["state0"]
+        state_txt = _("Finished")
+    else:
+        css = ["state2"]
+        state_txt = _("Failed")
+
+    html.open_tr(class_=["data", "even0"])
+    html.td(_("State"), class_=["left", "legend"])
+    html.td(state_txt, class_=["state"] + css)
+    html.close_tr()
+
+    html.open_tr(class_=["data", "odd0"])
+    html.td(_("Runtime"), class_="left")
+    html.open_td()
+    if state.started:
+        html.write_text_permissive(_("Started at %s") % render.date_and_time(state.started))
+        duration = time.time() - state.started
+        if state.state == "finished":
+            assert state.finished is not None
+            html.write_text_permissive(", Finished at %s" % render.date_and_time(state.started))
+            duration = state.finished - state.started
+
+        html.write_text_permissive(_(" (duration: %s)") % render.timespan(duration))
+    html.close_td()
+    html.close_tr()
+
+    html.open_tr(class_=["data", "even0"])
+    html.td(_("Output"), class_=["left", "legend"])
+    html.open_td()
+    html.open_div(class_="log_output", style="height: 400px;", id_="progress_log")
+    html.pre(state.output)
+    html.close_div()
+    html.close_td()
+    html.close_tr()
+
+    html.close_table()
+
+
+class PageBackupJobState:
     def __init__(self) -> None:
         super().__init__()
         self._from_vars()
-
-    @property
-    def ident(self) -> str:
-        return self._ident
-
-    @property
-    def job(self) -> Job:
-        return self._job
-
-    def title(self) -> str:
-        return _("Job state: %s") % self.job.title
 
     def _from_vars(self) -> None:
         if (job_ident := request.var("job")) is None:
@@ -1162,6 +1136,16 @@ class PageBackupJobState(PageAbstractMKBackupJobState[Job]):
             raise MKUserError("job", _("This backup job does not exist."))
         self._job = tmp
         self._ident = job_ident
+
+    @property
+    def job(self) -> MKBackupJob:
+        return self._job
+
+    def title(self) -> str:
+        return _("Job state: %s") % self._job.title
+
+    def page(self, config: Config) -> None:
+        job_page(self.job, self._ident)
 
 
 # .
@@ -2512,16 +2496,14 @@ class PageBackupRestore:
         PageBackupRestoreState().page(config)
 
 
-class PageBackupRestoreState(PageAbstractMKBackupJobState[RestoreJob]):
+class PageBackupRestoreState:
     def __init__(self) -> None:
         super().__init__()
         self._job = RestoreJob(None, None)  # TODO: target_ident and backup_ident needed?
-        self._ident = "restore"
 
     @property
-    def ident(self) -> str:
-        return self._ident
-
-    @property
-    def job(self) -> RestoreJob:
+    def job(self) -> MKBackupJob:
         return self._job
+
+    def page(self, config: Config) -> None:
+        job_page(self.job, "restore")

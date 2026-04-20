@@ -251,7 +251,7 @@ run_test_component() {
 
             export LD_LIBRARY_PATH="${path_to_runtime}:${LD_LIBRARY_PATH}"
             echo "TEST IS SKIPPED on LINUX"
-            # bazel test :mk-oracle-lib-test-external
+            bazel test :mk-oracle-lib-test-external
             ;;
     esac
 }

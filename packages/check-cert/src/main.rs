@@ -186,12 +186,12 @@ struct Args {
     #[arg(long, default_value_t = false, action = clap::ArgAction::SetTrue)]
     pub ignore_proxy_env: bool,
 
-    /// Proxy server URL.
-    #[arg(long, requires_if("proxy_tls", "connection_type"))]
+    /// Proxy server URL. Must be combined with --proxy-port; any port in the URL is ignored.
+    #[arg(long, requires = "proxy_port")]
     pub proxy_url: Option<String>,
 
-    /// Proxy server port.
-    #[arg(long, requires_if("proxy_tls", "connection_type"))]
+    /// Proxy server port. Must be combined with --proxy-url.
+    #[arg(long, requires = "proxy_url")]
     pub proxy_port: Option<u16>,
 
     /// Username for proxy server basic auth.

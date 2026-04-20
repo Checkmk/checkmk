@@ -4,7 +4,7 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import userEvent from '@testing-library/user-event'
-import { fireEvent, render, screen, waitFor } from '@testing-library/vue'
+import { render, screen, waitFor } from '@testing-library/vue'
 import { defineComponent, ref } from 'vue'
 import type { ComponentProps } from 'vue-component-type-helpers'
 
@@ -12,6 +12,7 @@ import CmkDropdown from '@/components/CmkDropdown'
 import { ErrorResponse, Response, WarningResponse } from '@/components/CmkSuggestions'
 
 test('dropdown shows options', async () => {
+  const user = userEvent.setup()
   render(CmkDropdown, {
     props: {
       options: {
@@ -29,7 +30,7 @@ test('dropdown shows options', async () => {
 
   const dropdown = screen.getByRole('combobox', { name: 'some aria label' })
 
-  await fireEvent.click(dropdown)
+  await user.click(dropdown)
 
   await screen.findByText('Option 1')
 })
@@ -52,6 +53,7 @@ test('dropdown shows no elements text without elements', async () => {
 })
 
 test('dropdown marks selectedOptions as selected', async () => {
+  const user = userEvent.setup()
   render(CmkDropdown, {
     props: {
       options: {
@@ -70,12 +72,13 @@ test('dropdown marks selectedOptions as selected', async () => {
 
   const dropdown = screen.getByRole('combobox', { name: 'some aria label' })
 
-  await fireEvent.click(dropdown)
+  await user.click(dropdown)
 
   await expect((await screen.findAllByRole('option'))[1]).toHaveClass('selected')
 })
 
 test('dropdown updates selecedOption', async () => {
+  const user = userEvent.setup()
   let selectedOption: string | null = ''
   const props = {
     options: {
@@ -96,15 +99,16 @@ test('dropdown updates selecedOption', async () => {
   render(CmkDropdown, { props })
 
   const dropdown = screen.getByRole('combobox', { name: 'some aria label' })
-  await fireEvent.click(dropdown)
+  await user.click(dropdown)
 
   const option1 = await screen.findByRole('option', { name: 'Option 1' })
-  await fireEvent.click(option1)
+  await user.click(option1)
 
   expect(selectedOption).toBe('option1')
 })
 
 test('dropdown shows and hides options', async () => {
+  const user = userEvent.setup()
   render(CmkDropdown, {
     props: {
       options: {
@@ -121,12 +125,12 @@ test('dropdown shows and hides options', async () => {
   })
 
   const dropdown = screen.getByRole('combobox', { name: 'some aria label' })
-  await fireEvent.click(dropdown)
+  await user.click(dropdown)
 
   // Dropdown is open and options are visible
   await screen.findByText('Option 2')
 
-  await fireEvent.click(screen.getByText('Option 1'))
+  await user.click(screen.getByText('Option 1'))
 
   expect(screen.queryByText('Option 2')).toBeNull()
 })
@@ -202,6 +206,7 @@ test('dropdown resets label if option is reset', async () => {
 })
 
 test('dropdown handles race condition when resetting value', async () => {
+  const user = userEvent.setup()
   let resolveQuery: ((value: Response) => void) | null = null
 
   const response = new Response([
@@ -240,9 +245,9 @@ test('dropdown handles race condition when resetting value', async () => {
   const dropdown = screen.getByRole('combobox', { name: 'some aria label' })
 
   // 1. Set value to 'value1'. This triggers querySuggestions which waits to be resolved.
-  await fireEvent.click(screen.getByText('Set Value'))
+  await user.click(screen.getByText('Set Value'))
   // 2. Reset value to null. This updates button label to input hint immediately.
-  await fireEvent.click(screen.getByText('Reset Value'))
+  await user.click(screen.getByText('Reset Value'))
 
   // Verify it is currently showing the hint (because null update was fast/sync)
   await screen.findByLabelText('Select an option')
@@ -261,6 +266,7 @@ test('dropdown handles race condition when resetting value', async () => {
 })
 
 test('dropdown hides after clicking already selected option', async () => {
+  const user = userEvent.setup()
   render(CmkDropdown, {
     props: {
       options: {
@@ -277,12 +283,12 @@ test('dropdown hides after clicking already selected option', async () => {
   })
 
   const dropdown = screen.getByRole('combobox', { name: 'some aria label' })
-  await fireEvent.click(dropdown)
+  await user.click(dropdown)
 
   // Dropdown is open and options are visible
   await screen.findByText('Option 2')
 
-  await fireEvent.click(screen.getByRole('option', { name: 'Option 1' }))
+  await user.click(screen.getByRole('option', { name: 'Option 1' }))
 
   expect(screen.queryByText('Option 2')).toBeNull()
 })
@@ -290,6 +296,7 @@ test('dropdown hides after clicking already selected option', async () => {
 test.each([{ showFilter: true }, { showFilter: false }])(
   'dropdown updates selecedOption selected via keyboard with showFilter=$showFilter',
   async ({ showFilter }) => {
+    const user = userEvent.setup()
     let selectedOption: string | null = ''
     render(CmkDropdown, {
       props: {
@@ -308,15 +315,16 @@ test.each([{ showFilter: true }, { showFilter: false }])(
         label: 'some aria label'
       }
     })
-    await fireEvent.click(screen.getByRole('combobox', { name: 'some aria label' }))
+    await user.click(screen.getByRole('combobox', { name: 'some aria label' }))
 
-    await userEvent.keyboard('[ArrowDown][Enter]')
+    await user.keyboard('[ArrowDown][Enter]')
 
     expect(selectedOption).toBe('option2')
   }
 )
 
 test('dropdown option selection via keyboard wraps', async () => {
+  const user = userEvent.setup()
   let selectedOption: string | null = ''
   render(CmkDropdown, {
     props: {
@@ -335,14 +343,15 @@ test('dropdown option selection via keyboard wraps', async () => {
       label: 'some aria label'
     }
   })
-  await fireEvent.click(screen.getByRole('combobox', { name: 'some aria label' }))
+  await user.click(screen.getByRole('combobox', { name: 'some aria label' }))
 
-  await userEvent.keyboard('[ArrowUp][Enter]')
+  await user.keyboard('[ArrowUp][Enter]')
 
   expect(selectedOption).toBe('option2')
 })
 
 test('dropdown option keyboard selection with filtering wraps', async () => {
+  const user = userEvent.setup()
   let selectedOption: string | null = ''
   render(CmkDropdown, {
     props: {
@@ -363,14 +372,15 @@ test('dropdown option keyboard selection with filtering wraps', async () => {
       label: 'some aria label'
     }
   })
-  await fireEvent.click(screen.getByRole('combobox', { name: 'some aria label' }))
+  await user.click(screen.getByRole('combobox', { name: 'some aria label' }))
 
-  await userEvent.keyboard('opt[ArrowUp][Enter]')
+  await user.keyboard('opt[ArrowUp][Enter]')
 
   expect(selectedOption).toBe('option2')
 })
 
 test('dropdown keyboard can handle empty dropdown', async () => {
+  const user = userEvent.setup()
   render(CmkDropdown, {
     props: {
       options: {
@@ -385,12 +395,13 @@ test('dropdown keyboard can handle empty dropdown', async () => {
       label: 'some aria label'
     }
   })
-  await fireEvent.click(screen.getByRole('combobox', { name: 'some aria label' }))
+  await user.click(screen.getByRole('combobox', { name: 'some aria label' }))
 
-  await userEvent.keyboard('dadada[ArrowUp]')
+  await user.keyboard('dadada[ArrowUp]')
 })
 
 test('dropdown keyboard can handle selection filtered away dropdown', async () => {
+  const user = userEvent.setup()
   render(CmkDropdown, {
     props: {
       options: {
@@ -406,14 +417,15 @@ test('dropdown keyboard can handle selection filtered away dropdown', async () =
       label: 'some aria label'
     }
   })
-  await fireEvent.click(screen.getByRole('combobox', { name: 'some aria label' }))
+  await user.click(screen.getByRole('combobox', { name: 'some aria label' }))
 
-  await userEvent.keyboard('[ArrowDown]')
-  await userEvent.keyboard('option')
-  await userEvent.keyboard('[ArrowUp]')
+  await user.keyboard('[ArrowDown]')
+  await user.keyboard('option')
+  await user.keyboard('[ArrowUp]')
 })
 
 test('dropdown option immediate focus and filtering', async () => {
+  const user = userEvent.setup()
   let selectedOption: string | null = ''
   render(CmkDropdown, {
     props: {
@@ -434,13 +446,13 @@ test('dropdown option immediate focus and filtering', async () => {
   })
 
   const dropdown = screen.getByRole('combobox', { name: 'some aria label' })
-  await fireEvent.click(dropdown)
+  await user.click(dropdown)
 
-  await userEvent.keyboard('2[Enter]')
+  await user.keyboard('2[Enter]')
   expect(selectedOption).toBe('option2')
 
-  await fireEvent.click(dropdown)
-  await userEvent.keyboard('2[Backspace][Enter]')
+  await user.click(dropdown)
+  await user.keyboard('2[Backspace][Enter]')
   expect(selectedOption).toBe('option1')
 })
 
@@ -486,6 +498,7 @@ test('dropdown does not show required if required is not passed', async () => {
 })
 
 test('dropdown still clickable if only option is already selected', async () => {
+  const user = userEvent.setup()
   render(CmkDropdown, {
     props: {
       options: {
@@ -498,12 +511,13 @@ test('dropdown still clickable if only option is already selected', async () => 
   })
 
   const dropdown = screen.getByRole('combobox', { name: 'some aria label' })
-  await fireEvent.click(dropdown)
+  await user.click(dropdown)
 
   await screen.findByRole('option', { name: 'Option 1' })
 })
 
 test('dropdown clickable if only one option is available', async () => {
+  const user = userEvent.setup()
   render(CmkDropdown, {
     props: {
       options: {
@@ -517,7 +531,7 @@ test('dropdown clickable if only one option is available', async () => {
   })
 
   const dropdown = screen.getByRole('combobox', { name: 'some aria label' })
-  await fireEvent.click(dropdown)
+  await user.click(dropdown)
 
   await screen.findByText('Option 1')
 })
@@ -572,6 +586,7 @@ test('dropdown doesnt interfere with tab order', async () => {
 })
 
 test('dropdown with callback and freeform element in first place still selects correctly', async () => {
+  const user = userEvent.setup()
   let selectedOption: string | null = ''
   render(CmkDropdown, {
     props: {
@@ -600,15 +615,17 @@ test('dropdown with callback and freeform element in first place still selects c
   })
 
   const dropdown = screen.getByRole('combobox', { name: 'some aria label' })
-  await fireEvent.click(dropdown)
+  await user.click(dropdown)
   const input = screen.getByRole('textbox', { name: 'filter' })
   await screen.findByText('four') // make sure suggestions are loaded
-  await fireEvent.update(input, 'ut_something')
-  await fireEvent.click(await screen.findByText('three'))
+  await user.click(input)
+  await user.keyboard('ut_something')
+  await user.click(await screen.findByText('three'))
   await waitFor(() => expect(selectedOption).toBe('three'))
 })
 
 test('dropdown with callback and unselectable suggestion shows title', async () => {
+  const user = userEvent.setup()
   render(CmkDropdown, {
     props: {
       options: {
@@ -629,11 +646,12 @@ test('dropdown with callback and unselectable suggestion shows title', async () 
   })
 
   const dropdown = screen.getByRole('combobox', { name: 'dropdown-label' })
-  await fireEvent.click(dropdown)
+  await user.click(dropdown)
   await screen.findByText('unselectable')
 })
 
 test('dropdown with callback and unselectable selects first selectable suggestion', async () => {
+  const user = userEvent.setup()
   let selectedOption: string | null = ''
   render(CmkDropdown, {
     props: {
@@ -658,13 +676,14 @@ test('dropdown with callback and unselectable selects first selectable suggestio
   })
 
   const dropdown = screen.getByRole('combobox', { name: 'dropdown-label' })
-  await fireEvent.click(dropdown)
+  await user.click(dropdown)
 
-  await userEvent.keyboard('[Enter]')
+  await user.keyboard('[Enter]')
   expect(selectedOption).toBe('one')
 })
 
 test('dropdown with callback and unselectable selects wraps up', async () => {
+  const user = userEvent.setup()
   let selectedOption: string | null = ''
   render(CmkDropdown, {
     props: {
@@ -689,13 +708,14 @@ test('dropdown with callback and unselectable selects wraps up', async () => {
   })
 
   const dropdown = screen.getByRole('combobox', { name: 'dropdown-label' })
-  await fireEvent.click(dropdown)
+  await user.click(dropdown)
 
-  await userEvent.keyboard('[ArrowUp][Enter]')
+  await user.keyboard('[ArrowUp][Enter]')
   expect(selectedOption).toBe('four')
 })
 
 test('dropdown with callback skips unselectable with keyboard', async () => {
+  const user = userEvent.setup()
   let selectedOption: string | null = ''
   render(CmkDropdown, {
     props: {
@@ -720,13 +740,14 @@ test('dropdown with callback skips unselectable with keyboard', async () => {
   })
 
   const dropdown = screen.getByRole('combobox', { name: 'dropdown-label' })
-  await fireEvent.click(dropdown)
+  await user.click(dropdown)
 
-  await userEvent.keyboard('[ArrowDown][Enter]')
+  await user.keyboard('[ArrowDown][Enter]')
   expect(selectedOption).toBe('three')
 })
 
 test('dropdown unselectable is unselectable', async () => {
+  const user = userEvent.setup()
   let selectedOption: string | null = 'one'
   render(CmkDropdown, {
     props: {
@@ -751,10 +772,10 @@ test('dropdown unselectable is unselectable', async () => {
   })
 
   const dropdown = screen.getByRole('combobox', { name: 'dropdown-label' })
-  await fireEvent.click(dropdown)
+  await user.click(dropdown)
 
   const unselectable = await screen.findByText('unselectable')
-  await fireEvent.click(unselectable)
+  await user.click(unselectable)
 
   expect(selectedOption).toBe('one')
   expect(screen.getByText('unselectable')).toBeInTheDocument()
@@ -784,6 +805,7 @@ test('dropdown with callback-filtered shows error message when callback returns 
 })
 
 test('dropdown with callback-filtered clears error message after successful selection', async () => {
+  const user = userEvent.setup()
   const errorMessage = 'Failed to load suggestions'
   let callCount = 0
   let selectedOption: string | null = 'invalid_value'
@@ -815,10 +837,10 @@ test('dropdown with callback-filtered clears error message after successful sele
   await screen.findByText(errorMessage)
 
   const dropdown = screen.getByRole('combobox', { name: 'dropdown-label' })
-  await fireEvent.click(dropdown)
+  await user.click(dropdown)
 
   const option = await screen.findByText('one')
-  await fireEvent.click(option)
+  await user.click(option)
 
   await waitFor(() => {
     expect(screen.queryByText(errorMessage)).not.toBeInTheDocument()
@@ -828,6 +850,7 @@ test('dropdown with callback-filtered clears error message after successful sele
 })
 
 test('dropdown with callback-filtered shows warning message when callback returns WarningResponse', async () => {
+  const user = userEvent.setup()
   const warningMessage = 'This is a warning from the backend'
   render(CmkDropdown, {
     props: {
@@ -847,7 +870,7 @@ test('dropdown with callback-filtered shows warning message when callback return
   })
 
   const dropdown = screen.getByRole('combobox', { name: 'dropdown-label' })
-  await fireEvent.click(dropdown)
+  await user.click(dropdown)
 
   await screen.findByText(warningMessage)
   await screen.findByText('Option 1')
@@ -855,6 +878,7 @@ test('dropdown with callback-filtered shows warning message when callback return
 })
 
 test('dropdown with callback-filtered options prefills filter input', async () => {
+  const user = userEvent.setup()
   const selectedOption = 'option2'
   render(CmkDropdown, {
     props: {
@@ -876,7 +900,7 @@ test('dropdown with callback-filtered options prefills filter input', async () =
 
   const dropdown = screen.getByRole('combobox', { name: 'dropdown-label' })
 
-  await fireEvent.click(dropdown)
+  await user.click(dropdown)
 
   const input = screen.getByRole('textbox', { name: 'filter' })
 
@@ -887,6 +911,7 @@ test('dropdown with callback-filtered options prefills filter input', async () =
 
 test('callback-filtered dropdown debounces querySuggestions while typing', async () => {
   vi.useFakeTimers()
+  const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
 
   const querySuggestions = vi.fn(async (_: string) => {
     return new Response([
@@ -905,13 +930,13 @@ test('callback-filtered dropdown debounces querySuggestions while typing', async
   })
 
   const dropdown = screen.getByRole('combobox', { name: 'some aria label' })
-  await fireEvent.click(dropdown)
+  await user.click(dropdown)
 
-  // Update rapidly without advancing timers by using fireEvent instead of userEvent
   const input = screen.getByRole('textbox', { name: 'filter' })
-  await fireEvent.update(input, 'a')
-  await fireEvent.update(input, 'ab')
-  await fireEvent.update(input, 'abc')
+  await user.click(input)
+  await user.keyboard('a')
+  await user.keyboard('b')
+  await user.keyboard('c')
 
   expect(querySuggestions).toHaveBeenCalledTimes(1)
 
@@ -925,6 +950,7 @@ test('callback-filtered dropdown debounces querySuggestions while typing', async
 })
 
 test('dropdown with filtered options does not prefill filter input', async () => {
+  const user = userEvent.setup()
   const selectedOption = 'option2'
   render(CmkDropdown, {
     props: {
@@ -944,7 +970,7 @@ test('dropdown with filtered options does not prefill filter input', async () =>
 
   const dropdown = screen.getByRole('combobox', { name: 'dropdown-label' })
 
-  await fireEvent.click(dropdown)
+  await user.click(dropdown)
 
   const input = screen.getByRole('textbox', { name: 'filter' })
 

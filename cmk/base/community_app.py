@@ -38,7 +38,7 @@ def make_app() -> CheckmkBaseApp:
         automations=automations,
         make_bake_on_restart=lambda *args: lambda: None,
         create_core=create_core,
-        licensing_handler_type=CommunityLicensingHandler,
+        licensing_handler_factory=CommunityLicensingHandler.make,
         make_fetcher_trigger=lambda *a, **kw: PlainFetcherTrigger(omd_root=omd_root),
         make_metric_backend_fetcher=lambda *args: None,
         get_builtin_host_labels=get_builtin_host_labels,

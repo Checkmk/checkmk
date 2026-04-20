@@ -47,7 +47,7 @@ class CheckmkBaseApp:
         ],
         MonitoringCore,
     ]
-    licensing_handler_type: type[LicensingHandler]
+    licensing_handler_factory: Callable[[], LicensingHandler]
     make_fetcher_trigger: FetcherTriggerFactory
     make_metric_backend_fetcher: Callable[
         [

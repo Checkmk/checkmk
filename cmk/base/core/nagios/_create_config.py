@@ -85,11 +85,11 @@ class NagiosCore(MonitoringCore):
     def __init__(
         self,
         core_client: NagiosClient,
-        licensing_handler_type: type[LicensingHandler],
+        licensing_handler_factory: Callable[[], LicensingHandler],
         # we should consider passing a NagiosConfig here, in analogy to CmcPb
         timeperiods: TimeperiodSpecs,
     ) -> None:
-        super().__init__(core_client, licensing_handler_type)
+        super().__init__(core_client, licensing_handler_factory)
         self.timeperiods: Final = timeperiods
 
     @classmethod

@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.ccc.version import Edition
+from cmk.licensing.community_handler import CommunityLicensingHandler
 from cmk.licensing.handler import LicensingHandler
 from cmk.licensing.registry import (
     licensing_handler_registry,
@@ -13,6 +14,6 @@ from cmk.licensing.registry import (
 
 def test_licensing_handler_registry_community() -> None:
     register_community_licensing_handler()
-    handler_class = licensing_handler_registry[Edition.COMMUNITY]
-    assert handler_class.__name__ == "CommunityLicensingHandler"
-    assert issubclass(handler_class, LicensingHandler)
+    handler = licensing_handler_registry[Edition.COMMUNITY]()
+    assert isinstance(handler, CommunityLicensingHandler)
+    assert isinstance(handler, LicensingHandler)

@@ -30,8 +30,10 @@ tracer = trace.get_tracer()
 
 
 class MonitoringCore(abc.ABC):
-    def __init__(self, core_client: CoreClient, licensing_handler_type: type[LicensingHandler]):
-        self.licensing_handler_type: Final = licensing_handler_type
+    def __init__(
+        self, core_client: CoreClient, licensing_handler_factory: Callable[[], LicensingHandler]
+    ):
+        self.licensing_handler_factory: Final = licensing_handler_factory
         self.core_client: Final = core_client
 
     @classmethod
@@ -63,7 +65,7 @@ class MonitoringCore(abc.ABC):
         hosts_to_update: set[HostName] | None,
         service_depends_on: Callable[[HostAddress, ServiceName], Sequence[ServiceName]],
     ) -> None:
-        licensing_handler = self.licensing_handler_type.make()
+        licensing_handler = self.licensing_handler_factory()
         licensing_handler.persist_licensed_state(
             get_licensed_state_file_path(get_licensing_dir(paths.omd_root))
         )

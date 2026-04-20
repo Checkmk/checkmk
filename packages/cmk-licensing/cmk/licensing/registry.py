@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Callable
 from pathlib import Path
 
 from cmk.ccc.version import Edition, edition
@@ -19,17 +20,17 @@ from cmk.licensing.handler import (
 
 class LicensingHandlerRegistry:
     def __init__(self) -> None:
-        self._entries: dict[Edition, type[LicensingHandler]] = {}
+        self._entries: dict[Edition, Callable[[], LicensingHandler]] = {}
 
     def register(
         self,
         *,
         cmk_edition: Edition,
-        licensing_handler: type[LicensingHandler],
+        licensing_handler_factory: Callable[[], LicensingHandler],
     ) -> None:
-        self._entries[cmk_edition] = licensing_handler
+        self._entries[cmk_edition] = licensing_handler_factory
 
-    def __getitem__(self, key: Edition) -> type[LicensingHandler]:
+    def __getitem__(self, key: Edition) -> Callable[[], LicensingHandler]:
         return self._entries.__getitem__(key)
 
 
@@ -37,12 +38,12 @@ class LicensingHandlerRegistry:
 licensing_handler_registry = LicensingHandlerRegistry()
 
 
-def _get_licensing_handler(omd_root: Path) -> type[LicensingHandler]:
+def _get_licensing_handler_factory(omd_root: Path) -> Callable[[], LicensingHandler]:
     return licensing_handler_registry[edition(omd_root)]
 
 
 def _make_licensing_handler(omd_root: Path) -> LicensingHandler:
-    return _get_licensing_handler(omd_root).make()
+    return _get_licensing_handler_factory(omd_root)()
 
 
 def is_free(omd_root: Path) -> bool:
@@ -98,5 +99,5 @@ def register_community_licensing_handler() -> None:
     # There is no license management planned for Checkmk Community -> Always licensed
     licensing_handler_registry.register(
         cmk_edition=Edition.COMMUNITY,
-        licensing_handler=CommunityLicensingHandler,
+        licensing_handler_factory=CommunityLicensingHandler.make,
     )

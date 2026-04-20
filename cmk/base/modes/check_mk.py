@@ -1548,7 +1548,7 @@ def mode_dump_nagios_config(app: CheckmkBaseApp, args: Sequence[HostName]) -> No
         ),
         plugins.check_plugins,
         hostnames=hostnames,
-        licensing_handler=app.licensing_handler_type().make(),
+        licensing_handler=app.licensing_handler_factory(),
         passwords=load_secrets_file(cmk.utils.password_store.pending_secrets_path_site()),
         get_ip_stack_config=ip_lookup_config.ip_stack_config,
         default_address_family=ip_lookup_config.default_address_family,

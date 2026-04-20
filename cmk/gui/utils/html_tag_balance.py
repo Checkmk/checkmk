@@ -32,15 +32,20 @@ _VOID_ELEMENTS = frozenset(
 )
 
 
-def check_html_tag_balance(body: str) -> list[str]:
-    """Return a list of tag-balance errors found in *body*.
+class TagImbalanceError(RuntimeError):
+    def __init__(self, errors: list[str]) -> None:
+        self.errors = errors
 
-    Returns an empty list if the HTML is well-formed.
-    """
+    def __str__(self) -> str:
+        return str(self.errors)
+
+
+def check_html_tag_balance(body: str) -> bool:
+    """Parses an HTML document and checks for tag imbalance, raising an error if not balanced."""
     with _TagBalanceChecker() as checker:
         checker.feed(body)
 
-    return checker.errors
+    return checker.is_balanced
 
 
 class _TagBalanceChecker(HTMLParser):
@@ -89,6 +94,12 @@ class _TagBalanceChecker(HTMLParser):
                 del self._stack[i:]
                 return
         self.errors.append(f"line {line}: </{tag}> has no matching open tag")
+
+    @property
+    def is_balanced(self) -> bool:
+        if self.errors:
+            raise TagImbalanceError(self.errors)
+        return True
 
     @staticmethod
     def _fmt(attrs: dict[str, str | None]) -> str:

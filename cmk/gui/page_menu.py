@@ -20,7 +20,7 @@ from collections.abc import Iterator
 from dataclasses import asdict, dataclass, field
 
 import cmk.ccc.version as cmk_version
-from cmk.gui.breadcrumb import Breadcrumb
+from cmk.gui.breadcrumb import Breadcrumb, breadcrumb_to_utm_content
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import Request, request
@@ -42,6 +42,7 @@ from cmk.gui.utils.selection_id import SelectionId
 from cmk.gui.utils.urls import (
     doc_reference_url,
     DocReference,
+    DocReferenceUtm,
     get_confirm_link_title,
     makeuri,
     requested_file_name,
@@ -389,12 +390,18 @@ class PageMenu:
         return any(True for _s in self.suggestions)
 
     def add_doc_reference(self, title: str, doc_ref: DocReference) -> None:
+        content = (breadcrumb_to_utm_content(self.breadcrumb) if self.breadcrumb else "") or "help"
         help_dropdown = self.get_dropdown_by_name("help", make_help_dropdown())
         help_dropdown.topics[1].entries.append(
             PageMenuEntry(
                 title=title,
                 icon_name=DynamicIconName("manual"),
-                item=make_external_link(doc_reference_url(doc_ref)),
+                item=make_external_link(
+                    doc_reference_url(
+                        DocReferenceUtm(campaign="help_menu", content=content),
+                        doc_ref,
+                    )
+                ),
             )
         )
 
@@ -494,7 +501,11 @@ def make_help_dropdown() -> PageMenuDropdown:
                     PageMenuEntry(
                         title=_("The official Checkmk User Guide"),
                         icon_name=DynamicIconName("manual"),
-                        item=make_external_link(doc_reference_url()),
+                        item=make_external_link(
+                            doc_reference_url(
+                                DocReferenceUtm(campaign="help_menu", content="help.user_guide"),
+                            )
+                        ),
                     ),
                 ],
             ),

@@ -12,6 +12,7 @@ from cmk.gui.type_defs import HTTPVariables
 from cmk.gui.utils.urls import (
     doc_reference_url,
     DocReference,
+    DocReferenceUtm,
     makeuri_contextless,
     urlencode,
     urlencode_vars,
@@ -57,12 +58,36 @@ def test_urlencode(inp: str | None, out: str) -> None:
 
 
 def test_empty_doc_reference(request_context: None) -> None:
-    doc_reference_url_without_origin = doc_reference_url().replace("?origin=checkmk", "")
-    assert doc_reference_url_without_origin == user.get_docs_base_url()
+    utm = DocReferenceUtm(campaign="help_menu", content="test")
+    url = doc_reference_url(utm)
+    assert url.startswith(f"{user.get_docs_base_url()}?")
 
 
 def test_doc_references(request_context: None) -> None:
-    assert [doc_reference_url(r) for r in DocReference]
+    utm = DocReferenceUtm(campaign="help_menu", content="test")
+    assert [doc_reference_url(utm, r) for r in DocReference]
+
+
+def test_doc_reference_url_encodes_special_characters_in_content(
+    request_context: None,
+) -> None:
+    """A content value with `&` or non-ASCII must not corrupt the query string."""
+    utm = DocReferenceUtm(campaign="help_menu", content="hosts & services")
+    url = doc_reference_url(utm)
+    # The raw '&' must not leak through, otherwise it would be parsed as a
+    # new query parameter by consumers.
+    assert "utm_content=hosts+%26+services" in url
+    assert "content=hosts & services" not in url
+
+
+def test_doc_reference_url_term_includes_patch_level(request_context: None) -> None:
+    """utm_term must include the patch level (e.g. 2.3.0p1_pro), not just 2.3.0_pro."""
+    from cmk.ccc.version import __version__, Version
+
+    utm = DocReferenceUtm(campaign="help_menu", content="test")
+    url = doc_reference_url(utm)
+    version_without_rc = Version.from_str(__version__).version_without_rc or "master"
+    assert f"utm_term={version_without_rc}_" in url
 
 
 def test_makeuri_contextless() -> None:

@@ -75,6 +75,15 @@ class Breadcrumb(MutableSequence[BreadcrumbItem]):
         return Breadcrumb(list(self) + list(other))
 
 
+def breadcrumb_to_utm_content(breadcrumb: Breadcrumb) -> str:
+    """Build a locale-independent UTM content identifier from the breadcrumb.
+
+    Only items that carry a stable ``id`` contribute, so analytics stay
+    comparable across languages. Items without an id are skipped.
+    """
+    return ".".join(item.id for item in list(breadcrumb)[:2] if item.id)
+
+
 class BreadcrumbRenderer:
     def show(self, breadcrumb: Breadcrumb) -> None:
         cmk.gui.htmllib.html.html.open_div(class_="breadcrumb")

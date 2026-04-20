@@ -54,6 +54,7 @@ from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import (
     doc_reference_url,
     DocReference,
+    DocReferenceUtm,
     makeuri,
     makeuri_contextless,
 )
@@ -360,7 +361,13 @@ class ModeDiagnostics(WatoMode):
                                     )
                                     % html.render_a(
                                         "user manual",
-                                        href=doc_reference_url(DocReference.DIAGNOSTICS_CLI),
+                                        href=doc_reference_url(
+                                            DocReferenceUtm(
+                                                campaign="inline_help",
+                                                content="setup.diagnostics",
+                                            ),
+                                            DocReference.DIAGNOSTICS_CLI,
+                                        ),
                                         target="_blank",
                                     ),
                                     default_value=timeout_default,

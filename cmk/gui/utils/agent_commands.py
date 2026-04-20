@@ -10,7 +10,7 @@ from urllib.parse import urlparse
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.plugin_registry import Registry
 from cmk.gui.config import Config
-from cmk.gui.utils.urls import doc_reference_url, DocReference
+from cmk.gui.utils.urls import doc_reference_url, DocReference, DocReferenceUtm
 from cmk.shared_typing.agent_slideout import (
     AgentInstallCmds,
     AgentRegistrationCmds,
@@ -174,7 +174,10 @@ def register(registry: AgentCommandsRegistry) -> None:
             install_cmds=build_agent_install_cmds,
             registration_cmds=build_agent_registration_cmds,
             status_cmds=build_agent_status_cmds,
-            legacy_agent_url=lambda: doc_reference_url(DocReference.AGENT_LINUX_LEGACY),
+            legacy_agent_url=lambda: doc_reference_url(
+                DocReferenceUtm(campaign="inline_help", content="setup.agent_linux_legacy"),
+                DocReference.AGENT_LINUX_LEGACY,
+            ),
         )
     )
 

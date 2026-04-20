@@ -21,7 +21,7 @@ from cmk.gui.main_menu_types import (
 from cmk.gui.type_defs import IconNames, StaticIcon
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.roles import UserPermissions
-from cmk.gui.utils.urls import doc_reference_url, DocReference, makeuri_contextless
+from cmk.gui.utils.urls import doc_reference_url, DocReference, DocReferenceUtm, makeuri_contextless
 from cmk.gui.welcome.utils import WELCOME_PERMISSIONS
 from cmk.utils import paths
 from cmk.utils.licensing.registry import get_license_message
@@ -57,7 +57,10 @@ def default_learning_entries() -> MainMenuTopicEntries:
         MainMenuItem(
             name="beginners_guide",
             title=_("Beginner's Guide"),
-            url=doc_reference_url(DocReference.INTRO_SETUP),
+            url=doc_reference_url(
+                DocReferenceUtm(campaign="help_menu", content="help.beginners_guide"),
+                DocReference.INTRO_SETUP,
+            ),
             target="_blank",
             sort_index=20,
             icon=StaticIcon(IconNames.learning_beginner),
@@ -65,7 +68,9 @@ def default_learning_entries() -> MainMenuTopicEntries:
         MainMenuItem(
             name="user_manual",
             title=_("User Guide"),
-            url=doc_reference_url(),
+            url=doc_reference_url(
+                DocReferenceUtm(campaign="help_menu", content="help.user_guide"),
+            ),
             target="_blank",
             sort_index=30,
             icon=StaticIcon(IconNames.learning_guide),
@@ -114,7 +119,10 @@ def default_developer_entries() -> MainMenuTopicEntries:
         MainMenuItem(
             name="plugin_api_introduction",
             title=_("Check plug-in API introduction"),
-            url=doc_reference_url(DocReference.DEVEL_CHECK_PLUGINS),
+            url=doc_reference_url(
+                DocReferenceUtm(campaign="help_menu", content="help.check_plugin_api"),
+                DocReference.DEVEL_CHECK_PLUGINS,
+            ),
             target="_blank",
             sort_index=10,
             icon=StaticIcon(
@@ -147,7 +155,10 @@ def rest_api_menu_items() -> MainMenuTopicSegment:
             MainMenuItem(
                 name="rest_api_introduction",
                 title=_("Introduction"),
-                url=doc_reference_url(DocReference.REST_API),
+                url=doc_reference_url(
+                    DocReferenceUtm(campaign="help_menu", content="help.rest_api"),
+                    DocReference.REST_API,
+                ),
                 target="_blank",
                 sort_index=10,
                 icon=StaticIcon(

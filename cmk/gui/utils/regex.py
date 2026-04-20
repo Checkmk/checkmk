@@ -8,7 +8,7 @@ import re
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
-from cmk.gui.utils.urls import doc_reference_url, DocReference
+from cmk.gui.utils.urls import doc_reference_url, DocReference, DocReferenceUtm
 
 
 def validate_regex(value: str, varname: str | None) -> None:
@@ -24,7 +24,10 @@ def validate_regex(value: str, varname: str | None) -> None:
             )
             % html.render_a(
                 "regular expression",
-                href=doc_reference_url(DocReference.REGEXES),
+                href=doc_reference_url(
+                    DocReferenceUtm(campaign="error_help", content="regex"),
+                    DocReference.REGEXES,
+                ),
                 target="_blank",
             ),
         )

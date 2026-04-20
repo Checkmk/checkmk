@@ -6,12 +6,15 @@
 import json
 import urllib.parse
 from collections.abc import Mapping, Sequence
+from dataclasses import dataclass
 from enum import Enum
 from functools import lru_cache
 from typing import assert_never, Literal
 
 from flask import session
 
+import cmk.utils.paths
+from cmk.ccc.version import __version__, edition, Version
 from cmk.gui.exceptions import MKNotFound
 from cmk.gui.http import Request
 from cmk.gui.http import request as _request
@@ -482,14 +485,35 @@ class DocReference(Enum):
         return key in cls._member_names_
 
 
-def doc_reference_url(doc_ref: DocReference | None = None) -> str:
+@dataclass(frozen=True, kw_only=True)
+class DocReferenceUtm:
+    campaign: Literal["help_menu", "inline_help", "error_help", "setup_wizard"]
+    content: str
+
+
+def doc_reference_url(
+    utm: DocReferenceUtm,
+    doc_ref: DocReference | None = None,
+) -> str:
     base = user.get_docs_base_url()
-    origin = "?origin=checkmk"
+    version = Version.from_str(__version__).version_without_rc or "master"
+    cmk_edition = edition(cmk.utils.paths.omd_root)
+    query = urlencode_vars(
+        [
+            ("utm_source", "checkmk"),
+            ("utm_medium", "app"),
+            ("utm_campaign", utm.campaign),
+            ("utm_content", utm.content),
+            ("utm_term", f"{version}_{cmk_edition.short}"),
+        ]
+    )
+
     if doc_ref is None:
-        return base + origin
+        return f"{base}?{query}"
     if "#" not in doc_ref.value:
-        return f"{base}/{doc_ref.value}.html{origin}"
-    return f"{base}/{doc_ref.value.replace('#', f'.html{origin}#', 1)}"
+        return f"{base}/{doc_ref.value}.html?{query}"
+    page, anchor = doc_ref.value.split("#", 1)
+    return f"{base}/{page}.html?{query}#{anchor}"
 
 
 class YouTubeReference(Enum):

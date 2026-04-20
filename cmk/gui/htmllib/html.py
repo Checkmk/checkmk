@@ -99,6 +99,8 @@ class HTMLGenerator(HTMLWriter):
         self.form_name: str | None = None
         self.form_vars: list[str] = []
         self.form_has_submit_button: bool = False
+        self.form_header_open: bool = False
+        self.form_section_open: bool = False
 
         self.request = request
 

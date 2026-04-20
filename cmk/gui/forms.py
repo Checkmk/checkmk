@@ -20,10 +20,6 @@ from cmk.gui.theme.current_theme import theme
 from cmk.gui.utils import escaping
 from cmk.gui.utils.html import HTML
 
-g_header_open = False
-g_section_open = False
-
-
 # New functions for painting forms
 
 
@@ -45,8 +41,7 @@ def header(
     show_more_mode: bool = False,
     help_text: str | HTML | None = None,
 ) -> None:
-    global g_header_open, g_section_open
-    if g_header_open:
+    if html.form_header_open:
         end()
 
     id_ = base64.b64encode(title.encode()).decode()
@@ -85,8 +80,8 @@ def header(
 
     html.open_tbody(id_=foldable_attrs.container_id, class_=foldable_attrs.class_)
     html.tr(HTMLWriter.render_td("", colspan=2))
-    g_header_open = True
-    g_section_open = False
+    html.form_header_open = True
+    html.form_section_open = False
 
 
 def _table_head(
@@ -127,11 +122,10 @@ def _table_head(
 
 # container without legend and content
 def container() -> None:
-    global g_section_open
     section_close()
     html.open_tr()
     html.open_td(colspan=2)
-    g_section_open = True
+    html.form_section_open = True
 
 
 def space() -> None:
@@ -159,7 +153,6 @@ def section(
     is_changed: bool = False,
     is_required: bool = False,
 ) -> None:
-    global g_section_open
     section_close()
     html.open_tr(
         id_=section_id,
@@ -192,18 +185,17 @@ def section(
     html.open_td(
         class_=["content"] + (["simple"] if simple else []), colspan=2 if not legend else None
     )
-    g_section_open = True
+    html.form_section_open = True
 
 
 def section_close() -> None:
-    if g_section_open:
+    if html.form_section_open:
         html.close_td()
         html.close_tr()
 
 
 def end() -> None:
-    global g_header_open
-    g_header_open = False
+    html.form_header_open = False
     section_close()
     html.tr(HTMLWriter.render_td("", colspan=2), class_=["bottom"])
     html.close_tbody()

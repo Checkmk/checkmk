@@ -315,6 +315,7 @@ def _predictive_bound[NumberT: (int, float)](
     return OptionalChoice(
         title=Title("Fixed limits"),
         label=Label("Set fixed limits"),
+        none_label=Label(""),  # empty Label will hide the indent and (unset)
         parameter_form=Tuple(
             help_text=fixed_help_text,
             elements=[

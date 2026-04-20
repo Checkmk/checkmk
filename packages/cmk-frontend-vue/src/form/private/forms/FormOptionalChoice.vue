@@ -69,7 +69,7 @@ watch(checkboxValue, (newValue: boolean) => {
       :backend-validation="embeddedValidation"
     />
   </FormIndent>
-  <FormIndent v-if="data === null">{{ spec.i18n.none_label }}</FormIndent>
+  <FormIndent v-if="data === null && spec.i18n.none_label">{{ spec.i18n.none_label }}</FormIndent>
 </template>
 
 <style scoped>

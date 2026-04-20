@@ -26,6 +26,8 @@
       "python.analysis.indexing": true,
       "python.analysis.autoImportCompletions": true,
       "python.analysis.diagnosticMode": "openFilesOnly",
+      "python.analysis.typeCheckingMode": "off",
+      "python.analysis.useLibraryCodeForTypes": false,
       "python.defaultInterpreterPath": "${workspaceFolder}/.venv/bin/python",
       "mypy.dmypyExecutable": "${workspaceFolder}/.venv/bin/dmypy",
       "mypy.runUsingActiveInterpreter": true,

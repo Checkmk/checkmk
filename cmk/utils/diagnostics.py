@@ -102,6 +102,17 @@ COMPONENT_COMMANDS = {
     "ss-tulpen": ["ss", "-tulpen"],
     "w": ["w"],
     "top": ["top", "-b", "-n", "1", "-H", "-c", "-w", "512", "-o", "-PID", "-1"],
+    "otel-licenses": [
+        "clickhouse",
+        "client",
+        "--config",
+        "etc/clickhouse-server/config.xml",
+        "--user",
+        "checkmk_read_write",
+        "--secure",
+        "--query",
+        "SELECT count FROM checkmk.licensing_active_series_count order by bucket_start desc limit 1;",
+    ],
 }
 
 COMPONENT_DIRECTORIES = {

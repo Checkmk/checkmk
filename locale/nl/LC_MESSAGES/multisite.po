@@ -13739,8 +13739,8 @@ msgstr "Kies alle"
 #, fuzzy
 msgid ""
 "Choose what kind of output data is sent to the Checkmk server: Only count "
-"the files, only report count and extrem files (i.e. the oldest, newest, "
-"largest and smallest), report the full stats on all files, or sent "
+"the files, only report count and extremes files (i.e. the oldest, newest, "
+"largest and smallest), report the full stats on all files, or send "
 "information about a single file only."
 msgstr ""
 "Kies wat voor soort ouputgegevens naar de Checkmk server worden gestuurd: "
@@ -19556,10 +19556,6 @@ msgstr ""
 "Afhankelijk van de nauwkeurigheid kan de eenheid milliseconden of "
 "micoseconden zijn."
 
-#, python-format
-msgid "Deploy %s"
-msgstr "Inzetten %s"
-
 #, fuzzy
 msgid "Deploy AD-Replication plug-in"
 msgstr "AD-Replicatie plugin implementeren"
@@ -19645,6 +19641,10 @@ msgstr "Agenten inzetten"
 #, fuzzy
 msgid "Deploy batch file plug-in - recommended for WinXP / Win2k upwards"
 msgstr "Deploy batch-bestand plugin - aanbevolen voor WinXP / Win2k en hoger"
+
+#, fuzzy
+msgid "Deploy configuration file"
+msgstr "Directory voor configuratiebestanden"
 
 msgid "Deploy custom files with agent"
 msgstr "Aangepaste bestanden uitrollen met agent"
@@ -21493,22 +21493,6 @@ msgstr "Niet controleren"
 #, fuzzy
 msgid "Do not exclude messages"
 msgstr "Berichten verwijderen"
-
-#, fuzzy
-msgid ""
-"Do not forget to activate the plug-in (i.e., deploy with or without "
-"configuration in at least one of your rules. It can be useful to create "
-"rules that are only partially filled out. Since the rule execution is done "
-"on a <i>per parameter</i> base you can for example create one rule at the "
-"top of your list that just sets the activation to <i>no</i> for just some of "
-"your hosts without setting any of the other parameters."
-msgstr ""
-"Vergeet niet de plugin te activeren (d.w.z. met of zonder configuratie in te "
-"zetten in ten minste één van uw regels. Het kan nuttig zijn om regels te "
-"maken die slechts gedeeltelijk zijn ingevuld. Omdat de regeluitvoering "
-"gebeurt op een <i>per parameter</i> basis kun je bijvoorbeeld één regel "
-"bovenaan je lijst maken die alleen de activatie op <i>no</i> zet voor "
-"slechts enkele van je hosts zonder andere parameters in te stellen."
 
 #, fuzzy
 msgid ""
@@ -67727,14 +67711,6 @@ msgstr ""
 msgid "The file %s needs to be created and maintained manually."
 msgstr "Het bestand %s moet handmatig worden aangemaakt en onderhouden."
 
-#, python-format
-msgid ""
-"The file %s needs to be created and maintained manually.<br>Configuration "
-"entries provided with this rule will be ignored."
-msgstr ""
-"Het bestand %s moet handmatig worden aangemaakt en onderhouden.<br>Bij deze "
-"regel verstrekte configuratie-items worden genegeerd."
-
 msgid ""
 "The file age of files with creation time from the future will be set to 0 if "
 "the creation time is within the tolerance period."
@@ -69893,6 +69869,14 @@ msgstr "De geheime toegangssleutel voor uw AWS account"
 
 msgid "The secret key for your AWS account"
 msgstr "De geheime sleutel voor uw AWS-account"
+
+#, fuzzy, python-format
+msgid ""
+"The section and the group name will be included in the item name. To use the "
+"single file aggregation, add <tt>%s</tt> to the group name."
+msgstr ""
+"De sectienaam wordt opgenomen in de itemnaam. Om de aggregatie met één "
+"bestand te gebruiken, voegt u <tt>%s</tt> toe aan de sectienaam."
 
 #, python-format
 msgid ""
@@ -85322,6 +85306,12 @@ msgstr ""
 "op te slaan met deze bestandsnaam. De extensie moet altijd <tt>pdf</tt> zijn."
 
 msgid ""
+"When disabled, the plug-in is deployed without its configuration file. The "
+"file <tt>/etc/check_mk/filestats.cfg</tt> must then be created and "
+"maintained manually."
+msgstr ""
+
+msgid ""
 "When doing service discovery on brocade switches only ports with the given "
 "administrative states will be added to the monitoring system."
 msgstr ""
@@ -95784,6 +95774,34 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, python-format
+#~ msgid "Deploy %s"
+#~ msgstr "Inzetten %s"
+
+#, fuzzy
+#~ msgid ""
+#~ "Do not forget to activate the plug-in (i.e., deploy with or without "
+#~ "configuration in at least one of your rules. It can be useful to create "
+#~ "rules that are only partially filled out. Since the rule execution is "
+#~ "done on a <i>per parameter</i> base you can for example create one rule "
+#~ "at the top of your list that just sets the activation to <i>no</i> for "
+#~ "just some of your hosts without setting any of the other parameters."
+#~ msgstr ""
+#~ "Vergeet niet de plugin te activeren (d.w.z. met of zonder configuratie in "
+#~ "te zetten in ten minste één van uw regels. Het kan nuttig zijn om regels "
+#~ "te maken die slechts gedeeltelijk zijn ingevuld. Omdat de regeluitvoering "
+#~ "gebeurt op een <i>per parameter</i> basis kun je bijvoorbeeld één regel "
+#~ "bovenaan je lijst maken die alleen de activatie op <i>no</i> zet voor "
+#~ "slechts enkele van je hosts zonder andere parameters in te stellen."
+
+#, python-format
+#~ msgid ""
+#~ "The file %s needs to be created and maintained manually.<br>Configuration "
+#~ "entries provided with this rule will be ignored."
+#~ msgstr ""
+#~ "Het bestand %s moet handmatig worden aangemaakt en onderhouden.<br>Bij "
+#~ "deze regel verstrekte configuratie-items worden genegeerd."
 
 #~ msgid "Allowed is 1 ... 9"
 #~ msgstr "Toegestaan is 1 ... 9"

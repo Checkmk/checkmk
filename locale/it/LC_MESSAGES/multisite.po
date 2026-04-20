@@ -13621,8 +13621,8 @@ msgstr "Scegliere tutti"
 #, fuzzy
 msgid ""
 "Choose what kind of output data is sent to the Checkmk server: Only count "
-"the files, only report count and extrem files (i.e. the oldest, newest, "
-"largest and smallest), report the full stats on all files, or sent "
+"the files, only report count and extremes files (i.e. the oldest, newest, "
+"largest and smallest), report the full stats on all files, or send "
 "information about a single file only."
 msgstr ""
 "Scegliere il tipo di dati di output da inviare al server Checkmk: Contare "
@@ -19414,10 +19414,6 @@ msgid ""
 msgstr ""
 "A seconda della precisione, l'unità può essere millisecondi o micosecondi."
 
-#, python-format
-msgid "Deploy %s"
-msgstr "Distribuzione %s"
-
 #, fuzzy
 msgid "Deploy AD-Replication plug-in"
 msgstr "Distribuire il plugin AD-Replication"
@@ -19504,6 +19500,10 @@ msgstr "Distribuire agenti"
 msgid "Deploy batch file plug-in - recommended for WinXP / Win2k upwards"
 msgstr ""
 "Distribuire il plugin del file batch - raccomandato per WinXP / Win2k in su"
+
+#, fuzzy
+msgid "Deploy configuration file"
+msgstr "Directory per i file di configurazione"
 
 msgid "Deploy custom files with agent"
 msgstr "Distribuire file personalizzati con l'agente"
@@ -21371,22 +21371,6 @@ msgstr "Non controllare"
 #, fuzzy
 msgid "Do not exclude messages"
 msgstr "Cancellare i messaggi"
-
-#, fuzzy
-msgid ""
-"Do not forget to activate the plug-in (i.e., deploy with or without "
-"configuration in at least one of your rules. It can be useful to create "
-"rules that are only partially filled out. Since the rule execution is done "
-"on a <i>per parameter</i> base you can for example create one rule at the "
-"top of your list that just sets the activation to <i>no</i> for just some of "
-"your hosts without setting any of the other parameters."
-msgstr ""
-"Non dimenticate di attivare il plugin (cioè di distribuirlo con o senza "
-"configurazione) in almeno una delle vostre regole. Può essere utile creare "
-"regole compilate solo parzialmente. Poiché l'esecuzione della regola avviene "
-"su base <i> per parametro</i>, si può ad esempio creare una regola in cima "
-"all'elenco che imposta l'attivazione solo su <i>no</i> per alcuni host, "
-"senza impostare altri parametri."
 
 #, fuzzy
 msgid ""
@@ -67489,12 +67473,6 @@ msgstr ""
 msgid "The file %s needs to be created and maintained manually."
 msgstr "Il file %s deve essere creato e mantenuto manualmente."
 
-#, python-format
-msgid ""
-"The file %s needs to be created and maintained manually.<br>Configuration "
-"entries provided with this rule will be ignored."
-msgstr "Il file %s deve essere creato e mantenuto manualmente."
-
 msgid ""
 "The file age of files with creation time from the future will be set to 0 if "
 "the creation time is within the tolerance period."
@@ -69678,6 +69656,14 @@ msgstr "La chiave di accesso segreta per il tuo account AWS"
 
 msgid "The secret key for your AWS account"
 msgstr "La chiave segreta dell'account AWS"
+
+#, fuzzy, python-format
+msgid ""
+"The section and the group name will be included in the item name. To use the "
+"single file aggregation, add <tt>%s</tt> to the group name."
+msgstr ""
+"Il nome della sezione sarà incluso nel nome dell'elemento. Per utilizzare "
+"l'aggregazione a file singolo, aggiungere <tt>%s</tt> al nome della sezione."
 
 #, python-format
 msgid ""
@@ -85043,6 +85029,12 @@ msgstr ""
 "questo nome. L'estensione dovrebbe essere sempre <tt>pdf</tt>."
 
 msgid ""
+"When disabled, the plug-in is deployed without its configuration file. The "
+"file <tt>/etc/check_mk/filestats.cfg</tt> must then be created and "
+"maintained manually."
+msgstr ""
+
+msgid ""
 "When doing service discovery on brocade switches only ports with the given "
 "administrative states will be added to the monitoring system."
 msgstr ""
@@ -95493,6 +95485,32 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, python-format
+#~ msgid "Deploy %s"
+#~ msgstr "Distribuzione %s"
+
+#, fuzzy
+#~ msgid ""
+#~ "Do not forget to activate the plug-in (i.e., deploy with or without "
+#~ "configuration in at least one of your rules. It can be useful to create "
+#~ "rules that are only partially filled out. Since the rule execution is "
+#~ "done on a <i>per parameter</i> base you can for example create one rule "
+#~ "at the top of your list that just sets the activation to <i>no</i> for "
+#~ "just some of your hosts without setting any of the other parameters."
+#~ msgstr ""
+#~ "Non dimenticate di attivare il plugin (cioè di distribuirlo con o senza "
+#~ "configurazione) in almeno una delle vostre regole. Può essere utile "
+#~ "creare regole compilate solo parzialmente. Poiché l'esecuzione della "
+#~ "regola avviene su base <i> per parametro</i>, si può ad esempio creare "
+#~ "una regola in cima all'elenco che imposta l'attivazione solo su <i>no</i> "
+#~ "per alcuni host, senza impostare altri parametri."
+
+#, python-format
+#~ msgid ""
+#~ "The file %s needs to be created and maintained manually.<br>Configuration "
+#~ "entries provided with this rule will be ignored."
+#~ msgstr "Il file %s deve essere creato e mantenuto manualmente."
 
 #~ msgid "Allowed is 1 ... 9"
 #~ msgstr "Consentito è 1 ... 9"

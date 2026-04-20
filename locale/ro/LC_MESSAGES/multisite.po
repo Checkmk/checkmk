@@ -13753,8 +13753,8 @@ msgstr "Alegeți toate"
 #, fuzzy
 msgid ""
 "Choose what kind of output data is sent to the Checkmk server: Only count "
-"the files, only report count and extrem files (i.e. the oldest, newest, "
-"largest and smallest), report the full stats on all files, or sent "
+"the files, only report count and extremes files (i.e. the oldest, newest, "
+"largest and smallest), report the full stats on all files, or send "
 "information about a single file only."
 msgstr ""
 "Alegeți ce fel de date de ieșire sunt trimise către serverul Checkmk: Doar "
@@ -19573,10 +19573,6 @@ msgstr ""
 "În funcție de precizie, unitatea de măsură poate fi fie milisecundele, fie "
 "micosecundele."
 
-#, python-format
-msgid "Deploy %s"
-msgstr "Implementați %s"
-
 #, fuzzy
 msgid "Deploy AD-Replication plug-in"
 msgstr "Implementarea pluginului AD-Replication"
@@ -19664,6 +19660,10 @@ msgid "Deploy batch file plug-in - recommended for WinXP / Win2k upwards"
 msgstr ""
 "Plugin de implementare a fișierelor batch - recomandat pentru WinXP / Win2k "
 "și versiunile superioare"
+
+#, fuzzy
+msgid "Deploy configuration file"
+msgstr "Director pentru fișierele de configurare"
 
 msgid "Deploy custom files with agent"
 msgstr "Distribuie fișiere personalizate cu agentul"
@@ -21527,23 +21527,6 @@ msgstr "Nu verificați"
 #, fuzzy
 msgid "Do not exclude messages"
 msgstr "Ștergerea mesajelor"
-
-#, fuzzy
-msgid ""
-"Do not forget to activate the plug-in (i.e., deploy with or without "
-"configuration in at least one of your rules. It can be useful to create "
-"rules that are only partially filled out. Since the rule execution is done "
-"on a <i>per parameter</i> base you can for example create one rule at the "
-"top of your list that just sets the activation to <i>no</i> for just some of "
-"your hosts without setting any of the other parameters."
-msgstr ""
-"Nu uitați să activați plugin-ul (adică să îl implementați cu sau fără "
-"configurare în cel puțin una dintre regulile dvs. Poate fi util să creați "
-"reguli care sunt doar parțial completate. Deoarece execuția regulilor se "
-"face pe o bază <i>pe parametru</i>, puteți, de exemplu, să creați o regulă "
-"în partea de sus a listei dvs. care stabilește doar activarea la <i>nu</i> "
-"pentru doar câteva dintre gazdele dvs. fără a seta niciunul dintre ceilalți "
-"parametri."
 
 #, fuzzy
 msgid ""
@@ -67843,14 +67826,6 @@ msgstr ""
 msgid "The file %s needs to be created and maintained manually."
 msgstr "Fișierul %s trebuie să fie creat și menținut manual."
 
-#, python-format
-msgid ""
-"The file %s needs to be created and maintained manually.<br>Configuration "
-"entries provided with this rule will be ignored."
-msgstr ""
-"Fișierul %s trebuie creat și menținut manual.<br>Intrările de configurare "
-"furnizate cu această regulă vor fi ignorate."
-
 msgid ""
 "The file age of files with creation time from the future will be set to 0 if "
 "the creation time is within the tolerance period."
@@ -70014,6 +69989,14 @@ msgstr "Cheia secretă de acces pentru contul AWS"
 
 msgid "The secret key for your AWS account"
 msgstr "Cheia secretă pentru contul dvs. AWS"
+
+#, fuzzy, python-format
+msgid ""
+"The section and the group name will be included in the item name. To use the "
+"single file aggregation, add <tt>%s</tt> to the group name."
+msgstr ""
+"Denumirea secțiunii va fi inclusă în denumirea articolului. Pentru a utiliza "
+"agregarea cu un singur fișier, adăugați <tt>%s</tt> la numele secțiunii."
 
 #, python-format
 msgid ""
@@ -85449,6 +85432,12 @@ msgstr ""
 "cu acest nume de fișier. Extensia trebuie să fie întotdeauna <tt>pdf</tt>."
 
 msgid ""
+"When disabled, the plug-in is deployed without its configuration file. The "
+"file <tt>/etc/check_mk/filestats.cfg</tt> must then be created and "
+"maintained manually."
+msgstr ""
+
+msgid ""
 "When doing service discovery on brocade switches only ports with the given "
 "administrative states will be added to the monitoring system."
 msgstr ""
@@ -95943,6 +95932,35 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, python-format
+#~ msgid "Deploy %s"
+#~ msgstr "Implementați %s"
+
+#, fuzzy
+#~ msgid ""
+#~ "Do not forget to activate the plug-in (i.e., deploy with or without "
+#~ "configuration in at least one of your rules. It can be useful to create "
+#~ "rules that are only partially filled out. Since the rule execution is "
+#~ "done on a <i>per parameter</i> base you can for example create one rule "
+#~ "at the top of your list that just sets the activation to <i>no</i> for "
+#~ "just some of your hosts without setting any of the other parameters."
+#~ msgstr ""
+#~ "Nu uitați să activați plugin-ul (adică să îl implementați cu sau fără "
+#~ "configurare în cel puțin una dintre regulile dvs. Poate fi util să creați "
+#~ "reguli care sunt doar parțial completate. Deoarece execuția regulilor se "
+#~ "face pe o bază <i>pe parametru</i>, puteți, de exemplu, să creați o "
+#~ "regulă în partea de sus a listei dvs. care stabilește doar activarea la "
+#~ "<i>nu</i> pentru doar câteva dintre gazdele dvs. fără a seta niciunul "
+#~ "dintre ceilalți parametri."
+
+#, python-format
+#~ msgid ""
+#~ "The file %s needs to be created and maintained manually.<br>Configuration "
+#~ "entries provided with this rule will be ignored."
+#~ msgstr ""
+#~ "Fișierul %s trebuie creat și menținut manual.<br>Intrările de configurare "
+#~ "furnizate cu această regulă vor fi ignorate."
 
 #~ msgid "Allowed is 1 ... 9"
 #~ msgstr "Numărul permis este 1 ... 9"

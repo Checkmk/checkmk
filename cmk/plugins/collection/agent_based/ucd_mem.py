@@ -8,23 +8,9 @@
 
 import operator
 from collections.abc import Mapping, Sequence
-from typing import Any
 
-from cmk.agent_based.v2 import (
-    CheckPlugin,
-    CheckResult,
-    DiscoveryResult,
-    Result,
-    Service,
-    SNMPSection,
-    SNMPTree,
-    State,
-    StringTable,
-)
+from cmk.agent_based.v2 import SNMPSection, SNMPTree, StringTable
 from cmk.plugins.lib import ucd_hr_detection
-from cmk.plugins.lib.memory import check_dict
-
-type Section = Mapping[str, int | str]
 
 # .1.3.6.1.4.1.2021.4.2.0 swap      --> UCD-SNMP-MIB::memErrorName.0
 # .1.3.6.1.4.1.2021.4.3.0 8388604   --> UCD-SNMP-MIB::MemTotalSwap.0
@@ -43,7 +29,7 @@ def _info_str_to_bytes(info_str):
     return int(info_str.replace("kB", "").strip()) * 1024
 
 
-def parse_ucd_mem(string_table: Sequence[StringTable]) -> Section:
+def parse_ucd_mem(string_table: Sequence[StringTable]) -> Mapping[str, int]:
     info = string_table[0]
 
     # mandatory memory values
@@ -124,71 +110,4 @@ snmp_section_ucd_mem = SNMPSection(
         ),
     ],
     detect=ucd_hr_detection.USE_UCD_MEM,
-)
-
-
-# FIXME
-# The WATO group 'memory_simple' needs an item and the service_description should
-# have a '%s'.  At the moment the current empty item '' and 'Memory' without '%s'
-# works but is not consistent.  This will be fixed in the future.
-# If we change this we loose history and parameter sets have to be adapted.
-
-# .1.3.6.1.4.1.2021.4.2.0 swap      --> UCD-SNMP-MIB::memErrorName.0
-# .1.3.6.1.4.1.2021.4.3.0 8388604   --> UCD-SNMP-MIB::MemTotalSwap.0
-# .1.3.6.1.4.1.2021.4.4.0 8388604   --> UCD-SNMP-MIB::MemAvailSwap.0
-# .1.3.6.1.4.1.2021.4.5.0 4003584   --> UCD-SNMP-MIB::MemTotalReal.0
-# .1.3.6.1.4.1.2021.4.11.0 12233816 --> UCD-SNMP-MIB::MemTotalFree.0
-# .1.3.6.1.4.1.2021.4.12.0 16000    --> UCD-SNMP-MIB::memMinimumSwap.0
-# .1.3.6.1.4.1.2021.4.13.0 3163972  --> UCD-SNMP-MIB::memShared.0
-# .1.3.6.1.4.1.2021.4.14.0 30364    --> UCD-SNMP-MIB::memBuffer.0
-# .1.3.6.1.4.1.2021.4.15.0 10216780 --> UCD-SNMP-MIB::memCached.0
-# .1.3.6.1.4.1.2021.4.100.0 0       --> UCD-SNMP-MIB::memSwapError.0
-# .1.3.6.1.4.1.2021.4.101.0         --> UCD-SNMP-MIB::smemSwapErrorMsg.0
-
-
-def discover_ucd_mem(section: Section) -> DiscoveryResult:
-    if section:
-        yield Service()
-
-
-def check_ucd_mem(params: dict[str, Any], section: Section) -> CheckResult:
-    if not section:
-        return
-
-    # general errors
-    error = section["error"]
-    if error and error != "swap":
-        yield Result(state=State.WARN, summary=f"Error: {error}")
-
-    # map legacy levels
-    if params.get("levels") is not None:
-        params["levels_ram"] = params.pop("levels")
-
-    yield from (
-        r
-        for results in check_dict(
-            {k: v for k, v in section.items() if isinstance(v, int)}, params
-        ).values()
-        for r in results
-    )
-
-    # swap errors
-    if "error_swap" in section:
-        if section["error_swap"] != 0 and section["error_swap_msg"]:
-            yield Result(
-                state=State(int(params.get("swap_errors", 0))),
-                summary=f"Swap error: {section['error_swap_msg']}",
-            )
-
-
-check_plugin_ucd_mem = CheckPlugin(
-    name="ucd_mem",
-    service_name="Memory",
-    discovery_function=discover_ucd_mem,
-    check_function=check_ucd_mem,
-    check_ruleset_name="memory_simple_single",
-    check_default_parameters={
-        "levels": ("perc_used", (80.0, 90.0)),
-        "swap_errors": 0,
-    },
 )

@@ -23,7 +23,7 @@ def _compute_state(value: float, warn: float | None, crit: float | None) -> int:
 
 
 #############################################################################
-#    This function is already migrated and available in lib/memory.py !     #
+#    This function is already migrated and available in utils/memory.py !   #
 #############################################################################
 def check_memory_element(
     label: str,
@@ -84,9 +84,6 @@ def check_memory_element(
     return state, infotext, perf
 
 
-#############################################################################
-#    This function is already migrated and available in lib/memory.py !     #
-#############################################################################
 def check_memory_dict(
     meminfo: Mapping[str, Any], params: Mapping[str, Any]
 ) -> Mapping[

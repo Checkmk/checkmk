@@ -74,11 +74,9 @@ jobs:
             - name: Cache bazel
               uses: actions/cache@v3
               with:
-                  key: ${{ matrix.os }}-bazel-${{ hashFiles('.bazelversion', '.bazelrc', 'WORKSPACE', 'MODULE.bazel') }}
-                  path: |
-                      ~/.cache/bazel
-                  restore-keys: |
-                      ${{ matrix.os }}-bazel-
+                  key: ${{ matrix.os }}-bazel-${{ github.run_id }}
+                  path: ~/.cache/bazel
+                  restore-keys: ${{ matrix.os }}-bazel-
             - name: Reset bazel downloader config
               # Bazel would try to download files from the internal mirror and report many errors but would not fail
               shell: bash

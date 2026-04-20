@@ -22,7 +22,10 @@ from cmk.utils.rulesets.definition import RuleGroup
 type ItemTransformer = Callable[[str | None], str | None]
 type TDiscoveredItemsTransforms = Mapping[CheckPluginName, ItemTransformer]
 
-_EXPLICIT_DISCOVERED_ITEMS_TRANSFORMS: TDiscoveredItemsTransforms = {}
+_EXPLICIT_DISCOVERED_ITEMS_TRANSFORMS: TDiscoveredItemsTransforms = {
+    # Only yielded one item - Refactored to no item.
+    CheckPluginName("stormshield_info"): lambda x: None,
+}
 
 _ALL_EXPLICIT_DISCOVERED_ITEMS_TRANSFORMS: TDiscoveredItemsTransforms = {
     **_EXPLICIT_DISCOVERED_ITEMS_TRANSFORMS,

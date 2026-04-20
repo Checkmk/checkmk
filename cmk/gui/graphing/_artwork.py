@@ -119,16 +119,10 @@ class RequestedTimeRange(BaseModel, frozen=True):
     end: int
 
 
-class YAxis(TypedDict):
-    min: float
-    max: float
+class Axis(TypedDict):
+    lower: float
+    upper: float
     labels: Sequence[AxisTick]
-
-
-class XAxis(TypedDict):
-    labels: Sequence[AxisTick]
-    start: int
-    end: int
 
 
 class Curve(TypedDict):
@@ -142,8 +136,8 @@ class GraphArtwork(BaseModel):
     # Actual data and axes
     curves: Sequence[LayoutedCurve]
     horizontal_rules: Sequence[HorizontalRule]
-    y_axis: YAxis
-    x_axis: XAxis
+    y_axis: Axis
+    x_axis: Axis
     mark_requested_end_time: bool
     # Displayed range
     actual_time: ActualTimeRange
@@ -595,7 +589,7 @@ def _compute_graph_v_axis(
     height_ex: SizeEx,
     layouted_curves: Sequence[LayoutedCurve],
     mirrored: bool,
-) -> YAxis:
+) -> Axis:
     # Calculate the the value range
     # distance   -> amount of values visible in vaxis (max_value - min_value)
     # min_value  -> value of lowest v axis label (taking extra margin and zooming into account)
@@ -617,9 +611,9 @@ def _compute_graph_v_axis(
     rendered_labels = [
         AxisTick(position=label.position, text=label.text, line_width=2) for label in labels
     ]
-    return YAxis(
-        min=min(v_axis_min, *(t.position for t in rendered_labels)),
-        max=max(v_axis_max, *(t.position for t in rendered_labels)),
+    return Axis(
+        lower=min(v_axis_min, *(t.position for t in rendered_labels)),
+        upper=max(v_axis_max, *(t.position for t in rendered_labels)),
         labels=rendered_labels,
     )
 
@@ -748,7 +742,7 @@ def _remove_useless_zeroes(label: str) -> str:
 
 def _compute_graph_t_axis(
     start_time: int, end_time: int, width: float, step: int
-) -> tuple[XAxis, str]:
+) -> tuple[Axis, str]:
     # Depending on which time range is being shown we have different
     # steps of granularity
 
@@ -841,7 +835,7 @@ def _compute_graph_t_axis(
         )
 
     return (
-        XAxis(labels=labels, start=start_time, end=end_time),
+        Axis(labels=labels, lower=start_time, upper=end_time),
         _add_step_to_title(title_label, step),
     )
 

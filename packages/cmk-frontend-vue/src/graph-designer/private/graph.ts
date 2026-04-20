@@ -110,18 +110,10 @@ interface AxisTick {
   line_width: number
 }
 
-interface YAxis {
-  min: number
-  max: number
+interface Axis {
+  lower: number
+  upper: number
   labels: AxisTick[]
-  //dynamic
-  pixels_per_unit: number
-}
-
-interface XAxis {
-  labels: AxisTick[]
-  start: number
-  end: number
 }
 
 //this type is from cmk/gui/plugins/metrics/artwork.py:82
@@ -139,8 +131,8 @@ interface RequestedTimeRange {
 interface GraphArtwork {
   curves: LayoutedCurve[]
   horizontal_rules: HorizontalRule[]
-  y_axis: YAxis
-  x_axis: XAxis
+  y_axis: Axis
+  x_axis: Axis
   mark_requested_end_time: boolean
   //Displayed range
   actual_time: ActualTimeRange

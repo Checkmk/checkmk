@@ -131,14 +131,14 @@ def render_graph_pdf(
     bottom_border = _graph_bottom_border(display_config)
 
     # Prepare position and translation of origin
-    t_range_from = artwork.x_axis["start"]
-    t_range_to = artwork.x_axis["end"]
+    t_range_from = artwork.x_axis["lower"]
+    t_range_to = artwork.x_axis["upper"]
     t_range = t_range_to - t_range_from
     t_mm = width - left_border - left_margin - right_margin
     t_mm_per_second = 1.0 * t_mm / t_range
 
-    v_range_from = artwork.y_axis["min"]
-    v_range_to = artwork.y_axis["max"]
+    v_range_from = artwork.y_axis["lower"]
+    v_range_to = artwork.y_axis["upper"]
     v_range = v_range_to - v_range_from
     v_mm = height - top_margin - bottom_border - bottom_margin
     v_mm_per_unit = 1.0 * v_mm / v_range

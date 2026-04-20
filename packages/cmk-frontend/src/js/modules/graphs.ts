@@ -138,19 +138,13 @@ interface AxisTick {
   line_width: number
 }
 
-interface XAxis {
+interface Axis {
+  lower: number
+  upper: number
   labels: AxisTick[]
-  start: number
-  end: number
 }
 
 type GraphRecipe = Record<string, any>
-
-interface YAxis {
-  min: number
-  max: number
-  labels: AxisTick[]
-}
 
 export interface HorizontalRule {
   value: number
@@ -174,8 +168,8 @@ interface RequestedTimeRange {
 export interface GraphArtwork {
   curves: LayoutedCurve[]
   horizontal_rules: HorizontalRule[]
-  y_axis: YAxis
-  x_axis: XAxis
+  y_axis: Axis
+  x_axis: Axis
   mark_requested_end_time: boolean
   actual_time: ActualTimeRange
   requested_time: RequestedTimeRange
@@ -717,15 +711,15 @@ function render_graph(graph: GraphInstance) {
   const v_line_color = [graph.display_config.foreground_color, '#8097b19c', '#8097b19c']
 
   // Prepare position and translation of origin
-  const t_range_from = graph.artwork.x_axis.start
-  const t_range_to = graph.artwork.x_axis.end
+  const t_range_from = graph.artwork.x_axis.lower
+  const t_range_to = graph.artwork.x_axis.upper
   const t_range = t_range_to - t_range_from
   const t_pixels = width - v_axis_width
   const t_pixels_per_second = t_pixels / t_range
   graph.pixels_per_second = t_pixels_per_second // store for dragging
 
-  const v_range_from = graph.artwork.y_axis.min
-  const v_range_to = graph.artwork.y_axis.max
+  const v_range_from = graph.artwork.y_axis.lower
+  const v_range_to = graph.artwork.y_axis.upper
   const v_range = v_range_to - v_range_from
   const v_pixels = height - bottom_border - top_border
   const v_pixels_per_unit = v_pixels / v_range
@@ -1457,10 +1451,10 @@ function graph_get_mouse_position(
   graph: GraphInstance
 ): null | [number, number] {
   const time = graph_get_click_time(event, graph)
-  if (time < graph.artwork.x_axis.start || time > graph.artwork.x_axis.end) return null // out of range
+  if (time < graph.artwork.x_axis.lower || time > graph.artwork.x_axis.upper) return null // out of range
 
   const value = graph_get_click_value(event, graph)
-  if (value < graph.artwork.y_axis.min || value > graph.artwork.y_axis.max) return null // out of range
+  if (value < graph.artwork.y_axis.lower || value > graph.artwork.y_axis.upper) return null // out of range
 
   return [time, value]
 }
@@ -1727,7 +1721,7 @@ function graph_get_click_time(event: MouseEvent, graph: GraphInstance) {
 
   // Convert this to a time value and check if its within the visible range
   const t_offset = (x - graph.time_origin) / graph.pixels_per_second
-  return graph.artwork.x_axis.start + t_offset
+  return graph.artwork.x_axis.lower + t_offset
 }
 
 function graph_get_click_value(event: MouseEvent, graph: GraphInstance) {
@@ -1738,7 +1732,7 @@ function graph_get_click_value(event: MouseEvent, graph: GraphInstance) {
 
   // Convert this to a vertical value and check if its within the visible range
   const v_offset = -(y - graph.vertical_origin) / graph.pixels_per_unit
-  return graph.artwork.y_axis.min + v_offset
+  return graph.artwork.y_axis.lower + v_offset
 }
 
 function get_event_offset_x(event: MouseEvent) {
@@ -1778,7 +1772,10 @@ function update_graph_hover_popup(event: Event, graph: GraphInstance): boolean |
     return prevent_default_events(event)
   }
 
-  if (hover_timestamp < graph.artwork.x_axis.start || hover_timestamp > graph.artwork.x_axis.end) {
+  if (
+    hover_timestamp < graph.artwork.x_axis.lower ||
+    hover_timestamp > graph.artwork.x_axis.upper
+  ) {
     return prevent_default_events(event)
   }
 
@@ -2021,8 +2018,8 @@ function update_graph(
   let range_from: null | number = null
   let range_to: null | number = null
   if (vertical_zoom != null) {
-    const old_range_from = graph.artwork.y_axis.min
-    const old_range_to = graph.artwork.y_axis.max
+    const old_range_from = graph.artwork.y_axis.lower
+    const old_range_to = graph.artwork.y_axis.upper
     range_from = old_range_from / vertical_zoom
     range_to = old_range_to / vertical_zoom
   } else if (graph.artwork.requested_y_range != null) {

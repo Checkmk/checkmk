@@ -4,7 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import { nextTick, onMounted, onUnmounted, ref } from 'vue'
+import { nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 
 import usei18n from '@/lib/i18n'
 
@@ -186,6 +186,10 @@ const cloneRelativeGridWidget = (oldWidgetId: string) => {
 }
 
 const enterMissingRuntimeFiltersAction = useInjectMissingRuntimeFiltersAction()
+watch(enterMissingRuntimeFiltersAction, async () => {
+  await nextTick()
+  setDashboardLayout()
+})
 </script>
 
 <template>

@@ -35,34 +35,36 @@ def make_header(
     if writer.output_format != "html":
         return
 
-    if not writer._header_sent:
-        if show_body_start:
-            writer.body_start(
-                title,
-                force=force,
-                lang=lang,
-                inject_js_profiling_code=inject_js_profiling_code,
-                load_frontend_vue=load_frontend_vue,
-                custom_style_sheet=custom_style_sheet,
-                screenshotmode=screenshotmode,
-                inline_help_as_text=inline_help_as_text,
-            )
+    if writer._header_sent:
+        return
 
-        writer._header_sent = True
+    if show_body_start:
+        writer.body_start(
+            title,
+            force=force,
+            lang=lang,
+            inject_js_profiling_code=inject_js_profiling_code,
+            load_frontend_vue=load_frontend_vue,
+            custom_style_sheet=custom_style_sheet,
+            screenshotmode=screenshotmode,
+            inline_help_as_text=inline_help_as_text,
+        )
 
-        breadcrumb = breadcrumb or Breadcrumb()
+    writer._header_sent = True
 
-        if writer.render_headfoot and show_top_heading:
-            top_heading(
-                writer,
-                writer.request,
-                title,
-                breadcrumb=breadcrumb,
-                page_menu=page_menu or PageMenu(breadcrumb=breadcrumb),
-                browser_reload=writer.browser_reload,
-                debug=debug,
-                hide_suggestions=hide_suggestions,
-                user_role_ids=user_role_ids,
-            )
+    breadcrumb = breadcrumb or Breadcrumb()
+
+    if writer.render_headfoot and show_top_heading:
+        top_heading(
+            writer,
+            writer.request,
+            title,
+            breadcrumb=breadcrumb,
+            page_menu=page_menu or PageMenu(breadcrumb=breadcrumb),
+            browser_reload=writer.browser_reload,
+            debug=debug,
+            hide_suggestions=hide_suggestions,
+            user_role_ids=user_role_ids,
+        )
 
     writer.begin_page_content(enable_scrollbar=enable_main_page_scrollbar)

@@ -219,7 +219,7 @@ test.each(graphLineTypesExceptQuery)('Graph line of type %s has dissolve button'
   })
   expect(graphLineRow).toBeInTheDocument()
 
-  const dissolveButton = screen.getByRole('img', { name: 'Dissolve operation' })
+  const dissolveButton = screen.getByRole('button', { name: 'Dissolve operation' })
   expect(dissolveButton).toBeInTheDocument()
 })
 
@@ -258,7 +258,9 @@ test("Graph line of type 'query' has 'Add rule: Metric backend (Custom query)' b
     }
   })
 
-  const addRuleButton = screen.getByRole('img', { name: 'Add rule: Metric backend (Custom query)' })
+  const addRuleButton = screen.getByRole('button', {
+    name: 'Add rule: Metric backend (Custom query)'
+  })
   expect(addRuleButton).toBeInTheDocument()
 })
 
@@ -294,7 +296,7 @@ test.each(graphLineTypesExceptQuery)(
       }
     })
 
-    const addRuleButton = screen.queryByRole('img', {
+    const addRuleButton = screen.queryByRole('button', {
       name: 'Add rule: Metric backend (Custom query)'
     })
     expect(addRuleButton).not.toBeInTheDocument()

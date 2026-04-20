@@ -21,7 +21,6 @@ import { type Ref, computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 
 import usei18n from '@/lib/i18n'
 import useDragging from '@/lib/useDragging'
-import { useTheme } from '@/lib/useTheme'
 
 import CmkAlertBox from '@/components/CmkAlertBox.vue'
 import CmkButton from '@/components/CmkButton.vue'
@@ -29,6 +28,7 @@ import CmkColorPicker from '@/components/CmkColorPicker.vue'
 import CmkDropdown from '@/components/CmkDropdown'
 import { useCmkErrorBoundary } from '@/components/CmkErrorBoundary'
 import CmkHelpText from '@/components/CmkHelpText.vue'
+import CmkIconButton from '@/components/CmkIconButton.vue'
 import CmkSlideInDialog from '@/components/CmkSlideInDialog.vue'
 import type { Suggestion } from '@/components/CmkSuggestions'
 import CmkSwitch from '@/components/CmkSwitch.vue'
@@ -68,12 +68,6 @@ import type { Topic } from './type_defs'
 const { CmkErrorBoundary } = useCmkErrorBoundary()
 
 const { _t } = usei18n()
-const { theme } = useTheme()
-
-function _themedIcon(name: string): string {
-  const themeDir = theme.value === 'facelift' ? 'facelift' : 'modern-dark'
-  return `themes/${themeDir}/images/${name}`
-}
 
 const props = defineProps<{
   graph_id: string
@@ -1075,44 +1069,45 @@ const graphDesignerContentAsJson = computed(() => {
           </div>
         </td>
         <td class="buttons">
-          <img
+          <CmkIconButton
             v-if="isDissolvable(graphLine)"
+            name="dissolve-operation"
+            size="large"
             :title="_t('Dissolve operation')"
             :aria-label="_t('Dissolve operation')"
-            src="themes/facelift/images/icon_dissolve_operation.png"
-            class="icon iconbutton png"
             @click="dissolveGraphLine(graphLine)"
           />
-          <img
+          <CmkIconButton
+            name="clone"
+            size="large"
             :title="_t('Clone this entry')"
-            src="themes/facelift/images/icon_clone.svg"
-            class="icon iconbutton"
             @click="cloneGraphLine(graphLine)"
           />
-          <img
+          <CmkIconButton
+            name="drag"
+            size="large"
             :title="_t('Move this entry')"
-            :src="_themedIcon('icon_drag.svg')"
-            class="icon iconbutton"
+            draggable="true"
             @dragstart="dragStart"
             @drag="dragElement"
             @dragend="dragEnd"
           />
-          <img
+          <CmkIconButton
+            name="delete"
+            size="large"
             :title="_t('Delete this entry')"
-            src="themes/facelift/images/icon_delete.svg"
-            class="icon iconbutton"
             @click="deleteGraphLine(graphLine)"
           />
-          <img
+          <CmkIconButton
             v-if="
               props.create_services_available &&
               graphLine.type === 'query' &&
               validateFormMetricBackendCustomQuery(undefined, graphLine).length === 0
             "
+            name="add-rule"
+            size="large"
             :title="_t('Add rule: Metric backend (Custom query)')"
             :aria-label="_t('Add rule: Metric backend (Custom query)')"
-            :src="_themedIcon('icon_add_rule.svg')"
-            class="icon iconbutton"
             @click="openSlideIn(graphLine)"
           />
         </td>

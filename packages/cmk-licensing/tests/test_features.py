@@ -22,7 +22,6 @@ def test_community() -> None:
     [e for e in Edition if e is not Edition.COMMUNITY],
 )
 def test_commercial(edition: Edition) -> None:
-    # NOTE: this will go away soon
     assert licensed_features(Path(), edition) == Features(
         bakery=FeatureFlag(enabled=True),
     )

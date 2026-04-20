@@ -283,4 +283,5 @@ py_library(
     srcs = [
         "sitecustomize.py",
     ],
+    deps = ["//packages/cmk-licensing/cmk/licensing/basics"],
 )

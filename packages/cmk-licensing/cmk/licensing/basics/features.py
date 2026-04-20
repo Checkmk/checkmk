@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from dataclasses import dataclass
+from dataclasses import dataclass, fields
 from enum import auto, StrEnum
 from pathlib import Path
 
@@ -27,6 +27,9 @@ class Features:
         match name:
             case FeatureName.BAKERY:
                 return self.bakery
+
+    def disabled(self) -> set[str]:
+        return {f.name for f in fields(self) if not getattr(self, f.name).enabled}
 
 
 # NOTE: Soon this will consider the contents of the actual license.

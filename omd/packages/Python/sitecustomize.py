@@ -25,3 +25,9 @@ if omd_root:
     # for extension modules of the user, for example installed manually
     # or via pip.
     sys.path.insert(0, omd_root + "/local/lib/python3")
+
+    # Enable with CMK-33726
+    # # Block the import of modules that are not licensed for the current edition:
+    # from cmk.licensing.basics.finder import apply_feature_filter
+    #
+    # sys.meta_path[:] = apply_feature_filter(Path(omd_root), sys.meta_path)

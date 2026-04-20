@@ -1614,5 +1614,8 @@ allows = ["@ccc"]
 [file_dependencies."omd/packages/check_mk/post-create/01_create-sample-config.py"]
 allows = ["@ccc", "cmk.gui", "cmk.utils.log", "cmk.utils.paths"]
 
+[file_dependencies."omd/packages/Python/sitecustomize.py"]
+allows = ["cmk.licensing.basics"]
+
 [file_dependencies."omd/non-free/packages/licensing/cmk-license-email-notification.py"]
 allows = ["cmk.licensing.nonfree", "cmk.utils"]

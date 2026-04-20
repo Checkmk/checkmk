@@ -302,7 +302,6 @@ class TemplateGraphSpecification(GraphSpecification, frozen=True):
     site: SiteId | None
     host_name: AnnotatedHostName
     service_description: ServiceName
-    graph_index: int | None = None
     graph_id: str | None = None
     destination: str | None = None
 
@@ -333,7 +332,6 @@ class TemplateGraphSpecification(GraphSpecification, frozen=True):
         site: SiteId | None,
         host_name: AnnotatedHostName,
         service_description: ServiceName,
-        graph_index: int | None,
         graph_id: str | None,
         destination: str | None,
     ) -> Self:
@@ -342,7 +340,6 @@ class TemplateGraphSpecification(GraphSpecification, frozen=True):
             host_name=host_name,
             service_description=service_description,
             destination=destination,
-            graph_index=graph_index,
             graph_id=graph_id,
         )
 
@@ -354,7 +351,6 @@ class TemplateGraphSpecification(GraphSpecification, frozen=True):
         service_name: ServiceName,
         show_graph_ids: bool,
         *,
-        graph_index: int,
         graph_id: str,
         recipe: GraphRecipe,
         consolidation_function: GraphConsolidationFunction,
@@ -374,7 +370,6 @@ class TemplateGraphSpecification(GraphSpecification, frozen=True):
                 site=site_id,
                 host_name=host_name,
                 service_description=service_name,
-                graph_index=graph_index,
                 graph_id=graph_id,
                 destination=self.destination,
             ),
@@ -398,12 +393,6 @@ class TemplateGraphSpecification(GraphSpecification, frozen=True):
         site_id = graph_row.site_id
         host_name = graph_row.host_name
         service_name = graph_row.service_name
-        # Performance graph dashlets already use graph_id, but for example in reports, we still use
-        # graph_index. Therefore, this function needs to support both. We should switch to graph_id
-        # everywhere (CMK-7308) and remove the support for graph_index. However, note that we cannot
-        # easily build a corresponding transform, so even after switching to graph_id everywhere, we
-        # will need to keep this functionality here for some time to support already created dashlets,
-        # reports etc.
         if (
             isinstance(self.graph_id, str)
             and self.graph_id.startswith("METRIC_")
@@ -411,7 +400,6 @@ class TemplateGraphSpecification(GraphSpecification, frozen=True):
         ):
             recipes = [
                 (
-                    0,
                     self.graph_id,
                     _create_graph_recipe_from_translated_metric(
                         site_id,
@@ -425,25 +413,22 @@ class TemplateGraphSpecification(GraphSpecification, frozen=True):
             ]
         else:
             recipes = [
-                (graph_recipe_index, graph_recipe_id, recipe)
-                for graph_recipe_index, (graph_recipe_id, recipe) in enumerate(
-                    _evaluate_graph_plugins(
-                        env.registered_metrics,
-                        sort_registered_graph_plugins(env.registered_graphs),
-                        site_id,
-                        host_name,
-                        service_name,
-                        graph_row.translated_metrics,
-                        consolidation_function=consolidation_function,
-                        temperature_unit=env.temperature_unit,
-                    )
+                (graph_recipe_id, recipe)
+                for graph_recipe_id, recipe in _evaluate_graph_plugins(
+                    env.registered_metrics,
+                    sort_registered_graph_plugins(env.registered_graphs),
+                    site_id,
+                    host_name,
+                    service_name,
+                    graph_row.translated_metrics,
+                    consolidation_function=consolidation_function,
+                    temperature_unit=env.temperature_unit,
                 )
-                if (self.graph_index is None or self.graph_index == graph_recipe_index)
-                and (self.graph_id is None or self.graph_id == graph_recipe_id)
+                if self.graph_id is None or self.graph_id == graph_recipe_id
             ]
         return [
             post_processed_recipe
-            for graph_index, graph_id, recipe in recipes
+            for graph_id, recipe in recipes
             if (
                 post_processed_recipe := self._post_process_recipe(
                     env.user_permissions,
@@ -451,7 +436,6 @@ class TemplateGraphSpecification(GraphSpecification, frozen=True):
                     host_name,
                     service_name,
                     env.show_graph_ids,
-                    graph_index=graph_index,
                     graph_id=graph_id,
                     recipe=recipe,
                     consolidation_function=consolidation_function,
@@ -465,7 +449,6 @@ def get_template_graph_specification(
     site_id: SiteId | None,
     host_name: HostName,
     service_name: ServiceName,
-    graph_index: int | None = None,
     graph_id: str | None = None,
     destination: str | None = None,
 ) -> TemplateGraphSpecification:
@@ -476,8 +459,47 @@ def get_template_graph_specification(
             site=site_id,
             host_name=host_name,
             service_description=service_name,
-            graph_index=graph_index,
             graph_id=graph_id,
             destination=destination,
         )
     raise TypeError(graph_specification)
+
+
+def resolve_graph_id_from_index(
+    *,
+    env: GraphEnvironment,
+    site_id: SiteId | None,
+    host_name: HostName,
+    service_name: ServiceName,
+    graph_index: int,
+) -> str | None:
+    """Resolve a 0-based positional graph index to its stable ``graph_id``.
+
+    Computes the recipes for the given (host, service) and returns the id at
+    ``graph_index`` position, or ``None`` when out of range / no metrics.
+    """
+    graph_row = fetch_graph_row(
+        site_id,
+        host_name,
+        service_name,
+        env.registered_metrics,
+        debug=env.debug,
+        temperature_unit=env.temperature_unit,
+    )
+    if not graph_row.translated_metrics:
+        return None
+    for i, (graph_id, _recipe) in enumerate(
+        _evaluate_graph_plugins(
+            env.registered_metrics,
+            sort_registered_graph_plugins(env.registered_graphs),
+            graph_row.site_id,
+            graph_row.host_name,
+            graph_row.service_name,
+            graph_row.translated_metrics,
+            consolidation_function="max",
+            temperature_unit=env.temperature_unit,
+        )
+    ):
+        if i == graph_index:
+            return graph_id
+    return None

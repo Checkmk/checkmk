@@ -357,18 +357,41 @@ class PerformanceGraphContent(_BaseGraphContent):
 
     @classmethod
     def from_internal(cls, config: TemplateGraphDashletConfig) -> Self:
+        # Prefer the new stable ``graph_id`` field; fall back to the legacy ``source`` index for
+        # pre-CMK-7308 dashboards.
+        graph_id = config.get("graph_id")
+        source: str | int
+        if graph_id is not None:
+            source = graph_id
+        else:
+            legacy_source = config.get("source")
+            assert legacy_source is not None
+            source = legacy_source
         return cls(
             type="performance_graph",
             timerange=timerange_from_internal(config.get("timerange", "25h")),
             graph_render_options=GraphRenderOptions.from_internal(
                 config.get("graph_render_options", {})
             ),
-            source=config["source"],
+            source=source,
         )
 
     @override
     def to_internal(self) -> TemplateGraphDashletConfig:
+        # The REST API still exposes a single ``source`` field; route string ids into the new
+        # ``graph_id`` field and keep int indices in the legacy ``source`` field.
+        # NOTE: mypy doesn't like missing non-required fields in ** expressions,
+        #       so we can't use **self._to_internal() here.
+        if isinstance(self.source, int):
+            return TemplateGraphDashletConfig(
+                type=self.internal_type(),
+                timerange=self.timerange.to_internal(),
+                graph_render_options=self._get_graph_render_options_internal(),
+                source=self.source,
+            )
         return TemplateGraphDashletConfig(
-            **self._to_internal(),
-            source=self.source,
+            type=self.internal_type(),
+            timerange=self.timerange.to_internal(),
+            graph_render_options=self._get_graph_render_options_internal(),
+            graph_id=self.source,
         )

@@ -18,6 +18,6 @@ def test_all_template_graph_dashlets_reference_known_graph_templates() -> None:
     for dashboard_config in builtin_dashboards.values():
         for dashlet_config in dashboard_config["widgets"].values():
             if dashlet_config["type"] == TemplateGraphDashlet.type_name():
-                source = cast(TemplateGraphDashletConfig, dashlet_config)["source"]
-                assert isinstance(source, str), "Graph source must be string identifier"
-                get_graph_plugin_from_id(graphs_from_api, source)
+                graph_id = cast(TemplateGraphDashletConfig, dashlet_config).get("graph_id")
+                assert graph_id is not None, "Builtin dashlets must use the stable 'graph_id' field"
+                get_graph_plugin_from_id(graphs_from_api, graph_id)

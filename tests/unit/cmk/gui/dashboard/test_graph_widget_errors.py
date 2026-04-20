@@ -63,7 +63,7 @@ class TestGraphWidgetErrorHandling:
             "type": "performance_graph",
             "graph_render_options": {},
             "timerange": "25h",
-            "source": "",
+            "graph_id": "",
         }
 
         with patch(
@@ -103,7 +103,7 @@ class TestGraphWidgetErrorHandling:
             "type": "performance_graph",
             "graph_render_options": {},
             "timerange": "25h",
-            "source": "",
+            "graph_id": "",
         }
 
         with patch.object(TemplateGraphDashlet, "build_graph_specification") as mock_graph_spec:

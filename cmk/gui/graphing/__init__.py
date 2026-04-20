@@ -54,6 +54,7 @@ from ._graph_templates import (
     get_graph_plugin_choices,
     get_template_graph_specification,
     GraphPluginChoice,
+    resolve_graph_id_from_index,
     sort_registered_graph_plugins,
     TemplateGraphSpecification,
 )
@@ -192,6 +193,7 @@ __all__ = [
     "render_deferred_graphs_html",
     "render_graphs_html",
     "render_plain_graph_title",
+    "resolve_graph_id_from_index",
     "translate_and_merge_rrd_columns",
     "translate_metrics",
     "user_specific_unit",

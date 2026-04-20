@@ -23,6 +23,7 @@ from cmk.gui.graphing._graph_specification import (
 )
 from cmk.gui.graphing._graph_templates import (
     _evaluate_graph_plugins,
+    resolve_graph_id_from_index,
     sort_registered_graph_plugins,
     TemplateGraphSpecification,
 )
@@ -592,11 +593,10 @@ class _FakeTemplateGraphSpecification(TemplateGraphSpecification):
 
 
 @pytest.mark.parametrize(
-    ("graph_id", "graph_index", "expected"),
+    ("graph_id", "expected"),
     [
         pytest.param(
             None,
-            None,
             [
                 GraphRecipe(
                     title="Graph 1",
@@ -657,53 +657,10 @@ class _FakeTemplateGraphSpecification(TemplateGraphSpecification):
                     ],
                 ),
             ],
-            id="no index and no id",
-        ),
-        pytest.param(
-            None,
-            0,
-            [
-                GraphRecipe(
-                    title="Graph 1",
-                    unit_spec=ConvertibleUnitSpecification(
-                        notation=DecimalNotation(symbol=""),
-                        precision=AutoPrecision(digits=2),
-                    ),
-                    explicit_vertical_range=None,
-                    horizontal_rules=[],
-                    omit_zero_metrics=False,
-                    metrics=[
-                        GraphMetric(
-                            title="Metric1",
-                            line_type="line",
-                            operation=GraphMetricRRDSource(
-                                site_id=SiteId("site_id"),
-                                host_name=HostName("host_name"),
-                                service_name=ServiceName("service_name"),
-                                metric_name="metric1",
-                                consolidation_func_name="max",
-                                scale=1.0,
-                            ),
-                            unit=ConvertibleUnitSpecification(
-                                notation=DecimalNotation(symbol=""),
-                                precision=AutoPrecision(digits=2),
-                            ),
-                            color="#0080c0",
-                        )
-                    ],
-                ),
-            ],
-            id="matching index and no id",
-        ),
-        pytest.param(
-            None,
-            10,
-            [],
-            id="non-matching index and no id",
+            id="no id",
         ),
         pytest.param(
             "graph2",
-            None,
             [
                 GraphRecipe(
                     title="Graph 2",
@@ -735,61 +692,17 @@ class _FakeTemplateGraphSpecification(TemplateGraphSpecification):
                     ],
                 ),
             ],
-            id="no index and matching id",
+            id="matching id",
         ),
         pytest.param(
             "wrong",
-            None,
             [],
-            id="no index and non-matching id",
-        ),
-        pytest.param(
-            "graph1",
-            0,
-            [
-                GraphRecipe(
-                    title="Graph 1",
-                    unit_spec=ConvertibleUnitSpecification(
-                        notation=DecimalNotation(symbol=""),
-                        precision=AutoPrecision(digits=2),
-                    ),
-                    explicit_vertical_range=None,
-                    horizontal_rules=[],
-                    omit_zero_metrics=False,
-                    metrics=[
-                        GraphMetric(
-                            title="Metric1",
-                            line_type="line",
-                            operation=GraphMetricRRDSource(
-                                site_id=SiteId("site_id"),
-                                host_name=HostName("host_name"),
-                                service_name=ServiceName("service_name"),
-                                metric_name="metric1",
-                                consolidation_func_name="max",
-                                scale=1.0,
-                            ),
-                            unit=ConvertibleUnitSpecification(
-                                notation=DecimalNotation(symbol=""),
-                                precision=AutoPrecision(digits=2),
-                            ),
-                            color="#0080c0",
-                        )
-                    ],
-                ),
-            ],
-            id="matching index and matching id",
-        ),
-        pytest.param(
-            "2",
-            0,
-            [],
-            id="inconsistent matching index and matching id",
+            id="non-matching id",
         ),
     ],
 )
 def test_template_recipes_matching(
     graph_id: str | None,
-    graph_index: int | None,
     expected: Sequence[GraphRecipe],
 ) -> None:
     graph_specification = _FakeTemplateGraphSpecification(
@@ -797,7 +710,6 @@ def test_template_recipes_matching(
         host_name=HostName("host_name"),
         service_description=ServiceName("service_name"),
         graph_id=graph_id,
-        graph_index=graph_index,
     )
     env = GraphEnvironment(
         registered_metrics={
@@ -841,6 +753,143 @@ def test_template_recipes_matching(
         r.recipe
         for r in graph_specification.recipes(env, graph_specification.fetch_graph_rows(env))
     ] == expected
+
+
+def _env_for_resolve_helper(registered_metrics: Mapping[str, RegisteredMetric]) -> GraphEnvironment:
+    return GraphEnvironment(
+        registered_metrics=registered_metrics,
+        registered_graphs={
+            "graph1": graphs_api.Graph(
+                name="graph1",
+                title=Title("Graph 1"),
+                simple_lines=["metric1"],
+            ),
+            "graph2": graphs_api.Graph(
+                name="graph2",
+                title=Title("Graph 2"),
+                simple_lines=["metric2"],
+            ),
+        },
+        user_permissions=UserPermissions({}, {}, {}, []),
+        temperature_unit=TemperatureUnit.CELSIUS,
+        backend_time_series_fetcher=None,
+        debug=False,
+    )
+
+
+def _registered_metrics_for_resolve_helper() -> Mapping[str, RegisteredMetric]:
+    return {
+        "metric1": RegisteredMetric(
+            name="metric1",
+            title_localizer=lambda _localizer: "Metric1",
+            unit_spec=ConvertibleUnitSpecification(
+                notation=DecimalNotation(symbol=""),
+                precision=AutoPrecision(digits=2),
+            ),
+            color="#0080c0",
+        ),
+        "metric2": RegisteredMetric(
+            name="metric2",
+            title_localizer=lambda _localizer: "Metric2",
+            unit_spec=ConvertibleUnitSpecification(
+                notation=DecimalNotation(symbol=""),
+                precision=AutoPrecision(digits=2),
+            ),
+            color="#0080c0",
+        ),
+    }
+
+
+def _fake_graph_row_fetcher_with_metrics(
+    site_id: SiteId | None,
+    host_name: HostName,
+    service_name: ServiceName,
+    registered_metrics: Mapping[str, RegisteredMetric],
+    *,
+    debug: bool,
+    temperature_unit: TemperatureUnit,
+) -> ServiceGraphRow:
+    perf_data, check_command = parse_perf_data(
+        "metric1=163651.992188;;;; metric2=313848.039062;;;", "check_mk-foo", debug=False
+    )
+    return ServiceGraphRow(
+        site_id=SiteId("site_id"),
+        host_name=HostName("host_name"),
+        service_name=ServiceName("service_name"),
+        check_command=check_command,
+        translated_metrics=compute_translated_metrics(
+            perf_data,
+            ["metric1", "metric2"],
+            check_command,
+            registered_metrics,
+            debug=debug,
+            temperature_unit=temperature_unit,
+        ),
+    )
+
+
+def _fake_graph_row_fetcher_empty(
+    site_id: SiteId | None,
+    host_name: HostName,
+    service_name: ServiceName,
+    registered_metrics: Mapping[str, RegisteredMetric],
+    *,
+    debug: bool,
+    temperature_unit: TemperatureUnit,
+) -> ServiceGraphRow:
+    _perf, check_command = parse_perf_data("", "check_mk-foo", debug=False)
+    return ServiceGraphRow(
+        site_id=SiteId("site_id"),
+        host_name=HostName("host_name"),
+        service_name=ServiceName("service_name"),
+        check_command=check_command,
+        translated_metrics={},
+    )
+
+
+@pytest.mark.parametrize(
+    ("graph_index", "expected"),
+    [
+        pytest.param(0, "graph1", id="first"),
+        pytest.param(1, "graph2", id="second"),
+        pytest.param(10, None, id="out-of-range"),
+        pytest.param(-1, None, id="negative"),
+    ],
+)
+def test_resolve_graph_id_from_index(
+    monkeypatch: pytest.MonkeyPatch, graph_index: int, expected: str | None
+) -> None:
+    monkeypatch.setattr(
+        "cmk.gui.graphing._graph_templates.fetch_graph_row",
+        _fake_graph_row_fetcher_with_metrics,
+    )
+    assert (
+        resolve_graph_id_from_index(
+            env=_env_for_resolve_helper(_registered_metrics_for_resolve_helper()),
+            site_id=SiteId("site_id"),
+            host_name=HostName("host_name"),
+            service_name=ServiceName("service_name"),
+            graph_index=graph_index,
+        )
+        == expected
+    )
+
+
+def test_resolve_graph_id_from_index_no_metrics(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(
+        "cmk.gui.graphing._graph_templates.fetch_graph_row",
+        _fake_graph_row_fetcher_empty,
+    )
+    assert (
+        resolve_graph_id_from_index(
+            env=_env_for_resolve_helper({}),
+            site_id=SiteId("site_id"),
+            host_name=HostName("host_name"),
+            service_name=ServiceName("service_name"),
+            graph_index=0,
+        )
+        is None
+    )
 
 
 @pytest.mark.parametrize(

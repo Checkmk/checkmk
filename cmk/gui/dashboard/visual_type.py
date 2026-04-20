@@ -132,7 +132,7 @@ class VisualTypeDashboards(VisualType):
             #
             # Example:
             # parameters = [ 'template', {'service_description': 'CPU load', 'site': 'mysite',
-            #                         'graph_index': 0, 'host_name': 'server123'}])
+            #                         'graph_id': 'cpu_load', 'host_name': 'server123'}])
             add_type, context, parameters = self._handle_add_graph(
                 GraphExportRequest.model_validate(parameters).specification
             )
@@ -215,7 +215,7 @@ class VisualTypeDashboards(VisualType):
                     "service": {"service": graph_specification.service_description},
                 },
                 {
-                    "source": graph_specification.graph_id,
+                    "graph_id": graph_specification.graph_id,
                     "single_infos": [],
                 },
             )

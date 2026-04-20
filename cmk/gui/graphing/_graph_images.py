@@ -107,7 +107,6 @@ def _answer_graph_image_request(
         site_id=None,
         host_name=host_name,
         service_name=service_description,
-        graph_index=None,  # all graphs
         destination=GraphDestinations.notification,
     )
 

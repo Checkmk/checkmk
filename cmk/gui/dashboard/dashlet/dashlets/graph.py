@@ -10,7 +10,7 @@
 
 import abc
 from collections.abc import Iterable, Mapping, Sequence
-from typing import Any, Literal
+from typing import Any, Literal, NotRequired
 
 import livestatus
 
@@ -38,6 +38,7 @@ from cmk.gui.graphing import (
     metrics_from_api,
     MKCombinedGraphLimitExceededError,
     RegisteredMetric,
+    resolve_graph_id_from_index,
     sort_registered_graph_plugins,
     TemplateGraphSpecification,
 )
@@ -226,7 +227,10 @@ class ABCGraphDashlet[T: ABCGraphDashletConfig, TGraphSpec: GraphSpecification](
 
 
 class TemplateGraphDashletConfig(ABCGraphDashletConfig):
-    source: str | int  # graph id or index (1-based) of the graph in the template
+    # Legacy 1-based graph index. Present only in pre-CMK-7308 configs.
+    source: NotRequired[int]
+    # Stable graph id. Written by all new configs.
+    graph_id: NotRequired[str]
 
 
 class TemplateGraphDashlet(ABCGraphDashlet[TemplateGraphDashletConfig, TemplateGraphSpecification]):
@@ -270,23 +274,39 @@ class TemplateGraphDashlet(ABCGraphDashlet[TemplateGraphDashletConfig, TemplateG
         else:
             site_id = site
 
-        # source changed from int (n'th graph) to the graph id in 2.0.0b6, but we cannot transform this, so we have to
-        # handle this here
-        raw_source = self._dashlet_spec["source"]
-        if isinstance(raw_source, int):
-            return get_template_graph_specification(
+        # New configs carry the stable ``graph_id``; pre-CMK-7308 dashlets stored the 1-based graph
+        # index in ``source``. Resolve the legacy int to a stable id at this boundary.
+        configured_graph_id = self._dashlet_spec.get("graph_id")
+        legacy_source = self._dashlet_spec.get("source")
+        if configured_graph_id is not None:
+            graph_id: str | None = configured_graph_id
+        elif legacy_source is not None:
+            graph_id = resolve_graph_id_from_index(
+                env=GraphEnvironment(
+                    registered_metrics=metrics_from_api,
+                    registered_graphs=graphs_from_api,
+                    user_permissions=UserPermissions.from_config(
+                        active_config, permission_registry
+                    ),
+                    temperature_unit=get_temperature_unit(
+                        user, active_config.default_temperature_unit
+                    ),
+                    backend_time_series_fetcher=None,
+                    debug=active_config.debug,
+                ),
                 site_id=site_id,
                 host_name=host,
                 service_name=service,
-                graph_index=raw_source - 1,
-                destination=GraphDestinations.dashlet,
+                graph_index=legacy_source - 1,
             )
+        else:
+            graph_id = None
 
         return get_template_graph_specification(
             site_id=site_id,
             host_name=host,
             service_name=service,
-            graph_id=raw_source,
+            graph_id=graph_id,
             destination=GraphDestinations.dashlet,
         )
 

@@ -2856,11 +2856,12 @@ def connection(
 @contextmanager
 def replace_package_ca_certificate(package_root: Path, ca_cert: Certificate) -> Iterator[None]:
     """Replace the license CA certificate in the given package."""
-    ca_cert_file = (package_root / "share/check_mk/licensing/ca-certificate.pem").resolve()
+    ca_cert_file = package_root / "share" / "check_mk" / "licensing" / "ca-certificate.pem"
     ca_cert_backup = ca_cert_file.parent / f"{ca_cert_file.name}.bak"
-    run(["mv", "-f", ca_cert_file.as_posix(), ca_cert_backup.as_posix()], sudo=True)
+    run(["cp", ca_cert_file.as_posix(), ca_cert_backup.as_posix()], check=False, sudo=True)
     try:
         write_file(ca_cert_file, ca_cert.dump_pem().bytes, sudo=True)
         yield
     finally:
-        run(["mv", "-f", ca_cert_backup.as_posix(), ca_cert_file.as_posix()], sudo=True)
+        run(["cp", ca_cert_backup.as_posix(), ca_cert_file.as_posix()], sudo=True)
+        run(["rm", ca_cert_backup.as_posix()], sudo=True)

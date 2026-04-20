@@ -22,11 +22,11 @@ from ._autodiscovery import (
     TransitionCounter,
 )
 from ._commandline import commandline_discovery
-from ._filters import RediscoveryParameters
 from ._host_labels import analyse_cluster_labels, discover_host_labels, HostLabelPlugin
-from ._params import ABCDiscoveryConfig, DiscoveryCheckParameters, get_plugin_parameters
 from ._preview import CheckPreview, CheckPreviewEntry, get_check_preview
 from ._services import analyse_services, discover_services, find_plugins
+from ._utils.filters import RediscoveryParameters
+from ._utils.params import ABCDiscoveryConfig, DiscoveryCheckParameters, get_plugin_parameters
 from .types import (
     DiscoveryMode,
     DiscoverySettingFlags,

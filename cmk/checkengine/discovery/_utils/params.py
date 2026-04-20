@@ -16,7 +16,7 @@ from cmk.checkengine.parameters import Parameters
 from cmk.utils.check_utils import ParametersTypeAlias
 from cmk.utils.rulesets import RuleSetName
 
-from ._filters import RediscoveryParameters
+from .filters import RediscoveryParameters
 
 
 class ABCDiscoveryConfig(ABC):

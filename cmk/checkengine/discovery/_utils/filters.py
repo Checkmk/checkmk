@@ -7,9 +7,8 @@ from collections.abc import Callable, Sequence
 from typing import Literal, NamedTuple, TypedDict
 
 from cmk.ccc.regex import combine_patterns, regex
+from cmk.checkengine.discovery.types import DiscoveryValueSpecModel
 from cmk.utils.servicename import ServiceName
-
-from .types import DiscoveryValueSpecModel
 
 ServiceFilter = Callable[[ServiceName], bool]
 

@@ -45,10 +45,9 @@ from ._autochecks import (
     AutochecksStore,
 )
 from ._autodiscovery import discovery_by_host, get_host_services_by_host_name, ServicesByTransition
-from ._filters import ServiceFilter as _ServiceFilter
-from ._filters import ServiceFilters as _ServiceFilters
 from ._host_labels import analyse_cluster_labels, discover_host_labels, HostLabelPlugin
-from ._params import DiscoveryCheckParameters
+from ._utils.filters import ServiceFilter, ServiceFilters
+from ._utils.params import DiscoveryCheckParameters
 from .types import DiscoverySettings, QualifiedDiscovery
 
 __all__ = ["execute_check_discovery"]
@@ -175,7 +174,7 @@ def execute_check_discovery(
         host_name=host_name,
         services_by_transition=services_by_host[host_name],
         params=params,
-        service_filters=_ServiceFilters.from_settings(params.rediscovery),
+        service_filters=ServiceFilters.from_settings(params.rediscovery),
         discovery_mode=discovery_mode,
         get_service_description=autochecks_config.service_description,
     )
@@ -217,7 +216,7 @@ def _check_service_lists(
     host_name: HostName,
     services_by_transition: ServicesByTransition,
     params: DiscoveryCheckParameters,
-    service_filters: _ServiceFilters,
+    service_filters: ServiceFilters,
     discovery_mode: DiscoverySettings,
     get_service_description: Callable[[HostName, AutocheckEntry], ServiceName],
 ) -> tuple[Sequence[ActiveCheckResult], bool]:
@@ -336,13 +335,13 @@ def _make_service_result(
 def _iter_output_services(
     services_by_transition: ServicesByTransition,
     params: DiscoveryCheckParameters,
-    service_filters: _ServiceFilters,
+    service_filters: ServiceFilters,
 ) -> Iterable[
     tuple[
         _Transition,
         Sequence[AutocheckServiceWithNodes],
         int,
-        _ServiceFilter,
+        ServiceFilter,
     ]
 ]:
     yield (

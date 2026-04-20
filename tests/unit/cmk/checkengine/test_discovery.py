@@ -14,11 +14,11 @@ from dataclasses import dataclass
 import pytest
 
 from cmk.checkengine.discovery import (
-    _filters,
     analyse_services,
     DiscoveryMode,
     QualifiedDiscovery,
 )
+from cmk.checkengine.discovery._utils import filters
 from cmk.checkengine.discovery.types import DiscoveredItem
 from cmk.checkengine.plugins import AutocheckEntry, CheckPluginName
 from cmk.utils.everythingtype import EVERYTHING
@@ -232,11 +232,11 @@ def test_qualified_discovery_replaced() -> None:
     ],
 )
 def test__get_service_filter_func_no_lists(
-    parameters_rediscovery: _filters.RediscoveryParameters,
+    parameters_rediscovery: filters.RediscoveryParameters,
 ) -> None:
-    service_filters = _filters.ServiceFilters.from_settings(parameters_rediscovery)
-    assert service_filters.new is _filters._accept_all_services
-    assert service_filters.vanished is _filters._accept_all_services
+    service_filters = filters.ServiceFilters.from_settings(parameters_rediscovery)
+    assert service_filters.new is filters._accept_all_services
+    assert service_filters.vanished is filters._accept_all_services
 
 
 @pytest.mark.parametrize(
@@ -251,15 +251,15 @@ def test__get_service_filter_func_no_lists(
 def test__get_service_filter_func_same_lists(
     monkeypatch: pytest.MonkeyPatch, whitelist: Sequence[str], result: bool
 ) -> None:
-    service_filters = _filters.ServiceFilters.from_settings({"service_whitelist": whitelist})
+    service_filters = filters.ServiceFilters.from_settings({"service_whitelist": whitelist})
     assert service_filters.new is not None
     assert service_filters.new("Test Description") is result
 
-    service_filters_inv = _filters.ServiceFilters.from_settings({"service_blacklist": whitelist})
+    service_filters_inv = filters.ServiceFilters.from_settings({"service_blacklist": whitelist})
     assert service_filters_inv.new is not None
     assert service_filters_inv.new("Test Description") is not result
 
-    service_filters_both = _filters.ServiceFilters.from_settings(
+    service_filters_both = filters.ServiceFilters.from_settings(
         {
             "service_whitelist": whitelist,
             "service_blacklist": whitelist,
@@ -311,10 +311,10 @@ def test__get_service_filter_func_same_lists(
     ],
 )
 def test__get_service_filter_func(
-    parameters_rediscovery: _filters.RediscoveryParameters,
+    parameters_rediscovery: filters.RediscoveryParameters,
     result: bool,
 ) -> None:
-    service_filters = _filters.ServiceFilters.from_settings(parameters_rediscovery)
+    service_filters = filters.ServiceFilters.from_settings(parameters_rediscovery)
     assert service_filters.new is not None
     assert service_filters.new("Test Description") is result
 
@@ -753,7 +753,7 @@ def test__get_service_filters_lists(
     changed_params_whitelist,
     changed_params_blacklist,
 ):
-    service_filter_lists = _filters._get_service_filter_lists(parameters)
+    service_filter_lists = filters._get_service_filter_lists(parameters)
     assert service_filter_lists.new_whitelist == new_whitelist
     assert service_filter_lists.new_blacklist == new_blacklist
     assert service_filter_lists.vanished_whitelist == vanished_whitelist
@@ -763,6 +763,6 @@ def test__get_service_filters_lists(
     assert service_filter_lists.changed_params_whitelist == changed_params_whitelist
     assert service_filter_lists.changed_params_blacklist == changed_params_blacklist
 
-    service_filters = _filters.ServiceFilters.from_settings(parameters)
+    service_filters = filters.ServiceFilters.from_settings(parameters)
     assert service_filters.new is not None
     assert service_filters.vanished is not None

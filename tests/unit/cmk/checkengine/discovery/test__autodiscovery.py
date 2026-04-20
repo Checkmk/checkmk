@@ -13,7 +13,7 @@ import time_machine
 from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.checkengine.discovery._autochecks import AutocheckServiceWithNodes
 from cmk.checkengine.discovery._autodiscovery import _may_rediscover, get_host_services_by_host_name
-from cmk.checkengine.discovery._filters import RediscoveryParameters
+from cmk.checkengine.discovery._utils.filters import RediscoveryParameters
 from cmk.checkengine.discovery.types import DiscoveredItem
 from cmk.checkengine.plugins import AutocheckEntry, CheckPluginName
 

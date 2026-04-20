@@ -44,10 +44,9 @@ from ._autochecks import (
     set_autochecks_of_cluster,
     set_autochecks_of_real_hosts,
 )
-from ._filters import RediscoveryParameters
-from ._filters import ServiceFilters as _ServiceFilters
 from ._host_labels import discover_host_labels, HostLabelPlugin
 from ._services import analyse_services, discover_services, find_plugins
+from ._utils.filters import RediscoveryParameters, ServiceFilters
 from .types import DiscoveredItem, DiscoverySettings, QualifiedDiscovery
 
 __all__ = ["get_host_services_by_host_name", "discovery_by_host"]
@@ -144,7 +143,7 @@ def automation_discovery(
     autochecks_config: AutochecksConfig,
     settings: DiscoverySettings,
     keep_clustered_vanished_services: bool,
-    service_filters: _ServiceFilters | None,
+    service_filters: ServiceFilters | None,
     enforced_services: Container[ServiceID],
     on_error: OnError,
     section_error_handling: Callable[[SectionName, Sequence[object]], str],
@@ -251,7 +250,7 @@ def automation_discovery(
             h: _get_post_discovery_autocheck_services(
                 h,
                 s,
-                service_filters or _ServiceFilters.accept_all(),
+                service_filters or ServiceFilters.accept_all(),
                 results[h],
                 autochecks_config.service_description,
                 settings,
@@ -306,7 +305,7 @@ def automation_discovery(
 def _get_post_discovery_autocheck_services(
     host_name: HostName,
     services: ServicesByTransition,
-    service_filters: _ServiceFilters,
+    service_filters: ServiceFilters,
     result: DiscoveryReport,
     get_service_description: Callable[[HostName, AutocheckEntry], ServiceName],
     settings: DiscoverySettings,
@@ -504,7 +503,7 @@ def autodiscovery(
         keep_clustered_vanished_services=rediscovery_parameters.get(
             "keep_clustered_vanished_services", True
         ),
-        service_filters=_ServiceFilters.from_settings(rediscovery_parameters),
+        service_filters=ServiceFilters.from_settings(rediscovery_parameters),
         enforced_services=enforced_services,
         on_error=on_error,
     )

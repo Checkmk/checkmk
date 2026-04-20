@@ -221,7 +221,7 @@ run_test_component() {
             LD_LIBRARY_PATH="${path_to_runtime}:${LD_LIBRARY_PATH}"
             export LD_LIBRARY_PATH
             echo "TEST IS SKIPPED on LINUX"
-            #cargo test --test "*"
+            cargo test --test "*"
             ;;
         'AIX')
             ORACLE_PLATFORM=AIX /opt/freeware/bin/make -C runtimes libs
@@ -229,7 +229,7 @@ run_test_component() {
             LIBPATH="${path_to_runtime}:${LIBPATH}"
             export LIBPATH
             echo "TEST IS SKIPPED on LINUX"
-            #cargo test --test "*"
+            cargo test --test "*"
             ;;
         *)
             # 1. obtain rebundled client

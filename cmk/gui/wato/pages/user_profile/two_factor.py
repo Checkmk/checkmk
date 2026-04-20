@@ -797,6 +797,7 @@ class RegisterTotpSecret(Page):
             BreadcrumbItem(
                 title=_("Two-factor authentication"),
                 url="user_two_factor_overview.py",
+                id="user_two_factor_overview",
             ),
         )
         return breadcrumb
@@ -961,6 +962,7 @@ class EditCredentialAlias(Page):
             BreadcrumbItem(
                 title=_("Two-factor authentication"),
                 url="user_two_factor_overview.py",
+                id="user_two_factor_overview",
             ),
         )
         return breadcrumb

@@ -7,25 +7,25 @@ from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
 
 
 def test_breadcrumb_item_creation() -> None:
-    i1 = BreadcrumbItem("Title", "index.py")
+    i1 = BreadcrumbItem("Title", "index.py", None)
     assert i1.title == "Title"
     assert i1.url == "index.py"
 
 
 def test_breadcrumb_creation() -> None:
-    i1 = BreadcrumbItem("Title1", "index.py")
+    i1 = BreadcrumbItem("Title1", "index.py", None)
 
     b = Breadcrumb([i1])
     assert len(b) == 1
     assert b[0].title == "Title1"
 
-    b.append(BreadcrumbItem("Title2", "index.py"))
+    b.append(BreadcrumbItem("Title2", "index.py", None))
     assert len(b) == 2
     assert b[1].title == "Title2"
 
     b += [
-        BreadcrumbItem("Title3", "index.py"),
-        BreadcrumbItem("Title4", "index.py"),
+        BreadcrumbItem("Title3", "index.py", None),
+        BreadcrumbItem("Title4", "index.py", None),
     ]
     assert isinstance(b, Breadcrumb)
     assert len(b) == 4
@@ -34,10 +34,10 @@ def test_breadcrumb_creation() -> None:
 
 
 def test_breadcrumb_add() -> None:
-    i1 = BreadcrumbItem("Title1", "index.py")
+    i1 = BreadcrumbItem("Title1", "index.py", None)
     b1 = Breadcrumb([i1])
 
-    i2 = BreadcrumbItem("Title2", "index.py")
+    i2 = BreadcrumbItem("Title2", "index.py", None)
     b2 = Breadcrumb([i2])
 
     b3 = b1 + b2

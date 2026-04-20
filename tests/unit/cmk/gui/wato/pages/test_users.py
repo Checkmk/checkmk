@@ -24,15 +24,19 @@ def test_show_user_list_unknown_role() -> None:
 
 def test_users_breadcrumb_dont_list_users_topic(request_context: None) -> None:
     assert list(ModeUsers().breadcrumb()) == [
-        BreadcrumbItem(title="Users", url="wato.py?mode=users"),
+        BreadcrumbItem(title="Users", url="wato.py?mode=users", id="users"),
     ]
 
 
 def test_edituser_breadcrumb_dont_list_users_topic(request_context: None) -> None:
     request.set_var("user", "testuser")
     assert list(ModeEditUser().breadcrumb()) == [
-        BreadcrumbItem(title="Users", url="wato.py?mode=users"),
-        BreadcrumbItem(title="Edit user testuser", url="wato.py?edit=testuser&mode=edit_user"),
+        BreadcrumbItem(title="Users", url="wato.py?mode=users", id="users"),
+        BreadcrumbItem(
+            title="Edit user testuser",
+            url="wato.py?edit=testuser&mode=edit_user",
+            id="edit_user",
+        ),
     ]
 
 

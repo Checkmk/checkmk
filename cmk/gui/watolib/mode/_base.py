@@ -114,6 +114,7 @@ class WatoMode[RequestOK](abc.ABC):
         return BreadcrumbItem(
             title=self.title(),
             url=breadcrumb_url,
+            id=self.name(),
         )
 
     def _breadcrumb_url(self) -> str:
@@ -150,6 +151,7 @@ class WatoMode[RequestOK](abc.ABC):
         yield BreadcrumbItem(
             title=main_module().topic.title,
             url=None,
+            id=main_module().topic.name,
         )
         yield from main_module.additional_breadcrumb_items()
 

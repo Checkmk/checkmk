@@ -906,6 +906,7 @@ def _folder_breadcrumb(folder: Folder | SearchFolder) -> Breadcrumb:
             BreadcrumbItem(
                 title=this_folder.title(),
                 url=this_folder.url(),
+                id=this_folder.id() if isinstance(this_folder, Folder) else None,
             )
         )
 

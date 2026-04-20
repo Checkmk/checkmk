@@ -1410,12 +1410,12 @@ def make_breadcrumb(
 ) -> Breadcrumb:
     breadcrumb = make_main_menu_breadcrumb(main_menu_registry.menu_customize())
 
-    breadcrumb.append(BreadcrumbItem(title=parent_title or title, url=list_url))
+    breadcrumb.append(BreadcrumbItem(title=parent_title or title, url=list_url, id=None))
 
     if page_name == "list":  # The list is the parent of all others
         return breadcrumb
 
-    breadcrumb.append(BreadcrumbItem(title=title, url=makeuri(request, [])))
+    breadcrumb.append(BreadcrumbItem(title=title, url=makeuri(request, []), id=page_name))
     return breadcrumb
 
 

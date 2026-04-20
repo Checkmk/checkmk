@@ -248,6 +248,7 @@ def show_availability_page(
         BreadcrumbItem(
             title=title,
             url=breadcrumb[-1].url + "&mode=availability",
+            id="availability",
         )
     )
 
@@ -829,6 +830,7 @@ def show_bi_availability(
             BreadcrumbItem(
                 title=title,
                 url=breadcrumb[-1].url + "&mode=availability",
+                id="availability",
             )
         )
 
@@ -1228,6 +1230,7 @@ def _edit_annotation_breadcrumb(breadcrumb: Breadcrumb, title: str) -> Breadcrum
         BreadcrumbItem(
             title=title,
             url=makeuri(request, []),
+            id=None,
         )
     )
     return breadcrumb

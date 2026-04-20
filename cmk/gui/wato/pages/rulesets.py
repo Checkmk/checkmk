@@ -707,6 +707,7 @@ class ModeRulesetGroup(ABCRulesetMode):
         yield BreadcrumbItem(
             title=main_module.topic.title,
             url=None,
+            id=main_module.topic.name,
         )
         yield from main_module.additional_breadcrumb_items()
 

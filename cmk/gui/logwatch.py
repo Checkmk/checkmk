@@ -409,6 +409,7 @@ def _show_file_breadcrumb(
         BreadcrumbItem(
             title=_("Log files of host %s") % host_name,
             url=makeuri(request, [("file", "")]),
+            id="logfiles_of_host",
         )
     )
     breadcrumb.append(make_current_page_breadcrumb_item(title))

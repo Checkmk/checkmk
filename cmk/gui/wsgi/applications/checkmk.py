@@ -102,10 +102,12 @@ def _page_not_found(ctx: pages.PageContext) -> Response:
                     BreadcrumbItem(
                         title="Nowhere",
                         url=None,
+                        id=None,
                     ),
                     BreadcrumbItem(
                         title=title,
                         url="javascript:document.location.reload(false)",
+                        id=None,
                     ),
                 ]
             ),

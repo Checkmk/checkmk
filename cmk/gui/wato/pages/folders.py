@@ -80,6 +80,7 @@ from cmk.gui.valuespec import (
     TextInput,
     ValueSpec,
 )
+from cmk.gui.wato._main_module_topics import MainModuleTopicHosts
 from cmk.gui.watolib.agent_registration import remove_tls_registration
 from cmk.gui.watolib.audit_log_url import make_object_audit_log_url
 from cmk.gui.watolib.automations import make_automation_config
@@ -154,6 +155,7 @@ def make_folder_breadcrumb(folder: Folder | SearchFolder) -> Breadcrumb:
                 BreadcrumbItem(
                     title=_("Hosts"),
                     url=None,
+                    id=MainModuleTopicHosts.name,
                 ),
             ]
         )

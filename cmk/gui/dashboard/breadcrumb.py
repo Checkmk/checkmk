@@ -24,16 +24,19 @@ __all__ = ["dashboard_breadcrumb"]
 class EvaluatedBreadcrumbItem:
     title: str
     link: str | None
+    id: str | None
 
     @classmethod
     def from_breadcrumb_item(cls, item: BreadcrumbItem) -> "EvaluatedBreadcrumbItem":
-        return cls(title=str(item.title), link=item.url)
+        return cls(title=str(item.title), link=item.url, id=item.id)
 
 
 def dashboard_topic_breadcrumb(topic: str, user_permissions: UserPermissions) -> Breadcrumb:
+    page = PagetypeTopics.get_topic(topic, user_permissions)
     return make_topic_breadcrumb(
         main_menu_registry.menu_monitoring(),
-        PagetypeTopics.get_topic(topic, user_permissions).title(),
+        page.title(),
+        page.name(),
     )
 
 
@@ -49,7 +52,9 @@ def dashboard_breadcrumb(
     if "kubernetes" in name:
         return kubernetes_dashboard_breadcrumb(name, board, title, breadcrumb, context)
 
-    breadcrumb.append(BreadcrumbItem(title, makeuri(request, [("name", name)])))
+    breadcrumb.append(
+        BreadcrumbItem(title, makeuri(request, [("name", name)]), f"dashboard_{name}")
+    )
     return breadcrumb
 
 
@@ -84,7 +89,11 @@ def kubernetes_dashboard_breadcrumb(
     }
     # Overview
     breadcrumb.append(
-        BreadcrumbItem("Kubernetes", makeuri_contextless(request, [("name", k8s_ids["overview"])]))
+        BreadcrumbItem(
+            "Kubernetes",
+            makeuri_contextless(request, [("name", k8s_ids["overview"])]),
+            "dashboard_kubernetes",
+        )
     )
     if name == k8s_ids["overview"]:
         return breadcrumb
@@ -99,7 +108,7 @@ def kubernetes_dashboard_breadcrumb(
         else request.get_str_input(k8s_ids["cluster-host"])
     )
     if not (cluster_name and cluster_host):
-        breadcrumb.append(BreadcrumbItem(title, makeuri(request, [("name", name)])))
+        breadcrumb.append(BreadcrumbItem(title, makeuri(request, [("name", name)]), None))
         return breadcrumb
     add_vars: HTTPVariables = [
         ("site", context.get("site", {}).get("site")),
@@ -117,6 +126,7 @@ def kubernetes_dashboard_breadcrumb(
                     *add_vars,
                 ],
             ),
+            "k8s_cluster",
         )
     )
     if name == k8s_ids["cluster"]:
@@ -125,7 +135,7 @@ def kubernetes_dashboard_breadcrumb(
     # Namespace
     namespace_name: str | None = context.get(k8s_ids["namespace"], {}).get(k8s_ids["namespace"])
     if not namespace_name:
-        breadcrumb.append(BreadcrumbItem(title, makeuri(request, [("name", name)])))
+        breadcrumb.append(BreadcrumbItem(title, makeuri(request, [("name", name)]), None))
         return breadcrumb
     add_vars.append((k8s_ids["namespace"], namespace_name))
     breadcrumb.append(
@@ -139,6 +149,7 @@ def kubernetes_dashboard_breadcrumb(
                     *add_vars,
                 ],
             ),
+            "k8s_namespace",
         )
     )
     if name == k8s_ids["namespace"]:
@@ -161,10 +172,11 @@ def kubernetes_dashboard_breadcrumb(
                         request,
                         [("name", k8s_ids[obj_type]), ("host", host_name), *add_vars],
                     ),
+                    f"k8s_{obj_type}",
                 )
             )
             break
     if not obj_name:
-        breadcrumb.append(BreadcrumbItem(title, makeuri(request, [("name", name)])))
+        breadcrumb.append(BreadcrumbItem(title, makeuri(request, [("name", name)]), None))
 
     return breadcrumb

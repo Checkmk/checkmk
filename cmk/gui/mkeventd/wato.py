@@ -4925,6 +4925,7 @@ class MainModuleEventConsoleRules(ABCMainModule):
                 [("mode", "mkeventd_rule_packs")],
                 filename="wato.py",
             ),
+            id="mkeventd_rule_packs",
         )
 
 

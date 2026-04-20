@@ -14,10 +14,12 @@ def visual_page_breadcrumb(what: str, title: str, page_name: str) -> Breadcrumb:
     breadcrumb = make_main_menu_breadcrumb(main_menu_registry.menu_customize())
 
     list_title = visual_type_registry[what]().plural_title
-    breadcrumb.append(BreadcrumbItem(title=list_title.title(), url="edit_%s.py" % what))
+    breadcrumb.append(
+        BreadcrumbItem(title=list_title.title(), url="edit_%s.py" % what, id="edit_%s" % what)
+    )
 
     if page_name == "list":  # The list is the parent of all others
         return breadcrumb
 
-    breadcrumb.append(BreadcrumbItem(title=title, url=makeuri(request, [])))
+    breadcrumb.append(BreadcrumbItem(title=title, url=makeuri(request, []), id=page_name))
     return breadcrumb

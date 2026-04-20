@@ -1325,6 +1325,7 @@ class MainModuleAgentRules(ABCMainModule):
                 [("mode", "agents")],
                 filename="wato.py",
             ),
+            id="agents",
         )
 
 

@@ -113,12 +113,6 @@ pkg_files(
 )
 
 pkg_mklink(
-    name = "10-agent-receiver",
-    link_name = "skel/etc/rc.d/10-agent-receiver",
-    target = "../init.d/agent-receiver",
-)
-
-pkg_mklink(
     name = "10-mkeventd",
     link_name = "skel/etc/rc.d/10-mkeventd",
     target = "../init.d/mkeventd",
@@ -205,7 +199,6 @@ pkg_mkdirs(
 pkg_tar(
     name = "check_mk",
     srcs = [
-        ":10-agent-receiver",
         ":10-mkeventd",
         ":55-automation-helper",
         ":60-ui-job-scheduler",
@@ -237,7 +230,6 @@ sh_library(
         "scripts/post-restore/01_cmk-post-rename-site",
         "scripts/post-update/01_mkp-disable-outdated",
         "scripts/post-update/02_cmk-update-config",
-        "skel/etc/init.d/agent-receiver",
         "skel/etc/init.d/automation-helper",
         "skel/etc/init.d/mkeventd",
         "skel/etc/init.d/piggyback-hub",
@@ -252,7 +244,6 @@ py_library(
     name = "omd_packages_check_mk_py",
     srcs = [
         "post-create/01_create-sample-config.py",
-        "skel/etc/agent-receiver/gunicorn.conf.py",
     ],
     deps = [
         "//cmk/gui",

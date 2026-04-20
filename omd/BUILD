@@ -173,6 +173,7 @@ edition_skel_permissions = select({
         "//omd/packages/stunnel:skel.permissions",
         "//omd/packages/openssl:skel.permissions",
         "//omd/packages/perl-modules:skel.permissions",
+        "//packages/cmk-agent-receiver:skel.permissions",
     ],
     "@cmk//edition:community": [
         "//omd/packages/apache-omd:skel.permissions",
@@ -189,6 +190,7 @@ edition_skel_permissions = select({
         "//omd/packages/stunnel:skel.permissions",
         "//omd/packages/openssl:skel.permissions",
         "//omd/packages/perl-modules:skel.permissions",
+        "//packages/cmk-agent-receiver:skel.permissions",
     ],
     "@cmk//edition:pro": [
         "//omd/packages/apache-omd:skel.permissions",
@@ -210,6 +212,7 @@ edition_skel_permissions = select({
         "//omd/packages/stunnel:skel.permissions",
         "//omd/packages/openssl:skel.permissions",
         "//omd/packages/perl-modules:skel.permissions",
+        "//packages/cmk-agent-receiver:skel.permissions",
     ],
     "@cmk//edition:ultimate": [
         "//omd/packages/apache-omd:skel.permissions",
@@ -235,6 +238,7 @@ edition_skel_permissions = select({
         "//omd/packages/stunnel:skel.permissions",
         "//omd/packages/openssl:skel.permissions",
         "//omd/packages/perl-modules:skel.permissions",
+        "//packages/cmk-agent-receiver:skel.permissions",
     ],
     "@cmk//edition:ultimatemt": [
         "//omd/packages/apache-omd:skel.permissions",
@@ -260,6 +264,7 @@ edition_skel_permissions = select({
         "//omd/packages/stunnel:skel.permissions",
         "//omd/packages/openssl:skel.permissions",
         "//omd/packages/perl-modules:skel.permissions",
+        "//packages/cmk-agent-receiver:skel.permissions",
     ],
 })
 
@@ -734,6 +739,7 @@ pkg_tar(
         "//omd/packages/snap7",
         "//omd/packages/stunnel",
         "//omd/packages/xmlsec1",
+        "//packages/cmk-agent-receiver:omd_skel_tar",
         "//packages/cmk-agent-receiver:pkg_tar",
         "//packages/cmk-ccc:pkg_tar",
         "//packages/cmk-check-engine:pkg_tar",

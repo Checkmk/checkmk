@@ -1,6 +1,8 @@
-load("@aspect_rules_py//py:defs.bzl", "py_library")
+load("@aspect_rules_py//py:defs.bzl", "py_binary", "py_library")
 load("@bazel_skylib//rules:build_test.bzl", "build_test")
 load("@cmk_requirements//:requirements.bzl", "requirement")
+load("@rules_pkg//pkg:mappings.bzl", "pkg_attributes", "pkg_files", "pkg_mklink", "strip_prefix")
+load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
 load("@rules_python//python:packaging.bzl", "py_wheel")
 load("//bazel/rules:doctest.bzl", "py_doc_test")
 load("//bazel/rules:package_wheel.bzl", "package_wheel")
@@ -10,7 +12,40 @@ exports_files([
     "dev-requirements.in",
     "pyproject.toml",
     "requirements.in",
+    "skel.permissions",
 ])
+
+pkg_files(
+    name = "skel",
+    srcs = glob(
+        ["skel/**/*"],
+        exclude = ["skel/etc/init.d/*"],
+    ),
+    strip_prefix = strip_prefix.from_pkg(""),
+)
+
+pkg_files(
+    name = "skel_755",
+    srcs = glob(["skel/etc/init.d/*"]),
+    attributes = pkg_attributes(mode = "0755"),
+    strip_prefix = strip_prefix.from_pkg(""),
+)
+
+pkg_mklink(
+    name = "10-agent-receiver",
+    link_name = "skel/etc/rc.d/10-agent-receiver",
+    target = "../init.d/agent-receiver",
+)
+
+pkg_tar(
+    name = "omd_skel_tar",
+    srcs = [
+        ":10-agent-receiver",
+        ":skel",
+        ":skel_755",
+    ],
+    visibility = ["//omd:__pkg__"],
+)
 
 py_library(
     name = "cmk-agent-receiver",
@@ -155,10 +190,17 @@ package_wheel(
     whl = "wheel",
 )
 
+py_binary(
+    name = "gunicorn_conf",
+    srcs = ["skel/etc/agent-receiver/gunicorn.conf.py"],
+    main = "skel/etc/agent-receiver/gunicorn.conf.py",
+)
+
 sh_library(
     name = "helpers",
     srcs = [
         ".f12",
+        "skel/etc/init.d/agent-receiver",
     ],
 )
 

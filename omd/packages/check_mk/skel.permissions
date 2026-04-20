@@ -8,7 +8,6 @@ etc/cron.d/cmk_inventory 0640
 etc/cron.d/cmk_transform_inventory_trees 0640
 etc/cron.d/cmk_update_license_usage 0640
 etc/cron.d/cmk_cleanup_pdf_tmp_files 0640
-etc/init.d/agent-receiver 0770
 etc/init.d/mkeventd 0770
 etc/init.d/piggyback-hub 0770
 etc/init.d/ui-job-scheduler 0770

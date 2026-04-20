@@ -49,7 +49,6 @@ from cmk.checkengine.discovery import (
     find_plugins,
     QualifiedDiscovery,
 )
-from cmk.checkengine.discovery._active_check import _check_host_labels, _check_service_lists
 from cmk.checkengine.discovery._autodiscovery import (
     _get_post_discovery_autocheck_services,
     _group_by_transition,
@@ -59,6 +58,10 @@ from cmk.checkengine.discovery._autodiscovery import (
     ServicesByTransition,
     ServicesTable,
     ServicesTableEntry,
+)
+from cmk.checkengine.discovery._entrypoints.active_check import (
+    _check_host_labels,
+    _check_service_lists,
 )
 from cmk.checkengine.discovery._utils.filters import RediscoveryParameters, ServiceFilters
 from cmk.checkengine.discovery.types import DiscoveredItem

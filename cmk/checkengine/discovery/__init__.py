@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from ._active_check import execute_check_discovery
 from ._autochecks import (
     AutocheckServiceWithNodes,
     AutochecksMemoizer,
@@ -21,10 +20,11 @@ from ._autodiscovery import (
     get_host_services_by_host_name,
     TransitionCounter,
 )
-from ._commandline import commandline_discovery
 from ._discover.host_labels import analyse_cluster_labels, discover_host_labels, HostLabelPlugin
 from ._discover.services import analyse_services, discover_services, find_plugins
-from ._preview import CheckPreview, CheckPreviewEntry, get_check_preview
+from ._entrypoints.active_check import execute_check_discovery
+from ._entrypoints.commandline import commandline_discovery
+from ._entrypoints.preview import CheckPreview, CheckPreviewEntry, get_check_preview
 from ._utils.filters import RediscoveryParameters
 from ._utils.params import ABCDiscoveryConfig, DiscoveryCheckParameters, get_plugin_parameters
 from .types import (

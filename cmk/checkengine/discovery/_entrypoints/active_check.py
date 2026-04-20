@@ -16,6 +16,24 @@ import cmk.ccc.resulttype as result
 from cmk.ccc.exceptions import OnError
 from cmk.ccc.hostaddress import HostName
 from cmk.checkengine.checkresults import ActiveCheckResult
+from cmk.checkengine.discovery._autochecks import (
+    AutochecksConfig,
+    AutocheckServiceWithNodes,
+    AutochecksStore,
+)
+from cmk.checkengine.discovery._autodiscovery import (
+    discovery_by_host,
+    get_host_services_by_host_name,
+    ServicesByTransition,
+)
+from cmk.checkengine.discovery._discover.host_labels import (
+    analyse_cluster_labels,
+    discover_host_labels,
+    HostLabelPlugin,
+)
+from cmk.checkengine.discovery._utils.filters import ServiceFilter, ServiceFilters
+from cmk.checkengine.discovery._utils.params import DiscoveryCheckParameters
+from cmk.checkengine.discovery.types import DiscoverySettings, QualifiedDiscovery
 from cmk.checkengine.fetcher import HostKey
 from cmk.checkengine.parser import group_by_host, ParserFunction
 from cmk.checkengine.plugins import (
@@ -38,17 +56,6 @@ from cmk.utils.auto_queue import AutoQueue
 from cmk.utils.labels import DiscoveredHostLabelsStore, HostLabel
 from cmk.utils.log import console
 from cmk.utils.servicename import ServiceName
-
-from ._autochecks import (
-    AutochecksConfig,
-    AutocheckServiceWithNodes,
-    AutochecksStore,
-)
-from ._autodiscovery import discovery_by_host, get_host_services_by_host_name, ServicesByTransition
-from ._discover.host_labels import analyse_cluster_labels, discover_host_labels, HostLabelPlugin
-from ._utils.filters import ServiceFilter, ServiceFilters
-from ._utils.params import DiscoveryCheckParameters
-from .types import DiscoverySettings, QualifiedDiscovery
 
 __all__ = ["execute_check_discovery"]
 

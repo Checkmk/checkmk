@@ -13,6 +13,14 @@ import cmk.ccc.debug
 from cmk.ccc import tty
 from cmk.ccc.exceptions import MKGeneralException, OnError
 from cmk.ccc.hostaddress import HostName
+from cmk.checkengine.discovery._autochecks import AutochecksStore
+from cmk.checkengine.discovery._discover.host_labels import discover_host_labels, HostLabelPlugin
+from cmk.checkengine.discovery._discover.services import (
+    analyse_services,
+    discover_services,
+    find_plugins,
+)
+from cmk.checkengine.discovery.types import QualifiedDiscovery
 from cmk.checkengine.fetcher import FetcherFunction, HostKey
 from cmk.checkengine.parser import group_by_host, ParserFunction
 from cmk.checkengine.plugins import CheckPluginName, DiscoveryPlugin, SectionName
@@ -25,11 +33,6 @@ from cmk.checkengine.sectionparser import (
 from cmk.checkengine.sectionparserutils import check_parsing_errors
 from cmk.utils.labels import DiscoveredHostLabelsStore, HostLabel
 from cmk.utils.log import console, section
-
-from ._autochecks import AutochecksStore
-from ._discover.host_labels import discover_host_labels, HostLabelPlugin
-from ._discover.services import analyse_services, discover_services, find_plugins
-from .types import QualifiedDiscovery
 
 __all__ = ["commandline_discovery"]
 

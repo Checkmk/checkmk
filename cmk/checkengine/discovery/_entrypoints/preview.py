@@ -18,6 +18,18 @@ from cmk.checkengine.checkresults import (
     MetricTuple,
     SubmittableServiceCheckResult,
 )
+from cmk.checkengine.discovery._autochecks import AutochecksConfig, AutochecksStore
+from cmk.checkengine.discovery._autodiscovery import (
+    _Transition,
+    discovery_by_host,
+    get_host_services_by_host_name,
+)
+from cmk.checkengine.discovery._discover.host_labels import (
+    analyse_cluster_labels,
+    discover_host_labels,
+    HostLabelPlugin,
+)
+from cmk.checkengine.discovery.types import QualifiedDiscovery
 from cmk.checkengine.fetcher import FetcherFunction, HostKey
 from cmk.checkengine.parameters import (
     TimespecificParameters,
@@ -42,11 +54,6 @@ from cmk.checkengine.summarize import SummarizerFunction
 from cmk.utils.labels import DiscoveredHostLabelsStore, HostLabel
 from cmk.utils.log import console
 from cmk.utils.servicename import Item
-
-from ._autochecks import AutochecksConfig, AutochecksStore
-from ._autodiscovery import _Transition, discovery_by_host, get_host_services_by_host_name
-from ._discover.host_labels import analyse_cluster_labels, discover_host_labels, HostLabelPlugin
-from .types import QualifiedDiscovery
 
 __all__ = ["CheckPreview", "CheckPreviewEntry", "get_check_preview"]
 

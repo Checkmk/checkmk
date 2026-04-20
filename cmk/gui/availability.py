@@ -25,6 +25,7 @@ from livestatus import (
 
 import cmk.ccc.version as cmk_version
 from cmk.ccc import store
+from cmk.ccc.site import omd_site
 
 import cmk.utils.paths
 from cmk.utils import dateutils
@@ -2745,7 +2746,7 @@ def create_bi_timeline_entry(
         "log_output": node_compute_result.output,
         "from": from_time,
         "until": until_time,
-        "site": "",
+        "site": omd_site(),
         "host_name": aggr_group,
         "service_description": tree["title"],
         "in_notification_period": 1,

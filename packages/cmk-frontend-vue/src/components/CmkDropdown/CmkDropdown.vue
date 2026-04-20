@@ -228,6 +228,7 @@ const group = computed<ButtonVariants['group']>(() => {
   display: inline-block;
   position: relative;
   white-space: nowrap;
+  align-self: flex-start;
 
   .cmk-dropdown--arrow {
     flex-shrink: 0;

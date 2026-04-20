@@ -45,7 +45,7 @@ from cmk.utils.servicename import Item
 
 from ._autochecks import AutochecksConfig, AutochecksStore
 from ._autodiscovery import _Transition, discovery_by_host, get_host_services_by_host_name
-from ._host_labels import analyse_cluster_labels, discover_host_labels, HostLabelPlugin
+from ._discover.host_labels import analyse_cluster_labels, discover_host_labels, HostLabelPlugin
 from .types import QualifiedDiscovery
 
 __all__ = ["CheckPreview", "CheckPreviewEntry", "get_check_preview"]

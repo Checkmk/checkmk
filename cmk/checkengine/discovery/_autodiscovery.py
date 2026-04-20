@@ -44,8 +44,8 @@ from ._autochecks import (
     set_autochecks_of_cluster,
     set_autochecks_of_real_hosts,
 )
-from ._host_labels import discover_host_labels, HostLabelPlugin
-from ._services import analyse_services, discover_services, find_plugins
+from ._discover.host_labels import discover_host_labels, HostLabelPlugin
+from ._discover.services import analyse_services, discover_services, find_plugins
 from ._utils.filters import RediscoveryParameters, ServiceFilters
 from .types import DiscoveredItem, DiscoverySettings, QualifiedDiscovery
 

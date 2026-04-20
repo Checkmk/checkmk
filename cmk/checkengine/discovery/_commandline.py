@@ -27,8 +27,8 @@ from cmk.utils.labels import DiscoveredHostLabelsStore, HostLabel
 from cmk.utils.log import console, section
 
 from ._autochecks import AutochecksStore
-from ._host_labels import discover_host_labels, HostLabelPlugin
-from ._services import analyse_services, discover_services, find_plugins
+from ._discover.host_labels import discover_host_labels, HostLabelPlugin
+from ._discover.services import analyse_services, discover_services, find_plugins
 from .types import QualifiedDiscovery
 
 __all__ = ["commandline_discovery"]

@@ -10,7 +10,9 @@ from collections.abc import Callable, Iterable, Mapping, Sequence
 import pytest
 
 from cmk.ccc.hostaddress import HostName
-from cmk.checkengine.discovery._host_labels import _all_parsing_results as all_parsing_results
+from cmk.checkengine.discovery._discover.host_labels import (
+    _all_parsing_results as all_parsing_results,
+)
 from cmk.checkengine.fetcher import HostKey
 from cmk.checkengine.parser import AgentRawDataSection, AgentRawDataSectionElem, HostSections
 from cmk.checkengine.plugins import ParsedSectionName, SectionName

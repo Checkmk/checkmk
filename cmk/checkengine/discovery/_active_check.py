@@ -45,7 +45,7 @@ from ._autochecks import (
     AutochecksStore,
 )
 from ._autodiscovery import discovery_by_host, get_host_services_by_host_name, ServicesByTransition
-from ._host_labels import analyse_cluster_labels, discover_host_labels, HostLabelPlugin
+from ._discover.host_labels import analyse_cluster_labels, discover_host_labels, HostLabelPlugin
 from ._utils.filters import ServiceFilter, ServiceFilters
 from ._utils.params import DiscoveryCheckParameters
 from .types import DiscoverySettings, QualifiedDiscovery

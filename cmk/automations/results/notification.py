@@ -7,7 +7,9 @@
 
 from __future__ import annotations
 
+from ast import literal_eval
 from dataclasses import asdict, dataclass
+from typing import Self
 
 from cmk.automations.results._base import (
     ABCAutomationResult,
@@ -74,6 +76,10 @@ class NotifyResult(ABCAutomationResult):
     @staticmethod
     def automation_call() -> AutomationID:
         return AutomationID("notify")
+
+    @classmethod
+    def deserialize(cls, serialized_result: SerializedResult) -> Self:
+        return cls(**literal_eval(serialized_result))
 
     def serialize(
         self,

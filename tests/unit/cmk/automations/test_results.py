@@ -15,6 +15,7 @@ from cmk.automations.results import (
     DiagSpecialAgentInput,
     Gateway,
     GatewayResult,
+    NotifyResult,
     ScanParentsResult,
     SerializedResult,
     ServiceDiscoveryPreviewResult,
@@ -224,3 +225,11 @@ class TestDiagSpecialAgentInput:
             )
             == self.DIAG_SPECIAL_AGENT_INPUT
         )
+
+
+def test_notify_result_serialization() -> None:
+    original = NotifyResult(exit_code=0, output="All good!")
+    deserialized = NotifyResult.deserialize(
+        original.serialize(cmk_version.Version.from_str(cmk_version.__version__))
+    )
+    assert original == deserialized

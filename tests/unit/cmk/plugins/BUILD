@@ -38,8 +38,6 @@ py_test(
         "//tests/testlib/unit",
         requirement("exchangelib"),
         requirement("feedparser"),
-        requirement("google-cloud-asset"),
-        requirement("google-cloud-monitoring"),
         requirement("polyfactory"),
         requirement("pysmb"),
         requirement("pytest"),
@@ -51,16 +49,5 @@ py_test(
         requirement("responses"),
         requirement("time-machine"),
         requirement("vcrpy"),
-    ],
-)
-
-py_library(
-    name = "gcp_testlib",
-    srcs = ["gcp/testlib.py"],
-    visibility = ["//tests:__subpackages__"],
-    deps = [
-        requirement("google-cloud-monitoring"),
-        requirement("pytest"),
-        "//cmk/plugins",
     ],
 )

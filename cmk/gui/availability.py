@@ -41,7 +41,7 @@ from cmk.bi.trees import BICompiledAggregation, BICompiledRule, CompiledAggrTree
 from cmk.ccc import store
 from cmk.ccc.cpu_tracking import CPUTracker
 from cmk.ccc.hostaddress import HostName
-from cmk.ccc.site import SiteId
+from cmk.ccc.site import omd_site, SiteId
 from cmk.gui.bi import BIManager
 from cmk.gui.data_source import query_livestatus
 from cmk.gui.exceptions import MKUserError
@@ -2760,7 +2760,7 @@ def create_bi_timeline_entry(
         "log_output": node_compute_result.output,
         "from": from_time,
         "until": until_time,
-        "site": "",
+        "site": omd_site(),
         "host_name": aggr_group,
         "service_description": tree["title"],
         "in_notification_period": 1,

@@ -34,7 +34,7 @@ from cmk.password_store.v1_unstable import parser_add_secret_option, resolve_sec
 from cmk.plugins.redfish.lib import detect_vendor, REDFISH_SECTIONS, Vendor
 from cmk.server_side_programs.v1_unstable import report_agent_crashes, Storage, vcrtrace
 
-__version__ = "2.5.0b5"
+__version__ = "2.5.0"
 
 AGENT = "redfish"
 

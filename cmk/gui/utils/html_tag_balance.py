@@ -9,7 +9,8 @@ unclosed or mismatched HTML tags before they reach the browser.
 """
 
 from html.parser import HTMLParser
-from typing import override
+from types import TracebackType
+from typing import override, Self
 
 _VOID_ELEMENTS = frozenset(
     {
@@ -36,9 +37,10 @@ def check_html_tag_balance(body: str) -> list[str]:
 
     Returns an empty list if the HTML is well-formed.
     """
-    checker = _TagBalanceChecker()
-    checker.feed(body)
-    return checker.finish()
+    with _TagBalanceChecker() as checker:
+        checker.feed(body)
+
+    return checker.errors
 
 
 class _TagBalanceChecker(HTMLParser):
@@ -46,6 +48,22 @@ class _TagBalanceChecker(HTMLParser):
         super().__init__(convert_charrefs=False)
         self._stack: list[tuple[str, int, dict[str, str | None]]] = []
         self.errors: list[str] = []
+
+    def __enter__(self) -> Self:
+        return self
+
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_val: BaseException | None,
+        exc_tb: TracebackType | None,
+    ) -> None:
+        self.errors.extend(
+            f"line {line}: <{tag}{self._fmt(attrs)}> never closed"
+            for tag, line, attrs in self._stack
+        )
+        self._stack = []
+        self.close()
 
     @override
     def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
@@ -71,13 +89,6 @@ class _TagBalanceChecker(HTMLParser):
                 del self._stack[i:]
                 return
         self.errors.append(f"line {line}: </{tag}> has no matching open tag")
-
-    def finish(self) -> list[str]:
-        self.close()
-        errors = list(self.errors)
-        for tag, line, attrs in self._stack:
-            errors.append(f"line {line}: <{tag}{self._fmt(attrs)}> never closed")
-        return errors
 
     @staticmethod
     def _fmt(attrs: dict[str, str | None]) -> str:

@@ -68,7 +68,7 @@ class DiscoverTester(ABC):
         assert len(list(self.discover(assets=None))) == 0
 
     def test_found_some_assets(self, asset_section: gcp.AssetSection) -> None:
-        assert len(asset_section._assets) != 0
+        assert len(asset_section._assets) != 0  # noqa: SLF001
 
     def test_discover_all_items(self, services: Sequence[Service]) -> None:
         assert {a.item for a in services} == self.expected_items

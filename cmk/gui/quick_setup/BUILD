@@ -53,5 +53,6 @@ py_library(
         "//packages/cmk-plugin-apis:rulesets",
         "//packages/cmk-plugins:aws",
         "//packages/cmk-plugins:azure_v2",
+        "//packages/cmk-plugins:gcp",
     ],
 )

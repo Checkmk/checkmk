@@ -1407,13 +1407,13 @@ google-api-python-client==2.190.0 \
     --hash=sha256:d9b5266758f96c39b8c21d9bbfeb4e58c14dbfba3c931f7c5a8d7fdcd292dd57
     # via
     #   -c requirements.txt
-    #   -r cmk/requirements.in
+    #   -r packages/cmk-plugins/requirements.in
 google-auth==2.48.0 \
     --hash=sha256:2e2a537873d449434252a9632c28bfc268b0adb1e53f9fb62afc5333a975903f \
     --hash=sha256:4f7e706b0cd3208a3d940a19a822c37a476ddba5450156c3e6624a71f7c841ce
     # via
     #   -c requirements.txt
-    #   -r cmk/requirements.in
+    #   -r packages/cmk-plugins/requirements.in
     #   google-api-core
     #   google-api-python-client
     #   google-auth-httplib2
@@ -1439,13 +1439,13 @@ google-cloud-asset==4.1.0 \
     # via
     #   -c constraints.txt
     #   -c requirements.txt
-    #   -r cmk/requirements.in
+    #   -r packages/cmk-plugins/requirements.in
 google-cloud-monitoring==2.29.1 \
     --hash=sha256:86cac55cdd2608561819d19544fb3c129bbb7dcecc445d8de426e34cd6fa8e49 \
     --hash=sha256:944a57031f20da38617d184d5658c1f938e019e8061f27fd944584831a1b9d5a
     # via
     #   -c requirements.txt
-    #   -r cmk/requirements.in
+    #   -r packages/cmk-plugins/requirements.in
 google-cloud-org-policy==1.16.1 \
     --hash=sha256:2a578a8fa2611b8a62fd700cf360bf567749103da7bcad7e373bd3d659bbce91 \
     --hash=sha256:403946466ccdef3e8bc6ef4230ead8ac4d5050381c6c0bb264a3bdb978102bf9
@@ -3643,6 +3643,7 @@ protobuf==6.33.4 \
     #   -c bazel-requirements-constraints.txt
     #   -c requirements.txt
     #   -r cmk/requirements.in
+    #   -r packages/cmk-plugins/requirements.in
     #   google-api-core
     #   google-cloud-access-context-manager
     #   google-cloud-asset

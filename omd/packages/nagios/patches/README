@@ -51,11 +51,3 @@ Index of patches
   Adding triggered downtime for child hosts causes a SIGSEGV on
   restart/reload
   http://sourceforge.net/p/nagios/nagioscore/ci/76310176f3ec9a37b0b4161dddbbea69b6fa6a73/
-
-0011:
-  Prevent creation of invalid RRD files when the RRD filename exceeds the
-  filesystem PC_NAME_MAX limit. rrd_create.c appends "XXXXXX" to the filename
-  for a temp file, so the filename plus 6 bytes must fit within PC_NAME_MAX.
-  If the limit would be exceeded, data2rrd logs a warning and returns early
-  instead of letting the RRD backend fail silently or corrupt state.
-

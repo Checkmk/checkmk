@@ -1,5 +1,5 @@
---- pnp4nagios-0.6.26/share/pnp/process_perfdata.pl
-+++ /tmp/process_perfdata.pl
+--- a/scripts/process_perfdata.pl.in
++++ b/scripts/process_perfdata.pl.in
 @@ -409,6 +409,36 @@
      my @rrd_state = ();
      my $rrd_storage_type;

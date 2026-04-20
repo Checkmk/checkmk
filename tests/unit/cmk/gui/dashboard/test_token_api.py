@@ -10,7 +10,7 @@ import pytest
 
 from cmk.ccc.user import UserId
 from cmk.gui.token_auth import get_token_store, TokenId
-from tests.testlib.unit.rest_api_client import ClientRegistry
+from tests.testlib.rest_api_client import ClientRegistry
 
 
 @pytest.fixture(name="user_dashboard")

@@ -12,8 +12,8 @@ import pytest
 
 from cmk.utils.rulesets.definition import RuleGroup
 from cmk.utils.tags import BuiltinTagConfig
-from tests.testlib.unit.gui.web_test_app import WebTestAppForCMK
-from tests.testlib.unit.rest_api_client import ClientRegistry
+from tests.testlib.gui.web_test_app import WebTestAppForCMK
+from tests.testlib.rest_api_client import ClientRegistry
 
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls")

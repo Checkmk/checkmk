@@ -6,7 +6,7 @@ import pytest
 
 from cmk.gui.http import Request
 from cmk.livestatus_client.testing import MockLiveStatusConnection
-from tests.testlib.unit.gui.web_test_app import WebTestAppForCMK
+from tests.testlib.gui.web_test_app import WebTestAppForCMK
 
 
 @pytest.mark.usefixtures("patch_theme")

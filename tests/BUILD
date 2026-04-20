@@ -83,6 +83,19 @@ py_library(
 )
 
 py_library(
+    name = "rest_api_client",
+    testonly = True,
+    srcs = ["testlib/rest_api_client.py"],
+    imports = [".."],
+    visibility = ["//:__subpackages__"],
+    deps = [
+        "//cmk/gui",
+        "//packages/cmk-ccc:crash-reporting",
+        requirement("requests"),
+    ],
+)
+
+py_library(
     name = "testlib_system_level",
     testonly = True,
     srcs = ["__init__.py"] + glob(

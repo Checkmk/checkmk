@@ -8,7 +8,7 @@ import pytest
 from cmk.gui.watolib.password_store import PasswordStore
 from cmk.utils import password_store
 from cmk.utils.password_store import PasswordConfig
-from tests.testlib.unit.rest_api_client import ClientRegistry
+from tests.testlib.rest_api_client import ClientRegistry
 
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls", "mock_password_file_regeneration")

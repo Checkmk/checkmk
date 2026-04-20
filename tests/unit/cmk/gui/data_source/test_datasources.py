@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from cmk.gui.data_source.datasources import DataSourceComments
 from cmk.gui.data_source.registry import DataSourceRegistry, row_id
-from tests.testlib.unit.rest_api_client import ClientRegistry
+from tests.testlib.rest_api_client import ClientRegistry
 
 
 def test_comment_row_id_is_unique_per_site() -> None:

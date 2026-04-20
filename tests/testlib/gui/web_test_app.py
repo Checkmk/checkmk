@@ -24,7 +24,7 @@ from werkzeug.test import TestResponse
 
 from cmk.ccc.user import UserId
 from cmk.gui.type_defs import SessionInfo
-from tests.testlib.unit.rest_api_client import (
+from tests.testlib.rest_api_client import (
     assert_and_delete_rest_crash_report,
     expand_rel,
     get_link,

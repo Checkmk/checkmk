@@ -18,12 +18,12 @@ from cmk.gui.openapi.framework.model import ApiOmitted
 from cmk.gui.type_defs import ColumnSpec, DashboardEmbeddedViewSpec, SorterSpec, VisualLinkSpec
 from cmk.gui.views.icon.registry import all_icons
 from cmk.livestatus_client.testing import MockLiveStatusConnection
+from tests.testlib.rest_api_client import ClientRegistry
 from tests.testlib.unit.gui.dashboard_api_test_helper import (
     check_widget_create,
     create_dashboard_payload,
     create_widget,
 )
-from tests.testlib.unit.rest_api_client import ClientRegistry
 
 
 @pytest.mark.parametrize(

@@ -11,7 +11,7 @@ import yaml
 from openapi_spec_validator import validate
 
 from cmk.utils import paths
-from tests.testlib.unit.gui.web_test_app import WebTestAppForCMK
+from tests.testlib.gui.web_test_app import WebTestAppForCMK
 
 
 def test_yaml_file_unauthenticated(wsgi_app: WebTestAppForCMK, request_context: None) -> None:

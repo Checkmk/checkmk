@@ -16,7 +16,7 @@ from cmk.gui.watolib.userroles import clone_role, get_all_roles, RoleID
 from cmk.shared_typing.configuration_entity import ConfigEntityType
 from cmk.utils.oauth2_connection import OAuth2Connection
 from cmk.utils.password_store import PasswordConfig
-from tests.testlib.unit.rest_api_client import ClientRegistry
+from tests.testlib.rest_api_client import ClientRegistry
 
 MY_OAUTH2_CONNECTION_UUID = str(uuid.uuid4())
 MY_CLIENT_ID = str(uuid.uuid4())

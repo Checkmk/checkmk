@@ -11,7 +11,7 @@ from urllib.parse import urljoin
 import pytest
 from pytest_mock import MockerFixture
 
-from tests.testlib.unit.gui.web_test_app import WebTestAppForCMK
+from tests.testlib.gui.web_test_app import WebTestAppForCMK
 
 _BASE = "/NO_SITE/check_mk/api/1.0/"
 _URL_ROOT_CERT = urljoin(_BASE, "root_cert")

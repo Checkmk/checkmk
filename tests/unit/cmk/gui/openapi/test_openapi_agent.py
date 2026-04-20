@@ -7,7 +7,7 @@ from pathlib import Path
 
 from pytest_mock import MockerFixture
 
-from tests.testlib.unit.gui.web_test_app import WebTestAppForCMK
+from tests.testlib.gui.web_test_app import WebTestAppForCMK
 
 
 def test_download_agent_shipped_with_checkmk(

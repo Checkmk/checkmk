@@ -6,7 +6,7 @@
 from pytest_mock import MockerFixture
 
 from cmk.gui.icons import IconData
-from tests.testlib.unit.rest_api_client import ClientRegistry
+from tests.testlib.rest_api_client import ClientRegistry
 
 
 def _mock_built_in_icons(mocker: MockerFixture, icons: list[IconData]) -> None:

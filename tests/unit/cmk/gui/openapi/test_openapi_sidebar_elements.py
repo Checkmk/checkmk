@@ -7,7 +7,7 @@ from cmk.gui.config import active_config
 from cmk.gui.permissions import permission_registry
 from cmk.gui.sidebar._snapin import all_snapins
 from cmk.gui.utils.roles import UserPermissions
-from tests.testlib.unit.rest_api_client import ClientRegistry
+from tests.testlib.rest_api_client import ClientRegistry
 
 
 def test_list_test_openapi_sidebar_element(clients: ClientRegistry) -> None:

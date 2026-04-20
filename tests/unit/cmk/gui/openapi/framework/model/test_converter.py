@@ -26,7 +26,7 @@ from cmk.gui.session import UserContext
 from cmk.gui.utils.roles import UserPermissions
 from cmk.livestatus_client.testing import MockLiveStatusConnection
 from cmk.utils.tags import TagGroup, TagGroupID, TagID
-from tests.testlib.unit.gui.users import create_and_destroy_user
+from tests.testlib.gui.users import create_and_destroy_user
 
 
 def test_validators_dont_run_on_json_dump() -> None:

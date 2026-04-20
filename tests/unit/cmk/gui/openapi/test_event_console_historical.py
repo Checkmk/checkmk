@@ -8,7 +8,7 @@ from time import time
 from typing import Any
 
 from cmk.livestatus_client.testing import MockLiveStatusConnection
-from tests.testlib.unit.rest_api_client import ClientRegistry
+from tests.testlib.rest_api_client import ClientRegistry
 
 EXPECTED_COLUMNS = (
     "history_time history_what event_id event_state event_sl event_host event_rule_id event_application "

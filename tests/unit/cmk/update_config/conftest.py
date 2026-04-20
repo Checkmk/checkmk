@@ -16,15 +16,15 @@ from cmk.gui.config import Config
 from cmk.gui.permissions import permission_registry
 from cmk.gui.utils.roles import UserPermissions
 from cmk.utils import paths
-from tests.testlib.unit.gui.common_fixtures import (
+from tests.testlib.gui.common_fixtures import (
     create_flask_app,
     create_wsgi_app,
     perform_gui_cleanup_after_test,
     perform_load_config,
     perform_load_plugins,
 )
-from tests.testlib.unit.gui.users import create_and_destroy_user
-from tests.testlib.unit.gui.web_test_app import (
+from tests.testlib.gui.users import create_and_destroy_user
+from tests.testlib.gui.web_test_app import (
     WebTestAppForCMK,
 )
 

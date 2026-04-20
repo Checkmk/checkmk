@@ -7,7 +7,7 @@ from unittest.mock import MagicMock
 import pytest
 
 from cmk.gui import hooks
-from tests.testlib.unit.gui.web_test_app import WebTestAppForCMK
+from tests.testlib.gui.web_test_app import WebTestAppForCMK
 
 
 @pytest.mark.usefixtures("mock_livestatus", "patch_theme")

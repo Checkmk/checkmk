@@ -39,8 +39,8 @@ from cmk.gui.watolib.hosts_and_folders import Folder, folder_tree, Host
 from cmk.utils import paths
 from cmk.utils.global_ident_type import PROGRAM_ID_QUICK_SETUP
 from cmk.utils.tags import BuiltinTagConfig
-from tests.testlib.unit.gui.web_test_app import WebTestAppForCMK
-from tests.testlib.unit.rest_api_client import ClientRegistry, RestApiException
+from tests.testlib.gui.web_test_app import WebTestAppForCMK
+from tests.testlib.rest_api_client import ClientRegistry, RestApiException
 
 EDITIONS_ULTIMATE_PLUS = {
     version.Edition.ULTIMATEMT,

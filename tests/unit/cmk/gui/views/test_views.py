@@ -43,7 +43,7 @@ from cmk.gui.views.layout import layout_registry
 from cmk.gui.views.page_show_view import get_limit
 from cmk.gui.views.store import multisite_builtin_views
 from cmk.livestatus_client.testing import MockLiveStatusConnection
-from tests.testlib.unit.gui.web_test_app import WebTestAppForCMK
+from tests.testlib.gui.web_test_app import WebTestAppForCMK
 
 
 def test_registered_painter_options(request_context: None) -> None:

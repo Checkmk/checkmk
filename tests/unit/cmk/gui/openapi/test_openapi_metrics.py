@@ -9,8 +9,8 @@ import pytest
 
 from cmk.gui.graphing import GraphConsolidationFunction
 from cmk.livestatus_client.testing import MockLiveStatusConnection
-from tests.testlib.unit.gui.web_test_app import WebTestAppForCMK
-from tests.testlib.unit.rest_api_client import RestApiClient
+from tests.testlib.gui.web_test_app import WebTestAppForCMK
+from tests.testlib.rest_api_client import RestApiClient
 
 GRAPH_ENDPOINT_GET = "/NO_SITE/check_mk/api/1.0/domain-types/metric/actions/get/invoke"
 COLOR_HEX = "#6fc1f7"

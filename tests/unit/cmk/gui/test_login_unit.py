@@ -38,8 +38,8 @@ from cmk.gui.userdb.store import load_custom_attr, save_custom_attr, save_two_fa
 from cmk.gui.utils.misc import saveint
 from cmk.gui.utils.roles import UserPermissions
 from cmk.livestatus_client.testing import MockLiveStatusConnection
-from tests.testlib.unit.gui.users import create_and_destroy_user
-from tests.testlib.unit.gui.web_test_app import WebTestAppForCMK
+from tests.testlib.gui.users import create_and_destroy_user
+from tests.testlib.gui.web_test_app import WebTestAppForCMK
 
 
 # copied from testlib.

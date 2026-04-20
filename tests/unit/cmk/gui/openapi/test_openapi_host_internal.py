@@ -19,7 +19,7 @@ from cmk.utils.paths import (
     received_outputs_dir,
     uuid_lookup_dir,
 )
-from tests.testlib.unit.gui.web_test_app import WebTestAppForCMK
+from tests.testlib.gui.web_test_app import WebTestAppForCMK
 
 _API_BASE = "/NO_SITE/check_mk/api/1.0/"
 _HOST_CONFIG_INTERNAL_BASE = urljoin(_API_BASE, "objects/host_config_internal/")

@@ -20,7 +20,7 @@ from werkzeug.test import create_environ
 from cmk.ccc.site import omd_site
 from cmk.ccc.user import UserId
 from cmk.gui.pages import Page, page_registry, PageContext, PageEndpoint
-from tests.testlib.unit.gui.web_test_app import CmkTestResponse, WebTestAppForCMK
+from tests.testlib.gui.web_test_app import CmkTestResponse, WebTestAppForCMK
 
 
 def search_up(search_path: str, start_path: str) -> str:

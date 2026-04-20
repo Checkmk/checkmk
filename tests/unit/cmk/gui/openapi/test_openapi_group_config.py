@@ -18,8 +18,8 @@ from pytest import FixtureRequest
 from cmk.ccc import version
 from cmk.gui.openapi.endpoints.contact_group_config.common import APIInventoryPaths
 from cmk.utils import paths
-from tests.testlib.unit.gui.web_test_app import WebTestAppForCMK
-from tests.testlib.unit.rest_api_client import ClientRegistry, GroupConfig
+from tests.testlib.gui.web_test_app import WebTestAppForCMK
+from tests.testlib.rest_api_client import ClientRegistry, GroupConfig
 
 ESCAPED_GROUP_NAME_PATTERN = "^(?!\\\\.\\\\.$|\\\\.$)[-a-zA-Z0-9_\\\\.]*\\\\Z"
 _is_managed_edition = version.edition(paths.omd_root) is version.Edition.ULTIMATEMT

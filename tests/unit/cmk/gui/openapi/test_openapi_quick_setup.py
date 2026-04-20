@@ -44,7 +44,7 @@ from cmk.rulesets.v1.form_specs import (
     String,
     validators,
 )
-from tests.testlib.unit.rest_api_client import ClientRegistry
+from tests.testlib.rest_api_client import ClientRegistry
 
 
 def _make_action(

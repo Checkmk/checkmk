@@ -20,8 +20,8 @@ from cmk.gui.watolib.groups import HostAttributeContactGroups
 from cmk.gui.watolib.host_attributes import HostAttributes
 from cmk.gui.watolib.hosts_and_folders import folder_tree
 from cmk.gui.wsgi.blueprints import checkmk, rest_api
-from tests.testlib.unit.gui.web_test_app import WebTestAppForCMK, WebTestAppRequestHandler
-from tests.testlib.unit.rest_api_client import RestApiClient
+from tests.testlib.gui.web_test_app import WebTestAppForCMK, WebTestAppRequestHandler
+from tests.testlib.rest_api_client import RestApiClient
 
 
 @pytest.fixture()

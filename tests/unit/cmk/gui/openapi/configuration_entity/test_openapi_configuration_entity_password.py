@@ -11,7 +11,7 @@ from cmk.gui.form_specs.visitors._utils import option_id
 from cmk.gui.watolib import password_store
 from cmk.shared_typing.configuration_entity import ConfigEntityType
 from cmk.utils.password_store import lookup, password_store_path, PasswordConfig
-from tests.testlib.unit.rest_api_client import ClientRegistry
+from tests.testlib.rest_api_client import ClientRegistry
 
 
 @pytest.fixture

@@ -21,7 +21,7 @@ from cmk.gui.watolib.configuration_bundles import create_config_bundle, CreateBu
 from cmk.utils import paths
 from cmk.utils.global_ident_type import PROGRAM_ID_QUICK_SETUP
 from cmk.utils.rulesets.definition import RuleGroup
-from tests.testlib.unit.rest_api_client import (
+from tests.testlib.rest_api_client import (
     ClientRegistry,
     Response,
     RestApiClient,

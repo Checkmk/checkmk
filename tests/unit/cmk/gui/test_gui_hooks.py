@@ -17,7 +17,7 @@ from pytest_mock import MockerFixture
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.gui import hooks
 from cmk.gui.pages import Page, page_registry, PageContext, PageEndpoint
-from tests.testlib.unit.gui.web_test_app import WebTestAppForCMK
+from tests.testlib.gui.web_test_app import WebTestAppForCMK
 
 
 @pytest.fixture()

@@ -10,7 +10,7 @@ from pytest_mock import MockerFixture
 
 from cmk.ccc.user import UserId
 from cmk.utils.automation_config import LocalAutomationConfig
-from tests.testlib.unit.rest_api_client import ClientRegistry
+from tests.testlib.rest_api_client import ClientRegistry
 
 
 @pytest.mark.usefixtures("inline_background_jobs")

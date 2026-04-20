@@ -22,7 +22,7 @@ from cmk.gui.rest_api_types.site_connection import (
     StatusHost,
 )
 from cmk.utils import paths
-from tests.testlib.unit.rest_api_client import ClientRegistry
+from tests.testlib.rest_api_client import ClientRegistry
 
 DOMAIN_TYPE = "site_connection"
 

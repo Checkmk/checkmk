@@ -23,12 +23,12 @@ from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.visuals import _filters as filters
 from cmk.gui.visuals.filter import filter_registry
 from cmk.livestatus_client.testing import MockLiveStatusConnection
+from tests.testlib.gui.web_test_app import SetConfig
 from tests.testlib.unit.gui.filter_table_test_helper import (
     filter_inv_table_tests,
     filter_table_tests,
     FilterTableTest,
 )
-from tests.testlib.unit.gui.web_test_app import SetConfig
 
 
 @pytest.fixture(name="live")

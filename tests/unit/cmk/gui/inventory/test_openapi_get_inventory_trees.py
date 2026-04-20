@@ -12,8 +12,8 @@ import cmk.ccc.store
 import cmk.utils.paths
 from cmk.gui.http import HTTPMethod
 from cmk.livestatus_client.testing import MockLiveStatusConnection
-from tests.testlib.unit.gui.web_test_app import WebTestAppForCMK, WebTestAppRequestHandler
-from tests.testlib.unit.rest_api_client import RequestHandler, Response, RestApiException
+from tests.testlib.gui.web_test_app import WebTestAppForCMK, WebTestAppRequestHandler
+from tests.testlib.rest_api_client import RequestHandler, Response, RestApiException
 
 JSON_HEADERS = {"Accept": "application/json", "Content-Type": "application/json"}
 

@@ -7,8 +7,8 @@ import pytest
 
 from cmk.livestatus_client.testing import MockLiveStatusConnection
 from cmk.shared_typing.configuration_entity import ConfigEntityType
-from tests.testlib.unit.gui.web_test_app import SetConfig
-from tests.testlib.unit.rest_api_client import ClientRegistry, RestApiException
+from tests.testlib.gui.web_test_app import SetConfig
+from tests.testlib.rest_api_client import ClientRegistry, RestApiException
 
 # mypy: disable-error-code="unreachable"
 

@@ -49,7 +49,7 @@ from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.valuespec import Dictionary
 
 if TYPE_CHECKING:
-    from tests.testlib.unit.gui.web_test_app import SetConfig, SingleRequest, WebTestAppForCMK
+    from tests.testlib.gui.web_test_app import SetConfig, SingleRequest, WebTestAppForCMK
 
 
 @pytest.fixture(name="user_id")

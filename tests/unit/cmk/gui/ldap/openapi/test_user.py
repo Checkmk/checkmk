@@ -16,7 +16,7 @@ from cmk.gui.user_connection_config_types import (
 )
 from cmk.gui.userdb import get_user_attributes, UserConnectionConfigFile
 from cmk.gui.watolib.users import create_user, default_sites
-from tests.testlib.unit.rest_api_client import ClientRegistry
+from tests.testlib.rest_api_client import ClientRegistry
 
 
 def test_edit_ldap_user_with_locked_attributes(clients: ClientRegistry) -> None:

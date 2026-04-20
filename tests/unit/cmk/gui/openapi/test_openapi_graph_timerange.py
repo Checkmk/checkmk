@@ -5,7 +5,7 @@
 
 
 from cmk.gui.config import active_config
-from tests.testlib.unit.rest_api_client import ClientRegistry
+from tests.testlib.rest_api_client import ClientRegistry
 
 
 def test_show_graph_timerange_invalid_index(clients: ClientRegistry) -> None:

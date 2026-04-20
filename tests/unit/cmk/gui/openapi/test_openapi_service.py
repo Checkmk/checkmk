@@ -7,7 +7,7 @@
 import pytest
 
 from cmk.livestatus_client.testing import MockLiveStatusConnection
-from tests.testlib.unit.rest_api_client import ClientRegistry
+from tests.testlib.rest_api_client import ClientRegistry
 
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls", "with_host")

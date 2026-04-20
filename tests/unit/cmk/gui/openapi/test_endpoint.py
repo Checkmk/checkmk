@@ -29,8 +29,8 @@ from cmk.gui.openapi.restful_objects.decorators import Endpoint, WrappedEndpoint
 from cmk.gui.openapi.restful_objects.registry import endpoint_registry
 from cmk.gui.openapi.utils import ProblemException, RestAPIResponseGeneralException
 from cmk.utils.local_secrets import SiteInternalSecret
-from tests.testlib.unit.gui.web_test_app import SetConfig, WebTestAppForCMK
-from tests.testlib.unit.rest_api_client import ClientRegistry, RestApiClient
+from tests.testlib.gui.web_test_app import SetConfig, WebTestAppForCMK
+from tests.testlib.rest_api_client import ClientRegistry, RestApiClient
 
 TEST_TARGZ_FILE = "H4sIAAAAAAAAA+3OQQrCMBCF4aw9RbyAJDVNzxNooIXgyBjR4xvppuBCN0UK/7eYxzCzeNN8qs9qNuWaGMM7/dC7dS58b3yI3RDbDJ1pe/BnY922tRb3W01qrSlZLklHueaqounj79t9p6ZcitiHaBmPh3+XAQAAAAAAAAAAAAAAAAD87AUCVDjzACgAAA=="
 

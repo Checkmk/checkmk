@@ -9,8 +9,8 @@ import json
 import pytest
 
 from cmk.livestatus_client.testing import MockLiveStatusConnection
-from tests.testlib.unit.gui.web_test_app import WebTestAppForCMK
-from tests.testlib.unit.rest_api_client import ClientRegistry
+from tests.testlib.gui.web_test_app import WebTestAppForCMK
+from tests.testlib.rest_api_client import ClientRegistry
 
 
 @pytest.mark.usefixtures("with_host")

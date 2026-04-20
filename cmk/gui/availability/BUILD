@@ -1,0 +1,38 @@
+load("@aspect_rules_py//py:defs.bzl", "py_library")
+
+py_library(
+    name = "availability",
+    srcs = glob(["**/*.py"]),
+    imports = ["../../.."],
+    visibility = [
+        "//cmk:__subpackages__",
+        "//tests:__subpackages__",
+    ],
+    deps = [
+        "//cmk/bi",
+        "//cmk/gui:exceptions",
+        "//cmk/gui:http",
+        "//cmk/gui:i18n",
+        "//cmk/gui:log",
+        "//cmk/gui:logged_in",
+        "//cmk/gui:num_split",
+        "//cmk/gui:type_defs",
+        "//cmk/gui:view",
+        "//cmk/gui:view_utils",
+        "//cmk/gui/bi:bi_manager",
+        "//cmk/gui/bi:foldable_tree_renderer",
+        "//cmk/gui/data_source",
+        "//cmk/gui/utils:html",
+        "//cmk/gui/utils:urls",
+        "//cmk/gui/utils:user_errors",
+        "//cmk/gui/valuespec",
+        "//cmk/gui/watolib:groups_io",
+        "//cmk/utils",
+        "//packages/cmk-ccc:cpu-tracking",
+        "//packages/cmk-ccc:hostaddress",
+        "//packages/cmk-ccc:site",
+        "//packages/cmk-ccc:store",
+        "//packages/cmk-ccc:version",
+        "//packages/cmk-livestatus-client",
+    ],
+)

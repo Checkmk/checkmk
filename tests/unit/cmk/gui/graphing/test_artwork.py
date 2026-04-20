@@ -357,8 +357,8 @@ def test_fringe(
             70,
             60,
             (
-                {
-                    "labels": [
+                Axis(
+                    labels=[
                         AxisTick(
                             position=1668502800.0,
                             text="10:00",
@@ -420,9 +420,9 @@ def test_fringe(
                             line_width=2,
                         ),
                     ],
-                    "lower": 1668502380,
-                    "upper": 1668516660,
-                },
+                    lower=1668502380,
+                    upper=1668516660,
+                ),
                 "2022-11-15 @ 1m",
             ),
             id="4h",
@@ -433,8 +433,8 @@ def test_fringe(
             70,
             300,
             (
-                {
-                    "labels": [
+                Axis(
+                    labels=[
                         AxisTick(
                             position=1668438000.0,
                             text="Mon 16:00",
@@ -466,9 +466,9 @@ def test_fringe(
                             line_width=2,
                         ),
                     ],
-                    "lower": 1668426900,
-                    "upper": 1668516300,
-                },
+                    lower=1668426900,
+                    upper=1668516300,
+                ),
                 "2022-11-14 \u2014 2022-11-15 @ 5m",
             ),
             id="25h",
@@ -479,8 +479,8 @@ def test_fringe(
             70,
             1800,
             (
-                {
-                    "labels": [
+                Axis(
+                    labels=[
                         AxisTick(
                             position=1667862000.0,
                             text=None,
@@ -562,9 +562,9 @@ def test_fringe(
                             line_width=0,
                         ),
                     ],
-                    "lower": 1667827800,
-                    "upper": 1668515400,
-                },
+                    lower=1667827800,
+                    upper=1668515400,
+                ),
                 "2022-11-07 \u2014 2022-11-15 @ 30m",
             ),
             id="8d",
@@ -575,8 +575,8 @@ def test_fringe(
             70,
             9000,
             (
-                {
-                    "labels": [
+                Axis(
+                    labels=[
                         AxisTick(
                             position=1665698400.0,
                             text="10-14",
@@ -633,9 +633,9 @@ def test_fringe(
                             line_width=2,
                         ),
                     ],
-                    "lower": 1665495000,
-                    "upper": 1668510000,
-                },
+                    lower=1665495000,
+                    upper=1668510000,
+                ),
                 "2022-10-11 \u2014 2022-11-15 @ 2h",
             ),
             id="35d",
@@ -646,8 +646,8 @@ def test_fringe(
             70,
             86400,
             (
-                {
-                    "labels": [
+                Axis(
+                    labels=[
                         AxisTick(
                             position=1638313200.0,
                             text="2021-12-01",
@@ -679,9 +679,9 @@ def test_fringe(
                             line_width=2,
                         ),
                     ],
-                    "lower": 1633996800,
-                    "upper": 1668384000,
-                },
+                    lower=1633996800,
+                    upper=1668384000,
+                ),
                 "2021-10-12 \u2014 2022-11-14 @ 1d",
             ),
             id="400d",

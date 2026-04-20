@@ -149,6 +149,7 @@ def page_dashboard_app(ctx: PageContext) -> None:
     }
 
     html.vue_component("cmk-dashboard", data=page_properties)
+    html.footer()
 
 
 def _get_default_dashboard_name() -> str:

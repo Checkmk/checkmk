@@ -43,6 +43,12 @@ const props = withDefaults(
      */
     collectorActivationAllowed?: boolean
     /**
+     * Whether to include the enable-metric-backend action. Same rationale
+     * as `collectorActivationAllowed` — defaults to `true` so omitting it
+     * keeps the action in the registry.
+     */
+    metricBackendAllowed?: boolean
+    /**
      * Overrides the set of actions to run. Defaults to `POST_SAVE_ACTIONS`.
      * Primarily useful for tests; production callers should not pass this.
      */
@@ -57,7 +63,8 @@ const props = withDefaults(
     errorHeading?: string
   }>(),
   {
-    collectorActivationAllowed: true
+    collectorActivationAllowed: true,
+    metricBackendAllowed: true
   }
 )
 
@@ -68,9 +75,12 @@ const emit = defineEmits<{
 const { _t } = usei18n()
 
 const actions = computed(() => {
-  const base = props.actions ?? POST_SAVE_ACTIONS
+  let base = props.actions ?? POST_SAVE_ACTIONS
   if (props.collectorActivationAllowed === false) {
-    return base.filter((a) => a.key !== 'enableCollector')
+    base = base.filter((a) => a.key !== 'enableCollector')
+  }
+  if (props.metricBackendAllowed === false) {
+    base = base.filter((a) => a.key !== 'enableMetricBackend')
   }
   return base
 })

@@ -165,11 +165,42 @@ const enableCollectorAction: PostSaveAction = {
 }
 
 /**
+ * Action: enable the metric backend (ClickHouse) for the selected site.
+ *
+ * Hits the internal `metric_backend/actions/update/invoke` endpoint which
+ * configures and enables the metric backend with default port settings for
+ * the site. Idempotent: if the backend is already enabled the endpoint
+ * still returns 204 and the resulting "change" collapses to a no-op on
+ * activation.
+ */
+const enableMetricBackendAction: PostSaveAction = {
+  key: 'enableMetricBackend',
+  label: () => _t('Metric backend connection'),
+  execute: async (ctx) => {
+    try {
+      const response = await fetchRestAPI(
+        'api/internal/domain-types/metric_backend/actions/update/invoke',
+        'PATCH',
+        {
+          site_id: ctx.siteId,
+          config: { type: 'enabled' }
+        }
+      )
+      await response.raiseForStatus()
+      return { ok: true }
+    } catch (err) {
+      return errorFromUnknown(err, _t('Could not enable the metric backend'))
+    }
+  }
+}
+
+/**
  * Ordered list of steps run by the QuickSetup finalize stage. To add a new
  * verify-and-add-change step append a new `PostSaveAction` here.
  */
 export const POST_SAVE_ACTIONS: readonly PostSaveAction[] = [
   enableCollectorAction,
+  enableMetricBackendAction,
   createTelemetryFolderAction,
   createDCDConnectorAction
 ]

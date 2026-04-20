@@ -368,7 +368,7 @@
     "@@aspect_rules_js+//npm:extensions.bzl%pnpm": {
       "general": {
         "bzlTransitiveDigest": "oolVCGysG32UQLK1hupMt3zmPrTRSZ18E3+NvRHmBV8=",
-        "usagesDigest": "7GvoAhVpBqU2RMYiz3JUs6vdxd6OyzbcW2shhGyQqV0=",
+        "usagesDigest": "Lanvq1fjlyajVCYu1yJrg465WHpQ9WkVbIQOccbQUZA=",
         "recordedFileInputs": {},
         "recordedDirentsInputs": {},
         "envVariables": {},
@@ -377,11 +377,11 @@
             "repoRuleId": "@@aspect_rules_js+//npm/private:npm_import.bzl%npm_import_rule",
             "attributes": {
               "package": "pnpm",
-              "version": "8.6.7",
+              "version": "10.33.0",
               "root_package": "",
               "link_workspace": "",
               "link_packages": {},
-              "integrity": "sha512-vRIWpD/L4phf9Bk2o/O2TDR8fFoJnpYrp2TKqTIZF/qZ2/rgL3qKXzHofHgbXsinwMoSEigz28sqk3pQ+yMEQQ==",
+              "integrity": "sha512-EFaLtKavtYyes2MNqQzJUWQXq+vT+rvmc58K55VyjaFJHp21pUTHatjrdXD1xLs9bGN7LLQb/c20f6gjyGSTGQ==",
               "url": "",
               "commit": "",
               "patch_args": [
@@ -405,7 +405,7 @@
             "repoRuleId": "@@aspect_rules_js+//npm/private:npm_import.bzl%npm_import_links",
             "attributes": {
               "package": "pnpm",
-              "version": "8.6.7",
+              "version": "10.33.0",
               "dev": false,
               "root_package": "",
               "link_packages": {},

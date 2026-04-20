@@ -11,7 +11,7 @@ import re
 import time
 from collections.abc import Callable
 from pathlib import Path
-from typing import Final, Self
+from typing import Final, Literal, Self
 
 from cmk.ccc.version import (
     _EditionValue,
@@ -539,6 +539,10 @@ class CMKPackageInfo:
     def edition(self) -> TypeCMKEdition:
         return self._edition
 
+    @property
+    def commit_hash(self) -> str:
+        return _commit_hash(self)
+
     def is_installed(self) -> bool:
         return os.path.exists(self.version_path())
 
@@ -548,8 +552,8 @@ class CMKPackageInfo:
     def version_directory(self) -> str:
         return self.omd_version()
 
-    def omd_version(self) -> str:
-        return f"{self._version.version}.{self._edition.long}"
+    def omd_version(self, edition_type: Literal["long", "short"] = "long") -> str:
+        return _omd_version(self, edition_type)
 
 
 class CMKPackageInfoOld:
@@ -576,6 +580,10 @@ class CMKPackageInfoOld:
     def edition(self) -> TypeCMKEditionOld:
         return self._edition
 
+    @property
+    def commit_hash(self) -> str:
+        return _commit_hash(self)
+
     def is_installed(self) -> bool:
         return os.path.exists(self.version_path())
 
@@ -585,8 +593,28 @@ class CMKPackageInfoOld:
     def version_directory(self) -> str:
         return self.omd_version()
 
-    def omd_version(self) -> str:
-        return f"{self._version.version}.{self._edition.short}"
+    def omd_version(self, edition_type: Literal["long", "short"] = "short") -> str:
+        return _omd_version(self, edition_type)
+
+
+def _commit_hash(package_info: CMKPackageInfo | CMKPackageInfoOld) -> str:
+    # short edition is required for <= Checkmk 2.4.0
+    short_hand = package_info.omd_version(edition_type="short")
+    try:
+        return Path(f"/opt/omd/versions/{short_hand}/share/doc/COMMIT").read_text().strip()
+    except FileNotFoundError as excp:
+        if package_info.is_installed():
+            excp.add_note(f"Checkmk package '{short_hand}' is installed! Checkmk packaging issues?")
+        else:
+            excp.add_note(f"Missing Checkmk package '{short_hand}' installation!")
+        raise excp
+
+
+def _omd_version(
+    package_info: CMKPackageInfo | CMKPackageInfoOld, edition_type: Literal["long", "short"]
+) -> str:
+    edition_ = package_info._edition.long if edition_type == "long" else package_info._edition.short
+    return f"{package_info._version.version}.{edition_}"
 
 
 def package_hash_path(version: str, edition: TypeCMKEdition | TypeCMKEditionOld) -> Path:

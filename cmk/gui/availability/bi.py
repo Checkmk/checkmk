@@ -27,6 +27,7 @@ from cmk.bi.lib import (
 )
 from cmk.bi.trees import BICompiledAggregation, BICompiledRule, CompiledAggrTree
 from cmk.ccc.hostaddress import HostName
+from cmk.ccc.site import omd_site
 from cmk.gui.bi.bi_manager import BIManager
 from cmk.gui.data_source import query_livestatus
 from cmk.gui.i18n import _
@@ -446,7 +447,7 @@ def create_bi_timeline_entry(
         "log_output": node_compute_result.output,
         "from": from_time,
         "until": until_time,
-        "site": "",
+        "site": omd_site(),
         "host_name": aggr_group,
         "service_description": tree["title"],
         "in_notification_period": 1,

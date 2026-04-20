@@ -52,6 +52,7 @@ The user provides a natural language request or a direct command. Examples:
 - `/crash-report auto-fix search --type check --unsolved --limit 5` — auto-fix top 5 unsolved check crashes
 - `/crash-report auto-fix --dry-run popular --limit 3` — analyze and fix but don't commit/push
 - `/crash-report resolved --since 30d` — list crash groups fixed in the last 30 days
+- `/crash-report resolve <group_id> --versions 2.4.0p8,2.3.0p25` — mark a crash group as resolved on the server (versions required)
 
 ## Workflow
 
@@ -74,6 +75,8 @@ Translate the user's request into one of these commands:
 | "Show local GUI crashes"             | `local --type gui`                             |
 | "What crash groups did we fix?"      | `resolved --since 30d`                         |
 | "Show resolved crashes this quarter" | `resolved --since 90d`                         |
+| "Resolve group 42 in 2.4.0p8"        | `resolve 42 --versions 2.4.0p8`                |
+| "Unresolve group 42"                 | `resolve 42 --unresolve`                       |
 
 ### Step 1.5: Check Authentication
 
@@ -118,7 +121,18 @@ PYTHONPATH=.github/skills .venv/bin/python -m crash_report group <group_id>
 
 # List crash reports from local OMD sites
 PYTHONPATH=.github/skills .venv/bin/python -m crash_report local [--type TYPE]
+
+# Mark a crash group as resolved (JWT auth required; legacy token rejected)
+PYTHONPATH=.github/skills .venv/bin/python -m crash_report resolve <group_id> \
+  --versions 2.4.0p8,2.3.0p25
+PYTHONPATH=.github/skills .venv/bin/python -m crash_report resolve <group_id> --unresolve
 ```
+
+The `resolve` command marks the group `is_solved=true` server-side, records the
+authenticated user as `solved_by`, and stores the caller-supplied
+`solved_versions` verbatim. `--versions` is required when resolving — the server
+does not guess the fix versions. Use `--unresolve` to reverse a prior resolve
+(no `--versions` needed).
 
 Date arguments accept:
 
@@ -400,6 +414,8 @@ The arguments after `auto-fix` are passed directly to the `popular` or `search` 
    git checkout master
    ```
 
+   **Do NOT mark the group as resolved on the server** as part of this pipeline. Server-side resolve is a separate, explicitly-permitted step (see "Mark Resolved on Server" below) that the user opts into after verifying the fix has actually been merged and released.
+
 3. **Summary.** After all groups are processed, print a summary table:
 
    | Group ID | Crash Type | Branch                     | Confidence | Status                          |
@@ -477,6 +493,35 @@ resolved [--since DATE] [--branch BRANCH]
    | 57       | gui   | [Link](https://crash.checkmk.com/...) | [Change 12400](https://review.lan.tribe29.com/c/check_mk/+/12400) | 2.4.0p7           |
 
 **Note:** This command only finds crash groups fixed using the `Crash-Group-ID:` commit trailer convention. Older fixes without this trailer will not appear.
+
+**Follow-up:** After presenting the table, offer to run "Mark Resolved on Server" (below) for any row where the user confirms the fix is merged and released.
+
+---
+
+### Mark Resolved on Server
+
+After a crash group has been fixed **and the fix has actually been merged and released**, the user may ask to mark the group as resolved on crash.checkmk.com so it stops showing up in unsolved-crash queries and customers get notified.
+
+**This step is never automatic.** Do not run it as part of `auto-fix`, and do not run it silently after `resolved`. Always get explicit user confirmation (via `AskUserQuestion`) for each group before calling the endpoint.
+
+**Command:**
+
+```bash
+PYTHONPATH=.github/skills .venv/bin/python -m crash_report resolve <group_id> \
+  [--versions 2.4.0p8,2.3.0p25] [--unresolve]
+```
+
+- `--versions`: **required when resolving.** Comma-separated list of Checkmk versions that contain the fix (e.g. `2.4.0p8,2.3.0p25`). The server does not guess — pass the specific patch releases the fix landed in. Check the werk and any backport commits to determine these.
+- `--unresolve`: reverse a prior resolve (e.g. after discovering the fix was incomplete). `--versions` is not needed with `--unresolve`.
+
+**Authentication:** requires JWT auth (run `authenticate.py` if needed). The legacy static token is rejected server-side because the endpoint records the authenticated user as `solved_by`.
+
+**Typical flow:**
+
+1. User runs `resolved --since 30d` (or hands over a list of group IDs they want to close out).
+2. For each group, ask: "Mark group `<id>` as resolved on the server? (versions: `<auto|explicit>`)".
+3. On `yes`, run the `resolve` command. On `no` or skip, move on.
+4. Report the server's response (solved_by, solved_at, solved_versions).
 
 ---
 

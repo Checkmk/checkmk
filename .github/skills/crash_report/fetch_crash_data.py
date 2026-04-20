@@ -213,6 +213,35 @@ def api_request(endpoint: str, params: dict[str, str] | None = None) -> dict[str
         raise ApiError(f"Could not connect to {BASE_URL}: {e.reason}") from e
 
 
+def api_post(endpoint: str, body: dict[str, Any]) -> dict[str, Any]:
+    """Make an authenticated POST API request with a JSON body and return parsed JSON."""
+    url = f"{API_BASE}/{endpoint}"
+    headers = {**_get_auth_headers(), "Content-Type": "application/json"}
+    data = json.dumps(body).encode("utf-8")
+    req = urllib.request.Request(url, data=data, headers=headers, method="POST")
+
+    try:
+        with urllib.request.urlopen(req, timeout=30) as resp:  # nosec B310
+            result: dict[str, Any] = json.loads(resp.read().decode())
+            return result
+    except urllib.error.HTTPError as e:
+        detail = ""
+        try:
+            detail = json.loads(e.read().decode()).get("message", "")
+        except (json.JSONDecodeError, UnicodeDecodeError, AttributeError):
+            pass
+        suffix = f": {detail}" if detail else ""
+        if e.code == 404:
+            raise ApiError(f"Not found: {endpoint}{suffix}") from e
+        if e.code == 401:
+            raise ApiError(f"Authentication failed{suffix}") from e
+        if e.code == 400:
+            raise ApiError(f"Bad request{suffix}") from e
+        raise ApiError(f"HTTP {e.code}: {e.reason}{suffix}") from e
+    except urllib.error.URLError as e:
+        raise ApiError(f"Could not connect to {BASE_URL}: {e.reason}") from e
+
+
 def parse_date(date_str: str) -> str:
     """Parse a date string (ISO date or relative like '30d') to ISO format."""
     if date_str.endswith("d"):
@@ -555,6 +584,40 @@ def cmd_group(args: argparse.Namespace) -> None:
             )
 
 
+def cmd_resolve(args: argparse.Namespace) -> None:
+    """Mark a crash group as resolved (or unresolved) on crash.checkmk.com.
+
+    Requires JWT authentication (the legacy static token has no user identity,
+    so the server rejects it for this endpoint).
+    """
+    body: dict[str, Any] = {"solved": not args.unresolve}
+    if not args.unresolve:
+        if not args.versions:
+            sys.stderr.write(
+                "Error: --versions is required when resolving. "
+                "Pass the comma-separated list of Checkmk versions that contain the "
+                "fix, e.g. --versions 2.4.0p8,2.3.0p25.\n"
+            )
+            sys.exit(2)
+        versions = [v.strip() for v in args.versions.split(",") if v.strip()]
+        if not versions:
+            sys.stderr.write("Error: --versions must contain at least one version.\n")
+            sys.exit(2)
+        body["solved_versions"] = versions
+
+    data = api_post(f"crash_group/{args.group_id}/resolve", body)
+    group = data.get("crash_group", {})
+
+    action = "unresolved" if args.unresolve else "resolved"
+    print(f"Crash group {group.get('id')} marked as {action}.")
+    if group.get("solved_by"):
+        print(f"- Solved by: {group['solved_by']}")
+    if group.get("solved_at"):
+        print(f"- Solved at: {group['solved_at']}")
+    if group.get("solved_versions"):
+        print(f"- Solved in: {group['solved_versions']}")
+
+
 def cmd_check_auth(_args: argparse.Namespace) -> None:
     """Exit 0 if a valid cached token exists, 1 otherwise."""
     token = get_cached_bearer_token()
@@ -608,6 +671,22 @@ def main() -> None:
         "--type", help="Crash type filter (check, gui, rest_api, section, etc.)"
     )
 
+    # resolve
+    resolve_parser = subparsers.add_parser(
+        "resolve", help="Mark a crash group as resolved (or unresolved)"
+    )
+    resolve_parser.add_argument("group_id", type=int, help="Crash group ID")
+    resolve_parser.add_argument(
+        "--unresolve", action="store_true", help="Mark the group as unresolved instead"
+    )
+    resolve_parser.add_argument(
+        "--versions",
+        help=(
+            "Comma-separated list of Checkmk versions that contain the fix "
+            "(e.g. '2.4.0p8,2.3.0p25'). Required when resolving; ignored with --unresolve."
+        ),
+    )
+
     # check-auth
     subparsers.add_parser("check-auth", help="Check if a valid auth token is cached (exit 0/1)")
 
@@ -620,6 +699,7 @@ def main() -> None:
         "show": cmd_show,
         "group": cmd_group,
         "local": cmd_local,
+        "resolve": cmd_resolve,
         "check-auth": cmd_check_auth,
     }
 

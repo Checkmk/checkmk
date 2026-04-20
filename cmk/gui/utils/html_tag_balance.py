@@ -52,7 +52,7 @@ class _TagBalanceChecker(HTMLParser):
     def __init__(self) -> None:
         super().__init__(convert_charrefs=False)
         self._stack: list[tuple[str, int, dict[str, str | None]]] = []
-        self.errors: list[str] = []
+        self._errors: list[str] = []
 
     def __enter__(self) -> Self:
         return self
@@ -63,7 +63,7 @@ class _TagBalanceChecker(HTMLParser):
         exc_val: BaseException | None,
         exc_tb: TracebackType | None,
     ) -> None:
-        self.errors.extend(
+        self._errors.extend(
             f"line {line}: <{tag}{self._fmt(attrs)}> never closed"
             for tag, line, attrs in self._stack
         )
@@ -85,20 +85,22 @@ class _TagBalanceChecker(HTMLParser):
             return
         line = self.getpos()[0]
         if not self._stack:
-            self.errors.append(f"line {line}: extra </{tag}>")
+            self._errors.append(f"line {line}: extra </{tag}>")
             return
         for i in range(len(self._stack) - 1, -1, -1):
             if self._stack[i][0] == tag:
                 for t, ln, a in self._stack[i + 1 :]:
-                    self.errors.append(f"line {ln}: <{t}{self._fmt(a)}> not closed before </{tag}>")
+                    self._errors.append(
+                        f"line {ln}: <{t}{self._fmt(a)}> not closed before </{tag}>"
+                    )
                 del self._stack[i:]
                 return
-        self.errors.append(f"line {line}: </{tag}> has no matching open tag")
+        self._errors.append(f"line {line}: </{tag}> has no matching open tag")
 
     @property
     def is_balanced(self) -> bool:
-        if self.errors:
-            raise TagImbalanceError(self.errors)
+        if self._errors:
+            raise TagImbalanceError(self._errors)
         return True
 
     @staticmethod

@@ -4,9 +4,9 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
+"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2026-04-15 08:56+0000\n"
+"PO-Revision-Date: 2026-04-20 10:09+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/stable/"
 "de/>\n"
 "Language: de\n"
@@ -16253,9 +16253,8 @@ msgstr "Kritisch bei Stratum"
 msgid "Critical at usage of"
 msgstr "CRIT bei Benutzung von"
 
-#, fuzzy
 msgid "Critical at/above"
-msgstr "Kritisch über"
+msgstr "Kritisch bei/über"
 
 msgid "Critical at/below"
 msgstr "Kritisch bei/unter"
@@ -22880,9 +22879,8 @@ msgstr "Einträge pro Zeile"
 msgid "Entry"
 msgstr "Eintrag"
 
-#, fuzzy
 msgid "Environment Metrics"
-msgstr "Umgebungssensoren"
+msgstr "Umgebungsmetriken"
 
 msgid "Environment Sensors"
 msgstr "Umgebungssensoren"
@@ -38209,9 +38207,8 @@ msgstr ""
 msgid "Lower limit of expected interfaces"
 msgstr "Untergrenze der erwarteten Schnittstellen"
 
-#, fuzzy
 msgid "Lower voltage levels"
-msgstr "Untergrenzen des Healthwertes"
+msgstr "Untergrenzen des Spannungslevels"
 
 msgid "Lowest: No notification, update badge number"
 msgstr "Am niedrigsten: keine Benachrichtigung, Badge-Nummer aktualisieren"
@@ -49710,9 +49707,8 @@ msgstr "Leistung"
 msgid "Power Presence Sensors"
 msgstr "Sensoren für die Netzteilverfügbarkeit"
 
-#, fuzzy
 msgid "Power Subsystem"
-msgstr "Knoten-System"
+msgstr "Teilstromversorgungssystem"
 
 msgid "Power Supplies"
 msgstr "Netzteile"
@@ -67877,9 +67873,8 @@ msgstr "Es ist nur ein aktiver Benutzeranschluss verfügbar"
 msgid "There job \"%s\" is not encrypted"
 msgstr "Der Sicherungs-Job \"%s\" ist nicht verschlüsselt"
 
-#, fuzzy
 msgid "Thermal Subsystem"
-msgstr "Die SAP System ID."
+msgstr "Wärmesubsystem"
 
 msgid "Thermal information"
 msgstr "Thermische Informationen"
@@ -77975,17 +77970,16 @@ msgstr "Prozentuale Obergrenzen für die DB-Speichergröße"
 msgid "Upper percentual levels for the logs usage size"
 msgstr "Prozentuale Obergrenzen für die Log-Nutzungsgröße"
 
-#, fuzzy
 msgid "Upper voltage levels"
-msgstr "Absolute Obergrenzen"
+msgstr "Obergrenzen für Spannung"
 
-#, fuzzy
 msgid ""
 "Upper voltage levels for devices like UPS or PDUs. Leave unset on "
 "installations where over-voltage is not a concern."
 msgstr ""
-"Spannungspegel für Geräte wie USV oder PDUs. Es können mehrere Phasen "
-"unabhängig voneinander angesprochen werden."
+"Obergrenzen für Spannung für Geräte wie USV oder PDUs. Lassen Sie diese "
+"Einstellung bei Installationen, bei denen keine Gefahr durch Überspannung "
+"besteht, unverändert."
 
 msgid "Uptime"
 msgstr "Laufzeit"
@@ -80894,9 +80888,8 @@ msgstr "Warnung bei oder unter"
 msgid "Warning at usage of"
 msgstr "Warnung bei Verwendung von"
 
-#, fuzzy
 msgid "Warning at/above"
-msgstr "Warnung über"
+msgstr "Warnung bei/über"
 
 msgid "Warning at/below"
 msgstr "Warnung bei/unter"

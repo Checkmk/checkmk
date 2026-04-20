@@ -239,6 +239,7 @@ def _edit_annotation_breadcrumb(breadcrumb: Breadcrumb, title: str) -> Breadcrum
         BreadcrumbItem(
             title=title,
             url=makeuri(request, []),
+            id=None,
         )
     )
     return breadcrumb

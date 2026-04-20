@@ -68,6 +68,7 @@ class ModeUserMigrate(WatoMode):
             BreadcrumbItem(
                 title=_("Users"),
                 url="wato.py?mode=users",
+                id="users",
             ),
         )
         return breadcrumb

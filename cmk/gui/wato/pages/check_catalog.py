@@ -346,6 +346,7 @@ def _add_breadcrumb_topic_items(
                     request,
                     [("mode", "check_plugin_topic"), ("topic", "/".join(elements))],
                 ),
+                id=None,
             )
         )
     return breadcrumb

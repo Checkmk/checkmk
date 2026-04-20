@@ -302,6 +302,7 @@ def page_werk(ctx: PageContext) -> None:
         BreadcrumbItem(
             title=_("Change log (Werks)"),
             url="change_log.py",
+            id="change_log",
         )
     )
     breadcrumb.append(make_current_page_breadcrumb_item(title))

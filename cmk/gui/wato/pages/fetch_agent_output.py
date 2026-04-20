@@ -226,6 +226,7 @@ class PageFetchAgentOutput(AgentOutputPage):
             BreadcrumbItem(
                 title=title,
                 url="javascript:document.location.reload(false)",
+                id="fetch_agent_output",
             )
         )
         return breadcrumb

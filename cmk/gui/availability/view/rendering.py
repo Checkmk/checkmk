@@ -229,6 +229,7 @@ def show_availability_page(
         BreadcrumbItem(
             title=title,
             url=breadcrumb[-1].url + "&mode=availability",
+            id="availability",
         )
     )
 
@@ -837,6 +838,7 @@ def show_bi_availability(
             BreadcrumbItem(
                 title=title,
                 url=breadcrumb[-1].url + "&mode=availability",
+                id="availability",
             )
         )
 

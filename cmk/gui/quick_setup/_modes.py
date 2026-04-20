@@ -204,6 +204,7 @@ class ModeEditConfigurationBundles(WatoMode):
         yield BreadcrumbItem(
             title=MainModuleTopicQuickSetup.title,
             url=None,
+            id=MainModuleTopicQuickSetup.name,
         )
 
     @override

@@ -48,7 +48,7 @@ def test_get_user_role_links() -> None:
 @pytest.mark.usefixtures("request_context")
 def test_users_breadcrumb_dont_list_users_topic(test_edition: Edition) -> None:
     assert list(ModeUsers(test_edition).breadcrumb()) == [
-        BreadcrumbItem(title="Users", url="wato.py?mode=users"),
+        BreadcrumbItem(title="Users", url="wato.py?mode=users", id="users"),
     ]
 
 
@@ -56,8 +56,12 @@ def test_users_breadcrumb_dont_list_users_topic(test_edition: Edition) -> None:
 def test_edituser_breadcrumb_dont_list_users_topic(test_edition: Edition) -> None:
     request.set_var("user", "testuser")
     assert list(ModeEditUser(test_edition).breadcrumb()) == [
-        BreadcrumbItem(title="Users", url="wato.py?mode=users"),
-        BreadcrumbItem(title="Edit user testuser", url="wato.py?edit=testuser&mode=edit_user"),
+        BreadcrumbItem(title="Users", url="wato.py?mode=users", id="users"),
+        BreadcrumbItem(
+            title="Edit user testuser",
+            url="wato.py?edit=testuser&mode=edit_user",
+            id="edit_user",
+        ),
     ]
 
 

@@ -318,6 +318,7 @@ class View:
                 BreadcrumbItem(
                     title=view_title(self.spec, self.context),
                     url=makeuri_contextless(request, request_vars),
+                    id=f"view_{self.name}",
                 )
             )
             return breadcrumb
@@ -363,6 +364,7 @@ class View:
                             ]
                         ),
                     ),
+                    id=f"view_{self.name}",
                 )
             )
             return breadcrumb
@@ -389,6 +391,7 @@ class View:
                         ]
                     ),
                 ),
+                id=f"view_{self.name}",
             )
         )
 

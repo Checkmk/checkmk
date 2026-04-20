@@ -85,8 +85,12 @@ class TestWatoMode:
         test_edition: Edition,
     ):
         assert list(SomeWatoMode(test_edition).breadcrumb()) == [
-            BreadcrumbItem(title="Hosts", url=None),
-            BreadcrumbItem(title="(Untitled module)", url="wato.py?mode=some_wato_mode"),
+            BreadcrumbItem(title="Hosts", url=None, id="hosts"),
+            BreadcrumbItem(
+                title="(Untitled module)",
+                url="wato.py?mode=some_wato_mode",
+                id="some_wato_mode",
+            ),
         ]
 
     def test_breadcrumb_with_additions(
@@ -100,10 +104,12 @@ class TestWatoMode:
             yield BreadcrumbItem(
                 title="In between 1",
                 url=None,
+                id=None,
             )
             yield BreadcrumbItem(
                 title="In between 2",
                 url="123",
+                id=None,
             )
 
         monkeypatch.setattr(
@@ -112,8 +118,12 @@ class TestWatoMode:
             additional_breadcrumb_items,
         )
         assert list(SomeWatoMode(test_edition).breadcrumb()) == [
-            BreadcrumbItem(title="Hosts", url=None),
-            BreadcrumbItem(title="In between 1", url=None),
-            BreadcrumbItem(title="In between 2", url="123"),
-            BreadcrumbItem(title="(Untitled module)", url="wato.py?mode=some_wato_mode"),
+            BreadcrumbItem(title="Hosts", url=None, id="hosts"),
+            BreadcrumbItem(title="In between 1", url=None, id=None),
+            BreadcrumbItem(title="In between 2", url="123", id=None),
+            BreadcrumbItem(
+                title="(Untitled module)",
+                url="wato.py?mode=some_wato_mode",
+                id="some_wato_mode",
+            ),
         ]

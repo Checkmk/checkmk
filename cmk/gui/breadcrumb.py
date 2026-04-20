@@ -22,6 +22,10 @@ from cmk.shared_typing.main_menu import NavItem
 class BreadcrumbItem(NamedTuple):
     title: str | LazyString
     url: str | None
+    id: str | None
+    """Stable, locale-independent identifier for analytics and similar
+    consumers that must not depend on the translated title. Pass ``None``
+    when no stable id is available."""
 
 
 class Breadcrumb(MutableSequence[BreadcrumbItem]):
@@ -101,12 +105,14 @@ def make_current_page_breadcrumb_item(title: str) -> BreadcrumbItem:
     return BreadcrumbItem(
         title=title,
         url="javascript:document.location.reload(false)",
+        id=None,
     )
 
 
 def make_topic_breadcrumb(
     menu: NavItem,
     topic_title: str | LazyString,
+    topic_id: str | None = None,
 ) -> Breadcrumb:
     """Helper to create a breadcrumb down to topic level"""
     # 1. Main menu level
@@ -117,6 +123,7 @@ def make_topic_breadcrumb(
         BreadcrumbItem(
             title=topic_title,
             url=None,
+            id=topic_id,
         )
     )
 
@@ -130,6 +137,7 @@ def make_main_menu_breadcrumb(menu: NavItem) -> Breadcrumb:
             BreadcrumbItem(
                 title=menu.title,
                 url=None,
+                id=menu.id.value,
             )
         ]
     )

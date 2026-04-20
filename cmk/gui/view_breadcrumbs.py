@@ -40,9 +40,10 @@ def _service_breadcrumb(host_name: HostName, service_name: ServiceName) -> Bread
                 ),
                 filename="view.py",
             ),
+            id=None,
         )
     # In case of no permission for the service view, use breadcrumb without URL
-    return BreadcrumbItem(title="Service", url=None)
+    return BreadcrumbItem(title="Service", url=None, id=None)
 
 
 def make_host_breadcrumb(host_name: HostName, user_permissions: UserPermissions) -> Breadcrumb:
@@ -64,6 +65,7 @@ def make_host_breadcrumb(host_name: HostName, user_permissions: UserPermissions)
                 [("view_name", "allhosts")],
                 filename="view.py",
             ),
+            id=None,
         )
     )
 
@@ -76,6 +78,7 @@ def make_host_breadcrumb(host_name: HostName, user_permissions: UserPermissions)
                 append_site_from_request([("view_name", "hoststatus"), ("host", host_name)]),
                 filename="view.py",
             ),
+            id=None,
         )
     )
 
@@ -89,6 +92,7 @@ def make_host_breadcrumb(host_name: HostName, user_permissions: UserPermissions)
                 append_site_from_request([("view_name", "host"), ("host", host_name)]),
                 filename="view.py",
             ),
+            id=None,
         )
     )
 

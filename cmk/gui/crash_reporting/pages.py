@@ -220,6 +220,7 @@ class PageCrash(Page):
                     [("view_name", "crash_reports")],
                     filename="view.py",
                 ),
+                id="crash_reports",
             )
         )
 

@@ -1439,7 +1439,7 @@ def _render_deferred_graph_html(
 @tracer.instrument("graphing.render_deferred_graphs_html")
 def render_deferred_graphs_html(
     graph_specification: GraphSpecification,
-    time_range: GraphTimeRange,
+    time_range: GraphTimeRange | None,
     display_config: GraphDisplayConfigHTML,
     env: GraphEnvironment,
     *,
@@ -1453,6 +1453,7 @@ def render_deferred_graphs_html(
     output = HTML.empty()
     for recipe_with_overrides in recipes:
         effective_time_range = recipe_with_overrides.time_range or time_range
+        assert effective_time_range is not None
         interaction = GraphInteractionState(
             consolidation_function=recipe_with_overrides.consolidation_function,
             time_start=effective_time_range.start,

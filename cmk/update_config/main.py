@@ -27,7 +27,8 @@ from typing import Literal
 from cmk.base import config as base_config
 from cmk.base.app import make_app
 from cmk.ccc import debug, tty
-from cmk.ccc.version import Edition, edition
+from cmk.ccc.version import Edition
+from cmk.ccc.version import edition as cmk_edition
 from cmk.gui import main_modules
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
@@ -68,20 +69,23 @@ def main(
         tty.yellow,
         tty.normal,
     )
-    main_modules.register(edition(paths.omd_root))
+    edition = cmk_edition(paths.omd_root)
+    main_modules.register(edition)
 
     with _force_automations_cli_interface():
-        exit_code = main_check_config(logger, arguments.conflict)
+        exit_code = main_check_config(edition, logger, arguments.conflict)
         if exit_code != 0 or arguments.dry_run:
             return exit_code
-        return main_update_config(logger, arguments.conflict)
+        return main_update_config(edition, logger, arguments.conflict)
 
 
-def main_update_config(logger: logging.Logger, conflict: ConflictMode) -> Literal[0, 1]:
-    _load_plugins(logger)
+def main_update_config(
+    edition: Edition, logger: logging.Logger, conflict: ConflictMode
+) -> Literal[0, 1]:
+    _load_plugins(edition, logger)
 
     try:
-        return update_config(logger)
+        return update_config(edition, logger)
     except Exception:
         if debug.enabled():
             raise
@@ -91,14 +95,16 @@ def main_update_config(logger: logging.Logger, conflict: ConflictMode) -> Litera
         return 1
 
 
-def main_check_config(logger: logging.Logger, conflict: ConflictMode) -> Literal[0, 1]:
-    _load_pre_plugins()
+def main_check_config(
+    edition: Edition, logger: logging.Logger, conflict: ConflictMode
+) -> Literal[0, 1]:
+    _load_pre_plugins(edition)
     try:
         # This has to be done BEFORE initializing the GUI context on start of
         # the pre update actions
         _cleanup_precompiled_files(logger)
 
-        check_config(logger, conflict)
+        check_config(edition, logger, conflict)
     except Exception as e:
         if not isinstance(e, MKUserError):
             traceback.print_exc()
@@ -184,22 +190,22 @@ def ensure_site_is_stopped(logger: logging.Logger) -> None:
         sys.exit(1)
 
 
-def _load_plugins(logger: logging.Logger) -> None:
+def _load_plugins(edition: Edition, logger: logging.Logger) -> None:
     for plugin, exc in chain(
         load_plugins_with_exceptions("cmk.update_config.plugins.actions"),
         (
             []
-            if edition(paths.omd_root) is Edition.COMMUNITY
+            if edition is Edition.COMMUNITY
             else load_plugins_with_exceptions("cmk.update_config.nonfree.pro.plugins.actions")
         ),
         (
             load_plugins_with_exceptions("cmk.update_config.nonfree.ultimate.plugins.actions")
-            if edition(paths.omd_root) in (Edition.ULTIMATE, Edition.ULTIMATEMT)
+            if edition in (Edition.ULTIMATE, Edition.ULTIMATEMT)
             else []
         ),
         (
             load_plugins_with_exceptions("cmk.update_config.nonfree.ultimatemt.plugins.actions")
-            if edition(paths.omd_root) is Edition.ULTIMATEMT
+            if edition is Edition.ULTIMATEMT
             else []
         ),
     ):
@@ -208,17 +214,17 @@ def _load_plugins(logger: logging.Logger) -> None:
             raise exc
 
 
-def _load_pre_plugins() -> None:
+def _load_pre_plugins(edition: Edition) -> None:
     for plugin, exc in chain(
         load_plugins_with_exceptions("cmk.update_config.plugins.pre_actions"),
         (
             []
-            if edition(paths.omd_root) is Edition.COMMUNITY
+            if edition is Edition.COMMUNITY
             else load_plugins_with_exceptions("cmk.update_config.nonfree.pro.plugins.pre_actions")
         ),
         (
             load_plugins_with_exceptions("cmk.update_config.nonfree.ultimate.plugins.pre_actions")
-            if edition(paths.omd_root) in (Edition.ULTIMATE, Edition.ULTIMATEMT)
+            if edition in (Edition.ULTIMATE, Edition.ULTIMATEMT)
             else []
         ),
     ):
@@ -230,7 +236,7 @@ def _load_pre_plugins() -> None:
 # TODO(sk): check_config can't raise exception(raise is an reaction on check, i.e. 2 in 1):
 # change name assert_config or ensure_valid_config for example
 # or change logic
-def check_config(logger: logging.Logger, conflict_mode: ConflictMode) -> None:
+def check_config(edition: Edition, logger: logging.Logger, conflict_mode: ConflictMode) -> None:
     """Raise exception on failure"""
     pre_update_actions = sorted(pre_update_action_registry.values(), key=lambda a: a.sort_index)
     total = len(pre_update_actions)
@@ -238,7 +244,7 @@ def check_config(logger: logging.Logger, conflict_mode: ConflictMode) -> None:
 
     # Note: Redis has to be disabled first, the other contexts depend on it
     with disable_redis(), gui_context():
-        _initialize_base_environment()
+        _initialize_base_environment(edition)
         for count, pre_action in enumerate(pre_update_actions, start=1):
             logger.info(f" {tty.yellow}{count:02d}/{total:02d}{tty.normal} {pre_action.title}...")
             pre_action(logger, conflict_mode)
@@ -246,7 +252,7 @@ def check_config(logger: logging.Logger, conflict_mode: ConflictMode) -> None:
     logger.info(f"Done ({tty.green}success{tty.normal})\n")
 
 
-def update_config(logger: logging.Logger) -> Literal[0, 1]:
+def update_config(edition: Edition, logger: logging.Logger) -> Literal[0, 1]:
     """Return exit code, 0 is ok, 1 is failure"""
     has_errors = False
     logger.log(VERBOSE, "Initializing application...")
@@ -258,7 +264,7 @@ def update_config(logger: logging.Logger) -> Literal[0, 1]:
     with disable_redis(), gui_context(), SuperUserContext():
         set_global_vars()
         _check_failed_gui_plugins(logger)
-        _initialize_base_environment()
+        _initialize_base_environment(edition)
 
         logger.info("Updating Checkmk configuration...")
 
@@ -302,12 +308,11 @@ def _check_failed_gui_plugins(logger: logging.Logger) -> None:
         )
 
 
-def _initialize_base_environment() -> None:
-    _edition = edition(paths.omd_root)
+def _initialize_base_environment(edition: Edition) -> None:
     base_config.load(
         discovery_rulesets=(),
-        get_builtin_host_labels=make_app(_edition).get_builtin_host_labels,
-        edition=_edition,
+        get_builtin_host_labels=make_app(edition).get_builtin_host_labels,
+        edition=edition,
     )
 
 

@@ -13,6 +13,7 @@ import pytest
 from pytest_mock import MockerFixture
 
 import cmk.utils.paths
+from cmk.ccc.version import Edition
 from cmk.update_config import main, registry
 from cmk.update_config.lib import ExpiryVersion
 
@@ -108,6 +109,6 @@ def test_config_updater_executes_plugins(
     assert mock_plugin.calls == 1
 
 
-def test_load_plugins() -> None:
-    main._load_plugins(logging.getLogger())
+def test_load_plugins(test_edition: Edition) -> None:
+    main._load_plugins(test_edition, logging.getLogger())
     assert registry.update_action_registry

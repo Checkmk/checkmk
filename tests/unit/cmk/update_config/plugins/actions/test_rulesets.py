@@ -4,16 +4,15 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import logging
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 
 import pytest
 
-from cmk.ccc.version import Edition, edition
+from cmk.ccc.version import Edition
 from cmk.gui.watolib.hosts_and_folders import folder_tree
 from cmk.gui.watolib.rulesets import Rule, Ruleset, RulesetCollection
 from cmk.gui.watolib.rulespecs import Rulespec
 from cmk.update_config.plugins.actions import rulesets as rulesets_updater
-from cmk.utils import paths
 from cmk.utils.rulesets.definition import RuleGroup
 from cmk.utils.rulesets.ruleset_matcher import RulesetName
 
@@ -36,7 +35,7 @@ def _instantiate_ruleset(
     ["rulesets", "n_expected_warnings"],
     [
         pytest.param(
-            {
+            lambda edition: {
                 "logwatch_rules": {
                     "reclassify_patterns": [
                         ("C", "\\\\x\\\\y\\\\z", "some comment"),
@@ -51,7 +50,7 @@ def _instantiate_ruleset(
             id="invalid configuration",
         ),
         pytest.param(
-            {
+            lambda edition: {
                 "logwatch_rules": {
                     "reclassify_patterns": [
                         ("C", "\\\\x\\\\y\\\\z", "some comment"),
@@ -62,7 +61,7 @@ def _instantiate_ruleset(
                 },
                 **(
                     {}
-                    if edition(paths.omd_root) is Edition.COMMUNITY
+                    if edition is Edition.COMMUNITY
                     else {RuleGroup.ExtraServiceConf("_sla_config"): "i am skipped"}
                 ),
             },
@@ -74,7 +73,8 @@ def _instantiate_ruleset(
 @pytest.mark.usefixtures("request_context")
 def test_validate_rule_values(
     caplog: pytest.LogCaptureFixture,
-    rulesets: Mapping[RulesetName, object],
+    test_edition: Edition,
+    rulesets: Callable[[Edition], Mapping[RulesetName, object]],
     n_expected_warnings: int,
 ) -> None:
     all_rulesets = RulesetCollection(
@@ -83,7 +83,7 @@ def test_validate_rule_values(
                 ruleset_name,
                 rule_value,
             )
-            for ruleset_name, rule_value in rulesets.items()
+            for ruleset_name, rule_value in rulesets(test_edition).items()
         }
     )
     caplog.set_level(logging.INFO)

@@ -46,10 +46,6 @@ class _TagBalanceChecker(HTMLParser):
         self._stack: list[tuple[str, int, dict[str, str | None]]] = []
         self.errors: list[str] = []
 
-    @staticmethod
-    def _fmt(attrs: dict[str, str | None]) -> str:
-        return "".join(f" {k}" if v is None else f" {k}={v!r}" for k, v in attrs.items())
-
     def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
         if tag not in _VOID_ELEMENTS:
             self._stack.append((tag, self.getpos()[0], dict(attrs)))
@@ -78,3 +74,7 @@ class _TagBalanceChecker(HTMLParser):
         for tag, line, attrs in self._stack:
             errors.append(f"line {line}: <{tag}{self._fmt(attrs)}> never closed")
         return errors
+
+    @staticmethod
+    def _fmt(attrs: dict[str, str | None]) -> str:
+        return "".join(f" {k}" if v is None else f" {k}={v!r}" for k, v in attrs.items())

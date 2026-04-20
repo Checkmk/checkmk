@@ -36,6 +36,7 @@ const props = defineProps<{
   encryption_allowed: boolean
   event_console_allowed: boolean
   collector_activation_allowed: boolean
+  metric_backend_allowed: boolean
   overview_url: string
 }>()
 
@@ -241,6 +242,7 @@ async function onSaveClick(): Promise<void> {
           :site-id="siteId"
           :config-name="configName"
           :collector-activation-allowed="collector_activation_allowed"
+          :metric-backend-allowed="metric_backend_allowed"
           @update:state="saveState = $event"
         />
       </template>

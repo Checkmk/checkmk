@@ -31,9 +31,14 @@ describe('POST_SAVE_ACTIONS', () => {
   })
 
   test('enableCollector action is present as the first registry entry', () => {
-    expect(POST_SAVE_ACTIONS.length).toBeGreaterThan(0)
+    expect(POST_SAVE_ACTIONS.length).toBeGreaterThanOrEqual(2)
     expect(POST_SAVE_ACTIONS[0]!.key).toBe('enableCollector')
     expect(POST_SAVE_ACTIONS[0]!.label()).toBe('OpenTelemetry Collector activation')
+  })
+
+  test('enableMetricBackend action is present as the second registry entry', () => {
+    expect(POST_SAVE_ACTIONS[1]!.key).toBe('enableMetricBackend')
+    expect(POST_SAVE_ACTIONS[1]!.label()).toBe('Metric backend connection')
   })
 
   describe('enableCollector.execute', () => {
@@ -75,6 +80,50 @@ describe('POST_SAVE_ACTIONS', () => {
       expect(result.ok).toBe(false)
       if (!result.ok) {
         expect(result.error.title).toBe('Could not enable the OpenTelemetry Collector')
+        expect(result.error.detail).toBe('Network down')
+      }
+    })
+  })
+
+  describe('enableMetricBackend.execute', () => {
+    test('PATCHes the metric backend update endpoint with the selected site', async () => {
+      const spy = vi.spyOn(cmkFetch, 'fetchRestAPI').mockResolvedValue(makeFetchResponse(204))
+
+      const action = POST_SAVE_ACTIONS.find((a) => a.key === 'enableMetricBackend')!
+      const result = await action.execute({ siteId: 'prod', configName: 'test-config' })
+
+      expect(result.ok).toBe(true)
+      expect(spy).toHaveBeenCalledWith(
+        'api/internal/domain-types/metric_backend/actions/update/invoke',
+        'PATCH',
+        { site_id: 'prod', config: { type: 'enabled' } }
+      )
+    })
+
+    test('returns a structured error when the endpoint returns a REST problem', async () => {
+      vi.spyOn(cmkFetch, 'fetchRestAPI').mockResolvedValue(
+        makeFetchResponse(400, { title: 'Bad request', detail: 'Site does not exist' })
+      )
+
+      const action = POST_SAVE_ACTIONS.find((a) => a.key === 'enableMetricBackend')!
+      const result = await action.execute({ siteId: 'ghost', configName: 'test-config' })
+
+      expect(result.ok).toBe(false)
+      if (!result.ok) {
+        expect(result.error.title).toBe('Bad request')
+        expect(result.error.detail).toBe('Site does not exist')
+      }
+    })
+
+    test('returns a generic error for unexpected failures', async () => {
+      vi.spyOn(cmkFetch, 'fetchRestAPI').mockRejectedValue(new Error('Network down'))
+
+      const action = POST_SAVE_ACTIONS.find((a) => a.key === 'enableMetricBackend')!
+      const result = await action.execute({ siteId: 'prod', configName: 'test-config' })
+
+      expect(result.ok).toBe(false)
+      if (!result.ok) {
+        expect(result.error.title).toBe('Could not enable the metric backend')
         expect(result.error.detail).toBe('Network down')
       }
     })

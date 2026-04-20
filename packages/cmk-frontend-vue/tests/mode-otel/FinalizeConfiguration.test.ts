@@ -34,8 +34,13 @@ function renderWithActions(
   siteId: string | null = 'local',
   {
     collectorActivationAllowed,
+    metricBackendAllowed,
     configName = 'my-config'
-  }: { collectorActivationAllowed?: boolean; configName?: string } = {}
+  }: {
+    collectorActivationAllowed?: boolean
+    configName?: string
+    metricBackendAllowed?: boolean
+  } = {}
 ) {
   const lastState = ref<FinalizeState>('idle')
   const compRef = ref<InstanceType<typeof FinalizeConfiguration>>()
@@ -49,9 +54,10 @@ function renderWithActions(
         actions,
         siteId,
         collectorActivationAllowed,
+        metricBackendAllowed,
         configName
       }),
-      template: `<FinalizeConfiguration ref="compRef" :site-id="siteId" :config-name="configName" :actions="actions" :collector-activation-allowed="collectorActivationAllowed" @update:state="lastState = $event" />`
+      template: `<FinalizeConfiguration ref="compRef" :site-id="siteId" :config-name="configName" :actions="actions" :collector-activation-allowed="collectorActivationAllowed" :metric-backend-allowed="metricBackendAllowed" @update:state="lastState = $event" />`
     })
   )
 
@@ -218,6 +224,57 @@ describe('FinalizeConfiguration', () => {
       const ok = await compRef.value!.runActions()
       expect(ok).toBe(true)
       expect(collector.execute).toHaveBeenCalledTimes(1)
+    })
+
+    test('filters out enableMetricBackend action when metricBackendAllowed is false', async () => {
+      const metricBackend: PostSaveAction = {
+        key: 'enableMetricBackend',
+        label: () => 'Metric backend connection',
+        execute: vi.fn(async () => ({ ok: true as const }))
+      }
+      const other = makeAction('other', 'ok')
+      renderWithActions([metricBackend, other], 'local', {
+        metricBackendAllowed: false
+      })
+
+      await screen.findByText('Action other')
+      expect(screen.queryByText('Metric backend connection')).toBeNull()
+    })
+
+    test('keeps enableMetricBackend action when metricBackendAllowed is true', async () => {
+      const metricBackend: PostSaveAction = {
+        key: 'enableMetricBackend',
+        label: () => 'Metric backend connection',
+        execute: vi.fn(async () => ({ ok: true as const }))
+      }
+      const other = makeAction('other', 'ok')
+      renderWithActions([metricBackend, other], 'local', {
+        metricBackendAllowed: true
+      })
+
+      await screen.findByText('Metric backend connection')
+      await screen.findByText('Action other')
+    })
+
+    test('keeps enableMetricBackend action when metricBackendAllowed is not passed', async () => {
+      // Regression: Vue 3 coerces an unpassed Boolean prop to `false`. Without
+      // withDefaults, that silently strips enableMetricBackend and the save
+      // flow completes without hitting the REST API. This path is what the
+      // Prometheus QuickSetup relies on — it never passes the prop.
+      const metricBackend: PostSaveAction = {
+        key: 'enableMetricBackend',
+        label: () => 'Metric backend connection',
+        execute: vi.fn(async () => ({ ok: true as const }))
+      }
+      const other = makeAction('other', 'ok')
+      const { compRef } = renderWithActions([metricBackend, other], 'local')
+
+      await screen.findByText('Metric backend connection')
+      await screen.findByText('Action other')
+
+      const ok = await compRef.value!.runActions()
+      expect(ok).toBe(true)
+      expect(metricBackend.execute).toHaveBeenCalledTimes(1)
     })
   })
 })

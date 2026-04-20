@@ -5,8 +5,6 @@
 
 OMD_SITE=$(whoami)
 SITE_VERSION="$(realpath ~/version | sed 's|.*/||')"
-LD_LIBRARY_PATH="/omd/versions/${SITE_VERSION}/lib:${LD_LIBRARY_PATH}"
-export LD_LIBRARY_PATH
 
 which timeout >/dev/null 2>&1 && waitmax() { timeout "$@"; }
 

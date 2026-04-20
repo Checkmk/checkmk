@@ -119,3 +119,83 @@ code {
   font-size: 0.9em;
   word-break: break-all;
 }
+
+.mypy-targets-family.open .ext-family-body {
+  max-height: none;
+}
+
+.mypy-staged-banner {
+  flex-wrap: wrap;
+  row-gap: 6px;
+}
+
+.mypy-staged-banner code {
+  font-size: 0.85em;
+}
+
+.mypy-targets-list {
+  padding: 6px 10px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.mypy-target {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--vscode-editor-font-family);
+  font-size: 0.8em;
+  color: var(--vscode-foreground);
+  padding: 2px 0;
+}
+
+.mypy-target-inactive {
+  opacity: 0.65;
+}
+
+.mypy-target-name {
+  flex: 1;
+  min-width: 0;
+  word-break: break-all;
+}
+
+.mypy-target-status {
+  font-size: 0.9em;
+  width: 14px;
+  text-align: center;
+}
+
+.mypy-target-status.ok {
+  color: #15d1a0;
+}
+
+.mypy-target-status.missing {
+  color: #e05050;
+}
+
+.mypy-baseline-tag {
+  background: #4da6ff33;
+  color: #4da6ff;
+}
+
+.mypy-alwayson-tag {
+  background: #15d1a033;
+  color: #15d1a0;
+}
+
+.mypy-staged-tag {
+  background: #e0a02033;
+  color: #e0a020;
+}
+
+.mypy-pin-locked {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.mypy-empty {
+  padding: 8px 10px;
+  font-size: 0.85em;
+  color: var(--vscode-descriptionForeground);
+}

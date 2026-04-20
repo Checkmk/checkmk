@@ -44,7 +44,8 @@
     "workspace": {
       "ruff.nativeServer": "on",
       "ruff.enable": true,
-      "ruff.path": ["${workspaceFolder}/.venv/bin/ruff"]
+      "ruff.path": ["${workspaceFolder}/.venv/bin/ruff"],
+      "cmk.mypy.dynamicTargets.enabled": true
     },
     "user": {
       "python.condaPath": "",

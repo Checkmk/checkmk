@@ -66,7 +66,14 @@ export function wrap(
   .codicon-output::before { content: "\\eb9d"; }
   .codicon-file::before { content: "\\ea7b"; }
   .codicon-file-text::before { content: "\\ec5e"; }
-  .codicon-history::before { content: "\\ea82"; }`
+  .codicon-history::before { content: "\\ea82"; }
+  .codicon-pin::before { content: "\\eb2b"; }
+  .codicon-pinned::before { content: "\\eba0"; }
+  .codicon-remove::before { content: "\\eb3b"; }
+  .codicon-list-selection::before { content: "\\eb85"; }
+  .codicon-new-collection::before { content: "\\ec58"; }
+  .codicon-check::before { content: "\\eab2"; }
+  .codicon-close::before { content: "\\ea76"; }`
     : ''
   return `<!DOCTYPE html>
 <html lang="en">
@@ -161,6 +168,10 @@ ${body}
         vscode.postMessage({ type: 'applySingleSetting', ...setting });
         break;
       }
+      case 'mypy-add-baseline': vscode.postMessage({ type: 'mypyAddBaseline', target: el.dataset.target }); break;
+      case 'mypy-remove-baseline': vscode.postMessage({ type: 'mypyRemoveBaseline', target: el.dataset.target }); break;
+      case 'mypy-activate-target': vscode.postMessage({ type: 'mypyActivateTarget', target: el.dataset.target }); break;
+      case 'mypy-deactivate-target': vscode.postMessage({ type: 'mypyDeactivateTarget', target: el.dataset.target }); break;
     }
   });
   // Restore accordion open/close state

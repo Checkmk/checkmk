@@ -121,12 +121,42 @@ export function discoverMypyTargets(wsPath: string): string[] {
   return targets
 }
 
-async function applyDynamicMypyTargets(wsPath: string): Promise<void> {
-  const targets = discoverMypyTargets(wsPath)
+type TargetsFilter = (catalog: string[]) => string[]
+let targetsFilter: TargetsFilter | null = null
+
+/**
+ * Install a filter used by `applyDynamicMypyTargets()` to reduce the full
+ * catalog to a subset before writing it to `mypy.targets`. Used by the
+ * dynamic-targets module to start with a minimal set and expand on demand.
+ * Pass null to clear.
+ */
+export function setMypyTargetsFilter(filter: TargetsFilter | null): void {
+  targetsFilter = filter
+}
+
+export async function applyDynamicMypyTargets(wsPath: string, subset?: string[]): Promise<void> {
+  const full = discoverMypyTargets(wsPath)
+  const targets = subset ?? (targetsFilter ? targetsFilter(full) : full)
   const wsFolder = vscode.workspace.workspaceFolders?.[0]?.uri
   await vscode.workspace
     .getConfiguration('mypy', wsFolder)
     .update('targets', targets, vscode.ConfigurationTarget.WorkspaceFolder)
+}
+
+/**
+ * Map a workspace-relative file path to the catalog target that covers it.
+ * Longest-prefix match so nested targets (e.g. `packages/cmk-ccc/cmk` vs
+ * `packages/cmk-ccc/tests`) resolve correctly. Returns null if no target
+ * covers the file.
+ */
+export function resolveTargetForFile(relPath: string, catalog: string[]): string | null {
+  let match: string | null = null
+  for (const target of catalog) {
+    if (relPath === target || relPath.startsWith(`${target}/`)) {
+      if (!match || target.length > match.length) match = target
+    }
+  }
+  return match
 }
 
 const PY_WALK_SKIP_DIRS = new Set([

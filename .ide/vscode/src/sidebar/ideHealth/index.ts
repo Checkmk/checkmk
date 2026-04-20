@@ -12,6 +12,12 @@ import { type ExtensionSets, loadConfig, resolveVariables } from '../../core/con
 import { FAMILY_DISPLAY } from '../../core/constants'
 import { log, notifyInfo, notifyWarn } from '../../core/log'
 import * as profileManager from '../../profiles/profileManager'
+import {
+  activateTarget,
+  addTargetToBaseline,
+  deactivateTarget,
+  removeTargetFromBaseline
+} from '../../profiles/python/dynamicMypyTargets'
 import { esc, getNonce, wrap } from '../html'
 import type {
   ExtensionFamily,
@@ -350,6 +356,38 @@ export async function handleMessage(
       refreshAll()
       return true
     }
+    case 'mypyAddBaseline': {
+      const target = msg.target as string
+      if (target) {
+        addTargetToBaseline(target)
+        refreshAll()
+      }
+      return true
+    }
+    case 'mypyRemoveBaseline': {
+      const target = msg.target as string
+      if (target) {
+        removeTargetFromBaseline(target)
+        refreshAll()
+      }
+      return true
+    }
+    case 'mypyActivateTarget': {
+      const target = msg.target as string
+      if (target) {
+        activateTarget(target)
+        refreshAll()
+      }
+      return true
+    }
+    case 'mypyDeactivateTarget': {
+      const target = msg.target as string
+      if (target) {
+        deactivateTarget(target)
+        refreshAll()
+      }
+      return true
+    }
     default:
       return false
   }
@@ -362,7 +400,8 @@ export function render(state: StateCache, codiconUri?: vscode.Uri, cspSource?: s
     extensionHealth,
     settingsMismatches,
     versionMismatch,
-    configInWorkspace
+    configInWorkspace,
+    mypyTargets
   } = state
 
   const installedVersion = vscode.extensions.getExtension('checkmk.cmk-vscode')?.packageJSON
@@ -493,13 +532,164 @@ export function render(state: StateCache, codiconUri?: vscode.Uri, cspSource?: s
     })
     .join('')
 
+  const mypyHtml = renderMypyTargets(mypyTargets)
+
   return wrap(
     nonce,
     sectionCss,
     `${versionHtml}${versionBanner}${pyEnvsBanner}${noConfigBanner}` +
+      `${mypyHtml}` +
       `<div class="section-label">Settings</div>${settingsHtml}` +
       `<div class="section-label">Extensions</div>${extFamilies}`,
     codiconUri,
     cspSource
   )
+}
+
+function renderMypyTargets(info: StateCache['mypyTargets']): string {
+  if (!info.pythonProfileActive) return ''
+  const {
+    enabled,
+    activeCount,
+    catalogSize,
+    activeTargets,
+    baselineTargets,
+    alwaysOnTargets,
+    stagedActiveAdd,
+    stagedActiveRemove,
+    stagedBaselineAdd,
+    stagedBaselineRemove,
+    catalog
+  } = info
+
+  const statusCls = enabled ? 'ok' : 'stale'
+  const statusIcon = enabled ? '&#10003;' : '&#9888;'
+  const statusText = enabled
+    ? `${activeCount} active / ${catalogSize} available`
+    : `disabled — checking full catalog (${catalogSize})`
+
+  const actions = enabled
+    ? `<button class="btn btn-small btn-icon" data-action="exec" data-id="cmk.mypy.resetTargetsToBaseline" title="Apply baseline">
+        <span class="codicon codicon-refresh"></span>
+      </button>
+      <button class="btn btn-small btn-icon" data-action="exec" data-id="cmk.mypy.activateTargetPick" title="Activate target(s)…">
+        <span class="codicon codicon-new-collection"></span>
+      </button>`
+    : ''
+
+  const activeSet = new Set(activeTargets)
+  const baselineSet = new Set(baselineTargets)
+  const alwaysOnSet = new Set(alwaysOnTargets)
+  const stagedActiveAddSet = new Set(stagedActiveAdd)
+  const stagedActiveRemoveSet = new Set(stagedActiveRemove)
+  const stagedBaselineAddSet = new Set(stagedBaselineAdd)
+  const stagedBaselineRemoveSet = new Set(stagedBaselineRemove)
+  const stagedAll = new Set<string>([
+    ...stagedActiveAdd,
+    ...stagedActiveRemove,
+    ...stagedBaselineAdd,
+    ...stagedBaselineRemove
+  ])
+
+  const targetRow = (t: string): string => {
+    const isAlwaysOn = alwaysOnSet.has(t)
+    const isAppliedActive = activeSet.has(t) || isAlwaysOn
+    const effectiveActive =
+      (isAppliedActive && !stagedActiveRemoveSet.has(t)) || stagedActiveAddSet.has(t)
+    const appliedBaseline = baselineSet.has(t) || isAlwaysOn
+    const effectiveBaseline =
+      (appliedBaseline && !stagedBaselineRemoveSet.has(t)) || stagedBaselineAddSet.has(t)
+    const isStaged = stagedAll.has(t)
+
+    const statusSymbol = effectiveActive
+      ? `<span class="mypy-target-status ok" title="Active">&#10003;</span>`
+      : `<span class="mypy-target-status missing" title="Inactive">&#10007;</span>`
+
+    const labels: string[] = []
+    if (isAlwaysOn) labels.push(`<span class="tag mypy-alwayson-tag">always on</span>`)
+    else if (effectiveBaseline)
+      labels.push(`<span class="tag mypy-baseline-tag">user baseline</span>`)
+    if (isStaged) labels.push(`<span class="tag mypy-staged-tag">staged</span>`)
+
+    const buttons: string[] = []
+    if (!effectiveActive) {
+      buttons.push(
+        `<button class="btn btn-small btn-icon" data-action="mypy-activate-target" data-target="${esc(t)}" title="Stage activate">
+          <span class="codicon codicon-add"></span>
+        </button>`
+      )
+    } else if (!isAlwaysOn) {
+      buttons.push(
+        `<button class="btn btn-small btn-icon" data-action="mypy-deactivate-target" data-target="${esc(t)}" title="Stage deactivate">
+          <span class="codicon codicon-remove"></span>
+        </button>`
+      )
+    }
+    if (!isAlwaysOn) {
+      const pinAction = effectiveBaseline ? 'mypy-remove-baseline' : 'mypy-add-baseline'
+      const pinIcon = effectiveBaseline ? 'codicon-pinned' : 'codicon-pin'
+      const pinTitle = effectiveBaseline ? 'Stage: remove from baseline' : 'Stage: add to baseline'
+      buttons.push(
+        `<button class="btn btn-small btn-icon" data-action="${pinAction}" data-target="${esc(t)}" title="${pinTitle}">
+          <span class="codicon ${pinIcon}"></span>
+        </button>`
+      )
+    }
+
+    return `<div class="mypy-target ${effectiveActive ? 'mypy-target-active' : 'mypy-target-inactive'}">
+      ${statusSymbol}
+      <span class="mypy-target-name">${esc(t)}</span>
+      ${labels.join('')}
+      ${buttons.join('')}
+    </div>`
+  }
+
+  const rank = (t: string): number => {
+    if (alwaysOnSet.has(t)) return 0
+    const appliedBaseline = baselineSet.has(t)
+    const effectiveBaseline =
+      (appliedBaseline && !stagedBaselineRemoveSet.has(t)) || stagedBaselineAddSet.has(t)
+    if (effectiveBaseline) return 1
+    const isAppliedActive = activeSet.has(t)
+    const effectiveActive =
+      (isAppliedActive && !stagedActiveRemoveSet.has(t)) || stagedActiveAddSet.has(t)
+    if (effectiveActive) return 2
+    return 3
+  }
+  const sortedCatalog = [...catalog].sort((a, b) => {
+    const diff = rank(a) - rank(b)
+    return diff !== 0 ? diff : a.localeCompare(b)
+  })
+
+  const body = enabled
+    ? sortedCatalog.length > 0
+      ? `<div class="mypy-targets-list">${sortedCatalog.map(targetRow).join('')}</div>`
+      : `<div class="mypy-empty"><i>No targets discovered in the workspace.</i></div>`
+    : `<div class="mypy-empty"><i>Enable <code>cmk.mypy.dynamicTargets.enabled</code> to start dmypy with a minimal target set that grows on demand.</i></div>`
+
+  const stagedBanner =
+    enabled && stagedAll.size > 0
+      ? `<div class="banner mypy-staged-banner">
+          <span class="banner-icon">&#9888;</span>
+          <span class="banner-text"><b>${stagedAll.size} staged change(s)</b>: ${[...stagedAll]
+            .sort()
+            .map((t) => `<code>${esc(t)}</code>`)
+            .join(', ')}</span>
+          <button class="btn btn-small" data-action="exec" data-id="cmk.mypy.applyStagedTargets" title="Apply staged changes (restarts dmypy)"><span class="codicon codicon-check"></span> Apply</button>
+          <button class="btn btn-small" data-action="exec" data-id="cmk.mypy.discardStagedTargets" title="Discard staged changes"><span class="codicon codicon-close"></span> Discard</button>
+        </div>`
+      : ''
+
+  return `<div class="section-label">Mypy Targets</div>
+    ${stagedBanner}
+    <div class="ext-family mypy-targets-family">
+      <div class="ext-family-header ${statusCls}" data-action="toggle-accordion">
+        <span class="card-icon">${statusIcon}</span>
+        <span class="ext-family-name">Dynamic targets</span>
+        <span class="ext-count">${esc(statusText)}</span>
+        ${actions}
+        <span class="ext-chevron codicon codicon-chevron-right"></span>
+      </div>
+      <div class="ext-family-body">${body}</div>
+    </div>`
 }

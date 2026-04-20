@@ -272,7 +272,63 @@ F1 → `CMK ▸ Push to Gerrit` pushes commits for Gerrit code review. It:
 
 Also available from the Tools section in the dashboard sidebar.
 
-### 11. First-Run Wizard
+### 11. Dynamic Mypy Targets
+
+On the Checkmk monorepo the default `mypy.targets` list covers every package — dmypy loads the whole graph into RAM (~2.9 GiB) and a daemon restart rebuilds all of it. The Dynamic Mypy Targets feature starts dmypy with a minimal subset and lets you grow it on demand, cutting resident memory roughly in half and making restarts noticeably faster.
+
+**Opt-in setting:**
+
+```json
+"cmk.mypy.dynamicTargets.enabled": true
+```
+
+When enabled, the IDE Health dashboard gains a **Mypy Targets** card (above Settings) listing every target from the catalog.
+
+**Target states (column prefix):**
+
+| Icon | Meaning                                                                         |
+| ---- | ------------------------------------------------------------------------------- |
+| ✓    | Active — included in the `mypy.targets` list currently written to the workspace |
+| ✗    | Inactive — not in the active set (dmypy ignores it)                             |
+
+**Labels:**
+
+- **always on** — hardcoded defaults (e.g. `cmk`) that can't be removed
+- **user baseline** — saved in `cmk.mypy.dynamicTargets.baseline`; applied on startup and via _Apply Baseline_
+- **staged** — a pending change that hasn't been applied to dmypy yet
+
+**Per-row buttons:**
+
+- `+` _(codicon-add)_ — stage activation
+- `−` _(codicon-remove)_ — stage deactivation
+- `⇩` _(codicon-pin)_ — stage adding to baseline
+- `⇧` _(codicon-pinned)_ — stage removing from baseline
+
+**Header buttons:**
+
+- _Apply Baseline_ (codicon-refresh) — set active = baseline + always-on, immediate apply
+- _Activate target(s)…_ (codicon-new-collection) — multi-select QuickPick of all inactive targets, immediate apply
+
+**Staged changes — why they exist:** every change to `mypy.targets` restarts dmypy, which takes 5–15 s while it rebuilds its type graph. Rather than restart on each click, the per-row `+` / `−` / pin / unpin buttons **stage** changes. A banner appears at the top of the card listing all staged targets, with **Apply** and **Discard** buttons. The Issues tree also shows a _"Mypy: staged changes — N pending"_ entry. Applying runs a single dmypy restart. This lets you explore the target list freely without paying the restart cost until you commit.
+
+**Opening a Python file in an uncovered target** triggers a notification with three actions:
+
+- **Stage** — stage the addition (no restart yet)
+- **Activate Now** — apply immediately (one restart)
+- **Add to Baseline** — persist to the baseline setting and apply immediately
+
+Dismissing the notification is sticky for the target for the session.
+
+**Commands** (F1 → `CMK ▸ Mypy`):
+
+- `Apply Baseline` — set active = baseline + always-on
+- `Activate Target…` — QuickPick over inactive targets
+- `Apply Staged Targets` — flush all staged changes
+- `Discard Staged Targets` — clear all staged changes
+
+**Underlying mechanics:** a write-filter in `mypyConfig.ts` intersects the full discovered catalog with the active set before writing `mypy.targets`. Skipping writes when the active set is unchanged prevents spurious dmypy restarts from configuration-change flurries. State persists across sessions in VS Code's `workspaceState`.
+
+### 12. First-Run Wizard
 
 On first activation, the extension detects whether basic workspace settings (e.g. `editor.formatOnSave`, `git.branchProtection`) are configured. If not, it shows an info notification offering to open the dashboard to get started with system setup, venv build, and IDE configuration. The prompt can be permanently dismissed via "Don't Ask Again".
 

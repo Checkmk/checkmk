@@ -24,6 +24,7 @@ import { createSite, registerOmd } from './omd/omd'
 import { registerProfileDetector } from './profiles/profileDetector'
 import * as profileManager from './profiles/profileManager'
 import { registerBazelTestRunner } from './profiles/python/bazelTest'
+import { registerDynamicMypyTargets } from './profiles/python/dynamicMypyTargets'
 import { registerInterpreterResolver } from './profiles/python/interpreter'
 // Family-gated modules
 import {
@@ -146,6 +147,7 @@ export function activate(context: vscode.ExtensionContext): void {
     'python',
     () => {
       return [
+        ...registerDynamicMypyTargets(context),
         ...registerMypyConfigWatcher(),
         ...registerInterpreterResolver(),
         ...registerSnippets(),

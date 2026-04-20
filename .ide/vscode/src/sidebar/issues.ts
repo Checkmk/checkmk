@@ -62,7 +62,8 @@ export function updateIssues(
     extensionHealth,
     pythonEnvsActive,
     devSiteTools,
-    versionMismatch
+    versionMismatch,
+    mypyTargets
   } = stateCache
   const items: IssueItem[] = []
   const warnColor = new vscode.ThemeColor('charts.yellow')
@@ -161,6 +162,25 @@ export function updateIssues(
       iconColor: warnColor,
       command: 'cmk.installDevSite'
     })
+  }
+
+  if (mypyTargets) {
+    const stagedUnion = new Set<string>([
+      ...mypyTargets.stagedActiveAdd,
+      ...mypyTargets.stagedActiveRemove,
+      ...mypyTargets.stagedBaselineAdd,
+      ...mypyTargets.stagedBaselineRemove
+    ])
+    if (stagedUnion.size > 0) {
+      items.push({
+        label: 'Mypy: staged changes',
+        description: `${stagedUnion.size} pending`,
+        tooltip: `Staged: ${[...stagedUnion].sort().join(', ')}\nClick to apply (restarts dmypy).`,
+        icon: 'diff-added',
+        iconColor: warnColor,
+        command: 'cmk.mypy.applyStagedTargets'
+      })
+    }
   }
 
   issuesProvider.refresh(items)

@@ -2,7 +2,7 @@
   "name": "cmk-vscode",
   "displayName": "CMK Dev Tools for VS Code",
   "description": "Build commands and helpers for Checkmk development",
-  "version": "0.1.58",
+  "version": "0.1.59",
   "publisher": "checkmk",
   "engines": {
     "vscode": "^1.85.0"
@@ -214,6 +214,22 @@
         "title": "CMK ▸ Cmd: Regenerate mypy config"
       },
       {
+        "command": "cmk.mypy.resetTargetsToBaseline",
+        "title": "CMK ▸ Mypy: Apply Baseline"
+      },
+      {
+        "command": "cmk.mypy.activateTargetPick",
+        "title": "CMK ▸ Mypy: Activate Target…"
+      },
+      {
+        "command": "cmk.mypy.applyStagedTargets",
+        "title": "CMK ▸ Mypy: Apply Staged Targets"
+      },
+      {
+        "command": "cmk.mypy.discardStagedTargets",
+        "title": "CMK ▸ Mypy: Discard Staged Targets"
+      },
+      {
         "command": "cmk.pushToGerrit",
         "title": "CMK ▸ Push to Gerrit",
         "icon": "$(cloud-upload)"
@@ -268,6 +284,19 @@
           "default": 30,
           "minimum": 5,
           "description": "Minutes of inactivity before suggesting to disable a profile."
+        },
+        "cmk.mypy.dynamicTargets.enabled": {
+          "type": "boolean",
+          "default": false,
+          "description": "Start dmypy with a minimal mypy.targets set derived from git-changed files + open editors, and expand automatically when you open a Python file in an uncovered package. Reduces dmypy memory use on large monorepos."
+        },
+        "cmk.mypy.dynamicTargets.baseline": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [],
+          "description": "Mypy targets always loaded on startup. Add the paths you work in most often (e.g. \"cmk\", \"packages/cmk-ccc/cmk\"). When a Python file is opened in a target that isn't active, the extension prompts to add it."
         }
       }
     },
@@ -415,6 +444,22 @@
         {
           "command": "cmk.omdLogTail",
           "when": "resourceScheme == cmk-omd-log"
+        },
+        {
+          "command": "cmk.mypy.resetTargetsToBaseline",
+          "when": "cmk.pythonInstalled"
+        },
+        {
+          "command": "cmk.mypy.activateTargetPick",
+          "when": "cmk.pythonInstalled"
+        },
+        {
+          "command": "cmk.mypy.applyStagedTargets",
+          "when": "cmk.pythonInstalled"
+        },
+        {
+          "command": "cmk.mypy.discardStagedTargets",
+          "when": "cmk.pythonInstalled"
         }
       ]
     }

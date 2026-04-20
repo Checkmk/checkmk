@@ -54,6 +54,21 @@ export interface SettingsMismatch {
   scope: string
 }
 
+export interface MypyTargetsInfo {
+  enabled: boolean
+  pythonProfileActive: boolean
+  activeCount: number
+  catalogSize: number
+  activeTargets: string[]
+  baselineTargets: string[]
+  alwaysOnTargets: string[]
+  stagedActiveAdd: string[]
+  stagedActiveRemove: string[]
+  stagedBaselineAdd: string[]
+  stagedBaselineRemove: string[]
+  catalog: string[]
+}
+
 export interface StateCache {
   buildStatus: BuildStatus
   profiles: ProfileInfo[]
@@ -69,6 +84,7 @@ export interface StateCache {
   onboarding: OnboardingState
   onboardingDismissed: boolean
   configInWorkspace: boolean
+  mypyTargets: MypyTargetsInfo
 }
 
 export interface SectionContext {

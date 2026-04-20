@@ -17,6 +17,7 @@ import { getDevSiteToolsState } from './omd/devSiteTools'
 import { detectOmdSites, forceRefreshOmdStatusFiles, getOmdStatus } from './omd/omd'
 import { getActiveProxies } from './omd/proxy'
 import * as profileManager from './profiles/profileManager'
+import { getMypyTargetsSnapshot } from './profiles/python/dynamicMypyTargets'
 import * as environmentSection from './sidebar/environment'
 import { renderLoading } from './sidebar/html'
 import * as ideHealthSection from './sidebar/ideHealth'
@@ -70,6 +71,8 @@ function refreshStateCache(): StateCache {
     const devSiteTools = getDevSiteToolsState()
     const versionMismatch = _context ? getVersionMismatch(_context) : null
     const onboarding = environmentSection.getOnboardingState(environment, buildStatus, _context)
+    const mypySnapshot = getMypyTargetsSnapshot(wsPath)
+    const pythonProfileActive = profileManager.isActive('python')
     _stateCache = {
       buildStatus,
       profiles,
@@ -90,7 +93,8 @@ function refreshStateCache(): StateCache {
         return (
           fs.existsSync(configDir) && fs.readdirSync(configDir).some((f) => f.endsWith('.json'))
         )
-      })()
+      })(),
+      mypyTargets: { ...mypySnapshot, pythonProfileActive }
     }
 
     updateIssues(_issuesView, _issuesProvider, _stateCache)
@@ -129,7 +133,21 @@ function refreshStateCache(): StateCache {
         allDone: false
       },
       onboardingDismissed: _onboardingDismissed,
-      configInWorkspace: false
+      configInWorkspace: false,
+      mypyTargets: {
+        enabled: false,
+        pythonProfileActive: false,
+        activeCount: 0,
+        catalogSize: 0,
+        activeTargets: [],
+        baselineTargets: [],
+        alwaysOnTargets: [],
+        stagedActiveAdd: [],
+        stagedActiveRemove: [],
+        stagedBaselineAdd: [],
+        stagedBaselineRemove: [],
+        catalog: []
+      }
     }
   }
 }

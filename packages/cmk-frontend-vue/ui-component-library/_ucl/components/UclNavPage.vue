@@ -33,6 +33,9 @@ const { page } = defineProps<{
   text-decoration: none;
   cursor: pointer;
   color: var(--ucl-body-text-color);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 :root a.ucl-nav-page.ucl-nav-page--active {

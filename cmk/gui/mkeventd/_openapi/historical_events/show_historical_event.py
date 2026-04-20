@@ -7,9 +7,7 @@ from typing import Annotated
 
 from cmk.ccc.site import SiteId
 from cmk.gui import sites
-from cmk.gui.livestatus_utils.commands.historical_event_console import (
-    filter_historical_events_table,
-)
+from cmk.gui.mkeventd._openapi.commands import filter_historical_events_table
 from cmk.gui.openapi.framework import (
     ApiContext,
     APIVersion,

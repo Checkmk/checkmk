@@ -11,10 +11,10 @@ from livestatus import OnlySites
 
 from cmk.ccc.site import SiteId
 from cmk.gui import sites
-from cmk.gui.livestatus_utils.commands.historical_event_console import (
+from cmk.gui.mkeventd._openapi.commands import (
     filter_historical_events_table,
     HistoricalPhaseType,
-    StateNameType,
+    ServiceStateType,
 )
 from cmk.gui.openapi.framework import (
     ApiContext,
@@ -103,7 +103,7 @@ def list_historical_events_unstable(
         ),
     ] = ApiOmitted(),
     state: Annotated[
-        StateNameType | ApiOmitted,
+        ServiceStateType | ApiOmitted,
         QueryParam(
             description="The state of the historical event.",
             example="ok",

@@ -8,7 +8,7 @@ from typing import Annotated, Literal, Self
 
 from pydantic import AwareDatetime
 
-from cmk.gui.livestatus_utils.commands.historical_event_console import (
+from cmk.gui.mkeventd._openapi.commands import (
     HistoricalPhaseType,
     SERVICE_LEVEL_INT_TO_NAME_MAP,
     ServiceLevelType,
@@ -23,14 +23,7 @@ from cmk.gui.openapi.framework.model.base_models import DomainObjectModel
 from cmk.gui.openapi.framework.model.constructors import generate_links
 from cmk.livestatus_client.queries import ResultRow
 
-# from cmk.utils.statename import core_state_names
-
 # mypy: disable-error-code="mutable-override"
-# state_names = [v.lower() for v in core_state_names().values() if v != "NODATA"]
-# states_ints_reversed = {v.lower(): k for k, v in core_state_names().items() if v != "NODATA"}
-# service_level_map: dict[int, ServiceLevelType] = dict(
-#     zip([0, 10, 20, 30], list(get_args(ServiceLevelType)))
-# )
 
 
 @api_model

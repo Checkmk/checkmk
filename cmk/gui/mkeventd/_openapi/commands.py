@@ -17,6 +17,7 @@ from cmk.livestatus_client import ECChangeState, ECDelete, ECUpdate, LivestatusC
 from cmk.livestatus_client.expressions import Or, QueryExpression
 from cmk.livestatus_client.queries import Query
 from cmk.livestatus_client.tables.eventconsoleevents import Eventconsoleevents
+from cmk.livestatus_client.tables.eventconsolehistory import Eventconsolehistory
 
 ServiceStateType = Literal[
     "ok",
@@ -177,8 +178,11 @@ SYSLOG_PRIORITY_INT_TO_NAME_MAP: Final[
 }
 
 
-class EventNotFoundError(ValueError):
-    pass
+#  _____                 _      ____                      _
+# | ____|_   _____ _ __ | |_   / ___|___  _ __  ___  ___ | | ___
+# |  _| \ \ / / _ \ '_ \| __| | |   / _ \| '_ \/ __|/ _ \| |/ _ \
+# | |___ \ V /  __/ | | | |_  | |__| (_) | | | \__ \ (_) | |  __/
+# |_____| \_/ \___|_| |_|\__|  \____\___/|_| |_|___/\___/|_|\___|
 
 
 def query_event_console() -> Query:
@@ -299,3 +303,71 @@ def archive_events(
     for site, event_ids in sites_with_ids.items():
         ids = tuple(map(int, event_ids))
         LivestatusClient(connection).command(ECDelete(event_ids=ids, user=user.ident), SiteId(site))
+
+
+#  _____                 _      ____                      _
+# | ____|_   _____ _ __ | |_   / ___|___  _ __  ___  ___ | | ___
+# |  _| \ \ / / _ \ '_ \| __| | |   / _ \| '_ \/ __|/ _ \| |/ _ \
+# | |___ \ V /  __/ | | | |_  | |__| (_) | | | \__ \ (_) | |  __/
+# |_____| \_/ \___|_| |_|\__|  \____\___/|_| |_|___/\___/|_|\___|
+#  _   _ _     _
+# | | | (_)___| |_ ___  _ __ _   _
+# | |_| | / __| __/ _ \| '__| | | |
+# |  _  | \__ \ || (_) | |  | |_| |
+# |_| |_|_|___/\__\___/|_|   \__, |
+#                            |___/
+
+
+def query_event_console_history() -> Query:
+    return Query(
+        [
+            Eventconsolehistory.history_time,
+            Eventconsolehistory.history_what,
+            Eventconsolehistory.event_id,
+            Eventconsolehistory.event_state,
+            Eventconsolehistory.event_sl,
+            Eventconsolehistory.event_host,
+            Eventconsolehistory.event_rule_id,
+            Eventconsolehistory.event_application,
+            Eventconsolehistory.event_comment,
+            Eventconsolehistory.event_contact,
+            Eventconsolehistory.event_ipaddress,
+            Eventconsolehistory.event_facility,
+            Eventconsolehistory.event_priority,
+            Eventconsolehistory.event_count,
+            Eventconsolehistory.event_phase,
+            Eventconsolehistory.event_text,
+        ]
+    )
+
+
+def filter_historical_events_table(
+    event_ids: list[int] | None = None,
+    state: ServiceStateType | None = None,
+    application: str | None = None,
+    host: str | None = None,
+    phase: HistoricalPhaseType | None = None,
+    query_expression: QueryExpression | None = None,
+) -> Query:
+    query = (
+        query_event_console_history().filter(query_expression)
+        if query_expression
+        else query_event_console_history()
+    )
+
+    if event_ids is not None:
+        query = query.filter(Or(*[Eventconsolehistory.event_id == ev_id for ev_id in event_ids]))
+
+    if state is not None:
+        query = query.filter(Eventconsolehistory.event_state == STATE_NAME_TO_INT_MAP[state])
+
+    if application is not None:
+        query = query.filter(Eventconsolehistory.event_application == application)
+
+    if phase is not None:
+        query = query.filter(Eventconsolehistory.event_phase == phase)
+
+    if host is not None:
+        query = query.filter(Eventconsolehistory.event_host == host)
+
+    return query

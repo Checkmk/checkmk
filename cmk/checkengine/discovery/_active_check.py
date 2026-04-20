@@ -49,7 +49,7 @@ from ._filters import ServiceFilter as _ServiceFilter
 from ._filters import ServiceFilters as _ServiceFilters
 from ._host_labels import analyse_cluster_labels, discover_host_labels, HostLabelPlugin
 from ._params import DiscoveryCheckParameters
-from ._utils import DiscoverySettings, QualifiedDiscovery
+from .types import DiscoverySettings, QualifiedDiscovery
 
 __all__ = ["execute_check_discovery"]
 

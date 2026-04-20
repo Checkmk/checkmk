@@ -48,7 +48,7 @@ from ._filters import RediscoveryParameters
 from ._filters import ServiceFilters as _ServiceFilters
 from ._host_labels import discover_host_labels, HostLabelPlugin
 from ._services import analyse_services, discover_services, find_plugins
-from ._utils import DiscoveredItem, DiscoverySettings, QualifiedDiscovery
+from .types import DiscoveredItem, DiscoverySettings, QualifiedDiscovery
 
 __all__ = ["get_host_services_by_host_name", "discovery_by_host"]
 

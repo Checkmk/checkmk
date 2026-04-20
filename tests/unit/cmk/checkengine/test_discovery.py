@@ -19,7 +19,7 @@ from cmk.checkengine.discovery import (
     DiscoveryMode,
     QualifiedDiscovery,
 )
-from cmk.checkengine.discovery._utils import DiscoveredItem
+from cmk.checkengine.discovery.types import DiscoveredItem
 from cmk.checkengine.plugins import AutocheckEntry, CheckPluginName
 from cmk.utils.everythingtype import EVERYTHING
 from cmk.utils.labels import HostLabel

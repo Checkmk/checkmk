@@ -27,7 +27,7 @@ from ._host_labels import analyse_cluster_labels, discover_host_labels, HostLabe
 from ._params import ABCDiscoveryConfig, DiscoveryCheckParameters, get_plugin_parameters
 from ._preview import CheckPreview, CheckPreviewEntry, get_check_preview
 from ._services import analyse_services, discover_services, find_plugins
-from ._utils import (
+from .types import (
     DiscoveryMode,
     DiscoverySettingFlags,
     DiscoverySettings,

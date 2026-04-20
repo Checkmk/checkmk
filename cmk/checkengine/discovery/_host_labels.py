@@ -14,7 +14,7 @@ from dataclasses import dataclass
 from cmk.agent_based.v1 import HostLabel
 from cmk.ccc.exceptions import MKGeneralException, MKTimeout, OnError
 from cmk.ccc.hostaddress import HostName
-from cmk.checkengine.discovery._utils import QualifiedDiscovery
+from cmk.checkengine.discovery.types import QualifiedDiscovery
 from cmk.checkengine.fetcher import HostKey
 from cmk.checkengine.parameters import Parameters
 from cmk.checkengine.plugins import SectionName

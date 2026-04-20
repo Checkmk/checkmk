@@ -61,7 +61,7 @@ from cmk.checkengine.discovery._autodiscovery import (
     ServicesTableEntry,
 )
 from cmk.checkengine.discovery._filters import RediscoveryParameters, ServiceFilters
-from cmk.checkengine.discovery._utils import DiscoveredItem
+from cmk.checkengine.discovery.types import DiscoveredItem
 from cmk.checkengine.fetcher import HostKey
 from cmk.checkengine.parser import AgentRawDataSection, HostSections, NO_SELECTION
 from cmk.checkengine.plugins import (

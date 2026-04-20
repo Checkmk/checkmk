@@ -18,7 +18,7 @@ from cmk.ccc.store import ObjectStore
 from cmk.checkengine.plugins import AutocheckEntry, CheckPluginName, ServiceID
 from cmk.utils.servicename import ServiceName
 
-from ._utils import DiscoveredItem
+from .types import DiscoveredItem
 
 __all__ = [
     "AutocheckServiceWithNodes",

@@ -24,7 +24,7 @@ from cmk.checkengine.sectionparserutils import get_section_kwargs
 from cmk.helper_interface import SourceType
 from cmk.utils.log import console
 
-from ._utils import QualifiedDiscovery
+from .types import QualifiedDiscovery
 
 __all__ = ["analyse_services", "discover_services", "find_plugins"]
 

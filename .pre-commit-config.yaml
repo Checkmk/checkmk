@@ -53,7 +53,7 @@ repos:
           - id: bandit
             name: Run bandit
             # -l level low -ll = level medium -lll level high
-            entry: scripts/run-uvenv bandit --config bandit.yaml -ll
+            entry: scripts/run-uvenv bandit --config pyproject.toml -ll
             language: script
             types: [file, python]
             require_serial: true

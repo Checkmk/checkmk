@@ -363,6 +363,7 @@ class JobRenderer:
             ):
                 cls.render_job_row(job_id, job_info, odd, job_details_back_url)
                 odd = "even" if odd == "odd" else "odd"
+        html.close_table()
 
     @classmethod
     def show_job_row_headers(cls) -> None:

@@ -72,6 +72,7 @@ py_test(
 py_test(
     name = "repo_community",
     size = "small",
+    timeout = "moderate",
     # This is the "catch all" target. Don't add new stuff here.
     srcs = [
         "__init__.py",

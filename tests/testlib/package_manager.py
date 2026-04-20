@@ -30,7 +30,7 @@ from tests.testlib.version import (
     version_from_env,
 )
 
-logger = logging.getLogger()
+logger = logging.getLogger(__name__)
 
 PackageUrl = NewType("PackageUrl", str)
 
@@ -159,6 +159,12 @@ class ABCPackageManager(abc.ABC):
             self._write_package_hash(version, edition, package_path)
             self._install_package(package_path)
             os.unlink(package_path)
+
+        logger.info(
+            "Checkmk package '%s' built using commit: '%s'",
+            package_info.omd_version(),
+            package_info.commit_hash,
+        )
 
     def uninstall(self, package_info: TCMKPackageInfos) -> None:
         package_name = self.installed_package_name(

@@ -936,17 +936,22 @@ class Site:
                     ],
                     env=dict(os.environ, VERSION=self.version.version, EDITION=self.edition.short),
                 )
+                logger.info(
+                    "Checkmk package '%s' built using commit: '%s'",
+                    self._package.omd_version(),
+                    self._package.commit_hash,
+                )
             except subprocess.CalledProcessError as excp:
                 excp.add_note("Execute 'tests/scripts/install-cmk.py' manually to debug the issue.")
                 excp.add_note(excp.stdout)
                 excp.add_note(excp.stderr)
                 if excp.returncode == 22:
                     raise RuntimeError(
-                        f"Version {self.version.version} could not be installed!"
+                        f"Checkmk package '{self._package}' could not be installed!"
                     ) from excp
                 if excp.returncode == 11:
                     raise FileNotFoundError(
-                        f"Version {self.version.version} could not be downloaded!"
+                        f"Checkmk package '{self._package}' could not be downloaded!"
                     ) from excp
                 raise excp
 

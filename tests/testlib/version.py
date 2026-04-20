@@ -10,7 +10,7 @@ import re
 import time
 from collections.abc import Callable
 from pathlib import Path
-from typing import Final, Self
+from typing import Final, Literal, Self
 
 from cmk.ccc.version import (
     Edition,
@@ -356,6 +356,21 @@ class CMKPackageInfo:
     def edition(self) -> TypeCMKEdition:
         return self._edition
 
+    @property
+    def commit_hash(self) -> str:
+        # short edition is required for <= Checkmk 2.4.0
+        short_hand = self.omd_version(edition_type="short")
+        try:
+            return Path(f"/opt/omd/versions/{short_hand}/share/doc/COMMIT").read_text().strip()
+        except FileNotFoundError as excp:
+            if self.is_installed():
+                excp.add_note(
+                    f"Checkmk package '{short_hand}' is installed! Checkmk packaging issues?"
+                )
+            else:
+                excp.add_note(f"Missing Checkmk package '{short_hand}' installation!")
+            raise excp
+
     def is_installed(self) -> bool:
         return os.path.exists(self.version_path())
 
@@ -365,8 +380,9 @@ class CMKPackageInfo:
     def version_directory(self) -> str:
         return self.omd_version()
 
-    def omd_version(self) -> str:
-        return f"{self._version.version}.{self._edition.long}"
+    def omd_version(self, edition_type: Literal["long", "short"] = "long") -> str:
+        edition_ = self._edition.long if edition_type == "long" else self._edition.short
+        return f"{self._version.version}.{edition_}"
 
 
 def package_hash_path(version: str, edition: TypeCMKEdition) -> Path:

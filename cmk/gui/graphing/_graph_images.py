@@ -43,7 +43,7 @@ from ._graph_display_config import (
 )
 from ._graph_metric_expressions import LineType
 from ._graph_pdf import (
-    compute_pdf_graph_time_range,
+    compute_pdf_graph_ranges,
     get_mm_per_ex,
     graph_legend_height,
     render_graph_pdf,
@@ -51,8 +51,8 @@ from ._graph_pdf import (
 from ._graph_specification import (
     AugmentedTimeSeriesOfGraphMetric,
     GraphEnvironment,
+    GraphRanges,
     GraphRecipeWithOverrides,
-    GraphTimeRange,
 )
 from ._graph_templates import (
     get_template_graph_specification,
@@ -133,13 +133,15 @@ def _answer_graph_image_request(
         graph_image_render_options(),
     )
 
-    time_range = graph_image_time_range(display_config, start_time, end_time)
     num_graphs = request.get_integer_input("num_graphs")
 
     graphs = []
     for rwo, result in itertools.islice(
         iter_graph_artworks(
-            graph_specification.recipes(env, rows), time_range, display_config.size, env
+            graph_specification.recipes(env, rows),
+            compute_image_graph_ranges(display_config, start_time, end_time),
+            display_config.size,
+            env,
         ),
         num_graphs,
     ):
@@ -157,12 +159,12 @@ def _answer_graph_image_request(
     return graphs
 
 
-def graph_image_time_range(
+def compute_image_graph_ranges(
     display_config: GraphDisplayConfigImage, start_time: int, end_time: int
-) -> GraphTimeRange:
+) -> GraphRanges:
     mm_per_ex = get_mm_per_ex(display_config.font_size)
     width_mm = display_config.size[0] * mm_per_ex
-    return compute_pdf_graph_time_range(width_mm, start_time, end_time)
+    return compute_pdf_graph_ranges(width_mm, start_time, end_time)
 
 
 def graph_image_render_options(api_request: dict[str, Any] | None = None) -> GraphRenderOptions:
@@ -232,7 +234,7 @@ def render_graph_png(
 def graph_recipes_from_request(
     export_request: GraphExportRequest,
     env: GraphEnvironment,
-) -> tuple[GraphTimeRange, Sequence[GraphRecipeWithOverrides]]:
+) -> tuple[GraphRanges, Sequence[GraphRecipeWithOverrides]]:
     now = int(time.time())
     start = (
         export_request.time_start if export_request.time_start is not None else now - (25 * 3600)
@@ -252,7 +254,7 @@ def graph_recipes_from_request(
     except livestatus.MKLivestatusNotFoundError as e:
         raise MKUserError(None, _("Cannot calculate graph recipes: %s") % e)
 
-    return GraphTimeRange(time_range=(start, end), step=60), recipes
+    return GraphRanges(time_range=(start, end), step=60), recipes
 
 
 class Curves(TypedDict):
@@ -271,11 +273,11 @@ class GraphSpec(TypedDict):
 
 
 def _compute_graph_spec(
-    time_range: GraphTimeRange,
+    ranges: GraphRanges,
     augmented_time_series_of_graph_metrics: Sequence[AugmentedTimeSeriesOfGraphMetric],
 ) -> GraphSpec:
     api_curves = []
-    start, end, step = time_range.time_range[0], time_range.time_range[1], 60  # empty graph
+    start, end, step = ranges.time_range[0], ranges.time_range[1], 60  # empty graph
     for augmented_time_series_of_graph_metric in augmented_time_series_of_graph_metrics:
         for augmented_time_series in augmented_time_series_of_graph_metric.time_series:
             if (
@@ -305,7 +307,7 @@ def graph_spec_from_request(
     env: GraphEnvironment,
 ) -> GraphSpec:
     try:
-        time_range, recipes = graph_recipes_from_request(export_request, env)
+        ranges, recipes = graph_recipes_from_request(export_request, env)
         recipe = recipes[0].recipe
 
     except MKGraphNotFound:
@@ -315,13 +317,13 @@ def graph_spec_from_request(
         raise MKUserError(None, _("The requested graph does not exist"))
 
     return _compute_graph_spec(
-        time_range,
+        ranges,
         [
             result.ok
             for result in fetch_augmented_time_series(
                 env.registered_metrics,
                 recipe,
-                time_range,
+                ranges,
                 consolidation_function=recipes[0].consolidation_function,
                 temperature_unit=env.temperature_unit,
                 backend_time_series_fetcher=env.backend_time_series_fetcher,

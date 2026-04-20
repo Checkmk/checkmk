@@ -25,7 +25,7 @@ from ._artwork import (
     LayoutedCurveStack,
 )
 from ._graph_display_config import GraphDisplayConfigImage
-from ._graph_specification import GraphTimeRange
+from ._graph_specification import GraphRanges
 
 tracer = trace.get_tracer()
 
@@ -410,7 +410,7 @@ def _is_area_or_stacked_layouted_curve(
     return curve["line_type"] in ("area", "-area", "stack", "-stack")
 
 
-def compute_pdf_graph_time_range(width: SizeMM, start_time: int, end_time: int) -> GraphTimeRange:
+def compute_pdf_graph_ranges(width: SizeMM, start_time: int, end_time: int) -> GraphRanges:
     """Estimate step. It is depended on width of the graph in mm."""
     graph_offcut_width = 20.0  # total width - this = width of canvas in mm
     mm_per_step = 0.5  # approx. one datapoint per 0.5 mm
@@ -418,10 +418,7 @@ def compute_pdf_graph_time_range(width: SizeMM, start_time: int, end_time: int) 
     available_width = width - graph_offcut_width
     number_of_steps = int(available_width / mm_per_step)  # fixed: true-division
     step = int((end_time - start_time) / number_of_steps / 2)
-    return GraphTimeRange(
-        time_range=(start_time, end_time),
-        step=step,
-    )
+    return GraphRanges(time_range=(start_time, end_time), step=step)
 
 
 def get_mm_per_ex(font_size: float) -> SizeMM:

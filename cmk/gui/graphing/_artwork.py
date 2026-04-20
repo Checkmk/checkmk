@@ -45,9 +45,9 @@ from ._graph_specification import (
     FixedVerticalRange,
     GraphEnvironment,
     GraphMetricLimit,
+    GraphRanges,
     GraphRecipe,
     GraphRecipeWithOverrides,
-    GraphTimeRange,
     HorizontalRule,
     MinimalVerticalRange,
 )
@@ -296,7 +296,7 @@ class GraphArtworkOrErrors:
 
 def iter_graph_artworks(
     recipes: Sequence[GraphRecipeWithOverrides],
-    time_range: GraphTimeRange,
+    ranges: GraphRanges,
     size: tuple[float, float],
     env: GraphEnvironment,
     *,
@@ -308,7 +308,7 @@ def iter_graph_artworks(
             recipe_with_overrides,
             compute_graph_artwork(
                 recipe_with_overrides.recipe,
-                recipe_with_overrides.time_range or time_range,
+                recipe_with_overrides.ranges or ranges,
                 size,
                 env.registered_metrics,
                 consolidation_function=recipe_with_overrides.consolidation_function,
@@ -323,7 +323,7 @@ def iter_graph_artworks(
 @tracer.instrument("graphing.compute_graph_artwork")
 def compute_graph_artwork(
     recipe: GraphRecipe,
-    time_range: GraphTimeRange,
+    ranges: GraphRanges,
     size: tuple[float, float],
     registered_metrics: Mapping[str, RegisteredMetric],
     *,
@@ -341,7 +341,7 @@ def compute_graph_artwork(
     for result in fetch_augmented_time_series(
         registered_metrics,
         recipe,
-        time_range,
+        ranges,
         consolidation_function=consolidation_function,
         temperature_unit=temperature_unit,
         backend_time_series_fetcher=backend_time_series_fetcher,
@@ -363,8 +363,7 @@ def compute_graph_artwork(
         time_series = augmented_time_series_of_graph_metrics[0].time_series[0].time_series
         start_time, end_time, step = time_series.start, time_series.end, time_series.step
     except IndexError:  # Empty graph
-        start_time, end_time, step = time_range.time_range[0], time_range.time_range[1], 60
-
+        start_time, end_time, step = ranges.time_range[0], ranges.time_range[1], 60
     x_axis, x_axis_title = _compute_graph_t_axis(start_time, end_time, width, step)
 
     return GraphArtworkOrErrors(
@@ -374,7 +373,7 @@ def compute_graph_artwork(
             y_axis=_compute_graph_v_axis(
                 unit_spec,
                 recipe.explicit_vertical_range,
-                time_range,
+                ranges,
                 SizeEx(height),
                 layouted_curves,
                 mirrored,
@@ -383,10 +382,10 @@ def compute_graph_artwork(
             mark_requested_end_time=mark_requested_end_time,
             actual_time=ActualTimeRange(start=int(start_time), end=int(end_time), step=int(step)),
             requested_time=RequestedTimeRange(
-                start=time_range.time_range[0],
-                end=time_range.time_range[1],
+                start=ranges.time_range[0],
+                end=ranges.time_range[1],
             ),
-            requested_y_range=time_range.vertical_range,
+            requested_y_range=ranges.vertical_range,
             pin_time=pin_time,
         ),
         GraphArtworkAnnotations(
@@ -585,7 +584,7 @@ def _compute_labels_from_api(
 def _compute_graph_v_axis(
     unit_spec: UserSpecificUnit,
     explicit_vertical_range: FixedVerticalRange | MinimalVerticalRange | None,
-    time_range: GraphTimeRange,
+    ranges: GraphRanges,
     height_ex: SizeEx,
     layouted_curves: Sequence[LayoutedCurve],
     mirrored: bool,
@@ -597,7 +596,7 @@ def _compute_graph_v_axis(
     v_axis_min, v_axis_max = _compute_v_axis_min_max(
         explicit_vertical_range,
         layouted_curves,
-        time_range.vertical_range,
+        ranges.vertical_range,
         mirrored,
         height_ex,
     )

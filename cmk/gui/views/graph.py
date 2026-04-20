@@ -17,6 +17,7 @@ from cmk.ccc.version import edition
 from cmk.graphing.v1 import graphs as graphs_api
 from cmk.gui.config import active_config
 from cmk.gui.graphing import (
+    compute_html_graph_ranges,
     FetchTimeSeries,
     get_temperature_unit,
     get_template_graph_specification,
@@ -24,7 +25,6 @@ from cmk.gui.graphing import (
     GraphEnvironment,
     GraphRenderOptions,
     graphs_from_api,
-    make_graph_time_range_html,
     metric_backend_registry,
     metrics_from_api,
     RegisteredMetric,
@@ -234,7 +234,7 @@ def _paint_time_graph_cmk(
     if painter_option_pnp_timerange is not None:
         raw_time_range = get_graph_timerange_from_painter_options()
 
-    time_range = make_graph_time_range_html(
+    ranges = compute_html_graph_ranges(
         start=raw_time_range[0],
         end=raw_time_range[1],
         factor=1,
@@ -293,7 +293,7 @@ def _paint_time_graph_cmk(
     if request.has_var("cmk-token"):
         return "", render_graphs_html(
             spec,
-            time_range,
+            ranges,
             display_config,
             env,
             size=graph_size,
@@ -302,7 +302,7 @@ def _paint_time_graph_cmk(
         )
     return "", render_deferred_graphs_html(
         spec,
-        time_range,
+        ranges,
         display_config,
         env,
         size=graph_size,

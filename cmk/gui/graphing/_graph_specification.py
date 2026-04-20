@@ -202,7 +202,7 @@ class MinimalVerticalRange(BaseModel, frozen=True):
     max: float | None
 
 
-class GraphTimeRange(BaseModel, frozen=True):
+class GraphRanges(BaseModel, frozen=True):
     time_range: tuple[int, int]
     # Forecast graphs represent step as str (see forecasts.py and fetch_rrd_data)
     # colon separated [step length]:[rrd point count]
@@ -231,7 +231,7 @@ class GraphRecipeWithOverrides:
     """Bundles a GraphRecipe with its per-recipe settings.
 
     Keeps the core GraphRecipe (the serializable graph definition) separate
-    from per-recipe settings (specification, time_range, render_options,
+    from per-recipe settings (specification, ranges, render_options,
     additional_html) that mirror the sibling fields in GraphRenderState without
     polluting the recipe itself.
     """
@@ -239,7 +239,7 @@ class GraphRecipeWithOverrides:
     recipe: GraphRecipe
     specification: GraphSpecification
     consolidation_function: GraphConsolidationFunction | None = None
-    time_range: GraphTimeRange | None = None
+    ranges: GraphRanges | None = None
     render_options: GraphRenderOptions = field(default_factory=GraphRenderOptions)
     additional_html: AdditionalGraphHTML | None = None
     mark_requested_end_time: bool = False

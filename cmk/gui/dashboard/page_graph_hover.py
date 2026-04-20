@@ -32,7 +32,7 @@ from cmk.gui.graphing import get_temperature_unit, metric_backend_registry
 from cmk.gui.graphing._from_api import metrics_from_api
 from cmk.gui.graphing._graph_specification import GraphSpecification
 from cmk.gui.graphing._html_render import (
-    make_graph_time_range_html,
+    compute_html_graph_ranges,
     render_graph_values_at_time,
 )
 from cmk.gui.logged_in import user
@@ -115,16 +115,14 @@ class GraphHoverTokenAuthPage(DashboardTokenAuthenticatedJsonPage):
             height_in_ex = graph_dashlet_config.get("graph_render_options", {}).get(
                 "size", (None, 16.0)
             )[1]
-            time_range = make_graph_time_range_html(
-                start=start_time,
-                end=end_time,
-                factor=1,
-                height_in_ex=height_in_ex,
-            )
-
             return render_graph_values_at_time(
                 recipes[0].recipe,
-                time_range,
+                compute_html_graph_ranges(
+                    start=start_time,
+                    end=end_time,
+                    factor=1,
+                    height_in_ex=height_in_ex,
+                ),
                 metrics_from_api,
                 consolidation_function=recipes[0].consolidation_function,
                 hover_time=ctx.request.get_integer_input_mandatory("hover_time"),

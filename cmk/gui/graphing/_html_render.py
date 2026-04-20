@@ -32,7 +32,7 @@ from cmk.gui.logged_in import (
     load_user_file,
     save_user_file,
     user,
-    UserGraphTimeRangeFileName,
+    UserGraphRangesFileName,
 )
 from cmk.gui.pages import AjaxPage, PageContext, PageResult
 from cmk.gui.theme.current_theme import theme
@@ -70,10 +70,10 @@ from ._graph_metric_expressions import GraphConsolidationFunction, GraphMetricEx
 from ._graph_specification import (
     AdditionalGraphHTML,
     GraphEnvironment,
+    GraphRanges,
     GraphRecipe,
     GraphRecipeWithOverrides,
     GraphSpecification,
-    GraphTimeRange,
     parse_graph_specification,
 )
 from ._graph_templates import (
@@ -276,42 +276,42 @@ def _order_graph_curves_for_legend_and_mouse_hover[TCurveType: (LayoutedCurve, C
     return lines[::-1] + areas[::-1] + mirrored_areas + mirrored_lines + refs
 
 
-def make_graph_time_range_html(
+def compute_html_graph_ranges(
     *,
     start: int,
     end: int,
     factor: int,
     height_in_ex: float,
-) -> GraphTimeRange:
-    return GraphTimeRange(
+) -> GraphRanges:
+    return GraphRanges(
         time_range=(start, end),
         step=factor * int((end - start) / (height_in_ex * _HTML_SIZE_PER_EX * 4)),
     )
 
 
-def _user_graph_time_range_file_name(custom_graph_id: str) -> UserGraphTimeRangeFileName:
+def _user_graph_ranges_file_name(custom_graph_id: str) -> UserGraphRangesFileName:
     if "../" in custom_graph_id:
         raise ValueError("../ in graph id")
-    return UserGraphTimeRangeFileName(f"graph_range_{custom_graph_id}")
+    return UserGraphRangesFileName(f"graph_range_{custom_graph_id}")
 
 
-class UserGraphTimeRangeStore:
+class UserGraphRangesStore:
     def __init__(self, user_id: UserId) -> None:
         self.user_id = user_id
 
-    def save(self, custom_graph_id: str, time_range: GraphTimeRange) -> None:
+    def save(self, custom_graph_id: str, ranges: GraphRanges) -> None:
         save_user_file(
-            _user_graph_time_range_file_name(custom_graph_id),
-            time_range.model_dump(),
+            _user_graph_ranges_file_name(custom_graph_id),
+            ranges.model_dump(),
             self.user_id,
         )
 
-    def load(self, custom_graph_id: str) -> GraphTimeRange | None:
+    def load(self, custom_graph_id: str) -> GraphRanges | None:
         return (
-            GraphTimeRange.model_validate(raw_range)
+            GraphRanges.model_validate(raw_ranges)
             if (
-                raw_range := load_user_file(
-                    _user_graph_time_range_file_name(custom_graph_id),
+                raw_ranges := load_user_file(
+                    _user_graph_ranges_file_name(custom_graph_id),
                     self.user_id,
                     deflt=None,
                     lock=False,
@@ -321,9 +321,9 @@ class UserGraphTimeRangeStore:
         )
 
     def remove(self, custom_graph_id: str) -> None:
-        (
-            profile_dir / self.user_id / f"{_user_graph_time_range_file_name(custom_graph_id)}.mk"
-        ).unlink(missing_ok=True)
+        (profile_dir / self.user_id / f"{_user_graph_ranges_file_name(custom_graph_id)}.mk").unlink(
+            missing_ok=True
+        )
 
 
 #   .--HTML-Graphs---------------------------------------------------------.
@@ -546,7 +546,7 @@ def _render_time_range_selection(
         )
 
         preview_size = (20.0, 4.0)
-        time_range = make_graph_time_range_html(
+        ranges = compute_html_graph_ranges(
             start=now - duration,
             end=now,
             factor=2,
@@ -555,9 +555,9 @@ def _render_time_range_selection(
 
         preview_interaction = render_state.interaction.model_copy(
             update={
-                "time_start": time_range.time_range[0],
-                "time_end": time_range.time_range[1],
-                "step": time_range.step,
+                "time_start": ranges.time_range[0],
+                "time_end": ranges.time_range[1],
+                "step": ranges.step,
                 "size_x": preview_size[0],
                 "size_y": preview_size[1],
             }
@@ -572,7 +572,7 @@ def _render_time_range_selection(
 
         artwork_or_errors = compute_graph_artwork(
             render_state.recipe,
-            time_range,
+            ranges,
             preview_size,
             metrics_from_api,
             consolidation_function=render_state.interaction.consolidation_function,
@@ -740,7 +740,7 @@ def _compute_recipes(
 @tracer.instrument("graphing.render_graphs_html")
 def render_graphs_html(
     graph_specification: GraphSpecification,
-    time_range: GraphTimeRange,
+    ranges: GraphRanges,
     display_config: GraphDisplayConfigHTML,
     env: GraphEnvironment,
     *,
@@ -754,21 +754,17 @@ def render_graphs_html(
 
     output = HTML.empty()
     for recipe_with_overrides in recipes:
-        effective_time_range = recipe_with_overrides.time_range or time_range
+        effective_ranges = recipe_with_overrides.ranges or ranges
         interaction = GraphInteractionState(
             consolidation_function=recipe_with_overrides.consolidation_function,
-            time_start=effective_time_range.time_range[0],
-            time_end=effective_time_range.time_range[1],
-            step=effective_time_range.step,
+            time_start=effective_ranges.time_range[0],
+            time_end=effective_ranges.time_range[1],
+            step=effective_ranges.step,
             value_min=(
-                effective_time_range.vertical_range[0]
-                if effective_time_range.vertical_range
-                else None
+                effective_ranges.vertical_range[0] if effective_ranges.vertical_range else None
             ),
             value_max=(
-                effective_time_range.vertical_range[1]
-                if effective_time_range.vertical_range
-                else None
+                effective_ranges.vertical_range[1] if effective_ranges.vertical_range else None
             ),
             size_x=size[0],
             size_y=size[1],
@@ -785,7 +781,7 @@ def render_graphs_html(
             render_state,
             compute_graph_artwork(
                 render_state.recipe,
-                effective_time_range,
+                effective_ranges,
                 (interaction.size_x, interaction.size_y),
                 metrics_from_api,
                 consolidation_function=interaction.consolidation_function,
@@ -836,7 +832,7 @@ def host_service_graph_popup_cmk(
                 host_name=host_name,
                 service_name=service_description,
             ),
-            make_graph_time_range_html(
+            compute_html_graph_ranges(
                 start=start_time,
                 end=end_time,
                 factor=1,
@@ -1285,9 +1281,9 @@ def render_graph_html(
     # Persist the current data range for the graph editor.
     if display_config.editing and (render_state.specification.id):
         assert user.id is not None
-        UserGraphTimeRangeStore(user.id).save(
+        UserGraphRangesStore(user.id).save(
             render_state.specification.id,
-            GraphTimeRange(
+            GraphRanges(
                 time_range=(start_time, end_time),
                 step=step,
                 vertical_range=(
@@ -1302,7 +1298,7 @@ def render_graph_html(
 
     artwork_or_errors = compute_graph_artwork(
         render_state.recipe,
-        GraphTimeRange(
+        GraphRanges(
             time_range=(interaction.time_start, interaction.time_end),
             step=interaction.step,
             vertical_range=(
@@ -1437,7 +1433,7 @@ def _render_deferred_graph_html(
 @tracer.instrument("graphing.render_deferred_graphs_html")
 def render_deferred_graphs_html(
     graph_specification: GraphSpecification,
-    time_range: GraphTimeRange | None,
+    ranges: GraphRanges | None,
     display_config: GraphDisplayConfigHTML,
     env: GraphEnvironment,
     *,
@@ -1450,22 +1446,18 @@ def render_deferred_graphs_html(
 
     output = HTML.empty()
     for recipe_with_overrides in recipes:
-        effective_time_range = recipe_with_overrides.time_range or time_range
-        assert effective_time_range is not None
+        effective_ranges = recipe_with_overrides.ranges or ranges
+        assert effective_ranges is not None
         interaction = GraphInteractionState(
             consolidation_function=recipe_with_overrides.consolidation_function,
-            time_start=effective_time_range.time_range[0],
-            time_end=effective_time_range.time_range[1],
-            step=effective_time_range.step,
+            time_start=effective_ranges.time_range[0],
+            time_end=effective_ranges.time_range[1],
+            step=effective_ranges.step,
             value_min=(
-                effective_time_range.vertical_range[0]
-                if effective_time_range.vertical_range
-                else None
+                effective_ranges.vertical_range[0] if effective_ranges.vertical_range else None
             ),
             value_max=(
-                effective_time_range.vertical_range[1]
-                if effective_time_range.vertical_range
-                else None
+                effective_ranges.vertical_range[1] if effective_ranges.vertical_range else None
             ),
             size_x=size[0],
             size_y=size[1],
@@ -1540,7 +1532,7 @@ class GraphValuesAtTime(TypedDict):
 @tracer.instrument("graphing.render_graph_values_at_time")
 def render_graph_values_at_time(
     recipe: GraphRecipe,
-    time_range: GraphTimeRange,
+    ranges: GraphRanges,
     registered_metrics: Mapping[str, RegisteredMetric],
     *,
     consolidation_function: GraphConsolidationFunction | None,
@@ -1555,7 +1547,7 @@ def render_graph_values_at_time(
             for result in fetch_augmented_time_series(
                 registered_metrics,
                 recipe,
-                time_range,
+                ranges,
                 consolidation_function=consolidation_function,
                 temperature_unit=temperature_unit,
                 backend_time_series_fetcher=backend_time_series_fetcher,
@@ -1599,7 +1591,7 @@ class AjaxGraphValuesAtTime(AjaxPage):
         )
         return render_graph_values_at_time(
             hover_request.recipe,
-            GraphTimeRange(
+            GraphRanges(
                 time_range=(
                     hover_request.interaction.time_start,
                     hover_request.interaction.time_end,
@@ -1703,7 +1695,7 @@ def host_service_graph_dashlet_cmk(
         start_time, end_time = Timerange.compute_range(time_range).range
 
     try:
-        graph_time_range = make_graph_time_range_html(
+        graph_ranges = compute_html_graph_ranges(
             start=start_time,
             end=end_time,
             factor=1,
@@ -1714,7 +1706,7 @@ def host_service_graph_dashlet_cmk(
 
     artwork_or_errors = compute_graph_artwork(
         recipe_with_overrides.recipe,
-        graph_time_range,
+        graph_ranges,
         (width, height),
         registered_metrics,
         consolidation_function=recipe_with_overrides.consolidation_function,
@@ -1757,18 +1749,14 @@ def host_service_graph_dashlet_cmk(
             update={"legend_max_height_px": int(legend_height_ex * _HTML_SIZE_PER_EX)}
         )
 
-    effective_time_range = recipe_with_overrides.time_range or graph_time_range
+    effective_ranges = recipe_with_overrides.ranges or graph_ranges
     interaction = GraphInteractionState(
         consolidation_function=recipe_with_overrides.consolidation_function,
-        time_start=effective_time_range.time_range[0],
-        time_end=effective_time_range.time_range[1],
-        step=effective_time_range.step,
-        value_min=(
-            effective_time_range.vertical_range[0] if effective_time_range.vertical_range else None
-        ),
-        value_max=(
-            effective_time_range.vertical_range[1] if effective_time_range.vertical_range else None
-        ),
+        time_start=effective_ranges.time_range[0],
+        time_end=effective_ranges.time_range[1],
+        step=effective_ranges.step,
+        value_min=(effective_ranges.vertical_range[0] if effective_ranges.vertical_range else None),
+        value_max=(effective_ranges.vertical_range[1] if effective_ranges.vertical_range else None),
         size_x=width,
         size_y=height,
     )

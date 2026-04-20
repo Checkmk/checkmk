@@ -26,8 +26,8 @@ from ._graph_metric_expressions import (
 from ._graph_specification import (
     AugmentedTimeSeriesOfGraphMetric,
     GraphMetricLimit,
+    GraphRanges,
     GraphRecipe,
-    GraphTimeRange,
 )
 from ._metric_backend_registry import FetchTimeSeries
 from ._rrd import fetch_time_series_rrd
@@ -40,17 +40,16 @@ tracer = trace.get_tracer()
 def fetch_augmented_time_series(
     registered_metrics: Mapping[str, RegisteredMetric],
     recipe: GraphRecipe,
-    time_range: GraphTimeRange,
+    ranges: GraphRanges,
     *,
     consolidation_function: GraphConsolidationFunction | None,
     temperature_unit: TemperatureUnit,
     backend_time_series_fetcher: FetchTimeSeries | None,
 ) -> Iterator[Result[AugmentedTimeSeriesOfGraphMetric, QueryDataError]]:
     conversion = user_specific_unit(recipe.unit_spec, temperature_unit).conversion
-    start_time = time_range.time_range[0]
-    end_time = time_range.time_range[1]
-    step = time_range.step
-
+    start_time = ranges.time_range[0]
+    end_time = ranges.time_range[1]
+    step = ranges.step
     rrd_keys = set()
     query_keys = set()
     for graph_metric in recipe.metrics:
@@ -101,11 +100,11 @@ def fetch_augmented_time_series(
                 yield Error(result.error)
 
     fallback_time_range = FallbackTimeRange(
-        start=time_range.time_range[0],
-        end=time_range.time_range[1],
+        start=ranges.time_range[0],
+        end=ranges.time_range[1],
         # We only encounter `str`` here for forecast graphs, where the fallback range should be
         # irrelevant.
-        step=max(time_range.step, 60) if isinstance(time_range.step, int) else 60,
+        step=max(ranges.step, 60) if isinstance(ranges.step, int) else 60,
     )
 
     for graph_metric in recipe.metrics:

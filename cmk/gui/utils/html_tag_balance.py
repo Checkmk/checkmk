@@ -9,6 +9,7 @@ unclosed or mismatched HTML tags before they reach the browser.
 """
 
 from html.parser import HTMLParser
+from typing import override
 
 _VOID_ELEMENTS = frozenset(
     {
@@ -46,13 +47,16 @@ class _TagBalanceChecker(HTMLParser):
         self._stack: list[tuple[str, int, dict[str, str | None]]] = []
         self.errors: list[str] = []
 
+    @override
     def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
         if tag not in _VOID_ELEMENTS:
             self._stack.append((tag, self.getpos()[0], dict(attrs)))
 
+    @override
     def handle_startendtag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
         pass
 
+    @override
     def handle_endtag(self, tag: str) -> None:
         if tag in _VOID_ELEMENTS:
             return

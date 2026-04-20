@@ -75,11 +75,6 @@ const grpcEventConsole = ref<EventConsoleConfig | null>(null)
 const httpEventConsole = ref<EventConsoleConfig | null>(null)
 const newlyCreatedPasswords = ref<Map<string, PasswordConfig>>(new Map())
 
-// Cloud has event_console_allowed=false so both refs stay null there.
-const sendLogsToEc = computed(
-  () => grpcEventConsole.value !== null || httpEventConsole.value !== null
-)
-
 const finalizeRef = useTemplateRef<InstanceType<typeof FinalizeConfiguration>>('finalize')
 
 /**
@@ -208,7 +203,8 @@ async function onSaveClick(): Promise<void> {
           :http-tls-enabled="httpEncryption"
           :grpc-auth="grpcAuth"
           :http-auth="httpAuth"
-          :send-logs-to-ec="sendLogsToEc"
+          :grpc-event-console="grpcEventConsole"
+          :http-event-console="httpEventConsole"
         />
       </template>
 

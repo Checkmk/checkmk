@@ -18,14 +18,14 @@ const authOff: AuthConfig = { method: 'none', credential: null }
 const httpConfig: ExporterConfig = {
   endpoint: { address: '172.18.134.39', port: 4318 },
   tlsEnabled: true,
-  auth: authOn
+  auth: authOn,
+  eventConsole: false
 }
 
 const baseState: CollectorSnippetInput = {
   siteName: 'mysite',
   httpInfo: httpConfig,
-  grpcInfo: null,
-  sendLogsToEc: false
+  grpcInfo: null
 }
 
 describe('buildCollectorSnippets', () => {
@@ -90,7 +90,7 @@ describe('buildCollectorSnippets', () => {
         httpInfo: { ...httpConfig, auth: authOn }
       })
       expect(extensions).toContain('username: {user-name}')
-      expect(extensions).toContain('password: {password}')
+      expect(extensions).toContain('password: <REPLACE_ME> # Use the value of {password}')
     })
 
     it('uses actual credentials when credential is populated', () => {
@@ -103,7 +103,7 @@ describe('buildCollectorSnippets', () => {
         httpInfo: { ...httpConfig, auth: authWithCreds }
       })
       expect(extensions).toContain('username: bb')
-      expect(extensions).toContain('password: id_b')
+      expect(extensions).toContain('password: <REPLACE_ME> # Use the value of id_b')
     })
 
     it('renders only basicauth/http when only http has auth', () => {
@@ -145,8 +145,11 @@ describe('buildCollectorSnippets', () => {
 
   describe('service block', () => {
     it('always renders with the metrics pipeline', () => {
-      for (const sendLogsToEc of [true, false]) {
-        const { service } = buildCollectorSnippets({ ...baseState, sendLogsToEc })
+      for (const eventConsole of [true, false]) {
+        const { service } = buildCollectorSnippets({
+          ...baseState,
+          httpInfo: { ...httpConfig, eventConsole }
+        })
         expect(service).toContain('service:')
         expect(service).toContain('metrics:')
       }
@@ -173,23 +176,42 @@ describe('buildCollectorSnippets', () => {
       expect(service).toContain('exporters: [..., otlphttp/checkmk, otlp/checkmk]')
     })
 
-    it('includes the logs pipeline only when sendLogsToEc is true', () => {
-      const off = buildCollectorSnippets({ ...baseState, sendLogsToEc: false })
-      expect(off.service).not.toContain('logs:')
-
-      const on = buildCollectorSnippets({ ...baseState, sendLogsToEc: true })
-      expect(on.service).toContain('logs:')
-    })
-
-    it('uses the same protocol list in the logs pipeline as in metrics', () => {
+    it('omits the logs pipeline when no receiver has eventConsole enabled', () => {
       const { service } = buildCollectorSnippets({
         ...baseState,
-        grpcInfo: httpConfig,
-        sendLogsToEc: true
+        httpInfo: { ...httpConfig, eventConsole: false },
+        grpcInfo: { ...httpConfig, eventConsole: false }
       })
-      const metricsExporters = 'exporters: [..., otlphttp/checkmk, otlp/checkmk]'
-      // both the metrics and logs pipelines should list the same exporters
-      expect(service.split(metricsExporters).length - 1).toBe(2)
+      expect(service).not.toContain('logs:')
+    })
+
+    it('renders the logs pipeline when at least one receiver has eventConsole enabled', () => {
+      const { service } = buildCollectorSnippets({
+        ...baseState,
+        httpInfo: { ...httpConfig, eventConsole: true }
+      })
+      expect(service).toContain('logs:')
+    })
+
+    it('includes only receivers with eventConsole enabled in the logs pipeline', () => {
+      const { service } = buildCollectorSnippets({
+        ...baseState,
+        httpInfo: { ...httpConfig, eventConsole: true },
+        grpcInfo: { ...httpConfig, eventConsole: false }
+      })
+      const logsSection = service.slice(service.indexOf('logs:'))
+      expect(logsSection).toContain('otlphttp/checkmk')
+      expect(logsSection).not.toContain('otlp/checkmk]')
+    })
+
+    it('includes both receivers in the logs pipeline when both have eventConsole enabled', () => {
+      const { service } = buildCollectorSnippets({
+        ...baseState,
+        httpInfo: { ...httpConfig, eventConsole: true },
+        grpcInfo: { ...httpConfig, eventConsole: true }
+      })
+      const logsSection = service.slice(service.indexOf('logs:'))
+      expect(logsSection).toContain('[..., otlphttp/checkmk, otlp/checkmk]')
     })
   })
 
@@ -239,8 +261,7 @@ describe('buildCollectorSnippets', () => {
   it('produces a minimal snippet when auth, tls, and logs are disabled', () => {
     const { exporters, extensions, service } = buildCollectorSnippets({
       ...baseState,
-      httpInfo: { ...httpConfig, tlsEnabled: false, auth: authOff },
-      sendLogsToEc: false
+      httpInfo: { ...httpConfig, tlsEnabled: false, auth: authOff, eventConsole: false }
     })
     expect(exporters).not.toContain('basicauth')
     expect(exporters).toContain('insecure: true')
@@ -253,8 +274,7 @@ describe('buildCollectorSnippets', () => {
   it('produces the full Cloud-style snippet when everything is enabled', () => {
     const { exporters, extensions, service } = buildCollectorSnippets({
       ...baseState,
-      httpInfo: { ...httpConfig, tlsEnabled: true, auth: authOn },
-      sendLogsToEc: true
+      httpInfo: { ...httpConfig, tlsEnabled: true, auth: authOn, eventConsole: true }
     })
     expect(exporters).toContain('insecure: false')
     expect(exporters).toContain('authenticator: basicauth/http')

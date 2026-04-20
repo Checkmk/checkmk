@@ -11,7 +11,6 @@ export interface CollectorSnippetInput {
   siteName: string
   httpInfo: ExporterConfig | null
   grpcInfo: ExporterConfig | null
-  sendLogsToEc: boolean
 }
 
 export interface CollectorSnippets {
@@ -24,6 +23,7 @@ export interface ExporterConfig {
   endpoint: EndpointConfig
   tlsEnabled: boolean
   auth: AuthConfig
+  eventConsole: boolean
 }
 
 function buildAuthExtension(auth: AuthConfig, name: string): string | null {
@@ -35,7 +35,7 @@ function buildAuthExtension(auth: AuthConfig, name: string): string | null {
   return `  ${name}:
     client_auth:
       username: ${username}
-      password: ${password}`
+      password: <REPLACE_ME> # Use the value of ${password}`
 }
 
 export function buildExporter(
@@ -106,12 +106,20 @@ export function buildCollectorSnippets(state: CollectorSnippetInput): CollectorS
   const exportersList =
     activeProtocols.length > 0 ? `[..., ${activeProtocols.join(', ')}]` : '[...]'
 
-  const logsPipeline = state.sendLogsToEc
-    ? `
+  const logs = [
+    ...(state.httpInfo?.eventConsole ? ['otlphttp/checkmk'] : []),
+    ...(state.grpcInfo?.eventConsole ? ['otlp/checkmk'] : [])
+  ]
+
+  const logsExportersList = logs.length > 0 ? `[..., ${logs.join(', ')}]` : '[...]'
+
+  const logsPipeline =
+    logs.length > 0
+      ? `
     logs:
       ...
-      exporters: ${exportersList}`
-    : ''
+      exporters: ${logsExportersList}`
+      : ''
 
   const service = `service:
   ...

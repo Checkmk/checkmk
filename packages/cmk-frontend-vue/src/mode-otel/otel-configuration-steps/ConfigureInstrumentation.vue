@@ -14,7 +14,7 @@ import CmkHeading from '@/components/typography/CmkHeading.vue'
 import CmkParagraph from '@/components/typography/CmkParagraph.vue'
 
 import { type CollectorSnippetInput, buildCollectorSnippets } from './otelSnippets'
-import type { AuthConfig, EndpointConfig } from './otelTypes'
+import type { AuthConfig, EndpointConfig, EventConsoleConfig } from './otelTypes'
 
 const { _t } = usei18n()
 
@@ -26,7 +26,8 @@ const props = defineProps<{
   grpcTlsEnabled: boolean
   grpcAuth: AuthConfig
   httpAuth: AuthConfig
-  sendLogsToEc: boolean
+  grpcEventConsole: EventConsoleConfig | null
+  httpEventConsole: EventConsoleConfig | null
 }>()
 
 const activeTab = ref('collector')
@@ -36,14 +37,15 @@ const snippetInput = computed<CollectorSnippetInput>(() => ({
   httpInfo: {
     endpoint: props.httpEndpoint,
     tlsEnabled: props.httpTlsEnabled,
-    auth: props.httpAuth
+    auth: props.httpAuth,
+    eventConsole: props.httpEventConsole !== null
   },
   grpcInfo: {
     endpoint: props.grpcEndpoint,
     tlsEnabled: props.grpcTlsEnabled,
-    auth: props.grpcAuth
-  },
-  sendLogsToEc: props.sendLogsToEc
+    auth: props.grpcAuth,
+    eventConsole: props.grpcEventConsole !== null
+  }
 }))
 
 const snippets = computed(() => buildCollectorSnippets(snippetInput.value))

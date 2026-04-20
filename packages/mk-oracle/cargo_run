@@ -27,7 +27,7 @@ fi
 test_host=oracle-rocky-ci.lan.checkmk.net
 test_port=1521
 test_service=dbtest23
-test_instance=dbtest23
+test_instance=_
 test_sid=SID23
 test_user=system
 

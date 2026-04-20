@@ -49,7 +49,7 @@ use std::sync::LazyLock;
 pub static ORA_TEST_ENDPOINTS: &str = include_str!("files/endpoints.txt");
 
 pub fn get_sid(endpoint: &SqlDbEndpoint) -> String {
-    endpoint.instance_name.clone().unwrap()
+    endpoint.sid.clone().unwrap()
 }
 
 pub fn get_service_name(endpoint: &SqlDbEndpoint) -> String {
@@ -299,9 +299,17 @@ fn test_remote_mini_connection() {
     assert!(result.is_ok());
     let rows = result.unwrap();
     assert!(!rows.is_empty());
-    let instance_name = &endpoint.instance_name.clone().unwrap();
-    assert!(rows[0].starts_with(&format!("{}|sys_time_model|DB CPU|", &instance_name)));
-    assert!(rows[1].starts_with(&format!("{}|sys_time_model|DB time|", &instance_name)));
+    let sid_name = &endpoint.sid.clone().unwrap();
+    assert!(
+        rows[0].starts_with(&format!("{}|sys_time_model|DB CPU|", &sid_name)),
+        "Actual: {}",
+        rows[0]
+    );
+    assert!(
+        rows[1].starts_with(&format!("{}|sys_time_model|DB time|", &sid_name)),
+        "Actual: {}",
+        rows[1]
+    );
     assert_eq!(rows.len(), 2);
 }
 
@@ -352,7 +360,7 @@ async fn test_remote_custom_instance_connection() {
     eprintln!("{rows:?}");
     assert_eq!(rows[0], "<<<oracle_instance:sep(124)>>>");
     for r in rows[1..].iter() {
-        assert!(r.starts_with(endpoint.instance_name.as_ref().unwrap()));
+        assert!(r.starts_with(endpoint.sid.as_ref().unwrap()));
     }
 }
 
@@ -464,7 +472,7 @@ fn test_io_stats_query() {
     for endpoint in WORKING_ENDPOINTS.iter() {
         let rows = connect_and_query(endpoint, sqls::Id::IoStats, None);
         assert!(rows.len() > 10);
-        let name_dot = format!("{}.", &endpoint.instance_name.clone().unwrap());
+        let name_dot = format!("{}.", &endpoint.sid.clone().unwrap());
         for r in &rows {
             let values: Vec<String> = r.split('|').map(|s| s.to_string()).collect();
             assert_eq!(
@@ -475,7 +483,7 @@ fn test_io_stats_query() {
             );
             assert!(
                 values[0].starts_with(name_dot.as_str()),
-                "Row does not start with instance name: {}",
+                "Row does not start with SID name: {}",
                 r
             );
             assert_eq!(values[1], "iostat_file");
@@ -618,10 +626,7 @@ fn test_resumable() {
         });
         assert_eq!(
             rows[0],
-            format!(
-                "{}|||||||||",
-                endpoint.instance_name.clone().unwrap().as_str()
-            )
+            format!("{}|||||||||", endpoint.sid.clone().unwrap().as_str())
         );
     }
 }
@@ -676,21 +681,23 @@ fn test_locks_last() {
         // or
         // FREE|||||||||||||||||
         // Let's QA team checks correctness
-        let inst = get_sid(endpoint);
-        let instance_name = inst.as_str();
+        let sid = get_sid(endpoint);
+        let sid_name = sid.as_str();
+        let row0_starts = format!("{}.CDB$ROOT|", sid_name);
         assert!(
-            rows[0].starts_with(format!("{}.CDB$ROOT|", instance_name).as_str()),
-            "expected {} starts with {instance_name}",
+            rows[0].starts_with(&row0_starts),
+            "expected {} starts with {row0_starts}",
             rows[0]
         );
+        let row1_starts = format!("{0}.", sid_name);
         assert!(
-            rows[1].starts_with(format!("{0}.", instance_name).as_str()),
-            "expected {} starts with {instance_name}",
+            rows[1].starts_with(&row1_starts),
+            "expected {} starts with {sid_name}",
             rows[1]
         );
         assert!(
-            rows[2].starts_with(instance_name.to_string().as_str()),
-            "expected {} starts with {instance_name}",
+            rows[2].starts_with(sid_name.to_string().as_str()),
+            "expected {} starts with {sid_name}",
             rows[2]
         );
     }

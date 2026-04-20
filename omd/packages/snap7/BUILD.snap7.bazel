@@ -1,4 +1,15 @@
+load("@@//bazel/rules:dependency_info.bzl", "dependency_info")
 load("@rules_foreign_cc//foreign_cc:defs.bzl", "make")
+
+dependency_info(
+    name = "dependency_info",
+    package_name = "snap7",
+    cpe_format_str = "cpe:2.3:a:snap7_project:snap7:%s:*:*:*:*:*:*:*",
+    license_kind = "@package_metadata//licenses/spdx:LGPL-3.0-only",
+    purl_namespace = None,
+    purl_type = "generic",
+    version = "1.4.2",
+)
 
 filegroup(
     name = "all_srcs",
@@ -9,6 +20,7 @@ filegroup(
             "Makefile",
         ],
     ),
+    package_metadata = [":dependency_info"],
 )
 
 make(

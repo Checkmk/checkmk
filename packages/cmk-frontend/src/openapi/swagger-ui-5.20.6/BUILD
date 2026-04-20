@@ -1,5 +1,5 @@
+load("@@//bazel/rules:dependency_info.bzl", "dependency_info")
 load("@aspect_bazel_lib//lib:copy_to_bin.bzl", "copy_to_bin")
-load("@omd_packages//bazel/rules:dependency_info.bzl", "dependency_info")
 
 dependency_info(
     name = "dependency_info",

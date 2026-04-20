@@ -1,4 +1,18 @@
+load("@@//bazel/rules:dependency_info.bzl", "dependency_info")
 load("@rules_foreign_cc//foreign_cc:defs.bzl", "configure_make")
+
+package(default_package_metadata = [":dependency_info"])
+
+dependency_info(
+    name = "dependency_info",
+    package_name = "libgsf",
+    cpe_format_str = "cpe:2.3:a:libgsf:libgsf:%s:*:*:*:*:*:*:*",
+    license_kind = "@package_metadata//licenses/spdx:LGPL-2.1-only",
+    license_text = "COPYING",
+    purl_namespace = None,
+    purl_type = "generic",
+    version = module_version(),
+)
 
 filegroup(
     name = "srcs",

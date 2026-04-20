@@ -20,6 +20,7 @@ class Bom(TypedDict):
 
 LINKS = {
     "0BSD": "http://landley.net/toybox/license.html",
+    "AGPL-3.0-only": "https://www.gnu.org/licenses/agpl-3.0.txt",
     "Apache-2.0": "https://opensource.org/licenses/Apache-2.0",
     "Artistic-1.0": "https://opensource.org/licenses/Artistic-1.0",
     "Artistic-1.0-Perl": "http://dev.perl.org/licenses/artistic.html",
@@ -241,20 +242,20 @@ def _get_csv_sections(bom_info: Bom) -> dict[str, list[CsvRow]]:
 def _check_links(bom_info: Bom) -> None:
     """make sure all licenses in the BOM have a link in the global LINKS"""
 
-    licenses: set[str] = set()
-    for l in {_license_from_bom(component) for component in bom_info["components"]}:
-        if l is None:
-            continue
-        licenses.update(_split_expression(l))
-
-    links_missing = False
-    for l in licenses:
-        if l not in LINKS:
-            logging.error("No link for %s in LINKS", l)
-            links_missing = True
-
-    if links_missing:
+    licenses = {
+        expression
+        for license_ in {_license_from_bom(component) for component in bom_info["components"]}
+        if license_ is not None
+        for expression in _split_expression(license_)
+    }
+    if missing_links := (licenses - set(LINKS)):
+        for missing_link in missing_links:
+            logging.error("No link for %s in LINKS", missing_link)
         sys.exit("There are links to licenses missing")
+
+    if unnecessary_links := set(LINKS) - licenses:
+        for l in unnecessary_links:
+            logging.info("There is a link for %s in LINKS, but it is not used in the BOM", l)
 
 
 def _write_csv(csv_sections: dict[str, list[CsvRow]], csv_file: IO[str]) -> None:
@@ -272,7 +273,7 @@ def _write_csv(csv_sections: dict[str, list[CsvRow]], csv_file: IO[str]) -> None
 
 
 def _main() -> None:
-    logging.basicConfig()
+    logging.basicConfig(level=logging.WARNING, format="%(levelname)s: %(message)s")
 
     args = _get_args()
 

@@ -1,10 +1,22 @@
+load("@@//bazel/rules:dependency_info.bzl", "dependency_info")
 load("@rules_foreign_cc//foreign_cc:defs.bzl", "make")
+
+dependency_info(
+    name = "dependency_info",
+    package_name = "heirloom-mailx",
+    cpe_format_str = "cpe:2.3:a:heirloom:mailx:%s:*:*:*:*:*:*:*",
+    license_kind = "@package_metadata//licenses/spdx:BSD-3-Clause",  # todo(wrong) BSD-4-Clause-UC AND MIT AND MPL-1.1
+    purl_namespace = None,
+    purl_type = "generic",
+    version = "12.5",
+)
 
 filegroup(
     name = "mailxsrc",
     srcs = glob([
         "**",
     ]),
+    package_metadata = [":dependency_info"],
 )
 
 make(

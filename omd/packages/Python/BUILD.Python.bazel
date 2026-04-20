@@ -1,4 +1,5 @@
 load("@@//:package_versions.bzl", "PYTHON_VERSION")
+load("@@//bazel/rules:dependency_info.bzl", "dependency_info")
 load("@@//omd/packages/Python:version.bzl", "PYTHON_MAJOR_DOT_MINOR", "PYTHON_VERSION_MAJOR")
 load("@rules_foreign_cc//foreign_cc:defs.bzl", "configure_make")
 
@@ -6,12 +7,24 @@ package(default_visibility = ["//visibility:public"])
 
 INSTALL_PREFIX = "py_install"
 
+dependency_info(
+    name = "dependency_info",
+    package_name = "python",
+    cpe_format_str = "cpe:2.3:a:python:python:%s:*:*:*:*:*:*:*",
+    license_kind = "@package_metadata//licenses/spdx:PSF-2.0",
+    license_text = "LICENSE",
+    purl_namespace = None,
+    purl_type = "generic",
+    version = PYTHON_VERSION,
+)
+
 filegroup(
     name = "all_srcs",
     srcs = glob(
         include = ["**/*"],
         exclude = ["*.bazel"],
     ),
+    package_metadata = [":dependency_info"],
 )
 
 out_binaries = [

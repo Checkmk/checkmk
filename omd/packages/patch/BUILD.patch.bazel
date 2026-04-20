@@ -1,9 +1,9 @@
-load("@//bazel/rules:dependency_info.bzl", "dependency_info")
+load("@@//bazel/rules:dependency_info.bzl", "dependency_info")
 
 dependency_info(
     name = "dependency_info",
     package_name = "patch",
-    cpe_format_str = "cpe:2.3:a:gnu:patch:%s:*:*:*:*:*:*:*:*",
+    cpe_format_str = "cpe:2.3:a:gnu:patch:%s:*:*:*:*:*:*:*",
     license_kind = "@package_metadata//licenses/spdx:GPL-3.0-or-later",
     license_text = "COPYING",
     purl_namespace = None,

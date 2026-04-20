@@ -1,8 +1,29 @@
+load("@@//bazel/rules:dependency_info.bzl", "dependency_info")
+
+dependency_info(
+    name = "dependency_info",
+    package_name = "redis",
+    cpe_format_str = "cpe:2.3:a:redis:redis:%s:*:*:*:*:*:*:*",
+    # Redis Open Source is available as both source available and OSI-compliant
+    # open source software. A user may select one of the following three
+    # license options to use Redis Open Source (starting with Redis 8) and
+    # subsequent versions: the Redis Source Available License v2 (RSALv2), the
+    # Server Side Public License v1 (SSPLv1), and the GNU Affero General Public
+    # License v3 (AGPLv3).
+    # https://redis.io/legal/licenses/
+    license_kind = "@package_metadata//licenses/spdx:AGPL-3.0-only",
+    license_text = "LICENSE.txt",
+    purl_namespace = None,
+    purl_type = "generic",
+    version = "8.4.0",
+)
+
 filegroup(
     name = "package_source_files",
     srcs = glob([
         "**",
     ]),
+    package_metadata = [":dependency_info"],
 )
 
 # TODO: This is only needed to find the root of the bazel files.

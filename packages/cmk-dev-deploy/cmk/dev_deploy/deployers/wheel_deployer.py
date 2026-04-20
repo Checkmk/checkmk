@@ -459,7 +459,14 @@ def _compile_bytecode(site_python: Path, dirs: list[Path]) -> bool:
 
 def _deployer_keys(spec: WheelDeploySpec) -> list[tuple[str, tuple[str, ...]]]:
     """Return (state_key, path_prefixes) pairs for a wheel spec."""
-    if spec.source_subdirs:
+    prefixes: tuple[str, ...]
+    if spec.deploy_mode == WheelDeployMode.GENERATED:
+        # Generated packages have no Python sources on disk; their inputs are
+        # schema/config files anywhere under the package directory.  Track the
+        # whole package root so that changes to e.g. source/vue_formspec/*.json
+        # are detected and trigger a rebuild.
+        prefixes = (spec.package + "/",)
+    elif spec.source_subdirs:
         prefixes = tuple(f"{spec.package}/{sd}" for sd in spec.source_subdirs)
     else:
         prefixes = (spec.package + "/",)
@@ -766,12 +773,21 @@ def specs_for_changed_files(
     changed_files: tuple[str, ...],
     all_specs: tuple[WheelDeploySpec, ...] | None = None,
 ) -> tuple[WheelDeploySpec, ...]:
-    """Return only the specs whose package prefix matches any changed file."""
+    """Return only the specs whose package prefix matches any changed file.
+
+    Generated packages (deploy_mode=GENERATED) are always included: their
+    Python sources are built by Bazel from schema/config inputs, so git-diff
+    against source_subdirs cannot reliably determine whether the deployed wheel
+    is stale.  Bazel's own cache makes the redundant build fast.
+    """
     if all_specs is None:
         all_specs = get_wheel_specs()
 
     matched: set[str] = set()
     for spec in all_specs:
+        if spec.deploy_mode == WheelDeployMode.GENERATED:
+            matched.add(spec.package)
+            continue
         prefix = spec.package + "/"
         if any(f.startswith(prefix) for f in changed_files):
             matched.add(spec.package)

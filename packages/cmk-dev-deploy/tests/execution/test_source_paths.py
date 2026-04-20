@@ -176,6 +176,24 @@ class TestWheelSourceSubdirs:
 
         assert result == ("packages/cmk-shared-typing/",)
 
+    def test_generated_package_with_nonempty_subdirs_ignores_subdirs(self) -> None:
+        """Generated package with non-empty source_subdirs still tracks whole package dir.
+
+        source_subdirs for generated packages contain output paths (e.g. cmk/shared_typing/)
+        not the actual source inputs (e.g. source/vue_formspec/*.json). Tracking the whole
+        package root ensures changes to any input file trigger a rebuild.
+        """
+        spec = _make_wheel_spec(
+            package="packages/cmk-shared-typing",
+            deploy_mode=WheelDeployMode.GENERATED,
+            source_subdirs=("cmk/shared_typing/", "utils/"),
+        )
+
+        with patch(f"{_MANIFEST_PREFIX}.get_wheel_specs", return_value=(spec,)):
+            result = resolve_source_paths("wheel:packages/cmk-shared-typing", Path("/repo"))
+
+        assert result == ("packages/cmk-shared-typing/",)
+
     def test_multiple_source_subdirs(self) -> None:
         """Spec with multiple source_subdirs returns all prefixed paths."""
         spec = _make_wheel_spec(

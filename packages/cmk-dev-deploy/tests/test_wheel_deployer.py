@@ -627,6 +627,46 @@ class TestSpecsForChangedFiles:
         result = specs_for_changed_files(changed, all_specs=specs)
         assert len(result) == 0
 
+    def test_generated_package_always_included(self) -> None:
+        """GENERATED packages are always included regardless of changed_files.
+
+        cmk-shared-typing has no Python sources on disk; its inputs are JSON schemas.
+        Even when no schema file appears in changed_files (e.g. site build commit
+        already post-dates the schema change), the package must still be a candidate
+        so that check_skip can run and deploy if needed.
+        """
+        specs = (
+            _make_wheel_spec(
+                package="packages/cmk-shared-typing",
+                deploy_mode=WheelDeployMode.GENERATED,
+                source_subdirs=("cmk/shared_typing/",),
+            ),
+            _make_wheel_spec(package="packages/cmk-ccc", source_subdirs=("cmk/ccc/",)),
+        )
+        # No files from cmk-shared-typing in changed_files
+        changed = ("packages/cmk-ccc/cmk/ccc/foo.py",)
+
+        result = specs_for_changed_files(changed, all_specs=specs)
+
+        packages = {s.package for s in result}
+        assert "packages/cmk-shared-typing" in packages, (
+            "GENERATED package must always be a deploy candidate"
+        )
+        assert "packages/cmk-ccc" in packages
+
+    def test_generated_package_included_even_with_empty_changed_files(self) -> None:
+        """GENERATED packages are included even when changed_files is empty."""
+        specs = (
+            _make_wheel_spec(
+                package="packages/cmk-shared-typing",
+                deploy_mode=WheelDeployMode.GENERATED,
+                source_subdirs=(),
+            ),
+        )
+        result = specs_for_changed_files((), all_specs=specs)
+        assert len(result) == 1
+        assert result[0].package == "packages/cmk-shared-typing"
+
 
 # ---------------------------------------------------------------------------
 # 6. Generated-Source (Category D) Tests

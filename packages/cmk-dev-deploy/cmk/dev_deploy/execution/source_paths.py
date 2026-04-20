@@ -16,7 +16,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from cmk.dev_deploy.types import WheelDeploySpec
+from cmk.dev_deploy.types import WheelDeployMode, WheelDeploySpec
 
 
 def resolve_source_paths(
@@ -128,6 +128,13 @@ def _resolve_package_level(
     spec: WheelDeploySpec,
 ) -> tuple[str, ...]:
     """Resolve paths for a wheel deployer key using Bazel-derived source_subdirs."""
+    if spec.deploy_mode == WheelDeployMode.GENERATED:
+        # Generated packages might not have Python sources on disk; their inputs
+        # can be anywhere under the package directory (e.g. source/**.json
+        # schemas). Track the whole package root so any file change triggers a
+        # rebuild.
+        return (spec.package + "/",)
+
     if spec.source_subdirs:
         return tuple(spec.package + "/" + subdir for subdir in spec.source_subdirs)
 

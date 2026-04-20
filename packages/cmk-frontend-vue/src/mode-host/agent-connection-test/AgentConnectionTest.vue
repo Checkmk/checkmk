@@ -534,7 +534,7 @@ const showSettings = ref(false)
       {{ _t('Install & register agent') }}
     </CmkButton>
 
-    <template v-else>
+    <template v-else-if="!isPushMode">
       <span v-if="!isLoading && !isSuccess && !isError" class="test-controls">
         <CmkButton
           type="button"

@@ -13,46 +13,55 @@ from cmk.plugins.roomalert.agent_based.ra32e_sensors import (
     check_ra32e_sensors_voltage,
     DigitalSection,
     InternalSection,
-    parse_ra32e_digital_sensors,
-    parse_ra32e_internal_sensors,
+    parse_ra32e_sensors,
+    Ra32eSection,
 )
+
+_EMPTY_DIGITAL: list[DigitalSection | None] = [None] * 8
 
 
 def test_parse_ra32e_internal_section_temperature() -> None:
-    section = parse_ra32e_internal_sensors([["3000", "8000", "5000", "", ""]])
+    section = parse_ra32e_sensors([[["3000", "8000", "5000", "", ""]], *[[] for _ in range(8)]])
 
     assert section is not None
-    assert section.temperature == 30
-    assert section.humidity == 80
-    assert section.heat_index == 50
+    assert section.internal is not None
+    assert section.internal.temperature == 30
+    assert section.internal.humidity == 80
+    assert section.internal.heat_index == 50
 
 
 def test_parse_ra32e_internal_section_digital_with_temp() -> None:
-    section = parse_ra32e_digital_sensors([["4000", "33", "", "", ""]])
+    section = parse_ra32e_sensors([[], [["4000", "33", "", "", ""]], *[[] for _ in range(7)]])
 
     assert section is not None
-    assert section.temperature == 40
+    assert section.digital[0] is not None
+    assert section.digital[0].temperature == 40
 
 
 def test_parse_ra32e_internal_section_digital_with_humidity() -> None:
-    section = parse_ra32e_digital_sensors([["4000", "33", "1400", "1500", "15"]])
+    section = parse_ra32e_sensors(
+        [[], [["4000", "33", "1400", "1500", "15"]], *[[] for _ in range(7)]]
+    )
 
     assert section is not None
-    assert section.humidity == 14
+    assert section.digital[0] is not None
+    assert section.digital[0].humidity == 14
 
 
 def test_parse_ra32e_internal_section_digital_with_voltage() -> None:
-    section = parse_ra32e_digital_sensors([["4000", "33", "5", "1500", ""]])
+    section = parse_ra32e_sensors([[], [["4000", "33", "5", "1500", ""]], *[[] for _ in range(7)]])
 
     assert section is not None
-    assert section.voltage == 5
+    assert section.digital[0] is not None
+    assert section.digital[0].voltage == 5
 
 
 def test_parse_ra32e_internal_section_digital_with_power() -> None:
-    section = parse_ra32e_digital_sensors([["4000", "33", "1", "", ""]])
+    section = parse_ra32e_sensors([[], [["4000", "33", "1", "", ""]], *[[] for _ in range(7)]])
 
     assert section is not None
-    assert section.power
+    assert section.digital[0] is not None
+    assert section.digital[0].power
 
 
 #
@@ -170,7 +179,7 @@ def test_ra32e_digital_sensor_humidity_internal_only() -> None:
 
     result = list(
         check_ra32e_humidity_sensors(
-            "Internal", params, internal, None, None, None, None, None, None, None, None
+            "Internal", params, Ra32eSection(internal=internal, digital=_EMPTY_DIGITAL)
         )
     )
 
@@ -189,7 +198,9 @@ def test_ra32e_digital_sensor_humidity_internal_and_digital() -> None:
 
     result = list(
         check_ra32e_humidity_sensors(
-            "Sensor 1", params, internal, digital, None, None, None, None, None, None, None
+            "Sensor 1",
+            params,
+            Ra32eSection(internal=internal, digital=[digital, *([None] * 7)]),
         )
     )
 
@@ -206,7 +217,9 @@ def test_ra32e_digital_sensor_voltage() -> None:
     section = DigitalSection(temperature=30, voltage=5)
     result = list(
         check_ra32e_sensors_voltage(
-            "Sensor 1", params, section, None, None, None, None, None, None, None
+            "Sensor 1",
+            params,
+            Ra32eSection(internal=None, digital=[section, *([None] * 7)]),
         )
     )
 
@@ -222,7 +235,9 @@ def test_ra3s_digital_sensor_power() -> None:
     section = DigitalSection(temperature=30, power=True)
     result = list(
         check_ra32e_power_sensors(
-            "Sensor 1", params, section, None, None, None, None, None, None, None
+            "Sensor 1",
+            params,
+            Ra32eSection(internal=None, digital=[section, *([None] * 7)]),
         )
     )
 

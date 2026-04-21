@@ -69,6 +69,8 @@ class HeaderNotificationSingleLine:
 
     @property
     def message_html(self) -> str:
+        if not self.subject:
+            return self.message
         return f"<b>{self.subject}</b> {self.message}"
 
 

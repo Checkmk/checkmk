@@ -33,11 +33,12 @@ from cmk.licensing.basics.paths import (
     get_licensing_dir,
     get_next_run_file_path,
 )
+from cmk.licensing.basics.protocol_version import get_licensing_protocol_version
+from cmk.licensing.basics.verification import parse_protocol_version
 from cmk.licensing.export import (
     LicenseUsageExtensions,
     LicenseUsageSample,
     make_parser,
-    parse_protocol_version,
     RawLicenseUsageExtensions,
     RawLicenseUsageReport,
     RawLicenseUsageSample,
@@ -47,7 +48,6 @@ from cmk.licensing.helper import (
     load_instance_id,
     rot47,
 )
-from cmk.licensing.protocol_version import get_licensing_protocol_version
 
 CLOUD_SERVICE_PREFIXES = {"aws", "azure", "gcp"}
 

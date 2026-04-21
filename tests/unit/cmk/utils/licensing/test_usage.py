@@ -19,12 +19,12 @@ import livestatus
 
 from cmk.discover_plugins import discover_families, PluginGroup
 from cmk.licensing.basics.paths import get_license_usage_report_file_path
+from cmk.licensing.basics.protocol_version import get_licensing_protocol_version
 from cmk.licensing.export import (
     LicenseUsageExtensions,
     LicenseUsageSample,
     RawLicenseUsageReport,
 )
-from cmk.licensing.protocol_version import get_licensing_protocol_version
 from cmk.licensing.usage import (
     _load_extensions,
     _parse_extensions,

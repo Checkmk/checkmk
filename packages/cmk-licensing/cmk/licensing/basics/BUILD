@@ -11,5 +11,6 @@ py_library(
     deps = [
         # NOTE: since this is used in sitecustomize.py, keep the deps to a minimum
         "//packages/cmk-ccc:version",
+        "//packages/cmk-crypto",
     ],
 )

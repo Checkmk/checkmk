@@ -10,12 +10,12 @@ from unittest.mock import Mock, patch
 import pytest
 
 from cmk.ccc.version import Edition
-from cmk.licensing.protocol_version import get_licensing_protocol_version
+from cmk.licensing.basics.protocol_version import get_licensing_protocol_version
 
 
 @pytest.fixture
 def edition_fn_mock() -> Generator[Mock]:
-    with patch("cmk.licensing.protocol_version.edition") as edition_fn_mock:
+    with patch("cmk.licensing.basics.protocol_version.edition") as edition_fn_mock:
         yield edition_fn_mock
 
 

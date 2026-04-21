@@ -1302,6 +1302,7 @@ allows = [
 
 [components."cmk.licensing"]
 allows = [
+  "@crypto",
   "@livestatus_client",
   "cmk.ccc.site",
   "cmk.ccc.store",

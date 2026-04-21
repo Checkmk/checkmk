@@ -58,9 +58,6 @@ from cmk.gui.openapi.framework.registry import EndpointDefinition
 from cmk.gui.openapi.restful_objects import Endpoint
 from cmk.gui.openapi.restful_objects.utils import format_to_routing_path
 from cmk.gui.openapi.restful_objects.validators import PermissionValidator
-from cmk.gui.openapi.restful_objects.versioned_endpoint_map import (
-    discover_endpoints,
-)
 from cmk.gui.openapi.spec.utils import spec_path
 from cmk.gui.openapi.utils import (
     EXT,
@@ -71,6 +68,7 @@ from cmk.gui.openapi.utils import (
     RestAPIRequestGeneralException,
     RestAPIResponseGeneralException,
 )
+from cmk.gui.openapi.versioned_endpoint_map import discover_endpoints
 from cmk.gui.site_config import enabled_sites
 from cmk.gui.token_auth import AuthToken, parse_token_and_validate
 from cmk.gui.wsgi.applications.utils import AbstractWSGIApp

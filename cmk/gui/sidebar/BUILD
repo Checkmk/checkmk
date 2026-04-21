@@ -43,6 +43,7 @@ py_library(
         "//cmk/gui/htmllib:html",
         "//cmk/gui/openapi/framework",
         "//cmk/gui/openapi/framework:core",
+        "//cmk/gui/openapi/framework:types",
         "//cmk/gui/openapi/restful_objects",
         "//cmk/gui/pagetypes",
         "//cmk/gui/plugins/sidebar",

@@ -16,6 +16,8 @@ py_library(
         "//cmk/gui:permissions",
         "//cmk/gui/fields:base",
         "//cmk/gui/openapi/framework",
+        "//cmk/gui/openapi/framework:core",
+        "//cmk/gui/openapi/framework:types",
         "//cmk/gui/openapi/restful_objects",
         "//cmk/gui/token_auth",
         "//cmk/gui/utils:roles",

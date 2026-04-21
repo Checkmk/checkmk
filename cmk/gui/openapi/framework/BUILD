@@ -2,11 +2,20 @@ load("@aspect_rules_py//py:defs.bzl", "py_library")
 load("@cmk_requirements//:requirements.bzl", "requirement")
 
 py_library(
-    name = "core",
+    name = "api_config",
+    srcs = ["api_config.py"],
+    imports = ["../../../.."],
+    visibility = [
+        "//cmk:__subpackages__",
+        "//tests:__subpackages__",
+    ],
+)
+
+py_library(
+    name = "types",
     srcs = [
         "_types.py",
         "_utils.py",
-        "api_config.py",
         "content_types.py",
         "model/__init__.py",
         "model/_api_field.py",
@@ -22,6 +31,7 @@ py_library(
         "//tests:__subpackages__",
     ],
     deps = [
+        ":api_config",
         "//cmk/gui/openapi:_type_adapter",
         "//cmk/gui/openapi/restful_objects:type_defs",
         "//cmk/gui/utils:dataclasses",
@@ -32,19 +42,10 @@ py_library(
 )
 
 py_library(
-    name = "framework",
+    name = "core",
     srcs = [
-        "__init__.py",
         "_context.py",
-        "_validation.py",
-        "endpoint_model.py",
-        "handler.py",
-        "model/base_models.py",
-        "model/common_fields.py",
-        "model/constructors.py",
-        "model/converter.py",
         "model/response.py",
-        "model/restrict_editions.py",
         "registry.py",
         "versioned_endpoint.py",
     ],
@@ -54,7 +55,49 @@ py_library(
         "//tests:__subpackages__",
     ],
     deps = [
+        ":types",
+        "//cmk/gui:config",
+        "//cmk/gui:http",
+        "//cmk/gui:permissions",
+        "//cmk/gui:role_types",
+        "//cmk/gui:type_defs",
+        "//cmk/gui/openapi:utils",
+        "//cmk/gui/openapi/restful_objects",
+        "//cmk/gui/openapi/restful_objects:type_defs",
+        "//cmk/gui/token_auth",
+        "//cmk/gui/utils:dataclasses",
+        "//cmk/gui/utils:permission_verification",
+        "//cmk/gui/utils:roles",
+        "//cmk/utils",
+        "//packages/cmk-ccc:user",
+        "//packages/cmk-ccc:version",
+        "//packages/cmk-livestatus-client:py_livestatus",
+        requirement("werkzeug"),
+    ],
+)
+
+py_library(
+    name = "framework",
+    srcs = [
+        "__init__.py",
+        "_validation.py",
+        "endpoint_link.py",
+        "endpoint_model.py",
+        "handler.py",
+        "model/base_models.py",
+        "model/common_fields.py",
+        "model/constructors.py",
+        "model/converter.py",
+        "model/restrict_editions.py",
+    ],
+    imports = ["../../../.."],
+    visibility = [
+        "//cmk:__subpackages__",
+        "//tests:__subpackages__",
+    ],
+    deps = [
         ":core",
+        ":types",
         "//cmk/gui:config",
         "//cmk/gui:customer",
         "//cmk/gui:exceptions",
@@ -62,14 +105,12 @@ py_library(
         "//cmk/gui:http",
         "//cmk/gui:logged_in",
         "//cmk/gui:permissions",
-        "//cmk/gui:role_types",
         "//cmk/gui:site_config",
         "//cmk/gui:sites",
-        "//cmk/gui:type_defs",
         "//cmk/gui/fields",
+        "//cmk/gui/openapi:versioned_endpoint_map",
         "//cmk/gui/openapi/restful_objects",
         "//cmk/gui/openapi/restful_objects:type_defs",
-        "//cmk/gui/token_auth",
         "//cmk/gui/userdb",
         "//cmk/gui/utils:dataclasses",
         "//cmk/gui/utils:permission_verification",
@@ -80,6 +121,8 @@ py_library(
         "//cmk/gui/watolib:groups_io",
         "//cmk/gui/watolib:passwords",
         "//cmk/utils",
+        "//packages/cmk-ccc:site",
+        "//packages/cmk-ccc:version",
         requirement("werkzeug"),
     ],
 )

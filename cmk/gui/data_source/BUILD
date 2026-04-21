@@ -18,7 +18,7 @@ py_library(
         "//cmk/gui:type_defs",
         "//cmk/gui/htmllib:html",
         "//cmk/gui/openapi/framework",
-        "//cmk/gui/openapi/framework:core",
+        "//cmk/gui/openapi/framework:types",
         "//cmk/gui/openapi/restful_objects",
         "//cmk/gui/painter:v0_base",
         "//cmk/gui/visuals",

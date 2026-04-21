@@ -60,6 +60,23 @@ py_library(
     ],
     deps = [
         "//cmk/gui/openapi/framework",
+        "//cmk/gui/openapi/framework:core",
+        "//cmk/gui/openapi/restful_objects",
+    ],
+)
+
+py_library(
+    name = "versioned_endpoint_map",
+    srcs = ["versioned_endpoint_map.py"],
+    imports = ["../../.."],
+    visibility = [
+        "//cmk:__subpackages__",
+        "//tests:__subpackages__",
+    ],
+    deps = [
+        "//cmk/gui:hooks",
+        "//cmk/gui/openapi/framework:api_config",
+        "//cmk/gui/openapi/framework:core",
         "//cmk/gui/openapi/restful_objects",
     ],
 )
@@ -77,6 +94,7 @@ py_library(
         "//cmk/gui/openapi/api_endpoints",
         "//cmk/gui/openapi/endpoints",
         "//cmk/gui/openapi/framework",
+        "//cmk/gui/openapi/framework:core",
         "//cmk/gui/openapi/restful_objects",
         "//cmk/gui/openapi/shared_endpoint_families",
     ],

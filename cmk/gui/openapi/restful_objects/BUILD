@@ -22,7 +22,6 @@ py_library(
         include = ["**/*.py"],
         exclude = [
             "type_defs.py",
-            "versioned_endpoint_map.py",
         ],
     ),
     imports = ["../../../.."],
@@ -42,7 +41,7 @@ py_library(
         "//cmk/gui/livestatus_utils/commands",
         "//cmk/gui/openapi:permission_tracking",
         "//cmk/gui/openapi:utils",
-        "//cmk/gui/openapi/framework:core",
+        "//cmk/gui/openapi/framework:api_config",
         "//cmk/gui/utils:permission_verification",
         "//cmk/gui/watolib",
         "//cmk/gui/watolib:config_infra",
@@ -58,21 +57,5 @@ py_library(
         requirement("marshmallow"),
         requirement("marshmallow-oneofschema"),
         requirement("werkzeug"),
-    ],
-)
-
-py_library(
-    name = "versioned_endpoint_map",
-    srcs = ["versioned_endpoint_map.py"],
-    imports = ["../../../.."],
-    visibility = [
-        "//cmk:__subpackages__",
-        "//tests:__subpackages__",
-    ],
-    deps = [
-        ":restful_objects",
-        "//cmk/gui:hooks",
-        "//cmk/gui/openapi/framework",
-        "//cmk/gui/openapi/framework:core",
     ],
 )

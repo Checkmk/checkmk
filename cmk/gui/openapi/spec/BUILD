@@ -10,7 +10,7 @@ py_library(
         "//tests:__subpackages__",
     ],
     deps = [
-        "//cmk/gui/openapi/framework:core",
+        "//cmk/gui/openapi/framework:api_config",
         "//cmk/gui/openapi/restful_objects:type_defs",
     ],
 )
@@ -31,7 +31,7 @@ py_library(
         ":utils",
         "//cmk/gui/fields:base",
         "//cmk/gui/openapi:_type_adapter",
-        "//cmk/gui/openapi/framework:core",
+        "//cmk/gui/openapi/framework:types",
         requirement("apispec"),
         requirement("marshmallow"),
         requirement("marshmallow-oneofschema"),

@@ -43,7 +43,6 @@ from cmk.gui.openapi.restful_objects.type_defs import (
 from cmk.gui.openapi.restful_objects.utils import (
     identify_expected_status_codes,
 )
-from cmk.gui.openapi.restful_objects.versioned_endpoint_map import EndpointVersionChange
 from cmk.gui.openapi.spec.plugin_pydantic import CheckmkGenerateJsonSchema
 from cmk.gui.openapi.spec.spec_generator._code_examples import code_samples
 from cmk.gui.openapi.spec.spec_generator._doc_utils import (
@@ -54,6 +53,7 @@ from cmk.gui.openapi.spec.spec_generator._doc_utils import (
     endpoint_title_and_description_from_docstring,
 )
 from cmk.gui.openapi.spec.spec_generator._type_defs import DocEndpoint, SpecEndpoint
+from cmk.gui.openapi.versioned_endpoint_map import EndpointVersionChange
 
 
 def _is_response_subclass(value: object) -> bool:

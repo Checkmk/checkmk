@@ -24,6 +24,7 @@ py_library(
         "//cmk/gui/htmllib:html",
         "//cmk/gui/openapi:utils",
         "//cmk/gui/openapi/framework",
+        "//cmk/gui/openapi/framework:core",
         "//cmk/gui/openapi/restful_objects",
         "//cmk/gui/token_auth",
         "//cmk/gui/utils:csrf_token",

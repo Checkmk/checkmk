@@ -415,16 +415,13 @@ from cmk.gui.openapi.restful_objects.documentation import table_definitions
 from cmk.gui.openapi.restful_objects.parameters import ACCEPT_HEADER
 from cmk.gui.openapi.restful_objects.params import marshmallow_to_openapi
 from cmk.gui.openapi.restful_objects.type_defs import EndpointTarget, OperationObject
-from cmk.gui.openapi.restful_objects.versioned_endpoint_map import (
-    compute_endpoint_changes,
-    discover_endpoints,
-)
 from cmk.gui.openapi.spec.plugin_marshmallow import CheckmkMarshmallowPlugin
 from cmk.gui.openapi.spec.plugin_pydantic import CheckmkPydanticPlugin
 from cmk.gui.openapi.spec.spec_generator._doc_marshmallow import marshmallow_doc_endpoints
 from cmk.gui.openapi.spec.spec_generator._doc_pydantic import pydantic_endpoint_to_doc_endpoint
 from cmk.gui.openapi.spec.spec_generator._type_defs import DocEndpoint
 from cmk.gui.openapi.spec.utils import spec_path
+from cmk.gui.openapi.versioned_endpoint_map import compute_endpoint_changes, discover_endpoints
 from cmk.gui.script_helpers import gui_context
 from cmk.gui.session import SuperUserContext
 from cmk.utils.paths import omd_root

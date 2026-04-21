@@ -27,6 +27,7 @@ py_library(
         "//cmk/gui/openapi/endpoints",
         "//cmk/gui/openapi/framework",
         "//cmk/gui/openapi/framework:core",
+        "//cmk/gui/openapi/framework:types",
         "//cmk/gui/openapi/restful_objects",
         "//cmk/gui/openapi/restful_objects:type_defs",
         "//cmk/gui/rest_api_types:notifications",

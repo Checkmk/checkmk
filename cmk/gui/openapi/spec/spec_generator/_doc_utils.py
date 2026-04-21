@@ -16,7 +16,7 @@ from cmk.ccc.version import Edition
 from cmk.gui.fields.utils import get_multiple_edition_description
 from cmk.gui.openapi import endpoint_family_registry
 from cmk.gui.openapi.restful_objects.type_defs import OpenAPITag, TagGroup
-from cmk.gui.openapi.restful_objects.versioned_endpoint_map import EndpointVersionChange
+from cmk.gui.openapi.versioned_endpoint_map import EndpointVersionChange
 from cmk.gui.permissions import permission_registry
 from cmk.gui.utils import permission_verification as permissions
 

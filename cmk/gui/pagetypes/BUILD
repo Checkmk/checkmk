@@ -34,6 +34,7 @@ py_library(
         "//cmk/gui/htmllib:html",
         "//cmk/gui/openapi/framework",
         "//cmk/gui/openapi/framework:core",
+        "//cmk/gui/openapi/framework:types",
         "//cmk/gui/openapi/restful_objects",
         "//cmk/gui/utils:flashed_messages",
         "//cmk/gui/utils:html",

@@ -198,16 +198,16 @@ test-update-community:
 	$(PYTEST) --cmk-edition community $(realpath update)/community $(PYTEST_SYSTEM_TEST_ARGS) --session-timeout 5400
 
 test-update-pro:
-	$(PYTEST) --cmk-edition pro $(realpath update)/nonfree/pro $(PYTEST_SYSTEM_TEST_ARGS) --session-timeout 5400
+	$(PYTEST) --cmk-edition pro $(realpath update)/nonfree $(PYTEST_SYSTEM_TEST_ARGS) --session-timeout 5400
 
 test-update-ultimate:
-	$(PYTEST) --cmk-edition ultimate $(realpath update)/nonfree/ultimate $(PYTEST_SYSTEM_TEST_ARGS) --session-timeout 5400
+	$(PYTEST) --cmk-edition ultimate $(realpath update)/nonfree $(PYTEST_SYSTEM_TEST_ARGS) --session-timeout 5400
 
 test-update-ultimatemt:
-	$(PYTEST) --cmk-edition ultimatemt $(realpath update)/nonfree/ultimatemt $(PYTEST_SYSTEM_TEST_ARGS) --session-timeout 5400
+	$(PYTEST) --cmk-edition ultimatemt $(realpath update)/nonfree $(PYTEST_SYSTEM_TEST_ARGS) --session-timeout 5400
 
 test-update-cloud:
-	$(PYTEST) --cmk-edition cloud $(realpath update)/nonfree/cloud $(PYTEST_SYSTEM_TEST_ARGS) --disable-interactive-mode \
+	$(PYTEST) --cmk-edition cloud $(realpath update)/nonfree $(PYTEST_SYSTEM_TEST_ARGS) --disable-interactive-mode \
 	--session-timeout 5400
 
 test-update-cross-edition-pro-to-ultimate: # from pro to ultimate

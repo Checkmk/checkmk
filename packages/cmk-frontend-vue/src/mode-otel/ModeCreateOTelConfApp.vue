@@ -32,9 +32,12 @@ import {
 } from './otel-configuration-steps/otelTypes'
 import type { PasswordConfig } from './otel-configuration-steps/password_store_password.types.ts'
 import {
+  type OTelAuthInput,
+  type OTelReceiverProtocolInput,
+  type OTelSocketAddressInput,
   POST_SAVE_ACTIONS,
   type PostSaveAction,
-  createSavePasswordsAction
+  createOTelReceiverConfigAction
 } from './otel-configuration-steps/post_save_actions.ts'
 
 const props = defineProps<{
@@ -109,13 +112,123 @@ const passwordsToSave = computed<PasswordConfig[]>(() => {
   )
 })
 
-const finalizeActions = computed<readonly PostSaveAction[]>(() =>
-  passwordsToSave.value.length > 0
-    ? [createSavePasswordsAction(passwordsToSave.value), ...POST_SAVE_ACTIONS]
-    : POST_SAVE_ACTIONS
-)
-
 const finalizeRef = useTemplateRef<InstanceType<typeof FinalizeConfiguration>>('finalize')
+
+/**
+ * Narrow the wizard's `AuthConfig` (which allows a null credential while the
+ * form is being filled) into the create action's `OTelAuthInput`. Returns
+ * `null` if `basicauth` is selected without a username or password id, which
+ * tells `buildProtocolInput` to omit this protocol entirely.
+ */
+function narrowAuth(auth: AuthConfig): OTelAuthInput | null {
+  switch (auth.method) {
+    case 'none':
+      return { method: 'none' }
+    case 'basicauth': {
+      const username = auth.credential?.username.trim()
+      const passwordId = auth.credential?.password
+      if (!username || !passwordId) {
+        return null
+      }
+      return { method: 'basicauth', username, passwordId }
+    }
+  }
+}
+
+/**
+ * Narrow the wizard's `EndpointConfig` (which allows `port: undefined` for
+ * default modes) into the create action's `OTelSocketAddressInput`. Mirrors
+ * `endpointIsConfigured` in `ConfigureCollector.vue` so the wizard validation
+ * rule and the save gate agree: default IPv4/IPv6 are always considered
+ * configured (the server resolves the bind), only `'custom'` requires the
+ * user-entered address + port.
+ */
+function narrowSocketAddress(endpoint: EndpointConfig): OTelSocketAddressInput | null {
+  switch (endpoint.socketAddressType) {
+    case 'default_ipv4':
+    case 'default_ipv6':
+      return { type: endpoint.socketAddressType }
+    case 'custom': {
+      const address = endpoint.address.trim()
+      if (!address || endpoint.port === undefined) {
+        return null
+      }
+      return { type: 'custom', address, port: endpoint.port }
+    }
+  }
+}
+
+function buildProtocolInput(
+  auth: AuthConfig,
+  endpoint: EndpointConfig,
+  encryption: boolean,
+  eventConsole: EventConsoleConfig | null
+): OTelReceiverProtocolInput | null {
+  const narrowedAuth = narrowAuth(auth)
+  if (!narrowedAuth) {
+    return null
+  }
+  if (!props.endpoint_config_allowed) {
+    return { auth: narrowedAuth }
+  }
+  const socketAddress = narrowSocketAddress(endpoint)
+  if (!socketAddress) {
+    return null
+  }
+  return {
+    auth: narrowedAuth,
+    extended: {
+      socketAddress,
+      encryption,
+      eventConsole: props.event_console_allowed ? eventConsole : null
+    }
+  }
+}
+
+// Per-run create action plus the shared post-save list, with edition-specific
+// activation steps stripped on cloud. Composed here (not in
+// `FinalizeConfiguration`) so the renderer stays purely visual.
+const finalizeActions = computed<readonly PostSaveAction[]>(() => {
+  if (!siteId.value) {
+    return []
+  }
+  const sharedActions = POST_SAVE_ACTIONS.filter((action) => {
+    if (!props.collector_activation_allowed && action.key === 'enableCollector') {
+      return false
+    }
+    if (!props.metric_backend_allowed && action.key === 'enableMetricBackend') {
+      return false
+    }
+    return true
+  })
+  // The per-protocol enable checkboxes (`grpcEnabled` / `httpEnabled`) gate the
+  // save payload here so the disabled tab's form state never reaches the
+  // server, matching what the wizard shows the user.
+  return [
+    createOTelReceiverConfigAction({
+      id: configName.value,
+      siteId: siteId.value,
+      grpc: grpcEnabled.value
+        ? buildProtocolInput(
+            grpcAuth.value,
+            grpcEndpoint.value,
+            grpcEncryption.value,
+            grpcEventConsole.value
+          )
+        : null,
+      http: httpEnabled.value
+        ? buildProtocolInput(
+            httpAuth.value,
+            httpEndpoint.value,
+            httpEncryption.value,
+            httpEventConsole.value
+          )
+        : null,
+      passwords: passwordsToSave.value
+    }),
+    ...sharedActions
+  ]
+})
 
 /**
  * State machine driving the Step 4 save button. Updated by
@@ -272,8 +385,6 @@ async function onSaveClick(): Promise<void> {
           ref="finalize"
           :site-id="siteId"
           :config-name="configName"
-          :collector-activation-allowed="collector_activation_allowed"
-          :metric-backend-allowed="metric_backend_allowed"
           :actions="finalizeActions"
           @update:state="saveState = $event"
         />

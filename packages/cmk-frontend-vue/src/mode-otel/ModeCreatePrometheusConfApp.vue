@@ -23,6 +23,11 @@ import type { PrometheusScraperConfig } from './otel-configuration-steps/Configu
 import FinalizeConfiguration, {
   type FinalizeState
 } from './otel-configuration-steps/FinalizeConfiguration.vue'
+import {
+  POST_SAVE_ACTIONS,
+  type PostSaveAction,
+  createPrometheusScrapeConfigAction
+} from './otel-configuration-steps/post_save_actions.ts'
 
 const props = defineProps<{
   overview_url: string
@@ -56,6 +61,31 @@ async function validatePrometheusScraper(): Promise<boolean> {
 }
 
 const finalizeRef = useTemplateRef<InstanceType<typeof FinalizeConfiguration>>('finalize')
+
+// Per-run create action plus the shared post-save list. The Prometheus
+// wizard is ultimate-only and always wants every shared step, so no
+// filtering is applied here.
+const finalizeActions = computed<readonly PostSaveAction[]>(() => {
+  // Port is validated in Step 2 (ConfigurePrometheusScraper.validate) before
+  // the user can reach Step 3, so by the time the save button runs we can
+  // safely assume it is defined. Guard anyway so an unexpected state surfaces
+  // an empty action list rather than a request with NaN port.
+  if (!siteId.value || scraperConfig.value.port === undefined) {
+    return []
+  }
+  return [
+    createPrometheusScrapeConfigAction({
+      id: configName.value,
+      siteId: siteId.value,
+      jobName: scraperConfig.value.jobName,
+      metricsPath: scraperConfig.value.metricsPath,
+      address: scraperConfig.value.address,
+      port: scraperConfig.value.port,
+      encryption: scraperConfig.value.encryption
+    }),
+    ...POST_SAVE_ACTIONS
+  ]
+})
 
 /**
  * State machine driving the Step 3 save button. Updated by
@@ -158,6 +188,7 @@ async function onSaveClick(): Promise<void> {
           ref="finalize"
           :site-id="siteId"
           :config-name="configName"
+          :actions="finalizeActions"
           :running-message="_t('Verifying the Prometheus configuration...')"
           :success-message="_t('Prometheus configuration saved successfully.')"
           :error-heading="_t('Could not save the Prometheus configuration')"

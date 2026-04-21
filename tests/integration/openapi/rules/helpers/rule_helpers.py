@@ -154,7 +154,9 @@ def managed_rule_with_levels(
 def hosts_pkl_exists(site: Site) -> None:
     """CMK-33417: validate populated 'hosts.pkl' files.
 
-    Crash report with 'KeyError: all hosts' is generated, when a rule assigned to a host is deleted.
+    Crash report with 'KeyError: all hosts' is generated, because of following conditions
+    + missing 'hosts.pkl' files in main folder and sub-directories
+    + rule assigned to a host is deleted.
     This leads to failing test teardown.
     """
 
@@ -162,7 +164,13 @@ def hosts_pkl_exists(site: Site) -> None:
         folder_pkl = f"etc/check_mk/conf.d/wato/{FOLDER_PATH}/hosts.pkl"
         main_pkl = "etc/check_mk/conf.d/wato/hosts.pkl"
         # files exist with a non-zero size.
-        return site.file_exists(folder_pkl, strict=True) and site.file_exists(main_pkl, strict=True)
+        if site.edition.is_community_edition():
+            # pkl only exists in subdirectory with host(s).
+            return site.file_exists(folder_pkl, strict=True)
+        else:
+            return site.file_exists(folder_pkl, strict=True) and site.file_exists(
+                main_pkl, strict=True
+            )
 
     wait_until(_pkl_exists, timeout=10, condition_name="Check for 'hosts.pkl'")
 

@@ -41,7 +41,6 @@ from tests.integration.openapi.rules.helpers.rule_helpers import hosts_pkl_exist
 from tests.testlib.site import Site
 
 logger = logging.getLogger(__name__)
-pytestmark = pytest.mark.skip_if_edition("community")  # CMK-33417
 
 
 @pytest.fixture(scope="module", autouse=True)

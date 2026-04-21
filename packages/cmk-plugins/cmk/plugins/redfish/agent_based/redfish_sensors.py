@@ -4,16 +4,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """check single redfish sensor state"""
 
-from collections.abc import Callable
-
 from cmk.agent_based.v2 import (
     AgentSection,
-    check_levels,
     CheckPlugin,
     CheckResult,
     DiscoveryResult,
     get_value_store,
-    render,
     Result,
     Service,
     State,
@@ -26,9 +22,7 @@ from cmk.plugins.lib.temperature import (
     TempParamDict,
 )
 from cmk.plugins.redfish.lib import (
-    Levels,
     parse_redfish_multiple,
-    Perfdata,
     process_redfish_perfdata,
     redfish_health_state,
     RedfishAPIData,
@@ -49,33 +43,6 @@ def discovery_redfish_sensors(section: RedfishAPIData) -> DiscoveryResult:
         yield Service(item=section[key]["Id"])
 
 
-def _dev_levels(levels: Levels | None) -> tuple[float, float] | None:
-    """Extract device-level thresholds for check_temperature/check_humidity."""
-    if levels and len(levels) > 1:
-        return levels[1]
-    return None
-
-
-def _check_sensor_levels(
-    perfdata: Perfdata,
-    *,
-    metric_name: str,
-    label: str,
-    render_func: Callable[[float], str],
-    boundaries: tuple[float | None, float | None] | None = None,
-) -> CheckResult:
-    """Yield check_levels result for a generic sensor reading."""
-    yield from check_levels(
-        value=perfdata.value,
-        levels_upper=perfdata.levels_upper,
-        levels_lower=perfdata.levels_lower,
-        metric_name=metric_name,
-        label=label,
-        render_func=render_func,
-        boundaries=boundaries if boundaries is not None else perfdata.boundaries,
-    )
-
-
 def check_redfish_sensors(item: str, params: TempParamDict, section: RedfishAPIData) -> CheckResult:
     """Check single sensor state"""
     data = section.get(item)
@@ -84,80 +51,41 @@ def check_redfish_sensors(item: str, params: TempParamDict, section: RedfishAPID
 
     perfdata = process_redfish_perfdata(data)
     if perfdata:
-        match data.get("ReadingType"):
-            case "Temperature":
-                yield from check_temperature(
-                    perfdata.value,
-                    params,
-                    unique_name=f"redfish.temp.{item}",
-                    value_store=get_value_store(),
-                    dev_levels=_dev_levels(perfdata.levels_upper),
-                    dev_levels_lower=_dev_levels(perfdata.levels_lower),
-                )
-            case "Humidity":
-                yield from check_humidity(
-                    humidity=perfdata.value,
-                    params={
-                        "levels": _dev_levels(perfdata.levels_upper),
-                        "levels_lower": _dev_levels(perfdata.levels_lower),
-                    },
-                )
-            case "Rotational":
-                if data.get("ReadingUnits") == "Percent":
-                    yield from _check_sensor_levels(
-                        perfdata,
-                        metric_name="perc",
-                        label="Speed",
-                        render_func=render.percent,
-                        boundaries=(0, 100),
-                    )
-                else:
-                    yield from _check_sensor_levels(
-                        perfdata,
-                        metric_name="fan",
-                        label="Speed",
-                        render_func=lambda v: f"{v:.0f} rpm",
-                    )
-            case "Voltage":
-                yield from _check_sensor_levels(
-                    perfdata,
-                    metric_name="voltage",
-                    label="Voltage",
-                    render_func=lambda v: f"{v:.1f} V",
-                )
-            case "Current":
-                yield from _check_sensor_levels(
-                    perfdata,
-                    metric_name="current",
-                    label="Current",
-                    render_func=lambda v: f"{v:.1f} A",
-                )
-            case "Power":
-                yield from _check_sensor_levels(
-                    perfdata, metric_name="power", label="Power", render_func=lambda v: f"{v:.1f} W"
-                )
-            case "Frequency":
-                yield from _check_sensor_levels(
-                    perfdata,
-                    metric_name="frequency",
-                    label="Frequency",
-                    render_func=lambda v: f"{v:.1f} Hz",
-                )
-            case "Percent":
-                yield from _check_sensor_levels(
-                    perfdata,
-                    metric_name="perc",
-                    label="Usage",
-                    render_func=render.percent,
-                    boundaries=(0, 100),
-                )
-            case other:
-                yield Result(
-                    state=State(0),
-                    summary=f"{other or 'Unknown'} reading: {perfdata.value}",
-                )
+        if data.get("ReadingType") == "Temperature":
+            yield from check_temperature(
+                perfdata.value,
+                params,
+                unique_name=f"redfish.temp.{item}",
+                value_store=get_value_store(),
+                dev_levels=(
+                    perfdata.levels_upper[1]
+                    if perfdata.levels_upper and len(perfdata.levels_upper) > 1
+                    else None
+                ),
+                dev_levels_lower=(
+                    perfdata.levels_lower[1]
+                    if perfdata.levels_lower and len(perfdata.levels_lower) > 1
+                    else None
+                ),
+            )
+        elif data.get("ReadingType") == "Humidity":
+            yield from check_humidity(
+                humidity=perfdata.value,
+                params={
+                    "levels": (
+                        perfdata.levels_upper[1]
+                        if perfdata.levels_upper and len(perfdata.levels_upper) > 1
+                        else None
+                    ),
+                    "levels_lower": (
+                        perfdata.levels_lower[1]
+                        if perfdata.levels_lower and len(perfdata.levels_lower) > 1
+                        else None
+                    ),
+                },
+            )
     else:
-        yield Result(state=State(0), summary="No reading data available")
+        yield Result(state=State(0), summary="No temperature data found")
 
     dev_state, dev_msg = redfish_health_state(data.get("Status", {}))
     yield Result(state=State(dev_state), notice=dev_msg)

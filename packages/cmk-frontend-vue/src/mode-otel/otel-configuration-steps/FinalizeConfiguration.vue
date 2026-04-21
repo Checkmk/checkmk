@@ -34,6 +34,7 @@ import {
 const props = withDefaults(
   defineProps<{
     siteId: string | null
+    configName: string
     /**
      * Whether to include the enable-collector action. Defaults to `true`.
      * Must default to `true` (not Vue's Boolean coercion of `false`) so
@@ -92,9 +93,9 @@ const items = ref<ActionItemStatus[]>(
  * can drive this component's state machine.
  */
 async function runActions(): Promise<boolean> {
-  if (!props.siteId) {
-    // Should never happen in practice — the site is selected in Step 1 and
-    // cannot be unset — but guard anyway so a misuse of the component
+  if (!props.siteId || !props.configName) {
+    // Should never happen in practice — site and config name are set in Step 1
+    // and cannot be unset — but guard anyway so a misuse of the component
     // surfaces a clean error state instead of a TypeError.
     state.value = 'error'
     items.value = items.value.map((item, idx) =>
@@ -113,7 +114,7 @@ async function runActions(): Promise<boolean> {
   }
 
   state.value = 'running'
-  const ctx: PostSaveContext = { siteId: props.siteId }
+  const ctx: PostSaveContext = { siteId: props.siteId, configName: props.configName }
 
   // Reset any previous run state so retries start clean.
   items.value = actions.value.map((a) => ({

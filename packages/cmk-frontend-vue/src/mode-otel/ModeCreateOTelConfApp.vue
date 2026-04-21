@@ -239,6 +239,7 @@ async function onSaveClick(): Promise<void> {
         <FinalizeConfiguration
           ref="finalize"
           :site-id="siteId"
+          :config-name="configName"
           :collector-activation-allowed="collector_activation_allowed"
           @update:state="saveState = $event"
         />

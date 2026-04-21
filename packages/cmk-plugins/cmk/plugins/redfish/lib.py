@@ -176,15 +176,37 @@ def parse_redfish_multiple(string_table: StringTable) -> RedfishAPIData:
             continue
         if not entry.get("@odata.type"):
             continue
-        if any(x in entry.get("@odata.type") for x in hpe_matches):
+        odata_type = entry.get("@odata.type")
+        if any(x in odata_type for x in hpe_matches):
             item = redfish_item_hpe(entry)
-        elif "Drive" in entry.get("@odata.type"):
-            item = entry.get("@odata.id")
-        elif "Power" in entry.get("@odata.type"):
-            item = entry.get("@odata.id")
-        elif "Thermal" in entry.get("@odata.type"):
-            item = entry.get("@odata.id")
-        elif "Volume" in entry.get("@odata.type"):
+        elif odata_type.startswith("#PowerSupply."):
+            # Individual PSU. Id (e.g. "PSU.Slot.1") is unique within a chassis
+            # but collides across chassis (blade enclosures, multi-node
+            # servers). Fold the chassis id in, from the canonical path
+            # "/redfish/v1/Chassis/<chassis>/PowerSubsystem/PowerSupplies/<psu>".
+            path_parts = str(entry.get("@odata.id", "")).strip("/").split("/")
+            if len(path_parts) >= 4 and path_parts[-3] == "PowerSubsystem":
+                item = f"{path_parts[-4]}/{path_parts[-1]}"
+            else:
+                # Unknown layout — preserve uniqueness by using the full URL.
+                item = entry.get("@odata.id")
+        elif odata_type.startswith("#PowerSubsystem."):
+            # Singleton per chassis. The Id field is typically the literal
+            # "PowerSubsystem" (collides across chassis); use the chassis id
+            # from "/redfish/v1/Chassis/<chassis_id>/PowerSubsystem".
+            path_parts = str(entry.get("@odata.id", "")).strip("/").split("/")
+            if (
+                len(path_parts) >= 4
+                and path_parts[-1] == "PowerSubsystem"
+                and path_parts[-3] == "Chassis"
+            ):
+                item = path_parts[-2]
+            else:
+                # Unknown layout — preserve uniqueness by using the full URL.
+                item = entry.get("@odata.id")
+        elif any(kind in odata_type for kind in ("Drive", "Power", "Thermal", "Volume")):
+            # Old-model aggregator / leaf resources where `Id` alone can collide
+            # across chassis; use the full URL path as a unique key.
             item = entry.get("@odata.id")
         else:
             item = entry.get("Id")

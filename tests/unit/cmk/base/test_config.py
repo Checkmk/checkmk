@@ -46,6 +46,7 @@ from cmk.base.configlib.servicename import (
     PassiveServiceNameConfig,
 )
 from cmk.base.default_config.base import _PeriodicDiscovery
+from cmk.ccc import version as cmk_version
 from cmk.ccc.config_path import VersionedConfigPath
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostAddress, HostName
@@ -3482,3 +3483,62 @@ def test_old_description_used(monkeypatch: MonkeyPatch) -> None:
             "Service %s",
         )
         assert actual_descr == expected.service_description
+
+
+def test_notification_spooling_community_default_is_off(monkeypatch: MonkeyPatch) -> None:
+    monkeypatch.setattr(config, "notification_spool_to", None)
+    monkeypatch.setattr(config, "notification_spooling", None)
+    monkeypatch.setattr(cmk_version, "edition", lambda _omd_root: Edition.COMMUNITY)
+    assert ConfigCache.notification_spooling() == "off"
+
+
+@pytest.mark.parametrize(
+    "edition",
+    [Edition.PRO, Edition.CLOUD, Edition.ULTIMATE, Edition.ULTIMATEMT],
+)
+def test_notification_spooling_non_community_default_is_local(
+    monkeypatch: MonkeyPatch, edition: Edition
+) -> None:
+    monkeypatch.setattr(config, "notification_spool_to", None)
+    monkeypatch.setattr(config, "notification_spooling", None)
+    monkeypatch.setattr(cmk_version, "edition", lambda _omd_root: edition)
+    assert ConfigCache.notification_spooling() == "local"
+
+
+@pytest.mark.parametrize("value", ["off", "local", "remote", "both"])
+def test_notification_spooling_explicit_string_wins_over_edition_default(
+    monkeypatch: MonkeyPatch, value: Literal["off", "local", "remote", "both"]
+) -> None:
+    # Force community so its "off" default is different from any non-"off" value
+    # and we can tell the override took effect.
+    monkeypatch.setattr(config, "notification_spool_to", None)
+    monkeypatch.setattr(config, "notification_spooling", value)
+    monkeypatch.setattr(cmk_version, "edition", lambda _omd_root: Edition.COMMUNITY)
+    assert ConfigCache.notification_spooling() == value
+
+
+def test_notification_spooling_spool_to_with_also_local_returns_both(
+    monkeypatch: MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(config, "notification_spool_to", ("remote.example", 6555, True))
+    monkeypatch.setattr(config, "notification_spooling", None)
+    assert ConfigCache.notification_spooling() == "both"
+
+
+def test_notification_spooling_spool_to_without_also_local_returns_remote(
+    monkeypatch: MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(config, "notification_spool_to", ("remote.example", 6555, False))
+    monkeypatch.setattr(config, "notification_spooling", None)
+    assert ConfigCache.notification_spooling() == "remote"
+
+
+def test_notification_spooling_legacy_boolean_falls_through_to_edition_default(
+    monkeypatch: MonkeyPatch,
+) -> None:
+    # Legacy: `notification_spooling = True/False` (non-string) should fall
+    # through the `isinstance(..., str)` branch to the edition-aware default.
+    monkeypatch.setattr(config, "notification_spool_to", None)
+    monkeypatch.setattr(config, "notification_spooling", True)
+    monkeypatch.setattr(cmk_version, "edition", lambda _omd_root: Edition.COMMUNITY)
+    assert ConfigCache.notification_spooling() == "off"

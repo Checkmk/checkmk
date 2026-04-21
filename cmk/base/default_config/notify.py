@@ -7,8 +7,6 @@ from __future__ import annotations
 
 from typing import Literal
 
-import cmk.ccc.version as cmk_version
-from cmk.utils import paths
 from cmk.utils.notify_types import (
     EventRule,
     NotificationParameterSpecs,
@@ -46,10 +44,9 @@ notification_plugin_timeout = 60
 # "both"   - Asynchronous local delivery plus remote forwarding
 # False    - legacy: sync delivery  (and notification_spool_to)
 # True     - legacy: async delivery (and notification_spool_to)
-if cmk_version.edition(paths.omd_root) is cmk_version.Edition.COMMUNITY:
-    notification_spooling: bool | Literal["local", "remote", "both", "off"] = "off"
-else:
-    notification_spooling = "local"
+# None     - use the edition-aware default resolved by
+#            ConfigCache.notification_spooling() at call time
+notification_spooling: bool | Literal["local", "remote", "both", "off"] | None = None
 
 # Legacy setting. The spool target is now specified in the
 # configuration of the spooler. notification_spool_to has

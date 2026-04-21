@@ -2803,9 +2803,15 @@ class ConfigCache:
             if notification_spool_to[2]:
                 return "both"
             return "remote"
+
         if notification_spooling and isinstance(notification_spooling, str):
             return notification_spooling
-        return "remote"
+
+        # Edition-aware default value
+        if cmk_version.edition(cmk.utils.paths.omd_root) is cmk_version.Edition.COMMUNITY:
+            return "off"
+
+        return "local"
 
     def notification_plugin_parameters(
         self,

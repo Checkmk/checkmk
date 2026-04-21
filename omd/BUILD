@@ -30,7 +30,6 @@ py_binary(
 # * nagvis should be added to all editions EXCEPT cloud - see CMK-14926
 edition_deps = select({
     "@cmk//edition:cloud": [
-        "//cmk/plugins/custom_query_metric_backend:pkg_tar",
         "//non-free/packages/cmk-bakery:pkg_tar",
         "//non-free/packages/cmk-cloud:pkg_tar",
         "//non-free/packages/cmc-protocols:pkg_tar",
@@ -82,7 +81,6 @@ edition_deps = select({
         "//omd/packages/nagvis:pkg_tar",
     ],
     "@cmk//edition:ultimate": [
-        "//cmk/plugins/custom_query_metric_backend:pkg_tar",
         "//non-free/packages/cmk-bakery:pkg_tar",
         "//non-free/packages/cmc-protocols:pkg_tar",
         "//non-free/packages/cmk-core-helpers:pkg_tar",
@@ -115,7 +113,6 @@ edition_deps = select({
         "//non-free/packages/otel-collector",
     ],
     "@cmk//edition:ultimatemt": [
-        "//cmk/plugins/custom_query_metric_backend:pkg_tar",
         "//non-free/packages/cmk-bakery:pkg_tar",
         "//non-free/packages/cmc-protocols:pkg_tar",
         "//non-free/packages/cmk-core-helpers:pkg_tar",

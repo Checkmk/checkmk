@@ -7,15 +7,17 @@ def _set_runpath_impl(ctx):
     outputs = []
     for src in ctx.files.srcs:
         out = ctx.actions.declare_file(ctx.label.name + "/" + src.basename)
-        arguments = []
-        if ctx.attr.force_rpath:
-            arguments.append("--force-rpath")
-        arguments += ["--set-rpath", rpath, "--output", out.path, src.path]
         ctx.actions.run(
             outputs = [out],
             inputs = [src],
             executable = patchelf,
-            arguments = arguments,
+            arguments = [
+                "--set-rpath",
+                rpath,
+                "--output",
+                out.path,
+                src.path,
+            ],
             mnemonic = "SetRunpath",
             progress_message = "Patching %s with RUNPATH %s" % (src.basename, rpath),
         )
@@ -26,10 +28,6 @@ def _set_runpath_impl(ctx):
 set_runpath = rule(
     implementation = _set_runpath_impl,
     attrs = {
-        "force_rpath": attr.bool(
-            default = False,
-            doc = "Pass --force-rpath to patchelf, storing the path in DT_RPATH instead of DT_RUNPATH. Required when the binary uses dlopen() and needs its rpath to be searched for dynamically loaded modules.",
-        ),
         "rpaths": attr.string_list(
             default = ["${ORIGIN}"],
             doc = "RUNPATH entries to set, joined with ':'. Defaults to ['${ORIGIN}'].",

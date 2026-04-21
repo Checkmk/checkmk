@@ -2,11 +2,7 @@
 # Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-"""Lightweight HTML tag-balance checker.
-
-Used by the WSGI after_request middleware (in testing mode) to catch
-unclosed or mismatched HTML tags before they reach the browser.
-"""
+"""Lightweight HTML tag-balance checker."""
 
 from html.parser import HTMLParser
 from types import TracebackType

@@ -2,7 +2,7 @@ load("@aspect_bazel_lib//lib:copy_to_directory.bzl", "copy_to_directory")
 load("@aspect_bazel_lib//lib:directory_path.bzl", "directory_path")
 load("@rules_pkg//pkg:mappings.bzl", "pkg_attributes", "pkg_filegroup", "pkg_files", "pkg_mkdirs", "pkg_mklink", "strip_prefix")
 load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
-load("//bazel/rules:patchelf.bzl", "set_runpath")
+load("//bazel/rules:patchelf.bzl", "add_runpath", "set_runpath")
 
 exports_files(["skel.permissions"])
 
@@ -61,7 +61,8 @@ pkg_filegroup(
     tags = ["manual"],
 )
 
-set_runpath(
+# We must append the rpath. As the configure_make adds the host systems perl distrubution to the rpath as well.
+add_runpath(
     name = "nagios_bin_runpath",
     srcs = ["@nagios//:nagios_bin"],
     # nagios links libltdl to load NEB event broker modules. DT_RUNPATH is not

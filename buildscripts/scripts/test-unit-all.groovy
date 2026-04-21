@@ -1,6 +1,6 @@
 #!groovy
 
-/// file: test-python3-unit-all.groovy
+/// file: test-unit-all.groovy
 
 void main() {
     def test_jenkins_helper = load("${checkout_dir}/buildscripts/scripts/utils/test_helper.groovy");

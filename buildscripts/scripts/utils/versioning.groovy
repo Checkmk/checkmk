@@ -99,12 +99,12 @@ String get_package_name(base_dir, package_type, edition, cmk_version) {
 }
 
 List<String> get_distros(Map args) {
-    def override_distros = args.override.trim() ?: "";
+    def override_distros = args.override?.trim() ?: "";
 
     /// retrieve all available distros if provided distro-list is 'all',
     /// respect provided arguments otherwise
-    def edition = override_distros == "all" ? "all" : args.edition.trim() ?: "all";
-    def use_case = override_distros == "all" ? "all" : args.use_case.trim() ?: "daily";
+    def edition = override_distros == "all" ? "all" : args.edition?.trim() ?: "all";
+    def use_case = override_distros == "all" ? "all" : args.use_case?.trim() ?: "daily";
 
     /// return requested list if provided
     if (override_distros && override_distros != "all") {

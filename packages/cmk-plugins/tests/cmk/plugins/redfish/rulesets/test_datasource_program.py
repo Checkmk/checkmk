@@ -93,27 +93,3 @@ from cmk.plugins.redfish.rulesets.datasource_program import (
 def test_migrate_redfish(old: object, new: Mapping[str, object]) -> None:
     assert migrate_redfish(old) == new
     assert migrate_redfish(new) == new
-
-
-def test_migrate_redfish_adds_missing_sections_to_existing_fetching() -> None:
-    """Rules created before new sections were added should get them filled in."""
-    old = {
-        "user": "admin",
-        "password": ("cmk_postprocessed", "explicit_password", ("uuid", "pw")),
-        "fetching": {
-            "FirmwareInventory": ("never", -1.0),
-        },
-        "port": 443,
-        "proto": "https",
-        "retries": 2,
-        "timeout": 3.0,
-    }
-    result = migrate_redfish(old)
-    assert isinstance(fetching := result["fetching"], dict)
-    # New sections must be added with default
-    assert fetching["Sensors"] == ("always", 0.0)
-    assert fetching["ThermalSubsystem"] == ("always", 0.0)
-    assert fetching["PowerSubsystem"] == ("always", 0.0)
-    assert fetching["EnvironmentMetrics"] == ("always", 0.0)
-    # Existing sections must be preserved
-    assert fetching["FirmwareInventory"] == ("never", -1.0)

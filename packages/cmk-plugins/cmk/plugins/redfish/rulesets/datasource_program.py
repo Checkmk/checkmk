@@ -184,11 +184,7 @@ def migrate_redfish(data: object) -> Mapping[str, object]:
     if not isinstance(data, Mapping):
         raise TypeError(data)
     if "fetching" in data:
-        existing_fetching = {s.name: ("always", 0.0) for s in REDFISH_SECTIONS}
-        existing_fetching.update(data["fetching"])
-        result = {**data, "fetching": existing_fetching}
-        result.pop("debug", None)
-        return result
+        return {k: v for k, v in data.items() if k != "debug"}
 
     enabled_sections = data.get("sections", [s.name for s in REDFISH_SECTIONS])
     disabled_sections = data.get("disabled_sections", ())

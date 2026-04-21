@@ -65,17 +65,12 @@ logging.getLogger("faker").setLevel(logging.ERROR)
 PYTEST_RAISE = os.getenv("_PYTEST_RAISE", "0") != "0"
 
 
-# Some cmk.* code is calling things like cmk_version.is_community_edition() at import time
-# (e.g. cmk/base/default_config/notify.py) for edition specific variable
-# defaults. In integration tests we want to use the exact version of the
-# site. For unit tests we assume we are in Ultimate multi-tenancy context.
-def _fake_version_and_paths() -> None:
+def _fake_paths() -> None:
+    """Patch `cmk.utils.paths.*` into a temp directory so the tests run isolated"""
     from pytest import MonkeyPatch
 
     monkeypatch = MonkeyPatch()
     tmp_dir = tempfile.mkdtemp(prefix="pytest_cmk_")
-
-    edition = _edition()
 
     unpatched_paths: Final = {
         # FIXME :-(
@@ -91,7 +86,6 @@ def _fake_version_and_paths() -> None:
         "mkbackup_lock_dir",
     }
 
-    # patch `cmk.utils.paths` before `cmk.ccc.versions`
     logger.info("Patching `cmk.utils.paths`.")
     import cmk.utils.paths
 
@@ -149,15 +143,6 @@ def _fake_version_and_paths() -> None:
     monkeypatch.setattr("cmk.utils.paths.inventory_dir", repo_path() / "inventory")
     monkeypatch.setattr("cmk.utils.paths.legacy_check_manpages_dir", repo_path() / "checkman")
 
-    # patch `cmk.ccc.versions`
-    logger.info("Patching `cmk.ccc.versions`.")
-    import cmk.ccc.version as cmk_version
-
-    monkeypatch.setattr(cmk_version, "orig_omd_version", cmk_version.omd_version, raising=False)
-    monkeypatch.setattr(
-        cmk_version, "omd_version", lambda *args, **kw: f"{cmk_version.__version__}.{edition.long}"
-    )
-
 
 def _edition() -> cmk_version.Edition:
     if edition := os.environ.get("EDITION"):
@@ -184,14 +169,27 @@ def cleanup_cmk() -> Generator[None]:
         pass
 
 
-# Run _fake_version_and_paths() and add_python_paths() before test execution
-_fake_version_and_paths()
+# Run _fake_paths() and add_python_paths() before test execution
+_fake_paths()
 add_python_paths()
 
 
 @pytest.fixture(scope="session")
 def test_edition() -> cmk_version.Edition:
     return _edition()
+
+
+@pytest.fixture(scope="session", autouse=True)
+def patch_omd_version(test_edition: cmk_version.Edition) -> Iterator[None]:
+    with pytest.MonkeyPatch.context() as mp:
+        mp.setattr(cmk_version, "orig_omd_version", cmk_version.omd_version, raising=False)
+        mp.setattr(
+            cmk_version,
+            "omd_version",
+            lambda *args, **kw: f"{cmk_version.__version__}.{test_edition.long}",
+        )
+        cmk_version.edition.cache_clear()
+        yield
 
 
 @pytest.hookimpl(tryfirst=True)

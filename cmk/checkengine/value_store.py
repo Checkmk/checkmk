@@ -82,6 +82,10 @@ class AllValueStoresStore:
         except FileNotFoundError:
             self._last_known_state = None
             data = {}
+        except (json.JSONDecodeError, ValueError, TypeError) as exc:
+            logger.warning("value store: ignoring corrupt file %s: %s", self.path, exc)
+            self._last_known_state = None
+            data = {}
 
         return data
 

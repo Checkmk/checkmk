@@ -59,9 +59,6 @@ class TestAllValueStoresStore:
             (HostName("host1"), "service2", None): {"key": "value2"},
         }
 
-    @pytest.mark.xfail(
-        strict=True, reason="Crash group 4188: JSONDecodeError on corrupt value store"
-    )
     def test_load_corrupt_file(self, tmp_path: Path) -> None:
         file = tmp_path / "corrupt-file"
         file.write_text("{'not': 'json'}")

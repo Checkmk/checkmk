@@ -3,6 +3,20 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+"""Service discovery orchestration.
+
+This module is organized in layers, each with distinct responsibilities:
+
+Layer 1  types.py          pure data types — DiscoverySettings, QualifiedDiscovery, etc.
+Layer 2  _autochecks       persistence (reads/writes autocheck .mk files)
+         _discover/         stateless plugin-execution engines
+         _utils/            configuration/parameter types
+Layer 3  _autodiscovery    orchestration — classifies services, writes autochecks
+Layer 4  _entrypoints/      top-level workflows (active check, commandline, GUI preview)
+
+Public API is re-exported from this module via __all__.
+"""
+
 from ._autochecks import (
     AutocheckServiceWithNodes,
     AutochecksMemoizer,

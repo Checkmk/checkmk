@@ -156,11 +156,9 @@ class DesignGraph(BaseGraph):
 
     def open_slide_in_for_metric_backend_rule(self) -> None:
         logger.info("Open 'Design graph' slide-in")
-        slide_in_selector = (
-            "#form_graph_designer_form_context > cmk-graph-designer > div > table > "
-            "tbody > tr > td:nth-child(3) > img:nth-child(4)"
-        )
-        self.main_area.locator(slide_in_selector).click()
+        self.main_area.locator().get_by_role(
+            "button", name="Add rule: Metric backend (Custom query)"
+        ).click()
         ruleset_name = "special_agents:custom_query_metric_backend"
         expect(
             self.main_area.get_text(ruleset_name),

@@ -493,6 +493,14 @@ class CheckmkCheckParameters(NamedTuple):
 
 
 HostCheckCommand = None | str | tuple[str, int | str]
+
+
+@dataclasses.dataclass(frozen=True)
+class ResolvedHostCheckCommand:
+    command: HostCheckCommand
+    is_explicit: bool
+
+
 PingLevels = dict[str, int | tuple[float, float]]
 
 # TODO (sk): Make the type narrower: TypedDict isn't easy in the case - "too chaotic usage"(c) SP
@@ -2820,13 +2828,13 @@ class ConfigCache:
 
     def host_check_command(
         self, host_name: HostName, default_host_check_command: HostCheckCommand
-    ) -> HostCheckCommand:
+    ) -> ResolvedHostCheckCommand:
         explicit_command = self.explicit_check_command(host_name)
         if explicit_command is not None:
-            return explicit_command
+            return ResolvedHostCheckCommand(explicit_command, is_explicit=True)
         if self.ip_stack_config(host_name) is IPStackConfig.NO_IP:
-            return "ok"
-        return default_host_check_command
+            return ResolvedHostCheckCommand("ok", is_explicit=False)
+        return ResolvedHostCheckCommand(default_host_check_command, is_explicit=False)
 
     def missing_sys_description(self, host_name: HostName) -> bool:
         return self.ruleset_matcher.get_host_bool_value(

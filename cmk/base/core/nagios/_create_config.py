@@ -552,7 +552,7 @@ def create_nagios_host_spec(
         "ping",
         host_check_via_service_status,
         host_check_via_custom_check,
-    )
+    ).command
     if command:
         host_spec["check_command"] = command
 

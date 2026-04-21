@@ -1,8 +1,7 @@
-load("@aspect_bazel_lib//lib:copy_to_directory.bzl", "copy_to_directory")
-load("@aspect_bazel_lib//lib:directory_path.bzl", "directory_path")
 load("@rules_pkg//pkg:mappings.bzl", "pkg_attributes", "pkg_files", "pkg_mklink")
 load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
-load("//bazel/rules:patchelf.bzl", "set_runpath_tree")
+load("//bazel/rules:exclude_from_filegroup.bzl", "exclude_from_filegroup")
+load("//bazel/rules:make_deployable.bzl", "make_deployable_dir")
 
 exports_files(
     [
@@ -12,32 +11,11 @@ exports_files(
     visibility = ["//visibility:public"],
 )
 
-filegroup(
-    name = "monitoring_plugins_gen_dir",
-    srcs = ["@monitoring-plugins//:monitoring-plugins"],
-    output_group = "gen_dir",
-    tags = ["manual"],
-)
-
-directory_path(
-    name = "libexec_dir",
-    directory = ":monitoring_plugins_gen_dir",
-    path = "libexec",
-    tags = ["manual"],
-)
-
-copy_to_directory(
-    name = "libexec_copy",
-    srcs = [":libexec_dir"],
-    include_external_repositories = ["**"],
-    root_paths = ["**/libexec"],
-    tags = ["manual"],
-)
-
-set_runpath_tree(
+make_deployable_dir(
     name = "monitoring-plugins_deployable_libexec",
-    src = ":libexec_copy",
-    rpath = "$ORIGIN/../../../lib",
+    src = "@monitoring-plugins//:gen_dir",
+    input_dir = "libexec",
+    rpath = "\\$ORIGIN/../../../lib",
     tags = ["manual"],
 )
 
@@ -50,7 +28,7 @@ pkg_files(
         mode = "0755",
     ),
     prefix = "lib/nagios/plugins/",
-    strip_prefix = "monitoring-plugins_deployable_libexec",
+    strip_prefix = "libexec",
     tags = ["manual"],
 )
 
@@ -68,31 +46,25 @@ pkg_mklink(
     target = "check_ldap",
 )
 
-directory_path(
-    name = "monitoring_plugins_share_dir",
-    directory = ":monitoring_plugins_gen_dir",
-    path = "share",
-    tags = ["manual"],
-)
-
-copy_to_directory(
-    name = "monitoring_plugins_share",
-    srcs = [":monitoring_plugins_share_dir"],
-    include_external_repositories = ["**"],
-    root_paths = ["**/share"],
+exclude_from_filegroup(
+    name = "share",
+    src = "@monitoring-plugins//:gen_dir",
+    excludes = [
+        "libexec/*",
+        "include/*",
+    ],
     tags = ["manual"],
 )
 
 pkg_files(
     name = "share_doc",
     srcs = [
-        ":monitoring_plugins_share",
+        ":share",
     ],
     attributes = pkg_attributes(
         mode = "0755",
     ),
-    prefix = "share",
-    strip_prefix = "monitoring_plugins_share",
+    strip_prefix = "rest",
     tags = ["manual"],
 )
 

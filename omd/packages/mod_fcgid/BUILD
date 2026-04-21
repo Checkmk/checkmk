@@ -1,17 +1,11 @@
 load("@rules_pkg//pkg:mappings.bzl", "pkg_files")
 load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
-load("//bazel/rules:patchelf.bzl", "set_runpath")
-
-set_runpath(
-    name = "mod_fcgid_runpath",
-    srcs = ["@mod_fcgid//:mod_fcgid.so"],
-    rpaths = ["$ORIGIN/../../../lib"],
-    tags = ["manual"],
-)
 
 pkg_files(
     name = "lib_pkg",
-    srcs = [":mod_fcgid_runpath"],
+    srcs = [
+        "@mod_fcgid//:mod_fcgid.so",
+    ],
     prefix = "lib/apache/modules",
     tags = ["manual"],
 )

@@ -30,14 +30,34 @@ CONFIGURE_OPTIONS = [
 
 COPTS = [
     "-I$EXT_BUILD_ROOT/omd/packages/monitoring-plugins/",
+    # will be prepended to executable and appended to dynamic libraries,
+    # leaving all other "copts" non-optional, lol
+    "-Wl,--rpath,$ORIGIN_VAR/../lib",
 ]
 
+# dict: Environment variables to set during the build.
+# $(execpath) macros may be used to point at files which are listed as data, deps, or build_data,
+# but unlike with other rules, these will be replaced with absolute paths to those files, because
+# the build does not run in the exec root. This attribute is subject to make variable substitution.
+# No other macros are supported.Variables containing PATH (e.g. PATH, LD_LIBRARY_PATH, CPATH)
+# entries will be prepended to the existing variable.
 ENV = {
     "PKG_CONFIG_PATH": ":".join([
         "/usr/lib/pkgconfig",
         "/usr/lib64/pkgconfig",
         "/usr/lib/x86_64-linux-gnu/pkgconfig",
     ]),
+    #
+    # This is a nasty workaround for Bazel's inability to escape `$ORIGIN`
+    # combined with foreign_cc/configure_make's RPATH agnosticness
+    #   see https://github.com/bazelbuild/rules_foreign_cc/issues/940
+    # There is a caveat left, though: this rule will append "/opt/gcc-14.2.0/lib/../lib64"
+    #   + the actual build directory, leading to a potentially wrong RPATH
+    #   next to the fact that build artifacts won't be binary identical even
+    #   when built in an exact same environment
+    # This can be worked around by setting RPATH again after `bazel build` still
+    # leaving us with RPATH placeholders of different size
+    "ORIGIN_VAR": "\\\\$$\\$$ORIGIN",  # expands to "$ORIGIN", lol
 }
 
 LIB_SOURCE = ":all_srcs"
@@ -106,4 +126,11 @@ configure_make(
     targets = TARGETS,
     visibility = VISIBILITY,
     deps = ["@openssl"],
+)
+
+filegroup(
+    name = "gen_dir",
+    srcs = [":monitoring-plugins"],
+    output_group = "gen_dir",
+    visibility = ["//visibility:public"],
 )

@@ -1,28 +1,16 @@
-load("@aspect_bazel_lib//lib:copy_to_directory.bzl", "copy_to_directory")
-load("@aspect_bazel_lib//lib:directory_path.bzl", "directory_path")
 load("@rules_pkg//pkg:mappings.bzl", "filter_directory", "pkg_filegroup", "pkg_files", "pkg_mklink", "strip_prefix")
 load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
-load("//bazel/rules:patchelf.bzl", "set_runpath_tree")
+load("//bazel/rules:exclude_from_filegroup.bzl", "exclude_from_filegroup")
+load("//bazel/rules:make_deployable.bzl", "make_deployable_dir")
 
-filegroup(
-    name = "freetds_gen_dir",
-    srcs = ["@freetds"],
-    output_group = "gen_dir",
-    tags = ["manual"],
-)
-
-directory_path(
-    name = "freetds_include_dir",
-    directory = ":freetds_gen_dir",
-    path = "include",
-    tags = ["manual"],
-)
-
-copy_to_directory(
+exclude_from_filegroup(
     name = "freetds_include",
-    srcs = [":freetds_include_dir"],
-    include_external_repositories = ["**"],
-    root_paths = ["**/freetds"],
+    src = "@freetds//:gen_dir",
+    excludes = [
+        "share",
+        "etc",
+        "lib",
+    ],
     tags = ["manual"],
 )
 
@@ -31,29 +19,15 @@ pkg_files(
     srcs = [
         ":freetds_include",
     ],
-    strip_prefix = strip_prefix.from_pkg("freetds_include"),
+    strip_prefix = strip_prefix.from_pkg("rest"),
     tags = ["manual"],
 )
 
-directory_path(
-    name = "freetds_lib_dir",
-    directory = ":freetds_gen_dir",
-    path = "lib",
-    tags = ["manual"],
-)
-
-copy_to_directory(
-    name = "freetds_lib_copy",
-    srcs = [":freetds_lib_dir"],
-    include_external_repositories = ["**"],
-    root_paths = ["**/lib"],
-    tags = ["manual"],
-)
-
-set_runpath_tree(
+make_deployable_dir(
     name = "freetds_lib_deployable",
-    src = ":freetds_lib_copy",
-    rpath = "$ORIGIN",
+    src = "@freetds//:gen_dir",
+    input_dir = "lib",
+    rpath = "\\$ORIGIN",
     tags = ["manual"],
 )
 

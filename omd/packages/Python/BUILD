@@ -1,10 +1,7 @@
-load("@aspect_bazel_lib//lib:copy_file.bzl", "copy_file")
-load("@aspect_bazel_lib//lib:copy_to_directory.bzl", "copy_to_directory")
-load("@aspect_bazel_lib//lib:directory_path.bzl", "directory_path")
 load("@rules_pkg//pkg:mappings.bzl", "pkg_attributes", "pkg_filegroup", "pkg_files", "pkg_mklink", "strip_prefix")
 load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
-load("//bazel/rules:make_deployable.bzl", "string_replace")
-load("//bazel/rules:patchelf.bzl", "set_runpath", "set_runpath_tree")
+load("//bazel/rules:exclude_from_filegroup.bzl", "exclude_from_filegroup")
+load("//bazel/rules:make_deployable.bzl", "make_deployable_dir", "string_replace")
 load("//omd/packages/Python:version.bzl", "PYTHON_MAJOR_DOT_MINOR", "PYTHON_VERSION_MAJOR")
 
 exports_files([
@@ -81,37 +78,20 @@ share_symlinks = [
 
 symlinks = bin_symlinks + lib_symlinks + pkgconfig_symlinks + share_symlinks
 
-filegroup(
-    name = "python_gen_dir",
-    srcs = ["@python"],
-    output_group = "gen_dir",
-    tags = ["manual"],
-)
-
-[directory_path(
-    name = "python_bin_path_%s" % f.replace("/", "_").replace(".", "_"),
-    directory = ":python_gen_dir",
-    path = f,
-    tags = ["manual"],
-) for f in bin_paths]
-
-[copy_file(
-    name = "python_bin_copy_%s" % f.replace("/", "_").replace(".", "_"),
-    src = ":python_bin_path_%s" % f.replace("/", "_").replace(".", "_"),
-    out = f.split("/")[-1],
-    tags = ["manual"],
-) for f in bin_paths]
-
-elf_bin_paths = [
-    "bin/python%s" % PYTHON_MAJOR_DOT_MINOR,
-]
-
-script_bin_paths = [f for f in bin_paths if f not in elf_bin_paths]
-
-set_runpath(
+# Deployable means binaries are prepared to be packaged.
+genrule(
     name = "python_bin_deployable",
-    srcs = [":python_bin_copy_%s" % f.replace("/", "_").replace(".", "_") for f in elf_bin_paths],
-    rpaths = ["$ORIGIN/../lib"],
+    srcs = ["@python//:gen_dir"],
+    outs = bin_paths,
+    cmd = """
+        BIN=$$(find $(location @python//:gen_dir) -name bin)
+        rsync -r -L --chmod='u+w' $$BIN $$(realpath $(RULEDIR))
+
+        # set RPATH for all ELF binaries we find
+        file -L $(OUTS) \\
+            | grep ELF | cut -d ':' -f1 \\
+            | xargs patchelf --force-rpath --set-rpath "\\$$ORIGIN/../lib"
+    """,
     tags = ["manual"],
 )
 
@@ -119,7 +99,7 @@ pkg_files(
     name = "python_bin_pkg",
     srcs = [
         ":python_bin_deployable",
-    ] + [":python_bin_copy_%s" % f.replace("/", "_").replace(".", "_") for f in script_bin_paths],
+    ],
     attributes = pkg_attributes(
         mode = "0755",
     ),
@@ -127,25 +107,11 @@ pkg_files(
     tags = ["manual"],
 )
 
-directory_path(
-    name = "python_lib_dynload_path",
-    directory = ":python_gen_dir",
-    path = "lib/python%s/lib-dynload" % PYTHON_MAJOR_DOT_MINOR,
-    tags = ["manual"],
-)
-
-copy_to_directory(
-    name = "python_lib_dynload_copy",
-    srcs = [":python_lib_dynload_path"],
-    include_external_repositories = ["**"],
-    root_paths = ["**/lib-dynload"],
-    tags = ["manual"],
-)
-
-set_runpath_tree(
+make_deployable_dir(
     name = "python_lib_dynload_deployable",
-    src = ":python_lib_dynload_copy",
-    rpath = "$ORIGIN/../..",
+    src = "@python//:gen_dir",
+    input_dir = "lib/python%s/lib-dynload" % PYTHON_MAJOR_DOT_MINOR,
+    rpath = "\\$ORIGIN/../..",
     tags = ["manual"],
 )
 
@@ -155,8 +121,7 @@ pkg_files(
     attributes = pkg_attributes(
         mode = "0755",
     ),
-    prefix = "lib/python%s/lib-dynload" % PYTHON_MAJOR_DOT_MINOR,
-    strip_prefix = "python_lib_dynload_deployable",
+    prefix = "lib/python%s/" % PYTHON_MAJOR_DOT_MINOR,
     tags = ["manual"],
 )
 
@@ -171,7 +136,7 @@ pkg_filegroup(
     name = "python_bin_symlinks_pkg",
     srcs = [
         ":%s" % link_name
-        for link_name, _ in bin_symlinks
+        for link_name, target in bin_symlinks
     ],
     prefix = "bin",
     tags = ["manual"],
@@ -181,7 +146,7 @@ pkg_filegroup(
     name = "python_lib_symlinks_pkg",
     srcs = [
         ":%s" % link_name
-        for link_name, _ in lib_symlinks
+        for link_name, target in lib_symlinks
     ],
     prefix = "lib",
     tags = ["manual"],
@@ -191,7 +156,7 @@ pkg_filegroup(
     name = "python_pkgconfig_symlinks_pkg",
     srcs = [
         ":%s" % link_name
-        for link_name, _ in pkgconfig_symlinks
+        for link_name, target in pkgconfig_symlinks
     ],
     prefix = "lib/pkgconfig",
     tags = ["manual"],
@@ -201,7 +166,7 @@ pkg_filegroup(
     name = "python_share_symlinks_pkg",
     srcs = [
         ":%s" % link_name
-        for link_name, _ in share_symlinks
+        for link_name, target in share_symlinks
     ],
     prefix = "share/man/man1",
     tags = ["manual"],
@@ -214,21 +179,15 @@ pkg_filegroup(
 # the RPATH needs patching, symlinking.
 # This target should contain all files that are not referenced
 # explicitly somewhere else.
-copy_to_directory(
+exclude_from_filegroup(
     name = "python_rest",
-    srcs = ["@python"],
-    exclude_srcs_patterns =
-        ["lib/python%s/lib-dynload/**" % PYTHON_MAJOR_DOT_MINOR] +
-        ["lib/%s" % i[0] for i in lib_symlinks] +
-        ["lib/pkgconfig/%s" % i[0] for i in pkgconfig_symlinks] +
-        ["share/man/man1/%s" % i[0] for i in share_symlinks],
-    include_external_repositories = ["**"],
-    include_srcs_patterns = [
-        "include/**",
-        "lib/**",
-        "share/**",
-    ],
-    root_paths = ["python"],
+    src = "@python//:gen_dir",
+    excludes = ["lib/python%s/lib-dynload" % PYTHON_MAJOR_DOT_MINOR] +
+               bin_paths +
+               ["bin/%s" % i[0] for i in bin_symlinks] +
+               ["lib/%s" % i[0] for i in lib_symlinks] +
+               ["lib/pkgconfig/%s" % i[0] for i in pkgconfig_symlinks] +
+               ["share/man/man1/%s" % i[0] for i in share_symlinks],
     tags = ["manual"],
 )
 

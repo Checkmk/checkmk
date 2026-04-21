@@ -1,73 +1,22 @@
-load("@aspect_bazel_lib//lib:copy_to_directory.bzl", "copy_to_directory")
-load("@aspect_bazel_lib//lib:directory_path.bzl", "directory_path")
-load("@rules_pkg//pkg:mappings.bzl", "pkg_attributes", "pkg_filegroup", "pkg_files", "pkg_mkdirs", "pkg_mklink", "strip_prefix")
+load("@//bazel/rules:exclude_from_filegroup.bzl", "exclude_from_filegroup")
+load("@rules_pkg//pkg:mappings.bzl", "pkg_attributes", "pkg_files", "pkg_mkdirs", "pkg_mklink", "strip_prefix")
 load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
-load("//bazel/rules:patchelf.bzl", "set_runpath")
 
 exports_files(["skel.permissions"])
 
-directory_path(
-    name = "nagios_lib_dir",
-    directory = "@nagios//:gen_dir",
-    path = "lib",
-    tags = ["manual"],
-)
-
-directory_path(
-    name = "nagios_share_dir",
-    directory = "@nagios//:gen_dir",
-    path = "share",
-    tags = ["manual"],
-)
-
-copy_to_directory(
-    name = "nagios_lib_copy",
-    srcs = [":nagios_lib_dir"],
-    include_external_repositories = ["**"],
-    root_paths = ["**/lib"],
-    tags = ["manual"],
-)
-
-copy_to_directory(
-    name = "nagios_share_copy",
-    srcs = [":nagios_share_dir"],
-    include_external_repositories = ["**"],
-    root_paths = ["**/share"],
+exclude_from_filegroup(
+    name = "nagios_rest",
+    src = "@nagios//:gen_dir",
+    excludes = ["bin/*"],
     tags = ["manual"],
 )
 
 pkg_files(
-    name = "nagios_lib_files",
-    srcs = [":nagios_lib_copy"],
-    prefix = "lib",
-    strip_prefix = "nagios_lib_copy",
-    tags = ["manual"],
-)
-
-pkg_files(
-    name = "nagios_share_files",
-    srcs = [":nagios_share_copy"],
-    prefix = "share",
-    strip_prefix = "nagios_share_copy",
-    tags = ["manual"],
-)
-
-pkg_filegroup(
     name = "nagios_without_bin",
     srcs = [
-        ":nagios_lib_files",
-        ":nagios_share_files",
+        "nagios_rest",
     ],
-    tags = ["manual"],
-)
-
-set_runpath(
-    name = "nagios_bins_runpath",
-    srcs = [
-        "@nagios//:nagios_bin",
-        "@nagios//:nagiostats_bin",
-    ],
-    rpaths = ["$ORIGIN/../lib"],
+    strip_prefix = "rest",
     tags = ["manual"],
 )
 
@@ -75,7 +24,8 @@ pkg_files(
     name = "nagios_bin",
     srcs = [
         ":merge-nagios-config",
-        ":nagios_bins_runpath",
+        "@nagios//:nagios_bin",
+        "@nagios//:nagiostats_bin",
     ],
     attributes = pkg_attributes(
         mode = "0755",

@@ -24,6 +24,7 @@ configure_make(
         "-Wno-deprecated-non-prototype",
         "-Wno-implicit-int",
         "-Wno-unused-but-set-variable",
+        "-Wl,--rpath,$ORIGIN_VAR/../lib",
     ],
     env = {
         "PKG_CONFIG_PATH": ":".join([

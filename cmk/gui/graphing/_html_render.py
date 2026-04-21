@@ -386,6 +386,10 @@ def _collect_graph_html(
 ) -> HTML:
     with output_funnel.plugged():
         display_config = render_state.display_config
+        is_inline = display_config.show_title == "inline"
+        graph_width: float = render_state.interaction.size_x * _HTML_SIZE_PER_EX
+        graph_height: float = render_state.interaction.size_y * _HTML_SIZE_PER_EX
+
         html.open_div(
             class_=["graph"]
             + (["preview"] if display_config.preview else [])
@@ -418,11 +422,8 @@ def _collect_graph_html(
             html.img(src=theme.detect_icon_path("resize_graph", prefix=""), class_="resize")
 
         # Render title and time info together so they can be laid out without overlapping.
-        # The canvas pixel width is computed here so the header div can carry an explicit width,
-        # which is the only reliable way to constrain a flex container inside an inline-block and
-        # thus allow the title to wrap when title + time info would exceed the canvas width.
-        is_inline = display_config.show_title == "inline"
-        graph_width: float = render_state.interaction.size_x * _HTML_SIZE_PER_EX
+        # The canvas pixel width is set on the header div so the flex container has a
+        # definite size and the title can wrap instead of stretching the parent inline-block.
         time_text: str | None = None
         if display_config.show_graph_time and not display_config.preview:
             time_text = annotations.x_axis_title or ""
@@ -457,7 +458,6 @@ def _collect_graph_html(
             html.close_div()
 
         # Create canvas where actual graph will be rendered
-        graph_height: float = render_state.interaction.size_y * _HTML_SIZE_PER_EX
         html.canvas(
             "",
             style="position: relative; width: %dpx; height: %dpx;" % (graph_width, graph_height),
@@ -542,6 +542,7 @@ def _render_time_range_selection(
                 "preview": True,
                 "resizable": False,
                 "interaction": False,
+                "show_vertical_axis": False,
             }
         )
 

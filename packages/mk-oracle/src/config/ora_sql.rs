@@ -513,6 +513,7 @@ impl Piggyback {
 
 #[cfg(test)]
 mod tests {
+    use super::super::section::names;
     use tests::defaults::{MAX_CONNECTIONS, MAX_QUERIES};
 
     use self::data::TEST_CONFIG;
@@ -546,40 +547,45 @@ oracle:
       timeout: 11 # optional, default 5
       tns_admin: "/path/to/oracle/config/files/" # optional, default: agent plugin config folder. Points to the location of sqlnet.ora and tnsnames.ora
       oracle_local_registry: "/etc/oracle/olr.loc" # optional, default: folder of oracle configuration files like oratab
+    custom_queries: # additional queries which generates <<<oracle_sql>>>> + item [SID|name] for each instance
+      - my_custom_query: # for item generation, mandatory
+          text: "select * from dual" # optional
+          file: "my_custom_query_file" # optional by default the same as name of the section
+          is_async: no # optional, default: no
     sections: # optional
-    - instance: # special section
-      affinity: "all" # optional, default: "db", values: "all", "db", "asm"
-    - dataguard_stats:
-    - locks:
-    - logswitches:
-    - longactivesessions:
-    - performance:
-    - processes:
-      affinity: "all" # optional, default "db", values: "all", "db", "asm"
-    - recovery_area:
-    - recovery_status:
-    - sessions:
-    - systemparameter:
-    - undostat:
-    - asm_diskgroup:
-      is_async: yes
-      affinity: "asm" # optional, default: "asm", values: "all", "db", "asm"
-    - iostats:
-      is_async: yes
-    - jobs:
-      is_async: yes
-    - resumable:
-      is_async: yes
-    - rman:
-      is_async: yes
-    - tablespaces:
-      is_async: yes
-    - tablespaces_xxx:
-      is_async: yes
-    - tablespaces_xxxz:
-      is_async: yes
-    - tablespaces_xxxz1222:
-      is_async: yes
+      - instance: # special section
+          affinity: "all" # optional, default: "db", values: "all", "db", "asm"
+      - dataguard_stats:
+      - locks:
+      - logswitches:
+      - longactivesessions:
+      - performance:
+      - processes:
+        affinity: "all" # optional, default "db", values: "all", "db", "asm"
+      - recovery_area:
+      - recovery_status:
+      - sessions:
+      - systemparameter:
+      - undostat:
+      - asm_diskgroup:
+          is_async: yes
+          affinity: "asm" # optional, default: "asm", values: "all", "db", "asm"
+      - iostats:
+          is_async: yes
+      - jobs:
+          is_async: yes
+      - resumable:
+          is_async: yes
+      - rman:
+          is_async: yes
+      - tablespaces:
+          is_async: yes
+      - tablespaces_xxx:
+          is_async: yes
+      - tablespaces_xxxz:
+          is_async: yes
+      - tablespaces_xxxz1222:
+          is_async: yes
     cache_age: 501 # optional(default:600)
     piggyback_host: "some_pb_host"
     discovery: # optional
@@ -744,9 +750,23 @@ piggyback:
 
         let product = c.product();
         assert_eq!(product.cache_age(), 501);
-        assert_eq!(product.sections().len(), 21);
+        assert_eq!(product.sections().len(), 22);
         assert_eq!(c.piggyback_host(), Some("some_pb_host"));
         assert!(!c.discovery().detect);
+        let custom = product.sections().last().unwrap();
+        assert_eq!(custom.name().as_str(), names::ORACLE_SQL_SECTION);
+        assert_eq!(
+            custom.item_value().map(|v| v.as_str()),
+            Some("my_custom_query")
+        );
+
+        product.sections().iter().for_each(|s| {
+            if s.name().as_str() == names::ORACLE_SQL_SECTION {
+                assert!(s.item_value().is_some());
+            } else {
+                assert!(s.item_value().is_none());
+            }
+        });
 
         let instances = c.instances();
         assert_eq!(instances.len(), 2);

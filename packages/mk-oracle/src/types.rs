@@ -234,6 +234,15 @@ impl SectionName {
     }
 }
 
+#[derive(PartialEq, From, Clone, Debug, Display, Hash, Eq, Into)]
+pub struct ItemValue(String);
+
+impl ItemValue {
+    pub fn as_str(&self) -> &str {
+        &self.0
+    }
+}
+
 #[derive(Debug)]
 pub struct Credentials {
     pub user: String,

@@ -16,7 +16,7 @@
 
 use super::defines::{defaults, keys};
 use super::yaml::{Get, Yaml};
-use crate::types::{SectionAffinity, SectionFilter, SectionName};
+use crate::types::{ItemValue, SectionAffinity, SectionFilter, SectionName};
 use anyhow::Result;
 use log;
 use std::collections::HashMap;
@@ -44,6 +44,7 @@ pub mod names {
     pub const IO_STATS: &str = "iostats";
     pub const ASM_DISK_GROUP: &str = "asm_diskgroup";
     pub const TS_QUOTAS: &str = "ts_quotas";
+    pub const ORACLE_SQL_SECTION: &str = "oracle_sql"; // virtual section for custom queries
 }
 
 static DEFAULT_AFFINITY_MAP: LazyLock<HashMap<&str, SectionAffinity>> = LazyLock::new(|| {
@@ -131,6 +132,7 @@ pub struct SectionBuilder {
     is_disabled: bool,
     sql: Option<String>,
     affinity: SectionAffinity,
+    item_value: Option<ItemValue>, // [PROD|locks]
 }
 
 impl SectionBuilder {
@@ -147,6 +149,7 @@ impl SectionBuilder {
                 .get(name.as_str())
                 .cloned()
                 .unwrap_or(SectionAffinity::Db),
+            item_value: None,
         }
     }
     pub fn sep(mut self, sep: Option<char>) -> Self {
@@ -155,8 +158,14 @@ impl SectionBuilder {
         }
         self
     }
+
     pub fn set_async(mut self, value: bool) -> Self {
         self.is_async = value;
+        self
+    }
+
+    pub fn set_item_value(mut self, value: ItemValue) -> Self {
+        self.item_value = Some(value);
         self
     }
 
@@ -176,8 +185,13 @@ impl SectionBuilder {
     }
 
     pub fn build(self) -> Section {
+        let name = if self.item_value.is_some() {
+            names::ORACLE_SQL_SECTION.to_string()
+        } else {
+            self.name
+        };
         Section {
-            name: SectionName::from(self.name),
+            name: SectionName::from(name),
             sep: self.sep,
             kind: if self.is_disabled {
                 SectionKind::Disabled
@@ -188,6 +202,7 @@ impl SectionBuilder {
             },
             sql: self.sql,
             affinity: self.affinity,
+            item_value: self.item_value,
         }
     }
 }
@@ -199,6 +214,7 @@ pub struct Section {
     kind: SectionKind,
     sql: Option<String>,
     affinity: SectionAffinity,
+    item_value: Option<ItemValue>, // part of [SID|item_value]
 }
 
 impl Section {
@@ -208,6 +224,10 @@ impl Section {
 
     pub fn name(&self) -> &SectionName {
         &self.name
+    }
+
+    pub fn item_value(&self) -> Option<&ItemValue> {
+        self.item_value.as_ref()
     }
 
     pub fn sep(&self) -> char {
@@ -320,9 +340,25 @@ impl Sections {
             log::debug!("Using default cache age");
             default.cache_age()
         });
-        let sections = Sections::get_sections(yaml.get(keys::SECTIONS));
+        let mut sections = Sections::get_sections(yaml.get(keys::SECTIONS)).unwrap_or_else(|| {
+            log::debug!("Using default sections");
+            default.sections().clone()
+        });
+        let custom_queries = Sections::get_sections(yaml.get(keys::CUSTOM_QUERIES))
+            .unwrap_or_default()
+            .into_iter()
+            .map(|s| {
+                let item = ItemValue::from(s.name().as_str().to_string());
+                Section {
+                    name: SectionName::from(names::ORACLE_SQL_SECTION.to_string()),
+                    item_value: Some(item),
+                    ..s
+                }
+            })
+            .collect::<Vec<Section>>();
+        sections.extend(custom_queries);
         Ok(Self {
-            sections: sections.unwrap_or(default.sections().clone()),
+            sections,
             cache_age,
         })
     }
@@ -338,6 +374,7 @@ impl Sections {
             None
         }
     }
+
     pub fn sections(&self) -> &Vec<Section> {
         &self.sections
     }
@@ -484,5 +521,29 @@ sections:
 _nothing: "nothing"
 "#;
         create_yaml(SOURCE)
+    }
+
+    fn create_yaml_sections_with_custom() -> Yaml {
+        const SOURCE: &str = r#"
+custom_queries:
+  - custom1:
+      is_async: yes
+
+sections:
+  - something:
+"#;
+        create_yaml(SOURCE)
+    }
+
+    #[test]
+    fn test_sections_with_custom_queries() {
+        let s =
+            Sections::from_yaml(&create_yaml_sections_with_custom(), &Sections::default()).unwrap();
+        let sections: &Vec<Section> = s.sections();
+        assert_eq!(sections.len(), 2);
+        assert!(sections[0].item_value().is_none());
+        assert_eq!(sections[0].kind(), SectionKind::Sync);
+        assert_eq!(sections[1].item_value().unwrap().as_str(), "custom1");
+        assert_eq!(sections[1].kind(), SectionKind::Async);
     }
 }

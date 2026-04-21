@@ -79,6 +79,7 @@ class _TagBalanceChecker(HTMLParser):
             }
             for tag, line, attrs in self._stack
         )
+        self._errors.sort(key=lambda item: item["line"])
         self._stack = []
         self.close()
 

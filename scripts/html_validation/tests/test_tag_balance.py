@@ -89,11 +89,6 @@ def test_check_html_tag_balance_error_payload() -> None:
             "count": 3,
             "errors": [
                 {
-                    "line": 6,
-                    "reason": "has no matching open tag",
-                    "tag": "</span",
-                },
-                {
                     "line": 3,
                     "reason": "not closed before </html>",
                     "tag": "<main id='content'>",
@@ -102,6 +97,11 @@ def test_check_html_tag_balance_error_payload() -> None:
                     "line": 4,
                     "reason": "not closed before </html>",
                     "tag": "<div class='card'>",
+                },
+                {
+                    "line": 6,
+                    "reason": "has no matching open tag",
+                    "tag": "</span",
                 },
             ],
         }

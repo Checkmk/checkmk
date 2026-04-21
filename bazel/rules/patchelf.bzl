@@ -112,6 +112,54 @@ def _set_runpath_tree_impl(ctx):
     )
     return [DefaultInfo(files = depset([out]))]
 
+def _add_runpath_impl(ctx):
+    """Appends RUNPATH entries to ELF files, preserving any existing RUNPATH."""
+    patchelf = ctx.executable._patchelf
+    rpath = ":".join(ctx.attr.rpaths)
+    outputs = []
+    for src in ctx.files.srcs:
+        out = ctx.actions.declare_file(ctx.label.name + "/" + src.basename)
+        arguments = []
+        if ctx.attr.force_rpath:
+            arguments.append("--force-rpath")
+        arguments += ["--add-rpath", rpath, "--output", out.path, src.path]
+        ctx.actions.run(
+            outputs = [out],
+            inputs = [src],
+            executable = patchelf,
+            arguments = arguments,
+            mnemonic = "AppendRunpath",
+            progress_message = "Appending RUNPATH %s to %s" % (src.basename, rpath),
+        )
+        outputs.append(out)
+
+    return [DefaultInfo(files = depset(outputs))]
+
+add_runpath = rule(
+    implementation = _add_runpath_impl,
+    attrs = {
+        "force_rpath": attr.bool(
+            default = False,
+            doc = "Pass --force-rpath to patchelf, storing the path in DT_RPATH instead of DT_RUNPATH.",
+        ),
+        "rpaths": attr.string_list(
+            default = ["${ORIGIN}"],
+            doc = "RUNPATH entries to append, joined with ':'. Appended after any existing RUNPATH.",
+        ),
+        "srcs": attr.label_list(
+            allow_files = True,
+            doc = "ELF files to patch",
+            mandatory = True,
+        ),
+        "_patchelf": attr.label(
+            cfg = "exec",
+            default = "@patchelf",
+            executable = True,
+        ),
+    },
+    doc = "Appends entries to the RUNPATH of the given ELF files, preserving any existing RUNPATH",
+)
+
 set_runpath_tree = rule(
     implementation = _set_runpath_tree_impl,
     attrs = {

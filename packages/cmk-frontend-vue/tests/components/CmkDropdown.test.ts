@@ -567,7 +567,9 @@ test('dropdown doesnt interfere with tab order', async () => {
   dropdown.focus()
 
   // Open, select option2 by arrow keys and submit
-  await userEvent.keyboard('[Space][ArrowDown][Enter]')
+  await userEvent.keyboard('[Space]')
+  await screen.findByText('Option 1') // wait for suggestions to be rendered
+  await userEvent.keyboard('[ArrowDown][Enter]')
   expect(emitted('update:selectedOption')).toEqual([['option2']])
   expect(document.activeElement).toBe(dropdown)
 

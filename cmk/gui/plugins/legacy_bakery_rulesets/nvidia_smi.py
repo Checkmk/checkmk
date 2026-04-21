@@ -3,58 +3,94 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Mapping
 
-from cmk.gui.agent_bakery import RulespecGroupMonitoringAgentsAgentPlugins
-from cmk.gui.i18n import _
-from cmk.gui.plugins.wato.utils import HostRulespec, rulespec_registry
-from cmk.gui.valuespec import Alternative, Dictionary, FixedValue, TextInput
-from cmk.utils.rulesets.definition import RuleGroup
+from cmk.rulesets.v1 import Help, Title
+from cmk.rulesets.v1.form_specs import (
+    CascadingSingleChoice,
+    CascadingSingleChoiceElement,
+    DefaultValue,
+    DictElement,
+    Dictionary,
+    FixedValue,
+    String,
+    TimeMagnitude,
+    TimeSpan,
+)
+from cmk.rulesets.v1.rule_specs import AgentConfig, Topic
 
 
-def _valuespec_agent_config_nvidia_smi() -> Alternative:
-    return Alternative(
-        title=_("Nvidia GPU monitoring (Linux, Windows)"),
-        help=_(
+def migrate(value: object) -> Mapping[str, object]:
+    if isinstance(value, dict) and "deployment" in value:
+        return value
+    if value is None:
+        return {"deployment": ("do_not_deploy", None)}
+    if isinstance(value, dict):
+        result: dict[str, object] = {"deployment": ("sync", None)}
+        if "nvidia_smi_path" in value:
+            result["nvidia_smi_path"] = value["nvidia_smi_path"]
+        return result
+    raise ValueError(f"Unexpected value: {value!r}")
+
+
+def _valuespec_agent_config_nvidia_smi() -> Dictionary:
+    return Dictionary(
+        help_text=Help(
             "This will deploy the agent plug-in <tt>nvidia_smi</tt> used for monitoring Nvidia GPUs."
         ),
-        elements=[
-            Dictionary(
-                title=_("Deploy the nvidia_smi agent plug-in"),
-                elements=[
-                    (
-                        "nvidia_smi_path",
-                        TextInput(
-                            title=_("Path to nvidia-smi.exe (Windows only)"),
-                            help=_(
-                                "Put the path to the nvidia-smi.exe executable here, e.g. "
-                                "C:\\Program Files\\NVIDIA Corporation\\NVSMI\\nvidia-smi.exe. "
-                                "Under Linux, the relevant executable is usually defined in the "
-                                "PATH variable. Therefore, this setting is ignored under Linux."
+        elements={
+            "deployment": DictElement(
+                required=True,
+                parameter_form=CascadingSingleChoice(
+                    title=Title("Deployment type"),
+                    elements=(
+                        CascadingSingleChoiceElement(
+                            name="sync",
+                            title=Title("Deploy the plug-in and run it synchronously"),
+                            parameter_form=FixedValue(value=None),
+                        ),
+                        CascadingSingleChoiceElement(
+                            name="cached",
+                            title=Title("Deploy the plug-in and run it asynchronously"),
+                            parameter_form=TimeSpan(
+                                displayed_magnitudes=(
+                                    TimeMagnitude.HOUR,
+                                    TimeMagnitude.MINUTE,
+                                ),
+                                prefill=DefaultValue(24 * 3600.0),
                             ),
-                            allow_empty=False,
-                            regex=r"^[A-Za-z0-9\._\\ :-]+$",
-                            regex_error=_("You have used an invalid character"),
+                        ),
+                        CascadingSingleChoiceElement(
+                            name="do_not_deploy",
+                            title=Title("Do not deploy the plug-in"),
+                            parameter_form=FixedValue(value=None),
                         ),
                     ),
-                ],
-                optional_keys=False,
+                    prefill=DefaultValue("sync"),
+                ),
             ),
-            FixedValue(
-                value=None,
-                title=_("Do not deploy the nvidia_smi agent plug-in"),
-                totext=_("(disabled)"),
+            "nvidia_smi_path": DictElement(
+                parameter_form=String(
+                    title=Title("Path to nvidia-smi.exe (Windows only)"),
+                    help_text=Help(
+                        "Put the path to the nvidia-smi.exe executable here, e.g. "
+                        r"C:\Program Files\NVIDIA Corporation\NVSMI\nvidia-smi.exe. "
+                        "Under Linux, the relevant executable is usually defined in the "
+                        "PATH variable. Therefore, this setting is ignored under Linux."
+                    ),
+                    prefill=DefaultValue(
+                        r"C:\Program Files\NVIDIA Corporation\NVSMI\nvidia-smi.exe"
+                    ),
+                ),
             ),
-        ],
-        default_value={
-            "nvidia_smi_path": r"C:\Program Files\NVIDIA Corporation\NVSMI\nvidia-smi.exe"
         },
+        migrate=migrate,
     )
 
 
-rulespec_registry.register(
-    HostRulespec(
-        group=RulespecGroupMonitoringAgentsAgentPlugins,
-        name=RuleGroup.AgentConfig("nvidia_smi"),
-        valuespec=_valuespec_agent_config_nvidia_smi,
-    )
+rule_spec_nvidia_smi = AgentConfig(
+    title=Title("Nvidia GPU monitoring (Linux, Windows)"),
+    name="nvidia_smi",
+    topic=Topic.OPERATING_SYSTEM,
+    parameter_form=_valuespec_agent_config_nvidia_smi,
 )

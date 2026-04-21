@@ -4,8 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-import pytest
-
 from cmk.agent_based.v2 import Metric, Result, Service, State
 from cmk.plugins.collection.agent_based.pfsense_if import (
     check_firewall_if_testable,
@@ -24,9 +22,6 @@ def test_discover_pfsense_if() -> None:
     assert list(discover_pfsense_if(_section())) == [Service(item="WAN"), Service(item="LAN")]
 
 
-@pytest.mark.xfail(
-    strict=True, reason="Crash group 4446: Service(item='') raises TypeError on discovery"
-)
 def test_discover_pfsense_if_skips_empty_item() -> None:
     section = parse_pfsense_if([["", "0"], ["WAN", "9000"]])
     assert list(discover_pfsense_if(section)) == [Service(item="WAN")]

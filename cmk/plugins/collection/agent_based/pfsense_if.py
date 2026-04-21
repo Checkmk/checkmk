@@ -38,7 +38,7 @@ class Params(TypedDict):
 
 
 def parse_pfsense_if(string_table: StringTable) -> Section:
-    return {name: Packets(ip4_in_blocked=int(value)) for name, value in string_table}
+    return {name: Packets(ip4_in_blocked=int(value)) for name, value in string_table if name}
 
 
 def discover_pfsense_if(section: Section) -> DiscoveryResult:

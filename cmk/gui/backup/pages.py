@@ -166,8 +166,8 @@ class ModeBackupEditKey(handler.ModeBackupEditKey):
     def parent_mode(cls) -> type[WatoMode] | None:
         return ModeBackupKeyManagement
 
-    def __init__(self) -> None:
-        super().__init__(key_store=make_site_backup_keypair_store())
+    def __init__(self, edition: Edition) -> None:
+        super().__init__(edition, key_store=make_site_backup_keypair_store())
 
 
 class ModeBackupUploadKey(handler.ModeBackupUploadKey):

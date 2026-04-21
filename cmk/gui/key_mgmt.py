@@ -203,7 +203,8 @@ class ModeKeyManagement(WatoMode[object]):
 class ModeEditKey(WatoMode[object]):
     back_mode: str
 
-    def __init__(self, key_store: KeypairStore) -> None:
+    def __init__(self, edition: Edition, key_store: KeypairStore) -> None:
+        super().__init__(edition)
         self._minlen = 12
         self.key_store = key_store
 

@@ -21,6 +21,7 @@ from cmk.utils.servicename import ServiceName
 from .types import DiscoveredItem
 
 __all__ = [
+    "AutochecksSerializer",
     "AutocheckServiceWithNodes",
     "AutochecksStore",
     "AutochecksMemoizer",
@@ -40,7 +41,7 @@ class AutocheckServiceWithNodes(NamedTuple):
 _GetEffectiveHost = Callable[[HostName, AutocheckEntry], HostName]
 
 
-class _AutochecksSerializer:
+class AutochecksSerializer:
     @staticmethod
     def serialize(entries: Sequence[AutocheckEntry]) -> bytes:
         return ("[\n%s]\n" % "".join(f"  {e.dump()!r},\n" for e in entries)).encode("utf-8")
@@ -55,7 +56,7 @@ class AutochecksStore:
         self._host_name = host_name
         self._store = ObjectStore(
             cmk.utils.paths.autochecks_dir / f"{host_name}.mk",
-            serializer=_AutochecksSerializer(),
+            serializer=AutochecksSerializer(),
         )
 
     def read(self) -> Sequence[AutocheckEntry]:

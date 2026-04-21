@@ -14,7 +14,7 @@ from cmk.automations import results
 from cmk.automations.results import SerializedResult, SetAutochecksInput
 from cmk.ccc.hostaddress import HostName
 from cmk.checkengine.discovery import DiscoveryReport, DiscoverySettings
-from cmk.checkengine.discovery._autochecks import _AutochecksSerializer
+from cmk.checkengine.discovery._autochecks import AutochecksSerializer
 from cmk.checkengine.plugins import AutocheckEntry, CheckPluginName
 from cmk.utils.rulesets.definition import RuleGroup
 from cmk.utils.servicename import ServiceName
@@ -392,7 +392,7 @@ def test_automation_set_autochecks_v2(site: Site) -> None:
         autochecks_file = f"var/check_mk/autochecks/{host_name}.mk"
         assert site.file_exists(autochecks_file)
 
-        data = _AutochecksSerializer().deserialize(site.read_file(autochecks_file).encode("utf-8"))
+        data = AutochecksSerializer().deserialize(site.read_file(autochecks_file).encode("utf-8"))
         services = [
             (
                 (str(s.check_plugin_name), s.item),

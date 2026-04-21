@@ -9,7 +9,7 @@ import subprocess
 
 import pytest
 
-from cmk.checkengine.discovery._autochecks import _AutochecksSerializer
+from cmk.checkengine.discovery._autochecks import AutochecksSerializer
 from cmk.utils import paths
 from tests.integration.linux_test_host import create_linux_test_host
 from tests.testlib.site import Site
@@ -61,7 +61,7 @@ check_info["test_check_3"] = LegacyCheckDefinition(
     site.openapi.service_discovery.run_discovery_and_wait_for_completion(host_name)
 
     # Verify that the discovery worked as expected
-    entries = _AutochecksSerializer().deserialize(
+    entries = AutochecksSerializer().deserialize(
         site.read_file(f"var/check_mk/autochecks/{host_name}.mk").encode("utf-8")
     )
     assert str(entries[0].check_plugin_name) == "test_check_3"

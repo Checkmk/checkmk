@@ -8,7 +8,7 @@ from collections.abc import Iterable
 import cmk.utils.paths
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.store import ObjectStore
-from cmk.checkengine.discovery._autochecks import _AutochecksSerializer, AutochecksStore
+from cmk.checkengine.discovery._autochecks import AutochecksSerializer, AutochecksStore
 from cmk.checkengine.plugins import AutocheckEntry
 from cmk.config_anonymizer.interface import AnonInterface
 from cmk.config_anonymizer.step import AnonymizeStep
@@ -50,9 +50,7 @@ class AutochecksSteps(AnonymizeStep):
             ]
 
             new_file = f"{anon_interface.get_host(host)}.mk"
-            autochecks_store = ObjectStore(
-                target_dir / new_file, serializer=_AutochecksSerializer()
-            )
+            autochecks_store = ObjectStore(target_dir / new_file, serializer=AutochecksSerializer())
             autochecks_store.write_obj(
                 sorted(anonymized_checks, key=lambda e: (str(e.check_plugin_name), str(e.item)))
             )

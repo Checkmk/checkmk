@@ -14,7 +14,7 @@ from cmk.gui.graphing._time_series import TimeSeries
 
 def test__compute_graph_spec() -> None:
     assert _compute_graph_spec(
-        GraphTimeRange(start=0, end=3600, step=60),
+        GraphTimeRange(time_range=(0, 3600), step=60),
         [
             AugmentedTimeSeriesOfGraphMetric(
                 time_series=[

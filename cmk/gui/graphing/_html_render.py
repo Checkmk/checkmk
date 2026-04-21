@@ -284,8 +284,7 @@ def make_graph_time_range_html(
     height_in_ex: float,
 ) -> GraphTimeRange:
     return GraphTimeRange(
-        start=start,
-        end=end,
+        time_range=(start, end),
         step=factor * int((end - start) / (height_in_ex * _HTML_SIZE_PER_EX * 4)),
     )
 
@@ -556,8 +555,8 @@ def _render_time_range_selection(
 
         preview_interaction = render_state.interaction.model_copy(
             update={
-                "time_start": time_range.start,
-                "time_end": time_range.end,
+                "time_start": time_range.time_range[0],
+                "time_end": time_range.time_range[1],
                 "step": time_range.step,
                 "size_x": preview_size[0],
                 "size_y": preview_size[1],
@@ -758,8 +757,8 @@ def render_graphs_html(
         effective_time_range = recipe_with_overrides.time_range or time_range
         interaction = GraphInteractionState(
             consolidation_function=recipe_with_overrides.consolidation_function,
-            time_start=effective_time_range.start,
-            time_end=effective_time_range.end,
+            time_start=effective_time_range.time_range[0],
+            time_end=effective_time_range.time_range[1],
             step=effective_time_range.step,
             value_min=(
                 effective_time_range.vertical_range[0]
@@ -1289,8 +1288,7 @@ def render_graph_html(
         UserGraphTimeRangeStore(user.id).save(
             render_state.specification.id,
             GraphTimeRange(
-                start=start_time,
-                end=end_time,
+                time_range=(start_time, end_time),
                 step=step,
                 vertical_range=(
                     (vertical_range_min, vertical_range_max)
@@ -1305,8 +1303,7 @@ def render_graph_html(
     artwork_or_errors = compute_graph_artwork(
         render_state.recipe,
         GraphTimeRange(
-            start=interaction.time_start,
-            end=interaction.time_end,
+            time_range=(interaction.time_start, interaction.time_end),
             step=interaction.step,
             vertical_range=(
                 (interaction.value_min, interaction.value_max)
@@ -1457,8 +1454,8 @@ def render_deferred_graphs_html(
         assert effective_time_range is not None
         interaction = GraphInteractionState(
             consolidation_function=recipe_with_overrides.consolidation_function,
-            time_start=effective_time_range.start,
-            time_end=effective_time_range.end,
+            time_start=effective_time_range.time_range[0],
+            time_end=effective_time_range.time_range[1],
             step=effective_time_range.step,
             value_min=(
                 effective_time_range.vertical_range[0]
@@ -1603,8 +1600,10 @@ class AjaxGraphValuesAtTime(AjaxPage):
         return render_graph_values_at_time(
             hover_request.recipe,
             GraphTimeRange(
-                start=hover_request.interaction.time_start,
-                end=hover_request.interaction.time_end,
+                time_range=(
+                    hover_request.interaction.time_start,
+                    hover_request.interaction.time_end,
+                ),
                 step=hover_request.interaction.step,
                 vertical_range=(
                     (
@@ -1761,8 +1760,8 @@ def host_service_graph_dashlet_cmk(
     effective_time_range = recipe_with_overrides.time_range or graph_time_range
     interaction = GraphInteractionState(
         consolidation_function=recipe_with_overrides.consolidation_function,
-        time_start=effective_time_range.start,
-        time_end=effective_time_range.end,
+        time_start=effective_time_range.time_range[0],
+        time_end=effective_time_range.time_range[1],
         step=effective_time_range.step,
         value_min=(
             effective_time_range.vertical_range[0] if effective_time_range.vertical_range else None

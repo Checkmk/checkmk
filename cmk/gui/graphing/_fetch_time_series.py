@@ -47,8 +47,8 @@ def fetch_augmented_time_series(
     backend_time_series_fetcher: FetchTimeSeries | None,
 ) -> Iterator[Result[AugmentedTimeSeriesOfGraphMetric, QueryDataError]]:
     conversion = user_specific_unit(recipe.unit_spec, temperature_unit).conversion
-    start_time = time_range.start
-    end_time = time_range.end
+    start_time = time_range.time_range[0]
+    end_time = time_range.time_range[1]
     step = time_range.step
 
     rrd_keys = set()
@@ -101,8 +101,8 @@ def fetch_augmented_time_series(
                 yield Error(result.error)
 
     fallback_time_range = FallbackTimeRange(
-        start=time_range.start,
-        end=time_range.end,
+        start=time_range.time_range[0],
+        end=time_range.time_range[1],
         # We only encounter `str`` here for forecast graphs, where the fallback range should be
         # irrelevant.
         step=max(time_range.step, 60) if isinstance(time_range.step, int) else 60,

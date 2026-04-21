@@ -252,7 +252,7 @@ def graph_recipes_from_request(
     except livestatus.MKLivestatusNotFoundError as e:
         raise MKUserError(None, _("Cannot calculate graph recipes: %s") % e)
 
-    return GraphTimeRange(start=start, end=end, step=60), recipes
+    return GraphTimeRange(time_range=(start, end), step=60), recipes
 
 
 class Curves(TypedDict):
@@ -275,7 +275,7 @@ def _compute_graph_spec(
     augmented_time_series_of_graph_metrics: Sequence[AugmentedTimeSeriesOfGraphMetric],
 ) -> GraphSpec:
     api_curves = []
-    start, end, step = time_range.start, time_range.end, 60  # empty graph
+    start, end, step = time_range.time_range[0], time_range.time_range[1], 60  # empty graph
     for augmented_time_series_of_graph_metric in augmented_time_series_of_graph_metrics:
         for augmented_time_series in augmented_time_series_of_graph_metric.time_series:
             if (

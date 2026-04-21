@@ -363,7 +363,7 @@ def compute_graph_artwork(
         time_series = augmented_time_series_of_graph_metrics[0].time_series[0].time_series
         start_time, end_time, step = time_series.start, time_series.end, time_series.step
     except IndexError:  # Empty graph
-        start_time, end_time, step = time_range.start, time_range.end, 60
+        start_time, end_time, step = time_range.time_range[0], time_range.time_range[1], 60
 
     x_axis, x_axis_title = _compute_graph_t_axis(start_time, end_time, width, step)
 
@@ -383,8 +383,8 @@ def compute_graph_artwork(
             mark_requested_end_time=mark_requested_end_time,
             actual_time=ActualTimeRange(start=int(start_time), end=int(end_time), step=int(step)),
             requested_time=RequestedTimeRange(
-                start=time_range.start,
-                end=time_range.end,
+                start=time_range.time_range[0],
+                end=time_range.time_range[1],
             ),
             requested_y_range=time_range.vertical_range,
             pin_time=pin_time,

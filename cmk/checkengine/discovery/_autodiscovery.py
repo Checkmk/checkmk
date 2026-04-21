@@ -101,9 +101,9 @@ class DiscoveryReport:
     diff_text: str | None = None
 
 
-_BasicTransition = Literal["changed", "unchanged", "new", "vanished"]
-_Transition = (
-    _BasicTransition
+BasicTransition = Literal["changed", "unchanged", "new", "vanished"]
+Transition = (
+    BasicTransition
     | Literal[
         "ignored", "clustered_old", "clustered_new", "clustered_vanished", "clustered_ignored"
     ]
@@ -118,7 +118,7 @@ class ServicesTableEntry[L: str]:
 
 
 type ServicesTable[L: str] = dict[ServiceID, ServicesTableEntry[L]]
-ServicesByTransition = dict[_Transition, list[AutocheckServiceWithNodes]]
+ServicesByTransition = dict[Transition, list[AutocheckServiceWithNodes]]
 
 
 # determine changed services on host.
@@ -625,7 +625,7 @@ def get_host_services_by_host_name(
     autochecks_config: AutochecksConfig,
     enforced_services: Container[ServiceID],
 ) -> dict[HostName, ServicesByTransition]:
-    services_by_host_name: dict[HostName, ServicesTable[_Transition]]
+    services_by_host_name: dict[HostName, ServicesTable[Transition]]
     if is_cluster:
         services_by_host_name = {
             **_get_cluster_services(
@@ -691,7 +691,7 @@ def make_table(
     host_name: HostName,
     entries: QualifiedDiscovery[AutocheckEntry],
     autochecks_config: AutochecksConfig,
-) -> ServicesTable[_Transition]:
+) -> ServicesTable[Transition]:
     return {
         entry.newer.id(): ServicesTableEntry(
             transition=_node_service_source(
@@ -715,9 +715,9 @@ def _node_service_source(
     *,
     ignore_service: Callable[[HostName, AutocheckEntry], bool],
     ignore_plugin: Callable[[HostName, CheckPluginName], bool],
-    check_source: _BasicTransition,
+    check_source: BasicTransition,
     cluster_name: HostName,
-) -> _Transition:
+) -> Transition:
     if host_name == cluster_name:
         if check_source != "vanished" and (
             ignore_plugin(host_name, entry.check_plugin_name) or ignore_service(host_name, entry)
@@ -740,9 +740,9 @@ def _node_service_source(
 
 def _make_cluster_table(
     entries: QualifiedDiscovery[AutocheckEntry],
-    node_tables: Mapping[HostName, ServicesTable[_Transition]],
+    node_tables: Mapping[HostName, ServicesTable[Transition]],
     is_ignored_on_cluster: Callable[[AutocheckEntry], bool],
-) -> ServicesTable[_Transition]:
+) -> ServicesTable[Transition]:
     return {
         (sid := entry.newer.id()): ServicesTableEntry(
             transition="ignored"
@@ -760,7 +760,7 @@ def _make_cluster_table(
 
 
 def _group_by_transition(
-    transition_services: ServicesTable[_Transition],
+    transition_services: ServicesTable[Transition],
 ) -> ServicesByTransition:
     services_by_transition: ServicesByTransition = {}
     for service in transition_services.values():
@@ -778,7 +778,7 @@ def _get_cluster_services(
     existing_services: Mapping[HostName, Sequence[AutocheckEntry]],
     discovered_services: Mapping[HostName, Sequence[AutocheckEntry]],
     autochecks_config: AutochecksConfig,
-) -> dict[HostName, ServicesTable[_Transition]]:
+) -> dict[HostName, ServicesTable[Transition]]:
     # should/can we move these up the stack?
     def is_ignored(hn: HostName, entry: AutocheckEntry) -> bool:
         if autochecks_config.ignore_plugin(hn, entry.check_plugin_name):

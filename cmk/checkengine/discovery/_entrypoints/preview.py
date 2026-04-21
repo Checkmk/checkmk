@@ -20,9 +20,9 @@ from cmk.checkengine.checkresults import (
 )
 from cmk.checkengine.discovery._autochecks import AutochecksConfig, AutochecksStore
 from cmk.checkengine.discovery._autodiscovery import (
-    _Transition,
     discovery_by_host,
     get_host_services_by_host_name,
+    Transition,
 )
 from cmk.checkengine.discovery._discover.host_labels import (
     analyse_cluster_labels,
@@ -238,7 +238,7 @@ def _check_preview_table_row(
     new_discovered_parameters: Mapping[str, object],
     new_service_labels: Mapping[str, str],
     check_plugins: Mapping[CheckPluginName, CheckerPlugin],
-    check_source: _Transition | Literal["manual"],
+    check_source: Transition | Literal["manual"],
     providers: Mapping[HostKey, Provider],
     found_on_nodes: Sequence[HostName],
     timeperiods_active: Mapping[str, bool],

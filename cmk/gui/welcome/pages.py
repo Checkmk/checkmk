@@ -12,6 +12,7 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.logged_in import user
 from cmk.gui.pages import AjaxPage, PageContext, PageEndpoint, PageRegistry, PageResult
+from cmk.gui.top_heading import show_license_banner, show_license_expiry
 from cmk.gui.type_defs import HTTPVariables
 from cmk.gui.utils.urls import (
     doc_reference_url,
@@ -119,6 +120,14 @@ def _welcome_page(ctx: PageContext) -> None:
             ),
         )
         return
+
+    html.open_div(id_="welcome_expiry")
+    show_license_expiry(html, user.role_ids)
+    html.close_div()
+
+    html.open_div(id_="welcome_titlebar")
+    show_license_banner(html, user.role_ids)
+    html.close_div()
 
     html.vue_component(component_name="cmk-welcome", data=asdict(get_welcome_data(is_snapin=False)))
 

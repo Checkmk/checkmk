@@ -35,7 +35,7 @@ def top_heading(
     hide_suggestions: bool,
     user_role_ids: Sequence[str],
 ) -> None:
-    _may_show_license_expiry(writer, user_role_ids)
+    show_license_expiry(writer, user_role_ids)
 
     writer.open_div(id_="top_heading")
     writer.open_div(class_="titlebar")
@@ -63,7 +63,7 @@ def top_heading(
         browser_reload=browser_reload,
     )
 
-    _may_show_license_banner(writer, user_role_ids)
+    show_license_banner(writer, user_role_ids)
 
     if page_state:
         PageStateRenderer().show(page_state)
@@ -88,7 +88,7 @@ def top_heading(
         )
 
 
-def _may_show_license_expiry(writer: HTMLWriter, user_role_ids: Sequence[str]) -> None:
+def show_license_expiry(writer: HTMLWriter, user_role_ids: Sequence[str]) -> None:
     if (
         header_effect := get_licensing_user_effect(
             paths.omd_root,
@@ -100,7 +100,7 @@ def _may_show_license_expiry(writer: HTMLWriter, user_role_ids: Sequence[str]) -
         writer.show_warning(HTML.without_escaping(header_effect.message_html))
 
 
-def _may_show_license_banner(writer: HTMLWriter, user_role_ids: Sequence[str]) -> None:
+def show_license_banner(writer: HTMLWriter, user_role_ids: Sequence[str]) -> None:
     if (
         header_effect := get_licensing_user_effect(
             paths.omd_root,

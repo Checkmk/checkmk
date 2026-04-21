@@ -595,6 +595,28 @@ div#top_heading {
   }
 }
 
+div#welcome_expiry {
+  height: auto !important;
+  display: block !important;
+  &:empty {
+    display: none !important;
+  }
+}
+div#welcome_titlebar {
+  padding: 0;
+  z-index: +1;
+  position: absolute;
+  right: 10px;
+  margin-top: 10px;
+  height: 28px !important;
+  display: flex !important;
+  align-items: center;
+
+  &:empty {
+    display: none !important;
+  }
+}
+
 @keyframes shimmer {
   100% {
     transform: translateX(100%);

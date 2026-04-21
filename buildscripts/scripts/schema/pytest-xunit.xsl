@@ -5,6 +5,24 @@
     cdata-section-elements="system-out system-err failure"/>
   <xsl:decimal-format decimal-separator="." grouping-separator=","/>
 
+  <xsl:template match="testsuites">
+    <testsuites>
+      <xsl:for-each select="@*">
+        <xsl:choose>
+          <xsl:when test="name() = 'time'">
+            <xsl:attribute name="time">
+              <xsl:value-of select="format-number(., '#.###')"/>
+            </xsl:attribute>
+          </xsl:when>
+          <xsl:otherwise>
+            <xsl:copy-of select="."/>
+          </xsl:otherwise>
+        </xsl:choose>
+      </xsl:for-each>
+      <xsl:apply-templates select="testsuite"/>
+    </testsuites>
+  </xsl:template>
+
   <xsl:template match="testsuite">
     <testsuite>
       <xsl:if test="@name">
@@ -34,7 +52,7 @@
       </xsl:if>
       <xsl:if test="@time">
         <xsl:attribute name="time">
-          <xsl:value-of select="@time"/>
+          <xsl:value-of select="format-number(@time, '#.###')"/>
         </xsl:attribute>
       </xsl:if>
 
@@ -46,7 +64,14 @@
     <testcase>
       <xsl:if test="@classname">
         <xsl:attribute name="classname">
-          <xsl:value-of select="../@name"></xsl:value-of><xsl:text>.</xsl:text><xsl:value-of select="@classname"/>
+          <xsl:choose>
+            <xsl:when test="../../@name = 'vitest tests'">
+              <xsl:value-of select="@classname"/>
+            </xsl:when>
+            <xsl:otherwise>
+              <xsl:value-of select="../@name"/><xsl:text>.</xsl:text><xsl:value-of select="@classname"/>
+            </xsl:otherwise>
+          </xsl:choose>
         </xsl:attribute>
       </xsl:if>
       <xsl:if test="@name">
@@ -56,11 +81,20 @@
       </xsl:if>
       <xsl:if test="@time">
         <xsl:attribute name="time">
-          <xsl:value-of select="@time"/>
+          <xsl:value-of select="format-number(@time, '#.###')"/>
         </xsl:attribute>
       </xsl:if>
       <xsl:if test="failure">
-        <xsl:copy-of select="failure"/>
+        <xsl:choose>
+          <xsl:when test="../../@name = 'vitest tests'">
+            <failure>
+              <xsl:value-of select="failure"/>
+            </failure>
+          </xsl:when>
+          <xsl:otherwise>
+            <xsl:copy-of select="failure"/>
+          </xsl:otherwise>
+        </xsl:choose>
       </xsl:if>
       <xsl:for-each select="error">
         <error>
@@ -82,4 +116,5 @@
       </xsl:for-each>
     </testcase>
   </xsl:template>
+
 </xsl:stylesheet>

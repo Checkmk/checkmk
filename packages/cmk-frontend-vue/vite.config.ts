@@ -126,7 +126,22 @@ export default defineConfig(({ command }) => {
         // enable jest-like global test APIs
         globals: true,
         environment: 'jsdom',
-        setupFiles: ['tests/setup-tests.ts']
+        setupFiles: ['tests/setup-tests.ts'],
+        reporters: process.env.XML_OUTPUT_FILE // variable set by bazel
+          ? [
+              [
+                'junit',
+                {
+                  outputFile: process.env.XML_OUTPUT_FILE,
+                  // Hardcode the package name as prefix so that it appears in the test reporter
+                  // produced by Jenkins JUnit plugin
+                  classnameTemplate: ({ filename }: { filename: string }) =>
+                    `//packages/cmk-frontend-vue:${filename.replace(/\//g, '.').replace(/\.test\.ts$/, '')}`
+                }
+              ],
+              'default'
+            ]
+          : ['default']
       },
       optimizeDeps: {
         include: ['@/components/CmkIcon/icons.constants']

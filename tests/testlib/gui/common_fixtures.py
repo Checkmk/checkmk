@@ -6,7 +6,12 @@
 
 from __future__ import annotations
 
+import typing
 from collections.abc import Iterator
+from contextlib import contextmanager
+from typing import Any, NamedTuple
+from unittest import mock
+from unittest.mock import MagicMock, patch
 
 import pytest
 from flask import Flask
@@ -15,12 +20,21 @@ from pytest_mock import MockerFixture
 import cmk.gui.config as config_module
 import cmk.gui.watolib.password_store
 import cmk.utils.log
+from cmk.automations.results import DeleteHostsResult
+from cmk.ccc.hostaddress import HostName
 from cmk.ccc.user import UserId
 from cmk.ccc.version import Edition
 from cmk.gui import hooks, http, main_modules
+from cmk.gui.config import active_config, Config
 from cmk.gui.script_helpers import session_wsgi_app
+from cmk.gui.watolib.hosts_and_folders import folder_tree
 
 from .web_test_app import WebTestAppForCMK
+
+
+class RemoteAutomation(NamedTuple):
+    automation: MagicMock
+    responses: Any
 
 
 def create_flask_app() -> Iterator[Flask]:
@@ -110,3 +124,147 @@ def perform_load_plugins(edition: Edition) -> None:
 
     if errors := main_modules.get_failed_plugins():
         raise Exception(f"The following errors occured during plug-in loading: {errors}")
+
+
+@contextmanager
+def set_config_context(**kwargs: Any) -> Iterator[None]:  # type: ignore[misc]
+    """Patch the config
+
+    This works even in WSGI tests, where the config is (re-)loaded by the app itself,
+    through the registered callback.
+    """
+
+    def _set_config(config: Config) -> None:
+        config._raw_config = {**config._raw_config, **kwargs}
+        for key, val in kwargs.items():
+            if hasattr(config, key):
+                setattr(config, key, val)
+
+    def fake_load_single_global_wato_setting(
+        varname: str,
+        deflt: typing.Any | None = None,
+    ) -> typing.Any:
+        return kwargs.get(varname, deflt)
+
+    try:
+        config_module.register_post_config_load_hook(_set_config)
+        patchable = {k: v for k, v in kwargs.items() if hasattr(active_config, k)}
+        if patchable:
+            # NOTE: patch.multiple doesn't want to receive an empty kwargs dict and will crash.
+            with (
+                mock.patch.multiple(active_config, **patchable),
+                mock.patch(
+                    "cmk.gui.single_global_setting._load_single_global_wato_setting",
+                    new=fake_load_single_global_wato_setting,
+                ),
+            ):
+                yield
+        elif kwargs:
+            with mock.patch(
+                "cmk.gui.single_global_setting._load_single_global_wato_setting",
+                new=fake_load_single_global_wato_setting,
+            ):
+                yield
+        else:
+            yield
+    finally:
+        config_module._post_config_load_hooks.remove(_set_config)
+
+
+def inline_background_jobs_patches(mocker: MockerFixture) -> None:
+    """Prevent threading.Thread to spin off a new thread
+
+    This will run the code (non-concurrently, blocking) in the main execution path.
+    """
+    # Thread.start spins of the new thread. We tell it to just run the job instead.
+    mocker.patch("threading.Thread.start", new=lambda self: self.run())
+    ####
+    mocker.patch("multiprocessing.Process.start", new=lambda self: self.run())
+    mocker.patch("multiprocessing.context.SpawnProcess.start", new=lambda self: self.run())
+    # We stub out everything preventing smooth execution.
+    mocker.patch("threading.Thread.join")
+    mocker.patch("multiprocessing.Process.join")
+    mocker.patch("multiprocessing.context.SpawnProcess.join")
+    mocker.patch("multiprocessing.Process.pid", 1234)
+    mocker.patch("multiprocessing.context.SpawnProcess.pid", 1234)
+    mocker.patch("multiprocessing.Process.exitcode", 0)
+    mocker.patch("multiprocessing.context.SpawnProcess.exitcode", 0)
+
+    class SynchronousQueue(list[Any]):
+        def put(self, x: Any) -> None:
+            self.append(x)
+
+        def get(self) -> Any:
+            return self.pop()
+
+        def empty(self) -> bool:
+            return not bool(self)
+
+    mocker.patch("multiprocessing.Queue", wraps=SynchronousQueue)
+    # ThreadPool creates its own Process internally so we need to mock explictly
+    thread_pool_mock = mocker.patch("multiprocessing.pool.ThreadPool")
+    thread_pool_mock.return_value.__enter__.return_value.apply_async = (
+        lambda func, args=None, kwds=None, callback=(lambda *_args: None): callback(
+            func(*(args or ()), **(kwds or {}))
+        )
+    )
+    mocker.patch("sys.exit")
+    mocker.patch("cmk.ccc.daemon.daemonize")
+    mocker.patch("cmk.ccc.daemon.closefrom")
+
+
+def suppress_remote_automation_calls_patches(mocker: MockerFixture) -> RemoteAutomation:
+    """Stub out calls to the remote automation system
+    This is needed because in order for remote automation calls to work, the site needs to be set up
+    properly, which can't be done in an unit-test context."""
+    remote_automation = mocker.patch("cmk.gui.watolib.automations.do_remote_automation")
+    mocker.patch("cmk.gui.watolib.automations.do_remote_automation", new=remote_automation)
+    return RemoteAutomation(
+        automation=remote_automation,
+        responses=None,
+    )
+
+
+def create_test_hosts() -> Iterator[list[HostName]]:
+    hostnames = [HostName("heute"), HostName("example.com")]
+    root_folder = folder_tree().root_folder()
+    root_folder.create_hosts(
+        [(hostname, {}, None) for hostname in hostnames], pprint_value=False, use_git=False
+    )
+    yield hostnames
+    root_folder.delete_hosts(
+        hostnames,
+        automation=lambda *args, **kwargs: DeleteHostsResult(),
+        pprint_value=False,
+        debug=False,
+        use_git=False,
+    )
+
+
+def _fake_detect_icon_path(_: None, icon_name: str = "", prefix: str = "") -> str:
+    if icon_name == "link":
+        return "themes/facelift/images/icon_link.png"
+    if icon_name == "info":
+        return "themes/facelift/images/icon_info.svg"
+    return "unittest.png"
+
+
+def patch_theme_context() -> Iterator[None]:
+    with (
+        patch(
+            "cmk.gui.htmllib.html.HTMLGenerator._inject_vue_frontend",
+        ),
+        patch(
+            "cmk.gui.theme.Theme.detect_icon_path",
+            new=_fake_detect_icon_path,
+        ),
+        patch(
+            "cmk.gui.theme.Theme.get",
+            return_value="modern-dark",
+        ),
+        patch(
+            "cmk.gui.theme.choices.theme_choices",
+            return_value=[("modern-dark", "dark ut"), ("facelift", "light ut")],
+        ),
+    ):
+        yield

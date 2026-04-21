@@ -12,37 +12,35 @@ from __future__ import annotations
 
 import typing
 from collections.abc import Iterator
-from contextlib import contextmanager
-from typing import Any, NamedTuple
-from unittest import mock
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 import pytest
 from flask import Flask
 from pytest_mock import MockerFixture
 from werkzeug.test import create_environ
 
-import cmk.gui.config as config_module
 import cmk.gui.watolib.password_store
-import cmk.utils.log
-from cmk.automations.results import DeleteHostsResult
-from cmk.ccc.hostaddress import HostName
 from cmk.ccc.user import UserId
 from cmk.ccc.version import Edition
 from cmk.gui import http, login
-from cmk.gui.config import active_config, Config
+from cmk.gui.config import Config
 from cmk.gui.livestatus_utils.testing import mock_livestatus
 from cmk.gui.permissions import permission_registry
 from cmk.gui.utils.roles import UserPermissions
-from cmk.gui.watolib.hosts_and_folders import folder_tree
 from cmk.livestatus_client.testing import MockLiveStatusConnection
 from tests.testlib.gui.common_fixtures import (
     create_aut_user_auth_wsgi_app,
     create_flask_app,
+    create_test_hosts,
     create_wsgi_app,
+    inline_background_jobs_patches,
+    patch_theme_context,
     perform_gui_cleanup_after_test,
     perform_load_config,
     perform_load_plugins,
+    RemoteAutomation,
+    set_config_context,
+    suppress_remote_automation_calls_patches,
     validate_background_job_annotation,
 )
 from tests.testlib.gui.users import create_and_destroy_user
@@ -52,11 +50,6 @@ from tests.testlib.gui.web_test_app import (
     WebTestAppRequestHandler,
 )
 from tests.testlib.rest_api_client import ClientRegistry, get_client_registry
-
-
-class RemoteAutomation(NamedTuple):
-    automation: MagicMock
-    responses: Any
 
 
 @pytest.fixture
@@ -85,34 +78,9 @@ def gui_cleanup_after_test(
     yield from perform_gui_cleanup_after_test(mocker)
 
 
-def fake_detect_icon_path(_: None, icon_name: str = "", prefix: str = "") -> str:
-    if icon_name == "link":
-        return "themes/facelift/images/icon_link.png"
-    if icon_name == "info":
-        return "themes/facelift/images/icon_info.svg"
-    return "unittest.png"
-
-
 @pytest.fixture()
 def patch_theme() -> Iterator[None]:
-    with (
-        patch(
-            "cmk.gui.htmllib.html.HTMLGenerator._inject_vue_frontend",
-        ),
-        patch(
-            "cmk.gui.theme.Theme.detect_icon_path",
-            new=fake_detect_icon_path,
-        ),
-        patch(
-            "cmk.gui.theme.Theme.get",
-            return_value="modern-dark",
-        ),
-        patch(
-            "cmk.gui.theme.choices.theme_choices",
-            return_value=[("modern-dark", "dark ut"), ("facelift", "light ut")],
-        ),
-    ):
-        yield
+    yield from patch_theme_context()
 
 
 @pytest.fixture()
@@ -135,52 +103,7 @@ def load_config(request_context: None) -> Iterator[Config]:
 
 @pytest.fixture(name="set_config")
 def set_config_fixture() -> SetConfig:
-    return set_config
-
-
-@contextmanager
-def set_config(**kwargs: Any) -> Iterator[None]:
-    """Patch the config
-
-    This works even in WSGI tests, where the config is (re-)loaded by the app itself,
-    through the registered callback.
-    """
-
-    def _set_config(config: Config) -> None:
-        config._raw_config = {**config._raw_config, **kwargs}
-        for key, val in kwargs.items():
-            if hasattr(config, key):
-                setattr(config, key, val)
-
-    def fake_load_single_global_wato_setting(
-        varname: str,
-        deflt: typing.Any | None = None,
-    ) -> typing.Any:
-        return kwargs.get(varname, deflt)
-
-    try:
-        config_module.register_post_config_load_hook(_set_config)
-        patchable = {k: v for k, v in kwargs.items() if hasattr(active_config, k)}
-        if patchable:
-            # NOTE: patch.multiple doesn't want to receive an empty kwargs dict and will crash.
-            with (
-                mock.patch.multiple(active_config, **patchable),
-                mock.patch(
-                    "cmk.gui.single_global_setting._load_single_global_wato_setting",
-                    new=fake_load_single_global_wato_setting,
-                ),
-            ):
-                yield
-        elif kwargs:
-            with mock.patch(
-                "cmk.gui.single_global_setting._load_single_global_wato_setting",
-                new=fake_load_single_global_wato_setting,
-            ):
-                yield
-        else:
-            yield
-    finally:
-        config_module._post_config_load_hooks.remove(_set_config)
+    return set_config_context
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -226,58 +149,12 @@ def with_admin_login(load_config: Config, with_admin: tuple[UserId, str]) -> Ite
 
 @pytest.fixture()
 def suppress_remote_automation_calls(mocker: MagicMock) -> Iterator[RemoteAutomation]:
-    """Stub out calls to the remote automation system
-    This is needed because in order for remote automation calls to work, the site needs to be set up
-    properly, which can't be done in an unit-test context."""
-    remote_automation = mocker.patch("cmk.gui.watolib.automations.do_remote_automation")
-    mocker.patch("cmk.gui.watolib.automations.do_remote_automation", new=remote_automation)
-    yield RemoteAutomation(
-        automation=remote_automation,
-        responses=None,
-    )
+    yield suppress_remote_automation_calls_patches(mocker)
 
 
 @pytest.fixture()
 def inline_background_jobs(mocker: MockerFixture) -> None:
-    """Prevent threading.Thread to spin off a new thread
-
-    This will run the code (non-concurrently, blocking) in the main execution path.
-    """
-    # Thread.start spins of the new thread. We tell it to just run the job instead.
-    mocker.patch("threading.Thread.start", new=lambda self: self.run())
-    ####
-    mocker.patch("multiprocessing.Process.start", new=lambda self: self.run())
-    mocker.patch("multiprocessing.context.SpawnProcess.start", new=lambda self: self.run())
-    # We stub out everything preventing smooth execution.
-    mocker.patch("threading.Thread.join")
-    mocker.patch("multiprocessing.Process.join")
-    mocker.patch("multiprocessing.context.SpawnProcess.join")
-    mocker.patch("multiprocessing.Process.pid", 1234)
-    mocker.patch("multiprocessing.context.SpawnProcess.pid", 1234)
-    mocker.patch("multiprocessing.Process.exitcode", 0)
-    mocker.patch("multiprocessing.context.SpawnProcess.exitcode", 0)
-
-    class SynchronousQueue(list):
-        def put(self, x: Any) -> None:
-            self.append(x)
-
-        def get(self) -> Any:
-            return self.pop()
-
-        def empty(self) -> bool:
-            return not bool(self)
-
-    mocker.patch("multiprocessing.Queue", wraps=SynchronousQueue)
-    # ThreadPool creates its own Process internally so we need to mock explictly
-    thread_pool_mock = mocker.patch("multiprocessing.pool.ThreadPool")
-    thread_pool_mock.return_value.__enter__.return_value.apply_async = (
-        lambda func, args=None, kwds=None, callback=(lambda *_args: None): callback(
-            func(*(args or ()), **(kwds or {}))
-        )
-    )
-    mocker.patch("sys.exit")
-    mocker.patch("cmk.ccc.daemon.daemonize")
-    mocker.patch("cmk.ccc.daemon.closefrom")
+    inline_background_jobs_patches(mocker)
 
 
 @pytest.fixture()
@@ -363,19 +240,7 @@ def with_host(
     request_context,
     with_admin_login,
 ):
-    hostnames = [HostName("heute"), HostName("example.com")]
-    root_folder = folder_tree().root_folder()
-    root_folder.create_hosts(
-        [(hostname, {}, None) for hostname in hostnames], pprint_value=False, use_git=False
-    )
-    yield hostnames
-    root_folder.delete_hosts(
-        hostnames,
-        automation=lambda *args, **kwargs: DeleteHostsResult(),
-        pprint_value=False,
-        debug=False,
-        use_git=False,
-    )
+    yield from create_test_hosts()
 
 
 @pytest.fixture()

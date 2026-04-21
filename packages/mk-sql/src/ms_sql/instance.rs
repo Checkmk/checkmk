@@ -12,7 +12,7 @@ use crate::config::ms_sql::{is_local_endpoint, is_use_tcp, Discovery};
 use crate::config::section;
 use crate::config::{
     self,
-    ms_sql::{AuthType, Connection, CustomInstance, Endpoint},
+    ms_sql::{AuthType, CustomInstance, Endpoint},
     section::names,
     CheckConfig,
 };
@@ -481,13 +481,7 @@ impl SqlInstance {
         if self.tcp {
             create_tcp_client(endpoint, database, self.port()).await
         } else {
-            create_odbc_client(
-                endpoint.conn(),
-                self.cluster_name.as_ref(),
-                &self.name,
-                database,
-            )
-            .await
+            create_odbc_client(endpoint, self.cluster_name.as_ref(), &self.name, database).await
         }
     }
 
@@ -1388,12 +1382,12 @@ pub async fn create_tcp_client(
 }
 
 pub async fn create_odbc_client(
-    connection: &Connection,
+    endpoint: &Endpoint,
     cluster_name: Option<&ClusterName>,
     instance_name: &InstanceName,
     database: Option<String>,
 ) -> Result<UniClient> {
-    let hostname = connection.hostname();
+    let hostname = endpoint.conn().hostname();
     #[cfg(unix)]
     anyhow::bail!(
         "ODBC Not supported `{}` `{}` cluster:`{:?}` db:`{:?}`",
@@ -1410,7 +1404,7 @@ pub async fn create_odbc_client(
             instance_name,
             database.as_deref(),
             None,
-            connection.trust_server_certificate(),
+            endpoint,
         );
         let mut client = UniClient::Odbc(OdbcClient::new(connection_string));
         update_edition(&mut client).await;
@@ -2208,7 +2202,7 @@ async fn get_custom_instance_builder(
     if is_local_endpoint(auth, conn) && !is_use_tcp(instance_name, auth, conn) {
         log::debug!("Trying to connect to `{instance_name}` using ODBC");
         if let Ok(mut client) =
-            create_odbc_client(conn, builder.cluster_name.as_ref(), instance_name, None).await
+            create_odbc_client(endpoint, builder.cluster_name.as_ref(), instance_name, None).await
         {
             log::debug!("Connected to `{instance_name}` using ODBC");
             let b = obtain_properties(&mut client, instance_name)

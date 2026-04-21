@@ -268,6 +268,7 @@ mod tests {
 #[cfg(windows)]
 pub mod odbc {
     use super::Block;
+    use crate::config::ms_sql::{AuthType, Authentication, Endpoint};
     use crate::types::ClusterName;
     use anyhow::Result;
     use odbc_api::{
@@ -315,7 +316,7 @@ pub mod odbc {
         instance: &InstanceName,
         database: Option<&str>,
         driver: Option<&str>,
-        trust_server_certificate: bool,
+        endpoint: &Endpoint,
     ) -> String {
         let server = match cluster_name {
             Some(c) => c.to_string(),
@@ -324,7 +325,7 @@ pub mod odbc {
                 .unwrap_or_else(|| "(local)".to_string()),
         };
         format!(
-            "Driver={{{}}};SERVER={}{};Database={};Integrated Security=SSPI;Trusted_Connection=yes;Encrypt=yes;TrustServerCertificate={};",
+            "Driver={{{}}};SERVER={}{};Database={};{};Encrypt=yes;TrustServerCertificate={};",
             driver.unwrap_or(&ODBC_DRIVER.clone()),
             server,
             if instance.to_string().to_uppercase() == *"MSSQLSERVER" {
@@ -333,8 +334,50 @@ pub mod odbc {
                 format!("\\{}", instance)
             },
             database.unwrap_or("master"),
-            if trust_server_certificate { "yes"} else {"no"}
+            make_connection_sub_string(endpoint.auth()),
+            if endpoint.conn().trust_server_certificate() {
+                "yes"
+            } else {
+                "no"
+            }
         )
+    }
+
+    fn make_connection_sub_string(auth: &Authentication) -> String {
+        match auth.auth_type() {
+            AuthType::Windows | AuthType::Integrated => {
+                log::info!("Connection substring {:#?}", auth);
+                "Integrated Security=SSPI;Trusted_Connection=yes".to_string()
+            }
+            AuthType::SqlServer => {
+                log::info!("Connection substring {:#?}", auth);
+                format!(
+                    "UID={};PWD={}",
+                    auth.username(),
+                    auth.password().map(|s| s.as_str()).unwrap_or_default()
+                )
+            }
+            AuthType::Token => format!(
+                "AccessToken={}",
+                auth.access_token().map(|s| s.as_str()).unwrap_or_default()
+            ),
+            AuthType::Undefined => "Integrated Security=SSPI;Trusted_Connection=yes".to_string(),
+        }
+    }
+
+    fn redact_sensitive_key(s: &str, key: &str) -> String {
+        let Some((before, after)) = s.split_once(key) else {
+            return s.to_string();
+        };
+        match after.split_once(';') {
+            Some((_, rest)) => format!("{before}{key}***;{rest}"),
+            None => format!("{before}{key}***"),
+        }
+    }
+
+    fn redact_connection_string(s: &str) -> String {
+        let s = redact_sensitive_key(s, "PWD=");
+        redact_sensitive_key(&s, "AccessToken=")
     }
 
     type BufferType = ColumnarBuffer<TextColumn<u8>>;
@@ -347,7 +390,10 @@ pub mod odbc {
     ) -> Result<Vec<Block>> {
         let env = Environment::new()?;
 
-        log::info!("Connecting with string {}", connection_string);
+        log::info!(
+            "Connecting with string {}",
+            redact_connection_string(connection_string)
+        );
 
         let conn = env.connect_with_connection_string(
             connection_string,
@@ -420,8 +466,24 @@ pub mod odbc {
 
     #[cfg(test)]
     mod tests {
+        use crate::config::ms_sql::{Authentication, Connection, Endpoint};
+        use crate::config::yaml::test_tools::create_yaml;
         use crate::platform::odbc::{self, ODBC_DRIVER};
         use crate::types::{ClusterName, HostName, InstanceName};
+        use yaml_rust2::YamlLoader;
+
+        fn make_endpoint(trust_server_certificate: bool) -> Endpoint {
+            let y = create_yaml(&format!(
+                "connection:\n  trust_server_certificate: {} ",
+                if trust_server_certificate {
+                    "yes"
+                } else {
+                    "no"
+                }
+            ));
+            let conn = Connection::from_yaml(&y, None).unwrap_or_default().unwrap();
+            Endpoint::new(&Authentication::default(), &conn)
+        }
 
         #[test]
         fn test_make_connection_string() {
@@ -430,8 +492,12 @@ pub mod odbc {
                 None,
                 &InstanceName::from("SQLEXPRESS_NAME"),
                 None,
-                None, false),
+                None, &make_endpoint(false)),
                 format!("Driver={{{}}};SERVER=(local)\\SQLEXPRESS_NAME;Database=master;Integrated Security=SSPI;Trusted_Connection=yes;Encrypt=yes;TrustServerCertificate=no;", ODBC_DRIVER.clone()));
+            let auth_str = "authentication:\n  username: x\n  password: p\n  type: sql_server";
+            let a =
+                Authentication::from_yaml(&YamlLoader::load_from_str(auth_str).unwrap()[0].clone())
+                    .unwrap();
             assert_eq!(
                 odbc::make_connection_string(
                     Some(&HostName::from("host".to_string())),
@@ -439,7 +505,18 @@ pub mod odbc {
                     &InstanceName::from("Instance"),
                     Some("db"),
                     Some("driver"),
-                    true
+                    &Endpoint::new(&a, &Connection::default())
+                ),
+                "Driver={driver};SERVER=host\\Instance;Database=db;UID=x;PWD=p;Encrypt=yes;TrustServerCertificate=yes;"
+            );
+            assert_eq!(
+                odbc::make_connection_string(
+                    Some(&HostName::from("host".to_string())),
+                    None,
+                    &InstanceName::from("Instance"),
+                    Some("db"),
+                    Some("driver"),
+                    &make_endpoint(true)
                 ),
                 "Driver={driver};SERVER=host\\Instance;Database=db;Integrated Security=SSPI;Trusted_Connection=yes;Encrypt=yes;TrustServerCertificate=yes;"
             );
@@ -450,7 +527,7 @@ pub mod odbc {
                     &InstanceName::from("Instance"),
                     Some("db"),
                     Some("driver"),
-                    true
+                    &make_endpoint(true)
                 ),
                 "Driver={driver};SERVER=cluster\\Instance;Database=db;Integrated Security=SSPI;Trusted_Connection=yes;Encrypt=yes;TrustServerCertificate=yes;"
             );
@@ -459,8 +536,32 @@ pub mod odbc {
                 None,
                 &InstanceName::from("mssqlserver"),
                     None,
-                    None, false),
+                    None, &make_endpoint(false)),
                     format!("Driver={{{}}};SERVER=host;Database=master;Integrated Security=SSPI;Trusted_Connection=yes;Encrypt=yes;TrustServerCertificate=no;", ODBC_DRIVER.clone()));
+        }
+
+        #[test]
+        fn test_redact_connection_string() {
+            assert_eq!(
+                super::redact_connection_string("Driver={drv};PWD=secret;Server=host;"),
+                "Driver={drv};PWD=***;Server=host;"
+            );
+            assert_eq!(
+                super::redact_connection_string("AccessToken=tok123;Server=host;"),
+                "AccessToken=***;Server=host;"
+            );
+            assert_eq!(
+                super::redact_connection_string("PWD=p;AccessToken=t;X=1;"),
+                "PWD=***;AccessToken=***;X=1;"
+            );
+            assert_eq!(
+                super::redact_connection_string("Driver={drv};Integrated Security=SSPI;"),
+                "Driver={drv};Integrated Security=SSPI;"
+            );
+            assert_eq!(
+                super::redact_connection_string("PWD=trailing_no_semi"),
+                "PWD=***"
+            );
         }
     }
 }

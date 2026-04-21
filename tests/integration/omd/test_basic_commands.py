@@ -23,6 +23,8 @@ def test_basic_commands(site: Site) -> None:
         "bin/cmk-update-config",
         "bin/cmk-config-anonymizer",
         "bin/cmk-validate-plugins",
+        "bin/msiinfo",
+        "bin/msibuild",
     ]
 
     if not site.edition.is_community_edition():

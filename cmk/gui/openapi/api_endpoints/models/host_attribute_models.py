@@ -30,7 +30,6 @@ from cmk.gui.openapi.api_endpoints.models.attributes import (
     SNMPCredentialsConverter,
     SNMPCredentialsModel,
 )
-from cmk.gui.openapi.endpoints._common.host_attribute_schemas import built_in_tag_group_config
 from cmk.gui.openapi.framework.model import api_field, api_model, ApiOmitted
 from cmk.gui.openapi.framework.model.converter import (
     HostAddressConverter,
@@ -46,7 +45,9 @@ from cmk.gui.watolib.host_attributes import (
     MetricsAssociationEnabled,
 )
 from cmk.utils.agent_registration import HostAgentConnectionMode
-from cmk.utils.tags import TagGroupID
+from cmk.utils.tags import BuiltinTagConfig, TagGroupID
+
+_built_in_tag_group_config = BuiltinTagConfig()
 
 HostNameOrIPv4 = Annotated[
     HostAddress,
@@ -61,7 +62,7 @@ HostNameOrIPv6 = Annotated[
 
 
 def _validate_tag_id(tag_id: str, built_in_tag_group_id: TagGroupID) -> str:
-    tag_group = built_in_tag_group_config.get_tag_group(built_in_tag_group_id)
+    tag_group = _built_in_tag_group_config.get_tag_group(built_in_tag_group_id)
     assert tag_group is not None
 
     if tag_id not in [

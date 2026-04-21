@@ -24,8 +24,10 @@ from cmk.gui.config import active_config
 from cmk.gui.fields.utils import BaseSchema
 from cmk.gui.http import request, Response
 from cmk.gui.logged_in import user
-from cmk.gui.openapi.endpoints.background_job import JobID
+from cmk.gui.openapi.api_endpoints.background_job import BACKGROUND_JOB_FAMILY
 from cmk.gui.openapi.endpoints.host_config.request_schemas import EXISTING_HOST_NAME
+from cmk.gui.openapi.framework.api_config import APIVersion
+from cmk.gui.openapi.framework.endpoint_link import path_to_endpoint
 from cmk.gui.openapi.restful_objects import constructors, Endpoint, response_schemas
 from cmk.gui.openapi.restful_objects.constructors import domain_object, link_rel, object_property
 from cmk.gui.openapi.restful_objects.parameters import HOST_NAME
@@ -800,13 +802,13 @@ def execute_bulk_discovery(params: Mapping[str, Any]) -> Response:
     ).is_error():
         raise result.error
 
-    background_job_status_link = constructors.link_endpoint(
-        module_name="cmk.gui.openapi.endpoints.background_job",
-        rel="cmk/show",
-        parameters={JobID.field_name: job.get_job_id()},
-    )
     response = Response(status=303)
-    response.location = urlparse(background_job_status_link["href"]).path
+    response.location = path_to_endpoint(
+        family=BACKGROUND_JOB_FAMILY.name,
+        link_relation="cmk/show",
+        version=APIVersion.V1,
+        parameters={"job_id": job.get_job_id()},
+    )
     return response
 
 

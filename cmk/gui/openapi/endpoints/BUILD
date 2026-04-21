@@ -1,9 +1,14 @@
 load("@aspect_rules_py//py:defs.bzl", "py_library")
 load("@cmk_requirements//:requirements.bzl", "requirement")
 
+# Narrow target with the shared helpers used by both the legacy ``endpoints``
+# package and the new-framework ``api_endpoints`` package. Extracting this
+# lets ``api_endpoints`` depend on just these helpers without pulling in the
+# full legacy ``endpoints`` library, breaking what would otherwise be a
+# ``api_endpoints → endpoints → api_endpoints`` cycle.
 py_library(
-    name = "endpoints",
-    srcs = glob(include = ["**/*.py"]),
+    name = "utils",
+    srcs = ["utils.py"],
     imports = ["../../../.."],
     visibility = [
         "//cmk:__subpackages__",
@@ -11,6 +16,36 @@ py_library(
         "//tests:__subpackages__",
     ],
     deps = [
+        "//cmk/gui:customer",
+        "//cmk/gui:exceptions",
+        "//cmk/gui:groups",
+        "//cmk/gui:http",
+        "//cmk/gui/openapi:utils",
+        "//cmk/gui/openapi/restful_objects",
+        "//cmk/gui/openapi/restful_objects:type_defs",
+        "//cmk/gui/watolib",
+        "//cmk/gui/watolib:groups_io",
+        "//cmk/utils",
+        "//packages/cmk-ccc:site",
+        "//packages/cmk-ccc:version",
+        "//packages/cmk-livestatus-client:py_livestatus",
+    ],
+)
+
+py_library(
+    name = "endpoints",
+    srcs = glob(
+        include = ["**/*.py"],
+        exclude = ["utils.py"],
+    ),
+    imports = ["../../../.."],
+    visibility = [
+        "//cmk:__subpackages__",
+        "//non-free/packages:__subpackages__",
+        "//tests:__subpackages__",
+    ],
+    deps = [
+        ":utils",
         "//cmk/gui:autocompleters",
         "//cmk/gui:config",
         "//cmk/gui:customer",
@@ -34,8 +69,9 @@ py_library(
         "//cmk/gui/graphing",
         "//cmk/gui/livestatus_utils/commands",
         "//cmk/gui/openapi:utils",
+        "//cmk/gui/openapi/api_endpoints",
         "//cmk/gui/openapi/framework",
-        "//cmk/gui/openapi/framework:core",
+        "//cmk/gui/openapi/framework:types",
         "//cmk/gui/openapi/restful_objects",
         "//cmk/gui/openapi/restful_objects:type_defs",
         "//cmk/gui/openapi/shared_endpoint_families",

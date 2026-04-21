@@ -17,7 +17,6 @@ from collections.abc import Mapping, Sequence
 from dataclasses import asdict
 from enum import StrEnum
 from typing import Any
-from urllib.parse import urlparse
 
 from pydantic import BaseModel
 
@@ -29,7 +28,10 @@ from cmk.gui.background_job.job import AlreadyRunningError
 from cmk.gui.config import active_config
 from cmk.gui.http import Response
 from cmk.gui.logged_in import user
-from cmk.gui.openapi.restful_objects import constructors, Endpoint
+from cmk.gui.openapi.api_endpoints.background_job import BACKGROUND_JOB_FAMILY
+from cmk.gui.openapi.framework.api_config import APIVersion
+from cmk.gui.openapi.framework.endpoint_link import path_to_endpoint
+from cmk.gui.openapi.restful_objects import Endpoint
 from cmk.gui.openapi.restful_objects.constructors import (
     object_action_href,
     object_href,
@@ -80,7 +82,6 @@ from cmk.gui.watolib.automations import (
 )
 from cmk.utils.encoding import json_encode
 
-from .. import background_job
 from .request_schemas import (
     QuickSetupFinalActionRequest,
     QuickSetupStageActionRequest,
@@ -387,16 +388,16 @@ def quicksetup_run_stage_action(params: Mapping[str, Any]) -> Response:
                 job_uuid=None,
             )
 
-        background_job_status_link = constructors.link_endpoint(
-            module_name="cmk.gui.openapi.endpoints.background_job",
-            rel="cmk/show",
-            parameters={background_job.JobID.field_name: background_job_id},
-        )
-        response = Response(status=303)
-        url = urlparse(background_job_status_link["href"]).path
+        parameters = {"job_id": background_job_id}
         if site_id and not site_is_local(active_config.sites[SiteId(site_id)]):
-            url = f"{url}?{background_job.FieldSiteId.field_name}={site_id}"
-        response.location = url
+            parameters["site_id"] = site_id
+        response = Response(status=303)
+        response.location = path_to_endpoint(
+            family=BACKGROUND_JOB_FAMILY.name,
+            link_relation="cmk/show",
+            version=APIVersion.V1,
+            parameters=parameters,
+        )
         return response
 
     # TODO: see TODO (localization) note above
@@ -601,13 +602,13 @@ def complete_quick_setup_action(params: Mapping[str, Any], mode: QuickSetupActio
                 detail="Another Quick setup action already running.",
                 status_code=429,
             )
-        background_job_status_link = constructors.link_endpoint(
-            module_name="cmk.gui.openapi.endpoints.background_job",
-            rel="cmk/show",
-            parameters={background_job.JobID.field_name: background_job_id},
-        )
         response = Response(status=303)
-        response.location = urlparse(background_job_status_link["href"]).path
+        response.location = path_to_endpoint(
+            family=BACKGROUND_JOB_FAMILY.name,
+            link_relation="cmk/show",
+            version=APIVersion.V1,
+            parameters={"job_id": background_job_id},
+        )
         return response
 
     result = verify_custom_validators_and_complete_quick_setup(

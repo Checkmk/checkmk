@@ -50,7 +50,6 @@ def discovery_redfish_sensors(section: RedfishAPIData) -> DiscoveryResult:
 
 
 def _dev_levels(levels: Levels | None) -> tuple[float, float] | None:
-    """Extract device-level thresholds for check_temperature/check_humidity."""
     if levels and len(levels) > 1:
         return levels[1]
     return None
@@ -64,7 +63,6 @@ def _check_sensor_levels(
     render_func: Callable[[float], str],
     boundaries: tuple[float | None, float | None] | None = None,
 ) -> CheckResult:
-    """Yield check_levels result for a generic sensor reading."""
     yield from check_levels(
         value=perfdata.value,
         levels_upper=perfdata.levels_upper,
@@ -77,90 +75,104 @@ def _check_sensor_levels(
 
 
 def check_redfish_sensors(item: str, params: TempParamDict, section: RedfishAPIData) -> CheckResult:
-    """Check single sensor state"""
+    """Check single sensor state.
+
+    Only the Temperature branch consumes `params`; see `_check_non_temperature`
+    for the rest.
+    """
     data = section.get(item)
     if data is None:
         return
 
     perfdata = process_redfish_perfdata(data)
-    if perfdata:
-        match data.get("ReadingType"):
-            case "Temperature":
-                yield from check_temperature(
-                    perfdata.value,
-                    params,
-                    unique_name=f"redfish.temp.{item}",
-                    value_store=get_value_store(),
-                    dev_levels=_dev_levels(perfdata.levels_upper),
-                    dev_levels_lower=_dev_levels(perfdata.levels_lower),
-                )
-            case "Humidity":
-                yield from check_humidity(
-                    humidity=perfdata.value,
-                    params={
-                        "levels": _dev_levels(perfdata.levels_upper),
-                        "levels_lower": _dev_levels(perfdata.levels_lower),
-                    },
-                )
-            case "Rotational":
-                if data.get("ReadingUnits") == "Percent":
-                    yield from _check_sensor_levels(
-                        perfdata,
-                        metric_name="perc",
-                        label="Speed",
-                        render_func=render.percent,
-                        boundaries=(0, 100),
-                    )
-                else:
-                    yield from _check_sensor_levels(
-                        perfdata,
-                        metric_name="fan",
-                        label="Speed",
-                        render_func=lambda v: f"{v:.0f} rpm",
-                    )
-            case "Voltage":
-                yield from _check_sensor_levels(
-                    perfdata,
-                    metric_name="voltage",
-                    label="Voltage",
-                    render_func=lambda v: f"{v:.1f} V",
-                )
-            case "Current":
-                yield from _check_sensor_levels(
-                    perfdata,
-                    metric_name="current",
-                    label="Current",
-                    render_func=lambda v: f"{v:.1f} A",
-                )
-            case "Power":
-                yield from _check_sensor_levels(
-                    perfdata, metric_name="power", label="Power", render_func=lambda v: f"{v:.1f} W"
-                )
-            case "Frequency":
-                yield from _check_sensor_levels(
-                    perfdata,
-                    metric_name="frequency",
-                    label="Frequency",
-                    render_func=lambda v: f"{v:.1f} Hz",
-                )
-            case "Percent":
-                yield from _check_sensor_levels(
-                    perfdata,
-                    metric_name="perc",
-                    label="Usage",
-                    render_func=render.percent,
-                    boundaries=(0, 100),
-                )
-            case other:
-                yield Result(
-                    state=State(0),
-                    summary=f"{other or 'Unknown'} reading: {perfdata.value}",
-                )
-    else:
+    if perfdata is None:
         yield Result(state=State(0), summary="No reading data available")
+    elif data.get("ReadingType") == "Temperature":
+        yield from check_temperature(
+            perfdata.value,
+            params,
+            unique_name=f"redfish.temp.{item}",
+            value_store=get_value_store(),
+            dev_levels=_dev_levels(perfdata.levels_upper),
+            dev_levels_lower=_dev_levels(perfdata.levels_lower),
+        )
+    else:
+        yield from _check_non_temperature(data, perfdata)
 
     dev_state, dev_msg = redfish_health_state(data.get("Status", {}))
     yield Result(state=State(dev_state), notice=dev_msg)
+
+
+def _check_non_temperature(data: RedfishAPIData, perfdata: Perfdata) -> CheckResult:
+    """Dispatch for every non-Temperature ReadingType.
+
+    Takes no `params` — the "temperature" ruleset binding only covers
+    Temperature; everything here uses device-reported thresholds only.
+    """
+    # TODO: split per ReadingType so each can bind its natural ruleset
+    match data.get("ReadingType"):
+        case "Humidity":
+            yield from check_humidity(
+                humidity=perfdata.value,
+                params={
+                    "levels": _dev_levels(perfdata.levels_upper),
+                    "levels_lower": _dev_levels(perfdata.levels_lower),
+                },
+            )
+        case "Rotational":
+            if data.get("ReadingUnits") == "Percent":
+                yield from _check_sensor_levels(
+                    perfdata,
+                    metric_name="perc",
+                    label="Speed",
+                    render_func=render.percent,
+                    boundaries=(0, 100),
+                )
+            else:
+                yield from _check_sensor_levels(
+                    perfdata,
+                    metric_name="fan",
+                    label="Speed",
+                    render_func=lambda v: f"{v:.0f} rpm",
+                )
+        case "Voltage":
+            yield from _check_sensor_levels(
+                perfdata,
+                metric_name="voltage",
+                label="Voltage",
+                render_func=lambda v: f"{v:.1f} V",
+            )
+        case "Current":
+            yield from _check_sensor_levels(
+                perfdata,
+                metric_name="current",
+                label="Current",
+                render_func=lambda v: f"{v:.1f} A",
+            )
+        case "Power":
+            yield from _check_sensor_levels(
+                perfdata, metric_name="power", label="Power", render_func=lambda v: f"{v:.1f} W"
+            )
+        case "Frequency":
+            yield from _check_sensor_levels(
+                perfdata,
+                metric_name="frequency",
+                label="Frequency",
+                render_func=lambda v: f"{v:.1f} Hz",
+            )
+        case "Percent":
+            yield from _check_sensor_levels(
+                perfdata,
+                metric_name="perc",
+                label="Usage",
+                render_func=render.percent,
+                boundaries=(0, 100),
+            )
+        case other:
+            yield Result(
+                state=State(0),
+                summary=f"{other or 'Unknown'} reading: {perfdata.value}",
+            )
 
 
 check_plugin_redfish_sensors = CheckPlugin(

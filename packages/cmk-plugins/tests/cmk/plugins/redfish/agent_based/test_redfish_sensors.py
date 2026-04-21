@@ -4,14 +4,17 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from typing import Any
 
 import pytest
 
-from cmk.agent_based.v2 import Metric, Result, StringTable
+from cmk.agent_based.v2 import Metric, Result, State, StringTable
+from cmk.plugins.lib.temperature import TempParamDict
+from cmk.plugins.redfish.agent_based import redfish_sensors
 from cmk.plugins.redfish.agent_based.redfish_sensors import (
     _check_sensor_levels,
+    check_redfish_sensors,
     discovery_redfish_sensors,
 )
 from cmk.plugins.redfish.lib import (
@@ -39,7 +42,7 @@ def _make_modern_sensor(
     lower_critical: float | None = None,
     health: str = "OK",
     state: str = "Enabled",
-) -> dict[str, Any]:
+) -> Mapping[str, Any]:
     thresholds: dict[str, Any] = {}
     if upper_caution is not None:
         thresholds["UpperCaution"] = {"Reading": upper_caution}
@@ -70,7 +73,7 @@ def _make_legacy_sensor(
     upper_crit: float | None = 90.0,
     lower_warn: float | None = 5.0,
     lower_crit: float | None = None,
-) -> dict[str, Any]:
+) -> Mapping[str, Any]:
     entry: dict[str, Any] = {
         "ReadingCelsius": reading_celsius,
     }
@@ -85,7 +88,7 @@ def _make_legacy_sensor(
     return entry
 
 
-def _make_string_table(*entries: dict[str, Any]) -> StringTable:
+def _make_string_table(*entries: Mapping[str, Any]) -> StringTable:
     return [[json.dumps(e)] for e in entries]
 
 
@@ -173,7 +176,7 @@ class TestDetectVendor:
 
 
 # ---------------------------------------------------------------------------
-# discovery + check — redfish_sensors
+# discovery — redfish_sensors
 # ---------------------------------------------------------------------------
 
 
@@ -222,7 +225,7 @@ class TestThresholdValue:
 
 
 # ---------------------------------------------------------------------------
-# _check_sensor_levels — new ReadingType metrics
+# _check_sensor_levels — generic helper
 # ---------------------------------------------------------------------------
 
 
@@ -263,3 +266,136 @@ class TestCheckSensorLevels:
         assert metric_items[0].name == metric_name
         assert metric_items[0].value == value
         assert expected_summary_contains in result_items[0].summary
+
+
+# ---------------------------------------------------------------------------
+# check_redfish_sensors — characterization tests for every ReadingType branch.
+# ---------------------------------------------------------------------------
+
+
+@pytest.fixture
+def _patch_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Stub the global value store so check_temperature can run in tests."""
+    monkeypatch.setattr(redfish_sensors, "get_value_store", lambda: {})
+
+
+def _section_with(*entries: dict[str, Any]) -> Mapping[str, Any]:
+    return parse_redfish_multiple([[json.dumps(e)] for e in entries])
+
+
+def _sensor(
+    sensor_id: str = "S1",
+    *,
+    reading: float = 1.0,
+    reading_type: str = "Temperature",
+    reading_units: str | None = "Cel",
+    upper_caution: float | None = None,
+    upper_critical: float | None = None,
+    lower_caution: float | None = None,
+    lower_critical: float | None = None,
+    health: str = "OK",
+    state: str = "Enabled",
+) -> dict[str, Any]:
+    thresholds: dict[str, Any] = {}
+    if upper_caution is not None:
+        thresholds["UpperCaution"] = {"Reading": upper_caution}
+    if upper_critical is not None:
+        thresholds["UpperCritical"] = {"Reading": upper_critical}
+    if lower_caution is not None:
+        thresholds["LowerCaution"] = {"Reading": lower_caution}
+    if lower_critical is not None:
+        thresholds["LowerCritical"] = {"Reading": lower_critical}
+    entry: dict[str, Any] = {
+        "@odata.id": f"/redfish/v1/Chassis/X/Sensors/{sensor_id}",
+        "@odata.type": "#Sensor.v1_7_0.Sensor",
+        "Id": sensor_id,
+        "Name": sensor_id,
+        "Reading": reading,
+        "ReadingType": reading_type,
+        "Status": {"Health": health, "State": state},
+    }
+    if reading_units is not None:
+        entry["ReadingUnits"] = reading_units
+    if thresholds:
+        entry["Thresholds"] = thresholds
+    return entry
+
+
+def _results(iterable: Any) -> list[Result]:
+    return [r for r in iterable if isinstance(r, Result)]
+
+
+def _metrics(iterable: Any) -> list[Metric]:
+    return [r for r in iterable if isinstance(r, Metric)]
+
+
+class TestCheckRedfishSensors:
+    """Per-ReadingType metric outputs are covered by TestCheckSensorLevels' parametrize."""
+
+    def test_missing_item_yields_nothing(self) -> None:
+        section = _section_with(_sensor("S1"))
+        assert list(check_redfish_sensors("does_not_exist", {}, section)) == []
+
+    def test_no_reading_yields_placeholder_and_health(self, _patch_value_store: None) -> None:
+        sensor = _sensor("S1")
+        del sensor["Reading"]
+        section = _section_with(sensor)
+
+        results = list(check_redfish_sensors("S1", {}, section))
+
+        assert Result(state=State.OK, summary="No reading data available") in results
+        # Health-state trailer always appended, independent of perfdata.
+        assert any(
+            isinstance(r, Result) and "Component State: Normal" in ((r.details or "") + r.summary)
+            for r in results
+        )
+
+    def test_temperature_branch_still_consumes_user_params(self, _patch_value_store: None) -> None:
+        """The Temperature arm actually forwards `params` to check_temperature.
+
+        Device levels alone (upper_caution=80, upper_critical=90) keep
+        reading=55.0 OK; user levels (40/50) push it past crit. A CRIT
+        result proves the user levels reached check_temperature.
+        """
+        section = _section_with(
+            _sensor(
+                "CPU_TEMP",
+                reading=55.0,
+                reading_type="Temperature",
+                reading_units="Cel",
+                upper_caution=80.0,
+                upper_critical=90.0,
+            )
+        )
+        user_params: TempParamDict = {"levels": (40.0, 50.0)}
+        results = list(check_redfish_sensors("CPU_TEMP", user_params, section))
+        assert any(m.name == "temp" and m.value == 55.0 for m in _metrics(results))
+        assert any(r.state == State.CRIT for r in _results(results))
+
+    def test_non_temperature_branch_routes_through_helper(self, _patch_value_store: None) -> None:
+        """Representative non-Temperature case — proves `_check_non_temperature`
+        is actually reached and yields a metric."""
+        section = _section_with(
+            _sensor("VOLT1", reading=12.1, reading_type="Voltage", reading_units="V")
+        )
+        results = list(check_redfish_sensors("VOLT1", {}, section))
+        assert any(m.name == "voltage" and m.value == 12.1 for m in _metrics(results))
+
+    def test_unknown_reading_type_falls_back_to_text_result(self, _patch_value_store: None) -> None:
+        """`case other:` arm in `_check_non_temperature` still reachable."""
+        section = _section_with(_sensor("MAGIC1", reading=7.0, reading_type="Enchantment"))
+        results = list(check_redfish_sensors("MAGIC1", {}, section))
+        assert any(
+            isinstance(r, Result) and "Enchantment reading: 7.0" in r.summary for r in results
+        )
+
+    def test_health_state_translates_to_crit(self, _patch_value_store: None) -> None:
+        """Health-state trailer still maps device status to CheckMK State."""
+        section = _section_with(
+            _sensor("VOLT1", reading=12.1, reading_type="Voltage", health="Critical")
+        )
+        results = list(check_redfish_sensors("VOLT1", {}, section))
+        assert any(
+            isinstance(r, Result) and r.state == State.CRIT and "critical" in r.summary.lower()
+            for r in results
+        )

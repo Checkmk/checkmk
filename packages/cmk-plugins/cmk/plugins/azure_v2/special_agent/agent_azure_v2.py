@@ -2870,6 +2870,7 @@ async def collect_info(
     tenant = AzureTenant(args.tenant, args.tenant_name)
     write_tenant_info(tenant)
     write_tenant_section(tenant)
+    AzureSection("agent_info").write(write_empty=True)
     await asyncio.gather(
         main_graph_client(args, monitored_services),
         *{

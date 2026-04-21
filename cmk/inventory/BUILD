@@ -14,6 +14,7 @@ py_library(
     visibility = [
         "//cmk:__subpackages__",
         "//non-free/packages/cmk-liveproxyd:__pkg__",
+        "//tests:__subpackages__",
     ],
     deps = [
         "//packages/cmk-ccc:exceptions",

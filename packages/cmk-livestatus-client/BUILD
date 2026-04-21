@@ -40,6 +40,7 @@ py_library(
         "cmk/livestatus_client/tables/*.py",
     ]),
     imports = ["."],
+    visibility = ["//tests:__subpackages__"],
     deps = [
         ":livestatus-connection",
         "//packages/cmk-ccc:hostaddress",

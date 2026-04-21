@@ -102,6 +102,14 @@
           "source.fixAll.stylelint": "explicit"
         }
       },
+      "[scss]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode",
+        "editor.formatOnSave": true,
+        "editor.codeActionsOnSave": {
+          "source.organizeImports": "explicit",
+          "source.fixAll.stylelint": "explicit"
+        }
+      },
       "[jsonc]": {
         "editor.defaultFormatter": "esbenp.prettier-vscode",
         "editor.formatOnSave": true

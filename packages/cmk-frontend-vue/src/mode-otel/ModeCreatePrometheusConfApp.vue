@@ -157,6 +157,7 @@ async function onSaveClick(): Promise<void> {
         <FinalizeConfiguration
           ref="finalize"
           :site-id="siteId"
+          :config-name="configName"
           :running-message="_t('Verifying the Prometheus configuration...')"
           :success-message="_t('Prometheus configuration saved successfully.')"
           :error-heading="_t('Could not save the Prometheus configuration')"

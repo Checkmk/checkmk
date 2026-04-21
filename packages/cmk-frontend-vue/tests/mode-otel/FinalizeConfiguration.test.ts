@@ -32,7 +32,10 @@ function makeAction(
 function renderWithActions(
   actions: readonly PostSaveAction[],
   siteId: string | null = 'local',
-  { collectorActivationAllowed }: { collectorActivationAllowed?: boolean } = {}
+  {
+    collectorActivationAllowed,
+    configName = 'my-config'
+  }: { collectorActivationAllowed?: boolean; configName?: string } = {}
 ) {
   const lastState = ref<FinalizeState>('idle')
   const compRef = ref<InstanceType<typeof FinalizeConfiguration>>()
@@ -40,8 +43,15 @@ function renderWithActions(
   render(
     defineComponent({
       components: { FinalizeConfiguration },
-      setup: () => ({ compRef, lastState, actions, siteId, collectorActivationAllowed }),
-      template: `<FinalizeConfiguration ref="compRef" :site-id="siteId" :actions="actions" :collector-activation-allowed="collectorActivationAllowed" @update:state="lastState = $event" />`
+      setup: () => ({
+        compRef,
+        lastState,
+        actions,
+        siteId,
+        collectorActivationAllowed,
+        configName
+      }),
+      template: `<FinalizeConfiguration ref="compRef" :site-id="siteId" :config-name="configName" :actions="actions" :collector-activation-allowed="collectorActivationAllowed" @update:state="lastState = $event" />`
     })
   )
 
@@ -94,8 +104,8 @@ describe('FinalizeConfiguration', () => {
       const ok = await compRef.value!.runActions()
 
       expect(ok).toBe(true)
-      expect(actionA.execute).toHaveBeenCalledWith({ siteId: 'site42' })
-      expect(actionB.execute).toHaveBeenCalledWith({ siteId: 'site42' })
+      expect(actionA.execute).toHaveBeenCalledWith({ siteId: 'site42', configName: 'my-config' })
+      expect(actionB.execute).toHaveBeenCalledWith({ siteId: 'site42', configName: 'my-config' })
       // Order: A then B.
       const aOrder = (actionA.execute as Mock).mock.invocationCallOrder[0]!
       const bOrder = (actionB.execute as Mock).mock.invocationCallOrder[0]!

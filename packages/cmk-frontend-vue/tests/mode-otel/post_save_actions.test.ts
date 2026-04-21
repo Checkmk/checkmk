@@ -41,7 +41,7 @@ describe('POST_SAVE_ACTIONS', () => {
       const spy = vi.spyOn(cmkFetch, 'fetchRestAPI').mockResolvedValue(makeFetchResponse(204))
 
       const action = POST_SAVE_ACTIONS.find((a) => a.key === 'enableCollector')!
-      const result = await action.execute({ siteId: 'prod' })
+      const result = await action.execute({ siteId: 'prod', configName: 'test-config' })
 
       expect(result.ok).toBe(true)
       expect(spy).toHaveBeenCalledWith(
@@ -57,7 +57,7 @@ describe('POST_SAVE_ACTIONS', () => {
       )
 
       const action = POST_SAVE_ACTIONS.find((a) => a.key === 'enableCollector')!
-      const result = await action.execute({ siteId: 'ghost' })
+      const result = await action.execute({ siteId: 'ghost', configName: 'test-config' })
 
       expect(result.ok).toBe(false)
       if (!result.ok) {
@@ -70,7 +70,7 @@ describe('POST_SAVE_ACTIONS', () => {
       vi.spyOn(cmkFetch, 'fetchRestAPI').mockRejectedValue(new Error('Network down'))
 
       const action = POST_SAVE_ACTIONS.find((a) => a.key === 'enableCollector')!
-      const result = await action.execute({ siteId: 'prod' })
+      const result = await action.execute({ siteId: 'prod', configName: 'test-config' })
 
       expect(result.ok).toBe(false)
       if (!result.ok) {

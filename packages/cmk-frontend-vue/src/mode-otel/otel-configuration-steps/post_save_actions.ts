@@ -14,6 +14,7 @@ const { _t } = usei18n()
  */
 export interface PostSaveContext {
   siteId: string
+  configName: string
 }
 
 /**
@@ -59,6 +60,81 @@ function errorFromUnknown(err: unknown, fallbackTitle: string): PostSaveResult {
 }
 
 /**
+ * Action: create the "Telemetry" folder under the root folder.
+ *
+ * If the POST fails for any reason we verify the folder exists via GET before
+ * surfacing the error — a 200 on the GET means the folder is already there and
+ * we can proceed. This action must run before createDCDConnectorAction because
+ * the DCD endpoint validates that the folder path exists.
+ */
+const createTelemetryFolderAction: PostSaveAction = {
+  key: 'createTelemetryFolder',
+  label: () => _t('Create Telemetry hosts folder'),
+  execute: async (_ctx) => {
+    try {
+      const response = await fetchRestAPI(
+        'api/1.0/domain-types/folder_config/collections/all',
+        'POST',
+        { title: 'Telemetry', parent: '/', name: 'telemetry' }
+      )
+      if (response.status >= 200 && response.status <= 299) {
+        return { ok: true }
+      }
+      // POST didn't succeed — maybe the folder already exists, maybe something else went wrong.
+      // Check the actual state instead of parsing the error body.
+      const check = await fetchRestAPI('api/1.0/objects/folder_config/~telemetry', 'GET')
+      if (check.status === 200) {
+        return { ok: true }
+      }
+      // Folder really isn't there — the POST error is the real failure.
+      await response.raiseForStatus()
+      return { ok: true }
+    } catch (err) {
+      return errorFromUnknown(err, _t('Could not create the Telemetry hosts folder'))
+    }
+  }
+}
+
+/**
+ * Action: create the "Telemetry" DCD metric backend connector.
+ *
+ * Uses `service.name` as the hostname resource attribute and creates hosts in
+ * the "/telemetry" folder (created by createTelemetryFolderAction). The DCD ID
+ * is derived from the config name so it is stable across wizard reruns. A 409
+ * Conflict means the connector already exists and can be reused, so it is
+ * treated as success.
+ */
+const createDCDConnectorAction: PostSaveAction = {
+  key: 'createDCDConnector',
+  label: () => _t('Set up metric backend connector'),
+  execute: async (ctx) => {
+    try {
+      const response = await fetchRestAPI(
+        'api/internal/domain-types/dcd_metric_backend/collections/all',
+        'POST',
+        {
+          title: ctx.configName,
+          site: ctx.siteId,
+          dcd_id: `quick_setup_${ctx.configName}`,
+          connector: {
+            connector_type: 'metric_backend',
+            host_name_resource_attribute_key: 'service.name',
+            creation_rules: [{ folder_path: '/telemetry', delete_hosts: true }]
+          }
+        }
+      )
+      if (response.status === 409) {
+        return { ok: true }
+      }
+      await response.raiseForStatus()
+      return { ok: true }
+    } catch (err) {
+      return errorFromUnknown(err, _t('Could not create the metric backend connector'))
+    }
+  }
+}
+
+/**
  * Action: enable the OpenTelemetry collector for the selected site.
  *
  * Hits the internal `otel_collector/actions/update/invoke` endpoint which
@@ -92,4 +168,8 @@ const enableCollectorAction: PostSaveAction = {
  * Ordered list of steps run by the QuickSetup finalize stage. To add a new
  * verify-and-add-change step append a new `PostSaveAction` here.
  */
-export const POST_SAVE_ACTIONS: readonly PostSaveAction[] = [enableCollectorAction]
+export const POST_SAVE_ACTIONS: readonly PostSaveAction[] = [
+  enableCollectorAction,
+  createTelemetryFolderAction,
+  createDCDConnectorAction
+]

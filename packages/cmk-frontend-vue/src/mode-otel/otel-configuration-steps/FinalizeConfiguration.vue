@@ -31,15 +31,34 @@ import {
   type PostSaveContext
 } from './post_save_actions.ts'
 
-const props = defineProps<{
-  siteId: string | null
-  collectorActivationAllowed?: boolean
-  /**
-   * Overrides the set of actions to run. Defaults to `POST_SAVE_ACTIONS`.
-   * Primarily useful for tests; production callers should not pass this.
-   */
-  actions?: readonly PostSaveAction[]
-}>()
+const props = withDefaults(
+  defineProps<{
+    siteId: string | null
+    /**
+     * Whether to include the enable-collector action. Defaults to `true`.
+     * Must default to `true` (not Vue's Boolean coercion of `false`) so
+     * callers that simply omit the prop keep the enable-collector action;
+     * only the cloud-edition OTel wizard passes `false` explicitly.
+     */
+    collectorActivationAllowed?: boolean
+    /**
+     * Overrides the set of actions to run. Defaults to `POST_SAVE_ACTIONS`.
+     * Primarily useful for tests; production callers should not pass this.
+     */
+    actions?: readonly PostSaveAction[]
+    /**
+     * Status alert texts. Default to OpenTelemetry wording so existing callers
+     * stay unchanged; other QuickSetup flavors (e.g. Prometheus) pass their
+     * own translated strings.
+     */
+    runningMessage?: string
+    successMessage?: string
+    errorHeading?: string
+  }>(),
+  {
+    collectorActivationAllowed: true
+  }
+)
 
 const emit = defineEmits<{
   (e: 'update:state', value: FinalizeState): void
@@ -123,6 +142,16 @@ async function runActions(): Promise<boolean> {
 
 const firstError = computed(() => items.value.find((i) => i.state === 'error')?.error)
 
+const runningText = computed(
+  () => props.runningMessage ?? _t('Verifying the OpenTelemetry configuration...')
+)
+const successText = computed(
+  () => props.successMessage ?? _t('OpenTelemetry configuration saved successfully.')
+)
+const errorHeadingText = computed(
+  () => props.errorHeading ?? _t('Could not save the OpenTelemetry configuration')
+)
+
 // Propagate state transitions to the parent so it can update the save
 // button's label / disabled binding. `immediate: true` emits the initial
 // 'idle' state so the parent does not have to hard-code a default.
@@ -151,16 +180,16 @@ defineExpose({ runActions })
     </ul>
 
     <CmkAlertBox v-if="state === 'running'" variant="loading" size="small">
-      {{ _t('Verifying the OpenTelemetry configuration...') }}
+      {{ runningText }}
     </CmkAlertBox>
     <CmkAlertBox v-else-if="state === 'success'" variant="success" size="small">
-      {{ _t('OpenTelemetry configuration saved successfully.') }}
+      {{ successText }}
     </CmkAlertBox>
     <CmkAlertBox
       v-else-if="state === 'error'"
       variant="error"
       size="small"
-      :heading="firstError?.title ?? _t('Could not save the OpenTelemetry configuration')"
+      :heading="firstError?.title ?? errorHeadingText"
     >
       {{ firstError?.detail ?? _t('An unexpected error occurred. Please try again.') }}
     </CmkAlertBox>

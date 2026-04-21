@@ -5,7 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 
 <script setup lang="ts">
-import { ref, useTemplateRef } from 'vue'
+import { computed, ref, useTemplateRef } from 'vue'
 
 import usei18n from '@/lib/i18n'
 
@@ -18,9 +18,15 @@ import CmkHeading from '@/components/typography/CmkHeading.vue'
 import CmkParagraph from '@/components/typography/CmkParagraph.vue'
 
 import ConfigureGeneralProperties from './otel-configuration-steps/ConfigureGeneralProperties.vue'
-import ConfigureHosts from './otel-configuration-steps/ConfigureHosts.vue'
 import ConfigurePrometheusScraper from './otel-configuration-steps/ConfigurePrometheusScraper.vue'
 import type { PrometheusScraperConfig } from './otel-configuration-steps/ConfigurePrometheusScraper.vue'
+import FinalizeConfiguration, {
+  type FinalizeState
+} from './otel-configuration-steps/FinalizeConfiguration.vue'
+
+const props = defineProps<{
+  overview_url: string
+}>()
 
 const { _t } = usei18n()
 const currentMode = ref<'guided' | 'overview'>('guided')
@@ -49,8 +55,46 @@ async function validatePrometheusScraper(): Promise<boolean> {
   return prometheusScraperRef.value?.validate() ?? false
 }
 
-const close = () => {
-  // TODO: trigger activate changes
+const finalizeRef = useTemplateRef<InstanceType<typeof FinalizeConfiguration>>('finalize')
+
+/**
+ * State machine driving the Step 3 save button. Updated by
+ * `FinalizeConfiguration`'s `update:state` emit:
+ *   - 'idle'    : initial — label "Save Prometheus configuration"
+ *   - 'running' : running post-save actions — button disabled
+ *   - 'success' : all post-save actions ok — label "Finish & go to Activate changes"
+ *   - 'error'   : at least one post-save action failed — label stays as "Save..." so the
+ *                 user can retry after fixing the problem
+ */
+const saveState = ref<FinalizeState>('idle')
+
+const saveButtonLabel = computed(() =>
+  saveState.value === 'success'
+    ? _t('Finish & go to Activate changes')
+    : _t('Save Prometheus configuration')
+)
+
+const saveButtonDisabled = computed(() => saveState.value === 'running')
+
+async function onSaveClick(): Promise<void> {
+  // Second click after a successful run navigates back to the Prometheus
+  // Overview page and opens the "Activate changes" panel so the user can
+  // apply the pending configuration changes.
+  if (saveState.value === 'success') {
+    // Open the main-menu "Changes" panel in the top frame. The nav item is
+    // rendered by MainMenuApp with id="nav-item-changes"; clicking it toggles
+    // the activate-changes slide-in. We trigger it before navigating so the
+    // panel is already visible when the overview page loads.
+    try {
+      const changesNavItem = top?.document.getElementById('nav-item-changes')
+      changesNavItem?.click()
+    } catch {
+      // Cross-origin or missing element — fall through to navigation.
+    }
+    window.location.href = props.overview_url
+    return
+  }
+  await finalizeRef.value?.runActions()
 }
 </script>
 
@@ -104,17 +148,27 @@ const close = () => {
     <CmkWizardStep :index="3" :is-completed="() => currentStep > 3">
       <template #header>
         <CmkHeading>
-          {{ _t('Configure host folder') }}
+          {{ _t('Finalize configuration') }}
         </CmkHeading>
+
+        <CmkParagraph>{{ _t('Get your configuration ready to be applied.') }}</CmkParagraph>
       </template>
       <template #content>
-        <ConfigureHosts />
+        <FinalizeConfiguration
+          ref="finalize"
+          :site-id="siteId"
+          :running-message="_t('Verifying the Prometheus configuration...')"
+          :success-message="_t('Prometheus configuration saved successfully.')"
+          :error-heading="_t('Could not save the Prometheus configuration')"
+          @update:state="saveState = $event"
+        />
       </template>
       <template #actions>
         <CmkWizardButton
           type="finish"
-          :override-label="_t('Save & Go to Activate Changes')"
-          @click="close"
+          :override-label="saveButtonLabel"
+          :disabled="saveButtonDisabled"
+          @click="onSaveClick"
         />
         <CmkWizardButton type="previous" />
       </template>

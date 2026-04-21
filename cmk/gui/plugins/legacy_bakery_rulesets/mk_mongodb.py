@@ -3,183 +3,215 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Mapping
 
-from cmk.gui.agent_bakery import RulespecGroupMonitoringAgentsAgentPlugins
-from cmk.gui.i18n import _
-from cmk.gui.plugins.wato.utils import HostRulespec, rulespec_registry
-from cmk.gui.valuespec import (
-    Alternative,
-    CascadingDropdown,
+from cmk.rulesets.v1 import Help, Label, Title
+from cmk.rulesets.v1.form_specs import (
+    BooleanChoice,
+    CascadingSingleChoice,
+    CascadingSingleChoiceElement,
+    DefaultValue,
+    DictElement,
     Dictionary,
-    DropdownChoice,
     FixedValue,
-    Hostname,
-    NetworkPort,
-    TextInput,
-    TextUnicode,
-    UploadOrPasteTextFile,
+    Integer,
+    migrate_to_password,
+    Password,
+    SingleChoice,
+    SingleChoiceElement,
+    String,
+    TimeMagnitude,
+    TimeSpan,
+    validators,
 )
-from cmk.gui.wato import MigrateToIndividualOrStoredPassword
-from cmk.utils.rulesets.definition import RuleGroup
+from cmk.rulesets.v1.rule_specs import AgentConfig, Topic
 
 
-def _valuespec_no_auth() -> FixedValue[bool]:
-    return FixedValue(
-        value=True,
-        title=_("Deploy mk_mongodb.py without authentication."),
-        totext=_("Deploy without authentication."),
-    )
+def migrate_auth(value: object) -> Mapping[str, object]:
+    if not isinstance(value, dict):
+        raise ValueError(f"Unexpected value: {value!r}")
+    if "password" not in value:
+        return value
+    return {**value, "password": migrate_to_password(value["password"])}
 
 
-def _valuespec_auth() -> Dictionary:
+def migrate(value: object) -> Mapping[str, object]:
+    if isinstance(value, dict) and "deployment" in value:
+        return value
+    if value is None:
+        return {"deployment": ("do_not_deploy", None)}
+    if value is True:
+        return {"deployment": ("sync", None)}
+    if isinstance(value, dict):
+        return {"deployment": ("sync", None), "auth": value}
+    raise ValueError(f"Unexpected value: {value!r}")
+
+
+def _tls_form() -> Dictionary:
     return Dictionary(
-        title=_("Deploy mk_mongodb.py with authentication."),
-        required_keys=["username", "password", "auth_mechanism", "auth_source"],
-        elements=[
-            (
-                "auth_mechanism",
-                DropdownChoice(
-                    title=_("Authentication mechanism"),
-                    choices=[
-                        ("DEFAULT", _("Auto (DEFAULT)")),
-                        ("MONGODB-X509", _("MongoDB >= 5.0 (MONGODB-X509)")),
-                        ("SCRAM-SHA-256", _("MongoDB >= 4.0 (SCRAM-SHA-256)")),
-                        ("SCRAM-SHA-1", _("MongoDB >= 3.0 (SCRAM-SHA-1)")),
-                        ("MONGODB-CR", _("MongoDB < 3.0 (MONGODB-CR)")),
-                    ],
-                    default_value="DEFAULT",
+        title=Title("Enable TLS"),
+        elements={
+            "insecure": DictElement(
+                required=True,
+                parameter_form=BooleanChoice(
+                    label=Label("Ignore certificate errors (insecure)"),
+                    prefill=DefaultValue(False),
                 ),
             ),
-            (
-                "host",
-                Hostname(
-                    title=_("Host name"),
-                    default_value="localhost",
-                    help=_("The host name of the MongoDB server."),
+            "ca_file": DictElement(
+                parameter_form=String(
+                    title=Title("Path to CA File"),
+                    help_text=Help(
+                        "Has to contain a single or a bundle "
+                        "of 'certification authority' certificates."
+                    ),
                 ),
             ),
-            (
-                "port",
-                NetworkPort(
-                    title=_("Port"),
-                    default_value=27017,
-                ),
-            ),
-            (
-                "tls",
-                Dictionary(
-                    required_keys=["insecure"],
-                    title=_("Enable TLS"),
-                    elements=[
-                        (
-                            "insecure",
-                            DropdownChoice(
-                                title=_("Verify certificates"),
-                                choices=[
-                                    (True, _("Ignore certificate errors (insecure)")),
-                                    (False, _("Verify Certificates")),
-                                ],
-                                default_value=False,
+            "cert_key_file": DictElement(
+                parameter_form=CascadingSingleChoice(
+                    title=Title("Certificate Key File"),
+                    help_text=Help(
+                        "This is required only if the authentication method is MONGODB-X509"
+                    ),
+                    elements=(
+                        CascadingSingleChoiceElement(
+                            name="uploaded_cert_file",
+                            title=Title("Upload Certificate key file"),
+                            parameter_form=String(
+                                title=Title("PEM File content"),
                             ),
                         ),
-                        (
-                            "ca_file",
-                            TextUnicode(
-                                title=_("Path to CA File"),
-                                help=_(
-                                    "Has to contain a single or a bundle "
-                                    "of 'certification authority' certificates."
+                        CascadingSingleChoiceElement(
+                            name="cert_filepath",
+                            title=Title("Path to Certificate key file"),
+                            parameter_form=String(
+                                title=Title("Path to Cert Key file"),
+                                help_text=Help("Has to contain the path to the Cert Key File."),
+                            ),
+                        ),
+                    ),
+                ),
+            ),
+        },
+    )
+
+
+def _auth_form() -> Dictionary:
+    return Dictionary(
+        title=Title("Authentication"),
+        migrate=migrate_auth,
+        elements={
+            "auth_mechanism": DictElement(
+                required=True,
+                parameter_form=SingleChoice(
+                    title=Title("Authentication mechanism"),
+                    elements=(
+                        SingleChoiceElement(name="DEFAULT", title=Title("Auto (DEFAULT)")),
+                        SingleChoiceElement(
+                            name="MONGODB-X509",
+                            title=Title("MongoDB >= 5.0 (MONGODB-X509)"),
+                        ),
+                        SingleChoiceElement(
+                            name="SCRAM-SHA-256",
+                            title=Title("MongoDB >= 4.0 (SCRAM-SHA-256)"),
+                        ),
+                        SingleChoiceElement(
+                            name="SCRAM-SHA-1",
+                            title=Title("MongoDB >= 3.0 (SCRAM-SHA-1)"),
+                        ),
+                        SingleChoiceElement(
+                            name="MONGODB-CR",
+                            title=Title("MongoDB < 3.0 (MONGODB-CR)"),
+                        ),
+                    ),
+                    prefill=DefaultValue("DEFAULT"),
+                ),
+            ),
+            "host": DictElement(
+                parameter_form=String(
+                    title=Title("Host name"),
+                    prefill=DefaultValue("localhost"),
+                    help_text=Help("The host name of the MongoDB server."),
+                ),
+            ),
+            "port": DictElement(
+                parameter_form=Integer(
+                    title=Title("Port"),
+                    prefill=DefaultValue(27017),
+                    custom_validate=(validators.NetworkPort(),),
+                ),
+            ),
+            "auth_source": DictElement(
+                required=True,
+                parameter_form=String(
+                    title=Title("Authentication source"),
+                    prefill=DefaultValue("admin"),
+                    help_text=Help("The database to authenticate on."),
+                    custom_validate=(validators.LengthInRange(min_value=1),),
+                ),
+            ),
+            "username": DictElement(
+                required=True,
+                parameter_form=String(
+                    title=Title("Username"),
+                    custom_validate=(validators.LengthInRange(min_value=1),),
+                ),
+            ),
+            "password": DictElement(
+                required=True,
+                parameter_form=Password(title=Title("Password")),
+            ),
+            "tls": DictElement(
+                parameter_form=_tls_form(),
+            ),
+        },
+    )
+
+
+def _valuespec_agent_config_mk_mongodb() -> Dictionary:
+    return Dictionary(
+        help_text=Help("This will deploy the agent plug-in <tt>mk_mongodb.py</tt>."),
+        elements={
+            "deployment": DictElement(
+                required=True,
+                parameter_form=CascadingSingleChoice(
+                    title=Title("Deployment type"),
+                    elements=(
+                        CascadingSingleChoiceElement(
+                            name="sync",
+                            title=Title("Deploy the plug-in and run it synchronously"),
+                            parameter_form=FixedValue(value=None),
+                        ),
+                        CascadingSingleChoiceElement(
+                            name="cached",
+                            title=Title("Deploy the plug-in and run it asynchronously"),
+                            parameter_form=TimeSpan(
+                                displayed_magnitudes=(
+                                    TimeMagnitude.HOUR,
+                                    TimeMagnitude.MINUTE,
                                 ),
                             ),
                         ),
-                        (
-                            "cert_key_file",
-                            CascadingDropdown(
-                                title=_("Certificate Key File"),
-                                choices=[
-                                    (
-                                        "uploaded_cert_file",
-                                        _("Upload Certificate key file"),
-                                        UploadOrPasteTextFile(
-                                            elements=[],
-                                            title=_("Import"),
-                                            file_title=_("PEM File"),
-                                            mime_types=[
-                                                "application/x-x509-user-cert",
-                                                "application/x-x509-ca-cert",
-                                                "application/pkix-cert",
-                                            ],
-                                            allowed_extensions=[".pem", ".crt"],
-                                        ),
-                                    ),
-                                    (
-                                        "cert_filepath",
-                                        _("Path to Certificate key file"),
-                                        TextInput(
-                                            title=_("Path to Cert Key file"),
-                                            help=_("Has to contain the path to the Cert Key File."),
-                                        ),
-                                    ),
-                                ],
-                                help=_(
-                                    "This is required only if the authentication method is MONGODB-X509"
-                                ),
-                            ),
+                        CascadingSingleChoiceElement(
+                            name="do_not_deploy",
+                            title=Title("Do not deploy the mk_mongodb plug-in"),
+                            parameter_form=FixedValue(value=None),
                         ),
-                    ],
+                    ),
+                    prefill=DefaultValue("sync"),
                 ),
             ),
-            (
-                "auth_source",
-                TextUnicode(
-                    title=_("Authentication source"),
-                    default_value="admin",
-                    help=_("The database to authenticate on."),
-                    allow_empty=False,
-                ),
+            "auth": DictElement(
+                parameter_form=_auth_form(),
             ),
-            (
-                "username",
-                TextUnicode(
-                    title=_("Username"),
-                    allow_empty=False,
-                ),
-            ),
-            (
-                "password",
-                MigrateToIndividualOrStoredPassword(
-                    title=_("Password"),
-                    allow_empty=False,
-                ),
-            ),
-        ],
+        },
+        migrate=migrate,
     )
 
 
-def _valuespec_no_deploy() -> FixedValue[None]:
-    return FixedValue(
-        value=None,
-        title=_("Do not deploy mk_mongodb.py plug-in"),
-        totext=_("Do not deploy."),
-    )
-
-
-def _valuespec_agent_config_mk_mongodb() -> Alternative:
-    return Alternative(
-        title=_("MongoDB (Linux)"),
-        help=_("This will deploy the agent plug-in <tt>mk_mongodb.py</tt>."),
-        elements=[
-            _valuespec_no_auth(),
-            _valuespec_auth(),
-            _valuespec_no_deploy(),
-        ],
-    )
-
-
-rulespec_registry.register(
-    HostRulespec(
-        group=RulespecGroupMonitoringAgentsAgentPlugins,
-        name=RuleGroup.AgentConfig("mk_mongodb"),
-        valuespec=_valuespec_agent_config_mk_mongodb,
-    )
+rule_spec_mk_mongodb = AgentConfig(
+    title=Title("MongoDB (Linux)"),
+    name="mk_mongodb",
+    topic=Topic.DATABASES,
+    parameter_form=_valuespec_agent_config_mk_mongodb,
 )

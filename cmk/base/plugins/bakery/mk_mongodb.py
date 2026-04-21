@@ -4,22 +4,26 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import configparser
 import io
+from collections.abc import Mapping
 from pathlib import Path
-from typing import assert_never, Literal, NotRequired, TypedDict
+from typing import assert_never, Literal
 
-from .bakery_api.v1 import FileGenerator, OS, password_store, Plugin, PluginConfig, register
+from pydantic import BaseModel
+
+from cmk.utils.password_store import extract_formspec_password
+
+from .bakery_api.v1 import FileGenerator, OS, Plugin, PluginConfig, register
 
 _CertKeyChoices = Literal["cert_filepath", "uploaded_cert_file"]
-_CertChoices = tuple[_CertKeyChoices, str]
 
 
-class ValuespecTlsResult(TypedDict):
+class _TlsConfig(BaseModel):
     insecure: bool
-    ca_file: NotRequired[str]
-    cert_key_file: NotRequired[_CertChoices]
+    ca_file: str | None = None
+    cert_key_file: tuple[_CertKeyChoices, str] | None = None
 
 
-class _ValuespecResult(TypedDict):
+class _AuthConfig(BaseModel):
     auth_mechanism: Literal[
         "DEFAULT",
         "MONGODB-CR",
@@ -29,10 +33,18 @@ class _ValuespecResult(TypedDict):
     ]
     auth_source: str
     username: str
-    password: password_store.PasswordId | str
-    tls: NotRequired[ValuespecTlsResult]
-    host: NotRequired[str]
-    port: NotRequired[int]
+    password: (
+        tuple[Literal["cmk_postprocessed"], Literal["stored_password"], tuple[str, str]]
+        | tuple[Literal["cmk_postprocessed"], Literal["explicit_password"], tuple[str, str]]
+    )
+    host: str | None = None
+    port: int | None = None
+    tls: _TlsConfig | None = None
+
+
+class _Config(BaseModel):
+    deployment: tuple[Literal["do_not_deploy", "sync", "cached"], float | None]
+    auth: _AuthConfig | None = None
 
 
 class MongoDBConfigParser(configparser.ConfigParser):
@@ -63,16 +75,22 @@ def _update_parser_with_cert(
             assert_never(opt_name)
 
 
-def get_mk_mongodb_files(conf: Literal[True] | _ValuespecResult | None) -> FileGenerator:
-    if conf is None:
+def get_mk_mongodb_files(conf: Mapping[str, object]) -> FileGenerator:
+    config = _Config.model_validate(conf)
+    if config.deployment[0] == "do_not_deploy":
         return
 
-    yield Plugin(base_os=OS.LINUX, source=Path("mk_mongodb.py"))
+    interval = None if (v := config.deployment[1]) is None else int(v)
+    yield Plugin(base_os=OS.LINUX, source=Path("mk_mongodb.py"), interval=interval)
 
-    parser = make_config_parser(conf)
+    parser = make_config_parser(config.auth)
 
-    if not isinstance(conf, bool) and (cert_cfg := conf.get("tls", {}).get("cert_key_file")):
-        yield from _update_parser_with_cert(parser, *cert_cfg)
+    if (
+        config.auth is not None
+        and config.auth.tls is not None
+        and (ckf := config.auth.tls.cert_key_file) is not None
+    ):
+        yield from _update_parser_with_cert(parser, *ckf)
 
     yield PluginConfig(
         base_os=OS.LINUX,
@@ -82,42 +100,31 @@ def get_mk_mongodb_files(conf: Literal[True] | _ValuespecResult | None) -> FileG
     )
 
 
-def make_config_parser(conf: Literal[True] | _ValuespecResult) -> MongoDBConfigParser:
-    """Generate the lines of an INI-style configuration file
-
-    Args:
-        conf:
-            The config, as defined by the ruleset.
-
-    Returns:
-        The config as a list of strings.
-
-    """
-    # See: enterprise/cmk/gui/cee/plugins/wato/agent_bakery/rulespecs/mk_mongodb.py
+def make_config_parser(auth: _AuthConfig | None) -> MongoDBConfigParser:
     parser = MongoDBConfigParser()
-    if conf is True:
+    if auth is None:
         return parser
 
     parser["MONGODB"] = {
-        "username": conf["username"],
-        "password": password_store.extract(conf["password"]),
-        "auth_source": conf["auth_source"],
-        "auth_mechanism": conf["auth_mechanism"],
+        "username": auth.username,
+        "password": extract_formspec_password(auth.password),
+        "auth_source": auth.auth_source,
+        "auth_mechanism": auth.auth_mechanism,
     }
-    if "host" in conf:
-        parser["MONGODB"]["host"] = conf["host"]
-    if "port" in conf:
-        parser["MONGODB"]["port"] = str(conf["port"])
+    if auth.host is not None:
+        parser["MONGODB"]["host"] = auth.host
+    if auth.port is not None:
+        parser["MONGODB"]["port"] = str(auth.port)
 
-    if "tls" in conf:
+    if auth.tls is not None:
         parser["MONGODB"].update(
             {
                 "tls_enable": "true",
-                "tls_verify": str(not conf["tls"]["insecure"]).lower(),
+                "tls_verify": str(not auth.tls.insecure).lower(),
             }
         )
-        if conf["tls"].get("ca_file"):
-            parser["MONGODB"]["tls_ca_file"] = conf["tls"]["ca_file"]
+        if auth.tls.ca_file:
+            parser["MONGODB"]["tls_ca_file"] = auth.tls.ca_file
 
     return parser
 

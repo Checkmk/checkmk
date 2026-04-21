@@ -545,14 +545,10 @@ def fixture_is_licensed(monkeypatch_module: pytest.MonkeyPatch) -> None:
 @pytest.fixture(name="suppress_license_expiry_header")
 def fixture_suppress_license_expiry_header(monkeypatch_module: pytest.MonkeyPatch) -> None:
     """Don't check if message about license expiration should be shown"""
-    monkeypatch_module.setattr(
-        "cmk.gui.htmllib.top_heading._may_show_license_expiry", lambda x: None
-    )
+    monkeypatch_module.setattr("cmk.gui.htmllib.top_heading.show_license_expiry", lambda x: None)
 
 
 @pytest.fixture(name="suppress_license_banner")
 def fixture_suppress_license_banner(monkeypatch_module: pytest.MonkeyPatch) -> None:
     """Don't check if message about license expiration should be shown"""
-    monkeypatch_module.setattr(
-        "cmk.gui.htmllib.top_heading._may_show_license_banner", lambda x: None
-    )
+    monkeypatch_module.setattr("cmk.gui.htmllib.top_heading.show_license_banner", lambda x: None)

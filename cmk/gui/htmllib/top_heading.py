@@ -32,7 +32,7 @@ def top_heading(
     browser_reload: float,
     debug: bool,
 ) -> None:
-    _may_show_license_expiry(writer)
+    show_license_expiry(writer)
 
     writer.open_div(id_="top_heading")
     writer.open_div(class_="titlebar")
@@ -60,7 +60,7 @@ def top_heading(
         browser_reload=browser_reload,
     )
 
-    _may_show_license_banner(writer)
+    show_license_banner(writer)
 
     if page_state:
         PageStateRenderer().show(page_state)
@@ -85,7 +85,7 @@ def top_heading(
         )
 
 
-def _may_show_license_expiry(writer: HTMLWriter) -> None:
+def show_license_expiry(writer: HTMLWriter) -> None:
     if (
         header_effect := get_licensing_user_effect(
             licensing_settings_link=makeuri_contextless(
@@ -96,7 +96,7 @@ def _may_show_license_expiry(writer: HTMLWriter) -> None:
         writer.show_warning(HTML.without_escaping(header_effect.message_html))
 
 
-def _may_show_license_banner(writer: HTMLWriter) -> None:
+def show_license_banner(writer: HTMLWriter) -> None:
     if (
         header_effect := get_licensing_user_effect(
             licensing_settings_link=makeuri_contextless(

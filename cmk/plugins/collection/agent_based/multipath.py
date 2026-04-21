@@ -203,12 +203,15 @@ def check_multipath(
     num_active = num_paths - num_broken
 
     levels = params.get("levels")
-    yield from check_levels_v1(
-        num_active / num_paths * 100.0,
-        levels_lower=(levels[0], levels[1]) if isinstance(levels, tuple) else None,
-        render_func=render.percent,
-        label=f"{aliasinfo}Paths active",
-    )
+    if num_paths == 0:
+        yield Result(state=State.CRIT, summary=f"{aliasinfo}No paths")
+    else:
+        yield from check_levels_v1(
+            num_active / num_paths * 100.0,
+            levels_lower=(levels[0], levels[1]) if isinstance(levels, tuple) else None,
+            render_func=render.percent,
+            label=f"{aliasinfo}Paths active",
+        )
 
     state = State.OK
     infotext = f"{num_active} of {num_paths}"

@@ -19,13 +19,16 @@ from livestatus import LocalConnection, MKLivestatusSocketError, SiteConfigurati
 
 import cmk.gui.log
 from cmk.ccc.hostaddress import HostName
-from cmk.ccc.site import SiteId
+from cmk.ccc.site import omd_site, SiteId
 from cmk.gui.config import Config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.http import Request
 from cmk.gui.i18n import _
 from cmk.gui.session import SuperUserContext
-from cmk.gui.site_config import is_distributed_setup_remote_site, wato_site_ids
+from cmk.gui.site_config import (
+    is_distributed_setup_remote_site,
+    sites_ready_for_remote_automation,
+)
 from cmk.gui.utils.roles import UserPermissionSerializableConfig
 from cmk.gui.watolib.activate_changes import ActivateChangesManager
 from cmk.gui.watolib.automation_commands import AutomationCommand
@@ -71,7 +74,10 @@ def execute_host_removal_job(config: Config) -> None:
                         site_id: make_automation_config(
                             config.sites[site_id],
                         )
-                        for site_id in wato_site_ids(config.sites)
+                        for site_id in [
+                            omd_site(),
+                            *sites_ready_for_remote_automation(config.sites),
+                        ]
                     },
                     debug=config.debug,
                 )

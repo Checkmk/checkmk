@@ -13,7 +13,10 @@ py_library(
         exclude = ["cli.py"],
     ),
     imports = ["../.."],
-    visibility = ["//cmk:__subpackages__"],
+    visibility = [
+        "//cmk:__subpackages__",
+        "//tests:__subpackages__",
+    ],
     deps = [
         "//cmk/utils",
         "//packages/cmk-ccc:version",

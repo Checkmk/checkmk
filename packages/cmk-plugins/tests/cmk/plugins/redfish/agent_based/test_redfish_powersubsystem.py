@@ -56,6 +56,7 @@ def test_discovery() -> None:
     parsed = parse_redfish_multiple(_make_string_table(_make_powersubsystem()))
     services = list(discovery_redfish_powersubsystem(parsed))
     assert len(services) == 1
+    assert services[0].item == "System.Embedded.1"
 
 
 def test_check_ok() -> None:

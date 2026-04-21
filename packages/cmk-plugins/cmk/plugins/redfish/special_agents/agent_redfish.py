@@ -685,8 +685,8 @@ def get_information(storage: Storage, redfishobj: RedfishData) -> Literal[0]:
     legacy_environment = ("Power", "Thermal")
     modern_environment = ("Sensors", "ThermalSubsystem", "PowerSubsystem", "EnvironmentMetrics")
 
-    has_legacy = any(isinstance(chassis.get("Power"), dict) for chassis in chassis_data)
-    chassis_sections = list(legacy_environment if has_legacy else modern_environment)
+    has_modern = any(isinstance(chassis.get("Sensors"), dict) for chassis in chassis_data)
+    chassis_sections = list(modern_environment if has_modern else legacy_environment)
     chassis_sections.append("NetworkAdapters")
 
     resulting_sections = list(set(chassis_sections).intersection(redfishobj.sections))

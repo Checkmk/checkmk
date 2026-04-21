@@ -70,17 +70,14 @@ class AllValueStoresStore:
     def load(self) -> Mapping[ValueStoreKey, _SerializedValueStore]:
         self._log_debug("loading from disk")
         try:
-            self._last_known_state = _LastState(
-                self.path.stat().st_mtime,
-                (
-                    data := (
-                        self._deserialize(content)
-                        if (content := store.load_text_from_file(self.path, lock=False).strip())
-                        else {}
-                    )
-                ),
-            )
+            content = store.load_text_from_file(self.path, lock=False).strip()
+            data = self._deserialize(content) if content else {}
+            self._last_known_state = _LastState(self.path.stat().st_mtime, data)
         except FileNotFoundError:
+            self._last_known_state = None
+            data = {}
+        except (json.JSONDecodeError, ValueError, TypeError) as exc:
+            logger.warning("value store: ignoring corrupt file %s: %s", self.path, exc)
             self._last_known_state = None
             data = {}
 

@@ -5,7 +5,7 @@
 
 import pytest
 
-from cmk.gui.plugins.legacy_bakery_rulesets.nvidia_smi import migrate
+from cmk.plugins.collection.rulesets.nvidia_smi import migrate
 
 
 @pytest.mark.parametrize(

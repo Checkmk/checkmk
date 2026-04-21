@@ -611,6 +611,16 @@ table.data {
   table.groupheader + & th {
     top: var(--group-header-height);
   }
+
+  tr.groupheader:not(:first-child) {
+    td.groupheader {
+      top: -2 * $spacing;
+    }
+
+    table.groupheader {
+      margin-top: 2 * $spacing;
+    }
+  }
 }
 
 tr.data.grouped_row_header {

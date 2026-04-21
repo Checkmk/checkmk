@@ -487,9 +487,6 @@ def detect_vendor(root_data: Mapping[str, Any]) -> Vendor:
         case "Ami" | "Supermicro" | "Seagate" as name:
             return Vendor(name=name)
 
-        case "NVIDIA":
-            return Vendor(name="NVIDIA", expand_string="?$expand=*($levels=1)")
-
         case _other_vendor_string:
             # TODO: why not use the vendor string here?
             return Vendor(name="Generic")
@@ -682,12 +679,17 @@ def get_information(storage: Storage, redfishobj: RedfishData) -> Literal[0]:
     sys.stdout.write("<<<redfish_chassis:sep(0)>>>\n")
     sys.stdout.write(f"{json.dumps(chassis_data, sort_keys=True)}\n")
 
-    legacy_environment = ("Power", "Thermal")
-    modern_environment = ("Sensors", "ThermalSubsystem", "PowerSubsystem", "EnvironmentMetrics")
-
-    has_modern = any(isinstance(chassis.get("Sensors"), dict) for chassis in chassis_data)
-    chassis_sections = list(modern_environment if has_modern else legacy_environment)
-    chassis_sections.append("NetworkAdapters")
+    chassis_sections = [
+        "NetworkAdapters",
+        "Power",
+        "Thermal",
+    ]
+    # new_environment_resources = [
+    #     "Sensors",
+    #     "EnvironmentMetrics",
+    #     "PowerSubsystem",
+    #     "ThermalSubsystem",
+    # ]
 
     resulting_sections = list(set(chassis_sections).intersection(redfishobj.sections))
     for chassis in chassis_data:

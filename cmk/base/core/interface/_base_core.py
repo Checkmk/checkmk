@@ -18,7 +18,7 @@ from cmk.checkengine.checkerplugin import ConfiguredService
 from cmk.checkengine.plugins import AgentBasedPlugins, ServiceID
 from cmk.core_client import CoreClient
 from cmk.licensing.handler import LicensingHandler
-from cmk.licensing.helper import get_licensed_state_file_path
+from cmk.licensing.helper import get_licensed_state_file_path, get_licensing_dir
 from cmk.password_store.v1_unstable import Secret
 from cmk.utils import ip_lookup, paths
 from cmk.utils.labels import Labels
@@ -64,7 +64,9 @@ class MonitoringCore(abc.ABC):
         service_depends_on: Callable[[HostAddress, ServiceName], Sequence[ServiceName]],
     ) -> None:
         licensing_handler = self.licensing_handler_type.make()
-        licensing_handler.persist_licensed_state(get_licensed_state_file_path(paths.licensing_dir))
+        licensing_handler.persist_licensed_state(
+            get_licensed_state_file_path(get_licensing_dir(paths.omd_root))
+        )
         self._create_config(
             config_creation_context,
             config_cache,

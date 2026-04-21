@@ -157,8 +157,6 @@ local_dashboards_dir = local_gui_plugins_dir / "dashboard"
 local_views_dir = local_gui_plugins_dir / "views"
 local_reports_dir = local_gui_plugins_dir / "reports"
 
-licensing_dir = var_dir / "licensing"
-
 # Agent registration paths
 received_outputs_dir = omd_root / "var/agent-receiver/received-outputs"
 uuid_lookup_dir = omd_root / "var/agent-receiver/uuid-lookup"

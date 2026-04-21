@@ -37,6 +37,7 @@ from cmk.licensing.export import (
 )
 from cmk.licensing.helper import (
     get_instance_id_file_path,
+    get_licensing_dir,
     hash_site_id,
     load_instance_id,
     rot47,
@@ -179,7 +180,7 @@ def create_sample(
     num_active_metric_series = get_average_active_metric_series(omd_root, log_dir) or 0
 
     general_infos = cmk_version.get_general_version_infos(omd_root)
-    extensions = _load_extensions(licensing_dir=omd_root / "var/check_mk/licensing")
+    extensions = _load_extensions(licensing_dir=get_licensing_dir(omd_root))
 
     return LicenseUsageSample(
         instance_id=instance_id,

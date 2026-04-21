@@ -60,6 +60,10 @@ def _rot47_char(c: str) -> str:
     return chr(33 + ((ord_c + 14) % 94)) if 33 <= ord_c <= 126 else c
 
 
+def get_licensing_dir(omd_root: Path) -> Path:
+    return omd_root / "var/check_mk/licensing"
+
+
 def get_licensed_state_file_path(licensing_dir: Path) -> Path:
     return licensing_dir / "licensed_state"
 

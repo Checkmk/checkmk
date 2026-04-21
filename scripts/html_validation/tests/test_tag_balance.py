@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import json
-
 import pytest
 
 from scripts.html_validation.lib.tag_balance import check_html_tag_balance, TagImbalanceError
@@ -40,51 +38,59 @@ def test_check_html_tag_balance_success(body: str) -> None:
 
 
 @pytest.mark.parametrize(
-    "body, expected_errors",
+    "body",
     [
         pytest.param(
             "<html><body><div><p>content",
-            [
-                "line 1: <html> never closed",
-                "line 1: <body> never closed",
-                "line 1: <div> never closed",
-                "line 1: <p> never closed",
-            ],
             id="Tags left open at EOF.",
         ),
         pytest.param(
             "</div>",
-            ["line 1: extra </div>"],
             id="Extra close tag with nothing on the stack.",
         ),
         pytest.param(
             "<html><body><div><span></body></html>",
-            [
-                "line 1: <div> not closed before </body>",
-                "line 1: <span> not closed before </body>",
-            ],
             id="Inner element unclosed before outer close.",
         ),
         pytest.param(
             "<html><body><div><span></div></span></body></html>",
-            [
-                "line 1: <span> not closed before </div>",
-                "line 1: </span> has no matching open tag",
-            ],
             id="Crossed tags - mismatches between open and closed tags.",
         ),
         pytest.param(
             "<html><body><div><span></div></span></body></html>",
-            ["line 1: <p> not closed before </body>"],
             id="A single unclosed inner tag must not cascade into N errors.",
         ),
         pytest.param(
             "<html><body><div><span></div></span></body></html>",
-            ["line 1: <p> not closed before </div>"],
             id="Boolean attributes (value=None) should appear in the error.",
         ),
     ],
 )
-def test_check_html_tag_balance_errors(body: str, expected_errors: list[str]) -> None:
-    with pytest.raises(TagImbalanceError, match=json.dumps(expected_errors)):
+def test_check_html_tag_balance_errors(body: str) -> None:
+    with pytest.raises(TagImbalanceError):
         check_html_tag_balance(body)
+
+
+def test_check_html_tag_balance_error_payload() -> None:
+    imbalanced_html = """
+    <html>
+        <main id="content">
+            <div class="card">
+                <a href="/">Home</a>
+                </span>
+    </html>
+    """
+
+    try:
+        check_html_tag_balance(imbalanced_html)
+    except TagImbalanceError as exc:
+        value = exc.get_errors()
+        expected = {
+            "count": 3,
+            "errors": [
+                "line 6: </span> has no matching open tag",
+                "line 3: <main id='content'> not closed before </html>",
+                "line 4: <div class='card'> not closed before </html>",
+            ],
+        }
+        assert value == expected

@@ -89,7 +89,7 @@ def main() -> None:
     try:
         check_html_tag_balance(str(resp.content))
     except TagImbalanceError as exc:
-        print(exc.errors)
+        print(exc.get_errors())
         sys.exit(ExitCode.VALIDATION_ERRORS)
     else:
         sys.exit(ExitCode.SUCCESS)

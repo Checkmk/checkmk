@@ -6,7 +6,7 @@
 
 from html.parser import HTMLParser
 from types import TracebackType
-from typing import override, Self
+from typing import override, Self, TypedDict
 
 _VOID_ELEMENTS = frozenset(
     {
@@ -28,12 +28,18 @@ _VOID_ELEMENTS = frozenset(
 )
 
 
+class ErrorPayload(TypedDict):
+    count: int
+    errors: list[str]
+
+
 class TagImbalanceError(RuntimeError):
     def __init__(self, errors: list[str]) -> None:
-        self.errors = errors
+        super().__init__("Tag Imbalance detected in document.")
+        self._errors = errors
 
-    def __str__(self) -> str:
-        return str(self.errors)
+    def get_errors(self) -> ErrorPayload:
+        return {"count": len(self._errors), "errors": self._errors}
 
 
 def check_html_tag_balance(body: str) -> bool:

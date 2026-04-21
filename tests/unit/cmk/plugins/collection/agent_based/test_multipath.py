@@ -224,6 +224,24 @@ def test_check_returns_nothing_for_unknown_item(section: Section) -> None:
     assert list(check_multipath("does_not_exist", {"levels": 1}, section)) == []
 
 
+@pytest.mark.xfail(strict=True, reason="Crash group 3604: ZeroDivisionError when numpaths is 0")
+def test_check_multipath_numpaths_zero_does_not_crash() -> None:
+    section: Section = {
+        "empty": Group(
+            paths=[],
+            broken_paths=[],
+            luns=[],
+            uuid="empty",
+            state="prio=0status=active",
+            numpaths=0,
+            device="dm-0",
+            alias="empty_group",
+        )
+    }
+    # Must not raise ZeroDivisionError.
+    assert list(check_multipath("empty", {}, section))
+
+
 def test_check_branch_broken_paths_result_added_with_levels_tuple(section: Section) -> None:
     assert list(
         check_multipath(

@@ -22,8 +22,8 @@ py_library(
         "//cmk/utils",
         "//packages/cmk-livestatus-client:py_livestatus",
         "//packages/cmk-plugin-apis:agent_based",
+        "//tests:fake_site",
         "//tests/testlib/common:repo",
-        requirement("fakeredis"),
         requirement("pytest_metadata"),
     ],
 )

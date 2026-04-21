@@ -9,6 +9,7 @@ py_library(
     name = "testlib",
     srcs = ["__init__.py"] + glob(
         include = ["testlib/**/*.py"],
+        exclude = ["testlib/fake_site.py"],
     ),
     data = glob(
         include = ["testlib/**"],
@@ -97,11 +98,34 @@ py_library(
 )
 
 py_library(
+    name = "fake_site",
+    testonly = True,
+    srcs = ["testlib/fake_site.py"],
+    imports = [".."],
+    visibility = ["//:__subpackages__"],
+    deps = [
+        "//cmk/utils",
+        "//packages/cmk-ccc:crash-reporting",
+        "//packages/cmk-ccc:debug",
+        "//packages/cmk-ccc:site",
+        "//packages/cmk-ccc:version",
+        "//packages/cmk-crypto",
+        "//packages/cmk-livestatus-client:py_livestatus",
+        "//tests/testlib/common:repo",
+        requirement("fakeredis"),
+        requirement("pytest"),
+    ],
+)
+
+py_library(
     name = "testlib_system_level",
     testonly = True,
     srcs = ["__init__.py"] + glob(
         include = ["testlib/**/*.py"],
-        exclude = ["testlib/unit/**"],
+        exclude = [
+            "testlib/fake_site.py",
+            "testlib/unit/**",
+        ],
     ),
     data = glob(
         include = ["testlib/**"],

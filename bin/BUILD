@@ -85,15 +85,11 @@ pkg_files(
         ":mkbackup",
         ":mkevent",
         ":mkp",
-        ":post-rename-site.py",
     ],
     attributes = pkg_attributes(
         mode = "0755",
     ),
     prefix = "bin",
-    renames = {
-        "post-rename-site.py": "post-rename-site",
-    },
 )
 
 pkg_files(
@@ -151,13 +147,6 @@ pkg_files(
 
 # Not shipped — only exists so that static analysis tools (ruff, …)
 # can discover these .py files via Bazel.
-py_library(
-    name = "post_rename_site_py",
-    srcs = ["post-rename-site.py"],
-    imports = ["."],
-    deps = ["//cmk/post_rename_site"],
-)
-
 py_library(
     name = "mkeventd_main",
     srcs = ["mkeventd.py"],

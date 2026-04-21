@@ -13,6 +13,9 @@ py_library(
     visibility = ["//:__subpackages__"],
     deps = [
         "//cmk",
+        "//cmk/post_rename_site",
+        "//cmk/post_rename_site:internal",
+        "//cmk/post_rename_site/plugins",
         "//packages/cmk-plugins:all_families",
     ],
 )

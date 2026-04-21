@@ -1789,7 +1789,6 @@ allows = [
 "bin/cmk-validate-config" = "cmk.validate_config"
 "bin/cmk-validate-plugins" = "cmk.validate_plugins"
 "bin/mkeventd" = "cmk.ec"
-"bin/post-rename-site" = "cmk.post_rename_site"
 "cmk/active_checks/check_cmk_inv.py" = "cmk.base"
 "omd/packages/appliance/webconf_snapin.py" = "cmk.gui"
 "omd/non-free/packages/cmk-dcd/cmk-dcd.py" = "cmk.dcd.daemon"

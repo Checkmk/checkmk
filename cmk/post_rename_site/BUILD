@@ -1,4 +1,24 @@
-load("@aspect_rules_py//py:defs.bzl", "py_library")
+load("@aspect_rules_py//py:defs.bzl", "py_binary", "py_library")
+load("@rules_pkg//pkg:mappings.bzl", "pkg_attributes", "pkg_files")
+
+# Only for static analysis.
+py_binary(
+    name = "post-rename-site",
+    srcs = ["post-rename-site.py"],
+    main = "post-rename-site.py",
+    deps = [":post_rename_site"],
+)
+
+pkg_files(
+    name = "post-rename-site-pkg",
+    srcs = ["post-rename-site.py"],
+    attributes = pkg_attributes(
+        mode = "0755",
+    ),
+    prefix = "bin",
+    renames = {"post-rename-site.py": "post-rename-site"},
+    visibility = ["//omd:__pkg__"],
+)
 
 py_library(
     name = "internal",

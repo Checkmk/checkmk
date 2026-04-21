@@ -32,15 +32,7 @@ function makeAction(
 function renderWithActions(
   actions: readonly PostSaveAction[],
   siteId: string | null = 'local',
-  {
-    collectorActivationAllowed,
-    metricBackendAllowed,
-    configName = 'my-config'
-  }: {
-    collectorActivationAllowed?: boolean
-    configName?: string
-    metricBackendAllowed?: boolean
-  } = {}
+  { configName = 'my-config' }: { configName?: string } = {}
 ) {
   const lastState = ref<FinalizeState>('idle')
   const compRef = ref<InstanceType<typeof FinalizeConfiguration>>()
@@ -48,16 +40,8 @@ function renderWithActions(
   render(
     defineComponent({
       components: { FinalizeConfiguration },
-      setup: () => ({
-        compRef,
-        lastState,
-        actions,
-        siteId,
-        collectorActivationAllowed,
-        metricBackendAllowed,
-        configName
-      }),
-      template: `<FinalizeConfiguration ref="compRef" :site-id="siteId" :config-name="configName" :actions="actions" :collector-activation-allowed="collectorActivationAllowed" :metric-backend-allowed="metricBackendAllowed" @update:state="lastState = $event" />`
+      setup: () => ({ compRef, lastState, actions, siteId, configName }),
+      template: `<FinalizeConfiguration ref="compRef" :site-id="siteId" :config-name="configName" :actions="actions" @update:state="lastState = $event" />`
     })
   )
 
@@ -80,6 +64,34 @@ describe('FinalizeConfiguration', () => {
       renderWithActions([makeAction('a', 'ok'), makeAction('b', 'ok')])
       await screen.findByText('Action a')
       await screen.findByText('Action b')
+    })
+
+    test('renders actions added after mount (before any save click)', async () => {
+      // Regression: in production wizards build the action list from refs that
+      // start empty (siteId, port are filled in earlier steps). The rendered
+      // checklist must reflect the new list as soon as the prop updates —
+      // not only after `runActions` is called.
+      const enable = makeAction('enable', 'ok')
+      const create = makeAction('create', 'ok')
+      const actions = ref<readonly PostSaveAction[]>([enable])
+
+      render(
+        defineComponent({
+          components: { FinalizeConfiguration },
+          setup: () => ({ actions }),
+          template: `<FinalizeConfiguration site-id="local" config-name="cfg" :actions="actions" />`
+        })
+      )
+
+      // At mount: only the initial action is shown.
+      await screen.findByText('Action enable')
+      expect(screen.queryByText('Action create')).toBeNull()
+
+      // After the wizard fills earlier-step values, the list grows.
+      actions.value = [create, enable]
+      await screen.findByText('Action create')
+      const labels = screen.getAllByText(/Action /)
+      expect(labels.map((el) => el.textContent)).toEqual(['Action create', 'Action enable'])
     })
   })
 
@@ -173,108 +185,25 @@ describe('FinalizeConfiguration', () => {
       expect(lastState.value).toBe('error')
       expect(actionA.execute).not.toHaveBeenCalled()
     })
-  })
 
-  describe('edition filtering', () => {
-    test('filters out enableCollector action when collectorActivationAllowed is false', async () => {
-      const collector: PostSaveAction = {
-        key: 'enableCollector',
-        label: () => 'OpenTelemetry Collector activation',
-        execute: vi.fn(async () => ({ ok: true as const }))
-      }
-      const other = makeAction('other', 'ok')
-      renderWithActions([collector, other], 'local', {
-        collectorActivationAllowed: false
+    test('a failing first action stops the whole save (no follow-ups run)', async () => {
+      // Core acceptance criterion: "If the change for the Collector/scraper
+      // could not be created, the setup cannot finish." A failing per-run
+      // create action must block every subsequent action in the sequence.
+      const create = makeAction('create', {
+        title: 'Create failed',
+        detail: 'Validation error'
       })
-
-      await screen.findByText('Action other')
-      expect(screen.queryByText('OpenTelemetry Collector activation')).toBeNull()
-    })
-
-    test('keeps enableCollector action when collectorActivationAllowed is true', async () => {
-      const collector: PostSaveAction = {
-        key: 'enableCollector',
-        label: () => 'OpenTelemetry Collector activation',
-        execute: vi.fn(async () => ({ ok: true as const }))
-      }
-      const other = makeAction('other', 'ok')
-      renderWithActions([collector, other], 'local', {
-        collectorActivationAllowed: true
-      })
-
-      await screen.findByText('OpenTelemetry Collector activation')
-      await screen.findByText('Action other')
-    })
-
-    test('keeps enableCollector action when collectorActivationAllowed is not passed', async () => {
-      // Regression: Vue 3 coerces an unpassed Boolean prop to `false`. Without
-      // withDefaults, that silently strips enableCollector and the save flow
-      // completes without hitting the REST API.
-      const collector: PostSaveAction = {
-        key: 'enableCollector',
-        label: () => 'OpenTelemetry Collector activation',
-        execute: vi.fn(async () => ({ ok: true as const }))
-      }
-      const other = makeAction('other', 'ok')
-      const { compRef } = renderWithActions([collector, other], 'local')
-
-      await screen.findByText('OpenTelemetry Collector activation')
-      await screen.findByText('Action other')
+      const enable = makeAction('enable', 'ok')
+      const { compRef, lastState } = renderWithActions([create, enable])
 
       const ok = await compRef.value!.runActions()
-      expect(ok).toBe(true)
-      expect(collector.execute).toHaveBeenCalledTimes(1)
-    })
 
-    test('filters out enableMetricBackend action when metricBackendAllowed is false', async () => {
-      const metricBackend: PostSaveAction = {
-        key: 'enableMetricBackend',
-        label: () => 'Metric backend connection',
-        execute: vi.fn(async () => ({ ok: true as const }))
-      }
-      const other = makeAction('other', 'ok')
-      renderWithActions([metricBackend, other], 'local', {
-        metricBackendAllowed: false
-      })
-
-      await screen.findByText('Action other')
-      expect(screen.queryByText('Metric backend connection')).toBeNull()
-    })
-
-    test('keeps enableMetricBackend action when metricBackendAllowed is true', async () => {
-      const metricBackend: PostSaveAction = {
-        key: 'enableMetricBackend',
-        label: () => 'Metric backend connection',
-        execute: vi.fn(async () => ({ ok: true as const }))
-      }
-      const other = makeAction('other', 'ok')
-      renderWithActions([metricBackend, other], 'local', {
-        metricBackendAllowed: true
-      })
-
-      await screen.findByText('Metric backend connection')
-      await screen.findByText('Action other')
-    })
-
-    test('keeps enableMetricBackend action when metricBackendAllowed is not passed', async () => {
-      // Regression: Vue 3 coerces an unpassed Boolean prop to `false`. Without
-      // withDefaults, that silently strips enableMetricBackend and the save
-      // flow completes without hitting the REST API. This path is what the
-      // Prometheus QuickSetup relies on — it never passes the prop.
-      const metricBackend: PostSaveAction = {
-        key: 'enableMetricBackend',
-        label: () => 'Metric backend connection',
-        execute: vi.fn(async () => ({ ok: true as const }))
-      }
-      const other = makeAction('other', 'ok')
-      const { compRef } = renderWithActions([metricBackend, other], 'local')
-
-      await screen.findByText('Metric backend connection')
-      await screen.findByText('Action other')
-
-      const ok = await compRef.value!.runActions()
-      expect(ok).toBe(true)
-      expect(metricBackend.execute).toHaveBeenCalledTimes(1)
+      expect(ok).toBe(false)
+      expect(lastState.value).toBe('error')
+      expect(create.execute).toHaveBeenCalledTimes(1)
+      expect(enable.execute).not.toHaveBeenCalled()
+      await screen.findByText('Create failed')
     })
   })
 })

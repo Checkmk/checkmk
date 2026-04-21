@@ -25,48 +25,27 @@ import CmkAlertBox from '@/components/CmkAlertBox.vue'
 import CmkIcon from '@/components/CmkIcon'
 import CmkLoading from '@/components/CmkLoading.vue'
 
-import {
-  POST_SAVE_ACTIONS,
-  type PostSaveAction,
-  type PostSaveContext
-} from './post_save_actions.ts'
+import type { PostSaveAction, PostSaveContext } from './post_save_actions.ts'
 
-const props = withDefaults(
-  defineProps<{
-    siteId: string | null
-    configName: string
-    /**
-     * Whether to include the enable-collector action. Defaults to `true`.
-     * Must default to `true` (not Vue's Boolean coercion of `false`) so
-     * callers that simply omit the prop keep the enable-collector action;
-     * only the cloud-edition OTel wizard passes `false` explicitly.
-     */
-    collectorActivationAllowed?: boolean
-    /**
-     * Whether to include the enable-metric-backend action. Same rationale
-     * as `collectorActivationAllowed` — defaults to `true` so omitting it
-     * keeps the action in the registry.
-     */
-    metricBackendAllowed?: boolean
-    /**
-     * Overrides the set of actions to run. Defaults to `POST_SAVE_ACTIONS`.
-     * Primarily useful for tests; production callers should not pass this.
-     */
-    actions?: readonly PostSaveAction[]
-    /**
-     * Status alert texts. Default to OpenTelemetry wording so existing callers
-     * stay unchanged; other QuickSetup flavors (e.g. Prometheus) pass their
-     * own translated strings.
-     */
-    runningMessage?: string
-    successMessage?: string
-    errorHeading?: string
-  }>(),
-  {
-    collectorActivationAllowed: true,
-    metricBackendAllowed: true
-  }
-)
+const props = defineProps<{
+  siteId: string | null
+  configName: string
+  /**
+   * Ordered list of post-save actions to run when the user clicks finish.
+   * The caller composes this list (per-run create action + shared
+   * `POST_SAVE_ACTIONS`, with edition-specific filtering applied) — this
+   * component is purely the renderer and sequential runner.
+   */
+  actions: readonly PostSaveAction[]
+  /**
+   * Status alert texts. Default to OpenTelemetry wording so existing callers
+   * stay unchanged; other QuickSetup flavors (e.g. Prometheus) pass their
+   * own translated strings.
+   */
+  runningMessage?: string
+  successMessage?: string
+  errorHeading?: string
+}>()
 
 const emit = defineEmits<{
   (e: 'update:state', value: FinalizeState): void
@@ -74,36 +53,24 @@ const emit = defineEmits<{
 
 const { _t } = usei18n()
 
-const actions = computed(() => {
-  let base = props.actions ?? POST_SAVE_ACTIONS
-  if (props.collectorActivationAllowed === false) {
-    base = base.filter((a) => a.key !== 'enableCollector')
-  }
-  if (props.metricBackendAllowed === false) {
-    base = base.filter((a) => a.key !== 'enableMetricBackend')
-  }
-  return base
-})
-
 const state = ref<FinalizeState>('idle')
-const items = ref<ActionItemStatus[]>(
-  actions.value.map((a) => ({
-    key: a.key,
-    label: a.label(),
-    state: 'pending'
-  }))
-)
+const items = ref<ActionItemStatus[]>([])
 
-// Re-sync the checklist when the action list changes while idle. The action
-// list is dynamic for the OTel wizard: a "Save new passwords" action is added
-// only if the user created passwords in Step 2. Without this watcher the
-// checklist would freeze at its initial-mount snapshot.
-watch(actions, (next) => {
-  if (state.value === 'running') {
-    return
-  }
-  items.value = next.map((a) => ({ key: a.key, label: a.label(), state: 'pending' }))
-})
+// Keep the rendered checklist in sync with `actions`. Wizards build their
+// per-run create-config action from refs that are still empty when this
+// component mounts (e.g. siteId/port are filled in earlier steps), so the
+// computed list grows after mount — a one-time snapshot at setup would
+// render a stale list until `runActions` reset it on save.
+watch(
+  () => props.actions,
+  (next) => {
+    if (state.value === 'running') {
+      return
+    }
+    items.value = next.map((a) => ({ key: a.key, label: a.label(), state: 'pending' }))
+  },
+  { immediate: true }
+)
 
 /**
  * Runs all post-save actions sequentially. Stops on first error so the
@@ -138,14 +105,14 @@ async function runActions(): Promise<boolean> {
   const ctx: PostSaveContext = { siteId: props.siteId, configName: props.configName }
 
   // Reset any previous run state so retries start clean.
-  items.value = actions.value.map((a) => ({
+  items.value = props.actions.map((a) => ({
     key: a.key,
     label: a.label(),
     state: 'pending'
   }))
 
-  for (let i = 0; i < actions.value.length; i++) {
-    const action = actions.value[i]!
+  for (let i = 0; i < props.actions.length; i++) {
+    const action = props.actions[i]!
     items.value[i]!.state = 'running'
     const result = await action.execute(ctx)
     if (result.ok) {

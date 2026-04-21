@@ -10,6 +10,7 @@ import os
 import re
 import time
 from collections.abc import Callable
+from pathlib import Path
 from typing import Final, Self
 
 from packaging.version import Version
@@ -79,6 +80,20 @@ class CMKVersion:
         self.edition: Final = edition
         self.branch: Final = branch
         self.branch_version: Final = branch_version
+
+    @property
+    def commit_hash(self) -> str:
+        short_hand = self.omd_version()
+        try:
+            return Path(f"/opt/omd/versions/{short_hand}/share/doc/COMMIT").read_text().strip()
+        except FileNotFoundError as excp:
+            if self.is_installed():
+                excp.add_note(
+                    f"Checkmk package '{short_hand}' is installed! Checkmk packaging issues?"
+                )
+            else:
+                excp.add_note(f"Missing Checkmk package '{short_hand}' installation!")
+            raise excp
 
     @staticmethod
     def _get_default_version() -> str:

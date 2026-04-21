@@ -27,7 +27,7 @@ from tests.testlib.version import CMKVersion, version_from_env
 
 from cmk.ccc.version import Edition
 
-logger = logging.getLogger()
+logger = logging.getLogger(__name__)
 
 PackageUrl = NewType("PackageUrl", str)
 
@@ -116,18 +116,19 @@ class ABCPackageManager(abc.ABC):
 
         return target_path
 
-    def install(self, version: str, edition: Edition) -> None:
-        package_name = self.package_name(edition, version)
-        build_system_path = self._build_system_package_path(version, package_name)
+    def install(self, version: CMKVersion) -> None:
+        version_ = version.version_rc_aware
+        package_name = self.package_name(version.edition, version_)
+        build_system_path = self._build_system_package_path(version_, package_name)
         packages_dir = Path(__file__).parent.parent.parent / "package_download"
         if (package_path := packages_dir / package_name).exists():
             logger.info("Install from locally available package %s", package_path)
-            self._write_package_hash(version, edition, package_path)
+            self._write_package_hash(version_, version.edition, package_path)
             self._install_package(package_path)
 
         elif build_system_path.exists():
             logger.info("Install from build system package (%s)", build_system_path)
-            self._write_package_hash(version, edition, build_system_path)
+            self._write_package_hash(version_, version.edition, build_system_path)
             self._install_package(build_system_path)
 
         else:
@@ -137,19 +138,28 @@ class ABCPackageManager(abc.ABC):
                 # should be found.
                 logger.info("Try install from tstbuild")
                 self._download_package(
-                    self.package_url_internal(version, package_name), package_path
+                    self.package_url_internal(version_, package_name), package_path
                 )
             except requests.exceptions.HTTPError:
                 logger.info("Could not Install from tstbuild, trying download portal...")
-                self._download_package(self.package_url_public(version, package_name), package_path)
+                self._download_package(
+                    self.package_url_public(version_, package_name), package_path
+                )
 
             logger.info("Install from tstbuild or portal (%s)", package_path)
-            self._write_package_hash(version, edition, package_path)
+            self._write_package_hash(version_, version.edition, package_path)
             self._install_package(package_path)
             os.unlink(package_path)
 
-    def uninstall(self, version: str, edition: Edition) -> None:
-        package_name = self.package_name(edition, version)
+        logger.info(
+            "Checkmk package '%s' built using commit: '%s'",
+            version.omd_version(),
+            version.commit_hash,
+        )
+
+    def uninstall(self, version: CMKVersion) -> None:
+        version_ = version.version_rc_aware
+        package_name = self.package_name(version.edition, version_)
         self._uninstall_package(package_name)
 
     def _write_package_hash(self, version: str, edition: Edition, package_path: Path) -> None:

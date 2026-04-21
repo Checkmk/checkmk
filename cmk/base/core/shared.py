@@ -8,6 +8,7 @@
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="type-arg"
 
+import dataclasses
 import socket
 from collections.abc import Callable, Iterable, Sequence
 from typing import Literal
@@ -27,6 +28,13 @@ from cmk.utils.tags import TagGroupID, TagID
 
 CoreCommandName = str
 CoreCommand = str
+
+
+@dataclasses.dataclass(frozen=True)
+class ResolvedCoreCommand:
+    command: CoreCommand | None
+    is_explicit: bool
+
 
 tracer = trace.get_tracer()
 
@@ -85,41 +93,48 @@ def host_check_command(
     default_host_check_command: str,
     host_check_via_service_status: Callable,
     host_check_via_custom_check: Callable,
-) -> CoreCommand | None:
-    value = config_cache.host_check_command(host_name, default_host_check_command)
+) -> ResolvedCoreCommand:
+    resolved = config_cache.host_check_command(host_name, default_host_check_command)
+
+    def _wrap(command: CoreCommand | None) -> ResolvedCoreCommand:
+        return ResolvedCoreCommand(command, is_explicit=resolved.is_explicit)
+
+    value = resolved.command
 
     if value == "smart":
         if is_clust:
-            return _cluster_ping_command(config_cache, host_name, family, ip)
-        return "check-mk-host-smart"
+            return _wrap(_cluster_ping_command(config_cache, host_name, family, ip))
+        return _wrap("check-mk-host-smart")
 
     if value == "ping":
         if is_clust:
-            return _cluster_ping_command(config_cache, host_name, family, ip)
+            return _wrap(_cluster_ping_command(config_cache, host_name, family, ip))
         ping_args = check_icmp_arguments_of(config_cache, host_name, family)
         if ping_args:  # use special arguments
-            return "check-mk-host-ping!%s" % ping_args
-        return None
+            return _wrap("check-mk-host-ping!%s" % ping_args)
+        return _wrap(None)
 
     if value == "ok":
-        return "check-mk-host-ok"
+        return _wrap("check-mk-host-ok")
 
     if value == "agent":
-        return host_check_via_service_status("Check_MK")
+        return _wrap(host_check_via_service_status("Check_MK"))
 
     if isinstance(value, tuple) and value[0] == "service":
-        return host_check_via_service_status(value[1])
+        return _wrap(host_check_via_service_status(value[1]))
 
     if isinstance(value, tuple) and value[0] == "tcp":
         if value[1] is None:
             raise TypeError()
-        return "check-mk-host-tcp!" + str(value[1])
+        return _wrap("check-mk-host-tcp!" + str(value[1]))
 
     if isinstance(value, tuple) and value[0] == "custom":
         if not isinstance(value[1], str):
             raise TypeError()
-        return host_check_via_custom_check(
-            "check-mk-custom", "check-mk-custom!" + autodetect_plugin(value[1])
+        return _wrap(
+            host_check_via_custom_check(
+                "check-mk-custom", "check-mk-custom!" + autodetect_plugin(value[1])
+            )
         )
 
     raise MKGeneralException(f"Invalid value {value!r} for host_check_command of host {host_name}.")

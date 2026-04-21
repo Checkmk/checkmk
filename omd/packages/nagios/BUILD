@@ -62,18 +62,11 @@ pkg_filegroup(
 )
 
 set_runpath(
-    name = "nagios_bin_runpath",
-    srcs = ["@nagios//:nagios_bin"],
-    # nagios links libltdl to load NEB event broker modules. DT_RUNPATH is not
-    # searched for dlopen() calls; DT_RPATH is required.
-    force_rpath = True,
-    rpaths = ["$ORIGIN/../lib"],
-    tags = ["manual"],
-)
-
-set_runpath(
     name = "nagios_bins_runpath",
-    srcs = ["@nagios//:nagiostats_bin"],
+    srcs = [
+        "@nagios//:nagios_bin",
+        "@nagios//:nagiostats_bin",
+    ],
     rpaths = ["$ORIGIN/../lib"],
     tags = ["manual"],
 )
@@ -82,7 +75,6 @@ pkg_files(
     name = "nagios_bin",
     srcs = [
         ":merge-nagios-config",
-        ":nagios_bin_runpath",
         ":nagios_bins_runpath",
     ],
     attributes = pkg_attributes(

@@ -32,11 +32,25 @@ py_pytest_main(
     ],
 )
 
+py_library(
+    name = "compare_html",
+    testonly = True,
+    srcs = ["compare_html.py"],
+    visibility = ["//tests/unit/cmk/gui:__subpackages__"],
+    deps = [
+        "//cmk/gui/utils:html",
+        requirement("beautifulsoup4"),
+    ],
+)
+
 py_test(
     name = "gui",
     srcs = ["__test__.py"] + glob(
         include = ["**/*.py"],
-        exclude = ["conftest.py"],
+        exclude = [
+            "compare_html.py",
+            "conftest.py",
+        ],
     ),
     args = [
         "--config-file=$(location @//:pyproject.toml)",
@@ -51,6 +65,7 @@ py_test(
     visibility = ["//visibility:private"],
     deps = [
         ":__test__",
+        ":compare_html",
         ":conftest",
         "//tests/unit:conftest",
         requirement("apispec-oneofschema"),

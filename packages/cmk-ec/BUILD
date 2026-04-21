@@ -82,6 +82,7 @@ py_library(
         "//cmk:__subpackages__",
         "//non-free/packages:__subpackages__",
         "//packages:__subpackages__",
+        "//tests:__subpackages__",
     ],
     deps = [
         ":event",

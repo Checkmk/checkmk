@@ -19,6 +19,7 @@ void main() {
     def artifacts_helper = load("${checkout_dir}/buildscripts/scripts/utils/upload_artifacts.groovy");
     def package_helper = load("${checkout_dir}/buildscripts/scripts/utils/package_helper.groovy");
 
+    def selected_fips_distros = [];
     def distro = params.DISTRO;
     def fake_artifacts = params.FAKE_ARTIFACTS;
     def trigger_post_submit_heavy_chain = params.TRIGGER_POST_SUBMIT_HEAVY_CHAIN;
@@ -38,10 +39,15 @@ void main() {
     // the downloaded package.
     def setup_values = single_tests.common_prepare(version: "daily", docker_tag: params.CIPARAM_OVERRIDE_DOCKER_TAG_BUILD);
     def all_editions = ["ultimate", "pro", "ultimatemt", "community", "cloud", params.EDITION].unique().sort();
+    def fips_edition = "pro";
+    inside_container_minimal(safe_branch_name: safe_branch_name) {
+        // run everything requiring python in this container
+        selected_fips_distros = versioning.get_distros(use_case: "fips");
+    }
 
     def trigger_fips_chain = false;
-    // The time 11-12 has been chose to not collide with the CI maintenance window.
-    if (Calendar.getInstance().get(Calendar.HOUR_OF_DAY) in 11..12) {
+    // The time 1100 has been chosen to not collide with the CI maintenance window
+    if (Calendar.getInstance().get(Calendar.HOUR_OF_DAY) == 11) {
         trigger_fips_chain = true;
     }
 
@@ -58,6 +64,8 @@ void main() {
         |checkout_dir:............. │${checkout_dir}│
         |branch_base_folder:....... │${branch_base_folder}│
         |force_build:.............. │${force_build}│
+        |trigger_fips_chain:....... │${trigger_fips_chain}│
+        |selected_fips_distros:.... │${selected_fips_distros}│
         |===================================================
         """.stripMargin());
 
@@ -91,6 +99,41 @@ void main() {
                         VERSION: params.VERSION,
                         EDITION: edition,
                         DISTRO: distro,
+                        DISABLE_CACHE: params.DISABLE_CACHE,
+                        CIPARAM_OVERRIDE_DOCKER_TAG_BUILD: setup_values.docker_tag,
+                        FAKE_ARTIFACTS: fake_artifacts,
+                    ],
+                    build_params_no_check: [
+                        CIPARAM_OVERRIDE_BUILD_NODE: build_node,
+                        CIPARAM_CLEANUP_WORKSPACE: params.CIPARAM_CLEANUP_WORKSPACE,
+                        CIPARAM_BISECT_COMMENT: params.CIPARAM_BISECT_COMMENT,
+                    ],
+                    no_remove_others: true, // do not delete other files in the dest dir
+                    download: false,    // use copyArtifacts to avoid nested directories
+                );
+            }
+        }]
+    }
+
+    stages += selected_fips_distros.collectEntries { fips_distro ->
+        [("${fips_edition} FIPS ${fips_distro}") : {
+            sleep(0.1 * timeOffsetForOrder++);
+
+            smart_stage(
+                name: "Trigger FIPS ${fips_edition} package build for ${fips_distro}",
+                condition: trigger_fips_chain,
+                raiseOnError: true,
+            ) {
+                smart_build(
+                    // see global-defaults.yml, needs to run in minimal container
+                    use_upstream_build: true,
+                    force_build: force_build,
+                    relative_job_name: "${branch_base_folder}/builders/trigger-cmk-distro-package",
+                    build_params: [
+                        CUSTOM_GIT_REF: effective_git_ref,
+                        VERSION: params.VERSION,
+                        EDITION: fips_edition,
+                        DISTRO: fips_distro,
                         DISABLE_CACHE: params.DISABLE_CACHE,
                         CIPARAM_OVERRIDE_DOCKER_TAG_BUILD: setup_values.docker_tag,
                         FAKE_ARTIFACTS: fake_artifacts,

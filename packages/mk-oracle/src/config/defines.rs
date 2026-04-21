@@ -47,6 +47,7 @@ pub mod keys {
     pub const ENGINE: &str = "engine";
 
     pub const SECTIONS: &str = "sections";
+    pub const CUSTOM_QUERIES: &str = "custom_queries";
     pub const CACHE_AGE: &str = "cache_age";
     pub const IS_ASYNC: &str = "is_async";
     pub const DISABLED: &str = "disabled";

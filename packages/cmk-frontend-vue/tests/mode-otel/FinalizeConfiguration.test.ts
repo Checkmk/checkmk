@@ -189,5 +189,25 @@ describe('FinalizeConfiguration', () => {
       await screen.findByText('OpenTelemetry Collector activation')
       await screen.findByText('Action other')
     })
+
+    test('keeps enableCollector action when collectorActivationAllowed is not passed', async () => {
+      // Regression: Vue 3 coerces an unpassed Boolean prop to `false`. Without
+      // withDefaults, that silently strips enableCollector and the save flow
+      // completes without hitting the REST API.
+      const collector: PostSaveAction = {
+        key: 'enableCollector',
+        label: () => 'OpenTelemetry Collector activation',
+        execute: vi.fn(async () => ({ ok: true as const }))
+      }
+      const other = makeAction('other', 'ok')
+      const { compRef } = renderWithActions([collector, other], 'local')
+
+      await screen.findByText('OpenTelemetry Collector activation')
+      await screen.findByText('Action other')
+
+      const ok = await compRef.value!.runActions()
+      expect(ok).toBe(true)
+      expect(collector.execute).toHaveBeenCalledTimes(1)
+    })
   })
 })

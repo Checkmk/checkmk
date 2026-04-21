@@ -6,7 +6,7 @@
 
 REPO_PATH          := $(realpath $(dir $(lastword $(MAKEFILE_LIST))))
 
-VERSION            := 2.5.0
+VERSION            := 2.5.0p1
 
 # Currently only used for the OMD package build cache. We did not want to use
 # the branch name, because we want to re-use a single cache also for derived sandbox

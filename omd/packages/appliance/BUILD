@@ -86,7 +86,11 @@ py_library(
         "webconf_snapin.py",
     ],
     deps = [
-        "//cmk/gui",
+        "//cmk/gui:config",
+        "//cmk/gui:i18n",
+        "//cmk/gui/htmllib:html",
+        "//cmk/gui/htmllib:tag_rendering",
+        "//cmk/gui/sidebar",
         "//packages/cmk-ccc:version",
     ],
 )

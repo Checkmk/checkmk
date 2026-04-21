@@ -246,7 +246,10 @@ py_library(
         "post-create/01_create-sample-config.py",
     ],
     deps = [
-        "//cmk/gui",
+        "//cmk/gui:main_modules",
+        "//cmk/gui:script_helpers",
+        "//cmk/gui:session",
+        "//cmk/gui/watolib",
         "//cmk/utils",
     ],
 )

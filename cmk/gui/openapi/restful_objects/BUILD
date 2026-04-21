@@ -7,6 +7,7 @@ py_library(
     imports = ["../../../.."],
     visibility = [
         "//cmk:__subpackages__",
+        "//non-free/packages:__subpackages__",
         "//tests:__subpackages__",
     ],
     deps = [
@@ -27,6 +28,7 @@ py_library(
     imports = ["../../../.."],
     visibility = [
         "//cmk:__subpackages__",
+        "//non-free/packages:__subpackages__",
         "//tests:__subpackages__",
     ],
     deps = [

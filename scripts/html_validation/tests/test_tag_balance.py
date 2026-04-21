@@ -7,7 +7,7 @@ import json
 
 import pytest
 
-from scripts.html_validation.tag_balance import check_html_tag_balance, TagImbalanceError
+from scripts.html_validation.lib.tag_balance import check_html_tag_balance, TagImbalanceError
 
 
 @pytest.mark.parametrize(

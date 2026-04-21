@@ -951,6 +951,46 @@ test('callback-filtered dropdown debounces querySuggestions while typing', async
   vi.useRealTimers()
 })
 
+test.fails(
+  'callback-filtered dropdown makes only one request when reopened after selection',
+  async () => {
+    vi.useFakeTimers()
+    try {
+      const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
+      const querySuggestions = vi.fn(async (_: string) => {
+        return new Response([
+          { name: 'option1', title: 'Option 1' },
+          { name: 'option2', title: 'Option 2' }
+        ])
+      })
+
+      render(CmkDropdown, {
+        props: {
+          options: { type: 'callback-filtered', querySuggestions },
+          selectedOption: null,
+          inputHint: 'Select an option',
+          label: 'some aria label'
+        }
+      })
+
+      const dropdown = screen.getByRole('combobox', { name: 'some aria label' })
+      await user.click(dropdown)
+      await user.click(await screen.findByRole('option', { name: 'Option 2' }))
+
+      querySuggestions.mockClear()
+
+      await user.click(dropdown)
+      await screen.findByRole('option', { name: 'Option 1' })
+      // Advance past the debounce delay (300ms) to flush any pending filter-change requests
+      await vi.advanceTimersByTimeAsync(1000)
+
+      expect(querySuggestions).toHaveBeenCalledTimes(1)
+    } finally {
+      vi.useRealTimers()
+    }
+  }
+)
+
 test('dropdown with filtered options does not prefill filter input', async () => {
   const user = userEvent.setup()
   const selectedOption = 'option2'

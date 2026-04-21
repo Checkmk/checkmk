@@ -9,6 +9,7 @@ py_library(
     visibility = [
         "//non-free/packages/cmk-robotmk:__pkg__",
         "//tests:__pkg__",
+        "//tests/openapi:__subpackages__",
         "//tests/testlib/unit:__pkg__",
         "//tests/unit:__subpackages__",
     ],

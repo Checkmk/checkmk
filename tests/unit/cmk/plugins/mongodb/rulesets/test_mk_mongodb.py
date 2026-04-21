@@ -5,7 +5,7 @@
 
 import pytest
 
-from cmk.gui.plugins.legacy_bakery_rulesets.mk_mongodb import migrate, migrate_auth
+from cmk.plugins.mongodb.rulesets.bakery import migrate, migrate_auth
 
 
 @pytest.mark.parametrize(

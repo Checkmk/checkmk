@@ -313,12 +313,15 @@ def _get_parameters(location: LocationType, schema: type | None) -> Sequence[Ope
             _inline_refs(json_schema, defs)
 
         assert json_schema["type"] == "object", f"expected dataclass, got: {schema.__name__}"
+        required_fields = set(json_schema.get("required", []))
         for name, field in json_schema["properties"].items():
             param: OpenAPIParameter = {
                 "in": location,
                 "name": name,
                 "content": {"application/json": {"schema": field}},
             }
+            if location == "path" or name in required_fields:
+                param["required"] = True
             out.append(param)
 
     return out

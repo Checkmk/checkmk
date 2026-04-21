@@ -271,11 +271,11 @@ test-update-cloud:
 	--session-timeout 5400
 
 test-update-cross-edition-pro-to-ultimate: # from pro to ultimate
-	$(PYTEST) --cmk-edition pro $(realpath update)/nonfree/pro $(PYTEST_SYSTEM_TEST_ARGS) $(realpath update)/nonfree/pro/test_update.py \
+	$(PYTEST) --cmk-edition pro $(realpath update)/nonfree/pro/test_update.py $(PYTEST_SYSTEM_TEST_ARGS) \
 	--latest-base-version --target-edition=ultimate --disable-interactive-mode --session-timeout 5400
 
 test-update-cross-edition-pro-to-ultimatemt: # from pro to ultimatemt
-	$(PYTEST) --cmk-edition pro $(realpath update)/nonfree/pro $(PYTEST_SYSTEM_TEST_ARGS) $(realpath update)/nonfree/pro/test_update.py \
+	$(PYTEST) --cmk-edition pro $(realpath update)/nonfree/pro/test_update.py $(PYTEST_SYSTEM_TEST_ARGS) \
 	--latest-base-version --target-edition=ultimatemt --disable-interactive-mode --session-timeout 5400
 
 test-update-cross-edition-community-to-pro: # from community to pro

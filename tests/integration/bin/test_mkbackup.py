@@ -7,6 +7,7 @@ import fnmatch
 import logging
 import os
 import re
+import stat
 import subprocess
 from collections.abc import Generator, Iterator, Mapping
 from contextlib import contextmanager
@@ -124,10 +125,20 @@ def backup_lock_dir_fixture(
         _initialize_lock_dir()
         yield
     else:
+        lock_parent = mkbackup_lock_dir.parent
+        original_mode = stat.S_IMODE(lock_parent.stat().st_mode)
         run(["rm", "-r", str(mkbackup_lock_dir)], sudo=True)
         assert not mkbackup_lock_dir.exists(), f"Expected '{mkbackup_lock_dir}' to be deleted!"
-        yield
-        _initialize_lock_dir()
+        # mkbackup runs as the site user and must be able to create the lock dir itself.
+        # /run/lock is not world-writable on all distros, so grant access temporarily.
+        # 1777 (not 770): the site user is not in the parent's owning group, so we need o+w;
+        # the sticky bit matches the distro default and prevents cross-user lock deletion.
+        run(["chmod", "1777", str(lock_parent)], sudo=True)
+        try:
+            yield
+        finally:
+            run(["chmod", oct(original_mode).replace("0o", ""), str(lock_parent)], sudo=True)
+            _initialize_lock_dir()
 
 
 @pytest.fixture(name="test_cfg", scope="function")
@@ -456,7 +467,6 @@ def test_mkbackup_list_jobs(site_for_mkbackup_tests: Site) -> None:
     assert "Tästjob" in p.stdout
 
 
-@pytest.mark.skip(reason="CMK-26691; investigating ...")
 @pytest.mark.usefixtures("test_cfg", "backup_lock_dir")
 def test_mkbackup_simple_backup(site_for_mkbackup_tests: Site) -> None:
     _execute_backup(site_for_mkbackup_tests)

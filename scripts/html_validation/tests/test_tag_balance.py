@@ -88,9 +88,21 @@ def test_check_html_tag_balance_error_payload() -> None:
         expected = {
             "count": 3,
             "errors": [
-                "line 6: </span> has no matching open tag",
-                "line 3: <main id='content'> not closed before </html>",
-                "line 4: <div class='card'> not closed before </html>",
+                {
+                    "line": 6,
+                    "reason": "has no matching open tag",
+                    "tag": "</span",
+                },
+                {
+                    "line": 3,
+                    "reason": "not closed before </html>",
+                    "tag": "<main id='content'>",
+                },
+                {
+                    "line": 4,
+                    "reason": "not closed before </html>",
+                    "tag": "<div class='card'>",
+                },
             ],
         }
         assert value == expected

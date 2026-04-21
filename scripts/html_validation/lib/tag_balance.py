@@ -28,13 +28,19 @@ _VOID_ELEMENTS = frozenset(
 )
 
 
+class ErrorInfo(TypedDict):
+    line: int
+    tag: str
+    reason: str
+
+
 class ErrorPayload(TypedDict):
     count: int
-    errors: list[str]
+    errors: list[ErrorInfo]
 
 
 class TagImbalanceError(RuntimeError):
-    def __init__(self, errors: list[str]) -> None:
+    def __init__(self, errors: list[ErrorInfo]) -> None:
         super().__init__("Tag Imbalance detected in document.")
         self._errors = errors
 
@@ -54,7 +60,7 @@ class _TagBalanceChecker(HTMLParser):
     def __init__(self) -> None:
         super().__init__(convert_charrefs=False)
         self._stack: list[tuple[str, int, dict[str, str | None]]] = []
-        self._errors: list[str] = []
+        self._errors: list[ErrorInfo] = []
 
     def __enter__(self) -> Self:
         return self
@@ -66,7 +72,11 @@ class _TagBalanceChecker(HTMLParser):
         exc_tb: TracebackType | None,
     ) -> None:
         self._errors.extend(
-            f"line {line}: <{tag}{self._fmt(attrs)}> never closed"
+            {
+                "line": line,
+                "tag": f"<{tag}{self._fmt(attrs)}>",
+                "reason": "never closed",
+            }
             for tag, line, attrs in self._stack
         )
         self._stack = []
@@ -87,17 +97,33 @@ class _TagBalanceChecker(HTMLParser):
             return
         line = self.getpos()[0]
         if not self._stack:
-            self._errors.append(f"line {line}: extra </{tag}>")
+            self._errors.append(
+                {
+                    "line": line,
+                    "tag": f"</{tag}>",
+                    "reason": "extra",
+                }
+            )
             return
         for i in range(len(self._stack) - 1, -1, -1):
             if self._stack[i][0] == tag:
-                for t, ln, a in self._stack[i + 1 :]:
+                for t, line, a in self._stack[i + 1 :]:
                     self._errors.append(
-                        f"line {ln}: <{t}{self._fmt(a)}> not closed before </{tag}>"
+                        {
+                            "line": line,
+                            "tag": f"<{t}{self._fmt(a)}>",
+                            "reason": f"not closed before </{tag}>",
+                        }
                     )
                 del self._stack[i:]
                 return
-        self._errors.append(f"line {line}: </{tag}> has no matching open tag")
+        self._errors.append(
+            {
+                "line": line,
+                "tag": f"</{tag}",
+                "reason": "has no matching open tag",
+            }
+        )
 
     @property
     def is_balanced(self) -> bool:

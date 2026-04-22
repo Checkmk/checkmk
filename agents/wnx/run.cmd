@@ -303,15 +303,21 @@ powershell Write-Host "run:Signing binary..." -Foreground White
 :: to be sure that all artifacts are up to date
 "%msbuild_exe%" wamain.sln /t:install /p:Configuration=Release,Platform=x86
 call scripts\attach_usb_token.cmd %usbip_exe% yubi-usbserver.lan.checkmk.net 1-1.2 .\scripts\attach.ps1
-if errorlevel 1 call powershell Write-Host "Failed to attach USB token" -Foreground Red & :halt 91
+if errorlevel 1 call powershell Write-Host "Failed to attach USB token" -Foreground Red & call :halt 91
 del /Q %hash_file% 2>nul
 powershell Write-Host "Signing Executables" -Foreground White
-@call scripts\sign_code.cmd %build_dir%\check_mk_service\x64\Release\check_mk_service64.exe %hash_file%
-@call scripts\sign_code.cmd %build_dir%\check_mk_service\Win32\Release\check_mk_service32.exe %hash_file%
-@call scripts\sign_code.cmd %arte%\cmk-agent-ctl.exe %hash_file%
-@call scripts\sign_code.cmd %arte%\mk-sql.exe %hash_file%
-@call scripts\sign_code.cmd %build_dir%\ohm\OpenHardwareMonitorLib.dll %hash_file%
-@call scripts\sign_code.cmd %build_dir%\ohm\OpenHardwareMonitorCLI.exe %hash_file%
+call scripts\sign_code.cmd %build_dir%\check_mk_service\x64\Release\check_mk_service64.exe %hash_file%
+if errorlevel 1 powershell Write-Host "Failed to sign check_mk_service64.exe" -Foreground Red & call :halt 92
+call scripts\sign_code.cmd %build_dir%\check_mk_service\Win32\Release\check_mk_service32.exe %hash_file%
+if errorlevel 1 powershell Write-Host "Failed to sign check_mk_service32.exe" -Foreground Red & call :halt 93
+call scripts\sign_code.cmd %arte%\cmk-agent-ctl.exe %hash_file%
+if errorlevel 1 powershell Write-Host "Failed to sign cmk-agent-ctl.exe" -Foreground Red & call :halt 94
+call scripts\sign_code.cmd %arte%\mk-sql.exe %hash_file%
+if errorlevel 1 powershell Write-Host "Failed to sign mk-sql.exe" -Foreground Red & call :halt 95
+call scripts\sign_code.cmd %build_dir%\ohm\OpenHardwareMonitorLib.dll %hash_file%
+if errorlevel 1 powershell Write-Host "Failed to sign OpenHardwareMonitorLib.dll" -Foreground Red & call :halt 96
+call scripts\sign_code.cmd %build_dir%\ohm\OpenHardwareMonitorCLI.exe %hash_file%
+if errorlevel 1 powershell Write-Host "Failed to sign OpenHardwareMonitorCLI.exe" -Foreground Red & call :halt 97
 goto :eof
 
 :build_msi
@@ -366,9 +372,9 @@ powershell Write-Host "run:Signing MSI" -Foreground White
 @call scripts\sign_code.cmd %arte%\check_mk_agent.msi  %hash_file%
 call scripts\detach_usb_token.cmd %usbip_exe%
 call scripts\call_signing_tests.cmd
-if errorlevel 1 call powershell Write-Host "Failed MSI signing test %errorlevel%" -Foreground Red & :halt 41
+if errorlevel 1 call powershell Write-Host "Failed MSI signing test %errorlevel%" -Foreground Red & call :halt 41
 @py -3 scripts\check_hashes.py %hash_file%
-if errorlevel 1 call powershell Write-Host "Failed hashing test %errorlevel%" -Foreground Red & :halt 42
+if errorlevel 1 call powershell Write-Host "Failed hashing test %errorlevel%" -Foreground Red & call :halt 42
 powershell Write-Host "MSI signing succeeded" -Foreground Green
 goto :eof
 

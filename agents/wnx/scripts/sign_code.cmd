@@ -9,6 +9,7 @@ set pin=469673
 set cert=7b97b15df65358623576584b7aafbe04d6668a0e
 copy /Y %1 %1.%ext%
 c:\common\scsigntool.exe -pin %pin% sign /sha1 %cert% /tr http://timestamp.sectigo.com /td sha256 /fd sha256 %1
+if errorlevel 1 exit /b 1
 
 :: Create hash
 if "%2" == "" (

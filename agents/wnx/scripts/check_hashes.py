@@ -21,6 +21,7 @@ expected_files = {
     "check_mk_service32.exe",
     "check_mk_service64.exe",
     "cmk-agent-ctl.exe",
+    "mk-sql.exe",
     "OpenHardwareMonitorCLI.exe",
     "OpenHardwareMonitorLib.dll",
 }
@@ -32,7 +33,7 @@ with open(sys.argv[1]) as inp:
     hashes = {l.split()[1] for l in lines}
     if {f.lower() for f in expected_files} != {f.lower() for f in files}:
         sys.exit(1)
-    if len(hashes) != 6 or {len(h) for h in hashes} != {64}:
+    if len(hashes) != 7 or {len(h) for h in hashes} != {64}:
         sys.exit(1)
 
 sys.exit(0)

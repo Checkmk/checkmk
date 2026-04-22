@@ -19,8 +19,6 @@ pub mod config;
 pub mod constants;
 pub mod emit;
 pub mod ora_sql;
-#[cfg(unix)]
-pub mod permissions_linux;
 pub mod platform;
 pub mod setup;
 pub mod types;

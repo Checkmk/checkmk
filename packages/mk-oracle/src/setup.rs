@@ -443,25 +443,13 @@ pub fn reset_env(old_path: &Path, mut_env: Option<String>) {
     }
 }
 
-/// Validate permissions of the given path before we load an Oracle client
-/// library from it. Dispatches to the platform-specific implementation.
-///
-/// On Linux the path and, if it is a directory, its subtree must be
-/// only-root-modifiable whenever the plugin runs as root — otherwise a
-/// non-root user could swap in a malicious `.so`. On Windows the check is
-/// not yet implemented.
+/// Validate permissions of the given path(see mk-oracle)
 pub fn validate_permissions(p: &Path) -> bool {
-    #[cfg(unix)]
-    {
-        println!("Validating permissions for path {:?} on Unix", p);
-        crate::permissions_linux::validate(p)
-    }
-    #[cfg(windows)]
-    {
-        // TODO: implement in permissions_windows.rs
-        log::warn!("CHECK PERMISSIONS is not implemented yet, {p:?} is allowed to be used");
-        true
-    }
+    // TODO. Implement permission checks for Oracle home/bin
+    // If executable is elevated,
+    // then permissions for directory and all required binaries should be admin only.
+    log::warn!("CHECK PERMISSIONS is not implemented yet, {p:?} is allowed to be used");
+    true
 }
 
 #[cfg(windows)]

@@ -1,5 +1,5 @@
 {
-  "checksum": "7277289a07df389c64faae1d1b75d7d55f6da5d6af7fc6a2a09c9f0f9038be62",
+  "checksum": "20065651afa61d3e37fa58b5503bec7914794d42c0d8b9e3d5a257ddcf47d6fa",
   "crates": {
     "addr2line 0.24.2": {
       "name": "addr2line",
@@ -11408,12 +11408,6 @@
             }
           ],
           "selects": {
-            "cfg(unix)": [
-              {
-                "id": "nix 0.29.0",
-                "target": "nix"
-              }
-            ],
             "cfg(windows)": [
               {
                 "id": "winreg 0.52.0",

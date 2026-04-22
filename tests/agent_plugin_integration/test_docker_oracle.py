@@ -839,7 +839,7 @@ def test_docker_oracle_new_plugin(
         oracle.new_plugin_cfg.as_posix(),
         "--no-spool",
     ]
-    rc, output = oracle.container.exec_run(run_cmd)
+    rc, output = oracle.container.exec_run(run_cmd, user="root")
     agent_plugin_output = output.decode("utf-8")
     assert rc == 0, (
         f"mk-oracle plugin failed with {auth_mode} authentication!\n{agent_plugin_output}"

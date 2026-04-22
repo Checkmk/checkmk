@@ -1879,7 +1879,6 @@ dependencies = [
  "flexi_logger",
  "futures",
  "log",
- "nix",
  "oracle",
  "rayon",
  "regex",

@@ -21,8 +21,7 @@ pub enum Id {
     ClusterActiveNodes,
     ClusterNodes,
     IsClustered,
-    DatabaseNamesAll,
-    DatabaseNamesActive,
+    DatabaseNames,
     Databases,
     Datafiles,
     Backup,
@@ -169,18 +168,7 @@ WHERE object_name NOT LIKE '%Deprecated%'
             CAST(blocking_session_id AS varchar) AS blocking_session_id
     FROM sys.dm_os_waiting_tasks";
 
-    pub const DATABASE_NAMES_ALL: &str = "SELECT name FROM sys.databases";
-
-    /// Skips secondary replica databases participating in availability groups
-    /// sys.fn_hadr_is_primary_replica(d.name) returns
-    /// 1 for primary replica
-    /// 0 for secondary replica
-    /// NULL for databases not participating in availability groups
-    pub const DATABASE_NAMES_ACTIVE: &str = r#"SELECT d.name
-FROM sys.databases AS d
-WHERE
-    sys.fn_hadr_is_primary_replica(d.name) IS NULL
-    OR sys.fn_hadr_is_primary_replica(d.name) = 1;"#;
+    pub const DATABASE_NAMES: &str = "SELECT name FROM sys.databases";
 
     /// Executes `sp_spaceused` for each database parsing output AS resuult set
     /// Requires NVARCHAR support
@@ -458,8 +446,7 @@ lazy_static::lazy_static! {
         (Id::ClusterActiveNodes, QueryMap::new(query::CLUSTER_ACTIVE_NODES, None)),
         (Id::ClusterNodes, QueryMap::new(query::CLUSTER_NODES_NORMAL, Some(query::CLUSTER_NODES_AZURE))),
         (Id::IsClustered, QueryMap::new(query::IS_CLUSTERED, None)),
-        (Id::DatabaseNamesAll, QueryMap::new(query::DATABASE_NAMES_ALL, None)),
-        (Id::DatabaseNamesActive, QueryMap::new(query::DATABASE_NAMES_ACTIVE, None)),
+        (Id::DatabaseNames, QueryMap::new(query::DATABASE_NAMES, None)),
         (Id::Databases, QueryMap::new(query::DATABASES, None)),
         (Id::Datafiles, QueryMap::new(query::DATAFILES, None)),
         (Id::Backup, QueryMap::new(query::BACKUP, None)),

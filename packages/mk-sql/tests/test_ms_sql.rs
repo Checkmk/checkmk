@@ -381,9 +381,7 @@ async fn validate_all(i: &SqlInstance, c: &mut UniClient, e: &Endpoint) {
 }
 
 async fn validate_database_names(instance: &SqlInstance, client: &mut UniClient) {
-    let databases = instance
-        .generate_databases(client, sqls::Id::DatabaseNamesAll)
-        .await;
+    let databases = instance.generate_databases(client).await;
     let expected = expected_databases();
     // O^2, but good enough for testing
     assert!(expected.iter().all(|item| databases.contains(item)),);
@@ -451,9 +449,7 @@ async fn validate_table_spaces(
     client: &mut UniClient,
     endpoint: &Endpoint,
 ) {
-    let databases = instance
-        .generate_databases(client, sqls::Id::DatabaseNamesAll)
-        .await;
+    let databases = instance.generate_databases(client).await;
     let expected = expected_databases();
 
     let result = instance
@@ -515,9 +511,7 @@ async fn validate_transaction_logs(
 ) {
     let expected: HashSet<String> = expected_databases();
 
-    let databases = instance
-        .generate_databases(client, sqls::Id::DatabaseNamesAll)
-        .await;
+    let databases = instance.generate_databases(client).await;
     let result = instance
         .generate_transaction_logs_section(
             endpoint,
@@ -550,9 +544,7 @@ async fn validate_transaction_logs(
 
 async fn validate_datafiles(instance: &SqlInstance, client: &mut UniClient, endpoint: &Endpoint) {
     let expected: HashSet<String> = expected_databases();
-    let databases = instance
-        .generate_databases(client, sqls::Id::DatabaseNamesAll)
-        .await;
+    let databases = instance.generate_databases(client).await;
 
     let result = instance
         .generate_datafiles_section(
@@ -591,9 +583,7 @@ async fn validate_datafiles(instance: &SqlInstance, client: &mut UniClient, endp
 async fn validate_databases(instance: &SqlInstance, client: &mut UniClient) {
     let expected: HashSet<String> = expected_databases();
 
-    let databases = instance
-        .generate_databases(client, sqls::Id::DatabaseNamesAll)
-        .await;
+    let databases = instance.generate_databases(client).await;
     let result = instance
         .generate_databases_section(
             client,
@@ -631,9 +621,7 @@ async fn validate_databases(instance: &SqlInstance, client: &mut UniClient) {
 async fn validate_databases_error(instance: &SqlInstance, client: &mut UniClient) {
     let expected: HashSet<String> = expected_databases();
 
-    let databases = instance
-        .generate_databases(client, sqls::Id::DatabaseNamesAll)
-        .await;
+    let databases = instance.generate_databases(client).await;
     let result = instance
         .generate_databases_section(
             client,

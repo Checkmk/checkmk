@@ -169,7 +169,7 @@ class ModeDiagHost(WatoMode):
 
         if request.var("go_to_properties"):
             # Save the ipaddress and/or community
-            vs_host = self._vs_host()
+            vs_host = _vs_host(self._hostname)
             new = vs_host.from_html_vars("vs_host")
             vs_host.validate_value(new, "vs_host")
 
@@ -208,11 +208,11 @@ class ModeDiagHost(WatoMode):
         return None
 
     def _validate_diag_html_vars(self) -> None:
-        vs_host = self._vs_host()
+        vs_host = _vs_host(self._hostname)
         host_vars = vs_host.from_html_vars("vs_host")
         vs_host.validate_value(host_vars, "vs_host")
 
-        vs_rules = self._vs_rules()
+        vs_rules = _vs_rules()
         rule_vars = vs_rules.from_html_vars("vs_rules")
         vs_rules.validate_value(rule_vars, "vs_rules")
 
@@ -275,7 +275,7 @@ class ModeDiagHost(WatoMode):
                     continue
                 vs_dict[key] = value
 
-            vs_host = self._vs_host()
+            vs_host = _vs_host(self._hostname)
             vs_host.render_input("vs_host", vs_dict)
             html.help(vs_host.help())
 
@@ -288,7 +288,7 @@ class ModeDiagHost(WatoMode):
 
             value = {}
             forms.section(legend=False)
-            vs_rules = self._vs_rules(
+            vs_rules = _vs_rules(
                 agent_port=agent_port,
                 tcp_connect_timeout=tcp_connect_timeout,
                 snmp_timeout=snmp_timing.get("timeout"),
@@ -364,132 +364,131 @@ class ModeDiagHost(WatoMode):
                 )
             )
 
-    def _vs_host(self) -> Dictionary:
-        return Dictionary(
-            required_keys=["hostname"],
-            elements=[
-                (
-                    "hostname",
-                    FixedValue(
-                        value=self._hostname,
-                        title=_("Host name"),
-                    ),
-                ),
-                (
-                    "ipaddress",
-                    VSHostAddress(
-                        title=_("IPv4 address"),
-                        allow_empty=False,
-                        allow_ipv6_address=False,
-                    ),
-                ),
-                (
-                    "snmp_community",
-                    Password(
-                        title=_("SNMPv1/2 community"),
-                        allow_empty=False,
-                    ),
-                ),
-                (
-                    "snmp_v3_credentials",
-                    VSSNMPCredentials(
-                        default_value=None,
-                        only_v3=True,
-                    ),
-                ),
-            ],
-        )
 
-    def _vs_rules(
-        self,
-        agent_port: int | None = None,
-        tcp_connect_timeout: float | None = None,
-        snmp_timeout: int | None = None,
-        snmp_retries: int | None = None,
-    ) -> Dictionary:
-        return Dictionary(
-            optional_keys=False,
-            elements=[
-                (
-                    "agent_port",
-                    Integer(
-                        minvalue=1,
-                        maxvalue=65535,
-                        default_value=agent_port if agent_port is not None else 6556,
-                        title=_('Checkmk agent port (<a href="%s">rules</a>)')
-                        % folder_preserving_link(
-                            [
-                                ("mode", "edit_ruleset"),
-                                ("varname", "agent_ports"),
-                            ]
-                        ),
-                        help=_(
-                            "This variable allows to specify the TCP port to "
-                            "be used to connect to the agent on a per-host-basis."
-                        ),
+def _vs_host(hostname: HostName) -> Dictionary:
+    return Dictionary(
+        required_keys=["hostname"],
+        elements=[
+            (
+                "hostname",
+                FixedValue(
+                    value=hostname,
+                    title=_("Host name"),
+                ),
+            ),
+            (
+                "ipaddress",
+                VSHostAddress(
+                    title=_("IPv4 address"),
+                    allow_empty=False,
+                    allow_ipv6_address=False,
+                ),
+            ),
+            (
+                "snmp_community",
+                Password(
+                    title=_("SNMPv1/2 community"),
+                    allow_empty=False,
+                ),
+            ),
+            (
+                "snmp_v3_credentials",
+                VSSNMPCredentials(
+                    default_value=None,
+                    only_v3=True,
+                ),
+            ),
+        ],
+    )
+
+
+def _vs_rules(
+    agent_port: int | None = None,
+    tcp_connect_timeout: float | None = None,
+    snmp_timeout: int | None = None,
+    snmp_retries: int | None = None,
+) -> Dictionary:
+    return Dictionary(
+        optional_keys=False,
+        elements=[
+            (
+                "agent_port",
+                Integer(
+                    minvalue=1,
+                    maxvalue=65535,
+                    default_value=agent_port if agent_port is not None else 6556,
+                    title=_('Checkmk agent port (<a href="%s">rules</a>)')
+                    % folder_preserving_link(
+                        [
+                            ("mode", "edit_ruleset"),
+                            ("varname", "agent_ports"),
+                        ]
+                    ),
+                    help=_(
+                        "This variable allows to specify the TCP port to "
+                        "be used to connect to the agent on a per-host-basis."
                     ),
                 ),
-                (
-                    "tcp_connect_timeout",
-                    Float(
-                        minvalue=1.0,
-                        default_value=tcp_connect_timeout
-                        if tcp_connect_timeout is not None
-                        else 5.0,
-                        unit=_("sec"),
-                        display_format="%.0f",  # show values consistent to
-                        size=2,  # SNMP-Timeout
-                        title=_('TCP connection timeout (<a href="%s">Rules</a>)')
-                        % folder_preserving_link(
-                            [
-                                ("mode", "edit_ruleset"),
-                                ("varname", "tcp_connect_timeouts"),
-                            ]
-                        ),
-                        help=_(
-                            "This variable allows to specify a timeout for the "
-                            "TCP connection to the Checkmk agent on a per-host-basis. "
-                            "If the agent does not respond within this time, it is considered to be unreachable."
-                        ),
+            ),
+            (
+                "tcp_connect_timeout",
+                Float(
+                    minvalue=1.0,
+                    default_value=tcp_connect_timeout if tcp_connect_timeout is not None else 5.0,
+                    unit=_("sec"),
+                    display_format="%.0f",  # show values consistent to
+                    size=2,  # SNMP-Timeout
+                    title=_('TCP connection timeout (<a href="%s">Rules</a>)')
+                    % folder_preserving_link(
+                        [
+                            ("mode", "edit_ruleset"),
+                            ("varname", "tcp_connect_timeouts"),
+                        ]
+                    ),
+                    help=_(
+                        "This variable allows to specify a timeout for the "
+                        "TCP connection to the Checkmk agent on a per-host-basis. "
+                        "If the agent does not respond within this time, it is considered to be unreachable."
                     ),
                 ),
-                (
-                    "snmp_timeout",
-                    Integer(
-                        title=_('SNMP-timeout (<a href="%s">Rules</a>)')
-                        % folder_preserving_link(
-                            [
-                                ("mode", "edit_ruleset"),
-                                ("varname", "snmp_timing"),
-                            ]
-                        ),
-                        help=_(
-                            "After a request is sent to the remote SNMP agent, the service will wait up to "
-                            "the provided timeout limit before assuming that the answer got lost and retrying."
-                        ),
-                        default_value=snmp_timeout if snmp_timeout is not None else 1,
-                        minvalue=1,
-                        maxvalue=60,
-                        unit=_("sec"),
+            ),
+            (
+                "snmp_timeout",
+                Integer(
+                    title=_('SNMP-timeout (<a href="%s">Rules</a>)')
+                    % folder_preserving_link(
+                        [
+                            ("mode", "edit_ruleset"),
+                            ("varname", "snmp_timing"),
+                        ]
                     ),
-                ),
-                (
-                    "snmp_retries",
-                    Integer(
-                        title=_('SNMP-retries (<a href="%s">Rules</a>)')
-                        % folder_preserving_link(
-                            [
-                                ("mode", "edit_ruleset"),
-                                ("varname", "snmp_timing"),
-                            ]
-                        ),
-                        default_value=snmp_retries if snmp_retries is not None else 5,
-                        minvalue=0,
-                        maxvalue=50,
+                    help=_(
+                        "After a request is sent to the remote SNMP agent, the service will wait up to "
+                        "the provided timeout limit before assuming that the answer got lost and retrying."
                     ),
+                    default_value=snmp_timeout if snmp_timeout is not None else 1,
+                    minvalue=1,
+                    maxvalue=60,
+                    unit=_("sec"),
                 ),
-            ],
-        )
+            ),
+            (
+                "snmp_retries",
+                Integer(
+                    title=_('SNMP-retries (<a href="%s">Rules</a>)')
+                    % folder_preserving_link(
+                        [
+                            ("mode", "edit_ruleset"),
+                            ("varname", "snmp_timing"),
+                        ]
+                    ),
+                    default_value=snmp_retries if snmp_retries is not None else 5,
+                    minvalue=0,
+                    maxvalue=50,
+                ),
+            ),
+        ],
+    )
 
 
 class PageAjaxDiagHost(AjaxPage):

@@ -6,6 +6,7 @@
 .coverage.*
 .directory
 .DS_Store
+.envrc.local
 .github/prompts
 .github/agents/*.local.md
 .idea/

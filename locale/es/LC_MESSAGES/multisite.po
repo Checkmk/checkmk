@@ -890,9 +890,6 @@ msgstr "Borrar usuario"
 msgid "(TLS, HTTP and DNS names)"
 msgstr "(TLS, HTTP y nombres DNS)"
 
-msgid "(This module is not yet implemented)"
-msgstr "(Este módulo aún no está implementado)"
-
 msgid "(Untitled module)"
 msgstr "(Módulo sin título)"
 
@@ -7793,14 +7790,6 @@ msgid "Attribute"
 msgstr "Atributo"
 
 #, fuzzy
-msgid "Attribute filters"
-msgstr "Atributo a fijar"
-
-#, fuzzy
-msgid "Attribute key"
-msgstr "Atributo"
-
-#, fuzzy
 msgid "Attribute match value"
 msgstr "Atributo a fijar"
 
@@ -12766,6 +12755,10 @@ msgid "Check certificate"
 msgstr "Certificado CA"
 
 #, fuzzy
+msgid "Check certificate credentials"
+msgstr "Certificado CA"
+
+#, fuzzy
 msgid "Check certificate validity"
 msgstr "Validez del certificado del sitio"
 
@@ -12958,6 +12951,10 @@ msgid "Check result if the host or VM state is reported as <i>unknown</i>"
 msgstr ""
 "Comprobar el resultado si el estado del host o de la VM se informa como "
 "<i>desconocido</i>"
+
+#, fuzzy
+msgid "Check secret credentials"
+msgstr "Utilizar las credenciales"
 
 msgid "Check specific host(s)"
 msgstr "Compruebe el host específico (s)"
@@ -17265,6 +17262,11 @@ msgstr ""
 "Credenciales no configuradas o inválidas. Por favor, revise la configuración "
 "de la licencia"
 
+msgid ""
+"Credentials that expired more than this long ago will be ignored. Useful for "
+"suppressing alerts on expired credentials that have already been replaced."
+msgstr ""
+
 #, fuzzy
 msgid "Credentials to access the database"
 msgstr "Credenciales de acceso a la base de datos"
@@ -18329,10 +18331,6 @@ msgstr "Disponibilidad de la ruta de datos niveles inferiores"
 #, fuzzy
 msgid "Data point"
 msgstr "Datos enviados"
-
-#, fuzzy
-msgid "Data point attributes"
-msgstr "Atributos modificados"
 
 msgid "Data read"
 msgstr "Datos leídos"
@@ -19989,10 +19987,6 @@ msgid "Deploy the mk_filehandler plug-in"
 msgstr "Implementar el complemento docker"
 
 #, fuzzy
-msgid "Deploy the nvidia_smi agent plug-in"
-msgstr "Despliegue del plugin del agente nvidia_smi"
-
-#, fuzzy
 msgid "Deploy the plug-in and run it asynchronously"
 msgstr "Despliegue del plugin MTR de forma asíncrona"
 
@@ -21616,10 +21610,6 @@ msgstr "No despliegue el plugin TSM"
 #, fuzzy
 msgid "Do not deploy the mk_filehandler plug-in"
 msgstr "No desplegar el plugin docker"
-
-#, fuzzy
-msgid "Do not deploy the nvidia_smi agent plug-in"
-msgstr "No despliegue el plugin de agente nvidia_smi"
 
 #, fuzzy
 msgid "Do not deploy the plug-in"
@@ -33895,13 +33885,6 @@ msgstr ""
 "Livestatus del sitio de destino."
 
 msgid ""
-"If you enable the OpenTelemetry data, the data collected from the "
-"OpenTelemetry Collector or the Prometheus scraper will be used for this host "
-"if they match the resource attribute key. You must also enable the metric "
-"backend under Global Settings > Site Management."
-msgstr ""
-
-msgid ""
 "If you enable the replication of MKPs then during each <i>Activate Changes</"
 "i> MKPs that are installed on your central site and all other files below "
 "the <tt>~/local/</tt> directory will be also transferred to the remote site. "
@@ -34476,6 +34459,10 @@ msgstr "Ignorar los errores en los plugins de comprobación única"
 
 msgid "Ignore hard query limit"
 msgstr "Ignorar el límite de consulta dura"
+
+#, fuzzy
+msgid "Ignore if older than"
+msgstr "Advertencia si es mayor de"
 
 msgid "Ignore intervals shorter or equal"
 msgstr "Ignorar los intervalos más cortos o iguales"
@@ -48410,10 +48397,6 @@ msgstr "Añadir configuración de estado"
 msgid "OpenTelemetry Quick Setup"
 msgstr "Añadir configuración de estado"
 
-#, fuzzy
-msgid "OpenTelemetry data"
-msgstr "Añadir configuración de estado"
-
 msgid "OpenVMS processes"
 msgstr "Procesos de OpenVMS"
 
@@ -56407,14 +56390,6 @@ msgid "Resource attribute for host name lookup"
 msgstr "Cálculo del nombre de host"
 
 #, fuzzy
-msgid "Resource attribute for hostname lookup"
-msgstr "Cálculo del nombre de host"
-
-#, fuzzy
-msgid "Resource attributes"
-msgstr "Atributo de función"
-
-#, fuzzy
 msgid "Resource consumption of Windows processes"
 msgstr "Consumo de recursos de los procesos de Windows"
 
@@ -58264,10 +58239,6 @@ msgstr ""
 #, fuzzy
 msgid "Scope ID"
 msgstr "ID de nodo"
-
-#, fuzzy
-msgid "Scope attributes"
-msgstr "Atributo de función"
 
 msgid ""
 "Scope to be used in LDAP searches. In most cases <i>Search whole subtree "
@@ -64289,6 +64260,10 @@ msgstr "Estado cuando se sincroniza el estado de replicación"
 
 msgid "State when replication state is unknown"
 msgstr "Estado cuando se desconoce el estado de replicación"
+
+#, fuzzy
+msgid "State when reported device status is OK"
+msgstr "Estado cuando el estado de replicación es de error"
 
 #, fuzzy
 msgid "State when reported device status is UP"
@@ -76911,19 +76886,11 @@ msgstr ""
 "Tiempo hasta la alerta, si el último trabajo CronJob se ha estado ejecutando "
 "durante más tiempo del establecido"
 
-#, fuzzy
-msgid "Time until certificate credentials expiration"
-msgstr "Tiempo hasta la expiración de las credenciales"
-
 msgid "Time until credentials expiration"
 msgstr "Tiempo hasta la expiración de las credenciales"
 
 msgid "Time until license expiration"
 msgstr "Tiempo hasta la expiración de la licencia"
-
-#, fuzzy
-msgid "Time until secret credentials expiration"
-msgstr "Tiempo hasta la expiración de las credenciales"
 
 msgid "Time usage by phase"
 msgstr "Uso del tiempo por fase"
@@ -82985,13 +82952,6 @@ msgstr "Utilizar la unidad de temperatura por defecto"
 
 msgid "Use the default theme"
 msgstr "Utilizar el tema por defecto"
-
-#, fuzzy
-msgid ""
-"Use the filters to select the metrics the configuration will be applied to."
-msgstr ""
-"Las reglas deshabilitadas se mantienen en la configuración pero no se "
-"aplican."
 
 msgid "Use the following ID"
 msgstr "Utilice la siguiente identificación"
@@ -94607,6 +94567,22 @@ msgid "Ctrl + Alt"
 msgstr ""
 
 #, fuzzy
+msgid "Attribute key"
+msgstr "Atributo"
+
+#, fuzzy
+msgid "Resource attributes"
+msgstr "Atributo de función"
+
+#, fuzzy
+msgid "Scope attributes"
+msgstr "Atributo de función"
+
+#, fuzzy
+msgid "Data point attributes"
+msgstr "Atributos modificados"
+
+#, fuzzy
 msgid "Agent connection test running"
 msgstr "Establecer el tiempo de espera de la conexión"
 
@@ -95249,6 +95225,14 @@ msgid "Go back to restart authorization process"
 msgstr "No se puede crear la solicitud de autenticación"
 
 #, fuzzy
+msgid "Finish & go to Activate changes"
+msgstr "No activar los cambios"
+
+#, fuzzy
+msgid "Save OpenTelemetry configuration"
+msgstr "Añadir una nueva configuración de usuario"
+
+#, fuzzy
 msgid "Configure title and site"
 msgstr "Sin niveles en los inodos"
 
@@ -95295,8 +95279,8 @@ msgid "Get your configuration ready to be applied."
 msgstr "Configuración del núcleo recargada"
 
 #, fuzzy
-msgid "Save & Go to Activate Changes"
-msgstr "No activar los cambios"
+msgid "Save Prometheus configuration"
+msgstr "Añadir configuración de estado"
 
 #, fuzzy
 msgid "prometheus_config_1"
@@ -95316,8 +95300,16 @@ msgid "Specify the Prometheus target you want to scrape."
 msgstr "Seleccione el tipo de elemento de contenido"
 
 #, fuzzy
-msgid "Configure host folder"
-msgstr "Configurar"
+msgid "Verifying the Prometheus configuration..."
+msgstr "Añadir una nueva configuración de usuario"
+
+#, fuzzy
+msgid "Prometheus configuration saved successfully."
+msgstr "Configuración de host"
+
+#, fuzzy
+msgid "Could not save the Prometheus configuration"
+msgstr "Añadir una nueva configuración de usuario"
 
 #, fuzzy
 msgid "Username is required but not specified."
@@ -95341,6 +95333,10 @@ msgstr "Enviar eventos a la consola de eventos local"
 
 msgid "Port must differ from the other protocol endpoint."
 msgstr ""
+
+#, fuzzy
+msgid " | created"
+msgstr "Archivo creado"
 
 msgid "GRPC"
 msgstr ""
@@ -95376,12 +95372,6 @@ msgstr "Credenciales JSON para la cuenta de servicio"
 #, fuzzy
 msgid "Failed to validate site configuration. Please try again."
 msgstr "Añadir elemento de la barra lateral"
-
-#, fuzzy
-msgid "Select the folder your host(s) will be created in."
-msgstr ""
-"Especifica en qué periodo de tiempo se creará un nuevo archivo para el "
-"historial de eventos."
 
 msgid ""
 "OpenTelemetry instrumentation can be set up in two ways, depending on your "
@@ -95484,6 +95474,30 @@ msgid ""
 msgstr ""
 
 #, fuzzy
+msgid "Missing site selection"
+msgstr "Falta la selección requerida."
+
+#, fuzzy
+msgid "Cannot apply configuration without a selected site."
+msgstr "No se puede leer el archivo de configuración %s: %s"
+
+#, fuzzy
+msgid "Verifying the OpenTelemetry configuration..."
+msgstr "Añadir una nueva configuración de usuario"
+
+#, fuzzy
+msgid "OpenTelemetry configuration saved successfully."
+msgstr "Configuración de host"
+
+#, fuzzy
+msgid "Could not save the OpenTelemetry configuration"
+msgstr "Añadir una nueva configuración de usuario"
+
+#, fuzzy
+msgid "An unexpected error occurred. Please try again."
+msgstr "Se ha producido una excepción: %s"
+
+#, fuzzy
 msgid "Unexpected form data shape."
 msgstr "Estado de modo esperado."
 
@@ -95492,6 +95506,14 @@ msgid ""
 "configuration when completing the setup. However, you may still need to "
 "activate them for them to take effect."
 msgstr ""
+
+#, fuzzy
+msgid "OpenTelemetry Collector activation"
+msgstr "Añadir configuración de estado"
+
+#, fuzzy
+msgid "Could not enable the OpenTelemetry Collector"
+msgstr "Añadir configuración de estado"
 
 msgid "Run the installation script"
 msgstr ""
@@ -96499,6 +96521,59 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Deploy the nvidia_smi agent plug-in"
+#~ msgstr "Despliegue del plugin del agente nvidia_smi"
+
+#, fuzzy
+#~ msgid "Do not deploy the nvidia_smi agent plug-in"
+#~ msgstr "No despliegue el plugin de agente nvidia_smi"
+
+#, fuzzy
+#~ msgid "Configure host folder"
+#~ msgstr "Configurar"
+
+#, fuzzy
+#~ msgid "Save & Go to Activate Changes"
+#~ msgstr "No activar los cambios"
+
+#, fuzzy
+#~ msgid "Select the folder your host(s) will be created in."
+#~ msgstr ""
+#~ "Especifica en qué periodo de tiempo se creará un nuevo archivo para el "
+#~ "historial de eventos."
+
+#~ msgid "(This module is not yet implemented)"
+#~ msgstr "(Este módulo aún no está implementado)"
+
+#, fuzzy
+#~ msgid "Attribute filters"
+#~ msgstr "Atributo a fijar"
+
+#, fuzzy
+#~ msgid "OpenTelemetry data"
+#~ msgstr "Añadir configuración de estado"
+
+#, fuzzy
+#~ msgid "Resource attribute for hostname lookup"
+#~ msgstr "Cálculo del nombre de host"
+
+#, fuzzy
+#~ msgid "Time until certificate credentials expiration"
+#~ msgstr "Tiempo hasta la expiración de las credenciales"
+
+#, fuzzy
+#~ msgid "Time until secret credentials expiration"
+#~ msgstr "Tiempo hasta la expiración de las credenciales"
+
+#, fuzzy
+#~ msgid ""
+#~ "Use the filters to select the metrics the configuration will be applied "
+#~ "to."
+#~ msgstr ""
+#~ "Las reglas deshabilitadas se mantienen en la configuración pero no se "
+#~ "aplican."
 
 #, python-format
 #~ msgid "Deploy %s"
@@ -98018,10 +98093,6 @@ msgstr ""
 
 #~ msgid "Dynamic host configuration connections"
 #~ msgstr "Conexiones de configuración dinámica de host"
-
-#, fuzzy
-#~ msgid "OpenTelemetry Collector configuration"
-#~ msgstr "Añadir configuración de estado"
 
 #~ msgid "The graph data range is wrong or missing"
 #~ msgstr "El rango de datos del gráfico es incorrecto o falta"
@@ -102470,9 +102541,6 @@ msgstr ""
 #~ "elección correcta para usuarios experimentados o usuarios que quieran "
 #~ "ejecutar el actualizador de agentes en arquitecturas como ARM, ppc u "
 #~ "otras."
-
-#~ msgid "Use credentials"
-#~ msgstr "Utilizar las credenciales"
 
 #, fuzzy
 #~ msgid "Relative (Legacy)"

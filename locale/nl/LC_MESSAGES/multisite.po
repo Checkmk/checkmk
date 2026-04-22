@@ -887,9 +887,6 @@ msgstr "Gebruikers verwijderen"
 msgid "(TLS, HTTP and DNS names)"
 msgstr "(TLS, HTTP en DNS namen)"
 
-msgid "(This module is not yet implemented)"
-msgstr "(Deze module is nog niet geïmplementeerd)"
-
 msgid "(Untitled module)"
 msgstr "(Module zonder naam)"
 
@@ -7722,14 +7719,6 @@ msgid "Attribute"
 msgstr "Attribuut"
 
 #, fuzzy
-msgid "Attribute filters"
-msgstr "In te stellen attribuut"
-
-#, fuzzy
-msgid "Attribute key"
-msgstr "Attribuut"
-
-#, fuzzy
 msgid "Attribute match value"
 msgstr "In te stellen attribuut"
 
@@ -12669,6 +12658,10 @@ msgid "Check certificate"
 msgstr "CA-certificaat"
 
 #, fuzzy
+msgid "Check certificate credentials"
+msgstr "CA-certificaat"
+
+#, fuzzy
 msgid "Check certificate validity"
 msgstr "Geldigheid van het site-certificaat"
 
@@ -12861,6 +12854,10 @@ msgid "Check result if the host or VM state is reported as <i>unknown</i>"
 msgstr ""
 "Controleer het resultaat als de host- of VM-status wordt gerapporteerd als "
 "<i>onbekend</i>"
+
+#, fuzzy
+msgid "Check secret credentials"
+msgstr "Gebruik geloofsbrieven"
 
 msgid "Check specific host(s)"
 msgstr "Controleer specifieke host(s)"
@@ -17142,6 +17139,11 @@ msgstr ""
 "Credentials niet geconfigureerd of ongeldig. Controleer de licentie-"
 "instellingen"
 
+msgid ""
+"Credentials that expired more than this long ago will be ignored. Useful for "
+"suppressing alerts on expired credentials that have already been replaced."
+msgstr ""
+
 #, fuzzy
 msgid "Credentials to access the database"
 msgstr "Credentials voor toegang tot de Database"
@@ -18200,10 +18202,6 @@ msgstr "Beschikbaarheid gegevenspad lagere niveaus"
 #, fuzzy
 msgid "Data point"
 msgstr "Verzonden gegevens"
-
-#, fuzzy
-msgid "Data point attributes"
-msgstr "Gewijzigde attributen"
 
 msgid "Data read"
 msgstr "Gelezen gegevens"
@@ -19838,10 +19836,6 @@ msgid "Deploy the mk_filehandler plug-in"
 msgstr "De docker plugin implementeren"
 
 #, fuzzy
-msgid "Deploy the nvidia_smi agent plug-in"
-msgstr "De nvidia_smi agent-plugin implementeren"
-
-#, fuzzy
 msgid "Deploy the plug-in and run it asynchronously"
 msgstr "MTR plugin asynchroon implementeren"
 
@@ -21442,10 +21436,6 @@ msgstr "Implementeer de TSM plugin niet"
 #, fuzzy
 msgid "Do not deploy the mk_filehandler plug-in"
 msgstr "Zet de docker plugin niet in"
-
-#, fuzzy
-msgid "Do not deploy the nvidia_smi agent plug-in"
-msgstr "De nvidia_smi agent plugin niet implementeren"
 
 #, fuzzy
 msgid "Do not deploy the plug-in"
@@ -33639,13 +33629,6 @@ msgstr ""
 "threads in de Livestatus module van de doelsite."
 
 msgid ""
-"If you enable the OpenTelemetry data, the data collected from the "
-"OpenTelemetry Collector or the Prometheus scraper will be used for this host "
-"if they match the resource attribute key. You must also enable the metric "
-"backend under Global Settings > Site Management."
-msgstr ""
-
-msgid ""
 "If you enable the replication of MKPs then during each <i>Activate Changes</"
 "i> MKPs that are installed on your central site and all other files below "
 "the <tt>~/local/</tt> directory will be also transferred to the remote site. "
@@ -34212,6 +34195,10 @@ msgstr "Negeer fouten in plugins met enkele controle"
 
 msgid "Ignore hard query limit"
 msgstr "Negeer harde zoeklimiet"
+
+#, fuzzy
+msgid "Ignore if older than"
+msgstr "Waarschuwing indien ouder dan"
 
 msgid "Ignore intervals shorter or equal"
 msgstr "Negeer intervallen korter of gelijk"
@@ -48024,10 +48011,6 @@ msgstr "Configuratie toestand toevoegen"
 msgid "OpenTelemetry Quick Setup"
 msgstr "Configuratie toestand toevoegen"
 
-#, fuzzy
-msgid "OpenTelemetry data"
-msgstr "Configuratie toestand toevoegen"
-
 msgid "OpenVMS processes"
 msgstr "OpenVMS processen"
 
@@ -55948,14 +55931,6 @@ msgid "Resource attribute for host name lookup"
 msgstr "Hostname berekening"
 
 #, fuzzy
-msgid "Resource attribute for hostname lookup"
-msgstr "Hostname berekening"
-
-#, fuzzy
-msgid "Resource attributes"
-msgstr "Rolkenmerk"
-
-#, fuzzy
 msgid "Resource consumption of Windows processes"
 msgstr "Hulpbronnenverbruik van Windows-processen"
 
@@ -57780,10 +57755,6 @@ msgstr ""
 #, fuzzy
 msgid "Scope ID"
 msgstr "Knooppunt-ID"
-
-#, fuzzy
-msgid "Scope attributes"
-msgstr "Rolkenmerk"
 
 msgid ""
 "Scope to be used in LDAP searches. In most cases <i>Search whole subtree "
@@ -63732,6 +63703,10 @@ msgstr "Staat wanneer replicatietoestand aan het synchroniseren is"
 
 msgid "State when replication state is unknown"
 msgstr "Staat wanneer replicatietoestand onbekend is"
+
+#, fuzzy
+msgid "State when reported device status is OK"
+msgstr "Toestand wanneer replicatietoestand fout is"
 
 #, fuzzy
 msgid "State when reported device status is UP"
@@ -76281,19 +76256,11 @@ msgstr ""
 "Tijd tot waarschuwing, als de laatste CronJob-taak al langer loopt dan de "
 "ingestelde tijd"
 
-#, fuzzy
-msgid "Time until certificate credentials expiration"
-msgstr "Tijd tot de vervaldatum van de referenties"
-
 msgid "Time until credentials expiration"
 msgstr "Tijd tot de vervaldatum van de referenties"
 
 msgid "Time until license expiration"
 msgstr "Tijd tot licentievervaldatum"
-
-#, fuzzy
-msgid "Time until secret credentials expiration"
-msgstr "Tijd tot de vervaldatum van de referenties"
 
 msgid "Time usage by phase"
 msgstr "Tijdsgebruik per fase"
@@ -82316,13 +82283,6 @@ msgstr "Gebruik de standaardtemperatuureenheid"
 
 msgid "Use the default theme"
 msgstr "Gebruik het standaardthema"
-
-#, fuzzy
-msgid ""
-"Use the filters to select the metrics the configuration will be applied to."
-msgstr ""
-"Uitgeschakelde regels worden bewaard in de configuratie maar worden niet "
-"toegepast."
 
 msgid "Use the following ID"
 msgstr "Gebruik de volgende ID"
@@ -93890,6 +93850,22 @@ msgid "Ctrl + Alt"
 msgstr ""
 
 #, fuzzy
+msgid "Attribute key"
+msgstr "Attribuut"
+
+#, fuzzy
+msgid "Resource attributes"
+msgstr "Rolkenmerk"
+
+#, fuzzy
+msgid "Scope attributes"
+msgstr "Rolkenmerk"
+
+#, fuzzy
+msgid "Data point attributes"
+msgstr "Gewijzigde attributen"
+
+#, fuzzy
 msgid "Agent connection test running"
 msgstr "Time-out verbinding instellen"
 
@@ -94526,6 +94502,14 @@ msgid "Go back to restart authorization process"
 msgstr "Kan geen authenticatieverzoek aanmaken"
 
 #, fuzzy
+msgid "Finish & go to Activate changes"
+msgstr "Veranderingen niet activeren"
+
+#, fuzzy
+msgid "Save OpenTelemetry configuration"
+msgstr "Nieuwe gebruikersconfiguratie toevoegen"
+
+#, fuzzy
 msgid "Configure title and site"
 msgstr "Geen niveaus op inodes"
 
@@ -94571,8 +94555,8 @@ msgid "Get your configuration ready to be applied."
 msgstr "Kernconfiguratie opnieuw geladen"
 
 #, fuzzy
-msgid "Save & Go to Activate Changes"
-msgstr "Veranderingen niet activeren"
+msgid "Save Prometheus configuration"
+msgstr "Configuratie toestand toevoegen"
 
 #, fuzzy
 msgid "prometheus_config_1"
@@ -94592,8 +94576,16 @@ msgid "Specify the Prometheus target you want to scrape."
 msgstr "Selecteer het type inhoudselement"
 
 #, fuzzy
-msgid "Configure host folder"
-msgstr "Configureer"
+msgid "Verifying the Prometheus configuration..."
+msgstr "Nieuwe gebruikersconfiguratie toevoegen"
+
+#, fuzzy
+msgid "Prometheus configuration saved successfully."
+msgstr "Host configuratie"
+
+#, fuzzy
+msgid "Could not save the Prometheus configuration"
+msgstr "Nieuwe gebruikersconfiguratie toevoegen"
 
 #, fuzzy
 msgid "Username is required but not specified."
@@ -94617,6 +94609,10 @@ msgstr "Gebeurtenissen verzenden naar lokale gebeurtenissenconsole"
 
 msgid "Port must differ from the other protocol endpoint."
 msgstr ""
+
+#, fuzzy
+msgid " | created"
+msgstr "Bestand aangemaakt"
 
 msgid "GRPC"
 msgstr ""
@@ -94652,12 +94648,6 @@ msgstr "JSON inloggegevens voor dienstaccount"
 #, fuzzy
 msgid "Failed to validate site configuration. Please try again."
 msgstr "Zijbalk element toevoegen"
-
-#, fuzzy
-msgid "Select the folder your host(s) will be created in."
-msgstr ""
-"Geef aan op welk tijdstip een nieuw bestand voor de voorvalgeschiedenis "
-"wordt aangemaakt."
 
 msgid ""
 "OpenTelemetry instrumentation can be set up in two ways, depending on your "
@@ -94760,6 +94750,30 @@ msgid ""
 msgstr ""
 
 #, fuzzy
+msgid "Missing site selection"
+msgstr "Ontbrekende verplichte selectie."
+
+#, fuzzy
+msgid "Cannot apply configuration without a selected site."
+msgstr "Kan configuratiebestand %s niet lezen: %s"
+
+#, fuzzy
+msgid "Verifying the OpenTelemetry configuration..."
+msgstr "Nieuwe gebruikersconfiguratie toevoegen"
+
+#, fuzzy
+msgid "OpenTelemetry configuration saved successfully."
+msgstr "Host configuratie"
+
+#, fuzzy
+msgid "Could not save the OpenTelemetry configuration"
+msgstr "Nieuwe gebruikersconfiguratie toevoegen"
+
+#, fuzzy
+msgid "An unexpected error occurred. Please try again."
+msgstr "Er is een uitzondering opgetreden: %s"
+
+#, fuzzy
 msgid "Unexpected form data shape."
 msgstr "Verwachte modus status."
 
@@ -94768,6 +94782,14 @@ msgid ""
 "configuration when completing the setup. However, you may still need to "
 "activate them for them to take effect."
 msgstr ""
+
+#, fuzzy
+msgid "OpenTelemetry Collector activation"
+msgstr "Configuratie toestand toevoegen"
+
+#, fuzzy
+msgid "Could not enable the OpenTelemetry Collector"
+msgstr "Configuratie toestand toevoegen"
 
 msgid "Run the installation script"
 msgstr ""
@@ -95774,6 +95796,59 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Deploy the nvidia_smi agent plug-in"
+#~ msgstr "De nvidia_smi agent-plugin implementeren"
+
+#, fuzzy
+#~ msgid "Do not deploy the nvidia_smi agent plug-in"
+#~ msgstr "De nvidia_smi agent plugin niet implementeren"
+
+#, fuzzy
+#~ msgid "Configure host folder"
+#~ msgstr "Configureer"
+
+#, fuzzy
+#~ msgid "Save & Go to Activate Changes"
+#~ msgstr "Veranderingen niet activeren"
+
+#, fuzzy
+#~ msgid "Select the folder your host(s) will be created in."
+#~ msgstr ""
+#~ "Geef aan op welk tijdstip een nieuw bestand voor de voorvalgeschiedenis "
+#~ "wordt aangemaakt."
+
+#~ msgid "(This module is not yet implemented)"
+#~ msgstr "(Deze module is nog niet geïmplementeerd)"
+
+#, fuzzy
+#~ msgid "Attribute filters"
+#~ msgstr "In te stellen attribuut"
+
+#, fuzzy
+#~ msgid "OpenTelemetry data"
+#~ msgstr "Configuratie toestand toevoegen"
+
+#, fuzzy
+#~ msgid "Resource attribute for hostname lookup"
+#~ msgstr "Hostname berekening"
+
+#, fuzzy
+#~ msgid "Time until certificate credentials expiration"
+#~ msgstr "Tijd tot de vervaldatum van de referenties"
+
+#, fuzzy
+#~ msgid "Time until secret credentials expiration"
+#~ msgstr "Tijd tot de vervaldatum van de referenties"
+
+#, fuzzy
+#~ msgid ""
+#~ "Use the filters to select the metrics the configuration will be applied "
+#~ "to."
+#~ msgstr ""
+#~ "Uitgeschakelde regels worden bewaard in de configuratie maar worden niet "
+#~ "toegepast."
 
 #, python-format
 #~ msgid "Deploy %s"
@@ -97281,10 +97356,6 @@ msgstr ""
 
 #~ msgid "Dynamic host configuration connections"
 #~ msgstr "Dynamische host configuratie verbindingen"
-
-#, fuzzy
-#~ msgid "OpenTelemetry Collector configuration"
-#~ msgstr "Configuratie toestand toevoegen"
 
 #~ msgid "The graph data range is wrong or missing"
 #~ msgstr "Het bereik van de grafiekgegevens is verkeerd of ontbreekt"
@@ -101604,9 +101675,6 @@ msgstr ""
 #~ "aankondiging. Dit kan echter de juiste keuze zijn voor ervaren gebruikers "
 #~ "of gebruikers die de agent updater willen draaien op architecturen zoals "
 #~ "ARM, ppc of andere."
-
-#~ msgid "Use credentials"
-#~ msgstr "Gebruik geloofsbrieven"
 
 #, fuzzy
 #~ msgid "Relative (Legacy)"

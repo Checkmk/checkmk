@@ -900,9 +900,6 @@ msgstr "Ștergeți utilizatorul"
 msgid "(TLS, HTTP and DNS names)"
 msgstr "(TLS, HTTP și nume DNS)"
 
-msgid "(This module is not yet implemented)"
-msgstr "(Acest modul nu este încă implementat)"
-
 msgid "(Untitled module)"
 msgstr "(Modul fără titlu)"
 
@@ -7735,14 +7732,6 @@ msgstr "Portul Atto Fibrebridge FC"
 msgid "Attribute"
 msgstr "Atributul"
 
-#, fuzzy
-msgid "Attribute filters"
-msgstr "Atributul de setat"
-
-#, fuzzy
-msgid "Attribute key"
-msgstr "Atributul"
-
 msgid "Attribute match value"
 msgstr "Valoarea de potrivire a atributului"
 
@@ -12684,6 +12673,10 @@ msgstr "Doar verificare și afișare"
 msgid "Check certificate"
 msgstr "Verificați certificatele"
 
+#, fuzzy
+msgid "Check certificate credentials"
+msgstr "Verificați certificatele"
+
 msgid "Check certificate validity"
 msgstr "Verificați valabilitatea certificatului"
 
@@ -12871,6 +12864,10 @@ msgid "Check result if the host or VM state is reported as <i>unknown</i>"
 msgstr ""
 "Rezultatul verificării dacă starea gazdei sau a mașinii virtuale este "
 "raportată ca fiind <i>necunoscută</i>."
+
+#, fuzzy
+msgid "Check secret credentials"
+msgstr "Utilizați acreditările"
 
 msgid "Check specific host(s)"
 msgstr "Verificați gazda (gazdele) specifică (specifice)"
@@ -17157,6 +17154,11 @@ msgstr ""
 "Datele de acreditare nu sunt configurate sau nu sunt valide. Vă rugăm să "
 "revizuiți setările de licență"
 
+msgid ""
+"Credentials that expired more than this long ago will be ignored. Useful for "
+"suppressing alerts on expired credentials that have already been replaced."
+msgstr ""
+
 #, fuzzy
 msgid "Credentials to access the database"
 msgstr "Acreditive pentru a accesa baza de date"
@@ -18210,10 +18212,6 @@ msgstr "Disponibilitatea căii de acces a datelor la nivelurile inferioare"
 #, fuzzy
 msgid "Data point"
 msgstr "Date trimise"
-
-#, fuzzy
-msgid "Data point attributes"
-msgstr "Atributele timpilor morți:"
 
 msgid "Data read"
 msgstr "Date citite"
@@ -19861,10 +19859,6 @@ msgid "Deploy the mk_filehandler plug-in"
 msgstr "Implementați plugin-ul mk_filehandler"
 
 #, fuzzy
-msgid "Deploy the nvidia_smi agent plug-in"
-msgstr "Implementați plugin-ul agentului nvidia_smi"
-
-#, fuzzy
 msgid "Deploy the plug-in and run it asynchronously"
 msgstr "Implementarea pluginului MTR în mod asincron"
 
@@ -21476,10 +21470,6 @@ msgstr "Nu implementați extensia TSM"
 #, fuzzy
 msgid "Do not deploy the mk_filehandler plug-in"
 msgstr "Nu implementați plugin-ul mk_filehandler"
-
-#, fuzzy
-msgid "Do not deploy the nvidia_smi agent plug-in"
-msgstr "Nu implementați plugin-ul agentului nvidia_smi"
 
 #, fuzzy
 msgid "Do not deploy the plug-in"
@@ -33692,13 +33682,6 @@ msgstr ""
 "număr de fire de execuție în modulul Livestatus al site-ului țintă."
 
 msgid ""
-"If you enable the OpenTelemetry data, the data collected from the "
-"OpenTelemetry Collector or the Prometheus scraper will be used for this host "
-"if they match the resource attribute key. You must also enable the metric "
-"backend under Global Settings > Site Management."
-msgstr ""
-
-msgid ""
 "If you enable the replication of MKPs then during each <i>Activate Changes</"
 "i> MKPs that are installed on your central site and all other files below "
 "the <tt>~/local/</tt> directory will be also transferred to the remote site. "
@@ -34282,6 +34265,10 @@ msgstr "Ignoră erorile din pluginurile de verificare unică"
 
 msgid "Ignore hard query limit"
 msgstr "Ignoră limita de interogare dură"
+
+#, fuzzy
+msgid "Ignore if older than"
+msgstr "Avertisment dacă este mai veche de"
 
 msgid "Ignore intervals shorter or equal"
 msgstr "Ignoră intervalele mai mici sau egale"
@@ -48104,10 +48091,6 @@ msgstr "Configurația stilului selectat"
 msgid "OpenTelemetry Quick Setup"
 msgstr "Configurația stilului selectat"
 
-#, fuzzy
-msgid "OpenTelemetry data"
-msgstr "Configurația stilului selectat"
-
 msgid "OpenVMS processes"
 msgstr "Procesele OpenVMS"
 
@@ -56018,14 +56001,6 @@ msgid "Resource attribute for host name lookup"
 msgstr "Calcularea numelui de gazdă"
 
 #, fuzzy
-msgid "Resource attribute for hostname lookup"
-msgstr "Calcularea numelui de gazdă"
-
-#, fuzzy
-msgid "Resource attributes"
-msgstr "Resetarea atributelor"
-
-#, fuzzy
 msgid "Resource consumption of Windows processes"
 msgstr "Consumul de resurse al proceselor Windows"
 
@@ -57858,10 +57833,6 @@ msgstr ""
 #, fuzzy
 msgid "Scope ID"
 msgstr "ID-ul nodului"
-
-#, fuzzy
-msgid "Scope attributes"
-msgstr "Atributul rolului"
 
 msgid ""
 "Scope to be used in LDAP searches. In most cases <i>Search whole subtree "
@@ -63859,6 +63830,10 @@ msgstr "Starea când se sincronizează starea de replicare"
 
 msgid "State when replication state is unknown"
 msgstr "Stare atunci când starea de replicare este necunoscută"
+
+#, fuzzy
+msgid "State when reported device status is OK"
+msgstr "Stare atunci când starea de replicare este eroare"
 
 #, fuzzy
 msgid "State when reported device status is UP"
@@ -76468,19 +76443,11 @@ msgstr ""
 "Timpul până la alertă, în cazul în care ultima sarcină CronJob a fost "
 "executată mai mult decât timpul stabilit"
 
-#, fuzzy
-msgid "Time until certificate credentials expiration"
-msgstr "Timpul până la expirarea acreditărilor"
-
 msgid "Time until credentials expiration"
 msgstr "Timpul până la expirarea acreditărilor"
 
 msgid "Time until license expiration"
 msgstr "Timp până la expirarea licenței"
-
-#, fuzzy
-msgid "Time until secret credentials expiration"
-msgstr "Timpul până la expirarea acreditărilor"
 
 msgid "Time usage by phase"
 msgstr "Utilizarea timpului pe faze"
@@ -82436,12 +82403,6 @@ msgstr "Utilizați unitatea de temperatură implicită"
 
 msgid "Use the default theme"
 msgstr "Utilizați tema implicită"
-
-#, fuzzy
-msgid ""
-"Use the filters to select the metrics the configuration will be applied to."
-msgstr ""
-"Regulile dezactivate sunt păstrate în configurație, dar nu sunt aplicate."
 
 msgid "Use the following ID"
 msgstr "Utilizați următorul ID"
@@ -94031,6 +93992,22 @@ msgid "Ctrl + Alt"
 msgstr ""
 
 #, fuzzy
+msgid "Attribute key"
+msgstr "Atributul"
+
+#, fuzzy
+msgid "Resource attributes"
+msgstr "Resetarea atributelor"
+
+#, fuzzy
+msgid "Scope attributes"
+msgstr "Atributul rolului"
+
+#, fuzzy
+msgid "Data point attributes"
+msgstr "Atributele timpilor morți:"
+
+#, fuzzy
 msgid "Agent connection test running"
 msgstr "Setați timeout-ul conexiunii"
 
@@ -94675,6 +94652,14 @@ msgid "Go back to restart authorization process"
 msgstr "Nu se poate crea o cerere de autentificare"
 
 #, fuzzy
+msgid "Finish & go to Activate changes"
+msgstr "Nu activați modificările"
+
+#, fuzzy
+msgid "Save OpenTelemetry configuration"
+msgstr "Adaugp o noua configurație de utilizator"
+
+#, fuzzy
 msgid "Configure title and site"
 msgstr "Configurați nivelurile de fum"
 
@@ -94721,8 +94706,8 @@ msgid "Get your configuration ready to be applied."
 msgstr "Configurație de bază reîncărcată"
 
 #, fuzzy
-msgid "Save & Go to Activate Changes"
-msgstr "Nu activați modificările"
+msgid "Save Prometheus configuration"
+msgstr "Configurația stilului selectat"
 
 #, fuzzy
 msgid "prometheus_config_1"
@@ -94742,8 +94727,16 @@ msgid "Specify the Prometheus target you want to scrape."
 msgstr "Selectați tipul de element de conținut"
 
 #, fuzzy
-msgid "Configure host folder"
-msgstr "Configurați"
+msgid "Verifying the Prometheus configuration..."
+msgstr "Adaugp o noua configurație de utilizator"
+
+#, fuzzy
+msgid "Prometheus configuration saved successfully."
+msgstr "Configurație gazdă"
+
+#, fuzzy
+msgid "Could not save the Prometheus configuration"
+msgstr "Adaugp o noua configurație de utilizator"
 
 #, fuzzy
 msgid "Username is required but not specified."
@@ -94767,6 +94760,10 @@ msgstr "Trimiterea evenimentelor către consola locală de evenimente"
 
 msgid "Port must differ from the other protocol endpoint."
 msgstr ""
+
+#, fuzzy
+msgid " | created"
+msgstr "Fișier creat"
 
 msgid "GRPC"
 msgstr ""
@@ -94803,12 +94800,6 @@ msgstr "credențiale JSON pentru contul de servicii"
 #, fuzzy
 msgid "Failed to validate site configuration. Please try again."
 msgstr "Adăugați elementul sidebar"
-
-#, fuzzy
-msgid "Select the folder your host(s) will be created in."
-msgstr ""
-"Specificați la ce perioadă de timp va fi creat un nou fișier pentru "
-"istoricul evenimentelor."
 
 msgid ""
 "OpenTelemetry instrumentation can be set up in two ways, depending on your "
@@ -94911,6 +94902,30 @@ msgid ""
 msgstr ""
 
 #, fuzzy
+msgid "Missing site selection"
+msgstr "Lipsește selecția necesară."
+
+#, fuzzy
+msgid "Cannot apply configuration without a selected site."
+msgstr "Nu se poate citi fișierul de configurare %s: %s."
+
+#, fuzzy
+msgid "Verifying the OpenTelemetry configuration..."
+msgstr "Adaugp o noua configurație de utilizator"
+
+#, fuzzy
+msgid "OpenTelemetry configuration saved successfully."
+msgstr "Configurație gazdă"
+
+#, fuzzy
+msgid "Could not save the OpenTelemetry configuration"
+msgstr "Adaugp o noua configurație de utilizator"
+
+#, fuzzy
+msgid "An unexpected error occurred. Please try again."
+msgstr "S-a produs o excepție: %s"
+
+#, fuzzy
 msgid "Unexpected form data shape."
 msgstr "Starea modului așteptat."
 
@@ -94919,6 +94934,14 @@ msgid ""
 "configuration when completing the setup. However, you may still need to "
 "activate them for them to take effect."
 msgstr ""
+
+#, fuzzy
+msgid "OpenTelemetry Collector activation"
+msgstr "Configurația stilului selectat"
+
+#, fuzzy
+msgid "Could not enable the OpenTelemetry Collector"
+msgstr "Configurația stilului selectat"
 
 msgid "Run the installation script"
 msgstr ""
@@ -95932,6 +95955,58 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Deploy the nvidia_smi agent plug-in"
+#~ msgstr "Implementați plugin-ul agentului nvidia_smi"
+
+#, fuzzy
+#~ msgid "Do not deploy the nvidia_smi agent plug-in"
+#~ msgstr "Nu implementați plugin-ul agentului nvidia_smi"
+
+#, fuzzy
+#~ msgid "Configure host folder"
+#~ msgstr "Configurați"
+
+#, fuzzy
+#~ msgid "Save & Go to Activate Changes"
+#~ msgstr "Nu activați modificările"
+
+#, fuzzy
+#~ msgid "Select the folder your host(s) will be created in."
+#~ msgstr ""
+#~ "Specificați la ce perioadă de timp va fi creat un nou fișier pentru "
+#~ "istoricul evenimentelor."
+
+#~ msgid "(This module is not yet implemented)"
+#~ msgstr "(Acest modul nu este încă implementat)"
+
+#, fuzzy
+#~ msgid "Attribute filters"
+#~ msgstr "Atributul de setat"
+
+#, fuzzy
+#~ msgid "OpenTelemetry data"
+#~ msgstr "Configurația stilului selectat"
+
+#, fuzzy
+#~ msgid "Resource attribute for hostname lookup"
+#~ msgstr "Calcularea numelui de gazdă"
+
+#, fuzzy
+#~ msgid "Time until certificate credentials expiration"
+#~ msgstr "Timpul până la expirarea acreditărilor"
+
+#, fuzzy
+#~ msgid "Time until secret credentials expiration"
+#~ msgstr "Timpul până la expirarea acreditărilor"
+
+#, fuzzy
+#~ msgid ""
+#~ "Use the filters to select the metrics the configuration will be applied "
+#~ "to."
+#~ msgstr ""
+#~ "Regulile dezactivate sunt păstrate în configurație, dar nu sunt aplicate."
 
 #, python-format
 #~ msgid "Deploy %s"
@@ -97447,10 +97522,6 @@ msgstr ""
 
 #~ msgid "Dynamic host configuration connections"
 #~ msgstr "Conexiuni de configurare dinamică a gazdei"
-
-#, fuzzy
-#~ msgid "OpenTelemetry Collector configuration"
-#~ msgstr "Configurația stilului selectat"
 
 #~ msgid "The graph data range is wrong or missing"
 #~ msgstr "Intervalul de date al graficului este greșit sau lipsește"
@@ -102282,9 +102353,6 @@ msgstr ""
 #~ "anunțate. Cu toate acestea, aceasta ar putea fi alegerea potrivită pentru "
 #~ "utilizatorii experimentați sau pentru utilizatorii care doresc să ruleze "
 #~ "actualizatorul de agenți pe arhitecturi precum ARM, ppc sau altele."
-
-#~ msgid "Use credentials"
-#~ msgstr "Utilizați acreditările"
 
 #, fuzzy
 #~ msgid "Relative (Legacy)"

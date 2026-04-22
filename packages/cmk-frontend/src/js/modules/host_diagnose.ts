@@ -6,10 +6,6 @@
 import { call_ajax } from './ajax'
 import { add_class, remove_class, replaceIcon } from './utils'
 
-export function getFirstElementByNameAsInput(name: string): HTMLInputElement {
-  return document.getElementsByName(name)[0] as HTMLInputElement
-}
-
 export function start_test(ident: string, hostname: string, transid: string) {
   const log = document.getElementById(ident + '_log') as HTMLImageElement
   const img = document.getElementById(ident + '_img') as HTMLImageElement
@@ -17,85 +13,32 @@ export function start_test(ident: string, hostname: string, transid: string) {
 
   retry!.style.display = 'none'
 
-  let vars = ''
-  vars = '&_transid=' + encodeURIComponent(transid)
-  vars +=
-    '&ipaddress=' + encodeURIComponent(getFirstElementByNameAsInput('vs_host_p_ipaddress').value)
+  // Forward all valuespec fields; server-side Password handles typed-vs-_orig.
+  const params = new URLSearchParams()
+  params.append('host', hostname)
+  params.append('_test', ident)
+  params.append('_transid', transid)
 
-  if (getFirstElementByNameAsInput('vs_host_p_snmp_community_USE').checked)
-    vars +=
-      '&snmp_community=' +
-      encodeURIComponent(getFirstElementByNameAsInput('vs_host_p_snmp_community').value)
-
-  let v3_use
-  if (getFirstElementByNameAsInput('vs_host_p_snmp_v3_credentials_USE').checked) {
-    v3_use = encodeURIComponent(
-      getFirstElementByNameAsInput('vs_host_p_snmp_v3_credentials_use').value
-    )
-    vars += '&snmpv3_use=' + v3_use
-    if (v3_use == '0') {
-      vars +=
-        '&snmpv3_security_name=' +
-        encodeURIComponent(getFirstElementByNameAsInput('vs_host_p_snmp_v3_credentials_0_1').value)
-    } else if (v3_use == '1') {
-      vars +=
-        '&snmpv3_auth_proto=' +
-        encodeURIComponent(getFirstElementByNameAsInput('vs_host_p_snmp_v3_credentials_1_1').value)
-      vars +=
-        '&snmpv3_security_name=' +
-        encodeURIComponent(getFirstElementByNameAsInput('vs_host_p_snmp_v3_credentials_1_2').value)
-      vars +=
-        '&snmpv3_security_password=' +
-        encodeURIComponent(
-          getFirstElementByNameAsInput('vs_host_p_snmp_v3_credentials_1_3_orig').value
-        )
-    } else if (v3_use == '2') {
-      vars +=
-        '&snmpv3_auth_proto=' +
-        encodeURIComponent(getFirstElementByNameAsInput('vs_host_p_snmp_v3_credentials_2_1').value)
-      vars +=
-        '&snmpv3_security_name=' +
-        encodeURIComponent(getFirstElementByNameAsInput('vs_host_p_snmp_v3_credentials_2_2').value)
-      vars +=
-        '&snmpv3_security_password=' +
-        encodeURIComponent(
-          getFirstElementByNameAsInput('vs_host_p_snmp_v3_credentials_2_3_orig').value
-        )
-      vars +=
-        '&snmpv3_privacy_proto=' +
-        encodeURIComponent(getFirstElementByNameAsInput('vs_host_p_snmp_v3_credentials_2_4').value)
-      vars +=
-        '&snmpv3_privacy_password=' +
-        encodeURIComponent(
-          getFirstElementByNameAsInput('vs_host_p_snmp_v3_credentials_2_5_orig').value
-        )
-    }
+  const form = document.getElementsByName('diag_host')[0] as HTMLFormElement | undefined
+  if (!form) {
+    throw new Error("'diag_host' form not found; cannot run connection tests")
   }
-
-  vars +=
-    '&agent_port=' + encodeURIComponent(getFirstElementByNameAsInput('vs_rules_p_agent_port').value)
-  vars +=
-    '&tcp_connect_timeout=' +
-    encodeURIComponent(getFirstElementByNameAsInput('vs_rules_p_tcp_connect_timeout').value)
-  vars +=
-    '&snmp_timeout=' +
-    encodeURIComponent(getFirstElementByNameAsInput('vs_rules_p_snmp_timeout').value)
-  vars +=
-    '&snmp_retries=' +
-    encodeURIComponent(getFirstElementByNameAsInput('vs_rules_p_snmp_retries').value)
+  for (const [name, value] of new FormData(form)) {
+    if (typeof value !== 'string') continue
+    if (!name.startsWith('vs_host_') && !name.startsWith('vs_rules_')) continue
+    params.append(name, value)
+  }
 
   replaceIcon(img, 'reload')
   add_class(img, 'reloading')
 
   log.innerHTML = '...'
 
-  const data = 'host=' + encodeURIComponent(hostname) + '&_test=' + encodeURIComponent(ident) + vars
-
   call_ajax('wato_ajax_diag_host.py', {
     method: 'POST',
     response_handler: handle_host_diag_result,
     handler_data: { hostname: hostname, ident: ident },
-    post_data: data
+    post_data: params.toString()
   })
 }
 

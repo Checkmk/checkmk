@@ -24,6 +24,7 @@ py_test(
         "//cmk/gui/watolib:registries",
         "//tests/unit:conftest",
         "//tests/unit/cmk/gui:conftest",
+        requirement("beautifulsoup4"),
         requirement("flask"),
         requirement("pytest"),
         requirement("pytest-mock"),

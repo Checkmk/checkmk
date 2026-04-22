@@ -36,7 +36,7 @@ from cmk.utils.notify_types import (
     NotificationParameterID,
     NotificationParameterItem,
 )
-from tests.testlib.unit.utils import reset_registries
+from tests.testlib.common.utils import reset_registries
 
 
 def spec() -> ValueSpecDictionary:

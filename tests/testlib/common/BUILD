@@ -25,6 +25,7 @@ py_library(
         ":repo",
         "//cmk/base/configlib",
         "//cmk/utils",
+        "//packages/cmk-ccc:plugin-registry",
         "//packages/cmk-trace",
         requirement("beautifulsoup4"),
         requirement("pexpect"),

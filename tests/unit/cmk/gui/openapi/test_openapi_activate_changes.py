@@ -11,8 +11,8 @@ import cmk.ccc.resulttype as result
 from cmk.ccc.version import Edition
 from cmk.gui.watolib import activate_changes
 from cmk.livestatus_client.testing import MockLiveStatusConnection
+from tests.testlib.common.utils import reset_registries
 from tests.testlib.rest_api_client import ClientRegistry
-from tests.testlib.unit.utils import reset_registries
 
 
 def test_wait_for_completion_invalid_activation_id(clients: ClientRegistry) -> None:

@@ -11,7 +11,7 @@ import pytest
 from cmk.ccc.plugin_registry import Registry
 from cmk.gui import permissions
 from cmk.gui.permissions import permission_registry, permission_section_registry
-from tests.testlib.unit.utils import reset_registries
+from tests.testlib.common.utils import reset_registries
 
 
 @pytest.fixture(name="reset_permission_registries")

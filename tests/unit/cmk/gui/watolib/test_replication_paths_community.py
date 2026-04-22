@@ -17,7 +17,7 @@ from cmk.gui.watolib.config_sync import (
     ReplicationPath,
     ReplicationPathType,
 )
-from tests.testlib.unit.utils import reset_registries
+from tests.testlib.common.utils import reset_registries
 
 EDITION = cmk_version.Edition.COMMUNITY
 

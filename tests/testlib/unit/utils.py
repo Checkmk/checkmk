@@ -3,33 +3,15 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-"""Test utilities module provides functionality for managing plugin registries and dynamic
-module importing.
-"""
+"""Test utility for dynamically importing Python modules by path."""
 
-import contextlib
 import importlib.machinery
 import importlib.util
 import os
 import sys
-from collections.abc import Iterable, Iterator
 from types import ModuleType
 
-from cmk.ccc.plugin_registry import Registry
 from tests.testlib.common.repo import repo_path
-
-
-@contextlib.contextmanager
-def reset_registries[T](registries: Iterable[Registry[T]]) -> Iterator[None]:
-    """Reset the given registries after completing"""
-    defaults_per_registry = [(registry, list(registry)) for registry in registries]
-    try:
-        yield
-    finally:
-        for registry, defaults in defaults_per_registry:
-            for entry in list(registry):
-                if entry not in defaults:
-                    registry.unregister(entry)
 
 
 def import_module_hack(pathname: str) -> ModuleType:

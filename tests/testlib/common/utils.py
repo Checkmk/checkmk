@@ -8,11 +8,27 @@ for waiting until a condition is met.
 Note: this module can be used both in unit and system-level tests.
 """
 
+import contextlib
 import logging
 import time
-from collections.abc import Callable
+from collections.abc import Callable, Iterable, Iterator
+
+from cmk.ccc.plugin_registry import Registry
 
 logger = logging.getLogger(__name__)
+
+
+@contextlib.contextmanager
+def reset_registries[T](registries: Iterable[Registry[T]]) -> Iterator[None]:
+    """Reset the given registries after completing"""
+    defaults_per_registry = [(registry, list(registry)) for registry in registries]
+    try:
+        yield
+    finally:
+        for registry, defaults in defaults_per_registry:
+            for entry in list(registry):
+                if entry not in defaults:
+                    registry.unregister(entry)
 
 
 def wait_until(

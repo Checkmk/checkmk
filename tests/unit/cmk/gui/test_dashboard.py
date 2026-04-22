@@ -15,7 +15,7 @@ import pytest
 from cmk.ccc.plugin_registry import Registry
 from cmk.gui.dashboard import dashlet_registry, DashletConfig
 from cmk.gui.dashboard.dashlet.base import Dashlet
-from tests.testlib.unit.utils import reset_registries
+from tests.testlib.common.utils import reset_registries
 
 
 class DummyDashletConfig(DashletConfig): ...

@@ -64,3 +64,28 @@ py_test(
         ":conftest",
     ],
 )
+
+py_test(
+    name = "repo_community",
+    size = "small",
+    timeout = "moderate",
+    srcs = [
+        "__init__.py",
+        "__test__.py",
+    ] + glob(include = ["test_*.py"]),
+    args = [
+        "--config-file=$(location @//:pyproject.toml)",
+        "--import-mode=importlib",
+        "--random-order-bucket=global",
+        "--dist=loadfile",
+        "--numprocesses=4",
+    ],
+    data = ["@//:pyproject.toml"],
+    env = {"EDITION": "community"},
+    main = ":__test__.py",
+    deps = [
+        ":__test__",
+        ":conftest",
+        requirement("pytest-random-order"),
+    ],
+)

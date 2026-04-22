@@ -11,6 +11,7 @@ py_library(
     ],
     data = ["cmk/repo_checks/py.typed"],
     imports = ["."],
+    visibility = ["//tests:__subpackages__"],
 )
 
 # Per-target checker behind the deballast_aspect in deballast.bzl; not

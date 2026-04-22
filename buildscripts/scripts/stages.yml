@@ -118,6 +118,11 @@ STAGES:
       # filegroups incrementally. Being in a filegroup is necessary but not sufficient
       # for the PSScriptAnalyzer aspect to discover the script — the filegroup must
       # also carry the lint-with-psscriptanalyzer tag (separate follow-up).
+      #
+      # The py-extension check scans all git-tracked files (the aspect only sees
+      # declared srcs) and is unguarded on purpose: adding a plain file matches
+      # no CHANGED_* guard. Its summary is appended to results.txt; a missing
+      # summary means the bazel invocation itself broke.
       COMMAND: |
           make_rc=0
           ./scripts/in_bazel.sh ".py" "py_binary|py_library|py_test" \
@@ -139,6 +144,11 @@ STAGES:
               --known-offender packages/cmk-frontend/BUILD \
               --known-offender tests/unit/qa_metrics/test_coverage/BUILD \
               >> ${RESULTS}/results.txt || make_rc=$?
+          PYEXT_RESULTS=$(mktemp)
+          bazel test //tests/code_quality:python_extensions \
+              --test_env=RESULTS_FILE=$PYEXT_RESULTS || make_rc=$?
+          cat $PYEXT_RESULTS >> ${RESULTS}/results.txt || make_rc=$?
+          rm -f $PYEXT_RESULTS
           exit $make_rc
       RESULT_CHECK_FILE_PATTERN: "results/results.txt"
 

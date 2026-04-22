@@ -23,6 +23,13 @@ py_library(
     ],
 )
 
+py_library(
+    name = "init_py",
+    testonly = True,
+    srcs = ["__init__.py"],
+    visibility = ["//tests/unit/cmk/gui:__subpackages__"],
+)
+
 py_pytest_main(
     name = "__test__",
     deps = [

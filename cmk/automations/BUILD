@@ -13,7 +13,10 @@ py_library(
         "results/*.py",
     ]),
     imports = ["../.."],
-    visibility = ["//cmk:__subpackages__"],
+    visibility = [
+        "//cmk:__subpackages__",
+        "//tests:__subpackages__",
+    ],
     deps = [
         "//cmk/checkengine",
         "//cmk/utils",

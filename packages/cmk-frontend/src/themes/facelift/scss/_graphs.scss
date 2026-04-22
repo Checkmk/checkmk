@@ -17,6 +17,7 @@ div#hover_menu div.graph {
   float: left;
   margin-right: 2px;
   margin-bottom: 2px;
+  border: none;
 }
 
 div.graph_container {
@@ -33,6 +34,8 @@ div.graph {
   display: inline-block;
   padding: 0;
   margin-bottom: 5px;
+  border: 1px solid $ux-theme-5;
+
   /* stylelint-disable-next-line rule-empty-line-before */
   &.with_margin {
     padding: 1ex;
@@ -260,12 +263,11 @@ div.color {
 /* Graphs with timerange selection */
 div.graph_with_timeranges {
   display: block;
-  margin-bottom: 32px;
+  margin: 4px;
   white-space: nowrap;
 
   /* stylelint-disable-next-line no-descending-specificity */
   div.graph {
-    border: 1px solid $ux-theme-5;
     box-shadow: none;
 
     &.preview .graph_header {

@@ -158,12 +158,29 @@ def _compute_link_from_result(
     base_link_from: Callable[[SingleInfos, Rows, Visual, HTTPVariables], bool],
     has_inventory_tree: Callable[[HostName, SiteId, SDPath | None, bool], bool],
 ) -> bool:
-    if not base_link_from(linking_view_single_infos, linking_view_rows, visual, context_vars):
-        return False
-
     link_from = visual["link_from"]
     if not link_from:
         return True  # No link from filtering: Always display this.
+
+    if "has_inventory_tree" not in link_from and "has_inventory_tree_history" not in link_from:
+        # No inventory checks — delegate fully to base class.
+        return base_link_from(linking_view_single_infos, linking_view_rows, visual, context_vars)
+
+    # Inventory checks use context_vars directly and do not need row data. The base class
+    # returns False for empty rows, which would wrongly suppress inventory links on views
+    # whose datasource yields no rows (e.g. "Services of host" for a host with no services).
+    # Only the single_infos guard from the base class is still relevant here.
+    single_info_condition = link_from.get("single_infos")
+    if single_info_condition and not set(single_info_condition).issubset(linking_view_single_infos):
+        return False
+
+    # Non-inventory conditions (e.g. host_labels) must still be evaluated via the base class.
+    # We call it after the single_infos guard so a mismatch short-circuits before the base
+    # class can raise NotImplementedError for unsupported single_infos combinations.
+    _inventory_keys = {"has_inventory_tree", "has_inventory_tree_history", "single_infos"}
+    if link_from.keys() - _inventory_keys:
+        if not base_link_from(linking_view_single_infos, linking_view_rows, visual, context_vars):
+            return False
 
     context = dict(context_vars)
     if (hostname := context.get("host")) is None:

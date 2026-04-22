@@ -33,6 +33,7 @@ py_library(
     visibility = [
         "//cmk:__subpackages__",
         "//packages/cmk-ec:__pkg__",
+        "//tests:__subpackages__",
     ],
     deps = [
         requirement("pydantic"),

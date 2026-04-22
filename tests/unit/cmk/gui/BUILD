@@ -66,12 +66,150 @@ py_test(
 )
 
 py_test(
+    name = "auth",
+    srcs = ["test_auth.py"],
+    args = ["tests/unit/cmk/gui/test_auth.py"],
+    pytest_main = True,
+    deps = [
+        "//cmk/gui:auth",
+        "//cmk/gui:config",
+        "//cmk/gui:pseudo_users",
+        "//cmk/utils",
+        requirement("pytest"),
+    ],
+)
+
+py_test(
+    name = "autocompleters",
+    srcs = ["test_autocompleters.py"],
+    args = ["tests/unit/cmk/gui/test_autocompleters.py"],
+    env = {"EDITION": "community"},
+    pytest_main = True,
+    deps = [
+        ":conftest",
+        "//cmk/gui:autocompleters",
+        "//tests/unit:conftest",
+        requirement("pytest"),
+    ],
+)
+
+py_test(
     name = "breadcrumb",
     srcs = ["test_breadcrumb.py"],
     args = ["tests/unit/cmk/gui/test_breadcrumb.py"],
     pytest_main = True,
     deps = [
         "//cmk/gui:breadcrumb",
+        requirement("pytest"),
+    ],
+)
+
+py_test(
+    name = "cron",
+    srcs = ["test_cron.py"],
+    args = ["tests/unit/cmk/gui/test_cron.py"],
+    env = {"EDITION": "community"},
+    pytest_main = True,
+    deps = [
+        ":conftest",
+        "//cmk/gui:cron",
+        "//tests/unit:conftest",
+        requirement("pytest"),
+    ],
+)
+
+py_test(
+    name = "deprecations",
+    srcs = ["test_deprecations.py"],
+    args = ["tests/unit/cmk/gui/test_deprecations.py"],
+    pytest_main = True,
+    deps = [
+        "//cmk/gui:deprecations",
+        "//cmk/gui/watolib",
+        "//cmk/gui/watolib:config_infra",
+        "//packages/cmk-ccc:site",
+        "//packages/cmk-ccc:user",
+        "//packages/cmk-mkp-tool",
+        requirement("pytest"),
+    ],
+)
+
+py_test(
+    name = "edition_compatibility",
+    srcs = ["test_edition_compatibility.py"],
+    args = ["tests/unit/cmk/gui/test_edition_compatibility.py"],
+    pytest_main = True,
+    deps = [
+        "//cmk/gui:sites",
+        "//cmk/gui/watolib",
+        "//packages/cmk-ccc:version",
+        requirement("pytest"),
+    ],
+)
+
+py_test(
+    name = "figures",
+    srcs = ["test_figures.py"],
+    args = ["tests/unit/cmk/gui/test_figures.py"],
+    pytest_main = True,
+    deps = [
+        "//cmk/gui:figures",
+        requirement("pytest"),
+    ],
+)
+
+py_test(
+    name = "main_modules",
+    srcs = ["test_main_modules.py"],
+    args = ["tests/unit/cmk/gui/test_main_modules.py"],
+    env = {"EDITION": "community"},
+    pytest_main = True,
+    deps = [
+        ":conftest",
+        "//cmk/gui:main_modules",
+        "//cmk/utils",
+        "//tests/unit:conftest",
+        requirement("pytest"),
+    ],
+)
+
+py_test(
+    name = "query_filters",
+    srcs = ["test_query_filters.py"],
+    args = ["tests/unit/cmk/gui/test_query_filters.py"],
+    pytest_main = True,
+    deps = [
+        "//cmk/gui:exceptions",
+        "//cmk/gui:query_filters",
+        "//cmk/gui:type_defs",
+        "//cmk/utils",
+        requirement("pytest"),
+    ],
+)
+
+py_test(
+    name = "site_config",
+    srcs = ["test_site_config.py"],
+    args = ["tests/unit/cmk/gui/test_site_config.py"],
+    pytest_main = True,
+    deps = [
+        "//cmk/gui:site_config",
+        "//packages/cmk-ccc:site",
+        requirement("pytest"),
+    ],
+)
+
+py_test(
+    name = "userdb_htpasswd_connector",
+    srcs = ["test_userdb_htpasswd_connector.py"],
+    args = ["tests/unit/cmk/gui/test_userdb_htpasswd_connector.py"],
+    pytest_main = True,
+    deps = [
+        "//cmk/gui:exceptions",
+        "//cmk/gui:user_connection_config_types",
+        "//cmk/gui/userdb",
+        "//packages/cmk-ccc:user",
+        "//packages/cmk-crypto",
         requirement("pytest"),
     ],
 )
@@ -143,13 +281,23 @@ py_test(
         exclude = [
             "compare_html.py",
             "conftest.py",
+            "test_auth.py",
+            "test_autocompleters.py",
             "test_availability_*.py",
             "test_breadcrumb.py",
             "test_color.py",
+            "test_cron.py",
+            "test_deprecations.py",
+            "test_edition_compatibility.py",
             "test_escaping.py",
+            "test_figures.py",
+            "test_main_modules.py",
+            "test_query_filters.py",
+            "test_site_config.py",
             "test_sort.py",
             "test_type_defs.py",
             "test_unit_formatter.py",
+            "test_userdb_htpasswd_connector.py",
         ],
     ),
     args = [

@@ -97,7 +97,7 @@ def main() -> None:
     try:
         check_html_tag_balance(str(resp.content))
     except TagImbalanceError as exc:
-        err_msg = json.dumps(exc.get_errors())
+        err_msg = json.dumps({"url": args.url, "result": exc.get_errors()})
         sys.stderr.write(f"{err_msg}\n")
         sys.exit(ExitCode.VALIDATION_ERRORS)
     else:

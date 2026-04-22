@@ -205,7 +205,7 @@ def host_label_meraki_switch_ports_statuses(section: Section) -> HostLabelGenera
     # NOTE: only setting LLDP label as Meraki CDP data are not useful for NVDCT.
     for port in section.values():
         if port.lldp:
-            yield HostLabel(name="cmk/meraki/has_lldp_neighbors", value="yes")
+            yield HostLabel(name="cmk/has_lldp_neighbors", value="yes")
 
 
 agent_section_cisco_meraki_org_switch_ports_statuses = AgentSection(

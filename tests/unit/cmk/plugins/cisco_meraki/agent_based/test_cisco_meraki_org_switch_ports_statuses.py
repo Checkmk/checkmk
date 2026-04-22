@@ -115,7 +115,7 @@ class TestHostLabels:
         section = self._build_section(with_lldp=True)
 
         value = list(host_label_meraki_switch_ports_statuses(section))
-        expected = [HostLabel("cmk/meraki/has_lldp_neighbors", "yes")]
+        expected = [HostLabel("cmk/has_lldp_neighbors", "yes")]
 
         assert value == expected
 

@@ -56,8 +56,14 @@ def _make_usage_form() -> Dictionary:
                     ),
                     custom_validate=(_validate_positive,),
                     migrate=migrate_to_integer_simple_levels,
-                    prefill_levels_type=DefaultValue(LevelsType.NONE),
-                    prefill_fixed_levels=DefaultValue((10 * 1024**3, 100 * 1024**3)),
+                    prefill_levels_type=DefaultValue(LevelsType.FIXED),
+                    prefill_fixed_levels=DefaultValue(
+                        (
+                            # B  KiB    MiB    GiB    TiB   n
+                            1 * 1024 * 1024 * 1024 * 1024 * 1,  # 1 TiB
+                            1 * 1024 * 1024 * 1024 * 1024 * 5,  # 5 TiB
+                        )
+                    ),
                 ),
             )
         },

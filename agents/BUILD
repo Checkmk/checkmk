@@ -2,8 +2,10 @@ load("@bazel_skylib//rules:write_file.bzl", "write_file")
 load("//bazel/rules:filename_from_flag.bzl", "filename_from_flag")
 
 AGENT_PACKAGES = {
+    "check-mk-agent.aarch64.rpm": "check-mk-agent-{VERSION}-1.aarch64.rpm",
     "check-mk-agent.noarch.rpm": "check-mk-agent-{VERSION}-1.noarch.rpm",
     "check-mk-agent_all.deb": "check-mk-agent_{VERSION}-1_all.deb",
+    "check-mk-agent_arm64.deb": "check-mk-agent_{VERSION}-1_arm64.deb",
 }
 
 [

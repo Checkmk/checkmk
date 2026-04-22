@@ -75,14 +75,21 @@ void main() {
             dir("${checkout_dir}/agents") {
                 sh("make rpm NEW_VERSION='${cmk_version}'");
                 sh("make deb NEW_VERSION='${cmk_version}'");
+                sh("make rpm-aarch64 NEW_VERSION='${cmk_version}'");
+                sh("make deb-aarch64 NEW_VERSION='${cmk_version}'");
             }
-            def package_name_rpm = cmd_output("find ${checkout_dir} -name *.rpm -not -path '*/fixtures/*'");
-            def package_name_deb = cmd_output("find ${checkout_dir} -name *.deb -not -path '*/fixtures/*'");
-            package_helper.sign_package(checkout_dir, package_name_rpm)
+            def package_name_rpm = cmd_output("find ${checkout_dir}/agents -name '*.noarch.rpm' -not -path '*/fixtures/*'");
+            def package_name_deb = cmd_output("find ${checkout_dir}/agents -name '*_all.deb' -not -path '*/fixtures/*'");
+            def package_name_rpm_aarch64 = cmd_output("find ${checkout_dir}/agents -name '*.aarch64.rpm' -not -path '*/fixtures/*'");
+            def package_name_deb_aarch64 = cmd_output("find ${checkout_dir}/agents -name '*_arm64.deb' -not -path '*/fixtures/*'");
+            package_helper.sign_package(checkout_dir, package_name_rpm);
+            package_helper.sign_package(checkout_dir, package_name_rpm_aarch64);
             dir("${WORKSPACE}/build") {
                 sh("""
                     cp ${package_name_rpm} .
                     cp ${package_name_deb} .
+                    cp ${package_name_rpm_aarch64} .
+                    cp ${package_name_deb_aarch64} .
                 """);
             }
         }

@@ -8,6 +8,7 @@ import { ref, watch } from 'vue'
 
 import usei18n from '@/lib/i18n'
 import type { TranslatedString } from '@/lib/i18nString'
+import usePersistentRef from '@/lib/usePersistentRef'
 
 import CmkAlertBox from '@/components/CmkAlertBox.vue'
 import CmkButton from '@/components/CmkButton.vue'
@@ -61,6 +62,10 @@ const packageFormatTgz = 'tgz'
 const model = ref(sessionStorage.getItem('slideInModelState') || packageFormatDeb)
 sessionStorage.removeItem('slideInModelState')
 sessionStorage.removeItem('slideInTabState')
+
+const selectedVariantId = usePersistentRef<string>('slideInSelectedVariantId', 'powershell', (v) =>
+  typeof v === 'string' ? v : 'powershell'
+)
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 declare const cmk: any
@@ -216,7 +221,32 @@ function getInitStep() {
                     />
                   </div>
                   <template v-if="ott !== null">
-                    <template v-if="tab.installDownloadCmd">
+                    <template v-if="tab.installCmdVariants && tab.installCmdVariants.length > 1">
+                      <CmkToggleButtonGroup
+                        v-model="selectedVariantId"
+                        class="shell-toggle"
+                        :options="
+                          tab.installCmdVariants.map((v) => ({ label: v.label, value: v.id }))
+                        "
+                      />
+                      <template v-for="variant in tab.installCmdVariants" :key="variant.id">
+                        <template v-if="variant.id === selectedVariantId">
+                          <CmkCode
+                            :title="_t('Download the agent')"
+                            :code_txt="installCmdWithToken(variant.downloadCmd || '')"
+                            class="code"
+                            width="fill"
+                          />
+                          <CmkCode
+                            :title="_t('Install the agent')"
+                            :code_txt="variant.installCmd"
+                            class="code"
+                            width="fill"
+                          />
+                        </template>
+                      </template>
+                    </template>
+                    <template v-else-if="tab.installDownloadCmd">
                       <CmkCode
                         :title="_t('Download agent')"
                         :code_txt="installCmdWithToken(tab.installDownloadCmd)"
@@ -292,6 +322,7 @@ function getInitStep() {
           </CmkWizardStep>
 
           <RegisterAgent
+            v-model:selected-variant-id="selectedVariantId"
             :index="3"
             :is-completed="() => currentStep > 3 || !tab.registrationMsg"
             :tab="tab"
@@ -366,6 +397,11 @@ button.all_agents {
 .code {
   margin: var(--dimension-5) 0 var(--dimension-7);
   width: 100%;
+}
+
+.shell-toggle {
+  margin-top: var(--dimension-5);
+  margin-bottom: var(--dimension-5);
 }
 
 .register-heading-row {

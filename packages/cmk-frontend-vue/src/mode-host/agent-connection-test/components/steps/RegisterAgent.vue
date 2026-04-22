@@ -14,6 +14,7 @@ import CmkCode from '@/components/CmkCode.vue'
 import CmkCollapsible from '@/components/CmkCollapsible'
 import CmkCollapsibleTitle from '@/components/CmkCollapsible/CmkCollapsibleTitle.vue'
 import CmkIndent from '@/components/CmkIndent.vue'
+import CmkToggleButtonGroup from '@/components/CmkToggleButtonGroup.vue'
 import { CmkWizardButton } from '@/components/CmkWizard'
 import CmkWizardStep from '@/components/CmkWizard/CmkWizardStep.vue'
 import { getWizardContext } from '@/components/CmkWizard/utils.ts'
@@ -36,21 +37,29 @@ const props = defineProps<{
   agentReceiverPortIsDefault: boolean
 }>()
 
+const selectedVariantId = defineModel<string>('selectedVariantId', { default: '' })
 const emit = defineEmits(['close'])
 const context = getWizardContext()
 const ott = ref<string | null | Error>(null)
 const collapsibleOpen = ref<boolean>(false)
 
-const regAgentOttCmd = computed(() => {
-  if (props.tab.registrationCmd) {
-    if (ott.value && !(ott.value instanceof Error)) {
-      return props.tab.registrationCmd?.replace('--user agent_registration', `--ott 0:${ott.value}`)
-    }
+const activeRegistrationCmd = computed<string | undefined>(() => {
+  const variants = props.tab.registrationCmdVariants
+  if (variants && variants.length > 0) {
+    return variants.find((v) => v.id === selectedVariantId.value)?.cmd ?? variants[0]!.cmd
+  }
+  return props.tab.registrationCmd
+})
 
-    return props.tab.registrationCmd
-  } else {
+const regAgentOttCmd = computed(() => {
+  const cmd = activeRegistrationCmd.value
+  if (!cmd) {
     return ''
   }
+  if (ott.value && !(ott.value instanceof Error)) {
+    return cmd.replace('--user agent_registration', `--ott 0:${ott.value}`)
+  }
+  return cmd
 })
 
 function reset() {
@@ -64,7 +73,7 @@ function reset() {
     </template>
     <template #content>
       <div v-if="context.isSelected(index)">
-        <div v-if="tab.registrationMsg && tab.registrationCmd">
+        <div v-if="tab.registrationMsg && (tab.registrationCmd || tab.registrationCmdVariants)">
           <div class="register-heading-row">
             <CmkParagraph>
               {{
@@ -87,6 +96,12 @@ function reset() {
             :description="_t('This requires the generation of a registration token.')"
           />
           <template v-if="ott !== null">
+            <CmkToggleButtonGroup
+              v-if="tab.registrationCmdVariants && tab.registrationCmdVariants.length > 1"
+              v-model="selectedVariantId"
+              class="mh-register-agent__shell-toggle"
+              :options="tab.registrationCmdVariants.map((v) => ({ label: v.label, value: v.id }))"
+            />
             <CmkParagraph>{{ tab.registrationMsg }}</CmkParagraph>
             <CmkCode :code_txt="regAgentOttCmd" class="code" width="fill" />
             <CmkAlertBox v-if="agentReceiverPortIsDefault" variant="warning" size="small">
@@ -131,7 +146,13 @@ function reset() {
             <a :href="userSettingsUrl" target="_blank"> {{ _t('agent_registration user') }}</a>
             {{ _t(`and paste it into the terminal to continue the registration.`) }}
           </CmkParagraph>
-          <CmkCode :code_txt="tab.registrationCmd ?? ''" class="code" width="fill" />
+          <CmkToggleButtonGroup
+            v-if="tab.registrationCmdVariants && tab.registrationCmdVariants.length > 1"
+            v-model="selectedVariantId"
+            class="mh-register-agent__shell-toggle"
+            :options="tab.registrationCmdVariants.map((v) => ({ label: v.label, value: v.id }))"
+          />
+          <CmkCode :code_txt="activeRegistrationCmd ?? ''" class="code" width="fill" />
         </CmkIndent>
       </CmkCollapsible>
     </template>
@@ -153,5 +174,10 @@ function reset() {
 <style scoped>
 .mh-register-agent__panel {
   max-width: 650px;
+}
+
+.mh-register-agent__shell-toggle {
+  margin-top: var(--dimension-5);
+  margin-bottom: var(--dimension-5);
 }
 </style>

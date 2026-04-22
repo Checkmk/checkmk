@@ -13,6 +13,19 @@ export type PackageOption = {
 }
 export type PackageOptions = PackageOption[]
 
+export interface RegistrationCmdVariant {
+  id: string
+  label: string
+  cmd: string
+}
+
+export interface InstallCmdVariant {
+  id: string
+  label: string
+  downloadCmd?: string
+  installCmd: string
+}
+
 export interface AgentSlideOutTabs {
   id: string
   title: string
@@ -22,8 +35,10 @@ export interface AgentSlideOutTabs {
   installDebCmd?: string
   installRpmCmd?: string
   installTgzCmd?: string | undefined
+  installCmdVariants?: InstallCmdVariant[]
   registrationMsg?: TranslatedString
   registrationCmd?: string
+  registrationCmdVariants?: RegistrationCmdVariant[]
   installUrl?: InstallUrl | undefined
   toggleButtonOptions?: PackageOptions
 }

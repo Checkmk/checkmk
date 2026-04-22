@@ -25,7 +25,7 @@ from cmk.rulesets.v1.form_specs import (
     TimeMagnitude,
     TimeSpan,
 )
-from cmk.rulesets.v1.form_specs.validators import NumberInRange, ValidationError
+from cmk.rulesets.v1.form_specs.validators import LengthInRange, NumberInRange, ValidationError
 from cmk.rulesets.v1.rule_specs import SpecialAgent, Topic
 
 
@@ -137,6 +137,12 @@ def _form_special_agent_cisco_meraki() -> Dictionary:
                             "wireless_ethernet_statuses",
                         ]
                     ),
+                    custom_validate=[
+                        LengthInRange(
+                            min_value=1,
+                            error_msg=Message("Specify at least one section."),
+                        )
+                    ],
                     migrate=_migrate_to_valid_ident,
                 )
             ),
@@ -284,6 +290,12 @@ def _form_special_agent_cisco_meraki() -> Dictionary:
                             )
                         ),
                     },
+                    custom_validate=[
+                        LengthInRange(
+                            min_value=1,
+                            error_msg=Message("Specify at least one resource to cache."),
+                        )
+                    ],
                 ),
             ),
         },

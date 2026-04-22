@@ -1,5 +1,5 @@
 {
-  "checksum": "dfeb821f13f0d96e5131f991c1465d6b73f1e80b5c50c2a9210ea6b32a9ec88e",
+  "checksum": "15759c8e47c9025ef04228a8d0587522f4b7a7dfa64d37f168d4db6f6a2d238a",
   "crates": {
     "addr2line 0.24.2": {
       "name": "addr2line",
@@ -490,7 +490,7 @@
               "target": "android_properties"
             },
             {
-              "id": "bitflags 2.9.3",
+              "id": "bitflags 2.11.1",
               "target": "bitflags"
             },
             {
@@ -1516,7 +1516,7 @@
               "target": "futures_util"
             },
             {
-              "id": "native-tls 0.2.14",
+              "id": "native-tls 0.2.18",
               "target": "native_tls"
             },
             {
@@ -2059,14 +2059,14 @@
       ],
       "license_file": "LICENSE-APACHE"
     },
-    "bitflags 2.9.3": {
+    "bitflags 2.11.1": {
       "name": "bitflags",
-      "version": "2.9.3",
+      "version": "2.11.1",
       "package_url": "https://github.com/bitflags/bitflags",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/bitflags/2.9.3/download",
-          "sha256": "34efbcccd345379ca2868b2b2c9d3782e9cc58ba87bc7d79d5b53d9c9ae6f25d"
+          "url": "https://static.crates.io/crates/bitflags/2.11.1/download",
+          "sha256": "c4512299f36f043ab09a583e57bceb5a5aab7a73db1805848e8fef3c9e8c78b3"
         }
       },
       "targets": [
@@ -2095,7 +2095,7 @@
           "selects": {}
         },
         "edition": "2021",
-        "version": "2.9.3"
+        "version": "2.11.1"
       },
       "license": "MIT OR Apache-2.0",
       "license_ids": [
@@ -2428,7 +2428,7 @@
         "deps": {
           "common": [
             {
-              "id": "bitflags 2.9.3",
+              "id": "bitflags 2.11.1",
               "target": "bitflags"
             },
             {
@@ -2674,7 +2674,7 @@
               "target": "log"
             },
             {
-              "id": "openssl 0.10.73",
+              "id": "openssl 0.10.78",
               "target": "openssl"
             },
             {
@@ -3254,7 +3254,7 @@
               "target": "nix"
             },
             {
-              "id": "openssl 0.10.73",
+              "id": "openssl 0.10.78",
               "target": "openssl"
             },
             {
@@ -5800,7 +5800,7 @@
             ],
             "cfg(windows)": [
               {
-                "id": "windows-sys 0.60.2",
+                "id": "windows-sys 0.52.0",
                 "target": "windows_sys"
               }
             ]
@@ -8558,7 +8558,7 @@
               "target": "hyper_util"
             },
             {
-              "id": "native-tls 0.2.14",
+              "id": "native-tls 0.2.18",
               "target": "native_tls"
             },
             {
@@ -9807,7 +9807,7 @@
         "deps": {
           "common": [
             {
-              "id": "bitflags 2.9.3",
+              "id": "bitflags 2.11.1",
               "target": "bitflags"
             },
             {
@@ -10450,7 +10450,7 @@
             ],
             "cfg(windows)": [
               {
-                "id": "windows-targets 0.53.3",
+                "id": "windows-targets 0.48.5",
                 "target": "windows_targets"
               }
             ]
@@ -10497,7 +10497,7 @@
         "deps": {
           "common": [
             {
-              "id": "bitflags 2.9.3",
+              "id": "bitflags 2.11.1",
               "target": "bitflags"
             },
             {
@@ -11505,7 +11505,7 @@
               "target": "log"
             },
             {
-              "id": "openssl 0.10.73",
+              "id": "openssl 0.10.78",
               "target": "openssl"
             },
             {
@@ -11562,14 +11562,14 @@
       "license_ids": [],
       "license_file": null
     },
-    "native-tls 0.2.14": {
+    "native-tls 0.2.18": {
       "name": "native-tls",
-      "version": "0.2.14",
-      "package_url": "https://github.com/sfackler/rust-native-tls",
+      "version": "0.2.18",
+      "package_url": "https://github.com/rust-native-tls/rust-native-tls",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/native-tls/0.2.14/download",
-          "sha256": "87de3442987e9dbec73158d5c715e7ad9072fda936bb03d19d7fa10e00520f0e"
+          "url": "https://static.crates.io/crates/native-tls/0.2.18/download",
+          "sha256": "465500e14ea162429d264d44189adc38b199b62b1c21eea9f69e4b73cb03bbf2"
         }
       },
       "targets": [
@@ -11605,14 +11605,15 @@
         ],
         "crate_features": {
           "common": [
-            "alpn"
+            "alpn",
+            "default"
           ],
           "selects": {}
         },
         "deps": {
           "common": [
             {
-              "id": "native-tls 0.2.14",
+              "id": "native-tls 0.2.18",
               "target": "build_script_build"
             }
           ],
@@ -11623,15 +11624,15 @@
                 "target": "log"
               },
               {
-                "id": "openssl 0.10.73",
+                "id": "openssl 0.10.78",
                 "target": "openssl"
               },
               {
-                "id": "openssl-probe 0.1.6",
+                "id": "openssl-probe 0.2.1",
                 "target": "openssl_probe"
               },
               {
-                "id": "openssl-sys 0.9.109",
+                "id": "openssl-sys 0.9.114",
                 "target": "openssl_sys"
               }
             ],
@@ -11643,7 +11644,7 @@
             ],
             "cfg(target_os = \"windows\")": [
               {
-                "id": "schannel 0.1.27",
+                "id": "schannel 0.1.29",
                 "target": "schannel"
               }
             ],
@@ -11653,18 +11654,18 @@
                 "target": "libc"
               },
               {
-                "id": "security-framework 2.11.1",
+                "id": "security-framework 3.7.0",
                 "target": "security_framework"
               },
               {
-                "id": "security-framework-sys 2.14.0",
+                "id": "security-framework-sys 2.17.0",
                 "target": "security_framework_sys"
               }
             ]
           }
         },
-        "edition": "2015",
-        "version": "0.2.14"
+        "edition": "2021",
+        "version": "0.2.18"
       },
       "build_script_attrs": {
         "compile_data_glob": [
@@ -11681,7 +11682,7 @@
           "selects": {
             "cfg(not(any(target_os = \"windows\", target_vendor = \"apple\")))": [
               {
-                "id": "openssl-sys 0.9.109",
+                "id": "openssl-sys 0.9.114",
                 "target": "openssl_sys"
               }
             ]
@@ -11727,7 +11728,7 @@
         "deps": {
           "common": [
             {
-              "id": "bitflags 2.9.3",
+              "id": "bitflags 2.11.1",
               "target": "bitflags"
             },
             {
@@ -11903,7 +11904,7 @@
         "deps": {
           "common": [
             {
-              "id": "bitflags 2.9.3",
+              "id": "bitflags 2.11.1",
               "target": "bitflags"
             },
             {
@@ -14014,14 +14015,14 @@
       ],
       "license_file": "LICENSE-APACHE"
     },
-    "openssl 0.10.73": {
+    "openssl 0.10.78": {
       "name": "openssl",
-      "version": "0.10.73",
-      "package_url": "https://github.com/sfackler/rust-openssl",
+      "version": "0.10.78",
+      "package_url": "https://github.com/rust-openssl/rust-openssl",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/openssl/0.10.73/download",
-          "sha256": "8505734d46c8ab1e19a1dce3aef597ad87dcb4c37e7188231769bd6bd51cebf8"
+          "url": "https://static.crates.io/crates/openssl/0.10.78/download",
+          "sha256": "f38c4372413cdaaf3cc79dd92d29d7d9f5ab09b51b10dded508fb90bb70b9222"
         }
       },
       "targets": [
@@ -14065,7 +14066,7 @@
         "deps": {
           "common": [
             {
-              "id": "bitflags 2.9.3",
+              "id": "bitflags 2.11.1",
               "target": "bitflags"
             },
             {
@@ -14085,11 +14086,11 @@
               "target": "once_cell"
             },
             {
-              "id": "openssl 0.10.73",
+              "id": "openssl 0.10.78",
               "target": "build_script_build"
             },
             {
-              "id": "openssl-sys 0.9.109",
+              "id": "openssl-sys 0.9.114",
               "target": "openssl_sys",
               "alias": "ffi"
             }
@@ -14106,7 +14107,7 @@
           ],
           "selects": {}
         },
-        "version": "0.10.73"
+        "version": "0.10.78"
       },
       "build_script_attrs": {
         "compile_data_glob": [
@@ -14121,7 +14122,7 @@
         "link_deps": {
           "common": [
             {
-              "id": "openssl-sys 0.9.109",
+              "id": "openssl-sys 0.9.114",
               "target": "openssl_sys",
               "alias": "ffi"
             }
@@ -14324,14 +14325,14 @@
       ],
       "license_file": "LICENSE-APACHE"
     },
-    "openssl-sys 0.9.109": {
+    "openssl-sys 0.9.114": {
       "name": "openssl-sys",
-      "version": "0.9.109",
-      "package_url": "https://github.com/sfackler/rust-openssl",
+      "version": "0.9.114",
+      "package_url": "https://github.com/rust-openssl/rust-openssl",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/openssl-sys/0.9.109/download",
-          "sha256": "90096e2e47630d78b7d1c20952dc621f957103f8bc2c8359ec81290d75238571"
+          "url": "https://static.crates.io/crates/openssl-sys/0.9.114/download",
+          "sha256": "13ce1245cd07fcc4cfdb438f7507b0c7e4f3849a69fd84d52374c66d83741bb6"
         }
       },
       "targets": [
@@ -14379,14 +14380,14 @@
               "target": "libc"
             },
             {
-              "id": "openssl-sys 0.9.109",
+              "id": "openssl-sys 0.9.114",
               "target": "build_script_main"
             }
           ],
           "selects": {}
         },
         "edition": "2021",
-        "version": "0.9.109"
+        "version": "0.9.114"
       },
       "build_script_attrs": {
         "compile_data_glob": [
@@ -16399,7 +16400,7 @@
                 "target": "once_cell"
               },
               {
-                "id": "windows-sys 0.59.0",
+                "id": "windows-sys 0.52.0",
                 "target": "windows_sys"
               }
             ]
@@ -17302,7 +17303,7 @@
         "deps": {
           "common": [
             {
-              "id": "bitflags 2.9.3",
+              "id": "bitflags 2.11.1",
               "target": "bitflags"
             }
           ],
@@ -17835,7 +17836,7 @@
               "target": "mime_guess"
             },
             {
-              "id": "native-tls 0.2.14",
+              "id": "native-tls 0.2.18",
               "target": "native_tls",
               "alias": "native_tls_crate"
             },
@@ -18372,7 +18373,7 @@
         "deps": {
           "common": [
             {
-              "id": "bitflags 2.9.3",
+              "id": "bitflags 2.11.1",
               "target": "bitflags"
             },
             {
@@ -18411,7 +18412,7 @@
                 "alias": "libc_errno"
               },
               {
-                "id": "windows-sys 0.59.0",
+                "id": "windows-sys 0.52.0",
                 "target": "windows_sys"
               }
             ]
@@ -18491,7 +18492,7 @@
         "deps": {
           "common": [
             {
-              "id": "bitflags 2.9.3",
+              "id": "bitflags 2.11.1",
               "target": "bitflags"
             },
             {
@@ -18530,7 +18531,7 @@
                 "alias": "libc_errno"
               },
               {
-                "id": "windows-sys 0.60.2",
+                "id": "windows-sys 0.52.0",
                 "target": "windows_sys"
               }
             ]
@@ -18723,13 +18724,13 @@
             ],
             "cfg(target_os = \"macos\")": [
               {
-                "id": "security-framework 3.3.0",
+                "id": "security-framework 3.7.0",
                 "target": "security_framework"
               }
             ],
             "cfg(windows)": [
               {
-                "id": "schannel 0.1.27",
+                "id": "schannel 0.1.29",
                 "target": "schannel"
               }
             ]
@@ -19131,14 +19132,14 @@
       ],
       "license_file": "LICENSE-MIT"
     },
-    "schannel 0.1.27": {
+    "schannel 0.1.29": {
       "name": "schannel",
-      "version": "0.1.27",
+      "version": "0.1.29",
       "package_url": "https://github.com/steffengy/schannel-rs",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/schannel/0.1.27/download",
-          "sha256": "1f29ebaa345f945cec9fbbc532eb307f0fdad8161f281b6369539c8d84876b3d"
+          "url": "https://static.crates.io/crates/schannel/0.1.29/download",
+          "sha256": "91c1b7e4904c873ef0710c1f407dde2e6287de2bebc1bbbf7d430bb7cbffd939"
         }
       },
       "targets": [
@@ -19163,14 +19164,14 @@
         "deps": {
           "common": [
             {
-              "id": "windows-sys 0.59.0",
+              "id": "windows-sys 0.61.2",
               "target": "windows_sys"
             }
           ],
           "selects": {}
         },
         "edition": "2018",
-        "version": "0.1.27"
+        "version": "0.1.29"
       },
       "license": "MIT",
       "license_ids": [
@@ -19402,14 +19403,14 @@
       ],
       "license_file": "LICENSE-APACHE"
     },
-    "security-framework 2.11.1": {
+    "security-framework 3.7.0": {
       "name": "security-framework",
-      "version": "2.11.1",
+      "version": "3.7.0",
       "package_url": "https://github.com/kornelski/rust-security-framework",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/security-framework/2.11.1/download",
-          "sha256": "897b2245f0b511c87893af39b033e5ca9cce68824c4d7e7630b5a1d339658d02"
+          "url": "https://static.crates.io/crates/security-framework/3.7.0/download",
+          "sha256": "b7f4bc775c73d9a02cde8bf7b2ec4c9d12743edf609006c7facc23998404cd1d"
         }
       },
       "targets": [
@@ -19434,71 +19435,7 @@
         "deps": {
           "common": [
             {
-              "id": "bitflags 2.9.3",
-              "target": "bitflags"
-            },
-            {
-              "id": "core-foundation 0.9.4",
-              "target": "core_foundation"
-            },
-            {
-              "id": "core-foundation-sys 0.8.7",
-              "target": "core_foundation_sys"
-            },
-            {
-              "id": "libc 0.2.175",
-              "target": "libc"
-            },
-            {
-              "id": "security-framework-sys 2.14.0",
-              "target": "security_framework_sys"
-            }
-          ],
-          "selects": {}
-        },
-        "edition": "2021",
-        "version": "2.11.1"
-      },
-      "license": "MIT OR Apache-2.0",
-      "license_ids": [
-        "Apache-2.0",
-        "MIT"
-      ],
-      "license_file": "LICENSE-APACHE"
-    },
-    "security-framework 3.3.0": {
-      "name": "security-framework",
-      "version": "3.3.0",
-      "package_url": "https://github.com/kornelski/rust-security-framework",
-      "repository": {
-        "Http": {
-          "url": "https://static.crates.io/crates/security-framework/3.3.0/download",
-          "sha256": "80fb1d92c5028aa318b4b8bd7302a5bfcf48be96a37fc6fc790f806b0004ee0c"
-        }
-      },
-      "targets": [
-        {
-          "Library": {
-            "crate_name": "security_framework",
-            "crate_root": "src/lib.rs",
-            "srcs": {
-              "allow_empty": true,
-              "include": [
-                "**/*.rs"
-              ]
-            }
-          }
-        }
-      ],
-      "library_target_name": "security_framework",
-      "common_attrs": {
-        "compile_data_glob": [
-          "**"
-        ],
-        "deps": {
-          "common": [
-            {
-              "id": "bitflags 2.9.3",
+              "id": "bitflags 2.11.1",
               "target": "bitflags"
             },
             {
@@ -19514,14 +19451,14 @@
               "target": "libc"
             },
             {
-              "id": "security-framework-sys 2.14.0",
+              "id": "security-framework-sys 2.17.0",
               "target": "security_framework_sys"
             }
           ],
           "selects": {}
         },
-        "edition": "2021",
-        "version": "3.3.0"
+        "edition": "2024",
+        "version": "3.7.0"
       },
       "license": "MIT OR Apache-2.0",
       "license_ids": [
@@ -19530,14 +19467,14 @@
       ],
       "license_file": "LICENSE-APACHE"
     },
-    "security-framework-sys 2.14.0": {
+    "security-framework-sys 2.17.0": {
       "name": "security-framework-sys",
-      "version": "2.14.0",
+      "version": "2.17.0",
       "package_url": "https://github.com/kornelski/rust-security-framework",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/security-framework-sys/2.14.0/download",
-          "sha256": "49db231d56a190491cb4aeda9527f1ad45345af50b0851622a7adb8c03b01c32"
+          "url": "https://static.crates.io/crates/security-framework-sys/2.17.0/download",
+          "sha256": "6ce2691df843ecc5d231c0b14ece2acc3efb62c0a398c7e1d875f3983ce020e3"
         }
       },
       "targets": [
@@ -19573,7 +19510,7 @@
           "selects": {}
         },
         "edition": "2021",
-        "version": "2.14.0"
+        "version": "2.17.0"
       },
       "license": "MIT OR Apache-2.0",
       "license_ids": [
@@ -21187,7 +21124,7 @@
         "deps": {
           "common": [
             {
-              "id": "bitflags 2.9.3",
+              "id": "bitflags 2.11.1",
               "target": "bitflags"
             },
             {
@@ -21350,7 +21287,7 @@
             ],
             "cfg(windows)": [
               {
-                "id": "windows-sys 0.60.2",
+                "id": "windows-sys 0.52.0",
                 "target": "windows_sys"
               }
             ]
@@ -22399,7 +22336,7 @@
         "deps": {
           "common": [
             {
-              "id": "native-tls 0.2.14",
+              "id": "native-tls 0.2.18",
               "target": "native_tls"
             },
             {
@@ -22926,7 +22863,7 @@
         "deps": {
           "common": [
             {
-              "id": "bitflags 2.9.3",
+              "id": "bitflags 2.11.1",
               "target": "bitflags"
             },
             {
@@ -25300,7 +25237,7 @@
           "selects": {
             "cfg(windows)": [
               {
-                "id": "windows-sys 0.60.2",
+                "id": "windows-sys 0.48.0",
                 "target": "windows_sys"
               }
             ]
@@ -26480,6 +26417,54 @@
         },
         "edition": "2021",
         "version": "0.60.2"
+      },
+      "license": "MIT OR Apache-2.0",
+      "license_ids": [
+        "Apache-2.0",
+        "MIT"
+      ],
+      "license_file": "license-apache-2.0"
+    },
+    "windows-sys 0.61.2": {
+      "name": "windows-sys",
+      "version": "0.61.2",
+      "package_url": "https://github.com/microsoft/windows-rs",
+      "repository": {
+        "Http": {
+          "url": "https://static.crates.io/crates/windows-sys/0.61.2/download",
+          "sha256": "ae137229bcbd6cdf0f7b80a31df61766145077ddf49416a728b02cb3921ff3fc"
+        }
+      },
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "windows_sys",
+            "crate_root": "src/lib.rs",
+            "srcs": {
+              "allow_empty": true,
+              "include": [
+                "**/*.rs"
+              ]
+            }
+          }
+        }
+      ],
+      "library_target_name": "windows_sys",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "deps": {
+          "common": [
+            {
+              "id": "windows-link 0.2.1",
+              "target": "windows_link"
+            }
+          ],
+          "selects": {}
+        },
+        "edition": "2021",
+        "version": "0.61.2"
       },
       "license": "MIT OR Apache-2.0",
       "license_ids": [
@@ -29102,7 +29087,7 @@
         "deps": {
           "common": [
             {
-              "id": "bitflags 2.9.3",
+              "id": "bitflags 2.11.1",
               "target": "bitflags"
             },
             {
@@ -29604,7 +29589,7 @@
         "deps": {
           "common": [
             {
-              "id": "bitflags 2.9.3",
+              "id": "bitflags 2.11.1",
               "target": "bitflags"
             },
             {
@@ -30520,7 +30505,7 @@
     "mime 0.3.17",
     "nix 0.29.0",
     "odbc-api 10.2.0",
-    "openssl 0.10.73",
+    "openssl 0.10.78",
     "openssl-probe 0.1.6",
     "oracle 0.6.3",
     "os_info 3.12.0",

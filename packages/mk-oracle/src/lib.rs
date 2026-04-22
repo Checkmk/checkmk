@@ -21,8 +21,6 @@ pub mod emit;
 pub mod ora_sql;
 #[cfg(unix)]
 pub mod permissions_linux;
-#[cfg(windows)]
-pub mod permissions_windows;
 pub mod platform;
 pub mod setup;
 pub mod types;

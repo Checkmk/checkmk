@@ -1878,7 +1878,6 @@ dependencies = [
  "derive_more",
  "flexi_logger",
  "futures",
- "is_elevated",
  "log",
  "nix",
  "oracle",
@@ -1889,7 +1888,6 @@ dependencies = [
  "tempfile",
  "tokio",
  "tokio-util",
- "winapi",
  "winreg",
  "yaml-rust2",
 ]

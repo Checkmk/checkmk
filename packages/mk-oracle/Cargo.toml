@@ -46,19 +46,6 @@ sysinfo = "0.38.0"
 nix = { workspace = true, features = ["user"] }
 
 [target.'cfg(windows)'.dependencies]
-is_elevated.workspace = true
-winapi = { workspace = true, features = [
-  "accctrl",
-  "aclapi",
-  "fileapi",
-  "handleapi",
-  "minwindef",
-  "sddl",
-  "securitybaseapi",
-  "winbase",
-  "winerror",
-  "winnt",
-] }
 winreg.workspace = true
 
 [dev-dependencies]

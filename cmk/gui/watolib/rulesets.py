@@ -13,7 +13,15 @@ import itertools
 import os
 import pprint
 import re
-from collections.abc import Callable, Container, Generator, Iterable, Iterator, Mapping, Sequence
+from collections.abc import (
+    Callable,
+    Container,
+    Generator,
+    Iterable,
+    Iterator,
+    Mapping,
+    Sequence,
+)
 from enum import auto, Enum
 from pathlib import Path
 from typing import Any, assert_never, cast, Final, Literal, override, TypedDict
@@ -70,7 +78,9 @@ from cmk.rulesets.internal.form_specs import (
 from cmk.rulesets.internal.form_specs import (
     SingleChoiceElementExtended as SingleChoiceElementExtendedAPI,
 )
-from cmk.rulesets.internal.form_specs import SingleChoiceExtended as SingleChoiceExtendedAPI
+from cmk.rulesets.internal.form_specs import (
+    SingleChoiceExtended as SingleChoiceExtendedAPI,
+)
 from cmk.rulesets.v1 import Help, Label, Message, Title
 from cmk.rulesets.v1.form_specs import BooleanChoice as BooleanChoiceAPI
 from cmk.rulesets.v1.form_specs import CascadingSingleChoice as CascadingSingleChoiceAPI
@@ -2205,7 +2215,7 @@ def _create_explicit_rule_services_dict(rule_spec_item: RuleSpecItem) -> DictEle
                 "value": DictElementAPI(parameter_form=value_parameter_form, required=True),
                 "negate": DictElementAPI(
                     parameter_form=BooleanChoiceAPI(
-                        label=Label("Negate: make rule apply for all but the above entries")
+                        label=Label("Negate: apply to all except listed entries above")
                     ),
                     required=True,
                 ),
@@ -2335,7 +2345,7 @@ def _create_explicit_rule_conditions_dict(
                     ),
                     "negate": DictElementAPI(
                         parameter_form=BooleanChoiceAPI(
-                            label=Label("Negate: make rule apply for all but the above entries"),
+                            label=Label("Negate: apply to all except listed hosts above"),
                         ),
                         required=True,
                     ),

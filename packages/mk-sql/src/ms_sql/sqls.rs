@@ -176,11 +176,19 @@ WHERE object_name NOT LIKE '%Deprecated%'
     /// 1 for primary replica
     /// 0 for secondary replica
     /// NULL for databases not participating in availability groups
-    pub const DATABASE_NAMES_ACTIVE: &str = r#"SELECT d.name
-FROM sys.databases AS d
-WHERE
-    sys.fn_hadr_is_primary_replica(d.name) IS NULL
-    OR sys.fn_hadr_is_primary_replica(d.name) = 1;"#;
+    /// ONLY SUPPORTED since version 12 (SQL Server 2014)
+    pub const DATABASE_NAMES_ACTIVE: &str = r#"IF CAST(PARSENAME(CAST(SERVERPROPERTY('ProductVersion') AS varchar(30)), 4) AS int) >= 12
+BEGIN
+    SELECT d.name
+    FROM sys.databases AS d
+    WHERE sys.fn_hadr_is_primary_replica(d.name) IS NULL
+       OR sys.fn_hadr_is_primary_replica(d.name) = 1;
+END
+ELSE
+BEGIN
+    SELECT d.name
+    FROM sys.databases AS d;
+END;"#;
 
     /// Executes `sp_spaceused` for each database parsing output AS resuult set
     /// Requires NVARCHAR support

@@ -1,4 +1,4 @@
-load("@aspect_rules_py//py:defs.bzl", "py_library", "py_pytest_main", "py_test")
+load("@aspect_rules_py//py:defs.bzl", "py_library", "py_test")
 load("@cmk_requirements//:requirements.bzl", "requirement")
 
 py_library(
@@ -28,15 +28,6 @@ py_library(
     testonly = True,
     srcs = ["__init__.py"],
     visibility = ["//tests/unit/cmk/gui:__subpackages__"],
-)
-
-py_pytest_main(
-    name = "__test__",
-    deps = [
-        requirement("pytest"),
-        # pytest-xdist for `--numprocesses=NPROC`
-        requirement("pytest-xdist"),
-    ],
 )
 
 py_library(
@@ -222,6 +213,475 @@ py_test(
 )
 
 py_test(
+    name = "background_job",
+    srcs = ["test_background_job.py"],
+    args = ["tests/unit/cmk/gui/test_background_job.py"],
+    env = {"EDITION": "community"},
+    pytest_main = True,
+    deps = [
+        ":conftest",
+        "//cmk/gui:log",
+        "//cmk/gui/background_job/job",
+        "//cmk/utils",
+        "//packages/cmk-trace",
+        "//tests/unit:conftest",
+        requirement("opentelemetry-sdk"),
+        requirement("pytest"),
+    ],
+)
+
+py_test(
+    name = "backup_unit",
+    srcs = ["test_backup_unit.py"],
+    args = ["tests/unit/cmk/gui/test_backup_unit.py"],
+    env = {"EDITION": "community"},
+    pytest_main = True,
+    deps = [
+        ":conftest",
+        "//cmk/gui:logged_in",
+        "//cmk/gui/backup",
+        "//cmk/utils",
+        "//packages/cmk-ccc:user",
+        "//packages/cmk-ccc:version",
+        "//packages/cmk-crypto",
+        "//tests/unit:conftest",
+        requirement("pytest"),
+    ],
+)
+
+py_test(
+    name = "cmkcert",
+    srcs = ["test_cmkcert.py"],
+    args = ["tests/unit/cmk/gui/test_cmkcert.py"],
+    env = {"EDITION": "community"},
+    pytest_main = True,
+    deps = [
+        ":conftest",
+        "//cmk/gui:cmkcert",
+        "//cmk/gui:config",
+        "//cmk/utils",
+        "//packages/cmk-ccc:site",
+        "//tests/unit:conftest",
+        requirement("pytest"),
+        requirement("pytest-mock"),
+    ],
+)
+
+py_test(
+    name = "crash_handler",
+    srcs = ["test_crash_handler.py"],
+    args = ["tests/unit/cmk/gui/test_crash_handler.py"],
+    env = {"EDITION": "community"},
+    pytest_main = True,
+    deps = [
+        ":conftest",
+        "//cmk/gui:crash_handler",
+        "//packages/cmk-ccc:crash-reporting",
+        "//tests/unit:conftest",
+        requirement("pytest"),
+    ],
+)
+
+py_test(
+    name = "dashboard_tests",
+    srcs = ["test_dashboard.py"],
+    args = ["tests/unit/cmk/gui/test_dashboard.py"],
+    env = {"EDITION": "community"},
+    pytest_main = True,
+    deps = [
+        ":conftest",
+        "//cmk/gui/dashboard",
+        "//packages/cmk-ccc:plugin-registry",
+        "//tests/unit:conftest",
+        requirement("pytest"),
+    ],
+)
+
+py_test(
+    name = "forms",
+    srcs = ["test_forms.py"],
+    args = ["tests/unit/cmk/gui/test_forms.py"],
+    env = {"EDITION": "community"},
+    pytest_main = True,
+    deps = [
+        ":conftest",
+        "//cmk/gui:forms",
+        "//cmk/gui:http",
+        "//cmk/gui/wato",
+        "//tests/unit:conftest",
+        requirement("pytest"),
+    ],
+)
+
+py_test(
+    name = "graphing_main",
+    srcs = ["test_graphing_main.py"],
+    args = ["tests/unit/cmk/gui/test_graphing_main.py"],
+    env = {"EDITION": "community"},
+    pytest_main = True,
+    deps = [
+        ":conftest",
+        "//cmk/gui:graphing_main",
+        "//cmk/gui:unit_formatter",
+        "//cmk/gui/graphing",
+        "//packages/cmk-plugin-apis:graphing",
+        "//tests/unit:conftest",
+        requirement("pytest"),
+    ],
+)
+
+py_test(
+    name = "gui_config",
+    srcs = ["test_gui_config.py"],
+    args = ["tests/unit/cmk/gui/test_gui_config.py"],
+    env = {"EDITION": "community"},
+    pytest_main = True,
+    deps = [
+        ":conftest",
+        "//cmk/gui:config",
+        "//cmk/utils",
+        "//tests/unit:conftest",
+        requirement("pytest"),
+    ],
+)
+
+py_test(
+    name = "gui_hooks",
+    srcs = ["test_gui_hooks.py"],
+    args = ["tests/unit/cmk/gui/test_gui_hooks.py"],
+    env = {"EDITION": "community"},
+    pytest_main = True,
+    deps = [
+        ":conftest",
+        "//cmk/gui:hooks",
+        "//cmk/gui:pages",
+        "//packages/cmk-ccc:exceptions",
+        "//tests/unit:conftest",
+        requirement("pytest"),
+        requirement("pytest-mock"),
+    ],
+)
+
+py_test(
+    name = "http",
+    srcs = ["test_http.py"],
+    args = ["tests/unit/cmk/gui/test_http.py"],
+    env = {"EDITION": "community"},
+    pytest_main = True,
+    deps = [
+        ":conftest",
+        "//cmk/gui:exceptions",
+        "//cmk/gui:http",
+        "//cmk/gui:script_helpers",
+        "//tests/unit:conftest",
+        requirement("pytest"),
+        requirement("werkzeug"),
+    ],
+)
+
+py_test(
+    name = "i18n",
+    srcs = ["test_i18n.py"],
+    args = ["tests/unit/cmk/gui/test_i18n.py"],
+    env = {"EDITION": "community"},
+    pytest_main = True,
+    deps = [
+        ":conftest",
+        "//cmk/gui:i18n",
+        "//cmk/gui:script_helpers",
+        "//cmk/utils",
+        "//tests/unit:conftest",
+        requirement("flask"),
+        requirement("pytest"),
+    ],
+)
+
+py_test(
+    name = "index",
+    srcs = ["test_index.py"],
+    args = ["tests/unit/cmk/gui/test_index.py"],
+    env = {"EDITION": "community"},
+    pytest_main = True,
+    deps = [
+        ":conftest",
+        "//cmk/gui:config",
+        "//cmk/gui:http",
+        "//cmk/gui:logged_in",
+        "//cmk/gui:main",
+        "//cmk/gui:session",
+        "//tests/unit:conftest",
+        requirement("pytest"),
+        requirement("werkzeug"),
+    ],
+)
+
+py_test(
+    name = "key_mgmt",
+    srcs = ["test_key_mgmt.py"],
+    args = ["tests/unit/cmk/gui/test_key_mgmt.py"],
+    env = {"EDITION": "community"},
+    pytest_main = True,
+    deps = [
+        ":conftest",
+        "//cmk/gui:key_mgmt",
+        "//cmk/utils",
+        "//packages/cmk-ccc:site",
+        "//packages/cmk-ccc:user",
+        "//packages/cmk-crypto",
+        "//tests/unit:conftest",
+        requirement("pytest"),
+    ],
+)
+
+py_test(
+    name = "logged_in",
+    srcs = ["test_logged_in.py"],
+    args = ["tests/unit/cmk/gui/test_logged_in.py"],
+    env = {"EDITION": "community"},
+    pytest_main = True,
+    deps = [
+        ":conftest",
+        "//cmk/gui:config",
+        "//cmk/gui:exceptions",
+        "//cmk/gui:hooks",
+        "//cmk/gui:logged_in",
+        "//cmk/gui:permissions",
+        "//cmk/gui:role_types",
+        "//cmk/gui:session",
+        "//packages/cmk-ccc:site",
+        "//packages/cmk-ccc:user",
+        "//tests/unit:conftest",
+        requirement("pytest"),
+        requirement("pytest-mock"),
+    ],
+)
+
+py_test(
+    name = "login_unit",
+    srcs = ["test_login_unit.py"],
+    args = ["tests/unit/cmk/gui/test_login_unit.py"],
+    env = {"EDITION": "community"},
+    pytest_main = True,
+    deps = [
+        ":conftest",
+        "//cmk/gui:auth",
+        "//cmk/gui:config",
+        "//cmk/gui:http",
+        "//cmk/gui:logged_in",
+        "//cmk/gui:login",
+        "//cmk/gui:script_helpers",
+        "//cmk/gui:session",
+        "//cmk/gui:type_defs",
+        "//cmk/gui/userdb",
+        "//packages/cmk-ccc:user",
+        "//tests/unit:conftest",
+        requirement("flask"),
+        requirement("pytest"),
+        requirement("werkzeug"),
+    ],
+)
+
+py_test(
+    name = "monitored_service_description_autocompleter",
+    srcs = ["test_monitored_service_description_autocompleter.py"],
+    args = ["tests/unit/cmk/gui/test_monitored_service_description_autocompleter.py"],
+    env = {"EDITION": "community"},
+    pytest_main = True,
+    deps = [
+        ":conftest",
+        "//cmk/gui:config",
+        "//cmk/gui/visuals",
+        "//packages/cmk-livestatus-client:livestatus-api",
+        "//tests/unit:conftest",
+        requirement("pytest"),
+    ],
+)
+
+py_test(
+    name = "page_menu",
+    srcs = ["test_page_menu.py"],
+    args = ["tests/unit/cmk/gui/test_page_menu.py"],
+    env = {"EDITION": "community"},
+    pytest_main = True,
+    deps = [
+        ":conftest",
+        "//cmk/gui:page_menu",
+        "//cmk/gui:type_defs",
+        "//tests/unit:conftest",
+        requirement("pytest"),
+    ],
+)
+
+py_test(
+    name = "pages",
+    srcs = ["test_pages.py"],
+    args = ["tests/unit/cmk/gui/test_pages.py"],
+    env = {"EDITION": "community"},
+    pytest_main = True,
+    deps = [
+        ":conftest",
+        "//cmk/gui:config",
+        "//cmk/gui:http",
+        "//cmk/gui:pages",
+        "//tests/unit:conftest",
+        requirement("pytest"),
+        requirement("werkzeug"),
+    ],
+)
+
+py_test(
+    name = "pagetypes",
+    srcs = ["test_pagetypes.py"],
+    args = ["tests/unit/cmk/gui/test_pagetypes.py"],
+    env = {"EDITION": "community"},
+    pytest_main = True,
+    deps = [
+        ":conftest",
+        "//cmk/gui:script_helpers",
+        "//cmk/gui/pagetypes",
+        "//tests/unit:conftest",
+        requirement("pytest"),
+    ],
+)
+
+py_test(
+    name = "permissions",
+    srcs = ["test_permissions.py"],
+    args = ["tests/unit/cmk/gui/test_permissions.py"],
+    env = {"EDITION": "community"},
+    pytest_main = True,
+    deps = [
+        ":conftest",
+        "//cmk/gui:permissions",
+        "//packages/cmk-ccc:plugin-registry",
+        "//tests/unit:conftest",
+        requirement("pytest"),
+    ],
+)
+
+py_test(
+    name = "session",
+    srcs = ["test_session.py"],
+    args = ["tests/unit/cmk/gui/test_session.py"],
+    env = {"EDITION": "community"},
+    pytest_main = True,
+    deps = [
+        ":conftest",
+        "//cmk/gui:logged_in",
+        "//cmk/gui:session",
+        "//tests/unit:conftest",
+        requirement("flask"),
+        requirement("pytest"),
+        requirement("pytest-mock"),
+    ],
+)
+
+py_test(
+    name = "sites",
+    srcs = ["test_sites.py"],
+    args = ["tests/unit/cmk/gui/test_sites.py"],
+    env = {"EDITION": "community"},
+    pytest_main = True,
+    deps = [
+        ":conftest",
+        "//cmk/gui:sites",
+        "//cmk/gui:user_sites",
+        "//cmk/utils",
+        "//packages/cmk-ccc:site",
+        "//packages/cmk-livestatus-client",
+        "//tests/unit:conftest",
+        requirement("pytest"),
+    ],
+)
+
+py_test(
+    name = "table",
+    srcs = ["test_table.py"],
+    args = ["tests/unit/cmk/gui/test_table.py"],
+    env = {"EDITION": "community"},
+    pytest_main = True,
+    deps = [
+        ":compare_html",
+        ":conftest",
+        "//cmk/gui:http",
+        "//cmk/gui:logged_in",
+        "//cmk/gui:table",
+        "//cmk/gui/htmllib:html",
+        "//cmk/gui/utils:html",
+        "//cmk/gui/utils:output_funnel",
+        "//tests/unit:conftest",
+        requirement("beautifulsoup4"),
+        requirement("pytest"),
+    ],
+)
+
+py_test(
+    name = "threading",
+    srcs = ["test_threading.py"],
+    args = ["tests/unit/cmk/gui/test_threading.py"],
+    env = {"EDITION": "community"},
+    pytest_main = True,
+    deps = [
+        ":conftest",
+        "//cmk/gui:config",
+        "//cmk/gui/utils:request_context",
+        "//tests/unit:conftest",
+        requirement("flask"),
+        requirement("pytest"),
+    ],
+)
+
+py_test(
+    name = "valuespec",
+    srcs = ["test_valuespec.py"],
+    args = ["tests/unit/cmk/gui/test_valuespec.py"],
+    env = {"EDITION": "community"},
+    pytest_main = True,
+    deps = [
+        ":conftest",
+        "//cmk/gui:config",
+        "//cmk/gui:exceptions",
+        "//cmk/gui:http",
+        "//cmk/gui/valuespec",
+        "//tests/unit:conftest",
+        requirement("pytest"),
+        requirement("time-machine"),
+    ],
+)
+
+py_test(
+    name = "view_utils",
+    srcs = ["test_view_utils.py"],
+    args = ["tests/unit/cmk/gui/test_view_utils.py"],
+    env = {"EDITION": "community"},
+    pytest_main = True,
+    deps = [
+        ":conftest",
+        "//cmk/gui:http",
+        "//cmk/gui:view_utils",
+        "//cmk/gui/utils:html",
+        "//tests/unit:conftest",
+        requirement("pytest"),
+    ],
+)
+
+py_test(
+    name = "visuals_tests",
+    srcs = ["test_visuals.py"],
+    args = ["tests/unit/cmk/gui/test_visuals.py"],
+    env = {"EDITION": "community"},
+    pytest_main = True,
+    deps = [
+        ":conftest",
+        "//cmk/gui:http",
+        "//cmk/gui:type_defs",
+        "//cmk/gui/visuals",
+        "//tests/unit:conftest",
+        requirement("pytest"),
+    ],
+)
+
+py_test(
     name = "color",
     srcs = ["test_color.py"],
     args = ["tests/unit/cmk/gui/test_color.py"],
@@ -278,80 +738,5 @@ py_test(
     deps = [
         "//cmk/gui:unit_formatter",
         requirement("pytest"),
-    ],
-)
-
-py_test(
-    name = "gui",
-    srcs = ["__test__.py"] + glob(
-        include = ["**/*.py"],
-        exclude = [
-            "compare_html.py",
-            "conftest.py",
-            "test_auth.py",
-            "test_autocompleters.py",
-            "test_availability_*.py",
-            "test_breadcrumb.py",
-            "test_color.py",
-            "test_cron.py",
-            "test_deprecations.py",
-            "test_edition_compatibility.py",
-            "test_escaping.py",
-            "test_figures.py",
-            "test_main_modules.py",
-            "test_query_filters.py",
-            "test_site_config.py",
-            "test_sort.py",
-            "test_type_defs.py",
-            "test_unit_formatter.py",
-            "test_userdb_htpasswd_connector.py",
-        ],
-    ),
-    args = [
-        "--config-file=$(location @//:pyproject.toml)",
-        "--import-mode=importlib",
-        "--random-order-bucket=global",
-        "--dist=loadfile",
-        "--numprocesses=4",
-    ],
-    data = ["@//:pyproject.toml"],
-    env = {"EDITION": "community"},
-    main = ":__test__.py",
-    visibility = ["//visibility:private"],
-    deps = [
-        ":__test__",
-        ":compare_html",
-        ":conftest",
-        "//tests/unit:conftest",
-        requirement("apispec-oneofschema"),
-        requirement("beautifulsoup4"),
-        requirement("fakeredis"),
-        requirement("fastapi"),
-        requirement("flask"),
-        requirement("httpx"),
-        requirement("marshmallow"),
-        requirement("marshmallow-oneofschema"),
-        requirement("openapi-spec-validator"),
-        requirement("opentelemetry-sdk"),
-        requirement("polyfactory"),
-        requirement("pytest-mock"),
-        requirement("pytest-asyncio"),
-        requirement("pytest-random-order"),
-        requirement("python-dateutil"),
-        requirement("python-ldap"),
-        requirement("pyyaml"),
-        requirement("responses"),
-        requirement("time-machine"),
-        requirement("werkzeug"),
-        "//cmk:validate_config",
-        "//cmk/bi",
-        "//cmk/gui",
-        "//cmk/gui/job_scheduler",
-        "//cmk/gui/openapi/spec/spec_generator",
-        "//cmk/gui/openapi/spec/spec_generator:_core",
-        "//omd/packages/omd:omdlib",
-        "//tests/testlib/common:empty_config",
-        "//tests/testlib/common:utils",
-        "//tests/testlib/unit",
     ],
 )

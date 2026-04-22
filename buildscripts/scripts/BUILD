@@ -101,6 +101,7 @@ sh_library(
         "bazel_mypy.sh",
         "bazel_test_ci.sh",
         "bazel_test_post_archive_xunit.sh",
+        "check_community_edition_no_nonfree.sh",
         "create_unsign_msi_patch.sh",
         "sign-packages.sh",
     ],

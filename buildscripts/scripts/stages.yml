@@ -115,6 +115,7 @@ STAGES:
           ./scripts/in_bazel.sh ".py" "py_binary|py_library|py_test" \
               --known-offender omd/packages/omd/omdlib/__init__.py \
               > ${RESULTS}/results.txt || make_rc=$?
+          ./buildscripts/scripts/check_community_edition_no_nonfree.sh >> ${RESULTS}/results.txt || make_rc=$?
           ./scripts/in_bazel.sh "requirements.in" "filegroup" \
               --path "packages" \
               --path "non-free/packages" \

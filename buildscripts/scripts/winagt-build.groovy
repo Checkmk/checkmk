@@ -34,8 +34,11 @@ void main() {
                 string(
                     credentialsId: "CI_ORA2_DB_TEST_PASSWORD",
                     variable:"CI_ORA2_DB_TEST_PASSWORD"),
+                string(
+                    credentialsId: "CI_ORA_TEST_PASSWORD",
+                    variable:"CI_ORA_TEST_PASSWORD"),
             ]) {
-                // The windows.build function will create stages.
+            // The windows.build function will create stages.
                 windows.build(
                     TARGET: 'agent_with_sign',
                     PASSWORD: WIN_SIGN_PASSWORD,

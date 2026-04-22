@@ -762,6 +762,7 @@ STAGES:
       SEC_VAR_LIST:
           - "CI_TEST_SQL_DB_ENDPOINT"
           - "CI_ORA2_DB_TEST_PASSWORD"
+          - "CI_ORA_TEST_PASSWORD"
       DIR: "packages/mk-oracle"
       COMMAND: "./run --build --unit-tests --component-tests --lint=clippy"
       BAZEL_LOCKS_AMOUNT: 1

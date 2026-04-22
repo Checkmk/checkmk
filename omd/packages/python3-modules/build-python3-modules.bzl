@@ -104,7 +104,8 @@ build_cmd = """
     # Resolve tool paths provided by Bazel:
     export RUSTC="$$HOME/$(location //bazel/toolchains/rust:rustc)"
     export CARGO="$$HOME/$(location //bazel/toolchains/rust:cargo)"
-    export PATH="$$PATH:$$(dirname "$$RUSTC"):$$(dirname "$$CARGO")"
+    # The PATH order matters: For the build to be hermetic, we need to prefer `rustc` provided by Bazel.
+    export PATH="$$(dirname "$$RUSTC"):$$(dirname "$$CARGO"):$$PATH"
 
     # Keep cargo artifacts inside the sandbox (optional but nice):
     export CARGO_TARGET_DIR="$(@D)/cargo_out"

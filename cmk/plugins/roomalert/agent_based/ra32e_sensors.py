@@ -48,7 +48,6 @@ class DigitalSensorType(StrEnum):
     TEMP_ACTIVE_POWER = "temp/active_power"
     TEMP_ANALOG = "temp/analog"
     TEMP_HUMIDITY = "temp/humidity"
-    TEMP_EXTREME = "temp/extreme"
 
 
 def _parse_ra32e_internal(table: StringTable) -> InternalSection | None:
@@ -108,8 +107,7 @@ def _parse_ra32e_digital_sensor(sensors: StringTable) -> DigitalSection | None:
                 humidity=float(humidity) / 100.0,
                 heat_index=float(heat_index) / 100.0,
             )
-        # Extreme temperature sensor not supported yet
-        case DigitalSensorType.TEMP_EXTREME | None:
+        case None:
             return None
 
 

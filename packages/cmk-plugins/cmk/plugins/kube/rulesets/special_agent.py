@@ -9,7 +9,6 @@
 
 import ipaddress
 import re
-from collections.abc import Callable, Iterable, Mapping
 from contextlib import suppress
 from typing import Final
 
@@ -40,29 +39,15 @@ from cmk.rulesets.v1.form_specs import (
 )
 from cmk.rulesets.v1.rule_specs import SpecialAgent, Topic
 
-openshift_element: Callable[
-    [Dictionary], Iterable[CascadingSingleChoiceElement[Mapping[str, object]]]
-]
-transform_openshift_endpoint: Callable[[dict[str, object]], dict[str, object]]
+from .special_agent_options_community import OpenshiftElement, TransformOpenshiftEndpoint
+
 try:
-    from .nonfree.special_agent_options import (  # type: ignore[no-redef,import-not-found, unused-ignore]
-        openshift_element,
-        transform_openshift_endpoint,
+    from cmk.plugins.kube_extended.rulesets.special_agent_options import (  # type: ignore[no-redef,import-not-found, unused-ignore]
+        OpenshiftElement,
+        TransformOpenshiftEndpoint,
     )
 except ImportError:
-
-    def openshift_element(
-        tcp_timeouts: Dictionary,
-    ) -> Iterable[CascadingSingleChoiceElement[Mapping[str, object]]]:
-        return ()
-
-    def transform_openshift_endpoint(p: dict[str, object]) -> dict[str, object]:
-        return {
-            k: v
-            for k, v in p.items()
-            if k != "usage_endpoint"
-            or (isinstance(v, tuple) and v[0] in ("cluster_collector", "cluster-collector"))
-        }
+    pass
 
 
 def _tcp_timeouts() -> Dictionary:
@@ -96,7 +81,7 @@ def _usage_endpoint() -> CascadingSingleChoice:
     return CascadingSingleChoice(
         title=Title("Enrich with usage data"),
         migrate=_migrate_usage_endpoint,
-        elements=[_cluster_collector(), *openshift_element(_tcp_timeouts())],
+        elements=[_cluster_collector(), *OpenshiftElement()(_tcp_timeouts())],
         prefill=DefaultValue("cluster_collector"),
     )
 
@@ -109,7 +94,7 @@ def _migrate_usage_endpoint(p: object) -> tuple[str, object]:
 
 def migrate_and_transform(p: object) -> dict[str, object]:
     p = _migrate_form_specs(p)
-    return transform_openshift_endpoint(p)
+    return TransformOpenshiftEndpoint()(p)
 
 
 def _cluster_collector() -> CascadingSingleChoiceElement:

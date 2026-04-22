@@ -1,0 +1,68 @@
+Make the crypto backend search relocatable.
+
+libltdl does not consult the calling binary's DT_RPATH/DT_RUNPATH when
+resolving lt_dlopenext() modules; it uses LTDL_LIBRARY_PATH,
+LD_LIBRARY_PATH and the compiled-in sys_lib_dlsearch_path_spec.  When
+xmlsec1 is shipped to a non-standard prefix (e.g. $OMD_ROOT/lib), the
+crypto backend (libxmlsec1-openssl.so) cannot be found, and libltdl
+may instead pick up a version from a distro-installed xmlsec1 in
+/usr/lib/x86_64-linux-gnu, with predictable ABI-mismatch failures.
+
+Use dladdr() on a libxmlsec1 symbol to locate libxmlsec1.so itself and
+register the directory containing it with lt_dladdsearchdir().  The
+crypto backends are shipped alongside libxmlsec1.so, so this makes
+the install self-contained regardless of prefix, without relying on
+environment variables or wrapper scripts.
+
+--- a/src/dl.c
++++ b/src/dl.c
+@@ -6,6 +6,11 @@
+  *
+  * Copyright (C) 2002-2024 Aleksey Sanin <aleksey@aleksey.com>. All Rights Reserved.
+  */
++/* dladdr() is a GNU extension; needed here to locate libxmlsec1.so at runtime
++ * so libltdl can find crypto backends bundled next to it. */
++#ifndef _GNU_SOURCE
++#  define _GNU_SOURCE 1
++#endif
+ /**
+  * SECTION:dl
+  * @Short_description: Dynamic crypto-engine library loading functions.
+@@ -40,6 +45,12 @@
+ #include <ltdl.h>
+ #endif /* XMLSEC_DL_LIBLTDL */
+
++#if defined(XMLSEC_DL_LIBLTDL) && defined(__linux__)
++#include <dlfcn.h>
++#include <libgen.h>
++#include <limits.h>
++#endif /* XMLSEC_DL_LIBLTDL && __linux__ */
++
+ #if defined(XMLSEC_WINDOWS) && defined(XMLSEC_DL_WIN32)
+ #include <windows.h>
+ #endif /* defined(XMLSEC_WINDOWS) && defined(XMLSEC_DL_WIN32) */
+@@ -373,6 +384,24 @@ xmlSecCryptoDLInit(void) {
+         xmlSecIOError("lt_dlinit", NULL, NULL);
+         return(-1);
+     }
++
++#if defined(__linux__)
++    /* libltdl does not consult DT_RPATH/DT_RUNPATH of the calling binary.
++     * Tell it about the directory that holds libxmlsec1.so so that crypto
++     * backends shipped next to it are preferred over any system-installed
++     * copies in /usr/lib. */
++    {
++        Dl_info info;
++        char path[PATH_MAX];
++        size_t len;
++        if(dladdr((const void *)&gXmlSecCryptoDLLibraries, &info) != 0
++           && info.dli_fname != NULL
++           && (len = strlen(info.dli_fname)) < sizeof(path)) {
++            memcpy(path, info.dli_fname, len + 1);
++            (void)lt_dladdsearchdir(dirname(path));
++        }
++    }
++#endif /* __linux__ */
+ #endif /* XMLSEC_DL_LIBLTDL */
+
+     return(0);

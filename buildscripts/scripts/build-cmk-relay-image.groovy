@@ -104,6 +104,29 @@ void main() {
                     }
                 }
             }
+
+            // RC builds are only pushed to nexus. never to dockerhub
+            smart_stage(
+                name: "Push image to Nexus",
+                condition: push_to_registry && is_release_candidate,
+            ) {
+                withCredentials([
+                    usernamePassword(
+                        credentialsId: "nexus",
+                        passwordVariable: 'NEXUS_PASSWORD',
+                        usernameVariable: 'NEXUS_USERNAME'),
+                ]) {
+                    withEnv(["DOCKER_CONFIG=${checkout_dir}/.docker"]) {
+                        sh('''
+                            mkdir -p ${DOCKER_CONFIG}
+                            echo "${NEXUS_PASSWORD}" | docker login --password-stdin -u "${NEXUS_USERNAME}" artifacts.lan.tribe29.com:4000
+                        ''')
+                        sh("""
+                            bazel run --cmk_edition=ultimate //omd/non-free/relay:image_push_nexus -- --tag ${cmk_version}
+                        """)
+                    }
+                }
+            }
         }
     }
 }

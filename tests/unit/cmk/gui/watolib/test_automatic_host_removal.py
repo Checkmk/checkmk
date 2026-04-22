@@ -272,3 +272,35 @@ def test_execute_host_removal_job(
     ]
     mock_delete_hosts_automation.assert_called_once()
     activate_changes_mock.assert_called_once()
+
+
+@pytest.mark.usefixtures(
+    "setup_rules"
+)  # needed to pass the early-exit guard in execute_host_removal_job
+@pytest.mark.usefixtures("with_admin_login")
+def test_execute_host_removal_job_skips_remote_site_without_secret(
+    mocker: MockerFixture, request_context: None
+) -> None:
+    """A remote site with replication enabled but no login secret must not appear in
+    automation_configs. Covers the race window between sites.create() (no secret yet)
+    and sites.login() (secret added).
+    """
+    mock_hosts_to_be_removed = mocker.patch.object(
+        automatic_host_removal,
+        "_hosts_to_be_removed",
+        return_value=[],  # I don't care about actually removing hosts in this test
+    )
+
+    config = Config()
+    config.sites[SiteId("NO_SITE")] = default_site_config()
+    remote_without_secret = default_site_config()
+    remote_without_secret["id"] = SiteId("remote_no_secret")
+    remote_without_secret["replication"] = "slave"  # replication enabled — but no "secret"
+    config.sites[SiteId("remote_no_secret")] = remote_without_secret
+
+    automatic_host_removal.execute_host_removal_job(config)
+
+    mock_hosts_to_be_removed.assert_called_once()
+    automation_configs = mock_hosts_to_be_removed.call_args.kwargs["automation_configs"]
+    assert SiteId("remote_no_secret") not in automation_configs
+    assert SiteId("NO_SITE") in automation_configs

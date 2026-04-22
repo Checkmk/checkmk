@@ -65,8 +65,12 @@ pkg_filegroup(
 add_runpath(
     name = "nagios_bin_runpath",
     srcs = ["@nagios//:nagios_bin"],
-    # nagios links libltdl to load NEB event broker modules. DT_RUNPATH is not
-    # searched for dlopen() calls; DT_RPATH is required.
+    # nagios dlopen()s NEB event broker modules (e.g. livestatus.o) with absolute
+    # paths from nagios.cfg. That load doesn't consult this rpath, but DT_RPATH
+    # (unlike DT_RUNPATH) is inherited when the loader resolves those modules'
+    # own transitive DT_NEEDED. Kept as force_rpath so any NEB module whose
+    # dependencies aren't reachable via its own runpath can still fall back to
+    # $OMD_ROOT/lib.
     force_rpath = True,
     rpaths = ["$ORIGIN/../lib"],
     tags = ["manual"],

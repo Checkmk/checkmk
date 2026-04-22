@@ -29,9 +29,11 @@ copy_file(
 set_runpath(
     name = "xmlsec1_deployable_bin",
     srcs = [":xmlsec1_bin_copy"],
-    # xmlsec1 uses libltdl to dlopen() its crypto backend (libxmlsec1-openssl).
-    # DT_RUNPATH is not searched for dlopen() calls; DT_RPATH is required.
-    force_rpath = True,
+    # RUNPATH here only resolves the binary's direct DT_NEEDED libs (libxmlsec1,
+    # libltdl, libxml2, libxslt, libstdc++). The crypto backend (libxmlsec1-openssl)
+    # is dlopen()ed by libltdl, which ignores RPATH/RUNPATH entirely -- that lookup
+    # is handled by a source patch (see //omd/packages/xmlsec1/patches) which calls
+    # lt_dladdsearchdir() with the libxmlsec1.so directory at runtime.
     rpaths = ["$ORIGIN/../lib"],
     tags = ["manual"],
 )

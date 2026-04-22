@@ -18,17 +18,6 @@ import { initializeComponentRegistry } from '@/form/private/FormEditDispatcher/d
 
 initializeComponentRegistry()
 
-const defaultI18n = {
-  save_button: 'save_button_i18n',
-  cancel_button: 'cancel_button_i18n',
-  create_button: 'create_button_i18n',
-  validation_error: 'validation_button_i18n',
-  loading: 'loading_i18n',
-  fatal_error: 'fatal_error_i18n',
-  permanent_choice_warning: 'permanent_choice_warning_i18n',
-  permanent_choice_warning_dismissal: 'permanent_choice_warning_dismissal_i18n'
-}
-
 test('FormSingleChoiceEditableEditAsync renders form', async () => {
   type Data = Record<string, unknown>
 
@@ -76,8 +65,7 @@ test('FormSingleChoiceEditableEditAsync renders form', async () => {
         ): Promise<SetDataResult<Data>> {
           return { type: 'success', entity: { id: 'some_object_id' } }
         }
-      },
-      i18n: defaultI18n
+      }
     }
   })
 
@@ -113,8 +101,7 @@ test('abort during fetch is silently suppressed on unmount', async () => {
             )
           }),
         setData: async (): Promise<SetDataResult<Data>> => ({ type: 'success', entity: {} })
-      },
-      i18n: defaultI18n
+      }
     }
   })
 
@@ -141,8 +128,7 @@ test('non-abort error from fetch is propagated', async () => {
         },
         getData: async (): Promise<Data> => ({}),
         setData: async (): Promise<SetDataResult<Data>> => ({ type: 'success', entity: {} })
-      },
-      i18n: defaultI18n
+      }
     }
   })
 

@@ -13,7 +13,7 @@ import { onUnmounted, ref, toRaw } from 'vue'
 
 import { type SetDataResult } from '@/lib/configuration_entity_types'
 import usei18n from '@/lib/i18n'
-import { untranslated } from '@/lib/i18n'
+import type { TranslatedString } from '@/lib/i18nString'
 import { immediateWatch } from '@/lib/watch'
 
 import CmkAlertBox from '@/components/CmkAlertBox.vue'
@@ -39,16 +39,10 @@ export type API<ObjectIdent, Result> = {
 export interface FormSingleChoiceEditableEditAsyncProps<ObjectIdent, Result> {
   objectId: ObjectIdent | null
   api: API<ObjectIdent, Result>
-  i18n: {
-    save_button: string
-    cancel_button: string
-    create_button: string
-    loading: string
-    fatal_error: string
-    validation_error: string
-    permanent_choice_warning: string
-    permanent_choice_warning_dismissal: string
-  }
+  saveButtonLabel?: TranslatedString
+  cancelButtonLabel?: TranslatedString
+  createButtonLabel?: TranslatedString
+  permanentChoiceWarning?: TranslatedString
 }
 
 const DISMISSAL_KEY = 'immediate_slideout_change'
@@ -128,23 +122,32 @@ const { CmkErrorBoundary } = useCmkErrorBoundary()
     <CmkErrorBoundary>
       <CmkDialog
         class="form-edit-async__dialog"
-        :message="untranslated(props.i18n.permanent_choice_warning)"
+        :message="
+          props.permanentChoiceWarning ??
+          _t(
+            'Changes submitted through this form will be immediately applied to your configuration. However, you may still need to activate them for them to take effect.'
+          )
+        "
         :dismissal_button="{
-          title: untranslated(props.i18n.permanent_choice_warning_dismissal),
+          title: _t('Do not show again'),
           key: DISMISSAL_KEY
         }"
       />
       <div class="form-edit-async__buttons">
         <CmkButtonSubmit @click="save">
           {{
-            objectId === undefined ? props.i18n.create_button : props.i18n.save_button
+            objectId === undefined
+              ? (props.createButtonLabel ?? _t('Create'))
+              : (props.saveButtonLabel ?? _t('Save'))
           }}</CmkButtonSubmit
         >
         <CmkSpace />
-        <CmkButtonCancel @click="cancel">{{ props.i18n.cancel_button }}</CmkButtonCancel>
+        <CmkButtonCancel @click="cancel">{{
+          props.cancelButtonLabel ?? _t('Cancel')
+        }}</CmkButtonCancel>
         <!-- the validation error could be scrolled out of the viewport, so we have to show an error bar at the top -->
         <CmkAlertBox v-if="backendValidation.length !== 0" variant="error">
-          {{ i18n.validation_error }}
+          {{ _t('Could not validate form, errors are shown in the form') }}
         </CmkAlertBox>
         <div v-if="saving" class="form-edit-async__saving">
           <CmkIcon name="load-graph" size="large" /> {{ _t('Saving') }}
@@ -158,7 +161,7 @@ const { CmkErrorBoundary } = useCmkErrorBoundary()
         />
       </div>
       <div v-if="schema === undefined">
-        <CmkIcon name="load-graph" size="xxlarge" /> {{ i18n.loading }}
+        <CmkIcon name="load-graph" size="xxlarge" /> {{ _t('Loading ...') }}
       </div>
     </CmkErrorBoundary>
   </div>

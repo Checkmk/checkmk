@@ -1393,19 +1393,12 @@ const graphDesignerContentAsJson = computed(() => {
       <FormSingleChoiceEditableEditAsync
         :object-id="slideInObjectId"
         :api="slideInAPI"
-        :i18n="{
-          save_button: _t('Save'),
-          cancel_button: _t('Cancel'),
-          create_button: _t('Create'),
-          loading: _t('Loading'),
-          validation_error: _t('Validation error'),
-          fatal_error: _t('Fatal error'),
-          permanent_choice_warning: _t(
+        :permanent-choice-warning="
+          _t(
             'This creates a special agent rule based on the selected custom graph. ' +
               'Note that later changes to the custom graph will not be applied to the special agent rule.'
-          ),
-          permanent_choice_warning_dismissal: _t('Dismiss')
-        }"
+          )
+        "
         @cancel="closeSlideIn"
         @submitted="slideInSubmitted"
       />

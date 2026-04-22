@@ -92,18 +92,11 @@ const api: API<string, PasswordConfig> = {
     <FormEditAsync
       :object-id="slideInObjectId"
       :api="api"
-      :i18n="{
-        save_button: _t('Save'),
-        cancel_button: _t('Cancel'),
-        create_button: _t('Create'),
-        loading: _t('Loading...'),
-        validation_error: _t('Could not validate form, errors are shown in the form'),
-        fatal_error: _t('A fatal error occurred:'),
-        permanent_choice_warning: _t(
+      :permanent-choice-warning="
+        _t(
           'Changes submitted through this form will be immediately applied to your configuration when completing the setup. However, you may still need to activate them for them to take effect.'
-        ),
-        permanent_choice_warning_dismissal: _t('Do not show again')
-      }"
+        )
+      "
       @cancel="emit('close')"
       @submitted="(result) => emit('created', result)"
     />

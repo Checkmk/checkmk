@@ -136,17 +136,7 @@ const resolvedI18n = computed(() => ({
   edit: _t('Edit'),
   create: _t('Create'),
   slideInNewTitle: _t('New %{entity}', { entity: readableEntityName() }),
-  slideInEditTitle: _t('Edit %{entity}', { entity: readableEntityName() }),
-  saveButton: _t('Save'),
-  cancelButton: _t('Cancel'),
-  createButton: _t('Create'),
-  loading: _t('Loading ...'),
-  validationError: _t('Could not validate form, errors are shown in the form'),
-  fatalError: _t('A fatal error occurred:'),
-  permanentChangeWarning: _t(
-    'Changes submitted through this form will be immediately applied to your configuration. However, you may still need to activate them for them to take effect.'
-  ),
-  permanentChangeWarningDismissal: _t('Do not show again')
+  slideInEditTitle: _t('Edit %{entity}', { entity: readableEntityName() })
 }))
 
 function slideInSubmitted(event: { ident: string; description: string }) {
@@ -224,16 +214,6 @@ const { CmkErrorBoundary, error } = useCmkErrorBoundary()
       <FormEditAsync
         :object-id="slideInObjectId"
         :api="slideInAPI"
-        :i18n="{
-          save_button: resolvedI18n.saveButton,
-          cancel_button: resolvedI18n.cancelButton,
-          create_button: resolvedI18n.createButton,
-          loading: resolvedI18n.loading,
-          validation_error: resolvedI18n.validationError,
-          fatal_error: resolvedI18n.fatalError,
-          permanent_choice_warning: resolvedI18n.permanentChangeWarning,
-          permanent_choice_warning_dismissal: resolvedI18n.permanentChangeWarningDismissal
-        }"
         @cancel="closeSlideIn"
         @submitted="slideInSubmitted"
       />

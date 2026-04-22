@@ -187,6 +187,8 @@ def build_checkmk(
                 "CMK_EDITION": version.edition.long,
                 "IMAGE_CMK_BASE": resolve_image_alias("IMAGE_CMK_BASE"),
             },
+            rm=True,
+            forcerm=True,
         )
     except docker.errors.BuildError as e:
         logger.error("= Build log ==================")

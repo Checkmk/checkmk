@@ -96,9 +96,9 @@ check_plugin_azure_storageaccounts = CheckPlugin(
         "used_capacity_levels": (
             "fixed",
             (
-                # B   KiB    MiB    GiB    TiB
-                1 * 1024 * 1024 * 1024 * 1024 * 50,  # 50 TiB
-                1 * 1024 * 1024 * 1024 * 1024 * 500,  # 500 TiB
+                # B  KiB    MiB    GiB    TiB   n
+                1 * 1024 * 1024 * 1024 * 1024 * 1,  # 1 TiB
+                1 * 1024 * 1024 * 1024 * 1024 * 5,  # 5 TiB
             ),
         )
     },

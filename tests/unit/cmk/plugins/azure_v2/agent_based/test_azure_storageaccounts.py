@@ -162,8 +162,10 @@ def test_check_azure_storageaccounts_defaults():
     params = check_plugin_azure_storageaccounts.check_default_parameters
     result = list(check_plugin_azure_storageaccounts.check_function(params, resource))
     assert result == [
-        Result(state=State.WARN, summary="Used capacity: 56.6 TiB (warn/crit at 50.0 TiB/500 TiB)"),
-        Metric("used_space", 62225513949213.0, levels=(54975581388800.0, 549755813888000.0)),
+        Result(
+            state=State.CRIT, summary="Used capacity: 56.6 TiB (warn/crit at 1.00 TiB/5.00 TiB)"
+        ),
+        Metric("used_space", 62225513949213.0, levels=(1099511627776.0, 5497558138880.0)),
     ]
 
 

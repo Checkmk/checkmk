@@ -86,6 +86,7 @@ py_test(
     deps = [
         ":__test__",
         ":conftest",
+        requirement("marshmallow-oneofschema"),
         requirement("pytest-mock"),
         requirement("pytest-random-order"),
         requirement("time-machine"),

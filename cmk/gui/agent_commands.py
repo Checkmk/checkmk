@@ -38,7 +38,20 @@ WINDOWS_AGENT_DOWNLOAD_CMD = (
     ' --data-urlencode "os_type=windows_msi"'
 )
 
-WINDOWS_AGENT_INSTALL_CMD = "msiexec /i check-mk-agent_{version}.msi"
+WINDOWS_AGENT_DOWNLOAD_CMD_POWERSHELL = (
+    "Invoke-WebRequest `\n"
+    '    -Uri "{{{{SERVER}}}}/{{{{SITE}}}}/check_mk/api/internal/domain-types/agent/actions/download_by_token/invoke?os_type=windows_msi" `\n'
+    '    -OutFile "check-mk-agent_{version}.msi" `\n'
+    '    -Method "GET" `\n'
+    "    -Headers @{{\n"
+    '        "Accept" = "application/octet-stream";\n'
+    '        "Authorization" = "CMK-TOKEN 0:[AGENT_DOWNLOAD_OTT]"\n'
+    "    }}"
+)
+
+WINDOWS_AGENT_INSTALL_CMD = "msiexec /i check-mk-agent_{version}.msi /quiet /norestart"
+
+WINDOWS_AGENT_INSTALL_CMD_POWERSHELL = 'Start-Process msiexec.exe -ArgumentList "/i `"$PWD\\check-mk-agent_{version}.msi`" /quiet /norestart" -Wait'
 
 LINUX_DEBIAN_AGENT_INSTALL_CMD = """curl -o check-mk-agent_{version}-1_all.deb -fJG \\
     '{{{{SERVER}}}}/{{{{SITE}}}}/check_mk/api/internal/domain-types/agent/actions/download_by_token/invoke' \\
@@ -61,7 +74,9 @@ def build_agent_install_cmds(
 ) -> AgentInstallCmds:
     return AgentInstallCmds(
         windows_download=WINDOWS_AGENT_DOWNLOAD_CMD.format(version=version),
+        windows_download_powershell=WINDOWS_AGENT_DOWNLOAD_CMD_POWERSHELL.format(version=version),
         windows=WINDOWS_AGENT_INSTALL_CMD.format(version=version),
+        windows_powershell=WINDOWS_AGENT_INSTALL_CMD_POWERSHELL.format(version=version),
         linux_deb=LINUX_DEBIAN_AGENT_INSTALL_CMD.format(version=version),
         linux_rpm=LINUX_RPM_AGENT_INSTALL_CMD.format(version=version),
     )
@@ -69,6 +84,14 @@ def build_agent_install_cmds(
 
 WINDOWS_AGENT_REGISTRATION_CMD = (
     '"C:\\Program Files (x86)\\checkmk\\service\\cmk-agent-ctl.exe" register'
+    " --hostname {{HOSTNAME}}"
+    " --server {{SERVER}}"
+    " --site {{SITE}}"
+    " --user agent_registration"
+)
+
+WINDOWS_AGENT_REGISTRATION_CMD_POWERSHELL = (
+    '& "C:\\Program Files (x86)\\checkmk\\service\\cmk-agent-ctl.exe" register'
     " --hostname {{HOSTNAME}}"
     " --server {{SERVER}}"
     " --site {{SITE}}"
@@ -97,6 +120,7 @@ SOLARIS_REGISTRATION_CMD = """sudo cmk-agent-ctl register \\
 def build_agent_registration_cmds() -> AgentRegistrationCmds:
     return AgentRegistrationCmds(
         windows=WINDOWS_AGENT_REGISTRATION_CMD,
+        windows_powershell=WINDOWS_AGENT_REGISTRATION_CMD_POWERSHELL,
         linux=LINUX_REGISTRATION_CMD,
         aix=AIX_REGISTRATION_CMD,
         solaris=SOLARIS_REGISTRATION_CMD,

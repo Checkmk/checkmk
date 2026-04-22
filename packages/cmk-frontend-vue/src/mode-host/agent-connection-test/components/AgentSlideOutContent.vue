@@ -84,10 +84,36 @@ const tabs = computed<AgentSlideOutTabs[]>(() => [
     ),
     installDownloadCmd: replaceMacros(props.agentInstallCmds.windows_download, false),
     installCmd: replaceMacros(props.agentInstallCmds.windows, false),
+    installCmdVariants: [
+      {
+        id: 'powershell',
+        label: 'PowerShell',
+        downloadCmd: replaceMacros(props.agentInstallCmds.windows_download_powershell, false),
+        installCmd: replaceMacros(props.agentInstallCmds.windows_powershell, false)
+      },
+      {
+        id: 'cmd',
+        label: 'Command Prompt',
+        downloadCmd: replaceMacros(props.agentInstallCmds.windows_download, false),
+        installCmd: replaceMacros(props.agentInstallCmds.windows, false)
+      }
+    ],
     registrationMsg: _t(
       'After you have installed the agent, run this command on your Windows host to register the Checkmk agent controller. Please make sure to run this command with sufficient permissions (e.g. "Run as Administrator").'
     ),
-    registrationCmd: replaceMacros(props.agentRegistrationCmds.windows, true)
+    registrationCmd: replaceMacros(props.agentRegistrationCmds.windows, true),
+    registrationCmdVariants: [
+      {
+        id: 'powershell',
+        label: 'PowerShell',
+        cmd: replaceMacros(props.agentRegistrationCmds.windows_powershell, true)
+      },
+      {
+        id: 'cmd',
+        label: 'Command Prompt',
+        cmd: replaceMacros(props.agentRegistrationCmds.windows, true)
+      }
+    ]
   },
   {
     id: 'linux',

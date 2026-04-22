@@ -16,6 +16,19 @@ export interface AgentSlideOutSubTab {
   installWarning?: TranslatedString
 }
 
+export interface RegistrationCmdVariant {
+  id: string
+  label: string
+  cmd: string
+}
+
+export interface InstallCmdVariant {
+  id: string
+  label: string
+  downloadCmd?: string
+  installCmd: string
+}
+
 export interface AgentSlideOutTabs {
   id: string
   title: string
@@ -23,8 +36,10 @@ export interface AgentSlideOutTabs {
   installWarning?: TranslatedString
   installCmd?: string | undefined
   installDownloadCmd?: string
+  installCmdVariants?: InstallCmdVariant[]
   registrationMsg?: TranslatedString
   registrationCmd?: string
+  registrationCmdVariants?: RegistrationCmdVariant[]
   installUrl?: InstallUrl | undefined
   subTabs?: AgentSlideOutSubTab[]
 }

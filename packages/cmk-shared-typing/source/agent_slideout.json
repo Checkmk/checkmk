@@ -29,7 +29,9 @@
       "type": "object",
       "properties": {
         "windows_download": { "type": "string" },
+        "windows_download_powershell": { "type": "string" },
         "windows": { "type": "string" },
+        "windows_powershell": { "type": "string" },
         "linux_deb": { "type": "string" },
         "linux_rpm": { "type": "string" },
         "linux_tgz_download": { "type": "string" },
@@ -44,6 +46,7 @@
       "type": "object",
       "properties": {
         "windows": { "type": "string" },
+        "windows_powershell": { "type": "string" },
         "linux": { "type": "string" },
         "solaris": { "type": "string" },
         "aix": { "type": "string" }

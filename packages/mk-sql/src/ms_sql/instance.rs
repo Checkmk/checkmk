@@ -427,7 +427,11 @@ impl SqlInstance {
     }
 
     /// Gather databases based on sections content: only if any of sections is database based
-    async fn gather_databases(&self, client: &mut UniClient, sections: &[Section]) -> Vec<String> {
+    async fn gather_active_databases(
+        &self,
+        client: &mut UniClient,
+        sections: &[Section],
+    ) -> Vec<String> {
         let database_based_sections = section::get_per_database_sections();
         let need = database_based_sections.iter().any(|s| {
             sections
@@ -437,7 +441,8 @@ impl SqlInstance {
                 .contains(s)
         });
         if need {
-            self.generate_databases(client).await
+            self.generate_databases(client, sqls::Id::DatabaseNamesActive)
+                .await
         } else {
             Vec::new()
         }
@@ -450,7 +455,7 @@ impl SqlInstance {
         sections: &[Section],
     ) -> String {
         let mut data: Vec<String> = Vec::new();
-        let databases = self.gather_databases(client, sections).await;
+        let databases = self.gather_active_databases(client, sections).await;
         for section in sections.iter() {
             data.push(
                 self.generate_section(client, endpoint, section, &databases)
@@ -767,7 +772,9 @@ impl SqlInstance {
         query: &str,
         sep: char,
     ) -> String {
-        let databases = self.generate_databases(client).await;
+        let databases = self
+            .generate_databases(client, sqls::Id::DatabaseNamesAll)
+            .await;
 
         let result = run_custom_query(client, query)
             .await
@@ -800,6 +807,10 @@ impl SqlInstance {
         query: &str,
         sep: char,
     ) -> String {
+        if databases.is_empty() {
+            log::warn!("No active databases, skip section {}", section.name());
+            return String::new();
+        }
         let chunks = if databases.len() >= 64 {
             let max_chunk = databases.len().div_ceil(4usize);
             let min_chunk = 16usize;
@@ -968,8 +979,8 @@ impl SqlInstance {
     }
 
     /// doesn't return error - the same behavior as plugin
-    pub async fn generate_databases(&self, client: &mut UniClient) -> Vec<String> {
-        let result = run_known_query(client, sqls::Id::DatabaseNames)
+    pub async fn generate_databases(&self, client: &mut UniClient, which: sqls::Id) -> Vec<String> {
+        let result = run_known_query(client, which)
             .await
             .and_then(validate_rows)
             .map(|rows| self.process_databases_rows(&rows));

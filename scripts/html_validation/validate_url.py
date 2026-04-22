@@ -77,6 +77,12 @@ def main() -> None:
 
     resp = requests.get(args.url, cookies=cookies, timeout=REQUEST_TIMEOUT)
 
+    # Unfortunately, we need to check the history because the redirected response returns 200.
+    if resp.history and "login.py" in resp.history[0].headers.get("Location", ""):
+        err_msg = "Error: Request was redirected to login page. Did you pass valid credentials?\n"
+        sys.stderr.write(err_msg)
+        sys.exit(ExitCode.INVALID_ARGUMENTS)
+
     if args.verbose:
         sys.stdout.write("=" * 60 + "\n")
         sys.stdout.write(f"URL: {args.url}\n")

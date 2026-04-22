@@ -10,6 +10,11 @@ def pnp4nagios_workspace():
         name = "pnp4nagios",
         build_file = "@omd_packages//omd/packages/pnp4nagios:BUILD.pnp4nagios.bazel",
         strip_prefix = "pnp4nagios-" + version_str,
+        patches = [
+            "//omd/packages/pnp4nagios/patches:0001-prevent-creation-invalid-rrd-files.dif",
+        ],
+        patch_args = ["-p1"],
+        patch_tool = "patch",
         urls = [
             UPSTREAM_MIRROR_URL + filename,
             "https://sourceforge.net/projects/pnp4nagios/files/PNP-0.6/" + filename,

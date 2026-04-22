@@ -46,7 +46,7 @@ PYTEST_RAISE = os.getenv("_PYTEST_RAISE", "0") != "0"
 
 
 # Cleanup temporary directory created above
-@pytest.fixture(scope="session", autouse=True)
+@pytest.fixture(scope="session")
 def cleanup_cmk() -> Generator[None]:
     yield from fake_site.cleanup_cmk_tmp_dir()
 
@@ -59,7 +59,7 @@ def test_edition() -> cmk_version.Edition:
     return fake_site.edition()
 
 
-@pytest.fixture(scope="session", autouse=True)
+@pytest.fixture(scope="session")
 def patch_omd_version(test_edition: cmk_version.Edition) -> Iterator[None]:
     with pytest.MonkeyPatch.context() as mp:
         mp.setattr(cmk_version, "orig_omd_version", cmk_version.omd_version, raising=False)
@@ -70,6 +70,20 @@ def patch_omd_version(test_edition: cmk_version.Edition) -> Iterator[None]:
         )
         cmk_version.edition.cache_clear()
         yield
+
+
+@pytest.fixture(name="fake_site", autouse=True)
+def fixture_fake_site(
+    cleanup_cmk: None,
+    enable_debug_fixture: None,
+    fixture_omd_site: None,
+    fixture_umask: None,
+    patch_omd_version: None,
+    prevent_security_event_file_logging: queue.Queue[logging.LogRecord],
+    reduce_password_hashing_rounds: None,
+) -> None:
+    """Wrapper of multiple fixtures to immitate a site environment for testing"""
+    return
 
 
 @pytest.hookimpl(tryfirst=True)
@@ -87,7 +101,7 @@ def pytest_exception_interact(  # type: ignore[misc]
         raise excp_
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture
 def enable_debug_fixture() -> Generator[None]:
     yield from fake_site.enable_cmk_debug()
 
@@ -100,7 +114,7 @@ def disable_debug() -> Generator[None]:
     cmk.ccc.debug.debug_mode = debug_mode
 
 
-@pytest.fixture(autouse=True, scope="session")
+@pytest.fixture(scope="session")
 def fixture_umask() -> Generator[None]:
     """Ensure the unit tests always use the same umask"""
     old_mask = os.umask(0o0007)
@@ -120,7 +134,7 @@ def fixture_capsys(capsys: pytest.CaptureFixture[str]) -> Iterator[pytest.Captur
         tty.reinit()
 
 
-@pytest.fixture(autouse=True, scope="session")
+@pytest.fixture(scope="session")
 def fixture_omd_site() -> Generator[None]:
     os.environ["OMD_SITE"] = "NO_SITE"
     yield
@@ -200,13 +214,13 @@ def use_fakeredis_client() -> Iterator[None]:
     yield from fake_site.use_fakeredis()
 
 
-@pytest.fixture(autouse=True, scope="session")
+@pytest.fixture(scope="session")
 def reduce_password_hashing_rounds() -> Iterator[None]:
     """Reduce the number of rounds for hashing with bcrypt to the allowed minimum"""
     yield from fake_site.reduce_password_hashing_rounds()
 
 
-@pytest.fixture(autouse=True, scope="session")
+@pytest.fixture(scope="session")
 def prevent_security_event_file_logging() -> Iterator[queue.Queue[logging.LogRecord]]:
     """cmk.utils.log.security_event.log_security_event implicitly opens a file logger upon it's
     first call which we want to avoid in the unit test context."""

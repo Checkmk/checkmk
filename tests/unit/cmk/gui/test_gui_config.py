@@ -78,6 +78,8 @@ def test_default_config_from_plugins() -> None:
         "graph_timeranges",
         "agent_controller_certificates",
         "userdb_automatic_sync",
+        "authentication_connections",
+        "user_attribute_sync_connections",
         "user_login",
         "user_connections",
         "default_user_profile",

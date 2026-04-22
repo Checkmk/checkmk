@@ -53,6 +53,21 @@ LocalSocketInfo = tuple[Literal["local"], None]
 SiteGlobals = dict[str, Any]
 
 
+class SAMLAuthenticationEntry(TypedDict):
+    connection_id: str
+    # Site-specific URLs derived from the site's callback URL and connection ID
+    # by `populate_saml_site_endpoint_urls()`. Filled both for the site editor
+    # (so the admin sees up-to-date URLs) and for the remote's propagated
+    # `sitespecific.mk` (so the remote's SAML runtime reads them at runtime).
+    metadata_endpoint: NotRequired[str]
+    acs_endpoint: NotRequired[str]
+
+
+AuthenticationConnectionEntry = (
+    tuple[Literal["ldap"], str] | tuple[Literal["saml"], SAMLAuthenticationEntry]
+)
+
+
 class ProxyConfigParams(TypedDict, total=False):
     channels: int
     heartbeat: tuple[int, float]
@@ -94,7 +109,18 @@ class SiteConfiguration(TypedDict):
     timeout: int
     url_prefix: str
     user_login: bool
-    user_sync: Literal["all"] | tuple[Literal["list"], list[str]] | None
+    # Connectors available for login authentication on this site (LDAP / SAML).
+    # Absence of the key means "inherit from the central site": the central
+    # resolves it from its own live config when building the remote's
+    # `sitespecific.mk`, so the remote sees the resolved list at runtime via
+    # the propagated global. The form layer's ``"central_site" / "list"``
+    # discriminator is translated at the save/load boundary; it does not
+    # appear on disk.
+    authentication_connections: NotRequired[list[AuthenticationConnectionEntry]]
+    # Connectors used for periodic user attribute synchronization on this
+    # site. Absence of the key means "inherit from the propagated global"
+    # (same propagation as `authentication_connections`).
+    user_attribute_sync_connections: NotRequired[Literal["all"] | list[str]]
     # Should this site be technically be able to XSS the central site or do other harm
     # In 2.5 this is mandatory, that meant that all creations of a SiteConfiguration need this
     # attribute. In order to minimize the changes I went for NotRequired. The default should always

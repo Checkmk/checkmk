@@ -29,7 +29,7 @@ def _site_config(*, replication: bool, secret: bool) -> SiteConfiguration:
         timeout=5,
         url_prefix="/remote/",
         user_login=True,
-        user_sync="all",
+        user_attribute_sync_connections="all",
     )
     if secret:
         site_config["secret"] = "s3cr3t"

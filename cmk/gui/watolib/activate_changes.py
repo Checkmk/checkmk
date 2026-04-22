@@ -48,7 +48,11 @@ from urllib.parse import urlparse
 from pydantic import BaseModel
 from setproctitle import setthreadtitle
 
-from livestatus import BrokerConnections, SiteConfiguration, SiteConfigurations
+from livestatus import (
+    BrokerConnections,
+    SiteConfiguration,
+    SiteConfigurations,
+)
 
 import cmk.bi.filesystem
 import cmk.ec.export as ec  # astrein: disable=cmk-module-layer-violation
@@ -94,7 +98,13 @@ from cmk.gui.sites import SiteStatus
 from cmk.gui.sites import states as sites_states
 from cmk.gui.type_defs import GlobalSettings, Users
 from cmk.gui.user_sites import activation_sites
-from cmk.gui.userdb import get_user_attributes, load_users, user_sync_default_config, UserAttribute
+from cmk.gui.userdb import (
+    get_user_attributes,
+    load_users,
+    user_sync_default_config,
+    UserAttribute,
+    UserSyncConfig,
+)
 from cmk.gui.userdb.htpasswd import HtpasswdUserConnector
 from cmk.gui.userdb.store import load_users_uncached, save_users
 from cmk.gui.utils import escaping
@@ -3703,14 +3713,14 @@ class AutomationReceiveConfigSync(AutomationCommand[ReceiveConfigSyncRequest]):
         base_dir = cmk.utils.paths.omd_root
         base_folder_path = str(cmk.utils.paths.check_mk_config_dir / "wato")
 
-        default_sync_config = user_sync_default_config(site_config, site_id)
-        current_users = {}
-        keep_local_users = False
-        active_connectors = []
-        if isinstance(default_sync_config, tuple) and default_sync_config[0] == "list":
-            keep_local_users = True
+        active_connectors = _active_connectors_for_user_preservation(
+            site_config,
+            user_sync_default_config(site_config, site_id),
+        )
+        current_users: Users = {}
+        keep_local_users = bool(active_connectors)
+        if keep_local_users:
             current_users = load_users()
-            active_connectors = default_sync_config[1]
 
         try:
             # to_delete should not include any files mentioned in the sync_archive
@@ -3738,6 +3748,60 @@ class AutomationReceiveConfigSync(AutomationCommand[ReceiveConfigSyncRequest]):
         finally:
             if keep_local_users:
                 _reintegrate_site_local_users(current_users, active_connectors, user_attributes)
+
+
+def _active_connectors_for_user_preservation(
+    site_config: SiteConfiguration,
+    default_sync_config: UserSyncConfig,
+) -> list[str]:
+    """The set of connector IDs whose users on a remote site must survive a config push.
+
+    Returned as the union of two contributions:
+
+    **Attribute-sync contribution** — resolved as follows:
+        1. ``site_config["user_attribute_sync_connections"]`` if the key is
+           present; otherwise ``active_config.user_attribute_sync_connections``
+           (the global, propagated to a remote via ``get_site_globals()``
+           since ``sites.mk`` is not synchronized).
+        2. Only an explicit ``list[str]`` of connection IDs contributes
+           here: ``"all"`` is intentionally not expanded because for
+           periodic attribute sync the central site is authoritative and
+           those users arrive via the snapshot anyway. Falls through to
+           ``default_sync_config`` when neither produces a list.
+
+    **Authentication contribution** — resolved with this precedence:
+        1. ``site_config["authentication_connections"]`` if the key is
+           present (the explicit per-site override).
+        2. ``active_config.authentication_connections`` (the global,
+           propagated on a remote via ``get_site_globals()``).
+
+       Each entry contributes one ID: ``("ldap", conn_id)`` and
+       ``("saml", {connection_id: ...})`` are flattened.
+    """
+    result: set[str] = set()
+
+    # Treat a legacy `None` value the same as an absent key: fall through
+    # to the propagated global. The new types disallow `None`, but
+    # `sitespecific.mk` files written before the refactor may still carry
+    # it.
+    attr_sync_cfg = site_config.get("user_attribute_sync_connections")
+    if attr_sync_cfg is None:
+        attr_sync_cfg = active_config.user_attribute_sync_connections
+    if isinstance(attr_sync_cfg, list):
+        result.update(attr_sync_cfg)
+    elif isinstance(default_sync_config, tuple) and default_sync_config[0] == "list":
+        result.update(default_sync_config[1])
+
+    auth_cfg = site_config.get("authentication_connections")
+    if auth_cfg is None:
+        auth_cfg = active_config.authentication_connections or []
+    for entry in auth_cfg:
+        if entry[0] == "ldap":
+            result.add(entry[1])
+        else:
+            result.add(entry[1]["connection_id"])
+
+    return list(result)
 
 
 def _reintegrate_site_local_users(

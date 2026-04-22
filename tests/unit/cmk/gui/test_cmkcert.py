@@ -232,7 +232,7 @@ def _mock_site_gui_context(mocker: MockerFixture) -> MagicMock:
                 "timeout": 5,
                 "url_prefix": "/test_site/",
                 "user_login": True,
-                "user_sync": "all",
+                "user_attribute_sync_connections": "all",
                 "is_trusted": True,
             }
         }

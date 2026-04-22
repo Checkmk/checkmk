@@ -168,7 +168,7 @@ def _default_site_config() -> SiteConfiguration:
         timeout=5,
         user_login=True,
         proxy=None,
-        user_sync="all",
+        user_attribute_sync_connections="all",
         status_host=None,
         message_broker_port=5672,
         is_trusted=False,

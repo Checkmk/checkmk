@@ -503,8 +503,8 @@ class UserSyncWithLdapModel:
         example=["LDAP_1", "LDAP_2"],
     )
 
-    def to_internal(self) -> tuple[Literal["list"], list[str]]:
-        return ("list", self.ldap_connections)
+    def to_internal(self) -> list[str]:
+        return list(self.ldap_connections)
 
 
 @api_model
@@ -526,6 +526,7 @@ class UserSyncDisabledModel:
     )
 
     def to_internal(self) -> None:
+        """Sentinel: the API caller wants the key absent on disk."""
         return None
 
 
@@ -642,7 +643,6 @@ class SiteConnectionBaseModel:
             disable_wato=True,
             insecure=False,
             user_login=True,
-            user_sync=None,
             replicate_ec=True,
             replicate_mkps=True,
             message_broker_port=5672,
@@ -662,7 +662,12 @@ class SiteConnectionBaseModel:
         if not isinstance(self.configuration_connection.url_of_remote_site, ApiOmitted):
             site_configuration["multisiteurl"] = self.configuration_connection.url_of_remote_site
         site_configuration["insecure"] = self.configuration_connection.ignore_tls_errors
-        site_configuration["user_sync"] = self.configuration_connection.user_sync.to_internal()
+        user_sync_value = self.configuration_connection.user_sync.to_internal()
+        # `UserSyncDisabledModel.to_internal()` returns `None` meaning "leave
+        # the key absent" (= inherit from the central site's propagated
+        # value).
+        if user_sync_value is not None:
+            site_configuration["user_attribute_sync_connections"] = user_sync_value
         site_configuration["disable_wato"] = (
             self.configuration_connection.disable_remote_configuration
         )

@@ -13,7 +13,7 @@ import re
 import time
 from collections.abc import Collection, Mapping
 from multiprocessing import JoinableQueue, Process
-from typing import Any, cast, NamedTuple, Protocol
+from typing import Any, cast, NamedTuple, override, Protocol
 
 from livestatus import (
     BrokerConnection,
@@ -36,16 +36,16 @@ from cmk.ccc.store import load_from_mk_file
 from cmk.gui import hooks, log
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.form_specs.generators.cascading_choice_utils import (
-    CascadingDataConversion,
-    enable_deprecated_cascading_elements,
-)
 from cmk.gui.form_specs.generators.host_address import create_host_address
+from cmk.gui.form_specs.unstable import LegacyValueSpec
 from cmk.gui.form_specs.unstable.cascading_single_choice_extended import (
     CascadingSingleChoiceExtended,
     CascadingSingleChoiceLayout,
 )
-from cmk.gui.form_specs.unstable.legacy_converter import Tuple
+from cmk.gui.form_specs.unstable.legacy_converter import (
+    TransformDataForLegacyFormatOrRecomposeFunction,
+    Tuple,
+)
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
@@ -58,7 +58,7 @@ from cmk.gui.site_config import (
     is_replication_enabled,
     site_is_local,
 )
-from cmk.gui.userdb import connection_choices
+from cmk.gui.userdb import connection_choices, saml_connection_choices
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import makeactionuri
 from cmk.gui.valuespec import (
@@ -86,11 +86,17 @@ from cmk.gui.watolib.config_domains import (
     ConfigDomainCACertificates,
     ConfigDomainGUI,
 )
-from cmk.gui.watolib.config_sync import create_distributed_wato_files
+from cmk.gui.watolib.config_sync import (
+    create_distributed_wato_files,
+)
 from cmk.gui.watolib.global_settings import load_configuration_settings
 from cmk.gui.watolib.mode import mode_registry
 from cmk.gui.watolib.simple_config_file import ConfigFileRegistry, WatoSingleConfigFile
 from cmk.licensing.handler import LicenseState
+from cmk.rulesets.internal.form_specs import (
+    SingleChoiceElementExtended,
+    SingleChoiceExtended,
+)
 from cmk.rulesets.v1 import Help, Label, Message, Title
 from cmk.rulesets.v1.form_specs import (
     BooleanChoice,
@@ -102,6 +108,7 @@ from cmk.rulesets.v1.form_specs import (
     FixedValue,
     FormSpec,
     Integer,
+    List,
     MultipleChoice,
     MultipleChoiceElement,
     String,
@@ -145,6 +152,113 @@ class NoOpLivestatusProxy:
 
     def affected_config_domains(self) -> list[ABCConfigDomain]:
         return []
+
+
+class _DynamicFixedValueText(_LegacyFixedValue):
+    """Read-only display of a dynamically-injected string.
+
+    Behaves like the legacy `FixedValue` valuespec but skips the strict
+    equality check in `validate_datatype` so that values different from the
+    configured default (which is what render-time injection produces) pass
+    through cleanly.
+    """
+
+    @override
+    def validate_datatype(self, value: str, varprefix: str) -> None:
+        if not isinstance(value, str):
+            raise MKUserError(varprefix, _("Expected string"))
+
+
+class _DynamicFixedValueTextBlock(_DynamicFixedValueText):
+    """Multi-line variant of `_DynamicFixedValueText` rendered inside ``<pre>``.
+
+    Newlines in the dynamically-injected value are preserved so a free-form
+    text representation (e.g. a list of inherited connections) renders the
+    way it was assembled.
+    """
+
+    @override
+    def render_input(self, varprefix: str, value: str) -> None:
+        html.open_pre(class_="vs_fixed_value")
+        html.write_text(value or "")
+        html.close_pre()
+
+
+class DropKeySentinel:
+    """Sentinel returned by `to_disk` converters to signal "remove this key".
+
+    The save path in `cmk/gui/wato/pages/sites.py` checks for instances of
+    this and `pop`s the key from the `SiteConfiguration` dict instead of
+    assigning it. Used to encode "inherit from central site" (for
+    ``authentication_connections``) and "disabled" (for
+    ``user_attribute_sync_connections``) as key absence on disk.
+    """
+
+
+DROP_KEY: DropKeySentinel = DropKeySentinel()
+
+
+def _auth_connections_from_disk(value: object) -> tuple[str, object]:
+    """Translate the on-disk shape into the cascading-choice tuple.
+
+    The site-edit page pre-renders the dict and converts list → ("list",
+    list) / absent → ("central_site", summary) before passing to the form,
+    so the typical input here is already a tuple. The bare-shape branches
+    handle direct disk loads (legacy/migration paths) and form-resubmission
+    after validation failure.
+    """
+    if isinstance(value, tuple) and len(value) == 2:
+        return value[0], value[1]
+    # Absent key → form shows "Inherit from central site". The summary is
+    # injected by the site-edit page; here we fall back to "-".
+    if value is None:
+        return "central_site", "-"
+    assert isinstance(value, list)
+    return "list", value
+
+
+def _auth_connections_to_disk(value: object) -> object:
+    assert isinstance(value, tuple) and len(value) == 2
+    choice, payload = value
+    if choice == "central_site":
+        return DROP_KEY
+    assert choice == "list"
+    return payload
+
+
+def _user_attribute_sync_from_disk(value: object) -> tuple[str, object]:
+    """Translate the on-disk shape into the cascading-choice tuple.
+
+    Form choices: ``"disabled"`` / ``"all"`` / ``"list"``. The disk shape
+    is ``Literal["all"] | list[str]`` with absence meaning "disabled".
+    """
+    if value is None:
+        return "disabled", True
+    if value == "all":
+        return "all", True
+    if isinstance(value, tuple) and len(value) == 2:
+        # Already in form-spec tuple shape (e.g. on validation re-render).
+        return value[0], value[1]
+    assert isinstance(value, list)
+    return "list", value
+
+
+def _user_attribute_sync_to_disk(value: object) -> object:
+    """Translate the cascading-choice tuple back to the on-disk shape.
+
+    The cascading choice always arrives as ``(choice_name, payload)``:
+    ``"disabled"`` → ``DROP_KEY`` (key absent on disk),
+    ``"all"`` → bare ``"all"``,
+    ``"list"`` → ``list[str]``.
+    """
+    assert isinstance(value, tuple) and len(value) == 2
+    choice, payload = value
+    if choice == "disabled":
+        return DROP_KEY
+    if choice == "all":
+        return "all"
+    assert choice == "list"
+    return list(payload)
 
 
 class SiteManagement:
@@ -288,31 +402,185 @@ class SiteManagement:
         )
 
     @classmethod
-    def user_sync_form_spec(
+    def authentication_connections_form_spec(
         cls,
-        site_id: SiteId | None,
-        site_configuration: SiteConfiguration,
+        site_configuration: SiteConfiguration | None = None,
     ) -> FormSpec[Any]:
-        local = site_id is None or site_is_local(site_configuration)
-        return enable_deprecated_cascading_elements(
-            CascadingSingleChoiceExtended(
-                title=Title("Sync with LDAP connections"),
+        # The "central_site" choice means "inherit from the central site"
+        # (encoded on disk as the per-site key being absent). Hide it when
+        # the form edits the central site itself, where it would be a
+        # self-reference. The on-disk value never carries the form's
+        # ``("central_site", _)`` shape; ``_auth_connections_to_disk`` maps
+        # it to the ``DROP_KEY`` sentinel that the save path translates to
+        # key removal.
+        is_local_site = site_configuration is not None and site_is_local(site_configuration)
+        elements: list[CascadingSingleChoiceElement[Any]] = []
+        if not is_local_site:
+            elements.append(
+                CascadingSingleChoiceElement(
+                    name="central_site",
+                    title=Title("Use the same connections as the central site"),
+                    parameter_form=cls._central_site_connections_widget(),
+                ),
+            )
+        elements.append(
+            CascadingSingleChoiceElement(
+                name="list",
+                title=Title("Use the following connections"),
+                parameter_form=cls._editable_connections_form_spec(),
+            ),
+        )
+
+        return TransformDataForLegacyFormatOrRecomposeFunction(
+            wrapped_form_spec=CascadingSingleChoiceExtended(
+                title=Title("Authentication connections"),
+                elements=elements,
+                prefill=DefaultValue("list"),
+                help_text=Help(
+                    "Select the connections that are available for login on this site. "
+                    "Choose <i>Use the same connections as the central site</i> to inherit "
+                    "the central site's selection (changes made on the central site take "
+                    "effect after the next configuration sync), or <i>Use the following "
+                    "connections</i> to pick specific LDAP and SAML connections. Each "
+                    "SAML entry may optionally override the SP entity ID, which is useful "
+                    "when multiple sites share the same SAML connection but need to be "
+                    "registered separately at the IdP."
+                ),
+                layout=CascadingSingleChoiceLayout.horizontal,
+            ),
+            from_disk=_auth_connections_from_disk,
+            to_disk=_auth_connections_to_disk,
+        )
+
+    @staticmethod
+    def _saml_metadata_endpoint_widget() -> LegacyValueSpec:
+        return LegacyValueSpec.wrap(
+            _DynamicFixedValueText(
+                value="-",
+                title=_("Metadata endpoint URL"),
+                help=_(
+                    "URL where this site serves the SAML Service Provider metadata "
+                    "for this connection. Derived from the site's <i>Server URL for "
+                    "SAML ACS callback</i> and the connection ID. The URL is only "
+                    "shown after saving the site configuration and reopening this "
+                    "dialog."
+                ),
+            )
+        )
+
+    @staticmethod
+    def _saml_acs_endpoint_widget() -> LegacyValueSpec:
+        return LegacyValueSpec.wrap(
+            _DynamicFixedValueText(
+                value="-",
+                title=_("Assertion Consumer Service URL"),
+                help=_(
+                    "URL where this site receives SAML responses from the IdP for "
+                    "this connection. Register this URL with the IdP's client "
+                    "configuration. The URL is only shown after saving the site "
+                    "configuration and reopening this dialog."
+                ),
+            )
+        )
+
+    @classmethod
+    def _editable_connections_form_spec(cls) -> List[tuple[str, object]]:
+        """Editable list of LDAP/SAML connection picks (the ``"list"`` form)."""
+        ldap_elements = [
+            SingleChoiceElementExtended(  # astrein: disable=localization-checker
+                name=id_,
+                title=Title(label),  # astrein: disable=localization-checker
+            )
+            for id_, label in connection_choices()
+        ]
+        saml_elements = [
+            SingleChoiceElementExtended(  # astrein: disable=localization-checker
+                name=id_,
+                title=Title(label),  # astrein: disable=localization-checker
+            )
+            for id_, label in saml_connection_choices()
+        ]
+        return List(
+            element_template=CascadingSingleChoice(
+                title=Title("Connection"),
+                elements=[
+                    CascadingSingleChoiceElement(
+                        name="ldap",
+                        title=Title("LDAP connection"),
+                        parameter_form=SingleChoiceExtended[str](
+                            title=Title("LDAP connection"),
+                            elements=ldap_elements,
+                        ),
+                    ),
+                    CascadingSingleChoiceElement(
+                        name="saml",
+                        title=Title("SAML connection"),
+                        parameter_form=Dictionary(
+                            elements={
+                                "connection_id": DictElement(
+                                    required=True,
+                                    parameter_form=SingleChoiceExtended[str](
+                                        title=Title("SAML connection"),
+                                        elements=saml_elements,
+                                    ),
+                                ),
+                                "metadata_endpoint": DictElement(
+                                    required=True,
+                                    parameter_form=cls._saml_metadata_endpoint_widget(),
+                                ),
+                                "acs_endpoint": DictElement(
+                                    required=True,
+                                    parameter_form=cls._saml_acs_endpoint_widget(),
+                                ),
+                            },
+                        ),
+                    ),
+                ],
+            ),
+            title=Title("Authentication"),
+            add_element_label=Label("Add connection"),
+            editable_order=False,
+        )
+
+    @classmethod
+    def _central_site_connections_widget(cls) -> LegacyValueSpec:
+        """Read-only multi-line text display of the inherited central-site connections.
+
+        The text is assembled at render time by `populate_saml_site_endpoint_urls()`
+        from the central site's own `authentication_connections`: one line per
+        LDAP entry, and three indented lines per SAML entry (connection ID,
+        metadata endpoint URL, ACS URL).
+        """
+        return LegacyValueSpec.wrap(
+            _DynamicFixedValueTextBlock(
+                value="-",
+                title=_("Inherited from central site"),
+                help=_(
+                    "Read-only summary of the connections inherited from the "
+                    "central site. Refreshed each time this dialog is opened."
+                ),
+            )
+        )
+
+    @classmethod
+    def user_attribute_sync_connections_form_spec(cls) -> FormSpec[Any]:
+        return TransformDataForLegacyFormatOrRecomposeFunction(
+            wrapped_form_spec=CascadingSingleChoiceExtended(
+                title=Title("User attribute synchronization"),
                 elements=[
                     CascadingSingleChoiceElement(
                         name="disabled",
-                        title=Title(
-                            "Disable automatic user synchronization (use central site users)"
-                        ),
+                        title=Title("Disable automatic user attribute synchronization"),
                         parameter_form=FixedValue(value=True, label=Label("")),
                     ),
                     CascadingSingleChoiceElement(
                         name="all",
-                        title=Title("Sync users with all connections"),
+                        title=Title("Sync attributes for all LDAP connections"),
                         parameter_form=FixedValue(value=True, label=Label("")),
                     ),
                     CascadingSingleChoiceElement(
                         name="list",
-                        title=Title("Sync with the following LDAP connections"),
+                        title=Title("Sync attributes only for the following connections"),
                         parameter_form=MultipleChoice(
                             custom_validate=[
                                 validators.LengthInRange(min_value=1, error_msg=Message(""))
@@ -327,33 +595,18 @@ class SiteManagement:
                         ),
                     ),
                 ],
-                prefill=DefaultValue("all" if local else "disabled"),
+                prefill=DefaultValue("all"),
                 help_text=Help(
-                    "By default the users are synchronized automatically in the interval configured "
-                    "in the connection. For example the LDAP connector synchronizes the users every "
-                    "five minutes by default. The interval can be changed for each connection "
-                    'individually in the <a href="wato.py?mode=ldap_config">connection settings</a>. '
-                    "Please note that the synchronization is only performed on the central site in "
-                    "distributed setups by default.<br>"
-                    "The remote sites don't perform automatic user synchronizations with the "
-                    "configured connections. But you can configure each site to either "
-                    "synchronize the users with all configured connections or a specific list of "
-                    "connections."
+                    "Periodic user attribute synchronization keeps user attributes "
+                    "(alias, email, roles, contact groups) up to date on this site. "
+                    "This is primarily relevant for LDAP connections. SAML connections "
+                    "update attributes only when a user logs in, so they do not need "
+                    "to be listed here."
                 ),
                 layout=CascadingSingleChoiceLayout.horizontal,
             ),
-            [
-                CascadingDataConversion(
-                    name_in_form_spec="disabled",
-                    value_on_disk=None,
-                    has_form_spec=False,
-                ),
-                CascadingDataConversion(
-                    name_in_form_spec="all",
-                    value_on_disk="all",
-                    has_form_spec=False,
-                ),
-            ],
+            from_disk=_user_attribute_sync_from_disk,
+            to_disk=_user_attribute_sync_to_disk,
         )
 
     @classmethod
@@ -582,10 +835,6 @@ class SiteManagement:
                     "You cannot disable the replication on this site. It is used in a broker peer-to-peer connection."
                 ),
             )
-
-        # User synchronization
-        if ldap_connections_are_configurable():
-            pass  # FormSpec validation is handled by parse_data_from_field_id in the page layer
 
     @classmethod
     def load_sites(cls) -> SiteConfigurations:

@@ -50,10 +50,11 @@ from cmk.gui.form_specs import (
     read_data_from_frontend,
     render_form_spec,
 )
-from cmk.gui.form_specs.generators.alternative_utils import enable_deprecated_alternative
 from cmk.gui.form_specs.generators.dict_to_catalog import create_flat_catalog_from_dictionary
-from cmk.gui.form_specs.unstable import LegacyValueSpec
-from cmk.gui.form_specs.unstable.legacy_converter import Tuple
+from cmk.gui.form_specs.unstable.legacy_converter import (
+    TransformDataForLegacyFormatOrRecomposeFunction,
+    Tuple,
+)
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.htmllib.tag_rendering import render_end_tag
@@ -94,7 +95,6 @@ from cmk.gui.utils.urls import (
     makeuri_contextless,
 )
 from cmk.gui.utils.user_errors import user_errors
-from cmk.gui.valuespec import MonitoredHostname
 from cmk.gui.wato.pages._html_elements import wato_html_head
 from cmk.gui.wato.pages.global_settings import (
     ABCEditGlobalSettingMode,
@@ -121,6 +121,10 @@ from cmk.gui.watolib.config_domains import (
     ConfigDomainGUI,
     finalize_all_settings_per_site,
 )
+from cmk.gui.watolib.config_sync import (
+    central_site_inherited_summary,
+    populate_saml_site_endpoint_urls,
+)
 from cmk.gui.watolib.global_settings import (
     load_configuration_settings,
     load_site_global_settings,
@@ -144,6 +148,7 @@ from cmk.gui.watolib.site_management import (
     add_changes_after_editing_site_connection,
 )
 from cmk.gui.watolib.sites import (
+    DropKeySentinel,
     is_livestatus_encrypted,
     ldap_connections_are_configurable,
     PingResult,
@@ -171,6 +176,7 @@ from cmk.rulesets.v1.form_specs import (
     FieldSize,
     FixedValue,
     Integer,
+    MonitoredHost,
     String,
     validators,
 )
@@ -186,6 +192,26 @@ def register(page_registry: PageRegistry, mode_registry: ModeRegistry) -> None:
     mode_registry.register(ModeEditSiteGlobals)
     mode_registry.register(ModeEditSiteGlobalSetting)
     mode_registry.register(ModeSiteLivestatusEncryption)
+
+
+def _status_host_from_disk(value: object) -> tuple[str, object]:
+    """Translate the on-disk ``tuple[SiteId, str] | None`` into the cascading
+    choice tuple the form spec expects.
+    """
+    if value is None:
+        return "disabled", None
+    assert isinstance(value, tuple) and len(value) == 2
+    return "enabled", value
+
+
+def _status_host_to_disk(value: object) -> object:
+    """Translate the cascading choice tuple back to the on-disk shape."""
+    assert isinstance(value, tuple) and len(value) == 2
+    choice, payload = value
+    if choice == "disabled":
+        return None
+    assert choice == "enabled"
+    return payload
 
 
 class ModeEditSite(WatoMode):
@@ -245,7 +271,8 @@ class ModeEditSite(WatoMode):
                 persist=False,
                 proxy={},
                 message_broker_port=5672,
-                user_sync="all",
+                authentication_connections=[],
+                user_attribute_sync_connections="all",
                 status_host=None,
                 replicate_mkps=True,
                 replicate_ec=True,
@@ -300,6 +327,12 @@ class ModeEditSite(WatoMode):
         raw_site_spec = parse_data_from_field_id(flat_catalog, "_edit_site_id")
         assert isinstance(raw_site_spec, dict)
 
+        # `authentication_connections` / `user_attribute_sync_connections`
+        # may carry a `DropKeySentinel` value to mark "inherit from central"
+        # / "disabled". Leave the sentinel in place here so the
+        # `setdefault` loop in `save_site_changes` treats the key as
+        # present and does not reinstate the previous on-disk value; the
+        # sentinel is stripped after that loop.
         site_spec = cast(SiteConfiguration, raw_site_spec)
         if self._new:
             self._site_id = site_spec["id"]
@@ -325,6 +358,13 @@ class ModeEditSite(WatoMode):
         for key, value in configured_sites.get(self._site_id, {}).items():
             # We need to review whether or not we still want to allow setting arbritrary keys
             site_spec.setdefault(key, value)  # type: ignore[misc]
+
+        # Strip the `DropKeySentinel` markers that survived `setdefault`
+        # (they blocked the old on-disk value from leaking back in, but
+        # must not reach `save_sites`).
+        for drop_key in ("authentication_connections", "user_attribute_sync_connections"):
+            if isinstance(site_spec.get(drop_key), DropKeySentinel):
+                site_spec.pop(drop_key)  # type: ignore[misc]
 
         self._site_mgmt.validate_configuration(self._site_id, site_spec, configured_sites)
 
@@ -377,22 +417,58 @@ class ModeEditSite(WatoMode):
                     do_validate=True,
                 )
             else:
+                self._site.pop("secret", None)
+                self._site.pop("globals", None)
                 render_form_spec(
-                    flat_catalog, "_edit_site_id", RawDiskData(dict(self._site)), do_validate=False
+                    flat_catalog,
+                    "_edit_site_id",
+                    # Inject computed SAML SP endpoint URLs for the read-only
+                    # display fields, and the "inherit from central" summary
+                    # text for the central_site form choice.
+                    RawDiskData(self._form_data_for_render()),
+                    do_validate=False,
                 )
             forms.end()
             html.hidden_fields()
+
+    def _form_data_for_render(self) -> dict:
+        """Build the form-input dict for the site-edit dialog.
+
+        Translates the on-disk shape of `authentication_connections`
+        (absent ↔ inherit from central, present ↔ explicit list) into the
+        cascading-choice tuple the form spec expects, and fills SAML
+        endpoint URLs / the central-site inherited summary so the read-only
+        display widgets show meaningful values.
+        """
+        populated = populate_saml_site_endpoint_urls(self._site)
+        data: dict = dict(populated)
+        callback_url = populated.get("multisiteurl", "")
+        if "authentication_connections" in data:
+            data["authentication_connections"] = ("list", data["authentication_connections"])
+        else:
+            data["authentication_connections"] = (
+                "central_site",
+                central_site_inherited_summary(callback_url),
+            )
+        if "user_attribute_sync_connections" in data:
+            value = data["user_attribute_sync_connections"]
+            if isinstance(value, list):
+                data["user_attribute_sync_connections"] = ("list", value)
+        return data
 
     def _flat_catalog(self, config: Config):  # type: ignore[no-untyped-def]
         basic = self._basic_elements(config)
         livestatus = self._livestatus_elements()
         replication = self._replication_elements()
-        spec = Dictionary(elements={**basic, **livestatus, **replication})
+        user_config = self._user_config_elements()
+        spec = Dictionary(elements={**basic, **livestatus, **replication, **user_config})
         headers = [
             (_("Basic settings"), list(basic.keys())),
             (_("Status connection"), list(livestatus.keys())),
             (_("Configuration connection"), list(replication.keys())),
         ]
+        if user_config:
+            headers.append((_("User configuration"), list(user_config.keys())))
         return create_flat_catalog_from_dictionary(spec, headers=headers)
 
     def _basic_elements(self, config: Config) -> dict[str, DictElement]:
@@ -533,18 +609,19 @@ class ModeEditSite(WatoMode):
                 ),
             ),
             "status_host": DictElement(
-                parameter_form=enable_deprecated_alternative(
+                parameter_form=TransformDataForLegacyFormatOrRecomposeFunction(
                     wrapped_form_spec=CascadingSingleChoice(
+                        title=Title("Status host"),
                         elements=[
                             CascadingSingleChoiceElement(
-                                name="alternative_0",
+                                name="disabled",
                                 title=Title("No status host"),
                                 parameter_form=FixedValue(
                                     value=None, title=Title("No status host"), label=Label("")
                                 ),
                             ),
                             CascadingSingleChoiceElement(
-                                name="alternative_1",
+                                name="enabled",
                                 title=Title("Use the following status host"),
                                 parameter_form=Tuple(
                                     title=Title("Use the following status host"),
@@ -554,7 +631,7 @@ class ModeEditSite(WatoMode):
                                             title=Title("Site:"),
                                             elements=site_elements,
                                         ),
-                                        LegacyValueSpec.wrap(MonitoredHostname(title=_("Host:"))),
+                                        MonitoredHost(),
                                     ],
                                 ),
                             ),
@@ -569,7 +646,9 @@ class ModeEditSite(WatoMode):
                             )
                             % status_host_docu_url
                         ),
-                    )
+                    ),
+                    from_disk=_status_host_from_disk,
+                    to_disk=_status_host_to_disk,
                 ),
             ),
             "disabled": DictElement(
@@ -675,11 +754,6 @@ class ModeEditSite(WatoMode):
             ),
         }
 
-        if ldap_connections_are_configurable():
-            elements["user_sync"] = DictElement(
-                parameter_form=self._site_mgmt.user_sync_form_spec(self._site_id, self._site)
-            )
-
         elements["replicate_ec"] = DictElement(
             parameter_form=BooleanChoice(
                 title=Title("Replicate Event Console config"),
@@ -705,6 +779,20 @@ class ModeEditSite(WatoMode):
             ),
         )
         return elements
+
+    def _user_config_elements(self) -> dict[str, DictElement]:
+        if not ldap_connections_are_configurable():
+            return {}
+        return {
+            "authentication_connections": DictElement(
+                required=True,
+                parameter_form=self._site_mgmt.authentication_connections_form_spec(self._site),
+            ),
+            "user_attribute_sync_connections": DictElement(
+                required=True,
+                parameter_form=self._site_mgmt.user_attribute_sync_connections_form_spec(),
+            ),
+        }
 
 
 class ModeEditBrokerConnection(WatoMode):

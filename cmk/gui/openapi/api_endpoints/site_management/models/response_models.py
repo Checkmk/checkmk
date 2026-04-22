@@ -83,15 +83,15 @@ class SiteConnectionExtensionsModel(SiteConnectionBaseModel):
             site_configuration: SiteConfiguration,
         ) -> ConnectionModel:
             def _user_sync_from_internal(
-                user_sync: Literal["all"] | tuple[Literal["list"], list[str]] | None,
+                user_sync: Literal["all"] | list[str] | None,
             ) -> UserSyncWithLdapModel | UserSyncAllModel | UserSyncDisabledModel:
                 if user_sync == "all":
                     return UserSyncAllModel(sync_with_ldap_connections="all")
 
-                if isinstance(user_sync, tuple) and user_sync[0] == "list":
+                if isinstance(user_sync, list):
                     return UserSyncWithLdapModel(
                         sync_with_ldap_connections="ldap",
-                        ldap_connections=user_sync[1],
+                        ldap_connections=user_sync,
                     )
                 return UserSyncDisabledModel(sync_with_ldap_connections="disabled")
 
@@ -101,7 +101,9 @@ class SiteConnectionExtensionsModel(SiteConnectionBaseModel):
                 disable_remote_configuration=site_configuration["disable_wato"],
                 ignore_tls_errors=site_configuration["insecure"],
                 direct_login_to_web_gui_allowed=site_configuration["user_login"],
-                user_sync=_user_sync_from_internal(user_sync=site_configuration["user_sync"]),
+                user_sync=_user_sync_from_internal(
+                    user_sync=site_configuration.get("user_attribute_sync_connections")
+                ),
                 replicate_event_console=site_configuration["replicate_ec"],
                 replicate_extensions=site_configuration["replicate_mkps"],
                 message_broker_port=site_configuration["message_broker_port"],

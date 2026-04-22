@@ -17,7 +17,12 @@ from pathlib import Path
 import pytest
 from werkzeug.test import create_environ
 
-from livestatus import SiteConfiguration, SiteConfigurations
+from livestatus import (
+    AuthenticationConnectionEntry,
+    SAMLAuthenticationEntry,
+    SiteConfiguration,
+    SiteConfigurations,
+)
 
 import cmk.gui.watolib.utils
 import cmk.utils.paths
@@ -71,11 +76,25 @@ def default_site_config() -> SiteConfiguration:
         timeout=5,
         user_login=True,
         proxy=None,
-        user_sync="all",
+        user_attribute_sync_connections="all",
         status_host=None,
         message_broker_port=5672,
         is_trusted=False,
     )
+
+
+def test_active_connectors_for_user_preservation_includes_saml_connection_id(
+    request_context: None,
+) -> None:
+    """SAML auth entries contribute the inner ``connection_id``, not the
+    ``("saml", {...})`` tuple itself."""
+    site_config = default_site_config()
+    saml_entry: SAMLAuthenticationEntry = {"connection_id": "my_saml"}
+    entries: list[AuthenticationConnectionEntry] = [("saml", saml_entry)]
+    site_config["authentication_connections"] = entries
+    assert activate_changes._active_connectors_for_user_preservation(
+        site_config, default_sync_config=None
+    ) == ["my_saml"]
 
 
 def test_automation_get_config_sync_state(request_context: None) -> None:
@@ -105,9 +124,9 @@ def test_automation_get_config_sync_state(request_context: None) -> None:
             ),
             "etc/check_mk/multisite.d/sites.mk": (
                 33200,
-                489,
+                511,
                 None,
-                "670166ff0481b8da011e7b3bf27750667b3b0851bcd63063cb75843643ae5ece",
+                "718908c63cb855cdc56236425e995ff78b48d3d6024afa28af81dd609e07ba00",
             ),
             "etc/check_mk/mkeventd.d/wato/rules.mk": (
                 33200,
@@ -616,7 +635,7 @@ class TestAutomationReceiveConfigSync:
                             tls=("encrypted", {"verify": True}),
                         ),
                     ),
-                    user_sync="all",
+                    user_attribute_sync_connections="all",
                     is_trusted=False,
                 ),
                 user_attributes=get_user_attributes([]),
@@ -674,7 +693,7 @@ class TestAutomationReceiveConfigSync:
                     url_prefix="/NO_SITE/",
                     proxy=None,
                     socket=("local", None),
-                    user_sync="all",
+                    user_attribute_sync_connections="all",
                     is_trusted=False,
                 )
             }
@@ -789,7 +808,7 @@ def test_activation_cleanup_background_job(caplog: pytest.LogCaptureFixture) -> 
                             tls=("encrypted", {"verify": True}),
                         ),
                     ),
-                    user_sync="all",
+                    user_attribute_sync_connections="all",
                     is_trusted=False,
                 ),
             },
@@ -824,7 +843,7 @@ def test_activation_cleanup_background_job(caplog: pytest.LogCaptureFixture) -> 
                             tls=("encrypted", {"verify": True}),
                         ),
                     ),
-                    user_sync="all",
+                    user_attribute_sync_connections="all",
                     is_trusted=False,
                 ),
             },
@@ -859,7 +878,7 @@ def test_activation_cleanup_background_job(caplog: pytest.LogCaptureFixture) -> 
                             tls=("encrypted", {"verify": True}),
                         ),
                     ),
-                    user_sync="all",
+                    user_attribute_sync_connections="all",
                     is_trusted=False,
                 ),
                 "remote_2": SiteConfiguration(
@@ -887,7 +906,7 @@ def test_activation_cleanup_background_job(caplog: pytest.LogCaptureFixture) -> 
                             tls=("encrypted", {"verify": True}),
                         ),
                     ),
-                    user_sync="all",
+                    user_attribute_sync_connections="all",
                     is_trusted=False,
                 ),
             },
@@ -931,7 +950,7 @@ def test_activation_cleanup_background_job(caplog: pytest.LogCaptureFixture) -> 
                             tls=("encrypted", {"verify": True}),
                         ),
                     ),
-                    user_sync="all",
+                    user_attribute_sync_connections="all",
                     is_trusted=False,
                 ),
                 SiteId("remote_2"): SiteConfiguration(
@@ -959,7 +978,7 @@ def test_activation_cleanup_background_job(caplog: pytest.LogCaptureFixture) -> 
                             tls=("encrypted", {"verify": True}),
                         ),
                     ),
-                    user_sync="all",
+                    user_attribute_sync_connections="all",
                     is_trusted=False,
                 ),
             },
@@ -1004,7 +1023,7 @@ def _make_local_site_config(site_id: SiteId, disabled: bool = False) -> SiteConf
         timeout=5,
         user_login=True,
         proxy=None,
-        user_sync="all",
+        user_attribute_sync_connections="all",
         status_host=None,
         message_broker_port=5672,
         is_trusted=False,

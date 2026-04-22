@@ -424,6 +424,8 @@ UNREGISTERED_SETTINGS = {
     "wato_enabled",
     "userdb_automatic_sync",
     "user_login",
+    "authentication_connections",
+    "user_attribute_sync_connections",
 }
 
 

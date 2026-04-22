@@ -12,16 +12,23 @@ from collections.abc import Iterable
 from dataclasses import dataclass
 from pathlib import Path
 from typing import NamedTuple, override, Self
+from urllib.parse import quote
 
-from livestatus import SiteConfiguration, SiteGlobals
+from livestatus import (
+    AuthenticationConnectionEntry,
+    SAMLAuthenticationEntry,
+    SiteConfiguration,
+    SiteGlobals,
+)
 
 import cmk.ccc.version as cmk_version
 import cmk.utils.paths
 from cmk.ccc import store
 from cmk.ccc.plugin_registry import Registry
-from cmk.ccc.site import SiteId
+from cmk.ccc.site import omd_site, SiteId
+from cmk.gui.config import active_config
 from cmk.gui.log import logger
-from cmk.gui.userdb import user_sync_default_config
+from cmk.gui.userdb import get_active_saml_connections, user_sync_default_config
 from cmk.gui.watolib.config_domain_name import wato_fileheader
 from cmk.messaging import rabbitmq
 
@@ -177,17 +184,192 @@ def is_user_file(filepath: str) -> bool:
     return entry.startswith("user_") or entry in ["tableoptions.mk", "treestates.mk", "sidebar.mk"]
 
 
+def resolve_central_site_inheritance(site_config: SiteConfiguration) -> SiteConfiguration:
+    """Resolve absent `authentication_connections` to the central site's value.
+
+    Called on the central site when building a remote site's
+    ``sitespecific.mk``: when the remote's per-site key is absent the
+    inherited value comes from the central's own
+    `authentication_connections`, so the remote sees the concrete list at
+    runtime and `populate_saml_site_endpoint_urls()` sees SAML entries
+    directly. The central's own missing key collapses to an empty list.
+    """
+    if "authentication_connections" in site_config:
+        return site_config
+    central_id = omd_site()
+    central_config = active_config.sites.get(central_id)
+    inherited: list[AuthenticationConnectionEntry] = (
+        list(central_config.get("authentication_connections", []))
+        if central_config is not None
+        else []
+    )
+    return {**site_config, "authentication_connections": inherited}
+
+
+def populate_saml_site_endpoint_urls(site_config: SiteConfiguration) -> SiteConfiguration:
+    """Inject SAML SP endpoint URLs into the resolved authentication connections.
+
+    Returns a copy of `site_config` where each SAML entry under
+    `authentication_connections` carries `metadata_endpoint` and `acs_endpoint`
+    populated from the site's `multisiteurl` and the connection ID. Used by
+    `get_site_globals()` so the propagated `sitespecific.mk` carries the
+    resolved URLs instead of the placeholder ``-``.
+
+    `multisiteurl` is only set on remote sites — it's the URL the central uses
+    to reach them. On the central / single-site setups it's empty; in that
+    case the SAML connection's own `checkmk_assertion_consumer_service_endpoint`
+    serves as the displayed ACS URL (matching the runtime fallback in
+    `_pages._site_interface_config`).
+
+    Entries that don't have enough information yet (e.g. a brand-new entry
+    without a connection ID, or a site without a callback URL configured)
+    show ``-`` instead.
+
+    Sites that inherit (no per-site key) are returned unchanged; callers
+    that want the resolved list should run `resolve_central_site_inheritance`
+    first.
+    """
+    auth_conns = site_config.get("authentication_connections")
+    if auth_conns is None:
+        return site_config
+
+    callback_url = site_config.get("multisiteurl", "")
+    populated = _populate_endpoint_urls(auth_conns, callback_url)
+    return {**site_config, "authentication_connections": populated}
+
+
+def _populate_endpoint_urls(
+    entries: list[AuthenticationConnectionEntry], callback_url: str
+) -> list[AuthenticationConnectionEntry]:
+    populated: list[AuthenticationConnectionEntry] = []
+    for entry in entries:
+        if entry[0] != "saml":
+            populated.append(entry)
+            continue
+        _kind, saml_entry = entry
+        connection_id = saml_entry.get("connection_id", "")
+        metadata, acs = _saml_endpoint_urls(callback_url, connection_id)
+        new_entry: SAMLAuthenticationEntry = {
+            "connection_id": connection_id,
+            "metadata_endpoint": metadata,
+            "acs_endpoint": acs,
+        }
+        populated.append(("saml", new_entry))
+    return populated
+
+
+def _saml_endpoint_urls(callback_url: str, connection_id: str) -> tuple[str, str]:
+    """Compute the per-site SAML metadata + ACS URLs for a connection.
+
+    On a remote site `callback_url` is the site's `multisiteurl` and the URLs
+    are derived from it. On the central / single-site setups `callback_url`
+    is empty; we then fall back to the connection's own
+    `checkmk_assertion_consumer_service_endpoint` so the editor displays the
+    actual URL pysaml2 will use at runtime (mirroring
+    `_pages._site_interface_config`).
+    """
+    if callback_url and connection_id:
+        # URL-encode ``connection_id`` for defense-in-depth: ``validate_connection_id``
+        # currently only enforces uniqueness, so a future relaxation of the
+        # upstream ``ID()`` valuespec could otherwise let characters like ``&``
+        # or ``=`` smuggle extra query parameters into the IdP request.
+        return (
+            f"{callback_url}saml_metadata.py?RelayState={quote(connection_id, safe='')}",
+            f"{callback_url}saml_acs.py?acs",
+        )
+
+    if not connection_id:
+        return "-", "-"
+
+    connection = get_active_saml_connections().get(connection_id)
+    if connection is None:
+        return "-", "-"
+
+    acs_endpoint = connection["checkmk_assertion_consumer_service_endpoint"]
+    if not acs_endpoint:
+        return "-", "-"
+    # `checkmk_metadata_endpoint` is already stored as
+    # `<server>/saml_metadata.py?RelayState=<connection_id>` (see
+    # `checkmk_service_provider_metadata` in `_config.py`), so it must not be
+    # appended to again.
+    return connection["checkmk_metadata_endpoint"], acs_endpoint
+
+
+def central_site_inherited_summary(callback_url: str) -> str:
+    """Render a human-readable summary of the central site's authentication connections.
+
+    Used by the site-edit form to show what the remote site would inherit
+    when the admin picks "Use the same connections as the central site".
+    The form widget is read-only display; the summary is recomputed each
+    time the dialog renders.
+
+    Returned format:
+        LDAP: <connection_id>
+        SAML: <connection_id>
+            Metadata endpoint URL: <url>
+            Assertion Consumer Service URL: <url>
+
+    For an unset / empty central, returns a placeholder.
+    """
+    central_id = omd_site()
+    central_config = active_config.sites.get(central_id)
+    central_auth = (
+        central_config.get("authentication_connections") if central_config is not None else None
+    )
+
+    if not central_auth:
+        return "-"
+
+    lines: list[str] = []
+    for entry in central_auth:
+        if entry[0] == "ldap":
+            lines.append(f"LDAP: {entry[1]}")
+            continue
+        connection_id = entry[1].get("connection_id", "")
+        metadata, acs = _saml_endpoint_urls(callback_url, connection_id)
+        lines.append(f"SAML: {connection_id or '-'}")
+        lines.append(f"    Metadata endpoint URL: {metadata}")
+        lines.append(f"    Assertion Consumer Service URL: {acs}")
+    return "\n".join(lines) if lines else "-"
+
+
 def get_site_globals(site_id: SiteId, site_config: SiteConfiguration) -> SiteGlobals:
     site_globals = site_config.get("globals", {}).copy()
+    # Resolve "inherit from central" first so downstream steps (SAML endpoint
+    # population) see the concrete connection list.
+    site_config = resolve_central_site_inheritance(site_config)
+    # Resolve the SAML SP endpoint URLs so the propagated authentication_connections
+    # value carries the actual `metadata_endpoint` / `acs_endpoint` URLs rather than
+    # the `"-"` placeholder that the site editor stores in `sites.mk`.
+    populated_site_config = populate_saml_site_endpoint_urls(site_config)
     site_globals.update(
         {
             "wato_enabled": not site_config.get("disable_wato", True),
-            "userdb_automatic_sync": site_config.get(
-                "user_sync", user_sync_default_config(site_config, site_id)
-            ),
+            "userdb_automatic_sync": user_sync_default_config(site_config, site_id),
             "user_login": site_config.get("user_login", False),
+            # Propagate the per-site connector settings. `sites.mk` is not synced
+            # to remotes, so these are passed through the global settings
+            # mechanism. The propagated `authentication_connections` carries
+            # per-entry SAML `acs_endpoint`/`metadata_endpoint` URLs computed
+            # for this site by `populate_saml_site_endpoint_urls()`, so the
+            # remote's SAML runtime reads them straight from there. SAML cert
+            # files arrive on the remote via the `saml2_certs` `ReplicationPath`
+            # (see `cmk/gui/nonfree/pro/saml2_auth/registration.py`).
+            "authentication_connections": populated_site_config.get(
+                "authentication_connections", []
+            ),
         }
     )
+    # Propagate `user_attribute_sync_connections` when set per-site; otherwise
+    # fall back to the central's own value so the remote inherits it. If
+    # neither is set the global keeps its default ("all").
+    attr_sync = site_config.get("user_attribute_sync_connections")
+    if attr_sync is None:
+        central_config = active_config.sites.get(omd_site())
+        if central_config is not None:
+            attr_sync = central_config.get("user_attribute_sync_connections")
+    if attr_sync is not None:
+        site_globals["user_attribute_sync_connections"] = attr_sync
     return site_globals
 
 

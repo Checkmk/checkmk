@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import logging
-from typing import Literal
 
 from cmk.base.config import LoadingResult
 from cmk.ccc.site import SiteId
@@ -86,24 +85,6 @@ def _anonymize_status_host(
 
     site_id, host_name = status_host
     return SiteId(anon_interface.get_site(site_id)), anon_interface.get_host(host_name)
-
-
-def _anonymize_user_sync(
-    anon_interface: AnonInterface,
-    user_sync: Literal["all"] | tuple[Literal["list"], list[str]] | None,
-) -> Literal["all"] | tuple[Literal["list"], list[str]] | None:
-    match user_sync:
-        case None:
-            return None
-        case "all":
-            return "all"
-        case ("list", ldap_connections):
-            return "list", [
-                anon_interface.get_ldap_connection(ldap_connection)
-                for ldap_connection in ldap_connections
-            ]
-        case _:
-            raise ValueError(f"Invalid user_sync format: {user_sync}")
 
 
 def _anonymize_tls(anon_interface: AnonInterface, tls_info: TLSInfo) -> TLSInfo:
@@ -193,7 +174,6 @@ class SitesSteps(AnonymizeStep):
                 timeout=site_config["timeout"],
                 url_prefix=f"{anon_interface.get_url(site_config['url_prefix'])}/",
                 user_login=site_config["user_login"],
-                user_sync=_anonymize_user_sync(anon_interface, site_config["user_sync"]),
                 is_trusted=site_config["is_trusted"],
                 proxy=_anonymize_proxy_config(anon_interface, site_config["proxy"]),
                 socket=_anonymize_socket(anon_interface, site_config["socket"]),

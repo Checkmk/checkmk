@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import override
 from uuid import uuid4
 
-from cmk.licensing.helper import get_instance_id_file_path
+from cmk.licensing.paths import get_instance_id_file_path
 from cmk.update_config.lib import ExpiryVersion
 from cmk.update_config.registry import update_action_registry, UpdateAction
 from cmk.utils.log import VERBOSE

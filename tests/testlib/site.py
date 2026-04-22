@@ -46,6 +46,7 @@ from cmk import trace
 from cmk.crypto.certificate import Certificate
 from cmk.crypto.password import Password
 from cmk.crypto.secrets import Secret
+from cmk.licensing.paths import get_licensing_dir
 from tests.testlib.common.repo import current_branch_name, repo_path
 from tests.testlib.common.utils import wait_until
 from tests.testlib.common.utils2 import (
@@ -193,7 +194,7 @@ class Site:
 
     @property
     def licensing_dir(self) -> Path:
-        return self.root / "var" / "check_mk" / "licensing"
+        return get_licensing_dir(self.root)
 
     # Previous versions of integration/composition tests needed this distinction. This is no
     # longer the case and can be safely removed once all tests switch to either one of url

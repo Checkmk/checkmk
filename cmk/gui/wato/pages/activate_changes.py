@@ -74,7 +74,6 @@ from cmk.gui.watolib.config_domain_name import ABCConfigDomain, DomainRequest, D
 from cmk.gui.watolib.hosts_and_folders import folder_preserving_link, folder_tree, Host
 from cmk.gui.watolib.mode import ModeRegistry, WatoMode
 from cmk.gui.watolib.objref import ObjectRef, ObjectRefType
-from cmk.licensing.helper import get_licensing_dir
 from cmk.licensing.registry import get_licensing_user_effect
 from cmk.licensing.usage import get_license_usage_report_validity, LicenseUsageReportValidity
 from cmk.utils import paths, render
@@ -390,7 +389,6 @@ class ModeActivateChanges(WatoMode):
         self._changes.load(list(activation_sites(active_config.sites)))
         self._license_usage_report_validity = get_license_usage_report_validity(
             omd_root=paths.omd_root,
-            licensing_dir=get_licensing_dir(paths.omd_root),
             log_dir=paths.log_dir,
         )
         self._quick_setup_origin = request.get_ascii_input(self.VAR_ORIGIN) == "quick_setup"

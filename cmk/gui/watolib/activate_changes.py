@@ -150,7 +150,6 @@ from cmk.gui.watolib.site_changes import ChangeSpec, SiteChanges
 from cmk.gui.watolib.snapshots import SnapshotManager
 from cmk.licensing.export import LicenseUsageExtensions
 from cmk.licensing.handler import ActivationBlock
-from cmk.licensing.helper import get_licensing_dir
 from cmk.licensing.registry import get_licensing_user_effect, is_free
 from cmk.licensing.usage import save_extensions
 from cmk.messaging import rabbitmq
@@ -2917,7 +2916,7 @@ def _add_extensions_for_license_usage() -> None:
         LicenseUsageExtensions(
             ntop=ntop_connection().is_configured(),
         ),
-        licensing_dir=get_licensing_dir(paths.omd_root),
+        omd_root=paths.omd_root,
     )
 
 

@@ -23,13 +23,13 @@ from cmk.licensing.export import (
     LicenseUsageSample,
     RawLicenseUsageReport,
 )
+from cmk.licensing.paths import get_license_usage_report_file_path
 from cmk.licensing.protocol_version import get_licensing_protocol_version
 from cmk.licensing.usage import (
     _load_extensions,
     _parse_extensions,
     _serialize_dump,
     CLOUD_SERVICE_PREFIXES,
-    get_license_usage_report_file_path,
     HostsOrServicesCloudCounter,
     load_raw_license_usage_report,
     LocalLicenseUsageHistory,
@@ -45,14 +45,7 @@ def omd_root_fixture(tmp_path: Path) -> Path:
     return tmp_path
 
 
-@pytest.fixture(name="licensing_dir")
-def licensing_dir_fixture(tmp_path: Path) -> Path:
-    d = tmp_path / "var/check_mk/licensing"
-    d.mkdir(parents=True, exist_ok=True)
-    return d
-
-
-def test_try_update_license_usage(omd_root: Path, licensing_dir: Path) -> None:
+def test_try_update_license_usage(omd_root: Path) -> None:
     instance_id = UUID("937495cb-78f7-40d4-9b5f-f2c5a81e66b8")
     site_hash = "site-hash"
 
@@ -85,21 +78,18 @@ def test_try_update_license_usage(omd_root: Path, licensing_dir: Path) -> None:
             extension_ntop=True,
         ),
         omd_root=omd_root,
-        licensing_dir=licensing_dir,
     )
     assert (
         len(
             LocalLicenseUsageHistory.parse(
-                load_raw_license_usage_report(get_license_usage_report_file_path(licensing_dir))
+                load_raw_license_usage_report(get_license_usage_report_file_path(omd_root))
             )
         )
         == 1
     )
 
 
-def test_try_update_license_usage_livestatus_socket_error(
-    omd_root: Path, licensing_dir: Path
-) -> None:
+def test_try_update_license_usage_livestatus_socket_error(omd_root: Path) -> None:
     def _mock_livestatus() -> LicenseUsageSample:
         raise livestatus.MKLivestatusSocketError()
 
@@ -114,21 +104,18 @@ def test_try_update_license_usage_livestatus_socket_error(
             site_hash,
             lambda *args, **kwargs: _mock_livestatus(),
             omd_root=omd_root,
-            licensing_dir=licensing_dir,
         )
     assert (
         len(
             LocalLicenseUsageHistory.parse(
-                load_raw_license_usage_report(get_license_usage_report_file_path(licensing_dir))
+                load_raw_license_usage_report(get_license_usage_report_file_path(omd_root))
             )
         )
         == 0
     )
 
 
-def test_try_update_license_usage_livestatus_not_found_error(
-    omd_root: Path, licensing_dir: Path
-) -> None:
+def test_try_update_license_usage_livestatus_not_found_error(omd_root: Path) -> None:
     def _mock_livestatus() -> LicenseUsageSample:
         raise livestatus.MKLivestatusNotFoundError()
 
@@ -143,21 +130,18 @@ def test_try_update_license_usage_livestatus_not_found_error(
             site_hash,
             lambda *args, **kwargs: _mock_livestatus(),
             omd_root=omd_root,
-            licensing_dir=licensing_dir,
         )
     assert (
         len(
             LocalLicenseUsageHistory.parse(
-                load_raw_license_usage_report(get_license_usage_report_file_path(licensing_dir))
+                load_raw_license_usage_report(get_license_usage_report_file_path(omd_root))
             )
         )
         == 0
     )
 
 
-def test_try_update_license_usage_next_run_ts_not_reached(
-    omd_root: Path, licensing_dir: Path
-) -> None:
+def test_try_update_license_usage_next_run_ts_not_reached(omd_root: Path) -> None:
     instance_id = UUID("937495cb-78f7-40d4-9b5f-f2c5a81e66b8")
     site_hash = "site-hash"
 
@@ -190,12 +174,11 @@ def test_try_update_license_usage_next_run_ts_not_reached(
             extension_ntop=True,
         ),
         omd_root=omd_root,
-        licensing_dir=licensing_dir,
     )
     assert (
         len(
             LocalLicenseUsageHistory.parse(
-                load_raw_license_usage_report(get_license_usage_report_file_path(licensing_dir))
+                load_raw_license_usage_report(get_license_usage_report_file_path(omd_root))
             )
         )
         == 0
@@ -1172,12 +1155,10 @@ def test_history_try_add_sample_from_same_day() -> None:
         pytest.param(LicenseUsageExtensions(ntop=False), id="ntop disabled"),
     ],
 )
-def test_save_load_extensions(
-    expected_extensions: LicenseUsageExtensions, licensing_dir: Path
-) -> None:
-    save_extensions(expected_extensions, licensing_dir=licensing_dir)
+def test_save_load_extensions(expected_extensions: LicenseUsageExtensions, omd_root: Path) -> None:
+    save_extensions(expected_extensions, omd_root=omd_root)
 
-    assert _load_extensions(licensing_dir=licensing_dir) == expected_extensions
+    assert _load_extensions(omd_root=omd_root) == expected_extensions
 
 
 @pytest.mark.parametrize(

@@ -31,10 +31,6 @@ def init_logging(log_dir: Path) -> logging.Logger:
     return logger
 
 
-def get_instance_id_file_path(omd_root: Path) -> Path:
-    return omd_root / "etc/omd/instance_id"
-
-
 def load_instance_id(file_path: Path) -> UUID | None:
     try:
         with file_path.open("r", encoding="utf-8") as fp:
@@ -58,19 +54,3 @@ def rot47(input_str: str) -> str:
 def _rot47_char(c: str) -> str:
     ord_c = ord(c)
     return chr(33 + ((ord_c + 14) % 94)) if 33 <= ord_c <= 126 else c
-
-
-def get_licensing_dir(omd_root: Path) -> Path:
-    return omd_root / "var/check_mk/licensing"
-
-
-def get_licensed_state_file_path(licensing_dir: Path) -> Path:
-    return licensing_dir / "licensed_state"
-
-
-def get_state_file_created_file_path(licensing_dir: Path) -> Path:
-    return licensing_dir / "state_file_created"
-
-
-def get_state_change_path(licensing_dir: Path) -> Path:
-    return licensing_dir / "state_change"

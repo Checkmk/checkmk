@@ -36,11 +36,16 @@ from cmk.licensing.export import (
     RawLicenseUsageSample,
 )
 from cmk.licensing.helper import (
-    get_instance_id_file_path,
-    get_licensing_dir,
     hash_site_id,
     load_instance_id,
     rot47,
+)
+from cmk.licensing.paths import (
+    get_extensions_file_path,
+    get_instance_id_file_path,
+    get_license_usage_report_file_path,
+    get_licensing_dir,
+    get_next_run_file_path,
 )
 from cmk.licensing.protocol_version import get_licensing_protocol_version
 
@@ -88,7 +93,6 @@ def try_update_license_usage(
     do_create_sample: DoCreateSample,
     *,
     omd_root: Path,
-    licensing_dir: Path,
 ) -> None:
     """Update the license usage history.
 
@@ -97,9 +101,9 @@ def try_update_license_usage(
     if instance_id is None:
         raise ValueError("No such instance ID")
 
-    report_file_path = get_license_usage_report_file_path(licensing_dir)
-    licensing_dir.mkdir(parents=True, exist_ok=True)
-    next_run_file_path = get_next_run_file_path(licensing_dir)
+    report_file_path = get_license_usage_report_file_path(omd_root)
+    get_licensing_dir(omd_root).mkdir(parents=True, exist_ok=True)
+    next_run_file_path = get_next_run_file_path(omd_root)
 
     with store.locked(next_run_file_path), store.locked(report_file_path):
         if now.dt.timestamp() < _get_next_run_ts(next_run_file_path):
@@ -180,7 +184,7 @@ def create_sample(
     num_active_metric_series = get_average_active_metric_series(omd_root, log_dir) or 0
 
     general_infos = cmk_version.get_general_version_infos(omd_root)
-    extensions = _load_extensions(licensing_dir=get_licensing_dir(omd_root))
+    extensions = _load_extensions(omd_root=omd_root)
 
     return LicenseUsageSample(
         instance_id=instance_id,
@@ -383,14 +387,6 @@ def _create_next_run_ts(now: Now) -> int:
     return random.randrange(int(start.timestamp()), int(end.timestamp()), 600)
 
 
-def get_license_usage_report_file_path(licensing_dir: Path) -> Path:
-    return licensing_dir / "history.json"
-
-
-def get_next_run_file_path(licensing_dir: Path) -> Path:
-    return licensing_dir / "next_run"
-
-
 def save_license_usage_report(file_path: Path, raw_report: RawLicenseUsageReport) -> None:
     store.save_bytes_to_file(file_path, _serialize_dump(raw_report))
 
@@ -467,13 +463,9 @@ class LocalLicenseUsageHistory:
 #   '----------------------------------------------------------------------'
 
 
-def _get_extensions_file_path(licensing_dir: Path) -> Path:
-    return licensing_dir / "extensions.json"
-
-
-def save_extensions(extensions: LicenseUsageExtensions, *, licensing_dir: Path) -> None:
-    licensing_dir.mkdir(parents=True, exist_ok=True)
-    extensions_file_path = _get_extensions_file_path(licensing_dir)
+def save_extensions(extensions: LicenseUsageExtensions, *, omd_root: Path) -> None:
+    get_licensing_dir(omd_root).mkdir(parents=True, exist_ok=True)
+    extensions_file_path = get_extensions_file_path(omd_root)
 
     with store.locked(extensions_file_path):
         store.save_bytes_to_file(
@@ -488,8 +480,8 @@ def _parse_extensions(raw: object) -> LicenseUsageExtensions:
     raise TypeError("Wrong extensions type: %r" % type(raw))
 
 
-def _load_extensions(*, licensing_dir: Path) -> LicenseUsageExtensions:
-    extensions_file_path = _get_extensions_file_path(licensing_dir)
+def _load_extensions(*, omd_root: Path) -> LicenseUsageExtensions:
+    extensions_file_path = get_extensions_file_path(omd_root)
     with store.locked(extensions_file_path):
         raw_extensions = deserialize_dump(
             store.load_bytes_from_file(
@@ -536,9 +528,9 @@ class LicenseUsageReportValidity(Enum):
 
 
 def get_license_usage_report_validity(
-    *, omd_root: Path, licensing_dir: Path, log_dir: Path
+    *, omd_root: Path, log_dir: Path
 ) -> LicenseUsageReportValidity:
-    report_file_path = get_license_usage_report_file_path(licensing_dir)
+    report_file_path = get_license_usage_report_file_path(omd_root)
 
     with store.locked(report_file_path):
         # TODO use len(history)
@@ -551,7 +543,6 @@ def get_license_usage_report_validity(
                     now, instance_id, site_hash, omd_root=omd_root, log_dir=log_dir
                 ),
                 omd_root=omd_root,
-                licensing_dir=licensing_dir,
             )
             return LicenseUsageReportValidity.recent_enough
 

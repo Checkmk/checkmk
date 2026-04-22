@@ -12,15 +12,16 @@ from cmk.licensing.active_metric_series_retriever_registry import (  # astrein: 
     active_metric_series_retriever_registry,
 )
 from cmk.licensing.helper import (  # astrein: disable=cmk-module-layer-violation
-    get_instance_id_file_path,
-    get_licensing_dir,
     hash_site_id,
     init_logging,
     load_instance_id,
 )
+from cmk.licensing.paths import (  # astrein: disable=cmk-module-layer-violation
+    get_instance_id_file_path,
+    get_next_run_file_path,
+)
 from cmk.licensing.usage import (  # astrein: disable=cmk-module-layer-violation
     create_sample,
-    get_next_run_file_path,
     Now,
     try_update_license_usage,
 )
@@ -70,9 +71,8 @@ def main() -> int:
     if edition(paths.omd_root) in [Edition.ULTIMATE, Edition.ULTIMATEMT, Edition.CLOUD]:
         active_metric_series_retriever_registry.register(average_active_metric_series_retriever)
 
-    licensing_dir = get_licensing_dir(omd_root)
     if args.force:
-        get_next_run_file_path(licensing_dir).unlink(missing_ok=True)
+        get_next_run_file_path(omd_root).unlink(missing_ok=True)
 
     try:
         try_update_license_usage(
@@ -83,7 +83,6 @@ def main() -> int:
                 now, instance_id, site_hash, omd_root=omd_root, log_dir=paths.log_dir
             ),
             omd_root=omd_root,
-            licensing_dir=licensing_dir,
         )
         logger.info("Successfully updated the license usage")
         return 0

@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Verify or find out a hosts agent related configuration"""
 
-import base64
 import json
 from collections.abc import Collection
 from typing import NotRequired, TypedDict
@@ -32,11 +31,10 @@ from cmk.gui.page_menu import (
 from cmk.gui.pages import AjaxPage, PageRegistry, PageResult
 from cmk.gui.type_defs import ActionResult, PermissionName
 from cmk.gui.utils.csrf_token import check_csrf_token
-from cmk.gui.utils.encrypter import Encrypter
 from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.user_errors import user_errors
-from cmk.gui.valuespec import Dictionary, DropdownChoice, FixedValue, Float, Integer, Password
+from cmk.gui.valuespec import Dictionary, FixedValue, Float, Integer, Password
 from cmk.gui.valuespec import HostAddress as VSHostAddress
 from cmk.gui.wato.pages.hosts import ModeEditHost, page_menu_host_entries
 from cmk.gui.watolib.attributes import SNMPCredentials as VSSNMPCredentials
@@ -497,55 +495,51 @@ class PageAjaxDiagHost(AjaxPage):
         if _test not in dict(ModeDiagHost.diag_host_tests()):
             raise MKGeneralException(_("Invalid test."))
 
-        # TODO: Use ModeDiagHost._vs_rules() for processing/validation?
+        # Parse the submitted form fields via the valuespecs. This lets the
+        # Password valuespec handle the typed-or-decrypt-_orig logic correctly,
+        # so SNMPv3 credentials entered by the user are honored. We also
+        # validate here -- per-test retries bypass the action path's
+        # _validate_diag_html_vars(), so this is the only safety net for
+        # those requests.
+        vs_host = _vs_host(hostname)
+        host_vars = vs_host.from_html_vars("vs_host")
+        vs_host.validate_value(host_vars, "vs_host")
+        vs_rules = _vs_rules()
+        rule_vars = vs_rules.from_html_vars("vs_rules")
+        vs_rules.validate_value(rule_vars, "vs_rules")
+
         args: list[str] = [""] * 13
-        for idx, what in enumerate(
-            [
-                "ipaddress",
-                "snmp_community",
-                "agent_port",
-                "snmp_timeout",
-                "snmp_retries",
-                "tcp_connect_timeout",
-            ]
-        ):
-            args[idx] = api_request.get(what, "")
+        ipaddress = host_vars.get("ipaddress", "")
+        args[0] = ipaddress if isinstance(ipaddress, str) else ""
+        snmp_community = host_vars.get("snmp_community", "")
+        args[1] = snmp_community if isinstance(snmp_community, str) else ""
+        args[2] = str(rule_vars["agent_port"])
+        args[3] = str(rule_vars["snmp_timeout"])
+        args[4] = str(rule_vars["snmp_retries"])
+        args[5] = str(rule_vars["tcp_connect_timeout"])
+        # args[6] is intentionally empty (legacy "cmd" slot in the automation).
 
-        if api_request.get("snmpv3_use"):
-            snmpv3_use = {
-                "0": "noAuthNoPriv",
-                "1": "authNoPriv",
-                "2": "authPriv",
-            }.get(api_request.get("snmpv3_use", ""), "")
-
-            args[7] = snmpv3_use
-            if snmpv3_use != "noAuthNoPriv":
-                snmpv3_auth_proto = {
-                    str(DropdownChoice.option_id("md5")): "md5",
-                    str(DropdownChoice.option_id("sha")): "sha",
-                    str(DropdownChoice.option_id("SHA-224")): "SHA-224",
-                    str(DropdownChoice.option_id("SHA-256")): "SHA-256",
-                    str(DropdownChoice.option_id("SHA-384")): "SHA-384",
-                    str(DropdownChoice.option_id("SHA-512")): "SHA-512",
-                }.get(api_request.get("snmpv3_auth_proto", ""), "")
-
-                args[8] = snmpv3_auth_proto
-                args[9] = api_request.get("snmpv3_security_name", "")
-                args[10] = _decrypt_passwd(api_request.get("snmpv3_security_password", ""))
-
-                if snmpv3_use == "authPriv":
-                    snmpv3_privacy_proto = {
-                        str(DropdownChoice.option_id("DES")): "DES",
-                        str(DropdownChoice.option_id("AES")): "AES",
-                        str(DropdownChoice.option_id("AES-192")): "AES-192",
-                        str(DropdownChoice.option_id("AES-256")): "AES-256",
-                    }.get(api_request.get("snmpv3_privacy_proto", ""), "")
-
-                    args[11] = snmpv3_privacy_proto
-
-                    args[12] = _decrypt_passwd(api_request.get("snmpv3_privacy_password", ""))
-            else:
-                args[9] = api_request.get("snmpv3_security_name", "")
+        match host_vars.get("snmp_v3_credentials"):
+            case None:
+                pass  # SNMPv3 credentials section not enabled in the form.
+            case (use, name):  # noAuthNoPriv
+                args[7] = use
+                args[9] = name
+            case (use, auth_proto, name, auth_pw):  # authNoPriv
+                args[7], args[8], args[9], args[10] = use, auth_proto, name, auth_pw
+            case (use, auth_proto, name, auth_pw, priv_proto, priv_pw):  # authPriv
+                args[7], args[8], args[9], args[10] = use, auth_proto, name, auth_pw
+                args[11], args[12] = priv_proto, priv_pw
+            # Do not interpolate the credential value itself into error
+            # messages: the tuple carries the SNMPv3 password in plaintext.
+            case tuple() as unexpected:
+                raise MKGeneralException(
+                    _("Unexpected SNMPv3 credentials shape: tuple of length %d") % len(unexpected)
+                )
+            case unexpected:
+                raise MKGeneralException(
+                    _("Unexpected SNMPv3 credentials type: %s") % type(unexpected).__name__
+                )
 
         result = diag_host(
             host.site_id(),
@@ -558,10 +552,3 @@ class PageAjaxDiagHost(AjaxPage):
             "status_code": result.return_code,
             "output": result.response,
         }
-
-
-def _decrypt_passwd(encrypted_passwd: str) -> str:
-    try:
-        return Encrypter.decrypt(base64.b64decode(encrypted_passwd.encode("ascii")))
-    except Exception:
-        raise MKUserError(None, _("Decryption of SNMPv3 password failed."))

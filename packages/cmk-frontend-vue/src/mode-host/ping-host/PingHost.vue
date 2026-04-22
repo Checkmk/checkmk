@@ -29,6 +29,8 @@ const props = defineProps<{
   relaySelectElement: HTMLSelectElement | null
   relayDefaultElement: HTMLDivElement | null
   siteSelectElement: HTMLSelectElement
+  siteInputElement: HTMLInputElement | null
+  siteDefaultElement: HTMLDivElement | null
   sites: Array<ModeHostSite>
   defaultRelayIdHash: string
 }>()
@@ -300,7 +302,10 @@ async function callAJAX(
     [cmd]: { ...pingStatus.value[cmd], queriesMade: pingStatus.value[cmd].queriesMade + 1 }
   }
 
-  const siteId = props.sites.find((site) => site.id_hash === props.siteSelectElement.value)?.site_id
+  const siteId =
+    props.siteInputElement === null || props.siteInputElement.checked
+      ? props.sites.find((site) => site.id_hash === props.siteSelectElement.value)?.site_id
+      : (props.siteDefaultElement?.textContent?.split(' - ')[0] ?? undefined)
   const currentInput = inputElement.value ? encodeURIComponent(inputElement.value) : undefined
 
   if (!currentInput) {

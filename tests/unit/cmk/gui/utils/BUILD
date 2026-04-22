@@ -31,7 +31,6 @@ py_test(
         "//cmk/gui/utils:filter",
         "//cmk/gui/utils:flashed_messages",
         "//cmk/gui/utils:html",
-        "//cmk/gui/utils:html_tag_balance",
         "//cmk/gui/utils:json",
         "//cmk/gui/utils:labels",
         "//cmk/gui/utils:misc",

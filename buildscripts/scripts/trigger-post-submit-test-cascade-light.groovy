@@ -19,7 +19,7 @@ void main() {
         "test-github-actions",
         "test-plugins-siteless",
         "test-python3-typing",
-        "test-python3-unit-all",
+        "test-unit-all",
     ];
 
     print(

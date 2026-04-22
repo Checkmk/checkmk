@@ -287,17 +287,22 @@ class BaseVersions:
     @classmethod
     def get_base_packages(cls) -> list[CMKPackageInfo]:
         if cls._base_packages is None:
+            base_versions_pb_file = MODULE_PATH / "base_versions_previous_branch.json"
+            if not base_versions_pb_file.exists():
+                base_versions_pb_file = MODULE_PATH / "base_versions.json"
             if edition_from_env().is_cloud_edition():
+                raw_versions = json.loads(base_versions_pb_file.read_text(encoding="utf-8"))
+                # Extract the branch version from the latest entry
+                latest_version = raw_versions[-1]
+                branch_ver = CMKVersion(latest_version).semantic
+                # branch and branch_version are equal for release branches
                 cls._base_packages = [
                     CMKPackageInfo(
-                        CMKVersion(CMKVersion.DAILY, "2.4.0", "2.4.0"),
+                        CMKVersion(CMKVersion.DAILY, branch_ver, branch_ver),
                         CMKEdition(CMKEdition.CLOUD),
                     )
                 ]
             else:
-                base_versions_pb_file = MODULE_PATH / "base_versions_previous_branch.json"
-                if not base_versions_pb_file.exists():
-                    base_versions_pb_file = MODULE_PATH / "base_versions.json"
                 base_versions_pb = cls._limit_versions(
                     json.loads(base_versions_pb_file.read_text(encoding="utf-8")), cls.min_version
                 )

@@ -21,6 +21,8 @@ filegroup(
         [
             "check-mk-agent-*.noarch.rpm",
             "check-mk-agent_*_all.deb",
+            "check-mk-agent-*.aarch64.rpm",
+            "check-mk-agent_*_arm64.deb",
         ],
         # Files created elsewhere
         allow_empty = True,

@@ -71,7 +71,7 @@ class Command(abc.ABC):
         only_view: str | None = None,
         show_command_form: bool = True,
         executor: CommandExecutor | None = None,
-        vue_props: Callable[[LoggedInUser, Rows], PageMenuVue] | None = None,
+        vue_props: Callable[[LoggedInUser, Rows], PageMenuVue | None] | None = None,
         enabled: Callable[[], bool] | None = None,
     ) -> None:
         self.ident = ident

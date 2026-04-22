@@ -145,6 +145,19 @@ def _version_dir(site_root: Path) -> Path | None:
         return None
 
 
+def _read_proc_mounts() -> str | None:
+    """Return ``/proc/mounts`` content, or ``None`` when it cannot be read.
+
+    Extracted as a module-level helper so tests can substitute a fixture
+    without mocking ``pathlib``.  ``None`` distinguishes a read error from an
+    empty file so callers can treat the two cases differently if they need to.
+    """
+    try:
+        return Path("/proc/mounts").read_text()
+    except OSError:
+        return None
+
+
 def _find_sub_mounts(mount_point: str) -> list[str]:
     """Return mount points that are nested under *mount_point*, deepest first.
 
@@ -152,9 +165,8 @@ def _find_sub_mounts(mount_point: str) -> list[str]:
     path (e.g. a tmpfs on ``<site>/tmp``).  Returns them in reverse order so
     that the deepest mounts are unmounted first.
     """
-    try:
-        mounts = Path("/proc/mounts").read_text()
-    except OSError:
+    mounts = _read_proc_mounts()
+    if mounts is None:
         return []
     prefix = mount_point.rstrip("/") + "/"
     sub_mounts = [
@@ -173,16 +185,41 @@ def is_overlay_active(site_root: Path) -> bool:
     Parses ``/proc/mounts`` for an overlay entry whose mount point matches
     the resolved site root path.
     """
-    resolved = str(site_root.resolve())
-    try:
-        mounts = Path("/proc/mounts").read_text()
-    except OSError:
+    mounts = _read_proc_mounts()
+    if mounts is None:
         return False
+    resolved = str(site_root.resolve())
     for line in mounts.splitlines():
         parts = line.split()
         if len(parts) >= 3 and parts[0] == "overlay" and parts[1] == resolved:
             return True
     return False
+
+
+def _site_tmpfs_mount(site_root: Path) -> str | None:
+    """Return the path of the tmpfs mounted at ``<site_root>/tmp``, or ``None``.
+
+    Omd's tmpfs mount survives ``omd stop`` and stays registered in
+    ``/proc/mounts``.  When an overlay is stacked on top of the site root, that
+    mount gets shadowed but is not removed from ``/proc/mounts`` — and omd's
+    ``tmpfs_mounted()`` check, which only scans ``/proc/mounts``, then
+    short-circuits the next ``prepare_tmpfs`` on the overlayed site.  The net
+    effect is a site running on the overlay with no usable tmpfs.
+
+    Callers use this helper to detect and unmount the shadowed tmpfs *before*
+    the overlay is mounted, so the subsequent ``omd start`` on the overlay sees
+    no tmpfs in ``/proc/mounts`` and mounts a fresh one on top of the merged
+    view.
+    """
+    mounts = _read_proc_mounts()
+    if mounts is None:
+        return None
+    tmp_path = str(site_root.resolve() / "tmp")
+    for line in mounts.splitlines():
+        parts = line.split()
+        if len(parts) >= 3 and parts[1] == tmp_path and parts[2] == "tmpfs":
+            return parts[1]
+    return None
 
 
 def _chown_upper(upper: Path) -> None:
@@ -421,6 +458,28 @@ def ensure_overlay(site_root: Path, state: SSHState) -> None:
     output.info(f"Stopping site {site_name} for overlay mount...")
     # During overlay setup we must use sudo (SSH not yet available)
     _run_omd_via_sudo(site_name, "stop")
+
+    # Unmount any tmpfs under the site root before stacking the overlay.
+    # Leaving it mounted would shadow the tmpfs under the overlay while keeping
+    # the entry in /proc/mounts, causing omd's `prepare_tmpfs` to short-circuit
+    # on the next `omd start` — leaving the overlayed site without a usable
+    # tmpfs.  The tmpfs dump was already written by `omd stop` (save_tmpfs_dump
+    # hook) on the bare site, so contents are restored after the new tmpfs is
+    # mounted on top of the overlay.
+    if (tmpfs_path := _site_tmpfs_mount(site_root)) is not None:
+        output.verbose(f"Unmounting tmpfs at {tmpfs_path} before overlay mount")
+        umount_result = run_as_root(["umount", tmpfs_path])
+        if umount_result.returncode != 0:
+            # Leave the site stopped so the user can identify which service
+            # still holds files open under tmp/.  Restarting would mask the
+            # offender by letting more processes attach to the busy mount.
+            raise OverlayError(
+                f"Failed to unmount tmpfs at {tmpfs_path}: {umount_result.stderr.strip()}",
+                recovery=(
+                    "Ensure the site is fully stopped and no processes hold files open\n"
+                    f"under {tmpfs_path}.  Try: sudo lsof +D {tmpfs_path}"
+                ),
+            )
 
     result = run_as_root(
         ["mount", "-t", "overlay", "overlay", "-o", opts, resolved],

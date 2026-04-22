@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2026-04-18 16:42+0000\n"
+"PO-Revision-Date: 2026-04-22 06:09+0000\n"
 "Language-Team: Portuguese (Portugal) <https://translate.checkmk.com/projects/"
 "checkmk/stable/pt_PT/>\n"
 "Language: pt_PT\n"
@@ -153,6 +153,9 @@ msgstr ""
 
 msgid ""
 " To view content, click on \"<b>Apply filters</b>\" in the \"Filters\" panel."
+"<br><br>To display content by default, disable the \"Show data only on "
+"search\" setting in the View configuration. <br>This removes the need to "
+"click \"Apply filters\""
 msgstr ""
 
 #, python-format
@@ -62897,6 +62900,10 @@ msgstr "Estado quando o estado de replicação está em sincronia"
 
 msgid "State when replication state is unknown"
 msgstr "Estado quando o estado de replicação é desconhecido"
+
+#, fuzzy
+msgid "State when reported device status is OK"
+msgstr "Estado quando o estado de replicação é erro"
 
 #, fuzzy
 msgid "State when reported device status is Present"

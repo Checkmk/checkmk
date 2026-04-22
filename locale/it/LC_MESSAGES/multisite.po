@@ -154,9 +154,10 @@ msgstr ""
 
 msgid ""
 " To view content, click on \"<b>Apply filters</b>\" in the \"Filters\" panel."
+"<br><br>To display content by default, disable the \"Show data only on "
+"search\" setting in the View configuration. <br>This removes the need to "
+"click \"Apply filters\""
 msgstr ""
-" Per visualizzare il contenuto, clicca su \"<b>Applica filtri</b>\" nel "
-"pannello °Filtri°."
 
 #, python-format
 msgid " and %s '%s'"
@@ -62632,6 +62633,10 @@ msgid "State when replication state is unknown"
 msgstr "Stato quando lo stato di replica è sconosciuto"
 
 #, fuzzy
+msgid "State when reported device status is OK"
+msgstr "Stato quando lo stato di replica è errore"
+
+#, fuzzy
 msgid "State when reported device status is Present"
 msgstr "Stato quando lo stato della VPN è Phase1"
 
@@ -90382,6 +90387,13 @@ msgstr ""
 
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "⚠ <b>non disponibile</b> perché Robotmk Core MKP è stato installato"
+
+#~ msgid ""
+#~ " To view content, click on \"<b>Apply filters</b>\" in the \"Filters\" "
+#~ "panel."
+#~ msgstr ""
+#~ " Per visualizzare il contenuto, clicca su \"<b>Applica filtri</b>\" nel "
+#~ "pannello °Filtri°."
 
 #, fuzzy
 #~ msgid "Compute a rate"

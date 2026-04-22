@@ -4,7 +4,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
+"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
 "PO-Revision-Date: 2026-04-20 10:09+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/stable/"
@@ -155,9 +155,10 @@ msgstr ""
 
 msgid ""
 " To view content, click on \"<b>Apply filters</b>\" in the \"Filters\" panel."
+"<br><br>To display content by default, disable the \"Show data only on "
+"search\" setting in the View configuration. <br>This removes the need to "
+"click \"Apply filters\""
 msgstr ""
-" Um Inhalte anzuzeigen, klicken Sie auf \"<b>Filter anwenden</b>\" im "
-"Bereich \"Filter\"."
 
 #, python-format
 msgid " and %s '%s'"
@@ -60629,6 +60630,10 @@ msgstr "Zustand, wenn der Replikationszustand syncing ist"
 msgid "State when replication state is unknown"
 msgstr "Zustand, wenn der Replikationszustand unknown ist"
 
+#, fuzzy
+msgid "State when reported device status is OK"
+msgstr "Zustand, wenn der gemeldete Gerätezustand UP ist"
+
 msgid "State when reported device status is Present"
 msgstr "Zustand, wenn der gemeldete Gerätezustand PRESENT ist"
 
@@ -87704,6 +87709,13 @@ msgstr ""
 
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "⚠ <b>nicht verfügbar</b>, da Robotmk-Kern-MKP installiert wurde"
+
+#~ msgid ""
+#~ " To view content, click on \"<b>Apply filters</b>\" in the \"Filters\" "
+#~ "panel."
+#~ msgstr ""
+#~ " Um Inhalte anzuzeigen, klicken Sie auf \"<b>Filter anwenden</b>\" im "
+#~ "Bereich \"Filter\"."
 
 #~ msgid "Compute a rate"
 #~ msgstr "Eine Rate berechnen"

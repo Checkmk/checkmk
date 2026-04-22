@@ -152,6 +152,9 @@ msgstr ""
 
 msgid ""
 " To view content, click on \"<b>Apply filters</b>\" in the \"Filters\" panel."
+"<br><br>To display content by default, disable the \"Show data only on "
+"search\" setting in the View configuration. <br>This removes the need to "
+"click \"Apply filters\""
 msgstr ""
 
 #, python-format
@@ -62907,6 +62910,10 @@ msgstr "Staat wanneer replicatietoestand aan het synchroniseren is"
 
 msgid "State when replication state is unknown"
 msgstr "Staat wanneer replicatietoestand onbekend is"
+
+#, fuzzy
+msgid "State when reported device status is OK"
+msgstr "Toestand wanneer replicatietoestand fout is"
 
 #, fuzzy
 msgid "State when reported device status is Present"

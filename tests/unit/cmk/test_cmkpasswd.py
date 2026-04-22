@@ -11,7 +11,7 @@ from unittest.mock import patch
 import pytest
 from pytest import MonkeyPatch
 
-from cmk.cmkpasswd import _run_cmkpasswd, InvalidPasswordError, InvalidUsernameError, main
+from cmk.cmkpasswd.main import _run_cmkpasswd, InvalidPasswordError, InvalidUsernameError, main
 from cmk.crypto.password import Password
 
 Capsys = pytest.CaptureFixture[str]
@@ -83,7 +83,7 @@ def test_invalid_password() -> None:
 @pytest.fixture(name="htpasswd_path")
 def fixture_htpasswd_path(monkeypatch: MonkeyPatch, tmp_path: Path) -> Path:
     file_ = tmp_path / "htpasswd"
-    monkeypatch.setattr("cmk.cmkpasswd.HTPASSWD_FILE", file_)
+    monkeypatch.setattr("cmk.cmkpasswd.main.HTPASSWD_FILE", file_)
     return file_
 
 

@@ -9,7 +9,7 @@ exports_files(["requirements.in"])
 
 py_library(
     name = "cmkpasswd",
-    srcs = ["cmkpasswd.py"],
+    srcs = glob(["cmkpasswd/**/*.py"]),
     imports = [".."],
     visibility = ["//:__subpackages__"],
     deps = [

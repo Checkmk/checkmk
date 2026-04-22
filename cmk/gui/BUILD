@@ -1840,7 +1840,11 @@ py_library(
 
 py_library(
     name = "cmkcert",
-    srcs = ["cmkcert.py"],
+    srcs = [
+        "cmkcert/__init__.py",
+        "cmkcert/__main__.py",
+        "cmkcert/main.py",
+    ],
     imports = ["../.."],
     visibility = [
         "//cmk:__subpackages__",
@@ -1857,7 +1861,10 @@ py_library(
 
 py_library(
     name = "cmkcert_rotate",
-    srcs = ["cmkcert_rotate.py"],
+    srcs = [
+        "cmkcert/__init__.py",
+        "cmkcert/cmkcert_rotate.py",
+    ],
     imports = ["../.."],
     visibility = [
         "//cmk:__subpackages__",
@@ -2041,6 +2048,7 @@ py_library(
     name = "gui",
     imports = ["../.."],
     visibility = [
+        "//bin:__pkg__",
         "//cmk:__subpackages__",
         "//non-free/packages/cmk-dcd:__pkg__",
         "//non-free/packages/cmk-liveproxyd:__pkg__",

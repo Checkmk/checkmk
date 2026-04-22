@@ -198,6 +198,20 @@ py_library(
     tags = ["no-mypy"],
 )
 
+py_library(
+    name = "cmk_cert_py",
+    srcs = ["cmk-cert"],
+    imports = ["."],
+    deps = ["//cmk/gui"],
+)
+
+py_library(
+    name = "cmk_passwd_py",
+    srcs = ["cmk-passwd"],
+    imports = ["."],
+    deps = ["//cmk:cmkpasswd"],
+)
+
 sh_library(
     name = "bin_sh",
     srcs = [

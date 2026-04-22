@@ -163,7 +163,7 @@ def _run_rotate(
     # we import the expensive GUI module only if we really need it
     main_modules.register(edition(omd_root))
 
-    import cmk.gui.cmkcert_rotate as rotate
+    import cmk.gui.cmkcert.cmkcert_rotate as rotate
 
     if (
         site_id == omd_site()

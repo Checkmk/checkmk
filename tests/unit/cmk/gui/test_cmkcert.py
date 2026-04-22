@@ -15,7 +15,7 @@ from pytest_mock import MockerFixture
 from livestatus import SiteConfigurations
 
 from cmk.ccc.site import SiteId
-from cmk.gui.cmkcert import (
+from cmk.gui.cmkcert.main import (
     _certificate_path,
     _run_init,
     _run_rotate,
@@ -165,9 +165,9 @@ def test_init_cert_does_not_replace_existing(
 
 
 def test_rotate_site(mocker: MockerFixture, omd_root: Path, site_ca: Path) -> None:
-    mocker.patch("cmk.gui.cmkcert_rotate._site_gui_context").return_value = _mock_site_gui_context(
-        mocker
-    )
+    mocker.patch(
+        "cmk.gui.cmkcert.cmkcert_rotate._site_gui_context"
+    ).return_value = _mock_site_gui_context(mocker)
     _create_dummy(omd_root, "site-ca")
     _create_dummy(omd_root, "site")
 
@@ -190,9 +190,9 @@ def test_rotate_site(mocker: MockerFixture, omd_root: Path, site_ca: Path) -> No
 
 
 def test_rotate_site_wo_site_ca(mocker: MockerFixture, omd_root: Path) -> None:
-    mocker.patch("cmk.gui.cmkcert_rotate._site_gui_context").return_value = _mock_site_gui_context(
-        mocker
-    )
+    mocker.patch(
+        "cmk.gui.cmkcert.cmkcert_rotate._site_gui_context"
+    ).return_value = _mock_site_gui_context(mocker)
 
     _create_dummy(omd_root, "site")
 
@@ -250,9 +250,9 @@ def test_rotate_site_ca(
     omd_root: Path,
     site_ca: Path,
 ) -> None:
-    mocker.patch("cmk.gui.cmkcert_rotate._site_gui_context").return_value = _mock_site_gui_context(
-        mocker
-    )
+    mocker.patch(
+        "cmk.gui.cmkcert.cmkcert_rotate._site_gui_context"
+    ).return_value = _mock_site_gui_context(mocker)
 
     with patch("cmk.gui.watolib.changes.add_change") as mock_add_change:
         with patch(

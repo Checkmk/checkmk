@@ -113,10 +113,10 @@ def test_inventory_tree_link_empty_rows() -> None:
             [],
             visual,
             context_vars,
-            base_link_from=_base_checks_rows,
+            base_link_from=_base_returns_true,
             has_inventory_tree=_tree_found,
         )
-        is False
+        is True
     )
 
 
@@ -129,10 +129,172 @@ def test_inventory_tree_history_link_empty_rows() -> None:
             [],
             visual,
             context_vars,
+            base_link_from=_base_returns_true,
+            has_inventory_tree=_tree_found,
+        )
+        is True
+    )
+
+
+def test_label_filter_suppresses_link_when_rows_empty() -> None:
+    visual = _make_visual(
+        {
+            "single_infos": ["host"],
+            "host_labels": {"cmk/os-family": "linux"},
+            "has_inventory_tree": _path("hardware"),
+        }
+    )
+    context_vars: HTTPVariables = [("host", "myhost"), ("site", "mysite")]
+    assert (
+        _compute_link_from_result(
+            ["host"],
+            [],
+            visual,
+            context_vars,
             base_link_from=_base_checks_rows,
             has_inventory_tree=_tree_found,
         )
         is False
+    )
+
+
+def test_label_filter_suppresses_link_when_label_mismatches() -> None:
+    visual = _make_visual(
+        {
+            "single_infos": ["host"],
+            "host_labels": {"cmk/os-family": "linux"},
+            "has_inventory_tree": _path("hardware"),
+        }
+    )
+    context_vars: HTTPVariables = [("host", "myhost"), ("site", "mysite")]
+    row: dict[str, object] = {}
+
+    def _base_rejects(
+        single_infos: SingleInfos, rows: Rows, visual: Visual, context_vars: HTTPVariables
+    ) -> bool:
+        return False
+
+    assert (
+        _compute_link_from_result(
+            ["host"],
+            [row],
+            visual,
+            context_vars,
+            base_link_from=_base_rejects,
+            has_inventory_tree=_tree_found,
+        )
+        is False
+    )
+
+
+def test_label_and_inventory_both_match_shows_link() -> None:
+    visual = _make_visual(
+        {
+            "single_infos": ["host"],
+            "host_labels": {"cmk/os-family": "linux"},
+            "has_inventory_tree": _path("hardware"),
+        }
+    )
+    context_vars: HTTPVariables = [("host", "myhost"), ("site", "mysite")]
+    row: dict[str, object] = {}
+    assert (
+        _compute_link_from_result(
+            ["host"],
+            [row],
+            visual,
+            context_vars,
+            base_link_from=_base_checks_rows,
+            has_inventory_tree=_tree_found,
+        )
+        is True
+    )
+
+
+def test_label_matches_but_inventory_missing_suppresses_link() -> None:
+    visual = _make_visual(
+        {
+            "single_infos": ["host"],
+            "host_labels": {"cmk/os-family": "linux"},
+            "has_inventory_tree": _path("hardware"),
+        }
+    )
+    context_vars: HTTPVariables = [("host", "myhost"), ("site", "mysite")]
+    row: dict[str, object] = {}
+    assert (
+        _compute_link_from_result(
+            ["host"],
+            [row],
+            visual,
+            context_vars,
+            base_link_from=_base_checks_rows,
+            has_inventory_tree=_tree_not_found,
+        )
+        is False
+    )
+
+
+def test_single_infos_not_matching_returns_false() -> None:
+    visual = _make_visual({"single_infos": ["host"], "has_inventory_tree": _path("hardware")})
+    context_vars: HTTPVariables = [("host", "myhost"), ("site", "s")]
+    assert (
+        _compute_link_from_result(
+            [],
+            [],
+            visual,
+            context_vars,
+            base_link_from=_base_returns_true,
+            has_inventory_tree=_tree_found,
+        )
+        is False
+    )
+
+
+def test_single_infos_matching_proceeds() -> None:
+    visual = _make_visual({"single_infos": ["host"], "has_inventory_tree": _path("hardware")})
+    context_vars: HTTPVariables = [("host", "myhost"), ("site", "mysite")]
+    assert (
+        _compute_link_from_result(
+            ["host"],
+            [],
+            visual,
+            context_vars,
+            base_link_from=_base_returns_true,
+            has_inventory_tree=_tree_found,
+        )
+        is True
+    )
+
+
+def test_single_infos_partially_matching_returns_false() -> None:
+    visual = _make_visual(
+        {"single_infos": ["host", "service"], "has_inventory_tree": _path("hardware")}
+    )
+    assert (
+        _compute_link_from_result(
+            ["host"],
+            [],
+            visual,
+            [],
+            base_link_from=_base_returns_true,
+            has_inventory_tree=_tree_found,
+        )
+        is False
+    )
+
+
+def test_no_single_infos_condition_proceeds() -> None:
+    visual = _make_visual({"has_inventory_tree": _path("hardware")})
+    context_vars: HTTPVariables = [("host", "myhost"), ("site", "mysite")]
+    assert (
+        _compute_link_from_result(
+            [],
+            [],
+            visual,
+            context_vars,
+            base_link_from=_base_returns_true,
+            has_inventory_tree=_tree_found,
+        )
+        is True
     )
 
 

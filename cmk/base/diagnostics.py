@@ -1552,10 +1552,13 @@ class CheckmkCommandDiagnosticsElementTextDump(ABCDiagnosticsElementTextDump):
                 self.command,
                 text=True,
                 stderr=subprocess.STDOUT,
+                cwd=omd_root,
             )
 
         except subprocess.CalledProcessError:
-            raise DiagnosticsElementError("Command %s returned an unexpected error.")
+            raise DiagnosticsElementError(
+                "Command %s returned an unexpected error." % " ".join(self.command)
+            )
 
         except FileNotFoundError:
             raise DiagnosticsElementInfo(

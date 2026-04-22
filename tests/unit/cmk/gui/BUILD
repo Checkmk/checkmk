@@ -66,6 +66,77 @@ py_test(
 )
 
 py_test(
+    name = "breadcrumb",
+    srcs = ["test_breadcrumb.py"],
+    args = ["tests/unit/cmk/gui/test_breadcrumb.py"],
+    pytest_main = True,
+    deps = [
+        "//cmk/gui:breadcrumb",
+        requirement("pytest"),
+    ],
+)
+
+py_test(
+    name = "color",
+    srcs = ["test_color.py"],
+    args = ["tests/unit/cmk/gui/test_color.py"],
+    pytest_main = True,
+    deps = [
+        "//cmk/gui:color",
+        "//packages/cmk-ccc:exceptions",
+        "//packages/cmk-plugin-apis:graphing",
+        "//packages/cmk-plugin-apis:inventory_ui",
+        requirement("pytest"),
+    ],
+)
+
+py_test(
+    name = "escaping",
+    srcs = ["test_escaping.py"],
+    args = ["tests/unit/cmk/gui/test_escaping.py"],
+    pytest_main = True,
+    deps = [
+        "//cmk/gui/utils:escaping",
+        "//cmk/gui/utils:html",
+        "//cmk/gui/utils:speaklater",
+        requirement("pytest"),
+    ],
+)
+
+py_test(
+    name = "sort",
+    srcs = ["test_sort.py"],
+    args = ["tests/unit/cmk/gui/test_sort.py"],
+    pytest_main = True,
+    deps = [
+        "//cmk/gui/utils:sort",
+        requirement("pytest"),
+    ],
+)
+
+py_test(
+    name = "type_defs",
+    srcs = ["test_type_defs.py"],
+    args = ["tests/unit/cmk/gui/test_type_defs.py"],
+    pytest_main = True,
+    deps = [
+        "//cmk/gui:type_defs",
+        requirement("pytest"),
+    ],
+)
+
+py_test(
+    name = "unit_formatter",
+    srcs = ["test_unit_formatter.py"],
+    args = ["tests/unit/cmk/gui/test_unit_formatter.py"],
+    pytest_main = True,
+    deps = [
+        "//cmk/gui:unit_formatter",
+        requirement("pytest"),
+    ],
+)
+
+py_test(
     name = "gui",
     srcs = ["__test__.py"] + glob(
         include = ["**/*.py"],
@@ -73,6 +144,12 @@ py_test(
             "compare_html.py",
             "conftest.py",
             "test_availability_*.py",
+            "test_breadcrumb.py",
+            "test_color.py",
+            "test_escaping.py",
+            "test_sort.py",
+            "test_type_defs.py",
+            "test_unit_formatter.py",
         ],
     ),
     args = [

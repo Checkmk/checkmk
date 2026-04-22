@@ -1915,6 +1915,7 @@ py_library(
         ":weblib",
         ":werks",
         "//cmk/gui/agent_registration",
+        "//cmk/gui/availability",
         "//cmk/gui/background_job/job",
         "//cmk/gui/background_job/wato",
         "//cmk/gui/bi",

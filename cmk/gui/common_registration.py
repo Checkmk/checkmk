@@ -37,6 +37,7 @@ from cmk.gui import (
     werks,
 )
 from cmk.gui.autocompleters import AutocompleterRegistry
+from cmk.gui.availability import registration as availability_registration
 from cmk.gui.background_job.job import BackgroundJobRegistry
 from cmk.gui.background_job.wato import registration as background_job_registration
 from cmk.gui.bi import registration as bi_registration
@@ -340,6 +341,10 @@ def register(
         versioned_endpoint_registry,
         endpoint_family_registry,
         job_registry,
+    )
+    availability_registration.register(
+        versioned_endpoint_registry=versioned_endpoint_registry,
+        endpoint_family_registry=endpoint_family_registry,
     )
 
     register_userroles(config_file_registry)

@@ -24,6 +24,20 @@ export const a11yData = [
   {
     keys: ['Enter', 'Space'],
     description: 'When the button is focused, pressing Enter or Space opens the slide-in.'
+  },
+  {
+    keys: ['ArrowUp', 'ArrowDown'],
+    description: 'Scrolls the content area line by line when it is focused and has overflow.'
+  },
+  {
+    keys: ['PageUp', 'PageDown'],
+    description:
+      'Scrolls the content area up or down by a page when it is focused and has overflow.'
+  },
+  {
+    keys: ['Home', 'End'],
+    description:
+      'Scrolls the content area to the top or bottom when it is focused and has overflow.'
   }
 ]
 export const codeExample = `<script setup lang="ts">

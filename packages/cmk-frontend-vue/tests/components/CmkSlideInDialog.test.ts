@@ -64,8 +64,9 @@ test.each([{ addTooltip: true }, { addTooltip: false }])(
     const button = screen.getByRole('button', { name: 'Open' })
     await fireEvent.click(button)
 
-    const slideIn = await screen.findByRole('dialog')
-    expect(document.activeElement).toBe(slideIn)
+    await screen.findByRole('dialog')
+    const scrollContainer = screen.getByRole('region', { name: 'Some Title' })
+    expect(document.activeElement).toBe(scrollContainer)
   }
 )
 
@@ -81,14 +82,20 @@ test.each([{ addTooltip: true }, { addTooltip: false }])(
     await screen.findByText('Main Content')
 
     await userEvent.tab()
-    const closeButton = screen.getByRole('button', { name: 'Close' })
-    expect(document.activeElement).toBe(closeButton)
-
-    await userEvent.tab()
     const autoFocusElement = screen.getByTestId('focus-element')
     expect(document.activeElement).toBe(autoFocusElement)
   }
 )
+
+test('Slidein focuses scroll container on open for keyboard scroll support', async () => {
+  render(createCmkSlideInDialogComp(false))
+
+  await fireEvent.click(screen.getByRole('button', { name: 'Open' }))
+
+  await screen.findByRole('dialog')
+  const scrollContainer = screen.getByRole('region', { name: 'Some Title' })
+  expect(document.activeElement).toBe(scrollContainer)
+})
 
 test('Multiple slide-ins opened sequentially: body styles are managed correctly [CMK-28534]', async () => {
   render(

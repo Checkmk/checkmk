@@ -88,5 +88,6 @@ py_test(
         ":conftest",
         requirement("pytest-mock"),
         requirement("pytest-random-order"),
+        requirement("time-machine"),
     ],
 )

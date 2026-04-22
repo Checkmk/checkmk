@@ -6,7 +6,7 @@
 # mypy: disable-error-code="no-any-return"
 # mypy: disable-error-code="type-arg"
 
-from collections.abc import Iterator
+from collections.abc import Callable, Iterator
 from typing import override
 
 import cmk.utils.paths
@@ -39,6 +39,8 @@ from cmk.inventory.structured_data import (
     ImmutableTree,
     SDPath,
 )
+
+_InventoryTreeCache = dict[tuple[bool, HostName, SiteId], ImmutableTree | ImmutableDeltaTree]
 
 
 class VisualTypeViews(VisualType):
@@ -113,47 +115,20 @@ class VisualTypeViews(VisualType):
         """This has been implemented for HW/SW Inventory views which are often useless when a host
         has no such information available. For example the "Oracle Tablespaces" inventory view is
         useless on hosts that don't host Oracle databases."""
-        result = super().link_from(
-            linking_view_single_infos, linking_view_rows, visual, context_vars
-        )
-        if result is False:
-            return False
+        tree_cache: _InventoryTreeCache = g.setdefault("inventory_tree_cache", {})
 
-        link_from = visual["link_from"]
-        if not link_from:
-            return True  # No link from filtering: Always display this.
+        def has_inventory_tree(
+            hostname: HostName, site_id: SiteId, path: SDPath | None, is_history: bool
+        ) -> bool:
+            return _has_inventory_tree(hostname, site_id, path, is_history, tree_cache)
 
-        context = dict(context_vars)
-        if (hostname := context.get("host")) is None:
-            # No host data? Keep old behaviour
-            return True
-
-        if hostname == "":
-            return False
-
-        if isinstance(hostname, int):
-            return False
-
-        # TODO: host is not correctly validated by visuals. Do it here for the moment.
-        try:
-            Hostname().validate_value(hostname, "")
-        except MKUserError:
-            return False
-
-        if not (site_id := context.get("site")):
-            return False
-
-        hostname = HostName(hostname)
-        return _has_inventory_tree(
-            hostname,
-            SiteId(str(site_id)),
-            link_from.get("has_inventory_tree"),
-            is_history=False,
-        ) or _has_inventory_tree(
-            hostname,
-            SiteId(str(site_id)),
-            link_from.get("has_inventory_tree_history"),
-            is_history=True,
+        return _compute_link_from_result(
+            linking_view_single_infos,
+            linking_view_rows,
+            visual,
+            context_vars,
+            base_link_from=super().link_from,
+            has_inventory_tree=has_inventory_tree,
         )
 
 
@@ -162,6 +137,7 @@ def _has_inventory_tree(
     site_id: SiteId,
     path: SDPath | None,
     is_history: bool,
+    tree_cache: _InventoryTreeCache,
 ) -> bool:
     if path is None:
         return False
@@ -169,7 +145,7 @@ def _has_inventory_tree(
     # FIXME In order to decide whether this view is enabled
     # do we really need to load the whole tree?
     try:
-        inventory_tree = _get_inventory_tree(is_history, hostname, site_id)
+        inventory_tree = _get_inventory_tree(is_history, hostname, site_id, tree_cache)
     except Exception as e:
         if active_config.debug:
             html.show_warning("%s" % e)
@@ -179,21 +155,71 @@ def _has_inventory_tree(
 
 
 def _get_inventory_tree(
-    is_history: bool, host_name: HostName, site_id: SiteId
+    is_history: bool,
+    hostname: HostName,
+    site_id: SiteId,
+    tree_cache: _InventoryTreeCache,
 ) -> ImmutableTree | ImmutableDeltaTree:
-    tree_cache = g.setdefault("inventory_tree_cache", {})
-
-    cache_id = (is_history, host_name, site_id)
+    cache_id = (is_history, hostname, site_id)
     if cache_id in tree_cache:
         return tree_cache[cache_id]
 
     tree: ImmutableTree | ImmutableDeltaTree = (
-        load_latest_delta_tree(HistoryStore(cmk.utils.paths.omd_root), host_name)
+        load_latest_delta_tree(HistoryStore(cmk.utils.paths.omd_root), hostname)
         if is_history
         else load_tree(
-            host_name=host_name,
-            raw_status_data_tree=get_raw_status_data_via_livestatus(site_id, host_name),
+            host_name=hostname,
+            raw_status_data_tree=get_raw_status_data_via_livestatus(site_id, hostname),
         )
     )
     tree_cache[cache_id] = tree
     return tree
+
+
+def _compute_link_from_result(
+    linking_view_single_infos: SingleInfos,
+    linking_view_rows: Rows,
+    visual: Visual,
+    context_vars: HTTPVariables,
+    base_link_from: Callable[[SingleInfos, Rows, Visual, HTTPVariables], bool],
+    has_inventory_tree: Callable[[HostName, SiteId, SDPath | None, bool], bool],
+) -> bool:
+    if not base_link_from(linking_view_single_infos, linking_view_rows, visual, context_vars):
+        return False
+
+    link_from = visual["link_from"]
+    if not link_from:
+        return True  # No link from filtering: Always display this.
+
+    context = dict(context_vars)
+    if (hostname := context.get("host")) is None:
+        # No host data? Keep old behaviour
+        return True
+
+    if hostname == "":
+        return False
+
+    if isinstance(hostname, int):
+        return False
+
+    # TODO: host is not correctly validated by visuals. Do it here for the moment.
+    try:
+        Hostname().validate_value(hostname, "")
+    except MKUserError:
+        return False
+
+    if not (site_id := context.get("site")):
+        return False
+
+    hostname = HostName(hostname)
+    return has_inventory_tree(
+        hostname,
+        SiteId(str(site_id)),
+        link_from.get("has_inventory_tree"),
+        False,
+    ) or has_inventory_tree(
+        hostname,
+        SiteId(str(site_id)),
+        link_from.get("has_inventory_tree_history"),
+        True,
+    )

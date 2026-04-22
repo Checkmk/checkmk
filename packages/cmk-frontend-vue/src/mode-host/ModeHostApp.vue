@@ -156,6 +156,8 @@ function getElementBySelector<T>(selector: string): T {
     :relay-select-element="relaySelectElement"
     :relay-default-element="relayDefaultElement"
     :site-select-element="siteSelectElement"
+    :site-input-element="siteInputElement"
+    :site-default-element="siteDefaultElement"
     :sites="sites"
     :default-relay-id-hash="default_relay_id_hash"
   ></PingHost>

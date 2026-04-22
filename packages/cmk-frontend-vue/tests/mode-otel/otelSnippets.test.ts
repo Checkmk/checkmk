@@ -16,7 +16,7 @@ const authOn: AuthConfig = { method: 'basicauth', credential: null }
 const authOff: AuthConfig = { method: 'none', credential: null }
 
 const httpConfig: ExporterConfig = {
-  endpoint: { socketAddressType: 'custom', address: '172.18.134.39', port: 4318 },
+  endpoint: { address: '172.18.134.39', port: 4318 },
   tlsEnabled: true,
   auth: authOn,
   eventConsole: false
@@ -37,10 +37,7 @@ describe('buildCollectorSnippets', () => {
   it('falls back to placeholders when endpoint is empty', () => {
     const { exporters } = buildCollectorSnippets({
       ...baseState,
-      httpInfo: {
-        ...httpConfig,
-        endpoint: { socketAddressType: 'custom', address: '', port: undefined }
-      }
+      httpInfo: { ...httpConfig, endpoint: { address: '', port: undefined } }
     })
     expect(exporters).not.toContain('endpoint: ')
   })

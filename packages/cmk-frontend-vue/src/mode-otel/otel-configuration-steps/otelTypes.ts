@@ -16,10 +16,7 @@ export interface AuthConfig {
   credential: Credential | null
 }
 
-export type SocketAddressType = 'default_ipv4' | 'default_ipv6' | 'custom'
-
 export interface EndpointConfig {
-  socketAddressType: SocketAddressType
   address: string
   port: number | undefined
 }

@@ -8,6 +8,7 @@
 .coverage.*
 .directory
 .DS_Store
+.envrc.local
 .idea/
 .metadata
 .mypy_cache

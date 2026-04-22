@@ -5,6 +5,7 @@
 
 import argparse
 import enum
+import json
 import os
 import sys
 from pathlib import Path
@@ -67,7 +68,8 @@ def main() -> None:
     auth_missing = not args.auth_key or not args.auth_val
 
     if auth_missing and not args.no_auth:
-        print("Error: Missing auth credentials. Either pass to command or set in environment.\n")
+        err_msg = "Error: Missing auth credentials. Either pass to command or set in environment.\n"
+        sys.stderr.write(err_msg)
         cli.print_help()
         sys.exit(ExitCode.INVALID_ARGUMENTS)
 
@@ -76,20 +78,21 @@ def main() -> None:
     resp = requests.get(args.url, cookies=cookies, timeout=REQUEST_TIMEOUT)
 
     if args.verbose:
-        print("=" * 60)
-        print("URL:", args.url)
-        print("Status code:", resp.status_code)
-        print("Content type:", resp.headers.get("Content-Type"))
-        print("=" * 60)
+        sys.stdout.write("=" * 60 + "\n")
+        sys.stdout.write(f"URL: {args.url}\n")
+        sys.stdout.write(f"Status code: {resp.status_code}\n")
+        sys.stdout.write(f"Content type: {resp.headers.get('Content-Type')}\n")
+        sys.stdout.write("=" * 60 + "\n")
 
     if "text/html" not in resp.headers.get("Content-Type", ""):
-        print("Error: Can only validate HTML documents. Try another URL.")
+        sys.stderr.write("Error: Can only validate HTML documents. Try another URL.\n")
         sys.exit(ExitCode.INVALID_ARGUMENTS)
 
     try:
         check_html_tag_balance(str(resp.content))
     except TagImbalanceError as exc:
-        print(exc.get_errors())
+        err_msg = json.dumps(exc.get_errors())
+        sys.stderr.write(f"{err_msg}\n")
         sys.exit(ExitCode.VALIDATION_ERRORS)
     else:
         sys.exit(ExitCode.SUCCESS)

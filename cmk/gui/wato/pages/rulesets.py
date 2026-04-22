@@ -2850,7 +2850,7 @@ class VSExplicitConditions(Transform):
                     ),
                 ),
                 Checkbox(
-                    label=_("<b>Negate:</b> make rule apply for <b>all but</b> the above hosts"),
+                    label=_("<b>Negate:</b> apply to <b>all</b> except listed hosts above"),
                 ),
             ],
         )
@@ -2874,7 +2874,7 @@ class VSExplicitConditions(Transform):
             elements=[
                 self._vs_service_conditions(),
                 Checkbox(
-                    label=_("<b>Negate:</b> make rule apply for <b>all but</b> the above entries"),
+                    label=_("<b>Negate:</b> apply to <b>all</b> except listed entries above"),
                 ),
             ],
         )

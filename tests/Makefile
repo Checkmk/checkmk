@@ -176,7 +176,7 @@ test-semgrep:
 test-bandit: bandit.ini
 # Currently only care about high severity reported issues. Once this is reached,
 # go and enable the medium/low checks.
-	$(BANDIT) -c ../bandit.yaml -r -ll --ini bandit.ini $(BANDIT_OUTPUT_ARGS)
+	$(BANDIT) -c ../pyproject.toml -r -ll --ini bandit.ini $(BANDIT_OUTPUT_ARGS)
 
 prepare-playwright:
 	$(UVENV) playwright install-deps "chromium";

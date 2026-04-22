@@ -69,18 +69,6 @@ pub struct Elf {
     dependencies: Vec<String>,
     rpath: Vec<String>,
     runpath: Vec<String>,
-    /// True if the ELF calls `lt_dlopen*()` (libltdl) or links `libltdl` directly.
-    /// libltdl searches the ELF RPATH, so these binaries require `DT_RPATH` (not
-    /// `DT_RUNPATH`) for bundled plugins to be found at runtime. Raw `dlopen()`
-    /// callers (OpenSSL, Python, Erlang, etc.) are excluded because they pass
-    /// absolute paths and are unaffected by DT_RPATH vs DT_RUNPATH.
-    uses_dlopen: bool,
-    /// True if the ELF has a `PT_INTERP` program header, meaning the kernel will
-    /// invoke a dynamic linker to run it as a main executable. Only executables have
-    /// this header; shared libraries (`ET_DYN`) do not. Used to restrict the
-    /// DT_RUNPATH + dlopen check to executables, because only the main executable's
-    /// `DT_RPATH` propagates process-wide to all `dlopen()` calls.
-    has_interpreter: bool,
 }
 
 // ELF files typically don't have extensions (aside from .so, .so.x, .so.x.y, etc.), so this is safe.
@@ -138,20 +126,6 @@ impl Elf {
     #[must_use]
     pub fn runpath(&self) -> &[String] {
         &self.runpath
-    }
-
-    /// Returns true if the ELF calls `lt_dlopen*()` or links `libltdl`.
-    #[must_use]
-    pub fn uses_dlopen(&self) -> bool {
-        self.uses_dlopen
-    }
-
-    /// Returns true if the ELF has a `PT_INTERP` program header (i.e. it is a
-    /// main executable that will be run directly by the kernel via a dynamic linker).
-    /// Shared libraries do not have this header.
-    #[must_use]
-    pub fn has_interpreter(&self) -> bool {
-        self.has_interpreter
     }
 
     /// Normalize and resolve RPATH and RUNPATH entries into absolute filesystem paths.
@@ -355,29 +329,6 @@ impl Elf {
             }
         }
 
-        // Detect libltdl usage: either a direct DT_NEEDED on libltdl, or a direct
-        // import of lt_dlopen*(). Raw dlopen() is intentionally excluded: callers
-        // like OpenSSL (provider loading), Python (extension modules), and Erlang
-        // (NIFs) construct absolute paths before calling dlopen, so DT_RPATH vs
-        // DT_RUNPATH is irrelevant to them. libltdl's lt_dlopen* is the pattern
-        // that actually relies on the ELF RPATH search path.
-        let uses_dlopen =
-            // Binary directly calls any lt_dlopen*() function from libltdl
-            elf.dynsyms.iter().any(|sym| {
-                sym.is_import()
-                    && elf
-                        .dynstrtab
-                        .get_at(sym.st_name)
-                        .is_some_and(|n| n.starts_with("lt_dlopen"))
-            })
-            // Binary directly links libltdl (libtool's portable dlopen wrapper)
-            || dependencies.iter().any(|dep| dep.starts_with("libltdl"));
-
-        // PT_INTERP is present only in main executables (the kernel uses it to locate
-        // the dynamic linker). Shared libraries do not have this header. Goblin parses
-        // PT_INTERP into the `interpreter` field automatically.
-        let has_interpreter = elf.interpreter.is_some();
-
         Ok(Self {
             kind: match elf.header.e_type {
                 goblin::elf::header::ET_NONE => ElfType::None,
@@ -394,8 +345,6 @@ impl Elf {
             dependencies,
             rpath,
             runpath,
-            uses_dlopen,
-            has_interpreter,
         })
     }
 
@@ -511,27 +460,6 @@ impl Elf {
 mod tests {
     use super::*;
 
-    impl Elf {
-        /// Construct an `Elf` with explicit field values for use in tests.
-        pub(crate) fn new_for_testing(
-            kind: ElfType,
-            dependencies: Vec<String>,
-            rpath: Vec<String>,
-            runpath: Vec<String>,
-            uses_dlopen: bool,
-            has_interpreter: bool,
-        ) -> Self {
-            Self {
-                kind,
-                dependencies,
-                rpath,
-                runpath,
-                uses_dlopen,
-                has_interpreter,
-            }
-        }
-    }
-
     fn get_examples_dir() -> PathBuf {
         match runfiles::Runfiles::create() {
             Ok(r) => r
@@ -640,8 +568,6 @@ mod tests {
             dependencies: Vec::new(),
             rpath: vec!["/usr/lib".to_string()],
             runpath: vec!["/opt/lib".to_string()],
-            uses_dlopen: false,
-            has_interpreter: true,
         };
 
         let normalized = elf.normalize_paths(origin);
@@ -655,8 +581,6 @@ mod tests {
             dependencies: Vec::new(),
             rpath: vec!["/usr/lib".to_string()],
             runpath: Vec::new(),
-            uses_dlopen: false,
-            has_interpreter: true,
         };
 
         let normalized_rpath = elf_rpath_only.normalize_paths(origin);

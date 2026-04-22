@@ -277,8 +277,8 @@ class ManageUpdate:
                     "Since the root cause of this error is not known to OMD, the site is an "
                     "unknown state and both, restarting or updating the site, can have unknown effects.\n"
                 )
+            sys.stdout.write("\nThe update was rolled back successfully.\n")
         shutil.rmtree(self.backup_dir)
-        sys.stdout.write("The update was rolled back successfully.\n")
         return False  # Don't suppress the exception
 
 

@@ -814,7 +814,10 @@ Function sql_tablespaces {
           DECLARE
                type x is table of varchar2(20000) index by pls_integer;
                xx x;
+               l_open varchar2(32);
           begin
+               select open_mode into l_open from v$database;
+               if l_open in ('READ WRITE', 'READ ONLY WITH APPLY') then
                begin
                     execute immediate
                          'select upper(decode(vp.con_id, null, d.NAME,d.NAME||''.''||vp.name))
@@ -861,12 +864,16 @@ Function sql_tablespaces {
                                    dbms_output.put_line(cur1.name || '| Debug (121) 1: ' ||sqlerrm);
                               end loop;
                end;
+               end if;
           END;
 /
           DECLARE
                type x is table of varchar2(20000) index by pls_integer;
                xx x;
+               l_open varchar2(32);
           begin
+               select open_mode into l_open from v$database;
+               if l_open in ('READ WRITE', 'READ ONLY WITH APPLY') then
                begin
                     execute immediate
                          'select upper(decode(dbf.con_id, null, d.NAME,dbf.name))
@@ -946,6 +953,7 @@ Function sql_tablespaces {
                               dbms_output.put_line(cur1.name || '| Debug (121) 2: ' ||sqlerrm);
                          end loop;
                end;
+               end if;
           END;
 /
               set serverout off
@@ -960,7 +968,10 @@ Function sql_tablespaces {
           DECLARE
                type x is table of varchar2(20000) index by pls_integer;
                xx x;
+               l_open varchar2(32);
           begin
+               select open_mode into l_open from v$database;
+               if l_open in ('READ WRITE', 'READ ONLY WITH APPLY') then
                begin
                     execute immediate
                          'select upper(i.instance_name)
@@ -994,13 +1005,17 @@ Function sql_tablespaces {
                               dbms_output.put_line(cur1.name || '| Debug (102) 1: ' ||sqlerrm);
                          end loop;
                end;
+               end if;
           END;
 /
 
           DECLARE
                type x is table of varchar2(20000) index by pls_integer;
                xx x;
+               l_open varchar2(32);
           begin
+               select open_mode into l_open from v$database;
+               if l_open in ('READ WRITE', 'READ ONLY WITH APPLY') then
                begin
                     execute immediate
                          'select upper(i.instance_name)
@@ -1069,6 +1084,7 @@ Function sql_tablespaces {
                               dbms_output.put_line(cur1.name || '| Debug (102) 2: ' ||sqlerrm);
                          end loop;
                end;
+               end if;
           END;
 /
           set serverout off
@@ -1079,82 +1095,108 @@ Function sql_tablespaces {
      elseif ($DBVERSION -gt 92000) {
           $query_tablespace = @'
           prompt <<<oracle_tablespaces:sep(124)>>>;
-          select upper(d.NAME)
-               || '|' || file_name
-               || '|' || tablespace_name
-               || '|' || fstatus
-               || '|' || AUTOEXTENSIBLE
-               || '|' || blocks
-               || '|' || maxblocks
-               || '|' || USER_BLOCKS
-               || '|' || INCREMENT_BY
-               || '|' || ONLINE_STATUS
-               || '|' || BLOCK_SIZE
-               || '|' || decode(tstatus,'READ ONLY', 'READONLY', tstatus)
-               || '|' || free_blocks
-               || '|' || contents
-          from v$database d , (
-               select
-                    f.file_name,
-                    f.tablespace_name,
-                    f.status fstatus,
-                    f.AUTOEXTENSIBLE,
-                    f.blocks,
-                    f.maxblocks,
-                    f.USER_BLOCKS,
-                    f.INCREMENT_BY,
-                    'ONLINE' ONLINE_STATUS,
-                    t.BLOCK_SIZE,
-                    t.status tstatus,
-                    nvl(sum(fs.blocks),0) free_blocks,
-                    t.contents
-               from dba_data_files f, dba_tablespaces t, dba_free_space fs
-               where f.tablespace_name = t.tablespace_name
-               and f.file_id = fs.file_id(+)
-               group by
-                    f.file_name,
-                    f.tablespace_name,
-                    f.status,
-                    f.autoextensible,
-                    f.blocks,
-                    f.maxblocks,
-                    f.user_blocks,
-                    f.increment_by,
-                    'ONLINE',
-                    t.block_size,
-                    t.status,
-                    t.contents
-               UNION
-               select
-                    f.file_name,
-                    f.tablespace_name,
-                    'ONLINE' status,
-                    f.AUTOEXTENSIBLE,
-                    f.blocks,
-                    f.maxblocks,
-                    f.USER_BLOCKS,
-                    f.INCREMENT_BY,
-                    'TEMP',
-                    t.BLOCK_SIZE,
-                    'TEMP' status,
-                    sum(sh.blocks_free) free_blocks,
-                    'TEMPORARY'
-               from v$thread th, dba_temp_files f, dba_tablespaces t, v$temp_space_header sh
-               WHERE f.tablespace_name = t.tablespace_name and f.file_id = sh.file_id
-               GROUP BY
-                    th.instance,
-                    f.file_name,
-                    f.tablespace_name,
-                    'ONLINE',
-                    f.autoextensible,
-                    f.blocks,
-                    f.maxblocks,
-                    f.user_blocks,
-                    f.increment_by,
-                    'TEMP',
-                    t.block_size,
-                    t.status
-          );
+          SET SERVEROUTPUT ON feedback off
+               DECLARE
+                    type x is table of varchar2(20000) index by pls_integer;
+                    xx x;
+                    l_open varchar2(32);
+               begin
+                    select open_mode into l_open from v$database;
+                    if l_open in ('READ WRITE', 'READ ONLY WITH APPLY') then
+                    begin
+                         execute immediate
+                              'select upper(d.NAME)
+                                   || ''|'' || file_name
+                                   || ''|'' || tablespace_name
+                                   || ''|'' || fstatus
+                                   || ''|'' || AUTOEXTENSIBLE
+                                   || ''|'' || blocks
+                                   || ''|'' || maxblocks
+                                   || ''|'' || USER_BLOCKS
+                                   || ''|'' || INCREMENT_BY
+                                   || ''|'' || ONLINE_STATUS
+                                   || ''|'' || BLOCK_SIZE
+                                   || ''|'' || decode(tstatus,''READ ONLY'', ''READONLY'', tstatus)
+                                   || ''|'' || free_blocks
+                                   || ''|'' || contents
+                              from v$database d , (
+                                   select
+                                        f.file_name,
+                                        f.tablespace_name,
+                                        f.status fstatus,
+                                        f.AUTOEXTENSIBLE,
+                                        f.blocks,
+                                        f.maxblocks,
+                                        f.USER_BLOCKS,
+                                        f.INCREMENT_BY,
+                                        ''ONLINE'' ONLINE_STATUS,
+                                        t.BLOCK_SIZE,
+                                        t.status tstatus,
+                                        nvl(sum(fs.blocks),0) free_blocks,
+                                        t.contents
+                                   from dba_data_files f, dba_tablespaces t, dba_free_space fs
+                                   where f.tablespace_name = t.tablespace_name
+                                   and f.file_id = fs.file_id(+)
+                                   group by
+                                        f.file_name,
+                                        f.tablespace_name,
+                                        f.status,
+                                        f.autoextensible,
+                                        f.blocks,
+                                        f.maxblocks,
+                                        f.user_blocks,
+                                        f.increment_by,
+                                        ''ONLINE'',
+                                        t.block_size,
+                                        t.status,
+                                        t.contents
+                                   UNION
+                                   select
+                                        f.file_name,
+                                        f.tablespace_name,
+                                        ''ONLINE'' status,
+                                        f.AUTOEXTENSIBLE,
+                                        f.blocks,
+                                        f.maxblocks,
+                                        f.USER_BLOCKS,
+                                        f.INCREMENT_BY,
+                                        ''TEMP'',
+                                        t.BLOCK_SIZE,
+                                        ''TEMP'' status,
+                                        sum(sh.blocks_free) free_blocks,
+                                        ''TEMPORARY''
+                                   from v$thread th, dba_temp_files f, dba_tablespaces t, v$temp_space_header sh
+                                   WHERE f.tablespace_name = t.tablespace_name and f.file_id = sh.file_id
+                                   GROUP BY
+                                        th.instance,
+                                        f.file_name,
+                                        f.tablespace_name,
+                                        ''ONLINE'',
+                                        f.autoextensible,
+                                        f.blocks,
+                                        f.maxblocks,
+                                        f.user_blocks,
+                                        f.increment_by,
+                                        ''TEMP'',
+                                        t.block_size,
+                                        t.status
+                              )'
+                         bulk collect into xx;
+                         if xx.count >= 1 then
+                              for i in 1 .. xx.count loop
+                                   dbms_output.put_line(xx(i));
+                              end loop;
+                         end if;
+                         exception
+                              when others then
+                                   for cur1 in (select upper(name) name from  v$database) loop
+                                        dbms_output.put_line(cur1.name || '| Debug (92): ' || sqlerrm);
+                                   end loop;
+                    end;
+                    end if;
+               END;
+/
+          set serverout off
           select * from v$instance;
 
 '@
@@ -1592,7 +1634,10 @@ Function sql_resumable {
           DECLARE
                type x is table of varchar2(20000) index by pls_integer;
                xx x;
+               l_open varchar2(32);
           begin
+               select open_mode into l_open from v$database;
+               if l_open in ('READ WRITE', 'READ ONLY WITH APPLY') then
                begin
                     execute immediate
                          'select upper(i.INSTANCE_NAME)
@@ -1625,6 +1670,7 @@ Function sql_resumable {
                               dbms_output.put_line(cur1.instance_name || '| Debug: '||sqlerrm);
                          end loop;
                end;
+               end if;
           END;
           /
           set serverout off
@@ -1645,7 +1691,10 @@ Function sql_jobs {
           DECLARE
               type x is table of varchar2(20000) index by pls_integer;
               xx x;
+              l_open varchar2(32);
           begin
+               select open_mode into l_open from v$database;
+               if l_open in ('READ WRITE', 'READ ONLY WITH APPLY') then
                begin
                     execute immediate
                          'SELECT upper(vp.name)
@@ -1696,6 +1745,7 @@ Function sql_jobs {
                               dbms_output.put_line(cur1.name || '| Debug (121): ' ||sqlerrm);
                          end loop;
                end;
+               end if;
           END;
           /
           set serverout off
@@ -1710,7 +1760,10 @@ Function sql_jobs {
                DECLARE
                     type x is table of varchar2(20000) index by pls_integer;
                     xx x;
+                    l_open varchar2(32);
           begin
+               select open_mode into l_open from v$database;
+               if l_open in ('READ WRITE', 'READ ONLY WITH APPLY') then
                begin
                     execute immediate
                          'SELECT upper(vd.NAME)
@@ -1751,6 +1804,7 @@ Function sql_jobs {
                               dbms_output.put_line(cur1.name || '| Debug (102): ' ||sqlerrm);
                          end loop;
                end;
+               end if;
           END;
           /
           set serverout off
@@ -1767,18 +1821,44 @@ Function sql_jobs {
 Function sql_ts_quotas {
      $query_ts_quotas = @'
      prompt <<<oracle_ts_quotas:sep(124)>>>;
-     select upper(d.NAME)
-          ||'|'|| Q.USERNAME
-          ||'|'|| Q.TABLESPACE_NAME
-          ||'|'|| Q.BYTES
-          ||'|'|| Q.MAX_BYTES
-     from dba_ts_quotas Q, v$database d
-     where max_bytes > 0
-     union all
-     select upper(d.NAME)
-          ||'|||'
-     from v$database d
-     order by 1;
+     SET SERVEROUTPUT ON feedback off
+          DECLARE
+               type x is table of varchar2(20000) index by pls_integer;
+               xx x;
+               l_open varchar2(32);
+          begin
+               select open_mode into l_open from v$database;
+               if l_open in ('READ WRITE', 'READ ONLY WITH APPLY') then
+               begin
+                    execute immediate
+                         'select upper(d.NAME)
+                              ||''|''|| Q.USERNAME
+                              ||''|''|| Q.TABLESPACE_NAME
+                              ||''|''|| Q.BYTES
+                              ||''|''|| Q.MAX_BYTES
+                         from dba_ts_quotas Q, v$database d
+                         where max_bytes > 0
+                         union all
+                         select upper(d.NAME)
+                              ||''|||''
+                         from v$database d
+                         order by 1'
+                    bulk collect into xx;
+                    if xx.count >= 1 then
+                         for i in 1 .. xx.count loop
+                              dbms_output.put_line(xx(i));
+                         end loop;
+                    end if;
+                    exception
+                         when others then
+                              for cur1 in (select upper(name) name from  v$database) loop
+                                   dbms_output.put_line(cur1.name || '| Debug ts_quotas: ' || sqlerrm);
+                              end loop;
+               end;
+               end if;
+          END;
+/
+     set serverout off
 
 '@
      echo $query_ts_quotas
@@ -2114,7 +2194,10 @@ Function sql_locks_old {
           DECLARE
                type x is table of varchar2(20000) index by pls_integer;
                xx x;
+               l_open varchar2(32);
           begin
+               select open_mode into l_open from v$database;
+               if l_open in ('READ WRITE', 'READ ONLY WITH APPLY') then
                begin
                     execute immediate
                          'select upper(i.instance_name)
@@ -2152,6 +2235,7 @@ Function sql_locks_old {
                               dbms_output.put_line(cur1.instance_name || '|||||||||'||sqlerrm);
                          end loop;
                end;
+               end if;
           END;
           /
           set serverout off

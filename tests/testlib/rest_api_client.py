@@ -3952,6 +3952,101 @@ class HistoricalEventConsole(RestApiClient):
         )
 
 
+class HostAvailabilityClient(RestApiClient):
+    domain: DomainType = "host_availability"
+    default_version = APIVersion.UNSTABLE
+
+    def list_all(
+        self,
+        time_range_from: str,
+        time_range_until: str,
+        site_id: str | None = None,
+        expect_ok: bool = True,
+    ) -> Response:
+        return self.request(
+            "get",
+            url=f"/domain-types/{self.domain}/collections/all",
+            query_params=_only_set_keys(
+                {
+                    "time_range_from": time_range_from,
+                    "time_range_until": time_range_until,
+                    "site_id": site_id,
+                }
+            ),
+            expect_ok=expect_ok,
+        )
+
+    def get(
+        self,
+        host_name: str,
+        time_range_from: str,
+        time_range_until: str,
+        site_id: str | None = None,
+        expect_ok: bool = True,
+    ) -> Response:
+        return self.request(
+            "get",
+            url=f"/objects/{self.domain}/{host_name}",
+            query_params=_only_set_keys(
+                {
+                    "time_range_from": time_range_from,
+                    "time_range_until": time_range_until,
+                    "site_id": site_id,
+                }
+            ),
+            expect_ok=expect_ok,
+        )
+
+
+class ServiceAvailabilityClient(RestApiClient):
+    domain: DomainType = "service_availability"
+    default_version = APIVersion.UNSTABLE
+
+    def list_all(
+        self,
+        time_range_from: str,
+        time_range_until: str,
+        site_id: str | None = None,
+        host_name: str | None = None,
+        expect_ok: bool = True,
+    ) -> Response:
+        return self.request(
+            "get",
+            url=f"/domain-types/{self.domain}/collections/all",
+            query_params=_only_set_keys(
+                {
+                    "site_id": site_id,
+                    "host_name": host_name,
+                    "time_range_from": time_range_from,
+                    "time_range_until": time_range_until,
+                }
+            ),
+            expect_ok=expect_ok,
+        )
+
+    def get(
+        self,
+        host_name: str,
+        service_name: str,
+        time_range_from: str,
+        time_range_until: str,
+        site_id: str | None = None,
+        expect_ok: bool = True,
+    ) -> Response:
+        return self.request(
+            "get",
+            url=f"/objects/host/{host_name}/service_availability/{service_name}",
+            query_params=_only_set_keys(
+                {
+                    "time_range_from": time_range_from,
+                    "time_range_until": time_range_until,
+                    "site_id": site_id,
+                }
+            ),
+            expect_ok=expect_ok,
+        )
+
+
 @dataclasses.dataclass
 class ClientRegistry:
     """Overall client registry for all available endpoint family clients.
@@ -4018,6 +4113,8 @@ class ClientRegistry:
     PagetypeTopicClient: PagetypeTopicClient
     IconClient: IconClient
     HistoricalEventConsole: HistoricalEventConsole
+    HostAvailability: HostAvailabilityClient
+    ServiceAvailability: ServiceAvailabilityClient
 
 
 def get_client_registry(request_handler: RequestHandler, url_prefix: str) -> ClientRegistry:
@@ -4076,4 +4173,6 @@ def get_client_registry(request_handler: RequestHandler, url_prefix: str) -> Cli
         PagetypeTopicClient=PagetypeTopicClient(request_handler, url_prefix),
         IconClient=IconClient(request_handler, url_prefix),
         HistoricalEventConsole=HistoricalEventConsole(request_handler, url_prefix),
+        HostAvailability=HostAvailabilityClient(request_handler, url_prefix),
+        ServiceAvailability=ServiceAvailabilityClient(request_handler, url_prefix),
     )

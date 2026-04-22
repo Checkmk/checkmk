@@ -71,7 +71,7 @@ class BICompiler:
     def get_aggregation_by_name(
         self, aggr_name: str
     ) -> tuple[BICompiledAggregation, BICompiledRule] | None:
-        for _name, compiled_aggregation in self._compiled_aggregations.items():
+        for compiled_aggregation in self._compiled_aggregations.values():
             for branch in compiled_aggregation.branches:
                 if branch.properties.title == aggr_name:
                     return compiled_aggregation, branch

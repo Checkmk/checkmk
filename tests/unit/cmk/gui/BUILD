@@ -44,12 +44,35 @@ py_library(
 )
 
 py_test(
+    name = "availability_tests",
+    srcs = glob(["test_availability_*.py"]),
+    args = ["tests/unit/cmk/gui"],
+    env = {"EDITION": "community"},
+    pytest_main = True,
+    deps = [
+        ":conftest",
+        "//cmk/gui/availability",
+        "//cmk/utils",
+        "//packages/cmk-ccc:hostaddress",
+        "//packages/cmk-ccc:site",
+        "//tests/unit:conftest",
+        requirement("fido2"),
+        requirement("marshmallow"),
+        requirement("opentelemetry-sdk"),
+        requirement("pytest"),
+        requirement("python-ldap"),
+        requirement("time-machine"),
+    ],
+)
+
+py_test(
     name = "gui",
     srcs = ["__test__.py"] + glob(
         include = ["**/*.py"],
         exclude = [
             "compare_html.py",
             "conftest.py",
+            "test_availability_*.py",
         ],
     ),
     args = [

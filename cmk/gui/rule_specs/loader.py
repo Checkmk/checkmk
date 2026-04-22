@@ -61,6 +61,7 @@ def _discover_modules_from(*names: str) -> set[str]:
 def load_api_v1_rule_specs(
     raise_errors: bool,
     edition: Edition,
+    agent_bakery_enabled: bool,
 ) -> tuple[Sequence[Exception], Sequence[LoadedRuleSpec]]:
     used_entry_points = (
         {
@@ -68,7 +69,7 @@ def load_api_v1_rule_specs(
             for type_, prefix in entry_point_prefixes().items()
             if type_ is not AgentConfig
         }
-        if edition is Edition.COMMUNITY
+        if not agent_bakery_enabled
         else entry_point_prefixes()
     )
 

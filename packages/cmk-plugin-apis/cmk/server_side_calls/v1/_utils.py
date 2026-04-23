@@ -111,10 +111,9 @@ class HostConfig:
     Example:
 
         >>> from collections.abc import Iterable, Mapping
-
         >>> from cmk.server_side_calls.v1 import HostConfig, SpecialAgentCommand
-
-
+        ...
+        ...
         >>> def generate_example_commands(
         ...     params: Mapping[str, object],
         ...     host_config: HostConfig,
@@ -326,22 +325,22 @@ def noop_parser(params: Mapping[str, object]) -> Mapping[str, object]:
     Example:
 
         >>> from collections.abc import Iterable
-
+        ...
         >>> from cmk.server_side_calls.v1 import (
         ...     noop_parser,
         ...     SpecialAgentCommand,
         ...     SpecialAgentConfig
         ... )
-
-
+        ...
+        ...
         >>> def generate_example_commands(
         ...     params: Mapping[str, object],
         ...     host_config: HostConfig,
         ... ) -> Iterable[SpecialAgentCommand]:
         ...     args = ["--service", str(params["service"])]
         ...     yield SpecialAgentCommand(command_arguments=args)
-
-
+        ...
+        ...
         >>> special_agent_example = SpecialAgentConfig(
         ...     name="example",
         ...     parameter_parser=noop_parser,

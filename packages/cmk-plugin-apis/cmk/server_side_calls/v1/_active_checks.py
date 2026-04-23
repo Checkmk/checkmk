@@ -24,9 +24,10 @@ class ActiveCheckCommand:
         command_arguments: Arguments that are passed to the active checks command-line interface
 
     Example:
-        >>> from cmk.server_side_calls.v1 import Secret
 
-        >>> ActiveCheckCommand(
+        >>> from cmk.server_side_calls.v1 import Secret
+        ...
+        >>> command = ActiveCheckCommand(
         ...     service_description="Example description",
         ...     command_arguments=[
         ...         "--user",
@@ -35,8 +36,6 @@ class ActiveCheckCommand:
         ...         Secret(0)
         ...     ]
         ... )
-        ActiveCheckCommand(service_description='Example description', command_arguments=['--user', \
-'example-user', '--password', Secret(id=0, format='%s', pass_safely=True)])
     """
 
     service_description: str
@@ -71,7 +70,7 @@ class ActiveCheckConfig[ParsedParameters]:
     Example:
 
         >>> from cmk.server_side_calls.v1 import noop_parser
-
+        ...
         >>> def generate_example_commands(
         ...     params: Mapping[str, object],
         ...     host_config: HostConfig,
@@ -81,7 +80,7 @@ class ActiveCheckConfig[ParsedParameters]:
         ...         service_description="Example description",
         ...         command_arguments=args
         ...         )
-
+        ...
         >>> active_check_example = ActiveCheckConfig(
         ...     name="norris",
         ...     parameter_parser=noop_parser,

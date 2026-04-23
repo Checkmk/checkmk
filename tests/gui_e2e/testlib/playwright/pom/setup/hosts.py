@@ -202,11 +202,11 @@ class AddHost(CmkPage):
 
     @property
     def host_name_status_valid(self) -> Locator:
-        return self.main_area.locator("table#basic").locator("div.cmk-alert-box--success")
+        return self.main_area.locator("table#basic").get_by_role("status")
 
     @property
     def host_name_status_invalid(self) -> Locator:
-        return self.main_area.locator("table#basic").locator("div.cmk-alert-box--warning")
+        return self.main_area.locator("table#basic").get_by_role("alert")
 
     @property
     def monitored_on_site_checkbox(self) -> Locator:
@@ -226,11 +226,11 @@ class AddHost(CmkPage):
 
     @property
     def ipaddress_status_valid(self) -> Locator:
-        return self.main_area.locator("table#address").locator("div.cmk-alert-box--success")
+        return self.main_area.locator("table#address").get_by_role("status")
 
     @property
     def ipaddress_status_invalid(self) -> Locator:
-        return self.main_area.locator("table#address").locator("div.cmk-alert-box--warning")
+        return self.main_area.locator("table#address").get_by_role("alert")
 
     def save_and_run_discovery(self) -> None:
         self.main_area.get_suggestion("Save & run service discovery").click()

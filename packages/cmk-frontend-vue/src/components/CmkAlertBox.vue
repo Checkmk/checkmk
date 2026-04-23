@@ -104,7 +104,12 @@ const alertIconColor = computed(() => {
 </script>
 
 <template>
-  <div v-if="open" class="cmk-alert-box" :class="propsCva({ variant, size })">
+  <div
+    v-if="open"
+    class="cmk-alert-box"
+    :class="propsCva({ variant, size })"
+    :role="variant === 'error' || variant === 'warning' ? 'alert' : 'status'"
+  >
     <div class="cmk-alert-box__icon">
       <CmkIcon v-if="variant === 'loading'" name="load-graph" size="large" />
       <CmkMultitoneIcon v-else :name="alertIconName" :primary-color="alertIconColor" size="large" />

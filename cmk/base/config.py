@@ -776,6 +776,17 @@ def _perform_post_config_loading_actions(
         define_hostgroups=define_hostgroups,
         define_servicegroups=define_servicegroups,
         contactgroup_members=contactgroup_members,
+        cmc_import_nagios_state=cmc_import_nagios_state,
+        restart_locking=restart_locking,
+        check_submission=check_submission,
+        check_max_cachefile_age=check_max_cachefile_age,
+        check_mk_perfdata_with_times=check_mk_perfdata_with_times,
+        perfdata_format=perfdata_format,
+        host_notification_periods=host_notification_periods,
+        service_notification_periods=service_notification_periods,
+        inventory_check_autotrigger=inventory_check_autotrigger,
+        monitoring_host=monitoring_host,
+        explicit_snmp_communities=explicit_snmp_communities,
     )
 
     config_cache = ConfigCache(loaded_config, get_builtin_host_labels, edition).initialize(

@@ -281,7 +281,7 @@ def _inventory_as_check(
                 tracker.duration,
                 # FIXME: This is inconsistent with the other two calls.
                 (),  # nothing to add here, b/c fetching is triggered further down the call stack.
-                perfdata_with_times=config.check_mk_perfdata_with_times,
+                perfdata_with_times=loaded_config.check_mk_perfdata_with_times,
             ),
         ]
 

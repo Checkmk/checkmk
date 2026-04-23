@@ -747,7 +747,7 @@ def mode_dump_agent(app: CheckmkBaseApp, options: Mapping[str, object], hostname
             simulation_mode=config.simulation_mode,
             file_cache_options=file_cache_options,
             file_cache_max_age=MaxAge(
-                checking=config.check_max_cachefile_age,
+                checking=loaded_config.check_max_cachefile_age,
                 discovery=1.5 * check_interval,
                 inventory=1.5 * check_interval,
             ),
@@ -1510,12 +1510,12 @@ def mode_dump_nagios_config(app: CheckmkBaseApp, args: Sequence[HostName]) -> No
 
     hostnames = args if args else None
 
-    if config.host_notification_periods:
+    if loaded_config.host_notification_periods:
         config_warnings.warn(
             "host_notification_periods is not longer supported. Please use extra_host_conf['notification_period'] instead."
         )
 
-    if config.service_notification_periods:
+    if loaded_config.service_notification_periods:
         config_warnings.warn(
             "service_notification_periods is not longer supported. Please use extra_service_conf['notification_period'] instead."
         )
@@ -1670,7 +1670,8 @@ def mode_update(app: CheckmkBaseApp) -> None:
 
     try:
         with activation_lock(
-            main_mk_file=cmk.utils.paths.default_config_dir / "main.mk", mode=config.restart_locking
+            main_mk_file=cmk.utils.paths.default_config_dir / "main.mk",
+            mode=loaded_config.restart_locking,
         ):
             core_interface.do_create_config(
                 core=app.create_core(
@@ -1798,7 +1799,7 @@ def mode_restart(app: CheckmkBaseApp, args: Sequence[HostName]) -> None:
         ),
         plugins,
         hosts_to_update=set(args) if args else None,
-        locking_mode=config.restart_locking,
+        locking_mode=loaded_config.restart_locking,
         service_depends_on=config.ServiceDependsOn(
             tag_list=loading_result.config_cache.host_tags.tag_list,
             service_dependencies=loaded_config.service_dependencies,
@@ -1897,7 +1898,7 @@ def mode_reload(app: CheckmkBaseApp, args: Sequence[HostName]) -> None:
         ),
         plugins,
         hosts_to_update=set(args) if args else None,
-        locking_mode=config.restart_locking,
+        locking_mode=loaded_config.restart_locking,
         service_depends_on=config.ServiceDependsOn(
             tag_list=loading_result.config_cache.host_tags.tag_list,
             service_dependencies=loaded_config.service_dependencies,
@@ -2194,7 +2195,7 @@ def mode_check_discovery(
         mode=FetchMode.DISCOVERY,
         simulation_mode=config.simulation_mode,
         max_cachefile_age=MaxAge(
-            checking=config.check_max_cachefile_age,
+            checking=loaded_config.check_max_cachefile_age,
             discovery=discovery_file_cache_max_age,
             inventory=1.5 * check_interval,
         ),
@@ -2282,7 +2283,7 @@ def mode_check_discovery(
             make_timing_results(
                 tracker.duration,
                 tuple((f[0], f[2]) for f in fetched),
-                perfdata_with_times=config.check_mk_perfdata_with_times,
+                perfdata_with_times=loaded_config.check_mk_perfdata_with_times,
             ),
         ]
 
@@ -2961,11 +2962,11 @@ def run_checking(
                     )
                 ),
                 submitter=get_submitter(
-                    check_submission=config.check_submission,
+                    check_submission=loaded_config.check_submission,
                     monitoring_core=monitoring_core,
                     dry_run=dry_run,
                     host_name=hostname,
-                    perfdata_format=("pnp" if config.perfdata_format == "pnp" else "standard"),
+                    perfdata_format=loaded_config.perfdata_format,
                     show_perfdata=options.get("perfdata", False),
                 ),
                 exit_spec=config_cache.exit_code_spec(hostname),
@@ -2977,7 +2978,7 @@ def run_checking(
             make_timing_results(
                 tracker.duration,
                 tuple((f[0], f[2]) for f in fetched),
-                perfdata_with_times=config.check_mk_perfdata_with_times,
+                perfdata_with_times=loaded_config.check_mk_perfdata_with_times,
             ),
         ]
 

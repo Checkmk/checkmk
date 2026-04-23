@@ -147,6 +147,17 @@ EMPTY_CONFIG = LoadedConfigFragment(
     define_hostgroups={},
     define_servicegroups={},
     contactgroup_members={},
+    cmc_import_nagios_state=True,
+    restart_locking="abort",
+    check_submission="file",
+    check_max_cachefile_age=0,
+    check_mk_perfdata_with_times=True,
+    perfdata_format="pnp",
+    host_notification_periods=[],
+    service_notification_periods=[],
+    inventory_check_autotrigger=True,
+    monitoring_host=None,
+    explicit_snmp_communities={},
 )
 
 

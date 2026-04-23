@@ -174,3 +174,14 @@ class LoadedConfigFragment:
     define_hostgroups: Mapping[str, str]
     define_servicegroups: Mapping[str, str]
     contactgroup_members: Mapping[str, Sequence[ContactName]]
+    cmc_import_nagios_state: bool
+    restart_locking: Literal["abort", "wait"] | None
+    check_submission: Literal["file", "pipe"]
+    check_max_cachefile_age: int
+    check_mk_perfdata_with_times: bool
+    perfdata_format: Literal["pnp", "standard"]
+    host_notification_periods: Sequence[RuleSpec[object]]
+    service_notification_periods: Sequence[RuleSpec[object]]
+    inventory_check_autotrigger: bool
+    monitoring_host: str | None
+    explicit_snmp_communities: Mapping[HostName | HostAddress, object]

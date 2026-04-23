@@ -288,9 +288,10 @@ def _trigger_discovery_check(
     config_cache: ConfigCache,
     host_name: HostName,
     monitoring_core: Literal["nagios", "cmc"],
+    inventory_check_autotrigger: bool,
 ) -> None:
     """if required, schedule the "Check_MK Discovery" check"""
-    if not config.inventory_check_autotrigger:
+    if not inventory_check_autotrigger:
         return
 
     if config_cache.discovery_check_parameters(host_name).commandline_only:
@@ -502,7 +503,10 @@ def _automation_service_discovery(
             # Trigger the discovery service right after performing the discovery to
             # make the service reflect the new state as soon as possible.
             _trigger_discovery_check(
-                config_cache, hostname, loading_result.loaded_config.monitoring_core
+                config_cache,
+                hostname,
+                loading_result.loaded_config.monitoring_core,
+                loading_result.loaded_config.inventory_check_autotrigger,
             )
 
     return ServiceDiscoveryResult(results)
@@ -1427,7 +1431,7 @@ def _execute_autodiscovery(
                     ip_address_of_mgmt,
                     core,
                     ab_plugins,
-                    locking_mode=config.restart_locking,
+                    locking_mode=loaded_config.restart_locking,
                     discovery_rules=loaded_config.discovery_rules,
                     hosts_to_update=None,
                     service_depends_on=config.ServiceDependsOn(
@@ -1459,7 +1463,7 @@ def _execute_autodiscovery(
                         tag_list=config_cache.host_tags.tag_list,
                         service_dependencies=loaded_config.service_dependencies,
                     ),
-                    locking_mode=config.restart_locking,
+                    locking_mode=loaded_config.restart_locking,
                     discovery_rules=loaded_config.discovery_rules,
                     duplicates=sorted(
                         hosts_config.duplicates(
@@ -1573,6 +1577,7 @@ def _automation_set_autochecks_v2(
         config_cache,
         set_autochecks_input.discovered_host,
         loaded_config.monitoring_core,
+        loaded_config.inventory_check_autotrigger,
     )
 
     return SetAutochecksV2Result()
@@ -1600,7 +1605,10 @@ def _automation_update_host_labels(
             edition=ctx.edition,
         )
     _trigger_discovery_check(
-        loading_result.config_cache, hostname, loading_result.loaded_config.monitoring_core
+        loading_result.config_cache,
+        hostname,
+        loading_result.loaded_config.monitoring_core,
+        loading_result.loaded_config.inventory_check_autotrigger,
     )
     return UpdateHostLabelsResult()
 
@@ -2855,7 +2863,7 @@ def _execute_silently(
                 discovery_rules=loaded_config.discovery_rules,
                 hosts_to_update=hosts_to_update,
                 service_depends_on=service_depends_on,
-                locking_mode=config.restart_locking,
+                locking_mode=loaded_config.restart_locking,
                 duplicates=sorted(
                     hosts_config.duplicates(
                         lambda hn: config_cache.is_active(hn) and config_cache.is_online(hn)
@@ -3012,9 +3020,8 @@ def _automation_scan_parents(
     hosts_config = config.make_hosts_config(loading_result.loaded_config)
     ip_lookup_config = loading_result.config_cache.ip_lookup_config()
 
-    monitoring_host = (
-        HostName(config.monitoring_host) if config.monitoring_host is not None else None
-    )
+    monitoring_host_name = loading_result.loaded_config.monitoring_host
+    monitoring_host = HostName(monitoring_host_name) if monitoring_host_name is not None else None
 
     def make_scan_config() -> Mapping[HostName, ScanConfig]:
         return {
@@ -3022,7 +3029,7 @@ def _automation_scan_parents(
             for host in itertools.chain(
                 hostnames,
                 hosts_config.hosts,
-                ([HostName(config.monitoring_host)] if config.monitoring_host else ()),
+                ([HostName(monitoring_host_name)] if monitoring_host_name else ()),
             )
         }
 
@@ -3563,6 +3570,7 @@ class AutomationDiagHost:
                         snmpv3_security_password,
                         snmpv3_privacy_proto,
                         snmpv3_privacy_password,
+                        loading_result.loaded_config.explicit_snmp_communities,
                     )
                 )
 
@@ -3681,7 +3689,7 @@ class AutomationDiagHost:
             simulation_mode=config.simulation_mode,
             file_cache_options=file_cache_options,
             file_cache_max_age=MaxAge(
-                checking=config.check_max_cachefile_age,
+                checking=loaded_config.check_max_cachefile_age,
                 discovery=1.5 * check_interval,
                 inventory=1.5 * check_interval,
             ),
@@ -3813,6 +3821,7 @@ class AutomationDiagHost:
         snmpv3_security_password: str | None,
         snmpv3_privacy_proto: str | None,
         snmpv3_privacy_password: str | None,
+        explicit_snmp_communities: Mapping[HostName | HostAddress, object],
     ) -> tuple[int, str]:
         # SNMPv3 tuples
         # ('noAuthNoPriv', "username")
@@ -3865,7 +3874,7 @@ class AutomationDiagHost:
             )
 
         # Determine SNMPv2/v3 community
-        if hostname not in config.explicit_snmp_communities:
+        if hostname not in explicit_snmp_communities:
             cred = config_cache.snmp_credentials_of_version(
                 hostname, snmp_version=3 if test == "snmpv3" else 2
             )
@@ -4309,7 +4318,7 @@ def _automation_get_agent_output(
                 simulation_mode=config.simulation_mode,
                 file_cache_options=file_cache_options,
                 file_cache_max_age=MaxAge(
-                    checking=config.check_max_cachefile_age,
+                    checking=loaded_config.check_max_cachefile_age,
                     discovery=1.5 * check_interval,
                     inventory=1.5 * check_interval,
                 ),

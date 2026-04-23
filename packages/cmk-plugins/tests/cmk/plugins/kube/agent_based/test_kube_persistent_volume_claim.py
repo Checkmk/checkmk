@@ -12,7 +12,7 @@ from typing import Any
 import pytest
 from polyfactory.factories.pydantic_factory import ModelFactory
 
-from cmk.agent_based.v2 import render, Result, State
+from cmk.agent_based.v2 import Metric, Result, State
 from cmk.plugins.kube.agent_based.kube_persistent_volume_claim import (
     _check_kube_pvc,
     VOLUME_DEFAULT_PARAMS,
@@ -49,6 +49,7 @@ def fixture_bounded_pvc() -> PersistentVolumeClaim:
         status=PVCStatusFactory.build(
             phase=PersistentVolumeClaimPhase.CLAIM_BOUND,
             capacity=StorageRequirement(storage=1000),
+            current_volume_attributes_class_name="cool-class-there",
         )
     )
 
@@ -65,9 +66,31 @@ def test_pvc_with_no_volume(bound_pvc: PersistentVolumeClaim) -> None:
     )
 
     assert bound_pvc.status.capacity is not None
-    assert [r.summary for r in result if isinstance(r, Result)] == [
-        "Status: Bound",
-        f"Capacity: {render.bytes(bound_pvc.status.capacity.storage)}",
+    assert list(result) == [
+        Result(state=State.OK, summary="Status: Bound"),
+        Result(state=State.OK, notice="VolumeAttributesClass: cool-class-there"),
+        Result(state=State.OK, summary="Capacity: 1000 B"),
+    ]
+
+
+def test_pvc_with_no_volume_attributes_class(bound_pvc: PersistentVolumeClaim) -> None:
+    # If it doesn't exist, it'll be None
+    bound_pvc.status.current_volume_attributes_class_name = None
+
+    result = _check_kube_pvc(
+        bound_pvc.metadata.name,
+        value_store={},
+        pvc=bound_pvc,
+        persistent_volume=None,
+        volume=None,
+        params=VOLUME_DEFAULT_PARAMS,
+        timestamp=60,
+    )
+
+    assert bound_pvc.status.capacity is not None
+    assert list(result) == [
+        Result(state=State.OK, summary="Status: Bound"),
+        Result(state=State.OK, summary="Capacity: 1000 B"),
     ]
 
 
@@ -79,7 +102,7 @@ def test_pvc_with_volume(bound_pvc: PersistentVolumeClaim) -> None:
         capacity=2000,
     )
 
-    check_result = list(
+    result = list(
         _check_kube_pvc(
             bound_pvc.metadata.name,
             value_store={
@@ -98,12 +121,25 @@ def test_pvc_with_volume(bound_pvc: PersistentVolumeClaim) -> None:
         )
     )
 
-    results = [r.summary for r in check_result if isinstance(r, Result)]
-    assert results[0].startswith("Status: Bound")
-    assert results[1].startswith("Used: 50.00% - 1000 B of 1.95 KiB")
-    assert results[2].startswith("trend per")
-    assert results[3].startswith("trend per")
-    assert results[4].startswith("Time left until disk full:")
+    assert list(result) == [
+        Result(state=State.OK, summary="Status: Bound"),
+        Result(state=State.OK, notice="VolumeAttributesClass: cool-class-there"),
+        Metric(
+            "fs_used",
+            0.00095367431640625,
+            levels=(0.00152587890625, 0.00171661376953125),
+            boundaries=(0.0, 0.0019073486328125),
+        ),
+        Metric("fs_free", 0.00095367431640625, boundaries=(0.0, None)),
+        Metric("fs_used_percent", 50.0, levels=(80.0, 90.0), boundaries=(0.0, 100.0)),
+        Result(state=State.OK, summary="Used: 50.00% - 1000 B of 1.95 KiB"),
+        Metric("fs_size", 0.0019073486328125, boundaries=(0.0, None)),
+        Metric("growth", 1.373291015625),
+        Result(state=State.OK, summary="trend per 1 day 0 hours: +693 B"),
+        Result(state=State.OK, summary="trend per 1 day 0 hours: +34.65%"),
+        Metric("trend", 0.0006608775933843906),
+        Result(state=State.OK, summary="Time left until disk full: 1 day 10 hours"),
+    ]
 
 
 def test_pvc_with_critical_volume(bound_pvc: PersistentVolumeClaim) -> None:

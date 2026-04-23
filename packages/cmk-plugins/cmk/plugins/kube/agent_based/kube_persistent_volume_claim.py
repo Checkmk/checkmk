@@ -160,6 +160,9 @@ def _check_kube_pvc(
         persistent_volume=persistent_volume,
     )
 
+    if volume_attrs_class_name := pvc.status.current_volume_attributes_class_name:
+        yield Result(state=State.OK, notice=f"VolumeAttributesClass: {volume_attrs_class_name}")
+
     if volume is None:
         yield from _output_status_capacity_result(pvc)
         return

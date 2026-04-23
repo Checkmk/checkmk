@@ -19,7 +19,8 @@ Method = Literal["GET", "POST", "PUT", "PATCH", "DELETE", "ANY"]
 
 class Request(BaseModel):
     method: Literal["GET", "POST", "PUT", "PATCH", "DELETE"]
-    url: str
+    url: str | None = None
+    urlPattern: str | None = None
     bodyPatterns: list[Mapping[PatternType, str]] | None = None
     queryParameters: Mapping[str, Mapping[PatternType, str]] | None = None
     headers: Mapping[AllowedHeader, Mapping[PatternType, str]] = Field(default_factory=dict)

@@ -220,6 +220,23 @@ class SiteMock:
             )
             self.wiremock.setup_mapping(mapping)
 
+        # Catch-all: any relay GET not matched above returns 404
+        self.wiremock.setup_mapping(
+            WMapping(
+                scenarioName=name,
+                requiredScenarioState=state,
+                priority=2,
+                request=Request(
+                    method="GET",
+                    urlPattern=f"{self.base_route}/objects/relay/[^/]+",
+                    headers={
+                        "Authorization": {"matches": self._auth_regex},
+                    },
+                ),
+                response=Response(status=HTTPStatus.NOT_FOUND),
+            )
+        )
+
     def mock_relay_get_error(self, relay_id: Relay, status: HTTPStatus, error_message: str) -> None:
         """Mock a GET request for a specific relay to return an error status code.
 

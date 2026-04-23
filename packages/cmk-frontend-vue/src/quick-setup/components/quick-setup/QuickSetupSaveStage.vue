@@ -4,15 +4,18 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
+import usei18n from '@/lib/i18n'
+
 import type { QuickSetupSaveStageProps } from '@/quick-setup/components/quick-setup/quick_setup_types'
 
 import QuickSetupStageContent from './QuickSetupStageContent.vue'
 
+const { _t } = usei18n()
 defineProps<QuickSetupSaveStageProps>()
 </script>
 
 <template>
-  <div class="qs-save-stage__content">
+  <div class="qs-save-stage__content" role="region" :aria-label="_t('Save actions')">
     <QuickSetupStageContent
       :index="index"
       :number-of-stages="numberOfStages"

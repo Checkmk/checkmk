@@ -145,13 +145,17 @@ class QuickSetupPage(CmkPage):
             self.go_to_prev_stage_button.click()
 
     def save_and_test(self) -> None:
-        self.main_area.locator(".qs-save-stage__content").get_by_label("Save").first.click()
+        self.main_area.locator().get_by_role("region", name="Save actions").get_by_label(
+            "Save"
+        ).first.click()
         self.page.wait_for_url(
             url=re.compile(quote_plus("wato.py?mode=test_notifications")), wait_until="load"
         )
 
     def save_and_create_another_rule(self) -> None:
-        self.main_area.locator(".qs-save-stage__content").get_by_label("Save").nth(1).click()
+        self.main_area.locator().get_by_role("region", name="Save actions").get_by_label(
+            "Save"
+        ).nth(1).click()
 
     @property
     def editor_slide_in(self) -> Locator:

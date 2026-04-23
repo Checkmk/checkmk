@@ -40,6 +40,7 @@ function getIconColor(): CmkMultitoneIconColor | CustomIconColor {
   <CmkChip
     class="unified-search-filter-button__button"
     :class="{ 'unified-search-filter-button--active': props.active }"
+    :aria-pressed="props.active"
     :color="getColor()"
     :variant="getVariant()"
   >

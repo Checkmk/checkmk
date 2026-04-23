@@ -26,10 +26,7 @@ class ProviderSelect:
 
     def is_active(self, provider_name: Literal["All", "Monitoring", "Customize", "Setup"]) -> bool:
         """Check if a specific provider button is active."""
-        button = self.get_button(provider_name)
-        # Check for the active class on the button element
-        class_attr = button.get_attribute("class") or ""
-        return "unified-search-filter-button--active" in class_attr
+        return self.get_button(provider_name).get_attribute("aria-pressed") == "true"
 
     def select(self, provider_name: Literal["All", "Monitoring", "Customize", "Setup"]) -> None:
         """Click the button for a specific provider."""

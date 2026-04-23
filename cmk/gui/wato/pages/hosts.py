@@ -124,8 +124,8 @@ from cmk.shared_typing.mode_host import (
     ModeHostServerPerSite,
     ModeHostSite,
 )
-from cmk.utils.agent_registration import HostAgentConnectionMode
-from cmk.utils.paths import omd_root
+from cmk.utils.agent_registration import HostAgentConnectionMode, UUIDStore
+from cmk.utils.paths import omd_root, uuid_lookup_dir
 
 from ._host_attributes import configure_attributes
 from ._status_links import make_host_status_link
@@ -465,8 +465,8 @@ class ABCHostMode(WatoMode, abc.ABC):
                         can_download_baked_agents=can_download_baked_agents,
                     ),
                     host_name=hostname,
-                    is_auto_registered=(
-                        self._host.labels().get("cmk/agent_auto_registered") == "yes"
+                    is_registered=(
+                        UUIDStore(uuid_lookup_dir).get(self._host.name()) is not None
                         if self._mode == "edit"
                         else False
                     ),

@@ -63,7 +63,6 @@ interface Props {
   agentConnectionModes: Array<ModeHostAgentConnectionMode>
   agentSlideout: AgentSlideout
   setupError: boolean
-  isAutoRegistered: boolean
 }
 
 const props = defineProps<Props>()
@@ -518,7 +517,7 @@ const showSettings = ref(false)
 <template>
   <Teleport v-if="showTest" :to="targetElement" defer>
     <CmkButton
-      v-if="isPushMode && !props.isAutoRegistered"
+      v-if="isPushMode"
       type="button"
       :title="_t('Install & register agent')"
       class="agent-test-button"

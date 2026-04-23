@@ -37,11 +37,13 @@ PortStats = Mapping[str, int]
 _FIELDS = ["bcast", "mcast", "0-63b", "64-127b", "128-255b", "256-511b", "512-1023b", "1024-1518b"]
 
 
+def _to_int(value: str) -> int:
+    stripped = value.replace(" Packets", "").strip()
+    return int(stripped) if stripped else 0
+
+
 def parse_rmon_stats(string_table: StringTable) -> Mapping[str, PortStats]:
-    return {
-        port: {k: int(v.replace(" Packets", "")) for k, v in zip(_FIELDS, row)}
-        for port, *row in string_table
-    }
+    return {port: {k: _to_int(v) for k, v in zip(_FIELDS, row)} for port, *row in string_table}
 
 
 def discover_rmon_stats(

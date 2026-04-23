@@ -886,6 +886,7 @@ allows = [
   "cmk.utils.unixsocket_http",
   "cmk.utils.urls",
   "cmk.web.utils.html",
+  "cmk.web.utils.escaping",
   "cmk.web.utils.speaklater",
   "cmk.utils.visuals",
   "cmk.utils.werks",
@@ -1231,7 +1232,7 @@ allows = []
 allows = ["@crypto", "cmk.ccc.exceptions"]
 
 [components."cmk.utils.escaping"]
-allows = ["cmk.utils.urls"]
+allows = ["cmk.web.utils.escaping"]
 
 [components."cmk.utils.everythingtype"]
 allows = []

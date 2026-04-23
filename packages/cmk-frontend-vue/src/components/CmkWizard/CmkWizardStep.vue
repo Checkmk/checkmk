@@ -48,6 +48,7 @@ function onClickGoTo() {
       'cmk-wizard-step--complete': isCompleted() && context.mode() !== 'overview',
       'cmk-wizard-step--overview': context.mode() === 'overview'
     }"
+    :aria-current="isActive ? 'step' : undefined"
     @click="onClickGoTo"
   >
     <div class="cmk-wizard-step__slots-outer">

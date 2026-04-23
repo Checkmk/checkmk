@@ -52,7 +52,7 @@ class CreateRelay(CmkPage):
     @property
     def active_step(self) -> Locator:
         """Return the currently active wizard step."""
-        return self.vue_app.locator(".cmk-wizard-step--active")
+        return self.vue_app.locator('[aria-current="step"]')
 
     @property
     def active_step_heading(self) -> Locator:

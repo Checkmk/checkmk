@@ -30,6 +30,7 @@ const onClickGoTo = computed(() =>
       'qs-stage--active': isSelectedStage && props.mode !== 'overview',
       'qs-stage--complete': isCompleted && props.mode !== 'overview'
     }"
+    :aria-current="isSelectedStage && props.mode !== 'overview' ? 'step' : undefined"
     @click="(_mouse_event) => onClickGoTo"
   >
     <div class="qs-stage__content">

@@ -61,14 +61,14 @@ class QuickSetupPage(CmkPage):
     @property
     def active_stage(self) -> Locator:
         """Return the currently active stage in the Quick Setup."""
-        return self.main_area.locator(".qs-stage--active")
+        return self.main_area.locator('[aria-current="step"]')
 
     @property
     def index_of_active_stage(self) -> int:
         """Return the index of the currently active stage in the Quick Setup."""
         stages = self.main_area.locator(".qs-stage")
         for index, stage in enumerate(stages.all()):
-            if "qs-stage--active" in (stage.get_attribute("class") or ""):
+            if stage.get_attribute("aria-current") == "step":
                 return index
 
         return -1

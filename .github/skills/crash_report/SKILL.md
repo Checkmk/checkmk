@@ -316,15 +316,17 @@ After the explain step and the unit test commit, implement the fix:
 
 1. **Minimal change only.** Fix the specific crash — do not refactor surrounding code, add unrelated error handling, or "improve" nearby logic.
 
-2. **Remove the `@pytest.mark.xfail(strict=True, ...)` marker** from the test created in Step 6 so the test now asserts the correct behavior. Update the test assertion if the fix changes the expected output.
+2. **No inline comments in source code.** Do not add `# ...` explanatory comments in the edited source file. The commit message, werk, and test (which may have comments) carry the explanation. Inline comments in **test files are fine** and encouraged when they describe the scenario being reproduced.
 
-3. **Run tests and lint** using the `/bazel` skill to verify the fix passes.
+3. **Remove the `@pytest.mark.xfail(strict=True, ...)` marker** from the test created in Step 6 so the test now asserts the correct behavior. Update the test assertion if the fix changes the expected output.
 
-4. **Create a werk** (changelog entry) by invoking the `/werk` skill — do not write to `.werks/` directly. The skill handles werk ID allocation, metadata validation, and the changelog commit.
+4. **Run tests and lint** using the `/bazel` skill to verify the fix passes.
 
-5. **Run Step 6.5 (Jira Ticket)** to look up or create the tracking ticket before committing. Capture the resulting `CMK-XXXXX` key for the commit trailer.
+5. **Create a werk** (changelog entry) via `/werk`. Write it **from the user's perspective** (see "Werk wording" below).
 
-6. **Create the second commit** containing the fix, the unmarked test, and the werk. This is the only content in this commit — the xfail test was already committed in Step 6. Use `Crash-Group-ID:` and `Jira:` trailers in the commit body:
+6. **Run Step 6.5 (Jira Ticket)** to look up or create the tracking ticket before committing. Capture the resulting `CMK-XXXXX` key for the commit trailer.
+
+7. **Create the second commit** containing the fix, the unmarked test, and the werk. This is the only content in this commit — the xfail test was already committed in Step 6. Use `Crash-Group-ID:` and `Jira:` trailers in the commit body:
 
    ```
    <werk_id>: Fix crash in <component> (<crash_type>)
@@ -332,6 +334,51 @@ After the explain step and the unit test commit, implement the fix:
    Crash-Group-ID: <group_id>
    Jira: CMK-XXXXX
    ```
+
+---
+
+### Werk wording
+
+Werks are read by end users and admins, not by Checkmk developers. Write from the **reader's point of view**: what they saw, when, and what is now different. Avoid implementation jargon.
+
+**Do:**
+
+- Describe the **observable symptom** first: which service went to UNKNOWN/CRIT, which page crashed, which exception the user saw in the crash report or UI.
+- Describe **when** the bug triggers from the user's world (e.g. "after upgrading from 2.3.0", "when a WLC returns fewer radio rows than access points", "when a MIB file contains Windows-1252 smart quotes").
+- Describe **what the user will now see** ("the page now renders", "the check continues and reports the device status", "the affected pod keeps the currently observed status").
+- If the fix is **defensive rather than addressing a confirmed root cause**, say so honestly — don't fabricate an upstream bug.
+
+**Don't:**
+
+- Name private functions, attributes, dict keys, class names, internal state variables (`value_store`, `duration_per_status`, `ps_raw`, `_Levels`) — these mean nothing to users.
+- Copy the stack trace verbatim. One line quoting the exception type + message is enough.
+- Describe the code change as the subject ("ensure the key exists before += on duration_per_status"). Describe the outcome ("the check now tolerates ...").
+
+**Title:**
+
+- One line, present tense, change-oriented. Example: `mem_win: don't crash on legacy Windows memory rule configuration`.
+- Avoid implementation jargon: `mem_win: survive legacy tuple level configuration` uses the internal term "tuple".
+
+**Example (good):**
+
+```
+huawei_wlc_aps: tolerate access points with a missing radio row
+
+If a Huawei WLC reported fewer radio entries than access points (e.g. an
+AP with only a 2.4 GHz radio), the `AP <n> Status` service went to UNKNOWN
+with `IndexError: list index out of range`. The check now skips APs whose
+radio data is incomplete and still reports the other APs.
+```
+
+**Example (bad — implementation-heavy):**
+
+```
+huawei_wlc_aps: skip APs with missing radio rows
+
+The section parser crashed with IndexError: list index out of range when
+aps_info2 had fewer radio rows than aps_info1. The loop now breaks early
+when 2*idx+1 >= len(aps_info2).
+```
 
 ---
 
@@ -380,9 +427,9 @@ The arguments after `auto-fix` are passed directly to the `popular` or `search` 
    Add xfail test for crash group <group_id>
    ```
 
-   g. **Fix.** Execute Step 7 (Fix the Issue) — implement the fix, remove `xfail(strict=True)`, run tests and lint via `/bazel`.
+   g. **Fix.** Execute Step 7 (Fix the Issue) — implement the fix (no inline comments in source; test comments fine), remove `xfail(strict=True)`, run tests and lint via `/bazel`.
 
-   h. **Werk.** Invoke the `/werk` skill to create the werk with class `fix`, level `1`, and the appropriate component inferred from the crash type and file path. Do not write to `.werks/` or edit `.werks/first_free` directly — the `/werk` skill manages werk IDs and metadata.
+   h. **Werk.** Invoke the `/werk` skill to create the werk with class `fix`, level `1`, and the appropriate component inferred from the crash type and file path. Do not write to `.werks/` or edit `.werks/first_free` directly — the `/werk` skill manages werk IDs and metadata. Follow the "Werk wording" guidance above: user-facing symptom + trigger + new behaviour, no internal identifiers.
 
    i. **Jira ticket.** Execute Step 6.5 (Jira Ticket) to look up or create the tracking ticket. Capture the resulting `CMK-XXXXX` key for the commit trailer. Skip this sub-step entirely when `--dry-run` is active.
 

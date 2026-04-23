@@ -313,7 +313,8 @@ function getInitStep() {
                 type="next"
                 :disabled="
                   tabNeedsToken(tab) &&
-                  (ott === null || ott instanceof Error || !canDownloadBakedAgents)
+                  canDownloadBakedAgents &&
+                  (ott === null || ott instanceof Error)
                 "
                 :override-label="_t('Next step: Register agent')"
               />

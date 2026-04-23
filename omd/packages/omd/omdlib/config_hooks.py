@@ -21,7 +21,7 @@ import re
 import subprocess
 import sys
 import traceback
-from collections.abc import Iterable, Sequence
+from collections.abc import Iterable, Mapping, Sequence
 from pathlib import Path
 from re import Pattern
 from typing import TYPE_CHECKING
@@ -47,6 +47,15 @@ if TYPE_CHECKING:
 ConfigHookChoiceItem = tuple[str, str]
 ConfigHookChoices = Pattern[str] | list[ConfigHookChoiceItem] | ConfigChoiceHasError
 ConfigHookResult = tuple[int, str]
+
+
+class _Error: ...
+
+
+@dataclasses.dataclass(frozen=True)
+class _SiteConfigs:
+    configs: Mapping[str, Config]
+    sites_with_unreadable_configs: Sequence[str]
 
 
 @dataclasses.dataclass(frozen=True)
@@ -292,6 +301,15 @@ def config_set_all(
         _config_set(site, config, hook_name, verbose)
 
 
+def _report_error(key: str, sites_with_unreadable_configs: Sequence[str]) -> None:
+    if sites_with_unreadable_configs:
+        sites_str = ",".join(sites_with_unreadable_configs)
+        sys.stderr.write(
+            f"ERROR: Failed to read config of site {sites_str}. "
+            f"{key} port will possibly be allocated twice\n"
+        )
+
+
 def _config_set(
     site: "SiteContext",
     config: Config,
@@ -302,7 +320,9 @@ def _config_set(
     value = config[hook_name]
     match hook_name:
         case "LIVESTATUS_TCP_PORT":
-            output = _set_livestatus_tcp_port(site.name, value, omd_path)
+            site_configs = _build_site_configs(site.name, omd_path)
+            _report_error("LIVESTATUS_TCP_PORT", site_configs.sites_with_unreadable_configs)
+            output = _set_livestatus_tcp_port(site.name, value, site_configs.configs, omd_path)
             if isinstance(output, _Error):
                 return
         case _:
@@ -315,45 +335,50 @@ def _config_set(
     os.environ["CONFIG_" + hook_name] = config[hook_name]
 
 
-def _port_is_used(key: str, this_site: str, port: str, omd_path: Path = Path("/omd/")) -> bool:
+def _build_site_configs(this_site: str, omd_path: Path = Path("/omd")) -> _SiteConfigs:
+    site_configs: dict[str, Config] = {}
+    sites_with_unreadable_configs = []
     for sitename in all_sites(omd_path):
         site_home = SitePaths.from_site_name(sitename, omd_path).home
         if sitename == this_site:
-            config = read_site_config(site_home)
-            if any(k != key and port == v for k, v in config.items()):
-                return True
+            site_configs[sitename] = read_site_config(site_home)
         else:
-            err_msg = f"ERROR: Failed to read config of site {sitename}. {key} port will possibly be allocated twice\n"
             try:
                 config = read_site_config(site_home)
             except PermissionError:
-                sys.stderr.write(err_msg)
+                sites_with_unreadable_configs.append(sitename)
                 continue
             if not config:
-                sys.stderr.write(err_msg)
+                sites_with_unreadable_configs.append(sitename)
                 continue
-            if any(port == v for v in config.values()):
+            site_configs[sitename] = config
+    return _SiteConfigs(site_configs, sites_with_unreadable_configs)
+
+
+def _port_is_used(key: str, this_site: str, port: str, site_configs: Mapping[str, Config]) -> bool:
+    for sitename, config in site_configs.items():
+        if sitename == this_site:
+            if any(k != key and port == v for k, v in config.items()):
                 return True
+        elif any(port == v for v in config.values()):
+            return True
     return False
 
 
 def _next_free_port(
-    key: str, this_site: str, start_port: int, omd_path: Path = Path("/omd/")
+    key: str, this_site: str, start_port: int, site_configs: Mapping[str, Config]
 ) -> int:
-    while _port_is_used(key, this_site, str(start_port), omd_path):
+    while _port_is_used(key, this_site, str(start_port), site_configs):
         start_port += 1
     return start_port
 
 
-class _Error: ...
-
-
 def _set_livestatus_tcp_port(
-    site_name: str, value: str, omd_path: Path = Path("/omd/")
+    site_name: str, value: str, site_configs: Mapping[str, Config], omd_path: Path = Path("/omd/")
 ) -> str | _Error:
     site_home = SitePaths.from_site_name(site_name, omd_path).home
     try:
-        new_value = str(_next_free_port("LIVESTATUS_TCP_PORT", site_name, int(value), omd_path))
+        new_value = str(_next_free_port("LIVESTATUS_TCP_PORT", site_name, int(value), site_configs))
         pattern = re.compile(r"^(\s*port\s*=\s*)([0-9]+)")
         xinetd_conf = os.path.join(site_home, "etc/mk-livestatus/xinetd.conf")
         if value != new_value:

@@ -10,8 +10,8 @@ from cmk.gui.num_split import key_num_split
 
 
 def key_natural_sort(key: str) -> tuple[int | str, ...]:
-    is_symbol = not key[0].isalnum()
-    is_number = key[0].isdigit()
+    is_symbol = not key or not key[0].isalnum()
+    is_number = bool(key) and key[0].isdigit()
     split = key_num_split(key.casefold())
 
     order = (

@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import pytest
-
 from cmk.gui.utils.sort import natural_sort
 
 
@@ -18,7 +16,6 @@ def test_natural_sort() -> None:
     assert sorted_items == correct_order
 
 
-@pytest.mark.xfail(strict=True, reason="Crash group 4240: IndexError on empty host name")
 def test_natural_sort_with_empty_string() -> None:
     assert natural_sort(["", "host1", "host2"]) == ["", "host1", "host2"]
 

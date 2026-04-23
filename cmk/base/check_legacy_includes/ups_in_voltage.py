@@ -18,7 +18,7 @@ def check_ups_in_voltage(
         yield check_levels(
             int(line[1]),
             "in_voltage",
-            params.get("levels_upper", (None, None)) + params["levels_lower"],
+            (None, None) + params["levels_lower"],
             human_readable_func=lambda v: f"{v}V",
             infoname="In voltage",
             boundaries=(150, None),

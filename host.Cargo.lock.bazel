@@ -1,5 +1,5 @@
 {
-  "checksum": "89a6c71bc1954311431551a99fc9de1c604b687500288719cd50e517821fe40a",
+  "checksum": "1944952a1fc85cb8338fe67f754f0a940f4b947b49d2f546263e965a78d42866",
   "crates": {
     "addr2line 0.24.2": {
       "name": "addr2line",
@@ -14398,7 +14398,7 @@
         ],
         "data": {
           "common": [
-            "@openssl_static//:gen_dir"
+            "@openssl//:gen_static_dir"
           ],
           "selects": {}
         },
@@ -14428,7 +14428,7 @@
         },
         "build_script_env": {
           "common": {
-            "OPENSSL_DIR": "$(execpath @openssl_static//:gen_dir)",
+            "OPENSSL_DIR": "$(execpath @openssl//:gen_static_dir)",
             "OPENSSL_NO_VENDOR": "1",
             "OPENSSL_STATIC": "1"
           },

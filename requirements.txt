@@ -4084,6 +4084,7 @@ pytest==8.4.2 \
     #   -r packages/cmk-plugins/dev-requirements.in
     #   -r packages/cmk-relay-protocols/dev-requirements.in
     #   -r packages/cmk-trace/dev-requirements.in
+    #   -r packages/cmk-web/dev-requirements.in
     #   -r packages/cmk-werks/dev-requirements.in
     #   -r tests/dev-requirements.in
     #   meraki

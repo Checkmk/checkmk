@@ -1,0 +1,69 @@
+load("@aspect_rules_py//py:defs.bzl", "py_library")
+load("@bazel_skylib//rules:build_test.bzl", "build_test")
+load("@rules_python//python:packaging.bzl", "py_wheel")
+load("//bazel/rules:doctest.bzl", "py_doc_test")
+load("//bazel/rules:package_wheel.bzl", "package_wheel")
+load("//bazel/rules:py_requirements_test.bzl", "py_requirements_test")
+
+exports_files([
+    "dev-requirements.in",
+    "pyproject.toml",
+    "requirements.in",
+])
+
+py_library(
+    name = "cmk-web",
+    srcs = [
+        "cmk/web/__init__.py",
+    ],
+    data = ["cmk/web/py.typed"],
+    imports = ["."],
+    visibility = ["//visibility:public"],
+    deps = [],
+)
+
+py_doc_test(
+    name = "doctest",
+    size = "small",
+    srcs = [
+        ":cmk-web",
+    ],
+    tags = ["no-mypy"],
+)
+
+py_requirements_test(
+    name = "requirements-test",
+    libs = [
+        ":cmk-web",
+    ],
+    requirements_in = "requirements.in",
+)
+
+py_wheel(
+    name = "wheel",
+    distribution = "cmk-web",
+    strip_path_prefixes = ["packages/cmk-web"],
+    # TODO: Duplicated from pyproject.toml
+    version = "1.0.0",
+    deps = [
+        ":cmk-web",
+    ],
+)
+
+build_test(
+    name = "build_test",
+    targets = [
+        ":wheel",
+    ],
+)
+
+sh_library(
+    name = "f12",
+    srcs = [".f12"],
+)
+
+package_wheel(
+    name = "pkg_tar",
+    visibility = ["//visibility:public"],
+    whl = "wheel",
+)

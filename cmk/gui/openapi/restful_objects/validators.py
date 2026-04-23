@@ -72,7 +72,7 @@ class ContentTypeValidator:
         method: HTTPMethod,
     ) -> None:
         """Validate the request content type"""
-        inbound_method = method in ("post", "put")
+        inbound_method = method in ("post", "put", "patch")
 
         # If we have a schema, we need a content-type
         if has_schema and not content_type:

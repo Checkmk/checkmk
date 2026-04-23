@@ -41,9 +41,9 @@ class LinkSchema(BaseSchema):
         example="https://.../api_resource",
     )
     method = fields.String(
-        description="The HTTP method to use to traverse the link (get, post, put or delete)",
+        description="The HTTP method to use to traverse the link (get, post, put, delete or patch)",
         required=True,
-        enum=["GET", "PUT", "POST", "DELETE"],
+        enum=["GET", "PUT", "POST", "DELETE", "PATCH"],
         example="GET",
     )
     type = fields.String(

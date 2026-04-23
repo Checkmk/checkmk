@@ -474,7 +474,7 @@ def populate_spec(
     undocumented_tag_groups: set[str],
     site_name: str,
 ) -> APISpec:
-    methods = ["get", "put", "post", "delete"]
+    methods = ["get", "put", "post", "delete", "patch"]
 
     def sort_key(e: DocEndpoint) -> tuple[str | int, ...]:
         return e.doc_sort_index, e.family_name, methods.index(e.method), e.path, e.effective_path

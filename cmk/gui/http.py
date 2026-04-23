@@ -32,7 +32,7 @@ from cmk.gui.i18n import _
 from cmk.utils.urls import is_allowed_url
 
 UploadedFile = tuple[str, str, bytes]
-HTTPMethod = Literal["get", "put", "post", "delete"]
+HTTPMethod = Literal["get", "put", "post", "delete", "patch"]
 
 
 class ContentDispositionType(StrEnum):

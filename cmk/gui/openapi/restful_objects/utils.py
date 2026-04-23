@@ -49,7 +49,7 @@ def identify_expected_status_codes(
     if doc_category == "Setup":
         expected_status_codes.add(403)
 
-    if method in ("put", "post"):
+    if method in ("put", "post", "patch"):
         expected_status_codes.add(400)  # bad request
         expected_status_codes.add(415)  # unsupported media type
 

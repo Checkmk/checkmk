@@ -46,7 +46,7 @@ def after_request(response: Response) -> Response:
     return response
 
 
-@rest_api.route("/<string:version>/<path:path>", methods=["GET", "PUT", "POST", "DELETE"])
+@rest_api.route("/<string:version>/<path:path>", methods=["GET", "PUT", "POST", "DELETE", "PATCH"])
 def endpoint(site: str, version: str, path: str) -> WSGIApplication:
     # TODO: Carve out parts from `CheckmkRESTAPI` and move them here, decorated by @rest_api.route
     return app_instance(debug=current_app.debug, testing=current_app.testing)

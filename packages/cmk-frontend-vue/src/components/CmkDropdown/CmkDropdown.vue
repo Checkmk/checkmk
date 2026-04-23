@@ -85,7 +85,7 @@ async function getButtonLabel(
     case 'filtered':
     case 'fixed': {
       if (options.suggestions.length === 0) {
-        return noElementsText ?? inputHint
+        return noElementsText || inputHint
       } else if (selected === null) {
         return inputHint
       }

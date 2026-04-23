@@ -107,7 +107,7 @@ async function getCurrentSelectionState(
     case 'filtered':
     case 'fixed': {
       if (options.suggestions.length === 0) {
-        return { value: new NoSelection(), buttonLabel: noElementsText ?? inputHint }
+        return { value: new NoSelection(), buttonLabel: noElementsText || inputHint }
       } else if (selected === null) {
         return { value: new NoSelection(), buttonLabel: inputHint }
       }

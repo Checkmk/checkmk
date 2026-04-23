@@ -107,6 +107,20 @@ test('dropdown updates selecedOption', async () => {
   expect(selectedOption).toBe('option1')
 })
 
+test('dropdown shows inputHint when noElementsText is empty and there are no elements', async () => {
+  render(CmkDropdown, {
+    props: {
+      options: { type: 'fixed', suggestions: [] },
+      selectedOption: null,
+      inputHint: 'Select an option',
+      noElementsText: '',
+      label: 'some aria label'
+    }
+  })
+
+  await screen.findByLabelText('Select an option')
+})
+
 test('dropdown shows and hides options', async () => {
   const user = userEvent.setup()
   render(CmkDropdown, {

@@ -9,7 +9,6 @@ import httpx
 import pytest
 from pydantic import SecretStr
 
-from cmk.agent_receiver.lib.certs import serialize_to_pem
 from cmk.agent_receiver.relay.api.routers.relays.handlers.register_relay import (
     RegisterRelayHandler,
 )
@@ -100,4 +99,4 @@ def test_process_rejects_unknown_auth_format(
 
 
 def _csr(relay_id: RelayID) -> str:
-    return serialize_to_pem(generate_csr_pair(cn=relay_id)[1])
+    return generate_csr_pair(cn=relay_id)[1].dump_pem().bytes.decode()

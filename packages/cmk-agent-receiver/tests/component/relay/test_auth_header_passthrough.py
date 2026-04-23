@@ -7,7 +7,6 @@ from http import HTTPMethod, HTTPStatus
 import pytest
 from fastapi.testclient import TestClient
 
-from cmk.agent_receiver.lib.certs import serialize_to_pem
 from cmk.testlib.agent_receiver.agent_receiver import AgentReceiverClient
 from cmk.testlib.agent_receiver.certs import generate_csr_pair
 from cmk.testlib.agent_receiver.relay import random_relay_id
@@ -63,7 +62,11 @@ def test_auth_header_rejected_for_unsupported_format(
     resp = test_client.post(
         f"/{site_name}/relays/",
         headers={"Authorization": auth_header},
-        json={"relay_id": relay_id, "alias": "test-relay", "csr": serialize_to_pem(csr_pair[1])},
+        json={
+            "relay_id": relay_id,
+            "alias": "test-relay",
+            "csr": csr_pair[1].dump_pem().bytes.decode(),
+        },
     )
     assert resp.status_code == HTTPStatus.UNAUTHORIZED
     assert "Unsupported authorization format" in resp.json()["detail"]
@@ -88,7 +91,11 @@ def test_site_api_error_returned_by_ar(
     resp = test_client.post(
         f"/{site.site_name}/relays/",
         headers={"Authorization": "Bearer wrong_user wrong_pass"},
-        json={"relay_id": relay_id, "alias": "test-relay", "csr": serialize_to_pem(csr_pair[1])},
+        json={
+            "relay_id": relay_id,
+            "alias": "test-relay",
+            "csr": csr_pair[1].dump_pem().bytes.decode(),
+        },
     )
     assert resp.status_code == HTTPStatus.BAD_GATEWAY
     assert "Invalid credentials" in resp.json()["detail"]

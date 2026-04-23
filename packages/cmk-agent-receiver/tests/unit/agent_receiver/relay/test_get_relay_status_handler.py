@@ -13,7 +13,6 @@ from uuid import uuid4
 
 import pytest
 
-from cmk.agent_receiver.lib.certs import serialize_to_pem
 from cmk.agent_receiver.lib.config import Config
 from cmk.agent_receiver.relay.api.routers.relays.handlers.register_relay import (
     GetRelayStatusHandler,
@@ -121,4 +120,4 @@ def test_get_relay_status_returns_pending_deletion_when_config_exists_but_not_in
 
 
 def _csr(relay_id: RelayID) -> str:
-    return serialize_to_pem(generate_csr_pair(cn=relay_id)[1])
+    return generate_csr_pair(cn=relay_id)[1].dump_pem().bytes.decode()

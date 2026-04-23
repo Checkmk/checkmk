@@ -11,7 +11,6 @@ from typing import Any, final
 import httpx
 from fastapi.testclient import TestClient
 
-from cmk.agent_receiver.lib.certs import serialize_to_pem
 from cmk.agent_receiver.lib.mtls_auth_validator import INJECTED_UUID_HEADER
 from cmk.agent_receiver.relay.lib.shared_types import RelayID, Serial
 from cmk.relay_protocols.monitoring_data import MonitoringData
@@ -92,7 +91,7 @@ class AgentReceiverClient:
             json={
                 "relay_id": relay_id,
                 "alias": name,
-                "csr": serialize_to_pem(csr_pair[1]),
+                "csr": csr_pair[1].dump_pem().bytes.decode(),
             },
         )
 
@@ -104,7 +103,7 @@ class AgentReceiverClient:
             json={
                 "relay_id": relay_id,
                 "alias": name,
-                "csr": serialize_to_pem(csr_pair[1]),
+                "csr": csr_pair[1].dump_pem().bytes.decode(),
             },
         )
 
@@ -132,7 +131,7 @@ class AgentReceiverClient:
             f"/{self.site_name}/relays/{relay_id}/csr",
             headers={INJECTED_UUID_HEADER: relay_id},
             json={
-                "csr": serialize_to_pem(csr_pair[1]),
+                "csr": csr_pair[1].dump_pem().bytes.decode(),
             },
         )
 

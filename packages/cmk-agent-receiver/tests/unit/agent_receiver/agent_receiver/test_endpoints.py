@@ -27,7 +27,6 @@ from cmk.agent_receiver.agent_receiver.models import (
     RequestForRegistration,
 )
 from cmk.agent_receiver.agent_receiver.utils import R4R
-from cmk.agent_receiver.lib.certs import serialize_to_pem
 from cmk.agent_receiver.lib.config import get_config
 from cmk.agent_receiver.lib.mtls_auth_validator import INJECTED_UUID_HEADER
 from cmk.testlib.agent_receiver.certs import generate_csr_pair
@@ -54,7 +53,7 @@ def _symlink_push_host(
 @pytest.fixture(name="serialized_csr", scope="session")
 def fixture_serialized_csr(uuid: UUID4) -> str:
     _key, csr = generate_csr_pair(str(uuid), 1024)
-    return serialize_to_pem(csr)
+    return csr.dump_pem().bytes.decode()
 
 
 def test_register_existing_ok(
@@ -905,7 +904,7 @@ def test_renew_certificate_uuid_csr_mismatch(
     response = client.post(
         f"/renew_certificate/{uuid}",
         headers=registration_status_headers,
-        json={"csr": serialize_to_pem(wrong_csr)},
+        json={"csr": wrong_csr.dump_pem().bytes.decode()},
     )
 
     assert response.status_code == 400

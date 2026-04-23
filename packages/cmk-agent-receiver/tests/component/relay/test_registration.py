@@ -162,9 +162,9 @@ def test_certificate_validity_period(
     # Verify that the certificate has correct validity period bounds.
     now = datetime.now(tz=UTC)
     cert = certslib.read_certificate(resp.json()["client_cert"])
-    assert cert.not_valid_before_utc <= now
-    assert cert.not_valid_before_utc >= now - timedelta(minutes=1)
-    assert cert.not_valid_after_utc <= now + relativedelta(months=3)
+    assert cert.not_valid_before <= now
+    assert cert.not_valid_before >= now - timedelta(minutes=1)
+    assert cert.not_valid_after <= now + relativedelta(months=3)
 
 
 @pytest.mark.parametrize(

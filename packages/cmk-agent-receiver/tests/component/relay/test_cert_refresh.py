@@ -44,13 +44,13 @@ def test_cert_refresh(
     cert = certslib.read_certificate(refresh_response.client_cert)
 
     # Verify the certificate CN matches the relay_id
-    assert certslib.check_cn(cert, relay_id)
+    assert cert.subject.common_name == relay_id
 
     # Verify that the certificate has correct validity period bounds.
     now = datetime.now(tz=UTC)
-    assert cert.not_valid_before_utc <= now
-    assert cert.not_valid_before_utc >= now - timedelta(minutes=1)
-    assert cert.not_valid_after_utc <= now + relativedelta(months=3)
+    assert cert.not_valid_before <= now
+    assert cert.not_valid_before >= now - timedelta(minutes=1)
+    assert cert.not_valid_after <= now + relativedelta(months=3)
 
 
 def test_cert_refresh_unknown_relay(

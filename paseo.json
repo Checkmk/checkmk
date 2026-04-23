@@ -1,5 +1,5 @@
 {
   "worktree": {
-    "teardown": ["bazel shutdown"]
+    "teardown": ["bazel clean --expunge"]
   }
 }

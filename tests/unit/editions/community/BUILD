@@ -27,7 +27,11 @@ py_test(
     visibility = ["//visibility:private"],
     deps = [
         ":__test__",
-        "//cmk/editions:community",
+        "//cmk/base:app",
+        "//cmk/base/automations",
+        "//cmk/post_rename_site",
+        "//cmk/post_rename_site/plugins",
+        "//packages/cmk-ccc:version",
         requirement("pytest-random-order"),
     ],
 )

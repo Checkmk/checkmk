@@ -198,6 +198,7 @@ py_library(
     visibility = [
         "//cmk:__pkg__",
         "//cmk/base:__subpackages__",
+        "//tests:__subpackages__",
     ],
     deps = [
         ":base-app",
@@ -228,6 +229,7 @@ py_library(
     visibility = [
         "//cmk:__pkg__",
         "//cmk/base:__subpackages__",
+        "//tests:__subpackages__",
     ],
     deps = [
         ":base-app",

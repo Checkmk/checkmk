@@ -8,6 +8,7 @@ py_library(
         "//cmk:__pkg__",
         "//cmk/base:__subpackages__",
         "//non-free/packages/cmk-bakery:__pkg__",
+        "//tests:__subpackages__",
     ],
     deps = [
         "//cmk/automations",

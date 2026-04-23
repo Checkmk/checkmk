@@ -37,7 +37,10 @@ concat_files(
 
 py_library(
     name = "all_families",
-    visibility = ["//cmk:__subpackages__"],
+    visibility = [
+        "//cmk:__subpackages__",
+        "//tests:__subpackages__",
+    ],
     deps = [
         "//packages/cmk-plugins/cmk/plugins/%s:%s" % (family, family)
         for family in FAMILIES
@@ -50,7 +53,10 @@ filegroup(
         "//packages/cmk-plugins/cmk/plugins/%s:checkman" % family
         for family in FAMILIES
     ],
-    visibility = ["//cmk:__subpackages__"],
+    visibility = [
+        "//cmk:__subpackages__",
+        "//tests:__subpackages__",
+    ],
 )
 
 filegroup(
@@ -59,7 +65,10 @@ filegroup(
         "//packages/cmk-plugins/cmk/plugins/%s:libexec" % family
         for family in FAMILIES
     ],
-    visibility = ["//cmk:__subpackages__"],
+    visibility = [
+        "//cmk:__subpackages__",
+        "//tests:__subpackages__",
+    ],
 )
 
 [py_wheel(

@@ -37,7 +37,7 @@ UploadedFile = tuple[str, str, bytes]
 T = TypeVar("T")
 Value = TypeVar("Value")
 
-HTTPMethod = Literal["get", "put", "post", "delete"]
+HTTPMethod = Literal["get", "put", "post", "delete", "patch"]
 
 
 class ContentDispositionType(StrEnum):

@@ -29,9 +29,9 @@ class LinkModel:
         description="The (absolute) address of the related resource. Any characters that are invalid in URLs must be URL encoded.",
         example="https://.../api_resource",
     )
-    method: Literal["GET", "POST", "PUT", "DELETE"] = api_field(
+    method: Literal["GET", "POST", "PUT", "DELETE", "PATCH"] = api_field(
         title="Method",
-        description="The HTTP method to use to traverse the link (get, post, put or delete)",
+        description="The HTTP method to use to traverse the link (get, post, put, delete or patch)",
         example="GET",
     )
     type: str = api_field(
@@ -78,11 +78,12 @@ class LinkModel:
             body_params=body_params,
         )
         # make mypy happy
-        methods: Mapping[str, Literal["GET", "POST", "PUT", "DELETE"]] = {
+        methods: Mapping[str, Literal["GET", "POST", "PUT", "DELETE", "PATCH"]] = {
             "get": "GET",
             "post": "POST",
             "put": "PUT",
             "delete": "DELETE",
+            "patch": "PATCH",
         }
         return cls(
             rel=link_obj["rel"],

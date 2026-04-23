@@ -9,7 +9,7 @@ from pathlib import Path
 from typing import Any
 
 from cmk.base.app import make_app
-from cmk.base.config import AutochecksConfigurer, load, load_all_pluginX
+from cmk.base.config import AutochecksConfigurer, load, load_all_plugins
 from cmk.base.configlib.servicename import (
     make_final_service_name_config,
     make_passive_service_name_config,
@@ -431,7 +431,7 @@ class RulesStep(AnonymizeStep):
         builtin_host_labels_callable = make_app(edition(paths.omd_root)).get_builtin_host_labels
         builtin_host_labels = builtin_host_labels_callable(omd_site())
 
-        all_plugins = load_all_pluginX()
+        all_plugins = load_all_plugins()
 
         # TODO pass in loaded_config_result
         loaded_config_result = load(

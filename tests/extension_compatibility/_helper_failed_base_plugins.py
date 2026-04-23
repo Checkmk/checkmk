@@ -5,6 +5,6 @@
 
 import json
 
-from cmk.base.config import load_all_pluginX
+from cmk.base.config import load_all_plugins
 
-print(json.dumps(load_all_pluginX().errors))
+print(json.dumps(load_all_plugins().errors))

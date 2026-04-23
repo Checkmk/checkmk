@@ -7,7 +7,7 @@ from collections.abc import Callable, Generator, Iterable, Mapping
 from dataclasses import dataclass
 from typing import Any
 
-from cmk.base.config import load_all_pluginX
+from cmk.base.config import load_all_plugins
 from cmk.ccc import debug
 from cmk.ccc.hostaddress import HostName
 from cmk.checkengine.discovery import AutochecksStore
@@ -69,7 +69,7 @@ def rewrite_yielding_errors(*, write: bool) -> Iterable[RewriteError]:
     to ensure consistency.
     """
     all_rulesets = AllRulesets.load_all_rulesets()
-    plugins = load_all_pluginX()
+    plugins = load_all_plugins()
     for hostname in _autocheck_hosts():
         fixed_autochecks = yield from _get_fixed_autochecks(
             hostname, all_rulesets, plugins.check_plugins

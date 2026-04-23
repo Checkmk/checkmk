@@ -16,7 +16,7 @@ from typing import assert_never
 
 from cmk.agent_based import v2 as agent_based_v2
 from cmk.base.config import (  # astrein: disable=cmk-module-layer-violation
-    load_all_pluginX,
+    load_all_plugins,
 )
 from cmk.ccc import debug
 from cmk.ccc.exceptions import MKGeneralException
@@ -93,7 +93,7 @@ def to_result(step: ValidationStep, errors: Sequence[str]) -> ActiveCheckResult:
 
 
 def _validate_agent_based_plugin_loading() -> tuple[AgentBasedPlugins, ActiveCheckResult]:
-    plugins = load_all_pluginX()
+    plugins = load_all_plugins()
     return plugins, to_result(ValidationStep.AGENT_BASED_PLUGINS, plugins.errors)
 
 

@@ -68,7 +68,7 @@ class _State:
             # We might be running under the debug flag. In that case
             # we *must* be in the try/except block.
             if self.plugins is None:
-                self.plugins = config.load_all_pluginX()
+                self.plugins = config.load_all_plugins()
 
             # Do not yet set `self.last_reload_at`. We don't know if we succeed.
             time_right_before_reload = time.time()

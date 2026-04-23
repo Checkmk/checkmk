@@ -15,6 +15,6 @@ def agent_based_plugins() -> Generator[AgentBasedPlugins]:
     # Local import to have faster pytest initialization
     from cmk.base import config
 
-    plugins = config.load_all_pluginX()
+    plugins = config.load_all_plugins()
     assert not plugins.errors
     yield plugins

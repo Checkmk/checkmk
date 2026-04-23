@@ -93,7 +93,7 @@ class _LogwatchConfigMocker:
 def test_checks_executor(
     agent_data_filename: str, request: pytest.FixtureRequest, setup_dirs: Iterator[None]
 ) -> None:
-    agent_based_plugins = config.load_all_pluginX()
+    agent_based_plugins = config.load_all_plugins()
     assert not agent_based_plugins.errors
     assert agent_based_plugins.agent_sections
 

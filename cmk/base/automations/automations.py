@@ -213,7 +213,7 @@ def load_plugins() -> AgentBasedPlugins:
         redirect_stdout(open(os.devnull, "w")),
     ):
         log.setup_console_logging()
-        return config.load_all_pluginX()
+        return config.load_all_plugins()
 
 
 def load_config(

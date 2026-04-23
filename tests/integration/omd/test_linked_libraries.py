@@ -206,6 +206,6 @@ def test_perl_rrds_links_against_omd_rrd_so(site: Site) -> None:
     )
     rrd_path = linked_rrd_libs[0].path
     assert rrd_path is not None, "librrd should be found by ldd"
-    assert Path(os.path.normpath(rrd_path)) == Path(site.root) / "lib/librrd.so.8", (
+    assert Path(rrd_path).resolve() == (Path(site.root) / "lib/librrd.so.8").resolve(), (
         "RRDs.so should link against a librrd which is shipped with omd."
     )

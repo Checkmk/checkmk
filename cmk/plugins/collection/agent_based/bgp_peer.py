@@ -270,9 +270,17 @@ def _convert_address(value: str | list[int]) -> str:
     if not value:
         return "empty()"
     if isinstance(value, list):
-        return clean_v4_address(value) if len(value) == 4 else clean_v6_address(value)
+        if len(value) == 4:
+            return clean_v4_address(value)
+        if len(value) == 16:
+            return clean_v6_address(value)
+        return f"unknown({value!r})"
     split_value = value.split(".")
-    return clean_v4_address(split_value) if len(split_value) == 4 else clean_v6_address(split_value)
+    if len(split_value) == 4:
+        return clean_v4_address(split_value)
+    if len(split_value) == 16:
+        return clean_v6_address(split_value)
+    return f"unknown({value!r})"
 
 
 def _format_last_received_error(error_entry: str | list[int]) -> str:

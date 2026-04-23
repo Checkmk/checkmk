@@ -29,8 +29,8 @@ def check_hp_webmgmt_status(item, _no_params, info):
         "6": (2, "non-recoverable"),
     }
 
-    device_model = info[1][0][0]
-    serial_number = info[2][0][0]
+    device_model = info[1][0][0] if info[1] and info[1][0] else ""
+    serial_number = info[2][0][0] if info[2] and info[2][0] else ""
     for index, health in info[0]:
         if index == item:
             status, status_msg = status_map[health]

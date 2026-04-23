@@ -29,6 +29,8 @@ from cmk.plugins.azure_v2.agent_based.azure_app_registration import (
     Section,
 )
 
+DAY = 24 * 60 * 60.0
+
 SECTION = Section(
     secrets={
         "srv-whatever - MyKey-bfd9d3a3": Credential(
@@ -144,11 +146,7 @@ def test_discover_certificates(section: Section, expected_discovery: DiscoveryRe
         ),
         pytest.param(
             "srv-whatever - Very very secure-bfd9d3a2",
-            {
-                "secrets": {
-                    "remaining_validity": ("fixed", (500 * 24 * 60 * 60, 100 * 24 * 60 * 60))
-                }
-            },
+            {"secrets": {"remaining_validity": ("fixed", (500 * DAY, 100 * DAY))}},
             SECTION,
             [
                 Result(
@@ -160,10 +158,17 @@ def test_discover_certificates(section: Section, expected_discovery: DiscoveryRe
         ),
         pytest.param(
             "srv-whatever - MyVault-799a984e",
-            {"secrets": {"remaining_validity": ("fixed", (30 * 24 * 60 * 60, 7 * 24 * 60 * 60))}},
+            {"secrets": {"remaining_validity": ("fixed", (30 * DAY, 7 * DAY))}},
             SECTION,
             [Result(state=State.CRIT, summary="Secret expired: 230 days 15 hours ago")],
             id="secret_expired",
+        ),
+        pytest.param(
+            "srv-whatever - MyVault-799a984e",
+            {"secrets": {"ignore_if_older_than": 1 * 24 * 60 * 60}},
+            SECTION,
+            [Result(state=State.OK, summary="Secret ignored: expired more than 1 day 0 hours ago")],
+            id="secret_expired_ignored",
         ),
         pytest.param(
             "srv-whatever - Very very secure-bfd9d3a2",
@@ -178,7 +183,7 @@ def test_discover_certificates(section: Section, expected_discovery: DiscoveryRe
             "srv-whatever - no-start-date-bfd9d3a4",
             {
                 "secrets": {
-                    "max_validity": ("fixed", (400 * 24 * 60 * 60.0, 600 * 24 * 60 * 60.0)),
+                    "max_validity": ("fixed", (400 * DAY, 600 * DAY)),
                 }
             },
             SECTION,
@@ -191,8 +196,8 @@ def test_discover_certificates(section: Section, expected_discovery: DiscoveryRe
             "srv-whatever - long-lived-00000001",
             {
                 "secrets": {
-                    "remaining_validity": ("fixed", (30 * 24 * 60 * 60, 7 * 24 * 60 * 60)),
-                    "max_validity": ("fixed", (400 * 24 * 60 * 60.0, 600 * 24 * 60 * 60.0)),
+                    "remaining_validity": ("fixed", (30 * DAY, 7 * DAY)),
+                    "max_validity": ("fixed", (400 * DAY, 600 * DAY)),
                 }
             },
             Section(
@@ -240,6 +245,30 @@ def test_discover_certificates(section: Section, expected_discovery: DiscoveryRe
             ],
             id="secret_default_params_max_validity_exceeded",
         ),
+        pytest.param(
+            "srv-whatever - MyVault-799a984e",
+            {
+                "secrets": {
+                    "remaining_validity": ("fixed", (30 * DAY, 7 * DAY)),
+                    "ignore_if_older_than": 3000 * DAY,
+                }
+            },
+            SECTION,
+            [Result(state=State.CRIT, summary="Secret expired: 230 days 15 hours ago")],
+            id="secret_not_ignored_threshold_not_reached",
+        ),
+        pytest.param(
+            "srv-whatever - Very very secure-bfd9d3a2",
+            {
+                "secrets": {
+                    "remaining_validity": ("fixed", (30 * DAY, 7 * DAY)),
+                    "ignore_if_older_than": 100 * DAY,
+                }
+            },
+            SECTION,
+            [Result(state=State.OK, summary="Remaining time: 348 days 9 hours")],
+            id="secret_not_expired_ignore_not_applied",
+        ),
     ],
 )
 def test_check_app_registration_secret(
@@ -259,8 +288,8 @@ def test_check_app_registration_secret(
             "srv-whatever - long-cert-00000002",
             {
                 "certificates": {
-                    "remaining_validity": ("fixed", (30 * 24 * 60 * 60, 7 * 24 * 60 * 60)),
-                    "max_validity": ("fixed", (400 * 24 * 60 * 60.0, 600 * 24 * 60 * 60.0)),
+                    "remaining_validity": ("fixed", (30 * DAY, 7 * DAY)),
+                    "max_validity": ("fixed", (400 * DAY, 600 * DAY)),
                 }
             },
             Section(
@@ -307,6 +336,42 @@ def test_check_app_registration_secret(
                 ),
             ],
             id="certificate_default_params_max_validity_exceeded",
+        ),
+        pytest.param(
+            "srv-whatever - the best description-4d120265",
+            {
+                "certificates": {
+                    "remaining_validity": ("fixed", (30 * DAY, 7 * DAY)),
+                    "ignore_if_older_than": 300 * DAY,
+                }
+            },
+            SECTION,
+            [Result(state=State.OK, summary="Remaining time: 21 years 12 days")],
+            id="certificate_not_ignored_not_expired",
+        ),
+        pytest.param(
+            "srv-whatever - expired-cert-00000003",
+            {"certificates": {"ignore_if_older_than": 1 * DAY}},
+            Section(
+                secrets={},
+                certificates={
+                    "srv-whatever - expired-cert-00000003": Credential(
+                        appId="9c677ced-6cb2-44b3-af54-65f768065fdf",
+                        appName="srv-whatever",
+                        startDateTime="2022-01-01T00:00:00Z",
+                        endDateTime="2022-04-05T08:25:51.097Z",
+                        keyId="00000000-0000-0000-0000-000000000003",
+                        displayName="expired-cert",
+                    )
+                },
+            ),
+            [
+                Result(
+                    state=State.OK,
+                    summary="Certificate ignored: expired more than 1 day 0 hours ago",
+                )
+            ],
+            id="certificate_expired_ignored",
         ),
     ],
 )

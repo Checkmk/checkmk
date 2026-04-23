@@ -56,7 +56,7 @@ pkg_files(
         ":check_mk.py",
         ":cmk-automation-helper.py",
         ":cmk-broker-test.py",
-        ":cmk-cert",
+        ":cmk-cert.py",
         ":cmk-config-anonymizer",
         ":cmk-convert-rrds",
         ":cmk-general-version-infos",
@@ -69,7 +69,7 @@ pkg_files(
         ":cmk-monitor-mkbackup",
         ":cmk-monitor-mknotifyd",
         ":cmk-monitor-otel-collector",
-        ":cmk-passwd",
+        ":cmk-passwd.py",
         ":cmk-piggyback",
         ":cmk-piggyback-hub",
         ":cmk-pwstore",
@@ -94,7 +94,9 @@ pkg_files(
         "check_mk.py": "check_mk",
         "cmk-automation-helper.py": "cmk-automation-helper",
         "cmk-broker-test.py": "cmk-broker-test",
+        "cmk-cert.py": "cmk-cert",
         "cmk-migrate-extension-rulesets.py": "cmk-migrate-extension-rulesets",
+        "cmk-passwd.py": "cmk-passwd",
         "cmk-ui-job-scheduler.py": "cmk-ui-job-scheduler",
         "cmk-update-license-usage.py": "cmk-update-license-usage",
         "cmk-validate-config.py": "cmk-validate-config",
@@ -257,14 +259,14 @@ py_library(
 
 py_library(
     name = "cmk_cert_py",
-    srcs = ["cmk-cert"],
+    srcs = ["cmk-cert.py"],
     imports = ["."],
     deps = ["//cmk/gui"],
 )
 
 py_library(
     name = "cmk_passwd_py",
-    srcs = ["cmk-passwd"],
+    srcs = ["cmk-passwd.py"],
     imports = ["."],
     deps = ["//cmk:cmkpasswd"],
 )

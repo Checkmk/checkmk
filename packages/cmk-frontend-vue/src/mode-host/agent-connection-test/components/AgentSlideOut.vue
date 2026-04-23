@@ -8,6 +8,7 @@ import { ref, watch } from 'vue'
 
 import usei18n from '@/lib/i18n'
 import type { TranslatedString } from '@/lib/i18nString'
+import usePersistentRef from '@/lib/usePersistentRef'
 
 import CmkAlertBox from '@/components/CmkAlertBox.vue'
 import CmkButton from '@/components/CmkButton.vue'
@@ -58,7 +59,9 @@ const model = ref(sessionStorage.getItem('slideInModelState') || 'deb')
 sessionStorage.removeItem('slideInModelState')
 sessionStorage.removeItem('slideInTabState')
 
-const selectedVariantId = ref<string>('powershell')
+const selectedVariantId = usePersistentRef<string>('slideInSelectedVariantId', 'powershell', (v) =>
+  typeof v === 'string' ? v : 'powershell'
+)
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 declare const cmk: any

@@ -113,7 +113,7 @@ class NotificationConfiguration(CmkPage):
 
     @property
     def _notification_overview_container(self) -> Locator:
-        return self.main_area.locator("div.notification-overview__container")
+        return self.main_area.locator().get_by_role("region", name="Notification overview")
 
     def collapse_notification_overview(self, collapse: bool = True) -> None:
         container = self._notification_overview_container
@@ -130,11 +130,7 @@ class NotificationConfiguration(CmkPage):
         self._notification_rule_row(rule_id).wait_for(state="detached")
 
     def _get_notification_stat_count(self, title: str) -> Locator:
-        return (
-            self.main_area.locator("div.notification-stats__section")
-            .filter(has=self.main_area.page.get_by_role("heading", name=title))
-            .get_by_role("paragraph")
-        )
+        return self.main_area.locator().get_by_role("group", name=title).get_by_role("paragraph")
 
     def get_total_sent_notifications_count(self) -> int:
         return int(self._get_notification_stat_count("Total sent notifications").inner_text())

@@ -57,7 +57,12 @@ function toggleContent() {
     <CmkIconButton name="tree-closed" size="xsmall" :rotate="isContentVisible ? 90 : 0" />
     {{ overview_title_i18n }}
   </h3>
-  <div v-if="isContentVisible" class="notification-overview__container">
+  <div
+    v-if="isContentVisible"
+    class="notification-overview__container"
+    role="region"
+    :aria-label="overview_title_i18n"
+  >
     <div class="notification-overview__stats-container">
       <NotificationStats :notification_stats="notification_stats"></NotificationStats>
       <NotificationCoreStats :stats="core_stats"></NotificationCoreStats>

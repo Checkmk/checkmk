@@ -15,7 +15,11 @@ defineProps<{
 
 <template>
   <div class="notification-stats">
-    <div class="notification-stats__section">
+    <div
+      class="notification-stats__section"
+      role="group"
+      :aria-label="notification_stats['i18n']['failed_notifications']"
+    >
       <h3>{{ notification_stats['i18n']['failed_notifications'] }}</h3>
       <div class="notification-stats__content">
         <p class="notification-stats__count">
@@ -34,7 +38,11 @@ defineProps<{
         >
       </div>
     </div>
-    <div class="notification-stats__section">
+    <div
+      class="notification-stats__section"
+      role="group"
+      :aria-label="notification_stats['i18n']['sent_notifications']"
+    >
       <h3 class="table">{{ notification_stats['i18n']['sent_notifications'] }}</h3>
       <div class="notification-stats__content">
         <p class="notification-stats__count">

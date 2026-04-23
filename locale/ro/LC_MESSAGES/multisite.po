@@ -2244,10 +2244,6 @@ msgid ""
 "failed service is disabled."
 msgstr ""
 
-#, fuzzy
-msgid "A fatal error occurred:"
-msgstr "%d au apărut erori:"
-
 msgid "A folder with that name already exists."
 msgstr "Un director cu acest nume deja există."
 
@@ -7636,10 +7632,6 @@ msgid ""
 msgstr ""
 
 #, fuzzy
-msgid "At least one custom query is required."
-msgstr "Starea când lipsește fișierul"
-
-#, fuzzy
 msgid "At least one host event must be selected."
 msgstr "Starea când lipsește fișierul"
 
@@ -12502,12 +12494,6 @@ msgid "Changes since last dump"
 msgstr "Modificări de la ultima descărcare de gestiune"
 
 msgid ""
-"Changes submitted through this form will be immediately applied to your "
-"configuration. However, you may still need to activate them for them to take "
-"effect."
-msgstr ""
-
-msgid ""
 "Changes to a user's two-factor settings within remote sites will be "
 "overritten by changes to the user's settings in the central site."
 msgstr ""
@@ -16464,9 +16450,6 @@ msgstr "Nu s-a putut prelua simbolul de identitate. (%s)"
 msgid "Could not save changes: %s"
 msgstr "Nu s-a putut salva modificările: %s"
 
-msgid "Could not validate form, errors are shown in the form"
-msgstr ""
-
 msgid ""
 "Couldn't lock the Checkmk configuration. Another process is running that "
 "holds this lock. In order for you to be able to perform the desired action, "
@@ -17665,10 +17648,6 @@ msgstr "Gazdă personalizată"
 msgid "Custom probe state"
 msgstr "Starea sondei personalizate"
 
-#, fuzzy
-msgid "Custom query result"
-msgstr "Client"
-
 msgid "Custom recipient of \"Reply to\""
 msgstr ""
 
@@ -18591,9 +18570,6 @@ msgstr "Trafic decodificat"
 
 msgid "Decoder utilization"
 msgstr "Utilizarea decodorului"
-
-msgid "Decryption of SNMPv3 password failed."
-msgstr "Decriptarea parolei SNMPv3 a eșuat."
 
 msgid "Dedicated white-/blacklists for new and vanished services"
 msgstr "Liste albe/negre dedicate pentru servicii noi și dispărute"
@@ -39206,10 +39182,6 @@ msgstr "Încărcare..."
 msgid "Loading \"%s/%s\" failed: %s"
 msgstr "Încărcarea \"%s/%s\" a eșuat: %s."
 
-#, fuzzy
-msgid "Loading ..."
-msgstr "Încărcare..."
-
 msgid "Loading maps..."
 msgstr "Încărcarea hărților..."
 
@@ -42358,10 +42330,6 @@ msgid "Metric backend"
 msgstr "Instanțe Oracle"
 
 #, fuzzy
-msgid "Metric backend (custom query)"
-msgstr "Instanțe Oracle"
-
-#, fuzzy
 msgid "Metric backend is disabled, autocompletion is not available."
 msgstr "Instanțe Oracle"
 
@@ -44743,10 +44711,6 @@ msgstr "Nu folosiți niciodată date piggyback"
 msgid "New"
 msgstr "Nou"
 
-#, fuzzy, python-format
-msgid "New %s"
-msgstr "Stat nou: %s"
-
 msgid "New Action"
 msgstr "Acțiune nouă"
 
@@ -45274,10 +45238,6 @@ msgstr "Regula de notificare modificată %d"
 
 msgid "No object type"
 msgstr "Nici un tip de obiect"
-
-#, fuzzy
-msgid "No options available"
-msgstr "Nu există informații disponibile"
 
 msgid "No password entered. Please enter a password."
 msgstr "Nu a fost introdusă nicio parolă. Vă rugăm să introduceți o parolă."
@@ -47859,10 +47819,6 @@ msgstr ""
 #, fuzzy
 msgid "Only needed if you have multiple MySQL instances on one server"
 msgstr "Este necesar doar dacă aveți mai multe instanțe MySQL pe un server"
-
-#, python-format
-msgid "Only one %s per site is supported currently."
-msgstr ""
 
 msgid "Only one tag may be empty."
 msgstr "Numai o singură etichetă poate fi goală."
@@ -53490,10 +53446,6 @@ msgstr "Instanțe Oracle"
 
 msgid "Query or SQL statement"
 msgstr "Interogare sau instrucțiune SQL"
-
-#, fuzzy
-msgid "Query the metric backend"
-msgstr "Configurația stilului selectat"
 
 #, fuzzy
 msgid "Query time limit"
@@ -80537,6 +80489,14 @@ msgstr "Ștergerea regulii de notificare #%d"
 msgid "Unexpected 'throttling' values passed to form."
 msgstr "Ștergerea regulii de notificare #%d"
 
+#, python-format
+msgid "Unexpected SNMPv3 credentials shape: tuple of length %d"
+msgstr ""
+
+#, fuzzy, python-format
+msgid "Unexpected SNMPv3 credentials type: %s"
+msgstr "Tipul de cluster așteptat."
+
 #, fuzzy, python-format
 msgid "Unexpected dictionary type: %s"
 msgstr "Tipul de cluster așteptat."
@@ -91185,10 +91145,6 @@ msgstr "expresie regulată, potrivire de subșiruri"
 msgid "relative URI under which Jolokia is visible"
 msgstr "URI relativ sub care este vizibil Jolokia"
 
-#, fuzzy
-msgid "reload"
-msgstr "Reîncărcare"
-
 msgid ""
 "remote endpoint has shut down; the kernel is waiting for the application to "
 "close the socket"
@@ -91903,6 +91859,42 @@ msgstr "Finalizat"
 #, fuzzy
 msgid "Guided"
 msgstr "Modul deschis"
+
+#, fuzzy
+msgid "%{specifier} parameter"
+msgstr "Parametrii modelului"
+
+msgid "rule %{specifier}"
+msgstr ""
+
+#, fuzzy
+msgid "No options available"
+msgstr "Nu există informații disponibile"
+
+#, fuzzy
+msgid "New %{entity}"
+msgstr "Noi intrări"
+
+#, fuzzy
+msgid "Edit %{entity}"
+msgstr "Editare metrică"
+
+#, fuzzy
+msgid "Loading ..."
+msgstr "Încărcare..."
+
+msgid "Could not validate form, errors are shown in the form"
+msgstr ""
+
+#, fuzzy
+msgid "A fatal error occurred:"
+msgstr "%d au apărut erori:"
+
+msgid ""
+"Changes submitted through this form will be immediately applied to your "
+"configuration. However, you may still need to activate them for them to take "
+"effect."
+msgstr ""
 
 #, fuzzy
 msgid "required"
@@ -95955,6 +95947,33 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "At least one custom query is required."
+#~ msgstr "Starea când lipsește fișierul"
+
+#, fuzzy
+#~ msgid "Custom query result"
+#~ msgstr "Client"
+
+#~ msgid "Decryption of SNMPv3 password failed."
+#~ msgstr "Decriptarea parolei SNMPv3 a eșuat."
+
+#, fuzzy
+#~ msgid "Metric backend (custom query)"
+#~ msgstr "Instanțe Oracle"
+
+#, fuzzy, python-format
+#~ msgid "New %s"
+#~ msgstr "Stat nou: %s"
+
+#, fuzzy
+#~ msgid "Query the metric backend"
+#~ msgstr "Configurația stilului selectat"
+
+#, fuzzy
+#~ msgid "reload"
+#~ msgstr "Reîncărcare"
 
 #, fuzzy
 #~ msgid "Deploy the nvidia_smi agent plug-in"
@@ -105661,9 +105680,6 @@ msgstr ""
 
 #~ msgid "File Size Levels"
 #~ msgstr "Niveluri de mărime a fișierelor"
-
-#~ msgid "Edit metric"
-#~ msgstr "Editare metrică"
 
 #~ msgid "Save filters & go to designer"
 #~ msgstr "Salvați filtrele și mergeți la designer"

@@ -2219,10 +2219,6 @@ msgid ""
 "failed service is disabled."
 msgstr ""
 
-#, fuzzy
-msgid "A fatal error occurred:"
-msgstr "%d foutmeldingen:"
-
 msgid "A folder with that name already exists."
 msgstr "Er bestaat al een map met die naam."
 
@@ -7620,10 +7616,6 @@ msgid ""
 msgstr ""
 
 #, fuzzy
-msgid "At least one custom query is required."
-msgstr "Staat wanneer bestand ontbreekt"
-
-#, fuzzy
 msgid "At least one host event must be selected."
 msgstr "Staat wanneer bestand ontbreekt"
 
@@ -12483,12 +12475,6 @@ msgid "Changes since last dump"
 msgstr "Veranderingen sinds de laatste dump"
 
 msgid ""
-"Changes submitted through this form will be immediately applied to your "
-"configuration. However, you may still need to activate them for them to take "
-"effect."
-msgstr ""
-
-msgid ""
 "Changes to a user's two-factor settings within remote sites will be "
 "overritten by changes to the user's settings in the central site."
 msgstr ""
@@ -16457,9 +16443,6 @@ msgstr "Kon het huidige thema niet bepalen."
 msgid "Could not save changes: %s"
 msgstr "Kon wijzigingen niet opslaan: %s"
 
-msgid "Could not validate form, errors are shown in the form"
-msgstr ""
-
 msgid ""
 "Couldn't lock the Checkmk configuration. Another process is running that "
 "holds this lock. In order for you to be able to perform the desired action, "
@@ -17653,10 +17636,6 @@ msgstr "Aangepaste gastheer"
 msgid "Custom probe state"
 msgstr "Aangepaste sondestatus"
 
-#, fuzzy
-msgid "Custom query result"
-msgstr "Klant"
-
 msgid "Custom recipient of \"Reply to\""
 msgstr ""
 
@@ -18584,9 +18563,6 @@ msgstr "Gedecodeerd verkeer"
 
 msgid "Decoder utilization"
 msgstr "Gebruik van de decoder"
-
-msgid "Decryption of SNMPv3 password failed."
-msgstr ""
 
 msgid "Dedicated white-/blacklists for new and vanished services"
 msgstr "Speciale witte/blacklists voor nieuwe en verdwenen diensten"
@@ -39127,10 +39103,6 @@ msgstr "Laden..."
 msgid "Loading \"%s/%s\" failed: %s"
 msgstr "Het laden van \"%s/%s\" is mislukt: %s"
 
-#, fuzzy
-msgid "Loading ..."
-msgstr "Laden..."
-
 msgid "Loading maps..."
 msgstr "Kaarten laden..."
 
@@ -42278,10 +42250,6 @@ msgid "Metric backend"
 msgstr "Oracle gevallen"
 
 #, fuzzy
-msgid "Metric backend (custom query)"
-msgstr "Oracle gevallen"
-
-#, fuzzy
 msgid "Metric backend is disabled, autocompletion is not available."
 msgstr "Oracle gevallen"
 
@@ -44656,10 +44624,6 @@ msgstr "Gebruik nooit piggyback data"
 msgid "New"
 msgstr "Nieuw"
 
-#, fuzzy, python-format
-msgid "New %s"
-msgstr "Job staat: %s"
-
 msgid "New Action"
 msgstr "Nieuwe Actie"
 
@@ -45190,10 +45154,6 @@ msgstr "Gewijzigde meldingsregel %d"
 
 msgid "No object type"
 msgstr "Geen objecttype"
-
-#, fuzzy
-msgid "No options available"
-msgstr "Geen informatie beschikbaar"
 
 msgid "No password entered. Please enter a password."
 msgstr ""
@@ -47782,10 +47742,6 @@ msgstr "Vraag alleen naar de volgende SID's (indien gevonden)"
 #, fuzzy
 msgid "Only needed if you have multiple MySQL instances on one server"
 msgstr "Alleen nodig als u meerdere MySQL Instances op één server heeft"
-
-#, python-format
-msgid "Only one %s per site is supported currently."
-msgstr ""
 
 msgid "Only one tag may be empty."
 msgstr "Slechts één tag mag leeg zijn."
@@ -53412,10 +53368,6 @@ msgstr "Oracle gevallen"
 
 msgid "Query or SQL statement"
 msgstr "Query of SQL verklaring"
-
-#, fuzzy
-msgid "Query the metric backend"
-msgstr "Configuratie toestand toevoegen"
 
 #, fuzzy
 msgid "Query time limit"
@@ -80413,6 +80365,14 @@ msgstr "Kennisgevingsregel verwijderen #%d"
 msgid "Unexpected 'throttling' values passed to form."
 msgstr "Kennisgevingsregel verwijderen #%d"
 
+#, python-format
+msgid "Unexpected SNMPv3 credentials shape: tuple of length %d"
+msgstr ""
+
+#, fuzzy, python-format
+msgid "Unexpected SNMPv3 credentials type: %s"
+msgstr "Verwacht clustertype."
+
 #, fuzzy, python-format
 msgid "Unexpected dictionary type: %s"
 msgstr "Verwacht clustertype."
@@ -91060,10 +91020,6 @@ msgstr "reguliere expressie, substring wedstrijd"
 msgid "relative URI under which Jolokia is visible"
 msgstr "relatieve URI waaronder Jolokia zichtbaar is"
 
-#, fuzzy
-msgid "reload"
-msgstr "Herladen"
-
 msgid ""
 "remote endpoint has shut down; the kernel is waiting for the application to "
 "close the socket"
@@ -91766,6 +91722,42 @@ msgstr "Afgewerkt"
 #, fuzzy
 msgid "Guided"
 msgstr "Open mode"
+
+#, fuzzy
+msgid "%{specifier} parameter"
+msgstr "Modelparameters"
+
+msgid "rule %{specifier}"
+msgstr ""
+
+#, fuzzy
+msgid "No options available"
+msgstr "Geen informatie beschikbaar"
+
+#, fuzzy
+msgid "New %{entity}"
+msgstr "Nieuwe inzendingen"
+
+#, fuzzy
+msgid "Edit %{entity}"
+msgstr "Bewerk metriek"
+
+#, fuzzy
+msgid "Loading ..."
+msgstr "Laden..."
+
+msgid "Could not validate form, errors are shown in the form"
+msgstr ""
+
+#, fuzzy
+msgid "A fatal error occurred:"
+msgstr "%d foutmeldingen:"
+
+msgid ""
+"Changes submitted through this form will be immediately applied to your "
+"configuration. However, you may still need to activate them for them to take "
+"effect."
+msgstr ""
 
 #, fuzzy
 msgid "required"
@@ -95796,6 +95788,30 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "At least one custom query is required."
+#~ msgstr "Staat wanneer bestand ontbreekt"
+
+#, fuzzy
+#~ msgid "Custom query result"
+#~ msgstr "Klant"
+
+#, fuzzy
+#~ msgid "Metric backend (custom query)"
+#~ msgstr "Oracle gevallen"
+
+#, fuzzy, python-format
+#~ msgid "New %s"
+#~ msgstr "Job staat: %s"
+
+#, fuzzy
+#~ msgid "Query the metric backend"
+#~ msgstr "Configuratie toestand toevoegen"
+
+#, fuzzy
+#~ msgid "reload"
+#~ msgstr "Herladen"
 
 #, fuzzy
 #~ msgid "Deploy the nvidia_smi agent plug-in"
@@ -104903,9 +104919,6 @@ msgstr ""
 
 #~ msgid "File Size Levels"
 #~ msgstr "Niveaus bestandsgrootte"
-
-#~ msgid "Edit metric"
-#~ msgstr "Bewerk metriek"
 
 #~ msgid "Save filters & go to designer"
 #~ msgstr "Bewaar filters & ga naar ontwerper"

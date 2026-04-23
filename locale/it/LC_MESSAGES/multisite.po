@@ -2237,10 +2237,6 @@ msgid ""
 "failed service is disabled."
 msgstr ""
 
-#, fuzzy
-msgid "A fatal error occurred:"
-msgstr "Si sono verificati %d errori:"
-
 msgid "A folder with that name already exists."
 msgstr "Una cartella con quel nome esiste già."
 
@@ -7545,10 +7541,6 @@ msgid ""
 msgstr ""
 
 #, fuzzy
-msgid "At least one custom query is required."
-msgstr "Stato quando il file manca"
-
-#, fuzzy
 msgid "At least one host event must be selected."
 msgstr "Stato quando il file manca"
 
@@ -12380,12 +12372,6 @@ msgid "Changes since last dump"
 msgstr "Cambiamenti dall'ultimo dump"
 
 msgid ""
-"Changes submitted through this form will be immediately applied to your "
-"configuration. However, you may still need to activate them for them to take "
-"effect."
-msgstr ""
-
-msgid ""
 "Changes to a user's two-factor settings within remote sites will be "
 "overritten by changes to the user's settings in the central site."
 msgstr ""
@@ -16322,9 +16308,6 @@ msgstr "Impossibile recuperare il token di identità. (%s)"
 msgid "Could not save changes: %s"
 msgstr "Impossibile salvare le modifiche: %s"
 
-msgid "Could not validate form, errors are shown in the form"
-msgstr ""
-
 msgid ""
 "Couldn't lock the Checkmk configuration. Another process is running that "
 "holds this lock. In order for you to be able to perform the desired action, "
@@ -17514,10 +17497,6 @@ msgstr "Host personalizzato"
 msgid "Custom probe state"
 msgstr "Stato della sonda personalizzata"
 
-#, fuzzy
-msgid "Custom query result"
-msgstr "Cliente"
-
 msgid "Custom recipient of \"Reply to\""
 msgstr ""
 
@@ -18439,9 +18418,6 @@ msgstr "Traffico decodificato"
 
 msgid "Decoder utilization"
 msgstr "Utilizzo del decoder"
-
-msgid "Decryption of SNMPv3 password failed."
-msgstr "Decrittazione fallita per la password SNMPv3."
 
 msgid "Dedicated white-/blacklists for new and vanished services"
 msgstr "White-/blacklists dedicate per servizi nuovi e scomparsi"
@@ -38977,10 +38953,6 @@ msgstr "Caricamento..."
 msgid "Loading \"%s/%s\" failed: %s"
 msgstr "Caricamento \"%s/%s\" fallito: %s"
 
-#, fuzzy
-msgid "Loading ..."
-msgstr "Caricamento..."
-
 msgid "Loading maps..."
 msgstr "Caricamento mappe..."
 
@@ -42122,10 +42094,6 @@ msgid "Metric backend"
 msgstr "Istanze Oracle"
 
 #, fuzzy
-msgid "Metric backend (custom query)"
-msgstr "Istanze Oracle"
-
-#, fuzzy
 msgid "Metric backend is disabled, autocompletion is not available."
 msgstr "Istanze Oracle"
 
@@ -44491,10 +44459,6 @@ msgstr "Non usare mai i dati piggyback"
 msgid "New"
 msgstr "Nuovo"
 
-#, fuzzy, python-format
-msgid "New %s"
-msgstr "Nuovo stato: %s"
-
 msgid "New Action"
 msgstr "Nuova azione"
 
@@ -45017,10 +44981,6 @@ msgstr "Regola di notifica modificata %d"
 
 msgid "No object type"
 msgstr "Nessun tipo di oggetto"
-
-#, fuzzy
-msgid "No options available"
-msgstr "Nessuna informazione disponibile"
 
 msgid "No password entered. Please enter a password."
 msgstr "Non hai inserito una password. Per favore inseriscine una."
@@ -47584,10 +47544,6 @@ msgstr "Monitora solo i seguenti SID (se rilevati o aggiunti manualmente)"
 #, fuzzy
 msgid "Only needed if you have multiple MySQL instances on one server"
 msgstr "Necessario solo se si hanno più istanze MySQL su un server"
-
-#, python-format
-msgid "Only one %s per site is supported currently."
-msgstr ""
 
 msgid "Only one tag may be empty."
 msgstr "Solo un tag può essere vuoto."
@@ -53206,10 +53162,6 @@ msgstr "Istanze Oracle"
 
 msgid "Query or SQL statement"
 msgstr "Query o dichiarazione SQL"
-
-#, fuzzy
-msgid "Query the metric backend"
-msgstr "Configurazione dello stile selezionato"
 
 #, fuzzy
 msgid "Query time limit"
@@ -80165,6 +80117,14 @@ msgstr "Elimina regola di notifica #%d"
 msgid "Unexpected 'throttling' values passed to form."
 msgstr "Elimina regola di notifica #%d"
 
+#, python-format
+msgid "Unexpected SNMPv3 credentials shape: tuple of length %d"
+msgstr ""
+
+#, fuzzy, python-format
+msgid "Unexpected SNMPv3 credentials type: %s"
+msgstr "Tipo di cluster previsto."
+
 #, fuzzy, python-format
 msgid "Unexpected dictionary type: %s"
 msgstr "Tipo di cluster previsto."
@@ -90773,10 +90733,6 @@ msgstr "espressione regolare, corrispondenza della sottostringa"
 msgid "relative URI under which Jolokia is visible"
 msgstr "URI relativo sotto il quale Jolokia è visibile"
 
-#, fuzzy
-msgid "reload"
-msgstr "Ricarica"
-
 msgid ""
 "remote endpoint has shut down; the kernel is waiting for the application to "
 "close the socket"
@@ -91476,6 +91432,42 @@ msgstr "Finito"
 #, fuzzy
 msgid "Guided"
 msgstr "Modo aperto"
+
+#, fuzzy
+msgid "%{specifier} parameter"
+msgstr "parametro %s"
+
+msgid "rule %{specifier}"
+msgstr ""
+
+#, fuzzy
+msgid "No options available"
+msgstr "Nessuna informazione disponibile"
+
+#, fuzzy
+msgid "New %{entity}"
+msgstr "Nessuna voce"
+
+#, fuzzy
+msgid "Edit %{entity}"
+msgstr "Modifica metrica"
+
+#, fuzzy
+msgid "Loading ..."
+msgstr "Caricamento..."
+
+msgid "Could not validate form, errors are shown in the form"
+msgstr ""
+
+#, fuzzy
+msgid "A fatal error occurred:"
+msgstr "Si sono verificati %d errori:"
+
+msgid ""
+"Changes submitted through this form will be immediately applied to your "
+"configuration. However, you may still need to activate them for them to take "
+"effect."
+msgstr ""
 
 msgid "required"
 msgstr "(obbligatorio)"
@@ -95507,6 +95499,33 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "At least one custom query is required."
+#~ msgstr "Stato quando il file manca"
+
+#, fuzzy
+#~ msgid "Custom query result"
+#~ msgstr "Cliente"
+
+#~ msgid "Decryption of SNMPv3 password failed."
+#~ msgstr "Decrittazione fallita per la password SNMPv3."
+
+#, fuzzy
+#~ msgid "Metric backend (custom query)"
+#~ msgstr "Istanze Oracle"
+
+#, fuzzy, python-format
+#~ msgid "New %s"
+#~ msgstr "Nuovo stato: %s"
+
+#, fuzzy
+#~ msgid "Query the metric backend"
+#~ msgstr "Configurazione dello stile selezionato"
+
+#, fuzzy
+#~ msgid "reload"
+#~ msgstr "Ricarica"
 
 #, fuzzy
 #~ msgid "Deploy the nvidia_smi agent plug-in"
@@ -104934,9 +104953,6 @@ msgstr ""
 
 #~ msgid "File Size Levels"
 #~ msgstr "Livelli di dimensione dei file"
-
-#~ msgid "Edit metric"
-#~ msgstr "Modifica metrica"
 
 #~ msgid "Save filters & go to designer"
 #~ msgstr "Salva i filtri e vai al designer"

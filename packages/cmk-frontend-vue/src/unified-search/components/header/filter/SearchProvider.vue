@@ -52,7 +52,11 @@ const provideri18n: Record<QueryProvider, TranslatedString> = {
 </script>
 
 <template>
-  <div class="unified-search-search-provider__wrapper">
+  <div
+    class="unified-search-search-provider__wrapper"
+    role="toolbar"
+    :aria-label="_t('Search providers')"
+  >
     <FilterButton
       v-for="po in availableProviders"
       :key="po.value"

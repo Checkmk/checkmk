@@ -48,7 +48,12 @@ immediateWatch(
 </script>
 
 <template>
-  <div v-if="recentlyViewed.length > 0" class="recently-viewed">
+  <div
+    v-if="recentlyViewed.length > 0"
+    class="recently-viewed"
+    role="region"
+    :aria-label="_t('Recently viewed')"
+  >
     <CmkHeading type="h4" class="result-heading">
       {{ _t('Recently viewed') }}
       <button

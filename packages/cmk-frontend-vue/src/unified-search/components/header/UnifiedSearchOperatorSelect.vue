@@ -106,6 +106,8 @@ function toggleOperatorOptions() {
   <div
     class="unified-search-operator-select__switch"
     :class="{ 'unified-search-operator-select__disabled': props.disabled }"
+    role="group"
+    :aria-label="_t('Search operators')"
   >
     <button
       ref="unified-search-operator-btn"

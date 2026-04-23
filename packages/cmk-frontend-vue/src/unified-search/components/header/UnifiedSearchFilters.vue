@@ -131,6 +131,8 @@ function getFilterOptions(): FilterOption[] {
     v-if="searchUtils.input.suggestionsActive.value === true"
     v-click-outside="hideFilterSuggestions"
     class="unified-search-filters__suggestions"
+    role="listbox"
+    :aria-label="_t('Search operator suggestions')"
   >
     <ul ref="unified-search-filters__suggestions" class="unified-search-filters__suggestions-list">
       <FilterOptionEntry

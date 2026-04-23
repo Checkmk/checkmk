@@ -122,7 +122,12 @@ onMounted(() => {
       :history-entries="recentlyViewed"
     ></UnifiedSearchRecentlyViewed>
 
-    <div v-if="recentlySearches.length > 0" class="recent-searches">
+    <div
+      v-if="recentlySearches.length > 0"
+      class="recent-searches"
+      role="region"
+      :aria-label="_t('Recently searched')"
+    >
       <CmkHeading type="h4" class="result-heading">
         {{ _t('Recently searched') }}
         <button

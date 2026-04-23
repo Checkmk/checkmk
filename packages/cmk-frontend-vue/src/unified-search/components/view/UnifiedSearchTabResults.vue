@@ -265,7 +265,12 @@ function isMonitoringSearch(): boolean {
 </script>
 
 <template>
-  <div v-if="searchResultNotEmpty()" class="cmk-unified-search-result-tabs">
+  <div
+    v-if="searchResultNotEmpty()"
+    class="cmk-unified-search-result-tabs"
+    role="region"
+    :aria-label="_t('Search results')"
+  >
     <div>
       <CmkHeading type="h4" class="result-heading">
         {{ _t('Results') }} ({{ results.length }})

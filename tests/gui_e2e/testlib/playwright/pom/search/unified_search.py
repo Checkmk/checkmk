@@ -66,7 +66,7 @@ class UnifiedSearchSlideout(LocatorHelper):
 
     @property
     def slideout(self) -> Locator:
-        return self.cmk_page.locator(".main-menu-popup-menu.unified-search-app")
+        return self.locator().get_by_role("dialog", name="Search")
 
     @property
     def input(self) -> Locator:
@@ -74,34 +74,32 @@ class UnifiedSearchSlideout(LocatorHelper):
 
     @property
     def provider_select(self) -> ProviderSelect:
-        return ProviderSelect(
-            locator=self.slideout.locator(".unified-search-search-provider__wrapper")
-        )
+        return ProviderSelect(locator=self.slideout.get_by_role("toolbar", name="Search providers"))
 
     @property
     def search_operator_select(self) -> SearchOperatorSelect:
         return SearchOperatorSelect(
-            locator=self.slideout.locator(".unified-search-operator-select__switch")
+            locator=self.slideout.get_by_role("group", name="Search operators")
         )
 
     @property
     def slash_search_operators(self) -> SearchOperatorSelect:
         self.input.type("/")
         return SearchOperatorSelect(
-            locator=self.slideout.locator(".unified-search-filters__suggestions")
+            locator=self.slideout.get_by_role("listbox", name="Search operator suggestions")
         )
 
     @property
     def recently_viewed(self) -> RecentlyResults:
-        return RecentlyResults(self.slideout.locator(".recently-viewed"))
+        return RecentlyResults(self.slideout.get_by_role("region", name="Recently viewed"))
 
     @property
     def recently_searched(self) -> RecentlyResults:
-        return RecentlyResults(self.slideout.locator(".recently-searched"))
+        return RecentlyResults(self.slideout.get_by_role("region", name="Recently searched"))
 
     @property
     def search_results(self) -> SearchResults:
-        return SearchResults(self.slideout.locator(".cmk-unified-search-result-tabs"))
+        return SearchResults(self.slideout.get_by_role("region", name="Search results"))
 
     def exec_service_host_search(self, search_term: str) -> None:
         self.input.fill(search_term)

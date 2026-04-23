@@ -13,6 +13,7 @@ import type {
 import { onMounted, ref } from 'vue'
 
 import { Api } from '@/lib/api-client'
+import usei18n from '@/lib/i18n'
 import type { TranslatedString } from '@/lib/i18nString'
 
 import DefaultPopup from '@/main-menu/changes/components/DefaultPopup.vue'
@@ -40,6 +41,8 @@ import { getIconForTopic } from './lib/icon-mapping'
 import { setRecentSearch } from './lib/search-debug'
 import { initSearchUtils, provideSearchUtils } from './providers/search-utils'
 import type { UnifiedSearchQueryLike } from './providers/search-utils.types'
+
+const { _t } = usei18n()
 
 const props = defineProps<UnifiedSearchProps>()
 const mainMenu = getInjectedMainMenu()
@@ -214,7 +217,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <DefaultPopup class="unified-search-app">
+  <DefaultPopup class="unified-search-app" role="dialog" :aria-label="_t('Search')">
     <UnifiedSearchHeader> </UnifiedSearchHeader>
     <UnifiedSearchStart v-if="showEmptyStart()" :history-result="historyResult">
     </UnifiedSearchStart>

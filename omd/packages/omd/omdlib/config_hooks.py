@@ -325,6 +325,13 @@ def _config_set(
             output = _set_livestatus_tcp_port(site.name, value, site_configs.configs, omd_path)
             if isinstance(output, _Error):
                 return
+        case "LIVESTATUS_TCP_TLS":
+            # Do not patch the xinetd config directly here, because that would lead to
+            # later conflicts during omd cp/mv. The xinetd config points to a link
+            # live-tcp instead which always points to the correct socket. This is
+            # done by "omd", because the hook can not change things in tmp since the
+            # tmpfs may not be available during hook execution.
+            return
         case _:
             exitcode, output = _call_hook(site, hook_name, ["set", value], verbose)
             if exitcode:

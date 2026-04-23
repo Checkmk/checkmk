@@ -137,6 +137,7 @@ py_library(
     visibility = ["//packages/cmk-agent-receiver/tests:__subpackages__"],
     deps = [
         ":cmk-agent-receiver",
+        "//packages/cmk-crypto",
         requirement("cryptography"),
         requirement("fastapi"),
         requirement("httpx"),

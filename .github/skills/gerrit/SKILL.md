@@ -26,6 +26,35 @@ when you want to review a change that is **not** checked out locally.
 2. In case a Verified -1 is reported, fetch the Jenkins job results using the jenkins skill
 3. For each failed stage, fetch the details of the triggered stage job
 
+# When asked to check out a Gerrit change locally
+
+You can check out a Gerrit change given either its change number
+(e.g. `125896`) or its Change-Id (e.g. `Iaa4acff6...`).
+
+1. Make sure the worktree is clean — `git status` must report no uncommitted
+   or staged changes. Abort if it is dirty.
+
+2. Ask Gerrit for the ref of the current patch set. `<change>` below is the
+   change number or Change-Id provided by the user:
+
+   ```
+   ref=$(curl -s --netrc \
+     "https://review.lan.tribe29.com/a/changes/<change>?o=CURRENT_REVISION" \
+     | sed '1d' \
+     | jq -r '.revisions[.current_revision].ref')
+   ```
+
+   `ref` will have the form `refs/changes/<NN>/<change_number>/<patchset>`.
+
+3. Fetch that ref from `origin` (already configured in every clone) and
+   check it out:
+
+   ```
+   git fetch origin "$ref" && git checkout FETCH_HEAD
+   ```
+
+   This lands on a detached `FETCH_HEAD`.
+
 # When asked for the list of open Gerrit changes
 
 ```

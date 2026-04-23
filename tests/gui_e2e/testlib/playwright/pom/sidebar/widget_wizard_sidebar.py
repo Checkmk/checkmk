@@ -205,11 +205,6 @@ class MetricsAndGraphsWidgetWizard(BaseWidgetWizard):
         """Locator property of 'Add filter' section."""
         return self._sidebar_locator.get_by_role("region", name="Add filter")
 
-    @property
-    def _filter_menu_entries(self) -> Locator:
-        """Locator property of 'Add filter' menu entries."""
-        return self._add_filter_section.locator("div.filter-menu__entries")
-
     def _get_filter_menu_item(self, item_name: str, exact: bool) -> Locator:
         """Get an item from filter menu.
 
@@ -220,9 +215,7 @@ class MetricsAndGraphsWidgetWizard(BaseWidgetWizard):
         Returns:
             The locator of the filter menu item.
         """
-        return self._filter_menu_entries.locator("div.filter-menu__filter-item").get_by_text(
-            item_name, exact=exact
-        )
+        return self._add_filter_section.get_by_role("button", name=item_name, exact=exact)
 
     def get_host_filter_container(self, filter_name: str) -> Locator:
         """Get the locator of the container of a filter from 'Host selection' region.
@@ -332,7 +325,7 @@ class MetricsAndGraphsWidgetWizard(BaseWidgetWizard):
         filter_menu_item = self._get_filter_menu_item(filter_name, exact=True)
 
         if sub_menu is not None and not filter_menu_item.is_visible():
-            self._filter_menu_entries.get_by_role("button", name=sub_menu).click()
+            self._add_filter_section.get_by_role("button", name=sub_menu).click()
             expect(
                 filter_menu_item,
                 message=f"Filter menu item '{filter_name}' not visible",

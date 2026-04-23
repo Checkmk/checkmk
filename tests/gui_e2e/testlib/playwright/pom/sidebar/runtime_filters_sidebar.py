@@ -42,11 +42,6 @@ class RuntimeFiltersSidebar(SidebarHelper):
         return self._sidebar_locator.get_by_role("region", name="Add filter")
 
     @property
-    def _filter_menu_entries(self) -> Locator:
-        """Locator property of 'Add filter' menu entries."""
-        return self._add_filter_section.locator("div.filter-menu__entries")
-
-    @property
     def _dropdown_list(self) -> Locator:
         """Locator property of the dropdown listbox."""
         return self.locator().get_by_role("listbox")
@@ -66,9 +61,7 @@ class RuntimeFiltersSidebar(SidebarHelper):
         Returns:
             The locator of the filter menu item.
         """
-        return self._filter_menu_entries.locator("div.filter-menu__filter-item").get_by_text(
-            item_name, exact=exact
-        )
+        return self._add_filter_section.get_by_role("button", name=item_name, exact=exact)
 
     def add_filter_to_host_selection(self, filter_name: str, sub_menu: str | None = None) -> None:
         """Add filter to widget in host selection region.
@@ -80,7 +73,7 @@ class RuntimeFiltersSidebar(SidebarHelper):
         filter_menu_item = self._get_filter_menu_item(filter_name, exact=True)
 
         if sub_menu is not None and not filter_menu_item.is_visible():
-            self._filter_menu_entries.get_by_role("button", name=sub_menu).click()
+            self._add_filter_section.get_by_role("button", name=sub_menu).click()
             expect(
                 filter_menu_item,
                 message=f"Filter menu item '{filter_name}' not visible",

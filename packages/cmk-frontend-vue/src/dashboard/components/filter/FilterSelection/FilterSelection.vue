@@ -232,7 +232,10 @@ onMounted(() => {
               <div
                 v-if="entry.type === 'filter'"
                 class="filter-menu__filter-item"
+                role="button"
+                tabindex="0"
                 @click="filters.toggleFilter(entry.id)"
+                @keydown.enter.space.prevent="filters.toggleFilter(entry.id)"
               >
                 <FilterSelectionActiveIcon :is-active="filters.isFilterActive(entry.id)" />
                 <div class="filter-menu__filter-title">
@@ -258,7 +261,10 @@ onMounted(() => {
                       v-for="filterItem in entry.entries"
                       :key="filterItem.id"
                       class="filter-menu__filter-item filter-menu__filter-item--grouped"
+                      role="button"
+                      tabindex="0"
                       @click="filters.toggleFilter(filterItem.id)"
+                      @keydown.enter.space.prevent="filters.toggleFilter(filterItem.id)"
                     >
                       <FilterSelectionActiveIcon
                         :is-active="filters.isFilterActive(filterItem.id)"

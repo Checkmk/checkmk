@@ -182,10 +182,7 @@ class BaseQuickSetupAddNewConfiguration(QuickSetupPage):
         self.activate_changes(navigate_to_page=False)
 
     def _get_row(self, name: str) -> Locator:
-        # TODO: change to accessibility elements once available
-        return self.main_area.locator(
-            f'div[class*="form-dictionary"]:has(span > span:has-text("{name}"))'
-        )
+        return self.main_area.locator().get_by_role("group", name=name)
 
     def click_test_configuration_button(self) -> None:
         # TODO: change to access via .get_by_role("button", name="<buttonId>")

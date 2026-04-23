@@ -650,4 +650,4 @@ def edition_from_env_old(
 
 def get_min_version() -> CMKVersion:
     """Minimal version supported for an update to the daily version of this branch."""
-    return CMKVersion(os.getenv("MIN_VERSION", "2.4.0p23"))
+    return CMKVersion(os.getenv("MIN_VERSION", "2.4.0p26"))

@@ -5,7 +5,7 @@
 
 from collections.abc import Mapping
 
-from cmk.rulesets.v1 import Help, Title
+from cmk.rulesets.v1 import Title
 from cmk.rulesets.v1.form_specs import (
     DefaultValue,
     DictElement,
@@ -54,21 +54,6 @@ def _credential_validity_form(is_secret: bool) -> Dictionary:
                     form_spec_template=_time_span(),
                     level_direction=LevelDirection.UPPER,
                     prefill_fixed_levels=DefaultValue((ONE_YEAR, TWO_YEARS)),
-                ),
-            ),
-            "ignore_if_older_than": DictElement(
-                parameter_form=TimeSpan(
-                    title=Title("Ignore if older than"),
-                    help_text=Help(
-                        "Credentials that expired more than this long ago will be ignored. "
-                        "Useful for suppressing alerts on expired credentials that have already been replaced."
-                    ),
-                    displayed_magnitudes=[
-                        TimeMagnitude.DAY,
-                        TimeMagnitude.HOUR,
-                        TimeMagnitude.MINUTE,
-                        TimeMagnitude.SECOND,
-                    ],
                 ),
             ),
         },

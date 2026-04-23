@@ -18,7 +18,7 @@ defineProps<{
 </script>
 
 <template>
-  <div class="mm-changes-activating__container">
+  <div role="status" class="mm-changes-activating__container">
     <span v-if="typeof activatingOnSites === 'string'" class="mm-changes-activating__text"
       >{{ _t('Activating changes on ') }}
       {{ "'".concat(activatingOnSites as string).concat("'...") }}</span

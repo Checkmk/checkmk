@@ -174,7 +174,7 @@ def test_activate_changes_slideout_distributed_setup(
 
     logging.info("Now activate changes for remote site")
     expect(slideout.activate_changes_btn).to_be_enabled()
-    expect(slideout.total_changes_lbl).to_have_text("Changes: (20)")
+    expect(slideout.total_changes_lbl).to_contain_text("Changes: (20)")
     assert slideout.is_site_entry_selected(remote_site_entry), (
         f"The site entry for remote site '{remote_site_wato_disabled.id}' is not selected!"
     )

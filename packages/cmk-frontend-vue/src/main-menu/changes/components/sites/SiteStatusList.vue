@@ -51,7 +51,7 @@ function toggleSelectedSite(siteId: string, value: boolean) {
 
 <template>
   <div class="cmk-changes-sites" :class="{ 'add-flex': props.sites.length === 1 }">
-    <div class="cmk-changes-site-single">
+    <div role="region" :aria-label="_t('Site(s) with changes')" class="cmk-changes-site-single">
       <div class="cmk-changes-site-single-title">{{ _t('Site(s) with changes') }}</div>
       <CmkScrollContainer
         v-if="sitesWithChanges.length > 0 && typeof sitesWithChanges[0] !== 'undefined'"

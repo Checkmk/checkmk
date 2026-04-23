@@ -75,7 +75,7 @@ class ActivateChangesSlideout(LocatorHelper):
 
     @property
     def no_pending_changes_text(self) -> Locator:
-        return self.slideout.locator("span.mm-site-status-list__empty")
+        return self.sites_section.get_by_text("No pending changes on your site(s).")
 
     @property
     def info_text(self) -> Locator:
@@ -95,7 +95,7 @@ class ActivateChangesSlideout(LocatorHelper):
 
     @property
     def sites_section(self) -> Locator:
-        return self.slideout.locator("div.cmk-changes-site-single")
+        return self.slideout.get_by_role("region", name="Site(s) with changes")
 
     @property
     def changes_section(self) -> Locator:
@@ -103,35 +103,33 @@ class ActivateChangesSlideout(LocatorHelper):
 
     @property
     def total_changes_lbl(self) -> Locator:
-        return self.slideout.locator("span.cmk-collapsible-title__text", has_text="Changes:")
+        return self.slideout.get_by_role("button", name=re.compile("Changes:"))
 
     @property
     def foreign_changes_lbl(self) -> Locator:
-        return self.slideout.locator(
-            "span.cmk-collapsible-title__side-text", has_text="Foreign changes:"
-        )
+        return self.slideout.get_by_role("button", name=re.compile("Foreign changes:"))
 
     @property
     def sites_with_errors_tab(self) -> Locator:
         """Get the locator for the 'Sites with errors' tab."""
-        return self.slideout.locator('li[role="tab"]', has_text="Sites with errors")
+        return self.slideout.get_by_role("tab", name="Sites with errors")
 
     @property
     def sites_with_changes_tab(self) -> Locator:
         """Get the locator for the 'Sites with changes' tab."""
-        return self.slideout.locator('li[role="tab"]', has_text="Sites with changes")
+        return self.slideout.get_by_role("tab", name="Sites with changes")
 
     @property
     def activation_succcess_banner(self) -> Locator:
-        return self.slideout.locator("div.cmk-div-activation-result-container")
+        return self.slideout.get_by_role("status")
 
     def _extract_count_from_label(self, label_locator: Locator, label_name: str) -> int:
-        """Get the number in parentheses from a label text."""
+        """Get the number in parentheses after `label_name` from a label text."""
         txt = label_locator.text_content()
         if not txt:
             raise AssertionError(f"The '{label_name}' label text is empty!")
 
-        match = re.search(r"\((\d+)\)", txt)
+        match = re.search(rf"{re.escape(label_name)}[^(]*\((\d+)\)", txt)
         if not match:
             raise AssertionError(
                 f"The '{label_name}' label text '{txt}' does not contain the number in parentheses!"
@@ -173,7 +171,7 @@ class ActivateChangesSlideout(LocatorHelper):
 
     def site_entry_checkbox(self, site_entry: Locator) -> Locator:
         """Get the locator of the checkbox to select/deselect a site entry."""
-        return site_entry.locator("button[role='checkbox']")
+        return site_entry.get_by_role("checkbox")
 
     def is_site_entry_selected(self, site_entry: Locator) -> bool:
         """Check if the site entry checkbox is selected."""
@@ -181,9 +179,8 @@ class ActivateChangesSlideout(LocatorHelper):
 
     def ensure_expected_changes_activated(self, expected_changes: int) -> None:
         expect(
-            self.slideout.locator(
-                "div.mm-changes-activating__container span",
-                has_text="You can safely navigate away",
+            self.slideout.get_by_role("status").get_by_text(
+                re.compile(r"You can safely navigate away")
             )
         ).to_be_visible()
         expect(

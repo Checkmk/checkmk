@@ -11,11 +11,7 @@ from cmk.gui.type_defs import UserSpec
 from cmk.gui.wato.pages.users import ModeUsers
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="Crash group 3592: KeyError 'locked' on sparse UserSpec",
-)
-@pytest.mark.usefixtures("request_context", "patch_theme")
+@pytest.mark.usefixtures("request_context", "patch_theme", "with_admin_login")
 def test_show_user_list_without_locked_field(test_edition: Edition) -> None:
     mode = ModeUsers(test_edition)
     users = {

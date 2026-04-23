@@ -665,7 +665,7 @@ class ModeUsers(WatoMode):
                 table.cell(_("Authentication"), auth_method)
 
                 table.cell(_("State"), sortable=False)
-                if user_spec["locked"]:
+                if user_spec.get("locked", False):
                     html.static_icon(
                         StaticIcon(IconNames.user_locked), title=_("The login is currently locked")
                     )

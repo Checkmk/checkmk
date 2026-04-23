@@ -21,6 +21,8 @@ def discover_wlc_clients(
         return
     yield Service(item="Summary")
     for ssid_name in section.clients_per_ssid.keys():
+        if not ssid_name:
+            continue
         yield Service(item=ssid_name)
 
 

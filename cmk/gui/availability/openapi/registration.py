@@ -10,6 +10,7 @@ from .endpoint_family import HOST_AVAILABILITY_FAMILY, SERVICE_AVAILABILITY_FAMI
 from .list_host_availability import ENDPOINT_LIST_HOST_AVAILABILITY
 from .list_service_availability import ENDPOINT_LIST_SERVICE_AVAILABILITY
 from .show_host_availability import ENDPOINT_SHOW_HOST_AVAILABILITY
+from .show_service_availability import ENDPOINT_SHOW_SERVICE_AVAILABILITY
 
 
 def register(
@@ -21,3 +22,4 @@ def register(
     versioned_endpoint_registry.register(ENDPOINT_LIST_HOST_AVAILABILITY)
     versioned_endpoint_registry.register(ENDPOINT_SHOW_HOST_AVAILABILITY)
     versioned_endpoint_registry.register(ENDPOINT_LIST_SERVICE_AVAILABILITY)
+    versioned_endpoint_registry.register(ENDPOINT_SHOW_SERVICE_AVAILABILITY)

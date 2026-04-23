@@ -57,7 +57,7 @@ class AddOpenTelemetryCollectorPrometheusScraping(CmkPage):
 
     @property
     def error_detail(self) -> Locator:
-        return self.main_area.locator("div.cmk-inline-validation")
+        return self.main_area.locator().get_by_role("alert")
 
     @property
     def save_configuration_button(self) -> Locator:

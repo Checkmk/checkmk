@@ -16,7 +16,12 @@ This will submit the change and all its unmerged parents
 
 1. Fetch the current state from Gerrit
 
-`gerrit-change-log HEAD`
+`gerrit-change-log [<gerrit_url_or_change_number_or_change_id_or_git_ref>]`
+
+The positional argument is optional — pass `HEAD` (or omit / use any git ref)
+when the change is the currently checked-out commit. Pass a change number
+(e.g. `125896`), a Change-Id (e.g. `Iaa4acff6...`), or a full Gerrit URL
+when you want to review a change that is **not** checked out locally.
 
 2. In case a Verified -1 is reported, fetch the Jenkins job results using the jenkins skill
 3. For each failed stage, fetch the details of the triggered stage job

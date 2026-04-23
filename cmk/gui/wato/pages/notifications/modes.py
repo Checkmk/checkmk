@@ -3964,6 +3964,7 @@ class ModeEditNotificationParameter(ABCNotificationParameterMode):
         return (origin == DataOrigin.FRONTEND) or (DataOrigin.DISK and not self._new)
 
     def page(self) -> None:
+        html.enable_help_toggle()
         value, origin = self._get_parameter_value_and_origin()
 
         with html.form_context("parameter", method="POST"):

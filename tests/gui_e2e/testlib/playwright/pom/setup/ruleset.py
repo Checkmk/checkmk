@@ -45,9 +45,7 @@ class Ruleset(CmkPage):
         if self.section_name:
             # Search results are grouped by topic; section names appear as group
             # headings rather than inside individual list items.
-            group_heading = popup.locator(".result-group-heading").filter(
-                has_text=self.section_name
-            )
+            group_heading = popup.get_by_role("heading", level=4).filter(has_text=self.section_name)
             results = group_heading.locator("xpath=following-sibling::div[1]").get_by_role(
                 role="listitem"
             )

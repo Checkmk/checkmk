@@ -26,7 +26,6 @@ from kubernetes.client import (  # type: ignore[attr-defined]
     V1Job,
     V1Namespace,
     V1PersistentVolume,
-    V1PersistentVolumeClaim,
     V1ReplicaSet,
     V1ResourceQuota,
 )
@@ -38,6 +37,10 @@ from cmk.plugins.kube.from_json.deployment import deployment_from_json, JSONDepl
 from cmk.plugins.kube.from_json.metadata import dependent_object_uid_from_json
 from cmk.plugins.kube.from_json.node import JSONNodeList, node_list_from_json
 from cmk.plugins.kube.from_json.pod.pod import JSONPodList, pod_from_client
+from cmk.plugins.kube.from_json.pvc import (
+    JSONPersistentVolumeClaimList,
+    persistent_volume_claim_from_json,
+)
 from cmk.plugins.kube.from_json.statefulset import JSONStatefulSetList, statefulset_from_json
 from cmk.plugins.kube.schemata import api
 from cmk.plugins.kube.transform import (
@@ -46,7 +49,6 @@ from cmk.plugins.kube.transform import (
     job_from_client,
     namespace_from_client,
     parse_object_to_owners,
-    persistent_volume_claim_from_client,
     resource_quota_from_client,
 )
 from cmk.plugins.kube.transform_any import parse_open_metric_samples
@@ -112,10 +114,9 @@ class ClientCoreAPI(ClientAPI):
         response = send_request(self._config, self._client, request)
         return self._deserializer.run("V1NamespaceList", response).items
 
-    def query_persistent_volume_claims(self) -> Sequence[V1PersistentVolumeClaim]:
+    def query_persistent_volume_claims(self) -> JSONPersistentVolumeClaimList:
         request = requests.Request("GET", self._config.url("/api/v1/persistentvolumeclaims"))
-        response = send_request(self._config, self._client, request)
-        return self._deserializer.run("V1PersistentVolumeClaimList", response).items
+        return send_request(self._config, self._client, request).json()
 
     def query_persistent_volumes(self) -> Sequence[V1PersistentVolume]:
         request = requests.Request("GET", self._config.url("/api/v1/persistentvolumes"))
@@ -369,7 +370,7 @@ class UnparsedAPIData:
     raw_nodes: JSONNodeList
     raw_namespaces: Sequence[V1Namespace]
     raw_resource_quotas: Sequence[V1ResourceQuota]
-    raw_persistent_volume_claims: Sequence[V1PersistentVolumeClaim]
+    raw_persistent_volume_claims: JSONPersistentVolumeClaimList
     raw_persistent_volumes: Sequence[V1PersistentVolume]
     raw_deployments: JSONDeploymentList
     raw_daemonsets: Sequence[V1DaemonSet]
@@ -421,7 +422,7 @@ def parse_api_data(
     raw_deployments: JSONDeploymentList,
     raw_daemonsets: Sequence[V1DaemonSet],
     raw_statefulsets: JSONStatefulSetList,
-    raw_persistent_volume_claims: Sequence[V1PersistentVolumeClaim],
+    raw_persistent_volume_claims: JSONPersistentVolumeClaimList,
     raw_persistent_volumes: Sequence[V1PersistentVolume],
     node_to_kubelet_health: Mapping[str, api.HealthZ | api.NodeConnectionError],
     api_health: api.APIHealth,
@@ -481,7 +482,7 @@ def parse_api_data(
         for pod in raw_pods["items"]
     ]
     persistent_volume_claims = [
-        persistent_volume_claim_from_client(pvc) for pvc in raw_persistent_volume_claims
+        persistent_volume_claim_from_json(pvc) for pvc in raw_persistent_volume_claims["items"]
     ]
     resource_quotas: Sequence[api.ResourceQuota] = [
         api_resource_quota

@@ -31,8 +31,14 @@ function renderComponent(
   noAuthAllowed = true,
   endpointConfigAllowed = true,
   encryptionAllowed = true,
-  eventConsoleAllowed = true
+  eventConsoleAllowed = true,
+  grpcDefaultPort = 4317,
+  httpDefaultPort = 4318,
+  initialGrpcEnabled = true,
+  initialHttpEnabled = false
 ) {
+  const grpcEnabled = ref<boolean>(initialGrpcEnabled)
+  const httpEnabled = ref<boolean>(initialHttpEnabled)
   const grpcAuth = ref<AuthConfig>({
     method: noAuthAllowed ? 'none' : 'basicauth',
     credential: null
@@ -41,8 +47,16 @@ function renderComponent(
     method: noAuthAllowed ? 'none' : 'basicauth',
     credential: null
   })
-  const grpcEndpoint = ref<EndpointConfig>({ address: '0.0.0.0', port: 4317 })
-  const httpEndpoint = ref<EndpointConfig>({ address: '0.0.0.0', port: 4318 })
+  const grpcEndpoint = ref<EndpointConfig>({
+    socketAddressType: 'custom',
+    address: '0.0.0.0',
+    port: 4317
+  })
+  const httpEndpoint = ref<EndpointConfig>({
+    socketAddressType: 'custom',
+    address: '0.0.0.0',
+    port: 4318
+  })
   const grpcEncryption = ref<boolean>(false)
   const httpEncryption = ref<boolean>(false)
   const grpcEventConsole = ref<EventConsoleConfig | null>(null)
@@ -54,6 +68,8 @@ function renderComponent(
     defineComponent({
       components: { ConfigureCollector },
       setup: () => ({
+        grpcEnabled,
+        httpEnabled,
         grpcAuth,
         httpAuth,
         grpcEndpoint,
@@ -67,13 +83,17 @@ function renderComponent(
         noAuthAllowed,
         endpointConfigAllowed,
         encryptionAllowed,
-        eventConsoleAllowed
+        eventConsoleAllowed,
+        grpcDefaultPort,
+        httpDefaultPort
       }),
-      template: `<ConfigureCollector ref="compRef" :no-auth-allowed="noAuthAllowed" :endpoint-config-allowed="endpointConfigAllowed" :encryption-allowed="encryptionAllowed" :event-console-allowed="eventConsoleAllowed" v-model:grpc-auth="grpcAuth" v-model:http-auth="httpAuth" v-model:grpc-endpoint="grpcEndpoint" v-model:http-endpoint="httpEndpoint" v-model:grpc-encryption="grpcEncryption" v-model:http-encryption="httpEncryption" v-model:grpc-event-console="grpcEventConsole" v-model:http-event-console="httpEventConsole" v-model:newly-created-passwords="newlyCreatedPasswords" />`
+      template: `<ConfigureCollector ref="compRef" :no-auth-allowed="noAuthAllowed" :endpoint-config-allowed="endpointConfigAllowed" :encryption-allowed="encryptionAllowed" :event-console-allowed="eventConsoleAllowed" :grpc-default-port="grpcDefaultPort" :http-default-port="httpDefaultPort" v-model:grpc-enabled="grpcEnabled" v-model:http-enabled="httpEnabled" v-model:grpc-auth="grpcAuth" v-model:http-auth="httpAuth" v-model:grpc-endpoint="grpcEndpoint" v-model:http-endpoint="httpEndpoint" v-model:grpc-encryption="grpcEncryption" v-model:http-encryption="httpEncryption" v-model:grpc-event-console="grpcEventConsole" v-model:http-event-console="httpEventConsole" v-model:newly-created-passwords="newlyCreatedPasswords" />`
     })
   )
 
   return {
+    grpcEnabled,
+    httpEnabled,
     grpcAuth,
     httpAuth,
     grpcEndpoint,
@@ -196,9 +216,72 @@ describe('ConfigureCollector', () => {
       await screen.findByText('Password is required but not specified.')
     })
 
-    test('validate() returns true for valid basicauth credential', async () => {
+    test('validate() returns true for valid basicauth credential with TLS enabled', async () => {
       mockPasswordsResponse([{ id: 'pw1', title: 'Password 1' }])
-      const { compRef, grpcAuth } = renderComponent(true)
+      const { compRef, grpcAuth, grpcEncryption } = renderComponent(true)
+
+      grpcAuth.value.method = 'basicauth'
+      grpcAuth.value.credential = { username: 'admin', password: 'pw1' }
+      grpcEncryption.value = true
+
+      await waitFor(() => expect(compRef.value).toBeDefined())
+      await new Promise((r) => setTimeout(r, 0))
+
+      const result = compRef.value!.validate()
+      expect(result).toBe(true)
+    })
+
+    test('validate() returns false if only HTTP tab has invalid credential', async () => {
+      mockPasswordsError()
+      const { compRef, httpAuth, httpEnabled } = renderComponent(true)
+
+      httpEnabled.value = true
+      httpAuth.value.method = 'basicauth'
+      httpAuth.value.credential = { username: '', password: '' }
+
+      await waitFor(() => expect(compRef.value).toBeDefined())
+      await new Promise((r) => setTimeout(r, 0))
+
+      const result = compRef.value!.validate()
+      expect(result).toBe(false)
+    })
+  })
+
+  describe('TLS validation', () => {
+    test('validate() returns false when basicauth is selected without TLS', async () => {
+      mockPasswordsResponse([{ id: 'pw1', title: 'Password 1' }])
+      const { compRef, grpcAuth, grpcEncryption } = renderComponent(true)
+
+      grpcAuth.value.method = 'basicauth'
+      grpcAuth.value.credential = { username: 'admin', password: 'pw1' }
+      grpcEncryption.value = false
+
+      await waitFor(() => expect(compRef.value).toBeDefined())
+      await new Promise((r) => setTimeout(r, 0))
+
+      const result = compRef.value!.validate()
+      expect(result).toBe(false)
+      await screen.findByText('TLS encryption must be enabled when using basic authentication.')
+    })
+
+    test('validate() returns true when basicauth with TLS enabled', async () => {
+      mockPasswordsResponse([{ id: 'pw1', title: 'Password 1' }])
+      const { compRef, grpcAuth, grpcEncryption } = renderComponent(true)
+
+      grpcAuth.value.method = 'basicauth'
+      grpcAuth.value.credential = { username: 'admin', password: 'pw1' }
+      grpcEncryption.value = true
+
+      await waitFor(() => expect(compRef.value).toBeDefined())
+      await new Promise((r) => setTimeout(r, 0))
+
+      const result = compRef.value!.validate()
+      expect(result).toBe(true)
+    })
+
+    test('validate() skips TLS check when encryptionAllowed=false', async () => {
+      mockPasswordsResponse([{ id: 'pw1', title: 'Password 1' }])
+      const { compRef, grpcAuth } = renderComponent(true, true, false)
 
       grpcAuth.value.method = 'basicauth'
       grpcAuth.value.credential = { username: 'admin', password: 'pw1' }
@@ -210,12 +293,14 @@ describe('ConfigureCollector', () => {
       expect(result).toBe(true)
     })
 
-    test('validate() returns false if only HTTP tab has invalid credential', async () => {
-      mockPasswordsError()
-      const { compRef, httpAuth } = renderComponent(true)
+    test('validate() returns false when only HTTP tab has basicauth without TLS', async () => {
+      mockPasswordsResponse([{ id: 'pw1', title: 'Password 1' }])
+      const { compRef, httpAuth, httpEncryption, httpEnabled } = renderComponent(true)
 
+      httpEnabled.value = true
       httpAuth.value.method = 'basicauth'
-      httpAuth.value.credential = { username: '', password: '' }
+      httpAuth.value.credential = { username: 'admin', password: 'pw1' }
+      httpEncryption.value = false
 
       await waitFor(() => expect(compRef.value).toBeDefined())
       await new Promise((r) => setTimeout(r, 0))
@@ -429,8 +514,9 @@ describe('ConfigureCollector', () => {
 
     test('validate() returns false when HTTP address is invalid', async () => {
       mockPasswordsResponse()
-      const { compRef, httpEndpoint } = renderComponent(true, true)
+      const { compRef, httpEndpoint, httpEnabled } = renderComponent(true, true)
 
+      httpEnabled.value = true
       httpEndpoint.value.address = 'not..valid'
 
       await waitFor(() => expect(compRef.value).toBeDefined())
@@ -442,8 +528,9 @@ describe('ConfigureCollector', () => {
 
     test('validate() returns false when HTTP has port but no address', async () => {
       mockPasswordsResponse()
-      const { compRef, httpEndpoint } = renderComponent(true, true)
+      const { compRef, httpEndpoint, httpEnabled } = renderComponent(true, true)
 
+      httpEnabled.value = true
       httpEndpoint.value.address = ''
       httpEndpoint.value.port = 4318
 
@@ -485,8 +572,9 @@ describe('ConfigureCollector', () => {
 
     test('validate() returns false when gRPC and HTTP use the same port', async () => {
       mockPasswordsResponse()
-      const { compRef, grpcEndpoint, httpEndpoint } = renderComponent(true, true)
+      const { compRef, grpcEndpoint, httpEndpoint, httpEnabled } = renderComponent(true, true)
 
+      httpEnabled.value = true
       grpcEndpoint.value.port = 4317
       httpEndpoint.value.port = 4317
 
@@ -615,6 +703,122 @@ describe('ConfigureCollector', () => {
 
       expect(grpcAuth.value.credential!.password).toBe('pw-new')
       expect(httpAuth.value.credential!.password).toBe('existing-pw')
+    })
+  })
+
+  describe('enabled/disabled tab behaviour', () => {
+    test('validate() returns false when both tabs are disabled', async () => {
+      mockPasswordsResponse()
+      const { compRef, grpcEnabled, httpEnabled } = renderComponent(
+        true,
+        true,
+        true,
+        true,
+        4317,
+        4318,
+        false,
+        false
+      )
+
+      await waitFor(() => expect(compRef.value).toBeDefined())
+      await new Promise((r) => setTimeout(r, 0))
+
+      const result = compRef.value!.validate()
+      expect(result).toBe(false)
+      await screen.findByText('At least one receiver (GRPC or HTTP) must be enabled.')
+
+      // Confirm both are actually disabled
+      expect(grpcEnabled.value).toBe(false)
+      expect(httpEnabled.value).toBe(false)
+    })
+
+    test('validate() returns true when only GRPC is enabled and valid', async () => {
+      mockPasswordsResponse()
+      const { compRef, httpEnabled } = renderComponent(
+        true,
+        true,
+        true,
+        true,
+        4317,
+        4318,
+        true,
+        false
+      )
+
+      await waitFor(() => expect(compRef.value).toBeDefined())
+      await new Promise((r) => setTimeout(r, 0))
+
+      expect(httpEnabled.value).toBe(false)
+      const result = compRef.value!.validate()
+      expect(result).toBe(true)
+    })
+
+    test('validate() returns true when only HTTP is enabled and valid', async () => {
+      mockPasswordsResponse()
+      const { compRef, grpcEnabled } = renderComponent(
+        true,
+        true,
+        true,
+        true,
+        4317,
+        4318,
+        false,
+        true
+      )
+
+      await waitFor(() => expect(compRef.value).toBeDefined())
+      await new Promise((r) => setTimeout(r, 0))
+
+      expect(grpcEnabled.value).toBe(false)
+      const result = compRef.value!.validate()
+      expect(result).toBe(true)
+    })
+
+    test('validate() skips auth validation for a disabled tab', async () => {
+      mockPasswordsResponse([{ id: 'pw1', title: 'Password 1' }])
+      // HTTP is disabled (default); give it invalid basicauth — should still pass
+      const { compRef, httpAuth, httpEncryption } = renderComponent(true)
+
+      httpAuth.value.method = 'basicauth'
+      httpAuth.value.credential = { username: '', password: '' }
+      httpEncryption.value = false
+
+      await waitFor(() => expect(compRef.value).toBeDefined())
+      await new Promise((r) => setTimeout(r, 0))
+
+      const result = compRef.value!.validate()
+      expect(result).toBe(true)
+    })
+
+    test('validate() skips TLS check for a disabled tab', async () => {
+      mockPasswordsResponse([{ id: 'pw1', title: 'Password 1' }])
+      // HTTP is disabled (default); basicauth without TLS on disabled tab should not fail
+      const { compRef, httpAuth, httpEncryption } = renderComponent(true, true, true)
+
+      httpAuth.value.method = 'basicauth'
+      httpAuth.value.credential = { username: 'admin', password: 'pw1' }
+      httpEncryption.value = false
+
+      await waitFor(() => expect(compRef.value).toBeDefined())
+      await new Promise((r) => setTimeout(r, 0))
+
+      const result = compRef.value!.validate()
+      expect(result).toBe(true)
+    })
+
+    test('port conflict is ignored when one tab is disabled', async () => {
+      mockPasswordsResponse()
+      // HTTP is disabled (default); same port on both endpoints should not trigger conflict
+      const { compRef, grpcEndpoint, httpEndpoint } = renderComponent(true, true)
+
+      grpcEndpoint.value.port = 4317
+      httpEndpoint.value.port = 4317
+
+      await waitFor(() => expect(compRef.value).toBeDefined())
+      await new Promise((r) => setTimeout(r, 0))
+
+      const result = compRef.value!.validate()
+      expect(result).toBe(true)
     })
   })
 })

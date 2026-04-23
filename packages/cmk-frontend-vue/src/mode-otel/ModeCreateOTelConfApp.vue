@@ -67,8 +67,18 @@ const httpAuth = ref<AuthConfig>({
   method: props.no_auth_allowed ? 'none' : 'basicauth',
   credential: null
 })
-const grpcEndpoint = ref<EndpointConfig>({ address: '', port: undefined })
-const httpEndpoint = ref<EndpointConfig>({ address: '', port: undefined })
+const grpcEndpoint = ref<EndpointConfig>({
+  socketAddressType: 'default_ipv4',
+  address: '',
+  port: undefined
+})
+const httpEndpoint = ref<EndpointConfig>({
+  socketAddressType: 'default_ipv4',
+  address: '',
+  port: undefined
+})
+const grpcEnabled = ref<boolean>(true)
+const httpEnabled = ref<boolean>(false)
 const grpcEncryption = ref<boolean>(false)
 const httpEncryption = ref<boolean>(false)
 const grpcEventConsole = ref<EventConsoleConfig | null>(null)
@@ -162,6 +172,8 @@ async function onSaveClick(): Promise<void> {
       <template #content>
         <ConfigureCollector
           ref="collector"
+          v-model:grpc-enabled="grpcEnabled"
+          v-model:http-enabled="httpEnabled"
           v-model:grpc-auth="grpcAuth"
           v-model:http-auth="httpAuth"
           v-model:grpc-endpoint="grpcEndpoint"
@@ -175,6 +187,8 @@ async function onSaveClick(): Promise<void> {
           :endpoint-config-allowed="endpoint_config_allowed"
           :encryption-allowed="encryption_allowed"
           :event-console-allowed="event_console_allowed"
+          :grpc-default-port="4317"
+          :http-default-port="4318"
         />
       </template>
       <template #actions>

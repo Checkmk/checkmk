@@ -21,10 +21,18 @@ const props = defineProps<{
   encryptionAllowed: boolean
   eventConsoleAllowed: boolean
   showErrors: boolean
+  tlsRequired?: boolean
 }>()
 
 const encryption = defineModel<boolean>('encryption', { required: true })
 const eventConsole = defineModel<EventConsoleConfig | null>('eventConsole', { required: true })
+
+const tlsErrors = computed((): string[] => {
+  if (!props.tlsRequired) {
+    return []
+  }
+  return [_t('TLS encryption must be enabled when using basic authentication.')]
+})
 
 const eventConsoleErrors = computed((): string[] => {
   if (!props.showErrors) {
@@ -44,7 +52,11 @@ const eventConsoleErrors = computed((): string[] => {
 <template>
   <template v-if="encryptionAllowed">
     <CmkLabel>{{ _t('Encryption') }}</CmkLabel>
-    <CmkCheckbox v-model="encryption" :label="_t('Encrypt communication with TLS')" />
+    <CmkCheckbox
+      v-model="encryption"
+      :label="_t('Encrypt communication with TLS')"
+      :external-errors="tlsErrors"
+    />
   </template>
 
   <template v-if="eventConsoleAllowed">

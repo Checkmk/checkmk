@@ -10,9 +10,12 @@ import { fetchRestAPI } from '@/lib/cmkFetch.ts'
 import usei18n from '@/lib/i18n'
 import type { TranslatedString } from '@/lib/i18nString'
 
+import CmkLabel from '@/components/CmkLabel.vue'
 import type { Suggestion } from '@/components/CmkSuggestions'
 import CmkTabs, { CmkTab, CmkTabContent } from '@/components/CmkTabs'
 import CmkParagraph from '@/components/typography/CmkParagraph.vue'
+import CmkCheckbox from '@/components/user-input/CmkCheckbox.vue'
+import CmkInlineValidation from '@/components/user-input/CmkInlineValidation.vue'
 
 import CollectorAuthConfig from './CollectorAuthConfig.vue'
 import CollectorConnectionOptions from './CollectorConnectionOptions.vue'
@@ -30,8 +33,12 @@ const props = defineProps<{
   endpointConfigAllowed: boolean
   encryptionAllowed: boolean
   eventConsoleAllowed: boolean
+  grpcDefaultPort: number
+  httpDefaultPort: number
 }>()
 
+const grpcEnabled = defineModel<boolean>('grpcEnabled', { required: true })
+const httpEnabled = defineModel<boolean>('httpEnabled', { required: true })
 const grpcAuth = defineModel<AuthConfig>('grpcAuth', { required: true })
 const httpAuth = defineModel<AuthConfig>('httpAuth', { required: true })
 const grpcEndpoint = defineModel<EndpointConfig>('grpcEndpoint', { required: true })
@@ -76,19 +83,25 @@ onMounted(async () => {
 })
 
 const bothEndpointsEmpty = computed(
-  () => !endpointIsConfigured(grpcEndpoint.value) && !endpointIsConfigured(httpEndpoint.value)
+  () =>
+    (!grpcEnabled.value || !endpointIsConfigured(grpcEndpoint.value)) &&
+    (!httpEnabled.value || !endpointIsConfigured(httpEndpoint.value))
 )
 
+function getEffectivePort(endpoint: EndpointConfig, defaultPort: number): number | undefined {
+  if (endpoint.socketAddressType !== 'custom') {
+    return defaultPort
+  }
+  return isValidPort(endpoint.port) ? endpoint.port : undefined
+}
+
 const portsConflict = computed(() => {
-  const grpcPort = grpcEndpoint.value.port
-  const httpPort = httpEndpoint.value.port
-  return (
-    grpcPort !== undefined &&
-    httpPort !== undefined &&
-    isValidPort(grpcPort) &&
-    isValidPort(httpPort) &&
-    grpcPort === httpPort
-  )
+  if (!grpcEnabled.value || !httpEnabled.value) {
+    return false
+  }
+  const grpcPort = getEffectivePort(grpcEndpoint.value, props.grpcDefaultPort)
+  const httpPort = getEffectivePort(httpEndpoint.value, props.httpDefaultPort)
+  return grpcPort !== undefined && httpPort !== undefined && grpcPort === httpPort
 })
 
 function authHasErrors(auth: AuthConfig): boolean {
@@ -97,30 +110,52 @@ function authHasErrors(auth: AuthConfig): boolean {
   )
 }
 
+function tlsHasErrors(auth: AuthConfig, encryption: boolean): boolean {
+  return auth.method === 'basicauth' && !encryption
+}
+
 function eventConsoleHasErrors(ec: EventConsoleConfig | null): boolean {
   return ec !== null && !ec.resourceAttribute.trim()
 }
 
 function endpointIsConfigured(endpoint: EndpointConfig): boolean {
+  if (endpoint.socketAddressType !== 'custom') {
+    return true
+  }
   return !!endpoint.address.trim() || endpoint.port !== undefined
 }
 
 function configuredEndpointHasErrors(endpoint: EndpointConfig): boolean {
-  return !isValidIpOrHostname(endpoint.address) || !isValidPort(endpoint.port)
-}
-
-function endpointHasValidationErrors(endpoint: EndpointConfig, other: EndpointConfig): boolean {
-  if (!endpoint.address.trim()) {
-    return endpoint.port !== undefined || !endpointIsConfigured(other)
+  if (endpoint.socketAddressType !== 'custom') {
+    return false
   }
   return !isValidIpOrHostname(endpoint.address) || !isValidPort(endpoint.port)
 }
 
+function endpointHasValidationErrors(endpoint: EndpointConfig, other: EndpointConfig): boolean {
+  if (endpoint.socketAddressType !== 'custom') {
+    return false
+  }
+  if (!endpoint.address.trim()) {
+    return endpoint.port !== undefined || !endpointIsConfigured(other)
+  }
+  return configuredEndpointHasErrors(endpoint)
+}
+
 function tabHasValidationErrors(tab: 'grpc' | 'http'): boolean {
+  const enabled = tab === 'grpc' ? grpcEnabled.value : httpEnabled.value
+  if (!enabled) {
+    return false
+  }
+
   const auth = tab === 'grpc' ? grpcAuth.value : httpAuth.value
+  const encryption = tab === 'grpc' ? grpcEncryption.value : httpEncryption.value
   const ec = tab === 'grpc' ? grpcEventConsole.value : httpEventConsole.value
 
   if (authHasErrors(auth)) {
+    return true
+  }
+  if (props.encryptionAllowed && tlsHasErrors(auth, encryption)) {
     return true
   }
   if (props.eventConsoleAllowed && eventConsoleHasErrors(ec)) {
@@ -141,28 +176,37 @@ function tabHasValidationErrors(tab: 'grpc' | 'http'): boolean {
 function validate(): boolean {
   displayErrors.value = true
 
+  if (!grpcEnabled.value && !httpEnabled.value) {
+    return false
+  }
+
   const ecValid =
-    !eventConsoleHasErrors(grpcEventConsole.value) && !eventConsoleHasErrors(httpEventConsole.value)
+    (!grpcEnabled.value || !eventConsoleHasErrors(grpcEventConsole.value)) &&
+    (!httpEnabled.value || !eventConsoleHasErrors(httpEventConsole.value))
+
+  const tlsValid =
+    !props.encryptionAllowed ||
+    ((!grpcEnabled.value || !tlsHasErrors(grpcAuth.value, grpcEncryption.value)) &&
+      (!httpEnabled.value || !tlsHasErrors(httpAuth.value, httpEncryption.value)))
 
   let isValid: boolean
   if (!props.endpointConfigAllowed) {
-    isValid = !authHasErrors(grpcAuth.value) && !authHasErrors(httpAuth.value) && ecValid
+    isValid =
+      (!grpcEnabled.value || !authHasErrors(grpcAuth.value)) &&
+      (!httpEnabled.value || !authHasErrors(httpAuth.value)) &&
+      ecValid &&
+      tlsValid
   } else {
-    const grpcConfigured = endpointIsConfigured(grpcEndpoint.value)
-    const httpConfigured = endpointIsConfigured(httpEndpoint.value)
-    if (!grpcConfigured && !httpConfigured) {
-      isValid = false
-    } else {
-      const grpcValid = !grpcConfigured || !configuredEndpointHasErrors(grpcEndpoint.value)
-      const httpValid = !httpConfigured || !configuredEndpointHasErrors(httpEndpoint.value)
-      isValid =
-        !authHasErrors(grpcAuth.value) &&
-        !authHasErrors(httpAuth.value) &&
-        grpcValid &&
-        httpValid &&
-        !portsConflict.value &&
-        ecValid
-    }
+    isValid =
+      (!grpcEnabled.value ||
+        !endpointHasValidationErrors(grpcEndpoint.value, httpEndpoint.value)) &&
+      (!httpEnabled.value ||
+        !endpointHasValidationErrors(httpEndpoint.value, grpcEndpoint.value)) &&
+      (!grpcEnabled.value || !authHasErrors(grpcAuth.value)) &&
+      (!httpEnabled.value || !authHasErrors(httpAuth.value)) &&
+      !portsConflict.value &&
+      ecValid &&
+      tlsValid
   }
 
   if (!isValid) {
@@ -210,6 +254,11 @@ defineExpose({ validate, onPasswordCreated })
 </script>
 
 <template>
+  <CmkInlineValidation
+    v-if="displayErrors && !grpcEnabled && !httpEnabled"
+    :validation="[_t('At least one receiver (GRPC or HTTP) must be enabled.')]"
+  />
+
   <CmkTabs v-model="activeTab">
     <template #tabs>
       <CmkTab id="grpc">{{ _t('GRPC') }}</CmkTab>
@@ -217,66 +266,82 @@ defineExpose({ validate, onPasswordCreated })
     </template>
     <template #tab-contents>
       <CmkTabContent id="grpc">
-        <CmkParagraph>{{
-          _t('Configure a GRPC-based OTLP receiver that will collect OpenTelemetry data.')
-        }}</CmkParagraph>
-
         <div class="mode-otel-configure-collector__form">
-          <CollectorEndpointConfig
-            v-if="endpointConfigAllowed"
-            v-model:endpoint="grpcEndpoint"
-            :show-errors="displayErrors"
-            :both-endpoints-empty="bothEndpointsEmpty"
-            :port-conflict="portsConflict"
-            address-placeholder="0.0.0.0"
-            port-placeholder="4317"
-          />
-          <CollectorAuthConfig
-            v-model:auth="grpcAuth"
-            :no-auth-allowed="noAuthAllowed"
-            :available-passwords="availablePasswords"
-            :show-errors="displayErrors"
-            @create-password="openPasswordSlideIn('grpc')"
-          />
-          <CollectorConnectionOptions
-            v-model:encryption="grpcEncryption"
-            v-model:event-console="grpcEventConsole"
-            :encryption-allowed="encryptionAllowed"
-            :event-console-allowed="eventConsoleAllowed"
-            :show-errors="displayErrors"
-          />
+          <CmkParagraph class="mode-otel-configure-collector__tab-description">{{
+            _t('Configure a GRPC-based OTLP receiver that will collect OpenTelemetry data.')
+          }}</CmkParagraph>
+          <CmkLabel>{{ _t('Enable the GRPC-based OTLP receiver') }}</CmkLabel>
+          <CmkCheckbox v-model="grpcEnabled" />
+          <div
+            :class="[
+              'mode-otel-configure-collector__tab-body',
+              { 'mode-otel-configure-collector__tab-body--disabled': !grpcEnabled }
+            ]"
+          >
+            <CollectorEndpointConfig
+              v-if="endpointConfigAllowed"
+              v-model:endpoint="grpcEndpoint"
+              :show-errors="displayErrors"
+              :both-endpoints-empty="bothEndpointsEmpty"
+              :port-conflict="portsConflict"
+              :default-port="grpcDefaultPort"
+            />
+            <CollectorAuthConfig
+              v-model:auth="grpcAuth"
+              :no-auth-allowed="noAuthAllowed"
+              :available-passwords="availablePasswords"
+              :show-errors="displayErrors"
+              @create-password="openPasswordSlideIn('grpc')"
+            />
+            <CollectorConnectionOptions
+              v-model:encryption="grpcEncryption"
+              v-model:event-console="grpcEventConsole"
+              :encryption-allowed="encryptionAllowed"
+              :event-console-allowed="eventConsoleAllowed"
+              :show-errors="displayErrors"
+              :tls-required="displayErrors && tlsHasErrors(grpcAuth, grpcEncryption)"
+            />
+          </div>
         </div>
       </CmkTabContent>
 
       <CmkTabContent id="http">
-        <CmkParagraph>{{
-          _t('Configure an HTTP-based OTLP receiver that will collect OpenTelemetry data.')
-        }}</CmkParagraph>
-
         <div class="mode-otel-configure-collector__form">
-          <CollectorEndpointConfig
-            v-if="endpointConfigAllowed"
-            v-model:endpoint="httpEndpoint"
-            :show-errors="displayErrors"
-            :both-endpoints-empty="bothEndpointsEmpty"
-            :port-conflict="portsConflict"
-            address-placeholder="0.0.0.0"
-            port-placeholder="4318"
-          />
-          <CollectorAuthConfig
-            v-model:auth="httpAuth"
-            :no-auth-allowed="noAuthAllowed"
-            :available-passwords="availablePasswords"
-            :show-errors="displayErrors"
-            @create-password="openPasswordSlideIn('http')"
-          />
-          <CollectorConnectionOptions
-            v-model:encryption="httpEncryption"
-            v-model:event-console="httpEventConsole"
-            :encryption-allowed="encryptionAllowed"
-            :event-console-allowed="eventConsoleAllowed"
-            :show-errors="displayErrors"
-          />
+          <CmkParagraph class="mode-otel-configure-collector__tab-description">{{
+            _t('Configure an HTTP-based OTLP receiver that will collect OpenTelemetry data.')
+          }}</CmkParagraph>
+          <CmkLabel>{{ _t('Enable the HTTP-based OTLP receiver') }}</CmkLabel>
+          <CmkCheckbox v-model="httpEnabled" />
+          <div
+            :class="[
+              'mode-otel-configure-collector__tab-body',
+              { 'mode-otel-configure-collector__tab-body--disabled': !httpEnabled }
+            ]"
+          >
+            <CollectorEndpointConfig
+              v-if="endpointConfigAllowed"
+              v-model:endpoint="httpEndpoint"
+              :show-errors="displayErrors"
+              :both-endpoints-empty="bothEndpointsEmpty"
+              :port-conflict="portsConflict"
+              :default-port="httpDefaultPort"
+            />
+            <CollectorAuthConfig
+              v-model:auth="httpAuth"
+              :no-auth-allowed="noAuthAllowed"
+              :available-passwords="availablePasswords"
+              :show-errors="displayErrors"
+              @create-password="openPasswordSlideIn('http')"
+            />
+            <CollectorConnectionOptions
+              v-model:encryption="httpEncryption"
+              v-model:event-console="httpEventConsole"
+              :encryption-allowed="encryptionAllowed"
+              :event-console-allowed="eventConsoleAllowed"
+              :show-errors="displayErrors"
+              :tls-required="displayErrors && tlsHasErrors(httpAuth, httpEncryption)"
+            />
+          </div>
         </div>
       </CmkTabContent>
     </template>
@@ -296,5 +361,23 @@ defineExpose({ validate, onPasswordCreated })
   gap: var(--spacing) var(--dimension-6);
   align-items: start;
   margin-top: var(--spacing);
+}
+
+.mode-otel-configure-collector__tab-body {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: subgrid;
+  gap: var(--spacing) var(--dimension-6);
+  align-items: start;
+
+  &.mode-otel-configure-collector__tab-body--disabled {
+    opacity: 0.5;
+    pointer-events: none;
+    user-select: none;
+  }
+}
+
+.mode-otel-configure-collector__tab-description {
+  grid-column: 1 / -1;
 }
 </style>

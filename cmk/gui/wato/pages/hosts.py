@@ -54,6 +54,7 @@ from cmk.gui.page_menu import (
     PageMenuTopic,
 )
 from cmk.gui.pages import AjaxPage, PageContext, PageEndpoint, PageRegistry, PageResult
+from cmk.gui.permissions import permission_registry
 from cmk.gui.quick_setup.html import quick_setup_duplication_warning, quick_setup_locked_warning
 from cmk.gui.site_config import is_distributed_setup_remote_site, site_is_local
 from cmk.gui.type_defs import ActionResult, IconNames, PermissionName, StaticIcon
@@ -394,7 +395,9 @@ class ABCHostMode(WatoMode, abc.ABC):
         form_name: Final[str] = "edit_host"
         version = ".".join(omd_version(omd_root).split(".")[:-1])
         hostname = self._host.name()
-        can_download_baked_agents = user.may("wato.agents") and user.may("wato.download_agents")
+        can_download_baked_agents = "wato.agents" not in permission_registry or (
+            user.may("wato.agents") and user.may("wato.download_agents")
+        )
         html.vue_component(
             component_name="cmk-mode-host",
             data=asdict(

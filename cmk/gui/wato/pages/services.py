@@ -55,6 +55,7 @@ from cmk.gui.page_menu import (
 )
 from cmk.gui.page_menu_entry import disable_page_menu_entry, enable_page_menu_entry
 from cmk.gui.pages import AjaxPage, PageContext, PageEndpoint, PageRegistry, PageResult
+from cmk.gui.permissions import permission_registry
 from cmk.gui.table import Foldable, Table, table_element
 from cmk.gui.type_defs import HTTPVariables, IconNames, PermissionName, StaticIcon
 from cmk.gui.utils.csrf_token import check_csrf_token
@@ -825,8 +826,8 @@ class DiscoveryPageRenderer:
                         agent_install_cls=AgentInstallCmds,
                         agent_registration_cls=AgentRegistrationCmds,
                         version=version,
-                        can_download_baked_agents=user.may("wato.agents")
-                        and user.may("wato.download_agents"),
+                        can_download_baked_agents="wato.agents" not in permission_registry
+                        or (user.may("wato.agents") and user.may("wato.download_agents")),
                     ),
                 )
             ),

@@ -12,6 +12,7 @@ from collections.abc import Mapping, Sequence
 from dataclasses import asdict
 from typing import Any
 
+from cmk.gui import i18n
 from cmk.gui.form_specs.vue.form_spec_visitor import FormSpecValidationError
 from cmk.gui.http import Response
 from cmk.gui.logged_in import user
@@ -96,6 +97,10 @@ def _serve_entities(data: ConfigurationEntityDescription) -> Response:
 )
 def _create_configuration_entity(params: Mapping[str, Any]) -> Response:
     """Create a configuration entity"""
+    # TODO (localization): localization is currently unavailable on VueJS and therefore needs to be
+    #  done on the API side which is not ideal. This should be removed once the localization
+    #  mechanism is available on the VueJS side.
+    i18n.localize(user.language)
     body = params["body"]
     entity_type = ConfigEntityType(body["entity_type"])
     entity_type_specifier = body["entity_type_specifier"]
@@ -125,6 +130,10 @@ def _create_configuration_entity(params: Mapping[str, Any]) -> Response:
 )
 def _update_configuration_entity(params: Mapping[str, Any]) -> Response:
     """Update an existing configuration entity"""
+    # TODO (localization): localization is currently unavailable on VueJS and therefore needs to be
+    #  done on the API side which is not ideal. This should be removed once the localization
+    #  mechanism is available on the VueJS side.
+    i18n.localize(user.language)
     body = params["body"]
     entity_type = ConfigEntityType(body["entity_type"])
     entity_type_specifier = body["entity_type_specifier"]
@@ -156,6 +165,10 @@ def _update_configuration_entity(params: Mapping[str, Any]) -> Response:
 )
 def _get_configuration_entity_form_spec_schema(params: Mapping[str, Any]) -> Response:
     """Get a configuration entity form spec schema"""
+    # TODO (localization): localization is currently unavailable on VueJS and therefore needs to be
+    #  done on the API side which is not ideal. This should be removed once the localization
+    #  mechanism is available on the VueJS side.
+    i18n.localize(user.language)
     entity_type = ConfigEntityType(params["entity_type"])
     entity_type_specifier = params["entity_type_specifier"]
 

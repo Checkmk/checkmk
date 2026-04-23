@@ -301,6 +301,16 @@ class TestParams:
         pytest.param(
             (base_version, interactive_mode),
             id=f"base-version={base_version.version}|interactive-mode={interactive_mode}",
+            marks=(
+                [
+                    pytest.mark.skipif(
+                        os.environ.get("DISTRO") == "almalinux-9",
+                        reason="Temporarily disabled until the release of 2.4.0p25 (CMK-32594).",
+                    )
+                ]
+                if base_version.version in ("2.4.0p22", "2.4.0p23", "2.4.0p24")
+                else []
+            ),
         )
         for base_version, interactive_mode in itertools.product(
             BaseVersions.base_versions, INTERACTIVE_MODE

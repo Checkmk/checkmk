@@ -5,7 +5,7 @@
 
 import pytest
 
-from cmk.utils.urls import is_allowed_url
+from cmk.web.utils.urls import is_allowed_url
 
 
 @pytest.mark.parametrize(

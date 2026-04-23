@@ -53,6 +53,7 @@ py_library(
         "//packages/cmk-plugin-apis:agent_based",
         "//packages/cmk-plugin-apis:password_store",
         "//packages/cmk-trace",
+        "//packages/cmk-web",
         "//packages/cmk-werks",
         requirement("azure-identity"),
         requirement("azure-storage-blob"),

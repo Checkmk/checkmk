@@ -1491,7 +1491,7 @@ allows = []
 allows = []
 
 [components."cmk.utils.urls"]
-allows = ["cmk.ccc.regex"]
+allows = ["cmk.web.utils.urls"]
 
 [components."cmk.utils.visuals"]
 allows = ["cmk.utils.paths"]
@@ -1513,6 +1513,9 @@ allows = [
   "cmk.gui",
   "cmk.shared_typing.vue_formspec_components",
 ]
+
+[components."cmk.web"]
+allows = ["@ccc"]
 
 [components."cmk.werks"]
 allows = ["@ccc"]

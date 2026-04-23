@@ -1,5 +1,6 @@
-load("@aspect_rules_py//py:defs.bzl", "py_library")
+load("@aspect_rules_py//py:defs.bzl", "py_library", "py_test")
 load("@bazel_skylib//rules:build_test.bzl", "build_test")
+load("@cmk_requirements//:requirements.bzl", "requirement")
 load("@rules_python//python:packaging.bzl", "py_wheel")
 load("//bazel/rules:doctest.bzl", "py_doc_test")
 load("//bazel/rules:package_wheel.bzl", "package_wheel")
@@ -15,11 +16,15 @@ py_library(
     name = "cmk-web",
     srcs = [
         "cmk/web/__init__.py",
+        "cmk/web/utils/__init__.py",
+        "cmk/web/utils/urls.py",
     ],
     data = ["cmk/web/py.typed"],
     imports = ["."],
     visibility = ["//visibility:public"],
-    deps = [],
+    deps = [
+        "//packages/cmk-ccc:regex",
+    ],
 )
 
 py_doc_test(
@@ -37,6 +42,17 @@ py_requirements_test(
         ":cmk-web",
     ],
     requirements_in = "requirements.in",
+)
+
+py_test(
+    name = "unit",
+    size = "small",
+    srcs = glob(["tests/**/*.py"]),
+    pytest_main = True,
+    deps = [
+        ":cmk-web",
+        requirement("pytest"),
+    ],
 )
 
 py_wheel(

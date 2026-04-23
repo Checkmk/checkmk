@@ -100,6 +100,9 @@ py_library(
         "//non-free/packages:__subpackages__",
         "//tests:__subpackages__",
     ],
+    deps = [
+        "//packages/cmk-web",
+    ],
 )
 
 py_library(

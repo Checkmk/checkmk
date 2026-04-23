@@ -885,6 +885,7 @@ allows = [
   "cmk.utils.translations",
   "cmk.utils.unixsocket_http",
   "cmk.utils.urls",
+  "cmk.web.utils.html",
   "cmk.utils.visuals",
   "cmk.utils.werks",
 ]

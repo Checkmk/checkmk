@@ -14,11 +14,7 @@ import { immediateWatch } from '@/lib/watch'
 import CmkLoading from '@/components/CmkLoading.vue'
 import CmkSuggestions, {
   ErrorResponse,
-  NoSelection,
-  Selection,
-  SelectionWithTitle,
   type Suggestion,
-  type SuggestionValue,
   type Suggestions
 } from '@/components/CmkSuggestions'
 import ArrowDown from '@/components/graphics/ArrowDown.vue'
@@ -34,7 +30,6 @@ export interface DropdownOption {
 }
 
 const {
-  selectedOption: selectedOptionPublic,
   inputHint = untranslated(''),
   noResultsHint = '',
   disabled = false,
@@ -46,7 +41,6 @@ const {
   label,
   formValidation = false
 } = defineProps<{
-  selectedOption: string | null
   options: Suggestions
   inputHint?: TranslatedString
   noResultsHint?: TranslatedString
@@ -61,35 +55,23 @@ const {
 
 const vClickOutside = useClickOutside()
 
+const selectedOption = defineModel<string | null>('selectedOption', { required: true })
 const buttonLabel = ref<TranslatedString>(inputHint)
 const callbackFilteredErrorMessage = ref<string | null>(null)
 const callbackFilteredLoading = ref<boolean>(false)
 const internallyDisabled = ref<boolean>(false)
 
-const selectedOption = ref<SuggestionValue>(new NoSelection())
-
-const emit = defineEmits<{
-  (e: 'update:selectedOption', value: string | null): void
-}>()
-
 immediateWatch(
   () => ({
-    newValue: selectedOptionPublic,
+    newValue: selectedOption.value,
     newOptions: options
   }),
   async ({ newValue, newOptions }) => {
     callbackFilteredLoading.value = false
-    if (newOptions.type === 'callback-filtered' && newValue !== null) {
-      internallyDisabled.value = true
-      callbackFilteredLoading.value = true
-    }
-    const currentSelectionState = await getCurrentSelectionState(newOptions, newValue)
-    callbackFilteredLoading.value = false
-    internallyDisabled.value = false
+    const label = await getButtonLabel(newOptions, newValue)
     // Only update if the selected option hasn't changed again while awaiting
-    if (newValue === selectedOptionPublic) {
-      buttonLabel.value = currentSelectionState.buttonLabel
-      selectedOption.value = currentSelectionState.value
+    if (newValue === selectedOption.value) {
+      buttonLabel.value = label
     }
   }
 )
@@ -98,31 +80,35 @@ immediateWatch(
  * This function might have a performance impact as it might trigger a callback to fetch
  * suggestions. It should only be called when necessary.
  */
-async function getCurrentSelectionState(
+async function getButtonLabel(
   options: Suggestions,
   selected: string | null
-): Promise<{ value: SuggestionValue; buttonLabel: TranslatedString }> {
+): Promise<TranslatedString> {
   let currentOptions: Suggestion[]
   switch (options.type) {
     case 'filtered':
     case 'fixed': {
       if (options.suggestions.length === 0) {
-        return { value: new NoSelection(), buttonLabel: noElementsText ?? inputHint }
+        return noElementsText ?? inputHint
       } else if (selected === null) {
-        return { value: new NoSelection(), buttonLabel: inputHint }
+        return inputHint
       }
       currentOptions = options.suggestions
       break
     }
     case 'callback-filtered': {
       if (selected === null) {
-        return { value: new NoSelection(), buttonLabel: inputHint }
+        return inputHint
       }
+      callbackFilteredLoading.value = true
+      internallyDisabled.value = true
       const result = await options.querySuggestions(selected)
+      callbackFilteredLoading.value = false
+      internallyDisabled.value = false
 
       if (result instanceof ErrorResponse) {
         callbackFilteredErrorMessage.value = result.error
-        return { value: new Selection(selected), buttonLabel: untranslated(selected) }
+        return untranslated(selected)
       } else {
         callbackFilteredErrorMessage.value = null
         currentOptions = result.choices
@@ -131,23 +117,10 @@ async function getCurrentSelectionState(
     }
   }
   if (currentOptions.length === 0) {
-    return { value: new NoSelection(), buttonLabel: noElementsText }
+    return noElementsText
   } else {
     const selectedSuggestion = currentOptions.find((s: Suggestion) => s.name === selected)
-    if (selectedSuggestion) {
-      if (selectedSuggestion.name === null) {
-        return {
-          value: new NoSelection(),
-          buttonLabel: inputHint
-        }
-      }
-      return {
-        value: new SelectionWithTitle(selectedSuggestion.name, selectedSuggestion.title),
-        buttonLabel: selectedSuggestion.title
-      }
-    } else {
-      return { value: new Selection(selected), buttonLabel: untranslated(selected) }
-    }
+    return selectedSuggestion ? selectedSuggestion.title : untranslated(selected)
   }
 }
 
@@ -198,13 +171,7 @@ function hideSuggestions(): void {
 }
 
 function handleUpdate(selected: Suggestion | null): void {
-  // CmkSuggestion tells us to change our value
-  const newValue =
-    selected === null || selected.name === null
-      ? new NoSelection()
-      : new SelectionWithTitle(selected.name, selected.title)
-  selectedOption.value = newValue
-  emit('update:selectedOption', newValue.getName())
+  selectedOption.value = selected?.name || null
   callbackFilteredErrorMessage.value = null
   hideSuggestions()
 }
@@ -247,7 +214,7 @@ const group = computed<ButtonVariants['group']>(() => {
       :aria-expanded="suggestionsShown"
       :disabled="disabled"
       :multiple-choices-available="canOpenDropdown"
-      :value-is-selected="!(selectedOption instanceof NoSelection)"
+      :value-is-selected="selectedOption !== null"
       :group="group"
       :width="width"
       :class="{ 'cmk-dropdown__validation-error': formValidation }"
@@ -258,9 +225,7 @@ const group = computed<ButtonVariants['group']>(() => {
       </template>
       <span v-if="!callbackFilteredLoading && buttonLabel" style="display: contents"
         ><TruncateText :text="buttonLabel" /></span
-      ><CmkLabelRequired
-        :show="required && selectedOption instanceof NoSelection"
-        :space="'before'" />
+      ><CmkLabelRequired :show="required && selectedOption === null" :space="'before'" />
       <template v-if="!callbackFilteredLoading && !buttonLabel">&nbsp;</template>
       <ArrowDown
         class="cmk-dropdown--arrow"

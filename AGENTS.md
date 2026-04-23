@@ -35,3 +35,10 @@ Python modules are available; pass `--cmk_edition=<edition>` to Bazel.
 ## Commit rules
 
 Before a commit do a sanity check of your changes and run the linters and formatters.
+
+### Files that must never be committed
+
+Ensure the following paths are NOT part of any commit (check `git status` /
+`git diff --cached` before committing and unstage them if they appear):
+
+- `tests/qa-test-data` (submodule — never update its pinned commit)

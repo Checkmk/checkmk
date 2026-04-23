@@ -320,7 +320,7 @@ After the explain step and the unit test commit, implement the fix:
 
 3. **Run tests and lint** using the `/bazel` skill to verify the fix passes.
 
-4. **Create a werk** (changelog entry) via `/werk`.
+4. **Create a werk** (changelog entry) by invoking the `/werk` skill — do not write to `.werks/` directly. The skill handles werk ID allocation, metadata validation, and the changelog commit.
 
 5. **Run Step 6.5 (Jira Ticket)** to look up or create the tracking ticket before committing. Capture the resulting `CMK-XXXXX` key for the commit trailer.
 
@@ -382,7 +382,7 @@ The arguments after `auto-fix` are passed directly to the `popular` or `search` 
 
    g. **Fix.** Execute Step 7 (Fix the Issue) — implement the fix, remove `xfail(strict=True)`, run tests and lint via `/bazel`.
 
-   h. **Werk.** Create a werk via `/werk` with class `fix`, level `1`, and the appropriate component inferred from the crash type and file path.
+   h. **Werk.** Invoke the `/werk` skill to create the werk with class `fix`, level `1`, and the appropriate component inferred from the crash type and file path. Do not write to `.werks/` or edit `.werks/first_free` directly — the `/werk` skill manages werk IDs and metadata.
 
    i. **Jira ticket.** Execute Step 6.5 (Jira Ticket) to look up or create the tracking ticket. Capture the resulting `CMK-XXXXX` key for the commit trailer. Skip this sub-step entirely when `--dry-run` is active.
 

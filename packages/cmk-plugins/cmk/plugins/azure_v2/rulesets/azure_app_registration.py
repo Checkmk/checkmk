@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Mapping
-
 from cmk.rulesets.v1 import Title
 from cmk.rulesets.v1.form_specs import (
     DefaultValue,
@@ -19,78 +17,42 @@ from cmk.rulesets.v1.rule_specs import CheckParameters, HostAndItemCondition, To
 
 THIRTY_DAYS = 30 * 24 * 60 * 60.0
 SEVEN_DAYS = 7 * 24 * 60 * 60.0
-ONE_YEAR = 365 * 24 * 60 * 60.0
-TWO_YEARS = 2 * ONE_YEAR
-
-
-def _time_span() -> TimeSpan:
-    return TimeSpan(
-        displayed_magnitudes=[
-            TimeMagnitude.DAY,
-            TimeMagnitude.HOUR,
-            TimeMagnitude.MINUTE,
-            TimeMagnitude.SECOND,
-        ]
-    )
-
-
-def _credential_validity_form(is_secret: bool) -> Dictionary:
-    return Dictionary(
-        title=Title("Check secret credentials")
-        if is_secret
-        else Title("Check certificate credentials"),
-        elements={
-            "remaining_validity": DictElement(
-                parameter_form=SimpleLevels(
-                    title=Title("Remaining validity time"),
-                    form_spec_template=_time_span(),
-                    level_direction=LevelDirection.LOWER,
-                    prefill_fixed_levels=DefaultValue((THIRTY_DAYS, SEVEN_DAYS)),
-                ),
-            ),
-            "max_validity": DictElement(
-                parameter_form=SimpleLevels(
-                    title=Title("Maximum allowed validity"),
-                    form_spec_template=_time_span(),
-                    level_direction=LevelDirection.UPPER,
-                    prefill_fixed_levels=DefaultValue((ONE_YEAR, TWO_YEARS)),
-                ),
-            ),
-        },
-    )
-
-
-def _migrate(value: object) -> Mapping[str, object]:
-    if not isinstance(value, dict):
-        raise ValueError(value)
-
-    # Already in new nested format
-    if "secrets" in value or "certificates" in value:
-        return value
-
-    # Migrate from old flat format: expiration_time_secrets / expiration_time_certificates
-    result: dict[str, object] = {}
-    if "expiration_time_secrets" in value:
-        result["secrets"] = {"remaining_validity": value["expiration_time_secrets"]}
-    if "expiration_time_certificates" in value:
-        result["certificates"] = {"remaining_validity": value["expiration_time_certificates"]}
-
-    return result
 
 
 def _make_form() -> Dictionary:
     return Dictionary(
-        migrate=_migrate,
         elements={
-            "secrets": DictElement(
-                required=False,
-                parameter_form=_credential_validity_form(is_secret=True),
+            "expiration_time_secrets": DictElement(
+                parameter_form=SimpleLevels(
+                    title=Title("Time until secret credentials expiration"),
+                    form_spec_template=TimeSpan(
+                        displayed_magnitudes=[
+                            TimeMagnitude.DAY,
+                            TimeMagnitude.HOUR,
+                            TimeMagnitude.MINUTE,
+                            TimeMagnitude.SECOND,
+                        ]
+                    ),
+                    level_direction=LevelDirection.LOWER,
+                    prefill_fixed_levels=DefaultValue((THIRTY_DAYS, SEVEN_DAYS)),
+                )
             ),
-            "certificates": DictElement(
-                required=False,
-                parameter_form=_credential_validity_form(is_secret=False),
+            "expiration_time_certificates": DictElement(
+                parameter_form=SimpleLevels(
+                    title=Title("Time until certificate credentials expiration"),
+                    form_spec_template=TimeSpan(
+                        displayed_magnitudes=[
+                            TimeMagnitude.DAY,
+                            TimeMagnitude.HOUR,
+                            TimeMagnitude.MINUTE,
+                            TimeMagnitude.SECOND,
+                        ]
+                    ),
+                    level_direction=LevelDirection.LOWER,
+                    prefill_fixed_levels=DefaultValue((THIRTY_DAYS, SEVEN_DAYS)),
+                )
             ),
-        },
+        }
     )
 
 

@@ -3,19 +3,13 @@ agents: azure_v2
 catalog: cloud/azure
 license: GPLv2
 distribution: check_mk
-description: This check monitors validity of a Microsoft Azure
+description: This check monitors validity of an Microsoft Azure
   app registration secret.
-  The state of the service is CRIT if the secret has expired.
+  The state of the service is CRIT if the secret has
+  expired.
 
-  Two threshold groups can be configured in the rule
-  "Microsoft Azure App Registrations":
-
-  Remaining validity: Alert when the secret is about to expire.
-  The default levels are WARN at 30 days and CRIT at 7 days.
-
-  Maximum allowed validity: Alert when the total lifespan of the secret
-  (from creation to expiry) exceeds a threshold.
-  The default levels are WARN at 1 year and CRIT at 2 years.
+  The levels for remaining time until expiry can be
+  configured in the rule "Azure App Registration".
 
   In order to use this check, you need to configure the Azure special agent.
 

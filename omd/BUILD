@@ -51,6 +51,7 @@ edition_deps = select({
         "//omd/non-free/packages/cmk-robotmk:pkg_tar",
         "//omd/non-free/packages/legal-docs:ultimate_pkg_tar",
         "//omd/non-free/packages/licensing:pkg_tar",
+        "//omd/non-free/packages/metric-backend:pkg_tar",
         "//omd/non-free/packages/reporting:pkg_tar",
         "//omd/non-free/packages/robotmk:pkg_tar",
         "//omd/non-free/packages/saml2:pkg_tar",

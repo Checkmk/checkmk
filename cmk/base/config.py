@@ -771,6 +771,11 @@ def _perform_post_config_loading_actions(
         delay_precompile=delay_precompile,
         default_host_group=default_host_group,
         extra_nagios_conf=extra_nagios_conf,
+        contacts=contacts,
+        define_contactgroups=define_contactgroups,
+        define_hostgroups=define_hostgroups,
+        define_servicegroups=define_servicegroups,
+        contactgroup_members=contactgroup_members,
     )
 
     config_cache = ConfigCache(loaded_config, get_builtin_host_labels, edition).initialize(

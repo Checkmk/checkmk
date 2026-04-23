@@ -27,7 +27,7 @@ from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.rrd import RRDObjectConfig
 from cmk.utils.host_storage import FolderAttributesForBase
 from cmk.utils.http_proxy_config import HTTPProxySpec
-from cmk.utils.notify_types import EventRule
+from cmk.utils.notify_types import Contact, ContactName, EventRule
 from cmk.utils.oauth2_connection import OAuth2Connection
 from cmk.utils.rulesets import ruleset_matcher, RuleSetName
 from cmk.utils.rulesets.ruleset_matcher import RuleSpec
@@ -169,3 +169,8 @@ class LoadedConfigFragment:
     delay_precompile: bool
     default_host_group: str
     extra_nagios_conf: str
+    contacts: dict[ContactName, Contact]
+    define_contactgroups: Mapping[str, str]
+    define_hostgroups: Mapping[str, str]
+    define_servicegroups: Mapping[str, str]
+    contactgroup_members: Mapping[str, Sequence[ContactName]]

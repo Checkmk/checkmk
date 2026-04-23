@@ -57,6 +57,11 @@ def create_core(
                     dummy_check_commandline=loaded_config.dummy_check_commandline,
                     default_host_group=loaded_config.default_host_group,
                     extra_nagios_conf=loaded_config.extra_nagios_conf,
+                    contacts=loaded_config.contacts,
+                    define_contactgroups=loaded_config.define_contactgroups,
+                    define_hostgroups=loaded_config.define_hostgroups,
+                    define_servicegroups=loaded_config.define_servicegroups,
+                    contactgroup_members=loaded_config.contactgroup_members,
                 ),
             )
         case "cmc":

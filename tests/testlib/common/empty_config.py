@@ -142,6 +142,11 @@ EMPTY_CONFIG = LoadedConfigFragment(
     delay_precompile=False,
     default_host_group="check_mk",
     extra_nagios_conf="",
+    contacts={},
+    define_contactgroups={},
+    define_hostgroups={},
+    define_servicegroups={},
+    contactgroup_members={},
 )
 
 
@@ -162,6 +167,11 @@ EMPTY_NAGIOS_CORE_CONFIG = NagiosCoreConfig(
     ),
     default_host_group="check_mk",
     extra_nagios_conf="",
+    contacts={},
+    define_contactgroups={},
+    define_hostgroups={},
+    define_servicegroups={},
+    contactgroup_members={},
 )
 
 

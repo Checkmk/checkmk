@@ -97,6 +97,11 @@ class NagiosCoreConfig:
     dummy_check_commandline: str
     default_host_group: str
     extra_nagios_conf: str
+    contacts: Mapping[str, Contact]
+    define_contactgroups: Mapping[str, str]
+    define_hostgroups: Mapping[str, str]
+    define_servicegroups: Mapping[str, str]
+    contactgroup_members: Mapping[str, Sequence[str]]
 
 
 class NagiosCore(MonitoringCore):
@@ -367,12 +372,16 @@ def create_config(
 
     notify_host_files = create_notify_host_files(all_notify_host_configs)
 
-    _create_nagios_config_contacts(cfg)
+    _create_nagios_config_contacts(cfg, nagios_core_config.contacts)
     if hostnames:
         _create_nagios_check_mk_notify_contact(cfg)
-    _create_nagios_config_hostgroups(cfg, nagios_core_config.default_host_group)
-    _create_nagios_config_servicegroups(cfg)
-    _create_nagios_config_contactgroups(cfg)
+    _create_nagios_config_hostgroups(
+        cfg, nagios_core_config.default_host_group, nagios_core_config.define_hostgroups
+    )
+    _create_nagios_config_servicegroups(cfg, nagios_core_config.define_servicegroups)
+    _create_nagios_config_contactgroups(
+        cfg, nagios_core_config.define_contactgroups, nagios_core_config.contactgroup_members
+    )
     create_nagios_config_commands(
         cfg, nagios_core_config.generate_dummy_commands, nagios_core_config.dummy_check_commandline
     )
@@ -547,7 +556,9 @@ def create_nagios_host_spec(
         host_spec["check_command"] = command
 
     hostgroups = config_cache.hostgroups(hostname)
-    if config.define_hostgroups or hostgroups == [nagios_core_config.default_host_group]:
+    if nagios_core_config.define_hostgroups or hostgroups == [
+        nagios_core_config.default_host_group
+    ]:
         cfg.hostgroups_to_define.update(hostgroups)
     host_spec["hostgroups"] = ",".join(sorted(hostgroups))
 
@@ -680,7 +691,12 @@ def _process_services_data(
             }
             | passive_service_attributes
             | _extra_service_conf_of(
-                cfg, config_cache, hostname, service.description, service.labels
+                cfg,
+                config_cache,
+                hostname,
+                service.description,
+                service.labels,
+                nagios_core_config.define_servicegroups,
             )
         )
 
@@ -744,7 +760,14 @@ def create_nagios_servicedefs(
                 "service_description": "Check_MK",
             }
             | check_mk_attrs
-            | _extra_service_conf_of(cfg, config_cache, hostname, "Check_MK", check_mk_labels)
+            | _extra_service_conf_of(
+                cfg,
+                config_cache,
+                hostname,
+                "Check_MK",
+                check_mk_labels,
+                nagios_core_config.define_servicegroups,
+            )
         )
 
         cfg.write_object("service", service_spec)
@@ -810,7 +833,12 @@ def create_nagios_servicedefs(
             }
             | service_attributes
             | _extra_service_conf_of(
-                cfg, config_cache, hostname, service_data.description, active_service_labels
+                cfg,
+                config_cache,
+                hostname,
+                service_data.description,
+                active_service_labels,
+                nagios_core_config.define_servicegroups,
             )
         )
 
@@ -867,7 +895,14 @@ def create_nagios_servicedefs(
             | _to_nagios_core_attributes(
                 get_service_attributes(config_cache, hostname, service_discovery_name, labels)
             )
-            | _extra_service_conf_of(cfg, config_cache, hostname, service_discovery_name, labels)
+            | _extra_service_conf_of(
+                cfg,
+                config_cache,
+                hostname,
+                service_discovery_name,
+                labels,
+                nagios_core_config.define_servicegroups,
+            )
             | {
                 "check_interval": str(disco_params.check_interval),
                 "retry_interval": str(disco_params.check_interval),
@@ -912,6 +947,7 @@ def create_nagios_servicedefs(
             ping_service,
             license_counter,
             nagios_core_config.pingonly_template,
+            nagios_core_config.define_servicegroups,
         )
 
     return service_labels
@@ -1004,7 +1040,14 @@ def _create_custom_check(
         }
         | freshness
         | service_attr
-        | _extra_service_conf_of(cfg, config_cache, hostname, description, labels)
+        | _extra_service_conf_of(
+            cfg,
+            config_cache,
+            hostname,
+            description,
+            labels,
+            nagios_core_config.define_servicegroups,
+        )
     )
 
     service_labels[description] = dict(get_labels_from_attributes(list(service_attr.items())))
@@ -1072,6 +1115,7 @@ def _add_ping_service(
     ping_service: _PingServiceNames,
     licensing_counter: Counter,
     pingonly_template: str,
+    define_servicegroups: Mapping[str, str],
 ) -> None:
     service_labels = _get_service_labels(config_cache.label_manager, host_name, ping_service)
     family: Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6]
@@ -1099,7 +1143,14 @@ def _add_ping_service(
         arguments += " " + ipaddress
 
     service_spec = _make_ping_only_spec(
-        cfg, config_cache, host_name, ping_service, arguments, service_labels, pingonly_template
+        cfg,
+        config_cache,
+        host_name,
+        ping_service,
+        arguments,
+        service_labels,
+        pingonly_template,
+        define_servicegroups,
     )
 
     cfg.write_object("service", service_spec)
@@ -1114,6 +1165,7 @@ def _make_ping_only_spec(
     arguments: str,
     service_labels: Labels,
     pingonly_template: str,
+    define_servicegroups: Mapping[str, str],
 ) -> dict[str, str | HostAddress]:
     ping_command = "check-mk-ping"
     return (
@@ -1126,7 +1178,9 @@ def _make_ping_only_spec(
         | _to_nagios_core_attributes(
             get_service_attributes(config_cache, host_name, service_name, service_labels)
         )
-        | _extra_service_conf_of(cfg, config_cache, host_name, service_name, service_labels)
+        | _extra_service_conf_of(
+            cfg, config_cache, host_name, service_name, service_labels, define_servicegroups
+        )
     )
 
 
@@ -1158,8 +1212,10 @@ def _simulate_command(cfg: NagiosConfig, command: CoreCommand) -> CoreCommand:
     return command
 
 
-def _create_nagios_config_hostgroups(cfg: NagiosConfig, default_host_group: str) -> None:
-    if config.define_hostgroups:
+def _create_nagios_config_hostgroups(
+    cfg: NagiosConfig, default_host_group: str, define_hostgroups: Mapping[str, str]
+) -> None:
+    if define_hostgroups:
         cfg.write_str("\n# ------------------------------------------------------------\n")
         cfg.write_str("# Host groups (controlled by define_hostgroups)\n")
         cfg.write_str("# ------------------------------------------------------------\n")
@@ -1168,7 +1224,7 @@ def _create_nagios_config_hostgroups(cfg: NagiosConfig, default_host_group: str)
                 "hostgroup",
                 {
                     "hostgroup_name": hg,
-                    "alias": config.define_hostgroups.get(hg, hg),
+                    "alias": define_hostgroups.get(hg, hg),
                 },
             )
 
@@ -1183,8 +1239,10 @@ def _create_nagios_config_hostgroups(cfg: NagiosConfig, default_host_group: str)
         )
 
 
-def _create_nagios_config_servicegroups(cfg: NagiosConfig) -> None:
-    if not config.define_servicegroups:
+def _create_nagios_config_servicegroups(
+    cfg: NagiosConfig, define_servicegroups: Mapping[str, str]
+) -> None:
+    if not define_servicegroups:
         return
     cfg.write_str("\n# ------------------------------------------------------------\n")
     cfg.write_str("# Service groups (controlled by define_servicegroups)\n")
@@ -1194,12 +1252,16 @@ def _create_nagios_config_servicegroups(cfg: NagiosConfig) -> None:
             "servicegroup",
             {
                 "servicegroup_name": sg,
-                "alias": config.define_servicegroups.get(sg, sg),
+                "alias": define_servicegroups.get(sg, sg),
             },
         )
 
 
-def _create_nagios_config_contactgroups(cfg: NagiosConfig) -> None:
+def _create_nagios_config_contactgroups(
+    cfg: NagiosConfig,
+    define_contactgroups: Mapping[str, str],
+    contactgroup_members: Mapping[str, Sequence[str]],
+) -> None:
     if not cfg.contactgroups_to_define:
         return
     cfg.write_str("\n# ------------------------------------------------------------\n")
@@ -1208,9 +1270,9 @@ def _create_nagios_config_contactgroups(cfg: NagiosConfig) -> None:
     for name in sorted(cfg.contactgroups_to_define):
         contactgroup_spec = {
             "contactgroup_name": name,
-            "alias": config.define_contactgroups.get(name, name),
+            "alias": define_contactgroups.get(name, name),
         }
-        if members := config.contactgroup_members.get(name):
+        if members := contactgroup_members.get(name):
             contactgroup_spec["members"] = ",".join(sorted(members))
         cfg.write_object("contactgroup", contactgroup_spec)
 
@@ -1279,12 +1341,12 @@ def _create_nagios_config_timeperiods(cfg: NagiosConfig) -> None:
         cfg.write_object("timeperiod", timeperiod_spec)
 
 
-def _create_nagios_config_contacts(cfg: NagiosConfig) -> None:
-    if config.contacts:
+def _create_nagios_config_contacts(cfg: NagiosConfig, contacts: Mapping[str, Contact]) -> None:
+    if contacts:
         cfg.write_str("\n# ------------------------------------------------------------\n")
         cfg.write_str("# Contact definitions (controlled by variable 'contacts')\n")
         cfg.write_str("# ------------------------------------------------------------\n\n")
-        for cname, contact in sorted(config.contacts.items()):
+        for cname, contact in sorted(contacts.items()):
             if contact_groups := _update_contact_groups(cfg, contact):
                 contact_spec = _make_contact_spec(cname, contact, contact_groups)
                 cfg.write_object("contact", contact_spec)
@@ -1385,6 +1447,7 @@ def _extra_service_conf_of(
     host_name: HostName,
     service_name: ServiceName,
     service_labels: Labels,
+    define_servicegroups: Mapping[str, str],
 ) -> ObjectSpec:
     """Collect all extra configuration data for a service"""
     service_spec: ObjectSpec = {}
@@ -1401,7 +1464,7 @@ def _extra_service_conf_of(
     sergr = config_cache.servicegroups_of_service(host_name, service_name, service_labels)
     if sergr:
         service_spec["service_groups"] = ",".join(sorted(sergr))
-        if config.define_servicegroups:
+        if define_servicegroups:
             cfg.servicegroups_to_define.update(sergr)
 
     return service_spec

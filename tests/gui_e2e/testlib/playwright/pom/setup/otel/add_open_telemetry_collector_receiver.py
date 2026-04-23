@@ -93,6 +93,11 @@ class AddOpenTelemetryCollectorReceiver(CmkPage):
     def encrypt_communication_with_tls_checkbox(self, receiver_type: str) -> Locator:
         return self._receiver(receiver_type).get_by_label("Encrypt communication with TLS")
 
+    def socket_address_dropdown(self, receiver_type: str) -> Locator:
+        return self._receiver(receiver_type).get_by_role(
+            "combobox", name="Socket address to listen on"
+        )
+
     def ip_address_or_hostname_textfield(self, receiver_type: str) -> Locator:
         return self._receiver(receiver_type).get_by_role("textbox", name="IP address or host name")
 
@@ -102,7 +107,9 @@ class AddOpenTelemetryCollectorReceiver(CmkPage):
     def authentication_method_dropdown(self, receiver_type: str) -> Locator:
         return self._receiver(receiver_type).get_by_label("Authentication method")
 
-    def dropdown_option(self, receiver_type: str, option: str, exact: bool = False) -> Locator:
+    def dropdown_option(
+        self, receiver_type: str, option: str | re.Pattern[str], exact: bool = False
+    ) -> Locator:
         return self._receiver(receiver_type).get_by_role("option", name=option, exact=exact)
 
     def add_new_credentials_button(self, receiver_type: str) -> Locator:
@@ -160,8 +167,18 @@ class AddOpenTelemetryCollectorReceiver(CmkPage):
         self.receiver_protocol_endpoint_checkbox(receiver_type).check()
         if properties["endpoint"]["encryption"]:
             self.encrypt_communication_with_tls_checkbox(receiver_type).check()
-        self.ip_address_or_hostname_textfield(receiver_type).fill(properties["endpoint"]["address"])
-        self.port_textfield(receiver_type).fill(properties["endpoint"]["port"])
+        socket_addr = properties["endpoint"]["socket_address"]
+        sa_type = socket_addr["type"]
+        self.socket_address_dropdown(receiver_type).click()
+        label_map: dict[str, str | re.Pattern[str]] = {
+            "default_ipv4": re.compile(r"Default IPv4"),
+            "default_ipv6": re.compile(r"Default IPv6"),
+            "custom": "Custom",
+        }
+        self.dropdown_option(receiver_type, label_map[sa_type]).click()
+        if sa_type == "custom":
+            self.ip_address_or_hostname_textfield(receiver_type).fill(socket_addr["address"])
+            self.port_textfield(receiver_type).fill(str(socket_addr["port"]))
         if properties["endpoint"]["auth"]["type"] != "none":
             self.authentication_method_dropdown(receiver_type).click()
             self.dropdown_option(receiver_type, "Basic Authentication").click()

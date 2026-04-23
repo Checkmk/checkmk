@@ -87,6 +87,20 @@ def test_inventory_printer_supply(
     assert list(result) == expected_result
 
 
+@pytest.mark.xfail(
+    strict=True,
+    reason="Crash group 3957: empty supply name crashes Service(item='')",
+)
+def test_discovery_printer_supply_skips_empty_supply_name() -> None:
+    info: list[StringTable] = [
+        [["1.4", "black"]],
+        [["", "15", "-2", "-3", "3", "4"]],
+    ]
+    section = parse_printer_supply(info)
+    # Must not raise when the printer reports a nameless supply entry.
+    list(discovery_printer_supply(section))
+
+
 @pytest.mark.parametrize(
     "item, params, info, expected_result",
     [

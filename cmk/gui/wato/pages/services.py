@@ -819,8 +819,6 @@ class DiscoveryPageRenderer:
                         agent_install_cls=AgentInstallCmds,
                         agent_registration_cls=AgentRegistrationCmds,
                         version=version,
-                        can_download_baked_agents=user.may("wato.agents")
-                        and user.may("wato.download_agents"),
                     ),
                 )
             ),

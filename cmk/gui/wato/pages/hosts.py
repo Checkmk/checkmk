@@ -384,7 +384,6 @@ class ABCHostMode(WatoMode, abc.ABC):
         form_name: Final[str] = "edit_host"
         version = ".".join(omd_version(omd_root).split(".")[:-1])
         hostname = self._host.name()
-        can_download_baked_agents = user.may("wato.agents") and user.may("wato.download_agents")
         html.vue_component(
             component_name="cmk-mode-host",
             data=asdict(
@@ -447,7 +446,6 @@ class ABCHostMode(WatoMode, abc.ABC):
                         agent_install_cls=AgentInstallCmds,
                         agent_registration_cls=AgentRegistrationCmds,
                         version=version,
-                        can_download_baked_agents=can_download_baked_agents,
                     ),
                     host_name=hostname,
                     is_auto_registered=(

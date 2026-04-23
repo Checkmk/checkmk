@@ -10,7 +10,6 @@ import usei18n from '@/lib/i18n'
 import type { TranslatedString } from '@/lib/i18nString'
 import usePersistentRef from '@/lib/usePersistentRef'
 
-import CmkAlertBox from '@/components/CmkAlertBox.vue'
 import CmkButton from '@/components/CmkButton.vue'
 import CmkCode from '@/components/CmkCode.vue'
 import CmkDialog from '@/components/CmkDialog.vue'
@@ -39,7 +38,6 @@ const props = defineProps<{
   isPushMode: boolean
   hostName: string
   agentReceiverPortIsDefault: boolean
-  canDownloadBakedAgents: boolean
 }>()
 
 const { _t } = usei18n()
@@ -204,7 +202,7 @@ function getInitStep() {
             </template>
             <template #content>
               <div v-if="currentStep === 2" class="download_install__content">
-                <template v-if="tabNeedsToken(tab) && canDownloadBakedAgents">
+                <template v-if="tabNeedsToken(tab)">
                   <div class="download_install__token">
                     <CmkParagraph>{{ tab.installMsg }}</CmkParagraph>
                     <GenerateToken
@@ -295,27 +293,12 @@ function getInitStep() {
                     :open-in-new-tab="true"
                   />
                 </div>
-                <CmkAlertBox
-                  v-else-if="tabNeedsToken(tab) && !canDownloadBakedAgents"
-                  variant="warning"
-                >
-                  {{
-                    _t(
-                      'You do not have the required permissions to download monitoring agents. ' +
-                        'Please ask your administrator to grant you the required permissions, or ask them to install the agent on this host.'
-                    )
-                  }}
-                </CmkAlertBox>
               </div>
             </template>
             <template v-if="currentStep === 2" #actions>
               <CmkWizardButton
                 type="next"
-                :disabled="
-                  tabNeedsToken(tab) &&
-                  canDownloadBakedAgents &&
-                  (ott === null || ott instanceof Error)
-                "
+                :disabled="tabNeedsToken(tab) && (ott === null || ott instanceof Error)"
                 :override-label="_t('Next step: Register agent')"
               />
               <CmkWizardButton type="previous" />

@@ -87,10 +87,6 @@ def test_inventory_printer_supply(
     assert list(result) == expected_result
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="Crash group 3957: empty supply name crashes Service(item='')",
-)
 def test_discovery_printer_supply_skips_empty_supply_name() -> None:
     info: list[StringTable] = [
         [["1.4", "black"]],

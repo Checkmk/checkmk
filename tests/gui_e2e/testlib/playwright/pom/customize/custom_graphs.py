@@ -167,12 +167,9 @@ class DesignGraph(BaseGraph):
 
     def save_rule_via_slide_in(self) -> None:
         logger.info("Save rule via 'Design graph' slide-in")
-        save_button_selector = (
-            "body > div.cmk-vue-app.cmk-slide-in__container.cmk-slide-in--"
-            "size-medium > div > div > div.form-edit-async__buttons > "
-            "button.cmk-button.cmk-button--variant-secondary"
-        )
-        self.main_area.locator(save_button_selector).click()
+        self.page.get_by_role("dialog", name="Add rule: Metric backend (Custom query)").get_by_role(
+            "button", name="Save"
+        ).click()
 
 
 class CustomGraph(BaseGraph):

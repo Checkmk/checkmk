@@ -66,6 +66,20 @@ EXPECTED_APS = sorted(
 )
 
 
+@pytest.mark.xfail(
+    strict=True,
+    reason="Crash group 3846: IndexError when aps_info2 has fewer radio entries than aps_info1",
+)
+def test_parse_huawei_wlc_aps_handles_missing_radio_rows() -> None:
+    string_table = [
+        # One AP with full info1
+        [["8", "23", "66", "40", "1"]],
+        # But only the 2.4 GHz radio row; 5 GHz row is missing.
+        [["to-ap-01", "1", "12", "1"]],
+    ]
+    assert "to-ap-01" in parse_huawei_wlc_aps(string_table)
+
+
 def test_huawei_wlc_aps_discovery_status() -> None:
     services = sorted(s.item or "" for s in discovery_huawei_wlc_aps_status(PARSED))
     assert services == EXPECTED_APS

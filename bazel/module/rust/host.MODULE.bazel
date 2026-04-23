@@ -18,10 +18,10 @@ host_crates.from_cargo(
 use_repo(host_crates, "host_crates")
 host_crates.annotation(
     build_script_data = [
-        "@openssl_static//:gen_dir",
+        "@openssl//:gen_static_dir",
     ],
     build_script_env = {
-        "OPENSSL_DIR": "$(execpath @openssl_static//:gen_dir)",
+        "OPENSSL_DIR": "$(execpath @openssl//:gen_static_dir)",
         "OPENSSL_NO_VENDOR": "1",
         "OPENSSL_STATIC": "1",
     },

@@ -71,7 +71,7 @@ class BaseDashboard(CmkPage):
     @property
     def _menu_header(self) -> Locator:
         """Locator property for top menu of the dashboard"""
-        return self.main_area.locator(".dashboard-menu-header")
+        return self.main_area.locator().get_by_role("toolbar", name="Dashboard menu")
 
     @property
     def dashboard_selector(self) -> Locator:

@@ -137,7 +137,7 @@ const copyInternalDashboardLink = async (): Promise<void> => {
 </script>
 
 <template>
-  <div class="dashboard-menu-header">
+  <div class="dashboard-menu-header" role="toolbar" :aria-label="_t('Dashboard menu')">
     <div class="left-section">
       <div class="dashboard-title">
         <CmkLabel class="dashboard-label">{{ _t('Dashboard') }}</CmkLabel>

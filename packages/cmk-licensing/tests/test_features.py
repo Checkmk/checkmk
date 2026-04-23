@@ -3,56 +3,26 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from pathlib import Path
+
+import pytest
 
 from cmk.ccc.version import Edition
-from cmk.licensing.community_handler import CommunityLicensingHandler
 from cmk.licensing.features import FeatureFlag, Features, licensed_features
 
 
 def test_community() -> None:
-    assert licensed_features(
-        edition=Edition.COMMUNITY,
-        licensing_handler=CommunityLicensingHandler(),
-    ) == Features(
+    assert licensed_features(Path(), Edition.COMMUNITY) == Features(
         bakery=FeatureFlag(enabled=False),
     )
 
 
-def test_pro() -> None:
-    assert licensed_features(
-        edition=Edition.PRO,
-        # The handler type is not relevant for the test currently
-        licensing_handler=CommunityLicensingHandler(),
-    ) == Features(
-        bakery=FeatureFlag(enabled=True),
-    )
-
-
-def test_cloud() -> None:
-    assert licensed_features(
-        edition=Edition.CLOUD,
-        # The handler type is not relevant for the test currently
-        licensing_handler=CommunityLicensingHandler(),
-    ) == Features(
-        bakery=FeatureFlag(enabled=True),
-    )
-
-
-def test_ultimate() -> None:
-    assert licensed_features(
-        edition=Edition.ULTIMATE,
-        # The handler type is not relevant for the test currently
-        licensing_handler=CommunityLicensingHandler(),
-    ) == Features(
-        bakery=FeatureFlag(enabled=True),
-    )
-
-
-def test_ultimatemt() -> None:
-    assert licensed_features(
-        edition=Edition.ULTIMATEMT,
-        # The handler type is not relevant for the test currently
-        licensing_handler=CommunityLicensingHandler(),
-    ) == Features(
+@pytest.mark.parametrize(
+    "edition",
+    [e for e in Edition if e is not Edition.COMMUNITY],
+)
+def test_commercial(edition: Edition) -> None:
+    # NOTE: this will go away soon
+    assert licensed_features(Path(), edition) == Features(
         bakery=FeatureFlag(enabled=True),
     )

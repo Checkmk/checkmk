@@ -7,10 +7,8 @@ from typing import assert_never
 
 from cmk.ccc.version import Edition
 from cmk.gui.legacy_plugins import get_failed_plugins as get_failed_plugins
-from cmk.licensing.community_handler import (  # astrein: disable=cmk-module-layer-violation
-    CommunityLicensingHandler,
-)
-from cmk.licensing.features import licensed_features  # astrein: disable=cmk-module-layer-violation
+from cmk.licensing.features import licensed_features
+from cmk.utils import paths
 
 _registered_edition: Edition | None = None
 
@@ -26,14 +24,7 @@ def register(edition: Edition) -> None:
         return
     _registered_edition = edition
 
-    # NOTE: CommunityLicensingHandler is used here because the edition-specific handler has not
-    # been registered yet at this point in the call chain. This is safe because licensed_features()
-    # currently ignores the handler entirely (see features.py) and derives bakery availability
-    # solely from the edition. Once licensed_features() is simplified to reflect this, the
-    # handler argument will be removed and this workaround will no longer be needed.
-    agent_bakery_enabled = licensed_features(
-        edition, CommunityLicensingHandler.make()
-    ).bakery.enabled
+    agent_bakery_enabled = licensed_features(paths.omd_root, edition).bakery.enabled
 
     match edition:
         case Edition.PRO:

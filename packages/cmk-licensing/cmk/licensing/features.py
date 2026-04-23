@@ -4,10 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from dataclasses import dataclass
+from pathlib import Path
 
 from cmk.ccc.version import Edition
-
-from .handler import LicensingHandler
 
 
 @dataclass(frozen=True)
@@ -20,13 +19,15 @@ class Features:
     bakery: FeatureFlag
 
 
-# NOTE: This will become significantly more complex soon.
-# In particular: this information depends on the contents of
-# the actual license.
-# This is only added as a very first step, to decouple
-# different implementation aspects.
-def licensed_features(
-    edition: Edition,
-    licensing_handler: LicensingHandler,  # noqa: ARG001
-) -> Features:
-    return Features(bakery=FeatureFlag(enabled=edition is not Edition.COMMUNITY))
+# NOTE: Soon this will consider the contents of the actual license.
+def licensed_features(omd_root: Path, edition: Edition) -> Features:
+    if edition is Edition.COMMUNITY:
+        # community edition -> all features disabled.
+        return Features(bakery=FeatureFlag(enabled=False))
+
+    is_lite = _is_fake_lite(omd_root)
+    return Features(bakery=FeatureFlag(enabled=not is_lite))
+
+
+def _is_fake_lite(omd_root: Path) -> bool:
+    return (omd_root / ".golite").exists()

@@ -33,8 +33,8 @@ def _parameter_valuespec_evolt() -> Migrate[dict[str, Any]]:
                             "Several phases may be addressed independently."
                         ),
                         elements=[
-                            Float(title=_("Warning at/below"), unit="V", default_value=210),
-                            Float(title=_("Critical at/below"), unit="V", default_value=180),
+                            Float(title=_("Warning at/below"), unit="V", default_value=215),
+                            Float(title=_("Critical at/below"), unit="V", default_value=210),
                         ],
                     ),
                 ),
@@ -47,8 +47,8 @@ def _parameter_valuespec_evolt() -> Migrate[dict[str, Any]]:
                             "Leave unset on installations where over-voltage is not a concern."
                         ),
                         elements=[
-                            Float(title=_("Warning at/above"), unit="V"),
-                            Float(title=_("Critical at/above"), unit="V"),
+                            Float(title=_("Warning at/above"), unit="V", default_value=245),
+                            Float(title=_("Critical at/above"), unit="V", default_value=250),
                         ],
                     ),
                 ),

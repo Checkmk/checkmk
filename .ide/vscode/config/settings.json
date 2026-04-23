@@ -29,7 +29,7 @@
       "python.analysis.typeCheckingMode": "off",
       "python.analysis.useLibraryCodeForTypes": false,
       "python.defaultInterpreterPath": "${workspaceFolder}/.venv/bin/python",
-      "mypy.dmypyExecutable": "${workspaceFolder}/.venv/bin/dmypy",
+      "mypy.dmypyExecutable": "${cmk-ext:workspaceFolder}/.venv/bin/dmypy",
       "mypy.runUsingActiveInterpreter": true,
       "mypy.configFile": ".vscode/.mypy.ini",
       "mypy.extraArguments": ["--follow-imports=normal"],

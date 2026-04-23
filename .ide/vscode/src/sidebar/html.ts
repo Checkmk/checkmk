@@ -172,6 +172,10 @@ ${body}
       case 'mypy-remove-baseline': vscode.postMessage({ type: 'mypyRemoveBaseline', target: el.dataset.target }); break;
       case 'mypy-activate-target': vscode.postMessage({ type: 'mypyActivateTarget', target: el.dataset.target }); break;
       case 'mypy-deactivate-target': vscode.postMessage({ type: 'mypyDeactivateTarget', target: el.dataset.target }); break;
+      case 'mypy-allocator-enable': vscode.postMessage({ type: 'mypyAllocatorEnable' }); break;
+      case 'mypy-allocator-disable': vscode.postMessage({ type: 'mypyAllocatorDisable' }); break;
+      case 'mypy-allocator-dismiss': vscode.postMessage({ type: 'mypyAllocatorDismiss' }); break;
+      case 'mypy-allocator-reapply': vscode.postMessage({ type: 'mypyAllocatorReapply' }); break;
     }
   });
   // Restore accordion open/close state

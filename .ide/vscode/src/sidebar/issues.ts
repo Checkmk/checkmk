@@ -63,7 +63,8 @@ export function updateIssues(
     pythonEnvsActive,
     devSiteTools,
     versionMismatch,
-    mypyTargets
+    mypyTargets,
+    allocator
   } = stateCache
   const items: IssueItem[] = []
   const warnColor = new vscode.ThemeColor('charts.yellow')
@@ -180,6 +181,50 @@ export function updateIssues(
         iconColor: warnColor,
         command: 'cmk.mypy.applyStagedTargets'
       })
+    }
+  }
+
+  if (allocator && mypyTargets?.pythonProfileActive) {
+    if (allocator.mode === 'jemalloc') {
+      const reasons: string[] = []
+      if (!allocator.libraryAvailable) reasons.push('libjemalloc not found')
+      if (!allocator.wrapperExists) reasons.push('wrapper missing')
+      if (!allocator.dmypyExecutableMatches) reasons.push('dmypyExecutable mismatch')
+      if (!allocator.runUsingInterpreterOff) reasons.push('runUsingActiveInterpreter still true')
+      if (reasons.length > 0) {
+        items.push({
+          label: 'Mypy: allocator',
+          description: `jemalloc enabled but not active — ${reasons.join(', ')}`,
+          tooltip:
+            'jemalloc is configured but one or more settings are stale. Click to re-run the reconciliation.',
+          icon: 'warning',
+          iconColor: warnColor,
+          command: 'cmk.mypy.reapplyJemalloc'
+        })
+      }
+    } else if (!allocator.recommendationDismissed) {
+      items.push(
+        allocator.libraryAvailable
+          ? {
+              label: 'Mypy: allocator',
+              description: 'jemalloc available',
+              tooltip:
+                'dmypy is running under the default allocator. Switching to jemalloc caps long-running RSS growth. Click to enable.',
+              icon: 'warning',
+              iconColor: warnColor,
+              command: 'workbench.action.openSettings',
+              commandArgs: ['cmk.mypy.allocator']
+            }
+          : {
+              label: 'Mypy: allocator',
+              description: 'libjemalloc not installed',
+              tooltip:
+                'dmypy is running under the default allocator. Install jemalloc to let the extension cap long-running RSS growth. Click to run the install command.',
+              icon: 'warning',
+              iconColor: warnColor,
+              command: 'cmk.mypy.installJemalloc'
+            }
+      )
     }
   }
 

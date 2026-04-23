@@ -133,6 +133,28 @@ code {
   font-size: 0.85em;
 }
 
+.mypy-allocator-banner {
+  flex-wrap: wrap;
+  row-gap: 6px;
+}
+
+.mypy-allocator-banner code {
+  font-size: 0.85em;
+}
+
+.mypy-allocator-banner ul {
+  margin: 4px 0 0;
+  padding-left: 18px;
+}
+
+.mypy-allocator-status {
+  margin-bottom: 8px;
+}
+
+.build-row.warn .card-icon {
+  color: var(--cmk-yellow);
+}
+
 .mypy-targets-list {
   padding: 6px 10px 10px;
   display: flex;

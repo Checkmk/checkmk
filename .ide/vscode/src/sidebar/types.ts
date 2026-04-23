@@ -69,6 +69,15 @@ export interface MypyTargetsInfo {
   catalog: string[]
 }
 
+export interface AllocatorInfo {
+  mode: 'default' | 'jemalloc'
+  libraryAvailable: boolean
+  recommendationDismissed: boolean
+  wrapperExists: boolean
+  dmypyExecutableMatches: boolean
+  runUsingInterpreterOff: boolean
+}
+
 export interface StateCache {
   buildStatus: BuildStatus
   profiles: ProfileInfo[]
@@ -85,6 +94,7 @@ export interface StateCache {
   onboardingDismissed: boolean
   configInWorkspace: boolean
   mypyTargets: MypyTargetsInfo
+  allocator: AllocatorInfo
 }
 
 export interface SectionContext {

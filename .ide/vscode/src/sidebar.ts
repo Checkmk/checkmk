@@ -18,6 +18,7 @@ import { detectOmdSites, forceRefreshOmdStatusFiles, getOmdStatus } from './omd/
 import { getActiveProxies } from './omd/proxy'
 import * as profileManager from './profiles/profileManager'
 import { getMypyTargetsSnapshot } from './profiles/python/dynamicMypyTargets'
+import { getAllocatorSnapshot } from './profiles/python/jemallocAllocator'
 import * as environmentSection from './sidebar/environment'
 import { renderLoading } from './sidebar/html'
 import * as ideHealthSection from './sidebar/ideHealth'
@@ -94,7 +95,8 @@ function refreshStateCache(): StateCache {
           fs.existsSync(configDir) && fs.readdirSync(configDir).some((f) => f.endsWith('.json'))
         )
       })(),
-      mypyTargets: { ...mypySnapshot, pythonProfileActive }
+      mypyTargets: { ...mypySnapshot, pythonProfileActive },
+      allocator: getAllocatorSnapshot()
     }
 
     updateIssues(_issuesView, _issuesProvider, _stateCache)
@@ -147,6 +149,14 @@ function refreshStateCache(): StateCache {
         stagedBaselineAdd: [],
         stagedBaselineRemove: [],
         catalog: []
+      },
+      allocator: {
+        mode: 'default',
+        libraryAvailable: false,
+        recommendationDismissed: false,
+        wrapperExists: false,
+        dmypyExecutableMatches: false,
+        runUsingInterpreterOff: false
       }
     }
   }

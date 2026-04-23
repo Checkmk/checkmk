@@ -26,6 +26,7 @@ import * as profileManager from './profiles/profileManager'
 import { registerBazelTestRunner } from './profiles/python/bazelTest'
 import { registerDynamicMypyTargets } from './profiles/python/dynamicMypyTargets'
 import { registerInterpreterResolver } from './profiles/python/interpreter'
+import { registerJemallocAllocator } from './profiles/python/jemallocAllocator'
 // Family-gated modules
 import {
   generateAndWriteMypyConfig,
@@ -148,6 +149,7 @@ export function activate(context: vscode.ExtensionContext): void {
     () => {
       return [
         ...registerDynamicMypyTargets(context),
+        ...registerJemallocAllocator(context),
         ...registerMypyConfigWatcher(),
         ...registerInterpreterResolver(),
         ...registerSnippets(),

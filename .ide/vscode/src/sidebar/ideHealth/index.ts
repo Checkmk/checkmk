@@ -18,6 +18,12 @@ import {
   deactivateTarget,
   removeTargetFromBaseline
 } from '../../profiles/python/dynamicMypyTargets'
+import {
+  disableJemallocFromStatus,
+  dismissAllocatorRecommendation,
+  enableJemallocFromRecommendation,
+  reapplyJemallocAllocator
+} from '../../profiles/python/jemallocAllocator'
 import { esc, getNonce, wrap } from '../html'
 import type {
   ExtensionFamily,
@@ -181,7 +187,21 @@ export function getSettingsMismatches(
     }
   }
 
-  return mismatches
+  return suppressAllocatorManagedKeys(mismatches)
+}
+
+/** When `cmk.mypy.allocator === "jemalloc"` the extension deliberately
+ *  overrides `mypy.dmypyExecutable` and `mypy.runUsingActiveInterpreter` at
+ *  workspace-folder scope. Those diverge from the bundled CMK defaults by
+ *  design — suppress them so the settings-mismatch UI doesn't prompt the
+ *  user to revert our own overrides. */
+function suppressAllocatorManagedKeys(list: SettingsMismatch[]): SettingsMismatch[] {
+  const allocatorMode = vscode.workspace
+    .getConfiguration()
+    .get<string>('cmk.mypy.allocator', 'default')
+  if (allocatorMode !== 'jemalloc') return list
+  const managed = new Set(['mypy.dmypyExecutable', 'mypy.runUsingActiveInterpreter'])
+  return list.filter((m) => !managed.has(m.key))
 }
 
 /**
@@ -388,6 +408,26 @@ export async function handleMessage(
       }
       return true
     }
+    case 'mypyAllocatorEnable': {
+      await enableJemallocFromRecommendation()
+      refreshAll()
+      return true
+    }
+    case 'mypyAllocatorDisable': {
+      await disableJemallocFromStatus()
+      refreshAll()
+      return true
+    }
+    case 'mypyAllocatorDismiss': {
+      await dismissAllocatorRecommendation()
+      refreshAll()
+      return true
+    }
+    case 'mypyAllocatorReapply': {
+      await reapplyJemallocAllocator()
+      refreshAll()
+      return true
+    }
     default:
       return false
   }
@@ -401,7 +441,8 @@ export function render(state: StateCache, codiconUri?: vscode.Uri, cspSource?: s
     settingsMismatches,
     versionMismatch,
     configInWorkspace,
-    mypyTargets
+    mypyTargets,
+    allocator
   } = state
 
   const installedVersion = vscode.extensions.getExtension('checkmk.cmk-vscode')?.packageJSON
@@ -532,7 +573,7 @@ export function render(state: StateCache, codiconUri?: vscode.Uri, cspSource?: s
     })
     .join('')
 
-  const mypyHtml = renderMypyTargets(mypyTargets)
+  const mypyHtml = renderMypyTargets(mypyTargets, allocator)
 
   return wrap(
     nonce,
@@ -546,7 +587,10 @@ export function render(state: StateCache, codiconUri?: vscode.Uri, cspSource?: s
   )
 }
 
-function renderMypyTargets(info: StateCache['mypyTargets']): string {
+function renderMypyTargets(
+  info: StateCache['mypyTargets'],
+  allocator: StateCache['allocator']
+): string {
   if (!info.pythonProfileActive) return ''
   const {
     enabled,
@@ -667,6 +711,8 @@ function renderMypyTargets(info: StateCache['mypyTargets']): string {
       : `<div class="mypy-empty"><i>No targets discovered in the workspace.</i></div>`
     : `<div class="mypy-empty"><i>Enable <code>cmk.mypy.dynamicTargets.enabled</code> to start dmypy with a minimal target set that grows on demand.</i></div>`
 
+  const allocatorBanner = renderAllocatorBanner(allocator)
+
   const stagedBanner =
     enabled && stagedAll.size > 0
       ? `<div class="banner mypy-staged-banner">
@@ -680,7 +726,8 @@ function renderMypyTargets(info: StateCache['mypyTargets']): string {
         </div>`
       : ''
 
-  return `<div class="section-label">Mypy Targets</div>
+  return `<div class="section-label">Mypy</div>
+    ${allocatorBanner}
     ${stagedBanner}
     <div class="ext-family mypy-targets-family">
       <div class="ext-family-header ${statusCls}" data-action="toggle-accordion">
@@ -692,4 +739,71 @@ function renderMypyTargets(info: StateCache['mypyTargets']): string {
       </div>
       <div class="ext-family-body">${body}</div>
     </div>`
+}
+
+function renderAllocatorBanner(allocator: StateCache['allocator']): string {
+  if (allocator.mode === 'jemalloc') return renderJemallocStatus(allocator)
+  return renderDefaultAllocatorStatus(allocator)
+}
+
+function renderDefaultAllocatorStatus(allocator: StateCache['allocator']): string {
+  const { libraryAvailable, recommendationDismissed } = allocator
+  const toggleBtn = libraryAvailable
+    ? `<button class="btn btn-small btn-icon" data-action="mypy-allocator-enable" title="Enable jemalloc (set cmk.mypy.allocator to jemalloc)">
+         <span class="codicon codicon-wrench"></span>
+       </button>`
+    : `<button class="btn btn-small btn-icon" data-action="exec" data-id="cmk.mypy.installJemalloc" title="Install jemalloc (opens a terminal with the right install command)">
+         <span class="codicon codicon-package"></span>
+       </button>`
+  const statusRow = `<div class="build-row warn mypy-allocator-status">
+    <span class="card-icon">&#9888;</span>
+    <span class="build-name">jemalloc ${libraryAvailable ? 'available — not enabled' : 'not installed'}</span>
+    ${toggleBtn}
+  </div>`
+
+  if (recommendationDismissed) return statusRow
+
+  const text = libraryAvailable
+    ? 'dmypy is running under the default allocator. Enabling <code>jemalloc</code> caps long-running RSS growth (typically 15–30 % lower steady-state, no daemon restart).'
+    : 'dmypy is running under the default allocator. Installing <code>jemalloc</code> lets the extension launch dmypy under it to cap long-running RSS growth.'
+  const banner = `<div class="banner mypy-allocator-banner">
+    <span class="banner-icon">&#9888;</span>
+    <span class="banner-text">${text}</span>
+    <button class="btn btn-small btn-icon" data-action="mypy-allocator-dismiss" title="Don't recommend again for this workspace">
+      <span class="codicon codicon-close"></span>
+    </button>
+  </div>`
+  return statusRow + banner
+}
+
+function renderJemallocStatus(allocator: StateCache['allocator']): string {
+  const issues: string[] = []
+  if (!allocator.libraryAvailable) issues.push('libjemalloc not detected on the host')
+  if (!allocator.wrapperExists) issues.push('wrapper script not written')
+  if (!allocator.dmypyExecutableMatches)
+    issues.push('<code>mypy.dmypyExecutable</code> does not point at the wrapper')
+  if (!allocator.runUsingInterpreterOff)
+    issues.push('<code>mypy.runUsingActiveInterpreter</code> is still <code>true</code>')
+
+  const ok = issues.length === 0
+  const statusCls = ok ? 'ok' : 'warn'
+  const statusIcon = ok ? '&#10003;' : '&#9888;'
+  const statusText = ok ? 'jemalloc active' : 'jemalloc enabled — not active'
+  const statusRow = `<div class="build-row ${statusCls} mypy-allocator-status">
+    <span class="card-icon">${statusIcon}</span>
+    <span class="build-name">${statusText}</span>
+    <button class="btn btn-small btn-icon" data-action="mypy-allocator-disable" title="Disable jemalloc (revert to default allocator)">
+      <span class="codicon codicon-circle-slash"></span>
+    </button>
+  </div>`
+
+  if (ok) return statusRow
+
+  const list = issues.map((i) => `<li>${i}</li>`).join('')
+  const banner = `<div class="banner mypy-allocator-banner">
+    <span class="banner-icon">&#9888;</span>
+    <span class="banner-text">jemalloc enabled but not active:<ul>${list}</ul>If a Python setting file was dirty during activation, save it and click <b>Re-apply</b>.</span>
+    <button class="btn btn-small" data-action="mypy-allocator-reapply" title="Re-run the jemalloc reconciliation"><span class="codicon codicon-wrench"></span> Re-apply</button>
+  </div>`
+  return statusRow + banner
 }

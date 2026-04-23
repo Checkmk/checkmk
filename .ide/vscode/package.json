@@ -2,7 +2,7 @@
   "name": "cmk-vscode",
   "displayName": "CMK Dev Tools for VS Code",
   "description": "Build commands and helpers for Checkmk development",
-  "version": "0.1.60",
+  "version": "0.1.61",
   "publisher": "checkmk",
   "engines": {
     "vscode": "^1.85.0"
@@ -230,6 +230,14 @@
         "title": "CMK ▸ Mypy: Discard Staged Targets"
       },
       {
+        "command": "cmk.mypy.installJemalloc",
+        "title": "CMK ▸ Mypy: Install jemalloc"
+      },
+      {
+        "command": "cmk.mypy.reapplyJemalloc",
+        "title": "CMK ▸ Mypy: Re-apply jemalloc settings"
+      },
+      {
         "command": "cmk.pushToGerrit",
         "title": "CMK ▸ Push to Gerrit",
         "icon": "$(cloud-upload)"
@@ -297,6 +305,15 @@
           },
           "default": [],
           "description": "Mypy targets always loaded on startup. Add the paths you work in most often (e.g. \"cmk\", \"packages/cmk-ccc/cmk\"). When a Python file is opened in a target that isn't active, the extension prompts to add it."
+        },
+        "cmk.mypy.allocator": {
+          "type": "string",
+          "enum": [
+            "default",
+            "jemalloc"
+          ],
+          "default": "default",
+          "description": "Launch dmypy under jemalloc to cap long-running RSS growth. Requires libjemalloc installed on the host (apt install libjemalloc2 / dnf install jemalloc / brew install jemalloc). If the library is not detected the extension notifies once and leaves the setting armed — install, reload, feature activates."
         }
       }
     },
@@ -459,6 +476,14 @@
         },
         {
           "command": "cmk.mypy.discardStagedTargets",
+          "when": "cmk.pythonInstalled"
+        },
+        {
+          "command": "cmk.mypy.installJemalloc",
+          "when": "cmk.pythonInstalled"
+        },
+        {
+          "command": "cmk.mypy.reapplyJemalloc",
           "when": "cmk.pythonInstalled"
         }
       ]

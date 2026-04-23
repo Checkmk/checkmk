@@ -328,7 +328,50 @@ Dismissing the notification is sticky for the target for the session.
 
 **Underlying mechanics:** a write-filter in `mypyConfig.ts` intersects the full discovered catalog with the active set before writing `mypy.targets`. Skipping writes when the active set is unchanged prevents spurious dmypy restarts from configuration-change flurries. State persists across sessions in VS Code's `workspaceState`.
 
-### 12. First-Run Wizard
+### 12. Mypy Allocator (jemalloc)
+
+Long-running dmypy daemons accumulate fine-grained state and, under Python's default allocator (`pymalloc`), don't return freed pages to the kernel. RSS climbs monotonically — typical observation on the Checkmk tree is 1.8 GiB after a few minutes and 3–4 GiB by end of day. Flip `cmk.mypy.allocator: "jemalloc"` and the extension launches dmypy under jemalloc, which returns freed pages promptly and keeps steady-state RSS 15–30 % lower.
+
+**IDE Health status row** at the top of the Mypy card, mirroring the _All settings match_ pattern:
+
+| State                           | Row                                   | Icon buttons                                         |
+| ------------------------------- | ------------------------------------- | ---------------------------------------------------- |
+| jemalloc active + healthy       | `✓ jemalloc active`                   | _circle-slash_ — disable                             |
+| jemalloc enabled, misconfigured | `⚠ jemalloc enabled — not active`    | _circle-slash_ — disable, _wrench_ banner → re-apply |
+| Default, libjemalloc present    | `⚠ jemalloc available — not enabled` | _wrench_ — enable                                    |
+| Default, libjemalloc missing    | `⚠ jemalloc not installed`           | _package_ — install                                  |
+
+The same states surface in the **Issues** tree + activity bar badge, so you don't need the Mypy card open to notice.
+
+**Prerequisite — install libjemalloc on the host:**
+
+| Platform        | Install command                    |
+| --------------- | ---------------------------------- |
+| Debian / Ubuntu | `sudo apt install -y libjemalloc2` |
+| Fedora / RHEL   | `sudo dnf install -y jemalloc`     |
+| Arch            | `sudo pacman -S --needed jemalloc` |
+| macOS           | `brew install jemalloc`            |
+
+The **Install jemalloc** button opens a terminal pre-populated with the right command for your OS. If libjemalloc is missing when you flip the setting to `"jemalloc"`, the extension surfaces a one-shot notification with the same Install action and leaves the setting armed — install, reload, the feature activates. The extension never silently falls back to the default allocator.
+
+**How it works:** on activation the extension probes `ldconfig -p` (Linux) or `brew --prefix jemalloc` (macOS), writes a small wrapper script to the extension's global storage that sets `LD_PRELOAD` (Linux) or `DYLD_INSERT_LIBRARIES` (macOS) to the detected library path, points `mypy.dmypyExecutable` at the wrapper, and forces `mypy.runUsingActiveInterpreter: false` at workspace-folder scope so matangover actually calls the wrapper. After a successful apply, stale dmypy daemons are killed so matangover respawns fresh under the wrapper on the next mypy check. Flipping the setting back to `"default"` releases both overrides and deletes the wrapper.
+
+The two settings the extension takes over (`mypy.dmypyExecutable`, `mypy.runUsingActiveInterpreter`) are filtered out of the _Settings_ mismatch UI while jemalloc is active, so you don't get prompted to revert the extension's own overrides. A pre-existing _custom_ `mypy.dmypyExecutable` (i.e. not the Checkmk default) is never overwritten — the extension logs and skips.
+
+**Commands** (F1 → `CMK ▸ Mypy`):
+
+- `Install jemalloc` — opens a terminal with the right install command; no-op if already installed.
+- `Re-apply jemalloc settings` — re-runs the reconciliation. Useful if a dirty `.vscode/settings.json` or `.code-workspace` buffer blocked the activation-time write (errors then surface as a toast).
+
+**Verify jemalloc is loaded** (Linux):
+
+```sh
+PID=$(pgrep -f mypy.dmypy | head -1)
+grep jemalloc /proc/$PID/maps | head -1
+tr '\0' '\n' < /proc/$PID/environ | grep -E 'LD_PRELOAD|PYTHONMALLOC'
+```
+
+### 13. First-Run Wizard
 
 On first activation, the extension detects whether basic workspace settings (e.g. `editor.formatOnSave`, `git.branchProtection`) are configured. If not, it shows an info notification offering to open the dashboard to get started with system setup, venv build, and IDE configuration. The prompt can be permanently dismissed via "Don't Ask Again".
 

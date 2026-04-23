@@ -117,7 +117,7 @@ class Config(BaseModel):
         if not distributed_mk.exists():
             return False
         file_vars: dict[str, object] = {}
-        exec(distributed_mk.read_text(), file_vars, file_vars)  # nosec B102
+        exec(distributed_mk.read_text(), file_vars, file_vars)  # nosec B102 BNS:dcaf44
         return file_vars.get("is_wato_remote_site") is True
 
 

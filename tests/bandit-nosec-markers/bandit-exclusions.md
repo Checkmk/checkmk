@@ -50,3 +50,4 @@ Note that Bandit is picky about the exact format.
 | `BNS:7c4e91`    | `B415`         | pyghmi uses IPMI v2.0 RMCP+ with AES-128 CBC encryption by default. Bandit flags the import regardless. IPMI monitoring is a core Checkmk feature with cipher suite configuration.   |
 | `BNS:a52d7f`    | `B605`         | Developer-only CLI tool (werk management). Shell commands via `os.system` are used intentionally and not exposed to end users.                                                       |
 | `BNS:e18b63`    | `B303`         | Test code verifying that MD5 is correctly rejected as unsupported by the cryptography layer.                                                                                         |
+| `BNS:dcaf44`    | `B102`         | Well using exec to read `etc/omd/distributed.mk`                                                                                                                                     |

@@ -9,6 +9,7 @@ py_library(
         "//cmk:__subpackages__",
         "//tests:__subpackages__",
     ],
+    deps = ["//packages/cmk-web"],
 )
 
 py_library(
@@ -286,6 +287,7 @@ py_library(
         ":html",
         ":speaklater",
         "//cmk/utils",
+        "//packages/cmk-web",
     ],
 )
 

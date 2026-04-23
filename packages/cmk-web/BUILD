@@ -18,6 +18,7 @@ py_library(
         "cmk/web/__init__.py",
         "cmk/web/utils/__init__.py",
         "cmk/web/utils/html.py",
+        "cmk/web/utils/speaklater.py",
         "cmk/web/utils/urls.py",
     ],
     data = ["cmk/web/py.typed"],

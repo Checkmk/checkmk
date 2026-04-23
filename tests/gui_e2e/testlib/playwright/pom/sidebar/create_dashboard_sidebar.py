@@ -72,13 +72,10 @@ class BaseDashboarCreationSidebar(SidebarHelper):
             message=f"'{auto_generated_unique_id_checkbox_label}' checkbox is not checked",
         ).to_be_checked()
         expect(
-            self.locator(
-                "div.field-component",
-                has_text=auto_generated_unique_id_checkbox_label,
-            ),
+            self.automatic_unique_id_checkbox,
             message="Auto-generated unique ID label is not populated",
-        ).to_have_text(
-            re.compile(rf"{auto_generated_unique_id_checkbox_label}: {expected_value}(_\d)?$")
+        ).to_have_accessible_name(
+            re.compile(rf"{auto_generated_unique_id_checkbox_label}: {expected_value}(_\d+)?$")
         )
 
 

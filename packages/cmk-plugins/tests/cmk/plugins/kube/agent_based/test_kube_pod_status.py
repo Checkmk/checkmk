@@ -284,6 +284,34 @@ def test_check_kube_pod_status_multiple_issues(
     )
 
 
+@pytest.mark.xfail(
+    strict=True,
+    reason="Crash group 4091: KeyError when value_store's previous_status is not in duration_per_status",
+)
+def test_check_kube_pod_status_stale_previous_status() -> None:
+    # Simulate a value_store that retained previous_status from an old run
+    # whose key was never added to duration_per_status. Previously crashed
+    # with KeyError on the += operation.
+    value_store: ValueStore = {
+        "group": [".*"],
+        "duration_per_status": {"Running": 0.0},
+        "previous_status": "OOMKilled",
+        "previous_time": 0.0,
+    }
+    params = kube_pod_status.Params(groups=[("no_levels", [".*"])])
+
+    list(
+        _check_kube_pod_status(
+            now=1.0,
+            value_store=value_store,
+            params=params,
+            section_kube_pod_containers=None,
+            section_kube_pod_init_containers=None,
+            section_kube_pod_lifecycle=PodLifeCycle(phase=Phase.RUNNING),
+        )
+    )
+
+
 def test_check_alert_if_pending_too_long() -> None:
     value_store: ValueStore = {}
     section_kube_pod_containers = None

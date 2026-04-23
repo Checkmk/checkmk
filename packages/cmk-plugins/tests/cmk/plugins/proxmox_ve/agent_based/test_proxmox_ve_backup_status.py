@@ -262,6 +262,30 @@ def test_check_proxmox_ve_vm_backup_status(
     assert results == expected_results
 
 
+@pytest.mark.xfail(
+    strict=True,
+    reason="Crash group 3721: negative age crashes render.timespan",
+)
+def test_check_proxmox_ve_vm_backup_status_future_started_time() -> None:
+    # started_time in the future (e.g. due to clock skew) produces a
+    # negative age which render.timespan cannot render.
+    section = pvbs.parse_proxmox_ve_vm_backup_status(
+        [
+            [
+                json.dumps(
+                    {
+                        "last_backup": {
+                            "started_time": "2020-04-18 00:00:00+0000",
+                            "total_duration": 0,
+                        }
+                    }
+                )
+            ]
+        ]
+    )
+    list(pvbs.check_proxmox_ve_vm_backup_status(FROZEN_TIME, DEFAULT_PARAMS_NO_LEVELS, section))
+
+
 if __name__ == "__main__":
     # Please keep these lines - they make TDD easy and have no effect on normal test runs.
     # Just run this file from your IDE and dive into the code.

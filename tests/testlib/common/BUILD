@@ -20,6 +20,7 @@ py_library(
     imports = ["../../.."],
     visibility = [
         "//non-free/packages/cmk-metric-backend:__pkg__",
+        "//non-free/tests:__subpackages__",
         "//tests:__subpackages__",
     ],
     deps = [

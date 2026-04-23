@@ -76,6 +76,15 @@ ignore = [
 "non-free/packages/cmk-metric-backend/cmk/plugins/*" = ["ARG001"]
 "non-free/packages/cmk-plugins-nonfree/cmk/plugins/*" = ["ARG001", "ARG002"]
 "tests/*" = ["ARG001", "ARG002", "ARG003", "ARG004", "ARG005", "SLF001", "T20"]
+"non-free/tests/*" = [
+  "ARG001",
+  "ARG002",
+  "ARG003",
+  "ARG004",
+  "ARG005",
+  "SLF001",
+  "T20",
+]
 ".claude/skills/*" = ["T20"]
 ".github/skills/*" = ["T20"]
 "buildscripts/*" = ["T20"]
@@ -211,7 +220,7 @@ warn_required_dynamic_aliases = true
 warn_untyped_fields = true
 
 [tool.pytest.ini_options]
-testpaths = ["tests"]
+testpaths = ["tests", "non-free/tests"]
 addopts = [
   # Live logs initially look like a good idea to pin down problems in the tests
   # quickly, but with the current state of our tests it's simply too much noise.

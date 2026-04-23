@@ -28,7 +28,6 @@ from kubernetes.client import (  # type: ignore[attr-defined]
     V1LabelSelectorRequirement,
     V1Namespace,
     V1ObjectMeta,
-    V1PersistentVolumeClaim,
     V1Pod,
     V1ReplicaSet,
     V1ReplicationController,
@@ -295,16 +294,6 @@ def resource_quota_from_client(
     return api.ResourceQuota(
         metadata=parse_metadata(resource_quota.metadata),
         spec=spec,
-    )
-
-
-def persistent_volume_claim_from_client(
-    persistent_volume_claim: V1PersistentVolumeClaim,
-) -> api.PersistentVolumeClaim:
-    return api.PersistentVolumeClaim(
-        metadata=parse_metadata(persistent_volume_claim.metadata),
-        spec=api.PersistentVolumeClaimSpec.model_validate(persistent_volume_claim.spec),
-        status=api.PersistentVolumeClaimStatus.model_validate(persistent_volume_claim.status),
     )
 
 

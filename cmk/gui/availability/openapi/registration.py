@@ -7,6 +7,7 @@ from cmk.gui.openapi.framework.registry import VersionedEndpointRegistry
 from cmk.gui.openapi.restful_objects.endpoint_family import EndpointFamilyRegistry
 
 from .endpoint_family import HOST_AVAILABILITY_FAMILY, SERVICE_AVAILABILITY_FAMILY
+from .list_host_availability import ENDPOINT_LIST_HOST_AVAILABILITY
 
 
 def register(
@@ -15,3 +16,4 @@ def register(
 ) -> None:
     endpoint_family_registry.register(HOST_AVAILABILITY_FAMILY)
     endpoint_family_registry.register(SERVICE_AVAILABILITY_FAMILY)
+    versioned_endpoint_registry.register(ENDPOINT_LIST_HOST_AVAILABILITY)

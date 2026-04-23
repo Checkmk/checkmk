@@ -229,6 +229,10 @@ snmp_section_printer_supply = SNMPSection(
 
 def discovery_printer_supply(section: Section) -> DiscoveryResult:
     for key in section.keys():
+        # Some printers expose supply entries without a name; Service(item="")
+        # is rejected by the v2 API, so those entries are skipped.
+        if not key:
+            continue
         yield Service(item=key)
 
 

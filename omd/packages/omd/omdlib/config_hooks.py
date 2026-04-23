@@ -20,6 +20,7 @@ import os
 import re
 import subprocess
 import sys
+import traceback
 from collections.abc import Iterable, Sequence
 from pathlib import Path
 from re import Pattern
@@ -33,6 +34,8 @@ from omdlib.config_choices import (
     IpListenAddressHasError,
     NetworkPortHasError,
 )
+from omdlib.site_paths import SitePaths
+from omdlib.sites import all_sites
 from omdlib.type_defs import Config
 
 from cmk.ccc.exceptions import MKTerminate
@@ -40,7 +43,6 @@ from cmk.ccc.version import edition
 
 if TYPE_CHECKING:
     from omdlib.contexts import SiteContext
-from omdlib.site_paths import SitePaths
 
 ConfigHookChoiceItem = tuple[str, str]
 ConfigHookChoices = Pattern[str] | list[ConfigHookChoiceItem] | ConfigChoiceHasError
@@ -290,17 +292,86 @@ def config_set_all(
         _config_set(site, config, hook_name, verbose)
 
 
-def _config_set(site: "SiteContext", config: Config, hook_name: str, verbose: bool) -> None:
+def _config_set(
+    site: "SiteContext",
+    config: Config,
+    hook_name: str,
+    verbose: bool,
+    omd_path: Path = Path("/omd/"),
+) -> None:
     value = config[hook_name]
-
-    exitcode, output = _call_hook(site, hook_name, ["set", value], verbose)
-    if exitcode:
-        return
-
-    if output and output != value:
+    match hook_name:
+        case "LIVESTATUS_TCP_PORT":
+            output = _set_livestatus_tcp_port(site.name, value, omd_path)
+            if isinstance(output, _Error):
+                return
+        case _:
+            exitcode, output = _call_hook(site, hook_name, ["set", value], verbose)
+            if exitcode:
+                return
+    if output:
         config[hook_name] = output
 
     os.environ["CONFIG_" + hook_name] = config[hook_name]
+
+
+def _port_is_used(key: str, this_site: str, port: str, omd_path: Path = Path("/omd/")) -> bool:
+    for sitename in all_sites(omd_path):
+        site_home = SitePaths.from_site_name(sitename, omd_path).home
+        if sitename == this_site:
+            config = read_site_config(site_home)
+            if any(k != key and port == v for k, v in config.items()):
+                return True
+        else:
+            err_msg = f"ERROR: Failed to read config of site {sitename}. {key} port will possibly be allocated twice\n"
+            try:
+                config = read_site_config(site_home)
+            except PermissionError:
+                sys.stderr.write(err_msg)
+                continue
+            if not config:
+                sys.stderr.write(err_msg)
+                continue
+            if any(port == v for v in config.values()):
+                return True
+    return False
+
+
+def _next_free_port(
+    key: str, this_site: str, start_port: int, omd_path: Path = Path("/omd/")
+) -> int:
+    while _port_is_used(key, this_site, str(start_port), omd_path):
+        start_port += 1
+    return start_port
+
+
+class _Error: ...
+
+
+def _set_livestatus_tcp_port(
+    site_name: str, value: str, omd_path: Path = Path("/omd/")
+) -> str | _Error:
+    site_home = SitePaths.from_site_name(site_name, omd_path).home
+    try:
+        new_value = str(_next_free_port("LIVESTATUS_TCP_PORT", site_name, int(value), omd_path))
+        pattern = re.compile(r"^(\s*port\s*=\s*)([0-9]+)")
+        xinetd_conf = os.path.join(site_home, "etc/mk-livestatus/xinetd.conf")
+        if value != new_value:
+            sys.stderr.write(
+                f"Livestatus port {value} is in use. I've choosen {new_value} instead."
+            )
+
+        with open(xinetd_conf) as file:
+            lines = file.readlines()
+
+        with open(xinetd_conf, "w") as file:
+            for line in lines:
+                new_line = pattern.sub(rf"\g<1>{new_value}", line)
+                file.write(new_line)
+    except Exception:
+        traceback.print_exc()
+        return _Error()
+    return new_value
 
 
 def config_set_value(

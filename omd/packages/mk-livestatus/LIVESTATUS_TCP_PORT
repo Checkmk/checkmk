@@ -14,16 +14,6 @@ case "$1" in
     choices)
         echo "[0-9]{1,5}"
         ;;
-    set)
-        PORT=$($OMD_ROOT/lib/omd/next_free_port LIVESTATUS_TCP_PORT $2)
-
-        if [ "$PORT" != "$2" ]; then
-            echo "Livestatus port $2 is in use. I've choosen $PORT instead." >&2
-            echo "$PORT"
-        fi
-
-        sed -ri 's/^([[:space:]]*port[[:space:]]*=[[:space:]]*)([0-9]+)/\1'$PORT'/' $OMD_ROOT/etc/mk-livestatus/xinetd.conf
-        ;;
     depends)
         [ "$CONFIG_CORE" != none -a "$CONFIG_LIVESTATUS_TCP" = on ]
         ;;

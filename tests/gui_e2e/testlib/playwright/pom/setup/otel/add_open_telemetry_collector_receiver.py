@@ -258,7 +258,7 @@ class NewPasswordSlideIn(LocatorHelper):
 
     @property
     def title(self) -> Locator:
-        return self.locator("h1[class*='cmk-heading']")
+        return self.locator().get_by_role("heading", level=1)
 
     @property
     def save_button(self) -> Locator:

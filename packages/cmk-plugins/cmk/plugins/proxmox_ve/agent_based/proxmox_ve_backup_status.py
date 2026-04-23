@@ -115,8 +115,9 @@ def check_proxmox_ve_vm_backup_status(
     # explicitly converted them to utc
     started_time = last_backup.get("started_time")
     if started_time:
+        age_seconds = max(0.0, (now - started_time.astimezone(UTC)).total_seconds())
         yield from check_levels(
-            value=(now - started_time.astimezone(UTC)).total_seconds(),
+            value=age_seconds,
             levels_upper=params["age_levels_upper"],
             metric_name="age",
             render_func=render.timespan,

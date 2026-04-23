@@ -262,13 +262,7 @@ def test_check_proxmox_ve_vm_backup_status(
     assert results == expected_results
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="Crash group 3721: negative age crashes render.timespan",
-)
 def test_check_proxmox_ve_vm_backup_status_future_started_time() -> None:
-    # started_time in the future (e.g. due to clock skew) produces a
-    # negative age which render.timespan cannot render.
     section = pvbs.parse_proxmox_ve_vm_backup_status(
         [
             [

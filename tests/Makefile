@@ -416,7 +416,7 @@ test-unit-all: test-doctest
 test-system-metric-backend:
 	cd .. && \
 	    bazel test --test_verbose_timeout_warnings \
-	    //tests/system/non-free/metric_backend/...
+	    //non-free/tests/system/metric_backend/...
 
 test-unit-all-and-system-metric-backend: test-unit-all test-system-metric-backend
 

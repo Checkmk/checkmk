@@ -88,6 +88,9 @@ def parse_huawei_wlc_aps(string_table: Sequence[StringTable]) -> Section:
     aps_info1, aps_info2 = string_table
 
     for idx, ap_info1 in enumerate(aps_info1):
+        if 2 * idx + 1 >= len(aps_info2):
+            break
+
         status, mem, cpu, temp, con_users = ap_info1
         ap_id, radio_state_2GHz, ch_usage_2GHz, users_online_2GHz = aps_info2[2 * idx]
         _ap_id, radio_state_5GHz, ch_usage_5GHz, users_online_5GHz = aps_info2[2 * idx + 1]

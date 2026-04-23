@@ -3515,7 +3515,7 @@ class ModeEventConsoleMIBs(ABCEventConsoleMode):
     def _parse_snmp_mib_header(self, path: Path) -> MIBInfo:
         # read up to first "OBJECT IDENTIFIER" declaration
         head = ""
-        with path.open() as f:
+        with path.open(encoding="utf-8", errors="replace") as f:
             for line in f:
                 if line.startswith("--"):
                     continue

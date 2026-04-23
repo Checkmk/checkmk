@@ -5,15 +5,9 @@
 
 from pathlib import Path
 
-import pytest
-
 from cmk.gui.mkeventd.wato import ModeEventConsoleMIBs
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="Crash group 3800: UnicodeDecodeError on non-utf-8 MIB file",
-)
 def test_parse_snmp_mib_header_handles_non_utf8_bytes(tmp_path: Path) -> None:
     mib = tmp_path / "BAD-MIB.txt"
     # 0x92 is a common Windows-1252 "right single quote" that is not valid UTF-8.

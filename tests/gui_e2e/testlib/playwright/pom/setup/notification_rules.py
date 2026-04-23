@@ -112,7 +112,7 @@ class BaseNotificationPage(QuickSetupPage):
         There can be multiple dropdown lists present.
         By default, the first one or left most one is addressed.
         """
-        return self._hosts_row.locator("div.cmk-dropdown").nth(index)
+        return self._hosts_row.get_by_role("combobox").nth(index)
 
     def select_host_from_dropdown_list(self, name: str, index: int = 0) -> Locator:
         """Return locator corresponding to a name present within the dropdown list of host names.
@@ -120,7 +120,7 @@ class BaseNotificationPage(QuickSetupPage):
         There can be multiple dropdown lists present.
         By default, the first one or the left-most dropdown list is searched.
         """
-        return self.hosts_dropdown_list(index).get_by_role("option", name=name)
+        return self._hosts_row.get_by_role("option", name=name)
 
     @property
     def _service_filters_button(self) -> Locator:

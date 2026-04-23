@@ -17657,9 +17657,6 @@ msgstr "Dekodierter Datenverkehr"
 msgid "Decoder utilization"
 msgstr "Auslastung des Decoders"
 
-msgid "Decryption of SNMPv3 password failed."
-msgstr "Entschlüsselung des SNMPv3 Passworts ist fehlgeschlagen."
-
 msgid "Dedicated white-/blacklists for new and vanished services"
 msgstr "Dedizierte White- und Blacklist für neue und verschwundene Services"
 
@@ -76807,6 +76804,14 @@ msgid "Unexpected 'throttling' values passed to form."
 msgstr "Unerwartete 'Drosselungs'-Werte an das Formular übergeben."
 
 #, python-format
+msgid "Unexpected SNMPv3 credentials shape: tuple of length %d"
+msgstr ""
+
+#, fuzzy, python-format
+msgid "Unexpected SNMPv3 credentials type: %s"
+msgstr "SNMPv3-Zugangsdaten"
+
+#, python-format
 msgid ""
 "Unfortunately, using a proxy and a virtual host is not supported (try '%s')."
 msgstr ""
@@ -87709,6 +87714,9 @@ msgstr ""
 
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "⚠ <b>nicht verfügbar</b>, da Robotmk-Kern-MKP installiert wurde"
+
+#~ msgid "Decryption of SNMPv3 password failed."
+#~ msgstr "Entschlüsselung des SNMPv3 Passworts ist fehlgeschlagen."
 
 #~ msgid ""
 #~ " To view content, click on \"<b>Apply filters</b>\" in the \"Filters\" "

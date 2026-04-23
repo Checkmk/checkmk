@@ -18161,9 +18161,6 @@ msgstr "Gedecodeerd verkeer"
 msgid "Decoder utilization"
 msgstr "Gebruik van de decoder"
 
-msgid "Decryption of SNMPv3 password failed."
-msgstr ""
-
 msgid "Dedicated white-/blacklists for new and vanished services"
 msgstr "Speciale witte/blacklists voor nieuwe en verdwenen diensten"
 
@@ -79512,6 +79509,14 @@ msgstr "Verwijderde notificatie regel %d van gebruiker %s"
 
 msgid "Unexpected 'throttling' values passed to form."
 msgstr ""
+
+#, python-format
+msgid "Unexpected SNMPv3 credentials shape: tuple of length %d"
+msgstr ""
+
+#, fuzzy, python-format
+msgid "Unexpected SNMPv3 credentials type: %s"
+msgstr "SNMPv3 geloofsbrieven"
 
 #, python-format
 msgid ""

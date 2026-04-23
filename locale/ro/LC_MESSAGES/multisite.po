@@ -18173,9 +18173,6 @@ msgstr "Trafic decodificat"
 msgid "Decoder utilization"
 msgstr "Utilizarea decodorului"
 
-msgid "Decryption of SNMPv3 password failed."
-msgstr "Decriptarea parolei SNMPv3 a eșuat."
-
 msgid "Dedicated white-/blacklists for new and vanished services"
 msgstr "Liste albe/negre dedicate pentru servicii noi și dispărute"
 
@@ -79700,6 +79697,14 @@ msgid "Unexpected 'throttling' values passed to form."
 msgstr ""
 
 #, python-format
+msgid "Unexpected SNMPv3 credentials shape: tuple of length %d"
+msgstr ""
+
+#, fuzzy, python-format
+msgid "Unexpected SNMPv3 credentials type: %s"
+msgstr "Acreditive SNMPv3"
+
+#, python-format
 msgid ""
 "Unfortunately, using a proxy and a virtual host is not supported (try '%s')."
 msgstr ""
@@ -90890,6 +90895,9 @@ msgstr ""
 #, fuzzy
 msgid "⚠ <b>not available</b> because Robotmk Core MKP has been installed"
 msgstr "Utilizați SSL pentru conexiune."
+
+#~ msgid "Decryption of SNMPv3 password failed."
+#~ msgstr "Decriptarea parolei SNMPv3 a eșuat."
 
 #, fuzzy
 #~ msgid "Compute a rate"

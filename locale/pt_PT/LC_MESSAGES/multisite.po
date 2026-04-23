@@ -4,7 +4,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
+"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
 "PO-Revision-Date: 2026-04-22 06:09+0000\n"
 "Language-Team: Portuguese (Portugal) <https://translate.checkmk.com/projects/"
@@ -18153,9 +18153,6 @@ msgstr "Tráfego descodificado"
 
 msgid "Decoder utilization"
 msgstr "Utilização do descodificador"
-
-msgid "Decryption of SNMPv3 password failed."
-msgstr ""
 
 msgid "Dedicated white-/blacklists for new and vanished services"
 msgstr "Listas brancas/blacklists dedicadas a serviços novos e desaparecidos"
@@ -79458,6 +79455,14 @@ msgid "Unexpected 'throttling' values passed to form."
 msgstr ""
 
 #, python-format
+msgid "Unexpected SNMPv3 credentials shape: tuple of length %d"
+msgstr ""
+
+#, fuzzy, python-format
+msgid "Unexpected SNMPv3 credentials type: %s"
+msgstr "SNMPv3 credenciais"
+
+#, python-format
 msgid ""
 "Unfortunately, using a proxy and a virtual host is not supported (try '%s')."
 msgstr ""
@@ -88620,7 +88625,6 @@ msgstr "contando"
 msgid "cp437"
 msgstr "cp437"
 
-#, fuzzy
 msgid "crash report"
 msgid_plural "crash reports"
 msgstr[0] ""
@@ -89130,7 +89134,6 @@ msgstr "Os anfitriões estão a postos mas têm os serviços em estado de alerta
 msgid "hosts in total"
 msgstr "anfitriões no total"
 
-#, fuzzy
 msgid "hour"
 msgid_plural "hours"
 msgstr[0] ""

@@ -18278,9 +18278,6 @@ msgstr "Tráfico descodificado"
 msgid "Decoder utilization"
 msgstr "Utilización del descodificador"
 
-msgid "Decryption of SNMPv3 password failed."
-msgstr ""
-
 msgid "Dedicated white-/blacklists for new and vanished services"
 msgstr "Listas blancas/negras dedicadas para servicios nuevos y desaparecidos"
 
@@ -80139,6 +80136,14 @@ msgstr "Regla de notificación %d eliminada del usuario %s"
 
 msgid "Unexpected 'throttling' values passed to form."
 msgstr ""
+
+#, python-format
+msgid "Unexpected SNMPv3 credentials shape: tuple of length %d"
+msgstr ""
+
+#, fuzzy, python-format
+msgid "Unexpected SNMPv3 credentials type: %s"
+msgstr "Credenciales SNMPv3"
 
 #, python-format
 msgid ""

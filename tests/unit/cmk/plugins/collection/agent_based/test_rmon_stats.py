@@ -3,18 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import pytest
-
 from cmk.plugins.collection.agent_based.rmon_stats import parse_rmon_stats
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="Crash group 3658: empty counter fields crash parse_rmon_stats",
-)
 def test_parse_rmon_stats_handles_empty_counter() -> None:
     string_table = [
-        # One port with an empty 5th counter value (256-511b).
         [
             "1",
             "100 Packets",
@@ -28,4 +21,5 @@ def test_parse_rmon_stats_handles_empty_counter() -> None:
         ],
     ]
     result = parse_rmon_stats(string_table)
-    assert "1" in result
+    assert result["1"]["128-255b"] == 0
+    assert result["1"]["bcast"] == 100

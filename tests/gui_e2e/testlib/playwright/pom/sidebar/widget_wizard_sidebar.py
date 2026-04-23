@@ -203,7 +203,7 @@ class MetricsAndGraphsWidgetWizard(BaseWidgetWizard):
     @property
     def _add_filter_section(self) -> Locator:
         """Locator property of 'Add filter' section."""
-        return self.locator("div.db-add-filters__container")
+        return self._sidebar_locator.get_by_role("region", name="Add filter")
 
     @property
     def _filter_menu_entries(self) -> Locator:
@@ -233,7 +233,7 @@ class MetricsAndGraphsWidgetWizard(BaseWidgetWizard):
         Returns:
             The locator of the filter container.
         """
-        return self._host_selection_region.locator("div.filter-container", has_text=filter_name)
+        return self._host_selection_region.get_by_role("group", name=filter_name)
 
     def get_host_filter_combobox(self, filter_name: str) -> Locator:
         """Get the locator of the combobox to set a host filter for the widget.
@@ -255,7 +255,7 @@ class MetricsAndGraphsWidgetWizard(BaseWidgetWizard):
         Returns:
             The locator of the filter container.
         """
-        return self._service_selection_region.locator("div.filter-container", has_text=filter_name)
+        return self._service_selection_region.get_by_role("group", name=filter_name)
 
     def get_service_filter_combobox(self, filter_name: str) -> Locator:
         """Get the locator of the combobox to set a service filter for the widget.

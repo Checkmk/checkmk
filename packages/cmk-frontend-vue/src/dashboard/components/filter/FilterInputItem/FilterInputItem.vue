@@ -62,7 +62,7 @@ const handleComponentChange = (
 </script>
 
 <template>
-  <div class="filter-container">
+  <div role="group" :aria-label="filterDefinition.title" class="filter-container">
     <div class="filter-title">
       {{ filterDefinition.title }}
       <span v-if="showRequiredLabel" class="filter-required-label"> {{ _t('(required)') }} </span>

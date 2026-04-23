@@ -209,7 +209,11 @@ const serviceMandatoryFilters = computed(() => {
 
 <template>
   <div class="db-filter-settings__main-container">
-    <div class="db-filter-settings__selection-container">
+    <div
+      role="region"
+      :aria-label="_t('Add filter')"
+      class="db-filter-settings__selection-container"
+    >
       <CmkHeading class="db-filter-settings__selection-container-header" type="h1">{{
         _t('Add filter')
       }}</CmkHeading>

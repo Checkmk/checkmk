@@ -39,7 +39,7 @@ const filterCategory = computed(() => {
 </script>
 
 <template>
-  <div class="db-add-filters__container">
+  <div role="region" :aria-label="_t('Add filter')" class="db-add-filters__container">
     <StepsHeader :title="_t('Add filter')" @back="props.close" />
     <ContentSpacer :height="40" class="db-add-filters__spacer" />
 

@@ -200,14 +200,8 @@ def test_bgp_peer_parse_cisco_2(data: StringByteTable, result: bgp_peer.Section)
     assert bgp_peer.parse_bgp_peer_cisco_2([data]) == result
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="Crash group 3608: AddressValueError on short byte list",
-)
 def test_convert_address_short_byte_list() -> None:
-    # SNMP may return a byte-list whose length is neither 4 (IPv4) nor 16
-    # (IPv6). _convert_address must not crash on such malformed input.
-    bgp_peer._convert_address([0x7C, 0x30])
+    assert bgp_peer._convert_address([0x7C, 0x30]) == "unknown([124, 48])"
 
 
 @pytest.mark.parametrize(

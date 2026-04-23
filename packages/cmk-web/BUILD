@@ -14,19 +14,12 @@ exports_files([
 
 py_library(
     name = "cmk-web",
-    srcs = [
-        "cmk/web/__init__.py",
-        "cmk/web/utils/__init__.py",
-        "cmk/web/utils/escaping.py",
-        "cmk/web/utils/html.py",
-        "cmk/web/utils/speaklater.py",
-        "cmk/web/utils/urls.py",
-    ],
+    srcs = ["cmk/web/__init__.py"],
     data = ["cmk/web/py.typed"],
     imports = ["."],
     visibility = ["//visibility:public"],
     deps = [
-        "//packages/cmk-ccc:regex",
+        "//packages/cmk-web/cmk/web/utils",
     ],
 )
 
@@ -34,7 +27,7 @@ py_doc_test(
     name = "doctest",
     size = "small",
     srcs = [
-        ":cmk-web",
+        "//packages/cmk-web/cmk/web/utils",
     ],
     tags = ["no-mypy"],
 )
@@ -42,7 +35,7 @@ py_doc_test(
 py_requirements_test(
     name = "requirements-test",
     libs = [
-        ":cmk-web",
+        "//packages/cmk-web/cmk/web/utils",
     ],
     requirements_in = "requirements.in",
 )

@@ -18,7 +18,7 @@ def check_ups_out_voltage(
         yield check_levels(
             int(line[1]),
             "out_voltage",
-            params.get("levels_upper", (None, None)) + params["levels_lower"],
+            (None, None) + params["levels_lower"],
             human_readable_func=lambda v: f"{v}V",
             infoname="Out voltage",
         )

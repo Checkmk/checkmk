@@ -111,6 +111,7 @@ py_library(
     ],
     deps = [
         "//packages/cmk-ccc:version",
+        "//packages/cmk-crypto",
         "//packages/cmk-relay-protocols",
         requirement("cryptography"),
         requirement("fastapi"),
@@ -172,6 +173,7 @@ py_wheel(
     deps = [
         ":cmk-agent-receiver",
         ":py_typed",
+        "//packages/cmk-crypto",
     ],
 )
 

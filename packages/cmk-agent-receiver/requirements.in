@@ -1,4 +1,3 @@
-cryptography
 fastapi
 gunicorn
 h11

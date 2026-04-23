@@ -12,12 +12,12 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Literal, override, Self
 
-from cryptography.x509 import CertificateSigningRequest
 from fastapi import HTTPException
 from pydantic import BaseModel, field_validator, GetCoreSchemaHandler, UUID4
 from pydantic_core import core_schema
 
 from cmk.agent_receiver.lib.certs import validate_csr
+from cmk.crypto.certificate import CertificateSigningRequest
 
 
 @dataclass(frozen=True)

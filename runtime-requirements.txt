@@ -689,7 +689,6 @@ cryptography==46.0.5 \
     #   -c requirements.txt
     #   -r cmk/requirements.in
     #   -r non-free/packages/cmk-relay-engine/requirements.in
-    #   -r packages/cmk-agent-receiver/requirements.in
     #   -r packages/cmk-crypto/requirements.in
     #   -r packages/cmk-plugin-apis/requirements.in
     #   -r packages/cmk-relay-protocols/requirements.in

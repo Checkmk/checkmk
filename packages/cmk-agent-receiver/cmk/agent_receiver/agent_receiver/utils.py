@@ -8,8 +8,6 @@ from contextlib import suppress
 from dataclasses import dataclass
 from typing import Final, Self
 
-from cryptography.x509 import load_pem_x509_csr
-from cryptography.x509.oid import NameOID
 from pydantic import UUID4
 
 from cmk.agent_receiver.agent_receiver.models import (
@@ -18,6 +16,7 @@ from cmk.agent_receiver.agent_receiver.models import (
     RequestForRegistration,
 )
 from cmk.agent_receiver.lib.config import get_config
+from cmk.crypto.certificate import CertificateSigningRequest, CertificateSigningRequestPEM
 
 
 class NotRegisteredException(Exception): ...
@@ -70,13 +69,7 @@ class R4R:
 
 
 def uuid_from_pem_csr(pem_csr: str) -> str:
-    try:
-        v = (
-            load_pem_x509_csr(pem_csr.encode())
-            .subject.get_attributes_for_oid(NameOID.COMMON_NAME)[0]
-            .value
-        )
-        assert isinstance(v, str)
-        return v
-    except ValueError:
+    csr = CertificateSigningRequest.load_pem(CertificateSigningRequestPEM(pem_csr.encode()))
+    if csr.subject.common_name is None:
         return "[CSR parsing failed]"
+    return csr.subject.common_name

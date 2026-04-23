@@ -6,10 +6,9 @@
 import dataclasses
 from typing import Final
 
-from cryptography.x509 import CertificateSigningRequest
-
 from cmk.agent_receiver.lib import certs as certslib
 from cmk.agent_receiver.relay.lib.shared_types import CertificateCNError, RelayID
+from cmk.crypto.certificate import CertificateSigningRequest
 
 _VALIDITY_IN_MONTHS: Final = 3
 
@@ -37,7 +36,6 @@ def _sign_csr(csr: CertificateSigningRequest) -> str:
             csr=csr,
             lifetime_in_months=_VALIDITY_IN_MONTHS,
             keypair=certslib.relay_root_ca(),
-            valid_from=certslib.current_time_naive(),
         )
     )
 

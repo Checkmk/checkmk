@@ -217,7 +217,7 @@ def test_relay_pending_deletion_refresh_cert(
 
     refresh_response = RelayRefreshCertResponse.model_validate_json(resp.text)
     cert = certslib.read_certificate(refresh_response.client_cert)
-    assert certslib.check_cn(cert, relay_id)
+    assert cert.subject.common_name == relay_id
 
     _assert_agent_receiver_healthy(agent_receiver)
     _assert_no_errors_in_logs(site_context)

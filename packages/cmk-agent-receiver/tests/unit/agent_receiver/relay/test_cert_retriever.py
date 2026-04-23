@@ -23,8 +23,8 @@ def test_process_creates_valid_certificate() -> None:
     certificates = get_certificates(serialize_to_pem(csr), relay_id)
 
     cert = certslib.read_certificate(certificates.client_cert)
-    assert certslib.check_cn(cert, relay_id)
-    certslib.check_certificate_against_private_key(cert, private_key)
+    assert cert.subject.common_name == relay_id
+    assert cert.public_key == private_key.public_key
 
 
 def test_process_validates_csr() -> None:
@@ -49,6 +49,6 @@ def test_certificate_lifetime() -> None:
     client_certificate = certslib.read_certificate(certificates.client_cert)
     now = datetime.now(tz=UTC)
 
-    assert client_certificate.not_valid_before_utc <= now
-    assert client_certificate.not_valid_before_utc >= now - timedelta(minutes=1)
-    assert client_certificate.not_valid_after_utc <= now + relativedelta(months=3)
+    assert client_certificate.not_valid_before <= now
+    assert client_certificate.not_valid_before >= now - timedelta(minutes=1)
+    assert client_certificate.not_valid_after <= now + relativedelta(months=3)

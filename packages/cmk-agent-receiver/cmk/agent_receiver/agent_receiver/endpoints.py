@@ -9,7 +9,6 @@ from functools import cache
 from pathlib import Path
 from typing import Annotated, assert_never
 
-from cryptography.x509 import Certificate
 from fastapi import (
     APIRouter,
     Depends,
@@ -74,7 +73,6 @@ from cmk.agent_receiver.agent_receiver.utils import (
 from cmk.agent_receiver.lib.auth import internal_credentials
 from cmk.agent_receiver.lib.certs import (
     agent_root_ca,
-    current_time_naive,
     extract_cn_from_csr,
     serialize_to_pem,
     sign_csr,
@@ -83,6 +81,7 @@ from cmk.agent_receiver.lib.certs import (
 from cmk.agent_receiver.lib.config import get_config
 from cmk.agent_receiver.lib.log import logger
 from cmk.agent_receiver.lib.mtls_auth_validator import mtls_authorization_dependency
+from cmk.crypto.certificate import Certificate
 
 UUID_VALIDATION_ROUTER = APIRouter(
     dependencies=[mtls_authorization_dependency("uuid", HTTP_400_BAD_REQUEST)]
@@ -107,7 +106,6 @@ def _sign_agent_csr(uuid: UUID4, csr_field: CsrField) -> Certificate:
             internal_credentials(),
         ).lifetime_in_months,
         agent_root_ca(),
-        current_time_naive(),
     )
 
 

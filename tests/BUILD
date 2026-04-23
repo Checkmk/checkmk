@@ -338,6 +338,8 @@ py_library(
         requirement("pyyaml"),
         requirement("clickhouse_connect"),
         requirement("cryptography"),
+        requirement("python-dateutil"),
+        requirement("types-python-dateutil"),
         requirement("pysnmp"),
         requirement("psutil"),
         requirement("semver"),

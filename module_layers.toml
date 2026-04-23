@@ -253,7 +253,7 @@ allows = ["cmk.utils.paths"]
 allows = []
 
 [components."cmk.agent_receiver"]
-allows = ["@ccc", "@relay_protocols"]
+allows = ["@ccc", "@crypto", "@relay_protocols"]
 
 [components."cmk.automations"]
 allows = [

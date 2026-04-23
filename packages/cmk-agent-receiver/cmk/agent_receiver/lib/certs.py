@@ -3,128 +3,55 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from datetime import datetime, UTC
 from functools import cache
 from uuid import UUID
 
-from cryptography.hazmat.primitives.asymmetric.rsa import RSAPrivateKey
-from cryptography.hazmat.primitives.asymmetric.types import CertificateIssuerPrivateKeyTypes
-from cryptography.hazmat.primitives.hashes import SHA256
-from cryptography.hazmat.primitives.serialization import Encoding, load_pem_private_key
-from cryptography.x509 import (
-    AuthorityKeyIdentifier,
-    BasicConstraints,
-    Certificate,
-    CertificateBuilder,
-    CertificateSigningRequest,
-    DNSName,
-    KeyUsage,
-    load_pem_x509_certificate,
-    load_pem_x509_csr,
-    random_serial_number,
-    SubjectAlternativeName,
-    SubjectKeyIdentifier,
-)
-from cryptography.x509.oid import NameOID
 from dateutil.relativedelta import relativedelta
 
 from cmk.agent_receiver.lib.config import get_config
+from cmk.crypto.certificate import (
+    Certificate,
+    CertificatePEM,
+    CertificateSigningRequest,
+    CertificateSigningRequestPEM,
+    CertificateWithPrivateKey,
+)
+from cmk.crypto.x509 import SAN, SubjectAlternativeNames
 
 
 def site_root_certificate() -> Certificate:
     config = get_config()
-    return load_pem_x509_certificate(config.site_ca_path.read_bytes())
-
-
-def current_time_naive() -> datetime:
-    """
-    Create a not timezone aware, "naive", datetime at UTC now. This mimics the deprecated
-    datetime.utcnow(), but we still need it to be naive because that's what pyca/cryptography
-    certificates use. See also https://github.com/pyca/cryptography/issues/9186.
-    """
-    return datetime.now(tz=UTC).replace(tzinfo=None)
+    return Certificate.load_pem(CertificatePEM(config.site_ca_path.read_bytes()))
 
 
 def sign_csr(
     csr: CertificateSigningRequest,
     lifetime_in_months: int,
-    keypair: tuple[Certificate, CertificateIssuerPrivateKeyTypes],
-    valid_from: datetime,
+    keypair: CertificateWithPrivateKey,
 ) -> Certificate:
-    root_cert, root_key = keypair
-    return (
-        CertificateBuilder()
-        .subject_name(csr.subject)
-        .issuer_name(root_cert.subject)
-        .not_valid_before(valid_from)
-        .not_valid_after(valid_from + relativedelta(months=lifetime_in_months))
-        .serial_number(random_serial_number())
-        .public_key(csr.public_key())
-        # RFC 5280 4.2.1.6.  Subject Alternative Name
-        .add_extension(
-            SubjectAlternativeName([DNSName(extract_cn_from_csr(csr))]),
-            critical=False,
-        )
-        # RFC 5280 4.2.1.9.  Basic Constraints
-        .add_extension(
-            BasicConstraints(
-                ca=False,
-                path_length=None,
-            ),
-            critical=True,
-        )
-        # RFC 5280 4.2.1.2.  Subject Key Identifier
-        .add_extension(
-            SubjectKeyIdentifier.from_public_key(csr.public_key()),
-            critical=False,
-        )
-        # RFC 5280 4.2.1.1.  Authority Key Identifier
-        .add_extension(
-            AuthorityKeyIdentifier.from_issuer_public_key(root_key.public_key()),
-            critical=False,
-        )
-        # RFC 5280 4.2.1.9.  Key Usage
-        .add_extension(
-            KeyUsage(
-                digital_signature=True,  # signing data
-                content_commitment=False,  # aka non_repudiation
-                key_encipherment=False,
-                data_encipherment=False,
-                key_agreement=False,
-                key_cert_sign=False,
-                crl_sign=False,
-                encipher_only=False,
-                decipher_only=False,
-            ),
-            critical=True,
-        )
-        .sign(
-            root_key,
-            SHA256(),
-        )
+    expiry = relativedelta(months=lifetime_in_months)
+    return keypair.sign_csr(
+        csr, expiry, SubjectAlternativeNames([SAN.dns_name(extract_cn_from_csr(csr))])
     )
 
 
 def serialize_to_pem(certificate: Certificate | CertificateSigningRequest) -> str:
-    return certificate.public_bytes(Encoding.PEM).decode()
+    return certificate.dump_pem().str
 
 
 def extract_cn_from_csr(csr: CertificateSigningRequest) -> str:
-    v = csr.subject.get_attributes_for_oid(NameOID.COMMON_NAME)[0].value
-    assert isinstance(v, str)
-    return v
+    if csr.subject.common_name is None:
+        raise ValueError("CSR contains no CN")
+    return csr.subject.common_name
 
 
 def validate_csr(csr: CertificateSigningRequest | str) -> CertificateSigningRequest:
     if not isinstance(csr, CertificateSigningRequest):
-        csr = load_pem_x509_csr(csr.encode())
+        csr = CertificateSigningRequest.load_pem(CertificateSigningRequestPEM(csr.encode()))
 
     if not csr.is_signature_valid:
         raise ValueError("Invalid CSR (signature and public key do not match)")
-    try:
-        cn = extract_cn_from_csr(csr)
-    except IndexError as e:
-        raise ValueError("CSR contains no CN") from e
+    cn = extract_cn_from_csr(csr)
     try:
         UUID(cn)
     except ValueError as e:
@@ -134,21 +61,17 @@ def validate_csr(csr: CertificateSigningRequest | str) -> CertificateSigningRequ
 
 
 @cache
-def agent_root_ca() -> tuple[Certificate, RSAPrivateKey]:
+def agent_root_ca() -> CertificateWithPrivateKey:
     config = get_config()
-    pem_bytes = config.agent_ca_path.read_bytes()
-    key = load_pem_private_key(pem_bytes, None)
-    assert isinstance(key, RSAPrivateKey)
-    return load_pem_x509_certificate(pem_bytes), key
+    content = config.agent_ca_path.read_text()
+    return CertificateWithPrivateKey.load_combined_file_content(content, passphrase=None)
 
 
 @cache
-def relay_root_ca() -> tuple[Certificate, RSAPrivateKey]:
+def relay_root_ca() -> CertificateWithPrivateKey:
     config = get_config()
-    pem_bytes = config.relay_ca_path.read_bytes()
-    key = load_pem_private_key(pem_bytes, None)
-    assert isinstance(key, RSAPrivateKey)
-    return load_pem_x509_certificate(pem_bytes), key
+    content = config.relay_ca_path.read_text()
+    return CertificateWithPrivateKey.load_combined_file_content(content, passphrase=None)
 
 
 @cache
@@ -166,11 +89,7 @@ def get_local_site_cn() -> str:
         ValueError: If the certificate doesn't contain a CN attribute.
     """
     config = get_config()
-    site_cert = load_pem_x509_certificate(config.site_cert_path.read_bytes())
-    cn_attributes = site_cert.subject.get_attributes_for_oid(NameOID.COMMON_NAME)
-    if not cn_attributes:
+    site_cert = Certificate.load_pem(CertificatePEM(config.site_cert_path.read_bytes()))
+    if site_cert.common_name is None:
         raise ValueError("Site certificate does not contain a Common Name (CN)")
-
-    cn_value = cn_attributes[0].value
-    assert isinstance(cn_value, str)
-    return cn_value
+    return site_cert.common_name

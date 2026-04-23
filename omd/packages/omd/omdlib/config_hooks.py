@@ -332,6 +332,10 @@ def _config_set(
             # done by "omd", because the hook can not change things in tmp since the
             # tmpfs may not be available during hook execution.
             return
+        case "LIVESTATUS_TCP_ONLY_FROM":
+            output = _set_livestatus_tcp_only_from(site.name, value, omd_path)
+            if isinstance(output, _Error):
+                return
         case _:
             exitcode, output = _call_hook(site, hook_name, ["set", value], verbose)
             if exitcode:
@@ -390,7 +394,7 @@ def _set_livestatus_tcp_port(
         xinetd_conf = os.path.join(site_home, "etc/mk-livestatus/xinetd.conf")
         if value != new_value:
             sys.stderr.write(
-                f"Livestatus port {value} is in use. I've choosen {new_value} instead."
+                f"Livestatus port {value} is in use. I've chosen {new_value} instead.\n"
             )
 
         with open(xinetd_conf) as file:
@@ -404,6 +408,27 @@ def _set_livestatus_tcp_port(
         traceback.print_exc()
         return _Error()
     return new_value
+
+
+def _set_livestatus_tcp_only_from(
+    site_name: str, value: str, omd_path: Path = Path("/omd/")
+) -> str | _Error:
+    site_home = SitePaths.from_site_name(site_name, omd_path).home
+    try:
+        pattern = re.compile(r"^#?(\s*only_from\s*=\s*)(.*)")
+        xinetd_conf = os.path.join(site_home, "etc/mk-livestatus/xinetd.conf")
+
+        with open(xinetd_conf) as file:
+            lines = file.readlines()
+
+        with open(xinetd_conf, "w") as file:
+            for line in lines:
+                new_line = pattern.sub(rf"\g<1>{value}", line)
+                file.write(new_line)
+    except Exception:
+        traceback.print_exc()
+        return _Error()
+    return value
 
 
 def config_set_value(

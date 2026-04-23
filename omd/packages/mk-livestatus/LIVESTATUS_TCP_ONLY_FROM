@@ -15,9 +15,6 @@ case "$1" in
     choices)
         echo "@{IP_ADDRESS_LIST}"
         ;;
-    set)
-        sed -ri "s@#?([[:space:]]*only_from[[:space:]]*=[[:space:]]*)(.*)@\1$2@" $OMD_ROOT/etc/mk-livestatus/xinetd.conf
-        ;;
     depends)
         [ "$CONFIG_CORE" != none -a "$CONFIG_LIVESTATUS_TCP" = on ]
         ;;

@@ -9,8 +9,10 @@ import pytest
 
 from omdlib.config_hooks import (
     _build_site_configs,
+    _Error,
     _next_free_port,
     _report_error,
+    _set_livestatus_tcp_only_from,
     _set_livestatus_tcp_port,
 )
 
@@ -70,6 +72,18 @@ def _make_xinetd_conf(site_dir: Path, port: int) -> Path:
     return conf
 
 
+def _make_xinetd_conf_with_only_from(site_dir: Path, only_from: str | None) -> Path:
+    conf = site_dir / "etc/mk-livestatus/xinetd.conf"
+    conf.parent.mkdir(parents=True, exist_ok=True)
+    if only_from is None:
+        # default: commented out, as in the shipped template
+        only_from_line = "#\tonly_from       = 127.0.0.1\n"
+    else:
+        only_from_line = f"\tonly_from       = {only_from}\n"
+    conf.write_text(f"service livestatus\n{{\n\tport\t\t= 6557\n{only_from_line}}}\n")
+    return conf
+
+
 def test_set_livestatus_tcp_port_no_conflict(tmp_path: Path) -> None:
     # Port is free. xinetd.conf is rewritten with the same port, value returned.
     site_dir = tmp_path / "sites/mysite"
@@ -110,4 +124,52 @@ def test_set_livestatus_tcp_port_missing_xinetd_conf(tmp_path: Path) -> None:
     site_configs = _build_site_configs("mysite", tmp_path)
     result = _set_livestatus_tcp_port("mysite", "6557", site_configs.configs, tmp_path)
 
-    assert not isinstance(result, str)
+    assert isinstance(result, _Error)
+
+
+def test_set_livestatus_tcp_only_from_commented_default(tmp_path: Path) -> None:
+    # The shipped template has only_from commented out. Setting a value must uncomment
+    # and replace it.
+    site_dir = tmp_path / "sites/mysite"
+    _make_site(site_dir.parent, "mysite", "")
+    conf = _make_xinetd_conf_with_only_from(site_dir, None)
+
+    result = _set_livestatus_tcp_only_from("mysite", "192.168.0.0/24", tmp_path)
+
+    assert result == "192.168.0.0/24"
+    text = conf.read_text()
+    assert "\tonly_from       = 192.168.0.0/24" in text
+    assert text.count("only_from") == 1
+
+
+def test_set_livestatus_tcp_only_from_existing_value(tmp_path: Path) -> None:
+    # An already-set value is replaced.
+    site_dir = tmp_path / "sites/mysite"
+    _make_site(site_dir.parent, "mysite", "")
+    conf = _make_xinetd_conf_with_only_from(site_dir, "10.0.0.1")
+
+    result = _set_livestatus_tcp_only_from("mysite", "10.0.0.2 10.0.0.3", tmp_path)
+
+    assert result == "10.0.0.2 10.0.0.3"
+    assert "\tonly_from       = 10.0.0.2 10.0.0.3" in conf.read_text()
+
+
+@pytest.mark.xfail(reason="only_from absent from xinetd.conf is silently ignored", strict=True)
+def test_set_livestatus_tcp_only_from_no_only_from_line(tmp_path: Path) -> None:
+    site_dir = tmp_path / "sites/mysite"
+    _make_site(site_dir.parent, "mysite", "")
+    conf = _make_xinetd_conf(site_dir, 6557)  # no only_from line
+
+    _set_livestatus_tcp_only_from("mysite", "10.0.0.1", tmp_path)
+
+    assert "only_from" in conf.read_text()
+
+
+def test_set_livestatus_tcp_only_from_missing_xinetd_conf(tmp_path: Path) -> None:
+    # Missing xinetd.conf returns _Error without raising.
+    site_dir = tmp_path / "sites/mysite"
+    _make_site(site_dir.parent, "mysite", "")
+
+    result = _set_livestatus_tcp_only_from("mysite", "10.0.0.1", tmp_path)
+
+    assert isinstance(result, _Error)

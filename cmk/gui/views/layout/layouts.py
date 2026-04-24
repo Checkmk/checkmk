@@ -806,10 +806,11 @@ class LayoutTable(Layout):
 
             column += 1
 
-        if group_open:
-            for _i in range(column - 1, num_columns):
-                html.td("", class_="gap")
-                html.td("", class_="fillup", colspan=num_cells)
+        if column > 1:
+            if group_open:
+                for _i in range(column - 1, num_columns):
+                    html.td("", class_="gap")
+                    html.td("", class_="fillup", colspan=num_cells)
             html.close_tr()
         html.close_table()
         if not user.may("general.act"):

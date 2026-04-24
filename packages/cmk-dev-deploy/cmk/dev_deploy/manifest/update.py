@@ -183,17 +183,12 @@ def _load_specs_from_toml(
     for target_label, overrides in raw.get("config_overrides", {}).items():
         config_overrides[target_label] = dict(overrides)
 
-    # Filter non-free specs in GPL-only checkout
+    # Filter non-free specs in GPL-only checkout.  Use the `editions` field
+    # set by _derive_editions as the source of truth so we catch both
+    # "non-free/" and "nonfree/" markers consistently.
     if not is_nonfree_checkout:
         for specs in (install_specs, service_specs):
-            specs[:] = [
-                s
-                for s in specs
-                if not (
-                    s.get("source_prefix", "").startswith("non-free/")
-                    or "non-free/" in s.get("package_target", "")
-                )
-            ]
+            specs[:] = [s for s in specs if not s.get("editions")]
 
     # Sort each list by name for deterministic output
     for specs in (install_specs, service_specs):
@@ -204,6 +199,32 @@ def _load_specs_from_toml(
         "service_specs": service_specs,
         "config_overrides": config_overrides,
     }
+
+
+def _validate_manual_specs(manual: dict[str, Any], repo_root: Path) -> None:
+    """Fail if [[service]]/[[package]] entries reference paths that no longer exist."""
+    errors: list[str] = []
+
+    for spec in manual.get("service_specs", []):
+        name = spec.get("name", "?")
+        sp = spec.get("source_prefix", "")
+        if sp and not (repo_root / sp.rstrip("/")).is_dir():
+            errors.append(f"[[service]] {name}: source_prefix {sp!r} does not exist")
+        pt = spec.get("package_target", "")
+        if pt and not (repo_root / _label_to_package_path(pt)).is_dir():
+            errors.append(f"[[service]] {name}: package_target {pt!r} does not exist")
+
+    for spec in manual.get("install_specs", []):
+        name = spec.get("name", "?")
+        pt = spec.get("package_target", "")
+        if pt and not (repo_root / _label_to_package_path(pt)).is_dir():
+            errors.append(f"[[package]] {name}: package_target {pt!r} does not exist")
+
+    if errors:
+        raise ValueError(
+            "deploy_specs.toml references paths that no longer exist:\n"
+            + "\n".join(f"  - {e}" for e in errors)
+        )
 
 
 # ---------------------------------------------------------------------------

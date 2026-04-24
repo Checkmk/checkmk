@@ -578,7 +578,7 @@ def extract_snapshot(
             errors.append(_("Contains corrupt file %s") % tar_member.name)
             return errors
 
-        for line in completed_process.stdout:
+        for line in completed_process.stdout.splitlines():
             full_path = str(prefix) + "/" + line
             path_tokens = full_path.split("/")
             check_exists_or_writable(path_tokens)

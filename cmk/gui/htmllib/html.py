@@ -467,6 +467,7 @@ class HTMLGenerator(HTMLWriter):
             yield
         finally:
             if only_close:
+                html.end_form_table()
                 html.close_form()
             else:
                 html.end_form()
@@ -533,8 +534,21 @@ class HTMLGenerator(HTMLWriter):
     def end_form(self) -> None:
         if not self.form_has_submit_button:
             self.input(name="_save", type_="submit", cssclass="hidden_submit")
+        self.end_form_table()
         self.close_form()
         self.form_name = None
+
+    def end_form_table(self) -> None:
+        if not self.form_header_open:
+            return
+        self.form_header_open = False
+        if self.form_section_open:
+            self.close_td()
+            self.close_tr()
+            self.form_section_open = False
+        self.tr(HTMLWriter.render_td("", colspan=2), class_=["bottom"])
+        self.close_tbody()
+        self.close_table()
 
     def in_form(self) -> bool:
         return self.form_name is not None

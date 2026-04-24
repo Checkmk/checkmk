@@ -195,11 +195,7 @@ def section_close() -> None:
 
 
 def end() -> None:
-    html.form_header_open = False
-    section_close()
-    html.tr(HTMLWriter.render_td("", colspan=2), class_=["bottom"])
-    html.close_tbody()
-    html.close_table()
+    html.end_form_table()
 
 
 def remove_unused_vars(

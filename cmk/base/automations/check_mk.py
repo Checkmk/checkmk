@@ -104,13 +104,6 @@ from cmk.base.checkers import (
     SectionPluginMapper,
     SpecialAgentFetcher,
 )
-from cmk.base.config import (
-    ConfigCache,
-    EnforcedServicesTable,
-    handle_ip_lookup_failure,
-    load_resource_cfg_macros,
-    snmp_default_community,
-)
 from cmk.base.configlib.checkengine import CheckingConfig, DiscoveryConfig
 from cmk.base.configlib.fetchers import make_parsed_snmp_fetch_intervals_config
 from cmk.base.configlib.loaded_config import LoadedConfigFragment
@@ -287,7 +280,7 @@ def _schedule_discovery_check(
 
 
 def _trigger_discovery_check(
-    config_cache: ConfigCache,
+    config_cache: config.ConfigCache,
     host_name: HostName,
     monitoring_core: Literal["nagios", "cmc"],
     inventory_check_autotrigger: bool,
@@ -637,7 +630,7 @@ def _automation_discovery_preview(
     ip_address_of_with_fallback = ip_lookup.ConfiguredIPLookup(
         ip_address_of_bare,
         allow_empty=config_cache.hosts_config.clusters,
-        error_handler=handle_ip_lookup_failure,
+        error_handler=config.handle_ip_lookup_failure,
     )
     on_error = OnError.RAISE if raise_errors else OnError.WARN
     file_cache_options = FileCacheOptions(
@@ -828,7 +821,7 @@ def _get_discovery_preview(
 
 
 def _active_check_preview_rows(
-    config_cache: ConfigCache,
+    config_cache: config.ConfigCache,
     final_service_name_config: Callable[
         [HostName, ServiceName, Callable[[HostName], Labels]], ServiceName
     ],
@@ -1030,7 +1023,7 @@ def _execute_discovery(
             autochecks_config=autochecks_config,
             enforced_services={
                 sid: service
-                for sid, (_ruleset_name, service) in EnforcedServicesTable(
+                for sid, (_ruleset_name, service) in config.EnforcedServicesTable(
                     enforced_services_config=BundledHostRulesetMatcher(
                         loaded_config.static_checks,
                         config_cache.ruleset_matcher,
@@ -1487,7 +1480,7 @@ def _execute_autodiscovery(
 
 
 def _make_get_effective_host_of_autocheck_callback(
-    config_cache: ConfigCache,
+    config_cache: config.ConfigCache,
     check_plugins: Mapping[CheckPluginName, CheckPlugin],
     service_name_config: Callable[[HostName, ServiceID, str | None], ServiceName],
     precomputed_service_descriptions: Mapping[tuple[HostName, CheckPluginName, Item], ServiceName],
@@ -2176,7 +2169,7 @@ class AutomationAnalyseServices:
 
     def _search_service(
         self,
-        config_cache: ConfigCache,
+        config_cache: config.ConfigCache,
         enforced_services_table: Callable[
             [HostName], Mapping[ServiceID, tuple[RulesetName, ConfiguredService]]
         ],
@@ -2229,7 +2222,7 @@ class AutomationAnalyseServices:
 
     @staticmethod
     def _search_checkmk_discovery_service(
-        config_cache: ConfigCache, host_name: HostName, servicedesc: str
+        config_cache: config.ConfigCache, host_name: HostName, servicedesc: str
     ) -> Iterable[_FoundService]:
         if servicedesc != "Check_MK Discovery":
             return
@@ -2264,7 +2257,7 @@ class AutomationAnalyseServices:
 
     @staticmethod
     def _search_discovered_checks(
-        config_cache: ConfigCache,
+        config_cache: config.ConfigCache,
         service_name_config: Callable[[HostName, ServiceID, str | None], ServiceName],
         enforced_services_table: Callable[
             [HostName], Mapping[ServiceID, tuple[RulesetName, ConfiguredService]]
@@ -2332,7 +2325,7 @@ class AutomationAnalyseServices:
 
     @staticmethod
     def _search_classical_checks(
-        config_cache: ConfigCache,
+        config_cache: config.ConfigCache,
         host_name: HostName,
         servicedesc: str,
     ) -> Iterable[_FoundService]:
@@ -2349,7 +2342,7 @@ class AutomationAnalyseServices:
 
     @staticmethod
     def _search_active_checks(
-        config_cache: ConfigCache,
+        config_cache: config.ConfigCache,
         final_service_name_config: Callable[
             [HostName, ServiceName, Callable[[HostName], Labels]], ServiceName
         ],
@@ -2827,7 +2820,7 @@ class AutomationReload(AutomationRestart):
 
 def _execute_silently(
     monitoring_core: MonitoringCore,
-    config_cache: ConfigCache,
+    config_cache: config.ConfigCache,
     final_service_name_config: Callable[
         [HostName, ServiceName, Callable[[HostName], Labels]], ServiceName
     ],
@@ -3061,10 +3054,10 @@ def _disabled_ip_lookup(host_name: object, family: object = None) -> None:
     #  implementation for IP hosts, without using the config_cache, this restriction can be removed.
 
     # In some cases (e.g., during "Test Configuration" in the quick setup),
-    # tags cannot be correctly resolved within ConfigCache.ip_stack_config, resulting in a default
+    # tags cannot be correctly resolved within config.ConfigCache.ip_stack_config, resulting in a default
     # ip_stack_config of IPStackConfig.IPv4.
     # In these cases, therefore, this function is still called for hosts that do not actually have an IP:
-    # this happens for example in ConfigCache.get_host_attributes.
+    # this happens for example in config.ConfigCache.get_host_attributes.
     # That is why for now we do not raise an error here but return None, instead
     return None
 
@@ -3366,7 +3359,7 @@ def _automation_diag_snmp(
     elif diag_input.snmp_community:
         credentials = diag_input.snmp_community
     else:
-        credentials = snmp_default_community
+        credentials = config.snmp_default_community
 
     # Determine SNMP version
     if diag_input.snmpv3_use is not None:
@@ -3614,7 +3607,7 @@ class AutomationDiagHost:
         self,
         ctx: AutomationContext,
         loaded_config: LoadedConfigFragment,
-        config_cache: ConfigCache,
+        config_cache: config.ConfigCache,
         label_manager: LabelManager,
         service_name_config: PassiveServiceNameConfig,
         service_configurer: ServiceConfigurer,
@@ -3815,7 +3808,7 @@ class AutomationDiagHost:
 
     def _execute_snmp(
         self,
-        config_cache: ConfigCache,
+        config_cache: config.ConfigCache,
         test: str,
         snmp_config: SNMPHostConfig,
         hostname: HostName,
@@ -3878,7 +3871,7 @@ class AutomationDiagHost:
             credentials = snmp_community or (
                 snmp_config.credentials
                 if isinstance(snmp_config.credentials, str)
-                else snmp_default_community
+                else config.snmp_default_community
             )
 
         # Determine SNMPv2/v3 community
@@ -4061,9 +4054,9 @@ class AutomationActiveCheck:
         commandline: str,
         ip_address_of: ip_lookup.IPLookup,
         discovered_labels: Mapping[str, str],
-        config_cache: ConfigCache,
+        config_cache: config.ConfigCache,
     ) -> str:
-        macros = ConfigCache.get_host_macros_from_attributes(
+        macros = config.ConfigCache.get_host_macros_from_attributes(
             hostname, config_cache.get_host_attributes(hostname, ip_family, ip_address_of)
         )
 
@@ -4073,9 +4066,9 @@ class AutomationActiveCheck:
             service_desc,
             config_cache.label_manager.labels_of_service(hostname, service_desc, discovered_labels),
         )
-        macros.update(ConfigCache.get_service_macros_from_attributes(service_attrs))
+        macros.update(config.ConfigCache.get_service_macros_from_attributes(service_attrs))
         macros.update(
-            load_resource_cfg_macros(
+            config.load_resource_cfg_macros(
                 cmk.utils.paths.nagios_resource_cfg,
                 None if cmk.ccc.debug.enabled() else lambda x: None,
             )
@@ -4089,12 +4082,12 @@ class AutomationActiveCheck:
         service_name: ServiceName,
         service_labels: Mapping[str, str],
         commandline: str,
-        config_cache: ConfigCache,
+        config_cache: config.ConfigCache,
     ) -> str:
         service_attrs = get_service_attributes(
             config_cache, host_name, service_name, service_labels
         )
-        service_macros = ConfigCache.get_service_macros_from_attributes(service_attrs)
+        service_macros = config.ConfigCache.get_service_macros_from_attributes(service_attrs)
 
         return replace_macros_in_str(commandline, {k: f"{v}" for k, v in service_macros.items()})
 

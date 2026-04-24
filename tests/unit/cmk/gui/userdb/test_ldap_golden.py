@@ -10,9 +10,11 @@
 
 import datetime
 from collections.abc import Sequence
+from contextlib import contextmanager
 from unittest.mock import ANY, MagicMock
 
 import ldap  # type: ignore[import-untyped]
+import ldap.ldapobject  # type: ignore[import-untyped]
 import pytest
 from pytest_mock import MockerFixture
 
@@ -25,7 +27,7 @@ from cmk.gui.userdb.ldap_connector import LDAPUserConnector
 from cmk.crypto.password import Password
 
 
-@pytest.fixture(name="mock_ldap", autouse=True)
+@pytest.fixture(name="mock_ldap")
 def fixture_mock_ldap_object(mocker: MockerFixture) -> MagicMock:
     """Mock the ReconnectLDAPObject and return the mock object.
     The actual instance of the mock, that can be used to check method calls, is
@@ -210,7 +212,9 @@ def test_do_sync(mocker: MockerFixture, request_context: None) -> None:
     )
 
 
-def test_check_credentials_valid(mocker: MockerFixture, request_context: None) -> None:
+def test_check_credentials_valid(
+    mocker: MockerFixture, mock_ldap: MagicMock, request_context: None
+) -> None:
     connector = LDAPUserConnector(_test_config)
     connector.connect()
     assert connector._ldap_obj
@@ -222,7 +226,9 @@ def test_check_credentials_valid(mocker: MockerFixture, request_context: None) -
     assert result == UserId("carol_id")
 
 
-def test_check_credentials_invalid(mocker: MockerFixture, request_context: None) -> None:
+def test_check_credentials_invalid(
+    mocker: MockerFixture, mock_ldap: MagicMock, request_context: None
+) -> None:
     connector = LDAPUserConnector(_test_config)
     connector.connect()
     assert connector._ldap_obj
@@ -232,7 +238,7 @@ def test_check_credentials_invalid(mocker: MockerFixture, request_context: None)
     assert connector.check_credentials(UserId("carol"), Password("hunter2")) is False
 
 
-def test_check_credentials_not_found(mocker: MockerFixture) -> None:
+def test_check_credentials_not_found(mocker: MockerFixture, mock_ldap: MagicMock) -> None:
     connector = LDAPUserConnector(_test_config)
     connector.connect()
     assert connector._ldap_obj
@@ -278,3 +284,59 @@ def test_remove_trailing_dot_from_hostname(mock_ldap: MagicMock) -> None:
     connector.connect()
 
     mock_ldap.assert_called_with("ldap://lolcathorst")
+
+
+@contextmanager
+def with_crl_check():
+    old_crl_check = ldap.get_option(ldap.OPT_X_TLS_CRLCHECK)
+    try:
+        ldap.set_option(ldap.OPT_X_TLS_CRLCHECK, ldap.OPT_X_TLS_CRL_ALL)
+        yield
+    finally:
+        ldap.set_option(ldap.OPT_X_TLS_CRLCHECK, old_crl_check)
+
+
+def test_set_tls_options_overrides_global_crlcheck() -> None:
+    """Regression test for SUP-28719.
+
+    On OpenSSL-linked libldap, a new handle inherits the global OPT_X_TLS_CRLCHECK from ldap.conf.
+    A globally configured 'TLS_CRLCHECK all' (e.g. via /etc/ldap/ldap.conf) would then enforce CRL
+    checks on our handle, which fail in our environment because no CRL is loaded.
+
+    _set_tls_options must override that inherited global to OPT_X_TLS_CRL_NONE on the handle.
+    """
+    if (backend := ldap.get_option(ldap.OPT_X_TLS_PACKAGE)) != "OpenSSL":
+        assert backend == "GnuTLS", f"Unexpected TLS backend: {backend}"
+        pytest.skip("OPT_X_TLS_CRLCHECK is only relevant on OpenSSL backend, GnuTLS would raise")
+
+    with with_crl_check():
+        conn = ldap.ldapobject.ReconnectLDAPObject("ldaps://foobar.test")
+        # Precondition: new handle inherits the global setting for TLS_CRLCHECK
+        assert conn.get_option(ldap.OPT_X_TLS_CRLCHECK) == ldap.OPT_X_TLS_CRL_ALL
+
+        LDAPUserConnector(
+            {
+                **_test_config,
+                "use_ssl": True,
+            }
+        )._set_tls_options(conn)
+
+        assert conn.get_option(ldap.OPT_X_TLS_CRLCHECK) == ldap.OPT_X_TLS_CRL_NONE
+
+
+def test_set_tls_options_gnutls_no_crlcheck_support() -> None:
+    """Test that we didn't break the GnuTLS path with the fix for SUP-28719.
+
+    I.e. with GnuTLS we must still be able to set use_ssl without crashing, even though
+    OPT_X_TLS_CRLCHECK is not supported by the backend at all.
+    """
+    if ldap.get_option(ldap.OPT_X_TLS_PACKAGE) != "GnuTLS":
+        pytest.skip("CRLCHECK-unsupported path only meaningful on GnuTLS backend")
+
+    conn = ldap.ldapobject.ReconnectLDAPObject("ldaps://foobar.test")
+    LDAPUserConnector(
+        {
+            **_test_config,
+            "use_ssl": True,
+        }
+    )._set_tls_options(conn)  # must not raise

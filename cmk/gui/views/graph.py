@@ -275,12 +275,11 @@ def _paint_time_graph_cmk(
     # painter settings (which makes sense). The caching in graph.ts breaks this assumption. So
     # for now, we randomize. See also CMK-13840.
     display_id = str(uuid4())
-    spec = get_template_graph_specification(
+    graph_specification = get_template_graph_specification(
         site_id=row["site"],
         host_name=row["host_name"],
         service_name=row.get("service_description", "_HOST_"),
     )
-
     env = GraphEnvironment(
         registered_metrics=registered_metrics,
         registered_graphs=registered_graphs,
@@ -292,7 +291,7 @@ def _paint_time_graph_cmk(
     )
     if request.has_var("cmk-token"):
         return "", render_graphs_html(
-            spec,
+            graph_specification,
             ranges,
             display_config,
             env,
@@ -301,7 +300,7 @@ def _paint_time_graph_cmk(
             display_id=display_id,
         )
     return "", render_deferred_graphs_html(
-        spec,
+        graph_specification,
         ranges,
         display_config,
         env,

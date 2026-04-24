@@ -64,17 +64,31 @@ agent_section_netapp_ontap_qtree_quota = AgentSection(
     parse_function=parse_netapp_ontap_qtree_quota,
 )
 
+agent_section_netapp_ontap_s3_buckets = AgentSection(
+    name="netapp_ontap_s3_buckets",
+    parse_function=parse_netapp_ontap_qtree_quota,
+)
+
 
 def discover_netapp_ontap_qtree_quota(
-    params: Mapping[str, Any], section: Section
+    params: Mapping[str, Any],
+    section_netapp_ontap_qtree_quota: Section | None,
+    section_netapp_ontap_s3_buckets: Section | None,
 ) -> DiscoveryResult:
-    yield from netapp_api.discover_netapp_qtree_quota(params, section)
+    for section in (section_netapp_ontap_qtree_quota, section_netapp_ontap_s3_buckets):
+        if section:
+            yield from netapp_api.discover_netapp_qtree_quota(params, section)
 
 
 def check_netapp_ontap_qtree_quota(
-    item: str, params: Mapping[str, Any], section: Section
+    item: str,
+    params: Mapping[str, Any],
+    section_netapp_ontap_qtree_quota: Section | None,
+    section_netapp_ontap_s3_buckets: Section | None,
 ) -> CheckResult:
-    qtree = section.get(item)
+    qtree = (section_netapp_ontap_qtree_quota or {}).get(item) or (
+        section_netapp_ontap_s3_buckets or {}
+    ).get(item)
     if not qtree:
         return
 
@@ -83,6 +97,7 @@ def check_netapp_ontap_qtree_quota(
 
 check_plugin_netapp_ontap_qtree_quota = CheckPlugin(
     name="netapp_ontap_qtree_quota",
+    sections=["netapp_ontap_qtree_quota", "netapp_ontap_s3_buckets"],
     service_name="Qtree %s",
     discovery_function=discover_netapp_ontap_qtree_quota,
     discovery_ruleset_name="discovery_qtree",

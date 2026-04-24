@@ -3,11 +3,16 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from unittest.mock import patch
+
 import pytest
 
-from cmk.agent_based.v2 import StringTable
+from cmk.agent_based.v2 import Metric, Result, Service, State, StringTable
+from cmk.plugins.lib.df import FILESYSTEM_DEFAULT_PARAMS
 from cmk.plugins.lib.netapp_api import Qtree
 from cmk.plugins.netapp.agent_based.netapp_ontap_qtree_quota import (
+    check_netapp_ontap_qtree_quota,
+    discover_netapp_ontap_qtree_quota,
     parse_netapp_ontap_qtree_quota,
     Section,
 )
@@ -132,3 +137,68 @@ def test_parse_netapp_ontap_qtree_quota(
     result = parse_netapp_ontap_qtree_quota(input_string_table)
 
     assert result == expected_section
+
+
+_QTREE_SECTION: Section = {
+    "vol1/qt1": Qtree(
+        quota="qt1",
+        quota_users="",
+        volume="vol1",
+        disk_limit="107374182400",
+        disk_used="10737418240",
+    ),
+    "qt1": Qtree(
+        quota="qt1",
+        quota_users="",
+        volume="vol1",
+        disk_limit="107374182400",
+        disk_used="10737418240",
+    ),
+}
+
+_S3_SECTION: Section = {
+    "fg_oss_1/bucket-1": Qtree(
+        quota="bucket-1",
+        quota_users="",
+        volume="fg_oss_1",
+        disk_limit="107374182400",
+        disk_used="96636764160",
+    ),
+    "bucket-1": Qtree(
+        quota="bucket-1",
+        quota_users="",
+        volume="fg_oss_1",
+        disk_limit="107374182400",
+        disk_used="96636764160",
+    ),
+}
+
+
+def test_discover_merges_qtree_and_s3_sections() -> None:
+    services = list(
+        discover_netapp_ontap_qtree_quota({"exclude_volume": False}, _QTREE_SECTION, _S3_SECTION)
+    )
+    assert services == [Service(item="vol1/qt1"), Service(item="fg_oss_1/bucket-1")]
+
+
+def test_discover_with_only_the_s3_section() -> None:
+    services = list(discover_netapp_ontap_qtree_quota({"exclude_volume": False}, None, _S3_SECTION))
+    assert services == [Service(item="fg_oss_1/bucket-1")]
+
+
+def test_check_s3_bucket_through_qtree_plugin() -> None:
+    with patch(
+        "cmk.plugins.netapp.agent_based.netapp_ontap_qtree_quota.get_value_store",
+        return_value={
+            "fg_oss_1/bucket-1.delta": (1000.0, 100.0),
+            "fg_oss_1/bucket-1.trend": (1000.0 - 86400, 1000.0, 0.0),
+        },
+    ):
+        results = list(
+            check_netapp_ontap_qtree_quota(
+                "fg_oss_1/bucket-1", FILESYSTEM_DEFAULT_PARAMS, None, _S3_SECTION
+            )
+        )
+
+    assert any(isinstance(r, Metric) and r.name == "fs_used_percent" for r in results)
+    assert any(isinstance(r, Result) and r.state is State.CRIT for r in results)

@@ -35,6 +35,7 @@ DEFAULT_RESOURCES = [
     "ntp_time_sync",
     "environment",
     "qtree_quota",
+    "s3_buckets",
     "snapvault",
     "fc_interfaces",
 ]
@@ -117,6 +118,7 @@ def _formspec_netapp_ontap() -> Dictionary:
                         MultipleChoiceElement(name="luns", title=Title("LUNs")),
                         MultipleChoiceElement(name="aggr", title=Title("Aggregations")),
                         MultipleChoiceElement(name="qtree_quota", title=Title("Qtree Quotas")),
+                        MultipleChoiceElement(name="s3_buckets", title=Title("S3 Buckets")),
                         MultipleChoiceElement(name="snapvault", title=Title("SnapVaults")),
                         MultipleChoiceElement(name="interfaces", title=Title("Network Interfaces")),
                         MultipleChoiceElement(name="ports", title=Title("Network Ports")),

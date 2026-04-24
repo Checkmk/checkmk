@@ -31,3 +31,8 @@ item:
 discovery:
  One service is created for each qtree with the quota-type {tree}.
  {User} and {group} quota types are not shown.
+
+ NetApp ONTAP S3 buckets are surfaced as Qtree services as well (a bucket maps
+ to a qtree on its backing FlexGroup volume). Enable the {S3 Buckets} fetch in
+ the {NetApp via Ontap REST API} rule to monitor them. The {NetApp Qtree
+ discovery} ruleset governs the service naming of both.

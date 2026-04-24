@@ -125,7 +125,7 @@ function refreshStateCache(): StateCache {
       settingsMismatches: [],
       omdSites: [],
       activeProxies: [],
-      devSiteTools: { installed: false },
+      devSiteTools: { installed: false, installedVersion: '' },
       versionMismatch: null,
       onboarding: {
         systemDone: false,

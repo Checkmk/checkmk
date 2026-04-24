@@ -20,7 +20,6 @@ $argClean = $false
 $argCtl = $false
 $argSign = $false
 $argMsi = $false
-$argOhm = $false
 $argOracle = $false
 $argExt = $false
 $argSql = $false
@@ -36,7 +35,6 @@ $msbuild_exe = & "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vsw
 $repo_root = (get-item $pwd).parent.parent.FullName
 $results_dir = "$repo_root\artefacts"
 $build_dir = "$pwd\build"
-$ohm_dir = "$build_dir\ohm\"
 $env:ExternalCompilerOptions = "/DDECREASE_COMPILE_TIME"
 $hash_file = "$results_dir\windows_files_hashes.txt"
 $usbip_exe = "c:\common\usbip-win-0.3.6-dev\usbip.exe"
@@ -62,7 +60,7 @@ function Write-Help() {
     Write-Host ""
     Write-Host "Available arguments:"
     Write-Host "  -?, -h, --help          display help and exit"
-    Write-Host "  -A, --all               shortcut to -C -O -T -M -E -Q -R:  ctl, ohm, unit, msi, extensions, mk-sql, mk-oracle"
+    Write-Host "  -A, --all               shortcut to -C -T -M -E -Q -R:  ctl, unit, msi, extensions, mk-sql, mk-oracle"
     Write-Host "  --clean-all             clean literally all, use with care"
     Write-Host "  --clean-artifacts       clean artifacts"
     Write-Host "  -C, --ctl               make controller"
@@ -71,7 +69,6 @@ function Write-Help() {
     Write-Host "  -B, --build             do not test, just build"
     Write-Host "  -W, --win-agent         make windows agent"
     Write-Host "  -M, --msi               make msi"
-    Write-Host "  -O, --ohm               make ohm"
     Write-Host "  -E, --extensions        make extensions"
     Write-Host "  -S, --skip-sql-test     skip sql test to be able to build msi in case sql is not configured"
     Write-Host "  --detach                detach USB before running"
@@ -100,7 +97,6 @@ else {
             { $("-B", "--build") -contains $_ } { $argBuildOnly = $true }
             { $("-W", "--win-agent") -contains $_ } { $argWin = $true }
             { $("-M", "--msi") -contains $_ } { $argMsi = $true }
-            { $("-O", "--ohm") -contains $_ } { $argOhm = $true }
             { $("-R", "--mk-oracle") -contains $_ } { $argOracle = $true }
             { $("-Q", "--mk-sql") -contains $_ } { $argSql = $true }
             { $("-E", "--extensions") -contains $_ } { $argExt = $true }
@@ -118,7 +114,6 @@ else {
 
 
 if ($argAll) {
-    $argOhm = $true
     $argOracle = $true
     $argCtl = $true
     $argSql = $true
@@ -225,23 +220,6 @@ function Build-Ext {
 
     Write-Host "Success building Ext" -foreground Green
     Set-Location $cwd
-}
-
-function Build-OHM() {
-    if ($argOhm -ne $true) {
-        Write-Host "Skipping OHM build..." -ForegroundColor Yellow
-        return
-    }
-    Write-Host "Building OHM..." -ForegroundColor White
-    & $msbuild_exe .\ohm\ohm.sln "/p:OutDir=$ohm_dir;TargetFrameworkVersion=v4.6;Configuration=Release"
-    if ($LASTEXITCODE -ne 0) {
-        Write-Error "Error building OHM, error code is $LASTEXITCODE" -ErrorAction Stop
-    }
-
-    Write-Host "Uploading OHM" -foreground Green
-    Copy-Item "$ohm_dir/OpenHardwareMonitorLib.dll" $results_dir -Force -ErrorAction Stop
-    Copy-Item "$ohm_dir/OpenHardwareMonitorCLI.exe" $results_dir -Force -ErrorAction Stop
-    Write-Host "Success building OHM" -foreground Green
 }
 
 function Build-MSI {
@@ -447,9 +425,7 @@ function Start-BinarySigning {
         "$build_dir\check_mk_service\Win32\Release\check_mk_service32.exe",
         "$results_dir\cmk-agent-ctl.exe",
         "$results_dir\mk-sql.exe",
-        "$results_dir\mk-oracle.exe",
-        "$ohm_dir\OpenHardwareMonitorLib.dll",
-        "$ohm_dir\OpenHardwareMonitorCLI.exe"
+        "$results_dir\mk-oracle.exe"
     )
 
     foreach ($file in $files_to_sign) {
@@ -549,8 +525,6 @@ function Start-ArtifactUploading {
         @("$build_dir/install/Release/check_mk_service.msi", "$results_dir/check_mk_agent.msi"),
         @("$build_dir/check_mk_service/x64/Release/check_mk_service64.exe", "$results_dir/check_mk_agent-64.exe"),
         @("$build_dir/check_mk_service/Win32/Release/check_mk_service32.exe", "$results_dir/check_mk_agent.exe"),
-        @("$build_dir/ohm/OpenHardwareMonitorCLI.exe", "$results_dir/OpenHardwareMonitorCLI.exe"),
-        @("$build_dir/ohm/OpenHardwareMonitorLib.dll", "$results_dir/OpenHardwareMonitorLib.dll"),
         @("./install/resources/check_mk.user.yml", "$results_dir/check_mk.user.yml"),
         @("./install/resources/check_mk.yml", "$results_dir/check_mk.yml")
     )
@@ -734,7 +708,6 @@ try {
         Build-Package $argSql "mk-sql" "MK-SQL" --build
         Build-Package $argOracle "mk-oracle" "mk-oracle" --build
     }
-    Build-Ohm
     Build-Ext
 
     Start-UnitTests

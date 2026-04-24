@@ -9,6 +9,7 @@ load("@npm//bazel/tools:stylelint/package_json.bzl", stylelint_bin = "bin")
 load("@rules_mypy//mypy:mypy.bzl", "mypy_cli")
 load("@rules_python//python:defs.bzl", "py_binary")
 load("@rules_python//python/entry_points:py_console_script_binary.bzl", "py_console_script_binary")
+load("@rules_shell//shell:sh_binary.bzl", "sh_binary")
 load("//bazel/rules:sh_expand_template.bzl", "sh_expand_template")
 
 npm_link_all_packages(name = "node_modules")
@@ -83,16 +84,11 @@ py_console_script_binary(
     ],
 )
 
-# Custom mypy wrapper that filters problematic MYPYPATH entries
-py_binary(
+# Custom mypy wrapper that filters problematic MYPYPATH entries.
+sh_binary(
     name = "mypy_cli",
-    srcs = ["mypy_wrapper.py"],
+    srcs = ["mypy_wrapper.sh"],
     data = [":mypy_cli_original"],
-    main = "mypy_wrapper.py",
-    deps = [
-        requirement("mypy"),
-        requirement("pydantic"),
-    ],
 )
 
 native_binary(

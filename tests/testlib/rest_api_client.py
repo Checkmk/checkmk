@@ -1576,6 +1576,88 @@ class PasswordClient(RestApiClient):
         return set_if_match_header(etag)
 
 
+class CustomerClient(RestApiClient):
+    domain: DomainType = "customer"
+
+    def create(
+        self,
+        customer_id: str,
+        name: str,
+        macros: Sequence[Mapping[str, str]] | None = None,
+        customer_report_layout: str | None = None,
+        expect_ok: bool = True,
+    ) -> Response:
+        body: dict[str, Any] = {"id": customer_id, "name": name}
+        if macros is not None:
+            body["macros"] = list(macros)
+        if customer_report_layout is not None:
+            body["customer_report_layout"] = customer_report_layout
+        return self.request(
+            "post",
+            url=f"/domain-types/{self.domain}/collections/all",
+            body=body,
+            expect_ok=expect_ok,
+        )
+
+    def get(self, customer_id: str, expect_ok: bool = True) -> Response:
+        return self.request(
+            "get",
+            url=f"/objects/{self.domain}/{customer_id}",
+            expect_ok=expect_ok,
+        )
+
+    def get_all(self, expect_ok: bool = True) -> Response:
+        return self.request(
+            "get",
+            url=f"/domain-types/{self.domain}/collections/all",
+            expect_ok=expect_ok,
+        )
+
+    def edit(
+        self,
+        customer_id: str,
+        name: str | None = None,
+        macros: Sequence[Mapping[str, str]] | None = None,
+        customer_report_layout: str | None = None,
+        expect_ok: bool = True,
+        etag: IF_MATCH_HEADER_OPTIONS = "star",
+    ) -> Response:
+        body: dict[str, Any] = {}
+        if name is not None:
+            body["name"] = name
+        if macros is not None:
+            body["macros"] = list(macros)
+        if customer_report_layout is not None:
+            body["customer_report_layout"] = customer_report_layout
+        return self.request(
+            "put",
+            url=f"/objects/{self.domain}/{customer_id}",
+            body=body,
+            expect_ok=expect_ok,
+            headers=self._set_etag_header(customer_id, etag),
+        )
+
+    def delete(
+        self,
+        customer_id: str,
+        expect_ok: bool = True,
+        etag: IF_MATCH_HEADER_OPTIONS = "star",
+    ) -> Response:
+        return self.request(
+            "delete",
+            url=f"/objects/{self.domain}/{customer_id}",
+            expect_ok=expect_ok,
+            headers=self._set_etag_header(customer_id, etag),
+        )
+
+    def _set_etag_header(
+        self, customer_id: str, etag: IF_MATCH_HEADER_OPTIONS
+    ) -> Mapping[str, str] | None:
+        if etag == "valid_etag":
+            return {"If-Match": self.get(customer_id).headers["ETag"]}
+        return set_if_match_header(etag)
+
+
 class AgentClient(RestApiClient):
     domain: DomainType = "agent"
 
@@ -4073,6 +4155,7 @@ class ClientRegistry:
     Ruleset: RulesetClient
     HostTagGroup: HostTagGroupClient
     Password: PasswordClient
+    Customer: CustomerClient
     Agent: AgentClient
     Downtime: DowntimeClient
     HostGroup: HostGroupClient
@@ -4133,6 +4216,7 @@ def get_client_registry(request_handler: RequestHandler, url_prefix: str) -> Cli
         Ruleset=RulesetClient(request_handler, url_prefix),
         HostTagGroup=HostTagGroupClient(request_handler, url_prefix),
         Password=PasswordClient(request_handler, url_prefix),
+        Customer=CustomerClient(request_handler, url_prefix),
         Agent=AgentClient(request_handler, url_prefix),
         Downtime=DowntimeClient(request_handler, url_prefix),
         HostGroup=HostGroupClient(request_handler, url_prefix),

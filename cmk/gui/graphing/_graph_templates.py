@@ -59,7 +59,7 @@ tracer = trace.get_tracer()
 class MKGraphNotFound(MKGeneralException): ...
 
 
-def _sort_registered_graph_plugins(
+def sort_registered_graph_plugins(
     registered_graphs: Mapping[str, graphs_api.Graph | graphs_api.Bidirectional],
 ) -> list[tuple[str, graphs_api.Graph | graphs_api.Bidirectional]]:
     def _by_index(graph_name: str) -> int:
@@ -104,7 +104,7 @@ def get_graph_plugin_from_id(
                 metrics_api.CriticalOf(metric_name),
             ],
         )
-    for name, graph_plugin in _sort_registered_graph_plugins(registered_graphs):
+    for name, graph_plugin in sort_registered_graph_plugins(registered_graphs):
         if graph_id == name:
             return graph_plugin
     raise MKGraphNotFound(_("There is no graph plug-in with the id '%s'") % graph_id)
@@ -112,7 +112,7 @@ def get_graph_plugin_from_id(
 
 def get_graph_plugin_and_single_metric_choices(
     registered_metrics: Mapping[str, RegisteredMetric],
-    registered_graphs: Mapping[str, graphs_api.Graph | graphs_api.Bidirectional],
+    sorted_graph_plugins: Sequence[tuple[str, graphs_api.Graph | graphs_api.Bidirectional]],
     site_id: SiteId,
     host_name: HostName,
     service_name: ServiceName,
@@ -120,7 +120,7 @@ def get_graph_plugin_and_single_metric_choices(
 ) -> tuple[list[GraphPluginChoice], list[GraphPluginChoice]]:
     graph_plugin_choices = []
     already_graphed_metrics: set[str] = set()
-    for _graph_id, graph_plugin in _sort_registered_graph_plugins(registered_graphs):
+    for _graph_id, graph_plugin in sorted_graph_plugins:
         if (
             graphed_metrics := evaluate_graph_plugin_metrics(
                 registered_metrics,
@@ -222,7 +222,7 @@ def _create_graph_recipe(
 
 def _evaluate_graph_plugins(
     registered_metrics: Mapping[str, RegisteredMetric],
-    registered_graphs: Mapping[str, graphs_api.Graph | graphs_api.Bidirectional],
+    sorted_graph_plugins: Sequence[tuple[str, graphs_api.Graph | graphs_api.Bidirectional]],
     site_id: SiteId,
     host_name: HostName,
     service_name: ServiceName,
@@ -232,7 +232,7 @@ def _evaluate_graph_plugins(
     temperature_unit: TemperatureUnit,
 ) -> Iterator[tuple[str, GraphRecipe]]:
     already_graphed_metrics: set[str] = set()
-    for graph_id, graph_plugin in _sort_registered_graph_plugins(registered_graphs):
+    for graph_id, graph_plugin in sorted_graph_plugins:
         if (
             graphed_metrics := evaluate_graph_plugin_metrics(
                 registered_metrics,
@@ -429,7 +429,7 @@ class TemplateGraphSpecification(GraphSpecification, frozen=True):
                 for graph_recipe_index, (graph_recipe_id, recipe) in enumerate(
                     _evaluate_graph_plugins(
                         env.registered_metrics,
-                        env.registered_graphs,
+                        sort_registered_graph_plugins(env.registered_graphs),
                         site_id,
                         host_name,
                         service_name,

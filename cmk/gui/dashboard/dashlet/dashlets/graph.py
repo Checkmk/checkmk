@@ -38,6 +38,7 @@ from cmk.gui.graphing import (
     metrics_from_api,
     MKCombinedGraphLimitExceededError,
     RegisteredMetric,
+    sort_registered_graph_plugins,
     TemplateGraphSpecification,
 )
 from cmk.gui.i18n import _
@@ -394,7 +395,7 @@ def _graph_and_single_metric_templates_choices_for_context(
 
     return get_graph_plugin_and_single_metric_choices(
         registered_metrics,
-        registered_graphs,
+        sort_registered_graph_plugins(registered_graphs),
         graph_row.site_id,
         graph_row.host_name,
         graph_row.service_name,

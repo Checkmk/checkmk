@@ -23,6 +23,7 @@ from cmk.gui.graphing._graph_specification import (
 )
 from cmk.gui.graphing._graph_templates import (
     _evaluate_graph_plugins,
+    sort_registered_graph_plugins,
     TemplateGraphSpecification,
 )
 from cmk.gui.graphing._rrd import HostGraphRow, ServiceGraphRow
@@ -1005,7 +1006,7 @@ def test__evaluate_graph_plugins_1(
             graph_id
             for graph_id, _graph_recipe in _evaluate_graph_plugins(
                 {},
-                registered_graphs,
+                sort_registered_graph_plugins(registered_graphs),
                 SiteId("site_id"),
                 HostName("host_name"),
                 ServiceName("service_name"),
@@ -1049,7 +1050,7 @@ def test__evaluate_graph_plugins_2(
             graph_id
             for graph_id, _graph_recipe in _evaluate_graph_plugins(
                 {},
-                registered_graphs,
+                sort_registered_graph_plugins(registered_graphs),
                 SiteId("site_id"),
                 HostName("host_name"),
                 ServiceName("service_name"),
@@ -1455,7 +1456,7 @@ def test__evaluate_graph_plugins_with_predictive_metrics(
         recipe
         for _graph_id, recipe in _evaluate_graph_plugins(
             registered_metrics,
-            registered_graphs,
+            sort_registered_graph_plugins(registered_graphs),
             SiteId("site_id"),
             HostName("host_name"),
             ServiceName("service_name"),
@@ -1993,7 +1994,7 @@ def test_conflicting_metrics(
             graph_id
             for graph_id, _graph_recipe in _evaluate_graph_plugins(
                 {},
-                registered_graphs,
+                sort_registered_graph_plugins(registered_graphs),
                 SiteId("site_id"),
                 HostName("host_name"),
                 ServiceName("service_name"),

@@ -54,6 +54,7 @@ from ._graph_templates import (
     get_graph_plugin_choices,
     get_template_graph_specification,
     GraphPluginChoice,
+    sort_registered_graph_plugins,
     TemplateGraphSpecification,
 )
 from ._graph_title import render_plain_graph_title
@@ -164,6 +165,7 @@ __all__ = [
     "make_graph_row",
     "get_graph_plugin_and_single_metric_choices",
     "get_graph_plugin_choices",
+    "sort_registered_graph_plugins",
     "get_metric_spec",
     "get_mm_per_ex",
     "get_temperature_unit",

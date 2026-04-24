@@ -76,11 +76,11 @@ LIVESTATUS_CONFIG_TEMPLATE = """service livestatus
         # server. Please make sure that this value is at least as high
         # as the number of threads defined with num_client_threads in
         # etc/mk-livestatus/nagios.cfg.
-        instances       = 500
+        instances       = {LIVESTATUS_TCP_INSTANCES}
 
         # Limit the maximum number of simultaneous connections from
         # each distinct source IP address.
-        per_source      = 250
+        per_source      = {LIVESTATUS_TCP_PER_SOURCE}
 
         # Restrict access to the listed remote hosts. The value is a
         # space-separated list of IPv4 or IPv6 addresses. If unset,
@@ -398,6 +398,14 @@ def _config_set(
             output = _set_livestatus_tcp_only_from(site.name, config, omd_path, value)
             if isinstance(output, _Error):
                 return
+        case "LIVESTATUS_TCP_INSTANCES":
+            output = _set_livestatus_tcp_instances(site.name, config, omd_path, value)
+            if isinstance(output, _Error):
+                return
+        case "LIVESTATUS_TCP_PER_SOURCE":
+            output = _set_livestatus_tcp_per_source(site.name, config, omd_path, value)
+            if isinstance(output, _Error):
+                return
         case _:
             exitcode, output = _call_hook(site, hook_name, ["set", value], verbose)
             if exitcode:
@@ -453,6 +461,8 @@ def _set_livestatus_tcp(site_name: str, config: Config, omd_path: Path, value: s
             value,
             config["LIVESTATUS_TCP_ONLY_FROM"],
             config["LIVESTATUS_TCP_PORT"],
+            config["LIVESTATUS_TCP_INSTANCES"],
+            config["LIVESTATUS_TCP_PER_SOURCE"],
             omd_path,
         )
     except Exception:
@@ -466,6 +476,8 @@ def _write_livestatus_xinetd_conf_file(
     livestatus_tcp: str,
     livestatus_tcp_only_from: str,
     livestatus_tcp_port: str,
+    livestatus_tcp_instances: str,
+    livestatus_tcp_per_source: str,
     omd_path: Path = Path("/omd/"),
 ) -> None:
     site_home = SitePaths.from_site_name(site_name, omd_path).home
@@ -476,6 +488,8 @@ def _write_livestatus_xinetd_conf_file(
             content = LIVESTATUS_CONFIG_HEADER + LIVESTATUS_CONFIG_TEMPLATE.format(
                 LIVESTATUS_TCP_ONLY_FROM=livestatus_tcp_only_from,
                 LIVESTATUS_TCP_PORT=livestatus_tcp_port,
+                LIVESTATUS_TCP_INSTANCES=livestatus_tcp_instances,
+                LIVESTATUS_TCP_PER_SOURCE=livestatus_tcp_per_source,
                 OMD_SITE=site_name,
                 OMD_ROOT=site_home,
             )
@@ -488,6 +502,44 @@ def _write_livestatus_xinetd_conf_file(
         livestatus_xinetd_conf.write(content)
 
 
+def _set_livestatus_tcp_instances(
+    site_name: str, config: Config, omd_path: Path, value: str
+) -> str | _Error:
+    try:
+        _write_livestatus_xinetd_conf_file(
+            site_name,
+            config["LIVESTATUS_TCP"],
+            config["LIVESTATUS_TCP_ONLY_FROM"],
+            config["LIVESTATUS_TCP_PORT"],
+            value,
+            config["LIVESTATUS_TCP_PER_SOURCE"],
+            omd_path,
+        )
+    except Exception:
+        traceback.print_exc()
+        return _Error()
+    return value
+
+
+def _set_livestatus_tcp_per_source(
+    site_name: str, config: Config, omd_path: Path, value: str
+) -> str | _Error:
+    try:
+        _write_livestatus_xinetd_conf_file(
+            site_name,
+            config["LIVESTATUS_TCP"],
+            config["LIVESTATUS_TCP_ONLY_FROM"],
+            config["LIVESTATUS_TCP_PORT"],
+            config["LIVESTATUS_TCP_INSTANCES"],
+            value,
+            omd_path,
+        )
+    except Exception:
+        traceback.print_exc()
+        return _Error()
+    return value
+
+
 def _set_livestatus_tcp_only_from(
     site_name: str, config: Config, omd_path: Path, value: str
 ) -> str | _Error:
@@ -497,6 +549,8 @@ def _set_livestatus_tcp_only_from(
             config["LIVESTATUS_TCP"],
             value,
             config["LIVESTATUS_TCP_PORT"],
+            config["LIVESTATUS_TCP_INSTANCES"],
+            config["LIVESTATUS_TCP_PER_SOURCE"],
             omd_path,
         )
     except Exception:
@@ -523,6 +577,8 @@ def _set_livestatus_tcp_port(
             config["LIVESTATUS_TCP"],
             config["LIVESTATUS_TCP_ONLY_FROM"],
             new_value,
+            config["LIVESTATUS_TCP_INSTANCES"],
+            config["LIVESTATUS_TCP_PER_SOURCE"],
             omd_path,
         )
     except Exception:

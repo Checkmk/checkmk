@@ -17,7 +17,9 @@ pkg_files(
     name = "hooks_pkg",
     srcs = [
         "LIVESTATUS_TCP",
+        "LIVESTATUS_TCP_INSTANCES",
         "LIVESTATUS_TCP_ONLY_FROM",
+        "LIVESTATUS_TCP_PER_SOURCE",
         "LIVESTATUS_TCP_PORT",
         "LIVESTATUS_TCP_TLS",
     ],

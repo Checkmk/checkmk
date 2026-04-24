@@ -763,6 +763,8 @@ class ConfigDomainOMD(ABCConfigDomain):
                     ].split()
 
                 del settings["LIVESTATUS_TCP_ONLY_FROM"]
+                del settings["LIVESTATUS_TCP_INSTANCES"]
+                del settings["LIVESTATUS_TCP_PER_SOURCE"]
             else:
                 settings["LIVESTATUS_TCP"] = None
 
@@ -831,6 +833,8 @@ class ConfigDomainOMD(ABCConfigDomain):
                 else:
                     settings["LIVESTATUS_TCP_ONLY_FROM"] = "0.0.0.0"
 
+                settings["LIVESTATUS_TCP_INSTANCES"] = settings["LIVESTATUS_TCP"]["instances"]
+                settings["LIVESTATUS_TCP_PER_SOURCE"] = settings["LIVESTATUS_TCP"]["per_source"]
                 settings["LIVESTATUS_TCP"] = "on"
             else:
                 settings["LIVESTATUS_TCP"] = "off"

@@ -1,0 +1,20 @@
+#!/bin/bash
+
+# Alias: Maximum number of parallel Livestatus TCP server instances
+# Menu: Distributed Monitoring
+# Description:
+#  If Livestatus is configured to listen on a TCP port, this setting
+#  limits how many server instances can be active simultaneously.
+#  Default: 500
+
+case "$1" in
+    default)
+        echo "500"
+        ;;
+    choices)
+        echo "[0-9]+"
+        ;;
+    depends)
+        [ "$CONFIG_CORE" != none -a "$CONFIG_LIVESTATUS_TCP" = on ]
+        ;;
+esac

@@ -46,6 +46,28 @@ def _livestatus_via_tcp() -> Dictionary:
                 ),
             ),
             (
+                "instances",
+                Integer(
+                    title=_("Maximum number of parallel server instances"),
+                    help=_(
+                        "Limits the number of Livestatus server processes that can be active "
+                        "simultaneously."
+                    ),
+                    default_value=500,
+                ),
+            ),
+            (
+                "per_source",
+                Integer(
+                    title=_("Maximum parallel connections per source IP address"),
+                    help=_(
+                        "Limits the number of simultaneous Livestatus connections allowed "
+                        "from a single source IP address."
+                    ),
+                    default_value=250,
+                ),
+            ),
+            (
                 "tls",
                 FixedValue(
                     value=True,

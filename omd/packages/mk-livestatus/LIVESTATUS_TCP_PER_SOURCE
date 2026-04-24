@@ -1,0 +1,21 @@
+#!/bin/bash
+
+# Alias: Maximum parallel Livestatus TCP connections per source IP
+# Menu: Distributed Monitoring
+# Description:
+#  If Livestatus is configured to listen on a TCP port, this setting
+#  limits the number of simultaneous connections allowed from a single
+#  source IP address.
+#  Default: 250
+
+case "$1" in
+    default)
+        echo "250"
+        ;;
+    choices)
+        echo "[0-9]+"
+        ;;
+    depends)
+        [ "$CONFIG_CORE" != none -a "$CONFIG_LIVESTATUS_TCP" = on ]
+        ;;
+esac

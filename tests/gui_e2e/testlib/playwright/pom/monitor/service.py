@@ -9,6 +9,7 @@ from typing import override
 from playwright.sync_api import expect, Locator, Page
 
 from tests.gui_e2e.testlib.playwright.helpers import DropdownListNameToID
+from tests.gui_e2e.testlib.playwright.pom.ai_conversation import AiConversationSlideout
 from tests.gui_e2e.testlib.playwright.pom.page import CmkPage
 
 logger = logging.getLogger(__name__)
@@ -65,3 +66,7 @@ class ServicePage(CmkPage):
     @property
     def broken_graph(self) -> Locator:
         return self.main_area.locator("div[class*='brokengraph']")
+
+    def click_explain_with_ai(self) -> None:
+        self.main_area.get_suggestion("Explain with AI").click()
+        expect(AiConversationSlideout(self).disclaimer).to_be_visible()

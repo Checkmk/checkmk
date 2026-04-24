@@ -395,7 +395,7 @@ class TemplateGraphSpecification(GraphSpecification, frozen=True):
         if not graph_row.translated_metrics:
             return []
 
-        site_id = graph_row.site
+        site_id = graph_row.site_id
         host_name = graph_row.host_name
         service_name = graph_row.service_name
         # Performance graph dashlets already use graph_id, but for example in reports, we still use

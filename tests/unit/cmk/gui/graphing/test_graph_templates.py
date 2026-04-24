@@ -574,7 +574,7 @@ class _FakeTemplateGraphSpecification(TemplateGraphSpecification):
         )
         return [
             ServiceGraphRow(
-                site=SiteId("site_id"),
+                site_id=SiteId("site_id"),
                 host_name=HostName("host_name"),
                 service_name=ServiceName("service_name"),
                 check_command=check_command,
@@ -2015,7 +2015,7 @@ class _FakeTemplateGraphSpecificationFS(TemplateGraphSpecification):
         metrics_list = ["fs_used", "fs_free", "fs_size", "growth"]
         return [
             ServiceGraphRow(
-                site=SiteId("site_id"),
+                site_id=SiteId("site_id"),
                 host_name=HostName("host_name"),
                 service_name=ServiceName("service_name"),
                 check_command=check_command,

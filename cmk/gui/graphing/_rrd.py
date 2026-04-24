@@ -60,7 +60,7 @@ tracer = trace.get_tracer()
 
 @dataclass(frozen=True)
 class HostGraphRow:
-    site: SiteId
+    site_id: SiteId
     host_name: HostName
     check_command: str
     translated_metrics: Mapping[str, TranslatedMetric] = field(default_factory=dict)
@@ -72,7 +72,7 @@ class HostGraphRow:
 
 @dataclass(frozen=True)
 class ServiceGraphRow:
-    site: SiteId
+    site_id: SiteId
     host_name: HostName
     service_name: ServiceName
     check_command: str
@@ -140,13 +140,13 @@ def make_graph_row(
     )
     if service_name == "_HOST_":
         return HostGraphRow(
-            site=site,
+            site_id=site,
             host_name=host_name,
             check_command=normalized_check_command,
             translated_metrics=translated,
         )
     return ServiceGraphRow(
-        site=site,
+        site_id=site,
         host_name=host_name,
         service_name=service_name,
         check_command=normalized_check_command,

@@ -8,7 +8,7 @@ from pathlib import Path
 import pytest
 
 from cmk.ccc.version import Edition
-from cmk.licensing.features import FeatureFlag, Features, licensed_features
+from cmk.licensing.basics.features import FeatureFlag, Features, licensed_features
 
 
 def test_community() -> None:

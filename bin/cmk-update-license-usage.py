@@ -11,14 +11,14 @@ from cmk.ccc.version import Edition, edition  # astrein: disable=cmk-module-laye
 from cmk.licensing.active_metric_series_retriever_registry import (  # astrein: disable=cmk-module-layer-violation
     active_metric_series_retriever_registry,
 )
+from cmk.licensing.basics.paths import (  # astrein: disable=cmk-module-layer-violation
+    get_instance_id_file_path,
+    get_next_run_file_path,
+)
 from cmk.licensing.helper import (  # astrein: disable=cmk-module-layer-violation
     hash_site_id,
     init_logging,
     load_instance_id,
-)
-from cmk.licensing.paths import (  # astrein: disable=cmk-module-layer-violation
-    get_instance_id_file_path,
-    get_next_run_file_path,
 )
 from cmk.licensing.usage import (  # astrein: disable=cmk-module-layer-violation
     create_sample,

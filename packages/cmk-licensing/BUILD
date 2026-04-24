@@ -13,7 +13,12 @@ exports_files([
 
 py_library(
     name = "cmk-licensing",
-    srcs = glob(["cmk/licensing/**/*.py"]),
+    srcs = glob(
+        include = ["cmk/licensing/**/*.py"],
+        # Note: Do not make this a package.
+        # We want to be able to import cmk.licensing.basics without pulling in the rest.
+        exclude = ["cmk/licensing/__init__.py"],
+    ),
     data = ["cmk/licensing/py.typed"],
     imports = ["."],
     visibility = [
@@ -25,6 +30,7 @@ py_library(
         "//packages/cmk-ccc:site",
         "//packages/cmk-ccc:store",
         "//packages/cmk-ccc:version",
+        "//packages/cmk-licensing/cmk/licensing/basics",
         "//packages/cmk-livestatus-client:py_livestatus",
         requirement("python-dateutil"),
     ],
@@ -38,6 +44,7 @@ py_wheel(
     version = "1.0.0",
     deps = [
         ":cmk-licensing",
+        "//packages/cmk-licensing/cmk/licensing/basics",
     ],
 )
 

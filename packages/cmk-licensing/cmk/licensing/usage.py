@@ -26,6 +26,13 @@ from cmk.ccc.version import Edition
 from cmk.licensing.active_metric_series_retriever_registry import (
     get_average_active_metric_series,
 )
+from cmk.licensing.basics.paths import (
+    get_extensions_file_path,
+    get_instance_id_file_path,
+    get_license_usage_report_file_path,
+    get_licensing_dir,
+    get_next_run_file_path,
+)
 from cmk.licensing.export import (
     LicenseUsageExtensions,
     LicenseUsageSample,
@@ -39,13 +46,6 @@ from cmk.licensing.helper import (
     hash_site_id,
     load_instance_id,
     rot47,
-)
-from cmk.licensing.paths import (
-    get_extensions_file_path,
-    get_instance_id_file_path,
-    get_license_usage_report_file_path,
-    get_licensing_dir,
-    get_next_run_file_path,
 )
 from cmk.licensing.protocol_version import get_licensing_protocol_version
 

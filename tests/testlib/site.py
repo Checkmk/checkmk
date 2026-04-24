@@ -46,7 +46,7 @@ from cmk import trace
 from cmk.crypto.certificate import Certificate
 from cmk.crypto.password import Password
 from cmk.crypto.secrets import Secret
-from cmk.licensing.paths import get_licensing_dir
+from cmk.licensing.basics.paths import get_licensing_dir
 from tests.testlib.common.repo import current_branch_name, repo_path
 from tests.testlib.common.utils import wait_until
 from tests.testlib.common.utils2 import (

@@ -7,7 +7,7 @@ from typing import assert_never
 
 from cmk.ccc.version import Edition
 from cmk.gui.legacy_plugins import get_failed_plugins as get_failed_plugins
-from cmk.licensing.features import licensed_features
+from cmk.licensing.basics.features import licensed_features
 from cmk.utils import paths
 
 _registered_edition: Edition | None = None

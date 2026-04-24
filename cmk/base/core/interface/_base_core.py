@@ -17,8 +17,8 @@ from cmk.ccc.hostaddress import HostAddress, HostName, Hosts
 from cmk.checkengine.checkerplugin import ConfiguredService
 from cmk.checkengine.plugins import AgentBasedPlugins, ServiceID
 from cmk.core_client import CoreClient
+from cmk.licensing.basics.paths import get_licensed_state_file_path
 from cmk.licensing.handler import LicensingHandler
-from cmk.licensing.paths import get_licensed_state_file_path
 from cmk.password_store.v1_unstable import Secret
 from cmk.utils import ip_lookup, paths
 from cmk.utils.labels import Labels

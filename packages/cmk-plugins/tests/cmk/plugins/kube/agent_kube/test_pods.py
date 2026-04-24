@@ -30,7 +30,7 @@ def test_pod_conditions_with_conditions_present() -> None:
         status=PodStatusFactory.build(
             conditions=[
                 api.PodCondition(
-                    status=True,
+                    status=api.ConditionStatus.TRUE,
                     type=api.ConditionType.INITIALIZED,
                     custom_type=None,
                     reason="PodCompleted",
@@ -38,7 +38,7 @@ def test_pod_conditions_with_conditions_present() -> None:
                     last_transition_time=100,
                 ),
                 api.PodCondition(
-                    status=False,
+                    status=api.ConditionStatus.FALSE,
                     type=api.ConditionType.READY,
                     custom_type=None,
                     reason="PodCompleted",
@@ -46,7 +46,7 @@ def test_pod_conditions_with_conditions_present() -> None:
                     last_transition_time=100,
                 ),
                 api.PodCondition(
-                    status=False,
+                    status=api.ConditionStatus.FALSE,
                     type=api.ConditionType.CONTAINERSREADY,
                     custom_type=None,
                     reason="PodCompleted",
@@ -54,7 +54,7 @@ def test_pod_conditions_with_conditions_present() -> None:
                     last_transition_time=100,
                 ),
                 api.PodCondition(
-                    status=True,
+                    status=api.ConditionStatus.TRUE,
                     type=api.ConditionType.PODSCHEDULED,
                     custom_type=None,
                     reason=None,
@@ -69,16 +69,25 @@ def test_pod_conditions_with_conditions_present() -> None:
     assert isinstance(section_pod_conditions, section.PodConditions)
     assert section_pod_conditions == section.PodConditions(
         initialized=section.PodCondition(
-            status=True, reason="PodCompleted", detail=None, last_transition_time=100
+            status=api.ConditionStatus.TRUE,
+            reason="PodCompleted",
+            detail=None,
+            last_transition_time=100,
         ),
         ready=section.PodCondition(
-            status=False, reason="PodCompleted", detail=None, last_transition_time=100
+            status=api.ConditionStatus.FALSE,
+            reason="PodCompleted",
+            detail=None,
+            last_transition_time=100,
         ),
         containersready=section.PodCondition(
-            status=False, reason="PodCompleted", detail=None, last_transition_time=100
+            status=api.ConditionStatus.FALSE,
+            reason="PodCompleted",
+            detail=None,
+            last_transition_time=100,
         ),
         scheduled=section.PodCondition(
-            status=True, reason=None, detail=None, last_transition_time=100
+            status=api.ConditionStatus.TRUE, reason=None, detail=None, last_transition_time=100
         ),
     )
 

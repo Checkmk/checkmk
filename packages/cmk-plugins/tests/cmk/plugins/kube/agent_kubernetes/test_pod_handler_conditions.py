@@ -4,8 +4,33 @@
 
 import datetime
 
+import pytest
+
 from cmk.plugins.kube.agent_handlers import pod_handler
 from cmk.plugins.kube.schemata import api, section
+
+
+# TODO: Remove for CMK 3.1
+@pytest.mark.parametrize(
+    "status, parsed_status",
+    [
+        (True, api.ConditionStatus.TRUE),
+        (False, api.ConditionStatus.FALSE),
+        ("True", api.ConditionStatus.TRUE),
+        ("False", api.ConditionStatus.FALSE),
+        ("Unknown", api.ConditionStatus.UNKNOWN),
+    ],
+)
+def test_pod_condition_status_normalization(
+    status: bool | str, parsed_status: api.ConditionStatus
+) -> None:
+    parsed = section.PodCondition.model_validate(
+        {"status": status, "reason": "foo", "detail": "bar", "last_transition_time": 1337}
+    )
+    assert parsed.status == parsed_status
+    assert parsed.reason == "foo"
+    assert parsed.detail == "bar"
+    assert parsed.last_transition_time == 1337
 
 
 def test_pod_conditions_start_up() -> None:
@@ -19,28 +44,28 @@ def test_pod_conditions_start_up() -> None:
         ),
         conditions=[
             api.PodCondition(
-                status=True,
+                status=api.ConditionStatus.TRUE,
                 type=api.ConditionType.INITIALIZED,
                 custom_type=None,
                 reason=None,
                 detail=None,
             ),
             api.PodCondition(
-                status=False,
+                status=api.ConditionStatus.FALSE,
                 type=api.ConditionType.READY,
                 custom_type=None,
                 reason="ContainersNotReady",
                 detail="containers with unready status: [unready_container]",
             ),
             api.PodCondition(
-                status=False,
+                status=api.ConditionStatus.FALSE,
                 type=api.ConditionType.CONTAINERSREADY,
                 custom_type=None,
                 reason="ContainersNotReady",
                 detail="containers with unready status: [unready_container]",
             ),
             api.PodCondition(
-                status=True,
+                status=api.ConditionStatus.TRUE,
                 type=api.ConditionType.PODSCHEDULED,
                 custom_type=None,
                 reason=None,
@@ -51,15 +76,15 @@ def test_pod_conditions_start_up() -> None:
         qos_class="burstable",
     )
     assert pod_handler._conditions(api_pod_status) == section.PodConditions(  # noqa: SLF001
-        initialized=section.PodCondition(status=True, reason=None, detail=None),
-        scheduled=section.PodCondition(status=True, reason=None, detail=None),
+        initialized=section.PodCondition(status=api.ConditionStatus.TRUE, reason=None, detail=None),
+        scheduled=section.PodCondition(status=api.ConditionStatus.TRUE, reason=None, detail=None),
         containersready=section.PodCondition(
-            status=False,
+            status=api.ConditionStatus.FALSE,
             reason="ContainersNotReady",
             detail="containers with unready status: [unready_container]",
         ),
         ready=section.PodCondition(
-            status=False,
+            status=api.ConditionStatus.FALSE,
             reason="ContainersNotReady",
             detail="containers with unready status: [unready_container]",
         ),
@@ -77,7 +102,7 @@ def test_pod_conditions_start_up_missing_fields() -> None:
         ),
         conditions=[
             api.PodCondition(
-                status=True,
+                status=api.ConditionStatus.TRUE,
                 type=api.ConditionType.PODSCHEDULED,
                 custom_type=None,
                 reason=None,
@@ -90,7 +115,7 @@ def test_pod_conditions_start_up_missing_fields() -> None:
 
     assert pod_handler._conditions(api_pod_status) == section.PodConditions(  # noqa: SLF001
         initialized=None,
-        scheduled=section.PodCondition(status=True, reason=None, detail=None),
+        scheduled=section.PodCondition(status=api.ConditionStatus.TRUE, reason=None, detail=None),
         containersready=None,
         ready=None,
     )

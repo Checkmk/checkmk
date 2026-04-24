@@ -300,10 +300,26 @@ class PodLifeCycle(BasePodLifeCycle, Section):
 
 
 class PodCondition(BaseModel):
-    status: bool
+    status: api.ConditionStatus
     reason: str | None = Field(None)
     detail: str | None = Field(None)
     last_transition_time: int | None = Field(None)
+
+    # TODO: Remove this in CMK 3.1 - this is compatibility since the piggyback
+    # data sent a bool literal instead of the string from the API. We coerce the
+    # boolean here. (We need to maintain compatibility with the old piggyback
+    # because of distributed piggyback and possible differing versions between
+    # check plugin and agent execution.)
+    @model_validator(mode="before")
+    @classmethod
+    def _handle_status_bool(cls, data: object) -> object:
+        """Support old agent output that sent status as a boolean literal."""
+        if isinstance(data, dict) and isinstance(status := data.get("status"), bool):
+            data = {
+                **data,
+                "status": api.ConditionStatus.TRUE if status else api.ConditionStatus.FALSE,
+            }
+        return data
 
 
 class PodConditions(Section):

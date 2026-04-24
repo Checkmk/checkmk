@@ -808,11 +808,11 @@ class ConditionType(enum.StrEnum):
 class PodCondition(BaseModel):
     """
     status:
-        * when True, reason & detail will be normally None
+        * when ConditionStatus.TRUE, reason & detail will be normally None
         * for condition DisruptionTarget will include a reason & detail strings also for True
     """
 
-    status: bool
+    status: ConditionStatus
     type: ConditionType | None = None
     custom_type: str | None = None
     reason: str | None = None

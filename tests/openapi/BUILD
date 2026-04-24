@@ -87,6 +87,7 @@ py_test(
         ":__test__",
         ":conftest",
         requirement("marshmallow-oneofschema"),
+        requirement("polyfactory"),
         requirement("pytest-mock"),
         requirement("pytest-random-order"),
         requirement("time-machine"),

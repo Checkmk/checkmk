@@ -752,13 +752,19 @@ function renderAllocatorBanner(allocator: StateCache['allocator']): string {
 }
 
 function renderPylanceStatus(p: StateCache['pylanceHealth']): string {
-  if (p.rssMiB === null) return ''
+  if (!p.extensionActive) return ''
+  if (p.rssMiB === null) {
+    return renderStatusRow({
+      level: 'ok',
+      label: 'Pylance · starting…',
+      spinner: true
+    })
+  }
   const over = p.overThreshold
-  const label = `Pylance · ${p.rssMiB} MiB`
   const state = over ? `over ${p.thresholdMiB} MiB threshold` : `threshold ${p.thresholdMiB} MiB`
   return renderStatusRow({
     level: over ? 'warn' : 'ok',
-    label,
+    label: `Pylance · ${p.rssMiB} MiB`,
     state,
     buttons: [
       {

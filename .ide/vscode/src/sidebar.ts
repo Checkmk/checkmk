@@ -164,7 +164,8 @@ function refreshStateCache(): StateCache {
         pid: null,
         rssMiB: null,
         thresholdMiB: 2048,
-        overThreshold: false
+        overThreshold: false,
+        extensionActive: false
       }
     }
   }

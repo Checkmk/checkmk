@@ -216,6 +216,8 @@ export interface StatusRowOpts {
   label: string
   state?: string
   buttons?: StatusRowButton[]
+  /** When true, render a spinner in place of the level glyph. */
+  spinner?: boolean
 }
 
 function buttonHtml(b: StatusRowButton): string {
@@ -237,8 +239,11 @@ const LEVEL_ICON: Record<StatusLevel, string> = {
 export function renderStatusRow(opts: StatusRowOpts): string {
   const btns = (opts.buttons || []).map(buttonHtml).join('')
   const state = opts.state ? `<span class="status-row-state">${esc(opts.state)}</span>` : ''
+  const icon = opts.spinner
+    ? `<span class="spinner">&#8635;</span>`
+    : `<span class="card-icon">${LEVEL_ICON[opts.level]}</span>`
   return `<div class="status-row ${opts.level}">
-    <span class="card-icon">${LEVEL_ICON[opts.level]}</span>
+    ${icon}
     <span class="status-row-label">${esc(opts.label)}</span>
     ${state}
     ${btns}

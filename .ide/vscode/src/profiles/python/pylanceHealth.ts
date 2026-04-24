@@ -18,13 +18,17 @@ export interface PylanceHealthSnapshot {
   rssMiB: number | null
   thresholdMiB: number
   overThreshold: boolean
+  /** True when the ms-python.vscode-pylance extension is installed and
+   *  active. If false, the sidebar hides the Pylance row entirely. */
+  extensionActive: boolean
 }
 
 let latest: PylanceHealthSnapshot = {
   pid: null,
   rssMiB: null,
   thresholdMiB: WARN_DEFAULT,
-  overThreshold: false
+  overThreshold: false,
+  extensionActive: false
 }
 let notifiedThisSession = false
 
@@ -74,7 +78,9 @@ function poll(): void {
   const rss = pid !== null ? readRssMiB(pid) : null
   const threshold = thresholdMiB()
   const over = rss !== null && rss > threshold
-  latest = { pid, rssMiB: rss, thresholdMiB: threshold, overThreshold: over }
+  const extensionActive =
+    vscode.extensions.getExtension('ms-python.vscode-pylance')?.isActive ?? false
+  latest = { pid, rssMiB: rss, thresholdMiB: threshold, overThreshold: over, extensionActive }
   if (rss !== null && pid !== null) {
     log(`Pylance (pid ${pid}) RSS = ${rss} MiB (threshold ${threshold})`)
   }
@@ -85,11 +91,21 @@ function poll(): void {
 
 /** Register the Pylance memory watcher. Linux only — uses /proc. No-op on
  *  other platforms, so the snapshot reports pid=null and consumers show no
- *  row. Polls every 60s; invokes a single per-session warn notification
- *  when RSS crosses `cmk.python.pylanceMemoryWarnMiB` (default 2048 MiB). */
+ *  row. Polls at t=0 and t=15s to catch Pylance coming up shortly after
+ *  activation, then every 60s; invokes a single per-session warn
+ *  notification when RSS crosses `cmk.python.pylanceMemoryWarnMiB`
+ *  (default 2048 MiB). */
 export function registerPylanceHealth(): vscode.Disposable[] {
   if (process.platform !== 'linux') return []
   poll()
+  const earlyPoll = setTimeout(poll, 15_000)
   const interval = setInterval(poll, POLL_MS)
-  return [{ dispose: () => clearInterval(interval) }]
+  return [
+    {
+      dispose: () => {
+        clearTimeout(earlyPoll)
+        clearInterval(interval)
+      }
+    }
+  ]
 }

@@ -442,7 +442,8 @@ export function render(state: StateCache, codiconUri?: vscode.Uri, cspSource?: s
     versionMismatch,
     configInWorkspace,
     mypyTargets,
-    allocator
+    allocator,
+    pylanceHealth
   } = state
 
   const installedVersion = vscode.extensions.getExtension('checkmk.cmk-vscode')?.packageJSON
@@ -573,7 +574,7 @@ export function render(state: StateCache, codiconUri?: vscode.Uri, cspSource?: s
     })
     .join('')
 
-  const mypyHtml = renderMypyTargets(mypyTargets, allocator)
+  const mypyHtml = renderMypyTargets(mypyTargets, allocator, pylanceHealth)
 
   return wrap(
     nonce,
@@ -589,7 +590,8 @@ export function render(state: StateCache, codiconUri?: vscode.Uri, cspSource?: s
 
 function renderMypyTargets(
   info: StateCache['mypyTargets'],
-  allocator: StateCache['allocator']
+  allocator: StateCache['allocator'],
+  pylance: StateCache['pylanceHealth']
 ): string {
   if (!info.pythonProfileActive) return ''
   const {
@@ -726,7 +728,10 @@ function renderMypyTargets(
         </div>`
       : ''
 
+  const pylanceRow = renderPylanceStatus(pylance)
+
   return `<div class="section-label profile-label">Python</div>
+    ${pylanceRow}
     ${allocatorBanner}
     ${stagedBanner}
     <div class="ext-family mypy-targets-family">
@@ -744,6 +749,26 @@ function renderMypyTargets(
 function renderAllocatorBanner(allocator: StateCache['allocator']): string {
   if (allocator.mode === 'jemalloc') return renderJemallocStatus(allocator)
   return renderDefaultAllocatorStatus(allocator)
+}
+
+function renderPylanceStatus(p: StateCache['pylanceHealth']): string {
+  if (p.rssMiB === null) return ''
+  const over = p.overThreshold
+  const label = `Pylance · ${p.rssMiB} MiB`
+  const state = over ? `over ${p.thresholdMiB} MiB threshold` : `threshold ${p.thresholdMiB} MiB`
+  return renderStatusRow({
+    level: over ? 'warn' : 'ok',
+    label,
+    state,
+    buttons: [
+      {
+        action: 'exec',
+        commandId: 'cmk.python.restartLanguageServer',
+        icon: 'refresh',
+        title: 'Restart Pylance language server'
+      }
+    ]
+  })
 }
 
 function renderDefaultAllocatorStatus(allocator: StateCache['allocator']): string {

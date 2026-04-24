@@ -64,7 +64,8 @@ export function updateIssues(
     devSiteTools,
     versionMismatch,
     mypyTargets,
-    allocator
+    allocator,
+    pylanceHealth
   } = stateCache
   const items: IssueItem[] = []
   const warnColor = new vscode.ThemeColor('charts.yellow')
@@ -226,6 +227,18 @@ export function updateIssues(
             }
       )
     }
+  }
+
+  if (pylanceHealth?.overThreshold && pylanceHealth.rssMiB !== null) {
+    items.push({
+      label: 'Pylance memory',
+      description: `${pylanceHealth.rssMiB} MiB > ${pylanceHealth.thresholdMiB} MiB`,
+      tooltip:
+        'Pylance language server RSS has exceeded the configured threshold (cmk.python.pylanceMemoryWarnMiB). Click to restart Pylance.',
+      icon: 'warning',
+      iconColor: warnColor,
+      command: 'cmk.python.restartLanguageServer'
+    })
   }
 
   issuesProvider.refresh(items)

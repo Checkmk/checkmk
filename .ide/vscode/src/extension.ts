@@ -38,6 +38,7 @@ import {
   killAllDmypyDaemons,
   registerMypyConfigWatcher
 } from './profiles/python/mypyConfig'
+import { registerPylanceHealth } from './profiles/python/pylanceHealth'
 import { registerSnippets } from './profiles/python/snippets'
 import { registerIdePickers } from './setup/idePicker'
 import { registerTemplates } from './setup/templates'
@@ -155,6 +156,7 @@ export function activate(context: vscode.ExtensionContext): void {
       return [
         ...registerDynamicMypyTargets(context),
         ...registerJemallocAllocator(context),
+        ...registerPylanceHealth(),
         ...registerPytestOnDemand(),
         ...registerRuffOnDemand(),
         ...registerMypyConfigWatcher(),

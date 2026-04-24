@@ -396,7 +396,11 @@ Per-tool opt-in for deferred startup of heavy tooling. Each window reload starts
 
 Set any `cmk.<tool>.testOnDemand` to `false` to disable the on-demand behavior entirely for that tool — it then stays in whatever state you configure manually.
 
-### 14. First-Run Wizard
+### 14. Pylance Memory Monitor
+
+Pylance's language server process on the Checkmk monorepo routinely grows past 2 GiB RSS during a workday. The extension polls `/proc/<pid>/status` every 60 s and surfaces the result as a status row in the IDE Health → Python section (`Pylance · <N> MiB`). When RSS crosses `cmk.python.pylanceMemoryWarnMiB` (default 2048, minimum 256), the row flips to warn state, an Issues entry appears, and a one-shot notification offers to restart Pylance. Linux only — the monitor is a no-op on macOS/Windows. The row's refresh icon triggers `cmk.python.restartLanguageServer`, which wraps `python.analysis.restartLanguageServer` so it works regardless of which file is focused.
+
+### 15. First-Run Wizard
 
 On first activation, the extension detects whether basic workspace settings (e.g. `editor.formatOnSave`, `git.branchProtection`) are configured. If not, it shows an info notification offering to open the dashboard to get started with system setup, venv build, and IDE configuration. The prompt can be permanently dismissed via "Don't Ask Again".
 

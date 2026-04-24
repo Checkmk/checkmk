@@ -78,6 +78,13 @@ export interface AllocatorInfo {
   runUsingInterpreterOff: boolean
 }
 
+export interface PylanceHealthInfo {
+  pid: number | null
+  rssMiB: number | null
+  thresholdMiB: number
+  overThreshold: boolean
+}
+
 export interface StateCache {
   buildStatus: BuildStatus
   profiles: ProfileInfo[]
@@ -95,6 +102,7 @@ export interface StateCache {
   configInWorkspace: boolean
   mypyTargets: MypyTargetsInfo
   allocator: AllocatorInfo
+  pylanceHealth: PylanceHealthInfo
 }
 
 export interface SectionContext {

@@ -19,6 +19,7 @@ import { getActiveProxies } from './omd/proxy'
 import * as profileManager from './profiles/profileManager'
 import { getMypyTargetsSnapshot } from './profiles/python/dynamicMypyTargets'
 import { getAllocatorSnapshot } from './profiles/python/jemallocAllocator'
+import { getPylanceHealthSnapshot } from './profiles/python/pylanceHealth'
 import * as environmentSection from './sidebar/environment'
 import { renderLoading } from './sidebar/html'
 import * as ideHealthSection from './sidebar/ideHealth'
@@ -96,7 +97,8 @@ function refreshStateCache(): StateCache {
         )
       })(),
       mypyTargets: { ...mypySnapshot, pythonProfileActive },
-      allocator: getAllocatorSnapshot()
+      allocator: getAllocatorSnapshot(),
+      pylanceHealth: getPylanceHealthSnapshot()
     }
 
     updateIssues(_issuesView, _issuesProvider, _stateCache)
@@ -157,6 +159,12 @@ function refreshStateCache(): StateCache {
         wrapperExists: false,
         dmypyExecutableMatches: false,
         runUsingInterpreterOff: false
+      },
+      pylanceHealth: {
+        pid: null,
+        rssMiB: null,
+        thresholdMiB: 2048,
+        overThreshold: false
       }
     }
   }

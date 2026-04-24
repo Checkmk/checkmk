@@ -333,6 +333,12 @@
           "type": "boolean",
           "default": false,
           "description": "When true, defer vitest test discovery until a test file is opened or the Testing view is used. Not yet implemented — reserved for a future release."
+        },
+        "cmk.python.pylanceMemoryWarnMiB": {
+          "type": "number",
+          "default": 2048,
+          "minimum": 256,
+          "description": "Warn when the Pylance language-server process RSS exceeds this many MiB. Surfaces as a status row in IDE Health (Python section), an Issues entry, and a single per-session notification offering to restart Pylance. Linux only."
         }
       }
     },

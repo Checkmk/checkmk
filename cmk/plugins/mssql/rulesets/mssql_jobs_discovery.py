@@ -1,22 +1,21 @@
 #!/usr/bin/env python3
 
 from cmk.rulesets.v1 import (
-    Title,
     Label,
+    Title,
 )
 
 from cmk.rulesets.v1.form_specs import (
-    Dictionary,
-    DictElement,
     BooleanChoice,
     DefaultValue,
+    DictElement,
+    Dictionary,
 )
 
 from cmk.rulesets.v1.rule_specs import (
-    Topic,
     DiscoveryParameters,
+    Topic,
 )
-
 
 
 def _parameter_form_mssql_jobs_discovery() -> Dictionary:
@@ -25,8 +24,7 @@ def _parameter_form_mssql_jobs_discovery() -> Dictionary:
         elements={
             "discover_schedule_disabled": DictElement(
                 parameter_form=BooleanChoice(
-                    label=Label("Discover jobs with disabled Scheduler"),
-                    prefill=DefaultValue(True)
+                    label=Label("Discover jobs with disabled Scheduler"), prefill=DefaultValue(True)
                 ),
                 required=True,
             ),

@@ -198,7 +198,7 @@ def discover_mssql_jobs(params: dict[str, bool], section: Mapping[str, JobSpec])
         if not params.get("discover_schedule_disabled") and not job_specs.schedule_enabled:
             continue
         else:
-             yield Service(item=job_name)
+            yield Service(item=job_name)
 
 
 def check_mssql_jobs(
@@ -261,5 +261,5 @@ check_plugin_mssql_jobs = CheckPlugin(
     discovery_ruleset_name="mssql_jobs_discovery",
     discovery_default_parameters={
         "discover_schedule_disabled": True,
-    }
+    },
 )

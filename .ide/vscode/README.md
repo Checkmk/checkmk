@@ -371,7 +371,32 @@ grep jemalloc /proc/$PID/maps | head -1
 tr '\0' '\n' < /proc/$PID/environ | grep -E 'LD_PRELOAD|PYTHONMALLOC'
 ```
 
-### 13. First-Run Wizard
+### 13. Test On-Demand
+
+Per-tool opt-in for deferred startup of heavy tooling. Each window reload starts with the deferred tool off and waits for a trigger again — nothing is persisted.
+
+| Setting                   | Tool   | Default | Triggers                                     |
+| ------------------------- | ------ | ------- | -------------------------------------------- |
+| `cmk.python.testOnDemand` | pytest | `true`  | Python test file opened, Testing view opened |
+| `cmk.vitest.testOnDemand` | vitest | `false` | TS/Vue test file opened, Testing view opened |
+| `cmk.ruff.testOnDemand`   | Ruff   | `false` | Python file opened                           |
+
+**How it works:**
+
+- **File-open trigger** — only fires the tool whose file pattern matches. Opening a Python test file triggers pytest (not vitest); opening a `.test.ts`/`.spec.ts`/`.test.vue` triggers vitest; opening any Python file triggers Ruff. Tools never cross-trigger.
+- **Testing-view trigger** — VS Code fires `TestController.resolveHandler` on all registered controllers when the Testing view opens, so both pytest and vitest activate together (they're the test tools). Ruff doesn't listen to the Testing view.
+- On first trigger per session, the extension flips the relevant tool's "enable" setting at workspace-folder scope, logs to the CMK output channel, and shows an info notification `CMK ▸ <tool> started (<reason>).`
+- On window reload the workspace-folder override is unset and the tool reverts to off. The cycle repeats.
+
+**What each tool toggles:**
+
+- **pytest** — flips `python.testing.pytestEnabled` from false/undefined to `true`. Skipped entirely if pytest is already enabled (effective value) via user config or an older bundled apply.
+- **Ruff** — holds `ruff.enable: false` at folder scope on startup (shadowing the bundled workspace-scope `true`); on trigger, unsets the folder override so the workspace value (`true`) takes over and the Ruff LSP starts. Skipped if the user explicitly set `ruff.enable` at folder scope.
+- **vitest** — holds `vitest.configSearchPatternExclude: "**/*"` at folder scope on startup (excluding everything from config discovery); on trigger, unsets the folder override so the workspace-scope pattern takes over and vitest discovers configs normally. Skipped if the user explicitly set that key at folder scope.
+
+Set any `cmk.<tool>.testOnDemand` to `false` to disable the on-demand behavior entirely for that tool — it then stays in whatever state you configure manually.
+
+### 14. First-Run Wizard
 
 On first activation, the extension detects whether basic workspace settings (e.g. `editor.formatOnSave`, `git.branchProtection`) are configured. If not, it shows an info notification offering to open the dashboard to get started with system setup, venv build, and IDE configuration. The prompt can be permanently dismissed via "Don't Ask Again".
 

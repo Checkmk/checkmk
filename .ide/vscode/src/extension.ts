@@ -21,6 +21,11 @@ import { registerGerritPush } from './gerrit'
 import { checkForUpdates, isInstalled as isDevSiteInstalled } from './omd/devSiteTools'
 import { registerLogs } from './omd/logs'
 import { createSite, registerOmd } from './omd/omd'
+import {
+  registerPytestOnDemand,
+  registerRuffOnDemand,
+  registerVitestOnDemand
+} from './profiles/onDemand'
 import { registerProfileDetector } from './profiles/profileDetector'
 import * as profileManager from './profiles/profileManager'
 import { registerBazelTestRunner } from './profiles/python/bazelTest'
@@ -150,6 +155,8 @@ export function activate(context: vscode.ExtensionContext): void {
       return [
         ...registerDynamicMypyTargets(context),
         ...registerJemallocAllocator(context),
+        ...registerPytestOnDemand(),
+        ...registerRuffOnDemand(),
         ...registerMypyConfigWatcher(),
         ...registerInterpreterResolver(),
         ...registerSnippets(),
@@ -171,7 +178,7 @@ export function activate(context: vscode.ExtensionContext): void {
   profileManager.register(
     'frontend',
     () => {
-      return [toggleSettings(frontendDisable, frontendEnable)]
+      return [...registerVitestOnDemand(), toggleSettings(frontendDisable, frontendEnable)]
     },
     frontendDisable
   )

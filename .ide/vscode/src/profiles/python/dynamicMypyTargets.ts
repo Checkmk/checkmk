@@ -182,12 +182,10 @@ export function registerDynamicMypyTargets(context: vscode.ExtensionContext): vs
       return
     }
     const catalog = discoverMypyTargets(wsPath)
-    const persisted = context.workspaceState.get<string[]>(STATE_KEY, [])
-    const valid = persisted.filter((t) => catalog.includes(t))
-    if (valid.length > 0) activeTargets = new Set(valid)
-    for (const t of ALWAYS_ON_TARGETS) {
-      if (catalog.includes(t)) activeTargets.add(t)
-    }
+    // Always reset to always-on + baseline on activation. In-session activations
+    // still persist to STATE_KEY for the ideHealth view, but are discarded on
+    // reload so a new window starts with a predictable, minimal target set.
+    activeTargets = baselineTargets(catalog)
     setMypyTargetsFilter((full) =>
       activeTargets.size === 0 ? full : full.filter((t) => activeTargets.has(t))
     )
@@ -198,10 +196,6 @@ export function registerDynamicMypyTargets(context: vscode.ExtensionContext): vs
     if (!isEnabled()) {
       await applyDynamicMypyTargets(wsPath)
       return
-    }
-    if (activeTargets.size === 0) {
-      const catalog = discoverMypyTargets(wsPath)
-      activeTargets = baselineTargets(catalog)
     }
     await persistAndApply(wsPath)
   }

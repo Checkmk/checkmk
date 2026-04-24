@@ -314,6 +314,21 @@
           ],
           "default": "default",
           "description": "Launch dmypy under jemalloc to cap long-running RSS growth. Requires libjemalloc installed on the host (apt install libjemalloc2 / dnf install jemalloc / brew install jemalloc). If the library is not detected the extension notifies once and leaves the setting armed — install, reload, feature activates."
+        },
+        "cmk.python.testOnDemand": {
+          "type": "boolean",
+          "default": true,
+          "description": "Defer pytest discovery (pytest --collect-only) until a test file is opened or the Testing view is used. Each window reload starts with pytest discovery off and waits for a trigger again. Set to false to disable the on-demand behavior entirely (pytest stays in whatever state you configure manually)."
+        },
+        "cmk.ruff.testOnDemand": {
+          "type": "boolean",
+          "default": false,
+          "description": "When true, defer starting the Ruff language server until a Python file is opened in the editor. Not yet implemented — reserved for a future release."
+        },
+        "cmk.vitest.testOnDemand": {
+          "type": "boolean",
+          "default": false,
+          "description": "When true, defer vitest test discovery until a test file is opened or the Testing view is used. Not yet implemented — reserved for a future release."
         }
       }
     },

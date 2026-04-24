@@ -46,7 +46,6 @@
       "python.analysis.packageIndexDepths": [
         { "name": "", "depth": 2, "includeAllSymbols": false }
       ],
-      "python.testing.pytestEnabled": true,
       "python.testing.cwd": "${workspaceFolder}",
       "python.testing.autoTestDiscoverOnSaveEnabled": true,
       "python.terminal.activateEnvInCurrentTerminal": true,
@@ -76,7 +75,8 @@
       "ruff.nativeServer": "on",
       "ruff.enable": true,
       "ruff.path": ["${workspaceFolder}/.venv/bin/ruff"],
-      "cmk.mypy.dynamicTargets.enabled": true
+      "cmk.mypy.dynamicTargets.enabled": true,
+      "cmk.python.testOnDemand": true
     },
     "user": {
       "python.condaPath": "",

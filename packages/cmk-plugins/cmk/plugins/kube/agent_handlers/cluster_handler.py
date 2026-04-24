@@ -125,7 +125,7 @@ def _version(api_cluster: Cluster) -> api.GitVersion:
 def _node_is_ready(node: api.Node) -> bool:
     for condition in node.status.conditions or []:
         if condition.type_.lower() == "ready":
-            return condition.status == api.NodeConditionStatus.TRUE
+            return condition.status == api.ConditionStatus.TRUE
     return False
 
 

@@ -11,61 +11,61 @@ from cmk.plugins.kube.agent_based.kube_node_conditions import (
     DEFAULT_PARAMS,
     DEFAULT_STATE_MAP,
 )
-from cmk.plugins.kube.schemata.api import NodeConditionStatus
+from cmk.plugins.kube.schemata.api import ConditionStatus
 from cmk.plugins.kube.schemata.section import NodeCondition, NodeConditions
 
 READY = NodeCondition(
     type_="Ready",
-    status=NodeConditionStatus.TRUE,
+    status=ConditionStatus.TRUE,
     reason=None,
     message=None,
 )
 
 MEMORYPRESSURE = NodeCondition(
     type_="MemoryPressure",
-    status=NodeConditionStatus.TRUE,
+    status=ConditionStatus.TRUE,
     reason=None,
     message=None,
 )
 
 NO_MEMORYPRESSURE = NodeCondition(
     type_="MemoryPressure",
-    status=NodeConditionStatus.FALSE,
+    status=ConditionStatus.FALSE,
     reason=None,
     message=None,
 )
 
 NO_DISKPRESSURE = NodeCondition(
     type_="DiskPressure",
-    status=NodeConditionStatus.FALSE,
+    status=ConditionStatus.FALSE,
     reason=None,
     message=None,
 )
 
 NO_PIDPRESSURE = NodeCondition(
     type_="PIDPressure",
-    status=NodeConditionStatus.FALSE,
+    status=ConditionStatus.FALSE,
     reason=None,
     message=None,
 )
 
 NETWORKAVAILABLE = NodeCondition(
     type_="NetworkUnavailable",
-    status=NodeConditionStatus.FALSE,
+    status=ConditionStatus.FALSE,
     reason=None,
     message=None,
 )
 
 CUSTOMFALSE = NodeCondition(
     type_="Custom",
-    status=NodeConditionStatus.FALSE,
+    status=ConditionStatus.FALSE,
     reason=None,
     message=None,
 )
 
 CUSTOMTRUE = NodeCondition(
     type_="Custom",
-    status=NodeConditionStatus.TRUE,
+    status=ConditionStatus.TRUE,
     reason=None,
     message=None,
 )
@@ -138,6 +138,6 @@ def test_check_single() -> None:
 
 
 def test_check_details() -> None:
-    cond = NodeCondition(type_="Ready", status=NodeConditionStatus.TRUE, reason="r", message="m")
+    cond = NodeCondition(type_="Ready", status=ConditionStatus.TRUE, reason="r", message="m")
     results = list(_check_condition(DEFAULT_STATE_MAP, cond))
     assert results == [Result(state=State.CRIT, summary="READY: True (r: m)")]

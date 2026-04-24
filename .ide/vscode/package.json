@@ -238,6 +238,10 @@
         "title": "CMK ▸ Mypy: Re-apply jemalloc settings"
       },
       {
+        "command": "cmk.python.restartLanguageServer",
+        "title": "CMK ▸ Python: Restart Language Server (Pylance)"
+      },
+      {
         "command": "cmk.pushToGerrit",
         "title": "CMK ▸ Push to Gerrit",
         "icon": "$(cloud-upload)"
@@ -499,6 +503,10 @@
         },
         {
           "command": "cmk.mypy.reapplyJemalloc",
+          "when": "cmk.pythonInstalled"
+        },
+        {
+          "command": "cmk.python.restartLanguageServer",
           "when": "cmk.pythonInstalled"
         }
       ]

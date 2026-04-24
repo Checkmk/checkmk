@@ -161,6 +161,9 @@ export function activate(context: vscode.ExtensionContext): void {
         ...registerInterpreterResolver(),
         ...registerSnippets(),
         ...registerBazelTestRunner(),
+        vscode.commands.registerCommand('cmk.python.restartLanguageServer', () =>
+          vscode.commands.executeCommand('python.analysis.restartLanguageServer')
+        ),
         toggleSettings(pythonDisable, pythonEnable),
         { dispose: () => killAllDmypyDaemons() },
         {

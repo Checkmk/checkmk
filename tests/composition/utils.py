@@ -68,6 +68,25 @@ def get_cre_agent_path(site: Site) -> Path:
         raise ValueError(
             f"Can't find '{package_extension}' agent to install in folder '{agent_folder}'"
         )
+    if len(agent_results) > 1:
+        # The Checkmk server always runs on x86_64; prefer the matching package when
+        # multiple are present (e.g. both x86_64.rpm and aarch64.rpm in the agents dir).
+        for arch_str in ("x86_64", "amd64"):
+            for result in agent_results:
+                if arch_str in Path(result).name:
+                    return Path(result)
+    if len(agent_results) > 1:
+        # The Checkmk server always runs on x86_64; prefer the matching package when
+        # multiple are present (e.g. both x86_64.rpm and aarch64.rpm in the agents dir).
+        for arch_str in ("x86_64", "amd64"):
+            for result in agent_results:
+                if arch_str in Path(result).name:
+                    return Path(result)
+        logger.warning(
+            "Multiple agent packages found but none matched x86_64/amd64: %s — using %s",
+            agent_results,
+            agent_results[0],
+        )
     return Path(agent_results[0])
 
 

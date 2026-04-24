@@ -98,6 +98,13 @@ def _make_connected_remote_site(
 @pytest.fixture(name="installed_agent_ctl_in_unknown_state", scope="function")
 def _installed_agent_ctl_in_unknown_state(central_site: Site, tmp_path: Path) -> Path:
     if central_site.edition.is_community_edition():
+        # Same pre-check as download_and_install_agent_package: verify the controller binary
+        # is executable on this platform before installing. The post-install script silently
+        # deletes it when it can't run (e.g. wrong arch), so without this check the failure
+        # surfaces as a confusing "controller not found" assertion downstream.
+        run(
+            [central_site.path("share/check_mk/agents/linux/cmk-agent-ctl").as_posix(), "--version"]
+        )
         return install_agent_package(get_cre_agent_path(central_site))
     bake_agents(central_site)
     return download_and_install_agent_package(central_site, tmp_path)

@@ -6,9 +6,33 @@
 
 import pytest
 
+from cmk.gui import forms
 from cmk.gui.forms import remove_unused_vars
+from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
+from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.wato.pages.rulesets import _is_var_to_delete
+
+
+@pytest.mark.usefixtures("request_context")
+def test_end_is_noop_when_no_header_open() -> None:
+    assert not html.form_header_open
+    with output_funnel.plugged():
+        forms.end()
+        rendered = "".join(output_funnel.drain())
+    assert rendered == ""
+
+
+@pytest.mark.usefixtures("request_context", "patch_theme")
+def test_end_closes_table_when_header_open() -> None:
+    with output_funnel.plugged():
+        forms.header("Title")
+        forms.section("Section")
+        forms.end()
+        rendered = "".join(output_funnel.drain())
+    assert "</tbody>" in rendered
+    assert "</table>" in rendered
+    assert not html.form_header_open
 
 
 @pytest.mark.parametrize(

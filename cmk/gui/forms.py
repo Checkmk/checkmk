@@ -195,6 +195,8 @@ def section_close() -> None:
 
 
 def end() -> None:
+    if not html.form_header_open:
+        return
     html.end_form_table()
 
 

@@ -86,6 +86,7 @@ py_test(
     deps = [
         ":__test__",
         ":conftest",
+        "//cmk:validate_config",
         requirement("marshmallow-oneofschema"),
         requirement("polyfactory"),
         requirement("pytest-mock"),

@@ -1012,7 +1012,6 @@ def register(inventory_displayhints: InventoryHintRegistry) -> None:
         # MIGRATED         "architecture",
         # MIGRATED         "container_runtime_version",
         # MIGRATED         "kubelet_version",
-        # MIGRATED         "kube_proxy_version",
         # MIGRATED     ],
         # MIGRATED },
         # MIGRATED ".software.applications.kube.node.operating_system": {"title": _l("Operating system")},
@@ -1023,7 +1022,6 @@ def register(inventory_displayhints: InventoryHintRegistry) -> None:
         # MIGRATED     "title": _l("Container runtime version")
         # MIGRATED },
         # MIGRATED ".software.applications.kube.node.kubelet_version": {"title": _l("Kubelet version")},
-        # MIGRATED ".software.applications.kube.node.kube_proxy_version": {"title": _l("Kube-proxy version")},
         # MIGRATED ".software.applications.kube.pod.": {
         # MIGRATED     "title": _l("Pod"),
         # MIGRATED     "keyorder": [

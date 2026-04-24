@@ -658,7 +658,6 @@ class KubeletInfo(Section):
     """section: kube_node_kubelet_v1"""
 
     version: str
-    proxy_version: str
     health: api.HealthZ | api.NodeConnectionError
 
 

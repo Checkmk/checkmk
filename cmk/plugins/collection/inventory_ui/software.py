@@ -885,7 +885,6 @@ node_software_applications_kube_node = Node(
         "architecture": TextField(Title("Architecture")),
         "container_runtime_version": TextField(Title("Container runtime version")),
         "kubelet_version": TextField(Title("Kubelet version")),
-        "kube_proxy_version": TextField(Title("Kube-proxy version")),
     },
 )
 

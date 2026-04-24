@@ -463,7 +463,6 @@ class NodeInfo(ClientModel):
     operating_system: str = Field(..., alias="operatingSystem")
     container_runtime_version: str = Field(..., alias="containerRuntimeVersion")
     kubelet_version: str = Field(..., alias="kubeletVersion")
-    kube_proxy_version: str = Field(..., alias="kubeProxyVersion")
 
 
 class NodeAddress(ClientModel):

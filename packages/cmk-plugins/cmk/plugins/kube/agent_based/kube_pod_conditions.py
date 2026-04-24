@@ -24,6 +24,7 @@ from cmk.plugins.kube.kube import (
     get_age_levels_for,
     VSResultAge,
 )
+from cmk.plugins.kube.schemata.api import ConditionStatus
 from cmk.plugins.kube.schemata.section import PodCondition, PodConditions
 
 
@@ -46,17 +47,26 @@ def _check_condition(
     if cond is not None:
         # keep the last-seen one
         time_diff = now - cond.last_transition_time  # type: ignore[operator]  # SUP-12170
-        if (not invert and cond.status) or (invert and not cond.status):
+        if (not invert and cond.status == ConditionStatus.TRUE) or (
+            invert and cond.status == ConditionStatus.FALSE
+        ):
             # TODO: CMK-11697
             yield Result(state=State.OK, summary=condition_short_description(name, cond.status))
             return
+        # Anything that isn't the expected status (TRUE for non-invert, FALSE for invert)
+        # falls through to the time-based check below: it counts against the configured
+        # timer and alerts if it persists. This covers both FALSE (e.g. still booting)
+        # and UNKNOWN (rare in practice; core Kubernetes only emits Unknown for node
+        # conditions, but custom controllers/operators may emit it for pods).
         summary_prefix = condition_detailed_description(name, cond.status, cond.reason, cond.detail)
         for result in check_levels_v1(
             time_diff, levels_upper=levels_upper, render_func=render.timespan
         ):
             yield Result(state=result.state, summary=f"{summary_prefix} for {result.summary}")
     else:
-        yield Result(state=State.OK, summary=condition_short_description(name, False))
+        yield Result(
+            state=State.OK, summary=condition_short_description(name, ConditionStatus.FALSE)
+        )
 
 
 def _check(now: float, params: Mapping[str, VSResultAge], section: PodConditions) -> CheckResult:

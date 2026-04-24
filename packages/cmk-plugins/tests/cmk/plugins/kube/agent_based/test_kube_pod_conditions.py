@@ -19,6 +19,7 @@ from pydantic import ValidationError
 
 from cmk.agent_based.v2 import CheckResult, render, Result, State, StringTable
 from cmk.plugins.kube.agent_based import kube_pod_conditions
+from cmk.plugins.kube.schemata.api import ConditionStatus
 from cmk.plugins.kube.schemata.section import PodCondition, PodConditions
 
 MINUTE = 60
@@ -48,7 +49,7 @@ class PodConditionFactory(ModelFactory):
     last_transition_time = TIMESTAMP
 
 
-def status_dict(status: bool | None, time_diff_minutes=0) -> Mapping[str, str] | None:
+def status_dict(status: ConditionStatus | None, time_diff_minutes=0) -> Mapping[str, str] | None:
     if status is None:
         return None
     return {
@@ -96,7 +97,7 @@ def state_resizeinprogress(state):
 
 @pytest.fixture
 def status():
-    return True
+    return ConditionStatus.TRUE
 
 
 @pytest.fixture
@@ -121,12 +122,12 @@ def status_ready(status):
 
 @pytest.fixture
 def status_resizepending():
-    return False
+    return ConditionStatus.FALSE
 
 
 @pytest.fixture
 def status_resizeinprogress():
-    return False
+    return ConditionStatus.FALSE
 
 
 @pytest.fixture
@@ -146,7 +147,7 @@ def string_table_element(
 ):
     return {
         "initialized": status_dict(status_initialized, state_initialized),
-        "hasnetwork": status_dict(True),
+        "hasnetwork": status_dict(ConditionStatus.TRUE),
         "scheduled": status_dict(status_scheduled, state_scheduled),
         "containersready": status_dict(status_containersready, state_containersready),
         "ready": status_dict(status_ready, state_ready),
@@ -188,7 +189,9 @@ def test_parse(string_table: StringTable) -> None:
     def assert_ready(cond: PodCondition | None, invert: bool = False) -> None:
         if cond is None:
             raise AssertionError("Condition should not be None")
-        assert cond.model_dump() == status_dict(not invert)
+        # if invert is True, we are ready when the condition is *False*
+        ready_status = ConditionStatus.FALSE if invert else ConditionStatus.TRUE
+        assert cond.model_dump() == status_dict(ready_status)
 
     assert_ready(section.initialized)
     assert_ready(section.scheduled)
@@ -215,74 +218,74 @@ def test_parse(string_table: StringTable) -> None:
     """,
     [
         (
-            True,
-            True,
-            True,
-            True,
-            False,
-            False,
-            status_dict(True),
-            status_dict(True),
-            status_dict(True),
-            status_dict(True),
-            status_dict(False),
-            status_dict(False),
+            ConditionStatus.TRUE,
+            ConditionStatus.TRUE,
+            ConditionStatus.TRUE,
+            ConditionStatus.TRUE,
+            ConditionStatus.FALSE,
+            ConditionStatus.FALSE,
+            status_dict(ConditionStatus.TRUE),
+            status_dict(ConditionStatus.TRUE),
+            status_dict(ConditionStatus.TRUE),
+            status_dict(ConditionStatus.TRUE),
+            status_dict(ConditionStatus.FALSE),
+            status_dict(ConditionStatus.FALSE),
         ),
         (
-            True,
-            True,
-            False,
-            False,
-            False,
-            False,
-            status_dict(True),
-            status_dict(True),
-            status_dict(False),
-            status_dict(False),
-            status_dict(False),
-            status_dict(False),
+            ConditionStatus.TRUE,
+            ConditionStatus.TRUE,
+            ConditionStatus.FALSE,
+            ConditionStatus.FALSE,
+            ConditionStatus.FALSE,
+            ConditionStatus.FALSE,
+            status_dict(ConditionStatus.TRUE),
+            status_dict(ConditionStatus.TRUE),
+            status_dict(ConditionStatus.FALSE),
+            status_dict(ConditionStatus.FALSE),
+            status_dict(ConditionStatus.FALSE),
+            status_dict(ConditionStatus.FALSE),
         ),
         (
             None,
-            False,
+            ConditionStatus.FALSE,
             None,
             None,
             None,
             None,
             None,
-            status_dict(False),
-            None,
-            None,
-            None,
-            None,
-        ),
-        (
-            False,
-            False,
-            None,
-            None,
-            None,
-            None,
-            status_dict(False),
-            status_dict(False),
+            status_dict(ConditionStatus.FALSE),
             None,
             None,
             None,
             None,
         ),
         (
-            False,
-            False,
-            False,
-            False,
-            True,
-            True,
-            status_dict(False),
-            status_dict(False),
-            status_dict(False),
-            status_dict(False),
-            status_dict(True),
-            status_dict(True),
+            ConditionStatus.FALSE,
+            ConditionStatus.FALSE,
+            None,
+            None,
+            None,
+            None,
+            status_dict(ConditionStatus.FALSE),
+            status_dict(ConditionStatus.FALSE),
+            None,
+            None,
+            None,
+            None,
+        ),
+        (
+            ConditionStatus.FALSE,
+            ConditionStatus.FALSE,
+            ConditionStatus.FALSE,
+            ConditionStatus.FALSE,
+            ConditionStatus.TRUE,
+            ConditionStatus.TRUE,
+            status_dict(ConditionStatus.FALSE),
+            status_dict(ConditionStatus.FALSE),
+            status_dict(ConditionStatus.FALSE),
+            status_dict(ConditionStatus.FALSE),
+            status_dict(ConditionStatus.TRUE),
+            status_dict(ConditionStatus.TRUE),
         ),
     ],
     ids=[
@@ -499,4 +502,36 @@ def test_check_disruption_target_condition():
         "RESIZEPENDING: False",
         "RESIZEINPROGRESS: False",
         "DISRUPTIONTARGET: True (EvictionByEvictionAPI: EvictionAPI: evicting)",
+    ]
+
+
+def test_check_handles_unknown_status() -> None:
+    """An Unknown condition status is rendered without crashing the check.
+
+    Previously, Unknown was unrepresentable (status was a bool) and would fail
+    parsing entirely; now it falls through to the time-based check and is
+    reported as 'Unknown' in the service summary.
+    """
+    section = PodConditionsFactory.build(
+        initialized=PodConditionFactory.build(status=ConditionStatus.TRUE),
+        hasnetwork=PodConditionFactory.build(status=ConditionStatus.TRUE),
+        scheduled=PodConditionFactory.build(
+            status=ConditionStatus.UNKNOWN, reason=REASON, detail=DETAIL
+        ),
+        containersready=PodConditionFactory.build(status=ConditionStatus.TRUE),
+        ready=PodConditionFactory.build(status=ConditionStatus.TRUE),
+        resizepending=PodConditionFactory.build(status=ConditionStatus.FALSE),
+        resizeinprogress=PodConditionFactory.build(status=ConditionStatus.FALSE),
+    )
+    assert list(kube_pod_conditions._check(TIMESTAMP, {}, section)) == [
+        Result(
+            state=State.OK,
+            summary=f"SCHEDULED: Unknown ({REASON}: {DETAIL}) for 0 seconds",
+        ),
+        Result(state=State.OK, summary="HASNETWORK: True"),
+        Result(state=State.OK, summary="INITIALIZED: True"),
+        Result(state=State.OK, summary="CONTAINERSREADY: True"),
+        Result(state=State.OK, summary="READY: True"),
+        Result(state=State.OK, summary="RESIZEPENDING: False"),
+        Result(state=State.OK, summary="RESIZEINPROGRESS: False"),
     ]

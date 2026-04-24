@@ -76,15 +76,13 @@ class KubernetesError(Exception):
     pass
 
 
-def condition_short_description(name: str, status: ConditionStatus | bool) -> str:
-    if isinstance(status, ConditionStatus):
-        return f"{name.upper()}: {status.value}"
-    return f"{name.upper()}: {status}"
+def condition_short_description(name: str, status: ConditionStatus) -> str:
+    return f"{name.upper()}: {status.value}"
 
 
 def condition_detailed_description(
     name: str,
-    status: ConditionStatus | bool,
+    status: ConditionStatus,
     reason: str | None,
     message: str | None,
 ) -> str:

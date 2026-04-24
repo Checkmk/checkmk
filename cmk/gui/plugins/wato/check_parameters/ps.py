@@ -455,7 +455,7 @@ def process_discovery_descr_option() -> TextInput:
             "nevertheless.</p>"
             "<p>As an alternative to <tt>%s</tt> you may also use <tt>%1</tt>, "
             "<tt>%2</tt>, etc. These will be replaced by the first, second, "
-            "... matching group. This allows you to reorder things."
+            "... matching group. This allows you to reorder things.</p>"
         ),
     )
 

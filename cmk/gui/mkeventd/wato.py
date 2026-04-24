@@ -4872,7 +4872,7 @@ ConfigVariableEventConsoleServiceLevels = ConfigVariable(
             "<p>You can also attach service levels to hosts and services "
             "in the monitoring. These levels will then be sent to the "
             "Event Console when you forward notifications to it and will "
-            "override the setting of the matching rule."
+            "override the setting of the matching rule.</p>"
         ),
         allow_empty=False,
     ),

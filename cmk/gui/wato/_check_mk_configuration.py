@@ -3067,7 +3067,7 @@ ConfigVariableDelayPrecompile = ConfigVariable(
             "Instead it will delay this to the first "
             "time the host is actually checked being by Nagios.<p>This reduces the time needed "
             "for the operation, but on the other hand will lead to a slightly higher load "
-            "of Nagios for the first couple of minutes after the restart. "
+            "of Nagios for the first couple of minutes after the restart.</p>"
         ),
     ),
 )

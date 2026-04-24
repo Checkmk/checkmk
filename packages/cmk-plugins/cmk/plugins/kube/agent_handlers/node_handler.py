@@ -109,7 +109,6 @@ def _allocatable_pods(api_node: Node) -> section.AllocatablePods:
 def _kubelet(api_node: Node) -> section.KubeletInfo:
     return section.KubeletInfo(
         version=api_node.status.node_info.kubelet_version,
-        proxy_version=api_node.status.node_info.kube_proxy_version,
         health=api_node.kubelet_health,
     )
 

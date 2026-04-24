@@ -41,7 +41,6 @@ from tests.cmk.plugins.kube.agent_based.utils_inventory import sort_inventory_re
             ),
             KubeletInfo(
                 version="1.2.3",
-                proxy_version="1.2.3",
                 health=HealthZ(status_code=200, response="ok"),
             ),
             [
@@ -61,7 +60,6 @@ from tests.cmk.plugins.kube.agent_based.utils_inventory import sort_inventory_re
                         "architecture": "amd64",
                         "container_runtime_version": "docker://20.10.8",
                         "kubelet_version": "1.2.3",
-                        "kube_proxy_version": "1.2.3",
                     },
                     status_attributes={},
                 ),

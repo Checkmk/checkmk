@@ -32,7 +32,6 @@ def inventory_kube_node(
             "architecture": section_kube_node_info.architecture,
             "container_runtime_version": section_kube_node_info.container_runtime_version,
             "kubelet_version": section_kube_node_kubelet.version,
-            "kube_proxy_version": section_kube_node_kubelet.proxy_version,
         },
     )
     for address in section_kube_node_info.addresses:

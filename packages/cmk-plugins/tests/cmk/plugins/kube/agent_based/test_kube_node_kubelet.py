@@ -17,7 +17,6 @@ from cmk.plugins.kube.schemata.section import KubeletInfo
         pytest.param(
             KubeletInfo(
                 version="1.2.3",
-                proxy_version="1.2.3",
                 health=HealthZ(status_code=200, response="ok"),
             ),
             [
@@ -29,7 +28,6 @@ from cmk.plugins.kube.schemata.section import KubeletInfo
         pytest.param(
             KubeletInfo(
                 version="1.2.3",
-                proxy_version="1.2.3",
                 health=HealthZ(status_code=500, response="bad"),
             ),
             [
@@ -45,7 +43,6 @@ from cmk.plugins.kube.schemata.section import KubeletInfo
         pytest.param(
             KubeletInfo(
                 version="1.2.3",
-                proxy_version="1.2.3",
                 health=NodeConnectionError(message="MaxRetryError..."),
             ),
             [

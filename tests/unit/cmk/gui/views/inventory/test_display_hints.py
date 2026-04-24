@@ -375,7 +375,6 @@ _KNOWN_ATTRIBUTES_KEY_ORDERS = {
         "architecture",
         "container_runtime_version",
         "kubelet_version",
-        "kube_proxy_version",
     ],
     ("software", "applications", "kube", "pod"): [
         "dns_policy",

@@ -787,6 +787,9 @@ def _perform_post_config_loading_actions(
         inventory_check_autotrigger=inventory_check_autotrigger,
         monitoring_host=monitoring_host,
         explicit_snmp_communities=explicit_snmp_communities,
+        cmc_host_limit=cmc_host_limit,
+        cmc_service_limit=cmc_service_limit,
+        cmc_store_params_in_config=cmc_store_params_in_config,
     )
 
     config_cache = ConfigCache(loaded_config, get_builtin_host_labels, edition).initialize(

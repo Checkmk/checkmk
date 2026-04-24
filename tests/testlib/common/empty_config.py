@@ -158,6 +158,9 @@ EMPTY_CONFIG = LoadedConfigFragment(
     inventory_check_autotrigger=True,
     monitoring_host=None,
     explicit_snmp_communities={},
+    cmc_host_limit=None,
+    cmc_service_limit=None,
+    cmc_store_params_in_config=False,
 )
 
 

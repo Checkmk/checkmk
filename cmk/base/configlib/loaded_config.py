@@ -185,3 +185,6 @@ class LoadedConfigFragment:
     inventory_check_autotrigger: bool
     monitoring_host: str | None
     explicit_snmp_communities: Mapping[HostName | HostAddress, object]
+    cmc_host_limit: int | None
+    cmc_service_limit: int | None
+    cmc_store_params_in_config: bool

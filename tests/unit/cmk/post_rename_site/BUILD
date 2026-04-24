@@ -54,7 +54,6 @@ py_test(
         ":conftest",
         "//cmk/post_rename_site",
         "//cmk/post_rename_site/plugins",
-        "//tests/testlib/unit",
         "//tests/unit:conftest",
         requirement("pytest"),
         requirement("pytest-asyncio"),

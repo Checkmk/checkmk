@@ -1,5 +1,5 @@
 {
-  "checksum": "1220b0717654e651e9db994e611bcc611e4abdf8cc4164b2c11f37b76859e993",
+  "checksum": "686ed5cbdf4fecd5931120a3886dab9bc58af711742501063b1a4fd1f8c6a4bf",
   "crates": {
     "addr2line 0.24.2": {
       "name": "addr2line",
@@ -288,7 +288,7 @@
               "target": "android_properties"
             },
             {
-              "id": "bitflags 2.9.0",
+              "id": "bitflags 2.11.1",
               "target": "bitflags"
             },
             {
@@ -308,7 +308,7 @@
               "target": "libc"
             },
             {
-              "id": "log 0.4.26",
+              "id": "log 0.4.29",
               "target": "log"
             },
             {
@@ -1270,7 +1270,7 @@
               "target": "futures_util"
             },
             {
-              "id": "native-tls 0.2.13",
+              "id": "native-tls 0.2.18",
               "target": "native_tls"
             },
             {
@@ -1388,7 +1388,7 @@
         "deps": {
           "common": [
             {
-              "id": "bytes 1.10.1",
+              "id": "bytes 1.11.1",
               "target": "bytes"
             },
             {
@@ -1774,14 +1774,14 @@
       ],
       "license_file": "LICENSE-APACHE"
     },
-    "bitflags 2.9.0": {
+    "bitflags 2.11.1": {
       "name": "bitflags",
-      "version": "2.9.0",
+      "version": "2.11.1",
       "package_url": "https://github.com/bitflags/bitflags",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/bitflags/2.9.0/download",
-          "sha256": "5c8214115b7bf84099f1309324e63141d4c5d7cc26862f97a0a857dbefe165bd"
+          "url": "https://static.crates.io/crates/bitflags/2.11.1/download",
+          "sha256": "c4512299f36f043ab09a583e57bceb5a5aab7a73db1805848e8fef3c9e8c78b3"
         }
       },
       "targets": [
@@ -1887,7 +1887,7 @@
           }
         },
         "edition": "2021",
-        "version": "2.9.0"
+        "version": "2.11.1"
       },
       "license": "MIT OR Apache-2.0",
       "license_ids": [
@@ -2095,14 +2095,14 @@
       ],
       "license_file": "LICENSE-MIT"
     },
-    "bytes 1.10.1": {
+    "bytes 1.11.1": {
       "name": "bytes",
-      "version": "1.10.1",
+      "version": "1.11.1",
       "package_url": "https://github.com/tokio-rs/bytes",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/bytes/1.10.1/download",
-          "sha256": "d71b6127be86fdcfddb610f7182ac57211d4b18a3e9c82eb2d17662f2227ad6a"
+          "url": "https://static.crates.io/crates/bytes/1.11.1/download",
+          "sha256": "1e748733b7cbc798e1434b6ac524f0c1ff2ab456fe201501e6497c8417a4fc33"
         }
       },
       "targets": [
@@ -2131,8 +2131,8 @@
           ],
           "selects": {}
         },
-        "edition": "2018",
-        "version": "1.10.1"
+        "edition": "2021",
+        "version": "1.11.1"
       },
       "license": "MIT",
       "license_ids": [
@@ -2172,11 +2172,11 @@
         "deps": {
           "common": [
             {
-              "id": "bitflags 2.9.0",
+              "id": "bitflags 2.11.1",
               "target": "bitflags"
             },
             {
-              "id": "log 0.4.26",
+              "id": "log 0.4.29",
               "target": "log"
             },
             {
@@ -2924,7 +2924,7 @@
               "target": "ipnet"
             },
             {
-              "id": "log 0.4.26",
+              "id": "log 0.4.29",
               "target": "log"
             },
             {
@@ -2932,7 +2932,7 @@
               "target": "nix"
             },
             {
-              "id": "openssl 0.10.73",
+              "id": "openssl 0.10.78",
               "target": "openssl"
             },
             {
@@ -3274,6 +3274,65 @@
         },
         "edition": "2018",
         "version": "0.9.4"
+      },
+      "license": "MIT OR Apache-2.0",
+      "license_ids": [
+        "Apache-2.0",
+        "MIT"
+      ],
+      "license_file": "LICENSE-APACHE"
+    },
+    "core-foundation 0.10.1": {
+      "name": "core-foundation",
+      "version": "0.10.1",
+      "package_url": "https://github.com/servo/core-foundation-rs",
+      "repository": {
+        "Http": {
+          "url": "https://static.crates.io/crates/core-foundation/0.10.1/download",
+          "sha256": "b2a6cd9ae233e7f62ba4e9353e81a88df7fc8a5987b8d445b4d90c879bd156f6"
+        }
+      },
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "core_foundation",
+            "crate_root": "src/lib.rs",
+            "srcs": {
+              "allow_empty": true,
+              "include": [
+                "**/*.rs"
+              ]
+            }
+          }
+        }
+      ],
+      "library_target_name": "core_foundation",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "crate_features": {
+          "common": [
+            "default",
+            "link"
+          ],
+          "selects": {}
+        },
+        "deps": {
+          "common": [
+            {
+              "id": "core-foundation-sys 0.8.7",
+              "target": "core_foundation_sys"
+            },
+            {
+              "id": "libc 0.2.170",
+              "target": "libc"
+            }
+          ],
+          "selects": {}
+        },
+        "edition": "2021",
+        "version": "0.10.1"
       },
       "license": "MIT OR Apache-2.0",
       "license_ids": [
@@ -4724,7 +4783,7 @@
             ],
             "cfg(windows)": [
               {
-                "id": "windows-sys 0.52.0",
+                "id": "windows-sys 0.59.0",
                 "target": "windows_sys"
               }
             ]
@@ -4944,7 +5003,7 @@
               "target": "chrono"
             },
             {
-              "id": "log 0.4.26",
+              "id": "log 0.4.29",
               "target": "log"
             },
             {
@@ -6441,7 +6500,7 @@
               "target": "atomic_waker"
             },
             {
-              "id": "bytes 1.10.1",
+              "id": "bytes 1.11.1",
               "target": "bytes"
             },
             {
@@ -6867,7 +6926,7 @@
         "deps": {
           "common": [
             {
-              "id": "bytes 1.10.1",
+              "id": "bytes 1.11.1",
               "target": "bytes"
             },
             {
@@ -6923,7 +6982,7 @@
         "deps": {
           "common": [
             {
-              "id": "bytes 1.10.1",
+              "id": "bytes 1.11.1",
               "target": "bytes"
             },
             {
@@ -6974,7 +7033,7 @@
         "deps": {
           "common": [
             {
-              "id": "bytes 1.10.1",
+              "id": "bytes 1.11.1",
               "target": "bytes"
             },
             {
@@ -7121,7 +7180,7 @@
         "deps": {
           "common": [
             {
-              "id": "bytes 1.10.1",
+              "id": "bytes 1.11.1",
               "target": "bytes"
             },
             {
@@ -7303,7 +7362,7 @@
         "deps": {
           "common": [
             {
-              "id": "bytes 1.10.1",
+              "id": "bytes 1.11.1",
               "target": "bytes"
             },
             {
@@ -7319,7 +7378,7 @@
               "target": "hyper_util"
             },
             {
-              "id": "native-tls 0.2.13",
+              "id": "native-tls 0.2.18",
               "target": "native_tls"
             },
             {
@@ -7390,7 +7449,7 @@
         "deps": {
           "common": [
             {
-              "id": "bytes 1.10.1",
+              "id": "bytes 1.11.1",
               "target": "bytes"
             },
             {
@@ -8785,7 +8844,7 @@
               "target": "jni_sys"
             },
             {
-              "id": "log 0.4.26",
+              "id": "log 0.4.29",
               "target": "log"
             },
             {
@@ -9162,7 +9221,7 @@
         "deps": {
           "common": [
             {
-              "id": "bitflags 2.9.0",
+              "id": "bitflags 2.11.1",
               "target": "bitflags"
             },
             {
@@ -9470,14 +9529,14 @@
       ],
       "license_file": "LICENSE-APACHE"
     },
-    "log 0.4.26": {
+    "log 0.4.29": {
       "name": "log",
-      "version": "0.4.26",
+      "version": "0.4.29",
       "package_url": "https://github.com/rust-lang/log",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/log/0.4.26/download",
-          "sha256": "30bde2b3dc3671ae49d8e2e9f044c7c005836e7a023ee57cffa25ab82764bb9e"
+          "url": "https://static.crates.io/crates/log/0.4.29/download",
+          "sha256": "5e5032e24019045c762d3c0f28f5b6b8bbf38563a65908389bf7978758920897"
         }
       },
       "targets": [
@@ -9506,7 +9565,7 @@
           "selects": {}
         },
         "edition": "2021",
-        "version": "0.4.26"
+        "version": "0.4.29"
       },
       "license": "MIT OR Apache-2.0",
       "license_ids": [
@@ -10001,11 +10060,11 @@
               "target": "lazy_static"
             },
             {
-              "id": "log 0.4.26",
+              "id": "log 0.4.29",
               "target": "log"
             },
             {
-              "id": "openssl 0.10.73",
+              "id": "openssl 0.10.78",
               "target": "openssl"
             },
             {
@@ -10062,14 +10121,14 @@
       "license_ids": [],
       "license_file": null
     },
-    "native-tls 0.2.13": {
+    "native-tls 0.2.18": {
       "name": "native-tls",
-      "version": "0.2.13",
-      "package_url": "https://github.com/sfackler/rust-native-tls",
+      "version": "0.2.18",
+      "package_url": "https://github.com/rust-native-tls/rust-native-tls",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/native-tls/0.2.13/download",
-          "sha256": "0dab59f8e050d5df8e4dd87d9206fb6f65a483e20ac9fda365ade4fab353196c"
+          "url": "https://static.crates.io/crates/native-tls/0.2.18/download",
+          "sha256": "465500e14ea162429d264d44189adc38b199b62b1c21eea9f69e4b73cb03bbf2"
         }
       },
       "targets": [
@@ -10103,29 +10162,35 @@
         "compile_data_glob": [
           "**"
         ],
+        "crate_features": {
+          "common": [
+            "default"
+          ],
+          "selects": {}
+        },
         "deps": {
           "common": [
             {
-              "id": "native-tls 0.2.13",
+              "id": "native-tls 0.2.18",
               "target": "build_script_build"
             }
           ],
           "selects": {
             "cfg(not(any(target_os = \"windows\", target_vendor = \"apple\")))": [
               {
-                "id": "log 0.4.26",
+                "id": "log 0.4.29",
                 "target": "log"
               },
               {
-                "id": "openssl 0.10.73",
+                "id": "openssl 0.10.78",
                 "target": "openssl"
               },
               {
-                "id": "openssl-probe 0.1.6",
+                "id": "openssl-probe 0.2.1",
                 "target": "openssl_probe"
               },
               {
-                "id": "openssl-sys 0.9.109",
+                "id": "openssl-sys 0.9.114",
                 "target": "openssl_sys"
               }
             ],
@@ -10137,7 +10202,7 @@
             ],
             "cfg(target_os = \"windows\")": [
               {
-                "id": "schannel 0.1.27",
+                "id": "schannel 0.1.29",
                 "target": "schannel"
               }
             ],
@@ -10147,18 +10212,18 @@
                 "target": "libc"
               },
               {
-                "id": "security-framework 2.11.1",
+                "id": "security-framework 3.5.1",
                 "target": "security_framework"
               },
               {
-                "id": "security-framework-sys 2.14.0",
+                "id": "security-framework-sys 2.17.0",
                 "target": "security_framework_sys"
               }
             ]
           }
         },
-        "edition": "2015",
-        "version": "0.2.13"
+        "edition": "2021",
+        "version": "0.2.18"
       },
       "build_script_attrs": {
         "compile_data_glob": [
@@ -10172,7 +10237,7 @@
           "selects": {
             "cfg(not(any(target_os = \"windows\", target_vendor = \"apple\")))": [
               {
-                "id": "openssl-sys 0.9.109",
+                "id": "openssl-sys 0.9.114",
                 "target": "openssl_sys"
               }
             ]
@@ -10218,7 +10283,7 @@
         "deps": {
           "common": [
             {
-              "id": "bitflags 2.9.0",
+              "id": "bitflags 2.11.1",
               "target": "bitflags"
             },
             {
@@ -10226,7 +10291,7 @@
               "target": "jni_sys"
             },
             {
-              "id": "log 0.4.26",
+              "id": "log 0.4.29",
               "target": "log"
             },
             {
@@ -10394,7 +10459,7 @@
         "deps": {
           "common": [
             {
-              "id": "bitflags 2.9.0",
+              "id": "bitflags 2.11.1",
               "target": "bitflags"
             },
             {
@@ -11874,7 +11939,7 @@
               "target": "atoi"
             },
             {
-              "id": "log 0.4.26",
+              "id": "log 0.4.29",
               "target": "log"
             },
             {
@@ -12118,14 +12183,14 @@
       ],
       "license_file": "LICENSE-APACHE"
     },
-    "openssl 0.10.73": {
+    "openssl 0.10.78": {
       "name": "openssl",
-      "version": "0.10.73",
-      "package_url": "https://github.com/sfackler/rust-openssl",
+      "version": "0.10.78",
+      "package_url": "https://github.com/rust-openssl/rust-openssl",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/openssl/0.10.73/download",
-          "sha256": "8505734d46c8ab1e19a1dce3aef597ad87dcb4c37e7188231769bd6bd51cebf8"
+          "url": "https://static.crates.io/crates/openssl/0.10.78/download",
+          "sha256": "f38c4372413cdaaf3cc79dd92d29d7d9f5ab09b51b10dded508fb90bb70b9222"
         }
       },
       "targets": [
@@ -12169,7 +12234,7 @@
         "deps": {
           "common": [
             {
-              "id": "bitflags 2.9.0",
+              "id": "bitflags 2.11.1",
               "target": "bitflags"
             },
             {
@@ -12189,11 +12254,11 @@
               "target": "once_cell"
             },
             {
-              "id": "openssl 0.10.73",
+              "id": "openssl 0.10.78",
               "target": "build_script_build"
             },
             {
-              "id": "openssl-sys 0.9.109",
+              "id": "openssl-sys 0.9.114",
               "target": "openssl_sys",
               "alias": "ffi"
             }
@@ -12210,7 +12275,7 @@
           ],
           "selects": {}
         },
-        "version": "0.10.73"
+        "version": "0.10.78"
       },
       "build_script_attrs": {
         "compile_data_glob": [
@@ -12222,7 +12287,7 @@
         "link_deps": {
           "common": [
             {
-              "id": "openssl-sys 0.9.109",
+              "id": "openssl-sys 0.9.114",
               "target": "openssl_sys",
               "alias": "ffi"
             }
@@ -12292,14 +12357,14 @@
       ],
       "license_file": "LICENSE-APACHE"
     },
-    "openssl-probe 0.1.6": {
+    "openssl-probe 0.2.1": {
       "name": "openssl-probe",
-      "version": "0.1.6",
-      "package_url": "https://github.com/alexcrichton/openssl-probe",
+      "version": "0.2.1",
+      "package_url": "https://github.com/rustls/openssl-probe",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/openssl-probe/0.1.6/download",
-          "sha256": "d05e27ee213611ffe7d6348b942e8f942b37114c00cc03cec254295a4a17852e"
+          "url": "https://static.crates.io/crates/openssl-probe/0.2.1/download",
+          "sha256": "7c87def4c32ab89d880effc9e097653c8da5d6ef28e6b539d313baaacfbafcbe"
         }
       },
       "targets": [
@@ -12322,9 +12387,9 @@
           "**"
         ],
         "edition": "2021",
-        "version": "0.1.6"
+        "version": "0.2.1"
       },
-      "license": "MIT/Apache-2.0",
+      "license": "MIT OR Apache-2.0",
       "license_ids": [
         "Apache-2.0",
         "MIT"
@@ -12386,14 +12451,14 @@
       ],
       "license_file": "LICENSE-APACHE"
     },
-    "openssl-sys 0.9.109": {
+    "openssl-sys 0.9.114": {
       "name": "openssl-sys",
-      "version": "0.9.109",
-      "package_url": "https://github.com/sfackler/rust-openssl",
+      "version": "0.9.114",
+      "package_url": "https://github.com/rust-openssl/rust-openssl",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/openssl-sys/0.9.109/download",
-          "sha256": "90096e2e47630d78b7d1c20952dc621f957103f8bc2c8359ec81290d75238571"
+          "url": "https://static.crates.io/crates/openssl-sys/0.9.114/download",
+          "sha256": "13ce1245cd07fcc4cfdb438f7507b0c7e4f3849a69fd84d52374c66d83741bb6"
         }
       },
       "targets": [
@@ -12447,7 +12512,7 @@
               "target": "libc"
             },
             {
-              "id": "openssl-sys 0.9.109",
+              "id": "openssl-sys 0.9.114",
               "target": "build_script_main"
             }
           ],
@@ -12460,7 +12525,7 @@
           "selects": {}
         },
         "edition": "2021",
-        "version": "0.9.109"
+        "version": "0.9.114"
       },
       "build_script_attrs": {
         "compile_data_glob": [
@@ -12625,7 +12690,7 @@
         "deps": {
           "common": [
             {
-              "id": "log 0.4.26",
+              "id": "log 0.4.29",
               "target": "log"
             },
             {
@@ -13715,7 +13780,7 @@
         "deps": {
           "common": [
             {
-              "id": "bytes 1.10.1",
+              "id": "bytes 1.11.1",
               "target": "bytes"
             },
             {
@@ -13797,7 +13862,7 @@
         "deps": {
           "common": [
             {
-              "id": "bytes 1.10.1",
+              "id": "bytes 1.11.1",
               "target": "bytes"
             },
             {
@@ -13921,7 +13986,7 @@
                 "target": "once_cell"
               },
               {
-                "id": "windows-sys 0.52.0",
+                "id": "windows-sys 0.59.0",
                 "target": "windows_sys"
               }
             ]
@@ -14697,7 +14762,7 @@
         "deps": {
           "common": [
             {
-              "id": "bitflags 2.9.0",
+              "id": "bitflags 2.11.1",
               "target": "bitflags"
             }
           ],
@@ -14988,7 +15053,7 @@
               "target": "base64"
             },
             {
-              "id": "bytes 1.10.1",
+              "id": "bytes 1.11.1",
               "target": "bytes"
             },
             {
@@ -15055,7 +15120,7 @@
                 "target": "hyper_tls"
               },
               {
-                "id": "native-tls 0.2.13",
+                "id": "native-tls 0.2.18",
                 "target": "native_tls",
                 "alias": "native_tls_crate"
               },
@@ -15106,7 +15171,7 @@
                 "target": "hyper_tls"
               },
               {
-                "id": "native-tls 0.2.13",
+                "id": "native-tls 0.2.18",
                 "target": "native_tls",
                 "alias": "native_tls_crate"
               },
@@ -15153,7 +15218,7 @@
                 "target": "hyper_tls"
               },
               {
-                "id": "native-tls 0.2.13",
+                "id": "native-tls 0.2.18",
                 "target": "native_tls",
                 "alias": "native_tls_crate"
               },
@@ -15200,7 +15265,7 @@
                 "target": "hyper_tls"
               },
               {
-                "id": "native-tls 0.2.13",
+                "id": "native-tls 0.2.18",
                 "target": "native_tls",
                 "alias": "native_tls_crate"
               },
@@ -15247,7 +15312,7 @@
                 "target": "hyper_tls"
               },
               {
-                "id": "native-tls 0.2.13",
+                "id": "native-tls 0.2.18",
                 "target": "native_tls",
                 "alias": "native_tls_crate"
               },
@@ -15294,7 +15359,7 @@
                 "target": "hyper_tls"
               },
               {
-                "id": "native-tls 0.2.13",
+                "id": "native-tls 0.2.18",
                 "target": "native_tls",
                 "alias": "native_tls_crate"
               },
@@ -15341,7 +15406,7 @@
                 "target": "hyper_tls"
               },
               {
-                "id": "native-tls 0.2.13",
+                "id": "native-tls 0.2.18",
                 "target": "native_tls",
                 "alias": "native_tls_crate"
               },
@@ -15388,7 +15453,7 @@
                 "target": "hyper_tls"
               },
               {
-                "id": "native-tls 0.2.13",
+                "id": "native-tls 0.2.18",
                 "target": "native_tls",
                 "alias": "native_tls_crate"
               },
@@ -15435,7 +15500,7 @@
                 "target": "hyper_tls"
               },
               {
-                "id": "native-tls 0.2.13",
+                "id": "native-tls 0.2.18",
                 "target": "native_tls",
                 "alias": "native_tls_crate"
               },
@@ -15482,7 +15547,7 @@
                 "target": "hyper_tls"
               },
               {
-                "id": "native-tls 0.2.13",
+                "id": "native-tls 0.2.18",
                 "target": "native_tls",
                 "alias": "native_tls_crate"
               },
@@ -15529,7 +15594,7 @@
                 "target": "hyper_tls"
               },
               {
-                "id": "native-tls 0.2.13",
+                "id": "native-tls 0.2.18",
                 "target": "native_tls",
                 "alias": "native_tls_crate"
               },
@@ -15576,7 +15641,7 @@
                 "target": "hyper_tls"
               },
               {
-                "id": "native-tls 0.2.13",
+                "id": "native-tls 0.2.18",
                 "target": "native_tls",
                 "alias": "native_tls_crate"
               },
@@ -15623,7 +15688,7 @@
                 "target": "ipnet"
               },
               {
-                "id": "log 0.4.26",
+                "id": "log 0.4.29",
                 "target": "log"
               },
               {
@@ -15697,7 +15762,7 @@
                 "target": "hyper_tls"
               },
               {
-                "id": "native-tls 0.2.13",
+                "id": "native-tls 0.2.18",
                 "target": "native_tls",
                 "alias": "native_tls_crate"
               },
@@ -15748,7 +15813,7 @@
                 "target": "hyper_tls"
               },
               {
-                "id": "native-tls 0.2.13",
+                "id": "native-tls 0.2.18",
                 "target": "native_tls",
                 "alias": "native_tls_crate"
               },
@@ -15795,7 +15860,7 @@
                 "target": "hyper_tls"
               },
               {
-                "id": "native-tls 0.2.13",
+                "id": "native-tls 0.2.18",
                 "target": "native_tls",
                 "alias": "native_tls_crate"
               },
@@ -15842,7 +15907,7 @@
                 "target": "hyper_tls"
               },
               {
-                "id": "native-tls 0.2.13",
+                "id": "native-tls 0.2.18",
                 "target": "native_tls",
                 "alias": "native_tls_crate"
               },
@@ -15889,7 +15954,7 @@
                 "target": "hyper_tls"
               },
               {
-                "id": "native-tls 0.2.13",
+                "id": "native-tls 0.2.18",
                 "target": "native_tls",
                 "alias": "native_tls_crate"
               },
@@ -15936,7 +16001,7 @@
                 "target": "hyper_tls"
               },
               {
-                "id": "native-tls 0.2.13",
+                "id": "native-tls 0.2.18",
                 "target": "native_tls",
                 "alias": "native_tls_crate"
               },
@@ -15983,7 +16048,7 @@
                 "target": "hyper_tls"
               },
               {
-                "id": "native-tls 0.2.13",
+                "id": "native-tls 0.2.18",
                 "target": "native_tls",
                 "alias": "native_tls_crate"
               },
@@ -16030,7 +16095,7 @@
                 "target": "hyper_tls"
               },
               {
-                "id": "native-tls 0.2.13",
+                "id": "native-tls 0.2.18",
                 "target": "native_tls",
                 "alias": "native_tls_crate"
               },
@@ -16077,7 +16142,7 @@
                 "target": "hyper_tls"
               },
               {
-                "id": "native-tls 0.2.13",
+                "id": "native-tls 0.2.18",
                 "target": "native_tls",
                 "alias": "native_tls_crate"
               },
@@ -16124,7 +16189,7 @@
                 "target": "hyper_tls"
               },
               {
-                "id": "native-tls 0.2.13",
+                "id": "native-tls 0.2.18",
                 "target": "native_tls",
                 "alias": "native_tls_crate"
               },
@@ -16171,7 +16236,7 @@
                 "target": "hyper_tls"
               },
               {
-                "id": "native-tls 0.2.13",
+                "id": "native-tls 0.2.18",
                 "target": "native_tls",
                 "alias": "native_tls_crate"
               },
@@ -16218,7 +16283,7 @@
                 "target": "hyper_tls"
               },
               {
-                "id": "native-tls 0.2.13",
+                "id": "native-tls 0.2.18",
                 "target": "native_tls",
                 "alias": "native_tls_crate"
               },
@@ -16269,7 +16334,7 @@
                 "target": "hyper_tls"
               },
               {
-                "id": "native-tls 0.2.13",
+                "id": "native-tls 0.2.18",
                 "target": "native_tls",
                 "alias": "native_tls_crate"
               },
@@ -16316,7 +16381,7 @@
                 "target": "hyper_tls"
               },
               {
-                "id": "native-tls 0.2.13",
+                "id": "native-tls 0.2.18",
                 "target": "native_tls",
                 "alias": "native_tls_crate"
               },
@@ -16363,7 +16428,7 @@
                 "target": "hyper_tls"
               },
               {
-                "id": "native-tls 0.2.13",
+                "id": "native-tls 0.2.18",
                 "target": "native_tls",
                 "alias": "native_tls_crate"
               },
@@ -16410,7 +16475,7 @@
                 "target": "hyper_tls"
               },
               {
-                "id": "native-tls 0.2.13",
+                "id": "native-tls 0.2.18",
                 "target": "native_tls",
                 "alias": "native_tls_crate"
               },
@@ -16457,7 +16522,7 @@
                 "target": "hyper_tls"
               },
               {
-                "id": "native-tls 0.2.13",
+                "id": "native-tls 0.2.18",
                 "target": "native_tls",
                 "alias": "native_tls_crate"
               },
@@ -16504,7 +16569,7 @@
                 "target": "hyper_tls"
               },
               {
-                "id": "native-tls 0.2.13",
+                "id": "native-tls 0.2.18",
                 "target": "native_tls",
                 "alias": "native_tls_crate"
               },
@@ -16551,7 +16616,7 @@
                 "target": "hyper_tls"
               },
               {
-                "id": "native-tls 0.2.13",
+                "id": "native-tls 0.2.18",
                 "target": "native_tls",
                 "alias": "native_tls_crate"
               },
@@ -16598,7 +16663,7 @@
                 "target": "hyper_tls"
               },
               {
-                "id": "native-tls 0.2.13",
+                "id": "native-tls 0.2.18",
                 "target": "native_tls",
                 "alias": "native_tls_crate"
               },
@@ -17043,7 +17108,7 @@
         "deps": {
           "common": [
             {
-              "id": "bitflags 2.9.0",
+              "id": "bitflags 2.11.1",
               "target": "bitflags"
             },
             {
@@ -17159,7 +17224,7 @@
                 "alias": "libc_errno"
               },
               {
-                "id": "windows-sys 0.52.0",
+                "id": "windows-sys 0.59.0",
                 "target": "windows_sys"
               }
             ],
@@ -17434,7 +17499,7 @@
         "deps": {
           "common": [
             {
-              "id": "bitflags 2.9.0",
+              "id": "bitflags 2.11.1",
               "target": "bitflags"
             },
             {
@@ -17550,7 +17615,7 @@
                 "alias": "libc_errno"
               },
               {
-                "id": "windows-sys 0.52.0",
+                "id": "windows-sys 0.59.0",
                 "target": "windows_sys"
               }
             ],
@@ -17760,7 +17825,7 @@
         "deps": {
           "common": [
             {
-              "id": "log 0.4.26",
+              "id": "log 0.4.29",
               "target": "log"
             },
             {
@@ -18148,14 +18213,14 @@
       ],
       "license_file": "LICENSE-MIT"
     },
-    "schannel 0.1.27": {
+    "schannel 0.1.29": {
       "name": "schannel",
-      "version": "0.1.27",
+      "version": "0.1.29",
       "package_url": "https://github.com/steffengy/schannel-rs",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/schannel/0.1.27/download",
-          "sha256": "1f29ebaa345f945cec9fbbc532eb307f0fdad8161f281b6369539c8d84876b3d"
+          "url": "https://static.crates.io/crates/schannel/0.1.29/download",
+          "sha256": "91c1b7e4904c873ef0710c1f407dde2e6287de2bebc1bbbf7d430bb7cbffd939"
         }
       },
       "targets": [
@@ -18180,14 +18245,14 @@
         "deps": {
           "common": [
             {
-              "id": "windows-sys 0.59.0",
+              "id": "windows-sys 0.61.2",
               "target": "windows_sys"
             }
           ],
           "selects": {}
         },
         "edition": "2018",
-        "version": "0.1.27"
+        "version": "0.1.29"
       },
       "license": "MIT",
       "license_ids": [
@@ -18234,14 +18299,14 @@
       ],
       "license_file": "LICENSE-APACHE"
     },
-    "security-framework 2.11.1": {
+    "security-framework 3.5.1": {
       "name": "security-framework",
-      "version": "2.11.1",
+      "version": "3.5.1",
       "package_url": "https://github.com/kornelski/rust-security-framework",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/security-framework/2.11.1/download",
-          "sha256": "897b2245f0b511c87893af39b033e5ca9cce68824c4d7e7630b5a1d339658d02"
+          "url": "https://static.crates.io/crates/security-framework/3.5.1/download",
+          "sha256": "b3297343eaf830f66ede390ea39da1d462b6b0c1b000f420d0a83f898bbbe6ef"
         }
       },
       "targets": [
@@ -18265,10 +18330,7 @@
         ],
         "crate_features": {
           "common": [
-            "OSX_10_10",
-            "OSX_10_11",
             "OSX_10_12",
-            "OSX_10_9",
             "default"
           ],
           "selects": {}
@@ -18276,11 +18338,11 @@
         "deps": {
           "common": [
             {
-              "id": "bitflags 2.9.0",
+              "id": "bitflags 2.11.1",
               "target": "bitflags"
             },
             {
-              "id": "core-foundation 0.9.4",
+              "id": "core-foundation 0.10.1",
               "target": "core_foundation"
             },
             {
@@ -18292,14 +18354,14 @@
               "target": "libc"
             },
             {
-              "id": "security-framework-sys 2.14.0",
+              "id": "security-framework-sys 2.17.0",
               "target": "security_framework_sys"
             }
           ],
           "selects": {}
         },
         "edition": "2021",
-        "version": "2.11.1"
+        "version": "3.5.1"
       },
       "license": "MIT OR Apache-2.0",
       "license_ids": [
@@ -18308,14 +18370,14 @@
       ],
       "license_file": "LICENSE-APACHE"
     },
-    "security-framework-sys 2.14.0": {
+    "security-framework-sys 2.17.0": {
       "name": "security-framework-sys",
-      "version": "2.14.0",
+      "version": "2.17.0",
       "package_url": "https://github.com/kornelski/rust-security-framework",
       "repository": {
         "Http": {
-          "url": "https://static.crates.io/crates/security-framework-sys/2.14.0/download",
-          "sha256": "49db231d56a190491cb4aeda9527f1ad45345af50b0851622a7adb8c03b01c32"
+          "url": "https://static.crates.io/crates/security-framework-sys/2.17.0/download",
+          "sha256": "6ce2691df843ecc5d231c0b14ece2acc3efb62c0a398c7e1d875f3983ce020e3"
         }
       },
       "targets": [
@@ -18339,10 +18401,8 @@
         ],
         "crate_features": {
           "common": [
-            "OSX_10_10",
-            "OSX_10_11",
             "OSX_10_12",
-            "OSX_10_9",
+            "OSX_10_13",
             "default"
           ],
           "selects": {}
@@ -18361,7 +18421,7 @@
           "selects": {}
         },
         "edition": "2021",
-        "version": "2.14.0"
+        "version": "2.17.0"
       },
       "license": "MIT OR Apache-2.0",
       "license_ids": [
@@ -19717,7 +19777,7 @@
         "deps": {
           "common": [
             {
-              "id": "bitflags 2.9.0",
+              "id": "bitflags 2.11.1",
               "target": "bitflags"
             },
             {
@@ -19949,7 +20009,7 @@
             ],
             "cfg(windows)": [
               {
-                "id": "windows-sys 0.52.0",
+                "id": "windows-sys 0.59.0",
                 "target": "windows_sys"
               }
             ],
@@ -20435,7 +20495,7 @@
               "target": "byteorder"
             },
             {
-              "id": "bytes 1.10.1",
+              "id": "bytes 1.11.1",
               "target": "bytes"
             },
             {
@@ -20923,7 +20983,7 @@
         "deps": {
           "common": [
             {
-              "id": "bytes 1.10.1",
+              "id": "bytes 1.11.1",
               "target": "bytes"
             },
             {
@@ -21449,7 +21509,7 @@
         "deps": {
           "common": [
             {
-              "id": "native-tls 0.2.13",
+              "id": "native-tls 0.2.18",
               "target": "native_tls"
             },
             {
@@ -21697,7 +21757,7 @@
         "deps": {
           "common": [
             {
-              "id": "bytes 1.10.1",
+              "id": "bytes 1.11.1",
               "target": "bytes"
             },
             {
@@ -22128,7 +22188,7 @@
         "deps": {
           "common": [
             {
-              "id": "log 0.4.26",
+              "id": "log 0.4.29",
               "target": "log"
             },
             {
@@ -23448,7 +23508,7 @@
               "target": "bumpalo"
             },
             {
-              "id": "log 0.4.26",
+              "id": "log 0.4.29",
               "target": "log"
             },
             {
@@ -24358,6 +24418,45 @@
       ],
       "license_file": "license-apache-2.0"
     },
+    "windows-link 0.2.1": {
+      "name": "windows-link",
+      "version": "0.2.1",
+      "package_url": "https://github.com/microsoft/windows-rs",
+      "repository": {
+        "Http": {
+          "url": "https://static.crates.io/crates/windows-link/0.2.1/download",
+          "sha256": "f0805222e57f7521d6a62e36fa9163bc891acd422f971defe97d64e70d0a4fe5"
+        }
+      },
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "windows_link",
+            "crate_root": "src/lib.rs",
+            "srcs": {
+              "allow_empty": true,
+              "include": [
+                "**/*.rs"
+              ]
+            }
+          }
+        }
+      ],
+      "library_target_name": "windows_link",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "edition": "2021",
+        "version": "0.2.1"
+      },
+      "license": "MIT OR Apache-2.0",
+      "license_ids": [
+        "Apache-2.0",
+        "MIT"
+      ],
+      "license_file": "license-apache-2.0"
+    },
     "windows-registry 0.2.0": {
       "name": "windows-registry",
       "version": "0.2.0",
@@ -24776,16 +24875,10 @@
           "common": [
             "Win32",
             "Win32_Foundation",
-            "Win32_Security",
-            "Win32_Security_Authentication",
-            "Win32_Security_Authentication_Identity",
-            "Win32_Security_Credentials",
-            "Win32_Security_Cryptography",
+            "Win32_Storage",
+            "Win32_Storage_FileSystem",
             "Win32_System",
             "Win32_System_Console",
-            "Win32_System_LibraryLoader",
-            "Win32_System_Memory",
-            "Win32_System_SystemInformation",
             "default"
           ],
           "selects": {}
@@ -24801,6 +24894,71 @@
         },
         "edition": "2021",
         "version": "0.59.0"
+      },
+      "license": "MIT OR Apache-2.0",
+      "license_ids": [
+        "Apache-2.0",
+        "MIT"
+      ],
+      "license_file": "license-apache-2.0"
+    },
+    "windows-sys 0.61.2": {
+      "name": "windows-sys",
+      "version": "0.61.2",
+      "package_url": "https://github.com/microsoft/windows-rs",
+      "repository": {
+        "Http": {
+          "url": "https://static.crates.io/crates/windows-sys/0.61.2/download",
+          "sha256": "ae137229bcbd6cdf0f7b80a31df61766145077ddf49416a728b02cb3921ff3fc"
+        }
+      },
+      "targets": [
+        {
+          "Library": {
+            "crate_name": "windows_sys",
+            "crate_root": "src/lib.rs",
+            "srcs": {
+              "allow_empty": true,
+              "include": [
+                "**/*.rs"
+              ]
+            }
+          }
+        }
+      ],
+      "library_target_name": "windows_sys",
+      "common_attrs": {
+        "compile_data_glob": [
+          "**"
+        ],
+        "crate_features": {
+          "common": [
+            "Win32",
+            "Win32_Foundation",
+            "Win32_Security",
+            "Win32_Security_Authentication",
+            "Win32_Security_Authentication_Identity",
+            "Win32_Security_Credentials",
+            "Win32_Security_Cryptography",
+            "Win32_System",
+            "Win32_System_LibraryLoader",
+            "Win32_System_Memory",
+            "Win32_System_SystemInformation",
+            "default"
+          ],
+          "selects": {}
+        },
+        "deps": {
+          "common": [
+            {
+              "id": "windows-link 0.2.1",
+              "target": "windows_link"
+            }
+          ],
+          "selects": {}
+        },
+        "edition": "2021",
+        "version": "0.61.2"
       },
       "license": "MIT OR Apache-2.0",
       "license_ids": [
@@ -26649,7 +26807,7 @@
         "deps": {
           "common": [
             {
-              "id": "bitflags 2.9.0",
+              "id": "bitflags 2.11.1",
               "target": "bitflags"
             },
             {
@@ -27195,7 +27353,7 @@
         "deps": {
           "common": [
             {
-              "id": "bitflags 2.9.0",
+              "id": "bitflags 2.11.1",
               "target": "bitflags"
             },
             {
@@ -27203,7 +27361,7 @@
               "target": "dlib"
             },
             {
-              "id": "log 0.4.26",
+              "id": "log 0.4.29",
               "target": "log"
             },
             {
@@ -28753,11 +28911,11 @@
     "ipnet 2.11.0",
     "is_elevated 0.1.2",
     "lazy_static 1.5.0",
-    "log 0.4.26",
+    "log 0.4.29",
     "mail_slot 0.1.3",
     "nix 0.29.0",
     "odbc-api 10.2.0",
-    "openssl 0.10.73",
+    "openssl 0.10.78",
     "os_info 3.10.0",
     "rand 0.8.5",
     "reqwest 0.12.12",

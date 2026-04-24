@@ -10,13 +10,15 @@
 # trying to capture the current behavior of the connector to facilitate refactoring
 
 import datetime
-from collections.abc import Sequence
+from collections.abc import Iterator, Sequence
+from contextlib import contextmanager
 from dataclasses import dataclass
 from time import time
 from unittest import mock
 from unittest.mock import ANY, MagicMock
 
 import ldap  # type: ignore[import-untyped,unused-ignore]
+import ldap.ldapobject  # type: ignore[import-untyped,unused-ignore]
 import pytest
 from pytest_mock import MockerFixture
 
@@ -43,7 +45,7 @@ from cmk.gui.userdb.user_attributes import StartURLUserAttribute, TemperatureUni
 from cmk.gui.utils.security_log_events import UserManagementEvent
 
 
-@pytest.fixture(name="mock_ldap", autouse=True)
+@pytest.fixture(name="mock_ldap")
 def fixture_mock_ldap_object(mocker: MockerFixture) -> MagicMock:
     """Mock the ReconnectLDAPObject and return the mock object.
     The actual instance of the mock, that can be used to check method calls, is
@@ -67,7 +69,7 @@ _test_config = LDAPUserConnectionConfig(
                     server="lolcathorst",
                     failover_servers=["internet"],
                 ),
-            )
+            ),
         ),
     ),
     user_dn="ou=People,dc=ldap_golden,dc=unit_tests,dc=local",
@@ -132,7 +134,9 @@ def test_connect(mock_ldap: MagicMock) -> None:
 
 
 def _mock_result3(
-    mocker: MockerFixture, connector: LDAPUserConnector, ldap_result: Sequence
+    mocker: MockerFixture,
+    connector: LDAPUserConnector,
+    ldap_result: Sequence,
 ) -> None:
     """Make 'connector._ldap_object' return 'ldap_result' (plus some values that aren't used)."""
     mocker.patch.object(
@@ -177,7 +181,7 @@ def test_get_users(mocker: MockerFixture, mock_ldap: MagicMock) -> None:
             dn="user1",
             ldap_user_name="user1_id",
             ldap_user_spec={"dn": ["user1"], "uid": ["USER1_ID"]},
-        )
+        ),
     }
 
     add_filter = "my(*)filter"
@@ -259,7 +263,11 @@ def test_do_sync(mocker: MockerFixture, request_context: None) -> None:
     )
 
 
-def test_check_credentials_valid(mocker: MockerFixture, request_context: None) -> None:
+def test_check_credentials_valid(
+    mocker: MockerFixture,
+    mock_ldap: MagicMock,
+    request_context: None,
+) -> None:
     connector = LDAPUserConnector(_test_config)
     with mock.patch("cmk.utils.password_store.extract", return_value="hunter2"):
         connector.connect()
@@ -281,7 +289,7 @@ def test_check_credentials_valid(mocker: MockerFixture, request_context: None) -
         assert result == UserId("carol_id")
 
 
-def test_check_credentials_invalid(mocker: MockerFixture) -> None:
+def test_check_credentials_invalid(mocker: MockerFixture, mock_ldap: MagicMock) -> None:
     connector = LDAPUserConnector(_test_config)
     with mock.patch("cmk.utils.password_store.extract", return_value="hunter2"):
         connector.connect()
@@ -301,7 +309,7 @@ def test_check_credentials_invalid(mocker: MockerFixture) -> None:
         )
 
 
-def test_check_credentials_not_found(mocker: MockerFixture) -> None:
+def test_check_credentials_not_found(mocker: MockerFixture, mock_ldap: MagicMock) -> None:
     connector = LDAPUserConnector(_test_config)
     with mock.patch("cmk.utils.password_store.extract", return_value=None):
         connector.connect()
@@ -331,7 +339,7 @@ def test_remove_trailing_dot_from_hostname(mock_ldap: MagicMock) -> None:
                     Fixed(
                         server="lolcathorst.",
                     ),
-                )
+                ),
             ),
         ),
         user_dn="ou=People,dc=ldap_golden,dc=unit_tests,dc=local",
@@ -358,6 +366,62 @@ def test_remove_trailing_dot_from_hostname(mock_ldap: MagicMock) -> None:
         connector.connect()
 
     mock_ldap.assert_called_with("ldap://lolcathorst")
+
+
+@contextmanager
+def with_crl_check() -> Iterator[None]:
+    old_crl_check = ldap.get_option(ldap.OPT_X_TLS_CRLCHECK)  # type: ignore[attr-defined,no-untyped-call,unused-ignore]
+    try:
+        ldap.set_option(ldap.OPT_X_TLS_CRLCHECK, ldap.OPT_X_TLS_CRL_ALL)  # type: ignore[attr-defined,no-untyped-call,unused-ignore]
+        yield
+    finally:
+        ldap.set_option(ldap.OPT_X_TLS_CRLCHECK, old_crl_check)  # type: ignore[attr-defined,no-untyped-call,unused-ignore]
+
+
+def test_set_tls_options_overrides_global_crlcheck() -> None:
+    """Regression test for SUP-28719.
+
+    On OpenSSL-linked libldap, a new handle inherits the global OPT_X_TLS_CRLCHECK from ldap.conf.
+    A globally configured 'TLS_CRLCHECK all' (e.g. via /etc/ldap/ldap.conf) would then enforce CRL
+    checks on our handle, which fail in our environment because no CRL is loaded.
+
+    _set_tls_options must override that inherited global to OPT_X_TLS_CRL_NONE on the handle.
+    """
+    if (backend := ldap.get_option(ldap.OPT_X_TLS_PACKAGE)) != "OpenSSL":  # type: ignore[attr-defined,no-untyped-call,unused-ignore]
+        assert backend == "GnuTLS", f"Unexpected TLS backend: {backend}"
+        pytest.skip("OPT_X_TLS_CRLCHECK is only relevant on OpenSSL backend, GnuTLS would raise")
+
+    with with_crl_check():
+        conn = ldap.ldapobject.ReconnectLDAPObject("ldaps://foobar.test")  # type: ignore[no-untyped-call,unused-ignore]
+        # Precondition: new handle inherits the global setting for TLS_CRLCHECK
+        assert conn.get_option(ldap.OPT_X_TLS_CRLCHECK) == ldap.OPT_X_TLS_CRL_ALL  # type: ignore[attr-defined,no-untyped-call,unused-ignore]
+
+        LDAPUserConnector(
+            {
+                **_test_config,
+                "use_ssl": True,
+            },
+        )._set_tls_options(conn)
+
+        assert conn.get_option(ldap.OPT_X_TLS_CRLCHECK) == ldap.OPT_X_TLS_CRL_NONE  # type: ignore[attr-defined,no-untyped-call,unused-ignore]
+
+
+def test_set_tls_options_gnutls_no_crlcheck_support() -> None:
+    """Test that we didn't break the GnuTLS path with the fix for SUP-28719.
+
+    I.e. with GnuTLS we must still be able to set use_ssl without crashing, even though
+    OPT_X_TLS_CRLCHECK is not supported by the backend at all.
+    """
+    if ldap.get_option(ldap.OPT_X_TLS_PACKAGE) != "GnuTLS":  # type: ignore[attr-defined,no-untyped-call,unused-ignore]
+        pytest.skip("CRLCHECK-unsupported path only meaningful on GnuTLS backend")
+
+    conn = ldap.ldapobject.ReconnectLDAPObject("ldaps://foobar.test")  # type: ignore[no-untyped-call,unused-ignore]
+    LDAPUserConnector(
+        {
+            **_test_config,
+            "use_ssl": True,
+        },
+    )._set_tls_options(conn)  # must not raise
 
 
 @dataclass
@@ -394,8 +458,8 @@ sync_data: list[SyncLdapData] = [
                     serial=0,
                     start_url="welcome.py",
                     user_scheme_serial=1,
-                )
-            }
+                ),
+            },
         ),
         change_str="Changed start_url from welcome.py to mr_bojangles.py, Added: temperature_unit",
         expected_user_after_sync={
@@ -411,7 +475,7 @@ sync_data: list[SyncLdapData] = [
                 user_scheme_serial=1,
                 start_url="mr_bojangles.py",
                 temperature_unit="celsius",
-            )
+            ),
         },
         security_event=UserManagementEvent(
             event="user modified",
@@ -447,7 +511,7 @@ sync_data: list[SyncLdapData] = [
                 user_scheme_serial=1,
                 start_url="mr_bojangles.py",
                 temperature_unit="celsius",
-            )
+            ),
         },
         security_event=UserManagementEvent(
             event="user created",
@@ -508,7 +572,7 @@ _test_config_with_auth_expire = LDAPUserConnectionConfig(
                     server="lolcathorst",
                     failover_servers=["internet"],
                 ),
-            )
+            ),
         ),
     ),
     user_dn="ou=People,dc=ldap_golden,dc=unit_tests,dc=local",
@@ -529,7 +593,11 @@ _test_config_with_auth_expire = LDAPUserConnectionConfig(
 )
 
 
-def test_check_credentials_with_auth_expire(mocker: MockerFixture, request_context: None) -> None:
+def test_check_credentials_with_auth_expire(
+    mocker: MockerFixture,
+    mock_ldap: MagicMock,
+    request_context: None,
+) -> None:
     """Login with auth_expire plugin enabled must request all needed LDAP attributes.
 
     Regression test: _get_user() used to fetch only the user-id attribute, so

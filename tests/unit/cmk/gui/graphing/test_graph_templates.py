@@ -22,7 +22,7 @@ from cmk.gui.graphing._graph_specification import (
     MinimalVerticalRange,
 )
 from cmk.gui.graphing._graph_templates import (
-    _compute_graph_recipes,
+    _evaluate_graph_plugins,
     TemplateGraphSpecification,
 )
 from cmk.gui.graphing._rrd import HostGraphRow, ServiceGraphRow
@@ -987,7 +987,7 @@ def test_template_recipes_matching(
         ),
     ],
 )
-def test__compute_graph_recipes_1(
+def test__evaluate_graph_plugins_1(
     metric_names: Sequence[str],
     check_command: str,
     registered_graphs: Mapping[str, graphs_api.Graph | graphs_api.Bidirectional],
@@ -1003,7 +1003,7 @@ def test__compute_graph_recipes_1(
     assert sorted(
         [
             graph_id
-            for graph_id, _graph_recipe in _compute_graph_recipes(
+            for graph_id, _graph_recipe in _evaluate_graph_plugins(
                 {},
                 registered_graphs,
                 SiteId("site_id"),
@@ -1030,7 +1030,7 @@ def test__compute_graph_recipes_1(
         ),
     ],
 )
-def test__compute_graph_recipes_2(
+def test__evaluate_graph_plugins_2(
     metric_names: Sequence[str],
     warn_crit_min_max: tuple[int, int, int, int],
     check_command: str,
@@ -1047,7 +1047,7 @@ def test__compute_graph_recipes_2(
     assert sorted(
         [
             graph_id
-            for graph_id, _graph_recipe in _compute_graph_recipes(
+            for graph_id, _graph_recipe in _evaluate_graph_plugins(
                 {},
                 registered_graphs,
                 SiteId("site_id"),
@@ -1431,7 +1431,7 @@ def test__compute_graph_recipes_2(
         ),
     ],
 )
-def test__compute_graph_recipes_with_predictive_metrics(
+def test__evaluate_graph_plugins_with_predictive_metrics(
     metric_names: Sequence[str],
     predict_metric_names: Sequence[str],
     predict_lower_metric_names: Sequence[str],
@@ -1453,7 +1453,7 @@ def test__compute_graph_recipes_with_predictive_metrics(
     )
     assert [
         recipe
-        for _graph_id, recipe in _compute_graph_recipes(
+        for _graph_id, recipe in _evaluate_graph_plugins(
             registered_metrics,
             registered_graphs,
             SiteId("site_id"),
@@ -1991,7 +1991,7 @@ def test_conflicting_metrics(
     assert sorted(
         [
             graph_id
-            for graph_id, _graph_recipe in _compute_graph_recipes(
+            for graph_id, _graph_recipe in _evaluate_graph_plugins(
                 {},
                 registered_graphs,
                 SiteId("site_id"),

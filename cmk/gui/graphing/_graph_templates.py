@@ -220,7 +220,7 @@ def _create_graph_recipe(
     )
 
 
-def _compute_graph_recipes(
+def _evaluate_graph_plugins(
     registered_metrics: Mapping[str, RegisteredMetric],
     registered_graphs: Mapping[str, graphs_api.Graph | graphs_api.Bidirectional],
     site_id: SiteId,
@@ -427,7 +427,7 @@ class TemplateGraphSpecification(GraphSpecification, frozen=True):
             recipes = [
                 (graph_recipe_index, graph_recipe_id, recipe)
                 for graph_recipe_index, (graph_recipe_id, recipe) in enumerate(
-                    _compute_graph_recipes(
+                    _evaluate_graph_plugins(
                         env.registered_metrics,
                         env.registered_graphs,
                         site_id,

@@ -3853,7 +3853,7 @@ class MetricBackendClient(RestApiClient):
 
     def update(self, payload: Mapping[str, Any], expect_ok: bool = True) -> Response:
         return self.request(
-            "put",
+            "patch",
             url=f"/domain-types/{self.domain}/actions/update/invoke",
             body=dict(payload),
             expect_ok=expect_ok,

@@ -2007,7 +2007,7 @@ class MetricBackendAPI(BaseAPI):
         self._base_url_internal = f"http://{self.session.host}:{self.session.port}/{self.session.site}/check_mk/api/internal"
 
     def disable(self, site_id: str) -> None:
-        response = self.session.put(
+        response = self.session.patch(
             url=self._config_endpoint_url(),
             json={
                 "site_id": site_id,
@@ -2021,7 +2021,7 @@ class MetricBackendAPI(BaseAPI):
             raise UnexpectedResponse.from_response(response)
 
     def enable(self, site_id: str) -> None:
-        response = self.session.put(
+        response = self.session.patch(
             url=self._config_endpoint_url(),
             json={
                 "site_id": site_id,

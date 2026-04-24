@@ -92,7 +92,9 @@ Bazel builds it automatically as a dependency when running the server.
 
 `vite-plugin-ucl-mcp` collects component data during the UCL build and emits
 it as `ucl-components.json`. The static `ucl-mcp-runtime.mjs` server script
-loads this JSON at startup and serves it over the MCP protocol.
+loads this JSON at startup and serves it over the MCP protocol. The JSON is
+also available on the hosted dev docs site:
+https://devdocs.lan.checkmk.net/ui-component-library/api/ucl-components.json
 
 
 ## Package management

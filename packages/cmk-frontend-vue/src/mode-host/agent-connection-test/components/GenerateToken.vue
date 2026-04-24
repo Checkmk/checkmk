@@ -4,7 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 
 import { Api } from '@/lib/api-client'
 import usei18n from '@/lib/i18n'
@@ -50,6 +50,14 @@ const ottGenerated = ref(false)
 const ottError = ref<Error | null>(null)
 const ottExpiry = ref<Date | null>(null)
 const noOTT = ref(false)
+
+watch(ott, (newValue) => {
+  if (newValue === null) {
+    ottGenerated.value = false
+    ottError.value = null
+    ottExpiry.value = null
+  }
+})
 const api = new Api('api/internal/', [['Content-Type', 'application/json']])
 const tokenGenerationBody = ref<IAgentTokenGenerationRequestBody>(props.tokenGenerationBody)
 

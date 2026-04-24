@@ -1,5 +1,8 @@
 {
   "worktree": {
-    "teardown": ["bazel clean --expunge"]
+    "teardown": [
+      "bazel clean --expunge",
+      "BRANCH=$(git branch --show-current) && git checkout --detach && git branch -D \"$BRANCH\""
+    ]
   }
 }

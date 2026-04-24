@@ -189,6 +189,16 @@ class CMKOpenApiSession(requests.Session):
     ) -> requests.Response:
         return self.request("PUT", url, api_version=api_version, data=data, **kwargs)
 
+    def patch(  # type: ignore[override]
+        self,
+        url: str,
+        api_version: APIVersion | None = None,
+        data: Any = None,
+        json: Any = None,
+        **kwargs: Any,
+    ) -> requests.Response:
+        return self.request("PATCH", url, api_version=api_version, data=data, json=json, **kwargs)
+
     def delete(  # type: ignore[override]
         self, url: str, api_version: APIVersion | None = None, **kwargs: Any
     ) -> requests.Response:
@@ -2057,7 +2067,7 @@ class RelayRegistrationTokenAPI(BaseAPI):
 
 class MetricBackendAPI(BaseAPI):
     def disable(self, site_id: str) -> None:
-        response = self.session.put(
+        response = self.session.patch(
             "domain-types/metric_backend/actions/update/invoke",
             api_version=APIVersion.INTERNAL,
             json={
@@ -2072,7 +2082,7 @@ class MetricBackendAPI(BaseAPI):
             raise UnexpectedResponse.from_response(response)
 
     def enable(self, site_id: str) -> None:
-        response = self.session.put(
+        response = self.session.patch(
             "domain-types/metric_backend/actions/update/invoke",
             api_version=APIVersion.INTERNAL,
             json={

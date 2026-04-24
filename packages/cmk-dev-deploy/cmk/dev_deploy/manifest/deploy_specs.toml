@@ -173,8 +173,7 @@ services = ["apache:reload", "ui-job-scheduler:restart"]
 
 [[service]]
 name = "deploy_svc_dcd_core"
-package_target = "//cmk:cmk_cmk"
-source_prefix = "cmk/nonfree/pro/dcd/"
+package_target = "//non-free/packages/cmk-dcd:wheel"
 services = ["dcd:restart", "apache:reload"]
 
 [[service]]

@@ -99,11 +99,6 @@ def test_module_name_for_cmk_gui_init(make_checker: _MakeChecker) -> None:
     assert str(checker.module_name) == "cmk.gui.__init__"
 
 
-def test_module_name_for_tests_unit(make_checker: _MakeChecker) -> None:
-    checker = make_checker("tests/unit/test_foo.py")
-    assert str(checker.module_name) == "tests.unit.test_foo"
-
-
 def test_module_name_for_omdlib(make_checker: _MakeChecker) -> None:
     checker = make_checker("omd/packages/omd/omdlib/foo.py")
     assert str(checker.module_name) == "omdlib.foo"
@@ -343,6 +338,26 @@ def test_package_cmk_code_checked(make_checker: _MakeChecker) -> None:
 def test_nonfree_package_tests_excluded(make_checker: _MakeChecker) -> None:
     source_code = "from cmk.base.config import load_config"
     checker = make_checker("non-free/packages/cmk-bla/tests/test_something.py", source_code)
+    tree = ast.parse(source_code)
+    errors = checker.check(tree)
+
+    assert len(errors) == 0
+
+
+def test_top_level_tests_excluded(make_checker: _MakeChecker) -> None:
+    source_code = """from cmk.base.config import load_config
+from cmk.gui.pages import Page
+"""
+    checker = make_checker("tests/unit/cmk/gui/test_foo.py", source_code)
+    tree = ast.parse(source_code)
+    errors = checker.check(tree)
+
+    assert len(errors) == 0
+
+
+def test_top_level_tests_non_cmk_subdir_excluded(make_checker: _MakeChecker) -> None:
+    source_code = "from cmk.gui.watolib.rulespecs import Rulespec"
+    checker = make_checker("tests/plugins_consistency/nonfree/pro/test_bar.py", source_code)
     tree = ast.parse(source_code)
     errors = checker.check(tree)
 

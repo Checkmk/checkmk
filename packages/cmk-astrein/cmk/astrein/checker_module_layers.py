@@ -74,7 +74,7 @@ class ModuleLayersChecker(ASTVisitorChecker):
             # File is outside repo, use as-is
             pass
 
-        if p.is_below("cmk") or p.is_below("tests"):
+        if p.is_below("cmk"):
             return ModuleName(".".join(p.parts))
 
         if p.is_below("omd/packages/omd/omdlib"):
@@ -124,11 +124,9 @@ class ModuleLayersChecker(ASTVisitorChecker):
 
     def _check_import(self, node: ast.Import | ast.ImportFrom, imported: ModuleName) -> None:
         """Check if an import is allowed"""
-        if self._shall_exclude_file_below_packages(self.relative_path):
+        if self._shall_skip_layer_check(self.relative_path):
             return
 
-        # We only care about imports of our own modules.
-        # ... blissfully ignoring tests/.
         if not imported.in_component(Component("cmk")):
             return
 
@@ -139,15 +137,21 @@ class ModuleLayersChecker(ASTVisitorChecker):
             )
 
     @staticmethod
-    def _shall_exclude_file_below_packages(relative_path: ModulePath) -> bool:
-        """Exclude files in "tests" or other non cmk related directories below packages
+    def _shall_skip_layer_check(relative_path: ModulePath) -> bool:
+        """Decide whether a file is out of scope for module-layer checking.
 
-        This is not just a lazy shortcut. The layer checker is supposed to ensure
-        rules in the cmk namespace. Dependencies of the package's tests are managed through
-        bazel dependencies. We feel no need to enforce cmk module layer rules there.
+        The layer checker enforces rules in the cmk namespace. For the cases
+        below, dependencies are already managed by Bazel, so the layer checker
+        would only restate what Bazel already enforces:
+
+        - Files under the top-level ``tests/`` tree.
+        - Files below ``packages/<pkg>/`` or ``non-free/packages/<pkg>/`` that
+          are not under the package's own ``cmk/`` subtree (the package's own
+          tests, scripts, helpers).
         """
-        base_paths = ["tests", "packages", "non-free/packages"]
-        for base_path in base_paths:
+        if relative_path.is_below("tests"):
+            return True
+        for base_path in ("packages", "non-free/packages"):
             if relative_path.is_below(base_path):
                 relative_to_pkg = ModulePath(*relative_path.relative_to(base_path).parts[1:])
                 if not relative_to_pkg.is_below("cmk"):

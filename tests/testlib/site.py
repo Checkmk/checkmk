@@ -1715,8 +1715,9 @@ class Site:
                 logger.warning("Ignored crash report due to known OpenSSL issue. See CMK-28862")
                 continue
             pytest_check.fail(
-                f"""Crash report detected! {crash_type}: {crash_detail}.
-                See {crash_file} for more details."""
+                f"Crash report detected! {crash_type}: {crash_detail}.\n"
+                f"Crash details:\n{json.dumps(crash, indent=4)}\n"
+                f"See {crash_file} for more details."
             )
 
     @property

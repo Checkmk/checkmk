@@ -144,12 +144,12 @@ class ModuleLayersChecker(ASTVisitorChecker):
         below, dependencies are already managed by Bazel, so the layer checker
         would only restate what Bazel already enforces:
 
-        - Files under the top-level ``tests/`` tree.
+        - Files under the top-level ``tests/`` or ``non-free/tests/`` tree.
         - Files below ``packages/<pkg>/`` or ``non-free/packages/<pkg>/`` that
           are not under the package's own ``cmk/`` subtree (the package's own
           tests, scripts, helpers).
         """
-        if relative_path.is_below("tests"):
+        if relative_path.is_below("tests") or relative_path.is_below("non-free/tests"):
             return True
         for base_path in ("packages", "non-free/packages"):
             if relative_path.is_below(base_path):

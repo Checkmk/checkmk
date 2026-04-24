@@ -364,6 +364,17 @@ def test_top_level_tests_non_cmk_subdir_excluded(make_checker: _MakeChecker) -> 
     assert len(errors) == 0
 
 
+def test_non_free_top_level_tests_excluded(make_checker: _MakeChecker) -> None:
+    source_code = """from cmk.metric_backend.config import Foo
+from cmk.testlib.metric_backend.data import bar
+"""
+    checker = make_checker("non-free/tests/system/metric_backend/test_ttl.py", source_code)
+    tree = ast.parse(source_code)
+    errors = checker.check(tree)
+
+    assert len(errors) == 0
+
+
 def test_file_without_component_rejects_cmk_imports(make_checker: _MakeChecker) -> None:
     source_code = "from cmk.utils.paths import omd_root"
     checker = make_checker("some_random_script.py", source_code)

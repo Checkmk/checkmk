@@ -1577,6 +1577,7 @@ class CommandScheduleDowntimesForm:
             onchange="cmk.page_menu.update_down_duration_button();",
         )
         html.close_td()
+        html.close_tr()
 
         # Repeat section
         html.open_tr()
@@ -1587,6 +1588,7 @@ class CommandScheduleDowntimesForm:
         self.recurring_downtimes.show_input_elements(default="0")
 
         html.close_td()
+        html.close_tr()
 
         html.close_table()
         html.close_div()

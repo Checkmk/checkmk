@@ -8,7 +8,6 @@ import json
 from collections.abc import Mapping
 from typing import Any
 
-from cmk.gui import forms
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
 from cmk.gui.type_defs import IconNames, SingleInfos, StaticIcon, VisualContext
@@ -54,8 +53,6 @@ def show_filter_form(
         html.open_div(id_=filter_list_selected_id, class_=["side_popup_content"])
         vs_filters.render_input(varprefix, context)
         html.close_div()
-
-        forms.end()
 
         html.hidden_fields()
     html.javascript("cmk.utils.add_simplebar_scrollbar(%s);" % json.dumps(filter_list_selected_id))

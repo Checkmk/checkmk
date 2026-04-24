@@ -279,7 +279,7 @@ pkg_tar(
 )
 
 py_library(
-    name = "python_py",
+    name = "sitecustomize_py",
     srcs = [
         "sitecustomize.py",
     ],

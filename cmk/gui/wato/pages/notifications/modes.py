@@ -424,11 +424,22 @@ class ABCNotificationsMode(ABCEventsMode):
                 # Analyse
                 if analyse:
                     table.cell(css=["buttons"])
-                    what, _anarule, reason = analyse_rules[nr + start_nr]
-                    if what == "match":
-                        html.icon("checkmark", _("This rule matches"))
-                    elif what == "miss":
-                        html.icon("hyphen", _("This rule does not match: %s") % reason)
+                    idx = nr + start_nr
+                    if idx < len(analyse_rules):
+                        what, _anarule, reason = analyse_rules[idx]
+                        if what == "match":
+                            html.icon("checkmark", _("This rule matches"))
+                        elif what == "miss":
+                            html.icon("hyphen", _("This rule does not match: %s") % reason)
+                    else:
+                        html.icon(
+                            "warning",
+                            _(
+                                "This rule is not yet known on the target site. "
+                                "Activate pending changes or complete the user "
+                                "profile replication to synchronize it."
+                            ),
+                        )
 
                 table.cell("#", css=["narrow nowrap"])
 
@@ -972,23 +983,37 @@ class ModeNotifications(ABCNotificationsMode):
         html.close_table()
 
     def _show_rules(self, analyse: NotifyAnalysisInfo | None) -> None:
-        start_nr = 0
         rules = self._get_notification_rules()
+        user_rules_by_user = (
+            sorted(load_user_notification_rules().items(), key=lambda u: u[0])
+            if self._show_user_rules
+            else []
+        )
+        if analyse is not None:
+            expected = len(rules) + sum(len(ur) for _, ur in user_rules_by_user)
+            if len(analyse[0]) < expected:
+                html.show_warning(
+                    _(
+                        "The target site does not know about all notification "
+                        "rules shown below. These rules were created locally "
+                        "but not yet synchronized to the target site. Activate "
+                        "pending changes (or complete the user profile "
+                        "replication for personal rules) to synchronize them."
+                    )
+                )
+        start_nr = 0
         self._render_notification_rules(rules, show_title=True, analyse=analyse, start_nr=start_nr)
         start_nr += len(rules)
-        if self._show_user_rules:
-            for user_id, user_rules in sorted(
-                load_user_notification_rules().items(), key=lambda u: u[0]
-            ):
-                self._render_notification_rules(
-                    user_rules,
-                    user_id,
-                    show_title=True,
-                    show_buttons=False,
-                    analyse=analyse,
-                    start_nr=start_nr,
-                )
-                start_nr += len(user_rules)
+        for user_id, user_rules in user_rules_by_user:
+            self._render_notification_rules(
+                user_rules,
+                user_id,
+                show_title=True,
+                show_buttons=False,
+                analyse=analyse,
+                start_nr=start_nr,
+            )
+            start_nr += len(user_rules)
 
     def _vs_notification_scripts(self) -> DropdownChoice:
         return DropdownChoice(

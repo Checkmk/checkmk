@@ -24,7 +24,7 @@ import {
   enableJemallocFromRecommendation,
   reapplyJemallocAllocator
 } from '../../profiles/python/jemallocAllocator'
-import { esc, getNonce, wrap } from '../html'
+import { esc, getNonce, renderStatusRow, wrap } from '../html'
 import type {
   ExtensionFamily,
   SectionContext,
@@ -489,7 +489,7 @@ export function render(state: StateCache, codiconUri?: vscode.Uri, cspSource?: s
   }
   let settingsHtml: string
   if (settingsMismatches.length === 0) {
-    settingsHtml = `<div class="build-row ok"><span class="card-icon">&#10003;</span><span class="build-name">All settings match</span></div>`
+    settingsHtml = renderStatusRow({ level: 'ok', label: 'All settings match' })
   } else {
     const applyBtn = `<div class="apply-wrapper"><button class="btn" data-action="apply-all-mismatches"><span class="codicon codicon-wrench"></span> Apply All (${settingsMismatches.length})</button></div>`
     const grouped = new Map<string, SettingsMismatch[]>()
@@ -726,13 +726,13 @@ function renderMypyTargets(
         </div>`
       : ''
 
-  return `<div class="section-label">Mypy</div>
+  return `<div class="section-label profile-label">Python</div>
     ${allocatorBanner}
     ${stagedBanner}
     <div class="ext-family mypy-targets-family">
       <div class="ext-family-header ${statusCls}" data-action="toggle-accordion">
         <span class="card-icon">${statusIcon}</span>
-        <span class="ext-family-name">Dynamic targets</span>
+        <span class="ext-family-name">Mypy · dynamic targets</span>
         <span class="ext-count">${esc(statusText)}</span>
         ${actions}
         <span class="ext-chevron codicon codicon-chevron-right"></span>
@@ -748,18 +748,24 @@ function renderAllocatorBanner(allocator: StateCache['allocator']): string {
 
 function renderDefaultAllocatorStatus(allocator: StateCache['allocator']): string {
   const { libraryAvailable, recommendationDismissed } = allocator
-  const toggleBtn = libraryAvailable
-    ? `<button class="btn btn-small btn-icon" data-action="mypy-allocator-enable" title="Enable jemalloc (set cmk.mypy.allocator to jemalloc)">
-         <span class="codicon codicon-wrench"></span>
-       </button>`
-    : `<button class="btn btn-small btn-icon" data-action="exec" data-id="cmk.mypy.installJemalloc" title="Install jemalloc (opens a terminal with the right install command)">
-         <span class="codicon codicon-package"></span>
-       </button>`
-  const statusRow = `<div class="build-row warn mypy-allocator-status">
-    <span class="card-icon">&#9888;</span>
-    <span class="build-name">jemalloc ${libraryAvailable ? 'available — not enabled' : 'not installed'}</span>
-    ${toggleBtn}
-  </div>`
+  const statusRow = renderStatusRow({
+    level: 'warn',
+    label: `jemalloc ${libraryAvailable ? 'available — not enabled' : 'not installed'}`,
+    buttons: [
+      libraryAvailable
+        ? {
+            action: 'mypy-allocator-enable',
+            icon: 'wrench',
+            title: 'Enable jemalloc (set cmk.mypy.allocator to jemalloc)'
+          }
+        : {
+            action: 'exec',
+            commandId: 'cmk.mypy.installJemalloc',
+            icon: 'package',
+            title: 'Install jemalloc (opens a terminal with the right install command)'
+          }
+    ]
+  })
 
   if (recommendationDismissed) return statusRow
 
@@ -786,16 +792,17 @@ function renderJemallocStatus(allocator: StateCache['allocator']): string {
     issues.push('<code>mypy.runUsingActiveInterpreter</code> is still <code>true</code>')
 
   const ok = issues.length === 0
-  const statusCls = ok ? 'ok' : 'warn'
-  const statusIcon = ok ? '&#10003;' : '&#9888;'
-  const statusText = ok ? 'jemalloc active' : 'jemalloc enabled — not active'
-  const statusRow = `<div class="build-row ${statusCls} mypy-allocator-status">
-    <span class="card-icon">${statusIcon}</span>
-    <span class="build-name">${statusText}</span>
-    <button class="btn btn-small btn-icon" data-action="mypy-allocator-disable" title="Disable jemalloc (revert to default allocator)">
-      <span class="codicon codicon-circle-slash"></span>
-    </button>
-  </div>`
+  const statusRow = renderStatusRow({
+    level: ok ? 'ok' : 'warn',
+    label: ok ? 'jemalloc active' : 'jemalloc enabled — not active',
+    buttons: [
+      {
+        action: 'mypy-allocator-disable',
+        icon: 'circle-slash',
+        title: 'Disable jemalloc (revert to default allocator)'
+      }
+    ]
+  })
 
   if (ok) return statusRow
 

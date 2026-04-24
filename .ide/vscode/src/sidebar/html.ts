@@ -200,3 +200,47 @@ export function renderLoading(): string {
     `<div class="loader"><span class="spinner">&#8635;</span> Refreshing…</div>`
   )
 }
+
+export type StatusLevel = 'ok' | 'warn' | 'error'
+
+export interface StatusRowButton {
+  action: string
+  icon: string
+  title: string
+  dataAttrs?: Record<string, string>
+  commandId?: string
+}
+
+export interface StatusRowOpts {
+  level: StatusLevel
+  label: string
+  state?: string
+  buttons?: StatusRowButton[]
+}
+
+function buttonHtml(b: StatusRowButton): string {
+  const data = [`data-action="${esc(b.action)}"`, `title="${esc(b.title)}"`]
+  if (b.commandId) data.push(`data-id="${esc(b.commandId)}"`)
+  for (const [k, v] of Object.entries(b.dataAttrs || {})) {
+    data.push(`data-${esc(k)}="${esc(v)}"`)
+  }
+  return `<button class="btn btn-small btn-icon" ${data.join(' ')}><span class="codicon codicon-${esc(b.icon)}"></span></button>`
+}
+
+const LEVEL_ICON: Record<StatusLevel, string> = {
+  ok: '&#10003;',
+  warn: '&#9888;',
+  error: '&#10007;'
+}
+
+/** Shared compact one-line status row used across IDE Health. */
+export function renderStatusRow(opts: StatusRowOpts): string {
+  const btns = (opts.buttons || []).map(buttonHtml).join('')
+  const state = opts.state ? `<span class="status-row-state">${esc(opts.state)}</span>` : ''
+  return `<div class="status-row ${opts.level}">
+    <span class="card-icon">${LEVEL_ICON[opts.level]}</span>
+    <span class="status-row-label">${esc(opts.label)}</span>
+    ${state}
+    ${btns}
+  </div>`
+}

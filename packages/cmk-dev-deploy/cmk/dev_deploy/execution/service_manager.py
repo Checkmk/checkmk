@@ -60,6 +60,14 @@ EDITION_GATED_SERVICES: MappingProxyType[Service, frozenset[str]] = MappingProxy
 )
 """Services that only exist on specific editions."""
 
+# cmc's long-lived helpers import from virtually every wheel, so the default
+# has to include cmc:restart.  Edition gating drops it on CRE.
+_WHEEL_CONVENTION_DEFAULTS: tuple[tuple[Service, ServiceAction], ...] = (
+    (Service.APACHE, ServiceAction.RELOAD),
+    (Service.AUTOMATION_HELPER, ServiceAction.RESTART),
+    (Service.CMC, ServiceAction.RESTART),
+)
+
 
 def resolve_services(
     changes: ChangeSet | None,
@@ -93,9 +101,8 @@ def resolve_services(
     raw: list[tuple[Service, ServiceAction]] = []
 
     if changes is None:
-        # No build commit -- deploying everything, use safe defaults
-        raw.append((Service.APACHE, ServiceAction.RELOAD))
-        raw.append((Service.AUTOMATION_HELPER, ServiceAction.RESTART))
+        # No build commit -- deploying everything, use safe defaults.
+        raw.extend(_WHEEL_CONVENTION_DEFAULTS)
     else:
         # Build the set of files to check against service specs.
         # When deployed_deployers is set, restrict to categories those deployers handle.
@@ -128,9 +135,9 @@ def resolve_services(
             if matched_explicit:
                 continue
 
-            # Tier 2: Wheel convention — any py_wheel package implies apache:reload
+            # Tier 2: Wheel convention.
             if any(f.startswith(prefix) for prefix in wheel_prefixes):
-                raw.append((Service.APACHE, ServiceAction.RELOAD))
+                raw.extend(_WHEEL_CONVENTION_DEFAULTS)
                 continue
 
             # Tier 3: Config spec annotations
@@ -166,7 +173,7 @@ def resolve_services(
             if not matched_explicit:
                 # Tier 2: Wheel convention for target packages
                 if any(target.package == wp.rstrip("/") for wp in wheel_prefixes):
-                    raw.append((Service.APACHE, ServiceAction.RELOAD))
+                    raw.extend(_WHEEL_CONVENTION_DEFAULTS)
 
     # Deduplicate: RESTART trumps RELOAD for the same service
     by_service: dict[Service, ServiceAction] = {}

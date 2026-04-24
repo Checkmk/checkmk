@@ -11,10 +11,10 @@
 # to derive source_prefix, site_dest, mode, file lists, and deploy dependencies.
 #
 # Service restart convention:
-#   All py_wheel targets automatically trigger apache:reload on deploy (zero config).
-#   Only non-default restarts need explicit [[service]] entries below, keyed by
-#   package_target.  source_prefix is auto-derived from package_target unless
-#   explicitly set (for sub-path overrides within a target).
+#   Python-wheel deploys trigger apache:reload + automation-helper:restart +
+#   cmc:restart (cmc is edition-gated and drops on CRE).  Explicit [[service]]
+#   entries below *replace* that default — use them to opt out of cmc restarts
+#   or to add service-specific restarts.
 
 # =============================================================================
 # Supplementary categorization rules
@@ -154,12 +154,8 @@ post_install = ["setcap_net_raw"]
 # =============================================================================
 # Service restart overrides
 # =============================================================================
-# Convention: all py_wheel targets automatically trigger apache:reload.
-# Only non-default restarts need explicit entries here.
-#
-# package_target is the primary key (Bazel-first).  source_prefix is
-# auto-derived from package_target during manifest generation unless
-# explicitly set (for sub-path overrides within a single target).
+# Entries here *replace* the wheel-convention default (see the file header).
+# source_prefix is auto-derived from package_target unless explicitly set.
 
 # Sub-path overrides within the cmk wheel (//cmk:cmk_cmk)
 
@@ -167,7 +163,7 @@ post_install = ["setcap_net_raw"]
 name = "deploy_svc_base"
 package_target = "//cmk:cmk_cmk"
 source_prefix = "cmk/base/"
-services = ["automation-helper:restart"]
+services = ["automation-helper:restart", "cmc:restart"]
 
 [[service]]
 name = "deploy_svc_gui"
@@ -225,4 +221,4 @@ services = ["cmc:restart"]
 [[service]]
 name = "deploy_svc_cmk_core_helpers"
 package_target = "//non-free/packages/cmk-core-helpers:wheel"
-services = ["apache:reload", "automation-helper:restart"]
+services = ["apache:reload", "cmc:restart"]

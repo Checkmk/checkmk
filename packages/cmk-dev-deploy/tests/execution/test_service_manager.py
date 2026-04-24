@@ -130,11 +130,20 @@ def _patch_specs(
 class TestResolveServicesDefaults:
     """When changes is None, return safe defaults."""
 
-    def test_changes_none_returns_defaults(self, monkeypatch: pytest.MonkeyPatch) -> None:
+    def test_changes_none_returns_defaults_on_pro(self, monkeypatch: pytest.MonkeyPatch) -> None:
         _patch_specs(monkeypatch)
         result = resolve_services(None, None, _site())
         assert (Service.APACHE, ServiceAction.RELOAD) in result
         assert (Service.AUTOMATION_HELPER, ServiceAction.RESTART) in result
+        assert (Service.CMC, ServiceAction.RESTART) in result
+        assert len(result) == 3
+
+    def test_changes_none_drops_cmc_on_community(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        _patch_specs(monkeypatch)
+        result = resolve_services(None, None, _site(Edition.COMMUNITY))
+        assert (Service.APACHE, ServiceAction.RELOAD) in result
+        assert (Service.AUTOMATION_HELPER, ServiceAction.RESTART) in result
+        assert (Service.CMC, ServiceAction.RESTART) not in result
         assert len(result) == 2
 
 
@@ -375,17 +384,34 @@ class TestResolveServicesBazelTargets:
 
 
 class TestWheelConventionDefault:
-    """Wheel packages auto-derive apache:reload when no explicit spec matches."""
+    """Wheel packages auto-derive the default service set when no explicit spec matches."""
 
-    def test_wheel_convention_apache_reload(self, monkeypatch: pytest.MonkeyPatch) -> None:
-        """File under a wheel prefix with no explicit service spec -> apache:reload."""
+    def test_wheel_convention_defaults_on_pro(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        """File under a wheel prefix -> apache:reload + automation-helper + cmc."""
         _patch_specs(
             monkeypatch,
             wheel_specs=[_wheel_spec("packages/cmk-ccc")],
         )
         changes = _changeset(files=("packages/cmk-ccc/foo.py",))
         result = resolve_services(changes, None, _site())
-        assert result == [(Service.APACHE, ServiceAction.RELOAD)]
+        assert result == [
+            (Service.APACHE, ServiceAction.RELOAD),
+            (Service.AUTOMATION_HELPER, ServiceAction.RESTART),
+            (Service.CMC, ServiceAction.RESTART),
+        ]
+
+    def test_wheel_convention_drops_cmc_on_community(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        """CRE strips cmc via edition gating, leaving apache + automation-helper."""
+        _patch_specs(
+            monkeypatch,
+            wheel_specs=[_wheel_spec("packages/cmk-ccc")],
+        )
+        changes = _changeset(files=("packages/cmk-ccc/foo.py",))
+        result = resolve_services(changes, None, _site(Edition.COMMUNITY))
+        assert result == [
+            (Service.APACHE, ServiceAction.RELOAD),
+            (Service.AUTOMATION_HELPER, ServiceAction.RESTART),
+        ]
 
     def test_explicit_overrides_wheel_convention(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """Explicit service spec takes precedence over wheel convention."""
@@ -433,7 +459,7 @@ class TestWheelConventionDefault:
         assert result == []
 
     def test_wheel_convention_deduplicates(self, monkeypatch: pytest.MonkeyPatch) -> None:
-        """Multiple files under different wheels still produce single apache:reload."""
+        """Multiple files under different wheels still produce a single default set."""
         _patch_specs(
             monkeypatch,
             wheel_specs=[
@@ -448,7 +474,11 @@ class TestWheelConventionDefault:
             ),
         )
         result = resolve_services(changes, None, _site())
-        assert result == [(Service.APACHE, ServiceAction.RELOAD)]
+        assert result == [
+            (Service.APACHE, ServiceAction.RELOAD),
+            (Service.AUTOMATION_HELPER, ServiceAction.RESTART),
+            (Service.CMC, ServiceAction.RESTART),
+        ]
 
     def test_wheel_convention_for_bazel_targets(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """Bazel target matching also falls through to wheel convention."""
@@ -461,7 +491,11 @@ class TestWheelConventionDefault:
         )
         changes = _changeset()
         result = resolve_services(changes, targets, _site())
-        assert result == [(Service.APACHE, ServiceAction.RELOAD)]
+        assert result == [
+            (Service.APACHE, ServiceAction.RELOAD),
+            (Service.AUTOMATION_HELPER, ServiceAction.RESTART),
+            (Service.CMC, ServiceAction.RESTART),
+        ]
 
     def test_wheel_convention_respects_deployer_gating(
         self, monkeypatch: pytest.MonkeyPatch

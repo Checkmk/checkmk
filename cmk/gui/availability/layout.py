@@ -434,7 +434,7 @@ def layout_timeline(
     chaos_begin = None
     chaos_end = None
     chaos_count = 0
-    chaos_width = 0
+    chaos_width = 0.0
 
     def apply_render_number_functions(n: AVTimeStamp, d: int) -> str:
         texts = []
@@ -443,7 +443,7 @@ def layout_timeline(
         return ", ".join(texts)
 
     def chaos_period(
-        chaos_begin: AVTimeStamp, chaos_end: AVTimeStamp, chaos_count: int, chaos_width: int
+        chaos_begin: AVTimeStamp, chaos_end: AVTimeStamp, chaos_count: int, chaos_width: float
     ) -> AVTimelineSpan:
         title = _("%d chaotic state changes from %s until %s (%s)") % (
             chaos_count,

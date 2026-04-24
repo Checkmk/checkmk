@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Callable
-from typing import Any, Literal, TypedDict
+from typing import Any, Literal, NotRequired, TypedDict
 
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
@@ -35,7 +35,44 @@ AVOutageStatisticsStates = list[
     ]
 ]
 AVOutageStatistics = tuple[AVOutageStatisticsAggregations, AVOutageStatisticsStates]
-AVSpan = dict[str, Any]  # TODO: Improve this type
+
+# The functional TypedDict form is required here because "from" and "until" are Python keywords
+# and cannot be used as identifiers in the class-body syntax.
+AVSpan = TypedDict(
+    "AVSpan",
+    {
+        "site": SiteId,
+        "host_name": HostName,
+        "service_description": ServiceName,
+        "from": int,
+        "until": int,
+        "duration": int,
+        "state": int | None,
+        "host_down": int,
+        "in_downtime": int,
+        "in_host_downtime": int,
+        "in_notification_period": int,
+        "in_service_period": int,
+        "is_flapping": int,
+        "log_output": NotRequired[str],
+        "long_log_output": NotRequired[str],
+        "service_check_command": NotRequired[str],
+        "service_custom_variables": NotRequired[dict[str, str]],
+        "service_display_name": NotRequired[str],
+        "host_alias": NotRequired[str],
+        "host_state": NotRequired[int | None],
+        "service_groups": NotRequired[list[str]],
+        "host_groups": NotRequired[list[str]],
+        # Fields added by SLA computation (_sla_computation)
+        "original_state": NotRequired[int | None],
+        "avail_state": NotRequired[str],
+        # Fields added by SLA display (_sla_display)
+        "css_period_class": NotRequired[str],
+        "css_error_class": NotRequired[str],
+        "duration_perc": NotRequired[str],
+    },
+)
+
 SiteHost = tuple[SiteId, HostName]
 AVRawServices = dict[ServiceName, list[AVSpan]]
 AVRawData = dict[SiteHost, AVRawServices]

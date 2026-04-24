@@ -445,8 +445,8 @@ def create_bi_timeline_entry(
     return {
         "state": node_compute_result.state,
         "log_output": node_compute_result.output,
-        "from": from_time,
-        "until": until_time,
+        "from": int(from_time),
+        "until": int(until_time),
         "site": omd_site(),
         "host_name": aggr_group,
         "service_description": tree["title"],
@@ -456,7 +456,7 @@ def create_bi_timeline_entry(
         "in_host_downtime": 0,
         "host_down": 0,
         "is_flapping": 0,
-        "duration": until_time - from_time,
+        "duration": int(until_time - from_time),
     }
 
 

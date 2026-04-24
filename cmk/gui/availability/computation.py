@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import cast
+
 from livestatus import (
     lqencode,
     OnlySites,
@@ -151,7 +153,7 @@ def get_host_service_availability_rawdata(
         )
 
     columns = ["site"] + columns
-    spans: list[AVSpan] = [dict(zip(columns, span)) for span in data]
+    spans: list[AVSpan] = [cast(AVSpan, dict(zip(columns, s))) for s in data]
     amount_filtered_rows = len(spans)
 
     # When a group filter is set, only care about these groups in the group fields
@@ -240,8 +242,13 @@ def filter_groups_of_entries(
         raise NotImplementedError()
 
     for span in spans:
-        filtered_groups = list(set(span[group_by]).intersection(only_groups))
-        span[group_by] = filtered_groups
+        match group_by:
+            case "service_groups":
+                span["service_groups"] = list(set(span["service_groups"]).intersection(only_groups))
+            case "host_groups":
+                span["host_groups"] = list(set(span["host_groups"]).intersection(only_groups))
+            case _:
+                raise TypeError(group_by)
 
 
 # Sort the raw spans into a tree of dicts, so that we
@@ -306,7 +313,13 @@ def compute_availability(
                 # Information about host/service groups are in the actual entries
                 if grouping in ["host_groups", "service_groups"] and what != "bi":
                     assert isinstance(group_ids, set)
-                    group_ids.update(span[grouping])  # List of host/service groups
+                    match grouping:
+                        case "service_groups":
+                            group_ids.update(span["service_groups"])
+                        case "host_groups":
+                            group_ids.update(span["host_groups"])
+                        case _:
+                            raise TypeError(grouping)
 
                 display_name = span.get("service_display_name", service)
                 state = span["state"]

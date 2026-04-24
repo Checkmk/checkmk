@@ -6,11 +6,12 @@
 import itertools
 import time
 from collections.abc import Callable
-from typing import Any, cast, NamedTuple
+from typing import Any, cast, NamedTuple, overload
 
 import cmk.utils.paths
 import cmk.utils.render
 from cmk.ccc import store
+from cmk.gui.type_defs import Row
 
 from .type_defs import (
     AVAnnotationEntry,
@@ -156,10 +157,23 @@ class ReclassifyConfig(NamedTuple):
     service_state: Any | None
 
 
+@overload
 def reclassify_history_by_annotations(
     history: list[AVSpan], annotation_entries: list[AVAnnotationEntry]
-) -> list[AVSpan]:
-    new_history = history
+) -> list[AVSpan]: ...
+
+
+@overload
+def reclassify_history_by_annotations(
+    history: list[Row], annotation_entries: list[AVAnnotationEntry]
+) -> list[Row]: ...
+
+
+def reclassify_history_by_annotations(
+    history: list[AVSpan] | list[Row],
+    annotation_entries: list[AVAnnotationEntry],
+) -> list[AVSpan] | list[Row]:
+    new_history: list[AVSpan] = cast(list[AVSpan], history)
     for annotation in annotation_entries:
         downtime = annotation.get("downtime")
         host_state = annotation.get("host_state")

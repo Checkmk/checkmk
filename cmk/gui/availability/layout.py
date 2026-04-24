@@ -136,7 +136,7 @@ def layout_availability_table(
                     continue
 
                 ssid = f"{sid}-{timeformat}"
-                number = entry["states"].get(sid, 0)
+                number: int | float = entry["states"].get(sid, 0)
                 considered_duration = entry["considered_duration"]
                 if not number:
                     css = "unused"
@@ -157,11 +157,12 @@ def layout_availability_table(
                 cells.append((render_number(number, considered_duration), css))
 
                 # Statistics?
-                x_cnt, x_min, x_max = entry["statistics"].get(sid, (None, None, None))
+                stats = entry["statistics"].get(sid)
                 if sid in os_states:
                     statistics = []
                     for aggr in os_aggrs:
-                        if x_cnt is not None:
+                        if stats is not None:
+                            x_cnt, x_min, x_max = stats
                             if aggr == "avg":
                                 r = render_number(
                                     int(number / x_cnt), considered_duration

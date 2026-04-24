@@ -7,6 +7,7 @@
 
 from typing import Literal, Self
 
+from cmk.ccc.site import SiteId
 from cmk.gui.availability.type_defs import AVEntry, AVTimelineStates
 from cmk.gui.openapi.framework.model import api_field, api_model
 from cmk.gui.openapi.framework.model.base_models import (
@@ -14,7 +15,9 @@ from cmk.gui.openapi.framework.model.base_models import (
     DomainObjectModel,
     LinkModel,
 )
+from cmk.gui.openapi.framework.model.common_fields import AnnotatedHostName
 from cmk.gui.openapi.restful_objects.constructors import object_href, sub_object_href
+from cmk.utils.servicename import ServiceName
 
 
 @api_model
@@ -127,11 +130,11 @@ class ServiceAvailabilityStates:
 
 @api_model
 class HostAvailabilityExtension:
-    site: str = api_field(
+    site: SiteId = api_field(
         description="The site ID the host belongs to.",
         example="mysite",
     )
-    host: str = api_field(
+    host: AnnotatedHostName = api_field(
         description="The host name.",
         example="my-host",
     )
@@ -151,8 +154,8 @@ class HostAvailabilityExtension:
     @classmethod
     def from_internal(cls, entry: AVEntry) -> Self:
         return cls(
-            site=str(entry["site"]),
-            host=str(entry["host"]),
+            site=entry["site"],
+            host=entry["host"],
             alias=entry["alias"],
             states=HostAvailabilityStates.from_internal(entry["states"]),
             total_duration=entry["total_duration"],
@@ -170,7 +173,7 @@ class HostAvailabilityObject(DomainObjectModel):
 
     @classmethod
     def from_internal(cls, entry: AVEntry) -> Self:
-        host_name = str(entry["host"])
+        host_name = entry["host"]
         return cls(
             domainType="host_availability",
             id=f"{entry['site']}~{host_name}",
@@ -192,11 +195,11 @@ class HostAvailabilityCollection(DomainObjectCollectionModel):
 
 @api_model
 class ServiceAvailabilityExtension:
-    site: str = api_field(
+    site: SiteId = api_field(
         description="The site ID the service belongs to.",
         example="mysite",
     )
-    host: str = api_field(
+    host: AnnotatedHostName = api_field(
         description="The host name the service runs on.",
         example="my-host",
     )
@@ -204,7 +207,7 @@ class ServiceAvailabilityExtension:
         description="The host alias.",
         example="My Host",
     )
-    service: str = api_field(
+    service: ServiceName = api_field(
         description="The service name.",
         example="CPU load",
     )
@@ -224,10 +227,10 @@ class ServiceAvailabilityExtension:
     @classmethod
     def from_internal(cls, entry: AVEntry) -> Self:
         return cls(
-            site=str(entry["site"]),
-            host=str(entry["host"]),
+            site=entry["site"],
+            host=entry["host"],
             alias=entry["alias"],
-            service=str(entry["service"]),
+            service=entry["service"],
             display_name=entry["display_name"],
             states=ServiceAvailabilityStates.from_internal(entry["states"]),
             total_duration=entry["total_duration"],
@@ -245,8 +248,8 @@ class ServiceAvailabilityObject(DomainObjectModel):
 
     @classmethod
     def from_internal(cls, entry: AVEntry) -> Self:
-        host_name = str(entry["host"])
-        service = str(entry["service"])
+        host_name = entry["host"]
+        service = entry["service"]
         return cls(
             domainType="service_availability",
             id=f"{entry['site']}~{host_name}~{service}",

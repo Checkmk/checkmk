@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Callable
-from typing import Any, Literal
+from typing import Any, Literal, TypedDict
 
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
@@ -39,12 +39,9 @@ AVSpan = dict[str, Any]  # TODO: Improve this type
 SiteHost = tuple[SiteId, HostName]
 AVRawServices = dict[ServiceName, list[AVSpan]]
 AVRawData = dict[SiteHost, AVRawServices]
-AVEntry = dict[str, Any]
-AVData = list[AVEntry]
 AVTimelineSpan = tuple[int | None, str, float, CSSClass]
 AVObjectCells = list[tuple[str, str]]
 AVRowCells = list[tuple[HTML | str, CSSClass]]
-AVGroups = list[tuple[str | None, AVData]]
 HostOrServiceGroupName = str
 AVGroupKey = SiteHost | HostOrServiceGroupName | None
 AVGroupIds = list[SiteHost] | set[HostOrServiceGroupName] | None
@@ -89,6 +86,24 @@ AVTimelineRows = list[AVTimelineRow]
 AVTimelineStates = dict[AVTimelineStateName, int]
 AVTimelineStatistics = dict[AVTimelineStateName, tuple[int, int, int]]
 AVTimelineStyle = Literal["standalone", "inline"]
+
+
+class AVEntry(TypedDict):
+    site: SiteId
+    host: HostName
+    alias: str
+    service: ServiceName
+    display_name: str
+    states: AVTimelineStates
+    considered_duration: int
+    total_duration: int
+    statistics: AVTimelineStatistics
+    groups: AVGroupIds
+    timeline: AVTimelineRows
+
+
+AVData = list[AVEntry]
+AVGroups = list[tuple[str | None, AVData]]
 
 
 # Example for annotations:

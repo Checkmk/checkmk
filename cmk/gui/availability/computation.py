@@ -466,7 +466,7 @@ def pass_availability_filter(row: AVEntry, avoptions: AVOptions) -> bool:
         elif key == "crit":
             ref_value = row["states"].get("crit", row["states"].get("down", 0))
         elif key == "non-ok":
-            ref_value = 0.0
+            ref_value = 0
             for state_key, value in row["states"].items():
                 if state_key not in ["ok", "up", "unmonitored"]:
                     ref_value += value
@@ -625,9 +625,10 @@ def check_av_levels(ok_seconds: float, av_levels: AVLevels, considered_duration:
 def get_av_groups(availability_table: AVData, avoptions: AVOptions) -> set[AVGroupKey]:
     all_group_ids: set[AVGroupKey] = set()
     for entry in availability_table:
-        all_group_ids.update(entry["groups"])
-        if len(entry["groups"]) == 0:
+        if entry["groups"] is None or len(entry["groups"]) == 0:
             all_group_ids.add(None)  # None denotes ungrouped objects
+        else:
+            all_group_ids.update(entry["groups"])
     return all_group_ids
 
 

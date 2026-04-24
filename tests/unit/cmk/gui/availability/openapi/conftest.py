@@ -5,6 +5,8 @@
 
 import pytest
 
+from cmk.ccc.hostaddress import HostName
+from cmk.ccc.site import SiteId
 from cmk.gui.availability.type_defs import AVEntry
 
 BASE = "/NO_SITE/check_mk/api/unstable"
@@ -16,8 +18,8 @@ TIME_PARAMS = f"time_range_from={TIME_FROM}&time_range_until={TIME_UNTIL}"
 @pytest.fixture()
 def host_av_entry() -> AVEntry:
     return {
-        "site": "NO_SITE",
-        "host": "my-host",
+        "site": SiteId("NO_SITE"),
+        "host": HostName("my-host"),
         "alias": "My Host",
         "service": "",
         "display_name": "",
@@ -33,8 +35,8 @@ def host_av_entry() -> AVEntry:
 @pytest.fixture()
 def service_av_entry() -> AVEntry:
     return {
-        "site": "NO_SITE",
-        "host": "my-host",
+        "site": SiteId("NO_SITE"),
+        "host": HostName("my-host"),
         "alias": "My Host",
         "service": "CPU load",
         "display_name": "CPU load",

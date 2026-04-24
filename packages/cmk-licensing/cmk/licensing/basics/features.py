@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from dataclasses import dataclass
+from enum import auto, StrEnum
 from pathlib import Path
 
 from cmk.ccc.version import Edition
@@ -14,9 +15,18 @@ class FeatureFlag:
     enabled: bool
 
 
+class FeatureName(StrEnum):
+    BAKERY = auto()
+
+
 @dataclass(frozen=True)
 class Features:
     bakery: FeatureFlag
+
+    def get_flag(self, name: FeatureName) -> FeatureFlag:
+        match name:
+            case FeatureName.BAKERY:
+                return self.bakery
 
 
 # NOTE: Soon this will consider the contents of the actual license.

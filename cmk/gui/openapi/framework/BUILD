@@ -90,6 +90,7 @@ py_library(
         "model/constructors.py",
         "model/converter.py",
         "model/restrict_editions.py",
+        "model/restrict_features.py",
     ],
     imports = ["../../../.."],
     visibility = [
@@ -125,6 +126,7 @@ py_library(
         "//cmk/utils",
         "//packages/cmk-ccc:site",
         "//packages/cmk-ccc:version",
+        "//packages/cmk-licensing",
         requirement("werkzeug"),
     ],
 )

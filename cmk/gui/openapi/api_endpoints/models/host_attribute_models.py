@@ -37,6 +37,7 @@ from cmk.gui.openapi.framework.model.converter import (
     TypedPlainValidator,
 )
 from cmk.gui.openapi.framework.model.restrict_editions import RestrictEditions
+from cmk.gui.openapi.framework.model.restrict_features import RestrictFeatures
 from cmk.gui.watolib.builtin_attributes import HostAttributeLabels, HostAttributeWaitingForDiscovery
 from cmk.gui.watolib.host_attributes import (
     HostAttributes,
@@ -44,6 +45,7 @@ from cmk.gui.watolib.host_attributes import (
     MetricsAssociationAttributeFilters,
     MetricsAssociationEnabled,
 )
+from cmk.licensing.basics.features import FeatureName
 from cmk.utils.agent_registration import HostAgentConnectionMode
 from cmk.utils.tags import BuiltinTagConfig, TagGroupID
 
@@ -165,12 +167,10 @@ class BaseHostAttributeModel:
     )
 
     bake_agent_package: Annotated[
-        bool | ApiOmitted, RestrictEditions(excluded_editions={Edition.COMMUNITY})
+        bool | ApiOmitted,
+        RestrictFeatures(feature_name=FeatureName.BAKERY, which_field="bake_agent_package"),
     ] = api_field(
-        description=edition_field_description(
-            "Bake agent packages for this folder even if it is empty.",
-            excluded_editions={Edition.COMMUNITY},
-        ),
+        description="Bake agent packages for this folder even if it is empty. Requires the agent bakery feature to be licensed.",
         default_factory=ApiOmitted,
     )
     cmk_agent_connection: Annotated[

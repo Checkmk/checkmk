@@ -1455,12 +1455,14 @@ msgstr ""
 "especificar nombres explícitos. Las etiquetas globales se ignorarán para "
 "estos servicios."
 
-msgid "<b>Negate:</b> make rule apply for <b>all but</b> the above entries"
+#, fuzzy
+msgid "<b>Negate:</b> apply to <b>all</b> except listed entries above"
 msgstr ""
 "<b>Negar:</b> hacer que la regla se aplique para <b>todas menos</b> las "
 "entradas anteriores"
 
-msgid "<b>Negate:</b> make rule apply for <b>all but</b> the above hosts"
+#, fuzzy
+msgid "<b>Negate:</b> apply to <b>all</b> except listed hosts above"
 msgstr ""
 "<b>Negar:</b> hacer que la regla se aplique a <b>todos menos</b> los hosts "
 "anteriores"

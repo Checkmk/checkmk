@@ -1462,12 +1462,14 @@ msgstr ""
 "algemene tags negeren:</b><br>Gebruik deze optie om expliciete namen op te "
 "geven. De algemene tags worden voor deze diensten genegeerd."
 
-msgid "<b>Negate:</b> make rule apply for <b>all but</b> the above entries"
+#, fuzzy
+msgid "<b>Negate:</b> apply to <b>all</b> except listed entries above"
 msgstr ""
 "<b>Sluit uit:</b> pas de regel toe voor <b>alles behalve</b> de bovenstaande "
 "gegevens"
 
-msgid "<b>Negate:</b> make rule apply for <b>all but</b> the above hosts"
+#, fuzzy
+msgid "<b>Negate:</b> apply to <b>all</b> except listed hosts above"
 msgstr ""
 "<b>Sluit uit:</b> pas de regel toe voor <b>alles behalve</b> de bovenstaande "
 "hosts"

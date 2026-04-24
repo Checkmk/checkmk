@@ -1463,12 +1463,14 @@ msgstr ""
 "explizite Namen anzugeben. Die allgemeinen Merkmale werden für diese "
 "Services ignoriert."
 
-msgid "<b>Negate:</b> make rule apply for <b>all but</b> the above entries"
+#, fuzzy
+msgid "<b>Negate:</b> apply to <b>all</b> except listed entries above"
 msgstr ""
 "<b>Negation:</b> Wende Regel auf alle <b>außer</b> den oben stehenden "
 "Einträgen an"
 
-msgid "<b>Negate:</b> make rule apply for <b>all but</b> the above hosts"
+#, fuzzy
+msgid "<b>Negate:</b> apply to <b>all</b> except listed hosts above"
 msgstr ""
 "<b>Negation:</b> Wende Regel auf alle <b>außer</b> den oben stehenden Hosts "
 "an"

@@ -1474,12 +1474,14 @@ msgstr ""
 "globales:</b><br>Utilisez cette option pour spécifier des noms explicites. "
 "Les balises globales seront ignorées pour ces services."
 
-msgid "<b>Negate:</b> make rule apply for <b>all but</b> the above entries"
+#, fuzzy
+msgid "<b>Negate:</b> apply to <b>all</b> except listed entries above"
 msgstr ""
 "<b>Négation : </b> faire en sorte que la règle s'applique pour <b>toutes les "
 "entrées sauf</b> les entrées ci-dessus"
 
-msgid "<b>Negate:</b> make rule apply for <b>all but</b> the above hosts"
+#, fuzzy
+msgid "<b>Negate:</b> apply to <b>all</b> except listed hosts above"
 msgstr ""
 "<b>Négation : </b> faire en sorte que la règle s'applique à <b>tous sauf</b> "
 "les hôtes ci-dessus"

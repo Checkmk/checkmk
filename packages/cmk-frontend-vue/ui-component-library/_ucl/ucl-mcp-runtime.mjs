@@ -70,7 +70,7 @@ function dispatch({ jsonrpc = '2.0', id, method, params }) {
       result: {
         protocolVersion: '2024-11-05',
         capabilities: { tools: {} },
-        serverInfo: { name: 'ucl', version: '1.0.0' }
+        serverInfo: { name: 'cmk-frontend-vue--ui-component-library', version: '1.0.0' }
       }
     })
     return

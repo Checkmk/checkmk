@@ -44,7 +44,6 @@ py_test(
         ":__test__",
         ":conftest",
         "//cmk/update_config",
-        "//tests/testlib/unit",
         "//tests/unit:conftest",
         requirement("flask"),
         requirement("pytest"),

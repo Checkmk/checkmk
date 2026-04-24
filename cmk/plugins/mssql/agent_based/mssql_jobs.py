@@ -193,10 +193,12 @@ def parse_mssql_jobs(string_table: StringTable) -> Mapping[str, JobSpec]:
     return section
 
 
-def discover_mssql_jobs(section: Mapping[str, JobSpec]) -> DiscoveryResult:
-    for job_name in section:
-        if job_name:
-            yield Service(item=job_name)
+def discover_mssql_jobs(params: dict[str, bool], section: Mapping[str, JobSpec]) -> DiscoveryResult:
+    for job_name, job_specs in section.items():
+        if not params.get("discover_schedule_disabled") and not job_specs.schedule_enabled:
+            continue
+        else:
+             yield Service(item=job_name)
 
 
 def check_mssql_jobs(
@@ -256,4 +258,8 @@ check_plugin_mssql_jobs = CheckPlugin(
         "status_disabled_schedule": 0,
         "status_missing_jobs": 2,
     },
+    discovery_ruleset_name="mssql_jobs_discovery",
+    discovery_default_parameters={
+        "discover_schedule_disabled": True,
+    }
 )

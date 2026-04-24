@@ -119,7 +119,7 @@ from cmk.base.errorhandling import create_section_crash_dump
 from cmk.base.parent_scan import ScanConfig
 from cmk.base.snmp_plugin_store import make_plugin_store
 from cmk.base.sources import make_parser
-from cmk.ccc import config_path, tty, version
+from cmk.ccc import tty, version
 from cmk.ccc.config_path import VersionedConfigPath
 from cmk.ccc.exceptions import (
     MKBailOut,
@@ -4234,8 +4234,10 @@ def _automation_get_agent_output(
         error_handler=config.handle_ip_lookup_failure,
     )
 
-    # I am not sure we should resolve the link here. What if the core removes the config?
-    active_config_path = config_path.detect_latest_config_path(cmk.utils.paths.omd_root)
+    # Use the unresolved 'latest' symlink: the core may prune a resolved
+    # serial directory at any time (same reasoning as _automation_autodiscovery
+    # above).
+    active_config_path = VersionedConfigPath.make_latest_path(cmk.utils.paths.omd_root)
 
     # No caching option over commandline here.
     file_cache_options = FileCacheOptions()

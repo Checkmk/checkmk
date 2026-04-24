@@ -18,9 +18,9 @@ from cmk.agent_based.v2 import (
     render,
     Result,
     Service,
+    ServiceLabel,
     State,
     StringTable,
-    ServiceLabel
 )
 
 # <<<mssql_backup>>>
@@ -133,7 +133,11 @@ agent_section_mssql_backup = AgentSection(
 )
 
 
-def discover_mssql_backup(params: Mapping[str, Any], section_mssql_backup: Section | None, section_mssql_databases: SectionDatabases | None) -> DiscoveryResult:
+def discover_mssql_backup(
+    params: Mapping[str, Any],
+    section_mssql_backup: Section | None,
+    section_mssql_databases: SectionDatabases | None,
+) -> DiscoveryResult:
     if params["mode"] != "summary":
         return
     for db_name in section_mssql_backup:
@@ -143,15 +147,22 @@ def discover_mssql_backup(params: Mapping[str, Any], section_mssql_backup: Secti
                 labels=[
                     ServiceLabel(
                         name="cmk/mssql_recovery_type",
-                        value=section_mssql_databases.get(db_name.split('MSSQL_')[1]).get("Recovery"),
+                        value=section_mssql_databases.get(db_name.split("MSSQL_")[1]).get(
+                            "Recovery"
+                        ),
                     )
-                ]
+                ],
             )
         except Exception:
             yield Service(item=db_name)
 
 
-def check_mssql_backup(item: str, params: Mapping[str, Any], section_mssql_backup: Section | None, section_mssql_databases: SectionDatabases | None) -> CheckResult:
+def check_mssql_backup(
+    item: str,
+    params: Mapping[str, Any],
+    section_mssql_backup: Section | None,
+    section_mssql_databases: SectionDatabases | None,
+) -> CheckResult:
     data = section_mssql_backup.get(item)
     if data is None:
         # Assume general connection problem to the database, which is reported

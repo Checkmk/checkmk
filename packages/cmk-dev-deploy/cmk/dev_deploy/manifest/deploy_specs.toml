@@ -176,18 +176,6 @@ name = "deploy_svc_dcd_core"
 package_target = "//non-free/packages/cmk-dcd:wheel"
 services = ["dcd:restart", "apache:reload"]
 
-[[service]]
-name = "deploy_svc_dcd_gui"
-package_target = "//cmk:cmk_cmk"
-source_prefix = "cmk/gui/nonfree/pro/dcd/"
-services = ["dcd:restart", "apache:reload"]
-
-[[service]]
-name = "deploy_svc_dcd_utils"
-package_target = "//cmk:cmk_cmk"
-source_prefix = "cmk/utils/nonfree/pro/dcd/"
-services = ["dcd:restart", "apache:reload"]
-
 # Whole-target overrides (source_prefix derived from package_target)
 
 [[service]]

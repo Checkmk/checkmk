@@ -381,14 +381,14 @@ class ResourceQuota(BaseModel):
     spec: ResourceQuotaSpec
 
 
-class NodeConditionStatus(enum.StrEnum):
+class ConditionStatus(enum.StrEnum):
     TRUE = "True"
     FALSE = "False"
     UNKNOWN = "Unknown"
 
 
 class NodeCondition(ClientModel):
-    status: NodeConditionStatus
+    status: ConditionStatus
     type_: str = Field(..., alias="type")
     reason: str | None = None
     message: str | None = None
@@ -528,12 +528,6 @@ class Replicas(BaseModel):
     available: int
     ready: int
     unavailable: int
-
-
-class ConditionStatus(enum.StrEnum):
-    TRUE = "True"
-    FALSE = "False"
-    UNKNOWN = "Unknown"
 
 
 class DeploymentCondition(BaseModel):

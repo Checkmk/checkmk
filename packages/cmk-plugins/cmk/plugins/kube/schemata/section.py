@@ -382,7 +382,7 @@ class NodeInfo(Section):
 
 class NodeCondition(BaseModel, extra="forbid"):
     type_: str
-    status: api.NodeConditionStatus
+    status: api.ConditionStatus
     reason: str | None
     message: str | None
 

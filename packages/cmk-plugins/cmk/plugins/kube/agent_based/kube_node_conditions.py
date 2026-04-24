@@ -17,7 +17,7 @@ from cmk.agent_based.v2 import (
     StringTable,
 )
 from cmk.plugins.kube.kube import condition_detailed_description, condition_short_description
-from cmk.plugins.kube.schemata.api import NodeConditionStatus
+from cmk.plugins.kube.schemata.api import ConditionStatus
 from cmk.plugins.kube.schemata.section import NodeCondition, NodeConditions
 
 
@@ -64,13 +64,13 @@ def check(params: Params, section: NodeConditions) -> CheckResult:
         yield from results
 
 
-def _extract_state(state_map: StateMap, status: NodeConditionStatus) -> State:
+def _extract_state(state_map: StateMap, status: ConditionStatus) -> State:
     match status:
-        case NodeConditionStatus.FALSE:
+        case ConditionStatus.FALSE:
             return state_map.false
-        case NodeConditionStatus.TRUE:
+        case ConditionStatus.TRUE:
             return state_map.true
-        case NodeConditionStatus.UNKNOWN:
+        case ConditionStatus.UNKNOWN:
             return state_map.unknown
     assert_never(status)
 

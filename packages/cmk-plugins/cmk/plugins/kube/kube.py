@@ -9,12 +9,12 @@ from typing import Literal
 
 from cmk.agent_based.v2 import CheckResult, HostLabel, HostLabelGenerator
 from cmk.plugins.kube.schemata.api import (
+    ConditionStatus,
     ContainerRunningState,
     ContainerStatus,
     ContainerTerminatedState,
     ContainerWaitingState,
     Labels,
-    NodeConditionStatus,
 )
 from cmk.plugins.kube.schemata.section import (
     BasePodLifeCycle,
@@ -76,22 +76,22 @@ class KubernetesError(Exception):
     pass
 
 
-def condition_short_description(name: str, status: NodeConditionStatus | bool) -> str:
-    if isinstance(status, NodeConditionStatus):
+def condition_short_description(name: str, status: ConditionStatus | bool) -> str:
+    if isinstance(status, ConditionStatus):
         return f"{name.upper()}: {status.value}"
     return f"{name.upper()}: {status}"
 
 
 def condition_detailed_description(
     name: str,
-    status: NodeConditionStatus | bool,
+    status: ConditionStatus | bool,
     reason: str | None,
     message: str | None,
 ) -> str:
     """Format the condition for Result summary or details
 
     Examples:
-        >>> condition_detailed_description("Ready", NodeConditionStatus.FALSE, "Waiting", "ContainerCreating")
+        >>> condition_detailed_description("Ready", ConditionStatus.FALSE, "Waiting", "ContainerCreating")
         'READY: False (Waiting: ContainerCreating)'
 
     """

@@ -61,6 +61,8 @@ from ldap import (  # type: ignore[attr-defined,unused-ignore]
     NO_SUCH_OBJECT,
     OPT_REFERRALS,
     OPT_X_TLS_CACERTFILE,
+    OPT_X_TLS_CRL_NONE,
+    OPT_X_TLS_CRLCHECK,
     OPT_X_TLS_NEWCTX,
     SCOPE_BASE,
     SCOPE_ONELEVEL,
@@ -662,17 +664,7 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
                 conn.set_option(OPT_REFERRALS, 0)
 
             if "use_ssl" in self._config:
-                conn.set_option(OPT_X_TLS_CACERTFILE, str(cmk.utils.paths.trusted_ca_file))
-
-                # Caused trouble on older systems or systems with some special configuration or set of
-                # libraries. For example we saw a Ubuntu 17.10 system with libldap  2.4.45+dfsg-1ubuntu1 and
-                # libgnutls30 3.5.8-6ubuntu3 raising "ValueError: option error" while another system with
-                # the exact same liraries did not. Try to do this on systems that support this call and ignore
-                # the errors on other systems.
-                try:
-                    conn.set_option(OPT_X_TLS_NEWCTX, 0)
-                except ValueError:
-                    pass
+                self._set_tls_options(conn)
 
             self._default_bind(conn)
             return conn, None
@@ -695,6 +687,32 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
         port_spec = ":%d" % self._config["port"] if "port" in self._config else ""
         srv = server[:-1] if server.endswith(".") else server
         return uri + srv + port_spec
+
+    def _set_tls_options(self, conn: ldap.ldapobject.ReconnectLDAPObject) -> None:
+        conn.set_option(OPT_X_TLS_CACERTFILE, str(cmk.utils.paths.trusted_ca_file))
+
+        # If libldap is linked to OpenSSL, like on Debian trixie, OpenSSL may try to check CRLs,
+        # presumably because the global option TLS_CRLCHECK from `man 5 ldap.conf` option makes it
+        # into our context here. Other options, notably including TLS_CACERTDIR, don't make it. The
+        # CRL checks cannot be performed and the connection fails.
+        # On other systems, linking to GnuTLS, CRL checks were never done.
+        #
+        # We explicitly disable them for OpenSSL as well.
+        #
+        # We have to guard this with a try/except as the option doesn't even seem to exist with the
+        # GnuTLS backend.
+        try:
+            conn.set_option(OPT_X_TLS_CRLCHECK, OPT_X_TLS_CRL_NONE)
+        except ValueError:
+            pass
+
+        # "Materialize" the settings in libldap.
+        # The guard below was apparently needed at least on Ubuntu 17.10 with
+        # libldap  2.4.45+dfsg-1ubuntu1 and libgnutls30  3.5.8-6ubuntu3.
+        try:
+            conn.set_option(OPT_X_TLS_NEWCTX, 0)
+        except ValueError:
+            pass
 
     def connect(self, enforce_new: bool = False, enforce_server: str | None = None) -> None:
         if not enforce_new and self._ldap_obj and self._config == self._ldap_obj_config:

@@ -71,6 +71,7 @@ class FetchedResource(Enum):
     psu = "psu"
     environment = "environment"
     qtree_quota = "qtree_quota"
+    s3_buckets = "s3_buckets"
     snapvault = "snapvault"
     fc_interfaces = "fc_interfaces"
 
@@ -175,6 +176,29 @@ def _collect_volume_models(netapp_volumes: Iterable[Resource]) -> Iterable[model
             snapshot_reserve_percent=element_data.get("space", {})
             .get("snapshot", {})
             .get("reserve_percent"),
+        )
+
+
+def fetch_s3_buckets(
+    connection: HostConnection,
+) -> Iterable[models.QtreeQuotaModel]:
+    field_query = (
+        "name",
+        "volume.name",
+        "size",
+        "logical_used_size",
+    )
+    for element in NetAppResource.S3Bucket.get_collection(
+        connection=connection,
+        fields=",".join(field_query),
+    ):
+        element_data = element.to_dict()
+        yield models.QtreeQuotaModel(
+            name=element_data["name"],
+            volume=(element_data.get("volume") or {}).get("name") or "",
+            hard_limit=element_data.get("size"),
+            used_total=element_data.get("logical_used_size"),
+            users=[],
         )
 
 
@@ -1102,6 +1126,9 @@ def write_sections(
     if FetchedResource.qtree_quota.value in fetched_resources:
         safe_write_section("qtree_quota", fetch_qtree_quota(connection), logger)
 
+    if FetchedResource.s3_buckets.value in fetched_resources:
+        safe_write_section("s3_buckets", fetch_s3_buckets(connection), logger)
+
     if FetchedResource.snapvault.value in fetched_resources:
         safe_write_section("snapvault", fetch_snapmirror(connection), logger)
 
@@ -1227,6 +1254,7 @@ def parse_arguments(argv: Sequence[str] | None) -> argparse.Namespace:
             FetchedResource.psu,
             FetchedResource.environment,
             FetchedResource.qtree_quota,
+            FetchedResource.s3_buckets,
             FetchedResource.snapvault,
             FetchedResource.fc_interfaces,
             FetchedResource.ntp_time_sync,

@@ -10,7 +10,6 @@ py_test(
     deps = [
         "//cmk/gui/form_specs",
         "//cmk/gui/quick_setup",
-        "//cmk/plugins",
         "//cmk/server_side_calls_backend",
         "//cmk/utils",
         "//packages/cmk-ccc:user",

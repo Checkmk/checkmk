@@ -16,7 +16,6 @@ py_test(
         "//cmk/gui:type_defs",
         "//cmk/gui/search",
         "//cmk/gui/utils:roles",
-        "//cmk/gui/watolib:config_infra",
         "//tests/unit:conftest",
         "//tests/unit/cmk/gui:conftest",
         requirement("fakeredis"),

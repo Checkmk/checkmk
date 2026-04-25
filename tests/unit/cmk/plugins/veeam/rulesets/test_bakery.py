@@ -5,7 +5,7 @@
 
 import pytest
 
-from cmk.gui.plugins.legacy_bakery_rulesets.veeam_backup_status import migrate
+from cmk.plugins.veeam.rulesets.bakery import migrate
 
 
 @pytest.mark.parametrize(

@@ -5,12 +5,32 @@
 
 from pathlib import Path
 
+import pytest
+
 from cmk.bakery.v1 import OS, Plugin
 from cmk.base.plugins.bakery.win_dmidecode import get_win_dmidecode_files
 
 
-def test_win_dmidecode_files() -> None:
-    result = list(get_win_dmidecode_files(None))
-    assert result == [
-        Plugin(base_os=OS.WINDOWS, source=Path("win_dmidecode.bat")),
-    ]
+@pytest.mark.parametrize(
+    "conf, expected",
+    [
+        pytest.param(
+            {"deployment": ("sync", None)},
+            [Plugin(base_os=OS.WINDOWS, source=Path("win_dmidecode.bat"), interval=None)],
+            id="sync",
+        ),
+        pytest.param(
+            {"deployment": ("cached", 3600.0)},
+            [Plugin(base_os=OS.WINDOWS, source=Path("win_dmidecode.bat"), interval=3600)],
+            id="cached",
+        ),
+        pytest.param(
+            {"deployment": ("do_not_deploy", None)},
+            [],
+            id="do_not_deploy",
+        ),
+    ],
+)
+def test_win_dmidecode_files(conf: dict[str, object], expected: list[Plugin]) -> None:
+    result = list(get_win_dmidecode_files(conf))
+    assert result == expected

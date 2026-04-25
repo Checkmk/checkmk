@@ -263,12 +263,14 @@ HistoryFilePair = tuple[HistoryFile, HistoryFile]
 
 
 def _schedule_discovery_check(
-    host_name: HostName, monitoring_core: Literal["nagios", "cmc"]
+    host_name: HostName,
+    monitoring_core: Literal["nagios", "cmc"],
+    use_new_descriptions_for: Mapping[str, bool],
 ) -> None:
     now = int(time.time())
     service = (
         "Check_MK Discovery"
-        if config.use_new_descriptions_for.get("cmk_inventory", False)
+        if use_new_descriptions_for.get("cmk_inventory", False)
         else "Check_MK inventory"
     )
     # Ignore missing check and avoid warning in cmc.log
@@ -289,6 +291,7 @@ def _trigger_discovery_check(
     host_name: HostName,
     monitoring_core: Literal["nagios", "cmc"],
     inventory_check_autotrigger: bool,
+    use_new_descriptions_for: Mapping[str, bool],
 ) -> None:
     """if required, schedule the "Check_MK Discovery" check"""
     if not inventory_check_autotrigger:
@@ -300,7 +303,7 @@ def _trigger_discovery_check(
     if host_name in config_cache.hosts_config.clusters:
         return
 
-    _schedule_discovery_check(host_name, monitoring_core)
+    _schedule_discovery_check(host_name, monitoring_core, use_new_descriptions_for)
 
 
 def _extract_directive(directive: str, args: list[str]) -> tuple[bool, list[str]]:
@@ -507,6 +510,7 @@ def _automation_service_discovery(
                 hostname,
                 loading_result.loaded_config.monitoring_core,
                 loading_result.loaded_config.inventory_check_autotrigger,
+                loading_result.loaded_config.use_new_descriptions_for,
             )
 
     return ServiceDiscoveryResult(results)
@@ -1373,7 +1377,9 @@ def _execute_autodiscovery(
                         plugins=plugins,
                         autochecks_config=autochecks_config,
                         schedule_discovery_check=lambda host_name: _schedule_discovery_check(
-                            host_name, loading_result.loaded_config.monitoring_core
+                            host_name,
+                            loading_result.loaded_config.monitoring_core,
+                            loading_result.loaded_config.use_new_descriptions_for,
                         ),
                         rediscovery_parameters=params.rediscovery,
                         invalidate_host_config=config_cache.invalidate_host_config,
@@ -1578,6 +1584,7 @@ def _automation_set_autochecks_v2(
         set_autochecks_input.discovered_host,
         loaded_config.monitoring_core,
         loaded_config.inventory_check_autotrigger,
+        loaded_config.use_new_descriptions_for,
     )
 
     return SetAutochecksV2Result()
@@ -1609,6 +1616,7 @@ def _automation_update_host_labels(
         hostname,
         loading_result.loaded_config.monitoring_core,
         loading_result.loaded_config.inventory_check_autotrigger,
+        loading_result.loaded_config.use_new_descriptions_for,
     )
     return UpdateHostLabelsResult()
 

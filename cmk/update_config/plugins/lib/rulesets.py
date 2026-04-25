@@ -11,7 +11,6 @@ from collections.abc import Collection, Iterable, Mapping, Sequence
 from logging import Logger
 from typing import Final
 
-from cmk.base import config
 from cmk.ccc import debug
 from cmk.gui.form_specs import get_visitor, RawDiskData, VisitorOptions
 from cmk.gui.watolib.hosts_and_folders import folder_tree
@@ -67,10 +66,15 @@ SKIP_PREACTION: Final = SKIP_ACTION | {
 }
 
 
-def load_and_transform(logger: Logger, *, use_git: bool) -> AllRulesets:
+def load_and_transform(
+    logger: Logger,
+    *,
+    use_git: bool,
+    use_new_descriptions_for: Mapping[str, bool],
+) -> AllRulesets:
     all_rulesets = AllRulesets.load_all_rulesets()
 
-    if not config.use_new_descriptions_for.get("http", False):
+    if not use_new_descriptions_for.get("http", False):
         _force_old_http_service_description(all_rulesets)
 
     _delete_deprecated_wato_rulesets(

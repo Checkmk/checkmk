@@ -6,6 +6,10 @@
 from logging import Logger
 from typing import override
 
+import cmk.utils.paths as utils_paths
+from cmk.base import config as base_config
+from cmk.base.app import make_app
+from cmk.ccc.version import edition
 from cmk.gui.config import active_config
 from cmk.gui.crash_handler import create_gui_crash_report
 from cmk.gui.exceptions import MKUserError
@@ -21,7 +25,17 @@ from cmk.update_config.registry import update_action_registry, UpdateAction
 class UpdateRulesets(UpdateAction):
     @override
     def __call__(self, logger: Logger) -> None:
-        all_rulesets = load_and_transform(logger, use_git=active_config.wato_use_git)
+        omd_edition = edition(utils_paths.omd_root)
+        loading_result = base_config.load(
+            discovery_rulesets=(),
+            get_builtin_host_labels=make_app(omd_edition).get_builtin_host_labels,
+            edition=omd_edition,
+        )
+        all_rulesets = load_and_transform(
+            logger,
+            use_git=active_config.wato_use_git,
+            use_new_descriptions_for=loading_result.loaded_config.use_new_descriptions_for,
+        )
         validate_rule_values(logger, all_rulesets)
         all_rulesets.save(pprint_value=active_config.wato_pprint_config, debug=active_config.debug)
 

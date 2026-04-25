@@ -209,7 +209,7 @@ def _inventory_as_check(
         ip_address_of_mandatory=ip_address_of_bare,
         ip_address_of_mgmt=make_lookup_mgmt_board_ip_address(ip_lookup_config),
         mode=FetchMode.INVENTORY,
-        simulation_mode=config.simulation_mode,
+        simulation_mode=loaded_config.simulation_mode,
         secrets_config_relay=StoredSecrets(
             path=cmk.utils.password_store.active_secrets_path_relay(),
             secrets=(

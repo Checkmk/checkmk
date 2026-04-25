@@ -196,6 +196,7 @@ EMPTY_NAGIOS_CORE_CONFIG = NagiosCoreConfig(
     define_hostgroups={},
     define_servicegroups={},
     contactgroup_members={},
+    simulation_mode=False,
 )
 
 

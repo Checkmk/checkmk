@@ -429,7 +429,7 @@ def _automation_service_discovery(
         ip_address_of_mandatory=ip_lookup.make_lookup_ip_address(ip_lookup_config),
         ip_address_of_mgmt=ip_lookup.make_lookup_mgmt_board_ip_address(ip_lookup_config),
         mode=Mode.DISCOVERY,
-        simulation_mode=config.simulation_mode,
+        simulation_mode=loaded_config.simulation_mode,
         secrets_config_relay=AdHocSecrets(
             path=cmk.utils.password_store.generate_ad_hoc_secrets_path(
                 cmk.utils.paths.relative_tmp_dir
@@ -701,7 +701,7 @@ def _automation_discovery_preview(
         ip_address_of_mandatory=ip_lookup.make_lookup_ip_address(ip_lookup_config),
         ip_address_of_mgmt=ip_lookup.make_lookup_mgmt_board_ip_address(ip_lookup_config),
         mode=Mode.DISCOVERY,
-        simulation_mode=config.simulation_mode,
+        simulation_mode=loaded_config.simulation_mode,
         secrets_config_relay=secrets_config_relay,
         secrets_config_site=secrets_config_site,
         # avoid using cache unless prevent_fetching is set (-> fetch new data for rescan
@@ -1253,7 +1253,7 @@ def _execute_autodiscovery(
         ip_address_of_mandatory=ip_address_of,
         ip_address_of_mgmt=ip_address_of_mgmt,
         mode=Mode.DISCOVERY,
-        simulation_mode=config.simulation_mode,
+        simulation_mode=loaded_config.simulation_mode,
         secrets_config_relay=StoredSecrets(
             path=cmk.utils.password_store.active_secrets_path_relay(),
             secrets=(
@@ -3556,7 +3556,7 @@ class AutomationDiagHost:
                 return DiagHostResult(*self._execute_traceroute(ipaddress, ip_family))
 
             if test.startswith("snmp"):
-                if config.simulation_mode:
+                if loading_result.loaded_config.simulation_mode:
                     raise FetcherError(
                         "Simulation mode enabled. Not trying to contact snmp datasource"
                     )
@@ -3694,7 +3694,7 @@ class AutomationDiagHost:
                     relative_section_cache_path=cmk.utils.paths.relative_snmp_section_cache_dir,
                 ),
             ),
-            simulation_mode=config.simulation_mode,
+            simulation_mode=loaded_config.simulation_mode,
             file_cache_options=file_cache_options,
             file_cache_max_age=MaxAge(
                 checking=loaded_config.check_max_cachefile_age,
@@ -3768,7 +3768,7 @@ class AutomationDiagHost:
 
             raw_data = trigger.get_raw_data(
                 source.file_cache(
-                    simulation=config.simulation_mode,
+                    simulation=loaded_config.simulation_mode,
                     file_cache_options=file_cache_options,
                 ),
                 fetcher,
@@ -4323,7 +4323,7 @@ def _automation_get_agent_output(
                         ),
                     ),
                 ),
-                simulation_mode=config.simulation_mode,
+                simulation_mode=loaded_config.simulation_mode,
                 file_cache_options=file_cache_options,
                 file_cache_max_age=MaxAge(
                     checking=loaded_config.check_max_cachefile_age,
@@ -4372,7 +4372,8 @@ def _automation_get_agent_output(
 
                 raw_data = trigger.get_raw_data(
                     source.file_cache(
-                        simulation=config.simulation_mode, file_cache_options=file_cache_options
+                        simulation=loaded_config.simulation_mode,
+                        file_cache_options=file_cache_options,
                     ),
                     source.fetcher(),
                     Mode.CHECKING,

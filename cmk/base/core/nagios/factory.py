@@ -62,6 +62,7 @@ def create_core(
                     define_hostgroups=loaded_config.define_hostgroups,
                     define_servicegroups=loaded_config.define_servicegroups,
                     contactgroup_members=loaded_config.contactgroup_members,
+                    simulation_mode=loaded_config.simulation_mode,
                 ),
             )
         case "cmc":

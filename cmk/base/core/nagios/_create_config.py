@@ -102,6 +102,7 @@ class NagiosCoreConfig:
     define_hostgroups: Mapping[str, str]
     define_servicegroups: Mapping[str, str]
     contactgroup_members: Mapping[str, Sequence[str]]
+    simulation_mode: bool
 
 
 class NagiosCore(MonitoringCore):
@@ -596,8 +597,10 @@ def create_nagios_host_spec(
     return host_spec
 
 
-def transform_active_service_command(cfg: NagiosConfig, service_data: ActiveServiceData) -> str:
-    if config.simulation_mode:
+def transform_active_service_command(
+    cfg: NagiosConfig, service_data: ActiveServiceData, simulation_mode: bool
+) -> str:
+    if simulation_mode:
         cfg.custom_commands_to_define.add("check-mk-simulation")
         return "check-mk-simulation!echo 'Simulation mode - cannot execute real check'"
 
@@ -828,7 +831,9 @@ def create_nagios_servicedefs(
                 "use": "check_mk_perf,check_mk_default",
                 "host_name": hostname,
                 "service_description": service_data.description,
-                "check_command": transform_active_service_command(cfg, service_data),
+                "check_command": transform_active_service_command(
+                    cfg, service_data, nagios_core_config.simulation_mode
+                ),
                 "active_checks_enabled": str(1),
             }
             | service_attributes
@@ -1035,7 +1040,7 @@ def _create_custom_check(
             "use": "check_mk_perf,check_mk_default",
             "host_name": hostname,
             "service_description": description,
-            "check_command": _simulate_command(cfg, command),
+            "check_command": _simulate_command(cfg, command, nagios_core_config.simulation_mode),
             "active_checks_enabled": str(1 if (command_line and not freshness) else 0),
         }
         | freshness
@@ -1205,8 +1210,10 @@ def _b16encode(b: str) -> str:
     return (base64.b16encode(b.encode())).decode()
 
 
-def _simulate_command(cfg: NagiosConfig, command: CoreCommand) -> CoreCommand:
-    if config.simulation_mode:
+def _simulate_command(
+    cfg: NagiosConfig, command: CoreCommand, simulation_mode: bool
+) -> CoreCommand:
+    if simulation_mode:
         cfg.custom_commands_to_define.add("check-mk-simulation")
         return "check-mk-simulation!echo 'Simulation mode - cannot execute real check'"
     return command

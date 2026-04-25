@@ -744,7 +744,7 @@ def mode_dump_agent(app: CheckmkBaseApp, options: Mapping[str, object], hostname
                     force_stored_walks=bool(options.get("usewalk", False)),
                 ),
             ),
-            simulation_mode=config.simulation_mode,
+            simulation_mode=loaded_config.simulation_mode,
             file_cache_options=file_cache_options,
             file_cache_max_age=MaxAge(
                 checking=loaded_config.check_max_cachefile_age,
@@ -793,7 +793,7 @@ def mode_dump_agent(app: CheckmkBaseApp, options: Mapping[str, object], hostname
 
             raw_data = fetcher_trigger.get_raw_data(
                 source.file_cache(
-                    simulation=config.simulation_mode,
+                    simulation=loaded_config.simulation_mode,
                     file_cache_options=file_cache_options,
                 ),
                 source.fetcher(),
@@ -927,7 +927,7 @@ def mode_dump_hosts(app: CheckmkBaseApp, hostlist: Iterable[HostName]) -> None:
             ip_lookup_config.default_address_family(hostname),
             ip_address_of=ip_address_of,
             ip_address_of_mgmt=ip_address_of_mgmt,
-            simulation_mode=config.simulation_mode,
+            simulation_mode=loaded_config.simulation_mode,
             timeperiod_active=timeperiod.TimeperiodActiveCoreLookup(
                 livestatus.get_optional_timeperiods_active_map, log=logger.warning
             ).get,
@@ -1555,6 +1555,7 @@ def mode_dump_nagios_config(app: CheckmkBaseApp, args: Sequence[HostName]) -> No
             define_hostgroups=loaded_config.define_hostgroups,
             define_servicegroups=loaded_config.define_servicegroups,
             contactgroup_members=loaded_config.contactgroup_members,
+            simulation_mode=loaded_config.simulation_mode,
         ),
         final_service_name_config,
         service_name_config,
@@ -2193,7 +2194,7 @@ def mode_check_discovery(
         ip_address_of_mgmt=_forced_ip_lookup()
         or ip_lookup.make_lookup_mgmt_board_ip_address(ip_lookup_config),
         mode=FetchMode.DISCOVERY,
-        simulation_mode=config.simulation_mode,
+        simulation_mode=loaded_config.simulation_mode,
         max_cachefile_age=MaxAge(
             checking=loaded_config.check_max_cachefile_age,
             discovery=discovery_file_cache_max_age,
@@ -2585,7 +2586,7 @@ def mode_discover(app: CheckmkBaseApp, options: _DiscoveryOptions, args: list[st
         mode=(
             FetchMode.DISCOVERY if selected_sections is NO_SELECTION else FetchMode.FORCE_SECTIONS
         ),
-        simulation_mode=config.simulation_mode,
+        simulation_mode=loaded_config.simulation_mode,
         secrets_config_relay=AdHocSecrets(
             path=cmk.utils.password_store.generate_ad_hoc_secrets_path(
                 cmk.utils.paths.relative_tmp_dir
@@ -2859,7 +2860,7 @@ def run_checking(
         mode=(
             FetchMode.CHECKING if selected_sections is NO_SELECTION else FetchMode.FORCE_SECTIONS
         ),
-        simulation_mode=config.simulation_mode,
+        simulation_mode=loaded_config.simulation_mode,
         secrets_config_relay=secrets_config_relay,
         secrets_config_site=secrets_config_site,
         metric_backend_fetcher_factory=lambda hn: app.make_metric_backend_fetcher(
@@ -3161,7 +3162,7 @@ def mode_inventory(app: CheckmkBaseApp, options: _InventoryOptions, args: list[s
         mode=(
             FetchMode.INVENTORY if selected_sections is NO_SELECTION else FetchMode.FORCE_SECTIONS
         ),
-        simulation_mode=config.simulation_mode,
+        simulation_mode=loaded_config.simulation_mode,
         secrets_config_relay=AdHocSecrets(
             path=cmk.utils.password_store.generate_ad_hoc_secrets_path(
                 cmk.utils.paths.relative_tmp_dir
@@ -3489,7 +3490,7 @@ def mode_inventorize_marked_hosts(app: CheckmkBaseApp, options: Mapping[str, obj
         ip_address_of_mgmt=_forced_ip_lookup()
         or ip_lookup.make_lookup_mgmt_board_ip_address(ip_lookup_config),
         mode=FetchMode.INVENTORY,
-        simulation_mode=config.simulation_mode,
+        simulation_mode=loaded_config.simulation_mode,
         secrets_config_relay=StoredSecrets(
             path=cmk.utils.password_store.active_secrets_path_relay(),
             secrets=(

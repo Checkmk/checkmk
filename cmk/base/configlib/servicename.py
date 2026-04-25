@@ -17,7 +17,7 @@ from cmk.utils.labels import LabelManager, Labels
 from cmk.utils.rulesets.ruleset_matcher import RulesetMatcher, RuleSpec
 from cmk.utils.servicename import Item, ServiceName
 
-from .loaded_config import LoadedConfigFragment
+from .loaded_config import BaseConfig
 
 
 class FinalServiceNameConfig:
@@ -93,7 +93,7 @@ def _translate_service_description(
 
 
 def make_final_service_name_config(
-    loaded_config: LoadedConfigFragment,
+    loaded_config: BaseConfig,
     matcher: RulesetMatcher,
 ) -> FinalServiceNameConfig:
     return FinalServiceNameConfig(
@@ -161,7 +161,7 @@ class PassiveServiceNameConfig:
 
 
 def make_passive_service_name_config(
-    loaded_config: LoadedConfigFragment,
+    loaded_config: BaseConfig,
     matcher: RulesetMatcher,
     label_manager: LabelManager,
 ) -> PassiveServiceNameConfig:

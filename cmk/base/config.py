@@ -51,7 +51,7 @@ from cmk.base import default_config
 from cmk.base.configlib.checkengine import CheckingConfig
 from cmk.base.configlib.fetchers import make_tcp_fetcher_config
 from cmk.base.configlib.labels import LabelConfig
-from cmk.base.configlib.loaded_config import LoadedConfigFragment
+from cmk.base.configlib.loaded_config import BaseConfig
 from cmk.base.configlib.logwatch import set_global_logwatch_config
 from cmk.base.configlib.piggyback import guess_piggybacked_hosts_time_settings
 from cmk.base.configlib.scheduling import make_check_interval_config
@@ -552,7 +552,7 @@ class LoadingResult:
     This is hopefully temporary, until ConfigCache is dissolved ...
     """
 
-    loaded_config: LoadedConfigFragment
+    loaded_config: BaseConfig
     config_cache: ConfigCache
 
 
@@ -649,8 +649,8 @@ def _perform_post_config_loading_actions(
     _transform_plugin_names_from_160_to_170(loaded_context)
     _drop_invalid_ssc_rules(loaded_context)
 
-    loaded_config = LoadedConfigFragment(
-        **{f.name: loaded_context[f.name] for f in dataclasses.fields(LoadedConfigFragment)},
+    loaded_config = BaseConfig(
+        **{f.name: loaded_context[f.name] for f in dataclasses.fields(BaseConfig)},
     )
 
     config_cache = ConfigCache(
@@ -1370,7 +1370,7 @@ def get_ssc_host_config(
 #   +----------------------------------------------------------------------+
 
 
-def make_hosts_config(loaded_config: LoadedConfigFragment) -> Hosts:
+def make_hosts_config(loaded_config: BaseConfig) -> Hosts:
     return Hosts(
         hosts=strip_tags(loaded_config.all_hosts),
         clusters=strip_tags(loaded_config.clusters),
@@ -1449,7 +1449,7 @@ class AutochecksConfigurer:
 class ConfigCache:
     def __init__(
         self,
-        loaded_config: LoadedConfigFragment,
+        loaded_config: BaseConfig,
         get_builtin_host_labels: Callable[[SiteId], Labels],
         edition: cmk_version.Edition,
         *,
@@ -3678,7 +3678,7 @@ def get_relay_id(labels: Labels) -> str | None:
 
 
 def make_parser_config(
-    loaded_config: LoadedConfigFragment,
+    loaded_config: BaseConfig,
     ruleset_matcher: RulesetMatcher,
     label_manager: LabelManager,
     ip_address_of: Callable[[HostName], HostAddress | None],

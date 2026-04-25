@@ -112,7 +112,7 @@ from cmk.base.checkers import (
 )
 from cmk.base.configlib.checkengine import CheckingConfig, DiscoveryConfig
 from cmk.base.configlib.fetchers import make_parsed_snmp_fetch_intervals_config
-from cmk.base.configlib.loaded_config import LoadedConfigFragment
+from cmk.base.configlib.loaded_config import BaseConfig
 from cmk.base.configlib.servicename import (
     FinalServiceNameConfig,
     PassiveServiceNameConfig,
@@ -682,7 +682,7 @@ def _get_discovery_preview(
     on_error: OnError,
     fetcher: FetcherFunction,
     file_cache_options: FileCacheOptions,
-    loaded_config: LoadedConfigFragment,
+    loaded_config: BaseConfig,
     active_service_name_config: Callable[
         [HostName, ServiceName, Callable[[HostName], Labels]], ServiceName
     ],
@@ -842,7 +842,7 @@ def _make_compute_check_parameters_of_autocheck(
 
 
 def _execute_discovery(
-    loaded_config: LoadedConfigFragment,
+    loaded_config: BaseConfig,
     ruleset_matcher: RulesetMatcher,
     label_manager: LabelManager,
     host_name: HostName,
@@ -3300,7 +3300,7 @@ class AutomationDiagHost:
     def _execute_agent(
         self,
         app: CheckmkBaseApp,
-        loaded_config: LoadedConfigFragment,
+        loaded_config: BaseConfig,
         config_cache: config.ConfigCache,
         label_manager: LabelManager,
         service_name_config: PassiveServiceNameConfig,

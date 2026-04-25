@@ -5,7 +5,7 @@
 
 from collections.abc import Callable
 
-from cmk.base.configlib.loaded_config import LoadedConfigFragment
+from cmk.base.configlib.loaded_config import BaseConfig
 from cmk.ccc.hostaddress import HostName
 from cmk.utils.labels import LabelManager
 from cmk.utils.rulesets.ruleset_matcher import (
@@ -24,7 +24,7 @@ MAX_CHECK_ATTEMPTS = 1
 
 
 def make_check_period_config(
-    loaded_config: LoadedConfigFragment,
+    loaded_config: BaseConfig,
     matcher: RulesetMatcher,
     label_manager: LabelManager,
 ) -> Callable[[HostName, ServiceName], TimeperiodName]:
@@ -51,7 +51,7 @@ def make_check_period_config(
 
 
 def make_check_interval_config(
-    loaded_config: LoadedConfigFragment,
+    loaded_config: BaseConfig,
     matcher: RulesetMatcher,
     label_manager: LabelManager,
 ) -> Callable[[HostName, ServiceName], float]:
@@ -77,7 +77,7 @@ def make_check_interval_config(
 
 
 def make_retry_interval_config(
-    loaded_config: LoadedConfigFragment,
+    loaded_config: BaseConfig,
     matcher: RulesetMatcher,
     label_manager: LabelManager,
 ) -> Callable[[HostName, ServiceName], float]:
@@ -103,7 +103,7 @@ def make_retry_interval_config(
 
 
 def make_max_check_attempts_config(
-    loaded_config: LoadedConfigFragment,
+    loaded_config: BaseConfig,
     matcher: RulesetMatcher,
     label_manager: LabelManager,
 ) -> Callable[[HostName, ServiceName], int]:

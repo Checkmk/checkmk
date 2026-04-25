@@ -6,7 +6,7 @@
 
 from collections.abc import Callable, Mapping
 
-from cmk.base.configlib.loaded_config import LoadedConfigFragment
+from cmk.base.configlib.loaded_config import BaseConfig
 from cmk.ccc.hostaddress import HostName
 from cmk.fetchers import TCPFetcherConfig
 from cmk.snmplib import SNMPSectionName
@@ -19,7 +19,7 @@ from cmk.utils.rulesets.ruleset_matcher import (
 
 
 def make_tcp_fetcher_config(
-    loaded_config: LoadedConfigFragment,
+    loaded_config: BaseConfig,
     ruleset_matcher: RulesetMatcher,
     labels_of_host: Callable[[HostName], Labels],
 ) -> TCPFetcherConfig:
@@ -52,7 +52,7 @@ def make_tcp_fetcher_config(
 
 
 def make_parsed_snmp_fetch_intervals_config(
-    loaded_config: LoadedConfigFragment,
+    loaded_config: BaseConfig,
     ruleset_matcher: RulesetMatcher,
     labels_of_host: Callable[[HostName], Labels],
 ) -> Callable[[HostName], Mapping[SNMPSectionName, int]]:

@@ -38,7 +38,7 @@ from cmk.automations.types import AutomationID
 from cmk.base.automations.automations import Automation, load_config
 from cmk.base.base_app import CheckmkBaseApp
 from cmk.base.config import LoadingResult
-from cmk.base.configlib.loaded_config import LoadedConfigFragment
+from cmk.base.configlib.loaded_config import BaseConfig
 from cmk.base.modes.modes import Mode, Option
 from cmk.ccc import site, store, tty
 from cmk.ccc.crash_reporting import make_crash_report_base_path
@@ -451,8 +451,8 @@ class ConsoleLogger:
 def diagnostics_elements_for(
     *,
     edition: cmk_version.Edition,
-    loaded_config: LoadedConfigFragment,
-    core_performance_settings: Callable[[LoadedConfigFragment], Mapping[str, int]],
+    loaded_config: BaseConfig,
+    core_performance_settings: Callable[[BaseConfig], Mapping[str, int]],
     omd_config: site.OMDConfig,
     parameters: DiagnosticsOptionalParameters,
 ) -> list[ABCDiagnosticsElement]:
@@ -900,10 +900,10 @@ class GeneralDiagnosticsElement(ABCDiagnosticsElementTextDump):
 class PerfDataDiagnosticsElement(ABCDiagnosticsElementTextDump):
     def __init__(
         self,
-        load_config: LoadedConfigFragment,
-        core_performance_settings: Callable[[LoadedConfigFragment], Mapping[str, int]],
+        loaded_config: BaseConfig,
+        core_performance_settings: Callable[[BaseConfig], Mapping[str, int]],
     ) -> None:
-        self._loaded_config: Final = load_config
+        self._loaded_config: Final = loaded_config
         self._core_performance_settings: Final = core_performance_settings
 
     @override

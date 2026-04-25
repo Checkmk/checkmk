@@ -20,7 +20,7 @@ import cmk.utils.render
 from cmk.base import sources
 from cmk.base.config import ConfigCache, get_relay_id, ObjectAttributes
 from cmk.base.configlib.fetchers import make_parsed_snmp_fetch_intervals_config
-from cmk.base.configlib.loaded_config import LoadedConfigFragment
+from cmk.base.configlib.loaded_config import BaseConfig
 from cmk.base.configlib.servicename import PassiveServiceNameConfig
 from cmk.base.sources import Source
 from cmk.ccc import tty
@@ -124,7 +124,7 @@ def print_(txt: str) -> None:
 
 
 def dump_host(
-    loaded_config: LoadedConfigFragment,
+    loaded_config: BaseConfig,
     config_cache: ConfigCache,
     service_name_config: PassiveServiceNameConfig,
     enforced_services_table: Callable[

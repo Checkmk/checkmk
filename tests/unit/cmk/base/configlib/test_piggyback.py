@@ -8,7 +8,7 @@ import time
 from collections.abc import Mapping
 from pathlib import Path
 
-from cmk.base.configlib.loaded_config import LoadedConfigFragment
+from cmk.base.configlib.loaded_config import BaseConfig
 from cmk.base.configlib.piggyback import guess_piggybacked_hosts_time_settings
 from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.piggyback import backend as piggyback_backend
@@ -34,7 +34,7 @@ def _source_entry(source: HostName) -> tuple[tuple[str, str], str, int]:
     return ("exact_match", source), "max_cache_age", _SOURCE_MAX_CACHE_AGE
 
 
-def _config_with_source_rule(source: HostName) -> LoadedConfigFragment:
+def _config_with_source_rule(source: HostName) -> BaseConfig:
     """Config with piggybacked_host_files rule matching the source host"""
     rule: RuleSpec[Mapping[str, object]] = RuleSpec(
         value={"global_max_cache_age": _SOURCE_MAX_CACHE_AGE},

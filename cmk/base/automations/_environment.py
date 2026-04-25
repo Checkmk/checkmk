@@ -34,7 +34,7 @@ from cmk.base.automations.automations import load_config, load_plugins
 from cmk.base.base_app import CheckmkBaseApp
 from cmk.base.config import ConfigCache
 from cmk.base.configlib.checkengine import DiscoveryConfig
-from cmk.base.configlib.loaded_config import LoadedConfigFragment
+from cmk.base.configlib.loaded_config import BaseConfig
 from cmk.base.configlib.servicename import (
     FinalServiceNameConfig,
     make_final_service_name_config,
@@ -116,7 +116,7 @@ class AutomationEnvironment:
     # --- Pass-through accessors (no caching — just re-expose what's already there).
 
     @property
-    def loaded_config(self) -> LoadedConfigFragment:
+    def loaded_config(self) -> BaseConfig:
         return self.loading_result.loaded_config
 
     @property

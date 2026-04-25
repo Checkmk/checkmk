@@ -18,7 +18,7 @@ from collections.abc import Mapping, Sequence
 from pathlib import Path
 
 from cmk.agent_based.v2 import CheckPlugin
-from cmk.base.configlib.loaded_config import LoadedConfigFragment
+from cmk.base.configlib.loaded_config import BaseConfig
 from cmk.base.configlib.servicename import make_final_service_name_config, PassiveServiceNameConfig
 from cmk.ccc.hostaddress import HostName
 from cmk.checkengine.plugins import (
@@ -36,7 +36,7 @@ from cmk.utils.rulesets.ruleset_matcher import RulesetMatcher
 
 
 def set_global_logwatch_config(
-    loaded_config: LoadedConfigFragment,
+    loaded_config: BaseConfig,
     matcher: RulesetMatcher,
     label_manager: LabelManager,
     *,
@@ -117,7 +117,7 @@ class _LogwatchConfig:
 
     def __init__(
         self,
-        loaded_config: LoadedConfigFragment,
+        loaded_config: BaseConfig,
         matcher: RulesetMatcher,
         label_manager: LabelManager,
         *,

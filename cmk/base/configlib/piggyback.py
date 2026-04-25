@@ -16,11 +16,11 @@ from cmk.utils.labels import Labels
 from cmk.utils.paths import omd_root
 from cmk.utils.rulesets.ruleset_matcher import RulesetMatcher
 
-from .loaded_config import LoadedConfigFragment
+from .loaded_config import BaseConfig
 
 
 def guess_piggybacked_hosts_time_settings(
-    loaded_config: LoadedConfigFragment,
+    loaded_config: BaseConfig,
     matcher: RulesetMatcher,
     labels_of_host: Callable[[HostName], Labels],
     piggybacked_hostname: HostName,
@@ -49,7 +49,7 @@ def guess_piggybacked_hosts_time_settings(
 
 
 def make_piggyback_time_settings(
-    loaded_config: LoadedConfigFragment,
+    loaded_config: BaseConfig,
     matcher: RulesetMatcher,
     labels_of_host: Callable[[HostName], Labels],
     source_host_names: Iterable[HostName],

@@ -46,14 +46,15 @@ from cmk.utils.servicename import ServiceName
 
 
 @dataclasses.dataclass(frozen=True, kw_only=True)
-class LoadedConfigFragment:
-    """Return *some of* the values that have been loaded as part of the config loading process.
+class BaseConfig:
+    """Typed snapshot of the loaded base configuration.
 
-    The config loading currently mostly manipulates a global state.
-    Return an instance of this class, to indicate that the config has been loaded.
-
-    Someday (TM): return the actual loaded config, at which point this class will be quite big
-    (compare cmk/base/default_config/base ...)
+    The config loading still goes through module globals in `cmk.base.config`,
+    but every value that is exposed here is meant to be accessed exclusively
+    through this dataclass: direct `cmk.base.config.<X>` lookups for fields
+    listed below have been migrated away. New base-config fields should land
+    here (or on a scoped wrapper such as `CMCConfig` / `NagiosCoreConfig` /
+    `NotificationConfig`) rather than as additional module globals.
     """
 
     # TODO: get `HostAddress` VS. `str` right! Which is it at what point?!

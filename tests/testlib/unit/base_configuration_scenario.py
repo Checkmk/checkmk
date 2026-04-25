@@ -48,7 +48,7 @@ class Scenario:
         return ConfigCache(
             replace(
                 EMPTY_CONFIG,
-                # This only works as long as the attribute names of LoadedConfigFragment
+                # This only works as long as the attribute names of BaseConfig
                 # are the same as the variabele names in config.py
                 # But it's probably less confusing if we stick to that pattern anyway.
                 **{k: v for k, v in self.config.items() if k in asdict(EMPTY_CONFIG)},

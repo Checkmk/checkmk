@@ -6,7 +6,7 @@
 from typing import assert_never
 
 from cmk.base.config import ConfigCache
-from cmk.base.configlib.loaded_config import LoadedConfigFragment
+from cmk.base.configlib.loaded_config import BaseConfig
 from cmk.base.core.interface import MonitoringCore
 from cmk.ccc.version import Edition
 from cmk.checkengine.plugins import AgentBasedPlugins
@@ -23,7 +23,7 @@ def create_core(
     edition: Edition,
     matcher: RulesetMatcher,
     label_manager: LabelManager,
-    loaded_config: LoadedConfigFragment,
+    loaded_config: BaseConfig,
     snmp_plugin_store: SNMPPluginStore,
     config_cache: ConfigCache,
     plugins: AgentBasedPlugins,

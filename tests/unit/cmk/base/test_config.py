@@ -39,7 +39,7 @@ from cmk.base.community_app import make_app
 from cmk.base.config import ConfigCache, EnforcedServicesTable
 from cmk.base.configlib.checkengine import CheckingConfig
 from cmk.base.configlib.labels import LabelConfig
-from cmk.base.configlib.loaded_config import LoadedConfigFragment
+from cmk.base.configlib.loaded_config import BaseConfig
 from cmk.base.configlib.servicename import (
     FinalServiceNameConfig,
     make_final_service_name_config,
@@ -2571,7 +2571,7 @@ def test_host_config_add_discovery_check(
 
 
 def test_get_config_file_paths_with_confd(
-    folder_path_test_config: LoadedConfigFragment,
+    folder_path_test_config: BaseConfig,
 ) -> None:
     # NOTE: there are still some globals at play here, otherwise we would have to use
     # the folder_path_test_config somewhere.
@@ -2592,7 +2592,7 @@ def test_get_config_file_paths_with_confd(
     ]
 
 
-def test_load_config_folder_paths(folder_path_test_config: LoadedConfigFragment) -> None:
+def test_load_config_folder_paths(folder_path_test_config: BaseConfig) -> None:
     config_cache = config.ConfigCache(
         folder_path_test_config,
         (app := make_app()).get_builtin_host_labels,
@@ -2661,7 +2661,7 @@ def test_load_config_folder_paths(folder_path_test_config: LoadedConfigFragment)
 @pytest.fixture(name="folder_path_test_config")
 def folder_path_test_config_fixture(
     monkeypatch: MonkeyPatch,
-) -> Iterator[LoadedConfigFragment]:
+) -> Iterator[BaseConfig]:
     config_dir = cmk.utils.paths.check_mk_config_dir
     config_dir.mkdir(parents=True, exist_ok=True)
 

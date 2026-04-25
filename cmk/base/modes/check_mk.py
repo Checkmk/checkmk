@@ -44,7 +44,7 @@ from cmk.base.checkers import (
 from cmk.base.config import ConfigCache, handle_ip_lookup_failure
 from cmk.base.configlib.checkengine import DiscoveryConfig
 from cmk.base.configlib.fetchers import make_parsed_snmp_fetch_intervals_config
-from cmk.base.configlib.loaded_config import LoadedConfigFragment
+from cmk.base.configlib.loaded_config import BaseConfig
 from cmk.base.configlib.servicename import make_final_service_name_config
 from cmk.base.core import interface as core_interface
 from cmk.base.core.active_config_layout import (
@@ -2755,7 +2755,7 @@ def _mode_check(app: CheckmkBaseApp, options: _CheckingOptions, args: list[str])
 # also used in precompiled host checks!
 def run_checking(
     app: CheckmkBaseApp,
-    loaded_config: LoadedConfigFragment,
+    loaded_config: BaseConfig,
     ruleset_matcher: RulesetMatcher,
     label_manager: LabelManager,
     plugins: AgentBasedPlugins,

@@ -6,7 +6,7 @@
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 
-from cmk.base.configlib.loaded_config import LoadedConfigFragment
+from cmk.base.configlib.loaded_config import BaseConfig
 from cmk.base.core.interface import MonitoringCore
 from cmk.ccc.hostaddress import HostAddress
 from cmk.ccc.site import SiteId
@@ -36,7 +36,7 @@ class CheckmkBaseApp:
             Edition,
             RulesetMatcher,
             LabelManager,
-            LoadedConfigFragment,
+            BaseConfig,
             SNMPPluginStore,
             ConfigCache,
             AgentBasedPlugins,
@@ -54,4 +54,4 @@ class CheckmkBaseApp:
         Fetcher[AgentRawData] | None,
     ]
     get_builtin_host_labels: Callable[[SiteId], Labels]
-    core_performance_settings: Callable[[LoadedConfigFragment], Mapping[str, int]]
+    core_performance_settings: Callable[[BaseConfig], Mapping[str, int]]

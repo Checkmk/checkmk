@@ -4,12 +4,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import cmk.utils.paths
-from cmk.base.configlib.loaded_config import LoadedConfigFragment
+from cmk.base.configlib.loaded_config import BaseConfig
 from cmk.base.core.nagios._create_config import NagiosCoreConfig
 from cmk.utils.labels import ABCLabelConfig, LabelManager, Labels
 from cmk.utils.rulesets.ruleset_matcher import RulesetMatcher
 
-EMPTY_CONFIG = LoadedConfigFragment(
+EMPTY_CONFIG = BaseConfig(
     discovery_parameters={},
     checkgroup_parameters={},
     logwatch_rules=(),

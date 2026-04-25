@@ -1392,12 +1392,14 @@ msgstr ""
 "b><br>Utilizați această opțiune pentru a specifica nume explicite. "
 "Etichetele globale vor fi ignorate pentru aceste servicii."
 
-msgid "<b>Negate:</b> make rule apply for <b>all but</b> the above entries"
+#, fuzzy
+msgid "<b>Negate:</b> apply to <b>all</b> except listed entries above"
 msgstr ""
 "<b>Negate:</b> face ca regula să se aplice pentru <b>toate, cu excepția</b> "
 "intrărilor de mai sus"
 
-msgid "<b>Negate:</b> make rule apply for <b>all but</b> the above hosts"
+#, fuzzy
+msgid "<b>Negate:</b> apply to <b>all</b> except listed hosts above"
 msgstr ""
 "<b>Negare:</b> face regula să se aplice pentru <b>toate elementele mai "
 "puțin</b> cei de sus"
@@ -1934,7 +1936,7 @@ msgid ""
 "substrings corresponding to the remaining groups are copied into the regular "
 "expression, nevertheless.</p><p>As an alternative to <tt>%s</tt> you may "
 "also use <tt>%1</tt>, <tt>%2</tt>, etc. These will be replaced by the first, "
-"second, ... matching group. This allows you to reorder things."
+"second, ... matching group. This allows you to reorder things.</p>"
 msgstr ""
 "<p>Numele procesului poate conține una sau mai multe apariții ale <tt>%s</"
 "tt>. Dacă faceți acest lucru, atunci modelul trebuie să fie o expresie "
@@ -12456,6 +12458,10 @@ msgid "Changed properties of customer"
 msgstr "Proprietăți modificate ale clientului"
 
 #, fuzzy, python-format
+msgid "Changed properties of customer %s"
+msgstr "Proprietăți modificate ale clientului"
+
+#, fuzzy, python-format
 msgid "Changed properties of installed extension package %s %s"
 msgstr "Proprietăți modificate ale pachetului de extensii instalat %s"
 
@@ -12659,10 +12665,6 @@ msgstr "Doar verificare și afișare"
 msgid "Check certificate"
 msgstr "Verificați certificatele"
 
-#, fuzzy
-msgid "Check certificate credentials"
-msgstr "Verificați certificatele"
-
 msgid "Check certificate validity"
 msgstr "Verificați valabilitatea certificatului"
 
@@ -12850,10 +12852,6 @@ msgid "Check result if the host or VM state is reported as <i>unknown</i>"
 msgstr ""
 "Rezultatul verificării dacă starea gazdei sau a mașinii virtuale este "
 "raportată ca fiind <i>necunoscută</i>."
-
-#, fuzzy
-msgid "Check secret credentials"
-msgstr "Utilizați acreditările"
 
 msgid "Check specific host(s)"
 msgstr "Verificați gazda (gazdele) specifică (specifice)"
@@ -16442,6 +16440,10 @@ msgstr ""
 "utilizatorul dvs. ntopng să nu aibă drepturi suficiente pentru a interoga "
 "aceste informații."
 
+#, fuzzy, python-format
+msgid "Could not retrieve bulk notifications: %s"
+msgstr "Nu s-a putut prelua simbolul de identitate. (%s)"
+
 #, python-format
 msgid "Could not retrieve identity token. (%s)"
 msgstr "Nu s-a putut prelua simbolul de identitate. (%s)"
@@ -17137,11 +17139,6 @@ msgstr ""
 "Datele de acreditare nu sunt configurate sau nu sunt valide. Vă rugăm să "
 "revizuiți setările de licență"
 
-msgid ""
-"Credentials that expired more than this long ago will be ignored. Useful for "
-"suppressing alerts on expired credentials that have already been replaced."
-msgstr ""
-
 #, fuzzy
 msgid "Credentials to access the database"
 msgstr "Acreditive pentru a accesa baza de date"
@@ -17501,6 +17498,10 @@ msgstr "În prezent, există %s care nu au fost încă activate."
 msgid "Currently, there is one pending change not yet activated."
 msgstr ""
 "În prezent, există o modificare în așteptare care nu a fost încă activată."
+
+#, fuzzy
+msgid "Custom"
+msgstr "Client"
 
 #, python-format
 msgid "Custom GUI design of %s"
@@ -18590,6 +18591,14 @@ msgstr "Implicit (%s)"
 
 msgid "Default BI visualization settings"
 msgstr "Setări implicite de vizualizare BI"
+
+#, fuzzy
+msgid "Default IPv4"
+msgstr "Implicit"
+
+#, fuzzy
+msgid "Default IPv6"
+msgstr "Implicit"
 
 #, fuzzy
 msgid "Default behavior for 'Changes'"
@@ -24025,10 +24034,6 @@ msgstr ""
 msgid "Error while rendering element type '%s'"
 msgstr "Eroare la redarea elementului de tip '%s'"
 
-#, fuzzy, python-format
-msgid "Error while running migration script: %s"
-msgstr "Eroare la redarea elementului de tip '%s'"
-
 msgid ""
 "Error: The process responsible for creating the snapshot is no longer "
 "running!"
@@ -28748,12 +28753,13 @@ msgstr ""
 "Aici aveți voie să utilizați toate macrocomenzile care sunt definite în "
 "contextul notificării."
 
+#, fuzzy
 msgid ""
 "Here you are allowed to use all macros that are defined in the notification "
-"context.<br>The most important are:<ul><li><tt>$HOSTNAME$</"
-"li><li><tt>$SERVICEDESC$</li><li><tt>$SERVICESHORTSTATE$</"
-"li><li><tt>$SERVICEOUTPUT$</li><li><tt>$LONGSERVICEOUTPUT$</"
-"li><li><tt>$SERVICEPERFDATA$</li><li><tt>$EVENT_TXT$</li></ul>"
+"context.<br>The most important are:<ul><li><tt>$HOSTNAME$</tt></"
+"li><li><tt>$SERVICEDESC$</tt></li><li><tt>$SERVICESHORTSTATE$</tt></"
+"li><li><tt>$SERVICEOUTPUT$</tt></li><li><tt>$LONGSERVICEOUTPUT$</tt></"
+"li><li><tt>$SERVICEPERFDATA$</tt></li><li><tt>$EVENT_TXT$</tt></li></ul>"
 msgstr ""
 "Aici aveți voie să utilizați toate macrocomenzile care sunt definite în "
 "contextul notificării.Cele mai importante sunt:<ul><li><tt>$HOSTNAME$</"
@@ -29529,7 +29535,7 @@ msgid ""
 "important when filtering views by the service level.<p>You can also attach "
 "service levels to hosts and services in the monitoring. These levels will "
 "then be sent to the Event Console when you forward notifications to it and "
-"will override the setting of the matching rule."
+"will override the setting of the matching rule.</p>"
 msgstr ""
 "Aici puteți configura lista nivelurilor de servicii posibile pentru gazde, "
 "servicii și evenimente. Un nivel de serviciu poate fi atribuit unei gazde "
@@ -33705,13 +33711,14 @@ msgstr ""
 "va activa procesarea evenimentelor în cazul în care maestrul este "
 "inaccesibil timp de un număr de secunde configurat."
 
+#, fuzzy
 msgid ""
 "If you enable this option, then Checkmk will not directly Python-bytecompile "
 "all host checks when activating the configuration and restarting Nagios. "
 "Instead it will delay this to the first time the host is actually checked "
 "being by Nagios.<p>This reduces the time needed for the operation, but on "
 "the other hand will lead to a slightly higher load of Nagios for the first "
-"couple of minutes after the restart. "
+"couple of minutes after the restart.</p>"
 msgstr ""
 "Dacă activați această opțiune, atunci Checkmk nu va compila direct Python-"
 "bytecompile toate verificările gazdei la activarea configurației și la "
@@ -34241,10 +34248,6 @@ msgstr "Ignoră erorile din pluginurile de verificare unică"
 
 msgid "Ignore hard query limit"
 msgstr "Ignoră limita de interogare dură"
-
-#, fuzzy
-msgid "Ignore if older than"
-msgstr "Avertisment dacă este mai veche de"
 
 msgid "Ignore intervals shorter or equal"
 msgstr "Ignoră intervalele mai mici sau egale"
@@ -44376,14 +44379,20 @@ msgstr ""
 "Negarea meciului: Executați această regulă dacă condițiile superioare nu "
 "sunt <b>nu</b> îndeplinite."
 
-msgid "Negate: find hosts <b>not</b> having this package"
-msgstr "Negate: găsiți gazdele <b>nu</b> care au acest pachet"
-
 #, fuzzy
-msgid "Negate: make rule apply for all but the above entries"
+msgid "Negate: apply to all except listed entries above"
 msgstr ""
 "<b>Negate:</b> face ca regula să se aplice pentru <b>toate, cu excepția</b> "
 "intrărilor de mai sus"
+
+#, fuzzy
+msgid "Negate: apply to all except listed hosts above"
+msgstr ""
+"<b>Negate:</b> face ca regula să se aplice pentru <b>toate, cu excepția</b> "
+"intrărilor de mai sus"
+
+msgid "Negate: find hosts <b>not</b> having this package"
+msgstr "Negate: găsiți gazdele <b>nu</b> care au acest pachet"
 
 #, fuzzy
 msgid "Negative age tolerance"
@@ -53005,9 +53014,6 @@ msgstr "Interogare PromQL (este permisă doar o singură valoare de returnare)"
 msgid "Prometheus"
 msgstr "Prometheus"
 
-msgid "Prometheus API endpoint"
-msgstr "Punct final API Prometheus"
-
 #, fuzzy
 msgid "Prometheus Alertmanager"
 msgstr "Alertmanager"
@@ -61512,6 +61518,10 @@ msgid "Socket"
 msgstr "Soclu"
 
 #, fuzzy
+msgid "Socket address to listen on"
+msgstr "Adresa sau numele gazdei"
+
+#, fuzzy
 msgid "Socket detection method"
 msgstr "Detectarea fumului"
 
@@ -66233,11 +66243,11 @@ msgstr ""
 "ca o vizualizare încorporată, vizualizarea dvs. o va înlocui pe aceasta (o "
 "va umbri)."
 
-msgid ""
-"The IP address or host name the receiver should listen on. To listen only "
-"locally, use '127.0.0.1' or '::1'. To listen on all interfaces, use "
-"'0.0.0.0' or '::'."
+#, fuzzy
+msgid "The IP address or host name the receiver should listen on."
 msgstr ""
+"Numele de gazdă, adresa IP sau aliasul de gazdă pentru care este relevant "
+"evenimentul"
 
 msgid "The Index of the Overcurrent Protector"
 msgstr "Indicele dispozitivului de protecție la supracurent"
@@ -67949,15 +67959,6 @@ msgstr ""
 "URL-ul complet al serverului Kubernetes API, inclusiv protocolul (http sau "
 "https) și portul. O bară oblică finală (dacă este prezentă) va fi eliminată."
 
-msgid ""
-"The full URL to the Prometheus API endpoint including the protocol (http or "
-"https). OpenShift exposes such endpoints via a route in the openshift-"
-"monitoring namespace called prometheus-k8s."
-msgstr ""
-"URL-ul complet al punctului final al API Prometheus, inclusiv protocolul "
-"(http sau https). OpenShift expune astfel de puncte finale prin intermediul "
-"unei rute din spațiul de nume openshift-monitoring numit prometheus-k8s."
-
 #, python-format
 msgid "The given base object \"%s\" does not exist in LDAP (%s))"
 msgstr "Obiectul de bază dat \"%s\" nu există în LDAP (%s))"
@@ -68710,7 +68711,7 @@ msgid ""
 "{current_revision_id!r} is applied, but the expected revision is "
 "{head_revision_id!r}. Activation has been blocked to prevent unintended "
 "schema upgrades. To resolve this, upgrade the schema manually as the site "
-"user: `cmk-metric-backend-schema-manager --config default upgrade HEAD` If "
+"user: `cmk-metric-backend-schema-manager upgrade --config default HEAD` If "
 "the upgrade fails, please contact Checkmk support."
 msgstr ""
 
@@ -76395,11 +76396,19 @@ msgstr ""
 "Timpul până la alertă, în cazul în care ultima sarcină CronJob a fost "
 "executată mai mult decât timpul stabilit"
 
+#, fuzzy
+msgid "Time until certificate credentials expiration"
+msgstr "Timpul până la expirarea acreditărilor"
+
 msgid "Time until credentials expiration"
 msgstr "Timpul până la expirarea acreditărilor"
 
 msgid "Time until license expiration"
 msgstr "Timp până la expirarea licenței"
+
+#, fuzzy
+msgid "Time until secret credentials expiration"
+msgstr "Timpul până la expirarea acreditărilor"
 
 msgid "Time usage by phase"
 msgstr "Utilizarea timpului pe faze"
@@ -82080,9 +82089,6 @@ msgstr "Utilizați tipul personalizat"
 
 msgid "Use data from Checkmk Cluster Collector"
 msgstr "Utilizați datele de la Checkmk Cluster Collector"
-
-msgid "Use data from OpenShift"
-msgstr "Utilizați date din OpenShift"
 
 msgid "Use default layout"
 msgstr "Utilizați aspectul implicit"
@@ -91880,23 +91886,6 @@ msgid "Edit %{entity}"
 msgstr "Editare metrică"
 
 #, fuzzy
-msgid "Loading ..."
-msgstr "Încărcare..."
-
-msgid "Could not validate form, errors are shown in the form"
-msgstr ""
-
-#, fuzzy
-msgid "A fatal error occurred:"
-msgstr "%d au apărut erori:"
-
-msgid ""
-"Changes submitted through this form will be immediately applied to your "
-"configuration. However, you may still need to activate them for them to take "
-"effect."
-msgstr ""
-
-#, fuzzy
 msgid "required"
 msgstr "Port necesar"
 
@@ -92977,10 +92966,6 @@ msgid "Specific host"
 msgstr "Situri specifice"
 
 #, fuzzy
-msgid "Custom"
-msgstr "Client"
-
-#, fuzzy
 msgid "Select at least one scope."
 msgstr "Vă rugăm să selectați cel puțin un element"
 
@@ -93520,9 +93505,22 @@ msgstr "Editați proprietățile"
 msgid "Add widget to dashboard"
 msgstr "Adăugați la tabloul de bord"
 
+msgid ""
+"Changes submitted through this form will be immediately applied to your "
+"configuration. However, you may still need to activate them for them to take "
+"effect."
+msgstr ""
+
+msgid "Could not validate form, errors are shown in the form"
+msgstr ""
+
 #, fuzzy
 msgid "Saving"
 msgstr "Economii de spațiu"
+
+#, fuzzy
+msgid "Loading ..."
+msgstr "Încărcare..."
 
 #, fuzzy
 msgid "The value of this rule is not valid."
@@ -93734,18 +93732,7 @@ msgstr "Vă rugăm să selectați cel puțin un element"
 msgid "Edit rule: Metric backend (Custom query)"
 msgstr "Instanțe Oracle"
 
-#, fuzzy
-msgid "Validation error"
-msgstr "Eroare de configurare"
-
-#, fuzzy
-msgid "Fatal error"
-msgstr "Eroare internă"
-
 msgid "This creates a special agent rule based on the selected custom graph. "
-msgstr ""
-
-msgid "Dismiss"
 msgstr ""
 
 #, fuzzy
@@ -94750,12 +94737,22 @@ msgstr "Porturi disponibile"
 msgid "Send log messages to event console"
 msgstr "Trimiterea evenimentelor către consola locală de evenimente"
 
+msgid "Default IPv4 (0.0.0.0:${props.defaultPort})"
+msgstr ""
+
+msgid "Default IPv6 ([::]:${props.defaultPort})"
+msgstr ""
+
 msgid "Port must differ from the other protocol endpoint."
 msgstr ""
 
 #, fuzzy
 msgid " | created"
 msgstr "Fișier creat"
+
+#, fuzzy
+msgid "At least one receiver (GRPC or HTTP) must be enabled."
+msgstr "Starea când lipsește fișierul"
 
 msgid "GRPC"
 msgstr ""
@@ -94764,8 +94761,14 @@ msgid ""
 "Configure a GRPC-based OTLP receiver that will collect OpenTelemetry data."
 msgstr ""
 
+msgid "Enable the GRPC-based OTLP receiver"
+msgstr ""
+
 msgid ""
 "Configure an HTTP-based OTLP receiver that will collect OpenTelemetry data."
+msgstr ""
+
+msgid "Enable the HTTP-based OTLP receiver"
 msgstr ""
 
 #, fuzzy
@@ -94926,6 +94929,22 @@ msgid ""
 "configuration when completing the setup. However, you may still need to "
 "activate them for them to take effect."
 msgstr ""
+
+#, fuzzy
+msgid "Create Telemetry hosts folder"
+msgstr "Creați gazde de gateway în"
+
+#, fuzzy
+msgid "Could not create the Telemetry hosts folder"
+msgstr "Configurația stilului selectat"
+
+#, fuzzy
+msgid "Set up metric backend connector"
+msgstr "Configurația stilului selectat"
+
+#, fuzzy
+msgid "Could not create the metric backend connector"
+msgstr "Configurația stilului selectat"
 
 #, fuzzy
 msgid "OpenTelemetry Collector activation"
@@ -95948,6 +95967,50 @@ msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
 
+#, fuzzy, python-format
+#~ msgid "Error while running migration script: %s"
+#~ msgstr "Eroare la redarea elementului de tip '%s'"
+
+#~ msgid "Prometheus API endpoint"
+#~ msgstr "Punct final API Prometheus"
+
+#~ msgid ""
+#~ "The full URL to the Prometheus API endpoint including the protocol (http "
+#~ "or https). OpenShift exposes such endpoints via a route in the openshift-"
+#~ "monitoring namespace called prometheus-k8s."
+#~ msgstr ""
+#~ "URL-ul complet al punctului final al API Prometheus, inclusiv protocolul "
+#~ "(http sau https). OpenShift expune astfel de puncte finale prin "
+#~ "intermediul unei rute din spațiul de nume openshift-monitoring numit "
+#~ "prometheus-k8s."
+
+#~ msgid "Use data from OpenShift"
+#~ msgstr "Utilizați date din OpenShift"
+
+#, fuzzy
+#~ msgid "Check certificate credentials"
+#~ msgstr "Verificați certificatele"
+
+#, fuzzy
+#~ msgid "Check secret credentials"
+#~ msgstr "Utilizați acreditările"
+
+#, fuzzy
+#~ msgid "Ignore if older than"
+#~ msgstr "Avertisment dacă este mai veche de"
+
+#, fuzzy
+#~ msgid "A fatal error occurred:"
+#~ msgstr "%d au apărut erori:"
+
+#, fuzzy
+#~ msgid "Validation error"
+#~ msgstr "Eroare de configurare"
+
+#, fuzzy
+#~ msgid "Fatal error"
+#~ msgstr "Eroare internă"
+
 #, fuzzy
 #~ msgid "At least one custom query is required."
 #~ msgstr "Starea când lipsește fișierul"
@@ -96011,14 +96074,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Resource attribute for hostname lookup"
 #~ msgstr "Calcularea numelui de gazdă"
-
-#, fuzzy
-#~ msgid "Time until certificate credentials expiration"
-#~ msgstr "Timpul până la expirarea acreditărilor"
-
-#, fuzzy
-#~ msgid "Time until secret credentials expiration"
-#~ msgstr "Timpul până la expirarea acreditărilor"
 
 #, fuzzy
 #~ msgid ""

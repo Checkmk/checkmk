@@ -1377,12 +1377,14 @@ msgstr ""
 "specificare nomi dei servizi specifici. I tag globali saranno ignorati per "
 "questi servizi."
 
-msgid "<b>Negate:</b> make rule apply for <b>all but</b> the above entries"
+#, fuzzy
+msgid "<b>Negate:</b> apply to <b>all</b> except listed entries above"
 msgstr ""
 "<b>Negare:</b> fare applicare la regola per <b>tutti ma</b> le voci di cui "
 "sopra"
 
-msgid "<b>Negate:</b> make rule apply for <b>all but</b> the above hosts"
+#, fuzzy
+msgid "<b>Negate:</b> apply to <b>all</b> except listed hosts above"
 msgstr ""
 "<b>Negare:</b> fare in modo che la regola si applichi a <b>tutti gli host "
 "tranne</b> quelli di cui sopra"
@@ -1918,6 +1920,7 @@ msgstr ""
 "escludere tutti i processi appartenenti a un contenitore docker specificando "
 "l'espressione \"%s\" (senza le virgolette), e selezionando \"%s\".</p>"
 
+#, fuzzy
 msgid ""
 "<p>The process name may contain one or more occurrences of <tt>%s</tt>. If "
 "you do this, then the pattern must be a regular expression and be prefixed "
@@ -1932,7 +1935,7 @@ msgid ""
 "substrings corresponding to the remaining groups are copied into the regular "
 "expression, nevertheless.</p><p>As an alternative to <tt>%s</tt> you may "
 "also use <tt>%1</tt>, <tt>%2</tt>, etc. These will be replaced by the first, "
-"second, ... matching group. This allows you to reorder things."
+"second, ... matching group. This allows you to reorder things.</p>"
 msgstr ""
 "<p>Il nome del processo può contenere una o più occorrenze di <tt>%s</tt>. "
 "In questo caso, la sequenza deve essere una espressione regolare e deve "
@@ -12337,6 +12340,10 @@ msgid "Changed properties of customer"
 msgstr "Proprietà modificate del cliente"
 
 #, fuzzy, python-format
+msgid "Changed properties of customer %s"
+msgstr "Proprietà modificate del cliente"
+
+#, fuzzy, python-format
 msgid "Changed properties of installed extension package %s %s"
 msgstr "Proprietà modificate del pacchetto di estensioni installato %s"
 
@@ -12534,10 +12541,6 @@ msgstr "Solo controllo e visualizzazione"
 msgid "Check certificate"
 msgstr "Controllare i certificati"
 
-#, fuzzy
-msgid "Check certificate credentials"
-msgstr "Controllare i certificati"
-
 msgid "Check certificate validity"
 msgstr "Controllare la validità del certificato"
 
@@ -12723,10 +12726,6 @@ msgid "Check result if the host or VM state is reported as <i>unknown</i>"
 msgstr ""
 "Controlla il risultato se lo stato dell'host o della VM è riportato come "
 "<i>sconosciuto</i>"
-
-#, fuzzy
-msgid "Check secret credentials"
-msgstr "Utilizzare le credenziali"
 
 msgid "Check specific host(s)"
 msgstr "Controllare gli host specifici"
@@ -16301,6 +16300,10 @@ msgstr ""
 "potrebbe non avere diritti sufficienti per interrogare questa informazione."
 
 #, fuzzy, python-format
+msgid "Could not retrieve bulk notifications: %s"
+msgstr "Impossibile recuperare il token di identità. (%s)"
+
+#, fuzzy, python-format
 msgid "Could not retrieve identity token. (%s)"
 msgstr "Impossibile recuperare il token di identità. (%s)"
 
@@ -16987,11 +16990,6 @@ msgstr ""
 "Credenziali non configurate o non valide. Rivedere le impostazioni della "
 "licenza"
 
-msgid ""
-"Credentials that expired more than this long ago will be ignored. Useful for "
-"suppressing alerts on expired credentials that have already been replaced."
-msgstr ""
-
 #, fuzzy
 msgid "Credentials to access the database"
 msgstr "Credenziali di accesso al database"
@@ -17350,6 +17348,10 @@ msgstr "Attualmente, ci sono %s non ancora attivati."
 
 msgid "Currently, there is one pending change not yet activated."
 msgstr "Attualmente c'è una modifica in sospeso non ancora attivata."
+
+#, fuzzy
+msgid "Custom"
+msgstr "Cliente"
 
 #, python-format
 msgid "Custom GUI design of %s"
@@ -18438,6 +18440,14 @@ msgstr "Predefinito (%s)"
 
 msgid "Default BI visualization settings"
 msgstr "Impostazioni predefinite per la visualizzazione della BI"
+
+#, fuzzy
+msgid "Default IPv4"
+msgstr "Default"
+
+#, fuzzy
+msgid "Default IPv6"
+msgstr "Default"
 
 #, fuzzy
 msgid "Default behavior for 'Changes'"
@@ -23865,10 +23875,6 @@ msgstr ""
 msgid "Error while rendering element type '%s'"
 msgstr "Errore durante il rendering del tipo di elemento \"%s"
 
-#, fuzzy, python-format
-msgid "Error while running migration script: %s"
-msgstr "Errore durante il rendering del tipo di elemento \"%s"
-
 msgid ""
 "Error: The process responsible for creating the snapshot is no longer "
 "running!"
@@ -28572,12 +28578,13 @@ msgid ""
 msgstr ""
 "Qui potete usare tutte le macro che sono definite nel contesto di notifica."
 
+#, fuzzy
 msgid ""
 "Here you are allowed to use all macros that are defined in the notification "
-"context.<br>The most important are:<ul><li><tt>$HOSTNAME$</"
-"li><li><tt>$SERVICEDESC$</li><li><tt>$SERVICESHORTSTATE$</"
-"li><li><tt>$SERVICEOUTPUT$</li><li><tt>$LONGSERVICEOUTPUT$</"
-"li><li><tt>$SERVICEPERFDATA$</li><li><tt>$EVENT_TXT$</li></ul>"
+"context.<br>The most important are:<ul><li><tt>$HOSTNAME$</tt></"
+"li><li><tt>$SERVICEDESC$</tt></li><li><tt>$SERVICESHORTSTATE$</tt></"
+"li><li><tt>$SERVICEOUTPUT$</tt></li><li><tt>$LONGSERVICEOUTPUT$</tt></"
+"li><li><tt>$SERVICEPERFDATA$</tt></li><li><tt>$EVENT_TXT$</tt></li></ul>"
 msgstr ""
 "Qui è possibile utilizzare tutte le macro definite nel contesto di "
 "notifica.Le più importanti sono:$HOSTNAME$</li><li><tt>$SERVICEDESC$</"
@@ -29348,7 +29355,7 @@ msgid ""
 "important when filtering views by the service level.<p>You can also attach "
 "service levels to hosts and services in the monitoring. These levels will "
 "then be sent to the Event Console when you forward notifications to it and "
-"will override the setting of the matching rule."
+"will override the setting of the matching rule.</p>"
 msgstr ""
 "Qui puoi configurare l'elenco dei possibili livelli di servizio per host, "
 "servizi ed eventi. Un livello di servizio può essere assegnato a un host o a "
@@ -33500,13 +33507,14 @@ msgstr ""
 "e abiliterà l'elaborazione degli eventi se il master non è raggiungibile per "
 "il numero di secondi configurato."
 
+#, fuzzy
 msgid ""
 "If you enable this option, then Checkmk will not directly Python-bytecompile "
 "all host checks when activating the configuration and restarting Nagios. "
 "Instead it will delay this to the first time the host is actually checked "
 "being by Nagios.<p>This reduces the time needed for the operation, but on "
 "the other hand will lead to a slightly higher load of Nagios for the first "
-"couple of minutes after the restart. "
+"couple of minutes after the restart.</p>"
 msgstr ""
 "Se si abilita questa opzione, Checkmk non eseguirà direttamente la "
 "compilazione di tutti i controlli dell'host in Python-bytecompile quando si "
@@ -34029,10 +34037,6 @@ msgstr "Ignorare gli errori nei plugin a controllo singolo"
 
 msgid "Ignore hard query limit"
 msgstr "Ignorare il limite delle query"
-
-#, fuzzy
-msgid "Ignore if older than"
-msgstr "Attenzione se più vecchio di"
 
 msgid "Ignore intervals shorter or equal"
 msgstr "Ignora gli intervalli più brevi o uguali"
@@ -44124,14 +44128,20 @@ msgstr ""
 "Partita negata: Esegui questa regola se le condizioni superiori non sono "
 "<b>soddisfatte</b>."
 
-msgid "Negate: find hosts <b>not</b> having this package"
-msgstr "Negate: trova gli host che <b>non</b> hanno questo pacchetto"
-
 #, fuzzy
-msgid "Negate: make rule apply for all but the above entries"
+msgid "Negate: apply to all except listed entries above"
 msgstr ""
 "<b>Negare:</b> fare applicare la regola per <b>tutti ma</b> le voci di cui "
 "sopra"
+
+#, fuzzy
+msgid "Negate: apply to all except listed hosts above"
+msgstr ""
+"<b>Negare:</b> fare applicare la regola per <b>tutti ma</b> le voci di cui "
+"sopra"
+
+msgid "Negate: find hosts <b>not</b> having this package"
+msgstr "Negate: trova gli host che <b>non</b> hanno questo pacchetto"
 
 #, fuzzy
 msgid "Negative age tolerance"
@@ -52720,9 +52730,6 @@ msgstr "Interrogazione PromQL (è permesso un solo valore di ritorno)"
 msgid "Prometheus"
 msgstr "Prometeo"
 
-msgid "Prometheus API endpoint"
-msgstr "Endpoint API di Prometheus"
-
 #, fuzzy
 msgid "Prometheus Alertmanager"
 msgstr "Alertmanager"
@@ -61174,6 +61181,10 @@ msgid "Socket"
 msgstr "Presa"
 
 #, fuzzy
+msgid "Socket address to listen on"
+msgstr "Indirizzo o nome dell'host"
+
+#, fuzzy
 msgid "Socket detection method"
 msgstr "Rilevamento del fumo"
 
@@ -65885,11 +65896,9 @@ msgstr ""
 "per nome di vista. Se si crea una vista che ha lo stesso nome di una vista "
 "incorporata, la propria vista la sovrascriverà (facendole da ombra)."
 
-msgid ""
-"The IP address or host name the receiver should listen on. To listen only "
-"locally, use '127.0.0.1' or '::1'. To listen on all interfaces, use "
-"'0.0.0.0' or '::'."
-msgstr ""
+#, fuzzy
+msgid "The IP address or host name the receiver should listen on."
+msgstr "Hostname, indirizzo IP o alias di host per cui l'evento è rilevante"
 
 msgid "The Index of the Overcurrent Protector"
 msgstr "L'indice del protettore di sovracorrente"
@@ -67592,15 +67601,6 @@ msgstr ""
 "L'URL completo del server API di Kubernetes, compreso il protocollo (http o "
 "https) e la porta. Uno slash finale (se presente) verrà rimosso."
 
-msgid ""
-"The full URL to the Prometheus API endpoint including the protocol (http or "
-"https). OpenShift exposes such endpoints via a route in the openshift-"
-"monitoring namespace called prometheus-k8s."
-msgstr ""
-"L'URL completo dell'endpoint API di Prometheus, compreso il protocollo (http "
-"o https). OpenShift espone tali endpoint tramite una rotta nello spazio dei "
-"nomi openshift-monitoring chiamata prometheus-k8s."
-
 #, python-format
 msgid "The given base object \"%s\" does not exist in LDAP (%s))"
 msgstr "L'oggetto base dato \"%s\" non esiste in LDAP (%s))"
@@ -68355,7 +68355,7 @@ msgid ""
 "{current_revision_id!r} is applied, but the expected revision is "
 "{head_revision_id!r}. Activation has been blocked to prevent unintended "
 "schema upgrades. To resolve this, upgrade the schema manually as the site "
-"user: `cmk-metric-backend-schema-manager --config default upgrade HEAD` If "
+"user: `cmk-metric-backend-schema-manager upgrade --config default HEAD` If "
 "the upgrade fails, please contact Checkmk support."
 msgstr ""
 
@@ -76018,11 +76018,19 @@ msgstr ""
 "Tempo fino all'avviso, se l'ultimo lavoro CronJob è in esecuzione da più "
 "tempo di quanto impostato"
 
+#, fuzzy
+msgid "Time until certificate credentials expiration"
+msgstr "Tempo fino alla scadenza delle credenziali"
+
 msgid "Time until credentials expiration"
 msgstr "Tempo fino alla scadenza delle credenziali"
 
 msgid "Time until license expiration"
 msgstr "Tempo fino alla scadenza della licenza"
+
+#, fuzzy
+msgid "Time until secret credentials expiration"
+msgstr "Tempo fino alla scadenza delle credenziali"
 
 msgid "Time usage by phase"
 msgstr "Utilizzo del tempo per fase"
@@ -81696,9 +81704,6 @@ msgstr "Utilizzare un tipo personalizzato"
 
 msgid "Use data from Checkmk Cluster Collector"
 msgstr "Utilizzare i dati di Checkmk Cluster Collector"
-
-msgid "Use data from OpenShift"
-msgstr "Utilizzare i dati di OpenShift"
 
 msgid "Use default layout"
 msgstr "Usa il layout predefinito"
@@ -91452,23 +91457,6 @@ msgstr "Nessuna voce"
 msgid "Edit %{entity}"
 msgstr "Modifica metrica"
 
-#, fuzzy
-msgid "Loading ..."
-msgstr "Caricamento..."
-
-msgid "Could not validate form, errors are shown in the form"
-msgstr ""
-
-#, fuzzy
-msgid "A fatal error occurred:"
-msgstr "Si sono verificati %d errori:"
-
-msgid ""
-"Changes submitted through this form will be immediately applied to your "
-"configuration. However, you may still need to activate them for them to take "
-"effect."
-msgstr ""
-
 msgid "required"
 msgstr "(obbligatorio)"
 
@@ -92546,10 +92534,6 @@ msgid "Specific host"
 msgstr "Siti specifici"
 
 #, fuzzy
-msgid "Custom"
-msgstr "Cliente"
-
-#, fuzzy
 msgid "Select at least one scope."
 msgstr "Seleziona almeno un elemento"
 
@@ -93082,9 +93066,22 @@ msgstr "Modifica delle proprietà"
 msgid "Add widget to dashboard"
 msgstr "Aggiungi al cruscotto"
 
+msgid ""
+"Changes submitted through this form will be immediately applied to your "
+"configuration. However, you may still need to activate them for them to take "
+"effect."
+msgstr ""
+
+msgid "Could not validate form, errors are shown in the form"
+msgstr ""
+
 #, fuzzy
 msgid "Saving"
 msgstr "Risparmio di spazio"
+
+#, fuzzy
+msgid "Loading ..."
+msgstr "Caricamento..."
 
 #, fuzzy
 msgid "The value of this rule is not valid."
@@ -93295,18 +93292,7 @@ msgstr "Seleziona almeno un elemento"
 msgid "Edit rule: Metric backend (Custom query)"
 msgstr "Istanze Oracle"
 
-#, fuzzy
-msgid "Validation error"
-msgstr "Errore di configurazione"
-
-#, fuzzy
-msgid "Fatal error"
-msgstr "Errore interno"
-
 msgid "This creates a special agent rule based on the selected custom graph. "
-msgstr ""
-
-msgid "Dismiss"
 msgstr ""
 
 #, fuzzy
@@ -94305,12 +94291,22 @@ msgstr "Porte disponibili"
 msgid "Send log messages to event console"
 msgstr "Invia gli eventi alla console eventi locale"
 
+msgid "Default IPv4 (0.0.0.0:${props.defaultPort})"
+msgstr ""
+
+msgid "Default IPv6 ([::]:${props.defaultPort})"
+msgstr ""
+
 msgid "Port must differ from the other protocol endpoint."
 msgstr ""
 
 #, fuzzy
 msgid " | created"
 msgstr "File creato"
+
+#, fuzzy
+msgid "At least one receiver (GRPC or HTTP) must be enabled."
+msgstr "Stato quando il file manca"
 
 msgid "GRPC"
 msgstr ""
@@ -94319,8 +94315,14 @@ msgid ""
 "Configure a GRPC-based OTLP receiver that will collect OpenTelemetry data."
 msgstr ""
 
+msgid "Enable the GRPC-based OTLP receiver"
+msgstr ""
+
 msgid ""
 "Configure an HTTP-based OTLP receiver that will collect OpenTelemetry data."
+msgstr ""
+
+msgid "Enable the HTTP-based OTLP receiver"
 msgstr ""
 
 #, fuzzy
@@ -94480,6 +94482,22 @@ msgid ""
 "configuration when completing the setup. However, you may still need to "
 "activate them for them to take effect."
 msgstr ""
+
+#, fuzzy
+msgid "Create Telemetry hosts folder"
+msgstr "Creare host gateway in"
+
+#, fuzzy
+msgid "Could not create the Telemetry hosts folder"
+msgstr "Configurazione dello stile selezionato"
+
+#, fuzzy
+msgid "Set up metric backend connector"
+msgstr "Configurazione dello stile selezionato"
+
+#, fuzzy
+msgid "Could not create the metric backend connector"
+msgstr "Configurazione dello stile selezionato"
 
 #, fuzzy
 msgid "OpenTelemetry Collector activation"
@@ -95500,6 +95518,49 @@ msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
 
+#, fuzzy, python-format
+#~ msgid "Error while running migration script: %s"
+#~ msgstr "Errore durante il rendering del tipo di elemento \"%s"
+
+#~ msgid "Prometheus API endpoint"
+#~ msgstr "Endpoint API di Prometheus"
+
+#~ msgid ""
+#~ "The full URL to the Prometheus API endpoint including the protocol (http "
+#~ "or https). OpenShift exposes such endpoints via a route in the openshift-"
+#~ "monitoring namespace called prometheus-k8s."
+#~ msgstr ""
+#~ "L'URL completo dell'endpoint API di Prometheus, compreso il protocollo "
+#~ "(http o https). OpenShift espone tali endpoint tramite una rotta nello "
+#~ "spazio dei nomi openshift-monitoring chiamata prometheus-k8s."
+
+#~ msgid "Use data from OpenShift"
+#~ msgstr "Utilizzare i dati di OpenShift"
+
+#, fuzzy
+#~ msgid "Check certificate credentials"
+#~ msgstr "Controllare i certificati"
+
+#, fuzzy
+#~ msgid "Check secret credentials"
+#~ msgstr "Utilizzare le credenziali"
+
+#, fuzzy
+#~ msgid "Ignore if older than"
+#~ msgstr "Attenzione se più vecchio di"
+
+#, fuzzy
+#~ msgid "A fatal error occurred:"
+#~ msgstr "Si sono verificati %d errori:"
+
+#, fuzzy
+#~ msgid "Validation error"
+#~ msgstr "Errore di configurazione"
+
+#, fuzzy
+#~ msgid "Fatal error"
+#~ msgstr "Errore interno"
+
 #, fuzzy
 #~ msgid "At least one custom query is required."
 #~ msgstr "Stato quando il file manca"
@@ -95563,14 +95624,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Resource attribute for hostname lookup"
 #~ msgstr "Calcolo del nome host"
-
-#, fuzzy
-#~ msgid "Time until certificate credentials expiration"
-#~ msgstr "Tempo fino alla scadenza delle credenziali"
-
-#, fuzzy
-#~ msgid "Time until secret credentials expiration"
-#~ msgstr "Tempo fino alla scadenza delle credenziali"
 
 #, fuzzy
 #~ msgid ""

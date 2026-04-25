@@ -4,9 +4,9 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
+"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2026-04-21 05:05+0000\n"
+"PO-Revision-Date: 2026-04-24 17:50+0000\n"
 "Language-Team: Japanese <https://translate.checkmk.com/projects/checkmk/"
 "stable/ja/>\n"
 "Language: ja\n"
@@ -154,6 +154,10 @@ msgid ""
 "search\" setting in the View configuration. <br>This removes the need to "
 "click \"Apply filters\""
 msgstr ""
+" コンテンツを表示するには、「フィルター」パネル内の 「<b>フィルターを適用</"
+"b>」をクリックしてください。<br><br>コンテンツをデフォルトで表示するには、表"
+"示設定で「検索時のみデータを表示」の設定を無効にしてください。<br>これによ"
+"り、「フィルターを適用」をクリックする必要がなくなります"
 
 #, python-format
 msgid " and %s '%s'"
@@ -1426,13 +1430,11 @@ msgstr ""
 "フィルタを無視して監視する：</b><br>明示的な名前を指定するには、このオプショ"
 "ンを使用します。これらのサービスでは、全体的なタグは無視されます。"
 
-msgid "<b>Negate:</b> make rule apply for <b>all but</b> the above entries"
-msgstr ""
-"<b>否定:</b> 上記のエントリを <b>除く</b> すべてのエントリにルールを適用する"
+msgid "<b>Negate:</b> apply to <b>all</b> except listed entries above"
+msgstr "<b>負:</b> 上記にリストされた項目を除く <b>すべて</b> に適用する"
 
-msgid "<b>Negate:</b> make rule apply for <b>all but</b> the above hosts"
-msgstr ""
-"<b>否定:</b> 上記のホストを <b>除く</b> すべてのホストにルールを適用する"
+msgid "<b>Negate:</b> apply to <b>all</b> except listed hosts above"
+msgstr "<b>負:</b> 上記にリストされたホストを除く <b>すべて</b> に適用する"
 
 #, python-format
 msgid ""
@@ -38453,8 +38455,8 @@ msgid ""
 msgstr ""
 "プロセスヒープが割り当てようとする総メモリの最大量。このオプションは、利用可"
 "能な総メモリからハードメモリ制限を計算するために使用されます。例えば、利用可"
-"能な総メモリが1000 MiBのリミット75%でマシンで制限を75%のすると、750 MiBのハー"
-"ド制限が適用されます。"
+"能な総メモリが1000 MiBのリミット75%でマシンで制限を75%のすると、750 MiBの"
+"ハード制限が適用されます。"
 
 msgid "Maximum bulk size"
 msgstr "最大バルクサイズ"
@@ -59086,9 +59088,8 @@ msgstr "レプリケーション状態が同期しているときの状態"
 msgid "State when replication state is unknown"
 msgstr "レプリケーション状態が不明な場合の状態"
 
-#, fuzzy
 msgid "State when reported device status is OK"
-msgstr "レポート時のデバイスステータスがUpの場合"
+msgstr "報告されたデバイスステータスがOKの場合の状態"
 
 msgid "State when reported device status is Present"
 msgstr "レポート時のデバイスステータスがPresentの場合"
@@ -74537,11 +74538,11 @@ msgstr "フォームに渡された'throttling'の値が想定外です。"
 
 #, python-format
 msgid "Unexpected SNMPv3 credentials shape: tuple of length %d"
-msgstr ""
+msgstr "予期しない SNMPv3 認証情報の形式: 長さ%dのタプル"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Unexpected SNMPv3 credentials type: %s"
-msgstr "SNMPv3資格情報"
+msgstr "予期しないSNMPv3認証情報タイプ: %s"
 
 #, python-format
 msgid ""

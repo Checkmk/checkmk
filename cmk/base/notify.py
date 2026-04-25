@@ -34,7 +34,7 @@ import sys
 import time
 import traceback
 import uuid
-from collections.abc import Callable, Iterable, Mapping, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from contextlib import suppress
 from dataclasses import dataclass, field
 from functools import partial
@@ -45,6 +45,7 @@ import livestatus
 from livestatus import MKLivestatusException
 
 import cmk.ccc.debug
+import cmk.ccc.version as cmk_version
 import cmk.utils.paths
 import cmk.utils.timeperiod
 from cmk.automations.backends.helper import AutomationHelperUnavailable, HelperExecutor
@@ -63,9 +64,6 @@ from cmk.base.automations.automations import (
     load_plugins,
 )
 from cmk.base.base_app import CheckmkBaseApp
-from cmk.base.config import (
-    ConfigCache,
-)
 from cmk.base.modes.modes import Mode, Option
 from cmk.base.utils import register_sigint_handler
 from cmk.ccc import store
@@ -174,6 +172,68 @@ class NotificationEntry:
 Notifications = list[NotificationEntry]
 
 _FallbackFormat = tuple[NotificationPluginNameStr, NotifyPluginParamsDict]
+
+
+@dataclass(frozen=True, kw_only=True)
+class NotificationConfig:
+    rules: Sequence[EventRule]
+    parameters: NotificationParameterSpecs
+    backlog_size: int
+    bulk_interval: int
+    fallback_email: str
+    fallback_format: _FallbackFormat
+    plugin_timeout: int
+    spooling: Literal["local", "remote", "both", "off"]
+    logging_level: int
+
+
+def resolve_logging_level(notification_logging: int) -> int:
+    # The former values 1 and 2 are mapped to the values 20 (default) and 10 (debug)
+    # which agree with the values used in cmk/utils/log.py.
+    # The deprecated value 0 is transformed to the default logging value.
+    if notification_logging in (0, 1):
+        return 20
+    if notification_logging == 2:
+        return 10
+    return notification_logging
+
+
+def resolve_spooling(
+    notification_spooling: bool | Literal["local", "remote", "both", "off"] | None,
+    notification_spool_to: object,
+) -> Literal["local", "remote", "both", "off"]:
+    if notification_spool_to:
+        # Legacy tuple format: (remote_host, tcp_port, also_local)
+        if (
+            isinstance(notification_spool_to, tuple)
+            and len(notification_spool_to) >= 3
+            and notification_spool_to[2]
+        ):
+            return "both"
+        return "remote"
+
+    if notification_spooling and isinstance(notification_spooling, str):
+        return notification_spooling
+
+    # Edition-aware default value
+    if cmk_version.edition(cmk.utils.paths.omd_root) is cmk_version.Edition.COMMUNITY:
+        return "off"
+    return "local"
+
+
+def make_notification_config(loaded_config: config.LoadingResult) -> NotificationConfig:
+    lc = loaded_config.loaded_config
+    return NotificationConfig(
+        rules=lc.notification_rules,
+        parameters=lc.notification_parameter,
+        backlog_size=lc.notification_backlog,
+        bulk_interval=lc.notification_bulk_interval,
+        fallback_email=lc.notification_fallback_email,
+        fallback_format=lc.notification_fallback_format,
+        plugin_timeout=lc.notification_plugin_timeout,
+        spooling=resolve_spooling(lc.notification_spooling, lc.notification_spool_to),
+        logging_level=resolve_logging_level(lc.notification_logging),
+    )
 
 
 type _CoreTimeperiodsActive = Mapping[str, bool]
@@ -311,20 +371,12 @@ def _mode_notify(app: CheckmkBaseApp, options: dict, args: list[str]) -> int | N
     return do_notify(
         options,
         args,
+        notification_config=make_notification_config(loading_result),
         define_servicegroups=loading_result.loaded_config.define_servicegroups,
         host_parameters_cb=loading_result.config_cache.notification_plugin_parameters,
-        rules=config.notification_rules,
-        parameters=config.notification_parameter,
         get_http_proxy=make_http_proxy_getter(loading_result.loaded_config.http_proxies),
         ensure_nagios=make_ensure_nagios(loading_result.loaded_config.monitoring_core),
-        bulk_interval=config.notification_bulk_interval,
-        plugin_timeout=config.notification_plugin_timeout,
         config_contacts=loading_result.loaded_config.contacts,
-        fallback_email=config.notification_fallback_email,
-        fallback_format=config.notification_fallback_format,
-        spooling=config.ConfigCache.notification_spooling(),
-        backlog_size=config.notification_backlog,
-        logging_level=config.ConfigCache.notification_logging_level(),
         keepalive=keepalive,
         all_timeperiods=timeperiod.get_all_timeperiods(loading_result.loaded_config.timeperiods),
         timeperiods_active=timeperiod.TimeperiodActiveCoreLookup(
@@ -401,20 +453,12 @@ def do_notify(
     options: dict[str, bool],
     args: list[str],
     *,
-    rules: Iterable[EventRule],
-    parameters: NotificationParameterSpecs,
+    notification_config: NotificationConfig,
     define_servicegroups: Mapping[str, str],
     get_http_proxy: events.ProxyGetter,
     host_parameters_cb: Callable[[HostName, NotificationPluginNameStr], Mapping[str, object]],
     ensure_nagios: Callable[[str], object],
     config_contacts: ConfigContacts,
-    fallback_email: str,
-    fallback_format: _FallbackFormat,
-    bulk_interval: int,
-    plugin_timeout: int,
-    spooling: Literal["local", "remote", "both", "off"],
-    backlog_size: int,
-    logging_level: int,
     keepalive: bool,
     all_timeperiods: TimeperiodSpecs,
     timeperiods_active: _CoreTimeperiodsActive,
@@ -424,7 +468,7 @@ def do_notify(
 
     notification_logdir.mkdir(parents=True, exist_ok=True)
     notification_spooldir.mkdir(parents=True, exist_ok=True)
-    _initialize_logging(logging_level)
+    _initialize_logging(notification_config.logging_level)
 
     try:
         notify_mode = "notify"
@@ -450,16 +494,10 @@ def do_notify(
                 filename,
                 host_parameters_cb,
                 get_http_proxy,
-                rules=rules,
-                parameters=parameters,
+                notification_config=notification_config,
                 define_servicegroups=define_servicegroups,
                 config_contacts=config_contacts,
-                fallback_email=fallback_email,
-                fallback_format=fallback_format,
-                plugin_timeout=plugin_timeout,
                 all_timeperiods=all_timeperiods,
-                spooling=spooling,
-                backlog_size=backlog_size,
                 timeperiods_active=timeperiods_active,
             )
 
@@ -468,17 +506,9 @@ def do_notify(
                 host_parameters_cb,
                 get_http_proxy,
                 ensure_nagios,
-                rules=rules,
-                parameters=parameters,
+                notification_config=notification_config,
                 define_servicegroups=define_servicegroups,
-                bulk_interval=bulk_interval,
-                fallback_email=fallback_email,
-                fallback_format=fallback_format,
-                plugin_timeout=plugin_timeout,
                 config_contacts=config_contacts,
-                spooling=spooling,
-                backlog_size=backlog_size,
-                logging_level=logging_level,
                 all_timeperiods=all_timeperiods,
             )
         elif notify_mode == "replay":
@@ -492,16 +522,9 @@ def do_notify(
                 host_parameters_cb,
                 get_http_proxy,
                 ensure_nagios,
-                rules=rules,
-                parameters=parameters,
+                notification_config=notification_config,
                 define_servicegroups=define_servicegroups,
                 config_contacts=config_contacts,
-                fallback_email=fallback_email,
-                fallback_format=fallback_format,
-                plugin_timeout=plugin_timeout,
-                spooling=spooling,
-                backlog_size=backlog_size,
-                logging_level=logging_level,
                 all_timeperiods=all_timeperiods,
             )
         elif notify_mode == "test":
@@ -512,16 +535,9 @@ def do_notify(
                 host_parameters_cb,
                 get_http_proxy,
                 ensure_nagios,
-                rules=rules,
-                parameters=parameters,
+                notification_config=notification_config,
                 define_servicegroups=define_servicegroups,
                 config_contacts=config_contacts,
-                fallback_email=fallback_email,
-                fallback_format=fallback_format,
-                plugin_timeout=plugin_timeout,
-                spooling=spooling,
-                backlog_size=backlog_size,
-                logging_level=logging_level,
                 all_timeperiods=all_timeperiods,
             )
         elif notify_mode == "stdin":
@@ -531,24 +547,17 @@ def do_notify(
                 host_parameters_cb,
                 get_http_proxy,
                 ensure_nagios,
-                rules=rules,
-                parameters=parameters,
+                notification_config=notification_config,
                 define_servicegroups=define_servicegroups,
                 config_contacts=config_contacts,
-                fallback_email=fallback_email,
-                fallback_format=fallback_format,
-                plugin_timeout=plugin_timeout,
-                spooling=spooling,
-                backlog_size=backlog_size,
-                logging_level=logging_level,
                 all_timeperiods=all_timeperiods,
             )
         elif notify_mode == "send-bulks":
             _send_ripe_bulks(
                 get_http_proxy,
                 timeperiods_active,
-                bulk_interval=bulk_interval,
-                plugin_timeout=plugin_timeout,
+                bulk_interval=notification_config.bulk_interval,
+                plugin_timeout=notification_config.plugin_timeout,
             )
         else:
             _notify_notify(
@@ -557,16 +566,9 @@ def do_notify(
                 host_parameters_cb,
                 get_http_proxy,
                 ensure_nagios,
-                rules=rules,
-                parameters=parameters,
+                notification_config=notification_config,
                 define_servicegroups=define_servicegroups,
                 config_contacts=config_contacts,
-                fallback_email=fallback_email,
-                fallback_format=fallback_format,
-                plugin_timeout=plugin_timeout,
-                spooling=spooling,
-                backlog_size=backlog_size,
-                logging_level=logging_level,
                 all_timeperiods=all_timeperiods,
             )
 
@@ -588,16 +590,9 @@ def _notify_notify(
     get_http_proxy: events.ProxyGetter,
     ensure_nagios: Callable[[str], object],
     *,
-    rules: Iterable[EventRule],
-    parameters: NotificationParameterSpecs,
+    notification_config: NotificationConfig,
     define_servicegroups: Mapping[str, str],
     config_contacts: ConfigContacts,
-    fallback_email: str,
-    fallback_format: _FallbackFormat,
-    spooling: Literal["local", "remote", "both", "off"],
-    plugin_timeout: int,
-    backlog_size: int,
-    logging_level: int,
     all_timeperiods: TimeperiodSpecs,
     analyse: bool = False,
     dispatch: str = "",
@@ -615,13 +610,13 @@ def _notify_notify(
     enriched_context = events.complete_raw_context(
         raw_context,
         ensure_nagios,
-        with_dump=logging_level <= 10,
+        with_dump=notification_config.logging_level <= 10,
         contacts_needed=True,
         analyse=analyse,
     )
 
     if not analyse:
-        store_notification_backlog(enriched_context, backlog_size=backlog_size)
+        store_notification_backlog(enriched_context, backlog_size=notification_config.backlog_size)
 
     logger.info("----------------------------------------------------------------------")
     if analyse:
@@ -644,26 +639,21 @@ def _notify_notify(
     enriched_context["LOGDIR"] = str(notification_logdir)
 
     # Spool notification to remote host, if this is enabled
-    if spooling in ("remote", "both"):
+    if notification_config.spooling in ("remote", "both"):
         create_spool_file(
             logger,
             notification_spooldir,
             NotificationForward({"context": enriched_context, "forward": True}),
         )
 
-    if spooling != "remote":
+    if notification_config.spooling != "remote":
         return _locally_deliver_raw_context(
             enriched_context,
             host_parameters_cb,
             get_http_proxy,
-            rules=rules,
-            parameters=parameters,
+            notification_config=notification_config,
             define_servicegroups=define_servicegroups,
-            spooling=spooling,
             config_contacts=config_contacts,
-            fallback_email=fallback_email,
-            fallback_format=fallback_format,
-            plugin_timeout=plugin_timeout,
             all_timeperiods=all_timeperiods,
             analyse=analyse,
             dispatch=dispatch,
@@ -677,14 +667,9 @@ def _locally_deliver_raw_context(
     host_parameters_cb: Callable[[HostName, NotificationPluginNameStr], Mapping[str, object]],
     get_http_proxy: events.ProxyGetter,
     *,
-    rules: Iterable[EventRule],
-    parameters: NotificationParameterSpecs,
+    notification_config: NotificationConfig,
     define_servicegroups: Mapping[str, str],
-    spooling: Literal["local", "remote", "both", "off"],
     config_contacts: ConfigContacts,
-    fallback_email: str,
-    fallback_format: _FallbackFormat,
-    plugin_timeout: int,
     all_timeperiods: TimeperiodSpecs,
     analyse: bool = False,
     dispatch: str = "",
@@ -696,14 +681,9 @@ def _locally_deliver_raw_context(
             enriched_context,
             host_parameters_cb,
             get_http_proxy,
+            notification_config=notification_config,
             define_servicegroups=define_servicegroups,
-            spooling=spooling,
             config_contacts=config_contacts,
-            fallback_email=fallback_email,
-            fallback_format=fallback_format,
-            plugin_timeout=plugin_timeout,
-            rules=rules,
-            parameters=parameters,
             all_timeperiods=all_timeperiods,
             analyse=analyse,
             dispatch=dispatch,
@@ -724,22 +704,15 @@ def _notification_replay_backlog(
     ensure_nagios: Callable[[str], object],
     nr: int,
     *,
-    rules: Iterable[EventRule],
-    parameters: NotificationParameterSpecs,
+    notification_config: NotificationConfig,
     define_servicegroups: Mapping[str, str],
     config_contacts: ConfigContacts,
-    fallback_email: str,
-    fallback_format: _FallbackFormat,
-    plugin_timeout: int,
-    spooling: Literal["local", "remote", "both", "off"],
-    backlog_size: int,
-    logging_level: int,
     all_timeperiods: TimeperiodSpecs,
     timeperiods_active: _CoreTimeperiodsActive,
 ) -> None:
     global notify_mode
     notify_mode = "replay"
-    _initialize_logging(logging_level)
+    _initialize_logging(notification_config.logging_level)
     raw_context = raw_context_from_backlog(nr)
     _notify_notify(
         raw_context,
@@ -747,16 +720,9 @@ def _notification_replay_backlog(
         host_parameters_cb,
         get_http_proxy,
         ensure_nagios,
-        rules=rules,
-        parameters=parameters,
+        notification_config=notification_config,
         define_servicegroups=define_servicegroups,
         config_contacts=config_contacts,
-        fallback_email=fallback_email,
-        fallback_format=fallback_format,
-        plugin_timeout=plugin_timeout,
-        spooling=spooling,
-        backlog_size=backlog_size,
-        logging_level=logging_level,
         all_timeperiods=all_timeperiods,
     )
 
@@ -767,22 +733,15 @@ def _notification_analyse_backlog(
     ensure_nagios: Callable[[str], object],
     nr: int,
     *,
-    rules: Iterable[EventRule],
-    parameters: NotificationParameterSpecs,
+    notification_config: NotificationConfig,
     define_servicegroups: Mapping[str, str],
     config_contacts: ConfigContacts,
-    fallback_email: str,
-    fallback_format: _FallbackFormat,
-    plugin_timeout: int,
-    spooling: Literal["local", "remote", "both", "off"],
-    backlog_size: int,
-    logging_level: int,
     all_timeperiods: TimeperiodSpecs,
     timeperiods_active: _CoreTimeperiodsActive,
 ) -> NotifyAnalysisInfo | None:
     global notify_mode
     notify_mode = "replay"
-    _initialize_logging(logging_level)
+    _initialize_logging(notification_config.logging_level)
     raw_context = raw_context_from_backlog(nr)
     return _notify_notify(
         raw_context,
@@ -790,16 +749,9 @@ def _notification_analyse_backlog(
         host_parameters_cb,
         get_http_proxy,
         ensure_nagios,
-        rules=rules,
-        parameters=parameters,
+        notification_config=notification_config,
         define_servicegroups=define_servicegroups,
         config_contacts=config_contacts,
-        fallback_email=fallback_email,
-        fallback_format=fallback_format,
-        plugin_timeout=plugin_timeout,
-        spooling=spooling,
-        backlog_size=backlog_size,
-        logging_level=logging_level,
         all_timeperiods=all_timeperiods,
         analyse=True,
     )
@@ -811,23 +763,16 @@ def _notification_test(
     get_http_proxy: events.ProxyGetter,
     ensure_nagios: Callable[[str], object],
     *,
-    rules: Iterable[EventRule],
-    parameters: NotificationParameterSpecs,
+    notification_config: NotificationConfig,
     define_servicegroups: Mapping[str, str],
     config_contacts: ConfigContacts,
-    fallback_email: str,
-    fallback_format: _FallbackFormat,
-    plugin_timeout: int,
-    spooling: Literal["local", "remote", "both", "off"],
-    backlog_size: int,
-    logging_level: int,
     all_timeperiods: TimeperiodSpecs,
     dispatch: str = "",
     timeperiods_active: _CoreTimeperiodsActive,
 ) -> NotifyAnalysisInfo | None:
     global notify_mode
     notify_mode = "test"
-    _initialize_logging(logging_level)
+    _initialize_logging(notification_config.logging_level)
 
     contact_list = raw_context["CONTACTS"].split(",")
     if "check-mk-notify" in contact_list:
@@ -842,16 +787,9 @@ def _notification_test(
         host_parameters_cb,
         get_http_proxy,
         ensure_nagios,
-        rules=rules,
-        parameters=parameters,
+        notification_config=notification_config,
         define_servicegroups=define_servicegroups,
         config_contacts=config_contacts,
-        fallback_email=fallback_email,
-        fallback_format=fallback_format,
-        plugin_timeout=plugin_timeout,
-        spooling=spooling,
-        backlog_size=backlog_size,
-        logging_level=logging_level,
         all_timeperiods=all_timeperiods,
         analyse=True,
         dispatch=dispatch,
@@ -878,44 +816,29 @@ def _notify_keepalive(
     get_http_proxy: events.ProxyGetter,
     ensure_nagios: Callable[[str], object],
     *,
-    rules: Iterable[EventRule],
-    parameters: NotificationParameterSpecs,
+    notification_config: NotificationConfig,
     define_servicegroups: Mapping[str, str],
-    fallback_email: str,
-    fallback_format: _FallbackFormat,
     config_contacts: ConfigContacts,
-    plugin_timeout: int,
-    bulk_interval: int,
-    spooling: Literal["local", "remote", "both", "off"],
-    backlog_size: int,
-    logging_level: int,
     all_timeperiods: TimeperiodSpecs,
 ) -> None:
     events.event_keepalive(
         event_function=partial(
             _notify_notify,
-            define_servicegroups=define_servicegroups,
             host_parameters_cb=host_parameters_cb,
             get_http_proxy=get_http_proxy,
             ensure_nagios=ensure_nagios,
-            rules=rules,
-            parameters=parameters,
-            fallback_email=fallback_email,
-            fallback_format=fallback_format,
+            notification_config=notification_config,
+            define_servicegroups=define_servicegroups,
             config_contacts=config_contacts,
-            plugin_timeout=plugin_timeout,
-            spooling=spooling,
-            backlog_size=backlog_size,
-            logging_level=logging_level,
             all_timeperiods=all_timeperiods,
         ),
         call_every_loop=partial(
             _send_ripe_bulks,
             get_http_proxy,
-            bulk_interval=bulk_interval,
-            plugin_timeout=plugin_timeout,
+            bulk_interval=notification_config.bulk_interval,
+            plugin_timeout=notification_config.plugin_timeout,
         ),
-        loop_interval=bulk_interval,
+        loop_interval=notification_config.bulk_interval,
     )
 
 
@@ -939,16 +862,9 @@ def _automation_notification_replay(
         http_proxy_config.make_http_proxy_getter(loading_result.loaded_config.http_proxies),
         make_ensure_nagios(loading_result.loaded_config.monitoring_core),
         int(nr),
-        rules=config.notification_rules,
-        parameters=config.notification_parameter,
+        notification_config=make_notification_config(loading_result),
         define_servicegroups=loading_result.loaded_config.define_servicegroups,
         config_contacts=loading_result.loaded_config.contacts,
-        fallback_email=config.notification_fallback_email,
-        fallback_format=config.notification_fallback_format,
-        plugin_timeout=config.notification_plugin_timeout,
-        spooling=ConfigCache.notification_spooling(),
-        backlog_size=config.notification_backlog,
-        logging_level=ConfigCache.notification_logging_level(),
         all_timeperiods=get_all_timeperiods(loading_result.loaded_config.timeperiods),
         timeperiods_active=cmk.utils.timeperiod.TimeperiodActiveCoreLookup(
             livestatus.get_optional_timeperiods_active_map, log=logger.warning
@@ -978,16 +894,9 @@ def _automation_notification_analyse(
             http_proxy_config.make_http_proxy_getter(loading_result.loaded_config.http_proxies),
             make_ensure_nagios(loading_result.loaded_config.monitoring_core),
             int(nr),
-            rules=config.notification_rules,
-            parameters=config.notification_parameter,
+            notification_config=make_notification_config(loading_result),
             define_servicegroups=loading_result.loaded_config.define_servicegroups,
             config_contacts=loading_result.loaded_config.contacts,
-            fallback_email=config.notification_fallback_email,
-            fallback_format=config.notification_fallback_format,
-            plugin_timeout=config.notification_plugin_timeout,
-            spooling=ConfigCache.notification_spooling(),
-            backlog_size=config.notification_backlog,
-            logging_level=ConfigCache.notification_logging_level(),
             all_timeperiods=get_all_timeperiods(loading_result.loaded_config.timeperiods),
             timeperiods_active=cmk.utils.timeperiod.TimeperiodActiveCoreLookup(
                 livestatus.get_optional_timeperiods_active_map, log=logger.warning
@@ -1020,16 +929,9 @@ def _automation_notification_test(
             loading_result.config_cache.notification_plugin_parameters,
             http_proxy_config.make_http_proxy_getter(loading_result.loaded_config.http_proxies),
             ensure_nagios,
-            rules=config.notification_rules,
-            parameters=config.notification_parameter,
+            notification_config=make_notification_config(loading_result),
             define_servicegroups=loading_result.loaded_config.define_servicegroups,
             config_contacts=loading_result.loaded_config.contacts,
-            fallback_email=config.notification_fallback_email,
-            fallback_format=config.notification_fallback_format,
-            plugin_timeout=config.notification_plugin_timeout,
-            spooling=ConfigCache.notification_spooling(),
-            backlog_size=config.notification_backlog,
-            logging_level=ConfigCache.notification_logging_level(),
             all_timeperiods=get_all_timeperiods(loading_result.loaded_config.timeperiods),
             dispatch=dispatch,
             timeperiods_active=cmk.utils.timeperiod.TimeperiodActiveCoreLookup(
@@ -1047,10 +949,16 @@ def _automation_get_bulks(
 ) -> NotificationGetBulksResult:
     only_ripe = args[0] == "1"
     logger = logging.getLogger("cmk.base.automations")  # this might go nowhere.
+    if loading_result is None:
+        loading_result = load_config(
+            discovery_rulesets=(),
+            get_builtin_host_labels=ctx.get_builtin_host_labels,
+            edition=ctx.edition,
+        )
     return NotificationGetBulksResult(
         _find_bulks(
             only_ripe,
-            bulk_interval=config.notification_bulk_interval,
+            bulk_interval=loading_result.loaded_config.notification_bulk_interval,
             timeperiods_active=cmk.utils.timeperiod.TimeperiodActiveCoreLookup(
                 livestatus.get_optional_timeperiods_active_map, log=logger.warning
             ),
@@ -1098,14 +1006,9 @@ def _notify_rulebased(
     host_parameters_cb: Callable[[HostName, NotificationPluginNameStr], Mapping[str, object]],
     get_http_proxy: events.ProxyGetter,
     *,
-    rules: Iterable[EventRule],
-    parameters: NotificationParameterSpecs,
+    notification_config: NotificationConfig,
     define_servicegroups: Mapping[str, str],
-    spooling: Literal["local", "remote", "both", "off"],
     config_contacts: ConfigContacts,
-    fallback_email: str,
-    fallback_format: _FallbackFormat,
-    plugin_timeout: int,
     all_timeperiods: TimeperiodSpecs,
     analyse: bool = False,
     dispatch: str = "",
@@ -1122,7 +1025,9 @@ def _notify_rulebased(
     rule_info = []
 
     for nr, rule in enumerate(
-        itertools.chain(rules, user_notification_rules(config_contacts=config_contacts))
+        itertools.chain(
+            notification_config.rules, user_notification_rules(config_contacts=config_contacts)
+        )
     ):
         contact_info = _get_contact_info_text(rule)
 
@@ -1146,12 +1051,12 @@ def _notify_rulebased(
             notifications, rule_info = _create_notifications(
                 enriched_context,
                 rule,
-                parameters,
+                notification_config.parameters,
                 notifications,
                 rule_info,
                 host_parameters_cb,
                 config_contacts=config_contacts,
-                fallback_email=fallback_email,
+                fallback_email=notification_config.fallback_email,
                 rule_nr=nr,
                 timeperiods_active=timeperiods_active,
             )
@@ -1159,15 +1064,15 @@ def _notify_rulebased(
     plugin_info = _process_notifications(
         enriched_context,
         notifications,
-        parameters,
+        notification_config.parameters,
         num_rule_matches,
         host_parameters_cb,
         get_http_proxy,
         config_contacts=config_contacts,
-        fallback_email=fallback_email,
-        fallback_format=fallback_format,
-        plugin_timeout=plugin_timeout,
-        spooling=spooling,
+        fallback_email=notification_config.fallback_email,
+        fallback_format=notification_config.fallback_format,
+        plugin_timeout=notification_config.plugin_timeout,
+        spooling=notification_config.spooling,
         analyse=analyse,
         dispatch=dispatch,
     )
@@ -2343,16 +2248,11 @@ def _handle_spoolfile(
     spoolfile: str,
     host_parameters_cb: Callable[[HostName, NotificationPluginNameStr], Mapping[str, object]],
     get_http_proxy: events.ProxyGetter,
-    rules: Iterable[EventRule],
-    parameters: NotificationParameterSpecs,
+    *,
+    notification_config: NotificationConfig,
     define_servicegroups: Mapping[str, str],
     config_contacts: ConfigContacts,
-    fallback_email: str,
-    fallback_format: _FallbackFormat,
-    plugin_timeout: int,
     all_timeperiods: TimeperiodSpecs,
-    spooling: Literal["local", "remote", "both", "off"],
-    backlog_size: int,
     timeperiods_active: _CoreTimeperiodsActive,
 ) -> int:
     notif_uuid = spoolfile.rsplit("/", 1)[-1]
@@ -2383,7 +2283,7 @@ def _handle_spoolfile(
             return call_notification_script(
                 plugin_name=plugin_name,
                 plugin_context=plugin_context,
-                plugin_timeout=plugin_timeout,
+                plugin_timeout=notification_config.plugin_timeout,
                 is_spoolfile=True,
             )
 
@@ -2397,19 +2297,14 @@ def _handle_spoolfile(
             events.find_host_service_in_context(raw_context),
         )
 
-        store_notification_backlog(raw_context, backlog_size=backlog_size)
+        store_notification_backlog(raw_context, backlog_size=notification_config.backlog_size)
         _locally_deliver_raw_context(
             raw_context,
             host_parameters_cb,
             get_http_proxy,
-            rules=rules,
-            parameters=parameters,
+            notification_config=notification_config,
             define_servicegroups=define_servicegroups,
             config_contacts=config_contacts,
-            plugin_timeout=plugin_timeout,
-            fallback_email=fallback_email,
-            fallback_format=fallback_format,
-            spooling=spooling,
             all_timeperiods=all_timeperiods,
             timeperiods_active=timeperiods_active,
         )

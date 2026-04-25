@@ -27,7 +27,14 @@ from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.rrd import RRDObjectConfig
 from cmk.utils.host_storage import FolderAttributesForBase
 from cmk.utils.http_proxy_config import HTTPProxySpec
-from cmk.utils.notify_types import Contact, ContactName, EventRule
+from cmk.utils.notify_types import (
+    Contact,
+    ContactName,
+    EventRule,
+    NotificationParameterSpecs,
+    NotificationPluginNameStr,
+    NotifyPluginParamsDict,
+)
 from cmk.utils.oauth2_connection import OAuth2Connection
 from cmk.utils.rulesets import ruleset_matcher, RuleSetName
 from cmk.utils.rulesets.ruleset_matcher import RuleSpec
@@ -188,3 +195,13 @@ class LoadedConfigFragment:
     cmc_host_limit: int | None
     cmc_service_limit: int | None
     cmc_store_params_in_config: bool
+    notification_rules: Sequence[EventRule]
+    notification_parameter: NotificationParameterSpecs
+    notification_backlog: int
+    notification_bulk_interval: int
+    notification_fallback_email: str
+    notification_fallback_format: tuple[NotificationPluginNameStr, NotifyPluginParamsDict]
+    notification_plugin_timeout: int
+    notification_logging: int
+    notification_spooling: bool | Literal["local", "remote", "both", "off"] | None
+    notification_spool_to: object

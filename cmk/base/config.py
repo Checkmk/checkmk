@@ -790,6 +790,16 @@ def _perform_post_config_loading_actions(
         cmc_host_limit=cmc_host_limit,
         cmc_service_limit=cmc_service_limit,
         cmc_store_params_in_config=cmc_store_params_in_config,
+        notification_rules=notification_rules,
+        notification_parameter=notification_parameter,
+        notification_backlog=notification_backlog,
+        notification_bulk_interval=notification_bulk_interval,
+        notification_fallback_email=notification_fallback_email,
+        notification_fallback_format=notification_fallback_format,
+        notification_plugin_timeout=notification_plugin_timeout,
+        notification_logging=notification_logging,
+        notification_spooling=notification_spooling,
+        notification_spool_to=notification_spool_to,
     )
 
     config_cache = ConfigCache(loaded_config, get_builtin_host_labels, edition).initialize(
@@ -2817,33 +2827,6 @@ class ConfigCache:
     ) -> CheckmkCheckParameters:
         # 'for_relay' only passed into this function to ensure consistency between callsites
         return CheckmkCheckParameters(enabled=not self.is_ping_host(host_name) or for_relay)
-
-    @staticmethod
-    def notification_logging_level() -> int:
-        # The former values 1 and 2 are mapped to the values 20 (default) and 10 (debug)
-        # which agree with the values used in cmk/utils/log.py.
-        # The deprecated value 0 is transformed to the default logging value.
-        if notification_logging in (0, 1):
-            return 20
-        if notification_logging == 2:
-            return 10
-        return notification_logging
-
-    @staticmethod
-    def notification_spooling() -> Literal["local", "remote", "both", "off"]:
-        if notification_spool_to:
-            if notification_spool_to[2]:
-                return "both"
-            return "remote"
-
-        if notification_spooling and isinstance(notification_spooling, str):
-            return notification_spooling
-
-        # Edition-aware default value
-        if cmk_version.edition(cmk.utils.paths.omd_root) is cmk_version.Edition.COMMUNITY:
-            return "off"
-
-        return "local"
 
     def notification_plugin_parameters(
         self,

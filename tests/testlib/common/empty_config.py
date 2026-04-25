@@ -161,6 +161,16 @@ EMPTY_CONFIG = LoadedConfigFragment(
     cmc_host_limit=None,
     cmc_service_limit=None,
     cmc_store_params_in_config=False,
+    notification_rules=[],
+    notification_parameter={},
+    notification_backlog=10,
+    notification_bulk_interval=10,
+    notification_fallback_email="",
+    notification_fallback_format=("asciimail", {}),
+    notification_plugin_timeout=60,
+    notification_logging=15,
+    notification_spooling=None,
+    notification_spool_to=None,
 )
 
 

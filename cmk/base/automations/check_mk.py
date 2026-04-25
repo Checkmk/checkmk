@@ -4459,6 +4459,11 @@ def _automation_find_unknown_check_parameter_rule_sets(
     loaded_config: config.LoadingResult | None,
 ) -> UnknownCheckParameterRuleSetsResult:
     plugins = plugins or load_plugins()  # do we really still need this?
+    loaded_config = loaded_config or load_config(
+        discovery_rulesets=(),
+        get_builtin_host_labels=ctx.get_builtin_host_labels,
+        edition=ctx.edition,
+    )
     known_check_rule_sets = {
         str(plugin.check_ruleset_name)
         for plugin in plugins.check_plugins.values()
@@ -4467,7 +4472,7 @@ def _automation_find_unknown_check_parameter_rule_sets(
     return UnknownCheckParameterRuleSetsResult(
         [
             rule_set
-            for rule_set in config.checkgroup_parameters
+            for rule_set in loaded_config.loaded_config.checkgroup_parameters
             if rule_set not in known_check_rule_sets
         ]
     )

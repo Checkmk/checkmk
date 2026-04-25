@@ -43,7 +43,6 @@ def pong_received_message(stdout: IO[str], wait_for: int) -> bool:
     return False
 
 
-@pytest.mark.skip("https://tribe29.slack.com/archives/C085MHGLPJ6/p1774342431437719")
 @pytest.mark.skip_if_edition("cloud")
 class TestCMKBrokerTest:
     """Make sure our cmk-broker-test tool works"""

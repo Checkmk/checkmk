@@ -610,6 +610,8 @@ def load_packed_config(
     discovery_rulesets: Iterable[RuleSetName],
     get_builtin_host_labels: Callable[[SiteId], Labels],
     edition: cmk_version.Edition,
+    ipaddresses_override: Mapping[HostName, HostAddress] | None = None,
+    ipv6addresses_override: Mapping[HostName, HostAddress] | None = None,
 ) -> LoadingResult:
     """Load the configuration for the CMK helpers of CMC
 
@@ -626,6 +628,18 @@ def load_packed_config(
     """
     _initialize_config()
     globals().update(PackedConfigStore.from_serial(config_path).read())
+
+    # Used by the precompiled host check, which resolves the addresses dynamically
+    # at config-generation time (potentially via DNS) and ships them in the template.
+    # We set them here to ensure we have a consistent state in case we still access
+    # the global state. Once we pass the argument down cleanly, we can just pass the
+    # right one in the precompiled host check, without tempering with the global state
+    # here.
+    if ipaddresses_override is not None:
+        globals()["ipaddresses"] = ipaddresses_override
+    if ipv6addresses_override is not None:
+        globals()["ipv6addresses"] = ipv6addresses_override
+
     return _perform_post_config_loading_actions(
         discovery_rulesets,
         get_builtin_host_labels,
@@ -2165,9 +2179,9 @@ class ConfigCache:
             return mgmt_host_address
 
         if host_ip_family is socket.AF_INET6:
-            return ipv6addresses.get(host_name)
+            return self._loaded_config.ipv6addresses.get(host_name)
 
-        return ipaddresses.get(host_name)
+        return self._loaded_config.ipaddresses.get(host_name)
 
     @overload
     def management_credentials(

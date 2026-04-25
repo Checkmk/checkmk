@@ -103,10 +103,12 @@ def main() -> int:
             discovery_rulesets=extract_known_discovery_rulesets(plugins),
             get_builtin_host_labels=app.get_builtin_host_labels,
             edition=app.edition,
+            # Note: CONFIG.ip{,v6}addresses is populated not only with the values
+            # that would be loaded here anyway, but additionally with some looked
+            # up addresses.
+            ipaddresses_override=CONFIG.ipaddresses,
+            ipv6addresses_override=CONFIG.ipv6addresses,
         )
-
-        config.ipaddresses = CONFIG.ipaddresses
-        config.ipv6addresses = CONFIG.ipv6addresses
 
         secrets = load_secrets_file(
             cmk.utils.password_store.active_secrets_path_site(

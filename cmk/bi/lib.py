@@ -46,14 +46,12 @@ from cmk.bi.type_defs import (
     SearchKind,
     SearchMetadata,
     SearchSerialized,
+    ServiceDetails,
+    ServiceState,
 )
 from cmk.ccc import plugin_registry
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
-from cmk.checkengine.submitters import (  # astrein: disable=cmk-module-layer-violation
-    ServiceDetails,
-    ServiceState,
-)
 from cmk.fields import Boolean, List, Nested, String
 from cmk.utils.labels import LabelGroups
 from cmk.utils.macros import replace_macros_in_str

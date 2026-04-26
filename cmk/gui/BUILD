@@ -2309,7 +2309,6 @@ py_library(
         "//cmk/piggyback:hub",
         "//cmk/plugins",
         "//cmk/product_usage",
-        "//cmk/rrd",
         "//cmk/server_side_calls_backend",
         "//cmk/utils",
         "//packages/cmk-ccc:archive",

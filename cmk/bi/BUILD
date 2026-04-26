@@ -10,7 +10,6 @@ py_library(
         "//tests/unit:__subpackages__",
     ],
     deps = [
-        "//cmk/checkengine",
         "//cmk/fields",
         "//cmk/utils",
         "//packages/cmk-ccc:plugin-registry",

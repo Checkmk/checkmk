@@ -85,6 +85,8 @@ class AggrConfigDict(TypedDict):
 
 # search
 HostState = int
+ServiceState = int
+ServiceDetails = str
 HostRegexMatches = dict[str, tuple[str, ...]]
 
 

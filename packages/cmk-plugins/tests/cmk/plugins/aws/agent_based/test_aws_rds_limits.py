@@ -9,7 +9,7 @@ from collections.abc import Mapping, Sequence
 import pytest
 
 from cmk.agent_based.v2 import Metric, Result, Service, State, StringTable
-from cmk.legacy_checks.aws_rds_limits import (
+from cmk.plugins.aws.agent_based.aws_rds_limits import (
     check_aws_rds_limits,
     discover_aws_rds_limits,
     parse_aws_rds_limits,

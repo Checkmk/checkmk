@@ -65,14 +65,7 @@ git_override(
     remote = "https://github.com/theoremlp/rules_mypy",
 )
 
-bazel_dep(name = "aspect_rules_py", version = "0.7.4")
-
-# TODO (TBC): Switch back to upstream as soon as https://github.com/aspect-build/rules_py/pull/428 is merged
-git_override(
-    module_name = "aspect_rules_py",
-    commit = "6a3242d016798c6892a848939e36cc7bff99d6c8",
-    remote = "https://github.com/TimotheusBachinger/rules_py",
-)
+bazel_dep(name = "aspect_rules_py", version = "1.1.0")
 
 bazel_dep(name = "aspect_rules_lint", version = "1.0.2")
 

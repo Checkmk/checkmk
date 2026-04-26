@@ -3,20 +3,23 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from typing import Any
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import render
-from cmk.legacy_includes.aws import check_aws_limits
-from cmk.plugins.aws.lib import AWSLimitsByRegion, parse_aws
+from cmk.agent_based.v2 import (
+    AgentSection,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    render,
+    Service,
+    StringTable,
+)
+from cmk.plugins.aws.lib import AWSLimitsByRegion, check_aws_limits_legacy, parse_aws
 
-check_info = {}
 
-
-def parse_aws_rds_limits(string_table):
+def parse_aws_rds_limits(string_table: StringTable) -> AWSLimitsByRegion:
     limits_by_region: AWSLimitsByRegion = {}
     for line in parse_aws(string_table):
         resource_key, resource_title, limit, amount, region = line
@@ -35,19 +38,27 @@ def parse_aws_rds_limits(string_table):
     return limits_by_region
 
 
-def check_aws_rds_limits(item, params, parsed):
-    if not (region_data := parsed.get(item)):
+def check_aws_rds_limits(
+    item: str, params: Mapping[str, Any], section: AWSLimitsByRegion
+) -> CheckResult:
+    if not (region_data := section.get(item)):
         return
-    yield from check_aws_limits("rds", params, region_data)
+    yield from check_aws_limits_legacy("rds", params, region_data)
 
 
-def discover_aws_rds_limits(section):
-    yield from ((item, {}) for item in section)
+def discover_aws_rds_limits(section: AWSLimitsByRegion) -> DiscoveryResult:
+    for item in section:
+        yield Service(item=item)
 
 
-check_info["aws_rds_limits"] = LegacyCheckDefinition(
+agent_section_aws_rds_limits = AgentSection(
     name="aws_rds_limits",
     parse_function=parse_aws_rds_limits,
+)
+
+
+check_plugin_aws_rds_limits = CheckPlugin(
+    name="aws_rds_limits",
     service_name="AWS/RDS Limits %s",
     discovery_function=discover_aws_rds_limits,
     check_function=check_aws_rds_limits,

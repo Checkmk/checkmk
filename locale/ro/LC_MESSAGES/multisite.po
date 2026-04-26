@@ -12665,6 +12665,10 @@ msgstr "Doar verificare și afișare"
 msgid "Check certificate"
 msgstr "Verificați certificatele"
 
+#, fuzzy
+msgid "Check certificate credentials"
+msgstr "Verificați certificatele"
+
 msgid "Check certificate validity"
 msgstr "Verificați valabilitatea certificatului"
 
@@ -12852,6 +12856,10 @@ msgid "Check result if the host or VM state is reported as <i>unknown</i>"
 msgstr ""
 "Rezultatul verificării dacă starea gazdei sau a mașinii virtuale este "
 "raportată ca fiind <i>necunoscută</i>."
+
+#, fuzzy
+msgid "Check secret credentials"
+msgstr "Utilizați acreditările"
 
 msgid "Check specific host(s)"
 msgstr "Verificați gazda (gazdele) specifică (specifice)"
@@ -17139,6 +17147,11 @@ msgstr ""
 "Datele de acreditare nu sunt configurate sau nu sunt valide. Vă rugăm să "
 "revizuiți setările de licență"
 
+msgid ""
+"Credentials that expired more than this long ago will be ignored. Useful for "
+"suppressing alerts on expired credentials that have already been replaced."
+msgstr ""
+
 #, fuzzy
 msgid "Credentials to access the database"
 msgstr "Acreditive pentru a accesa baza de date"
@@ -19651,12 +19664,6 @@ msgstr "Director pentru fișierele de configurare"
 msgid "Deploy custom files with agent"
 msgstr "Distribuie fișiere personalizate cu agentul"
 
-msgid "Deploy mk_mongodb.py with authentication."
-msgstr "Implementați mk_mongodb.py cu autentificare."
-
-msgid "Deploy mk_mongodb.py without authentication."
-msgstr "Implementați mk_mongodb.py fără autentificare."
-
 #, fuzzy
 msgid "Deploy plug-in for Ceph"
 msgstr "Implementarea plugin-ului pentru DAG"
@@ -19858,9 +19865,6 @@ msgstr "Implementarea pluginului MTR în mod asincron"
 #, fuzzy
 msgid "Deploy the plug-ins and run them synchronously"
 msgstr "Implementarea pluginului MTR în mod asincron"
-
-msgid "Deploy without authentication."
-msgstr "Implementați fără autentificare."
 
 msgid "Deployment"
 msgstr "Desfășurare"
@@ -21320,10 +21324,6 @@ msgid "Do not deploy automatic agent update plug-in"
 msgstr "Nu implementați pluginul de actualizare automată a agentului"
 
 #, fuzzy
-msgid "Do not deploy mk_mongodb.py plug-in"
-msgstr "Nu implementați pluginul mk_mongodb.py"
-
-#, fuzzy
 msgid "Do not deploy plug-in for Hyper-V VM Guest Information"
 msgstr ""
 "Nu implementați pluginul pentru informațiile despre oaspeții VM Hyper-V VM"
@@ -21457,15 +21457,16 @@ msgid "Do not deploy the mk_filehandler plug-in"
 msgstr "Nu implementați plugin-ul mk_filehandler"
 
 #, fuzzy
+msgid "Do not deploy the mk_mongodb plug-in"
+msgstr "Nu implementați pluginul mk_mongodb.py"
+
+#, fuzzy
 msgid "Do not deploy the plug-in"
 msgstr "Nu implementați plugin-ul %s."
 
 #, fuzzy
 msgid "Do not deploy the plug-ins"
 msgstr "Nu implementați plugin-ul %s."
-
-msgid "Do not deploy."
-msgstr "Nu desfășurați."
 
 msgid "Do not discover"
 msgstr "Nu descoperiți"
@@ -34248,6 +34249,10 @@ msgstr "Ignoră erorile din pluginurile de verificare unică"
 
 msgid "Ignore hard query limit"
 msgstr "Ignoră limita de interogare dură"
+
+#, fuzzy
+msgid "Ignore if older than"
+msgstr "Avertisment dacă este mai veche de"
 
 msgid "Ignore intervals shorter or equal"
 msgstr "Ignoră intervalele mai mici sau egale"
@@ -49702,8 +49707,9 @@ msgstr "PDU Stare de conectare"
 msgid "PDisk EID:Slot-Device"
 msgstr "PDisk EID:Slot-Device"
 
-msgid "PEM File"
-msgstr "Fișier PEM"
+#, fuzzy
+msgid "PEM File content"
+msgstr "Numărul de fișiere la"
 
 msgid "PEND"
 msgstr "PEND"
@@ -76396,19 +76402,11 @@ msgstr ""
 "Timpul până la alertă, în cazul în care ultima sarcină CronJob a fost "
 "executată mai mult decât timpul stabilit"
 
-#, fuzzy
-msgid "Time until certificate credentials expiration"
-msgstr "Timpul până la expirarea acreditărilor"
-
 msgid "Time until credentials expiration"
 msgstr "Timpul până la expirarea acreditărilor"
 
 msgid "Time until license expiration"
 msgstr "Timp până la expirarea licenței"
-
-#, fuzzy
-msgid "Time until secret credentials expiration"
-msgstr "Timpul până la expirarea acreditărilor"
 
 msgid "Time usage by phase"
 msgstr "Utilizarea timpului pe faze"
@@ -84189,9 +84187,6 @@ msgstr "Verificarea a eșuat (Cod de stare: %d, Server: %s): %s"
 msgid "Verification failed: %s"
 msgstr "Verificarea a eșuat: %s"
 
-msgid "Verify Certificates"
-msgstr "Verificarea certificatelor"
-
 #, fuzzy
 msgid "Verify SSL certificate (not verifying is insecure)"
 msgstr "Ignoră erorile de certificat (nesigur)"
@@ -84199,9 +84194,6 @@ msgstr "Ignoră erorile de certificat (nesigur)"
 #, fuzzy
 msgid "Verify TLS certificate (not verifying is insecure)"
 msgstr "Ignoră erorile de certificat (nesigur)"
-
-msgid "Verify certificates"
-msgstr "Verificarea certificatelor"
 
 msgid "Verify response"
 msgstr "Verificați răspunsul"
@@ -95967,6 +95959,35 @@ msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
 
+#~ msgid "Deploy mk_mongodb.py with authentication."
+#~ msgstr "Implementați mk_mongodb.py cu autentificare."
+
+#~ msgid "Deploy mk_mongodb.py without authentication."
+#~ msgstr "Implementați mk_mongodb.py fără autentificare."
+
+#~ msgid "Deploy without authentication."
+#~ msgstr "Implementați fără autentificare."
+
+#~ msgid "Do not deploy."
+#~ msgstr "Nu desfășurați."
+
+#~ msgid "PEM File"
+#~ msgstr "Fișier PEM"
+
+#, fuzzy
+#~ msgid "Time until certificate credentials expiration"
+#~ msgstr "Timpul până la expirarea acreditărilor"
+
+#, fuzzy
+#~ msgid "Time until secret credentials expiration"
+#~ msgstr "Timpul până la expirarea acreditărilor"
+
+#~ msgid "Verify Certificates"
+#~ msgstr "Verificarea certificatelor"
+
+#~ msgid "Verify certificates"
+#~ msgstr "Verificarea certificatelor"
+
 #, fuzzy, python-format
 #~ msgid "Error while running migration script: %s"
 #~ msgstr "Eroare la redarea elementului de tip '%s'"
@@ -95986,18 +96007,6 @@ msgstr ""
 
 #~ msgid "Use data from OpenShift"
 #~ msgstr "Utilizați date din OpenShift"
-
-#, fuzzy
-#~ msgid "Check certificate credentials"
-#~ msgstr "Verificați certificatele"
-
-#, fuzzy
-#~ msgid "Check secret credentials"
-#~ msgstr "Utilizați acreditările"
-
-#, fuzzy
-#~ msgid "Ignore if older than"
-#~ msgstr "Avertisment dacă este mai veche de"
 
 #, fuzzy
 #~ msgid "A fatal error occurred:"

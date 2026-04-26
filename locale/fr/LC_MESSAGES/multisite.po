@@ -12734,6 +12734,10 @@ msgid "Check certificate"
 msgstr "Certificat CA"
 
 #, fuzzy
+msgid "Check certificate credentials"
+msgstr "Certificat CA"
+
+#, fuzzy
 msgid "Check certificate validity"
 msgstr "Validité du certificat de site"
 
@@ -12925,6 +12929,10 @@ msgid "Check result if the host or VM state is reported as <i>unknown</i>"
 msgstr ""
 "Résultat de la vérification si l'état de l'hôte ou de la VM est signalé "
 "comme <i>inconnu</i>"
+
+#, fuzzy
+msgid "Check secret credentials"
+msgstr "Utiliser les informations d'identification"
 
 msgid "Check specific host(s)"
 msgstr "Vérifier le(s) hôte(s) spécifique(s)"
@@ -17254,6 +17262,11 @@ msgstr ""
 "Les informations d'identification ne sont pas configurées ou ne sont pas "
 "valides. Veuillez revoir les paramètres de la licence"
 
+msgid ""
+"Credentials that expired more than this long ago will be ignored. Useful for "
+"suppressing alerts on expired credentials that have already been replaced."
+msgstr ""
+
 #, fuzzy
 msgid "Credentials to access the database"
 msgstr "Informations d'identification pour accéder à la base de données"
@@ -19778,12 +19791,6 @@ msgstr "Répertoire pour les fichiers de configuration"
 msgid "Deploy custom files with agent"
 msgstr "Déployer des fichiers personnalisés avec l'agent"
 
-msgid "Deploy mk_mongodb.py with authentication."
-msgstr "Déployer mk_mongodb.py avec authentification."
-
-msgid "Deploy mk_mongodb.py without authentication."
-msgstr "Déployer mk_mongodb.py sans authentification."
-
 #, fuzzy
 msgid "Deploy plug-in for Ceph"
 msgstr "Déployer le plugin pour DAG"
@@ -19984,9 +19991,6 @@ msgstr "Déploiement asynchrone du plugin MTR"
 #, fuzzy
 msgid "Deploy the plug-ins and run them synchronously"
 msgstr "Déploiement asynchrone du plugin MTR"
-
-msgid "Deploy without authentication."
-msgstr "Déployer sans authentification."
 
 msgid "Deployment"
 msgstr "Déploiement"
@@ -21449,10 +21453,6 @@ msgid "Do not deploy automatic agent update plug-in"
 msgstr "Ne pas déployer le plugin de mise à jour automatique des agents"
 
 #, fuzzy
-msgid "Do not deploy mk_mongodb.py plug-in"
-msgstr "Ne pas déployer le plugin mk_mongodb.py"
-
-#, fuzzy
 msgid "Do not deploy plug-in for Hyper-V VM Guest Information"
 msgstr "Ne pas déployer le plugin pour Hyper-V VM Guest Information"
 
@@ -21585,15 +21585,16 @@ msgid "Do not deploy the mk_filehandler plug-in"
 msgstr "Ne pas déployer le plugin docker"
 
 #, fuzzy
+msgid "Do not deploy the mk_mongodb plug-in"
+msgstr "Ne pas déployer le plugin mk_mongodb.py"
+
+#, fuzzy
 msgid "Do not deploy the plug-in"
 msgstr "Ne pas déployer le plugin %s"
 
 #, fuzzy
 msgid "Do not deploy the plug-ins"
 msgstr "Ne pas déployer le plugin %s"
-
-msgid "Do not deploy."
-msgstr "Ne pas déployer."
 
 msgid "Do not discover"
 msgstr "Ne pas découvrir"
@@ -34465,6 +34466,10 @@ msgstr "Ignorer les erreurs dans les plugins à vérification unique"
 
 msgid "Ignore hard query limit"
 msgstr "Ignorer la limite des requêtes"
+
+#, fuzzy
+msgid "Ignore if older than"
+msgstr "Avertissement si plus ancien que"
 
 msgid "Ignore intervals shorter or equal"
 msgstr "Ignorer les intervalles plus courts ou égaux"
@@ -50013,8 +50018,9 @@ msgstr "État de la fiche PDU"
 msgid "PDisk EID:Slot-Device"
 msgstr "PDisk EID:Slot-Device (Périphérique à fente)"
 
-msgid "PEM File"
-msgstr "Fichier PEM"
+#, fuzzy
+msgid "PEM File content"
+msgstr "Nombre de fichiers à"
 
 msgid "PEND"
 msgstr "PEND"
@@ -76892,19 +76898,11 @@ msgstr ""
 "Temps avant alerte, si le dernier travail CronJob est en cours depuis plus "
 "longtemps que le temps défini"
 
-#, fuzzy
-msgid "Time until certificate credentials expiration"
-msgstr "Délai d'expiration des informations d'identification"
-
 msgid "Time until credentials expiration"
 msgstr "Délai d'expiration des informations d'identification"
 
 msgid "Time until license expiration"
 msgstr "Temps jusqu'à l'expiration de la licence"
-
-#, fuzzy
-msgid "Time until secret credentials expiration"
-msgstr "Délai d'expiration des informations d'identification"
 
 msgid "Time usage by phase"
 msgstr "Utilisation du temps par phase"
@@ -84806,19 +84804,12 @@ msgid "Verification failed: %s"
 msgstr "La vérification a échoué : %s"
 
 #, fuzzy
-msgid "Verify Certificates"
-msgstr "Vérifier les certificats"
-
-#, fuzzy
 msgid "Verify SSL certificate (not verifying is insecure)"
 msgstr "Ignorer les erreurs de certificat (non sécurisé)"
 
 #, fuzzy
 msgid "Verify TLS certificate (not verifying is insecure)"
 msgstr "Ignorer les erreurs de certificat (non sécurisé)"
-
-msgid "Verify certificates"
-msgstr "Vérifier les certificats"
 
 msgid "Verify response"
 msgstr "Vérifier la réponse"
@@ -96652,6 +96643,36 @@ msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
 
+#~ msgid "Deploy mk_mongodb.py with authentication."
+#~ msgstr "Déployer mk_mongodb.py avec authentification."
+
+#~ msgid "Deploy mk_mongodb.py without authentication."
+#~ msgstr "Déployer mk_mongodb.py sans authentification."
+
+#~ msgid "Deploy without authentication."
+#~ msgstr "Déployer sans authentification."
+
+#~ msgid "Do not deploy."
+#~ msgstr "Ne pas déployer."
+
+#~ msgid "PEM File"
+#~ msgstr "Fichier PEM"
+
+#, fuzzy
+#~ msgid "Time until certificate credentials expiration"
+#~ msgstr "Délai d'expiration des informations d'identification"
+
+#, fuzzy
+#~ msgid "Time until secret credentials expiration"
+#~ msgstr "Délai d'expiration des informations d'identification"
+
+#, fuzzy
+#~ msgid "Verify Certificates"
+#~ msgstr "Vérifier les certificats"
+
+#~ msgid "Verify certificates"
+#~ msgstr "Vérifier les certificats"
+
 #, fuzzy, python-format
 #~ msgid "Error while running migration script: %s"
 #~ msgstr "Erreur lors du rendu du type d'élément '%s'"
@@ -96671,18 +96692,6 @@ msgstr ""
 
 #~ msgid "Use data from OpenShift"
 #~ msgstr "Utiliser les données d'OpenShift"
-
-#, fuzzy
-#~ msgid "Check certificate credentials"
-#~ msgstr "Certificat CA"
-
-#, fuzzy
-#~ msgid "Check secret credentials"
-#~ msgstr "Utiliser les informations d'identification"
-
-#, fuzzy
-#~ msgid "Ignore if older than"
-#~ msgstr "Avertissement si plus ancien que"
 
 #, fuzzy
 #~ msgid "A fatal error occurred:"

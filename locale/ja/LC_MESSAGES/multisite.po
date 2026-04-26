@@ -11759,6 +11759,9 @@ msgstr "チェックして表示するだけ"
 msgid "Check certificate"
 msgstr "証明書のチェック"
 
+msgid "Check certificate credentials"
+msgstr "証明書の認証情報をチェックする"
+
 msgid "Check certificate validity"
 msgstr "証明書の有効性を確認する"
 
@@ -11931,6 +11934,9 @@ msgid "Check result if the host or VM state is reported as <i>unknown</i>"
 msgstr ""
 "ホストまたはVMの状態が <i>unknown</i> として報告されている場合は、結果を確認"
 "してください"
+
+msgid "Check secret credentials"
+msgstr "秘密の認証情報をチェックする"
 
 msgid "Check specific host(s)"
 msgstr "特定のホストを確認する"
@@ -15937,6 +15943,13 @@ msgid ""
 msgstr ""
 "認証情報が設定されていないか、無効です。ライセンス設定を確認してください"
 
+msgid ""
+"Credentials that expired more than this long ago will be ignored. Useful for "
+"suppressing alerts on expired credentials that have already been replaced."
+msgstr ""
+"この期間より前に有効期限が切れた認証情報は無視されます。すでに置き換えられた"
+"有効期限切れの認証情報に関するアラートを抑制するのに役立ちます。"
+
 msgid "Credentials to access the database"
 msgstr "データベースにアクセスするための認証情報"
 
@@ -18297,12 +18310,6 @@ msgstr "設定ファイルのデプロイ"
 msgid "Deploy custom files with agent"
 msgstr "エージェントを使用してカスタムファイルをデプロイする"
 
-msgid "Deploy mk_mongodb.py with authentication."
-msgstr "mk_mongodb.pyを認証付きでデプロイします。"
-
-msgid "Deploy mk_mongodb.py without authentication."
-msgstr "mk_mongodb.pyを認証なしでデプロイします。"
-
 msgid "Deploy plug-in for Ceph"
 msgstr "Ceph用プラグインを展開する"
 
@@ -18471,9 +18478,6 @@ msgstr "プラグインをデプロイし非同期実行する"
 
 msgid "Deploy the plug-ins and run them synchronously"
 msgstr "プラグインをデプロイし、同期実行する"
-
-msgid "Deploy without authentication."
-msgstr "パスワード認証を許可する。"
 
 msgid "Deployment"
 msgstr "デプロイ"
@@ -19801,9 +19805,6 @@ msgstr "Windows Updateプラグインを展開しないでください"
 msgid "Do not deploy automatic agent update plug-in"
 msgstr "エージェントの自動アップデートプラグインをデプロイしないでください"
 
-msgid "Do not deploy mk_mongodb.py plug-in"
-msgstr "mk_mongodb.pyプラグインをデプロイしないでください"
-
 msgid "Do not deploy plug-in for Hyper-V VM Guest Information"
 msgstr "Hyper-V VMゲスト情報のプラグインをデプロイしないでください"
 
@@ -19904,14 +19905,15 @@ msgstr "TSMプラグインをデプロイしないでください"
 msgid "Do not deploy the mk_filehandler plug-in"
 msgstr "mk_filehandlerプラグインをデプロイしない"
 
+#, fuzzy
+msgid "Do not deploy the mk_mongodb plug-in"
+msgstr "mk_mongodb.pyプラグインをデプロイしないでください"
+
 msgid "Do not deploy the plug-in"
 msgstr "プラグインをデプロイしないでください"
 
 msgid "Do not deploy the plug-ins"
 msgstr "プラグインをデプロイしないでください"
-
-msgid "Do not deploy."
-msgstr "デプロイしないでください。"
 
 msgid "Do not discover"
 msgstr "検出しない"
@@ -31692,6 +31694,9 @@ msgstr "シングルチェックプラグインのエラーを無視する"
 
 msgid "Ignore hard query limit"
 msgstr "ハードクエリ制限を無視する"
+
+msgid "Ignore if older than"
+msgstr "この日付より前のものは無視する"
 
 msgid "Ignore intervals shorter or equal"
 msgstr "短いか等しい間隔を無視する"
@@ -45832,8 +45837,9 @@ msgstr "PDUプラグの状態"
 msgid "PDisk EID:Slot-Device"
 msgstr "PDisk EID:スロットデバイス"
 
-msgid "PEM File"
-msgstr "PEM ファイル"
+#, fuzzy
+msgid "PEM File content"
+msgstr "でのファイル数"
 
 msgid "PEND"
 msgstr "PEND"
@@ -70770,17 +70776,11 @@ msgid ""
 msgstr ""
 "最新のCronJobジョブが設定時間より長く実行されている場合、アラートまでの時間"
 
-msgid "Time until certificate credentials expiration"
-msgstr "証明書の有効期限までの残り時間"
-
 msgid "Time until credentials expiration"
 msgstr "視覚情報の有効期限までの時間"
 
 msgid "Time until license expiration"
 msgstr "ライセンスの有効期限が切れるまでの時間"
-
-msgid "Time until secret credentials expiration"
-msgstr "秘密の資格情報の有効期限までの残り時間"
 
 msgid "Time usage by phase"
 msgstr "フェーズごとの時間使用"
@@ -77621,9 +77621,6 @@ msgstr "認証に失敗しました（ステータスコード: %d, サーバー
 msgid "Verification failed: %s"
 msgstr "検証失敗: %s"
 
-msgid "Verify Certificates"
-msgstr "証明書の検証"
-
 msgid "Verify SSL certificate (not verifying is insecure)"
 msgstr ""
 "SSL証明書を確認する（確認しない場合はセキュリティ上のリスクがあります）"
@@ -77631,9 +77628,6 @@ msgstr ""
 msgid "Verify TLS certificate (not verifying is insecure)"
 msgstr ""
 "TLS証明書を確認する（確認しない場合はセキュリティ上のリスクがあります）"
-
-msgid "Verify certificates"
-msgstr "証明書を確認する"
 
 msgid "Verify response"
 msgstr "応答を確認する"
@@ -88951,6 +88945,33 @@ msgid ""
 msgstr ""
 "後で「ヘルプ」＞「Checkmkの学習」＞「ウェルカムページ」からアクセスできます"
 
+#~ msgid "Deploy mk_mongodb.py with authentication."
+#~ msgstr "mk_mongodb.pyを認証付きでデプロイします。"
+
+#~ msgid "Deploy mk_mongodb.py without authentication."
+#~ msgstr "mk_mongodb.pyを認証なしでデプロイします。"
+
+#~ msgid "Deploy without authentication."
+#~ msgstr "パスワード認証を許可する。"
+
+#~ msgid "Do not deploy."
+#~ msgstr "デプロイしないでください。"
+
+#~ msgid "PEM File"
+#~ msgstr "PEM ファイル"
+
+#~ msgid "Time until certificate credentials expiration"
+#~ msgstr "証明書の有効期限までの残り時間"
+
+#~ msgid "Time until secret credentials expiration"
+#~ msgstr "秘密の資格情報の有効期限までの残り時間"
+
+#~ msgid "Verify Certificates"
+#~ msgstr "証明書の検証"
+
+#~ msgid "Verify certificates"
+#~ msgstr "証明書を確認する"
+
 #, python-format
 #~ msgid "Error while running migration script: %s"
 #~ msgstr "移行スクリプト実施中のエラー：%s"
@@ -88978,23 +88999,6 @@ msgstr ""
 
 #~ msgid "Use data from OpenShift"
 #~ msgstr "OpenShiftのデータを使用"
-
-#~ msgid "Check certificate credentials"
-#~ msgstr "証明書の認証情報をチェックする"
-
-#~ msgid "Check secret credentials"
-#~ msgstr "秘密の認証情報をチェックする"
-
-#~ msgid ""
-#~ "Credentials that expired more than this long ago will be ignored. Useful "
-#~ "for suppressing alerts on expired credentials that have already been "
-#~ "replaced."
-#~ msgstr ""
-#~ "この期間より前に有効期限が切れた認証情報は無視されます。すでに置き換えられ"
-#~ "た有効期限切れの認証情報に関するアラートを抑制するのに役立ちます。"
-
-#~ msgid "Ignore if older than"
-#~ msgstr "この日付より前のものは無視する"
 
 #~ msgid "A fatal error occurred:"
 #~ msgstr "致命的なエラーが発生しました："

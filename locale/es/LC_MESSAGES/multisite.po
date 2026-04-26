@@ -12747,6 +12747,10 @@ msgid "Check certificate"
 msgstr "Certificado CA"
 
 #, fuzzy
+msgid "Check certificate credentials"
+msgstr "Certificado CA"
+
+#, fuzzy
 msgid "Check certificate validity"
 msgstr "Validez del certificado del sitio"
 
@@ -12939,6 +12943,10 @@ msgid "Check result if the host or VM state is reported as <i>unknown</i>"
 msgstr ""
 "Comprobar el resultado si el estado del host o de la VM se informa como "
 "<i>desconocido</i>"
+
+#, fuzzy
+msgid "Check secret credentials"
+msgstr "Utilizar las credenciales"
 
 msgid "Check specific host(s)"
 msgstr "Compruebe el host específico (s)"
@@ -17247,6 +17255,11 @@ msgstr ""
 "Credenciales no configuradas o inválidas. Por favor, revise la configuración "
 "de la licencia"
 
+msgid ""
+"Credentials that expired more than this long ago will be ignored. Useful for "
+"suppressing alerts on expired credentials that have already been replaced."
+msgstr ""
+
 #, fuzzy
 msgid "Credentials to access the database"
 msgstr "Credenciales de acceso a la base de datos"
@@ -19770,12 +19783,6 @@ msgstr "Directorio para los archivos de configuración"
 msgid "Deploy custom files with agent"
 msgstr "Implementar archivos personalizados con el agente"
 
-msgid "Deploy mk_mongodb.py with authentication."
-msgstr "Desplegar mk_mongodb.py con autenticación."
-
-msgid "Deploy mk_mongodb.py without authentication."
-msgstr "Despliega mk_mongodb.py sin autenticación."
-
 #, fuzzy
 msgid "Deploy plug-in for Ceph"
 msgstr "Implementar complemento para DAG"
@@ -19986,9 +19993,6 @@ msgstr "Despliegue del plugin MTR de forma asíncrona"
 #, fuzzy
 msgid "Deploy the plug-ins and run them synchronously"
 msgstr "Despliegue del plugin MTR de forma asíncrona"
-
-msgid "Deploy without authentication."
-msgstr "Despliegue sin autenticación."
 
 msgid "Deployment"
 msgstr "Despliegues"
@@ -21460,10 +21464,6 @@ msgid "Do not deploy automatic agent update plug-in"
 msgstr "No desplegar el plugin de actualización automática del agente"
 
 #, fuzzy
-msgid "Do not deploy mk_mongodb.py plug-in"
-msgstr "No desplegar el plugin mk_mongodb.py"
-
-#, fuzzy
 msgid "Do not deploy plug-in for Hyper-V VM Guest Information"
 msgstr "No desplegar el plugin para Hyper-V VM Guest Information"
 
@@ -21597,15 +21597,16 @@ msgid "Do not deploy the mk_filehandler plug-in"
 msgstr "No desplegar el plugin docker"
 
 #, fuzzy
+msgid "Do not deploy the mk_mongodb plug-in"
+msgstr "No desplegar el plugin mk_mongodb.py"
+
+#, fuzzy
 msgid "Do not deploy the plug-in"
 msgstr "No despliegue el plugin %s"
 
 #, fuzzy
 msgid "Do not deploy the plug-ins"
 msgstr "No despliegue el plugin %s"
-
-msgid "Do not deploy."
-msgstr "No desplegar."
 
 msgid "Do not discover"
 msgstr "No descubra"
@@ -34442,6 +34443,10 @@ msgstr "Ignorar los errores en los plugins de comprobación única"
 
 msgid "Ignore hard query limit"
 msgstr "Ignorar el límite de consulta dura"
+
+#, fuzzy
+msgid "Ignore if older than"
+msgstr "Advertencia si es mayor de"
 
 msgid "Ignore intervals shorter or equal"
 msgstr "Ignorar los intervalos más cortos o iguales"
@@ -50016,8 +50021,9 @@ msgstr "Estado del enchufe PDU"
 msgid "PDisk EID:Slot-Device"
 msgstr "PDisk EID:Ranura-Dispositivo"
 
-msgid "PEM File"
-msgstr "Fichero PEM"
+#, fuzzy
+msgid "PEM File content"
+msgstr "Recuento de archivos en"
 
 msgid "PEND"
 msgstr "PEND"
@@ -76838,19 +76844,11 @@ msgstr ""
 "Tiempo hasta la alerta, si el último trabajo CronJob se ha estado ejecutando "
 "durante más tiempo del establecido"
 
-#, fuzzy
-msgid "Time until certificate credentials expiration"
-msgstr "Tiempo hasta la expiración de las credenciales"
-
 msgid "Time until credentials expiration"
 msgstr "Tiempo hasta la expiración de las credenciales"
 
 msgid "Time until license expiration"
 msgstr "Tiempo hasta la expiración de la licencia"
-
-#, fuzzy
-msgid "Time until secret credentials expiration"
-msgstr "Tiempo hasta la expiración de las credenciales"
 
 msgid "Time usage by phase"
 msgstr "Uso del tiempo por fase"
@@ -84738,19 +84736,12 @@ msgid "Verification failed: %s"
 msgstr "Ha fallado la verificación: %s"
 
 #, fuzzy
-msgid "Verify Certificates"
-msgstr "Verificar los certificados"
-
-#, fuzzy
 msgid "Verify SSL certificate (not verifying is insecure)"
 msgstr "Ignorar los errores de los certificados (no seguros)"
 
 #, fuzzy
 msgid "Verify TLS certificate (not verifying is insecure)"
 msgstr "Ignorar los errores de los certificados (no seguros)"
-
-msgid "Verify certificates"
-msgstr "Verificar los certificados"
 
 msgid "Verify response"
 msgstr "Verificar la respuesta"
@@ -96532,6 +96523,36 @@ msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
 
+#~ msgid "Deploy mk_mongodb.py with authentication."
+#~ msgstr "Desplegar mk_mongodb.py con autenticación."
+
+#~ msgid "Deploy mk_mongodb.py without authentication."
+#~ msgstr "Despliega mk_mongodb.py sin autenticación."
+
+#~ msgid "Deploy without authentication."
+#~ msgstr "Despliegue sin autenticación."
+
+#~ msgid "Do not deploy."
+#~ msgstr "No desplegar."
+
+#~ msgid "PEM File"
+#~ msgstr "Fichero PEM"
+
+#, fuzzy
+#~ msgid "Time until certificate credentials expiration"
+#~ msgstr "Tiempo hasta la expiración de las credenciales"
+
+#, fuzzy
+#~ msgid "Time until secret credentials expiration"
+#~ msgstr "Tiempo hasta la expiración de las credenciales"
+
+#, fuzzy
+#~ msgid "Verify Certificates"
+#~ msgstr "Verificar los certificados"
+
+#~ msgid "Verify certificates"
+#~ msgstr "Verificar los certificados"
+
 #, fuzzy, python-format
 #~ msgid "Error while running migration script: %s"
 #~ msgstr "Error al renderizar el tipo de elemento '%s'"
@@ -96551,18 +96572,6 @@ msgstr ""
 
 #~ msgid "Use data from OpenShift"
 #~ msgstr "Utilizar datos de OpenShift"
-
-#, fuzzy
-#~ msgid "Check certificate credentials"
-#~ msgstr "Certificado CA"
-
-#, fuzzy
-#~ msgid "Check secret credentials"
-#~ msgstr "Utilizar las credenciales"
-
-#, fuzzy
-#~ msgid "Ignore if older than"
-#~ msgstr "Advertencia si es mayor de"
 
 #, fuzzy
 #~ msgid "A fatal error occurred:"

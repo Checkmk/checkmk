@@ -12650,6 +12650,10 @@ msgid "Check certificate"
 msgstr "CA-certificaat"
 
 #, fuzzy
+msgid "Check certificate credentials"
+msgstr "CA-certificaat"
+
+#, fuzzy
 msgid "Check certificate validity"
 msgstr "Geldigheid van het site-certificaat"
 
@@ -12842,6 +12846,10 @@ msgid "Check result if the host or VM state is reported as <i>unknown</i>"
 msgstr ""
 "Controleer het resultaat als de host- of VM-status wordt gerapporteerd als "
 "<i>onbekend</i>"
+
+#, fuzzy
+msgid "Check secret credentials"
+msgstr "Gebruik geloofsbrieven"
 
 msgid "Check specific host(s)"
 msgstr "Controleer specifieke host(s)"
@@ -17124,6 +17132,11 @@ msgstr ""
 "Credentials niet geconfigureerd of ongeldig. Controleer de licentie-"
 "instellingen"
 
+msgid ""
+"Credentials that expired more than this long ago will be ignored. Useful for "
+"suppressing alerts on expired credentials that have already been replaced."
+msgstr ""
+
 #, fuzzy
 msgid "Credentials to access the database"
 msgstr "Credentials voor toegang tot de Database"
@@ -19632,12 +19645,6 @@ msgstr "Directory voor configuratiebestanden"
 msgid "Deploy custom files with agent"
 msgstr "Aangepaste bestanden uitrollen met agent"
 
-msgid "Deploy mk_mongodb.py with authentication."
-msgstr "Zet mk_mongodb.py in met authenticatie."
-
-msgid "Deploy mk_mongodb.py without authentication."
-msgstr "Zet mk_mongodb.py in met authenticatie."
-
 #, fuzzy
 msgid "Deploy plug-in for Ceph"
 msgstr "Invoegtoepassing voor DAG implementeren"
@@ -19835,9 +19842,6 @@ msgstr "MTR plugin asynchroon implementeren"
 #, fuzzy
 msgid "Deploy the plug-ins and run them synchronously"
 msgstr "MTR plugin asynchroon implementeren"
-
-msgid "Deploy without authentication."
-msgstr "Implementeer zonder authenticatie."
 
 msgid "Deployment"
 msgstr "Inzet"
@@ -21287,10 +21291,6 @@ msgid "Do not deploy automatic agent update plug-in"
 msgstr "Implementeer geen automatische agent update plugin"
 
 #, fuzzy
-msgid "Do not deploy mk_mongodb.py plug-in"
-msgstr "Zet de mk_mongodb.py plugin niet in"
-
-#, fuzzy
 msgid "Do not deploy plug-in for Hyper-V VM Guest Information"
 msgstr "Invoegtoepassing niet implementeren voor Hyper-V VM Guest-informatie"
 
@@ -21423,15 +21423,16 @@ msgid "Do not deploy the mk_filehandler plug-in"
 msgstr "Zet de docker plugin niet in"
 
 #, fuzzy
+msgid "Do not deploy the mk_mongodb plug-in"
+msgstr "Zet de mk_mongodb.py plugin niet in"
+
+#, fuzzy
 msgid "Do not deploy the plug-in"
 msgstr "Implementeer de %s plugin niet"
 
 #, fuzzy
 msgid "Do not deploy the plug-ins"
 msgstr "Implementeer de %s plugin niet"
-
-msgid "Do not deploy."
-msgstr "Niet inzetten."
 
 msgid "Do not discover"
 msgstr "Ontdek niet"
@@ -34178,6 +34179,10 @@ msgstr "Negeer fouten in plugins met enkele controle"
 
 msgid "Ignore hard query limit"
 msgstr "Negeer harde zoeklimiet"
+
+#, fuzzy
+msgid "Ignore if older than"
+msgstr "Waarschuwing indien ouder dan"
 
 msgid "Ignore intervals shorter or equal"
 msgstr "Negeer intervallen korter of gelijk"
@@ -49623,8 +49628,9 @@ msgstr "PDU Stekkertoestand"
 msgid "PDisk EID:Slot-Device"
 msgstr "PDisk EID:Slot-Device"
 
-msgid "PEM File"
-msgstr "PEM-bestand"
+#, fuzzy
+msgid "PEM File content"
+msgstr "Aantal bestanden op"
 
 msgid "PEND"
 msgstr "PEND"
@@ -76207,19 +76213,11 @@ msgstr ""
 "Tijd tot waarschuwing, als de laatste CronJob-taak al langer loopt dan de "
 "ingestelde tijd"
 
-#, fuzzy
-msgid "Time until certificate credentials expiration"
-msgstr "Tijd tot de vervaldatum van de referenties"
-
 msgid "Time until credentials expiration"
 msgstr "Tijd tot de vervaldatum van de referenties"
 
 msgid "Time until license expiration"
 msgstr "Tijd tot licentievervaldatum"
-
-#, fuzzy
-msgid "Time until secret credentials expiration"
-msgstr "Tijd tot de vervaldatum van de referenties"
 
 msgid "Time usage by phase"
 msgstr "Tijdsgebruik per fase"
@@ -84054,19 +84052,12 @@ msgid "Verification failed: %s"
 msgstr "Verificatie is mislukt: %s"
 
 #, fuzzy
-msgid "Verify Certificates"
-msgstr "Certificaten verifiëren"
-
-#, fuzzy
 msgid "Verify SSL certificate (not verifying is insecure)"
 msgstr "Negeer certificaatfouten (onveilig)"
 
 #, fuzzy
 msgid "Verify TLS certificate (not verifying is insecure)"
 msgstr "Negeer certificaatfouten (onveilig)"
-
-msgid "Verify certificates"
-msgstr "Certificaten verifiëren"
 
 msgid "Verify response"
 msgstr "Antwoord verifiëren"
@@ -95806,6 +95797,36 @@ msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
 
+#~ msgid "Deploy mk_mongodb.py with authentication."
+#~ msgstr "Zet mk_mongodb.py in met authenticatie."
+
+#~ msgid "Deploy mk_mongodb.py without authentication."
+#~ msgstr "Zet mk_mongodb.py in met authenticatie."
+
+#~ msgid "Deploy without authentication."
+#~ msgstr "Implementeer zonder authenticatie."
+
+#~ msgid "Do not deploy."
+#~ msgstr "Niet inzetten."
+
+#~ msgid "PEM File"
+#~ msgstr "PEM-bestand"
+
+#, fuzzy
+#~ msgid "Time until certificate credentials expiration"
+#~ msgstr "Tijd tot de vervaldatum van de referenties"
+
+#, fuzzy
+#~ msgid "Time until secret credentials expiration"
+#~ msgstr "Tijd tot de vervaldatum van de referenties"
+
+#, fuzzy
+#~ msgid "Verify Certificates"
+#~ msgstr "Certificaten verifiëren"
+
+#~ msgid "Verify certificates"
+#~ msgstr "Certificaten verifiëren"
+
 #, fuzzy, python-format
 #~ msgid "Error while running migration script: %s"
 #~ msgstr "Fout bij het renderen van element type '%s'"
@@ -95824,18 +95845,6 @@ msgstr ""
 
 #~ msgid "Use data from OpenShift"
 #~ msgstr "Gebruik gegevens van OpenShift"
-
-#, fuzzy
-#~ msgid "Check certificate credentials"
-#~ msgstr "CA-certificaat"
-
-#, fuzzy
-#~ msgid "Check secret credentials"
-#~ msgstr "Gebruik geloofsbrieven"
-
-#, fuzzy
-#~ msgid "Ignore if older than"
-#~ msgstr "Waarschuwing indien ouder dan"
 
 #, fuzzy
 #~ msgid "A fatal error occurred:"

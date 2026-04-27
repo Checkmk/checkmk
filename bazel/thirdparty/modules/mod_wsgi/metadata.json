@@ -1,0 +1,6 @@
+{
+  "homepage": "https://modwsgi.readthedocs.io/",
+  "maintainers": [],
+  "repository": ["github:GrahamDumpleton/mod_wsgi"],
+  "versions": ["5.0.2.cmk.1"]
+}

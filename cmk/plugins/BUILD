@@ -278,6 +278,7 @@ filegroup(
         "azure_status/libexec/agent_azure_status",
         "checkmk/libexec/agent_bi",
         "checkmk/libexec/check_cmk_inv",
+        "checkmk/libexec/check_notify_count",
         "cisco_meraki/libexec/agent_cisco_meraki",
         "couchbase/libexec/agent_couchbase",
         "datadog/libexec/agent_datadog",

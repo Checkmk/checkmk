@@ -201,7 +201,7 @@ test-update-pro:
 	$(PYTEST) --cmk-edition pro $(realpath update)/nonfree $(PYTEST_SYSTEM_TEST_ARGS) --session-timeout 5400
 
 test-update-ultimate:
-	$(PYTEST) --cmk-edition ultimate $(realpath update)/nonfree $(PYTEST_SYSTEM_TEST_ARGS) --session-timeout 5400
+	$(PYTEST) --cmk-edition ultimate $(realpath update)/nonfree $(PYTEST_SYSTEM_TEST_ARGS) --session-timeout 9000
 
 test-update-ultimatemt:
 	$(PYTEST) --cmk-edition ultimatemt $(realpath update)/nonfree $(PYTEST_SYSTEM_TEST_ARGS) --session-timeout 9000

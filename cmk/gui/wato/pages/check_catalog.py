@@ -649,8 +649,7 @@ class ModeCheckManPage(WatoMode):
 
     def _manpage_text(self, text: str) -> str:
         html_code = re.sub("{(.*?)}", "<tt>\\1</tt>", text)
-        html_code = re.sub("\n\n+", "<p>", html_code)
-        return html_code
+        return "".join(f"<p>{p}</p>" for p in re.split(r"\n\n+", html_code))
 
     def _show_ruleset(self, varname: str) -> None:
         if varname not in rulespec_registry:

@@ -532,6 +532,7 @@ py_wheel(
         "//cmk/gui/openapi:versioned_endpoint_map",
         "//cmk/gui/openapi/api_endpoints",
         "//cmk/gui/openapi/endpoints",
+        "//cmk/gui/openapi/endpoints:utils",
         "//cmk/gui/openapi/framework",
         "//cmk/gui/openapi/framework:api_config",
         "//cmk/gui/openapi/framework:core",

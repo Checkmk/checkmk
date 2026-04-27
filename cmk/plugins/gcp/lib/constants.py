@@ -26,6 +26,7 @@ RegionMap: typing.Final = {
     "asia-south2": "Delhi",
     "asia-southeast1": "Singapore",
     "asia-southeast2": "Jakarta",
+    "asia-southeast3": "Bangkok",
     "australia-southeast1": "Sydney",
     "australia-southeast2": "Melbourne",
     "europe-central2": "Warsaw",

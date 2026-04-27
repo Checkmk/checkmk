@@ -4,6 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.agent_registration.token_util import issue_agent_registration_token
+from cmk.gui.i18n import _
+from cmk.gui.logged_in import user
 from cmk.gui.openapi.framework import (
     ApiContext,
     APIVersion,
@@ -15,7 +17,13 @@ from cmk.gui.openapi.framework import (
 )
 from cmk.gui.openapi.framework.model.response import ApiResponse
 from cmk.gui.openapi.restful_objects.constructors import collection_href
+from cmk.gui.openapi.utils import ProblemException
+from cmk.gui.site_config import site_is_local
 from cmk.gui.token_auth import get_token_store
+from cmk.gui.watolib.agent_token_automations import (
+    AgentRegistrationTokenCreateRequest,
+    forward_token_create,
+)
 
 from .family import AGENT_REGISTRATION_FAMILY
 from .model.token import (
@@ -31,12 +39,48 @@ def create_agent_registration_token_v1(
 ) -> ApiResponse[AgentRegistrationTokenObjectModel]:
     """Creates a new agent registration token and returns its metadata."""
     verify_permissions(body.host)
-    token_store = get_token_store()
+
+    if body.site_id is not None:
+        site_config = api_context.config.sites.get(body.site_id)
+        if site_config is None:
+            raise ProblemException(
+                status=400,
+                title="Unknown site",
+                detail=_('No site with id "%s" is configured.') % body.site_id,
+            )
+        if not site_is_local(site_config):
+            forwarded = forward_token_create(
+                site_id=body.site_id,
+                site_config=site_config,
+                command="agent-registration-token-create",
+                request_payload=AgentRegistrationTokenCreateRequest(
+                    issuer=user.ident,
+                    host_name=body.host.name(),
+                    expires_at=body.expires_at,
+                    comment=body.comment,
+                ),
+                debug=api_context.config.debug,
+            )
+            return ApiResponse(
+                AgentRegistrationTokenObjectModel(
+                    id=forwarded.id,
+                    domainType="agent_registration_token",
+                    extensions=AgentRegistrationTokenMetadata(
+                        comment=body.comment,
+                        host_name=body.host.name(),
+                        issued_at=forwarded.issued_at,
+                        expires_at=forwarded.expires_at,
+                    ),
+                    links=[],
+                ),
+                status_code=201,
+            )
+
     token = issue_agent_registration_token(
         expiration_time=body.expires_at,
         host=body.host,
         comment=body.comment,
-        token_store=token_store,
+        token_store=get_token_store(),
     )
 
     return ApiResponse(

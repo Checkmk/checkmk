@@ -460,6 +460,8 @@ class JobRenderer:
             html.td("", css="job_last_progress")
             html.td("", css="job_result")
 
+        html.close_tr()
+
     @classmethod
     def get_css_for_jobstate(cls, job_state: str) -> str:
         job_css_map = {

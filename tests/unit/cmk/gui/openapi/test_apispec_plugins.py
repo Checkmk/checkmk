@@ -161,7 +161,6 @@ def test_apispec_plugin_string_to_string_dict(spec: APISpec) -> None:
             "type": "string",
             "description": "Tag value here",
             "pattern": "foo|bar",
-            "required": True,
         },
     }
 

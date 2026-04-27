@@ -471,7 +471,7 @@ class ModeEditSite(WatoMode):
                         "service on that site. You can either use an absolute URL prefix like <tt>http://some.host/mysite/</tt> "
                         "or a relative URL like <tt>/mysite/</tt>. When using relative prefixes you need a mod_proxy "
                         "configuration in your local system Apache that proxies such URLs to the according remote site. "
-                        "Please refer to the <a target=_blank href='%s'>User Guide</a> for details. "
+                        'Please refer to the <a href="%s" target="_blank">User Guide</a> for details. '
                         "The prefix should end with a slash. Omit the <tt>/nagvis/</tt> from the prefix."
                     )
                     % proxy_docu_url,
@@ -502,7 +502,7 @@ class ModeEditSite(WatoMode):
                         "you prevent graphical user interface (GUI) from running into timeouts when remote sites do not respond. "
                         "You need to add the remote monitoring servers as hosts into your local monitoring "
                         "site and use their host state as a reachability state of the remote site. Please "
-                        "refer to the <a target=_blank href='%s'>online documentation</a> for details."
+                        'refer to the <a href="%s" target="_blank">online documentation</a> for details.'
                     )
                     % status_host_docu_url,
                 ),

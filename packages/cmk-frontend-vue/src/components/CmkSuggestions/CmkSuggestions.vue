@@ -3,19 +3,8 @@ Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
 This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 conditions defined in the file COPYING, which is part of this source code package.
 -->
-<script setup lang="ts">
-import { type Ref, computed, nextTick, ref, useTemplateRef } from 'vue'
-
-import usei18n from '@/lib/i18n'
-import { useDebounceRef } from '@/lib/useDebounce'
-import { immediateWatch } from '@/lib/watch'
-
-import CmkHtml from '@/components/CmkHtml.vue'
-import CmkScrollContainer from '@/components/CmkScrollContainer.vue'
-
-import { ErrorResponse, Response, type Suggestion, WarningResponse } from './suggestions'
-
-const { _t } = usei18n()
+<script lang="ts">
+export type Suggestions = SuggestionsFixed | SuggestionsFiltered | SuggestionsCallbackFiltered
 
 type SuggestionsFixed = {
   type: 'fixed'
@@ -32,7 +21,61 @@ type SuggestionsCallbackFiltered = {
   querySuggestions: (query: string) => Promise<ErrorResponse | WarningResponse | Response>
 }
 
-export type Suggestions = SuggestionsFixed | SuggestionsFiltered | SuggestionsCallbackFiltered
+export class NoSelection {
+  getName(): null {
+    return null
+  }
+  getTitle(): null {
+    return null
+  }
+}
+
+export class Selection {
+  value: string
+  constructor(value: string) {
+    this.value = value
+  }
+  getName(): string {
+    return this.value
+  }
+  getTitle(): null {
+    return null
+  }
+}
+
+export class SelectionWithTitle {
+  // we are tightly coupled with CmkDropdown. We have to look up the title
+  // there, and want to save one request, so we have to transport the title...
+  name: string // id / backend value
+  title: string // label / human readable
+  constructor(name: string, title: string) {
+    this.name = name
+    this.title = title
+  }
+  getName(): string {
+    return this.name
+  }
+  getTitle(): string {
+    return this.title
+  }
+}
+
+export type SuggestionValue = NoSelection | SelectionWithTitle | Selection
+</script>
+
+<script setup lang="ts">
+import { type Ref, computed, nextTick, ref, useTemplateRef } from 'vue'
+
+import usei18n from '@/lib/i18n'
+import { useDebounceRef } from '@/lib/useDebounce'
+import { immediateWatch } from '@/lib/watch'
+
+import CmkHtml from '@/components/CmkHtml.vue'
+import CmkScrollContainer from '@/components/CmkScrollContainer.vue'
+
+import { ErrorResponse, Response, type Suggestion, WarningResponse } from './suggestions'
+
+const { _t } = usei18n()
 
 const {
   selectedSuggestion,
@@ -40,7 +83,7 @@ const {
   role,
   noResultsHint = ''
 } = defineProps<{
-  selectedSuggestion: string | null
+  selectedSuggestion: SuggestionValue
   suggestions: Suggestions
   role: 'suggestion' | 'option'
   noResultsHint?: string
@@ -59,7 +102,9 @@ const emit = defineEmits<{
 const error = ref<string>('')
 const warning = ref<string>('')
 const suggestionRefs = useTemplateRef('suggestionRefs')
-const filterString = ref<string>('')
+const filterString = ref<string>(
+  suggestions.type === 'callback-filtered' ? selectedSuggestion.getTitle() || '' : ''
+)
 const suggestionInputRef = ref<HTMLInputElement | null>(null)
 
 const filteredSuggestions = ref<Array<Suggestion>>([])
@@ -115,14 +160,13 @@ async function getSuggestions(
 }
 
 const debouncedFilterString = useDebounceRef(filterString)
-const effectiveFilterString = computed(() =>
+const effectiveFilterString = () =>
   suggestions.type === 'callback-filtered' ? debouncedFilterString.value : filterString.value
-)
 
 async function handleSuggestionsUpdate(
   newSuggestions: Suggestions,
   query: string,
-  newSelectedSuggestion: string | null
+  newSelectedSuggestion: SuggestionValue
 ): Promise<void> {
   const result = await getSuggestions(newSuggestions, query)
 
@@ -139,17 +183,19 @@ async function handleSuggestionsUpdate(
     error.value = ''
     warning.value = ''
     filteredSuggestions.value = result.choices
-    const foundSuggestion = newSelectedSuggestion
-      ? filteredSuggestions.value.find((s) => s.name === newSelectedSuggestion)
-      : null
+    const foundSuggestion =
+      newSelectedSuggestion instanceof NoSelection
+        ? null
+        : filteredSuggestions.value.find((s) => s.name === newSelectedSuggestion.getName())
 
-    if (newSelectedSuggestion !== null && !isSelectedSuggestionSetAsFilter.value) {
+    if (!(newSelectedSuggestion instanceof NoSelection) && !isSelectedSuggestionSetAsFilter.value) {
       if (newSuggestions.type === 'callback-filtered') {
-        filterString.value = foundSuggestion?.title ?? newSelectedSuggestion
+        filterString.value = foundSuggestion?.title ?? newSelectedSuggestion.getName()
+
         isSelectedSuggestionSetAsFilter.value = true
       }
     }
-    if (foundSuggestion) {
+    if (foundSuggestion && newSuggestions.type !== 'filtered') {
       activeSuggestion.value = foundSuggestion
     } else {
       activeSuggestion.value = null
@@ -161,7 +207,7 @@ async function handleSuggestionsUpdate(
 immediateWatch(
   () => ({
     newSuggestions: suggestions,
-    newFilterString: effectiveFilterString.value,
+    newFilterString: effectiveFilterString(),
     newSelectedSuggestion: selectedSuggestion
   }),
   async ({ newSuggestions, newFilterString, newSelectedSuggestion }) => {
@@ -183,7 +229,7 @@ function selectSuggestion(suggestion: Suggestion | null) {
     // do not select non-selectable elements
     return
   }
-  if (suggestion && suggestion.name === selectedSuggestion) {
+  if (suggestion && suggestion.name === selectedSuggestion.getName()) {
     emit('request-close-suggestions')
     return
   }

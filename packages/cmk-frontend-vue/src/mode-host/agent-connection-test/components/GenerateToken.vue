@@ -33,6 +33,7 @@ export interface IAgentTokenGenerationRequestBody {
   host?: string
   comment?: string
   expires_at?: Date | undefined
+  site_id?: string
 }
 
 const { _t, _tn } = usei18n()

@@ -33,6 +33,7 @@ const props = defineProps<{
   isPushMode: boolean
   closeButtonTitle: TranslatedString
   hostName: string
+  siteId: string
   userSettingsUrl: string
   agentReceiverPortIsDefault: boolean
 }>()
@@ -91,7 +92,8 @@ function reset() {
             :expires-in-seconds="604800"
             :token-generation-body="{
               host: hostName,
-              comment: 'Agent registration token for agent slideout'
+              comment: 'Agent registration token for agent slideout',
+              site_id: siteId
             }"
             :description="_t('This requires the generation of a registration token.')"
           />

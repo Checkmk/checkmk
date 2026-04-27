@@ -38,6 +38,7 @@ const props = defineProps<{
   agentInstalled: boolean
   isPushMode: boolean
   hostName: string
+  siteId: string
   agentReceiverPortIsDefault: boolean
 }>()
 
@@ -224,7 +225,7 @@ function getInitStep() {
                         )
                       "
                       :expires-in-seconds="604800"
-                      :token-generation-body="{}"
+                      :token-generation-body="{ site_id: siteId }"
                     />
                   </div>
                   <template v-if="ott !== null">
@@ -338,6 +339,7 @@ function getInitStep() {
             :is-push-mode="isPushMode"
             :close-button-title="closeButtonTitle"
             :host-name="hostName"
+            :site-id="siteId"
             :user-settings-url="userSettingsUrl"
             :agent-receiver-port-is-default="agentReceiverPortIsDefault"
             @close="close"

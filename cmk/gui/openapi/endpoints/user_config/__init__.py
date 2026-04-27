@@ -35,6 +35,7 @@ from cmk.gui.openapi.restful_objects import constructors, Endpoint
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.openapi.restful_objects.type_defs import DomainObject
 from cmk.gui.openapi.utils import ProblemException, serve_json
+from cmk.gui.site_config import is_distributed_setup_remote_site
 from cmk.gui.type_defs import UserSpec
 from cmk.gui.userdb import (
     ConnectorType,
@@ -218,6 +219,18 @@ def edit_user(params: Mapping[str, Any]) -> Response:
 
     current_attrs = _load_user(username)
     constructors.require_etag(constructors.hash_of_dict(current_attrs))
+
+    if api_attrs.get("auth_option", {}).get("auth_type") in (
+        "password",
+        "automation",
+        "remove",
+    ) and is_distributed_setup_remote_site(active_config.sites):
+        raise ProblemException(
+            status=403,
+            title="Not allowed on remote site",
+            detail="Changing user credentials is not permitted on remote sites.",
+        )
+
     internal_attrs = _api_to_internal_format(
         current_attrs,
         api_attrs,

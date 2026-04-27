@@ -2999,7 +2999,9 @@ class ModePersonalUserNotifications(ABCUserNotificationsMode):
                         )
                     ],
                 ),
-                page_menu_dropdown_user_related(self._edition, "user_notifications_p"),
+                page_menu_dropdown_user_related(
+                    self._edition, config.sites, "user_notifications_p"
+                ),
             ],
             breadcrumb=breadcrumb,
             inpage_search=PageMenuSearch(),

@@ -130,7 +130,7 @@ class UserProfile(Page):
             html,
             title,
             breadcrumb,
-            user_profile_page_menu(self._edition, breadcrumb),
+            user_profile_page_menu(self._edition, ctx.config.sites, breadcrumb),
             debug=ctx.config.debug,
             lang=user.language,
             inject_js_profiling_code=ctx.config.inject_js_profiling_code,

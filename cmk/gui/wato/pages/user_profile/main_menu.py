@@ -8,12 +8,14 @@
 from collections.abc import Callable
 from typing import override
 
+from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _, _l
 from cmk.gui.logged_in import user
 from cmk.gui.main_menu import MainMenuRegistry
 from cmk.gui.main_menu_types import MainMenuItem
 from cmk.gui.pages import AjaxPage, PageContext, PageEndpoint, PageRegistry, PageResult
+from cmk.gui.site_config import is_distributed_setup_remote_site
 from cmk.gui.theme.choices import theme_choices
 from cmk.gui.theme.current_theme import theme
 from cmk.gui.type_defs import HTTPVariables, IconNames
@@ -135,7 +137,11 @@ def default_user_menu_topics(
         else []
     )
 
-    if user.may("general.change_password") and add_change_password_menu_item:
+    if (
+        user.may("general.change_password")
+        and add_change_password_menu_item
+        and not is_distributed_setup_remote_site(active_config.sites)
+    ):
         entries.append(
             NavItemTopicEntry(
                 id="change_password",

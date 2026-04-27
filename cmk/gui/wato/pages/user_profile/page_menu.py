@@ -5,6 +5,8 @@
 
 from collections.abc import Iterator
 
+from livestatus import SiteConfigurations
+
 from cmk.ccc.version import Edition
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.http import request
@@ -18,20 +20,28 @@ from cmk.gui.page_menu import (
     PageMenuEntry,
     PageMenuTopic,
 )
+from cmk.gui.site_config import is_distributed_setup_remote_site
 from cmk.gui.type_defs import IconNames, StaticIcon
 from cmk.gui.utils.urls import requested_file_name
 
 
-def user_profile_page_menu(edition: Edition, breadcrumb: Breadcrumb) -> PageMenu:
+def user_profile_page_menu(
+    edition: Edition, sites: SiteConfigurations, breadcrumb: Breadcrumb
+) -> PageMenu:
     menu = make_simple_form_page_menu(
         _("Profile"), breadcrumb, form_name="profile", button_name="_save"
     )
-    menu.dropdowns.insert(1, page_menu_dropdown_user_related(edition, requested_file_name(request)))
+    menu.dropdowns.insert(
+        1, page_menu_dropdown_user_related(edition, sites, requested_file_name(request))
+    )
     return menu
 
 
 def page_menu_dropdown_user_related(
-    edition: Edition, page_name: str, show_shortcuts: bool = True
+    edition: Edition,
+    sites: SiteConfigurations,
+    page_name: str,
+    show_shortcuts: bool = True,
 ) -> PageMenuDropdown:
     return PageMenuDropdown(
         name="related",
@@ -39,20 +49,24 @@ def page_menu_dropdown_user_related(
         topics=[
             PageMenuTopic(
                 title=_("User"),
-                entries=list(_page_menu_entries_related(edition, page_name, show_shortcuts)),
+                entries=list(_page_menu_entries_related(edition, sites, page_name, show_shortcuts)),
             ),
         ],
     )
 
 
 def _page_menu_entries_related(
-    edition: Edition, page_name: str, show_shortcuts: bool = True
+    edition: Edition,
+    sites: SiteConfigurations,
+    page_name: str,
+    show_shortcuts: bool = True,
 ) -> Iterator[PageMenuEntry]:
     is_cse_edition = edition == Edition.CLOUD
+    is_remote_site = is_distributed_setup_remote_site(sites)
 
     must_change_password = request.get_ascii_input("reason") in ("expired", "enforced")
 
-    if page_name != "user_change_pw" and not is_cse_edition:
+    if page_name != "user_change_pw" and not is_cse_edition and not is_remote_site:
         yield PageMenuEntry(
             title=_("Change password"),
             icon_name=StaticIcon(IconNames.topic_change_password),

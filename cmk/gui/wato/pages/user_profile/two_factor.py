@@ -370,7 +370,9 @@ class UserTwoFactorOverview(Page):
         )
         return HTML.empty().join([header_msg, message1, codesdiv, message2, copy_button])
 
-    def _page_menu(self, request: Request, breadcrumb: Breadcrumb) -> PageMenu:
+    def _page_menu(
+        self, request: Request, sites: SiteConfigurations, breadcrumb: Breadcrumb
+    ) -> PageMenu:
         assert user.id is not None
         credentials = load_two_factor_credentials(user.id)
         registered_credentials = list(credentials["webauthn_credentials"].keys()) + list(
@@ -455,7 +457,7 @@ class UserTwoFactorOverview(Page):
                     ],
                 ),
                 page_menu_dropdown_user_related(
-                    self._edition, page_name=overview_page_name, show_shortcuts=False
+                    self._edition, sites, page_name=overview_page_name, show_shortcuts=False
                 ),
             ],
             breadcrumb=breadcrumb,
@@ -606,7 +608,7 @@ class UserTwoFactorOverview(Page):
             html,
             title,
             breadcrumb,
-            self._page_menu(ctx.request, breadcrumb),
+            self._page_menu(ctx.request, ctx.config.sites, breadcrumb),
             debug=ctx.config.debug,
             lang=user.language,
             inject_js_profiling_code=ctx.config.inject_js_profiling_code,
@@ -688,7 +690,7 @@ class UserTwoFactorEnforce(Page):
     def _action(self) -> None:
         assert user.id is not None
 
-    def _page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
+    def _page_menu(self, sites: SiteConfigurations, breadcrumb: Breadcrumb) -> PageMenu:
         assert user.id is not None
 
         page_menu: PageMenu = PageMenu(
@@ -730,7 +732,7 @@ class UserTwoFactorEnforce(Page):
                     ],
                 ),
                 page_menu_dropdown_user_related(
-                    self._edition, page_name=overview_page_name, show_shortcuts=False
+                    self._edition, sites, page_name=overview_page_name, show_shortcuts=False
                 ),
             ],
             breadcrumb=breadcrumb,
@@ -809,7 +811,7 @@ class UserTwoFactorEnforce(Page):
             html,
             title,
             breadcrumb,
-            self._page_menu(breadcrumb),
+            self._page_menu(ctx.config.sites, breadcrumb),
             debug=ctx.config.debug,
             lang=user.language,
             inject_js_profiling_code=ctx.config.inject_js_profiling_code,

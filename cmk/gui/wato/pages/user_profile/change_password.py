@@ -13,7 +13,7 @@ from cmk.crypto.password import Password, PasswordPolicy
 from cmk.gui import forms, userdb
 from cmk.gui.breadcrumb import make_simple_page_breadcrumb
 from cmk.gui.config import Config
-from cmk.gui.exceptions import MKUserError
+from cmk.gui.exceptions import MKAuthException, MKUserError
 from cmk.gui.header import make_header
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import Request
@@ -23,6 +23,7 @@ from cmk.gui.main_menu import main_menu_registry
 from cmk.gui.pages import Page, PageContext, PageEndpoint, PageRegistry
 from cmk.gui.permissions import permission_registry
 from cmk.gui.session import session
+from cmk.gui.site_config import is_distributed_setup_remote_site
 from cmk.gui.userdb import get_user_attributes, UserAttribute
 from cmk.gui.userdb._connections import get_connection
 from cmk.gui.userdb.htpasswd import hash_password
@@ -72,6 +73,9 @@ class UserChangePasswordPage(Page):
         return "_password2"
 
     def _action(self, request: Request, config: Config) -> None:
+        if is_distributed_setup_remote_site(config.sites):
+            raise MKAuthException(_("Changing your password is not allowed on remote sites."))
+
         assert user.id is not None
 
         users = userdb.load_users(lock=True)
@@ -188,13 +192,15 @@ class UserChangePasswordPage(Page):
             "general.change_password",
             ctx.config.wato_enabled,
         )
+        if is_distributed_setup_remote_site(ctx.config.sites):
+            raise MKAuthException(_("Changing your password is not allowed on remote sites."))
         title = self._page_title()
         breadcrumb = make_simple_page_breadcrumb(main_menu_registry.menu_user(), self._page_title())
         make_header(
             html,
             title,
             breadcrumb,
-            user_profile_page_menu(self._edition, breadcrumb),
+            user_profile_page_menu(self._edition, ctx.config.sites, breadcrumb),
             debug=ctx.config.debug,
             lang=user.language,
             inject_js_profiling_code=ctx.config.inject_js_profiling_code,

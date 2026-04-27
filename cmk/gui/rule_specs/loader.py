@@ -83,6 +83,7 @@ def load_api_v1_rule_specs(
     # HACK for migrating plugins: also search in certain modules that are not yet moved.
     # This is for convenience of the reviewer of a plugin migration only:
     # This way we can separate migration and moving.
+    bakery_ns = ("cmk.gui.plugins.legacy_bakery_rulesets",) if agent_bakery_enabled else ()
     not_yet_moved_plugins = set[str]()
     match edition:
         case Edition.COMMUNITY:
@@ -92,12 +93,12 @@ def load_api_v1_rule_specs(
         case Edition.PRO:
             not_yet_moved_plugins = _discover_modules_from(
                 "cmk.gui.plugins.wato.check_parameters",
-                "cmk.gui.plugins.legacy_bakery_rulesets",
+                *bakery_ns,
             )
         case Edition.ULTIMATE | Edition.ULTIMATEMT | Edition.CLOUD:
             not_yet_moved_plugins = _discover_modules_from(
                 "cmk.gui.plugins.wato.check_parameters",
-                "cmk.gui.plugins.legacy_bakery_rulesets",
+                *bakery_ns,
                 "cmk.gui.nonfree.ultimate.plugins.wato.check_parameters",
             )
 

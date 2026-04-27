@@ -5,7 +5,7 @@
 
 import pytest
 
-from cmk.gui.plugins.legacy_bakery_rulesets.mk_apt import migrate
+from cmk.plugins.collection.rulesets.mk_apt import migrate
 
 
 @pytest.mark.parametrize(

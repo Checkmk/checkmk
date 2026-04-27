@@ -3,33 +3,72 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Mapping
 
-from cmk.gui.agent_bakery import RulespecGroupMonitoringAgentsAgentPlugins
-from cmk.gui.i18n import _
-from cmk.gui.plugins.wato.utils import HostRulespec, rulespec_registry
-from cmk.gui.valuespec import DropdownChoice
-from cmk.utils.rulesets.definition import RuleGroup
+from cmk.rulesets.v1 import Help, Title
+from cmk.rulesets.v1.form_specs import (
+    CascadingSingleChoice,
+    CascadingSingleChoiceElement,
+    DefaultValue,
+    DictElement,
+    Dictionary,
+    FixedValue,
+    TimeMagnitude,
+    TimeSpan,
+)
+from cmk.rulesets.v1.rule_specs import AgentConfig, Topic
 
 
-def _valuespec_agent_config_hyperv_vms_guestinfos() -> DropdownChoice[bool | None]:
-    return DropdownChoice(
-        title=_("Hyper-V VM Guest Information (Windows)"),
-        help=_(
+def migrate(value: object) -> Mapping[str, object]:
+    if isinstance(value, dict):
+        return value
+    return {"deployment": ("sync" if value else "do_not_deploy", None)}
+
+
+def _form_spec() -> Dictionary:
+    return Dictionary(
+        help_text=Help(
             "This plug-in provides information about integration services "
             "and checkpoints (snapshots) for each Hyper-V VM guest."
         ),
-        choices=[
-            (True, _("Deploy plug-in for Hyper-V VM Guest Information")),
-            (None, _("Do not deploy plug-in for Hyper-V VM Guest Information")),
-        ],
+        elements={
+            "deployment": DictElement(
+                required=True,
+                parameter_form=CascadingSingleChoice(
+                    title=Title("Deployment type"),
+                    elements=(
+                        CascadingSingleChoiceElement(
+                            name="sync",
+                            title=Title("Deploy Hyper-V VM Guest Information plug-in"),
+                            parameter_form=FixedValue(value=None),
+                        ),
+                        CascadingSingleChoiceElement(
+                            name="cached",
+                            title=Title("Deploy the plug-in and run it asynchronously"),
+                            parameter_form=TimeSpan(
+                                displayed_magnitudes=(
+                                    TimeMagnitude.HOUR,
+                                    TimeMagnitude.MINUTE,
+                                )
+                            ),
+                        ),
+                        CascadingSingleChoiceElement(
+                            name="do_not_deploy",
+                            title=Title("Do not deploy Hyper-V VM Guest Information plug-in"),
+                            parameter_form=FixedValue(value=None),
+                        ),
+                    ),
+                    prefill=DefaultValue("sync"),
+                ),
+            ),
+        },
+        migrate=migrate,
     )
 
 
-rulespec_registry.register(
-    HostRulespec(
-        group=RulespecGroupMonitoringAgentsAgentPlugins,
-        name=RuleGroup.AgentConfig("hyperv_vms_guestinfos"),
-        valuespec=_valuespec_agent_config_hyperv_vms_guestinfos,
-        is_deprecated=True,
-    )
+rule_spec_hyperv_vms_guestinfos = AgentConfig(
+    title=Title("Hyper-V VM Guest Information (Windows)"),
+    name="hyperv_vms_guestinfos",
+    topic=Topic.VIRTUALIZATION,
+    parameter_form=_form_spec,
 )

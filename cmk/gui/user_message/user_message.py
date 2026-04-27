@@ -158,6 +158,7 @@ def show_user_messages() -> None:
 
     if not (messages := [m for m in message.get_gui_messages() if "gui_hint" in m["methods"]]):
         html.show_message(_("Currently you have no received messages"))
+        html.close_div()
         return
 
     security_count = 0

@@ -2717,6 +2717,9 @@ class ABCUserNotificationsMode(ABCNotificationsMode):
                 site_configs=config.sites,
             )
 
+        if self._start_async_repl:
+            return None
+
         search = request.get_str_input("search", "")
         if search:
             return redirect(self.mode_url(user=self._user_id(), search=search))
@@ -3498,6 +3501,9 @@ class ABCEditNotificationRuleMode(ABCNotificationsMode):
                 else _("Notification rule number #%d successfully edited!") % self._edit_nr
             ),
         )
+
+        if self._start_async_repl:
+            return None
 
         if back_mode := request.var("back_mode"):
             return redirect(mode_url(back_mode))

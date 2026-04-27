@@ -11,6 +11,7 @@ from typing import Annotated, Literal, Self
 from dateutil.relativedelta import relativedelta
 from pydantic import AwareDatetime, FutureDatetime
 
+from cmk.ccc.site import SiteId
 from cmk.gui.openapi.framework.model import api_field, api_model
 from cmk.gui.openapi.framework.model.base_models import DomainObjectModel
 from cmk.gui.token_auth import AgentDownloadToken, AuthToken
@@ -51,4 +52,13 @@ class CreateAgentDownloadToken:
         description="The date and time when the token will expire. Defaults to one month from now.",
         example="2025-12-31T23:59:59Z",
         default_factory=lambda: dt.datetime.now(dt.UTC) + relativedelta(months=1),
+    )
+    site_id: SiteId | None = api_field(
+        description=(
+            "Site that should issue and store the token. If set to a remote site, the "
+            "token is created on that site so that the matching agent download endpoint "
+            "(which is also on that site) can validate it. Defaults to the local site."
+        ),
+        example="remote_site",
+        default=None,
     )

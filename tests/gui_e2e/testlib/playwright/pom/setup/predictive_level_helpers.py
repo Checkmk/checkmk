@@ -126,8 +126,6 @@ class PredictiveLevels:
                         f"{self.fixed_limits.critical}",
                     ]
                 )
-            else:
-                res.append("(unset)")
         if self.upper_bound_limit:
             res.append(f"{BoundType.LIMIT_DYNAMIC_UPPER.value}")
             res.extend(

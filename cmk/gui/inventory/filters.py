@@ -154,7 +154,7 @@ class _FilterNumberRange(Filter):
                 deflt=value.get(self._html_var_from_prefix, ""),
             )
             html.close_td()
-            html.close_tr()
+        html.close_tr()
 
         html.open_tr()
         html.open_td()
@@ -177,7 +177,7 @@ class _FilterNumberRange(Filter):
                 deflt=value.get(self._html_var_until_prefix, ""),
             )
             html.close_td()
-            html.close_tr()
+        html.close_tr()
 
         html.close_table()
 

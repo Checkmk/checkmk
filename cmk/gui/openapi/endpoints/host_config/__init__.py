@@ -13,6 +13,8 @@ from collections.abc import Callable, Iterable, Mapping, Sequence
 from typing import Any
 from urllib.parse import urlparse
 
+from marshmallow import ValidationError
+
 from cmk import fields
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
@@ -66,18 +68,30 @@ from cmk.gui.watolib.hosts_and_folders import (
     folder_tree,
     Host,
 )
+from cmk.licensing.basics.features import FeatureName
+from cmk.licensing.registry import is_feature_enabled
+from cmk.utils import paths
 
 BAKE_AGENT_PARAM_NAME = "bake_agent"
+
+
+def _validate_bake_agent_parameter(value: bool) -> bool:
+    if value and not is_feature_enabled(paths.omd_root, FeatureName.BAKERY):
+        raise ValidationError("The bake_agent field is not supported by this license")
+    return True
+
+
 BAKE_AGENT_PARAM = {
     BAKE_AGENT_PARAM_NAME: fields.Boolean(
         load_default=False,
         required=False,
+        validate=_validate_bake_agent_parameter,
         example=False,
         description=(
             "Tries to bake the agents for the just created hosts. This process is started in the "
             "background after configuring the host. Please note that the backing may take some "
             "time and might block subsequent API calls. "
-            "This only works in the commercial editions of Checkmk."
+            "Requires the agent bakery feature to be licensed."
         ),
     )
 }

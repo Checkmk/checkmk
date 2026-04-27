@@ -341,6 +341,14 @@ def fail_on_unannotated_background_job_start(
 
 @pytest.fixture(name="suppress_bake_agents_in_background")
 def fixture_suppress_bake_agents_in_background(mocker: MockerFixture) -> MagicMock:
+    mocker.patch(
+        "cmk.gui.openapi.endpoints.host_config.is_feature_enabled",
+        return_value=True,
+    )
+    mocker.patch(
+        "cmk.gui.fields.definitions.is_feature_enabled",
+        return_value=True,
+    )
     return mocker.patch(
         "cmk.gui.watolib.bakery.try_bake_agents_for_hosts",
         side_effect=lambda *args, **kw: None,

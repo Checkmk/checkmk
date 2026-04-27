@@ -54,6 +54,8 @@ from cmk.gui.watolib.hosts_and_folders import (
 from cmk.gui.watolib.passwords import contact_group_choices, password_exists
 from cmk.gui.watolib.sites import site_management_registry
 from cmk.gui.watolib.tags import load_tag_config_read_only
+from cmk.licensing.basics.features import FeatureName
+from cmk.licensing.registry import is_feature_enabled
 from cmk.livestatus_client.expressions import NothingExpression, QueryExpression
 from cmk.livestatus_client.queries import Query
 from cmk.livestatus_client.tables import Hostgroups, Hosts, Servicegroups
@@ -1026,7 +1028,7 @@ class _BakeAgentField(Boolean):
     """A field representing the bake agent option."""
 
     default_error_messages = {
-        "edition_not_supported": "Bake agent field not supported in this edition.",
+        "feature_not_supported": "Bake agent field not supported by this license.",
     }
 
     def __init__(
@@ -1034,16 +1036,13 @@ class _BakeAgentField(Boolean):
         description: str = "Bake agent packages for this folder even if it is empty.",
         **kwargs: Any,
     ) -> None:
-        description = edition_field_description(
-            description=description,
-            excluded_editions={version.Edition.COMMUNITY},
-        )
+        description = f"{description} Requires the agent bakery feature to be licensed."
         super().__init__(description=description, **kwargs)
 
     @override
     def _validate(self, value: bool) -> None:
-        if version.edition(paths.omd_root) is version.Edition.COMMUNITY:
-            raise self.make_error("edition_not_supported")
+        if not is_feature_enabled(paths.omd_root, FeatureName.BAKERY):
+            raise self.make_error("feature_not_supported")
 
         super()._validate(value)
 

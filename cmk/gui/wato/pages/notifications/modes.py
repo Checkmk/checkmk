@@ -1155,6 +1155,8 @@ class ModeNotifications(ABCNotificationsMode):
                 html.open_tr()
             html.th(key)
             html.td(val)
+        if context:
+            html.close_tr()
         html.close_table()
 
     def _show_rules(

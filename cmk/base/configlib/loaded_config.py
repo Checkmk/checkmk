@@ -128,6 +128,8 @@ class LoadedConfigFragment:
     http_proxies: Mapping[str, HTTPProxySpec]
     oauth2_connections: Mapping[str, OAuth2Connection]
     extra_service_conf: Mapping[str, Sequence[RuleSpec[object]]]
+    extra_host_conf: Mapping[str, Sequence[RuleSpec[Any]]]
+    host_attributes: Mapping[HostName, Mapping[str, Any]]
     timeperiods: object  # Here we don't lie for a change. We haven't parsed anything.
     check_periods: Sequence[RuleSpec[object]]
     relays: object  # see above

@@ -737,6 +737,8 @@ def _perform_post_config_loading_actions(
         http_proxies=http_proxies,
         oauth2_connections=oauth2_connections,
         extra_service_conf=extra_service_conf,
+        extra_host_conf=extra_host_conf,
+        host_attributes=host_attributes,
         timeperiods=timeperiods,
         check_periods=check_periods,
         relays=relays,
@@ -2175,7 +2177,9 @@ class ConfigCache:
         host_name: HostName,
         host_ip_family: Literal[socket.AddressFamily.AF_INET, socket.AddressFamily.AF_INET6],
     ) -> HostAddress | None:
-        if mgmt_host_address := host_attributes.get(host_name, {}).get("management_address"):
+        if mgmt_host_address := self._loaded_config.host_attributes.get(host_name, {}).get(
+            "management_address"
+        ):
             return mgmt_host_address
 
         if host_ip_family is socket.AF_INET6:
@@ -2244,7 +2248,9 @@ class ConfigCache:
         # Alias by rule matching
         default: Sequence[RuleSpec[HostName]] = []
         aliases = self.ruleset_matcher.get_host_values_all(
-            host_name, extra_host_conf.get("alias", default), self.label_manager.labels_of_host
+            host_name,
+            self._loaded_config.extra_host_conf.get("alias", default),
+            self.label_manager.labels_of_host,
         )
 
         # First rule match and Fallback alias
@@ -2279,7 +2285,7 @@ class ConfigCache:
         attrs: ObjectAttributes = {}
         attrs.update(self.explicit_host_attributes(host_name))
 
-        for key, ruleset in extra_host_conf.items():
+        for key, ruleset in self._loaded_config.extra_host_conf.items():
             if key in attrs:
                 # An explicit value is already set
                 values: Sequence[object] = [attrs[key]]
@@ -2331,7 +2337,7 @@ class ConfigCache:
             return self.__is_waiting_for_discovery_host[host_name]
 
         return self.__is_waiting_for_discovery_host.setdefault(
-            host_name, ConfigCache._is_waiting_for_discovery(host_name)
+            host_name, self._is_waiting_for_discovery(host_name)
         )
 
     def is_ping_host(self, host_name: HostName) -> bool:
@@ -2921,7 +2927,9 @@ class ConfigCache:
 
     def service_level(self, hostname: HostName) -> int | None:
         entries = self.ruleset_matcher.get_host_values_all(
-            hostname, extra_host_conf.get("_ec_sl", []), self.label_manager.labels_of_host
+            hostname,
+            self._loaded_config.extra_host_conf.get("_ec_sl", []),
+            self.label_manager.labels_of_host,
         )
         return entries[0] if entries else None
 
@@ -3047,22 +3055,28 @@ class ConfigCache:
         )
         return entries[0] if entries else None
 
-    @staticmethod
-    def additional_ipaddresses(hostname: HostName) -> tuple[list[HostAddress], list[HostAddress]]:
+    def additional_ipaddresses(
+        self, hostname: HostName
+    ) -> tuple[list[HostAddress], list[HostAddress]]:
         # TODO Regarding the following configuration variables from WATO
         # there's no inheritance, thus we use 'host_attributes'.
         # Better would be to use cmk.base configuration variables,
         # eg. like 'management_protocol'.
         return (
-            host_attributes.get(hostname, {}).get("additional_ipv4addresses", []),
-            host_attributes.get(hostname, {}).get("additional_ipv6addresses", []),
+            self._loaded_config.host_attributes.get(hostname, {}).get(
+                "additional_ipv4addresses", []
+            ),
+            self._loaded_config.host_attributes.get(hostname, {}).get(
+                "additional_ipv6addresses", []
+            ),
         )
 
-    @staticmethod
-    def _is_waiting_for_discovery(hostname: HostName) -> bool:
+    def _is_waiting_for_discovery(self, hostname: HostName) -> bool:
         """Check custom attribute set by WATO to signal
         the host may be not discovered and should be ignore"""
-        return host_attributes.get(hostname, {}).get("waiting_for_discovery", False)
+        return self._loaded_config.host_attributes.get(hostname, {}).get(
+            "waiting_for_discovery", False
+        )
 
     def check_mk_check_interval(self, host_name: HostName) -> float:
         return self.check_interval(host_name, "Check_MK")
@@ -3317,7 +3331,7 @@ class ConfigCache:
             host_name,
             service_name,
             service_labels,
-            extra_service_conf.get("_ec_sl", []),
+            self._loaded_config.extra_service_conf.get("_ec_sl", []),
             self.label_manager.labels_of_host,
         )
         return _parse(out[0], int) if out else None

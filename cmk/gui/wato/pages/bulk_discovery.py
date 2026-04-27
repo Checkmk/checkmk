@@ -205,6 +205,7 @@ class ModeBulkDiscovery(WatoMode):
             )
             html.open_p()
             html.write_text_permissive(" ".join(msgs))
+            html.close_p()
             vs.render_input("bulkinventory", self._bulk_discovery_params)
             forms.end()
 

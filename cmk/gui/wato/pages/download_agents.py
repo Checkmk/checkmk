@@ -181,7 +181,6 @@ class ABCModeDownloadAgents(WatoMode):
             html.close_div()
             html.div(cmk.utils.render.fmt_bytes(file_size), style="width:60px;", class_="rulecount")
             html.close_div()
-            html.close_div()
         forms.end()
 
 

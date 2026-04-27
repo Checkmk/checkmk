@@ -821,10 +821,10 @@ def _vs_mkeventd_rule(site_configs: SiteConfigurations, customer: str | None = N
             Dictionary(
                 title=_("Count messages in interval"),
                 help=_(
-                    "With this option you can make the rule being executed not before "
-                    "the matching message is seen a couple of times in a defined "
-                    "time interval. Also counting activates the aggregation of messages "
-                    "that result from the same rule into one event, even if <i>count</i> is "
+                    "With this option, rules are not executed until "
+                    "the matching message has been received for the count specified. "
+                    "Counting activates the aggregation of messages matching this rule, "
+                    "combining them into one event, even if <i>count</i> is "
                     "set to 1."
                 ),
                 optional_keys=False,
@@ -835,7 +835,7 @@ def _vs_mkeventd_rule(site_configs: SiteConfigurations, customer: str | None = N
                         Integer(
                             title=_("Count until triggered"),
                             help=_(
-                                "That many times the message must occur until an event is created"
+                                "That many times the message must occur until an event moves out of the <i>counting</i> state"
                             ),
                             minvalue=1,
                         ),
@@ -845,9 +845,8 @@ def _vs_mkeventd_rule(site_configs: SiteConfigurations, customer: str | None = N
                         Age(
                             title=_("Time period for counting"),
                             help=_(
-                                "If in this time range the configured number of time the rule is "
-                                "triggered, an event is being created. If the required count is not reached "
-                                "then the count is reset to zero."
+                                "If an event is still in the <i>counting</i> state after the time period has passed, it will be removed from the event console. "
+                                "Only events which reach or exceed their expected count within the time period are kept."
                             ),
                             default_value=86400,
                         ),

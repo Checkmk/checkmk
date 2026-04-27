@@ -17,7 +17,7 @@ from argparse import ArgumentParser, BooleanOptionalAction
 from argparse import Namespace as Args
 from collections.abc import Iterator
 from pathlib import Path
-from typing import Literal, NamedTuple
+from typing import get_args, Literal, NamedTuple
 
 import requests
 
@@ -37,6 +37,7 @@ from tests.testlib.version import CMKEdition
 
 HTTP_STATUS_OK = 200
 
+UseCase = Literal["release", "daily", "weekly"]
 MetaFileExtension = Literal["json", "csv"]
 
 
@@ -88,9 +89,11 @@ def build_docker_image_name_and_registry(
         )
 
 
-def build_package_artifacts(args: Args, loaded_yaml: dict) -> Iterator[tuple[str, bool]]:
+def build_package_artifacts(
+    args: Args, use_case: UseCase, loaded_yaml: dict
+) -> Iterator[tuple[str, bool]]:
     for edition in loaded_yaml["editions"]:
-        for distro in flatten(loaded_yaml["editions"][edition][args.use_case]):
+        for distro in flatten(loaded_yaml["editions"][edition][use_case]):
             package_name = ABCPackageManager.factory(code_name(distro)).package_name(
                 CMKEdition(CMKEdition.from_long_edition(edition)), version=args.version
             )
@@ -255,7 +258,7 @@ def assert_build_artifacts(args: Args, loaded_yaml: dict) -> None:
         if not internal_only:
             results.append(assert_hash_matches_package_content(artifact_name, version, credentials))
 
-    for artifact_name, internal_only in build_package_artifacts(args, loaded_yaml):
+    for artifact_name, internal_only in build_package_artifacts(args, args.use_case, loaded_yaml):
         results.append(
             assert_presence_on_download_server(version, internal_only, artifact_name, credentials)
         )
@@ -328,7 +331,9 @@ def parse_arguments() -> Args:
     sub_assert_build_artifacts = subparsers.add_parser("assert_build_artifacts")
     sub_assert_build_artifacts.set_defaults(func=assert_build_artifacts)
     sub_assert_build_artifacts.add_argument("--version", required=True, default=False)
-    sub_assert_build_artifacts.add_argument("--use_case", required=False, default="release")
+    sub_assert_build_artifacts.add_argument(
+        "--use_case", required=False, default="release", choices=list(get_args(UseCase))
+    )
 
     sub_print_bom_artifacts = subparsers.add_parser("dump_meta_artifacts_mapping")
     sub_print_bom_artifacts.set_defaults(func=dump_meta_artifacts_mapping)

@@ -5,7 +5,7 @@
 # This agent plugin is meant to be used on a windows server which
 # is running one or multiple MySQL server instances locally.
 
-$CMK_VERSION = "2.4.0p27"
+$CMK_VERSION = "2.4.0p28"
 
 # Entries which assumed as safe during testing security permission check
 # ----------------------------------------------------------------------

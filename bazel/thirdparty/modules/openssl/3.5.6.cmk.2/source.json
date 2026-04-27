@@ -3,7 +3,7 @@
   "strip_prefix": "openssl-3.5.6",
   "url": "https://github.com/openssl/openssl/releases/download/openssl-3.5.6/openssl-3.5.6.tar.gz",
   "overlay": {
-    "BUILD.bazel": "sha256-hyz8e5aMm82hmwTHnqhLxtJUkPeieEfSpboeRAMv9vA=",
-    "MODULE.bazel": "sha256-c/EXJNb7PPwHwNuZ8KFYLs23XEIX5UApdj2+hWtqij0="
+    "BUILD.bazel": "sha256-Ip4N9rFFHxPo81qOb4nph+QaKQcsiLuTcsfffkpQHUo=",
+    "MODULE.bazel": "sha256-OVuc1jJhgHKf5Bm+PgNnQgINjXP1EsNfy6oZb3x/Q1E="
   }
 }

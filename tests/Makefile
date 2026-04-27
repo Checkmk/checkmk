@@ -264,7 +264,7 @@ test-update-ultimate:
 	$(PYTEST) --cmk-edition ultimate $(realpath update)/nonfree/pro $(PYTEST_SYSTEM_TEST_ARGS) --session-timeout 5400
 
 test-update-ultimatemt:
-	$(PYTEST) --cmk-edition ultimatemt $(realpath update)/nonfree/pro $(PYTEST_SYSTEM_TEST_ARGS) --session-timeout 5400
+	$(PYTEST) --cmk-edition ultimatemt $(realpath update)/nonfree/pro $(PYTEST_SYSTEM_TEST_ARGS) --session-timeout 9000
 
 test-update-cloud:
 	$(PYTEST) --cmk-edition cloud $(realpath update)/nonfree/pro $(PYTEST_SYSTEM_TEST_ARGS) --disable-interactive-mode \

@@ -16,7 +16,6 @@ from cmk.automations.types import AutomationID
 from cmk.ccc.hostaddress import HostName
 from cmk.checkengine.discovery import DiscoverySettings
 from cmk.checkengine.plugins import CheckPluginName
-from cmk.diagnostics import DiagnosticsCLParameters
 from cmk.gui.hooks import request_memoize
 from cmk.gui.i18n import _
 from cmk.gui.watolib.activate_changes import sync_changes_before_remote_automation
@@ -791,7 +790,7 @@ def notification_get_bulks(*, only_ripe: bool, debug: bool) -> results.Notificat
 
 def create_diagnostics_dump(
     automation_config: LocalAutomationConfig | RemoteAutomationConfig,
-    serialized_params: DiagnosticsCLParameters,
+    serialized_params: Sequence[str],
     timeout: int,
     *,
     debug: bool,

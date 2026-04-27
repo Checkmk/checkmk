@@ -56,7 +56,6 @@ def type_and_format_of_field(field: fields.Field) -> tuple[str, str | None]:
 
 
 class FieldProperties(typing.TypedDict, total=False):
-    required: bool
     description: str
     format: str
     pattern: str
@@ -64,7 +63,13 @@ class FieldProperties(typing.TypedDict, total=False):
 
 
 def field_properties(field: fields.Field) -> FieldProperties:
-    """
+    """Build the OpenAPI schema object for a field used as additionalProperties.
+
+    Note: `required` is intentionally omitted. In OpenAPI 3.x, `required` is a
+    string[] at the parent schema level listing named properties — it has no
+    meaning inside an additionalProperties schema where keys are dynamic.
+    For named-property schemas, apispec's standard schema2jsonschema handles the
+    required list correctly.
 
     Examples:
 
@@ -75,14 +80,14 @@ def field_properties(field: fields.Field) -> FieldProperties:
         {'type': 'string', 'description': 'Email', 'format': 'email'}
 
         >>> field_properties(fields.String(metadata=dict(format="email", description="Email"), required=True))
-        {'type': 'string', 'description': 'Email', 'format': 'email', 'required': True}
+        {'type': 'string', 'description': 'Email', 'format': 'email'}
 
     Args:
         field:
             A marshmallow Field instance.
 
     Returns:
-        The OpenAPI additionalproperties section.
+        The OpenAPI additionalProperties schema object.
 
     """
     type_, format_ = type_and_format_of_field(field)
@@ -100,9 +105,6 @@ def field_properties(field: fields.Field) -> FieldProperties:
 
     if "pattern" in field.metadata:
         properties["pattern"] = field.metadata["pattern"]
-
-    if field.required:
-        properties["required"] = field.required
 
     return properties
 

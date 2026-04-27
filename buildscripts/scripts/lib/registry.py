@@ -177,11 +177,7 @@ class Registry:
 
         The image has the format `namespace/image_name`.
         """
-        yield from requests.get(
-            f"{self.url}/v2/{image}/tags/list",
-            auth=(self.credentials.username, self.credentials.password),
-            timeout=30,
-        ).json()["tags"]
+        yield from self._get_existing_tags(f"{self.url}/v2/{image}/tags/list")
 
     def image_exists_docker_hub(self, image: DockerImage, _edition: str) -> bool:
         sys.stdout.write(f"Test if {image.full_name()} is available...")
@@ -199,14 +195,7 @@ class Registry:
     def image_exists_enterprise(self, image: DockerImage, _edition: str) -> bool:
         url = f"{self.url}/v2/{image.image_name}/tags/list"
         sys.stdout.write(f"Test if {image.tag} can be found in {url}...")
-        exists = (
-            image.tag
-            in requests.get(
-                url,
-                auth=(self.credentials.username, self.credentials.password),
-                timeout=30,
-            ).json()["tags"]
-        )
+        exists = image.tag in self._get_existing_tags(url)
         if not exists:
             sys.stdout.write(" NO!\n")
             return False
@@ -229,6 +218,23 @@ class Registry:
             return False
         sys.stdout.write(" OK\n")
         return True
+
+    def _get_existing_tags(self, url: str) -> list[DockerTag]:
+        response = requests.get(
+            url,
+            auth=(self.credentials.username, self.credentials.password),
+            timeout=30,
+        )
+
+        if not response.ok:
+            raise RuntimeError(
+                f"Failed to communicate with registry: HTTP status {response.status_code}"
+                + (f"- {response.content.decode()}" if response.content else "")
+            )
+
+        tags: list[DockerTag] = response.json()["tags"]
+
+        return tags
 
     def get_previous_release_tag(self, image: DockerImage, edition: str) -> str:
         """

@@ -143,7 +143,8 @@ class ModeUserMigrate(WatoMode):
 
     def _show_form_page(self, user_attributes: Sequence[tuple[str, UserAttribute]]) -> None:
         if not (selected_users := _get_selected_users()):
-            raise MKUserError("users", _("You have to select at least one user."))
+            html.show_error(_("You have to select at least one user."))
+            return
 
         html.show_message(
             _("You have selected %d %s for migration: %s")

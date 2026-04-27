@@ -747,6 +747,7 @@ def _perform_post_config_loading_actions(
         inventory_check_severity=inventory_check_severity,
         enable_rulebased_notifications=enable_rulebased_notifications,
         current_customer=current_customer,
+        host_paths=host_paths,
         timeperiods=timeperiods,
         check_periods=check_periods,
         relays=relays,
@@ -1699,7 +1700,9 @@ class ConfigCache:
 
         self._check_table_cache = cache_manager.obtain_cache("check_tables")
         self._cache_section_name_of: dict[str, str] = {}
-        self._host_paths: dict[HostName, str] = ConfigCache._get_host_paths(host_paths)
+        self._host_paths: dict[HostName, str] = ConfigCache._get_host_paths(
+            self._loaded_config.host_paths
+        )
 
         (
             self._clusters_of_cache,
@@ -2028,7 +2031,7 @@ class ConfigCache:
         self.__snmp_backend.clear()
 
     @staticmethod
-    def _get_host_paths(config_host_paths: dict[HostName, str]) -> dict[HostName, str]:
+    def _get_host_paths(config_host_paths: Mapping[HostName, str]) -> dict[HostName, str]:
         """Reference hostname -> dirname including /"""
         host_dirs = {}
         for hostname, filename in config_host_paths.items():
@@ -3430,7 +3433,7 @@ class ConfigCache:
         for n, address in enumerate(add_ipv6addrs, start=1):
             attrs[f"_ADDRESSES_6_{n}"] = address
 
-        if path := host_paths.get(hostname):
+        if path := self._loaded_config.host_paths.get(hostname):
             attrs["_FILENAME"] = path
 
         if actions := self.icons_and_actions(hostname):

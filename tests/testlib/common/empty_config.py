@@ -101,6 +101,7 @@ EMPTY_CONFIG = LoadedConfigFragment(
     inventory_check_severity=1,
     enable_rulebased_notifications=True,
     current_customer="provider",
+    host_paths={},
     timeperiods={},
     check_periods=(),
     relays={},

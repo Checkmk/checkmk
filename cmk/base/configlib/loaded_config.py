@@ -140,6 +140,7 @@ class LoadedConfigFragment:
     inventory_check_severity: int
     enable_rulebased_notifications: bool
     current_customer: str
+    host_paths: Mapping[HostName, str]
     timeperiods: object  # Here we don't lie for a change. We haven't parsed anything.
     check_periods: Sequence[RuleSpec[object]]
     relays: object  # see above

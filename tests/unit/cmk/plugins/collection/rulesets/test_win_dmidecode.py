@@ -5,7 +5,7 @@
 
 import pytest
 
-from cmk.gui.plugins.legacy_bakery_rulesets.win_dmidecode import migrate
+from cmk.plugins.collection.rulesets.win_dmidecode import migrate
 
 
 @pytest.mark.parametrize(

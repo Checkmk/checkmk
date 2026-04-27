@@ -102,10 +102,10 @@ def meta_file_name(edition: str, version: str, extension: MetaFileExtension) -> 
     return f"check-mk-{edition}-{version}-bill-of-materials.{extension}"
 
 
-def build_meta_artifacts(args: Args, loaded_yaml: dict) -> Iterator[tuple[str, bool]]:
+def build_meta_artifacts(version: Version, loaded_yaml: dict) -> Iterator[tuple[str, bool]]:
     for edition in loaded_yaml["editions"]:
-        bom_file_name = meta_file_name(edition, args.version, "json")
-        csv_file_name = meta_file_name(edition, args.version, "csv")
+        bom_file_name = meta_file_name(edition, version.version_without_rc, "json")
+        csv_file_name = meta_file_name(edition, version.version_without_rc, "csv")
         internal_only = edition in loaded_yaml.get("internal_editions", [])
         yield bom_file_name, internal_only
         yield hash_file(bom_file_name), internal_only
@@ -259,7 +259,7 @@ def assert_build_artifacts(args: Args, loaded_yaml: dict) -> None:
         if not internal_only:
             results.append(assert_hash_matches_package_content(artifact_name, version, credentials))
 
-    for artifact_name, internal_only in build_meta_artifacts(args, loaded_yaml):
+    for artifact_name, internal_only in build_meta_artifacts(version, loaded_yaml):
         results.append(
             assert_presence_on_download_server(version, internal_only, artifact_name, credentials)
         )

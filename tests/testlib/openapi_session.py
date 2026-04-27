@@ -2068,35 +2068,38 @@ class RelayRegistrationTokenAPI(BaseAPI):
 
 
 class MetricBackendAPI(BaseAPI):
-    def disable(self, site_id: str) -> None:
-        response = self.session.patch(
+    # The endpoint switched from PUT to PATCH on master and was backported to
+    # the 2.5.0 branch after 2.5.0p1 was tagged, so it first ships in 2.5.0p2.
+    # Older sites (used by update tests via the `base_site` fixture) still
+    # register PUT and their Apache config rejects PATCH at the mod_rewrite
+    # layer with 405.
+    _PATCH_SINCE = CMKVersion("2.5.0p2")
+
+    def _request(self, site_id: str, config_type: str) -> None:
+        method = (
+            self.session.patch
+            if self.session.site_version >= self._PATCH_SINCE
+            else self.session.put
+        )
+        response = method(
             "domain-types/metric_backend/actions/update/invoke",
             api_version=APIVersion.INTERNAL,
             json={
                 "site_id": site_id,
                 "config": {
-                    "type": "disabled",
+                    "type": config_type,
                 },
             },
         )
 
         if not response.ok:
             raise UnexpectedResponse.from_response(response)
+
+    def disable(self, site_id: str) -> None:
+        self._request(site_id, "disabled")
 
     def enable(self, site_id: str) -> None:
-        response = self.session.patch(
-            "domain-types/metric_backend/actions/update/invoke",
-            api_version=APIVersion.INTERNAL,
-            json={
-                "site_id": site_id,
-                "config": {
-                    "type": "enabled",
-                },
-            },
-        )
-
-        if not response.ok:
-            raise UnexpectedResponse.from_response(response)
+        self._request(site_id, "enabled")
 
 
 class AgentReceiverRelayAPI(ARBaseAPI):

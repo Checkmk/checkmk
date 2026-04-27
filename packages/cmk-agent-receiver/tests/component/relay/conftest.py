@@ -10,7 +10,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from cmk.agent_receiver.lib.auth import internal_credentials
-from cmk.agent_receiver.lib.config import Config, CONFIG_FILE
+from cmk.agent_receiver.lib.config import Config, CONFIG_FILE, get_config
 from cmk.agent_receiver.main import main_app
 from cmk.agent_receiver.relay.api.routers.relays.dependencies import (
     get_forward_monitoring_data_handler,
@@ -39,6 +39,7 @@ def site_context(
 
     os.environ["OMD_ROOT"] = str(site_dir)
     os.environ["OMD_SITE"] = site_name
+    get_config.cache_clear()
 
     site_conf = site_dir / "etc/omd/site.conf"
     site_conf.parent.mkdir(parents=True, exist_ok=True)

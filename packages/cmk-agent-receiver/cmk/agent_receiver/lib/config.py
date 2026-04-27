@@ -9,12 +9,14 @@ import os
 from functools import cache
 from pathlib import Path
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 CONFIG_FILE = "agent_receiver_config.json"
 
 
 class Config(BaseModel):
+    omd_root: Path = Field(default_factory=lambda: Path(os.environ["OMD_ROOT"]), exclude=True)
+    site_name: str = Field(default_factory=lambda: os.environ["OMD_SITE"], exclude=True)
     task_ttl: float = 120.0
     max_pending_tasks_per_relay: int = 10
 
@@ -33,14 +35,6 @@ class Config(BaseModel):
         with path.open(encoding="utf-8") as fin:
             raw_config = fin.read()
         return cls.model_validate_json(raw_config)
-
-    @property
-    def omd_root(self) -> Path:
-        return Path(os.environ["OMD_ROOT"])
-
-    @property
-    def site_name(self) -> str:
-        return os.environ["OMD_SITE"]
 
     @property
     def config_file(self) -> Path:
@@ -81,6 +75,10 @@ class Config(BaseModel):
     @property
     def relay_ca_path(self) -> Path:
         return self.omd_root / "etc/ssl/relays/ca.pem"
+
+    @property
+    def agent_cert_store_path(self) -> Path:
+        return self.omd_root / "etc/ssl/agent_cert_store.pem"
 
     @property
     def helper_config_dir(self) -> Path:

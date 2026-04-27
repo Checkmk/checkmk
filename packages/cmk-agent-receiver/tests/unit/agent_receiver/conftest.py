@@ -41,6 +41,7 @@ def site_env(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
 @pytest.fixture(autouse=True)
 def setup_site_context(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     site_env(monkeypatch, tmp_path)
+    get_config.cache_clear()
     config = get_config()
     config.agent_output_dir.mkdir(parents=True)
     config.r4r_dir.mkdir(parents=True)

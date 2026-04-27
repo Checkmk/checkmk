@@ -71,7 +71,7 @@ def set_up_site_certs(config: Config) -> None:
     )
 
     # Cert-only trust store: agents/*.pem + relays/*.pem + ca.pem (no private keys)
-    cert_store = config.omd_root / "etc/ssl/agent_cert_store.pem"
+    cert_store = config.agent_cert_store_path
     cert_store.write_bytes(
         agent_ca.certificate.dump_pem().bytes
         + relay_ca.certificate.dump_pem().bytes

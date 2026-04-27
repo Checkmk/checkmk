@@ -11,6 +11,7 @@ from typing import Annotated, Literal, Self
 from dateutil.relativedelta import relativedelta
 from pydantic import AwareDatetime, FutureDatetime
 
+from cmk.ccc.site import SiteId
 from cmk.gui.openapi.framework.model import api_field, api_model
 from cmk.gui.openapi.framework.model.base_models import DomainObjectModel
 from cmk.gui.openapi.framework.model.common_fields import AnnotatedHostName
@@ -71,3 +72,12 @@ class CreateAgentRegistrationToken:
         Host,
         TypedPlainValidator(str, HostConverter().host),
     ] = api_field(description="The name of the host the token should be issued for")
+    site_id: SiteId | None = api_field(
+        description=(
+            "Site that should issue and store the token. If set to a remote site, the "
+            "token is created on that site so that the agent receiver on that site can "
+            "validate it during registration. Defaults to the local site."
+        ),
+        example="remote_site",
+        default=None,
+    )

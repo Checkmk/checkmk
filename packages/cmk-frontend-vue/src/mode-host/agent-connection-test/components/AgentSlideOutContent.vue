@@ -258,6 +258,7 @@ const tabs = computed<AgentSlideOutTabs[]>(() => [
     :setup-error="setupError"
     :agent-installed="agentInstalled"
     :host-name="hostName"
+    :site-id="siteId"
     :is-push-mode="isPushMode"
     :agent-receiver-port-is-default="agentReceiverPortIsDefault"
     @close="close"

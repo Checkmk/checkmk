@@ -403,3 +403,86 @@ def test_nvalid_hostnames_rejected(hostname: str) -> None:
 
     with pytest.raises(MKUserError):
         vs.Hostname().validate_value(hostname, "varprefix")
+
+
+def _stack_imbalance_errors(html_fragment: str) -> list[str]:
+    from html.parser import HTMLParser
+
+    void_elements = {
+        "area",
+        "base",
+        "br",
+        "col",
+        "embed",
+        "hr",
+        "img",
+        "input",
+        "link",
+        "meta",
+        "param",
+        "source",
+        "track",
+        "wbr",
+    }
+
+    class _Checker(HTMLParser):
+        def __init__(self) -> None:
+            super().__init__()
+            self.stack: list[str] = []
+            self.errors: list[str] = []
+
+        def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
+            if tag not in void_elements:
+                self.stack.append(tag)
+
+        def handle_endtag(self, tag: str) -> None:
+            if tag in void_elements:
+                return
+            if tag in self.stack:
+                while self.stack and self.stack[-1] != tag:
+                    self.errors.append(f"<{self.stack.pop()}> not closed before </{tag}>")
+                self.stack.pop()
+            else:
+                self.errors.append(f"</{tag}> has no matching open tag")
+
+    checker = _Checker()
+    checker.feed(html_fragment)
+    checker.errors.extend(f"<{t}> never closed" for t in checker.stack)
+    return checker.errors
+
+
+@pytest.mark.usefixtures("request_context", "patch_theme")
+def test_dictionary_form_with_nested_form_part_renders_balanced_html() -> None:
+    from cmk.gui.utils.output_funnel import output_funnel
+
+    inner = vs.Dictionary(
+        elements=[
+            ("folder", vs.TextInput(title="Folder")),
+            ("host_tags", vs.TextInput(title="Host tags")),
+        ],
+        headers=[
+            ("Folder", "condition explicit", ["folder"]),
+            ("Host tags", "condition explicit", ["host_tags"]),
+        ],
+        render="form_part",
+        optional_keys=[],
+    )
+    outer = vs.Dictionary(
+        elements=[
+            ("title", vs.TextInput(title="Title")),
+            ("conditions", vs.Transform(valuespec=inner)),
+        ],
+        headers=[
+            ("General properties", ["title"]),
+            ("Conditions", ["conditions"]),
+        ],
+        render="form",
+        optional_keys=[],
+    )
+
+    with output_funnel.plugged():
+        outer.render_input("_edit", {})
+        rendered = "".join(output_funnel.drain())
+
+    assert '<div id="_edit_d_conditions"></td>' not in rendered
+    assert _stack_imbalance_errors(rendered) == []

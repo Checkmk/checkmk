@@ -5992,6 +5992,18 @@ DictionaryElementsRaw = Promise[DictionaryElements]
 DictionaryModel = dict[str, Any]
 
 
+def _renders_own_form_sections(vs: ValueSpec) -> bool:
+    """A Dictionary with render="form_part" already calls forms.section()
+    itself. When such a valuespec is nested inside another Dictionary's form
+    section, our wrapping <tr>/<td>/<div> would be torn apart by the inner's
+    section_close, so we let it manage its own sections instead."""
+    if isinstance(vs, Dictionary):
+        return vs._render == "form_part"
+    if isinstance(vs, Transform):
+        return _renders_own_form_sections(vs._valuespec)
+    return False
+
+
 class Dictionary(ValueSpec[DictionaryModel]):
     # TODO: Cleanup ancient "migrate"
     def __init__(
@@ -6269,8 +6281,13 @@ class Dictionary(ValueSpec[DictionaryModel]):
             if section_elements and param not in section_elements:
                 continue
 
-            div_id = varprefix + "_d_" + param
             vp = varprefix + "_p_" + param
+
+            if _renders_own_form_sections(vs):
+                vs.render_input(vp, value.get(param, vs.default_value()))
+                continue
+
+            div_id = varprefix + "_d_" + param
             if self._optional_keys and param not in self._required_keys:
                 visible = html.get_checkbox(vp + "_USE")
                 if visible is None:

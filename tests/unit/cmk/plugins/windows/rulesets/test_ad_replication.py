@@ -5,7 +5,7 @@
 
 import pytest
 
-from cmk.gui.plugins.legacy_bakery_rulesets.ad_replication import migrate
+from cmk.plugins.windows.rulesets.ad_replication import migrate
 
 
 @pytest.mark.parametrize(

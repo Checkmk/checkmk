@@ -6,9 +6,7 @@ import itertools
 from typing import Annotated
 
 from cmk.ccc.hostaddress import HostName
-from cmk.ccc.version import Edition
 from cmk.gui.exceptions import MKAuthException, MKUserError
-from cmk.gui.fields.utils import edition_field_description
 from cmk.gui.logged_in import user
 from cmk.gui.openapi.framework import (
     ApiContext,
@@ -25,11 +23,12 @@ from cmk.gui.openapi.framework.model import (
     api_model,
     ApiOmitted,
 )
-from cmk.gui.openapi.framework.model.restrict_editions import RestrictEditions
+from cmk.gui.openapi.framework.model.restrict_features import RestrictFeatures
 from cmk.gui.openapi.restful_objects.constructors import domain_type_action_href
 from cmk.gui.openapi.shared_endpoint_families.host_config import HOST_CONFIG_FAMILY
 from cmk.gui.watolib import bakery
 from cmk.gui.watolib.hosts_and_folders import Folder, Host
+from cmk.licensing.basics.features import FeatureName
 
 from ._utils import bulk_host_action_response, PERMISSIONS_CREATE
 from .create_host import CreateHostModel
@@ -60,13 +59,13 @@ def bulk_create_host_v1(
     body: BulkCreateHostModel,
     bake_agent: Annotated[
         bool | ApiOmitted,
-        RestrictEditions(excluded_editions={Edition.COMMUNITY}),
+        RestrictFeatures(feature_name=FeatureName.BAKERY, which_field="bake_agent"),
         QueryParam(
-            description=edition_field_description(
+            description=(
                 "Tries to bake the agents for the just created hosts. This process is started in the "
                 "background after configuring the host. Please note that the baking may take some "
-                "time and might block subsequent API calls.",
-                excluded_editions={Edition.COMMUNITY},
+                "time and might block subsequent API calls. "
+                "Requires the agent bakery feature to be licensed."
             ),
             example="True",
         ),
@@ -103,7 +102,7 @@ def bulk_create_host_v1(
         )
         succeeded_hosts.extend(entry[0] for entry in validated_entries)
 
-    if bake_agent:
+    if not isinstance(bake_agent, ApiOmitted) and bake_agent:
         bakery.try_bake_agents_for_hosts(succeeded_hosts, debug=api_context.config.debug)
 
     return bulk_host_action_response(

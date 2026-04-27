@@ -18,14 +18,16 @@ from cmk.gui.openapi.framework import (
     QueryParam,
     VersionedEndpoint,
 )
-from cmk.gui.openapi.framework.model import api_field, api_model
+from cmk.gui.openapi.framework.model import api_field, api_model, ApiOmitted
 from cmk.gui.openapi.framework.model.common_fields import AnnotatedFolder
 from cmk.gui.openapi.framework.model.converter import HostConverter, TypedPlainValidator
 from cmk.gui.openapi.framework.model.response import ApiResponse
+from cmk.gui.openapi.framework.model.restrict_features import RestrictFeatures
 from cmk.gui.openapi.restful_objects.constructors import collection_href
 from cmk.gui.openapi.shared_endpoint_families.host_config import HOST_CONFIG_FAMILY
 from cmk.gui.watolib import bakery
 from cmk.gui.watolib.hosts_and_folders import Host
+from cmk.licensing.basics.features import FeatureName
 
 from ._utils import host_etag, PERMISSIONS_CREATE, serialize_host
 from .models.response_models import HostConfigModel
@@ -51,17 +53,18 @@ def create_host_v1(
     api_context: ApiContext,
     body: CreateHostModel,
     bake_agent: Annotated[
-        bool,
+        bool | ApiOmitted,
+        RestrictFeatures(feature_name=FeatureName.BAKERY, which_field="bake_agent"),
         QueryParam(
             description=(
                 "Tries to bake the agents for the just created hosts. This process is started in the "
                 "background after configuring the host. Please note that the backing may take some "
                 "time and might block subsequent API calls. "
-                "This only works in the commercial editions of Checkmk."
+                "Requires the agent bakery feature to be licensed."
             ),
             example="True",
         ),
-    ] = False,
+    ] = ApiOmitted(),
 ) -> ApiResponse[HostConfigModel]:
     """Create a hosts."""
     user.need_permission("wato.edit")
@@ -73,7 +76,7 @@ def create_host_v1(
         pprint_value=api_context.config.wato_pprint_config,
         use_git=api_context.config.wato_use_git,
     )
-    if bake_agent:
+    if not isinstance(bake_agent, ApiOmitted) and bake_agent:
         bakery.try_bake_agents_for_hosts([host_name], debug=api_context.config.debug)
 
     host = Host.load_host(host_name)

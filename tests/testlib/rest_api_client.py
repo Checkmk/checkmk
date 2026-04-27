@@ -773,6 +773,7 @@ class HostConfigClient(RestApiClient):
         attributes: Mapping[str, Any] | Any | None = None,
         bake_agent: bool | None = None,
         expect_ok: bool = True,
+        api_version: APIVersion | None = None,
     ) -> Response:
         if bake_agent is not None:
             query_params = {"bake_agent": "1" if bake_agent else "0"}
@@ -788,6 +789,7 @@ class HostConfigClient(RestApiClient):
                 "attributes": attributes or {},
             },
             expect_ok=expect_ok,
+            api_version=api_version,
         )
 
     def bulk_create(

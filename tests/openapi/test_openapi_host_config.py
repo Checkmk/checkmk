@@ -136,6 +136,23 @@ def test_openapi_add_host_bake_agent_parameter(
         suppress_bake_agents_in_background.assert_not_called()
 
 
+def test_openapi_add_host_bake_agent_rejected_without_feature(
+    clients: ClientRegistry,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(
+        "cmk.gui.openapi.framework.model.restrict_features.is_feature_enabled",
+        lambda _omd_root, _feature: False,
+    )
+
+    clients.HostConfig.create(
+        host_name="foobar",
+        bake_agent=True,
+        expect_ok=False,
+        api_version=APIVersion.UNSTABLE,
+    ).assert_status_code(400)
+
+
 def test_openapi_add_host_with_attributes(clients: ClientRegistry) -> None:
     response = clients.HostConfig.create(
         host_name="foobar",

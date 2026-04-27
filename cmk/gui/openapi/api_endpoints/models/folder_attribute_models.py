@@ -26,7 +26,9 @@ from cmk.gui.openapi.api_endpoints.models.host_attribute_models import BaseHostT
 from cmk.gui.openapi.framework.model import api_field, api_model, ApiOmitted
 from cmk.gui.openapi.framework.model.converter import HostConverter
 from cmk.gui.openapi.framework.model.restrict_editions import RestrictEditions
+from cmk.gui.openapi.framework.model.restrict_features import RestrictFeatures
 from cmk.gui.watolib.builtin_attributes import HostAttributeLabels
+from cmk.licensing.basics.features import FeatureName
 from cmk.utils.agent_registration import HostAgentConnectionMode
 
 
@@ -51,9 +53,11 @@ class BaseFolderAttributeModel:
         ),
         default_factory=ApiOmitted,
     )
-    # TODO: evaluate if edition handling should be included
-    bake_agent_package: bool | ApiOmitted = api_field(
-        description="Bake agent packages for this folder even if it is empty.",
+    bake_agent_package: Annotated[
+        bool | ApiOmitted,
+        RestrictFeatures(feature_name=FeatureName.BAKERY, which_field="bake_agent_package"),
+    ] = api_field(
+        description="Bake agent packages for this folder even if it is empty. Requires the agent bakery feature to be licensed.",
         default_factory=ApiOmitted,
     )
     cmk_agent_connection: Annotated[

@@ -1600,6 +1600,28 @@ class AgentClient(RestApiClient):
             expect_ok=expect_ok,
         )
 
+    def create_download_token(
+        self, body: Mapping[str, Any] | None = None, expect_ok: bool = True
+    ) -> Response:
+        return self.request(
+            "post",
+            url="/domain-types/agent_download_token/collections/all",
+            body=dict(body) if body else {},
+            expect_ok=expect_ok,
+            api_version=APIVersion.INTERNAL,
+        )
+
+    def create_registration_token(
+        self, body: Mapping[str, Any], expect_ok: bool = True
+    ) -> Response:
+        return self.request(
+            "post",
+            url="/domain-types/agent_registration_token/collections/all",
+            body=dict(body),
+            expect_ok=expect_ok,
+            api_version=APIVersion.INTERNAL,
+        )
+
 
 class DowntimeClient(RestApiClient):
     domain: DomainType = "downtime"

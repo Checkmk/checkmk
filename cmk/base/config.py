@@ -739,6 +739,9 @@ def _perform_post_config_loading_actions(
         extra_service_conf=extra_service_conf,
         extra_host_conf=extra_host_conf,
         host_attributes=host_attributes,
+        management_protocol=management_protocol,
+        management_snmp_credentials=management_snmp_credentials,
+        management_ipmi_credentials=management_ipmi_credentials,
         timeperiods=timeperiods,
         check_periods=check_periods,
         relays=relays,
@@ -2167,7 +2170,7 @@ class ConfigCache:
         )
 
     def management_protocol(self, host_name: HostName) -> Literal["snmp", "ipmi"] | None:
-        return management_protocol.get(host_name)
+        return self._loaded_config.management_protocol.get(host_name)
 
     def has_management_board(self, host_name: HostName) -> bool:
         return self.management_protocol(host_name) is not None
@@ -2205,9 +2208,9 @@ class ConfigCache:
         with contextlib.suppress(KeyError):
             match protocol:
                 case "snmp":
-                    return management_snmp_credentials[host_name]
+                    return self._loaded_config.management_snmp_credentials[host_name]
                 case "ipmi":
-                    return management_ipmi_credentials[host_name]
+                    return self._loaded_config.management_ipmi_credentials[host_name]
                 case _:
                     assert_never(protocol)
 

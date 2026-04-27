@@ -24,7 +24,9 @@ from cmk.base.default_config.cmc import (
     SmartPingTuning,
 )
 from cmk.ccc.hostaddress import HostAddress, HostName
+from cmk.fetchers import IPMICredentials
 from cmk.rrd import RRDObjectConfig
+from cmk.snmplib import SNMPCredentials
 from cmk.utils.host_storage import FolderAttributesForBase
 from cmk.utils.http_proxy_config import HTTPProxySpec
 from cmk.utils.notify_types import (
@@ -130,6 +132,9 @@ class LoadedConfigFragment:
     extra_service_conf: Mapping[str, Sequence[RuleSpec[object]]]
     extra_host_conf: Mapping[str, Sequence[RuleSpec[Any]]]
     host_attributes: Mapping[HostName, Mapping[str, Any]]
+    management_protocol: Mapping[HostName, Literal["snmp", "ipmi"]]
+    management_snmp_credentials: Mapping[HostName, SNMPCredentials]
+    management_ipmi_credentials: Mapping[HostName, IPMICredentials]
     timeperiods: object  # Here we don't lie for a change. We haven't parsed anything.
     check_periods: Sequence[RuleSpec[object]]
     relays: object  # see above

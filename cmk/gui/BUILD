@@ -829,6 +829,7 @@ py_library(
     srcs = ["config.py"],
     imports = ["../.."],
     visibility = [
+        "//bin:__pkg__",
         "//cmk:__subpackages__",
         "//non-free/packages:__subpackages__",
         "//non-free/packages/cmk-dcd:__pkg__",
@@ -1244,6 +1245,7 @@ py_library(
     srcs = ["session.py"],
     imports = ["../.."],
     visibility = [
+        "//bin:__pkg__",
         "//cmk:__subpackages__",
         "//omd/packages/check_mk:__pkg__",
         "//tests:__subpackages__",
@@ -1695,6 +1697,7 @@ py_library(
     srcs = ["rulespec.py"],
     imports = ["../.."],
     visibility = [
+        "//bin:__pkg__",
         "//cmk:__subpackages__",
         "//tests:__subpackages__",
     ],
@@ -1847,6 +1850,7 @@ py_library(
     ],
     imports = ["../.."],
     visibility = [
+        "//bin:__pkg__",
         "//cmk:__subpackages__",
         "//tests:__subpackages__",
     ],
@@ -1967,6 +1971,7 @@ py_library(
     srcs = ["main_modules.py"],
     imports = ["../.."],
     visibility = [
+        "//bin:__pkg__",
         "//cmk:__subpackages__",
         "//omd/packages/check_mk:__pkg__",
         "//tests:__subpackages__",
@@ -1983,6 +1988,7 @@ py_library(
     srcs = ["script_helpers.py"],
     imports = ["../.."],
     visibility = [
+        "//bin:__pkg__",
         "//cmk:__subpackages__",
         "//omd/packages/check_mk:__pkg__",
         "//tests:__subpackages__",

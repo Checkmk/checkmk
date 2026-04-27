@@ -6,6 +6,10 @@
 import { fetchRestAPI } from '@/lib/cmkFetch.ts'
 import usei18n from '@/lib/i18n'
 
+import { configEntityAPI } from '@/components/user-input/CmkConfigurationEntityDropdown'
+
+import type { PasswordConfig } from './password_store_password.types.ts'
+
 const { _t } = usei18n()
 
 /**
@@ -190,6 +194,41 @@ const enableMetricBackendAction: PostSaveAction = {
       return { ok: true }
     } catch (err) {
       return errorFromUnknown(err, _t('Could not enable the metric backend'))
+    }
+  }
+}
+
+/**
+ * Factory: action that POSTs each entry in `passwords` to the password store
+ * via the slide-in schema. Stops on the first server rejection so the user
+ * sees exactly which password failed and can retry after fixing it. Used by
+ * the OTel QuickSetup to defer password saves until the finalize step.
+ */
+export function createSavePasswordsAction(passwords: readonly PasswordConfig[]): PostSaveAction {
+  return {
+    key: 'savePendingPasswords',
+    label: () => _t('Save new passwords'),
+    execute: async () => {
+      for (const config of passwords) {
+        const result = await configEntityAPI.createEntity(
+          'passwordstore_password',
+          'passwordstore_password',
+          config as unknown as Record<string, unknown>
+        )
+        if (result.type === 'error') {
+          const firstMessage = result.validationMessages[0]
+          return {
+            ok: false,
+            error: {
+              title: _t('Could not save password "%{title}"', {
+                title: config.general_props.title
+              }),
+              detail: firstMessage?.message ?? _t('The password was rejected by the server.')
+            }
+          }
+        }
+      }
+      return { ok: true }
     }
   }
 }

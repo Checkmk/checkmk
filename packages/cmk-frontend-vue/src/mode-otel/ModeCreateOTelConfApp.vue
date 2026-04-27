@@ -29,6 +29,11 @@ import type {
   EventConsoleConfig
 } from './otel-configuration-steps/otelTypes'
 import type { PasswordConfig } from './otel-configuration-steps/password_store_password.types.ts'
+import {
+  POST_SAVE_ACTIONS,
+  type PostSaveAction,
+  createSavePasswordsAction
+} from './otel-configuration-steps/post_save_actions.ts'
 
 const props = defineProps<{
   no_auth_allowed: boolean
@@ -84,7 +89,29 @@ const grpcEncryption = ref<boolean>(false)
 const httpEncryption = ref<boolean>(false)
 const grpcEventConsole = ref<EventConsoleConfig | null>(null)
 const httpEventConsole = ref<EventConsoleConfig | null>(null)
-const newlyCreatedPasswords = ref<Map<string, PasswordConfig>>(new Map())
+const pendingPasswords = ref<Map<string, PasswordConfig>>(new Map())
+
+// Pending passwords actually referenced by the configured auth methods. The
+// Step 2 slide-in lets users create passwords they may later swap out, and we
+// only want to persist the ones still selected when the wizard is finalized
+const passwordsToSave = computed<PasswordConfig[]>(() => {
+  const selectedIds = new Set<string>()
+  if (grpcAuth.value.credential?.password) {
+    selectedIds.add(grpcAuth.value.credential.password)
+  }
+  if (httpAuth.value.credential?.password) {
+    selectedIds.add(httpAuth.value.credential.password)
+  }
+  return Array.from(pendingPasswords.value.values()).filter((p) =>
+    selectedIds.has(p.general_props.id)
+  )
+})
+
+const finalizeActions = computed<readonly PostSaveAction[]>(() =>
+  passwordsToSave.value.length > 0
+    ? [createSavePasswordsAction(passwordsToSave.value), ...POST_SAVE_ACTIONS]
+    : POST_SAVE_ACTIONS
+)
 
 const finalizeRef = useTemplateRef<InstanceType<typeof FinalizeConfiguration>>('finalize')
 
@@ -183,7 +210,7 @@ async function onSaveClick(): Promise<void> {
           v-model:http-encryption="httpEncryption"
           v-model:grpc-event-console="grpcEventConsole"
           v-model:http-event-console="httpEventConsole"
-          v-model:newly-created-passwords="newlyCreatedPasswords"
+          v-model:pending-passwords="pendingPasswords"
           :no-auth-allowed="no_auth_allowed"
           :endpoint-config-allowed="endpoint_config_allowed"
           :encryption-allowed="encryption_allowed"
@@ -243,6 +270,7 @@ async function onSaveClick(): Promise<void> {
           :config-name="configName"
           :collector-activation-allowed="collector_activation_allowed"
           :metric-backend-allowed="metric_backend_allowed"
+          :actions="finalizeActions"
           @update:state="saveState = $event"
         />
       </template>

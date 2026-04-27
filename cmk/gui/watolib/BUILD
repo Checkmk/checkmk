@@ -278,6 +278,7 @@ py_library(
         "//cmk/gui/rest_api_types:notifications",
         "//cmk/gui/rule_specs:loader",
         "//cmk/gui/search:match_items",
+        "//cmk/gui/token_auth",
         "//cmk/gui/userdb",
         "//cmk/gui/utils:agent_registration",
         "//cmk/gui/utils:escaping",

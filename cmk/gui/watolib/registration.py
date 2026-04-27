@@ -41,6 +41,10 @@ from .activate_changes import (
     execute_activation_cleanup_job,
 )
 from .agent_registration import AutomationRemoveTLSRegistration
+from .agent_token_automations import (
+    AutomationAgentDownloadTokenCreate,
+    AutomationAgentRegistrationTokenCreate,
+)
 from .analyze_configuration import AutomationCheckAnalyzeConfig
 from .automation_commands import AutomationCommandRegistry
 from .broker_certificates import (
@@ -148,6 +152,8 @@ def register(
     automation_command_registry.register(AutomationGetConfigSyncState)
     automation_command_registry.register(AutomationReceiveConfigSync)
     automation_command_registry.register(AutomationRemoveTLSRegistration)
+    automation_command_registry.register(AutomationAgentDownloadTokenCreate)
+    automation_command_registry.register(AutomationAgentRegistrationTokenCreate)
     automation_command_registry.register(AutomationCheckAnalyzeConfig)
     automation_command_registry.register(AutomationDiscoveredHostLabelSync)
     sample_config_generator_registry.register(ConfigGeneratorBasicWATOConfig)

@@ -37,6 +37,8 @@ def test_registered_config_domains() -> None:
 def test_registered_automation_commands() -> None:
     expected_automation_commands = [
         "activate-changes",
+        "agent-download-token-create",
+        "agent-registration-token-create",
         "check-analyze-config",
         "checkmk-remote-automation-get-status",
         "checkmk-remote-automation-start",

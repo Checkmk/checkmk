@@ -1,0 +1,9 @@
+{
+  "integrity": "sha256-mg/bYUBavDAOxrEAxEDdmM8xy1+Xru9CBzkJNymMrSA=",
+  "strip_prefix": "mod_wsgi-5.0.2",
+  "url": "http://ftp.debian.org/debian/pool/main/m/mod-wsgi/mod-wsgi_5.0.2.orig.tar.gz",
+  "overlay": {
+    "BUILD.bazel": "sha256-+sDRODOB0ivp7gxRxiQRlifQjrXUzi2CJ3cYerqUs6w=",
+    "MODULE.bazel": "sha256-MEBBvmejxrceLt/2oE6JVBP+ZBgHhhB6Pkqk3lpxiiY="
+  }
+}

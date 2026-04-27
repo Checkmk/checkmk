@@ -142,6 +142,7 @@ py_library(
         requirement("cryptography"),
         requirement("fastapi"),
         requirement("httpx"),
+        requirement("python-dateutil"),
     ],
 )
 

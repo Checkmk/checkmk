@@ -51,7 +51,10 @@ const grpcEventConsole = defineModel<EventConsoleConfig | null>('grpcEventConsol
 const httpEventConsole = defineModel<EventConsoleConfig | null>('httpEventConsole', {
   required: true
 })
-const newlyCreatedPasswords = defineModel<Map<string, PasswordConfig>>('newlyCreatedPasswords', {
+// Populated by slide-in Save clicks. Held in the frontend until the user
+// finishes the QuickSetup; the finalize step POSTs each entry to the
+// password store as one of its post-save actions.
+const pendingPasswords = defineModel<Map<string, PasswordConfig>>('pendingPasswords', {
   required: true
 })
 
@@ -60,6 +63,10 @@ const availablePasswords = ref<Suggestion[]>([])
 const displayErrors = ref(false)
 const passwordStoreSlideInOpen = ref(false)
 const passwordTargetAuth = ref<'grpc' | 'http'>('grpc')
+
+function createdSuggestion(id: string, title: string): Suggestion {
+  return { name: id, title: `${title}${createdSuffix}` as TranslatedString }
+}
 
 onMounted(async () => {
   try {
@@ -72,11 +79,10 @@ onMounted(async () => {
       name: p.id,
       title: p.title
     }))
-    const created: Suggestion[] = Array.from(newlyCreatedPasswords.value.values()).map((p) => ({
-      name: p.general_props.id,
-      title: `${p.general_props.title}${createdSuffix}` as TranslatedString
-    }))
-    availablePasswords.value = fetched.concat(created)
+    const pending: Suggestion[] = Array.from(pendingPasswords.value.values()).map((p) =>
+      createdSuggestion(p.general_props.id, p.general_props.title)
+    )
+    availablePasswords.value = fetched.concat(pending)
   } catch {
     // password store unavailable — leave list empty
   }
@@ -235,11 +241,10 @@ function openPasswordSlideIn(target: 'grpc' | 'http') {
 
 function onPasswordCreated(password: PasswordConfig) {
   passwordStoreSlideInOpen.value = false
-  newlyCreatedPasswords.value.set(password.general_props.id, password)
-  availablePasswords.value.push({
-    name: password.general_props.id,
-    title: `${password.general_props.title}${createdSuffix}` as TranslatedString
-  })
+  pendingPasswords.value.set(password.general_props.id, password)
+  availablePasswords.value.push(
+    createdSuggestion(password.general_props.id, password.general_props.title)
+  )
   const triggeringAuth = passwordTargetAuth.value === 'grpc' ? grpcAuth.value : httpAuth.value
   if (triggeringAuth.credential !== null) {
     triggeringAuth.credential.password = password.general_props.id

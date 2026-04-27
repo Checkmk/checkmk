@@ -94,6 +94,17 @@ const items = ref<ActionItemStatus[]>(
   }))
 )
 
+// Re-sync the checklist when the action list changes while idle. The action
+// list is dynamic for the OTel wizard: a "Save new passwords" action is added
+// only if the user created passwords in Step 2. Without this watcher the
+// checklist would freeze at its initial-mount snapshot.
+watch(actions, (next) => {
+  if (state.value === 'running') {
+    return
+  }
+  items.value = next.map((a) => ({ key: a.key, label: a.label(), state: 'pending' }))
+})
+
 /**
  * Runs all post-save actions sequentially. Stops on first error so the
  * user sees exactly which change failed. Returns true if every action

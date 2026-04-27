@@ -61,7 +61,7 @@ function renderComponent(
   const httpEncryption = ref<boolean>(false)
   const grpcEventConsole = ref<EventConsoleConfig | null>(null)
   const httpEventConsole = ref<EventConsoleConfig | null>(null)
-  const newlyCreatedPasswords = ref<Map<string, PasswordConfig>>(new Map())
+  const pendingPasswords = ref<Map<string, PasswordConfig>>(new Map())
   const compRef = ref<InstanceType<typeof ConfigureCollector>>()
 
   render(
@@ -78,7 +78,7 @@ function renderComponent(
         httpEncryption,
         grpcEventConsole,
         httpEventConsole,
-        newlyCreatedPasswords,
+        pendingPasswords,
         compRef,
         noAuthAllowed,
         endpointConfigAllowed,
@@ -87,7 +87,7 @@ function renderComponent(
         grpcDefaultPort,
         httpDefaultPort
       }),
-      template: `<ConfigureCollector ref="compRef" :no-auth-allowed="noAuthAllowed" :endpoint-config-allowed="endpointConfigAllowed" :encryption-allowed="encryptionAllowed" :event-console-allowed="eventConsoleAllowed" :grpc-default-port="grpcDefaultPort" :http-default-port="httpDefaultPort" v-model:grpc-enabled="grpcEnabled" v-model:http-enabled="httpEnabled" v-model:grpc-auth="grpcAuth" v-model:http-auth="httpAuth" v-model:grpc-endpoint="grpcEndpoint" v-model:http-endpoint="httpEndpoint" v-model:grpc-encryption="grpcEncryption" v-model:http-encryption="httpEncryption" v-model:grpc-event-console="grpcEventConsole" v-model:http-event-console="httpEventConsole" v-model:newly-created-passwords="newlyCreatedPasswords" />`
+      template: `<ConfigureCollector ref="compRef" :no-auth-allowed="noAuthAllowed" :endpoint-config-allowed="endpointConfigAllowed" :encryption-allowed="encryptionAllowed" :event-console-allowed="eventConsoleAllowed" :grpc-default-port="grpcDefaultPort" :http-default-port="httpDefaultPort" v-model:grpc-enabled="grpcEnabled" v-model:http-enabled="httpEnabled" v-model:grpc-auth="grpcAuth" v-model:http-auth="httpAuth" v-model:grpc-endpoint="grpcEndpoint" v-model:http-endpoint="httpEndpoint" v-model:grpc-encryption="grpcEncryption" v-model:http-encryption="httpEncryption" v-model:grpc-event-console="grpcEventConsole" v-model:http-event-console="httpEventConsole" v-model:pending-passwords="pendingPasswords" />`
     })
   )
 
@@ -102,7 +102,7 @@ function renderComponent(
     httpEncryption,
     grpcEventConsole,
     httpEventConsole,
-    newlyCreatedPasswords,
+    pendingPasswords,
     compRef
   }
 }
@@ -625,41 +625,41 @@ describe('ConfigureCollector', () => {
 
     test('stores newly created password in the map', async () => {
       mockPasswordsResponse()
-      const { compRef, newlyCreatedPasswords } = renderComponent(false)
+      const { compRef, pendingPasswords } = renderComponent(false)
 
       await waitFor(() => expect(compRef.value).toBeDefined())
 
       const pw = makePasswordConfig('pw-new-1', 'My New Password')
       compRef.value!.onPasswordCreated(pw)
 
-      expect(newlyCreatedPasswords.value.get('pw-new-1')).toEqual(pw)
+      expect(pendingPasswords.value.get('pw-new-1')).toEqual(pw)
     })
 
     test('stores multiple newly created passwords', async () => {
       mockPasswordsResponse()
-      const { compRef, newlyCreatedPasswords } = renderComponent(false)
+      const { compRef, pendingPasswords } = renderComponent(false)
 
       await waitFor(() => expect(compRef.value).toBeDefined())
 
       compRef.value!.onPasswordCreated(makePasswordConfig('pw-1', 'First'))
       compRef.value!.onPasswordCreated(makePasswordConfig('pw-2', 'Second'))
 
-      expect(newlyCreatedPasswords.value.size).toBe(2)
-      expect(newlyCreatedPasswords.value.has('pw-1')).toBe(true)
-      expect(newlyCreatedPasswords.value.has('pw-2')).toBe(true)
+      expect(pendingPasswords.value.size).toBe(2)
+      expect(pendingPasswords.value.has('pw-1')).toBe(true)
+      expect(pendingPasswords.value.has('pw-2')).toBe(true)
     })
 
     test('replaces password when creating with same ID', async () => {
       mockPasswordsResponse()
-      const { compRef, newlyCreatedPasswords } = renderComponent(false)
+      const { compRef, pendingPasswords } = renderComponent(false)
 
       await waitFor(() => expect(compRef.value).toBeDefined())
 
       compRef.value!.onPasswordCreated(makePasswordConfig('pw-dup', 'Original'))
       compRef.value!.onPasswordCreated(makePasswordConfig('pw-dup', 'Replaced'))
 
-      expect(newlyCreatedPasswords.value.size).toBe(1)
-      expect(newlyCreatedPasswords.value.get('pw-dup')!.general_props.title).toBe('Replaced')
+      expect(pendingPasswords.value.size).toBe(1)
+      expect(pendingPasswords.value.get('pw-dup')!.general_props.title).toBe('Replaced')
     })
 
     test('auto-selects newly created password in the triggering tab', async () => {

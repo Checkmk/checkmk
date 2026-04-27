@@ -270,6 +270,10 @@ STAGES:
 
     - NAME: "Enforced relay build"
       ONLY_WHEN_NOT_EMPTY: CHANGED_PYTHON_REQUIREMENTS,CHANGED_BAZEL_MODULES,CHANGED_BAZEL_FILES,CHANGED_MAKEFILE
-      COMMAND: "bazel build --cmk_edition=ultimate --cmk_version=$(make print-VERSION) //omd/non-free/relay:image_tar &> ${RESULTS}/cmk-relay-build.txt"
+      COMMAND: |
+          make_rc=0
+          bazel build --cmk_edition=ultimate --cmk_version=$(make print-VERSION) //omd/non-free/relay:image_tar //omd/non-free/relay:sbom &> ${RESULTS}/cmk-relay-build.txt || make_rc=$?
+          cp $(bazel cquery --cmk_edition=ultimate //omd/non-free/relay:bill_of_materials --output=files) ${RESULTS}/relay-bill-of-materials.json || true
+          exit $make_rc
       TEXT_ON_SKIP: "No package dependencies changed"
-      RESULT_CHECK_FILE_PATTERN: "results/cmk-relay-build.txt"
+      RESULT_CHECK_FILE_PATTERN: "results/relay-bill-of-materials.json"

@@ -5,7 +5,7 @@
 
 import pytest
 
-from cmk.gui.plugins.legacy_bakery_rulesets.hyperv_vms_guestinfos import migrate
+from cmk.plugins.hyperv.rulesets.hyperv_vms_guestinfos import migrate
 
 
 @pytest.mark.parametrize(

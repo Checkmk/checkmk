@@ -135,6 +135,11 @@ class LoadedConfigFragment:
     management_protocol: Mapping[HostName, Literal["snmp", "ipmi"]]
     management_snmp_credentials: Mapping[HostName, SNMPCredentials]
     management_ipmi_credentials: Mapping[HostName, IPMICredentials]
+    snmp_default_community: str
+    snmp_communities: Sequence[RuleSpec[SNMPCredentials]]
+    inventory_check_severity: int
+    enable_rulebased_notifications: bool
+    current_customer: str
     timeperiods: object  # Here we don't lie for a change. We haven't parsed anything.
     check_periods: Sequence[RuleSpec[object]]
     relays: object  # see above
@@ -198,7 +203,7 @@ class LoadedConfigFragment:
     service_notification_periods: Sequence[RuleSpec[object]]
     inventory_check_autotrigger: bool
     monitoring_host: str | None
-    explicit_snmp_communities: Mapping[HostName | HostAddress, object]
+    explicit_snmp_communities: Mapping[HostName | HostAddress, SNMPCredentials]
     cmc_host_limit: int | None
     cmc_service_limit: int | None
     cmc_store_params_in_config: bool

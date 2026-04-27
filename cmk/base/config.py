@@ -742,6 +742,11 @@ def _perform_post_config_loading_actions(
         management_protocol=management_protocol,
         management_snmp_credentials=management_snmp_credentials,
         management_ipmi_credentials=management_ipmi_credentials,
+        snmp_default_community=snmp_default_community,
+        snmp_communities=snmp_communities,
+        inventory_check_severity=inventory_check_severity,
+        enable_rulebased_notifications=enable_rulebased_notifications,
+        current_customer=current_customer,
         timeperiods=timeperiods,
         check_periods=check_periods,
         relays=relays,
@@ -2224,7 +2229,7 @@ class ConfigCache:
 
         match protocol:
             case "snmp":
-                return snmp_default_community
+                return self._loaded_config.snmp_default_community
             case "ipmi":
                 return {}
             case _:
@@ -2400,7 +2405,7 @@ class ConfigCache:
         defaults = DiscoveryCheckParameters(
             commandline_only=inv_interval is None,
             check_interval=int(inv_interval or 0),
-            severity_new_services=int(inventory_check_severity),
+            severity_new_services=int(self._loaded_config.inventory_check_severity),
             severity_vanished_services=0,
             severity_new_host_labels=1,
             severity_changed_service_labels=0,
@@ -2779,7 +2784,10 @@ class ConfigCache:
             if folder_cgrs:
                 cgrs += folder_cgrs[0]
 
-            if self._loaded_config.monitoring_core == "nagios" and enable_rulebased_notifications:
+            if (
+                self._loaded_config.monitoring_core == "nagios"
+                and self._loaded_config.enable_rulebased_notifications
+            ):
                 cgrs.append("check-mk-notify")
 
             return list(set(cgrs))
@@ -2957,14 +2965,16 @@ class ConfigCache:
         preset with "public", but can be overridden in main.mk.
         """
         with contextlib.suppress(KeyError):
-            return explicit_snmp_communities[host_name]
+            return self._loaded_config.explicit_snmp_communities[host_name]
         if communities := self.ruleset_matcher.get_host_values_all(
-            host_name, snmp_communities, self.label_manager.labels_of_host
+            host_name,
+            self._loaded_config.snmp_communities,
+            self.label_manager.labels_of_host,
         ):
             return communities[0]
 
         # nothing configured for this host -> use default
-        return snmp_default_community
+        return self._loaded_config.snmp_default_community
 
     def _is_host_snmp_v1(self, host_name: HostName | HostAddress) -> bool:
         """Determines is host snmp-v1 using a bit Heuristic algorithm"""
@@ -3022,7 +3032,9 @@ class ConfigCache:
         self, hostname: HostName, snmp_version: int
     ) -> SNMPCredentials | None:
         for entry in self.ruleset_matcher.get_host_values_all(
-            hostname, snmp_communities, self.label_manager.labels_of_host
+            hostname,
+            self._loaded_config.snmp_communities,
+            self.label_manager.labels_of_host,
         ):
             if snmp_version == 3 and not isinstance(entry, tuple):
                 continue
@@ -3425,7 +3437,7 @@ class ConfigCache:
             attrs["_ACTIONS"] = ",".join(actions)
 
         if self.edition is cmk_version.Edition.ULTIMATEMT:
-            attrs["_CUSTOMER"] = current_customer  # type: ignore[name-defined,unused-ignore]
+            attrs["_CUSTOMER"] = self._loaded_config.current_customer
 
         return attrs
 

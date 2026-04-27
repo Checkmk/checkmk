@@ -276,6 +276,7 @@ class ABCTopologyPage(Page):
             query_hash=reqvars.query_hash,
             topology_frontend_configuration=reqvars.topology_frontend_configuration,
         )
+        html.footer()
 
     def make_ui_components(self, user_permissions: UserPermissions) -> None:
         visual_spec = self.visual_spec()

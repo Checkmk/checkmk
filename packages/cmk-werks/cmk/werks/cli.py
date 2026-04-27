@@ -68,6 +68,8 @@ WERK_ID_RANGES = {
     "cloudmk": [(1_000_000, 2_000_000)],
 }
 
+WERK_IDS_PATH = Path.home() / ".cmk-werk-ids"
+
 
 def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
@@ -676,7 +678,7 @@ WERK_NOTES = """
 def main_new(args: argparse.Namespace) -> None:
     sys.stdout.write(TTY_GREEN + WERK_NOTES + TTY_NORMAL)
 
-    stash = Stash.load_from_file()
+    stash = Stash.load_from_file(WERK_IDS_PATH)
 
     metadata: WerkMetadata = {}
     werk_id = stash.pick_id(project=get_config().project)
@@ -711,7 +713,7 @@ def main_new(args: argparse.Namespace) -> None:
     save_werk(werk, get_werk_file_version())
     git_add(werk)
     stash.free_id(werk_id)
-    stash.dump_to_file()
+    stash.dump_to_file(WERK_IDS_PATH)
 
     sys.stdout.write(f"Werk {format_werk_id(werk_id)} saved.\n")
 
@@ -828,9 +830,9 @@ def main_delete(args: argparse.Namespace) -> None:
             sys.stdout.write(f"Error removing Werk file: {exc}.\n")
             continue
         sys.stdout.write(f"Deleted Werk {format_werk_id(werk_id)} ({werk_to_be_removed_title}).\n")
-        stash = Stash.load_from_file()
+        stash = Stash.load_from_file(WERK_IDS_PATH)
         stash.add_id(werk_id, project=get_config().project)
-        stash.dump_to_file()
+        stash.dump_to_file(WERK_IDS_PATH)
         sys.stdout.write(f"You lucky bastard now own the Werk ID {format_werk_id(werk_id)}.\n")
 
 
@@ -1062,7 +1064,7 @@ def _reserve_werk_ids(
 
 
 def main_fetch_ids(args: argparse.Namespace) -> None:
-    stash = Stash.load_from_file()
+    stash = Stash.load_from_file(WERK_IDS_PATH)
 
     if args.count is None:
         per_project = "\n".join(
@@ -1091,10 +1093,10 @@ def main_fetch_ids(args: argparse.Namespace) -> None:
 
     new_first_free, fresh_ids = _reserve_werk_ids(ranges, first_free, args.count)
 
-    stash = Stash.load_from_file()
+    stash = Stash.load_from_file(WERK_IDS_PATH)
     for werk_id in fresh_ids:
         stash.add_id(werk_id, project=project)
-    stash.dump_to_file()
+    stash.dump_to_file(WERK_IDS_PATH)
 
     # Store the new reserved werk ids
     with open("first_free", "w", encoding="utf-8") as f:
@@ -1118,7 +1120,8 @@ def main_fetch_ids(args: argparse.Namespace) -> None:
 def main_preview(args: argparse.Namespace) -> None:
     werk_path = werk_path_by_id(WerkId(args.id))
     werk = cmk_werks_load_werk(
-        file_content=Path(werk_path).read_text(encoding="utf-8"), file_name=werk_path.name
+        file_content=Path(werk_path).read_text(encoding="utf-8"),
+        file_name=werk_path.name,
     )
 
     def meta_data() -> Iterator[str]:

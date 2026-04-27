@@ -7,7 +7,7 @@ import ast
 import datetime
 import sys
 from pathlib import Path
-from typing import ClassVar, Literal, NamedTuple, override, TypeVar
+from typing import Literal, NamedTuple, override, TypeVar
 
 from pydantic import BaseModel, Field
 
@@ -18,8 +18,6 @@ T = TypeVar("T", bound="Stash")
 
 
 class Stash(BaseModel):
-    PATH: ClassVar[Path] = Path.home() / ".cmk-werk-ids"
-
     stash_version: Literal["2"] = Field(default="2", alias="__version__")
     ids_by_project: dict[str, list[int]]
 
@@ -69,10 +67,10 @@ class Stash(BaseModel):
         self.ids_by_project[project].append(werk_id.id)
 
     @classmethod
-    def load_from_file(cls: type[T]) -> T:
-        if not cls.PATH.exists():
+    def load_from_file(cls: type[T], werk_ids_path: Path) -> T:
+        if not werk_ids_path.exists():
             return cls.model_validate({"ids_by_project": {}})
-        content = cls.PATH.read_text(encoding="utf-8")
+        content = werk_ids_path.read_text(encoding="utf-8")
         if not content:
             return cls.model_validate({"ids_by_project": {}})
         if content[0] == "[":
@@ -80,8 +78,8 @@ class Stash(BaseModel):
             return cls.model_validate({"ids_by_project": {"cmk": ast.literal_eval(content)}})
         return cls.model_validate_json(content)
 
-    def dump_to_file(self) -> None:
-        self.PATH.write_text(self.model_dump_json(by_alias=True), encoding="utf-8")
+    def dump_to_file(self, werk_ids_path: Path) -> None:
+        werk_ids_path.write_text(self.model_dump_json(by_alias=True), encoding="utf-8")
 
 
 class WerkId:

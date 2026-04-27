@@ -272,7 +272,7 @@ class ModeRevertChanges(WatoMode):
         if not self._changes.has_changes():
             html.open_div(class_="wato")
             html.show_message(_("No pending changes."))
-            html.footer()
+            html.close_div()
             return
 
         confirm_url = makeactionuri(request, transactions, [("_action", "discard")])

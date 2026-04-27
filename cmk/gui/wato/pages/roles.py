@@ -557,5 +557,3 @@ class ModeRoleMatrix(WatoMode):
                         table.cell(role.name, css=["center"])
                         if icon_name:
                             html.static_icon(icon_name)
-
-        html.close_table()

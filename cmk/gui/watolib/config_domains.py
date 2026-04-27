@@ -515,6 +515,65 @@ def finalize_all_settings_per_site(
     return final_settings_per_site
 
 
+def _all_sites(omd_path: Path) -> Iterable[str]:
+    basedir = omd_path / "sites"
+    return sorted([p.name for p in basedir.iterdir() if p.is_dir()])
+
+
+def _read_site_config(config_path: Path) -> Mapping[str, str]:
+    config: dict[str, str] = {}
+    with config_path.open() as conf_file:
+        for line in conf_file:
+            line = line.strip()
+            if line == "" or line[0] == "#":
+                continue
+            var, value = line.split("=", 1)
+            if var.startswith("CONFIG_"):
+                config[var[7:].strip()] = value.strip().strip("'")
+    return config
+
+
+def _build_site_configs(omd_path: Path = Path("/omd")) -> dict[str, Mapping[str, str]]:
+    site_configs: dict[str, Mapping[str, str]] = {}
+    for sitename in _all_sites(omd_path):
+        try:
+            site_configs[sitename] = _read_site_config(
+                omd_path / f"sites/{sitename}/etc/omd/site.conf"
+            )
+        except Exception:
+            # Some sites will not have a configuration file: For example, sites created with
+            # `omd create --no-init`. These sites will choose a new ports, once they are
+            # initialized, so treating them as if they don't exist is the correct thing to do.
+            # There is a secondary error, if the configuration is not word-readable. That error is
+            # logged by `omd config change`, so we don't log it here again.
+            pass
+    return site_configs
+
+
+def _port_in_use_by(
+    value: int, this_site: str, site_configs: Mapping[str, Mapping[str, str]]
+) -> tuple[str, str] | None:
+    for sitename, config in site_configs.items():
+        if sitename == this_site:
+            for k, v in config.items():
+                if k != "LIVESTATUS_TCP_PORT" and v == str(value):
+                    return k, sitename
+        else:
+            for k, v in config.items():
+                if v == str(value):
+                    return k, sitename
+    return None
+
+
+def validate_port_not_in_use(value: int, omd_path: Path = Path("/omd")) -> None:
+    if conflict := _port_in_use_by(value, omd_site(), _build_site_configs(omd_path)):
+        key, site = conflict
+        raise MKUserError(
+            "",
+            _("Port %d is already in use by site '%s' (key: %s).") % (value, site, key),
+        )
+
+
 class ConfigDomainOMD(ABCConfigDomain):
     needs_sync = True
     needs_activation = True
@@ -587,6 +646,9 @@ class ConfigDomainOMD(ABCConfigDomain):
         omd_settings = finalize_specifically_set_settings(
             self._to_omd_config(self.load()), self._to_omd_config(self.load_site_globals())
         )
+
+        if "LIVESTATUS_TCP_PORT" in omd_settings:
+            validate_port_not_in_use(int(omd_settings["LIVESTATUS_TCP_PORT"]))
 
         config_change_commands: list[str] = []
         self._logger.debug("Set omd config: %r" % omd_settings)

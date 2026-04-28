@@ -274,6 +274,63 @@ describe('buildCollectorSnippets', () => {
     expect(service).toContain('metrics:')
   })
 
+  describe('default socket-address modes', () => {
+    const baseExporter: Omit<ExporterConfig, 'endpoint'> = {
+      tlsEnabled: false,
+      auth: authOff,
+      eventConsole: false
+    }
+
+    it('renders 0.0.0.0:4318 for an http exporter in default_ipv4 mode', () => {
+      const { exporters } = buildCollectorSnippets({
+        ...baseState,
+        httpInfo: {
+          ...baseExporter,
+          endpoint: { socketAddressType: 'default_ipv4', address: '', port: undefined }
+        },
+        grpcInfo: null
+      })
+      expect(exporters).toContain('endpoint: 0.0.0.0:4318')
+    })
+
+    it('renders [::]:4318 for an http exporter in default_ipv6 mode', () => {
+      const { exporters } = buildCollectorSnippets({
+        ...baseState,
+        httpInfo: {
+          ...baseExporter,
+          endpoint: { socketAddressType: 'default_ipv6', address: '', port: undefined }
+        },
+        grpcInfo: null
+      })
+      expect(exporters).toContain('endpoint: [::]:4318')
+    })
+
+    it('renders the gRPC default port 4317 for a grpc exporter in default mode', () => {
+      const { exporters } = buildCollectorSnippets({
+        ...baseState,
+        httpInfo: null,
+        grpcInfo: {
+          ...baseExporter,
+          endpoint: { socketAddressType: 'default_ipv4', address: '', port: undefined }
+        }
+      })
+      expect(exporters).toContain('endpoint: 0.0.0.0:4317')
+      expect(exporters).not.toContain(':4318')
+    })
+
+    it('lists the default-mode protocol in the service exporters list', () => {
+      const { service } = buildCollectorSnippets({
+        ...baseState,
+        httpInfo: {
+          ...baseExporter,
+          endpoint: { socketAddressType: 'default_ipv4', address: '', port: undefined }
+        },
+        grpcInfo: null
+      })
+      expect(service).toContain('exporters: [..., otlphttp/checkmk]')
+    })
+  })
+
   it('produces the full Cloud-style snippet when everything is enabled', () => {
     const { exporters, extensions, service } = buildCollectorSnippets({
       ...baseState,

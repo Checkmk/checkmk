@@ -14,12 +14,21 @@ import CmkHeading from '@/components/typography/CmkHeading.vue'
 import CmkParagraph from '@/components/typography/CmkParagraph.vue'
 
 import { type CollectorSnippetInput, buildCollectorSnippets } from './otelSnippets'
-import type { AuthConfig, EndpointConfig, EventConsoleConfig } from './otelTypes'
+import {
+  type AuthConfig,
+  type EndpointConfig,
+  type EventConsoleConfig,
+  GRPC_DEFAULT_PORT,
+  HTTP_DEFAULT_PORT,
+  resolveEndpoint
+} from './otelTypes'
 
 const { _t } = usei18n()
 
 const props = defineProps<{
   siteName: string
+  httpEnabled: boolean
+  grpcEnabled: boolean
   httpEndpoint: EndpointConfig
   grpcEndpoint: EndpointConfig
   httpTlsEnabled: boolean
@@ -34,18 +43,22 @@ const activeTab = ref('collector')
 
 const snippetInput = computed<CollectorSnippetInput>(() => ({
   siteName: props.siteName,
-  httpInfo: {
-    endpoint: props.httpEndpoint,
-    tlsEnabled: props.httpTlsEnabled,
-    auth: props.httpAuth,
-    eventConsole: props.httpEventConsole !== null
-  },
-  grpcInfo: {
-    endpoint: props.grpcEndpoint,
-    tlsEnabled: props.grpcTlsEnabled,
-    auth: props.grpcAuth,
-    eventConsole: props.grpcEventConsole !== null
-  }
+  httpInfo: props.httpEnabled
+    ? {
+        endpoint: props.httpEndpoint,
+        tlsEnabled: props.httpTlsEnabled,
+        auth: props.httpAuth,
+        eventConsole: props.httpEventConsole !== null
+      }
+    : null,
+  grpcInfo: props.grpcEnabled
+    ? {
+        endpoint: props.grpcEndpoint,
+        tlsEnabled: props.grpcTlsEnabled,
+        auth: props.grpcAuth,
+        eventConsole: props.grpcEventConsole !== null
+      }
+    : null
 }))
 
 const snippets = computed(() => buildCollectorSnippets(snippetInput.value))
@@ -54,14 +67,20 @@ const basicAuthEnabled = computed(
   () => props.httpAuth.method === 'basicauth' || props.grpcAuth.method === 'basicauth'
 )
 
+// Prefer the HTTP endpoint for the SDK example since OTLP/HTTP is the more
+// common SDK transport; fall back to gRPC when only that one is enabled.
 const sdkEndpointDisplay = computed(() => {
-  const endpoint =
-    props.httpEndpoint.address || props.httpEndpoint.port !== undefined
-      ? props.httpEndpoint
-      : props.grpcEndpoint
-  const address = endpoint.address || '<host>'
-  const port = endpoint.port ?? 4318
-  return `${address}:${port}`
+  const httpResolved = props.httpEnabled
+    ? resolveEndpoint(props.httpEndpoint, HTTP_DEFAULT_PORT)
+    : null
+  const grpcResolved = props.grpcEnabled
+    ? resolveEndpoint(props.grpcEndpoint, GRPC_DEFAULT_PORT)
+    : null
+  const resolved = httpResolved ?? grpcResolved
+  if (resolved === null) {
+    return `<host>:${HTTP_DEFAULT_PORT}`
+  }
+  return `${resolved.address}:${resolved.port}`
 })
 
 const sdkAuthExample = 'echo -n "username:password" | base64'

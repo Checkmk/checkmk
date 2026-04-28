@@ -61,6 +61,9 @@ void main() {
         """.stripMargin());
 
     def relative_job_name = "${branch_base_folder}/builders/test-update-single-f12less";
+    if (env.USE_K8S_UPDATE_SYSTEMTESTS == "1") {
+        relative_job_name = "${branch_base_folder}/builders/test-update-single-f12less-k8s";
+    }
 
     def test_stages = all_distros.collectEntries { distro -> [
         ("Test ${distro}") : {

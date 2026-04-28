@@ -3,10 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import base64
 from dataclasses import dataclass
 from pathlib import Path
 from typing import final
 
+from cmk.agent_receiver.lib.auth import B64SiteInternalSecret
 from cmk.agent_receiver.lib.config import Config, CONFIG_FILE
 from cmk.testlib.agent_receiver.certs import set_up_site_certs
 
@@ -18,6 +20,12 @@ class AgentReceiverSite:
     @property
     def env(self) -> dict[str, str]:
         return {"OMD_ROOT": str(self.config.omd_root), "OMD_SITE": self.config.site_name}
+
+    @property
+    def internal_credentials(self) -> B64SiteInternalSecret:
+        return B64SiteInternalSecret(
+            base64.b64encode(self.config.internal_secret_path.read_bytes()).decode("ascii")
+        )
 
 
 @final

@@ -64,7 +64,6 @@ class LoadedConfigFragment:
     static_checks: Mapping[
         str, list[RuleSpec[list[object]]]
     ]  # a.k.a. "enforced_services". Keep the name for consistency
-    service_rule_groups: set[str]
     service_descriptions: Mapping[str, str]
     service_description_translation: Sequence[RuleSpec[Mapping[str, object]]]
     use_new_descriptions_for: Mapping[str, bool]

@@ -867,7 +867,6 @@ def _execute_discovery(
         ruleset_matcher,
         label_manager.labels_of_host,
         loaded_config.checkgroup_parameters,
-        loaded_config.service_rule_groups,
     )
     checker_config = CheckerConfig(
         only_from=config_cache.only_from,

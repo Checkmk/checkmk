@@ -683,7 +683,6 @@ def _perform_post_config_loading_actions(
         checkgroup_parameters=checkgroup_parameters,
         logwatch_rules=logwatch_rules,
         static_checks=static_checks,
-        service_rule_groups=service_rule_groups,
         service_descriptions=service_descriptions,
         service_description_translation=service_description_translation,
         use_new_descriptions_for=use_new_descriptions_for,
@@ -1396,11 +1395,6 @@ ALL_SERVICES = tuple_rulesets.ALL_SERVICES
 NEGATE = tuple_rulesets.NEGATE
 
 
-# workaround: set of check-groups that are to be treated as service-checks even if
-#   the item is None
-service_rule_groups = {"temperature"}
-
-
 # .
 #   .--Loading-------------------------------------------------------------.
 #   |                _                    _ _                              |
@@ -1808,7 +1802,6 @@ class ConfigCache:
                 self.ruleset_matcher,
                 self.label_manager.labels_of_host,
                 self._loaded_config.checkgroup_parameters,
-                self._loaded_config.service_rule_groups,
             ),
             check_plugins,
             _make_service_description_cb(passive_service_name_config, check_plugins),

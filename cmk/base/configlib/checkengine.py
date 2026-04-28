@@ -5,7 +5,7 @@
 
 
 import dataclasses
-from collections.abc import Callable, Container, Mapping, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from typing import (
     assert_never,
 )
@@ -37,12 +37,10 @@ class CheckingConfig(ABCCheckingConfig):
         matcher: RulesetMatcher,
         labels_of_host: Callable[[HostName], Labels],
         parameter_rules: Mapping[str, Sequence[RuleSpec[Mapping[str, object]]]],
-        service_rule_names: Container[str],
     ) -> None:
         self._matcher = matcher
         self._parameter_rules = parameter_rules
         self._labels_of_host = labels_of_host
-        self._service_rule_names = service_rule_names
 
     def __call__(
         self, host_name: HostName, item: Item, service_labels: Labels, ruleset_name: RulesetName
@@ -52,7 +50,7 @@ class CheckingConfig(ABCCheckingConfig):
             return []
 
         try:
-            if item is None and ruleset_name not in self._service_rule_names:
+            if item is None:
                 return self._matcher.get_host_values_all(host_name, rules, self._labels_of_host)
 
             # checks with an item need service-specific rules

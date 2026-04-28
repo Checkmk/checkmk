@@ -12,12 +12,6 @@ from cmk.gui.plugins.wato.utils import (
 from cmk.gui.valuespec import Dictionary, DropdownChoice, Float, Integer, TextInput, Tuple
 
 
-# New temperature rule for modern temperature checks that have the
-# sensor type (e.g. "CPU", "Chassis", etc.) as the beginning of their
-# item (e.g. "CPU 1", "Chassis 17/11"). This will replace all other
-# temperature rulesets in future. Note: those few temperature checks
-# that do *not* use an item, need to be converted to use one single
-# item (other than None).
 def _parameter_valuespec_temperature() -> Dictionary:
     return Dictionary(
         elements=[

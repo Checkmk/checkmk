@@ -3256,7 +3256,6 @@ def test_checking_config(
                 }
             ],
         },
-        ("ps",),
     )
 
     entries = config_getter(hostname, "item", {}, "ps")

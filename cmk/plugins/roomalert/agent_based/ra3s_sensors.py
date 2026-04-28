@@ -23,23 +23,32 @@ from cmk.plugins.roomalert.lib import DETECT_RA3S
 
 
 class InternalSection(NamedTuple):
-    temp_celsius: float
+    temp_fahrenheit: float | None = None
+    temp_celsius: float | None = None
 
 
 def parse_ra3s_internal_section_temperature(string_table: StringTable) -> InternalSection | None:
-    if len(string_table) == 0 or len(string_table[0]) == 0:
-        return None
+    try:
+        tempf, tempc = string_table[0]
+        if not tempf and not tempc:
+            return None
 
-    value = string_table[0][0]
-    return InternalSection(temp_celsius=float(value) / 100.0)
+        return InternalSection(
+            temp_fahrenheit=float(tempf) / 100.0 if tempf else None,
+            temp_celsius=float(tempc) / 100.0 if tempc else None,
+        )
+    except (ValueError, IndexError):
+        return None
 
 
 snmp_section_ra3s_internal_sensors = SimpleSNMPSection(
     name="ra3s_internal_sensors",
     detect=DETECT_RA3S,
     fetch=SNMPTree(
-        base=".1.3.6.1.4.1.20916.1.13.1.1",
-        oids=["1.2"],  # internal-tempc
+        base=".1.3.6.1.4.1.20916.1.13.1.1.1",
+        # both required because the hardware may not
+        # return tempc by itself.
+        oids=["1", "2"],  # internal-tempf, internal-tempc
     ),
     parse_function=parse_ra3s_internal_section_temperature,
 )
@@ -165,12 +174,21 @@ def _check_ra3s_temperature(
     digital: DigitalSection | None,
 ) -> CheckResult:
     if internal is not None and item == "Internal":
-        yield from check_temperature(
-            reading=internal.temp_celsius,
-            params=params,
-            unique_name="ra3s_temp_internal",
-            value_store=value_store,
-        )
+        if internal.temp_celsius is not None:
+            yield from check_temperature(
+                reading=internal.temp_celsius,
+                params=params,
+                unique_name="ra3s_temp_internal",
+                value_store=value_store,
+            )
+        elif internal.temp_fahrenheit is not None:
+            yield from check_temperature(
+                reading=internal.temp_fahrenheit,
+                params=params,
+                unique_name="ra3s_temp_internal",
+                value_store=value_store,
+                dev_unit="f",
+            )
 
     if digital is not None and item == "Sensor":
         yield from check_temperature(

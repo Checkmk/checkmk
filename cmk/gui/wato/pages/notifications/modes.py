@@ -3506,7 +3506,12 @@ class ABCEditNotificationRuleMode(ABCNotificationsMode):
             return None
 
         if back_mode := request.var("back_mode"):
-            return redirect(mode_url(back_mode))
+            preserved_vars: dict[str, str] = {}
+            if (user_id := self._user_id()) is not None:
+                preserved_vars["user"] = user_id
+            if search := request.get_str_input("search"):
+                preserved_vars["search"] = search
+            return redirect(mode_url(back_mode, **preserved_vars))
 
         return self._back_mode()
 

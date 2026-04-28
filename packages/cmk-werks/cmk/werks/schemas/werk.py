@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import ast
 import datetime
 import sys
 from pathlib import Path
@@ -19,7 +18,7 @@ T = TypeVar("T", bound="Stash")
 
 class Stash(BaseModel):
     stash_version: Literal["2"] = Field(default="2", alias="__version__")
-    ids_by_project: dict[str, list[int]]
+    ids_by_project: dict[str, list[int]] = Field(default={})
 
     def count(self) -> int:
         """
@@ -65,21 +64,6 @@ class Stash(BaseModel):
         if project not in self.ids_by_project:
             self.ids_by_project[project] = []
         self.ids_by_project[project].append(werk_id.id)
-
-    @classmethod
-    def load_from_file(cls: type[T], werk_ids_path: Path) -> T:
-        if not werk_ids_path.exists():
-            return cls.model_validate({"ids_by_project": {}})
-        content = werk_ids_path.read_text(encoding="utf-8")
-        if not content:
-            return cls.model_validate({"ids_by_project": {}})
-        if content[0] == "[":
-            # we have a legacy file, from cmk project, we need to adapt it:
-            return cls.model_validate({"ids_by_project": {"cmk": ast.literal_eval(content)}})
-        return cls.model_validate_json(content)
-
-    def dump_to_file(self, werk_ids_path: Path) -> None:
-        werk_ids_path.write_text(self.model_dump_json(by_alias=True), encoding="utf-8")
 
 
 class WerkId:

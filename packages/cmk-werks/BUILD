@@ -35,6 +35,7 @@ py_library(
         "cmk/werks/convert.py",
         "cmk/werks/error.py",
         "cmk/werks/format.py",
+        "cmk/werks/id_pool.py",
         "cmk/werks/in_out_elements.py",
         "cmk/werks/load.py",
         "cmk/werks/markup.py",

@@ -94,7 +94,10 @@
       "Bash(.venv/bin/python .github/skills/jira-read-ticket/read_ticket.py *)",
       "Bash(PYTHONPATH=.github/skills .venv/bin/python -m crash_report*)",
       "WebFetch(domain:*.tribe29.com)",
-      "WebFetch(domain:*.checkmk.net)"
+      "WebFetch(domain:*.checkmk.net)",
+      "mcp__cmk-frontend-vue--ui-component-library__get_component",
+      "mcp__cmk-frontend-vue--ui-component-library__list_components",
+      "mcp__cmk-frontend-vue--ui-component-library__search_components"
     ],
     "ask": ["Bash(find *--exec*)", "Bash(git remote *)", "Bash(git config *)"],
     "deny": [

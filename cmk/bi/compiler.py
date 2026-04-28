@@ -7,7 +7,6 @@ from __future__ import annotations
 
 import os
 import time
-from collections.abc import Mapping
 from multiprocessing.pool import Pool
 from pathlib import Path
 from typing import TypedDict
@@ -21,16 +20,12 @@ from cmk.bi import storage
 from cmk.bi.aggregation import BIAggregation
 from cmk.bi.data_fetcher import BIStructureFetcher, SiteProgramStart
 from cmk.bi.filesystem import BIFileSystem, get_default_site_filesystem
+from cmk.bi.frozen_manager import BIFrozenManager
 from cmk.bi.lib import SitesCallback
 from cmk.bi.log import LOGGER
 from cmk.bi.packs import BIAggregationPacks
 from cmk.bi.searcher import BISearcher
-from cmk.bi.trees import (
-    BICompiledAggregation,
-    BICompiledRule,
-    FrozenBIInfo,
-    get_compiled_aggregation_and_branch_by_name,
-)
+from cmk.bi.trees import BICompiledAggregation
 from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.i18n import _
@@ -63,12 +58,16 @@ class BICompiler:
 
         self._aggregation_store = storage.AggregationStore(self._fs.cache)
         self._metadata_store = storage.MetadataStore(self._fs)
-        self._frozen_store = storage.FrozenAggregationStore(self._fs.var)
         self._lookup_store = storage.LookupStore(redis_client or get_redis_client())
 
         self._bi_packs = BIAggregationPacks(bi_configuration_file)
         self._bi_structure_fetcher = BIStructureFetcher(self._sites_callback, self._fs)
         self.bi_searcher = BISearcher()
+
+        self._frozen_manager = BIFrozenManager(
+            store=storage.FrozenAggregationStore(self._fs.var),
+            lookup_store=storage.LookupStore(redis_client or get_redis_client()),
+        )
 
     @property
     def compiled_aggregations(self) -> dict[str, BICompiledAggregation]:
@@ -79,82 +78,6 @@ class BICompiler:
             self._check_compilation_status()
         finally:
             self._load_compiled_aggregations()
-
-    def _manage_frozen_branches(
-        self, compiled_aggregations: dict[str, BICompiledAggregation]
-    ) -> dict[str, BICompiledAggregation]:
-        updated_aggregations = {}
-        new_branch_was_frozen = False
-
-        for aggr_id, compiled_aggregation in compiled_aggregations.items():
-            updated_aggregations[aggr_id] = compiled_aggregation
-
-            if compiled_aggregation.frozen_info is not None:
-                continue  # Aggregation is already frozen.
-
-            if not compiled_aggregation.computation_options.freeze_aggregations:
-                self._frozen_store.delete(aggr_id)
-                continue  # Aggregation is no longer frozen.
-
-            new_branch_was_frozen = (
-                self._freeze_new_branches(compiled_aggregation, compiled_aggregations)
-                or new_branch_was_frozen
-            )
-
-            # Read frozen branches. Each branch gets a separate aggregation ID since
-            # the computation time may differ, which also means possibly changed computation options
-            for branch in list(compiled_aggregation.branches):
-                branch_title = branch.properties.title
-                if frozen_agg := self._frozen_store.get(compiled_aggregation.id, branch_title):
-                    frozen_agg.frozen_info = FrozenBIInfo(compiled_aggregation.id, branch_title)
-                    updated_aggregations[frozen_agg.id] = frozen_agg
-
-            # Remove all branches from the original aggregation, since all of them are now frozen
-            compiled_aggregation.branches = []
-
-        if new_branch_was_frozen:
-            self._lookup_store.generate_aggregation_lookups(updated_aggregations)
-
-        return updated_aggregations
-
-    def _freeze_new_branches(
-        self,
-        compiled_aggregation: BICompiledAggregation,
-        compiled_aggregations: Mapping[str, BICompiledAggregation],
-    ) -> bool:
-        new_branch_found = False
-        for branch in list(compiled_aggregation.branches):
-            if self._frozen_store.exists(compiled_aggregation.id, branch.properties.title):
-                continue  # Branch is already frozen.
-
-            new_branch_found = True
-            aggregation, branch = get_compiled_aggregation_and_branch_by_name(
-                compiled_aggregations=compiled_aggregations,
-                aggr_name=branch.properties.title,
-            )
-            self._freeze_branch(aggregation, branch)
-
-        return new_branch_found
-
-    def _freeze_branch(self, aggregation: BICompiledAggregation, branch: BICompiledRule) -> None:
-        # Prepare a single frozen configuration specifically for this branch
-        # This includes the aggregation configuration and the frozen branch
-        if frozen_info := aggregation.frozen_info:
-            aggr_id = frozen_info.based_on_aggregation_id
-        else:
-            aggr_id = aggregation.id
-
-        branch_name = branch.properties.title
-        original_branches = aggregation.branches
-        original_id = aggregation.id
-
-        try:
-            aggregation.branches = [branch]
-            aggregation.id = f"frozen_{aggr_id}_{branch_name}"
-            self._frozen_store.save(aggregation, aggr_id, branch_name)
-        finally:
-            aggregation.branches = original_branches
-            aggregation.id = original_id
 
     def _get_currently_loaded_aggregation_identifiers(self) -> set[storage.Identifier]:
         return {storage.generate_identifier(id_) for id_ in self._compiled_aggregations.keys()}
@@ -170,7 +93,7 @@ class BICompiler:
             LOGGER.debug("Loaded cached aggregation result: %s", aggregation.id)
             self._compiled_aggregations[aggregation.id] = aggregation
 
-        self._compiled_aggregations = self._manage_frozen_branches(self._compiled_aggregations)
+        self._compiled_aggregations = self._frozen_manager.update(self._compiled_aggregations)
 
     def _check_compilation_status(self) -> None:
         current_configstatus = self.compute_current_configstatus()
@@ -200,7 +123,7 @@ class BICompiler:
             for compiled_aggregation in self._compiled_aggregations.values():
                 self._store_compiled_aggregation(compiled_aggregation)
 
-            self._compiled_aggregations = self._manage_frozen_branches(self._compiled_aggregations)
+            self._compiled_aggregations = self._frozen_manager.update(self._compiled_aggregations)
             self._lookup_store.generate_aggregation_lookups(self._compiled_aggregations)
 
             known_sites = {kv[0]: kv[1] for kv in current_configstatus.get("known_sites", set())}
@@ -238,7 +161,7 @@ class BICompiler:
     def _cleanup_vanished_aggregations(self) -> None:
         for identifier in self._get_vanished_aggregation_identifiers():
             self._aggregation_store.delete_by_identifier(identifier)
-            self._frozen_store.delete_by_identifier(identifier)
+            self._frozen_manager.delete(identifier)
 
     def _verify_aggregation_title_uniqueness(
         self, compiled_aggregations: dict[str, BICompiledAggregation]

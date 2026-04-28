@@ -73,6 +73,7 @@ DOCKERABLE_TESTS := \
 	test-plugins-siteless \
 	test-shellcheck \
 	test-unit-all \
+	test-system-metric-backend \
 	test-unit-shell \
 	test-unit-testlib \
 	test-werks \
@@ -96,6 +97,8 @@ AGENT_PLUGIN_UNIT_TEST_FILES := $(wildcard agent-plugin-unit/test_*.py)
 	$(foreach TEST,$(SYSTEM_TESTS),$(TEST)-docker-debug) \
 	test-mypy test-mypy-gpl test-mypy-docker test-packaging \
 	test-unit test-unit-all test-unit-docker \
+	test-system-metric-backend test-system-metric-backend-docker \
+	test-unit-all-and-system-metric-backend \
 	test-unit-shell test-unit-shell-docker test-shellcheck test-shellcheck-docker test-cycles test-cycles-docker \
 	test-unit-omdlib \
 	test-tidy-core test-tidy-docker test-iwyu-core test-iwyu-docker \
@@ -407,9 +410,15 @@ test-unit-all: test-doctest
 	cd .. && \
 	    bazel test --test_verbose_timeout_warnings \
 	    //tests/unit:all \
-	    //tests/system/non-free/metric_backend/... \
 	    --test_env=TZ=$(RANDOM_TZ) \
 	    --test_arg="--numprocesses=4"
+
+test-system-metric-backend:
+	cd .. && \
+	    bazel test --test_verbose_timeout_warnings \
+	    //tests/system/non-free/metric_backend/...
+
+test-unit-all-and-system-metric-backend: test-unit-all test-system-metric-backend
 
 # Default bazel coverage options are defined in .bazelrc.
 # With BAZEL_COVERAGE_ARGS you can pass additional arguments to bazel coverage command, for example

@@ -76,7 +76,7 @@ String distro_code() {
 }
 
 /* groovylint-disable DuplicateListLiteral */
-String get_cmk_version(branch_name, branch_version, version) {
+String get_cmk_version(String branch_name, String branch_version, String version) {
     return (
       // Experimental builds
       (branch_name.startsWith('sandbox') && version in ['daily', 'git']) ? "${build_date}-${branch_name}" :
@@ -87,7 +87,7 @@ String get_cmk_version(branch_name, branch_version, version) {
 }
 /* groovylint-enable DuplicateListLiteral */
 
-String get_package_name(base_dir, package_type, edition, cmk_version) {
+String get_package_name(String base_dir, String package_type, String edition, String cmk_version) {
     print("FN get_package_name(base_dir=${base_dir}, package_type=${package_type}, cmk_version=${cmk_version})");
     dir(base_dir) {
         def file_pattern = (package_type == "deb" ?
@@ -172,11 +172,11 @@ String get_docker_tag(String git_dir=".") {
     return "${safe_branch_name()}-${build_date}-${get_git_hash(git_dir)}";
 }
 
-String get_docker_artifact_name(edition, cmk_version) {
+String get_docker_artifact_name(String edition, String cmk_version) {
     return "check-mk-${edition}-docker-${cmk_version}.tar.gz";
 }
 
-String select_docker_tag(build_tag, branch_name) {
+String select_docker_tag(String build_tag, String branch_name) {
     // build_tag > branch_name
     return build_tag ?: "${branch_name}-latest";
 }
@@ -185,7 +185,7 @@ String print_image_tag() {
     sh("cat /version.txt");
 }
 
-void patch_folders(edition) {
+void patch_folders(String edition) {
     REPO_PATCH_RULES[edition]["paths_to_be_removed"].each { FOLDER ->
         sh("find -name ${FOLDER} -exec rm -rf {} ';' || true");
     }
@@ -195,11 +195,11 @@ void patch_folders(edition) {
     }
 }
 
-void set_version(cmk_version) {
+void set_version(String cmk_version) {
     sh("make NEW_VERSION=${cmk_version} setversion");
 }
 
-void configure_checkout_folder(edition, cmk_version) {
+void configure_checkout_folder(String edition, String cmk_version) {
     assert edition in REPO_PATCH_RULES: "edition=${edition} not known";
     patch_folders(edition);
     set_version(cmk_version);
@@ -215,11 +215,11 @@ void delete_non_cre_files() {
     """);
 }
 
-String strip_rc_number_from_version(VERSION) {
+String strip_rc_number_from_version(String VERSION) {
     return VERSION.split("-rc")[0];
 }
 
-boolean is_official_release(version) {
+boolean is_official_release(String version) {
     // groovylint-disable IfStatementCouldBeTernary
     if (strip_rc_number_from_version(version) ==~ /((\d+.\d+.\d+)(([pib])(\d+))?)/) {
         return true;

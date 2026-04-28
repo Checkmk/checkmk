@@ -196,6 +196,7 @@ def test_registered_pages() -> None:
             "graph_image",
             "graph_tunings",
             "noauth:deploy_agent",
+            "proxy_download_agent",
             "register_agent",
             "report",
             "report_download_preview",

@@ -28,7 +28,7 @@ type ListOrientation = 'vertical' | 'horizontal'
 
 export const panelConfig = {
   orientation: {
-    type: 'list',
+    type: 'list' as const,
     title: 'Orientation',
     options: [
       { title: 'Vertical', name: 'vertical' },
@@ -37,12 +37,12 @@ export const panelConfig = {
     initialState: 'vertical' as const
   },
   showAdd: {
-    type: 'boolean',
+    type: 'boolean' as const,
     title: 'Show Add Button',
     initialState: true
   },
   enableDrag: {
-    type: 'boolean',
+    type: 'boolean' as const,
     title: 'Enable Drag & Drop',
     initialState: false
   }

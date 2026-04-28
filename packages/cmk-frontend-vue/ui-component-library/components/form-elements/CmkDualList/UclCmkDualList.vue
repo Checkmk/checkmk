@@ -32,12 +32,12 @@ export const a11yData = [
 
 export const panelConfig = {
   title: {
-    type: 'string',
+    type: 'string' as const,
     title: 'Group Title',
     initialState: 'Assign User Roles'
   },
   width: {
-    type: 'list',
+    type: 'list' as const,
     title: 'Width',
     options: [
       { title: 'XSmall', name: 'xsmall' },
@@ -48,7 +48,7 @@ export const panelConfig = {
     initialState: 'medium' as const
   },
   selectedData: {
-    type: 'string-array',
+    type: 'string-array' as const,
     title: 'selectedData',
     initialState: ['host_admin'],
     help: 'Type: string[]. IDs must match the name of each available element. In the UCL app, enter one ID per line in the textarea, e.g.:host_admin network_admin db_admin'

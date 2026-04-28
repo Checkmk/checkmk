@@ -10,7 +10,7 @@ import codeExample from './UclCmkSwitchCodeExample.vue?raw'
 
 export const panelConfig = {
   data: {
-    type: 'boolean',
+    type: 'boolean' as const,
     title: 'Checked State',
     initialState: false
   }

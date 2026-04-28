@@ -28,10 +28,10 @@ interface CollapsibleTitleProps {
   /**@property {TranslatedString} help_text - Help text to display next to the title */
   help_text?: TranslatedString | null
 
-  /**@property {CmkIconProps} icon - Icon to display before the title*/
+  /**@property {DynamicIcon} icon - Icon to display before the title*/
   icon?: DynamicIcon | null
 
-  /**@property {CmkIconProps} icon - Icon to display before the title*/
+  /**@property {boolean} focus - If true, the title will be focused */
   focus?: boolean | null
 
   /**@property {boolean} disabled - If true, the title is non-interactive (greyed out, no click) */

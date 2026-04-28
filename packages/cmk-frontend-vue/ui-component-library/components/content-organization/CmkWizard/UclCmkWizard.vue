@@ -25,7 +25,7 @@ export const a11yData = [
 
 export const panelConfig = {
   mode: {
-    type: 'list',
+    type: 'list' as const,
     title: 'Wizard Mode',
     options: [
       { title: 'Guided (Step-by-Step)', name: 'guided' },
@@ -34,7 +34,7 @@ export const panelConfig = {
     initialState: 'guided' as 'guided' | 'overview'
   },
   currentStep: {
-    type: 'list',
+    type: 'list' as const,
     title: 'Current Step',
     options: [
       { title: 'Step 1', name: '1' },

@@ -18,7 +18,7 @@ export const a11yData = [
 
 export const panelConfig = {
   language: {
-    type: 'list',
+    type: 'list' as const,
     title: 'Active Language',
     options: [
       { title: 'English', name: 'en' },
@@ -28,13 +28,13 @@ export const panelConfig = {
     initialState: 'en'
   },
   name: {
-    type: 'string',
+    type: 'string' as const,
     title: 'Name',
     initialState: 'Alice',
     help: 'Enter a name to see interpolation in action.'
   },
   appleCount: {
-    type: 'list',
+    type: 'list' as const,
     title: 'Apple Count',
     options: [
       { title: '0 Apples', name: '0' },

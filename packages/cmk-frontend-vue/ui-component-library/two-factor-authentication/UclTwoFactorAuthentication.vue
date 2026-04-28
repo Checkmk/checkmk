@@ -25,9 +25,9 @@ export const a11yData = [
 ]
 
 export const panelConfig = {
-  totp: { type: 'boolean', title: 'Enable TOTP', initialState: true },
-  webauthn: { type: 'boolean', title: 'Enable WebAuthn', initialState: true },
-  backup: { type: 'boolean', title: 'Enable Backup Codes', initialState: true }
+  totp: { type: 'boolean' as const, title: 'Enable TOTP', initialState: true },
+  webauthn: { type: 'boolean' as const, title: 'Enable WebAuthn', initialState: true },
+  backup: { type: 'boolean' as const, title: 'Enable Backup Codes', initialState: true }
 } satisfies PanelConfig
 </script>
 

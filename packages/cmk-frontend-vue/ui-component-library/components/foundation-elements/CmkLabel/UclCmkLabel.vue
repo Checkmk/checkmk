@@ -12,7 +12,7 @@ import codeExample from './UclCmkLabelCodeExample.vue?raw'
 
 export const panelConfig = {
   variant: {
-    type: 'list',
+    type: 'list' as const,
     title: 'Variant',
     options: [
       { title: 'Default', name: 'default' },
@@ -22,18 +22,23 @@ export const panelConfig = {
     initialState: 'default' as const
   },
   dots: {
-    type: 'boolean',
+    type: 'boolean' as const,
     title: 'Dots',
     initialState: false
   },
   cursor: {
-    type: 'list',
+    type: 'list' as const,
     title: 'Cursor',
     options: [
       { title: 'Default', name: 'default' },
       { title: 'Pointer', name: 'pointer' }
     ] satisfies Options<LabelProps['cursor']>[],
     initialState: 'default' as const
+  },
+  help: {
+    type: 'string' as const,
+    title: 'Help Text',
+    initialState: ''
   }
 } satisfies PanelConfig
 </script>

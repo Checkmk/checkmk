@@ -33,12 +33,12 @@ type InputType = 'text' | 'number' | 'date' | 'time' | 'password'
 
 export const panelConfig = {
   modelValue: {
-    type: 'string',
+    type: 'string' as const,
     title: 'Value',
     initialState: 'Checkmk Admin'
   },
   type: {
-    type: 'list',
+    type: 'list' as const,
     title: 'Type',
     options: [
       { title: 'Text', name: 'text' },
@@ -50,7 +50,7 @@ export const panelConfig = {
     initialState: 'text' as InputType
   },
   fieldSize: {
-    type: 'list',
+    type: 'list' as const,
     title: 'Size',
     help: 'This Only affects text inputs and controls the width of the input field.',
     options: [
@@ -62,17 +62,17 @@ export const panelConfig = {
     initialState: 'SMALL' as const
   },
   unit: {
-    type: 'string',
+    type: 'string' as const,
     title: 'Unit',
     initialState: ''
   },
   inline: {
-    type: 'boolean',
+    type: 'boolean' as const,
     title: 'Inline',
     initialState: false
   },
   externalErrors: {
-    type: 'string',
+    type: 'string' as const,
     title: 'External Error',
     initialState: ''
   }

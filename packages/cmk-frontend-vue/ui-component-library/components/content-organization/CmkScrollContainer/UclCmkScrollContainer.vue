@@ -28,7 +28,7 @@ export const a11yData = [
 
 export const panelConfig = {
   type: {
-    type: 'list',
+    type: 'list' as const,
     title: 'Scrollbar Type',
     options: [
       { title: 'Inner', name: 'inner' },
@@ -36,8 +36,8 @@ export const panelConfig = {
     ] satisfies Options<ScrollContainerVariants['type']>[],
     initialState: 'inner' as const
   },
-  height: { type: 'string', title: 'Fixed Height', initialState: '100%' },
-  maxHeight: { type: 'string', title: 'Max Height', initialState: '200px' }
+  height: { type: 'string' as const, title: 'Fixed Height', initialState: '100%' },
+  maxHeight: { type: 'string' as const, title: 'Max Height', initialState: '200px' }
 } satisfies PanelConfig
 </script>
 

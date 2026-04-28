@@ -65,7 +65,7 @@ const catalog = ref<Catalog>({
                 default_value: '',
                 group: null,
                 parameter_form: {
-                  type: 'string',
+                  type: 'string' as const,
                   label: 'string label',
                   input_hint: 'string input hint',
                   title: 'string title',

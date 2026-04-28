@@ -5,6 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script lang="ts">
 import { type PanelConfig } from '@ucl/_ucl/components/detail-page'
+import type { DynamicIcon } from 'cmk-shared-typing/typescript/icon'
 
 import codeExample from './UclCmkCollapsibleCodeExample.vue?raw'
 
@@ -26,10 +27,21 @@ export const a11yData = [
 ]
 
 export const panelConfig = {
-  open: { type: 'boolean', title: 'Open', initialState: false },
-  title: { type: 'string', title: 'Title Text', initialState: 'Collapsible Section' },
-  sideTitle: { type: 'string', title: 'Side Title', initialState: 'Details' },
-  helpText: { type: 'string', title: 'Help Text', initialState: 'Click to expand' }
+  open: { type: 'boolean' as const, title: 'Open', initialState: false },
+  title: { type: 'string' as const, title: 'Title Text', initialState: 'Collapsible Section' },
+  icon: {
+    type: 'list' as const,
+    title: 'Icon',
+    options: [
+      { title: 'None', name: 'none' },
+      { title: 'Alert Critical', name: 'alert-crit' },
+      { title: 'Checkmark', name: 'check' }
+    ],
+    initialState: 'none'
+  },
+  disabled: { type: 'boolean' as const, title: 'Disabled', initialState: false },
+  sideTitle: { type: 'string' as const, title: 'Side Title', initialState: 'Details' },
+  help_text: { type: 'string' as const, title: 'Help Text', initialState: 'Click to expand' }
 } satisfies PanelConfig
 </script>
 
@@ -64,8 +76,14 @@ const propState = ref(createPanelState(panelConfig))
       <CmkCollapsibleTitle
         :title="propState.title"
         :side-title="propState.sideTitle"
-        :help_text="propState.helpText"
+        :help_text="propState.help_text"
         :open="propState.open"
+        :icon="
+          propState.icon === 'none'
+            ? null
+            : ({ type: 'default_icon', id: propState.icon } as DynamicIcon)
+        "
+        :disabled="propState.disabled"
         @toggle-open="propState.open = !propState.open"
       />
 

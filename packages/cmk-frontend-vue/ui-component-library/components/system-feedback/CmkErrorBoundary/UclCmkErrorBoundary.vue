@@ -9,7 +9,7 @@ import { type PanelConfig } from '@ucl/_ucl/components/detail-page'
 import codeExample from './UclCmkErrorBoundaryCodeExample.vue?raw'
 
 export const panelConfig = {
-  error: { type: 'boolean', title: 'error', initialState: false }
+  error: { type: 'boolean' as const, title: 'error', initialState: false }
 } satisfies PanelConfig
 export const a11yData = [
   {

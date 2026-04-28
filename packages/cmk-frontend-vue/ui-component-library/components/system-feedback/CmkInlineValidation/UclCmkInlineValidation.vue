@@ -10,7 +10,7 @@ import codeExample from './UclCmkInlineValidationCodeExample.vue?raw'
 
 export const panelConfig = {
   validation: {
-    type: 'boolean',
+    type: 'boolean' as const,
     title: 'validation',
     initialState: true
   }

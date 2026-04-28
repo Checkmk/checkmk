@@ -82,7 +82,7 @@ const maxOpenSelected = ref<'1' | '2' | '3'>('1')
     <CmkDropdown
       v-model:selected-option="minOpenSelected"
       :options="{
-        type: 'fixed',
+        type: 'fixed' as const,
 
         suggestions: [
           { name: '0', title: '0' },
@@ -100,7 +100,7 @@ const maxOpenSelected = ref<'1' | '2' | '3'>('1')
     <CmkDropdown
       v-model:selected-option="maxOpenSelected"
       :options="{
-        type: 'fixed',
+        type: 'fixed' as const,
         suggestions: [
           { name: '0', title: '0 (unlimited)' },
           { name: '1', title: '1' },

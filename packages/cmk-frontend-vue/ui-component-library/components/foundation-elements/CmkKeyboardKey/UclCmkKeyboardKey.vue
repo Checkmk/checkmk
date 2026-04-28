@@ -12,7 +12,7 @@ import codeExample from './UclCmkKeyboardKeyCodeExample.vue?raw'
 
 export const panelConfig = {
   keyboardKey: {
-    type: 'list',
+    type: 'list' as const,
     title: 'Key Content',
     options: [
       { title: 'Arrow Left', name: 'arrow-left' },
@@ -29,7 +29,7 @@ export const panelConfig = {
     initialState: 'enter' as const
   },
   size: {
-    type: 'list',
+    type: 'list' as const,
     title: 'Size',
     options: [
       { title: 'Small', name: 'small' },

@@ -11,15 +11,15 @@ import { type Sizes } from '@/components/CmkProgressbar.vue'
 import codeExample from './UclCmkProgressbarCodeExample.vue?raw'
 
 export const panelConfig = {
-  value: { type: 'number', title: 'Current Value', initialState: 30 },
+  value: { type: 'number' as const, title: 'Current Value', initialState: 30 },
   max: {
-    type: 'string',
+    type: 'string' as const,
     title: 'Max Value',
     initialState: '100',
     help: 'Leave empty for infinite mode'
   },
   size: {
-    type: 'list',
+    type: 'list' as const,
     title: 'Size',
     options: [
       { title: 'Small', name: 'small' },
@@ -28,7 +28,7 @@ export const panelConfig = {
     ] satisfies Options<NonNullable<Sizes>>[],
     initialState: 'medium' as const
   },
-  label: { type: 'boolean', title: 'label', initialState: true }
+  label: { type: 'boolean' as const, title: 'label', initialState: true }
 } satisfies PanelConfig
 </script>
 

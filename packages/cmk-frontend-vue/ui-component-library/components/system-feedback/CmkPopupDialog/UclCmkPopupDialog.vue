@@ -31,15 +31,15 @@ export const a11yData = [
 ]
 
 export const panelConfig = {
-  open: { type: 'boolean', title: 'Open', initialState: false },
-  title: { type: 'string', title: 'Title', initialState: 'System Notification' },
+  open: { type: 'boolean' as const, title: 'Open', initialState: false },
+  title: { type: 'string' as const, title: 'Title', initialState: 'System Notification' },
   text: {
-    type: 'string',
+    type: 'string' as const,
     title: 'Text Content',
     initialState: 'This is a detailed message explaining the context of the dialog.'
   },
   icon: {
-    type: 'list',
+    type: 'list' as const,
     title: 'Icon',
     options: [
       { title: 'None', name: 'none' },
@@ -49,8 +49,12 @@ export const panelConfig = {
     ] satisfies Options<SimpleIcons | 'none'>[],
     initialState: 'alert-crit' as SimpleIcons | 'none'
   },
-  okButtonText: { type: 'string', title: 'OK Button Text', initialState: 'Close' },
-  stayOpenOverlayClick: { type: 'boolean', title: 'Prevent Overlay Close', initialState: false }
+  okButtonText: { type: 'string' as const, title: 'OK Button Text', initialState: 'Close' },
+  stayOpenOverlayClick: {
+    type: 'boolean' as const,
+    title: 'Prevent Overlay Close',
+    initialState: false
+  }
 } satisfies PanelConfig
 </script>
 

@@ -30,7 +30,7 @@ export const a11yData = [
 
 export const panelConfig = {
   data: {
-    type: 'string',
+    type: 'string' as const,
     title: 'Color',
     initialState: '#ff0000',
     help: 'Controls the selected color value in hexadecimal format.'

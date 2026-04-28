@@ -44,9 +44,9 @@ export const a11yData = [
 ]
 
 export const panelConfig = {
-  open: { type: 'boolean', title: 'Is Open', initialState: false },
+  open: { type: 'boolean' as const, title: 'Is Open', initialState: false },
   size: {
-    type: 'list',
+    type: 'list' as const,
     title: 'Size',
     options: [
       { title: 'Medium', name: 'medium' },
@@ -54,7 +54,16 @@ export const panelConfig = {
     ] satisfies Options<SlideInVariants['size']>[],
     initialState: 'medium' as const
   },
-  ariaLabel: { type: 'string', title: 'Aria Label', initialState: 'Demo Slide-In' }
+  ariaLabel: { type: 'string' as const, title: 'Aria Label', initialState: 'Demo Slide-In' },
+  borderColor: {
+    type: 'list' as const,
+    title: 'Border Color',
+    options: [
+      { title: 'Default (green)', name: 'default' },
+      { title: 'Purple', name: 'purple' }
+    ] satisfies Options<SlideInVariants['borderColor']>[],
+    initialState: 'default' as const
+  }
 } satisfies PanelConfig
 </script>
 
@@ -94,6 +103,7 @@ const propState = ref(createPanelState(panelConfig))
         :open="propState.open"
         :size="propState.size"
         :aria-label="propState.ariaLabel"
+        :border-color="propState.borderColor as SlideInVariants['borderColor']"
         @close="propState.open = false"
       >
         <div

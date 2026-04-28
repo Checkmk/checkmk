@@ -6,13 +6,18 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script lang="ts">
 import { type Options, type PanelConfig } from '@ucl/_ucl/components/detail-page'
 
-import { type IconEmblems, type IconSizeNames, type SimpleIcons } from '@/components/CmkIcon/types'
+import {
+  type CmkIconVariants,
+  type IconEmblems,
+  type IconSizeNames,
+  type SimpleIcons
+} from '@/components/CmkIcon/types'
 
 import codeExample from './UclCmkIconEmblemCodeExample.vue?raw'
 
 export const emblemPanelConfig = {
   emblem: {
-    type: 'list',
+    type: 'list' as const,
     title: 'emblem',
     options: [
       { title: 'Add', name: 'add' },
@@ -37,12 +42,13 @@ export const emblemPanelConfig = {
     ] satisfies Options<'' | IconEmblems>[],
     initialState: 'warning' as '' | IconEmblems,
     help: 'Only the fixed IconEmblems set can be used here — these are separate from SimpleIcons.'
-  }
+  },
+  colored: { type: 'boolean' as const, title: 'Colored', initialState: true }
 } satisfies PanelConfig
 
 export const iconPanelConfig = {
   name: {
-    type: 'list',
+    type: 'list' as const,
     title: 'name',
     options: [
       { title: 'Filter', name: 'filter' },
@@ -55,7 +61,7 @@ export const iconPanelConfig = {
     help: 'Any SimpleIcon name can be used as the base icon, not just the options listed here.'
   },
   size: {
-    type: 'list',
+    type: 'list' as const,
     title: 'size',
     options: [
       { title: 'Medium', name: 'medium' },
@@ -65,7 +71,19 @@ export const iconPanelConfig = {
       { title: 'XXX-Large', name: 'xxxlarge' }
     ] satisfies Options<IconSizeNames>[],
     initialState: 'xxlarge' as IconSizeNames
-  }
+  },
+  title: { type: 'string' as const, title: 'Title (Tooltip)', initialState: '' },
+  variant: {
+    type: 'list' as const,
+    title: 'Variant',
+    options: [
+      { title: 'Plain', name: 'plain' },
+      { title: 'Inline', name: 'inline' }
+    ],
+    initialState: 'plain'
+  },
+  colored: { type: 'boolean' as const, title: 'Colored', initialState: true },
+  rotate: { type: 'number' as const, title: 'Rotation (Degrees)', initialState: 0 }
 } satisfies PanelConfig
 </script>
 
@@ -98,8 +116,18 @@ const iconPropState = ref(createPanelState(iconPanelConfig))
     <UclDetailPageHeader>CmkIconEmblem</UclDetailPageHeader>
 
     <UclDetailPageComponent>
-      <CmkIconEmblem :emblem="emblemPropState.emblem || undefined">
-        <CmkIcon :name="iconPropState.name" :size="iconPropState.size" />
+      <CmkIconEmblem
+        :emblem="emblemPropState.emblem || undefined"
+        :colored="emblemPropState.colored"
+      >
+        <CmkIcon
+          :name="iconPropState.name"
+          :size="iconPropState.size"
+          :title="iconPropState.title || undefined"
+          :variant="iconPropState.variant as CmkIconVariants['variant']"
+          :colored="iconPropState.colored"
+          :rotate="iconPropState.rotate"
+        />
       </CmkIconEmblem>
 
       <template #properties>

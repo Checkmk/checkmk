@@ -35,7 +35,7 @@ type DialogVariant = 'info' | 'error' | 'success' | 'warning' | 'loading'
 
 export const panelConfig = {
   variant: {
-    type: 'list',
+    type: 'list' as const,
     title: 'Variant',
     options: [
       { title: 'Info', name: 'info' },
@@ -46,14 +46,14 @@ export const panelConfig = {
     ] satisfies Options<DialogVariant>[],
     initialState: 'info' as DialogVariant
   },
-  title: { type: 'string', title: 'Title', initialState: 'Dialog Title' },
+  title: { type: 'string' as const, title: 'Title', initialState: 'Dialog Title' },
   message: {
-    type: 'string',
+    type: 'string' as const,
     title: 'Message',
     initialState: 'This is a sample message demonstrating the dialog content and layout.'
   },
-  buttons: { type: 'boolean', title: 'Buttons', initialState: true },
-  dismissal_button: { type: 'boolean', title: 'Dismissal Button', initialState: false }
+  buttons: { type: 'boolean' as const, title: 'Buttons', initialState: true },
+  dismissal_button: { type: 'boolean' as const, title: 'Dismissal Button', initialState: false }
 } satisfies PanelConfig
 </script>
 

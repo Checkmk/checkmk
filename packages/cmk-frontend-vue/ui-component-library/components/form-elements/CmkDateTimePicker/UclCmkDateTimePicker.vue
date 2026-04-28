@@ -35,7 +35,7 @@ export const a11yData = [
 
 export const panelConfig = {
   mode: {
-    type: 'list',
+    type: 'list' as const,
     title: 'Mode',
     options: [
       { title: 'DateTime', name: 'datetime' },
@@ -45,7 +45,7 @@ export const panelConfig = {
     initialState: 'datetime' as Mode
   },
   suffix: {
-    type: 'string',
+    type: 'string' as const,
     title: 'Suffix',
     initialState: 'UTC+1'
   }

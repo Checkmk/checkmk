@@ -28,13 +28,13 @@ export const a11yData = [
 
 export const panelConfig = {
   icon: {
-    type: 'string',
+    type: 'string' as const,
     title: 'Icon',
     initialState: 'plus',
     help: 'Name of the icon to display. Defaults to "plus" if not set.'
   },
   disabled: {
-    type: 'boolean',
+    type: 'boolean' as const,
     title: 'Disabled',
     initialState: false
   }

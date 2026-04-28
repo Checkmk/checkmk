@@ -10,17 +10,17 @@ import codeExample from './UclCmkButtonSubmitCodeExample.vue?raw'
 
 export const panelConfig = {
   label: {
-    type: 'string',
+    type: 'string' as const,
     title: 'Label',
     initialState: 'Save'
   },
   disabled: {
-    type: 'boolean',
+    type: 'boolean' as const,
     title: 'Disabled',
     initialState: false
   },
   title: {
-    type: 'string',
+    type: 'string' as const,
     title: 'Title',
     initialState: ''
   }

@@ -27,7 +27,7 @@ export const a11yData = [
 
 export const panelConfig = {
   size: {
-    type: 'list',
+    type: 'list' as const,
     title: 'Size',
     options: [
       { title: 'Small', name: 'small' },
@@ -37,7 +37,7 @@ export const panelConfig = {
     initialState: 'medium' as const
   },
   color: {
-    type: 'list',
+    type: 'list' as const,
     title: 'Color',
     options: [
       { title: 'Success(Green)', name: 'success' },
@@ -54,7 +54,7 @@ export const panelConfig = {
     initialState: 'success' as const
   },
   variant: {
-    type: 'list',
+    type: 'list' as const,
     title: 'Variant',
     options: [
       { title: 'Fill', name: 'fill' },
@@ -62,8 +62,8 @@ export const panelConfig = {
     ] satisfies Options<Variants>[],
     initialState: 'fill' as const
   },
-  asDiv: { type: 'boolean', title: 'Render as Div', initialState: false },
-  disabled: { type: 'boolean', title: 'Disabled', initialState: false }
+  asDiv: { type: 'boolean' as const, title: 'Render as Div', initialState: false },
+  disabled: { type: 'boolean' as const, title: 'Disabled', initialState: false }
 } satisfies PanelConfig
 </script>
 

@@ -28,7 +28,7 @@ export const a11yData = [
 
 export const panelConfig = {
   modelValue: {
-    type: 'list',
+    type: 'list' as const,
     title: 'Selected Value',
     options: [
       { title: 'list', name: 'list' },

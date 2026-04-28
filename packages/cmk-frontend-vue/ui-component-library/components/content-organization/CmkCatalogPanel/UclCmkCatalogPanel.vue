@@ -28,9 +28,9 @@ export const a11yData = [
 type CatalogPanelVariant = 'default' | 'padded'
 
 export const panelConfig = {
-  title: { type: 'string', title: 'Panel Title', initialState: 'Catalog Panel' },
+  title: { type: 'string' as const, title: 'Panel Title', initialState: 'Catalog Panel' },
   variant: {
-    type: 'list',
+    type: 'list' as const,
     title: 'Variant',
     options: [
       { title: 'Default', name: 'default' },
@@ -38,7 +38,7 @@ export const panelConfig = {
     ] satisfies Options<CatalogPanelVariant>[],
     initialState: 'default' as CatalogPanelVariant
   },
-  open: { type: 'boolean', title: 'Open', initialState: true }
+  open: { type: 'boolean' as const, title: 'Open', initialState: true }
 } satisfies PanelConfig
 </script>
 

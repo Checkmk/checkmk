@@ -31,7 +31,8 @@ export const a11yData = [
 ]
 
 export const panelConfig = {
-  text: { type: 'string', title: 'Text to Copy', initialState: 'cmk --check myhost' }
+  text: { type: 'string' as const, title: 'Text to Copy', initialState: 'cmk --check myhost' },
+  copiedMessage: { type: 'string' as const, title: 'Copied Message', initialState: 'Copied!' }
 } satisfies PanelConfig
 </script>
 

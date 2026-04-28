@@ -10,7 +10,7 @@ import codeExample from './UclCmkLoadingCodeExample.vue?raw'
 
 export const panelConfig = {
   height: {
-    type: 'string',
+    type: 'string' as const,
     title: 'Dot Height',
     help: 'Adjust the height of the loading dots using any valid CSS unit (e.g., px, em, rem). 8px is default and recommended for most use cases.',
     initialState: '8px'

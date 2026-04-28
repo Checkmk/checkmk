@@ -11,9 +11,9 @@ import { type CmkIconVariants, type IconSizeNames, type SimpleIcons } from '@/co
 import codeExample from './UclCmkIconCodeExample.vue?raw'
 
 export const panelConfig = {
-  name: { type: 'string', title: 'Icon Name', initialState: 'main-help' },
+  name: { type: 'string' as const, title: 'Icon Name', initialState: 'main-help' },
   variant: {
-    type: 'list',
+    type: 'list' as const,
     title: 'Variant',
     options: [
       { title: 'Plain', name: 'plain' },
@@ -22,7 +22,7 @@ export const panelConfig = {
     initialState: 'plain'
   },
   size: {
-    type: 'list',
+    type: 'list' as const,
     title: 'Size',
     options: [
       { title: 'XX-Small', name: 'xxsmall' },
@@ -36,9 +36,9 @@ export const panelConfig = {
     ],
     initialState: 'xxlarge'
   },
-  colored: { type: 'boolean', title: 'Colored', initialState: false },
-  title: { type: 'string', title: 'Title (Tooltip/Alt)', initialState: 'Help Icon' },
-  rotate: { type: 'number', title: 'Rotation (Degrees)', initialState: 0 }
+  colored: { type: 'boolean' as const, title: 'Colored', initialState: false },
+  title: { type: 'string' as const, title: 'Title (Tooltip/Alt)', initialState: 'Help Icon' },
+  rotate: { type: 'number' as const, title: 'Rotation (Degrees)', initialState: 0 }
 } satisfies PanelConfig
 </script>
 

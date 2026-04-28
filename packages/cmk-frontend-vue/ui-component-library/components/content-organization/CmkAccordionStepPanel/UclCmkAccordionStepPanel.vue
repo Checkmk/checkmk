@@ -25,24 +25,40 @@ export const a11yData = [
 
 export const panelConfig = {
   openSteps: {
-    type: 'string-array',
+    type: 'string-array' as const,
     title: 'openSteps',
     initialState: ['step-2'],
     help: "Type: string[]. IDs are auto-generated as step-{n} from each item's step prop. In the UCL app, enter one ID per line in the textarea, e.g.:step-1 step-2 step-3"
   }
 } satisfies PanelConfig
 export const itemPanelConfig = {
+  step: {
+    type: 'number' as const,
+    title: 'step',
+    initialState: 1
+  },
+  title: {
+    type: 'string' as const,
+    title: 'title',
+    initialState: 'Step Title'
+  },
   accomplished: {
-    type: 'boolean',
+    type: 'boolean' as const,
     title: 'accomplished',
     initialState: false,
     help: 'Marks items as completed, showing a checkmark badge.'
   },
   disabled: {
-    type: 'boolean',
+    type: 'boolean' as const,
     title: 'disabled',
     initialState: false,
     help: 'Disables all items, preventing them from being expanded.'
+  },
+  info: {
+    type: 'string' as const,
+    title: 'info',
+    initialState: '2-3 min',
+    help: 'Short hint displayed next to the step title (e.g. estimated duration).'
   }
 } satisfies PanelConfig
 </script>
@@ -79,7 +95,7 @@ const itemPropState = ref(createPanelState(itemPanelConfig))
         <CmkAccordionStepPanelItem
           :step="1"
           title="Download Agent"
-          info="2-3 min"
+          :info="itemPropState.info"
           :accomplished="itemPropState.accomplished"
           :disabled="itemPropState.disabled"
         >

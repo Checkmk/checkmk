@@ -12,12 +12,12 @@ import codeExample from './UclCmkTagCodeExample.vue?raw'
 
 export const panelConfig = {
   content: {
-    type: 'string',
+    type: 'string' as const,
     title: 'Content',
     initialState: 'Status Tag'
   },
   size: {
-    type: 'list',
+    type: 'list' as const,
     title: 'Size',
     options: [
       { title: 'Small', name: 'small' },
@@ -27,7 +27,7 @@ export const panelConfig = {
     initialState: 'medium' as const
   },
   color: {
-    type: 'list',
+    type: 'list' as const,
     title: 'Color',
     options: [
       { title: 'Default', name: 'default' },
@@ -38,7 +38,7 @@ export const panelConfig = {
     initialState: 'default' as const
   },
   variant: {
-    type: 'list',
+    type: 'list' as const,
     title: 'Variant',
     options: [
       { title: 'Outline', name: 'outline' },

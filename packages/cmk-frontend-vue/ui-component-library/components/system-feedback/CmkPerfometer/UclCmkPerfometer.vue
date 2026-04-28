@@ -9,16 +9,16 @@ import { type PanelConfig } from '@ucl/_ucl/components/detail-page'
 import codeExample from './UclCmkPerfometerCodeExample.vue?raw'
 
 export const panelConfig = {
-  value: { type: 'number', title: 'Value', initialState: 75 },
+  value: { type: 'number' as const, title: 'Value', initialState: 75 },
   valueRange: {
-    type: 'string',
+    type: 'string' as const,
     title: 'ValueRange',
     initialState: '0,100',
     help: 'Comma-separated min and max, e.g. "0,100"'
   },
-  formatted: { type: 'string', title: 'Formatted', initialState: '75 %' },
+  formatted: { type: 'string' as const, title: 'Formatted', initialState: '75 %' },
   color: {
-    type: 'list',
+    type: 'list' as const,
     title: 'Color',
     options: [
       { title: 'Green', name: 'green' },

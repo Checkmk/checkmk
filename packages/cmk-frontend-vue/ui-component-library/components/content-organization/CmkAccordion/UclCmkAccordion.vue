@@ -28,19 +28,19 @@ export const a11yData = [
 
 export const panelConfig = {
   minOpen: {
-    type: 'number',
+    type: 'number' as const,
     title: 'minOpen',
     help: '0 allows all items to be collapsed, while 1 or more ensures that at least that many items are always expanded.',
     initialState: 1
   },
   maxOpen: {
-    type: 'number',
+    type: 'number' as const,
     title: 'maxOpen',
     help: '0 allows unlimited items to be expanded, while 1 restricts to only one item at a time.',
     initialState: 1
   },
   openedItems: {
-    type: 'string-array',
+    type: 'string-array' as const,
     title: 'openedItems',
     initialState: ['item-1'],
     help: 'Type: string[]. IDs must match the value prop of each CmkAccordionItem. In the UCL app, enter one ID per line in the textarea, e.g.:item-1 item-2 item-3'
@@ -48,7 +48,7 @@ export const panelConfig = {
 } satisfies PanelConfig
 export const itemPanelConfig = {
   headerAs: {
-    type: 'list',
+    type: 'list' as const,
     title: 'headerAs',
     options: [
       { title: 'h1', name: 'h1' },
@@ -60,7 +60,7 @@ export const itemPanelConfig = {
     help: 'HTML element used to render the accordion item header.'
   },
   disabled: {
-    type: 'boolean',
+    type: 'boolean' as const,
     title: 'disabled',
     initialState: false,
     help: 'Disables all items in the accordion.'

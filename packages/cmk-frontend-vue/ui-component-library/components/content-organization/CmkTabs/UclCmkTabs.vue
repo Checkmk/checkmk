@@ -31,7 +31,7 @@ type TabId = 'tab-1' | 'tab-2' | 'tab-3'
 
 export const panelConfig = {
   modelValue: {
-    type: 'list',
+    type: 'list' as const,
     title: 'Active Tab',
     options: [
       { title: 'Search', name: 'tab-1' },

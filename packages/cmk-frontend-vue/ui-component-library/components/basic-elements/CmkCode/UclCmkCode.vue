@@ -27,12 +27,12 @@ export const a11yData = [
 
 export const panelConfig = {
   title: {
-    type: 'string',
+    type: 'string' as const,
     title: 'Title',
     initialState: 'Example Code Snippet'
   },
   code_txt: {
-    type: 'multiline-string',
+    type: 'multiline-string' as const,
     title: 'Code Text',
     initialState: `<script setup lang="ts">
 ${'import'} CmkCode from '@/components/CmkCode.vue'
@@ -49,6 +49,15 @@ greet();\`
     :code_txt="mySnippet"
   />
 </template>`
+  },
+  width: {
+    type: 'list' as const,
+    title: 'Width',
+    options: [
+      { title: 'Default', name: 'default' },
+      { title: 'Fill', name: 'fill' }
+    ],
+    initialState: 'default'
   }
 } satisfies PanelConfig
 </script>
@@ -65,12 +74,15 @@ import {
   createPanelState
 } from '@ucl/_ucl/components/detail-page'
 import { ref } from 'vue'
+import type { ComponentProps } from 'vue-component-type-helpers'
 
 import CmkCode from '@/components/CmkCode.vue'
 
 import UclCmkCodeDev from './UclCmkCodeDev.vue'
 
 defineProps<{ screenshotMode: boolean }>()
+
+type WidthOption = ComponentProps<typeof CmkCode>['width']
 
 const propState = ref(createPanelState(panelConfig))
 </script>
@@ -80,7 +92,11 @@ const propState = ref(createPanelState(panelConfig))
     <UclDetailPageHeader>CmkCode</UclDetailPageHeader>
 
     <UclDetailPageComponent>
-      <CmkCode :title="propState.title" :code_txt="propState.code_txt" />
+      <CmkCode
+        :title="propState.title"
+        :code_txt="propState.code_txt"
+        :width="(propState.width as WidthOption)!"
+      />
 
       <template #properties>
         <UclPropertiesPanel v-model="propState" :config="panelConfig" />

@@ -16,7 +16,7 @@ import codeExample from './UclCmkMultitoneIconCodeExample.vue?raw'
 
 export const panelConfig = {
   name: {
-    type: 'list',
+    type: 'list' as const,
     title: 'Icon Name',
     options: [
       { title: 'Services', name: 'services' },
@@ -31,7 +31,7 @@ export const panelConfig = {
     initialState: 'services' as CmkMultitoneIconNames
   },
   size: {
-    type: 'list',
+    type: 'list' as const,
     title: 'Size',
     options: [
       { title: 'XX-Small', name: 'xxsmall' },
@@ -46,7 +46,7 @@ export const panelConfig = {
     initialState: 'xxlarge' as const
   },
   primaryColor: {
-    type: 'list',
+    type: 'list' as const,
     title: 'Primary Color',
     options: [
       { name: 'success', title: 'Success (Green)' },
@@ -63,7 +63,7 @@ export const panelConfig = {
     initialState: 'success' as const
   },
   secondaryColor: {
-    type: 'list',
+    type: 'list' as const,
     title: 'Secondary Color',
     options: [
       { name: 'success', title: 'Success (Green)' },
@@ -80,13 +80,13 @@ export const panelConfig = {
     initialState: 'warning' as const
   },
   rotate: {
-    type: 'number',
+    type: 'number' as const,
     title: 'Rotation',
     initialState: 0,
     help: 'Enter a rotation value in degrees (e.g., 45, 90, 180) to rotate the icon.'
   },
   title: {
-    type: 'string',
+    type: 'string' as const,
     title: 'Title Attribute',
     initialState: 'Demo Multitone Icon'
   }

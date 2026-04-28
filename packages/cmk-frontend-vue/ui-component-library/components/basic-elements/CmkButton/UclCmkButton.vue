@@ -29,7 +29,7 @@ export const a11yData = [
 
 export const panelConfig = {
   variant: {
-    type: 'list',
+    type: 'list' as const,
     title: 'Variant',
     options: [
       { title: 'Optional', name: 'optional' },
@@ -43,18 +43,18 @@ export const panelConfig = {
     initialState: 'optional' as const
   },
   disabled: {
-    type: 'boolean',
+    type: 'boolean' as const,
     title: 'Disabled',
     initialState: false
   },
   href: {
-    type: 'string',
+    type: 'string' as const,
     title: 'Href',
     initialState: '',
     help: 'Href attribute renders as a link.'
   },
   target: {
-    type: 'list',
+    type: 'list' as const,
     title: 'Target',
     options: [
       { title: 'None', name: '' },
@@ -65,7 +65,7 @@ export const panelConfig = {
     help: 'Only applicable if href is set. Specifies where to open the linked document.'
   },
   title: {
-    type: 'string',
+    type: 'string' as const,
     title: 'Title Attribute',
     initialState: ''
   }

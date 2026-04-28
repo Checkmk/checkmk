@@ -30,12 +30,12 @@ export const a11yData = [
 
 export const panelConfig = {
   help: {
-    type: 'string',
+    type: 'string' as const,
     title: 'Help',
     initialState: 'This is a short, precise contextual help text.'
   },
   ariaLabel: {
-    type: 'string',
+    type: 'string' as const,
     title: 'Custom Aria Label',
     initialState: 'Help regarding this setting'
   }

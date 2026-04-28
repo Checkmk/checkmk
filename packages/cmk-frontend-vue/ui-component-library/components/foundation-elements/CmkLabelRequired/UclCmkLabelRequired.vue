@@ -9,9 +9,9 @@ import { type Options, type PanelConfig } from '@ucl/_ucl/components/detail-page
 import codeExample from './UclCmkLabelRequiredCodeExample.vue?raw'
 
 export const panelConfig = {
-  show: { type: 'boolean', title: 'Show Required Label', initialState: true },
+  show: { type: 'boolean' as const, title: 'Show Required Label', initialState: true },
   space: {
-    type: 'list',
+    type: 'list' as const,
     title: 'space',
     options: [
       { title: 'null', name: '' },

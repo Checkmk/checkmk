@@ -12,7 +12,7 @@ import codeExample from './UclCmkSpaceCodeExample.vue?raw'
 
 export const panelConfig = {
   direction: {
-    type: 'list',
+    type: 'list' as const,
     title: 'Direction',
     options: [
       { title: 'Horizontal', name: 'horizontal' },
@@ -21,7 +21,7 @@ export const panelConfig = {
     initialState: 'horizontal' as const
   },
   size: {
-    type: 'list',
+    type: 'list' as const,
     title: 'Size',
     options: [
       { title: 'Medium', name: 'medium' },

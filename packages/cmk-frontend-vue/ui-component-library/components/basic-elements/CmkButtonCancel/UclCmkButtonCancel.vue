@@ -10,7 +10,7 @@ import codeExample from './UclCmkButtonCancelCodeExample.vue?raw'
 
 export const panelConfig = {
   label: {
-    type: 'string',
+    type: 'string' as const,
     title: 'Label',
     initialState: 'Cancel'
   }

@@ -10,7 +10,7 @@ import codeExample from './UclCmkPopupCodeExample.vue?raw'
 
 export const panelConfig = {
   open: {
-    type: 'boolean',
+    type: 'boolean' as const,
     title: 'Open',
     initialState: false
   }

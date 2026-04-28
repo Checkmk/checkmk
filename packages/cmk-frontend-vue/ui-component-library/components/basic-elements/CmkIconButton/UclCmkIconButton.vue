@@ -25,9 +25,9 @@ export const a11yData = [
 ]
 
 export const panelConfig = {
-  name: { type: 'string', title: 'Icon Name', initialState: 'main-help' },
+  name: { type: 'string' as const, title: 'Icon Name', initialState: 'main-help' },
   variant: {
-    type: 'list',
+    type: 'list' as const,
     title: 'Variant',
     options: [
       { title: 'Plain', name: 'plain' },
@@ -36,7 +36,7 @@ export const panelConfig = {
     initialState: 'plain'
   },
   size: {
-    type: 'list',
+    type: 'list' as const,
     title: 'Size',
     options: [
       { title: 'XX-Small', name: 'xxsmall' },
@@ -50,8 +50,9 @@ export const panelConfig = {
     ],
     initialState: 'medium'
   },
-  title: { type: 'string', title: 'Title (Tooltip)', initialState: 'Get Help' },
-  rotate: { type: 'number', title: 'Rotation (Degrees)', initialState: 0 }
+  title: { type: 'string' as const, title: 'Title (Tooltip)', initialState: 'Get Help' },
+  rotate: { type: 'number' as const, title: 'Rotation (Degrees)', initialState: 0 },
+  colored: { type: 'boolean' as const, title: 'Colored', initialState: true }
 } satisfies PanelConfig
 </script>
 
@@ -89,6 +90,7 @@ const propState = ref(createPanelState(panelConfig))
         :size="propState.size as IconSizeNames"
         :title="propState.title"
         :rotate="propState.rotate"
+        :colored="propState.colored"
       />
 
       <template #properties>

@@ -32,7 +32,7 @@ export const a11yData = [
 
 export const panelConfig = {
   borders: {
-    type: 'list',
+    type: 'list' as const,
     title: 'Borders',
     options: [
       { title: 'Standard', name: 'standard' },
@@ -41,7 +41,7 @@ export const panelConfig = {
     initialState: 'standard'
   },
   contrast: {
-    type: 'list',
+    type: 'list' as const,
     title: 'Contrast',
     options: [
       { title: 'Standard', name: 'standard' },
@@ -49,14 +49,14 @@ export const panelConfig = {
     ],
     initialState: 'standard'
   },
-  title: { type: 'string', title: 'Title', initialState: 'Checkmk Community' },
+  title: { type: 'string' as const, title: 'Title', initialState: 'Checkmk Community' },
   subtitle: {
-    type: 'string',
+    type: 'string' as const,
     title: 'Subtitle',
     initialState: 'Join the discussion with other users.'
   },
   iconName: {
-    type: 'list',
+    type: 'list' as const,
     title: 'Icon',
     options: [
       { title: 'None', name: 'none' },
@@ -66,8 +66,14 @@ export const panelConfig = {
     ],
     initialState: 'checkmk-logo-min'
   },
-  openInNewTab: { type: 'boolean', title: 'Open in New Tab', initialState: true },
-  disabled: { type: 'boolean', title: 'Disabled', initialState: false }
+  openInNewTab: { type: 'boolean' as const, title: 'Open in New Tab', initialState: true },
+  disabled: { type: 'boolean' as const, title: 'Disabled', initialState: false },
+  url: {
+    type: 'string' as const,
+    title: 'URL',
+    initialState: 'https://forum.checkmk.com',
+    help: 'Destination URL. Ignored when Disabled is true.'
+  }
 } satisfies PanelConfig
 </script>
 
@@ -111,7 +117,7 @@ const propState = ref(createPanelState(panelConfig))
           :title="propState.title"
           :subtitle="propState.subtitle"
           :icon-name="propState.iconName as SimpleIcons"
-          :url="propState.disabled ? undefined : 'https://forum.checkmk.com'"
+          :url="propState.disabled ? undefined : propState.url"
           :borders="propState.borders as CmkLinkCardBorders"
           :contrast="propState.contrast as CmkLinkCardContrast"
           :open-in-new-tab="propState.openInNewTab"

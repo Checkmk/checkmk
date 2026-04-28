@@ -36,7 +36,18 @@ export const a11yData = [
 ]
 
 export const panelConfig = {
-  allowEditing: { type: 'boolean', title: 'Allow Editing Existing', initialState: true }
+  label: { type: 'string' as const, title: 'Label', initialState: 'Select an entity' },
+  validation: { type: 'string-array' as const, title: 'Validation Errors', initialState: [] },
+  inputHint: {
+    type: 'string' as const,
+    title: 'Input Hint',
+    initialState: 'Start typing to search...'
+  },
+  allowEditingExistingElements: {
+    type: 'boolean' as const,
+    title: 'Allow Editing Existing',
+    initialState: true
+  }
 } satisfies PanelConfig
 </script>
 
@@ -164,8 +175,10 @@ onBeforeUnmount(() => {
           v-model="selectedId"
           :config-entity-type="DEMO_ENTITY_TYPE"
           config-entity-type-specifier="all"
-          label="Demo entity"
-          :allow-editing-existing-elements="Boolean(propState.allowEditing)"
+          :label="propState.label"
+          :input-hint="propState.inputHint"
+          :allow-editing-existing-elements="Boolean(propState.allowEditingExistingElements)"
+          :validation="propState.validation"
         />
       </div>
       <div v-else>Initializing...</div>

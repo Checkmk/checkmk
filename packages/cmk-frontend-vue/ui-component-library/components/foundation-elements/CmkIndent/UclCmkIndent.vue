@@ -9,8 +9,8 @@ import { type PanelConfig } from '@ucl/_ucl/components/detail-page'
 import codeExample from './UclCmkIndentCodeExample.vue?raw'
 
 export const panelConfig = {
-  indent: { type: 'boolean', title: 'Enable Indent', initialState: true },
-  error: { type: 'boolean', title: 'Error State', initialState: false }
+  indent: { type: 'boolean' as const, title: 'Enable Indent', initialState: true },
+  error: { type: 'boolean' as const, title: 'Error State', initialState: false }
 } satisfies PanelConfig
 </script>
 

@@ -28,27 +28,27 @@ type CheckboxPadding = 'both' | 'top' | 'bottom'
 
 export const panelConfig = {
   modelValue: {
-    type: 'boolean',
+    type: 'boolean' as const,
     title: 'Checked',
     initialState: false
   },
   label: {
-    type: 'string',
+    type: 'string' as const,
     title: 'Label',
     initialState: 'Enable notifications'
   },
   help: {
-    type: 'string',
+    type: 'string' as const,
     title: 'Help Text',
     initialState: 'You will receive alerts via email.'
   },
   disabled: {
-    type: 'boolean',
+    type: 'boolean' as const,
     title: 'Disabled',
     initialState: false
   },
   padding: {
-    type: 'list',
+    type: 'list' as const,
     title: 'Padding',
     options: [
       { title: 'Both', name: 'both' },
@@ -59,12 +59,12 @@ export const panelConfig = {
     initialState: 'both' as const
   },
   dots: {
-    type: 'boolean',
+    type: 'boolean' as const,
     title: 'Show Dots',
     initialState: false
   },
   externalErrors: {
-    type: 'string',
+    type: 'string' as const,
     title: 'External Error Message',
     initialState: ''
   }

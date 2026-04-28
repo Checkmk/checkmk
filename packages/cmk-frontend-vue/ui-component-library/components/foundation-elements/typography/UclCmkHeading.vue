@@ -12,7 +12,7 @@ import codeExample from './UclCmkHeadingCodeExample.vue?raw'
 
 export const panelConfig = {
   type: {
-    type: 'list',
+    type: 'list' as const,
     title: 'type',
     options: [
       { title: 'H1', name: 'h1' },
@@ -23,12 +23,12 @@ export const panelConfig = {
     initialState: 'h1' as NonNullable<HeadingType>
   },
   text: {
-    type: 'multiline-string',
+    type: 'multiline-string' as const,
     title: 'text',
     initialState: 'The quick brown fox jumps over the lazy dog.'
   },
   onClick: {
-    type: 'boolean',
+    type: 'boolean' as const,
     title: 'onClick',
     initialState: false,
     help: 'When enabled, passes a click handler to the heading.'

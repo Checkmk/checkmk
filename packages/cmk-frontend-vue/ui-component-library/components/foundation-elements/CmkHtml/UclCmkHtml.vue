@@ -12,7 +12,7 @@ export const a11yData: never[] = []
 
 export const panelConfig = {
   html: {
-    type: 'multiline-string',
+    type: 'multiline-string' as const,
     title: 'html',
     initialState: "<h1>Heading</h1> <b>bold</b> and <a href='https://checkmk.com'>link</a>"
   }

@@ -12,7 +12,7 @@ import codeExample from './UclCmkSkeletonCodeExample.vue?raw'
 
 export const panelConfig = {
   type: {
-    type: 'list',
+    type: 'list' as const,
     title: 'Skeleton Type',
     options: [
       { title: 'Box', name: 'box' },
@@ -32,7 +32,7 @@ export const panelConfig = {
     initialState: 'text' as const
   },
   width: {
-    type: 'string',
+    type: 'string' as const,
     title: 'Custom Width',
     help: 'Optionally set a custom width for the skeleton using any valid CSS unit(% or px).',
     initialState: '100%'

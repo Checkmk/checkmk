@@ -7,6 +7,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 import { type Options, type PanelConfig } from '@ucl/_ucl/components/detail-page'
 
 import { type CmkIconProps } from '@/components/CmkIcon'
+import type { SlideInVariants } from '@/components/CmkSlideIn'
 
 import codeExample from './UclCmkSlideInDialogCodeExample.vue?raw'
 
@@ -43,21 +44,28 @@ export const a11yData = [
   }
 ]
 
-type DialogSize = 'medium' | 'small'
-
 export const panelConfig = {
-  open: { type: 'boolean', title: 'Is Open', initialState: false },
-  title: { type: 'string', title: 'Header Title', initialState: 'Dialog Title' },
-  showCloseButton: { type: 'boolean', title: 'Show Close Button', initialState: true },
-  showIcon: { type: 'boolean', title: 'Show Header Icon', initialState: true },
+  open: { type: 'boolean' as const, title: 'Is Open', initialState: false },
+  title: { type: 'string' as const, title: 'Header Title', initialState: 'Dialog Title' },
+  showCloseButton: { type: 'boolean' as const, title: 'Show Close Button', initialState: true },
+  showIcon: { type: 'boolean' as const, title: 'Show Header Icon', initialState: true },
   size: {
-    type: 'list',
+    type: 'list' as const,
     title: 'Size',
     options: [
       { title: 'Medium', name: 'medium' },
       { title: 'Small', name: 'small' }
-    ] satisfies Options<DialogSize>[],
+    ] satisfies Options<SlideInVariants['size']>[],
     initialState: 'medium' as const
+  },
+  borderColor: {
+    type: 'list' as const,
+    title: 'Border Color',
+    options: [
+      { title: 'Default', name: 'default' },
+      { title: 'Purple', name: 'purple' }
+    ] satisfies Options<SlideInVariants['borderColor']>[],
+    initialState: 'default' as const
   }
 } satisfies PanelConfig
 </script>
@@ -106,6 +114,7 @@ const headerConfig = computed(() => ({
         :open="propState.open"
         :header="headerConfig"
         :size="propState.size"
+        :border-color="propState.borderColor"
         @close="propState.open = false"
       >
         <CmkHeading type="h2">Content Area</CmkHeading>

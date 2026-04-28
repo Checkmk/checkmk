@@ -32,10 +32,14 @@ type SideOptions = 'top' | 'right' | 'bottom' | 'left'
 type AlignOptions = 'start' | 'center' | 'end'
 
 export const panelConfig = {
-  open: { type: 'boolean', title: 'Open', initialState: false },
-  disableClosingTrigger: { type: 'boolean', title: 'Disable Closing Trigger', initialState: false },
+  open: { type: 'boolean' as const, title: 'Open', initialState: false },
+  disableClosingTrigger: {
+    type: 'boolean' as const,
+    title: 'Disable Closing Trigger',
+    initialState: false
+  },
   side: {
-    type: 'list',
+    type: 'list' as const,
     title: 'Side',
     options: [
       { title: 'Top', name: 'top' },
@@ -46,7 +50,7 @@ export const panelConfig = {
     initialState: 'top' as SideOptions
   },
   align: {
-    type: 'list',
+    type: 'list' as const,
     title: 'Align',
     options: [
       { title: 'Start', name: 'start' },

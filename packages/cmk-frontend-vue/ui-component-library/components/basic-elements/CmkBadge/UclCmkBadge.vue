@@ -12,7 +12,7 @@ import codeExample from './UclCmkBadgeCodeExample.vue?raw'
 
 export const panelConfig = {
   size: {
-    type: 'list',
+    type: 'list' as const,
     title: 'Size',
     options: [
       { title: 'Small', name: 'small' },
@@ -22,7 +22,7 @@ export const panelConfig = {
     initialState: 'medium' as const
   },
   color: {
-    type: 'list',
+    type: 'list' as const,
     title: 'Color',
     options: [
       { title: 'Default', name: 'default' },
@@ -33,7 +33,7 @@ export const panelConfig = {
     initialState: 'default' as const
   },
   type: {
-    type: 'list',
+    type: 'list' as const,
     title: 'Type',
     options: [
       { title: 'Fill', name: 'fill' },
@@ -42,7 +42,7 @@ export const panelConfig = {
     initialState: 'fill' as const
   },
   shape: {
-    type: 'list',
+    type: 'list' as const,
     title: 'Shape',
     options: [
       { title: 'Default', name: 'default' },

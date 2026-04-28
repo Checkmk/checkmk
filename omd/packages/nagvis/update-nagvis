@@ -14,7 +14,7 @@ else
     [ -z "$VERSION" ] && echo "ERROR: Got no version." && exit 1
     git rm nagvis-*.tar.gz
     echo "Adding current VERSION ($VERSION)..."
-    wget -O nagvis-${VERSION}.tar.gz http://nagvis.org/share/nagvis-${VERSION}.tar.gz
+    wget -O nagvis-${VERSION}.tar.gz https://github.com/NagVis/nagvis/releases/download/nagvis-${VERSION}/nagvis-${VERSION}.tar.gz
 fi
 
 git add nagvis-$VERSION.tar.gz

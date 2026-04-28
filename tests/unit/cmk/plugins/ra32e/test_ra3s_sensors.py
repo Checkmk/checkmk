@@ -20,10 +20,40 @@ from cmk.plugins.ra32e.agent_based.ra3s_sensors import (
 
 
 def test_parse_ra3s_internal_section_temperature() -> None:
+    section = parse_ra3s_internal_section_temperature([["7400"], ["3000"]])
+
+    assert section is not None
+    assert section.temp_celsius == 30.0
+    assert section.temp_fahrenheit == 74.0
+
+
+def test_parse_ra3s_internal_section_temperature_fahrenheit_only() -> None:
+    section = parse_ra3s_internal_section_temperature([["7400"], [""]])
+
+    assert section is not None
+    assert section.temp_fahrenheit == 74.0
+    assert section.temp_celsius is None
+
+
+def test_parse_ra3s_internal_section_temperature_celsius_only() -> None:
+    section = parse_ra3s_internal_section_temperature([[""], ["3000"]])
+
+    assert section is not None
+    assert section.temp_celsius == 30.0
+    assert section.temp_fahrenheit is None
+
+
+def test_parse_ra3s_internal_section_temperature_both_empty() -> None:
+    assert parse_ra3s_internal_section_temperature([[""], [""]]) is None
+
+
+# If there is just one value, we'll always get Fahrenheit.
+def test_parse_ra3s_internal_section_temperature_too_few_columns() -> None:
     section = parse_ra3s_internal_section_temperature([["3000"]])
 
     assert section is not None
-    assert section.temp_celsius == 30
+    assert section.temp_fahrenheit == 30
+    assert section.temp_celsius is None
 
 
 def test_parse_ra3s_digital_with_temp() -> None:
@@ -68,6 +98,23 @@ def test_check_ra3s_internal_temperature() -> None:
     assert result == [
         Metric("temp", 28.0, levels=(30.0, 35.0)),
         Result(state=State.OK, summary="Temperature: 28 °C"),
+        Result(
+            state=State.OK,
+            notice="Configuration: prefer user levels over device levels (used user levels)",
+        ),
+    ]
+
+
+def test_check_ra3s_internal_temperature_fahrenheit_fallback() -> None:
+    value_store: MutableMapping[str, object] = {}
+    params: TempParamDict = {"levels": (30.0, 35.0)}
+    # 77°F = 25°C (exact conversion, avoids floating point noise)
+    temp_section = InternalSection(temp_fahrenheit=77.0)
+    result = list(_check_ra3s_temperature(value_store, "Internal", params, temp_section, None))
+
+    assert result == [
+        Metric("temp", 25.0, levels=(30.0, 35.0)),
+        Result(state=State.OK, summary="Temperature: 25.0 °C"),
         Result(
             state=State.OK,
             notice="Configuration: prefer user levels over device levels (used user levels)",

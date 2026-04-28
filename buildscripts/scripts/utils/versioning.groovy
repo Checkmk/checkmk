@@ -215,8 +215,8 @@ void delete_non_cre_files() {
     """);
 }
 
-String strip_rc_number_from_version(String VERSION) {
-    return VERSION.split("-rc")[0];
+String strip_rc_number_from_version(String version) {
+    return version.split("-rc")[0];
 }
 
 boolean is_official_release(String version) {

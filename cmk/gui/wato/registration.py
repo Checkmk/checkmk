@@ -31,7 +31,7 @@ from cmk.gui.watolib.config_sync import ReplicationPathRegistry
 from cmk.gui.watolib.groups_io import ContactGroupUsageFinderRegistry
 from cmk.gui.watolib.host_rename import rename_host_in_rule_value_registry
 from cmk.gui.watolib.hosts_and_folders import ajax_popup_host_action_menu
-from cmk.gui.watolib.main_menu import MainModuleRegistry, MainModuleTopicRegistry
+from cmk.gui.watolib.main_menu import MainModuleTopicRegistry
 from cmk.gui.watolib.mode import ModeRegistry
 from cmk.gui.watolib.notification_parameter import NotificationParameterRegistry
 from cmk.gui.watolib.rulespecs import RulespecGroupRegistry
@@ -41,7 +41,6 @@ from . import (
     _ac_tests,
     _check_mk_configuration,
     _main_module_topics,
-    _main_modules,
     _notification_settings,
     _omd_configuration,
     _permissions,
@@ -51,6 +50,8 @@ from . import (
     piggyback_hub,
 )
 from . import pages as wato_pages
+from ._main_modules import register as register_main_modules
+from ._main_modules import register_agent_download_pages, register_multisite_modules
 from ._notification_parameter import registration as _notification_parameter_registration
 from ._virtual_host_tree import VirtualHostTree
 from .icons import DownloadAgentOutputIcon, DownloadSnmpWalkIcon, WatoIcon
@@ -80,7 +81,6 @@ def register(
     permission_section_registry: PermissionSectionRegistry,
     permission_registry: PermissionRegistry,
     main_module_topic_registry: MainModuleTopicRegistry,
-    main_module_registry: MainModuleRegistry,
     rulespec_group_registry: RulespecGroupRegistry,
     config_domain_registry: ConfigDomainRegistry,
     config_variable_registry: ConfigVariableRegistry,
@@ -128,7 +128,6 @@ def register(
     )
     _permissions.register(permission_section_registry, permission_registry)
     _main_module_topics.register(main_module_topic_registry)
-    _main_modules.register(edition, main_module_registry)
     _check_mk_configuration.register(
         edition,
         config_variable_registry,
@@ -148,3 +147,11 @@ def register(
     _notification_parameter_registration.register(edition, notification_parameter_registry)
     snapin_registry.register(VirtualHostTree)
     piggyback_hub.register(config_variable_registry)
+
+
+__all__ = [
+    "register",
+    "register_agent_download_pages",
+    "register_main_modules",
+    "register_multisite_modules",
+]

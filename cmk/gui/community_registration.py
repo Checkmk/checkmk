@@ -243,7 +243,6 @@ def register(edition: Edition, agent_bakery_enabled: bool) -> None:
         permission_section_registry,
         permission_registry,
         main_module_topic_registry,
-        main_module_registry,
         rulespec_group_registry,
         config_domain_registry,
         config_variable_registry,
@@ -257,6 +256,10 @@ def register(edition: Edition, agent_bakery_enabled: bool) -> None:
         replication_path_registry,
         default_user_menu_topics,
     )
+    wato_registration.register_main_modules(main_module_registry)
+    wato_registration.register_multisite_modules(main_module_registry)
+    if not agent_bakery_enabled:
+        wato_registration.register_agent_download_pages(main_module_registry)
     user_features_registry.register(
         UserFeatures(
             edition=edition,

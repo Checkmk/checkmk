@@ -10,7 +10,6 @@
 import time
 from collections.abc import Iterable, Sequence
 
-from cmk.ccc.version import Edition
 from cmk.gui.breadcrumb import BreadcrumbItem
 from cmk.gui.http import request
 from cmk.gui.i18n import _
@@ -30,7 +29,8 @@ from ._main_module_topics import (
 )
 
 
-def register(edition: Edition, main_module_registry: MainModuleRegistry) -> None:
+def register(main_module_registry: MainModuleRegistry) -> None:
+    """Register Setup main modules common to all editions."""
     main_module_registry.register(MainModuleFolder)
     main_module_registry.register(MainModuleTags)
     main_module_registry.register(MainModuleGlobalSettings)
@@ -46,10 +46,6 @@ def register(edition: Edition, main_module_registry: MainModuleRegistry) -> None
     main_module_registry.register(MainModuleHostCustomAttributes)
     main_module_registry.register(MainModuleServiceGroups)
     main_module_registry.register(MainModuleUsers)
-    if edition is not Edition.CLOUD:  # disabled in CSE
-        main_module_registry.register(MainModuleRoles)
-        main_module_registry.register(MainModuleLDAP)
-        main_module_registry.register(MainModuleSites)
     main_module_registry.register(MainModuleUserCustomAttributes)
     main_module_registry.register(MainModuleContactGroups)
     main_module_registry.register(MainModuleNotifications)
@@ -71,11 +67,18 @@ def register(edition: Edition, main_module_registry: MainModuleRegistry) -> None
     main_module_registry.register(MainModuleVMCloudContainer)
     main_module_registry.register(MainModuleOtherIntegrations)
 
-    # Register the built-in agent download page on the top level of Setup only when the Agent Bakery
-    # does not exist (e.g. when using Checkmk Community)
-    if edition in (Edition.COMMUNITY,):
-        main_module_registry.register(MainModuleAgentsWindows)
-        main_module_registry.register(MainModuleAgentsLinux)
+
+def register_multisite_modules(main_module_registry: MainModuleRegistry) -> None:
+    """Register Setup modules not available in the cloud edition."""
+    main_module_registry.register(MainModuleRoles)
+    main_module_registry.register(MainModuleLDAP)
+    main_module_registry.register(MainModuleSites)
+
+
+def register_agent_download_pages(main_module_registry: MainModuleRegistry) -> None:
+    """Register built-in agent download pages for editions without the Agent Bakery."""
+    main_module_registry.register(MainModuleAgentsWindows)
+    main_module_registry.register(MainModuleAgentsLinux)
 
 
 class MainModuleFolder(ABCMainModule):

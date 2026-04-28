@@ -654,11 +654,11 @@ http_archive(
         "//omd/packages/nagvis/patches:0001-global.php.dif",
         "//omd/packages/nagvis/patches:0002-cmkadmin.dif",
     ],
-    sha256 = "2b40d3d2e2ced246ee67dec486fb3f6d61dc695c8f796fe15fd168abae204329",
-    strip_prefix = "nagvis-1.10.0",
+    sha256 = "0d0d1094d06bfd6c03ee73ec4adba9022df5736316215f12dd4281f9702c3218",
+    strip_prefix = "nagvis-1.10.1",
     urls = [
-        UPSTREAM_MIRROR_URL + "nagvis-1.10.0.tar.gz",
-        "https://github.com/NagVis/nagvis/releases/download/nagvis-1.10.0/nagvis-1.10.0.tar.gz",
+        UPSTREAM_MIRROR_URL + "nagvis-1.10.1.tar.gz",
+        "https://github.com/NagVis/nagvis/releases/download/nagvis-1.10.1/nagvis-1.10.1.tar.gz",
     ],
 )
 

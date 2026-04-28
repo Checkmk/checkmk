@@ -6,7 +6,8 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import {
   type AgentInstallCmds,
-  type AgentRegistrationCmds
+  type AgentRegistrationCmds,
+  type AgentStatusCmds
 } from 'cmk-shared-typing/typescript/agent_slideout'
 import { computed } from 'vue'
 
@@ -28,6 +29,7 @@ const props = defineProps<{
   agentReceiverPortIsDefault: boolean
   agentInstallCmds: AgentInstallCmds
   agentRegistrationCmds: AgentRegistrationCmds
+  agentStatusCmds: AgentStatusCmds
   closeButtonTitle: TranslatedString
   saveHost: boolean
   hostExists: boolean
@@ -119,6 +121,19 @@ const tabs = computed<AgentSlideOutTabs[]>(() => [
         label: 'Command Prompt',
         cmd: replaceMacros(props.agentRegistrationCmds.windows, true)
       }
+    ],
+    statusCmd: props.agentStatusCmds.windows,
+    statusCmdVariants: [
+      {
+        id: 'powershell',
+        label: 'PowerShell',
+        cmd: props.agentStatusCmds.windows_powershell ?? props.agentStatusCmds.windows
+      },
+      {
+        id: 'cmd',
+        label: 'Command Prompt',
+        cmd: props.agentStatusCmds.windows
+      }
     ]
   },
   {
@@ -144,6 +159,7 @@ const tabs = computed<AgentSlideOutTabs[]>(() => [
       'After you have installed the agent, run this command on your Linux host to register the Checkmk agent controller.'
     ),
     registrationCmd: replaceMacros(props.agentRegistrationCmds.linux, true),
+    statusCmd: props.agentStatusCmds.linux,
     toggleButtonOptions: toggleButtonOptions
   },
   {
@@ -164,7 +180,8 @@ const tabs = computed<AgentSlideOutTabs[]>(() => [
     registrationMsg: _t(
       'After you have installed the agent, run this command on your Solaris host to register the Checkmk agent.'
     ),
-    registrationCmd: replaceMacros(props.agentRegistrationCmds.solaris, true)
+    registrationCmd: replaceMacros(props.agentRegistrationCmds.solaris, true),
+    statusCmd: props.agentStatusCmds.solaris
   },
   {
     id: 'aix',
@@ -184,7 +201,8 @@ const tabs = computed<AgentSlideOutTabs[]>(() => [
     registrationMsg: _t(
       'After you have installed the agent, run this command on your AIX host to register the Checkmk agent controller.'
     ),
-    registrationCmd: replaceMacros(props.agentRegistrationCmds.aix, true)
+    registrationCmd: replaceMacros(props.agentRegistrationCmds.aix, true),
+    statusCmd: props.agentStatusCmds.aix
   }
 ])
 </script>

@@ -123,6 +123,7 @@ const triggerRescan = () => {
       :agent-receiver-port-is-default="agentReceiverPortIsDefault"
       :agent-install-cmds="agentSlideout.agent_install_cmds"
       :agent-registration-cmds="agentSlideout.agent_registration_cmds"
+      :agent-status-cmds="agentSlideout.agent_status_cmds"
       :legacy-agent-url="agentSlideout.legacy_agent_url"
       :close-button-title="closeButtonTitle"
       :save-host="agentSlideout.save_host"

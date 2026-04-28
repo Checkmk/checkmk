@@ -81,6 +81,14 @@ watch([openedTab, model], () => {
   ott.value = null
 })
 
+function getStatusCmd(tab: AgentSlideOutTabs): string {
+  const variants = tab.statusCmdVariants
+  if (variants && variants.length > 0) {
+    return variants.find((v) => v.id === selectedVariantId.value)?.cmd ?? variants[0]!.cmd
+  }
+  return tab.statusCmd
+}
+
 function tabNeedsToken(tab: AgentSlideOutTabs): boolean {
   if (tab.installCmd) {
     return true
@@ -345,9 +353,17 @@ function getInitStep() {
                   command into the CLI of the target system.`)
                 }}
               </CmkParagraph>
+              <CmkToggleButtonGroup
+                v-if="
+                  currentStep === 4 && tab.statusCmdVariants && tab.statusCmdVariants.length > 1
+                "
+                v-model="selectedVariantId"
+                class="shell-toggle"
+                :options="tab.statusCmdVariants.map((v) => ({ label: v.label, value: v.id }))"
+              />
               <CmkCode
                 v-if="currentStep === 4"
-                code_txt="cmk-agent-ctl status"
+                :code_txt="getStatusCmd(tab)"
                 class="code"
                 width="fill"
               />

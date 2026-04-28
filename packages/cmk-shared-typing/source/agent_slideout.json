@@ -7,6 +7,9 @@
     "agent_registration_cmds": {
       "$ref": "#/$defs/agent_registration_cmds"
     },
+    "agent_status_cmds": {
+      "$ref": "#/$defs/agent_status_cmds"
+    },
     "host_name": { "type": "string" },
     "all_agents_url": { "type": "string" },
     "user_settings_url": { "type": "string" },
@@ -18,6 +21,7 @@
   "required": [
     "agent_install_cmds",
     "agent_registration_cmds",
+    "agent_status_cmds",
     "host_name",
     "all_agents_url",
     "user_settings_url",
@@ -41,6 +45,17 @@
       "required": ["windows_download", "windows", "linux_deb", "linux_rpm"]
     },
     "agent_registration_cmds": {
+      "type": "object",
+      "properties": {
+        "windows": { "type": "string" },
+        "windows_powershell": { "type": "string" },
+        "linux": { "type": "string" },
+        "solaris": { "type": "string" },
+        "aix": { "type": "string" }
+      },
+      "required": ["windows", "linux", "solaris", "aix"]
+    },
+    "agent_status_cmds": {
       "type": "object",
       "properties": {
         "windows": { "type": "string" },

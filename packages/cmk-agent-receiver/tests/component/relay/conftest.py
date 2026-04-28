@@ -8,7 +8,6 @@ from collections.abc import Iterator
 import pytest
 from fastapi.testclient import TestClient
 
-from cmk.agent_receiver.lib.auth import internal_credentials
 from cmk.agent_receiver.lib.config import Config, get_config
 from cmk.agent_receiver.main import main_app
 from cmk.agent_receiver.relay.api.routers.relays.dependencies import (
@@ -16,7 +15,7 @@ from cmk.agent_receiver.relay.api.routers.relays.dependencies import (
 )
 from cmk.agent_receiver.relay.api.routers.relays.handlers import ForwardMonitoringDataHandler
 from cmk.testlib.agent_receiver.agent_receiver import AgentReceiverClient
-from cmk.testlib.agent_receiver.builder import AgentReceiverConfigBuilder
+from cmk.testlib.agent_receiver.builder import AgentReceiverConfigBuilder, AgentReceiverSite
 from cmk.testlib.agent_receiver.native_wiremock import run_wiremock
 from cmk.testlib.agent_receiver.site_mock import SiteMock, User
 from cmk.testlib.agent_receiver.wiremock import Wiremock
@@ -28,22 +27,21 @@ def site_name() -> str:
 
 
 @pytest.fixture()
-def site_context(
-    wiremock: Wiremock,
-    tmp_path: pathlib.Path,
-    site_name: str,
-    monkeypatch: pytest.MonkeyPatch,
-) -> Config:
-    built = AgentReceiverConfigBuilder(
+def ar_site(wiremock: Wiremock, tmp_path: pathlib.Path, site_name: str) -> AgentReceiverSite:
+    return AgentReceiverConfigBuilder(
         omd_root=tmp_path / site_name,
         site_name=site_name,
         apache_address=wiremock.wiremock_hostname,
         apache_port=wiremock.port,
     ).build()
-    for key, value in built.env.items():
+
+
+@pytest.fixture()
+def site_context(ar_site: AgentReceiverSite, monkeypatch: pytest.MonkeyPatch) -> Config:
+    for key, value in ar_site.env.items():
         monkeypatch.setenv(key, value)
     get_config.cache_clear()
-    return built.config
+    return ar_site.config
 
 
 @pytest.fixture()
@@ -87,12 +85,9 @@ def user() -> User:
 
 
 @pytest.fixture
-def site(wiremock: Wiremock, user: User, site_context: Config) -> SiteMock:
-    """
-    Create a site mock instance.
-    """
+def site(wiremock: Wiremock, user: User, ar_site: AgentReceiverSite) -> SiteMock:
     wiremock.reset()
-    return SiteMock(wiremock, site_context.site_name, user, internal_credentials())
+    return SiteMock(wiremock, ar_site.config.site_name, user, ar_site.internal_credentials)
 
 
 @pytest.fixture

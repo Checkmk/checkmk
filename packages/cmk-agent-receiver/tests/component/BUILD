@@ -30,6 +30,7 @@ py_test(
         ":__component_test__",
         "//packages/cmk-agent-receiver",
         "//packages/cmk-agent-receiver:testlib",
+        "//packages/cmk-crypto",
         requirement("pytest"),
         requirement("pytest-xdist"),
         requirement("pytest-socket"),

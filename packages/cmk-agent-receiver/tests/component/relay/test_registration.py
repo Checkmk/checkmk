@@ -29,7 +29,7 @@ def test_a_relay_can_be_registered(
     """
     relay_id = random_relay_id()
     site.set_scenario([], [(relay_id, OP.ADD)])
-    resp = agent_receiver.register_relay(relay_id, "relay1")
+    _, resp = agent_receiver.register_relay(relay_id, "relay1")
     assert resp.status_code == HTTPStatus.OK
 
     agent_receiver.apply_config(site.push_config([relay_id]))
@@ -87,7 +87,7 @@ def test_relay_registration_rejected_on_remote_site(
     relay_id = random_relay_id()
     site.set_scenario([], [(relay_id, OP.ADD)])
 
-    resp = agent_receiver.register_relay(relay_id, "relay1")
+    _, resp = agent_receiver.register_relay(relay_id, "relay1")
 
     assert resp.status_code == HTTPStatus.FORBIDDEN
     assert "remote site" in resp.json()["detail"].lower()
@@ -110,7 +110,7 @@ def test_relay_registration_allowed_on_central_site_in_distributed_setup(
     relay_id = random_relay_id()
     site.set_scenario([], [(relay_id, OP.ADD)])
 
-    resp = agent_receiver.register_relay(relay_id, "relay1")
+    _, resp = agent_receiver.register_relay(relay_id, "relay1")
 
     assert resp.status_code == HTTPStatus.OK
 
@@ -147,7 +147,7 @@ def test_certificate_validity_period(
     """
     relay_id = random_relay_id()
     site.set_scenario([], [(relay_id, OP.ADD)])
-    resp = agent_receiver.register_relay(relay_id, "relay1")
+    _, resp = agent_receiver.register_relay(relay_id, "relay1")
     assert resp.status_code == HTTPStatus.OK
 
     # Verify that the certificate has correct validity period bounds.
@@ -180,5 +180,5 @@ def test_registration_rejects_non_uuid_relay_id(
     2. Verify the request is rejected with 422 Unprocessable Entity
     """
     site.set_scenario([], [(malformed_relay_id, OP.ADD)])
-    resp = agent_receiver.register_relay(malformed_relay_id, "relay")
+    _, resp = agent_receiver.register_relay(malformed_relay_id, "relay")
     assert resp.status_code == HTTPStatus.UNPROCESSABLE_ENTITY

@@ -3,21 +3,35 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Iterator
 from datetime import datetime, timedelta, UTC
 from http import HTTPStatus
 
+import pytest
 from dateutil.relativedelta import relativedelta
 
+from cmk.crypto.certificate import Certificate, CertificatePEM, CertificateWithPrivateKey
 from cmk.relay_protocols.relays import RelayRefreshCertResponse
 from cmk.testlib.agent_receiver import certs as certslib
 from cmk.testlib.agent_receiver.agent_receiver import AgentReceiverClient, register_relay
+from cmk.testlib.agent_receiver.builder import AgentReceiverSite
 from cmk.testlib.agent_receiver.relay import random_relay_id
-from cmk.testlib.agent_receiver.site_mock import OP, SiteMock
+from cmk.testlib.agent_receiver.runner import AgentReceiverRunner
+from cmk.testlib.agent_receiver.site_mock import OP, SiteMock, User
+
+
+@pytest.fixture
+def ar_runner(ar_site: AgentReceiverSite) -> Iterator[AgentReceiverRunner]:
+    runner = AgentReceiverRunner(ar_site)
+    with runner.running():
+        runner.wait_for_running()
+        yield runner
 
 
 def test_cert_refresh(
+    ar_runner: AgentReceiverRunner,
     site: SiteMock,
-    agent_receiver: AgentReceiverClient,
+    user: User,
 ) -> None:
     """Verify that a relay can refresh its certificate.
 
@@ -30,16 +44,20 @@ def test_cert_refresh(
     relay_id = random_relay_id()
     site.set_scenario([], [(relay_id, OP.ADD)])
 
-    # Register the relay first
-    register_relay(agent_receiver, "test_relay", relay_id)
+    with ar_runner.http_client() as client:
+        priv_key, resp = AgentReceiverClient(client, site.site_name, user).register_relay(
+            relay_id, "relay1"
+        )
+        relay_cert = CertificateWithPrivateKey(
+            certificate=Certificate.load_pem(CertificatePEM(resp.json()["client_cert"].encode())),
+            private_key=priv_key,
+        )
 
-    # Refresh the certificate
-    resp = agent_receiver.refresh_cert(relay_id)
+    # ClientCertWorker injects the cert CN as INJECTED_UUID_HEADER, authenticating the relay.
+    with ar_runner.mtls_client(relay_cert) as client:
+        resp = AgentReceiverClient(client, site.site_name, user).refresh_cert(relay_id)
 
-    # Assert status code
     assert resp.status_code == HTTPStatus.OK
-
-    # Parse the response and verify the client certificate is valid
     refresh_response = RelayRefreshCertResponse.model_validate_json(resp.text)
     cert = certslib.read_certificate(refresh_response.client_cert)
 
@@ -51,6 +69,39 @@ def test_cert_refresh(
     assert cert.not_valid_before <= now
     assert cert.not_valid_before >= now - timedelta(minutes=1)
     assert cert.not_valid_after <= now + relativedelta(months=3)
+
+
+def test_relay_cert_rotation_rejected_for_wrong_relay(
+    ar_runner: AgentReceiverRunner,
+    site: SiteMock,
+    user: User,
+) -> None:
+    """Relay cert with CN=A is rejected on relay B's tasks endpoint.
+
+    Test steps:
+    1. Register two relays a and b with the agent receiver
+    2. use the cert of relay a to refresh the cert of b.
+    3. Verify the response status code is FORBIDDEN
+
+    """
+    relay_a = random_relay_id()
+    relay_b = random_relay_id()
+    site.set_scenario([], [(relay_a, OP.ADD), (relay_b, OP.ADD)])
+
+    with ar_runner.http_client() as client:
+        priv_key, resp = AgentReceiverClient(client, site.site_name, user).register_relay(
+            relay_a, "relaya"
+        )
+        cert_a = CertificateWithPrivateKey(
+            certificate=Certificate.load_pem(CertificatePEM(resp.json()["client_cert"].encode())),
+            private_key=priv_key,
+        )
+        AgentReceiverClient(client, site.site_name, user).register_relay(relay_b, "relayb")
+
+    with ar_runner.mtls_client(cert_a) as client:
+        resp = AgentReceiverClient(client, site.site_name, user).refresh_cert(relay_b)
+
+    assert resp.status_code == HTTPStatus.FORBIDDEN
 
 
 def test_cert_refresh_unknown_relay(

@@ -51,43 +51,19 @@ If the file is absent, built-in defaults apply.
 
 The environment variables `OMD_ROOT` and `OMD_SITE` must be set (provided automatically by `omd`).
 
+## Testing
+
+The component tests have two ways to start the agent receiver: use the real process if you are verifying TLS authorization.
+The `TestClient` fixture (default in `conftest.py`) wraps the FastAPI app in-process using Starlette's test client — fast and suitable for most endpoint logic.
+`AgentReceiverRunner` spawns a real Gunicorn process with the `ClientCertWorker`, enabling genuine mTLS handshakes and `verified-uuid` header injection; use it when testing certificate extraction or TLS-gated endpoints.
+
 ## Development
-
-### Deploying local changes
-
-From the package directory, run `f12`.
-This builds the wheel via Bazel, pip-installs it into the site, and restarts the `agent-receiver` daemon.
 
 ### Running locally for debugging
 
 ```bash
 omd stop agent-receiver
 uvicorn cmk.agent_receiver.main:main_app
-```
-
-### Bazel targets
-
-```bash
-# run all tests
-bazel test //packages/cmk-agent-receiver/...
-
-# unit tests only
-bazel test //packages/cmk-agent-receiver/tests/unit:unit
-
-# component tests only
-bazel test //packages/cmk-agent-receiver/tests/component:component
-
-# type checking
-bazel build --config=mypy //packages/cmk-agent-receiver/...
-
-# formatting
-bazel run //:format packages/cmk-agent-receiver
-
-# linting
-bazel lint //packages/cmk-agent-receiver/...
-
-# build wheel
-bazel build //packages/cmk-agent-receiver:wheel
 ```
 
 <!-- CONTEXT

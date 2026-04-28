@@ -841,7 +841,7 @@ def _vs_mkeventd_rule(site_configs: SiteConfigurations, customer: str | None = N
                         Age(
                             title=_("Time period for counting"),
                             help=_(
-                                "If an event is still in the <i>counting</i> state after the time period has passed, it will be removed from the event console. "
+                                "If an event is still in the <i>counting</i> state after the time period has passed, it will be removed from the Event Console. "
                                 "Only events which reach or exceed their expected count within the time period are kept."
                             ),
                             default_value=86400,
@@ -4828,7 +4828,7 @@ ConfigVariableEventConsoleNotifyFacility = ConfigVariable(
     valuespec=lambda context: DropdownChoice(
         title=_("Syslog facility for Event Console notifications"),
         help=_(
-            "When sending notifications from the monitoring system to the event console "
+            "When sending notifications from the monitoring system to the Event Console "
             "the following syslog facility will be set for these messages. Choosing "
             "a unique facility makes creation of rules easier."
         ),
@@ -5064,7 +5064,7 @@ def _valuespec_active_checks_mkevents() -> Dictionary:
                                 "In a distributed setup where the Event Console is not running in the same "
                                 "site as the host is monitored you need to access the remote Event Console "
                                 "via TCP. Please make sure that this is activated in the global settings of "
-                                "the event console. The default port number is 6558."
+                                "the Event Console. The default port number is 6558."
                             ),
                         ),
                         TextInput(

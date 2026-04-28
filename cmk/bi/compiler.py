@@ -70,12 +70,13 @@ class BICompiler:
 
     def get_aggregation_by_name(
         self, aggr_name: str
-    ) -> tuple[BICompiledAggregation, BICompiledRule] | None:
+    ) -> tuple[BICompiledAggregation, BICompiledRule]:
         for compiled_aggregation in self._compiled_aggregations.values():
             for branch in compiled_aggregation.branches:
                 if branch.properties.title == aggr_name:
                     return compiled_aggregation, branch
-        return None
+
+        raise MKGeneralException(f"Unknown aggregation {aggr_name}")
 
     def load_compiled_aggregations(self) -> None:
         try:
@@ -99,11 +100,7 @@ class BICompiler:
         # Creates a frozen aggregation in the frozen_aggregations_dir
         # And an additional hint-file in an aggregation sub-folder, so that we know
         # where the frozen aggregation branch initially came from
-
-        result = self.get_aggregation_by_name(aggr_name=branch_name)
-        if not result:
-            raise MKGeneralException(f"Unknown aggregation {branch_name}")
-        aggregation, branch = result
+        aggregation, branch = self.get_aggregation_by_name(aggr_name=branch_name)
 
         # Prepare a single frozen configuration specifically for this branch
         # This includes the aggregation configuration and the frozen branch

@@ -17,7 +17,6 @@ from cmk.bi.computer import BIAggregationFilter
 from cmk.bi.filesystem import get_default_site_filesystem
 from cmk.bi.lib import FrozenMarker
 from cmk.bi.trees import BICompiledRule
-from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
 from cmk.gui.bi.bi_manager import BIManager, load_compiled_branch
@@ -878,10 +877,7 @@ def convert_tree_to_frozen_diff_tree(row: Row) -> tuple[Row, bool]:
     other_aggregation = frozen_info.based_on_aggregation_id
     other_branch = frozen_info.based_on_branch_title
     bi_manager = _get_cached_bi_manager()
-    found_aggr = bi_manager.compiler.get_aggregation_by_name(reference_name)
-    if not found_aggr:
-        raise MKGeneralException("Unable to find source aggregation for diff tree")
-    bi_ref_aggregation, bi_ref_branch = found_aggr
+    bi_ref_aggregation, bi_ref_branch = bi_manager.compiler.get_aggregation_by_name(reference_name)
 
     # Load other aggregation from disk
     other_aggr = storage.AggregationStore(get_default_site_filesystem().cache).get(

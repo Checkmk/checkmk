@@ -463,7 +463,10 @@ def construct_content(
         elements = ["graph", "abstime", "address", "longoutput"]
 
     if is_bulk and "graph" in elements:
-        notifications_with_graphs = context["PARAMETER_NOTIFICATIONS_WITH_GRAPHS"]
+        # User notification rules using the legacy dict format do not
+        # propagate this parameter, fall back to the same default that
+        # _rbn_finalize_plugin_parameters applies for global rules.
+        notifications_with_graphs = context.get("PARAMETER_NOTIFICATIONS_WITH_GRAPHS", "5")
         if notification_number > int(notifications_with_graphs):
             elements.remove("graph")
 

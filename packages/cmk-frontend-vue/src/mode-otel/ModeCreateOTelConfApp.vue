@@ -23,10 +23,12 @@ import ConfigureInstrumentation from './otel-configuration-steps/ConfigureInstru
 import FinalizeConfiguration, {
   type FinalizeState
 } from './otel-configuration-steps/FinalizeConfiguration.vue'
-import type {
-  AuthConfig,
-  EndpointConfig,
-  EventConsoleConfig
+import {
+  type AuthConfig,
+  type EndpointConfig,
+  type EventConsoleConfig,
+  GRPC_DEFAULT_PORT,
+  HTTP_DEFAULT_PORT
 } from './otel-configuration-steps/otelTypes'
 import type { PasswordConfig } from './otel-configuration-steps/password_store_password.types.ts'
 import {
@@ -215,8 +217,8 @@ async function onSaveClick(): Promise<void> {
           :endpoint-config-allowed="endpoint_config_allowed"
           :encryption-allowed="encryption_allowed"
           :event-console-allowed="event_console_allowed"
-          :grpc-default-port="4317"
-          :http-default-port="4318"
+          :grpc-default-port="GRPC_DEFAULT_PORT"
+          :http-default-port="HTTP_DEFAULT_PORT"
         />
       </template>
       <template #actions>
@@ -239,6 +241,8 @@ async function onSaveClick(): Promise<void> {
       <template #content>
         <ConfigureInstrumentation
           :site-name="siteId ?? ''"
+          :grpc-enabled="grpcEnabled"
+          :http-enabled="httpEnabled"
           :grpc-endpoint="grpcEndpoint"
           :http-endpoint="httpEndpoint"
           :grpc-tls-enabled="grpcEncryption"

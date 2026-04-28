@@ -3,7 +3,14 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import type { AuthConfig, Credential, EndpointConfig } from './otelTypes'
+import {
+  type AuthConfig,
+  type Credential,
+  type EndpointConfig,
+  GRPC_DEFAULT_PORT,
+  HTTP_DEFAULT_PORT,
+  resolveEndpoint
+} from './otelTypes'
 
 export type { AuthConfig, Credential }
 
@@ -43,8 +50,10 @@ export function buildExporter(
   protocol: 'http' | 'grpc',
   siteName: string
 ): string {
-  const address = config.endpoint.address || '<host>'
-  const port = config.endpoint.port ?? 4318
+  const defaultPort = protocol === 'http' ? HTTP_DEFAULT_PORT : GRPC_DEFAULT_PORT
+  const resolved = resolveEndpoint(config.endpoint, defaultPort)
+  const address = resolved?.address ?? '<host>'
+  const port = resolved?.port ?? defaultPort
   const authenticatorName = protocol === 'http' ? 'basicauth/http' : 'basicauth/grpc'
 
   const authBlock =
@@ -76,10 +85,17 @@ export function buildExporter(
 export function buildCollectorSnippets(state: CollectorSnippetInput): CollectorSnippets {
   const siteName = state.siteName || '%SITENAME%'
 
+  const httpResolved = state.httpInfo
+    ? resolveEndpoint(state.httpInfo.endpoint, HTTP_DEFAULT_PORT)
+    : null
+  const grpcResolved = state.grpcInfo
+    ? resolveEndpoint(state.grpcInfo.endpoint, GRPC_DEFAULT_PORT)
+    : null
+
   const exporters = `exporters:
   ....
-  ${`${state.httpInfo?.endpoint.address ? buildExporter(state.httpInfo, 'http', siteName) : ''}
-  ${state.grpcInfo?.endpoint.address ? buildExporter(state.grpcInfo, 'grpc', siteName) : ''}`.trim()}`
+  ${`${httpResolved && state.httpInfo ? buildExporter(state.httpInfo, 'http', siteName) : ''}
+  ${grpcResolved && state.grpcInfo ? buildExporter(state.grpcInfo, 'grpc', siteName) : ''}`.trim()}`
 
   const httpAuthEntry = state.httpInfo
     ? buildAuthExtension(state.httpInfo.auth, 'basicauth/http')
@@ -100,8 +116,8 @@ export function buildCollectorSnippets(state: CollectorSnippetInput): CollectorS
     activeAuthNames.length > 0 ? `extensions: [..., ${activeAuthNames.join(', ')}]` : ''
 
   const activeProtocols = [
-    ...(state.httpInfo?.endpoint.address ? ['otlphttp/checkmk'] : []),
-    ...(state.grpcInfo?.endpoint.address ? ['otlp/checkmk'] : [])
+    ...(httpResolved ? ['otlphttp/checkmk'] : []),
+    ...(grpcResolved ? ['otlp/checkmk'] : [])
   ]
   const exportersList =
     activeProtocols.length > 0 ? `[..., ${activeProtocols.join(', ')}]` : '[...]'

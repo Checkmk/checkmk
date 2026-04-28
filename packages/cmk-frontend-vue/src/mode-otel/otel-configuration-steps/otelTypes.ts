@@ -27,3 +27,31 @@ export interface EndpointConfig {
 export interface EventConsoleConfig {
   resourceAttribute: string
 }
+
+export const GRPC_DEFAULT_PORT = 4317
+export const HTTP_DEFAULT_PORT = 4318
+
+export interface ResolvedEndpoint {
+  address: string
+  port: number
+}
+
+// Resolves an EndpointConfig into the concrete address/port the collector will
+// actually bind to. The "default" socket-address modes leave `address`/`port`
+// empty in the form state so the UI inputs stay hidden; consumers that need
+// the real values (snippet builders, SDK examples) go through this resolver.
+export function resolveEndpoint(cfg: EndpointConfig, defaultPort: number): ResolvedEndpoint | null {
+  switch (cfg.socketAddressType) {
+    case 'default_ipv4':
+      return { address: '0.0.0.0', port: defaultPort }
+    case 'default_ipv6':
+      return { address: '[::]', port: defaultPort }
+    case 'custom': {
+      const address = cfg.address.trim()
+      if (!address || cfg.port === undefined) {
+        return null
+      }
+      return { address, port: cfg.port }
+    }
+  }
+}

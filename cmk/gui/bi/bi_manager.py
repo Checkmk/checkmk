@@ -14,7 +14,11 @@ from cmk.bi.data_fetcher import BIStatusFetcher
 from cmk.bi.filesystem import get_default_site_filesystem
 from cmk.bi.lib import SitesCallback
 from cmk.bi.storage import AggregationNotFound, AggregationStore
-from cmk.bi.trees import BICompiledAggregation, BICompiledRule
+from cmk.bi.trees import (
+    BICompiledAggregation,
+    BICompiledRule,
+    get_compiled_aggregation_and_branch_by_name,
+)
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.site import SiteId
 from cmk.gui import sites
@@ -37,6 +41,12 @@ class BIManager:
     @classmethod
     def bi_configuration_file(cls) -> Path:
         return get_default_site_filesystem().etc.config
+
+    def get_aggregation_by_name(self, name: str) -> tuple[BICompiledAggregation, BICompiledRule]:
+        return get_compiled_aggregation_and_branch_by_name(
+            compiled_aggregations=self.compiler.compiled_aggregations,
+            aggr_name=name,
+        )
 
 
 def all_sites_with_id_and_online() -> list[tuple[SiteId, bool]]:

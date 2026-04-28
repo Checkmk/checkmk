@@ -11,7 +11,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from typing import Any, Literal, NamedTuple, NotRequired, override, TypedDict
 
 from marshmallow import pre_dump
@@ -47,6 +47,7 @@ from cmk.bi.node_vis import (
 from cmk.bi.rule_interface import BIRuleProperties
 from cmk.bi.schema import Schema
 from cmk.bi.type_defs import HostState, ServiceState
+from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
 from cmk.utils.caching import instance_method_lru_cache
@@ -818,3 +819,14 @@ class BIResultSchema(OneOfSchema):
     @override
     def get_obj_type(self, obj: ABCBICompiledNode) -> str:
         return obj.kind()
+
+
+def get_compiled_aggregation_and_branch_by_name(
+    compiled_aggregations: Mapping[str, BICompiledAggregation], aggr_name: str
+) -> tuple[BICompiledAggregation, BICompiledRule]:
+    for compiled_aggregation in compiled_aggregations.values():
+        for branch in compiled_aggregation.branches:
+            if branch.properties.title == aggr_name:
+                return compiled_aggregation, branch
+
+    raise MKGeneralException(f"Unknown aggregation {aggr_name}")

@@ -877,7 +877,7 @@ def convert_tree_to_frozen_diff_tree(row: Row) -> tuple[Row, bool]:
     other_aggregation = frozen_info.based_on_aggregation_id
     other_branch = frozen_info.based_on_branch_title
     bi_manager = _get_cached_bi_manager()
-    bi_ref_aggregation, bi_ref_branch = bi_manager.compiler.get_aggregation_by_name(reference_name)
+    bi_ref_aggregation, bi_ref_branch = bi_manager.get_aggregation_by_name(reference_name)
 
     # Load other aggregation from disk
     other_aggr = storage.AggregationStore(get_default_site_filesystem().cache).get(

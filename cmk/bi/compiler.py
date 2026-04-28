@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import os
 import time
+from collections.abc import Mapping
 from multiprocessing.pool import Pool
 from pathlib import Path
 from typing import TypedDict
@@ -24,7 +25,12 @@ from cmk.bi.lib import SitesCallback
 from cmk.bi.log import LOGGER
 from cmk.bi.packs import BIAggregationPacks
 from cmk.bi.searcher import BISearcher
-from cmk.bi.trees import BICompiledAggregation, BICompiledRule, FrozenBIInfo
+from cmk.bi.trees import (
+    BICompiledAggregation,
+    BICompiledRule,
+    FrozenBIInfo,
+    get_compiled_aggregation_and_branch_by_name,
+)
 from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.i18n import _
@@ -68,37 +74,32 @@ class BICompiler:
     def compiled_aggregations(self) -> dict[str, BICompiledAggregation]:
         return self._compiled_aggregations
 
-    def get_aggregation_by_name(
-        self, aggr_name: str
-    ) -> tuple[BICompiledAggregation, BICompiledRule]:
-        for compiled_aggregation in self._compiled_aggregations.values():
-            for branch in compiled_aggregation.branches:
-                if branch.properties.title == aggr_name:
-                    return compiled_aggregation, branch
-
-        raise MKGeneralException(f"Unknown aggregation {aggr_name}")
-
     def load_compiled_aggregations(self) -> None:
         try:
             self._check_compilation_status()
         finally:
             self._load_compiled_aggregations()
 
-    def _freeze_new_branches(self, compiled_aggregation: BICompiledAggregation) -> bool:
+    def _freeze_new_branches(
+        self,
+        compiled_aggregation: BICompiledAggregation,
+        compiled_aggregations: Mapping[str, BICompiledAggregation],
+    ) -> bool:
         new_branch_found = False
         for branch in list(compiled_aggregation.branches):
             if self._frozen_store.exists(compiled_aggregation.id, branch.properties.title):
                 continue
+
             new_branch_found = True
-            self.freeze_branch(branch.properties.title)
+            aggregation, branch = get_compiled_aggregation_and_branch_by_name(
+                compiled_aggregations=compiled_aggregations,
+                aggr_name=branch.properties.title,
+            )
+            self.freeze_branch(aggregation, branch)
+
         return new_branch_found
 
-    def freeze_branch(self, branch_name: str) -> None:
-        # Creates a frozen aggregation in the frozen_aggregations_dir
-        # And an additional hint-file in an aggregation sub-folder, so that we know
-        # where the frozen aggregation branch initially came from
-        aggregation, branch = self.get_aggregation_by_name(aggr_name=branch_name)
-
+    def freeze_branch(self, aggregation: BICompiledAggregation, branch: BICompiledRule) -> None:
         # Prepare a single frozen configuration specifically for this branch
         # This includes the aggregation configuration and the frozen branch
         if frozen_info := aggregation.frozen_info:
@@ -106,8 +107,10 @@ class BICompiler:
         else:
             aggr_id = aggregation.id
 
+        branch_name = branch.properties.title
         original_branches = aggregation.branches
         original_id = aggregation.id
+
         try:
             aggregation.branches = [branch]
             aggregation.id = f"frozen_{aggr_id}_{branch_name}"
@@ -133,7 +136,8 @@ class BICompiler:
                 continue
 
             computed_new_frozen_branch = (
-                self._freeze_new_branches(compiled_aggregation) or computed_new_frozen_branch
+                self._freeze_new_branches(compiled_aggregation, compiled_aggregations)
+                or computed_new_frozen_branch
             )
 
             # Read frozen branches. Each branch gets a separate aggregation ID since

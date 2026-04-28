@@ -16,7 +16,7 @@ import type {
   StringPropDef
 } from './prop-def'
 
-export type { PanelConfig, PropDef } from './prop-def'
+export type { PanelConfig, PanelConfigFor, PropDef } from './prop-def'
 export type {
   BoolPropDef,
   ListPropDef,

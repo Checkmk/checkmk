@@ -4,7 +4,8 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script lang="ts">
-import { type Options, type PanelConfig } from '@ucl/_ucl/components/detail-page'
+import { type Options, type PanelConfigFor } from '@ucl/_ucl/components/detail-page'
+import type { BoolPropDef } from '@ucl/_ucl/types/prop-def'
 
 import codeExample from './UclCmkListCodeExample.vue?raw'
 
@@ -46,7 +47,10 @@ export const panelConfig = {
     title: 'Enable Drag & Drop',
     initialState: false
   }
-} satisfies PanelConfig
+} satisfies PanelConfigFor<typeof CmkList, 'tryDelete' | 'add' | 'dragCallback'> & {
+  showAdd: BoolPropDef
+  enableDrag: BoolPropDef
+}
 </script>
 
 <script setup lang="ts">

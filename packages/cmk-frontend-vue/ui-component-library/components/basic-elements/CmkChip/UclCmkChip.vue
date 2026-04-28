@@ -4,7 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script lang="ts">
-import { type Options, type PanelConfig } from '@ucl/_ucl/components/detail-page'
+import { type Options, type PanelConfigFor } from '@ucl/_ucl/components/detail-page'
 
 import { type Colors, type Sizes, type Variants } from '@/components/CmkChip.vue'
 
@@ -64,7 +64,7 @@ export const panelConfig = {
   },
   asDiv: { type: 'boolean' as const, title: 'Render as Div', initialState: false },
   disabled: { type: 'boolean' as const, title: 'Disabled', initialState: false }
-} satisfies PanelConfig
+} satisfies PanelConfigFor<typeof CmkChip>
 </script>
 
 <script setup lang="ts">

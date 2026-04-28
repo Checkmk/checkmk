@@ -4,7 +4,7 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 export { createPanelState } from '../../types/prop-panel'
-export type { Options, PanelConfig } from '../../types/prop-panel'
+export type { Options, PanelConfig, PanelConfigFor } from '../../types/prop-panel'
 export { default as UclDetailPageAccessibility } from './UclDetailPageAccessibilityTable.vue'
 export { default as UclDetailPageCodeExample } from './UclDetailPageCodeExample.vue'
 export { default as UclDetailPageComponent } from './UclDetailPageComponent.vue'

@@ -4,7 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script lang="ts">
-import { type PanelConfig } from '@ucl/_ucl/components/detail-page'
+import { type PanelConfigFor, type StringPropDef } from '@ucl/_ucl/types/prop-def'
 
 import codeExample from './UclCmkButtonSubmitCodeExample.vue?raw'
 
@@ -24,7 +24,7 @@ export const panelConfig = {
     title: 'Title',
     initialState: ''
   }
-} satisfies PanelConfig
+} satisfies PanelConfigFor<typeof CmkButtonSubmit> & { label: StringPropDef }
 </script>
 
 <script setup lang="ts">

@@ -4,7 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script lang="ts">
-import { type Options, type PanelConfig } from '@ucl/_ucl/components/detail-page'
+import { type Options, type PanelConfigFor } from '@ucl/_ucl/components/detail-page'
 
 import { type Colors, type Shapes, type Sizes, type Types } from '@/components/CmkBadge.vue'
 
@@ -50,7 +50,7 @@ export const panelConfig = {
     ] satisfies Options<Shapes>[],
     initialState: 'default' as const
   }
-} satisfies PanelConfig
+} satisfies PanelConfigFor<typeof CmkBadge>
 </script>
 
 <script setup lang="ts">

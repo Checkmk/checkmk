@@ -4,7 +4,8 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script lang="ts">
-import { type Options, type PanelConfig } from '@ucl/_ucl/components/detail-page'
+import { type Options, type PanelConfigFor } from '@ucl/_ucl/components/detail-page'
+import type { StringArrayPropDef } from '@ucl/_ucl/types/prop-def'
 
 import {
   type DualListElement,
@@ -53,7 +54,10 @@ export const panelConfig = {
     initialState: ['host_admin'],
     help: 'Type: string[]. IDs must match the name of each available element. In the UCL app, enter one ID per line in the textarea, e.g.:host_admin network_admin db_admin'
   }
-} satisfies PanelConfig
+} satisfies PanelConfigFor<
+  typeof CmkDualList,
+  'data' | 'backendValidation' | 'validators' | 'elements'
+> & { selectedData: StringArrayPropDef }
 </script>
 
 <script setup lang="ts">

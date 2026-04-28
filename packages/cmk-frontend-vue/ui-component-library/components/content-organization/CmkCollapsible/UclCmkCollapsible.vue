@@ -4,7 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script lang="ts">
-import { type PanelConfig } from '@ucl/_ucl/components/detail-page'
+import { type PanelConfigFor } from '@ucl/_ucl/components/detail-page'
 import type { DynamicIcon } from 'cmk-shared-typing/typescript/icon'
 
 import codeExample from './UclCmkCollapsibleCodeExample.vue?raw'
@@ -42,7 +42,8 @@ export const panelConfig = {
   disabled: { type: 'boolean' as const, title: 'Disabled', initialState: false },
   sideTitle: { type: 'string' as const, title: 'Side Title', initialState: 'Details' },
   help_text: { type: 'string' as const, title: 'Help Text', initialState: 'Click to expand' }
-} satisfies PanelConfig
+} satisfies PanelConfigFor<typeof CmkCollapsible, 'contentId'> &
+  PanelConfigFor<typeof CmkCollapsibleTitle, 'focus'>
 </script>
 
 <script setup lang="ts">

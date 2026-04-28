@@ -4,7 +4,8 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script lang="ts">
-import { type PanelConfig } from '@ucl/_ucl/components/detail-page'
+import { type PanelConfigFor } from '@ucl/_ucl/components/detail-page'
+import type { StringArrayPropDef } from '@ucl/_ucl/types/prop-def'
 
 import codeExample from './UclCmkAccordionStepPanelCodeExample.vue?raw'
 
@@ -30,7 +31,9 @@ export const panelConfig = {
     initialState: ['step-2'],
     help: "Type: string[]. IDs are auto-generated as step-{n} from each item's step prop. In the UCL app, enter one ID per line in the textarea, e.g.:step-1 step-2 step-3"
   }
-} satisfies PanelConfig
+} satisfies PanelConfigFor<typeof CmkAccordionStepPanel, 'modelValue'> & {
+  openSteps: StringArrayPropDef
+}
 export const itemPanelConfig = {
   step: {
     type: 'number' as const,
@@ -60,7 +63,7 @@ export const itemPanelConfig = {
     initialState: '2-3 min',
     help: 'Short hint displayed next to the step title (e.g. estimated duration).'
   }
-} satisfies PanelConfig
+} satisfies PanelConfigFor<typeof CmkAccordionStepPanelItem>
 </script>
 
 <script setup lang="ts">

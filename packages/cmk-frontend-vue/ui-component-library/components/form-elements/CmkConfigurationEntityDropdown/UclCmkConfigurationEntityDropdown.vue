@@ -4,7 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script lang="ts">
-import { type PanelConfig } from '@ucl/_ucl/components/detail-page'
+import { type PanelConfigFor } from '@ucl/_ucl/components/detail-page'
 
 import codeExample from './UclCmkConfigurationEntityDropdownCodeExample.vue?raw'
 
@@ -48,7 +48,10 @@ export const panelConfig = {
     title: 'Allow Editing Existing',
     initialState: true
   }
-} satisfies PanelConfig
+} satisfies PanelConfigFor<
+  typeof CmkConfigurationEntityDropdown,
+  'modelValue' | 'configEntityType' | 'configEntityTypeSpecifier' | 'initialElements'
+>
 </script>
 
 <script setup lang="ts">
@@ -94,7 +97,7 @@ const mockEntities = [
 ]
 
 const minimalSchema: FormSpecString = {
-  type: 'string',
+  type: 'string' as const,
   title: 'Name',
   help: '',
   validators: [],

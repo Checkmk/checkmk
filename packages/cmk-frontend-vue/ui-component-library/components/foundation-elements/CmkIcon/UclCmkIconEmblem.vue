@@ -4,7 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script lang="ts">
-import { type Options, type PanelConfig } from '@ucl/_ucl/components/detail-page'
+import { type Options, type PanelConfigFor } from '@ucl/_ucl/components/detail-page'
 
 import {
   type CmkIconVariants,
@@ -44,7 +44,7 @@ export const emblemPanelConfig = {
     help: 'Only the fixed IconEmblems set can be used here — these are separate from SimpleIcons.'
   },
   colored: { type: 'boolean' as const, title: 'Colored', initialState: true }
-} satisfies PanelConfig
+} satisfies PanelConfigFor<typeof CmkIconEmblem>
 
 export const iconPanelConfig = {
   name: {
@@ -84,7 +84,7 @@ export const iconPanelConfig = {
   },
   colored: { type: 'boolean' as const, title: 'Colored', initialState: true },
   rotate: { type: 'number' as const, title: 'Rotation (Degrees)', initialState: 0 }
-} satisfies PanelConfig
+} satisfies PanelConfigFor<typeof CmkIcon>
 </script>
 
 <script setup lang="ts">

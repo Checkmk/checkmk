@@ -4,9 +4,9 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script lang="ts">
-import { type Options, type PanelConfig } from '@ucl/_ucl/components/detail-page'
+import { type Options, type PanelConfigFor } from '@ucl/_ucl/components/detail-page'
 
-import { type ToggleButtonOption } from '@/components/CmkToggleButtonGroup.vue'
+import type { ToggleButtonOption } from '@/components/CmkToggleButtonGroup.vue'
 
 import codeExample from './UclCmkToggleButtonGroupCodeExample.vue?raw'
 
@@ -37,7 +37,7 @@ export const panelConfig = {
     ] satisfies Options<string>[],
     initialState: 'list' as const
   }
-} satisfies PanelConfig
+} satisfies PanelConfigFor<typeof CmkToggleButtonGroup, 'options'>
 </script>
 
 <script setup lang="ts">

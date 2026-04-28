@@ -4,7 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script lang="ts">
-import { type Options, type PanelConfig } from '@ucl/_ucl/components/detail-page'
+import { type Options, type PanelConfigFor } from '@ucl/_ucl/components/detail-page'
 
 import codeExample from './UclCmkCheckboxCodeExample.vue?raw'
 
@@ -68,7 +68,7 @@ export const panelConfig = {
     title: 'External Error Message',
     initialState: ''
   }
-} satisfies PanelConfig
+} satisfies PanelConfigFor<typeof CmkCheckbox>
 </script>
 
 <script setup lang="ts">

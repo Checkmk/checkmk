@@ -4,7 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script lang="ts">
-import { type Options, type PanelConfig } from '@ucl/_ucl/components/detail-page'
+import { type Options, type PanelConfigFor } from '@ucl/_ucl/components/detail-page'
 
 import codeExample from './UclCmkTabsCodeExample.vue?raw'
 
@@ -40,7 +40,7 @@ export const panelConfig = {
     ] satisfies Options<TabId>[],
     initialState: 'tab-1' as TabId
   }
-} satisfies PanelConfig
+} satisfies PanelConfigFor<typeof CmkTabs>
 </script>
 
 <script setup lang="ts">

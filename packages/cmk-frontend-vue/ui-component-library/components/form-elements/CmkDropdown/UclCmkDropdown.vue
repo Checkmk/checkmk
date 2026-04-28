@@ -4,7 +4,8 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script lang="ts">
-import { type Options, type PanelConfig } from '@ucl/_ucl/components/detail-page'
+import { type Options, type PanelConfigFor } from '@ucl/_ucl/components/detail-page'
+import type { ListPropDef } from '@ucl/_ucl/types/prop-def'
 
 import { type ButtonVariants } from '@/components/CmkDropdown/CmkDropdownButton.vue'
 import { type Suggestions } from '@/components/CmkSuggestions'
@@ -39,7 +40,7 @@ export const a11yData = [
 
 export const panelConfig = {
   optionsType: {
-    type: 'list',
+    type: 'list' as const,
     title: 'Options Type',
     options: [
       { title: 'Fixed', name: 'fixed' },
@@ -49,7 +50,7 @@ export const panelConfig = {
     initialState: 'fixed'
   },
   width: {
-    type: 'list',
+    type: 'list' as const,
     title: 'Width',
     options: [
       { title: 'Default', name: 'default' },
@@ -58,13 +59,21 @@ export const panelConfig = {
     ] satisfies Options<NonNullable<ButtonVariants['width']>>[],
     initialState: 'default' as const
   },
-  disabled: { type: 'boolean', title: 'Disabled', initialState: false },
-  required: { type: 'boolean', title: 'Required', initialState: false },
-  formValidation: { type: 'boolean', title: 'Form Validation Error', initialState: false },
-  inputHint: { type: 'string', title: 'Input Hint', initialState: 'Please select an option...' },
-  noResultsHint: { type: 'string', title: 'No Results Hint', initialState: 'No matches found' },
+  disabled: { type: 'boolean' as const, title: 'Disabled', initialState: false },
+  required: { type: 'boolean' as const, title: 'Required', initialState: false },
+  formValidation: { type: 'boolean' as const, title: 'Form Validation Error', initialState: false },
+  inputHint: {
+    type: 'string' as const,
+    title: 'Input Hint',
+    initialState: 'Please select an option...'
+  },
+  noResultsHint: {
+    type: 'string' as const,
+    title: 'No Results Hint',
+    initialState: 'No matches found'
+  },
   selectedOption: {
-    type: 'list',
+    type: 'list' as const,
     title: 'Selected Option',
     options: [
       { name: '', title: 'None' },
@@ -74,7 +83,10 @@ export const panelConfig = {
     ],
     initialState: ''
   }
-} satisfies PanelConfig
+} satisfies PanelConfigFor<
+  typeof CmkDropdown,
+  'label' | 'options' | 'componentId' | 'noElementsText'
+> & { optionsType: ListPropDef }
 </script>
 
 <script setup lang="ts">

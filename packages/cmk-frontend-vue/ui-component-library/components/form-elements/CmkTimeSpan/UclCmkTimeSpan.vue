@@ -4,17 +4,39 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script lang="ts">
-import { type PanelConfig } from '@ucl/_ucl/components/detail-page'
+import { type BoolPropDef, type PanelConfigFor } from '@ucl/_ucl/types/prop-def'
 
 import codeExample from './UclCmkTimeSpanCodeExample.vue?raw'
 
+type OmittedProps =
+  | 'data'
+  | 'ariaLabel'
+  | 'title'
+  | 'backendValidation'
+  | 'validators'
+  | 'displayedMagnitudes'
+type AdditionalProps = {
+  showDay: BoolPropDef
+  showHour: BoolPropDef
+  showMinute: BoolPropDef
+  showSecond: BoolPropDef
+  showMillisecond: BoolPropDef
+}
+
 export const panelConfig = {
-  showDay: { type: 'boolean', title: 'Show Days', initialState: true },
-  showHour: { type: 'boolean', title: 'Show Hours', initialState: true },
-  showMinute: { type: 'boolean', title: 'Show Minutes', initialState: true },
-  showSecond: { type: 'boolean', title: 'Show Seconds', initialState: true },
-  showMillisecond: { type: 'boolean', title: 'Show Milliseconds', initialState: false }
-} satisfies PanelConfig
+  label: { type: 'string' as const, title: 'Label', initialState: '' },
+  inputHint: {
+    type: 'number' as const,
+    title: 'Input Hint',
+    initialState: 60,
+    help: 'Given in seconds'
+  },
+  showDay: { type: 'boolean' as const, title: 'Show Days', initialState: true },
+  showHour: { type: 'boolean' as const, title: 'Show Hours', initialState: true },
+  showMinute: { type: 'boolean' as const, title: 'Show Minutes', initialState: true },
+  showSecond: { type: 'boolean' as const, title: 'Show Seconds', initialState: true },
+  showMillisecond: { type: 'boolean' as const, title: 'Show Milliseconds', initialState: false }
+} satisfies PanelConfigFor<typeof CmkTimeSpan, OmittedProps> & AdditionalProps
 </script>
 
 <script setup lang="ts">
@@ -65,9 +87,9 @@ const displayedMagnitudes = computed<Magnitude[]>(() => {
     <UclDetailPageComponent>
       <CmkTimeSpan
         v-model:data="data"
-        :label="null"
+        :label="propState.label"
         title="Duration"
-        :input-hint="null"
+        :input-hint="propState.inputHint"
         :displayed-magnitudes="displayedMagnitudes"
         :validators="[]"
         :backend-validation="[]"

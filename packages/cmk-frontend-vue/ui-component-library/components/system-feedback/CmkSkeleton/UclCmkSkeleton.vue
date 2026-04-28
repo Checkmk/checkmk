@@ -4,7 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script lang="ts">
-import { type Options, type PanelConfig } from '@ucl/_ucl/components/detail-page'
+import { type Options, type PanelConfigFor } from '@ucl/_ucl/components/detail-page'
 
 import { type SkeletonType } from '@/components/CmkSkeleton.vue'
 
@@ -37,7 +37,7 @@ export const panelConfig = {
     help: 'Optionally set a custom width for the skeleton using any valid CSS unit(% or px).',
     initialState: '100%'
   }
-} satisfies PanelConfig
+} satisfies PanelConfigFor<typeof CmkSkeleton>
 </script>
 
 <script setup lang="ts">

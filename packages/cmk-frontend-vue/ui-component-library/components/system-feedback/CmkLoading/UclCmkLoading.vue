@@ -4,7 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script lang="ts">
-import { type PanelConfig } from '@ucl/_ucl/components/detail-page'
+import { type PanelConfigFor } from '@ucl/_ucl/components/detail-page'
 
 import codeExample from './UclCmkLoadingCodeExample.vue?raw'
 
@@ -15,7 +15,7 @@ export const panelConfig = {
     help: 'Adjust the height of the loading dots using any valid CSS unit (e.g., px, em, rem). 8px is default and recommended for most use cases.',
     initialState: '8px'
   }
-} satisfies PanelConfig
+} satisfies PanelConfigFor<typeof CmkLoading>
 </script>
 
 <script setup lang="ts">

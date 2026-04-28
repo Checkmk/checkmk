@@ -4,9 +4,9 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script lang="ts">
-import { type PanelConfig } from '@ucl/_ucl/components/detail-page'
+import { type PanelConfigFor } from '@ucl/_ucl/components/detail-page'
 
-import { type CmkIconVariants, type IconSizeNames, type SimpleIcons } from '@/components/CmkIcon'
+import type { CmkIconVariants, IconSizeNames, SimpleIcons } from '@/components/CmkIcon'
 
 import codeExample from './UclCmkIconCodeExample.vue?raw'
 
@@ -39,7 +39,7 @@ export const panelConfig = {
   colored: { type: 'boolean' as const, title: 'Colored', initialState: false },
   title: { type: 'string' as const, title: 'Title (Tooltip/Alt)', initialState: 'Help Icon' },
   rotate: { type: 'number' as const, title: 'Rotation (Degrees)', initialState: 0 }
-} satisfies PanelConfig
+} satisfies PanelConfigFor<typeof CmkIcon>
 </script>
 
 <script setup lang="ts">

@@ -4,9 +4,9 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script lang="ts">
-import { type Options, type PanelConfig } from '@ucl/_ucl/components/detail-page'
+import { type Options, type PanelConfigFor } from '@ucl/_ucl/components/detail-page'
 
-import { type CmkKeyboardKeyProps, type Sizes } from '@/components/CmkKeyboardKey.vue'
+import type { CmkKeyboardKeyProps, Sizes } from '@/components/CmkKeyboardKey.vue'
 
 import codeExample from './UclCmkKeyboardKeyCodeExample.vue?raw'
 
@@ -38,7 +38,7 @@ export const panelConfig = {
     ] satisfies Options<Sizes>[],
     initialState: 'medium' as const
   }
-} satisfies PanelConfig
+} satisfies PanelConfigFor<typeof CmkKeyboardKey>
 </script>
 
 <script setup lang="ts">

@@ -4,7 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script lang="ts">
-import { type PanelConfig } from '@ucl/_ucl/components/detail-page'
+import { type PanelConfigFor } from '@ucl/_ucl/components/detail-page'
 
 import codeExampleButton from './UclCmkCopyButtonCodeExample.vue?raw'
 import codeExample from './UclCmkCopyCodeExample.vue?raw'
@@ -33,7 +33,7 @@ export const a11yData = [
 export const panelConfig = {
   text: { type: 'string' as const, title: 'Text to Copy', initialState: 'cmk --check myhost' },
   copiedMessage: { type: 'string' as const, title: 'Copied Message', initialState: 'Copied!' }
-} satisfies PanelConfig
+} satisfies PanelConfigFor<typeof CmkCopy>
 </script>
 
 <script setup lang="ts">

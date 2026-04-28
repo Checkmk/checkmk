@@ -4,7 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script lang="ts">
-import { type Options, type PanelConfig } from '@ucl/_ucl/components/detail-page'
+import { type Options, type PanelConfigFor } from '@ucl/_ucl/components/detail-page'
 
 import type { ButtonVariants } from '@/components/CmkButton'
 
@@ -69,7 +69,7 @@ export const panelConfig = {
     title: 'Title Attribute',
     initialState: ''
   }
-} satisfies PanelConfig
+} satisfies PanelConfigFor<typeof CmkButton>
 </script>
 
 <script setup lang="ts">

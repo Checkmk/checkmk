@@ -4,12 +4,20 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script lang="ts">
-import { type Options, type PanelConfig } from '@ucl/_ucl/components/detail-page'
+import { type Options, type PanelConfigFor } from '@ucl/_ucl/components/detail-page'
+import type { BoolPropDef, StringPropDef } from '@ucl/_ucl/types/prop-def'
 
 import { type CmkIconProps } from '@/components/CmkIcon'
 import type { SlideInVariants } from '@/components/CmkSlideIn'
 
 import codeExample from './UclCmkSlideInDialogCodeExample.vue?raw'
+
+type OmittedProps = 'isIndexPage' | 'stackPriority' | 'header'
+type CmkSlideInDialogDemoProps = PanelConfigFor<typeof CmkSlideInDialog, OmittedProps> & {
+  title: StringPropDef
+  showCloseButton: BoolPropDef
+  showIcon: BoolPropDef
+}
 
 export const a11yData = [
   {
@@ -67,7 +75,7 @@ export const panelConfig = {
     ] satisfies Options<SlideInVariants['borderColor']>[],
     initialState: 'default' as const
   }
-} satisfies PanelConfig
+} satisfies CmkSlideInDialogDemoProps
 </script>
 
 <script setup lang="ts">

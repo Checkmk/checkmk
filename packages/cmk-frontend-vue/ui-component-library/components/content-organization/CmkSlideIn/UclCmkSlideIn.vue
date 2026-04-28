@@ -4,7 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script lang="ts">
-import { type Options, type PanelConfig } from '@ucl/_ucl/components/detail-page'
+import { type Options, type PanelConfigFor } from '@ucl/_ucl/components/detail-page'
 
 import { type SlideInVariants } from '@/components/CmkSlideIn'
 
@@ -64,7 +64,10 @@ export const panelConfig = {
     ] satisfies Options<SlideInVariants['borderColor']>[],
     initialState: 'default' as const
   }
-} satisfies PanelConfig
+} satisfies PanelConfigFor<
+  typeof CmkSlideIn,
+  'isIndexPage' | 'stackPriority' | 'initialFocusTarget'
+>
 </script>
 
 <script setup lang="ts">

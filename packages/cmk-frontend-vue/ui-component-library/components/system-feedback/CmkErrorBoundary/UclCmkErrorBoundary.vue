@@ -4,8 +4,6 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script lang="ts">
-import { type PanelConfig } from '@ucl/_ucl/components/detail-page'
-
 import codeExample from './UclCmkErrorBoundaryCodeExample.vue?raw'
 
 export const panelConfig = {
@@ -30,6 +28,7 @@ export const a11yData = [
 
 <script setup lang="ts">
 import {
+  type PanelConfig,
   UclDetailPageAccessibility,
   UclDetailPageCodeExample,
   UclDetailPageComponent,

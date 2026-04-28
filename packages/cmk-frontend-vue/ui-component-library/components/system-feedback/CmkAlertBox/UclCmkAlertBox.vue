@@ -4,7 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script lang="ts">
-import { type Options, type PanelConfig } from '@ucl/_ucl/components/detail-page'
+import { type Options, type PanelConfigFor } from '@ucl/_ucl/components/detail-page'
 
 import { type Sizes, type Variants } from '@/components/CmkAlertBox.vue'
 
@@ -36,7 +36,7 @@ export const panelConfig = {
   heading: { type: 'string' as const, title: 'Heading', initialState: 'Alert Heading' },
   dismissible: { type: 'boolean' as const, title: 'Dismissable', initialState: false },
   autoDismiss: { type: 'boolean' as const, title: 'Auto Dismiss (6s)', initialState: false }
-} satisfies PanelConfig
+} satisfies PanelConfigFor<typeof CmkAlertBox>
 </script>
 
 <script setup lang="ts">

@@ -4,7 +4,8 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script lang="ts">
-import { type Options, type PanelConfig } from '@ucl/_ucl/components/detail-page'
+import { type Options, type PanelConfigFor } from '@ucl/_ucl/components/detail-page'
+import type { ListPropDef } from '@ucl/_ucl/types/prop-def'
 
 import codeExample from './UclCmkWizardCodeExample.vue?raw'
 
@@ -43,7 +44,7 @@ export const panelConfig = {
     ],
     initialState: '1'
   }
-} satisfies PanelConfig
+} satisfies PanelConfigFor<typeof CmkWizard, 'modelValue'> & { currentStep: ListPropDef }
 </script>
 
 <script setup lang="ts">

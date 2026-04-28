@@ -4,7 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script lang="ts">
-import { type Options, type PanelConfig } from '@ucl/_ucl/components/detail-page'
+import { type Options, type PanelConfigFor } from '@ucl/_ucl/components/detail-page'
 
 import { type ButtonVariants } from '@/components/CmkButton'
 import type { DismissalButtonKey } from '@/components/CmkDialog.vue'
@@ -54,7 +54,7 @@ export const panelConfig = {
   },
   buttons: { type: 'boolean' as const, title: 'Buttons', initialState: true },
   dismissal_button: { type: 'boolean' as const, title: 'Dismissal Button', initialState: false }
-} satisfies PanelConfig
+} satisfies PanelConfigFor<typeof CmkDialog>
 </script>
 
 <script setup lang="ts">

@@ -4,7 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script lang="ts">
-import { type PanelConfig } from '@ucl/_ucl/components/detail-page'
+import { type PanelConfigFor } from '@ucl/_ucl/components/detail-page'
 
 import codeExample from './UclCmkPerfometerCodeExample.vue?raw'
 
@@ -28,7 +28,7 @@ export const panelConfig = {
     ],
     initialState: 'green'
   }
-} satisfies PanelConfig
+} satisfies PanelConfigFor<typeof CmkPerfometer>
 </script>
 
 <script setup lang="ts">

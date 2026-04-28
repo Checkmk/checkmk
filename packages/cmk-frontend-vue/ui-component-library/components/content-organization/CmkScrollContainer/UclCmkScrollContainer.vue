@@ -4,7 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script lang="ts">
-import { type Options, type PanelConfig } from '@ucl/_ucl/components/detail-page'
+import { type Options, type PanelConfigFor } from '@ucl/_ucl/components/detail-page'
 
 import { type ScrollContainerVariants } from '@/components/CmkScrollContainer.vue'
 
@@ -38,7 +38,7 @@ export const panelConfig = {
   },
   height: { type: 'string' as const, title: 'Fixed Height', initialState: '100%' },
   maxHeight: { type: 'string' as const, title: 'Max Height', initialState: '200px' }
-} satisfies PanelConfig
+} satisfies PanelConfigFor<typeof CmkScrollContainer>
 </script>
 
 <script setup lang="ts">

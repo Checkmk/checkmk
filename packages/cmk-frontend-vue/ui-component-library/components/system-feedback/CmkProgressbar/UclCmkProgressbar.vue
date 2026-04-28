@@ -4,9 +4,9 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script lang="ts">
-import { type Options, type PanelConfig } from '@ucl/_ucl/components/detail-page'
+import { type Options, type PanelConfigFor } from '@ucl/_ucl/components/detail-page'
 
-import { type Sizes } from '@/components/CmkProgressbar.vue'
+import type { Sizes } from '@/components/CmkProgressbar.vue'
 
 import codeExample from './UclCmkProgressbarCodeExample.vue?raw'
 
@@ -29,7 +29,7 @@ export const panelConfig = {
     initialState: 'medium' as const
   },
   label: { type: 'boolean' as const, title: 'label', initialState: true }
-} satisfies PanelConfig
+} satisfies PanelConfigFor<typeof CmkProgressbar>
 </script>
 
 <script setup lang="ts">

@@ -3,6 +3,7 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
+import type { ComponentProps } from 'vue-component-type-helpers'
 
 export interface BoolPropDef {
   type: 'boolean'
@@ -56,3 +57,11 @@ export type PropDef =
   | StringArrayPropDef
 
 export type PanelConfig = Record<string, PropDef>
+
+type InternalVueProps = 'key' | 'ref' | 'ref_for' | 'ref_key' | 'class' | 'style' | `on${string}`
+
+type UserProps<T> = Omit<ComponentProps<T>, InternalVueProps>
+
+export type PanelConfigFor<T, TOmit extends keyof UserProps<T> = never> = {
+  [K in keyof UserProps<T> as K extends TOmit ? never : K]-?: PropDef
+}

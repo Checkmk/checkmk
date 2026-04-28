@@ -4,7 +4,8 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script lang="ts">
-import { type Options, type PanelConfig } from '@ucl/_ucl/components/detail-page'
+import { type Options, type PanelConfigFor } from '@ucl/_ucl/components/detail-page'
+import type { BoolPropDef, MultilineStringPropDef } from '@ucl/_ucl/types/prop-def'
 
 import { type HeadingType } from '@/components/typography/CmkHeading.vue'
 
@@ -33,7 +34,10 @@ export const panelConfig = {
     initialState: false,
     help: 'When enabled, passes a click handler to the heading.'
   }
-} satisfies PanelConfig
+} satisfies PanelConfigFor<typeof CmkHeading> & {
+  text: MultilineStringPropDef
+  onClick: BoolPropDef
+}
 </script>
 
 <script setup lang="ts">

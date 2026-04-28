@@ -4,7 +4,8 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script lang="ts">
-import { type Options, type PanelConfig } from '@ucl/_ucl/components/detail-page'
+import { type Options, type PanelConfigFor } from '@ucl/_ucl/components/detail-page'
+import type { StringArrayPropDef } from '@ucl/_ucl/types/prop-def'
 
 import { type HeadingType } from '@/components/typography/CmkHeading.vue'
 
@@ -45,7 +46,7 @@ export const panelConfig = {
     initialState: ['item-1'],
     help: 'Type: string[]. IDs must match the value prop of each CmkAccordionItem. In the UCL app, enter one ID per line in the textarea, e.g.:item-1 item-2 item-3'
   }
-} satisfies PanelConfig
+} satisfies PanelConfigFor<typeof CmkAccordion, 'modelValue'> & { openedItems: StringArrayPropDef }
 export const itemPanelConfig = {
   headerAs: {
     type: 'list' as const,
@@ -65,7 +66,7 @@ export const itemPanelConfig = {
     initialState: false,
     help: 'Disables all items in the accordion.'
   }
-} satisfies PanelConfig
+} satisfies PanelConfigFor<typeof CmkAccordionItem, 'value'>
 </script>
 
 <script setup lang="ts">

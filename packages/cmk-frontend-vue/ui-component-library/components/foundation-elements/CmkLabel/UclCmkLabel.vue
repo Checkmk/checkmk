@@ -4,7 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script lang="ts">
-import { type Options, type PanelConfig } from '@ucl/_ucl/components/detail-page'
+import { type Options, type PanelConfigFor } from '@ucl/_ucl/components/detail-page'
 
 import { type LabelProps } from '@/components/CmkLabel.vue'
 
@@ -40,7 +40,7 @@ export const panelConfig = {
     title: 'Help Text',
     initialState: ''
   }
-} satisfies PanelConfig
+} satisfies PanelConfigFor<typeof CmkLabel, 'for'>
 </script>
 
 <script setup lang="ts">

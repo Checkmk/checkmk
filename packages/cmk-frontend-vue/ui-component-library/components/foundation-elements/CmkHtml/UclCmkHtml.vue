@@ -4,7 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script lang="ts">
-import { type PanelConfig } from '@ucl/_ucl/components/detail-page'
+import { type PanelConfigFor } from '@ucl/_ucl/components/detail-page'
 
 import codeExample from './UclCmkHtmlCodeExample.vue?raw'
 
@@ -16,7 +16,7 @@ export const panelConfig = {
     title: 'html',
     initialState: "<h1>Heading</h1> <b>bold</b> and <a href='https://checkmk.com'>link</a>"
   }
-} satisfies PanelConfig
+} satisfies PanelConfigFor<typeof CmkHtml, 'allowedClasses'>
 </script>
 
 <script setup lang="ts">

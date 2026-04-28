@@ -3,29 +3,69 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Mapping
 
-from cmk.gui.agent_bakery import RulespecGroupMonitoringAgentsAgentPlugins
-from cmk.gui.i18n import _
-from cmk.gui.plugins.wato.utils import HostRulespec, rulespec_registry
-from cmk.gui.valuespec import DropdownChoice
-from cmk.utils.rulesets.definition import RuleGroup
+from cmk.rulesets.v1 import Help, Title
+from cmk.rulesets.v1.form_specs import (
+    CascadingSingleChoice,
+    CascadingSingleChoiceElement,
+    DefaultValue,
+    DictElement,
+    Dictionary,
+    FixedValue,
+    TimeMagnitude,
+    TimeSpan,
+)
+from cmk.rulesets.v1.rule_specs import AgentConfig, Topic
 
 
-def _valuespec_agent_config_mk_sshd_config() -> DropdownChoice[bool]:
-    return DropdownChoice(
-        title=_("SSH daemon configuration (Linux)"),
-        help=_("Deploy the agent plug-in <tt>mk_sshd_config</tt>."),
-        choices=[
-            (True, _("Deploy the SSH daemon configuration plug-in")),
-            (None, _("Do not deploy the SSH daemon configuration plug-in")),
-        ],
+def migrate(value: object) -> Mapping[str, object]:
+    if isinstance(value, dict):
+        return value
+    return {"deployment": ("sync" if value else "do_not_deploy", None)}
+
+
+def _form_spec_agent_config_mk_sshd_config() -> Dictionary:
+    return Dictionary(
+        help_text=Help("Deploy the agent plug-in <tt>mk_sshd_config</tt>."),
+        elements={
+            "deployment": DictElement(
+                required=True,
+                parameter_form=CascadingSingleChoice(
+                    title=Title("Deployment type"),
+                    elements=(
+                        CascadingSingleChoiceElement(
+                            name="sync",
+                            title=Title("Deploy the plug-in and run it synchronously"),
+                            parameter_form=FixedValue(value=None),
+                        ),
+                        CascadingSingleChoiceElement(
+                            name="cached",
+                            title=Title("Deploy the plug-in and run it asynchronously"),
+                            parameter_form=TimeSpan(
+                                displayed_magnitudes=(
+                                    TimeMagnitude.HOUR,
+                                    TimeMagnitude.MINUTE,
+                                )
+                            ),
+                        ),
+                        CascadingSingleChoiceElement(
+                            name="do_not_deploy",
+                            title=Title("Do not deploy the plug-in"),
+                            parameter_form=FixedValue(value=None),
+                        ),
+                    ),
+                    prefill=DefaultValue("sync"),
+                ),
+            ),
+        },
+        migrate=migrate,
     )
 
 
-rulespec_registry.register(
-    HostRulespec(
-        group=RulespecGroupMonitoringAgentsAgentPlugins,
-        name=RuleGroup.AgentConfig("mk_sshd_config"),
-        valuespec=_valuespec_agent_config_mk_sshd_config,
-    )
+rule_spec_mk_sshd_config = AgentConfig(
+    title=Title("SSH daemon configuration (Linux)"),
+    name="mk_sshd_config",
+    topic=Topic.APPLICATIONS,
+    parameter_form=_form_spec_agent_config_mk_sshd_config,
 )

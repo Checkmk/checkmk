@@ -3,31 +3,22 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Sequence
-
-from cmk.base import notify
+from cmk.base.base_app import CheckmkBaseApp
+from cmk.base.core.nagios.factory import create_core
+from cmk.base.modes.check_mk import general_options
+from cmk.base.modes.modes import Modes
 from cmk.ccc.version import Edition
 from cmk.fetchers import PlainFetcherTrigger
 from cmk.licensing.community_handler import CommunityLicensingHandler
 from cmk.utils.labels import get_builtin_host_labels
 from cmk.utils.paths import omd_root
 
-from . import diagnostics, localize
-from .base_app import CheckmkBaseApp
-from .core.nagios.factory import create_core
-from .modes.check_mk import general_options, modes_common
-from .modes.modes import Mode, Modes
-
 
 def make_app() -> CheckmkBaseApp:
-    modes = _modes(
-        [
-            *modes_common(),
-            diagnostics.mode_create_diagnostics_dump,
-            localize.mode_localize,
-            notify.mode_notify,
-        ]
-    )
+    modes = Modes()
+    for option in general_options():
+        modes.register_general_option(option)
+    modes.discover()
 
     return CheckmkBaseApp(
         edition=Edition.COMMUNITY,
@@ -40,15 +31,3 @@ def make_app() -> CheckmkBaseApp:
         get_builtin_host_labels=get_builtin_host_labels,
         core_performance_settings=lambda _: {},
     )
-
-
-def _modes(reg_modes: Sequence[Mode]) -> Modes:
-    modes = Modes()
-
-    for option in general_options():
-        modes.register_general_option(option)
-
-    for mode in reg_modes:
-        modes.register(mode)
-
-    return modes

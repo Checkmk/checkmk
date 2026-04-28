@@ -3680,34 +3680,3 @@ mode_help = Mode(
     handler_function=_mode_help,
     short_help="Print this help",
 )
-
-
-def modes_common() -> list[Mode]:
-    return [
-        mode_help,
-        mode_list_hosts,
-        mode_list_tag,
-        mode_list_checks,
-        mode_dump_agent,
-        mode_dump,
-        mode_package,
-        mode_update_dns_cache,
-        mode_cleanup_piggyback,
-        mode_snmptranslate,
-        mode_snmpwalk,
-        mode_snmpget,
-        mode_flush,
-        mode_nagios_config,
-        mode_update,
-        mode_restart,
-        mode_reload,
-        mode_man,
-        mode_browse_man,
-        mode_automation,
-        mode_check_discovery,
-        mode_discover,
-        mode_check,
-        mode_inventory,
-        mode_inventorize_marked_hosts,
-        mode_version,
-    ]

@@ -18,6 +18,7 @@ from cmk.utils.log import VERBOSE
 
 __all__ = ["mode_localize"]
 
+
 logger = logging.getLogger("cmk.base.localize")
 
 LanguageName = str

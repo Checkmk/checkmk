@@ -19,6 +19,7 @@ from typing import TYPE_CHECKING
 from cmk import trace
 from cmk.ccc import tty
 from cmk.ccc.exceptions import MKGeneralException
+from cmk.discover_plugins import discover_plugins_from_modules
 from cmk.utils.log import console
 
 if TYPE_CHECKING:
@@ -42,6 +43,29 @@ class Modes:
         self._mode_map: dict[OptionName, Mode] = {}
         self._modes: list[Mode] = []
         self._general_options: list[Option] = []
+
+    def discover(self) -> None:
+        discovery_result = discover_plugins_from_modules(
+            plugin_prefixes={Mode: "mode_"},
+            module_names_by_priority=[
+                # TODO: We need to get rid of this hard-coded list
+                "cmk.base.modes.check_mk",
+                "cmk.base.diagnostics",
+                "cmk.base.localize",
+                "cmk.base.notify",
+                "cmk.bakery.base.cap",
+                "cmk.base.nonfree.alert_handling",
+                "cmk.base.nonfree.dump_protobufs",
+                "cmk.base.nonfree.cmc_helpers",
+                "cmk.base.nonfree.convert_rrds",
+                "cmk.base.nonfree.compress_history",
+                "cmk.bakery.base.mode",  # non-free, optional
+            ],
+            skip_wrong_types=True,
+            raise_errors=False,  # non-free modes are expected to be missing.
+        )
+        for mode in discovery_result.plugins.values():
+            self.register(mode)
 
     def register(self, mode: Mode) -> None:
         self._modes.append(mode)

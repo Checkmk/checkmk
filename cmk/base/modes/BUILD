@@ -13,6 +13,7 @@ py_library(
         "//cmk/utils",
         "//packages/cmk-ccc:exceptions",
         "//packages/cmk-ccc:tty",
+        "//packages/cmk-plugin-apis:discover_plugins",
         "//packages/cmk-trace",
     ],
 )

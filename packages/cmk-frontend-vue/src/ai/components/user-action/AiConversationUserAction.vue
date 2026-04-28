@@ -39,7 +39,10 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="ai-conversation-user-action__container">
+  <div
+    class="ai-conversation-user-action__container"
+    data-testid="ai-conversation-user-action-container"
+  >
     <CmkHeading v-if="userActions && userActions.filter((a) => !a.executed).length > 0" type="h4"
       >{{ _t('What would you like the AI to do?') }}
     </CmkHeading>
@@ -47,6 +50,7 @@ onMounted(async () => {
       <AiConversationUserActionButton
         v-for="action in userActions.filter((a) => !a.executed)"
         :key="action.action_id"
+        :data-testid="`ai-conversation-action-${action.action_id}`"
         v-bind="action"
         @click="aiTemplate?.execUserActionButton(action)"
       />

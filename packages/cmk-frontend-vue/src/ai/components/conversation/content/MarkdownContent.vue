@@ -47,6 +47,7 @@ watch(
   <div
     class="ai-markdown-content"
     :class="{ 'ai-markdown-content--thinking': props.title === 'thinking' }"
+    data-testid="ai-markdown-content"
     v-html="typedText"
   ></div>
   <!-- eslint-enable vue/no-v-html -->

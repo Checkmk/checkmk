@@ -24,7 +24,9 @@ onMounted(() => {
 </script>
 
 <template>
-  <CmkAlertBox :variant="variant">{{ text }}</CmkAlertBox>
+  <div :data-testid="`ai-conversation-alert-${variant}`">
+    <CmkAlertBox :variant="variant">{{ text }}</CmkAlertBox>
+  </div>
 </template>
 
 <style scoped>

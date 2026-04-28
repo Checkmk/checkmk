@@ -361,11 +361,19 @@ watch(
       <CmkIcon name="sparkle" size="xlarge" />
       <div class="ai-conversation-element__ai-header-text">
         <CmkHeading type="h2">{{ _t('AI-generated answer') }}</CmkHeading>
-        <div v-if="isHeaderLoading" class="ai-conversation-element__loader">
+        <div
+          v-if="isHeaderLoading"
+          class="ai-conversation-element__loader"
+          data-testid="ai-conversation-header-loading"
+        >
           <CmkIcon name="load-graph" size="large" class="ai-conversation-element__text-loader" />
           <label>{{ headerLoadingText }}</label>
         </div>
-        <div v-else-if="isHeaderThinking" class="ai-conversation-element__loader">
+        <div
+          v-else-if="isHeaderThinking"
+          class="ai-conversation-element__loader"
+          data-testid="ai-conversation-header-thinking"
+        >
           <CmkIcon name="load-graph" size="large" class="ai-conversation-element__text-loader" />
           <label>{{ _t('Thinking...') }}</label>
         </div>

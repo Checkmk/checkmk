@@ -59,6 +59,7 @@ function onConsent() {
     v-if="disclaimerActive"
     class="ai-conversation-disclaimer"
     :class="{ 'ai-conversation-disclaimer--triggered': consentTriggered }"
+    data-testid="ai-conversation-disclaimer"
   >
     <CmkHeading type="h1" class="ai-conversation-disclaimer__header">
       {{ legal.disclaimer_title }}

@@ -1,0 +1,18 @@
+title: NVIDIA Graphics Card: Fan speed
+agents: linux, windows
+catalog: os/hardware
+license: GPLv2
+distribution: check_mk
+description:
+ This check monitors the fan speed of an NVIDIA graphics card
+ using the command line tool {nvidia-smi}.
+ The check only works if that tool is installed.
+
+ You can configure upper levels for fan speed.
+
+item:
+ PCI bus ID of the graphics card
+
+discovery:
+ One service is created for each available graphics card if fan speed
+ is available.

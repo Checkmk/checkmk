@@ -105,7 +105,7 @@ STRING_TABLE = [
     ["<tx_util>16000 KB/s</tx_util>"],
     ["<rx_util>18000 KB/s</rx_util>"],
     ["</pci>"],
-    ["<fan_speed>0 %</fan_speed>"],
+    ["<fan_speed>10 %</fan_speed>"],
     ["<performance_state>P0</performance_state>"],
     ["<fb_memory_usage>"],
     ["<total>8192 MiB</total>"],
@@ -268,6 +268,7 @@ SECTION = nvidia_smi.Section(
                 encoder_util=3.0,
                 decoder_util=8.0,
             ),
+            fan_speed=10.0,
         )
     },
 )
@@ -581,3 +582,51 @@ def test_check_nvidia_smi_memory_util(
     expected_result: CheckResult,
 ) -> None:
     assert list(nvidia_smi.check_nvidia_smi_memory_util(item, params, section)) == expected_result
+
+
+@pytest.mark.parametrize(
+    "section, expected_result",
+    [
+        (
+            SECTION,
+            [Service(item="00000000:0B:00.0")],
+        ),
+    ],
+)
+def test_discover_nvidia_smi_fan_speed(
+    section: nvidia_smi.Section,
+    expected_result: DiscoveryResult,
+) -> None:
+    assert list(nvidia_smi.discover_nvidia_smi_fan_speed(section)) == expected_result
+
+
+@pytest.mark.parametrize(
+    "item, params, section, expected_result",
+    [
+        (
+            "00000000:0B:00.0",
+            {},
+            SECTION,
+            [
+                Result(state=State.OK, summary="Speed: 10.00%"),
+                Metric("fan_speed", 10.0),
+            ],
+        ),
+        (
+            "00000000:0B:00.0",
+            nvidia_smi.GenericLevelsParam(levels=(5.0, 8.0)),
+            SECTION,
+            [
+                Result(state=State.CRIT, summary="Speed: 10.00% (warn/crit at 5.00%/8.00%)"),
+                Metric("fan_speed", 10.0, levels=(5.0, 8.0)),
+            ],
+        ),
+    ],
+)
+def test_check_nvidia_smi_fan_speed(
+    item: str,
+    params: nvidia_smi.GenericLevelsParam,
+    section: nvidia_smi.Section,
+    expected_result: CheckResult,
+) -> None:
+    assert list(nvidia_smi.check_nvidia_smi_fan_speed(item, params, section)) == expected_result

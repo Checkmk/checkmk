@@ -103,6 +103,7 @@ class GPU(BaseModel):
     power_readings: PowerReadings
     temperature: Temperature
     utilization: Utilization
+    fan_speed: float | None
 
 
 class Section(BaseModel):
@@ -250,6 +251,7 @@ def parse_nvidia_smi(string_table: StringTable) -> Section:
                     encoder_util=get_float_from_element(gpu.find("utilization/encoder_util"), "%"),
                     decoder_util=get_float_from_element(gpu.find("utilization/decoder_util"), "%"),
                 ),
+                fan_speed=get_float_from_element(gpu.find("fan_speed"), "%"),
             )
             for gpu in xml.findall("gpu")
         },
@@ -524,4 +526,39 @@ check_plugin_nvidia_smi_memory_util = CheckPlugin(
     check_ruleset_name="nvidia_smi_memory_util",
     check_default_parameters=MemoryParams(levels_total=None, levels_bar1=None, levels_fb=None),
     check_function=check_nvidia_smi_memory_util,
+)
+
+
+def discover_nvidia_smi_fan_speed(section: Section) -> DiscoveryResult:
+    for gpu_id, gpu in section.gpus.items():
+        if gpu.fan_speed is not None:
+            yield Service(item=gpu_id)
+
+
+def check_nvidia_smi_fan_speed(
+    item: str,
+    params: GenericLevelsParam,
+    section: Section,
+) -> CheckResult:
+    if not (gpu := section.gpus.get(item)):
+        return
+    if gpu.fan_speed is None:
+        return
+    yield from check_levels_v1(
+        gpu.fan_speed,
+        levels_upper=params.get("levels"),
+        render_func=render.percent,
+        metric_name="fan_perc",
+        label="Speed",
+    )
+
+
+check_plugin_nvidia_smi_fan_speed = CheckPlugin(
+    name="nvidia_smi_fan_speed",
+    service_name="Nvidia GPU fan speed %s",
+    sections=["nvidia_smi"],
+    discovery_function=discover_nvidia_smi_fan_speed,
+    check_ruleset_name="nvidia_smi_fan_speed",
+    check_default_parameters={},
+    check_function=check_nvidia_smi_fan_speed,
 )

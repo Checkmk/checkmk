@@ -73,6 +73,24 @@ def urlencode(value: str | None) -> str:
     return "" if value is None else quote_plus(value)
 
 
+_TRUTHY_QUERY_VALUES = frozenset({"1", "t", "true", "y", "yes", "on"})
+
+
+def is_kiosk_request(request: Request) -> bool:
+    """Whether the request opted into chromeless 'kiosk' mode via a truthy ?kiosk=<value>."""
+    value = request.var("kiosk")
+    return value is not None and value.strip().lower() in _TRUTHY_QUERY_VALUES
+
+
+def add_kiosk_to_url(url: str) -> str:
+    """Set kiosk=true on a URL, deduping any existing kiosk param and respecting fragments."""
+    parts = urllib.parse.urlsplit(url)
+    qs_map = dict(urllib.parse.parse_qsl(parts.query, keep_blank_values=True))
+    qs_map["kiosk"] = "true"
+    query = urllib.parse.urlencode(list(qs_map.items()))
+    return urllib.parse.urlunsplit(parts._replace(query=query))
+
+
 def _file_name_from_path(
     path: str,
     on_error: Literal["raise", "ignore"] = "ignore",

@@ -420,13 +420,13 @@ class PageMenu:
         )
 
 
-def _make_filtered_url(request_: Request) -> str:
+def _make_filtered_url(request_: Request, *, exclude: tuple[str, ...] = ()) -> str:
     """Make a URI from the request, filtering out sensitive variables."""
     sensitive_markers = ("_password", "_passphrase", "_secret")
     vars_: HTTPVariables = [
         (v, val)
         for v, val in request_.itervars()
-        if v[0] != "_" and not any(marker in v for marker in sensitive_markers)
+        if v[0] != "_" and v not in exclude and not any(marker in v for marker in sensitive_markers)
     ]
 
     url = urlencode(requested_file_name(request_)) + ".py"
@@ -437,14 +437,17 @@ def _make_filtered_url(request_: Request) -> str:
 
 
 def _with_navigation(request_: Request) -> Link:
+    """Link to enter kiosk mode (chrome hidden)."""
+    start_url = _make_filtered_url(request_, exclude=("kiosk",))
     return Link(
-        url=_make_filtered_url(request_),
+        url=f"index.py?{urlencode_vars([('start_url', start_url)])}&kiosk=true",
         target="_top",
     )
 
 
 def _without_navigation(request_: Request) -> Link:
-    start_url = _make_filtered_url(request_)
+    """Link to leave kiosk mode (chrome restored)."""
+    start_url = _make_filtered_url(request_, exclude=("kiosk",))
     return Link(
         url=f"index.py?{urlencode_vars([('start_url', start_url)])}",
         target="_top",

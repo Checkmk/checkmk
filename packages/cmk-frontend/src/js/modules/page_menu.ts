@@ -338,16 +338,19 @@ export function inpage_search_init(
   }
 }
 
+function is_kiosk_url(search: string): boolean {
+  return new URLSearchParams(search).has('kiosk')
+}
+
 export function toggle_navigation_page_menu_entry() {
-  const iframe = window.frameElement
   const hide_navigation = document.getElementById('menu_entry_hide_navigation')!
   const show_navigation = document.getElementById('menu_entry_show_navigation')!
 
-  if (iframe !== null) {
-    remove_class(hide_navigation, 'hidden')
-    add_class(show_navigation, 'hidden')
-  } else {
+  if (is_kiosk_url(window.location.search)) {
     remove_class(show_navigation, 'hidden')
     add_class(hide_navigation, 'hidden')
+  } else {
+    remove_class(hide_navigation, 'hidden')
+    add_class(show_navigation, 'hidden')
   }
 }

@@ -10,10 +10,12 @@ from cmk.gui.http import Request
 from cmk.gui.logged_in import user
 from cmk.gui.type_defs import HTTPVariables
 from cmk.gui.utils.urls import (
+    add_kiosk_to_url,
     doc_reference_url,
     DocReference,
     DocReferenceUtm,
     get_docs_base_url,
+    is_kiosk_request,
     makeuri_contextless,
     urlencode,
     urlencode_vars,
@@ -107,3 +109,74 @@ def test_makeuri_contextless_no_variables() -> None:
     expected = "wato.py"
 
     assert value == expected
+
+
+@pytest.mark.parametrize(
+    "query_string,expected",
+    [
+        pytest.param("", False, id="empty query"),
+        pytest.param("name=foo", False, id="no kiosk var"),
+        pytest.param("kiosk=true", True, id="kiosk true"),
+        pytest.param("kiosk=TRUE", True, id="kiosk true uppercase"),
+        pytest.param("kiosk=1", True, id="kiosk 1"),
+        pytest.param("kiosk=yes", True, id="kiosk yes"),
+        pytest.param("kiosk=on", True, id="kiosk on"),
+        pytest.param("kiosk=t", True, id="kiosk t"),
+        pytest.param("kiosk=y", True, id="kiosk y"),
+        pytest.param("kiosk=%20true%20", True, id="kiosk true whitespace padded"),
+        pytest.param("kiosk=false", False, id="kiosk false is not truthy"),
+        pytest.param("kiosk=0", False, id="kiosk 0 is not truthy"),
+        pytest.param("kiosk=no", False, id="kiosk no is not truthy"),
+        pytest.param("kiosk=off", False, id="kiosk off is not truthy"),
+        pytest.param("kiosk=", False, id="kiosk empty value not truthy"),
+        pytest.param("kiosk", False, id="kiosk bare flag not truthy"),
+        pytest.param("name=foo&kiosk=true", True, id="kiosk alongside other vars"),
+    ],
+)
+def test_is_kiosk_request(query_string: str, expected: bool) -> None:
+    assert is_kiosk_request(Request(create_environ(query_string=query_string))) is expected
+
+
+@pytest.mark.parametrize(
+    "url,expected",
+    [
+        pytest.param("dashboard.py", "dashboard.py?kiosk=true", id="plain path kiosk appended"),
+        pytest.param(
+            "dashboard.py?name=foo",
+            "dashboard.py?name=foo&kiosk=true",
+            id="existing query kiosk appended at end",
+        ),
+        pytest.param(
+            "dashboard.py?b=2&a=1",
+            "dashboard.py?b=2&a=1&kiosk=true",
+            id="existing query order preserved",
+        ),
+        pytest.param(
+            "dashboard.py?kiosk=true",
+            "dashboard.py?kiosk=true",
+            id="already kiosk deduped",
+        ),
+        pytest.param(
+            "dashboard.py?kiosk=true&name=foo",
+            "dashboard.py?kiosk=true&name=foo",
+            id="already kiosk position preserved",
+        ),
+        pytest.param(
+            "dashboard.py?kiosk=false",
+            "dashboard.py?kiosk=true",
+            id="kiosk value overwritten to true",
+        ),
+        pytest.param(
+            "dashboard.py#anchor",
+            "dashboard.py?kiosk=true#anchor",
+            id="fragment preserved kiosk before",
+        ),
+        pytest.param(
+            "dashboard.py?name=foo#anchor",
+            "dashboard.py?name=foo&kiosk=true#anchor",
+            id="fragment preserved with existing query",
+        ),
+    ],
+)
+def test_add_kiosk_to_url(url: str, expected: str) -> None:
+    assert add_kiosk_to_url(url) == expected

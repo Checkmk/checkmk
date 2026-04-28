@@ -81,3 +81,40 @@ def test_get_start_url_invalid_config(monkeypatch: MonkeyPatch) -> None:
     with monkeypatch.context() as m:
         m.setattr(user, "attributes", {"start_url": "http://asdasd/"})
         assert cmk.gui.main._get_start_url(Request(create_environ()), Config()) == "dashboard.py"
+
+
+@pytest.mark.parametrize(
+    "query_string,kiosk,expected",
+    [
+        pytest.param("", False, "dashboard.py", id="kiosk false is no-op on empty"),
+        pytest.param(
+            "start_url=dashboard.py?name=foo",
+            False,
+            "dashboard.py?name=foo",
+            id="kiosk false is no-op with start_url",
+        ),
+        pytest.param("", True, "dashboard.py?kiosk=true", id="kiosk true appends to empty"),
+        pytest.param(
+            "start_url=dashboard.py?name=foo",
+            True,
+            "dashboard.py?name=foo&kiosk=true",
+            id="kiosk true appends at end of query",
+        ),
+        pytest.param(
+            "start_url=dashboard.py%3Fkiosk%3Dtrue%26name%3Dfoo",
+            True,
+            "dashboard.py?kiosk=true&name=foo",
+            id="encoded inner separators dedupe kiosk",
+        ),
+        pytest.param(
+            "start_url=dashboard.py%23anchor",
+            True,
+            "dashboard.py?kiosk=true#anchor",
+            id="kiosk lands before fragment",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("request_context")
+def test_get_start_url_kiosk(query_string: str, kiosk: bool, expected: str) -> None:
+    request = Request(create_environ(query_string=query_string))
+    assert cmk.gui.main._get_start_url(request, Config(), kiosk=kiosk) == expected

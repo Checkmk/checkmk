@@ -434,6 +434,7 @@ class SidebarRenderer:
         start_url: str,
         show_scrollbar: bool,
         sidebar_update_interval: float,
+        kiosk: bool,
     ) -> None:
         # TODO: Right now the method renders the full HTML page, i.e.
         # the header, sidebar, and page content. Ideally we should
@@ -458,24 +459,31 @@ class SidebarRenderer:
         )
 
         self._show_body_start(
-            screenshot_mode=screenshot_mode, sidebar_notify_interval=sidebar_notify_interval
+            screenshot_mode=screenshot_mode,
+            sidebar_notify_interval=sidebar_notify_interval,
+            kiosk=kiosk,
         )
-        self._show_sidebar(
-            config,
-            user_permissions,
-            sidebar_config,
-            start_url,
-            show_scrollbar=show_scrollbar,
-            sidebar_update_interval=sidebar_update_interval,
-        )
+        if not kiosk:
+            self._show_sidebar(
+                config,
+                user_permissions,
+                sidebar_config,
+                start_url,
+                show_scrollbar=show_scrollbar,
+                sidebar_update_interval=sidebar_update_interval,
+            )
         self._show_page_content(content)
 
         html.body_end()
 
     def _show_body_start(
-        self, *, screenshot_mode: bool, sidebar_notify_interval: int | None
+        self, *, screenshot_mode: bool, sidebar_notify_interval: int | None, kiosk: bool
     ) -> None:
-        body_classes = ["side"] + (["screenshotmode"] if screenshot_mode else [])
+        body_classes = ["side"]
+        if screenshot_mode:
+            body_classes.append("screenshotmode")
+        if kiosk:
+            body_classes.append("kiosk")
 
         if not user.may("general.see_sidebar"):
             html.open_body(class_=body_classes, data_theme=theme.get())
@@ -763,6 +771,7 @@ def page_side(ctx: PageContext) -> None:
         start_url=ctx.config.start_url,
         show_scrollbar=ctx.config.sidebar_show_scrollbar,
         sidebar_update_interval=ctx.config.sidebar_update_interval,
+        kiosk=False,
     )
 
 

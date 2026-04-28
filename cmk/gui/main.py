@@ -14,7 +14,7 @@ from cmk.gui.permissions import permission_registry
 from cmk.gui.sidebar import SidebarRenderer
 from cmk.gui.utils.mobile import is_mobile
 from cmk.gui.utils.roles import UserPermissions
-from cmk.gui.utils.urls import makeuri
+from cmk.gui.utils.urls import add_kiosk_to_url, is_kiosk_request, makeuri
 from cmk.utils.urls import is_allowed_url
 
 
@@ -27,12 +27,13 @@ def page_index(ctx: PageContext) -> None:
     if is_mobile(ctx.request, response):
         raise HTTPRedirect(makeuri(ctx.request, [], filename="mobile.py"))
 
+    kiosk = is_kiosk_request(ctx.request)
     SidebarRenderer().show(
         config=ctx.config,
         user_permissions=UserPermissions.from_config(ctx.config, permission_registry),
         title=get_page_heading(ctx.config),
         content=HTMLWriter.render_iframe(
-            "", src=_get_start_url(ctx.request, ctx.config), name="main"
+            "", src=_get_start_url(ctx.request, ctx.config, kiosk=kiosk), name="main"
         ),
         sidebar_config=ctx.config.sidebar,
         screenshot_mode=ctx.config.screenshotmode,
@@ -40,15 +41,17 @@ def page_index(ctx: PageContext) -> None:
         start_url=ctx.config.start_url,
         show_scrollbar=ctx.config.sidebar_show_scrollbar,
         sidebar_update_interval=ctx.config.sidebar_update_interval,
+        kiosk=kiosk,
     )
 
 
-def _get_start_url(request: Request, config: Config) -> str:
+def _get_start_url(request: Request, config: Config, *, kiosk: bool = False) -> str:
     default_start_url = user.start_url or config.start_url
     if not is_allowed_url(default_start_url):
         default_start_url = "dashboard.py"
 
-    return request.get_url_input("start_url", default_start_url)
+    start_url = request.get_url_input("start_url", default_start_url)
+    return add_kiosk_to_url(start_url) if kiosk else start_url
 
 
 def get_page_heading(config: Config) -> str:

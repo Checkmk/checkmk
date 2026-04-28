@@ -4,8 +4,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import pytest
+from werkzeug.test import create_environ
 
+from cmk.gui.http import Request
 from cmk.gui.page_menu import (
+    _with_navigation,
+    _without_navigation,
     make_external_link,
     make_form_submit_link,
     make_javascript_link,
@@ -107,3 +111,54 @@ def test_simple_page_menu() -> None:
     help_dropdown = pm.dropdowns[2]
     assert help_dropdown.name == "help"
     assert help_dropdown.topics[0].entries[0].name == "inline_help"
+
+
+def _make_request(
+    query_string: str = "", path_info: str = "/NO_SITE/check_mk/dashboard.py"
+) -> Request:
+    return Request(create_environ(path=path_info, query_string=query_string))
+
+
+@pytest.mark.parametrize(
+    "query_string,expected_url",
+    [
+        pytest.param(
+            "",
+            "index.py?start_url=dashboard.py&kiosk=true",
+            id="plain inner path wrapped into index",
+        ),
+        pytest.param(
+            "name=foo&site=bar",
+            "index.py?start_url=dashboard.py%3Fname%3Dfoo%26site%3Dbar&kiosk=true",
+            id="inner vars survive url encoded",
+        ),
+        pytest.param(
+            "kiosk=true&name=foo",
+            "index.py?start_url=dashboard.py%3Fname%3Dfoo&kiosk=true",
+            id="inner kiosk stripped outer is source of truth",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("request_context")
+def test_with_navigation(query_string: str, expected_url: str) -> None:
+    link = _with_navigation(_make_request(query_string=query_string))
+    assert link.url == expected_url
+    assert link.target == "_top"
+
+
+@pytest.mark.parametrize(
+    "query_string,expected_url",
+    [
+        pytest.param("", "index.py?start_url=dashboard.py", id="plain inner path"),
+        pytest.param(
+            "kiosk=true&name=foo&_password=secret&_transid=42",
+            "index.py?start_url=dashboard.py%3Fname%3Dfoo",
+            id="kiosk and underscore sensitive vars stripped",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("request_context")
+def test_without_navigation(query_string: str, expected_url: str) -> None:
+    link = _without_navigation(_make_request(query_string=query_string))
+    assert link.url == expected_url
+    assert link.target == "_top"

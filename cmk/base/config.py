@@ -1800,7 +1800,7 @@ class ConfigCache:
                 self.ruleset_matcher,
                 self.label_manager.labels_of_host,
                 self._loaded_config.checkgroup_parameters,
-                service_rule_groups,
+                self._loaded_config.service_rule_groups,
             ),
             check_plugins,
             _make_service_description_cb(passive_service_name_config, check_plugins),

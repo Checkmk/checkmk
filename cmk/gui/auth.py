@@ -331,13 +331,26 @@ def _check_internal_token(config: Config) -> SiteInternalPseudoUser | None:
     return None
 
 
+# Pages that accept the distributed-setup site secret (``RemoteSite``
+# Authorization scheme). Each entry is the page name of a (registered) page
+# handler that authenticates the caller as a ``RemoteSitePseudoUser`` and
+# either skips user-permission checks or scopes them to the site secret.
+# Keep in sync with the ``PageEndpoint`` registrations using these names.
+_REMOTE_SITE_ALLOWED_PAGES: frozenset[str] = frozenset(
+    {
+        "register_agent",
+        "proxy_download_agent",
+    }
+)
+
+
 def _check_remote_site(config: Config) -> RemoteSitePseudoUser | None:
     if not (auth_header := request.environ.get("HTTP_AUTHORIZATION", "")).startswith("RemoteSite "):
         return None
 
     _tokenname, token = auth_header.split("RemoteSite ", maxsplit=1)
 
-    if (page_name := requested_file_name(request)) != "register_agent":
+    if (page_name := requested_file_name(request)) not in _REMOTE_SITE_ALLOWED_PAGES:
         raise MKAuthException(f"RemoteSite auth for invalid page: {page_name}")
 
     with contextlib.suppress(binascii.Error):  # base64 decoding failure

@@ -18,12 +18,6 @@ else
 fi
 
 case "$1" in
-    default)
-        # Scan for a free port number by looking at the
-        # configuration of the other sites...
-        PORT=$($OMD_ROOT/lib/omd/next_free_port APACHE_TCP_PORT 5000)
-        echo "$PORT"
-        ;;
     choices)
         echo "@{APACHE_NETWORK_PORT}"
         ;;

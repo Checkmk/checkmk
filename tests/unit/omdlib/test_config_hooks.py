@@ -9,6 +9,7 @@ import pytest
 
 from omdlib.config_hooks import (
     _build_site_configs,
+    _default_APACHE_TCP_PORT,
     _Error,
     _next_free_port,
     _report_error,
@@ -173,3 +174,27 @@ def test_set_livestatus_tcp_only_from_missing_xinetd_conf(tmp_path: Path) -> Non
     result = _set_livestatus_tcp_only_from("mysite", "10.0.0.1", tmp_path)
 
     assert isinstance(result, _Error)
+
+
+def test_default_APACHE_TCP_PORT_cross_key_conflict(tmp_path: Path) -> None:
+    # Port 5000 is used by a different config key on another site.
+    sites = tmp_path / "sites"
+    _make_site(sites, "other", "CONFIG_LIVESTATUS_TCP_PORT='5000'\n")
+    _make_site(sites, "mysite", "")
+
+    site_configs = _build_site_configs("mysite", tmp_path)
+    assert _default_APACHE_TCP_PORT("mysite", site_configs) == "5001"
+
+
+def test_default_APACHE_TCP_PORT_warns_on_unreadable_site(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    # A site directory without a readable site.conf triggers a stderr warning.
+    sites = tmp_path / "sites"
+    _make_site(sites, "mysite", "")
+    (sites / "ghost").mkdir(parents=True)  # no site.conf
+
+    site_configs = _build_site_configs("mysite", tmp_path)
+    _default_APACHE_TCP_PORT("mysite", site_configs)
+
+    assert "ghost" in capsys.readouterr().err

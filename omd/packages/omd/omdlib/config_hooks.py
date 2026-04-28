@@ -198,7 +198,12 @@ def load_hook_dependencies(
     return config_hooks
 
 
-def load_config(site: "SiteContext", verbose: bool) -> Config:
+def _default_APACHE_TCP_PORT(site_name: str, site_configs: _SiteConfigs) -> str:
+    _report_error("APACHE_TCP_PORT", site_configs.sites_with_unreadable_configs)
+    return str(_next_free_port("APACHE_TCP_PORT", site_name, 5000, site_configs.configs))
+
+
+def load_config(site: "SiteContext", verbose: bool, omd_path: Path = Path("/omd/")) -> Config:
     """Load all variables from omd/sites.conf. These variables always begin with
     CONFIG_. The reason is that this file can be sources with the shell.
 
@@ -206,12 +211,17 @@ def load_config(site: "SiteContext", verbose: bool) -> Config:
     puts the variables into the process environment."""
     site_home = SitePaths.from_site_name(site.name).home
     config = read_site_config(site_home)
+    site_configs = _build_site_configs(site.name, omd_path)
     if site.hook_dir and os.path.exists(site.hook_dir):
         for hook_name in _sort_hooks(os.listdir(site.hook_dir)):
             if hook_name[0] != "." and hook_name not in config:
-                config[hook_name] = _call_hook(
-                    site, hook_name, ["default", edition(Path(site_home)).long], verbose
-                )[1]
+                match hook_name:
+                    case "APACHE_TCP_PORT":
+                        config[hook_name] = _default_APACHE_TCP_PORT(site.name, site_configs)
+                    case _:
+                        config[hook_name] = _call_hook(
+                            site, hook_name, ["default", edition(Path(site_home)).long], verbose
+                        )[1]
     return config
 
 

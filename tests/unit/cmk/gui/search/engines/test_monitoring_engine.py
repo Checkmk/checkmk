@@ -30,43 +30,36 @@ class TestServiceStateMatchPlugin:
                 {"st": ["ok|warn"]},
                 "Filter: state = 0\nFilter: state = 1\nOr: 2",
                 id="with pipe operator",
-                marks=pytest.mark.xfail(strict=True, reason="CMK-33998"),
             ),
             pytest.param(
                 {"st": ["ok|warn|crit"]},
                 "Filter: state = 0\nFilter: state = 1\nFilter: state = 2\nOr: 3",
                 id="with pipe operator multiple pipes",
-                marks=pytest.mark.xfail(strict=True, reason="CMK-33998"),
             ),
             pytest.param(
                 {"st": ["(ok|warn)"]},
                 "Filter: state = 0\nFilter: state = 1\nOr: 2",
                 id="wrapped in parentheses",
-                marks=pytest.mark.xfail(strict=True, reason="CMK-33998"),
             ),
             pytest.param(
                 {"st": ["ok|warn "]},
                 "Filter: state = 0\nFilter: state = 1\nOr: 2",
                 id="trailing right whitespace",
-                marks=pytest.mark.xfail(strict=True, reason="CMK-33998"),
             ),
             pytest.param(
                 {"st": [" ok|warn"]},
                 "Filter: state = 0\nFilter: state = 1\nOr: 2",
                 id="trailing left whitespace",
-                marks=pytest.mark.xfail(strict=True, reason="CMK-33998"),
             ),
             pytest.param(
                 {"st": [" ok|warn "]},
                 "Filter: state = 0\nFilter: state = 1\nOr: 2",
                 id="left and right whitespace",
-                marks=pytest.mark.xfail(strict=True, reason="CMK-33998"),
             ),
             pytest.param(
                 {"st": ["ok | warn"]},
                 "Filter: state = 0\nFilter: state = 1\nOr: 2",
                 id="whitespace between operator",
-                marks=pytest.mark.xfail(strict=True, reason="CMK-33998"),
             ),
         ],
     )

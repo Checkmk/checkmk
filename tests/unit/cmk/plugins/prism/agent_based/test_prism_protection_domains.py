@@ -105,3 +105,32 @@ def test_check_prism_protection_domains(
         )
         == expected_check_result
     )
+
+
+@pytest.mark.xfail(strict=True, reason="Crash group 4698: KeyError 'usage_stats'")
+def test_check_prism_protection_domains_async_dr_without_usage_stats() -> None:
+    # Async DR protection domain returned by the Prism API without
+    # a "usage_stats" entry (observed on a freshly created PD with no
+    # snapshots yet). The check must not crash with KeyError.
+    section = {
+        "CPS-FRS-ASYNC-WEEKLY": {
+            "active": True,
+            "name": "CPS-FRS-ASYNC-WEEKLY",
+            "metro_avail": None,
+            "next_snapshot_time_usecs": 1776585600000000,
+            "remote_site_names": ["DOM3-FRS"],
+            "stats": {
+                "replication_received_bandwidth_kBps": "0",
+                "replication_transmitted_bandwidth_kBps": "0",
+            },
+            "vms": [],
+        },
+    }
+    result = list(
+        check_prism_protection_domains(
+            item="CPS-FRS-ASYNC-WEEKLY",
+            params={},
+            section=section,
+        )
+    )
+    assert result, "Check must yield a result instead of crashing"

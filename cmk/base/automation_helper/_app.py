@@ -37,6 +37,8 @@ from ._log import LOGGER, temporary_log_level
 from ._tracer import TRACER
 
 
+# NOTE: A protocol with a single method can be replaced by a Callable, there is no need for a "self"
+# or the concrete name.
 class AutomationEngine(Protocol):
     def execute(
         self,

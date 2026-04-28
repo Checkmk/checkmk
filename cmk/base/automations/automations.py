@@ -41,6 +41,8 @@ class MKAutomationError(MKGeneralException):
     pass
 
 
+# TODO: These are the actual process exit codes of "cmk --automation ...". We should probably add
+# the "OK" case (exit code 0) here, too.
 class AutomationError(enum.IntEnum):
     KNOWN_ERROR = 1
     UNKNOWN_ERROR = 2
@@ -97,6 +99,10 @@ class Automations:
         super().__init__()
         self._automations: dict[AutomationID, Automation] = {}
 
+    # TODO: There is only a single call site of this method (per edition) when constructing the
+    # CheckmkBaseApp, and the call *immediately* follows the Automations() constructor. So we should
+    # probably merge this method into the constructor. As it is, it looks a bit like the "empty
+    # constructor" and/or "hidden dependency" anti-pattern.
     def discover(self) -> None:
         discovery_result = discover_plugins_from_modules(
             plugin_prefixes={Automation: "automation_"},
@@ -116,6 +122,8 @@ class Automations:
             {automation.name: automation for automation in discovery_result.plugins.values()}
         )
 
+    # Called either via the CLI's "cmk --automation" mode or via the "/automation" endpoint of the
+    # automation helper.
     def execute(
         self,
         ctx: AutomationContext,
@@ -132,6 +140,8 @@ class Automations:
         ):
             return self._execute(ctx, cmd, remaining_args, plugins, loading_result)
 
+    # TODO: cmk.base.modes.check_mk.mode_automation() contains the *only call site of this method.
+    # Probably most of the code below should actually live there.
     def execute_and_write_serialized_result_to_stdout(
         self,
         ctx: AutomationContext,
@@ -173,6 +183,7 @@ class Automations:
         plugins: AgentBasedPlugins | None,
         loading_result: config.LoadingResult | None,
     ) -> ABCAutomationResult | AutomationError:
+        # TODO: Disentangle this control flow mess
         try:
             try:
                 automation = self._automations[cmd]

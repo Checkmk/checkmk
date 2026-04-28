@@ -10,11 +10,11 @@ from cmk.base.plugins.bakery.iis_app_pool_state import get_iis_app_pool_state_fi
 
 
 def test_iis_app_pool_state_files_enabled() -> None:
-    result = list(get_iis_app_pool_state_files(True))
-    expected = [Plugin(base_os=OS.WINDOWS, source=Path("iis_app_pool_state.ps1"))]
+    result = list(get_iis_app_pool_state_files({"deployment": ("sync", None)}))
+    expected = [Plugin(base_os=OS.WINDOWS, source=Path("iis_app_pool_state.ps1"), interval=None)]
     assert result == expected
 
 
 def test_iis_app_pool_state_files_disabled() -> None:
-    result = list(get_iis_app_pool_state_files(False))
+    result = list(get_iis_app_pool_state_files({"deployment": ("do_not_deploy", None)}))
     assert result == []

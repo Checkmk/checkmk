@@ -33,7 +33,7 @@ from typing import Any
 
 JIRA_SERVER = "https://jira.lan.tribe29.com"
 JIRA_TOKEN_VAR = "JIRA_API_TOKEN"
-COMPASS_JSON_URL = "https://devdocs.lan.checkmk.net/developer_matrix/compass.json"
+COMPASS_JSON_URL = "https://devdocs.lan.checkmk.net/atlas/compass.json"
 
 
 def _get_token_from_env(env_var: str) -> str:

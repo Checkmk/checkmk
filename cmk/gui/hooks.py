@@ -57,7 +57,10 @@ def register_from_plugin(name: str, func: Callable) -> None:
 
 # Kept public for compatibility with pre 1.6 plug-ins (is_builtin needs to be optional for pre 1.6)
 def register(name: str, func: Callable, is_builtin: bool = False) -> None:
-    hooks.setdefault(name, []).append(Hook(handler=func, is_builtin=is_builtin))
+    registered_hooks = hooks.setdefault(name, [])
+    if any(h.handler == func for h in registered_hooks):
+        return
+    registered_hooks.append(Hook(handler=func, is_builtin=is_builtin))
 
 
 def unregister(name: str, func: Callable) -> None:

@@ -245,6 +245,20 @@ def test_hook_registration() -> None:
 
 
 @pytest.mark.usefixtures("reset_hooks")
+def test_register_is_idempotent(mocker: MockerFixture) -> None:
+    handler = mocker.Mock()
+
+    hooks.register_builtin("blub", handler)
+    hooks.register_builtin("blub", handler)
+    hooks.register_from_plugin("blub", handler)
+
+    assert len(hooks.get("blub")) == 1
+
+    hooks.call("blub")
+    handler.assert_called_once()
+
+
+@pytest.mark.usefixtures("reset_hooks")
 def test_call(mocker: MockerFixture) -> None:
     hook1_mock = mocker.Mock()
     hook2_mock = mocker.Mock()

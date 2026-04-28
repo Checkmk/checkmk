@@ -13,7 +13,7 @@ import { computed, onBeforeUnmount, ref, useTemplateRef } from 'vue'
 
 import { immediateWatch } from '@/lib/watch'
 
-import CmkButton from '@/components/CmkButton.vue'
+import CmkButton from '@/components/CmkButton'
 import CmkDynamicIcon from '@/components/CmkIcon/CmkDynamicIcon/CmkDynamicIcon.vue'
 import CmkZebra from '@/components/CmkZebra.vue'
 

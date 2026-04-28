@@ -8,7 +8,7 @@ import { DialogTitle } from 'reka-ui'
 
 import type { TranslatedString } from '@/lib/i18nString'
 
-import CmkButton from './CmkButton.vue'
+import CmkButton from './CmkButton'
 import type { SimpleIcons } from './CmkIcon'
 import CmkIcon from './CmkIcon/CmkIcon.vue'
 import CmkPopup from './CmkPopup.vue'

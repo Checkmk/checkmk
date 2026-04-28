@@ -9,7 +9,7 @@ import { ref } from 'vue'
 import CmkDropdown from '@/components/CmkDropdown'
 import CmkDropdownButton from '@/components/CmkDropdown/CmkDropdownButton.vue'
 import { ErrorResponse, Response } from '@/components/CmkSuggestions'
-import { type Suggestions } from '@/components/CmkSuggestions/CmkSuggestions.vue'
+import { type Suggestions } from '@/components/CmkSuggestions'
 
 defineProps<{ screenshotMode: boolean }>()
 

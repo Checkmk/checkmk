@@ -6,7 +6,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import { ref } from 'vue'
 
-import CmkButton from '@/components/CmkButton.vue'
+import CmkButton from '@/components/CmkButton'
 import CmkPopup from '@/components/CmkPopup.vue'
 
 const isOpen = ref(false)

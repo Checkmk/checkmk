@@ -10,7 +10,7 @@ import { computed, nextTick, onMounted, ref } from 'vue'
 import usei18n from '@/lib/i18n'
 
 import CmkAlertBox from '@/components/CmkAlertBox.vue'
-import CmkButton from '@/components/CmkButton.vue'
+import CmkButton from '@/components/CmkButton'
 
 import TwoFactorAuthBackupInput from './components/TwoFactorAuthBackupInput.vue'
 import TwoFactorAuthHeader from './components/TwoFactorAuthHeader.vue'

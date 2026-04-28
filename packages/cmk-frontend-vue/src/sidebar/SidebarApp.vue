@@ -11,7 +11,7 @@ import { provide, ref } from 'vue'
 import usei18n from '@/lib/i18n'
 import { KeyShortcutService } from '@/lib/keyShortcuts'
 
-import CmkButton from '@/components/CmkButton.vue'
+import CmkButton from '@/components/CmkButton'
 import CmkIcon from '@/components/CmkIcon/CmkIcon.vue'
 import CmkScrollContainer from '@/components/CmkScrollContainer.vue'
 

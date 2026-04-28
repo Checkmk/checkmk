@@ -15,7 +15,7 @@ import type {
 } from 'cmk-shared-typing/typescript/vue_formspec_components'
 import { ref } from 'vue'
 
-import CmkButton from '@/components/CmkButton.vue'
+import CmkButton from '@/components/CmkButton'
 import CmkButtonCancel from '@/components/CmkButtonCancel.vue'
 import CmkButtonSubmit from '@/components/CmkButtonSubmit.vue'
 import CmkCollapsible, { CmkCollapsibleTitle } from '@/components/CmkCollapsible'

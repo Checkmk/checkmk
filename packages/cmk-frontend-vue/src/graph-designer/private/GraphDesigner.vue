@@ -23,7 +23,7 @@ import usei18n from '@/lib/i18n'
 import useDragging from '@/lib/useDragging'
 
 import CmkAlertBox from '@/components/CmkAlertBox.vue'
-import CmkButton from '@/components/CmkButton.vue'
+import CmkButton from '@/components/CmkButton'
 import CmkColorPicker from '@/components/CmkColorPicker.vue'
 import CmkDropdown from '@/components/CmkDropdown'
 import { useCmkErrorBoundary } from '@/components/CmkErrorBoundary'

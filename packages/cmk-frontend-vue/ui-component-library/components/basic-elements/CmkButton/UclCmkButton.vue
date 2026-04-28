@@ -6,7 +6,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script lang="ts">
 import { type Options, type PanelConfig } from '@ucl/_ucl/components/detail-page'
 
-import { type ButtonVariants } from '@/components/CmkButton.vue'
+import type { ButtonVariants } from '@/components/CmkButton'
 
 import codeExample from './UclCmkButtonCodeExample.vue?raw'
 
@@ -85,7 +85,7 @@ import {
 } from '@ucl/_ucl/components/detail-page'
 import { ref } from 'vue'
 
-import CmkButton from '@/components/CmkButton.vue'
+import CmkButton from '@/components/CmkButton'
 
 import UclCmkButtonDev from './UclCmkButtonDev.vue'
 

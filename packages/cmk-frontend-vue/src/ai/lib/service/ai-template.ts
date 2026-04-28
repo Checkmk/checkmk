@@ -11,7 +11,7 @@ import { KeyShortcutService } from '@/lib/keyShortcuts'
 import { ServiceBase } from '@/lib/service/base'
 import usePersistentRef from '@/lib/usePersistentRef'
 
-import { type ButtonProps } from '@/components/CmkButton.vue'
+import { type ButtonProps } from '@/components/CmkButton'
 
 import {
   AiApiClient,

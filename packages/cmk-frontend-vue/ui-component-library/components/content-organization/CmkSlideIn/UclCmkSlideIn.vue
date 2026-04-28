@@ -71,7 +71,7 @@ import {
 } from '@ucl/_ucl/components/detail-page'
 import { ref } from 'vue'
 
-import CmkButton from '@/components/CmkButton.vue'
+import CmkButton from '@/components/CmkButton'
 import CmkSlideIn from '@/components/CmkSlideIn'
 import CmkHeading from '@/components/typography/CmkHeading.vue'
 import CmkParagraph from '@/components/typography/CmkParagraph.vue'

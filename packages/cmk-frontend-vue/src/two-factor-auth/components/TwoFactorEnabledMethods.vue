@@ -8,7 +8,7 @@ import type { TwoFactorAuth } from 'cmk-shared-typing/typescript/two_factor_auth
 
 import usei18n from '@/lib/i18n'
 
-import CmkButton from '@/components/CmkButton.vue'
+import CmkButton from '@/components/CmkButton'
 
 import type { AuthMode } from '../twoFactorAuth'
 

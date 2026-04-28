@@ -12,7 +12,7 @@ import usei18n from '@/lib/i18n'
 import type { TranslatedString } from '@/lib/i18nString'
 import { KeyShortcutService } from '@/lib/keyShortcuts'
 
-import CmkButton from '@/components/CmkButton.vue'
+import CmkButton from '@/components/CmkButton'
 import CmkKeyboardKey from '@/components/CmkKeyboardKey.vue'
 import CmkPopupDialog from '@/components/CmkPopupDialog.vue'
 

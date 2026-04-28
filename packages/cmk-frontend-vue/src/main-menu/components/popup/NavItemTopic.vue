@@ -13,7 +13,7 @@ import type {
 
 import usei18n from '@/lib/i18n'
 
-import CmkButton from '@/components/CmkButton.vue'
+import CmkButton from '@/components/CmkButton'
 import CmkDynamicIcon from '@/components/CmkIcon/CmkDynamicIcon/CmkDynamicIcon.vue'
 import CmkIcon from '@/components/CmkIcon/CmkIcon.vue'
 import CmkScrollContainer from '@/components/CmkScrollContainer.vue'

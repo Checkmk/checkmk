@@ -6,8 +6,8 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import type { TranslatedString } from '@/lib/i18nString'
 
-import type { ButtonVariants } from '@/components/CmkButton.vue'
-import CmkButton from '@/components/CmkButton.vue'
+import type { ButtonVariants } from '@/components/CmkButton'
+import CmkButton from '@/components/CmkButton'
 import type { SimpleIcons } from '@/components/CmkIcon'
 import CmkIcon from '@/components/CmkIcon'
 

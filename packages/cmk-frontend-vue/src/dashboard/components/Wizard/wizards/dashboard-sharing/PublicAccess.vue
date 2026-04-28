@@ -9,7 +9,7 @@ import { type Reactive, computed, reactive, ref, toRef, watch } from 'vue'
 import usei18n from '@/lib/i18n'
 
 import CmkAlertBox from '@/components/CmkAlertBox.vue'
-import CmkButton from '@/components/CmkButton.vue'
+import CmkButton from '@/components/CmkButton'
 import CmkCatalogPanel from '@/components/CmkCatalogPanel.vue'
 import CmkCode from '@/components/CmkCode.vue'
 import CmkLabel from '@/components/CmkLabel.vue'

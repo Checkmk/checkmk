@@ -11,7 +11,7 @@ import { computed, ref } from 'vue'
 import usei18n from '@/lib/i18n'
 
 import CmkBadge from '@/components/CmkBadge.vue'
-import CmkButton from '@/components/CmkButton.vue'
+import CmkButton from '@/components/CmkButton'
 import CmkIcon from '@/components/CmkIcon'
 import CmkParagraph from '@/components/typography/CmkParagraph.vue'
 

@@ -5,7 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 
 <script setup lang="ts">
-import CmkButton from '@/components/CmkButton.vue'
+import CmkButton from '@/components/CmkButton'
 import CmkIcon from '@/components/CmkIcon/CmkIcon.vue'
 
 import { type AiActionButton } from '@/ai/lib/service/ai-template'

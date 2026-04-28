@@ -9,8 +9,8 @@ import { computed, nextTick, ref, useSlots, watch } from 'vue'
 
 import type { TranslatedString } from '@/lib/i18nString'
 
-import type { ButtonVariants } from '@/components/CmkButton.vue'
-import CmkButton from '@/components/CmkButton.vue'
+import type { ButtonVariants } from '@/components/CmkButton'
+import CmkButton from '@/components/CmkButton'
 import CmkIcon from '@/components/CmkIcon/CmkIcon.vue'
 import CmkSpace from '@/components/CmkSpace.vue'
 import CmkHeading from '@/components/typography/CmkHeading.vue'

@@ -9,7 +9,7 @@ import { computed, ref } from 'vue'
 import usei18n from '@/lib/i18n'
 
 import CmkAlertBox from '@/components/CmkAlertBox.vue'
-import CmkButton from '@/components/CmkButton.vue'
+import CmkButton from '@/components/CmkButton'
 import CmkHtml from '@/components/CmkHtml.vue'
 
 import {

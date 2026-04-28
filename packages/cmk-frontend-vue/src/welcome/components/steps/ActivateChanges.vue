@@ -11,7 +11,7 @@ import usei18n from '@/lib/i18n'
 
 import CmkAccordionStepPanelItem from '@/components/CmkAccordionStepPanel/CmkAccordionStepPanelItem.vue'
 import CmkAlertBox from '@/components/CmkAlertBox.vue'
-import CmkButton from '@/components/CmkButton.vue'
+import CmkButton from '@/components/CmkButton'
 import CmkIcon from '@/components/CmkIcon/CmkIcon.vue'
 import CmkLinkCard from '@/components/CmkLinkCard'
 

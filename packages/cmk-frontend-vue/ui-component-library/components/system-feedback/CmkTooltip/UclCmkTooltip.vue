@@ -70,7 +70,7 @@ import {
 } from '@ucl/_ucl/components/detail-page'
 import { ref } from 'vue'
 
-import CmkButton from '@/components/CmkButton.vue'
+import CmkButton from '@/components/CmkButton'
 import CmkIcon from '@/components/CmkIcon'
 import CmkTooltip, {
   CmkTooltipContent,

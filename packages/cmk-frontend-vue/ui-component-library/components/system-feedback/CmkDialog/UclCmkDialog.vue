@@ -6,8 +6,8 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script lang="ts">
 import { type Options, type PanelConfig } from '@ucl/_ucl/components/detail-page'
 
-import { type ButtonVariants } from '@/components/CmkButton.vue'
-import { type DismissalButtonKey } from '@/components/CmkDialog.vue'
+import { type ButtonVariants } from '@/components/CmkButton'
+import type { DismissalButtonKey } from '@/components/CmkDialog.vue'
 
 import codeExample from './UclCmkDialogCodeExample.vue?raw'
 

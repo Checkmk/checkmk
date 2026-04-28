@@ -11,7 +11,7 @@ import type { TranslatedString } from '@/lib/i18nString'
 import usePersistentRef from '@/lib/usePersistentRef'
 
 import CmkAlertBox from '@/components/CmkAlertBox.vue'
-import CmkButton from '@/components/CmkButton.vue'
+import CmkButton from '@/components/CmkButton'
 import CmkCode from '@/components/CmkCode.vue'
 import CmkDialog from '@/components/CmkDialog.vue'
 import CmkIcon from '@/components/CmkIcon'

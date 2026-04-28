@@ -8,7 +8,7 @@ import type { FileUpload } from 'cmk-shared-typing/typescript/vue_formspec_compo
 
 import useId from '@/lib/useId'
 
-import CmkButton from '@/components/CmkButton.vue'
+import CmkButton from '@/components/CmkButton'
 import FormValidation from '@/components/user-input/CmkInlineValidation.vue'
 
 import FormLabel from '@/form/private/FormLabel.vue'

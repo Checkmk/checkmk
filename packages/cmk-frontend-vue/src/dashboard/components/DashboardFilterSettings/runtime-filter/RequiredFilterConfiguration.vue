@@ -8,7 +8,7 @@ import { computed } from 'vue'
 
 import usei18n from '@/lib/i18n'
 
-import CmkButton from '@/components/CmkButton.vue'
+import CmkButton from '@/components/CmkButton'
 
 import type { useFilters } from '@/dashboard/components/filter/composables/useFilters.ts'
 import type { FilterDefinition } from '@/dashboard/components/filter/types.ts'

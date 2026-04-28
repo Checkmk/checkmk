@@ -29,7 +29,7 @@ import {
 } from '@ucl/_ucl/components/detail-page'
 import { ref } from 'vue'
 
-import CmkButton from '@/components/CmkButton.vue'
+import CmkButton from '@/components/CmkButton'
 import CmkPopup from '@/components/CmkPopup.vue'
 
 defineProps<{ screenshotMode: boolean }>()

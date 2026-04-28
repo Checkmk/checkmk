@@ -6,11 +6,10 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import { computed, nextTick, ref, watch } from 'vue'
 
-import usei18n from '@/lib/i18n'
-import { untranslated } from '@/lib/i18n'
+import usei18n, { untranslated } from '@/lib/i18n'
 import useClickOutside from '@/lib/useClickOutside'
 
-import CmkButton from '@/components/CmkButton.vue'
+import CmkButton from '@/components/CmkButton'
 import CmkIconButton from '@/components/CmkIconButton.vue'
 
 const { _t } = usei18n()

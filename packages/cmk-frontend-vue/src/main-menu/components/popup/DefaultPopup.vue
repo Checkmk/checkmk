@@ -10,7 +10,7 @@ import { computed, ref } from 'vue'
 
 import usei18n from '@/lib/i18n'
 
-import CmkButton from '@/components/CmkButton.vue'
+import CmkButton from '@/components/CmkButton'
 import CmkMultitoneIcon from '@/components/CmkIcon/CmkMultitoneIcon.vue'
 import type { CmkMultitoneIconColor, OneColorIcons } from '@/components/CmkIcon/types'
 import CmkHeading from '@/components/typography/CmkHeading.vue'

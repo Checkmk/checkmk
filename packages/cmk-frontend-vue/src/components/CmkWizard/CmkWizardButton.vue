@@ -7,11 +7,11 @@ conditions defined in the file COPYING, which is part of this source code packag
 import usei18n from '@/lib/i18n'
 import type { TranslatedString } from '@/lib/i18nString'
 
-import CmkIcon, { type IconSizeNames } from '@/components/CmkIcon'
+import type { ButtonVariants } from '@/components/CmkButton'
+import CmkButton from '@/components/CmkButton'
 import type { SimpleIcons } from '@/components/CmkIcon'
+import CmkIcon, { type IconSizeNames } from '@/components/CmkIcon'
 import { getWizardContext } from '@/components/CmkWizard/utils.ts'
-
-import CmkButton, { type ButtonVariants } from '../CmkButton.vue'
 
 export interface CmkWizardButtonProps {
   type: 'next' | 'previous' | 'finish' | 'other'

@@ -11,7 +11,7 @@ import { computed } from 'vue'
 import usei18n from '@/lib/i18n'
 import { randomId } from '@/lib/randomId.ts'
 
-import CmkButton from '@/components/CmkButton.vue'
+import CmkButton from '@/components/CmkButton'
 import CmkCopy from '@/components/CmkCopy.vue'
 import CmkIcon from '@/components/CmkIcon'
 import type { CmkWizardStepProps } from '@/components/CmkWizard'

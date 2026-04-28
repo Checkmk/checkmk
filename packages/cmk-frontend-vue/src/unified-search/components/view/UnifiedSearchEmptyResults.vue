@@ -9,7 +9,7 @@ import { onBeforeUnmount, ref, useTemplateRef } from 'vue'
 import usei18n from '@/lib/i18n'
 
 import CmkAlertBox from '@/components/CmkAlertBox.vue'
-import CmkButton from '@/components/CmkButton.vue'
+import CmkButton from '@/components/CmkButton'
 import CmkIcon from '@/components/CmkIcon'
 import CmkParagraph from '@/components/typography/CmkParagraph.vue'
 

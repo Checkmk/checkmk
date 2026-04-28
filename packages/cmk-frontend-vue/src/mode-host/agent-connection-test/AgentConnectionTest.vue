@@ -21,7 +21,7 @@ import usei18n from '@/lib/i18n'
 import useId from '@/lib/useId'
 
 import CmkAlertBox from '@/components/CmkAlertBox.vue'
-import CmkButton from '@/components/CmkButton.vue'
+import CmkButton from '@/components/CmkButton'
 import CmkIcon from '@/components/CmkIcon'
 import CmkLabel from '@/components/CmkLabel.vue'
 import CmkSlideInDialog from '@/components/CmkSlideInDialog.vue'

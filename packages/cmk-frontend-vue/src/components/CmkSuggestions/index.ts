@@ -13,4 +13,4 @@ export {
   NoSelection,
   Selection,
   SelectionWithTitle
-} from './CmkSuggestions.vue'
+} from './types'

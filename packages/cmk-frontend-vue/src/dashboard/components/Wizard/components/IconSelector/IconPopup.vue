@@ -10,7 +10,7 @@ import { computed, nextTick, onBeforeUnmount, onMounted, onUnmounted, ref } from
 import usei18n from '@/lib/i18n'
 import useClickOutside from '@/lib/useClickOutside'
 
-import CmkButton from '@/components/CmkButton.vue'
+import CmkButton from '@/components/CmkButton'
 import CmkToggleButtonGroup from '@/components/CmkToggleButtonGroup.vue'
 
 import IconGallery from './IconGallery.vue'

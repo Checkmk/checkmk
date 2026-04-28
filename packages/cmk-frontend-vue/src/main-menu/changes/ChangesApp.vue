@@ -21,7 +21,7 @@ import usei18n from '@/lib/i18n'
 import { untranslated } from '@/lib/i18n/i18n'
 
 import CmkAlertBox from '@/components/CmkAlertBox.vue'
-import CmkButton from '@/components/CmkButton.vue'
+import CmkButton from '@/components/CmkButton'
 import CmkButtonSubmit from '@/components/CmkButtonSubmit.vue'
 import CmkDialog from '@/components/CmkDialog.vue'
 import CmkHtml from '@/components/CmkHtml.vue'

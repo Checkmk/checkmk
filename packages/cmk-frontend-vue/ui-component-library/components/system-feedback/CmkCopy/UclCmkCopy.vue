@@ -48,7 +48,7 @@ import {
 } from '@ucl/_ucl/components/detail-page'
 import { ref } from 'vue'
 
-import CmkButton from '@/components/CmkButton.vue'
+import CmkButton from '@/components/CmkButton'
 import CmkCopy from '@/components/CmkCopy.vue'
 import CmkIconButton from '@/components/CmkIconButton.vue'
 

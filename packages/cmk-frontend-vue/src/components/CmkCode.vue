@@ -9,7 +9,7 @@ import { computed, ref } from 'vue'
 import usei18n from '@/lib/i18n'
 import type { TranslatedString } from '@/lib/i18nString'
 
-import CmkButton from '@/components/CmkButton.vue'
+import CmkButton from '@/components/CmkButton'
 import CmkCopy from '@/components/CmkCopy.vue'
 import CmkIcon from '@/components/CmkIcon'
 import CmkIconButton from '@/components/CmkIconButton.vue'

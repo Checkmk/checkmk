@@ -11,7 +11,7 @@ import usei18n from '@/lib/i18n'
 import type { TranslatedString } from '@/lib/i18nString'
 
 import CmkAlertBox from '@/components/CmkAlertBox.vue'
-import CmkButton from '@/components/CmkButton.vue'
+import CmkButton from '@/components/CmkButton'
 import CmkIcon from '@/components/CmkIcon'
 import CmkParagraph from '@/components/typography/CmkParagraph.vue'
 

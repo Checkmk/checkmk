@@ -132,11 +132,11 @@ class BICompiler:
                 compiled_aggregations=compiled_aggregations,
                 aggr_name=branch.properties.title,
             )
-            self.freeze_branch(aggregation, branch)
+            self._freeze_branch(aggregation, branch)
 
         return new_branch_found
 
-    def freeze_branch(self, aggregation: BICompiledAggregation, branch: BICompiledRule) -> None:
+    def _freeze_branch(self, aggregation: BICompiledAggregation, branch: BICompiledRule) -> None:
         # Prepare a single frozen configuration specifically for this branch
         # This includes the aggregation configuration and the frozen branch
         if frozen_info := aggregation.frozen_info:

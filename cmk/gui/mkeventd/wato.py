@@ -841,7 +841,7 @@ def vs_mkeventd_rule(customer: str | None = None) -> Dictionary:
                         Age(
                             title=_("Time period for counting"),
                             help=_(
-                                "If an event is still in the <i>counting</i> state after the time period has passed, it will be removed from the event console. "
+                                "If an event is still in the <i>counting</i> state after the time period has passed, it will be removed from the Event Console. "
                                 "Only events which reach or exceed their expected count within the time period are kept."
                             ),
                             default_value=86400,
@@ -3748,7 +3748,7 @@ ConfigureECPermission = Permission(
     section=PermissionSectionEventConsole,
     name="config",
     title=_l("Configuration of Event Console"),
-    description=_l("This permission allows to configure the global settings of the event console."),
+    description=_l("This permission allows to configure the global settings of the Event Console."),
     defaults=["admin"],
 )
 
@@ -3768,9 +3768,9 @@ ConfigureECRulesPermission = Permission(
 ActivateECPermission = Permission(
     section=PermissionSectionEventConsole,
     name="activate",
-    title=_l("Activate changes for event console"),
+    title=_l("Activate changes for Event Console"),
     description=_l(
-        "Activation of changes for the event console (rule modification, "
+        "Activation of changes for the Event Console (rule modification, "
         "global settings) is done separately from the monitoring configuration "
         "and needs this permission."
     ),
@@ -4913,7 +4913,7 @@ class ConfigVariableEventConsoleNotifyContactgroup(ConfigVariable):
             help=_(
                 "If you select a contact group here, then all notifications of "
                 "hosts and services in that contact group will be sent to the "
-                "event console. <b>Note</b>: you still need to create a rule "
+                "Event Console. <b>Note</b>: you still need to create a rule "
                 "matching those messages in order to have events created. <b>Note (2)</b>: "
                 "If you are using the Checkmk Micro Core then this setting is deprecated. "
                 "Please use the notification plug-in <i>Forward Notification to Event Console</i> instead."
@@ -4970,7 +4970,7 @@ class ConfigVariableEventConsoleNotifyFacility(ConfigVariable):
         return DropdownChoice(
             title=_("Syslog facility for Event Console notifications"),
             help=_(
-                "When sending notifications from the monitoring system to the event console "
+                "When sending notifications from the monitoring system to the Event Console "
                 "the following syslog facility will be set for these messages. Choosing "
                 "a unique facility makes creation of rules easier."
             ),
@@ -5011,7 +5011,7 @@ class ConfigVariableEventConsoleServiceLevels(ConfigVariable):
             help=_(
                 "Here you can configure the list of possible service levels for hosts, services and "
                 "events. A service level can be assigned to a host or service by configuration. "
-                "The event console can configure each created event to have a specific service level. "
+                "The Event Console can configure each created event to have a specific service level. "
                 "Internally the level is represented as an integer number. Note: a higher number represents "
                 "a higher service level. This is important when filtering views "
                 "by the service level.<p>You can also attach service levels to hosts "
@@ -5211,7 +5211,7 @@ def _valuespec_active_checks_mkevents() -> Dictionary:
                                 "In a distributed setup where the Event Console is not running in the same "
                                 "site as the host is monitored you need to access the remote Event Console "
                                 "via TCP. Please make sure that this is activated in the global settings of "
-                                "the event console. The default port number is 6558."
+                                "the Event Console. The default port number is 6558."
                             ),
                         ),
                         TextInput(

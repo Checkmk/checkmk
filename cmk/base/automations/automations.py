@@ -7,15 +7,14 @@ import enum
 import os
 import sys
 from collections.abc import Callable, Iterable, Mapping, Sequence
-from contextlib import nullcontext, redirect_stdout, suppress
+from contextlib import nullcontext, redirect_stdout
 from dataclasses import dataclass
-from typing import assert_never
 
 import cmk.ccc.debug
 from cmk import trace
 from cmk.automations.results import ABCAutomationResult
 from cmk.automations.types import AutomationID
-from cmk.base import config, profiling
+from cmk.base import config
 from cmk.base.configlib.loaded_config import LoadedConfigFragment
 from cmk.base.core.interface import MonitoringCore
 from cmk.ccc import version as cmk_version
@@ -139,41 +138,6 @@ class Automations:
             else Timeout(timeout, message="Action timed out after %s seconds." % timeout)
         ):
             return self._execute(ctx, cmd, remaining_args, plugins, loading_result)
-
-    # TODO: cmk.base.modes.check_mk.mode_automation() contains the *only call site of this method.
-    # Probably most of the code below should actually live there.
-    def execute_and_write_serialized_result_to_stdout(
-        self,
-        ctx: AutomationContext,
-        cmd: AutomationID,
-        args: list[str],
-        plugins: AgentBasedPlugins | None = None,
-        loading_result: config.LoadingResult | None = None,
-    ) -> int:
-        try:
-            result = self.execute(
-                ctx,
-                cmd,
-                args,
-                plugins,
-                loading_result,
-            )
-        finally:
-            profiling.output_profile()
-
-        match result:
-            case ABCAutomationResult():
-                with suppress(IOError):
-                    sys.stdout.write(
-                        result.serialize(cmk_version.Version.from_str(cmk_version.__version__))
-                        + "\n"
-                    )
-                    sys.stdout.flush()
-                return 0
-            case AutomationError():
-                return result
-            case _:
-                assert_never(result)
 
     def _execute(
         self,

@@ -2042,9 +2042,13 @@ _BROWSE_MAN_MODE = Mode(
 #   '----------------------------------------------------------------------'
 
 
-def mode_automation(app: CheckmkBaseApp, args: list[str]) -> None:
+def mode_automation(app: CheckmkBaseApp, args: list[str]) -> int:
     from cmk.automations.types import AutomationID
-    from cmk.base.automations.automations import AutomationContext, MKAutomationError
+    from cmk.base.automations.automations import (
+        AutomationContext,
+        AutomationError,
+        MKAutomationError,
+    )
 
     if not args:
         raise MKAutomationError("You need to provide arguments")
@@ -2071,21 +2075,27 @@ def mode_automation(app: CheckmkBaseApp, args: list[str]) -> None:
             "cmk.automation.args": automation_args,
         },
     ):
-        sys.exit(
-            app.automations.execute_and_write_serialized_result_to_stdout(
-                AutomationContext(
-                    edition=app.edition,
-                    make_bake_on_restart=app.make_bake_on_restart,
-                    create_core=app.create_core,
-                    make_fetcher_trigger=app.make_fetcher_trigger,
-                    make_metric_backend_fetcher=app.make_metric_backend_fetcher,
-                    get_builtin_host_labels=app.get_builtin_host_labels,
-                    core_performance_settings=app.core_performance_settings,
-                ),
-                name,
-                automation_args,
-            )
+        ctx = AutomationContext(
+            edition=app.edition,
+            make_bake_on_restart=app.make_bake_on_restart,
+            create_core=app.create_core,
+            make_fetcher_trigger=app.make_fetcher_trigger,
+            make_metric_backend_fetcher=app.make_metric_backend_fetcher,
+            get_builtin_host_labels=app.get_builtin_host_labels,
+            core_performance_settings=app.core_performance_settings,
         )
+        try:
+            result = app.automations.execute(ctx, name, automation_args)
+        finally:
+            profiling.output_profile()
+        if isinstance(result, AutomationError):
+            return result
+        with suppress(IOError):
+            sys.stdout.write(
+                result.serialize(cmk_version.Version.from_str(cmk_version.__version__)) + "\n"
+            )
+            sys.stdout.flush()
+        return 0
 
 
 _AUTOMATION_MODE = Mode(

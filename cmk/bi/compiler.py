@@ -88,7 +88,7 @@ class BICompiler:
         new_branch_found = False
         for branch in list(compiled_aggregation.branches):
             if self._frozen_store.exists(compiled_aggregation.id, branch.properties.title):
-                continue
+                continue  # Branch is already frozen.
 
             new_branch_found = True
             aggregation, branch = get_compiled_aggregation_and_branch_by_name(
@@ -127,13 +127,13 @@ class BICompiler:
         computed_new_frozen_branch = False
         for aggr_id, compiled_aggregation in compiled_aggregations.items():
             updated_aggregations[aggr_id] = compiled_aggregation
+
             if compiled_aggregation.frozen_info is not None:
-                # Already frozen
-                continue
+                continue  # Aggregation is already frozen.
 
             if not compiled_aggregation.computation_options.freeze_aggregations:
                 self._frozen_store.delete(aggr_id)
-                continue
+                continue  # Aggregation is no longer frozen.
 
             computed_new_frozen_branch = (
                 self._freeze_new_branches(compiled_aggregation, compiled_aggregations)

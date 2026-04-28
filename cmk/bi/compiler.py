@@ -80,6 +80,43 @@ class BICompiler:
         finally:
             self._load_compiled_aggregations()
 
+    def _manage_frozen_branches(
+        self, compiled_aggregations: dict[str, BICompiledAggregation]
+    ) -> dict[str, BICompiledAggregation]:
+        updated_aggregations = {}
+        new_branch_was_frozen = False
+
+        for aggr_id, compiled_aggregation in compiled_aggregations.items():
+            updated_aggregations[aggr_id] = compiled_aggregation
+
+            if compiled_aggregation.frozen_info is not None:
+                continue  # Aggregation is already frozen.
+
+            if not compiled_aggregation.computation_options.freeze_aggregations:
+                self._frozen_store.delete(aggr_id)
+                continue  # Aggregation is no longer frozen.
+
+            new_branch_was_frozen = (
+                self._freeze_new_branches(compiled_aggregation, compiled_aggregations)
+                or new_branch_was_frozen
+            )
+
+            # Read frozen branches. Each branch gets a separate aggregation ID since
+            # the computation time may differ, which also means possibly changed computation options
+            for branch in list(compiled_aggregation.branches):
+                branch_title = branch.properties.title
+                if frozen_agg := self._frozen_store.get(compiled_aggregation.id, branch_title):
+                    frozen_agg.frozen_info = FrozenBIInfo(compiled_aggregation.id, branch_title)
+                    updated_aggregations[frozen_agg.id] = frozen_agg
+
+            # Remove all branches from the original aggregation, since all of them are now frozen
+            compiled_aggregation.branches = []
+
+        if new_branch_was_frozen:
+            self._lookup_store.generate_aggregation_lookups(updated_aggregations)
+
+        return updated_aggregations
+
     def _freeze_new_branches(
         self,
         compiled_aggregation: BICompiledAggregation,
@@ -118,43 +155,6 @@ class BICompiler:
         finally:
             aggregation.branches = original_branches
             aggregation.id = original_id
-
-    def _manage_frozen_branches(
-        self, compiled_aggregations: dict[str, BICompiledAggregation]
-    ) -> dict[str, BICompiledAggregation]:
-        updated_aggregations = {}
-        new_branch_was_frozen = False
-
-        for aggr_id, compiled_aggregation in compiled_aggregations.items():
-            updated_aggregations[aggr_id] = compiled_aggregation
-
-            if compiled_aggregation.frozen_info is not None:
-                continue  # Aggregation is already frozen.
-
-            if not compiled_aggregation.computation_options.freeze_aggregations:
-                self._frozen_store.delete(aggr_id)
-                continue  # Aggregation is no longer frozen.
-
-            new_branch_was_frozen = (
-                self._freeze_new_branches(compiled_aggregation, compiled_aggregations)
-                or new_branch_was_frozen
-            )
-
-            # Read frozen branches. Each branch gets a separate aggregation ID since
-            # the computation time may differ, which also means possibly changed computation options
-            for branch in list(compiled_aggregation.branches):
-                branch_title = branch.properties.title
-                if frozen_agg := self._frozen_store.get(compiled_aggregation.id, branch_title):
-                    frozen_agg.frozen_info = FrozenBIInfo(compiled_aggregation.id, branch_title)
-                    updated_aggregations[frozen_agg.id] = frozen_agg
-
-            # Remove all branches from the original aggregation, since all of them are now frozen
-            compiled_aggregation.branches = []
-
-        if new_branch_was_frozen:
-            self._lookup_store.generate_aggregation_lookups(updated_aggregations)
-
-        return updated_aggregations
 
     def _get_currently_loaded_aggregation_identifiers(self) -> set[storage.Identifier]:
         return {storage.generate_identifier(id_) for id_ in self._compiled_aggregations.keys()}

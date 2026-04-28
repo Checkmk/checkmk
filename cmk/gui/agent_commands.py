@@ -12,7 +12,11 @@ from cmk.ccc.plugin_registry import Registry
 from cmk.gui.config import Config
 from cmk.gui.logged_in import user
 from cmk.gui.utils.urls import doc_reference_url, DocReference
-from cmk.shared_typing.agent_slideout import AgentInstallCmds, AgentRegistrationCmds
+from cmk.shared_typing.agent_slideout import (
+    AgentInstallCmds,
+    AgentRegistrationCmds,
+    AgentStatusCmds,
+)
 from cmk.shared_typing.mode_host import (
     AgentInstallCmds as ModeHostAgentInstallCmds,
 )
@@ -23,12 +27,16 @@ from cmk.shared_typing.mode_host import (
     AgentSlideout as ModeHostAgentSlideout,
 )
 from cmk.shared_typing.mode_host import (
+    AgentStatusCmds as ModeHostAgentStatusCmds,
+)
+from cmk.shared_typing.mode_host import (
     ModeHostServerPerSite,
 )
 from cmk.shared_typing.setup import AgentDownloadServerPerSite
 from cmk.shared_typing.setup import AgentInstallCmds as SetupAgentInstallCmds
 from cmk.shared_typing.setup import AgentRegistrationCmds as SetupAgentRegistrationCmds
 from cmk.shared_typing.setup import AgentSlideout as SetupAgentSlideout
+from cmk.shared_typing.setup import AgentStatusCmds as SetupAgentStatusCmds
 
 WINDOWS_AGENT_DOWNLOAD_CMD = (
     "curl.exe -o check-mk-agent_{version}.msi -fG"
@@ -82,8 +90,10 @@ def build_agent_install_cmds(
     )
 
 
+WINDOWS_AGENT_CTL_PATH = '"C:\\Program Files (x86)\\checkmk\\service\\cmk-agent-ctl.exe"'
+
 WINDOWS_AGENT_REGISTRATION_CMD = (
-    '"C:\\Program Files (x86)\\checkmk\\service\\cmk-agent-ctl.exe" register'
+    WINDOWS_AGENT_CTL_PATH + " register"
     " --hostname {{HOSTNAME}}"
     " --server {{SERVER}}"
     " --site {{SITE}}"
@@ -91,12 +101,18 @@ WINDOWS_AGENT_REGISTRATION_CMD = (
 )
 
 WINDOWS_AGENT_REGISTRATION_CMD_POWERSHELL = (
-    '& "C:\\Program Files (x86)\\checkmk\\service\\cmk-agent-ctl.exe" register'
+    "& " + WINDOWS_AGENT_CTL_PATH + " register"
     " --hostname {{HOSTNAME}}"
     " --server {{SERVER}}"
     " --site {{SITE}}"
     " --user agent_registration"
 )
+
+WINDOWS_AGENT_STATUS_CMD = WINDOWS_AGENT_CTL_PATH + " status"
+WINDOWS_AGENT_STATUS_CMD_POWERSHELL = "& " + WINDOWS_AGENT_CTL_PATH + " status"
+LINUX_STATUS_CMD = "cmk-agent-ctl status"
+AIX_STATUS_CMD = "cmk-agent-ctl status"
+SOLARIS_STATUS_CMD = "cmk-agent-ctl status"
 
 LINUX_REGISTRATION_CMD = """sudo cmk-agent-ctl register \\
     --hostname {{HOSTNAME}} \\
@@ -127,10 +143,21 @@ def build_agent_registration_cmds() -> AgentRegistrationCmds:
     )
 
 
+def build_agent_status_cmds() -> AgentStatusCmds:
+    return AgentStatusCmds(
+        windows=WINDOWS_AGENT_STATUS_CMD,
+        windows_powershell=WINDOWS_AGENT_STATUS_CMD_POWERSHELL,
+        linux=LINUX_STATUS_CMD,
+        aix=AIX_STATUS_CMD,
+        solaris=SOLARIS_STATUS_CMD,
+    )
+
+
 @dataclass(kw_only=True)
 class AgentCommands:
     install_cmds: Callable[[str, HostName], AgentInstallCmds]
     registration_cmds: Callable[[], AgentRegistrationCmds]
+    status_cmds: Callable[[], AgentStatusCmds]
     legacy_agent_url: Callable[[], str | None] = lambda: None
 
 
@@ -147,6 +174,7 @@ def register(registry: AgentCommandsRegistry) -> None:
         AgentCommands(
             install_cmds=build_agent_install_cmds,
             registration_cmds=build_agent_registration_cmds,
+            status_cmds=build_agent_status_cmds,
             legacy_agent_url=lambda: doc_reference_url(
                 user.language, DocReference.AGENT_LINUX_LEGACY
             ),
@@ -196,6 +224,7 @@ def get_agent_slideout(
     agent_slideout_cls: type[SetupAgentSlideout],
     agent_install_cls: type[SetupAgentInstallCmds | ModeHostAgentInstallCmds],
     agent_registration_cls: type[SetupAgentRegistrationCmds | ModeHostAgentRegistrationCmds],
+    agent_status_cls: type[SetupAgentStatusCmds | ModeHostAgentStatusCmds],
     version: str,
     can_download_baked_agents: bool,
 ) -> SetupAgentSlideout: ...
@@ -211,6 +240,7 @@ def get_agent_slideout(
     agent_slideout_cls: type[ModeHostAgentSlideout],
     agent_install_cls: type[SetupAgentInstallCmds | ModeHostAgentInstallCmds],
     agent_registration_cls: type[SetupAgentRegistrationCmds | ModeHostAgentRegistrationCmds],
+    agent_status_cls: type[SetupAgentStatusCmds | ModeHostAgentStatusCmds],
     version: str,
     can_download_baked_agents: bool,
 ) -> ModeHostAgentSlideout: ...
@@ -225,6 +255,7 @@ def get_agent_slideout(
     agent_slideout_cls: type[SetupAgentSlideout | ModeHostAgentSlideout],
     agent_install_cls: type,
     agent_registration_cls: type,
+    agent_status_cls: type,
     version: str,
     can_download_baked_agents: bool,
 ) -> Any:
@@ -237,6 +268,9 @@ def get_agent_slideout(
         ),
         agent_registration_cmds=agent_registration_cls(
             **asdict(agent_commands_registry["agent_commands"].registration_cmds())
+        ),
+        agent_status_cmds=agent_status_cls(
+            **asdict(agent_commands_registry["agent_commands"].status_cmds())
         ),
         legacy_agent_url=agent_commands_registry["agent_commands"].legacy_agent_url(),
         save_host=save_host,

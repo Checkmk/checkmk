@@ -656,6 +656,7 @@ const showSettings = ref(false)
         :agent-receiver-port-is-default="agentReceiverPortIsDefault"
         :agent-install-cmds="agentSlideout.agent_install_cmds"
         :agent-registration-cmds="agentSlideout.agent_registration_cmds"
+        :agent-status-cmds="agentSlideout.agent_status_cmds"
         :legacy-agent-url="agentSlideout.legacy_agent_url"
         :save-host="agentSlideout.save_host"
         :host-exists="agentSlideout.host_exists ?? false"

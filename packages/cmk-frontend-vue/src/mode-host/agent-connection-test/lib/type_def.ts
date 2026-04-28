@@ -22,6 +22,12 @@ export interface RegistrationCmdVariant {
   cmd: string
 }
 
+export interface StatusCmdVariant {
+  id: string
+  label: string
+  cmd: string
+}
+
 export interface InstallCmdVariant {
   id: string
   label: string
@@ -40,6 +46,8 @@ export interface AgentSlideOutTabs {
   registrationMsg?: TranslatedString
   registrationCmd?: string
   registrationCmdVariants?: RegistrationCmdVariant[]
+  statusCmd: string
+  statusCmdVariants?: StatusCmdVariant[]
   installUrl?: InstallUrl | undefined
   subTabs?: AgentSlideOutSubTab[]
 }

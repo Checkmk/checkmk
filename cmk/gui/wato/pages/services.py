@@ -112,6 +112,7 @@ from cmk.shared_typing.setup import (
     AgentInstallCmds,
     AgentRegistrationCmds,
     AgentSlideout,
+    AgentStatusCmds,
 )
 from cmk.utils.automation_config import LocalAutomationConfig, RemoteAutomationConfig
 from cmk.utils.check_utils import worst_service_state
@@ -825,6 +826,7 @@ class DiscoveryPageRenderer:
                         agent_slideout_cls=AgentSlideout,
                         agent_install_cls=AgentInstallCmds,
                         agent_registration_cls=AgentRegistrationCmds,
+                        agent_status_cls=AgentStatusCmds,
                         version=version,
                         can_download_baked_agents="wato.agents" not in permission_registry
                         or (user.may("wato.agents") and user.may("wato.download_agents")),

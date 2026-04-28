@@ -134,7 +134,7 @@ const resolvedI18n = computed(() => ({
   noSelection: props.inputHint ?? _t('Please select an element'),
   noObjects: _t('No options available'),
   edit: _t('Edit'),
-  create: _t('Create'),
+  create: _t('Create new'),
   slideInNewTitle: _t('New %{entity}', { entity: readableEntityName() }),
   slideInEditTitle: _t('Edit %{entity}', { entity: readableEntityName() })
 }))

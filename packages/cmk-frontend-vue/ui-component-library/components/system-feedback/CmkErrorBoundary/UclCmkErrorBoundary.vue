@@ -6,6 +6,8 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script lang="ts">
 import { type PanelConfig } from '@ucl/_ucl/components/detail-page'
 
+import codeExample from './UclCmkErrorBoundaryCodeExample.vue?raw'
+
 export const panelConfig = {
   error: { type: 'boolean', title: 'error', initialState: false }
 } satisfies PanelConfig
@@ -24,22 +26,6 @@ export const a11yData = [
       'When focused on the error message, pressing Enter or Space will trigger any available details to be expanded.'
   }
 ]
-export const codeExample = `<script setup lang="ts">
-${'import'} { useCmkErrorBoundary } from '@/components/CmkErrorBoundary'
-
-// eslint-disable-next-line @typescript-eslint/naming-convention
-const { CmkErrorBoundary } = useCmkErrorBoundary()
-
-function throwError() {
-  throw new Error('Something went wrong.')
-}
-<${'/'}script>
-
-<template>
-  <CmkErrorBoundary>
-    <button @click="throwError()">Throw error</button>
-  </CmkErrorBoundary>
-</template>`
 </script>
 
 <script setup lang="ts">

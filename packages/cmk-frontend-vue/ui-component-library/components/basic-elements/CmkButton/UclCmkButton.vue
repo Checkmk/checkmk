@@ -8,6 +8,8 @@ import { type Options, type PanelConfig } from '@ucl/_ucl/components/detail-page
 
 import { type ButtonVariants } from '@/components/CmkButton.vue'
 
+import codeExample from './UclCmkButtonCodeExample.vue?raw'
+
 export const a11yData = [
   {
     keys: ['Tab'],
@@ -24,19 +26,7 @@ export const a11yData = [
       'Activates the button. If rendered as a link (via the href prop), Enter follows the link.'
   }
 ]
-export const codeExample = `<script setup lang="ts">
-${'import'} CmkButton from '@/components/CmkButton.vue'
 
-const handleClick = () => {
-  console.log('Button clicked!')
-}
-<${'/'}script>
-
-<template>
-  <CmkButton variant="primary" @click="handleClick">
-    Click Me
-  </CmkButton>
-</template>`
 export const panelConfig = {
   variant: {
     type: 'list',

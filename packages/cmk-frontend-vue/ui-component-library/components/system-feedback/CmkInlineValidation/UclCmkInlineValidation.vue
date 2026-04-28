@@ -6,20 +6,8 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script lang="ts">
 import { type PanelConfig } from '@ucl/_ucl/components/detail-page'
 
-export const codeExample = `<script setup lang="ts">
-import { ref } from 'vue'
+import codeExample from './UclCmkInlineValidationCodeExample.vue?raw'
 
-${'import'} CmkInlineValidation from '@/components/user-input/CmkInlineValidation.vue'
-
-const formErrors = ref<string[]>([
-  'This is an inline validation error message.',
-  'A secondary validation condition also failed.'
-])
-<${'/'}script>
-
-<template>
-  <CmkInlineValidation :validation="formErrors" />
-</template>`
 export const panelConfig = {
   validation: {
     type: 'boolean',

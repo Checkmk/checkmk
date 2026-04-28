@@ -12,19 +12,8 @@ import {
   type IconSizeNames
 } from '@/components/CmkIcon/types.ts'
 
-export const codeExample = `<script setup lang="ts">
-${'import'} CmkMultitoneIcon from '@/components/CmkIcon/CmkMultitoneIcon.vue'
-<${'/'}script>
+import codeExample from './UclCmkMultitoneIconCodeExample.vue?raw'
 
-<template>
-  <CmkMultitoneIcon
-    name="services"
-    primary-color="success"
-    secondary-color="warning"
-    size="large"
-    title="Service Status"
-  />
-</template>`
 export const panelConfig = {
   name: {
     type: 'list',

@@ -6,16 +6,8 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script lang="ts">
 import { type PanelConfig } from '@ucl/_ucl/components/detail-page'
 
-export const codeExample = `<script setup lang="ts">
-import { ref } from 'vue'
-${'import'} CmkSwitch from '@/components/CmkSwitch.vue'
+import codeExample from './UclCmkSwitchCodeExample.vue?raw'
 
-const isEnabled = ref(false)
-<${'/'}script>
-
-<template>
-  <CmkSwitch v-model:data="isEnabled" />
-</template>`
 export const panelConfig = {
   data: {
     type: 'boolean',

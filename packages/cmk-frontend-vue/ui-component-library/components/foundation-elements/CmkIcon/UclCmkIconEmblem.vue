@@ -8,14 +8,7 @@ import { type Options, type PanelConfig } from '@ucl/_ucl/components/detail-page
 
 import { type IconEmblems, type IconSizeNames, type SimpleIcons } from '@/components/CmkIcon/types'
 
-export const codeExample = `<script setup lang="ts">
-${'import'} CmkIcon from '@/components/CmkIcon'
-${'import'} CmkIconEmblem from '@/components/CmkIcon/CmkIconEmblem.vue'
-<${'/'}script>
-
-<template>
-  <CmkIconEmblem emblem="warning"><CmkIcon name="filter" size="medium" /></CmkIconEmblem>
-</template>`
+import codeExample from './UclCmkIconEmblemCodeExample.vue?raw'
 </script>
 
 <script setup lang="ts">

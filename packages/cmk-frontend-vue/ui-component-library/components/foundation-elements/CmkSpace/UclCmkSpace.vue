@@ -8,16 +8,8 @@ import { type Options, type PanelConfig } from '@ucl/_ucl/components/detail-page
 
 import { type CmkSpaceVariants } from '@/components/CmkSpace.vue'
 
-export const codeExample = `<script setup lang="ts">
-${'import'} CmkButton from '@/components/CmkButton.vue'
-${'import'} CmkSpace from '@/components/CmkSpace.vue'
-<${'/'}script>
+import codeExample from './UclCmkSpaceCodeExample.vue?raw'
 
-<template>
-  <CmkButton variant="secondary">First Element</CmkButton>
-  <CmkSpace direction="horizontal" size="medium" />
-  <CmkButton variant="primary">Second Element</CmkButton>
-</template>`
 export const panelConfig = {
   direction: {
     type: 'list',

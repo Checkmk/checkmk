@@ -8,6 +8,8 @@ import { type Options, type PanelConfig } from '@ucl/_ucl/components/detail-page
 
 import { type inputSizes } from '@/components/user-input/sizes'
 
+import codeExample from './UclCmkInputCodeExample.vue?raw'
+
 export const a11yData = [
   {
     keys: ['Tab'],
@@ -26,20 +28,6 @@ export const a11yData = [
     description: 'Moves the cursor to the end of the input content.'
   }
 ]
-export const codeExample = `<script setup lang="ts">
-import { ref } from 'vue'
-${'import'} CmkInput from '@/components/user-input/CmkInput.vue'
-
-const username = ref('')
-<${'/'}script>
-
-<template>
-  <CmkInput
-    v-model="username"
-    type="text"
-    field-size="MEDIUM"
-  />
-</template>`
 
 type InputType = 'text' | 'number' | 'date' | 'time' | 'password'
 

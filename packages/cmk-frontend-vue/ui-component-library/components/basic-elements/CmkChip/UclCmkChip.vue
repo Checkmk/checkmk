@@ -8,6 +8,8 @@ import { type Options, type PanelConfig } from '@ucl/_ucl/components/detail-page
 
 import { type Colors, type Sizes, type Variants } from '@/components/CmkChip.vue'
 
+import codeExample from './UclCmkChipCodeExample.vue?raw'
+
 export const a11yData = [
   {
     keys: ['Tab'],
@@ -22,19 +24,7 @@ export const a11yData = [
     description: 'Triggers the click event if the chip is rendered as an interactive button.'
   }
 ]
-export const codeExample = `<script setup lang="ts">
-${'import'} CmkChip from '@/components/CmkChip.vue'
-<${'/'}script>
 
-<template>
-  <CmkChip
-    size="medium"
-    color="success"
-    variant="fill"
-  >
-    Demo Chip
-  </CmkChip>
-</template>`
 export const panelConfig = {
   size: {
     type: 'list',

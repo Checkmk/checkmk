@@ -8,24 +8,8 @@ import { type Options, type PanelConfig } from '@ucl/_ucl/components/detail-page
 
 import { type Sizes, type Variants } from '@/components/CmkAlertBox.vue'
 
-export const codeExample = `<script setup lang="ts">
-import { ref } from 'vue'
+import codeExample from './UclCmkAlertBoxCodeExample.vue?raw'
 
-${'import'} CmkAlertBox from '@/components/CmkAlertBox.vue'
-
-const isAlertOpen = ref(true)
-<${'/'}script>
-
-<template>
-  <CmkAlertBox
-    v-model:open="isAlertOpen"
-    variant="info"
-    size="medium"
-    heading="Alert Heading"
-  >
-    This is an important alert message that requires your attention.
-  </CmkAlertBox>
-</template>`
 export const panelConfig = {
   open: { type: 'boolean', title: 'Open', initialState: true },
   variant: {

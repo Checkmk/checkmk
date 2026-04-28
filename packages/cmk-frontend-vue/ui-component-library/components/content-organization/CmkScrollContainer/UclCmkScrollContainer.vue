@@ -8,6 +8,8 @@ import { type Options, type PanelConfig } from '@ucl/_ucl/components/detail-page
 
 import { type ScrollContainerVariants } from '@/components/CmkScrollContainer.vue'
 
+import codeExample from './UclCmkScrollContainerCodeExample.vue?raw'
+
 export const a11yData = [
   {
     keys: ['Tab'],
@@ -23,18 +25,7 @@ export const a11yData = [
       'If the container has overflow and is scrollable, users can scroll using the Arrow Up/Down keys when the container or an element inside it has focus.'
   }
 ]
-export const codeExample = `<script setup lang="ts">
-${'import'} CmkScrollContainer from '@/components/CmkScrollContainer.vue'
-<${'/'}script>
 
-<template>
-  <CmkScrollContainer max-height="200px" type="outer">
-    <p>
-      Long content that will cause the container to overflow
-      and display the custom "outer" style scrollbar.
-    </p>
-  </CmkScrollContainer>
-</template>`
 export const panelConfig = {
   type: {
     type: 'list',

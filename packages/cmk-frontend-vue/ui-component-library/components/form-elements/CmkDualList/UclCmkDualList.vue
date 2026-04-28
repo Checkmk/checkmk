@@ -11,6 +11,8 @@ import {
   type SearchableListWidthVariants
 } from '@/components/CmkDualList/index.ts'
 
+import codeExample from './UclCmkDualListCodeExample.vue?raw'
+
 export const a11yData = [
   {
     keys: ['Tab'],
@@ -27,31 +29,7 @@ export const a11yData = [
       'Triggers the selected action button (e.g., adding or removing items between lists).'
   }
 ]
-export const codeExample = `<script setup lang="ts">
-import { ref } from 'vue'
-${'import'} CmkDualList from '@/components/CmkDualList/CmkDualList.vue'
-${'import'} { type DualListElement } from '@/components/CmkDualList/index.ts'
 
-const availableRoles = ref<DualListElement[]>([
-  { name: 'admin', title: 'Admin' },
-  { name: 'editor', title: 'Editor' },
-  { name: 'viewer', title: 'Viewer' }
-])
-
-
-const selectedRoles = ref<DualListElement[]>([availableRoles.value[2]!])
-<${'/'}script>
-
-<template>
-  <CmkDualList
-    v-model:data="selectedRoles"
-    :elements="availableRoles"
-    title="Assign User Roles"
-    :validators="[]"
-    :backendValidation="[]"
-    width="medium"
-  />
-</template>`
 export const panelConfig = {
   title: {
     type: 'string',

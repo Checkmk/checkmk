@@ -9,6 +9,8 @@ import { type Options, type PanelConfig } from '@ucl/_ucl/components/detail-page
 import { type ButtonVariants } from '@/components/CmkButton.vue'
 import { type DismissalButtonKey } from '@/components/CmkDialog.vue'
 
+import codeExample from './UclCmkDialogCodeExample.vue?raw'
+
 export const a11yData = [
   {
     keys: ['Tab'],
@@ -28,25 +30,6 @@ export const a11yData = [
     description: 'Activates the focused action or dismissal button within the dialog.'
   }
 ]
-export const codeExample = `<script setup lang="ts">
-${'import'} CmkDialog from '@/components/CmkDialog.vue'
-
-function handleAction() {
-  console.log('Action triggered')
-}
-<${'/'}script>
-
-<template>
-  <CmkDialog
-    variant="info"
-    title="Dialog Title"
-    message="This is an informational message that requires user attention."
-    :buttons="[
-      { title: 'Acknowledge', variant: 'info', onclick: handleAction }
-    ]"
-    :dismissal_button="{ title: 'Dismiss', key: 'immediate_slideout_change' }"
-  />
-</template>`
 
 type DialogVariant = 'info' | 'error' | 'success' | 'warning' | 'loading'
 

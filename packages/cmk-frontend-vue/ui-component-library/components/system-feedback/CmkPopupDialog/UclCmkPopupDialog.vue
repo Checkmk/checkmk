@@ -8,6 +8,8 @@ import { type Options, type PanelConfig } from '@ucl/_ucl/components/detail-page
 
 import { type SimpleIcons } from '@/components/CmkIcon'
 
+import codeExample from './UclCmkPopupDialogCodeExample.vue?raw'
+
 export const a11yData = [
   {
     keys: ['Tab'],
@@ -27,29 +29,7 @@ export const a11yData = [
     description: 'Closes the dialog.'
   }
 ]
-export const codeExample = `<script setup lang="ts">
-import { ref } from 'vue'
 
-${'import'} CmkButton from '@/components/CmkButton.vue'
-${'import'} CmkPopupDialog from '@/components/CmkPopupDialog.vue'
-
-const isOpen = ref(false)
-<${'/'}script>
-
-<template>
-  <CmkButton @click="isOpen = true">
-    Open Dialog
-  </CmkButton>
-
-  <CmkPopupDialog
-    :open="isOpen"
-    title="System Notification"
-    text="This is a detailed message explaining the context of the dialog."
-    icon="alert-crit"
-    ok-button-text="OK Button Text"
-    @close="isOpen = false"
-  />
-</template>`
 export const panelConfig = {
   open: { type: 'boolean', title: 'Open', initialState: false },
   title: { type: 'string', title: 'Title', initialState: 'System Notification' },

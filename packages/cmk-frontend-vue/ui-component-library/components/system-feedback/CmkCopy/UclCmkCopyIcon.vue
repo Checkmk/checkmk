@@ -6,6 +6,8 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script lang="ts">
 import { type PanelConfig } from '@ucl/_ucl/components/detail-page'
 
+import codeExample from './UclCmkCopyIconCodeExample.vue?raw'
+
 export const a11yData = [
   {
     keys: ['Tab'],
@@ -26,16 +28,7 @@ export const a11yData = [
     description: 'Dismisses the active tooltip if it is currently visible.'
   }
 ]
-export const codeExample = `<script setup lang="ts">
-${'import'} CmkCopy from '@/components/CmkCopy.vue'
-${'import'} CmkIconButton from '@/components/CmkIconButton.vue'
-<${'/'}script>
 
-<template>
-  <CmkCopy text="cmk --check myhost">
-    <CmkIconButton name="copied" size="medium" />
-  </CmkCopy>
-</template>`
 export const panelConfig = {
   text: { type: 'string', title: 'Text to Copy', initialState: 'cmk --check myhost' }
 } satisfies PanelConfig

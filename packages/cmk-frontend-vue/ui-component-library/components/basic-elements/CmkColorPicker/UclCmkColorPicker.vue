@@ -6,6 +6,8 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script lang="ts">
 import { type PanelConfig } from '@ucl/_ucl/components/detail-page'
 
+import codeExample from './UclCmkColorPickerCodeExample.vue?raw'
+
 export const a11yData = [
   {
     keys: ['Tab'],
@@ -25,16 +27,7 @@ export const a11yData = [
     description: 'Closes the color selection dialog if it is open.'
   }
 ]
-export const codeExample = `<script setup lang="ts">
-import { ref } from 'vue'
-${'import'} CmkColorPicker from '@/components/CmkColorPicker.vue'
 
-const selectedColor = ref('#ff0000')
-<${'/'}script>
-
-<template>
-  <CmkColorPicker v-model:data="selectedColor" />
-</template>`
 export const panelConfig = {
   data: {
     type: 'string',

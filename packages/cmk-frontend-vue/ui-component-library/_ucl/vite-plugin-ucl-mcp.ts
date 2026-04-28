@@ -18,6 +18,7 @@ import type {
   Property,
   VariableDeclaration
 } from 'acorn'
+import fs from 'node:fs'
 import path from 'node:path'
 import { type Plugin } from 'vite'
 
@@ -87,6 +88,14 @@ export type ComponentDetail = CatalogEntry & {
  * is mapped to the AI-readable API format: { name, type, uclInitialState?, options?, description? }
  *
  */
+export function readCodeExample(filePath: string): string {
+  const base = path.basename(filePath)
+  return fs.readFileSync(
+    path.join(path.dirname(filePath), base.replace(/\.vue$/, 'CodeExample.vue')),
+    'utf-8'
+  )
+}
+
 export function serializePanelConfig(config: Record<string, PropDef>): ApiPropDef[] {
   return Object.entries(config).map(([name, def]) => {
     const prop: ApiPropDef = { name, type: def.type }
@@ -153,6 +162,12 @@ export function generateUclApiPlugin(): Plugin {
       let accessibility: AccessibilityItem[] = []
       let description = ''
 
+      try {
+        codeExample = readCodeExample(filePath)
+      } catch (e) {
+        this.error(`UCL plugin: no *CodeExample.vue file found next to ${filePath}: ${e}`)
+      }
+
       for (const node of program.body) {
         if (node.type !== 'ExportNamedDeclaration') {
           continue
@@ -185,9 +200,9 @@ export function generateUclApiPlugin(): Plugin {
         }
       }
 
-      if (codeExample === '') {
+      if (props.length === 0) {
         this.warn(
-          `UCL plugin: no exported data found in ${filePath} — does it use the split <script>/<script setup> pattern?`
+          `UCL plugin: no panelConfig export found in ${filePath} — does it use the split <script>/<script setup> pattern?`
         )
       }
 

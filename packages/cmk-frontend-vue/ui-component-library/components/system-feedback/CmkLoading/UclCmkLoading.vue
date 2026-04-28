@@ -6,13 +6,8 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script lang="ts">
 import { type PanelConfig } from '@ucl/_ucl/components/detail-page'
 
-export const codeExample = `<script setup lang="ts">
-${'import'} CmkLoading from '@/components/CmkLoading.vue'
-<${'/'}script>
+import codeExample from './UclCmkLoadingCodeExample.vue?raw'
 
-<template>
-  <CmkLoading height="8px" />
-</template>`
 export const panelConfig = {
   height: {
     type: 'string',

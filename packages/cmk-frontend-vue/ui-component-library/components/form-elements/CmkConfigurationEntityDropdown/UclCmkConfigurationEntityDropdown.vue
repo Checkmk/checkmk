@@ -25,6 +25,7 @@ import CmkConfigurationEntityDropdown from '@/components/user-input/CmkConfigura
 
 import { initializeComponentRegistry } from '@/form/private/FormEditDispatcher/dispatch'
 
+import codeExample from './UclCmkConfigurationEntityDropdownCodeExample.vue?raw'
 import UclCmkConfigurationEntityDropdownDev from './UclCmkConfigurationEntityDropdownDev.vue'
 
 initializeComponentRegistry()
@@ -147,23 +148,6 @@ onBeforeMount(async () => {
 onBeforeUnmount(() => {
   worker?.stop()
 })
-
-const codeExample = `<script setup lang="ts">
-import { ref } from 'vue'
-import CmkConfigurationEntityDropdown from '@/components/user-input/CmkConfigurationEntityDropdown'
-
-const selectedId = ref<string | null>(null)
-<${'/'} script>
-
-<template>
-  <CmkConfigurationEntityDropdown
-    v-model="selectedId"
-    config-entity-type="notification_parameter"
-    config-entity-type-specifier="slack"
-    label="Notification parameter"
-    :allow-editing-existing-elements="true"
-  />
-</template>`
 </script>
 
 <template>

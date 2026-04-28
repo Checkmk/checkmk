@@ -4,21 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script lang="ts">
-export const codeExample = `<script setup lang="ts">
-${'import'} CmkZebra from '@/components/CmkZebra.vue'
-
-const items = [
-  'Demonstration of of row context for index 0',
-  'Demonstration of of row context for index 1',
-  'Demonstration of of row context for index 2'
-]
-<${'/'}script>
-
-<template>
-  <CmkZebra v-for="(item, index) in items" :key="index" :num="index">
-    {{ item }}
-  </CmkZebra>
-</template>`
+import codeExample from './UclCmkZebraCodeExample.vue?raw'
 </script>
 
 <script setup lang="ts">

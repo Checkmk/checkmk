@@ -8,6 +8,8 @@ import { type Options, type PanelConfig } from '@ucl/_ucl/components/detail-page
 
 import { type CmkIconProps } from '@/components/CmkIcon'
 
+import codeExample from './UclCmkSlideInDialogCodeExample.vue?raw'
+
 export const a11yData = [
   {
     keys: ['Tab'],
@@ -40,30 +42,6 @@ export const a11yData = [
       'Scrolls the content area to the top or bottom when it is focused and has overflow.'
   }
 ]
-export const codeExample = `<script setup lang="ts">
-import { ref } from 'vue'
-${'import'} CmkSlideInDialog from '@/components/CmkSlideInDialog.vue'
-${'import'} CmkButton from '@/components/CmkButton.vue'
-
-const isOpen = ref(false)
-<${'/'}script>
-
-<template>
-  <CmkButton @click="isOpen = true">Open Dialog</CmkButton>
-
-  <CmkSlideInDialog
-    :open="isOpen"
-    :header="{
-      title: 'Dialog Title',
-      closeButton: true,
-      icon: { name: 'info-circle', size: 'medium' }
-    }"
-    @close="isOpen = false"
-  >
-    <p>This dialog comes with a built-in header and scroll container.</p>
-    <CmkButton variant="primary" @click="isOpen = false">Confirm Action</CmkButton>
-  </CmkSlideInDialog>
-</template>`
 
 type DialogSize = 'medium' | 'small'
 

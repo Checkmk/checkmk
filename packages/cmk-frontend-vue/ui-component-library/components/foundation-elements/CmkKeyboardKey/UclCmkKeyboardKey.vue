@@ -8,13 +8,8 @@ import { type Options, type PanelConfig } from '@ucl/_ucl/components/detail-page
 
 import { type CmkKeyboardKeyProps, type Sizes } from '@/components/CmkKeyboardKey.vue'
 
-export const codeExample = `<script setup lang="ts">
-${'import'} CmkKeyboardKey from '@/components/CmkKeyboardKey.vue'
-<${'/'}script>
+import codeExample from './UclCmkKeyboardKeyCodeExample.vue?raw'
 
-<template>
-  <CmkKeyboardKey keyboard-key="enter" size="large" />
-</template>`
 export const panelConfig = {
   keyboardKey: {
     type: 'list',

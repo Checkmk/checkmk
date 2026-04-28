@@ -8,16 +8,8 @@ import { type Options, type PanelConfig } from '@ucl/_ucl/components/detail-page
 
 import { type HeadingType } from '@/components/typography/CmkHeading.vue'
 
-export const codeExample = `<script setup lang="ts">
-${'import'} CmkHeading from '@/components/typography/CmkHeading.vue'
-<${'/'}script>
+import codeExample from './UclCmkHeadingCodeExample.vue?raw'
 
-<template>
-  <CmkHeading type="h1">Main Title</CmkHeading>
-  <CmkHeading type="h2" @click="console.log('Clicked!')">
-    Make Clickable
-  </CmkHeading>
-</template>`
 export const panelConfig = {
   type: {
     type: 'list',

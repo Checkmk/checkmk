@@ -12,6 +12,8 @@ import {
   type CmkLinkCardContrast
 } from '@/components/CmkLinkCard/CmkLinkCard.vue'
 
+import codeExample from './UclCmkLinkCardCodeExample.vue?raw'
+
 export const a11yData = [
   {
     keys: ['Tab'],
@@ -27,20 +29,7 @@ export const a11yData = [
     description: 'Activates the link card, following the URL or triggering the callback.'
   }
 ]
-export const codeExample = `<script setup lang="ts">
-${'import'} CmkLinkCard from '@/components/CmkLinkCard'
-<${'/'}script>
 
-<template>
-  <CmkLinkCard
-    title="Checkmk Documentation"
-    subtitle="Learn how to configure and use Checkmk."
-    icon-name="about-checkmk"
-    url="https://docs.checkmk.com"
-    variant="standard"
-    :open-in-new-tab="true"
-  />
-</template>`
 export const panelConfig = {
   borders: {
     type: 'list',

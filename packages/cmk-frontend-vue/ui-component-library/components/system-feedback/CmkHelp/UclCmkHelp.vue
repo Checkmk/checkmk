@@ -6,6 +6,8 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script lang="ts">
 import { type PanelConfig } from '@ucl/_ucl/components/detail-page'
 
+import codeExample from './UclCmkHelpCodeExample.vue?raw'
+
 export const a11yData = [
   {
     keys: ['Tab'],
@@ -25,13 +27,7 @@ export const a11yData = [
     description: 'Closes the tooltip if it is currently open.'
   }
 ]
-export const codeExample = `<script setup lang="ts">
-${'import'} CmkHelpText from '@/components/CmkHelpText.vue'
-<${'/'}script>
 
-<template>
-    <CmkHelpText help="Enter the fully qualified domain name (FQDN) of the server." />
-</template>`
 export const panelConfig = {
   help: {
     type: 'string',

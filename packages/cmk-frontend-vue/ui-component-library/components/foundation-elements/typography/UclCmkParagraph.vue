@@ -4,15 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script lang="ts">
-export const codeExample = `<script setup lang="ts">
-${'import'} CmkParagraph from '@/components/typography/CmkParagraph.vue'
-<${'/'}script>
-
-<template>
-  <CmkParagraph>
-    The quick brown fox jumps over the lazy dog.
-  </CmkParagraph>
-</template>`
+import codeExample from './UclCmkParagraphCodeExample.vue?raw'
 </script>
 
 <script setup lang="ts">

@@ -6,6 +6,8 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script lang="ts">
 import { type PanelConfig } from '@ucl/_ucl/components/detail-page'
 
+import codeExample from './UclCmkCodeCodeExample.vue?raw'
+
 export const a11yData = [
   {
     keys: ['Tab'],
@@ -22,21 +24,7 @@ export const a11yData = [
       'Activates the "Show more/less" toggle or triggers the code copy action when the respective button is focused.'
   }
 ]
-export const codeExample = `<script setup lang="ts">
-${'import'} CmkCode from '@/components/CmkCode.vue'
 
-const mySnippet = \`const greet = () => {
-  console.log("Hello Checkmk!");
-};
-greet();\`
-<${'/'}script>
-
-<template>
-  <CmkCode
-    title="Greeting Function"
-    :code_txt="mySnippet"
-  />
-</template>`
 export const panelConfig = {
   title: {
     type: 'string',

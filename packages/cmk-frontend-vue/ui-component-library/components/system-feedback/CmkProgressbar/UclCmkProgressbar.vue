@@ -8,18 +8,8 @@ import { type Options, type PanelConfig } from '@ucl/_ucl/components/detail-page
 
 import { type Sizes } from '@/components/CmkProgressbar.vue'
 
-export const codeExample = `<script setup lang="ts">
-${'import'} CmkProgressbar from '@/components/CmkProgressbar.vue'
-<${'/'}script>
+import codeExample from './UclCmkProgressbarCodeExample.vue?raw'
 
-<template>
-  <CmkProgressbar
-    :value="30"
-    :max="100"
-    size="medium"
-    :label="{ showTotal: true, unit: '%' }"
-  />
-</template>`
 export const panelConfig = {
   value: { type: 'number', title: 'Current Value', initialState: 30 },
   max: {

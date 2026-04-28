@@ -8,20 +8,8 @@ import { type Options, type PanelConfig } from '@ucl/_ucl/components/detail-page
 
 import { type Colors, type Shapes, type Sizes, type Types } from '@/components/CmkBadge.vue'
 
-export const codeExample = `<script setup lang="ts">
-${'import'} CmkBadge from '@/components/CmkBadge.vue'
-<${'/'}script>
+import codeExample from './UclCmkBadgeCodeExample.vue?raw'
 
-<template>
-  <CmkBadge
-    color="danger"
-    type="fill"
-    shape="circle"
-    size="medium"
-  >
-    99
-  </CmkBadge>
-</template>`
 export const panelConfig = {
   size: {
     type: 'list',

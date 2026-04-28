@@ -6,6 +6,8 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script lang="ts">
 import { type Options, type PanelConfig } from '@ucl/_ucl/components/detail-page'
 
+import codeExample from './UclCmkCheckboxCodeExample.vue?raw'
+
 export const a11yData = [
   {
     keys: ['Tab'],
@@ -21,20 +23,6 @@ export const a11yData = [
     description: 'Toggles the checkbox state between checked and unchecked.'
   }
 ]
-export const codeExample = `<script setup lang="ts">
-import { ref } from 'vue'
-${'import'} CmkCheckbox from '@/components/user-input/CmkCheckbox.vue'
-
-const isChecked = ref(false)
-<${'/'}script>
-
-<template>
-  <CmkCheckbox
-    v-model="isChecked"
-    label="Enable notifications"
-    help="You will receive alerts via email."
-  />
-</template>`
 
 type CheckboxPadding = 'both' | 'top' | 'bottom'
 

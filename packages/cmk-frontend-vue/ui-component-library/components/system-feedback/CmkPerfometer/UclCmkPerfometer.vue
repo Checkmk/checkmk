@@ -6,18 +6,8 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script lang="ts">
 import { type PanelConfig } from '@ucl/_ucl/components/detail-page'
 
-export const codeExample = `<script setup lang="ts">
-${'import'} CmkPerfometer from '@/components/CmkPerfometer.vue'
-<${'/'}script>
+import codeExample from './UclCmkPerfometerCodeExample.vue?raw'
 
-<template>
-  <CmkPerfometer
-    :value="75"
-    :value-range="[0, 100]"
-    formatted="75 %"
-    color="green"
-  />
-</template>`
 export const panelConfig = {
   value: { type: 'number', title: 'Value', initialState: 75 },
   valueRange: {

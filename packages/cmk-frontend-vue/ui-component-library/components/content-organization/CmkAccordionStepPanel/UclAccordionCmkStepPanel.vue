@@ -6,6 +6,8 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script lang="ts">
 import { type PanelConfig } from '@ucl/_ucl/components/detail-page'
 
+import codeExample from './UclAccordionCmkStepPanelCodeExample.vue?raw'
+
 export const a11yData = [
   {
     keys: ['Tab'],
@@ -20,36 +22,7 @@ export const a11yData = [
     description: 'Toggles the expansion state of the focused accordion item.'
   }
 ]
-export const codeExample = `<script setup lang="ts">
-import { ref } from 'vue'
-${'import'} CmkAccordionStepPanel from '@/components/CmkAccordionStepPanel/CmkAccordionStepPanel.vue'
-${'import'} CmkAccordionStepPanelItem from '@/components/CmkAccordionStepPanel/CmkAccordionStepPanelItem.vue'
 
-const openSteps = ref(['step-2'])
-<${'/'}script>
-
-<template>
-  <CmkAccordionStepPanel v-model="openSteps">
-
-    <CmkAccordionStepPanelItem
-      :step="1"
-      title="Download Agent"
-      info="2-3 min"
-      :accomplished="true"
-    >
-      <p>Select your operating system and download the appropriate agent package.</p>
-    </CmkAccordionStepPanelItem>
-
-    <CmkAccordionStepPanelItem
-      :step="2"
-      title="Install Package"
-      info="5 min"
-      :accomplished="false"
-    >
-      <p>Run the installer on your target machine. Ensure you have root/admin privileges.</p>
-    </CmkAccordionStepPanelItem>
-  </CmkAccordionStepPanel>
-</template>`
 export const panelConfig = {
   openSteps: {
     type: 'string-array',

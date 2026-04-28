@@ -6,19 +6,8 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script lang="ts">
 import { type PanelConfig } from '@ucl/_ucl/components/detail-page'
 
-export const codeExample = `<script setup lang="ts">
-${'import'} CmkIndent from '@/components/CmkIndent.vue'
-<${'/'}script>
+import codeExample from './UclCmkIndentCodeExample.vue?raw'
 
-<template>
-  <p>Top Level Content</p>
-  <CmkIndent>
-    <p>First Level Indentation</p>
-    <CmkIndent error>
-      <p>Second Level Indentation</p>
-    </CmkIndent>
-  </CmkIndent>
-</template>`
 export const panelConfig = {
   indent: { type: 'boolean', title: 'Enable Indent', initialState: true },
   error: { type: 'boolean', title: 'Error State', initialState: false }

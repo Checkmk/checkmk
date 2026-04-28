@@ -7,6 +7,8 @@ conditions defined in the file COPYING, which is part of this source code packag
 import { type PanelConfig } from '@ucl/_ucl/components/detail-page'
 import { type TwoFactorAuth as TwoFactorAuthType } from 'cmk-shared-typing/typescript/two_factor_auth'
 
+import codeExample from './UclTwoFactorAuthenticationCodeExample.vue?raw'
+
 export const a11yData = [
   {
     keys: ['Tab'],
@@ -21,20 +23,7 @@ export const a11yData = [
     description: 'Submits the form when focused within the input fields.'
   }
 ]
-export const codeExample = `<script setup lang="ts">
-import type { TwoFactorAuth as TwoFactorAuthType } from 'cmk-shared-typing/typescript/two_factor_auth'
-${'import'} TwoFactorAuth from '@/two-factor-auth/TwoFactorAuthApp.vue'
 
-const methods: TwoFactorAuthType = {
-  totp_credentials: true,
-  webauthn_credentials: true,
-  backup_codes: false
-}
-<${'/'}script>
-
-<template>
-  <TwoFactorAuth :available-methods="methods" />
-</template>`
 export const panelConfig = {
   totp: { type: 'boolean', title: 'Enable TOTP', initialState: true },
   webauthn: { type: 'boolean', title: 'Enable WebAuthn', initialState: true },

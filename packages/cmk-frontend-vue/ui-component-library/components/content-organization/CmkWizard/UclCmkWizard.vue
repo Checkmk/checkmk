@@ -6,6 +6,8 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script lang="ts">
 import { type Options, type PanelConfig } from '@ucl/_ucl/components/detail-page'
 
+import codeExample from './UclCmkWizardCodeExample.vue?raw'
+
 export const a11yData = [
   {
     keys: ['Tab'],
@@ -20,43 +22,7 @@ export const a11yData = [
     description: 'Activates the focused Previous or Next button.'
   }
 ]
-export const codeExample = `<script setup lang="ts">
-import { ref } from 'vue'
-${'import'} CmkWizard, { CmkWizardStep, CmkWizardButton, CmkWizardModeToggle } from '@/components/CmkWizard'
 
-const step = ref(1)
-const mode = ref<'guided' | 'overview'>('guided')
-<${'/'}script>
-
-<template>
-  <CmkWizardModeToggle v-model="mode" />
-
-  <CmkWizard v-model="step" :mode="mode">
-    <CmkWizardStep :index="1" :is-completed="() => step > 1">
-      <template #header><CmkHeading type="h3">Step 1: Introduction</CmkHeading></template>
-      <template #content><p>Welcome to the setup wizard. Please provide your initial details.</p></template>
-      <template #actions><CmkWizardButton type="next" /></template>
-    </CmkWizardStep>
-
-    <CmkWizardStep :index="2" :is-completed="() => step > 2">
-      <template #header><CmkHeading type="h3">Step 2: Configuration</CmkHeading></template>
-      <template #content><p>Adjust the parameters for your monitoring instance here.</p></template>
-      <template #actions>
-        <CmkWizardButton type="previous" />
-        <CmkWizardButton type="next" />
-      </template>
-    </CmkWizardStep>
-
-    <CmkWizardStep :index="3" :is-completed="() => step > 3">
-      <template #header><CmkHeading type="h3">Step 3: Review</CmkHeading></template>
-      <template #content><p>Verify that all settings are correct before finishing the process.</p></template>
-      <template #actions>
-        <CmkWizardButton type="previous" />
-        <CmkWizardButton type="next" label="Complete Setup" />
-      </template>
-    </CmkWizardStep>
-  </CmkWizard>
-</template>`
 export const panelConfig = {
   mode: {
     type: 'list',

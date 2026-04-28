@@ -8,6 +8,8 @@ import { type Options, type PanelConfig } from '@ucl/_ucl/components/detail-page
 
 import { type ToggleButtonOption } from '@/components/CmkToggleButtonGroup.vue'
 
+import codeExample from './UclCmkToggleButtonGroupCodeExample.vue?raw'
+
 export const a11yData = [
   {
     keys: ['Tab'],
@@ -23,25 +25,7 @@ export const a11yData = [
     description: 'Selects the currently focused toggle option.'
   }
 ]
-export const codeExample = `<script setup lang="ts">
-import { ref } from 'vue'
-${'import'} CmkToggleButtonGroup from '@/components/CmkToggleButtonGroup.vue'
 
-const currentView = ref('list')
-
-const viewOptions = [
-  { label: 'List View', value: 'list' },
-  { label: 'Grid View', value: 'grid' }
-
-]
-<${'/'}script>
-
-<template>
-  <CmkToggleButtonGroup
-    v-model="currentView"
-    :options="viewOptions"
-  />
-</template>`
 export const panelConfig = {
   modelValue: {
     type: 'list',

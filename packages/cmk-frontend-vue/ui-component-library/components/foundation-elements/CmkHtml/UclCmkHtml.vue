@@ -6,14 +6,10 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script lang="ts">
 import { type PanelConfig } from '@ucl/_ucl/components/detail-page'
 
-export const a11yData: never[] = []
-export const codeExample = `<script setup lang="ts">
-import CmkHtml from '@/components/CmkHtml.vue'
-<${'/'}script>
+import codeExample from './UclCmkHtmlCodeExample.vue?raw'
 
-<template>
-  <CmkHtml html="<h1>Heading</h1> <b>bold</b> and <a href='https://checkmk.com'>link</a>" />
-</template>`
+export const a11yData: never[] = []
+
 export const panelConfig = {
   html: {
     type: 'multiline-string',

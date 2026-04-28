@@ -6,6 +6,8 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script lang="ts">
 import { type Options, type PanelConfig } from '@ucl/_ucl/components/detail-page'
 
+import codeExample from './UclCmkCatalogPanelCodeExample.vue?raw'
+
 export const a11yData = [
   {
     keys: ['Tab'],
@@ -22,15 +24,6 @@ export const a11yData = [
       'When the header button is focused, pressing Enter or Space toggles the visibility of the panel content.'
   }
 ]
-export const codeExample = `<script setup lang="ts">
-${'import'} CmkCatalogPanel from '@/components/CmkCatalogPanel.vue'
-<${'/'}script>
-
-<template>
-  <CmkCatalogPanel title="Catalog Panel" variant="default" :open="true">
-    This is the collapsible content inside the panel.
-  </CmkCatalogPanel>
-</template>`
 
 type CatalogPanelVariant = 'default' | 'padded'
 

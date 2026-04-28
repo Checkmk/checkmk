@@ -6,19 +6,8 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script lang="ts">
 import { type Options, type PanelConfig } from '@ucl/_ucl/components/detail-page'
 
-export const codeExample = `<script setup lang="ts">
-${'import'} CmkLabel from '@/components/CmkLabel.vue'
-${'import'} CmkInput from '@/components/user-input/CmkInput.vue'
-${'import'} CmkLabelRequired from '@/components/user-input/CmkLabelRequired.vue'
-<${'/'}script>
+import codeExample from './UclCmkLabelRequiredCodeExample.vue?raw'
 
-<template>
-  <CmkLabel>
-    Username
-    <CmkLabelRequired space="before" />
-  </CmkLabel>
-  <CmkInput type="text" required />
-</template>`
 export const panelConfig = {
   show: { type: 'boolean', title: 'Show Required Label', initialState: true },
   space: {

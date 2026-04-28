@@ -9,6 +9,8 @@ import { type Options, type PanelConfig } from '@ucl/_ucl/components/detail-page
 import { type ButtonVariants } from '@/components/CmkDropdown/CmkDropdownButton.vue'
 import { type Suggestions } from '@/components/CmkSuggestions'
 
+import codeExample from './UclCmkDropdownCodeExample.vue?raw'
+
 export const a11yData = [
   {
     keys: ['Enter', 'Space'],
@@ -34,32 +36,7 @@ export const a11yData = [
       'Moves the active highlight to the next selectable suggestion in the list, scrolling it into view if necessary.'
   }
 ]
-export const codeExample = `<script setup lang="ts">
-import { ref } from 'vue'
 
-import CmkDropdown from '@/components/CmkDropdown'
-import type { Suggestions } from '@/components/CmkSuggestions'
-
-const selected = ref<string | null>(null)
-const options: Suggestions = {
-  type: 'fixed',
-  suggestions: [
-    { name: '1', title: 'one' },
-    { name: '2', title: 'two' }
-  ]
-}
-<${'/'}script>
-
-<template>
-  <CmkDropdown
-    v-model:selected-option="selected"
-    :options="options"
-    input-hint="Input Hint"
-    no-results-hint="No Results Hint"
-    label="demo dropdown"
-    required
-  />
-</template>`
 export const panelConfig = {
   optionsType: {
     type: 'list',

@@ -3,8 +3,21 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { serializePanelConfig } from '@ucl/_ucl/vite-plugin-ucl-mcp'
+import { readCodeExample, serializePanelConfig } from '@ucl/_ucl/vite-plugin-ucl-mcp'
+import fs from 'node:fs'
+import path from 'node:path'
 import { describe, expect, it } from 'vitest'
+
+describe('readCodeExample', () => {
+  it('reads content from the co-located *CodeExample.vue file', () => {
+    const compDir = path.resolve(
+      __dirname,
+      '../../../ui-component-library/components/basic-elements/CmkButton'
+    )
+    const expected = fs.readFileSync(path.join(compDir, 'UclCmkButtonCodeExample.vue'), 'utf-8')
+    expect(readCodeExample(path.join(compDir, 'UclCmkButton.vue'))).toBe(expected)
+  })
+})
 
 describe('vite-plugin-ucl-mcp', () => {
   it('serializes panel config', () => {

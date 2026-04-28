@@ -8,18 +8,8 @@ import { type PanelConfig } from '@ucl/_ucl/components/detail-page'
 
 import { type CmkIconVariants, type IconSizeNames, type SimpleIcons } from '@/components/CmkIcon'
 
-export const codeExample = `<script setup lang="ts">
-${'import'} CmkIcon from '@/components/CmkIcon'
-<${'/'}script>
+import codeExample from './UclCmkIconCodeExample.vue?raw'
 
-<template>
-  <CmkIcon
-    name="main-help"
-    size="large"
-    variant="inline"
-    title="Get Help"
-  />
-</template>`
 export const panelConfig = {
   name: { type: 'string', title: 'Icon Name', initialState: 'main-help' },
   variant: {

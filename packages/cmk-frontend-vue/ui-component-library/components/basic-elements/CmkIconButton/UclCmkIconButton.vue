@@ -6,6 +6,8 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script lang="ts">
 import { type PanelConfig } from '@ucl/_ucl/components/detail-page'
 
+import codeExample from './UclCmkIconButtonCodeExample.vue?raw'
+
 export const a11yData = [
   {
     keys: ['Tab'],
@@ -21,23 +23,6 @@ export const a11yData = [
     description: 'Activates the button and emits the click event.'
   }
 ]
-
-export const codeExample = `<script setup lang="ts">
-${'import'} CmkIconButton from '@/components/CmkIconButton.vue'
-
-const handleClick = () => {
-  console.log('Button clicked!')
-}
-<${'/'}script>
-
-<template>
-  <CmkIconButton
-    name="main-help"
-    size="medium"
-    title="Get Help"
-    @click="handleClick"
-  />
-</template>`
 
 export const panelConfig = {
   name: { type: 'string', title: 'Icon Name', initialState: 'main-help' },

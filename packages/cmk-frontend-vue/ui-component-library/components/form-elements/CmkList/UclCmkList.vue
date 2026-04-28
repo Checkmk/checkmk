@@ -6,6 +6,8 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script lang="ts">
 import { type Options, type PanelConfig } from '@ucl/_ucl/components/detail-page'
 
+import codeExample from './UclCmkListCodeExample.vue?raw'
+
 export const a11yData = [
   {
     keys: ['Tab'],
@@ -21,40 +23,6 @@ export const a11yData = [
     description: 'Deletes the focused item from the list.'
   }
 ]
-export const codeExample = `<script setup lang="ts">
-import { ref } from 'vue'
-${'import'} CmkList from '@/components/CmkList/CmkList.vue'
-
-const itemsData = ref({
-  names: ['Alice', 'Bob', 'Charlie'],
-  roles: ['Admin', 'Editor', 'Viewer']
-})
-
-const handleAdd = () => {
-  itemsData.value.names.push('New User')
-  itemsData.value.roles.push('Viewer')
-  return true
-}
-
-const handleDelete = (index: number) => {
-  return true
-}
-<${'/'}script>
-
-<template>
-  <CmkList
-    :items-props="itemsData"
-    orientation="vertical"
-    :try-delete="handleDelete"
-    :add="{ show: true, tryAdd: handleAdd, label: 'Add User' }"
-  >
-    <template #item-props="{ names, roles }">
-      <div>
-        <strong>{{ names }}</strong> - <span>{{ roles }}</span>
-      </div>
-    </template>
-  </CmkList>
-</template>`
 
 type ListOrientation = 'vertical' | 'horizontal'
 

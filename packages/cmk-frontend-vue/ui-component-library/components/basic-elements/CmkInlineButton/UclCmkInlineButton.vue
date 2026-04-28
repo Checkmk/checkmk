@@ -8,6 +8,8 @@ import { type PanelConfig } from '@ucl/_ucl/components/detail-page'
 
 import { type SimpleIcons } from '@/components/CmkIcon'
 
+import codeExample from './UclCmkInlineButtonCodeExample.vue?raw'
+
 export const a11yData = [
   {
     keys: ['Tab'],
@@ -23,19 +25,7 @@ export const a11yData = [
     description: 'Activates the button and emits the click event.'
   }
 ]
-export const codeExample = `<script setup lang="ts">
-${'import'} CmkInlineButton from '@/components/user-input/CmkInlineButton.vue'
 
-const handleClick = () => {
-  console.log('Button clicked!')
-}
-<${'/'}script>
-
-<template>
-  <CmkInlineButton icon="plus" @click="handleClick">
-    Add item
-  </CmkInlineButton>
-</template>`
 export const panelConfig = {
   icon: {
     type: 'string',

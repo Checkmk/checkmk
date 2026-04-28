@@ -6,6 +6,8 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script lang="ts">
 import { type Options, type PanelConfig } from '@ucl/_ucl/components/detail-page'
 
+import codeExample from './UclCmkTabsCodeExample.vue?raw'
+
 export const a11yData = [
   {
     keys: ['Tab'],
@@ -24,43 +26,6 @@ export const a11yData = [
     description: 'Move to the first and last tabs respectively.'
   }
 ]
-export const codeExample = `<script setup lang="ts">
-import { ref } from 'vue'
-${'import'} CmkTabs, { CmkTab, CmkTabContent } from '@/components/CmkTabs'
-${'import'} CmkIcon from '@/components/CmkIcon'
-
-const activeTab = ref('tab-1')
-<${'/'}script>
-
-<template>
-  <CmkTabs v-model="activeTab">
-
-    <template #tabs>
-      <CmkTab id="tab-1">
-        <CmkIcon name="search" /> Search
-      </CmkTab>
-      <CmkTab id="tab-2">
-        <CmkIcon name="info-circle" /> Information
-      </CmkTab>
-      <CmkTab id="tab-3" :disabled="true">
-        <CmkIcon name="close" /> Disabled
-      </CmkTab>
-    </template>
-
-    <template #tab-contents>
-      <CmkTabContent id="tab-1">
-        <p>Use the search bar to find hosts and services.</p>
-      </CmkTabContent>
-      <CmkTabContent id="tab-2">
-        <p>Detailed system information and status reports.</p>
-      </CmkTabContent>
-      <CmkTabContent id="tab-3">
-        <p>This content is not accessible.</p>
-      </CmkTabContent>
-    </template>
-
-  </CmkTabs>
-</template>`
 
 type TabId = 'tab-1' | 'tab-2' | 'tab-3'
 

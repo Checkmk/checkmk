@@ -8,18 +8,8 @@ import { type Options, type PanelConfig } from '@ucl/_ucl/components/detail-page
 
 import { type Colors, type Sizes, type Variants } from '@/components/CmkTag.vue'
 
-export const codeExample = `<script setup lang="ts">
-${'import'} CmkTag from '@/components/CmkTag.vue'
-<${'/'}script>
+import codeExample from './UclCmkTagCodeExample.vue?raw'
 
-<template>
-  <CmkTag
-    content="Critical Issue"
-    color="default"
-    variant="outline"
-    size="medium"
-  />
-</template>`
 export const panelConfig = {
   content: {
     type: 'string',

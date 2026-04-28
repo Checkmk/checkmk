@@ -6,6 +6,8 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script lang="ts">
 import { type PanelConfig } from '@ucl/_ucl/components/detail-page'
 
+import codeExample from './UclCmkCollapsibleCodeExample.vue?raw'
+
 export const a11yData = [
   {
     keys: ['Tab'],
@@ -22,29 +24,7 @@ export const a11yData = [
       'When the title button is focused, pressing Enter or Space opens the collapsible content.'
   }
 ]
-export const codeExample = `<script setup lang="ts">
-import { ref } from 'vue'
-${'import'} CmkCollapsible, { CmkCollapsibleTitle } from '@/components/CmkCollapsible'
-${'import'} CmkIndent from '@/components/CmkIndent.vue'
 
-const isOpen = ref(false)
-<${'/'}script>
-
-<template>
-  <CmkCollapsibleTitle
-    title="Collapsible Section"
-    side-title="Details"
-    help_text="Click to expand"
-    :open="isOpen"
-    @toggle-open="isOpen = !isOpen"
-  />
-
-  <CmkCollapsible :open="isOpen">
-    <CmkIndent>
-      This content is hidden inside the collapsible wrapper. It animates height smoothly when toggled.
-    </CmkIndent>
-  </CmkCollapsible>
-</template>`
 export const panelConfig = {
   open: { type: 'boolean', title: 'Open', initialState: false },
   title: { type: 'string', title: 'Title Text', initialState: 'Collapsible Section' },

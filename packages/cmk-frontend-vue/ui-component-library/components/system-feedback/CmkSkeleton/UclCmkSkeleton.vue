@@ -8,19 +8,8 @@ import { type Options, type PanelConfig } from '@ucl/_ucl/components/detail-page
 
 import { type SkeletonType } from '@/components/CmkSkeleton.vue'
 
-export const codeExample = `<script setup lang="ts">
-${'import'} CmkSkeleton from '@/components/CmkSkeleton.vue'
-<${'/'}script>
+import codeExample from './UclCmkSkeletonCodeExample.vue?raw'
 
-<template>
-  <div class="user-card-loading">
-    <CmkSkeleton type="icon-xlarge" />
-    <div class="user-card-text">
-      <CmkSkeleton type="h3" width="60%" />
-      <CmkSkeleton type="info-text" width="40%" />
-    </div>
-  </div>
-</template>`
 export const panelConfig = {
   type: {
     type: 'list',

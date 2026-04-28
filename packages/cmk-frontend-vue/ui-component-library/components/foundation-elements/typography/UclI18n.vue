@@ -6,6 +6,8 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script lang="ts">
 import { type PanelConfig } from '@ucl/_ucl/components/detail-page'
 
+import codeExample from './UclI18nCodeExample.vue?raw'
+
 export const a11yData = [
   {
     keys: ['HTML Lang Attribute'],
@@ -13,16 +15,7 @@ export const a11yData = [
       'When switching languages dynamically, ensure the root `<html>` element’s `lang` attribute is updated (e.g., `lang="de"`). This is critical for screen readers to load the correct pronunciation dictionary.'
   }
 ]
-export const codeExample = `<script setup lang="ts">
-import usei18n from '@/lib/i18n'
-${'import'} CmkParagraph from '@/components/typography/CmkParagraph.vue'
 
-const { _t, _tn } = usei18n()
-<${'/'}script>
-
-<template>
-  <CmkParagraph>{{ _t('Hello %{name}!', { name: 'Alice' }) }}</CmkParagraph>
-</template>`
 export const panelConfig = {
   language: {
     type: 'list',

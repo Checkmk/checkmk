@@ -6,6 +6,8 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script lang="ts">
 import { type Options, type PanelConfig } from '@ucl/_ucl/components/detail-page'
 
+import codeExample from './UclCmkTooltipCodeExample.vue?raw'
+
 export const a11yData = [
   {
     keys: ['Tab'],
@@ -25,36 +27,6 @@ export const a11yData = [
     description: 'Closes the tooltip if it is currently open.'
   }
 ]
-export const codeExample = `<script setup lang="ts">
-import { ref } from 'vue'
-
-${'import'} CmkButton from '@/components/CmkButton.vue'
-import CmkTooltip, {
-  CmkTooltipContent,
-  CmkTooltipProvider,
-  CmkTooltipTrigger
-} from '@/components/CmkTooltip'
-
-const isTooltipOpen = ref(false)
-<${'/'}script>
-
-<template>
-  <CmkTooltipProvider>
-    <CmkTooltip v-model:open="isTooltipOpen">
-
-      <CmkTooltipTrigger as-child>
-        <CmkButton variant="secondary">Interact with me</CmkButton>
-      </CmkTooltipTrigger>
-
-      <CmkTooltipContent side="top" align="center">
-        <div class="tooltip-content">
-          This is a tooltip on the top!
-        </div>
-      </CmkTooltipContent>
-
-    </CmkTooltip>
-  </CmkTooltipProvider>
-</template>`
 
 type SideOptions = 'top' | 'right' | 'bottom' | 'left'
 type AlignOptions = 'start' | 'center' | 'end'

@@ -67,6 +67,7 @@ void main() {
     // groovylint-disable-next-line UnusedVariable
     def package_name = "";
     def license_flag = edition == "community" ? '--//:repo_license="gpl"' : "";
+    def enable_compression = versioning.is_official_release(cmk_version_rc_aware) ? "" : "--//:low_zstd_compression=true";
 
     print(
         """
@@ -219,6 +220,7 @@ void main() {
                         ]) {
                             sh("""
                                 bazel build \
+                                    ${enable_compression} \
                                     --cmk_version=${cmk_version} \
                                     --cmk_edition=${edition} \
                                     ${license_flag} \

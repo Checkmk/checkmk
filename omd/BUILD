@@ -494,7 +494,10 @@ pkg_files(
 [pkg_tar(
     name = "complete_install_compressed_" + edition,
     compressor = "@zstd//:zstd_cli",
-    compressor_args = "-19",
+    compressor_args = select({
+        "@//:low_zstd_compression_enabled": "-5",
+        "//conditions:default": "-19",
+    }),
     extension = "tar.zst",
     mtime = 1767744000,
     portable_mtime = False,

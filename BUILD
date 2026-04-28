@@ -1,5 +1,5 @@
 load("@aspect_bazel_lib//lib:copy_to_directory.bzl", "copy_to_directory")
-load("@bazel_skylib//rules:common_settings.bzl", "string_flag")
+load("@bazel_skylib//rules:common_settings.bzl", "bool_flag", "string_flag")
 load("@bazel_skylib//rules:write_file.bzl", "write_file")
 load("@gazelle//:def.bzl", "gazelle")
 load("@hedron_compile_commands//:refresh_compile_commands.bzl", "refresh_compile_commands")
@@ -52,6 +52,18 @@ config_setting(
     name = "gpl+nonfree_repo",
     flag_values = {":repo_license": "gpl+enterprise"},
     visibility = ["//:__subpackages__"],
+)
+
+bool_flag(
+    name = "low_zstd_compression",
+    build_setting_default = False,
+    visibility = ["//visibility:public"],
+)
+
+config_setting(
+    name = "low_zstd_compression_enabled",
+    flag_values = {":low_zstd_compression": "True"},
+    visibility = ["//visibility:public"],
 )
 
 # Generate `compile_commands.json` with `bazel run //:refresh_compile_commands`.

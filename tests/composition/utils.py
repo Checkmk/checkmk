@@ -21,17 +21,6 @@ class Timeout(RuntimeError):
     pass
 
 
-def get_package_extension() -> str:
-    package_type = get_package_type()
-    if package_type == "linux_deb":
-        return "deb"
-    if package_type == "linux_rpm":
-        return "rpm"
-    raise NotImplementedError(
-        f"'get_package_extension' for '{package_type}' is not supported yet in, please implement it"
-    )
-
-
 def bake_agent(site: Site, hostname: str) -> tuple[str, Path]:
     logger.info('Create host "%s" and bake agent...', hostname)
     start_time = time.time()
@@ -56,38 +45,22 @@ def bake_agent(site: Site, hostname: str) -> tuple[str, Path]:
 
 def get_cre_agent_path(site: Site) -> Path:
     # On Checkmk Community we can't bake agents since agent baking is a commercial feature so we
-    # use the vanilla agent
-    package_extension = get_package_extension()
-    agent_folder = site.resolve_path(Path("share", "check_mk", "agents"))
-    # The locations of the 2 agent packages in the raw edition are:
+    # use the vanilla agent.
+    # The locations of the agent packages in the raw edition are:
     # *) $SITE_HOME/share/check_mk/agents/check-mk-agent_2022.11.08-1_all.deb
     # *) $SITE_HOME/share/check_mk/agents/check-mk-agent-2022.11.08-1.noarch.rpm
-    agent_search_pattern = agent_folder / f"check-mk-agent*.{package_extension}"
-    agent_results = list(glob.glob(agent_search_pattern.as_posix()))
-    if not agent_results:
-        raise ValueError(
-            f"Can't find '{package_extension}' agent to install in folder '{agent_folder}'"
-        )
-    if len(agent_results) > 1:
-        # The Checkmk server always runs on x86_64; prefer the matching package when
-        # multiple are present (e.g. both x86_64.rpm and aarch64.rpm in the agents dir).
-        for arch_str in ("x86_64", "amd64"):
-            for result in agent_results:
-                if arch_str in Path(result).name:
-                    return Path(result)
-    if len(agent_results) > 1:
-        # The Checkmk server always runs on x86_64; prefer the matching package when
-        # multiple are present (e.g. both x86_64.rpm and aarch64.rpm in the agents dir).
-        for arch_str in ("x86_64", "amd64"):
-            for result in agent_results:
-                if arch_str in Path(result).name:
-                    return Path(result)
-        logger.warning(
-            "Multiple agent packages found but none matched x86_64/amd64: %s — using %s",
-            agent_results,
-            agent_results[0],
-        )
-    return Path(agent_results[0])
+    agent_folder = site.resolve_path(Path("share", "check_mk", "agents"))
+    package_type = get_package_type()
+    if package_type == "linux_deb":
+        pattern = agent_folder / "check-mk-agent_*_all.deb"
+    elif package_type == "linux_rpm":
+        pattern = agent_folder / "check-mk-agent-*.noarch.rpm"
+    else:
+        raise NotImplementedError(f"get_cre_agent_path: unsupported package type '{package_type}'")
+    results = list(glob.glob(pattern.as_posix()))
+    if not results:
+        raise ValueError(f"Can't find agent package matching '{pattern}'")
+    return Path(results[0])
 
 
 def enable_rabbitmq_tracing(*sites: Site) -> None:

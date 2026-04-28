@@ -407,7 +407,7 @@ test-unit-all: test-doctest
 	cd .. && \
 	    bazel test --test_verbose_timeout_warnings \
 	    //tests/unit:all \
-	    //non-free/tests/system/metric_backend/... \
+	    //tests/system/non-free/metric_backend/... \
 	    --test_env=TZ=$(RANDOM_TZ) \
 	    --test_arg="--numprocesses=4"
 

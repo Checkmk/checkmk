@@ -64,9 +64,7 @@ pidof_apache() {
         # between them using the process name.
         # One process is in watolib.py: ActivateChangesSite.run()
         APACHE_BIN_PATH=$(apache_bin)
-        # Ignore zombie processes. `--sort=lstart` ensures we choose the parent over children.
-        USER_PROCS=$(ps --user "$OMD_SITE" --sort=lstart --format pid=,stat=,comm= 2>/dev/null)
-        PID=$(awk --assign cmd="${APACHE_BIN_PATH##*/}" '$3 == cmd && $2 !~ /^Z/ {print $1; exit}' <<<"$USER_PROCS")
+        PID=$(pgrep -u $OMD_SITE -o ${APACHE_BIN_PATH##*/})
         if [ -n "$PID" ]; then
             echo $PID
             return 0

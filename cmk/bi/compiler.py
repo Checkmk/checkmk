@@ -84,9 +84,6 @@ class BICompiler:
         finally:
             self._load_compiled_aggregations()
 
-    def get_frozen_aggr_id(self, frozen_info: FrozenBIInfo) -> str:
-        return f"frozen_{frozen_info.based_on_aggregation_id}_{frozen_info.based_on_branch_title}"
-
     def _freeze_new_branches(self, compiled_aggregation: BICompiledAggregation) -> bool:
         new_branch_found = False
         for branch in list(compiled_aggregation.branches):
@@ -113,7 +110,7 @@ class BICompiler:
         original_id = aggregation.id
         try:
             aggregation.branches = [branch]
-            aggregation.id = self.get_frozen_aggr_id(FrozenBIInfo(aggr_id, branch_name))
+            aggregation.id = f"frozen_{aggr_id}_{branch_name}"
             self._frozen_store.save(aggregation, aggr_id, branch_name)
         finally:
             aggregation.branches = original_branches

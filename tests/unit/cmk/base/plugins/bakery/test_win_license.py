@@ -9,8 +9,13 @@ from cmk.bakery.v1 import OS, Plugin
 from cmk.base.plugins.bakery.win_license import get_win_license_files
 
 
-def test_win_license_files() -> None:
-    result = list(get_win_license_files(None))
+def test_win_license_files_enabled() -> None:
+    result = list(get_win_license_files({"deployment": ("sync", None)}))
     assert result == [
-        Plugin(base_os=OS.WINDOWS, source=Path("win_license.bat")),
+        Plugin(base_os=OS.WINDOWS, source=Path("win_license.bat"), interval=None),
     ]
+
+
+def test_win_license_files_disabled() -> None:
+    result = list(get_win_license_files({"deployment": ("do_not_deploy", None)}))
+    assert result == []

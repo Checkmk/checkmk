@@ -66,7 +66,8 @@ void main() {
     // groovylint-disable-next-line UnusedVariable
     def package_name = "";
     def license_flag = edition == "community" ? '--//:repo_license="gpl"' : "";
-    def fake_artifacts = params.FAKE_ARTIFACTS ? "--//:use_faked_artifacts=true" : ""
+    def fake_artifacts = params.FAKE_ARTIFACTS ? "--//:use_faked_artifacts=true" : "";
+    def enable_compression = versioning.is_official_release(cmk_version_rc_aware) ? "" : "--//:low_zstd_compression=true";
     def force_build = params.DISABLE_JENKINS_CACHE == true;
 
     print(
@@ -219,6 +220,7 @@ void main() {
                             sh("""
                                 bazel build \
                                     ${fake_artifacts} \
+                                    ${enable_compression} \
                                     --cmk_version=${cmk_version} \
                                     --cmk_edition=${edition} \
                                     ${license_flag} \

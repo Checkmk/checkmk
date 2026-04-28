@@ -126,6 +126,18 @@ config_setting(
     visibility = ["//:__subpackages__"],
 )
 
+bool_flag(
+    name = "low_zstd_compression",
+    build_setting_default = False,
+    visibility = ["//visibility:public"],
+)
+
+config_setting(
+    name = "low_zstd_compression_enabled",
+    flag_values = {":low_zstd_compression": "True"},
+    visibility = ["//visibility:public"],
+)
+
 # Generate `compile_commands.json` with `bazel run //:refresh_compile_commands`.
 refresh_compile_commands(
     name = "refresh_compile_commands",

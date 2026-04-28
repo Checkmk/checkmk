@@ -567,16 +567,17 @@ def load(
     validate_hosts: bool = True,
 ) -> LoadingResult:
     globals().update(get_default_config())
+    target_context = globals()
 
     # Load assorted experimental parameters if any
     experimental_config = load_experimental_config(cmk.utils.paths.default_config_dir)
 
     storage_format = get_storage_format(experimental_config.get("config_storage_format"))
 
-    _load_config(storage_format, with_conf_d=with_conf_d)
+    _load_config(target_context, storage_format, with_conf_d=with_conf_d)
 
     loading_result = _perform_post_config_loading_actions(
-        globals(),
+        target_context,
         discovery_rulesets,
         get_builtin_host_labels,
         experimental_config,
@@ -758,6 +759,7 @@ def _load_config_file(file_to_load: Path, into_dict: dict[str, Any]) -> None:
 
 
 def _load_config(
+    target_context: dict[str, Any],
     storage_format: StorageFormat,
     *,
     with_conf_d: bool,
@@ -766,15 +768,10 @@ def _load_config(
         "FOLDER_PATH": None,
     }
 
-    global all_hosts
-    global clusters
+    target_context["all_hosts"] = (all_hosts_h := SetFolderPathList(target_context["all_hosts"]))
+    target_context["clusters"] = (clusters_h := SetFolderPathDict(target_context["clusters"]))
 
-    all_hosts = SetFolderPathList(all_hosts)
-    clusters = SetFolderPathDict(clusters)
-
-    global_dict = globals()
-
-    global_dict |= helper_vars
+    target_context |= helper_vars
 
     host_storage_loaders = get_host_storage_loaders(storage_format)
     for path in get_config_file_paths(with_conf_d):
@@ -789,27 +786,29 @@ def _load_config(
                 relative_path = path.relative_to(cmk.utils.paths.check_mk_config_dir)
                 current_path = f"/{relative_path}"
                 folder_path = str(relative_path.parent)
-            global_dict["FOLDER_PATH"] = folder_path
+            target_context["FOLDER_PATH"] = folder_path
 
-            all_hosts.set_current_path(current_path)
-            clusters.set_current_path(current_path)
+            all_hosts_h.set_current_path(current_path)
+            clusters_h.set_current_path(current_path)
 
             if path.name == "hosts.mk":
-                apply_hosts_file_to_object(path.with_suffix(""), host_storage_loaders, global_dict)
+                apply_hosts_file_to_object(
+                    path.with_suffix(""), host_storage_loaders, target_context
+                )
             else:
-                _load_config_file(path, global_dict)
+                _load_config_file(path, target_context)
 
-            if not isinstance(all_hosts, SetFolderPathList):
+            if not isinstance(all_hosts_h, SetFolderPathList):
                 raise MKGeneralException(
                     "Load config error: The all_hosts parameter was modified through an other method than: x+=a or x=x+a"
                 )
-            host_paths.update(all_hosts.collected_host_paths)
+            host_paths.update(all_hosts_h.collected_host_paths)
 
             if not isinstance(clusters, SetFolderPathDict):
                 raise MKGeneralException(
                     "Load config error: The clusters parameter was modified through an other method than: x['a']=b or x.update({'a': b})"
                 )
-            host_paths.update(clusters.collected_host_paths)
+            host_paths.update(clusters_h.collected_host_paths)
 
         except Exception as e:
             if cmk.ccc.debug.enabled():
@@ -820,12 +819,12 @@ def _load_config(
 
     # Cleanup global helper vars
     for helper_var in helper_vars:
-        del global_dict[helper_var]
+        del target_context[helper_var]
 
     # Revert specialised SetFolderPath classes back to normal, because it improves
     # the lookup performance and the helper_vars are no longer available anyway..
-    all_hosts = list(all_hosts)
-    clusters = dict(clusters)
+    target_context["all_hosts"] = list(all_hosts_h)
+    target_context["clusters"] = dict(clusters_h)
 
 
 def _transform_plugin_names_from_160_to_170(global_dict: dict[str, Any]) -> None:

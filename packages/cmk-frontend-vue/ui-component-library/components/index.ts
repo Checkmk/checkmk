@@ -26,13 +26,13 @@ import UclCmkTabs from './content-organization/CmkTabs/UclCmkTabs.vue'
 import UclCmkWizard from './content-organization/CmkWizard/UclCmkWizard.vue'
 import UclTwoFactorAuth from './content-organization/TwoFactorAuthentication/UclTwoFactorAuthentication.vue'
 import UclCmkCheckbox from './form-elements/CmkCheckbox/UclCmkCheckbox.vue'
+import UclCmkConfigurationEntityDropdown from './form-elements/CmkConfigurationEntityDropdown/UclCmkConfigurationEntityDropdown.vue'
 import UclCmkDateTimePicker from './form-elements/CmkDateTimePicker/UclCmkDateTimePicker.vue'
 import UclCmkDropdown from './form-elements/CmkDropdown/UclCmkDropdown.vue'
 import UclCmkDualList from './form-elements/CmkDualList/UclCmkDualList.vue'
 import UclCmkInput from './form-elements/CmkInput/UclCmkInput.vue'
 import UclCmkList from './form-elements/CmkList/UclCmkList.vue'
 import UclCmkToggleButtonGroup from './form-elements/CmkToggleButtonGroup/UclCmkToggleButtonGroup.vue'
-import UclConfigurationEntityDropdown from './form-elements/ConfigurationEntityDropdown/UclConfigurationEntityDropdown.vue'
 import UclCmkHtml from './foundation-elements/CmkHtml/UclCmkHtml.vue'
 import UclCmkIcon from './foundation-elements/CmkIcon/UclCmkIcon.vue'
 import UclCmkIconEmblem from './foundation-elements/CmkIcon/UclCmkIconEmblem.vue'
@@ -50,6 +50,8 @@ import UclCmkAlertBox from './system-feedback/CmkAlertBox/UclCmkAlertBox.vue'
 import UclCmkCopyButton from './system-feedback/CmkCopy/UclCmkCopyButton.vue'
 import UclCmkCopyIcon from './system-feedback/CmkCopy/UclCmkCopyIcon.vue'
 import UclCmkDialog from './system-feedback/CmkDialog/UclCmkDialog.vue'
+import UclCmkErrorBoundary from './system-feedback/CmkErrorBoundary/UclCmkErrorBoundary.vue'
+import UclCmkHelp from './system-feedback/CmkHelp/UclCmkHelp.vue'
 import UclCmkInlineValidation from './system-feedback/CmkInlineValidation/UclCmkInlineValidation.vue'
 import UclCmkLoading from './system-feedback/CmkLoading/UclCmkLoading.vue'
 import UclCmkPerfometer from './system-feedback/CmkPerfometer/UclCmkPerfometer.vue'
@@ -57,8 +59,6 @@ import UclCmkPopupDialog from './system-feedback/CmkPopupDialog/UclCmkPopupDialo
 import UclCmkProgressbar from './system-feedback/CmkProgressbar/UclCmkProgressbar.vue'
 import UclCmkSkeleton from './system-feedback/CmkSkeleton/UclCmkSkeleton.vue'
 import UclCmkTooltip from './system-feedback/CmkTooltip/UclCmkTooltip.vue'
-import UclErrorBoundary from './system-feedback/ErrorBoundary/UclErrorBoundary.vue'
-import UclHelp from './system-feedback/Help/UclHelp.vue'
 
 const basicElementsPages = [
   new Page('CmkBadge', UclCmkBadge),
@@ -87,7 +87,7 @@ const contentOrganizationPages = [
 
 const formElementsPages = [
   new Page('CmkCheckbox', UclCmkCheckbox),
-  new Page('CmkConfigurationEntityDropdown', UclConfigurationEntityDropdown),
+  new Page('CmkConfigurationEntityDropdown', UclCmkConfigurationEntityDropdown),
   new Page('CmkDateTimePicker', UclCmkDateTimePicker),
   new Page('CmkDropdown', UclCmkDropdown),
   new Page('CmkDualList', UclCmkDualList),
@@ -118,8 +118,8 @@ const systemFeedbackPages = [
   new Page('CmkCopy (Button)', UclCmkCopyButton),
   new Page('CmkCopy (Icon)', UclCmkCopyIcon),
   new Page('CmkDialog', UclCmkDialog),
-  new Page('CmkErrorBoundary', UclErrorBoundary),
-  new Page('CmkHelpText', UclHelp),
+  new Page('CmkErrorBoundary', UclCmkErrorBoundary),
+  new Page('CmkHelpText', UclCmkHelp),
   new Page('CmkInlineValidation', UclCmkInlineValidation),
   new Page('CmkLoading', UclCmkLoading),
   new Page('CmkPerfometer', UclCmkPerfometer),

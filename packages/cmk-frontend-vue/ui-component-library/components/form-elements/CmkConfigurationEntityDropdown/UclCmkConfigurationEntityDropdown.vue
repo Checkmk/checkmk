@@ -25,7 +25,7 @@ import CmkConfigurationEntityDropdown from '@/components/user-input/CmkConfigura
 
 import { initializeComponentRegistry } from '@/form/private/FormEditDispatcher/dispatch'
 
-import UclConfigurationEntityDropdownDev from './UclConfigurationEntityDropdownDev.vue'
+import UclCmkConfigurationEntityDropdownDev from './UclCmkConfigurationEntityDropdownDev.vue'
 
 initializeComponentRegistry()
 
@@ -192,7 +192,7 @@ const selectedId = ref<string | null>(null)
     <UclDetailPageAccessibility :data="a11yData" />
 
     <UclDetailPageDeveloperPlayground>
-      <UclConfigurationEntityDropdownDev :screenshot-mode="screenshotMode" />
+      <UclCmkConfigurationEntityDropdownDev :screenshot-mode="screenshotMode" />
     </UclDetailPageDeveloperPlayground>
   </UclDetailPageLayout>
 </template>

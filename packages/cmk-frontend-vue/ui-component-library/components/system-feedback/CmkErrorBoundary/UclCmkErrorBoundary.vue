@@ -57,7 +57,7 @@ import { ref, watch } from 'vue'
 
 import { useCmkErrorBoundary } from '@/components/CmkErrorBoundary'
 
-import UclErrorBoundaryDev from './UclErrorBoundaryDev.vue'
+import UclCmkErrorBoundaryDev from './UclCmkErrorBoundaryDev.vue'
 
 defineProps<{ screenshotMode: boolean }>()
 
@@ -99,7 +99,7 @@ function throwError() {
     <UclDetailPageAccessibility :data="a11yData" />
 
     <UclDetailPageDeveloperPlayground>
-      <UclErrorBoundaryDev :screenshot-mode="screenshotMode" />
+      <UclCmkErrorBoundaryDev :screenshot-mode="screenshotMode" />
     </UclDetailPageDeveloperPlayground>
   </UclDetailPageLayout>
 </template>

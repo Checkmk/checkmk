@@ -43,6 +43,8 @@ import UclCmkAlertBox from '@ucl/components/system-feedback/CmkAlertBox/UclCmkAl
 import UclCmkCopyButton from '@ucl/components/system-feedback/CmkCopy/UclCmkCopyButton.vue'
 import UclCmkCopyIcon from '@ucl/components/system-feedback/CmkCopy/UclCmkCopyIcon.vue'
 import UclCmkDialog from '@ucl/components/system-feedback/CmkDialog/UclCmkDialog.vue'
+import UclCmkErrorBoundary from '@ucl/components/system-feedback/CmkErrorBoundary/UclCmkErrorBoundary.vue'
+import UclCmkHelp from '@ucl/components/system-feedback/CmkHelp/UclCmkHelp.vue'
 import UclCmkInlineValidation from '@ucl/components/system-feedback/CmkInlineValidation/UclCmkInlineValidation.vue'
 import UclCmkLoading from '@ucl/components/system-feedback/CmkLoading/UclCmkLoading.vue'
 import UclCmkPerfometer from '@ucl/components/system-feedback/CmkPerfometer/UclCmkPerfometer.vue'
@@ -50,8 +52,6 @@ import UclCmkPopupDialog from '@ucl/components/system-feedback/CmkPopupDialog/Uc
 import UclCmkProgressbar from '@ucl/components/system-feedback/CmkProgressbar/UclCmkProgressbar.vue'
 import UclCmkSkeleton from '@ucl/components/system-feedback/CmkSkeleton/UclCmkSkeleton.vue'
 import UclCmkTooltip from '@ucl/components/system-feedback/CmkTooltip/UclCmkTooltip.vue'
-import UclErrorBoundary from '@ucl/components/system-feedback/ErrorBoundary/UclErrorBoundary.vue'
-import UclHelp from '@ucl/components/system-feedback/Help/UclHelp.vue'
 
 vi.mock('vue-router', () => ({
   useRouter: () => ({ resolve: () => ({ href: '/' }) }),
@@ -276,12 +276,12 @@ test('CmkDialog demo page renders its component', () => {
 })
 
 test('CmkErrorBoundary demo page renders its component', () => {
-  render(UclErrorBoundary, { props: { screenshotMode: false } })
+  render(UclCmkErrorBoundary, { props: { screenshotMode: false } })
   screen.getByRole('button', { name: 'Throw error' })
 })
 
 test('CmkHelpText demo page renders its component', () => {
-  render(UclHelp, { props: { screenshotMode: false } })
+  render(UclCmkHelp, { props: { screenshotMode: false } })
   screen.getAllByRole('button')
 })
 

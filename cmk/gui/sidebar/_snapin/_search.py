@@ -1062,8 +1062,17 @@ class ServiceStateMatchPlugin(ABCLivestatusMatchPlugin):
         self._state_mapping = {"ok": "0", "warn": "1", "crit": "2", "unkn": "3", "pend": "p"}
         self._supported_views = frozenset({"allservices", "searchsvc"})
 
-    def _get_service_state_from_filter(self, value: str) -> str:
-        return self._state_mapping.get(value.lower(), "")
+    def _get_service_states_from_filter(self, value: str) -> Iterable[str]:
+        # Handle the pipe (|) operator for regex expressions.
+        # The following queries should all resolve to the same livestatus query:
+        #   st:warn st:crit
+        #   st:warn|crit
+        #   st:(warn|crit)
+        return (
+            self._state_mapping[state]
+            for state in (st.lstrip("(").rstrip(")").strip() for st in value.lower().split("|"))
+            if state in self._state_mapping
+        )
 
     def get_match_topic(self) -> str:
         return _("Service states")
@@ -1077,10 +1086,9 @@ class ServiceStateMatchPlugin(ABCLivestatusMatchPlugin):
         if not (raw_used_filters := used_filters.get(self.name, [])):
             return ""
 
-        filter_lines = [
-            f"Filter: state = {self._get_service_state_from_filter(entry)}"
-            for entry in raw_used_filters
-        ]
+        state_filters = (self._get_service_states_from_filter(entry) for entry in raw_used_filters)
+        combined_unique_states = sorted(set(itertools.chain.from_iterable(state_filters)))
+        filter_lines = [f"Filter: state = {st}" for st in combined_unique_states]
 
         if len(filter_lines) > 1:
             filter_lines.append("Or: %d" % len(filter_lines))
@@ -1098,10 +1106,11 @@ class ServiceStateMatchPlugin(ABCLivestatusMatchPlugin):
         if for_view not in self._supported_views:
             return None
 
-        url_infos: HTTPVariables = [
-            (f"st{self._get_service_state_from_filter(entry)}", "on")
-            for entry in used_filters.get(self.name, [])
-        ]
+        raw_used_filters = used_filters.get(self.name, [])
+        state_filters = (self._get_service_states_from_filter(entry) for entry in raw_used_filters)
+        combined_unique_states = sorted(set(itertools.chain.from_iterable(state_filters)))
+
+        url_infos: HTTPVariables = [(f"st{state}", "on") for state in combined_unique_states]
 
         # add support for clicking on an individual filtered service.
         service_field = row["description"] if row else ""

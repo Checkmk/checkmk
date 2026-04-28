@@ -29,6 +29,7 @@ from . import parse_werk
 from .config import Config, load_config, try_load_current_version_from_defines_make
 from .convert import werkv1_metadata_to_werkv2_metadata
 from .format import format_as_werk_v1, format_as_werk_v2
+from .id_pool import dump_stash_to_file, load_stash_from_file
 from .models import EditionV3
 from .parse import parse_werk_v3, WERK_V3_START, WerkV2ParseResult, WerkV3ParseResult
 from .utils import edition_v3_to_v2
@@ -862,7 +863,7 @@ WERK_NOTES = """
 def main_new(args: argparse.Namespace) -> None:
     sys.stdout.write(TTY_GREEN + WERK_NOTES + TTY_NORMAL)
 
-    stash = Stash.load_from_file(WERK_IDS_PATH)
+    stash = load_stash_from_file(WERK_IDS_PATH)
 
     metadata: WerkMetadata = {}
     werk_id = stash.pick_id(project=get_config().project)
@@ -896,7 +897,7 @@ def main_new(args: argparse.Namespace) -> None:
     save_werk(werk, get_werk_file_version())
     git_add(werk)
     stash.free_id(werk_id)
-    stash.dump_to_file(WERK_IDS_PATH)
+    dump_stash_to_file(WERK_IDS_PATH, stash)
     edit_werk(werk_path, args.custom_files)
 
     sys.stdout.write(f"Werk {format_werk_id(werk_id)} saved.\n")
@@ -937,9 +938,9 @@ def main_delete(args: argparse.Namespace) -> None:
             sys.stdout.write(f"Error removing werk file: {exc}.\n")
             continue
         sys.stdout.write(f"Deleted Werk {format_werk_id(werk_id)} ({werk_to_be_removed_title}).\n")
-        stash = Stash.load_from_file(WERK_IDS_PATH)
+        stash = load_stash_from_file(WERK_IDS_PATH)
         stash.add_id(werk_id, project=get_config().project)
-        stash.dump_to_file(WERK_IDS_PATH)
+        dump_stash_to_file(WERK_IDS_PATH, stash)
         sys.stdout.write(f"You lucky bastard now own the Werk ID {format_werk_id(werk_id)}.\n")
 
 
@@ -1168,7 +1169,7 @@ def _reserve_werk_ids(
 
 
 def main_fetch_ids(args: argparse.Namespace) -> None:
-    stash = Stash.load_from_file(WERK_IDS_PATH)
+    stash = load_stash_from_file(WERK_IDS_PATH)
 
     if args.count is None:
         per_project = "\n".join(
@@ -1194,10 +1195,10 @@ def main_fetch_ids(args: argparse.Namespace) -> None:
 
     new_first_free, fresh_ids = _reserve_werk_ids(ranges, first_free, args.count)
 
-    stash = Stash.load_from_file(WERK_IDS_PATH)
+    stash = load_stash_from_file(WERK_IDS_PATH)
     for werk_id in fresh_ids:
         stash.add_id(werk_id, project=project)
-    stash.dump_to_file(WERK_IDS_PATH)
+    dump_stash_to_file(WERK_IDS_PATH, stash)
 
     # Store the new reserved werk ids
     with open("first_free", "w", encoding="utf-8") as f:

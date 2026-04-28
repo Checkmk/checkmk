@@ -599,7 +599,10 @@ def render_cmk_graphs(context: dict[str, str], raise_exception: bool = False) ->
         params={
             "host": context["HOSTNAME"],
             "service": svc_desc,
-            "num_graphs": context["PARAMETER_GRAPHS_PER_NOTIFICATION"],
+            # User notification rules using the legacy dict format do not
+            # propagate this parameter, fall back to the same default that
+            # _rbn_finalize_plugin_parameters applies for global rules.
+            "num_graphs": context.get("PARAMETER_GRAPHS_PER_NOTIFICATION", "5"),
         },
         headers={"Authorization": f"InternalToken {SiteInternalSecret().secret.b64_str}"},
     ).prepare()

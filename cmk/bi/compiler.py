@@ -123,8 +123,8 @@ class BICompiler:
         self, compiled_aggregations: dict[str, BICompiledAggregation]
     ) -> dict[str, BICompiledAggregation]:
         updated_aggregations = {}
+        new_branch_was_frozen = False
 
-        computed_new_frozen_branch = False
         for aggr_id, compiled_aggregation in compiled_aggregations.items():
             updated_aggregations[aggr_id] = compiled_aggregation
 
@@ -135,9 +135,9 @@ class BICompiler:
                 self._frozen_store.delete(aggr_id)
                 continue  # Aggregation is no longer frozen.
 
-            computed_new_frozen_branch = (
+            new_branch_was_frozen = (
                 self._freeze_new_branches(compiled_aggregation, compiled_aggregations)
-                or computed_new_frozen_branch
+                or new_branch_was_frozen
             )
 
             # Read frozen branches. Each branch gets a separate aggregation ID since
@@ -151,7 +151,7 @@ class BICompiler:
             # Remove all branches from the original aggregation, since all of them are now frozen
             compiled_aggregation.branches = []
 
-        if computed_new_frozen_branch:
+        if new_branch_was_frozen:
             self._lookup_store.generate_aggregation_lookups(updated_aggregations)
 
         return updated_aggregations

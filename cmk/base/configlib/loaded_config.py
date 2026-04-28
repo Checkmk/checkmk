@@ -49,12 +49,14 @@ from cmk.utils.servicename import ServiceName
 class BaseConfig:
     """Typed snapshot of the loaded base configuration.
 
-    The config loading still goes through module globals in `cmk.base.config`,
-    but every value that is exposed here is meant to be accessed exclusively
-    through this dataclass: direct `cmk.base.config.<X>` lookups for fields
-    listed below have been migrated away. New base-config fields should land
-    here (or on a scoped wrapper such as `CMCConfig` / `NagiosCoreConfig` /
-    `NotificationConfig`) rather than as additional module globals.
+    The config loader (`load()` / `load_packed_config()`) builds an instance
+    of this class from a local namespace dict; `cmk.base.config.__dict__`
+    is not mutated. Every value exposed here is accessed exclusively
+    through this dataclass: direct `cmk.base.config.<X>` lookups for
+    fields listed below have been migrated away. New base-config fields
+    should land here (or on a scoped wrapper such as `CMCConfig` /
+    `NagiosCoreConfig` / `NotificationConfig`) rather than as additional
+    module globals.
     """
 
     # TODO: get `HostAddress` VS. `str` right! Which is it at what point?!

@@ -11,7 +11,6 @@
 # mypy: disable-error-code="type-arg"
 # mypy: disable-error-code="unreachable"
 
-# ruff: noqa: F405
 
 from __future__ import annotations
 
@@ -57,7 +56,6 @@ from cmk.base.configlib.logwatch import set_global_logwatch_config
 from cmk.base.configlib.piggyback import guess_piggybacked_hosts_time_settings
 from cmk.base.configlib.scheduling import make_check_interval_config
 from cmk.base.configlib.servicename import PassiveServiceNameConfig
-from cmk.base.default_config import *  # noqa: F403
 from cmk.base.parent_scan import ScanConfig as ParentScanConfig
 from cmk.base.snmp_plugin_store import make_plugin_store
 from cmk.base.sources import ParserConfig
@@ -558,20 +556,16 @@ class LoadingResult:
     config_cache: ConfigCache
 
 
-# This function still mostly manipulates a global state.
 def load(
     get_builtin_host_labels: Callable[[SiteId], Labels],
     edition: cmk_version.Edition,
     with_conf_d: bool = True,
     validate_hosts: bool = True,
 ) -> LoadingResult:
-    globals().update(get_default_config())
-    target_context = globals()
-
-    _load_config(target_context, StorageFormat.PICKLE, with_conf_d=with_conf_d)
+    raw_config = _load_config(get_default_config(), StorageFormat.PICKLE, with_conf_d=with_conf_d)
 
     loading_result = _perform_post_config_loading_actions(
-        target_context,
+        raw_config,
         get_builtin_host_labels,
         edition=edition,
     )
@@ -596,7 +590,6 @@ def load(
     return loading_result
 
 
-# This function still mostly manipulates a global state.
 def load_packed_config(
     config_path: Path,
     get_builtin_host_labels: Callable[[SiteId], Labels],
@@ -617,22 +610,20 @@ def load_packed_config(
         cmk.base.core.nagios._dump_precompiled_hostcheck()
 
     """
-    globals().update(get_default_config())
-    globals().update(PackedConfigStore.from_serial(config_path).read())
+    raw_config = {
+        **get_default_config(),
+        **PackedConfigStore.from_serial(config_path).read(),
+    }
 
     # Used by the precompiled host check, which resolves the addresses dynamically
     # at config-generation time (potentially via DNS) and ships them in the template.
-    # We set them here to ensure we have a consistent state in case we still access
-    # the global state. Once we pass the argument down cleanly, we can just pass the
-    # right one in the precompiled host check, without tempering with the global state
-    # here.
     if ipaddresses_override is not None:
-        globals()["ipaddresses"] = ipaddresses_override
+        raw_config["ipaddresses"] = ipaddresses_override
     if ipv6addresses_override is not None:
-        globals()["ipv6addresses"] = ipv6addresses_override
+        raw_config["ipv6addresses"] = ipv6addresses_override
 
     return _perform_post_config_loading_actions(
-        globals(),
+        raw_config,
         get_builtin_host_labels,
         edition=edition,
     )
@@ -744,7 +735,7 @@ def _load_config(
     storage_format: StorageFormat,
     *,
     with_conf_d: bool,
-) -> None:
+) -> dict[str, Any]:
     helper_vars = {
         "FOLDER_PATH": None,
     }
@@ -779,17 +770,17 @@ def _load_config(
             else:
                 _load_config_file(path, target_context)
 
-            if not isinstance(all_hosts_h, SetFolderPathList):
+            if not isinstance(target_context["all_hosts"], SetFolderPathList):
                 raise MKGeneralException(
                     "Load config error: The all_hosts parameter was modified through an other method than: x+=a or x=x+a"
                 )
-            host_paths.update(all_hosts_h.collected_host_paths)
+            target_context["host_paths"].update(target_context["all_hosts"].collected_host_paths)
 
-            if not isinstance(clusters, SetFolderPathDict):
+            if not isinstance(target_context["clusters"], SetFolderPathDict):
                 raise MKGeneralException(
                     "Load config error: The clusters parameter was modified through an other method than: x['a']=b or x.update({'a': b})"
                 )
-            host_paths.update(clusters_h.collected_host_paths)
+            target_context["host_paths"].update(target_context["clusters"].collected_host_paths)
 
         except Exception as e:
             if cmk.ccc.debug.enabled():
@@ -798,7 +789,7 @@ def _load_config(
                 console.error(f"Cannot read in configuration file {path}: {e}", file=sys.stderr)
             sys.exit(1)
 
-    # Cleanup global helper vars
+    # Cleanup helper vars
     for helper_var in helper_vars:
         del target_context[helper_var]
 
@@ -806,6 +797,7 @@ def _load_config(
     # the lookup performance and the helper_vars are no longer available anyway..
     target_context["all_hosts"] = list(all_hosts_h)
     target_context["clusters"] = dict(clusters_h)
+    return target_context
 
 
 def _transform_plugin_names_from_160_to_170(global_dict: dict[str, Any]) -> None:
@@ -854,8 +846,12 @@ def save_packed_config(
     config_cache: ConfigCache,
 ) -> None:
     """Create and store a precompiled configuration for Checkmk helper processes"""
+    base_config = config_cache.base_config
     PackedConfigStore.from_serial(config_path).write(
-        PackedConfigGenerator(config_cache, globals()).generate()
+        PackedConfigGenerator(
+            config_cache,
+            {f.name: getattr(base_config, f.name) for f in dataclasses.fields(base_config)},
+        ).generate()
     )
 
 
@@ -971,7 +967,14 @@ class PackedConfigGenerator:
             if varname in self._skipped_config_variable_names:
                 continue
 
-            val = self._loaded_config[varname]
+            try:
+                val = self._loaded_config[varname]
+            except KeyError:
+                # Note: variable_defaults contains a lot of additional values not part of
+                # self._loaded_config:
+                # Type definitions that are leaked by the '*' import, but also deprecated actual
+                # config values. We simply skip them, they are not needed here.
+                continue
 
             if val == default_value:
                 continue
@@ -1570,6 +1573,12 @@ class ConfigCache:
             parser=str,
         )
         return self
+
+    @property
+    def base_config(self) -> BaseConfig:
+        # currently needed for save_packed_config.
+        # please do not use this.
+        return self._loaded_config
 
     def make_passive_service_name_config(
         self,

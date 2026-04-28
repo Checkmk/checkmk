@@ -17,7 +17,6 @@ from pytest import MonkeyPatch
 
 import cmk.utils.paths
 import cmk.utils.tags
-from cmk.base import config
 from cmk.base.app import make_app
 from cmk.base.config import ConfigCache
 from cmk.ccc.hostaddress import HostAddress, HostName
@@ -209,9 +208,6 @@ class Scenario:
         self._autochecks_mocker.raw_autochecks[hostname] = entries
 
     def apply(self, monkeypatch: MonkeyPatch) -> ConfigCache:
-        for key, value in self.config.items():
-            monkeypatch.setattr(config, key, value)
-
         self.config_cache = self._get_config_cache()
         self.config_cache.initialize(self.get_builtin_host_labels)
 

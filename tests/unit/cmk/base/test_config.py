@@ -2857,20 +2857,6 @@ def test_save_packed_config(monkeypatch: MonkeyPatch, config_path: Path) -> None
     assert precompiled_check_config.exists()
 
 
-def test_load_packed_config(config_path: Path) -> None:
-    config.PackedConfigStore.from_serial(config_path).write({"abcd": 1})
-
-    assert "abcd" not in config.__dict__
-    config.load_packed_config(
-        config_path,
-        get_builtin_host_labels=(app := make_app()).get_builtin_host_labels,
-        edition=app.edition,
-    )
-    # Mypy does not understand that we add some new member for testing
-    assert config.abcd == 1  # type: ignore[attr-defined]
-    del config.__dict__["abcd"]
-
-
 class TestPackedConfigStore:
     @pytest.fixture()
     def store(self, config_path: Path) -> config.PackedConfigStore:

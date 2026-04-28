@@ -414,8 +414,6 @@ class TestHostCheckStore:
         hostname = HostName("aaa")
         store = HostCheckStore()
 
-        assert config.delay_precompile is False
-
         assert not store.host_check_source_file_path(config_path, hostname).exists()
         assert not store.host_check_file_path(config_path, hostname).exists()
 

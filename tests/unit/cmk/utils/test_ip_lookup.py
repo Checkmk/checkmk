@@ -12,7 +12,6 @@ from typing import Final
 import pytest
 from pytest import MonkeyPatch
 
-from cmk.base import config
 from cmk.ccc.exceptions import MKIPAddressLookupError
 from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.utils import ip_lookup
@@ -691,13 +690,6 @@ def test_lookup_mgmt_board_ip_address_unresolvable_2(
     ts.add_host(hostname)
     config_cache = ts.apply(monkeypatch)
     monkeypatch.setattr(ip_lookup, "_lookup_ip_address", fake_lookup_ip_address)
-    monkeypatch.setattr(
-        config,
-        "host_attributes",
-        {
-            "hostname": {"management_address": "lolo"},
-        },
-    )
 
     ip_lookup_config = config_cache.ip_lookup_config()
     assert (

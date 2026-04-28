@@ -107,7 +107,6 @@ def test_check_prism_protection_domains(
     )
 
 
-@pytest.mark.xfail(strict=True, reason="Crash group 4698: KeyError 'usage_stats'")
 def test_check_prism_protection_domains_async_dr_without_usage_stats() -> None:
     # Async DR protection domain returned by the Prism API without
     # a "usage_stats" entry (observed on a freshly created PD with no
@@ -133,4 +132,7 @@ def test_check_prism_protection_domains_async_dr_without_usage_stats() -> None:
             section=section,
         )
     )
-    assert result, "Check must yield a result instead of crashing"
+    final = result[-1]
+    assert isinstance(final, Result)
+    assert final.state == State.OK
+    assert "Type: Async DR" in final.summary

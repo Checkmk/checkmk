@@ -87,21 +87,30 @@ def check_prism_protection_domains(
         else:
             remote = ", ".join(remotes)
 
-        exclusivesnapshot = int(data["usage_stats"].get("dr.exclusive_snapshot_usage_bytes"))
+        usage_stats = data.get("usage_stats") or {}
+        stats = data.get("stats") or {}
+        vms = data.get("vms") or []
+
+        exclusive_raw = usage_stats.get("dr.exclusive_snapshot_usage_bytes")
+        exclusivesnapshot = int(exclusive_raw) if exclusive_raw is not None else 0
         yield Metric("pd_exclusivesnapshot", exclusivesnapshot)
-        yield Metric(
-            "pd_bandwidthtx", float(data["stats"].get("replication_received_bandwidth_kBps"))
-        )
-        yield Metric(
-            "pd_bandwidthrx", float(data["stats"].get("replication_transmitted_bandwidth_kBps"))
-        )
+
+        bandwidthtx_raw = stats.get("replication_received_bandwidth_kBps")
+        if bandwidthtx_raw is not None:
+            yield Metric("pd_bandwidthtx", float(bandwidthtx_raw))
+
+        bandwidthrx_raw = stats.get("replication_transmitted_bandwidth_kBps")
+        if bandwidthrx_raw is not None:
+            yield Metric("pd_bandwidthrx", float(bandwidthrx_raw))
+
         summary = (
             f"Type: Async DR, "
             f"Exclusive Snapshot Usage: {render.bytes(exclusivesnapshot)}, "
             f"Next Snapshot scheduled at: {date}, "
-            f"Total entities: {len(data['vms'])}, "
+            f"Total entities: {len(vms)}, "
             f"Remote Site: {remote}"
         )
+
         yield Result(state=State.OK, summary=summary)
 
 

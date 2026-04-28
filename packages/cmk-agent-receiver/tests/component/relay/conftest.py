@@ -2,7 +2,6 @@
 # Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-import os
 import pathlib
 from collections.abc import Iterator
 
@@ -10,14 +9,14 @@ import pytest
 from fastapi.testclient import TestClient
 
 from cmk.agent_receiver.lib.auth import internal_credentials
-from cmk.agent_receiver.lib.config import Config, CONFIG_FILE, get_config
+from cmk.agent_receiver.lib.config import Config, get_config
 from cmk.agent_receiver.main import main_app
 from cmk.agent_receiver.relay.api.routers.relays.dependencies import (
     get_forward_monitoring_data_handler,
 )
 from cmk.agent_receiver.relay.api.routers.relays.handlers import ForwardMonitoringDataHandler
 from cmk.testlib.agent_receiver.agent_receiver import AgentReceiverClient
-from cmk.testlib.agent_receiver.certs import set_up_site_certs
+from cmk.testlib.agent_receiver.builder import AgentReceiverConfigBuilder
 from cmk.testlib.agent_receiver.native_wiremock import run_wiremock
 from cmk.testlib.agent_receiver.site_mock import SiteMock, User
 from cmk.testlib.agent_receiver.wiremock import Wiremock
@@ -33,39 +32,18 @@ def site_context(
     wiremock: Wiremock,
     tmp_path: pathlib.Path,
     site_name: str,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> Config:
-    site_dir = tmp_path / site_name
-    site_dir.mkdir(parents=True, exist_ok=True)
-
-    os.environ["OMD_ROOT"] = str(site_dir)
-    os.environ["OMD_SITE"] = site_name
+    built = AgentReceiverConfigBuilder(
+        omd_root=tmp_path / site_name,
+        site_name=site_name,
+        apache_address=wiremock.wiremock_hostname,
+        apache_port=wiremock.port,
+    ).build()
+    for key, value in built.env.items():
+        monkeypatch.setenv(key, value)
     get_config.cache_clear()
-
-    site_conf = site_dir / "etc/omd/site.conf"
-    site_conf.parent.mkdir(parents=True, exist_ok=True)
-    site_conf.write_text(
-        f"CONFIG_APACHE_TCP_ADDR='{wiremock.wiremock_hostname}'\nCONFIG_APACHE_TCP_PORT='{wiremock.port}'\n"
-    )
-
-    site_context = Config()
-    site_context.internal_secret_path.parent.mkdir(parents=True, exist_ok=True)
-    site_context.internal_secret_path.write_text("lol")
-
-    site_context.log_path.parent.mkdir(parents=True, exist_ok=True)
-    site_context.log_path.touch()
-
-    (site_context.omd_root / CONFIG_FILE).write_text(site_context.model_dump_json())
-
-    set_up_site_certs(config=site_context)
-
-    # Create version symlink structure
-    version_name = "some.detailed.version.ultimate"
-    version_path = site_context.omd_root / version_name
-    version_path.mkdir(exist_ok=True)
-    version_link = site_context.omd_root / "version"
-    version_link.symlink_to(version_path)
-
-    return site_context
+    return built.config
 
 
 @pytest.fixture()

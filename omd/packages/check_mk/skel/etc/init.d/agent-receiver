@@ -74,6 +74,7 @@ case "$1" in
             exit_failure "CA file ${OMD_ROOT}/etc/ssl/ca.pem not found, cannot start agent-receiver"
         fi
 
+        # If you change this please also evaluate to update the receiver runner components
         if gunicorn -D -p "$PIDFILE" \
             -c "$OMD_ROOT/etc/agent-receiver/gunicorn.conf.py" \
             --ciphers "ECDHE+AESGCM:CHACHA20:ECDHE+AES256:!aNULL:!eNULL:!MD5:!RC4:!3DES:!SHA1:!CBC" \

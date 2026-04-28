@@ -32,3 +32,26 @@ Create a `relay_config.json` file with the following content:
 ```
 
 If the configuration file doesn't exist, default values will be used. See `relay_config.json.example` for a template.
+
+## Testing
+
+The component tests have two ways to start the agent receiver: use the real process if you are verifying TLS authorization.
+The `TestClient` fixture (default in `conftest.py`) wraps the FastAPI app in-process using Starlette's test client — fast and suitable for most endpoint logic.
+`AgentReceiverRunner` spawns a real Gunicorn process with the `ClientCertWorker`, enabling genuine mTLS handshakes and `verified-uuid` header injection; use it when testing certificate extraction or TLS-gated endpoints.
+
+## Development
+
+### Running locally for debugging
+
+```bash
+omd stop agent-receiver
+uvicorn cmk.agent_receiver.main:main_app
+```
+
+<!-- CONTEXT
+The main FastAPI app (main.py) mounts two distinct sub-apps:
+  - agent-receiver (/<site>/agent-receiver) — handles agent registration, pairing, certificate renewal, and monitoring-data ingestion from Checkmk agents.
+  - relay (/<site>/relays) — manages relay registration, task distribution, configuration activation, and forwarding of monitoring data from relays.
+Both sub-apps share common library code under lib/.
+The relay lifespan (startup logic) is defined on the main app because FastAPI does not propagate lifespan events to mounted sub-apps.
+-->

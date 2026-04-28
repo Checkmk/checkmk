@@ -22,7 +22,7 @@ def test_bearer_auth_header_passed_to_site_api_unchanged(
     relay_id = random_relay_id()
     site.set_scenario([], [(relay_id, OP.ADD)])
 
-    resp = agent_receiver.register_relay(relay_id, "test-relay")
+    _, resp = agent_receiver.register_relay(relay_id, "test-relay")
     assert resp.status_code == HTTPStatus.OK
 
     assert _get_site_api_auth_headers(wiremock, site) == [

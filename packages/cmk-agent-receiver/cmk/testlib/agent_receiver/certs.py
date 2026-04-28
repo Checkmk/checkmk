@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from ipaddress import IPv4Address
+
 from dateutil.relativedelta import relativedelta
 
 from cmk.agent_receiver.lib.certs import agent_root_ca, get_local_site_cn, relay_root_ca
@@ -14,7 +16,7 @@ from cmk.crypto.certificate import (
     CertificateWithPrivateKey,
 )
 from cmk.crypto.keys import PrivateKey
-from cmk.crypto.x509 import X509Name
+from cmk.crypto.x509 import SAN, SubjectAlternativeNames, X509Name
 
 _CERT_EXPIRY = relativedelta(days=365)
 _KEY_SIZE = 2048
@@ -64,6 +66,9 @@ def set_up_site_certs(config: Config) -> None:
         organization=f"Checkmk Site {config.site_name}",
         expiry=_CERT_EXPIRY,
         key_size=_KEY_SIZE,
+        subject_alternative_names=SubjectAlternativeNames(
+            [SAN.ip_address(IPv4Address("127.0.0.1"))]
+        ),
     )
     config.site_cert_path.parent.mkdir(parents=True, exist_ok=True)
     config.site_cert_path.write_bytes(
@@ -84,7 +89,7 @@ def set_up_site_certs(config: Config) -> None:
 
 
 def generate_csr_pair(
-    cn: str, private_key_size: int = 1024
+    cn: str, private_key_size: int = 2048
 ) -> tuple[PrivateKey, CertificateSigningRequest]:
     private_key = PrivateKey.generate_rsa(key_size=private_key_size)
     return (

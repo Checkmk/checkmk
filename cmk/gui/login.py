@@ -386,33 +386,33 @@ class LoginPage(Page):
                 html.show_user_errors()
                 html.close_div()
 
+        html.close_div()
+
+        html.open_div(id_="foot")
+
+        if config.login_screen.get("login_message"):
+            html.open_div(id_="login_message")
+            html.show_message(config.login_screen["login_message"])
             html.close_div()
 
-            html.open_div(id_="foot")
+        footer: list[HTML] = []
+        for title, url, target in config.login_screen.get("footer_links", []):
+            footer.append(HTMLWriter.render_a(title, href=url, target=target))
 
-            if config.login_screen.get("login_message"):
-                html.open_div(id_="login_message")
-                html.show_message(config.login_screen["login_message"])
-                html.close_div()
+        if "hide_version" not in config.login_screen:
+            footer.append(HTML.with_escaping("Version: %s" % cmk_version.__version__))
 
-            footer: list[HTML] = []
-            for title, url, target in config.login_screen.get("footer_links", []):
-                footer.append(HTMLWriter.render_a(title, href=url, target=target))
+        footer.append(
+            HTML.without_escaping("&copy; ")
+            + HTMLWriter.render_a("Checkmk GmbH", href="https://checkmk.com", target="_blank")
+        )
 
-            if "hide_version" not in config.login_screen:
-                footer.append(HTML.with_escaping("Version: %s" % cmk_version.__version__))
+        html.write_html(HTML.without_escaping(" - ").join(footer))
 
-            footer.append(
-                HTML.without_escaping("&copy; ")
-                + HTMLWriter.render_a("Checkmk GmbH", href="https://checkmk.com", target="_blank")
-            )
+        html.close_div()
 
-            html.write_html(HTML.without_escaping(" - ").join(footer))
-
-            html.close_div()
-
-            html.set_focus(self._username_varname)
-            html.hidden_fields()
+        html.set_focus(self._username_varname)
+        html.hidden_fields()
         html.close_div()
 
         html.footer()

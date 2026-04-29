@@ -1211,16 +1211,27 @@ class Site:
         site_id = site_id or self.id
         logger.info('Removing site "%s"...', site_id)
         time.sleep(1)
-        _ = run(
-            [
-                "omd",
-                "-f",
-                "rm",
-                "--apache-reload",
-                "--kill",
-                site_id,
-            ],
-            sudo=True,
+
+        def _rm_successful() -> bool:
+            try:
+                process = run(
+                    [
+                        "omd",
+                        "-f",
+                        "rm",
+                        "--apache-reload",
+                        "--kill",
+                        site_id,
+                    ],
+                    sudo=True,
+                )
+            except subprocess.CalledProcessError:
+                return False
+            return process.returncode == 0
+
+        # wait for 5 mins until TimeoutError is raised.
+        wait_until(
+            _rm_successful, interval=30, timeout=300, condition_name=f"Deletion of site: {site_id}"
         )
 
     @tracer.instrument("Site.start")

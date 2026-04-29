@@ -663,12 +663,19 @@ int ExecCmkUpdateAgent(const std::vector<std::wstring> &params) {
     cfg::SetupPluginEnvironment();
 
     ModifyStdio(false);
-    auto proc_id = tools::RunStdCommand(command_to_run, tools::WaitForEnd::yes);
+    auto result = tools::RunStdCommand(command_to_run, tools::WaitForEnd::yes);
     ModifyStdio(true);
 
-    if (proc_id.has_value() && *proc_id > 0) {
-        XLOG::l.i("Agent Updater process [{}] started\n", proc_id);
-        return 0;
+    if (result.has_value() && result->pid > 0) {
+        const auto exit_code = result->exit_code.value_or(1);
+        if (exit_code == 0) {
+            XLOG::l.i("Agent Updater process [{}] finished successfully\n",
+                      result->pid);
+        } else {
+            XLOG::l("Agent Updater process [{}] failed with code {}\n",
+                    result->pid, exit_code);
+        }
+        return static_cast<int>(exit_code);
     }
 
     XLOG::l("Agent Updater process '{}' failed to start\n",

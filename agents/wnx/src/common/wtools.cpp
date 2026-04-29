@@ -307,19 +307,18 @@ uint32_t AppRunner::goExec(std::wstring_view command_line,
         }
         prepareResources(command_line, use_pipe == UsePipe::yes);
 
-        process_id_ = cma::tools::RunStdCommand(
-                          command_line, cma::tools::WaitForEnd::no,
-                          cma::tools::InheritHandle::yes, stdio_.getWrite(),
-                          stderr_.getWrite(),
-                          CREATE_NEW_PROCESS_GROUP | DETACHED_PROCESS, 0)
-                          .value_or(0);
-        if (process_id_ != 0) {
-            return process_id_;
+        const auto result = cma::tools::RunStdCommand(
+            command_line, cma::tools::WaitForEnd::no,
+            cma::tools::InheritHandle::yes, stdio_.getWrite(),
+            stderr_.getWrite(), CREATE_NEW_PROCESS_GROUP | DETACHED_PROCESS, 0);
+        process_id_ = result.has_value() ? result->pid : 0;
+        if (process_id_ == 0) {
+            XLOG::l(XLOG_FLINE + " Failed updater RunStd: [{}]*",
+                    GetLastError());
+            cleanResources();
         }
 
-        XLOG::l(XLOG_FLINE + " Failed updater RunStd: [{}]*", GetLastError());
-        cleanResources();
-        return 0;
+        return process_id_;
 
     } catch (const std::exception &e) {
         XLOG::l.crit(XLOG_FLINE + " unexpected exception: '{}'", e.what());
@@ -3010,12 +3009,13 @@ fs::path ExecuteCommands(std::wstring_view name,
 
     auto to_exec = MakeCmdFileInTemp(safe_temp_sub_dir, name, commands);
     if (!to_exec.empty()) {
-        auto pid = cma::tools::RunStdCommand(to_exec.wstring(),
-                                             mode == ExecuteMode::sync
-                                                 ? cma::tools::WaitForEnd::yes
-                                                 : cma::tools::WaitForEnd::no);
-        if (pid != 0) {
-            XLOG::d.i("Process is started '{}'  with pid [{}]", to_exec, pid);
+        auto result = cma::tools::RunStdCommand(
+            to_exec.wstring(), mode == ExecuteMode::sync
+                                   ? cma::tools::WaitForEnd::yes
+                                   : cma::tools::WaitForEnd::no);
+        if (result && result->pid != 0) {
+            XLOG::d.i("Process is started '{}'  with pid [{}]", to_exec,
+                      result->pid);
             return to_exec;
         }
 

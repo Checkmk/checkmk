@@ -2047,11 +2047,11 @@ bool UninstallProduct(std::string_view name) {
     }
     XLOG::l.i("Starting uninstallation command '{}'", fname);
 
-    if (const auto pid =
+    if (const auto result =
             tools::RunStdCommand(fname.wstring(), tools::WaitForEnd::yes);
-        pid.has_value()) {
+        result.has_value()) {
         XLOG::l.i("Started uninstallation command '{}' with pid [{}]", fname,
-                  *pid);
+                  result->pid);
         return true;
     }
     XLOG::l("Failed to start '{}'", fname);

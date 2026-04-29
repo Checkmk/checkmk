@@ -1,7 +1,7 @@
 load("@host_crates//:defs.bzl", "aliases", "all_crate_deps")
-load("@rules_rust//rust:defs.bzl", "rust_binary", "rust_doc", "rust_library", "rust_test", "rust_test_suite")
+load("@rules_rust//rust:defs.bzl", "rust_doc", "rust_library", "rust_test", "rust_test_suite")
 load("//bazel/rules:file_from_flag.bzl", "file_from_flag")
-load("//bazel/rules:platform_transition_binary.bzl", "platform_transition_binary")
+load("//bazel/rules:xcomp/rust.bzl", "rust_binary")
 
 file_from_flag(
     name = "version.rs",
@@ -133,18 +133,32 @@ rust_binary(
     deps = all_crate_deps() + [":cmk-agent-ctl-lib"],
 )
 
-platform_transition_binary(
+rust_binary(
     name = "cmk-agent-ctl-musl",
-    binary = ":cmk-agent-ctl",
+    srcs = ["src/main.rs"],
+    aliases = aliases(),
+    crate_name = "cmk_agent_ctl",
+    edition = "2021",
     platform = "//bazel/platforms:x86_64-linux-musl",
+    proc_macro_deps = all_crate_deps(
+        proc_macro = True,
+    ),
     visibility = ["//visibility:public"],
+    deps = all_crate_deps() + [":cmk-agent-ctl-lib"],
 )
 
-platform_transition_binary(
+rust_binary(
     name = "cmk-agent-ctl-musl-aarch64",
-    binary = ":cmk-agent-ctl",
+    srcs = ["src/main.rs"],
+    aliases = aliases(),
+    crate_name = "cmk_agent_ctl",
+    edition = "2021",
     platform = "//bazel/platforms:aarch64-linux-musl",
+    proc_macro_deps = all_crate_deps(
+        proc_macro = True,
+    ),
     visibility = ["//visibility:public"],
+    deps = all_crate_deps() + [":cmk-agent-ctl-lib"],
 )
 
 rust_doc(

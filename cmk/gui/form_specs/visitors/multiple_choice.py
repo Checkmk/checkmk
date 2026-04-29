@@ -172,4 +172,6 @@ class MultipleChoiceVisitor(
 
     @override
     def _to_disk(self, parsed_value: _ParsedValueModel) -> list[str]:
-        return [v["name"] for v in parsed_value]
+        # str() coerces str subclasses (e.g. StrEnum members supplied as
+        # element.name) back to a plain str so disk repr() round-trips cleanly.
+        return [str(v["name"]) for v in parsed_value]

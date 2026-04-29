@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from enum import StrEnum
+
 import pytest
 
 from cmk.gui.form_specs import DefaultValue as FormSpecDefaultValue
@@ -107,3 +109,50 @@ def test_parse_default_value(multiple_choice_spec: MultipleChoice) -> None:
         multiple_choice_spec, VisitorOptions(migrate_values=True, mask_values=False)
     )
     assert visitor._parse_value(FormSpecDefaultValue()) == SORTED_GOOD_CHOICES_FRONTEND
+
+
+class _Color(StrEnum):
+    RED = "RED"
+    GREEN = "GREEN"
+
+
+def _strenum_multiple_choice_spec() -> MultipleChoice:
+    return MultipleChoice(
+        elements=[
+            MultipleChoiceElement(name=_Color.GREEN, title=Title("Green")),
+            MultipleChoiceElement(name=_Color.RED, title=Title("Red")),
+        ],
+    )
+
+
+def test_strenum_plain_str_from_disk_round_trips() -> None:
+    visitor = get_visitor(
+        _strenum_multiple_choice_spec(),
+        VisitorOptions(migrate_values=True, mask_values=False),
+    )
+    disk_value = visitor.to_disk(RawDiskData(["RED"]))
+    assert isinstance(disk_value, list)
+    assert disk_value == ["RED"]
+    assert all(type(v) is str for v in disk_value)
+
+
+def test_strenum_member_from_disk_normalizes() -> None:
+    visitor = get_visitor(
+        _strenum_multiple_choice_spec(),
+        VisitorOptions(migrate_values=True, mask_values=False),
+    )
+    disk_value = visitor.to_disk(RawDiskData([_Color.RED]))
+    assert isinstance(disk_value, list)
+    assert disk_value == ["RED"]
+    assert all(type(v) is str for v in disk_value)
+
+
+def test_strenum_member_from_frontend_normalizes() -> None:
+    visitor = get_visitor(
+        _strenum_multiple_choice_spec(),
+        VisitorOptions(migrate_values=True, mask_values=False),
+    )
+    disk_value = visitor.to_disk(RawFrontendData([{"name": "RED", "title": "Red"}]))
+    assert isinstance(disk_value, list)
+    assert disk_value == ["RED"]
+    assert all(type(v) is str for v in disk_value)

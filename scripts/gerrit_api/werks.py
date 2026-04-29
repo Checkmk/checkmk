@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Helper functions & objects to parse werk contents."""
 
+import logging
 import re
 from dataclasses import dataclass
 from enum import StrEnum
@@ -11,6 +12,8 @@ from pathlib import Path
 from typing import Final
 
 from scripts.gerrit_api.client import ChangeDetails, GerritClient
+
+logger = logging.getLogger(__name__)
 
 
 class WerkImpact(StrEnum):
@@ -57,13 +60,26 @@ class WerksParser:
             if line.startswith("#"):
                 self._summary = line.split("#")[-1].strip()
             elif WerksParser.DELIMITER in line:
+                # process Werk attributes
                 if "version" in line:
-                    self._version = line.split(WerksParser.DELIMITER)[-1].strip()
-                if "level" in line:
-                    self._level = int(line.split(WerksParser.DELIMITER)[-1].strip())
-                if "compatible" in line:
-                    self._compatible = line.split(WerksParser.DELIMITER)[-1].strip()
+                    self._version = self._validate_line_format(line)
+                elif "level" in line:
+                    self._level = int(self._validate_line_format(line))
+                elif "compatible" in line:
+                    self._compatible = self._validate_line_format(line)
         self._impact = self._get_impact()
+
+    def _validate_line_format(self, line: str) -> str:
+        """Validate lines in a Werk follow the format 'key | value' and return the 'value'."""
+        if line.count(WerksParser.DELIMITER) > 1:
+            # Parse line with format '| key | value |'
+            logger.warning(
+                "Potentially incorrect format in 'Werk %d' at line '%s'!", self._id, line
+            )
+            machine_readable_line = [_ for _ in line.split(WerksParser.DELIMITER) if _.strip()]
+        else:
+            machine_readable_line = line.split(WerksParser.DELIMITER)
+        return machine_readable_line[-1].strip()
 
     def _get_impact(self) -> WerkImpact:
         """Decide the impact of a werk on the client.

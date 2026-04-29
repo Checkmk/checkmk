@@ -22,6 +22,7 @@ from typing import IO, override
 
 from omdlib.args_site_user import args_to_command_line, Backup
 from omdlib.contexts import SiteContext
+from omdlib.flock import exclusive_owner
 from omdlib.global_options import GlobalOptions
 from omdlib.options import CommandOptions
 from omdlib.site_paths import SitePaths
@@ -119,11 +120,19 @@ def main_backup(
 
 def main_site_backup(args: Backup) -> int:
     site = site_environment_as_root(args.site, args.verbose)
-    with (
-        open(args.descriptor, mode="wb", closefd=False) as fileobj,
-        tarfile.open(fileobj=fileobj, mode="w|gz" if args.compression else "w|") as tar,
+    # This lock protects two resources:
+    # 1. Concurrent backups interleave SUSPEND/RESUME commands to rrdcached.
+    # 2. Parallel site backups cause I/O contention.
+    lock_path = Path(SitePaths.from_site_name(args.site).home) / "tmp" / "run" / "backup.lock"
+    with exclusive_owner(
+        lock_path,
+        f"Another backup for site '{args.site}' is already running.",
     ):
-        _try_backup_site_to_tarfile(tar, BackupExclusions.from_args(args), site, args.verbose)
+        with (
+            open(args.descriptor, mode="wb", closefd=False) as fileobj,
+            tarfile.open(fileobj=fileobj, mode="w|gz" if args.compression else "w|") as tar,
+        ):
+            _try_backup_site_to_tarfile(tar, BackupExclusions.from_args(args), site, args.verbose)
     return 0
 
 

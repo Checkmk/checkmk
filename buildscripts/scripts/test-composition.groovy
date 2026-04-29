@@ -72,6 +72,9 @@ void main() {
         """.stripMargin());
 
     def relative_job_name = "${branch_base_folder}/builders/test-composition-single-f12less";
+    if (env.USE_K8S_COMPOSITION_SYSTEMTESTS == "1") {
+        relative_job_name = "${branch_base_folder}/builders/test-composition-single-f12less-k8s";
+    }
 
     /// avoid failures due to leftover artifacts from prior runs
     /// and create folder before entering containers to not delete the folder after leaving the container

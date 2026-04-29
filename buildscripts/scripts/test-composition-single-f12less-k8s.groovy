@@ -75,10 +75,10 @@ void main() {
             make_target: "-C tests ${make_target}", // k8s does not allow dir()
             test_filter: params.TEST_FILTER,
             faked_artifacts: fake_artifacts,
-            // ultimate can hit 40min during the nightly runs (without wait time)
-            // runs of heavy chain are around 10-30min depending on the edition
+            // ultimatemt can hit 120min during the nightly runs (without wait time)
+            // runs of heavy chain are around 45-90min depending on the edition
             // using FoS of 3
-            timeout: 120,
+            timeout: 360,
         ]);
     }
 

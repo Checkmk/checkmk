@@ -3,19 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import pytest
-
-from cmk.base.base_app import CheckmkBaseApp
+from cmk.base.automations.automations import discover_automations
 from cmk.base.community_app import make_app
 
 
-@pytest.fixture(scope="module", name="app")
-def app_fixture() -> CheckmkBaseApp:
-    return make_app()
-
-
-def test_registered_modes(app: CheckmkBaseApp) -> None:
-    expected = {
+def test_registered_modes() -> None:
+    assert {m.long_option for m in make_app().modes._modes} == {
         "automation",
         "browse-man",
         "check",
@@ -46,11 +39,10 @@ def test_registered_modes(app: CheckmkBaseApp) -> None:
         "update-dns-cache",
         "version",
     }
-    assert expected == {m.long_option for m in app.modes._modes}
 
 
-def test_registered_automations(app: CheckmkBaseApp) -> None:
-    expected = {
+def test_discovered_automations() -> None:
+    assert {a.name for a in discover_automations()} == {
         "active-check",
         "analyse-host",
         "analyze-host-rule-effectiveness",
@@ -89,4 +81,3 @@ def test_registered_automations(app: CheckmkBaseApp) -> None:
         "update-passwords-merged-file",
         "find-unknown-check-parameter-rule-sets",
     }
-    assert expected == app.automations._automations.keys()

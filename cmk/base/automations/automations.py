@@ -9,6 +9,7 @@ import sys
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from contextlib import nullcontext, redirect_stdout
 from dataclasses import dataclass
+from typing import Final
 
 import cmk.ccc.debug
 from cmk import trace
@@ -93,33 +94,29 @@ class Automation:
     result: type[ABCAutomationResult]
 
 
-class Automations:
-    def __init__(self) -> None:
-        super().__init__()
-        self._automations: dict[AutomationID, Automation] = {}
+def discover_automations() -> Iterable[Automation]:
+    discovery_result = discover_plugins_from_modules(
+        plugin_prefixes={Automation: "automation_"},
+        module_names_by_priority=[
+            # TODO: We need to get rid of this hard-coded list
+            "cmk.base.automations.check_mk",
+            "cmk.base.diagnostics",
+            "cmk.base.notify",
+            "cmk.base.nonfree.notify_automation",
+            "cmk.bakery.base.automation",  # non-free
+        ],
+        skip_wrong_types=False,
+        raise_errors=True,
+    )
+    return discovery_result.plugins.values()
 
-    # TODO: There is only a single call site of this method (per edition) when constructing the
-    # CheckmkBaseApp, and the call *immediately* follows the Automations() constructor. So we should
-    # probably merge this method into the constructor. As it is, it looks a bit like the "empty
-    # constructor" and/or "hidden dependency" anti-pattern.
-    def discover(self) -> None:
-        discovery_result = discover_plugins_from_modules(
-            plugin_prefixes={Automation: "automation_"},
-            module_names_by_priority=[
-                # TODO: We need to get rid of this hard-coded list
-                "cmk.base.automations.check_mk",
-                "cmk.base.diagnostics",
-                "cmk.base.notify",
-                "cmk.base.nonfree.notify_automation",
-                "cmk.bakery.base.automation",  # non-free
-            ],
-            skip_wrong_types=False,
-            raise_errors=True,
-        )
-        assert not discovery_result.errors
-        self._automations.update(
-            {automation.name: automation for automation in discovery_result.plugins.values()}
-        )
+
+class Automations:
+    def __init__(self, plugins: Iterable[Automation]) -> None:
+        super().__init__()
+        self._automations: Final[Mapping[AutomationID, Automation]] = {
+            automation.name: automation for automation in plugins
+        }
 
     # Called either via the CLI's "cmk --automation" mode or via the "/automation" endpoint of the
     # automation helper.

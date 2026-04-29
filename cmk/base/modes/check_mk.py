@@ -2049,6 +2049,8 @@ def _mode_automation(app: CheckmkBaseApp, args: list[str]) -> int:
     from cmk.base.automations.automations import (
         AutomationContext,
         AutomationError,
+        Automations,
+        discover_automations,
         MKAutomationError,
     )
 
@@ -2070,6 +2072,7 @@ def _mode_automation(app: CheckmkBaseApp, args: list[str]) -> int:
         log.logger.setLevel(logging.INFO)
 
     name, automation_args = AutomationID(args[0]), args[1:]
+    automations = Automations(discover_automations())
     with tracer.span(
         f"mode_automation[{name}]",
         attributes={
@@ -2087,7 +2090,7 @@ def _mode_automation(app: CheckmkBaseApp, args: list[str]) -> int:
             core_performance_settings=app.core_performance_settings,
         )
         try:
-            result = app.automations.execute(ctx, name, automation_args)
+            result = automations.execute(ctx, name, automation_args)
         finally:
             profiling.output_profile()
         if isinstance(result, AutomationError):

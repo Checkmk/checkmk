@@ -19,7 +19,6 @@ from cmk.snmplib import SNMPPluginStore
 from cmk.utils.labels import LabelManager, Labels
 from cmk.utils.rulesets.ruleset_matcher import RulesetMatcher
 
-from .automations.automations import Automations
 from .config import ConfigCache, LoadingResult, ObjectAttributes
 from .modes.modes import Modes
 
@@ -33,7 +32,6 @@ class CheckmkBaseApp:
 
     edition: Edition
     modes: Modes
-    automations: Automations
     make_bake_on_restart: Callable[[LoadingResult, Sequence[HostAddress]], Callable[[], None]]
     create_core: Callable[
         [

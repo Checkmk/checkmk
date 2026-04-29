@@ -18,7 +18,7 @@ from setproctitle import setproctitle
 
 import cmk.ccc.version as cmk_version
 from cmk.base import config
-from cmk.base.app import make_app
+from cmk.base.automations.automations import Automations, discover_automations
 from cmk.base.config import ConfigCache
 from cmk.ccc.daemon import daemonize, pid_file_lock
 from cmk.ccc.site import SiteId
@@ -122,7 +122,7 @@ def _application() -> FastAPI:
 
     return make_application(
         edition=cmk_version.edition(omd_root),
-        engine=make_app(cmk_version.edition(omd_root)).automations,
+        engine=Automations(plugins=discover_automations()),
         cache=Cache.setup(client=get_redis_client()),
         reloader_config=config.reloader_config,
         reload_config=_reload_automation_config,

@@ -25,7 +25,13 @@ from . import load_werk as cmk_werks_load_werk
 from . import parse_werk
 from .config import Config, load_config, try_load_current_version_from_defines_make
 from .format import format_as_markdown_werk
-from .id_pool import dump_stash_to_file, load_stash_from_file
+from .id_pool import (
+    add_id_to_stash,
+    dump_stash_to_file,
+    load_legacy_stash_from_file,
+    make_paths_object,
+    pick_id_from_stash,
+)
 from .in_out_elements import (
     ask_user_if_not_provided,
     bail_out,
@@ -54,8 +60,6 @@ WERK_ID_RANGES = {
     "cmk": [(10_000, 1_000_000)],
     "cloudmk": [(1_000_000, 2_000_000)],
 }
-
-WERK_IDS_PATH = Path.home() / ".cmk-werk-ids"
 
 
 def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
@@ -705,11 +709,11 @@ def main_new(args: argparse.Namespace) -> None:
     else:
         sys.stdout.write(TTY_GREEN + WERK_NOTES + TTY_NORMAL)
 
-    stash = load_stash_from_file(WERK_IDS_PATH)
-    werk_id = stash.pick_id(project=get_config().project)
+    paths = make_paths_object(Path.home())
+    stash = load_legacy_stash_from_file(paths)
+    werk_id = pick_id_from_stash(stash, get_config().project)
 
     metadata: WerkMetadata = {}
-
     metadata["id"] = str(werk_id)
     metadata["date"] = datetime.datetime.now(datetime.UTC).isoformat()
     metadata["version"] = get_config().current_version
@@ -760,7 +764,7 @@ def main_new(args: argparse.Namespace) -> None:
         edit_werk(werk_path, args.custom_files, commit=not args.no_commit)
 
     stash.free_id(werk_id)
-    dump_stash_to_file(WERK_IDS_PATH, stash)
+    dump_stash_to_file(paths, stash)
 
     sys.stdout.write(f"Werk {format_werk_id(werk_id)} saved.\n")
     sys.stderr.write(
@@ -798,9 +802,9 @@ def main_url(args: argparse.Namespace) -> None:
 
 
 def main_delete(args: argparse.Namespace) -> None:
-    werks = [WerkId(i) for i in args.id]
+    paths = make_paths_object(Path.home())
 
-    for werk_id in werks:
+    for werk_id in [WerkId(i) for i in args.id]:
         if not werk_exists(werk_id):
             bail_out(f"There is no Werk {format_werk_id(werk_id)}.")
 
@@ -812,9 +816,9 @@ def main_delete(args: argparse.Namespace) -> None:
             sys.stdout.write(f"Error removing Werk file: {exc}.\n")
             continue
         sys.stdout.write(f"Deleted Werk {format_werk_id(werk_id)} ({werk_to_be_removed_title}).\n")
-        stash = load_stash_from_file(WERK_IDS_PATH)
-        stash.add_id(werk_id, project=get_config().project)
-        dump_stash_to_file(WERK_IDS_PATH, stash)
+        stash = load_legacy_stash_from_file(paths)
+        add_id_to_stash(stash, werk_id, get_config().project)
+        dump_stash_to_file(paths, stash)
         sys.stdout.write(f"You lucky bastard now own the Werk ID {format_werk_id(werk_id)}.\n")
 
 
@@ -1046,7 +1050,8 @@ def _reserve_werk_ids(
 
 
 def main_fetch_ids(args: argparse.Namespace) -> None:
-    stash = load_stash_from_file(WERK_IDS_PATH)
+    paths = make_paths_object(Path.home())
+    stash = load_legacy_stash_from_file(paths)
 
     if args.count is None:
         per_project = "\n".join(
@@ -1075,10 +1080,10 @@ def main_fetch_ids(args: argparse.Namespace) -> None:
 
     new_first_free, fresh_ids = _reserve_werk_ids(ranges, first_free, args.count)
 
-    stash = load_stash_from_file(WERK_IDS_PATH)
+    stash = load_legacy_stash_from_file(paths)
     for werk_id in fresh_ids:
-        stash.add_id(werk_id, project=project)
-    dump_stash_to_file(WERK_IDS_PATH, stash)
+        add_id_to_stash(stash, werk_id, project=project)
+    dump_stash_to_file(paths, stash)
 
     # Store the new reserved werk ids
     with open("first_free", "w", encoding="utf-8") as f:

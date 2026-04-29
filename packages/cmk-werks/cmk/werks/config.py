@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from pathlib import Path
-from typing import Literal
 
 from pydantic import BaseModel, model_validator, ValidationInfo
 
@@ -17,7 +16,6 @@ class Config(BaseModel):
     levels: list[tuple[str, str]]
     compatible: list[tuple[str, str]]
     online_url: str
-    project: Literal["cmk", "cloudmk", "cma"]
     create_commit: bool = True
     """
     Should the werk tool automatically create a commit when reserving ids or creating a werk?

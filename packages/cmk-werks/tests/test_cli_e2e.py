@@ -11,11 +11,12 @@ from unittest import mock
 
 from git.repo import Repo
 
+from cmk.werks.cli import Stash
+
 
 def initialize_werks_project(
     path: Path,
     *,
-    project: str,
     first_free: int,
     commit: bool = True,
 ) -> Repo:
@@ -45,29 +46,30 @@ compatible = [
     ("incomp", "Incompatible"),
 ]
 online_url = "https://checkmk.com/werk/%d"
-project = "{project}"
 current_version = "0.1.0"
 {commit_option}
     """)
     Repo.init(path)
     repo = Repo(path)
-    (path / "README.md").write_text(f"# repo {project}")
+    (path / "README.md").write_text("# repo")
     cw = repo.config_writer()
     cw.set_value("user", "email", "git@example.com")
     cw.set_value("user", "name", "git")
     cw.release()
     repo.index.add(["README.md", ".werks/first_free"])
     repo.index.commit("initial commit")
-    repo.create_remote("origin", "some-url/check_mk")
-    repo.create_head("master")
 
     return repo
 
 
-def call(*args: str) -> None:
-    # we can not call main directly, because the script was not created with that in mind
-    # for example we have very sticky caches
-    subprocess.check_call(["python", "-m", "cmk.werks", *args])
+def prepare_reserved_ids(home: Path, ids: list[int]) -> Path:
+    secret_file = home / ".config/cmk-werks/secret"
+    secret_file.parent.mkdir(parents=True)
+    secret_file.write_text("fake-secret", encoding="utf-8")
+    stash_file = home / ".local/state/cmk-werks/reserved-ids"
+    stash_file.parent.mkdir(parents=True)
+    stash_file.write_text(Stash(ids=ids).model_dump_json(by_alias=True))
+    return stash_file
 
 
 def create_werk(*, title: str) -> None:
@@ -94,48 +96,34 @@ def latest_commit_subject(repo_path: Path) -> str:
 def test_reserve_ids_and_create_werk(tmp_path: Path) -> None:
     home = tmp_path / "home"
     home.mkdir()
+    stash_file = prepare_reserved_ids(home, [11111, 11112, 11113])
 
-    def read_reserved_werks():
-        return json.loads((home / ".cmk-werk-ids").read_text().strip())["ids_by_project"]
-
-    cmk_repo_path = tmp_path / "repo_cmk"
-
-    initialize_werks_project(cmk_repo_path, project="cmk", first_free=11_111)
+    repo_path = tmp_path / "repo"
+    initialize_werks_project(repo_path, first_free=11_111)
 
     with mock.patch.dict(os.environ, {"HOME": str(home), "EDITOR": "true"}):
-        os.chdir(cmk_repo_path)
-        call("ids", "5")
-        assert latest_commit_subject(cmk_repo_path) == "Reserved 5 Werk IDS"
-        assert (cmk_repo_path / ".werks/first_free").read_text().strip() == "11116"
-        assert read_reserved_werks() == {
-            "cmk": [11111, 11112, 11113, 11114, 11115],
-        }
-
+        os.chdir(repo_path)
         create_werk(title="some_title")
-        assert latest_commit_subject(cmk_repo_path) == "11111 some_title"
-        assert "some_title" in (cmk_repo_path / ".werks/11111.md").read_text()
-        assert read_reserved_werks() == {
-            "cmk": [11112, 11113, 11114, 11115],
-        }
+
+    assert latest_commit_subject(repo_path) == "11111 some_title"
+    assert "some_title" in (repo_path / ".werks/11111.md").read_text()
+    remaining = json.loads(stash_file.read_text())["ids"]
+    assert remaining == [11112, 11113]
 
 
 def test_commit_config(tmp_path: Path) -> None:
     home = tmp_path / "home"
     home.mkdir()
-    cmk_repo_path = tmp_path / "repo_cmk"
-    initialize_werks_project(cmk_repo_path, project="cmk", first_free=11_111, commit=False)
-    assert latest_commit_subject(cmk_repo_path) == "initial commit"
+    stash_file = prepare_reserved_ids(home, [1111111, 1111112])
+    assert stash_file.exists()
+
+    repo_path = tmp_path / "repo"
+    initialize_werks_project(repo_path, first_free=1_111_111, commit=False)
+    assert latest_commit_subject(repo_path) == "initial commit"
 
     with mock.patch.dict(os.environ, {"HOME": str(home), "EDITOR": "true"}):
-        os.chdir(cmk_repo_path)
-        call("ids", "2")
-        assert latest_commit_subject(cmk_repo_path) == "initial commit"
-        # just lets make sure that the ids were actually reserved:
-        json.loads((home / ".cmk-werk-ids").read_text())["ids_by_project"] == {
-            "cmk": [11111, 11112]
-        }
-
+        os.chdir(repo_path)
         create_werk(title="some_cloud_title")
-        assert latest_commit_subject(cmk_repo_path) == "initial commit"
-        # just lets make sure that the werk was actually created:
-        assert "some_cloud_title" in (cmk_repo_path / ".werks/11111.md").read_text()
+
+    assert latest_commit_subject(repo_path) == "initial commit"
+    assert "some_cloud_title" in (repo_path / ".werks/1111111.md").read_text()

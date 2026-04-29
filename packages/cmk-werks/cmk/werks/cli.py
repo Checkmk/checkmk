@@ -23,7 +23,7 @@ import tty
 from collections.abc import Iterator, Mapping, Sequence
 from functools import cache
 from pathlib import Path
-from typing import Final, Literal, NamedTuple, NoReturn, override, Protocol, TypeVar
+from typing import Final, Literal, NamedTuple, NoReturn, override, Protocol
 
 import requests
 
@@ -38,12 +38,14 @@ from .models import EditionV3
 from .parse import parse_werk_v3, WERK_V3_START, WerkV2ParseResult, WerkV3ParseResult
 from .utils import edition_v3_to_v2
 
-T = TypeVar("T", bound="LegacyStash")
-
 
 class Stash(BaseModel):
     stash_version: Literal["3"] = Field(default="3", alias="__version__")
     ids: list[int] = Field(default=[])
+
+    @override
+    def __repr__(self) -> str:
+        return f"Stash({self.ids!r})"
 
     def count(self) -> int:
         return len(self.ids)
@@ -73,57 +75,6 @@ class Stash(BaseModel):
 
     def add_ids(self, werk_ids: "Sequence[WerkId]") -> None:
         self.ids = sorted(set(self.ids).union(werk_id.id for werk_id in werk_ids))
-
-
-class LegacyStash(BaseModel):
-    stash_version: Literal["2"] = Field(default="2", alias="__version__")
-    ids_by_project: dict[str, list[int]] = Field(default={})
-
-    def count(self) -> int:
-        """
-        total number of ids available in the stash
-        """
-        return sum(len(ids) for ids in self.ids_by_project.values())
-
-    def pick_id(self, *, project: str) -> "WerkId":
-        """
-        the id will still be in the stash, but it could be freed next.
-        """
-        try:
-            return WerkId(sorted(self.ids_by_project[project])[0])
-        except IndexError as e:
-            raise RuntimeError(
-                "You have no werk IDS left. "
-                "You can reserve 10 additional Werk IDS with 'werk ids 10'."
-            ) from e
-
-    def free_id(self, werk_id: "WerkId") -> None:
-        """
-        remove id from stash
-        """
-        removed = False
-        for project, ids in self.ids_by_project.items():
-            if werk_id.id in ids:
-                removed = True
-                ids.remove(werk_id.id)
-                if not ids:
-                    sys.stdout.write(
-                        f"\n{TTY_RED}"
-                        f"This was your last reserved ID for project {project}"
-                        f"{TTY_NORMAL}\n\n"
-                    )
-
-        if not removed:
-            raise RuntimeError(f"Could not find werk_id {werk_id} in any project.")
-
-    def add_id(self, werk_id: "WerkId", *, project: str) -> None:
-        """
-        put a id into the stash
-        """
-        # werks can be delete, but we don't want to lose the id, lets put it back to the stash
-        if project not in self.ids_by_project:
-            self.ids_by_project[project] = []
-        self.ids_by_project[project].append(werk_id.id)
 
 
 class WerkId:
@@ -169,15 +120,6 @@ WerkVersion = Literal["v1", "v2"]
 
 WerkMetadata = dict[str, str]
 
-WERK_ID_RANGES = {
-    # start is inclusive, end is exclusive, as it is in range()
-    "cma": [(9_000, 10_000)],
-    "cmk": [(10_000, 1_000_000)],
-    "cloudmk": [(1_000_000, 2_000_000)],
-}
-
-_FIRST_UNSUPPORTED_WERK_ID_FOR_LEGACY_WORKFLOW = 22003
-
 
 @dataclass(frozen=True, kw_only=True)
 class Paths:
@@ -191,30 +133,11 @@ class Paths:
 
 
 def make_paths_object(home: Path) -> Paths:
-    paths = Paths(
+    return Paths(
         legacy_stash_file=home / ".cmk-werk-ids",
         stash_file=home / ".local/state/cmk-werks/reserved-ids",
         secret_file=home / ".config/cmk-werks/secret",
     )
-    _migrate_path_locations(home, paths)
-    return paths
-
-
-def _migrate_path_locations(home: Path, paths: Paths) -> None:
-    for old, new in (
-        (home / ".config/cmk-werk-ids-secret", paths.secret_file),
-        (home / ".local/state/cmk-werk-ids-reserved", paths.stash_file),
-    ):
-        if old.exists() and not new.exists():
-            new.parent.mkdir(parents=True, exist_ok=True)
-            try:
-                old.rename(new)
-            except OSError as exc:
-                sys.stderr.write(
-                    f"Warning: could not migrate werk-ids file {old} to {new}: {exc}\n"
-                    f"Please move it manually; this automatic migration will be "
-                    f"removed at the start of September 2026.\n"
-                )
 
 
 def write_secret(secret_file: Path, secret: str) -> None:
@@ -347,21 +270,15 @@ def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
     # IDS
     parser_ids = subparsers.add_parser(
         "ids",
-        help="Show the number of reserved werk IDs (reserving via 'ids <NR>' is legacy-only, removed start of September 2026)",
+        help="Show the number of reserved werk IDs",
     )
     parser_ids.add_argument(
         "count",
         nargs="?",
         type=int,
-        help=(
-            "number of werks to reserve. Only supported with the legacy "
-            "reservation mechanism. From the start of August 2026 on, reserving "
-            "werk IDs at or above 22003 is rejected; the mechanism will be "
-            "removed entirely at the start of September 2026, after which IDs "
-            "are reserved automatically."
-        ),
+        help="ignored, kept for backwards compatibility",
     )
-    parser_ids.set_defaults(func=main_fetch_ids)
+    parser_ids.set_defaults(func=main_show_ids)
 
     # LIST
     parser_list = subparsers.add_parser("list", help="List werks")
@@ -944,32 +861,9 @@ WERK_NOTES = """
 """
 
 
-def load_legacy_stash_from_file(paths: Paths) -> "LegacyStash":
-    if not paths.legacy_stash_file.exists():
-        return LegacyStash()
-
-    content = paths.legacy_stash_file.read_text(encoding="utf-8")
-    if not content:
-        return LegacyStash()
-
-    if content[0] == "[":
-        # we have a legacy file, from cmk project, we need to adapt it:
-        return LegacyStash.model_validate({"ids_by_project": {"cmk": ast.literal_eval(content)}})
-
-    return LegacyStash.model_validate_json(content)
-
-
-def dump_stash_to_file(paths: Paths, stash: "LegacyStash | Stash") -> None:
-    raw_stash = stash.model_dump_json(by_alias=True) + "\n"
-    match stash:
-        case LegacyStash():
-            target = paths.legacy_stash_file
-        case Stash():
-            target = paths.stash_file
-        case other:
-            raise TypeError(other)
-    target.parent.mkdir(parents=True, exist_ok=True)
-    target.write_text(raw_stash, encoding="utf-8")
+def dump_stash_to_file(paths: Paths, stash: Stash) -> None:
+    paths.stash_file.parent.mkdir(parents=True, exist_ok=True)
+    paths.stash_file.write_text(stash.model_dump_json(by_alias=True) + "\n", encoding="utf-8")
 
 
 def _read_legacy_stash_file(paths: Paths) -> Sequence[int]:
@@ -1002,7 +896,7 @@ def migrate_werk_ids_file(paths: Paths) -> None:
     paths.legacy_stash_file.unlink(missing_ok=True)
 
 
-def load_stash_from_file(paths: Paths) -> "LegacyStash | Stash":
+def load_stash_from_file(paths: Paths) -> Stash:
     if paths.legacy_stash_file.exists() and paths.stash_file.exists():
         bail_out(
             f"{TTY_RED}Found both a legacy and a new werk IDs file:\n"
@@ -1010,13 +904,15 @@ def load_stash_from_file(paths: Paths) -> "LegacyStash | Stash":
             f"  {paths.stash_file}\n"
             f"Please run 'werk init' to merge them into a single file.{TTY_NORMAL}"
         )
-    if paths.secret_file.exists():
-        return (
-            Stash.model_validate_json(paths.stash_file.read_text(encoding="utf-8"))
-            if paths.stash_file.exists()
-            else Stash()
+    if not paths.secret_file.exists():
+        bail_out(
+            f"Could not load werk IDs: No such files {paths.secret_file} and {paths.stash_file}"
         )
-    return load_legacy_stash_from_file(paths)
+    return (
+        Stash.model_validate_json(paths.stash_file.read_text(encoding="utf-8"))
+        if paths.stash_file.exists()
+        else Stash()
+    )
 
 
 # Use a single short timeout for every request so commands fail fast when the werk IDs
@@ -1132,11 +1028,8 @@ def _ensure_stash_file_writable(paths: Paths) -> None:
         )
 
 
-def load_or_update_stash(paths: Paths, werk_ids_client: WerkIDsClient) -> "LegacyStash | Stash":
+def load_or_update_stash(paths: Paths, werk_ids_client: WerkIDsClient) -> Stash:
     stash = load_stash_from_file(paths)
-
-    if isinstance(stash, LegacyStash):
-        return stash
 
     if not paths.secret_file.exists():
         bail_out(f"No such secret file {paths.secret_file}")
@@ -1162,32 +1055,12 @@ def load_or_update_stash(paths: Paths, werk_ids_client: WerkIDsClient) -> "Legac
     return stash
 
 
-def pick_id_from_stash(stash: "LegacyStash | Stash", project: str) -> "WerkId":
-    match stash:
-        case LegacyStash():
-            return stash.pick_id(project=project)
-        case Stash():
-            return stash.pick_id()
-        case other:
-            raise TypeError(other)
-
-
-def add_id_to_stash(stash: "LegacyStash | Stash", werk_id: "WerkId", project: str) -> None:
-    match stash:
-        case LegacyStash():
-            stash.add_id(werk_id, project=project)
-        case Stash():
-            stash.add_ids([werk_id])
-        case other:
-            raise TypeError(other)
-
-
 def main_new(args: argparse.Namespace) -> None:
     sys.stdout.write(TTY_GREEN + WERK_NOTES + TTY_NORMAL)
 
     paths = make_paths_object(Path.home())
     stash = load_or_update_stash(paths, WerkIDsClient(get_config().werk_ids_server_url))
-    werk_id = pick_id_from_stash(stash, get_config().project)
+    werk_id = stash.pick_id()
 
     metadata: WerkMetadata = {}
     metadata["id"] = str(werk_id)
@@ -1295,7 +1168,7 @@ def main_delete(args: argparse.Namespace) -> None:
             continue
         sys.stdout.write(f"Deleted Werk {format_werk_id(werk_id)} ({werk_to_be_removed_title}).\n")
         stash = load_stash_from_file(paths)
-        add_id_to_stash(stash, werk_id, get_config().project)
+        stash.add_ids([werk_id])
         dump_stash_to_file(paths, stash)
         sys.stdout.write(f"You lucky bastard now own the Werk ID {format_werk_id(werk_id)}.\n")
 
@@ -1488,110 +1361,14 @@ def werk_cherry_pick(commit_id: str, no_commit: bool, werk_version: WerkVersion)
             subprocess.run(["git", "status"], check=True)
 
 
-def current_branch() -> str:
-    return [line for line in os.popen("git branch") if line.startswith("*")][0].split()[-1]
-
-
-def current_repo() -> str:
-    return list(os.popen("git config --get remote.origin.url"))[0].strip().split("/")[-1]
-
-
-def _reserve_werk_ids(
-    ranges: list[tuple[int, int]], first_free: int, count: int
-) -> tuple[int, list[WerkId]]:
-    buffer: list[WerkId] = []
-    while ranges:
-        start, end = ranges.pop(0)
-        if first_free > end:
-            # range already complelty exhausted
-            continue
-        if first_free < start:
-            # first_free is not in our range!
-            raise RuntimeError("Configuration error: first_free no in range!")
-        new_first_free = first_free + count
-        if new_first_free < end:
-            return new_first_free, buffer + list(
-                WerkId(i) for i in range(first_free, new_first_free)
-            )
-        buffer += list(WerkId(i) for i in range(first_free, end))
-        count -= end - first_free
-        if not ranges:
-            raise RuntimeError(
-                "Not enough ids available, please add a fresh range to WERK_ID_RANGES"
-            )
-        first_free = ranges[0][0]
-
-    raise RuntimeError("could not allocate ids")
-
-
-def _reject_ids_unsupported_by_legacy_workflow(werk_ids: Sequence[WerkId]) -> None:
-    if any(werk_id.id >= _FIRST_UNSUPPORTED_WERK_ID_FOR_LEGACY_WORKFLOW for werk_id in werk_ids):
+def main_show_ids(args: argparse.Namespace) -> None:
+    # '--no-commit' is ignored; it is kept only so that existing invocations from
+    # the days of manual reservation don't fail. IDs are now reserved on the fly.
+    sys.stdout.write(repr(load_stash_from_file(make_paths_object(Path.home()))))
+    if args.count is not None:
         bail_out(
-            "The manual reservation of werk IDs is no longer supported. Please run 'werk init' "
-            "to migrate to the new reservation mechanism, which reserves werk IDs on the fly "
-            "during 'werk new'."
-        )
-
-
-def main_fetch_ids(args: argparse.Namespace) -> None:
-    paths = make_paths_object(Path.home())
-    stash = load_stash_from_file(paths)
-
-    if args.count is None:
-        sys.stdout.write(f"You have {stash.count()} reserved IDs\n")
-        if isinstance(stash, LegacyStash):
-            sys.stdout.write(
-                "\n".join(f"{project}: {len(ids)}" for project, ids in stash.ids_by_project.items())
-            )
-            sys.stdout.write("\n")
-        sys.exit(0)
-
-    if isinstance(stash, Stash):
-        bail_out(
-            "You already converted to the new workflow, there is no need to reserve Werks. "
-            "Go live your happy life and just create Werks."
-        )
-
-    if current_branch() != "master" or current_repo() != "check_mk":
-        bail_out("Werk IDs can only be reserved on the master branch of the check_mk repository.")
-
-    # Get the start werk_id to reserve
-    try:
-        with open("first_free", encoding="utf-8") as f:
-            first_free = int(f.read().strip())
-    except (OSError, ValueError) as e:
-        raise RuntimeError("Could not load .werks/first_free") from e
-
-    project = get_config().project
-    if project not in WERK_ID_RANGES:
-        raise RuntimeError(f"project {project} has no werk id range")
-    ranges = WERK_ID_RANGES[project].copy()
-
-    new_first_free, fresh_ids = _reserve_werk_ids(ranges, first_free, args.count)
-
-    _reject_ids_unsupported_by_legacy_workflow(fresh_ids)
-
-    stash = load_legacy_stash_from_file(paths)
-    for werk_id in fresh_ids:
-        add_id_to_stash(stash, werk_id, project=project)
-    dump_stash_to_file(paths, stash)
-
-    # Store the new reserved werk ids
-    with open("first_free", "w", encoding="utf-8") as f:
-        f.write(str(new_first_free) + "\n")
-
-    sys.stdout.write(
-        f"Reserved {args.count} additional IDs now. You have {stash.count()} reserved IDs now.\n"
-    )
-
-    if get_config().create_commit:
-        if os.system(f"git commit -m 'Reserved {args.count} Werk IDS' .") == 0:  # nosec
-            sys.stdout.write("--> Successfully committed reserved werk IDS. Please push it soon!\n")
-        else:
-            bail_out("Cannot commit.")
-    else:
-        sys.stdout.write(
-            "--> Reserved werk IDs. Commit and push it soon, otherwise someone else reserves the same IDs!\n"
+            "The manual reservation of werk IDs is no longer supported, as these IDs are now"
+            " reserved on the fly. Should any issues arise, please open a ticket."
         )
 
 

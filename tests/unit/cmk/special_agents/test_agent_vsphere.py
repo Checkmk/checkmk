@@ -3,11 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from collections.abc import Mapping, Sequence
-from unittest.mock import Mock
+from unittest.mock import MagicMock, Mock, patch
 
 import pytest
 
 from cmk.special_agents.agent_vsphere import (
+    ESXSession,
     eval_multipath_info,
     fetch_virtual_machines,
     get_section_snapshot_summary,
@@ -61,6 +62,25 @@ def test_eval_multipath_info(
     propset: str, expected: tuple[Mapping[str, Sequence[str]], Mapping[object, object]]
 ) -> None:
     assert eval_multipath_info("", PROP_NAME, propset) == expected
+
+
+def test_postsoap_encodes_body_as_utf8() -> None:
+    session = ESXSession("vcenter.example.com", 443, cert_check=False)
+
+    payload = (
+        '<ns1:Login xsi:type="ns1:LoginRequestType">'
+        "  <ns1:userName>user</ns1:userName>"
+        "  <ns1:password>pa§§word</ns1:password>"
+        "</ns1:Login>"
+    )
+
+    with patch("requests.Session.post", return_value=MagicMock()) as mock_post:
+        session.postsoap(payload)
+
+    sent_data = mock_post.call_args.kwargs["data"]
+    assert isinstance(sent_data, bytes)
+    assert sent_data.decode("utf-8")
+    assert "pa§§word".encode() in sent_data
 
 
 def test_cloning_vm_is_processed(mocker: Mock) -> None:

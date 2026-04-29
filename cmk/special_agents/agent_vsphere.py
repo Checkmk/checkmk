@@ -1086,7 +1086,7 @@ class ESXSession(requests.Session):
         )
 
     def postsoap(self, request: str) -> requests.Response:
-        soapdata = ESXSession.ENVELOPE % request
+        soapdata = (ESXSession.ENVELOPE % request).encode("utf-8")
         # Watch out: we must provide the verify keyword to every individual request call!
         # Else it will be overwritten by the REQUESTS_CA_BUNDLE env variable
         return super().post(self._post_url, data=soapdata, verify=self.verify)

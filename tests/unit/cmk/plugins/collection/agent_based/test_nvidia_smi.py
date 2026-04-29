@@ -268,6 +268,16 @@ SECTION = nvidia_smi.Section(
                 encoder_util=3.0,
                 decoder_util=8.0,
             ),
+            clock=nvidia_smi.Clock(
+                graphics_clock=1244.0,
+                sm_clock=1244.0,
+                mem_clock=6993.0,
+                video_clock=1154.0,
+                graphics_clock_max=2475.0,
+                sm_clock_max=2475.0,
+                mem_clock_max=7001.0,
+                video_clock_max=1950.0,
+            ),
         )
     },
 )
@@ -581,3 +591,167 @@ def test_check_nvidia_smi_memory_util(
     expected_result: CheckResult,
 ) -> None:
     assert list(nvidia_smi.check_nvidia_smi_memory_util(item, params, section)) == expected_result
+
+
+# ------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    "section, expected_result",
+    [
+        (
+            SECTION,
+            [Service(item="00000000:0B:00.0")],
+        ),
+    ],
+)
+def test_discover_nvidia_smi_clock_speed(
+    section: nvidia_smi.Section,
+    expected_result: DiscoveryResult,
+) -> None:
+    assert list(nvidia_smi.discover_nvidia_smi_clock_speed(section)) == expected_result
+
+
+@pytest.mark.parametrize(
+    "item, params, section, expected_result",
+    [
+        (
+            "00000000:0B:00.0",
+            {},
+            SECTION,
+            [
+                Result(
+                    state=State.OK,
+                    summary="Graphics clock: 1244.0 MHz / 2475.0 MHz, SM clock: 1244.0 MHz / 2475.0 MHz, MEM clock: 6993.0 MHz / 7001.0 MHz, Video clock: 1154.0 MHz / 1950.0 MHz",
+                ),
+                Result(state=State.OK, notice="Graphics clock: 1.24 GHz"),
+                Metric("graphics_clock", 1244_000_000.0, boundaries=(0.0, 2475_000_000)),
+                Metric("graphics_clock_max", 2475_000_000.0),
+                Result(state=State.OK, notice="SM clock: 1.24 GHz"),
+                Metric("sm_clock", 1244_000_000.0, boundaries=(0.0, 2475_000_000)),
+                Metric("sm_clock_max", 2475_000_000.0),
+                Result(state=State.OK, notice="MEM clock: 6.99 GHz"),
+                Metric("mem_clock", 6993_000_000.0, boundaries=(0.0, 7001_000_000)),
+                Metric("mem_clock_max", 7001_000_000.0),
+                Result(state=State.OK, notice="Video clock: 1.15 GHz"),
+                Metric("video_clock", 1154_000_000.0, boundaries=(0.0, 1950_000_000)),
+                Metric("video_clock_max", 1950_000_000.0),
+            ],
+        ),
+        (
+            "00000000:0B:00.0",
+            nvidia_smi.ClockParams(
+                levels_graphics_upper=(1200_000_000.0, 1900_000_000.0),
+                levels_graphics_lower=None,
+                levels_sm_upper=(1000_000_000.0, 1200_000_000.0),
+                levels_sm_lower=None,
+                levels_mem_upper=(6900_000_000.0, 7000_000_000.0),
+                levels_mem_lower=None,
+                levels_video_upper=(900_000_000.0, 1100_000_000.0),
+                levels_video_lower=None,
+            ),
+            SECTION,
+            [
+                Result(
+                    state=State.OK,
+                    summary="Graphics clock: 1244.0 MHz / 2475.0 MHz, SM clock: 1244.0 MHz / 2475.0 MHz, MEM clock: 6993.0 MHz / 7001.0 MHz, Video clock: 1154.0 MHz / 1950.0 MHz",
+                ),
+                Result(
+                    state=State.WARN,
+                    notice="Graphics clock: 1.24 GHz (warn/crit at 1.20 GHz/1.90 GHz)",
+                ),
+                Metric(
+                    "graphics_clock",
+                    1244000000.0,
+                    levels=(1200000000.0, 1900000000.0),
+                    boundaries=(0.0, 2475000000.0),
+                ),
+                Metric("graphics_clock_max", 2475000000.0),
+                Result(
+                    state=State.CRIT,
+                    notice="SM clock: 1.24 GHz (warn/crit at 1.00 GHz/1.20 GHz)",
+                ),
+                Metric(
+                    "sm_clock",
+                    1244000000.0,
+                    levels=(1000000000.0, 1200000000.0),
+                    boundaries=(0.0, 2475000000.0),
+                ),
+                Metric("sm_clock_max", 2475000000.0),
+                Result(
+                    state=State.WARN,
+                    notice="MEM clock: 6.99 GHz (warn/crit at 6.90 GHz/7.00 GHz)",
+                ),
+                Metric(
+                    "mem_clock",
+                    6993000000.0,
+                    levels=(6900000000.0, 7000000000.0),
+                    boundaries=(0.0, 7001000000.0),
+                ),
+                Metric("mem_clock_max", 7001000000.0),
+                Result(
+                    state=State.CRIT,
+                    notice="Video clock: 1.15 GHz (warn/crit at 900 MHz/1.10 GHz)",
+                ),
+                Metric(
+                    "video_clock",
+                    1154000000.0,
+                    levels=(900000000.0, 1100000000.0),
+                    boundaries=(0.0, 1950000000.0),
+                ),
+                Metric("video_clock_max", 1950000000.0),
+            ],
+        ),
+        (
+            "00000000:0B:00.0",
+            nvidia_smi.ClockParams(
+                levels_graphics_upper=None,
+                levels_graphics_lower=(1700_000_000.0, 1500_000_000.0),
+                levels_sm_upper=None,
+                levels_sm_lower=(1300_000_000.0, 1100_000_000.0),
+                levels_mem_upper=None,
+                levels_mem_lower=(7000_000_000.0, 6900_000_000.0),
+                levels_video_upper=None,
+                levels_video_lower=(1300_000_000.0, 1200_000_000.0),
+            ),
+            SECTION,
+            [
+                Result(
+                    state=State.OK,
+                    summary="Graphics clock: 1244.0 MHz / 2475.0 MHz, SM clock: 1244.0 MHz / 2475.0 MHz, MEM clock: 6993.0 MHz / 7001.0 MHz, Video clock: 1154.0 MHz / 1950.0 MHz",
+                ),
+                Result(
+                    state=State.CRIT,
+                    notice="Graphics clock: 1.24 GHz (warn/crit below 1.70 GHz/1.50 GHz)",
+                ),
+                Metric("graphics_clock", 1244000000.0, boundaries=(0.0, 2475000000.0)),
+                Metric("graphics_clock_max", 2475000000.0),
+                Result(
+                    state=State.WARN,
+                    notice="SM clock: 1.24 GHz (warn/crit below 1.30 GHz/1.10 GHz)",
+                ),
+                Metric("sm_clock", 1244000000.0, boundaries=(0.0, 2475000000.0)),
+                Metric("sm_clock_max", 2475000000.0),
+                Result(
+                    state=State.WARN,
+                    notice="MEM clock: 6.99 GHz (warn/crit below 7.00 GHz/6.90 GHz)",
+                ),
+                Metric("mem_clock", 6993000000.0, boundaries=(0.0, 7001000000.0)),
+                Metric("mem_clock_max", 7001000000.0),
+                Result(
+                    state=State.CRIT,
+                    notice="Video clock: 1.15 GHz (warn/crit below 1.30 GHz/1.20 GHz)",
+                ),
+                Metric("video_clock", 1154000000.0, boundaries=(0.0, 1950000000.0)),
+                Metric("video_clock_max", 1950000000.0),
+            ],
+        ),
+    ],
+)
+def test_check_nvidia_smi_clock_speed(
+    item: str,
+    params: nvidia_smi.ClockParams,
+    section: nvidia_smi.Section,
+    expected_result: CheckResult,
+) -> None:
+    assert list(nvidia_smi.check_nvidia_smi_clock_speed(item, params, section)) == expected_result

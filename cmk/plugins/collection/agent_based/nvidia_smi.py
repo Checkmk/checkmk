@@ -51,6 +51,7 @@ PowerState = Literal[
 ]
 
 MiB = 1024.0**2
+MHz_to_Hz_factor = 1000_000
 
 
 class PowerManagement(Enum):
@@ -96,6 +97,17 @@ class Utilization(BaseModel):
     decoder_util: float | None
 
 
+class Clock(BaseModel):
+    graphics_clock: float | None
+    sm_clock: float | None
+    mem_clock: float | None
+    video_clock: float | None
+    graphics_clock_max: float | None
+    sm_clock_max: float | None
+    mem_clock_max: float | None
+    video_clock_max: float | None
+
+
 class GPU(BaseModel):
     id: str
     product_name: str | None
@@ -103,6 +115,7 @@ class GPU(BaseModel):
     power_readings: PowerReadings
     temperature: Temperature
     utilization: Utilization
+    clock: Clock
 
 
 class Section(BaseModel):
@@ -249,6 +262,20 @@ def parse_nvidia_smi(string_table: StringTable) -> Section:
                     gpu_util=get_float_from_element(gpu.find("utilization/gpu_util"), "%"),
                     encoder_util=get_float_from_element(gpu.find("utilization/encoder_util"), "%"),
                     decoder_util=get_float_from_element(gpu.find("utilization/decoder_util"), "%"),
+                ),
+                clock=Clock(
+                    graphics_clock=get_float_from_element(gpu.find("clocks/graphics_clock"), "MHz"),
+                    sm_clock=get_float_from_element(gpu.find("clocks/sm_clock"), "MHz"),
+                    mem_clock=get_float_from_element(gpu.find("clocks/mem_clock"), "MHz"),
+                    video_clock=get_float_from_element(gpu.find("clocks/video_clock"), "MHz"),
+                    graphics_clock_max=get_float_from_element(
+                        gpu.find("max_clocks/graphics_clock"), "MHz"
+                    ),
+                    sm_clock_max=get_float_from_element(gpu.find("max_clocks/sm_clock"), "MHz"),
+                    mem_clock_max=get_float_from_element(gpu.find("max_clocks/mem_clock"), "MHz"),
+                    video_clock_max=get_float_from_element(
+                        gpu.find("max_clocks/video_clock"), "MHz"
+                    ),
                 ),
             )
             for gpu in xml.findall("gpu")
@@ -524,4 +551,134 @@ check_plugin_nvidia_smi_memory_util = CheckPlugin(
     check_ruleset_name="nvidia_smi_memory_util",
     check_default_parameters=MemoryParams(levels_total=None, levels_bar1=None, levels_fb=None),
     check_function=check_nvidia_smi_memory_util,
+)
+
+
+class ClockParams(TypedDict):
+    levels_graphics_upper: tuple[float, float] | None
+    levels_graphics_lower: tuple[float, float] | None
+    levels_sm_upper: tuple[float, float] | None
+    levels_sm_lower: tuple[float, float] | None
+    levels_mem_upper: tuple[float, float] | None
+    levels_mem_lower: tuple[float, float] | None
+    levels_video_upper: tuple[float, float] | None
+    levels_video_lower: tuple[float, float] | None
+
+
+def discover_nvidia_smi_clock_speed(section: Section) -> DiscoveryResult:
+    for gpu_id, gpu in section.gpus.items():
+        if gpu.clock.graphics_clock is not None:
+            yield Service(item=gpu_id)
+
+
+def check_nvidia_smi_clock_speed(
+    item: str,
+    params: ClockParams,
+    section: Section,
+) -> CheckResult:
+    if not (gpu := section.gpus.get(item)):
+        return
+
+    graphics_clock = gpu.clock.graphics_clock
+    sm_clock = gpu.clock.sm_clock
+    mem_clock = gpu.clock.mem_clock
+    video_clock = gpu.clock.video_clock
+    graphics_clock_max = gpu.clock.graphics_clock_max
+    sm_clock_max = gpu.clock.sm_clock_max
+    mem_clock_max = gpu.clock.mem_clock_max
+    video_clock_max = gpu.clock.video_clock_max
+
+    info_texts: dict[str, str | None] = {
+        "graphics_clock": None,
+        "sm_clock": None,
+        "mem_clock": None,
+        "video_clock": None,
+    }
+
+    if graphics_clock is not None and graphics_clock_max is not None:
+        info_texts["graphics_clock"] = (
+            f"Graphics clock: {graphics_clock} MHz / {graphics_clock_max} MHz"
+        )
+    if sm_clock is not None and sm_clock_max is not None:
+        info_texts["sm_clock"] = f"SM clock: {sm_clock} MHz / {sm_clock_max} MHz"
+    if mem_clock is not None and mem_clock_max is not None:
+        info_texts["mem_clock"] = f"MEM clock: {mem_clock} MHz / {mem_clock_max} MHz"
+    if video_clock is not None and video_clock_max is not None:
+        info_texts["video_clock"] = f"Video clock: {video_clock} MHz / {video_clock_max} MHz"
+
+    info_text: str = ", ".join([info for info in info_texts.values() if info is not None])
+
+    yield Result(state=State.OK, summary=info_text)
+
+    # Clock speeds by nvidia-smi are given in MHz, check_mk expects them in hz for render.frequency
+    if graphics_clock is not None and graphics_clock_max is not None:
+        yield from check_levels_v1(
+            graphics_clock * MHz_to_Hz_factor,
+            levels_upper=params.get("levels_graphics_upper"),
+            levels_lower=params.get("levels_graphics_lower"),
+            render_func=render.frequency,
+            metric_name="graphics_clock",
+            boundaries=(0.0, graphics_clock_max * MHz_to_Hz_factor),
+            label="Graphics clock",
+            notice_only=True,
+        )
+        yield Metric("graphics_clock_max", graphics_clock_max * MHz_to_Hz_factor)
+
+    if sm_clock is not None and sm_clock_max is not None:
+        yield from check_levels_v1(
+            sm_clock * MHz_to_Hz_factor,
+            levels_upper=params.get("levels_sm_upper"),
+            levels_lower=params.get("levels_sm_lower"),
+            render_func=render.frequency,
+            metric_name="sm_clock",
+            boundaries=(0.0, sm_clock_max * MHz_to_Hz_factor),
+            label="SM clock",
+            notice_only=True,
+        )
+        yield Metric("sm_clock_max", sm_clock_max * MHz_to_Hz_factor)
+
+    if mem_clock is not None and mem_clock_max is not None:
+        yield from check_levels_v1(
+            mem_clock * MHz_to_Hz_factor,
+            levels_upper=params.get("levels_mem_upper"),
+            levels_lower=params.get("levels_mem_lower"),
+            render_func=render.frequency,
+            metric_name="mem_clock",
+            boundaries=(0.0, mem_clock_max * MHz_to_Hz_factor),
+            label="MEM clock",
+            notice_only=True,
+        )
+        yield Metric("mem_clock_max", mem_clock_max * MHz_to_Hz_factor)
+
+    if video_clock is not None and video_clock_max is not None:
+        yield from check_levels_v1(
+            video_clock * MHz_to_Hz_factor,
+            levels_upper=params.get("levels_video_upper"),
+            levels_lower=params.get("levels_video_lower"),
+            render_func=render.frequency,
+            metric_name="video_clock",
+            boundaries=(0.0, video_clock_max * MHz_to_Hz_factor),
+            label="Video clock",
+            notice_only=True,
+        )
+        yield Metric("video_clock_max", video_clock_max * MHz_to_Hz_factor)
+
+
+check_plugin_nvidia_smi_clock_speed = CheckPlugin(
+    name="nvidia_smi_clock_speed",
+    service_name="Nvidia GPU Clock speed %s",
+    sections=["nvidia_smi"],
+    discovery_function=discover_nvidia_smi_clock_speed,
+    check_ruleset_name="nvidia_smi_clock_speed",
+    check_default_parameters=ClockParams(
+        levels_graphics_upper=None,
+        levels_graphics_lower=None,
+        levels_sm_upper=None,
+        levels_sm_lower=None,
+        levels_mem_upper=None,
+        levels_mem_lower=None,
+        levels_video_upper=None,
+        levels_video_lower=None,
+    ),
+    check_function=check_nvidia_smi_clock_speed,
 )

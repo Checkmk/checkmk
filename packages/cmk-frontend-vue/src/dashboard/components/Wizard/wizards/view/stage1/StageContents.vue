@@ -11,7 +11,7 @@ import usei18n, { untranslated } from '@/lib/i18n'
 import CmkAlertBox from '@/components/CmkAlertBox.vue'
 import CmkToggleButtonGroup from '@/components/CmkToggleButtonGroup.vue'
 
-import ContentSpacer from '@/dashboard/components/Wizard/components/ContentSpacer.vue'
+import ContentSpacer from '@/dashboard/components/ContentSpacer.vue'
 import WidgetObjectFilterConfiguration from '@/dashboard/components/Wizard/components/filter/WidgetObjectFilterConfiguration/WidgetObjectFilterConfiguration.vue'
 import { parseFilters } from '@/dashboard/components/Wizard/components/filter/utils.ts'
 import { ElementSelection } from '@/dashboard/components/Wizard/types.ts'

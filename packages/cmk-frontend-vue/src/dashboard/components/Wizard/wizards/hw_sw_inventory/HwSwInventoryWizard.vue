@@ -10,6 +10,7 @@ import usei18n, { untranslated } from '@/lib/i18n'
 
 import type { Suggestion } from '@/components/CmkSuggestions'
 
+import ContentSpacer from '@/dashboard/components/ContentSpacer.vue'
 import QuickSetup from '@/quick-setup/components/quick-setup/QuickSetup.vue'
 import type { QuickSetupStageSpec } from '@/quick-setup/components/quick-setup/quick_setup_types'
 import useWizard from '@/quick-setup/components/quick-setup/useWizard'
@@ -27,7 +28,6 @@ import type {
 import { dashboardAPI } from '../../../../utils'
 import AddFilters from '../../components/AddFilters/AddFilters.vue'
 import CloseButton from '../../components/CloseButton.vue'
-import ContentSpacer from '../../components/ContentSpacer.vue'
 import FiltersRecap from '../../components/FiltersRecap/FiltersRecap.vue'
 import { parseContextConfiguredFilters, squashFilters } from '../../components/FiltersRecap/utils'
 import StepsHeader from '../../components/StepsHeader.vue'

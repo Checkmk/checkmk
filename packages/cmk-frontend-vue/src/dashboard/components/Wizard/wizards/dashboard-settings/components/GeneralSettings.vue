@@ -8,7 +8,8 @@ import usei18n from '@/lib/i18n'
 
 import CmkInput from '@/components/user-input/CmkInput.vue'
 
-import ContentSpacer from '../../../components/ContentSpacer.vue'
+import ContentSpacer from '@/dashboard/components/ContentSpacer.vue'
+
 import GeneralProperties from '../../../components/DashboardSettings/GeneralProperties.vue'
 import FieldComponent from '../../../components/TableForm/FieldComponent.vue'
 import FieldDescription from '../../../components/TableForm/FieldDescription.vue'

@@ -11,9 +11,9 @@ import usei18n from '@/lib/i18n'
 import CmkAlertBox from '@/components/CmkAlertBox.vue'
 import CmkHeading from '@/components/typography/CmkHeading.vue'
 
+import ContentSpacer from '@/dashboard/components/ContentSpacer.vue'
 import ActionBar from '@/dashboard/components/Wizard/components/ActionBar.vue'
 import ActionButton from '@/dashboard/components/Wizard/components/ActionButton.vue'
-import ContentSpacer from '@/dashboard/components/Wizard/components/ContentSpacer.vue'
 import type {
   CopyExistingViewSelection,
   NewViewSelection

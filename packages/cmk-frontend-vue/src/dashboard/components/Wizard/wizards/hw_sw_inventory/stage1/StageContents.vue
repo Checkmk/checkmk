@@ -15,7 +15,7 @@ import type { Suggestion } from '@/components/CmkSuggestions'
 import CmkInlineValidation from '@/components/user-input/CmkInlineValidation.vue'
 import CmkLabelRequired from '@/components/user-input/CmkLabelRequired.vue'
 
-import ContentSpacer from '@/dashboard/components/Wizard/components/ContentSpacer.vue'
+import ContentSpacer from '@/dashboard/components/ContentSpacer.vue'
 import type { ConfiguredFilters, ConfiguredValues } from '@/dashboard/components/filter/types'
 import type { ContextFilters } from '@/dashboard/types/filter'
 import type { ObjectType } from '@/dashboard/types/shared'

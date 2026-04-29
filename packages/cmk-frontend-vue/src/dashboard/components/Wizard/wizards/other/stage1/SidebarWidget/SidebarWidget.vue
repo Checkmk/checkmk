@@ -8,8 +8,8 @@ import usei18n from '@/lib/i18n'
 
 import CmkCatalogPanel from '@/components/CmkCatalogPanel.vue'
 
+import ContentSpacer from '@/dashboard/components/ContentSpacer.vue'
 import DashboardPreviewContent from '@/dashboard/components/DashboardPreviewContent.vue'
-import ContentSpacer from '@/dashboard/components/Wizard/components/ContentSpacer.vue'
 import WidgetVisualization from '@/dashboard/components/Wizard/components/WidgetVisualization/WidgetVisualization.vue'
 import type { BaseWidgetProp, WidgetProps } from '@/dashboard/components/Wizard/types'
 import DataSettings from '@/dashboard/components/Wizard/wizards/other/stage1/DataSettings.vue'

@@ -10,10 +10,10 @@ import usei18n from '@/lib/i18n'
 
 import CmkIcon from '@/components/CmkIcon/CmkIcon.vue'
 
+import ContentSpacer from '@/dashboard/components/ContentSpacer.vue'
 import AddFilters from '@/dashboard/components/Wizard/components/AddFilters/AddFilters.vue'
 import { useAddFilter } from '@/dashboard/components/Wizard/components/AddFilters/composables/useAddFilters'
 import CloseButton from '@/dashboard/components/Wizard/components/CloseButton.vue'
-import ContentSpacer from '@/dashboard/components/Wizard/components/ContentSpacer.vue'
 import FiltersRecap from '@/dashboard/components/Wizard/components/FiltersRecap/FiltersRecap.vue'
 import {
   parseContextConfiguredFilters,

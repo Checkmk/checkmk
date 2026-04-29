@@ -17,7 +17,7 @@ import CmkInlineValidation from '@/components/user-input/CmkInlineValidation.vue
 
 import { type DashboardShare } from '@/dashboard/types/shared'
 
-import { getContactGroups, getSites } from '../api'
+import { getContactGroups, getSites } from '../dashboard-settings/api'
 
 const { _t } = usei18n()
 

@@ -12,9 +12,8 @@ import CmkLabel from '@/components/CmkLabel.vue'
 import CmkInlineValidation from '@/components/user-input/CmkInlineValidation.vue'
 import CmkLabelRequired from '@/components/user-input/CmkLabelRequired.vue'
 
+import ContentSpacer from '@/dashboard/components/ContentSpacer.vue'
 import SelectorSingleInfo from '@/dashboard/components/selectors/SelectorSingleInfo.vue'
-
-import ContentSpacer from '../../components/ContentSpacer.vue'
 
 const { _t } = usei18n()
 

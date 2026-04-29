@@ -10,6 +10,7 @@ import usei18n from '@/lib/i18n'
 
 import CmkHeading from '@/components/typography/CmkHeading.vue'
 
+import ContentSpacer from '@/dashboard/components/ContentSpacer.vue'
 import type { ConfiguredFilters } from '@/dashboard/components/filter/types'
 import type { DashboardKey } from '@/dashboard/types/dashboard'
 import type {
@@ -21,7 +22,6 @@ import type {
 
 import ActionBar from '../../../components/ActionBar.vue'
 import ActionButton from '../../../components/ActionButton.vue'
-import ContentSpacer from '../../../components/ContentSpacer.vue'
 import CustomGraphWidget from './CustomGraphWidget.vue'
 import { useCustomGraph } from './composables/useCustomGraph'
 

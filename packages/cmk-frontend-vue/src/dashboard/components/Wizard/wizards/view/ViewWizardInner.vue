@@ -9,6 +9,7 @@ import { computed, h, nextTick, ref, watchEffect } from 'vue'
 import usei18n from '@/lib/i18n'
 import { randomId } from '@/lib/randomId'
 
+import ContentSpacer from '@/dashboard/components/ContentSpacer.vue'
 import AddFilters from '@/dashboard/components/Wizard/components/AddFilters/AddFilters.vue'
 import {
   parseContextConfiguredFilters,
@@ -35,7 +36,6 @@ import type { QuickSetupStageSpec } from '@/quick-setup/components/quick-setup/q
 import useWizard from '@/quick-setup/components/quick-setup/useWizard'
 
 import CloseButton from '../../components/CloseButton.vue'
-import ContentSpacer from '../../components/ContentSpacer.vue'
 import StepsHeader from '../../components/StepsHeader.vue'
 import WizardContainer from '../../components/WizardContainer.vue'
 import WizardStageContainer from '../../components/WizardStageContainer.vue'

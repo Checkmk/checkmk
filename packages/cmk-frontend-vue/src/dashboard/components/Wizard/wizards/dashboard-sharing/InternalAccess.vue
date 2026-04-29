@@ -10,7 +10,7 @@ import CmkCatalogPanel from '@/components/CmkCatalogPanel.vue'
 import CmkCode from '@/components/CmkCode.vue'
 import CmkHeading from '@/components/typography/CmkHeading.vue'
 
-import ContentSpacer from '../../components/ContentSpacer.vue'
+import ContentSpacer from '@/dashboard/components/ContentSpacer.vue'
 
 const { _t } = usei18n()
 

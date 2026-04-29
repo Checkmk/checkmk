@@ -15,11 +15,11 @@ import CmkCode from '@/components/CmkCode.vue'
 import CmkLabel from '@/components/CmkLabel.vue'
 import CmkHeading from '@/components/typography/CmkHeading.vue'
 
+import ContentSpacer from '@/dashboard/components/ContentSpacer.vue'
 import PopupDialog, { type PopupDialogProps } from '@/dashboard/components/PopupDialog.vue'
 import type { DashboardFeatures, DashboardKey } from '@/dashboard/types/dashboard'
 import { urlHandler } from '@/dashboard/utils'
 
-import ContentSpacer from '../../components/ContentSpacer.vue'
 import PublicAccessSettings from './PublicAccessSettings.vue'
 import RuntimeFiltersWarning from './RuntimeFiltersWarning.vue'
 import { type DashboardTokenModel } from './api'

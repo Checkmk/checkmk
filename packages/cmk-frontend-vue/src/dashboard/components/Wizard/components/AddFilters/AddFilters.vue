@@ -8,13 +8,13 @@ import { computed } from 'vue'
 
 import usei18n from '@/lib/i18n'
 
+import ContentSpacer from '@/dashboard/components/ContentSpacer.vue'
 import FilterSelection from '@/dashboard/components/filter/FilterSelection/FilterSelection.vue'
 import { getCategoryDefinition } from '@/dashboard/components/filter/FilterSelection/utils'
 import { type Filters } from '@/dashboard/components/filter/composables/useFilters'
 import { parseFilterTypes, useFilterDefinitions } from '@/dashboard/components/filter/utils'
 import type { ObjectType } from '@/dashboard/types/shared.ts'
 
-import ContentSpacer from '../ContentSpacer.vue'
 import StepsHeader from '../StepsHeader.vue'
 
 const { _t } = usei18n()

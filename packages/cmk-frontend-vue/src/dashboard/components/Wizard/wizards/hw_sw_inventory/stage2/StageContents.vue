@@ -6,13 +6,13 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import { toRef } from 'vue'
 
+import ContentSpacer from '@/dashboard/components/ContentSpacer.vue'
 import DashboardPreviewContent from '@/dashboard/components/DashboardPreviewContent.vue'
 import type { WidgetProps } from '@/dashboard/components/Wizard/types'
 import type { ConfiguredFilters } from '@/dashboard/components/filter/types'
 import type { DashboardKey } from '@/dashboard/types/dashboard'
 import type { WidgetContent, WidgetGeneralSettings } from '@/dashboard/types/widget'
 
-import ContentSpacer from '../../../components/ContentSpacer.vue'
 import Stage2Header from '../../../components/Stage2Header.vue'
 import InventoryWidget from './InventoryWidget/InventoryWidget.vue'
 import { useInventory } from './InventoryWidget/useInventory'

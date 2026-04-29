@@ -10,9 +10,10 @@ import type { TranslatedString } from '@/lib/i18nString'
 import CmkHeading from '@/components/typography/CmkHeading.vue'
 import CmkParagraph from '@/components/typography/CmkParagraph.vue'
 
+import ContentSpacer from '@/dashboard/components/ContentSpacer.vue'
+
 import ActionBar from './ActionBar.vue'
 import ActionButton from './ActionButton.vue'
-import ContentSpacer from './ContentSpacer.vue'
 
 const { _t } = usei18n()
 

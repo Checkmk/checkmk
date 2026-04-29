@@ -153,9 +153,9 @@ def call(
         raise TypeError()
 
     with tracer.span(
-        f"mode[{mode.name()}]",
+        f"mode[{mode.name}]",
         attributes={
-            "cmk.base.mode.name": mode.name(),
+            "cmk.base.mode.name": mode.name,
             "cmk.base.mode.args": repr(handler_args),
         },
         context=trace_context,
@@ -210,6 +210,7 @@ class Option:
         self.argument_optional = argument_optional
         self.handler_function = handler_function
 
+    @property
     def name(self) -> str:
         return self.long_option
 
@@ -367,7 +368,7 @@ class Mode(Option):
                 if option.is_deprecated_option(o):
                     console.warning(
                         tty.format_warning(
-                            f"{o!r} is deprecated in favour of option {option.name()!r}"
+                            f"{o!r} is deprecated in favour of option {option.name!r}"
                         )
                     )
 
@@ -377,10 +378,10 @@ class Mode(Option):
                 val: Argument | bool = a
                 if not option.takes_argument():
                     if option.count:
-                        value = options.setdefault(option.name(), 0)
+                        value = options.setdefault(option.name, 0)
                         if not isinstance(value, int):
                             raise TypeError()
-                        options[option.name()] = value + 1
+                        options[option.name] = value + 1
                         continue
                     val = True
                 elif option.argument_conv:
@@ -389,6 +390,6 @@ class Mode(Option):
                     except ValueError:
                         raise MKGeneralException("%s: Invalid argument" % o)
 
-                options[option.name()] = val
+                options[option.name] = val
 
         return options

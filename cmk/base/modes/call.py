@@ -45,9 +45,9 @@ def call(
         raise TypeError()
 
     with tracer.span(
-        f"mode[{mode.name()}]",
+        f"mode[{mode.name}]",
         attributes={
-            "cmk.base.mode.name": mode.name(),
+            "cmk.base.mode.name": mode.name,
             "cmk.base.mode.args": repr(handler_args),
         },
         context=trace_context,

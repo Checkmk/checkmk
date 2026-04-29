@@ -29,7 +29,10 @@ void main() {
         "test-update-single-f12less-community-pro",
         "test-update-single-f12less-pro-ultimate",
         "test-update-single-f12less-pro-ultimatemt",
-    ] + (env.USE_K8S_UPDATE_SYSTEMTESTS == "1" ? ["test-update-single-f12less-k8s"] : []);
+    ];
+
+    job_names += env.USE_K8S_UPDATE_SYSTEMTESTS == "1" ? ["test-update-single-f12less-k8s"] : [];
+    job_names += env.USE_K8S_COMPOSITION_SYSTEMTESTS == "1" ? ["test-composition-single-f12less-k8s"] : [];
 
     print(
         """

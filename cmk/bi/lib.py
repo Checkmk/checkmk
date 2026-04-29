@@ -470,6 +470,10 @@ class ABCBIStatusFetcher(ABC):
         self.states: BIStatusInfo = {}
         self.assumed_states: dict[RequiredBIElement, HostState | ServiceState] = {}
 
+    @abstractmethod
+    def entity_exists(self, element: RequiredBIElement) -> bool:
+        raise NotImplementedError()
+
 
 CompiledNodeKind = Literal[
     "leaf",

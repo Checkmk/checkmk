@@ -3,7 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.gui.agent_registration.token_util import issue_agent_registration_token
+from cmk.gui.agent_registration.token_util import (
+    issue_agent_registration_token,
+    reject_if_cluster_host,
+)
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.openapi.framework import (
@@ -24,6 +27,7 @@ from cmk.gui.watolib.agent_token_automations import (
     AgentRegistrationTokenCreateRequest,
     forward_token_create,
 )
+from cmk.utils.agent_registration import connection_mode_from_host_config
 
 from .family import AGENT_REGISTRATION_FAMILY
 from .model.token import (
@@ -39,6 +43,8 @@ def create_agent_registration_token_v1(
 ) -> ApiResponse[AgentRegistrationTokenObjectModel]:
     """Creates a new agent registration token and returns its metadata."""
     verify_permissions(body.host)
+    reject_if_cluster_host(body.host)
+    connection_mode = connection_mode_from_host_config(body.host.effective_attributes())
 
     if body.site_id is not None:
         site_config = api_context.config.sites.get(body.site_id)
@@ -56,6 +62,7 @@ def create_agent_registration_token_v1(
                 request_payload=AgentRegistrationTokenCreateRequest(
                     issuer=user.ident,
                     host_name=body.host.name(),
+                    connection_mode=connection_mode,
                     expires_at=body.expires_at,
                     comment=body.comment,
                 ),
@@ -81,6 +88,7 @@ def create_agent_registration_token_v1(
         host=body.host,
         comment=body.comment,
         token_store=get_token_store(),
+        connection_mode=connection_mode,
     )
 
     return ApiResponse(

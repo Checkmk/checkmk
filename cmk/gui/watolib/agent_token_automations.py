@@ -38,6 +38,7 @@ from cmk.gui.watolib.automations import (
     MKAutomationException,
     remote_automation_config_from_site_config,
 )
+from cmk.utils.agent_registration import HostAgentConnectionMode
 
 _AnnotatedUserId = Annotated[UserId, PlainValidator(UserId.parse)]
 _AnnotatedHostName = Annotated[HostName, PlainValidator(HostName.parse)]
@@ -51,6 +52,7 @@ class AgentDownloadTokenCreateRequest(BaseModel):
 class AgentRegistrationTokenCreateRequest(BaseModel):
     issuer: _AnnotatedUserId
     host_name: _AnnotatedHostName
+    connection_mode: HostAgentConnectionMode
     expires_at: AwareDatetime | None = None
     comment: str = ""
 
@@ -112,6 +114,7 @@ class AutomationAgentRegistrationTokenCreate(
             AgentRegistrationToken(
                 comment=api_request.comment,
                 host_name=api_request.host_name,
+                connection_mode=api_request.connection_mode,
             ),
             issuer=api_request.issuer,
             now=now,

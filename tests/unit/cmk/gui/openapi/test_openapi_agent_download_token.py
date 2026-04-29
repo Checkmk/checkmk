@@ -237,6 +237,7 @@ class TestCreateAgentRegistrationToken:
         assert captured["site_id"] == REMOTE_SITE
         assert captured["command"] == "agent-registration-token-create"
         assert '"host_name":"heute"' in captured["request"]
+        assert '"connection_mode":"pull-agent"' in captured["request"]
 
     @pytest.mark.usefixtures("with_host")
     def test_unknown_site_id_returns_400(

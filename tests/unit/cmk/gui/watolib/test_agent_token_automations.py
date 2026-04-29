@@ -23,6 +23,7 @@ from cmk.gui.watolib.agent_token_automations import (
     TokenCreateResponse,
 )
 from cmk.utils import paths
+from cmk.utils.agent_registration import HostAgentConnectionMode
 
 
 @pytest.fixture
@@ -64,6 +65,7 @@ class TestAutomationAgentRegistrationTokenCreate:
         api_request = AgentRegistrationTokenCreateRequest(
             issuer=UserId("admin"),
             host_name=HostName("my-host"),
+            connection_mode=HostAgentConnectionMode.PULL,
             expires_at=expires_at,
             comment="from slideout",
         )
@@ -76,8 +78,24 @@ class TestAutomationAgentRegistrationTokenCreate:
         assert isinstance(stored.details, AgentRegistrationToken)
         assert stored.details.host_name == HostName("my-host")
         assert stored.details.comment == "from slideout"
+        assert stored.details.connection_mode is HostAgentConnectionMode.PULL
         assert stored.issuer == UserId("admin")
         assert stored.valid_until == expires_at
+
+    def test_push_mode_is_persisted_in_token(self, isolated_token_store: Path) -> None:
+        api_request = AgentRegistrationTokenCreateRequest(
+            issuer=UserId("admin"),
+            host_name=HostName("push-host"),
+            connection_mode=HostAgentConnectionMode.PUSH,
+        )
+
+        result = TokenCreateResponse.model_validate(
+            AutomationAgentRegistrationTokenCreate().execute(api_request)
+        )
+
+        stored = get_token_store().verify(f"0:{result.id}", now=dt.datetime.now(dt.UTC))
+        assert isinstance(stored.details, AgentRegistrationToken)
+        assert stored.details.connection_mode is HostAgentConnectionMode.PUSH
 
 
 class TestRequestModelValidation:
@@ -90,7 +108,12 @@ class TestRequestModelValidation:
     def test_registration_request_rejects_invalid_host_name(self) -> None:
         with pytest.raises(ValueError):
             AgentRegistrationTokenCreateRequest.model_validate(
-                {"issuer": "admin", "host_name": "invalid host name", "comment": ""}
+                {
+                    "issuer": "admin",
+                    "host_name": "invalid host name",
+                    "connection_mode": "pull-agent",
+                    "comment": "",
+                }
             )
 
 

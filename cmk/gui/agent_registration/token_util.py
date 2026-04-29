@@ -13,10 +13,15 @@ from cmk.ccc.user import UserId
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.openapi.restful_objects.validators import RequestDataValidator
+from cmk.gui.openapi.utils import ProblemException
 from cmk.gui.session import UserContext
 from cmk.gui.token_auth import AgentRegistrationToken, AuthToken, get_token_store, TokenStore
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.watolib.hosts_and_folders import Host
+from cmk.utils.agent_registration import (
+    connection_mode_from_host_config,
+    HostAgentConnectionMode,
+)
 
 
 class ImpersonatedAgentRegistrationTokenIssuer:
@@ -58,11 +63,27 @@ def impersonate_agent_registration_token_issuer(
             issuer.invalidate()
 
 
+def reject_if_cluster_host(host: Host) -> None:
+    """Cluster hosts cannot be registered via agent token. Reject early at issuance.
+
+    Why: the registration endpoint cannot rely on a local host lookup (the host
+    config may not yet be replicated to the redeeming site). Cluster status is
+    therefore validated on the issuing site instead.
+    """
+    if host.is_cluster():
+        raise ProblemException(
+            status=405,
+            title="Cannot register cluster hosts",
+            detail="This host is a cluster host. Register its nodes instead.",
+        )
+
+
 def issue_agent_registration_token(
     expiration_time: dt.datetime | None,
     host: Host,
     comment: str = "",
     token_store: TokenStore | None = None,
+    connection_mode: HostAgentConnectionMode | None = None,
 ) -> AuthToken:
     """Issues a new agent registration token."""
     if token_store is None:
@@ -79,8 +100,15 @@ def issue_agent_registration_token(
                 )
             ]
         ) from None
+    reject_if_cluster_host(host)
+    if connection_mode is None:
+        connection_mode = connection_mode_from_host_config(host.effective_attributes())
     return token_store.issue(
-        AgentRegistrationToken(comment=comment, host_name=host.name()),
+        AgentRegistrationToken(
+            comment=comment,
+            host_name=host.name(),
+            connection_mode=connection_mode,
+        ),
         issuer=user.ident,
         now=now,
         valid_for=relativedelta(expiration_time, now) if expiration_time else None,

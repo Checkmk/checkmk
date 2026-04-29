@@ -18,6 +18,7 @@ from cmk.ccc.store import RealIo
 from cmk.ccc.user import UserId
 from cmk.gui.type_defs import AnnotatedUserId
 from cmk.utils import paths
+from cmk.utils.agent_registration import HostAgentConnectionMode
 
 # NOTE: must be kept in sync with the `type_` fields in the token models below
 TokenType = Literal["dashboard", "agent_registration", "agent_download", "relay_registration"]
@@ -63,6 +64,7 @@ class AgentRegistrationToken(BaseModel):
         PlainValidator(HostName),
         WithJsonSchema({"type": "string"}, mode="serialization"),
     ]
+    connection_mode: HostAgentConnectionMode = HostAgentConnectionMode.PULL
     comment: str = ""
 
 

@@ -8,9 +8,6 @@ from uuid import UUID
 
 import cmk.utils.paths
 from cmk.ccc.hostaddress import HostName
-from cmk.ccc.site import omd_site
-from cmk.gui.agent_registration.api.utils import PERMISSIONS_REGISTER_HOST, verify_permissions
-from cmk.gui.agent_registration.token_util import impersonate_agent_registration_token_issuer
 from cmk.gui.openapi.framework import (
     ApiContext,
     APIVersion,
@@ -21,20 +18,12 @@ from cmk.gui.openapi.framework import (
     PathParam,
     VersionedEndpoint,
 )
-from cmk.gui.openapi.framework.model.converter import (
-    HostConverter,
-    TypedPlainValidator,
-)
+from cmk.gui.openapi.framework.model.converter import TypedPlainValidator
 from cmk.gui.openapi.restful_objects.constructors import object_action_href
 from cmk.gui.openapi.shared_endpoint_families.host_config import HOST_CONFIG_FAMILY
 from cmk.gui.openapi.utils import ProblemException
 from cmk.gui.token_auth import AgentRegistrationToken, get_token_store
-from cmk.gui.watolib.hosts_and_folders import Host
-from cmk.utils.agent_registration import (
-    connection_mode_from_host_config,
-    HostAgentConnectionMode,
-    UUIDLinkManager,
-)
+from cmk.utils.agent_registration import HostAgentConnectionMode, UUIDLinkManager
 
 from .models.request_models import RegisterHost
 from .models.response_models import ConnectionMode
@@ -45,13 +34,20 @@ def register_host_via_token_v1(
     host_name: Annotated[
         Annotated[
             HostName,
-            TypedPlainValidator(str, HostConverter().host_name),
+            TypedPlainValidator(str, HostName),
         ],
-        PathParam(description="An existing host name.", example="my_host"),
+        PathParam(description="A host name.", example="my_host"),
     ],
     body: RegisterHost,
 ) -> ConnectionMode:
-    """Register an existing host, i.e. link it to a UUID"""
+    """Register a host via a one-time agent registration token, i.e. link it to a UUID.
+
+    The token has been pre-authorized on the issuing site (host existence,
+    cluster check, user permissions, target site). This endpoint therefore
+    trusts the token's payload and does not re-load the host from the local
+    WATO config — that allows registration to succeed even before the host
+    config has been replicated to a remote site via Activate Changes.
+    """
     if not api_context.token:
         raise ProblemException(
             status=401,
@@ -70,42 +66,10 @@ def register_host_via_token_v1(
             title="Forbidden",
             detail="The token was issued for a different host.",
         )
-    with impersonate_agent_registration_token_issuer(
-        api_context.token.issuer,
-        api_context.token.details,
-        api_context.config.user_permissions(),
-    ) as _issuer:
-        host = _verified_host(host_name)
-        connection_mode = connection_mode_from_host_config(host.effective_attributes())
-        _link_with_uuid(
-            host_name,
-            body.uuid,
-            connection_mode,
-        )
-        get_token_store().delete(api_context.token.token_id)
-        return ConnectionMode(connection_mode=connection_mode)
-
-
-def _verified_host(host_name: HostName) -> Host:
-    host = Host.load_host(host_name)
-    verify_permissions(host)
-    _verify_host_properties(host)
-    return host
-
-
-def _verify_host_properties(host: Host) -> None:
-    if host.site_id() != omd_site():
-        raise ProblemException(
-            status=405,
-            title="Wrong site",
-            detail=f"This host is monitored on the site {host.site_id()}, but you tried to register it at the site {omd_site()}.",
-        )
-    if host.is_cluster():
-        raise ProblemException(
-            status=405,
-            title="Cannot register cluster hosts",
-            detail="This host is a cluster host. Register its nodes instead.",
-        )
+    connection_mode = api_context.token.details.connection_mode
+    _link_with_uuid(host_name, body.uuid, connection_mode)
+    get_token_store().revoke(api_context.token.token_id)
+    return ConnectionMode(connection_mode=connection_mode)
 
 
 def _link_with_uuid(
@@ -134,7 +98,7 @@ ENDPOINT_REGISTER_HOST_VIA_TOKEN = VersionedEndpoint(
         link_relation="cmk/register_token",
         method="put",
     ),
-    permissions=EndpointPermissions(required=PERMISSIONS_REGISTER_HOST),
+    permissions=EndpointPermissions(),
     doc=EndpointDoc(family=HOST_CONFIG_FAMILY.name, group="Checkmk Internal"),
     versions={APIVersion.INTERNAL: EndpointHandler(handler=register_host_via_token_v1)},
     allowed_tokens={"agent_registration"},

@@ -7,12 +7,21 @@
 from __future__ import annotations
 
 import os
+import pwd
 import subprocess
 from pathlib import Path
 
 from cmk.dev_deploy.core import output
 from cmk.dev_deploy.errors import RepoNotFoundError, SiteError, SiteNotFoundError
 from cmk.dev_deploy.types import Edition, SiteInfo
+
+
+def _site_user_exists(site_name: str) -> bool:
+    try:
+        pwd.getpwnam(site_name)
+    except KeyError:
+        return False
+    return True
 
 
 def find_repo_root() -> Path:
@@ -75,6 +84,23 @@ def resolve_site(cli_site: str | None, repo_root: Path, cwd: Path) -> SiteInfo:
         raise SiteNotFoundError(
             f"Site directory does not exist: {site_root}",
             recovery=(f"Available sites: {available}\nCreate with: omd create {site_name}"),
+        )
+
+    # Reject orphan/disabled sites where the directory survives but the OMD
+    # site user has been removed.  Without this check the deploy proceeds
+    # through file copies and only fails at the very end when run_as_site_user
+    # cannot resolve the user, leaving the site in a confusing partial state.
+    if not _site_user_exists(site_name):
+        available = _list_sites()
+        raise SiteNotFoundError(
+            f"Site '{site_name}' has no system user -- "
+            f"directory {site_root} exists but the OMD site user is gone "
+            f"(disabled or orphaned site).",
+            recovery=(
+                f"Available sites: {available}\n"
+                f"Re-create:  omd rm {site_name} && omd create {site_name}\n"
+                f"Re-enable:  omd enable {site_name}"
+            ),
         )
 
     edition, version_string = _read_edition(site_root)

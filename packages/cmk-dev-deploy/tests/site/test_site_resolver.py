@@ -176,6 +176,10 @@ def test_resolve_site_full_pipeline(monkeypatch: pytest.MonkeyPatch, tmp_path: P
             return_value="testsite",
         ),
         patch(
+            "cmk.dev_deploy.site.site_resolver._site_user_exists",
+            return_value=True,
+        ),
+        patch(
             "cmk.dev_deploy.site.site_resolver._read_edition",
             return_value=(Edition.PRO, "2.6.0-2026.02.13.pro"),
         ),
@@ -212,6 +216,35 @@ def test_resolve_site_nonexistent_directory(tmp_path: Path) -> None:
     ):
         with pytest.raises(SiteNotFoundError, match="Site directory does not exist"):
             resolve_site("nonexistent", tmp_path, tmp_path)
+
+
+def test_resolve_site_orphan_no_system_user(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """resolve_site refuses a site whose directory exists but whose user does not."""
+    with (
+        patch(
+            "cmk.dev_deploy.site.site_resolver._resolve_site_name",
+            return_value="orphan",
+        ),
+        patch(
+            "cmk.dev_deploy.site.site_resolver._site_user_exists",
+            return_value=False,
+        ),
+        patch(
+            "cmk.dev_deploy.site.site_resolver._list_sites",
+            return_value="real_site",
+        ),
+    ):
+        original_is_dir = Path.is_dir
+        monkeypatch.setattr(
+            Path,
+            "is_dir",
+            lambda self: True if str(self) == "/omd/sites/orphan" else original_is_dir(self),
+        )
+
+        with pytest.raises(SiteNotFoundError, match="has no system user"):
+            resolve_site("orphan", tmp_path, tmp_path)
 
 
 # ---------------------------------------------------------------------------

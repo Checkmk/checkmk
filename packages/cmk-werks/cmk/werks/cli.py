@@ -134,6 +134,12 @@ def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
         type=int,
         help="number of Werks to reserve",
     )
+    parser_ids.add_argument(
+        "-n",
+        "--no-commit",
+        action="store_true",
+        help="do not commit at the end",
+    )
     parser_ids.set_defaults(func=main_fetch_ids)
 
     # LIST
@@ -157,6 +163,12 @@ def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
         "custom_files",
         nargs="*",
         help="files passed to 'git commit'",
+    )
+    parser_new.add_argument(
+        "-n",
+        "--no-commit",
+        action="store_true",
+        help="do not commit at the end",
     )
     parser_new.set_defaults(func=main_new)
 
@@ -662,7 +674,7 @@ def main_new(args: argparse.Namespace) -> None:
         ),
     )
     save_werk(werk, get_werk_file_version())
-    edit_werk(werk_path, args.custom_files)
+    edit_werk(werk_path, args.custom_files, commit=not args.no_commit)
     stash.free_id(werk_id)
     dump_stash_to_file(WERK_IDS_PATH, stash)
 
@@ -988,7 +1000,7 @@ def main_fetch_ids(args: argparse.Namespace) -> None:
         f"Reserved {args.count} additional IDs now. You have {stash.count()} reserved IDs now.\n"
     )
 
-    if get_config().create_commit:
+    if get_config().create_commit and not args.no_commit:
         if os.system(f"git commit --no-verify -m 'Reserved {args.count} Werk IDS' .") == 0:  # nosec
             sys.stdout.write("--> Successfully committed reserved Werk IDS. Please push it soon!\n")
         else:

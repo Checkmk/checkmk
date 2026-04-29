@@ -5,6 +5,7 @@
 
 import datetime
 import sys
+from collections.abc import Sequence
 from pathlib import Path
 from typing import Literal, NamedTuple, override, TypeVar
 
@@ -17,6 +18,49 @@ T = TypeVar("T", bound="Stash")
 
 
 class Stash(BaseModel):
+    stash_version: Literal["3"] = Field(default="3", alias="__version__")
+    ids: list[int] = Field(default=[])
+
+    def count(self) -> int:
+        """
+        total number of ids available in the stash
+        """
+        return len(self.ids)
+
+    def pick_id(self) -> "WerkId":
+        """
+        the id will still be in the stash, but it could be freed next.
+        """
+        try:
+            return WerkId(sorted(self.ids)[0])
+        except (KeyError, IndexError) as e:
+            raise RuntimeError(
+                "You have no Werk IDs. You can reserve 10 additional Werk IDs with 'werk ids 10'."
+            ) from e
+
+    def free_id(self, werk_id: "WerkId") -> None:
+        """
+        remove id from stash
+        """
+        removed = False
+        if werk_id.id in self.ids:
+            removed = True
+            self.ids.remove(werk_id.id)
+            if not self.ids:
+                sys.stdout.write(f"\n{TTY_RED}This was your last reserved ID{TTY_NORMAL}\n\n")
+
+        if not removed:
+            raise RuntimeError(f"Could not find werk_id {werk_id} in any project.")
+
+    def add_ids(self, werk_ids: Sequence["WerkId"]) -> None:
+        """
+        put a id into the stash
+        """
+        # werks can be delete, but we don't want to lose the id, lets put it back to the stash
+        self.ids.extend(werk_id.id for werk_id in werk_ids)
+
+
+class LegacyStash(BaseModel):
     stash_version: Literal["2"] = Field(default="2", alias="__version__")
     ids_by_project: dict[str, list[int]] = Field(default={})
 

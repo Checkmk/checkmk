@@ -30,12 +30,12 @@ def test_command(site: Site, cmd: str) -> None:
     """
     Ensures that commands using OpenSSL, such as ssh and curl, are working.
 
-    When executing ssh as a site user, usually, the system ssh is used. This binary is usually
-    dynamically linked against OpenSSL. We ship OpenSSL with OMD and set LD_LIBRARY_PATH to within
-    the site environment. Hence, when calling ssh as a site user, the OMD OpenSSL is used. There is
-    no garantuee that this version is compatible with the ssh compilation available on the system
-    (which is intended to compatible with the system OpenSSL). See also SUP-10161 and
-    omd/packages/omd/ssh_system_openssl.
+    In the past we set LD_LIBRARY_PATH to use the installed OMD site's library folder.
+    This was to force our binaries/shared libraries to use our OpenSSL.
+    We no longer do this, since our dependencies have the RPATH set correctly.
+
+    This test is to ensure that we do not regress to the previous behaviour.
+    See also SUP-10161.
 
     We execute this test in the CI containers of all supported distros to ensure that commands using
     OpenSSL which are available there can be executed.
@@ -47,11 +47,13 @@ def test_scp(site: Site) -> None:
     """
     Ensures that scp is working.
 
-    When executing scp as a site user, usually, the system scp is used. This binary is usually
-    dynamically linked against OpenSSL. We ship OpenSSL with OMD and set LD_LIBRARY_PATH to within
-    the site environment. Hence, when calling scp as a site user, the OMD OpenSSL is used. There is
-    no garantuee that this version is compatible with the scp compilation available on the system
-    (which is intended to compatible with the system OpenSSL). See also SUP-17682.
+    In the past we set LD_LIBRARY_PATH to use the installed OMD site's library folder.
+    This was to force our binaries/shared libraries to use our OpenSSL.
+    We no longer do this, since our dependencies have the RPATH set correctly.
+
+    This test is to ensure that we do not regress to the previous behaviour.
+
+    See also SUP-17682.
 
     We execute this test in the CI containers of all supported distros to ensure that commands using
     OpenSSL which are available there can be executed.

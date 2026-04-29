@@ -251,6 +251,7 @@ void main() {
                     try {
                         sh("""
                             bazel test \
+                                ${enable_compression} \
                                 --cmk_version=${cmk_version} \
                                 --cmk_edition=${edition} \
                                 ${license_flag} \

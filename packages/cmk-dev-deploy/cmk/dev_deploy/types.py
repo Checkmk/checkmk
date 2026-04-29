@@ -62,6 +62,7 @@ class ChangeCategory(StrEnum):
     DATA = "data"
     BUILD = "build"
     TEST = "test"
+    IGNORED = "ignored"
     OTHER = "other"
 
 
@@ -98,7 +99,13 @@ class ChangeSet:
         deployable = {
             cat
             for cat in self.categories
-            if cat not in (ChangeCategory.TEST, ChangeCategory.OTHER, ChangeCategory.BUILD)
+            if cat
+            not in (
+                ChangeCategory.TEST,
+                ChangeCategory.OTHER,
+                ChangeCategory.BUILD,
+                ChangeCategory.IGNORED,
+            )
         }
         return deployable == {ChangeCategory.PYTHON} or len(deployable) == 0
 

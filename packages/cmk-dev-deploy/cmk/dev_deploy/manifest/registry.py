@@ -5,8 +5,8 @@
 """Registry helpers for deploy directory coverage checks.
 
 Provides:
-- :func:`uncovered_changed_dirs` -- Given changed file paths, find source
-  directories that have changes but no registry entry (for pipeline warnings).
+- :func:`uncovered_changed_files` -- Given changed file paths, find source
+  files that have changes but no registry entry (for pipeline warnings).
 """
 
 from __future__ import annotations
@@ -18,27 +18,44 @@ from cmk.dev_deploy.manifest.reader import (
 )
 
 
-def _all_registered_source_dirs() -> frozenset[str]:
-    """Build set of ALL registered source directories from the manifest.
+def _registered_coverage() -> tuple[frozenset[str], frozenset[str]]:
+    """Build registry coverage signal as (covered_dirs, covered_files).
 
-    Combines source prefixes from install specs, config specs, and wheel specs.
+    - ``covered_dirs`` are source-tree prefixes (with trailing ``/``).  Used
+      for install and wheel specs which deploy entire packages, and as a
+      fallback for config specs whose enriched ``files`` list is empty.
+    - ``covered_files`` are exact source paths.  Populated from each config
+      spec's enumerated ``files`` list.
 
-    Returns:
-        A frozenset of source directory strings with trailing slashes.
+    Coverage is checked file-first, then dir-prefix.  Using the explicit
+    file list avoids false negatives for over-broad ``source_prefix``
+    values: ``commonpath()`` can collapse a few sibling files at different
+    depths into a top-level prefix (e.g. ``omd/``), which would otherwise
+    silently mask any sibling file as "covered" even when no spec actually
+    deploys it.
     """
     install_dirs = frozenset(spec.package + "/" for spec in get_install_specs())
-    config_dirs = frozenset(spec.source_prefix for spec in get_config_specs())
     wheel_dirs = frozenset(spec.package + "/" for spec in get_wheel_specs())
 
-    return install_dirs | config_dirs | wheel_dirs
+    config_dirs: set[str] = set()
+    config_files: set[str] = set()
+    for spec in get_config_specs():
+        if spec.files:
+            config_files.update(entry.src for entry in spec.files)
+        else:
+            config_dirs.add(spec.source_prefix)
+
+    return (install_dirs | wheel_dirs | frozenset(config_dirs), frozenset(config_files))
 
 
 def uncovered_changed_files(changed_files: tuple[str, ...]) -> list[str]:
     """Find changed files not covered by any deploy registry entry.
 
-    For each changed file, checks whether any registered directory is a
-    prefix of the file's path (longest-prefix matching).  Returns the
-    actual file paths that have no matching registry entry.
+    Coverage matches a changed file when either:
+
+    - The file's exact path appears in some config spec's ``files`` list, or
+    - A registered package prefix (install/wheel/config-without-files) is
+      a prefix of the file's path (longest-prefix matching).
 
     Files in the repo root (no directory prefix) are skipped.
 
@@ -48,19 +65,18 @@ def uncovered_changed_files(changed_files: tuple[str, ...]) -> list[str]:
     Returns:
         Sorted list of unregistered file paths.
     """
-    registered = _all_registered_source_dirs()
-    # Sort registered dirs by length (longest first) for longest-prefix matching
-    sorted_registered = sorted(registered, key=len, reverse=True)
+    covered_dirs, covered_files = _registered_coverage()
+    sorted_dirs = sorted(covered_dirs, key=len, reverse=True)
 
     unregistered: list[str] = []
 
     for filepath in changed_files:
-        # Skip files in repo root (no directory component)
         if "/" not in filepath:
             continue
-
-        # Try longest-prefix matching against registered dirs
-        if not any(filepath.startswith(reg_dir) for reg_dir in sorted_registered):
-            unregistered.append(filepath)
+        if filepath in covered_files:
+            continue
+        if any(filepath.startswith(reg_dir) for reg_dir in sorted_dirs):
+            continue
+        unregistered.append(filepath)
 
     return sorted(unregistered)

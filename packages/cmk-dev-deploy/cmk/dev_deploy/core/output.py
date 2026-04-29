@@ -463,6 +463,7 @@ _CATEGORY_LABELS: MappingProxyType[ChangeCategory, str] = MappingProxyType(
         ChangeCategory.DATA: "Data/Locale",
         ChangeCategory.BUILD: "Build System",
         ChangeCategory.TEST: "Tests",
+        ChangeCategory.IGNORED: "Ignored (non-deployable)",
         ChangeCategory.OTHER: "Other",
     }
 )

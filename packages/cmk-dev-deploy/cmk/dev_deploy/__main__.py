@@ -297,14 +297,17 @@ def _run_deploy_cycle(
                 expanded_deps = new_deps
                 output.print_dep_expansion(all_dirs, original_dirs)
 
-    # Check for unregistered changed files (excluding tests/build/other
-    # categories which are never deployed)
+    # Check for unregistered changed files.  We suppress files we know are
+    # not deployed (TEST/BUILD/IGNORED).  OTHER means "no rule matched" --
+    # exactly the case where the registry coverage check is informative,
+    # so we run it through the check and let the warning fire if no spec
+    # covers the file.
     if changes is not None and not changes.is_empty:
         non_deploy_files: set[str] = set()
         for cat in (
             ChangeCategory.TEST,
             ChangeCategory.BUILD,
-            ChangeCategory.OTHER,
+            ChangeCategory.IGNORED,
         ):
             non_deploy_files.update(changes.categories.get(cat, ()))
         deployable = tuple(f for f in changes.files if f not in non_deploy_files)

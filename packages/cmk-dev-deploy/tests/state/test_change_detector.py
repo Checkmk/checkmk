@@ -76,9 +76,9 @@ def _make_mock_run(
 class TestChangeCategory:
     """Tests for the ChangeCategory enum."""
 
-    def test_has_10_members(self) -> None:
-        """ChangeCategory has exactly 10 members."""
-        assert len(ChangeCategory) == 10
+    def test_has_11_members(self) -> None:
+        """ChangeCategory has exactly 11 members."""
+        assert len(ChangeCategory) == 11
 
     def test_all_members_present(self) -> None:
         """All expected members exist."""
@@ -92,6 +92,7 @@ class TestChangeCategory:
             "DATA",
             "BUILD",
             "TEST",
+            "IGNORED",
             "OTHER",
         }
         assert {m.name for m in ChangeCategory} == expected
@@ -150,13 +151,14 @@ class TestChangeSet:
         assert cs.has_python_only is False
 
     def test_has_python_only_true_when_only_non_deployable(self) -> None:
-        """has_python_only True when only TEST/OTHER/BUILD categories (no deployable)."""
+        """has_python_only True when only TEST/OTHER/BUILD/IGNORED categories (no deployable)."""
         cs = ChangeSet(
             build_commit="a" * 40,
-            files=("tests/test_x.py", "README.md"),
+            files=("tests/test_x.py", "README.md", "werks/12345"),
             categories={
                 ChangeCategory.TEST: ("tests/test_x.py",),
                 ChangeCategory.OTHER: ("README.md",),
+                ChangeCategory.IGNORED: ("werks/12345",),
             },
         )
         assert cs.has_python_only is True
@@ -242,10 +244,16 @@ class TestCategorizeFile:
             # Build
             ("MODULE.bazel", ChangeCategory.BUILD),
             ("bazel/deps.bzl", ChangeCategory.BUILD),
+            # Ignored (explicitly non-deployable structural prefixes)
+            ("werks/12345", ChangeCategory.IGNORED),
+            (".werks/12345", ChangeCategory.IGNORED),
+            (".github/workflows/ci.yml", ChangeCategory.IGNORED),
+            (".devcontainer/devcontainer.json", ChangeCategory.IGNORED),
+            ("docs/architecture.md", ChangeCategory.IGNORED),
             # Python packages (.py under packages/ and non-free/packages/)
             ("packages/cmk-ccc/cmk/ccc/version.py", ChangeCategory.PYTHON),
             ("non-free/packages/cmk-bakery/cmk/bakery/foo.py", ChangeCategory.PYTHON),
-            # OTHER (no prefix match)
+            # OTHER (no prefix match).
             ("README.md", ChangeCategory.OTHER),
         ],
     )
@@ -431,7 +439,8 @@ class TestCategorizationRules:
     def test_structural_rules_is_tuple(self) -> None:
         """_STRUCTURAL_RULES is a tuple of CategorizationRule instances."""
         assert isinstance(_STRUCTURAL_RULES, tuple)
-        assert len(_STRUCTURAL_RULES) == 3  # TEST, BUILD (MODULE.bazel), BUILD (bazel/)
+        # TEST + 2x BUILD + 5x IGNORED (werks, .werks, .github, .devcontainer, docs)
+        assert len(_STRUCTURAL_RULES) == 8
 
     def test_each_structural_rule_is_categorization_rule(self) -> None:
         """Each structural rule is a CategorizationRule dataclass."""
@@ -441,11 +450,12 @@ class TestCategorizationRules:
             assert rule.extensions is None or isinstance(rule.extensions, frozenset)
             assert isinstance(rule.category, ChangeCategory)
 
-    def test_structural_rules_cover_tests_and_build(self) -> None:
-        """Structural rules cover TEST and BUILD categories."""
+    def test_structural_rules_cover_tests_build_and_ignored(self) -> None:
+        """Structural rules cover TEST, BUILD, and IGNORED categories."""
         categories = {rule.category for rule in _STRUCTURAL_RULES}
         assert ChangeCategory.TEST in categories
         assert ChangeCategory.BUILD in categories
+        assert ChangeCategory.IGNORED in categories
 
 
 class TestCategorizationRegression:

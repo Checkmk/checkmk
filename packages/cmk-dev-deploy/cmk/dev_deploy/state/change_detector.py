@@ -23,8 +23,13 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 # Structural rules: not derivable from manifest, always present.
-# These match disjoint path prefixes (tests/, MODULE.bazel, bazel/)
-# that do not overlap with any manifest-derived prefix.
+# These match disjoint path prefixes that do not overlap with any
+# manifest-derived prefix.
+#
+# IGNORED rules tag paths that are explicitly known to be non-deployable
+# (changelogs, repo scaffolding, contributor docs).  They suppress both the
+# Bazel target resolution and the "uncovered by any deploy spec" warning,
+# the latter of which would otherwise fire on every werk edit.
 #
 # Note: "MODULE.bazel" as a prefix also matches "MODULE.bazel.lock" via
 # startswith(). This is a pre-existing false positive inherited from the
@@ -34,6 +39,11 @@ _STRUCTURAL_RULES: tuple[CategorizationRule, ...] = (
     CategorizationRule("tests/", None, ChangeCategory.TEST),
     CategorizationRule("MODULE.bazel", None, ChangeCategory.BUILD),
     CategorizationRule("bazel/", None, ChangeCategory.BUILD),
+    CategorizationRule("werks/", None, ChangeCategory.IGNORED),
+    CategorizationRule(".werks/", None, ChangeCategory.IGNORED),
+    CategorizationRule(".github/", None, ChangeCategory.IGNORED),
+    CategorizationRule(".devcontainer/", None, ChangeCategory.IGNORED),
+    CategorizationRule("docs/", None, ChangeCategory.IGNORED),
 )
 
 # Cached combined rules: computed once on first call, reset by reset_categorization_cache().

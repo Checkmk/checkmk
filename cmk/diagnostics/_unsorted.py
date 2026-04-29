@@ -97,6 +97,11 @@ COMPONENT_COMMANDS = {
     "ss-tulpen": ["ss", "-tulpen"],
     "w": ["w"],
     "top": ["top", "-b", "-n", "1", "-H", "-c", "-w", "512", "-o", "-PID", "-1"],
+    # TODO: The command below will result in user-visible errors when there is no ClickHouse (e.g.
+    # for the pro edition!) or ClickHouse is there, but not enabled. This is quite bad and
+    # irritating from a user POV. Basically the same holds for the other commands: Is e.g. "ss"
+    # installed everywhere? Does "top" support the tons of options above? I somehow doubt that this
+    # is universally the case.
     "otel-licenses": [
         "clickhouse",
         "client",

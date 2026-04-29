@@ -128,6 +128,12 @@ class BICompiledLeaf(ABCBICompiledNode):
         use_assumed: bool = False,
     ) -> NodeResultBundle | None:
         host_downtime_depth, entity = self._get_entity(bi_status_fetcher)
+        required_bi_element = RequiredBIElement(
+            site_id=self.site_id,
+            host_name=self.host_name,
+            service_description=self.service_description,
+        )
+
         if (
             entity is None
             or host_downtime_depth is None
@@ -138,7 +144,9 @@ class BICompiledLeaf(ABCBICompiledNode):
             #       There might be service information, but no host information available
             #       A state of None will be treated as "missing" - the leaf does not exist
             #       For frozen aggregations the leaf remains, but reports the state CRIT
-            if computation_options.freeze_aggregations:
+            if computation_options.freeze_aggregations and not bi_status_fetcher.entity_exists(
+                required_bi_element
+            ):
                 return NodeResultBundle(
                     NodeComputeResult(
                         2,
@@ -170,9 +178,7 @@ class BICompiledLeaf(ABCBICompiledNode):
         # Assumed
         assumed_result = None
         if use_assumed:
-            assumed_state = bi_status_fetcher.assumed_states.get(
-                RequiredBIElement(self.site_id, self.host_name, self.service_description)
-            )
+            assumed_state = bi_status_fetcher.assumed_states.get(required_bi_element)
             if assumed_state is not None:
                 # Make the i18n call explicit for our tooling
                 _ = bi_status_fetcher.sites_callback.translate

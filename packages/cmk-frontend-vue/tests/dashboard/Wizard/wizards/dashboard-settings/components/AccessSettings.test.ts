@@ -9,7 +9,7 @@ import { defineComponent, h, ref } from 'vue'
 
 import { CmkFetchError } from '@/lib/cmkFetch'
 
-import AccessSettings from '@/dashboard/components/Wizard/wizards/dashboard-settings/components/AccessSettings.vue'
+import AccessSettings from '@/dashboard/components/Wizard/wizards/components/AccessSettings.vue'
 import type { DashboardShare } from '@/dashboard/types/shared'
 
 import { flushPromises, wrapInSuspense } from '../../../../utils.ts'

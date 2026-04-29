@@ -8,9 +8,9 @@ import { type ShallowRef, computed, ref, toValue, useTemplateRef } from 'vue'
 
 import usei18n from '@/lib/i18n'
 
+import ContentSpacer from '@/dashboard/components/ContentSpacer.vue'
 import ActionBar from '@/dashboard/components/Wizard/components/ActionBar.vue'
 import ActionButton from '@/dashboard/components/Wizard/components/ActionButton.vue'
-import ContentSpacer from '@/dashboard/components/Wizard/components/ContentSpacer.vue'
 import SectionBlock from '@/dashboard/components/Wizard/components/SectionBlock.vue'
 import StepsHeader from '@/dashboard/components/Wizard/components/StepsHeader.vue'
 import WidgetTiles from '@/dashboard/components/Wizard/components/WidgetSelection/WidgetTiles.vue'

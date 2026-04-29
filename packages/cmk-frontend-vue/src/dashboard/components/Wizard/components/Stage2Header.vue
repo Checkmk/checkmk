@@ -8,9 +8,10 @@ import usei18n from '@/lib/i18n'
 
 import CmkHeading from '@/components/typography/CmkHeading.vue'
 
+import ContentSpacer from '@/dashboard/components/ContentSpacer.vue'
+
 import ActionBar from './ActionBar.vue'
 import ActionButton from './ActionButton.vue'
-import ContentSpacer from './ContentSpacer.vue'
 
 const { _t } = usei18n()
 

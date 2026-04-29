@@ -14,14 +14,14 @@ import CmkIcon from '@/components/CmkIcon/CmkIcon.vue'
 import CmkTabs, { CmkTab, CmkTabContent } from '@/components/CmkTabs'
 import CmkHeading from '@/components/typography/CmkHeading.vue'
 
+import ContentSpacer from '@/dashboard/components/ContentSpacer.vue'
 import { type DashboardGeneralSettings } from '@/dashboard/types/dashboard'
 
 import ActionBar from '../../components/ActionBar.vue'
 import ActionButton from '../../components/ActionButton.vue'
-import ContentSpacer from '../../components/ContentSpacer.vue'
 import type { DashboardIcon } from '../../components/DashboardSettings/types'
 import { isIdInUse, isValidSnakeCase } from '../../components/DashboardSettings/utils'
-import AccessSettings from './components/AccessSettings.vue'
+import AccessSettings from '../components/AccessSettings.vue'
 import GeneralSettings from './components/GeneralSettings.vue'
 import VisibilitySettings from './components/VisibilitySettings.vue'
 

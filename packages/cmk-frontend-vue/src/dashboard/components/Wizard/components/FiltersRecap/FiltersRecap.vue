@@ -10,12 +10,12 @@ import usei18n from '@/lib/i18n'
 
 import CmkHeading from '@/components/typography/CmkHeading.vue'
 
+import ContentSpacer from '@/dashboard/components/ContentSpacer.vue'
 import FilterDisplayItem from '@/dashboard/components/filter/FilterDisplayItem/FilterDisplayItem.vue'
 import type { ConfiguredFilters } from '@/dashboard/components/filter/types'
 import { useFilterDefinitions } from '@/dashboard/components/filter/utils'
 
 import { type MetricSelection } from '../../wizards/metrics/composables/useSelectGraphTypes'
-import ContentSpacer from '../ContentSpacer.vue'
 import { splitFiltersByCategory, squashFilters } from './utils'
 
 const { _t } = usei18n()

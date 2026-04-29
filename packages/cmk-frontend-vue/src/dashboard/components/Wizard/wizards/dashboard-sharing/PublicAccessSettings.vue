@@ -15,11 +15,11 @@ import CmkHeading from '@/components/typography/CmkHeading.vue'
 import CmkCheckbox from '@/components/user-input/CmkCheckbox.vue'
 import CmkInput from '@/components/user-input/CmkInput.vue'
 
+import ContentSpacer from '@/dashboard/components/ContentSpacer.vue'
 import { DashboardFeatures } from '@/dashboard/types/dashboard'
 
 import ActionBar from '../../components/ActionBar.vue'
 import ActionButton from '../../components/ActionButton.vue'
-import ContentSpacer from '../../components/ContentSpacer.vue'
 import FieldComponent from '../../components/TableForm/FieldComponent.vue'
 import FieldDescription from '../../components/TableForm/FieldDescription.vue'
 import TableForm from '../../components/TableForm/TableForm.vue'

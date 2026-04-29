@@ -16,7 +16,7 @@ import CmkSpace from '@/components/CmkSpace.vue'
 import CmkHeading from '@/components/typography/CmkHeading.vue'
 import CmkParagraph from '@/components/typography/CmkParagraph.vue'
 
-import ContentSpacer from './Wizard/components/ContentSpacer.vue'
+import ContentSpacer from './ContentSpacer.vue'
 
 interface PopupButtonProps {
   title: TranslatedString

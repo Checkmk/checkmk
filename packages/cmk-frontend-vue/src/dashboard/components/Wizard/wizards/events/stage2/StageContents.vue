@@ -11,8 +11,8 @@ import { useDebounceRef } from '@/lib/useDebounce'
 
 import CmkCatalogPanel from '@/components/CmkCatalogPanel.vue'
 
+import ContentSpacer from '@/dashboard/components/ContentSpacer.vue'
 import DashboardPreviewContent from '@/dashboard/components/DashboardPreviewContent.vue'
-import ContentSpacer from '@/dashboard/components/Wizard/components/ContentSpacer.vue'
 import WidgetVisualization from '@/dashboard/components/Wizard/components/WidgetVisualization/WidgetVisualization.vue'
 import { useWidgetVisualizationProps } from '@/dashboard/components/Wizard/components/WidgetVisualization/useWidgetVisualization.ts'
 import type { EventStatsContent } from '@/dashboard/components/Wizard/types'

@@ -11,7 +11,7 @@ import usei18n from '@/lib/i18n'
 import CmkIndent from '@/components/CmkIndent.vue'
 import CmkHeading from '@/components/typography/CmkHeading.vue'
 
-import ContentSpacer from '@/dashboard/components/Wizard/components/ContentSpacer.vue'
+import ContentSpacer from '@/dashboard/components/ContentSpacer.vue'
 import SingleInfosSpecifier from '@/dashboard/components/Wizard/wizards/view/stage1/components/SingleInfosSpecifier.vue'
 import SelectorDatasource from '@/dashboard/components/selectors/SelectorDatasource.vue'
 import type { DataSourceModel } from '@/dashboard/types/api'

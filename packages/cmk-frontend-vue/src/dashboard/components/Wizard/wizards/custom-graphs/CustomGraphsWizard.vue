@@ -10,6 +10,7 @@ import usei18n from '@/lib/i18n'
 
 import CmkIcon from '@/components/CmkIcon/CmkIcon.vue'
 
+import ContentSpacer from '@/dashboard/components/ContentSpacer.vue'
 import type { ConfiguredFilters } from '@/dashboard/components/filter/types'
 // Local components
 import type { DashboardKey } from '@/dashboard/types/dashboard'
@@ -25,7 +26,6 @@ import type { QuickSetupStageSpec } from '@/quick-setup/components/quick-setup/q
 import useWizard from '@/quick-setup/components/quick-setup/useWizard'
 
 import CloseButton from '../../components/CloseButton.vue'
-import ContentSpacer from '../../components/ContentSpacer.vue'
 import { parseContextConfiguredFilters } from '../../components/FiltersRecap/utils'
 import StepsHeader from '../../components/StepsHeader.vue'
 import WizardContainer from '../../components/WizardContainer.vue'

@@ -15,7 +15,7 @@ import CmkToggleButtonGroup from '@/components/CmkToggleButtonGroup.vue'
 import CmkInlineValidation from '@/components/user-input/CmkInlineValidation.vue'
 import CmkLabelRequired from '@/components/user-input/CmkLabelRequired.vue'
 
-import ContentSpacer from '@/dashboard/components/Wizard/components/ContentSpacer.vue'
+import ContentSpacer from '@/dashboard/components/ContentSpacer.vue'
 import AutocompleteHost from '@/dashboard/components/Wizard/components/autocompleters/AutocompleteHost.vue'
 import AutocompleteMonitoredMetrics from '@/dashboard/components/Wizard/components/autocompleters/AutocompleteMonitoredMetrics.vue'
 import AutocompleteService from '@/dashboard/components/Wizard/components/autocompleters/AutocompleteService.vue'

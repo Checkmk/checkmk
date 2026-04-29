@@ -13,7 +13,7 @@ import CmkDropdown from '@/components/CmkDropdown'
 import CmkLabel from '@/components/CmkLabel.vue'
 import CmkHeading from '@/components/typography/CmkHeading.vue'
 
-import ContentSpacer from '@/dashboard/components/Wizard/components/ContentSpacer.vue'
+import ContentSpacer from '@/dashboard/components/ContentSpacer.vue'
 import SelectorSingleInfo from '@/dashboard/components/selectors/SelectorSingleInfo.vue'
 import { RestrictedToSingle } from '@/dashboard/types/shared.ts'
 

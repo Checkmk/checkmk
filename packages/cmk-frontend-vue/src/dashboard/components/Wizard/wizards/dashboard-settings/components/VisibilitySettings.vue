@@ -10,7 +10,8 @@ import usei18n from '@/lib/i18n'
 
 import CmkCheckbox from '@/components/user-input/CmkCheckbox.vue'
 
-import ContentSpacer from '../../../components/ContentSpacer.vue'
+import ContentSpacer from '@/dashboard/components/ContentSpacer.vue'
+
 import VisibilityProperties from '../../../components/DashboardSettings/VisibilityProperties.vue'
 
 const { _t } = usei18n()

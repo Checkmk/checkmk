@@ -12,9 +12,9 @@ import CmkCatalogPanel from '@/components/CmkCatalogPanel.vue'
 import CmkDropdown from '@/components/CmkDropdown'
 import CmkIndent from '@/components/CmkIndent.vue'
 
+import ContentSpacer from '@/dashboard/components/ContentSpacer.vue'
 import DashboardPreviewContent from '@/dashboard/components/DashboardPreviewContent.vue'
 import GraphTimeRange from '@/dashboard/components/TimeRange/GraphTimeRange.vue'
-import ContentSpacer from '@/dashboard/components/Wizard/components/ContentSpacer.vue'
 import FixedDataRangeInput from '@/dashboard/components/Wizard/components/FixedDataRangeInput/FixedDataRangeInput.vue'
 import FieldComponent from '@/dashboard/components/Wizard/components/TableForm/FieldComponent.vue'
 import FieldDescription from '@/dashboard/components/Wizard/components/TableForm/FieldDescription.vue'
@@ -23,7 +23,7 @@ import TableFormRow from '@/dashboard/components/Wizard/components/TableForm/Tab
 import WidgetVisualization from '@/dashboard/components/Wizard/components/WidgetVisualization/WidgetVisualization.vue'
 import type { BaseWidgetProp } from '@/dashboard/components/Wizard/types.ts'
 
-import ShowServiceStatus from './ShowServiceStatus.vue'
+import ShowServiceStatus from '../components/ShowServiceStatus.vue'
 import type { UseGauge } from './composables/useGauge.ts'
 
 const { _t } = usei18n()

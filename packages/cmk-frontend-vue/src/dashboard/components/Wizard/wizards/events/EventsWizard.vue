@@ -8,6 +8,7 @@ import { computed, h } from 'vue'
 
 import usei18n from '@/lib/i18n'
 
+import ContentSpacer from '@/dashboard/components/ContentSpacer.vue'
 import CloseButton from '@/dashboard/components/Wizard/components/CloseButton.vue'
 import { useWidgetFilterManager } from '@/dashboard/components/Wizard/components/filter/composables/useWidgetFilterManager.ts'
 import type { ConfiguredFilters } from '@/dashboard/components/filter/types'
@@ -26,7 +27,6 @@ import useWizard from '@/quick-setup/components/quick-setup/useWizard'
 
 import AddFilters from '../../components/AddFilters/AddFilters.vue'
 import { useAddFilter } from '../../components/AddFilters/composables/useAddFilters'
-import ContentSpacer from '../../components/ContentSpacer.vue'
 import FiltersRecap from '../../components/FiltersRecap/FiltersRecap.vue'
 import { parseContextConfiguredFilters, squashFilters } from '../../components/FiltersRecap/utils'
 import StepsHeader from '../../components/StepsHeader.vue'

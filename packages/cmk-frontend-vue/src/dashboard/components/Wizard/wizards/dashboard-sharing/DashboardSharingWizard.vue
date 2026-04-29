@@ -12,11 +12,11 @@ import CmkButton from '@/components/CmkButton.vue'
 import CmkSlideIn from '@/components/CmkSlideIn'
 import CmkHeading from '@/components/typography/CmkHeading.vue'
 
+import ContentSpacer from '@/dashboard/components/ContentSpacer.vue'
 import type { DashboardFeatures, DashboardKey } from '@/dashboard/types/dashboard'
 
 import ActionBar from '../../components/ActionBar.vue'
 import CloseButton from '../../components/CloseButton.vue'
-import ContentSpacer from '../../components/ContentSpacer.vue'
 import WizardStageContainer from '../../components/WizardStageContainer.vue'
 import InternalAccess from './InternalAccess.vue'
 import PublicAccess from './PublicAccess.vue'

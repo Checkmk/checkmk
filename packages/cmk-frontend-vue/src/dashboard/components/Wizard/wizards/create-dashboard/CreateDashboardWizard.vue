@@ -11,11 +11,11 @@ import usei18n from '@/lib/i18n'
 import CmkCatalogPanel from '@/components/CmkCatalogPanel.vue'
 import CmkLabel from '@/components/CmkLabel.vue'
 
+import ContentSpacer from '@/dashboard/components/ContentSpacer.vue'
 import { type DashboardGeneralSettings, DashboardLayout } from '@/dashboard/types/dashboard'
 
 import ActionBar from '../../components/ActionBar.vue'
 import ActionButton from '../../components/ActionButton.vue'
-import ContentSpacer from '../../components/ContentSpacer.vue'
 import DashboardLayoutSelector from '../../components/DashboardSettings/DashboardLayoutSelector.vue'
 import DashboardScope from '../../components/DashboardSettings/DashboardScope.vue'
 import GeneralProperties from '../../components/DashboardSettings/GeneralProperties.vue'

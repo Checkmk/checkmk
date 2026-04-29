@@ -9,8 +9,8 @@ import usei18n from '@/lib/i18n'
 import CmkSlideIn from '@/components/CmkSlideIn'
 import CmkHeading from '@/components/typography/CmkHeading.vue'
 
+import ContentSpacer from '@/dashboard/components/ContentSpacer.vue'
 import CloseButton from '@/dashboard/components/Wizard/components/CloseButton.vue'
-import ContentSpacer from '@/dashboard/components/Wizard/components/ContentSpacer.vue'
 import WizardStageContainer from '@/dashboard/components/Wizard/components/WizardStageContainer.vue'
 import { DashboardFeatures } from '@/dashboard/types/dashboard'
 

@@ -8,7 +8,7 @@ import type { TranslatedString } from '@/lib/i18nString'
 
 import CmkHeading from '@/components/typography/CmkHeading.vue'
 
-import ContentSpacer from './ContentSpacer.vue'
+import ContentSpacer from '@/dashboard/components/ContentSpacer.vue'
 
 interface SectionBlockProps {
   title: TranslatedString

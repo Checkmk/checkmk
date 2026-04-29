@@ -16,7 +16,7 @@ import UclCmkInlineButton from './basic-elements/CmkInlineButton/UclCmkInlineBut
 import UclCmkSwitch from './basic-elements/CmkSwitch/UclCmkSwitch.vue'
 import UclCmkTag from './basic-elements/CmkTag/UclCmkTag.vue'
 import UclCmkAccordion from './content-organization/CmkAccordion/UclCmkAccordion.vue'
-import UclCmkAccordionStepPanel from './content-organization/CmkAccordionStepPanel/UclAccordionCmkStepPanel.vue'
+import UclCmkAccordionStepPanel from './content-organization/CmkAccordionStepPanel/UclCmkAccordionStepPanel.vue'
 import UclCmkCatalogPanel from './content-organization/CmkCatalogPanel/UclCmkCatalogPanel.vue'
 import UclCmkCollapsible from './content-organization/CmkCollapsible/UclCmkCollapsible.vue'
 import UclCmkScrollContainer from './content-organization/CmkScrollContainer/UclCmkScrollContainer.vue'
@@ -47,8 +47,8 @@ import UclCmkParagraph from './foundation-elements/typography/UclCmkParagraph.vu
 import UclI18n from './foundation-elements/typography/UclI18n.vue'
 import UclCmkLinkCard from './navigation/CmkLinkCard/UclCmkLinkCard.vue'
 import UclCmkAlertBox from './system-feedback/CmkAlertBox/UclCmkAlertBox.vue'
+import UclCmkCopy from './system-feedback/CmkCopy/UclCmkCopy.vue'
 import UclCmkCopyButton from './system-feedback/CmkCopy/UclCmkCopyButton.vue'
-import UclCmkCopyIcon from './system-feedback/CmkCopy/UclCmkCopyIcon.vue'
 import UclCmkDialog from './system-feedback/CmkDialog/UclCmkDialog.vue'
 import UclCmkErrorBoundary from './system-feedback/CmkErrorBoundary/UclCmkErrorBoundary.vue'
 import UclCmkHelp from './system-feedback/CmkHelp/UclCmkHelp.vue'
@@ -116,7 +116,7 @@ const navigationPages = [new Page('CmkLinkCard', UclCmkLinkCard)]
 const systemFeedbackPages = [
   new Page('CmkAlertBox', UclCmkAlertBox),
   new Page('CmkCopy (Button)', UclCmkCopyButton),
-  new Page('CmkCopy (Icon)', UclCmkCopyIcon),
+  new Page('CmkCopy (Icon)', UclCmkCopy),
   new Page('CmkDialog', UclCmkDialog),
   new Page('CmkErrorBoundary', UclCmkErrorBoundary),
   new Page('CmkHelpText', UclCmkHelp),

@@ -12,7 +12,7 @@ import UclCmkColorPicker from '@ucl/components/basic-elements/CmkColorPicker/Ucl
 import UclCmkSwitch from '@ucl/components/basic-elements/CmkSwitch/UclCmkSwitch.vue'
 import UclCmkTag from '@ucl/components/basic-elements/CmkTag/UclCmkTag.vue'
 import UclCmkAccordion from '@ucl/components/content-organization/CmkAccordion/UclCmkAccordion.vue'
-import UclAccordionCmkStepPanel from '@ucl/components/content-organization/CmkAccordionStepPanel/UclAccordionCmkStepPanel.vue'
+import UclCmkAccordionStepPanel from '@ucl/components/content-organization/CmkAccordionStepPanel/UclCmkAccordionStepPanel.vue'
 import UclCmkCatalogPanel from '@ucl/components/content-organization/CmkCatalogPanel/UclCmkCatalogPanel.vue'
 import UclCmkCollapsible from '@ucl/components/content-organization/CmkCollapsible/UclCmkCollapsible.vue'
 import UclCmkScrollContainer from '@ucl/components/content-organization/CmkScrollContainer/UclCmkScrollContainer.vue'
@@ -40,8 +40,8 @@ import UclCmkHeading from '@ucl/components/foundation-elements/typography/UclCmk
 import UclCmkParagraph from '@ucl/components/foundation-elements/typography/UclCmkParagraph.vue'
 import UclCmkLinkCard from '@ucl/components/navigation/CmkLinkCard/UclCmkLinkCard.vue'
 import UclCmkAlertBox from '@ucl/components/system-feedback/CmkAlertBox/UclCmkAlertBox.vue'
+import UclCmkCopy from '@ucl/components/system-feedback/CmkCopy/UclCmkCopy.vue'
 import UclCmkCopyButton from '@ucl/components/system-feedback/CmkCopy/UclCmkCopyButton.vue'
-import UclCmkCopyIcon from '@ucl/components/system-feedback/CmkCopy/UclCmkCopyIcon.vue'
 import UclCmkDialog from '@ucl/components/system-feedback/CmkDialog/UclCmkDialog.vue'
 import UclCmkErrorBoundary from '@ucl/components/system-feedback/CmkErrorBoundary/UclCmkErrorBoundary.vue'
 import UclCmkHelp from '@ucl/components/system-feedback/CmkHelp/UclCmkHelp.vue'
@@ -141,7 +141,7 @@ test('CmkAccordion demo page renders its component', () => {
 })
 
 test('CmkAccordionStepPanel demo page renders its component', () => {
-  render(UclAccordionCmkStepPanel, { props: { screenshotMode: false } })
+  render(UclCmkAccordionStepPanel, { props: { screenshotMode: false } })
   screen.getAllByRole('button')
 })
 
@@ -266,7 +266,7 @@ test('CmkCopyButton demo page renders its component', () => {
 })
 
 test('CmkCopyIcon demo page renders its component', () => {
-  render(UclCmkCopyIcon, { props: { screenshotMode: false } })
+  render(UclCmkCopy, { props: { screenshotMode: false } })
   screen.getByText('cmk --check myhost')
 })
 

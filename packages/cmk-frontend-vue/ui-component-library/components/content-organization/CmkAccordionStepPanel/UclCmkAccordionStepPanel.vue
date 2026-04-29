@@ -6,7 +6,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script lang="ts">
 import { type PanelConfig } from '@ucl/_ucl/components/detail-page'
 
-import codeExample from './UclAccordionCmkStepPanelCodeExample.vue?raw'
+import codeExample from './UclCmkAccordionStepPanelCodeExample.vue?raw'
 
 export const a11yData = [
   {

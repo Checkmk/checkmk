@@ -14,7 +14,7 @@ import UclCmkInlineButtonCodeExample from '@ucl/components/basic-elements/CmkInl
 import UclCmkSwitchCodeExample from '@ucl/components/basic-elements/CmkSwitch/UclCmkSwitchCodeExample.vue'
 import UclCmkTagCodeExample from '@ucl/components/basic-elements/CmkTag/UclCmkTagCodeExample.vue'
 import UclCmkAccordionCodeExample from '@ucl/components/content-organization/CmkAccordion/UclCmkAccordionCodeExample.vue'
-import UclAccordionCmkStepPanelCodeExample from '@ucl/components/content-organization/CmkAccordionStepPanel/UclAccordionCmkStepPanelCodeExample.vue'
+import UclAccordionCmkStepPanelCodeExample from '@ucl/components/content-organization/CmkAccordionStepPanel/UclCmkAccordionStepPanelCodeExample.vue'
 import UclCmkCatalogPanelCodeExample from '@ucl/components/content-organization/CmkCatalogPanel/UclCmkCatalogPanelCodeExample.vue'
 import UclCmkCollapsibleCodeExample from '@ucl/components/content-organization/CmkCollapsible/UclCmkCollapsibleCodeExample.vue'
 import UclCmkScrollContainerCodeExample from '@ucl/components/content-organization/CmkScrollContainer/UclCmkScrollContainerCodeExample.vue'
@@ -44,7 +44,7 @@ import UclI18nCodeExample from '@ucl/components/foundation-elements/typography/U
 import UclCmkLinkCardCodeExample from '@ucl/components/navigation/CmkLinkCard/UclCmkLinkCardCodeExample.vue'
 import UclCmkAlertBoxCodeExample from '@ucl/components/system-feedback/CmkAlertBox/UclCmkAlertBoxCodeExample.vue'
 import UclCmkCopyButtonCodeExample from '@ucl/components/system-feedback/CmkCopy/UclCmkCopyButtonCodeExample.vue'
-import UclCmkCopyIconCodeExample from '@ucl/components/system-feedback/CmkCopy/UclCmkCopyIconCodeExample.vue'
+import UclCmkCopyCodeExample from '@ucl/components/system-feedback/CmkCopy/UclCmkCopyCodeExample.vue'
 import UclCmkDialogCodeExample from '@ucl/components/system-feedback/CmkDialog/UclCmkDialogCodeExample.vue'
 import UclCmkErrorBoundaryCodeExample from '@ucl/components/system-feedback/CmkErrorBoundary/UclCmkErrorBoundaryCodeExample.vue'
 import UclCmkHelpCodeExample from '@ucl/components/system-feedback/CmkHelp/UclCmkHelpCodeExample.vue'
@@ -274,7 +274,7 @@ test('CmkCopyButton code example renders without errors', () => {
 })
 
 test('CmkCopyIcon code example renders without errors', () => {
-  const { container } = render(UclCmkCopyIconCodeExample)
+  const { container } = render(UclCmkCopyCodeExample)
   expect(container.firstChild).toBeTruthy()
 })
 

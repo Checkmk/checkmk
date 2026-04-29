@@ -5,6 +5,6 @@
  */
 import { Page } from '@ucl/_ucl/types/page'
 
-import UclCmkStepPanel from './UclAccordionCmkStepPanel.vue'
+import UclCmkStepPanel from './UclCmkAccordionStepPanel.vue'
 
 export const pages = [new Page('CmkAccordionStepPanel', UclCmkStepPanel)]

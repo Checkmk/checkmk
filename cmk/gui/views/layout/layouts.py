@@ -162,22 +162,15 @@ class GroupedBoxesLayout(Layout):
                 groups.append((this_group, current_group))
             current_group.append((row_id(view["datasource"], row), row))
 
-        # Create empty columns
         columns: list[list[tuple[Hashable, list[tuple[str, Row]]]]] = []
-        for _x in range(num_columns):
-            columns.append([])
 
-        # First put everything into the first column
-        for group in groups:
-            columns[0].append(group)
+        groups_per_column, first_non_full_column_index = divmod(len(groups), num_columns)
+        start = 0
 
-        # Shift from left to right as long as useful
-        did_something = True
-        while did_something:
-            did_something = False
-            for i in range(0, num_columns - 1):
-                if self._balance(columns[i], columns[i + 1]):
-                    did_something = True
+        for i in range(num_columns):
+            size = groups_per_column + (1 if i < first_non_full_column_index else 0)
+            columns.append(groups[start : start + size])
+            start += size
 
         classes = ["boxlayout"]
         if box_class := self._css_class():
@@ -306,27 +299,6 @@ class GroupedBoxesLayout(Layout):
             cell.paint_as_header()
             html.write_text_permissive("\n")
         html.close_tr()
-
-    def _balance(
-        self,
-        src: list[tuple[Hashable, list[tuple[str, Row]]]],
-        dst: list[tuple[Hashable, list[tuple[str, Row]]]],
-    ) -> bool:
-        # shift from src to dst, if useful
-        if len(src) == 0:
-            return False
-        hsrc = self._height_of(src)
-        hdst = self._height_of(dst)
-        shift = len(src[-1][1]) + 2
-        if max(hsrc, hdst) > max(hsrc - shift, hdst + shift):
-            dst[0:0] = [src[-1]]
-            del src[-1]
-            return True
-        return False
-
-    def _height_of(self, groups: list[tuple[Hashable, list[tuple[str, Row]]]]) -> int:
-        # compute total space needed. I count the group header like two rows.
-        return sum(len(rows_with_ids) for _header, rows_with_ids in groups) + 2 * len(groups)
 
 
 def grouped_row_title(

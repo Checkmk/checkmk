@@ -37,6 +37,14 @@ void main() {
         "test-gui-e2e-f12less-ultimate-k8s",
     ] : [];
 
+    // do keep running the non-k8s jobs due to I54b5b304b9ad2bdb5ef62d482406a3be6f7b011c
+    job_names += env.USE_K8S_INTEGRATION_SYSTEMTESTS == "1" ? [
+        "test-integration-single-f12less-k8s",
+        "test-integration-single-f12less-community-k8s",
+        "test-integration-single-f12less-redfish-k8s",
+        "test-integration-single-f12less-ultimatemt-k8s",
+    ] : [];
+
     def trigger_xss_crawl = false;
     // The time 2000 has been chosen to not collide with the CI maintenance window
     if (Calendar.getInstance().get(Calendar.HOUR_OF_DAY) == 20) {

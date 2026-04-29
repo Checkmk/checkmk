@@ -15,6 +15,7 @@ from ._utils import (
     compute_validation_errors,
     compute_validators,
     create_validation_error,
+    normalize_to_deserializable,
 )
 
 
@@ -68,7 +69,7 @@ class FormSpecVisitor[FormSpecModel: FormSpec[Any], ParsedValueModel, FallbackDa
             raise MKGeneralException(
                 "Unable to serialize invalid value. Reason: %s" % parsed_value.reason
             )
-        return self._to_disk(parsed_value)
+        return normalize_to_deserializable(self._to_disk(parsed_value))
 
     def _migrate_disk_value(self, value: IncomingData) -> IncomingData:
         if isinstance(value, RawDiskData) and self.form_spec.migrate:

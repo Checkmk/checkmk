@@ -136,5 +136,24 @@ def compute_label(label: Label | None) -> str | None:
     return label.localize(translate_to_current_language)
 
 
+_BUILTIN_SCALARS = frozenset({bool, str, int, float, bytes})
+
+
+def normalize_to_deserializable(value: object) -> object:
+    """Return *value* as its plain builtin type if it is a subclass instance.
+
+    Ensures that e.g. StrEnum/IntEnum members produce the same repr() as their
+    equivalent plain builtin values, which is required for clean disk
+    (de)serialization.
+    """
+    t = type(value)
+    if t in _BUILTIN_SCALARS:
+        return value
+    for base in t.__mro__:
+        if base in _BUILTIN_SCALARS:
+            return base(value)
+    return value
+
+
 def option_id(val: object) -> str:
-    return "%s" % hashlib.sha256(repr(val).encode()).hexdigest()
+    return "%s" % hashlib.sha256(repr(normalize_to_deserializable(val)).encode()).hexdigest()

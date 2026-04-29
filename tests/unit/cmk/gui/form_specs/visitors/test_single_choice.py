@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from enum import StrEnum
+
 import pytest
 
 from cmk.ccc.exceptions import MKGeneralException
@@ -154,6 +156,52 @@ def test_single_choice_valid_value(
     assert len(validation_messages) == 0
 
     assert visitor.to_disk(valid_choice) == "bar"
+
+
+class _Color(StrEnum):
+    RED = "RED"
+    GREEN = "GREEN"
+
+
+def _strenum_choice_spec() -> SingleChoice:
+    return SingleChoice(
+        elements=[
+            SingleChoiceElement(name=_Color.GREEN, title=Title("Green")),
+            SingleChoiceElement(name=_Color.RED, title=Title("Red")),
+        ],
+    )
+
+
+def test_strenum_option_id_matches_plain_str() -> None:
+    assert SingleChoiceVisitor.option_id(_Color.RED) == SingleChoiceVisitor.option_id("RED")
+
+
+def test_strenum_plain_str_from_disk_round_trips() -> None:
+    visitor = get_visitor(
+        _strenum_choice_spec(), VisitorOptions(migrate_values=True, mask_values=False)
+    )
+    _vue_spec, vue_value = visitor.to_vue(RawDiskData("RED"))
+    assert vue_value == SingleChoiceVisitor.option_id("RED")
+    assert visitor.to_disk(RawFrontendData(vue_value)) == "RED"
+    assert type(visitor.to_disk(RawFrontendData(vue_value))) is str
+
+
+def test_strenum_member_from_disk_round_trips_via_frontend() -> None:
+    visitor = get_visitor(
+        _strenum_choice_spec(), VisitorOptions(migrate_values=True, mask_values=False)
+    )
+    _vue_spec, vue_value = visitor.to_vue(RawDiskData(_Color.RED))
+    assert vue_value == SingleChoiceVisitor.option_id("RED")
+    assert visitor.to_disk(RawFrontendData(vue_value)) == "RED"
+    assert type(visitor.to_disk(RawFrontendData(vue_value))) is str
+
+
+def test_strenum_member_from_disk_normalizes_without_vue() -> None:
+    visitor = get_visitor(
+        _strenum_choice_spec(), VisitorOptions(migrate_values=True, mask_values=False)
+    )
+    assert visitor.to_disk(RawDiskData(_Color.RED)) == "RED"
+    assert type(visitor.to_disk(RawDiskData(_Color.RED))) is str
 
 
 def test_default_value_roundtrip() -> None:

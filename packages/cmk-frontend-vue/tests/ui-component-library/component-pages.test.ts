@@ -9,6 +9,8 @@ import UclCmkButton from '@ucl/components/basic-elements/CmkButton/UclCmkButton.
 import UclCmkChip from '@ucl/components/basic-elements/CmkChip/UclCmkChip.vue'
 import UclCmkCode from '@ucl/components/basic-elements/CmkCode/UclCmkCode.vue'
 import UclCmkColorPicker from '@ucl/components/basic-elements/CmkColorPicker/UclCmkColorPicker.vue'
+import UclCmkIconButton from '@ucl/components/basic-elements/CmkIconButton/UclCmkIconButton.vue'
+import UclCmkInlineButton from '@ucl/components/basic-elements/CmkInlineButton/UclCmkInlineButton.vue'
 import UclCmkSwitch from '@ucl/components/basic-elements/CmkSwitch/UclCmkSwitch.vue'
 import UclCmkTag from '@ucl/components/basic-elements/CmkTag/UclCmkTag.vue'
 import UclCmkAccordion from '@ucl/components/content-organization/CmkAccordion/UclCmkAccordion.vue'
@@ -22,6 +24,8 @@ import UclCmkTabs from '@ucl/components/content-organization/CmkTabs/UclCmkTabs.
 import UclCmkWizard from '@ucl/components/content-organization/CmkWizard/UclCmkWizard.vue'
 import UclTwoFactorAuthentication from '@ucl/components/content-organization/TwoFactorAuthentication/UclTwoFactorAuthentication.vue'
 import UclCmkCheckbox from '@ucl/components/form-elements/CmkCheckbox/UclCmkCheckbox.vue'
+import UclCmkConfigurationEntityDropdown from '@ucl/components/form-elements/CmkConfigurationEntityDropdown/UclCmkConfigurationEntityDropdown.vue'
+import UclCmkDateTimePicker from '@ucl/components/form-elements/CmkDateTimePicker/UclCmkDateTimePicker.vue'
 import UclCmkDropdown from '@ucl/components/form-elements/CmkDropdown/UclCmkDropdown.vue'
 import UclCmkDualList from '@ucl/components/form-elements/CmkDualList/UclCmkDualList.vue'
 import UclCmkInput from '@ucl/components/form-elements/CmkInput/UclCmkInput.vue'
@@ -52,11 +56,35 @@ import UclCmkPopupDialog from '@ucl/components/system-feedback/CmkPopupDialog/Uc
 import UclCmkProgressbar from '@ucl/components/system-feedback/CmkProgressbar/UclCmkProgressbar.vue'
 import UclCmkSkeleton from '@ucl/components/system-feedback/CmkSkeleton/UclCmkSkeleton.vue'
 import UclCmkTooltip from '@ucl/components/system-feedback/CmkTooltip/UclCmkTooltip.vue'
+import { HttpResponse, http } from 'msw'
+import { setupServer } from 'msw/node'
 
 vi.mock('vue-router', () => ({
   useRouter: () => ({ resolve: () => ({ href: '/' }) }),
   useRoute: () => ({ query: {} })
 }))
+
+// msw/browser's setupWorker requires a real Service Worker and cannot run in jsdom.
+// We replace it with a no-op so the UCL page's onBeforeMount resolves immediately.
+vi.mock('msw/browser', () => ({
+  setupWorker: () => ({ start: () => Promise.resolve(), stop: () => {} })
+}))
+
+// The REST API client singleton captures globalThis.fetch at import time, before any
+// msw/node server patches it. Re-create it with a lazy fetch so MSW can intercept.
+vi.mock('@/lib/rest-api-client/client', async (importOriginal) => {
+  const mod = await importOriginal<Record<string, unknown>>()
+  const createClientImpl = (await import('openapi-fetch')).default
+  return {
+    ...mod,
+    default: createClientImpl({
+      baseUrl: `${location.protocol}//${location.host}/api/internal`,
+      credentials: 'include',
+      headers: { Accept: 'application/json' },
+      fetch: (...args: Parameters<typeof globalThis.fetch>) => globalThis.fetch(...args)
+    })
+  }
+})
 
 function expectNoRegistryError() {
   expect(screen.queryByText(/Component registry not initialized/)).toBeNull()
@@ -67,6 +95,33 @@ function expectNoRegistryError() {
 test('CmkCheckbox demo page renders its component', () => {
   render(UclCmkCheckbox, { props: { screenshotMode: false } })
   screen.getByRole('checkbox', { name: 'Enable notifications' })
+})
+
+test('CmkConfigurationEntityDropdown page renders its component', async () => {
+  const BASE = `${location.protocol}//${location.host}/api/internal`
+  const server = setupServer(
+    http.get(`${BASE}/domain-types/ucl_demo_entity/collections/all`, () =>
+      HttpResponse.json({
+        value: [
+          { id: 'entity_1', title: 'First Demo Entity' },
+          { id: 'entity_2', title: 'Second Demo Entity' }
+        ]
+      })
+    )
+  )
+  server.listen({ onUnhandledRequest: 'bypass' })
+  try {
+    render(UclCmkConfigurationEntityDropdown, { props: { screenshotMode: false } })
+    await screen.findByRole('combobox')
+  } finally {
+    server.close()
+  }
+})
+
+test('CmkDateTimePicker demo page renders its component', async () => {
+  render(UclCmkDateTimePicker, { props: { screenshotMode: false } })
+  expect(await screen.findAllByRole('button')).toHaveLength(2 + 5) // two for selecting, rest for rest of ui
+  expect(await screen.findAllByRole('spinbutton')).toHaveLength(3) // date input
 })
 
 test('CmkInput demo page renders its component', () => {
@@ -120,6 +175,16 @@ test('CmkCode demo page renders', () => {
 
 test('CmkColorPicker demo page renders its component', () => {
   render(UclCmkColorPicker, { props: { screenshotMode: false } })
+  screen.getAllByRole('button')
+})
+
+test('CmkIconButton demo page renders its component', () => {
+  render(UclCmkIconButton, { props: { screenshotMode: false } })
+  screen.getAllByRole('button')
+})
+
+test('CmkInlineButton demo page renders its component', () => {
+  render(UclCmkInlineButton, { props: { screenshotMode: false } })
   screen.getAllByRole('button')
 })
 

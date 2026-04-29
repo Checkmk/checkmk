@@ -11,6 +11,7 @@ import os
 import time
 from collections.abc import Mapping
 from pathlib import Path
+from typing import override
 
 from livestatus import LivestatusResponse, Query, QuerySpecification
 
@@ -287,6 +288,11 @@ class BIStructureFetcher:
 
 
 class BIStatusFetcher(ABCBIStatusFetcher):
+    def __init__(self, sites_callback: SitesCallback) -> None:
+        super().__init__(sites_callback)
+        self._existing_services: list[RequiredBIElement] | None = None
+        self._existing_hosts: list[RequiredBIElement] | None = None
+
     def set_assumed_states(self, assumed_states: dict) -> None:
         # Streamline format to site, host, service (may be None)
         self.assumed_states = {}
@@ -315,6 +321,30 @@ class BIStatusFetcher(ABCBIStatusFetcher):
     def cleanup(self) -> None:
         self.states.clear()
         self.assumed_states.clear()
+
+    @override
+    def entity_exists(self, element: RequiredBIElement) -> bool:
+        """Returns whether a host or a service 'exists', i.e. is visible in an unrestricted query.
+        Needed to distinguish a missing element from one which the user is just not allowed to see"""
+        if element.service_description:
+            if self._existing_services is None:
+                self._existing_services = [
+                    RequiredBIElement(site_id, host_name, service_description)
+                    for site_id, host_name, service_description in self.sites_callback.query(
+                        Query(QuerySpecification("services", ["host_name", "description"])),
+                        fetch_full_data=True,
+                    )
+                ]
+            return element in self._existing_services
+        if self._existing_hosts is None:
+            self._existing_hosts = [
+                RequiredBIElement(site_id, host_name, None)
+                for site_id, host_name in self.sites_callback.query(
+                    Query(QuerySpecification("hosts", ["name"])),
+                    fetch_full_data=True,
+                )
+            ]
+        return element in self._existing_hosts
 
     # Get all status information for the required_hosts
     def _get_status_info(self, required_elements: set[RequiredBIElement]) -> BIStatusInfo:

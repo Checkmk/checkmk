@@ -8,7 +8,6 @@ from pathlib import Path
 import pytest
 
 from tests.testlib import package_manager
-from tests.testlib.common.utils2 import version_spec_from_env
 
 
 def pytest_addoption(parser: pytest.Parser) -> None:
@@ -48,10 +47,3 @@ def package_path() -> str:
             "PACKAGE_PATH environment variable pointing to the package to be tested is missing"
         )
     return path
-
-
-# TODO: Better hand over arguments using pytest mechanisms
-#       (http://doc.pytest.org/en/latest/example/parametrize.html)
-@pytest.fixture(scope="module")
-def cmk_version() -> str:
-    return version_spec_from_env()

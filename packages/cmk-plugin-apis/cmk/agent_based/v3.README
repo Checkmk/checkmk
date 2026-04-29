@@ -3,3 +3,5 @@ Possible improvements:
 * get_average should behave like get_rate, when encountering a time anomaly (raise ignoreResultError)
 
 * move `evaluate_snmp_detection` to the API, so that plugins may test against it.
+
+* add lower levels to Metric class

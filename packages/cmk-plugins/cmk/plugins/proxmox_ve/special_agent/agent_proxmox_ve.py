@@ -375,7 +375,7 @@ def _create_node_sections(
             qemu=[str(vmid) for vmid in all_vms if all_vms[vmid]["type"] == "qemu"],
             version=node["version"].get("version", "n/a"),
             subscription=SubscriptionInfo(
-                status=node["subscription"]["status"],
+                status=node["subscription"].get("status"),
                 next_due_date=node["subscription"].get("nextduedate"),
             ),
         ).model_dump(),

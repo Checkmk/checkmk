@@ -24,7 +24,7 @@ class SubscriptionStatus(StrEnum):
 
 
 class SubscriptionInfo(BaseModel, frozen=True):
-    status: SubscriptionStatus
+    status: SubscriptionStatus | None = None
     next_due_date: str | None = None
 
 

@@ -21,7 +21,7 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
-from cmk.plugins.proxmox_ve.lib.node_info import SectionNodeInfo
+from cmk.plugins.proxmox_ve.lib.node_info import SectionNodeInfo, SubscriptionInfo
 
 
 class Params(TypedDict):
@@ -55,25 +55,41 @@ def _check_days_until_expiration(
     )
 
 
+def _check_subscription_status(
+    subscription: SubscriptionInfo,
+    required_subscription_status: Mapping[str, Literal[0, 1, 2, 3]],
+    subscription_expiration_days_levels: NoLevelsT | FixedLevelsT[int],
+) -> CheckResult:
+    if not subscription.status:
+        yield Result(
+            state=State.OK if not required_subscription_status else State.WARN,
+            summary="Subscription: n/a",
+        )
+        return
+
+    yield Result(
+        state=State(required_subscription_status.get(subscription.status, 0)),
+        summary=f"Subscription: {subscription.status}",
+    )
+    if subscription.next_due_date:
+        yield from _check_days_until_expiration(
+            expiration_days_levels=subscription_expiration_days_levels,
+            expiration_date_str=subscription.next_due_date,
+            now=datetime.now(),
+        )
+
+
 def check_proxmox_ve_node_info(params: Params, section: SectionNodeInfo) -> CheckResult:
     yield Result(
         state=State(params.get("required_node_status", {}).get(section.status, 0)),
         summary=f"Status: {section.status}",
     )
 
-    yield Result(
-        state=State(
-            params.get("required_subscription_status", {}).get(section.subscription.status, 0)
-        ),
-        summary=f"Subscription: {section.subscription.status}",
+    yield from _check_subscription_status(
+        subscription=section.subscription,
+        required_subscription_status=params.get("required_subscription_status", {}),
+        subscription_expiration_days_levels=params["subscription_expiration_days_levels"],
     )
-
-    if section.subscription.next_due_date:
-        yield from _check_days_until_expiration(
-            expiration_days_levels=params["subscription_expiration_days_levels"],
-            expiration_date_str=section.subscription.next_due_date,
-            now=datetime.now(),
-        )
 
     yield Result(state=State.OK, summary=f"Version: {section.version}")
     yield Result(

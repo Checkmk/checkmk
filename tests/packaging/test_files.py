@@ -109,12 +109,6 @@ def _get_package_dependencies(package_path: str) -> Sequence[str]:
     raise NotImplementedError(f"Unsupported package type for dependency extraction: {package_path}")
 
 
-def _get_omd_version(cmk_version: str, package_path: str) -> str:
-    """Extract the files edition"""
-    edition = _edition_from_pkg_path(package_path)
-    return f"{cmk_version}.{edition}"
-
-
 def _edition_from_pkg_path(package_path: str) -> str:
     file_name = os.path.basename(package_path)
     if file_name.startswith("check-mk-community-"):
@@ -128,6 +122,26 @@ def _edition_from_pkg_path(package_path: str) -> str:
     if file_name.startswith("check-mk-cloud-"):
         return "cloud"
     raise NotImplementedError("Could not get edition from package path: %s" % package_path)
+
+
+def _version_from_pkg_path(package_path: str) -> str:
+    """Parse the CMK version string from a package filename.
+
+    Handles daily builds (2.5.0-2026.04.24) and stable releases (2.4.0p13).
+    """
+    name = os.path.basename(package_path)
+    m = re.match(
+        r"check-mk-[a-z]+-(\d+\.\d+\.\d+(?:[a-z]\d+)?(?:-\d{4}\.\d{2}\.\d{2})?)",
+        name,
+    )
+    if m:
+        return m.group(1)
+    raise ValueError(f"Cannot parse version from package path: {package_path}")
+
+
+def _get_omd_version(package_path: str) -> str:
+    """Return the OMD version string (e.g. '2.5.0-2026.04.24.pro') for a package."""
+    return f"{_version_from_pkg_path(package_path)}.{_edition_from_pkg_path(package_path)}"
 
 
 def _get_file_from_docker_package(
@@ -170,8 +184,8 @@ def _get_file_from_docker_package(
     raise FileNotFoundError(f"File {version_rel_path} not found in {package_path}")
 
 
-def _file_exists_in_package(package_path: str, cmk_version: str, version_rel_path: str) -> bool:
-    omd_version = _get_omd_version(cmk_version, package_path)
+def _file_exists_in_package(package_path: str, version_rel_path: str) -> bool:
+    omd_version = _get_omd_version(package_path)
 
     file_list = _get_paths_from_package(package_path)
 
@@ -187,8 +201,8 @@ def _file_exists_in_package(package_path: str, cmk_version: str, version_rel_pat
     raise NotImplementedError()
 
 
-def _get_file_from_package(package_path: str, cmk_version: str, version_rel_path: str) -> bytes:
-    omd_version = _get_omd_version(cmk_version, package_path)
+def _get_file_from_package(package_path: str, version_rel_path: str) -> bytes:
+    omd_version = _get_omd_version(package_path)
 
     if package_path.endswith(".rpm"):
         rpm2cpio = subprocess.run(["rpm2cpio", package_path], stdout=subprocess.PIPE, check=False)
@@ -255,7 +269,7 @@ def test_package_sizes(package_path: str, pkg_format: str, min_size: int, max_si
     )
 
 
-def test_files_not_in_version_path(package_path: str, cmk_version: str) -> None:
+def test_files_not_in_version_path(package_path: str) -> None:
     if not package_path.endswith(".rpm") and not package_path.endswith(".deb"):
         pytest.skip("%s is another package type" % os.path.basename(package_path))
 
@@ -312,7 +326,7 @@ def test_files_not_in_version_path(package_path: str, cmk_version: str) -> None:
 
     LOGGER.info("Testing %s", package_path)
 
-    omd_version = _get_omd_version(cmk_version, package_path)
+    omd_version = _get_omd_version(package_path)
     LOGGER.info("Checking OMD version: %s", omd_version)
 
     for path in paths:
@@ -394,11 +408,11 @@ def _get_paths_from_package(path_to_package: str) -> list[str]:
     raise NotImplementedError()
 
 
-def test_cma_only_contains_version_paths(package_path: str, cmk_version: str) -> None:
+def test_cma_only_contains_version_paths(package_path: str) -> None:
     if not package_path.endswith(".cma"):
         pytest.skip("%s is another package type" % os.path.basename(package_path))
 
-    omd_version = _get_omd_version(cmk_version, package_path)
+    omd_version = _get_omd_version(package_path)
     files = [
         line.split()[5]
         for line in subprocess.check_output(
@@ -410,11 +424,11 @@ def test_cma_only_contains_version_paths(package_path: str, cmk_version: str) ->
         assert file_path.startswith(omd_version + "/")
 
 
-def test_cma_specific_files(package_path: str, cmk_version: str) -> None:
+def test_cma_specific_files(package_path: str) -> None:
     if not package_path.endswith(".cma"):
         pytest.skip("%s is another package type" % os.path.basename(package_path))
 
-    omd_version = _get_omd_version(cmk_version, package_path)
+    omd_version = _get_omd_version(package_path)
     files = [
         line.split()[5]
         for line in subprocess.check_output(
@@ -522,10 +536,9 @@ def test_community_not_contains_nonfree_files(package_path: str) -> None:
     )
 
 
-def test_package_is_identifiable_by_commit(package_path: str, cmk_version: str) -> None:
+def test_package_is_identifiable_by_commit(package_path: str) -> None:
     commit = _get_file_from_package(
         package_path,
-        cmk_version,
         version_rel_path="COMMIT" if package_path.endswith(".tar.gz") else "share/doc/COMMIT",
     )
     assert (
@@ -534,19 +547,17 @@ def test_package_is_identifiable_by_commit(package_path: str, cmk_version: str) 
     )
 
 
-def test_monitoring_cores_packaging(package_path: str, cmk_version: str) -> None:
+def test_monitoring_cores_packaging(package_path: str) -> None:
     if package_path.endswith(".tar.gz"):
         pytest.skip("%s do not test source packages" % os.path.basename(package_path))
 
     if _edition_from_pkg_path(package_path) != "community":
-        assert (
-            len(_get_file_from_package(package_path, cmk_version, version_rel_path="bin/cmc")) > 0
-        )
+        assert len(_get_file_from_package(package_path, version_rel_path="bin/cmc")) > 0
 
-    assert len(_get_file_from_package(package_path, cmk_version, version_rel_path="bin/nagios")) > 0
+    assert len(_get_file_from_package(package_path, version_rel_path="bin/nagios")) > 0
 
 
-def test_not_rc_tag(package_path: str, cmk_version: str) -> None:
+def test_not_rc_tag(package_path: str) -> None:
     msi_file_path = os.path.join(
         os.path.dirname(__file__), "../../agents/windows/check_mk_agent.msi"
     )
@@ -567,7 +578,7 @@ def test_not_rc_tag(package_path: str, cmk_version: str) -> None:
     }
 
     assert "ProductVersion" in properties
-    assert properties["ProductVersion"] == cmk_version
+    assert properties["ProductVersion"] == _version_from_pkg_path(package_path)
     assert not re.match(r".*-rc\d+$", properties["ProductVersion"])
 
 
@@ -575,11 +586,10 @@ Bom = dict
 
 
 @pytest.fixture(name="bom_json", scope="module")
-def load_bom(package_path: str, cmk_version: str) -> Bom:
+def load_bom(package_path: str) -> Bom:
     return json.loads(
         _get_file_from_package(
             package_path,
-            cmk_version,
             "omd/bill-of-materials.json"
             if package_path.endswith(".tar.gz")
             else "share/doc/bill-of-materials.json",
@@ -588,11 +598,10 @@ def load_bom(package_path: str, cmk_version: str) -> Bom:
 
 
 @pytest.fixture(name="license_csv_rows", scope="module")
-def load_license_csv(package_path: str, cmk_version: str) -> list[dict[str, str]]:
+def load_license_csv(package_path: str) -> list[dict[str, str]]:
     license_file = io.StringIO(
         _get_file_from_package(
             package_path,
-            cmk_version,
             "omd/bill-of-materials.csv"
             if package_path.endswith(".tar.gz")
             else "share/doc/bill-of-materials.csv",
@@ -665,7 +674,7 @@ AGENT_PLUGINS_PREFIX = [
 ]
 
 
-def test_python_agent_plugins(package_path: str, cmk_version: str) -> None:
+def test_python_agent_plugins(package_path: str) -> None:
     if package_path.endswith(".tar.gz"):
         pytest.skip(
             "Skipping test for source package as it is more interessting for the install-able packages."
@@ -673,19 +682,19 @@ def test_python_agent_plugins(package_path: str, cmk_version: str) -> None:
 
     for prefix in AGENT_PLUGINS_PREFIX:
         filename = f"{prefix}.py"
-        assert _file_exists_in_package(
-            package_path, cmk_version, f"share/check_mk/agents/plugins/{filename}"
-        ), f"File {filename} is missing in {package_path}"
+        assert _file_exists_in_package(package_path, f"share/check_mk/agents/plugins/{filename}"), (
+            f"File {filename} is missing in {package_path}"
+        )
 
 
-def test_relay_install_script_file(package_path: str, cmk_version: str) -> None:
+def test_relay_install_script_file(package_path: str) -> None:
     if package_path.endswith(".tar.gz"):
         pytest.skip("Skipping test for source package.")
 
     if _edition_from_pkg_path(package_path) == "ultimate":
-        assert _file_exists_in_package(
-            package_path, cmk_version, "share/check_mk/relays/install_relay.sh"
-        ), f"File share/check_mk/relays/install_relay.sh is missing in {package_path}"
+        assert _file_exists_in_package(package_path, "share/check_mk/relays/install_relay.sh"), (
+            f"File share/check_mk/relays/install_relay.sh is missing in {package_path}"
+        )
 
 
 class UnwantedDependency(NamedTuple):
@@ -836,7 +845,6 @@ def _verify_signature(file_path: Path, file_name: str) -> None | str:
 )
 def test_windows_artifacts_are_signed(
     package_path: str,
-    cmk_version: str,
     is_no_source: bool,
     path_prefix_agents: str,
     non_msi_files: list[str],
@@ -861,7 +869,7 @@ def test_windows_artifacts_are_signed(
     for non_msi_file in non_msi_files:
         with NamedTemporaryFile() as non_msi_file_temp:
             non_msi_file_temp.flush()
-            non_msi_file_temp.write(_get_file_from_package(package_path, cmk_version, non_msi_file))
+            non_msi_file_temp.write(_get_file_from_package(package_path, non_msi_file))
             signing_failures.append(_verify_signature(Path(non_msi_file_temp.name), non_msi_file))
             paths_checked.append(non_msi_file)
 
@@ -870,9 +878,7 @@ def test_windows_artifacts_are_signed(
     if is_no_source:
         with NamedTemporaryFile() as msi_file:
             msi_file.write(
-                _get_file_from_package(
-                    package_path, cmk_version, f"{path_prefix_agents}/check_mk_agent.msi"
-                )
+                _get_file_from_package(package_path, f"{path_prefix_agents}/check_mk_agent.msi")
             )
             msi_file.flush()
             signing_failures.append(
@@ -904,7 +910,7 @@ def test_windows_artifacts_are_signed(
     # (so we don't forget to add them to the signing process)
     if is_no_source:
         paths = _get_paths_from_package(package_path)
-        omd_version = _get_omd_version(cmk_version, package_path)
+        omd_version = _get_omd_version(package_path)
         paths_signable = [
             # remove prefixes of paths to make it comparable
             #   * opt/omd/versions/{omd_version}/...  (for deb)

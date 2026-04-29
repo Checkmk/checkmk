@@ -19,14 +19,13 @@ from unittest.mock import patch
 import pytest
 
 from cmk.automations.results import ABCAutomationResult
-from cmk.base.app import make_app
 from cmk.base.automations.automations import AutomationContext
 from cmk.base.automations.check_mk import (
     automation_analyze_host_rule_effectiveness,
     automation_analyze_host_rule_matches,
 )
+from cmk.base.community_app import make_app
 from cmk.base.config import LoadingResult
-from cmk.ccc import version
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.user import UserId
@@ -747,7 +746,7 @@ def fixture_mock_analyze_host_rule_matches_automation(monkeypatch: pytest.Monkey
             m.setattr(sys, "stdin", StringIO(repr(r)))
             return automation_analyze_host_rule_matches.handler(
                 AutomationContext(
-                    edition=(app := make_app(version.Edition.COMMUNITY)).edition,
+                    edition=(app := make_app()).edition,
                     make_bake_on_restart=app.make_bake_on_restart,
                     create_core=app.create_core,
                     make_fetcher_trigger=app.make_fetcher_trigger,
@@ -908,7 +907,7 @@ def fixture_inline_analyze_host_rule_effectiveness_automation(
             m.setattr(sys, "stdin", StringIO(repr(r)))
             return automation_analyze_host_rule_effectiveness.handler(
                 AutomationContext(
-                    edition=(app := make_app(version.Edition.COMMUNITY)).edition,
+                    edition=(app := make_app()).edition,
                     make_bake_on_restart=app.make_bake_on_restart,
                     create_core=app.create_core,
                     make_fetcher_trigger=app.make_fetcher_trigger,

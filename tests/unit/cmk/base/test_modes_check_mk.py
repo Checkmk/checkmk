@@ -17,10 +17,9 @@ import cmk.ccc.resulttype as result
 import cmk.fetchers._snmp._fetcher as _snmp_module
 import cmk.utils.paths as cmk_paths
 from cmk.base import config
-from cmk.base.app import make_app
+from cmk.base.community_app import make_app
 from cmk.base.modes import check_mk
 from cmk.ccc.hostaddress import HostAddress, HostName
-from cmk.ccc.version import Edition
 from cmk.fetchers import (
     Fetcher,
     FetcherSecrets,
@@ -87,8 +86,8 @@ class TestModeDumpAgent:
                 loaded_config=loaded_config,
                 config_cache=config.ConfigCache(
                     loaded_config,
-                    make_app(Edition.COMMUNITY).get_builtin_host_labels,
-                    Edition.COMMUNITY,
+                    (app := make_app()).get_builtin_host_labels,
+                    app.edition,
                 ),
             ),
         )
@@ -107,7 +106,7 @@ class TestModeDumpAgent:
         self, hostname: HostName, raw_data: bytes, capsys: pytest.CaptureFixture[str]
     ) -> None:
         app = replace(
-            make_app(Edition.COMMUNITY),
+            make_app(),
             make_fetcher_trigger=lambda *args: _MockFetcherTrigger(raw_data),
         )
         check_mk.mode_dump_agent.handler_function(app, {}, hostname)
@@ -158,8 +157,8 @@ class TestModeDumpAgentUseWalk:
                 loaded_config=loaded_config,
                 config_cache=config.ConfigCache(
                     loaded_config,
-                    make_app(Edition.COMMUNITY).get_builtin_host_labels,
-                    Edition.COMMUNITY,
+                    (app := make_app()).get_builtin_host_labels,
+                    app.edition,
                 ),
             ),
         )
@@ -213,7 +212,7 @@ class TestModeDumpAgentUseWalk:
         monkeypatch.setattr(_sources_module.SNMPSource, "__init__", capturing_snmp_source_init)
 
         app = replace(
-            make_app(Edition.COMMUNITY),
+            make_app(),
             make_fetcher_trigger=lambda *args: _MockFetcherTrigger(b""),
         )
         check_mk.mode_dump_agent.handler_function(app, options, hostname)

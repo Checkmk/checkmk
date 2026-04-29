@@ -35,7 +35,7 @@ from cmk.agent_based.v2 import (
     StringTable,
 )
 from cmk.base import config, notify
-from cmk.base.app import make_app
+from cmk.base.community_app import make_app
 from cmk.base.config import ConfigCache, EnforcedServicesTable
 from cmk.base.configlib.checkengine import CheckingConfig
 from cmk.base.configlib.labels import LabelConfig
@@ -46,7 +46,6 @@ from cmk.base.configlib.servicename import (
     PassiveServiceNameConfig,
 )
 from cmk.base.default_config.base import _PeriodicDiscovery
-from cmk.ccc import version as cmk_version
 from cmk.ccc.config_path import VersionedConfigPath
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostAddress, HostName
@@ -2613,8 +2612,8 @@ def test_get_config_file_paths_with_confd(
 def test_load_config_folder_paths(folder_path_test_config: LoadedConfigFragment) -> None:
     config_cache = config.ConfigCache(
         folder_path_test_config,
-        make_app(Edition.COMMUNITY).get_builtin_host_labels,
-        Edition.COMMUNITY,
+        (app := make_app()).get_builtin_host_labels,
+        app.edition,
     )
 
     assert config_cache.host_path(HostName("main-host")) == "/"
@@ -2725,11 +2724,10 @@ cmc_host_rrd_config = [
     _add_host_in_folder(wato_lvl2_folder, "lvl2-host")
     _add_rule_in_folder(wato_lvl2_folder, "LVL2")
 
-    _edition = Edition.COMMUNITY
     yield config.load(
         discovery_rulesets=(),
-        get_builtin_host_labels=make_app(_edition).get_builtin_host_labels,
-        edition=_edition,
+        get_builtin_host_labels=(app := make_app()).get_builtin_host_labels,
+        edition=app.edition,
     ).loaded_config
 
     # Cleanup after the test. Would be better to use a dedicated test directory
@@ -2821,11 +2819,10 @@ def test_explicit_setting_loading(patch_omd_site: None) -> None:
         for foldername, setting, values in settings:
             _add_explicit_setting_in_folder(wato_main_folder / foldername, setting, values)
 
-        _edition = Edition.COMMUNITY
         config.load(
             discovery_rulesets=(),
-            get_builtin_host_labels=make_app(_edition).get_builtin_host_labels,
-            edition=_edition,
+            get_builtin_host_labels=(app := make_app()).get_builtin_host_labels,
+            edition=app.edition,
         )
         assert config.explicit_host_conf["parents"][HostName("hostA")] == "setting1"
         assert config.explicit_host_conf["parents"][HostName("hostB")] == "setting2"
@@ -2859,12 +2856,11 @@ def test_load_packed_config(config_path: Path) -> None:
     config.PackedConfigStore.from_serial(config_path).write({"abcd": 1})
 
     assert "abcd" not in config.__dict__
-    _edition = Edition.COMMUNITY
     config.load_packed_config(
         config_path,
         discovery_rulesets=(),
-        get_builtin_host_labels=make_app(_edition).get_builtin_host_labels,
-        edition=_edition,
+        get_builtin_host_labels=(app := make_app()).get_builtin_host_labels,
+        edition=app.edition,
     )
     # Mypy does not understand that we add some new member for testing
     assert config.abcd == 1  # type: ignore[attr-defined]
@@ -3484,44 +3480,41 @@ def test_old_description_used(monkeypatch: MonkeyPatch) -> None:
         assert actual_descr == expected.service_description
 
 
-def test_notification_spooling_community_default_is_off(monkeypatch: MonkeyPatch) -> None:
-    monkeypatch.setattr(cmk_version, "edition", lambda _omd_root: Edition.COMMUNITY)
-    assert notify.resolve_spooling(None, None) == "off"
+def test_notification_spooling_community_default_is_off() -> None:
+    assert notify.resolve_spooling(Edition.COMMUNITY, None, None) == "off"
 
 
 @pytest.mark.parametrize(
     "edition",
     [Edition.PRO, Edition.CLOUD, Edition.ULTIMATE, Edition.ULTIMATEMT],
 )
-def test_notification_spooling_non_community_default_is_local(
-    monkeypatch: MonkeyPatch, edition: Edition
-) -> None:
-    monkeypatch.setattr(cmk_version, "edition", lambda _omd_root: edition)
-    assert notify.resolve_spooling(None, None) == "local"
+def test_notification_spooling_non_community_default_is_local(edition: Edition) -> None:
+    assert notify.resolve_spooling(edition, None, None) == "local"
 
 
 @pytest.mark.parametrize("value", ["off", "local", "remote", "both"])
 def test_notification_spooling_explicit_string_wins_over_edition_default(
-    monkeypatch: MonkeyPatch, value: Literal["off", "local", "remote", "both"]
+    value: Literal["off", "local", "remote", "both"],
 ) -> None:
     # Force community so its "off" default is different from any non-"off" value
     # and we can tell the override took effect.
-    monkeypatch.setattr(cmk_version, "edition", lambda _omd_root: Edition.COMMUNITY)
-    assert notify.resolve_spooling(value, None) == value
+    assert notify.resolve_spooling(Edition.COMMUNITY, value, None) == value
 
 
 def test_notification_spooling_spool_to_with_also_local_returns_both() -> None:
-    assert notify.resolve_spooling(None, ("remote.example", 6555, True)) == "both"
+    assert (
+        notify.resolve_spooling(Edition.COMMUNITY, None, ("remote.example", 6555, True)) == "both"
+    )
 
 
 def test_notification_spooling_spool_to_without_also_local_returns_remote() -> None:
-    assert notify.resolve_spooling(None, ("remote.example", 6555, False)) == "remote"
+    assert (
+        notify.resolve_spooling(Edition.COMMUNITY, None, ("remote.example", 6555, False))
+        == "remote"
+    )
 
 
-def test_notification_spooling_legacy_boolean_falls_through_to_edition_default(
-    monkeypatch: MonkeyPatch,
-) -> None:
+def test_notification_spooling_legacy_boolean_falls_through_to_edition_default() -> None:
     # Legacy: `notification_spooling = True/False` (non-string) should fall
     # through the `isinstance(..., str)` branch to the edition-aware default.
-    monkeypatch.setattr(cmk_version, "edition", lambda _omd_root: Edition.COMMUNITY)
-    assert notify.resolve_spooling(True, None) == "off"
+    assert notify.resolve_spooling(Edition.COMMUNITY, True, None) == "off"

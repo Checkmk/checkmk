@@ -18,7 +18,6 @@ from pytest import MonkeyPatch
 
 from cmk.agent_based.v2 import AgentSection, CheckPlugin, SimpleSNMPSection
 from cmk.base import config
-from cmk.base.app import make_app
 from cmk.base.checkers import (
     CMKFetcher,
     CMKParser,
@@ -26,12 +25,12 @@ from cmk.base.checkers import (
     HostLabelPluginMapper,
     SectionPluginMapper,
 )
+from cmk.base.community_app import make_app
 from cmk.base.config import ConfigCache
 from cmk.base.configlib.checkengine import DiscoveryConfig
 from cmk.base.configlib.servicename import make_final_service_name_config
 from cmk.ccc.exceptions import OnError
 from cmk.ccc.hostaddress import HostAddress, HostName
-from cmk.ccc.version import Edition
 from cmk.checkengine.checkresults import ActiveCheckResult
 from cmk.checkengine.discovery import (
     ABCDiscoveryConfig,
@@ -1545,7 +1544,7 @@ def test_commandline_discovery(
     service_name_config = config_cache.make_passive_service_name_config(
         make_final_service_name_config(config_cache._loaded_config, config_cache.ruleset_matcher)
     )
-    app = make_app(Edition.COMMUNITY)
+    app = make_app()
     fetcher = CMKFetcher(
         config_cache,
         get_relay_id=lambda hn: None,

@@ -4,11 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from typing import Final
 
-from cmk.base.app import make_app
 from cmk.base.automations.automations import Automations
-from cmk.ccc.version import Edition
-
-EDITION = Edition.COMMUNITY
+from cmk.base.community_app import make_app
 
 
 def test_registered_modes() -> None:
@@ -44,7 +41,7 @@ def test_registered_modes() -> None:
         "version",
     ]
 
-    assert sorted(expected) == sorted([m.long_option for m in make_app(EDITION).modes._modes])
+    assert sorted(expected) == sorted([m.long_option for m in make_app().modes._modes])
 
 
 NEEDED_AUTOMATIONS: Final = [
@@ -89,7 +86,7 @@ NEEDED_AUTOMATIONS: Final = [
 
 
 def test_registered_automations() -> None:
-    assert sorted(NEEDED_AUTOMATIONS) == sorted(make_app(EDITION).automations._automations.keys())
+    assert sorted(NEEDED_AUTOMATIONS) == sorted(make_app().automations._automations.keys())
 
 
 def test_discovered_automations() -> None:

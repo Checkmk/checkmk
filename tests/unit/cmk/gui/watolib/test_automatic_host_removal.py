@@ -17,12 +17,11 @@ import time_machine
 from pytest_mock import MockerFixture
 
 from cmk.automations.results import ABCAutomationResult
-from cmk.base.app import make_app
 from cmk.base.automations.automations import AutomationContext
 from cmk.base.automations.check_mk import automation_analyze_host_rule_matches
+from cmk.base.community_app import make_app
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
-from cmk.ccc.version import Edition
 from cmk.gui.config import Config
 from cmk.gui.watolib import automatic_host_removal
 from cmk.gui.watolib.hosts_and_folders import folder_tree
@@ -220,7 +219,7 @@ def fixture_mock_analyze_host_rule_matches_automation(
         with mocker.patch("sys.stdin", StringIO(repr(r))):
             return automation_analyze_host_rule_matches.handler(
                 AutomationContext(
-                    edition=(app := make_app(Edition.COMMUNITY)).edition,
+                    edition=(app := make_app()).edition,
                     make_bake_on_restart=app.make_bake_on_restart,
                     create_core=app.create_core,
                     make_fetcher_trigger=app.make_fetcher_trigger,

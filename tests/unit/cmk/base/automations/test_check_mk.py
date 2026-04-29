@@ -25,12 +25,11 @@ import cmk.plugins.monitoring_plugins.server_side_calls.ftp
 from cmk.automations import results as automation_results
 from cmk.automations.results import DiagHostResult
 from cmk.base import config
-from cmk.base.app import make_app
 from cmk.base.automations import check_mk
 from cmk.base.automations.automations import AutomationContext
+from cmk.base.community_app import make_app
 from cmk.base.config import ConfigCache
 from cmk.ccc.hostaddress import HostAddress, HostName
-from cmk.ccc.version import Edition
 from cmk.checkengine.discovery import CheckPreview, CheckPreviewEntry, QualifiedDiscovery
 from cmk.checkengine.plugins import AgentBasedPlugins
 from cmk.discover_plugins import PluginLocation
@@ -109,7 +108,7 @@ class TestAutomationDiagHost:
 
         assert check_mk.AutomationDiagHost().execute(
             AutomationContext(
-                edition=(app := make_app(Edition.COMMUNITY)).edition,
+                edition=(app := make_app()).edition,
                 make_bake_on_restart=app.make_bake_on_restart,
                 create_core=app.create_core,
                 make_fetcher_trigger=lambda *args: _MockFetcherTrigger(
@@ -253,7 +252,7 @@ def test_automation_active_check(
     monkeypatch.setattr(check_mk, "get_service_attributes", lambda *a, **kw: service_attrs)
     monkeypatch.setattr(config, config.load_resource_cfg_macros.__name__, lambda *a, **kw: {})
 
-    app = make_app(Edition.COMMUNITY)
+    app = make_app()
     config_cache = config.ConfigCache(EMPTY_CONFIG, app.get_builtin_host_labels, app.edition)
     monkeypatch.setattr(config_cache, "active_checks", lambda *a, **kw: active_checks)
 
@@ -331,7 +330,7 @@ def test_automation_active_check_invalid_args(
     loaded_config = replace(
         EMPTY_CONFIG, ipaddresses={HostName("my_host"): HostAddress("127.0.0.1")}
     )
-    app = make_app(Edition.COMMUNITY)
+    app = make_app()
     config_cache = config.ConfigCache(loaded_config, app.get_builtin_host_labels, app.edition)
     monkeypatch.setattr(config_cache, "active_checks", lambda *a, **kw: active_checks)
 

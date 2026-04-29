@@ -199,6 +199,7 @@ def resolve_logging_level(notification_logging: int) -> int:
 
 
 def resolve_spooling(
+    edition: cmk_version.Edition,
     notification_spooling: bool | Literal["local", "remote", "both", "off"] | None,
     notification_spool_to: object,
 ) -> Literal["local", "remote", "both", "off"]:
@@ -216,12 +217,12 @@ def resolve_spooling(
         return notification_spooling
 
     # Edition-aware default value
-    if cmk_version.edition(cmk.utils.paths.omd_root) is cmk_version.Edition.COMMUNITY:
-        return "off"
-    return "local"
+    return "off" if edition is Edition.COMMUNITY else "local"
 
 
-def make_notification_config(loaded_config: config.LoadingResult) -> NotificationConfig:
+def make_notification_config(
+    edition: cmk_version.Edition, loaded_config: config.LoadingResult
+) -> NotificationConfig:
     lc = loaded_config.loaded_config
     return NotificationConfig(
         rules=lc.notification_rules,
@@ -231,7 +232,7 @@ def make_notification_config(loaded_config: config.LoadingResult) -> Notificatio
         fallback_email=lc.notification_fallback_email,
         fallback_format=lc.notification_fallback_format,
         plugin_timeout=lc.notification_plugin_timeout,
-        spooling=resolve_spooling(lc.notification_spooling, lc.notification_spool_to),
+        spooling=resolve_spooling(edition, lc.notification_spooling, lc.notification_spool_to),
         logging_level=resolve_logging_level(lc.notification_logging),
     )
 
@@ -349,7 +350,7 @@ def _mode_notify(app: CheckmkBaseApp, options: dict, args: list[str]) -> int | N
     return do_notify(
         options,
         args,
-        notification_config=make_notification_config(loading_result),
+        notification_config=make_notification_config(app.edition, loading_result),
         define_servicegroups=loading_result.loaded_config.define_servicegroups,
         host_parameters_cb=loading_result.config_cache.notification_plugin_parameters,
         get_http_proxy=make_http_proxy_getter(loading_result.loaded_config.http_proxies),
@@ -840,7 +841,7 @@ def _automation_notification_replay(
         http_proxy_config.make_http_proxy_getter(loading_result.loaded_config.http_proxies),
         make_ensure_nagios(loading_result.loaded_config.monitoring_core),
         int(nr),
-        notification_config=make_notification_config(loading_result),
+        notification_config=make_notification_config(ctx.edition, loading_result),
         define_servicegroups=loading_result.loaded_config.define_servicegroups,
         config_contacts=loading_result.loaded_config.contacts,
         all_timeperiods=get_all_timeperiods(loading_result.loaded_config.timeperiods),
@@ -872,7 +873,7 @@ def _automation_notification_analyse(
             http_proxy_config.make_http_proxy_getter(loading_result.loaded_config.http_proxies),
             make_ensure_nagios(loading_result.loaded_config.monitoring_core),
             int(nr),
-            notification_config=make_notification_config(loading_result),
+            notification_config=make_notification_config(ctx.edition, loading_result),
             define_servicegroups=loading_result.loaded_config.define_servicegroups,
             config_contacts=loading_result.loaded_config.contacts,
             all_timeperiods=get_all_timeperiods(loading_result.loaded_config.timeperiods),
@@ -907,7 +908,7 @@ def _automation_notification_test(
             loading_result.config_cache.notification_plugin_parameters,
             http_proxy_config.make_http_proxy_getter(loading_result.loaded_config.http_proxies),
             ensure_nagios,
-            notification_config=make_notification_config(loading_result),
+            notification_config=make_notification_config(ctx.edition, loading_result),
             define_servicegroups=loading_result.loaded_config.define_servicegroups,
             config_contacts=loading_result.loaded_config.contacts,
             all_timeperiods=get_all_timeperiods(loading_result.loaded_config.timeperiods),

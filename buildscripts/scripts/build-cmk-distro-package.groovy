@@ -252,6 +252,7 @@ void main() {
                         sh("""
                             bazel test \
                                 ${fake_artifacts} \
+                                ${enable_compression} \
                                 --cmk_version=${cmk_version} \
                                 --cmk_edition=${edition} \
                                 ${license_flag} \

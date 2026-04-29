@@ -36,6 +36,22 @@ NODE_DATA = parse_proxmox_ve_node_info(
     ]
 )
 
+NODE_DATA_NO_SUBSCRIPTION = parse_proxmox_ve_node_info(
+    [
+        [
+            json.dumps(
+                {
+                    "lxc": ["103", "101", "108", "105", "104"],
+                    "version": "6.2-15",
+                    "qemu": ["102", "9000", "106", "109"],
+                    "status": "online",
+                    "subscription": {},
+                }
+            )
+        ]
+    ]
+)
+
 
 @pytest.mark.parametrize(
     "params,section,expected_results",
@@ -82,6 +98,33 @@ NODE_DATA = parse_proxmox_ve_node_info(
                 Result(state=State.OK, summary="Hosted VMs: 5x LXC, 4x Qemu"),
             ],
             id="All OK -> no params given",
+        ),
+        pytest.param(
+            {
+                "subscription_expiration_days_levels": ("fixed", (30, 7)),
+            },
+            NODE_DATA_NO_SUBSCRIPTION,
+            [
+                Result(state=State.OK, summary="Status: online"),
+                Result(state=State.OK, summary="Subscription: n/a"),
+                Result(state=State.OK, summary="Version: 6.2-15"),
+                Result(state=State.OK, summary="Hosted VMs: 5x LXC, 4x Qemu"),
+            ],
+            id="OK -> no subscription information and no required subscription status",
+        ),
+        pytest.param(
+            {
+                "subscription_expiration_days_levels": ("fixed", (30, 7)),
+                "required_subscription_status": {"active": 0, "inactive": 1},
+            },
+            NODE_DATA_NO_SUBSCRIPTION,
+            [
+                Result(state=State.OK, summary="Status: online"),
+                Result(state=State.WARN, summary="Subscription: n/a"),
+                Result(state=State.OK, summary="Version: 6.2-15"),
+                Result(state=State.OK, summary="Hosted VMs: 5x LXC, 4x Qemu"),
+            ],
+            id="WARN -> no subscription information and required subscription status provided",
         ),
     ],
 )

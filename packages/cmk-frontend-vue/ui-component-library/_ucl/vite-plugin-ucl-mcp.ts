@@ -105,19 +105,26 @@ export function serializePanelConfig(config: Record<string, PropDef>): ApiPropDe
 
 export function generateUclApiPlugin(): Plugin {
   const componentDetails: ComponentDetail[] = []
+  let componentsDir: string
 
   return {
     name: 'vite-plugin-ucl-mcp',
     apply: 'build',
     enforce: 'post',
+    configResolved(config) {
+      componentsDir = path.join(config.root, 'components')
+    },
 
     transform(code, id) {
+      if (!componentsDir) {
+        return
+      }
       if (!id.includes('?vue&type=script')) {
         return
       }
       const filePath = id.split('?')[0]!
 
-      if (!filePath.includes('/components/')) {
+      if (!filePath.startsWith(componentsDir + path.sep)) {
         return
       }
       const base = path.basename(filePath)
@@ -125,14 +132,8 @@ export function generateUclApiPlugin(): Plugin {
         return
       }
 
-      const compIdx = filePath.lastIndexOf('/components/')
-      if (compIdx === -1) {
-        this.warn(`UCL plugin: could not resolve components dir for ${filePath}`)
-        return
-      }
-      const componentsDir = filePath.slice(0, compIdx + '/components'.length)
       const category = path.relative(componentsDir, path.dirname(filePath)).split(path.sep)[0]!
-      if (!category || category.startsWith('..')) {
+      if (!category) {
         this.warn(`UCL plugin: could not determine category for ${filePath}`)
         return
       }

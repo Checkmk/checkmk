@@ -8,7 +8,7 @@
 from typing import Literal, Self
 
 from cmk.ccc.site import SiteId
-from cmk.gui.availability.type_defs import AVEntry, AVTimelineStates
+from cmk.gui.availability.type_defs import AVEntry, AVSpan, AVTimelineRow, AVTimelineStates
 from cmk.gui.openapi.framework.model import api_field, api_model
 from cmk.gui.openapi.framework.model.base_models import (
     DomainObjectCollectionModel,
@@ -18,6 +18,98 @@ from cmk.gui.openapi.framework.model.base_models import (
 from cmk.gui.openapi.framework.model.common_fields import AnnotatedHostName
 from cmk.gui.openapi.restful_objects.constructors import object_href, sub_object_href
 from cmk.utils.servicename import ServiceName
+
+
+@api_model
+class AVSpanModel:
+    site: SiteId = api_field(
+        description="The site the span was recorded on.",
+        example="mysite",
+    )
+    host_name: AnnotatedHostName = api_field(
+        description="The host name.",
+        example="my-host",
+    )
+    service_description: ServiceName = api_field(
+        description="The service description, or an empty string for host availability.",
+        example="CPU load",
+    )
+    start: int = api_field(
+        description="Start of the span as a Unix timestamp.",
+        example=1699999200,
+        serialization_alias="from",
+    )
+    until: int = api_field(
+        description="End of the span as a Unix timestamp.",
+        example=1700003600,
+    )
+    duration: int = api_field(
+        description="Duration of the span in seconds.",
+        example=3600,
+    )
+    state: int | None = api_field(
+        description="The raw monitoring state (0=OK/UP, 1=WARN/DOWN, 2=CRIT/UNREACH, 3=UNKNOWN, null=unmonitored).",
+        example=0,
+    )
+    host_down: int = api_field(
+        description="1 if the host was down during this span, 0 otherwise.",
+        example=0,
+    )
+    in_downtime: int = api_field(
+        description="1 if a scheduled downtime was active during this span, 0 otherwise.",
+        example=0,
+    )
+    in_host_downtime: int = api_field(
+        description="1 if a host scheduled downtime was active during this span, 0 otherwise.",
+        example=0,
+    )
+    in_notification_period: int = api_field(
+        description="1 if the span falls within the notification period, 0 otherwise.",
+        example=1,
+    )
+    in_service_period: int = api_field(
+        description="1 if the span falls within the service period, 0 otherwise.",
+        example=1,
+    )
+    is_flapping: int = api_field(
+        description="1 if the state was flapping during this span, 0 otherwise.",
+        example=0,
+    )
+
+    @classmethod
+    def from_internal(cls, span: AVSpan) -> Self:
+        return cls(
+            site=span["site"],
+            host_name=span["host_name"],
+            service_description=span["service_description"],
+            start=span["from"],
+            until=span["until"],
+            duration=span["duration"],
+            state=span["state"],
+            host_down=span["host_down"],
+            in_downtime=span["in_downtime"],
+            in_host_downtime=span["in_host_downtime"],
+            in_notification_period=span["in_notification_period"],
+            in_service_period=span["in_service_period"],
+            is_flapping=span["is_flapping"],
+        )
+
+
+@api_model
+class AVTimelineRowModel:
+    span: AVSpanModel = api_field(
+        description="The availability span data.",
+        example={},
+    )
+    state_name: str = api_field(
+        description="The name of the monitoring state for this span (e.g. 'ok', 'warn', 'up', 'down').",
+        example="ok",
+    )
+
+    @classmethod
+    def from_internal(cls, row: AVTimelineRow) -> Self:
+        span, state_name = row
+        return cls(span=AVSpanModel.from_internal(span), state_name=state_name)
 
 
 @api_model
@@ -146,9 +238,17 @@ class HostAvailabilityExtension:
         description="Seconds spent in each monitoring state during the requested time range.",
         example={"up": 82800, "in_downtime": 3600},
     )
+    considered_duration: int = api_field(
+        description="Seconds actually considered for availability calculation (may differ from total_duration when time periods are configured).",
+        example=86400,
+    )
     total_duration: int = api_field(
         description="Total seconds in the requested time range.",
         example=86400,
+    )
+    timeline: list[AVTimelineRowModel] = api_field(
+        description="The individual availability spans making up the timeline.",
+        example=[],
     )
 
     @classmethod
@@ -158,7 +258,9 @@ class HostAvailabilityExtension:
             host=entry["host"],
             alias=entry["alias"],
             states=HostAvailabilityStates.from_internal(entry["states"]),
+            considered_duration=entry["considered_duration"],
             total_duration=entry["total_duration"],
+            timeline=[AVTimelineRowModel.from_internal(row) for row in entry["timeline"]],
         )
 
 
@@ -219,9 +321,17 @@ class ServiceAvailabilityExtension:
         description="Seconds spent in each monitoring state during the requested time range.",
         example={"ok": 82800, "warn": 3600},
     )
+    considered_duration: int = api_field(
+        description="Seconds actually considered for availability calculation (may differ from total_duration when time periods are configured).",
+        example=86400,
+    )
     total_duration: int = api_field(
         description="Total seconds in the requested time range.",
         example=86400,
+    )
+    timeline: list[AVTimelineRowModel] = api_field(
+        description="The individual availability spans making up the timeline.",
+        example=[],
     )
 
     @classmethod
@@ -233,7 +343,9 @@ class ServiceAvailabilityExtension:
             service=entry["service"],
             display_name=entry["display_name"],
             states=ServiceAvailabilityStates.from_internal(entry["states"]),
+            considered_duration=entry["considered_duration"],
             total_duration=entry["total_duration"],
+            timeline=[AVTimelineRowModel.from_internal(row) for row in entry["timeline"]],
         )
 
 

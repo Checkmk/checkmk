@@ -37,7 +37,12 @@ def show_password_v1(
         ),
     ],
 ) -> ApiResponse[PasswordObject]:
-    """Show password store entry"""
+    """Show the metadata of a password store entry
+
+    Returns the metadata of a stored password (comment, documentation URL,
+    owner, sharing, and customer assignment). The password value itself is
+    never returned by this endpoint.
+    """
     user.need_permission("wato.passwords")
     password = load_password(name)
     return ApiResponse(

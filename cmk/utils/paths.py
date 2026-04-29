@@ -25,7 +25,6 @@ _opt_root = "/opt" / omd_root.relative_to(omd_root.root)
 rrd_multiple_dir = _opt_root / "var/pnp4nagios/perfdata"
 rrd_single_dir = _opt_root / "var/check_mk/rrd"
 
-mkbackup_lock_dir = Path("/run/lock/mkbackup")
 trusted_ca_file = _omd_path("var/ssl/ca-certificates.crt")
 remote_sites_cas_dir = _omd_path("var/ssl/remote_sites_cas")
 root_cert_file = _omd_path("etc/ssl/ca.pem")

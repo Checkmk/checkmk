@@ -181,6 +181,7 @@ pkg_files(
         "omdlib/crash_reporting.py",
         "omdlib/dialog.py",
         "omdlib/finalize.py",
+        "omdlib/flock.py",
         "omdlib/global_options.py",
         "omdlib/init_scripts.py",
         "omdlib/instance_id.py",

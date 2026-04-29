@@ -3,23 +3,22 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="comparison-overlap"
-
 import fcntl
 import os
 import sys
+from contextlib import suppress
 from pathlib import Path
 
 lock_path = Path(sys.stdin.readline().strip())
-lock_file_descriptor: int | None = None
 
+# Keep in sync with packages/cmk-backup/cmk/backup/mkbackup/__init__.py::exclusive_owner
+lock_path.parent.mkdir(parents=True, exist_ok=True)
+fd = os.open(lock_path, os.O_RDONLY | os.O_CREAT | os.O_CLOEXEC, 0o600)
 try:
-    lock_file_descriptor = os.open(
-        lock_path,
-        os.O_RDONLY | os.O_CREAT,
-        mode=0o660,
-    )
-    fcntl.flock(lock_file_descriptor, fcntl.LOCK_EX | fcntl.LOCK_NB)
+    try:
+        fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+    except BlockingIOError:
+        sys.exit("Couldn't acquire lock")
     sys.stdout.write("locked\n")
     sys.stdout.flush()
 
@@ -28,7 +27,6 @@ try:
     # `sudo su ...`. Therefore, the call site only knows the the PID of the su process.
     sys.stdin.read()
 
-
 finally:
-    if lock_file_descriptor is not None:
-        os.close(lock_file_descriptor)
+    with suppress(OSError):
+        os.close(fd)

@@ -6,9 +6,11 @@
 
 from __future__ import annotations
 
+import fnmatch
 import json
 import logging
 import subprocess
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -55,6 +57,41 @@ _STRUCTURAL_RULES: tuple[CategorizationRule, ...] = (
     CategorizationRule("omd/dependency_management/", None, ChangeCategory.IGNORED),
     CategorizationRule("scripts/", None, ChangeCategory.IGNORED),
 )
+
+
+@dataclass(frozen=True)
+class _BasenameRule:
+    """Categorize a file by basename, regardless of where it lives in the tree.
+
+    Applied as a fallback after prefix-based rules have not matched, so a
+    BUILD file inside a typed package (e.g. ``packages/cmk-foo/BUILD``)
+    falls through prefix categorization (which keys on extension) into
+    this pass and gets the correct BUILD category.
+    """
+
+    category: ChangeCategory
+    basenames: frozenset[str] = frozenset()
+    suffixes: frozenset[str] = frozenset()
+    globs: tuple[str, ...] = field(default_factory=tuple)
+
+
+_BASENAME_RULES: tuple[_BasenameRule, ...] = (
+    _BasenameRule(
+        category=ChangeCategory.BUILD,
+        basenames=frozenset({"BUILD", "BUILD.bazel", "WORKSPACE", "Makefile"}),
+        suffixes=frozenset({".bzl", ".patch", ".dif", ".spec", ".wxs"}),
+        globs=("BUILD.*.bazel",),
+    ),
+)
+
+
+def _match_basename_rule(basename: str, rule: _BasenameRule) -> bool:
+    if basename in rule.basenames:
+        return True
+    if any(basename.endswith(s) for s in rule.suffixes):
+        return True
+    return any(fnmatch.fnmatchcase(basename, p) for p in rule.globs)
+
 
 # Cached combined rules: computed once on first call, reset by reset_categorization_cache().
 _cached_rules: tuple[CategorizationRule, ...] | None = None
@@ -105,7 +142,20 @@ def reset_categorization_cache() -> None:
 
 
 def categorize_file(path: str) -> ChangeCategory:
-    """Categorize a file path using first-match-wins against ordered rules."""
+    """Categorize a file path using first-match-wins against ordered rules.
+
+    Order:
+    1. Basename rules -- match BUILD files, ``*.bzl``, vendored patches,
+       etc. globally so that an over-broad manifest prefix rule (e.g.
+       ``omd/`` -> CONFIG) does not swallow build-system files that
+       happen to live under it.
+    2. Prefix rules (structural + manifest-derived) -- everything else.
+    """
+    basename = path.rsplit("/", 1)[-1]
+    for basename_rule in _BASENAME_RULES:
+        if _match_basename_rule(basename, basename_rule):
+            return basename_rule.category
+
     for rule in _load_rules():
         if path.startswith(rule.prefix):
             if rule.extensions is None:
@@ -113,6 +163,7 @@ def categorize_file(path: str) -> ChangeCategory:
             suffix = "." + path.rsplit(".", 1)[-1] if "." in path else ""
             if suffix in rule.extensions:
                 return rule.category
+
     return ChangeCategory.OTHER
 
 

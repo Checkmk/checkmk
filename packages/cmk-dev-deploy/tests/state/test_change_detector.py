@@ -241,9 +241,19 @@ class TestCategorizeFile:
             # Tests (NOT Python, despite .py extension)
             ("tests/unit/test_foo.py", ChangeCategory.TEST),
             ("tests/integration/test_bar.py", ChangeCategory.TEST),
-            # Build
+            # Build (prefix-based)
             ("MODULE.bazel", ChangeCategory.BUILD),
             ("bazel/deps.bzl", ChangeCategory.BUILD),
+            # Build (basename-based, anywhere in the tree)
+            ("packages/cmk-foo/BUILD", ChangeCategory.BUILD),
+            ("omd/packages/Python/BUILD", ChangeCategory.BUILD),
+            ("omd/packages/Python/BUILD.Python.bazel", ChangeCategory.BUILD),
+            ("omd/packages/freetds/patches/0001-foo.patch", ChangeCategory.BUILD),
+            ("omd/packages/heirloom-pkgtools/patches/0012-fix.dif", ChangeCategory.BUILD),
+            ("agents/Makefile", ChangeCategory.BUILD),
+            ("agents/check-mk-agent.spec", ChangeCategory.BUILD),
+            ("agents/wnx/install/Product.wxs", ChangeCategory.BUILD),
+            ("omd/packages/perl-modules/perl-modules_http.bzl", ChangeCategory.BUILD),
             # Ignored (explicitly non-deployable structural prefixes)
             ("werks/12345", ChangeCategory.IGNORED),
             (".werks/12345", ChangeCategory.IGNORED),

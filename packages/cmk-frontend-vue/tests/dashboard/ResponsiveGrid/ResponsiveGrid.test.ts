@@ -105,6 +105,20 @@ function mountResponsiveGrid(options: {
   return { wrapper, contentRef, allFiltersApplied }
 }
 
+// grid-layout-plus exposes its reactive state including `width` via setup expose().
+// Setting state.width triggers the library's internal responsive logic:
+//   width change → getBreakpointFromWidth() → responsiveGridLayout() →
+//   emits breakpoint-changed → ResponsiveGrid.onBreakpointChange.
+// onBreakpointChange only updates local render state (which breakpoint and arrangement
+// to display); it never writes to the composable. Composable state is mutated exclusively
+// by onArrangementUpdate, which fires when the user drags or resizes a widget.
+function getGridState(wrapper: ReturnType<typeof mount>) {
+  const gridLayout = wrapper.findComponent(GridLayout)
+  const gridState = (gridLayout.vm.$ as unknown as { exposed: { state: { width: number } } })
+    .exposed.state
+  return { gridLayout, gridState }
+}
+
 describe('ResponsiveGrid', () => {
   describe('edit mode column guides', () => {
     it('shows column guide divs when isEditing is true', async () => {
@@ -192,15 +206,7 @@ describe('ResponsiveGrid', () => {
       await flushPromises()
       await nextTick()
 
-      // grid-layout-plus exposes its reactive state including `width` via setup expose().
-      // Setting state.width triggers the library's internal responsive logic:
-      //   width change → getBreakpointFromWidth() → responsiveGridLayout() →
-      //   emits breakpoint-changed with the computed layout for that breakpoint →
-      //   ResponsiveGrid.onBreakpointChange → updateSelectedLayout → content model updated
-      const gridLayout = wrapper.findComponent(GridLayout)
-      // Access the exposed state — vue-test-utils exposes it via vm.$.exposed
-      const gridState = (gridLayout.vm.$ as unknown as { exposed: { state: { width: number } } })
-        .exposed.state
+      const { gridState } = getGridState(wrapper)
 
       // grid-layout-plus renders each item as a .vgl-item with inline style
       // containing width/height in px — this is what we check to verify the
@@ -232,6 +238,65 @@ describe('ResponsiveGrid', () => {
       expect(xlWidth).not.toBe(lWidth)
       // The height should not change between breakpoints
       expect(xlHeight).toBe(lHeight)
+
+      wrapper.unmount()
+    })
+
+    it('does not revert widget position when breakpoint-changed fires with stale arrangement', async () => {
+      const content = makeRGContent(
+        {
+          w1: makeLayoutWidget({
+            default: {
+              XS: { position: { x: 0, y: 0 }, size: { columns: 2, rows: 2 } },
+              S: { position: { x: 0, y: 0 }, size: { columns: 2, rows: 2 } },
+              M: { position: { x: 0, y: 0 }, size: { columns: 2, rows: 2 } },
+              L: { position: { x: 0, y: 0 }, size: { columns: 2, rows: 2 } },
+              XL: { position: { x: 0, y: 0 }, size: { columns: 6, rows: 4 } }
+            }
+          })
+        },
+        allBreakpoints
+      )
+
+      const { wrapper, contentRef } = mountResponsiveGrid({
+        content,
+        contentProps: makeContentPropsRecord(['w1'])
+      })
+
+      await flushPromises()
+      await nextTick()
+
+      const { gridLayout, gridState } = getGridState(wrapper)
+
+      // Switch to XL breakpoint (internal 'lg') so currentInternalBreakpoint is 'lg'
+      gridState.width = 1300
+      await flushPromises()
+      await nextTick()
+
+      // Directly update the content model to simulate the user having moved the widget to x:2.
+      // Using y:0 avoids vertical compaction (vertical-compact=true) changing it back.
+      // This causes the watch to update currentStrippedArrangementJSON / currentInternalArrangement.
+      contentRef.value.widgets['w1']!.layout.layouts['default']!['XL'] = {
+        position: { x: 2, y: 0 },
+        size: { columns: 6, rows: 4 }
+      }
+      await flushPromises()
+      await nextTick()
+
+      // Verify the content model reflects the move before triggering the breakpoint event
+      expect(contentRef.value.widgets['w1']?.layout.layouts['default']?.['XL']?.position.x).toBe(2)
+
+      // Emit `breakpoint-changed` with a STALE arrangement carrying the original x:0.
+      // vm.$emit on the GridLayout child propagates to ResponsiveGrid's @breakpoint-changed handler.
+      // This mimics the library sending its outdated per-breakpoint cache when switching back to XL
+      // after a round-trip (XL → L → XL).
+      gridLayout.vm.$emit('breakpoint-changed', 'lg', [
+        { i: 'w1', x: 0, y: 0, w: 6, h: 4, minW: 1, minH: 1, moved: false, static: false }
+      ])
+      await nextTick()
+
+      // The position in the content model must NOT have been overwritten by the stale data
+      expect(contentRef.value.widgets['w1']?.layout.layouts['default']?.['XL']?.position.x).toBe(2)
 
       wrapper.unmount()
     })

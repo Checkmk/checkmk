@@ -139,12 +139,18 @@ const currentInternalArrangement = ref<ResponsiveGridInternalArrangement>([])
 
 function onBreakpointChange(
   internalBreakpoint: ResponsiveGridInternalBreakpoint,
-  newInternalArrangement: ResponsiveGridInternalArrangement
+  _newInternalArrangement: ResponsiveGridInternalArrangement
 ) {
-  // A breakpoint change will always change the arrangement, so we can skip the comparison
+  // We use composable.selectedLayout rather than newInternalArrangement from the library,
+  // because the library's arrangement can be stale.
+  // If the breakpoint is not in the content layout, keep the last valid state.
+  const arrangement = composable.selectedLayout.value[internalBreakpoint]
+  if (arrangement === undefined) {
+    return
+  }
   currentInternalBreakpoint.value = internalBreakpoint
-  currentStrippedArrangementJSON.value = computeArrangementJSON(newInternalArrangement)
-  composable.updateSelectedLayout(internalBreakpoint, newInternalArrangement)
+  currentStrippedArrangementJSON.value = computeArrangementJSON(arrangement)
+  currentInternalArrangement.value = structuredClone(arrangement)
 }
 
 function onArrangementUpdate(newInternalArrangement: ResponsiveGridInternalArrangement) {

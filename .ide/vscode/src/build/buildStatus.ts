@@ -31,6 +31,7 @@ export function checkBuildStatus(wsPath: string): BuildStatus {
     sharedTypingTs: { ok: false, label: 'shared-typing (TS)', commandId: 'cmk.buildSharedTyping' },
     sharedTypingPy: { ok: false, label: 'shared-typing (PY)', commandId: 'cmk.buildVenv' },
     cmkFrontend: { ok: false, label: 'cmk-frontend', commandId: 'cmk.buildCmkFrontend' },
+    nodeModules: { ok: false, label: 'node_modules', commandId: 'cmk.installNodeModules' },
     mypyConfig: { ok: false, label: 'mypy config', commandId: 'cmk.regenerateMypyConfig' }
   }
 
@@ -77,6 +78,14 @@ export function checkBuildStatus(wsPath: string): BuildStatus {
     }
   } catch {
     status.cmkFrontend.ok = false
+  }
+
+  try {
+    const lockMtime = fs.statSync(path.join(wsPath, 'pnpm-lock.yaml')).mtimeMs
+    const modulesMtime = fs.statSync(path.join(wsPath, 'node_modules', '.modules.yaml')).mtimeMs
+    status.nodeModules.ok = modulesMtime >= lockMtime
+  } catch {
+    status.nodeModules.ok = false
   }
 
   status.mypyConfig.ok = fs.existsSync(path.join(wsPath, '.vscode', '.mypy.ini'))
@@ -129,7 +138,10 @@ export function createStatusBar(
     const stale = getStaleTargets(currentStatus)
 
     const pythonIssues = !currentStatus.venv?.ok || !currentStatus.sharedTypingPy?.ok
-    const frontendIssues = !currentStatus.sharedTypingTs?.ok || !currentStatus.cmkFrontend?.ok
+    const frontendIssues =
+      !currentStatus.sharedTypingTs?.ok ||
+      !currentStatus.cmkFrontend?.ok ||
+      !currentStatus.nodeModules?.ok
     profileManager.setIssues('python', pythonIssues)
     profileManager.setIssues('frontend', frontendIssues)
 
@@ -160,6 +172,7 @@ export function createStatusBar(
       { pattern: 'packages/cmk-shared-typing/source/**', events: ['change', 'create', 'delete'] },
       { pattern: 'packages/cmk-frontend/src/**', events: ['change', 'create', 'delete'] },
       { pattern: '**/requirements*.txt', events: ['change'] },
+      { pattern: 'pnpm-lock.yaml', events: ['change'] },
       { pattern: '.git/HEAD', events: ['change'], delay: 500, branchSwitch: true }
     ]
 

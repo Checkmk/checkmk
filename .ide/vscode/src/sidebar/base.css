@@ -290,23 +290,37 @@ body {
   flex: 1;
 }
 
+.env-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 2px 4px;
+}
+
 .env-row {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   padding: 4px 8px;
   font-size: 0.9em;
+  min-width: 0;
+}
+
+.env-row-wide {
+  grid-column: 1 / -1;
 }
 
 .env-label {
   font-weight: 600;
-  min-width: 50px;
+  color: var(--vscode-descriptionForeground);
 }
 
 .env-value {
   flex: 1;
   font-family: var(--vscode-editor-font-family);
   min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .env-detail {

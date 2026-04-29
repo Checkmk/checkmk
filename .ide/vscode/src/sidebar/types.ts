@@ -16,6 +16,7 @@ export interface EnvironmentInfo {
   python: string
   pythonPath: string
   node: string
+  pnpm: string
   bazel: string
   bazelisk: string
   docker: string

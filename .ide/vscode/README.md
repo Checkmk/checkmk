@@ -102,10 +102,11 @@ The extension monitors build targets and shows their status in the status bar:
 | shared-typing (TS) | Symlink to `cmk-frontend-vue/node_modules/cmk-shared-typing` missing or broken |
 | shared-typing (PY) | `cmk/shared_typing` missing from venv site-packages                            |
 | cmk-frontend       | `packages/cmk-frontend/dist` symlink missing or broken                         |
+| node_modules       | `node_modules/` missing or out of sync with `pnpm-lock.yaml`                   |
 | mypy config        | `.vscode/.mypy.ini` missing                                                    |
 | prettier config    | `.vscode/.prettier.config.cjs` missing                                         |
 
-**Auto-refresh triggers:** extension activation, after CMK build tasks complete, source file changes in `packages/cmk-shared-typing/source/`, `packages/cmk-frontend/src/`, `requirements*.txt`, and git branch switches (`.git/HEAD`).
+**Auto-refresh triggers:** extension activation, after CMK build tasks complete, source file changes in `packages/cmk-shared-typing/source/`, `packages/cmk-frontend/src/`, `requirements*.txt`, `pnpm-lock.yaml`, and git branch switches (`.git/HEAD`).
 
 Click the status bar item to see stale targets and build commands in a QuickPick. When stale targets exist, a warning banner also appears at the top of the Environment sidebar section with a **Build All Stale** button.
 
@@ -123,6 +124,7 @@ Available via the command palette (F1) or by clicking the status bar. Build comm
 | `Build cmk-frontend-vue`                      | Builds `cmk-frontend-vue` via Bazel.                                                                                                       |
 | `Build Vitest dependencies & Refresh Vitests` | Builds shared-typing (TS) + cmk-frontend, creates symlinks, then refreshes the VSCode test explorer.                                       |
 | `Run UI Component Library`                    | Starts the UI Component Library dev server via `ibazel`.                                                                                   |
+| `Install node_modules`                        | Runs `pnpm install` at the workspace root so ESLint, Prettier and Vitest can resolve their libraries from `node_modules/`.                 |
 | `Build All Stale`                             | Builds all targets that are currently stale, in sequence.                                                                                  |
 | `Build Menu`                                  | Opens the QuickPick with all build commands (same as clicking the status bar).                                                             |
 | `Refresh Build Status`                        | Manually re-checks all build targets.                                                                                                      |

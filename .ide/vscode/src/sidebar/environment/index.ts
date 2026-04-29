@@ -36,6 +36,7 @@ export function getEnvironmentInfo(wsPath?: string): EnvironmentInfo {
     python: '',
     pythonPath: '',
     node: '',
+    pnpm: '',
     bazel: '',
     bazelisk: '',
     docker: '',
@@ -54,6 +55,20 @@ export function getEnvironmentInfo(wsPath?: string): EnvironmentInfo {
     env.pythonPath = ''
   }
   env.node = safeExec('node --version', { cwd: wsPath }).replace('v', '')
+  if (wsPath) {
+    try {
+      const jsModule = fs.readFileSync(
+        path.join(wsPath, 'bazel', 'module', 'js.MODULE.bazel'),
+        'utf-8'
+      )
+      const match = jsModule.match(/pnpm_version\s*=\s*"([^"]+)"/)
+      env.pnpm = match ? `${match[1]} (Bazel)` : 'not found'
+    } catch {
+      env.pnpm = 'not found'
+    }
+  } else {
+    env.pnpm = 'not found'
+  }
   if (wsPath) {
     try {
       env.bazel = fs.readFileSync(path.join(wsPath, '.bazelversion'), 'utf-8').trim()
@@ -194,30 +209,35 @@ export function render(state: StateCache, codiconUri?: vscode.Uri, cspSource?: s
       </div>`
   }
 
-  const envRows = [
-    {
-      label: 'Python',
-      value: environment.python,
-      detail: environment.pythonPath || '',
-      action: 'exec',
-      actionId: 'cmk.buildVenv',
-      actionLabel: 'Rebuild'
-    },
-    { label: 'Node.js', value: environment.node || 'not found' },
-    { label: 'Bazel', value: environment.bazel },
-    { label: 'Bazelisk', value: environment.bazelisk },
-    { label: 'Docker', value: environment.docker },
-    { label: 'gcc', value: environment.gcc }
-  ]
-    .map(
-      (r) => `
-    <div class="env-row">
+  const envRows =
+    `<div class="env-grid">` +
+    [
+      {
+        label: 'Python',
+        value: environment.python,
+        detail: environment.pythonPath || '',
+        action: 'exec',
+        actionId: 'cmk.buildVenv',
+        actionLabel: 'Rebuild',
+        wide: true
+      },
+      { label: 'Node.js', value: environment.node || 'not found' },
+      { label: 'pnpm', value: environment.pnpm || 'not found' },
+      { label: 'Bazel', value: environment.bazel },
+      { label: 'Bazelisk', value: environment.bazelisk },
+      { label: 'Docker', value: environment.docker },
+      { label: 'gcc', value: environment.gcc }
+    ]
+      .map(
+        (r) => `
+    <div class="env-row${'wide' in r && r.wide ? ' env-row-wide' : ''}">
       <span class="env-label">${r.label}</span>
       <span class="env-value">${r.value}${'detail' in r && r.detail ? ` <span class="env-detail" title="${r.detail}">${r.detail}</span>` : ''}</span>
       ${'action' in r && r.action ? `<button class="btn btn-small btn-icon" data-action="${r.action}" data-id="${r.actionId}" title="${r.actionLabel}"><span class="codicon codicon-sync"></span></button>` : ''}
     </div>`
-    )
-    .join('')
+      )
+      .join('') +
+    `</div>`
 
   const configCommands = new Set(['cmk.regenerateMypyConfig'])
   const staleTargets = Object.values(buildStatus).filter((s) => !s.ok)

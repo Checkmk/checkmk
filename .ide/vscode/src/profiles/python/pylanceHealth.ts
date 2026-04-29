@@ -18,9 +18,11 @@ export interface PylanceHealthSnapshot {
   rssMiB: number | null
   thresholdMiB: number
   overThreshold: boolean
-  /** True when the ms-python.vscode-pylance extension is installed and
-   *  active. If false, the sidebar hides the Pylance row entirely. */
   extensionActive: boolean
+  /** True while we are actively polling Pylance health (Linux + Python
+   *  profile active). The sidebar shows the Pylance row whenever this is
+   *  true; pid===null is rendered as "starting…". */
+  monitored: boolean
 }
 
 let latest: PylanceHealthSnapshot = {
@@ -28,7 +30,8 @@ let latest: PylanceHealthSnapshot = {
   rssMiB: null,
   thresholdMiB: WARN_DEFAULT,
   overThreshold: false,
-  extensionActive: false
+  extensionActive: false,
+  monitored: false
 }
 let notifiedThisSession = false
 
@@ -73,17 +76,30 @@ async function maybeNotify(snap: PylanceHealthSnapshot): Promise<void> {
   }
 }
 
-function poll(): void {
+function poll(onRefresh?: () => void): void {
   const pid = findPylancePid()
   const rss = pid !== null ? readRssMiB(pid) : null
   const threshold = thresholdMiB()
   const over = rss !== null && rss > threshold
   const extensionActive =
     vscode.extensions.getExtension('ms-python.vscode-pylance')?.isActive ?? false
-  latest = { pid, rssMiB: rss, thresholdMiB: threshold, overThreshold: over, extensionActive }
+  const next: PylanceHealthSnapshot = {
+    pid,
+    rssMiB: rss,
+    thresholdMiB: threshold,
+    overThreshold: over,
+    extensionActive,
+    monitored: true
+  }
+  const visibilityChanged =
+    next.extensionActive !== latest.extensionActive ||
+    (next.pid !== null) !== (latest.pid !== null) ||
+    next.overThreshold !== latest.overThreshold
+  latest = next
   if (rss !== null && pid !== null) {
     log(`Pylance (pid ${pid}) RSS = ${rss} MiB (threshold ${threshold})`)
   }
+  if (visibilityChanged && onRefresh) onRefresh()
   maybeNotify(latest).catch((err) =>
     error(`pylanceHealth notify failed: ${(err as Error).message}`)
   )
@@ -95,16 +111,21 @@ function poll(): void {
  *  activation, then every 60s; invokes a single per-session warn
  *  notification when RSS crosses `cmk.python.pylanceMemoryWarnMiB`
  *  (default 2048 MiB). */
-export function registerPylanceHealth(): vscode.Disposable[] {
+export function registerPylanceHealth(onRefresh?: () => void): vscode.Disposable[] {
   if (process.platform !== 'linux') return []
-  poll()
-  const earlyPoll = setTimeout(poll, 15_000)
-  const interval = setInterval(poll, POLL_MS)
+  latest = { ...latest, monitored: true }
+  onRefresh?.()
+  const tick = (): void => poll(onRefresh)
+  tick()
+  const earlyPoll = setTimeout(tick, 15_000)
+  const interval = setInterval(tick, POLL_MS)
   return [
     {
       dispose: () => {
         clearTimeout(earlyPoll)
         clearInterval(interval)
+        latest = { ...latest, monitored: false, pid: null, rssMiB: null }
+        onRefresh?.()
       }
     }
   ]

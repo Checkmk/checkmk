@@ -165,7 +165,8 @@ function refreshStateCache(): StateCache {
         rssMiB: null,
         thresholdMiB: 2048,
         overThreshold: false,
-        extensionActive: false
+        extensionActive: false,
+        monitored: false
       }
     }
   }

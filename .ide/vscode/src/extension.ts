@@ -156,7 +156,7 @@ export function activate(context: vscode.ExtensionContext): void {
       return [
         ...registerDynamicMypyTargets(context),
         ...registerJemallocAllocator(context),
-        ...registerPylanceHealth(),
+        ...registerPylanceHealth(refreshAll),
         ...registerPytestOnDemand(),
         ...registerRuffOnDemand(),
         ...registerMypyConfigWatcher(),

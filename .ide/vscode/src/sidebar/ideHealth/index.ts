@@ -752,7 +752,7 @@ function renderAllocatorBanner(allocator: StateCache['allocator']): string {
 }
 
 function renderPylanceStatus(p: StateCache['pylanceHealth']): string {
-  if (!p.extensionActive) return ''
+  if (!p.monitored) return ''
   if (p.rssMiB === null) {
     return renderStatusRow({
       level: 'ok',

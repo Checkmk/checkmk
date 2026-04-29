@@ -85,6 +85,7 @@ export interface PylanceHealthInfo {
   thresholdMiB: number
   overThreshold: boolean
   extensionActive: boolean
+  monitored: boolean
 }
 
 export interface StateCache {

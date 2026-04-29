@@ -14,6 +14,7 @@ import type {
 import { ref, watch } from 'vue'
 
 import usei18n from '@/lib/i18n'
+import useId from '@/lib/useId'
 
 import CmkDropdown from '@/components/CmkDropdown'
 import CmkIndent from '@/components/CmkIndent.vue'
@@ -26,6 +27,10 @@ import CmkInput from '@/components/user-input/CmkInput.vue'
 import { extractUnitFields } from './converters'
 
 const { _t } = usei18n()
+
+const notationId = useId()
+const roundingModeId = useId()
+const digitsId = useId()
 
 const props = defineProps<{
   graph_options: GraphOptions
@@ -140,12 +145,13 @@ watch(
 
       <CmkIndent v-if="dataUnitChoice === 'custom'">
         <div>
-          <CmkLabel>
+          <CmkLabel :for="notationId">
             {{ _t('Notation') }}
           </CmkLabel>
           <CmkIndent>
             <CmkDropdown
               v-model:selected-option="dataNotation"
+              :component-id="notationId"
               :options="{ type: 'fixed', suggestions: notationSuggestions }"
               :label="_t('Notation')"
             />
@@ -159,21 +165,22 @@ watch(
           <CmkIndent>
             <div>
               <div class="gd-unit-editor__label-element-row">
-                <CmkLabel>
+                <CmkLabel :for="roundingModeId">
                   {{ _t('Rounding mode') }}
                 </CmkLabel>
                 <CmkDropdown
                   v-model:selected-option="dataPrecisionRoundingMode"
+                  :component-id="roundingModeId"
                   :options="{ type: 'fixed', suggestions: precisionRoundingModeSuggestions }"
                   :label="_t('Custom')"
                 />
               </div>
               <CmkSpace size="medium" />
               <div class="gd-unit-editor__label-element-row">
-                <CmkLabel>
+                <CmkLabel :for="digitsId">
                   {{ _t('Digits') }}
                 </CmkLabel>
-                <CmkInput v-model="dataPrecisionDigits" type="number" />
+                <CmkInput :id="digitsId" v-model="dataPrecisionDigits" type="number" />
               </div>
             </div>
           </CmkIndent>

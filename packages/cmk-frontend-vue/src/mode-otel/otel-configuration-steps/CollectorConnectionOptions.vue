@@ -7,6 +7,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 import { computed } from 'vue'
 
 import usei18n from '@/lib/i18n'
+import useId from '@/lib/useId'
 
 import CmkLabel from '@/components/CmkLabel.vue'
 import CmkCheckbox from '@/components/user-input/CmkCheckbox.vue'
@@ -16,6 +17,8 @@ import CmkLabelRequired from '@/components/user-input/CmkLabelRequired.vue'
 import type { EventConsoleConfig } from './otelTypes'
 
 const { _t } = usei18n()
+
+const resourceAttributeId = useId()
 
 const props = defineProps<{
   encryptionAllowed: boolean
@@ -69,10 +72,11 @@ const eventConsoleErrors = computed((): string[] => {
     <template v-if="eventConsole !== null">
       <span />
       <div class="mode-otel-collector-connection-options__sub-field">
-        <CmkLabel
-          >{{ _t('Resource attribute for host name lookup') }} <CmkLabelRequired
-        /></CmkLabel>
+        <CmkLabel :for="resourceAttributeId">
+          {{ _t('Resource attribute for host name lookup') }} <CmkLabelRequired />
+        </CmkLabel>
         <CmkInput
+          :id="resourceAttributeId"
           v-model="eventConsole.resourceAttribute"
           type="text"
           field-size="MEDIUM"

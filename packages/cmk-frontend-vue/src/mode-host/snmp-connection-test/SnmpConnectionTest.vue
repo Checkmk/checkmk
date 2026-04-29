@@ -8,6 +8,7 @@ import { type ModeHostFormKeys, type ModeHostSite } from 'cmk-shared-typing/type
 import { computed, onMounted, ref } from 'vue'
 
 import usei18n from '@/lib/i18n'
+import useId from '@/lib/useId'
 
 import CmkAlertBox from '@/components/CmkAlertBox.vue'
 import CmkButton from '@/components/CmkButton.vue'
@@ -22,6 +23,10 @@ defineOptions({
 })
 
 const { _t } = usei18n()
+
+const snmpPortId = useId()
+const snmpTimeoutId = useId()
+const snmpRetriesId = useId()
 
 interface Props {
   formElement: HTMLFormElement
@@ -292,14 +297,33 @@ async function startTest(): Promise<void> {
         class="mh-snmp-connection-test__settings-fields"
         :class="{ 'mh-snmp-connection-test__settings-fields--disabled': !hostname }"
       >
-        <CmkLabel>{{ _t('Port') }}<CmkSpace size="small" /></CmkLabel>
-        <CmkInput v-model="snmpPort" :disabled="!hostname" type="number" min="1" max="65535" />
+        <CmkLabel :for="snmpPortId">{{ _t('Port') }}<CmkSpace size="small" /></CmkLabel>
+        <CmkInput
+          :id="snmpPortId"
+          v-model="snmpPort"
+          :disabled="!hostname"
+          type="number"
+          min="1"
+          max="65535"
+        />
         <CmkSpace size="small" />
-        <CmkLabel>{{ _t('Timeout') }}<CmkSpace size="small" /></CmkLabel>
-        <CmkInput v-model="snmpTimeout" :disabled="!hostname" type="number" min="1" />
+        <CmkLabel :for="snmpTimeoutId">{{ _t('Timeout') }}<CmkSpace size="small" /></CmkLabel>
+        <CmkInput
+          :id="snmpTimeoutId"
+          v-model="snmpTimeout"
+          :disabled="!hostname"
+          type="number"
+          min="1"
+        />
         <CmkSpace size="small" />
-        <CmkLabel>{{ _t('Retries') }}<CmkSpace size="small" /></CmkLabel>
-        <CmkInput v-model="snmpRetries" :disabled="!hostname" type="number" min="0" />
+        <CmkLabel :for="snmpRetriesId">{{ _t('Retries') }}<CmkSpace size="small" /></CmkLabel>
+        <CmkInput
+          :id="snmpRetriesId"
+          v-model="snmpRetries"
+          :disabled="!hostname"
+          type="number"
+          min="0"
+        />
       </span>
     </span>
 
@@ -332,14 +356,14 @@ async function startTest(): Promise<void> {
         </button>
 
         <span v-if="showSettings" class="mh-snmp-connection-test__settings-fields">
-          <CmkLabel>{{ _t('Port') }}<CmkSpace size="small" /></CmkLabel>
-          <CmkInput v-model="snmpPort" type="number" min="1" max="65535" />
+          <CmkLabel :for="snmpPortId">{{ _t('Port') }}<CmkSpace size="small" /></CmkLabel>
+          <CmkInput :id="snmpPortId" v-model="snmpPort" type="number" min="1" max="65535" />
           <CmkSpace size="small" />
-          <CmkLabel>{{ _t('Timeout') }}<CmkSpace size="small" /></CmkLabel>
-          <CmkInput v-model="snmpTimeout" type="number" min="1" />
+          <CmkLabel :for="snmpTimeoutId">{{ _t('Timeout') }}<CmkSpace size="small" /></CmkLabel>
+          <CmkInput :id="snmpTimeoutId" v-model="snmpTimeout" type="number" min="1" />
           <CmkSpace size="small" />
-          <CmkLabel>{{ _t('Retries') }}<CmkSpace size="small" /></CmkLabel>
-          <CmkInput v-model="snmpRetries" type="number" min="0" />
+          <CmkLabel :for="snmpRetriesId">{{ _t('Retries') }}<CmkSpace size="small" /></CmkLabel>
+          <CmkInput :id="snmpRetriesId" v-model="snmpRetries" type="number" min="0" />
         </span>
       </span>
     </CmkAlertBox>
@@ -380,14 +404,14 @@ async function startTest(): Promise<void> {
           </button>
 
           <span v-if="showSettings" class="mh-snmp-connection-test__settings-fields">
-            <CmkLabel>{{ _t('Port') }}<CmkSpace size="small" /></CmkLabel>
-            <CmkInput v-model="snmpPort" type="number" min="1" max="65535" />
+            <CmkLabel :for="snmpPortId">{{ _t('Port') }}<CmkSpace size="small" /></CmkLabel>
+            <CmkInput :id="snmpPortId" v-model="snmpPort" type="number" min="1" max="65535" />
             <CmkSpace size="small" />
-            <CmkLabel>{{ _t('Timeout') }}<CmkSpace size="small" /></CmkLabel>
-            <CmkInput v-model="snmpTimeout" type="number" min="1" />
+            <CmkLabel :for="snmpTimeoutId">{{ _t('Timeout') }}<CmkSpace size="small" /></CmkLabel>
+            <CmkInput :id="snmpTimeoutId" v-model="snmpTimeout" type="number" min="1" />
             <CmkSpace size="small" />
-            <CmkLabel>{{ _t('Retries') }}<CmkSpace size="small" /></CmkLabel>
-            <CmkInput v-model="snmpRetries" type="number" min="0" />
+            <CmkLabel :for="snmpRetriesId">{{ _t('Retries') }}<CmkSpace size="small" /></CmkLabel>
+            <CmkInput :id="snmpRetriesId" v-model="snmpRetries" type="number" min="0" />
           </span>
         </span>
       </div>

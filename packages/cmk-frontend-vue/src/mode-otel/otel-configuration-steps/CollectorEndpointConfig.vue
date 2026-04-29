@@ -7,6 +7,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 import { computed } from 'vue'
 
 import usei18n from '@/lib/i18n'
+import useId from '@/lib/useId'
 
 import CmkDropdown from '@/components/CmkDropdown/CmkDropdown.vue'
 import CmkLabel from '@/components/CmkLabel.vue'
@@ -17,6 +18,10 @@ import type { EndpointConfig } from './otelTypes'
 import { validateAddress, validatePort } from './validation.ts'
 
 const { _t } = usei18n()
+
+const socketAddressId = useId()
+const addressId = useId()
+const portId = useId()
 
 const props = defineProps<{
   showErrors: boolean
@@ -57,9 +62,10 @@ const errors = computed((): { address: string[]; port: string[] } => {
 </script>
 
 <template>
-  <CmkLabel>{{ _t('Socket address to listen on') }}</CmkLabel>
+  <CmkLabel :for="socketAddressId">{{ _t('Socket address to listen on') }}</CmkLabel>
   <CmkDropdown
     v-model:selected-option="endpoint.socketAddressType"
+    :component-id="socketAddressId"
     :options="{ type: 'fixed', suggestions: socketAddressOptions }"
     :label="_t('Socket address to listen on')"
   />
@@ -67,16 +73,18 @@ const errors = computed((): { address: string[]; port: string[] } => {
   <template v-if="endpoint.socketAddressType === 'custom'">
     <span />
     <div class="mode-otel-collector-endpoint-config__sub-field">
-      <CmkLabel>{{ _t('IP address or host name') }} <CmkLabelRequired /></CmkLabel>
+      <CmkLabel :for="addressId">{{ _t('IP address or host name') }} <CmkLabelRequired /></CmkLabel>
       <CmkInput
+        :id="addressId"
         v-model="endpoint.address"
         type="text"
         field-size="MEDIUM"
         placeholder="0.0.0.0"
         :external-errors="errors.address"
       />
-      <CmkLabel>{{ _t('Port') }} <CmkLabelRequired /></CmkLabel>
+      <CmkLabel :for="portId">{{ _t('Port') }} <CmkLabelRequired /></CmkLabel>
       <CmkInput
+        :id="portId"
         v-model="endpoint.port"
         type="number"
         :placeholder="defaultPort"

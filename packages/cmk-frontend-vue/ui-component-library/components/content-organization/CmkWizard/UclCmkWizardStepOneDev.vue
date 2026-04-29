@@ -7,6 +7,8 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 
+import useId from '@/lib/useId'
+
 import CmkLabel from '@/components/CmkLabel.vue'
 import { CmkWizardButton, CmkWizardStep } from '@/components/CmkWizard'
 import type { CmkWizardStepProps } from '@/components/CmkWizard'
@@ -18,6 +20,7 @@ import CmkLabelRequired from '@/components/user-input/CmkLabelRequired.vue'
 
 defineProps<CmkWizardStepProps>()
 
+const nameId = useId()
 const checkboxChecked = ref(false)
 const yourName = ref<string>('')
 
@@ -68,11 +71,12 @@ async function validate(): Promise<boolean> {
         label="This checkbox needs to be checked to proceed."
         :external-errors="checkboxErrors"
       />
-      <CmkLabel>
+      <CmkLabel :for="nameId">
         Choose a name
         <CmkLabelRequired />
       </CmkLabel>
       <CmkInput
+        :id="nameId"
         v-model="yourName"
         type="text"
         field-size="MEDIUM"

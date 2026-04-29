@@ -17,6 +17,7 @@ export interface PrometheusScraperConfig {
 import { computed, ref } from 'vue'
 
 import usei18n from '@/lib/i18n'
+import useId from '@/lib/useId'
 
 import CmkLabel from '@/components/CmkLabel.vue'
 import CmkCheckbox from '@/components/user-input/CmkCheckbox.vue'
@@ -26,6 +27,11 @@ import CmkLabelRequired from '@/components/user-input/CmkLabelRequired.vue'
 import { validateAddress, validatePort } from './validation.ts'
 
 const { _t } = usei18n()
+
+const jobNameId = useId()
+const metricsPathId = useId()
+const addressId = useId()
+const portId = useId()
 
 const config = defineModel<PrometheusScraperConfig>('config', { required: true })
 
@@ -83,8 +89,9 @@ defineExpose({ validate })
 
 <template>
   <div class="mode-otel-configure-prometheus-scraper__form">
-    <CmkLabel>{{ _t('Job name') }} <CmkLabelRequired /></CmkLabel>
+    <CmkLabel :for="jobNameId">{{ _t('Job name') }} <CmkLabelRequired /></CmkLabel>
     <CmkInput
+      :id="jobNameId"
       v-model="config.jobName"
       type="text"
       field-size="MEDIUM"
@@ -92,6 +99,7 @@ defineExpose({ validate })
     />
 
     <CmkLabel
+      :for="metricsPathId"
       :help="
         _t(
           'The HTTP resource path on which to fetch metrics from targets. Must start with a \'/\'.'
@@ -100,6 +108,7 @@ defineExpose({ validate })
       >{{ _t('Metrics path') }} <CmkLabelRequired
     /></CmkLabel>
     <CmkInput
+      :id="metricsPathId"
       v-model="config.metricsPath"
       type="text"
       field-size="MEDIUM"
@@ -108,6 +117,7 @@ defineExpose({ validate })
     />
 
     <CmkLabel
+      :for="addressId"
       :help="
         _t(
           'The IP address or host name the OpenTelemetry Collector should listen on. To listen only locally, use \'127.0.0.1\' or \'::1\'. To listen on all interfaces, use \'0.0.0.0\' or \'::\'.'
@@ -116,6 +126,7 @@ defineExpose({ validate })
       >{{ _t('IP address or host name') }} <CmkLabelRequired
     /></CmkLabel>
     <CmkInput
+      :id="addressId"
       v-model="config.address"
       type="text"
       field-size="MEDIUM"
@@ -123,8 +134,9 @@ defineExpose({ validate })
       :external-errors="addressErrors"
     />
 
-    <CmkLabel>{{ _t('Port') }} <CmkLabelRequired /></CmkLabel>
+    <CmkLabel :for="portId">{{ _t('Port') }} <CmkLabelRequired /></CmkLabel>
     <CmkInput
+      :id="portId"
       v-model="config.port"
       type="number"
       placeholder="9090"

@@ -7,6 +7,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 import { computed, watch } from 'vue'
 
 import usei18n from '@/lib/i18n'
+import useId from '@/lib/useId'
 
 import CmkDropdown from '@/components/CmkDropdown/CmkDropdown.vue'
 import CmkLabel from '@/components/CmkLabel.vue'
@@ -19,6 +20,10 @@ import CmkLabelRequired from '@/components/user-input/CmkLabelRequired.vue'
 import type { AuthConfig } from './otelTypes'
 
 const { _t } = usei18n()
+
+const authMethodId = useId()
+const usernameId = useId()
+const passwordId = useId()
 
 const props = defineProps<{
   noAuthAllowed: boolean
@@ -72,9 +77,10 @@ const passwordErrors = computed<string[]>(() => {
 </script>
 
 <template>
-  <CmkLabel>{{ _t('Authentication method') }}</CmkLabel>
+  <CmkLabel :for="authMethodId">{{ _t('Authentication method') }}</CmkLabel>
   <CmkDropdown
     v-model:selected-option="auth.method"
+    :component-id="authMethodId"
     :options="{ type: 'fixed', suggestions: authMethodOptions }"
     :label="_t('Authentication method')"
   />
@@ -82,8 +88,9 @@ const passwordErrors = computed<string[]>(() => {
   <template v-if="auth.method === 'basicauth' && auth.credential !== null">
     <span />
     <div class="mode-otel-collector-auth-config__sub-field">
-      <CmkLabel>{{ _t('Username') }} <CmkLabelRequired /></CmkLabel>
+      <CmkLabel :for="usernameId">{{ _t('Username') }} <CmkLabelRequired /></CmkLabel>
       <CmkInput
+        :id="usernameId"
         v-model="auth.credential.username"
         type="text"
         field-size="MEDIUM"
@@ -91,11 +98,12 @@ const passwordErrors = computed<string[]>(() => {
         :external-errors="usernameErrors"
       />
 
-      <CmkLabel>{{ _t('Password') }} <CmkLabelRequired /></CmkLabel>
+      <CmkLabel :for="passwordId">{{ _t('Password') }} <CmkLabelRequired /></CmkLabel>
       <div class="mode-otel-collector-auth-config__password-row">
         <CmkDropdown
           :key="availablePasswords.length"
           v-model:selected-option="auth.credential.password"
+          :component-id="passwordId"
           :options="{ type: 'fixed', suggestions: availablePasswords }"
           :input-hint="_t('Select password')"
           :label="_t('Password')"

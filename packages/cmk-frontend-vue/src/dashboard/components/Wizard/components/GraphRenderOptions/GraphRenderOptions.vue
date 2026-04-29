@@ -7,6 +7,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 import { computed } from 'vue'
 
 import usei18n from '@/lib/i18n'
+import useId from '@/lib/useId'
 
 import CmkDropdown from '@/components/CmkDropdown'
 import CmkIndent from '@/components/CmkIndent.vue'
@@ -23,6 +24,8 @@ import TableFormRow from '@/dashboard/components/Wizard/components/TableForm/Tab
 import ColorSelector from '../ColorSelector/ColorSelector.vue'
 
 const { _t } = usei18n()
+
+const fontSizeId = useId()
 
 interface GraphRenderOptions {
   colorOptions?: Suggestion[]
@@ -92,9 +95,9 @@ const displayColorChooser = computed(() => color.value !== undefined && colorOpt
       <FieldDescription>{{ _t('Graph styling') }}</FieldDescription>
       <FieldComponent>
         <div>
-          <CmkLabel>{{ _t('Font size') }}</CmkLabel>
+          <CmkLabel :for="fontSizeId">{{ _t('Font size') }}</CmkLabel>
           <CmkIndent>
-            <CmkInput v-model:model-value="fontSize as number" type="number" />
+            <CmkInput :id="fontSizeId" v-model:model-value="fontSize as number" type="number" />
           </CmkIndent>
         </div>
 

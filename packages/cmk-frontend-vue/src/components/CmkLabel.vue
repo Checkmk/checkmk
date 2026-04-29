@@ -36,6 +36,7 @@ const labelVariants = cva('', {
 type LabelVariants = VariantProps<typeof labelVariants>
 
 export interface LabelProps {
+  /** `for` is required when the label is associated with an input — must match the input's id for a11y. */
   for?: string
   variant?: LabelVariants['variant']
   dots?: boolean | undefined

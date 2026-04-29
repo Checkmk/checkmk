@@ -21,6 +21,7 @@ import { computed, onMounted, ref } from 'vue'
 
 import { fetchRestAPI } from '@/lib/cmkFetch.ts'
 import usei18n, { untranslated } from '@/lib/i18n'
+import useId from '@/lib/useId'
 
 import CmkDropdown from '@/components/CmkDropdown/CmkDropdown.vue'
 import CmkLabel from '@/components/CmkLabel.vue'
@@ -36,6 +37,9 @@ type OTelConfigEntry = {
 const API_ROOT = 'api/v1'
 
 const { _t } = usei18n()
+
+const configNameId = useId()
+const siteDropdownId = useId()
 
 const props = defineProps<{
   configNamePlaceholder: string
@@ -166,8 +170,9 @@ defineExpose({ validate })
 
   <div class="mode-otel-configure-general-properties__form">
     <!-- Configuration name row -->
-    <CmkLabel>{{ _t('Configuration name') }} <CmkLabelRequired /></CmkLabel>
+    <CmkLabel :for="configNameId">{{ _t('Configuration name') }} <CmkLabelRequired /></CmkLabel>
     <CmkInput
+      :id="configNameId"
       v-model="configName"
       type="text"
       field-size="MEDIUM"
@@ -176,10 +181,11 @@ defineExpose({ validate })
     />
 
     <!-- Site selection row -->
-    <CmkLabel>{{ _t('Site selection') }} <CmkLabelRequired /></CmkLabel>
+    <CmkLabel :for="siteDropdownId">{{ _t('Site selection') }} <CmkLabelRequired /></CmkLabel>
     <div class="mode-otel-configure-general-properties__field-with-error">
       <CmkDropdown
         v-model:selected-option="siteId"
+        :component-id="siteDropdownId"
         :options="{ type: 'fixed', suggestions: siteOptions }"
         :input-hint="isLoading ? _t('Loading...') : _t('Select site')"
         :label="_t('Site selection')"

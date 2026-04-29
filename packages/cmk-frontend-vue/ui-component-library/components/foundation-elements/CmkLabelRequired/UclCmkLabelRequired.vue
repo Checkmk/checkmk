@@ -36,6 +36,8 @@ import {
 } from '@ucl/_ucl/components/detail-page'
 import { ref } from 'vue'
 
+import useId from '@/lib/useId'
+
 import CmkLabel from '@/components/CmkLabel.vue'
 import CmkInput from '@/components/user-input/CmkInput.vue'
 import CmkLabelRequired from '@/components/user-input/CmkLabelRequired.vue'
@@ -43,6 +45,7 @@ import CmkLabelRequired from '@/components/user-input/CmkLabelRequired.vue'
 defineProps<{ screenshotMode: boolean }>()
 
 const propState = ref(createPanelState(panelConfig))
+const exampleFieldId = useId()
 </script>
 
 <template>
@@ -50,11 +53,11 @@ const propState = ref(createPanelState(panelConfig))
     <UclDetailPageHeader>CmkLabelRequired</UclDetailPageHeader>
 
     <UclDetailPageComponent>
-      <CmkLabel>
+      <CmkLabel :for="exampleFieldId">
         Example Field Name
         <CmkLabelRequired :show="propState.show" :space="propState.space || null" />
       </CmkLabel>
-      <CmkInput type="text" field-size="MEDIUM" />
+      <CmkInput :id="exampleFieldId" type="text" field-size="MEDIUM" />
 
       <template #properties>
         <UclPropertiesPanel v-model="propState" :config="panelConfig" />

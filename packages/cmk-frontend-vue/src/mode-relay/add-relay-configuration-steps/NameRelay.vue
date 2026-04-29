@@ -9,6 +9,7 @@ import { computed, ref } from 'vue'
 
 import usei18n from '@/lib/i18n'
 import { type Relay, getRelayCollection } from '@/lib/rest-api-client/relay/client'
+import useId from '@/lib/useId'
 
 import CmkAlertBox from '@/components/CmkAlertBox.vue'
 import CmkLabel from '@/components/CmkLabel.vue'
@@ -20,6 +21,8 @@ import CmkInput from '@/components/user-input/CmkInput.vue'
 import CmkLabelRequired from '@/components/user-input/CmkLabelRequired.vue'
 
 const { _t } = usei18n()
+
+const relayAliasId = useId()
 
 const props = defineProps<
   CmkWizardStepProps & { aliasValidationRegex: string; aliasValidationRegexHelp: string }
@@ -76,11 +79,12 @@ async function validate(): Promise<boolean> {
         {{ _t('Provide a display alias for your Relay. This alias can be changed later.') }}
       </CmkParagraph>
       <div class="mode-relay-name-relay__form-row">
-        <CmkLabel>
+        <CmkLabel :for="relayAliasId">
           {{ _t('Relay alias') }}
           <CmkLabelRequired />
         </CmkLabel>
         <CmkInput
+          :id="relayAliasId"
           v-model="relayAlias"
           type="text"
           field-size="MEDIUM"

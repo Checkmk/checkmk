@@ -8,6 +8,7 @@ import { computed, ref } from 'vue'
 
 import usei18n from '@/lib/i18n'
 import type { TranslatedString } from '@/lib/i18nString'
+import useId from '@/lib/useId'
 
 import CmkAlertBox from '@/components/CmkAlertBox.vue'
 import CmkLabel from '@/components/CmkLabel.vue'
@@ -26,6 +27,8 @@ import TableForm from '../../components/TableForm/TableForm.vue'
 import TableFormRow from '../../components/TableForm/TableFormRow.vue'
 
 const { _t } = usei18n()
+
+const expiryDateId = useId()
 
 interface PublicAccessSettingsEmits {
   updateSettings: []
@@ -100,9 +103,10 @@ const handleSave = () => {
           "
         />
         <div v-if="hasValidity" class="db-public-access-settings__validity">
-          <CmkLabel>{{ _t('Public link expiration date') }}</CmkLabel>
+          <CmkLabel :for="expiryDateId">{{ _t('Public link expiration date') }}</CmkLabel>
           <ContentSpacer :dimension="4" />
           <CmkInput
+            :id="expiryDateId"
             v-model="expiryDate as string"
             type="date"
             :external-errors="validationError || []"

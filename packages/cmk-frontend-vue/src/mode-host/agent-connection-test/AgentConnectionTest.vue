@@ -18,6 +18,7 @@ import {
   fetchAgentReceiverPort as fetchAgentReceiverPortApi
 } from '@/lib/agentReceiverPort'
 import usei18n from '@/lib/i18n'
+import useId from '@/lib/useId'
 
 import CmkAlertBox from '@/components/CmkAlertBox.vue'
 import CmkButton from '@/components/CmkButton.vue'
@@ -35,6 +36,8 @@ defineOptions({
 })
 
 const { _t } = usei18n()
+
+const agentPortId = useId()
 
 interface Props {
   formElement: HTMLFormElement
@@ -559,12 +562,12 @@ const showSettings = ref(false)
         </button>
 
         <div v-if="showSettings && !hostname" class="label-container disabled">
-          <CmkLabel> {{ _t('Port') }}<CmkSpace size="small" /> </CmkLabel>
-          <CmkInput v-model="agentPort" :disabled="true" type="number" />
+          <CmkLabel :for="agentPortId"> {{ _t('Port') }}<CmkSpace size="small" /> </CmkLabel>
+          <CmkInput :id="agentPortId" v-model="agentPort" :disabled="true" type="number" />
         </div>
         <div v-else-if="showSettings && hostname" class="label-container enabled">
-          <CmkLabel> {{ _t('Port') }}<CmkSpace size="small" /> </CmkLabel>
-          <CmkInput v-model="agentPort" type="number" />
+          <CmkLabel :for="agentPortId"> {{ _t('Port') }}<CmkSpace size="small" /> </CmkLabel>
+          <CmkInput :id="agentPortId" v-model="agentPort" type="number" />
         </div>
       </span>
 
@@ -587,8 +590,8 @@ const showSettings = ref(false)
           </button>
 
           <div v-if="showSettings" class="label-container enabled">
-            <CmkLabel> {{ _t('Port') }}<CmkSpace size="small" /> </CmkLabel>
-            <CmkInput v-model="agentPort" type="number" />
+            <CmkLabel :for="agentPortId"> {{ _t('Port') }}<CmkSpace size="small" /> </CmkLabel>
+            <CmkInput :id="agentPortId" v-model="agentPort" type="number" />
           </div>
         </span>
       </CmkAlertBox>
@@ -631,8 +634,8 @@ const showSettings = ref(false)
             </button>
 
             <div v-if="showSettings" class="label-container enabled">
-              <CmkLabel> {{ _t('Port') }}<CmkSpace size="small" /> </CmkLabel>
-              <CmkInput v-model="agentPort" type="number" />
+              <CmkLabel :for="agentPortId"> {{ _t('Port') }}<CmkSpace size="small" /> </CmkLabel>
+              <CmkInput :id="agentPortId" v-model="agentPort" type="number" />
             </div>
           </span>
         </div>

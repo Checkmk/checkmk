@@ -10,6 +10,7 @@ import type { GraphOptionExplicitVerticalRangeBoundaries } from 'cmk-shared-typi
 import { ref, watch } from 'vue'
 
 import usei18n from '@/lib/i18n'
+import useId from '@/lib/useId'
 
 import CmkDropdown from '@/components/CmkDropdown'
 import CmkIndent from '@/components/CmkIndent.vue'
@@ -22,6 +23,9 @@ import CmkInput from '@/components/user-input/CmkInput.vue'
 import { extractExplicitVerticalRangeBounds } from './converters'
 
 const { _t } = usei18n()
+
+const lowerRangeId = useId()
+const upperRangeId = useId()
 
 const props = defineProps<{
   graph_options: GraphOptions
@@ -98,10 +102,11 @@ watch(
       <CmkIndent v-if="dataExplicitVerticalRange === 'explicit'">
         <div>
           <div class="gd-explicit-vertical-range-editor__label-element-row">
-            <CmkLabel>
+            <CmkLabel :for="lowerRangeId">
               {{ _t('Lower') }}
             </CmkLabel>
             <CmkInput
+              :id="lowerRangeId"
               v-model="dataExplicitVerticalRangeLower"
               type="number"
               :validators="[validateLower]"
@@ -109,10 +114,11 @@ watch(
           </div>
           <CmkSpace size="medium" />
           <div class="gd-explicit-vertical-range-editor__label-element-row">
-            <CmkLabel>
+            <CmkLabel :for="upperRangeId">
               {{ _t('Upper') }}
             </CmkLabel>
             <CmkInput
+              :id="upperRangeId"
               v-model="dataExplicitVerticalRangeUpper"
               type="number"
               :validators="[validateUpper]"

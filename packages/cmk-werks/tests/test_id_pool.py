@@ -14,19 +14,16 @@ import requests
 from cmk.werks.id_pool import (
     _ensure_stash_file_writable,
     _server_error_message,
-    add_id_to_stash,
     dump_stash_to_file,
-    load_legacy_stash_from_file,
     load_or_update_stash,
     load_stash_from_file,
     make_paths_object,
     migrate_werk_ids_file,
     Paths,
-    pick_id_from_stash,
     WerkIDsClient,
     write_secret,
 )
-from cmk.werks.schemas.werk import LegacyStash, Stash, WerkId
+from cmk.werks.schemas.werk import Stash, WerkId
 
 
 def _write_secret(paths: Paths) -> None:
@@ -90,51 +87,8 @@ def test_stash_add_ids_deduplicates() -> None:
 
 
 # ---------------------------------------------------------------------------
-# load_legacy_stash_from_file tests
+# dump_stash_to_file / load_stash_from_file tests
 # ---------------------------------------------------------------------------
-
-
-def test_load_legacy_stash_missing_file(tmp_path: Path) -> None:
-    paths = make_paths_object(tmp_path)
-    stash = load_legacy_stash_from_file(paths)
-    assert stash.count() == 0
-
-
-def test_load_legacy_stash_empty_file(tmp_path: Path) -> None:
-    paths = make_paths_object(tmp_path)
-    paths.legacy_stash_file.write_text("", encoding="utf-8")
-    stash = load_legacy_stash_from_file(paths)
-    assert stash.count() == 0
-
-
-def test_load_legacy_stash_json_format(tmp_path: Path) -> None:
-    paths = make_paths_object(tmp_path)
-    legacy = LegacyStash(ids_by_project={"cmk": [10, 11, 12]})
-    paths.legacy_stash_file.write_text(legacy.model_dump_json(by_alias=True), encoding="utf-8")
-    stash = load_legacy_stash_from_file(paths)
-    assert stash.ids_by_project == {"cmk": [10, 11, 12]}
-
-
-def test_load_legacy_stash_list_format(tmp_path: Path) -> None:
-    # Old cmk-project format: bare Python list
-    paths = make_paths_object(tmp_path)
-    paths.legacy_stash_file.write_text("[10, 11, 12]", encoding="utf-8")
-    stash = load_legacy_stash_from_file(paths)
-    assert stash.ids_by_project == {"cmk": [10, 11, 12]}
-
-
-# ---------------------------------------------------------------------------
-# dump_stash_to_file tests
-# ---------------------------------------------------------------------------
-
-
-def test_dump_and_load_legacy_stash(tmp_path: Path) -> None:
-    paths = make_paths_object(tmp_path)
-    legacy = LegacyStash(ids_by_project={"cmk": [1, 2]})
-    dump_stash_to_file(paths, legacy)
-    assert paths.legacy_stash_file.exists()
-    loaded = load_legacy_stash_from_file(paths)
-    assert loaded.ids_by_project == {"cmk": [1, 2]}
 
 
 def test_dump_new_stash_writes_to_stash_file(tmp_path: Path) -> None:
@@ -147,31 +101,30 @@ def test_dump_new_stash_writes_to_stash_file(tmp_path: Path) -> None:
     assert loaded.ids == [5, 6, 7]
 
 
-# ---------------------------------------------------------------------------
-# pick_id_from_stash / add_id_to_stash tests
-# ---------------------------------------------------------------------------
+def test_load_stash_from_file_missing_bails_out(tmp_path: Path) -> None:
+    paths = make_paths_object(tmp_path)
+    with pytest.raises(SystemExit):
+        load_stash_from_file(paths)
 
 
-def test_pick_id_from_legacy_stash() -> None:
-    stash = LegacyStash(ids_by_project={"cmk": [10, 20, 5]})
-    assert pick_id_from_stash(stash, "cmk") == WerkId(5)
+def test_load_stash_from_file_no_secret_bails_out(tmp_path: Path) -> None:
+    # stash_file present but no secret → bail_out (secret is required)
+    paths = make_paths_object(tmp_path)
+    paths.stash_file.parent.mkdir(parents=True, exist_ok=True)
+    paths.stash_file.write_text(Stash(ids=[5]).model_dump_json(by_alias=True), encoding="utf-8")
+    with pytest.raises(SystemExit):
+        load_stash_from_file(paths)
 
 
-def test_pick_id_from_new_stash() -> None:
-    stash = Stash(ids=[10, 20, 5])
-    assert pick_id_from_stash(stash, "cmk") == WerkId(5)
-
-
-def test_add_id_to_legacy_stash() -> None:
-    stash = LegacyStash(ids_by_project={"cmk": [1]})
-    add_id_to_stash(stash, WerkId(2), "cmk")
-    assert 2 in stash.ids_by_project["cmk"]
-
-
-def test_add_id_to_new_stash() -> None:
-    stash = Stash(ids=[1])
-    add_id_to_stash(stash, WerkId(2), "cmk")
-    assert 2 in stash.ids
+def test_load_stash_from_file_reads_stash_file(tmp_path: Path) -> None:
+    paths = make_paths_object(tmp_path)
+    paths.stash_file.parent.mkdir(parents=True, exist_ok=True)
+    paths.secret_file.parent.mkdir(parents=True, exist_ok=True)
+    paths.secret_file.write_text("secret", encoding="utf-8")
+    paths.stash_file.write_text(Stash(ids=[5]).model_dump_json(by_alias=True), encoding="utf-8")
+    result = load_stash_from_file(paths)
+    assert isinstance(result, Stash)
+    assert result.ids == [5]
 
 
 # ---------------------------------------------------------------------------
@@ -270,28 +223,11 @@ def test_active_stash_file_with_secret(tmp_path: Path) -> None:
     assert paths.active_stash_file == paths.stash_file
 
 
-def test_load_stash_from_file_no_files_returns_empty_legacy(tmp_path: Path) -> None:
-    paths = make_paths_object(tmp_path)
-    result = load_stash_from_file(paths)
-    assert isinstance(result, LegacyStash)
-    assert result.count() == 0
-
-
-def test_load_stash_from_file_no_secret_falls_back_to_legacy(tmp_path: Path) -> None:
-    paths = make_paths_object(tmp_path)
-    legacy = LegacyStash(ids_by_project={"cmk": [10, 20]})
-    paths.legacy_stash_file.write_text(legacy.model_dump_json(by_alias=True), encoding="utf-8")
-    result = load_stash_from_file(paths)
-    assert isinstance(result, LegacyStash)
-    assert result.ids_by_project == {"cmk": [10, 20]}
-
-
 def test_load_stash_from_file_secret_no_stash_returns_empty_stash(tmp_path: Path) -> None:
     paths = make_paths_object(tmp_path)
     paths.secret_file.parent.mkdir(parents=True, exist_ok=True)
     paths.secret_file.write_text("secret", encoding="utf-8")
     result = load_stash_from_file(paths)
-    assert isinstance(result, Stash)
     assert result.ids == []
 
 
@@ -323,30 +259,16 @@ def _prepare_stash(tmp_path: Path, stash: Stash) -> Paths:
     return paths
 
 
-def test_load_or_update_stash_legacy_stash_skips_server(tmp_path: Path) -> None:
-    paths = make_paths_object(tmp_path)
-    legacy = LegacyStash(ids_by_project={"cmk": [1, 2]})
-    paths.legacy_stash_file.write_text(legacy.model_dump_json(by_alias=True), encoding="utf-8")
-
-    stash = load_or_update_stash(paths, FakeWerkIDsClient("http://werk-ids.test"))
-
-    assert isinstance(stash, LegacyStash)
-    assert stash.ids_by_project == {"cmk": [1, 2]}
-
-
 def test_load_or_update_stash_no_secret_skips_server(tmp_path: Path) -> None:
-    # Without a secret file, load_stash_from_file falls back to LegacyStash, so the server
-    # is never contacted (load_or_update_stash returns early for LegacyStash).
+    # Without a secret file, load_or_update_stash bails out before contacting the server.
     paths = make_paths_object(tmp_path)
     paths.stash_file.parent.mkdir(parents=True, exist_ok=True)
     paths.stash_file.write_text(
         Stash(ids=[10, 20]).model_dump_json(by_alias=True), encoding="utf-8"
     )
 
-    stash = load_or_update_stash(paths, FakeWerkIDsClient("http://werk-ids.test"))
-
-    assert isinstance(stash, LegacyStash)
-    assert stash.count() == 0
+    with pytest.raises(SystemExit):
+        load_or_update_stash(paths, FakeWerkIDsClient("http://werk-ids.test"))
 
 
 def test_load_or_update_stash_reserves_ids_from_server(tmp_path: Path) -> None:
@@ -434,8 +356,9 @@ def test_load_stash_from_file_bails_when_both_files_exist(tmp_path: Path) -> Non
     paths.secret_file.parent.mkdir(parents=True, exist_ok=True)
     paths.secret_file.write_text("secret", encoding="utf-8")
     paths.stash_file.write_text(Stash(ids=[5]).model_dump_json(by_alias=True), encoding="utf-8")
-    legacy = LegacyStash(ids_by_project={"cmk": [99]})
-    paths.legacy_stash_file.write_text(legacy.model_dump_json(by_alias=True), encoding="utf-8")
+    paths.legacy_stash_file.write_text(
+        '{"__version__": "2", "ids_by_project": {"cmk": [99]}}', encoding="utf-8"
+    )
 
     with pytest.raises(SystemExit):
         load_stash_from_file(paths)
@@ -468,8 +391,9 @@ def test_migrate_json_legacy_file(tmp_path: Path) -> None:
     # Only "cmk" project IDs are migrated; other projects (e.g. "cloudmk") are dropped.
     paths = make_paths_object(tmp_path)
     _write_secret(paths)
-    legacy = LegacyStash(ids_by_project={"cmk": [10, 11], "cloudmk": [1000]})
-    paths.legacy_stash_file.write_text(legacy.model_dump_json(by_alias=True), encoding="utf-8")
+    # Only the "cmk" project IDs are migrated; other projects (e.g. cloudmk) are dropped.
+    legacy_json = '{"__version__": "2", "ids_by_project": {"cmk": [10, 11], "cloudmk": [1000]}}'
+    paths.legacy_stash_file.write_text(legacy_json, encoding="utf-8")
 
     migrate_werk_ids_file(paths)
 
@@ -498,7 +422,7 @@ def test_migrate_werk_ids_file_merges_both_files(tmp_path: Path) -> None:
     paths.stash_file.parent.mkdir(parents=True, exist_ok=True)
     paths.stash_file.write_text(Stash(ids=[1]).model_dump_json(by_alias=True), encoding="utf-8")
     paths.legacy_stash_file.write_text(
-        LegacyStash(ids_by_project={"cmk": [2]}).model_dump_json(by_alias=True), encoding="utf-8"
+        '{"__version__": "2", "ids_by_project": {"cmk": [2]}}', encoding="utf-8"
     )
 
     migrate_werk_ids_file(paths)
@@ -515,7 +439,7 @@ def test_migrate_werk_ids_file_deduplicates_overlapping_ids(tmp_path: Path) -> N
     paths.stash_file.parent.mkdir(parents=True, exist_ok=True)
     paths.stash_file.write_text(Stash(ids=[1, 2]).model_dump_json(by_alias=True), encoding="utf-8")
     paths.legacy_stash_file.write_text(
-        LegacyStash(ids_by_project={"cmk": [2, 3]}).model_dump_json(by_alias=True),
+        json.dumps({"ids_by_project": {"cmk": [2, 3]}}),
         encoding="utf-8",
     )
 
@@ -534,7 +458,7 @@ def test_migrate_werk_ids_file_is_idempotent(tmp_path: Path) -> None:
     paths.stash_file.parent.mkdir(parents=True, exist_ok=True)
     paths.stash_file.write_text(Stash(ids=[1]).model_dump_json(by_alias=True), encoding="utf-8")
     paths.legacy_stash_file.write_text(
-        LegacyStash(ids_by_project={"cmk": [2]}).model_dump_json(by_alias=True), encoding="utf-8"
+        '{"__version__": "2", "ids_by_project": {"cmk": [2]}}', encoding="utf-8"
     )
 
     migrate_werk_ids_file(paths)

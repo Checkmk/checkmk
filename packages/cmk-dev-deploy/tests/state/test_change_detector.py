@@ -249,7 +249,17 @@ class TestCategorizeFile:
             (".werks/12345", ChangeCategory.IGNORED),
             (".github/workflows/ci.yml", ChangeCategory.IGNORED),
             (".devcontainer/devcontainer.json", ChangeCategory.IGNORED),
+            (".aspect/cli/config.yaml", ChangeCategory.IGNORED),
+            (".claude/agents/architect.agent.md", ChangeCategory.IGNORED),
+            (".ide/vscode/package.json", ChangeCategory.IGNORED),
+            (".pre-commit-scripts/check-licence", ChangeCategory.IGNORED),
             ("docs/architecture.md", ChangeCategory.IGNORED),
+            ("buildscripts/scripts/test-gerrit.groovy", ChangeCategory.IGNORED),
+            ("component_owners/saas_dev/OWNERS_DEFINITION", ChangeCategory.IGNORED),
+            ("docker_image/Dockerfile", ChangeCategory.IGNORED),
+            ("doc/treasures/migration_helpers/legacy_checks/to_v2.py", ChangeCategory.IGNORED),
+            ("omd/dependency_management/generate_bom_csv.py", ChangeCategory.IGNORED),
+            ("scripts/find-python-files", ChangeCategory.IGNORED),
             # Python packages (.py under packages/ and non-free/packages/)
             ("packages/cmk-ccc/cmk/ccc/version.py", ChangeCategory.PYTHON),
             ("non-free/packages/cmk-bakery/cmk/bakery/foo.py", ChangeCategory.PYTHON),
@@ -439,8 +449,8 @@ class TestCategorizationRules:
     def test_structural_rules_is_tuple(self) -> None:
         """_STRUCTURAL_RULES is a tuple of CategorizationRule instances."""
         assert isinstance(_STRUCTURAL_RULES, tuple)
-        # TEST + 2x BUILD + 5x IGNORED (werks, .werks, .github, .devcontainer, docs)
-        assert len(_STRUCTURAL_RULES) == 8
+        # 1 TEST + 2 BUILD + 15 IGNORED
+        assert len(_STRUCTURAL_RULES) == 18
 
     def test_each_structural_rule_is_categorization_rule(self) -> None:
         """Each structural rule is a CategorizationRule dataclass."""

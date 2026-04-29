@@ -43,7 +43,17 @@ _STRUCTURAL_RULES: tuple[CategorizationRule, ...] = (
     CategorizationRule(".werks/", None, ChangeCategory.IGNORED),
     CategorizationRule(".github/", None, ChangeCategory.IGNORED),
     CategorizationRule(".devcontainer/", None, ChangeCategory.IGNORED),
+    CategorizationRule(".aspect/", None, ChangeCategory.IGNORED),
+    CategorizationRule(".claude/", None, ChangeCategory.IGNORED),
+    CategorizationRule(".ide/", None, ChangeCategory.IGNORED),
+    CategorizationRule(".pre-commit-scripts/", None, ChangeCategory.IGNORED),
     CategorizationRule("docs/", None, ChangeCategory.IGNORED),
+    CategorizationRule("buildscripts/", None, ChangeCategory.IGNORED),
+    CategorizationRule("component_owners/", None, ChangeCategory.IGNORED),
+    CategorizationRule("docker_image/", None, ChangeCategory.IGNORED),
+    CategorizationRule("doc/treasures/", None, ChangeCategory.IGNORED),
+    CategorizationRule("omd/dependency_management/", None, ChangeCategory.IGNORED),
+    CategorizationRule("scripts/", None, ChangeCategory.IGNORED),
 )
 
 # Cached combined rules: computed once on first call, reset by reset_categorization_cache().

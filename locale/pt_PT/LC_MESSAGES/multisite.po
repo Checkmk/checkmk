@@ -4,9 +4,9 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
+"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2026-04-26 17:50+0000\n"
+"PO-Revision-Date: 2026-04-28 11:45+0000\n"
 "Language-Team: Portuguese (Portugal) <https://translate.checkmk.com/projects/"
 "checkmk/dev/pt_PT/>\n"
 "Language: pt_PT\n"
@@ -113,6 +113,10 @@ msgstr ""
 #, python-format
 msgid " Finished at: %s."
 msgstr " Concluído em: %s."
+
+#, fuzzy
+msgid " Finished."
+msgstr "Acabado."
 
 msgid ""
 " If this action was not triggered by you, contact your administrator for "
@@ -11003,8 +11007,8 @@ msgid ""
 "graphical user interface (GUI) from running into timeouts when remote sites "
 "do not respond. You need to add the remote monitoring servers as hosts into "
 "your local monitoring site and use their host state as a reachability state "
-"of the remote site. Please refer to the <a target=_blank href='%s'>online "
-"documentation</a> for details."
+"of the remote site. Please refer to the <a href=\"%s\" "
+"target=\"_blank\">online documentation</a> for details."
 msgstr ""
 "Ao especificar um host de status para cada conexão não-local, você evita que "
 "a Multisite entre em timeouts quando os sites remotos não respondem. Você "
@@ -19565,6 +19569,10 @@ msgid "Deploy Arcserve plug-in"
 msgstr "Implantar o plugin Arcserve"
 
 #, fuzzy
+msgid "Deploy Hyper-V VM Guest Information plug-in"
+msgstr "Implementar plugin para Hyper-V VM Informação ao Convidado"
+
+#, fuzzy
 msgid "Deploy Hyper-V monitoring plug-ins"
 msgstr "Implantar plugins Unitrends"
 
@@ -19660,36 +19668,16 @@ msgid "Deploy plug-in for DB2"
 msgstr "Implementar plugin para o DB2"
 
 #, fuzzy
-msgid "Deploy plug-in for Hyper-V VM Guest Information"
-msgstr "Implementar plugin para Hyper-V VM Informação ao Convidado"
-
-#, fuzzy
 msgid "Deploy plug-in for JAR signatures"
 msgstr "Implantar plugin para assinaturas JAR"
-
-#, fuzzy
-msgid "Deploy plug-in for MS IIS Application Pool States"
-msgstr "Implantar plugin para estados do pool de aplicativos do MS IIS"
-
-#, fuzzy
-msgid "Deploy plug-in for Veeam backup status"
-msgstr "Implantar plugin para o estado de backup do Veeam"
 
 #, fuzzy
 msgid "Deploy plug-in for Windows DHCP pools"
 msgstr "Implementar plugin para Windows DHCP pools"
 
 #, fuzzy
-msgid "Deploy plug-in for Windows broadcom bonding"
-msgstr "Implantar plugin para ligação de widecom do Windows"
-
-#, fuzzy
 msgid "Deploy plug-in for Windows system info"
 msgstr "Implementar plugin para Windows System Info"
-
-#, fuzzy
-msgid "Deploy plug-in for Windows task scheduler"
-msgstr "Implementar plugin para o Programador de Tarefas do Windows"
 
 #, fuzzy
 msgid "Deploy plug-in that updates agent automatically"
@@ -19742,10 +19730,6 @@ msgstr "Implantar o plug-in SAP HANA"
 #, fuzzy
 msgid "Deploy the SAP router plug-in"
 msgstr "Implantar o plug-in de roteador SAP"
-
-#, fuzzy
-msgid "Deploy the SSH daemon configuration plug-in"
-msgstr "Implantar o plugin de configuração SSH daemon"
 
 #, fuzzy
 msgid "Deploy the TSM plug-in and run it asynchronously"
@@ -19830,10 +19814,6 @@ msgid ""
 msgstr ""
 "Isto irá implementar os dois plugins de agente <tt>plesk_backup</tt> e "
 "<tt>plesk_domain</tt>, usados para monitorar o Plesk."
-
-#, fuzzy
-msgid "Deploy the mk_filehandler plug-in"
-msgstr "Implementar o plugin mk_filehandler"
 
 #, fuzzy
 msgid "Deploy the plug-in and run it asynchronously"
@@ -21254,6 +21234,10 @@ msgid "Do not deploy AD-Replication plug-in"
 msgstr "Não implantar plug-in de reaplicação AD"
 
 #, fuzzy
+msgid "Do not deploy Hyper-V VM Guest Information plug-in"
+msgstr "Não implantar plugin para Hyper-V VM Informação ao Convidado"
+
+#, fuzzy
 msgid "Do not deploy Hyper-V plug-ins"
 msgstr "Não implante o plugin Zypper"
 
@@ -21301,16 +21285,8 @@ msgid "Do not deploy automatic agent update plug-in"
 msgstr "Não implantar plug-in de atualização automática de agente"
 
 #, fuzzy
-msgid "Do not deploy plug-in for Hyper-V VM Guest Information"
-msgstr "Não implantar plugin para Hyper-V VM Informação ao Convidado"
-
-#, fuzzy
 msgid "Do not deploy plug-in for JAR signatures"
 msgstr "Não implantar plugin para assinaturas JAR"
-
-#, fuzzy
-msgid "Do not deploy plug-in for MS IIS Application Pool States"
-msgstr "Não implantar plugin para estados de pool de aplicativos do MS IIS"
 
 #, fuzzy
 msgid "Do not deploy plug-in for MS Office 365"
@@ -21321,16 +21297,8 @@ msgid "Do not deploy plug-in for Microsoft SQL Server"
 msgstr "Não implantar plugin para Microsoft SQL Server"
 
 #, fuzzy
-msgid "Do not deploy plug-in for Veeam backup status"
-msgstr "Não implantar plugin para o estado de backup do Veeam"
-
-#, fuzzy
 msgid "Do not deploy plug-in for Windows DHCP pools"
 msgstr "Não implante plugin para Windows DHCP pools"
-
-#, fuzzy
-msgid "Do not deploy plug-in for Windows broadcom bonding"
-msgstr "Não implante plugin para Windows broadcom bonding"
 
 #, fuzzy
 msgid "Do not deploy plug-in for Windows interfaces"
@@ -21339,10 +21307,6 @@ msgstr "Não implante plugin para interfaces Windows"
 #, fuzzy
 msgid "Do not deploy plug-in for Windows system info"
 msgstr "Não implantar plugin para Windows System Info"
-
-#, fuzzy
-msgid "Do not deploy plug-in for Windows task scheduler"
-msgstr "Não implantar plugin para o Programador de Tarefas do Windows"
 
 #, fuzzy, python-format
 msgid "Do not deploy the %s plug-in"
@@ -21417,20 +21381,12 @@ msgid "Do not deploy the SMART plug-in"
 msgstr "Não implante o plugin APT"
 
 #, fuzzy
-msgid "Do not deploy the SSH daemon configuration plug-in"
-msgstr "Não implante o plugin de configuração do SSH daemon"
-
-#, fuzzy
 msgid "Do not deploy the StorCLI plug-in"
 msgstr "Não implante o plugin StorCLI"
 
 #, fuzzy
 msgid "Do not deploy the TSM plug-in"
 msgstr "Não implante o plugin TSM"
-
-#, fuzzy
-msgid "Do not deploy the mk_filehandler plug-in"
-msgstr "Não implementar o plugin mk_filehandler"
 
 #, fuzzy
 msgid "Do not deploy the mk_mongodb plug-in"
@@ -32677,6 +32633,12 @@ msgstr ""
 msgid "If agent_hash is omitted, target needs to be given."
 msgstr "Se agent_hash for omitido, é necessário fornecer o destino."
 
+msgid ""
+"If an event is still in the <i>counting</i> state after the time period has "
+"passed, it will be removed from the Event Console. Only events which reach "
+"or exceed their expected count within the time period are kept."
+msgstr ""
+
 msgid "If available, the following metric will be shown"
 msgstr "Se disponível, será mostrada a seguinte métrica"
 
@@ -32754,15 +32716,6 @@ msgid "If given forward output to a different host using piggyback mechanics."
 msgstr ""
 "Se for dado, reencaminhar a saída para um anfitrião diferente utilizando a "
 "mecânica piggyback."
-
-msgid ""
-"If in this time range the configured number of time the rule is triggered, "
-"an event is being created. If the required count is not reached then the "
-"count is reset to zero."
-msgstr ""
-"Se nesse intervalo de tempo o número de tempo configurado para a regra for "
-"acionado, um evento está sendo criado. Se a contagem necessária não for "
-"atingida, a contagem é reinicializada para zero."
 
 msgid ""
 "If invalid certificates are trusted, any certificate for any site will be "
@@ -34379,11 +34332,12 @@ msgstr ""
 msgid "In Downtime"
 msgstr "Em Tempo de inactividade"
 
+#, fuzzy
 msgid ""
 "In a distributed setup where the Event Console is not running in the same "
 "site as the host is monitored you need to access the remote Event Console "
 "via TCP. Please make sure that this is activated in the global settings of "
-"the event console. The default port number is 6558."
+"the Event Console. The default port number is 6558."
 msgstr ""
 "Em uma configuração distribuída onde o Console de Eventos não está rodando "
 "no mesmo site que o host é monitorado, você precisa acessar o Console de "
@@ -37075,9 +37029,6 @@ msgstr "Palavra-chave"
 #, fuzzy
 msgid "KiB"
 msgstr "MiB"
-
-msgid "Kube-proxy version"
-msgstr "Versão do Kube-proxy"
 
 msgid "Kubelet version"
 msgstr "Versão do Kubelet"
@@ -46965,9 +46916,6 @@ msgstr "Número do Rack"
 msgid "Number of the Slot"
 msgstr "Número da Ranhura"
 
-msgid "Number of the graph template"
-msgstr "Número do modelo gráfico"
-
 msgid "Number of threads"
 msgstr "Número de fios"
 
@@ -53353,10 +53301,6 @@ msgstr "Consultas por segundo"
 
 msgid "Query"
 msgstr "Consulta"
-
-#, python-format
-msgid "Query %s resource"
-msgstr "Consulta %s recurso"
 
 msgid "Query Timeout"
 msgstr "Tempo limite da consulta"
@@ -62110,6 +62054,14 @@ msgstr ""
 "introduzir um nome DNS aqui, a resolução DNS será efectuada sempre que o "
 "anfitrião for verificado. O cache DNS do Checkmk <b>NÃO</b> é consultado."
 
+#, fuzzy
+msgid "Specify at least one resource to cache."
+msgstr "Por favor, selecione pelo menos um elemento"
+
+#, fuzzy
+msgid "Specify at least one section."
+msgstr "Por favor, selecione pelo menos um elemento"
+
 msgid ""
 "Specify at which time period a new file for the event history will be "
 "created."
@@ -65628,7 +65580,10 @@ msgstr "Texto/Mensagem do evento"
 msgid "That many permissions do not use the factory defaults."
 msgstr "Que muitas permissões não usam os padrões de fábrica."
 
-msgid "That many times the message must occur until an event is created"
+#, fuzzy
+msgid ""
+"That many times the message must occur until an event moves out of the "
+"<i>counting</i> state"
 msgstr "Que muitas vezes a mensagem deve ocorrer até que um evento seja criado"
 
 #, fuzzy, python-format
@@ -66427,9 +66382,9 @@ msgid ""
 "either use an absolute URL prefix like <tt>http://some.host/mysite/</tt> or "
 "a relative URL like <tt>/mysite/</tt>. When using relative prefixes you need "
 "a mod_proxy configuration in your local system Apache that proxies such URLs "
-"to the according remote site. Please refer to the <a target=_blank "
-"href='%s'>User Guide</a> for details. The prefix should end with a slash. "
-"Omit the <tt>/nagvis/</tt> from the prefix."
+"to the according remote site. Please refer to the <a href=\"%s\" "
+"target=\"_blank\">User Guide</a> for details. The prefix should end with a "
+"slash. Omit the <tt>/nagvis/</tt> from the prefix."
 msgstr ""
 "O prefixo URL será preposto a links de addons como o NagVis quando um link "
 "para tais aplicações apontar para um host ou serviço naquele site. Você pode "
@@ -67628,11 +67583,11 @@ msgstr ""
 #. weblate-flags: read-only
 #, python-brace-format
 msgid ""
-"The feature \"Explain with AI\" uses a Large Language Model (LLM) [{models}] "
-"of [{provider}] to generate its output. Generated content (output) may "
-"contain errors or inaccuracies. Ensure all output generated is carefully "
-"reviewed and checked by a human for factual correctness before being used in "
-"any way. For further information visit our "
+"The feature \"Explain with AI\" uses a Large Language Model (LLM) {models} "
+"of {provider} to generate its output. Generated content (output) may contain "
+"errors or inaccuracies. Ensure all output generated is carefully reviewed "
+"and checked by a human for factual correctness before being used in any way. "
+"For further information visit our "
 msgstr ""
 
 msgid ""
@@ -70189,6 +70144,13 @@ msgstr "O alvo foi eliminado."
 
 msgid "The target rule is no longer available"
 msgstr "A regra de destino não está mais disponível"
+
+msgid ""
+"The target site does not know about all notification rules shown below. "
+"These rules were created locally but not yet synchronized to the target "
+"site. Activate pending changes (or complete the user profile replication for "
+"personal rules) to synchronize them."
+msgstr ""
 
 msgid ""
 "The team secret of your SIGNL4 team. That is the last part of your webhook "
@@ -73141,7 +73103,7 @@ msgstr ""
 "do Windows."
 
 #, fuzzy
-msgid "This plug-in checks the last return state of Windows task scripts"
+msgid "This plug-in checks the last return state of Windows task scripts."
 msgstr ""
 "Este plugin verifica o último estado de retorno dos scripts de tarefas do "
 "Windows"
@@ -73248,7 +73210,7 @@ msgstr ""
 "Windows."
 
 #, fuzzy
-msgid "This plug-in monitors Veeam backup status on Window hosts."
+msgid "This plug-in monitors Veeam backup status on Windows hosts."
 msgstr "Este plugin monitora o estado do backup do Veeam em hosts Window."
 
 #, fuzzy
@@ -73289,7 +73251,7 @@ msgid ""
 "This plug-in requires the executable <tt>C:"
 "\\Programme\\GnuWin32\\sbin\\dmidecode.exe</tt>. This is the default "
 "location when installing this tool. You can download it for free from <a "
-"href='http://gnuwin32.sourceforge.net/packages/dmidecode.htm'>here</a>. "
+"href='http://gnuwin32.sourceforge.net/packages/dmidecode.htm'>here</a>."
 msgstr ""
 "Este plugin requer o executável <tt>C:"
 "\\Programme\\GnuWin32\\sbin\\midecode.exe</tt>. Esta é a localização padrão "
@@ -73983,6 +73945,11 @@ msgstr "Esta regra é depreciada. Por favor, use \"%s\" em vez disso."
 
 msgid "This rule is disabled"
 msgstr "Esta regra está desactivada"
+
+msgid ""
+"This rule is not yet known on the target site. Activate pending changes or "
+"complete the user profile replication to synchronize it."
+msgstr ""
 
 msgid ""
 "This rule is used to configure thresholds for counter values read from "
@@ -79937,7 +79904,7 @@ msgstr "URL para HiveManagerNG, por exemplo https://cloud.aerohive.com"
 #, fuzzy
 msgid ""
 "URL to access the central site from the remote site, including the protocol "
-"(<tt>http://</tt> or <tt>https://</tt>) and </tt>/check_mk/</tt>. In case of "
+"(<tt>http://</tt> or <tt>https://</tt>) and <tt>/check_mk/</tt>. In case of "
 "HTTPS, the trusted certificate authorities from \"site management\" will be "
 "applied to verify the SSL connection. If this URL differs per remote site, "
 "you can set different URLs per site-specific global settings within the "
@@ -79953,9 +79920,10 @@ msgstr ""
 msgid "URL to central site"
 msgstr "URL para o site central"
 
+#, fuzzy
 msgid ""
 "URL under that the remote server is accessible from its monitored hosts, "
-"including the protocol (<tt>http://</tt> or <tt>https://</tt>) and </tt>/"
+"including the protocol (<tt>http://</tt> or <tt>https://</tt>) and <tt>/"
 "check_mk/</tt>. This URL is used to provide the update URL for a host "
 "automatically on agent registration or update."
 msgstr ""
@@ -85456,8 +85424,9 @@ msgstr ""
 "correspondente. O place holder <tt>$HOSTNAME$</tt> contém o nome do host "
 "filho e <tt>$2$</tt> o nome do host pai."
 
+#, fuzzy
 msgid ""
-"When sending notifications from the monitoring system to the event console "
+"When sending notifications from the monitoring system to the Event Console "
 "the following syslog facility will be set for these messages. Choosing a "
 "unique facility makes creation of rules easier."
 msgstr ""
@@ -86472,17 +86441,6 @@ msgstr ""
 "continuar com o próximo."
 
 msgid ""
-"With this option you can make the rule being executed not before the "
-"matching message is seen a couple of times in a defined time interval. Also "
-"counting activates the aggregation of messages that result from the same "
-"rule into one event, even if <i>count</i> is set to 1."
-msgstr ""
-"Com esta opção você pode fazer com que a regra sendo executada não antes que "
-"a mensagem correspondente seja vista algumas vezes em um intervalo de tempo "
-"definido. Também a contagem ativa a agregação de mensagens que resultam da "
-"mesma regra em um evento, mesmo que <i>count</i> esteja definido como 1."
-
-msgid ""
 "With this option you can prevent cleanup of files which have been updated "
 "within this time range."
 msgstr ""
@@ -86504,6 +86462,18 @@ msgid ""
 msgstr ""
 "Com esta opção você pode especificar se a notificação mais antiga (padrão) "
 "ou a mais nova deve ser mostrada na parte superior do correio de notificação."
+
+#, fuzzy
+msgid ""
+"With this option, rules are not executed until the matching message has been "
+"received for the count specified. Counting activates the aggregation of "
+"messages matching this rule, combining them into one event, even if "
+"<i>count</i> is set to 1."
+msgstr ""
+"Com esta opção você pode fazer com que a regra sendo executada não antes que "
+"a mensagem correspondente seja vista algumas vezes em um intervalo de tempo "
+"definido. Também a contagem ativa a agregação de mensagens que resultam da "
+"mesma regra em um evento, mesmo que <i>count</i> esteja definido como 1."
 
 msgid ""
 "With this option, you may verify the direct issuer of the checked "
@@ -89509,7 +89479,6 @@ msgstr "contando"
 msgid "cp437"
 msgstr "cp437"
 
-#, fuzzy
 msgid "crash report"
 msgid_plural "crash reports"
 msgstr[0] ""
@@ -89902,6 +89871,10 @@ msgstr "global"
 msgid "graph"
 msgstr "gráfico"
 
+#, fuzzy, python-format
+msgid "graph '%s'"
+msgstr "gráficos"
+
 #, python-format
 msgid "graph number %d"
 msgstr "número do gráfico %d"
@@ -90011,7 +89984,6 @@ msgstr "os anfitriões estão de pé e não têm problemas de serviço"
 msgid "hosts in total"
 msgstr "anfitriões no total"
 
-#, fuzzy
 msgid "hour"
 msgid_plural "hours"
 msgstr[0] ""
@@ -94694,6 +94666,26 @@ msgstr "Adicionar configuração do estado"
 msgid "Could not enable the OpenTelemetry Collector"
 msgstr "Adicionar configuração do estado"
 
+#, fuzzy
+msgid "Metric backend connection"
+msgstr "Conexões do verniz backend"
+
+#, fuzzy
+msgid "Could not enable the metric backend"
+msgstr "Adicionar configuração do estado"
+
+#, fuzzy
+msgid "Save new passwords"
+msgstr "Nova Senha"
+
+#, fuzzy
+msgid "Could not save password \"%{title}\""
+msgstr "Não foi possível salvar as mudanças: %s"
+
+#, fuzzy
+msgid "The password was rejected by the server."
+msgstr "Senha do usuário"
+
 msgid "Run the installation script"
 msgstr ""
 
@@ -95701,6 +95693,73 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Deploy plug-in for MS IIS Application Pool States"
+#~ msgstr "Implantar plugin para estados do pool de aplicativos do MS IIS"
+
+#, fuzzy
+#~ msgid "Deploy plug-in for Windows broadcom bonding"
+#~ msgstr "Implantar plugin para ligação de widecom do Windows"
+
+#, fuzzy
+#~ msgid "Deploy plug-in for Windows task scheduler"
+#~ msgstr "Implementar plugin para o Programador de Tarefas do Windows"
+
+#, fuzzy
+#~ msgid "Deploy the SSH daemon configuration plug-in"
+#~ msgstr "Implantar o plugin de configuração SSH daemon"
+
+#, fuzzy
+#~ msgid "Do not deploy plug-in for MS IIS Application Pool States"
+#~ msgstr "Não implantar plugin para estados de pool de aplicativos do MS IIS"
+
+#, fuzzy
+#~ msgid "Do not deploy plug-in for Windows broadcom bonding"
+#~ msgstr "Não implante plugin para Windows broadcom bonding"
+
+#, fuzzy
+#~ msgid "Do not deploy plug-in for Windows task scheduler"
+#~ msgstr "Não implantar plugin para o Programador de Tarefas do Windows"
+
+#, fuzzy
+#~ msgid "Do not deploy the SSH daemon configuration plug-in"
+#~ msgstr "Não implante o plugin de configuração do SSH daemon"
+
+#~ msgid ""
+#~ "If in this time range the configured number of time the rule is "
+#~ "triggered, an event is being created. If the required count is not "
+#~ "reached then the count is reset to zero."
+#~ msgstr ""
+#~ "Se nesse intervalo de tempo o número de tempo configurado para a regra "
+#~ "for acionado, um evento está sendo criado. Se a contagem necessária não "
+#~ "for atingida, a contagem é reinicializada para zero."
+
+#~ msgid "Kube-proxy version"
+#~ msgstr "Versão do Kube-proxy"
+
+#, fuzzy
+#~ msgid "Deploy plug-in for Veeam backup status"
+#~ msgstr "Implantar plugin para o estado de backup do Veeam"
+
+#, fuzzy
+#~ msgid "Deploy the mk_filehandler plug-in"
+#~ msgstr "Implementar o plugin mk_filehandler"
+
+#, fuzzy
+#~ msgid "Do not deploy plug-in for Veeam backup status"
+#~ msgstr "Não implantar plugin para o estado de backup do Veeam"
+
+#, fuzzy
+#~ msgid "Do not deploy the mk_filehandler plug-in"
+#~ msgstr "Não implementar o plugin mk_filehandler"
+
+#~ msgid "Number of the graph template"
+#~ msgstr "Número do modelo gráfico"
+
+#, python-format
+#~ msgid "Query %s resource"
+#~ msgstr "Consulta %s recurso"
 
 #~ msgid "Deploy mk_mongodb.py with authentication."
 #~ msgstr "Implementar mk_mongodb.py sem autenticação."
@@ -104683,9 +104742,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Linux/UNIX Agent Options"
 #~ msgstr "Agente Linux"
-
-#~ msgid "graphs"
-#~ msgstr "gráficos"
 
 #, fuzzy
 #~ msgid "No selected graph line"

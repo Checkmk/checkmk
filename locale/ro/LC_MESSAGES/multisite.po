@@ -112,6 +112,10 @@ msgstr ""
 msgid " Finished at: %s."
 msgstr " Finalizat la: %s."
 
+#, fuzzy
+msgid " Finished."
+msgstr "Finalizat."
+
 msgid ""
 " If this action was not triggered by you, contact your administrator for "
 "further investigation."
@@ -11009,8 +11013,8 @@ msgid ""
 "graphical user interface (GUI) from running into timeouts when remote sites "
 "do not respond. You need to add the remote monitoring servers as hosts into "
 "your local monitoring site and use their host state as a reachability state "
-"of the remote site. Please refer to the <a target=_blank href='%s'>online "
-"documentation</a> for details."
+"of the remote site. Please refer to the <a href=\"%s\" "
+"target=\"_blank\">online documentation</a> for details."
 msgstr ""
 "Prin specificarea unei gazde de stare pentru fiecare conexiune nelocală, "
 "evitați ca Multisite să intre în timeout-uri atunci când site-urile la "
@@ -19578,6 +19582,11 @@ msgid "Deploy Arcserve plug-in"
 msgstr "Implementarea plugin-ului Arcserve"
 
 #, fuzzy
+msgid "Deploy Hyper-V VM Guest Information plug-in"
+msgstr ""
+"Implementarea pluginului pentru informațiile despre oaspeții VM Hyper-V"
+
+#, fuzzy
 msgid "Deploy Hyper-V monitoring plug-ins"
 msgstr "Implementarea plugin-urilor Unitrends"
 
@@ -19673,37 +19682,16 @@ msgid "Deploy plug-in for DB2"
 msgstr "Implementarea plugin-ului pentru DB2"
 
 #, fuzzy
-msgid "Deploy plug-in for Hyper-V VM Guest Information"
-msgstr ""
-"Implementarea pluginului pentru informațiile despre oaspeții VM Hyper-V"
-
-#, fuzzy
 msgid "Deploy plug-in for JAR signatures"
 msgstr "Implementarea plugin-ului pentru semnăturile JAR"
-
-#, fuzzy
-msgid "Deploy plug-in for MS IIS Application Pool States"
-msgstr "Implementarea plugin-ului pentru MS IIS Application Pool States"
-
-#, fuzzy
-msgid "Deploy plug-in for Veeam backup status"
-msgstr "Implementarea plugin-ului pentru starea de backup Veeam"
 
 #, fuzzy
 msgid "Deploy plug-in for Windows DHCP pools"
 msgstr "Implementarea plugin-ului pentru grupurile DHCP din Windows"
 
 #, fuzzy
-msgid "Deploy plug-in for Windows broadcom bonding"
-msgstr "Implementarea plugin-ului pentru Windows broadcom bonding"
-
-#, fuzzy
 msgid "Deploy plug-in for Windows system info"
 msgstr "Implementarea plugin-ului pentru Windows System Info"
-
-#, fuzzy
-msgid "Deploy plug-in for Windows task scheduler"
-msgstr "Implementarea plugin-ului pentru Windows Task Scheduler"
 
 #, fuzzy
 msgid "Deploy plug-in that updates agent automatically"
@@ -19757,10 +19745,6 @@ msgstr "Implementați extensia SAP HANA"
 #, fuzzy
 msgid "Deploy the SAP router plug-in"
 msgstr "Implementați plugin-ul routerului SAP"
-
-#, fuzzy
-msgid "Deploy the SSH daemon configuration plug-in"
-msgstr "Implementarea plugin-ului de configurare a daemonului SSH"
 
 #, fuzzy
 msgid "Deploy the TSM plug-in and run it asynchronously"
@@ -19845,10 +19829,6 @@ msgid ""
 msgstr ""
 "Aceasta va implementa cele două plugin-uri agent <tt>plesk_backup</tt> și "
 "<tt>plesk_domain</tt>, utilizate pentru monitorizarea Plesk."
-
-#, fuzzy
-msgid "Deploy the mk_filehandler plug-in"
-msgstr "Implementați plugin-ul mk_filehandler"
 
 #, fuzzy
 msgid "Deploy the plug-in and run it asynchronously"
@@ -21277,6 +21257,11 @@ msgid "Do not deploy AD-Replication plug-in"
 msgstr "Nu implementați pluginul AD-Replication"
 
 #, fuzzy
+msgid "Do not deploy Hyper-V VM Guest Information plug-in"
+msgstr ""
+"Nu implementați pluginul pentru informațiile despre oaspeții VM Hyper-V VM"
+
+#, fuzzy
 msgid "Do not deploy Hyper-V plug-ins"
 msgstr "Nu implementați plugin-ul Zypper"
 
@@ -21324,17 +21309,8 @@ msgid "Do not deploy automatic agent update plug-in"
 msgstr "Nu implementați pluginul de actualizare automată a agentului"
 
 #, fuzzy
-msgid "Do not deploy plug-in for Hyper-V VM Guest Information"
-msgstr ""
-"Nu implementați pluginul pentru informațiile despre oaspeții VM Hyper-V VM"
-
-#, fuzzy
 msgid "Do not deploy plug-in for JAR signatures"
 msgstr "Nu implementați plugin-ul pentru semnăturile JAR"
-
-#, fuzzy
-msgid "Do not deploy plug-in for MS IIS Application Pool States"
-msgstr "Nu implementați plugin-ul pentru MS IIS Application Pool States"
 
 #, fuzzy
 msgid "Do not deploy plug-in for MS Office 365"
@@ -21345,16 +21321,8 @@ msgid "Do not deploy plug-in for Microsoft SQL Server"
 msgstr "Nu implementați pluginul pentru Microsoft SQL Server"
 
 #, fuzzy
-msgid "Do not deploy plug-in for Veeam backup status"
-msgstr "Nu implementați pluginul pentru starea de backup Veeam"
-
-#, fuzzy
 msgid "Do not deploy plug-in for Windows DHCP pools"
 msgstr "Nu implementați plugin-ul pentru grupurile DHCP Windows DHCP"
-
-#, fuzzy
-msgid "Do not deploy plug-in for Windows broadcom bonding"
-msgstr "Nu implementați plugin-ul pentru Windows broadcom bonding"
 
 #, fuzzy
 msgid "Do not deploy plug-in for Windows interfaces"
@@ -21363,10 +21331,6 @@ msgstr "Nu implementați plugin-ul pentru interfețele Windows"
 #, fuzzy
 msgid "Do not deploy plug-in for Windows system info"
 msgstr "Nu implementați pluginul pentru Windows System Info"
-
-#, fuzzy
-msgid "Do not deploy plug-in for Windows task scheduler"
-msgstr "Nu implementați pluginul pentru Windows Task Scheduler"
 
 #, fuzzy, python-format
 msgid "Do not deploy the %s plug-in"
@@ -21441,20 +21405,12 @@ msgid "Do not deploy the SMART plug-in"
 msgstr "Nu implementați extensia APT"
 
 #, fuzzy
-msgid "Do not deploy the SSH daemon configuration plug-in"
-msgstr "Nu implementați plugin-ul de configurare a daemonului SSH"
-
-#, fuzzy
 msgid "Do not deploy the StorCLI plug-in"
 msgstr "Nu implementați extensia StorCLI"
 
 #, fuzzy
 msgid "Do not deploy the TSM plug-in"
 msgstr "Nu implementați extensia TSM"
-
-#, fuzzy
-msgid "Do not deploy the mk_filehandler plug-in"
-msgstr "Nu implementați plugin-ul mk_filehandler"
 
 #, fuzzy
 msgid "Do not deploy the mk_mongodb plug-in"
@@ -32714,6 +32670,12 @@ msgstr ""
 msgid "If agent_hash is omitted, target needs to be given."
 msgstr "Dacă agent_hash este omis, trebuie să se precizeze ținta."
 
+msgid ""
+"If an event is still in the <i>counting</i> state after the time period has "
+"passed, it will be removed from the Event Console. Only events which reach "
+"or exceed their expected count within the time period are kept."
+msgstr ""
+
 msgid "If available, the following metric will be shown"
 msgstr "Dacă este disponibilă, se va afișa următoarea măsurătoare"
 
@@ -32792,15 +32754,6 @@ msgid "If given forward output to a different host using piggyback mechanics."
 msgstr ""
 "În cazul în care este dată, transmite ieșirea către o altă gazdă folosind "
 "mecanica piggyback."
-
-msgid ""
-"If in this time range the configured number of time the rule is triggered, "
-"an event is being created. If the required count is not reached then the "
-"count is reset to zero."
-msgstr ""
-"Dacă în acest interval de timp se declanșează numărul configurat de ori "
-"regula, se creează un eveniment. Dacă nu se atinge numărul necesar, atunci "
-"numărul este resetat la zero."
 
 msgid ""
 "If invalid certificates are trusted, any certificate for any site will be "
@@ -34447,11 +34400,12 @@ msgstr ""
 msgid "In Downtime"
 msgstr "În timp de indisponibilitate"
 
+#, fuzzy
 msgid ""
 "In a distributed setup where the Event Console is not running in the same "
 "site as the host is monitored you need to access the remote Event Console "
 "via TCP. Please make sure that this is activated in the global settings of "
-"the event console. The default port number is 6558."
+"the Event Console. The default port number is 6558."
 msgstr ""
 "Într-o configurație distribuită în care Consola de evenimente nu rulează în "
 "același loc în care este monitorizată gazda, trebuie să accesați Consola de "
@@ -37168,9 +37122,6 @@ msgstr "Cuvânt cheie"
 #, fuzzy
 msgid "KiB"
 msgstr "MiB"
-
-msgid "Kube-proxy version"
-msgstr "Versiunea Kube-proxy"
 
 msgid "Kubelet version"
 msgstr "Versiunea Kubelet"
@@ -47047,9 +46998,6 @@ msgstr "Numărul raftului"
 msgid "Number of the Slot"
 msgstr "Numărul fantei"
 
-msgid "Number of the graph template"
-msgstr "Numărul șablonului grafic"
-
 msgid "Number of threads"
 msgstr "Numărul de fire"
 
@@ -53441,10 +53389,6 @@ msgstr "Interogări pe secundă"
 
 msgid "Query"
 msgstr "Interogare"
-
-#, python-format
-msgid "Query %s resource"
-msgstr "Consultați resursa %s"
 
 msgid "Query Timeout"
 msgstr "Timeout de interogare"
@@ -62210,6 +62154,14 @@ msgstr ""
 "când este verificată gazda. Cache-ul DNS al Checkmk nu este <b>NU</b> "
 "interogat."
 
+#, fuzzy
+msgid "Specify at least one resource to cache."
+msgstr "Vă rugăm să selectați cel puțin un element"
+
+#, fuzzy
+msgid "Specify at least one section."
+msgstr "Vă rugăm să selectați cel puțin un element"
+
 msgid ""
 "Specify at which time period a new file for the event history will be "
 "created."
@@ -65730,7 +65682,10 @@ msgstr "Textul/Mesajul evenimentului"
 msgid "That many permissions do not use the factory defaults."
 msgstr "Că multe permisiuni nu folosesc valorile implicite din fabrică."
 
-msgid "That many times the message must occur until an event is created"
+#, fuzzy
+msgid ""
+"That many times the message must occur until an event moves out of the "
+"<i>counting</i> state"
 msgstr "De câte ori trebuie să apară mesajul până când se creează un eveniment"
 
 #, python-format
@@ -66538,9 +66493,9 @@ msgid ""
 "either use an absolute URL prefix like <tt>http://some.host/mysite/</tt> or "
 "a relative URL like <tt>/mysite/</tt>. When using relative prefixes you need "
 "a mod_proxy configuration in your local system Apache that proxies such URLs "
-"to the according remote site. Please refer to the <a target=_blank "
-"href='%s'>User Guide</a> for details. The prefix should end with a slash. "
-"Omit the <tt>/nagvis/</tt> from the prefix."
+"to the according remote site. Please refer to the <a href=\"%s\" "
+"target=\"_blank\">User Guide</a> for details. The prefix should end with a "
+"slash. Omit the <tt>/nagvis/</tt> from the prefix."
 msgstr ""
 "Prefixul URL va fi adăugat la legăturile cu addon-uri precum NagVis atunci "
 "când un link către astfel de aplicații indică o gazdă sau un serviciu de pe "
@@ -67751,11 +67706,11 @@ msgstr ""
 #. weblate-flags: read-only
 #, python-brace-format
 msgid ""
-"The feature \"Explain with AI\" uses a Large Language Model (LLM) [{models}] "
-"of [{provider}] to generate its output. Generated content (output) may "
-"contain errors or inaccuracies. Ensure all output generated is carefully "
-"reviewed and checked by a human for factual correctness before being used in "
-"any way. For further information visit our "
+"The feature \"Explain with AI\" uses a Large Language Model (LLM) {models} "
+"of {provider} to generate its output. Generated content (output) may contain "
+"errors or inaccuracies. Ensure all output generated is carefully reviewed "
+"and checked by a human for factual correctness before being used in any way. "
+"For further information visit our "
 msgstr ""
 
 msgid ""
@@ -70341,6 +70296,13 @@ msgstr "Ținta a fost ștearsă."
 
 msgid "The target rule is no longer available"
 msgstr "Regula țintă nu mai este disponibilă"
+
+msgid ""
+"The target site does not know about all notification rules shown below. "
+"These rules were created locally but not yet synchronized to the target "
+"site. Activate pending changes (or complete the user profile replication for "
+"personal rules) to synchronize them."
+msgstr ""
 
 msgid ""
 "The team secret of your SIGNL4 team. That is the last part of your webhook "
@@ -73341,7 +73303,7 @@ msgstr ""
 "Windows."
 
 #, fuzzy
-msgid "This plug-in checks the last return state of Windows task scripts"
+msgid "This plug-in checks the last return state of Windows task scripts."
 msgstr ""
 "Acest plugin verifică ultima stare de întoarcere a scripturilor de sarcini "
 "Windows"
@@ -73450,7 +73412,7 @@ msgstr ""
 "Acest plugin monitorizează MS IIS Application Pool States pe gazdele Windows."
 
 #, fuzzy
-msgid "This plug-in monitors Veeam backup status on Window hosts."
+msgid "This plug-in monitors Veeam backup status on Windows hosts."
 msgstr "Acest plugin monitorizează starea de backup Veeam pe gazdele Window."
 
 #, fuzzy
@@ -73492,7 +73454,7 @@ msgid ""
 "This plug-in requires the executable <tt>C:"
 "\\Programme\\GnuWin32\\sbin\\dmidecode.exe</tt>. This is the default "
 "location when installing this tool. You can download it for free from <a "
-"href='http://gnuwin32.sourceforge.net/packages/dmidecode.htm'>here</a>. "
+"href='http://gnuwin32.sourceforge.net/packages/dmidecode.htm'>here</a>."
 msgstr ""
 "Acest plugin necesită executabilul <tt>C:"
 "\\Programme\\GnuWin32\\sbin\\dmidecode.exe</tt>. Aceasta este locația "
@@ -74198,6 +74160,11 @@ msgstr "Această regulă este depășită. Vă rugăm să utilizați \"%s\" în 
 
 msgid "This rule is disabled"
 msgstr "Această regulă este dezactivată"
+
+msgid ""
+"This rule is not yet known on the target site. Activate pending changes or "
+"complete the user profile replication to synchronize it."
+msgstr ""
 
 msgid ""
 "This rule is used to configure thresholds for counter values read from "
@@ -80098,7 +80065,7 @@ msgstr "URL către HiveManagerNG, de exemplu https://cloud.aerohive.com"
 #, fuzzy
 msgid ""
 "URL to access the central site from the remote site, including the protocol "
-"(<tt>http://</tt> or <tt>https://</tt>) and </tt>/check_mk/</tt>. In case of "
+"(<tt>http://</tt> or <tt>https://</tt>) and <tt>/check_mk/</tt>. In case of "
 "HTTPS, the trusted certificate authorities from \"site management\" will be "
 "applied to verify the SSL connection. If this URL differs per remote site, "
 "you can set different URLs per site-specific global settings within the "
@@ -80115,9 +80082,10 @@ msgstr ""
 msgid "URL to central site"
 msgstr "URL către site-ul central"
 
+#, fuzzy
 msgid ""
 "URL under that the remote server is accessible from its monitored hosts, "
-"including the protocol (<tt>http://</tt> or <tt>https://</tt>) and </tt>/"
+"including the protocol (<tt>http://</tt> or <tt>https://</tt>) and <tt>/"
 "check_mk/</tt>. This URL is used to provide the update URL for a host "
 "automatically on agent registration or update."
 msgstr ""
@@ -85646,8 +85614,9 @@ msgstr ""
 "<tt>$HOSTNAME$</tt> conține numele gazdei copil și <tt>$2$</tt> numele "
 "gazdei părinte."
 
+#, fuzzy
 msgid ""
-"When sending notifications from the monitoring system to the event console "
+"When sending notifications from the monitoring system to the Event Console "
 "the following syslog facility will be set for these messages. Choosing a "
 "unique facility makes creation of rules easier."
 msgstr ""
@@ -86672,18 +86641,6 @@ msgstr ""
 "continua cu următorul."
 
 msgid ""
-"With this option you can make the rule being executed not before the "
-"matching message is seen a couple of times in a defined time interval. Also "
-"counting activates the aggregation of messages that result from the same "
-"rule into one event, even if <i>count</i> is set to 1."
-msgstr ""
-"Cu această opțiune puteți face ca regula să nu fie executată înainte ca "
-"mesajul corespunzător să fie văzut de câteva ori într-un interval de timp "
-"definit. De asemenea, numărarea activează agregarea mesajelor care rezultă "
-"din aceeași regulă într-un singur eveniment, chiar dacă <i>count</i> este "
-"setat la 1."
-
-msgid ""
 "With this option you can prevent cleanup of files which have been updated "
 "within this time range."
 msgstr ""
@@ -86707,6 +86664,19 @@ msgstr ""
 "Cu această opțiune puteți specifica dacă cea mai veche (implicit) sau cea "
 "mai nouă notificare trebuie să fie afișată în partea de sus a mesajului de "
 "notificare."
+
+#, fuzzy
+msgid ""
+"With this option, rules are not executed until the matching message has been "
+"received for the count specified. Counting activates the aggregation of "
+"messages matching this rule, combining them into one event, even if "
+"<i>count</i> is set to 1."
+msgstr ""
+"Cu această opțiune puteți face ca regula să nu fie executată înainte ca "
+"mesajul corespunzător să fie văzut de câteva ori într-un interval de timp "
+"definit. De asemenea, numărarea activează agregarea mesajelor care rezultă "
+"din aceeași regulă într-un singur eveniment, chiar dacă <i>count</i> este "
+"setat la 1."
 
 msgid ""
 "With this option, you may verify the direct issuer of the checked "
@@ -90118,6 +90088,10 @@ msgstr "global"
 
 msgid "graph"
 msgstr "grafic"
+
+#, fuzzy, python-format
+msgid "graph '%s'"
+msgstr "grafice"
 
 #, python-format
 msgid "graph number %d"
@@ -94946,6 +94920,26 @@ msgstr "Configurația stilului selectat"
 msgid "Could not enable the OpenTelemetry Collector"
 msgstr "Configurația stilului selectat"
 
+#, fuzzy
+msgid "Metric backend connection"
+msgstr "Conexiuni Varnish Backend"
+
+#, fuzzy
+msgid "Could not enable the metric backend"
+msgstr "Configurația stilului selectat"
+
+#, fuzzy
+msgid "Save new passwords"
+msgstr "Parolă nouă"
+
+#, fuzzy
+msgid "Could not save password \"%{title}\""
+msgstr "Nu s-a putut salva modificările: %s"
+
+#, fuzzy
+msgid "The password was rejected by the server."
+msgstr "Parola utilizatorului"
+
 msgid "Run the installation script"
 msgstr ""
 
@@ -95958,6 +95952,73 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Deploy plug-in for MS IIS Application Pool States"
+#~ msgstr "Implementarea plugin-ului pentru MS IIS Application Pool States"
+
+#, fuzzy
+#~ msgid "Deploy plug-in for Windows broadcom bonding"
+#~ msgstr "Implementarea plugin-ului pentru Windows broadcom bonding"
+
+#, fuzzy
+#~ msgid "Deploy plug-in for Windows task scheduler"
+#~ msgstr "Implementarea plugin-ului pentru Windows Task Scheduler"
+
+#, fuzzy
+#~ msgid "Deploy the SSH daemon configuration plug-in"
+#~ msgstr "Implementarea plugin-ului de configurare a daemonului SSH"
+
+#, fuzzy
+#~ msgid "Do not deploy plug-in for MS IIS Application Pool States"
+#~ msgstr "Nu implementați plugin-ul pentru MS IIS Application Pool States"
+
+#, fuzzy
+#~ msgid "Do not deploy plug-in for Windows broadcom bonding"
+#~ msgstr "Nu implementați plugin-ul pentru Windows broadcom bonding"
+
+#, fuzzy
+#~ msgid "Do not deploy plug-in for Windows task scheduler"
+#~ msgstr "Nu implementați pluginul pentru Windows Task Scheduler"
+
+#, fuzzy
+#~ msgid "Do not deploy the SSH daemon configuration plug-in"
+#~ msgstr "Nu implementați plugin-ul de configurare a daemonului SSH"
+
+#~ msgid ""
+#~ "If in this time range the configured number of time the rule is "
+#~ "triggered, an event is being created. If the required count is not "
+#~ "reached then the count is reset to zero."
+#~ msgstr ""
+#~ "Dacă în acest interval de timp se declanșează numărul configurat de ori "
+#~ "regula, se creează un eveniment. Dacă nu se atinge numărul necesar, "
+#~ "atunci numărul este resetat la zero."
+
+#~ msgid "Kube-proxy version"
+#~ msgstr "Versiunea Kube-proxy"
+
+#, fuzzy
+#~ msgid "Deploy plug-in for Veeam backup status"
+#~ msgstr "Implementarea plugin-ului pentru starea de backup Veeam"
+
+#, fuzzy
+#~ msgid "Deploy the mk_filehandler plug-in"
+#~ msgstr "Implementați plugin-ul mk_filehandler"
+
+#, fuzzy
+#~ msgid "Do not deploy plug-in for Veeam backup status"
+#~ msgstr "Nu implementați pluginul pentru starea de backup Veeam"
+
+#, fuzzy
+#~ msgid "Do not deploy the mk_filehandler plug-in"
+#~ msgstr "Nu implementați plugin-ul mk_filehandler"
+
+#~ msgid "Number of the graph template"
+#~ msgstr "Numărul șablonului grafic"
+
+#, python-format
+#~ msgid "Query %s resource"
+#~ msgstr "Consultați resursa %s"
 
 #~ msgid "Deploy mk_mongodb.py with authentication."
 #~ msgstr "Implementați mk_mongodb.py cu autentificare."
@@ -105392,9 +105453,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Linux/UNIX Agent Options"
 #~ msgstr "Agent Linux"
-
-#~ msgid "graphs"
-#~ msgstr "grafice"
 
 #, fuzzy
 #~ msgid "No selected graph line"

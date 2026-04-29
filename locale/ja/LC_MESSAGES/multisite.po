@@ -108,6 +108,10 @@ msgstr ""
 msgid " Finished at: %s."
 msgstr " 終了: %s."
 
+#, fuzzy
+msgid " Finished."
+msgstr "終了しました。"
+
 msgid ""
 " If this action was not triggered by you, contact your administrator for "
 "further investigation."
@@ -10212,14 +10216,14 @@ msgstr ""
 "す。それ以外の場合は、選択したカスタマーに割り当てられたサイトでのみ利用でき"
 "ます。"
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
 "By specifying a status host for each non-local connection you prevent "
 "graphical user interface (GUI) from running into timeouts when remote sites "
 "do not respond. You need to add the remote monitoring servers as hosts into "
 "your local monitoring site and use their host state as a reachability state "
-"of the remote site. Please refer to the <a target=_blank href='%s'>online "
-"documentation</a> for details."
+"of the remote site. Please refer to the <a href=\"%s\" "
+"target=\"_blank\">online documentation</a> for details."
 msgstr ""
 "非ローカル接続ごとにステータスホストを指定することにより、リモートサイトが応"
 "答しないときにグラフィカルユーザーインターフェイス（GUI）がタイムアウトになる"
@@ -18243,6 +18247,10 @@ msgstr "ADレプリケーションプラグインをデプロイする"
 msgid "Deploy Arcserve plug-in"
 msgstr "Arcserveプラグインをデプロイする"
 
+#, fuzzy
+msgid "Deploy Hyper-V VM Guest Information plug-in"
+msgstr "Hyper-V VMゲスト情報用のプラグインをデプロイする"
+
 msgid "Deploy Hyper-V monitoring plug-ins"
 msgstr "Hyper-V 監視プラグインをデプロイする"
 
@@ -18316,29 +18324,14 @@ msgstr "Ceph用プラグインを展開する"
 msgid "Deploy plug-in for DB2"
 msgstr "DB2用のプラグインをデプロイする"
 
-msgid "Deploy plug-in for Hyper-V VM Guest Information"
-msgstr "Hyper-V VMゲスト情報用のプラグインをデプロイする"
-
 msgid "Deploy plug-in for JAR signatures"
 msgstr "JAR署名用のプラグインをデプロイする"
-
-msgid "Deploy plug-in for MS IIS Application Pool States"
-msgstr "MS IIS Application Pool States のプラグインをデプロイする"
-
-msgid "Deploy plug-in for Veeam backup status"
-msgstr "Veeamバックアップステータス用のプラグインをデプロイする"
 
 msgid "Deploy plug-in for Windows DHCP pools"
 msgstr "Windows DHCPプール用のプラグインをデプロイする"
 
-msgid "Deploy plug-in for Windows broadcom bonding"
-msgstr "Windows Broadcomボンディング用のプラグインをデプロイする"
-
 msgid "Deploy plug-in for Windows system info"
 msgstr "Windowsシステム情報用のプラグインをデプロイする"
-
-msgid "Deploy plug-in for Windows task scheduler"
-msgstr "Windowsタスクスケジューラ用のプラグインをデプロイする"
 
 msgid "Deploy plug-in that updates agent automatically"
 msgstr "エージェント自動アップデートプラグインをデプロイする"
@@ -18380,9 +18373,6 @@ msgstr "SAP HANAプラグインをデプロイする"
 
 msgid "Deploy the SAP router plug-in"
 msgstr "SAPルータープラグインをデプロイする"
-
-msgid "Deploy the SSH daemon configuration plug-in"
-msgstr "SSHデーモン構成プラグインをデプロイする"
 
 msgid "Deploy the TSM plug-in and run it asynchronously"
 msgstr "TSMプラグインをデプロイし非同期実行する"
@@ -18463,9 +18453,6 @@ msgid ""
 msgstr ""
 "ターゲットシステムに、エージェントプラグイン <tt>unitrends_backup</tt> およ"
 "び <tt>unitrends_replication</tt> をデプロイします。"
-
-msgid "Deploy the mk_filehandler plug-in"
-msgstr "mk_filehandlerプラグインをデプロイする"
 
 msgid "Deploy the plug-in and run it asynchronously"
 msgstr "プラグインをデプロイし非同期実行する"
@@ -19769,6 +19756,10 @@ msgstr "ホストを作成しない"
 msgid "Do not deploy AD-Replication plug-in"
 msgstr "AD-Replicationプラグインをデプロイしないでください"
 
+#, fuzzy
+msgid "Do not deploy Hyper-V VM Guest Information plug-in"
+msgstr "Hyper-V VMゲスト情報のプラグインをデプロイしないでください"
+
 msgid "Do not deploy Hyper-V plug-ins"
 msgstr "Hyper-Vプラグインをデプロイしないでください"
 
@@ -19805,14 +19796,8 @@ msgstr "Windows Updateプラグインを展開しないでください"
 msgid "Do not deploy automatic agent update plug-in"
 msgstr "エージェントの自動アップデートプラグインをデプロイしないでください"
 
-msgid "Do not deploy plug-in for Hyper-V VM Guest Information"
-msgstr "Hyper-V VMゲスト情報のプラグインをデプロイしないでください"
-
 msgid "Do not deploy plug-in for JAR signatures"
 msgstr "JAR署名用のプラグインをデプロイしないでください"
-
-msgid "Do not deploy plug-in for MS IIS Application Pool States"
-msgstr "MS IIS Application Pool Statesのプラグインをデプロイしないでください"
 
 msgid "Do not deploy plug-in for MS Office 365"
 msgstr "MS Office365のプラグインをデプロイしないでください"
@@ -19820,23 +19805,14 @@ msgstr "MS Office365のプラグインをデプロイしないでください"
 msgid "Do not deploy plug-in for Microsoft SQL Server"
 msgstr "Microsoft SQL Serverのプラグインをデプロイしないでください"
 
-msgid "Do not deploy plug-in for Veeam backup status"
-msgstr "Veeamバックアップステータスのプラグインをデプロイしないでください"
-
 msgid "Do not deploy plug-in for Windows DHCP pools"
 msgstr "WindowsDHCPプール用のプラグインをデプロイしないでください"
-
-msgid "Do not deploy plug-in for Windows broadcom bonding"
-msgstr "Windows broadcom bonding用のプラグインをデプロイしないでください"
 
 msgid "Do not deploy plug-in for Windows interfaces"
 msgstr "Windowsインターフェイス用のプラグインをデプロイしないでください"
 
 msgid "Do not deploy plug-in for Windows system info"
 msgstr "Windowsシステム情報用のプラグインをデプロイしないでください"
-
-msgid "Do not deploy plug-in for Windows task scheduler"
-msgstr "Windowsタスクスケジューラ用のプラグインをデプロイしないでください"
 
 #, python-format
 msgid "Do not deploy the %s plug-in"
@@ -19893,17 +19869,11 @@ msgstr "SAPルータープラグインをデプロイしないでください"
 msgid "Do not deploy the SMART plug-in"
 msgstr "SMART プラグインをデプロイしないでください"
 
-msgid "Do not deploy the SSH daemon configuration plug-in"
-msgstr "SSHデーモン設定プラグインをデプロイしないでください"
-
 msgid "Do not deploy the StorCLI plug-in"
 msgstr "StorCLIプラグインをデプロイしないでください"
 
 msgid "Do not deploy the TSM plug-in"
 msgstr "TSMプラグインをデプロイしないでください"
-
-msgid "Do not deploy the mk_filehandler plug-in"
-msgstr "mk_filehandlerプラグインをデプロイしない"
 
 #, fuzzy
 msgid "Do not deploy the mk_mongodb plug-in"
@@ -30254,6 +30224,12 @@ msgstr ""
 msgid "If agent_hash is omitted, target needs to be given."
 msgstr "agent_hashを省略する場合は、ターゲットを指定する必要があります。"
 
+msgid ""
+"If an event is still in the <i>counting</i> state after the time period has "
+"passed, it will be removed from the Event Console. Only events which reach "
+"or exceed their expected count within the time period are kept."
+msgstr ""
+
 msgid "If available, the following metric will be shown"
 msgstr "可能な場合は、次のメトリックが表示されます"
 
@@ -30326,14 +30302,6 @@ msgstr ""
 
 msgid "If given forward output to a different host using piggyback mechanics."
 msgstr "ピギーバックの仕組みを利用し、出力を別のホストに転送する。"
-
-msgid ""
-"If in this time range the configured number of time the rule is triggered, "
-"an event is being created. If the required count is not reached then the "
-"count is reset to zero."
-msgstr ""
-"この時間範囲内で、設定された回数ルールがトリガされると、イベントが作成されま"
-"す。この期間内に必要な回数に達しない場合、カウントはゼロにリセットされます。"
 
 msgid ""
 "If invalid certificates are trusted, any certificate for any site will be "
@@ -31879,11 +31847,12 @@ msgstr ""
 msgid "In Downtime"
 msgstr "ダウンタイム中"
 
+#, fuzzy
 msgid ""
 "In a distributed setup where the Event Console is not running in the same "
 "site as the host is monitored you need to access the remote Event Console "
 "via TCP. Please make sure that this is activated in the global settings of "
-"the event console. The default port number is 6558."
+"the Event Console. The default port number is 6558."
 msgstr ""
 "イベントコンソールがホストと同じサイトで実行されていない分散セットアップで"
 "は、TCPを介してリモートイベントコンソールにアクセスする必要があります。イベン"
@@ -34403,9 +34372,6 @@ msgstr "キーワード"
 
 msgid "KiB"
 msgstr "KiB"
-
-msgid "Kube-proxy version"
-msgstr "Kube-proxy バージョン"
 
 msgid "Kubelet version"
 msgstr "Kubelet バージョン"
@@ -43501,9 +43467,6 @@ msgstr "ラックの数"
 msgid "Number of the Slot"
 msgstr "スロットの数"
 
-msgid "Number of the graph template"
-msgstr "グラフテンプレートの数"
-
 msgid "Number of threads"
 msgstr "スレッド数"
 
@@ -49265,10 +49228,6 @@ msgstr "1秒あたりのクエリ"
 
 msgid "Query"
 msgstr "クエリ"
-
-#, python-format
-msgid "Query %s resource"
-msgstr "%s リソースをクエリ"
 
 msgid "Query Timeout"
 msgstr "クエリのタイムアウト"
@@ -57410,6 +57369,14 @@ msgstr ""
 "をチェックするたびにDNS解決が実行されます。CheckmkのDNSキャッシュは照会されま"
 "せん。"
 
+#, fuzzy
+msgid "Specify at least one resource to cache."
+msgstr "少なくとも1つのスコープを選択してください。"
+
+#, fuzzy
+msgid "Specify at least one section."
+msgstr "少なくとも1つのスコープを選択してください。"
+
 msgid ""
 "Specify at which time period a new file for the event history will be "
 "created."
@@ -60656,7 +60623,10 @@ msgstr "イベントのテキスト/メッセージ"
 msgid "That many permissions do not use the factory defaults."
 msgstr "その多くの権限は、工場出荷時のデフォルトを使用していません。"
 
-msgid "That many times the message must occur until an event is created"
+#, fuzzy
+msgid ""
+"That many times the message must occur until an event moves out of the "
+"<i>counting</i> state"
 msgstr "イベントが作成されるまでに必要なメッセージの回数"
 
 #, python-format
@@ -61420,16 +61390,16 @@ msgstr "URLはhttps://で開始する必要があります"
 msgid "The URL prefix must end with a slash."
 msgstr "URLプレフィックスはスラッシュで終了する必要があります。"
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
 "The URL prefix will be prepended to links of add-ons like NagVis when a link "
 "to such applications points to a host or service on that site. You can "
 "either use an absolute URL prefix like <tt>http://some.host/mysite/</tt> or "
 "a relative URL like <tt>/mysite/</tt>. When using relative prefixes you need "
 "a mod_proxy configuration in your local system Apache that proxies such URLs "
-"to the according remote site. Please refer to the <a target=_blank "
-"href='%s'>User Guide</a> for details. The prefix should end with a slash. "
-"Omit the <tt>/nagvis/</tt> from the prefix."
+"to the according remote site. Please refer to the <a href=\"%s\" "
+"target=\"_blank\">User Guide</a> for details. The prefix should end with a "
+"slash. Omit the <tt>/nagvis/</tt> from the prefix."
 msgstr ""
 "このURLプレフィックスは、NagVisなどのアドオンへのリンクがそのサイトのホストや"
 "サービスを指している場合に、リンクの前に付加されます。<tt>http://some.host/"
@@ -62590,13 +62560,13 @@ msgstr ""
 "手サイトがサポートしていない場合は、プレーンテキストが使用されます。"
 
 #. weblate-flags: read-only
-#, python-brace-format
+#, fuzzy, python-brace-format
 msgid ""
-"The feature \"Explain with AI\" uses a Large Language Model (LLM) [{models}] "
-"of [{provider}] to generate its output. Generated content (output) may "
-"contain errors or inaccuracies. Ensure all output generated is carefully "
-"reviewed and checked by a human for factual correctness before being used in "
-"any way. For further information visit our "
+"The feature \"Explain with AI\" uses a Large Language Model (LLM) {models} "
+"of {provider} to generate its output. Generated content (output) may contain "
+"errors or inaccuracies. Ensure all output generated is carefully reviewed "
+"and checked by a human for factual correctness before being used in any way. "
+"For further information visit our "
 msgstr ""
 "「AIによる説明」機能は、[{provider}]のLarge Language Model (LLM)[{models}]を"
 "使用して出力を生成します。生成されたコンテンツ(出力)には、誤りや不正確な情報"
@@ -65099,6 +65069,13 @@ msgstr "ターゲットが削除されました。"
 
 msgid "The target rule is no longer available"
 msgstr "ターゲットルールは現在使用できません"
+
+msgid ""
+"The target site does not know about all notification rules shown below. "
+"These rules were created locally but not yet synchronized to the target "
+"site. Activate pending changes (or complete the user profile replication for "
+"personal rules) to synchronize them."
+msgstr ""
 
 msgid ""
 "The team secret of your SIGNL4 team. That is the last part of your webhook "
@@ -67946,7 +67923,8 @@ msgstr ""
 "このプラグインは、Windowsのbroadcomボンディングインターフェイスの現在の状態を"
 "チェックします。"
 
-msgid "This plug-in checks the last return state of Windows task scripts"
+#, fuzzy
+msgid "This plug-in checks the last return state of Windows task scripts."
 msgstr ""
 "このプラグインは、Windowsタスクスクリプトの最後の戻り状態をチェックします"
 
@@ -68043,7 +68021,8 @@ msgstr ""
 "このプラグインは、WindowホストでのMS IIS Application Pool Statesを監視しま"
 "す。"
 
-msgid "This plug-in monitors Veeam backup status on Window hosts."
+#, fuzzy
+msgid "This plug-in monitors Veeam backup status on Windows hosts."
 msgstr ""
 "このプラグインはWindowホスト上のVeeamバックアップステータスを監視します。"
 
@@ -68075,11 +68054,12 @@ msgstr ""
 "このプラグインは、各Hyper-V VMゲストの統合サービスとチェックポイント（スナッ"
 "プショット）に関する情報を提供します。"
 
+#, fuzzy
 msgid ""
 "This plug-in requires the executable <tt>C:"
 "\\Programme\\GnuWin32\\sbin\\dmidecode.exe</tt>. This is the default "
 "location when installing this tool. You can download it for free from <a "
-"href='http://gnuwin32.sourceforge.net/packages/dmidecode.htm'>here</a>. "
+"href='http://gnuwin32.sourceforge.net/packages/dmidecode.htm'>here</a>."
 msgstr ""
 "このプラグインは、実行ファイル <tt>C:"
 "\\Programme\\GnuWin32\\sbin\\dmidecode.exe</tt>を必要とします。これは、この"
@@ -68724,6 +68704,11 @@ msgstr "このルールは非推奨です。代わりに\"%s\"を使用してく
 
 msgid "This rule is disabled"
 msgstr "このルールは無効になっています"
+
+msgid ""
+"This rule is not yet known on the target site. Activate pending changes or "
+"complete the user profile replication to synchronize it."
+msgstr ""
 
 msgid ""
 "This rule is used to configure thresholds for counter values read from "
@@ -73929,9 +73914,10 @@ msgstr "URLサーバーアドレス"
 msgid "URL to HiveManagerNG, e.g. https://cloud.aerohive.com"
 msgstr "HiveManagerNGへのURL(例: https://cloud.aerohive.com)"
 
+#, fuzzy
 msgid ""
 "URL to access the central site from the remote site, including the protocol "
-"(<tt>http://</tt> or <tt>https://</tt>) and </tt>/check_mk/</tt>. In case of "
+"(<tt>http://</tt> or <tt>https://</tt>) and <tt>/check_mk/</tt>. In case of "
 "HTTPS, the trusted certificate authorities from \"site management\" will be "
 "applied to verify the SSL connection. If this URL differs per remote site, "
 "you can set different URLs per site-specific global settings within the "
@@ -73946,9 +73932,10 @@ msgstr ""
 msgid "URL to central site"
 msgstr "中央サイトへのURL"
 
+#, fuzzy
 msgid ""
 "URL under that the remote server is accessible from its monitored hosts, "
-"including the protocol (<tt>http://</tt> or <tt>https://</tt>) and </tt>/"
+"including the protocol (<tt>http://</tt> or <tt>https://</tt>) and <tt>/"
 "check_mk/</tt>. This URL is used to provide the update URL for a host "
 "automatically on agent registration or update."
 msgstr ""
@@ -78990,8 +78977,9 @@ msgstr ""
 "<tt>$HOSTNAME$</tt>には、子ホストの名前と<tt>$2$</tt>親ホストの名前が含まれま"
 "す。"
 
+#, fuzzy
 msgid ""
-"When sending notifications from the monitoring system to the event console "
+"When sending notifications from the monitoring system to the Event Console "
 "the following syslog facility will be set for these messages. Choosing a "
 "unique facility makes creation of rules easier."
 msgstr ""
@@ -79946,17 +79934,6 @@ msgstr ""
 "パックだけをスキップして次のルールパックに進むことができます。"
 
 msgid ""
-"With this option you can make the rule being executed not before the "
-"matching message is seen a couple of times in a defined time interval. Also "
-"counting activates the aggregation of messages that result from the same "
-"rule into one event, even if <i>count</i> is set to 1."
-msgstr ""
-"このオプションを使うと、一致するメッセー ジが定義した間隔でカウントされるまで"
-"ルールを実行しないように設定することができます。 また、<i>count</i> が 1 に設"
-"定されている場合、ルールに一致する結果のメッセージを 1 つのイベントに集約して"
-"カウントすることもできます。"
-
-msgid ""
 "With this option you can prevent cleanup of files which have been updated "
 "within this time range."
 msgstr ""
@@ -79978,6 +79955,18 @@ msgid ""
 msgstr ""
 "このオプションを使用すると、最も古い(デフォルト)通知を表示するか、最新の通知"
 "を通知メールの上部に表示するかを指定できます。"
+
+#, fuzzy
+msgid ""
+"With this option, rules are not executed until the matching message has been "
+"received for the count specified. Counting activates the aggregation of "
+"messages matching this rule, combining them into one event, even if "
+"<i>count</i> is set to 1."
+msgstr ""
+"このオプションを使うと、一致するメッセー ジが定義した間隔でカウントされるまで"
+"ルールを実行しないように設定することができます。 また、<i>count</i> が 1 に設"
+"定されている場合、ルールに一致する結果のメッセージを 1 つのイベントに集約して"
+"カウントすることもできます。"
 
 msgid ""
 "With this option, you may verify the direct issuer of the checked "
@@ -83210,6 +83199,10 @@ msgid "global"
 msgstr "グローバル"
 
 msgid "graph"
+msgstr "グラフ"
+
+#, fuzzy, python-format
+msgid "graph '%s'"
 msgstr "グラフ"
 
 #, python-format
@@ -87795,6 +87788,26 @@ msgstr "Open Telemetryコレクターの設定"
 msgid "Could not enable the OpenTelemetry Collector"
 msgstr "OpenTelemetry Collector を有効にする"
 
+#, fuzzy
+msgid "Metric backend connection"
+msgstr "Varnishバックエンド接続"
+
+#, fuzzy
+msgid "Could not enable the metric backend"
+msgstr "OpenTelemetry Collector を有効にする"
+
+#, fuzzy
+msgid "Save new passwords"
+msgstr "新しいパスワード"
+
+#, fuzzy
+msgid "Could not save password \"%{title}\""
+msgstr "変更を保存できませんでした: %s"
+
+#, fuzzy
+msgid "The password was rejected by the server."
+msgstr "ユーザーのパスワード。"
+
 msgid "Run the installation script"
 msgstr "インストールスクリプトを実行する"
 
@@ -88944,6 +88957,62 @@ msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
 "後で「ヘルプ」＞「Checkmkの学習」＞「ウェルカムページ」からアクセスできます"
+
+#~ msgid "Deploy plug-in for MS IIS Application Pool States"
+#~ msgstr "MS IIS Application Pool States のプラグインをデプロイする"
+
+#~ msgid "Deploy plug-in for Windows broadcom bonding"
+#~ msgstr "Windows Broadcomボンディング用のプラグインをデプロイする"
+
+#~ msgid "Deploy plug-in for Windows task scheduler"
+#~ msgstr "Windowsタスクスケジューラ用のプラグインをデプロイする"
+
+#~ msgid "Deploy the SSH daemon configuration plug-in"
+#~ msgstr "SSHデーモン構成プラグインをデプロイする"
+
+#~ msgid "Do not deploy plug-in for MS IIS Application Pool States"
+#~ msgstr ""
+#~ "MS IIS Application Pool Statesのプラグインをデプロイしないでください"
+
+#~ msgid "Do not deploy plug-in for Windows broadcom bonding"
+#~ msgstr "Windows broadcom bonding用のプラグインをデプロイしないでください"
+
+#~ msgid "Do not deploy plug-in for Windows task scheduler"
+#~ msgstr "Windowsタスクスケジューラ用のプラグインをデプロイしないでください"
+
+#~ msgid "Do not deploy the SSH daemon configuration plug-in"
+#~ msgstr "SSHデーモン設定プラグインをデプロイしないでください"
+
+#~ msgid ""
+#~ "If in this time range the configured number of time the rule is "
+#~ "triggered, an event is being created. If the required count is not "
+#~ "reached then the count is reset to zero."
+#~ msgstr ""
+#~ "この時間範囲内で、設定された回数ルールがトリガされると、イベントが作成され"
+#~ "ます。この期間内に必要な回数に達しない場合、カウントはゼロにリセットされま"
+#~ "す。"
+
+#~ msgid "Kube-proxy version"
+#~ msgstr "Kube-proxy バージョン"
+
+#~ msgid "Deploy plug-in for Veeam backup status"
+#~ msgstr "Veeamバックアップステータス用のプラグインをデプロイする"
+
+#~ msgid "Deploy the mk_filehandler plug-in"
+#~ msgstr "mk_filehandlerプラグインをデプロイする"
+
+#~ msgid "Do not deploy plug-in for Veeam backup status"
+#~ msgstr "Veeamバックアップステータスのプラグインをデプロイしないでください"
+
+#~ msgid "Do not deploy the mk_filehandler plug-in"
+#~ msgstr "mk_filehandlerプラグインをデプロイしない"
+
+#~ msgid "Number of the graph template"
+#~ msgstr "グラフテンプレートの数"
+
+#, python-format
+#~ msgid "Query %s resource"
+#~ msgstr "%s リソースをクエリ"
 
 #~ msgid "Deploy mk_mongodb.py with authentication."
 #~ msgstr "mk_mongodb.pyを認証付きでデプロイします。"
@@ -98767,9 +98836,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Linux/UNIX Agent Options"
 #~ msgstr "Linuxエージェント"
-
-#~ msgid "graphs"
-#~ msgstr "グラフ"
 
 #, fuzzy
 #~ msgid "No selected graph line"

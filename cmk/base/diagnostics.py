@@ -104,41 +104,21 @@ class _DiagnosticsElement:
 SUFFIX = ".tar.gz"
 
 
-def mode_create_diagnostics_dump(
-    core_performance_settings: Callable[[LoadedConfigFragment], Mapping[str, int]],
-) -> Mode:
-    return Mode(
-        long_option="create-diagnostics-dump",
-        handler_function=_make_mode_create_diagnostics_dump(core_performance_settings),
-        short_help="Create diagnostics dump",
-        long_help=[
-            "Create a dump containing information for diagnostic analysis "
-            "in the folder var/check_mk/diagnostics."
-        ],
-        sub_options=_get_diagnostics_dump_sub_options(),
+def _mode_create_diagnostics_dump(app: CheckmkBaseApp, options: DiagnosticsModesParameters) -> None:
+    # NOTE: All the stuff is logged on this level only, which is below the default WARNING level.
+    log.logger.setLevel(logging.INFO)
+    omd_config = get_omd_config(cmk.utils.paths.omd_root)
+    create_diagnostics_dump(
+        load_config(
+            discovery_rulesets=(),
+            get_builtin_host_labels=app.get_builtin_host_labels,
+            edition=app.edition,
+        ).loaded_config,
+        deserialize_modes_parameters(options),
+        app.core_performance_settings,
+        omd_config,
+        cmk.utils.paths.omd_root,
     )
-
-
-def _make_mode_create_diagnostics_dump(
-    core_performance_settings: Callable[[LoadedConfigFragment], Mapping[str, int]],
-) -> Callable[[CheckmkBaseApp, DiagnosticsModesParameters], None]:
-    def handler(app: CheckmkBaseApp, options: DiagnosticsModesParameters) -> None:
-        # NOTE: All the stuff is logged on this level only, which is below the default WARNING level.
-        log.logger.setLevel(logging.INFO)
-        omd_config = get_omd_config(cmk.utils.paths.omd_root)
-        create_diagnostics_dump(
-            load_config(
-                discovery_rulesets=(),
-                get_builtin_host_labels=app.get_builtin_host_labels,
-                edition=app.edition,
-            ).loaded_config,
-            deserialize_modes_parameters(options),
-            core_performance_settings,
-            omd_config,
-            cmk.utils.paths.omd_root,
-        )
-
-    return handler
 
 
 def _get_diagnostics_dump_sub_options() -> list[Option]:
@@ -215,6 +195,18 @@ def _get_diagnostics_dump_sub_options() -> list[Option]:
             )
         )
     return sub_options
+
+
+mode_create_diagnostics_dump = Mode(
+    long_option="create-diagnostics-dump",
+    handler_function=_mode_create_diagnostics_dump,
+    short_help="Create diagnostics dump",
+    long_help=[
+        "Create a dump containing information for diagnostic analysis "
+        "in the folder var/check_mk/diagnostics."
+    ],
+    sub_options=_get_diagnostics_dump_sub_options(),
+)
 
 
 def handler(

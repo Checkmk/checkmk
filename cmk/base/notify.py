@@ -326,28 +326,6 @@ def make_ensure_nagios(monitoring_core: Literal["nagios", "cmc"]) -> Callable[[s
 #   '----------------------------------------------------------------------'
 
 
-def mode_notify() -> Mode:
-    return Mode(
-        long_option="notify",
-        handler_function=_mode_notify,
-        argument=True,
-        argument_descr="MODE",
-        argument_optional=True,
-        short_help="Used to send notifications from core",
-        # TODO: Write long help
-        sub_options=[
-            Option(
-                long_option="log-to-stdout",
-                short_help="Also write log messages to console",
-            ),
-            Option(
-                long_option="keepalive",
-                short_help="Execute in keepalive mode (Commercial editions only)",
-            ),
-        ],
-    )
-
-
 def _mode_notify(app: CheckmkBaseApp, options: dict, args: list[str]) -> int | None:
     community_edition = app.edition is Edition.COMMUNITY
     if not community_edition and "spoolfile" in args:
@@ -965,6 +943,26 @@ def _automation_get_bulks(
         )
     )
 
+
+mode_notify = Mode(
+    long_option="notify",
+    handler_function=_mode_notify,
+    argument=True,
+    argument_descr="MODE",
+    argument_optional=True,
+    short_help="Used to send notifications from core",
+    # TODO: Write long help
+    sub_options=[
+        Option(
+            long_option="log-to-stdout",
+            short_help="Also write log messages to console",
+        ),
+        Option(
+            long_option="keepalive",
+            short_help="Execute in keepalive mode (Commercial editions only)",
+        ),
+    ],
+)
 
 automation_notification_replay = Automation(
     name=AutomationID("notification-replay"),

@@ -31,24 +31,23 @@ class LocalizeException(MKException):
 domain = "multisite"
 
 
-def mode_localize() -> Mode:
-    return Mode(
-        long_option="localize",
-        handler_function=_mode_localize,
-        argument=True,
-        argument_descr="COMMAND",
-        argument_optional=True,
-        short_help="Do localization operations",
-        long_help=[
-            "Brings you into localization mode. You can create "
-            "and/or improve the localization of Check_MKs GUI. "
-            "Call without arguments for a help on localization."
-        ],
-    )
-
-
 def _mode_localize(app: CheckmkBaseApp, args: list[str]) -> None:
     do_localize(args)
+
+
+mode_localize = Mode(
+    long_option="localize",
+    handler_function=_mode_localize,
+    argument=True,
+    argument_descr="COMMAND",
+    argument_optional=True,
+    short_help="Do localization operations",
+    long_help=[
+        "Brings you into localization mode. You can create "
+        "and/or improve the localization of Check_MKs GUI. "
+        "Call without arguments for a help on localization."
+    ],
+)
 
 
 def _locale_base() -> Path:

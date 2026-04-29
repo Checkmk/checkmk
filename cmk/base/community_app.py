@@ -24,9 +24,9 @@ def make_app() -> CheckmkBaseApp:
     modes = _modes(
         [
             *modes_common(),
-            diagnostics.mode_create_diagnostics_dump(lambda x: {}),
-            localize.mode_localize(),
-            notify.mode_notify(),
+            diagnostics.mode_create_diagnostics_dump,
+            localize.mode_localize,
+            notify.mode_notify,
         ]
     )
     automations = Automations()

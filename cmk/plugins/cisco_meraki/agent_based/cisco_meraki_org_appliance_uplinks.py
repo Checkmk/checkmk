@@ -42,6 +42,11 @@ class Uplink(BaseModel, frozen=True):
     secondary_dns: str | None = Field(default=None, alias="secondaryDns")
     status: str
 
+    @computed_field
+    @property
+    def status_key(self) -> str:
+        return self.status.replace(" ", "_")
+
 
 class HighAvailability(BaseModel, frozen=True):
     enabled: bool
@@ -98,12 +103,8 @@ def check_appliance_uplinks(item: str, params: CheckParams, section: Section) ->
     if (uplink := section.uplinks.get(item)) is None:
         return None
 
-    # TODO: cannot use 'not connected' in params anymore - still relevant? (note from MKP)
-    status_map = params["status_map"]
-    status_map["not connected"] = 1
-
     yield Result(
-        state=State(status_map.get(uplink.status, 3)),
+        state=State(params["status_map"].get(uplink.status_key, 3)),
         summary=f"Status: {uplink.status}",
     )
 

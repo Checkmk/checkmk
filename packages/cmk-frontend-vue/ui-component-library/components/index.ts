@@ -6,6 +6,7 @@
 import { Folder, Page } from '@ucl/_ucl/types/page'
 
 import { pages as formSpecPages } from '../form'
+import { pages as i18nPages } from '../i18n'
 import { pages as twoFactorAuthPages } from '../two-factor-authentication'
 import UclCmkBadge from './basic-elements/CmkBadge/UclCmkBadge.vue'
 import UclCmkButton from './basic-elements/CmkButton/UclCmkButton.vue'
@@ -48,7 +49,6 @@ import UclCmkSpace from './foundation-elements/CmkSpace/UclCmkSpace.vue'
 import UclCmkZebra from './foundation-elements/CmkZebra/UclCmkZebra.vue'
 import UclCmkHeading from './foundation-elements/typography/UclCmkHeading.vue'
 import UclCmkParagraph from './foundation-elements/typography/UclCmkParagraph.vue'
-import UclI18n from './foundation-elements/typography/UclI18n.vue'
 import UclArrowDown from './graphics/ArrowDown/UclArrowDown.vue'
 import UclCmkLinkCard from './navigation/CmkLinkCard/UclCmkLinkCard.vue'
 import UclCmkAlertBox from './system-feedback/CmkAlertBox/UclCmkAlertBox.vue'
@@ -109,7 +109,6 @@ const foundationElementsPages = [
   new Page('CmkMultitoneIcon', UclCmkMultitoneIcon),
   new Page('CmkHeading', UclCmkHeading),
   new Page('CmkParagraph', UclCmkParagraph),
-  new Page('i18n', UclI18n),
   new Page('CmkHtml', UclCmkHtml),
   new Page('CmkIndent', UclCmkIndent),
   new Page('CmkKeyboardKey', UclCmkKeyboardKey),
@@ -154,6 +153,7 @@ export const roots = [
   ),
   new Folder('Developer Playground', [
     new Folder('Form Spec Elements', formSpecPages),
+    new Folder('I18n', i18nPages),
     new Folder('Two Factor Authentication', twoFactorAuthPages)
   ])
 ]

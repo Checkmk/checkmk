@@ -7,10 +7,8 @@ import { type Folder, Page } from '@ucl/_ucl/types/page'
 
 import UclCmkHeading from './UclCmkHeading.vue'
 import UclCmkParagraph from './UclCmkParagraph.vue'
-import UclI18n from './UclI18n.vue'
 
 export const pages: Array<Folder | Page> = [
   new Page('CmkHeading', UclCmkHeading),
-  new Page('CmkParagraph', UclCmkParagraph),
-  new Page('i18n', UclI18n)
+  new Page('CmkParagraph', UclCmkParagraph)
 ]

@@ -43,7 +43,6 @@ import UclCmkSpaceCodeExample from '@ucl/components/foundation-elements/CmkSpace
 import UclCmkZebraCodeExample from '@ucl/components/foundation-elements/CmkZebra/UclCmkZebraCodeExample.vue'
 import UclCmkHeadingCodeExample from '@ucl/components/foundation-elements/typography/UclCmkHeadingCodeExample.vue'
 import UclCmkParagraphCodeExample from '@ucl/components/foundation-elements/typography/UclCmkParagraphCodeExample.vue'
-import UclI18nCodeExample from '@ucl/components/foundation-elements/typography/UclI18nCodeExample.vue'
 import UclArrowDownCodeExample from '@ucl/components/graphics/ArrowDown/UclArrowDownCodeExample.vue'
 import UclCmkLinkCardCodeExample from '@ucl/components/navigation/CmkLinkCard/UclCmkLinkCardCodeExample.vue'
 import UclCmkAlertBoxCodeExample from '@ucl/components/system-feedback/CmkAlertBox/UclCmkAlertBoxCodeExample.vue'
@@ -266,11 +265,6 @@ test('CmkHeading code example renders without errors', () => {
 
 test('CmkParagraph code example renders without errors', () => {
   const { container } = render(UclCmkParagraphCodeExample)
-  expect(container.firstChild).toBeTruthy()
-})
-
-test('UclI18n code example renders without errors', () => {
-  const { container } = render(UclI18nCodeExample)
   expect(container.firstChild).toBeTruthy()
 })
 

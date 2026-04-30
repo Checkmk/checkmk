@@ -1122,6 +1122,7 @@ class PersistentVolumeClaimStatus(ClientModel):
     phase: PersistentVolumeClaimPhase | None = None
     access_modes: Sequence[AccessMode] | None = None
     capacity: StorageRequirement | None = None
+    current_volume_attributes_class_name: str | None = None
 
 
 class PersistentVolumeClaim(BaseModel):

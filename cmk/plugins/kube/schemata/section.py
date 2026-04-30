@@ -717,6 +717,7 @@ class StorageRequirement(BaseModel):
 class PersistentVolumeClaimStatus(BaseModel):
     phase: api.PersistentVolumeClaimPhase | None = None
     capacity: StorageRequirement | None = None
+    current_volume_attributes_class_name: str | None = None
 
 
 class PersistentVolumeClaimMetaData(BaseModel):

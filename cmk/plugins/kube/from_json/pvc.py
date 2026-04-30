@@ -23,6 +23,7 @@ class JSONPVCStatus(TypedDict):
     phase: NotRequired[str]
     accessModes: NotRequired[Sequence[str]]
     capacity: NotRequired[JSONResourceRequirement]
+    currentVolumeAttributesClassName: NotRequired[str]
 
 
 class JSONPersistentVolumeClaim(JSONObjectWithMetadata):
@@ -64,6 +65,7 @@ def pvc_status_from_json(pvc_status: JSONPVCStatus) -> api.PersistentVolumeClaim
         phase=phase,
         access_modes=access_modes,
         capacity=capacity,
+        current_volume_attributes_class_name=pvc_status.get("currentVolumeAttributesClassName"),
     )
 
 

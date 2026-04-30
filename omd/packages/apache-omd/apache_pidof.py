@@ -11,9 +11,9 @@ import psutil
 
 
 def _pid_from_file(pid_file: Path) -> int | None:
-    with suppress(ValueError, OSError):
+    with suppress(ValueError, OSError, psutil.NoSuchProcess):
         pid = int(pid_file.read_text().strip())
-        if psutil.pid_exists(pid):
+        if psutil.pid_exists(pid) and psutil.Process(pid).status() != psutil.STATUS_ZOMBIE:
             return pid
     return None
 
@@ -26,9 +26,13 @@ def _pid_from_proctable(omd_site: str, apache_name: str) -> int | None:
     # using the process name.
     # One process is in watolib.py: ActivateChangesSite.run()
     candidates: list[psutil.Process] = []
-    for proc in psutil.process_iter(["username", "name", "create_time"]):
+    for proc in psutil.process_iter(["username", "name", "create_time", "status"]):
         with suppress(psutil.NoSuchProcess):
-            if proc.info["username"] == omd_site and proc.info["name"] == apache_name:
+            if (
+                proc.info["username"] == omd_site
+                and proc.info["name"] == apache_name
+                and proc.info["status"] != psutil.STATUS_ZOMBIE
+            ):
                 candidates.append(proc)
     if not candidates:
         return None

@@ -37,7 +37,6 @@ from tests.integration.openapi.rules.helpers import (
     TestRuleConfig,
     verify_rule_conversion,
 )
-from tests.integration.openapi.rules.helpers.rule_helpers import hosts_pkl_exists
 from tests.testlib.site import Site
 
 logger = logging.getLogger(__name__)
@@ -187,7 +186,6 @@ def test_update_predictive_levels_rule(site: Site) -> None:
 
         logger.info("Successfully updated predictive levels rule")
     finally:
-        hosts_pkl_exists(site)
         site.openapi.rules.delete(rule_id)
         site.openapi.changes.activate_and_wait_for_completion()
 

@@ -40,6 +40,7 @@ py_library(
         requirement("lxml"),
         requirement("markdown"),
         requirement("pydantic"),
+        requirement("requests"),
     ],
 )
 

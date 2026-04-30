@@ -1,7 +1,25 @@
+load("@aspect_rules_py//py:defs.bzl", "py_binary")
+load("@cmk_requirements//:requirements.bzl", "requirement")
 load("@rules_pkg//pkg:mappings.bzl", "pkg_attributes", "pkg_files", "pkg_mkdirs", "pkg_mklink", "strip_prefix")
 load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
 
 exports_files(["skel.permissions"])
+
+# Only for static analysis.
+py_binary(
+    name = "apache_pidof",
+    srcs = ["apache_pidof.py"],
+    main = "apache_pidof.py",
+    deps = [requirement("psutil")],
+)
+
+pkg_files(
+    name = "apache_pidof_bin",
+    srcs = ["apache_pidof.py"],
+    attributes = pkg_attributes(mode = "0755"),
+    prefix = "bin",
+    renames = {"apache_pidof.py": "apache_pidof"},
+)
 
 pkg_files(
     # See also `//omd/packages/omd:hooks`.
@@ -129,6 +147,7 @@ pkg_tar(
         "apache_module_setenvif",
         "apache_module_status",
         "skel_files",
+        ":apache_pidof_bin",
         ":apache_skel_dirs",
         ":bin_htpasswd",
         ":omd_hooks",

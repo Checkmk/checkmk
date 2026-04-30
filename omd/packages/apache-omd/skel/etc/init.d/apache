@@ -44,33 +44,7 @@ php_cgi_bin() {
 }
 
 pidof_apache() {
-    # if there is actually an apache2 process whose pid is in PIDFILE,
-    # print it and return 0.
-    if [ -e "$PID_FILE" ]; then
-        PID=$(cat "$PID_FILE")
-        if kill -0 $PID >/dev/null 2>&1; then
-            echo $PID
-            return 0
-        fi
-    else
-        # It might happen that there is no pidfile but a process is running
-        # As fallback check the process table for the oldest apache process
-        # running as this user
-        #
-        # Use the process name instead of the command line (see: pgrep -l).
-        # There may be processes forked from the the apache workers that
-        # need to be ignored by this script where we can not change the full
-        # command line but the process name. This means we can only distinguish
-        # between them using the process name.
-        # One process is in watolib.py: ActivateChangesSite.run()
-        APACHE_BIN_PATH=$(apache_bin)
-        PID=$(pgrep -u $OMD_SITE -o ${APACHE_BIN_PATH##*/})
-        if [ -n "$PID" ]; then
-            echo $PID
-            return 0
-        fi
-    fi
-    return 1
+    apache_pidof "$PID_FILE" "$OMD_SITE" "$(apache_bin)"
 }
 
 apache_wait_stop() {

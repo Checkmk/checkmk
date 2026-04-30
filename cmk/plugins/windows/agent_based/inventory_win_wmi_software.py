@@ -104,7 +104,7 @@ def parse_win_wmi_software(string_table: StringTable) -> Section:
                 vendor=vendor.replace("\x00", ""),  # Can happen, reason unclear
                 install_date=install_date,
                 language=language,
-                package_type="wmi",
+                package_type="installer",
             )
         )
     return parsed_packages

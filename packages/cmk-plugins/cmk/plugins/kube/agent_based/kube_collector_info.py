@@ -4,8 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from collections.abc import Mapping, Sequence
-from typing import Literal
+from collections.abc import Sequence
+from typing import Literal, TypedDict
 
 from cmk.agent_based.v2 import (
     AgentSection,
@@ -25,6 +25,15 @@ from cmk.plugins.kube.schemata.section import (
     CollectorProcessingLogs,
     CollectorState,
     NodeComponent,
+)
+
+
+class Params(TypedDict):
+    machine_metrics: int
+
+
+DEFAULT_PARAMS = Params(
+    machine_metrics=2,  # CRIT
 )
 
 
@@ -74,7 +83,7 @@ def discover(
 
 
 def _component_check(
-    params: Mapping[str, int],
+    state_if_missing: State,
     component: Literal["container_metrics", "machine_metrics"],
     component_log: CollectorHandlerLog | None,
 ) -> CheckResult:
@@ -93,7 +102,7 @@ def _component_check(
     # adding a whitespace, because for an URL the icon swallows the ')'
     detail_message = f"({component_log.detail} )" if component_log.detail else ""
     yield Result(
-        state=State(params.get(component, 2)),
+        state=state_if_missing,
         summary=component_message,
         details=f"{component_message}{detail_message}",
     )
@@ -158,7 +167,7 @@ def _check_collector_daemons(collector_daemons: CollectorDaemons) -> CheckResult
 
 
 def check(
-    params: Mapping[str, int],
+    params: Params,
     section_kube_collector_metadata: CollectorComponentsMetadata | None,
     section_kube_collector_processing_logs: CollectorProcessingLogs | None,
     section_kube_collector_daemons: CollectorDaemons | None,
@@ -192,10 +201,14 @@ def check(
 
     if section_kube_collector_processing_logs is not None:
         yield from _component_check(
-            {}, "container_metrics", section_kube_collector_processing_logs.container
+            State.CRIT,
+            "container_metrics",
+            section_kube_collector_processing_logs.container,
         )
         yield from _component_check(
-            params, "machine_metrics", section_kube_collector_processing_logs.machine
+            State(params["machine_metrics"]),
+            "machine_metrics",
+            section_kube_collector_processing_logs.machine,
         )
 
     if section_kube_collector_metadata.nodes:
@@ -221,5 +234,5 @@ check_plugin_kube_collector_info = CheckPlugin(
     discovery_function=discover,
     check_function=check,
     check_ruleset_name="kube_collector_info",
-    check_default_parameters={"machine_metrics": 2},
+    check_default_parameters=DEFAULT_PARAMS,
 )

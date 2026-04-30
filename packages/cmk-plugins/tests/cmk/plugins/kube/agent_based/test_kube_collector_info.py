@@ -186,7 +186,7 @@ def test_check_all_ok_sections() -> None:
     # Act
     check_result = list(
         kube_collector_info.check(
-            {},
+            kube_collector_info.DEFAULT_PARAMS,
             collector_metadata,
             collector_processing_logs,
             collector_daemons,
@@ -221,7 +221,7 @@ def test_check_with_no_collector_components_section() -> None:
     # Act
     check_result = list(
         kube_collector_info.check(
-            {},
+            kube_collector_info.DEFAULT_PARAMS,
             collector_metadata,
             None,
             collector_daemons,
@@ -258,7 +258,7 @@ def test_check_with_no_machine_component_with_params() -> None:
     # Act
     check_result = list(
         kube_collector_info.check(
-            {"machine_metrics": 0},
+            {**kube_collector_info.DEFAULT_PARAMS, "machine_metrics": 0},
             collector_metadata,
             collector_processing_logs,
             collector_daemons,
@@ -295,7 +295,7 @@ def test_check_with_errored_handled_metadata_section() -> None:
     # Act
     check_result = list(
         kube_collector_info.check(
-            {},
+            kube_collector_info.DEFAULT_PARAMS,
             collector_metadata,
             None,
             collector_daemons,
@@ -317,7 +317,7 @@ def test_check_with_errored_handled_component_section() -> None:
     # Act
     result = list(
         kube_collector_info._component_check(
-            {}, "container_metrics", collector_processing_logs.container
+            State.CRIT, "container_metrics", collector_processing_logs.container
         )
     )
 
@@ -353,7 +353,7 @@ def test_check_api_daemonsets_not_found() -> None:
     # Act
     check_result = list(
         kube_collector_info.check(
-            {},
+            kube_collector_info.DEFAULT_PARAMS,
             collector_metadata,
             collector_processing_logs,
             collector_daemons,
@@ -411,7 +411,7 @@ def test_check_api_daemonsets_multiple_with_same_label() -> None:
     # Act
     check_result = list(
         kube_collector_info.check(
-            {},
+            kube_collector_info.DEFAULT_PARAMS,
             collector_metadata,
             collector_processing_logs,
             collector_daemons,

@@ -126,11 +126,12 @@ void main() {
 
         stage("Test source package") {
             package_helper.test_package(
-                "${checkout_dir}/${source_package_name}",
-                "source",
-                WORKSPACE,
-                checkout_dir,
-                cmk_version);
+                package_path: "${checkout_dir}/${source_package_name}",
+                name: "source",
+                workspace: WORKSPACE,
+                source_dir: checkout_dir,
+                cmk_version: cmk_version,
+            );
         }
 
         stage("Archive stuff") {

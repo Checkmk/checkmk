@@ -311,13 +311,14 @@ void sign_package(source_dir, package_path) {
     }
 }
 
-void test_package(package_path, name, workspace, source_dir, cmk_version) {
-    def junit_file = "junit-${name}.xml";
+void test_package(Map args) {
+    def junit_file = "junit-${args.name}.xml";
+    def pytest_addopts = "--junitxml=${args.workspace}/${junit_file}";
     try {
         sh("""
-            PACKAGE_PATH=${package_path} \
-            PYTEST_ADDOPTS='--junitxml=${workspace}/${junit_file}' \
-            make -C '${source_dir}/tests' VERSION=${cmk_version} test-packaging
+            PACKAGE_PATH=${args.package_path} \
+            PYTEST_ADDOPTS='${pytest_addopts}' \
+            make -C '${args.source_dir}/tests' VERSION=${args.cmk_version} test-packaging
         """);
     } finally {
         step([

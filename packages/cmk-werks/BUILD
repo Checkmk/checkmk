@@ -102,6 +102,35 @@ py_wheel(
     deps = [":cmk-werks"],
 )
 
+py_library(
+    name = "cmk-werk-ids-server",
+    srcs = [
+        "cmk/werk_ids_server/__init__.py",
+        "cmk/werk_ids_server/__main__.py",
+        "cmk/werk_ids_server/_db.py",
+        "cmk/werk_ids_server/server.py",
+    ],
+    imports = ["."],
+    deps = [
+        requirement("flask"),
+        requirement("gunicorn"),
+        requirement("werkzeug"),
+    ],
+)
+
+py_wheel(
+    name = "wheel_server",
+    distribution = "cmk-werk-ids-server",
+    requires = [
+        "flask",
+        "gunicorn",
+        "werkzeug",
+    ],
+    strip_path_prefixes = ["packages/cmk-werks"],
+    version = "1.0.0",
+    deps = [":cmk-werk-ids-server"],
+)
+
 filegroup(
     name = "py_typed",
     srcs = ["cmk/werks/py.typed"],
@@ -153,4 +182,12 @@ py_requirements_test(
         ":cmk-werks",
     ],
     requirements_in = "requirements.in",
+)
+
+py_binary(
+    name = "werk-ids-server-deploy",
+    srcs = ["scripts/werk_ids_server.py"],
+    main = "scripts/werk_ids_server.py",
+    visibility = ["//visibility:public"],
+    deps = [],
 )

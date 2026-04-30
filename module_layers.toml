@@ -1520,6 +1520,9 @@ allows = [
 [components."cmk.web"]
 allows = ["@ccc"]
 
+[components."cmk.werk_ids_server"]
+allows = []
+
 [components."cmk.werks"]
 allows = ["@ccc"]
 

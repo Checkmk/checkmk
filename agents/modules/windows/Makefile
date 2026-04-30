@@ -72,6 +72,7 @@ $(PYTHON_PACKAGE):
 	@powershell where curl.exe > nul 2>&1 ||  powershell Write-Host "[-] curl not found"  -Foreground red && exit /B 10
 	@powershell powershell Write-Host "[+] curl found" -Foreground green
 	curl -o "$@" "$(NEXUS_UPSTREAM_ARCHIVES_URL)/$@"
+	@7z t "$@"
 
 $(PYTHON_TIMESTAMP): $(PYTHON_PACKAGE) ## deploying python sources
 	@powershell Write-Host "$@ is to be processed" -foreground White

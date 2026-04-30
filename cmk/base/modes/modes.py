@@ -14,18 +14,14 @@ from __future__ import annotations
 
 import sys
 import textwrap
-from collections.abc import Callable
+from collections.abc import Callable, Mapping, Sequence
 from contextlib import suppress
-from typing import TYPE_CHECKING
 
 from cmk import trace
 from cmk.ccc import tty
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.discover_plugins import discover_plugins_from_modules
 from cmk.utils.log import console
-
-if TYPE_CHECKING:
-    pass
 
 OptionSpec = str
 Argument = str
@@ -45,14 +41,44 @@ def print_(txt: str) -> None:
         sys.stdout.flush()
 
 
-class Modes:
-    def __init__(self) -> None:
-        super().__init__()
+def discover_modes() -> Sequence[Mode]:
+    discovery_result = discover_plugins_from_modules(
+        plugin_prefixes={Mode: "mode_"},
+        module_names_by_priority=[
+            # TODO: We need to get rid of this hard-coded list
+            "cmk.base.modes.check_mk",
+            "cmk.base.diagnostics",
+            "cmk.base.localize",
+            "cmk.base.notify",
+            "cmk.bakery.base.cap",
+            "cmk.base.nonfree.alert_handling",
+            "cmk.base.nonfree.dump_protobufs",
+            "cmk.base.nonfree.cmc_helpers",
+            "cmk.base.nonfree.convert_rrds",
+            "cmk.base.nonfree.compress_history",
+            "cmk.bakery.base.mode",  # non-free, optional
+        ],
+        skip_wrong_types=True,
+        raise_errors=True,
+    )
+    return tuple(discovery_result.plugins.values())
 
-        self._mode_map: dict[OptionName, Mode] = {}
-        self._modes: list[Mode] = []
-        self._general_options: list[Option] = []
-        self.register(self.mode_help())
+
+class Modes:
+    def __init__(
+        self,
+        *,
+        plugins: Sequence[Mode],
+        general_options: Sequence[Option],
+    ) -> None:
+        super().__init__()
+        modes = [*plugins, self.mode_help()]
+        self._mode_map: Mapping[OptionName, Mode] = {
+            **{m.long_option: m for m in modes},
+            **{m.short_option: m for m in modes if m.short_option is not None},
+        }
+        self._modes = modes
+        self._general_options = general_options
 
     def mode_help(self) -> Mode:
         # It's a little weird to implement the --help option like this,
@@ -63,36 +89,6 @@ class Modes:
             handler_function=lambda *a, **kw: print_(self.help()),
             short_help="Print this help",
         )
-
-    def discover(self) -> None:
-        discovery_result = discover_plugins_from_modules(
-            plugin_prefixes={Mode: "mode_"},
-            module_names_by_priority=[
-                # TODO: We need to get rid of this hard-coded list
-                "cmk.base.modes.check_mk",
-                "cmk.base.diagnostics",
-                "cmk.base.localize",
-                "cmk.base.notify",
-                "cmk.bakery.base.cap",
-                "cmk.base.nonfree.alert_handling",
-                "cmk.base.nonfree.dump_protobufs",
-                "cmk.base.nonfree.cmc_helpers",
-                "cmk.base.nonfree.convert_rrds",
-                "cmk.base.nonfree.compress_history",
-                "cmk.bakery.base.mode",  # non-free, optional
-            ],
-            skip_wrong_types=True,
-            raise_errors=False,  # non-free modes are expected to be missing.
-        )
-        for mode in discovery_result.plugins.values():
-            self.register(mode)
-
-    def register(self, mode: Mode) -> None:
-        self._modes.append(mode)
-
-        self._mode_map[mode.long_option] = mode
-        if mode.short_option is not None:
-            self._mode_map[mode.short_option] = mode
 
     def exists(self, opt: OptionName) -> bool:
         try:
@@ -155,9 +151,6 @@ NOTES:
     #
     # GENERAL OPTIONS
     #
-
-    def register_general_option(self, option: Option) -> None:
-        self._general_options.append(option)
 
     def process_general_options(self, all_opts: Options) -> None:
         for o, a in all_opts:

@@ -3,13 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.base.modes.modes import Modes
+from cmk.base.modes.modes import discover_modes
 
 
 def test_available_modes() -> None:
-    modes = Modes()
-    modes.discover()
-    assert {m.long_option for m in modes._modes} == {
+    assert {m.name for m in discover_modes()} == {
         "automation",
         "browse-man",
         "check",
@@ -20,7 +18,6 @@ def test_available_modes() -> None:
         "dump",
         "dump-agent",
         "flush",
-        "help",
         "inventorize-marked-hosts",
         "inventory",
         "list-checks",

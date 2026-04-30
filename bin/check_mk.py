@@ -34,7 +34,10 @@ from cmk.base import profiling  # astrein: disable=cmk-module-layer-violation
 from cmk.base.app import make_app  # astrein: disable=cmk-module-layer-violation
 from cmk.base.modes.call import call  # astrein: disable=cmk-module-layer-violation
 from cmk.base.modes.check_mk import general_options  # astrein: disable=cmk-module-layer-violation
-from cmk.base.modes.modes import Modes  # astrein: disable=cmk-module-layer-violation
+from cmk.base.modes.modes import (  # astrein: disable=cmk-module-layer-violation
+    discover_modes,
+    Modes,
+)
 from cmk.ccc.crash_reporting import (  # astrein: disable=cmk-module-layer-violation
     ABCCrashReport,
     BaseDetails,
@@ -100,11 +103,7 @@ class CrashReport(ABCCrashReport[BaseDetails]):
         )
 
 
-# Anti pattern, will be cleaned up soon.
-modes = Modes()
-for option in general_options():
-    modes.register_general_option(option)
-modes.discover()
+modes = Modes(plugins=discover_modes(), general_options=general_options())
 
 try:
     opts, args = getopt.getopt(sys.argv[1:], modes.short_getopt_specs(), modes.long_getopt_specs())

@@ -1,4 +1,4 @@
-type = "System"
+type = "Component"
 display_name = "CI Platform"
 members_required = 3
 description = """

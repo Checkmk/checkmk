@@ -58,6 +58,7 @@ py_library(
         requirement("lxml"),
         requirement("markdown"),
         requirement("pydantic"),
+        requirement("requests"),
     ],
 )
 
@@ -83,6 +84,7 @@ py_test(
         ":cmk-werks",
         requirement("pytest"),
         requirement("gitpython"),
+        requirement("requests"),
         requirement("vcrpy"),
         requirement("pytest-recording"),
     ],

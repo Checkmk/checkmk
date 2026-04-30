@@ -4,3 +4,4 @@ markdown
 pydantic
 rich
 httpx
+requests

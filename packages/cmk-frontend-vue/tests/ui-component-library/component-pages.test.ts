@@ -24,7 +24,6 @@ import UclCmkSlideIn from '@ucl/components/content-organization/CmkSlideIn/UclCm
 import UclCmkSlideInDialog from '@ucl/components/content-organization/CmkSlideInDialog/UclCmkSlideInDialog.vue'
 import UclCmkTabs from '@ucl/components/content-organization/CmkTabs/UclCmkTabs.vue'
 import UclCmkWizard from '@ucl/components/content-organization/CmkWizard/UclCmkWizard.vue'
-import UclTwoFactorAuthentication from '@ucl/components/content-organization/TwoFactorAuthentication/UclTwoFactorAuthentication.vue'
 import UclCmkCheckbox from '@ucl/components/form-elements/CmkCheckbox/UclCmkCheckbox.vue'
 import UclCmkConfigurationEntityDropdown from '@ucl/components/form-elements/CmkConfigurationEntityDropdown/UclCmkConfigurationEntityDropdown.vue'
 import UclCmkDateTimePicker from '@ucl/components/form-elements/CmkDateTimePicker/UclCmkDateTimePicker.vue'
@@ -269,12 +268,6 @@ test('CmkSlideIn page renders its component', () => {
 test('CmkSlideInDialog page renders its component', () => {
   render(UclCmkSlideInDialog, { props: { screenshotMode: false } })
   within(componentPreview()).getByRole('button', { name: 'Open Dialog' })
-})
-
-test('TwoFactorAuthentication page renders', () => {
-  const { container } = render(UclTwoFactorAuthentication, { props: { screenshotMode: false } })
-  expect(container.firstChild).toBeTruthy()
-  expectNoRegistryError()
 })
 
 // ─── Foundation elements ──────────────────────────────────────────────────────

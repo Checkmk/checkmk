@@ -6,6 +6,7 @@
 import { Folder, Page } from '@ucl/_ucl/types/page'
 
 import { pages as formSpecPages } from '../form'
+import { pages as twoFactorAuthPages } from '../two-factor-authentication'
 import UclCmkBadge from './basic-elements/CmkBadge/UclCmkBadge.vue'
 import UclCmkButton from './basic-elements/CmkButton/UclCmkButton.vue'
 import UclCmkButtonCancel from './basic-elements/CmkButtonCancel/UclCmkButtonCancel.vue'
@@ -26,7 +27,6 @@ import UclCmkSlideIn from './content-organization/CmkSlideIn/UclCmkSlideIn.vue'
 import UclCmkSlideInDialog from './content-organization/CmkSlideInDialog/UclCmkSlideInDialog.vue'
 import UclCmkTabs from './content-organization/CmkTabs/UclCmkTabs.vue'
 import UclCmkWizard from './content-organization/CmkWizard/UclCmkWizard.vue'
-import UclTwoFactorAuth from './content-organization/TwoFactorAuthentication/UclTwoFactorAuthentication.vue'
 import UclCmkCheckbox from './form-elements/CmkCheckbox/UclCmkCheckbox.vue'
 import UclCmkConfigurationEntityDropdown from './form-elements/CmkConfigurationEntityDropdown/UclCmkConfigurationEntityDropdown.vue'
 import UclCmkDateTimePicker from './form-elements/CmkDateTimePicker/UclCmkDateTimePicker.vue'
@@ -89,8 +89,7 @@ const contentOrganizationPages = [
   new Page('CmkScrollContainer', UclCmkScrollContainer),
   new Page('CmkSlideIn', UclCmkSlideIn),
   new Page('CmkSlideInDialog', UclCmkSlideInDialog),
-  new Page('CmkWizard', UclCmkWizard),
-  new Page('TwoFactorAuth', UclTwoFactorAuth)
+  new Page('CmkWizard', UclCmkWizard)
 ]
 
 const formElementsPages = [
@@ -155,5 +154,8 @@ export const roots = [
     ],
     true
   ),
-  new Folder('Developer Playground', [new Folder('Form Spec Elements', formSpecPages)])
+  new Folder('Developer Playground', [
+    new Folder('Form Spec Elements', formSpecPages),
+    new Folder('Two Factor Authentication', twoFactorAuthPages)
+  ])
 ]

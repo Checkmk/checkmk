@@ -24,7 +24,6 @@ import UclCmkSlideInCodeExample from '@ucl/components/content-organization/CmkSl
 import UclCmkSlideInDialogCodeExample from '@ucl/components/content-organization/CmkSlideInDialog/UclCmkSlideInDialogCodeExample.vue'
 import UclCmkTabsCodeExample from '@ucl/components/content-organization/CmkTabs/UclCmkTabsCodeExample.vue'
 import UclCmkWizardCodeExample from '@ucl/components/content-organization/CmkWizard/UclCmkWizardCodeExample.vue'
-import UclTwoFactorAuthenticationCodeExample from '@ucl/components/content-organization/TwoFactorAuthentication/UclTwoFactorAuthenticationCodeExample.vue'
 import UclCmkCheckboxCodeExample from '@ucl/components/form-elements/CmkCheckbox/UclCmkCheckboxCodeExample.vue'
 import UclCmkDropdownCodeExample from '@ucl/components/form-elements/CmkDropdown/UclCmkDropdownCodeExample.vue'
 import UclCmkDualListCodeExample from '@ucl/components/form-elements/CmkDualList/UclCmkDualListCodeExample.vue'
@@ -168,11 +167,6 @@ test('CmkTabs code example renders without errors', () => {
 
 test('CmkWizard code example renders without errors', () => {
   const { container } = render(UclCmkWizardCodeExample)
-  expect(container.firstChild).toBeTruthy()
-})
-
-test('TwoFactorAuthentication code example renders without errors', () => {
-  const { container } = render(UclTwoFactorAuthenticationCodeExample)
   expect(container.firstChild).toBeTruthy()
 })
 

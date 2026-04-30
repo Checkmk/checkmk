@@ -186,7 +186,10 @@ class PageCrash(Page):
         )
 
         if report.info["crash_type"] == "gui":
-            html.show_error("<b>{}:</b> {}".format(_("Internal error"), report.info["exc_value"]))
+            html.show_error(
+                HTMLWriter.render_b(HTML.with_escaping(_("Internal error")))
+                + HTML.with_escaping(": " + report.info["exc_value"])
+            )
             html.p(
                 _(
                     "An internal error occurred while processing your request. "
@@ -444,17 +447,19 @@ class PageCrash(Page):
 
         _crash_row(
             _("Exception"),
-            "{} ({})".format(info["exc_type"], info["exc_value"]),
+            HTML.with_escaping("{} ({})".format(info["exc_type"], info["exc_value"])),
             odd=True,
             pre=True,
         )
         _crash_row(
             _("Traceback"),
-            "".join(
-                [
-                    self._format_traceback(info["exc_traceback"]),
-                    info["exc_value"],
-                ]
+            HTML.with_escaping(
+                "".join(
+                    [
+                        self._format_traceback(info["exc_traceback"]),
+                        info["exc_value"],
+                    ]
+                )
             ),
             odd=False,
             pre=True,

@@ -12,8 +12,10 @@
 
 from __future__ import annotations
 
+import sys
 import textwrap
 from collections.abc import Callable
+from contextlib import suppress
 from typing import TYPE_CHECKING
 
 from cmk import trace
@@ -37,12 +39,30 @@ Arguments = list[str]
 tracer = trace.get_tracer()
 
 
+def print_(txt: str) -> None:
+    with suppress(IOError):
+        sys.stdout.write(txt)
+        sys.stdout.flush()
+
+
 class Modes:
     def __init__(self) -> None:
         super().__init__()
+
         self._mode_map: dict[OptionName, Mode] = {}
         self._modes: list[Mode] = []
         self._general_options: list[Option] = []
+        self.register(self.mode_help())
+
+    def mode_help(self) -> Mode:
+        # It's a little weird to implement the --help option like this,
+        # but it is the easiest way to be consistent with how we use `getopt`.
+        return Mode(
+            long_option="help",
+            short_option="h",
+            handler_function=lambda *a, **kw: print_(self.help()),
+            short_help="Print this help",
+        )
 
     def discover(self) -> None:
         discovery_result = discover_plugins_from_modules(
@@ -100,7 +120,23 @@ class Modes:
             options += option.long_getopt_specs()
         return options
 
-    def short_help(self) -> str:
+    def help(self) -> str:
+        return """WAYS TO CALL:
+%s
+
+OPTIONS:
+%s
+
+NOTES:
+%s
+
+""" % (
+            self._short_help(),
+            self._general_option_help(),
+            self._long_help(),
+        )
+
+    def _short_help(self) -> str:
         texts = []
         for mode in self._modes:
             text = mode.short_help_text(" cmk %-36s")
@@ -108,7 +144,7 @@ class Modes:
                 texts.append(text)
         return "\n".join(sorted(texts, key=lambda x: x.lstrip(" -").lower()))
 
-    def long_help(self) -> str:
+    def _long_help(self) -> str:
         texts = []
         for mode in self._modes:
             text = mode.long_help_text()
@@ -137,7 +173,7 @@ class Modes:
             else:
                 option.handler_function()
 
-    def general_option_help(self) -> str:
+    def _general_option_help(self) -> str:
         texts = []
         for option in self._general_options:
             text = option.short_help_text(fmt="  %-21s")

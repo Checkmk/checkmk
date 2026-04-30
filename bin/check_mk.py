@@ -59,7 +59,6 @@ cmk.base.utils.register_sigint_handler()
 
 app = make_app(cmk_version.edition(cmk.utils.paths.omd_root))
 
-help_function = app.modes.get("help").handler_function
 
 init_span_processor(
     trace.init_tracing(
@@ -107,9 +106,7 @@ try:
     )
 except getopt.GetoptError as err:
     console.error(f"ERROR: {err}\n", file=sys.stderr)
-    if help_function is None:
-        raise TypeError()
-    help_function(app)
+    sys.stdout.write(app.modes.help())
     sys.exit(1)
 
 # First load the general modifying options
@@ -124,9 +121,7 @@ try:
             break
 
     if not opts and not args:
-        if help_function is None:
-            raise TypeError()
-        help_function(app)
+        sys.stdout.write(app.modes.help())
         sys.exit(0)
 
     done, exit_status = False, 0
@@ -140,9 +135,7 @@ try:
         if (args and len(args) <= 2) or "--keepalive" in [o[0] for o in opts]:
             exit_status = call(app, app.modes.get("check"), None, opts, args, trace_context)
         else:
-            if help_function is None:
-                raise TypeError()
-            help_function(app)
+            sys.stdout.write(app.modes.help())
             exit_status = 0
 
     sys.exit(exit_status)

@@ -36,11 +36,7 @@ class _LicensesOverviewFactory(TypedDictFactory[LicensesOverview]):
     "raw_date",
     [
         pytest.param("", id="Empty value"),
-        pytest.param(
-            "N/A",
-            id="Not applicable found in support ticket",
-            marks=[pytest.mark.xfail(strict=True, reason="SUP-28879: gracefully handle dates")],
-        ),
+        pytest.param("N/A", id="Not applicable found in support ticket"),
     ],
 )
 def test_parse_unsupported_expiration_date_returns_none(raw_date: str) -> None:

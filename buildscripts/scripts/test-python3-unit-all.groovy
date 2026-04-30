@@ -14,8 +14,8 @@ void main() {
 
     dir("${checkout_dir}") {
         test_jenkins_helper.execute_test([
-            name: "test-unit-all-and-system-metric-backend",
-            cmd: "make -C tests test-unit-all-and-system-metric-backend",
+            name: "test-unit-all",
+            cmd: "make -C tests test-unit-all",
             container_name: "ubuntu-2404-${container_safe_branch_name}-latest",
             disable_hot_cache: true,
         ]);

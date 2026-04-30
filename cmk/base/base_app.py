@@ -20,7 +20,6 @@ from cmk.utils.labels import LabelManager, Labels
 from cmk.utils.rulesets.ruleset_matcher import RulesetMatcher
 
 from .config import ConfigCache, LoadingResult, ObjectAttributes
-from .modes.modes import Modes
 
 
 @dataclass(frozen=True)
@@ -31,7 +30,6 @@ class CheckmkBaseApp:
     """
 
     edition: Edition
-    modes: Modes
     make_bake_on_restart: Callable[[LoadingResult, Sequence[HostAddress]], Callable[[], None]]
     create_core: Callable[
         [

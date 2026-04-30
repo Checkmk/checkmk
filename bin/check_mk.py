@@ -33,6 +33,8 @@ from cmk import trace  # astrein: disable=cmk-module-layer-violation
 from cmk.base import profiling  # astrein: disable=cmk-module-layer-violation
 from cmk.base.app import make_app  # astrein: disable=cmk-module-layer-violation
 from cmk.base.modes.call import call  # astrein: disable=cmk-module-layer-violation
+from cmk.base.modes.check_mk import general_options  # astrein: disable=cmk-module-layer-violation
+from cmk.base.modes.modes import Modes  # astrein: disable=cmk-module-layer-violation
 from cmk.ccc.crash_reporting import (  # astrein: disable=cmk-module-layer-violation
     ABCCrashReport,
     BaseDetails,
@@ -56,8 +58,6 @@ cmk.utils.log.setup_console_logging()
 logger = logging.getLogger("cmk.base")
 
 cmk.base.utils.register_sigint_handler()
-
-app = make_app(cmk_version.edition(cmk.utils.paths.omd_root))
 
 
 init_span_processor(
@@ -100,42 +100,48 @@ class CrashReport(ABCCrashReport[BaseDetails]):
         )
 
 
+# Anti pattern, will be cleaned up soon.
+modes = Modes()
+for option in general_options():
+    modes.register_general_option(option)
+modes.discover()
+
 try:
-    opts, args = getopt.getopt(
-        sys.argv[1:], app.modes.short_getopt_specs(), app.modes.long_getopt_specs()
-    )
+    opts, args = getopt.getopt(sys.argv[1:], modes.short_getopt_specs(), modes.long_getopt_specs())
 except getopt.GetoptError as err:
     console.error(f"ERROR: {err}\n", file=sys.stderr)
-    sys.stdout.write(app.modes.help())
+    sys.stdout.write(modes.help())
     sys.exit(1)
 
 # First load the general modifying options
-app.modes.process_general_options(opts)
+modes.process_general_options(opts)
 
 try:
     # Now find the requested mode and execute it
     mode_name, mode_args = None, None
     for o, a in opts:
-        if app.modes.exists(o := o.lstrip("-")):
+        if modes.exists(o := o.lstrip("-")):
             mode_name, mode_args = o, a
             break
 
     if not opts and not args:
-        sys.stdout.write(app.modes.help())
+        sys.stdout.write(modes.help())
         sys.exit(0)
+
+    app = make_app(cmk_version.edition(cmk.utils.paths.omd_root))
 
     done, exit_status = False, 0
     trace_context = trace.extract_context_from_environment(dict(os.environ))
     if mode_name is not None and mode_args is not None:
-        exit_status = call(app, app.modes.get(mode_name), mode_args, opts, args, trace_context)
+        exit_status = call(app, modes.get(mode_name), mode_args, opts, args, trace_context)
         done = True
 
     # When no mode was found, Checkmk is running the "check" mode
     if not done:
         if (args and len(args) <= 2) or "--keepalive" in [o[0] for o in opts]:
-            exit_status = call(app, app.modes.get("check"), None, opts, args, trace_context)
+            exit_status = call(app, modes.get("check"), None, opts, args, trace_context)
         else:
-            sys.stdout.write(app.modes.help())
+            sys.stdout.write(modes.help())
             exit_status = 0
 
     sys.exit(exit_status)

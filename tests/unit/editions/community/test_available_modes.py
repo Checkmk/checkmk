@@ -3,11 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.base.community_app import make_app
+from cmk.base.modes.modes import Modes
 
 
 def test_available_modes() -> None:
-    assert {m.long_option for m in make_app().modes._modes} == {
+    modes = Modes()
+    modes.discover()
+    assert {m.long_option for m in modes._modes} == {
         "automation",
         "browse-man",
         "check",

@@ -5,8 +5,6 @@
 
 from cmk.base.base_app import CheckmkBaseApp
 from cmk.base.core.nagios.factory import create_core
-from cmk.base.modes.check_mk import general_options
-from cmk.base.modes.modes import Modes
 from cmk.ccc.version import Edition
 from cmk.fetchers import PlainFetcherTrigger
 from cmk.licensing.community_handler import CommunityLicensingHandler
@@ -15,14 +13,8 @@ from cmk.utils.paths import omd_root
 
 
 def make_app() -> CheckmkBaseApp:
-    modes = Modes()
-    for option in general_options():
-        modes.register_general_option(option)
-    modes.discover()
-
     return CheckmkBaseApp(
         edition=Edition.COMMUNITY,
-        modes=modes,
         make_bake_on_restart=lambda *args: lambda: None,
         create_core=create_core,
         licensing_handler_factory=CommunityLicensingHandler.make,

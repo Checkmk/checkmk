@@ -9,6 +9,9 @@ from pathlib import Path
 
 from cmk.ccc.version import Edition
 
+from .verification import CheckmkEdition as LicensedEdition
+from .verification import load_plain_verification_response
+
 
 @dataclass(frozen=True)
 class FeatureFlag:
@@ -38,9 +41,12 @@ def licensed_features(omd_root: Path, edition: Edition) -> Features:
         # community edition -> all features disabled.
         return Features(bakery=FeatureFlag(enabled=False))
 
-    is_lite = _is_fake_lite(omd_root)
-    return Features(bakery=FeatureFlag(enabled=not is_lite))
+    if (response := load_plain_verification_response(omd_root)) is None:
+        # no license -> all features enabled. We must assume TRIAL.
+        return Features(bakery=FeatureFlag(enabled=True))
 
+    if edition is Edition.ULTIMATE and response.checkmk_edition is LicensedEdition.cee:
+        # WIP: behave like a PRO.
+        return Features(bakery=FeatureFlag(enabled=True))
 
-def _is_fake_lite(omd_root: Path) -> bool:
-    return (omd_root / ".golite").exists()
+    return Features(bakery=FeatureFlag(enabled=True))

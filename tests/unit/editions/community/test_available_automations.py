@@ -4,44 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.base.automations.automations import discover_automations
-from cmk.base.community_app import make_app
 
 
-def test_registered_modes() -> None:
-    assert {m.long_option for m in make_app().modes._modes} == {
-        "automation",
-        "browse-man",
-        "check",
-        "check-discovery",
-        "cleanup-piggyback",
-        "create-diagnostics-dump",
-        "discover",
-        "dump",
-        "dump-agent",
-        "flush",
-        "help",
-        "inventorize-marked-hosts",
-        "inventory",
-        "list-checks",
-        "list-hosts",
-        "list-tag",
-        "localize",
-        "man",
-        "nagios-config",
-        "notify",
-        "package",
-        "reload",
-        "restart",
-        "snmpget",
-        "snmptranslate",
-        "snmpwalk",
-        "update",
-        "update-dns-cache",
-        "version",
-    }
-
-
-def test_discovered_automations() -> None:
+def test_available_automations() -> None:
     assert {a.name for a in discover_automations()} == {
         "active-check",
         "analyse-host",

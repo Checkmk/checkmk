@@ -27,11 +27,10 @@ py_test(
     visibility = ["//visibility:private"],
     deps = [
         ":__test__",
-        "//cmk/base:app",
-        "//cmk/base/automations",
-        "//cmk/post_rename_site",
-        "//cmk/post_rename_site/plugins",
-        "//packages/cmk-ccc:version",
+        # Do not adjust the dependencies here.
+        # These tests test the scope of the edition.
+        # Trimming these dependencies to a minimum defeats the purpose.
+        "//cmk/editions:community",
         requirement("pytest-random-order"),
     ],
 )

@@ -104,7 +104,7 @@ def check_appliance_uplinks(item: str, params: CheckParams, section: Section) ->
         return None
 
     yield Result(
-        state=State(params["status_map"].get(uplink.status_key, 3)),
+        state=State(params["status_map"].get(uplink.status_key, State.UNKNOWN)),
         summary=f"Status: {uplink.status}",
     )
 

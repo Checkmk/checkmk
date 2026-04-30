@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Sequence
 from pathlib import Path
 
 import pytest
@@ -11,8 +12,11 @@ from cmk.werks.id_pool import (
     add_id_to_stash,
     dump_stash_to_file,
     load_legacy_stash_from_file,
+    load_or_update_stash,
+    load_stash_from_file,
     make_paths_object,
     pick_id_from_stash,
+    WerkIDsClient,
 )
 from cmk.werks.schemas.werk import LegacyStash, Stash, WerkId
 
@@ -164,3 +168,121 @@ def test_active_stash_file_with_secret(tmp_path: Path) -> None:
     paths.secret_file.parent.mkdir(parents=True, exist_ok=True)
     paths.secret_file.write_text("secret", encoding="utf-8")
     assert paths.active_stash_file == paths.stash_file
+
+
+def test_load_stash_from_file_no_files_returns_empty_legacy(tmp_path: Path) -> None:
+    paths = make_paths_object(tmp_path)
+    result = load_stash_from_file(paths)
+    assert isinstance(result, LegacyStash)
+    assert result.count() == 0
+
+
+def test_load_stash_from_file_no_secret_falls_back_to_legacy(tmp_path: Path) -> None:
+    paths = make_paths_object(tmp_path)
+    legacy = LegacyStash(ids_by_project={"cmk": [10, 20]})
+    paths.legacy_stash_file.write_text(legacy.model_dump_json(by_alias=True), encoding="utf-8")
+    result = load_stash_from_file(paths)
+    assert isinstance(result, LegacyStash)
+    assert result.ids_by_project == {"cmk": [10, 20]}
+
+
+def test_load_stash_from_file_secret_no_stash_returns_empty_stash(tmp_path: Path) -> None:
+    paths = make_paths_object(tmp_path)
+    paths.secret_file.parent.mkdir(parents=True, exist_ok=True)
+    paths.secret_file.write_text("secret", encoding="utf-8")
+    result = load_stash_from_file(paths)
+    assert isinstance(result, Stash)
+    assert result.ids == []
+
+
+# ---------------------------------------------------------------------------
+# load_or_update_stash tests
+# ---------------------------------------------------------------------------
+
+
+class FakeWerkIDsClient(WerkIDsClient):
+    def reserve_werk_ids(self, _secret_file_path: Path, _stored_werk_ids: int) -> Sequence[int]:
+        return [30, 40]
+
+
+class FakeEmptyServerClient(WerkIDsClient):
+    def reserve_werk_ids(self, _secret_file_path: Path, _stored_werk_ids: int) -> Sequence[int]:
+        return []
+
+
+def test_load_or_update_stash_legacy_stash_skips_server(tmp_path: Path) -> None:
+    paths = make_paths_object(tmp_path)
+    legacy = LegacyStash(ids_by_project={"cmk": [1, 2]})
+    paths.legacy_stash_file.write_text(legacy.model_dump_json(by_alias=True), encoding="utf-8")
+
+    stash = load_or_update_stash(paths, FakeWerkIDsClient())
+
+    assert isinstance(stash, LegacyStash)
+    assert stash.ids_by_project == {"cmk": [1, 2]}
+
+
+def test_load_or_update_stash_no_secret_skips_server(tmp_path: Path) -> None:
+    # Without a secret file, load_stash_from_file falls back to LegacyStash, so the server
+    # is never contacted (load_or_update_stash returns early for LegacyStash).
+    paths = make_paths_object(tmp_path)
+    paths.stash_file.parent.mkdir(parents=True, exist_ok=True)
+    paths.stash_file.write_text(
+        Stash(ids=[10, 20]).model_dump_json(by_alias=True), encoding="utf-8"
+    )
+
+    stash = load_or_update_stash(paths, FakeWerkIDsClient())
+
+    assert isinstance(stash, LegacyStash)
+    assert stash.count() == 0
+
+
+def test_load_or_update_stash_reserves_ids_from_server(tmp_path: Path) -> None:
+    paths = make_paths_object(tmp_path)
+    paths.stash_file.parent.mkdir(parents=True, exist_ok=True)
+    paths.secret_file.write_text("secret", encoding="utf-8")
+    paths.stash_file.write_text(
+        Stash(ids=[10, 20]).model_dump_json(by_alias=True), encoding="utf-8"
+    )
+
+    stash = load_or_update_stash(paths, FakeWerkIDsClient())
+
+    assert isinstance(stash, Stash)
+    assert stash.ids == [10, 20, 30, 40]
+
+
+def test_load_or_update_stash_uses_local_ids_when_server_empty(tmp_path: Path) -> None:
+    paths = make_paths_object(tmp_path)
+    paths.stash_file.parent.mkdir(parents=True, exist_ok=True)
+    paths.secret_file.write_text("secret", encoding="utf-8")
+    paths.stash_file.write_text(
+        Stash(ids=[10, 20]).model_dump_json(by_alias=True), encoding="utf-8"
+    )
+
+    stash = load_or_update_stash(paths, FakeEmptyServerClient())
+
+    assert isinstance(stash, Stash)
+    assert stash.ids == [10, 20]
+
+
+def test_load_or_update_stash_no_ids_anywhere_bails_out(tmp_path: Path) -> None:
+    paths = make_paths_object(tmp_path)
+    paths.stash_file.parent.mkdir(parents=True, exist_ok=True)
+    paths.secret_file.write_text("secret", encoding="utf-8")
+    paths.stash_file.write_text(Stash(ids=[]).model_dump_json(by_alias=True), encoding="utf-8")
+
+    with pytest.raises(SystemExit):
+        load_or_update_stash(paths, FakeEmptyServerClient())
+
+
+def test_load_stash_from_file_prefers_new_stash(tmp_path: Path) -> None:
+    # Both stash formats present; new format wins only when secret_file also exists.
+    paths = make_paths_object(tmp_path)
+    paths.stash_file.parent.mkdir(parents=True, exist_ok=True)
+    paths.secret_file.write_text("secret", encoding="utf-8")
+    paths.stash_file.write_text(Stash(ids=[5]).model_dump_json(by_alias=True), encoding="utf-8")
+    legacy = LegacyStash(ids_by_project={"cmk": [99]})
+    paths.legacy_stash_file.write_text(legacy.model_dump_json(by_alias=True), encoding="utf-8")
+
+    result = load_stash_from_file(paths)
+    assert isinstance(result, Stash)
+    assert result.ids == [5]

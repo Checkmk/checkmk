@@ -85,8 +85,18 @@ class CollectorMetadata(BaseModel):
     checkmk_kube_agent: CheckmkKubeAgentMetadata
 
 
+class CacheSizeInfo(BaseModel):
+    size: int
+    maxsize: int
+
+
+class CacheHealth(BaseModel):
+    container_metrics: CacheSizeInfo
+    machine_sections: CacheSizeInfo
+
+
 class ClusterCollectorMetadata(CollectorMetadata):
-    pass
+    cache_health: CacheHealth | None = None  # Added in Cluster Collector 1.11.0
 
 
 class CollectorType(enum.Enum):

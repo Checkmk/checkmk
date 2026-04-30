@@ -13,8 +13,7 @@ import CmkHtml from '@/components/CmkHtml.vue'
 import CmkIcon from '@/components/CmkIcon'
 import CmkIconButton from '@/components/CmkIconButton.vue'
 
-import { useInjectCmkToken } from '@/dashboard/composables/useCmkToken'
-import { useSuppressEventOnPublicDashboard } from '@/dashboard/composables/useIsPublicDashboard'
+import { useInjectIsPublicDashboard } from '@/dashboard/composables/useIsPublicDashboard'
 
 import DashboardContentContainer from './DashboardContentContainer.vue'
 import type { ContentProps } from './types.ts'
@@ -27,8 +26,7 @@ const { _t } = usei18n()
 const headers: string[] = [_t('Actions'), _t('Message'), _t('Sent on'), _t('Expires on')]
 
 defineProps<ContentProps>()
-const cmkToken = useInjectCmkToken()
-const suppressEventOnPublicDashboard = useSuppressEventOnPublicDashboard()
+const isPublicDashboard = useInjectIsPublicDashboard()
 
 type UserMessage = {
   id: string
@@ -44,17 +42,13 @@ type UserMessage = {
 
 const messages: Ref<UserMessage[]> = ref([])
 const fetchData = async (): Promise<void> => {
-  let getMessagesEndpointUrl: string
-  if (cmkToken === undefined) {
-    getMessagesEndpointUrl = `ajax_get_user_messages.py`
-  } else {
-    const httpVarsString: string = new URLSearchParams({ 'cmk-token': cmkToken }).toString()
-    getMessagesEndpointUrl = `get_user_messages_token_auth.py?${httpVarsString}`
-  }
-  messages.value = await cmkAjax(getMessagesEndpointUrl, {})
+  messages.value = await cmkAjax(`ajax_get_user_messages.py`, {})
 }
 
 onMounted(async () => {
+  if (isPublicDashboard) {
+    return
+  }
   await fetchData()
 })
 
@@ -101,68 +95,73 @@ function formatTimestamp(timestamp: number): string {
 </script>
 
 <template>
-  <DashboardContentContainer :effective-title="effectiveTitle" :general_settings="general_settings">
-    <div
-      @click.capture="suppressEventOnPublicDashboard"
-      @auxclick.capture="suppressEventOnPublicDashboard"
-      @mousedown.capture="suppressEventOnPublicDashboard"
-      @keydown.capture="suppressEventOnPublicDashboard"
-      @wheel.capture="suppressEventOnPublicDashboard"
-    >
-      <table v-if="messages!.length" class="db-content-user-messages__table">
-        <tbody>
-          <tr>
-            <th v-for="(header, index) in headers" :key="index">{{ header }}</th>
-          </tr>
-          <tr
-            v-for="msg in messages!.filter((msg_) => !deletedMsgIds.includes(msg_.id))"
-            :key="msg.id"
-          >
-            <td class="db-content-user-messages__buttons">
-              <CmkIcon
-                v-if="msg.acknowledged || acknowledgedMsgIds.includes(msg.id)"
-                name="checkmark"
-                :title="_t('Acknowledged')"
-                variant="inline"
-                class="db-content-user-messages__icon-acknowledged"
-              />
-              <CmkIconButton
-                v-else
-                name="werk-ack"
-                :title="_t('Acknowledge message')"
-                variant="inline"
-                size="xlarge"
-                @click="postUserMessageAction('acknowledge', msg)"
-              />
-              <CmkIcon
-                v-if="msg.security === true"
-                name="delete"
-                :title="_t('Cannot be deleted manually, must expire')"
-                variant="inline"
-                :colored="false"
-              />
-              <CmkIconButton
-                v-else
-                name="delete"
-                :title="_t('Delete')"
-                variant="inline"
-                @click="postUserMessageAction('delete', msg)"
-              />
-            </td>
-            <td>
-              <span v-if="msg.text.content_type === 'text'">{{ msg.text.content }}</span>
-              <!-- Due to its sanitization CmkHtml may render the given content differently than it
-                   was rendered before by the backend code -->
-              <CmkHtml v-else :html="msg.text.content" />
-            </td>
-            <td>{{ formatTimestamp(msg.time) }}</td>
-            <td>{{ msg.valid_till ? formatTimestamp(msg.valid_till) : '-' }}</td>
-          </tr>
-        </tbody>
-      </table>
-      <div v-else class="db-content-user-messages__no-messages">
-        {{ _t('Currently you have no received messages') }}
-      </div>
+  <DashboardContentContainer
+    v-if="isPublicDashboard"
+    :effective-title="effectiveTitle"
+    :general_settings="general_settings"
+  >
+    <div class="db-content-user-messages__not-available">
+      {{ _t('Not available on shared dashboards') }}
+    </div>
+  </DashboardContentContainer>
+  <DashboardContentContainer
+    v-else
+    :effective-title="effectiveTitle"
+    :general_settings="general_settings"
+  >
+    <table v-if="messages!.length" class="db-content-user-messages__table">
+      <tbody>
+        <tr>
+          <th v-for="(header, index) in headers" :key="index">{{ header }}</th>
+        </tr>
+        <tr
+          v-for="msg in messages!.filter((msg_) => !deletedMsgIds.includes(msg_.id))"
+          :key="msg.id"
+        >
+          <td class="db-content-user-messages__buttons">
+            <CmkIcon
+              v-if="msg.acknowledged || acknowledgedMsgIds.includes(msg.id)"
+              name="checkmark"
+              :title="_t('Acknowledged')"
+              variant="inline"
+              class="db-content-user-messages__icon-acknowledged"
+            />
+            <CmkIconButton
+              v-else
+              name="werk-ack"
+              :title="_t('Acknowledge message')"
+              variant="inline"
+              size="xlarge"
+              @click="postUserMessageAction('acknowledge', msg)"
+            />
+            <CmkIcon
+              v-if="msg.security === true"
+              name="delete"
+              :title="_t('Cannot be deleted manually, must expire')"
+              variant="inline"
+              :colored="false"
+            />
+            <CmkIconButton
+              v-else
+              name="delete"
+              :title="_t('Delete')"
+              variant="inline"
+              @click="postUserMessageAction('delete', msg)"
+            />
+          </td>
+          <td>
+            <span v-if="msg.text.content_type === 'text'">{{ msg.text.content }}</span>
+            <!-- Due to its sanitization CmkHtml may render the given content differently than it
+                 was rendered before by the backend code -->
+            <CmkHtml v-else :html="msg.text.content" />
+          </td>
+          <td>{{ formatTimestamp(msg.time) }}</td>
+          <td>{{ msg.valid_till ? formatTimestamp(msg.valid_till) : '-' }}</td>
+        </tr>
+      </tbody>
+    </table>
+    <div v-else class="db-content-user-messages__no-messages">
+      {{ _t('Currently you have no received messages') }}
     </div>
   </DashboardContentContainer>
 </template>
@@ -213,6 +212,11 @@ function formatTimestamp(timestamp: number): string {
 
 .db-content-user-messages__no-messages {
   padding: var(--spacing);
+}
+
+.db-content-user-messages__not-available {
+  padding: var(--spacing);
+  color: var(--font-color);
 }
 
 .db-content-user-messages__icon-acknowledged {

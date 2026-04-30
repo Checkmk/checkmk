@@ -32,6 +32,29 @@ class _LicensesOverviewFactory(TypedDictFactory[LicensesOverview]):
     __check_model__ = False
 
 
+@pytest.mark.parametrize(
+    "raw_date",
+    [
+        pytest.param("", id="Empty value"),
+        pytest.param(
+            "N/A",
+            id="Not applicable found in support ticket",
+            marks=[pytest.mark.xfail(strict=True, reason="SUP-28879: gracefully handle dates")],
+        ),
+    ],
+)
+def test_parse_unsupported_expiration_date_returns_none(raw_date: str) -> None:
+    overview = _LicensesOverviewFactory.build(
+        organisation_name="org",
+        organisation_id="123",
+        expirationDate=raw_date,
+    )
+    string_table = [[f"[{json.dumps(overview)}]"]]
+    section = parse_licenses_overview(string_table)
+
+    assert section["org/123"].expiration_date is None
+
+
 @pytest.mark.parametrize("string_table", [[], [[]], [[""]]])
 def test_discover_licenses_overview_no_payload(string_table: StringTable) -> None:
     section = parse_licenses_overview(string_table)

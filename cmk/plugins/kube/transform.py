@@ -276,16 +276,6 @@ def resource_quota_from_client(
     )
 
 
-def persistent_volume_claim_from_client(
-    persistent_volume_claim: client.V1PersistentVolumeClaim,
-) -> api.PersistentVolumeClaim:
-    return api.PersistentVolumeClaim(
-        metadata=parse_metadata(persistent_volume_claim.metadata),
-        spec=api.PersistentVolumeClaimSpec.model_validate(persistent_volume_claim.spec),
-        status=api.PersistentVolumeClaimStatus.model_validate(persistent_volume_claim.status),
-    )
-
-
 WorkloadResource: TypeAlias = (
     client.V1Pod
     | client.V1Deployment

@@ -17,4 +17,4 @@ pyopenssl = "~=24.0"    # cmk_update_agent
 pywin32 = "==311"       # logwatch
 
 [requires]
-python_version = "3.12"
+python_version = "3.13"

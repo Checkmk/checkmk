@@ -89,7 +89,7 @@ export function registerBazelTestRunner(): vscode.Disposable[] {
         return
       }
 
-      const cmd = `bazel test ${shellEscape(target)} --test_arg=${shellEscape(relPath)}`
+      const cmd = `bazel test ${shellEscape(target)} --test_output=streamed --test_arg=${shellEscape(relPath)}`
 
       const execution = await runCommand(`Test: ${fileName}`, cmd)
       if (!execution) return
@@ -156,7 +156,7 @@ export function registerBazelTestRunner(): vscode.Disposable[] {
         return
       }
 
-      const cmd = `bazel test ${shellEscape(target)} --test_arg=${shellEscape(relPath)} --test_arg=-k --test_arg=${shellEscape(testName)}`
+      const cmd = `bazel test ${shellEscape(target)} --test_output=streamed --test_arg=${shellEscape(relPath)} --test_arg=-k --test_arg=${shellEscape(testName)}`
 
       const execution = await runCommand(`Test: ${testName}`, cmd)
       if (!execution) return

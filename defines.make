@@ -45,7 +45,7 @@ PYTHON_MAJOR_DOT_MINOR := $(PYTHON_VERSION_MAJOR).$(PYTHON_VERSION_MINOR)
 
 # We're separating the python version used in the windows agent modules as they are not directly connected.
 # However, we should keep them as close as possible.
-PYTHON_VERSION_WINDOWS := 3.12.6
+PYTHON_VERSION_WINDOWS := 3.13.13
 
 # convenience stuff derived from PYTHON_VERSION_WINDOWS
 PY_ARRAY_WINDOWS		:= $(subst ., ,$(PYTHON_VERSION_WINDOWS))
@@ -54,7 +54,7 @@ PYTHON_VERSION_WINDOWS_MINOR   := $(word 2,$(PY_ARRAY_WINDOWS))
 PYTHON_VERSION_WINDOWS_PATCH   := $(word 3,$(PY_ARRAY_WINDOWS))
 PYTHON_VERSION_WINDOWS_MAJOR_DOT_MINOR := $(PYTHON_VERSION_WINDOWS_MAJOR).$(PYTHON_VERSION_WINDOWS_MINOR)
 
-AGENT_PLUGIN_PYTHON_VERSIONS := 3.4 3.5 3.6 3.7 3.8 3.9 3.10 3.11 3.12
+AGENT_PLUGIN_PYTHON_VERSIONS := 3.4 3.5 3.6 3.7 3.8 3.9 3.10 3.11 3.12 3.13
 
 # Needed for bootstrapping CI and development environments
 VIRTUALENV_VERSION := 20.25.0

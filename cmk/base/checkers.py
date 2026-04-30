@@ -45,7 +45,11 @@ from cmk.ccc import tty
 from cmk.ccc.cpu_tracking import CPUTracker, Snapshot
 from cmk.ccc.exceptions import MKTimeout
 from cmk.ccc.hostaddress import HostAddress, HostName
-from cmk.checkengine.checkerplugin import AggregatedResult, CheckerPlugin, ConfiguredService
+from cmk.checkengine.checkerplugin import (
+    AggregatedResult,
+    CheckerPlugin,
+    ConfiguredService,
+)
 from cmk.checkengine.checking import cluster_mode
 from cmk.checkengine.checkresults import (
     ActiveCheckResult,
@@ -864,7 +868,16 @@ def consume_check_results(
                 case IgnoreResults():
                     ignore_results.append(subr)
                 case Metric():
-                    perfdata.append((subr.name, subr.value) + subr.levels + subr.boundaries)
+                    perfdata.append(
+                        MetricTuple(
+                            name=subr.name,
+                            value=subr.value,
+                            warn=subr.levels[0],
+                            crit=subr.levels[1],
+                            min_=subr.boundaries[0],
+                            max_=subr.boundaries[1],
+                        )
+                    )
                 case CheckFunctionResult():
                     results.append(subr)
                 case _:

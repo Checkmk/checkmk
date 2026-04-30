@@ -23,6 +23,7 @@ from cmk.automations.results import (
 )
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.user import UserId
+from cmk.checkengine.checkresults import MetricTuple
 from cmk.checkengine.discovery import CheckPreviewEntry
 from cmk.checkengine.plugins import AutocheckEntry, CheckPluginName, SectionName
 from cmk.gui.utils import transaction_manager
@@ -60,9 +61,9 @@ MOCK_DISCOVERY_RESULT = ServiceDiscoveryPreviewResult(
             0,
             "15 min load: 1.32 at 8 Cores (0.17 per Core)",
             [
-                ("load1", 2.7, 40.0, 80.0, 0, 8),
-                ("load5", 1.63, 40.0, 80.0, 0, 8),
-                ("load15", 1.32, 40.0, 80.0, 0, 8),
+                MetricTuple(name="load1", value=2.7, warn=40.0, crit=80.0, min_=0, max_=8),
+                MetricTuple(name="load5", value=1.63, warn=40.0, crit=80.0, min_=0, max_=8),
+                MetricTuple(name="load15", value=1.32, warn=40.0, crit=80.0, min_=0, max_=8),
             ],
             {},
             {},

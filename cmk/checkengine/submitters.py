@@ -19,7 +19,7 @@ from cmk.ccc import tty
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.timeout import Timeout
-from cmk.checkengine.checkresults import ServiceCheckResult
+from cmk.checkengine.checkresults import MetricTuple, ServiceCheckResult
 from cmk.utils.log import console
 from cmk.utils.servicename import ServiceName
 
@@ -36,7 +36,7 @@ def _sanitize_perftext(
     if not result.metrics:
         return ""
 
-    perftexts = [_serialize_metric(*mt) for mt in result.metrics]
+    perftexts = [_serialize_metric(mt) for mt in result.metrics]
 
     if perfdata_format == "pnp" and (check_command := _extract_check_command(result.output)):
         perftexts.append("[%s]" % check_command)
@@ -44,22 +44,11 @@ def _sanitize_perftext(
     return " ".join(perftexts)
 
 
-def _serialize_metric(
-    name: str,
-    value: float,
-    warn: float | None,
-    crit: float | None,
-    min_: float | None,
-    max_: float | None,
-) -> str:
-    """
-    >>> _serialize_metric("hot_chocolate", 2.3, None, 42.0, 0.0, None)
-    'hot_chocolate=2.3;;42;0;'
-
-    """
+def _serialize_metric(mt: MetricTuple) -> str:
     return (
-        f"{name}={_serialize_value(value)};{_serialize_value(warn)};{_serialize_value(crit)};"
-        f"{_serialize_value(min_)};{_serialize_value(max_)}"
+        f"{mt.name}={_serialize_value(mt.value)}"
+        f";{_serialize_value(mt.warn)};{_serialize_value(mt.crit)}"
+        f";{_serialize_value(mt.min_)};{_serialize_value(mt.max_)}"
     )
 
 

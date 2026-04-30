@@ -22,14 +22,14 @@ __all__ = ["ActiveCheckResult", "MetricTuple", "ServiceCheckResult", "state_mark
 state_markers = ("", "(!)", "(!!)", "(?)")
 
 
-MetricTuple = tuple[
-    MetricName,
-    float,
-    float | None,
-    float | None,
-    float | None,
-    float | None,
-]
+@dataclasses.dataclass(frozen=True, kw_only=True)
+class MetricTuple:
+    name: MetricName
+    value: float
+    warn: float | None
+    crit: float | None
+    min_: float | None
+    max_: float | None
 
 
 @dataclasses.dataclass(frozen=True)

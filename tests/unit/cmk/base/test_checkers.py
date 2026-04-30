@@ -20,7 +20,11 @@ from cmk.agent_based.v2 import CheckResult
 from cmk.base import checkers
 from cmk.ccc.hostaddress import HostName
 from cmk.checkengine.checkerplugin import ConfiguredService
-from cmk.checkengine.checkresults import ServiceCheckResult, SubmittableServiceCheckResult
+from cmk.checkengine.checkresults import (
+    MetricTuple,
+    ServiceCheckResult,
+    SubmittableServiceCheckResult,
+)
 from cmk.checkengine.fetcher import HostKey
 from cmk.checkengine.parameters import TimespecificParameters, TimespecificParameterSet
 from cmk.checkengine.plugins import CheckPluginName
@@ -67,7 +71,9 @@ def make_service(desription: ServiceName) -> ConfiguredService:
                 Metric(name="name", value=42),
             ],
             SubmittableServiceCheckResult(
-                0, "summary\nsummary", [("name", 42.0, None, None, None, None)]
+                0,
+                "summary\nsummary",
+                [MetricTuple(name="name", value=42.0, warn=None, crit=None, min_=None, max_=None)],
             ),
         ),
     ],

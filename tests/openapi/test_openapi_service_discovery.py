@@ -18,6 +18,7 @@ from cmk.automations.results import (
     SetAutochecksV2Result,
 )
 from cmk.ccc.hostaddress import HostName
+from cmk.checkengine.checkresults import MetricTuple
 from cmk.checkengine.discovery import CheckPreviewEntry, DiscoverySettings
 from cmk.checkengine.plugins import AutocheckEntry, CheckPluginName, SectionName
 from cmk.utils.automation_config import LocalAutomationConfig
@@ -41,9 +42,9 @@ mock_discovery_result = ServiceDiscoveryPreviewResult(
             0,
             "15 min load: 1.32 at 8 Cores (0.17 per Core)",
             [
-                ("load1", 2.7, 40.0, 80.0, 0, 8),
-                ("load5", 1.63, 40.0, 80.0, 0, 8),
-                ("load15", 1.32, 40.0, 80.0, 0, 8),
+                MetricTuple(name="load1", value=2.7, warn=40.0, crit=80.0, min_=0, max_=8),
+                MetricTuple(name="load5", value=1.63, warn=40.0, crit=80.0, min_=0, max_=8),
+                MetricTuple(name="load15", value=1.32, warn=40.0, crit=80.0, min_=0, max_=8),
             ],
             {},
             {},
@@ -62,8 +63,17 @@ mock_discovery_result = ServiceDiscoveryPreviewResult(
             0,
             "Count: 1708 threads, Usage: 1.35%",
             [
-                ("threads", 1708, 2000.0, 4000.0, None, None),
-                ("thread_usage", 1.3496215054443164, None, None, None, None),
+                MetricTuple(
+                    name="threads", value=1708, warn=2000.0, crit=4000.0, min_=None, max_=None
+                ),
+                MetricTuple(
+                    name="thread_usage",
+                    value=1.3496215054443164,
+                    warn=None,
+                    crit=None,
+                    min_=None,
+                    max_=None,
+                ),
             ],
             {},
             {},
@@ -93,10 +103,33 @@ mock_discovery_result = ServiceDiscoveryPreviewResult(
             0,
             "0.08% used (6.30 MB of 7.76 GB)",
             [
-                ("fs_used", 6.30078125, 6356.853125, 7151.459765625, 0, 7946.06640625),
-                ("fs_size", 7946.06640625, None, None, None, None),
-                ("fs_used_percent", 0.07929434424363863, None, None, None, None),
-                ("inodes_used", 1558, 1830773.7, 1932483.3499999999, 0.0, 2034193.0),
+                MetricTuple(
+                    name="fs_used",
+                    value=6.30078125,
+                    warn=6356.853125,
+                    crit=7151.459765625,
+                    min_=0,
+                    max_=7946.06640625,
+                ),
+                MetricTuple(
+                    name="fs_size", value=7946.06640625, warn=None, crit=None, min_=None, max_=None
+                ),
+                MetricTuple(
+                    name="fs_used_percent",
+                    value=0.07929434424363863,
+                    warn=None,
+                    crit=None,
+                    min_=None,
+                    max_=None,
+                ),
+                MetricTuple(
+                    name="inodes_used",
+                    value=1558,
+                    warn=1830773.7,
+                    crit=1932483.3499999999,
+                    min_=0.0,
+                    max_=2034193.0,
+                ),
             ],
             {},
             {},
@@ -126,10 +159,28 @@ mock_discovery_result = ServiceDiscoveryPreviewResult(
             0,
             "0% used (0.00 B of 7.76 GB)",
             [
-                ("fs_used", 0.0, 6356.853125, 7151.459765625, 0, 7946.06640625),
-                ("fs_size", 7946.06640625, None, None, None, None),
-                ("fs_used_percent", 0.0, None, None, None, None),
-                ("inodes_used", 1, 1830773.7, 1932483.3499999999, 0.0, 2034193.0),
+                MetricTuple(
+                    name="fs_used",
+                    value=0.0,
+                    warn=6356.853125,
+                    crit=7151.459765625,
+                    min_=0,
+                    max_=7946.06640625,
+                ),
+                MetricTuple(
+                    name="fs_size", value=7946.06640625, warn=None, crit=None, min_=None, max_=None
+                ),
+                MetricTuple(
+                    name="fs_used_percent", value=0.0, warn=None, crit=None, min_=None, max_=None
+                ),
+                MetricTuple(
+                    name="inodes_used",
+                    value=1,
+                    warn=1830773.7,
+                    crit=1932483.3499999999,
+                    min_=0.0,
+                    max_=2034193.0,
+                ),
             ],
             {},
             {},
@@ -159,10 +210,33 @@ mock_discovery_result = ServiceDiscoveryPreviewResult(
             0,
             "0.12% used (9.43 MB of 7.76 GB)",
             [
-                ("fs_used", 9.42578125, 6356.853125, 7151.459765625, 0, 7946.06640625),
-                ("fs_size", 7946.06640625, None, None, None, None),
-                ("fs_used_percent", 0.11862197933037819, None, None, None, None),
-                ("inodes_used", 1412, 1830773.7, 1932483.3499999999, 0.0, 2034193.0),
+                MetricTuple(
+                    name="fs_used",
+                    value=9.42578125,
+                    warn=6356.853125,
+                    crit=7151.459765625,
+                    min_=0,
+                    max_=7946.06640625,
+                ),
+                MetricTuple(
+                    name="fs_size", value=7946.06640625, warn=None, crit=None, min_=None, max_=None
+                ),
+                MetricTuple(
+                    name="fs_used_percent",
+                    value=0.11862197933037819,
+                    warn=None,
+                    crit=None,
+                    min_=None,
+                    max_=None,
+                ),
+                MetricTuple(
+                    name="inodes_used",
+                    value=1412,
+                    warn=1830773.7,
+                    crit=1932483.3499999999,
+                    min_=0.0,
+                    max_=2034193.0,
+                ),
             ],
             {},
             {},
@@ -192,10 +266,33 @@ mock_discovery_result = ServiceDiscoveryPreviewResult(
             0,
             "25.24% used (117.68 of 466.31 GB)",
             [
-                ("fs_used", 120506.43359375, 382000.025, 429750.028125, 0, 477500.03125),
-                ("fs_size", 477500.03125, None, None, None, None),
-                ("fs_used_percent", 25.236947792084568, None, None, None, None),
-                ("inodes_used", 1131429, 28009267.2, 29565337.599999998, 0.0, 31121408.0),
+                MetricTuple(
+                    name="fs_used",
+                    value=120506.43359375,
+                    warn=382000.025,
+                    crit=429750.028125,
+                    min_=0,
+                    max_=477500.03125,
+                ),
+                MetricTuple(
+                    name="fs_size", value=477500.03125, warn=None, crit=None, min_=None, max_=None
+                ),
+                MetricTuple(
+                    name="fs_used_percent",
+                    value=25.236947792084568,
+                    warn=None,
+                    crit=None,
+                    min_=None,
+                    max_=None,
+                ),
+                MetricTuple(
+                    name="inodes_used",
+                    value=1131429,
+                    warn=28009267.2,
+                    crit=29565337.599999998,
+                    min_=0.0,
+                    max_=31121408.0,
+                ),
             ],
             {},
             {},
@@ -225,9 +322,25 @@ mock_discovery_result = ServiceDiscoveryPreviewResult(
             0,
             "3.0% used (15.33 of 510.98 MB)",
             [
-                ("fs_used", 15.328125, 408.7875, 459.8859375, 0, 510.984375),
-                ("fs_size", 510.984375, None, None, None, None),
-                ("fs_used_percent", 2.9997247958902853, None, None, None, None),
+                MetricTuple(
+                    name="fs_used",
+                    value=15.328125,
+                    warn=408.7875,
+                    crit=459.8859375,
+                    min_=0,
+                    max_=510.984375,
+                ),
+                MetricTuple(
+                    name="fs_size", value=510.984375, warn=None, crit=None, min_=None, max_=None
+                ),
+                MetricTuple(
+                    name="fs_used_percent",
+                    value=2.9997247958902853,
+                    warn=None,
+                    crit=None,
+                    min_=None,
+                    max_=None,
+                ),
             ],
             {},
             {},
@@ -257,10 +370,33 @@ mock_discovery_result = ServiceDiscoveryPreviewResult(
             0,
             "30.85% used (217.37 of 704.48 MB)",
             [
-                ("fs_used", 217.3671875, 563.5875, 634.0359375, 0, 704.484375),
-                ("fs_size", 704.484375, None, None, None, None),
-                ("fs_used_percent", 30.854791846873823, None, None, None, None),
-                ("inodes_used", 305, 42163.200000000004, 44505.6, 0.0, 46848.0),
+                MetricTuple(
+                    name="fs_used",
+                    value=217.3671875,
+                    warn=563.5875,
+                    crit=634.0359375,
+                    min_=0,
+                    max_=704.484375,
+                ),
+                MetricTuple(
+                    name="fs_size", value=704.484375, warn=None, crit=None, min_=None, max_=None
+                ),
+                MetricTuple(
+                    name="fs_used_percent",
+                    value=30.854791846873823,
+                    warn=None,
+                    crit=None,
+                    min_=None,
+                    max_=None,
+                ),
+                MetricTuple(
+                    name="inodes_used",
+                    value=305,
+                    warn=42163.200000000004,
+                    crit=44505.6,
+                    min_=0.0,
+                    max_=46848.0,
+                ),
             ],
             {},
             {},
@@ -279,11 +415,21 @@ mock_discovery_result = ServiceDiscoveryPreviewResult(
             0,
             "WAITING - Counter based check, cannot be done offline",
             [
-                ("process_creations", 0.0, None, None, None, None),
-                ("context_switches", 0.0, None, None, None, None),
-                ("major_page_faults", 0.0, None, None, None, None),
-                ("page_swap_in", 0.0, None, None, None, None),
-                ("page_swap_out", 0.0, None, None, None, None),
+                MetricTuple(
+                    name="process_creations", value=0.0, warn=None, crit=None, min_=None, max_=None
+                ),
+                MetricTuple(
+                    name="context_switches", value=0.0, warn=None, crit=None, min_=None, max_=None
+                ),
+                MetricTuple(
+                    name="major_page_faults", value=0.0, warn=None, crit=None, min_=None, max_=None
+                ),
+                MetricTuple(
+                    name="page_swap_in", value=0.0, warn=None, crit=None, min_=None, max_=None
+                ),
+                MetricTuple(
+                    name="page_swap_out", value=0.0, warn=None, crit=None, min_=None, max_=None
+                ),
             ],
             {},
             {},
@@ -302,10 +448,28 @@ mock_discovery_result = ServiceDiscoveryPreviewResult(
             0,
             "User: 14.7%, System: 12.14%, Wait: 0.1%, Total CPU: 26.95%",
             [
-                ("user", 14.70410082412248, None, None, None, None),
-                ("system", 12.142805812602681, None, None, None, None),
-                ("wait", 0.10180487170606699, None, None, None, None),
-                ("util", 26.948711508431227, None, None, 0, None),
+                MetricTuple(
+                    name="user", value=14.70410082412248, warn=None, crit=None, min_=None, max_=None
+                ),
+                MetricTuple(
+                    name="system",
+                    value=12.142805812602681,
+                    warn=None,
+                    crit=None,
+                    min_=None,
+                    max_=None,
+                ),
+                MetricTuple(
+                    name="wait",
+                    value=0.10180487170606699,
+                    warn=None,
+                    crit=None,
+                    min_=None,
+                    max_=None,
+                ),
+                MetricTuple(
+                    name="util", value=26.948711508431227, warn=None, crit=None, min_=0, max_=None
+                ),
             ],
             {},
             {},
@@ -323,7 +487,7 @@ mock_discovery_result = ServiceDiscoveryPreviewResult(
             "Temperature Zone 0",
             0,
             "25.0 °C",
-            [("temp", 25.0, 107.0, 107.0, None, None)],
+            [MetricTuple(name="temp", value=25.0, warn=107.0, crit=107.0, min_=None, max_=None)],
             {},
             {},
             [HostName("heute")],
@@ -340,7 +504,7 @@ mock_discovery_result = ServiceDiscoveryPreviewResult(
             "Temperature Zone 1",
             0,
             "20.0 °C",
-            [("temp", 20.0, 70.0, 80.0, None, None)],
+            [MetricTuple(name="temp", value=20.0, warn=70.0, crit=80.0, min_=None, max_=None)],
             {},
             {},
             [HostName("heute")],
@@ -357,7 +521,7 @@ mock_discovery_result = ServiceDiscoveryPreviewResult(
             "Temperature Zone 2",
             0,
             "54.0 °C",
-            [("temp", 54.0, 78.0, 88.0, None, None)],
+            [MetricTuple(name="temp", value=54.0, warn=78.0, crit=88.0, min_=None, max_=None)],
             {},
             {},
             [HostName("heute")],
@@ -374,7 +538,7 @@ mock_discovery_result = ServiceDiscoveryPreviewResult(
             "Temperature Zone 3",
             0,
             "35.0 °C",
-            [("temp", 35.0, 70.0, 80.0, None, None)],
+            [MetricTuple(name="temp", value=35.0, warn=70.0, crit=80.0, min_=None, max_=None)],
             {},
             {},
             [HostName("heute")],
@@ -391,7 +555,7 @@ mock_discovery_result = ServiceDiscoveryPreviewResult(
             "Temperature Zone 4",
             0,
             "41.0 °C",
-            [("temp", 41.0, 70.0, 80.0, None, None)],
+            [MetricTuple(name="temp", value=41.0, warn=70.0, crit=80.0, min_=None, max_=None)],
             {},
             {},
             [HostName("heute")],
@@ -408,7 +572,7 @@ mock_discovery_result = ServiceDiscoveryPreviewResult(
             "Temperature Zone 5",
             0,
             "55.5 °C",
-            [("temp", 55.5, 115.0, 115.0, None, None)],
+            [MetricTuple(name="temp", value=55.5, warn=115.0, crit=115.0, min_=None, max_=None)],
             {},
             {},
             [HostName("heute")],
@@ -425,7 +589,7 @@ mock_discovery_result = ServiceDiscoveryPreviewResult(
             "Temperature Zone 6",
             0,
             "64.0 °C",
-            [("temp", 64.0, 99.0, 127.0, None, None)],
+            [MetricTuple(name="temp", value=64.0, warn=99.0, crit=127.0, min_=None, max_=None)],
             {},
             {},
             [HostName("heute")],
@@ -442,7 +606,7 @@ mock_discovery_result = ServiceDiscoveryPreviewResult(
             "Temperature Zone 7",
             1,
             "74.0 °C (warn/crit at 70.0/80.0 °C)",
-            [("temp", 74.0, 70.0, 80.0, None, None)],
+            [MetricTuple(name="temp", value=74.0, warn=70.0, crit=80.0, min_=None, max_=None)],
             {},
             {},
             [HostName("heute")],
@@ -459,7 +623,7 @@ mock_discovery_result = ServiceDiscoveryPreviewResult(
             "Temperature Zone 8",
             0,
             "38.0 °C",
-            [("temp", 38.0, 70.0, 80.0, None, None)],
+            [MetricTuple(name="temp", value=38.0, warn=70.0, crit=80.0, min_=None, max_=None)],
             {},
             {},
             [HostName("heute")],
@@ -486,52 +650,171 @@ mock_discovery_result = ServiceDiscoveryPreviewResult(
             2,
             "Total virtual memory: 49.43% - 8.14 GB of 16.48 GB, RAM: 47.68% - 7.40 GB of 15.52 GB, Swap: 77.91% - 763.52 MB of 980.00 MB, Largest Free VMalloc Chunk: 0% free - 0.00 B of 32.00 TB VMalloc Area (warn/crit below 50.00 MB/30.00 MB free)(!!)",
             [
-                ("active", 8891592704, None, None, None, None),
-                ("active_anon", 7336378368, None, None, None, None),
-                ("active_file", 1555214336, None, None, None, None),
-                ("anon_huge_pages", 0, None, None, None, None),
-                ("anon_pages", 7420919808, None, None, None, None),
-                ("bounce", 0, None, None, None, None),
-                ("buffers", 272564224, None, None, None, None),
-                ("cached", 3219124224, None, None, None, None),
-                ("caches", 4009385984, None, None, None, None),
-                ("cma_free", 0, None, None, None, None),
-                ("cma_total", 0, None, None, None, None),
-                ("commit_limit", 9359654912, None, None, None, None),
-                ("committed_as", 16258154496, None, None, None, None),
-                ("dirty", 14913536, None, None, None, None),
-                ("hardware_corrupted", 0, None, None, None, None),
-                ("inactive", 2157494272, None, None, None, None),
-                ("inactive_anon", 1121906688, None, None, None, None),
-                ("inactive_file", 1035587584, None, None, None, None),
-                ("kreclaimable", 361406464, None, None, None, None),
-                ("kernel_stack", 28037120, None, None, None, None),
-                ("mapped", 970366976, None, None, None, None),
-                ("mem_available", 7177719808, None, None, None, None),
-                ("mem_free", 4710035456, None, None, None, None),
-                ("mem_total", 16664109056, None, None, None, None),
-                ("mem_used", 7944687616, None, None, None, None),
-                ("mem_used_percent", 47.675441809110545, None, None, None, None),
-                ("mlocked", 81920, None, None, None, None),
-                ("nfs_unstable", 0, None, None, None, None),
-                ("page_tables", 84729856, None, None, None, None),
-                ("pending", 14913536, None, None, None, None),
-                ("percpu", 9633792, None, None, None, None),
-                ("sreclaimable", 361406464, None, None, None, None),
-                ("sunreclaim", 257396736, None, None, None, None),
-                ("shmem", 934322176, None, None, None, None),
-                ("shmem_huge_pages", 0, None, None, None, None),
-                ("shmem_pmd_mapped", 0, None, None, None, None),
-                ("slab", 618803200, None, None, None, None),
-                ("swap_cached", 156291072, None, None, None, None),
-                ("swap_free", 226992128, None, None, None, None),
-                ("swap_total", 1027600384, None, None, None, None),
-                ("swap_used", 800608256, None, None, None, None),
-                ("total_total", 17691709440, None, None, None, None),
-                ("total_used", 8745295872, None, None, None, None),
-                ("unevictable", 19808256, None, None, None, None),
-                ("writeback", 0, None, None, None, None),
-                ("writeback_tmp", 0, None, None, None, None),
+                MetricTuple(
+                    name="active", value=8891592704, warn=None, crit=None, min_=None, max_=None
+                ),
+                MetricTuple(
+                    name="active_anon", value=7336378368, warn=None, crit=None, min_=None, max_=None
+                ),
+                MetricTuple(
+                    name="active_file", value=1555214336, warn=None, crit=None, min_=None, max_=None
+                ),
+                MetricTuple(
+                    name="anon_huge_pages", value=0, warn=None, crit=None, min_=None, max_=None
+                ),
+                MetricTuple(
+                    name="anon_pages", value=7420919808, warn=None, crit=None, min_=None, max_=None
+                ),
+                MetricTuple(name="bounce", value=0, warn=None, crit=None, min_=None, max_=None),
+                MetricTuple(
+                    name="buffers", value=272564224, warn=None, crit=None, min_=None, max_=None
+                ),
+                MetricTuple(
+                    name="cached", value=3219124224, warn=None, crit=None, min_=None, max_=None
+                ),
+                MetricTuple(
+                    name="caches", value=4009385984, warn=None, crit=None, min_=None, max_=None
+                ),
+                MetricTuple(name="cma_free", value=0, warn=None, crit=None, min_=None, max_=None),
+                MetricTuple(name="cma_total", value=0, warn=None, crit=None, min_=None, max_=None),
+                MetricTuple(
+                    name="commit_limit",
+                    value=9359654912,
+                    warn=None,
+                    crit=None,
+                    min_=None,
+                    max_=None,
+                ),
+                MetricTuple(
+                    name="committed_as",
+                    value=16258154496,
+                    warn=None,
+                    crit=None,
+                    min_=None,
+                    max_=None,
+                ),
+                MetricTuple(
+                    name="dirty", value=14913536, warn=None, crit=None, min_=None, max_=None
+                ),
+                MetricTuple(
+                    name="hardware_corrupted", value=0, warn=None, crit=None, min_=None, max_=None
+                ),
+                MetricTuple(
+                    name="inactive", value=2157494272, warn=None, crit=None, min_=None, max_=None
+                ),
+                MetricTuple(
+                    name="inactive_anon",
+                    value=1121906688,
+                    warn=None,
+                    crit=None,
+                    min_=None,
+                    max_=None,
+                ),
+                MetricTuple(
+                    name="inactive_file",
+                    value=1035587584,
+                    warn=None,
+                    crit=None,
+                    min_=None,
+                    max_=None,
+                ),
+                MetricTuple(
+                    name="kreclaimable", value=361406464, warn=None, crit=None, min_=None, max_=None
+                ),
+                MetricTuple(
+                    name="kernel_stack", value=28037120, warn=None, crit=None, min_=None, max_=None
+                ),
+                MetricTuple(
+                    name="mapped", value=970366976, warn=None, crit=None, min_=None, max_=None
+                ),
+                MetricTuple(
+                    name="mem_available",
+                    value=7177719808,
+                    warn=None,
+                    crit=None,
+                    min_=None,
+                    max_=None,
+                ),
+                MetricTuple(
+                    name="mem_free", value=4710035456, warn=None, crit=None, min_=None, max_=None
+                ),
+                MetricTuple(
+                    name="mem_total", value=16664109056, warn=None, crit=None, min_=None, max_=None
+                ),
+                MetricTuple(
+                    name="mem_used", value=7944687616, warn=None, crit=None, min_=None, max_=None
+                ),
+                MetricTuple(
+                    name="mem_used_percent",
+                    value=47.675441809110545,
+                    warn=None,
+                    crit=None,
+                    min_=None,
+                    max_=None,
+                ),
+                MetricTuple(
+                    name="mlocked", value=81920, warn=None, crit=None, min_=None, max_=None
+                ),
+                MetricTuple(
+                    name="nfs_unstable", value=0, warn=None, crit=None, min_=None, max_=None
+                ),
+                MetricTuple(
+                    name="page_tables", value=84729856, warn=None, crit=None, min_=None, max_=None
+                ),
+                MetricTuple(
+                    name="pending", value=14913536, warn=None, crit=None, min_=None, max_=None
+                ),
+                MetricTuple(
+                    name="percpu", value=9633792, warn=None, crit=None, min_=None, max_=None
+                ),
+                MetricTuple(
+                    name="sreclaimable", value=361406464, warn=None, crit=None, min_=None, max_=None
+                ),
+                MetricTuple(
+                    name="sunreclaim", value=257396736, warn=None, crit=None, min_=None, max_=None
+                ),
+                MetricTuple(
+                    name="shmem", value=934322176, warn=None, crit=None, min_=None, max_=None
+                ),
+                MetricTuple(
+                    name="shmem_huge_pages", value=0, warn=None, crit=None, min_=None, max_=None
+                ),
+                MetricTuple(
+                    name="shmem_pmd_mapped", value=0, warn=None, crit=None, min_=None, max_=None
+                ),
+                MetricTuple(
+                    name="slab", value=618803200, warn=None, crit=None, min_=None, max_=None
+                ),
+                MetricTuple(
+                    name="swap_cached", value=156291072, warn=None, crit=None, min_=None, max_=None
+                ),
+                MetricTuple(
+                    name="swap_free", value=226992128, warn=None, crit=None, min_=None, max_=None
+                ),
+                MetricTuple(
+                    name="swap_total", value=1027600384, warn=None, crit=None, min_=None, max_=None
+                ),
+                MetricTuple(
+                    name="swap_used", value=800608256, warn=None, crit=None, min_=None, max_=None
+                ),
+                MetricTuple(
+                    name="total_total",
+                    value=17691709440,
+                    warn=None,
+                    crit=None,
+                    min_=None,
+                    max_=None,
+                ),
+                MetricTuple(
+                    name="total_used", value=8745295872, warn=None, crit=None, min_=None, max_=None
+                ),
+                MetricTuple(
+                    name="unevictable", value=19808256, warn=None, crit=None, min_=None, max_=None
+                ),
+                MetricTuple(name="writeback", value=0, warn=None, crit=None, min_=None, max_=None),
+                MetricTuple(
+                    name="writeback_tmp", value=0, warn=None, crit=None, min_=None, max_=None
+                ),
             ],
             {},
             {},
@@ -550,15 +833,63 @@ mock_discovery_result = ServiceDiscoveryPreviewResult(
             0,
             "WAITING - Counter based check, cannot be done offline",
             [
-                ("num_open_events", 0, None, None, None, None),
-                ("process_virtual_size", 218300416, None, None, None, None),
-                ("average_message_rate", 0.0, None, None, None, None),
-                ("average_rule_hit_rate", 0.0, None, None, None, None),
-                ("average_rule_trie_rate", 0.0, None, None, None, None),
-                ("average_drop_rate", 0.0, None, None, None, None),
-                ("average_event_rate", 0.0, None, None, None, None),
-                ("average_connect_rate", 0.0, None, None, None, None),
-                ("average_request_time", 0.00027762370400620984, None, None, None, None),
+                MetricTuple(
+                    name="num_open_events", value=0, warn=None, crit=None, min_=None, max_=None
+                ),
+                MetricTuple(
+                    name="process_virtual_size",
+                    value=218300416,
+                    warn=None,
+                    crit=None,
+                    min_=None,
+                    max_=None,
+                ),
+                MetricTuple(
+                    name="average_message_rate",
+                    value=0.0,
+                    warn=None,
+                    crit=None,
+                    min_=None,
+                    max_=None,
+                ),
+                MetricTuple(
+                    name="average_rule_hit_rate",
+                    value=0.0,
+                    warn=None,
+                    crit=None,
+                    min_=None,
+                    max_=None,
+                ),
+                MetricTuple(
+                    name="average_rule_trie_rate",
+                    value=0.0,
+                    warn=None,
+                    crit=None,
+                    min_=None,
+                    max_=None,
+                ),
+                MetricTuple(
+                    name="average_drop_rate", value=0.0, warn=None, crit=None, min_=None, max_=None
+                ),
+                MetricTuple(
+                    name="average_event_rate", value=0.0, warn=None, crit=None, min_=None, max_=None
+                ),
+                MetricTuple(
+                    name="average_connect_rate",
+                    value=0.0,
+                    warn=None,
+                    crit=None,
+                    min_=None,
+                    max_=None,
+                ),
+                MetricTuple(
+                    name="average_request_time",
+                    value=0.00027762370400620984,
+                    warn=None,
+                    crit=None,
+                    min_=None,
+                    max_=None,
+                ),
             ],
             {},
             {},
@@ -577,15 +908,63 @@ mock_discovery_result = ServiceDiscoveryPreviewResult(
             0,
             "WAITING - Counter based check, cannot be done offline",
             [
-                ("num_open_events", 0, None, None, None, None),
-                ("process_virtual_size", 205152256, None, None, None, None),
-                ("average_message_rate", 0.0, None, None, None, None),
-                ("average_rule_hit_rate", 0.0, None, None, None, None),
-                ("average_rule_trie_rate", 0.0, None, None, None, None),
-                ("average_drop_rate", 0.0, None, None, None, None),
-                ("average_event_rate", 0.0, None, None, None, None),
-                ("average_connect_rate", 0.0, None, None, None, None),
-                ("average_request_time", 0.00039733688471126213, None, None, None, None),
+                MetricTuple(
+                    name="num_open_events", value=0, warn=None, crit=None, min_=None, max_=None
+                ),
+                MetricTuple(
+                    name="process_virtual_size",
+                    value=205152256,
+                    warn=None,
+                    crit=None,
+                    min_=None,
+                    max_=None,
+                ),
+                MetricTuple(
+                    name="average_message_rate",
+                    value=0.0,
+                    warn=None,
+                    crit=None,
+                    min_=None,
+                    max_=None,
+                ),
+                MetricTuple(
+                    name="average_rule_hit_rate",
+                    value=0.0,
+                    warn=None,
+                    crit=None,
+                    min_=None,
+                    max_=None,
+                ),
+                MetricTuple(
+                    name="average_rule_trie_rate",
+                    value=0.0,
+                    warn=None,
+                    crit=None,
+                    min_=None,
+                    max_=None,
+                ),
+                MetricTuple(
+                    name="average_drop_rate", value=0.0, warn=None, crit=None, min_=None, max_=None
+                ),
+                MetricTuple(
+                    name="average_event_rate", value=0.0, warn=None, crit=None, min_=None, max_=None
+                ),
+                MetricTuple(
+                    name="average_connect_rate",
+                    value=0.0,
+                    warn=None,
+                    crit=None,
+                    min_=None,
+                    max_=None,
+                ),
+                MetricTuple(
+                    name="average_request_time",
+                    value=0.00039733688471126213,
+                    warn=None,
+                    crit=None,
+                    min_=None,
+                    max_=None,
+                ),
             ],
             {},
             {},
@@ -604,8 +983,10 @@ mock_discovery_result = ServiceDiscoveryPreviewResult(
             0,
             "Version: 2020.06.08, Spooler running",
             [
-                ("last_updated", 20, None, None, None, None),
-                ("new_files", 0, None, None, None, None),
+                MetricTuple(
+                    name="last_updated", value=20, warn=None, crit=None, min_=None, max_=None
+                ),
+                MetricTuple(name="new_files", value=0, warn=None, crit=None, min_=None, max_=None),
             ],
             {},
             {},
@@ -624,8 +1005,10 @@ mock_discovery_result = ServiceDiscoveryPreviewResult(
             0,
             "Version: 1.6.0-2020.06.05, Spooler running",
             [
-                ("last_updated", 12, None, None, None, None),
-                ("new_files", 0, None, None, None, None),
+                MetricTuple(
+                    name="last_updated", value=12, warn=None, crit=None, min_=None, max_=None
+                ),
+                MetricTuple(name="new_files", value=0, warn=None, crit=None, min_=None, max_=None),
             ],
             {},
             {},
@@ -728,66 +1111,241 @@ mock_discovery_result = ServiceDiscoveryPreviewResult(
             0,
             "WAITING - Counter based check, cannot be done offline",
             [
-                ("requests_images", 0.0, None, None, None, None),
-                ("requests_cmk_other", 0.0, None, None, None, None),
-                ("requests_cmk_snapins", 0.0, None, None, None, None),
-                ("requests_styles", 0.0, None, None, None, None),
-                ("requests_scripts", 0.0, None, None, None, None),
-                ("requests_cmk_wato", 0.0, None, None, None, None),
-                ("requests_cmk_views", 0.0, None, None, None, None),
-                ("requests_cmk_bi", 0.0, None, None, None, None),
-                ("requests_cmk_api", 0.0, None, None, None, None),
-                ("requests_cmk_ajax", 0.0, None, None, None, None),
-                ("requests_cmk_index", 0.0, None, None, None, None),
-                ("requests_cmk_login", 0.0, None, None, None, None),
-                ("requests_cmk_search", 0.0, None, None, None, None),
-                ("requests_cmk_sidebar", 0.0, None, None, None, None),
-                ("requests_cmk_graphs", 0.0, None, None, None, None),
-                ("requests_cmk_dashboards", 0.0, None, None, None, None),
-                ("requests_nagvis_snapin", 0.0, None, None, None, None),
-                ("requests_nagvis_ajax", 0.0, None, None, None, None),
-                ("requests_nagvis_other", 0.0, None, None, None, None),
-                ("requests_other", 0.0, None, None, None, None),
-                ("secs_cmk_other", 0.0, None, None, None, None),
-                ("secs_cmk_snapins", 0.0, None, None, None, None),
-                ("secs_scripts", 0.0, None, None, None, None),
-                ("secs_cmk_wato", 0.0, None, None, None, None),
-                ("secs_images", 0.0, None, None, None, None),
-                ("secs_styles", 0.0, None, None, None, None),
-                ("secs_cmk_views", 0.0, None, None, None, None),
-                ("secs_cmk_bi", 0.0, None, None, None, None),
-                ("secs_cmk_api", 0.0, None, None, None, None),
-                ("secs_cmk_ajax", 0.0, None, None, None, None),
-                ("secs_cmk_index", 0.0, None, None, None, None),
-                ("secs_cmk_login", 0.0, None, None, None, None),
-                ("secs_cmk_search", 0.0, None, None, None, None),
-                ("secs_cmk_sidebar", 0.0, None, None, None, None),
-                ("secs_cmk_graphs", 0.0, None, None, None, None),
-                ("secs_cmk_dashboards", 0.0, None, None, None, None),
-                ("secs_nagvis_snapin", 0.0, None, None, None, None),
-                ("secs_nagvis_ajax", 0.0, None, None, None, None),
-                ("secs_nagvis_other", 0.0, None, None, None, None),
-                ("secs_other", 0.0, None, None, None, None),
-                ("bytes_scripts", 0.0, None, None, None, None),
-                ("bytes_styles", 0.0, None, None, None, None),
-                ("bytes_cmk_other", 0.0, None, None, None, None),
-                ("bytes_cmk_snapins", 0.0, None, None, None, None),
-                ("bytes_cmk_wato", 0.0, None, None, None, None),
-                ("bytes_images", 0.0, None, None, None, None),
-                ("bytes_cmk_views", 0.0, None, None, None, None),
-                ("bytes_cmk_bi", 0.0, None, None, None, None),
-                ("bytes_cmk_api", 0.0, None, None, None, None),
-                ("bytes_cmk_ajax", 0.0, None, None, None, None),
-                ("bytes_cmk_index", 0.0, None, None, None, None),
-                ("bytes_cmk_login", 0.0, None, None, None, None),
-                ("bytes_cmk_search", 0.0, None, None, None, None),
-                ("bytes_cmk_sidebar", 0.0, None, None, None, None),
-                ("bytes_cmk_graphs", 0.0, None, None, None, None),
-                ("bytes_cmk_dashboards", 0.0, None, None, None, None),
-                ("bytes_nagvis_snapin", 0.0, None, None, None, None),
-                ("bytes_nagvis_ajax", 0.0, None, None, None, None),
-                ("bytes_nagvis_other", 0.0, None, None, None, None),
-                ("bytes_other", 0.0, None, None, None, None),
+                MetricTuple(
+                    name="requests_images", value=0.0, warn=None, crit=None, min_=None, max_=None
+                ),
+                MetricTuple(
+                    name="requests_cmk_other", value=0.0, warn=None, crit=None, min_=None, max_=None
+                ),
+                MetricTuple(
+                    name="requests_cmk_snapins",
+                    value=0.0,
+                    warn=None,
+                    crit=None,
+                    min_=None,
+                    max_=None,
+                ),
+                MetricTuple(
+                    name="requests_styles", value=0.0, warn=None, crit=None, min_=None, max_=None
+                ),
+                MetricTuple(
+                    name="requests_scripts", value=0.0, warn=None, crit=None, min_=None, max_=None
+                ),
+                MetricTuple(
+                    name="requests_cmk_wato", value=0.0, warn=None, crit=None, min_=None, max_=None
+                ),
+                MetricTuple(
+                    name="requests_cmk_views", value=0.0, warn=None, crit=None, min_=None, max_=None
+                ),
+                MetricTuple(
+                    name="requests_cmk_bi", value=0.0, warn=None, crit=None, min_=None, max_=None
+                ),
+                MetricTuple(
+                    name="requests_cmk_api", value=0.0, warn=None, crit=None, min_=None, max_=None
+                ),
+                MetricTuple(
+                    name="requests_cmk_ajax", value=0.0, warn=None, crit=None, min_=None, max_=None
+                ),
+                MetricTuple(
+                    name="requests_cmk_index", value=0.0, warn=None, crit=None, min_=None, max_=None
+                ),
+                MetricTuple(
+                    name="requests_cmk_login", value=0.0, warn=None, crit=None, min_=None, max_=None
+                ),
+                MetricTuple(
+                    name="requests_cmk_search",
+                    value=0.0,
+                    warn=None,
+                    crit=None,
+                    min_=None,
+                    max_=None,
+                ),
+                MetricTuple(
+                    name="requests_cmk_sidebar",
+                    value=0.0,
+                    warn=None,
+                    crit=None,
+                    min_=None,
+                    max_=None,
+                ),
+                MetricTuple(
+                    name="requests_cmk_graphs",
+                    value=0.0,
+                    warn=None,
+                    crit=None,
+                    min_=None,
+                    max_=None,
+                ),
+                MetricTuple(
+                    name="requests_cmk_dashboards",
+                    value=0.0,
+                    warn=None,
+                    crit=None,
+                    min_=None,
+                    max_=None,
+                ),
+                MetricTuple(
+                    name="requests_nagvis_snapin",
+                    value=0.0,
+                    warn=None,
+                    crit=None,
+                    min_=None,
+                    max_=None,
+                ),
+                MetricTuple(
+                    name="requests_nagvis_ajax",
+                    value=0.0,
+                    warn=None,
+                    crit=None,
+                    min_=None,
+                    max_=None,
+                ),
+                MetricTuple(
+                    name="requests_nagvis_other",
+                    value=0.0,
+                    warn=None,
+                    crit=None,
+                    min_=None,
+                    max_=None,
+                ),
+                MetricTuple(
+                    name="requests_other", value=0.0, warn=None, crit=None, min_=None, max_=None
+                ),
+                MetricTuple(
+                    name="secs_cmk_other", value=0.0, warn=None, crit=None, min_=None, max_=None
+                ),
+                MetricTuple(
+                    name="secs_cmk_snapins", value=0.0, warn=None, crit=None, min_=None, max_=None
+                ),
+                MetricTuple(
+                    name="secs_scripts", value=0.0, warn=None, crit=None, min_=None, max_=None
+                ),
+                MetricTuple(
+                    name="secs_cmk_wato", value=0.0, warn=None, crit=None, min_=None, max_=None
+                ),
+                MetricTuple(
+                    name="secs_images", value=0.0, warn=None, crit=None, min_=None, max_=None
+                ),
+                MetricTuple(
+                    name="secs_styles", value=0.0, warn=None, crit=None, min_=None, max_=None
+                ),
+                MetricTuple(
+                    name="secs_cmk_views", value=0.0, warn=None, crit=None, min_=None, max_=None
+                ),
+                MetricTuple(
+                    name="secs_cmk_bi", value=0.0, warn=None, crit=None, min_=None, max_=None
+                ),
+                MetricTuple(
+                    name="secs_cmk_api", value=0.0, warn=None, crit=None, min_=None, max_=None
+                ),
+                MetricTuple(
+                    name="secs_cmk_ajax", value=0.0, warn=None, crit=None, min_=None, max_=None
+                ),
+                MetricTuple(
+                    name="secs_cmk_index", value=0.0, warn=None, crit=None, min_=None, max_=None
+                ),
+                MetricTuple(
+                    name="secs_cmk_login", value=0.0, warn=None, crit=None, min_=None, max_=None
+                ),
+                MetricTuple(
+                    name="secs_cmk_search", value=0.0, warn=None, crit=None, min_=None, max_=None
+                ),
+                MetricTuple(
+                    name="secs_cmk_sidebar", value=0.0, warn=None, crit=None, min_=None, max_=None
+                ),
+                MetricTuple(
+                    name="secs_cmk_graphs", value=0.0, warn=None, crit=None, min_=None, max_=None
+                ),
+                MetricTuple(
+                    name="secs_cmk_dashboards",
+                    value=0.0,
+                    warn=None,
+                    crit=None,
+                    min_=None,
+                    max_=None,
+                ),
+                MetricTuple(
+                    name="secs_nagvis_snapin", value=0.0, warn=None, crit=None, min_=None, max_=None
+                ),
+                MetricTuple(
+                    name="secs_nagvis_ajax", value=0.0, warn=None, crit=None, min_=None, max_=None
+                ),
+                MetricTuple(
+                    name="secs_nagvis_other", value=0.0, warn=None, crit=None, min_=None, max_=None
+                ),
+                MetricTuple(
+                    name="secs_other", value=0.0, warn=None, crit=None, min_=None, max_=None
+                ),
+                MetricTuple(
+                    name="bytes_scripts", value=0.0, warn=None, crit=None, min_=None, max_=None
+                ),
+                MetricTuple(
+                    name="bytes_styles", value=0.0, warn=None, crit=None, min_=None, max_=None
+                ),
+                MetricTuple(
+                    name="bytes_cmk_other", value=0.0, warn=None, crit=None, min_=None, max_=None
+                ),
+                MetricTuple(
+                    name="bytes_cmk_snapins", value=0.0, warn=None, crit=None, min_=None, max_=None
+                ),
+                MetricTuple(
+                    name="bytes_cmk_wato", value=0.0, warn=None, crit=None, min_=None, max_=None
+                ),
+                MetricTuple(
+                    name="bytes_images", value=0.0, warn=None, crit=None, min_=None, max_=None
+                ),
+                MetricTuple(
+                    name="bytes_cmk_views", value=0.0, warn=None, crit=None, min_=None, max_=None
+                ),
+                MetricTuple(
+                    name="bytes_cmk_bi", value=0.0, warn=None, crit=None, min_=None, max_=None
+                ),
+                MetricTuple(
+                    name="bytes_cmk_api", value=0.0, warn=None, crit=None, min_=None, max_=None
+                ),
+                MetricTuple(
+                    name="bytes_cmk_ajax", value=0.0, warn=None, crit=None, min_=None, max_=None
+                ),
+                MetricTuple(
+                    name="bytes_cmk_index", value=0.0, warn=None, crit=None, min_=None, max_=None
+                ),
+                MetricTuple(
+                    name="bytes_cmk_login", value=0.0, warn=None, crit=None, min_=None, max_=None
+                ),
+                MetricTuple(
+                    name="bytes_cmk_search", value=0.0, warn=None, crit=None, min_=None, max_=None
+                ),
+                MetricTuple(
+                    name="bytes_cmk_sidebar", value=0.0, warn=None, crit=None, min_=None, max_=None
+                ),
+                MetricTuple(
+                    name="bytes_cmk_graphs", value=0.0, warn=None, crit=None, min_=None, max_=None
+                ),
+                MetricTuple(
+                    name="bytes_cmk_dashboards",
+                    value=0.0,
+                    warn=None,
+                    crit=None,
+                    min_=None,
+                    max_=None,
+                ),
+                MetricTuple(
+                    name="bytes_nagvis_snapin",
+                    value=0.0,
+                    warn=None,
+                    crit=None,
+                    min_=None,
+                    max_=None,
+                ),
+                MetricTuple(
+                    name="bytes_nagvis_ajax", value=0.0, warn=None, crit=None, min_=None, max_=None
+                ),
+                MetricTuple(
+                    name="bytes_nagvis_other", value=0.0, warn=None, crit=None, min_=None, max_=None
+                ),
+                MetricTuple(
+                    name="bytes_other", value=0.0, warn=None, crit=None, min_=None, max_=None
+                ),
             ],
             {},
             {},
@@ -806,45 +1364,163 @@ mock_discovery_result = ServiceDiscoveryPreviewResult(
             0,
             "WAITING - Counter based check, cannot be done offline",
             [
-                ("requests_cmk_other", 0.0, None, None, None, None),
-                ("requests_cmk_views", 0.0, None, None, None, None),
-                ("requests_cmk_wato", 0.0, None, None, None, None),
-                ("requests_cmk_bi", 0.0, None, None, None, None),
-                ("requests_cmk_snapins", 0.0, None, None, None, None),
-                ("requests_cmk_dashboards", 0.0, None, None, None, None),
-                ("requests_nagvis_snapin", 0.0, None, None, None, None),
-                ("requests_nagvis_ajax", 0.0, None, None, None, None),
-                ("requests_nagvis_other", 0.0, None, None, None, None),
-                ("requests_images", 0.0, None, None, None, None),
-                ("requests_styles", 0.0, None, None, None, None),
-                ("requests_scripts", 0.0, None, None, None, None),
-                ("requests_other", 0.0, None, None, None, None),
-                ("secs_cmk_other", 0.0, None, None, None, None),
-                ("secs_cmk_views", 0.0, None, None, None, None),
-                ("secs_cmk_wato", 0.0, None, None, None, None),
-                ("secs_cmk_bi", 0.0, None, None, None, None),
-                ("secs_cmk_snapins", 0.0, None, None, None, None),
-                ("secs_cmk_dashboards", 0.0, None, None, None, None),
-                ("secs_nagvis_snapin", 0.0, None, None, None, None),
-                ("secs_nagvis_ajax", 0.0, None, None, None, None),
-                ("secs_nagvis_other", 0.0, None, None, None, None),
-                ("secs_images", 0.0, None, None, None, None),
-                ("secs_styles", 0.0, None, None, None, None),
-                ("secs_scripts", 0.0, None, None, None, None),
-                ("secs_other", 0.0, None, None, None, None),
-                ("bytes_cmk_other", 0.0, None, None, None, None),
-                ("bytes_cmk_views", 0.0, None, None, None, None),
-                ("bytes_cmk_wato", 0.0, None, None, None, None),
-                ("bytes_cmk_bi", 0.0, None, None, None, None),
-                ("bytes_cmk_snapins", 0.0, None, None, None, None),
-                ("bytes_cmk_dashboards", 0.0, None, None, None, None),
-                ("bytes_nagvis_snapin", 0.0, None, None, None, None),
-                ("bytes_nagvis_ajax", 0.0, None, None, None, None),
-                ("bytes_nagvis_other", 0.0, None, None, None, None),
-                ("bytes_images", 0.0, None, None, None, None),
-                ("bytes_styles", 0.0, None, None, None, None),
-                ("bytes_scripts", 0.0, None, None, None, None),
-                ("bytes_other", 0.0, None, None, None, None),
+                MetricTuple(
+                    name="requests_cmk_other", value=0.0, warn=None, crit=None, min_=None, max_=None
+                ),
+                MetricTuple(
+                    name="requests_cmk_views", value=0.0, warn=None, crit=None, min_=None, max_=None
+                ),
+                MetricTuple(
+                    name="requests_cmk_wato", value=0.0, warn=None, crit=None, min_=None, max_=None
+                ),
+                MetricTuple(
+                    name="requests_cmk_bi", value=0.0, warn=None, crit=None, min_=None, max_=None
+                ),
+                MetricTuple(
+                    name="requests_cmk_snapins",
+                    value=0.0,
+                    warn=None,
+                    crit=None,
+                    min_=None,
+                    max_=None,
+                ),
+                MetricTuple(
+                    name="requests_cmk_dashboards",
+                    value=0.0,
+                    warn=None,
+                    crit=None,
+                    min_=None,
+                    max_=None,
+                ),
+                MetricTuple(
+                    name="requests_nagvis_snapin",
+                    value=0.0,
+                    warn=None,
+                    crit=None,
+                    min_=None,
+                    max_=None,
+                ),
+                MetricTuple(
+                    name="requests_nagvis_ajax",
+                    value=0.0,
+                    warn=None,
+                    crit=None,
+                    min_=None,
+                    max_=None,
+                ),
+                MetricTuple(
+                    name="requests_nagvis_other",
+                    value=0.0,
+                    warn=None,
+                    crit=None,
+                    min_=None,
+                    max_=None,
+                ),
+                MetricTuple(
+                    name="requests_images", value=0.0, warn=None, crit=None, min_=None, max_=None
+                ),
+                MetricTuple(
+                    name="requests_styles", value=0.0, warn=None, crit=None, min_=None, max_=None
+                ),
+                MetricTuple(
+                    name="requests_scripts", value=0.0, warn=None, crit=None, min_=None, max_=None
+                ),
+                MetricTuple(
+                    name="requests_other", value=0.0, warn=None, crit=None, min_=None, max_=None
+                ),
+                MetricTuple(
+                    name="secs_cmk_other", value=0.0, warn=None, crit=None, min_=None, max_=None
+                ),
+                MetricTuple(
+                    name="secs_cmk_views", value=0.0, warn=None, crit=None, min_=None, max_=None
+                ),
+                MetricTuple(
+                    name="secs_cmk_wato", value=0.0, warn=None, crit=None, min_=None, max_=None
+                ),
+                MetricTuple(
+                    name="secs_cmk_bi", value=0.0, warn=None, crit=None, min_=None, max_=None
+                ),
+                MetricTuple(
+                    name="secs_cmk_snapins", value=0.0, warn=None, crit=None, min_=None, max_=None
+                ),
+                MetricTuple(
+                    name="secs_cmk_dashboards",
+                    value=0.0,
+                    warn=None,
+                    crit=None,
+                    min_=None,
+                    max_=None,
+                ),
+                MetricTuple(
+                    name="secs_nagvis_snapin", value=0.0, warn=None, crit=None, min_=None, max_=None
+                ),
+                MetricTuple(
+                    name="secs_nagvis_ajax", value=0.0, warn=None, crit=None, min_=None, max_=None
+                ),
+                MetricTuple(
+                    name="secs_nagvis_other", value=0.0, warn=None, crit=None, min_=None, max_=None
+                ),
+                MetricTuple(
+                    name="secs_images", value=0.0, warn=None, crit=None, min_=None, max_=None
+                ),
+                MetricTuple(
+                    name="secs_styles", value=0.0, warn=None, crit=None, min_=None, max_=None
+                ),
+                MetricTuple(
+                    name="secs_scripts", value=0.0, warn=None, crit=None, min_=None, max_=None
+                ),
+                MetricTuple(
+                    name="secs_other", value=0.0, warn=None, crit=None, min_=None, max_=None
+                ),
+                MetricTuple(
+                    name="bytes_cmk_other", value=0.0, warn=None, crit=None, min_=None, max_=None
+                ),
+                MetricTuple(
+                    name="bytes_cmk_views", value=0.0, warn=None, crit=None, min_=None, max_=None
+                ),
+                MetricTuple(
+                    name="bytes_cmk_wato", value=0.0, warn=None, crit=None, min_=None, max_=None
+                ),
+                MetricTuple(
+                    name="bytes_cmk_bi", value=0.0, warn=None, crit=None, min_=None, max_=None
+                ),
+                MetricTuple(
+                    name="bytes_cmk_snapins", value=0.0, warn=None, crit=None, min_=None, max_=None
+                ),
+                MetricTuple(
+                    name="bytes_cmk_dashboards",
+                    value=0.0,
+                    warn=None,
+                    crit=None,
+                    min_=None,
+                    max_=None,
+                ),
+                MetricTuple(
+                    name="bytes_nagvis_snapin",
+                    value=0.0,
+                    warn=None,
+                    crit=None,
+                    min_=None,
+                    max_=None,
+                ),
+                MetricTuple(
+                    name="bytes_nagvis_ajax", value=0.0, warn=None, crit=None, min_=None, max_=None
+                ),
+                MetricTuple(
+                    name="bytes_nagvis_other", value=0.0, warn=None, crit=None, min_=None, max_=None
+                ),
+                MetricTuple(
+                    name="bytes_images", value=0.0, warn=None, crit=None, min_=None, max_=None
+                ),
+                MetricTuple(
+                    name="bytes_styles", value=0.0, warn=None, crit=None, min_=None, max_=None
+                ),
+                MetricTuple(
+                    name="bytes_scripts", value=0.0, warn=None, crit=None, min_=None, max_=None
+                ),
+                MetricTuple(
+                    name="bytes_other", value=0.0, warn=None, crit=None, min_=None, max_=None
+                ),
             ],
             {},
             {},
@@ -880,17 +1556,21 @@ mock_discovery_result = ServiceDiscoveryPreviewResult(
             0,
             "CLOSE_WAIT: 5, ESTABLISHED: 13, FIN_WAIT2: 1, LISTEN: 21, SYN_SENT: 1, TIME_WAIT: 108",
             [
-                ("CLOSED", 0, None, None, None, None),
-                ("CLOSE_WAIT", 5, None, None, None, None),
-                ("CLOSING", 0, None, None, None, None),
-                ("ESTABLISHED", 13, None, None, None, None),
-                ("FIN_WAIT1", 0, None, None, None, None),
-                ("FIN_WAIT2", 1, None, None, None, None),
-                ("LAST_ACK", 0, None, None, None, None),
-                ("LISTEN", 21, None, None, None, None),
-                ("SYN_RECV", 0, None, None, None, None),
-                ("SYN_SENT", 1, None, None, None, None),
-                ("TIME_WAIT", 108, None, None, None, None),
+                MetricTuple(name="CLOSED", value=0, warn=None, crit=None, min_=None, max_=None),
+                MetricTuple(name="CLOSE_WAIT", value=5, warn=None, crit=None, min_=None, max_=None),
+                MetricTuple(name="CLOSING", value=0, warn=None, crit=None, min_=None, max_=None),
+                MetricTuple(
+                    name="ESTABLISHED", value=13, warn=None, crit=None, min_=None, max_=None
+                ),
+                MetricTuple(name="FIN_WAIT1", value=0, warn=None, crit=None, min_=None, max_=None),
+                MetricTuple(name="FIN_WAIT2", value=1, warn=None, crit=None, min_=None, max_=None),
+                MetricTuple(name="LAST_ACK", value=0, warn=None, crit=None, min_=None, max_=None),
+                MetricTuple(name="LISTEN", value=21, warn=None, crit=None, min_=None, max_=None),
+                MetricTuple(name="SYN_RECV", value=0, warn=None, crit=None, min_=None, max_=None),
+                MetricTuple(name="SYN_SENT", value=1, warn=None, crit=None, min_=None, max_=None),
+                MetricTuple(
+                    name="TIME_WAIT", value=108, warn=None, crit=None, min_=None, max_=None
+                ),
             ],
             {},
             {},
@@ -908,7 +1588,11 @@ mock_discovery_result = ServiceDiscoveryPreviewResult(
             "Uptime",
             0,
             "Up since Tue Jun  2 07:50:48 2020, uptime: 7 days, 7:30:46",
-            [("uptime", 631846.94, None, None, None, None)],
+            [
+                MetricTuple(
+                    name="uptime", value=631846.94, warn=None, crit=None, min_=None, max_=None
+                )
+            ],
             {},
             {},
             [HostName("heute")],

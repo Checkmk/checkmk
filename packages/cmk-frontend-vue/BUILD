@@ -389,8 +389,11 @@ js_binary(
 )
 
 py_test(
-    name = "test-license-headers",
-    srcs = ["scripts/test_license_headers.py"],
+    name = "test-code-integrity",
+    srcs = [
+        "scripts/test_license_headers.py",
+        "scripts/test_ucl_parity.py",
+    ],
     data = glob(["**"]),
     pytest_main = True,
     deps = [requirement("pytest")],

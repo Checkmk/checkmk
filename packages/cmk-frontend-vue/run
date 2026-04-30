@@ -159,7 +159,7 @@ run_format() {
 }
 
 run_tests() {
-    bazel test :unit-test :test-license-headers
+    bazel test :unit-test :test-code-integrity
 }
 
 main() {

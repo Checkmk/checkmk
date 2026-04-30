@@ -77,6 +77,7 @@ DOCKERABLE_TESTS := \
 	test-unit-omdlib \
 	test-tidy-core test-tidy-docker \
 	test-unit-neb test-unit-core \
+	qa-metrics-change-quality qa-metrics-change-quality-dryrun \
 
 clean:
 	$(RM) -r .mypy_cache
@@ -386,3 +387,28 @@ test-medium-chain-list:
 		echo "No tests found with marker 'medium_test_chain'"; \
 		exit 1; \
 	fi
+
+# QA change-quality metric. Override defaults via env, e.g.
+#   make QA_METRICS_FROM=2026-01-01 qa-metrics-change-quality-dryrun
+QA_METRICS_REPO ?= $(REPO_PATH)
+QA_METRICS_BRANCH ?=
+QA_METRICS_FROM ?=
+QA_METRICS_TO ?=
+QA_METRICS_CHANGE_QUALITY_CSV ?= $(REPO_PATH)/qa-metrics-change-quality.csv
+qa_metrics_change_quality_args = \
+    --repo $(QA_METRICS_REPO) \
+    $(if $(QA_METRICS_BRANCH),--branch $(QA_METRICS_BRANCH),) \
+    $(if $(QA_METRICS_FROM),--from $(QA_METRICS_FROM),) \
+    $(if $(QA_METRICS_TO),--to $(QA_METRICS_TO),)
+
+qa-metrics-change-quality-dryrun:
+	bazel run //tests/qa_metrics/change_quality:push -- \
+	    $(qa_metrics_change_quality_args) \
+	    --dry-run \
+	    --format csv \
+	    --output $(QA_METRICS_CHANGE_QUALITY_CSV)
+
+qa-metrics-change-quality:
+	bazel build //tests/qa_metrics/change_quality:push
+	$(REPO_PATH)/bazel-bin/tests/qa_metrics/change_quality/push \
+	    $(qa_metrics_change_quality_args)

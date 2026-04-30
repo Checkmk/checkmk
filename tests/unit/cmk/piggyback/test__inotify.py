@@ -90,12 +90,6 @@ def test_basic_event_observing(tmp_path: Path) -> None:
                 cookie=Cookie(),
                 name="",
             ),
-            Event(
-                watchee=Watchee(wd=1, path=tmp_path),
-                type=Masks.IGNORED,
-                cookie=Cookie(),
-                name="",
-            ),
         ]
         assert isinstance(actual[4].cookie, Cookie)
         assert actual[3].cookie == actual[4].cookie

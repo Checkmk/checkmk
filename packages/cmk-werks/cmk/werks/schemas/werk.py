@@ -47,7 +47,7 @@ class Stash(BaseModel):
             removed = True
             self.ids.remove(werk_id.id)
             if not self.ids:
-                sys.stdout.write(f"\n{TTY_RED}This was your last reserved ID{TTY_NORMAL}\n\n")
+                sys.stderr.write(f"\n{TTY_RED}This was your last reserved ID{TTY_NORMAL}\n\n")
 
         if not removed:
             raise RuntimeError(f"Could not find werk_id {werk_id} in any project.")
@@ -56,8 +56,7 @@ class Stash(BaseModel):
         """
         put a id into the stash
         """
-        # werks can be delete, but we don't want to lose the id, lets put it back to the stash
-        self.ids.extend(werk_id.id for werk_id in werk_ids)
+        self.ids = list(set(self.ids).union(werk_id.id for werk_id in werk_ids))
 
 
 class LegacyStash(BaseModel):

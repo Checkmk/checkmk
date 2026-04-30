@@ -7,7 +7,10 @@
 from polyfactory.factories.pydantic_factory import ModelFactory
 
 from cmk.agent_based.v2 import Result, State
-from cmk.plugins.netapp.agent_based.netapp_ontap_snapvault import check_netapp_ontap_snapvault
+from cmk.plugins.netapp.agent_based.netapp_ontap_snapvault import (
+    check_netapp_ontap_snapvault,
+    parse_netapp_ontap_snapmirror,
+)
 from cmk.plugins.netapp.models import SnapMirrorModel
 
 
@@ -81,3 +84,19 @@ def test_check_netapp_ontap_snapvault_metrics_crit() -> None:
     assert result[0] == Result(state=State.OK, summary="Destination-system: snapmirror_destination")
     assert isinstance(result[2], Result)
     assert result[2].state == State.CRIT
+
+
+def test_parse_snapmirror_cloud_destination_no_svm() -> None:
+    # MetroCluster cloud/object-store destinations have no destination SVM (SUP-28199).
+    # Verify such models round-trip through the parse function correctly.
+    destination_path = "netapp-dj77748-0a9a-11ee-872f-dkii88e-mc:/objstore/not_vvvm-05_v005_0_dst"
+    model = SnapMirrorModel(
+        destination=destination_path,
+        source_svm_name="308177c1-3c44-11ee-901f-dkii88e",
+        policy_name="CloudBackupService-vzug_not_vvvm-05_cbs_mc",
+        policy_type="async",
+        transfer_state="success",
+    )
+    section = parse_netapp_ontap_snapmirror([[model.model_dump_json()]])
+    assert destination_path in section
+    assert section[destination_path].source_svm_name == "308177c1-3c44-11ee-901f-dkii88e"

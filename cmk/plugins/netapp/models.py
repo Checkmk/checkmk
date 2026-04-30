@@ -701,7 +701,6 @@ class SnapMirrorModel(BaseModel):
     "destination-location" ->  destination.path
     """
 
-    destination_svm: str
     policy_name: str | None = None
     policy_type: str | None = None
     state: str | None = None

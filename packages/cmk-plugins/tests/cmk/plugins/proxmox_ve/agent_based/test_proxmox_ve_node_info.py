@@ -11,7 +11,7 @@ import pytest
 from cmk.agent_based.v2 import CheckResult, FixedLevelsT, Metric, NoLevelsT, Result, State
 from cmk.plugins.proxmox_ve.agent_based.proxmox_ve_node_info import (
     _check_days_until_expiration,
-    check_proxmox_ve_node_info,
+    _check_proxmox_ve_node_info,
     Params,
     parse_proxmox_ve_node_info,
 )
@@ -27,7 +27,7 @@ NODE_DATA = parse_proxmox_ve_node_info(
                     "qemu": ["102", "9000", "106", "109"],
                     "status": "online",
                     "subscription": {
-                        "nextduedate": "2021-07-03",
+                        "next_due_date": "2021-07-03",
                         "status": "active",
                     },
                 }
@@ -66,6 +66,11 @@ NODE_DATA_NO_SUBSCRIPTION = parse_proxmox_ve_node_info(
             [
                 Result(state=State.OK, summary="Status: online"),
                 Result(state=State.OK, summary="Subscription: active"),
+                Result(
+                    state=State.CRIT,
+                    summary="Subscription expiration in: -1763 days (warn/crit below 30 days/7 days)",
+                ),
+                Metric("days_until_subscription_expiration", -1763.0, boundaries=(30.0, 7.0)),
                 Result(state=State.OK, summary="Version: 6.2-15"),
                 Result(state=State.OK, summary="Hosted VMs: 5x LXC, 4x Qemu"),
             ],
@@ -81,6 +86,11 @@ NODE_DATA_NO_SUBSCRIPTION = parse_proxmox_ve_node_info(
             [
                 Result(state=State.WARN, summary="Status: online"),
                 Result(state=State.WARN, summary="Subscription: active"),
+                Result(
+                    state=State.CRIT,
+                    summary="Subscription expiration in: -1763 days (warn/crit below 30 days/7 days)",
+                ),
+                Metric("days_until_subscription_expiration", -1763.0, boundaries=(30.0, 7.0)),
                 Result(state=State.OK, summary="Version: 6.2-15"),
                 Result(state=State.OK, summary="Hosted VMs: 5x LXC, 4x Qemu"),
             ],
@@ -94,6 +104,11 @@ NODE_DATA_NO_SUBSCRIPTION = parse_proxmox_ve_node_info(
             [
                 Result(state=State.OK, summary="Status: online"),
                 Result(state=State.OK, summary="Subscription: active"),
+                Result(
+                    state=State.CRIT,
+                    summary="Subscription expiration in: -1763 days (warn/crit below 30 days/7 days)",
+                ),
+                Metric("days_until_subscription_expiration", -1763.0, boundaries=(30.0, 7.0)),
                 Result(state=State.OK, summary="Version: 6.2-15"),
                 Result(state=State.OK, summary="Hosted VMs: 5x LXC, 4x Qemu"),
             ],
@@ -131,7 +146,10 @@ NODE_DATA_NO_SUBSCRIPTION = parse_proxmox_ve_node_info(
 def test_check_proxmox_ve_node_info(
     params: Params, section: SectionNodeInfo, expected_results: CheckResult
 ) -> None:
-    assert list(check_proxmox_ve_node_info(params, section)) == expected_results
+    assert (
+        list(_check_proxmox_ve_node_info(params, section, now=datetime(2026, 5, 1)))
+        == expected_results
+    )
 
 
 @pytest.mark.parametrize(

@@ -59,6 +59,7 @@ def _check_subscription_status(
     subscription: SubscriptionInfo,
     required_subscription_status: Mapping[str, Literal[0, 1, 2, 3]],
     subscription_expiration_days_levels: NoLevelsT | FixedLevelsT[int],
+    now: datetime,
 ) -> CheckResult:
     if not subscription.status:
         yield Result(
@@ -75,11 +76,15 @@ def _check_subscription_status(
         yield from _check_days_until_expiration(
             expiration_days_levels=subscription_expiration_days_levels,
             expiration_date_str=subscription.next_due_date,
-            now=datetime.now(),
+            now=now,
         )
 
 
-def check_proxmox_ve_node_info(params: Params, section: SectionNodeInfo) -> CheckResult:
+def _check_proxmox_ve_node_info(
+    params: Params,
+    section: SectionNodeInfo,
+    now: datetime,
+) -> CheckResult:
     yield Result(
         state=State(params.get("required_node_status", {}).get(section.status, 0)),
         summary=f"Status: {section.status}",
@@ -89,6 +94,7 @@ def check_proxmox_ve_node_info(params: Params, section: SectionNodeInfo) -> Chec
         subscription=section.subscription,
         required_subscription_status=params.get("required_subscription_status", {}),
         subscription_expiration_days_levels=params["subscription_expiration_days_levels"],
+        now=now,
     )
 
     yield Result(state=State.OK, summary=f"Version: {section.version}")
@@ -96,6 +102,13 @@ def check_proxmox_ve_node_info(params: Params, section: SectionNodeInfo) -> Chec
         state=State.OK,
         summary=f"Hosted VMs: {len(section.lxc)}x LXC, {len(section.qemu)}x Qemu",
     )
+
+
+def check_proxmox_ve_node_info(
+    params: Params,
+    section: SectionNodeInfo,
+) -> CheckResult:
+    yield from _check_proxmox_ve_node_info(params=params, section=section, now=datetime.now())
 
 
 agent_section_proxmox_ve_node_info = AgentSection(

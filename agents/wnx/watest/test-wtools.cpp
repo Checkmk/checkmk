@@ -253,7 +253,8 @@ protected:
 
         return cma::tools::RunStdCommand(exe_a.wstring(),
                                          cma::tools::WaitForEnd::no)
-            .value_or({.pid = 0, .exit_code = std::nullopt})
+            .value_or(
+                cma::tools::ProcessInfo{.pid = 0, .exit_code = std::nullopt})
             .pid;
     }
 

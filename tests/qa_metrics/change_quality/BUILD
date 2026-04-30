@@ -10,6 +10,7 @@ py_library(
         "detect_test.py",
         "repo.py",
         "rows.py",
+        "state.py",
         "walk.py",
     ],
     data = ["schema.sql"],

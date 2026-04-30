@@ -77,7 +77,7 @@ DOCKERABLE_TESTS := \
 	test-unit-omdlib \
 	test-tidy-core test-tidy-docker \
 	test-unit-neb test-unit-core \
-	qa-metrics-change-quality qa-metrics-change-quality-dryrun \
+	qa-metrics-change-quality qa-metrics-change-quality-dryrun qa-metrics-change-quality-full \
 
 clean:
 	$(RM) -r .mypy_cache
@@ -405,10 +405,21 @@ qa-metrics-change-quality-dryrun:
 	bazel run //tests/qa_metrics/change_quality:push -- \
 	    $(qa_metrics_change_quality_args) \
 	    --dry-run \
+	    --full \
 	    --format csv \
 	    --output $(QA_METRICS_CHANGE_QUALITY_CSV)
 
+# Incremental mode -- only walks commits newer than the DB watermark for the
+# current branch. After changing the metric definition, run -full instead.
 qa-metrics-change-quality:
 	bazel build //tests/qa_metrics/change_quality:push
 	$(REPO_PATH)/bazel-bin/tests/qa_metrics/change_quality/push \
 	    $(qa_metrics_change_quality_args)
+
+# Full rebuild -- walks all of git history and re-derives every row. Use after
+# editing detect_test.py / components.py / walk.py / etc.
+qa-metrics-change-quality-full:
+	bazel build //tests/qa_metrics/change_quality:push
+	$(REPO_PATH)/bazel-bin/tests/qa_metrics/change_quality/push \
+	    $(qa_metrics_change_quality_args) \
+	    --full

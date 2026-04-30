@@ -18,6 +18,7 @@ py_test(
         "test_detect_test.py",
         "test_repo.py",
         "test_rows.py",
+        "test_state.py",
         "test_walk.py",
     ],
     # importlib import mode: yields proper module-name nodeids in JUnit XML
@@ -35,5 +36,6 @@ py_test(
         requirement("marshmallow"),
         requirement("pytest"),
         "//tests/qa_metrics/change_quality",
+        "//tests/unit/qa_metrics",
     ],
 )

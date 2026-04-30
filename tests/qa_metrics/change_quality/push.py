@@ -33,6 +33,7 @@ from cmk.werks.utils import load_raw_files
 from tests.qa_metrics.change_quality import components, detect_test, walk
 from tests.qa_metrics.change_quality.repo import read_branch_version
 from tests.qa_metrics.change_quality.rows import CHANGE_TESTED, ChangeTestedRow
+from tests.qa_metrics.change_quality.state import read_watermark
 from tests.qa_metrics.db import MetabasePostgres
 
 logger = logging.getLogger(__name__)
@@ -86,6 +87,15 @@ def parse_args(argv: Sequence[str] | None) -> argparse.Namespace:
         help="Comma-separated subset of: fix,feature,security (default: fix)",
     )
     parser.add_argument("--dry-run", action="store_true", help="Compute rows but skip DB writes")
+    parser.add_argument(
+        "--full",
+        action="store_true",
+        help="Walk all of git history. Without this, the script reads the "
+        "latest commit_time already in `cmk_change_tested` for the target "
+        "branch and only walks newer commits. Pass --full after changing "
+        "the metric definition (walk.py / detect_test.py / components.py / "
+        "rows.py) so every existing row is re-derived under the new logic.",
+    )
     parser.add_argument(
         "--format",
         choices=["log", "csv", "json"],
@@ -225,6 +235,26 @@ def main(argv: Sequence[str] | None = None) -> int:
     logger.info("Indexing werks from %s/.werks", args.repo)
     werks_index = {w.id: w for w in load_raw_files(args.repo / ".werks")}
     allowed_classes = set(args.werk_classes)
+
+    # Incremental mode: read the DB watermark for this branch and walk only
+    # commits since then. Skipped under --full / --dry-run / explicit --from.
+    if not args.full and not args.dry_run and args.from_date is None:
+        with MetabasePostgres.from_env() as db:
+            args.from_date = read_watermark(db, branch)
+        if args.from_date is not None:
+            logger.info(
+                "Incremental mode: walking commits since %s. "
+                "Re-run with `make qa-metrics-change-quality-full` (--full) "
+                "after changing the metric definition to recompute every row.",
+                args.from_date,
+            )
+        else:
+            logger.info(
+                "Incremental mode: no prior rows for branch %s; walking all of history.",
+                branch,
+            )
+    elif args.full:
+        logger.info("Full mode: walking all of git history.")
 
     logger.info("Walking git history for werk-add events")
     events = list(walk.walk_werk_adds(args.repo, since=args.from_date, until=args.to_date))

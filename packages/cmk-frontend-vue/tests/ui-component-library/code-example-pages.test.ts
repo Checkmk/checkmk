@@ -52,7 +52,7 @@ import UclCmkCopyButtonCodeExample from '@ucl/components/system-feedback/CmkCopy
 import UclCmkCopyCodeExample from '@ucl/components/system-feedback/CmkCopy/UclCmkCopyCodeExample.vue'
 import UclCmkDialogCodeExample from '@ucl/components/system-feedback/CmkDialog/UclCmkDialogCodeExample.vue'
 import UclCmkErrorBoundaryCodeExample from '@ucl/components/system-feedback/CmkErrorBoundary/UclCmkErrorBoundaryCodeExample.vue'
-import UclCmkHelpCodeExample from '@ucl/components/system-feedback/CmkHelp/UclCmkHelpCodeExample.vue'
+import UclCmkHelpTextCodeExample from '@ucl/components/system-feedback/CmkHelpText/UclCmkHelpTextCodeExample.vue'
 import UclCmkInlineValidationCodeExample from '@ucl/components/system-feedback/CmkInlineValidation/UclCmkInlineValidationCodeExample.vue'
 import UclCmkLoadingCodeExample from '@ucl/components/system-feedback/CmkLoading/UclCmkLoadingCodeExample.vue'
 import UclCmkPerfometerCodeExample from '@ucl/components/system-feedback/CmkPerfometer/UclCmkPerfometerCodeExample.vue'
@@ -327,7 +327,7 @@ test('CmkErrorBoundary code example renders without errors', () => {
 })
 
 test('CmkHelp code example renders without errors', () => {
-  const { container } = render(UclCmkHelpCodeExample)
+  const { container } = render(UclCmkHelpTextCodeExample)
   expect(container.firstChild).toBeTruthy()
 })
 

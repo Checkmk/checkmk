@@ -53,7 +53,7 @@ import UclCmkCopy from '@ucl/components/system-feedback/CmkCopy/UclCmkCopy.vue'
 import UclCmkCopyButton from '@ucl/components/system-feedback/CmkCopy/UclCmkCopyButton.vue'
 import UclCmkDialog from '@ucl/components/system-feedback/CmkDialog/UclCmkDialog.vue'
 import UclCmkErrorBoundary from '@ucl/components/system-feedback/CmkErrorBoundary/UclCmkErrorBoundary.vue'
-import UclCmkHelp from '@ucl/components/system-feedback/CmkHelp/UclCmkHelp.vue'
+import UclCmkHelpText from '@ucl/components/system-feedback/CmkHelpText/UclCmkHelpText.vue'
 import UclCmkInlineValidation from '@ucl/components/system-feedback/CmkInlineValidation/UclCmkInlineValidation.vue'
 import UclCmkLoading from '@ucl/components/system-feedback/CmkLoading/UclCmkLoading.vue'
 import UclCmkPerfometer from '@ucl/components/system-feedback/CmkPerfometer/UclCmkPerfometer.vue'
@@ -389,7 +389,7 @@ test('CmkErrorBoundary page renders its component', () => {
 })
 
 test('CmkHelpText page renders its component', () => {
-  render(UclCmkHelp, { props: { screenshotMode: false } })
+  render(UclCmkHelpText, { props: { screenshotMode: false } })
   within(componentPreview()).getAllByRole('button')
 })
 

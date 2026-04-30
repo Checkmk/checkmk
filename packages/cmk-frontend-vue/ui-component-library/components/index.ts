@@ -56,7 +56,7 @@ import UclCmkCopy from './system-feedback/CmkCopy/UclCmkCopy.vue'
 import UclCmkCopyButton from './system-feedback/CmkCopy/UclCmkCopyButton.vue'
 import UclCmkDialog from './system-feedback/CmkDialog/UclCmkDialog.vue'
 import UclCmkErrorBoundary from './system-feedback/CmkErrorBoundary/UclCmkErrorBoundary.vue'
-import UclCmkHelp from './system-feedback/CmkHelp/UclCmkHelp.vue'
+import UclCmkHelpText from './system-feedback/CmkHelpText/UclCmkHelpText.vue'
 import UclCmkInlineValidation from './system-feedback/CmkInlineValidation/UclCmkInlineValidation.vue'
 import UclCmkLoading from './system-feedback/CmkLoading/UclCmkLoading.vue'
 import UclCmkPerfometer from './system-feedback/CmkPerfometer/UclCmkPerfometer.vue'
@@ -131,7 +131,7 @@ const systemFeedbackPages = [
   new Page('CmkCopy (Icon)', UclCmkCopy),
   new Page('CmkDialog', UclCmkDialog),
   new Page('CmkErrorBoundary', UclCmkErrorBoundary),
-  new Page('CmkHelpText', UclCmkHelp),
+  new Page('CmkHelpText', UclCmkHelpText),
   new Page('CmkInlineValidation', UclCmkInlineValidation),
   new Page('CmkLoading', UclCmkLoading),
   new Page('CmkPerfometer', UclCmkPerfometer),

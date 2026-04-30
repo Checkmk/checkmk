@@ -7,7 +7,7 @@ from cmk.bi.compiler import BICompiler
 from cmk.bi.packs import BIAggregationPacks
 from cmk.gui.hooks import request_memoize
 
-from .bi_manager import BIManager, create_default_sites_callback
+from .bi_manager import create_default_sites_callback, get_bi_config_path
 
 
 def is_part_of_aggregation(host: str, service: str) -> bool:
@@ -18,4 +18,4 @@ def is_part_of_aggregation(host: str, service: str) -> bool:
 
 @request_memoize()
 def _get_cached_bi_compiler() -> BICompiler:
-    return BICompiler(BIManager.bi_configuration_file(), create_default_sites_callback())
+    return BICompiler(get_bi_config_path(), create_default_sites_callback())

@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import ast
+import json
 import sys
 import traceback
 from collections.abc import Sequence
@@ -72,10 +73,76 @@ def dump_stash_to_file(paths: Paths, stash: LegacyStash | Stash) -> None:
             raise TypeError(other)
 
 
+def _read_legacy_stash_file(paths: Paths) -> Sequence[int]:
+    if not paths.legacy_stash_file.exists():
+        return []
+
+    if not (content := paths.legacy_stash_file.read_text(encoding="utf-8")):
+        return []
+
+    if content[0] == "[":
+        # we have a legacy file, from cmk project, we need to adapt it:
+        raw_cmk_werk_ids = ast.literal_eval(content)
+    else:
+        parsed = json.loads(content)
+        # The new-style JSON legacy file has {"__version__": ..., "ids_by_project": {...}}
+        raw_cmk_werk_ids = parsed.get("ids_by_project", parsed).get("cmk", [])
+
+    return [int(id_) for id_ in raw_cmk_werk_ids]
+
+
+def migrate_werk_ids_file(paths: Paths) -> None:
+    sys.stderr.write("Migrate legacy werk IDs file\n")
+    assert paths.secret_file.exists()
+
+    stash = (
+        Stash.model_validate_json(paths.stash_file.read_text(encoding="utf-8"))
+        if paths.stash_file.exists()
+        else Stash()
+    )
+    stash.add_ids([WerkId(id_) for id_ in _read_legacy_stash_file(paths)])
+
+    paths.stash_file.parent.mkdir(parents=True, exist_ok=True)
+    paths.stash_file.write_text(stash.model_dump_json(by_alias=True), encoding="utf-8")
+    paths.legacy_stash_file.unlink(missing_ok=True)
+    sys.stderr.write(f"Migrated werk IDs from {paths.legacy_stash_file} to {paths.stash_file}\n")
+
+
 class WerkIDsClient:
     URL: Final = "https://werk-ids.lan.checkmk.net"
 
+    def ensure_connection(self) -> bool:
+        sys.stderr.write("Ensure connection to werk IDs server\n")
+        try:
+            response = requests.get(self.URL, timeout=5)
+            response.raise_for_status()
+            sys.stderr.write(f"OK: {response.status_code}\n")
+            return True
+        except requests.exceptions.RequestException:
+            traceback.print_exc(file=sys.stderr)
+            sys.stderr.write("Failed: could not connect\n")
+            return False
+
+    def test_connection(self, secret_file_path: Path) -> bool:
+        sys.stderr.write("Test connection to werk IDs server\n")
+        secret = secret_file_path.read_text(encoding="utf-8").strip()
+        try:
+            response = requests.get(
+                f"{self.URL}/connect",
+                verify=True,
+                headers={"Authorization": f"Bearer {secret}"},
+                timeout=5,
+            )
+            response.raise_for_status()
+            sys.stderr.write(f"OK: {response.status_code}\n")
+            return True
+        except requests.exceptions.RequestException:
+            traceback.print_exc(file=sys.stderr)
+            sys.stderr.write("Failed: could not connect\n")
+            return False
+
     def reserve_werk_ids(self, secret_file_path: Path, local_werk_ids_count: int) -> Sequence[int]:
+        sys.stderr.write("Reserve werk IDs\n")
         secret = secret_file_path.read_text(encoding="utf-8").strip()
         try:
             response = requests.post(
@@ -91,10 +158,14 @@ class WerkIDsClient:
             return []
 
         if response.status_code == 200:
-            return [int(i) for i in response.json()["reserved_werk_ids"]]
+            reserved_werk_ids = response.json()["reserved_werk_ids"]
+            sys.stderr.write(f"Got {len(reserved_werk_ids)} new werk IDs\n")
+            return [int(i) for i in reserved_werk_ids]
 
         sys.stderr.write(
-            f"Could not reserve werk IDs (Status code: {response.status_code}, server: {self.URL}): {response.text}\n"
+            "Could not reserve werk IDs"
+            f" (Status code: {response.status_code}, server: {self.URL}):"
+            f" {response.text}\n"
         )
         return []
 

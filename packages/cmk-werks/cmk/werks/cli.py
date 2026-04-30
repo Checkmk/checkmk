@@ -28,8 +28,12 @@ from .id_pool import (
     add_id_to_stash,
     dump_stash_to_file,
     load_legacy_stash_from_file,
+    load_or_update_stash,
+    load_stash_from_file,
     make_paths_object,
+    migrate_werk_ids_file,
     pick_id_from_stash,
+    WerkIDsClient,
 )
 from .in_out_elements import (
     bail_out,
@@ -67,6 +71,13 @@ def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     subparsers = parser.add_subparsers(dest="command")
     subparsers.required = True
+
+    # INIT
+    parser_init = subparsers.add_parser(
+        "init",
+        help="Initialize secret for reserving werk ids and migrate the legacy stash file.",
+    )
+    parser_init.set_defaults(func=lambda *_args, **_kwargs: main_init())
 
     # BLAME
     parser_blame = subparsers.add_parser("blame", help="Show who worked on a Werk")
@@ -648,7 +659,7 @@ def main_new(args: argparse.Namespace) -> None:
     sys.stdout.write(TTY_GREEN + WERK_NOTES + TTY_NORMAL)
 
     paths = make_paths_object(Path.home())
-    stash = load_legacy_stash_from_file(paths)
+    stash = load_or_update_stash(paths, WerkIDsClient())
     werk_id = pick_id_from_stash(stash, get_config().project)
 
     metadata: WerkMetadata = {}
@@ -704,6 +715,27 @@ def get_werk_arg(arg: WerkId | None) -> WerkId:
     return wid
 
 
+def main_init() -> None:
+    if not WerkIDsClient().ensure_connection():
+        return
+
+    paths = make_paths_object(Path.home())
+
+    if paths.secret_file.exists() and WerkIDsClient().test_connection(paths.secret_file):
+        sys.stdout.write("Everything is fine.\n")
+        return
+
+    paths.secret_file.parent.mkdir(parents=True, exist_ok=True)
+    while True:
+        secret = get_input("Secret")
+        with paths.secret_file.open("w") as fp:
+            fp.write(secret)
+
+        if WerkIDsClient().test_connection(paths.secret_file):
+            migrate_werk_ids_file(paths)
+            break
+
+
 def main_blame(args: argparse.Namespace) -> None:
     wid = get_werk_arg(WerkId(args.id))
     os.system(f"git blame {werk_path_by_id(wid)}")  # nosec
@@ -729,7 +761,7 @@ def main_delete(args: argparse.Namespace) -> None:
             sys.stdout.write(f"Error removing Werk file: {exc}.\n")
             continue
         sys.stdout.write(f"Deleted Werk {format_werk_id(werk_id)} ({werk_to_be_removed_title}).\n")
-        stash = load_legacy_stash_from_file(paths)
+        stash = load_stash_from_file(paths)
         add_id_to_stash(stash, werk_id, get_config().project)
         dump_stash_to_file(paths, stash)
         sys.stdout.write(f"You lucky bastard now own the Werk ID {format_werk_id(werk_id)}.\n")

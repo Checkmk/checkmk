@@ -167,9 +167,9 @@ class DesignGraph(BaseGraph):
 
     def save_rule_via_slide_in(self) -> None:
         logger.info("Save rule via 'Design graph' slide-in")
-        self.page.get_by_role("dialog", name="Add rule: Metric backend (Custom query)").get_by_role(
-            "button", name="Save"
-        ).click()
+        self.main_area.locator().get_by_role(
+            "dialog", name="Add rule: Metric backend (Custom query)"
+        ).get_by_role("button", name="Save").click()
 
 
 class CustomGraph(BaseGraph):

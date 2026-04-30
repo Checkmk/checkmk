@@ -396,8 +396,10 @@ def _collect_graph_html(
             style=f"font-size: {display_config.font_size:.1f}pt;",
         )
 
-        if display_config.show_controls:
-            add_type = render_state.specification.add_visual_type()
+        if (
+            display_config.show_controls
+            and (add_type := render_state.specification.add_visual_type()) is not None
+        ):
             html.popup_trigger(
                 content=html.render_static_icon(StaticIcon(IconNames.menu), title=_("Add to ...")),
                 ident="add_visual",

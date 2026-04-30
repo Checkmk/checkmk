@@ -167,8 +167,8 @@ class GraphSpecification(BaseModel, ABC, frozen=True):
         return ""
 
     @classmethod
-    def add_visual_type(cls) -> str:
-        raise NotImplementedError(f"{cls.__name__} does not support add-to-visual")
+    def add_visual_type(cls) -> str | None:
+        return None
 
 
 class GraphSpecificationRegistry(Registry[type[GraphSpecification]]):

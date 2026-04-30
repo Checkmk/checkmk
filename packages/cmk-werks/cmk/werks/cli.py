@@ -7,6 +7,7 @@
 import argparse
 import ast
 import datetime
+from dataclasses import dataclass
 import fcntl
 import os
 import shlex
@@ -33,12 +34,42 @@ from .models import EditionV3
 from .parse import parse_werk_v3, WERK_V3_START, WerkV2ParseResult, WerkV3ParseResult
 from .utils import edition_v3_to_v2
 
-T = TypeVar("T", bound="Stash")
+T = TypeVar("T", bound="LegacyStash")
 
 
 class Stash(BaseModel):
+    stash_version: Literal["3"] = Field(default="3", alias="__version__")
+    ids: list[int] = Field(default=[])
+
+    def count(self) -> int:
+        return len(self.ids)
+
+    def pick_id(self) -> "WerkId":
+        try:
+            return WerkId(sorted(self.ids)[0])
+        except (KeyError, IndexError) as e:
+            raise RuntimeError(
+                "You have no Werk IDs. You can reserve 10 additional Werk IDs with 'werk ids 10'."
+            ) from e
+
+    def free_id(self, werk_id: "WerkId") -> None:
+        removed = False
+        if werk_id.id in self.ids:
+            removed = True
+            self.ids.remove(werk_id.id)
+            if not self.ids:
+                sys.stdout.write(f"\n{TTY_RED}This was your last reserved ID{TTY_NORMAL}\n\n")
+
+        if not removed:
+            raise RuntimeError(f"Could not find werk_id {werk_id} in any project.")
+
+    def add_ids(self, werk_ids: "Sequence[WerkId]") -> None:
+        self.ids.extend(werk_id.id for werk_id in werk_ids)
+
+
+class LegacyStash(BaseModel):
     stash_version: Literal["2"] = Field(default="2", alias="__version__")
-    ids_by_project: dict[str, list[int]]
+    ids_by_project: dict[str, list[int]] = Field(default={})
 
     def count(self) -> int:
         """
@@ -152,7 +183,24 @@ WERK_ID_RANGES = {
     "cloudmk": [(1_000_000, 2_000_000)],
 }
 
-WERK_IDS_PATH = Path.home() / ".cmk-werk-ids"
+
+@dataclass(frozen=True, kw_only=True)
+class Paths:
+    legacy_stash_file: Path
+    stash_file: Path
+    secret_file: Path
+
+    @property
+    def active_stash_file(self) -> Path:
+        return self.stash_file if self.secret_file.exists() else self.legacy_stash_file
+
+
+def make_paths_object(home: Path) -> Paths:
+    return Paths(
+        legacy_stash_file=home / ".cmk-werk-ids",
+        stash_file=home / ".local/cmk-werks/reserved-ids",
+        secret_file=home / ".local/cmk-werks/secret",
+    )
 
 
 # colored output, if stdout is a tty
@@ -859,29 +907,60 @@ WERK_NOTES = """
 """
 
 
-def load_stash_from_file(werk_ids_path: Path) -> "Stash":
-    if not werk_ids_path.exists():
-        return Stash.model_validate({"ids_by_project": {}})
-    content = werk_ids_path.read_text(encoding="utf-8")
+def load_legacy_stash_from_file(paths: Paths) -> "LegacyStash":
+    if not paths.legacy_stash_file.exists():
+        return LegacyStash()
+
+    content = paths.legacy_stash_file.read_text(encoding="utf-8")
     if not content:
-        return Stash.model_validate({"ids_by_project": {}})
+        return LegacyStash()
+
     if content[0] == "[":
         # we have a legacy file, from cmk project, we need to adapt it:
-        return Stash.model_validate({"ids_by_project": {"cmk": ast.literal_eval(content)}})
-    return Stash.model_validate_json(content)
+        return LegacyStash.model_validate({"ids_by_project": {"cmk": ast.literal_eval(content)}})
+
+    return LegacyStash.model_validate_json(content)
 
 
-def dump_stash_to_file(werk_ids_path: Path, stash: "Stash") -> None:
-    werk_ids_path.write_text(stash.model_dump_json(by_alias=True), encoding="utf-8")
+def dump_stash_to_file(paths: Paths, stash: "LegacyStash | Stash") -> None:
+    raw_stash = stash.model_dump_json(by_alias=True)
+    match stash:
+        case LegacyStash():
+            paths.legacy_stash_file.write_text(raw_stash, encoding="utf-8")
+        case Stash():
+            paths.stash_file.write_text(raw_stash, encoding="utf-8")
+        case other:
+            raise TypeError(other)
+
+
+def pick_id_from_stash(stash: "LegacyStash | Stash", project: str) -> "WerkId":
+    match stash:
+        case LegacyStash():
+            return stash.pick_id(project=project)
+        case Stash():
+            return stash.pick_id()
+        case other:
+            raise TypeError(other)
+
+
+def add_id_to_stash(stash: "LegacyStash | Stash", werk_id: "WerkId", project: str) -> None:
+    match stash:
+        case LegacyStash():
+            stash.add_id(werk_id, project=project)
+        case Stash():
+            stash.add_ids([werk_id])
+        case other:
+            raise TypeError(other)
 
 
 def main_new(args: argparse.Namespace) -> None:
     sys.stdout.write(TTY_GREEN + WERK_NOTES + TTY_NORMAL)
 
-    stash = load_stash_from_file(WERK_IDS_PATH)
+    paths = make_paths_object(Path.home())
+    stash = load_legacy_stash_from_file(paths)
+    werk_id = pick_id_from_stash(stash, get_config().project)
 
     metadata: WerkMetadata = {}
-    werk_id = stash.pick_id(project=get_config().project)
     metadata["id"] = str(werk_id)
 
     # this is the metadata format of werkv1
@@ -911,9 +990,10 @@ def main_new(args: argparse.Namespace) -> None:
 
     save_werk(werk, get_werk_file_version())
     git_add(werk)
-    stash.free_id(werk_id)
-    dump_stash_to_file(WERK_IDS_PATH, stash)
     edit_werk(werk_path, args.custom_files)
+
+    stash.free_id(werk_id)
+    dump_stash_to_file(paths, stash)
 
     sys.stdout.write(f"Werk {format_werk_id(werk_id)} saved.\n")
 
@@ -939,9 +1019,9 @@ def main_url(args: argparse.Namespace) -> None:
 
 
 def main_delete(args: argparse.Namespace) -> None:
-    werks = [WerkId(i) for i in args.id]
+    paths = make_paths_object(Path.home())
 
-    for werk_id in werks:
+    for werk_id in [WerkId(i) for i in args.id]:
         if not werk_exists(werk_id):
             bail_out(f"There is no werk {format_werk_id(werk_id)}.")
 
@@ -953,9 +1033,9 @@ def main_delete(args: argparse.Namespace) -> None:
             sys.stdout.write(f"Error removing werk file: {exc}.\n")
             continue
         sys.stdout.write(f"Deleted Werk {format_werk_id(werk_id)} ({werk_to_be_removed_title}).\n")
-        stash = load_stash_from_file(WERK_IDS_PATH)
-        stash.add_id(werk_id, project=get_config().project)
-        dump_stash_to_file(WERK_IDS_PATH, stash)
+        stash = load_legacy_stash_from_file(paths)
+        add_id_to_stash(stash, werk_id, get_config().project)
+        dump_stash_to_file(paths, stash)
         sys.stdout.write(f"You lucky bastard now own the Werk ID {format_werk_id(werk_id)}.\n")
 
 
@@ -1184,7 +1264,8 @@ def _reserve_werk_ids(
 
 
 def main_fetch_ids(args: argparse.Namespace) -> None:
-    stash = load_stash_from_file(WERK_IDS_PATH)
+    paths = make_paths_object(Path.home())
+    stash = load_legacy_stash_from_file(paths)
 
     if args.count is None:
         per_project = "\n".join(
@@ -1210,10 +1291,10 @@ def main_fetch_ids(args: argparse.Namespace) -> None:
 
     new_first_free, fresh_ids = _reserve_werk_ids(ranges, first_free, args.count)
 
-    stash = load_stash_from_file(WERK_IDS_PATH)
+    stash = load_legacy_stash_from_file(paths)
     for werk_id in fresh_ids:
-        stash.add_id(werk_id, project=project)
-    dump_stash_to_file(WERK_IDS_PATH, stash)
+        add_id_to_stash(stash, werk_id, project=project)
+    dump_stash_to_file(paths, stash)
 
     # Store the new reserved werk ids
     with open("first_free", "w", encoding="utf-8") as f:

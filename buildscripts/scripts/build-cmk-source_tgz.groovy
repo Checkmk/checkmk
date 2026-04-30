@@ -130,12 +130,12 @@ void main() {
 
         stage("Test source package") {
             package_helper.test_package(
-                "${checkout_dir}/${source_package_name}",
-                "source",
-                WORKSPACE,
-                checkout_dir,
-                cmk_version,
-                params.FAKE_ARTIFACTS,
+                package_path: "${checkout_dir}/${source_package_name}",
+                name: "source",
+                workspace: WORKSPACE,
+                source_dir: checkout_dir,
+                cmk_version: cmk_version,
+                fake_artifacts: params.FAKE_ARTIFACTS,
             );
         }
 

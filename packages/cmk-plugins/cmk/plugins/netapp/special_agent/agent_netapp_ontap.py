@@ -928,12 +928,11 @@ def fetch_snapmirror(
         element_data = element.to_dict()
 
         yield models.SnapMirrorModel(
-            destination_svm=element_data["destination"]["svm"]["name"],
             policy_name=element_data.get("policy", {}).get("name"),
             policy_type=element_data.get("policy", {}).get("type"),
             state=element_data.get("state"),
             transfer_state=element_data.get("transfer", {}).get("state"),
-            source_svm_name=element_data["source"]["svm"]["name"],
+            source_svm_name=element_data.get("source", {}).get("svm", {}).get("name"),
             lag_time=element_data.get("lag_time"),
             destination=element_data["destination"]["path"],
         )

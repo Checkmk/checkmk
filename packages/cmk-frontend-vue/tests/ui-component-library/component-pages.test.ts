@@ -6,6 +6,8 @@
 import { render, screen, within } from '@testing-library/vue'
 import UclCmkBadge from '@ucl/components/basic-elements/CmkBadge/UclCmkBadge.vue'
 import UclCmkButton from '@ucl/components/basic-elements/CmkButton/UclCmkButton.vue'
+import UclCmkButtonCancel from '@ucl/components/basic-elements/CmkButtonCancel/UclCmkButtonCancel.vue'
+import UclCmkButtonSubmit from '@ucl/components/basic-elements/CmkButtonSubmit/UclCmkButtonSubmit.vue'
 import UclCmkChip from '@ucl/components/basic-elements/CmkChip/UclCmkChip.vue'
 import UclCmkCode from '@ucl/components/basic-elements/CmkCode/UclCmkCode.vue'
 import UclCmkColorPicker from '@ucl/components/basic-elements/CmkColorPicker/UclCmkColorPicker.vue'
@@ -30,6 +32,7 @@ import UclCmkDropdown from '@ucl/components/form-elements/CmkDropdown/UclCmkDrop
 import UclCmkDualList from '@ucl/components/form-elements/CmkDualList/UclCmkDualList.vue'
 import UclCmkInput from '@ucl/components/form-elements/CmkInput/UclCmkInput.vue'
 import UclCmkList from '@ucl/components/form-elements/CmkList/UclCmkList.vue'
+import UclCmkTimeSpan from '@ucl/components/form-elements/CmkTimeSpan/UclCmkTimeSpan.vue'
 import UclCmkToggleButtonGroup from '@ucl/components/form-elements/CmkToggleButtonGroup/UclCmkToggleButtonGroup.vue'
 import UclCmkHtml from '@ucl/components/foundation-elements/CmkHtml/UclCmkHtml.vue'
 import UclCmkIcon from '@ucl/components/foundation-elements/CmkIcon/UclCmkIcon.vue'
@@ -37,11 +40,13 @@ import UclCmkIconEmblem from '@ucl/components/foundation-elements/CmkIcon/UclCmk
 import UclCmkMultitoneIcon from '@ucl/components/foundation-elements/CmkIcon/UclCmkMultitoneIcon.vue'
 import UclCmkIndent from '@ucl/components/foundation-elements/CmkIndent/UclCmkIndent.vue'
 import UclCmkKeyboardKey from '@ucl/components/foundation-elements/CmkKeyboardKey/UclCmkKeyboardKey.vue'
+import UclCmkLabel from '@ucl/components/foundation-elements/CmkLabel/UclCmkLabel.vue'
 import UclCmkLabelRequired from '@ucl/components/foundation-elements/CmkLabelRequired/UclCmkLabelRequired.vue'
 import UclCmkSpace from '@ucl/components/foundation-elements/CmkSpace/UclCmkSpace.vue'
 import UclCmkZebra from '@ucl/components/foundation-elements/CmkZebra/UclCmkZebra.vue'
 import UclCmkHeading from '@ucl/components/foundation-elements/typography/UclCmkHeading.vue'
 import UclCmkParagraph from '@ucl/components/foundation-elements/typography/UclCmkParagraph.vue'
+import UclArrowDown from '@ucl/components/graphics/ArrowDown/UclArrowDown.vue'
 import UclCmkLinkCard from '@ucl/components/navigation/CmkLinkCard/UclCmkLinkCard.vue'
 import UclCmkAlertBox from '@ucl/components/system-feedback/CmkAlertBox/UclCmkAlertBox.vue'
 import UclCmkCopy from '@ucl/components/system-feedback/CmkCopy/UclCmkCopy.vue'
@@ -52,6 +57,7 @@ import UclCmkHelp from '@ucl/components/system-feedback/CmkHelp/UclCmkHelp.vue'
 import UclCmkInlineValidation from '@ucl/components/system-feedback/CmkInlineValidation/UclCmkInlineValidation.vue'
 import UclCmkLoading from '@ucl/components/system-feedback/CmkLoading/UclCmkLoading.vue'
 import UclCmkPerfometer from '@ucl/components/system-feedback/CmkPerfometer/UclCmkPerfometer.vue'
+import UclCmkPopup from '@ucl/components/system-feedback/CmkPopup/UclCmkPopup.vue'
 import UclCmkPopupDialog from '@ucl/components/system-feedback/CmkPopupDialog/UclCmkPopupDialog.vue'
 import UclCmkProgressbar from '@ucl/components/system-feedback/CmkProgressbar/UclCmkProgressbar.vue'
 import UclCmkSkeleton from '@ucl/components/system-feedback/CmkSkeleton/UclCmkSkeleton.vue'
@@ -155,6 +161,11 @@ test('CmkToggleButtonGroup page renders its component', () => {
   within(componentPreview()).getAllByRole('button')
 })
 
+test('CmkTimeSpan page renders its component', () => {
+  render(UclCmkTimeSpan, { props: { screenshotMode: false } })
+  within(componentPreview()).getAllByRole('spinbutton')
+})
+
 // ─── Basic elements ───────────────────────────────────────────────────────────
 
 test('CmkBadge page renders its component', () => {
@@ -164,6 +175,16 @@ test('CmkBadge page renders its component', () => {
 
 test('CmkButton page renders its component', () => {
   render(UclCmkButton, { props: { screenshotMode: false } })
+  within(componentPreview()).getAllByRole('button')
+})
+
+test('CmkButtonCancel page renders its component', () => {
+  render(UclCmkButtonCancel, { props: { screenshotMode: false } })
+  within(componentPreview()).getAllByRole('button')
+})
+
+test('CmkButtonSubmit page renders its component', () => {
+  render(UclCmkButtonSubmit, { props: { screenshotMode: false } })
   within(componentPreview()).getAllByRole('button')
 })
 
@@ -275,6 +296,11 @@ test('CmkMultitoneIcon page renders', () => {
   expectNoRegistryError()
 })
 
+test('CmkLabel page renders its component', () => {
+  render(UclCmkLabel, { props: { screenshotMode: false } })
+  within(componentPreview()).getByText('Form Field')
+})
+
 test('CmkHeading page renders its component', () => {
   render(UclCmkHeading, { props: { screenshotMode: false } })
   within(componentPreview()).getAllByRole('heading')
@@ -316,6 +342,13 @@ test('CmkZebra page renders its component', () => {
   within(componentPreview()).getAllByText(/Demonstration row content/)
 })
 
+// ─── Graphics ─────────────────────────────────────────────────────────────────
+
+test('ArrowDown page renders its component', () => {
+  render(UclArrowDown, { props: { screenshotMode: false } })
+  expect(componentPreview().querySelector('svg')).toBeTruthy()
+})
+
 // ─── Navigation ───────────────────────────────────────────────────────────────
 
 test('CmkLinkCard page renders its component', () => {
@@ -324,6 +357,11 @@ test('CmkLinkCard page renders its component', () => {
 })
 
 // ─── System feedback ──────────────────────────────────────────────────────────
+
+test('CmkPopup page renders its component', () => {
+  render(UclCmkPopup, { props: { screenshotMode: false } })
+  within(componentPreview()).getByRole('button', { name: 'Open Popup' })
+})
 
 test('CmkAlertBox page renders its component', () => {
   render(UclCmkAlertBox, { props: { screenshotMode: false } })

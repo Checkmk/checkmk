@@ -8,6 +8,8 @@ import { Folder, Page } from '@ucl/_ucl/types/page'
 import { pages as formSpecPages } from '../form'
 import UclCmkBadge from './basic-elements/CmkBadge/UclCmkBadge.vue'
 import UclCmkButton from './basic-elements/CmkButton/UclCmkButton.vue'
+import UclCmkButtonCancel from './basic-elements/CmkButtonCancel/UclCmkButtonCancel.vue'
+import UclCmkButtonSubmit from './basic-elements/CmkButtonSubmit/UclCmkButtonSubmit.vue'
 import UclCmkChip from './basic-elements/CmkChip/UclCmkChip.vue'
 import UclCmkCode from './basic-elements/CmkCode/UclCmkCode.vue'
 import UclCmkColorPicker from './basic-elements/CmkColorPicker/UclCmkColorPicker.vue'
@@ -32,6 +34,7 @@ import UclCmkDropdown from './form-elements/CmkDropdown/UclCmkDropdown.vue'
 import UclCmkDualList from './form-elements/CmkDualList/UclCmkDualList.vue'
 import UclCmkInput from './form-elements/CmkInput/UclCmkInput.vue'
 import UclCmkList from './form-elements/CmkList/UclCmkList.vue'
+import UclCmkTimeSpan from './form-elements/CmkTimeSpan/UclCmkTimeSpan.vue'
 import UclCmkToggleButtonGroup from './form-elements/CmkToggleButtonGroup/UclCmkToggleButtonGroup.vue'
 import UclCmkHtml from './foundation-elements/CmkHtml/UclCmkHtml.vue'
 import UclCmkIcon from './foundation-elements/CmkIcon/UclCmkIcon.vue'
@@ -39,12 +42,14 @@ import UclCmkIconEmblem from './foundation-elements/CmkIcon/UclCmkIconEmblem.vue
 import UclCmkMultitoneIcon from './foundation-elements/CmkIcon/UclCmkMultitoneIcon.vue'
 import UclCmkIndent from './foundation-elements/CmkIndent/UclCmkIndent.vue'
 import UclCmkKeyboardKey from './foundation-elements/CmkKeyboardKey/UclCmkKeyboardKey.vue'
+import UclCmkLabel from './foundation-elements/CmkLabel/UclCmkLabel.vue'
 import UclCmkLabelRequired from './foundation-elements/CmkLabelRequired/UclCmkLabelRequired.vue'
 import UclCmkSpace from './foundation-elements/CmkSpace/UclCmkSpace.vue'
 import UclCmkZebra from './foundation-elements/CmkZebra/UclCmkZebra.vue'
 import UclCmkHeading from './foundation-elements/typography/UclCmkHeading.vue'
 import UclCmkParagraph from './foundation-elements/typography/UclCmkParagraph.vue'
 import UclI18n from './foundation-elements/typography/UclI18n.vue'
+import UclArrowDown from './graphics/ArrowDown/UclArrowDown.vue'
 import UclCmkLinkCard from './navigation/CmkLinkCard/UclCmkLinkCard.vue'
 import UclCmkAlertBox from './system-feedback/CmkAlertBox/UclCmkAlertBox.vue'
 import UclCmkCopy from './system-feedback/CmkCopy/UclCmkCopy.vue'
@@ -55,6 +60,7 @@ import UclCmkHelp from './system-feedback/CmkHelp/UclCmkHelp.vue'
 import UclCmkInlineValidation from './system-feedback/CmkInlineValidation/UclCmkInlineValidation.vue'
 import UclCmkLoading from './system-feedback/CmkLoading/UclCmkLoading.vue'
 import UclCmkPerfometer from './system-feedback/CmkPerfometer/UclCmkPerfometer.vue'
+import UclCmkPopup from './system-feedback/CmkPopup/UclCmkPopup.vue'
 import UclCmkPopupDialog from './system-feedback/CmkPopupDialog/UclCmkPopupDialog.vue'
 import UclCmkProgressbar from './system-feedback/CmkProgressbar/UclCmkProgressbar.vue'
 import UclCmkSkeleton from './system-feedback/CmkSkeleton/UclCmkSkeleton.vue'
@@ -63,6 +69,8 @@ import UclCmkTooltip from './system-feedback/CmkTooltip/UclCmkTooltip.vue'
 const basicElementsPages = [
   new Page('CmkBadge', UclCmkBadge),
   new Page('CmkButton', UclCmkButton),
+  new Page('CmkButtonCancel', UclCmkButtonCancel),
+  new Page('CmkButtonSubmit', UclCmkButtonSubmit),
   new Page('CmkIconButton', UclCmkIconButton),
   new Page('CmkInlineButton', UclCmkInlineButton),
   new Page('CmkChip', UclCmkChip),
@@ -93,6 +101,7 @@ const formElementsPages = [
   new Page('CmkDualList', UclCmkDualList),
   new Page('CmkInput', UclCmkInput),
   new Page('CmkList', UclCmkList),
+  new Page('CmkTimeSpan', UclCmkTimeSpan),
   new Page('CmkToggleButtonGroup', UclCmkToggleButtonGroup)
 ]
 
@@ -106,10 +115,13 @@ const foundationElementsPages = [
   new Page('CmkHtml', UclCmkHtml),
   new Page('CmkIndent', UclCmkIndent),
   new Page('CmkKeyboardKey', UclCmkKeyboardKey),
+  new Page('CmkLabel', UclCmkLabel),
   new Page('CmkLabelRequired', UclCmkLabelRequired),
   new Page('CmkSpace', UclCmkSpace),
   new Page('CmkZebra', UclCmkZebra)
 ]
+
+const graphicsPages = [new Page('ArrowDown', UclArrowDown)]
 
 const navigationPages = [new Page('CmkLinkCard', UclCmkLinkCard)]
 
@@ -123,6 +135,7 @@ const systemFeedbackPages = [
   new Page('CmkInlineValidation', UclCmkInlineValidation),
   new Page('CmkLoading', UclCmkLoading),
   new Page('CmkPerfometer', UclCmkPerfometer),
+  new Page('CmkPopup', UclCmkPopup),
   new Page('CmkPopupDialog', UclCmkPopupDialog),
   new Page('CmkProgressbar', UclCmkProgressbar),
   new Page('CmkSkeleton', UclCmkSkeleton),
@@ -136,6 +149,7 @@ export const roots = [
       new Folder('Content organization', contentOrganizationPages, true),
       new Folder('Form elements', formElementsPages),
       new Folder('Foundation elements', foundationElementsPages),
+      new Folder('Graphics', graphicsPages),
       new Folder('Navigation', navigationPages),
       new Folder('System feedback', systemFeedbackPages)
     ],

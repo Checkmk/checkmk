@@ -6,10 +6,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 
 <script setup lang="ts">
 import CmkButton from '@/components/CmkButton.vue'
-import CmkButtonCancel from '@/components/CmkButtonCancel.vue'
-import CmkButtonSubmit from '@/components/CmkButtonSubmit.vue'
 import CmkIcon from '@/components/CmkIcon'
-import CmkIconButton from '@/components/CmkIconButton.vue'
 
 defineProps<{ screenshotMode: boolean }>()
 </script>
@@ -63,16 +60,6 @@ defineProps<{ screenshotMode: boolean }>()
       <CmkButton variant="info" :disabled="true">info</CmkButton>
     </dd>
 
-    <dt><code>&lt;CmkButtonSubmit&gt;button&lt;/CmkButtonSubmit&gt;</code></dt>
-    <dd>
-      <CmkButtonSubmit>button</CmkButtonSubmit>
-    </dd>
-
-    <dt><code>&lt;CmkButtonCancel&gt;button&lt;/CmkButtonCancel&gt;</code></dt>
-    <dd>
-      <CmkButtonCancel>button</CmkButtonCancel>
-    </dd>
-
     <dt>
       <code
         >&lt;CmkButton&gt;&lt;CmkIcon name="about-checkmk" variant="inline"
@@ -81,11 +68,6 @@ defineProps<{ screenshotMode: boolean }>()
     </dt>
     <dd>
       <CmkButton><CmkIcon name="about-checkmk" variant="inline" />button</CmkButton>
-    </dd>
-
-    <dt><code>&lt;CmkIconButton name="iconName"&gt;button&lt;/CmkIconButton&gt;</code></dt>
-    <dd>
-      <CmkIconButton name="checkmark"></CmkIconButton>
     </dd>
 
     <dt>

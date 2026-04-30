@@ -6,6 +6,8 @@
 import { render } from '@testing-library/vue'
 import UclCmkBadgeCodeExample from '@ucl/components/basic-elements/CmkBadge/UclCmkBadgeCodeExample.vue'
 import UclCmkButtonCodeExample from '@ucl/components/basic-elements/CmkButton/UclCmkButtonCodeExample.vue'
+import UclCmkButtonCancelCodeExample from '@ucl/components/basic-elements/CmkButtonCancel/UclCmkButtonCancelCodeExample.vue'
+import UclCmkButtonSubmitCodeExample from '@ucl/components/basic-elements/CmkButtonSubmit/UclCmkButtonSubmitCodeExample.vue'
 import UclCmkChipCodeExample from '@ucl/components/basic-elements/CmkChip/UclCmkChipCodeExample.vue'
 import UclCmkCodeCodeExample from '@ucl/components/basic-elements/CmkCode/UclCmkCodeCodeExample.vue'
 import UclCmkColorPickerCodeExample from '@ucl/components/basic-elements/CmkColorPicker/UclCmkColorPickerCodeExample.vue'
@@ -28,6 +30,7 @@ import UclCmkDropdownCodeExample from '@ucl/components/form-elements/CmkDropdown
 import UclCmkDualListCodeExample from '@ucl/components/form-elements/CmkDualList/UclCmkDualListCodeExample.vue'
 import UclCmkInputCodeExample from '@ucl/components/form-elements/CmkInput/UclCmkInputCodeExample.vue'
 import UclCmkListCodeExample from '@ucl/components/form-elements/CmkList/UclCmkListCodeExample.vue'
+import UclCmkTimeSpanCodeExample from '@ucl/components/form-elements/CmkTimeSpan/UclCmkTimeSpanCodeExample.vue'
 import UclCmkToggleButtonGroupCodeExample from '@ucl/components/form-elements/CmkToggleButtonGroup/UclCmkToggleButtonGroupCodeExample.vue'
 import UclCmkHtmlCodeExample from '@ucl/components/foundation-elements/CmkHtml/UclCmkHtmlCodeExample.vue'
 import UclCmkIconCodeExample from '@ucl/components/foundation-elements/CmkIcon/UclCmkIconCodeExample.vue'
@@ -35,12 +38,14 @@ import UclCmkIconEmblemCodeExample from '@ucl/components/foundation-elements/Cmk
 import UclCmkMultitoneIconCodeExample from '@ucl/components/foundation-elements/CmkIcon/UclCmkMultitoneIconCodeExample.vue'
 import UclCmkIndentCodeExample from '@ucl/components/foundation-elements/CmkIndent/UclCmkIndentCodeExample.vue'
 import UclCmkKeyboardKeyCodeExample from '@ucl/components/foundation-elements/CmkKeyboardKey/UclCmkKeyboardKeyCodeExample.vue'
+import UclCmkLabelCodeExample from '@ucl/components/foundation-elements/CmkLabel/UclCmkLabelCodeExample.vue'
 import UclCmkLabelRequiredCodeExample from '@ucl/components/foundation-elements/CmkLabelRequired/UclCmkLabelRequiredCodeExample.vue'
 import UclCmkSpaceCodeExample from '@ucl/components/foundation-elements/CmkSpace/UclCmkSpaceCodeExample.vue'
 import UclCmkZebraCodeExample from '@ucl/components/foundation-elements/CmkZebra/UclCmkZebraCodeExample.vue'
 import UclCmkHeadingCodeExample from '@ucl/components/foundation-elements/typography/UclCmkHeadingCodeExample.vue'
 import UclCmkParagraphCodeExample from '@ucl/components/foundation-elements/typography/UclCmkParagraphCodeExample.vue'
 import UclI18nCodeExample from '@ucl/components/foundation-elements/typography/UclI18nCodeExample.vue'
+import UclArrowDownCodeExample from '@ucl/components/graphics/ArrowDown/UclArrowDownCodeExample.vue'
 import UclCmkLinkCardCodeExample from '@ucl/components/navigation/CmkLinkCard/UclCmkLinkCardCodeExample.vue'
 import UclCmkAlertBoxCodeExample from '@ucl/components/system-feedback/CmkAlertBox/UclCmkAlertBoxCodeExample.vue'
 import UclCmkCopyButtonCodeExample from '@ucl/components/system-feedback/CmkCopy/UclCmkCopyButtonCodeExample.vue'
@@ -51,6 +56,7 @@ import UclCmkHelpCodeExample from '@ucl/components/system-feedback/CmkHelp/UclCm
 import UclCmkInlineValidationCodeExample from '@ucl/components/system-feedback/CmkInlineValidation/UclCmkInlineValidationCodeExample.vue'
 import UclCmkLoadingCodeExample from '@ucl/components/system-feedback/CmkLoading/UclCmkLoadingCodeExample.vue'
 import UclCmkPerfometerCodeExample from '@ucl/components/system-feedback/CmkPerfometer/UclCmkPerfometerCodeExample.vue'
+import UclCmkPopupCodeExample from '@ucl/components/system-feedback/CmkPopup/UclCmkPopupCodeExample.vue'
 import UclCmkPopupDialogCodeExample from '@ucl/components/system-feedback/CmkPopupDialog/UclCmkPopupDialogCodeExample.vue'
 import UclCmkProgressbarCodeExample from '@ucl/components/system-feedback/CmkProgressbar/UclCmkProgressbarCodeExample.vue'
 import UclCmkSkeletonCodeExample from '@ucl/components/system-feedback/CmkSkeleton/UclCmkSkeletonCodeExample.vue'
@@ -70,6 +76,16 @@ test('CmkBadge code example renders without errors', () => {
 
 test('CmkButton code example renders without errors', () => {
   const { container } = render(UclCmkButtonCodeExample)
+  expect(container.firstChild).toBeTruthy()
+})
+
+test('CmkButtonCancel code example renders without errors', () => {
+  const { container } = render(UclCmkButtonCancelCodeExample)
+  expect(container.firstChild).toBeTruthy()
+})
+
+test('CmkButtonSubmit code example renders without errors', () => {
+  const { container } = render(UclCmkButtonSubmitCodeExample)
   expect(container.firstChild).toBeTruthy()
 })
 
@@ -187,6 +203,11 @@ test('CmkList code example renders without errors', () => {
   expect(container.firstChild).toBeTruthy()
 })
 
+test('CmkTimeSpan code example renders without errors', () => {
+  const { container } = render(UclCmkTimeSpanCodeExample)
+  expect(container.firstChild).toBeTruthy()
+})
+
 test('CmkToggleButtonGroup code example renders without errors', () => {
   const { container } = render(UclCmkToggleButtonGroupCodeExample)
   expect(container.firstChild).toBeTruthy()
@@ -224,6 +245,11 @@ test('CmkKeyboardKey code example renders without errors', () => {
   expect(container.firstChild).toBeTruthy()
 })
 
+test('CmkLabel code example renders without errors', () => {
+  const { container } = render(UclCmkLabelCodeExample)
+  expect(container.firstChild).toBeTruthy()
+})
+
 test('CmkLabelRequired code example renders without errors', () => {
   const { container } = render(UclCmkLabelRequiredCodeExample)
   expect(container.firstChild).toBeTruthy()
@@ -254,6 +280,13 @@ test('UclI18n code example renders without errors', () => {
   expect(container.firstChild).toBeTruthy()
 })
 
+// ─── Graphics ─────────────────────────────────────────────────────────────────
+
+test('ArrowDown code example renders without errors', () => {
+  const { container } = render(UclArrowDownCodeExample)
+  expect(container.firstChild).toBeTruthy()
+})
+
 // ─── Navigation ───────────────────────────────────────────────────────────────
 
 test('CmkLinkCard code example renders without errors', () => {
@@ -262,6 +295,11 @@ test('CmkLinkCard code example renders without errors', () => {
 })
 
 // ─── System feedback ──────────────────────────────────────────────────────────
+
+test('CmkPopup code example renders without errors', () => {
+  const { container } = render(UclCmkPopupCodeExample)
+  expect(container.firstChild).toBeTruthy()
+})
 
 test('CmkAlertBox code example renders without errors', () => {
   const { container } = render(UclCmkAlertBoxCodeExample)

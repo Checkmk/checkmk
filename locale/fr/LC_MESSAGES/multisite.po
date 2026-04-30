@@ -13847,12 +13847,12 @@ msgstr ""
 msgid ""
 "Choose what to do with the files under <tt>%PROGRAMDATA%\\checkmk</tt>:"
 "<ul><li><i>Do not remove anything</i>: Leave all files in place after "
-"uninstallation.<br><li><i>Remove data managed by the Checkmk agent</i>: "
+"uninstallation.</li><li><i>Remove data managed by the Checkmk agent</i>: "
 "Remove only files that got created on Checkmk agent installation. This "
 "includes files that came from bakery plugins, even if they have been edited "
 "by a user. Keep runtime files that have been created after installation, "
-"like state files, registration files, and logs.<li><i>Remove all files and "
-"subdirectories</i>: Remove all files regardless of their origin.</"
+"like state files, registration files, and logs.</li><li><i>Remove all files "
+"and subdirectories</i>: Remove all files regardless of their origin.</li></"
 "ul><b>Caution</b>: Uninstallation also happens on every agent update! As a "
 "consequence, this rule will break automatic agent updates and TLS encrypted "
 "agent communication on setting <i>Remove all files and subdirectories</i>, "
@@ -52602,6 +52602,10 @@ msgstr ""
 msgid "Port"
 msgstr "Port"
 
+#, python-format
+msgid "Port %d is already in use by site '%s' (key: %s)."
+msgstr ""
+
 #, fuzzy
 msgid "Port ID"
 msgstr "Port"
@@ -55774,6 +55778,10 @@ msgstr "Reproduire les extensions"
 
 msgid "Replicate extensions (MKPs and files in <tt>~/local/</tt>)"
 msgstr "Réplication des extensions (MKP et fichiers dans <tt>~/local/</tt>)"
+
+#, fuzzy, python-format
+msgid "Replicating profile to %d site(s) in parallel..."
+msgstr "Renommer un ou plusieurs hôtes dans les parents..."
 
 #, fuzzy
 msgid "Replication"
@@ -87018,6 +87026,14 @@ msgstr "Configuration de l'imprimante sous Windows"
 msgid "Windows Printer Queues and States"
 msgstr "Files d'attente et états des imprimantes Windows"
 
+#, fuzzy
+msgid "Windows Server 2022"
+msgstr "Services Windows"
+
+#, fuzzy
+msgid "Windows Server 2025"
+msgstr "Services Windows"
+
 msgid "Windows Service Summary"
 msgstr "Résumé du service Windows"
 
@@ -90040,10 +90056,6 @@ msgstr "Mises à jour de Zypper"
 msgid "Zypper normal and security updates (Linux)"
 msgstr "Zypper normal et mises à jour de sécurité (Linux)"
 
-#, python-format
-msgid "[%d/%d] Replicating to site %s..."
-msgstr ""
-
 #, fuzzy, python-format
 msgid "[%s] - OAuth2 connection"
 msgstr "Ajouter une connexion"
@@ -92702,6 +92714,10 @@ msgstr "Sélectionné"
 #, fuzzy
 msgid "Pre-selected"
 msgstr "Sélectionné"
+
+#, fuzzy
+msgid "Dashboard menu"
+msgstr "Élément du tableau de bord"
 
 msgid "Dashboard"
 msgstr "Tableau de bord"
@@ -95618,16 +95634,46 @@ msgid "Could not enable the metric backend"
 msgstr "Ajouter une configuration d'état"
 
 #, fuzzy
-msgid "Save new passwords"
-msgstr "Nouveau mot de passe"
-
-#, fuzzy
 msgid "Could not save password \"%{title}\""
 msgstr "Impossible de sauvegarder les modifications : %s"
 
 #, fuzzy
 msgid "The password was rejected by the server."
 msgstr "Mot de passe de l'utilisateur."
+
+#, fuzzy
+msgid "OpenTelemetry Collector configuration"
+msgstr "Ajouter une configuration d'état"
+
+#, fuzzy
+msgid "Could not create the OpenTelemetry Collector configuration"
+msgstr "Ajouter une nouvelle configuration utilisateur"
+
+#, fuzzy
+msgid "Prometheus scraper configuration"
+msgstr "Ajouter une configuration d'état"
+
+#, fuzzy
+msgid "Could not create the Prometheus scraper configuration"
+msgstr "Ajouter une nouvelle configuration utilisateur"
+
+msgid ""
+"Insecure connection detected (HTTP). For better security, we recommend "
+"switching this Checkmk site to HTTPS."
+msgstr ""
+
+#, fuzzy
+msgid "Download the MSI installer"
+msgstr "Agent téléchargé"
+
+msgid ""
+"Run the PowerShell command below on the Windows machine on which the Relay "
+"will be running "
+msgstr ""
+
+#, fuzzy
+msgid "Download relay MSI installer command"
+msgstr "Déployer le plugin de conteneur docker"
 
 msgid "Run the installation script"
 msgstr ""
@@ -95669,6 +95715,17 @@ msgid "Download relay install script command"
 msgstr "Déployer le plugin de conteneur docker"
 
 #, fuzzy
+msgid "Install WSL2"
+msgstr "Date d'installation"
+
+msgid "The Relay on Windows runs inside WSL2 (Windows Subsystem for Linux 2). "
+msgstr ""
+
+msgid ""
+"A system reboot may be required after installing WSL2 before proceeding."
+msgstr ""
+
+#, fuzzy
 msgid "A relay alias is required"
 msgstr "Expression régulière à attendre dans le contenu"
 
@@ -95689,6 +95746,19 @@ msgid ""
 "This alias will be used to identify your Relay. It will automatically be "
 "inserted into the command shown in the next steps."
 msgstr ""
+
+#, fuzzy
+msgid "Run the MSI installer"
+msgstr "RAM installée"
+
+msgid ""
+"On the Windows machine on which the Relay will be running, run the command "
+"below in an "
+msgstr ""
+
+#, fuzzy
+msgid "Note that the installation requires administrator privileges."
+msgstr "Aucune demande d'enregistrement d'agent n'a été traitée"
 
 #, fuzzy
 msgid "Registration results"
@@ -95799,6 +95869,10 @@ msgstr ""
 #, fuzzy
 msgid "Manage in global settings"
 msgstr "Modifier le paramètre global"
+
+#, fuzzy
+msgid "Save actions"
+msgstr "Sections"
 
 #, fuzzy
 msgid "Agent communication failed during service discovery"
@@ -96008,6 +96082,14 @@ msgstr ""
 msgid "2FA not possible (See #13325 for details)"
 msgstr ""
 
+#, fuzzy
+msgid "Search providers"
+msgstr "Index de recherche"
+
+#, fuzzy
+msgid "Search operator suggestions"
+msgstr "Modèle de recherche"
+
 msgid "No filters can be applied to your current search query."
 msgstr ""
 
@@ -96035,6 +96117,10 @@ msgstr "%d icônes personnalisées"
 #, fuzzy
 msgid "Search in setup"
 msgstr "Recherche dans la configuration"
+
+#, fuzzy
+msgid "Search operators"
+msgstr "Modèle de recherche"
 
 msgid "Only available for 'Monitoring' and 'All'"
 msgstr ""
@@ -96089,6 +96175,10 @@ msgstr "Effacer le journal"
 #, fuzzy
 msgid "Recently searched"
 msgstr "Services récemment modifiés"
+
+#, fuzzy
+msgid "Search results"
+msgstr "Jeux de règles de recherche"
 
 #, fuzzy
 msgid "Press"
@@ -96636,6 +96726,10 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Save new passwords"
+#~ msgstr "Nouveau mot de passe"
 
 #, fuzzy
 #~ msgid "Deploy plug-in for MS IIS Application Pool States"
@@ -101595,10 +101689,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Application successfully authorized!"
 #~ msgstr "Règle de notification modifiée avec succès !"
-
-#, fuzzy
-#~ msgid "Search operators"
-#~ msgstr "Modèle de recherche"
 
 #, fuzzy
 #~ msgid "Search in"

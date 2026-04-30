@@ -12738,15 +12738,16 @@ msgid ""
 msgstr ""
 "使用するモデムを選択します。現在、対応しているのはTeltonika-TRB140のみです。"
 
+#, fuzzy
 msgid ""
 "Choose what to do with the files under <tt>%PROGRAMDATA%\\checkmk</tt>:"
 "<ul><li><i>Do not remove anything</i>: Leave all files in place after "
-"uninstallation.<br><li><i>Remove data managed by the Checkmk agent</i>: "
+"uninstallation.</li><li><i>Remove data managed by the Checkmk agent</i>: "
 "Remove only files that got created on Checkmk agent installation. This "
 "includes files that came from bakery plugins, even if they have been edited "
 "by a user. Keep runtime files that have been created after installation, "
-"like state files, registration files, and logs.<li><i>Remove all files and "
-"subdirectories</i>: Remove all files regardless of their origin.</"
+"like state files, registration files, and logs.</li><li><i>Remove all files "
+"and subdirectories</i>: Remove all files regardless of their origin.</li></"
 "ul><b>Caution</b>: Uninstallation also happens on every agent update! As a "
 "consequence, this rule will break automatic agent updates and TLS encrypted "
 "agent communication on setting <i>Remove all files and subdirectories</i>, "
@@ -48186,6 +48187,10 @@ msgstr ""
 msgid "Port"
 msgstr "ポート"
 
+#, python-format
+msgid "Port %d is already in use by site '%s' (key: %s)."
+msgstr ""
+
 msgid "Port ID"
 msgstr "ポートID"
 
@@ -51096,6 +51101,10 @@ msgstr "拡張機能を複製する"
 
 msgid "Replicate extensions (MKPs and files in <tt>~/local/</tt>)"
 msgstr "拡張子を複製します(MKPや<tt>~/local/</tt>のファイルなど"
+
+#, fuzzy, python-format
+msgid "Replicating profile to %d site(s) in parallel..."
+msgstr "親ホストの名称変更..."
 
 msgid "Replication"
 msgstr "レプリケーション"
@@ -79687,6 +79696,14 @@ msgstr "Windowsプリンター構成"
 msgid "Windows Printer Queues and States"
 msgstr "Windowsプリンターのキューと状態"
 
+#, fuzzy
+msgid "Windows Server 2022"
+msgstr "Windowsサービス"
+
+#, fuzzy
+msgid "Windows Server 2025"
+msgstr "Windowsサービス"
+
 msgid "Windows Service Summary"
 msgstr "Windowsサービスの概要"
 
@@ -82486,10 +82503,6 @@ msgid "Zypper normal and security updates (Linux)"
 msgstr "通常のZypperアップデートとセキュリティアップデート(Linux)"
 
 #, python-format
-msgid "[%d/%d] Replicating to site %s..."
-msgstr "[%d/%d] サイト %sへの複製..."
-
-#, python-format
 msgid "[%s] - OAuth2 connection"
 msgstr "（[%s] ）- OAuth2接続"
 
@@ -84973,6 +84986,10 @@ msgstr "事前選択済み"
 
 msgid "Pre-selected"
 msgstr "事前選択済み"
+
+#, fuzzy
+msgid "Dashboard menu"
+msgstr "ダッシュボード要素"
 
 msgid "Dashboard"
 msgstr "ダッシュボード"
@@ -87797,16 +87814,52 @@ msgid "Could not enable the metric backend"
 msgstr "OpenTelemetry Collector を有効にする"
 
 #, fuzzy
-msgid "Save new passwords"
-msgstr "新しいパスワード"
-
-#, fuzzy
 msgid "Could not save password \"%{title}\""
 msgstr "変更を保存できませんでした: %s"
 
 #, fuzzy
 msgid "The password was rejected by the server."
 msgstr "ユーザーのパスワード。"
+
+#, fuzzy
+msgid "OpenTelemetry Collector configuration"
+msgstr "Open Telemetryコレクターの設定"
+
+#, fuzzy
+msgid "Could not create the OpenTelemetry Collector configuration"
+msgstr "OpenTelemetryの設定を管理する"
+
+#, fuzzy
+msgid "Prometheus scraper configuration"
+msgstr "Prometheusスクレイパーの設定"
+
+#, fuzzy
+msgid "Could not create the Prometheus scraper configuration"
+msgstr "OpenTelemetryの設定を管理する"
+
+#, fuzzy
+msgid ""
+"Insecure connection detected (HTTP). For better security, we recommend "
+"switching this Checkmk site to HTTPS."
+msgstr ""
+"セキュリティ保護されていない接続が検出されました（HTTP）。セキュリティを強化"
+"するため、このCheckmkサイトをHTTPSに切り替えることをお勧めします。 "
+
+#, fuzzy
+msgid "Download the MSI installer"
+msgstr "ダウンロード済・インストール済のエージェント"
+
+#, fuzzy
+msgid ""
+"Run the PowerShell command below on the Windows machine on which the Relay "
+"will be running "
+msgstr ""
+"Relayが実行されるマシンでRelayのインストールスクリプトを利用できるようにする"
+"には、以下のコマンドを実行してください。"
+
+#, fuzzy
+msgid "Download relay MSI installer command"
+msgstr "Dockerコンテナプラグインをデプロイする"
 
 msgid "Run the installation script"
 msgstr "インストールスクリプトを実行する"
@@ -87853,6 +87906,17 @@ msgid "Download relay install script command"
 msgstr "Dockerコンテナプラグインをデプロイする"
 
 #, fuzzy
+msgid "Install WSL2"
+msgstr "インストール日"
+
+msgid "The Relay on Windows runs inside WSL2 (Windows Subsystem for Linux 2). "
+msgstr ""
+
+msgid ""
+"A system reboot may be required after installing WSL2 before proceeding."
+msgstr ""
+
+#, fuzzy
 msgid "A relay alias is required"
 msgstr "正規表現が必要"
 
@@ -87874,6 +87938,20 @@ msgid ""
 msgstr ""
 "このエイリアスは、Relayを識別するために使用されます。これは、次の手順で示すコ"
 "マンドに自動的に挿入されます。"
+
+#, fuzzy
+msgid "Run the MSI installer"
+msgstr "インストールスクリプトを実行する"
+
+#, fuzzy
+msgid ""
+"On the Windows machine on which the Relay will be running, run the command "
+"below in an "
+msgstr "Relay を実行するマシンで、次のコマンドを実行してください "
+
+#, fuzzy
+msgid "Note that the installation requires administrator privileges."
+msgstr "インストールにはroot権限が必要ですので、ご注意ください。"
 
 #, fuzzy
 msgid "Registration results"
@@ -88002,6 +88080,10 @@ msgstr "30日後にリマインドする"
 
 msgid "Manage in global settings"
 msgstr "グローバル設定で管理する"
+
+#, fuzzy
+msgid "Save actions"
+msgstr "セクション"
 
 #, fuzzy
 msgid "Agent communication failed during service discovery"
@@ -88220,6 +88302,14 @@ msgstr "WebAuthnによる認証を確認できませんでした。"
 msgid "2FA not possible (See #13325 for details)"
 msgstr "2段階認証が利用できません（詳細は#13325を参照）"
 
+#, fuzzy
+msgid "Search providers"
+msgstr "ボディで検索"
+
+#, fuzzy
+msgid "Search operator suggestions"
+msgstr "検索パターン"
+
 msgid "No filters can be applied to your current search query."
 msgstr "現在の検索クエリにはフィルターを適用できません。"
 
@@ -88246,6 +88336,10 @@ msgstr "カスタマイズされた %d アイコン"
 #, fuzzy
 msgid "Search in setup"
 msgstr "セットアップで検索"
+
+#, fuzzy
+msgid "Search operators"
+msgstr "検索パターン"
 
 msgid "Only available for 'Monitoring' and 'All'"
 msgstr "「Monitoring」および「All」でのみ利用可能です"
@@ -88301,6 +88395,10 @@ msgstr "ログをクリアする"
 #, fuzzy
 msgid "Recently searched"
 msgstr "最近変更されたサービス"
+
+#, fuzzy
+msgid "Search results"
+msgstr "ルールセットを検索する"
 
 #, fuzzy
 msgid "Press"
@@ -88957,6 +89055,14 @@ msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
 "後で「ヘルプ」＞「Checkmkの学習」＞「ウェルカムページ」からアクセスできます"
+
+#, python-format
+#~ msgid "[%d/%d] Replicating to site %s..."
+#~ msgstr "[%d/%d] サイト %sへの複製..."
+
+#, fuzzy
+#~ msgid "Save new passwords"
+#~ msgstr "新しいパスワード"
 
 #~ msgid "Deploy plug-in for MS IIS Application Pool States"
 #~ msgstr "MS IIS Application Pool States のプラグインをデプロイする"
@@ -94800,10 +94906,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Application successfully authorized!"
 #~ msgstr "通知ルールが正常に修正されました！"
-
-#, fuzzy
-#~ msgid "Search operators"
-#~ msgstr "検索パターン"
 
 #, fuzzy
 #~ msgid "Search in"

@@ -13765,12 +13765,12 @@ msgstr ""
 msgid ""
 "Choose what to do with the files under <tt>%PROGRAMDATA%\\checkmk</tt>:"
 "<ul><li><i>Do not remove anything</i>: Leave all files in place after "
-"uninstallation.<br><li><i>Remove data managed by the Checkmk agent</i>: "
+"uninstallation.</li><li><i>Remove data managed by the Checkmk agent</i>: "
 "Remove only files that got created on Checkmk agent installation. This "
 "includes files that came from bakery plugins, even if they have been edited "
 "by a user. Keep runtime files that have been created after installation, "
-"like state files, registration files, and logs.<li><i>Remove all files and "
-"subdirectories</i>: Remove all files regardless of their origin.</"
+"like state files, registration files, and logs.</li><li><i>Remove all files "
+"and subdirectories</i>: Remove all files regardless of their origin.</li></"
 "ul><b>Caution</b>: Uninstallation also happens on every agent update! As a "
 "consequence, this rule will break automatic agent updates and TLS encrypted "
 "agent communication on setting <i>Remove all files and subdirectories</i>, "
@@ -52261,6 +52261,10 @@ msgstr ""
 msgid "Port"
 msgstr "Port"
 
+#, python-format
+msgid "Port %d is already in use by site '%s' (key: %s)."
+msgstr ""
+
 #, fuzzy
 msgid "Port ID"
 msgstr "Port"
@@ -55400,6 +55404,10 @@ msgstr "Replicați extensiile"
 
 msgid "Replicate extensions (MKPs and files in <tt>~/local/</tt>)"
 msgstr "Replicați extensiile (MKP și fișierele din <tt>~/local/</tt>)"
+
+#, fuzzy, python-format
+msgid "Replicating profile to %d site(s) in parallel..."
+msgstr "Redenumirea gazdelor în părinții..."
 
 msgid "Replication"
 msgstr "Replicare"
@@ -86376,6 +86384,14 @@ msgstr "Configurarea imprimantei Windows"
 msgid "Windows Printer Queues and States"
 msgstr "Cozi și stări ale imprimantei Windows"
 
+#, fuzzy
+msgid "Windows Server 2022"
+msgstr "Servicii Windows"
+
+#, fuzzy
+msgid "Windows Server 2025"
+msgstr "Servicii Windows"
+
 msgid "Windows Service Summary"
 msgstr "Rezumatul serviciului Windows"
 
@@ -89337,10 +89353,6 @@ msgstr "Actualizări Zypper"
 msgid "Zypper normal and security updates (Linux)"
 msgstr "Zypper normal și actualizări de securitate (Linux)"
 
-#, python-format
-msgid "[%d/%d] Replicating to site %s..."
-msgstr ""
-
 #, fuzzy, python-format
 msgid "[%s] - OAuth2 connection"
 msgstr "Adăugați o conexiune"
@@ -92010,6 +92022,10 @@ msgstr "Selectată"
 #, fuzzy
 msgid "Pre-selected"
 msgstr "Selectată"
+
+#, fuzzy
+msgid "Dashboard menu"
+msgstr "Element de tablou de bord"
 
 msgid "Dashboard"
 msgstr "Tabloul de bord"
@@ -94929,16 +94945,46 @@ msgid "Could not enable the metric backend"
 msgstr "Configurația stilului selectat"
 
 #, fuzzy
-msgid "Save new passwords"
-msgstr "Parolă nouă"
-
-#, fuzzy
 msgid "Could not save password \"%{title}\""
 msgstr "Nu s-a putut salva modificările: %s"
 
 #, fuzzy
 msgid "The password was rejected by the server."
 msgstr "Parola utilizatorului"
+
+#, fuzzy
+msgid "OpenTelemetry Collector configuration"
+msgstr "Configurația stilului selectat"
+
+#, fuzzy
+msgid "Could not create the OpenTelemetry Collector configuration"
+msgstr "Adaugp o noua configurație de utilizator"
+
+#, fuzzy
+msgid "Prometheus scraper configuration"
+msgstr "Configurația stilului selectat"
+
+#, fuzzy
+msgid "Could not create the Prometheus scraper configuration"
+msgstr "Adaugp o noua configurație de utilizator"
+
+msgid ""
+"Insecure connection detected (HTTP). For better security, we recommend "
+"switching this Checkmk site to HTTPS."
+msgstr ""
+
+#, fuzzy
+msgid "Download the MSI installer"
+msgstr "Agent descărcat"
+
+msgid ""
+"Run the PowerShell command below on the Windows machine on which the Relay "
+"will be running "
+msgstr ""
+
+#, fuzzy
+msgid "Download relay MSI installer command"
+msgstr "Implementați plugin-ul containerului docker"
 
 msgid "Run the installation script"
 msgstr ""
@@ -94980,6 +95026,17 @@ msgid "Download relay install script command"
 msgstr "Implementați plugin-ul containerului docker"
 
 #, fuzzy
+msgid "Install WSL2"
+msgstr "Data instalării"
+
+msgid "The Relay on Windows runs inside WSL2 (Windows Subsystem for Linux 2). "
+msgstr ""
+
+msgid ""
+"A system reboot may be required after installing WSL2 before proceeding."
+msgstr ""
+
+#, fuzzy
 msgid "A relay alias is required"
 msgstr "Expresie regulată de așteptat"
 
@@ -95000,6 +95057,19 @@ msgid ""
 "This alias will be used to identify your Relay. It will automatically be "
 "inserted into the command shown in the next steps."
 msgstr ""
+
+#, fuzzy
+msgid "Run the MSI installer"
+msgstr "neinstalat"
+
+msgid ""
+"On the Windows machine on which the Relay will be running, run the command "
+"below in an "
+msgstr ""
+
+#, fuzzy
+msgid "Note that the installation requires administrator privileges."
+msgstr "Nu au fost procesate cereri de înregistrare a agenților"
 
 #, fuzzy
 msgid "Registration results"
@@ -95110,6 +95180,10 @@ msgstr ""
 #, fuzzy
 msgid "Manage in global settings"
 msgstr "Editarea setării globale"
+
+#, fuzzy
+msgid "Save actions"
+msgstr "Secțiuni"
 
 #, fuzzy
 msgid "Agent communication failed during service discovery"
@@ -95324,6 +95398,14 @@ msgstr ""
 msgid "2FA not possible (See #13325 for details)"
 msgstr ""
 
+#, fuzzy
+msgid "Search providers"
+msgstr "Căutare în corp"
+
+#, fuzzy
+msgid "Search operator suggestions"
+msgstr "Model de căutare"
+
 msgid "No filters can be applied to your current search query."
 msgstr ""
 
@@ -95351,6 +95433,10 @@ msgstr "%d pictograme personalizate"
 #, fuzzy
 msgid "Search in setup"
 msgstr "Căutare în configurare"
+
+#, fuzzy
+msgid "Search operators"
+msgstr "Model de căutare"
 
 msgid "Only available for 'Monitoring' and 'All'"
 msgstr ""
@@ -95405,6 +95491,10 @@ msgstr "Ștergeți jurnalul"
 #, fuzzy
 msgid "Recently searched"
 msgstr "Servicii schimbate recent"
+
+#, fuzzy
+msgid "Search results"
+msgstr "Seturi de reguli de căutare"
 
 #, fuzzy
 msgid "Press"
@@ -95952,6 +96042,10 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Save new passwords"
+#~ msgstr "Parolă nouă"
 
 #, fuzzy
 #~ msgid "Deploy plug-in for MS IIS Application Pool States"
@@ -101444,10 +101538,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Application successfully authorized!"
 #~ msgstr "Gazdă creată cu succes"
-
-#, fuzzy
-#~ msgid "Search operators"
-#~ msgstr "Model de căutare"
 
 #, fuzzy
 #~ msgid "Search in"

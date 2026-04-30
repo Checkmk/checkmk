@@ -4,9 +4,9 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
+"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2026-04-28 11:45+0000\n"
+"PO-Revision-Date: 2026-04-30 08:27+0000\n"
 "Language-Team: Portuguese (Portugal) <https://translate.checkmk.com/projects/"
 "checkmk/dev/pt_PT/>\n"
 "Language: pt_PT\n"
@@ -13767,12 +13767,12 @@ msgstr ""
 msgid ""
 "Choose what to do with the files under <tt>%PROGRAMDATA%\\checkmk</tt>:"
 "<ul><li><i>Do not remove anything</i>: Leave all files in place after "
-"uninstallation.<br><li><i>Remove data managed by the Checkmk agent</i>: "
+"uninstallation.</li><li><i>Remove data managed by the Checkmk agent</i>: "
 "Remove only files that got created on Checkmk agent installation. This "
 "includes files that came from bakery plugins, even if they have been edited "
 "by a user. Keep runtime files that have been created after installation, "
-"like state files, registration files, and logs.<li><i>Remove all files and "
-"subdirectories</i>: Remove all files regardless of their origin.</"
+"like state files, registration files, and logs.</li><li><i>Remove all files "
+"and subdirectories</i>: Remove all files regardless of their origin.</li></"
 "ul><b>Caution</b>: Uninstallation also happens on every agent update! As a "
 "consequence, this rule will break automatic agent updates and TLS encrypted "
 "agent communication on setting <i>Remove all files and subdirectories</i>, "
@@ -52172,6 +52172,10 @@ msgstr ""
 msgid "Port"
 msgstr "Porto"
 
+#, python-format
+msgid "Port %d is already in use by site '%s' (key: %s)."
+msgstr ""
+
 #, fuzzy
 msgid "Port ID"
 msgstr "Porto"
@@ -55326,6 +55330,10 @@ msgstr "Replicar extensões"
 
 msgid "Replicate extensions (MKPs and files in <tt>~/local/</tt>)"
 msgstr "Replicar extensões (MKPs e ficheiros em <tt>~/local/</tt>)"
+
+#, fuzzy, python-format
+msgid "Replicating profile to %d site(s) in parallel..."
+msgstr "Renomear anfitrião(ões) nos pais..."
 
 msgid "Replication"
 msgstr "Replicação"
@@ -86177,6 +86185,14 @@ msgstr "Configuração da Impressora Windows"
 msgid "Windows Printer Queues and States"
 msgstr "Filas de Impressão e Estados do Windows"
 
+#, fuzzy
+msgid "Windows Server 2022"
+msgstr "Serviços Windows"
+
+#, fuzzy
+msgid "Windows Server 2025"
+msgstr "Serviços Windows"
+
 msgid "Windows Service Summary"
 msgstr "Resumo dos Serviços do Windows"
 
@@ -89119,10 +89135,6 @@ msgstr "Atualizações Zypper"
 msgid "Zypper normal and security updates (Linux)"
 msgstr "Zypper normal e atualizações de segurança (Linux)"
 
-#, python-format
-msgid "[%d/%d] Replicating to site %s..."
-msgstr ""
-
 #, fuzzy, python-format
 msgid "[%s] - OAuth2 connection"
 msgstr "Adicionar conexão"
@@ -89479,6 +89491,7 @@ msgstr "contando"
 msgid "cp437"
 msgstr "cp437"
 
+#, fuzzy
 msgid "crash report"
 msgid_plural "crash reports"
 msgstr[0] ""
@@ -89984,6 +89997,7 @@ msgstr "os anfitriões estão de pé e não têm problemas de serviço"
 msgid "hosts in total"
 msgstr "anfitriões no total"
 
+#, fuzzy
 msgid "hour"
 msgid_plural "hours"
 msgstr[0] ""
@@ -91773,6 +91787,10 @@ msgstr "Selecionado"
 #, fuzzy
 msgid "Pre-selected"
 msgstr "Selecionado"
+
+#, fuzzy
+msgid "Dashboard menu"
+msgstr "Elemento de tablier"
 
 msgid "Dashboard"
 msgstr "Painel de instrumentos"
@@ -94675,16 +94693,46 @@ msgid "Could not enable the metric backend"
 msgstr "Adicionar configuração do estado"
 
 #, fuzzy
-msgid "Save new passwords"
-msgstr "Nova Senha"
-
-#, fuzzy
 msgid "Could not save password \"%{title}\""
 msgstr "Não foi possível salvar as mudanças: %s"
 
 #, fuzzy
 msgid "The password was rejected by the server."
 msgstr "Senha do usuário"
+
+#, fuzzy
+msgid "OpenTelemetry Collector configuration"
+msgstr "Adicionar configuração do estado"
+
+#, fuzzy
+msgid "Could not create the OpenTelemetry Collector configuration"
+msgstr "Adicionar nova configuração de usuário"
+
+#, fuzzy
+msgid "Prometheus scraper configuration"
+msgstr "Adicionar configuração do estado"
+
+#, fuzzy
+msgid "Could not create the Prometheus scraper configuration"
+msgstr "Adicionar nova configuração de usuário"
+
+msgid ""
+"Insecure connection detected (HTTP). For better security, we recommend "
+"switching this Checkmk site to HTTPS."
+msgstr ""
+
+#, fuzzy
+msgid "Download the MSI installer"
+msgstr "Agente Descarregado"
+
+msgid ""
+"Run the PowerShell command below on the Windows machine on which the Relay "
+"will be running "
+msgstr ""
+
+#, fuzzy
+msgid "Download relay MSI installer command"
+msgstr "Implantar o plugin do container portuário"
 
 msgid "Run the installation script"
 msgstr ""
@@ -94726,6 +94774,17 @@ msgid "Download relay install script command"
 msgstr "Implantar o plugin do container portuário"
 
 #, fuzzy
+msgid "Install WSL2"
+msgstr "Data de Instalação"
+
+msgid "The Relay on Windows runs inside WSL2 (Windows Subsystem for Linux 2). "
+msgstr ""
+
+msgid ""
+"A system reboot may be required after installing WSL2 before proceeding."
+msgstr ""
+
+#, fuzzy
 msgid "A relay alias is required"
 msgstr "Expressão regular a esperar no conteúdo"
 
@@ -94746,6 +94805,19 @@ msgid ""
 "This alias will be used to identify your Relay. It will automatically be "
 "inserted into the command shown in the next steps."
 msgstr ""
+
+#, fuzzy
+msgid "Run the MSI installer"
+msgstr "não instalado"
+
+msgid ""
+"On the Windows machine on which the Relay will be running, run the command "
+"below in an "
+msgstr ""
+
+#, fuzzy
+msgid "Note that the installation requires administrator privileges."
+msgstr "Não foram processados pedidos de registo de agentes"
 
 #, fuzzy
 msgid "Registration results"
@@ -94856,6 +94928,10 @@ msgstr ""
 #, fuzzy
 msgid "Manage in global settings"
 msgstr "Editar cenário global"
+
+#, fuzzy
+msgid "Save actions"
+msgstr "Secções"
 
 #, fuzzy
 msgid "Agent communication failed during service discovery"
@@ -95065,6 +95141,14 @@ msgstr ""
 msgid "2FA not possible (See #13325 for details)"
 msgstr ""
 
+#, fuzzy
+msgid "Search providers"
+msgstr "Índice de pesquisa"
+
+#, fuzzy
+msgid "Search operator suggestions"
+msgstr "Padrão de pesquisa"
+
 msgid "No filters can be applied to your current search query."
 msgstr ""
 
@@ -95092,6 +95176,10 @@ msgstr "%d icons customizados"
 #, fuzzy
 msgid "Search in setup"
 msgstr "Pesquisar na Configuração"
+
+#, fuzzy
+msgid "Search operators"
+msgstr "Padrão de pesquisa"
 
 msgid "Only available for 'Monitoring' and 'All'"
 msgstr ""
@@ -95146,6 +95234,10 @@ msgstr "Limpar registo"
 #, fuzzy
 msgid "Recently searched"
 msgstr "Serviços alterados recentemente"
+
+#, fuzzy
+msgid "Search results"
+msgstr "Conjuntos de regras de pesquisa"
 
 #, fuzzy
 msgid "Press"
@@ -95693,6 +95785,10 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Save new passwords"
+#~ msgstr "Nova Senha"
 
 #, fuzzy
 #~ msgid "Deploy plug-in for MS IIS Application Pool States"
@@ -100776,10 +100872,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Application successfully authorized!"
 #~ msgstr "Anfitrião criado com sucesso"
-
-#, fuzzy
-#~ msgid "Search operators"
-#~ msgstr "Padrão de pesquisa"
 
 #, fuzzy
 #~ msgid "Search in"

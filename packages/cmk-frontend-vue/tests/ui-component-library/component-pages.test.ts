@@ -49,7 +49,6 @@ import UclArrowDown from '@ucl/components/graphics/ArrowDown/UclArrowDown.vue'
 import UclCmkLinkCard from '@ucl/components/navigation/CmkLinkCard/UclCmkLinkCard.vue'
 import UclCmkAlertBox from '@ucl/components/system-feedback/CmkAlertBox/UclCmkAlertBox.vue'
 import UclCmkCopy from '@ucl/components/system-feedback/CmkCopy/UclCmkCopy.vue'
-import UclCmkCopyButton from '@ucl/components/system-feedback/CmkCopy/UclCmkCopyButton.vue'
 import UclCmkDialog from '@ucl/components/system-feedback/CmkDialog/UclCmkDialog.vue'
 import UclCmkErrorBoundary from '@ucl/components/system-feedback/CmkErrorBoundary/UclCmkErrorBoundary.vue'
 import UclCmkHelpText from '@ucl/components/system-feedback/CmkHelpText/UclCmkHelpText.vue'
@@ -361,14 +360,11 @@ test('CmkAlertBox page renders its component', () => {
   within(componentPreview()).getByRole('heading', { name: 'Alert Heading' })
 })
 
-test('CmkCopyButton page renders its component', () => {
-  render(UclCmkCopyButton, { props: { screenshotMode: false } })
-  within(componentPreview()).getAllByRole('button')
-})
-
 test('CmkCopyIcon page renders its component', () => {
   render(UclCmkCopy, { props: { screenshotMode: false } })
-  within(componentPreview()).getByText('cmk --check myhost')
+  const previews = screen.getAllByRole('region', { name: 'component preview' })
+  within(previews[0]!).getByRole('img', { name: 'Copy' })
+  within(previews[1]!).getByRole('button', { name: 'Copy' })
 })
 
 test('CmkDialog page renders its component', () => {

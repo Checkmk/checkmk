@@ -6,6 +6,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script lang="ts">
 import { type PanelConfig } from '@ucl/_ucl/components/detail-page'
 
+import codeExampleButton from './UclCmkCopyButtonCodeExample.vue?raw'
 import codeExample from './UclCmkCopyCodeExample.vue?raw'
 
 export const a11yData = [
@@ -47,6 +48,7 @@ import {
 } from '@ucl/_ucl/components/detail-page'
 import { ref } from 'vue'
 
+import CmkButton from '@/components/CmkButton.vue'
 import CmkCopy from '@/components/CmkCopy.vue'
 import CmkIconButton from '@/components/CmkIconButton.vue'
 
@@ -59,13 +61,11 @@ const propState = ref(createPanelState(panelConfig))
 
 <template>
   <UclDetailPageLayout>
-    <UclDetailPageHeader>CmkCopyIcon</UclDetailPageHeader>
+    <UclDetailPageHeader>CmkCopyIcon (Icon)</UclDetailPageHeader>
 
     <UclDetailPageComponent>
-      <code>{{ propState.text }}</code>
-
       <CmkCopy :text="propState.text">
-        <CmkIconButton name="copied" size="medium" />
+        <CmkIconButton name="copied" size="medium" title="Copy" />
       </CmkCopy>
 
       <template #properties>
@@ -74,6 +74,20 @@ const propState = ref(createPanelState(panelConfig))
     </UclDetailPageComponent>
 
     <UclDetailPageCodeExample :code="codeExample" />
+
+    <UclDetailPageHeader>CmkCopyIcon (Button)</UclDetailPageHeader>
+
+    <UclDetailPageComponent>
+      <CmkCopy :text="propState.text">
+        <CmkButton variant="secondary">Copy</CmkButton>
+      </CmkCopy>
+
+      <template #properties>
+        <UclPropertiesPanel v-model="propState" :config="panelConfig" />
+      </template>
+    </UclDetailPageComponent>
+
+    <UclDetailPageCodeExample :code="codeExampleButton" />
 
     <UclDetailPageAccessibility :data="a11yData" />
 

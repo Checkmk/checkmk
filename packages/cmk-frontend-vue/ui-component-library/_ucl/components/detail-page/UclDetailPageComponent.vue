@@ -9,9 +9,9 @@ import UclLegacyCssSwitch from './UclLegacyCssSwitch.vue'
 
 <template>
   <div class="ucl-detail-page-component__component-container">
-    <div class="ucl-detail-page-component__preview-panel">
+    <section class="ucl-detail-page-component__preview-panel" aria-label="component preview">
       <slot></slot>
-    </div>
+    </section>
     <div class="ucl-detail-page-component__properties-panel">
       <slot name="properties"></slot>
       <UclLegacyCssSwitch></UclLegacyCssSwitch>

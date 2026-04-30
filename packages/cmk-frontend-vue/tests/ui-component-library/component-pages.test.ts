@@ -3,7 +3,7 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { render, screen } from '@testing-library/vue'
+import { render, screen, within } from '@testing-library/vue'
 import UclCmkBadge from '@ucl/components/basic-elements/CmkBadge/UclCmkBadge.vue'
 import UclCmkButton from '@ucl/components/basic-elements/CmkButton/UclCmkButton.vue'
 import UclCmkChip from '@ucl/components/basic-elements/CmkChip/UclCmkChip.vue'
@@ -86,6 +86,10 @@ vi.mock('@/lib/rest-api-client/client', async (importOriginal) => {
   }
 })
 
+function componentPreview() {
+  return screen.getByRole('region', { name: 'component preview' })
+}
+
 function expectNoRegistryError() {
   expect(screen.queryByText(/Component registry not initialized/)).toBeNull()
 }
@@ -94,7 +98,7 @@ function expectNoRegistryError() {
 
 test('CmkCheckbox page renders its component', () => {
   render(UclCmkCheckbox, { props: { screenshotMode: false } })
-  screen.getByRole('checkbox', { name: 'Enable notifications' })
+  within(componentPreview()).getByRole('checkbox', { name: 'Enable notifications' })
 })
 
 test('CmkConfigurationEntityDropdown page renders its component', async () => {
@@ -112,7 +116,7 @@ test('CmkConfigurationEntityDropdown page renders its component', async () => {
   server.listen({ onUnhandledRequest: 'bypass' })
   try {
     render(UclCmkConfigurationEntityDropdown, { props: { screenshotMode: false } })
-    await screen.findByRole('combobox')
+    await within(componentPreview()).findByRole('combobox')
   } finally {
     server.close()
   }
@@ -120,51 +124,52 @@ test('CmkConfigurationEntityDropdown page renders its component', async () => {
 
 test('CmkDateTimePicker page renders its component', async () => {
   render(UclCmkDateTimePicker, { props: { screenshotMode: false } })
-  expect(await screen.findAllByRole('button')).toHaveLength(2 + 5) // two for selecting, rest for rest of ui
-  expect(await screen.findAllByRole('spinbutton')).toHaveLength(3) // date input
+  const preview = within(componentPreview())
+  expect(await preview.findAllByRole('button')).toHaveLength(2) // calendar and time picker triggers
+  expect(await preview.findAllByRole('spinbutton')).toHaveLength(3) // date input
 })
 
 test('CmkInput page renders its component', () => {
   render(UclCmkInput, { props: { screenshotMode: false } })
-  const inputs = screen.getAllByRole<HTMLInputElement>('textbox')
+  const inputs = within(componentPreview()).getAllByRole<HTMLInputElement>('textbox')
   expect(inputs.some((i) => i.value === 'Checkmk Admin')).toBe(true)
 })
 
 test('CmkDropdown page renders its component', () => {
   render(UclCmkDropdown, { props: { screenshotMode: false } })
-  screen.getAllByRole('combobox')
+  within(componentPreview()).getAllByRole('combobox')
 })
 
 test('CmkDualList page renders its component', () => {
   render(UclCmkDualList, { props: { screenshotMode: false } })
-  screen.getAllByRole('listbox')
+  within(componentPreview()).getAllByRole('listbox')
 })
 
 test('CmkList page renders its component', () => {
   render(UclCmkList, { props: { screenshotMode: false } })
-  screen.getAllByRole('button')
+  within(componentPreview()).getAllByRole('button')
 })
 
 test('CmkToggleButtonGroup page renders its component', () => {
   render(UclCmkToggleButtonGroup, { props: { screenshotMode: false } })
-  screen.getAllByRole('button')
+  within(componentPreview()).getAllByRole('button')
 })
 
 // ─── Basic elements ───────────────────────────────────────────────────────────
 
 test('CmkBadge page renders its component', () => {
   render(UclCmkBadge, { props: { screenshotMode: false } })
-  screen.getByText('99')
+  within(componentPreview()).getByText('99')
 })
 
 test('CmkButton page renders its component', () => {
   render(UclCmkButton, { props: { screenshotMode: false } })
-  screen.getAllByRole('button')
+  within(componentPreview()).getAllByRole('button')
 })
 
 test('CmkChip page renders its component', () => {
   render(UclCmkChip, { props: { screenshotMode: false } })
-  screen.getAllByRole('button')
+  within(componentPreview()).getAllByRole('button')
 })
 
 test('CmkCode page renders', () => {
@@ -175,74 +180,74 @@ test('CmkCode page renders', () => {
 
 test('CmkColorPicker page renders its component', () => {
   render(UclCmkColorPicker, { props: { screenshotMode: false } })
-  screen.getAllByRole('button')
+  expect(componentPreview().querySelector('input[type="color"]')).toBeTruthy()
 })
 
 test('CmkIconButton page renders its component', () => {
   render(UclCmkIconButton, { props: { screenshotMode: false } })
-  screen.getAllByRole('button')
+  within(componentPreview()).getAllByRole('button')
 })
 
 test('CmkInlineButton page renders its component', () => {
   render(UclCmkInlineButton, { props: { screenshotMode: false } })
-  screen.getAllByRole('button')
+  within(componentPreview()).getAllByRole('button')
 })
 
 test('CmkSwitch page renders its component', () => {
   render(UclCmkSwitch, { props: { screenshotMode: false } })
-  screen.getAllByRole('checkbox')
+  within(componentPreview()).getAllByRole('checkbox')
 })
 
 test('CmkTag page renders its component', () => {
   render(UclCmkTag, { props: { screenshotMode: false } })
-  screen.getByText('Status Tag')
+  within(componentPreview()).getByText('Status Tag')
 })
 
 // ─── Content organization ─────────────────────────────────────────────────────
 
 test('CmkAccordion page renders its component', () => {
   render(UclCmkAccordion, { props: { screenshotMode: false } })
-  screen.getAllByRole('button')
+  within(componentPreview()).getAllByRole('button')
 })
 
 test('CmkAccordionStepPanel page renders its component', () => {
   render(UclCmkAccordionStepPanel, { props: { screenshotMode: false } })
-  screen.getAllByRole('button')
+  within(componentPreview()).getAllByRole('button')
 })
 
 test('CmkTabs page renders its component', () => {
   render(UclCmkTabs, { props: { screenshotMode: false } })
-  screen.getByRole('tablist')
+  within(componentPreview()).getByRole('tablist')
 })
 
 test('CmkWizard page renders its component', () => {
   render(UclCmkWizard, { props: { screenshotMode: false } })
-  screen.getByRole('heading', { name: 'Step 1: Introduction' })
+  within(componentPreview()).getByRole('heading', { name: 'Step 1: Introduction' })
 })
 
 test('CmkCatalogPanel page renders its component', () => {
   render(UclCmkCatalogPanel, { props: { screenshotMode: false } })
-  screen.getAllByRole('button')
+  within(componentPreview()).getAllByRole('button')
 })
 
 test('CmkCollapsible page renders its component', () => {
   render(UclCmkCollapsible, { props: { screenshotMode: false } })
-  screen.getAllByRole('button')
+  within(componentPreview()).getAllByRole('button')
 })
 
 test('CmkScrollContainer page renders its component', () => {
   render(UclCmkScrollContainer, { props: { screenshotMode: false } })
-  screen.getByText(/Lorem ipsum/)
+  within(componentPreview()).getByText(/Lorem ipsum/)
 })
 
 test('CmkSlideIn page renders its component', () => {
   render(UclCmkSlideIn, { props: { screenshotMode: false } })
-  screen.getByRole('heading', { name: 'CmkSlideIn' })
+  within(componentPreview()).getByRole('button', { name: 'Open Slide-In' })
 })
 
 test('CmkSlideInDialog page renders its component', () => {
   render(UclCmkSlideInDialog, { props: { screenshotMode: false } })
-  screen.getByRole('heading', { name: 'CmkSlideInDialog' })
+  within(componentPreview()).getByRole('button', { name: 'Open Dialog' })
 })
 
 test('TwoFactorAuthentication page renders', () => {
@@ -255,7 +260,7 @@ test('TwoFactorAuthentication page renders', () => {
 
 test('CmkIcon page renders its component', () => {
   render(UclCmkIcon, { props: { screenshotMode: false } })
-  screen.getByTitle('Help Icon')
+  within(componentPreview()).getByTitle('Help Icon')
 })
 
 test('CmkIconEmblem page renders', () => {
@@ -272,22 +277,22 @@ test('CmkMultitoneIcon page renders', () => {
 
 test('CmkHeading page renders its component', () => {
   render(UclCmkHeading, { props: { screenshotMode: false } })
-  screen.getAllByRole('heading')
+  within(componentPreview()).getAllByRole('heading')
 })
 
 test('CmkParagraph page renders its component', () => {
   render(UclCmkParagraph, { props: { screenshotMode: false } })
-  screen.getByText('The quick brown fox jumps over the lazy dog.')
+  within(componentPreview()).getByText('The quick brown fox jumps over the lazy dog.')
 })
 
 test('CmkHtml page renders its component', () => {
   render(UclCmkHtml, { props: { screenshotMode: false } })
-  screen.getByRole('heading', { name: 'Heading' })
+  within(componentPreview()).getByRole('heading', { name: 'Heading' })
 })
 
 test('CmkIndent page renders its component', () => {
   render(UclCmkIndent, { props: { screenshotMode: false } })
-  screen.getByText('Top Level Content')
+  within(componentPreview()).getByText('Top Level Content')
 })
 
 test('CmkKeyboardKey page renders', () => {
@@ -298,61 +303,61 @@ test('CmkKeyboardKey page renders', () => {
 
 test('CmkLabelRequired page renders its component', () => {
   render(UclCmkLabelRequired, { props: { screenshotMode: false } })
-  screen.getByText('Example Field Name')
+  within(componentPreview()).getByText('Example Field Name')
 })
 
 test('CmkSpace page renders its component', () => {
   render(UclCmkSpace, { props: { screenshotMode: false } })
-  screen.getByRole('button', { name: 'First Element' })
+  within(componentPreview()).getByRole('button', { name: 'First Element' })
 })
 
 test('CmkZebra page renders its component', () => {
   render(UclCmkZebra, { props: { screenshotMode: false } })
-  screen.getAllByText(/Demonstration row content/)
+  within(componentPreview()).getAllByText(/Demonstration row content/)
 })
 
 // ─── Navigation ───────────────────────────────────────────────────────────────
 
 test('CmkLinkCard page renders its component', () => {
   render(UclCmkLinkCard, { props: { screenshotMode: false } })
-  screen.getAllByRole('link')
+  within(componentPreview()).getAllByRole('link')
 })
 
 // ─── System feedback ──────────────────────────────────────────────────────────
 
 test('CmkAlertBox page renders its component', () => {
   render(UclCmkAlertBox, { props: { screenshotMode: false } })
-  screen.getByRole('heading', { name: 'Alert Heading' })
+  within(componentPreview()).getByRole('heading', { name: 'Alert Heading' })
 })
 
 test('CmkCopyButton page renders its component', () => {
   render(UclCmkCopyButton, { props: { screenshotMode: false } })
-  screen.getAllByRole('button')
+  within(componentPreview()).getAllByRole('button')
 })
 
 test('CmkCopyIcon page renders its component', () => {
   render(UclCmkCopy, { props: { screenshotMode: false } })
-  screen.getByText('cmk --check myhost')
+  within(componentPreview()).getByText('cmk --check myhost')
 })
 
 test('CmkDialog page renders its component', () => {
   render(UclCmkDialog, { props: { screenshotMode: false } })
-  screen.getByText('Dialog Title')
+  within(componentPreview()).getByText('Dialog Title')
 })
 
 test('CmkErrorBoundary page renders its component', () => {
   render(UclCmkErrorBoundary, { props: { screenshotMode: false } })
-  screen.getByRole('button', { name: 'Throw error' })
+  within(componentPreview()).getByRole('button', { name: 'Throw error' })
 })
 
 test('CmkHelpText page renders its component', () => {
   render(UclCmkHelp, { props: { screenshotMode: false } })
-  screen.getAllByRole('button')
+  within(componentPreview()).getAllByRole('button')
 })
 
 test('CmkInlineValidation page renders its component', () => {
   render(UclCmkInlineValidation, { props: { screenshotMode: false } })
-  screen.getByText('This is an inline validation error message.')
+  within(componentPreview()).getByText('This is an inline validation error message.')
 })
 
 test('CmkLoading page renders', () => {
@@ -363,17 +368,17 @@ test('CmkLoading page renders', () => {
 
 test('CmkPerfometer page renders its component', () => {
   render(UclCmkPerfometer, { props: { screenshotMode: false } })
-  screen.getByText('75 %')
+  within(componentPreview()).getByText('75 %')
 })
 
 test('CmkPopupDialog page renders', () => {
   render(UclCmkPopupDialog, { props: { screenshotMode: false } })
-  screen.getAllByRole('button')
+  within(componentPreview()).getAllByRole('button')
 })
 
 test('CmkProgressbar page renders its component', () => {
   render(UclCmkProgressbar, { props: { screenshotMode: false } })
-  screen.getAllByRole('progressbar')
+  within(componentPreview()).getAllByRole('progressbar')
 })
 
 test('CmkSkeleton page renders', () => {
@@ -384,5 +389,5 @@ test('CmkSkeleton page renders', () => {
 
 test('CmkTooltip page renders its component', () => {
   render(UclCmkTooltip, { props: { screenshotMode: false } })
-  screen.getByRole('button', { name: /Interact with me/ })
+  within(componentPreview()).getByRole('button', { name: /Interact with me/ })
 })

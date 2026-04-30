@@ -116,8 +116,17 @@ class _EventParser:
                 yield Event(Watchee(-1, Path()), Masks(raw_event_type), Cookie(0), "")
                 continue
 
+            if raw_event_type & Masks.IGNORED:
+                # Watch was removed (explicitly via inotify_rm_watch, or automatically
+                # when the watched object was deleted). The wd may already be gone from
+                # _wd_map by the time this trailing event is parsed, so skip it.
+                continue
+
+            if (watched_path := self._wd_map.get(raw_watch_descriptor)) is None:
+                continue
+
             yield Event(
-                Watchee(int(raw_watch_descriptor), self._wd_map[raw_watch_descriptor]),
+                Watchee(int(raw_watch_descriptor), watched_path),
                 Masks(raw_event_type),
                 Cookie(raw_cookie),
                 fsdecode(raw_name),

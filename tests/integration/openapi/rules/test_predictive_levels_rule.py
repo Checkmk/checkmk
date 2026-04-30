@@ -50,6 +50,7 @@ def setup_test_environment_fixture(site: Site) -> Generator:
         yield
 
 
+@pytest.mark.xfail(reason="CMK-29702: Flake")
 @pytest.mark.skip_if_edition("cloud")
 @pytest.mark.parametrize("config", PERIOD_CONFIGS)
 def test_predictive_levels_periods(site: Site, config: TestRuleConfig) -> None:

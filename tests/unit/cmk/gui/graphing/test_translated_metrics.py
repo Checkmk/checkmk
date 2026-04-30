@@ -34,7 +34,7 @@ from cmk.utils.metrics import MetricName
             None,
             (
                 [
-                    PerfDataTuple("lo", "lo", 1, "", None, None, None, None),
+                    PerfDataTuple(metric_name="lo", lookup_metric_name="lo", value=1, unit_name=""),
                 ],
                 "",
             ),
@@ -44,7 +44,9 @@ from cmk.utils.metrics import MetricName
             None,
             (
                 [
-                    PerfDataTuple("há_li", "há_li", 2, "", None, None, None, None),
+                    PerfDataTuple(
+                        metric_name="há_li", lookup_metric_name="há_li", value=2, unit_name=""
+                    ),
                 ],
                 "",
             ),
@@ -54,7 +56,7 @@ from cmk.utils.metrics import MetricName
             None,
             (
                 [
-                    PerfDataTuple("ßß", "ßß", 3, "", None, None, None, None),
+                    PerfDataTuple(metric_name="ßß", lookup_metric_name="ßß", value=3, unit_name=""),
                 ],
                 "",
             ),
@@ -64,7 +66,7 @@ from cmk.utils.metrics import MetricName
             "ter",
             (
                 [
-                    PerfDataTuple("hi", "hi", 6, "", None, None, None, None),
+                    PerfDataTuple(metric_name="hi", lookup_metric_name="hi", value=6, unit_name=""),
                 ],
                 "ihe",
             ),
@@ -75,7 +77,7 @@ from cmk.utils.metrics import MetricName
             "ter",
             (
                 [
-                    PerfDataTuple("hi", "hi", 6, "", None, None, None, None),
+                    PerfDataTuple(metric_name="hi", lookup_metric_name="hi", value=6, unit_name=""),
                 ],
                 "ihe",
             ),
@@ -85,8 +87,8 @@ from cmk.utils.metrics import MetricName
             "test",
             (
                 [
-                    PerfDataTuple("hi", "hi", 5, "", None, None, None, None),
-                    PerfDataTuple("no", "no", 6, "", None, None, None, None),
+                    PerfDataTuple(metric_name="hi", lookup_metric_name="hi", value=5, unit_name=""),
+                    PerfDataTuple(metric_name="no", lookup_metric_name="no", value=6, unit_name=""),
                 ],
                 "test",
             ),
@@ -96,8 +98,23 @@ from cmk.utils.metrics import MetricName
             "test",
             (
                 [
-                    PerfDataTuple("hi", "hi", 5, "", 6, 7, 8, 9),
-                    PerfDataTuple("not_here", "not_here", 6, "", 5.6, None, None, None),
+                    PerfDataTuple(
+                        metric_name="hi",
+                        lookup_metric_name="hi",
+                        value=5,
+                        unit_name="",
+                        warn=6,
+                        crit=7,
+                        min_=8,
+                        max_=9,
+                    ),
+                    PerfDataTuple(
+                        metric_name="not_here",
+                        lookup_metric_name="not_here",
+                        value=6,
+                        unit_name="",
+                        warn=5.6,
+                    ),
                 ],
                 "test",
             ),
@@ -107,8 +124,16 @@ from cmk.utils.metrics import MetricName
             "test",
             (
                 [
-                    PerfDataTuple("hi", "hi", 5, "G", None, None, None, None),
-                    PerfDataTuple("not_here", "not_here", 6, "M", 5.6, None, None, None),
+                    PerfDataTuple(
+                        metric_name="hi", lookup_metric_name="hi", value=5, unit_name="G"
+                    ),
+                    PerfDataTuple(
+                        metric_name="not_here",
+                        lookup_metric_name="not_here",
+                        value=6,
+                        unit_name="M",
+                        warn=5.6,
+                    ),
                 ],
                 "test",
             ),
@@ -118,7 +143,9 @@ from cmk.utils.metrics import MetricName
             "check_mk-local",
             (
                 [
-                    PerfDataTuple("11.26", "11.26", 6, "", None, None, None, None),
+                    PerfDataTuple(
+                        metric_name="11.26", lookup_metric_name="11.26", value=6, unit_name=""
+                    ),
                 ],
                 "check_mk-local",
             ),
@@ -296,8 +323,15 @@ def test_translate_metrics_with_predictive_metrics(
     expected_color: str,
 ) -> None:
     perfdata: Perfdata = [
-        PerfDataTuple(metric_name, metric_name, 0, "", None, None, None, None),
-        PerfDataTuple(predictive_metric_name, metric_name, 0, "", None, None, None, None),
+        PerfDataTuple(
+            metric_name=metric_name, lookup_metric_name=metric_name, value=0, unit_name=""
+        ),
+        PerfDataTuple(
+            metric_name=predictive_metric_name,
+            lookup_metric_name=metric_name,
+            value=0,
+            unit_name="",
+        ),
     ]
     translated_metrics = translate_metrics(
         perfdata,
@@ -325,12 +359,23 @@ def test_translate_metrics_with_predictive_metrics(
 
 def test_translate_metrics_with_multiple_predictive_metrics() -> None:
     perfdata: Perfdata = [
-        PerfDataTuple("messages_outbound", "messages_outbound", 0, "", None, None, None, None),
         PerfDataTuple(
-            "predict_messages_outbound", "messages_outbound", 0, "", None, None, None, None
+            metric_name="messages_outbound",
+            lookup_metric_name="messages_outbound",
+            value=0,
+            unit_name="",
         ),
         PerfDataTuple(
-            "predict_lower_messages_outbound", "messages_outbound", 0, "", None, None, None, None
+            metric_name="predict_messages_outbound",
+            lookup_metric_name="messages_outbound",
+            value=0,
+            unit_name="",
+        ),
+        PerfDataTuple(
+            metric_name="predict_lower_messages_outbound",
+            lookup_metric_name="messages_outbound",
+            value=0,
+            unit_name="",
         ),
     ]
     translated_metrics = translate_metrics(
@@ -366,7 +411,16 @@ def test_translate_metrics(
     expected_scalars: Mapping[str, float],
 ) -> None:
     translated_metric = translate_metrics(
-        [PerfDataTuple("temp", "temp", 59.05, "", 85.05, 85.05, None, None)],
+        [
+            PerfDataTuple(
+                metric_name="temp",
+                lookup_metric_name="temp",
+                value=59.05,
+                unit_name="",
+                warn=85.05,
+                crit=85.05,
+            )
+        ],
         "check_mk-lnx_thermal",
         {
             "temp": RegisteredMetric(

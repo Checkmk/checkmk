@@ -128,14 +128,14 @@ def parse_perf_data(
 
             perf_data.append(
                 PerfDataTuple(
-                    varname,
-                    _compute_lookup_metric_name(varname),
-                    value,
-                    unit_name,
-                    _float_or_int(value_parts[0]),
-                    _float_or_int(value_parts[1]),
-                    _float_or_int(value_parts[2]),
-                    _float_or_int(value_parts[3]),
+                    metric_name=varname,
+                    lookup_metric_name=_compute_lookup_metric_name(varname),
+                    value=value,
+                    unit_name=unit_name,
+                    warn=_float_or_int(value_parts[0]),
+                    crit=_float_or_int(value_parts[1]),
+                    min_=_float_or_int(value_parts[2]),
+                    max_=_float_or_int(value_parts[3]),
                 )
             )
         except Exception as exc:
@@ -227,10 +227,10 @@ def _translated_scalar(
         scalars["warn"] = conversion(float(perf_data_tuple.warn) * scale)
     if perf_data_tuple.crit is not None:
         scalars["crit"] = conversion(float(perf_data_tuple.crit) * scale)
-    if perf_data_tuple.min is not None:
-        scalars["min"] = conversion(float(perf_data_tuple.min) * scale)
-    if perf_data_tuple.max is not None:
-        scalars["max"] = conversion(float(perf_data_tuple.max) * scale)
+    if perf_data_tuple.min_ is not None:
+        scalars["min"] = conversion(float(perf_data_tuple.min_) * scale)
+    if perf_data_tuple.max_ is not None:
+        scalars["max"] = conversion(float(perf_data_tuple.max_) * scale)
     return scalars
 
 

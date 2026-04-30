@@ -1043,7 +1043,10 @@ def test__evaluate_graph_plugins_1(
     registered_graphs: Mapping[str, graphs_api.Graph | graphs_api.Bidirectional],
     graph_ids: Sequence[str],
 ) -> None:
-    perfdata: Perfdata = [PerfDataTuple(n, n, 0, "", None, None, None, None) for n in metric_names]
+    perfdata: Perfdata = [
+        PerfDataTuple(metric_name=n, lookup_metric_name=n, value=0, unit_name="")
+        for n in metric_names
+    ]
     translated_metrics = translate_metrics(
         perfdata,
         check_command,
@@ -1087,7 +1090,19 @@ def test__evaluate_graph_plugins_2(
     registered_graphs: Mapping[str, graphs_api.Graph | graphs_api.Bidirectional],
     graph_ids: Sequence[str],
 ) -> None:
-    perfdata: Perfdata = [PerfDataTuple(n, n, 0, "", *warn_crit_min_max) for n in metric_names]
+    perfdata: Perfdata = [
+        PerfDataTuple(
+            metric_name=n,
+            lookup_metric_name=n,
+            value=0,
+            unit_name="",
+            warn=warn_crit_min_max[0],
+            crit=warn_crit_min_max[1],
+            min_=warn_crit_min_max[2],
+            max_=warn_crit_min_max[3],
+        )
+        for n in metric_names
+    ]
     translated_metrics = translate_metrics(
         perfdata,
         check_command,
@@ -1491,9 +1506,32 @@ def test__evaluate_graph_plugins_with_predictive_metrics(
     graph_templates: Sequence[GraphRecipe],
 ) -> None:
     perfdata: Perfdata = (
-        [PerfDataTuple(n, n, 0, "", None, None, None, None) for n in metric_names]
-        + [PerfDataTuple(n, n[8:], 0, "", 1, 2, None, None) for n in predict_metric_names]
-        + [PerfDataTuple(n, n[14:], 0, "", 3, 4, None, None) for n in predict_lower_metric_names]
+        [
+            PerfDataTuple(metric_name=n, lookup_metric_name=n, value=0, unit_name="")
+            for n in metric_names
+        ]
+        + [
+            PerfDataTuple(
+                metric_name=n,
+                lookup_metric_name=n[8:],
+                value=0,
+                unit_name="",
+                warn=1,
+                crit=2,
+            )
+            for n in predict_metric_names
+        ]
+        + [
+            PerfDataTuple(
+                metric_name=n,
+                lookup_metric_name=n[14:],
+                value=0,
+                unit_name="",
+                warn=3,
+                crit=4,
+            )
+            for n in predict_lower_metric_names
+        ]
     )
     translated_metrics = translate_metrics(
         perfdata,
@@ -2031,7 +2069,10 @@ def test_conflicting_metrics(
     # We test conflicting metrics as following:
     # 1. write test for expected metric names of a graph template if it has "conflicting_metrics"
     # 2. use metric names from (1) and conflicting metrics
-    perfdata: Perfdata = [PerfDataTuple(n, n, 0, "", None, None, None, None) for n in metric_names]
+    perfdata: Perfdata = [
+        PerfDataTuple(metric_name=n, lookup_metric_name=n, value=0, unit_name="")
+        for n in metric_names
+    ]
     translated_metrics = translate_metrics(
         perfdata,
         "check_command",

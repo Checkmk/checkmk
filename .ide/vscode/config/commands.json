@@ -32,7 +32,7 @@
   },
   "cmk.installNodeModules": {
     "name": "Install node_modules",
-    "command": "bazel run @pnpm//:pnpm -- install",
+    "command": "bazel build @pnpm//:pnpm && BAZEL_BINDIR=. \"$(bazel info bazel-bin)/external/aspect_rules_js++pnpm+pnpm/pnpm_/pnpm\" install",
     "requires": "frontend"
   }
 }

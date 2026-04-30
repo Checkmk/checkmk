@@ -116,20 +116,20 @@ Available via the command palette (F1) or by clicking the status bar. Build comm
 
 <img src="docs/build-menu.png" alt="Build Commands QuickPick">
 
-| Command                                       | Description                                                                                                                                |
-| --------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
-| `Build venv`                                  | `bazel run //:create_venv` — creates/updates the Python venv with all dependencies including generated packages.                           |
-| `Build shared-typing`                         | Builds TS and PY types from `cmk-shared-typing` and symlinks the output into `cmk-frontend-vue/node_modules/`.                             |
-| `Build cmk-frontend`                          | Builds `cmk-frontend` (webpack) and symlinks `dist/` into the package directory.                                                           |
-| `Build cmk-frontend-vue`                      | Builds `cmk-frontend-vue` via Bazel.                                                                                                       |
-| `Build Vitest dependencies & Refresh Vitests` | Builds shared-typing (TS) + cmk-frontend, creates symlinks, then refreshes the VSCode test explorer.                                       |
-| `Run UI Component Library`                    | Starts the UI Component Library dev server via `ibazel`.                                                                                   |
-| `Install node_modules`                        | Runs `pnpm install` at the workspace root so ESLint, Prettier and Vitest can resolve their libraries from `node_modules/`.                 |
-| `Build All Stale`                             | Builds all targets that are currently stale, in sequence.                                                                                  |
-| `Build Menu`                                  | Opens the QuickPick with all build commands (same as clicking the status bar).                                                             |
-| `Refresh Build Status`                        | Manually re-checks all build targets.                                                                                                      |
-| `Regenerate mypy config`                      | Regenerates `.vscode/.mypy.ini` from `pyproject.toml`, stripping options unsupported by the installed mypy version.                        |
-| `Regenerate prettier config`                  | Regenerates `.vscode/.prettier.config.cjs` from `bazel/tools/prettier.config.cjs`, replacing `require()` with string-based plugin loading. |
+| Command                                       | Description                                                                                                                                                                                                |
+| --------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Build venv`                                  | `bazel run //:create_venv` — creates/updates the Python venv with all dependencies including generated packages.                                                                                           |
+| `Build shared-typing`                         | Builds TS and PY types from `cmk-shared-typing` and symlinks the output into `cmk-frontend-vue/node_modules/`.                                                                                             |
+| `Build cmk-frontend`                          | Builds `cmk-frontend` (webpack) and symlinks `dist/` into the package directory.                                                                                                                           |
+| `Build cmk-frontend-vue`                      | Builds `cmk-frontend-vue` via Bazel.                                                                                                                                                                       |
+| `Build Vitest dependencies & Refresh Vitests` | Builds shared-typing (TS) + cmk-frontend, creates symlinks, then refreshes the VSCode test explorer.                                                                                                       |
+| `Run UI Component Library`                    | Starts the UI Component Library dev server via `ibazel`.                                                                                                                                                   |
+| `Install node_modules`                        | Builds the Bazel-pinned pnpm (`@pnpm//:pnpm`) and invokes it directly from the workspace cwd so `node_modules/` lands at the workspace root where ESLint, Prettier and Vitest can resolve their libraries. |
+| `Build All Stale`                             | Builds all targets that are currently stale, in sequence.                                                                                                                                                  |
+| `Build Menu`                                  | Opens the QuickPick with all build commands (same as clicking the status bar).                                                                                                                             |
+| `Refresh Build Status`                        | Manually re-checks all build targets.                                                                                                                                                                      |
+| `Regenerate mypy config`                      | Regenerates `.vscode/.mypy.ini` from `pyproject.toml`, stripping options unsupported by the installed mypy version.                                                                                        |
+| `Regenerate prettier config`                  | Regenerates `.vscode/.prettier.config.cjs` from `bazel/tools/prettier.config.cjs`, replacing `require()` with string-based plugin loading.                                                                 |
 
 ### 5. Dashboard
 

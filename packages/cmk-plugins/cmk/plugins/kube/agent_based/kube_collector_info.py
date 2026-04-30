@@ -5,13 +5,17 @@
 
 
 from collections.abc import Sequence
-from typing import Literal, TypedDict
+from typing import Literal, NamedTuple, TypedDict
 
 from cmk.agent_based.v2 import (
     AgentSection,
+    check_levels,
     CheckPlugin,
     CheckResult,
     DiscoveryResult,
+    LevelsT,
+    Metric,
+    render,
     Result,
     Service,
     State,
@@ -19,6 +23,7 @@ from cmk.agent_based.v2 import (
 )
 from cmk.plugins.kube.kube import COLLECTOR_SERVICE_NAME
 from cmk.plugins.kube.schemata.section import (
+    CacheSizeInfo,
     CollectorComponentsMetadata,
     CollectorDaemons,
     CollectorHandlerLog,
@@ -27,13 +32,19 @@ from cmk.plugins.kube.schemata.section import (
     NodeComponent,
 )
 
+CacheSizeMode = Literal["percentage", "absolute"]
+
 
 class Params(TypedDict):
     machine_metrics: int
+    container_metrics_cache_size: tuple[CacheSizeMode, LevelsT[float] | LevelsT[int]]
+    machine_sections_cache_size: tuple[CacheSizeMode, LevelsT[float] | LevelsT[int]]
 
 
 DEFAULT_PARAMS = Params(
     machine_metrics=2,  # CRIT
+    container_metrics_cache_size=("percentage", ("fixed", (80.0, 95.0))),
+    machine_sections_cache_size=("percentage", ("fixed", (80.0, 95.0))),
 )
 
 
@@ -84,12 +95,12 @@ def discover(
 
 def _component_check(
     state_if_missing: State,
-    component: Literal["container_metrics", "machine_metrics"],
+    component: Literal["container_metrics", "machine_sections"],
     component_log: CollectorHandlerLog | None,
 ) -> CheckResult:
     component_name = {
         "container_metrics": "Container Metrics",
-        "machine_metrics": "Machine Metrics",
+        "machine_sections": "Machine Metrics",
     }[component]
     if component_log is None:
         return
@@ -166,6 +177,78 @@ def _check_collector_daemons(collector_daemons: CollectorDaemons) -> CheckResult
         )
 
 
+def _cache_result(
+    cache: CacheSizeInfo,
+    label: str,
+    levels_config: LevelsT[float] | LevelsT[int],
+    wants_percentage: bool,
+) -> Result | None:
+    """Evaluate cache size against thresholds with custom suffix formatting.
+
+    check_levels is used for state calculation, but custom formatting is needed
+    to avoid ugly output like "(warn/crit at 80/5000/95/5000)" and instead produce
+    readable "(warn at 80%, crit at 95%)" for percentages or "(warn at 8000, crit at 9500)"
+    for absolute values.
+    """
+    if cache.maxsize == 0:
+        # It should never be 0, otherwise the collector probably isn't working.
+        # But if it is, let's not crash.
+        return Result(
+            state=State.UNKNOWN,
+            summary=f"{label}: Cache max size is 0, this is likely a configuration error",
+        )
+    percentage = cache.size * 100 / cache.maxsize
+    value = percentage if wants_percentage else float(cache.size)
+    for check_result in check_levels(value=value, levels_upper=levels_config, metric_name=None):
+        if isinstance(check_result, Result):
+            base = (
+                f"{label}: {render.percent(percentage)} - {cache.size} of {cache.maxsize} entries"
+            )
+            if check_result.state == State.OK:
+                return Result(state=State.OK, notice=base)
+            match levels_config:
+                case ("fixed", (int() | float() as warn, int() | float() as crit)):
+                    suffix = (
+                        f"(warn at {render.percent(warn)}, crit at {render.percent(crit)})"
+                        if wants_percentage
+                        else f"(warn at {int(warn)}, crit at {int(crit)})"
+                    )
+                case _:
+                    suffix = ""
+            return Result(state=check_result.state, notice=f"{base} {suffix}".strip())
+    return None
+
+
+def _cache_metric(
+    cache: CacheSizeInfo,
+    metric_name: str,
+    levels_config: LevelsT[float] | LevelsT[int],
+    wants_percentage: bool,
+) -> Metric:
+    """Build metric with cache size in absolute units, converting percentage levels if needed."""
+    metric_levels: tuple[int, int] | None = None
+    match levels_config:
+        case ("fixed", (int() | float() as warn, int() | float() as crit)):
+            metric_levels = (
+                (
+                    int((warn / 100.0) * cache.maxsize),
+                    int((crit / 100.0) * cache.maxsize),
+                )
+                if wants_percentage
+                else (int(warn), int(crit))
+            )
+        case _:
+            metric_levels = None
+    return Metric(metric_name, cache.size, levels=metric_levels, boundaries=(0, cache.maxsize))
+
+
+class _ComponentCheckRow(NamedTuple):
+    cache_key: Literal["container_metrics", "machine_sections"]
+    logs_attr: Literal["container", "machine"]
+    label: str
+    log_missing_state: State
+
+
 def check(
     params: Params,
     section_kube_collector_metadata: CollectorComponentsMetadata | None,
@@ -199,17 +282,45 @@ def check(
     if section_kube_collector_metadata.processing_log.status == CollectorState.ERROR:
         return
 
-    if section_kube_collector_processing_logs is not None:
-        yield from _component_check(
-            State.CRIT,
-            "container_metrics",
-            section_kube_collector_processing_logs.container,
-        )
-        yield from _component_check(
-            State(params["machine_metrics"]),
-            "machine_metrics",
-            section_kube_collector_processing_logs.machine,
-        )
+    if section_kube_collector_metadata.cluster_collector is not None:
+        cache_health = section_kube_collector_metadata.cluster_collector.cache_health
+
+        components = [
+            _ComponentCheckRow(
+                "container_metrics",
+                "container",
+                "Container metrics cache size",
+                State.CRIT,
+            ),
+            _ComponentCheckRow(
+                "machine_sections",
+                "machine",
+                "Machine sections cache size",
+                State(params["machine_metrics"]),
+            ),
+        ]
+        for row in components:
+            # Cache health
+            if cache_health is not None:
+                cache: CacheSizeInfo = getattr(cache_health, row.cache_key)
+                mode, levels_config = params[f"{row.cache_key}_cache_size"]  # type: ignore[literal-required]
+                wants_percentage: bool = mode == "percentage"
+                if result := _cache_result(cache, row.label, levels_config, wants_percentage):
+                    yield result
+                yield _cache_metric(
+                    cache,
+                    f"kube_cluster_collector_{row.cache_key}_cache_size",
+                    levels_config,
+                    wants_percentage,
+                )
+
+            # "Did we query the thing successfully?" health
+            if section_kube_collector_processing_logs is not None:
+                yield from _component_check(
+                    row.log_missing_state,
+                    row.cache_key,
+                    getattr(section_kube_collector_processing_logs, row.logs_attr),
+                )
 
     if section_kube_collector_metadata.nodes:
         yield Result(

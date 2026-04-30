@@ -9,7 +9,7 @@ import shlex
 from collections import Counter
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
-from typing import Literal, TypedDict
+from typing import Literal
 
 import cmk.ccc.regex
 from cmk import trace
@@ -199,11 +199,12 @@ class Original:
     scale: float
 
 
-class ScalarBounds(TypedDict, total=False):
-    warn: float
-    crit: float
-    min: float
-    max: float
+@dataclass(frozen=True, kw_only=True)
+class ScalarBounds:
+    warn: float | None = None
+    crit: float | None = None
+    min_: float | None = None
+    max_: float | None = None
 
 
 @dataclass(frozen=True)
@@ -222,16 +223,15 @@ def _translated_scalar(
     scale: float,
     conversion: Callable[[float], float],
 ) -> ScalarBounds:
-    scalars: ScalarBounds = {}
-    if perf_data_tuple.warn is not None:
-        scalars["warn"] = conversion(float(perf_data_tuple.warn) * scale)
-    if perf_data_tuple.crit is not None:
-        scalars["crit"] = conversion(float(perf_data_tuple.crit) * scale)
-    if perf_data_tuple.min_ is not None:
-        scalars["min"] = conversion(float(perf_data_tuple.min_) * scale)
-    if perf_data_tuple.max_ is not None:
-        scalars["max"] = conversion(float(perf_data_tuple.max_) * scale)
-    return scalars
+    def _conversion(x: float | None) -> float | None:
+        return None if x is None else conversion(x * scale)
+
+    return ScalarBounds(
+        warn=_conversion(perf_data_tuple.warn),
+        crit=_conversion(perf_data_tuple.crit),
+        min_=_conversion(perf_data_tuple.min_),
+        max_=_conversion(perf_data_tuple.max_),
+    )
 
 
 @tracer.instrument("graphing.translate_metrics")

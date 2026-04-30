@@ -16,6 +16,7 @@ from cmk.gui.graphing import (
     ConvertibleUnitSpecification,
     get_temperature_unit,
     MetricSpec,
+    ScalarBounds,
     TranslatedMetric,
     user_specific_unit,
     UserSpecificUnit,
@@ -94,8 +95,21 @@ def purge_metric_spec_for_js(metric_spec: MetricSpec) -> dict[str, object]:
     )
 
 
+def _scalar_bounds_for_js(scalar: ScalarBounds) -> Mapping[str, float]:
+    bounds: dict[str, float] = {}
+    if scalar.warn is not None:
+        bounds["warn"] = scalar.warn
+    if scalar.crit is not None:
+        bounds["crit"] = scalar.crit
+    if scalar.min_ is not None:
+        bounds["min"] = scalar.min_
+    if scalar.max_ is not None:
+        bounds["max"] = scalar.max_
+    return bounds
+
+
 def purge_translated_metric_for_js(translated_metric: TranslatedMetric) -> dict[str, object]:
-    return {"bounds": translated_metric.scalar} | _purge_unit_spec_for_js(
+    return {"bounds": _scalar_bounds_for_js(translated_metric.scalar)} | _purge_unit_spec_for_js(
         translated_metric.unit_spec,
         temperature_unit=get_temperature_unit(user, active_config.default_temperature_unit),
     )

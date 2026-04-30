@@ -90,6 +90,7 @@ from ._translated_metrics import (
     compute_translated_metrics,
     lookup_metric_translations_for_check_command,
     parse_perf_data,
+    ScalarBounds,
     translate_metrics,
     TranslatedMetric,
 )
@@ -151,6 +152,7 @@ __all__ = [
     "MetricSpec",
     "RegisteredMetric",
     "TemplateGraphSpecification",
+    "ScalarBounds",
     "TranslatedMetric",
     "UserSpecificUnit",
     "ValuesWithUnits",

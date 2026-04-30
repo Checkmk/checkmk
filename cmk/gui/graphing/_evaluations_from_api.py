@@ -101,7 +101,7 @@ def evaluate_quantity(
                         metric_name=quantity.metric_name,
                     )
                 )
-            if (warn_value := translated_metric.scalar.get("warn")) is None:
+            if (warn_value := translated_metric.scalar.warn) is None:
                 return Error(
                     EvaluationError(
                         reason=f"No such warning value of {quantity.metric_name!r}",
@@ -133,7 +133,7 @@ def evaluate_quantity(
                         metric_name=quantity.metric_name,
                     )
                 )
-            if (crit_value := translated_metric.scalar.get("crit")) is None:
+            if (crit_value := translated_metric.scalar.crit) is None:
                 return Error(
                     EvaluationError(
                         reason=f"No such critical value of {quantity.metric_name!r}",
@@ -165,7 +165,7 @@ def evaluate_quantity(
                         metric_name=quantity.metric_name,
                     )
                 )
-            if (min_value := translated_metric.scalar.get("min")) is None:
+            if (min_value := translated_metric.scalar.min_) is None:
                 return Error(
                     EvaluationError(
                         reason=f"No such mininum value of {quantity.metric_name!r}",
@@ -197,7 +197,7 @@ def evaluate_quantity(
                         metric_name=quantity.metric_name,
                     )
                 )
-            if (max_value := translated_metric.scalar.get("max")) is None:
+            if (max_value := translated_metric.scalar.max_) is None:
                 return Error(
                     EvaluationError(
                         reason=f"No such maxinum value of {quantity.metric_name!r}",

@@ -65,7 +65,7 @@ def test_evaluate_graph_plugin_title(graph_plugin_title: str, expected: str) -> 
                 "metric": TranslatedMetric(
                     originals=[Original("metric", 1.0)],
                     value=123.456,
-                    scalar=ScalarBounds(max=10),
+                    scalar=ScalarBounds(max_=10),
                     auto_graph=True,
                     title="Metric",
                     unit_spec=ConvertibleUnitSpecification(
@@ -333,10 +333,7 @@ def test_evaluate_graph_plugin_scalars(
                 "metric": TranslatedMetric(
                     originals=[Original("metric", 1.0)],
                     value=123.456,
-                    scalar=ScalarBounds(
-                        warn=12.34,
-                        crit=56.78,
-                    ),
+                    scalar=ScalarBounds(warn=12.34, crit=56.78),
                     auto_graph=True,
                     title="Metric",
                     unit_spec=ConvertibleUnitSpecification(
@@ -365,10 +362,7 @@ def test_evaluate_graph_plugin_scalars(
                 "metric": TranslatedMetric(
                     originals=[Original("metric", 1.0)],
                     value=123.456,
-                    scalar=ScalarBounds(
-                        warn=12.34,
-                        crit=56.78,
-                    ),
+                    scalar=ScalarBounds(warn=12.34, crit=56.78),
                     auto_graph=True,
                     title="Metric",
                     unit_spec=ConvertibleUnitSpecification(
@@ -391,10 +385,7 @@ def test_evaluate_graph_plugin_scalars(
                 "metric": TranslatedMetric(
                     originals=[Original("metric", 1.0)],
                     value=123.456,
-                    scalar=ScalarBounds(
-                        warn=12.34,
-                        crit=56.78,
-                    ),
+                    scalar=ScalarBounds(warn=12.34, crit=56.78),
                     auto_graph=True,
                     title="Metric",
                     unit_spec=ConvertibleUnitSpecification(
@@ -438,10 +429,7 @@ def test_evaluate_graph_plugin_scalars(
                 "metric": TranslatedMetric(
                     originals=[Original("metric", 1.0)],
                     value=123.456,
-                    scalar=ScalarBounds(
-                        warn=12.34,
-                        crit=56.78,
-                    ),
+                    scalar=ScalarBounds(warn=12.34, crit=56.78),
                     auto_graph=True,
                     title="Metric",
                     unit_spec=ConvertibleUnitSpecification(

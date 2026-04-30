@@ -151,17 +151,19 @@ def _perfometer_plugin_matches(
         if scalar.metric_name not in translated_metrics:
             return False
 
+        scalar_bounds = translated_metrics[scalar.metric_name].scalar
         match scalar:
             case metrics_api.WarningOf():
-                scalar_name = "warn"
+                scalar_value = scalar_bounds.warn
             case metrics_api.CriticalOf():
-                scalar_name = "crit"
+                scalar_value = scalar_bounds.crit
             case metrics_api.MinimumOf():
-                scalar_name = "min"
+                scalar_value = scalar_bounds.min_
             case metrics_api.MaximumOf():
-                scalar_name = "max"
-
-        if scalar_name not in translated_metrics[scalar.metric_name].scalar:
+                scalar_value = scalar_bounds.max_
+            case _:
+                assert_never(scalar)
+        if scalar_value is None:
             return False
 
     return True

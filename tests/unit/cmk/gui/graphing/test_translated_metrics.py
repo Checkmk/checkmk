@@ -15,6 +15,7 @@ from cmk.gui.graphing._translated_metrics import (
     find_matching_translation,
     lookup_metric_translations_for_check_command,
     parse_perf_data,
+    ScalarBounds,
     translate_metrics,
     TranslationSpec,
 )
@@ -394,13 +395,13 @@ def test_translate_metrics_with_multiple_predictive_metrics() -> None:
         pytest.param(
             TemperatureUnit.CELSIUS,
             59.05,
-            {"warn": 85.05, "crit": 85.05},
+            ScalarBounds(warn=85.05, crit=85.05),
             id="no unit conversion",
         ),
         pytest.param(
             TemperatureUnit.FAHRENHEIT,
             138.29,
-            {"warn": 185.09, "crit": 185.09},
+            ScalarBounds(warn=185.09, crit=185.09),
             id="with unit conversion",
         ),
     ],
@@ -408,7 +409,7 @@ def test_translate_metrics_with_multiple_predictive_metrics() -> None:
 def test_translate_metrics(
     default_temperature_unit: TemperatureUnit,
     expected_value: float,
-    expected_scalars: Mapping[str, float],
+    expected_scalars: ScalarBounds,
 ) -> None:
     translated_metric = translate_metrics(
         [

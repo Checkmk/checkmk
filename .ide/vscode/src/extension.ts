@@ -21,14 +21,12 @@ import { registerGerritPush } from './gerrit'
 import { checkForUpdates, isInstalled as isDevSiteInstalled } from './omd/devSiteTools'
 import { registerLogs } from './omd/logs'
 import { createSite, registerOmd } from './omd/omd'
-import {
-  registerPytestOnDemand,
-  registerRuffOnDemand,
-  registerVitestOnDemand
-} from './profiles/onDemand'
+import { registerRuffOnDemand, registerVitestOnDemand } from './profiles/onDemand'
 import { registerProfileDetector } from './profiles/profileDetector'
 import * as profileManager from './profiles/profileManager'
 import { registerBazelTestRunner } from './profiles/python/bazelTest'
+import { registerBazelTestController } from './profiles/python/bazelTestController'
+import { registerBazelTestsConfigView } from './profiles/python/bazelTestsConfigView'
 import { registerDynamicMypyTargets } from './profiles/python/dynamicMypyTargets'
 import { registerInterpreterResolver } from './profiles/python/interpreter'
 import { registerJemallocAllocator } from './profiles/python/jemallocAllocator'
@@ -157,12 +155,13 @@ export function activate(context: vscode.ExtensionContext): void {
         ...registerDynamicMypyTargets(context),
         ...registerJemallocAllocator(context),
         ...registerPylanceHealth(refreshAll),
-        ...registerPytestOnDemand(),
         ...registerRuffOnDemand(),
         ...registerMypyConfigWatcher(),
         ...registerInterpreterResolver(),
         ...registerSnippets(),
         ...registerBazelTestRunner(),
+        ...registerBazelTestController(),
+        ...registerBazelTestsConfigView(),
         vscode.commands.registerCommand('cmk.python.restartLanguageServer', () =>
           vscode.commands.executeCommand('python.analysis.restartLanguageServer')
         ),

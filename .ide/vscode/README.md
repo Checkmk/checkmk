@@ -261,7 +261,24 @@ Run Python tests via Bazel directly from the editor:
 | `CMK ▸ Test: Run File (Bazel)`               | Run all tests in the current file            |
 | `CMK ▸ Test: Run Function at Cursor (Bazel)` | Run the test function at the cursor position |
 
-The test runner finds the Bazel target by walking up the directory tree for BUILD files. If no target is found locally, it falls back to `bazel query`. Results are shown in the terminal panel. Only available when the Python profile is active.
+The test runner finds the Bazel target by walking up the directory tree for BUILD files. If no target is found locally, it falls back to `bazel query`. Results stream live into the terminal panel (`--test_output=streamed`). Only available when the Python profile is active.
+
+#### CMK ▸ Bazel Tests Test Explorer group
+
+A dedicated **CMK ▸ Bazel Tests** group appears in the Test Explorer view (alongside the standard pytest group). Each Bazel `py_test` target under `//tests/...` shows up as a tree node mirroring its package path, e.g. `tests / unit / cmk / gui / :tests`. Click Run on any node — a leaf, a folder, or the whole tree — to spawn `bazel test` for the selected targets. Output streams into the **Test Results** panel; per-test pass/fail is parsed from each target's JUnit `test.xml` so failing tests jump to the assertion line.
+
+Two run profiles:
+
+| Profile        | Action                                                                            |
+| -------------- | --------------------------------------------------------------------------------- |
+| `Run`          | Default. Runs the selected target(s) with the configured edition.                 |
+| `Run with -k…` | Prompts for a pytest `-k` keyword expression and forwards it via `--test_arg=-k`. |
+
+Run options are configured via the **CMK ▸ Bazel Tests · Config** webview inside the Testing view (or `CMK ▸ Test: Configure Bazel run options`). The form exposes a single field:
+
+- **Edition** — `community` / `pro` / `ultimate` / `ultimatemt` / `cloud`, passed as `--cmk_edition=<edition>`. Persists in `cmk.bazelTests.edition` workspace setting.
+
+Site-related env vars (`VERSION`, `REUSE`, `CLEANUP`, `DEBUG`) are not exposed because they only matter for the Make-driven integration / composition / gui_e2e suites, which Bazel `py_test` targets don't run. The tree refreshes automatically when any `tests/**/BUILD` file changes; trigger a manual refresh via the Test Explorer's refresh button or `CMK ▸ Test: Refresh Bazel test targets`.
 
 ### 10. Gerrit Push
 
@@ -377,26 +394,26 @@ tr '\0' '\n' < /proc/$PID/environ | grep -E 'LD_PRELOAD|PYTHONMALLOC'
 
 Per-tool opt-in for deferred startup of heavy tooling. Each window reload starts with the deferred tool off and waits for a trigger again — nothing is persisted.
 
-| Setting                   | Tool   | Default | Triggers                                     |
-| ------------------------- | ------ | ------- | -------------------------------------------- |
-| `cmk.python.testOnDemand` | pytest | `true`  | Python test file opened, Testing view opened |
-| `cmk.vitest.testOnDemand` | vitest | `false` | TS/Vue test file opened, Testing view opened |
-| `cmk.ruff.testOnDemand`   | Ruff   | `false` | Python file opened                           |
+| Setting                   | Tool        | Default | Triggers                                                  |
+| ------------------------- | ----------- | ------- | --------------------------------------------------------- |
+| `cmk.bazelTests.onDemand` | Bazel tests | `true`  | Python test file opened, CMK ▸ Bazel Tests group expanded |
+| `cmk.vitest.testOnDemand` | vitest      | `false` | TS/Vue test file opened, Testing view opened              |
+| `cmk.ruff.testOnDemand`   | Ruff        | `false` | Python file opened                                        |
 
 **How it works:**
 
-- **File-open trigger** — only fires the tool whose file pattern matches. Opening a Python test file triggers pytest (not vitest); opening a `.test.ts`/`.spec.ts`/`.test.vue` triggers vitest; opening any Python file triggers Ruff. Tools never cross-trigger.
-- **Testing-view trigger** — VS Code fires `TestController.resolveHandler` on all registered controllers when the Testing view opens, so both pytest and vitest activate together (they're the test tools). Ruff doesn't listen to the Testing view.
-- On first trigger per session, the extension flips the relevant tool's "enable" setting at workspace-folder scope, logs to the CMK output channel, and shows an info notification `CMK ▸ <tool> started (<reason>).`
+- **File-open trigger** — only fires the tool whose file pattern matches. Opening a Python test file triggers Bazel test discovery; opening a `.test.ts`/`.spec.ts`/`.test.vue` triggers vitest; opening any Python file triggers Ruff. Tools never cross-trigger.
+- **Testing-view trigger** — Bazel test discovery also runs when the user expands the **CMK ▸ Bazel Tests** group in the Test Explorer (via `TestController.resolveHandler` on the root). Vitest activates similarly when the Testing view opens. Ruff doesn't listen to the Testing view.
+- On first trigger per session the extension performs the deferred work, logs to the CMK output channel, and (for Ruff/vitest) flips the relevant "enable" setting at workspace-folder scope.
 - On window reload the workspace-folder override is unset and the tool reverts to off. The cycle repeats.
 
-**What each tool toggles:**
+**What each tool defers:**
 
-- **pytest** — flips `python.testing.pytestEnabled` from false/undefined to `true`. Skipped entirely if pytest is already enabled (effective value) via user config or an older bundled apply.
+- **Bazel tests** — defers the filesystem scan of `tests/**/BUILD` that powers the `CMK ▸ Bazel Tests` Test Explorer group. Set the setting to `false` to discover at activation instead.
 - **Ruff** — holds `ruff.enable: false` at folder scope on startup (shadowing the bundled workspace-scope `true`); on trigger, unsets the folder override so the workspace value (`true`) takes over and the Ruff LSP starts. Skipped if the user explicitly set `ruff.enable` at folder scope.
 - **vitest** — holds `vitest.configSearchPatternExclude: "**/*"` at folder scope on startup (excluding everything from config discovery); on trigger, unsets the folder override so the workspace-scope pattern takes over and vitest discovers configs normally. Skipped if the user explicitly set that key at folder scope.
 
-Set any `cmk.<tool>.testOnDemand` to `false` to disable the on-demand behavior entirely for that tool — it then stays in whatever state you configure manually.
+Set any of these to `false` to disable the on-demand behavior entirely for that tool — it then stays in whatever state you configure manually.
 
 ### 14. Pylance Memory Monitor
 

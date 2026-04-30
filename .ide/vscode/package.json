@@ -79,6 +79,14 @@
           "id": "cmk.dashboard.badge",
           "name": "Issues"
         }
+      ],
+      "test": [
+        {
+          "type": "webview",
+          "id": "cmk.bazelTests.config",
+          "name": "CMK ▸ Bazel Tests · Config",
+          "visibility": "collapsed"
+        }
       ]
     },
     "commands": [
@@ -255,6 +263,14 @@
         "title": "CMK ▸ Test: Run Function at Cursor (Bazel)"
       },
       {
+        "command": "cmk.bazelTests.configure",
+        "title": "CMK ▸ Test: Configure Bazel run options"
+      },
+      {
+        "command": "cmk.bazelTests.refresh",
+        "title": "CMK ▸ Test: Refresh Bazel test targets"
+      },
+      {
         "command": "cmk.showWhatsNew",
         "title": "CMK ▸ Show What's New"
       },
@@ -319,10 +335,10 @@
           "default": "default",
           "description": "Launch dmypy under jemalloc to cap long-running RSS growth. Requires libjemalloc installed on the host (apt install libjemalloc2 / dnf install jemalloc / brew install jemalloc). If the library is not detected the extension notifies once and leaves the setting armed — install, reload, feature activates."
         },
-        "cmk.python.testOnDemand": {
+        "cmk.bazelTests.onDemand": {
           "type": "boolean",
           "default": true,
-          "description": "Defer pytest discovery (pytest --collect-only) until a test file is opened or the Testing view is used. Each window reload starts with pytest discovery off and waits for a trigger again. Set to false to disable the on-demand behavior entirely (pytest stays in whatever state you configure manually)."
+          "description": "Defer Bazel test discovery (filesystem scan of tests/**/BUILD) until a Python test file is opened or the CMK ▸ Bazel Tests group in the Test Explorer is expanded. Each window reload starts with discovery off and waits for a trigger again. Set to false to discover eagerly at activation."
         },
         "cmk.ruff.testOnDemand": {
           "type": "boolean",
@@ -339,6 +355,18 @@
           "default": 2048,
           "minimum": 256,
           "description": "Warn when the Pylance language-server process RSS exceeds this many MiB. Surfaces as a status row in IDE Health (Python section), an Issues entry, and a single per-session notification offering to restart Pylance. Linux only."
+        },
+        "cmk.bazelTests.edition": {
+          "type": "string",
+          "enum": [
+            "community",
+            "pro",
+            "ultimate",
+            "ultimatemt",
+            "cloud"
+          ],
+          "default": "pro",
+          "description": "Checkmk edition passed to bazel as --cmk_edition=<edition> when running tests via the CMK ▸ Bazel Tests Test Explorer group."
         }
       }
     },

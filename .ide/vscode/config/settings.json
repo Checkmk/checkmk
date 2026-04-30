@@ -46,17 +46,13 @@
       "python.analysis.packageIndexDepths": [
         { "name": "", "depth": 2, "includeAllSymbols": false }
       ],
-      "python.testing.cwd": "${workspaceFolder}",
-      "python.testing.autoTestDiscoverOnSaveEnabled": true,
-      "python.terminal.activateEnvInCurrentTerminal": true,
-      "python.testing.unittestEnabled": false,
-      "python.testing.pytestArgs": ["--import-mode=importlib", "tests/unit"],
       "python.analysis.indexing": true,
       "python.analysis.autoImportCompletions": true,
       "python.analysis.diagnosticMode": "openFilesOnly",
       "python.analysis.typeCheckingMode": "off",
       "python.analysis.useLibraryCodeForTypes": false,
       "python.defaultInterpreterPath": "${workspaceFolder}/.venv/bin/python",
+      "python.testing.pytestEnabled": false,
       "mypy.dmypyExecutable": "${cmk-ext:workspaceFolder}/.venv/bin/dmypy",
       "mypy.runUsingActiveInterpreter": true,
       "mypy.configFile": ".vscode/.mypy.ini",
@@ -76,7 +72,7 @@
       "ruff.enable": true,
       "ruff.path": ["${workspaceFolder}/.venv/bin/ruff"],
       "cmk.mypy.dynamicTargets.enabled": true,
-      "cmk.python.testOnDemand": true
+      "cmk.bazelTests.onDemand": true
     },
     "user": {
       "python.condaPath": "",
@@ -84,8 +80,7 @@
       "python.pipenvPath": ""
     },
     "disableFolder": {
-      "mypy.enabled": false,
-      "python.testing.pytestEnabled": false
+      "mypy.enabled": false
     },
     "disableWorkspace": {
       "python.languageServer": "None",

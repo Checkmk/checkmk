@@ -125,29 +125,7 @@ async function triggerTool(
   await notifyInfo(`CMK ▸ ${tool.displayName} started (${reason}).`)
 }
 
-const PYTHON_TEST_FILE = /(?:^|\/)test_[^/]+\.py$|_test\.py$|\/tests?\//
 const VITEST_TEST_FILE = /\.(test|spec)\.(ts|tsx|mts|cts|js|jsx|mjs|cjs|vue)$/
-
-export function registerPytestOnDemand(): vscode.Disposable[] {
-  return registerOnDemandTool(
-    {
-      id: 'cmk.pytestOnDemand',
-      displayName: 'pytest',
-      featureSetting: 'cmk.python.testOnDemand',
-      matchesFile: (doc) =>
-        doc.languageId === 'python' &&
-        doc.uri.scheme === 'file' &&
-        PYTHON_TEST_FILE.test(doc.uri.fsPath),
-      listenTestingView: true,
-      triggerOverrides: [{ section: 'python.testing', key: 'pytestEnabled', value: true }],
-      skipIfAlreadyManaged: (wsFolder) =>
-        vscode.workspace
-          .getConfiguration('python.testing', wsFolder)
-          .get<boolean>('pytestEnabled', false) === true
-    },
-    true
-  )
-}
 
 export function registerRuffOnDemand(): vscode.Disposable[] {
   return registerOnDemandTool(

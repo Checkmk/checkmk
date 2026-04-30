@@ -10,7 +10,7 @@ import * as vscode from 'vscode'
 
 import { notifyError } from './log'
 
-function getExtendedPath(): string {
+export function getExtendedPath(): string {
   const home = os.homedir()
   const candidatePaths = [
     '/home/linuxbrew/.linuxbrew/bin',

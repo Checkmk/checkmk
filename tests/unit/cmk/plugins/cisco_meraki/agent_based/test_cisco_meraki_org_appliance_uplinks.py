@@ -92,7 +92,6 @@ def test_check_appliance_uplinks(params: CheckParams) -> None:
     assert value == expected
 
 
-@pytest.mark.xfail(strict=True, reason="SUP-28872: sync params with actual value")
 def test_check_appliance_uplinks_not_connected_edge_case(params: CheckParams) -> None:
     uplinks = _UplinkStatusesFactory.build(
         uplinks=[{"interface": "wan1", "status": "not connected"}]

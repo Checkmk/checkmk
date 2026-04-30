@@ -19,6 +19,41 @@ describe('readCodeExample', () => {
   })
 })
 
+const componentsDir = path.resolve(__dirname, '../../../ui-component-library/components')
+
+describe('UCL split script convention', () => {
+  it('components using UclPropertiesPanel export panelConfig from the static <script> block', () => {
+    const files = (fs.readdirSync(componentsDir, { recursive: true }) as string[])
+      .filter((f) => {
+        const name = path.basename(f)
+        return (
+          name.startsWith('Ucl') &&
+          name.endsWith('.vue') &&
+          !name.endsWith('Dev.vue') &&
+          !name.endsWith('CodeExample.vue')
+        )
+      })
+      .map((f) => path.join(componentsDir, f))
+
+    const violations = files.filter((filePath) => {
+      const content = fs.readFileSync(filePath, 'utf-8')
+      if (!content.includes('UclPropertiesPanel')) {
+        return false
+      }
+      const staticScript = content.match(/<script(?![^>]*\bsetup\b)[^>]*>([\s\S]*?)<\/script>/)?.[1]
+      return !staticScript || !/export\s+const\s+\w*[Pp]anelConfig/.test(staticScript)
+    })
+
+    expect(
+      violations.map((f) => path.relative(componentsDir, f)),
+      'These components use <UclPropertiesPanel> but are missing `export const panelConfig` in the ' +
+        'static <script lang="ts"> block (not <script setup>). ' +
+        'Fix: add a separate <script lang="ts"> block and export panelConfig there. ' +
+        'The vite-plugin-ucl-mcp resolves props via AST analysis of the static block only.'
+    ).toEqual([])
+  })
+})
+
 describe('vite-plugin-ucl-mcp', () => {
   it('serializes panel config', () => {
     const result = serializePanelConfig({

@@ -3,40 +3,12 @@ Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
 This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 conditions defined in the file COPYING, which is part of this source code package.
 -->
-<script setup lang="ts">
-import {
-  type PanelConfig,
-  UclDetailPageAccessibility,
-  UclDetailPageCodeExample,
-  UclDetailPageComponent,
-  UclDetailPageDeveloperPlayground,
-  UclDetailPageHeader,
-  UclDetailPageLayout,
-  UclPropertiesPanel,
-  createPanelState
-} from '@ucl/_ucl/components/detail-page'
-import type { ConfigEntityType } from 'cmk-shared-typing/typescript/configuration_entity'
-import type { String as FormSpecString } from 'cmk-shared-typing/typescript/vue_formspec_components'
-import { HttpResponse, http } from 'msw'
-import { setupWorker } from 'msw/browser'
-import { onBeforeMount, onBeforeUnmount, ref } from 'vue'
-
-import CmkConfigurationEntityDropdown from '@/components/user-input/CmkConfigurationEntityDropdown'
-
-import { initializeComponentRegistry } from '@/form/private/FormEditDispatcher/dispatch'
+<script lang="ts">
+import { type PanelConfig } from '@ucl/_ucl/components/detail-page'
 
 import codeExample from './UclCmkConfigurationEntityDropdownCodeExample.vue?raw'
-import UclCmkConfigurationEntityDropdownDev from './UclCmkConfigurationEntityDropdownDev.vue'
 
-initializeComponentRegistry()
-
-defineProps<{ screenshotMode: boolean }>()
-
-// Dummy entity type used only in this UCL demo — not a real backend type.
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const DEMO_ENTITY_TYPE = 'ucl_demo_entity' as any as ConfigEntityType
-
-const a11yData = [
+export const a11yData = [
   {
     keys: ['Tab'],
     description: 'Moves keyboard focus to the dropdown.'
@@ -63,9 +35,41 @@ const a11yData = [
   }
 ]
 
-const panelConfig = {
+export const panelConfig = {
   allowEditing: { type: 'boolean', title: 'Allow Editing Existing', initialState: true }
 } satisfies PanelConfig
+</script>
+
+<script setup lang="ts">
+import {
+  UclDetailPageAccessibility,
+  UclDetailPageCodeExample,
+  UclDetailPageComponent,
+  UclDetailPageDeveloperPlayground,
+  UclDetailPageHeader,
+  UclDetailPageLayout,
+  UclPropertiesPanel,
+  createPanelState
+} from '@ucl/_ucl/components/detail-page'
+import type { ConfigEntityType } from 'cmk-shared-typing/typescript/configuration_entity'
+import type { String as FormSpecString } from 'cmk-shared-typing/typescript/vue_formspec_components'
+import { HttpResponse, http } from 'msw'
+import { setupWorker } from 'msw/browser'
+import { onBeforeMount, onBeforeUnmount, ref } from 'vue'
+
+import CmkConfigurationEntityDropdown from '@/components/user-input/CmkConfigurationEntityDropdown'
+
+import { initializeComponentRegistry } from '@/form/private/FormEditDispatcher/dispatch'
+
+import UclCmkConfigurationEntityDropdownDev from './UclCmkConfigurationEntityDropdownDev.vue'
+
+initializeComponentRegistry()
+
+defineProps<{ screenshotMode: boolean }>()
+
+// Dummy entity type used only in this UCL demo — not a real backend type.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const DEMO_ENTITY_TYPE = 'ucl_demo_entity' as any as ConfigEntityType
 
 const propState = ref(createPanelState(panelConfig))
 

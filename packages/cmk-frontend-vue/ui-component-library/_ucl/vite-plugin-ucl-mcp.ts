@@ -143,8 +143,7 @@ export function generateUclApiPlugin(): Plugin {
 
       const category = path.relative(componentsDir, path.dirname(filePath)).split(path.sep)[0]!
       if (!category) {
-        this.warn(`UCL plugin: could not determine category for ${filePath}`)
-        return
+        this.error(`UCL plugin: could not determine category for ${filePath}`)
       }
 
       const name = base.replace(/^Ucl/, '').replace(/\.vue$/, '')
@@ -153,8 +152,7 @@ export function generateUclApiPlugin(): Plugin {
       try {
         program = this.parse(code) as Program
       } catch {
-        this.warn(`UCL plugin: failed to parse ${filePath}`)
-        return
+        this.error(`UCL plugin: failed to parse ${filePath}`)
       }
 
       let props: ApiPropDef[] = []
@@ -198,12 +196,6 @@ export function generateUclApiPlugin(): Plugin {
             // skip non-evaluable declarations
           }
         }
-      }
-
-      if (props.length === 0) {
-        this.warn(
-          `UCL plugin: no panelConfig export found in ${filePath} — does it use the split <script>/<script setup> pattern?`
-        )
       }
 
       const slug = name.toLowerCase()

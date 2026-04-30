@@ -3,27 +3,14 @@ Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
 This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 conditions defined in the file COPYING, which is part of this source code package.
 -->
-<script setup lang="ts">
-import {
-  type Options,
-  type PanelConfig,
-  UclDetailPageAccessibility,
-  UclDetailPageCodeExample,
-  UclDetailPageComponent,
-  UclDetailPageHeader,
-  UclDetailPageLayout,
-  UclPropertiesPanel,
-  createPanelState
-} from '@ucl/_ucl/components/detail-page'
-import { ref } from 'vue'
-
-import CmkDateTimePicker from '@/components/CmkDateTimePicker/CmkDateTimePicker.vue'
+<script lang="ts">
+import { type Options, type PanelConfig } from '@ucl/_ucl/components/detail-page'
 
 import codeExample from './UclCmkDateTimePickerCodeExample.vue?raw'
 
-defineProps<{ screenshotMode: boolean }>()
+type Mode = 'datetime' | 'date' | 'time'
 
-const a11yData = [
+export const a11yData = [
   {
     keys: ['Tab'],
     description: 'Moves focus between date segments, time inputs, and trigger buttons.'
@@ -46,9 +33,7 @@ const a11yData = [
   }
 ]
 
-type Mode = 'datetime' | 'date' | 'time'
-
-const panelConfig = {
+export const panelConfig = {
   mode: {
     type: 'list',
     title: 'Mode',
@@ -65,6 +50,23 @@ const panelConfig = {
     initialState: 'UTC+1'
   }
 } satisfies PanelConfig
+</script>
+
+<script setup lang="ts">
+import {
+  UclDetailPageAccessibility,
+  UclDetailPageCodeExample,
+  UclDetailPageComponent,
+  UclDetailPageHeader,
+  UclDetailPageLayout,
+  UclPropertiesPanel,
+  createPanelState
+} from '@ucl/_ucl/components/detail-page'
+import { ref } from 'vue'
+
+import CmkDateTimePicker from '@/components/CmkDateTimePicker/CmkDateTimePicker.vue'
+
+defineProps<{ screenshotMode: boolean }>()
 
 const propState = ref(createPanelState(panelConfig))
 const date = ref('2026-03-15')

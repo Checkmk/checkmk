@@ -9,29 +9,8 @@ import { type Options, type PanelConfig } from '@ucl/_ucl/components/detail-page
 import { type IconEmblems, type IconSizeNames, type SimpleIcons } from '@/components/CmkIcon/types'
 
 import codeExample from './UclCmkIconEmblemCodeExample.vue?raw'
-</script>
 
-<script setup lang="ts">
-import {
-  UclDetailPageAccessibility,
-  UclDetailPageCodeExample,
-  UclDetailPageComponent,
-  UclDetailPageDeveloperPlayground,
-  UclDetailPageHeader,
-  UclDetailPageLayout,
-  UclPropertiesPanel,
-  createPanelState
-} from '@ucl/_ucl/components/detail-page'
-import { ref } from 'vue'
-
-import CmkIcon from '@/components/CmkIcon'
-import CmkIconEmblem from '@/components/CmkIcon/CmkIconEmblem.vue'
-
-import UclCmkIconEmblemDev from './UclCmkIconEmblemDev.vue'
-
-defineProps<{ screenshotMode: boolean }>()
-
-const emblemPanelConfig = {
+export const emblemPanelConfig = {
   emblem: {
     type: 'list',
     title: 'emblem',
@@ -61,7 +40,7 @@ const emblemPanelConfig = {
   }
 } satisfies PanelConfig
 
-const iconPanelConfig = {
+export const iconPanelConfig = {
   name: {
     type: 'list',
     title: 'name',
@@ -88,6 +67,27 @@ const iconPanelConfig = {
     initialState: 'xxlarge' as IconSizeNames
   }
 } satisfies PanelConfig
+</script>
+
+<script setup lang="ts">
+import {
+  UclDetailPageAccessibility,
+  UclDetailPageCodeExample,
+  UclDetailPageComponent,
+  UclDetailPageDeveloperPlayground,
+  UclDetailPageHeader,
+  UclDetailPageLayout,
+  UclPropertiesPanel,
+  createPanelState
+} from '@ucl/_ucl/components/detail-page'
+import { ref } from 'vue'
+
+import CmkIcon from '@/components/CmkIcon'
+import CmkIconEmblem from '@/components/CmkIcon/CmkIconEmblem.vue'
+
+import UclCmkIconEmblemDev from './UclCmkIconEmblemDev.vue'
+
+defineProps<{ screenshotMode: boolean }>()
 
 const emblemPropState = ref(createPanelState(emblemPanelConfig))
 const iconPropState = ref(createPanelState(iconPanelConfig))

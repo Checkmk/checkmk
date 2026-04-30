@@ -121,6 +121,7 @@ from cmk.livestatus_client import SiteConfigurations
 from cmk.ruleset_matcher.definition import RuleGroup
 from cmk.utils import paths
 
+from ._cron import reset_compile_bi_aggregations_scheduling
 from ._packs import get_cached_bi_packs
 from ._valuespecs import (
     bi_config_aggregation_function_registry,
@@ -317,6 +318,10 @@ class ABCBIMode(WatoMode):
                 allowed_rules.update(bi_pack.get_rules())
         return allowed_rules
 
+    def _save_config_and_schedule_compilation(self) -> None:
+        self._bi_packs.save_config()
+        reset_compile_bi_aggregations_scheduling()
+
 
 class ModeBIEditPack(ABCBIMode):
     @classmethod
@@ -384,7 +389,7 @@ class ModeBIEditPack(ABCBIMode):
                         )
                     )
                 )
-            self._bi_packs.save_config()
+            self._save_config_and_schedule_compilation()
 
         return redirect(mode_url("bi_packs"))
 
@@ -591,7 +596,7 @@ class ModeBIPacks(ABCBIMode):
             ChangeScope.all_activation_sites(),
         )
         self._bi_packs.delete_pack(pack_id)
-        self._bi_packs.save_config()
+        self._save_config_and_schedule_compilation()
         return redirect(self.mode_url())
 
     def page(self, config: Config) -> None:
@@ -857,7 +862,7 @@ class ModeBIRules(ABCBIMode):
             ),
             ChangeScope.all_activation_sites(),
         )
-        self._bi_packs.save_config()
+        self._save_config_and_schedule_compilation()
 
     def _bulk_delete_after_confirm(self, pending_changes: PendingChanges) -> None:
         selection = self._get_selection("rule")
@@ -877,7 +882,7 @@ class ModeBIRules(ABCBIMode):
                 ),
                 ChangeScope.all_activation_sites(),
             )
-        self._bi_packs.save_config()
+        self._save_config_and_schedule_compilation()
 
     def _check_delete_rule_id_permission(self, rule_id: str) -> None:
         aggr_refs, rule_refs, _level = self._bi_packs.count_rule_references(rule_id)
@@ -922,7 +927,7 @@ class ModeBIRules(ABCBIMode):
                 ),
                 ChangeScope.all_activation_sites(),
             )
-        self._bi_packs.save_config()
+        self._save_config_and_schedule_compilation()
 
     def page(self, config: Config) -> None:
         self.verify_pack_permission(self.bi_pack)
@@ -1268,7 +1273,7 @@ class ModeBIEditRule(ABCBIMode):
 
         self.bi_pack.add_rule(new_bi_rule)
         try:
-            self._bi_packs.save_config()
+            self._save_config_and_schedule_compilation()
         except MKGeneralException as e:
             raise MKUserError(None, str(e))
 
@@ -1870,7 +1875,7 @@ class BIModeEditAggregation(ABCBIMode):
 
         had_previous_aggregations = self._bi_packs.get_num_enabled_aggregations() > 0
         self.bi_pack.add_aggregation(new_bi_aggregation)
-        self._bi_packs.save_config()
+        self._save_config_and_schedule_compilation()
         redirect_kwargs = {"pack": self.bi_pack.id}
         if had_previous_aggregations != (self._bi_packs.get_num_enabled_aggregations() > 0):
             redirect_kwargs["reload_page"] = "1"
@@ -2203,7 +2208,7 @@ class BIModeAggregations(ABCBIMode):
             ),
             ChangeScope.all_activation_sites(),
         )
-        self._bi_packs.save_config()
+        self._save_config_and_schedule_compilation()
 
     def _bulk_delete_after_confirm(self, pending_changes: PendingChanges) -> None:
         selection = sorted(map(str, self._get_selection("aggregation")))
@@ -2221,7 +2226,7 @@ class BIModeAggregations(ABCBIMode):
                 ),
                 ChangeScope.all_activation_sites(),
             )
-        self._bi_packs.save_config()
+        self._save_config_and_schedule_compilation()
 
     def _bulk_move_after_confirm(self, pending_changes: PendingChanges) -> None:
         target = None
@@ -2252,7 +2257,7 @@ class BIModeAggregations(ABCBIMode):
                 ),
                 ChangeScope.all_activation_sites(),
             )
-        self._bi_packs.save_config()
+        self._save_config_and_schedule_compilation()
 
     def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
         aggr_entries = []

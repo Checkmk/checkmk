@@ -38,6 +38,7 @@ from cmk.bi.rule import BIRule, BIRuleSchema
 from cmk.bi.schema import Schema
 from cmk.bi.trees import BICompiledRule
 from cmk.gui import fields as gui_fields
+from cmk.gui.bi._cron import reset_compile_bi_aggregations_scheduling
 from cmk.gui.http import Response
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
@@ -208,6 +209,7 @@ def _update_bi_rule(params: Mapping[str, Any], must_exist: bool) -> Response:
     bi_rule = BIRule(rule_config)
     target_pack.add_rule(bi_rule)
     bi_packs.save_config()
+    reset_compile_bi_aggregations_scheduling()
 
     data = {"pack_id": bi_rule.pack_id}
     data.update(bi_rule.schema()().dump(bi_rule))
@@ -252,6 +254,7 @@ def delete_bi_rule(params: Mapping[str, Any]) -> Response:
     except (DeleteErrorUsedByRule, DeleteErrorUsedByAggregation) as e:
         raise ProblemException(status=409, title=http.client.responses[409], detail=e.args[0])
     bi_packs.save_config()
+    reset_compile_bi_aggregations_scheduling()
     return Response(status=204)
 
 
@@ -503,6 +506,7 @@ def _update_bi_aggregation(params: Mapping[str, Any], must_exist: bool) -> Respo
     bi_aggregation = BIAggregation(aggregation_config)
     target_pack.add_aggregation(bi_aggregation)
     bi_packs.save_config()
+    reset_compile_bi_aggregations_scheduling()
 
     data = {"pack_id": bi_aggregation.pack_id}
     data.update(bi_aggregation.schema()().dump(bi_aggregation))
@@ -531,6 +535,7 @@ def delete_bi_aggregation(params: Mapping[str, Any]) -> Response:
 
     bi_packs.delete_aggregation(bi_aggregation.id)
     bi_packs.save_config()
+    reset_compile_bi_aggregations_scheduling()
     return Response(status=204)
 
 
@@ -663,6 +668,7 @@ def delete_bi_pack(params: Mapping[str, Any]) -> Response:
         )
     bi_packs.delete_pack(pack_id)
     bi_packs.save_config()
+    reset_compile_bi_aggregations_scheduling()
     return Response(status=204)
 
 
@@ -742,6 +748,7 @@ def _update_bi_pack(params: Mapping[str, Any], must_exist: bool) -> Response:
     new_pack = BIAggregationPack(pack_config)
     bi_packs.add_pack(new_pack)
     bi_packs.save_config()
+    reset_compile_bi_aggregations_scheduling()
     return serve_json(BIPackEndpointSchema().dump(new_pack.serialize()))
 
 

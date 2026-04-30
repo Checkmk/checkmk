@@ -1,0 +1,20 @@
+--- nagvis-1.10.1.orig/install.sh	2026-04-30 11:13:19.165923225 +0200
++++ nagvis-1.10.1/install.sh	2026-04-30 11:13:19.170135283 +0200
+@@ -55,7 +55,7 @@
+ # Default Path to Graphviz binaries
+ GRAPHVIZ_PATH="/usr/local/bin"
+ # Version of NagVis to be installed
+-NAGVIS_VER=$(php -r "require './share/server/core/defines/global.php'; echo CONST_VERSION;")
++NAGVIS_VER=$(grep 'CONST_VERSION' share/server/core/defines/global.php | awk -F"'" '{ print $2 }')
+ INSTALLER_VERSION=$NAGVIS_VER
+ # Version of old NagVis (will be detected if update)
+ NAGVIS_VER_OLD=""
+@@ -83,7 +83,7 @@
+ WEB_GROUP=""
+
+ # Version prerequisites
+-NEED_PHP_VERSION=$(php -r "require './share/server/core/defines/global.php'; echo CONST_NEEDED_PHP_VERSION;")
++NEED_PHP_VERSION=$(grep 'CONST_NEEDED_PHP_VERSION' share/server/core/defines/global.php | awk -F"'" '{ print $2 }')
+ [ -z "$NEED_PHP_VERSION" ] && NEED_PHP_VERSION="5.0"
+
+ NEED_PHP_MODULES="gd mbstring gettext session xml pdo"

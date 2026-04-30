@@ -71,7 +71,7 @@ class LicensesOverview(BaseModel, frozen=True):
     def expiration_date(self) -> datetime | None:
         if not self.raw_expiration_date:
             return None
-        return datetime.strptime(self.raw_expiration_date, "%b %d, %Y %Z")
+        return self._try_and_parse_datetime(self.raw_expiration_date)
 
     @computed_field
     @property
@@ -101,6 +101,13 @@ class LicensesOverview(BaseModel, frozen=True):
                 counts_by_type["other_count"] += count
 
         return counts_by_type
+
+    @staticmethod
+    def _try_and_parse_datetime(raw: str) -> datetime | None:
+        try:
+            return datetime.strptime(raw, "%b %d, %Y %Z")
+        except ValueError:
+            return None
 
 
 def parse_licenses_overview(string_table: StringTable) -> Section:

@@ -71,9 +71,7 @@ class Modes:
         self._modes.append(mode)
 
         self._mode_map[mode.long_option] = mode
-        if mode.has_short_option():
-            if mode.short_option is None:
-                raise TypeError()
+        if mode.short_option is not None:
             self._mode_map[mode.short_option] = mode
 
     def exists(self, opt: OptionName) -> bool:
@@ -249,9 +247,6 @@ class Option:
     def is_deprecated_option(self, opt_str: str) -> bool:
         return opt_str.lstrip("-") in self._deprecated_long_options
 
-    def has_short_option(self) -> bool:
-        return self.short_option is not None
-
     def takes_argument(self) -> bool:
         return self.argument
 
@@ -279,12 +274,8 @@ class Option:
         return wrapper.fill(self.short_help)
 
     def short_getopt_specs(self) -> list[str]:
-        if not self.has_short_option():
+        if (spec := self.short_option) is None:
             return []
-
-        spec = self.short_option
-        if spec is None:
-            raise TypeError()
         if self.argument and not self.argument_optional:
             spec += ":"
         return [spec]

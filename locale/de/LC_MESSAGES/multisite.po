@@ -4,9 +4,9 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
+"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2026-04-30 08:26+0000\n"
+"PO-Revision-Date: 2026-04-30 22:50+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/stable/"
 "de/>\n"
 "Language: de\n"
@@ -870,7 +870,7 @@ msgstr "%s: Kann Handbuchseite nicht parsen: %s"
 
 #, python-format
 msgid "%s: Download agent output"
-msgstr "%s: Download der Agentenausgabe"
+msgstr "%s: Agentenausgabe herunterladen"
 
 #, python-format
 msgid "%s: No discovery result"
@@ -6753,7 +6753,8 @@ msgstr ""
 
 msgid "Allows users to download the product usage data as a JSON file."
 msgstr ""
-"Erlaubt Benutzern den Download von Daten zur Produktnutzung als JSON-Datei."
+"Erlaubt Benutzern die Daten zur Produktnutzung als JSON-Datei "
+"herunterzuladen."
 
 msgid ""
 "Allows users to perform commands on hosts and services in the views. If no "
@@ -22688,9 +22689,8 @@ msgstr "Agenten-Signaturschlüssel herunterladen"
 msgid "Download backup key"
 msgstr "Sicherungsschlüssel herunterladen"
 
-#, fuzzy
 msgid "Download file name"
-msgstr "Download-Dateiname"
+msgstr "Dateinamen herunterladen"
 
 #, fuzzy, python-format
 msgid "Download generic Checkmk agent for folder %s"
@@ -27101,9 +27101,8 @@ msgstr "Filter- und Berechnungsoptionen"
 msgid "Filtering by event ID"
 msgstr "Auslösende Ereignisse"
 
-#, fuzzy
 msgid "Filtering by event source"
-msgstr "Auslösende Ereignisse"
+msgstr "Nach Ereignisquelle filtern"
 
 #, fuzzy
 msgid "Filtering by event user"
@@ -32788,6 +32787,10 @@ msgstr "IP-Adresse oder FQDN des JVM-Webservers"
 #, fuzzy
 msgid "IP address or host name"
 msgstr "IP-Adresse oder Host-Name"
+
+#, fuzzy
+msgid "IP address or host name should not be empty"
+msgstr "Jobname darf nicht leer sein."
 
 msgid "IP address or name of tunnel endpoint"
 msgstr "IP-Adresse oder Name des Tunnelendpunkts"
@@ -48984,11 +48987,9 @@ msgstr "OpenLDAP"
 msgid "OpenTelemetry"
 msgstr "Name der OpenTelemetry Metrik"
 
-#, fuzzy
 msgid "OpenTelemetry Collector"
-msgstr "Daten des OpenTelemetry Collectors"
+msgstr "OpenTelemetry Collector"
 
-#, fuzzy
 msgid "OpenTelemetry Collector configuration"
 msgstr "Konfiguration des OpenTelemetry Collectors"
 
@@ -53172,7 +53173,7 @@ msgstr "Port Nummer"
 
 msgid "Port defaults to 443. In this mode the URL is not checked."
 msgstr ""
-"Standard-port ist 443. Wenn diese Option verwendet wird, dann wird die URL "
+"Standard-Port ist 443. Wenn diese Option verwendet wird, dann wird die URL "
 "nicht geprüft."
 
 msgid "Port down time until considered unused"
@@ -54474,9 +54475,8 @@ msgstr "benutzter RAM"
 msgid "RAM used (averaged)"
 msgstr "benutzter RAM (gemittelt)"
 
-#, fuzzy
 msgid "RCC"
-msgstr "CMC"
+msgstr "RCC"
 
 msgid "RCC Remote server address"
 msgstr "Adresse des RCC Remote-Servers"
@@ -63522,16 +63522,15 @@ msgstr ""
 "Gegen Sie den Host-Namen oder die IP-Adresse des PLCs an, mit dem "
 "kommuniziert werden soll."
 
-#, fuzzy
 msgid ""
 "Specify the host name or IP address of the central Event Console that you "
 "want to replicate from. The port number must be the same as set in the "
 "central site in <i>Access to event status via TCP</i>."
 msgstr ""
-"Legen Sie den Host-Namen oder die IP-Adresse der Master Event Console fest "
-"von der Sie replizieren möchten. Die Port-Nummer muss dieselbe sein wie an "
-"der Zentralinstanz im Abschnitt <i>Zugriff auf Ereignisstatus über TCP</i> "
-"eingestellt."
+"Legen Sie den Host-Namen oder die IP-Adresse der zentralen Event Console "
+"fest, von der Sie replizieren möchten. Die Port-Nummer muss dieselbe sein "
+"wie an der Zentralinstanz im Abschnitt <i>Zugriff auf Ereignisstatus über "
+"TCP</i> eingestellt."
 
 #, fuzzy
 msgid ""
@@ -77764,9 +77763,8 @@ msgstr "Schwellwerte für die Services der Podman-Festplattenauslastung."
 msgid "Thresholds for the Podman pods service."
 msgstr "Schwellwerte für den Service der Podman Pods."
 
-#, fuzzy
 msgid "Thresholds on lower message count"
-msgstr "Grenzen für Nachrichtenanzahl"
+msgstr "Schwellwerte für untere Meldungsanzahl"
 
 #, fuzzy
 msgid "Thresholds on outstanding DNS requests"
@@ -90485,9 +90483,9 @@ msgstr ""
 "Sie müssen Mitglied in mindestens einer Kontaktgruppe sein, um eine "
 "vordefinierte Bedingung erstellen zu können."
 
-#, fuzzy
 msgid "You need to change your password before proceeding. Reason: {}."
-msgstr "Bevor Sie weitermachen können, müssen Sie Ihr Passwort ändern."
+msgstr ""
+"Bevor Sie weitermachen können, müssen Sie Ihr Passwort ändern. Grund: {}."
 
 msgid "You need to change your password."
 msgstr "Sie müssen Ihr Kenntwort ändern."
@@ -91011,7 +91009,7 @@ msgstr "Normale und Sicherheitsupdates für Zypper (Linux)"
 msgid "[%s] - OAuth2 connection"
 msgstr "[%s] - OAuth2-Verbindung"
 
-#, fuzzy, python-format
+#, python-format
 msgid "[%s] - Quick Setup"
 msgstr "[%s] - Quick Setup"
 
@@ -91330,9 +91328,8 @@ msgstr "Konfiguration"
 msgid "configure"
 msgstr "konfigurieren"
 
-#, fuzzy
 msgid "connect"
-msgstr "Verbindungsaufbau"
+msgstr "verbinden"
 
 msgid "connection"
 msgstr "Verbindung"
@@ -94697,9 +94694,8 @@ msgstr "Kein Ablaufdatum"
 msgid "Public link expiration date"
 msgstr "Kein Ablaufdatum"
 
-#, fuzzy
 msgid "Internal comment, not visible to viewers"
-msgstr "Um eine Wartungszeit festzulegen, Kommentar eintragen"
+msgstr "Interner Kommentar, für Betrachter nicht sichtbar"
 
 #, fuzzy
 msgid "Save changes"
@@ -96345,17 +96341,15 @@ msgstr "Kann Änderungen nicht speichern: %s"
 msgid "The password was rejected by the server."
 msgstr "Das Passwort für diesen Benutzer."
 
-#, fuzzy
 msgid "Could not create the OpenTelemetry Collector configuration"
-msgstr "OpenTelemetry-Konfiguration konnte nicht gespeichert werden"
+msgstr ""
+"Die Konfiguration des OpenTelemetry Collectors konnte nicht erstellt werden"
 
-#, fuzzy
 msgid "Prometheus scraper configuration"
-msgstr "Prometheus scrape Konfiguration"
+msgstr "Konfiguration des Prometheus Scrapers"
 
-#, fuzzy
 msgid "Could not create the Prometheus scraper configuration"
-msgstr "Diese Konfiguration nicht anwenden"
+msgstr "Die Konfiguration des Prometheus Scrapers konnte nicht erstellt werden"
 
 msgid "Run the installation script"
 msgstr ""

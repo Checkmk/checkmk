@@ -34016,6 +34016,10 @@ msgid "IP address or host name"
 msgstr "Adresse IP de l'hôte"
 
 #, fuzzy
+msgid "IP address or host name should not be empty"
+msgstr "Gestion des mots de passe"
+
+#, fuzzy
 msgid "IP address or name of tunnel endpoint"
 msgstr "Adresse IP ou nom de l'extrémité du tunnel"
 

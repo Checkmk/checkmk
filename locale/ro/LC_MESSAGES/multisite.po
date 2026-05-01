@@ -32162,6 +32162,10 @@ msgid "IP address or host name"
 msgstr "Adresa IP a gazdei"
 
 #, fuzzy
+msgid "IP address or host name should not be empty"
+msgstr "Cheia secretă"
+
+#, fuzzy
 msgid "IP address or name of tunnel endpoint"
 msgstr "Adresa IP sau numele punctului final al tunelului"
 

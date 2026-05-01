@@ -32357,6 +32357,10 @@ msgid "IP address or host name"
 msgstr "Dirección IP del host"
 
 #, fuzzy
+msgid "IP address or host name should not be empty"
+msgstr "Clave secreta"
+
+#, fuzzy
 msgid "IP address or name of tunnel endpoint"
 msgstr "Dirección IP o nombre del punto final del túnel"
 

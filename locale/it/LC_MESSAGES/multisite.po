@@ -31973,6 +31973,10 @@ msgid "IP address or host name"
 msgstr "Indirizzo IP dell'host"
 
 #, fuzzy
+msgid "IP address or host name should not be empty"
+msgstr "Chiave segreta"
+
+#, fuzzy
 msgid "IP address or name of tunnel endpoint"
 msgstr "Indirizzo IP o nome dell'endpoint del tunnel"
 

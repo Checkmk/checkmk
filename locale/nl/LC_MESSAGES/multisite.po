@@ -32111,6 +32111,10 @@ msgid "IP address or host name"
 msgstr "IP-adres van gastheer"
 
 #, fuzzy
+msgid "IP address or host name should not be empty"
+msgstr "Geheime sleutel"
+
+#, fuzzy
 msgid "IP address or name of tunnel endpoint"
 msgstr "IP-adres of naam van tunnel-eindpunt"
 

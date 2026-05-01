@@ -29746,6 +29746,10 @@ msgstr "JVM WebサーバーのIPアドレスまたはFQDN"
 msgid "IP address or host name"
 msgstr "IPアドレスまたはホスト名"
 
+#, fuzzy
+msgid "IP address or host name should not be empty"
+msgstr "ユーザー名は空欄にできません。"
+
 msgid "IP address or name of tunnel endpoint"
 msgstr "トンネルのエンドポイントのIPアドレスまたは名前"
 

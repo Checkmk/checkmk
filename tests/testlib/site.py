@@ -30,7 +30,7 @@ import sys
 import time
 import urllib.parse
 from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
-from contextlib import contextmanager, nullcontext, suppress
+from contextlib import AbstractContextManager, contextmanager, nullcontext, suppress
 from dataclasses import dataclass
 from pathlib import Path
 from pprint import pformat
@@ -63,10 +63,6 @@ from tests.testlib.common.utils2 import (
     ServiceInfo,
     spawn_expect_process,
     write_file,
-)
-from tests.testlib.nonfree.cloud.utils import (  # type: ignore[import-untyped, unused-ignore, import-not-found]
-    create_cse_initial_config,
-    cse_openid_oauth_provider,
 )
 from tests.testlib.openapi_session import AgentReceiverApiSession, CMKOpenApiSession
 from tests.testlib.version import (
@@ -1999,12 +1995,6 @@ class SiteFactory:
 
     def get_site(self, name: str, create: bool = True) -> Site:
         site = self._site_obj(name)
-
-        if self.edition.is_cloud_edition():
-            # We need to create some Checkmk Cloud config files before starting the site, exactly as it
-            # happens on the SaaS environment, where k8s takes care of creating the config files
-            # before the site is created.
-            create_cse_initial_config()
         if create:
             site.create()
         return site
@@ -2033,12 +2023,7 @@ class SiteFactory:
         site.start()
 
         if prepare_for_tests:
-            with (
-                cse_openid_oauth_provider(f"http://localhost:{site.apache_port}")
-                if self.edition.is_cloud_edition()
-                else nullcontext()
-            ):
-                site.prepare_for_tests()
+            site.prepare_for_tests()
 
         if activate_changes:
             # There seem to be still some changes that want to be activated
@@ -2459,6 +2444,7 @@ class SiteFactory:
         report_crashes: bool = True,
         tracing_config: TracingConfig = NO_TRACING,
         global_settings_updates: Iterable[GlobalSettingsUpdate] = (),
+        lifecycle_wrapper: Callable[[Site], AbstractContextManager[object]] | None = None,
     ) -> Iterator[Site]:
         yield from self.get_test_site(
             name=name,
@@ -2470,6 +2456,7 @@ class SiteFactory:
             report_crashes=report_crashes,
             tracing_config=tracing_config,
             global_settings_updates=global_settings_updates,
+            lifecycle_wrapper=lifecycle_wrapper,
         )
 
     def get_test_site(
@@ -2483,6 +2470,7 @@ class SiteFactory:
         report_crashes: bool = True,
         tracing_config: TracingConfig = NO_TRACING,
         global_settings_updates: Iterable[GlobalSettingsUpdate] = (),
+        lifecycle_wrapper: Callable[[Site], AbstractContextManager[object]] | None = None,
     ) -> Iterator[Site]:
         """Return a fully set-up test site (for use in site fixtures)."""
         reuse_site = os.environ.get("REUSE", "0") == "1"
@@ -2518,23 +2506,22 @@ class SiteFactory:
                     global_settings_update.relative_path,
                     global_settings_update.update,
                 )
-            self.initialize_site(
-                site,
-                init_livestatus=init_livestatus,
-                prepare_for_tests=True,
-                tracing_config=tracing_config,
-                auto_restart_httpd=auto_restart_httpd,
+            wrapper: AbstractContextManager[object] = (
+                lifecycle_wrapper(site) if lifecycle_wrapper is not None else nullcontext()
             )
-            logger.info(
-                'Site "%s" is ready!%s',
-                site.id,
-                f" [{description}]" if description else "",
-            )
-            with (
-                cse_openid_oauth_provider(f"http://localhost:{site.apache_port}")
-                if self.edition.is_cloud_edition()
-                else nullcontext()
-            ):
+            with wrapper:
+                self.initialize_site(
+                    site,
+                    init_livestatus=init_livestatus,
+                    prepare_for_tests=True,
+                    tracing_config=tracing_config,
+                    auto_restart_httpd=auto_restart_httpd,
+                )
+                logger.info(
+                    'Site "%s" is ready!%s',
+                    site.id,
+                    f" [{description}]" if description else "",
+                )
                 yield site
         finally:
             if save_results:

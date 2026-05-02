@@ -2740,7 +2740,6 @@ cmc_host_rrd_config = [
     (wato_lvl1a_folder / "rules.mk").unlink()
     (wato_lvl2_folder / "hosts.mk").unlink()
     (wato_lvl2_folder / "rules.mk").unlink()
-    (config._initialize_config())
 
 
 def _add_host_in_folder(folder_path: Path, name: str) -> None:

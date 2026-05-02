@@ -533,10 +533,6 @@ def get_default_config() -> dict[str, Any]:
     }
 
 
-def load_default_config() -> None:
-    globals().update(get_default_config())
-
-
 def register(name: str, default_value: Any) -> None:
     """Register a new configuration variable within Check_MK base."""
     setattr(default_config, name, default_value)
@@ -575,7 +571,7 @@ def load(
     with_conf_d: bool = True,
     validate_hosts: bool = True,
 ) -> LoadingResult:
-    _initialize_config()
+    globals().update(get_default_config())
 
     # Load assorted experimental parameters if any
     experimental_config = load_experimental_config(cmk.utils.paths.default_config_dir)
@@ -634,7 +630,7 @@ def load_packed_config(
         cmk.base.core.nagios._dump_precompiled_hostcheck()
 
     """
-    _initialize_config()
+    globals().update(get_default_config())
     globals().update(PackedConfigStore.from_serial(config_path).read())
 
     # Used by the precompiled host check, which resolves the addresses dynamically
@@ -654,10 +650,6 @@ def load_packed_config(
         load_experimental_config(cmk.utils.paths.default_config_dir),
         edition=edition,
     )
-
-
-def _initialize_config() -> None:
-    load_default_config()
 
 
 def _perform_post_config_loading_actions(

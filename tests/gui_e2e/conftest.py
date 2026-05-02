@@ -57,7 +57,7 @@ def fixture_test_site(request: pytest.FixtureRequest, site_factory: SiteFactory)
     """Return the central Checkmk site object."""
     is_cloud = site_factory.edition.is_cloud_edition()
     if is_cloud:
-        from tests.testlib.nonfree.cloud.utils import (  # type: ignore[import-untyped, unused-ignore, import-not-found]
+        from tests.testlib.system.cloud.utils import (  # type: ignore[import-untyped, unused-ignore, import-not-found]
             create_cloud_initial_config,
         )
 
@@ -72,7 +72,7 @@ def fixture_test_site(request: pytest.FixtureRequest, site_factory: SiteFactory)
 
 
 def _cloud_lifecycle_wrapper(site: Site) -> "AbstractContextManager[object]":
-    from tests.testlib.nonfree.cloud.utils import (  # type: ignore[import-untyped, unused-ignore, import-not-found]
+    from tests.testlib.system.cloud.utils import (  # type: ignore[import-untyped, unused-ignore, import-not-found]
         cloud_environment,
     )
 

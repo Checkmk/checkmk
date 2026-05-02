@@ -4,6 +4,7 @@ load("@cmk_requirements//:requirements.bzl", "requirement")
 package(
     default_visibility = [
         "//cmk:__subpackages__",
+        "//non-free/tests:__subpackages__",
         "//tests:__subpackages__",
     ],
 )
@@ -29,6 +30,7 @@ py_library(
         "//bin:__subpackages__",
         "//cmk:__subpackages__",
         "//non-free/packages:__subpackages__",
+        "//non-free/tests:__subpackages__",
         "//omd/packages:__subpackages__",
         "//packages:__subpackages__",
         "//tests:__subpackages__",

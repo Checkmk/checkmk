@@ -578,7 +578,7 @@ def load(
 
     storage_format = get_storage_format(experimental_config.get("config_storage_format"))
 
-    _changed_var_names = _load_config(storage_format, with_conf_d=with_conf_d)
+    _load_config(storage_format, with_conf_d=with_conf_d)
 
     loading_result = _perform_post_config_loading_actions(
         discovery_rulesets,
@@ -910,7 +910,7 @@ def _load_config(
     storage_format: StorageFormat,
     *,
     with_conf_d: bool,
-) -> set[str]:
+) -> None:
     helper_vars = {
         "FOLDER_PATH": None,
     }
@@ -922,7 +922,6 @@ def _load_config(
     clusters = SetFolderPathDict(clusters)
 
     global_dict = globals()
-    pre_load_vars = {**global_dict}
 
     global_dict |= helper_vars
 
@@ -976,8 +975,6 @@ def _load_config(
     # the lookup performance and the helper_vars are no longer available anyway..
     all_hosts = list(all_hosts)
     clusters = dict(clusters)
-
-    return {k for k, v in global_dict.items() if k not in pre_load_vars or v != pre_load_vars[k]}
 
 
 def _transform_plugin_names_from_160_to_170(global_dict: dict[str, Any]) -> None:

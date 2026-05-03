@@ -1,0 +1,37 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+Subject: [PATCH] Fix data loss when POLLHUP races with unread kernel data
+
+When a backend (unix-socket) peer closes its connection, Linux can
+report POLLHUP without simultaneously reporting POLLIN, even though
+there is still data waiting in the kernel receive buffer.
+
+The remaining data in the buffer should be transmitted,
+quoting from https://man7.org/linux/man-pages/man2/poll.2.html
+
+> POLLHUP
+>
+> Hang up (only returned in revents; ignored in events). Note that when
+> reading from a channel such as a pipe or a stream socket, this event
+> merely indicates that the peer closed its end of the channel. Subsequent
+> reads from the channel will return 0 (end of file) only after all
+> outstanding data in the channel has been consumed.
+
+The already-correct "Read socket closed (read hangup)" path guards the
+same close decision with an ioctlsocket(FIONREAD) check. This patch
+simply applies the guard to s_poll_hup().
+
+--- a/src/client.c
++++ b/src/client.c
+@@ -895,10 +895,11 @@
+                 s_log(LOG_INFO, "Write socket closed (HUP)");
+                 sock_open_wr=0;
+             }
+-            if(s_poll_hup(c->fds, c->sock_rfd->fd)) {
++            if(sock_open_rd && s_poll_hup(c->fds, c->sock_rfd->fd) &&
++                    (ioctlsocket(c->sock_rfd->fd, FIONREAD, &bytes) || !bytes)) {
+                 s_log(LOG_INFO, "Read socket closed (HUP)");
+                 sock_open_rd=0;
+             }
+             if(s_poll_hup(c->fds, c->ssl_rfd->fd) ||
+                     s_poll_hup(c->fds, c->ssl_wfd->fd)) {
+                 if(c->sock_ptr) {

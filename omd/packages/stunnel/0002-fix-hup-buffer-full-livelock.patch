@@ -1,0 +1,46 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+Subject: [PATCH] Fix buffer-full/POLLHUP livelock that fires the watchdog
+
+Previously, `stunnel` would simply abandon the data in the read buffer,
+once a `POLLHUP` signal is received. With
+`0001-fix-hup-race-data-loss.patch` we attempt to send the remaining
+data. In particular, we require for the `transfer()` loop to make
+progress, even if the socket is closed.
+
+The following issue could occur:
+
+If the backend has closed the connection while both the read and TLS
+send buffers are full, `stunnel` would still register the backend socket
+with `poll()`. `poll()` returns immediately on every iteration due to
+`POLLHUP`. This would exhausts the max iteration number in the
+`transfer()` loop. Subsequently, the data in the read buffer would be
+abandoned.
+
+`s_poll_add` opts into `POLLRDHUP` by explicitly setting it in `events`
+when the buffer has room to receive data. This way TCP sockets avoid the
+busy loop and the associated data loss. `POLLHUP` has no equivalent
+mechanism: https://man7.org/linux/man-pages/man2/poll.2.html
+
+> The bits returned in revents can include any of those specified in
+> events, or one of the values POLLERR, POLLHUP, or POLLNVAL.
+
+The fix: We omit the call to `s_poll_add` completely if the read buffer
+is full. This way the `transfer()` loop will block until the TLS send
+buffer has room, allowing data to drain before polling the backend
+again.
+
+Any socket errors on the backend fd are detected on the next iteration
+once sock_ptr has drained below BUFFSIZE and the fd is polled again.
+
+--- a/src/client.c
++++ b/src/client.c
+@@ -856,7 +856,7 @@
+         /* for plain socket open data stream = open file descriptor */
+         /* make sure to add each open socket to receive exceptions! */
+-        if(sock_open_rd) /* only poll if the read file descriptor is open */
+-            s_poll_add(c->fds, c->sock_rfd->fd, c->sock_ptr<BUFFSIZE, 0);
++        if(sock_open_rd && c->sock_ptr<BUFFSIZE)
++            s_poll_add(c->fds, c->sock_rfd->fd, 1, 0);
+         if(sock_open_wr) /* only poll if the write file descriptor is open */
+             s_poll_add(c->fds, c->sock_wfd->fd, 0, c->ssl_ptr>0);
+         /* poll TLS file descriptors unless TLS shutdown was completed */

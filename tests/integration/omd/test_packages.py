@@ -176,7 +176,7 @@ def test_heirloommailx(site: Site) -> None:
 
 
 def test_stunnel(site: Site) -> None:
-    expected_version = "5.63"
+    expected_version = "5.78"
     process = site.run(cmd := ["stunnel", "-help"])
     help_text = process.stderr if process.stderr else "<EXPECTED ERROR; OBSERVED NO ERROR>"
     # TODO: Sync this with a global version for stunnel (like we do it for python)

@@ -462,11 +462,16 @@ http_archive(
 http_archive(
     name = "stunnel",
     build_file = "//omd/packages/stunnel:BUILD.stunnel.bazel",
-    sha256 = "c74c4e15144a3ae34b8b890bb31c909207301490bd1e51bfaaa5ffeb0a994617",
-    strip_prefix = "stunnel-5.63",
+    patch_args = ["-p1"],
+    patches = [
+        "//omd/packages/stunnel:0001-fix-hup-race-data-loss.patch",
+        "//omd/packages/stunnel:0002-fix-hup-buffer-full-livelock.patch",
+    ],
+    sha256 = "8727e53bb8b7528f850327a2a149158422c02183bc120d1d733cc65b1e2c349d",
+    strip_prefix = "stunnel-5.78",
     urls = [
-        "https://ftp.nluug.nl/pub/networking/stunnel/archive/5.x/stunnel-5.63.tar.gz",
-        UPSTREAM_MIRROR_URL + "stunnel-5.63.tar.gz",
+        "https://www.stunnel.org/archive/5.x/stunnel-5.78.tar.gz",
+        UPSTREAM_MIRROR_URL + "stunnel-5.78.tar.gz",
     ],
 )
 

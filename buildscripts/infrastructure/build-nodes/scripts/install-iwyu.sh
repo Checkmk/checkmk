@@ -101,6 +101,7 @@ cmake -Wno-dev \
     -G "Unix Makefiles" \
     -DCMAKE_BUILD_TYPE=Release \
     -DCMAKE_PREFIX_PATH="${CLANG_LIB_PATH}" \
+    -DCMAKE_CXX_FLAGS="-Wno-attributes" \
     -DCMAKE_INSTALL_PREFIX="${INSTALL_PREFIX}${IWYU_PATH}" \
     ../include-what-you-use
 make -j8 install

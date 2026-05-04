@@ -36,6 +36,11 @@ class _FeatureFilterFinder:
     def __init__(self, wrapped: FinderP, blocked: set[str]) -> None:
         self._wrapped = wrapped
         self._blocked = blocked
+        # It is not enough to implement `find_spec`.
+        # While that is the documented interface,
+        # implementing just that will break `importlib.metadata.version` (for instance).
+        if hasattr(wrapped, "find_distributions"):
+            self.find_distributions = wrapped.find_distributions
 
     def find_spec(
         self, fullname: str, path: Sequence[str] | None, target: ModuleType | None = None

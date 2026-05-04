@@ -112,6 +112,18 @@ class TestMessageBroker:
                 ):
                     check_broker_ping(remote_site_2, remote_site.id)
 
+    def test_p2p_bidirectional(
+        self, central_site: Site, remote_site: Site, remote_site_2: Site
+    ) -> None:
+        """Verify that a p2p connection enables message exchange in both directions."""
+        with rabbitmq_info_on_failure([central_site, remote_site, remote_site_2]):
+            with p2p_connection(central_site, remote_site, remote_site_2):
+                with broker_stopped(central_site):
+                    # remote_site_2 → remote_site
+                    assert_message_exchange_working(remote_site, remote_site_2)
+                    # remote_site → remote_site_2
+                    assert_message_exchange_working(remote_site_2, remote_site)
+
     def test_rabbitmq_port_change(self, central_site: Site, remote_site: Site) -> None:
         """Ensure that sites can still communicate after the message broker port is changed"""
         with rabbitmq_info_on_failure([central_site, remote_site]):

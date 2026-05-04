@@ -188,6 +188,14 @@ class VersionedEndpointRegistry:
                 handler=handler,
             )
 
+    def unregister(self, endpoint: VersionedEndpoint) -> None:
+        endpoint_family = endpoint_family_registry.get(endpoint.doc.family)
+        if endpoint_family is None:
+            return
+        endpoint_key_ = self.endpoint_key(endpoint_family.name, endpoint.metadata.link_relation)
+        for version in endpoint.versions:
+            self._versions.get(version, {}).pop(endpoint_key_, None)
+
     def specified_endpoints(self, version: APIVersion) -> Iterator[EndpointDefinition]:
         """Iterate over all endpoints specified for a given API version"""
         for _endpoint_key, endpoint in self._versions.get(version, dict()).items():

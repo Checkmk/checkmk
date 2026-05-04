@@ -4114,6 +4114,16 @@ class ServiceAvailabilityClient(RestApiClient):
         )
 
 
+class DisabledEndpointStubClient(RestApiClient):
+    """Test-only client for verifying the disabled_endpoint mechanism returns 403."""
+
+    def get_legacy(self, expect_ok: bool = True) -> Response:
+        return self.request("get", "/test-disabled-legacy-stub", expect_ok=expect_ok)
+
+    def get_versioned(self, expect_ok: bool = True) -> Response:
+        return self.request("get", "/test-disabled-versioned-stub", expect_ok=expect_ok)
+
+
 @dataclasses.dataclass
 class ClientRegistry:
     """Overall client registry for all available endpoint family clients.
@@ -4183,6 +4193,7 @@ class ClientRegistry:
     HistoricalEventConsole: HistoricalEventConsole
     HostAvailability: HostAvailabilityClient
     ServiceAvailability: ServiceAvailabilityClient
+    DisabledEndpointStub: DisabledEndpointStubClient
 
 
 def get_client_registry(request_handler: RequestHandler, url_prefix: str) -> ClientRegistry:
@@ -4244,4 +4255,5 @@ def get_client_registry(request_handler: RequestHandler, url_prefix: str) -> Cli
         HistoricalEventConsole=HistoricalEventConsole(request_handler, url_prefix),
         HostAvailability=HostAvailabilityClient(request_handler, url_prefix),
         ServiceAvailability=ServiceAvailabilityClient(request_handler, url_prefix),
+        DisabledEndpointStub=DisabledEndpointStubClient(request_handler, url_prefix),
     )

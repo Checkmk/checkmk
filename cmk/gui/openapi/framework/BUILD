@@ -82,6 +82,7 @@ py_library(
     srcs = [
         "__init__.py",
         "_validation.py",
+        "disabled_endpoint.py",
         "endpoint_link.py",
         "endpoint_model.py",
         "handler.py",

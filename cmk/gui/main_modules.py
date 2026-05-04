@@ -24,7 +24,9 @@ def register(edition: Edition) -> None:
         return
     _registered_edition = edition
 
-    agent_bakery_enabled = licensed_features(paths.omd_root, edition).bakery.enabled
+    features = licensed_features(paths.omd_root, edition)
+    agent_bakery_enabled = features.bakery.enabled
+    extended_metric_backend_enabled = features.extended_metric_backend.enabled
 
     match edition:
         case Edition.PRO:
@@ -33,34 +35,43 @@ def register(edition: Edition) -> None:
             cmk.gui.nonfree.pro.registration.register(
                 edition,
                 agent_bakery_enabled=agent_bakery_enabled,
+                extended_metric_backend_enabled=extended_metric_backend_enabled,
             )
 
         case Edition.ULTIMATEMT:
             import cmk.gui.nonfree.ultimatemt.registration  # type: ignore[import-not-found, import-untyped, unused-ignore]
 
             cmk.gui.nonfree.ultimatemt.registration.register(
-                edition, agent_bakery_enabled=agent_bakery_enabled
+                edition,
+                agent_bakery_enabled=agent_bakery_enabled,
+                extended_metric_backend_enabled=extended_metric_backend_enabled,
             )
 
         case Edition.ULTIMATE:
             import cmk.gui.nonfree.ultimate.registration  # type: ignore[import-not-found, import-untyped, unused-ignore]
 
             cmk.gui.nonfree.ultimate.registration.register(
-                edition, agent_bakery_enabled=agent_bakery_enabled
+                edition,
+                agent_bakery_enabled=agent_bakery_enabled,
+                extended_metric_backend_enabled=extended_metric_backend_enabled,
             )
 
         case Edition.CLOUD:
             import cmk.gui.nonfree.cloud.registration  # type: ignore[import-not-found, import-untyped, unused-ignore]
 
             cmk.gui.nonfree.cloud.registration.register(
-                edition, agent_bakery_enabled=agent_bakery_enabled
+                edition,
+                agent_bakery_enabled=agent_bakery_enabled,
+                extended_metric_backend_enabled=extended_metric_backend_enabled,
             )
 
         case Edition.COMMUNITY:
             import cmk.gui.community_registration
 
             cmk.gui.community_registration.register(
-                edition, agent_bakery_enabled=agent_bakery_enabled
+                edition,
+                agent_bakery_enabled=agent_bakery_enabled,
+                extended_metric_backend_enabled=extended_metric_backend_enabled,
             )
 
         case _ as unreachable:

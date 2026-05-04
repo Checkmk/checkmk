@@ -262,7 +262,7 @@ def _extra_service_attributes(
     attrs.update(config_cache.extra_attributes_of_service(host_name, service_name, service_labels))
 
     # Add explicit custom_variables
-    for varname, value in ConfigCache.get_explicit_service_custom_variables(
+    for varname, value in config_cache.get_explicit_service_custom_variables(
         host_name, service_name
     ).items():
         attrs["_%s" % varname.upper()] = value

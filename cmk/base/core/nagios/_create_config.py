@@ -886,7 +886,7 @@ def create_nagios_servicedefs(
                 service_labels,
                 service_depends_on,
             )
-    service_discovery_name = ConfigCache.service_discovery_name()
+    service_discovery_name = config_cache.service_discovery_name()
 
     # Inventory checks - if user has configured them.
     if not (disco_params := config_cache.discovery_check_parameters(hostname)).commandline_only:

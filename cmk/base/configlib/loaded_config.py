@@ -7,7 +7,7 @@
 
 
 import dataclasses
-from collections.abc import Mapping, Sequence
+from collections.abc import Container, Mapping, Sequence
 from typing import (
     Any,
     Literal,
@@ -25,10 +25,12 @@ from cmk.base.default_config.cmc import (
 )
 from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.fetchers import IPMICredentials
+from cmk.inventory.structured_data import RawIntervalFromConfig
 from cmk.rrd import RRDObjectConfig
-from cmk.snmplib import SNMPCredentials
+from cmk.snmplib import SNMPCredentials, SNMPTiming
 from cmk.utils.host_storage import FolderAttributesForBase
 from cmk.utils.http_proxy_config import HTTPProxySpec
+from cmk.utils.labels import Labels
 from cmk.utils.notify_types import (
     Contact,
     ContactName,
@@ -40,6 +42,7 @@ from cmk.utils.notify_types import (
 from cmk.utils.oauth2_connection import OAuth2Connection
 from cmk.utils.rulesets import ruleset_matcher, RuleSetName
 from cmk.utils.rulesets.ruleset_matcher import RuleSpec
+from cmk.utils.servicename import ServiceName
 
 
 @dataclasses.dataclass(frozen=True, kw_only=True)
@@ -217,3 +220,59 @@ class LoadedConfigFragment:
     notification_logging: int
     notification_spooling: bool | Literal["local", "remote", "both", "off"] | None
     notification_spool_to: object
+    active_checks: Mapping[str, Sequence[RuleSpec[Mapping[str, object]]]]
+    special_agents: Mapping[str, Sequence[RuleSpec[Mapping[str, object]]]]
+    custom_checks: Sequence[RuleSpec[dict[Any, Any]]]
+    notification_parameters: Mapping[str, Sequence[RuleSpec[Mapping[str, object]]]]
+    inv_parameters: Mapping[str, Sequence[RuleSpec[Mapping[str, object]]]]
+    inv_retention_intervals: Sequence[RuleSpec[Sequence[RawIntervalFromConfig]]]
+    periodic_discovery: Sequence[RuleSpec[Any]]
+    check_mk_exit_status: Sequence[RuleSpec[Any]]
+    ping_levels: Sequence[RuleSpec[Any]]
+    primary_address_family: Sequence[RuleSpec[object]]
+    datasource_programs: Sequence[RuleSpec[str]]
+    only_hosts: Sequence[RuleSpec[bool]] | None
+    distributed_wato_site: str | None
+    dyndns_hosts: Sequence[RuleSpec[bool]]
+    parents: Sequence[RuleSpec[str]]
+    explicit_host_conf: Mapping[str, Mapping[HostName, Any]]
+    host_label_rules: Sequence[RuleSpec[Mapping[str, str]]]
+    service_label_rules: Sequence[RuleSpec[Mapping[str, str]]]
+    host_labels: Mapping[HostName, Labels]
+    host_groups: Sequence[RuleSpec[str]]
+    host_contactgroups: Sequence[RuleSpec[str]]
+    host_check_commands: Sequence[RuleSpec[str | tuple[str, int | str] | None]]
+    host_icons_and_actions: Sequence[RuleSpec[str]]
+    service_groups: Sequence[RuleSpec[str]]
+    service_contactgroups: Sequence[RuleSpec[str]]
+    service_icons_and_actions: Sequence[RuleSpec[str]]
+    service_tag_rules: Sequence[RuleSpec[Sequence[tuple[str, str]]]]
+    custom_service_attributes: Sequence[RuleSpec[Sequence[tuple[str, str]]]]
+    explicit_service_custom_variables: dict[tuple[HostName, ServiceName], dict[str, str]]
+    ignored_services: Sequence[RuleSpec[object]]
+    ignored_checks: Sequence[RuleSpec[Container[str]]]
+    clustered_services: Sequence[RuleSpec[object]]
+    clustered_services_of: Mapping[HostAddress, Sequence[RuleSpec[object]]]
+    clustered_services_mapping: Sequence[RuleSpec[HostAddress]]
+    clustered_services_configuration: Sequence[
+        RuleSpec[Sequence[Mapping[str, Mapping[object, object]]]]
+    ]
+    management_board_config: Sequence[RuleSpec[tuple[str, SNMPCredentials | IPMICredentials]]]
+    snmp_ports: Sequence[RuleSpec[int]]
+    snmp_timing: Sequence[RuleSpec[SNMPTiming]]
+    snmp_bulk_size: Sequence[RuleSpec[int]]
+    snmp_character_encodings: Sequence[RuleSpec[str | None]]
+    snmp_backend_hosts: Sequence[RuleSpec[object]]
+    snmp_backend_default: Literal["inline", "classic"]
+    snmp_limit_oid_range: Sequence[RuleSpec[object]]
+    snmp_exclude_sections: Sequence[RuleSpec[Mapping[str, Sequence[str]]]]
+    snmp_without_sys_descr: Sequence[RuleSpec[bool]]
+    snmpv2c_hosts: Sequence[RuleSpec[bool]]
+    snmpv3_contexts: Sequence[
+        RuleSpec[
+            tuple[str | None, Sequence[str], Literal["continue_on_timeout", "stop_on_timeout"]]
+        ]
+    ]
+    bulkwalk_hosts: Sequence[RuleSpec[bool]]
+    management_bulkwalk_hosts: Sequence[RuleSpec[bool]]
+    usewalk_hosts: Sequence[RuleSpec[bool]]

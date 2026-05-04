@@ -2447,9 +2447,9 @@ def test_config_cache_service_discovery_name(
     ts = Scenario()
     ts.set_option("use_new_descriptions_for", use_new_descr)
 
-    ts.apply(monkeypatch)
+    config_cache = ts.apply(monkeypatch)
 
-    assert ConfigCache.service_discovery_name() == result
+    assert config_cache.service_discovery_name() == result
 
 
 @pytest.mark.parametrize(

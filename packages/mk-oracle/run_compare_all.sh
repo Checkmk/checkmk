@@ -1,5 +1,6 @@
 #!/bin/bash
 # Compare outputs of the old (mk_oracle) and new (mk-oracle) plugins.
+# Usage: ./run_compare_all.sh [--diff] [--keep] [--time-only]
 
 sections=(
     jobs
@@ -27,7 +28,7 @@ failed_sections=()
 
 for section in "${sections[@]}"; do
     echo "Running section: $section"
-    if ! DB_SECTION="$section" ./run_comparison.sh "$*"; then
+    if ! DB_SECTION="$section" ./run_comparison.sh "$@"; then
         failed_sections+=("$section")
     fi
 done

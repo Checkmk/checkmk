@@ -42,7 +42,7 @@ $cargo_target = "x86_64-pc-windows-msvc"
 # Oracle Test Database Params
 $test_host = "oracle-rocky-ci.lan.checkmk.net"
 $test_port = 1521
-$test_service = "testdb23"
+$test_service = "dbtest23"
 $test_instance = "_"
 $test_sid = "SID23"
 $test_user = "system"

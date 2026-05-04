@@ -13,7 +13,7 @@ export MK_LOGDIR="${PKG_DIR}/var/log/check_mk_agent"
 export DB_USER="system"
 export DB_PASSWORD="${CI_ORA_TEST_PASSWORD}"
 export DB_HOST="oracle-rocky-ci.lan.checkmk.net"
-export DB_SERVICE_NAME="testdb23"
+export DB_SERVICE_NAME="dbtest23"
 export DB_SECTION="${DB_SECTION:-instance}"
 envsubst <"${MK_CONFDIR}/mk-oracle.yml.conf" >"${MK_CONFDIR}/mk-oracle.yml"
 

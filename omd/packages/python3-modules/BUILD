@@ -1,5 +1,4 @@
 load("@omd_packages//:package_versions.bzl", "PYTHON_MAJOR_DOT_MINOR")
-load("@omd_packages//:static_variables.bzl", "INTERNAL_PYPI_MIRROR")
 load("@python_modules//:requirements.bzl", "all_requirements")
 load(":build-python3-modules.bzl", "build_cmd", "build_python_module", "create_requirements_file", "get_pip_options")
 
@@ -32,14 +31,12 @@ config_setting(
             git_ssl_no_verify = "",
             pip_add_opts = get_pip_options(module),
             pyMajMin = PYTHON_MAJOR_DOT_MINOR,
-            pypi_mirror = INTERNAL_PYPI_MIRROR,
             requirements = "-r $$HOME/$(execpath %s_requirements.txt)" % module,
         ),
         ":git_ssl_no_verify": build_cmd.format(
             git_ssl_no_verify = "GIT_SSL_NO_VERIFY=true",
             pip_add_opts = get_pip_options(module),
             pyMajMin = PYTHON_MAJOR_DOT_MINOR,
-            pypi_mirror = INTERNAL_PYPI_MIRROR,
             requirements = "-r $$HOME/$(execpath %s_requirements.txt)" % module,
         ),
     }),
@@ -69,14 +66,12 @@ config_setting(
             git_ssl_no_verify = "",
             pip_add_opts = get_pip_options(module),
             pyMajMin = PYTHON_MAJOR_DOT_MINOR,
-            pypi_mirror = INTERNAL_PYPI_MIRROR,
             requirements = dep,
         ),
         ":git_ssl_no_verify": build_cmd.format(
             git_ssl_no_verify = "GIT_SSL_NO_VERIFY=true",
             pip_add_opts = get_pip_options(module),
             pyMajMin = PYTHON_MAJOR_DOT_MINOR,
-            pypi_mirror = INTERNAL_PYPI_MIRROR,
             requirements = dep,
         ),
     }),

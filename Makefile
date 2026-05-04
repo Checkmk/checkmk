@@ -11,8 +11,7 @@ TAROPTS            := --owner=root --group=root --exclude=.svn --exclude=*~ \
                       --exclude=.gitignore --exclude=*.swp --exclude=.f12 \
                       --exclude=__pycache__ --exclude=*.pyc
 ARTIFACT_STORAGE   := https://artifacts.lan.tribe29.com
-# TODO: Prefixing the command with the environment variable breaks xargs usage below!
-PIPENV             := PIPENV_PYPI_MIRROR=$(PIPENV_PYPI_MIRROR) scripts/run-pipenv
+PIPENV             := scripts/run-pipenv
 
 JAVASCRIPT_SOURCES := $(filter-out %_min.js, \
                           $(wildcard \

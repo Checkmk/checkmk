@@ -112,17 +112,5 @@ VIRTUALENV_VERSION := 20.25.0
 NODEJS_VERSION := 22
 NPM_VERSION := 10
 
-# PyPi Mirror Configuration
-# By default our internal Python mirror is used.
-# To use the official Python mirror, please export `USE_EXTERNAL_PIPENV_MIRROR=true`.
-EXTERNAL_PYPI_MIRROR := https://pypi.org/simple
-INTERNAL_PYPI_MIRROR := $(shell sed -n 's|^INTERNAL_PYPI_MIRROR = \"\(\S*\)\"$$|\1|p' $(REPO_PATH)/static_variables.bzl)
-
-ifeq (true,${USE_EXTERNAL_PIPENV_MIRROR})
-PIPENV_PYPI_MIRROR  := $(EXTERNAL_PYPI_MIRROR)
-else
-PIPENV_PYPI_MIRROR  := $(INTERNAL_PYPI_MIRROR)
-endif
-
 print-%:
 	@echo '$($*)'

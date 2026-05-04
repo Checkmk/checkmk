@@ -15,7 +15,6 @@ jobs:
     runs-on: ${{ matrix.os }}
     env:
       PIPENV_IGNORE_VIRTUALENVS: 1
-      USE_EXTERNAL_PIPENV_MIRROR: true
       PYTHONWARNINGS: ignore:DeprecationWarning
     strategy:
       matrix:

@@ -18,7 +18,6 @@ from pathlib import Path
 from typing import NamedTuple
 
 environment = os.environ.copy()
-environment.update({"PIPENV_PYPI_MIRROR": "https://pypi.org/simple"})
 
 
 class UpdateInfo(NamedTuple):

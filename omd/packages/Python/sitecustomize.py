@@ -8,7 +8,6 @@
 import os
 import site
 import sys
-from pathlib import Path
 
 # Set the Checkmk version specific python module directory. This is the
 # location for the extra python modules shipped with Checkmk.
@@ -27,7 +26,8 @@ if omd_root:
     # or via pip.
     sys.path.insert(0, omd_root + "/local/lib/python3")
 
-    # Block the import of modules that are not licensed for the current edition:
-    from cmk.licensing.basics.finder import apply_feature_filter
-
-    sys.meta_path[:] = apply_feature_filter(Path(omd_root), sys.meta_path)
+    # Enable with CMK-33726
+    # # Block the import of modules that are not licensed for the current edition:
+    # from cmk.licensing.basics.finder import apply_feature_filter
+    #
+    # sys.meta_path[:] = apply_feature_filter(Path(omd_root), sys.meta_path)

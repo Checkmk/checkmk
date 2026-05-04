@@ -274,7 +274,13 @@ function shiftYear(delta: number) {
 .cmk-date-time-picker {
   display: inline-flex;
   align-items: center;
-  gap: var(--dimension-3);
+  gap: var(--dimension-4);
+}
+
+.cmk-date-time-picker__date {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--dimension-4);
 }
 
 .cmk-date-time-picker__field {
@@ -285,11 +291,11 @@ function shiftYear(delta: number) {
   padding: 1px 6px;
   background: var(--default-form-element-bg-color);
   color: var(--font-color);
-  font-family: monospace;
-  font-size: 11px;
+  font-size: var(--font-size-small);
   line-height: 17px;
-  height: 21px;
+  height: var(--form-field-height);
   box-sizing: border-box;
+  font-variant-numeric: tabular-nums;
 }
 
 .cmk-date-time-picker__trigger {
@@ -307,6 +313,12 @@ function shiftYear(delta: number) {
 
   &:hover {
     opacity: 1;
+  }
+
+  &:focus-visible {
+    opacity: 1;
+    outline: 2px solid var(--success);
+    outline-offset: 2px;
   }
 }
 

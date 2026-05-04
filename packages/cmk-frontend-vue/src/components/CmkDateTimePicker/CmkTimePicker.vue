@@ -290,7 +290,7 @@ function scrollToSelected() {
   position: relative;
   display: inline-flex;
   align-items: center;
-  gap: var(--dimension-2);
+  gap: var(--dimension-4);
 }
 
 .cmk-time-picker__field {
@@ -301,10 +301,9 @@ function scrollToSelected() {
   border-radius: var(--dimension-3);
   padding: var(--dimension-1) 6px;
   background: var(--default-form-element-bg-color);
-  font-family: monospace;
-  font-size: 11px;
+  font-size: var(--font-size-small);
   line-height: 17px;
-  height: 21px;
+  height: var(--form-field-height);
   box-sizing: border-box;
   font-variant-numeric: tabular-nums;
 }
@@ -314,8 +313,7 @@ function scrollToSelected() {
   border: none;
   background: transparent;
   color: var(--font-color);
-  font-family: monospace;
-  font-size: 11px;
+  font-size: var(--font-size-small);
   line-height: 17px;
   text-align: center;
   padding: 0;
@@ -324,6 +322,7 @@ function scrollToSelected() {
   outline: none;
   height: auto;
   box-shadow: none;
+  font-variant-numeric: tabular-nums;
 
   &:focus {
     background: var(--success);
@@ -341,6 +340,13 @@ function scrollToSelected() {
 
   &:hover {
     opacity: 1;
+  }
+
+  &:focus-visible {
+    opacity: 1;
+    outline: 2px solid var(--success);
+    outline-offset: 2px;
+    border-radius: var(--dimension-3);
   }
 }
 

@@ -7,6 +7,8 @@ import * as fs from 'fs'
 import * as path from 'path'
 import * as vscode from 'vscode'
 
+import { notifyError, notifyInfo } from './log'
+import { runCommand, waitForTask } from './tasks'
 import { versionNewer } from './version'
 
 const IDE_EXTENSION_DIR = path.join('.ide', 'vscode')
@@ -24,49 +26,63 @@ function getWorkspaceVersion(): string | undefined {
   return pkg.version
 }
 
-function resolveProfile(): string {
-  return `$(python3 -c "
-import json, os
-storage = os.path.expanduser('~/.config/Code/User/globalStorage/storage.json')
-with open(storage) as f: d = json.load(f)
-ws = 'file://' + os.path.realpath('.')
-assoc = d.get('profileAssociations', {}).get('workspaces', {})
-pid = assoc.get(ws, '__default__profile__')
-if pid == '__default__profile__':
-    print('Default')
-else:
-    profiles = {p['location']: p['name'] for p in d.get('userDataProfiles', [])}
-    print(profiles.get(pid, 'Default'))
-")`
+// The extension is loaded into the *active* profile, so its globalStorageUri
+// encodes the profile location:
+//   default: <userDataDir>/User/globalStorage/<extId>
+//   custom : <userDataDir>/User/profiles/<profile-id>/globalStorage/<extId>
+// The display name (what `code --profile` accepts) is mapped via storage.json.
+function resolveActiveProfile(context: vscode.ExtensionContext): string {
+  const storage = context.globalStorageUri.fsPath
+  const parts = storage.split(/[/\\]profiles[/\\]/)
+  if (parts.length < 2) return 'Default'
+
+  const profileLocation = parts[1].split(/[/\\]/)[0]
+  const userDir = parts[0]
+  const storageJson = path.join(userDir, 'globalStorage', 'storage.json')
+  if (!fs.existsSync(storageJson)) return 'Default'
+
+  try {
+    const data = JSON.parse(fs.readFileSync(storageJson, 'utf8'))
+    const profiles = (data.userDataProfiles ?? []) as Array<{ location: string; name: string }>
+    return profiles.find((p) => p.location === profileLocation)?.name ?? 'Default'
+  } catch {
+    return 'Default'
+  }
 }
 
-export function rebuildExtension(): void {
-  const terminal = vscode.window.createTerminal('CMK Extension Update')
-  const profile = resolveProfile()
-  terminal.sendText(
+export async function rebuildExtension(context: vscode.ExtensionContext): Promise<void> {
+  const profile = resolveActiveProfile(context)
+  const cmd =
     `bazel build ${BAZEL_TARGET} && ` +
-      `code --profile "${profile}" --install-extension ${VSIX_PATH} --force`
-  )
-  terminal.show()
+    `code --profile "${profile}" --install-extension ${VSIX_PATH} --force`
 
-  const disposable = vscode.window.onDidCloseTerminal((closedTerm) => {
-    if (closedTerm === terminal) {
-      disposable.dispose()
-      vscode.window
-        .showInformationMessage(
-          'CMK Extension updated. Reload window to activate the new version.',
-          'Reload Window'
-        )
-        .then((choice) => {
-          if (choice === 'Reload Window') {
-            vscode.commands.executeCommand('workbench.action.reloadWindow')
-          }
-        })
-    }
-  })
+  const exec = runCommand('CMK Extension Update', cmd)
+  if (!exec) return
+
+  const exitCode = await waitForTask(exec)
+  if (exitCode !== 0) {
+    notifyError(
+      'CMK Extension install failed',
+      `Profile: ${profile} — exit code: ${exitCode ?? 'unknown'}`
+    )
+    return
+  }
+
+  const choice = await notifyInfo(
+    'CMK Extension installed. Reload window to activate the new version.',
+    `Profile: ${profile}`,
+    'Reload Window'
+  )
+  if (choice === 'Reload Window') {
+    vscode.commands.executeCommand('workbench.action.reloadWindow')
+  }
 }
 
-function promptRebuild(installedVersion: string, wsVersion: string): void {
+function promptRebuild(
+  context: vscode.ExtensionContext,
+  installedVersion: string,
+  wsVersion: string
+): void {
   vscode.window
     .showWarningMessage(
       `CMK Extension: installed v${installedVersion} ≠ workspace v${wsVersion}`,
@@ -74,7 +90,7 @@ function promptRebuild(installedVersion: string, wsVersion: string): void {
     )
     .then((choice) => {
       if (choice === 'Install') {
-        rebuildExtension()
+        rebuildExtension(context)
       }
     })
 }
@@ -98,7 +114,7 @@ export function checkVersionMismatch(context: vscode.ExtensionContext): void {
   const wsVersion = getWorkspaceVersion()
 
   if (wsVersion && versionNewer(wsVersion, installedVersion)) {
-    promptRebuild(installedVersion, wsVersion)
+    promptRebuild(context, installedVersion, wsVersion)
   }
 
   // Watch for changes (e.g. git pull, branch switch)
@@ -110,7 +126,7 @@ export function checkVersionMismatch(context: vscode.ExtensionContext): void {
     watcher.onDidChange(() => {
       const newWsVersion = getWorkspaceVersion()
       if (newWsVersion && versionNewer(newWsVersion, installedVersion)) {
-        promptRebuild(installedVersion, newWsVersion)
+        promptRebuild(context, installedVersion, newWsVersion)
       }
     })
     context.subscriptions.push(watcher)

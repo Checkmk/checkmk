@@ -341,7 +341,7 @@ export function registerSidebar(
 
   context.subscriptions.push(
     vscode.commands.registerCommand('cmk.rebuildExtension', () => {
-      rebuildExtension()
+      rebuildExtension(context)
     })
   )
 

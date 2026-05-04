@@ -290,7 +290,7 @@ class UnitStatus:
                     pass
         return cls(
             name=name,
-            status=entry[2][1],
+            status=time_line[1] if len(time_line) >= 2 else "",
             enabled_status=enabled_status,
             time_since_change=time_since_change,
             cpu=cpu,
@@ -355,10 +355,18 @@ class UnitEntry:
         if len(remains) == 3:
             remains.append("")
         loaded_status, active_status, current_state, descr = remains
+        # `[status]` and `[all]` are produced by two independent `systemctl` invocations
+        # in the agent. On a host with many units, a state transition (e.g. a timer firing)
+        # can land between them, leaving the two sections describing different points in
+        # time for the same unit. Prefer the `[status]` snapshot for the active state so all
+        # status-derived fields (active_status, time_since_change, cpu, memory, tasks) come
+        # from one consistent moment.
         return unit_type, UnitEntry(
             name=name,
             loaded_status=loaded_status,
-            active_status=active_status,
+            active_status=(
+                status_details[name].status if name in status_details else active_status
+            ),
             current_state=current_state,
             description=descr,
             enabled_status=enabled,
@@ -859,7 +867,7 @@ CHECK_DEFAULT_PARAMETERS_SUMMARY = {
     "states_default": 2,
     "activating_levels": None,
     "deactivating_levels": (30, 60),
-    "reloading_levels": (30, 60),
+    "reloading_levels": None,
     "ignored": [],
 }
 

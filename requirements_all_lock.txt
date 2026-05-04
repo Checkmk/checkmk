@@ -343,12 +343,6 @@ botocore-stubs==1.35.80 \
 bson==0.5.10 \
     --hash=sha256:d6511b2ab051139a9123c184de1a04227262173ad593429d21e443d6462d6590
     # via -r requirements_dev.txt
-build==1.4.0 \
-    --hash=sha256:6a07c1b8eb6f2b311b96fcbdbce5dab5fe637ffda0fd83c9cac622e927501596 \
-    --hash=sha256:f1b91b925aa322be454f8330c6fb48b465da993d1e7e7e6fa35027ec49f3c936
-    # via
-    #   check-manifest
-    #   devpi-client
 cached-property==2.0.1 \
     --hash=sha256:484d617105e3ee0e4f1f58725e72a8ef9e93deee462222dbd51cd91230897641 \
     --hash=sha256:f617d70ab1100b7bcf6e42228f9ddcb78c676ffa167278d9f730d1c2fba69ccb
@@ -590,10 +584,6 @@ charset-normalizer==3.4.4 \
     # via
     #   -r requirements_all.txt
     #   requests
-check-manifest==0.51 \
-    --hash=sha256:9801c7637675755a563f33e3c48ee59a59b37a7677297c05c910c16c5b9b6d67 \
-    --hash=sha256:f5f35ed561012fc2115bb070e42a748ac2e034cf8904ab4dfaae893859085ca4
-    # via devpi-client
 checkmk-dev-tools==2.0.3 \
     --hash=sha256:3f1882e1d8c14d97c4e0b118f5d00e8be86b909feb9de1d707780776e6c669cc \
     --hash=sha256:b0adff7bd00dabe6d90e1c396d0ded00d09a671eb3e01e75c2eb0b6a636c7a1d
@@ -834,14 +824,6 @@ deprecated==1.3.1 \
     #   opentelemetry-exporter-otlp-proto-grpc
     #   opentelemetry-exporter-otlp-proto-http
     #   opentelemetry-semantic-conventions
-devpi-client==7.2.0 \
-    --hash=sha256:0dc11d8e3d73e38d87748f6bde07e451565aac0ed4bd99ce4634aa590035b5c3 \
-    --hash=sha256:c143368458c3878ba7bee6a1d9b418e2e659571a3856614f58d76b8a28269d7b
-    # via -r requirements_dev.txt
-devpi-common==4.1.1 \
-    --hash=sha256:8fda7e8965d3744b1184d6c426fd5caf1345ed74513db687beeb5ee0e63a675c \
-    --hash=sha256:a413dcc9d1cb6430ff09c7f4e0d76b39910fb5b3419882d78384c3e0fb785931
-    # via devpi-client
 dill==0.3.9 \
     --hash=sha256:468dff3b89520b474c0397703366b7b95eebe6303f108adf9b19da1f702be87a \
     --hash=sha256:81aa267dddf68cbfe8029c42ca9ec6a4ab3b22371d1c450abc54422577b4512c
@@ -1501,7 +1483,6 @@ iniconfig==2.3.0 \
     --hash=sha256:f631c04d2c48c52b84d0d0549c99ff3859c98df65b3101406327ecc7d53fbf12
     # via
     #   -r requirements_all.txt
-    #   devpi-client
     #   pytest
 isodate==0.7.2 \
     --hash=sha256:28009937d8031054830160fce6d409ed342816b543597cece116d966c6d99e15 \
@@ -1720,10 +1701,6 @@ kubernetes==21.7.0 \
     --hash=sha256:044c20253f8577491a87af8f9edea1f929ed6d62ce306376a6cb8aed24e572c5 \
     --hash=sha256:c9849afc2eafdce60efa210049ee7a94e7ef6cf3a7afa14a69b3bf0447825977
     # via -r requirements_all.txt
-lazy==1.6 \
-    --hash=sha256:449375c125c7acac6b7a93f71b8e7ccb06546c37b161613f92d2d3981f793244 \
-    --hash=sha256:7127324ec709e8324f08cb4611c1abe01776bda53bb9ce68dc5dfa46ca0ed3e9
-    # via devpi-common
 lazy-object-proxy==1.12.0 \
     --hash=sha256:029d2b355076710505c9545aef5ab3f750d89779310e26ddf2b7b23f6ea03cd8 \
     --hash=sha256:08c465fb5cd23527512f9bd7b4c7ba6cec33e28aad36fbbe46bf7b858f9f3f7f \
@@ -2680,7 +2657,6 @@ packaging==26.0 \
     #   -r requirements_all.txt
     #   apispec
     #   black
-    #   build
     #   datamodel-code-generator
     #   gunicorn
     #   jira
@@ -2688,15 +2664,10 @@ packaging==26.0 \
     #   matplotlib
     #   msal-extensions
     #   opentelemetry-instrumentation
-    #   packaging-legacy
     #   pytest
     #   requirements-parser
     #   sphinx
     #   twine
-packaging-legacy==23.0.post0 \
-    --hash=sha256:6cd21cd283c09409349bccc10bb55bfd837b4aab86a7b0f87bfcb8dd9831a8a3 \
-    --hash=sha256:c974a42291a77112313f0198b87ad96e07a3c357295d572560a4b9c368f7d9db
-    # via devpi-common
 paho-mqtt==1.6.1 \
     --hash=sha256:2a8291c81623aec00372b5a85558a372c747cbca8e9934dfe218638b8eefc26f
     # via -r requirements_all.txt
@@ -2847,15 +2818,12 @@ pipfile==0.0.2 \
 pkginfo==1.12.1.2 \
     --hash=sha256:5cd957824ac36f140260964eba3c6be6442a8359b8c48f4adf90210f33a04b7b \
     --hash=sha256:c783ac885519cab2c34927ccfa6bf64b5a704d7c69afaea583dd9b7afe969343
-    # via
-    #   devpi-client
-    #   twine
+    # via twine
 platformdirs==4.9.2 \
     --hash=sha256:9170634f126f8efdae22fb58ae8a0eaa86f38365bc57897a6c4f781d1f5875bd \
     --hash=sha256:9a33809944b9db043ad67ca0db94b14bf452cc6aeaac46a88ea55b26e2e9d291
     # via
     #   black
-    #   devpi-client
     #   pylint
     #   virtualenv
 playwright==1.49.1 \
@@ -2874,7 +2842,6 @@ pluggy==1.6.0 \
     --hash=sha256:e920276dd6813095e9377c0bc5566d94c932c33b27a3e3945d8389c374dd4746
     # via
     #   -r requirements_all.txt
-    #   devpi-client
     #   pytest
     #   python-lsp-server
 ply==3.11 \
@@ -3521,10 +3488,6 @@ pypdf==6.6.2 \
 pyprof2calltree==1.4.5 \
     --hash=sha256:a635672ff31677486350b2be9a823ef92f740e6354a6aeda8fa4a8a3768e8f2f
     # via -r requirements_all.txt
-pyproject-hooks==1.2.0 \
-    --hash=sha256:1e859bd5c40fae9448642dd871adf459e5e2084186e8d2c2a79a824c970da1f8 \
-    --hash=sha256:9e5c6bfa8dcc30091c74b0cf803c81fdd29d94f01992a7707bc97babb1141913
-    # via build
 pysaml2==7.5.0 \
     --hash=sha256:bc6627cc344476a83c757f440a73fda1369f13b6fda1b4e16bca63ffbabb5318 \
     --hash=sha256:f36871d4e5ee857c6b85532e942550d2cf90ea4ee943d75eb681044bbc4f54f7
@@ -3884,7 +3847,6 @@ requests==2.32.4 \
     # via
     #   -r requirements_all.txt
     #   azure-core
-    #   devpi-common
     #   docker
     #   exchangelib
     #   google-api-core
@@ -4227,7 +4189,6 @@ setuptools==70.3.0 \
     --hash=sha256:fe384da74336c398e0d956d1cae0669bc02eed936cdb1d49b57de1990dc11ffc
     # via
     #   -r requirements_all.txt
-    #   check-manifest
     #   kubernetes
     #   opsgenie-sdk
     #   pbr

@@ -12,7 +12,6 @@ checkmk-dev-tools~=2.0.1  # provides tooling for build artifacts
 # Locked to 0.26.1 since 0.26.3 handled const strings differently
 # which broke inheritance.
 datamodel-code-generator==0.26.1  # used for cmk-shared-typing generation
-devpi-client==7.2.0 # Managing the devpi server
 dill==0.3.9
 docker==7.1.0 # used by test_docker test and mk_docker agent plugin
 dockerpty==0.4.1 # used by dockerized tests for opening debug shells

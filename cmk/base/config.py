@@ -533,11 +533,6 @@ def get_default_config() -> dict[str, Any]:
     }
 
 
-def register(name: str, default_value: Any) -> None:
-    """Register a new configuration variable within Check_MK base."""
-    setattr(default_config, name, default_value)
-
-
 # .
 #   .--Read Config---------------------------------------------------------.
 #   |        ____                _    ____             __ _                |

@@ -35,18 +35,39 @@ class Features:
         return {f.name for f in fields(self) if not getattr(self, f.name).enabled}
 
 
-# NOTE: Soon this will consider the contents of the actual license.
 def licensed_features(omd_root: Path, edition: Edition) -> Features:
-    if edition is Edition.COMMUNITY:
-        # community edition -> all features disabled.
-        return Features(bakery=FeatureFlag(enabled=False))
+    licensed = load_plain_verification_response(omd_root)
+    match edition:
+        case Edition.COMMUNITY:
+            # community edition -> all features disabled.
+            return Features(
+                bakery=FeatureFlag(enabled=False),
+            )
 
-    if (response := load_plain_verification_response(omd_root)) is None:
-        # no license -> all features enabled. We must assume TRIAL.
-        return Features(bakery=FeatureFlag(enabled=True))
+        case Edition.PRO:
+            return _make_pro_features()
 
-    if edition is Edition.ULTIMATE and response.checkmk_edition is LicensedEdition.cee:
-        # WIP: behave like a PRO.
-        return Features(bakery=FeatureFlag(enabled=True))
+        case Edition.ULTIMATE:
+            if licensed and licensed.checkmk_edition is LicensedEdition.cee:
+                # WIP: behave like a PRO.
+                return _make_pro_features()
+            # no license -> all features enabled. We must assume TRIAL.
+            return Features(
+                bakery=FeatureFlag(enabled=True),
+            )
 
-    return Features(bakery=FeatureFlag(enabled=True))
+        case Edition.ULTIMATEMT:
+            return Features(
+                bakery=FeatureFlag(enabled=True),
+            )
+
+        case Edition.CLOUD:
+            return Features(
+                bakery=FeatureFlag(enabled=True),
+            )
+
+
+def _make_pro_features() -> Features:
+    return Features(
+        bakery=FeatureFlag(enabled=True),
+    )

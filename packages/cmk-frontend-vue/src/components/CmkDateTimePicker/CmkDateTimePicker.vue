@@ -334,8 +334,8 @@ function shiftYear(delta: number) {
   box-shadow: none;
 
   &:focus {
-    background: var(--success);
-    color: var(--font-color-light-bg);
+    background: var(--color-dark-blue-50);
+    color: var(--white);
   }
 }
 
@@ -415,8 +415,8 @@ function shiftYear(delta: number) {
   }
 
   &.cmk-date-time-picker__month-option--selected {
-    background: var(--success);
-    color: var(--font-color-light-bg);
+    background: var(--color-dark-blue-50);
+    color: var(--white);
   }
 }
 
@@ -476,8 +476,8 @@ function shiftYear(delta: number) {
   }
 
   &[data-selected] {
-    background: var(--success);
-    color: var(--font-color-light-bg);
+    background: var(--color-dark-blue-50);
+    color: var(--white);
   }
 
   &[data-today] {

@@ -325,8 +325,8 @@ function scrollToSelected() {
   font-variant-numeric: tabular-nums;
 
   &:focus {
-    background: var(--success);
-    color: var(--font-color-light-bg);
+    background: var(--color-dark-blue-50);
+    color: var(--white);
   }
 }
 
@@ -408,11 +408,11 @@ function scrollToSelected() {
 }
 
 .cmk-time-picker__option--selected {
-  background: var(--success);
-  color: var(--font-color-light-bg);
+  background: var(--color-dark-blue-50);
+  color: var(--white);
 
   &:hover {
-    background: var(--success-dimmed);
+    background: var(--color-dark-blue-60);
   }
 }
 </style>

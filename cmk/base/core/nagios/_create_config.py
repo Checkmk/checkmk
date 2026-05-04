@@ -65,6 +65,7 @@ from cmk.utils.ip_lookup import IPStackConfig
 from cmk.utils.labels import LabelManager, Labels
 from cmk.utils.macros import replace_macros_in_str
 from cmk.utils.notify import (
+    build_descendants_map,
     create_notify_host_files,
     make_notify_host_file_path,
     NotificationHostConfig,
@@ -349,6 +350,9 @@ def create_config(
     _output_conf_header(cfg)
 
     licensing_counter = Counter("services")
+    descendants_per_host = build_descendants_map(
+        {hostname: config_cache.parents(hostname) for hostname in hostnames}
+    )
     all_notify_host_configs: dict[HostName, NotificationHostConfig] = {}
     for hostname in hostnames:
         all_notify_host_configs[hostname] = _create_nagios_config_host(
@@ -367,6 +371,7 @@ def create_config(
             ip_address_of,
             service_depends_on,
             for_relay=get_relay_id(hostname) is not None,
+            descendants=descendants_per_host.get(hostname, ()),
         )
 
     _validate_licensing(config_cache.hosts_config, licensing_handler, licensing_counter)
@@ -426,6 +431,7 @@ def _create_nagios_config_host(
     service_depends_on: Callable[[HostAddress, ServiceName], Sequence[ServiceName]],
     *,
     for_relay: bool,
+    descendants: Sequence[HostName],
 ) -> NotificationHostConfig:
     cfg.write_str("\n# ----------------------------------------------------\n")
     cfg.write_str("# %s\n" % hostname)
@@ -445,6 +451,7 @@ def _create_nagios_config_host(
         cfg.write_object("host", host_spec)
 
     return NotificationHostConfig(
+        descendants=descendants,
         host_labels=get_labels_from_attributes(list(host_attrs.items())),
         service_labels=create_nagios_servicedefs(
             cfg,

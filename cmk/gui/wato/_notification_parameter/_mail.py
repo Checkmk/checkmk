@@ -207,6 +207,10 @@ def _content_elements() -> dict[str, DictElement[Any]]:
                         title=Title("Time series graph"),
                     ),
                     MultipleChoiceElement(
+                        name="hostchildren",
+                        title=Title("Affected child hosts (host notifications only)"),
+                    ),
+                    MultipleChoiceElement(
                         name="notesurl",
                         title=Title("Custom host/service notes URL"),
                     ),

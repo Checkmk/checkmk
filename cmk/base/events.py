@@ -480,6 +480,8 @@ def _update_enriched_context_from_notify_host_file(enriched_context: EnrichedEve
         ).items():
             # Dynamically added keys...
             enriched_context["SERVICELABEL_" + k] = v  # type: ignore[literal-required]
+    else:
+        enriched_context["HOSTCHILDREN"] = ",".join(notify_host_config.descendants)
 
     for k, v in notify_host_config.tags.items():
         enriched_context["HOSTTAG_" + k] = v  # type: ignore[literal-required]

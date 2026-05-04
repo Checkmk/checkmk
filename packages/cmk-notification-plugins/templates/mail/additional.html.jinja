@@ -79,6 +79,21 @@
                         {% else %}
                             {{ additional_tr(data, "Custom host notes URL", "HOSTNOTESURL") }}
                         {% endif %}
+                    {% elif element == "hostchildren" and not service_notification %}
+                        <tr>
+                            <td {{ macros.td_first_child(width="170px") }}>Affected child hosts:
+                                <span style="font-weight: initial;" {{ macros.td_last_child() }}>
+                                    {% if data.HOSTCHILDREN %}
+                                        {% for child in data.HOSTCHILDREN.split(",") %}
+                                            {{ child }}
+                                            {% if not loop.last %},{% endif %}
+                                        {% endfor %}
+                                    {% else %}
+                                        (none)
+                                    {% endif %}
+                                </span>
+                            </td>
+                        </tr>
                     {% elif element == "context" %}
                         <tr>
                             <td {{ macros.td_first_child(width="170px") }}>

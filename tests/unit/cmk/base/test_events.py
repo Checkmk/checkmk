@@ -37,6 +37,7 @@ from cmk.base.events import (
     event_match_timeperiod,
     raw_context_from_string,
 )
+from cmk.ccc.hostaddress import HostAddress
 from cmk.events.event_context import EnrichedEventContext, EventContext, HostName
 from cmk.utils.http_proxy_config import (
     EnvironmentProxyConfig,
@@ -315,6 +316,7 @@ def test_add_to_event_context(param: object, expected: EventContext) -> None:
                 "NOTIFICATIONTYPE": "PROBLEM",
                 "HOSTNAME": "heute",
                 "WHAT": "HOST",
+                "HOSTCHILDREN": "",
                 "HOSTLABEL_cmk/check_mk_server": "yes",
                 "HOSTLABEL_cmk/docker_object": "node",
                 "HOSTLABEL_cmk/os_family": "linux",
@@ -325,6 +327,32 @@ def test_add_to_event_context(param: object, expected: EventContext) -> None:
                 "HOSTTAG_criticality": "critical",
             },
             id="host notification",
+        ),
+        pytest.param(
+            {
+                "CONTACTS": "cmkadmin",
+                "NOTIFICATIONTYPE": "PROBLEM",
+                "HOSTNAME": "switch1",
+                "WHAT": "HOST",
+            },
+            NotificationHostConfig(
+                host_labels={},
+                service_labels={},
+                tags={},
+                descendants=(
+                    HostAddress("srv1"),
+                    HostAddress("srv2"),
+                    HostAddress("srv1.db"),
+                ),
+            ),
+            {
+                "CONTACTS": "cmkadmin",
+                "NOTIFICATIONTYPE": "PROBLEM",
+                "HOSTNAME": "switch1",
+                "WHAT": "HOST",
+                "HOSTCHILDREN": "srv1,srv2,srv1.db",
+            },
+            id="host notification with descendants",
         ),
     ],
 )

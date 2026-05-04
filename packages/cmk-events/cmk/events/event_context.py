@@ -31,6 +31,7 @@ class EventContext(TypedDict, total=False):
     EC_PRIORITY: str
     EC_RULE_ID: str
     HOSTATTEMPT: str
+    HOSTCHILDREN: str
     HOSTCONTACTGROUPNAMES: str
     HOSTGROUPNAMES: str
     HOSTNAME: HostName

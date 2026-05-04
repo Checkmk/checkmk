@@ -7,7 +7,8 @@ import dataclasses
 import logging
 import os
 import subprocess
-from collections.abc import Mapping
+from collections import deque
+from collections.abc import Mapping, Sequence
 from logging import Logger
 from pathlib import Path
 
@@ -24,15 +25,67 @@ from cmk.utils.tags import TagGroupID, TagID
 
 logger = logging.getLogger("cmk.utils.notify")
 
+# Cap protects pathological topologies and keeps env-var sizes bounded.
+# notification_script_env limits each NOTIFY_* env var to 32*PAGESIZE/2
+# (≈ 64 KB on Linux). At FQDN-typical ~30-50 bytes per hostname plus a
+# comma, 1000 entries sit safely below that limit and cover realistic
+# Checkmk topologies (a top-of-network host rarely has more downstream
+# hosts than that).
+MAX_HOST_DESCENDANTS = 1000
+
 
 @dataclasses.dataclass(frozen=True)
 class NotificationHostConfig:
     host_labels: Labels
     service_labels: Mapping[ServiceName, Labels]
     tags: Mapping[TagGroupID, TagID]
+    # Recursive descendant hostnames in BFS order. Pre-computed at activate-
+    # changes time so the notification path needs no livestatus query.
+    descendants: Sequence[HostName] = ()
 
 
 type NotifyHostFiles = Mapping[HostName, bytes]
+
+
+def build_descendants_map(
+    parents_per_host: Mapping[HostName, Sequence[HostName]],
+) -> Mapping[HostName, Sequence[HostName]]:
+    """Resolve full descendant lists for each host from a parents mapping.
+
+    Builds a reverse (parent → children) map, then expands each host's
+    descendants in BFS order with cycle protection. Results are capped at
+    MAX_HOST_DESCENDANTS to keep env-var payloads bounded.
+    """
+    children: dict[HostName, list[HostName]] = {}
+    for host, parents in parents_per_host.items():
+        for parent in parents:
+            children.setdefault(parent, []).append(host)
+
+    descendants: dict[HostName, tuple[HostName, ...]] = {}
+    for host in parents_per_host:
+        visited: set[HostName] = {host}
+        order: list[HostName] = []
+        queue: deque[HostName] = deque(children.get(host, ()))
+        truncated = False
+        while queue:
+            if len(order) >= MAX_HOST_DESCENDANTS:
+                truncated = True
+                break
+            current = queue.popleft()
+            if current in visited:
+                continue
+            visited.add(current)
+            order.append(current)
+            queue.extend(children.get(current, ()))
+        if truncated:
+            logger.warning(
+                "Host %s has more than %d descendants; truncating HOSTCHILDREN list",
+                host,
+                MAX_HOST_DESCENDANTS,
+            )
+        descendants[host] = tuple(order)
+
+    return descendants
 
 
 def find_wato_folder(context: NotificationContext) -> str:
@@ -99,6 +152,7 @@ def create_notify_host_files(
                     host_labels=labels.host_labels,
                     service_labels={k: v for k, v in labels.service_labels.items() if v.values()},
                     tags=labels.tags,
+                    descendants=labels.descendants,
                 )
             )
         )
@@ -115,7 +169,7 @@ def read_notify_host_file(
     return NotificationHostConfig(
         **load_object_from_file(
             path=host_file_path,
-            default={"host_labels": {}, "service_labels": {}, "tags": {}},
+            default={"host_labels": {}, "service_labels": {}, "tags": {}, "descendants": ()},
         )
     )
 

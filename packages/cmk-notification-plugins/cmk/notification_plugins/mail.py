@@ -163,6 +163,14 @@ BODY_ELEMENTS = [
         "Metrics",
         "$HOSTPERFDATA$",
     ),
+    (
+        "hostchildren",
+        "host",
+        False,
+        "normal",
+        "Affected child hosts",
+        "$HOSTCHILDREN$",
+    ),
     # Elements only for service notifications
     (
         "reltime",

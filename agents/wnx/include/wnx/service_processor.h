@@ -601,8 +601,9 @@ private:
                     AnswerIdToNumber(answer),                       // answer id
                     tout, command);
                 XLOG::d.i("async RunStdCmd: {}", wtools::ToUtf8(cmd_line));
-                if (tools::RunStdCommand(cmd_line, tools::WaitForEnd::no) ==
-                    0) {
+                const auto result =
+                    tools::RunStdCommand(cmd_line, tools::WaitForEnd::no);
+                if (!result || result->pid == 0) {
                     XLOG::l("Exec is failed with error [{}]", ::GetLastError());
                     return false;
                 }

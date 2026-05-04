@@ -250,9 +250,11 @@ protected:
         tst::CreateTextFile(exe_b, "@echo start\n@call " + ToStr(exe_c));
         tst::CreateTextFile(exe_c,
                             "@echo start\n@powershell Start-Sleep 10000");
+
         return cma::tools::RunStdCommand(exe_a.wstring(),
                                          cma::tools::WaitForEnd::no)
-            .value_or(0);
+            .value_or({.pid = 0, .exit_code = std::nullopt})
+            .pid;
     }
 
     static [[nodiscard]] bool findProcessByPid(uint32_t pid) {

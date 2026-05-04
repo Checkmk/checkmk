@@ -59,5 +59,5 @@ def test_python_module(
         main_exe=main_exe,
         data_dir=data_dir,
     )
-    assert exe_output.ret_code == 0
+    assert exe_output.ret_code == 1  # older versions returns always 0, newer - code from plugin
     assert exe_output.stderr.startswith("Missing agent info file")

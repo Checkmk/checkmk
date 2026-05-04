@@ -15,6 +15,12 @@
 #include "tools/_raii.h"
 
 namespace cma::tools {
+
+struct ProcessInfo {
+    uint32_t pid;
+    std::optional<uint32_t> exit_code;
+};
+
 enum class WaitForEnd { yes, no };
 
 enum class InheritHandle { yes, no };
@@ -137,7 +143,7 @@ inline bool RunDetachedProcess(const std::wstring &name) {
 // NOTE: LAST and BEST attempt to have standard windows starter
 // Returns process id on success
 /// IMPORTANT: SET inherit_handle to TRUE may prevent script form start
-inline std::optional<uint32_t> RunStdCommand(
+inline std::optional<ProcessInfo> RunStdCommand(
     std::wstring_view command,  // full command with arguments
     WaitForEnd wait_for_end,    // important flag! set false when you are sure
     InheritHandle inherit,      // recommended option No
@@ -163,10 +169,14 @@ inline std::optional<uint32_t> RunStdCommand(
         return {};
     }
     const auto process_id = pi.dwProcessId;
+    std::optional<uint32_t> exit_code = {};
     switch (wait_for_end) {
         case WaitForEnd::yes:
             if (pi.hProcess != nullptr) {
                 WaitForSingleObject(pi.hProcess, INFINITE);
+                DWORD v{0};
+                ::GetExitCodeProcess(pi.hProcess, &v);
+                exit_code = v;
             }
             break;
         case WaitForEnd::no:
@@ -174,11 +184,11 @@ inline std::optional<uint32_t> RunStdCommand(
             break;
     }
     ClosePi(pi);
-    return process_id;
+    return ProcessInfo{.pid = process_id, .exit_code = exit_code};
 }
 
-inline std::optional<uint32_t> RunStdCommand(std::wstring_view command,
-                                             WaitForEnd wait_for_end) {
+inline std::optional<ProcessInfo> RunStdCommand(std::wstring_view command,
+                                                WaitForEnd wait_for_end) {
     return RunStdCommand(command, wait_for_end, InheritHandle::no, nullptr,
                          nullptr, 0, 0);
 }

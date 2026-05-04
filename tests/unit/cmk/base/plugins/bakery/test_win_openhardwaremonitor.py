@@ -14,13 +14,20 @@ from cmk.base.plugins.bakery.win_openhardwaremonitor import (
 )
 from cmk.ccc.exceptions import MKGeneralException
 
+CONFIG = {"deployment": ("sync", None)}
+CONFIG_DO_NOT_DEPLOY = {"deployment": ("do_not_deploy", None)}
+
+
+def test_win_openhardwaremonitor_do_not_deploy() -> None:
+    assert list(get_win_openhardwaremonitor_files(CONFIG_DO_NOT_DEPLOY)) == []
+
 
 def test_win_openhardwaremonitor_files_missing_raises() -> None:
     with patch(
         "cmk.base.plugins.bakery.win_openhardwaremonitor.os.path.exists", return_value=False
     ):
         with pytest.raises(MKGeneralException, match="OpenHardwareMonitor files are missing"):
-            list(get_win_openhardwaremonitor_files(None))
+            list(get_win_openhardwaremonitor_files(CONFIG))
 
 
 def test_win_openhardwaremonitor_files_dll_missing_raises() -> None:
@@ -31,12 +38,12 @@ def test_win_openhardwaremonitor_files_dll_missing_raises() -> None:
         "cmk.base.plugins.bakery.win_openhardwaremonitor.os.path.exists", side_effect=fake_exists
     ):
         with pytest.raises(MKGeneralException, match="OpenHardwareMonitor files are missing"):
-            list(get_win_openhardwaremonitor_files(None))
+            list(get_win_openhardwaremonitor_files(CONFIG))
 
 
 def test_win_openhardwaremonitor_files_success() -> None:
     with patch("cmk.base.plugins.bakery.win_openhardwaremonitor.os.path.exists", return_value=True):
-        result = list(get_win_openhardwaremonitor_files(None))
+        result = list(get_win_openhardwaremonitor_files(CONFIG))
     assert result == [
         SystemBinary(
             base_os=OS.WINDOWS,

@@ -344,7 +344,6 @@ py_wheel(
             "//cmk/post_rename_site/nonfree/ultimate/plugins",
             "//cmk/update_config/nonfree/pro",
             "//cmk/update_config/nonfree/ultimate",
-            "//cmk/update_config/nonfree/ultimatemt",
             "//cmk/utils:pro",
             "//cmk/utils:ultimate",
             "//non-free/packages/cmc-protocols:py_config_proto",

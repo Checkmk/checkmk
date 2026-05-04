@@ -203,11 +203,6 @@ def _load_plugins(edition: Edition, logger: logging.Logger) -> None:
             if edition in (Edition.ULTIMATE, Edition.ULTIMATEMT)
             else []
         ),
-        (
-            load_plugins_with_exceptions("cmk.update_config.nonfree.ultimatemt.plugins.actions")
-            if edition is Edition.ULTIMATEMT
-            else []
-        ),
     ):
         logger.error("Error in action plug-in %s: %s\n", plugin, exc)
         if debug.enabled():

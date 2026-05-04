@@ -13,7 +13,6 @@ import cmk.utils.paths
 from tests.testlib.unit.utils import import_module_hack
 
 _NON_STD_PREFIX: Mapping[str, str] = {
-    "mkbackup_lock_dir": "/%.0s",
     "rrd_multiple_dir": "/opt%s",
     "rrd_single_dir": "/opt%s",
 }

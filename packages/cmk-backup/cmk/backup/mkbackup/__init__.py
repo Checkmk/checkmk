@@ -9,18 +9,16 @@
 import fcntl
 import getopt
 import glob
-import grp
 import os
 import signal
 import sys
-import tempfile
 import textwrap
 import time
 import traceback
-from collections.abc import Callable, Generator, Mapping, Sequence
-from contextlib import contextmanager, ExitStack
+from collections.abc import Callable, Iterator, Mapping
+from contextlib import contextmanager, suppress
 from pathlib import Path
-from typing import IO, NamedTuple, NoReturn
+from typing import NamedTuple, NoReturn
 
 import cmk.ccc.version as cmk_version  # astrein: disable=cmk-module-layer-violation
 from cmk.backup.utils.config import Config  # astrein: disable=cmk-module-layer-violation
@@ -44,8 +42,6 @@ from cmk.backup.utils.utils import (  # astrein: disable=cmk-module-layer-violat
     hostname,
     Log,
     log,
-    makedirs,
-    set_permissions,
     SITE_BACKUP_MARKER,
     State,
 )
@@ -55,7 +51,6 @@ from cmk.ccc.exceptions import (  # astrein: disable=cmk-module-layer-violation
     MKTerminate,
 )
 from cmk.utils import render, schedule  # astrein: disable=cmk-module-layer-violation
-from cmk.utils.paths import mkbackup_lock_dir  # astrein: disable=cmk-module-layer-violation
 
 ################
 # Utility Code #
@@ -76,87 +71,6 @@ def stop_logging() -> None:
     global g_stdout_log, g_stderr_log
     g_stderr_log = None
     g_stdout_log = None
-
-
-def _ensure_lock_file(lock_file_path: Path) -> None:
-    # Create the file (but ensure that the target file always has the
-    # correct permissions). The current lock implementation assumes the file is
-    # kept after the process frees the lock (terminates). The pure existence of
-    # the lock file is not locking anything. We work with fcntl.flock to realize
-    # the locking.
-    if lock_file_path.exists():
-        return
-    try:
-        with tempfile.NamedTemporaryFile(
-            mode="ab+",
-            dir=str(lock_file_path.parent),
-            delete=False,
-        ) as backup_lock:
-            set_permissions(path=Path(backup_lock.name), gid=grp.getgrnam("omd").gr_gid, mode=0o660)
-            os.rename(backup_lock.name, lock_file_path)
-    except OSError as e:
-        raise MKGeneralException(f'Failed to open lock file "{lock_file_path}": {e}')
-
-
-@contextmanager
-def acquire_single_lock(lock_file_path: Path) -> Generator[IO[bytes]]:
-    """Ensure only one "mkbackup" instance can run on each system at a time.
-    We are using multiple locks:
-    * one lock per site, which gets restored / backup
-    * one global lock, in case mkbackup is executed as root in order to perform a system backup / restore
-
-    Note:
-        Please note that with 1.6.0p21 we have changed the path from
-        /tmp/mkbackup.lock to /run/lock/mkbackup/mkbackup.lock. We had to move
-        the lock file to a dedicated subdirectory without sticky bit to make it
-        possible to write and lock files from different sites. The move from
-        /tmp to /run/lock was just to have the lock file in a more specific
-        place. See also:
-
-        https://forum.checkmk.com/t/backup-schlagt-fehl/21630/7
-        https://unix.stackexchange.com/a/503169
-    """
-    _ensure_lock_file(lock_file_path)
-
-    with lock_file_path.open("ab") as backup_lock:
-        try:
-            fcntl.flock(backup_lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
-        except OSError:
-            raise MKGeneralException(
-                "Failed to get the exclusive backup lock. "
-                "Another backup/restore seems to be running."
-            )
-
-        # Ensure that the lock is not inherited to subprocessess
-        try:
-            cloexec_flag = fcntl.FD_CLOEXEC
-        except AttributeError:
-            cloexec_flag = 1
-
-        fd = backup_lock.fileno()
-        fcntl.fcntl(fd, fcntl.F_SETFD, fcntl.fcntl(fd, fcntl.F_GETFD) | cloexec_flag)
-        yield backup_lock
-
-
-#########################################################
-# Lock files are shared with cma backup tool            #
-# We want to avoid running two backups at the same time #
-#########################################################
-
-
-def local_lock_file_path(site_name: str) -> Path:
-    return mkbackup_lock_dir / Path(f"mkbackup-{site_name}.lock")
-
-
-def get_needed_lock_files() -> Sequence[Path]:
-    # TODO: this doesn't seem to need to return a list
-    site_id = current_site_id()
-    return [local_lock_file_path(site_id)]
-
-
-######################
-# End of shared code #
-######################
 
 
 target_classes: Mapping[str, type[Target]] = {
@@ -302,17 +216,23 @@ modes = {
 }
 
 
+def get_lock_file() -> Path:
+    # `omd` will delete the files, which are not in `.restore_working_dir`. This would break the
+    # file locks, since processes would then hold a stale file descriptor.
+    return Path(os.environ["OMD_ROOT"], ".restore_working_dir", "mkbackup.lock")
+
+
 def mode_backup(local_job_id: str, opts: dict[str, str], config: Config) -> None:
     job = load_job(local_job_id, config)
     target = load_target(config, job.config["target"])
     target.check_ready()
 
-    with ExitStack() as stack:
-        for cm in [
-            acquire_single_lock(lock_file_path) for lock_file_path in get_needed_lock_files()
-        ]:
-            stack.enter_context(cm)
-
+    # This lock protects multiple state files (`backup_state`) and the to which the backup is
+    # written. `omd backup` also has its own locking mechanism to protect the actual backup process.
+    with exclusive_owner(
+        get_lock_file(),
+        "Another backup or restore is already running.",
+    ):
         state = backup_state(job)
         save_next_run(job, state)
 
@@ -403,16 +323,57 @@ def cleanup_backup_job_states() -> None:
             os.unlink(f)
 
 
+@contextmanager
+def exclusive_owner(path: Path, message: str) -> Iterator[None]:
+    """Ensure that this process is unique per site (analogous to a PID file lock).
+
+    Child processes that exec a new program will not inherit this lock (O_CLOEXEC).
+    Forked children that do not exec will still inherit it.
+
+    This implementation is deliberately minimal. It foregoes handling edge cases (e.g., io_uring
+    lingering, orphaned inodes after unlinking, or symlink TOCTOU attacks) in favor of the
+    following strict assumptions:
+
+    * `path` must be in a dedicated directory protected by access permissions (e.g., `/run` or
+      `/var/lock`). Do not use shared sticky-bit directories like `/tmp`.
+    * `path` must reside on a local filesystem. `flock` semantics are unreliable on network mounts
+      (NFS) and FAT. In practice this is not a concern: Linux has supported advisory NFS locks via
+      lockd/NLM since 2.6.12 (2005), and FAT does not support symlinks, making it unsuitable for
+      hosting a Checkmk site regardless. `flock` is used elsewhere already (e.g. CMC and
+      `cmk.ccc.store`).
+    * `path` must never be deleted while the process is running, as `flock` locks the underlying
+       inode, not the path.
+    * `flock` is per-process, not per-thread. It does not prevent race conditions between threads.
+
+    For locking implementations that securely handles these edge cases, see:
+    * TigerBeetle: https://github.com/tigerbeetle/tigerbeetle/blob/f051a0b0e15c77b292a4ca1e9409db41e35703e1/src/io/linux.zig#L1609-L1652
+    * Systemd: https://github.com/systemd/systemd/blob/37c272228dbdbcb4f60609d273d1352ccac061b7/src/tmpfiles/tmpfiles.c#L761
+    * Filelock: https://github.com/tox-dev/filelock/blob/eb526ec4edfd91aef607b54bf77a467f04b8f897/src/filelock/_unix.py#L33-L111
+    """
+    path.parent.mkdir(parents=True, exist_ok=True)
+    fd = os.open(path, os.O_RDONLY | os.O_CREAT | os.O_CLOEXEC, 0o600)
+    try:
+        try:
+            fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except BlockingIOError:
+            sys.exit(message)
+        yield
+    finally:
+        with suppress(OSError):
+            os.close(fd)
+
+
 def mode_restore(target_id: str, backup_id: str, opts: dict[str, str], config: Config) -> None:
     target = load_target(config, TargetId(target_id))
     target.check_ready()
 
-    with ExitStack() as stack:
-        for cm in [
-            acquire_single_lock(lock_file_path) for lock_file_path in get_needed_lock_files()
-        ]:
-            stack.enter_context(cm)
-
+    # This lock protects multiple state files (`restore_state`) and there are not multiple processes
+    # writting to the site directory. `omd restore` will detect site processes running, so it can't
+    # run concurrently to begin with.
+    with exclusive_owner(
+        get_lock_file(),
+        "Another backup or restore is already running.",
+    ):
         state = restore_state()
 
         if "background" in opts:
@@ -620,8 +581,6 @@ def main() -> None:
         current_site_id()
     except KeyError:
         raise MKGeneralException("Running outside of site context.")
-    # Ensure the backup lock path exists and has correct permissions
-    makedirs(mkbackup_lock_dir, group="omd", mode=0o770)
     opt_dict = {k.lstrip("-"): v for k, v in opts + mode_opts}
     mode.runner(mode_args, opt_dict, config)
 

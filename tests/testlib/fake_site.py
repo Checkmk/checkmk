@@ -78,7 +78,6 @@ def fake_paths() -> None:
         # these start with /opt and will not be changed in the code below
         "rrd_multiple_dir",
         "rrd_single_dir",
-        "mkbackup_lock_dir",
     }
 
     # patch `cmk.utils.paths` before `cmk.ccc.versions`

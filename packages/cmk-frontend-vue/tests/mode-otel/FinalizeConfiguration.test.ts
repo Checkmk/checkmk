@@ -206,4 +206,68 @@ describe('FinalizeConfiguration', () => {
       await screen.findByText('Create failed')
     })
   })
+
+  describe('success-summary slot', () => {
+    function renderWithSlot(actions: readonly PostSaveAction[]) {
+      const lastState = ref<FinalizeState>('idle')
+      const compRef = ref<InstanceType<typeof FinalizeConfiguration>>()
+
+      render(
+        defineComponent({
+          components: { FinalizeConfiguration },
+          setup: () => ({ compRef, lastState, actions }),
+          template: `
+            <FinalizeConfiguration
+              ref="compRef"
+              site-id="local"
+              config-name="cfg"
+              :actions="actions"
+              @update:state="lastState = $event"
+            >
+              <template #success-summary>
+                <div data-testid="summary">my summary</div>
+              </template>
+            </FinalizeConfiguration>
+          `
+        })
+      )
+
+      return { compRef, lastState }
+    }
+
+    test('summary slot is not rendered in idle state', () => {
+      renderWithSlot([makeAction('a', 'ok')])
+
+      expect(screen.queryByTestId('summary')).toBeNull()
+    })
+
+    test('summary slot is not rendered while running', async () => {
+      const action = makeAction('a', 'ok', { delayMs: 20 })
+      const { compRef } = renderWithSlot([action])
+
+      const runPromise = compRef.value!.runActions()
+      // Mid-run: summary must still be hidden.
+      expect(screen.queryByTestId('summary')).toBeNull()
+      await runPromise
+    })
+
+    test('summary slot is rendered after a successful run', async () => {
+      const { compRef, lastState } = renderWithSlot([makeAction('a', 'ok')])
+
+      await compRef.value!.runActions()
+
+      expect(lastState.value).toBe('success')
+      await screen.findByTestId('summary')
+    })
+
+    test('summary slot is not rendered after an error', async () => {
+      const failing = makeAction('a', { title: 'Boom', detail: 'broken' })
+      const { compRef, lastState } = renderWithSlot([failing])
+
+      await compRef.value!.runActions()
+
+      expect(lastState.value).toBe('error')
+      expect(screen.queryByTestId('summary')).toBeNull()
+    })
+  })
 })

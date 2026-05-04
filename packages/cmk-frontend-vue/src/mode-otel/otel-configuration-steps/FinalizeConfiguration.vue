@@ -171,9 +171,12 @@ defineExpose({ runActions })
     <CmkAlertBox v-if="state === 'running'" variant="loading" size="small">
       {{ runningText }}
     </CmkAlertBox>
-    <CmkAlertBox v-else-if="state === 'success'" variant="success" size="small">
-      {{ successText }}
-    </CmkAlertBox>
+    <template v-else-if="state === 'success'">
+      <CmkAlertBox variant="success" size="small">
+        {{ successText }}
+      </CmkAlertBox>
+      <slot name="success-summary" />
+    </template>
     <CmkAlertBox
       v-else-if="state === 'error'"
       variant="error"

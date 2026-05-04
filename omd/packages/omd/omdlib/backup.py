@@ -142,7 +142,7 @@ def ensure_mkbackup_lock_dir_rights() -> None:
         mkbackup_lock_dir.mkdir(mode=0o0770, exist_ok=True)
         shutil.chown(mkbackup_lock_dir, group="omd")
         mkbackup_lock_dir.chmod(0o0770)
-    except PermissionError:
+    except OSError:
         pass
 
 

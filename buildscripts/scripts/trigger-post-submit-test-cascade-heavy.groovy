@@ -13,9 +13,9 @@ void main() {
     def force_build = params.DISABLE_JENKINS_CACHE == true;
 
     def job_names = [
-        "test-composition-single-f12less",
-        "test-composition-single-f12less-community",
-        "test-composition-single-f12less-ultimatemt",
+        "test-composition-single-f12less-k8s",
+        "test-composition-single-f12less-community-k8s",
+        "test-composition-single-f12less-ultimatemt-k8s",
         "test-gui-crawl-f12less",
         "test-gui-e2e-f12less-cloud",
         "test-gui-e2e-f12less-pro",
@@ -34,7 +34,6 @@ void main() {
     ];
 
     job_names += env.USE_K8S_UPDATE_SYSTEMTESTS == "1" ? ["test-update-single-f12less-k8s"] : [];
-    job_names += env.USE_K8S_COMPOSITION_SYSTEMTESTS == "1" ? ["test-composition-single-f12less-k8s"] : [];
 
     print(
         """

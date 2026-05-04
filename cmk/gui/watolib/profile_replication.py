@@ -101,10 +101,13 @@ def _replicate_to_sites_parallel(
     automation_configs: Mapping[SiteId, RemoteAutomationConfig],
     *,
     debug: bool,
+    max_parallel_workers: int = 30,
 ) -> list[_SiteReplicationResult]:
     # One thread per site — all work is network I/O so the GIL is released for
     # each call.  Results arrive in completion order (fastest site first).
-    with ThreadPoolExecutor(max_workers=len(automation_configs)) as executor:
+    with ThreadPoolExecutor(
+        max_workers=min(max_parallel_workers, len(automation_configs))
+    ) as executor:
         futures = {
             executor.submit(
                 _replicate_to_one_site,

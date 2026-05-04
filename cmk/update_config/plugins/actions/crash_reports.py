@@ -131,6 +131,6 @@ update_action_registry.register(
         name="migrate_crash_reports",
         title="Crash reports: Migrate to grouped format with occurrence tracking",
         sort_index=150,
-        expiry_version=ExpiryVersion.CMK_300,
+        expiry_version=ExpiryVersion.CMK_310,
     )
 )

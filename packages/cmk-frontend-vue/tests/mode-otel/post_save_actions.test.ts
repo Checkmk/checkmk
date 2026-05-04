@@ -166,7 +166,7 @@ describe('createOTelReceiverConfigAction', () => {
       passwords: []
     })
     expect(action.key).toBe('createOTelReceiverConfig')
-    expect(action.label()).toBe('OpenTelemetry Collector configuration')
+    expect(action.label()).toBe('Collector configuration')
   })
 
   test('omits both receiver protocols when neither is configured', async () => {

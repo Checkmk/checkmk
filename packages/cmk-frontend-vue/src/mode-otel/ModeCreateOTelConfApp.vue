@@ -205,6 +205,7 @@ const finalizeActions = computed<readonly PostSaveAction[]>(() => {
   // save payload here so the disabled tab's form state never reaches the
   // server, matching what the wizard shows the user.
   return [
+    ...sharedActions.slice(0, -1),
     createOTelReceiverConfigAction({
       id: configName.value,
       siteId: siteId.value,
@@ -226,7 +227,7 @@ const finalizeActions = computed<readonly PostSaveAction[]>(() => {
         : null,
       passwords: passwordsToSave.value
     }),
-    ...sharedActions
+    ...sharedActions.slice(-1)
   ]
 })
 

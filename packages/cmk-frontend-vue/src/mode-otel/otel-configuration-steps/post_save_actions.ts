@@ -70,41 +70,61 @@ function errorFromUnknown(err: unknown, fallbackTitle: string): PostSaveResult {
 }
 
 /**
- * Action: create the "Telemetry" folder under the root folder.
- *
  * If the POST fails for any reason we verify the folder exists via GET before
  * surfacing the error — a 200 on the GET means the folder is already there and
  * we can proceed. This action must run before createDCDConnectorAction because
  * the DCD endpoint validates that the folder path exists.
  */
-const createTelemetryFolderAction: PostSaveAction = {
-  key: 'createTelemetryFolder',
-  label: () => _t('Create Telemetry hosts folder'),
-  execute: async (_ctx) => {
-    try {
-      const response = await fetchRestAPI(
-        'api/1.0/domain-types/folder_config/collections/all',
-        'POST',
-        { title: 'Telemetry', parent: '/', name: 'telemetry' }
-      )
-      if (response.status >= 200 && response.status <= 299) {
-        return { ok: true }
-      }
-      // POST didn't succeed — maybe the folder already exists, maybe something else went wrong.
-      // Check the actual state instead of parsing the error body.
-      const check = await fetchRestAPI('api/1.0/objects/folder_config/~telemetry', 'GET')
-      if (check.status === 200) {
-        return { ok: true }
-      }
-      // Folder really isn't there — the POST error is the real failure.
-      await response.raiseForStatus()
+
+async function createTelemetryFolderAction(): Promise<PostSaveResult> {
+  try {
+    const response = await fetchRestAPI(
+      'api/1.0/domain-types/folder_config/collections/all',
+      'POST',
+      { title: 'Telemetry', parent: '/', name: 'telemetry' }
+    )
+    if (response.status >= 200 && response.status <= 299) {
       return { ok: true }
-    } catch (err) {
-      return errorFromUnknown(err, _t('Could not create the Telemetry hosts folder'))
     }
+    // POST didn't succeed — maybe the folder already exists, maybe something else went wrong.
+    // Check the actual state instead of parsing the error body.
+    const check = await fetchRestAPI('api/1.0/objects/folder_config/~telemetry', 'GET')
+    if (check.status === 200) {
+      return { ok: true }
+    }
+    // Folder really isn't there — the POST error is the real failure.
+    await response.raiseForStatus()
+    return { ok: true }
+  } catch (err) {
+    return errorFromUnknown(err, _t('Could not create the Telemetry hosts folder'))
   }
 }
 
+async function createDCDConnector(ctx: PostSaveContext): Promise<PostSaveResult> {
+  try {
+    const response = await fetchRestAPI(
+      'api/internal/domain-types/dcd_metric_backend/collections/all',
+      'POST',
+      {
+        title: ctx.configName,
+        site: ctx.siteId,
+        dcd_id: `quick_setup_${ctx.configName}`,
+        connector: {
+          connector_type: 'metric_backend',
+          host_name_resource_attribute_key: 'service.name',
+          creation_rules: [{ folder_path: '/telemetry', delete_hosts: true }]
+        }
+      }
+    )
+    if (response.status === 409) {
+      return { ok: true }
+    }
+    await response.raiseForStatus()
+    return { ok: true }
+  } catch (err) {
+    return errorFromUnknown(err, _t('Could not create the metric backend connector'))
+  }
+}
 /**
  * Action: create the "Telemetry" DCD metric backend connector.
  *
@@ -116,31 +136,13 @@ const createTelemetryFolderAction: PostSaveAction = {
  */
 const createDCDConnectorAction: PostSaveAction = {
   key: 'createDCDConnector',
-  label: () => _t('Set up metric backend connector'),
+  label: () => _t('Dynamic host management setup'),
   execute: async (ctx) => {
-    try {
-      const response = await fetchRestAPI(
-        'api/internal/domain-types/dcd_metric_backend/collections/all',
-        'POST',
-        {
-          title: ctx.configName,
-          site: ctx.siteId,
-          dcd_id: `quick_setup_${ctx.configName}`,
-          connector: {
-            connector_type: 'metric_backend',
-            host_name_resource_attribute_key: 'service.name',
-            creation_rules: [{ folder_path: '/telemetry', delete_hosts: true }]
-          }
-        }
-      )
-      if (response.status === 409) {
-        return { ok: true }
-      }
-      await response.raiseForStatus()
-      return { ok: true }
-    } catch (err) {
-      return errorFromUnknown(err, _t('Could not create the metric backend connector'))
+    const folderResult = await createTelemetryFolderAction()
+    if (!folderResult.ok) {
+      return folderResult
     }
+    return await createDCDConnector(ctx)
   }
 }
 
@@ -373,7 +375,7 @@ function buildProtocolBody(input: OTelReceiverProtocolInput): OTelProtocolConfig
 export function createOTelReceiverConfigAction(input: OTelReceiverConfigInput): PostSaveAction {
   return {
     key: 'createOTelReceiverConfig',
-    label: () => _t('OpenTelemetry Collector configuration'),
+    label: () => _t('Collector configuration'),
     execute: async () => {
       // Passwords must land in the store before the receiver POST embeds
       // their IDs as `{ type: 'store', value: <id> }` references — the
@@ -479,6 +481,5 @@ export function createPrometheusScrapeConfigAction(
 export const POST_SAVE_ACTIONS: readonly PostSaveAction[] = [
   enableCollectorAction,
   enableMetricBackendAction,
-  createTelemetryFolderAction,
   createDCDConnectorAction
 ]

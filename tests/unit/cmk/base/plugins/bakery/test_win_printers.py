@@ -5,12 +5,32 @@
 
 from pathlib import Path
 
+import pytest
+
 from cmk.bakery.v1 import OS, Plugin
 from cmk.base.plugins.bakery.win_printers import get_win_printers_files
 
 
-def test_win_printers_files() -> None:
-    result = list(get_win_printers_files(None))
-    assert result == [
-        Plugin(base_os=OS.WINDOWS, source=Path("win_printers.ps1")),
-    ]
+@pytest.mark.parametrize(
+    "conf, expected_files",
+    [
+        (
+            {"deployment": ("sync", None)},
+            [Plugin(base_os=OS.WINDOWS, source=Path("win_printers.ps1"), interval=None)],
+        ),
+        (
+            {"deployment": ("cached", 3600.0)},
+            [Plugin(base_os=OS.WINDOWS, source=Path("win_printers.ps1"), interval=3600)],
+        ),
+        (
+            {"deployment": ("do_not_deploy", None)},
+            [],
+        ),
+    ],
+)
+def test_win_printers_files(
+    conf: dict[str, object],
+    expected_files: list[Plugin],
+) -> None:
+    result = list(get_win_printers_files(conf))
+    assert result == expected_files

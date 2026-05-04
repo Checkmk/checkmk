@@ -124,6 +124,23 @@ class TestMessageBroker:
                     # remote_site → remote_site_2
                     assert_message_exchange_working(remote_site_2, remote_site)
 
+    def test_p2p_fallback_to_central_routing_after_removal(
+        self, central_site: Site, remote_site: Site, remote_site_2: Site
+    ) -> None:
+        """After a p2p connection is removed,
+        message routing between remote sites should revert to requiring the central site."""
+        with rabbitmq_info_on_failure([central_site, remote_site, remote_site_2]):
+            with p2p_connection(central_site, remote_site, remote_site_2):
+                with broker_stopped(central_site):
+                    assert_message_exchange_working(remote_site, remote_site_2)
+                    assert_message_exchange_working(remote_site_2, remote_site)
+            # p2p removed; verify stale shovels/bindings are not keeping direct routing alive
+            with broker_stopped(central_site):
+                assert_message_exchange_not_working(remote_site, remote_site_2)
+            # central routing must be restored
+            assert_message_exchange_working(remote_site, remote_site_2)
+            assert_message_exchange_working(remote_site_2, remote_site)
+
     def test_rabbitmq_port_change(self, central_site: Site, remote_site: Site) -> None:
         """Ensure that sites can still communicate after the message broker port is changed"""
         with rabbitmq_info_on_failure([central_site, remote_site]):

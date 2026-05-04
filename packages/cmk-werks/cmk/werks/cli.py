@@ -117,21 +117,6 @@ class LegacyStash(BaseModel):
             self.ids_by_project[project] = []
         self.ids_by_project[project].append(werk_id.id)
 
-    @classmethod
-    def load_from_file(cls: type[T], werk_ids_path: Path) -> T:
-        if not werk_ids_path.exists():
-            return cls.model_validate({"ids_by_project": {}})
-        content = werk_ids_path.read_text(encoding="utf-8")
-        if not content:
-            return cls.model_validate({"ids_by_project": {}})
-        if content[0] == "[":
-            # we have a legacy file, from cmk project, we need to adapt it:
-            return cls.model_validate({"ids_by_project": {"cmk": ast.literal_eval(content)}})
-        return cls.model_validate_json(content)
-
-    def dump_to_file(self, werk_ids_path: Path) -> None:
-        werk_ids_path.write_text(self.model_dump_json(by_alias=True), encoding="utf-8")
-
 
 class WerkId:
     __slots__ = ("__id",)

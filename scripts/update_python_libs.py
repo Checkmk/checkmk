@@ -6,6 +6,7 @@
 """This script checks the deps before and after running `make relock_venv` and writes the diff to a
 file to be then picked up as git commit message."""
 
+import argparse
 import re
 import subprocess
 from dataclasses import dataclass
@@ -98,11 +99,47 @@ def test_diff() -> None:
     )
 
 
+def _parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(
+        description="Update Python libraries and make a nice commit message"
+    )
+    parser.add_argument(
+        "--commit", action="store_true", help="Call git commit with the generated message"
+    )
+    parser.add_argument(
+        "--package", action="append", dest="packages", help="Only update the given package(s)"
+    )
+    return parser.parse_args()
+
+
+def _get_lock_files() -> list[str]:
+    return [
+        filename
+        for filename in subprocess.check_output(
+            [
+                "bazel",
+                "cquery",
+                'kind("source file", deps(//:lock_python_requirements))',
+                "--output=files",
+            ],
+            text=True,
+        ).splitlines()
+        if filename.endswith("requirements.txt")
+    ]
+
+
 def _main() -> None:
+    args = _parse_args()
     requirements_txt_path = Path("requirements.txt")
     before = RequriementsTxtParser.parse(requirements_txt_path)
-    requirements_txt_path.write_text("")
-    subprocess.check_call(["bazel", "run", "//:lock_python_requirements"])
+    if args.packages:
+        subprocess.check_call(
+            ["bazel", "run", "//:lock_python_requirements", "--"]
+            + [arg for p in args.packages for arg in ("--upgrade-package", p)]
+        )
+    else:
+        requirements_txt_path.write_text("")
+        subprocess.check_call(["bazel", "run", "//:lock_python_requirements"])
     after = RequriementsTxtParser.parse(requirements_txt_path)
     # there is also a omd/requirements_lock.txt file, it looks like it will vanish soon
     # I'm not sure how we would want to update that anyways. Special commit or all in one?
@@ -112,7 +149,17 @@ def _main() -> None:
     with open(".git-commit-msg", "w") as f:
         f.write("Update Python libraries\n\n")
         f.write(_diff(before.info, after.info))
-    print("git commit -F .git-commit-msg")
+    if args.commit:
+        subprocess.check_call(
+            [
+                "git",
+                "add",
+            ]
+            + _get_lock_files()
+        )
+        subprocess.check_call(["git", "commit", "-F", ".git-commit-msg"])
+    else:
+        print("git commit -F .git-commit-msg")
 
 
 if __name__ == "__main__":

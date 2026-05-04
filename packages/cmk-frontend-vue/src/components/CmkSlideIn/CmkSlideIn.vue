@@ -46,6 +46,7 @@ export interface CmkSlideInProps {
   ariaLabel?: string | undefined
   stackPriority?: number | undefined
   borderColor?: SlideInVariants['borderColor']
+  initialFocusTarget?: HTMLElement | undefined
 }
 
 const props = defineProps<CmkSlideInProps>()
@@ -72,7 +73,11 @@ watch(
   async (isOpen) => {
     if (isOpen) {
       await nextTick(() => {
-        dialogContentRef.value?.$el.focus()
+        const target = props.initialFocusTarget ?? dialogContentRef.value?.$el
+        if (!(target instanceof HTMLElement)) {
+          return
+        }
+        target.focus()
       })
     }
   }

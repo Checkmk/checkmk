@@ -5,6 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import { DialogClose, DialogTitle } from 'radix-vue'
+import { computed, ref } from 'vue'
 
 import usei18n from '@/lib/i18n'
 
@@ -15,6 +16,12 @@ import CmkScrollContainer from './CmkScrollContainer.vue'
 import CmkHeading from './typography/CmkHeading.vue'
 
 const { _t } = usei18n()
+
+const scrollContainerRef = ref<InstanceType<typeof CmkScrollContainer>>()
+const scrollContainerEl = computed(() => {
+  const el = scrollContainerRef.value?.$el
+  return el instanceof HTMLElement ? el : undefined
+})
 
 export interface CmkSlideInDialogProps {
   open: boolean
@@ -40,6 +47,7 @@ const emit = defineEmits(['close'])
     :size="size"
     :stack-priority="stackPriority"
     :border-color="borderColor"
+    :initial-focus-target="scrollContainerEl"
     @close="emit('close')"
   >
     <DialogTitle v-if="header" class="cmk-slide-in-dialog__title">
@@ -57,7 +65,14 @@ const emit = defineEmits(['close'])
       </DialogClose>
     </DialogTitle>
 
-    <CmkScrollContainer type="outer" class="cmk-slide-in-dialog__content">
+    <CmkScrollContainer
+      ref="scrollContainerRef"
+      type="outer"
+      class="cmk-slide-in-dialog__content"
+      tabindex="0"
+      role="region"
+      :aria-label="header?.title ?? _t('Content')"
+    >
       <slot />
     </CmkScrollContainer>
   </CmkSlideIn>

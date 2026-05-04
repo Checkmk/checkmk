@@ -284,6 +284,14 @@ def cmd_search(args: argparse.Namespace) -> None:
         params["solved"] = "false"
     if args.version:
         params["version"] = args.version
+    if args.edition:
+        params["edition"] = args.edition
+    if args.contact_mail:
+        params["contact_mail"] = args.contact_mail
+    if args.exc_value:
+        params["exc_value"] = args.exc_value
+    if args.traceback_location:
+        params["traceback_location"] = args.traceback_location
     if args.limit:
         params["limit"] = str(args.limit)
 
@@ -644,6 +652,22 @@ def main() -> None:
     )
     search_parser.add_argument("--unsolved", action="store_true", help="Show only unsolved groups")
     search_parser.add_argument("--version", help="Version prefix filter (e.g. '2.4.0')")
+    search_parser.add_argument(
+        "--edition", help="Edition exact match (e.g. 'cee', 'cre', 'cme', 'cse')"
+    )
+    search_parser.add_argument(
+        "--contact-mail", help="Substring match on contact_mail (e.g. 'example.com')"
+    )
+    search_parser.add_argument(
+        "--exc-value", help="Substring match on exception message (e.g. 'KeyError')"
+    )
+    search_parser.add_argument(
+        "--traceback-location",
+        help=(
+            "Substring match on traceback location ('<filename>:<funcname>' of the "
+            "innermost frame, e.g. 'views.py:render_view')"
+        ),
+    )
     search_parser.add_argument("--limit", type=int, default=50, help="Max results (default: 50)")
 
     # popular

@@ -60,23 +60,27 @@ The user provides a natural language request or a direct command. Examples:
 
 Translate the user's request into one of these commands:
 
-| User intent                          | Command                                        |
-| ------------------------------------ | ---------------------------------------------- |
-| "Show me popular crashes"            | `popular`                                      |
-| "What crashes happened last week?"   | `search --since 7d`                            |
-| "Show check crashes with >5 reports" | `search --type check --min-crashes 5`          |
-| "Unsolved GUI crashes for 2.4.0"     | `search --type gui --unsolved --version 2.4.0` |
-| "Show crash report ABC-123-..."      | `show <crash_id>`                              |
-| "Show crash group 42"                | `group 42`                                     |
-| "Overall crash statistics"           | `stats`                                        |
-| "Auto-fix popular crashes"           | `auto-fix popular --limit 5`                   |
-| "Fix all unsolved check crashes"     | `auto-fix search --type check --unsolved`      |
-| "What crashes are on my local site?" | `local`                                        |
-| "Show local GUI crashes"             | `local --type gui`                             |
-| "What crash groups did we fix?"      | `resolved --since 30d`                         |
-| "Show resolved crashes this quarter" | `resolved --since 90d`                         |
-| "Resolve group 42 in 2.4.0p8"        | `resolve 42 --versions 2.4.0p8`                |
-| "Unresolve group 42"                 | `resolve 42 --unresolve`                       |
+| User intent                          | Command                                            |
+| ------------------------------------ | -------------------------------------------------- |
+| "Show me popular crashes"            | `popular`                                          |
+| "What crashes happened last week?"   | `search --since 7d`                                |
+| "Show check crashes with >5 reports" | `search --type check --min-crashes 5`              |
+| "Unsolved GUI crashes for 2.4.0"     | `search --type gui --unsolved --version 2.4.0`     |
+| "Crashes only on enterprise edition" | `search --edition cee`                             |
+| "Crashes from acme.com customers"    | `search --contact-mail acme.com`                   |
+| "Crashes mentioning KeyError"        | `search --exc-value KeyError`                      |
+| "Crashes in views.py:render_view"    | `search --traceback-location views.py:render_view` |
+| "Show crash report ABC-123-..."      | `show <crash_id>`                                  |
+| "Show crash group 42"                | `group 42`                                         |
+| "Overall crash statistics"           | `stats`                                            |
+| "Auto-fix popular crashes"           | `auto-fix popular --limit 5`                       |
+| "Fix all unsolved check crashes"     | `auto-fix search --type check --unsolved`          |
+| "What crashes are on my local site?" | `local`                                            |
+| "Show local GUI crashes"             | `local --type gui`                                 |
+| "What crash groups did we fix?"      | `resolved --since 30d`                             |
+| "Show resolved crashes this quarter" | `resolved --since 90d`                             |
+| "Resolve group 42 in 2.4.0p8"        | `resolve 42 --versions 2.4.0p8`                    |
+| "Unresolve group 42"                 | `resolve 42 --unresolve`                           |
 
 ### Step 1.5: Check Authentication
 
@@ -105,7 +109,18 @@ PYTHONPATH=.github/skills .venv/bin/python -m crash_report <command> [options]
 ```bash
 # Search crash groups with filters
 PYTHONPATH=.github/skills .venv/bin/python -m crash_report search \
-  [--since DATE] [--min-crashes N] [--type TYPE] [--unsolved] [--version VER] [--limit N]
+  [--since DATE] [--min-crashes N] [--type TYPE] [--unsolved] [--version VER] \
+  [--edition EDITION] [--contact-mail SUBSTR] [--exc-value SUBSTR] \
+  [--traceback-location SUBSTR] [--limit N]
+
+# Filters semantics:
+#   --type, --edition          exact match
+#   --version                  prefix match on cmk_version (e.g. '2.4' matches '2.4.0p3')
+#   --contact-mail             substring match on contact_mail
+#   --exc-value                substring match on exception message
+#   --traceback-location       substring match on '<filename>:<funcname>' of the
+#                              innermost traceback frame (e.g. 'views.py:render_view')
+# These per-report filters can be combined freely.
 
 # Popular unsolved crash groups (>10 crashes)
 PYTHONPATH=.github/skills .venv/bin/python -m crash_report popular [--since DATE] [--limit N]

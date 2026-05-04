@@ -123,5 +123,59 @@ test('CmkTimePicker updates value on popup hour selection', async () => {
   await fireEvent.click(hour14Button!)
 
   const hoursInput = screen.getByRole('textbox', { name: 'Hours' })
+  expect(hoursInput).toHaveValue('05')
+
+  const applyButton = screen.getByRole('button', { name: 'Apply' })
+  await fireEvent.click(applyButton)
+
   expect(hoursInput).toHaveValue('14')
+})
+
+test('CmkTimePicker enter on focused option applies that value', async () => {
+  const wrapper = defineComponent({
+    components: { CmkTimePicker },
+    setup() {
+      const time = ref('05:30')
+      return { time }
+    },
+    template: `<CmkTimePicker v-model="time" />`
+  })
+  render(wrapper)
+
+  const trigger = screen.getByRole('button', { name: 'Open time picker' })
+  await fireEvent.click(trigger)
+
+  const buttons = screen.getAllByRole('button')
+  const hour14Button = buttons.find((b) => b.textContent?.trim() === '14')
+  expect(hour14Button).toBeDefined()
+  await fireEvent.click(hour14Button!)
+  await fireEvent.keyDown(hour14Button!, { key: 'Enter' })
+
+  const hoursInput = screen.getByRole('textbox', { name: 'Hours' })
+  expect(hoursInput).toHaveValue('14')
+})
+
+test('CmkTimePicker discards popup selection on cancel', async () => {
+  const wrapper = defineComponent({
+    components: { CmkTimePicker },
+    setup() {
+      const time = ref('05:30')
+      return { time }
+    },
+    template: `<CmkTimePicker v-model="time" />`
+  })
+  render(wrapper)
+
+  const trigger = screen.getByRole('button', { name: 'Open time picker' })
+  await fireEvent.click(trigger)
+
+  const buttons = screen.getAllByRole('button')
+  const hour14Button = buttons.find((b) => b.textContent?.trim() === '14')
+  await fireEvent.click(hour14Button!)
+
+  const cancelButton = screen.getByRole('button', { name: 'Cancel' })
+  await fireEvent.click(cancelButton)
+
+  const hoursInput = screen.getByRole('textbox', { name: 'Hours' })
+  expect(hoursInput).toHaveValue('05')
 })

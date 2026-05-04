@@ -10,6 +10,7 @@ import usei18n from '@/lib/i18n'
 import { untranslated } from '@/lib/i18n'
 import useClickOutside from '@/lib/useClickOutside'
 
+import CmkButton from '@/components/CmkButton.vue'
 import CmkIconButton from '@/components/CmkIconButton.vue'
 
 const { _t } = usei18n()
@@ -38,6 +39,8 @@ const parsed = parseTime(model.value)
 const hours = ref(parsed?.hours ?? 0)
 const minutes = ref(parsed?.minutes ?? 0)
 const popupOpen = ref(false)
+const pendingHours = ref(hours.value)
+const pendingMinutes = ref(minutes.value)
 
 const hoursRef = ref<HTMLInputElement | null>(null)
 const minutesRef = ref<HTMLInputElement | null>(null)
@@ -54,7 +57,9 @@ const allHours = Array.from({ length: 24 }, (_, i) => i)
 const allMinutes = Array.from({ length: 60 }, (_, i) => i)
 
 watch([hours, minutes], () => {
-  model.value = timeString.value
+  if (model.value !== timeString.value) {
+    model.value = timeString.value
+  }
 })
 
 watch(
@@ -188,27 +193,74 @@ function onMinutesBlur() {
 }
 
 function togglePopup() {
-  popupOpen.value = !popupOpen.value
   if (popupOpen.value) {
-    void nextTick(() => {
-      scrollToSelected()
-    })
+    cancelPopup()
+    return
   }
+  pendingHours.value = hours.value
+  pendingMinutes.value = minutes.value
+  popupOpen.value = true
+  void nextTick(scrollAndFocusSelected)
 }
 
 function selectHour(h: number) {
-  hours.value = h
+  pendingHours.value = h
 }
 
 function selectMinute(m: number) {
-  minutes.value = m
+  pendingMinutes.value = m
 }
 
-function scrollToSelected() {
-  const hEl = hoursColumnRef.value?.querySelector('.cmk-time-picker__option--selected')
-  const mEl = minutesColumnRef.value?.querySelector('.cmk-time-picker__option--selected')
-  hEl?.scrollIntoView({ block: 'center' })
-  mEl?.scrollIntoView({ block: 'center' })
+function confirmPopup() {
+  hours.value = pendingHours.value
+  minutes.value = pendingMinutes.value
+  popupOpen.value = false
+  minutesRef.value?.focus()
+}
+
+function cancelPopup() {
+  popupOpen.value = false
+}
+
+function selectedOption(column: HTMLDivElement | null): HTMLButtonElement | null {
+  return column?.querySelector('.cmk-time-picker__option--selected') ?? null
+}
+
+function scrollAndFocusSelected() {
+  const h = selectedOption(hoursColumnRef.value)
+  const m = selectedOption(minutesColumnRef.value)
+  h?.scrollIntoView({ block: 'center' })
+  m?.scrollIntoView({ block: 'center' })
+  h?.focus()
+}
+
+function navigateOption(e: KeyboardEvent, which: 'hours' | 'minutes') {
+  const delta = e.key === 'ArrowDown' ? 1 : e.key === 'ArrowUp' ? -1 : 0
+  if (delta === 0) {
+    return
+  }
+  e.preventDefault()
+  if (which === 'hours') {
+    pendingHours.value = wrap(pendingHours.value + delta, 0, 23)
+    void nextTick(() => selectedOption(hoursColumnRef.value)?.focus())
+  } else {
+    pendingMinutes.value = wrap(pendingMinutes.value + delta, 0, 59)
+    void nextTick(() => selectedOption(minutesColumnRef.value)?.focus())
+  }
+}
+
+function onPopupKey(e: KeyboardEvent) {
+  if (e.key === 'Escape') {
+    e.preventDefault()
+    cancelPopup()
+    minutesRef.value?.focus()
+  } else if (
+    e.key === 'Enter' &&
+    (e.target as HTMLElement | null)?.classList.contains('cmk-time-picker__option')
+  ) {
+    e.preventDefault()
+    confirmPopup()
+  }
 }
 </script>
 
@@ -254,32 +306,46 @@ function scrollToSelected() {
       @click="togglePopup"
     />
     <!-- eslint-enable vue/no-bare-strings-in-template -->
-    <div v-if="popupOpen" class="cmk-time-picker__popup">
-      <div ref="hoursColumnRef" class="cmk-time-picker__column">
-        <div class="cmk-time-picker__column-header">{{ untranslated('H') }}</div>
-        <button
-          v-for="h in allHours"
-          :key="h"
-          type="button"
-          class="cmk-time-picker__option"
-          :class="{ 'cmk-time-picker__option--selected': h === hours }"
-          @click="selectHour(h)"
-        >
-          {{ pad(h) }}
-        </button>
+    <div v-if="popupOpen" class="cmk-time-picker__popup" @keydown="onPopupKey">
+      <div class="cmk-time-picker__columns">
+        <div ref="hoursColumnRef" class="cmk-time-picker__column">
+          <div class="cmk-time-picker__column-header">{{ untranslated('H') }}</div>
+          <button
+            v-for="h in allHours"
+            :key="h"
+            type="button"
+            class="cmk-time-picker__option"
+            :class="{ 'cmk-time-picker__option--selected': h === pendingHours }"
+            :tabindex="h === pendingHours ? 0 : -1"
+            @click="selectHour(h)"
+            @keydown="navigateOption($event, 'hours')"
+          >
+            {{ pad(h) }}
+          </button>
+        </div>
+        <div ref="minutesColumnRef" class="cmk-time-picker__column">
+          <div class="cmk-time-picker__column-header">{{ untranslated('M') }}</div>
+          <button
+            v-for="m in allMinutes"
+            :key="m"
+            type="button"
+            class="cmk-time-picker__option"
+            :class="{ 'cmk-time-picker__option--selected': m === pendingMinutes }"
+            :tabindex="m === pendingMinutes ? 0 : -1"
+            @click="selectMinute(m)"
+            @keydown="navigateOption($event, 'minutes')"
+          >
+            {{ pad(m) }}
+          </button>
+        </div>
       </div>
-      <div ref="minutesColumnRef" class="cmk-time-picker__column">
-        <div class="cmk-time-picker__column-header">{{ untranslated('M') }}</div>
-        <button
-          v-for="m in allMinutes"
-          :key="m"
-          type="button"
-          class="cmk-time-picker__option"
-          :class="{ 'cmk-time-picker__option--selected': m === minutes }"
-          @click="selectMinute(m)"
-        >
-          {{ pad(m) }}
-        </button>
+      <div class="cmk-time-picker__actions">
+        <CmkButton variant="secondary" @click="cancelPopup">
+          {{ _t('Cancel') }}
+        </CmkButton>
+        <CmkButton variant="primary" @click="confirmPopup">
+          {{ _t('Apply') }}
+        </CmkButton>
       </div>
     </div>
   </span>
@@ -356,13 +422,27 @@ function scrollToSelected() {
   left: 0;
   z-index: var(--z-index-modal-popup, 3500);
   display: flex;
-  gap: var(--dimension-2);
+  flex-direction: column;
+  gap: var(--dimension-3);
   margin-top: var(--dimension-3);
   background: var(--default-bg-color);
   border: 1px solid var(--default-border-color);
   border-radius: 6px;
   padding: var(--dimension-3);
   box-shadow: 0 4px 12px rgb(0 0 0 / 30%);
+}
+
+.cmk-time-picker__columns {
+  display: flex;
+  gap: var(--dimension-2);
+}
+
+.cmk-time-picker__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--dimension-3);
+  border-top: 1px solid var(--default-border-color);
+  padding-top: var(--dimension-3);
 }
 
 .cmk-time-picker__column {
@@ -380,7 +460,7 @@ function scrollToSelected() {
   top: 0;
   background: var(--default-bg-color);
   color: var(--font-color-dimmed);
-  font-size: 11px;
+  font-size: var(--font-size-small);
   font-weight: 600;
   text-align: center;
   padding: var(--dimension-3) 0;
@@ -395,8 +475,8 @@ function scrollToSelected() {
   border-radius: 3px;
   background: transparent;
   color: var(--font-color);
-  font-family: monospace;
-  font-size: 13px;
+  font-size: var(--font-size-small);
+  font-variant-numeric: tabular-nums;
   text-align: center;
   padding: var(--dimension-3) var(--dimension-4);
   cursor: pointer;
@@ -404,6 +484,11 @@ function scrollToSelected() {
 
   &:hover {
     background: var(--input-hover-bg-color);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--success);
+    outline-offset: -2px;
   }
 }
 

@@ -12,6 +12,7 @@ import {
   today
 } from '@internationalized/date'
 import {
+  DatePickerAnchor,
   DatePickerCalendar,
   DatePickerCell,
   DatePickerCellTrigger,
@@ -129,28 +130,29 @@ function shiftYear(delta: number) {
       :week-starts-on="1"
       :locale="'en-CA'"
       :prevent-deselect="true"
-      class="cmk-date-time-picker__date"
     >
-      <DatePickerField
-        v-slot="{ segments }"
-        class="cmk-date-time-picker__field"
-        :aria-label="_t('Date')"
-      >
-        <template v-for="item in segments" :key="item.part">
-          <DatePickerInput
-            v-if="item.part !== 'literal'"
-            :part="item.part"
-            class="cmk-date-time-picker__segment"
-          >
-            {{ item.value }}
-          </DatePickerInput>
-          <span v-else class="cmk-date-time-picker__literal">{{ item.value }}</span>
-        </template>
-      </DatePickerField>
-      <DatePickerTrigger class="cmk-date-time-picker__trigger" :aria-label="_t('Open calendar')">
-        <CmkIcon name="insertdate" size="medium" />
-      </DatePickerTrigger>
-      <DatePickerContent class="cmk-date-time-picker__popover" :side-offset="4">
+      <DatePickerAnchor as="span" class="cmk-date-time-picker__anchor">
+        <DatePickerField
+          v-slot="{ segments }"
+          class="cmk-date-time-picker__field"
+          :aria-label="_t('Date')"
+        >
+          <template v-for="item in segments" :key="item.part">
+            <DatePickerInput
+              v-if="item.part !== 'literal'"
+              :part="item.part"
+              class="cmk-date-time-picker__segment"
+            >
+              {{ item.value }}
+            </DatePickerInput>
+            <span v-else class="cmk-date-time-picker__literal">{{ item.value }}</span>
+          </template>
+        </DatePickerField>
+        <DatePickerTrigger class="cmk-date-time-picker__trigger" :aria-label="_t('Open calendar')">
+          <CmkIcon name="insertdate" size="medium" />
+        </DatePickerTrigger>
+      </DatePickerAnchor>
+      <DatePickerContent class="cmk-date-time-picker__popover" align="start" :side-offset="4">
         <DatePickerCalendar v-slot="{ weekDays, grid }" class="cmk-date-time-picker__calendar">
           <DatePickerHeader
             v-if="calendarView === 'calendar'"
@@ -277,7 +279,7 @@ function shiftYear(delta: number) {
   gap: var(--dimension-4);
 }
 
-.cmk-date-time-picker__date {
+.cmk-date-time-picker__anchor {
   display: inline-flex;
   align-items: center;
   gap: var(--dimension-4);
@@ -486,7 +488,6 @@ function shiftYear(delta: number) {
 
   &[data-outside-view] {
     color: var(--font-color-dimmed);
-    opacity: 0.5;
   }
 
   &[data-disabled] {

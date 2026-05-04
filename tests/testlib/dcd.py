@@ -5,7 +5,7 @@
 import logging
 from collections.abc import Iterator
 from contextlib import contextmanager
-from subprocess import CalledProcessError
+from subprocess import CalledProcessError, TimeoutExpired
 
 from tests.testlib.common.utils import wait_until
 from tests.testlib.site import Site
@@ -105,13 +105,23 @@ def execute_dcd_cycle(
     """
 
     def _wait_for_hosts_in_batch() -> bool:
-        site.run(["cmk-dcd", "--execute-cycle"])
+        try:
+            site.run(["cmk-dcd", "--execute-cycle"], timeout=10)
+        except TimeoutExpired:
+            logger.warning("cmk-dcd --execute-cycle timed out, retrying")
+            return False
 
         logger.info(
             "Waiting for DCD to compute the expected number of PB hosts.\nExpected PB hosts: %s",
             expected_pb_hosts,
         )
-        all_batches_stdout = site.check_output(["cmk-dcd", "--batches"]).strip("\n").split("\n")
+        try:
+            all_batches_stdout = (
+                site.check_output(["cmk-dcd", "--batches"], timeout=10).strip("\n").split("\n")
+            )
+        except TimeoutExpired:
+            logger.warning("cmk-dcd --batches timed out, retrying")
+            return False
         logger.info("DCD batches:\n%s", "\n".join(all_batches_stdout[:]))
 
         if connection_name is not None:

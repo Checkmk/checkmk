@@ -948,16 +948,39 @@ def _pick_oldest_node_version(nodes: Iterable[models.NodeModel]) -> models.Versi
     return min(node.version for node in nodes)
 
 
-def write_sections(
-    connection: HostConnection, logger: logging.Logger, args: argparse.Namespace
-) -> None:
-    """Write monitoring sections based on selected resources"""
-    fetched_resources = {obj.value for obj in args.fetched_resources}
+def get_version_from_cluster(connection: HostConnection) -> models.Version:
+    field_query = ("version",)
+    cluster = NetAppResource.Cluster(connection=connection)
+    cluster.get(fields=",".join(field_query))
+    # when the cluster has more than one node, the cluster version is equivalent
+    # to the lowest of generation, major, and minor versions on all nodes
+    return models.Version.model_validate(cluster.to_dict()["version"])
 
+
+def get_nodes(
+    connection: HostConnection, logger: logging.Logger, fetched_resources: set[str]
+) -> tuple[Sequence[models.NodeModel] | None, models.Version | None]:
     nodes: Sequence[models.NodeModel] | None = None
+    min_node_version: models.Version | None = None
     if RESOURCES_NEEDING_NODES_INFO & fetched_resources:
         try:
             nodes = list(fetch_nodes(connection))
+            if nodes:
+                min_node_version = _pick_oldest_node_version(nodes)
+            else:
+                # Some platforms deliberately hide node-level information via the ONTAP REST API.
+                # Amazon FSx for NetApp ONTAP is a known case: AWS manages the underlying hardware
+                # and returns an empty node collection by design, making node health checks
+                # (battery state, CPU, hardware identifiers) unavailable on that platform.
+                # Fall back to the cluster endpoint to at least recover the ONTAP version, which
+                # is required for version-gated queries (fans, temperatures, etc.).
+                nodes = None
+                logger.warning("Nodes API returned empty list. Trying with cluster endpoint.")
+                try:
+                    min_node_version = get_version_from_cluster(connection)
+                except Exception as cluster_exc:
+                    logger.exception("Failed to get version from cluster endpoint")
+                    _write_error("node", str(cluster_exc))
         except NetAppRestError as exc:
             if exc.status_code == 401:
                 raise
@@ -966,6 +989,16 @@ def write_sections(
         except Exception as exc:
             logger.exception("Failed to fetch nodes")
             _write_error("node", str(exc))
+
+    return nodes, min_node_version
+
+
+def write_sections(
+    connection: HostConnection, logger: logging.Logger, args: argparse.Namespace
+) -> None:
+    """Write monitoring sections based on selected resources"""
+    fetched_resources = {obj.value for obj in args.fetched_resources}
+    nodes, min_node_version = get_nodes(connection, logger, fetched_resources)
 
     if FetchedResource.node.value in fetched_resources:
         if nodes is not None:
@@ -1035,16 +1068,12 @@ def write_sections(
             )
 
     if FetchedResource.fan.value in fetched_resources:
-        if nodes is not None:
-            safe_write_section(
-                "fan", fetch_fans(connection, _pick_oldest_node_version(nodes)), logger
-            )
+        if min_node_version is not None:
+            safe_write_section("fan", fetch_fans(connection, min_node_version), logger)
 
     if FetchedResource.temp.value in fetched_resources:
-        if nodes is not None:
-            safe_write_section(
-                "temp", fetch_temperatures(connection, _pick_oldest_node_version(nodes)), logger
-            )
+        if min_node_version is not None:
+            safe_write_section("temp", fetch_temperatures(connection, min_node_version), logger)
 
     if FetchedResource.alerts.value in fetched_resources:
         safe_write_section("alerts", fetch_alerts(connection, args), logger)

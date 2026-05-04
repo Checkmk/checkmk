@@ -14,14 +14,23 @@ from cmk.licensing.basics.features import FeatureFlag, Features, licensed_featur
 def test_community() -> None:
     assert licensed_features(Path(), Edition.COMMUNITY) == Features(
         bakery=FeatureFlag(enabled=False),
+        extended_metric_backend=FeatureFlag(enabled=False),
+    )
+
+
+def test_pro() -> None:
+    assert licensed_features(Path(), Edition.PRO) == Features(
+        bakery=FeatureFlag(enabled=True),
+        extended_metric_backend=FeatureFlag(enabled=False),
     )
 
 
 @pytest.mark.parametrize(
     "edition",
-    [e for e in Edition if e is not Edition.COMMUNITY],
+    [e for e in Edition if e not in [Edition.COMMUNITY, Edition.PRO]],
 )
 def test_commercial(edition: Edition) -> None:
     assert licensed_features(Path(), edition) == Features(
         bakery=FeatureFlag(enabled=True),
+        extended_metric_backend=FeatureFlag(enabled=True),
     )

@@ -20,16 +20,20 @@ class FeatureFlag:
 
 class FeatureName(StrEnum):
     BAKERY = auto()
+    EXTENDED_METRIC_BACKEND = auto()
 
 
 @dataclass(frozen=True)
 class Features:
     bakery: FeatureFlag
+    extended_metric_backend: FeatureFlag
 
     def get_flag(self, name: FeatureName) -> FeatureFlag:
         match name:
             case FeatureName.BAKERY:
                 return self.bakery
+            case FeatureName.EXTENDED_METRIC_BACKEND:
+                return self.extended_metric_backend
 
     def disabled(self) -> set[str]:
         return {f.name for f in fields(self) if not getattr(self, f.name).enabled}
@@ -42,6 +46,7 @@ def licensed_features(omd_root: Path, edition: Edition) -> Features:
             # community edition -> all features disabled.
             return Features(
                 bakery=FeatureFlag(enabled=False),
+                extended_metric_backend=FeatureFlag(enabled=False),
             )
 
         case Edition.PRO:
@@ -54,20 +59,24 @@ def licensed_features(omd_root: Path, edition: Edition) -> Features:
             # no license -> all features enabled. We must assume TRIAL.
             return Features(
                 bakery=FeatureFlag(enabled=True),
+                extended_metric_backend=FeatureFlag(enabled=True),
             )
 
         case Edition.ULTIMATEMT:
             return Features(
                 bakery=FeatureFlag(enabled=True),
+                extended_metric_backend=FeatureFlag(enabled=True),
             )
 
         case Edition.CLOUD:
             return Features(
                 bakery=FeatureFlag(enabled=True),
+                extended_metric_backend=FeatureFlag(enabled=True),
             )
 
 
 def _make_pro_features() -> Features:
     return Features(
         bakery=FeatureFlag(enabled=True),
+        extended_metric_backend=FeatureFlag(enabled=False),
     )

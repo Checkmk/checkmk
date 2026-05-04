@@ -31,7 +31,7 @@ from cmk.server_side_programs.v1_unstable import (
     vcrtrace,
 )
 
-__version__ = "2.5.0p1"
+__version__ = "2.5.0p2"
 
 AGENT = "pure_storage_fa"
 

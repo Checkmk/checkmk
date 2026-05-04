@@ -23,6 +23,7 @@ import ConfigureInstrumentation from './otel-configuration-steps/ConfigureInstru
 import FinalizeConfiguration, {
   type FinalizeState
 } from './otel-configuration-steps/FinalizeConfiguration.vue'
+import OTelConfigurationSummary from './otel-configuration-steps/OTelConfigurationSummary.vue'
 import {
   type AuthConfig,
   type EndpointConfig,
@@ -156,6 +157,11 @@ function narrowSocketAddress(endpoint: EndpointConfig): OTelSocketAddressInput |
       return { type: 'custom', address, port: endpoint.port }
     }
   }
+}
+
+function isPasswordNew(auth: AuthConfig): boolean {
+  const id = auth.credential?.password
+  return id !== null && id !== undefined && pendingPasswords.value.has(id)
 }
 
 function buildProtocolInput(
@@ -388,7 +394,30 @@ async function onSaveClick(): Promise<void> {
           :config-name="configName"
           :actions="finalizeActions"
           @update:state="saveState = $event"
-        />
+        >
+          <template #success-summary>
+            <OTelConfigurationSummary
+              v-if="siteId !== null"
+              :config-name="configName"
+              :site-id="siteId"
+              :grpc-enabled="grpcEnabled"
+              :http-enabled="httpEnabled"
+              :grpc-auth="grpcAuth"
+              :http-auth="httpAuth"
+              :grpc-endpoint="grpcEndpoint"
+              :http-endpoint="httpEndpoint"
+              :grpc-encryption="grpcEncryption"
+              :http-encryption="httpEncryption"
+              :grpc-event-console="grpcEventConsole"
+              :http-event-console="httpEventConsole"
+              :grpc-password-is-new="isPasswordNew(grpcAuth)"
+              :http-password-is-new="isPasswordNew(httpAuth)"
+              :endpoint-config-allowed="endpoint_config_allowed"
+              :encryption-allowed="encryption_allowed"
+              :event-console-allowed="event_console_allowed"
+            />
+          </template>
+        </FinalizeConfiguration>
       </template>
       <template #actions>
         <CmkWizardButton

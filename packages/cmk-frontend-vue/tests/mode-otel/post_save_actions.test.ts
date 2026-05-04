@@ -12,6 +12,7 @@ import { configEntityAPI } from '@/components/user-input/CmkConfigurationEntityD
 import type { PasswordConfig } from '@/mode-otel/otel-configuration-steps/password_store_password.types.ts'
 import {
   POST_SAVE_ACTIONS,
+  buildPrometheusFinalizeActions,
   createOTelReceiverConfigAction,
   createPrometheusScrapeConfigAction
 } from '@/mode-otel/otel-configuration-steps/post_save_actions.ts'
@@ -567,5 +568,26 @@ describe('createPrometheusScrapeConfigAction', () => {
       expect(result.error.title).toBe('Could not create the Prometheus scraper configuration')
       expect(result.error.detail).toBe('Network down')
     }
+  })
+})
+
+describe('buildPrometheusFinalizeActions', () => {
+  test('returns the expected action order', () => {
+    const actions = buildPrometheusFinalizeActions({
+      id: 'cfg',
+      siteId: 'mysite',
+      jobName: 'my_job',
+      metricsPath: '/metrics',
+      address: '10.0.0.1',
+      port: 9090,
+      encryption: false
+    })
+
+    expect(actions.map((a) => a.key)).toEqual([
+      'enableCollector',
+      'enableMetricBackend',
+      'createPrometheusScrapeConfig',
+      'createDCDConnector'
+    ])
   })
 })

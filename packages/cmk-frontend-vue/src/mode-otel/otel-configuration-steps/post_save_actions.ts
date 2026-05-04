@@ -134,7 +134,7 @@ async function createDCDConnector(ctx: PostSaveContext): Promise<PostSaveResult>
  * Conflict means the connector already exists and can be reused, so it is
  * treated as success.
  */
-const createDCDConnectorAction: PostSaveAction = {
+export const createDCDConnectorAction: PostSaveAction = {
   key: 'createDCDConnector',
   label: () => _t('Dynamic host management setup'),
   execute: async (ctx) => {
@@ -155,7 +155,7 @@ const createDCDConnectorAction: PostSaveAction = {
  * collector is already enabled, the endpoint still returns 204 and the
  * resulting "change" collapses to a no-op on activation.
  */
-const enableCollectorAction: PostSaveAction = {
+export const enableCollectorAction: PostSaveAction = {
   key: 'enableCollector',
   label: () => _t('OpenTelemetry Collector activation'),
   execute: async (ctx) => {
@@ -185,7 +185,7 @@ const enableCollectorAction: PostSaveAction = {
  * still returns 204 and the resulting "change" collapses to a no-op on
  * activation.
  */
-const enableMetricBackendAction: PostSaveAction = {
+export const enableMetricBackendAction: PostSaveAction = {
   key: 'enableMetricBackend',
   label: () => _t('Metric backend connection'),
   execute: async (ctx) => {
@@ -472,14 +472,31 @@ export function createPrometheusScrapeConfigAction(
 }
 
 /**
- * Shared verify-and-add-change steps that run after the wizard's per-run
- * create action. Wizards build their final action list as
- * `[createReceiverConfigAction(...), ...POST_SAVE_ACTIONS]`, filtering this
- * list per edition (cloud strips collector activation / metric backend).
- * Append new shared steps here.
+ * Shared verify-and-add-change steps used by the OTel wizard, which builds
+ * its final list as `[createReceiverConfigAction(...), ...POST_SAVE_ACTIONS]`
+ * and filters per edition (cloud strips collector activation / metric
+ * backend). The Prometheus wizard does not consume this list directly — it
+ * composes its own ordered list via `buildPrometheusFinalizeActions`.
  */
 export const POST_SAVE_ACTIONS: readonly PostSaveAction[] = [
   enableCollectorAction,
   enableMetricBackendAction,
   createDCDConnectorAction
 ]
+
+/**
+ * Builds the Prometheus QuickSetup finalize action list in the order the
+ * checklist should display: collector on → backend on → scraper configured →
+ * hosts auto-managed. Centralized here so the order is testable without
+ * mounting the wizard component.
+ */
+export function buildPrometheusFinalizeActions(
+  input: PrometheusScrapeConfigInput
+): readonly PostSaveAction[] {
+  return [
+    enableCollectorAction,
+    enableMetricBackendAction,
+    createPrometheusScrapeConfigAction(input),
+    createDCDConnectorAction
+  ]
+}

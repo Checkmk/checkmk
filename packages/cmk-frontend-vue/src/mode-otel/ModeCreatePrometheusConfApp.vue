@@ -23,10 +23,10 @@ import type { PrometheusScraperConfig } from './otel-configuration-steps/Configu
 import FinalizeConfiguration, {
   type FinalizeState
 } from './otel-configuration-steps/FinalizeConfiguration.vue'
+import PrometheusConfigurationSummary from './otel-configuration-steps/PrometheusConfigurationSummary.vue'
 import {
-  POST_SAVE_ACTIONS,
   type PostSaveAction,
-  createPrometheusScrapeConfigAction
+  buildPrometheusFinalizeActions
 } from './otel-configuration-steps/post_save_actions.ts'
 
 const props = defineProps<{
@@ -62,9 +62,9 @@ async function validatePrometheusScraper(): Promise<boolean> {
 
 const finalizeRef = useTemplateRef<InstanceType<typeof FinalizeConfiguration>>('finalize')
 
-// Per-run create action plus the shared post-save list. The Prometheus
-// wizard is ultimate-only and always wants every shared step, so no
-// filtering is applied here.
+// Per-run create action plus the shared post-save list, in the order the
+// checklist should display. Composition lives in `buildPrometheusFinalizeActions`
+// so the order is testable without mounting this component.
 const finalizeActions = computed<readonly PostSaveAction[]>(() => {
   // Port is validated in Step 2 (ConfigurePrometheusScraper.validate) before
   // the user can reach Step 3, so by the time the save button runs we can
@@ -73,18 +73,15 @@ const finalizeActions = computed<readonly PostSaveAction[]>(() => {
   if (!siteId.value || scraperConfig.value.port === undefined) {
     return []
   }
-  return [
-    createPrometheusScrapeConfigAction({
-      id: configName.value,
-      siteId: siteId.value,
-      jobName: scraperConfig.value.jobName,
-      metricsPath: scraperConfig.value.metricsPath,
-      address: scraperConfig.value.address,
-      port: scraperConfig.value.port,
-      encryption: scraperConfig.value.encryption
-    }),
-    ...POST_SAVE_ACTIONS
-  ]
+  return buildPrometheusFinalizeActions({
+    id: configName.value,
+    siteId: siteId.value,
+    jobName: scraperConfig.value.jobName,
+    metricsPath: scraperConfig.value.metricsPath,
+    address: scraperConfig.value.address,
+    port: scraperConfig.value.port,
+    encryption: scraperConfig.value.encryption
+  })
 })
 
 /**
@@ -193,7 +190,20 @@ async function onSaveClick(): Promise<void> {
           :success-message="_t('Prometheus configuration saved successfully.')"
           :error-heading="_t('Could not save the Prometheus configuration')"
           @update:state="saveState = $event"
-        />
+        >
+          <template #success-summary>
+            <PrometheusConfigurationSummary
+              v-if="scraperConfig.port !== undefined && siteId !== null"
+              :config-name="configName"
+              :site-id="siteId"
+              :job-name="scraperConfig.jobName"
+              :metrics-path="scraperConfig.metricsPath"
+              :address="scraperConfig.address"
+              :port="scraperConfig.port"
+              :encryption="scraperConfig.encryption"
+            />
+          </template>
+        </FinalizeConfiguration>
       </template>
       <template #actions>
         <CmkWizardButton

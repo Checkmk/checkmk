@@ -6,7 +6,6 @@
 from collections.abc import Mapping
 from typing import Any
 
-from cmk.gui import bi
 from cmk.gui.config import Config
 from cmk.gui.htmllib.foldable_container import foldable_container
 from cmk.gui.htmllib.generator import HTMLWriter
@@ -16,6 +15,8 @@ from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.sidebar import bulletlink, SidebarSnapin, SnapinRegistry
 from cmk.gui.utils.urls import makeuri_contextless, urlencode
+
+from ._packs import aggregation_group_choices, get_aggregation_group_trees
 
 
 def register(snapin_registry: SnapinRegistry) -> None:
@@ -37,9 +38,9 @@ class SidebarSnapinAggregationGroupList(SidebarSnapin):
         return _("A direct link to all groups of BI aggregations")
 
     def show(self, config: Config) -> None:
-        if len(bi.aggregation_group_choices()):
+        if len(aggregation_group_choices()):
             html.open_ul()
-            for _ident, group in bi.aggregation_group_choices():
+            for _ident, group in aggregation_group_choices():
                 bulletlink(group, "view.py?view_name=aggr_group&aggr_group=%s" % urlencode(group))
             html.close_ul()
 
@@ -59,7 +60,7 @@ class SidebarSnapinAggregationGroupTree(SidebarSnapin):
 
     def show(self, config: Config) -> None:
         tree: dict[str, dict[str, Any]] = {}
-        for group in bi.get_aggregation_group_trees():
+        for group in get_aggregation_group_trees():
             self._build_tree(tuple(group.split("/")), tree, tuple())
         self._render_tree(tree)
 

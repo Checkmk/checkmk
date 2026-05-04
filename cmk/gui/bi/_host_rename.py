@@ -5,7 +5,8 @@
 
 from cmk.bi.packs import BIHostRenamer
 from cmk.ccc.hostaddress import HostName
-from cmk.gui.bi import get_cached_bi_packs
+
+from ._packs import get_cached_bi_packs
 
 
 def rename_host_in_bi(oldname: HostName, newname: HostName) -> list[str]:

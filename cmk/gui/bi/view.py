@@ -19,17 +19,6 @@ from cmk.bi.lib import FrozenMarker
 from cmk.bi.trees import BICompiledRule
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
-from cmk.gui.bi.bi_manager import BIManager, load_compiled_branch
-from cmk.gui.bi.foldable_tree_renderer import (
-    ABCFoldableTreeRenderer,
-    BIAggrTreeState,
-    BILeafTreeState,
-    FoldableTreeRendererBottomUp,
-    FoldableTreeRendererBoxes,
-    FoldableTreeRendererTopDown,
-    FoldableTreeRendererTree,
-    is_aggr,
-)
 from cmk.gui.data_source import ABCDataSource, RowTable
 from cmk.gui.hooks import request_memoize
 from cmk.gui.htmllib.generator import HTMLWriter
@@ -68,6 +57,18 @@ from cmk.gui.visuals.filter import Filter
 from cmk.livestatus_client import Dummy
 from cmk.utils.servicename import ServiceName
 from cmk.utils.statename import short_service_state_name
+
+from .bi_manager import BIManager, load_compiled_branch
+from .foldable_tree_renderer import (
+    ABCFoldableTreeRenderer,
+    BIAggrTreeState,
+    BILeafTreeState,
+    FoldableTreeRendererBottomUp,
+    FoldableTreeRendererBoxes,
+    FoldableTreeRendererTopDown,
+    FoldableTreeRendererTree,
+    is_aggr,
+)
 
 _FREEZE_AGGREGATION_BUTTON_VARNAME: Final = "_freeze_aggregations"
 

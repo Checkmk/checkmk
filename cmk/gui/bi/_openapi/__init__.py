@@ -37,13 +37,15 @@ from cmk.bi.rule import BIRule, BIRuleSchema
 from cmk.bi.schema import Schema
 from cmk.bi.trees import BICompiledRule
 from cmk.gui import fields as gui_fields
-from cmk.gui.bi import BIManager, get_cached_bi_packs
 from cmk.gui.http import Response
 from cmk.gui.logged_in import user
 from cmk.gui.openapi.restful_objects import constructors, Endpoint, response_schemas
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.openapi.utils import ProblemException, serve_json
 from cmk.gui.utils import permission_verification as permissions
+
+from .._packs import get_cached_bi_packs
+from ..bi_manager import BIManager
 
 BI_RULE_ID = {
     "rule_id": fields.String(

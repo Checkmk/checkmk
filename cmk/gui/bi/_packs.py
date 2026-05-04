@@ -7,7 +7,7 @@ from cmk.bi.packs import BIAggregationPacks
 from cmk.gui.hooks import request_memoize
 from cmk.gui.valuespec import DropdownChoiceEntries
 
-from .bi_manager import get_bi_config_path
+from ._filesystem import get_bi_config_path
 
 
 def get_aggregation_group_trees() -> list[str]:

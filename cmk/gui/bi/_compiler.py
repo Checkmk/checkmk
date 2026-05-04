@@ -7,7 +7,8 @@ from cmk.bi.compiler import BICompiler
 from cmk.bi.packs import BIAggregationPacks
 from cmk.gui.hooks import request_memoize
 
-from .bi_manager import create_default_sites_callback, get_bi_config_path
+from ._filesystem import get_bi_config_path
+from ._sites_callback import create_default_sites_callback
 
 
 def is_part_of_aggregation(host: str, service: str) -> bool:

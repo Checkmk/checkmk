@@ -1,6 +1,36 @@
 load("@aspect_rules_py//py:defs.bzl", "py_library")
 
 py_library(
+    name = "_filesystem",
+    srcs = ["_filesystem.py"],
+    imports = ["../../.."],
+    visibility = [
+        "//cmk:__subpackages__",
+        "//tests:__subpackages__",
+    ],
+    deps = [
+        "//cmk/bi",
+    ],
+)
+
+py_library(
+    name = "_sites_callback",
+    srcs = ["_sites_callback.py"],
+    imports = ["../../.."],
+    visibility = [
+        "//cmk:__subpackages__",
+        "//tests:__subpackages__",
+    ],
+    deps = [
+        "//cmk/bi",
+        "//cmk/gui:i18n",
+        "//cmk/gui:sites",
+        "//packages/cmk-ccc:site",
+        "//packages/cmk-livestatus-client",
+    ],
+)
+
+py_library(
     name = "bi_manager",
     srcs = ["bi_manager.py"],
     imports = ["../../.."],
@@ -9,13 +39,11 @@ py_library(
         "//tests:__subpackages__",
     ],
     deps = [
+        ":_filesystem",
+        ":_sites_callback",
         "//cmk/bi",
         "//cmk/gui:hooks",
-        "//cmk/gui:i18n",
-        "//cmk/gui:sites",
         "//packages/cmk-ccc:exceptions",
-        "//packages/cmk-ccc:site",
-        "//packages/cmk-livestatus-client",
     ],
 )
 
@@ -28,10 +56,10 @@ py_library(
         "//tests:__subpackages__",
     ],
     deps = [
-        ":bi_manager",
+        ":_filesystem",
+        ":_sites_callback",
         "//cmk/bi",
         "//cmk/gui:hooks",
-        "//cmk/gui:i18n",
     ],
 )
 
@@ -79,6 +107,8 @@ py_library(
         include = ["**/*.py"],
         exclude = [
             "_compiler.py",
+            "_filesystem.py",
+            "_sites_callback.py",
             "bi_manager.py",
             "foldable_tree_renderer.py",
             "helpers.py",
@@ -91,6 +121,8 @@ py_library(
     ],
     deps = [
         ":_compiler",
+        ":_filesystem",
+        ":_sites_callback",
         ":bi_manager",
         ":foldable_tree_renderer",
         "//cmk/bi",

@@ -36,7 +36,7 @@ _Section3 = SectionPaloAlto(
 )
 _Section4 = SectionPaloAlto(
     firmware_version="5.0.6",
-    ha_local_state="passive",
+    ha_local_state="initial",
     ha_peer_state="initial",
     ha_mode="active-passive",
 )
@@ -89,10 +89,10 @@ def test_discover() -> None:
             [
                 Result(state=State.OK, summary="Firmware Version: 5.0.6"),
                 Result(state=State.OK, summary="HA mode: active-passive"),
-                Result(state=State.OK, summary="HA local state: passive"),
+                Result(state=State.WARN, summary="HA local state: initial"),
                 Result(state=State.WARN, notice="HA peer state: initial"),
             ],
-            id="mode initial",
+            id="local and peer state initial",
         ),
     ],
 )

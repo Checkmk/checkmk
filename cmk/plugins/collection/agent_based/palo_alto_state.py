@@ -62,6 +62,7 @@ _STATE_MAPPING_DEFAULT: Mapping[str, int] = {
     "ha_local_state_active_primary": int(State.OK),
     "ha_local_state_active_secondary": int(State.OK),
     "ha_local_state_disabled": int(State.OK),
+    "ha_local_state_initial": int(State.WARN),
     "ha_local_state_tentative": int(State.WARN),
     "ha_local_state_non_functional": int(State.CRIT),
     "ha_local_state_suspended": int(State.CRIT),
@@ -71,11 +72,11 @@ _STATE_MAPPING_DEFAULT: Mapping[str, int] = {
     "ha_peer_state_active_primary": int(State.OK),
     "ha_peer_state_active_secondary": int(State.OK),
     "ha_peer_state_disabled": int(State.OK),
+    "ha_peer_state_initial": int(State.WARN),
     "ha_peer_state_tentative": int(State.WARN),
     "ha_peer_state_non_functional": int(State.CRIT),
     "ha_peer_state_suspended": int(State.CRIT),
     "ha_peer_state_unknown": int(State.UNKNOWN),
-    "ha_peer_state_initial": int(State.WARN),
 }
 
 

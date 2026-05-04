@@ -7,6 +7,8 @@ from collections.abc import Mapping, Sequence
 from typing import Any
 
 from cmk.ccc.site import omd_site
+from cmk.ccc.store import load_from_mk_file
+from cmk.ccc.version import Edition, edition
 from cmk.rulesets.internal.form_specs import MultipleChoiceElementExtended, MultipleChoiceExtended
 from cmk.rulesets.v1 import Help, Label, Message, Title
 from cmk.rulesets.v1.form_specs import (
@@ -477,6 +479,28 @@ def _valuespec_updater_registration() -> SingleChoice:
     )
 
 
+def _is_ultimatemt_remote_site() -> bool:
+    # Mirror of the 2.4 guard `edition() is Edition.CME and is_wato_slave_site()`.
+    # Reading distributed_wato.mk directly avoids cmk.gui import
+    if edition(paths.omd_root) is not Edition.ULTIMATEMT:
+        return False
+    distributed_wato_file = paths.check_mk_config_dir / "distributed_wato.mk"
+    if not distributed_wato_file.exists() or distributed_wato_file.stat().st_size == 0:
+        return False
+    return load_from_mk_file(
+        distributed_wato_file,
+        key="is_distributed_setup_remote_site",
+        default=False,
+        lock=False,
+    )
+
+
+def _validate_signature_keys(value: Sequence[object]) -> None:
+    if _is_ultimatemt_remote_site():
+        return
+    validators.LengthInRange(min_value=1)(value)
+
+
 def _valuespec_signature_keys() -> MultipleChoiceExtended:
     return MultipleChoiceExtended(
         title=Title("Signature keys the agent will accept"),
@@ -495,7 +519,7 @@ def _valuespec_signature_keys() -> MultipleChoiceExtended:
                 _make_agent_sign_keypair_store().load().values(), key=lambda k: k.alias
             )
         ],
-        custom_validate=(validators.LengthInRange(min_value=1),),
+        custom_validate=(_validate_signature_keys,),
     )
 
 

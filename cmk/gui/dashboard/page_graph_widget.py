@@ -8,7 +8,6 @@
 from typing import cast, override
 
 import cmk.gui.pages
-from cmk.ccc.version import edition
 from cmk.gui.dashboard.api import (
     get_validated_internal_graph_request,
     GraphDashletConfig,
@@ -37,6 +36,7 @@ from cmk.gui.graphing import (
     get_temperature_unit,
     GraphDisplayConfigHTML,
     host_service_graph_dashlet_cmk,
+    METRIC_BACKEND_KEY,
     metric_backend_registry,
     metrics_from_api,
     MKGraphRecipeNotFoundError,
@@ -50,7 +50,6 @@ from cmk.gui.theme.current_theme import theme
 from cmk.gui.token_auth import AuthToken, DashboardToken
 from cmk.gui.type_defs import VisualContext
 from cmk.gui.utils.roles import UserPermissions
-from cmk.utils import paths
 
 __all__ = ["GraphWidgetPage"]
 
@@ -87,7 +86,7 @@ def render_graph_widget_content(
                 graph_timeranges=ctx.config.graph_timeranges,
                 temperature_unit=get_temperature_unit(user, ctx.config.default_temperature_unit),
                 backend_time_series_fetcher=metric_backend_registry[
-                    str(edition(paths.omd_root))
+                    METRIC_BACKEND_KEY
                 ].get_time_series_fetcher(),
                 display_id=widget_id,
                 time_range=dashlet_config["timerange"],

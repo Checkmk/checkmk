@@ -13,7 +13,6 @@ from typing import Literal
 from uuid import uuid4
 
 from cmk.ccc.user import UserId
-from cmk.ccc.version import edition
 from cmk.graphing.v1 import graphs as graphs_api
 from cmk.gui.config import active_config
 from cmk.gui.graphing import (
@@ -25,6 +24,7 @@ from cmk.gui.graphing import (
     GraphEnvironment,
     GraphRenderOptions,
     graphs_from_api,
+    METRIC_BACKEND_KEY,
     metric_backend_registry,
     metrics_from_api,
     RegisteredMetric,
@@ -73,7 +73,6 @@ from cmk.gui.view_utils import (
     JSONExportError,
     PythonExportError,
 )
-from cmk.utils import paths
 
 
 def register(
@@ -392,7 +391,7 @@ class PainterServiceGraphs(Painter):
             graph_timeranges=self.config.graph_timeranges,
             temperature_unit=get_temperature_unit(user, self.config.default_temperature_unit),
             backend_time_series_fetcher=metric_backend_registry[
-                str(edition(paths.omd_root))
+                METRIC_BACKEND_KEY
             ].get_time_series_fetcher(),
             show_time_range_previews=True,
         )
@@ -446,7 +445,7 @@ class PainterHostGraphs(Painter):
             graph_timeranges=self.config.graph_timeranges,
             temperature_unit=get_temperature_unit(user, self.config.default_temperature_unit),
             backend_time_series_fetcher=metric_backend_registry[
-                str(edition(paths.omd_root))
+                METRIC_BACKEND_KEY
             ].get_time_series_fetcher(),
             show_time_range_previews=True,
             # for PainterHostGraphs used to paint service graphs (view "Service graphs of host"),
@@ -526,7 +525,7 @@ class PainterSvcPnpgraph(Painter):
             graph_timeranges=self.config.graph_timeranges,
             temperature_unit=get_temperature_unit(user, self.config.default_temperature_unit),
             backend_time_series_fetcher=metric_backend_registry[
-                str(edition(paths.omd_root))
+                METRIC_BACKEND_KEY
             ].get_time_series_fetcher(),
         )
 
@@ -582,7 +581,7 @@ class PainterHostPnpgraph(Painter):
             graph_timeranges=self.config.graph_timeranges,
             temperature_unit=get_temperature_unit(user, self.config.default_temperature_unit),
             backend_time_series_fetcher=metric_backend_registry[
-                str(edition(paths.omd_root))
+                METRIC_BACKEND_KEY
             ].get_time_series_fetcher(),
         )
 

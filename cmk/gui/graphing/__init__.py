@@ -70,7 +70,7 @@ from ._html_render import (
     render_graphs_html,
 )
 from ._legacy import check_metrics, CheckMetricEntry
-from ._metric_backend_registry import FetchTimeSeries, metric_backend_registry
+from ._metric_backend_registry import FetchTimeSeries, METRIC_BACKEND_KEY, metric_backend_registry
 from ._metrics import (
     get_metric_spec,
     MetricSpec,
@@ -181,6 +181,7 @@ __all__ = [
     "id_from_unit_spec",
     "lookup_metric_translations_for_check_command",
     "compute_html_graph_ranges",
+    "METRIC_BACKEND_KEY",
     "metric_backend_registry",
     "metrics_from_api",
     "metrics_of_query",

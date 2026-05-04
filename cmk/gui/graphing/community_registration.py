@@ -63,6 +63,6 @@ def register(
     graph_specification_registry.register(ExplicitGraphSpecification)
     graph_specification_registry.register(TemplateGraphSpecification)
 
-    metric_backend_registry.register(MetricBackend(edition=edition))
+    metric_backend_registry.register(MetricBackend())
 
     register_visitor_class(MetricExtended, MetricVisitor)

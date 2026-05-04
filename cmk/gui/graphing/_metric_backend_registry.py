@@ -9,9 +9,10 @@ from typing import Protocol
 
 from cmk.ccc.plugin_registry import Registry
 from cmk.ccc.resulttype import Result
-from cmk.ccc.version import Edition
 
 from ._graph_metric_expressions import QueryData, QueryDataError, QueryDataKey
+
+METRIC_BACKEND_KEY = "metric_backend"
 
 
 class FetchTimeSeries(Protocol):
@@ -27,8 +28,6 @@ class FetchTimeSeries(Protocol):
 
 @dataclass(frozen=True, kw_only=True)
 class MetricBackend:
-    edition: Edition
-
     @property
     def feature_available(self) -> bool:
         return False
@@ -39,7 +38,7 @@ class MetricBackend:
 
 class MetricBackendRegistry(Registry[MetricBackend]):
     def plugin_name(self, instance: MetricBackend) -> str:
-        return str(instance.edition)
+        return METRIC_BACKEND_KEY
 
 
 metric_backend_registry = MetricBackendRegistry()

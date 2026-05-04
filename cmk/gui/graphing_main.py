@@ -19,7 +19,6 @@ import cmk.ccc.debug
 import cmk.gui.pages
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
-from cmk.ccc.version import edition
 from cmk.discover_plugins import discover_all_plugins, DiscoveredPlugins, PluginGroup
 from cmk.graphing.v1 import entry_point_prefixes
 from cmk.graphing.v1 import graphs as graphs_api
@@ -33,6 +32,7 @@ from cmk.gui.graphing import (
     GraphEnvironment,
     graphs_from_api,
     host_service_graph_popup_cmk,
+    METRIC_BACKEND_KEY,
     metric_backend_registry,
     metrics_from_api,
     parse_metric_from_api,
@@ -43,7 +43,6 @@ from cmk.gui.logged_in import user
 from cmk.gui.pages import PageContext, PageResult
 from cmk.gui.permissions import permission_registry
 from cmk.gui.utils.roles import UserPermissions
-from cmk.utils import paths
 from cmk.utils.metrics import MetricName
 from cmk.utils.servicename import ServiceName
 
@@ -186,7 +185,7 @@ class PageHostServiceGraphPopup(cmk.gui.pages.Page):
                 user_permissions=UserPermissions.from_config(ctx.config, permission_registry),
                 temperature_unit=get_temperature_unit(user, ctx.config.default_temperature_unit),
                 backend_time_series_fetcher=metric_backend_registry[
-                    str(edition(paths.omd_root))
+                    METRIC_BACKEND_KEY
                 ].get_time_series_fetcher(),
                 debug=ctx.config.debug,
             ),

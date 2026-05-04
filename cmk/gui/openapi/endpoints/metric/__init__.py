@@ -12,7 +12,7 @@ from collections.abc import Mapping
 from typing import Any
 
 import cmk.product_usage.collectors.grafana as grafana_collector
-from cmk.ccc.version import Edition, edition
+from cmk.ccc.version import Edition
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.graphing import (
@@ -21,6 +21,7 @@ from cmk.gui.graphing import (
     GraphEnvironment,
     GraphExportRequest,
     graphs_from_api,
+    METRIC_BACKEND_KEY,
     metric_backend_registry,
     metrics_from_api,
     TemplateGraphSpecification,
@@ -87,7 +88,7 @@ def get_graph(params: Mapping[str, Any]) -> Response:
                 user_permissions=UserPermissions.from_config(active_config, permission_registry),
                 temperature_unit=get_temperature_unit(user, active_config.default_temperature_unit),
                 backend_time_series_fetcher=metric_backend_registry[
-                    str(edition(paths.omd_root))
+                    METRIC_BACKEND_KEY
                 ].get_time_series_fetcher(),
                 debug=active_config.debug,
             ),

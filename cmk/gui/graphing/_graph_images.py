@@ -16,7 +16,6 @@ import livestatus
 from cmk import trace
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
-from cmk.ccc.version import edition
 from cmk.gui import pdf
 from cmk.gui.exceptions import MKNotFound, MKUnauthenticatedException, MKUserError
 from cmk.gui.http import Request
@@ -27,7 +26,6 @@ from cmk.gui.pages import AjaxPage, PageContext, PageResult
 from cmk.gui.permissions import permission_registry
 from cmk.gui.type_defs import SizePT
 from cmk.gui.utils.roles import UserPermissions
-from cmk.utils import paths
 
 from ._artwork import (
     GraphArtwork,
@@ -59,7 +57,7 @@ from ._graph_templates import (
     MKGraphNotFound,
 )
 from ._html_render import GraphDestinations, GraphExportRequest
-from ._metric_backend_registry import metric_backend_registry
+from ._metric_backend_registry import METRIC_BACKEND_KEY, metric_backend_registry
 from ._unit import get_temperature_unit
 
 tracer = trace.get_tracer()
@@ -85,7 +83,7 @@ class AjaxGraphImagesForNotifications(AjaxPage):
                 user_permissions=UserPermissions.from_config(ctx.config, permission_registry),
                 temperature_unit=get_temperature_unit(user, ctx.config.default_temperature_unit),
                 backend_time_series_fetcher=metric_backend_registry[
-                    str(edition(paths.omd_root))
+                    METRIC_BACKEND_KEY
                 ].get_time_series_fetcher(),
                 debug=ctx.config.debug,
             ),

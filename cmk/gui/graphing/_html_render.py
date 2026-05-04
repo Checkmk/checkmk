@@ -22,7 +22,6 @@ from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
 from cmk.ccc.user import UserId
-from cmk.ccc.version import edition
 from cmk.gui.color import render_color_icon
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
@@ -43,7 +42,6 @@ from cmk.gui.utils.popups import MethodAjax
 from cmk.gui.utils.rendering import text_with_links_to_user_translated_html
 from cmk.gui.utils.temperate_unit import TemperatureUnit
 from cmk.gui.valuespec import Timerange, TimerangeValue
-from cmk.utils import paths
 from cmk.utils.jsontype import JsonSerializable
 from cmk.utils.paths import profile_dir
 from cmk.utils.servicename import ServiceName
@@ -82,6 +80,7 @@ from ._graph_templates import (
 from ._graph_title import iter_graph_title_elements
 from ._metric_backend_registry import (
     FetchTimeSeries,
+    METRIC_BACKEND_KEY,
     metric_backend_registry,
 )
 from ._unit import get_temperature_unit, user_specific_unit
@@ -1499,7 +1498,7 @@ class AjaxRenderGraph(AjaxPage):
             metrics_from_api,
             temperature_unit=get_temperature_unit(user, ctx.config.default_temperature_unit),
             backend_time_series_fetcher=metric_backend_registry[
-                str(edition(paths.omd_root))
+                METRIC_BACKEND_KEY
             ].get_time_series_fetcher(),
             show_titles_if_limit_reached=False,
             converter=None,
@@ -1614,7 +1613,7 @@ class AjaxGraphValuesAtTime(AjaxPage):
             hover_time=ctx.request.get_integer_input_mandatory("hover_time"),
             temperature_unit=get_temperature_unit(user, ctx.config.default_temperature_unit),
             backend_time_series_fetcher=metric_backend_registry[
-                str(edition(paths.omd_root))
+                METRIC_BACKEND_KEY
             ].get_time_series_fetcher(),
         )
 

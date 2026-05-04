@@ -143,6 +143,22 @@ class TestMessageBroker:
             assert_message_exchange_working(remote_site, remote_site_2)
             assert_message_exchange_working(remote_site_2, remote_site)
 
+    def test_p2p_message_exchange_after_remote_broker_restart(
+        self, central_site: Site, remote_site: Site, remote_site_2: Site
+    ) -> None:
+        """After one remote's broker is restarted,
+        the p2p shovel recovers and message exchange resumes without manual intervention."""
+        with rabbitmq_info_on_failure([central_site, remote_site, remote_site_2]):
+            with p2p_connection(central_site, remote_site, remote_site_2):
+                with broker_stopped(remote_site):
+                    pass
+                # broker_stopped already awaits remote_site; also wait for shovels on the other
+                # side (remote_site_2) to reconnect before removing central from the path
+                await_broker_ready(central_site, remote_site, remote_site_2)
+                with broker_stopped(central_site):
+                    assert_message_exchange_working(remote_site, remote_site_2)
+                    assert_message_exchange_working(remote_site_2, remote_site)
+
     def test_rabbitmq_port_change(self, central_site: Site, remote_site: Site) -> None:
         """Ensure that sites can still communicate after the message broker port is changed"""
         with rabbitmq_info_on_failure([central_site, remote_site]):

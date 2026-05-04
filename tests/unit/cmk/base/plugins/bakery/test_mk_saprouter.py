@@ -9,8 +9,8 @@ from cmk.bakery.v1 import OS, Plugin, PluginConfig
 from cmk.base.plugins.bakery.mk_saprouter import get_mk_saprouter_files
 
 
-def test_mk_saprouter_files() -> None:
-    conf = {"user": "saprouter", "path": "/usr/sap/sapgenpse", "interval": 300}
+def test_mk_saprouter_files_cached() -> None:
+    conf = {"deployment": ("cached", 300.0), "user": "saprouter", "path": "/usr/sap/sapgenpse"}
     result = sorted(get_mk_saprouter_files(conf), key=repr)
     expected = sorted(
         [
@@ -27,8 +27,8 @@ def test_mk_saprouter_files() -> None:
     assert result == expected
 
 
-def test_mk_saprouter_files_no_interval() -> None:
-    conf = {"user": "admin", "path": "/opt/sapgenpse"}
+def test_mk_saprouter_files_sync() -> None:
+    conf = {"deployment": ("sync", None), "user": "admin", "path": "/opt/sapgenpse"}
     result = sorted(get_mk_saprouter_files(conf), key=repr)
     expected = sorted(
         [
@@ -45,9 +45,14 @@ def test_mk_saprouter_files_no_interval() -> None:
     assert result == expected
 
 
+def test_mk_saprouter_files_do_not_deploy() -> None:
+    conf = {"deployment": ("do_not_deploy", None)}
+    result = list(get_mk_saprouter_files(conf))
+    assert result == []
+
+
 def test_mk_saprouter_files_special_chars() -> None:
-    """Test that shell quoting is applied to user and path."""
-    conf = {"user": "sap user", "path": "/path with spaces/sapgenpse"}
+    conf = {"deployment": ("sync", None), "user": "sap user", "path": "/path with spaces/sapgenpse"}
     result = sorted(get_mk_saprouter_files(conf), key=repr)
     expected = sorted(
         [

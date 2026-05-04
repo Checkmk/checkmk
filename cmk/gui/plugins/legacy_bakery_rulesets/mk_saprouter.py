@@ -3,63 +3,103 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Mapping
 
-from cmk.gui.agent_bakery import RulespecGroupMonitoringAgentsAgentPlugins
-from cmk.gui.i18n import _
-from cmk.gui.plugins.wato.utils import HostRulespec, rulespec_registry
-from cmk.gui.valuespec import Age, Alternative, Dictionary, FixedValue, TextInput
-from cmk.utils.rulesets.definition import RuleGroup
+from cmk.rulesets.v1 import Help, Title
+from cmk.rulesets.v1.form_specs import (
+    CascadingSingleChoice,
+    CascadingSingleChoiceElement,
+    DefaultValue,
+    DictElement,
+    Dictionary,
+    FixedValue,
+    String,
+    TimeMagnitude,
+    TimeSpan,
+    validators,
+)
+from cmk.rulesets.v1.rule_specs import AgentConfig, Topic
 
 
-def _valuespec_agent_config_mk_saprouter() -> Alternative:
-    return Alternative(
-        title=_("SAP router certificate"),
-        help=_(
-            "This will deploy and configure the Checkmk agent plug-in <tt>mk_saprouter</tt>. "
+def migrate(value: object) -> Mapping[str, object]:
+    if isinstance(value, dict) and "deployment" in value:
+        return value
+    if value is None:
+        return {"deployment": ("do_not_deploy", None)}
+    if isinstance(value, dict):
+        interval = value.get("interval", 0)
+        deployment: tuple[str, object] = (
+            ("cached", float(interval))
+            if isinstance(interval, (int, float)) and interval > 60
+            else ("sync", None)
+        )
+        result: dict[str, object] = {"deployment": deployment}
+        for key in ("user", "path"):
+            if key in value:
+                result[key] = value[key]
+        return result
+    raise ValueError(f"Unexpected value: {value!r}")
+
+
+def _valuespec_agent_config_mk_saprouter() -> Dictionary:
+    return Dictionary(
+        help_text=Help(
+            "This will deploy and configure the Checkmk agent plug-in mk_saprouter. "
             "The plug-in runs below the specified user's environment. Furthermore you have to "
             "determine the path to sapgenpse. It's recommended to run the plug-in asynchronously."
         ),
-        elements=[
-            Dictionary(
-                title=_("Deploy the SAP router plug-in"),
-                elements=[
-                    (
-                        "user",
-                        TextInput(
-                            title=_("Username"),
-                            allow_empty=False,
+        elements={
+            "deployment": DictElement(
+                required=True,
+                parameter_form=CascadingSingleChoice(
+                    title=Title("Deployment type"),
+                    elements=(
+                        CascadingSingleChoiceElement(
+                            name="sync",
+                            title=Title("Deploy the plug-in and run it synchronously"),
+                            parameter_form=FixedValue(value=None),
+                        ),
+                        CascadingSingleChoiceElement(
+                            name="cached",
+                            title=Title("Deploy the plug-in and run it asynchronously"),
+                            parameter_form=TimeSpan(
+                                displayed_magnitudes=(
+                                    TimeMagnitude.DAY,
+                                    TimeMagnitude.HOUR,
+                                    TimeMagnitude.MINUTE,
+                                ),
+                                prefill=DefaultValue(86400.0),
+                            ),
+                        ),
+                        CascadingSingleChoiceElement(
+                            name="do_not_deploy",
+                            title=Title("Do not deploy the plug-in"),
+                            parameter_form=FixedValue(value=None),
                         ),
                     ),
-                    (
-                        "path",
-                        TextInput(
-                            title=_("Path to sapgenpse"),
-                            allow_empty=False,
-                        ),
-                    ),
-                    (
-                        "interval",
-                        Age(
-                            title=_("Run asynchronously"),
-                            label=_("Interval for collecting data"),
-                            default_value=86400,
-                        ),
-                    ),
-                ],
+                    prefill=DefaultValue("cached"),
+                ),
             ),
-            FixedValue(
-                value=None,
-                title=_("Do not deploy the SAP router plug-in"),
-                totext=_("(disabled)"),
+            "user": DictElement(
+                parameter_form=String(
+                    title=Title("Username"),
+                    custom_validate=(validators.LengthInRange(min_value=1),),
+                ),
             ),
-        ],
+            "path": DictElement(
+                parameter_form=String(
+                    title=Title("Path to sapgenpse"),
+                    custom_validate=(validators.LengthInRange(min_value=1),),
+                ),
+            ),
+        },
+        migrate=migrate,
     )
 
 
-rulespec_registry.register(
-    HostRulespec(
-        group=RulespecGroupMonitoringAgentsAgentPlugins,
-        name=RuleGroup.AgentConfig("mk_saprouter"),
-        valuespec=_valuespec_agent_config_mk_saprouter,
-    )
+rule_spec_mk_saprouter = AgentConfig(
+    title=Title("SAP router certificate"),
+    name="mk_saprouter",
+    topic=Topic.APPLICATIONS,
+    parameter_form=_valuespec_agent_config_mk_saprouter,
 )

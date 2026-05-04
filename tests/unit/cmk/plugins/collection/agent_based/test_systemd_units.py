@@ -1602,12 +1602,13 @@ testing.service loaded reloading reload reload testing.service
 """
     string_table = [l.split(" ") for l in pre_pre_string_table.split("\n")]
     parsed = parse(string_table)
+    # FYI: By default, no levels are applied for reloading_levels.
+    # Reason: The current output format does not offer the correct information.
+    # In the future we may get this required information in a proper way.
+    params = CHECK_DEFAULT_PARAMETERS_SUMMARY.copy()
+    params["reloading_levels"] = (30, 60)
     assert parsed is not None
-    assert list(
-        check_systemd_units_services_summary(
-            params=CHECK_DEFAULT_PARAMETERS_SUMMARY, section=parsed
-        )
-    ) == [
+    assert list(check_systemd_units_services_summary(params=params, section=parsed)) == [
         Result(state=State.OK, summary="Total: 1"),
         Result(state=State.OK, summary="Disabled: 0"),
         Result(state=State.OK, summary="Failed: 0"),
@@ -1616,6 +1617,54 @@ testing.service loaded reloading reload reload testing.service
             summary="Service 'testing' reloading for: 53 seconds (warn/crit at 30 seconds/1 minute 0 seconds)",
         ),
     ]
+
+
+def test_race_between_status_and_all_sections() -> None:
+    """Reproduce the cross-section race observed on timer-driven oneshot services.
+
+    The agent runs ``systemctl status --all`` and ``systemctl --all`` as two separate
+    processes. On a host with many units the gap between them is seconds — long enough
+    for a timer to fire and a service to transition ``inactive -> activating`` in
+    between::
+
+        12:09:01  timer N fires; oneshot service runs briefly; becomes inactive (dead)
+        ...
+        12:38:50  agent: ``systemctl status --all`` captures
+                  "Active: inactive (dead) since 12:09:01; 29min ago"
+        12:39:01  timer N+1 fires; service transitions inactive -> activating
+        12:39:0x  agent: ``systemctl --all`` captures ACTIVE column = "activating"
+
+    The parser then merges ``active_status="activating"`` (from ``[all]``) with
+    ``time_since_change=29min`` (from the inactive ``Active:`` line in ``[status]``)
+    and yields a spurious CRIT "Service 'phpsessionclean' activating for: 29 minutes".
+    The 29 minutes is the timer period between two completed runs, not a stuck
+    activation.
+
+    The summary check must not emit any "activating for" alert when the ``[status]``
+    and ``[all]`` snapshots disagree about the active state.
+    """
+    pre_pre_string_table = """[list-unit-files]
+phpsessionclean.service static -
+[status]
+○ phpsessionclean.service - Clean PHP session files
+Loaded: loaded (/lib/systemd/system/phpsessionclean.service; static)
+Active: inactive (dead) since Wed 2026-04-29 12:09:01 CEST; 29min ago
+[all]
+phpsessionclean.service loaded activating start Clean PHP session files
+"""
+    string_table = [l.split(" ") for l in pre_pre_string_table.split("\n")]
+    parsed = parse(string_table)
+    assert parsed is not None
+
+    params = {**CHECK_DEFAULT_PARAMETERS_SUMMARY, "activating_levels": (300, 600)}
+    results = list(check_systemd_units_services_summary(params=params, section=parsed))
+
+    spurious = [
+        r
+        for r in results
+        if isinstance(r, Result) and r.state is not State.OK and "activating for" in r.summary
+    ]
+    assert not spurious, f"Spurious 'activating for' alert(s) emitted: {spurious}"
 
 
 def test_broken_parsing_without_unit_description() -> None:

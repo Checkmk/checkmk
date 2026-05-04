@@ -7,6 +7,8 @@ import userEvent from '@testing-library/user-event'
 import { render, screen } from '@testing-library/vue'
 import UclPropertiesPanel from '@ucl/_ucl/components/detail-page/UclPropertiesPanel.vue'
 import type { PanelConfig } from '@ucl/_ucl/types/prop-panel'
+import { createPanelState } from '@ucl/_ucl/types/prop-panel'
+import { type PropType, defineComponent, ref } from 'vue'
 
 import { copyToClipboard } from '@/lib/utils'
 
@@ -109,4 +111,124 @@ test('default property values are absent from the copied URL', async () => {
 
   const url = new URL(vi.mocked(copyToClipboard).mock.lastCall![0])
   expect(url.search).toBe('')
+})
+
+describe('prop type interactions update component', () => {
+  const dummyConfig = {
+    booleanProp: { type: 'boolean', title: 'Boolean', initialState: false },
+    stringProp: { type: 'string', title: 'String', initialState: '' },
+    numberProp: { type: 'number', title: 'Number', initialState: 0 },
+    multilineStringProp: {
+      type: 'multiline-string',
+      title: 'Multiline string',
+      initialState: ''
+    },
+    stringArrayProp: {
+      type: 'string-array',
+      title: 'String array',
+      initialState: [] as string[]
+    },
+    listProp: {
+      type: 'list',
+      title: 'List',
+      initialState: 'option-a',
+      options: [
+        { name: 'option-a', title: 'Option A' },
+        { name: 'option-b', title: 'Option B' }
+      ]
+    }
+  } satisfies PanelConfig
+
+  function makeTestApp() {
+    // eslint-disable-next-line @typescript-eslint/naming-convention
+    const DummyComponent = defineComponent({
+      props: {
+        booleanProp: { type: Boolean, required: true },
+        stringProp: { type: String, required: true },
+        numberProp: { type: Number, required: true },
+        multilineStringProp: { type: String, required: true },
+        stringArrayProp: { type: Array as PropType<string[]>, required: true },
+        listProp: { type: String, required: true }
+      },
+      template: `
+        <div>
+          <span data-testid="boolean-prop">{{ booleanProp }}</span>
+          <span data-testid="string-prop">{{ stringProp }}</span>
+          <span data-testid="number-prop">{{ numberProp }}</span>
+          <pre data-testid="multiline-string-prop">{{ multilineStringProp }}</pre>
+          <ul data-testid="string-array-prop">
+            <li v-for="item in stringArrayProp" :key="item">{{ item }}</li>
+          </ul>
+          <span data-testid="list-prop">{{ listProp }}</span>
+        </div>
+      `
+    })
+
+    return defineComponent({
+      components: { UclPropertiesPanel, DummyComponent },
+      setup() {
+        const propState = ref(createPanelState(dummyConfig))
+        return { propState, config: dummyConfig }
+      },
+      template: `
+        <UclPropertiesPanel :config="config" v-model="propState" />
+        <DummyComponent
+          :booleanProp="propState.booleanProp"
+          :stringProp="propState.stringProp"
+          :numberProp="propState.numberProp"
+          :multilineStringProp="propState.multilineStringProp"
+          :stringArrayProp="propState.stringArrayProp"
+          :listProp="propState.listProp"
+        />
+      `
+    })
+  }
+
+  test('boolean', async () => {
+    render(makeTestApp())
+    expect(screen.getByTestId('boolean-prop')).toHaveTextContent('false')
+    await userEvent.click(screen.getByRole('checkbox'))
+    expect(screen.getByTestId('boolean-prop')).toHaveTextContent('true')
+  })
+
+  test('string', async () => {
+    render(makeTestApp())
+    expect(screen.getByTestId('string-prop')).toBeEmptyDOMElement()
+    await userEvent.type(screen.getByLabelText('String'), 'hello')
+    expect(screen.getByTestId('string-prop')).toHaveTextContent('hello')
+  })
+
+  test('number', async () => {
+    render(makeTestApp())
+    expect(screen.getByTestId('number-prop')).toHaveTextContent('0')
+    const spinbutton = screen.getByRole('spinbutton')
+    await userEvent.tripleClick(spinbutton)
+    await userEvent.type(spinbutton, '42')
+    expect(screen.getByTestId('number-prop')).toHaveTextContent('42')
+  })
+
+  test('multiline-string', async () => {
+    render(makeTestApp())
+    await userEvent.type(screen.getByLabelText('Multiline string'), 'first line{Enter}second line')
+    expect(screen.getByTestId('multiline-string-prop').textContent).toBe('first line\nsecond line')
+  })
+
+  test('string-array', async () => {
+    render(makeTestApp())
+    expect(screen.queryAllByRole('listitem')).toHaveLength(0)
+    await userEvent.type(screen.getByLabelText('String array'), 'alpha{Enter}beta{Enter}gamma')
+    expect(screen.getAllByRole('listitem').map((li) => li.textContent)).toEqual([
+      'alpha',
+      'beta',
+      'gamma'
+    ])
+  })
+
+  test('list', async () => {
+    render(makeTestApp())
+    expect(screen.getByTestId('list-prop')).toHaveTextContent('option-a')
+    await userEvent.click(screen.getByRole('combobox', { name: 'List' }))
+    await userEvent.click(await screen.findByRole('option', { name: 'Option B' }))
+    expect(screen.getByTestId('list-prop')).toHaveTextContent('option-b')
+  })
 })

@@ -53,7 +53,7 @@ def test_get_available_metrics_from_exception(
         "subscription",
     )
 
-    result = client._get_available_metrics_from_exception(desired_names, api_error, RESOURCE_ID)
+    result = client._get_available_metrics_from_exception(desired_names, api_error, RESOURCE_ID)  # noqa: SLF001
     assert result == expected_result
 
 
@@ -86,4 +86,4 @@ def test_get_available_metrics_from_exception_error(
     )
 
     with pytest.raises(ApiError, match=expected_error):
-        client._get_available_metrics_from_exception(desired_names, api_error, RESOURCE_ID)
+        client._get_available_metrics_from_exception(desired_names, api_error, RESOURCE_ID)  # noqa: SLF001

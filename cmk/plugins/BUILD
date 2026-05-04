@@ -275,7 +275,6 @@ filegroup(
         "alertmanager/libexec/agent_alertmanager",
         "allnet_ip_sensoric/libexec/agent_allnet_ip_sensoric",
         "appdynamics/libexec/agent_appdynamics",
-        "azure_deprecated/libexec/agent_azure",
         "azure_status/libexec/agent_azure_status",
         "checkmk/libexec/agent_bi",
         "checkmk/libexec/check_cmk_inv",

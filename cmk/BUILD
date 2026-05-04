@@ -157,6 +157,7 @@ py_library(
         "//packages/cmk-plugin-apis:rulesets",
         "//packages/cmk-plugin-apis:server_side_calls",
         "//packages/cmk-plugin-apis:server_side_programs",
+        "//packages/cmk-plugins:azure_deprecated",  # quick_setup
         "//packages/cmk-plugins:azure_v2",  # quick_setup
         "//packages/cmk-plugins:gcp",  # quick_setup
         "//packages/cmk-plugins:graylog",

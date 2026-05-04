@@ -252,8 +252,8 @@ def test_get_vm_labels_section(
 ) -> None:
     labels_section = get_vm_labels_section(vm, group_tags)
 
-    assert labels_section._cont == expected_result[0]
-    assert labels_section._piggytargets == expected_result[1]
+    assert labels_section._cont == expected_result[0]  # noqa: SLF001
+    assert labels_section._piggytargets == expected_result[1]  # noqa: SLF001
 
 
 @pytest.mark.parametrize(
@@ -427,8 +427,8 @@ def test_process_resource(
     assert len(sections) == len(expected_result)
     for section, expected_section in zip(sections, expected_result):
         assert isinstance(section, expected_section[0])
-        assert section._piggytargets == expected_section[1]
-        assert section._cont == expected_section[2]
+        assert section._piggytargets == expected_section[1]  # noqa: SLF001
+        assert section._cont == expected_section[2]  # noqa: SLF001
 
 
 @pytest.mark.parametrize(

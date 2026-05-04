@@ -43,6 +43,7 @@ py_test(
         "//packages/cmk-ccc:user",
         "//packages/cmk-ccc:version",
         "//packages/cmk-livestatus-client:py_livestatus",
+        "//packages/cmk-plugins:azure_deprecated",
         "//tests/unit:conftest",
         "//tests/unit/cmk/gui:conftest",
         requirement("pytest"),

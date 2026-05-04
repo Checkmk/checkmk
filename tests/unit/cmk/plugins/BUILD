@@ -30,6 +30,7 @@ py_test(
         ":__test__",
         "//cmk/legacy_checks",
         "//cmk/plugins",
+        "//packages/cmk-plugins:azure_deprecated",
         "//tests/testlib/common:repo",
         "//tests/testlib/unit",
         requirement("exchangelib"),

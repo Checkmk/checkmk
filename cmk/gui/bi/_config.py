@@ -112,9 +112,7 @@ from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
 from cmk.utils import paths
 from cmk.utils.rulesets.definition import RuleGroup
 
-from ._filesystem import get_bi_config_path
 from ._packs import get_cached_bi_packs
-from ._sites_callback import create_default_sites_callback
 from ._valuespecs import (
     bi_config_aggregation_function_registry,
     get_aggregation_function_choices,
@@ -123,6 +121,7 @@ from ._valuespecs import (
     is_contact_for_pack,
     may_use_rules_in_pack,
 )
+from .bi_manager import create_default_sites_callback, get_bi_config_path
 
 
 def register(

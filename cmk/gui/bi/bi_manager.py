@@ -4,10 +4,15 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from __future__ import annotations
 
+from pathlib import Path
+
+from livestatus import LivestatusResponse, Query
+
 from cmk.bi.compiler import BICompiler
 from cmk.bi.computer import BIComputer
 from cmk.bi.data_fetcher import BIStatusFetcher
 from cmk.bi.filesystem import get_default_site_filesystem
+from cmk.bi.lib import SitesCallback
 from cmk.bi.storage import AggregationNotFound, AggregationStore
 from cmk.bi.trees import (
     BICompiledAggregation,
@@ -15,10 +20,10 @@ from cmk.bi.trees import (
     get_compiled_aggregation_and_branch_by_name,
 )
 from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.site import SiteId
+from cmk.gui import sites
 from cmk.gui.hooks import request_memoize
-
-from ._filesystem import get_bi_config_path
-from ._sites_callback import create_default_sites_callback
+from cmk.gui.i18n import _
 
 
 class BIManager:
@@ -34,6 +39,39 @@ class BIManager:
             compiled_aggregations=self.compiler.compiled_aggregations,
             aggr_name=name,
         )
+
+
+def get_bi_config_path() -> Path:
+    return get_default_site_filesystem().etc.config
+
+
+def create_default_sites_callback() -> SitesCallback:
+    return SitesCallback(
+        all_sites_with_id_and_online=_all_sites_with_id_and_online,
+        query=_bi_livestatus_query,
+        translate=_,
+    )
+
+
+def _all_sites_with_id_and_online() -> list[tuple[SiteId, bool]]:
+    return [
+        (site_id, site_status["state"] == "online")
+        for site_id, site_status in sites.states().items()
+    ]
+
+
+def _bi_livestatus_query(
+    query: Query,
+    only_sites: list[SiteId] | None = None,
+    fetch_full_data: bool = False,
+) -> LivestatusResponse:
+    with sites.only_sites(only_sites), sites.prepend_site():
+        try:
+            auth_domain = "bi_fetch_full_data" if fetch_full_data else "bi"
+            sites.live().set_auth_domain(auth_domain)
+            return sites.live().query(query)
+        finally:
+            sites.live().set_auth_domain("read")
 
 
 @request_memoize(maxsize=10000)

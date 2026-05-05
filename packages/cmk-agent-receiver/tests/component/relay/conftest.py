@@ -87,7 +87,13 @@ def user() -> User:
 @pytest.fixture
 def site(wiremock: Wiremock, user: User, ar_site: AgentReceiverSite) -> SiteMock:
     wiremock.reset()
-    return SiteMock(wiremock, ar_site.config.site_name, user, ar_site.internal_credentials)
+    return SiteMock(
+        wiremock,
+        ar_site.config.site_name,
+        user,
+        ar_site.internal_credentials,
+        ar_site.config.omd_root,
+    )
 
 
 @pytest.fixture

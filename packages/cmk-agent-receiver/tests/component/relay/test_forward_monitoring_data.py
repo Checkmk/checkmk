@@ -25,7 +25,6 @@ from cmk.testlib.agent_receiver.mock_socket import (
     create_socket,
     create_unresponsive_socket,
 )
-from cmk.testlib.agent_receiver.relay_config_generator import generate_relay_config
 from cmk.testlib.agent_receiver.site_mock import OP, SiteMock
 
 HOST = "testhost"
@@ -359,10 +358,10 @@ def socket_path(tmpdir: Path) -> Iterator[str]:
 
 @pytest.fixture
 def serial(
-    site_context: Config, relay_id: str, agent_receiver: AgentReceiverClient, socket_path: str
+    site: SiteMock, relay_id: str, agent_receiver: AgentReceiverClient, socket_path: str
 ) -> Serial:
     # We use socket_path indirectly; we want to make sure we use the patched the Config class.
     _ = socket_path
-    cf = generate_relay_config(root=site_context.omd_root, relays=[relay_id])
-    agent_receiver.set_serial(cf.serial)
-    return cf.serial
+    relay_config = site.push_config([relay_id])
+    agent_receiver.apply_config(relay_config)
+    return relay_config.serial

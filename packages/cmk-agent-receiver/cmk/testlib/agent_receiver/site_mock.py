@@ -8,11 +8,16 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 from enum import auto, Enum
 from http import HTTPStatus
+from pathlib import Path
 from typing import assert_never, final, NewType
 
 from pydantic import BaseModel, Field
 
 from ...agent_receiver.lib.auth import B64SiteInternalSecret
+from .relay_config_generator import (
+    generate_relay_config,
+    RelayConfig,
+)
 from .schema import JsonSchema
 from .wiremock import Request, Response, Wiremock, WMapping
 
@@ -68,13 +73,27 @@ class User:
 @final
 class SiteMock:
     def __init__(
-        self, wiremock: Wiremock, site_name: str, user: User, internal_secret: B64SiteInternalSecret
+        self,
+        wiremock: Wiremock,
+        site_name: str,
+        user: User,
+        internal_secret: B64SiteInternalSecret,
+        omd_root: Path,
     ) -> None:
         self.wiremock = wiremock
         self.site_name = site_name
         self.user = user
         self.internal_secret = f"InternalToken {internal_secret}"
+        self._omd_root = omd_root
         self._scenario_setup = False
+
+    @property
+    def omd_root(self) -> Path:
+        return self._omd_root
+
+    def push_config(self, relays: list[str]) -> RelayConfig:
+        """simulate a new configuration the ar would push to the relay"""
+        return generate_relay_config(self._omd_root, relays)
 
     @property
     def base_url(self) -> str:

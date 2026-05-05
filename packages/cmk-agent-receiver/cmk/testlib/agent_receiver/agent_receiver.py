@@ -20,6 +20,7 @@ from cmk.relay_protocols.tasks import HEADERS, TaskCreateRequest, TaskCreateRequ
 
 from .certs import generate_csr_pair
 from .relay import random_relay_id
+from .relay_config_generator import RelayConfig
 from .site_mock import User
 
 
@@ -75,6 +76,9 @@ class AgentReceiverClient:
         finally:
             # Restore original app
             original_transport.app = original_app  # type: ignore[attr-defined]
+
+    def apply_config(self, push: RelayConfig) -> None:
+        self.set_serial(push.serial)
 
     def set_serial(self, serial: Serial | None) -> None:
         if serial:

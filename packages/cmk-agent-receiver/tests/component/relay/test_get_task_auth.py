@@ -12,9 +12,7 @@ from http import HTTPStatus
 
 import pytest
 
-from cmk.agent_receiver.lib.config import Config
 from cmk.testlib.agent_receiver.agent_receiver import AgentReceiverClient
-from cmk.testlib.agent_receiver.relay_config_generator import generate_relay_config
 from cmk.testlib.agent_receiver.site_mock import SiteMock
 from cmk.testlib.agent_receiver.tasks import add_tasks
 
@@ -30,7 +28,6 @@ from cmk.testlib.agent_receiver.tasks import add_tasks
 def test_get_task_with_various_invalid_cns(
     site: SiteMock,
     agent_receiver: AgentReceiverClient,
-    site_context: Config,
     invalid_cn: str,
     description: str,
 ) -> None:
@@ -46,8 +43,7 @@ def test_get_task_with_various_invalid_cns(
     relay_id = str(uuid.uuid4())
     site.set_scenario([relay_id])
 
-    serial_folder = generate_relay_config(site_context.omd_root, [relay_id])
-    agent_receiver.set_serial(serial_folder.serial)
+    agent_receiver.apply_config(site.push_config([relay_id]))
 
     with agent_receiver.with_client_ip("127.0.0.1"):
         response = agent_receiver.get_task(
@@ -67,7 +63,6 @@ def test_get_task_with_various_invalid_cns(
 def test_get_task_with_valid_cn_and_localhost(
     site: SiteMock,
     agent_receiver: AgentReceiverClient,
-    site_context: Config,
     site_name: str,
 ) -> None:
     """Verify get-task succeeds with correct CN and localhost.
@@ -82,8 +77,7 @@ def test_get_task_with_valid_cn_and_localhost(
     relay_id = str(uuid.uuid4())
     site.set_scenario([relay_id])
 
-    serial_folder = generate_relay_config(site_context.omd_root, [relay_id])
-    agent_receiver.set_serial(serial_folder.serial)
+    agent_receiver.apply_config(site.push_config([relay_id]))
 
     task_ids = add_tasks(1, agent_receiver, relay_id, site_name)
     task_id = str(task_ids[0])
@@ -101,7 +95,6 @@ def test_get_task_with_valid_cn_and_localhost(
 def test_get_task_cn_check_without_localhost(
     site: SiteMock,
     agent_receiver: AgentReceiverClient,
-    site_context: Config,
     site_name: str,
 ) -> None:
     """Verify get-task requires localhost even with valid CN.
@@ -116,8 +109,7 @@ def test_get_task_cn_check_without_localhost(
     relay_id = str(uuid.uuid4())
     site.set_scenario([relay_id])
 
-    serial_folder = generate_relay_config(site_context.omd_root, [relay_id])
-    agent_receiver.set_serial(serial_folder.serial)
+    agent_receiver.apply_config(site.push_config([relay_id]))
 
     with agent_receiver.with_client_ip("192.168.1.100"):
         response = agent_receiver.get_task(

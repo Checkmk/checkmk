@@ -10,10 +10,8 @@ from http import HTTPStatus
 
 import pytest
 
-from cmk.agent_receiver.lib.config import Config
 from cmk.relay_protocols.tasks import FetchAdHocTask
 from cmk.testlib.agent_receiver.agent_receiver import AgentReceiverClient
-from cmk.testlib.agent_receiver.relay_config_generator import generate_relay_config
 from cmk.testlib.agent_receiver.site_mock import SiteMock
 
 
@@ -28,7 +26,6 @@ from cmk.testlib.agent_receiver.site_mock import SiteMock
 def test_create_task_with_various_invalid_cns(
     site: SiteMock,
     agent_receiver: AgentReceiverClient,
-    site_context: Config,
     invalid_cn: str,
     description: str,
 ) -> None:
@@ -48,8 +45,7 @@ def test_create_task_with_various_invalid_cns(
     relay_id = str(uuid.uuid4())
     site.set_scenario([relay_id])
 
-    serial_folder = generate_relay_config(site_context.omd_root, [relay_id])
-    agent_receiver.set_serial(serial_folder.serial)
+    agent_receiver.apply_config(site.push_config([relay_id]))
 
     # Test: Create task with invalid CN
     with agent_receiver.with_client_ip("127.0.0.1"):
@@ -69,7 +65,6 @@ def test_create_task_with_various_invalid_cns(
 def test_create_task_with_valid_cn_and_localhost(
     site: SiteMock,
     agent_receiver: AgentReceiverClient,
-    site_context: Config,
     site_name: str,
 ) -> None:
     """Verify create-task succeeds with correct CN and localhost.
@@ -88,8 +83,7 @@ def test_create_task_with_valid_cn_and_localhost(
     relay_id_b = str(uuid.uuid4())
     site.set_scenario([relay_id_a, relay_id_b])
 
-    serial_folder = generate_relay_config(site_context.omd_root, [relay_id_a, relay_id_b])
-    agent_receiver.set_serial(serial_folder.serial)
+    agent_receiver.apply_config(site.push_config([relay_id_a, relay_id_b]))
 
     # Test: Create task with correct CN from localhost
     with agent_receiver.with_client_ip("127.0.0.1"):
@@ -103,7 +97,6 @@ def test_create_task_with_valid_cn_and_localhost(
 def test_create_task_cn_check_without_localhost(
     site: SiteMock,
     agent_receiver: AgentReceiverClient,
-    site_context: Config,
     site_name: str,
 ) -> None:
     """Verify create-task requires localhost even with valid CN.
@@ -122,8 +115,7 @@ def test_create_task_cn_check_without_localhost(
     relay_id = str(uuid.uuid4())
     site.set_scenario([relay_id])
 
-    serial_folder = generate_relay_config(site_context.omd_root, [relay_id])
-    agent_receiver.set_serial(serial_folder.serial)
+    agent_receiver.apply_config(site.push_config([relay_id]))
 
     # Test: Create task with correct CN but from non-localhost
     with agent_receiver.with_client_ip("192.168.1.100"):

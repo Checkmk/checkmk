@@ -10,7 +10,7 @@ from http import HTTPStatus
 import pytest
 from fastapi.testclient import TestClient
 
-from cmk.agent_receiver.lib.config import Config, get_config
+from cmk.agent_receiver.lib.config import get_config
 from cmk.agent_receiver.main import main_app
 from cmk.agent_receiver.relay.api.routers.relays.dependencies import (
     get_forward_monitoring_data_handler,
@@ -19,7 +19,6 @@ from cmk.agent_receiver.relay.api.routers.relays.handlers import ForwardMonitori
 from cmk.relay_protocols.tasks import FetchAdHocTask
 from cmk.testlib.agent_receiver.agent_receiver import AgentReceiverClient
 from cmk.testlib.agent_receiver.builder import AgentReceiverConfigBuilder
-from cmk.testlib.agent_receiver.relay_config_generator import generate_relay_config
 from cmk.testlib.agent_receiver.site_mock import SiteMock, User
 from cmk.testlib.agent_receiver.tasks import add_tasks, get_all_tasks
 from cmk.testlib.agent_receiver.wiremock import Wiremock
@@ -31,7 +30,7 @@ def _setup(
     monkeypatch: pytest.MonkeyPatch,
     *,
     max_pending_tasks_per_relay: int,
-) -> tuple[SiteMock, AgentReceiverClient, Config, str]:
+) -> tuple[SiteMock, AgentReceiverClient, str]:
     site_name = "my_component_test_site"
     ar_site = AgentReceiverConfigBuilder(
         omd_root=tmp_path / site_name,
@@ -46,7 +45,9 @@ def _setup(
 
     user = User("testmo", "supersecret")
     wiremock.reset()
-    site = SiteMock(wiremock, site_name, user, ar_site.internal_credentials)
+    site = SiteMock(
+        wiremock, site_name, user, ar_site.internal_credentials, ar_site.config.omd_root
+    )
 
     app = main_app()
     app.dependency_overrides[get_forward_monitoring_data_handler] = lambda config: (
@@ -55,7 +56,7 @@ def _setup(
     client = TestClient(app)
     agent_receiver = AgentReceiverClient(client, site_name, user)
 
-    return site, agent_receiver, ar_site.config, site_name
+    return site, agent_receiver, site_name
 
 
 def test_cannot_push_more_pending_tasks_than_allowed(
@@ -71,13 +72,12 @@ def test_cannot_push_more_pending_tasks_than_allowed(
     3. Verify request is rejected with FORBIDDEN status
     """
     task_count = 3
-    site, agent_receiver, site_context, site_name = _setup(
+    site, agent_receiver, site_name = _setup(
         wiremock, tmp_path, monkeypatch, max_pending_tasks_per_relay=task_count
     )
 
     relay_id = add_relays(site, 1)[0]
-    cf = generate_relay_config(root=site_context.omd_root, relays=[relay_id])
-    agent_receiver.set_serial(cf.serial)
+    agent_receiver.apply_config(site.push_config([relay_id]))
 
     # add maximum number of tasks allowed
 
@@ -116,13 +116,12 @@ def test_cannot_push_more_tasks_after_marking_a_task_as_finished(
     3. Verify new task is accepted successfully
     """
     task_count = 3
-    site, agent_receiver, site_context, site_name = _setup(
+    site, agent_receiver, site_name = _setup(
         wiremock, tmp_path, monkeypatch, max_pending_tasks_per_relay=task_count
     )
 
     relay_id = add_relays(site, 1)[0]
-    cf = generate_relay_config(root=site_context.omd_root, relays=[relay_id])
-    agent_receiver.set_serial(cf.serial)
+    agent_receiver.apply_config(site.push_config([relay_id]))
 
     # add maximum number of tasks allowed
     task_id, *_ = add_tasks(task_count, agent_receiver, relay_id, site_name)
@@ -160,7 +159,7 @@ def test_each_relay_has_its_own_limit(
     3. Verify relay B accepts task despite relay A being full
     """
     task_count = 5
-    site, agent_receiver, _, site_name = _setup(
+    site, agent_receiver, site_name = _setup(
         wiremock, tmp_path, monkeypatch, max_pending_tasks_per_relay=task_count
     )
 

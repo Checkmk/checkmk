@@ -3,17 +3,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.agent_receiver.lib.config import Config
 from cmk.agent_receiver.relay.lib.shared_types import Serial
 from cmk.testlib.agent_receiver.agent_receiver import AgentReceiverClient
-from cmk.testlib.agent_receiver.relay_config_generator import generate_relay_config
 from cmk.testlib.agent_receiver.site_mock import SiteMock
 from cmk.testlib.agent_receiver.tasks import get_relay_tasks
 
 
 def test_relay_without_folder(
     agent_receiver: AgentReceiverClient,
-    site_context: Config,
     site: SiteMock,
 ) -> None:
     """Verify that retrieving tasks for a relay without a corresponding filesystem folder succeeds without errors.
@@ -25,8 +22,8 @@ def test_relay_without_folder(
     """
 
     stale_serial = Serial.default()
-    cf = generate_relay_config(root=site_context.omd_root, relays=["relay_id_1", "relay_id_3"])
-    assert cf.serial != stale_serial
+    relay_config = site.push_config(["relay_id_1", "relay_id_3"])
+    assert relay_config.serial != stale_serial
     agent_receiver.set_serial(stale_serial)
     site.set_scenario(["relay_1", "relay_2", "relay_3"])
 

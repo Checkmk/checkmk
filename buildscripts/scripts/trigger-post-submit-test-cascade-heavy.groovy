@@ -27,13 +27,11 @@ void main() {
         "test-integration-single-f12less-ultimatemt",
         "test-plugins",
         "test-plugins-piggyback",
-        "test-update-single-f12less",
-        "test-update-single-f12less-community-pro",
-        "test-update-single-f12less-pro-ultimate",
-        "test-update-single-f12less-pro-ultimatemt",
+        "test-update-single-f12less-k8s",
+        "test-update-single-f12less-community-pro-k8s",
+        "test-update-single-f12less-pro-ultimate-k8s",
+        "test-update-single-f12less-pro-ultimatemt-k8s",
     ];
-
-    job_names += env.USE_K8S_UPDATE_SYSTEMTESTS == "1" ? ["test-update-single-f12less-k8s"] : [];
 
     print(
         """

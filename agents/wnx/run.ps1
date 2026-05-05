@@ -28,10 +28,12 @@ $argDetach = $false
 $argWin = $false
 $argSkipSqlTest = $false
 
-$msbuild_exe = & "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe" `
-    -latest `
-    -requires Microsoft.Component.MSBuild `
-    -find MSBuild\**\Bin\MSBuild.exe
+$vswhere = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
+if (Test-Path $vswhere) {
+    $msbuild_exe = & $vswhere -latest -requires Microsoft.Component.MSBuild -find MSBuild\**\Bin\MSBuild.exe
+} else {
+    $msbuild_exe = $null
+}
 
 $repo_root = (get-item $pwd).parent.parent.FullName
 $results_dir = "$repo_root\artefacts"
@@ -701,7 +703,12 @@ function Test-MsiSigning($file) {
 Invoke-CheckApp "choco" "choco -v"
 Invoke-CheckApp "perl" "perl -v"
 Invoke-CheckApp "make" "make -v"
-Invoke-CheckApp "msvc" "& ""$msbuild_exe"" --version"
+if ($msbuild_exe) {
+    Invoke-CheckApp "msvc" "& ""$msbuild_exe"" --version"
+} else {
+    Write-Host "[-] msvc :vswhere.exe not found or Visual Studio not installed" -Fore Red
+    Exit 55
+}
 Invoke-CheckApp "is_crlf" "python .\scripts\check_crlf.py"
 
 $argAttached = $false

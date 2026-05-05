@@ -126,6 +126,7 @@ explicit_package_bases = true
 # cmk-update-agent is needed for now because cmk_update_agent is still imported by some composition
 # tests. Can hopefully be cleaned up in a following step.
 mypy_path = """\
+    $MYPY_CONFIG_FILE_DIR/non-free/packages/cmk-otel-collector:\
     $MYPY_CONFIG_FILE_DIR/non-free/packages/cmk-update-agent:\
     $MYPY_CONFIG_FILE_DIR/omd/packages/omd:\
     $MYPY_CONFIG_FILE_DIR/tests/typeshed:\

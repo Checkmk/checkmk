@@ -28,7 +28,11 @@ from cmk.gui.i18n import _
 
 class BIManager:
     def __init__(self) -> None:
-        sites_callback = create_default_sites_callback()
+        sites_callback = SitesCallback(
+            all_sites_with_id_and_online=all_sites_with_id_and_online,
+            query=bi_livestatus_query,
+            translate=_,
+        )
         self.compiler = BICompiler(self.bi_configuration_file(), sites_callback)
         self.compiler.load_compiled_aggregations()
         self.status_fetcher = BIStatusFetcher(sites_callback)
@@ -45,22 +49,14 @@ class BIManager:
         )
 
 
-def create_default_sites_callback() -> SitesCallback:
-    return SitesCallback(
-        all_sites_with_id_and_online=_all_sites_with_id_and_online,
-        query=_bi_livestatus_query,
-        translate=_,
-    )
-
-
-def _all_sites_with_id_and_online() -> list[tuple[SiteId, bool]]:
+def all_sites_with_id_and_online() -> list[tuple[SiteId, bool]]:
     return [
         (site_id, site_status["state"] == "online")
         for site_id, site_status in sites.states().items()
     ]
 
 
-def _bi_livestatus_query(
+def bi_livestatus_query(
     query: Query,
     only_sites: list[SiteId] | None = None,
     fetch_full_data: bool = False,

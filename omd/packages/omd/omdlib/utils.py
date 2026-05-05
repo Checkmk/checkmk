@@ -19,6 +19,7 @@ def is_containerized() -> bool:
         os.path.exists("/.dockerenv")
         or os.path.exists("/run/.containerenv")
         or os.environ.get("CMK_CONTAINERIZED") == "TRUE"
+        or bool(os.environ.get("POD_LABEL"))
     )
 
 

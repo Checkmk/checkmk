@@ -3,13 +3,23 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 
+from collections.abc import Mapping
+from typing import Any
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import get_rate, get_value_store, StringTable
-
-check_info = {}
+from cmk.agent_based.v2 import (
+    AgentSection,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    get_rate,
+    get_value_store,
+    Metric,
+    Result,
+    Service,
+    State,
+    StringTable,
+)
 
 linux_nic_check = "lnx_if"
 
@@ -49,24 +59,28 @@ netctr_counter_indices = {
 }
 
 
-def discover_netctr_combined(info):
+def discover_netctr_combined(section: StringTable) -> DiscoveryResult:
     if linux_nic_check != "legacy":
-        return []
-    if len(info) == 0:
-        return []
-    return [(l[0], {}) for l in info[1:] if l[0] != "lo" and not l[0].startswith("sit")]
+        return
+    if len(section) == 0:
+        return
+    for line in section[1:]:
+        if line[0] != "lo" and not line[0].startswith("sit"):
+            yield Service(item=line[0])
 
 
-def check_netctr_combined(nic, params, info):
+def check_netctr_combined(
+    item: str, params: Mapping[str, Any], section: StringTable
+) -> CheckResult:
     warn, crit = params["levels"]
-    this_time = int(info[0][0])
+    this_time = int(section[0][0])
     value_store = get_value_store()
 
     # Look for line describing this nic
-    for nicline in info[1:]:
-        if nicline[0] != nic:
+    for nicline in section[1:]:
+        if nicline[0] != item:
             continue
-        perfdata = []
+        metrics: list[Metric] = []
         infotxt = ""
         problems_per_sec = 0.0
         packets_per_sec = 0.0
@@ -74,42 +88,46 @@ def check_netctr_combined(nic, params, info):
             index = netctr_counter_indices[countername]
             value = int(nicline[index + 1])
             items_per_sec = get_rate(
-                value_store, f"netctr.{nic}.{countername}", this_time, value, raise_overflow=True
+                value_store, f"netctr.{item}.{countername}", this_time, value, raise_overflow=True
             )
-            perfdata.append((countername, "%dc" % value))
+            metrics.append(Metric(countername, value))
 
             if countername in ["rx_errors", "tx_errors", "tx_collisions"]:
                 problems_per_sec += items_per_sec
             elif countername in ["rx_packets", "tx_packets"]:
                 packets_per_sec += items_per_sec
             if countername == "rx_bytes":
-                infotxt += " - Receive: %.2f MB/sec" % (float(items_per_sec) / float(1024 * 1024))
+                infotxt += f" - Receive: {items_per_sec / (1024 * 1024):.2f} MB/sec"
             elif countername == "tx_bytes":
-                infotxt += " - Send: %.2f MB/sec" % (float(items_per_sec) / float(1024 * 1024))
+                infotxt += f" - Send: {items_per_sec / (1024 * 1024):.2f} MB/sec"
 
         error_percentage = 0.0
         if problems_per_sec > 0:
-            error_percentage = (problems_per_sec / packets_per_sec) * 100.0  # fixed: true-division
-            infotxt += ", error rate %.4f%%" % error_percentage
+            error_percentage = (problems_per_sec / packets_per_sec) * 100.0
+            infotxt += f", error rate {error_percentage:.4f}%"
         if error_percentage >= crit:
-            return (2, infotxt, perfdata)
-        if error_percentage >= warn:
-            return (1, infotxt, perfdata)
-        return (0, infotxt, perfdata)
+            yield Result(state=State.CRIT, summary=infotxt)
+        elif error_percentage >= warn:
+            yield Result(state=State.WARN, summary=infotxt)
+        else:
+            yield Result(state=State.OK, summary=infotxt)
+        yield from metrics
+        return
 
-    return (3, "NIC is not present")
+    yield Result(state=State.UNKNOWN, summary="NIC is not present")
 
 
 def parse_netctr(string_table: StringTable) -> StringTable:
     return string_table
 
 
-check_info["netctr"] = LegacyCheckDefinition(
+agent_section_netctr = AgentSection(
     name="netctr",
     parse_function=parse_netctr,
 )
 
-check_info["netctr.combined"] = LegacyCheckDefinition(
+
+check_plugin_netctr_combined = CheckPlugin(
     name="netctr_combined",
     service_name="NIC %s counters",
     sections=["netctr"],

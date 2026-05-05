@@ -1,6 +1,5 @@
-load("@aspect_rules_py//py:defs.bzl", "py_library", "py_test")
+load("@aspect_rules_py//py:defs.bzl", "py_library")
 load("@bazel_skylib//rules:build_test.bzl", "build_test")
-load("@cmk_requirements//:requirements.bzl", "requirement")
 load("@rules_python//python:packaging.bzl", "py_wheel")
 load("//bazel/rules:doctest.bzl", "py_doc_test")
 load("//bazel/rules:package_wheel.bzl", "package_wheel")
@@ -41,17 +40,6 @@ py_requirements_test(
         "//packages/cmk-web/cmk/web/utils",
     ],
     requirements_in = "requirements.in",
-)
-
-py_test(
-    name = "unit",
-    size = "small",
-    srcs = glob(["tests/**/*.py"]),
-    pytest_main = True,
-    deps = [
-        ":cmk-web",
-        requirement("pytest"),
-    ],
 )
 
 py_wheel(

@@ -11,7 +11,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Final
 
-from scripts.gerrit_api.client import GerritClient, TChangeStatus
+from scripts.gerrit_api.client import GerritClient, PROJECT_NAME, TChangeStatus
 from scripts.gerrit_api.werks import werk_details, WerkImpact
 
 ENV_GERRIT_USER: Final = "GERRIT_USER"
@@ -161,7 +161,7 @@ def create_search_query(args: type[TCliArgs]) -> str:
     status = "status"
 
     query = {
-        "project": "check_mk",
+        "project": PROJECT_NAME,
         "path": r"^.*werks/.*md",
         status: "",
         branch: "",

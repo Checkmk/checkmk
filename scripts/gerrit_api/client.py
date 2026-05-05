@@ -5,14 +5,19 @@
 """Abstract code related to Gerrit API calls."""
 
 import base64
+import logging
 from enum import StrEnum
-from typing import Final
+from typing import Any, Final
 from urllib.parse import quote_plus
 
 import httpx
 from pydantic import BaseModel
 from pydantic_core import from_json
 from requests.auth import HTTPBasicAuth
+
+_ACCOUNT_ID = "_account_id"
+PROJECT_NAME = "check_mk"
+logger = logging.getLogger(__name__)
 
 
 class TChangeStatus(StrEnum):
@@ -34,13 +39,63 @@ class ChangeDetails(BaseModel):
     virtual_id_number: int
     work_in_progress: bool = False
     revert_of: int = 0
+    owner: dict[str, int | str]
+    submit_records: list[dict[str, Any]]
+    cherry_pick_of_change: int | None = None
+
+    @property
+    def _owner_id(self) -> int:
+        try:
+            return int(self.owner[_ACCOUNT_ID])
+        except KeyError as exc:
+            exc.add_note(
+                f"Owner ID missing for change-ID '{self.id}'! "
+                "Has the REST-API data structure changed?\n"
+                f"ref: {GerritClient.GERRIT_API_DOCs}/#change-info"
+            )
+            raise exc
+
+    @property
+    def is_reviewed_by_peer(self) -> bool | None:
+        """Decide whether the change is peer-reviewed or not.
+
+        Only valid when a change is MERGED.
+        """
+        if self.status != TChangeStatus.MERGED:
+            logger.warning(
+                "Change '%s' is not yet merged; skip peer-review check...", self.change_id
+            )
+            return None
+
+        # iterate list
+        for record in self.submit_records:
+            # iterate dict
+            for label in record.get("labels", []):
+                try:
+                    if label["label"] == "Code-Review":
+                        if int(label["applied_by"][_ACCOUNT_ID]) != self._owner_id:
+                            return True
+                except KeyError as exc:
+                    exc.add_note(
+                        "Expected missing attribute! "
+                        "Has the REST-API data structure changed?\n"
+                        f"ref: {GerritClient.GERRIT_API_DOCs}/#submit-record-info"
+                    )
+                    raise exc
+        return False
+
+    @property
+    def change_url(self) -> str:
+        return f"{GerritClient.GERRIT_BASE_URL}/c/{PROJECT_NAME}/+/{self.virtual_id_number}"
 
 
 class GerritClient:
     """httpx client used for perform REST_API calls to Checkmk's gerrit instance."""
 
     GERRIT_PREFIX: Final = r")]}'"
-    GERRIT_URL: Final = "https://review.lan.tribe29.com/a"
+    GERRIT_BASE_URL: Final = "https://review.lan.tribe29.com"
+    GERRIT_API_DOCs: Final = f"{GERRIT_BASE_URL}/Documentation/rest-api-changes.html"
+    GERRIT_URL: Final = f"{GERRIT_BASE_URL}/a"
 
     def __init__(self, user: str, http_creds: str) -> None:
         super().__init__()

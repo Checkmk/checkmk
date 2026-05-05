@@ -18,11 +18,16 @@ import type { WidgetFiltersType } from './types'
 import { ElementSelection } from './types'
 
 export const isUrl = (text: string): boolean => {
+  if (!text) {
+    return false
+  }
+  if (/[\s<>"'`\\]/.test(text)) {
+    return false
+  }
   try {
-    new URL(text, 'http://checkmk.com')
-    return true
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  } catch (_) {
+    const url = new URL(text, 'http://checkmk.com')
+    return url.protocol === 'http:' || url.protocol === 'https:'
+  } catch {
     return false
   }
 }

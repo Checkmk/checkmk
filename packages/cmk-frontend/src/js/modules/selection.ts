@@ -330,13 +330,35 @@ function select_all_rows(elems: HTMLInputElement[], only_failed?: boolean) {
 }
 
 // Toggles the datarows of the group which the given checkbox is part of.
+//
+// Two layouts are supported:
+//
+// 1. The toggle element sits in the table's <thead> column header (e.g. tables
+//    rendered via cmk.gui.table.Table). In this case there is no in-table group
+//    context, so we toggle every data <tr> in the enclosing <table> — i.e. all
+//    <tr> descendants that are not inside a <thead>.
+// 2. The toggle element sits inline among the data rows (e.g. the views layout,
+//    or a per-group header row re-rendered between groupheader dividers). Here
+//    we walk the row's siblings, using adjacent <tr class="groupheader"> rows
+//    as the start/end boundaries of the group the toggle belongs to, and
+//    toggle every <tr> inside that slice.
 export function toggle_group_rows(checkbox: HTMLInputElement) {
-  // 1. Find the first tbody parent
-  // 2. iterate over the children and search for the group header of the checkbox
-  //    - Save the TR with class groupheader
-  //    - End this search once found the checkbox element
-  const this_row = checkbox.parentNode!.parentNode!
-  const rows = this_row.parentNode!.children
+  const this_row = checkbox.parentNode!.parentNode! as HTMLElement
+  const row_container = this_row.parentNode! as HTMLElement
+
+  if (row_container.tagName === 'THEAD') {
+    const table = row_container.parentNode as HTMLElement | null
+    if (!table) return
+    const data_rows: HTMLTableRowElement[] = []
+    const trs = table.getElementsByTagName('tr')
+    for (let i = 0; i < trs.length; i++) {
+      if (!trs[i].closest('thead')) data_rows.push(trs[i])
+    }
+    toggle_all_rows(data_rows)
+    return
+  }
+
+  const rows = row_container.children
 
   let in_this_group = false
   let group_start: number | null = null

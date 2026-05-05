@@ -11,7 +11,7 @@
 import pytest
 
 from cmk.agent_based.v2 import Result, Service, State
-from cmk.legacy_checks.md import check_md, discover_md, parse_md, Section
+from cmk.plugins.mdraid.agent_based.md import check_md, discover_md, parse_md, Section
 
 
 @pytest.fixture

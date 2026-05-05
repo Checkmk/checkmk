@@ -9,7 +9,7 @@
 # test by something more appropriate.
 
 from cmk.agent_based.v2 import Result, State
-from cmk.legacy_checks.md import (
+from cmk.plugins.mdraid.agent_based.md import (
     check_md,
     discover_md,
     parse_md,

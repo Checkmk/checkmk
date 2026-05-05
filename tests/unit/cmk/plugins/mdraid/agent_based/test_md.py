@@ -11,7 +11,7 @@ from typing import Any
 import pytest
 
 from cmk.agent_based.v2 import Result, Service, State, StringTable
-from cmk.legacy_checks.md import check_md, discover_md, parse_md
+from cmk.plugins.mdraid.agent_based.md import check_md, discover_md, parse_md
 
 
 @pytest.mark.parametrize(

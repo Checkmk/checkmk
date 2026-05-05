@@ -503,13 +503,6 @@ STAGES:
       BAZEL_LOCKS_AMOUNT: 1
       RESULT_CHECK_FILE_PATTERN: "results/agent-plugin-unit-junit.txt"
 
-    - NAME: "Software Documentation Generation"
-      ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_SW_DOC_FILES,CHANGED_MAKEFILE
-      COMMAND: "make sw-documentation &> ${RESULTS}/sw-documentation.txt"
-      TEXT_ON_SKIP: "No SW Documentation files changed"
-      BAZEL_LOCKS_AMOUNT: 1
-      RESULT_CHECK_FILE_PATTERN: "results/sw-documentation.txt"
-
     - NAME: "Detect Merge Conflicts"
       DIR: ""
       COMMAND: "./scripts/check-merge-conflicts ${PATCHSET_REVISION} &> ${RESULTS}/merge-conflicts.txt"

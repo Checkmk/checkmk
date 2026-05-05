@@ -166,6 +166,7 @@ from cmk.utils.rulesets.ruleset_matcher import (
     RulesetMatcher,
     RulesetName,
     RuleSpec,
+    SingleHostRulesetMatcher,
     SingleHostRulesetMatcherMerge,
     SingleServiceRulesetMatcherFirstParsed,
 )
@@ -1665,11 +1666,14 @@ class ConfigCache:
                 self._loaded_config, self.ruleset_matcher, self.label_manager.labels_of_host
             ),
             snmp_fetcher_config,
-            self.ruleset_matcher,
             service_configurer,
             service_name_config,
             enforced_services_table,
-            snmp_exclude_sections=self._loaded_config.snmp_exclude_sections,
+            snmp_exclude_sections=SingleHostRulesetMatcher(
+                self._loaded_config.snmp_exclude_sections,
+                self.ruleset_matcher,
+                self.label_manager.labels_of_host,
+            ),
             is_cmc=self._loaded_config.monitoring_core == "cmc",
         )
 
@@ -3760,23 +3764,19 @@ class FetcherFactory:
         ip_lookup: ip_lookup.IPLookup,
         tcp_fetcher_config: TCPFetcherConfig,
         snmp_fetcher_config: SNMPFetcherConfig,
-        ruleset_matcher_: RulesetMatcher,
         service_configurer: ServiceConfigurer,
         service_name_config: Callable[[HostName, ServiceID, str | None], ServiceName],
         enforced_services_table: Callable[
             [HostName], Mapping[ServiceID, tuple[object, ConfiguredService]]
         ],
         *,
-        # TODO(igor): Combine this with ruleset_matcher_ and pass a callback (compare CMCConfig)
-        snmp_exclude_sections: Sequence[RuleSpec[Mapping[str, Sequence[str]]]],
+        snmp_exclude_sections: Callable[[HostName], Sequence[Mapping[str, Sequence[str]]]],
         is_cmc: bool,
     ) -> None:
         self._config_cache: Final = config_cache
         self._ip_lookup: Final = ip_lookup
         self._tcp_fetcher_config: Final = tcp_fetcher_config
         self._snmp_fetcher_config: Final = snmp_fetcher_config
-        self._label_manager: Final = config_cache.label_manager
-        self._ruleset_matcher: Final = ruleset_matcher_
         self._service_configurer: Final = service_configurer
         self._service_name_config: Final = service_name_config
         self._enforced_services_table: Final = enforced_services_table
@@ -3790,11 +3790,7 @@ class FetcherFactory:
     def _disabled_snmp_sections(self, host_name: HostName) -> frozenset[SNMPSectionName]:
         def disabled_snmp_sections_impl() -> frozenset[SNMPSectionName]:
             """Return a set of disabled snmp sections"""
-            rules = self._ruleset_matcher.get_host_values_all(
-                host_name,
-                self._snmp_exclude_sections,
-                self._label_manager.labels_of_host,
-            )
+            rules = self._snmp_exclude_sections(host_name)
             merged_section_settings = {"if64adm": True}
             for rule in reversed(rules):
                 for section in rule.get("sections_enabled", ()):

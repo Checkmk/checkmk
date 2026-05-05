@@ -12,10 +12,8 @@ The GET /{relay_id}/status endpoint returns:
 
 from http import HTTPStatus
 
-from cmk.agent_receiver.lib.config import Config
 from cmk.relay_protocols.relays import RelayState, RelayStatusResponse
 from cmk.testlib.agent_receiver.agent_receiver import AgentReceiverClient, register_relay
-from cmk.testlib.agent_receiver.config_file_system import create_config_folder
 from cmk.testlib.agent_receiver.relay import random_relay_id
 from cmk.testlib.agent_receiver.site_mock import OP, SiteMock
 
@@ -23,7 +21,6 @@ from cmk.testlib.agent_receiver.site_mock import OP, SiteMock
 def test_get_relay_status_returns_configured_when_both_api_and_config_exist(
     site: SiteMock,
     agent_receiver: AgentReceiverClient,
-    site_context: Config,
 ) -> None:
     """Verify that GET /{relay_id}/status returns CONFIGURED when relay exists in both API and local config.
 
@@ -40,7 +37,7 @@ def test_get_relay_status_returns_configured_when_both_api_and_config_exist(
     register_relay(agent_receiver, "test_relay", relay_id)
 
     # Create local config folder
-    _ = create_config_folder(root=site_context.omd_root, relays=[relay_id])
+    site.push_config([relay_id])
 
     # Call the endpoint
     resp = agent_receiver.get_relay_status(relay_id)
@@ -106,7 +103,6 @@ def test_get_relay_status_returns_pending_activation_when_api_exists_but_no_conf
 def test_get_relay_status_returns_pending_deletion_when_config_exists_but_not_in_api(
     site: SiteMock,
     agent_receiver: AgentReceiverClient,
-    site_context: Config,
 ) -> None:
     """Verify that GET /{relay_id}/status returns PENDING_DELETION when config exists but API returns 404.
 
@@ -123,7 +119,7 @@ def test_get_relay_status_returns_pending_deletion_when_config_exists_but_not_in
     site.set_scenario([])
 
     # Create local config folder
-    _ = create_config_folder(root=site_context.omd_root, relays=[relay_id])
+    site.push_config([relay_id])
 
     # Call the endpoint
     resp = agent_receiver.get_relay_status(relay_id)
@@ -137,7 +133,6 @@ def test_get_relay_status_returns_pending_deletion_when_config_exists_but_not_in
 def test_get_relay_status_returns_502_on_api_error(
     site: SiteMock,
     agent_receiver: AgentReceiverClient,
-    site_context: Config,
 ) -> None:
     """Verify that GET /{relay_id}/status returns 502 when CMK API returns an error.
 
@@ -155,7 +150,7 @@ def test_get_relay_status_returns_502_on_api_error(
     register_relay(agent_receiver, "test_relay", relay_id)
 
     # Create local config folder
-    _ = create_config_folder(root=site_context.omd_root, relays=[relay_id])
+    site.push_config([relay_id])
 
     # Mock API error
     site.mock_relay_get_error(relay_id, HTTPStatus.INTERNAL_SERVER_ERROR, "Internal server error")
@@ -168,7 +163,6 @@ def test_get_relay_status_returns_502_on_api_error(
 def test_get_relay_status_returns_502_on_bad_request(
     site: SiteMock,
     agent_receiver: AgentReceiverClient,
-    site_context: Config,
 ) -> None:
     """Verify that GET /{relay_id}/status returns 502 when CMK API returns 400 Bad Request.
 
@@ -186,7 +180,7 @@ def test_get_relay_status_returns_502_on_bad_request(
     register_relay(agent_receiver, "test_relay", relay_id)
 
     # Create local config folder
-    _ = create_config_folder(root=site_context.omd_root, relays=[relay_id])
+    site.push_config([relay_id])
 
     # Mock API error
     site.mock_relay_get_error(relay_id, HTTPStatus.BAD_REQUEST, "Bad request from API")

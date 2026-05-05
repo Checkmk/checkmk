@@ -11,11 +11,10 @@ from http import HTTPStatus
 import httpx
 import pytest
 
-from cmk.agent_receiver.lib.config import Config
 from cmk.agent_receiver.relay.lib.shared_types import Serial
 from cmk.relay_protocols.tasks import RelayConfigTask, TaskResponse, TaskStatus
 from cmk.testlib.agent_receiver.agent_receiver import AgentReceiverClient
-from cmk.testlib.agent_receiver.config_file_system import ConfigFolder, create_config_folder
+from cmk.testlib.agent_receiver.config_file_system import ConfigFolder
 from cmk.testlib.agent_receiver.site_mock import (
     OP,
     SiteMock,
@@ -38,7 +37,6 @@ def site_client(site: SiteMock, user: User) -> httpx.Client:
 def test_activation_performed_by_user_creates_config_tasks_for_each_relay(
     site: SiteMock,
     agent_receiver: AgentReceiverClient,
-    site_context: Config,
     site_name: str,
 ) -> None:
     """Verify that user-triggered config activation creates a relay config task for each configured relay.
@@ -53,8 +51,8 @@ def test_activation_performed_by_user_creates_config_tasks_for_each_relay(
     relay_id_b = str(uuid.uuid4())
     site.set_scenario([relay_id_a, relay_id_b])
 
-    serial_folder = create_config_folder(site_context.omd_root, [relay_id_a, relay_id_b])
-    agent_receiver.set_serial(serial_folder.serial)
+    serial_folder = site.push_config([relay_id_a, relay_id_b])
+    agent_receiver.apply_config(serial_folder)
 
     # Simulate user activation. Call to the endpoint that creates a ActivateConfigTask for each relay
     with agent_receiver.with_client_ip("127.0.0.1"):
@@ -69,7 +67,6 @@ def test_activation_performed_by_user_creates_config_tasks_for_each_relay(
 def test_activation_performed_twice_with_same_config(
     site: SiteMock,
     agent_receiver: AgentReceiverClient,
-    site_context: Config,
     site_name: str,
 ) -> None:
     """Verify that performing config activation twice with the same configuration does not create duplicate tasks.
@@ -84,8 +81,8 @@ def test_activation_performed_twice_with_same_config(
     relay_id_b = str(uuid.uuid4())
     site.set_scenario([relay_id_a, relay_id_b])
 
-    serial_folder = create_config_folder(site_context.omd_root, [relay_id_a, relay_id_b])
-    agent_receiver.set_serial(serial_folder.serial)
+    serial_folder = site.push_config([relay_id_a, relay_id_b])
+    agent_receiver.apply_config(serial_folder)
 
     # Simulate user activation. Call to the endpoint that creates a ActivateConfigTask for each relay
     with agent_receiver.with_client_ip("127.0.0.1"):
@@ -109,7 +106,6 @@ def test_activation_performed_twice_with_same_config(
 def test_activation_performed_twice_with_new_config(
     site: SiteMock,
     agent_receiver: AgentReceiverClient,
-    site_context: Config,
     site_name: str,
 ) -> None:
     """Verify that performing activation with a new configuration creates new config tasks with the updated serial.
@@ -124,8 +120,8 @@ def test_activation_performed_twice_with_new_config(
     relay_id_b = str(uuid.uuid4())
     site.set_scenario([relay_id_a, relay_id_b])
 
-    config_a = create_config_folder(site_context.omd_root, [relay_id_a, relay_id_b])
-    agent_receiver.set_serial(config_a.serial)
+    config_a = site.push_config([relay_id_a, relay_id_b])
+    agent_receiver.apply_config(config_a)
 
     # Simulate user activation. Call to the endpoint that creates a ActivateConfigTask for each relay
     with agent_receiver.with_client_ip("127.0.0.1"):
@@ -137,8 +133,8 @@ def test_activation_performed_twice_with_new_config(
     _assert_single_pending_config_task(agent_receiver, config_a, relay_id_b)
 
     # Create a new configuration folder simulating a new config activation by user
-    config_b = create_config_folder(site_context.omd_root, [relay_id_a, relay_id_b])
-    agent_receiver.set_serial(config_b.serial)
+    config_b = site.push_config([relay_id_a, relay_id_b])
+    agent_receiver.apply_config(config_b)
 
     # Simulate second user activation.
     with agent_receiver.with_client_ip("127.0.0.1"):
@@ -154,7 +150,6 @@ def test_new_relays_when_activation_performed(
     site: SiteMock,
     site_client: httpx.Client,
     agent_receiver: AgentReceiverClient,
-    site_context: Config,
     site_name: str,
 ) -> None:
     """Verify that activation creates config tasks for newly added relays while maintaining tasks for existing relays.
@@ -170,8 +165,8 @@ def test_new_relays_when_activation_performed(
     relay_id_c = str(uuid.uuid4())
     site.set_scenario(relays=[relay_id_a, relay_id_b], changes=[(relay_id_c, OP.ADD)])
 
-    config_a = create_config_folder(site_context.omd_root, [relay_id_a, relay_id_b])
-    agent_receiver.set_serial(config_a.serial)
+    config_a = site.push_config([relay_id_a, relay_id_b])
+    agent_receiver.apply_config(config_a)
 
     # Simulate user activation. Call to the endpoint that creates a ActivateConfigTask for each relay
     with agent_receiver.with_client_ip("127.0.0.1"):
@@ -195,8 +190,8 @@ def test_new_relays_when_activation_performed(
         },
     )
     # Create a new configuration folder with new relays in site simulating a new config activation by user
-    config_b = create_config_folder(site_context.omd_root, [relay_id_a, relay_id_b, relay_id_c])
-    agent_receiver.set_serial(config_b.serial)
+    config_b = site.push_config([relay_id_a, relay_id_b, relay_id_c])
+    agent_receiver.apply_config(config_b)
 
     # Simulate second user activation.
     with agent_receiver.with_client_ip("127.0.0.1"):
@@ -213,7 +208,6 @@ def test_removed_relays_when_activation_performed(
     site: SiteMock,
     site_client: httpx.Client,
     agent_receiver: AgentReceiverClient,
-    site_context: Config,
     site_name: str,
 ) -> None:
     """Verify that activation correctly handles scenarios where relays have been removed from the configuration.
@@ -228,8 +222,8 @@ def test_removed_relays_when_activation_performed(
     relay_id_b = str(uuid.uuid4())
     site.set_scenario(relays=[relay_id_a, relay_id_b], changes=[(relay_id_a, OP.DEL)])
 
-    config_a = create_config_folder(site_context.omd_root, [relay_id_a, relay_id_b])
-    agent_receiver.set_serial(config_a.serial)
+    config_a = site.push_config([relay_id_a, relay_id_b])
+    agent_receiver.apply_config(config_a)
 
     # Simulate user activation. Call to the endpoint that creates a ActivateConfigTask for each relay
     with agent_receiver.with_client_ip("127.0.0.1"):
@@ -243,8 +237,8 @@ def test_removed_relays_when_activation_performed(
     # Remove relay_a in the site mock
     site_client.delete(f"/objects/relay/{relay_id_a}")
     # Create a new configuration folder with new relays in site simulating a new config activation by user
-    config_b = create_config_folder(site_context.omd_root, [relay_id_b])
-    agent_receiver.set_serial(config_b.serial)
+    config_b = site.push_config([relay_id_b])
+    agent_receiver.apply_config(config_b)
 
     # Simulate second user activation.
     with agent_receiver.with_client_ip("127.0.0.1"):
@@ -262,7 +256,6 @@ def test_removed_relays_when_activation_performed(
 def test_activation_with_no_relays(
     site: SiteMock,
     agent_receiver: AgentReceiverClient,
-    site_context: Config,
     site_name: str,
 ) -> None:
     """Verify that config activation succeeds gracefully when no relays are configured.
@@ -275,8 +268,7 @@ def test_activation_with_no_relays(
     # Start AR with no relays configured in the site
     site.set_scenario([])
 
-    cf = create_config_folder(site_context.omd_root, [])
-    agent_receiver.set_serial(cf.serial)
+    agent_receiver.apply_config(site.push_config([]))
 
     # Simulate user activation with no relays
     with agent_receiver.with_client_ip("127.0.0.1"):
@@ -290,7 +282,6 @@ def test_activation_with_no_relays(
 def test_activation_with_mixed_relay_task_states(
     site: SiteMock,
     agent_receiver: AgentReceiverClient,
-    site_context: Config,
     site_name: str,
 ) -> None:
     """Verify that activation creates new pending tasks only for relays whose previous config tasks are finished, not for those with pending tasks.
@@ -305,8 +296,8 @@ def test_activation_with_mixed_relay_task_states(
     relay_id_b = str(uuid.uuid4())
     site.set_scenario([relay_id_a, relay_id_b])
 
-    serial_folder = create_config_folder(site_context.omd_root, [relay_id_a, relay_id_b])
-    agent_receiver.set_serial(serial_folder.serial)
+    serial_folder = site.push_config([relay_id_a, relay_id_b])
+    agent_receiver.apply_config(serial_folder)
 
     # First activation - creates pending tasks for both relays
     with agent_receiver.with_client_ip("127.0.0.1"):
@@ -353,7 +344,6 @@ def test_activation_with_mixed_relay_task_states(
 def test_activation_with_relay_pending_activation_handles_gracefully(
     site: SiteMock,
     agent_receiver: AgentReceiverClient,
-    site_context: Config,
     site_name: str,
 ) -> None:
     """Verify that activation gracefully handles relays pending activation without errors.
@@ -381,10 +371,8 @@ def test_activation_with_relay_pending_activation_handles_gracefully(
 
     # Create config folders only for two relays - third relay is pending activation
     # This simulates the scenario where a relay is registered but not yet configured
-    serial_folder = create_config_folder(
-        site_context.omd_root, [relay_id_configured_1, relay_id_configured_2]
-    )
-    agent_receiver.set_serial(serial_folder.serial)
+    serial_folder = site.push_config([relay_id_configured_1, relay_id_configured_2])
+    agent_receiver.apply_config(serial_folder)
 
     # Perform config activation - this should succeed despite pending relay
     with agent_receiver.with_client_ip("127.0.0.1"):

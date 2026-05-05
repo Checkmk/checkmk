@@ -32,7 +32,7 @@ from cmk.relay_protocols.tasks import (
 )
 from cmk.testlib.agent_receiver import certs as certslib
 from cmk.testlib.agent_receiver.agent_receiver import AgentReceiverClient, register_relay
-from cmk.testlib.agent_receiver.config_file_system import ConfigFolder, create_config_folder
+from cmk.testlib.agent_receiver.config_file_system import ConfigFolder
 from cmk.testlib.agent_receiver.mock_socket import create_socket
 from cmk.testlib.agent_receiver.site_mock import OP, SiteMock, User
 from cmk.testlib.agent_receiver.tasks import get_relay_tasks, push_task
@@ -58,7 +58,6 @@ def relay_in_pending_deletion(
     site: SiteMock,
     site_client: httpx.Client,
     agent_receiver: AgentReceiverClient,
-    site_context: Config,
     site_name: str,
 ) -> Iterator[tuple[RelayID, ConfigFolder]]:
     """Set up a relay that is registered, activated, fully operational, then put into
@@ -72,8 +71,8 @@ def relay_in_pending_deletion(
 
     # Register relay and create config folder
     register_relay(agent_receiver, "test_relay", relay_id)
-    serial_folder = create_config_folder(site_context.omd_root, [relay_id])
-    agent_receiver.set_serial(serial_folder.serial)
+    serial_folder = site.push_config([relay_id])
+    agent_receiver.apply_config(serial_folder)
 
     # Activate config - relay is operating normally
     with agent_receiver.with_client_ip("127.0.0.1"):

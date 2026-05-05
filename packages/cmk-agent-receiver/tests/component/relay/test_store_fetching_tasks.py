@@ -6,10 +6,8 @@
 import uuid
 from http import HTTPStatus
 
-from cmk.agent_receiver.lib.config import Config
 from cmk.relay_protocols.tasks import FetchAdHocTask
 from cmk.testlib.agent_receiver.agent_receiver import AgentReceiverClient
-from cmk.testlib.agent_receiver.config_file_system import create_config_folder
 from cmk.testlib.agent_receiver.site_mock import SiteMock
 from cmk.testlib.agent_receiver.tasks import get_relay_tasks, push_task
 
@@ -17,7 +15,6 @@ from cmk.testlib.agent_receiver.tasks import get_relay_tasks, push_task
 def test_store_fetching_task(
     agent_receiver: AgentReceiverClient,
     site: SiteMock,
-    site_context: Config,
     site_name: str,
 ) -> None:
     """Verify that a fetching task can be stored and later retrieved with the correct payload.
@@ -29,8 +26,7 @@ def test_store_fetching_task(
     """
     relay_id = str(uuid.uuid4())
     site.set_scenario(relay_id)
-    cf = create_config_folder(root=site_context.omd_root, relays=[relay_id])
-    agent_receiver.set_serial(cf.serial)
+    agent_receiver.apply_config(site.push_config([relay_id]))
 
     push_task(
         agent_receiver=agent_receiver,
@@ -48,7 +44,6 @@ def test_store_fetching_task(
 def test_store_fetching_tasks_does_not_affect_other_relays(
     agent_receiver: AgentReceiverClient,
     site: SiteMock,
-    site_context: Config,
     site_name: str,
 ) -> None:
     """Verify that storing tasks for one relay does not affect the tasks of other relays.
@@ -62,8 +57,7 @@ def test_store_fetching_tasks_does_not_affect_other_relays(
     relay_id_B = str(uuid.uuid4())
     site.set_scenario([relay_id_A, relay_id_B])
 
-    cf = create_config_folder(root=site_context.omd_root, relays=[relay_id_A, relay_id_B])
-    agent_receiver.set_serial(cf.serial)
+    agent_receiver.apply_config(site.push_config([relay_id_A, relay_id_B]))
 
     push_task(
         agent_receiver=agent_receiver,
@@ -94,7 +88,6 @@ def test_store_fetching_tasks_does_not_affect_other_relays(
 def test_store_fetching_task_non_existent_relay(
     agent_receiver: AgentReceiverClient,
     site: SiteMock,
-    site_context: Config,
     site_name: str,
 ) -> None:
     """Verify that tasks can be stored for a relay even when the relay does not have a configured folder.
@@ -106,8 +99,7 @@ def test_store_fetching_task_non_existent_relay(
     """
     relay_id = str(uuid.uuid4())
     site.set_scenario(relay_id)
-    cf = create_config_folder(root=site_context.omd_root, relays=[])
-    agent_receiver.set_serial(cf.serial)
+    agent_receiver.apply_config(site.push_config([]))
 
     with agent_receiver.with_client_ip("127.0.0.1"):
         response = agent_receiver.push_task(

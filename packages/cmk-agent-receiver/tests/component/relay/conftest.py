@@ -114,7 +114,9 @@ def site(wiremock: Wiremock, user: User, site_context: Config) -> SiteMock:
     Create a site mock instance.
     """
     wiremock.reset()
-    return SiteMock(wiremock, site_context.site_name, user, internal_credentials())
+    return SiteMock(
+        wiremock, site_context.site_name, user, internal_credentials(), site_context.omd_root
+    )
 
 
 @pytest.fixture

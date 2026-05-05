@@ -923,7 +923,10 @@ py_library(
     ],
     deps = [
         ":config",
+        ":i18n",
         ":logged_in",
+        ":permissions",
+        "//cmk/gui/utils:agent",
         "//cmk/gui/utils:urls",
         "//packages/cmk-ccc:hostaddress",
         "//packages/cmk-ccc:plugin-registry",

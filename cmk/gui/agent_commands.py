@@ -10,12 +10,16 @@ from urllib.parse import urlparse
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.plugin_registry import Registry
 from cmk.gui.config import Config
-from cmk.gui.logged_in import user
+from cmk.gui.i18n import _
+from cmk.gui.logged_in import LoggedInUser, user
+from cmk.gui.permissions import PermissionRegistry
+from cmk.gui.utils.agent import raw_linux_agent_wget_commands
 from cmk.gui.utils.urls import doc_reference_url, DocReference, DocReferenceUtm
 from cmk.shared_typing.agent_slideout import (
     AgentInstallCmds,
     AgentRegistrationCmds,
     AgentStatusCmds,
+    UnbakedFallback,
 )
 from cmk.shared_typing.mode_host import (
     AgentInstallCmds as ModeHostAgentInstallCmds,
@@ -32,11 +36,15 @@ from cmk.shared_typing.mode_host import (
 from cmk.shared_typing.mode_host import (
     ModeHostServerPerSite,
 )
+from cmk.shared_typing.mode_host import (
+    UnbakedFallback as ModeHostUnbakedFallback,
+)
 from cmk.shared_typing.setup import AgentDownloadServerPerSite
 from cmk.shared_typing.setup import AgentInstallCmds as SetupAgentInstallCmds
 from cmk.shared_typing.setup import AgentRegistrationCmds as SetupAgentRegistrationCmds
 from cmk.shared_typing.setup import AgentSlideout as SetupAgentSlideout
 from cmk.shared_typing.setup import AgentStatusCmds as SetupAgentStatusCmds
+from cmk.shared_typing.setup import UnbakedFallback as SetupUnbakedFallback
 
 WINDOWS_AGENT_DOWNLOAD_CMD = (
     "curl.exe -o check-mk-agent_{version}.msi -fG"
@@ -153,12 +161,34 @@ def build_agent_status_cmds() -> AgentStatusCmds:
     )
 
 
+def baked_agents_available(
+    logged_in_user: LoggedInUser,
+    permission_registry: PermissionRegistry,
+) -> bool:
+    """True if the current user can fetch baked agents from the Agent Bakery."""
+    if "wato.agents" not in permission_registry:
+        return False
+    return logged_in_user.may("wato.agents") and logged_in_user.may("wato.download_agents")
+
+
+def _community_unbaked_fallback(available: bool, version: str) -> UnbakedFallback | None:
+    if available:
+        return None
+    return UnbakedFallback(
+        intro=_("Use the following command to download an agent package in basic configuration:"),
+        commands=raw_linux_agent_wget_commands(version),
+    )
+
+
 @dataclass(kw_only=True)
 class AgentCommands:
     install_cmds: Callable[[str, HostName], AgentInstallCmds]
     registration_cmds: Callable[[], AgentRegistrationCmds]
     status_cmds: Callable[[], AgentStatusCmds]
     legacy_agent_url: Callable[[], str | None] = lambda: None
+    unbaked_fallback: Callable[[bool, str], UnbakedFallback | None] = lambda _available, _version: (
+        None
+    )
 
 
 class AgentCommandsRegistry(Registry[AgentCommands]):
@@ -180,6 +210,7 @@ def register(registry: AgentCommandsRegistry) -> None:
                 DocReferenceUtm(campaign="inline_help", content="setup.agent_linux_legacy"),
                 DocReference.AGENT_LINUX_LEGACY,
             ),
+            unbaked_fallback=_community_unbaked_fallback,
         )
     )
 
@@ -227,8 +258,9 @@ def get_agent_slideout(
     agent_install_cls: type[SetupAgentInstallCmds | ModeHostAgentInstallCmds],
     agent_registration_cls: type[SetupAgentRegistrationCmds | ModeHostAgentRegistrationCmds],
     agent_status_cls: type[SetupAgentStatusCmds | ModeHostAgentStatusCmds],
+    unbaked_fallback_cls: type[SetupUnbakedFallback],
     version: str,
-    can_download_baked_agents: bool,
+    baked_agents_available: bool,
 ) -> SetupAgentSlideout: ...
 
 
@@ -243,8 +275,9 @@ def get_agent_slideout(
     agent_install_cls: type[SetupAgentInstallCmds | ModeHostAgentInstallCmds],
     agent_registration_cls: type[SetupAgentRegistrationCmds | ModeHostAgentRegistrationCmds],
     agent_status_cls: type[SetupAgentStatusCmds | ModeHostAgentStatusCmds],
+    unbaked_fallback_cls: type[ModeHostUnbakedFallback],
     version: str,
-    can_download_baked_agents: bool,
+    baked_agents_available: bool,
 ) -> ModeHostAgentSlideout: ...
 
 
@@ -258,24 +291,21 @@ def get_agent_slideout(
     agent_install_cls: type,
     agent_registration_cls: type,
     agent_status_cls: type,
+    unbaked_fallback_cls: type,
     version: str,
-    can_download_baked_agents: bool,
+    baked_agents_available: bool,
 ) -> Any:
+    commands = agent_commands_registry["agent_commands"]
+    fallback = commands.unbaked_fallback(baked_agents_available, version)
     return agent_slideout_cls(
         all_agents_url=all_agents_url,
         user_settings_url=user_settings_url,
         host_name=hostname,
-        agent_install_cmds=agent_install_cls(
-            **asdict(agent_commands_registry["agent_commands"].install_cmds(version, hostname))
-        ),
-        agent_registration_cmds=agent_registration_cls(
-            **asdict(agent_commands_registry["agent_commands"].registration_cmds())
-        ),
-        agent_status_cmds=agent_status_cls(
-            **asdict(agent_commands_registry["agent_commands"].status_cmds())
-        ),
-        legacy_agent_url=agent_commands_registry["agent_commands"].legacy_agent_url(),
+        agent_install_cmds=agent_install_cls(**asdict(commands.install_cmds(version, hostname))),
+        agent_registration_cmds=agent_registration_cls(**asdict(commands.registration_cmds())),
+        agent_status_cmds=agent_status_cls(**asdict(commands.status_cmds())),
+        legacy_agent_url=commands.legacy_agent_url(),
         save_host=save_host,
         host_exists=host_exists,
-        can_download_baked_agents=can_download_baked_agents,
+        unbaked_fallback=None if fallback is None else unbaked_fallback_cls(**asdict(fallback)),
     )

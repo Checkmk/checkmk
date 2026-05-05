@@ -33,6 +33,7 @@ from cmk.ccc.site import get_agent_receiver_port, omd_site, SiteId
 from cmk.ccc.version import Edition, omd_version
 from cmk.gui import forms, user_sites
 from cmk.gui.agent_commands import (
+    baked_agents_available,
     get_agent_slideout,
     get_server_per_site,
 )
@@ -124,6 +125,7 @@ from cmk.shared_typing.mode_host import (
     ModeHostFormKeys,
     ModeHostServerPerSite,
     ModeHostSite,
+    UnbakedFallback,
 )
 from cmk.utils.agent_registration import HostAgentConnectionMode, UUIDStore
 from cmk.utils.paths import omd_root, uuid_lookup_dir
@@ -396,9 +398,7 @@ class ABCHostMode(WatoMode, abc.ABC):
         form_name: Final[str] = "edit_host"
         version = ".".join(omd_version(omd_root).split(".")[:-1])
         hostname = self._host.name()
-        can_download_baked_agents = "wato.agents" not in permission_registry or (
-            user.may("wato.agents") and user.may("wato.download_agents")
-        )
+        bakery_available = baked_agents_available(user, permission_registry)
         html.vue_component(
             component_name="cmk-mode-host",
             data=asdict(
@@ -463,8 +463,9 @@ class ABCHostMode(WatoMode, abc.ABC):
                         agent_install_cls=AgentInstallCmds,
                         agent_registration_cls=AgentRegistrationCmds,
                         agent_status_cls=AgentStatusCmds,
+                        unbaked_fallback_cls=UnbakedFallback,
                         version=version,
-                        can_download_baked_agents=can_download_baked_agents,
+                        baked_agents_available=bakery_available,
                     ),
                     host_name=hostname,
                     is_registered=(

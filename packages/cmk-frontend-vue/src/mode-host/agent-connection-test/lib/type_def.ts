@@ -3,6 +3,8 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
+import type { UnbakedFallback } from 'cmk-shared-typing/typescript/agent_slideout'
+
 import type { TranslatedString } from '@/lib/i18nString'
 
 import type { SimpleIcons } from '@/components/CmkIcon'
@@ -50,6 +52,7 @@ export interface AgentSlideOutTabs {
   statusCmdVariants?: StatusCmdVariant[]
   installUrl?: InstallUrl | undefined
   subTabs?: AgentSlideOutSubTab[]
+  unbakedFallback?: UnbakedFallback | undefined
 }
 
 export interface InstallUrl {

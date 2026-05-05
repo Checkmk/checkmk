@@ -7,7 +7,8 @@ conditions defined in the file COPYING, which is part of this source code packag
 import {
   type AgentInstallCmds,
   type AgentRegistrationCmds,
-  type AgentStatusCmds
+  type AgentStatusCmds,
+  type UnbakedFallback
 } from 'cmk-shared-typing/typescript/agent_slideout'
 import { computed } from 'vue'
 
@@ -36,7 +37,7 @@ const props = defineProps<{
   setupError: boolean
   agentInstalled: boolean
   isPushMode: boolean
-  canDownloadBakedAgents: boolean
+  unbakedFallback: UnbakedFallback | null
 }>()
 
 const { _t } = usei18n()
@@ -76,6 +77,15 @@ function replaceMacros(cmd: string | undefined, isRegistration: boolean) {
     props.siteServer || `${window.location.protocol}//${window.location.host}`
   )
 }
+
+const linuxUnbakedFallback = computed<UnbakedFallback | undefined>(() =>
+  props.unbakedFallback === null
+    ? undefined
+    : {
+        intro: props.unbakedFallback.intro,
+        commands: props.unbakedFallback.commands.map((cmd) => replaceMacros(cmd, false))
+      }
+)
 
 const tabs = computed<AgentSlideOutTabs[]>(() => [
   {
@@ -143,6 +153,7 @@ const tabs = computed<AgentSlideOutTabs[]>(() => [
           icon: 'learning-guide'
         }
       : undefined,
+    unbakedFallback: linuxUnbakedFallback.value,
     registrationMsg: _t(
       'After you have installed the agent, run this command on your Linux host to register the Checkmk agent controller.'
     ),
@@ -249,7 +260,6 @@ const tabs = computed<AgentSlideOutTabs[]>(() => [
     :host-name="hostName"
     :is-push-mode="isPushMode"
     :agent-receiver-port-is-default="agentReceiverPortIsDefault"
-    :can-download-baked-agents="canDownloadBakedAgents"
     @close="close"
   />
 </template>

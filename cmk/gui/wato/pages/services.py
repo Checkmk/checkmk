@@ -31,7 +31,11 @@ from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import omd_site, SiteId
 from cmk.ccc.version import __version__, Edition, omd_version, Version
 from cmk.checkengine.discovery import CheckPreviewEntry
-from cmk.gui.agent_commands import get_agent_slideout, get_server_per_site
+from cmk.gui.agent_commands import (
+    baked_agents_available,
+    get_agent_slideout,
+    get_server_per_site,
+)
 from cmk.gui.background_job.job import JobStatusStates
 from cmk.gui.breadcrumb import Breadcrumb, make_main_menu_breadcrumb
 from cmk.gui.config import active_config, Config
@@ -113,6 +117,7 @@ from cmk.shared_typing.setup import (
     AgentRegistrationCmds,
     AgentSlideout,
     AgentStatusCmds,
+    UnbakedFallback,
 )
 from cmk.utils.automation_config import LocalAutomationConfig, RemoteAutomationConfig
 from cmk.utils.check_utils import worst_service_state
@@ -827,9 +832,9 @@ class DiscoveryPageRenderer:
                         agent_install_cls=AgentInstallCmds,
                         agent_registration_cls=AgentRegistrationCmds,
                         agent_status_cls=AgentStatusCmds,
+                        unbaked_fallback_cls=UnbakedFallback,
                         version=version,
-                        can_download_baked_agents="wato.agents" not in permission_registry
-                        or (user.may("wato.agents") and user.may("wato.download_agents")),
+                        baked_agents_available=baked_agents_available(user, permission_registry),
                     ),
                 )
             ),

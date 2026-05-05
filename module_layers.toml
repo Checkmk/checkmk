@@ -382,6 +382,7 @@ allows = [
   "cmk.licensing.nonfree",
   "cmk.multi_tenancy.shared",
   "cmk.server_side_calls_backend",
+  "cmk.snmplib",
   "cmk.telemetry",
   "cmk.utils",
 ]

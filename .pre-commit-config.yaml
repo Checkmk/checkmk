@@ -26,6 +26,7 @@ repos:
       rev: v4.6.0
       hooks:
           - id: trailing-whitespace
+            exclude: ^.*\.patch$
           - id: check-merge-conflict
             types: [file]
           - id: check-yaml # pre-commit cannot parse utf-16 files
@@ -35,7 +36,7 @@ repos:
                     ^agents/wnx/test_files/config/check_mk_dev_utf16.yml
                 )
           - id: end-of-file-fixer
-            exclude: .werks/.*
+            exclude: '.werks/.*|.*\.patch$'
           - id: fix-encoding-pragma
             args: ["--remove"]
             exclude: |

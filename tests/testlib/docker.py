@@ -372,10 +372,10 @@ class CheckmkApp:
 
         if self.package_info.edition.is_cloud_edition():
             from tests.testlib.nonfree.cloud.utils import (  # type: ignore[import-untyped, unused-ignore, import-not-found]
-                create_cse_initial_config,
+                create_cloud_initial_config,
             )
 
-            create_cse_initial_config(root=Path(cse_config_root))
+            create_cloud_initial_config(root=Path(cse_config_root))
 
         try:
             if self.name is None:

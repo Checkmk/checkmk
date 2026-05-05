@@ -5,7 +5,8 @@
 
 import logging
 import os
-from collections.abc import Iterator
+from collections.abc import Callable, Iterator
+from contextlib import AbstractContextManager
 from pathlib import Path
 from shutil import which
 from typing import Literal
@@ -31,6 +32,32 @@ from tests.testlib.site import (
 
 site_factory = get_site_factory(prefix="comp_")
 
+
+def _cloud_lifecycle_wrapper_or_none() -> Callable[[Site], AbstractContextManager[None]] | None:
+    if not site_factory.edition.is_cloud_edition():
+        return None
+
+    def _wrapper(site: Site) -> AbstractContextManager[None]:
+        from tests.testlib.nonfree.cloud.utils import (  # type: ignore[import-untyped, unused-ignore, import-not-found]
+            cloud_environment,
+        )
+
+        ctx: AbstractContextManager[None] = cloud_environment(site.apache_port)
+        return ctx
+
+    return _wrapper
+
+
+def _ensure_cloud_initial_config() -> None:
+    if not site_factory.edition.is_cloud_edition():
+        return
+    from tests.testlib.nonfree.cloud.utils import (  # type: ignore[import-untyped, unused-ignore, import-not-found]
+        create_cloud_initial_config,
+    )
+
+    create_cloud_initial_config()
+
+
 logger = logging.getLogger(__name__)
 
 
@@ -41,6 +68,7 @@ def instrument_requests() -> None:
 
 @pytest.fixture(name="central_site", scope="session")
 def _central_site(request: pytest.FixtureRequest, ensure_cron: None) -> Iterator[Site]:
+    _ensure_cloud_initial_config()
     with site_factory.get_test_site_ctx(
         "central",
         description=request.node.name,
@@ -62,6 +90,7 @@ def _central_site(request: pytest.FixtureRequest, ensure_cron: None) -> Iterator
                 update={"agent_bakery_logging": 10},
             ),
         ],
+        lifecycle_wrapper=_cloud_lifecycle_wrapper_or_none(),
     ) as central_site:
         yield central_site
 
@@ -85,11 +114,13 @@ def _make_connected_remote_site(
     central_site: Site,
     site_description: str,
 ) -> Iterator[Site]:
+    _ensure_cloud_initial_config()
     with site_factory.get_test_site_ctx(
         site_name,
         description=site_description,
         auto_restart_httpd=True,
         tracing_config=tracing_config_from_env(os.environ),
+        lifecycle_wrapper=_cloud_lifecycle_wrapper_or_none(),
     ) as remote_site:
         with connection(central_site=central_site, remote_site=remote_site):
             yield remote_site

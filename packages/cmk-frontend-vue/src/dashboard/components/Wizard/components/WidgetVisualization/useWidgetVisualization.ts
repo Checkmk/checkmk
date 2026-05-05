@@ -72,6 +72,7 @@ export const useWidgetVisualizationProps = (
 
   watch(titleUrlEnabled, () => {
     titleUrl.value = ''
+    titleUrlValidationErrors.value = []
   })
 
   const validate = () => {
@@ -84,6 +85,14 @@ export const useWidgetVisualizationProps = (
     titleUrlValidationErrors.value.push(_t('Value must be a valid URL'))
     return false
   }
+
+  watch(titleUrl, (newValue) => {
+    if (!titleUrlEnabled.value || newValue === '') {
+      titleUrlValidationErrors.value = []
+      return
+    }
+    validate()
+  })
 
   const dashboardConstants = useInjectDashboardConstants()
 

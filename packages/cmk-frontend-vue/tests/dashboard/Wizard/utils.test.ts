@@ -19,20 +19,30 @@ function mockFilterManager(
 }
 
 describe('isUrl', () => {
-  it('should return true for a valid relative URL', () => {
-    expect(isUrl('/some/path')).toBe(true)
+  it.each([
+    ['/some/path'],
+    ['https://example.com/path'],
+    ['http://example.com'],
+    ['view.py?label=cmk/os:linux'],
+    ['dashboard.py?name=main#frag'],
+    ['dashboard_view']
+  ])('returns true for valid URL %s', (url) => {
+    expect(isUrl(url)).toBe(true)
   })
 
-  it('should return true for a valid absolute URL', () => {
-    expect(isUrl('https://example.com/path')).toBe(true)
-  })
-
-  it('should return true for a simple string (permissive behavior with base URL)', () => {
-    expect(isUrl('dashboard_view')).toBe(true)
-  })
-
-  it('should return false for an invalid URL', () => {
-    expect(isUrl('http://')).toBe(false)
+  it.each([
+    [''],
+    ['http://'],
+    ['javascript:alert(1)'],
+    ['data:text/html,<h1>x'],
+    ['vbscript:msgbox(1)'],
+    ['ftp://example.com'],
+    ['mailto:foo@example.com'],
+    ['"><script>alert(1)</script>'],
+    ['foo<bar'],
+    ['foo`bar']
+  ])('returns false for invalid URL %s', (url) => {
+    expect(isUrl(url)).toBe(false)
   })
 })
 

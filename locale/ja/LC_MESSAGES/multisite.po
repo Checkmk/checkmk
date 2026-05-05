@@ -51894,6 +51894,10 @@ msgstr ""
 msgid "Port"
 msgstr "ポート"
 
+#, python-format
+msgid "Port %d is already in use by site '%s' (key: %s)."
+msgstr ""
+
 msgid "Port ID"
 msgstr "ポートID"
 
@@ -61778,14 +61782,6 @@ msgstr ""
 "更新できます。<br><br><b>動的IPアドレスのみ:</b><br>DNS名を入力すると、ホスト"
 "をチェックするたびにDNS解決が実行されます。CheckmkのDNSキャッシュは照会されま"
 "せん。"
-
-#, fuzzy
-msgid "Specify at least one resource to cache."
-msgstr "少なくとも1つのタグを指定してください。"
-
-#, fuzzy
-msgid "Specify at least one section."
-msgstr "少なくとも1回は指定してください。"
 
 msgid ""
 "Specify at which time period a new file for the event history will be "
@@ -91994,6 +91990,17 @@ msgstr "ルール分析のために通知を保存する"
 msgid "Additional graph options"
 msgstr "追加オプション"
 
+msgid "Owner (private)"
+msgstr ""
+
+#, fuzzy
+msgid "No contact groups found"
+msgstr "連絡先グループは割り当てられていません。"
+
+#, fuzzy
+msgid "Users of site"
+msgstr "サイトのサービス"
+
 #, fuzzy
 msgid "Unrestricted"
 msgstr "未登録"
@@ -92031,17 +92038,6 @@ msgstr "カスタムグラフのクローンを作成する"
 #, fuzzy
 msgid "Select a custom graph"
 msgstr "カスタムグラフのクローンを作成する"
-
-msgid "Owner (private)"
-msgstr ""
-
-#, fuzzy
-msgid "No contact groups found"
-msgstr "連絡先グループは割り当てられていません。"
-
-#, fuzzy
-msgid "Users of site"
-msgstr "サイトのサービス"
 
 #, fuzzy
 msgid "Enter description"
@@ -92319,19 +92315,6 @@ msgstr "ファイル選択"
 msgid "Data range"
 msgstr "データ範囲"
 
-msgid "Only show current value"
-msgstr "現在の値のみを表示"
-
-msgid "Show historic values"
-msgstr "歴史的価値観を示す"
-
-#, fuzzy
-msgid "Fixed data range"
-msgstr "固定範囲"
-
-msgid "Service status"
-msgstr "サービスステータス"
-
 #, fuzzy
 msgid "Show colored status label"
 msgstr "色付きのステータスラベルを表示する"
@@ -92348,6 +92331,19 @@ msgstr "OK以外の状態"
 #, fuzzy
 msgid "Show colored metric background"
 msgstr "色付きのバックグラウンド"
+
+msgid "Only show current value"
+msgstr "現在の値のみを表示"
+
+msgid "Show historic values"
+msgstr "歴史的価値観を示す"
+
+#, fuzzy
+msgid "Fixed data range"
+msgstr "固定範囲"
+
+msgid "Service status"
+msgstr "サービスステータス"
 
 msgid "Range limits"
 msgstr "範囲制限"
@@ -93809,19 +93805,16 @@ msgstr ""
 "す。ただし、有効にするにはアクティベーションが必要な場合があります。"
 
 #, fuzzy
-msgid "Create Telemetry hosts folder"
-msgstr "でゲートウェイホストを作成する"
-
-#, fuzzy
 msgid "Could not create the Telemetry hosts folder"
 msgstr "ゲートウェイホストを作成しないでください"
-
-msgid "Set up metric backend connector"
-msgstr ""
 
 #, fuzzy
 msgid "Could not create the metric backend connector"
 msgstr "パッケージを作成できませんでした: %s"
+
+#, fuzzy
+msgid "Dynamic host management setup"
+msgstr "動的ホスト管理"
 
 #, fuzzy
 msgid "OpenTelemetry Collector activation"
@@ -93846,6 +93839,10 @@ msgstr "変更を保存できませんでした: %s"
 #, fuzzy
 msgid "The password was rejected by the server."
 msgstr "ユーザーのパスワード。"
+
+#, fuzzy
+msgid "Collector configuration"
+msgstr "メトリック設定"
 
 #, fuzzy
 msgid "Could not create the OpenTelemetry Collector configuration"
@@ -94868,6 +94865,18 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Specify at least one resource to cache."
+#~ msgstr "少なくとも1つのタグを指定してください。"
+
+#, fuzzy
+#~ msgid "Specify at least one section."
+#~ msgstr "少なくとも1回は指定してください。"
+
+#, fuzzy
+#~ msgid "Create Telemetry hosts folder"
+#~ msgstr "でゲートウェイホストを作成する"
 
 #~ msgid "Kube-proxy version"
 #~ msgstr "Kube-proxy バージョン"

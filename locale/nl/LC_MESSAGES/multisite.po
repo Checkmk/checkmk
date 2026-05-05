@@ -54791,6 +54791,10 @@ msgstr ""
 msgid "Port"
 msgstr "Haven"
 
+#, python-format
+msgid "Port %d is already in use by site '%s' (key: %s)."
+msgstr ""
+
 #, fuzzy
 msgid "Port ID"
 msgstr "Haven"
@@ -65109,14 +65113,6 @@ msgstr ""
 "<br><br><b>Alleen dynamische IP-adressen:</b><br>Als u hier een DNS-naam "
 "invoert, zal de DNS-resolutie elke keer dat de host wordt gecontroleerd "
 "worden uitgevoerd. Checkmk's DNS cache wordt <b>NOT</b> bevraagd."
-
-#, fuzzy
-msgid "Specify at least one resource to cache."
-msgstr "Geef ten minste één tag op."
-
-#, fuzzy
-msgid "Specify at least one section."
-msgstr "Geef minstens één keer op."
 
 msgid ""
 "Specify at which time period a new file for the event history will be "
@@ -97114,6 +97110,17 @@ msgstr "Meldingen opslaan voor regelanalyse"
 msgid "Additional graph options"
 msgstr "Extra opties"
 
+msgid "Owner (private)"
+msgstr ""
+
+#, fuzzy
+msgid "No contact groups found"
+msgstr "Geen contactgroepen toegewezen."
+
+#, fuzzy
+msgid "Users of site"
+msgstr "Diensten van Site"
+
 #, fuzzy
 msgid "Unrestricted"
 msgstr "Niet-geregistreerd"
@@ -97151,17 +97158,6 @@ msgstr "Kloon aangepaste grafiek"
 #, fuzzy
 msgid "Select a custom graph"
 msgstr "Kloon aangepaste grafiek"
-
-msgid "Owner (private)"
-msgstr ""
-
-#, fuzzy
-msgid "No contact groups found"
-msgstr "Geen contactgroepen toegewezen."
-
-#, fuzzy
-msgid "Users of site"
-msgstr "Diensten van Site"
 
 #, fuzzy
 msgid "Enter description"
@@ -97442,19 +97438,6 @@ msgstr "Map Selectie"
 msgid "Data range"
 msgstr "Gegevensbereik"
 
-msgid "Only show current value"
-msgstr "Toon alleen huidige waarde"
-
-msgid "Show historic values"
-msgstr "Toon historische waarden"
-
-#, fuzzy
-msgid "Fixed data range"
-msgstr "Vast bereik"
-
-msgid "Service status"
-msgstr "Dienstverleningsstatus"
-
 #, fuzzy
 msgid "Show colored status label"
 msgstr "Toon een gekleurd status label"
@@ -97471,6 +97454,19 @@ msgstr "niet OK staten"
 #, fuzzy
 msgid "Show colored metric background"
 msgstr "Gekleurde achtergrond"
+
+msgid "Only show current value"
+msgstr "Toon alleen huidige waarde"
+
+msgid "Show historic values"
+msgstr "Toon historische waarden"
+
+#, fuzzy
+msgid "Fixed data range"
+msgstr "Vast bereik"
+
+msgid "Service status"
+msgstr "Dienstverleningsstatus"
 
 msgid "Range limits"
 msgstr "Bereik grenzen"
@@ -98953,19 +98949,16 @@ msgid ""
 msgstr ""
 
 #, fuzzy
-msgid "Create Telemetry hosts folder"
-msgstr "Maak gateway hosts in"
-
-#, fuzzy
 msgid "Could not create the Telemetry hosts folder"
 msgstr "geen gateway hosts aanmaken"
-
-msgid "Set up metric backend connector"
-msgstr ""
 
 #, fuzzy
 msgid "Could not create the metric backend connector"
 msgstr "Kon pakket niet aanmaken: %s"
+
+#, fuzzy
+msgid "Dynamic host management setup"
+msgstr "Dynamisch hostbeheer"
 
 #, fuzzy
 msgid "OpenTelemetry Collector activation"
@@ -98990,6 +98983,10 @@ msgstr "Kon wijzigingen niet opslaan: %s"
 #, fuzzy
 msgid "The password was rejected by the server."
 msgstr "Wachtwoord van de gebruiker"
+
+#, fuzzy
+msgid "Collector configuration"
+msgstr "Host configuratie"
 
 #, fuzzy
 msgid "Could not create the OpenTelemetry Collector configuration"
@@ -99996,6 +99993,18 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Specify at least one resource to cache."
+#~ msgstr "Geef ten minste één tag op."
+
+#, fuzzy
+#~ msgid "Specify at least one section."
+#~ msgstr "Geef minstens één keer op."
+
+#, fuzzy
+#~ msgid "Create Telemetry hosts folder"
+#~ msgstr "Maak gateway hosts in"
 
 #~ msgid "Kube-proxy version"
 #~ msgstr "Kube-proxy versie"

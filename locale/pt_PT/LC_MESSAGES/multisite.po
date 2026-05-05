@@ -4,7 +4,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
+"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
 "PO-Revision-Date: 2026-05-01 17:50+0000\n"
 "Language-Team: Portuguese (Portugal) <https://translate.checkmk.com/projects/"
@@ -54776,6 +54776,10 @@ msgstr ""
 msgid "Port"
 msgstr "Porto"
 
+#, python-format
+msgid "Port %d is already in use by site '%s' (key: %s)."
+msgstr ""
+
 #, fuzzy
 msgid "Port ID"
 msgstr "Porto"
@@ -65114,14 +65118,6 @@ msgstr ""
 "update-dns-cache</tt>.<br><br><b>Apenas endereços IP dinâmicos:</b><br>Se "
 "introduzir um nome DNS aqui, a resolução DNS será efectuada sempre que o "
 "anfitrião for verificado. O cache DNS do Checkmk <b>NÃO</b> é consultado."
-
-#, fuzzy
-msgid "Specify at least one resource to cache."
-msgstr "Por favor, especifique pelo menos uma etiqueta."
-
-#, fuzzy
-msgid "Specify at least one section."
-msgstr "Por favor, especifique pelo menos uma vez."
 
 msgid ""
 "Specify at which time period a new file for the event history will be "
@@ -93768,7 +93764,6 @@ msgstr "contando"
 msgid "cp437"
 msgstr "cp437"
 
-#, fuzzy
 msgid "crash report"
 msgid_plural "crash reports"
 msgstr[0] ""
@@ -94285,7 +94280,6 @@ msgstr "os anfitriões estão de pé e não têm problemas de serviço"
 msgid "hosts in total"
 msgstr "anfitriões no total"
 
-#, fuzzy
 msgid "hour"
 msgid_plural "hours"
 msgstr[0] ""
@@ -97010,6 +97004,17 @@ msgstr "Notas da loja para análise de regras"
 msgid "Additional graph options"
 msgstr "Opções adicionais"
 
+msgid "Owner (private)"
+msgstr ""
+
+#, fuzzy
+msgid "No contact groups found"
+msgstr "Não há grupos de contato designados."
+
+#, fuzzy
+msgid "Users of site"
+msgstr "Serviços do Site"
+
 #, fuzzy
 msgid "Unrestricted"
 msgstr "Não registado"
@@ -97047,17 +97052,6 @@ msgstr "Clonar gráfico personalizado"
 #, fuzzy
 msgid "Select a custom graph"
 msgstr "Clonar gráfico personalizado"
-
-msgid "Owner (private)"
-msgstr ""
-
-#, fuzzy
-msgid "No contact groups found"
-msgstr "Não há grupos de contato designados."
-
-#, fuzzy
-msgid "Users of site"
-msgstr "Serviços do Site"
 
 #, fuzzy
 msgid "Enter description"
@@ -97338,19 +97332,6 @@ msgstr "Seleção de Pasta"
 msgid "Data range"
 msgstr "Intervalo de dados"
 
-msgid "Only show current value"
-msgstr "Mostrar apenas o valor actual"
-
-msgid "Show historic values"
-msgstr "Mostrar valores históricos"
-
-#, fuzzy
-msgid "Fixed data range"
-msgstr "Alcance fixo"
-
-msgid "Service status"
-msgstr "Status do serviço"
-
 #, fuzzy
 msgid "Show colored status label"
 msgstr "Mostrar uma etiqueta de estado colorida"
@@ -97367,6 +97348,19 @@ msgstr "estados não OK"
 #, fuzzy
 msgid "Show colored metric background"
 msgstr "Fundo colorido"
+
+msgid "Only show current value"
+msgstr "Mostrar apenas o valor actual"
+
+msgid "Show historic values"
+msgstr "Mostrar valores históricos"
+
+#, fuzzy
+msgid "Fixed data range"
+msgstr "Alcance fixo"
+
+msgid "Service status"
+msgstr "Status do serviço"
 
 msgid "Range limits"
 msgstr "Limites de alcance"
@@ -98848,19 +98842,16 @@ msgid ""
 msgstr ""
 
 #, fuzzy
-msgid "Create Telemetry hosts folder"
-msgstr "Criar hospedeiros de gateway em"
-
-#, fuzzy
 msgid "Could not create the Telemetry hosts folder"
 msgstr "não criar hospedeiros de gateway"
-
-msgid "Set up metric backend connector"
-msgstr ""
 
 #, fuzzy
 msgid "Could not create the metric backend connector"
 msgstr "Não foi possível criar pacote: %s"
+
+#, fuzzy
+msgid "Dynamic host management setup"
+msgstr "Gestão dinâmica do hospedeiro"
 
 #, fuzzy
 msgid "OpenTelemetry Collector activation"
@@ -98885,6 +98876,10 @@ msgstr "Não foi possível salvar as mudanças: %s"
 #, fuzzy
 msgid "The password was rejected by the server."
 msgstr "Senha do usuário"
+
+#, fuzzy
+msgid "Collector configuration"
+msgstr "Configuração do anfitrião"
 
 #, fuzzy
 msgid "Could not create the OpenTelemetry Collector configuration"
@@ -99893,6 +99888,18 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Specify at least one resource to cache."
+#~ msgstr "Por favor, especifique pelo menos uma etiqueta."
+
+#, fuzzy
+#~ msgid "Specify at least one section."
+#~ msgstr "Por favor, especifique pelo menos uma vez."
+
+#, fuzzy
+#~ msgid "Create Telemetry hosts folder"
+#~ msgstr "Criar hospedeiros de gateway em"
 
 #~ msgid "Kube-proxy version"
 #~ msgstr "Versão do Kube-proxy"

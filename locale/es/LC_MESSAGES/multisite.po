@@ -55192,6 +55192,10 @@ msgstr ""
 msgid "Port"
 msgstr "Puerto"
 
+#, python-format
+msgid "Port %d is already in use by site '%s' (key: %s)."
+msgstr ""
+
 #, fuzzy
 msgid "Port ID"
 msgstr "Puerto"
@@ -65632,14 +65636,6 @@ msgstr ""
 "--update-dns-cache</tt>. Si introduce aquí un nombre DNS, la resolución DNS "
 "se realizará cada vez que se compruebe el host. La caché DNS de Checkmk'NO "
 "se consulta</b>."
-
-#, fuzzy
-msgid "Specify at least one resource to cache."
-msgstr "Por favor, especifique al menos una etiqueta."
-
-#, fuzzy
-msgid "Specify at least one section."
-msgstr "Por favor, especifique al menos una vez."
 
 msgid ""
 "Specify at which time period a new file for the event history will be "
@@ -97828,6 +97824,17 @@ msgstr "Almacenar notificaciones para el análisis de reglas"
 msgid "Additional graph options"
 msgstr "Opciones adicionales"
 
+msgid "Owner (private)"
+msgstr ""
+
+#, fuzzy
+msgid "No contact groups found"
+msgstr "No se han asignado grupos de contacto."
+
+#, fuzzy
+msgid "Users of site"
+msgstr "Servicios del sitio"
+
 #, fuzzy
 msgid "Unrestricted"
 msgstr "No registrado"
@@ -97865,17 +97872,6 @@ msgstr "Clonar gráfico personalizado"
 #, fuzzy
 msgid "Select a custom graph"
 msgstr "Clonar gráfico personalizado"
-
-msgid "Owner (private)"
-msgstr ""
-
-#, fuzzy
-msgid "No contact groups found"
-msgstr "No se han asignado grupos de contacto."
-
-#, fuzzy
-msgid "Users of site"
-msgstr "Servicios del sitio"
 
 #, fuzzy
 msgid "Enter description"
@@ -98157,19 +98153,6 @@ msgstr "Selección de carpetas"
 msgid "Data range"
 msgstr "Rango de datos"
 
-msgid "Only show current value"
-msgstr "Mostrar sólo el valor actual"
-
-msgid "Show historic values"
-msgstr "Mostrar valores históricos"
-
-#, fuzzy
-msgid "Fixed data range"
-msgstr "Alcance fijo"
-
-msgid "Service status"
-msgstr "Estado del servicio"
-
 #, fuzzy
 msgid "Show colored status label"
 msgstr "Mostrar una etiqueta de estado de color"
@@ -98186,6 +98169,19 @@ msgstr "estados no OK"
 #, fuzzy
 msgid "Show colored metric background"
 msgstr "Fondo de color"
+
+msgid "Only show current value"
+msgstr "Mostrar sólo el valor actual"
+
+msgid "Show historic values"
+msgstr "Mostrar valores históricos"
+
+#, fuzzy
+msgid "Fixed data range"
+msgstr "Alcance fijo"
+
+msgid "Service status"
+msgstr "Estado del servicio"
 
 msgid "Range limits"
 msgstr "Límites de la gama"
@@ -99668,19 +99664,16 @@ msgid ""
 msgstr ""
 
 #, fuzzy
-msgid "Create Telemetry hosts folder"
-msgstr "Crear hosts de puerta de enlace en"
-
-#, fuzzy
 msgid "Could not create the Telemetry hosts folder"
 msgstr "no crear hosts de puerta de enlace"
-
-msgid "Set up metric backend connector"
-msgstr ""
 
 #, fuzzy
 msgid "Could not create the metric backend connector"
 msgstr "No se ha podido crear el paquete: %s"
+
+#, fuzzy
+msgid "Dynamic host management setup"
+msgstr "Gestión dinámica de hosts"
 
 #, fuzzy
 msgid "OpenTelemetry Collector activation"
@@ -99705,6 +99698,10 @@ msgstr "No se han podido guardar los cambios: %s"
 #, fuzzy
 msgid "The password was rejected by the server."
 msgstr "Contraseña del usuario"
+
+#, fuzzy
+msgid "Collector configuration"
+msgstr "Configuración de host"
 
 #, fuzzy
 msgid "Could not create the OpenTelemetry Collector configuration"
@@ -100712,6 +100709,18 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Specify at least one resource to cache."
+#~ msgstr "Por favor, especifique al menos una etiqueta."
+
+#, fuzzy
+#~ msgid "Specify at least one section."
+#~ msgstr "Por favor, especifique al menos una vez."
+
+#, fuzzy
+#~ msgid "Create Telemetry hosts folder"
+#~ msgstr "Crear hosts de puerta de enlace en"
 
 #~ msgid "Kube-proxy version"
 #~ msgstr "Versión de Kube-proxy"

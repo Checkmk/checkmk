@@ -54927,6 +54927,10 @@ msgstr ""
 msgid "Port"
 msgstr "Port"
 
+#, python-format
+msgid "Port %d is already in use by site '%s' (key: %s)."
+msgstr ""
+
 #, fuzzy
 msgid "Port ID"
 msgstr "Port"
@@ -65329,14 +65333,6 @@ msgstr ""
 "introduceți un nume DNS aici, rezoluția DNS va fi efectuată de fiecare dată "
 "când este verificată gazda. Cache-ul DNS al Checkmk nu este <b>NU</b> "
 "interogat."
-
-#, fuzzy
-msgid "Specify at least one resource to cache."
-msgstr "Vă rugăm să specificați cel puțin o etichetă."
-
-#, fuzzy
-msgid "Specify at least one section."
-msgstr "Vă rugăm să specificați cel puțin o dată."
 
 msgid ""
 "Specify at which time period a new file for the event history will be "
@@ -97429,6 +97425,18 @@ msgstr "Stocarea notificărilor pentru analiza regulilor"
 msgid "Additional graph options"
 msgstr "Opțiuni adiționale"
 
+msgid "Owner (private)"
+msgstr ""
+
+#, fuzzy
+msgid "No contact groups found"
+msgstr "Nu sunt alocate grupuri de contact."
+
+# georgem ##############
+#, fuzzy
+msgid "Users of site"
+msgstr "Serviciile site-ului"
+
 #, fuzzy
 msgid "Unrestricted"
 msgstr "Neînregistrat"
@@ -97466,18 +97474,6 @@ msgstr "Clonarea graficului personalizat"
 #, fuzzy
 msgid "Select a custom graph"
 msgstr "Clonarea graficului personalizat"
-
-msgid "Owner (private)"
-msgstr ""
-
-#, fuzzy
-msgid "No contact groups found"
-msgstr "Nu sunt alocate grupuri de contact."
-
-# georgem ##############
-#, fuzzy
-msgid "Users of site"
-msgstr "Serviciile site-ului"
 
 #, fuzzy
 msgid "Enter description"
@@ -97762,19 +97758,6 @@ msgstr "Selecția fișierelor"
 msgid "Data range"
 msgstr "Intervalul de date"
 
-msgid "Only show current value"
-msgstr "Afișează doar valoarea curentă"
-
-msgid "Show historic values"
-msgstr "Afișați valorile istorice"
-
-#, fuzzy
-msgid "Fixed data range"
-msgstr "Interval fix"
-
-msgid "Service status"
-msgstr "Starea serviciului"
-
 #, fuzzy
 msgid "Show colored status label"
 msgstr "Afișați o etichetă de stare colorată"
@@ -97791,6 +97774,19 @@ msgstr "nu sunt OK stări"
 #, fuzzy
 msgid "Show colored metric background"
 msgstr "Fond colorat"
+
+msgid "Only show current value"
+msgstr "Afișează doar valoarea curentă"
+
+msgid "Show historic values"
+msgstr "Afișați valorile istorice"
+
+#, fuzzy
+msgid "Fixed data range"
+msgstr "Interval fix"
+
+msgid "Service status"
+msgstr "Starea serviciului"
 
 msgid "Range limits"
 msgstr "Limitele gamei"
@@ -99277,19 +99273,16 @@ msgid ""
 msgstr ""
 
 #, fuzzy
-msgid "Create Telemetry hosts folder"
-msgstr "Creați gazde de gateway în"
-
-#, fuzzy
 msgid "Could not create the Telemetry hosts folder"
 msgstr "nu creați gazde gateway"
-
-msgid "Set up metric backend connector"
-msgstr ""
 
 #, fuzzy
 msgid "Could not create the metric backend connector"
 msgstr "Nu s-a putut crea pachetul: %s."
+
+#, fuzzy
+msgid "Dynamic host management setup"
+msgstr "Gestionarea dinamică a gazdei"
 
 #, fuzzy
 msgid "OpenTelemetry Collector activation"
@@ -99314,6 +99307,10 @@ msgstr "Nu s-a putut salva modificările: %s"
 #, fuzzy
 msgid "The password was rejected by the server."
 msgstr "Parola utilizatorului"
+
+#, fuzzy
+msgid "Collector configuration"
+msgstr "Configurație gazdă"
 
 #, fuzzy
 msgid "Could not create the OpenTelemetry Collector configuration"
@@ -100327,6 +100324,18 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Specify at least one resource to cache."
+#~ msgstr "Vă rugăm să specificați cel puțin o etichetă."
+
+#, fuzzy
+#~ msgid "Specify at least one section."
+#~ msgstr "Vă rugăm să specificați cel puțin o dată."
+
+#, fuzzy
+#~ msgid "Create Telemetry hosts folder"
+#~ msgstr "Creați gazde de gateway în"
 
 #~ msgid "Kube-proxy version"
 #~ msgstr "Versiunea Kube-proxy"

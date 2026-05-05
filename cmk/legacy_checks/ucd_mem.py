@@ -9,6 +9,7 @@ from typing import Any
 
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition, LegacyResult
 from cmk.legacy_includes.mem import check_memory_element
+from cmk.plugins.collection.agent_based.ucd_mem import Section
 
 check_info = {}
 
@@ -31,154 +32,41 @@ check_info = {}
 # .1.3.6.1.4.1.2021.4.101.0         --> UCD-SNMP-MIB::smemSwapErrorMsg.0
 
 
-def discover_ucd_mem(parsed: Mapping[str, int | str]) -> Iterable[tuple[None, dict[str, Any]]]:
-    if parsed:
-        yield None, {}
+def discover_ucd_mem(parsed: Section) -> Iterable[tuple[None, dict[str, Any]]]:
+    yield None, {}
 
 
-# This function used to be shared with other plugins,
-# so it might be over generalized.
-def _check_memory_dict(
-    meminfo: Mapping[str, Any], params: Mapping[str, Any]
-) -> Mapping[
-    str,
-    tuple[
-        int, str, list[tuple[str, float, float | None, float | None, float | None, float | None]]
-    ],
-]:
-    """Check a dictionary of Memory entries against levels.
+def _check_memory_dict(meminfo: Section, params: Mapping[str, Any]) -> Iterable[LegacyResult]:
+    yield check_memory_element(
+        "RAM",
+        meminfo["MemUsed"],
+        meminfo["MemTotal"],
+        params.get("levels_ram"),
+        metric_name="mem_used",
+        create_percent_metric=True,
+    )
 
-    Only keys of meminfo that are checked below explicitly are considered.
-    All other keys are ignored.
-    """
-    results = {}  # dict[str, LegacyResult]()
-
-    # RAM
-    if "MemUsed" in meminfo and "MemTotal" in meminfo:
-        results["ram"] = check_memory_element(
-            "RAM",
-            meminfo["MemUsed"],
-            meminfo["MemTotal"],
-            params.get("levels_ram"),
-            metric_name="mem_used",
-            create_percent_metric=True,
-        )
-
-    # Swap
     if "SwapUsed" in meminfo and meminfo.get("SwapTotal"):
-        results["swap"] = check_memory_element(
+        yield check_memory_element(
             "Swap",
             meminfo["SwapUsed"],
             meminfo["SwapTotal"],
             params.get("levels_swap"),
             metric_name="swap_used",
         )
-    # Total virtual memory
-    if all(k in meminfo for k in ("MemTotal", "MemUsed", "SwapTotal", "SwapUsed")):
-        virtual_used = meminfo["MemUsed"] + meminfo["SwapUsed"]
-        virtual_total = meminfo["MemTotal"] + meminfo["SwapTotal"]
-        results["virtual"] = check_memory_element(
+
+    if "TotalUsed" in meminfo and "TotalTotal" in meminfo:
+        yield check_memory_element(
             "Total virtual memory",
-            virtual_used,
-            virtual_total,
+            meminfo["TotalUsed"],
+            meminfo["TotalTotal"],
             params.get("levels_virtual"),
         )
 
-        # Committed memory, only if we have virtual_total
-        if "Committed_AS" in meminfo:
-            results["committed"] = check_memory_element(
-                "Committed",
-                meminfo["Committed_AS"],
-                virtual_total,
-                params.get("levels_committed"),
-                label_total="virtual memory",
-                metric_name="mem_lnx_committed_as",
-            )
-
-        # Commit limit
-        if "CommitLimit" in meminfo:
-            results["commitlimit"] = check_memory_element(
-                "Commit Limit",
-                virtual_total - meminfo["CommitLimit"],
-                virtual_total,
-                params.get("levels_commitlimit"),
-                label_total="virtual memory",
-            )
-
-    # Shared memory
-    if "Shmem" in meminfo and "MemTotal" in meminfo:
-        results["shm"] = check_memory_element(
-            "Shared memory",
-            meminfo["Shmem"],
-            meminfo["MemTotal"],
-            params.get("levels_shm"),
-            label_total="RAM",
-            metric_name="mem_lnx_shmem",
-        )
-
-    # Page tables
-    if "PageTables" in meminfo and "MemTotal" in meminfo:
-        results["pagetables"] = check_memory_element(
-            "Page tables",
-            meminfo["PageTables"],
-            meminfo["MemTotal"],
-            params.get("levels_pagetables"),
-            label_total="RAM",
-            metric_name="mem_lnx_page_tables",
-        )
-
-    # Disk Writeback
-    if "Pending" in meminfo and "MemTotal" in meminfo:
-        results["pending"] = check_memory_element(
-            "Disk Writeback",
-            meminfo["Pending"],
-            meminfo["MemTotal"],
-            params.get("levels_writeback"),
-            label_total="RAM",
-        )
-
-    # Available Memory
-    if "MemAvailable" in meminfo and "MemTotal" in meminfo:
-        results["available"] = check_memory_element(
-            "RAM available",
-            meminfo["MemTotal"] - meminfo["MemAvailable"],
-            meminfo["MemTotal"],
-            params.get("levels_available"),
-            show_free=True,
-        )
-
-    # VMalloc,
-    # newer kernel version report wrong data,
-    # i.d. VMalloc Chunk equal zero
-    if "VmallocUsed" in meminfo and "VmallocChunk" in meminfo and meminfo["VmallocChunk"]:
-        results["vmalloc"] = check_memory_element(
-            "Largest Free VMalloc Chunk",
-            meminfo["VmallocTotal"] - meminfo["VmallocChunk"],
-            meminfo["VmallocTotal"],
-            params.get("levels_vmalloc"),
-            label_total="VMalloc Area",
-            show_free=True,
-        )
-
-    # HardwareCorrupted
-    if "HardwareCorrupted" in meminfo and "MemTotal" in meminfo:
-        results["corrupted"] = check_memory_element(
-            "Hardware Corrupted",
-            meminfo["HardwareCorrupted"],
-            meminfo["MemTotal"],
-            params.get("levels_hardwarecorrupted"),
-            label_total="RAM",
-        )
-
-    return results
-
 
 def check_ucd_mem(
-    _no_item: None, params: dict[str, Any], parsed: Mapping[str, int | str]
+    _no_item: None, params: dict[str, Any], parsed: Section
 ) -> Iterable[LegacyResult]:
-    if not parsed:
-        return
-
     # general errors
     error = parsed["error"]
     if error and error != "swap":
@@ -188,8 +76,7 @@ def check_ucd_mem(
     if params.get("levels") is not None:
         params["levels_ram"] = params.pop("levels")
 
-    results = _check_memory_dict(parsed, params)
-    yield from results.values()
+    yield from _check_memory_dict(parsed, params)
 
     # swap errors
     if "error_swap" in parsed:

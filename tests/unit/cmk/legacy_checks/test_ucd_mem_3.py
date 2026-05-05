@@ -9,43 +9,41 @@
 # If you encounter something weird in here, do not hesitate to replace this
 # test by something more appropriate.
 
-from collections.abc import Mapping
 
 import pytest
 
 from cmk.legacy_checks.ucd_mem import check_ucd_mem, discover_ucd_mem
-from cmk.plugins.collection.agent_based.ucd_mem import parse_ucd_mem
+from cmk.plugins.collection.agent_based.ucd_mem import parse_ucd_mem, Section
 
 
 @pytest.fixture(name="parsed", scope="module")
-def fixture_parsed() -> Mapping[str, int]:
+def fixture_parsed() -> Section:
     string_table = [
         [
-            [
-                "64313712",  # MemTotalReal
-                "3845212",  # MemAvailReal
-                "8388604",  # MemTotalSwap
-                "8388604",  # MemAvailSwap
-                "12233816",  # MemTotalFree
-                "16000",  # memMinimumSwap
-                "3163972",  # memShared
-                "30364",  # memBuffer
-                "10216780",  # memCached
-                "1",  # memSwapError (1 = error)
-                "foobar",  # memErrorName (different from standard)
-                "some error message",  # smemSwapErrorMsg
-            ]
+            "64313712",  # MemTotalReal
+            "3845212",  # MemAvailReal
+            "8388604",  # MemTotalSwap
+            "8388604",  # MemAvailSwap
+            "12233816",  # MemTotalFree
+            "16000",  # memMinimumSwap
+            "3163972",  # memShared
+            "30364",  # memBuffer
+            "10216780",  # memCached
+            "1",  # memSwapError (1 = error)
+            "foobar",  # memErrorName (different from standard)
+            "some error message",  # smemSwapErrorMsg
         ]
     ]
-    return parse_ucd_mem(string_table)
+    assert (section := parse_ucd_mem(string_table))
+    return section
 
 
-def test_discover_ucd_mem(parsed: Mapping[str, int]) -> None:
+def test_discover_ucd_mem(parsed: Section) -> None:
     result = list(discover_ucd_mem(parsed))
     assert result == [(None, {})]
 
 
-def test_check_ucd_mem_with_warning_thresholds(parsed: Mapping[str, int]) -> None:
+def test_check_ucd_mem_with_warning_thresholds(parsed: Section) -> None:
     """Test with warning/critical thresholds for RAM usage"""
     result = check_ucd_mem(
         None,
@@ -103,23 +101,21 @@ def test_check_ucd_mem_no_thresholds() -> None:
     """Test without thresholds (should not trigger warnings)"""
     string_table = [
         [
-            [
-                "64313712",  # MemTotalReal
-                "3845212",  # MemAvailReal
-                "8388604",  # MemTotalSwap
-                "8388604",  # MemAvailSwap
-                "12233816",  # MemTotalFree
-                "16000",  # memMinimumSwap
-                "3163972",  # memShared
-                "30364",  # memBuffer
-                "10216780",  # memCached
-                "0",  # memSwapError (0 = no error)
-                "",  # memErrorName
-                "",  # smemSwapErrorMsg
-            ]
+            "64313712",  # MemTotalReal
+            "3845212",  # MemAvailReal
+            "8388604",  # MemTotalSwap
+            "8388604",  # MemAvailSwap
+            "12233816",  # MemTotalFree
+            "16000",  # memMinimumSwap
+            "3163972",  # memShared
+            "30364",  # memBuffer
+            "10216780",  # memCached
+            "0",  # memSwapError (0 = no error)
+            "",  # memErrorName
+            "",  # smemSwapErrorMsg
         ]
     ]
-    parsed = parse_ucd_mem(string_table)
+    assert (parsed := parse_ucd_mem(string_table))
 
     result = list(check_ucd_mem(None, {}, parsed))
 

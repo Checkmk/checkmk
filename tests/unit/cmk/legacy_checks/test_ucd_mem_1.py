@@ -10,34 +10,31 @@
 # If you encounter something weird in here, do not hesitate to replace this
 # test by something more appropriate.
 
-from collections.abc import Mapping
-from typing import Any
 
 from cmk.legacy_checks.ucd_mem import check_ucd_mem, discover_ucd_mem
-from cmk.plugins.collection.agent_based.ucd_mem import parse_ucd_mem
+from cmk.plugins.collection.agent_based.ucd_mem import parse_ucd_mem, Section
 
 
-def parsed() -> Mapping[str, Any]:
+def parsed() -> Section:
     """Parsed UCD memory data for testing."""
     string_table = [
         [
-            [
-                "64313712",
-                "3845212",
-                "8388604",
-                "8388604",
-                "12233816",
-                "16000",
-                "3163972",
-                "30364",
-                "10216780",
-                "0",
-                "swap",
-                "",
-            ]
+            "64313712",
+            "3845212",
+            "8388604",
+            "8388604",
+            "12233816",
+            "16000",
+            "3163972",
+            "30364",
+            "10216780",
+            "0",
+            "swap",
+            "",
         ]
     ]
-    return parse_ucd_mem(string_table)
+    assert (section := parse_ucd_mem(string_table))
+    return section
 
 
 def test_ucd_mem_1_discovery():

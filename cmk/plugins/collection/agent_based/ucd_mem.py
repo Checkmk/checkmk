@@ -6,10 +6,10 @@
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="no-untyped-def"
 
-import operator
-from collections.abc import Mapping, Sequence
+from contextlib import suppress
+from typing import Literal, NotRequired, TypedDict
 
-from cmk.agent_based.v2 import SNMPSection, SNMPTree, StringTable
+from cmk.agent_based.v2 import SimpleSNMPSection, SNMPTree, StringTable
 from cmk.plugins.lib import ucd_hr_detection
 
 # .1.3.6.1.4.1.2021.4.2.0 swap      --> UCD-SNMP-MIB::memErrorName.0
@@ -25,24 +25,28 @@ from cmk.plugins.lib import ucd_hr_detection
 # .1.3.6.1.4.1.2021.4.101.0         --> UCD-SNMP-MIB::smemSwapErrorMsg.0
 
 
-def _info_str_to_bytes(info_str):
-    return int(info_str.replace("kB", "").strip()) * 1024
+class Section(TypedDict):
+    MemTotal: int
+    MemAvail: int
+    MemUsed: int
+    SwapTotal: NotRequired[int]
+    SwapFree: NotRequired[int]
+    SwapUsed: NotRequired[int]
+    MemFree: NotRequired[int]
+    SwapMinimum: NotRequired[int]
+    TotalTotal: NotRequired[int]
+    TotalUsed: NotRequired[int]
+    Shared: NotRequired[int]
+    Buffer: NotRequired[int]
+    Cached: NotRequired[int]
+    error_swap: NotRequired[int]
+    error: NotRequired[str]
+    error_swap_msg: NotRequired[str]
 
 
-def parse_ucd_mem(string_table: Sequence[StringTable]) -> Mapping[str, int]:
-    info = string_table[0]
-
-    # mandatory memory values
-    try:
-        parsed = {
-            "MemTotal": _info_str_to_bytes(info[0][0]),
-            "MemAvail": _info_str_to_bytes(info[0][1]),
-        }
-    except (IndexError, ValueError):
-        return {}
-
-    # optional memory values
-    optional_keys_bytes = [
+# optional memory values
+_OPTIONAL_KEYS: tuple[
+    Literal[
         "SwapTotal",
         "SwapFree",
         "MemFree",
@@ -50,8 +54,41 @@ def parse_ucd_mem(string_table: Sequence[StringTable]) -> Mapping[str, int]:
         "Shared",
         "Buffer",
         "Cached",
-    ]
-    for key, val in zip(optional_keys_bytes, info[0][2:-3]):
+    ],
+    ...,
+] = (
+    "SwapTotal",
+    "SwapFree",
+    "MemFree",
+    "SwapMinimum",
+    "Shared",
+    "Buffer",
+    "Cached",
+)
+
+
+def _info_str_to_bytes(info_str: str) -> int:
+    return int(info_str.replace("kB", "").strip()) * 1024
+
+
+def parse_ucd_mem(string_table: StringTable) -> Section | None:
+    if not string_table:
+        return None
+    row = string_table[0]
+
+    # mandatory memory values
+    try:
+        mem_total = _info_str_to_bytes(row[0])
+        mem_avail = _info_str_to_bytes(row[1])
+    except (IndexError, ValueError):
+        return None
+
+    parsed = Section(
+        MemTotal=mem_total,
+        MemAvail=mem_avail,
+        MemUsed=mem_total - mem_avail,  # might change below
+    )
+    for key, val in zip(_OPTIONAL_KEYS, row[2:-3]):
         try:
             parsed[key] = _info_str_to_bytes(val)
         except ValueError:
@@ -59,55 +96,46 @@ def parse_ucd_mem(string_table: Sequence[StringTable]) -> Mapping[str, int]:
 
     # optional other values
     try:
-        parsed["error_swap"] = int(info[0][-3])
+        parsed["error_swap"] = int(row[-3])
     except ValueError:
         pass
 
-    for key, val in zip(["error", "error_swap_msg"], info[0][-2:]):
-        parsed[key] = val
+    parsed["error"] = row[-2]
+    parsed["error_swap_msg"] = row[-1]
 
-    # additional memory values that need to be calculated
-    parsed["MemUsed"] = parsed["MemTotal"] - parsed["MemAvail"]
-    for key in ["Buffer", "Cached"]:
-        try:
-            parsed["MemUsed"] -= parsed[key]  # Buffer and cache count as as free memory
-        except KeyError:
-            pass
+    # Buffer and cache count as as free memory
+    parsed["MemUsed"] -= parsed.get("Buffer", 0)
+    parsed["MemUsed"] -= parsed.get("Cached", 0)
 
-    for target_key, (source_key_1, source_key_2), oper in zip(
-        ["SwapUsed", "TotalTotal", "TotalUsed"],
-        [("SwapTotal", "SwapFree"), ("MemTotal", "SwapTotal"), ("MemUsed", "SwapUsed")],
-        [operator.sub, operator.add, operator.sub],
-    ):
-        try:
-            parsed[target_key] = oper(parsed[source_key_1], parsed[source_key_2])
-        except KeyError:
-            pass
+    with suppress(KeyError):
+        parsed["SwapUsed"] = parsed["SwapTotal"] - parsed["SwapFree"]
+    with suppress(KeyError):
+        parsed["TotalTotal"] = parsed["MemTotal"] + parsed["SwapTotal"]
+    with suppress(KeyError):
+        parsed["TotalUsed"] = parsed["MemUsed"] - parsed["SwapUsed"]
 
     return parsed
 
 
-snmp_section_ucd_mem = SNMPSection(
+snmp_section_ucd_mem = SimpleSNMPSection(
     name="ucd_mem",
     parse_function=parse_ucd_mem,
-    fetch=[
-        SNMPTree(
-            base=".1.3.6.1.4.1.2021.4",
-            oids=[
-                "5",  # memTotalReal
-                "6",  # memAvailReal
-                "3",  # memTotalSwap
-                "4",  # memAvailSwap
-                "11",  # MemTotalFree
-                "12",  # memMinimumSwap
-                "13",  # memShared
-                "14",  # memBuffer
-                "15",  # memCached
-                "100",  # memSwapError
-                "2",  # memErrorName
-                "101",  # smemSwapErrorMsg
-            ],
-        ),
-    ],
+    fetch=SNMPTree(
+        base=".1.3.6.1.4.1.2021.4",
+        oids=[
+            "5",  # memTotalReal
+            "6",  # memAvailReal
+            "3",  # memTotalSwap
+            "4",  # memAvailSwap
+            "11",  # MemTotalFree
+            "12",  # memMinimumSwap
+            "13",  # memShared
+            "14",  # memBuffer
+            "15",  # memCached
+            "100",  # memSwapError
+            "2",  # memErrorName
+            "101",  # smemSwapErrorMsg
+        ],
+    ),
     detect=ucd_hr_detection.USE_UCD_MEM,
 )

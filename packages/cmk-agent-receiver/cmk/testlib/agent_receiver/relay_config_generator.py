@@ -20,7 +20,7 @@ ConfigFiles = dict[RelayId, RelayFiles]
 
 _SUBPATH = Path("var/check_mk/core/helper_config")
 
-_FOLDER_STRUCTURE: list[FileName] = [
+_RELAY_CONFIG_FILES: list[FileName] = [
     "some-config1.json",
     "workers/worker1.json",
     "workers/worker2.json",
@@ -28,29 +28,30 @@ _FOLDER_STRUCTURE: list[FileName] = [
 ]
 
 # TODO find a way to determine this number
-_NUMBER_OF_FOLDERS_IN_STRUCTURE = 2  # config and config/workers
+_RELAY_CONFIG_DIR_COUNT = 2  # config and config/workers
 
 
 @dataclasses.dataclass(frozen=True)
-class ConfigFolder:
+class RelayConfig:
     serial: Serial
     files: ConfigFiles
 
-    def assert_tar_content(self, relay_id: RelayId, tar_data: bytes) -> None:
-        relay_files = self.files[relay_id]
-        tar_buffer = io.BytesIO(tar_data)
-        with tarfile.open(fileobj=tar_buffer, mode="r") as tar:
-            members = tar.getmembers()
-            assert len(members) == len(_FOLDER_STRUCTURE) + _NUMBER_OF_FOLDERS_IN_STRUCTURE
-            for filename in _FOLDER_STRUCTURE:
-                tar_info = tar.getmember(f"{CONFIG_ARCHIVE_ROOT_FOLDER_NAME}/{filename}")
-                file_obj = tar.extractfile(tar_info)
-                assert file_obj is not None
-                file_content = file_obj.read().decode("utf-8")
-                assert relay_files[filename] == file_content, f"Failed for {relay_id=}, {filename=}"
+
+def assert_config_tar(config: RelayConfig, relay_id: RelayId, tar_data: bytes) -> None:
+    relay_files = config.files[relay_id]
+    tar_buffer = io.BytesIO(tar_data)
+    with tarfile.open(fileobj=tar_buffer, mode="r") as tar:
+        members = tar.getmembers()
+        assert len(members) == len(_RELAY_CONFIG_FILES) + _RELAY_CONFIG_DIR_COUNT
+        for filename in _RELAY_CONFIG_FILES:
+            tar_info = tar.getmember(f"{CONFIG_ARCHIVE_ROOT_FOLDER_NAME}/{filename}")
+            file_obj = tar.extractfile(tar_info)
+            assert file_obj is not None
+            file_content = file_obj.read().decode("utf-8")
+            assert relay_files[filename] == file_content, f"Failed for {relay_id=}, {filename=}"
 
 
-def create_config_folder(root: Path, relays: list[RelayId]) -> ConfigFolder:
+def generate_relay_config(root: Path, relays: list[RelayId]) -> RelayConfig:
     serial = Serial.random()
 
     # the serial folder exists even if no relay configured
@@ -62,7 +63,7 @@ def create_config_folder(root: Path, relays: list[RelayId]) -> ConfigFolder:
 
     for relay_id in relays:
         relay_files = {}
-        for filename in _FOLDER_STRUCTURE:
+        for filename in _RELAY_CONFIG_FILES:
             file_path = path_to_serial / "relays" / relay_id / filename
             file_path.parent.mkdir(parents=True, exist_ok=True)
             content = secrets.token_urlsafe(20)
@@ -76,4 +77,4 @@ def create_config_folder(root: Path, relays: list[RelayId]) -> ConfigFolder:
         symlink_path.unlink()
     symlink_path.symlink_to(path_to_serial)
 
-    return ConfigFolder(serial=serial, files=config_files)
+    return RelayConfig(serial=serial, files=config_files)

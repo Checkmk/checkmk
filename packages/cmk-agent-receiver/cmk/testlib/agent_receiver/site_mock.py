@@ -14,9 +14,9 @@ from typing import assert_never, final, NewType
 from pydantic import BaseModel, Field
 
 from ...agent_receiver.lib.auth import B64SiteInternalSecret
-from .config_file_system import (
-    ConfigFolder,
-    create_config_folder,
+from .relay_config_generator import (
+    generate_relay_config,
+    RelayConfig,
 )
 from .schema import JsonSchema
 from .wiremock import Request, Response, Wiremock, WMapping
@@ -91,9 +91,9 @@ class SiteMock:
     def omd_root(self) -> Path:
         return self._omd_root
 
-    def push_config(self, relays: list[str]) -> ConfigFolder:
+    def push_config(self, relays: list[str]) -> RelayConfig:
         """simulate a new configuration the ar would push to the relay"""
-        return create_config_folder(self._omd_root, relays)
+        return generate_relay_config(self._omd_root, relays)
 
     @property
     def base_url(self) -> str:

@@ -6,6 +6,7 @@ import uuid
 
 from cmk.relay_protocols.tasks import RelayConfigTask, TaskStatus
 from cmk.testlib.agent_receiver.agent_receiver import AgentReceiverClient
+from cmk.testlib.agent_receiver.relay_config_generator import assert_config_tar
 from cmk.testlib.agent_receiver.site_mock import SiteMock
 from cmk.testlib.agent_receiver.tasks import get_relay_tasks
 
@@ -35,7 +36,7 @@ def test_config_update_triggered_by_outdated_serial(
     task = relay_1_tasks[0]
     assert isinstance(task.spec, RelayConfigTask)
     assert task.spec.serial == new_config.serial.value
-    new_config.assert_tar_content(relay_id_1, task.spec.tar_data)
+    assert_config_tar(new_config, relay_id_1, task.spec.tar_data)
 
     # relay applies the new config — no update task created
     agent_receiver.apply_config(new_config)
@@ -67,7 +68,7 @@ def test_config_update_triggered_by_outdated_serial_is_generated_once(
     task = relay_1_tasks[0]
     assert isinstance(task.spec, RelayConfigTask)
     assert task.spec.serial == new_config.serial.value
-    new_config.assert_tar_content(relay_id_1, task.spec.tar_data)
+    assert_config_tar(new_config, relay_id_1, task.spec.tar_data)
 
     tasklist = get_relay_tasks(agent_receiver, relay_id_1, status="PENDING").tasks
     assert len(tasklist) == 1
@@ -102,7 +103,7 @@ def test_config_update_triggered_by_old_serial_twice_in_a_row(
     assert isinstance(first_task.spec, RelayConfigTask)
     assert first_task.status == TaskStatus.PENDING
     assert first_task.spec.serial == config_b.serial.value
-    config_b.assert_tar_content(relay_id_1, first_task.spec.tar_data)
+    assert_config_tar(config_b, relay_id_1, first_task.spec.tar_data)
 
     agent_receiver.apply_config(config_b)
     config_c = site.push_config([relay_id_1])
@@ -116,4 +117,4 @@ def test_config_update_triggered_by_old_serial_twice_in_a_row(
     assert isinstance(new_task_config.spec, RelayConfigTask)
     assert new_task_config.status == TaskStatus.PENDING
     assert new_task_config.spec.serial == config_c.serial.value
-    config_c.assert_tar_content(relay_id_1, new_task_config.spec.tar_data)
+    assert_config_tar(config_c, relay_id_1, new_task_config.spec.tar_data)

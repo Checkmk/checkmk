@@ -22,7 +22,7 @@ from cmk.agent_receiver.relay.lib.shared_types import (
     TaskID,
     TaskNotFoundError,
 )
-from cmk.testlib.agent_receiver.config_file_system import create_config_folder
+from cmk.testlib.agent_receiver.relay_config_generator import generate_relay_config
 
 
 @pytest.fixture
@@ -36,7 +36,7 @@ def test_get_task_handler(
     omd_root: Path,
 ) -> None:
     relay_id, task, relays_repository, tasks_repository = populated_repos
-    _ = create_config_folder(root=omd_root, relays=[relay_id])
+    _ = generate_relay_config(root=omd_root, relays=[relay_id])
     handled_task = get_task_handler.process(relay_id=relay_id, task_id=task.id)
     assert handled_task == task
 
@@ -61,7 +61,7 @@ def test_get_tasks_handler(
     omd_root: Path,
 ) -> None:
     relay_id, task, relays_repository, tasks_repository = populated_repos
-    config_folder = create_config_folder(root=omd_root, relays=[relay_id])
+    config_folder = generate_relay_config(root=omd_root, relays=[relay_id])
 
     handled_tasks = get_tasks_handler.process(
         relay_id=relay_id, status=None, relay_serial=config_folder.serial
@@ -75,7 +75,7 @@ def test_get_tasks_handler_with_filter(
     omd_root: Path,
 ) -> None:
     relay_id, task, relays_repository, tasks_repository = populated_repos
-    config_folder = create_config_folder(root=omd_root, relays=[relay_id])
+    config_folder = generate_relay_config(root=omd_root, relays=[relay_id])
     handled_tasks = get_tasks_handler.process(
         relay_id=relay_id, status=TaskStatus.FINISHED, relay_serial=config_folder.serial
     )

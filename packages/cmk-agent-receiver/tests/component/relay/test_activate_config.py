@@ -14,7 +14,7 @@ import pytest
 from cmk.agent_receiver.relay.lib.shared_types import Serial
 from cmk.relay_protocols.tasks import RelayConfigTask, TaskResponse, TaskStatus
 from cmk.testlib.agent_receiver.agent_receiver import AgentReceiverClient
-from cmk.testlib.agent_receiver.config_file_system import ConfigFolder
+from cmk.testlib.agent_receiver.relay_config_generator import assert_config_tar, RelayConfig
 from cmk.testlib.agent_receiver.site_mock import (
     OP,
     SiteMock,
@@ -398,7 +398,7 @@ def test_activation_with_relay_pending_activation_handles_gracefully(
 
 def _assert_single_pending_config_task(
     agent_receiver: AgentReceiverClient,
-    serial_folder: ConfigFolder,
+    serial_folder: RelayConfig,
     relay_id: str,
 ) -> None:
     resp = get_relay_tasks(agent_receiver, relay_id)
@@ -409,12 +409,12 @@ def _assert_single_pending_config_task(
         expected_status=TaskStatus.PENDING,
         expected_serial=serial_folder.serial,
     )
-    serial_folder.assert_tar_content(relay_id, task.tar_data)
+    assert_config_tar(serial_folder, relay_id, task.tar_data)
 
 
 def _assert_pending_config_task_is_present(
     agent_receiver: AgentReceiverClient,
-    serial_folder: ConfigFolder,
+    serial_folder: RelayConfig,
     relay_id: str,
 ) -> None:
     resp = get_relay_tasks(agent_receiver, relay_id)
@@ -423,7 +423,7 @@ def _assert_pending_config_task_is_present(
         expected_status=TaskStatus.PENDING,
         expected_serial=serial_folder.serial,
     )
-    serial_folder.assert_tar_content(relay_id, task.tar_data)
+    assert_config_tar(serial_folder, relay_id, task.tar_data)
 
 
 def _assert_config_task_exists(

@@ -25,8 +25,11 @@ from cmk.agent_receiver.relay.api.routers.tasks.libs.tasks_repository import (
 )
 from cmk.agent_receiver.relay.lib.relays_repository import RelaysRepository
 from cmk.agent_receiver.relay.lib.site_auth import InternalAuth
-from cmk.testlib.agent_receiver.config_file_system import create_config_folder
 from cmk.testlib.agent_receiver.relay import random_relay_id
+from cmk.testlib.agent_receiver.relay_config_generator import (
+    assert_config_tar,
+    generate_relay_config,
+)
 
 
 def test_create_tasks_for_all_relays(
@@ -44,7 +47,7 @@ def test_create_tasks_for_all_relays(
         test_user, relay_id=random_relay_id(), alias="test-relay-2"
     )
 
-    cf = create_config_folder(site_context.omd_root, [relay_id_1, relay_id_2])
+    cf = generate_relay_config(site_context.omd_root, [relay_id_1, relay_id_2])
 
     # Create tasks for all relays
     config_task_factory.create_for_all_relays()
@@ -61,8 +64,8 @@ def test_create_tasks_for_all_relays(
     assert isinstance(tasks_for_relay_2[0].spec, RelayConfigSpec)
     assert tasks_for_relay_2[0].spec.serial == cf.serial
 
-    cf.assert_tar_content(relay_id_1, tasks_for_relay_1[0].spec.tar_data)
-    cf.assert_tar_content(relay_id_2, tasks_for_relay_2[0].spec.tar_data)
+    assert_config_tar(cf, relay_id_1, tasks_for_relay_1[0].spec.tar_data)
+    assert_config_tar(cf, relay_id_2, tasks_for_relay_2[0].spec.tar_data)
 
 
 def test_create_task_for_single_chosen_relay_when_no_pending_task(
@@ -87,7 +90,7 @@ def test_create_task_for_single_chosen_relay_when_no_pending_task(
         test_user, relay_id=random_relay_id(), alias="test-relay-3"
     )
 
-    cf = create_config_folder(site_context.omd_root, [relay_id_1, relay_id_2, relay_id_3])
+    cf = generate_relay_config(site_context.omd_root, [relay_id_1, relay_id_2, relay_id_3])
 
     # Create tasks for chosen relay: relay_id_2
     _ = config_task_factory.create_for_relay(relay_id_2)
@@ -105,7 +108,7 @@ def test_create_task_for_single_chosen_relay_when_no_pending_task(
     assert isinstance(tasks_for_relay_2[0].spec, RelayConfigSpec)
     assert tasks_for_relay_2[0].spec.serial == cf.serial
 
-    cf.assert_tar_content(relay_id_2, tasks_for_relay_2[0].spec.tar_data)
+    assert_config_tar(cf, relay_id_2, tasks_for_relay_2[0].spec.tar_data)
 
 
 def test_create_task_for_single_chosen_relay_when_pending_task(
@@ -130,7 +133,7 @@ def test_create_task_for_single_chosen_relay_when_pending_task(
         test_user, relay_id=random_relay_id(), alias="test-relay-3"
     )
 
-    cf = create_config_folder(site_context.omd_root, [relay_id_1, relay_id_2, relay_id_3])
+    cf = generate_relay_config(site_context.omd_root, [relay_id_1, relay_id_2, relay_id_3])
 
     # If we already have a pending task for this serial...
 
@@ -182,7 +185,7 @@ def test_create_task_for_single_relay_skipped_when_config_not_applied(
 
     # Create a minimal config folder to establish the serial
     # Use a relay ID that won't conflict with other tests
-    _ = create_config_folder(site_context.omd_root, [])
+    _ = generate_relay_config(site_context.omd_root, [])
 
     # Use a relay ID that has NO config folder
     # This simulates calling create_for_relay for a relay that hasn't been configured yet
@@ -237,7 +240,7 @@ def test_create_tasks_for_all_relays_with_multiple_configured_relays(
     relay_id_3 = relays_repository.add_relay(test_user, relay_id=random_relay_id(), alias="relay-3")
 
     # Create config folders for all relays
-    cf = create_config_folder(site_context.omd_root, [relay_id_1, relay_id_2, relay_id_3])
+    cf = generate_relay_config(site_context.omd_root, [relay_id_1, relay_id_2, relay_id_3])
 
     # Capture logs at DEBUG level
     with caplog.at_level(logging.DEBUG, logger="agent-receiver"):
@@ -284,7 +287,7 @@ def test_create_task_fails_when_tar_creation_raises_exception(
     )
 
     # Create config folder so relay_config_applied returns True
-    _ = create_config_folder(site_context.omd_root, [relay_id])
+    _ = generate_relay_config(site_context.omd_root, [relay_id])
 
     # Mock create_tar to raise an exception
     with patch(

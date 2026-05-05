@@ -39,7 +39,7 @@ const updateData = (id: string, value: Ref) => {
 <template>
   <CmkCollapsibleTitle
     :title="props.title"
-    :help_text="props.help_text"
+    :help-text="props.help_text"
     :open="isOpen"
     @toggle-open="toggleOpen"
   />

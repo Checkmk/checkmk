@@ -20,7 +20,7 @@ const open = ref(false)
       :title="'Collapsible Title'"
       :side-title="'Side Title'"
       :open="open"
-      :help_text="'Some help text'"
+      :help-text="'Some help text'"
       class="ucl-cmk-collapsible-dev__collapsible"
       @toggle-open="open = !open"
     />

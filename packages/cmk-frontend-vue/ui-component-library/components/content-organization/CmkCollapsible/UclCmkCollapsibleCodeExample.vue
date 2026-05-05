@@ -16,7 +16,7 @@ const isOpen = ref(false)
   <CmkCollapsibleTitle
     title="Collapsible Section"
     side-title="Details"
-    help_text="Click to expand"
+    help-text="Click to expand"
     :open="isOpen"
     @toggle-open="isOpen = !isOpen"
   />

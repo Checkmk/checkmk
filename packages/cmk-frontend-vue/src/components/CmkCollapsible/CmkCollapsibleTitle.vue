@@ -25,8 +25,8 @@ interface CollapsibleTitleProps {
    */
   open: boolean
 
-  /**@property {TranslatedString} help_text - Help text to display next to the title */
-  help_text?: TranslatedString | null
+  /**@property {TranslatedString} helpText - Help text to display next to the title */
+  helpText?: TranslatedString | null
 
   /**@property {DynamicIcon} icon - Icon to display before the title*/
   icon?: DynamicIcon | null
@@ -74,7 +74,7 @@ immediateWatch(
       {{ sideTitle }}
     </span>
     <span class="cmk-collapsible-title__help">
-      <CmkHelpText v-if="help_text" :help="help_text" />
+      <CmkHelpText v-if="helpText" :help="helpText" />
     </span>
   </button>
 </template>

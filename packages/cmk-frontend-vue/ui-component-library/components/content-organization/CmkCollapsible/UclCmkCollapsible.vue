@@ -41,7 +41,7 @@ export const panelConfig = {
   },
   disabled: { type: 'boolean' as const, title: 'Disabled', initialState: false },
   sideTitle: { type: 'string' as const, title: 'Side Title', initialState: 'Details' },
-  help_text: { type: 'string' as const, title: 'Help Text', initialState: 'Click to expand' }
+  helpText: { type: 'string' as const, title: 'Help Text', initialState: 'Click to expand' }
 } satisfies PanelConfigFor<typeof CmkCollapsible, 'contentId'> &
   PanelConfigFor<typeof CmkCollapsibleTitle, 'focus'>
 </script>
@@ -76,7 +76,7 @@ const propState = new PanelStateCreator<typeof CmkCollapsible, 'contentId'>().cr
       <CmkCollapsibleTitle
         :title="propState.title"
         :side-title="propState.sideTitle"
-        :help_text="propState.help_text"
+        :help-text="propState.helpText"
         :open="propState.open"
         :icon="
           propState.icon === 'none'

@@ -15,7 +15,7 @@ import CmkWizard, {
 import CmkHeading from '@/components/typography/CmkHeading.vue'
 import CmkParagraph from '@/components/typography/CmkParagraph.vue'
 
-import StepOne from './UclCmkWizardStepOneDev.vue'
+import StepOne from './CmkWizardStepOne.vue'
 
 defineProps<{ screenshotMode: boolean }>()
 const currentStep = ref(1)

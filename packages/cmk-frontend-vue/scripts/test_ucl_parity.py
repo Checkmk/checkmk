@@ -82,12 +82,32 @@ def load_ucl_page_names() -> Iterator[tuple[str, Path]]:
     all_files = {p.relative_to(UCL_FOLDER): p for p in UCL_FOLDER.glob("**/*.vue")}
     all_files = unique_dict(ucl_ignore_additional_files(all_files))
     for relative, path in all_files.items():
+        if not path.name.startswith("Ucl"):
+            continue
         yield relative.stem.removeprefix("Ucl"), path
+
+
+def load_ucl_helper_components() -> Iterator[tuple[str, Path]]:
+    all_files = {p.relative_to(UCL_FOLDER): p for p in UCL_FOLDER.glob("**/*.vue")}
+    all_files = unique_dict(ucl_ignore_additional_files(all_files))
+    for relative, path in all_files.items():
+        if path.name.startswith("Ucl"):
+            continue
+        yield relative.stem, path
 
 
 def test_ucl_parity() -> None:
     """
-    make sure that each official component also has a UCL page and vice versa
+    Files under ui-component-library/components/ have three recognised roles:
+
+    * ``Ucl<X>.vue`` — canonical UCL page; must correspond 1:1 with a
+      ``<X>`` component under src/components/.
+    * ``Ucl<X>Dev.vue`` / ``Ucl<X>CodeExample.vue`` — Dev playground /
+      raw-imported code-example file; not enforced for parity.
+    * ``<Y>.vue`` (no ``Ucl`` prefix) — private helper imported by a sibling
+      ``Ucl*Dev.vue`` page. It must NOT collide with a real component name
+      and must live next to a ``Ucl*Dev.vue`` file (so an orphaned helper
+      is still caught).
     """
     components: set[str] = set(unique_dict(load_component_names()))
     ucl: set[str] = set(unique_dict(load_ucl_page_names()))
@@ -110,3 +130,15 @@ def test_ucl_parity() -> None:
     ucl.remove("CmkIconEmblem")
 
     assert components == ucl
+
+    helpers = dict(unique_dict(load_ucl_helper_components()))
+    for helper_name, helper_path in helpers.items():
+        assert helper_name not in components, (
+            f"Helper file {helper_path} shadows real component '{helper_name}'; "
+            f"helpers must use a name that does not match any src/components/ entry."
+        )
+        sibling_dev_pages = list(helper_path.parent.glob("Ucl*Dev.vue"))
+        assert sibling_dev_pages, (
+            f"Helper file {helper_path} has no sibling Ucl*Dev.vue page; "
+            f"helpers are only valid when imported by a Dev playground."
+        )

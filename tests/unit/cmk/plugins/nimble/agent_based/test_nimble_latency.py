@@ -9,7 +9,7 @@ from collections.abc import Mapping
 import pytest
 
 from cmk.agent_based.v2 import Result, State
-from cmk.legacy_checks.nimble_latency import (
+from cmk.plugins.nimble.agent_based.nimble_latency import (
     check_nimble_latency_reads,
     check_nimble_latency_writes,
     LatencyData,

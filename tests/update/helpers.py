@@ -6,7 +6,6 @@ import json
 import logging
 import os
 import subprocess
-from contextlib import AbstractContextManager, nullcontext
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -91,26 +90,9 @@ def create_site(base_package: CMKPackageInfo) -> Site:
     assert not site.exists(), "Trying to install existing site!"
     logger.info("Creating new site")
 
-    is_cloud = base_package.edition.is_cloud_edition()
-    if is_cloud:
-        from tests.testlib.nonfree.cloud.utils import (  # type: ignore[import-untyped, unused-ignore, import-not-found]
-            create_cloud_initial_config,
-        )
-
-        create_cloud_initial_config()
-
     try:
         site = site_factory.get_site(site_name)
-        if is_cloud:
-            from tests.testlib.nonfree.cloud.utils import (  # type: ignore[import-untyped, unused-ignore, import-not-found]
-                cloud_environment,
-            )
-
-            ctx: AbstractContextManager[object] = cloud_environment(site.apache_port)
-        else:
-            ctx = nullcontext()
-        with ctx:
-            site_factory.initialize_site(site, auto_restart_httpd=True)
+        site_factory.initialize_site(site, auto_restart_httpd=True)
     except FileNotFoundError:
         pytest.skip(
             f"Base-version '{base_package.version.version}' is not available for distro "

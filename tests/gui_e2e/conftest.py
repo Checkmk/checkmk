@@ -11,7 +11,6 @@
 import logging
 from collections import defaultdict
 from collections.abc import Iterator
-from contextlib import AbstractContextManager
 from typing import Any
 
 import pytest
@@ -55,28 +54,10 @@ def _site_factory() -> SiteFactory:
 @pytest.fixture(name="test_site", scope="session")
 def fixture_test_site(request: pytest.FixtureRequest, site_factory: SiteFactory) -> Iterator[Site]:
     """Return the central Checkmk site object."""
-    is_cloud = site_factory.edition.is_cloud_edition()
-    if is_cloud:
-        from tests.testlib.nonfree.cloud.utils import (  # type: ignore[import-untyped, unused-ignore, import-not-found]
-            create_cloud_initial_config,
-        )
-
-        create_cloud_initial_config()
     with exit_pytest_on_exceptions(
         exit_msg=f"Failure in site creation using fixture '{__file__}::{request.fixturename}'!"
     ):
-        yield from site_factory.get_test_site(
-            name="central",
-            lifecycle_wrapper=_cloud_lifecycle_wrapper if is_cloud else None,
-        )
-
-
-def _cloud_lifecycle_wrapper(site: Site) -> "AbstractContextManager[object]":
-    from tests.testlib.nonfree.cloud.utils import (  # type: ignore[import-untyped, unused-ignore, import-not-found]
-        cloud_environment,
-    )
-
-    return cloud_environment(site.apache_port)
+        yield from site_factory.get_test_site(name="central")
 
 
 @pytest.fixture(name="remote_site_wato_disabled")

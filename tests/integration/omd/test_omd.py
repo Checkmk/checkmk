@@ -15,17 +15,6 @@ from tests.testlib.site import Site, SiteFactory
 from tests.testlib.version import CMKPackageInfo, edition_from_env, version_from_env
 
 
-def _ensure_cloud_initial_config() -> None:
-    """Create Checkmk Cloud config files needed for cloud-edition sites to start."""
-    if not edition_from_env().is_cloud_edition():
-        return
-    from tests.testlib.nonfree.cloud.utils import (  # type: ignore[import-untyped, unused-ignore, import-not-found]
-        create_cloud_initial_config,
-    )
-
-    create_cloud_initial_config()
-
-
 def test_run_omd(site: Site) -> None:
     p = site.run(["omd"], check=False)
     assert p.returncode == 1
@@ -197,7 +186,6 @@ def test_run_omd_backup_and_omd_restore_empty() -> None:
     backup_path = Path(tempfile.gettempdir()) / "backup.tar.gz"
     try:
         # run the backup
-        _ensure_cloud_initial_config()
         restored_site = site_factory.get_site(restored_site_name, create=True)
         restored_site.omd("backup", str(backup_path), check=True)
         assert backup_path.stat().st_size > 0, "Backup file was not created."
@@ -232,7 +220,6 @@ def test_run_omd_create_welcome_message() -> None:
     package = CMKPackageInfo(version_from_env(), edition_from_env())
     site_factory = SiteFactory(package=package, prefix="")
     try:
-        _ensure_cloud_initial_config()
         site = site_factory.get_site("test_create_site", create=False)
         assert not site.exists()
         site.create()
@@ -251,7 +238,6 @@ def test_run_omd_init() -> None:
     site_factory = SiteFactory(package=package, prefix="")
     site = None
     try:
-        _ensure_cloud_initial_config()
         site = site_factory.get_site("test_init_site")
         run(["omd", "-V", package.version_directory(), "disable", site.id], sudo=True)
         run(["omd", "-V", package.version_directory(), "--force", "init", site.id], sudo=True)

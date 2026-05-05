@@ -26,7 +26,7 @@ def register(edition: Edition) -> None:
 
     features = licensed_features(paths.omd_root, edition)
     agent_bakery_enabled = features.bakery.enabled
-    extended_metric_backend_enabled = features.extended_metric_backend.enabled
+    telemetry_enabled = features.telemetry.enabled
 
     match edition:
         case Edition.PRO:
@@ -35,7 +35,7 @@ def register(edition: Edition) -> None:
             cmk.gui.nonfree.pro.registration.register(
                 edition,
                 agent_bakery_enabled=agent_bakery_enabled,
-                extended_metric_backend_enabled=extended_metric_backend_enabled,
+                telemetry_enabled=telemetry_enabled,
             )
 
         case Edition.ULTIMATEMT:
@@ -44,7 +44,7 @@ def register(edition: Edition) -> None:
             cmk.gui.nonfree.ultimatemt.registration.register(
                 edition,
                 agent_bakery_enabled=agent_bakery_enabled,
-                extended_metric_backend_enabled=extended_metric_backend_enabled,
+                telemetry_enabled=telemetry_enabled,
             )
 
         case Edition.ULTIMATE:
@@ -53,7 +53,7 @@ def register(edition: Edition) -> None:
             cmk.gui.nonfree.ultimate.registration.register(
                 edition,
                 agent_bakery_enabled=agent_bakery_enabled,
-                extended_metric_backend_enabled=extended_metric_backend_enabled,
+                telemetry_enabled=telemetry_enabled,
             )
 
         case Edition.CLOUD:
@@ -62,7 +62,7 @@ def register(edition: Edition) -> None:
             cmk.gui.nonfree.cloud.registration.register(
                 edition,
                 agent_bakery_enabled=agent_bakery_enabled,
-                extended_metric_backend_enabled=extended_metric_backend_enabled,
+                telemetry_enabled=telemetry_enabled,
             )
 
         case Edition.COMMUNITY:
@@ -71,7 +71,7 @@ def register(edition: Edition) -> None:
             cmk.gui.community_registration.register(
                 edition,
                 agent_bakery_enabled=agent_bakery_enabled,
-                extended_metric_backend_enabled=extended_metric_backend_enabled,
+                telemetry_enabled=telemetry_enabled,
             )
 
         case _ as unreachable:

@@ -14,14 +14,14 @@ from cmk.licensing.basics.features import FeatureFlag, Features, licensed_featur
 def test_community() -> None:
     assert licensed_features(Path(), Edition.COMMUNITY) == Features(
         bakery=FeatureFlag(enabled=False),
-        extended_metric_backend=FeatureFlag(enabled=False),
+        telemetry=FeatureFlag(enabled=False),
     )
 
 
 def test_pro() -> None:
     assert licensed_features(Path(), Edition.PRO) == Features(
         bakery=FeatureFlag(enabled=True),
-        extended_metric_backend=FeatureFlag(enabled=False),
+        telemetry=FeatureFlag(enabled=False),
     )
 
 
@@ -32,5 +32,5 @@ def test_pro() -> None:
 def test_commercial(edition: Edition) -> None:
     assert licensed_features(Path(), edition) == Features(
         bakery=FeatureFlag(enabled=True),
-        extended_metric_backend=FeatureFlag(enabled=True),
+        telemetry=FeatureFlag(enabled=True),
     )

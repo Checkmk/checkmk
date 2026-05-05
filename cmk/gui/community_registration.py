@@ -131,9 +131,7 @@ def register_painters() -> None:
     painter_registry.register(graph.PainterHostPnpgraph)
 
 
-def register(
-    edition: Edition, agent_bakery_enabled: bool, extended_metric_backend_enabled: bool
-) -> None:
+def register(edition: Edition, agent_bakery_enabled: bool, telemetry_enabled: bool) -> None:
     sample_config_generator_registry.register(SampleConfigGeneratorGroups)
     network_scan.register(host_attribute_registry, automation_command_registry, cron_job_registry)
     nagvis.register(permission_section_registry, permission_registry, snapin_registry)

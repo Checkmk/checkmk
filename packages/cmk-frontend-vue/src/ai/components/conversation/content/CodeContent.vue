@@ -24,7 +24,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <CmkCode class="ai-code-content" :code_txt="code" />
+  <CmkCode class="ai-code-content" :code-text="code" />
 </template>
 
 <style scoped>

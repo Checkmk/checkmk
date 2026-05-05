@@ -229,7 +229,7 @@ const handleUpdate = async () => {
       <div class="db-public-access__row">
         <CmkCode
           class="db-public-access__cell db-public-access__overflow"
-          :code_txt="urlHandler.getSharedDashboardLink(publicToken.token_id)"
+          :code-text="urlHandler.getSharedDashboardLink(publicToken.token_id)"
         />
 
         <div class="db-public-access__cell">

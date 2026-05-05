@@ -60,7 +60,7 @@ const downloadCommand = computed(() => `curl -O ${installScriptUrl.value}`)
       </CmkParagraph>
       <CmkAlertBox v-if="insecureProtocolWarning">{{ insecureProtocolWarning }}</CmkAlertBox>
       <CmkCode
-        :code_txt="downloadCommand"
+        :code-text="downloadCommand"
         :aria-label="_t('Download relay install script command')"
       ></CmkCode>
     </template>

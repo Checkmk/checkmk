@@ -20,7 +20,7 @@ const { _t } = usei18n()
 
 const props = defineProps<{
   title?: TranslatedString
-  code_txt: string
+  codeText: string
   width?: 'default' | 'fill'
   copyButtonTestId?: string
 }>()
@@ -29,10 +29,10 @@ const MAX_LINES = 10
 
 const isExpanded = ref(false)
 
-const codeLines = computed(() => props.code_txt.split('\n'))
+const codeLines = computed(() => props.codeText.split('\n'))
 const displayedCode = computed(() => {
   if (isExpanded.value || codeLines.value.length <= MAX_LINES) {
-    return props.code_txt
+    return props.codeText
   }
   return codeLines.value.slice(0, MAX_LINES).join('\n')
 })
@@ -70,7 +70,7 @@ const containerClasses = computed(() => ({
           </CmkButton>
         </div>
       </div>
-      <CmkCopy :text="code_txt">
+      <CmkCopy :text="codeText">
         <CmkIconButton
           name="copied"
           size="medium"

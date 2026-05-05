@@ -31,7 +31,7 @@ export const panelConfig = {
     title: 'Title',
     initialState: 'Example Code Snippet'
   },
-  code_txt: {
+  codeText: {
     type: 'multiline-string' as const,
     title: 'Code Text',
     initialState: `<script setup lang="ts">
@@ -46,7 +46,7 @@ greet();\`
 <template>
   <CmkCode
     title="Greeting Function"
-    :code_txt="mySnippet"
+    :code-text="mySnippet"
   />
 </template>`
   },
@@ -93,7 +93,7 @@ const propState = new PanelStateCreator<typeof CmkCode, 'copyButtonTestId'>().cr
     <UclDetailPageComponent>
       <CmkCode
         :title="propState.title"
-        :code_txt="propState.code_txt"
+        :code-text="propState.codeText"
         :width="(propState.width as WidthOption)!"
       />
 

@@ -98,7 +98,7 @@ function goToHostOverview() {
                 />
                 <template v-if="typeof ott === 'string'">
                   <CmkCode
-                    :code_txt="step.code.replace('[AGENT_DOWNLOAD_OTT]', ott)"
+                    :code-text="step.code.replace('[AGENT_DOWNLOAD_OTT]', ott)"
                     class="welcome-first-host-slideout__code"
                   />
                   <CmkSpace></CmkSpace>

@@ -141,16 +141,16 @@ const sdkAuthHeaderExample = 'Authorization: Basic YWRtaW46c2VjcmV0'
         <br />
         <CmkCode
           :title="_t('Exporters configuration')"
-          :code_txt="snippets.exporters"
+          :code-text="snippets.exporters"
           width="fill"
         />
         <CmkCode
           v-if="snippets.extensions"
           :title="_t('Extension configuration')"
-          :code_txt="snippets.extensions"
+          :code-text="snippets.extensions"
           width="fill"
         />
-        <CmkCode :title="_t('Service configuration')" :code_txt="snippets.service" width="fill" />
+        <CmkCode :title="_t('Service configuration')" :code-text="snippets.service" width="fill" />
       </CmkTabContent>
 
       <CmkTabContent id="sdk">

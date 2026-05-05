@@ -103,7 +103,7 @@ function reset() {
               :options="tab.registrationCmdVariants.map((v) => ({ label: v.label, value: v.id }))"
             />
             <CmkParagraph>{{ tab.registrationMsg }}</CmkParagraph>
-            <CmkCode :code_txt="regAgentOttCmd" class="code" width="fill" />
+            <CmkCode :code-text="regAgentOttCmd" class="code" width="fill" />
             <CmkAlertBox v-if="agentReceiverPortIsDefault" variant="warning" size="small">
               {{
                 _t(
@@ -152,7 +152,7 @@ function reset() {
             class="mh-register-agent__shell-toggle"
             :options="tab.registrationCmdVariants.map((v) => ({ label: v.label, value: v.id }))"
           />
-          <CmkCode :code_txt="activeRegistrationCmd ?? ''" class="code" width="fill" />
+          <CmkCode :code-text="activeRegistrationCmd ?? ''" class="code" width="fill" />
         </CmkIndent>
       </CmkCollapsible>
     </template>

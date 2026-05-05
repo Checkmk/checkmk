@@ -19,7 +19,7 @@ const displayCode = computed(() => props.code.replace(/^<!--[\s\S]*?-->\n?/, '')
 <template>
   <div class="ucl-detail-page-code-example__section">
     <CmkHeading type="h2">Code example</CmkHeading>
-    <CmkCode :code_txt="displayCode" width="fill" />
+    <CmkCode :code-text="displayCode" width="fill" />
   </div>
 </template>
 

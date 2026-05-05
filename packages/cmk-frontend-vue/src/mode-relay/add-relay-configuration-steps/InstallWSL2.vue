@@ -37,7 +37,7 @@ const installCommand = 'wsl --install'
           )
         }}
       </CmkParagraph>
-      <CmkCode :code_txt="installCommand" data-testid="install-wsl2-command"></CmkCode>
+      <CmkCode :code-text="installCommand" data-testid="install-wsl2-command"></CmkCode>
       <CmkAlertBox variant="info">
         {{ _t('A system reboot may be required after installing WSL2 before proceeding.') }}
       </CmkAlertBox>

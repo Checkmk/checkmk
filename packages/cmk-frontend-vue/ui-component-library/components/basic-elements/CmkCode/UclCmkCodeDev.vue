@@ -48,19 +48,19 @@ const multilineShortCodeText = `C:\\Program Files (x86)\\checkmk\\service\\cmk-a
   <div class="ucl-cmk-code-dev__container">
     <h2>Short code</h2>
     <br />
-    <CmkCode title="Some title" :code_txt="shortCodeText" />
+    <CmkCode title="Some title" :code-text="shortCodeText" />
     <h2>Long code</h2>
     <br />
-    <CmkCode title="Some title" :code_txt="longCodeText" />
+    <CmkCode title="Some title" :code-text="longCodeText" />
     <h2>Multiline code</h2>
     <br />
-    <CmkCode title="Super title" :code_txt="multilineCodeText" />
+    <CmkCode title="Super title" :code-text="multilineCodeText" />
     <h2>Multiline short code</h2>
     <br />
-    <CmkCode title="Super title" :code_txt="multilineShortCodeText" />
+    <CmkCode title="Super title" :code-text="multilineShortCodeText" />
     <h2>Multiline short code (fill full width of container)</h2>
     <br />
-    <CmkCode title="Super title" :code_txt="multilineShortCodeText" width="fill" />
+    <CmkCode title="Super title" :code-text="multilineShortCodeText" width="fill" />
   </div>
 </template>
 

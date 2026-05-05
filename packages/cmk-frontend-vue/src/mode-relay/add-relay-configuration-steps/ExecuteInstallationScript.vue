@@ -85,7 +85,7 @@ const installCommand = computed(() => {
 
       <CmkCode
         v-if="ott && !(ott instanceof Error)"
-        :code_txt="installCommand"
+        :code-text="installCommand"
         data-testid="run-relay-install-script"
       ></CmkCode>
     </template>

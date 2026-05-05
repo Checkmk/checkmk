@@ -77,7 +77,7 @@ const installCommand = computed(() => {
 
       <CmkCode
         v-if="ott && !(ott instanceof Error)"
-        :code_txt="installCommand"
+        :code-text="installCommand"
         data-testid="run-msi-installer-command"
       ></CmkCode>
     </template>

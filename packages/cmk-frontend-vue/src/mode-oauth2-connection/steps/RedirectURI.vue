@@ -112,7 +112,7 @@ immediateWatch(
       </CmkAlertBox>
       <CmkCode
         class="mode-oauth2-connection-redirect-u-r-i__cmk-code"
-        :code_txt="
+        :code-text="
           buildRedirectUri(props.urls.redirect, overrideSite, props.urls.site_redirect_urls)
         "
       />

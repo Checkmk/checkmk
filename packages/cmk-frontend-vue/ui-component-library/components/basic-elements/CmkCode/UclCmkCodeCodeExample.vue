@@ -13,5 +13,5 @@ greet();`
 </script>
 
 <template>
-  <CmkCode title="Greeting Function" :code_txt="mySnippet" />
+  <CmkCode title="Greeting Function" :code-text="mySnippet" />
 </template>

@@ -64,7 +64,7 @@ const downloadCommand = computed(
       </CmkParagraph>
       <CmkAlertBox v-if="insecureProtocolWarning">{{ insecureProtocolWarning }}</CmkAlertBox>
       <CmkCode
-        :code_txt="downloadCommand"
+        :code-text="downloadCommand"
         :aria-label="_t('Download relay MSI installer command')"
       ></CmkCode>
     </template>

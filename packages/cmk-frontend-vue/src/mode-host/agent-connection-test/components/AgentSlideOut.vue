@@ -240,7 +240,7 @@ function getInitStep() {
                         <template v-if="variant.id === selectedVariantId">
                           <CmkCode
                             :title="_t('Download the agent')"
-                            :code_txt="installCmdWithToken(variant.downloadCmd || '')"
+                            :code-text="installCmdWithToken(variant.downloadCmd || '')"
                             class="code"
                             width="fill"
                           />
@@ -249,7 +249,7 @@ function getInitStep() {
                           </CmkAlertBox>
                           <CmkCode
                             :title="_t('Install the agent')"
-                            :code_txt="variant.installCmd"
+                            :code-text="variant.installCmd"
                             class="code"
                             width="fill"
                           />
@@ -259,7 +259,7 @@ function getInitStep() {
                     <template v-else-if="tab.installDownloadCmd">
                       <CmkCode
                         :title="_t('Download the agent')"
-                        :code_txt="installCmdWithToken(tab.installDownloadCmd)"
+                        :code-text="installCmdWithToken(tab.installDownloadCmd)"
                         class="code"
                         width="fill"
                       />
@@ -268,14 +268,14 @@ function getInitStep() {
                       </CmkAlertBox>
                       <CmkCode
                         :title="_t('Install the agent')"
-                        :code_txt="tab.installCmd || ''"
+                        :code-text="tab.installCmd || ''"
                         class="code"
                         width="fill"
                       />
                     </template>
                     <CmkCode
                       v-else-if="tab.installMsg && tab.installCmd"
-                      :code_txt="installCmdWithToken(tab.installCmd)"
+                      :code-text="installCmdWithToken(tab.installCmd)"
                       class="code"
                       width="fill"
                     />
@@ -285,7 +285,7 @@ function getInitStep() {
                           <template v-if="subTab.downloadCmd">
                             <CmkCode
                               :title="_t('Download the agent')"
-                              :code_txt="installCmdWithToken(subTab.downloadCmd)"
+                              :code-text="installCmdWithToken(subTab.downloadCmd)"
                               class="code"
                               width="fill"
                             />
@@ -294,14 +294,14 @@ function getInitStep() {
                             </CmkAlertBox>
                             <CmkCode
                               :title="_t('Install the agent')"
-                              :code_txt="subTab.installCmd"
+                              :code-text="subTab.installCmd"
                               class="code"
                               width="fill"
                             />
                           </template>
                           <CmkCode
                             v-else
-                            :code_txt="installCmdWithToken(subTab.installCmd)"
+                            :code-text="installCmdWithToken(subTab.installCmd)"
                             class="code"
                             width="fill"
                           />
@@ -317,7 +317,7 @@ function getInitStep() {
                   <CmkCode
                     v-for="cmd in tab.unbakedFallback.commands"
                     :key="cmd"
-                    :code_txt="cmd"
+                    :code-text="cmd"
                     class="code"
                     width="fill"
                   />
@@ -381,7 +381,7 @@ function getInitStep() {
               />
               <CmkCode
                 v-if="currentStep === 4"
-                :code_txt="getStatusCmd(tab)"
+                :code-text="getStatusCmd(tab)"
                 class="code"
                 width="fill"
               />

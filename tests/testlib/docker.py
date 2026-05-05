@@ -371,7 +371,7 @@ class CheckmkApp:
             ) from e
 
         if self.package_info.edition.is_cloud_edition():
-            from tests.testlib.system.cloud.utils import (  # type: ignore[import-untyped, unused-ignore, import-not-found]
+            from tests.testlib.nonfree.cloud.utils import (  # type: ignore[import-untyped, unused-ignore, import-not-found]
                 create_cloud_initial_config,
             )
 

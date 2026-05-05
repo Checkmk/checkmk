@@ -38,7 +38,7 @@ def _cloud_lifecycle_wrapper_or_none() -> Callable[[Site], AbstractContextManage
         return None
 
     def _wrapper(site: Site) -> AbstractContextManager[object]:
-        from tests.testlib.system.cloud.utils import (  # type: ignore[import-untyped, unused-ignore, import-not-found]
+        from tests.testlib.nonfree.cloud.utils import (  # type: ignore[import-untyped, unused-ignore, import-not-found]
             cloud_environment,
         )
 
@@ -50,7 +50,7 @@ def _cloud_lifecycle_wrapper_or_none() -> Callable[[Site], AbstractContextManage
 def _ensure_cloud_initial_config() -> None:
     if not site_factory.edition.is_cloud_edition():
         return
-    from tests.testlib.system.cloud.utils import (  # type: ignore[import-untyped, unused-ignore, import-not-found]
+    from tests.testlib.nonfree.cloud.utils import (  # type: ignore[import-untyped, unused-ignore, import-not-found]
         create_cloud_initial_config,
     )
 

@@ -9,9 +9,7 @@ py_library(
     name = "testlib",
     srcs = ["__init__.py"] + glob(
         include = ["testlib/**/*.py"],
-        exclude = [
-            "testlib/fake_site.py",
-        ],
+        exclude = ["testlib/fake_site.py"],
     ),
     data = glob(
         include = ["testlib/**"],
@@ -60,7 +58,15 @@ py_library(
         requirement("pytest-check"),
         requirement("pytest-mock"),
         requirement("requests"),
-    ],
+    ] + select({
+        "//:gpl+nonfree_repo": [
+            "//cmk/editions/nonfree:cloud",
+            "//non-free/packages/cmk-licensing-nonfree",
+            "//non-free/packages/cmk-metric-backend",
+            "//non-free/packages/cmk-metric-backend:testlib",
+        ],
+        "//:gpl_repo": [],
+    }),
 )
 
 py_library(
@@ -100,10 +106,7 @@ py_library(
 py_library(
     name = "fake_site",
     testonly = True,
-    srcs = [
-        "__init__.py",
-        "testlib/fake_site.py",
-    ],
+    srcs = ["testlib/fake_site.py"],
     imports = [".."],
     visibility = ["//:__subpackages__"],
     deps = [
@@ -174,7 +177,13 @@ py_library(
         requirement("pytest-check"),
         requirement("pyyaml"),
         requirement("requests"),
-    ],
+    ] + select({
+        "//:gpl+nonfree_repo": [
+            "//cmk/editions/nonfree:cloud",
+            "//non-free/packages/cmk-metric-backend:testlib",
+        ],
+        "//:gpl_repo": [],
+    }),
 )
 
 py_library(
@@ -242,14 +251,7 @@ py_library(
         requirement("cryptography"),
         requirement("requests"),
         requirement("opentelemetry-instrumentation-requests"),
-    ] + select({
-        "//:gpl+nonfree_repo": [
-            "//non-free/tests/testlib/system:metric_backend",
-            "//non-free/tests/testlib/system:opentelemetry",
-            "//non-free/tests/testlib/system/cloud",
-        ],
-        "//:gpl_repo": [],
-    }),
+    ],
 )
 
 py_library(
@@ -340,15 +342,7 @@ py_library(
         requirement("pytest_playwright"),
         requirement("clickhouse_connect"),
         ":testlib",
-    ] + select({
-        "//:gpl+nonfree_repo": [
-            "//non-free/tests/testlib/system:metric_backend",
-            "//non-free/tests/testlib/system:opentelemetry",
-            "//non-free/tests/testlib/system/cloud",
-            "//non-free/tests/testlib/system/licensing",
-        ],
-        "//:gpl_repo": [],
-    }),
+    ],
 )
 
 py_library(
@@ -391,10 +385,7 @@ py_library(
         "//tests/testlib/common:utils",
     ] + select({
         "//:gpl+nonfree_repo": [
-            "//non-free/tests/testlib/system:metric_backend",
-            "//non-free/tests/testlib/system:opentelemetry",
-            "//non-free/tests/testlib/system/cloud",
-            "//non-free/tests/testlib/system/licensing",
+            "//non-free/packages/cmk-licensing-nonfree",
         ],
         "//:gpl_repo": [],
     }),
@@ -470,12 +461,7 @@ py_library(
     deps = [
         requirement("pytest"),
         ":testlib",
-    ] + select({
-        "//:gpl+nonfree_repo": [
-            "//non-free/tests/testlib/system/licensing",
-        ],
-        "//:gpl_repo": [],
-    }),
+    ],
 )
 
 py_library(
@@ -566,15 +552,7 @@ py_library(
         ":testlib",
         "//tests/testlib/common:utils",
         requirement("pytest"),
-    ] + select({
-        "//:gpl+nonfree_repo": [
-            "//non-free/tests/testlib/system:metric_backend",
-            "//non-free/tests/testlib/system:opentelemetry",
-            "//non-free/tests/testlib/system/cloud",
-            "//non-free/tests/testlib/system/licensing",
-        ],
-        "//:gpl_repo": [],
-    }),
+    ],
 )
 
 sh_library(

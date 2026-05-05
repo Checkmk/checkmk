@@ -384,92 +384,106 @@ def _discover_config_specs(
         if not entries:
             continue
 
-        src_paths = [src for _, _, src, _ in entries]
-        dest_paths = [dest for dest, _, _, _ in entries]
-        modes = [mode for _, mode, _, _ in entries if mode]
-
-        # Derive source_prefix
-        common_src = os.path.commonpath(src_paths) if src_paths else ""
-        if common_src and not common_src.endswith("/"):
-            common_src += "/"
-
-        # Skip targets with no resolvable source_prefix or external repo paths.
-        # These are compiled/generated artifacts (bin_755, agents_linux, cpp-libs,
-        # nagios_bin, etc.) that have no editable source files to deploy.
-        if not common_src or common_src.startswith("../"):
-            logger.debug(
-                "Skipping %s: no deployable source_prefix (%r)",
-                target_label,
-                common_src,
-            )
+        # Skip non-free targets in GPL-only checkout
+        if not is_nonfree_checkout and "non-free/" in target_label:
             continue
 
-        # Skip non-free specs in GPL-only checkout
-        if not is_nonfree_checkout and (
-            common_src.startswith("non-free/") or "non-free/" in target_label
-        ):
+        # Drop entries from external Bazel repos — unpatchable from the local checkout
+        editable_entries = [e for e in entries if not _is_external_src(e[2])]
+        if not editable_entries:
+            logger.debug("Skipping %s: only external sources", target_label)
             continue
 
-        # Derive site_dest
-        common_dest = os.path.commonpath(dest_paths) if dest_paths else ""
-        if common_dest and not common_dest.endswith("/"):
-            common_dest += "/"
+        # Group by source-tree root so heterogeneous targets (e.g. //bin:bin_755,
+        # which mixes bin/*.py with cmk/utils/password_store/cli.py) emit one
+        # spec per editable source root instead of being skipped wholesale.
+        groups = _group_entries_by_source_root(editable_entries)
 
-        # Skip targets with no resolvable site_dest (compiled third-party packages
-        # like erlang, freetds, nagios, rrdtool, etc. whose outputs have no
-        # common destination directory)
-        if not common_dest:
-            logger.debug(
-                "Skipping %s: no site_dest derivable (source: %s)",
-                target_label,
-                common_src,
-            )
+        # Drop pure-generated, repo-root (no source-tree root), and (in GPL
+        # checkout) non-free groups
+        groups = [
+            (root, gentries)
+            for root, gentries in groups
+            if root
+            and any(is_source for _, _, _, is_source in gentries)
+            and (is_nonfree_checkout or root != "non-free")
+        ]
+        if not groups:
             continue
 
-        # Derive mode
-        mode = int(modes[0], 8) if modes else -1
-
-        # Auto-classify deploy method
-        method = _classify_config_method(common_src, target_label)
-
-        # Build files list — mark generated files (is_source=False) so the
-        # deployer knows to resolve them from bazel-bin instead of the repo.
-        files: list[dict[str, Any]] = sorted(
-            [
-                {"src": src, "dest": dest, "mode": fmode, "generated": not is_source}
-                for dest, fmode, src, is_source in entries
-            ],
-            key=lambda f: f["src"],
-        )
-
-        # Normalize name from target label
-        name = "deploy_" + target_label.lstrip("/").replace("/", "_").replace(":", "_")
-
-        # Apply overrides from TOML
+        target_name = "deploy_" + target_label.lstrip("/").replace("/", "_").replace(":", "_")
         overrides = config_overrides.get(target_label, {})
         includes = overrides.get("includes", [])
         delete_extra = overrides.get("delete_extra", False)
         file_chmod = overrides.get("file_chmod", "")
         services = overrides.get("services", [])
+        single_group = len(groups) == 1
 
-        config_specs.append(
-            {
-                "delete_extra": delete_extra,
-                "file_chmod": file_chmod,
-                "files": files,
-                "includes": includes,
-                "method": method,
-                "mode": mode,
-                "name": name,
-                "package_target": target_label,
-                "services": services,
-                "site_dest": common_dest,
-                "source_prefix": common_src,
-            }
-        )
+        for root, gentries in groups:
+            src_paths = [src for _, _, src, _ in gentries]
+            dest_paths = [dest for dest, _, _, _ in gentries]
+            modes = [mode for _, mode, _, _ in gentries if mode]
+
+            common_src = os.path.commonpath(src_paths)
+            if common_src and not common_src.endswith("/"):
+                common_src += "/"
+
+            common_dest = os.path.commonpath(dest_paths) if dest_paths else ""
+            if common_dest and not common_dest.endswith("/"):
+                common_dest += "/"
+
+            if not common_dest:
+                logger.debug("Skipping %s group %r: no common site_dest", target_label, root)
+                continue
+
+            files: list[dict[str, Any]] = sorted(
+                [
+                    {"src": src, "dest": dest, "mode": fmode, "generated": not is_source}
+                    for dest, fmode, src, is_source in gentries
+                ],
+                key=lambda f: f["src"],
+            )
+            name = target_name if single_group else f"{target_name}__{root}"
+            config_specs.append(
+                {
+                    "delete_extra": delete_extra,
+                    "file_chmod": file_chmod,
+                    "files": files,
+                    "includes": includes,
+                    "method": _classify_config_method(common_src, target_label),
+                    "mode": int(modes[0], 8) if modes else -1,
+                    "name": name,
+                    "package_target": target_label,
+                    "services": services,
+                    "site_dest": common_dest,
+                    "source_prefix": common_src,
+                }
+            )
 
     config_specs.sort(key=lambda s: s["name"])
     return config_specs
+
+
+def _is_external_src(src: str) -> bool:
+    """True if a Bazel source path lives outside the local checkout."""
+    return src.startswith("../") or src.startswith("external/")
+
+
+def _group_entries_by_source_root(
+    entries: list[tuple[str, str, str, bool]],
+) -> list[tuple[str, list[tuple[str, str, str, bool]]]]:
+    """Group ``(dest, mode, src, is_source)`` entries by the first path component of ``src``.
+
+    Returns a list of ``(root, group_entries)`` tuples sorted by ``root`` for
+    deterministic output. Files without a path separator land in a ``""`` root
+    group (which the caller filters out alongside other unrootable entries).
+    """
+    groups: dict[str, list[tuple[str, str, str, bool]]] = {}
+    for entry in entries:
+        src = entry[2]
+        root = src.split("/", 1)[0] if "/" in src else ""
+        groups.setdefault(root, []).append(entry)
+    return sorted(groups.items())
 
 
 # ---------------------------------------------------------------------------
@@ -649,7 +663,10 @@ def _query_deps_packages_targets(repo_root: Path) -> list[str]:
 
     Returns a list of target labels for config-type packaging targets.
     """
-    query = 'kind("pkg_files rule", deps(//omd:deps_packages, 2))'
+    # Depth 3 walks into pkg_tar deps (e.g. //bin:pkg_tar) so their pkg_files
+    # srcs (//bin:bin_755 etc.) reach the discovery; depth 2 stops at the
+    # pkg_tar nodes themselves and silently drops their contents.
+    query = 'kind("pkg_files rule", deps(//omd:deps_packages, 3))'
     result = _run_bazel_query(
         ["bazel", "query", query, "--output=label", "--keep_going"],
         repo_root,

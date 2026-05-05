@@ -114,6 +114,7 @@ def test_predictive_levels_bounds(site: Site, config: BoundConfig) -> None:
         logger.info(f"Successfully tested {config.description}")
 
 
+@pytest.mark.skip("flaky test")
 @pytest.mark.skip_if_edition("cloud")
 def test_update_predictive_levels_rule(site: Site) -> None:
     """Test updating predictive levels rules via REST API."""

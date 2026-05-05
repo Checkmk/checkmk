@@ -182,11 +182,13 @@ void main() {
                             },
                         );
                     } finally {
+                        def result_str = build_instance ? "${build_instance.getResult()}".toLowerCase() : "failed"
+                        def url_str    = build_instance ? build_instance.getAbsoluteUrl() : ""
                         analyse_mapping["${item.NAME}"] = [
                             stepName: item.NAME,
                             duration: groovy.time.TimeCategory.minus(new Date(), time_stage_started),
-                            status: "${build_instance.getResult()}".toLowerCase(),
-                            triggered_build_url: build_instance.getAbsoluteUrl(),
+                            status: result_str,
+                            triggered_build_url: url_str,
                             test_result_path: item.JENKINS_TEST_RESULT_PATH,
                         ];
                     }

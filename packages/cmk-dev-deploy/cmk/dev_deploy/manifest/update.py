@@ -424,13 +424,8 @@ def _discover_config_specs(
             dest_paths = [dest for dest, _, _, _ in gentries]
             modes = [mode for _, mode, _, _ in gentries if mode]
 
-            common_src = os.path.commonpath(src_paths)
-            if common_src and not common_src.endswith("/"):
-                common_src += "/"
-
-            common_dest = os.path.commonpath(dest_paths) if dest_paths else ""
-            if common_dest and not common_dest.endswith("/"):
-                common_dest += "/"
+            common_src = _common_directory(src_paths)
+            common_dest = _common_directory(dest_paths)
 
             if not common_dest:
                 logger.debug("Skipping %s group %r: no common site_dest", target_label, root)
@@ -467,6 +462,26 @@ def _discover_config_specs(
 def _is_external_src(src: str) -> bool:
     """True if a Bazel source path lives outside the local checkout."""
     return src.startswith("../") or src.startswith("external/")
+
+
+def _common_directory(paths: list[str]) -> str:
+    """Return ``commonpath(paths)`` as a directory with trailing slash.
+
+    When ``commonpath`` returns a file (e.g. a single-element group), descend
+    to its parent directory so downstream consumers — which assume
+    ``source_prefix`` and ``site_dest`` are directory prefixes — can match
+    changed-file paths and locate the source on disk.
+    """
+    if not paths:
+        return ""
+    common = os.path.commonpath(paths)
+    if not common:
+        return ""
+    if common in paths:
+        common = os.path.dirname(common)
+    if not common:
+        return ""
+    return common.rstrip("/") + "/"
 
 
 def _group_entries_by_source_root(

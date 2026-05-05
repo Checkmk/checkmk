@@ -188,6 +188,30 @@ class TestNonFreeFilter:
         assert specs[0]["source_prefix"] == "agents/"
 
 
+class TestSingleFileNormalization:
+    """source_prefix/site_dest should always be directories, never file paths."""
+
+    def test_single_file_target_normalizes_prefix_to_parent_dir(self) -> None:
+        pkg_data: PackagingTargetIndex = {
+            "//bin:cmk-pwstore": [
+                ("bin/cmk-pwstore", "0755", "cmk/utils/password_store/cli.py", True),
+            ]
+        }
+        specs = _discover(pkg_data)
+        assert len(specs) == 1
+        assert specs[0]["source_prefix"] == "cmk/utils/password_store/"
+        assert specs[0]["site_dest"] == "bin/"
+
+    def test_single_file_with_no_directory_yields_no_spec(self) -> None:
+        pkg_data: PackagingTargetIndex = {
+            "//root:t": [
+                ("AUTHORS", "0644", "AUTHORS", True),
+            ]
+        }
+        # Repo-root group is filtered before commonpath even runs.
+        assert _discover(pkg_data) == []
+
+
 class TestDeterminism:
     def test_same_input_yields_identical_output(self) -> None:
         pkg_data: PackagingTargetIndex = {

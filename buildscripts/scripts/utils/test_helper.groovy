@@ -98,6 +98,7 @@ void execute_test(Map config = [:]) {
 // of the result of the executed command or callback.
 void run_this(Map args) {
     try {
+        // do not change this order, see test-gui-e2e-f12less-k8s.groovy
         if (args.cmd) {
             run_sh_command(args.cmd);
         }

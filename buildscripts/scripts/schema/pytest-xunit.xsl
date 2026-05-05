@@ -45,11 +45,18 @@
           <xsl:value-of select="@failures"/>
         </xsl:attribute>
       </xsl:if>
-      <xsl:if test="@skips">
-        <xsl:attribute name="skipped">
-          <xsl:value-of select="@skips"/>
-        </xsl:attribute>
-      </xsl:if>
+      <xsl:choose>
+        <xsl:when test="@skipped">
+          <xsl:attribute name="skipped">
+            <xsl:value-of select="@skipped"/>
+          </xsl:attribute>
+        </xsl:when>
+        <xsl:when test="@skips">
+          <xsl:attribute name="skipped">
+            <xsl:value-of select="@skips"/>
+          </xsl:attribute>
+        </xsl:when>
+      </xsl:choose>
       <xsl:if test="@time">
         <xsl:attribute name="time">
           <xsl:value-of select="format-number(@time, '#.###')"/>
@@ -96,6 +103,7 @@
           </xsl:otherwise>
         </xsl:choose>
       </xsl:if>
+      <xsl:copy-of select="skipped"/>
       <xsl:for-each select="error">
         <error>
           <xsl:attribute name="message">

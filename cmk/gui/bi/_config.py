@@ -16,7 +16,6 @@ from cmk.bi.actions import BICallARuleAction
 from cmk.bi.aggregation import BIAggregation, BIAggregationSchema
 from cmk.bi.aggregation_functions import BIAggregationFunctionSchema
 from cmk.bi.compiler import BICompiler
-from cmk.bi.lib import SitesCallback
 from cmk.bi.packs import BIAggregationPack, BIPackConfig
 from cmk.bi.rule import BIRule, BIRuleSchema
 from cmk.bi.type_defs import AggrConfigDict
@@ -122,7 +121,7 @@ from ._valuespecs import (
     is_contact_for_pack,
     may_use_rules_in_pack,
 )
-from .bi_manager import all_sites_with_id_and_online, bi_livestatus_query, BIManager
+from .bi_manager import BIManager, create_default_sites_callback
 
 
 def register(
@@ -1548,12 +1547,7 @@ class BIAggregationForm(Dictionary):
 class AjaxBIRulePreview(AjaxPage):
     @override
     def page(self, ctx: PageContext) -> PageResult:
-        sites_callback = SitesCallback(
-            all_sites_with_id_and_online=all_sites_with_id_and_online,
-            query=bi_livestatus_query,
-            translate=_,
-        )
-        compiler = BICompiler(BIManager.bi_configuration_file(), sites_callback)
+        compiler = BICompiler(BIManager.bi_configuration_file(), create_default_sites_callback())
         compiler.prepare_for_compilation(compiler.compute_current_configstatus()["online_sites"])
 
         # Create preview rule
@@ -1595,12 +1589,7 @@ class AjaxBIAggregationPreview(AjaxPage):
     @override
     def page(self, ctx: PageContext) -> PageResult:
         # Prepare compiler
-        sites_callback = SitesCallback(
-            all_sites_with_id_and_online=all_sites_with_id_and_online,
-            query=bi_livestatus_query,
-            translate=_,
-        )
-        compiler = BICompiler(BIManager.bi_configuration_file(), sites_callback)
+        compiler = BICompiler(BIManager.bi_configuration_file(), create_default_sites_callback())
         compiler.prepare_for_compilation(compiler.compute_current_configstatus()["online_sites"])
 
         # Create preview aggr

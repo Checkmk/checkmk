@@ -27,8 +27,8 @@ def parse_hitachi_hnas_fc_if(
             ),
             interfaces.Counters(
                 in_octets=interfaces.saveint(line[4]),
-                in_disc=interfaces.saveint(line[13]),
-                in_err=sum(map(int, line[6:13])),
+                in_disc=int(line[13]) if line[13] else None,
+                in_err=sum(int(x) for x in line[6:13]) if all(line[6:13]) else None,
                 out_octets=interfaces.saveint(line[5]),
             ),
             timestamp=timestamp,

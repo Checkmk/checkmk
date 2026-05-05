@@ -3,35 +3,69 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Mapping
 
-from cmk.gui.agent_bakery import RulespecGroupMonitoringAgentsAgentPlugins
-from cmk.gui.i18n import _
-from cmk.gui.plugins.wato.utils import HostRulespec, rulespec_registry
-from cmk.gui.valuespec import DropdownChoice
-from cmk.utils.rulesets.definition import RuleGroup
+from cmk.rulesets.v1 import Help, Title
+from cmk.rulesets.v1.form_specs import (
+    CascadingSingleChoice,
+    CascadingSingleChoiceElement,
+    DefaultValue,
+    DictElement,
+    Dictionary,
+    FixedValue,
+    TimeMagnitude,
+    TimeSpan,
+)
+from cmk.rulesets.v1.rule_specs import AgentConfig, Topic
 
 
-def _valuespec_agent_config_windows_updates() -> DropdownChoice[bool]:
-    return DropdownChoice(
-        title=_("Windows Updates"),
-        help=_(
-            "The Windows Updates plug-in checks for the number of pending updates. The "
-            "default configuration will include the asynchronous execution and caching "
-            "of the output for 4 hours (14400 seconds). You can still change these "
-            "values with the Setup rule sets <i>Set cache age for plug-ins and local checks"
-            "</i> and <i>Set execution mode for plug-ins and local checks</i>."
-        ),
-        choices=[
-            (True, _("Deploy Windows Updates plug-in")),
-            (False, _("Do not deploy Windows Updates plug-in")),
-        ],
+def migrate(value: object) -> Mapping[str, object]:
+    if isinstance(value, dict) and "deployment" in value:
+        return value
+    return {"deployment": ("sync" if value else "do_not_deploy", None)}
+
+
+def _form_spec() -> Dictionary:
+    return Dictionary(
+        help_text=Help("The Windows Updates plug-in checks for the number of pending updates."),
+        elements={
+            "deployment": DictElement(
+                required=True,
+                parameter_form=CascadingSingleChoice(
+                    title=Title("Deployment type"),
+                    elements=(
+                        CascadingSingleChoiceElement(
+                            name="sync",
+                            title=Title("Deploy Windows Updates plug-in"),
+                            parameter_form=FixedValue(value=None),
+                        ),
+                        CascadingSingleChoiceElement(
+                            name="cached",
+                            title=Title("Deploy Windows Updates plug-in and run asynchronously"),
+                            parameter_form=TimeSpan(
+                                displayed_magnitudes=(
+                                    TimeMagnitude.HOUR,
+                                    TimeMagnitude.MINUTE,
+                                )
+                            ),
+                        ),
+                        CascadingSingleChoiceElement(
+                            name="do_not_deploy",
+                            title=Title("Do not deploy Windows Updates plug-in"),
+                            parameter_form=FixedValue(value=None),
+                        ),
+                    ),
+                    prefill=DefaultValue("sync"),
+                ),
+            ),
+        },
+        migrate=migrate,
     )
 
 
-rulespec_registry.register(
-    HostRulespec(
-        group=RulespecGroupMonitoringAgentsAgentPlugins,
-        name=RuleGroup.AgentConfig("windows_updates"),
-        valuespec=_valuespec_agent_config_windows_updates,
-    )
+rule_spec_windows_updates = AgentConfig(
+    title=Title("Windows Updates"),
+    name="windows_updates",
+    topic=Topic.OPERATING_SYSTEM,
+    parameter_form=_form_spec,
 )

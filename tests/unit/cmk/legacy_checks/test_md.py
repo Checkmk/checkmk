@@ -4,14 +4,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="misc"
-# mypy: disable-error-code="no-untyped-call"
 
 from collections.abc import Mapping, Sequence
 from typing import Any
 
 import pytest
 
-from cmk.agent_based.v2 import StringTable
+from cmk.agent_based.v2 import Result, Service, State, StringTable
 from cmk.legacy_checks.md import check_md, discover_md, parse_md
 
 
@@ -27,17 +26,15 @@ from cmk.legacy_checks.md import check_md, discover_md, parse_md
                 ["2925532672", "blocks", "64k", "chunks"],
                 ["unused", "devices:", "<none>"],
             ],
-            [("md1", None)],
+            [Service(item="md1")],
         ),
     ],
 )
-def test_discover_md(
-    string_table: StringTable, expected_discoveries: Sequence[tuple[str, Mapping[str, Any]]]
-) -> None:
+def test_discover_md(string_table: StringTable, expected_discoveries: Sequence[Service]) -> None:
     """Test discovery function for md check."""
     parsed = parse_md(string_table)
     result = list(discover_md(parsed))
-    assert sorted(result) == sorted(expected_discoveries)
+    assert result == list(expected_discoveries)
 
 
 @pytest.mark.parametrize(
@@ -54,7 +51,10 @@ def test_discover_md(
                 ["2925532672", "blocks", "64k", "chunks"],
                 ["unused", "devices:", "<none>"],
             ],
-            [(0, "Status: active"), (0, "Spare: 0, Failed: 0, Active: 2")],
+            [
+                Result(state=State.OK, summary="Status: active"),
+                Result(state=State.OK, summary="Spare: 0, Failed: 0, Active: 2"),
+            ],
         ),
     ],
 )

@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
-
 # Example for output from agent (contents of /proc/mdstat):
 # ---------------------------------------------------------
 #    Personalities : [raid1]
@@ -113,16 +111,26 @@
 # ---------------------------------------------------------
 
 
-# mypy: disable-error-code="var-annotated"
+from collections.abc import Mapping
+from typing import Any
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
+from cmk.agent_based.v2 import (
+    AgentSection,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Result,
+    Service,
+    State,
+    StringTable,
+)
 
-check_info = {}
+Section = Mapping[str, Mapping[str, Any]]
 
 
-def parse_md(string_table):
-    parsed = {}
-    instance = {}
+def parse_md(string_table: StringTable) -> Section:
+    parsed: dict[str, dict[str, Any]] = {}
+    instance: dict[str, Any] = {}
     for line in (l for l in string_table if l):
         if len(line) >= 5 and line[0].startswith("md") and line[1] == ":":
             if line[3].startswith("(") and line[3].endswith(")"):
@@ -151,7 +159,7 @@ def parse_md(string_table):
         elif instance:
             if line[0].startswith("resync="):
                 k, v = line[0].split("=")
-                instance["%s_state" % k] = v
+                instance[f"{k}_state"] = v
                 continue
 
             if len(line) >= 2 and line[0].startswith("[") and line[0].endswith("]"):
@@ -160,7 +168,7 @@ def parse_md(string_table):
                         k, v = e.split("=")
                         instance[k] = v
                     elif e in ["recovery", "resync", "check"]:
-                        instance["%s_values" % e] = line[idx + 3]
+                        instance[f"{e}_values"] = line[idx + 3]
                 continue
 
             if line[-1].startswith("[") and line[-1].endswith("]"):
@@ -175,30 +183,33 @@ def parse_md(string_table):
     return parsed
 
 
-def discover_md(parsed):
-    for device, attrs in parsed.items():
+def discover_md(section: Section) -> DiscoveryResult:
+    for device, attrs in section.items():
         if attrs["raid_name"] != "raid0":
-            yield device, None
+            yield Service(item=device)
 
 
-def check_md(item, _no_params, parsed):
-    data = parsed.get(item)
+def check_md(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
+    data = section.get(item)
     if data is None:
         return
 
     raid_state = data["raid_state"]
-    infotext = "Status: %s" % raid_state
+    infotext = f"Status: {raid_state}"
     if raid_state in {"active", "active(auto-read-only)"}:
-        state = 0
+        state = State.OK
     else:
         infotext += " (should be 'active')"
-        state = 2
-    yield state, infotext
+        state = State.CRIT
+    yield Result(state=state, summary=infotext)
 
     spare_disks = data["spare_disks"]
     failed_disks = data["failed_disks"]
     active_disks = data["active_disks"]
-    yield 0, f"Spare: {spare_disks}, Failed: {failed_disks}, Active: {active_disks}"
+    yield Result(
+        state=State.OK,
+        summary=f"Spare: {spare_disks}, Failed: {failed_disks}, Active: {active_disks}",
+    )
 
     num_disks = data.get("num_disks")
     expected_disks = data.get("expected_disks")
@@ -206,15 +217,15 @@ def check_md(item, _no_params, parsed):
     if num_disks is not None and expected_disks is not None and working_disks is not None:
         infotext = f"Status: {num_disks}/{expected_disks}, {working_disks}"
         if num_disks == expected_disks and active_disks == working_disks.count("U"):
-            yield 0, infotext
+            yield Result(state=State.OK, summary=infotext)
         else:
-            yield 2, infotext
+            yield Result(state=State.CRIT, summary=infotext)
 
     header = "[Resync/Recovery]"
     infotexts = []
     if "resync_state" in data:
         header = "[Resync]"
-        infotexts.append("Status: %s" % data["resync_state"])
+        infotexts.append(f"Status: {data['resync_state']}")
 
     if "resync_values" in data:
         header = "[Resync]"
@@ -225,25 +236,31 @@ def check_md(item, _no_params, parsed):
         infotexts.append(data["recovery_values"])
 
     if "finish" in data:
-        infotexts.append("Finish: %s" % data["finish"])
+        infotexts.append(f"Finish: {data['finish']}")
 
     if "speed" in data:
-        infotexts.append("Speed: %s" % data["speed"])
+        infotexts.append(f"Speed: {data['speed']}")
 
     if "check_values" in data:
         header = "[Check]"
-        infotexts.append("Status: %s" % data["check_values"])
-        yield 0, "{} {}".format(header, ", ".join(infotexts))
+        infotexts.append(f"Status: {data['check_values']}")
+        yield Result(state=State.OK, summary=f"{header} {', '.join(infotexts)}")
 
     elif infotexts:
-        yield 1, "{} {}".format(header, ", ".join(infotexts))
+        yield Result(state=State.WARN, summary=f"{header} {', '.join(infotexts)}")
 
 
-check_info["md"] = LegacyCheckDefinition(
+agent_section_md = AgentSection(
     name="md",
     parse_function=parse_md,
+)
+
+
+check_plugin_md = CheckPlugin(
+    name="md",
     service_name="MD Softraid %s",
     discovery_function=discover_md,
     check_function=check_md,
     check_ruleset_name="raid",
+    check_default_parameters={},
 )

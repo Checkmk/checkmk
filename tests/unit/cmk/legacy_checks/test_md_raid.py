@@ -3,25 +3,21 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-any-return"
-# mypy: disable-error-code="no-untyped-call"
-
 # NOTE: This file has been created by an LLM (from something that was worse).
 # It mostly serves as test to ensure we don't accidentally break anything.
 # If you encounter something weird in here, do not hesitate to replace this
 # test by something more appropriate.
 
-from collections.abc import Mapping
-from typing import Any
-
+from cmk.agent_based.v2 import Result, State
 from cmk.legacy_checks.md import (
     check_md,
     discover_md,
     parse_md,
+    Section,
 )
 
 
-def parsed() -> Mapping[str, Any]:
+def parsed() -> Section:
     """Return parsed data from actual parse function."""
     return parse_md(
         [
@@ -61,7 +57,7 @@ def parsed() -> Mapping[str, Any]:
     )
 
 
-def parsed_with_failed_disks() -> Mapping[str, Any]:
+def parsed_with_failed_disks() -> Section:
     """Return parsed data with failed disks."""
     return parse_md(
         [
@@ -81,8 +77,7 @@ def test_md_raid_discovery() -> None:
     # Should discover RAID devices but exclude RAID0
     assert len(discoveries) >= 3
 
-    # Extract items from discovery tuples
-    items = [item for item, params in discoveries]
+    items = [service.item for service in discoveries]
     assert "md1" in items  # RAID1
     assert "md2" in items  # RAID5
     assert "md3" in items  # RAID1
@@ -90,75 +85,58 @@ def test_md_raid_discovery() -> None:
 
 def test_md_raid_check_active() -> None:
     """Test check function for active RAID."""
-    params = None
+    results = list(check_md("md1", {}, parsed()))
 
-    results = list(check_md("md1", params, parsed()))
-
-    # Should have multiple results
     assert len(results) >= 2
 
-    # First result should be status - active is OK
     first_result = results[0]
-    assert len(first_result) == 2  # state, summary
-    state, summary = first_result
-    assert state == 0  # OK state
-    assert "Status: active" in summary
+    assert isinstance(first_result, Result)
+    assert first_result.state is State.OK
+    assert "Status: active" in first_result.summary
 
-    # Should have disk information
     disk_result = results[1]
-    state, summary = disk_result
-    assert state == 0  # OK state
-    assert "Spare:" in summary
-    assert "Failed:" in summary
-    assert "Active:" in summary
+    assert isinstance(disk_result, Result)
+    assert disk_result.state is State.OK
+    assert "Spare:" in disk_result.summary
+    assert "Failed:" in disk_result.summary
+    assert "Active:" in disk_result.summary
 
 
 def test_md_raid_check_with_check_operation() -> None:
     """Test check function for RAID with ongoing check."""
-    params = None
+    results = list(check_md("md2", {}, parsed()))
 
-    results = list(check_md("md2", params, parsed()))
-
-    # Should have multiple results including check status
     assert len(results) >= 3
 
-    # Should have check operation status
     check_result = results[-1]
-    state, summary = check_result
-    assert state == 0  # OK state for check operation
-    assert "[Check]" in summary
-    assert "76.0%" in summary
+    assert isinstance(check_result, Result)
+    assert check_result.state is State.OK
+    assert "[Check]" in check_result.summary
+    assert "76.0%" in check_result.summary
 
 
 def test_md_raid_check_failed_disks() -> None:
     """Test check function with failed disks."""
-    params = None
     section = parsed_with_failed_disks()
 
-    results = list(check_md("md0", params, section))
+    results = list(check_md("md0", {}, section))
 
-    # Should have results
     assert len(results) >= 2
 
-    # First result - status should be OK even with failed disk if RAID is still active
     first_result = results[0]
-    state, summary = first_result
-    assert state == 0  # OK state for active RAID
-    assert "Status: active" in summary
+    assert isinstance(first_result, Result)
+    assert first_result.state is State.OK
+    assert "Status: active" in first_result.summary
 
-    # Should show failed disk count
     disk_result = results[1]
-    state, summary = disk_result
-    assert "Failed: 1" in summary
+    assert isinstance(disk_result, Result)
+    assert "Failed: 1" in disk_result.summary
 
 
 def test_md_raid_check_missing_item() -> None:
     """Test check function with non-existent item."""
-    params = None
+    results = list(check_md("md999", {}, parsed()))
 
-    results = list(check_md("md999", params, parsed()))
-
-    # Should return empty results for missing item
     assert len(results) == 0
 
 
@@ -166,12 +144,10 @@ def test_md_raid_parse_function() -> None:
     """Test that parse function creates expected data structure."""
     section = parsed()
 
-    # Should have MD devices
     assert "md1" in section
     assert "md2" in section
     assert "md3" in section
 
-    # Check md1 structure (RAID1)
     md1 = section["md1"]
     assert md1["raid_name"] == "raid1"
     assert md1["raid_state"] == "active"
@@ -182,7 +158,6 @@ def test_md_raid_parse_function() -> None:
     assert md1["expected_disks"] == 2
     assert md1["working_disks"] == "UU"
 
-    # Check md2 structure (RAID5 with check operation)
     md2 = section["md2"]
     assert md2["raid_name"] == "raid5"
     assert md2["raid_state"] == "active"
@@ -196,9 +171,8 @@ def test_md_raid_parse_failed_disks() -> None:
     """Test parse function with failed disks."""
     section = parsed_with_failed_disks()
 
-    # Check md0 with failed disk
     md0 = section["md0"]
     assert md0["raid_name"] == "raid1"
     assert md0["failed_disks"] == 1
-    assert md0["active_disks"] == 2  # sdc3[3] and sdb3[1]
+    assert md0["active_disks"] == 2
     assert md0["spare_disks"] == 0

@@ -632,6 +632,7 @@ allows = [
   "cmk.gui",
   "cmk.gui.community_registration",
   "cmk.gui.nonfree",
+  "cmk.licensing.basics.features",
   "cmk.utils.jsontype",
   "cmk.utils.paths",
 ]

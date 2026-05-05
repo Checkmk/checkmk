@@ -34,6 +34,7 @@ from cmk.gui.openapi.restful_objects.type_defs import (
 from cmk.gui.openapi.restful_objects.utils import endpoint_ident, format_to_routing_path
 from cmk.gui.token_auth import TokenType
 from cmk.gui.utils.permission_verification import BasePerm
+from cmk.licensing.basics.features import FeatureName
 
 
 @dataclass(frozen=True, slots=True)
@@ -59,6 +60,7 @@ class VersionedSpecEndpoint:
     doc_group: TagGroup
     doc_sort_index: int
     doc_supported_editions: set[Edition] | None
+    doc_features_required: set[FeatureName]
     deprecated_werk_id: int | None
     handler: Callable
     error_schemas: Mapping[ErrorStatusCodeInt, type[ApiErrorDataclass]] | None
@@ -121,6 +123,7 @@ class EndpointDefinition:
             doc_group=self.doc_group,
             doc_sort_index=self.doc.sort_index,
             doc_supported_editions=self.doc.supported_editions,
+            doc_features_required=self.doc.features_required,
             deprecated_werk_id=self.doc.sort_index,
             handler=self.handler.handler,
             error_schemas=self.handler.error_schemas,

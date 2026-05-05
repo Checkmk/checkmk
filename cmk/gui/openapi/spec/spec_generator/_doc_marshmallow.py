@@ -183,6 +183,7 @@ def _marshmallow_endpoint_to_doc_endpoint(
         status_descriptions=endpoint.status_descriptions,
         does_redirects=endpoint.does_redirects,
         supported_editions=endpoint.supported_editions or set(Edition.__members__.values()),
+        features_required=endpoint.features_required,
     )
     try:
         return DocEndpoint(
@@ -246,6 +247,7 @@ def _to_operation_dict(
             editions=spec_endpoint.supported_editions,
             permissions_required=spec_endpoint.permissions_required,
             permissions_description=spec_endpoint.permissions_description,
+            features_required=spec_endpoint.features_required,
         ),
         "summary": spec_endpoint.title,
     }

@@ -19,6 +19,7 @@ from cmk.gui.openapi.restful_objects.type_defs import OpenAPITag, TagGroup
 from cmk.gui.openapi.versioned_endpoint_map import EndpointVersionChange
 from cmk.gui.permissions import permission_registry
 from cmk.gui.utils import permission_verification as permissions
+from cmk.licensing.basics.features import FeatureName
 
 
 class DefaultStatusCodeDescription(enum.Enum):
@@ -68,9 +69,16 @@ def build_spec_description(
     permissions_required: permissions.BasePerm | None,
     permissions_description: Mapping[str, str] | None,
     version_change: EndpointVersionChange | None = None,
+    features_required: set[FeatureName] | None = None,
 ) -> str:
     # The validator will complain on empty descriptions being set, even though it's valid.
-    spec_description = _build_description(endpoint_description, werk_id, editions, version_change)
+    spec_description = _build_description(
+        endpoint_description,
+        werk_id,
+        editions,
+        version_change,
+        features_required,
+    )
 
     if permissions_required is not None:
         # Check that all the names are known to the system.
@@ -130,6 +138,7 @@ def _build_description(
     werk_id: int | None = None,
     editions: Container[Edition] | None = None,
     version_change: EndpointVersionChange | None = None,
+    features_required: set[FeatureName] | None = None,
 ) -> str:
     r"""Build a OperationSpecType description.
 
@@ -175,6 +184,9 @@ def _build_description(
         version_change:
             The type of change this endpoint has compared to the previous version. This may be None.
 
+        features_required:
+            The features that are required to be licensed for this endpoint. This may be None.
+
     Returns:
         Either a complete description or None
 
@@ -196,6 +208,10 @@ def _build_description(
     if editions is not None:
         editions_description = get_multiple_edition_description(editions)
         description += f"Available in the following editions: {editions_description}\n\n"
+
+    if features_required:
+        features_list = ", ".join(sorted(f.value.capitalize() for f in features_required))
+        description += f"Requires the following features to be licensed: {features_list}\n\n"
 
     if description_text is not None:
         description += description_text

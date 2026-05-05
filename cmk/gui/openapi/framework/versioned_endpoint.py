@@ -26,6 +26,7 @@ from cmk.gui.openapi.restful_objects.type_defs import (
 from cmk.gui.token_auth import TokenType
 from cmk.gui.utils import permission_verification as permissions
 from cmk.gui.utils.dataclasses import DataclassInstance
+from cmk.licensing.basics.features import FeatureName
 
 # the generic argument T will currently not be used, but this is the only way to specify a bound
 # on dataclasses
@@ -155,6 +156,9 @@ class EndpointDoc:
 
     exclude_in_targets: set[EndpointTarget] = field(default_factory=set)
     """A set of endpoint documentation targets to exclude this endpoint from."""
+
+    features_required: set[FeatureName] = field(default_factory=set)
+    """A set of feature names required for this endpoint to be available."""
 
 
 @dataclass(slots=True, frozen=True)

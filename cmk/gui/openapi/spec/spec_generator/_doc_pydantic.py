@@ -154,6 +154,7 @@ def pydantic_endpoint_to_doc_endpoint(
         status_descriptions=endpoint.status_descriptions or {},
         does_redirects=bool(expected_status_codes & {201, 301, 302, 303}),
         supported_editions=endpoint.doc_supported_editions or set(Edition.__members__.values()),
+        features_required=endpoint.doc_features_required,
     )
     try:
         return DocEndpoint(
@@ -226,6 +227,7 @@ def _to_operation_dict(
             permissions_required=spec_endpoint.permissions_required,
             permissions_description=spec_endpoint.permissions_description,
             version_change=version_change,
+            features_required=spec_endpoint.features_required,
         ),
         "summary": spec_endpoint.title,
     }

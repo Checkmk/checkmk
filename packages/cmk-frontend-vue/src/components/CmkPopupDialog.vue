@@ -6,7 +6,6 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import { DialogTitle } from 'reka-ui'
 
-import usei18n from '@/lib/i18n'
 import type { TranslatedString } from '@/lib/i18nString'
 
 import CmkButton from './CmkButton.vue'
@@ -15,8 +14,6 @@ import CmkIcon from './CmkIcon/CmkIcon.vue'
 import CmkPopup from './CmkPopup.vue'
 import CmkHeading from './typography/CmkHeading.vue'
 import CmkParagraph from './typography/CmkParagraph.vue'
-
-const { _t } = usei18n()
 
 export interface CmkPopupDialogProps {
   open: boolean
@@ -46,7 +43,7 @@ const emit = defineEmits(['close'])
     <CmkParagraph v-if="text" class="cmk-popup-dialog__text">{{ text }}</CmkParagraph>
 
     <CmkButton v-if="okButtonText !== undefined" variant="primary" @click="emit('close')">{{
-      okButtonText ?? _t('OK')
+      okButtonText
     }}</CmkButton>
   </CmkPopup>
 </template>

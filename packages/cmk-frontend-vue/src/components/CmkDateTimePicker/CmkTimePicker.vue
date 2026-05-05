@@ -402,6 +402,11 @@ function onPopupKey(e: KeyboardEvent) {
 }
 
 .cmk-time-picker__trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: var(--form-field-height);
+  padding: 0 var(--dimension-2);
   opacity: 0.7;
 
   &:hover {

@@ -306,8 +306,9 @@ function shiftYear(delta: number) {
   justify-content: center;
   border: none;
   border-radius: var(--dimension-3);
-  padding: 1px var(--dimension-2);
+  padding: 0 var(--dimension-2);
   margin: 0;
+  height: var(--form-field-height);
   background: transparent;
   cursor: pointer;
   box-shadow: none;

@@ -40,28 +40,7 @@ def discover_qlogic_fcport(info: StringTable) -> list[tuple[str, None]]:
         _oper_mode,
         admin_status,
         oper_status,
-        _link_failures,
-        _sync_losses,
-        _prim_seq_proto_errors,
-        _invalid_tx_words,
-        _invalid_crcs,
-        _address_id_errors,
-        _link_reset_ins,
-        _link_reset_outs,
-        _ols_ins,
-        _ols_outs,
-        _c2_in_frames,
-        _c2_out_frames,
-        _c2_in_octets,
-        _c2_out_octets,
-        _c2_discards,
-        _c2_fbsy_frames,
-        _c2_frjt_frames,
-        _c3_in_frames,
-        _c3_out_frames,
-        _c3_in_octets,
-        _c3_out_octets,
-        _c3_discards,
+        *_rest,
     ) in info:
         # There are devices out there which are totally missing the status related
         # SNMP tables. In this case we add all interfaces.
@@ -104,146 +83,148 @@ def check_qlogic_fcport(item: str, _no_params: None, info: StringTable) -> Legac
         c3_discards,
     ) in info:
         port_id = qlogic_fcport_generate_port_id(port_id)
-        if port_id == item:
+        if port_id != item:
+            continue
+
+        status = 0
+        perfdata = []
+        message = "Port %s" % port_id
+
+        # fcFxPortPhysAdminStatus
+        if admin_status == "1":
+            message += " AdminStatus: online"
             status = 0
-            perfdata = []
-            message = "Port %s" % port_id
+        elif admin_status == "2":
+            message += " AdminStatus: offline (!!)"
+            status = 2
+        elif admin_status == "3":
+            message += " AdminStatus: testing (!)"
+            status = 1
+        elif admin_status == "":
+            # Is not a possible valid value in the MIB, but some devices don't
+            # provide status information at all (SNMP table missing).
+            message += " AdminStatus: not reported"
+            status = 0
+        else:
+            message += " unknown AdminStatus %s (!)" % admin_status
+            status = 1
 
-            # fcFxPortPhysAdminStatus
-            if admin_status == "1":
-                message += " AdminStatus: online"
-                status = 0
-            elif admin_status == "2":
-                message += " AdminStatus: offline (!!)"
-                status = 2
-            elif admin_status == "3":
-                message += " AdminStatus: testing (!)"
-                status = 1
-            elif admin_status == "":
-                # Is not a possible valid value in the MIB, but some devices don't
-                # provide status information at all (SNMP table missing).
-                message += " AdminStatus: not reported"
-                status = 0
-            else:
-                message += " unknown AdminStatus %s (!)" % admin_status
-                status = 1
+        # fcFxPortPhysOperStatus
+        if oper_status == "1":
+            message += ", OperStatus: online"
+            status = max(status, 0)
+        elif oper_status == "2":
+            message += ", OperStatus: offline (!!)"
+            status = max(status, 2)
+        elif oper_status == "3":
+            message += ", OperStatus: testing (!)"
+            status = max(status, 1)
+        elif oper_status == "4":
+            message += ", OperStatus: linkFailure (!!)"
+            status = max(status, 2)
+        elif admin_status == "":
+            # Is not a possible valid value in the MIB, but some devices don't
+            # provide status information at all (SNMP table missing).
+            message += ", OperStatus: not reported"
+            status = 0
+        else:
+            message += ", unknown OperStatus %s (!)" % oper_status
+            status = max(status, 1)
 
-            # fcFxPortPhysOperStatus
-            if oper_status == "1":
-                message += ", OperStatus: online"
-                status = max(status, 0)
-            elif oper_status == "2":
-                message += ", OperStatus: offline (!!)"
-                status = max(status, 2)
-            elif oper_status == "3":
-                message += ", OperStatus: testing (!)"
-                status = max(status, 1)
-            elif oper_status == "4":
-                message += ", OperStatus: linkFailure (!!)"
-                status = max(status, 2)
-            elif admin_status == "":
-                # Is not a possible valid value in the MIB, but some devices don't
-                # provide status information at all (SNMP table missing).
-                message += ", OperStatus: not reported"
-                status = 0
-            else:
-                message += ", unknown OperStatus %s (!)" % oper_status
-                status = max(status, 1)
+        # fcFxPortOperMode (for display only)
+        if oper_mode == "2":
+            message += ", OperMode: fPort"
+        elif oper_mode == "3":
+            message += ", OperMode: flPort"
 
-            # fcFxPortOperMode (for display only)
-            if oper_mode == "2":
-                message += ", OperMode: fPort"
-            elif oper_mode == "3":
-                message += ", OperMode: flPort"
+        # Counters
+        this_time = time.time()
 
-            # Counters
-            this_time = time.time()
+        # Bytes/sec in and out
+        in_octets = int(c2_in_octets) + int(c3_in_octets)
+        out_octets = int(c2_out_octets) + int(c3_out_octets)
 
-            # Bytes/sec in and out
-            in_octets = int(c2_in_octets) + int(c3_in_octets)
-            out_octets = int(c2_out_octets) + int(c3_out_octets)
+        in_octet_rate = get_rate(
+            get_value_store(),
+            "qlogic_fcport.in_octets.%s" % port_id,
+            this_time,
+            in_octets,
+            raise_overflow=True,
+        )
+        out_octet_rate = get_rate(
+            get_value_store(),
+            "qlogic_fcport.out_octets.%s" % port_id,
+            this_time,
+            out_octets,
+            raise_overflow=True,
+        )
 
-            in_octet_rate = get_rate(
+        message += ", In: %s" % render.iobandwidth(in_octet_rate)
+        message += ", Out: %s" % render.iobandwidth(out_octet_rate)
+
+        perfdata.append(("in", in_octet_rate))
+        perfdata.append(("out", out_octet_rate))
+
+        # Frames in and out
+        in_frames = int(c2_in_frames) + int(c3_in_frames)
+        out_frames = int(c2_out_frames) + int(c3_out_frames)
+
+        in_frame_rate = get_rate(
+            get_value_store(),
+            "qlogic_fcport.in_frames.%s" % port_id,
+            this_time,
+            in_frames,
+            raise_overflow=True,
+        )
+        out_frame_rate = get_rate(
+            get_value_store(),
+            "qlogic_fcport.out_frames.%s" % port_id,
+            this_time,
+            out_frames,
+            raise_overflow=True,
+        )
+
+        message += ", in frames: %s/s" % in_frame_rate
+        message += ", out frames: %s/s" % out_frame_rate
+
+        perfdata.append(("rxframes", in_frame_rate))
+        perfdata.append(("txframes", out_frame_rate))
+
+        # error rates
+        discards = int(c2_discards) + int(c3_discards)
+        error_sum = 0.0
+        for descr, counter, value in [
+            ("Link Failures", "link_failures", link_failures),
+            ("Sync Losses", "sync_losses", sync_losses),
+            ("PrimitSeqErrors", "prim_seq_proto_errors", prim_seq_proto_errors),
+            ("Invalid TX Words", "invalid_tx_words", invalid_tx_words),
+            ("Invalid CRCs", "invalid_crcs", invalid_crcs),
+            ("Address ID Errors", "address_id_errors", address_id_errors),
+            ("Link Resets In", "link_reset_ins", link_reset_ins),
+            ("Link Resets Out", "link_reset_outs", link_reset_outs),
+            ("Offline Sequences In", "ols_ins", ols_ins),
+            ("Offline Sequences Out", "ols_outs", ols_outs),
+            ("Discards", "discards", discards),
+            ("F_BSY frames", "c2_fbsy_frames", c2_fbsy_frames),
+            ("F_RJT frames", "c2_frjt_frames", c2_frjt_frames),
+        ]:
+            value_int = int(value)  # type: ignore[call-overload]
+            per_sec = get_rate(
                 get_value_store(),
-                "qlogic_fcport.in_octets.%s" % port_id,
+                f"qlogic_fcport.{counter}.{port_id}",
                 this_time,
-                in_octets,
+                value_int,
                 raise_overflow=True,
             )
-            out_octet_rate = get_rate(
-                get_value_store(),
-                "qlogic_fcport.out_octets.%s" % port_id,
-                this_time,
-                out_octets,
-                raise_overflow=True,
-            )
+            perfdata.append((counter, per_sec))
+            error_sum += per_sec
 
-            message += ", In: %s" % render.iobandwidth(in_octet_rate)
-            message += ", Out: %s" % render.iobandwidth(out_octet_rate)
+            if per_sec > 0:
+                message += f", {descr}: {per_sec}/s"
+        if error_sum == 0:
+            message += ", no protocol errors"
 
-            perfdata.append(("in", in_octet_rate))
-            perfdata.append(("out", out_octet_rate))
-
-            # Frames in and out
-            in_frames = int(c2_in_frames) + int(c3_in_frames)
-            out_frames = int(c2_out_frames) + int(c3_out_frames)
-
-            in_frame_rate = get_rate(
-                get_value_store(),
-                "qlogic_fcport.in_frames.%s" % port_id,
-                this_time,
-                in_frames,
-                raise_overflow=True,
-            )
-            out_frame_rate = get_rate(
-                get_value_store(),
-                "qlogic_fcport.out_frames.%s" % port_id,
-                this_time,
-                out_frames,
-                raise_overflow=True,
-            )
-
-            message += ", in frames: %s/s" % in_frame_rate
-            message += ", out frames: %s/s" % out_frame_rate
-
-            perfdata.append(("rxframes", in_frame_rate))
-            perfdata.append(("txframes", out_frame_rate))
-
-            # error rates
-            discards = int(c2_discards) + int(c3_discards)
-            error_sum = 0.0
-            for descr, counter, value in [
-                ("Link Failures", "link_failures", link_failures),
-                ("Sync Losses", "sync_losses", sync_losses),
-                ("PrimitSeqErrors", "prim_seq_proto_errors", prim_seq_proto_errors),
-                ("Invalid TX Words", "invalid_tx_words", invalid_tx_words),
-                ("Invalid CRCs", "invalid_crcs", invalid_crcs),
-                ("Address ID Errors", "address_id_errors", address_id_errors),
-                ("Link Resets In", "link_reset_ins", link_reset_ins),
-                ("Link Resets Out", "link_reset_outs", link_reset_outs),
-                ("Offline Sequences In", "ols_ins", ols_ins),
-                ("Offline Sequences Out", "ols_outs", ols_outs),
-                ("Discards", "discards", discards),
-                ("F_BSY frames", "c2_fbsy_frames", c2_fbsy_frames),
-                ("F_RJT frames", "c2_frjt_frames", c2_frjt_frames),
-            ]:
-                value_int = int(value)  # type: ignore[call-overload]
-                per_sec = get_rate(
-                    get_value_store(),
-                    f"qlogic_fcport.{counter}.{port_id}",
-                    this_time,
-                    value_int,
-                    raise_overflow=True,
-                )
-                perfdata.append((counter, per_sec))
-                error_sum += per_sec
-
-                if per_sec > 0:
-                    message += f", {descr}: {per_sec}/s"
-            if error_sum == 0:
-                message += ", no protocol errors"
-
-            return status, message, perfdata
+        return status, message, perfdata
 
     return 3, "Port %s not found" % item
 

@@ -3,17 +3,23 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
-
 
 import re
+from collections.abc import Mapping
+from typing import Any
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import StringTable
-from cmk.legacy_includes.df import df_check_filesystem_list, FILESYSTEM_DEFAULT_PARAMS
-
-check_info = {}
+from cmk.agent_based.v2 import (
+    AgentSection,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    get_value_store,
+    Result,
+    Service,
+    State,
+    StringTable,
+)
+from cmk.plugins.lib.df import df_check_filesystem_list, FILESYSTEM_DEFAULT_PARAMS
 
 #   .--Example output from agent-------------------------------------------.
 # <<<libelle_business_shadow:sep(58)>>>
@@ -226,31 +232,29 @@ def parse_libelle_business_shadow(string_table: StringTable) -> StringTable:
     return string_table
 
 
-check_info["libelle_business_shadow"] = LegacyCheckDefinition(
+agent_section_libelle_business_shadow = AgentSection(
     name="libelle_business_shadow",
     parse_function=parse_libelle_business_shadow,
 )
 
 
-def check_libelle_business_shadow_to_mb(size):
+def check_libelle_business_shadow_to_mb(size: str) -> int:
     if size.endswith("MB"):
-        size = int(float(size.replace("MB", "")))
-    elif size.endswith("GB"):
-        size = int(float(size.replace("GB", ""))) * 1024
-    elif size.endswith("TB"):
-        size = int(float(size.replace("TB", ""))) * 1024 * 1024
-    elif size.endswith("PB"):
-        size = int(float(size.replace("PB", ""))) * 1024 * 1024 * 1024
-    elif size.endswith("EB"):
-        size = int(float(size.replace("EB", ""))) * 1024 * 1024 * 1024 * 1024
-    else:
-        size = int(float(size))
-    return size
+        return int(float(size.replace("MB", "")))
+    if size.endswith("GB"):
+        return int(float(size.replace("GB", ""))) * 1024
+    if size.endswith("TB"):
+        return int(float(size.replace("TB", ""))) * 1024 * 1024
+    if size.endswith("PB"):
+        return int(float(size.replace("PB", ""))) * 1024 * 1024 * 1024
+    if size.endswith("EB"):
+        return int(float(size.replace("EB", ""))) * 1024 * 1024 * 1024 * 1024
+    return int(float(size))
 
 
 # parses agent output into a dict
-def check_libelle_business_shadow_parse(info):
-    parsed = {}
+def check_libelle_business_shadow_parse(info: StringTable) -> dict[str, Any]:
+    parsed: dict[str, Any] = {}
     for line in info:
         if len(line) > 1 and line[0].startswith("Host   "):
             parsed["host"] = re.sub("^ +", "", line[1])
@@ -282,25 +286,24 @@ def check_libelle_business_shadow_parse(info):
 #   '----------------------------------------------------------------------'
 
 
-def discover_libelle_business_shadow_info(info):
-    return [(None, None)]
+def discover_libelle_business_shadow_info(section: StringTable) -> DiscoveryResult:
+    yield Service()
 
 
-def check_libelle_business_shadow_info(_no_item, _no_params, info):
-    parsed = check_libelle_business_shadow_parse(info)
-    parsed_keys = list(parsed)
+def check_libelle_business_shadow_info(section: StringTable) -> CheckResult:
+    parsed = check_libelle_business_shadow_parse(section)
     message = "Libelle Business Shadow"
-    if "host" in parsed_keys:
-        message += ", Host: %s" % parsed["host"]
-    if "release" in parsed_keys:
-        message += ", Release: %s" % parsed["release"]
-    if "start_time" in parsed_keys:
-        message += ", Start Time: %s" % parsed["start_time"]
+    if "host" in parsed:
+        message += f", Host: {parsed['host']}"
+    if "release" in parsed:
+        message += f", Release: {parsed['release']}"
+    if "start_time" in parsed:
+        message += f", Start Time: {parsed['start_time']}"
 
-    return 0, message
+    yield Result(state=State.OK, summary=message)
 
 
-check_info["libelle_business_shadow.info"] = LegacyCheckDefinition(
+check_plugin_libelle_business_shadow_info = CheckPlugin(
     name="libelle_business_shadow_info",
     service_name="Libelle Business Shadow Info",
     sections=["libelle_business_shadow"],
@@ -319,28 +322,25 @@ check_info["libelle_business_shadow.info"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 
-def discover_libelle_business_shadow_status(info):
-    parsed = check_libelle_business_shadow_parse(info)
+def discover_libelle_business_shadow_status(section: StringTable) -> DiscoveryResult:
+    parsed = check_libelle_business_shadow_parse(section)
     if "libelle_status" in parsed:
-        return [(None, None)]
-    return []
+        yield Service()
 
 
-def check_libelle_business_shadow_status(_no_item, _no_params, info):
-    parsed = check_libelle_business_shadow_parse(info)
-    status = 0
+def check_libelle_business_shadow_status(section: StringTable) -> CheckResult:
+    parsed = check_libelle_business_shadow_parse(section)
     if "libelle_status" in parsed:
-        message = "Status is: %s" % parsed["libelle_status"]
-        if parsed["libelle_status"] != "RUN":
-            status = 2
+        message = f"Status is: {parsed['libelle_status']}"
+        state = State.OK if parsed["libelle_status"] == "RUN" else State.CRIT
     else:
         message = "No information about libelle status found in agent output"
-        status = 3
+        state = State.UNKNOWN
 
-    return status, message
+    yield Result(state=state, summary=message)
 
 
-check_info["libelle_business_shadow.status"] = LegacyCheckDefinition(
+check_plugin_libelle_business_shadow_status = CheckPlugin(
     name="libelle_business_shadow_status",
     service_name="Libelle Business Shadow Status",
     sections=["libelle_business_shadow"],
@@ -359,31 +359,25 @@ check_info["libelle_business_shadow.status"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 
-def discover_libelle_business_shadow_process(info):
-    parsed = check_libelle_business_shadow_parse(info)
+def discover_libelle_business_shadow_process(section: StringTable) -> DiscoveryResult:
+    parsed = check_libelle_business_shadow_parse(section)
     if "process" in parsed:
-        return [(None, None)]
-    return []
+        yield Service()
 
 
-def check_libelle_business_shadow_process(_no_item, _no_params, info):
-    parsed = check_libelle_business_shadow_parse(info)
-    status = 0
+def check_libelle_business_shadow_process(section: StringTable) -> CheckResult:
+    parsed = check_libelle_business_shadow_parse(section)
     if "process" in parsed:
-        message = "Active Process is: {}, Status: {}".format(
-            parsed["process"],
-            parsed["process_status"],
-        )
-        if parsed["process_status"] != "RUN":
-            status = 2
+        message = f"Active Process is: {parsed['process']}, Status: {parsed['process_status']}"
+        state = State.OK if parsed["process_status"] == "RUN" else State.CRIT
     else:
         message = "No Active Process found!"
-        status = 2
+        state = State.CRIT
 
-    return status, message
+    yield Result(state=state, summary=message)
 
 
-check_info["libelle_business_shadow.process"] = LegacyCheckDefinition(
+check_plugin_libelle_business_shadow_process = CheckPlugin(
     name="libelle_business_shadow_process",
     service_name="Libelle Business Shadow Process",
     sections=["libelle_business_shadow"],
@@ -402,23 +396,25 @@ check_info["libelle_business_shadow.process"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 
-def discover_libelle_business_shadow_archive_dir(info):
-    parsed = check_libelle_business_shadow_parse(info)
-    parsed_keys = list(parsed)
-    if "arch_total_mb" in parsed_keys and "arch_free_mb" in parsed_keys:
-        return [("Archive Dir", {})]
-    return []
+def discover_libelle_business_shadow_archive_dir(section: StringTable) -> DiscoveryResult:
+    parsed = check_libelle_business_shadow_parse(section)
+    if "arch_total_mb" in parsed and "arch_free_mb" in parsed:
+        yield Service(item="Archive Dir")
 
 
-def check_libelle_business_shadow_archive_dir(item, params, info):
-    parsed = check_libelle_business_shadow_parse(info)
-    fslist = []
-    fslist.append((item, parsed["arch_total_mb"], parsed["arch_free_mb"], 0))
+def check_libelle_business_shadow_archive_dir(
+    item: str, params: Mapping[str, Any], section: StringTable
+) -> CheckResult:
+    parsed = check_libelle_business_shadow_parse(section)
+    yield from df_check_filesystem_list(
+        value_store=get_value_store(),
+        item=item,
+        params=params,
+        fslist_blocks=[(item, parsed["arch_total_mb"], parsed["arch_free_mb"], 0)],
+    )
 
-    return df_check_filesystem_list(item, params, fslist)
 
-
-check_info["libelle_business_shadow.archive_dir"] = LegacyCheckDefinition(
+check_plugin_libelle_business_shadow_archive_dir = CheckPlugin(
     name="libelle_business_shadow_archive_dir",
     service_name="Libelle Business Shadow %s",
     sections=["libelle_business_shadow"],

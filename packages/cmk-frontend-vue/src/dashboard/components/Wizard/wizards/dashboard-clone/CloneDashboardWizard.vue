@@ -8,7 +8,7 @@ import { computed, ref } from 'vue'
 
 import usei18n from '@/lib/i18n'
 
-import CmkHeading from '@/components/typography/CmkHeading.vue'
+import CmkCatalogPanel from '@/components/CmkCatalogPanel.vue'
 
 import ContentSpacer from '@/dashboard/components/ContentSpacer.vue'
 import { useDashboardGeneralSettings } from '@/dashboard/components/Wizard/components/DashboardSettings/composables/useDashboardGeneralSettings.ts'
@@ -24,7 +24,6 @@ import {
 
 import ActionBar from '../../components/ActionBar.vue'
 import ActionButton from '../../components/ActionButton.vue'
-import BoxedSection from '../../components/BoxedSection.vue'
 import DashboardLayoutSelector from '../../components/DashboardSettings/DashboardLayoutSelector.vue'
 import GeneralProperties from '../../components/DashboardSettings/GeneralProperties.vue'
 import VisibilityProperties from '../../components/DashboardSettings/VisibilityProperties.vue'
@@ -146,57 +145,47 @@ const cancel = () => {
 
       <ContentSpacer />
 
-      <BoxedSection>
-        <template #header>
-          <CmkHeading type="h4">{{ _t('General properties') }}</CmkHeading>
-        </template>
-        <template #content>
-          <TableForm>
-            <TableFormRow>
-              <FieldDescription>
-                {{ _t('Dashboard type') }}
-              </FieldDescription>
-              <FieldComponent>
-                <div class="db-clone-dashboard-wizard__general-properties-item">
-                  {{ dashboardScope }}
-                </div>
-              </FieldComponent>
-            </TableFormRow>
-          </TableForm>
-          <GeneralProperties
-            v-model:name="name"
-            v-model:create-unique-id="createUniqueId"
-            v-model:unique-id="uniqueId"
-            v-model:dashboard-icon="dashboardIcon"
-            v-model:dashboard-emblem="dashboardEmblem"
-            v-model:add-filter-suffix="addFilterSuffix"
-            :name-validation-errors="nameErrors"
-            :unique-id-validation-errors="uniqueIdErrors"
-            :logged-in-user="loggedInUser"
-          />
-          <ContentSpacer />
-          <DashboardLayoutSelector
-            v-model:dashboard-layout="dashboardLayout"
-            :available-layouts="cloneAvailableLayouts"
-          />
-        </template>
-      </BoxedSection>
+      <CmkCatalogPanel :title="_t('General properties')" variant="padded">
+        <TableForm>
+          <TableFormRow>
+            <FieldDescription>
+              {{ _t('Dashboard type') }}
+            </FieldDescription>
+            <FieldComponent>
+              <div class="db-clone-dashboard-wizard__general-properties-item">
+                {{ dashboardScope }}
+              </div>
+            </FieldComponent>
+          </TableFormRow>
+        </TableForm>
+        <GeneralProperties
+          v-model:name="name"
+          v-model:create-unique-id="createUniqueId"
+          v-model:unique-id="uniqueId"
+          v-model:dashboard-icon="dashboardIcon"
+          v-model:dashboard-emblem="dashboardEmblem"
+          v-model:add-filter-suffix="addFilterSuffix"
+          :name-validation-errors="nameErrors"
+          :unique-id-validation-errors="uniqueIdErrors"
+          :logged-in-user="loggedInUser"
+        />
+        <ContentSpacer />
+        <DashboardLayoutSelector
+          v-model:dashboard-layout="dashboardLayout"
+          :available-layouts="cloneAvailableLayouts"
+        />
+      </CmkCatalogPanel>
 
       <ContentSpacer />
 
-      <BoxedSection>
-        <template #header>
-          <CmkHeading type="h4">{{ _t('Visibility') }}</CmkHeading>
-        </template>
-        <template #content>
-          <VisibilityProperties
-            v-model:monitor-menu-topic="monitorMenuTopic"
-            v-model:show-in-monitor-menu="showInMonitorMenu"
-            v-model:sort-index="sortIndex"
-            :sort-index-error="sortIndexError"
-          />
-        </template>
-      </BoxedSection>
+      <CmkCatalogPanel :title="_t('Visibility')" variant="padded">
+        <VisibilityProperties
+          v-model:monitor-menu-topic="monitorMenuTopic"
+          v-model:show-in-monitor-menu="showInMonitorMenu"
+          v-model:sort-index="sortIndex"
+          :sort-index-error="sortIndexError"
+        />
+      </CmkCatalogPanel>
     </div>
   </div>
 </template>

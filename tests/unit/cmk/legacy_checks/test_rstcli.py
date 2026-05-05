@@ -3,10 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
-
-
-from .checktestlib import Check
+from cmk.legacy_checks.rstcli import parse_rstcli
 
 # Taken from https://forum.checkmk.com/t/monitoring-intel-vroc-with-rstcli/38613
 INFO = [
@@ -243,6 +240,5 @@ EXPECTED = {
 }
 
 
-def test_parse():
-    check = Check("rstcli")
-    assert check.run_parse(INFO) == EXPECTED
+def test_parse() -> None:
+    assert parse_rstcli(INFO) == EXPECTED

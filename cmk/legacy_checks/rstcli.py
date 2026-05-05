@@ -8,51 +8,16 @@ from __future__ import annotations
 from collections.abc import Generator, Mapping
 from typing import Any
 
-# --VOLUME INFORMATION--
-#
-# Name:              Vol1
-# Raid Level:        1
-# Size:              932 GB
-# StripeSize:        64 KB
-# Num Disks:         2
-# State:             Normal
-# System:            True
-# Initialized:       True
-# Cache Policy:      Off
-#
-#
-# --DISKS IN VOLUME: Vol1 --
-#
-# ID:                0-0-0-0
-# Type:              Disk
-# Disk Type:         SATA Disk
-# State:             Normal
-# Size:              932 GB
-# Free Size:         0 GB
-# System Disk:       False
-# Usage:             Array member
-# Serial Number:     AB-CDEF123456
-# Model:             AB CD EF
-#
-# ID:                0-1-0-0
-# Type:              Disk
-# Disk Type:         SATA Disk
-# State:             Normal
-# Size:              932 GB
-# Free Size:         0 GB
-# System Disk:       False
-# Usage:             Array member
-# Serial Number:     AB-CDEF123457
-# Model:             AB CD EF
-# split output into the --xxx-- sections
-from cmk.agent_based.legacy.v0_unstable import (
-    LegacyCheckDefinition,
-    LegacyCheckResult,
-    LegacyDiscoveryResult,
+from cmk.agent_based.v2 import (
+    AgentSection,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Result,
+    Service,
+    State,
+    StringTable,
 )
-from cmk.agent_based.v2 import StringTable
-
-check_info = {}
 
 type Section = Mapping[str, Mapping[str, Any]]
 
@@ -127,65 +92,65 @@ def parse_rstcli(string_table: StringTable) -> Section:
     return volumes
 
 
-def discover_rstcli(parsed: Section) -> LegacyDiscoveryResult:
-    return [(name, {}) for name in parsed]
+def discover_rstcli(section: Section) -> DiscoveryResult:
+    yield from [Service(item=name) for name in section]
 
 
 # Help! There is no documentation, what are the possible values?
 rstcli_states = {
-    "Normal": 0,
+    "Normal": State.OK,
 }
 
 
-def check_rstcli(item: str, _no_params: object, parsed: Section) -> LegacyCheckResult:
-    if not (volume := parsed.get(item)):
+def check_rstcli(item: str, section: Section) -> CheckResult:
+    if not (volume := section.get(item)):
         return
-    yield (
-        rstcli_states.get(volume["State"], 3),
-        "RAID %s, %d disks (%s), state %s"
-        % (
-            volume["Raid Level"],
-            int(volume["Num Disks"]),
-            volume["Size"],
-            volume["State"],
+    yield Result(
+        state=rstcli_states.get(volume["State"], State.UNKNOWN),
+        summary=(
+            f"RAID {volume['Raid Level']}, "
+            f"{int(volume['Num Disks'])} disks ({volume['Size']}), "
+            f"state {volume['State']}"
         ),
     )
 
 
-check_info["rstcli"] = LegacyCheckDefinition(
+agent_section_rstcli = AgentSection(
     name="rstcli",
     parse_function=parse_rstcli,
+)
+
+
+check_plugin_rstcli = CheckPlugin(
+    name="rstcli",
     service_name="RAID Volume %s",
     discovery_function=discover_rstcli,
     check_function=check_rstcli,
 )
 
 
-def discover_rstcli_pdisks(parsed: Section) -> LegacyDiscoveryResult:
-    for key, volume in parsed.items():
+def discover_rstcli_pdisks(section: Section) -> DiscoveryResult:
+    for key, volume in section.items():
         for disk in volume["Disks"]:
-            yield "{}/{}".format(key, disk["ID"]), {}
+            yield Service(item="{}/{}".format(key, disk["ID"]))
 
 
-def check_rstcli_pdisks(item: str, _no_params: object, parsed: Section) -> LegacyCheckResult:
+def check_rstcli_pdisks(item: str, section: Section) -> CheckResult:
     volume, disk_id = item.rsplit("/", 1)
 
-    disks = parsed.get(volume, {}).get("Disks", [])
+    disks = section.get(volume, {}).get("Disks", [])
     for disk in disks:
         if disk["ID"] == disk_id:
-            infotext = "{} (unit: {}, size: {}, type: {}, model: {}, serial: {})".format(
-                disk["State"],
-                volume,
-                disk["Size"],
-                disk["Disk Type"],
-                disk["Model"],
-                disk["Serial Number"],
+            infotext = (
+                f"{disk['State']} (unit: {volume}, size: {disk['Size']}, "
+                f"type: {disk['Disk Type']}, model: {disk['Model']}, "
+                f"serial: {disk['Serial Number']})"
             )
-            yield rstcli_states.get(disk["State"], 2), infotext
+            yield Result(state=rstcli_states.get(disk["State"], State.CRIT), summary=infotext)
             return
 
 
-check_info["rstcli.pdisks"] = LegacyCheckDefinition(
+check_plugin_rstcli_pdisks = CheckPlugin(
     name="rstcli_pdisks",
     service_name="RAID Disk %s",
     sections=["rstcli"],

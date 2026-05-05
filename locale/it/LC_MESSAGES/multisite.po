@@ -19448,14 +19448,14 @@ msgid "Deploy MSSQL Server plug-in"
 msgstr "Distribuire il plugin MSSQL Server"
 
 #, fuzzy
-msgid "Deploy Mailman plug-in"
-msgstr "Distribuire il plugin Mailman"
-
-#, fuzzy
 msgid "Deploy MegaRAID plug-in"
 msgstr "Distribuire il plugin MegaRAID"
 
 msgid "Deploy OpenHardwareMonitor (headless)"
+msgstr "Distribuire OpenHardwareMonitor (senza testa)"
+
+#, fuzzy
+msgid "Deploy OpenHardwareMonitor (headless) and run asynchronously"
 msgstr "Distribuire OpenHardwareMonitor (senza testa)"
 
 #, fuzzy
@@ -19475,20 +19475,8 @@ msgid "Deploy StorCLI plug-in"
 msgstr "Distribuire il plugin StorCLI"
 
 #, fuzzy
-msgid "Deploy Windows Multipath plug-in"
-msgstr "Distribuire il plugin Windows Multipath"
-
-#, fuzzy
-msgid "Deploy Windows Printer Queue plug-in"
-msgstr "Distribuire il plugin Windows Printer Queue"
-
-#, fuzzy
 msgid "Deploy Windows Updates plug-in"
 msgstr "Distribuire il plugin Aggiornamenti di Windows"
-
-#, fuzzy
-msgid "Deploy Windows license plug-in"
-msgstr "Distribuire il plugin della licenza di Windows"
 
 #, fuzzy
 msgid ""
@@ -19524,10 +19512,6 @@ msgstr "Distribuire il plugin per DB2"
 #, fuzzy
 msgid "Deploy plug-in for JAR signatures"
 msgstr "Distribuire il plugin per le firme JAR"
-
-#, fuzzy
-msgid "Deploy plug-in for Windows DHCP pools"
-msgstr "Distribuire il plugin per i pool DHCP di Windows"
 
 #, fuzzy
 msgid "Deploy plug-in for Windows system info"
@@ -19580,10 +19564,6 @@ msgstr "Distribuire il plugin MySQL"
 #, fuzzy
 msgid "Deploy the SAP HANA plug-in"
 msgstr "Distribuire il plugin SAP HANA"
-
-#, fuzzy
-msgid "Deploy the SAP router plug-in"
-msgstr "Distribuire il plugin del router SAP"
 
 #, fuzzy
 msgid "Deploy the TSM plug-in and run it asynchronously"
@@ -21117,10 +21097,6 @@ msgstr "Non distribuire il plugin Inotify"
 msgid "Do not deploy MSSQL Server plug-in"
 msgstr "Non distribuire il plugin Check SQL Server"
 
-#, fuzzy
-msgid "Do not deploy Mailman plug-in"
-msgstr "Non distribuire il plugin Mailman"
-
 msgid "Do not deploy OpenHardwareMonitor (headless)"
 msgstr "Non distribuire OpenHardwareMonitor (senza testa)"
 
@@ -21131,18 +21107,6 @@ msgstr "Non distribuire il plugin per i database ORACLE"
 #, fuzzy
 msgid "Do not deploy Oracle plug-in"
 msgstr "Non distribuire il plugin iptables"
-
-#, fuzzy
-msgid "Do not deploy Windows License plug-in"
-msgstr "Non distribuire il plugin di licenza di Windows"
-
-#, fuzzy
-msgid "Do not deploy Windows Multipath plug-in"
-msgstr "Non distribuire il plugin Windows Multipath"
-
-#, fuzzy
-msgid "Do not deploy Windows Printer Queue plug-in"
-msgstr "Non distribuire il plugin Windows Printer Queue"
 
 #, fuzzy
 msgid "Do not deploy Windows Updates plug-in"
@@ -21163,10 +21127,6 @@ msgstr "Non distribuire il plugin per MS Office 365"
 #, fuzzy
 msgid "Do not deploy plug-in for Microsoft SQL Server"
 msgstr "Non distribuire il plugin per Microsoft SQL Server"
-
-#, fuzzy
-msgid "Do not deploy plug-in for Windows DHCP pools"
-msgstr "Non distribuire il plugin per i pool DHCP di Windows"
 
 #, fuzzy
 msgid "Do not deploy plug-in for Windows interfaces"
@@ -21239,10 +21199,6 @@ msgstr "Non distribuire il plugin SAP HANA"
 #, fuzzy
 msgid "Do not deploy the SAP R/3 plug-in"
 msgstr "Non distribuire il plugin SAP R/3"
-
-#, fuzzy
-msgid "Do not deploy the SAP router plug-in"
-msgstr "Non distribuire il plugin del router SAP"
 
 #, fuzzy
 msgid "Do not deploy the SMART plug-in"
@@ -40145,7 +40101,8 @@ msgstr "Invio della posta"
 msgid "Mail transfer threads"
 msgstr "Numero massimo di thread"
 
-msgid "Mailman mailing lists queues (Linux)"
+#, fuzzy
+msgid "Mailman mailing lists (Linux)"
 msgstr "Mailman mailing list code (Linux)"
 
 msgid "Mailqueue"
@@ -47617,16 +47574,6 @@ msgstr "Solo quando l'evento cancellato è in fase OPEN"
 
 msgid "Open"
 msgstr "Aprire"
-
-msgid ""
-"Open Hardware Monitor files have been removed due to security reasons. To "
-"use Open Hardware Monitor, you may download it from our site using commands "
-"as site user: wget https://github.com/Checkmk/checkmk/blob/master/doc/"
-"treasures/windows/ohm/OpenHardwareMonitorCLI.exe -P local/share/check_mk/"
-"agents/windows/ wget https://github.com/Checkmk/checkmk/blob/master/doc/"
-"treasures/windows/ohm/OpenHardwareMonitorLib.dll -P local/share/check_mk/"
-"agents/windows/"
-msgstr ""
 
 msgid "Open Log"
 msgstr "Registro aperto"
@@ -73046,6 +72993,10 @@ msgstr ""
 "Arcserve, poiché i messaggi di log sono in lingua localizzata."
 
 #, fuzzy
+msgid "This plug-in monitors DHCP pool utilization on Windows hosts."
+msgstr "Questo plugin monitora lo stato del backup di Veeam sugli host Window."
+
+#, fuzzy
 msgid ""
 "This plug-in monitors Exchange Mailbox Servers in a Database Availability "
 "Group on Window hosts."
@@ -73076,7 +73027,7 @@ msgstr "Questo plugin controlla i canali, i manager e le code di IBM MQ."
 #, fuzzy
 msgid ""
 "This plug-in monitors the number of print jobs in the printer queues and the "
-"printer states"
+"printer states on Windows hosts."
 msgstr ""
 "Questo plugin controlla il numero di lavori di stampa nelle code di stampa e "
 "gli stati della stampante"
@@ -75209,18 +75160,6 @@ msgstr ""
 
 #, fuzzy
 msgid ""
-"This will deploy and configure the Checkmk agent plug-in <tt>mk_saprouter</"
-"tt>. The plug-in runs below the specified user's environment. Furthermore "
-"you have to determine the path to sapgenpse. It's recommended to run the "
-"plug-in asynchronously."
-msgstr ""
-"Questo distribuisce e configura il plugin dell'agente Checkmk "
-"<tt>mk_saprouter</tt>. Il plugin viene eseguito nell'ambiente dell'utente "
-"specificato. Inoltre è necessario determinare il percorso di sapgenpse. Si "
-"raccomanda di eseguire il plugin in modo asincrono."
-
-#, fuzzy
-msgid ""
 "This will deploy and configure the Checkmk agent plug-in "
 "<tt>mk_site_object_counts</tt>. The plug-in runs below the specified user's "
 "environment. Furthermore you have to determine host tags or service check "
@@ -75230,6 +75169,18 @@ msgstr ""
 "<tt>mk_site_object_counts</tt>. Il plugin viene eseguito nell'ambiente "
 "dell'utente specificato. Inoltre è necessario determinare i tag host o i "
 "comandi di controllo dei servizi."
+
+#, fuzzy
+msgid ""
+"This will deploy and configure the Checkmk agent plug-in mk_saprouter. The "
+"plug-in runs below the specified user's environment. Furthermore you have to "
+"determine the path to sapgenpse. It's recommended to run the plug-in "
+"asynchronously."
+msgstr ""
+"Questo distribuisce e configura il plugin dell'agente Checkmk "
+"<tt>mk_saprouter</tt>. Il plugin viene eseguito nell'ambiente dell'utente "
+"specificato. Inoltre è necessario determinare il percorso di sapgenpse. Si "
+"raccomanda di eseguire il plugin in modo asincrono."
 
 msgid ""
 "This will deploy the agent plug-in <tt>ceph</tt> for monitoring the status "
@@ -92510,6 +92461,17 @@ msgstr "Memorizza le notifiche per l'analisi delle regole"
 msgid "Additional graph options"
 msgstr "Opzioni aggiuntive"
 
+msgid "Owner (private)"
+msgstr ""
+
+#, fuzzy
+msgid "No contact groups found"
+msgstr "Nessun gruppo di contatto assegnato."
+
+#, fuzzy
+msgid "Users of site"
+msgstr "Servizi del sito"
+
 #, fuzzy
 msgid "Unrestricted"
 msgstr "Non registrato"
@@ -92547,17 +92509,6 @@ msgstr "Clonare un grafico personalizzato"
 #, fuzzy
 msgid "Select a custom graph"
 msgstr "Clonare un grafico personalizzato"
-
-msgid "Owner (private)"
-msgstr ""
-
-#, fuzzy
-msgid "No contact groups found"
-msgstr "Nessun gruppo di contatto assegnato."
-
-#, fuzzy
-msgid "Users of site"
-msgstr "Servizi del sito"
 
 #, fuzzy
 msgid "Enter description"
@@ -92841,19 +92792,6 @@ msgstr "Selezione dei file"
 msgid "Data range"
 msgstr "Gamma di dati"
 
-msgid "Only show current value"
-msgstr "Mostra solo il valore corrente"
-
-msgid "Show historic values"
-msgstr "Mostra i valori storici"
-
-#, fuzzy
-msgid "Fixed data range"
-msgstr "Gamma fissa"
-
-msgid "Service status"
-msgstr "Stato del servizio"
-
 #, fuzzy
 msgid "Show colored status label"
 msgstr "Mostra un'etichetta di stato colorata"
@@ -92870,6 +92808,19 @@ msgstr "non OK stati"
 #, fuzzy
 msgid "Show colored metric background"
 msgstr "Mostra il titolo senza alcuno sfondo"
+
+msgid "Only show current value"
+msgstr "Mostra solo il valore corrente"
+
+msgid "Show historic values"
+msgstr "Mostra i valori storici"
+
+#, fuzzy
+msgid "Fixed data range"
+msgstr "Gamma fissa"
+
+msgid "Service status"
+msgstr "Stato del servizio"
 
 msgid "Range limits"
 msgstr "Limiti di gamma"
@@ -94469,20 +94420,16 @@ msgid ""
 msgstr ""
 
 #, fuzzy
-msgid "Create Telemetry hosts folder"
-msgstr "Creare host gateway in"
-
-#, fuzzy
 msgid "Could not create the Telemetry hosts folder"
-msgstr "Configurazione dello stile selezionato"
-
-#, fuzzy
-msgid "Set up metric backend connector"
 msgstr "Configurazione dello stile selezionato"
 
 #, fuzzy
 msgid "Could not create the metric backend connector"
 msgstr "Configurazione dello stile selezionato"
+
+#, fuzzy
+msgid "Dynamic host management setup"
+msgstr "Gestione dinamica degli host"
 
 #, fuzzy
 msgid "OpenTelemetry Collector activation"
@@ -94509,8 +94456,8 @@ msgid "The password was rejected by the server."
 msgstr "Password dell'utente"
 
 #, fuzzy
-msgid "OpenTelemetry Collector configuration"
-msgstr "Configurazione dello stile selezionato"
+msgid "Collector configuration"
+msgstr "Configurazione del filtro Iptables"
 
 #, fuzzy
 msgid "Could not create the OpenTelemetry Collector configuration"
@@ -95596,6 +95543,66 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Deploy Mailman plug-in"
+#~ msgstr "Distribuire il plugin Mailman"
+
+#, fuzzy
+#~ msgid "Deploy Windows Multipath plug-in"
+#~ msgstr "Distribuire il plugin Windows Multipath"
+
+#, fuzzy
+#~ msgid "Deploy Windows Printer Queue plug-in"
+#~ msgstr "Distribuire il plugin Windows Printer Queue"
+
+#, fuzzy
+#~ msgid "Deploy Windows license plug-in"
+#~ msgstr "Distribuire il plugin della licenza di Windows"
+
+#, fuzzy
+#~ msgid "Deploy plug-in for Windows DHCP pools"
+#~ msgstr "Distribuire il plugin per i pool DHCP di Windows"
+
+#, fuzzy
+#~ msgid "Deploy the SAP router plug-in"
+#~ msgstr "Distribuire il plugin del router SAP"
+
+#, fuzzy
+#~ msgid "Do not deploy Mailman plug-in"
+#~ msgstr "Non distribuire il plugin Mailman"
+
+#, fuzzy
+#~ msgid "Do not deploy Windows License plug-in"
+#~ msgstr "Non distribuire il plugin di licenza di Windows"
+
+#, fuzzy
+#~ msgid "Do not deploy Windows Multipath plug-in"
+#~ msgstr "Non distribuire il plugin Windows Multipath"
+
+#, fuzzy
+#~ msgid "Do not deploy Windows Printer Queue plug-in"
+#~ msgstr "Non distribuire il plugin Windows Printer Queue"
+
+#, fuzzy
+#~ msgid "Do not deploy plug-in for Windows DHCP pools"
+#~ msgstr "Non distribuire il plugin per i pool DHCP di Windows"
+
+#, fuzzy
+#~ msgid "Do not deploy the SAP router plug-in"
+#~ msgstr "Non distribuire il plugin del router SAP"
+
+#, fuzzy
+#~ msgid "Create Telemetry hosts folder"
+#~ msgstr "Creare host gateway in"
+
+#, fuzzy
+#~ msgid "Set up metric backend connector"
+#~ msgstr "Configurazione dello stile selezionato"
+
+#, fuzzy
+#~ msgid "OpenTelemetry Collector configuration"
+#~ msgstr "Configurazione dello stile selezionato"
 
 #, fuzzy
 #~ msgid "Save new passwords"
@@ -101269,10 +101276,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Assign the contact group to hosts"
 #~ msgstr "Aggiungere questi gruppi di contatti all'host"
-
-#, fuzzy
-#~ msgid "Filter configuration"
-#~ msgstr "Configurazione del filtro Iptables"
 
 #, fuzzy
 #~ msgid "Close filter configuration"

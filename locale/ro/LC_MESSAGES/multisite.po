@@ -19607,14 +19607,14 @@ msgid "Deploy MSSQL Server plug-in"
 msgstr "Implementarea plugin-ului MSSQL Server"
 
 #, fuzzy
-msgid "Deploy Mailman plug-in"
-msgstr "Implementați plugin-ul Mailman"
-
-#, fuzzy
 msgid "Deploy MegaRAID plug-in"
 msgstr "Implementarea pluginului MegaRAID"
 
 msgid "Deploy OpenHardwareMonitor (headless)"
+msgstr "Implementați OpenHardwareMonitor (fără cap)"
+
+#, fuzzy
+msgid "Deploy OpenHardwareMonitor (headless) and run asynchronously"
 msgstr "Implementați OpenHardwareMonitor (fără cap)"
 
 #, fuzzy
@@ -19634,20 +19634,8 @@ msgid "Deploy StorCLI plug-in"
 msgstr "Implementarea pluginului StorCLI"
 
 #, fuzzy
-msgid "Deploy Windows Multipath plug-in"
-msgstr "Implementarea pluginului Windows Multipath"
-
-#, fuzzy
-msgid "Deploy Windows Printer Queue plug-in"
-msgstr "Implementarea pluginului Windows Printer Queue"
-
-#, fuzzy
 msgid "Deploy Windows Updates plug-in"
 msgstr "Implementarea pluginului Windows Updates"
-
-#, fuzzy
-msgid "Deploy Windows license plug-in"
-msgstr "Implementarea pluginului de licență Windows"
 
 #, fuzzy
 msgid ""
@@ -19684,10 +19672,6 @@ msgstr "Implementarea plugin-ului pentru DB2"
 #, fuzzy
 msgid "Deploy plug-in for JAR signatures"
 msgstr "Implementarea plugin-ului pentru semnăturile JAR"
-
-#, fuzzy
-msgid "Deploy plug-in for Windows DHCP pools"
-msgstr "Implementarea plugin-ului pentru grupurile DHCP din Windows"
 
 #, fuzzy
 msgid "Deploy plug-in for Windows system info"
@@ -19741,10 +19725,6 @@ msgstr "Implementați plugin-ul MySQL"
 #, fuzzy
 msgid "Deploy the SAP HANA plug-in"
 msgstr "Implementați extensia SAP HANA"
-
-#, fuzzy
-msgid "Deploy the SAP router plug-in"
-msgstr "Implementați plugin-ul routerului SAP"
 
 #, fuzzy
 msgid "Deploy the TSM plug-in and run it asynchronously"
@@ -21273,10 +21253,6 @@ msgstr "Nu implementați pluginul Inotify"
 msgid "Do not deploy MSSQL Server plug-in"
 msgstr "Nu implementați pluginul Check SQL Server"
 
-#, fuzzy
-msgid "Do not deploy Mailman plug-in"
-msgstr "Nu implementați plugin-ul Mailman"
-
 msgid "Do not deploy OpenHardwareMonitor (headless)"
 msgstr "Nu implementați OpenHardwareMonitor (fără cap)"
 
@@ -21287,18 +21263,6 @@ msgstr "Nu implementați plugin-ul pentru baze de date ORACLE"
 #, fuzzy
 msgid "Do not deploy Oracle plug-in"
 msgstr "Nu implementați plugin-ul iptables"
-
-#, fuzzy
-msgid "Do not deploy Windows License plug-in"
-msgstr "Nu implementați pluginul de licență Windows"
-
-#, fuzzy
-msgid "Do not deploy Windows Multipath plug-in"
-msgstr "Nu implementați pluginul Windows Multipath"
-
-#, fuzzy
-msgid "Do not deploy Windows Printer Queue plug-in"
-msgstr "Nu implementați pluginul Windows Printer Queue"
 
 #, fuzzy
 msgid "Do not deploy Windows Updates plug-in"
@@ -21319,10 +21283,6 @@ msgstr "Nu implementați pluginul pentru MS Office 365"
 #, fuzzy
 msgid "Do not deploy plug-in for Microsoft SQL Server"
 msgstr "Nu implementați pluginul pentru Microsoft SQL Server"
-
-#, fuzzy
-msgid "Do not deploy plug-in for Windows DHCP pools"
-msgstr "Nu implementați plugin-ul pentru grupurile DHCP Windows DHCP"
 
 #, fuzzy
 msgid "Do not deploy plug-in for Windows interfaces"
@@ -21395,10 +21355,6 @@ msgstr "Nu implementați extensia SAP HANA"
 #, fuzzy
 msgid "Do not deploy the SAP R/3 plug-in"
 msgstr "Nu implementați extensia SAP R/3"
-
-#, fuzzy
-msgid "Do not deploy the SAP router plug-in"
-msgstr "Nu implementați plugin-ul routerului SAP"
 
 #, fuzzy
 msgid "Do not deploy the SMART plug-in"
@@ -40378,7 +40334,8 @@ msgstr "Trimiterea corespondenței"
 msgid "Mail transfer threads"
 msgstr "Numărul maxim de fire de execuție"
 
-msgid "Mailman mailing lists queues (Linux)"
+#, fuzzy
+msgid "Mailman mailing lists (Linux)"
 msgstr "Mailman listele de corespondență cozi (Linux)"
 
 msgid "Mailqueue"
@@ -47893,16 +47850,6 @@ msgstr "Numai atunci când evenimentul anulat se află în faza OPEN"
 
 msgid "Open"
 msgstr "Deschideți"
-
-msgid ""
-"Open Hardware Monitor files have been removed due to security reasons. To "
-"use Open Hardware Monitor, you may download it from our site using commands "
-"as site user: wget https://github.com/Checkmk/checkmk/blob/master/doc/"
-"treasures/windows/ohm/OpenHardwareMonitorCLI.exe -P local/share/check_mk/"
-"agents/windows/ wget https://github.com/Checkmk/checkmk/blob/master/doc/"
-"treasures/windows/ohm/OpenHardwareMonitorLib.dll -P local/share/check_mk/"
-"agents/windows/"
-msgstr ""
 
 msgid "Open Log"
 msgstr "Jurnal deschis"
@@ -73405,6 +73352,10 @@ msgstr ""
 "localizată."
 
 #, fuzzy
+msgid "This plug-in monitors DHCP pool utilization on Windows hosts."
+msgstr "Acest plugin monitorizează starea de backup Veeam pe gazdele Window."
+
+#, fuzzy
 msgid ""
 "This plug-in monitors Exchange Mailbox Servers in a Database Availability "
 "Group on Window hosts."
@@ -73436,7 +73387,7 @@ msgstr ""
 #, fuzzy
 msgid ""
 "This plug-in monitors the number of print jobs in the printer queues and the "
-"printer states"
+"printer states on Windows hosts."
 msgstr ""
 "Acest plugin monitorizează numărul de lucrări de imprimare din cozile de "
 "așteptare ale imprimantei și stările imprimantei"
@@ -75584,18 +75535,6 @@ msgstr ""
 
 #, fuzzy
 msgid ""
-"This will deploy and configure the Checkmk agent plug-in <tt>mk_saprouter</"
-"tt>. The plug-in runs below the specified user's environment. Furthermore "
-"you have to determine the path to sapgenpse. It's recommended to run the "
-"plug-in asynchronously."
-msgstr ""
-"Aceasta va implementa și configura pluginul agentului Checkmk "
-"<tt>mk_saprouter</tt>. Plugin-ul rulează sub mediul utilizatorului "
-"specificat's. În plus, trebuie să determinați calea către sapgenpse. Este "
-"recomandat să rulați pluginul în mod asincron."
-
-#, fuzzy
-msgid ""
 "This will deploy and configure the Checkmk agent plug-in "
 "<tt>mk_site_object_counts</tt>. The plug-in runs below the specified user's "
 "environment. Furthermore you have to determine host tags or service check "
@@ -75605,6 +75544,18 @@ msgstr ""
 "<tt>mk_site_object_counts</tt>. Plugin-ul rulează sub mediul utilizatorului "
 "specificat's. În plus, trebuie să determinați etichete gazdă sau comenzi de "
 "verificare a serviciilor."
+
+#, fuzzy
+msgid ""
+"This will deploy and configure the Checkmk agent plug-in mk_saprouter. The "
+"plug-in runs below the specified user's environment. Furthermore you have to "
+"determine the path to sapgenpse. It's recommended to run the plug-in "
+"asynchronously."
+msgstr ""
+"Aceasta va implementa și configura pluginul agentului Checkmk "
+"<tt>mk_saprouter</tt>. Plugin-ul rulează sub mediul utilizatorului "
+"specificat's. În plus, trebuie să determinați calea către sapgenpse. Este "
+"recomandat să rulați pluginul în mod asincron."
 
 msgid ""
 "This will deploy the agent plug-in <tt>ceph</tt> for monitoring the status "
@@ -92943,6 +92894,18 @@ msgstr "Stocarea notificărilor pentru analiza regulilor"
 msgid "Additional graph options"
 msgstr "Opțiuni adiționale"
 
+msgid "Owner (private)"
+msgstr ""
+
+#, fuzzy
+msgid "No contact groups found"
+msgstr "Nu sunt alocate grupuri de contact."
+
+# georgem ##############
+#, fuzzy
+msgid "Users of site"
+msgstr "Serviciile site-ului"
+
 #, fuzzy
 msgid "Unrestricted"
 msgstr "Neînregistrat"
@@ -92980,18 +92943,6 @@ msgstr "Clonarea graficului personalizat"
 #, fuzzy
 msgid "Select a custom graph"
 msgstr "Clonarea graficului personalizat"
-
-msgid "Owner (private)"
-msgstr ""
-
-#, fuzzy
-msgid "No contact groups found"
-msgstr "Nu sunt alocate grupuri de contact."
-
-# georgem ##############
-#, fuzzy
-msgid "Users of site"
-msgstr "Serviciile site-ului"
 
 #, fuzzy
 msgid "Enter description"
@@ -93280,19 +93231,6 @@ msgstr "Selecția fișierelor"
 msgid "Data range"
 msgstr "Intervalul de date"
 
-msgid "Only show current value"
-msgstr "Afișează doar valoarea curentă"
-
-msgid "Show historic values"
-msgstr "Afișați valorile istorice"
-
-#, fuzzy
-msgid "Fixed data range"
-msgstr "Interval fix"
-
-msgid "Service status"
-msgstr "Starea serviciului"
-
 #, fuzzy
 msgid "Show colored status label"
 msgstr "Afișați o etichetă de stare colorată"
@@ -93309,6 +93247,19 @@ msgstr "nu sunt OK stări"
 #, fuzzy
 msgid "Show colored metric background"
 msgstr "Afișați titlul fără fundal"
+
+msgid "Only show current value"
+msgstr "Afișează doar valoarea curentă"
+
+msgid "Show historic values"
+msgstr "Afișați valorile istorice"
+
+#, fuzzy
+msgid "Fixed data range"
+msgstr "Interval fix"
+
+msgid "Service status"
+msgstr "Starea serviciului"
 
 msgid "Range limits"
 msgstr "Limitele gamei"
@@ -94917,20 +94868,16 @@ msgid ""
 msgstr ""
 
 #, fuzzy
-msgid "Create Telemetry hosts folder"
-msgstr "Creați gazde de gateway în"
-
-#, fuzzy
 msgid "Could not create the Telemetry hosts folder"
-msgstr "Configurația stilului selectat"
-
-#, fuzzy
-msgid "Set up metric backend connector"
 msgstr "Configurația stilului selectat"
 
 #, fuzzy
 msgid "Could not create the metric backend connector"
 msgstr "Configurația stilului selectat"
+
+#, fuzzy
+msgid "Dynamic host management setup"
+msgstr "Gestionarea dinamică a gazdei"
 
 #, fuzzy
 msgid "OpenTelemetry Collector activation"
@@ -94957,8 +94904,8 @@ msgid "The password was rejected by the server."
 msgstr "Parola utilizatorului"
 
 #, fuzzy
-msgid "OpenTelemetry Collector configuration"
-msgstr "Configurația stilului selectat"
+msgid "Collector configuration"
+msgstr "Configurația filtrului Iptables"
 
 #, fuzzy
 msgid "Could not create the OpenTelemetry Collector configuration"
@@ -96046,6 +95993,66 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Deploy Mailman plug-in"
+#~ msgstr "Implementați plugin-ul Mailman"
+
+#, fuzzy
+#~ msgid "Deploy Windows Multipath plug-in"
+#~ msgstr "Implementarea pluginului Windows Multipath"
+
+#, fuzzy
+#~ msgid "Deploy Windows Printer Queue plug-in"
+#~ msgstr "Implementarea pluginului Windows Printer Queue"
+
+#, fuzzy
+#~ msgid "Deploy Windows license plug-in"
+#~ msgstr "Implementarea pluginului de licență Windows"
+
+#, fuzzy
+#~ msgid "Deploy plug-in for Windows DHCP pools"
+#~ msgstr "Implementarea plugin-ului pentru grupurile DHCP din Windows"
+
+#, fuzzy
+#~ msgid "Deploy the SAP router plug-in"
+#~ msgstr "Implementați plugin-ul routerului SAP"
+
+#, fuzzy
+#~ msgid "Do not deploy Mailman plug-in"
+#~ msgstr "Nu implementați plugin-ul Mailman"
+
+#, fuzzy
+#~ msgid "Do not deploy Windows License plug-in"
+#~ msgstr "Nu implementați pluginul de licență Windows"
+
+#, fuzzy
+#~ msgid "Do not deploy Windows Multipath plug-in"
+#~ msgstr "Nu implementați pluginul Windows Multipath"
+
+#, fuzzy
+#~ msgid "Do not deploy Windows Printer Queue plug-in"
+#~ msgstr "Nu implementați pluginul Windows Printer Queue"
+
+#, fuzzy
+#~ msgid "Do not deploy plug-in for Windows DHCP pools"
+#~ msgstr "Nu implementați plugin-ul pentru grupurile DHCP Windows DHCP"
+
+#, fuzzy
+#~ msgid "Do not deploy the SAP router plug-in"
+#~ msgstr "Nu implementați plugin-ul routerului SAP"
+
+#, fuzzy
+#~ msgid "Create Telemetry hosts folder"
+#~ msgstr "Creați gazde de gateway în"
+
+#, fuzzy
+#~ msgid "Set up metric backend connector"
+#~ msgstr "Configurația stilului selectat"
+
+#, fuzzy
+#~ msgid "OpenTelemetry Collector configuration"
+#~ msgstr "Configurația stilului selectat"
 
 #, fuzzy
 #~ msgid "Save new passwords"
@@ -101899,10 +101906,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Assign the contact group to hosts"
 #~ msgstr "Adăugați aceste grupuri de contacte la gazdă"
-
-#, fuzzy
-#~ msgid "Filter configuration"
-#~ msgstr "Configurația filtrului Iptables"
 
 #, fuzzy
 #~ msgid "Close filter configuration"

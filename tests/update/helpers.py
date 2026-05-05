@@ -93,7 +93,7 @@ def create_site(base_package: CMKPackageInfo) -> Site:
 
     is_cloud = base_package.edition.is_cloud_edition()
     if is_cloud:
-        from tests.testlib.nonfree.cloud.utils import (  # type: ignore[import-untyped, unused-ignore, import-not-found]
+        from tests.testlib.system.cloud.utils import (  # type: ignore[import-untyped, unused-ignore, import-not-found]
             create_cloud_initial_config,
         )
 
@@ -102,7 +102,7 @@ def create_site(base_package: CMKPackageInfo) -> Site:
     try:
         site = site_factory.get_site(site_name)
         if is_cloud:
-            from tests.testlib.nonfree.cloud.utils import (  # type: ignore[import-untyped, unused-ignore, import-not-found]
+            from tests.testlib.system.cloud.utils import (  # type: ignore[import-untyped, unused-ignore, import-not-found]
                 cloud_environment,
             )
 

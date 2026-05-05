@@ -19,7 +19,7 @@ def _ensure_cloud_initial_config() -> None:
     """Create Checkmk Cloud config files needed for cloud-edition sites to start."""
     if not edition_from_env().is_cloud_edition():
         return
-    from tests.testlib.nonfree.cloud.utils import (  # type: ignore[import-untyped, unused-ignore, import-not-found]
+    from tests.testlib.system.cloud.utils import (  # type: ignore[import-untyped, unused-ignore, import-not-found]
         create_cloud_initial_config,
     )
 

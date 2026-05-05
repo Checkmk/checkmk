@@ -250,14 +250,6 @@ def main() -> None:
         print(json.dumps(components, indent=2))
         sys.exit(0)
 
-    # Epic search mode — dump all open roadmap epics for LLM context
-    if args.find_epics:
-        token = _get_token_from_env(JIRA_TOKEN_VAR)
-        jira = _connect_jira(JIRA_SERVER, token)
-        epics = find_epics(jira)
-        print(json.dumps(epics, indent=2))
-        sys.exit(0)
-
     component = args.component
     developer_team = args.developer_team
 
@@ -283,8 +275,13 @@ def main() -> None:
         )
         sys.exit(0)
 
-    token = _get_token_from_env(JIRA_TOKEN_VAR)
-    jira = _connect_jira(JIRA_SERVER, token)
+    jira = _connect_jira(JIRA_SERVER, _get_token_from_env(JIRA_TOKEN_VAR))
+
+    # Epic search mode — dump all open roadmap epics for LLM context
+    if args.find_epics:
+        epics = find_epics(jira)
+        print(json.dumps(epics, indent=2))
+        sys.exit(0)
 
     issue = create_issue(
         jira,

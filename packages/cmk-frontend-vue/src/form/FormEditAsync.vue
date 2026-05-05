@@ -128,7 +128,7 @@ const { CmkErrorBoundary } = useCmkErrorBoundary()
             'Changes submitted through this form will be immediately applied to your configuration. However, you may still need to activate them for them to take effect.'
           )
         "
-        :dismissal_button="{
+        :dismissal-button="{
           title: _t('Do not show again'),
           key: DISMISSAL_KEY
         }"

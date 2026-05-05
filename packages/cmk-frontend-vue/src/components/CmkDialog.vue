@@ -23,7 +23,7 @@ export interface CmkDialogProps {
   title?: TranslatedString | undefined
   message: TranslatedString
   buttons?: { title: TranslatedString; variant: ButtonVariants['variant']; onclick: () => void }[]
-  dismissal_button?: { title: TranslatedString; key: DismissalButtonKey }
+  dismissalButton?: { title: TranslatedString; key: DismissalButtonKey }
   variant?: Variants
 }
 
@@ -48,18 +48,18 @@ const propsCva = cva('', {
 
 export type Variants = VariantProps<typeof propsCva>['variant']
 
-const dialogHidden = props.dismissal_button
-  ? usePersistentRef(props.dismissal_button.key, false, (v) => v as boolean, 'session')
+const dialogHidden = props.dismissalButton
+  ? usePersistentRef(props.dismissalButton.key, false, (v) => v as boolean, 'session')
   : ref(false)
 
 async function hideContent(event?: Event) {
-  if (props.dismissal_button) {
+  if (props.dismissalButton) {
     // Stop event propagation to prevent affecting parent components
     event?.stopPropagation()
 
     dialogHidden.value = true
 
-    await persistWarningDismissal(props.dismissal_button.key)
+    await persistWarningDismissal(props.dismissalButton.key)
   }
 }
 
@@ -86,8 +86,8 @@ const alertIconColor = computed(() => {
 })
 
 onMounted(() => {
-  if (props.dismissal_button) {
-    dialogHidden.value = isWarningDismissed(props.dismissal_button.key, dialogHidden.value)
+  if (props.dismissalButton) {
+    dialogHidden.value = isWarningDismissed(props.dismissalButton.key, dialogHidden.value)
   }
 })
 </script>
@@ -106,7 +106,7 @@ onMounted(() => {
     <div class="cmk-dialog__content">
       <span v-if="props.title" class="cmk-dialog__title">{{ props.title }}<br /></span>
       <span>{{ props.message }}</span>
-      <div v-if="(props.buttons?.length ?? 0) > 0 || props.dismissal_button" class="buttons">
+      <div v-if="(props.buttons?.length ?? 0) > 0 || props.dismissalButton" class="buttons">
         <CmkSpace :direction="'vertical'" />
         <!-- eslint-disable vue/valid-v-for since no unique identifier is present for key -->
         <template v-for="button in props.buttons">
@@ -116,8 +116,8 @@ onMounted(() => {
           <CmkSpace />
         </template>
         <!-- eslint-enable vue/valid-v-for -->
-        <CmkButton v-if="props.dismissal_button" @click="hideContent($event)">
-          {{ props.dismissal_button.title }}
+        <CmkButton v-if="props.dismissalButton" @click="hideContent($event)">
+          {{ props.dismissalButton.title }}
         </CmkButton>
       </div>
     </div>

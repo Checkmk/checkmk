@@ -15,7 +15,7 @@ defineProps<{ screenshotMode: boolean }>()
     :title="'Title'"
     :message="'Some message, dismissal will be stored in localStorage for this session and sent to backend for retrieval.'"
     :buttons="[{ title: 'Button 1', onclick: () => console.log('foo'), variant: 'info' }]"
-    :dismissal_button="{ title: 'Dismiss', key: 'immediate_slideout_change' }"
+    :dismissal-button="{ title: 'Dismiss', key: 'immediate_slideout_change' }"
   />
   <CmkDialog
     :title="'Title'"
@@ -32,7 +32,7 @@ defineProps<{ screenshotMode: boolean }>()
     :title="'Title'"
     :message="'Some message, dismissal will be stored in localStorage for this session and sent to backend for retrieval.'"
     :buttons="[{ title: 'Button 1', onclick: () => console.log('foo'), variant: 'danger' }]"
-    :dismissal_button="{ title: 'Dismiss', key: 'immediate_slideout_change' }"
+    :dismissal-button="{ title: 'Dismiss', key: 'immediate_slideout_change' }"
     :variant="'error'"
   />
   <CmkDialog

@@ -53,7 +53,7 @@ export const panelConfig = {
     initialState: 'This is a sample message demonstrating the dialog content and layout.'
   },
   buttons: { type: 'boolean' as const, title: 'Buttons', initialState: true },
-  dismissal_button: { type: 'boolean' as const, title: 'Dismissal Button', initialState: false }
+  dismissalButton: { type: 'boolean' as const, title: 'Dismissal Button', initialState: false }
 } satisfies PanelConfigFor<typeof CmkDialog>
 </script>
 
@@ -95,8 +95,8 @@ const dialogProps = computed(() => ({
       }
     ]
   }),
-  ...(propState.value.dismissal_button && {
-    dismissal_button: {
+  ...(propState.value.dismissalButton && {
+    dismissalButton: {
       title: 'Dismiss',
       key: 'immediate_slideout_change' as DismissalButtonKey
     }

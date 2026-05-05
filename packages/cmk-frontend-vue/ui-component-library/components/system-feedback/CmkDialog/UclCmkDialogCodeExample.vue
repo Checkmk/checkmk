@@ -17,6 +17,6 @@ function handleAction() {
     title="Dialog Title"
     message="This is an informational message that requires user attention."
     :buttons="[{ title: 'Acknowledge', variant: 'info', onclick: handleAction }]"
-    :dismissal_button="{ title: 'Dismiss', key: 'immediate_slideout_change' }"
+    :dismissal-button="{ title: 'Dismiss', key: 'immediate_slideout_change' }"
   />
 </template>

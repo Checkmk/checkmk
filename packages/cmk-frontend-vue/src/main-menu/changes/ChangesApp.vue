@@ -439,7 +439,7 @@ onMounted(async () => {
           _t(`Changes are saved without affecting live monitoring, allowing you to review and adjust them safely.
               Click 'Activate pending changes' to apply them.`)
         "
-        :dismissal_button="{
+        :dismissal-button="{
           title: _t('Do not show again'),
           key: 'changes-info'
         }"

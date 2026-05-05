@@ -32,7 +32,7 @@ function openInSameTab(url: string) {
         onclick: () => openInSameTab(properties['setup_link'])
       }
     ]"
-    :dismissal_button="{
+    :dismissal-button="{
       title: untranslated(properties['i18n']['do_not_show_again_title']),
       key: WARNING_KEY
     }"

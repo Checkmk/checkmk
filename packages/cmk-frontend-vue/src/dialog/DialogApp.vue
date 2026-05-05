@@ -40,7 +40,7 @@ const dialogProps = computed<CmkDialogProps>(() => {
   }
 
   if (props.dismissal_button) {
-    baseProps.dismissal_button = {
+    baseProps.dismissalButton = {
       title: props.dismissal_button.title as TranslatedString,
       key: props.dismissal_button.key
     }

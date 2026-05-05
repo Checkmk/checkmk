@@ -34,8 +34,8 @@ function toggle() {
     :aria-label="_t('Toggle accordion item %{item}', { item: props.value })"
     class="cmk-accordion-trigger__button"
     @click="toggle"
-    @keydpress.enter="toggle"
-    @keydpress.space="toggle"
+    @keydown.enter="toggle"
+    @keydown.space="toggle"
   >
     <slot />
   </button>

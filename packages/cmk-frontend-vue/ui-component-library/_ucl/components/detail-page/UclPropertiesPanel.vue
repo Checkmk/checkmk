@@ -138,7 +138,7 @@ onMounted(() => {
         :id="`${uid}-${key}`"
         type="number"
         :model-value="state[key] as number"
-        @update:model-value="state[key] = $event ?? 0"
+        @update:model-value="state[key] = Number($event) || 0"
       />
       <textarea
         v-else-if="def.type === 'multiline-string'"

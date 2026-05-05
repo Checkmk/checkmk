@@ -202,7 +202,7 @@ describe('prop type interactions update component', () => {
     render(makeTestApp())
     expect(screen.getByTestId('number-prop')).toHaveTextContent('0')
     const spinbutton = screen.getByRole('spinbutton')
-    await userEvent.tripleClick(spinbutton)
+    await userEvent.clear(spinbutton)
     await userEvent.type(spinbutton, '42')
     expect(screen.getByTestId('number-prop')).toHaveTextContent('42')
   })

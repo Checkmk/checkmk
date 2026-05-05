@@ -783,9 +783,8 @@ def main(argv: Sequence[str]) -> None:
             if args.debug:
                 raise
 
-    _try_to_run("scripts/run-uvenv", "ruff", "check", "--fix", *args.files)
-    _try_to_run("scripts/run-uvenv", "ruff", "check", "--select", "I", "--fix", *args.files)
-    _try_to_run("scripts/run-uvenv", "ruff", "format", *args.files)
+    _try_to_run("bazel", "lint", "--fix", *args.files)
+    _try_to_run("bazel", "run", "//:format", "--", *args.files)
 
 
 if __name__ == "__main__":

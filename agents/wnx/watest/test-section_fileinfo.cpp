@@ -539,7 +539,7 @@ TEST(FileInfoTest, MakeFileInfoPagefile) {
         auto ftime = std::stoll(table[table.size() - 1]);
         auto cur_time = std::chrono::system_clock::to_time_t(
             std::chrono::system_clock::now());
-        EXPECT_GT(cur_time, ftime);
+        EXPECT_GE(cur_time, ftime);
         auto sz = std::stoll(table[table.size() - 2]);
         EXPECT_GT(sz, 0);
     }

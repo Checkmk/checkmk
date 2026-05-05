@@ -3,16 +3,37 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import pathlib
 import time
+
+import pytest
 
 from cmk.agent_receiver.lib.config import Config
 from cmk.relay_protocols.tasks import FetchAdHocTask
 from cmk.testlib.agent_receiver.agent_receiver import AgentReceiverClient, register_relay
-from cmk.testlib.agent_receiver.config import create_relay_config as _create_relay_config
+from cmk.testlib.agent_receiver.builder import AgentReceiverConfigBuilder, AgentReceiverSite
 from cmk.testlib.agent_receiver.config_file_system import create_config_folder
 from cmk.testlib.agent_receiver.relay import random_relay_id
 from cmk.testlib.agent_receiver.site_mock import OP, SiteMock
 from cmk.testlib.agent_receiver.tasks import get_relay_tasks, push_task
+from cmk.testlib.agent_receiver.wiremock import Wiremock
+
+
+@pytest.fixture()
+def site_name() -> str:
+    return "my_component_test_site"
+
+
+@pytest.fixture()
+def ar_site(wiremock: Wiremock, tmp_path: pathlib.Path, site_name: str) -> AgentReceiverSite:
+    """overwrite global fixture with a task_ttl of 1"""
+    return AgentReceiverConfigBuilder(
+        omd_root=tmp_path / site_name,
+        site_name=site_name,
+        apache_address=wiremock.wiremock_hostname,
+        apache_port=wiremock.port,
+        task_ttl=1.0,
+    ).build()
 
 
 def test_task_expires_in_agent_receiver(
@@ -24,15 +45,11 @@ def test_task_expires_in_agent_receiver(
     """Verify that tasks expire and are automatically removed after the configured TTL (time-to-live) period.
 
     Test steps:
-    1. Configure agent receiver with short expiration time
-    2. Register relay and add task
-    3. Wait for expiration time
-    4. Verify task is no longer present
+    1. Register relay and add task
+    2. Wait for expiration time
+    3. Verify task is no longer present
     """
-
-    # Configure short expiration time
     expiration_time = 1.0
-    _create_relay_config(task_ttl=1.0)
 
     # Step 1: Register relay
     relay_id = random_relay_id()
@@ -71,15 +88,12 @@ def test_task_expiration_resets_on_update(
     """Verify that the task expiration timer is reset when a task is updated, extending its lifetime.
 
     Test steps:
-    1. Configure agent receiver with short expiration time
-    2. Add task and wait until half expiration time
-    3. Update the task
-    4. Verify task remains present after additional half expiration
-    5. Verify task expires after full expiration from update
+    1. Add task and wait until half expiration time
+    2. Update the task
+    3. Verify task remains present after additional half expiration
+    4. Verify task expires after full expiration from update
     """
-    # Configure short expiration time
     expiration_time = 1.0
-    _create_relay_config(task_ttl=1.0)
 
     # Register relay
     relay_id = random_relay_id()
@@ -135,15 +149,12 @@ def test_completed_tasks_expiration(
     """Verify that tasks expire after their TTL regardless of whether they are pending, finished, or failed.
 
     Test steps:
-    1. Configure agent receiver with short expiration time
-    2. Add tasks and update them with different result types
-    3. Verify tasks are present initially
-    4. Wait for expiration time
-    5. Verify all tasks have expired
+    1. Add tasks and update them with different result types
+    2. Verify tasks are present initially
+    3. Wait for expiration time
+    4. Verify all tasks have expired
     """
-    # Configure short expiration time
     expiration_time = 1.0
-    _create_relay_config(task_ttl=1.0)
 
     # Register relay
     relay_id = random_relay_id()

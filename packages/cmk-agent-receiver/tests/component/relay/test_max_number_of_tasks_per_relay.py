@@ -3,23 +3,65 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import pathlib
 import uuid
 from http import HTTPStatus
 
-from cmk.agent_receiver.lib.config import Config
+import pytest
+from fastapi.testclient import TestClient
+
+from cmk.agent_receiver.lib.config import Config, get_config
+from cmk.agent_receiver.main import main_app
+from cmk.agent_receiver.relay.api.routers.relays.dependencies import (
+    get_forward_monitoring_data_handler,
+)
+from cmk.agent_receiver.relay.api.routers.relays.handlers import ForwardMonitoringDataHandler
 from cmk.relay_protocols.tasks import FetchAdHocTask
 from cmk.testlib.agent_receiver.agent_receiver import AgentReceiverClient
-from cmk.testlib.agent_receiver.config import create_relay_config
+from cmk.testlib.agent_receiver.builder import AgentReceiverConfigBuilder
 from cmk.testlib.agent_receiver.config_file_system import create_config_folder
-from cmk.testlib.agent_receiver.site_mock import SiteMock
+from cmk.testlib.agent_receiver.site_mock import SiteMock, User
 from cmk.testlib.agent_receiver.tasks import add_tasks, get_all_tasks
+from cmk.testlib.agent_receiver.wiremock import Wiremock
+
+
+def _setup(
+    wiremock: Wiremock,
+    tmp_path: pathlib.Path,
+    monkeypatch: pytest.MonkeyPatch,
+    *,
+    max_pending_tasks_per_relay: int,
+) -> tuple[SiteMock, AgentReceiverClient, Config, str]:
+    site_name = "my_component_test_site"
+    ar_site = AgentReceiverConfigBuilder(
+        omd_root=tmp_path / site_name,
+        site_name=site_name,
+        apache_address=wiremock.wiremock_hostname,
+        apache_port=wiremock.port,
+        max_pending_tasks_per_relay=max_pending_tasks_per_relay,
+    ).build()
+    for key, value in ar_site.env.items():
+        monkeypatch.setenv(key, value)
+    get_config.cache_clear()
+
+    user = User("testmo", "supersecret")
+    wiremock.reset()
+    site = SiteMock(wiremock, site_name, user, ar_site.internal_credentials)
+
+    app = main_app()
+    app.dependency_overrides[get_forward_monitoring_data_handler] = lambda config: (
+        ForwardMonitoringDataHandler(data_socket=config.raw_data_socket, socket_timeout=2.0)
+    )
+    client = TestClient(app)
+    agent_receiver = AgentReceiverClient(client, site_name, user)
+
+    return site, agent_receiver, ar_site.config, site_name
 
 
 def test_cannot_push_more_pending_tasks_than_allowed(
-    agent_receiver: AgentReceiverClient,
-    site: SiteMock,
-    site_context: Config,
-    site_name: str,
+    wiremock: Wiremock,
+    tmp_path: pathlib.Path,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Verify that pushing more tasks than the maximum allowed is rejected with a FORBIDDEN status.
 
@@ -29,7 +71,9 @@ def test_cannot_push_more_pending_tasks_than_allowed(
     3. Verify request is rejected with FORBIDDEN status
     """
     task_count = 3
-    create_relay_config(max_number_of_tasks=task_count)
+    site, agent_receiver, site_context, site_name = _setup(
+        wiremock, tmp_path, monkeypatch, max_pending_tasks_per_relay=task_count
+    )
 
     relay_id = add_relays(site, 1)[0]
     cf = create_config_folder(root=site_context.omd_root, relays=[relay_id])
@@ -60,10 +104,9 @@ def test_cannot_push_more_pending_tasks_than_allowed(
 
 
 def test_cannot_push_more_tasks_after_marking_a_task_as_finished(
-    agent_receiver: AgentReceiverClient,
-    site: SiteMock,
-    site_context: Config,
-    site_name: str,
+    wiremock: Wiremock,
+    tmp_path: pathlib.Path,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Verify that after marking a task as finished, new tasks can be pushed even when the limit was previously reached.
 
@@ -73,7 +116,9 @@ def test_cannot_push_more_tasks_after_marking_a_task_as_finished(
     3. Verify new task is accepted successfully
     """
     task_count = 3
-    create_relay_config(max_number_of_tasks=task_count)
+    site, agent_receiver, site_context, site_name = _setup(
+        wiremock, tmp_path, monkeypatch, max_pending_tasks_per_relay=task_count
+    )
 
     relay_id = add_relays(site, 1)[0]
     cf = create_config_folder(root=site_context.omd_root, relays=[relay_id])
@@ -103,7 +148,9 @@ def test_cannot_push_more_tasks_after_marking_a_task_as_finished(
 
 
 def test_each_relay_has_its_own_limit(
-    agent_receiver: AgentReceiverClient, site: SiteMock, site_name: str
+    wiremock: Wiremock,
+    tmp_path: pathlib.Path,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Verify that each relay has its own independent task limit and filling one relay does not affect others.
 
@@ -113,7 +160,9 @@ def test_each_relay_has_its_own_limit(
     3. Verify relay B accepts task despite relay A being full
     """
     task_count = 5
-    create_relay_config(max_number_of_tasks=task_count)
+    site, agent_receiver, _, site_name = _setup(
+        wiremock, tmp_path, monkeypatch, max_pending_tasks_per_relay=task_count
+    )
 
     relay_id_A, relay_id_B = add_relays(site, 2)
 

@@ -3,12 +3,15 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Sequence
+
 import pytest
 
 from cmk.agent_based.v2 import StringTable
-from tests.unit.cmk.legacy_checks.test_nimble_latency import Result
 
 from .checktestlib import Check
+
+Result = tuple[float, str, Sequence[object]]
 
 
 @pytest.mark.parametrize(

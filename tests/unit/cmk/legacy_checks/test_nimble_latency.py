@@ -4,15 +4,19 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import collections
-from collections.abc import Mapping, Sequence
+from collections.abc import Mapping
 
 import pytest
 
-from .checktestlib import Check
+from cmk.agent_based.v2 import Result, State
+from cmk.legacy_checks.nimble_latency import (
+    check_nimble_latency_reads,
+    check_nimble_latency_writes,
+    LatencyData,
+    ParsedNimbleLatency,
+)
 
-pytestmark = pytest.mark.checks
-
-range_data = {
+range_data: LatencyData = {
     "total": 20,
     "ranges": collections.OrderedDict(
         [
@@ -34,108 +38,73 @@ range_data = {
 }
 
 Param = Mapping[str, str | tuple[float, float]]
-Data = Mapping[str, Mapping[str, object]]
-Result = tuple[float, str, Sequence[object]]
 
 
 @pytest.mark.parametrize(
-    "params, data, result",
+    "params, data, expected",
     [
         (
-            {
-                "range_reference": "0.1",
-                "read": (99, 100),
-            },
-            {
-                "itemxyz": {"read": range_data},
-            },
-            (2, "At or above 0-0.1 ms: 100.00% (warn/crit at 99.00%/100.00%)", []),
+            {"range_reference": "0.1", "read": (99, 100)},
+            {"itemxyz": {"read": range_data}},
+            Result(
+                state=State.CRIT,
+                summary="At or above 0-0.1 ms: 100.00% (warn/crit at 99.00%/100.00%)",
+            ),
         ),
         (
-            {
-                "range_reference": "50",
-                "read": (99, 100),
-            },
-            {
-                "itemxyz": {"read": range_data},
-            },
-            (0, "At or above 20-50 ms: 20.00%", []),
+            {"range_reference": "50", "read": (99, 100)},
+            {"itemxyz": {"read": range_data}},
+            Result(state=State.OK, summary="At or above 20-50 ms: 20.00%"),
         ),
         (
-            {
-                "range_reference": "1000",
-                "read": (99, 100),
-            },
-            {
-                "itemxyz": {"read": range_data},
-            },
-            (0, "At or above 500+ ms: 0%", []),
+            {"range_reference": "1000", "read": (99, 100)},
+            {"itemxyz": {"read": range_data}},
+            Result(state=State.OK, summary="At or above 500+ ms: 0%"),
         ),
     ],
 )
 def test_nimble_latency_ranges(
     params: Param,
-    data: Data,
-    result: Result,
+    data: ParsedNimbleLatency,
+    expected: Result,
 ) -> None:
     """The user can specify a parameter range_reference, which serves as a starting
     point from which values should start to be stacked and checked against levels.
     Test whether the stacking is correct."""
-
-    check = Check("nimble_latency")
-    actual_results = list(check.run_check("itemxyz", params, data))
-    assert result == actual_results[0]
+    actual_results = list(check_nimble_latency_reads("itemxyz", params, data))
+    assert actual_results[0] == expected
 
 
-@pytest.mark.parametrize(
-    "params, data, result",
-    [
-        (
-            {
-                "range_reference": "50",
-                "read": (30, 40),
-                "write": (1, 2),
-            },
-            {
-                "itemxyz": {"read": range_data},
-            },
-            (0, "At or above 20-50 ms: 20.00%", []),
-        ),
-    ],
-)
-def test_nimble_latency_read_params(params: Param, data: Data, result: Result) -> None:
+def test_nimble_latency_read_params() -> None:
     """Test that latency read levels are applied to read types only."""
+    params: Param = {
+        "range_reference": "50",
+        "read": (30, 40),
+        "write": (1, 2),
+    }
+    data: ParsedNimbleLatency = {"itemxyz": {"read": range_data}}
+    expected = Result(state=State.OK, summary="At or above 20-50 ms: 20.00%")
 
-    read_check = Check("nimble_latency")
-    write_check = Check("nimble_latency_write")
-    read_results = list(read_check.run_check("itemxyz", params, data))
-    write_results = list(write_check.run_check("itemxyz", params, data))
-    assert result == read_results[0]
+    read_results = list(check_nimble_latency_reads("itemxyz", params, data))
+    write_results = list(check_nimble_latency_writes("itemxyz", params, data))
+    assert read_results[0] == expected
     assert not write_results
 
 
-@pytest.mark.parametrize(
-    "params, data, result",
-    [
-        (
-            {
-                "range_reference": "50",
-                "read": (30, 40),
-                "write": (1, 2),
-            },
-            {
-                "itemxyz": {"write": range_data},
-            },
-            (2, "At or above 20-50 ms: 20.00% (warn/crit at 1.00%/2.00%)", []),
-        ),
-    ],
-)
-def test_nimble_latency_write_params(params: Param, data: Data, result: Result) -> None:
+def test_nimble_latency_write_params() -> None:
     """Test that latency write levels are applied to write types only."""
+    params: Param = {
+        "range_reference": "50",
+        "read": (30, 40),
+        "write": (1, 2),
+    }
+    data: ParsedNimbleLatency = {"itemxyz": {"write": range_data}}
+    expected = Result(
+        state=State.CRIT,
+        summary="At or above 20-50 ms: 20.00% (warn/crit at 1.00%/2.00%)",
+    )
 
-    read_check = Check("nimble_latency")
-    write_check = Check("nimble_latency_write")
-    read_results = list(read_check.run_check("itemxyz", params, data))
-    write_results = list(write_check.run_check("itemxyz", params, data))
-    assert result == write_results[0]
+    read_results = list(check_nimble_latency_reads("itemxyz", params, data))
+    write_results = list(check_nimble_latency_writes("itemxyz", params, data))
+    assert write_results[0] == expected
     assert not read_results

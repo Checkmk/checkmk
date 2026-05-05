@@ -3,25 +3,27 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="arg-type"
-# mypy: disable-error-code="index"
-# mypy: disable-error-code="var-annotated"
-
 from __future__ import annotations
 
 import collections
 from collections.abc import Mapping
 from typing import Any, TypedDict
 
-from cmk.agent_based.legacy.v0_unstable import (
-    check_levels,
-    LegacyCheckDefinition,
-    LegacyCheckResult,
-    LegacyDiscoveryResult,
+from cmk.agent_based.legacy.conversion import convert_legacy_results
+from cmk.agent_based.legacy.v0_unstable import check_levels
+from cmk.agent_based.v2 import (
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    render,
+    Result,
+    Service,
+    SimpleSNMPSection,
+    SNMPTree,
+    startswith,
+    State,
+    StringTable,
 )
-from cmk.agent_based.v2 import render, SNMPTree, startswith, StringTable
-
-check_info = {}
 
 # Default levels: issue a WARN/CRIT if 1%/2% of read or write IO
 # operations have a latency of 10-20 ms or above.
@@ -32,7 +34,7 @@ NimbleWritesType = "write"
 type LatencyRanges = collections.OrderedDict[str, tuple[str, int]]
 
 
-class LatencyData(TypedDict):
+class LatencyData(TypedDict, total=False):
     total: int
     ranges: LatencyRanges
 
@@ -58,7 +60,7 @@ def parse_nimble_read_latency(string_table: StringTable) -> ParsedNimbleLatency:
         ("500", "200-500 ms"),
         ("1000", "500+ ms"),
     ]
-    parsed = {}
+    parsed: ParsedNimbleLatency = {}
 
     for line in string_table:
         vol_name = line[0]
@@ -67,14 +69,14 @@ def parse_nimble_read_latency(string_table: StringTable) -> ParsedNimbleLatency:
             (NimbleWritesType, 15),
         ]:
             values = line[start_idx : start_idx + 14]
-            latencies = {}
+            latencies: LatencyData = {}
             for (key, title), value_str in zip(range_keys, values):
                 try:
                     value = int(value_str)
                 except ValueError:
                     continue
                 if key == "total":
-                    latencies[key] = value
+                    latencies["total"] = value
                     continue
                 # maintain the key order so that long output is sorted later
                 latencies.setdefault("ranges", collections.OrderedDict())[key] = title, value
@@ -83,35 +85,33 @@ def parse_nimble_read_latency(string_table: StringTable) -> ParsedNimbleLatency:
     return parsed
 
 
-def inventory_nimble_latency(parsed: ParsedNimbleLatency, ty: str) -> LegacyDiscoveryResult:
-    for vol_name, vol_attrs in parsed.items():
-        if vol_attrs[ty]:
-            yield vol_name, {}
+def _discover_nimble_latency(section: ParsedNimbleLatency, ty: str) -> DiscoveryResult:
+    for vol_name, vol_attrs in section.items():
+        if vol_attrs.get(ty):
+            yield Service(item=vol_name)
 
 
-def _check_nimble_latency(
-    item: str, params: Mapping[str, Any], data: VolumeData, ty: str
-) -> LegacyCheckResult:
+def _check_nimble_latency(params: Mapping[str, Any], data: VolumeData, ty: str) -> CheckResult:
     ty_data = data.get(ty)
     if ty_data is None:
         return
 
     total_value = ty_data["total"]
     if total_value == 0:
-        yield 0, "No current %s operations" % ty
+        yield Result(state=State.OK, summary=f"No current {ty} operations")
         return
 
     range_reference = float(params["range_reference"])
     running_total_percent = 0.0
-    results = []
+    breakdown_results = []
     for key, (title, value) in ty_data["ranges"].items():
-        metric_name = "nimble_{}_latency_{}".format(ty, key.replace(".", ""))
+        metric_name = f"nimble_{ty}_latency_{key.replace('.', '')}"
         percent_value = value / total_value * 100
 
         if float(key) >= range_reference:
             running_total_percent += percent_value
 
-        results.append(
+        breakdown_results.append(
             check_levels(
                 value=percent_value,
                 dsname=metric_name,
@@ -121,32 +121,36 @@ def _check_nimble_latency(
             )
         )
 
-    yield check_levels(
+    aggregate = check_levels(
         value=running_total_percent,
         dsname=None,
         params=params[ty],
         human_readable_func=render.percent,
-        infoname="At or above %s" % ty_data["ranges"][params["range_reference"]][0],
+        infoname=f"At or above {ty_data['ranges'][params['range_reference']][0]}",
     )
 
-    yield 0, "\nLatency breakdown:"
-    for _state, infotext, perfdata in results:
-        yield 0, infotext, perfdata
+    yield from convert_legacy_results(
+        [
+            aggregate,
+            (0, "\nLatency breakdown:", []),
+            *breakdown_results,
+        ]
+    )
 
 
 def check_nimble_latency_reads(
-    item: str, params: Mapping[str, Any], parsed: ParsedNimbleLatency
-) -> LegacyCheckResult:
-    if not (data := parsed.get(item)):
+    item: str, params: Mapping[str, Any], section: ParsedNimbleLatency
+) -> CheckResult:
+    if not (data := section.get(item)):
         return
-    yield from _check_nimble_latency(item, params, data, NimbleReadsType)
+    yield from _check_nimble_latency(params, data, NimbleReadsType)
 
 
-def discover_nimble_latency(parsed: ParsedNimbleLatency) -> LegacyDiscoveryResult:
-    return inventory_nimble_latency(parsed, NimbleReadsType)
+def discover_nimble_latency(section: ParsedNimbleLatency) -> DiscoveryResult:
+    yield from _discover_nimble_latency(section, NimbleReadsType)
 
 
-check_info["nimble_latency"] = LegacyCheckDefinition(
+snmp_section_nimble_latency = SimpleSNMPSection(
     name="nimble_latency",
     detect=startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.37447.3.1"),
     fetch=SNMPTree(
@@ -184,6 +188,11 @@ check_info["nimble_latency"] = LegacyCheckDefinition(
         ],
     ),
     parse_function=parse_nimble_read_latency,
+)
+
+
+check_plugin_nimble_latency = CheckPlugin(
+    name="nimble_latency",
     service_name="Volume %s Read IO",
     discovery_function=discover_nimble_latency,
     check_function=check_nimble_latency_reads,
@@ -201,18 +210,18 @@ check_info["nimble_latency"] = LegacyCheckDefinition(
 
 
 def check_nimble_latency_writes(
-    item: str, params: Mapping[str, Any], parsed: ParsedNimbleLatency
-) -> LegacyCheckResult:
-    if not (data := parsed.get(item)):
+    item: str, params: Mapping[str, Any], section: ParsedNimbleLatency
+) -> CheckResult:
+    if not (data := section.get(item)):
         return
-    yield from _check_nimble_latency(item, params, data, NimbleWritesType)
+    yield from _check_nimble_latency(params, data, NimbleWritesType)
 
 
-def discover_nimble_latency_write(parsed: ParsedNimbleLatency) -> LegacyDiscoveryResult:
-    return inventory_nimble_latency(parsed, NimbleWritesType)
+def discover_nimble_latency_write(section: ParsedNimbleLatency) -> DiscoveryResult:
+    yield from _discover_nimble_latency(section, NimbleWritesType)
 
 
-check_info["nimble_latency.write"] = LegacyCheckDefinition(
+check_plugin_nimble_latency_write = CheckPlugin(
     name="nimble_latency_write",
     service_name="Volume %s Write IO",
     sections=["nimble_latency"],

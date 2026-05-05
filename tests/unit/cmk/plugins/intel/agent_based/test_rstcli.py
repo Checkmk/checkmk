@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.legacy_checks.rstcli import parse_rstcli
+from cmk.plugins.intel.agent_based.rstcli import parse_rstcli
 
 # Taken from https://forum.checkmk.com/t/monitoring-intel-vroc-with-rstcli/38613
 INFO = [

@@ -13,7 +13,7 @@
 import pytest
 
 from cmk.agent_based.v2 import StringTable
-from cmk.legacy_checks.rstcli import (
+from cmk.plugins.intel.agent_based.rstcli import (
     check_rstcli,
     check_rstcli_pdisks,
     discover_rstcli,

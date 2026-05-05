@@ -29,20 +29,20 @@ from cmk.gui.i18n import _
 class BIManager:
     def __init__(self) -> None:
         sites_callback = create_default_sites_callback()
-        self.compiler = BICompiler(get_bi_config_path(), sites_callback)
+        self.compiler = BICompiler(self.bi_configuration_file(), sites_callback)
         self.compiler.load_compiled_aggregations()
         self.status_fetcher = BIStatusFetcher(sites_callback)
         self.computer = BIComputer(self.compiler.compiled_aggregations, self.status_fetcher)
+
+    @classmethod
+    def bi_configuration_file(cls) -> Path:
+        return get_default_site_filesystem().etc.config
 
     def get_aggregation_by_name(self, name: str) -> tuple[BICompiledAggregation, BICompiledRule]:
         return get_compiled_aggregation_and_branch_by_name(
             compiled_aggregations=self.compiler.compiled_aggregations,
             aggr_name=name,
         )
-
-
-def get_bi_config_path() -> Path:
-    return get_default_site_filesystem().etc.config
 
 
 def create_default_sites_callback() -> SitesCallback:

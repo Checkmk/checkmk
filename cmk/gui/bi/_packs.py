@@ -7,7 +7,7 @@ from cmk.bi.packs import BIAggregationPacks
 from cmk.gui.hooks import request_memoize
 from cmk.gui.valuespec import DropdownChoiceEntries
 
-from .bi_manager import get_bi_config_path
+from .bi_manager import BIManager
 
 
 def get_aggregation_group_trees() -> list[str]:
@@ -26,6 +26,6 @@ def aggregation_group_choices() -> DropdownChoiceEntries:
 
 @request_memoize()
 def get_cached_bi_packs() -> BIAggregationPacks:
-    bi_packs = BIAggregationPacks(get_bi_config_path())
+    bi_packs = BIAggregationPacks(BIManager.bi_configuration_file())
     bi_packs.load_config()
     return bi_packs

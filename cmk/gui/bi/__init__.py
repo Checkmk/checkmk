@@ -10,7 +10,7 @@ from ._packs import get_cached_bi_packs as get_cached_bi_packs
 from ._valuespecs import (
     bi_config_aggregation_function_registry as bi_config_aggregation_function_registry,
 )
-from .bi_manager import BIManager, get_bi_config_path
+from .bi_manager import BIManager
 from .foldable_tree_renderer import FoldableTreeRendererTree
 
 __all__ = [
@@ -20,5 +20,4 @@ __all__ = [
     "get_aggregation_group_trees",
     "aggregation_group_choices",
     "get_cached_bi_packs",
-    "get_bi_config_path",
 ]

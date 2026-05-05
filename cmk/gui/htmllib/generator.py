@@ -36,7 +36,6 @@ from cmk.gui.utils import escaping
 from cmk.gui.utils.flashed_messages import MsgType
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import OutputFunnel
-from cmk.web.htmllib.builder import HtmlBuilder
 
 from .tag_rendering import (
     HTMLContent,
@@ -172,7 +171,9 @@ class HTMLWriter:
     def render_a(
         content: HTMLContent, href: None | str | str, **attrs: HTMLTagAttributeValue
     ) -> HTML:
-        return HtmlBuilder.render_a(content, href, **attrs)
+        if href is not None:
+            attrs["href"] = href
+        return render_element("a", content, **attrs)
 
     def a(self, content: HTMLContent, href: str, **attrs: HTMLTagAttributeValue) -> None:
         self.write_html(HTMLWriter.render_a(content, href, **attrs))
@@ -185,7 +186,15 @@ class HTMLWriter:
 
     @staticmethod
     def render_javascript(code: str, **attrs: HTMLTagAttributeValue) -> HTML:
-        return HtmlBuilder.render_javascript(code, **attrs)
+        # We can not use the regular html.escape since it escapes with HTML entities, which
+        # are not interpreted properly in script. Using the unicode escape sequences seems to
+        # have the desired effect.
+        # In case it turns out that it has unwanted side effects, we may finally have to get rid of
+        # the inline scripts, which would be a great idea anyways, but is quite some effort.
+        def escape_for_script(code: str) -> str:
+            return code.replace("&", "\\u0026").replace("<", "\\u003c").replace(">", "\\u003e")
+
+        return render_element("script", HTML.without_escaping(escape_for_script(code)), **attrs)
 
     def final_javascript(self, code: FinalJavaScript) -> None:
         self._final_javascript.append(code)
@@ -285,7 +294,8 @@ class HTMLWriter:
 
     @staticmethod
     def render_img(src: str, **attrs: HTMLTagAttributeValue) -> HTML:
-        return HtmlBuilder.render_img(src, **attrs)
+        attrs["src"] = src
+        return render_start_tag("img", close_tag=True, **attrs)
 
     def img(self, src: str, **attrs: HTMLTagAttributeValue) -> None:
         self.write_html(HTMLWriter.render_img(src, **attrs))
@@ -295,7 +305,8 @@ class HTMLWriter:
 
     @staticmethod
     def render_label(content: HTMLContent, for_: str, **attrs: HTMLTagAttributeValue) -> HTML:
-        return HtmlBuilder.render_label(content, for_, **attrs)
+        attrs["for"] = for_
+        return render_element("label", content, **attrs)
 
     def label(self, content: HTMLContent, for_: str, **attrs: HTMLTagAttributeValue) -> None:
         self.write_html(HTMLWriter.render_label(content, for_, **attrs))
@@ -306,21 +317,21 @@ class HTMLWriter:
 
     @staticmethod
     def render_heading(content: HTMLContent) -> HTML:
-        return HtmlBuilder.render_heading(content)
+        return render_element("h2", content)
 
     def heading(self, content: HTMLContent) -> None:
         self.write_html(HTMLWriter.render_heading(content))
 
     @staticmethod
     def render_br() -> HTML:
-        return HtmlBuilder.render_br()
+        return HTML.without_escaping("<br />")
 
     def br(self) -> None:
         self.write_html(HTMLWriter.render_br())
 
     @staticmethod
     def render_hr(**attrs: HTMLTagAttributeValue) -> HTML:
-        return HtmlBuilder.render_hr(**attrs)
+        return render_start_tag("hr", close_tag=True, **attrs)
 
     def hr(self, **attrs: HTMLTagAttributeValue) -> None:
         self.write_html(HTMLWriter.render_hr(**attrs))
@@ -330,7 +341,7 @@ class HTMLWriter:
 
     @staticmethod
     def render_nbsp() -> HTML:
-        return HtmlBuilder.render_nbsp()
+        return HTML.without_escaping("&nbsp;")
 
     def nbsp(self) -> None:
         self.write_html(HTMLWriter.render_nbsp())
@@ -410,13 +421,25 @@ class HTMLWriter:
     def vue_component(
         self, component_name: str, data: dict[str, Any], **kwargs: HTMLTagAttributeValue
     ) -> None:
-        self.write_html(HtmlBuilder.render_vue_component(component_name, data, **kwargs))
+        self.write_html(
+            render_element(
+                component_name,
+                None,
+                data=_dump_standard_compliant_json(data),
+                **kwargs,
+            )
+        )
 
     @staticmethod
     def render_vue_component(
         component_name: str, data: dict[str, Any], **kwargs: HTMLTagAttributeValue
     ) -> HTML:
-        return HtmlBuilder.render_vue_component(component_name, data, **kwargs)
+        return render_element(
+            component_name,
+            None,
+            data=_dump_standard_compliant_json(data),
+            **kwargs,
+        )
 
     def legend(self, content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> None:
         self.write_html(render_element("legend", content, **kwargs))
@@ -429,7 +452,7 @@ class HTMLWriter:
 
     @staticmethod
     def render_pre(content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
-        return HtmlBuilder.render_pre(content, **kwargs)
+        return render_element("pre", content, **kwargs)
 
     def open_h2(self, **kwargs: HTMLTagAttributeValue) -> None:
         self.write_html(render_start_tag("h2", close_tag=False, **kwargs))
@@ -439,7 +462,7 @@ class HTMLWriter:
 
     @staticmethod
     def render_h2(content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
-        return HtmlBuilder.render_h2(content, **kwargs)
+        return render_element("h2", content, **kwargs)
 
     def open_h3(self, **kwargs: HTMLTagAttributeValue) -> None:
         self.write_html(render_start_tag("h3", close_tag=False, **kwargs))
@@ -449,7 +472,7 @@ class HTMLWriter:
 
     @staticmethod
     def render_h3(content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
-        return HtmlBuilder.render_h3(content, **kwargs)
+        return render_element("h3", content, **kwargs)
 
     def open_tag(self, **kwargs: HTMLTagAttributeValue) -> None:
         self.write_html(render_start_tag("tag", close_tag=False, **kwargs))
@@ -459,7 +482,7 @@ class HTMLWriter:
 
     @staticmethod
     def render_tag(content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
-        return HtmlBuilder.render_tag(content, **kwargs)
+        return render_element("tag", content, **kwargs)
 
     def open_table(self, **kwargs: HTMLTagAttributeValue) -> None:
         self.write_html(render_start_tag("table", close_tag=False, **kwargs))
@@ -469,7 +492,7 @@ class HTMLWriter:
 
     @staticmethod
     def render_table(content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
-        return HtmlBuilder.render_table(content, **kwargs)
+        return render_element("table", content, **kwargs)
 
     def open_select(self, **kwargs: HTMLTagAttributeValue) -> None:
         self.write_html(render_start_tag("select", close_tag=False, **kwargs))
@@ -491,7 +514,7 @@ class HTMLWriter:
 
     @staticmethod
     def render_span(content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
-        return HtmlBuilder.render_span(content, **kwargs)
+        return render_element("span", content, **kwargs)
 
     def open_tt(self, **kwargs: HTMLTagAttributeValue) -> None:
         self.write_html(render_start_tag("tt", close_tag=False, **kwargs))
@@ -501,7 +524,7 @@ class HTMLWriter:
 
     @staticmethod
     def render_tt(content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
-        return HtmlBuilder.render_tt(content, **kwargs)
+        return render_element("tt", content, **kwargs)
 
     def open_tr(self, **kwargs: HTMLTagAttributeValue) -> None:
         self.write_html(render_start_tag("tr", close_tag=False, **kwargs))
@@ -511,7 +534,7 @@ class HTMLWriter:
 
     @staticmethod
     def render_tr(content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
-        return HtmlBuilder.render_tr(content, **kwargs)
+        return render_element("tr", content, **kwargs)
 
     def open_tbody(self, **kwargs: HTMLTagAttributeValue) -> None:
         self.write_html(render_start_tag("tbody", close_tag=False, **kwargs))
@@ -527,7 +550,7 @@ class HTMLWriter:
 
     @staticmethod
     def render_li(content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
-        return HtmlBuilder.render_li(content, **kwargs)
+        return render_element("li", content, **kwargs)
 
     def open_html(self, lang: str, **kwargs: HTMLTagAttributeValue) -> None:
         self.write_html(render_start_tag("html", close_tag=False, lang=lang, **kwargs))
@@ -543,11 +566,11 @@ class HTMLWriter:
 
     @staticmethod
     def render_th(content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
-        return HtmlBuilder.render_th(content, **kwargs)
+        return render_element("th", content, **kwargs)
 
     @staticmethod
     def render_sup(content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
-        return HtmlBuilder.render_sup(content, **kwargs)
+        return render_element("sup", content, **kwargs)
 
     def open_td(self, colspan: int | None = None, **kwargs: HTMLTagAttributeValue) -> None:
         self.write_html(
@@ -566,7 +589,9 @@ class HTMLWriter:
     def render_td(
         content: HTMLContent, colspan: int | None = None, **kwargs: HTMLTagAttributeValue
     ) -> HTML:
-        return HtmlBuilder.render_td(content, colspan, **kwargs)
+        return render_element(
+            "td", content, colspan=str(colspan) if colspan is not None else None, **kwargs
+        )
 
     def open_thead(self, **kwargs: HTMLTagAttributeValue) -> None:
         self.write_html(render_start_tag("thead", close_tag=False, **kwargs))
@@ -600,11 +625,11 @@ class HTMLWriter:
 
     @staticmethod
     def render_form(content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
-        return HtmlBuilder.render_form(content, **kwargs)
+        return render_element("form", content, **kwargs)
 
     @staticmethod
     def render_tags(content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
-        return HtmlBuilder.render_tags(content, **kwargs)
+        return render_element("tags", content, **kwargs)
 
     def open_nobr(self, **kwargs: HTMLTagAttributeValue) -> None:
         self.write_html(render_start_tag("nobr", close_tag=False, **kwargs))
@@ -614,11 +639,11 @@ class HTMLWriter:
 
     @staticmethod
     def render_nobr(content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
-        return HtmlBuilder.render_nobr(content, **kwargs)
+        return render_element("nobr", content, **kwargs)
 
     @staticmethod
     def render_strong(content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
-        return HtmlBuilder.render_strong(content, **kwargs)
+        return render_element("strong", content, **kwargs)
 
     def close_a(self) -> None:
         self.write_html(render_end_tag("a"))
@@ -631,7 +656,7 @@ class HTMLWriter:
 
     @staticmethod
     def render_b(content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
-        return HtmlBuilder.render_b(content, **kwargs)
+        return render_element("b", content, **kwargs)
 
     def open_center(self, **kwargs: HTMLTagAttributeValue) -> None:
         self.write_html(render_start_tag("center", close_tag=False, **kwargs))
@@ -641,15 +666,15 @@ class HTMLWriter:
 
     @staticmethod
     def render_center(content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
-        return HtmlBuilder.render_center(content, **kwargs)
+        return render_element("center", content, **kwargs)
 
     @staticmethod
     def render_i(content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
-        return HtmlBuilder.render_i(content, **kwargs)
+        return render_element("i", content, **kwargs)
 
     @staticmethod
     def render_title(content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
-        return HtmlBuilder.render_title(content, **kwargs)
+        return render_element("title", content, **kwargs)
 
     def open_p(self, **kwargs: HTMLTagAttributeValue) -> None:
         self.write_html(render_start_tag("p", close_tag=False, **kwargs))
@@ -659,11 +684,11 @@ class HTMLWriter:
 
     @staticmethod
     def render_p(content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
-        return HtmlBuilder.render_p(content, **kwargs)
+        return render_element("p", content, **kwargs)
 
     @staticmethod
     def render_iframe(content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
-        return HtmlBuilder.render_iframe(content, **kwargs)
+        return render_element("iframe", content, **kwargs)
 
     def open_x(self, **kwargs: HTMLTagAttributeValue) -> None:
         self.write_html(render_start_tag("x", close_tag=False, **kwargs))
@@ -673,7 +698,7 @@ class HTMLWriter:
 
     @staticmethod
     def render_x(content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
-        return HtmlBuilder.render_x(content, **kwargs)
+        return render_element("x", content, **kwargs)
 
     def call_ts_function(
         self,
@@ -717,7 +742,7 @@ class HTMLWriter:
 
     @staticmethod
     def render_div(content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
-        return HtmlBuilder.render_div(content, **kwargs)
+        return render_element("div", content, **kwargs)
 
     def open_ul(self, **kwargs: HTMLTagAttributeValue) -> None:
         self.write_html(render_start_tag("ul", close_tag=False, **kwargs))
@@ -727,7 +752,7 @@ class HTMLWriter:
 
     @staticmethod
     def render_ul(content: HTMLContent, **kwargs: HTMLTagAttributeValue) -> HTML:
-        return HtmlBuilder.render_ul(content, **kwargs)
+        return render_element("ul", content, **kwargs)
 
     def begin_page_content(self, enable_scrollbar: bool = True) -> None:
         content_id = "main_page_content"

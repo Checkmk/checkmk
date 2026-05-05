@@ -21,7 +21,10 @@ py_library(
         "//tests:__subpackages__",
     ],
     deps = [
-        "//packages/cmk-web",
+        ":type_defs",
+        "//cmk/gui/utils:escaping",
+        "//cmk/gui/utils:html",
+        "//cmk/utils",
     ],
 )
 

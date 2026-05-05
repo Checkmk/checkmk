@@ -3,27 +3,39 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
-
 # Example output from agent:
 # <<<mkeventd_status:sep(0)>>>
 # ["heute"]
 # [["status_config_load_time", "status_num_open_events", "status_messages", "status_message_rate", "status_average_message_rate", "status_connects", "status_connect_rate", "status_average_connect_rate", "status_rule_tries", "status_rule_trie_rate", "status_average_rule_trie_rate", "status_drops", "status_drop_rate", "status_average_drop_rate", "status_events", "status_event_rate", "status_average_event_rate", "status_rule_hits", "status_rule_hit_rate", "status_average_rule_hit_rate", "status_average_processing_time", "status_average_request_time", "status_average_sync_time", "status_replication_slavemode", "status_replication_last_sync", "status_replication_success", "status_event_limit_host", "status_event_limit_rule", "status_event_limit_overall", "status_event_limit_active_hosts", "status_event_limit_active_rules", "status_event_limit_active_overall"], [1474040901.678517, 19, 0, 0.0, 0.0, 2, 0.1998879393337847, 0.1998879393337847, 0, 0.0, 0.0, 0, 0.0, 0.0, 0, 0.0, 0.0, 0, 0.0, 0.0, 0.0, 0.002389192581176758, 0.0, "master", 0.0, false, 10, 5, 20, [], ["catch_w", "catch_y", "catch_x"], false]]
 
 
+import json
 import time
+from collections.abc import Mapping
 from typing import Any
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import get_rate, get_value_store, GetRateError, render
+from cmk.agent_based.v2 import (
+    AgentSection,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    get_rate,
+    get_value_store,
+    GetRateError,
+    Metric,
+    render,
+    Result,
+    Service,
+    State,
+    StringTable,
+)
 
-check_info = {}
+Section = Mapping[str, Mapping[str, Any] | None]
 
 
-def parse_mkeventd_status(string_table):
-    import json
-
-    parsed, site = dict[Any, Any](), None
+def parse_mkeventd_status(string_table: StringTable) -> Section:
+    parsed: dict[str, Mapping[str, Any] | None] = {}
+    site: str | None = None
     for line in string_table:
         try:
             data = json.loads(line[0])
@@ -44,59 +56,61 @@ def parse_mkeventd_status(string_table):
     return parsed
 
 
-def discover_mkeventd_status(parsed):
-    return [(site, {}) for (site, status) in parsed.items() if status is not None]
+def discover_mkeventd_status(section: Section) -> DiscoveryResult:
+    for site, status in section.items():
+        if status is not None:
+            yield Service(item=site)
 
 
-def check_mkeventd_status(item, params, parsed):
-    if item not in parsed:
+def check_mkeventd_status(item: str, section: Section) -> CheckResult:
+    if item not in section:
         return
 
-    status = parsed[item]
+    status = section[item]
 
     # Ignore down sites. This happens on a regular basis due to restarts
     # of the core. The availability of a site is monitored with 'omd_status'.
     if status is None:
-        yield 0, "Currently not running"
+        yield Result(state=State.OK, summary="Currently not running")
         return
 
-    yield (
-        0,
-        "Current events: %d" % status["num_open_events"],
-        [("num_open_events", status["num_open_events"])],
-    )
+    yield Result(state=State.OK, summary=f"Current events: {status['num_open_events']}")
+    yield Metric("num_open_events", status["num_open_events"])
 
-    yield (
-        0,
-        "Virtual memory: %s" % render.bytes(status["virtual_memory_size"]),
-        [("process_virtual_size", status["virtual_memory_size"])],
+    yield Result(
+        state=State.OK,
+        summary=f"Virtual memory: {render.bytes(status['virtual_memory_size'])}",
     )
+    yield Metric("process_virtual_size", status["virtual_memory_size"])
 
     # Event limits
     if status["event_limit_active_overall"]:
-        yield 2, "Overall event limit active"
+        yield Result(state=State.CRIT, summary="Overall event limit active")
     else:
-        yield 0, "Overall event limit inactive"
+        yield Result(state=State.OK, summary="Overall event limit inactive")
 
     for ty in ["hosts", "rules"]:
-        limited = status["event_limit_active_%s" % ty]
+        limited = status[f"event_limit_active_{ty}"]
         if limited:
-            yield 1, "Event limit active for %d %s (%s)" % (len(limited), ty, ", ".join(limited))
+            yield Result(
+                state=State.WARN,
+                summary=f"Event limit active for {len(limited)} {ty} ({', '.join(limited)})",
+            )
         else:
-            yield 0, "No %s event limit active" % ty
+            yield Result(state=State.OK, summary=f"No {ty} event limit active")
 
     # Rates
     columns = [
-        ("Received messages", "message", "%.2f/s"),
-        ("Rule hits", "rule_hit", "%.2f/s"),
-        ("Rule tries", "rule_trie", "%.2f/s"),
-        ("Message drops", "drop", "%.2f/s"),
-        ("Created events", "event", "%.2f/s"),
-        ("Client connects", "connect", "%.2f/s"),
+        ("Received messages", "message"),
+        ("Rule hits", "rule_hit"),
+        ("Rule tries", "rule_trie"),
+        ("Message drops", "drop"),
+        ("Created events", "event"),
+        ("Client connects", "connect"),
     ]
     rates = {}
     this_time = time.time()
-    for title, col, fmt in columns:
+    for title, col in columns:
         try:
             rate = get_rate(
                 get_value_store(), col, this_time, status[col + "s"], raise_overflow=True
@@ -104,16 +118,17 @@ def check_mkeventd_status(item, params, parsed):
         except GetRateError:
             continue
         rates[col] = rate
-        yield 0, ("%s: " + fmt) % (title, rate), [("average_%s_rate" % col, rate)]
+        yield Result(state=State.OK, summary=f"{title}: {rate:.2f}/s")
+        yield Metric(f"average_{col}_rate", rate)
 
     # Hit rate
     if rates.get("rule_trie", 0.0) == 0.0:
         hit_rate_txt = "-"
     else:
-        value = rates["rule_hit"] / rates["rule_trie"] * 100
-        hit_rate_txt = "%.2f%%" % value
-        yield 0, "", [("average_rule_hit_ratio", value)]
-    yield 0, "{}: {}".format("Rule hit ratio", hit_rate_txt)
+        hit_ratio = rates["rule_hit"] / rates["rule_trie"] * 100
+        hit_rate_txt = f"{hit_ratio:.2f}%"
+        yield Metric("average_rule_hit_ratio", hit_ratio)
+    yield Result(state=State.OK, summary=f"Rule hit ratio: {hit_rate_txt}")
 
     # Time columns
     time_columns = [
@@ -122,20 +137,25 @@ def check_mkeventd_status(item, params, parsed):
         ("Replication synchronization", "sync"),
     ]
     for title, name in time_columns:
-        value = status.get("average_%s_time" % name)
-        if value:
-            txt = "%.2f ms" % (value * 1000)
-            yield 0, "", [("average_%s_time" % name, value)]
+        time_value = status.get(f"average_{name}_time")
+        if time_value:
+            txt = f"{time_value * 1000:.2f} ms"
+            yield Metric(f"average_{name}_time", time_value)
         else:
             if name == "sync":
                 continue  # skip if not available
             txt = "-"
-        yield 0, f"{title}: {txt}"
+        yield Result(state=State.OK, summary=f"{title}: {txt}")
 
 
-check_info["mkeventd_status"] = LegacyCheckDefinition(
+agent_section_mkeventd_status = AgentSection(
     name="mkeventd_status",
     parse_function=parse_mkeventd_status,
+)
+
+
+check_plugin_mkeventd_status = CheckPlugin(
+    name="mkeventd_status",
     service_name="OMD %s Event Console",
     discovery_function=discover_mkeventd_status,
     check_function=check_mkeventd_status,

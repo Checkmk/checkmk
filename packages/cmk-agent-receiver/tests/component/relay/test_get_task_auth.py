@@ -14,7 +14,7 @@ import pytest
 
 from cmk.agent_receiver.lib.config import Config
 from cmk.testlib.agent_receiver.agent_receiver import AgentReceiverClient
-from cmk.testlib.agent_receiver.config_file_system import create_config_folder
+from cmk.testlib.agent_receiver.relay_config_generator import generate_relay_config
 from cmk.testlib.agent_receiver.site_mock import SiteMock
 from cmk.testlib.agent_receiver.tasks import add_tasks
 
@@ -46,7 +46,7 @@ def test_get_task_with_various_invalid_cns(
     relay_id = str(uuid.uuid4())
     site.set_scenario([relay_id])
 
-    serial_folder = create_config_folder(site_context.omd_root, [relay_id])
+    serial_folder = generate_relay_config(site_context.omd_root, [relay_id])
     agent_receiver.set_serial(serial_folder.serial)
 
     with agent_receiver.with_client_ip("127.0.0.1"):
@@ -82,7 +82,7 @@ def test_get_task_with_valid_cn_and_localhost(
     relay_id = str(uuid.uuid4())
     site.set_scenario([relay_id])
 
-    serial_folder = create_config_folder(site_context.omd_root, [relay_id])
+    serial_folder = generate_relay_config(site_context.omd_root, [relay_id])
     agent_receiver.set_serial(serial_folder.serial)
 
     task_ids = add_tasks(1, agent_receiver, relay_id, site_name)
@@ -116,7 +116,7 @@ def test_get_task_cn_check_without_localhost(
     relay_id = str(uuid.uuid4())
     site.set_scenario([relay_id])
 
-    serial_folder = create_config_folder(site_context.omd_root, [relay_id])
+    serial_folder = generate_relay_config(site_context.omd_root, [relay_id])
     agent_receiver.set_serial(serial_folder.serial)
 
     with agent_receiver.with_client_ip("192.168.1.100"):

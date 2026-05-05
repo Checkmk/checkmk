@@ -13,7 +13,7 @@ import pytest
 from cmk.agent_receiver.lib.config import Config
 from cmk.relay_protocols.tasks import FetchAdHocTask
 from cmk.testlib.agent_receiver.agent_receiver import AgentReceiverClient
-from cmk.testlib.agent_receiver.config_file_system import create_config_folder
+from cmk.testlib.agent_receiver.relay_config_generator import generate_relay_config
 from cmk.testlib.agent_receiver.site_mock import SiteMock
 
 
@@ -48,7 +48,7 @@ def test_create_task_with_various_invalid_cns(
     relay_id = str(uuid.uuid4())
     site.set_scenario([relay_id])
 
-    serial_folder = create_config_folder(site_context.omd_root, [relay_id])
+    serial_folder = generate_relay_config(site_context.omd_root, [relay_id])
     agent_receiver.set_serial(serial_folder.serial)
 
     # Test: Create task with invalid CN
@@ -88,7 +88,7 @@ def test_create_task_with_valid_cn_and_localhost(
     relay_id_b = str(uuid.uuid4())
     site.set_scenario([relay_id_a, relay_id_b])
 
-    serial_folder = create_config_folder(site_context.omd_root, [relay_id_a, relay_id_b])
+    serial_folder = generate_relay_config(site_context.omd_root, [relay_id_a, relay_id_b])
     agent_receiver.set_serial(serial_folder.serial)
 
     # Test: Create task with correct CN from localhost
@@ -122,7 +122,7 @@ def test_create_task_cn_check_without_localhost(
     relay_id = str(uuid.uuid4())
     site.set_scenario([relay_id])
 
-    serial_folder = create_config_folder(site_context.omd_root, [relay_id])
+    serial_folder = generate_relay_config(site_context.omd_root, [relay_id])
     agent_receiver.set_serial(serial_folder.serial)
 
     # Test: Create task with correct CN but from non-localhost

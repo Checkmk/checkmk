@@ -32,8 +32,8 @@ from cmk.relay_protocols.tasks import (
 )
 from cmk.testlib.agent_receiver import certs as certslib
 from cmk.testlib.agent_receiver.agent_receiver import AgentReceiverClient, register_relay
-from cmk.testlib.agent_receiver.config_file_system import ConfigFolder, create_config_folder
 from cmk.testlib.agent_receiver.mock_socket import create_socket
+from cmk.testlib.agent_receiver.relay_config_generator import generate_relay_config, RelayConfig
 from cmk.testlib.agent_receiver.site_mock import OP, SiteMock, User
 from cmk.testlib.agent_receiver.tasks import get_relay_tasks, push_task
 
@@ -60,7 +60,7 @@ def relay_in_pending_deletion(
     agent_receiver: AgentReceiverClient,
     site_context: Config,
     site_name: str,
-) -> Iterator[tuple[RelayID, ConfigFolder]]:
+) -> Iterator[tuple[RelayID, RelayConfig]]:
     """Set up a relay that is registered, activated, fully operational, then put into
     PENDING_DELETION by deleting it from the site without activating the change.
 
@@ -72,7 +72,7 @@ def relay_in_pending_deletion(
 
     # Register relay and create config folder
     register_relay(agent_receiver, "test_relay", relay_id)
-    serial_folder = create_config_folder(site_context.omd_root, [relay_id])
+    serial_folder = generate_relay_config(site_context.omd_root, [relay_id])
     agent_receiver.set_serial(serial_folder.serial)
 
     # Activate config - relay is operating normally
@@ -132,7 +132,7 @@ def _assert_agent_receiver_healthy(agent_receiver: AgentReceiverClient) -> None:
 
 
 def test_relay_pending_deletion_submit_data_ok(
-    relay_in_pending_deletion: tuple[RelayID, ConfigFolder],
+    relay_in_pending_deletion: tuple[RelayID, RelayConfig],
     agent_receiver: AgentReceiverClient,
     site_context: Config,
     tmpdir: Path,
@@ -168,7 +168,7 @@ def test_relay_pending_deletion_submit_data_ok(
 
 
 def test_relay_pending_deletion_get_relay_tasks(
-    relay_in_pending_deletion: tuple[RelayID, ConfigFolder],
+    relay_in_pending_deletion: tuple[RelayID, RelayConfig],
     agent_receiver: AgentReceiverClient,
     site_context: Config,
 ) -> None:
@@ -193,7 +193,7 @@ def test_relay_pending_deletion_get_relay_tasks(
 
 
 def test_relay_pending_deletion_refresh_cert(
-    relay_in_pending_deletion: tuple[RelayID, ConfigFolder],
+    relay_in_pending_deletion: tuple[RelayID, RelayConfig],
     agent_receiver: AgentReceiverClient,
     site_context: Config,
 ) -> None:
@@ -224,7 +224,7 @@ def test_relay_pending_deletion_refresh_cert(
 
 
 def test_relay_pending_deletion_with_fetch_adhoc_task(
-    relay_in_pending_deletion: tuple[RelayID, ConfigFolder],
+    relay_in_pending_deletion: tuple[RelayID, RelayConfig],
     agent_receiver: AgentReceiverClient,
     site_context: Config,
     site_name: str,

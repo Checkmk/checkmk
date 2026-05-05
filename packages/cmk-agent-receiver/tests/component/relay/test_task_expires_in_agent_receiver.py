@@ -12,8 +12,8 @@ from cmk.agent_receiver.lib.config import Config
 from cmk.relay_protocols.tasks import FetchAdHocTask
 from cmk.testlib.agent_receiver.agent_receiver import AgentReceiverClient, register_relay
 from cmk.testlib.agent_receiver.builder import AgentReceiverConfigBuilder, AgentReceiverSite
-from cmk.testlib.agent_receiver.config_file_system import create_config_folder
 from cmk.testlib.agent_receiver.relay import random_relay_id
+from cmk.testlib.agent_receiver.relay_config_generator import generate_relay_config
 from cmk.testlib.agent_receiver.site_mock import OP, SiteMock
 from cmk.testlib.agent_receiver.tasks import get_relay_tasks, push_task
 from cmk.testlib.agent_receiver.wiremock import Wiremock
@@ -55,7 +55,7 @@ def test_task_expires_in_agent_receiver(
     relay_id = random_relay_id()
     site.set_scenario([], [(relay_id, OP.ADD)])
     register_relay(agent_receiver, "Wonderful_relay", relay_id)
-    cf = create_config_folder(root=site_context.omd_root, relays=[relay_id])
+    cf = generate_relay_config(root=site_context.omd_root, relays=[relay_id])
     agent_receiver.set_serial(cf.serial)
 
     # Step 2: Add a task
@@ -99,7 +99,7 @@ def test_task_expiration_resets_on_update(
     relay_id = random_relay_id()
     site.set_scenario([], [(relay_id, OP.ADD)])
     register_relay(agent_receiver, "Wonderful_relay", relay_id)
-    cf = create_config_folder(root=site_context.omd_root, relays=[relay_id])
+    cf = generate_relay_config(root=site_context.omd_root, relays=[relay_id])
     agent_receiver.set_serial(cf.serial)
 
     # Step 2: Add a task
@@ -160,7 +160,7 @@ def test_completed_tasks_expiration(
     relay_id = random_relay_id()
     site.set_scenario([], [(relay_id, OP.ADD)])
     register_relay(agent_receiver, "Wonderful_relay", relay_id)
-    cf = create_config_folder(root=site_context.omd_root, relays=[relay_id])
+    cf = generate_relay_config(root=site_context.omd_root, relays=[relay_id])
     agent_receiver.set_serial(cf.serial)
 
     # Step 2: Add a tasks

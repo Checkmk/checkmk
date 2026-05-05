@@ -15,7 +15,11 @@ from cmk.agent_receiver.lib.config import Config
 from cmk.agent_receiver.relay.lib.shared_types import Serial
 from cmk.relay_protocols.tasks import RelayConfigTask, TaskResponse, TaskStatus
 from cmk.testlib.agent_receiver.agent_receiver import AgentReceiverClient
-from cmk.testlib.agent_receiver.config_file_system import ConfigFolder, create_config_folder
+from cmk.testlib.agent_receiver.relay_config_generator import (
+    assert_config_tar,
+    generate_relay_config,
+    RelayConfig,
+)
 from cmk.testlib.agent_receiver.site_mock import (
     OP,
     SiteMock,
@@ -53,7 +57,7 @@ def test_activation_performed_by_user_creates_config_tasks_for_each_relay(
     relay_id_b = str(uuid.uuid4())
     site.set_scenario([relay_id_a, relay_id_b])
 
-    serial_folder = create_config_folder(site_context.omd_root, [relay_id_a, relay_id_b])
+    serial_folder = generate_relay_config(site_context.omd_root, [relay_id_a, relay_id_b])
     agent_receiver.set_serial(serial_folder.serial)
 
     # Simulate user activation. Call to the endpoint that creates a ActivateConfigTask for each relay
@@ -84,7 +88,7 @@ def test_activation_performed_twice_with_same_config(
     relay_id_b = str(uuid.uuid4())
     site.set_scenario([relay_id_a, relay_id_b])
 
-    serial_folder = create_config_folder(site_context.omd_root, [relay_id_a, relay_id_b])
+    serial_folder = generate_relay_config(site_context.omd_root, [relay_id_a, relay_id_b])
     agent_receiver.set_serial(serial_folder.serial)
 
     # Simulate user activation. Call to the endpoint that creates a ActivateConfigTask for each relay
@@ -124,7 +128,7 @@ def test_activation_performed_twice_with_new_config(
     relay_id_b = str(uuid.uuid4())
     site.set_scenario([relay_id_a, relay_id_b])
 
-    config_a = create_config_folder(site_context.omd_root, [relay_id_a, relay_id_b])
+    config_a = generate_relay_config(site_context.omd_root, [relay_id_a, relay_id_b])
     agent_receiver.set_serial(config_a.serial)
 
     # Simulate user activation. Call to the endpoint that creates a ActivateConfigTask for each relay
@@ -137,7 +141,7 @@ def test_activation_performed_twice_with_new_config(
     _assert_single_pending_config_task(agent_receiver, config_a, relay_id_b)
 
     # Create a new configuration folder simulating a new config activation by user
-    config_b = create_config_folder(site_context.omd_root, [relay_id_a, relay_id_b])
+    config_b = generate_relay_config(site_context.omd_root, [relay_id_a, relay_id_b])
     agent_receiver.set_serial(config_b.serial)
 
     # Simulate second user activation.
@@ -170,7 +174,7 @@ def test_new_relays_when_activation_performed(
     relay_id_c = str(uuid.uuid4())
     site.set_scenario(relays=[relay_id_a, relay_id_b], changes=[(relay_id_c, OP.ADD)])
 
-    config_a = create_config_folder(site_context.omd_root, [relay_id_a, relay_id_b])
+    config_a = generate_relay_config(site_context.omd_root, [relay_id_a, relay_id_b])
     agent_receiver.set_serial(config_a.serial)
 
     # Simulate user activation. Call to the endpoint that creates a ActivateConfigTask for each relay
@@ -195,7 +199,7 @@ def test_new_relays_when_activation_performed(
         },
     )
     # Create a new configuration folder with new relays in site simulating a new config activation by user
-    config_b = create_config_folder(site_context.omd_root, [relay_id_a, relay_id_b, relay_id_c])
+    config_b = generate_relay_config(site_context.omd_root, [relay_id_a, relay_id_b, relay_id_c])
     agent_receiver.set_serial(config_b.serial)
 
     # Simulate second user activation.
@@ -228,7 +232,7 @@ def test_removed_relays_when_activation_performed(
     relay_id_b = str(uuid.uuid4())
     site.set_scenario(relays=[relay_id_a, relay_id_b], changes=[(relay_id_a, OP.DEL)])
 
-    config_a = create_config_folder(site_context.omd_root, [relay_id_a, relay_id_b])
+    config_a = generate_relay_config(site_context.omd_root, [relay_id_a, relay_id_b])
     agent_receiver.set_serial(config_a.serial)
 
     # Simulate user activation. Call to the endpoint that creates a ActivateConfigTask for each relay
@@ -243,7 +247,7 @@ def test_removed_relays_when_activation_performed(
     # Remove relay_a in the site mock
     site_client.delete(f"/objects/relay/{relay_id_a}")
     # Create a new configuration folder with new relays in site simulating a new config activation by user
-    config_b = create_config_folder(site_context.omd_root, [relay_id_b])
+    config_b = generate_relay_config(site_context.omd_root, [relay_id_b])
     agent_receiver.set_serial(config_b.serial)
 
     # Simulate second user activation.
@@ -275,7 +279,7 @@ def test_activation_with_no_relays(
     # Start AR with no relays configured in the site
     site.set_scenario([])
 
-    cf = create_config_folder(site_context.omd_root, [])
+    cf = generate_relay_config(site_context.omd_root, [])
     agent_receiver.set_serial(cf.serial)
 
     # Simulate user activation with no relays
@@ -305,7 +309,7 @@ def test_activation_with_mixed_relay_task_states(
     relay_id_b = str(uuid.uuid4())
     site.set_scenario([relay_id_a, relay_id_b])
 
-    serial_folder = create_config_folder(site_context.omd_root, [relay_id_a, relay_id_b])
+    serial_folder = generate_relay_config(site_context.omd_root, [relay_id_a, relay_id_b])
     agent_receiver.set_serial(serial_folder.serial)
 
     # First activation - creates pending tasks for both relays
@@ -381,7 +385,7 @@ def test_activation_with_relay_pending_activation_handles_gracefully(
 
     # Create config folders only for two relays - third relay is pending activation
     # This simulates the scenario where a relay is registered but not yet configured
-    serial_folder = create_config_folder(
+    serial_folder = generate_relay_config(
         site_context.omd_root, [relay_id_configured_1, relay_id_configured_2]
     )
     agent_receiver.set_serial(serial_folder.serial)
@@ -410,7 +414,7 @@ def test_activation_with_relay_pending_activation_handles_gracefully(
 
 def _assert_single_pending_config_task(
     agent_receiver: AgentReceiverClient,
-    serial_folder: ConfigFolder,
+    serial_folder: RelayConfig,
     relay_id: str,
 ) -> None:
     resp = get_relay_tasks(agent_receiver, relay_id)
@@ -421,12 +425,12 @@ def _assert_single_pending_config_task(
         expected_status=TaskStatus.PENDING,
         expected_serial=serial_folder.serial,
     )
-    serial_folder.assert_tar_content(relay_id, task.tar_data)
+    assert_config_tar(serial_folder, relay_id, task.tar_data)
 
 
 def _assert_pending_config_task_is_present(
     agent_receiver: AgentReceiverClient,
-    serial_folder: ConfigFolder,
+    serial_folder: RelayConfig,
     relay_id: str,
 ) -> None:
     resp = get_relay_tasks(agent_receiver, relay_id)
@@ -435,7 +439,7 @@ def _assert_pending_config_task_is_present(
         expected_status=TaskStatus.PENDING,
         expected_serial=serial_folder.serial,
     )
-    serial_folder.assert_tar_content(relay_id, task.tar_data)
+    assert_config_tar(serial_folder, relay_id, task.tar_data)
 
 
 def _assert_config_task_exists(

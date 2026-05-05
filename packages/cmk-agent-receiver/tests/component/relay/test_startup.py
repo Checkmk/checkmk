@@ -15,7 +15,7 @@ from cmk.agent_receiver.main import main_app
 from cmk.agent_receiver.relay.lib.shared_types import Serial
 from cmk.relay_protocols.tasks import RelayConfigTask, TaskResponse, TaskStatus
 from cmk.testlib.agent_receiver.agent_receiver import AgentReceiverClient
-from cmk.testlib.agent_receiver.config_file_system import create_config_folder
+from cmk.testlib.agent_receiver.relay_config_generator import generate_relay_config
 from cmk.testlib.agent_receiver.site_mock import SiteMock, User
 from cmk.testlib.agent_receiver.tasks import get_relay_tasks
 
@@ -38,7 +38,7 @@ def test_startup_with_relays(
 
     _create_version_folder(site_context.omd_root, edition)
     site.set_scenario(relays)
-    cf = create_config_folder(site_context.omd_root, relays)
+    cf = generate_relay_config(site_context.omd_root, relays)
 
     tasks = _do_test_and_get_tasks(relays[0], cf.serial, site_context, user)
 
@@ -60,7 +60,7 @@ def test_no_relays_folder(site: SiteMock, site_context: Config, user: User, edit
     relays = [str(uuid.uuid4()), str(uuid.uuid4())]
 
     site.set_scenario(relays)
-    cf = create_config_folder(site_context.omd_root, relays)
+    cf = generate_relay_config(site_context.omd_root, relays)
     shutil.rmtree(site_context.helper_config_dir / "latest/relays")
     _create_version_folder(site_context.omd_root, edition)
 
@@ -83,7 +83,7 @@ def test_empty_relays_folder(
     relays = [str(uuid.uuid4()), str(uuid.uuid4())]
 
     site.set_scenario(relays)
-    cf = create_config_folder(site_context.omd_root, relays)
+    cf = generate_relay_config(site_context.omd_root, relays)
     for rid in relays:
         shutil.rmtree(site_context.helper_config_dir / f"latest/relays/{rid}")
 
@@ -108,7 +108,7 @@ def test_unsupported_editions(
     relays = [str(uuid.uuid4()), str(uuid.uuid4())]
 
     site.set_scenario(relays)
-    cf = create_config_folder(site_context.omd_root, relays)
+    cf = generate_relay_config(site_context.omd_root, relays)
     _create_version_folder(site_context.omd_root, edition)
 
     tasks = _do_test_and_get_tasks(relays[0], cf.serial, site_context, user)

@@ -19,13 +19,13 @@ from cmk.agent_receiver.lib.mtls_auth_validator import INJECTED_UUID_HEADER
 from cmk.agent_receiver.relay.lib.shared_types import RelayID, Serial
 from cmk.relay_protocols.monitoring_data import MonitoringData
 from cmk.testlib.agent_receiver.agent_receiver import AgentReceiverClient, register_relay
-from cmk.testlib.agent_receiver.config_file_system import create_config_folder
 from cmk.testlib.agent_receiver.mock_socket import (
     create_crashy_socket,
     create_non_listening_socket,
     create_socket,
     create_unresponsive_socket,
 )
+from cmk.testlib.agent_receiver.relay_config_generator import generate_relay_config
 from cmk.testlib.agent_receiver.site_mock import OP, SiteMock
 
 HOST = "testhost"
@@ -363,6 +363,6 @@ def serial(
 ) -> Serial:
     # We use socket_path indirectly; we want to make sure we use the patched the Config class.
     _ = socket_path
-    cf = create_config_folder(root=site_context.omd_root, relays=[relay_id])
+    cf = generate_relay_config(root=site_context.omd_root, relays=[relay_id])
     agent_receiver.set_serial(cf.serial)
     return cf.serial

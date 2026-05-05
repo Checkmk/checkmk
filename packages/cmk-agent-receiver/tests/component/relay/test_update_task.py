@@ -17,7 +17,7 @@ from cmk.relay_protocols.tasks import (
     TaskStatus,
 )
 from cmk.testlib.agent_receiver.agent_receiver import AgentReceiverClient
-from cmk.testlib.agent_receiver.config_file_system import create_config_folder
+from cmk.testlib.agent_receiver.relay_config_generator import generate_relay_config
 from cmk.testlib.agent_receiver.site_mock import SiteMock
 from cmk.testlib.agent_receiver.tasks import add_tasks, get_all_tasks, get_relay_tasks
 
@@ -49,7 +49,7 @@ def test_updating_task_should_change_stored_task_object(
     3. Verify the stored task contains the result and correct status
     """
 
-    cf = create_config_folder(root=site_context.omd_root, relays=[relay_id])
+    cf = generate_relay_config(root=site_context.omd_root, relays=[relay_id])
     agent_receiver.set_serial(cf.serial)
 
     task_ids = add_tasks(1, agent_receiver, relay_id, site_name)
@@ -102,7 +102,7 @@ def test_task_no_longer_pending(
     3. Verify the task no longer appears in pending tasks list
     """
 
-    cf = create_config_folder(root=site_context.omd_root, relays=[relay_id])
+    cf = generate_relay_config(root=site_context.omd_root, relays=[relay_id])
     agent_receiver.set_serial(cf.serial)
 
     task_ids = add_tasks(3, agent_receiver, relay_id, site_name)
@@ -142,7 +142,7 @@ def test_timestamps_are_handled(
     3. Verify creation_timestamp unchanged and update_timestamp increased
     """
 
-    cf = create_config_folder(root=site_context.omd_root, relays=[relay_id])
+    cf = generate_relay_config(root=site_context.omd_root, relays=[relay_id])
     agent_receiver.set_serial(cf.serial)
 
     task_ids = add_tasks(1, agent_receiver, relay_id, site_name)
@@ -184,7 +184,7 @@ def test_the_other_tasks_are_not_changed(
     3. Verify other tasks remain unchanged
     """
 
-    cf = create_config_folder(root=site_context.omd_root, relays=[relay_id])
+    cf = generate_relay_config(root=site_context.omd_root, relays=[relay_id])
     agent_receiver.set_serial(cf.serial)
 
     task_ids = add_tasks(3, agent_receiver, relay_id, site_name)
@@ -224,7 +224,7 @@ def test_finishing_config_task(
     3. Update serial in client and acknowledge the task with result_type "OK"
     4. Assert that there are no pending tasks and the task is now in FINISHED status
     """
-    create_config_folder(root=site_context.omd_root, relays=[relay_id])
+    generate_relay_config(root=site_context.omd_root, relays=[relay_id])
 
     agent_receiver.set_serial(Serial.default())
     relay_tasks = get_relay_tasks(agent_receiver, relay_id, status="PENDING").tasks

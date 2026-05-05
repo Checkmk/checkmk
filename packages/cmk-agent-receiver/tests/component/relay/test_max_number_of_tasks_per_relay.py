@@ -19,7 +19,7 @@ from cmk.agent_receiver.relay.api.routers.relays.handlers import ForwardMonitori
 from cmk.relay_protocols.tasks import FetchAdHocTask
 from cmk.testlib.agent_receiver.agent_receiver import AgentReceiverClient
 from cmk.testlib.agent_receiver.builder import AgentReceiverConfigBuilder
-from cmk.testlib.agent_receiver.config_file_system import create_config_folder
+from cmk.testlib.agent_receiver.relay_config_generator import generate_relay_config
 from cmk.testlib.agent_receiver.site_mock import SiteMock, User
 from cmk.testlib.agent_receiver.tasks import add_tasks, get_all_tasks
 from cmk.testlib.agent_receiver.wiremock import Wiremock
@@ -76,7 +76,7 @@ def test_cannot_push_more_pending_tasks_than_allowed(
     )
 
     relay_id = add_relays(site, 1)[0]
-    cf = create_config_folder(root=site_context.omd_root, relays=[relay_id])
+    cf = generate_relay_config(root=site_context.omd_root, relays=[relay_id])
     agent_receiver.set_serial(cf.serial)
 
     # add maximum number of tasks allowed
@@ -121,7 +121,7 @@ def test_cannot_push_more_tasks_after_marking_a_task_as_finished(
     )
 
     relay_id = add_relays(site, 1)[0]
-    cf = create_config_folder(root=site_context.omd_root, relays=[relay_id])
+    cf = generate_relay_config(root=site_context.omd_root, relays=[relay_id])
     agent_receiver.set_serial(cf.serial)
 
     # add maximum number of tasks allowed

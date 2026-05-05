@@ -12,8 +12,8 @@ from cmk.agent_receiver.lib.config import Config
 from cmk.relay_protocols.tasks import FetchAdHocTask
 from cmk.testlib.agent_receiver import certs as certslib
 from cmk.testlib.agent_receiver.agent_receiver import AgentReceiverClient, register_relay
-from cmk.testlib.agent_receiver.config_file_system import create_config_folder
 from cmk.testlib.agent_receiver.relay import random_relay_id
+from cmk.testlib.agent_receiver.relay_config_generator import generate_relay_config
 from cmk.testlib.agent_receiver.site_mock import OP, SiteMock
 from cmk.testlib.agent_receiver.tasks import get_relay_tasks, push_task
 
@@ -35,7 +35,7 @@ def test_a_relay_can_be_registered(
     resp = agent_receiver.register_relay(relay_id, "relay1")
     assert resp.status_code == HTTPStatus.OK
 
-    cf = create_config_folder(root=site_context.omd_root, relays=[relay_id])
+    cf = generate_relay_config(root=site_context.omd_root, relays=[relay_id])
     agent_receiver.set_serial(cf.serial)
 
     resp = agent_receiver.get_relay_tasks(relay_id)
@@ -59,7 +59,7 @@ def test_registering_a_relay_does_not_affect_other_relays(
     relay_2_id = random_relay_id()
     site.set_scenario([], [(relay_1_id, OP.ADD), (relay_2_id, OP.ADD)])
     register_relay(agent_receiver, "relay1", relay_1_id)
-    cf = create_config_folder(root=site_context.omd_root, relays=[relay_1_id])
+    cf = generate_relay_config(root=site_context.omd_root, relays=[relay_1_id])
     agent_receiver.set_serial(cf.serial)
 
     push_task(
@@ -70,7 +70,7 @@ def test_registering_a_relay_does_not_affect_other_relays(
     )
 
     register_relay(agent_receiver, "relay2", relay_2_id)
-    cf = create_config_folder(root=site_context.omd_root, relays=[relay_1_id, relay_2_id])
+    cf = generate_relay_config(root=site_context.omd_root, relays=[relay_1_id, relay_2_id])
     agent_receiver.set_serial(cf.serial)
 
     tasks_A = get_relay_tasks(agent_receiver, relay_1_id)

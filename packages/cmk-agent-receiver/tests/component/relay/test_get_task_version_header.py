@@ -8,7 +8,7 @@ from http import HTTPStatus
 from cmk.agent_receiver.lib.config import Config
 from cmk.relay_protocols.tasks import HEADERS
 from cmk.testlib.agent_receiver.agent_receiver import AgentReceiverClient
-from cmk.testlib.agent_receiver.config_file_system import create_config_folder
+from cmk.testlib.agent_receiver.relay_config_generator import generate_relay_config
 from cmk.testlib.agent_receiver.site_mock import SiteMock
 
 
@@ -27,7 +27,7 @@ def test_get_tasks_returns_version_header(
     # register a relay and create a task
     relay_id = str(uuid.uuid4())
     site.set_scenario([relay_id])
-    _ = create_config_folder(root=site_context.omd_root, relays=[relay_id])
+    _ = generate_relay_config(root=site_context.omd_root, relays=[relay_id])
 
     response = agent_receiver.get_relay_tasks(relay_id)
 

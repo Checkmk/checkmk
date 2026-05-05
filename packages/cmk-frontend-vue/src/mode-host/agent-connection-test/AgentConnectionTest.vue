@@ -665,7 +665,7 @@ const showSettings = ref(false)
         :agent-installed="isNotRegistered"
         :is-push-mode="isPushMode"
         :user-settings-url="agentSlideout.user_settings_url"
-        :can-download-baked-agents="agentSlideout.can_download_baked_agents"
+        :unbaked-fallback="agentSlideout.unbaked_fallback ?? null"
         @close="onClose"
       />
     </CmkSlideInDialog>

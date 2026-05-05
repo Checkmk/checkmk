@@ -48,6 +48,7 @@ from cmk.gui.quick_setup.html import quick_setup_duplication_warning, quick_setu
 from cmk.gui.site_config import is_distributed_setup_remote_site, site_is_local
 from cmk.gui.type_defs import ActionResult, IconNames, PermissionName, StaticIcon
 from cmk.gui.utils.agent_commands import (
+    baked_agents_available,
     get_agent_slideout,
     get_server_per_site,
 )
@@ -115,6 +116,7 @@ from cmk.shared_typing.mode_host import (
     ModeHostFormKeys,
     ModeHostServerPerSite,
     ModeHostSite,
+    UnbakedFallback,
 )
 from cmk.utils.agent_registration import HostAgentConnectionMode, UUIDStore
 from cmk.utils.paths import omd_root, uuid_lookup_dir
@@ -386,9 +388,7 @@ class ABCHostMode(WatoMode, abc.ABC):
         form_name: Final[str] = "edit_host"
         version = ".".join(omd_version(omd_root).split(".")[:-1])
         hostname = self._host.name()
-        can_download_baked_agents = "wato.agents" not in permission_registry or (
-            user.may("wato.agents") and user.may("wato.download_agents")
-        )
+        bakery_available = baked_agents_available(user, permission_registry)
         html.vue_component(
             component_name="cmk-mode-host",
             data=asdict(
@@ -451,8 +451,9 @@ class ABCHostMode(WatoMode, abc.ABC):
                         agent_install_cls=AgentInstallCmds,
                         agent_registration_cls=AgentRegistrationCmds,
                         agent_status_cls=AgentStatusCmds,
+                        unbaked_fallback_cls=UnbakedFallback,
                         version=version,
-                        can_download_baked_agents=can_download_baked_agents,
+                        baked_agents_available=bakery_available,
                     ),
                     host_name=hostname,
                     is_registered=(

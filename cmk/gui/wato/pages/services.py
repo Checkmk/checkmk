@@ -57,7 +57,11 @@ from cmk.gui.pages import AjaxPage, PageContext, PageEndpoint, PageRegistry, Pag
 from cmk.gui.permissions import permission_registry
 from cmk.gui.table import Foldable, Table, table_element
 from cmk.gui.type_defs import HTTPVariables, IconNames, PermissionName, StaticIcon
-from cmk.gui.utils.agent_commands import get_agent_slideout, get_server_per_site
+from cmk.gui.utils.agent_commands import (
+    baked_agents_available,
+    get_agent_slideout,
+    get_server_per_site,
+)
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.flashed_messages import MsgType
 from cmk.gui.utils.html import HTML
@@ -113,6 +117,7 @@ from cmk.shared_typing.setup import (
     AgentRegistrationCmds,
     AgentSlideout,
     AgentStatusCmds,
+    UnbakedFallback,
 )
 from cmk.utils.automation_config import LocalAutomationConfig, RemoteAutomationConfig
 from cmk.utils.check_utils import worst_service_state
@@ -821,9 +826,9 @@ class DiscoveryPageRenderer:
                         agent_install_cls=AgentInstallCmds,
                         agent_registration_cls=AgentRegistrationCmds,
                         agent_status_cls=AgentStatusCmds,
+                        unbaked_fallback_cls=UnbakedFallback,
                         version=version,
-                        can_download_baked_agents="wato.agents" not in permission_registry
-                        or (user.may("wato.agents") and user.may("wato.download_agents")),
+                        baked_agents_available=baked_agents_available(user, permission_registry),
                     ),
                 )
             ),

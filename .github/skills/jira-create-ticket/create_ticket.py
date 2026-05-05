@@ -14,6 +14,7 @@ Usage:
         [--priority "Major"] \
         [--parent CMK-12345] \
         [--link-epic CMK-99999] \
+        [--bug-detection "Automated Tests"] \
         [--dry-run]
 
     # List all open roadmap epics (for LLM context)
@@ -150,6 +151,7 @@ CUSTOM_FIELDS = {
     "technical_owner": "customfield_13601",  # user
     "initiative_owner": "customfield_13600",  # user
     "initiative_sponsor": "customfield_13602",  # user
+    "bug_detection": "customfield_14006",  # select
 }
 
 # ---------------------------------------------------------------------------
@@ -169,6 +171,7 @@ def create_issue(
     priority: str | None = None,
     parent: str | None = None,
     link_epic: str | None = None,
+    bug_detection: str | None = None,
 ) -> Any:
     fields: dict[str, Any] = {
         "project": {"key": project},
@@ -192,6 +195,8 @@ def create_issue(
 
     if issue_type == "Epic":
         fields[CUSTOM_FIELDS["epic_name"]] = summary
+    elif issue_type == "Bug" and bug_detection:
+        fields[CUSTOM_FIELDS["bug_detection"]] = {"value": bug_detection}
 
     if link_epic:
         fields[CUSTOM_FIELDS["epic_link"]] = link_epic
@@ -221,6 +226,9 @@ def main() -> None:
     parser.add_argument(
         "--link-epic", default=None, help="Epic key to link as parent (e.g. CMK-12345)"
     )
+    parser.add_argument(
+        "--bug-detection", default=None, help="Bug Detection field value (required for Bug tickets)"
+    )
     parser.add_argument("--dry-run", action="store_true", help="Print fields without creating")
     parser.add_argument(
         "--guess", action="store_true", help="Print all compass components as JSON and exit"
@@ -232,6 +240,9 @@ def main() -> None:
     )
 
     args = parser.parse_args()
+
+    if args.bug_detection and args.issue_type != "Bug":
+        parser.error("--bug-detection is only valid for Bug tickets")
 
     # List components mode — dump compass data for LLM context
     if args.guess:
@@ -265,6 +276,7 @@ def main() -> None:
                     "parent": args.parent,
                     "labels": ["jira-create-ticket"],
                     "link_epic": args.link_epic,
+                    "bug_detection": args.bug_detection,
                 },
                 indent=2,
             )
@@ -285,6 +297,7 @@ def main() -> None:
         priority=args.priority,
         parent=args.parent,
         link_epic=args.link_epic,
+        bug_detection=args.bug_detection,
     )
 
     url = f"{JIRA_SERVER}/browse/{issue.key}"

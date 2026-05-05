@@ -12,6 +12,10 @@ feedparser
 fido2
 flask
 GitPython
+google-api-python-client
+google-auth
+google-cloud-asset
+google-cloud-monitoring
 icalendar
 jinja2
 jira

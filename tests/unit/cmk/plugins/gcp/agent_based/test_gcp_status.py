@@ -201,7 +201,7 @@ def test_no_indicents() -> None:
     discovery_param = gcp_status.DiscoveryParam(regions=["us-east"])
     section = gcp_status.Section(discovery_param=discovery_param, data={})
     results = list(gcp_status.check(item=discovery_param.regions[0], section=section))
-    assert results == [gcp_status._NO_ISSUES]  # noqa: SLF001
+    assert results == [gcp_status._NO_ISSUES]
 
 
 def test_one_incident_per_region() -> None:

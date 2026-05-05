@@ -22,3 +22,10 @@ def change_has_tests(client: GerritClient, change: ChangeDetails) -> bool:
         for file_path in client.changes_api.get_files(change)
         if re.findall(dir_pattern, file_path) and re.findall(file_pattern, file_path)
     )
+
+
+def get_jira_ticket_in_change(client: GerritClient, change: ChangeDetails) -> set[str]:
+    """Return a list of Jira tickets mentioned in the change."""
+    jira_ticket_pattern = r"(?:CMK|SAASDEV|SUP)-[0-9]{4,6}"
+    change_message = client.changes_api.get_commit_message(change)
+    return set(re.findall(jira_ticket_pattern, change_message))

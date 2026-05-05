@@ -7,11 +7,12 @@
 import os
 import re
 from argparse import ArgumentParser, Namespace, RawTextHelpFormatter
-from dataclasses import dataclass
+from dataclasses import dataclass, field, fields
 from pathlib import Path
 from typing import Final
 
 from scripts.gerrit_api.client import GerritClient, PROJECT_NAME, TChangeStatus
+from scripts.gerrit_api.helper import change_has_tests, get_jira_ticket_in_change
 from scripts.gerrit_api.werks import werk_details, WerkImpact
 
 ENV_GERRIT_USER: Final = "GERRIT_USER"
@@ -19,6 +20,8 @@ ENV_GERRIT_HTTP_CREDS: Final = "GERRIT_HTTP_CREDS"
 # TODO: improve detection of master branch's version.
 MASTER_BRANCH: Final = "2.6.0"
 CSV_DELIMITER: Final = ", "
+JIRA_URL_PREFIX: Final = "https://jira.lan.tribe29.com/browse"
+HEADER: Final = "header"
 
 
 class TCliArgs(Namespace):
@@ -32,21 +35,22 @@ class TCliArgs(Namespace):
 
 @dataclass(frozen=True)
 class CSVEntry:
-    change_id: int
-    change_status: TChangeStatus
-    werk_id: str
-    werk_summary: str
-    werk_impact: WerkImpact
+    change_url: str = field(metadata={HEADER: "Change URL"})
+    jira_url: str = field(metadata={HEADER: "JIRA ticket(s)"})
+    change_status: TChangeStatus = field(metadata={HEADER: "Change status"})
+    is_reviewed: bool | None = field(metadata={HEADER: "Peer reviewed"})
+    tested: bool = field(metadata={HEADER: "Contains tests"})
+    werk_id: str = field(metadata={HEADER: "Werk ID"})
+    werk_summary: str = field(metadata={HEADER: "Werk summary"})
+    werk_impact: WerkImpact = field(metadata={HEADER: "Impact"})
+
+    @classmethod
+    def csv_header(cls) -> str:
+        return CSV_DELIMITER.join(data_field.metadata[HEADER] for data_field in fields(cls))
 
     def __str__(self) -> str:
         return CSV_DELIMITER.join(
-            [
-                str(self.change_id),
-                self.change_status,
-                self.werk_id,
-                self.werk_summary,
-                self.werk_impact,
-            ]
+            str(getattr(self, data_field.name)) for data_field in fields(self)
         )
 
 
@@ -207,11 +211,18 @@ def collect_changes_with_werks(args: type[TCliArgs], client: GerritClient) -> li
             print(exc)
             continue
 
+        jira_urls = [
+            f"{JIRA_URL_PREFIX}/{jira_id}" for jira_id in get_jira_ticket_in_change(client, change)
+        ]
+
         if werk.VERSION == args.cmk_version:
             details.append(
                 CSVEntry(
-                    change_id=change.virtual_id_number,
+                    change_url=change.change_url,
+                    jira_url=" | ".join(jira_urls) or "None",
                     change_status=change.status,
+                    is_reviewed=change.is_reviewed_by_peer,
+                    tested=change_has_tests(client, change),
                     werk_id=f"https://checkmk.com/werk/{werk.ID}",
                     werk_summary=werk.SUMMARY,
                     werk_impact=werk.IMPACT,
@@ -228,6 +239,7 @@ def main() -> None:
     csv_entries = collect_changes_with_werks(args, client)
     csv_entries = sorted(csv_entries, key=lambda _: _.werk_id)
     with open(Path(args.dir_csv) / f"werks_{args.cmk_version}.csv", "w") as file:
+        print(CSVEntry.csv_header(), end="\n", file=file)
         for entry in csv_entries:
             print(str(entry), end="\n", file=file)
 

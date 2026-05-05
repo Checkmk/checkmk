@@ -168,3 +168,13 @@ class ChangesAPI:
                 f"File '{file_path}' was deleted in change '{change.id}: {change.subject}'!"
             ) from exc
         return base64.b64decode(GerritClient.parse_gerrit_response(resp)).decode("utf-8")
+
+    def get_commit_message(self, change: ChangeDetails) -> str:
+        """Return the commit message of a change.
+
+        Includes both the subject and the body of a commit message.
+        """
+        url = f"{self._url}/{change.id}/message"
+        resp = GerritClient.parse_gerrit_response(self._client.get(url))
+        resp_ = from_json(resp)
+        return str(resp_.get("full_message", "N/A"))

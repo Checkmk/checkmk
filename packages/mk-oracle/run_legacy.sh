@@ -24,6 +24,13 @@ export DB_HOST="oracle-rocky-ci.lan.checkmk.net"
 export DB_SERVICE_NAME="dbtest23"
 export DB_SID="SID23"
 export DB_SECTION="${DB_SECTION:-instance}"
+if [[ "${DB_SECTION}" == "all" ]]; then
+    export INDIVIDUAL_SECTIONS="#SYNC_SECTIONS"
+    export ALL_SECTIONS="SYNC_SECTIONS"
+else
+    export INDIVIDUAL_SECTIONS="SYNC_SECTIONS"
+    export ALL_SECTIONS="#SYNC_SECTIONS"
+fi
 envsubst <"${MK_CONFDIR}/mk_oracle.cfg.conf" >"${MK_CONFDIR}/mk_oracle.cfg"
 
 # sqlplus

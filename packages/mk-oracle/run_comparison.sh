@@ -39,12 +39,17 @@ if [[ " $* " == *" --time-only "* ]]; then
     TIME_ONLY=1
 fi
 
-echo "=== Building release binary ==="
-RELEASE_BIN="${SCRIPT_DIR}/target/release/mk-oracle"
-if ! cargo build --release --manifest-path "${SCRIPT_DIR}/Cargo.toml" 2>&1; then
-    echo "ERROR: release build failed" >&2
-    exit 1
+if [[ -z "${RELEASE_BIN}" ]]; then
+    echo "=== Building release binary ==="
+    TARGET_DIR=$(cargo metadata --manifest-path "${SCRIPT_DIR}/Cargo.toml" --no-deps --format-version 1 2>/dev/null | python3 -c "import sys,json; print(json.load(sys.stdin)['target_directory'])")
+    RELEASE_BIN="${TARGET_DIR}/release/mk-oracle"
+    if ! cargo build --release --manifest-path "${SCRIPT_DIR}/Cargo.toml" 2>&1; then
+        echo "ERROR: release build failed" >&2
+        exit 1
+    fi
+    strip "${RELEASE_BIN}"
 fi
+export RELEASE_BIN
 
 echo "=== Running old plugin (mk_oracle) ==="
 OLD_START=$(date +%s%N)
@@ -55,7 +60,7 @@ OLD_MS=$(((OLD_END - OLD_START) / 1000000))
 
 echo "=== Running new plugin (mk-oracle) ==="
 NEW_START=$(date +%s%N)
-"${SCRIPT_DIR}/run_unified.sh" --binary "${RELEASE_BIN}" | sed '/^[[:space:]]*$/d' >"$NEW_OUT" 2>/dev/null
+"${SCRIPT_DIR}/run_unified.sh" | sed '/^[[:space:]]*$/d' >"$NEW_OUT" 2>/dev/null
 NEW_RC=$?
 NEW_END=$(date +%s%N)
 NEW_MS=$(((NEW_END - NEW_START) / 1000000))

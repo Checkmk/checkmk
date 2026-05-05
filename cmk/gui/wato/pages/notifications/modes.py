@@ -1788,7 +1788,7 @@ class NotificationTestType(enum.StrEnum):
 
 class AdvancedTestOptions(TypedDict):
     notification_nr: NotRequired[int]
-    date_and_time: NotRequired[tuple[str, str, str]]
+    date_and_time: NotRequired[tuple[str, str]]
 
 
 class ModeTestNotifications(ModeNotifications):
@@ -2633,13 +2633,12 @@ class ModeTestNotifications(ModeNotifications):
                                     label=_("Event date and time"),
                                     default_value=time.strftime("%Y-%m-%d"),
                                 ),
-                                TimePicker(default_value=time.strftime("%H:%M")),
-                                TextInput(
-                                    title=timezone_utc_offset_str()
+                                TimePicker(
+                                    default_value=time.strftime("%H:%M"),
+                                    server_time_text=timezone_utc_offset_str()
                                     + " "
                                     + _("Server time (currently: %s)")
                                     % time.strftime("%Y-%m-%d %H:%M", time.localtime()),
-                                    cssclass="server_time",
                                 ),
                             ],
                         ),

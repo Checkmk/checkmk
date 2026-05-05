@@ -1343,16 +1343,8 @@ div#page_menu_popups div[id^='popup_add_to_'] > div.content > span {
     div#advanced_opts_d_notification_nr {
       margin: 0px;
 
-      input#date_advanced_opts_p_date_and_time_0 {
-        margin-left: $spacing;
-      }
-
       input.number {
         margin-left: 12px;
-      }
-
-      .tuple_td:last-child {
-        align-content: center;
       }
     }
 
@@ -1371,19 +1363,12 @@ div#page_menu_popups div[id^='popup_add_to_'] > div.content > span {
   }
 
   #advanced_opts_d_date_and_time {
-    .title {
-      color: $font-color-dimmed;
-      font-size: $font-size-normal;
-      padding: 0px;
+    .vs_floating_text {
+      margin-right: 8px;
     }
 
-    .server_time {
-      display: None;
-    }
-
-    #date_advanced_opts_p_date_and_time_0,
-    #time_advanced_opts_p_date_and_time_1 {
-      margin-right: 10px;
+    table.valuespec_tuple.horizontal td.tuple_td + td.tuple_td {
+      padding-left: 8px;
     }
   }
 }

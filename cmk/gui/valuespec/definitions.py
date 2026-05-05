@@ -8834,8 +8834,10 @@ class TimePicker(ValueSpec[str]):
         default_value: ValueSpecDefault[str] = DEF_VALUE,
         validate: ValueSpecValidateFunc[str] | None = None,
         onchange: str | None = None,
+        server_time_text: str | None = None,
     ):
         self._onchange = onchange
+        self._server_time_text = server_time_text
         super().__init__(
             title=title,
             help=help,
@@ -8844,13 +8846,16 @@ class TimePicker(ValueSpec[str]):
         )
 
     def render_input(self, varprefix: str, value: str) -> None:
+        data: dict[str, str] = {
+            "mode": "time",
+            "time_varprefix": varprefix,
+            "time_value": value,
+        }
+        if self._server_time_text:
+            data["server_time_text"] = self._server_time_text
         html.vue_component(
             "cmk-date-time-picker",
-            data={
-                "mode": "time",
-                "time_varprefix": varprefix,
-                "time_value": value,
-            },
+            data=data,
             onchange=self._onchange or "",
         )
 

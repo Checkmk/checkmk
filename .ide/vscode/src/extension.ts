@@ -38,6 +38,7 @@ import {
 } from './profiles/python/mypyConfig'
 import { registerPylanceHealth } from './profiles/python/pylanceHealth'
 import { registerSnippets } from './profiles/python/snippets'
+import { registerScm } from './scm'
 import { registerIdePickers } from './setup/idePicker'
 import { registerTemplates } from './setup/templates'
 import { refreshAll, refreshOmd, registerSidebar } from './sidebar'
@@ -108,6 +109,7 @@ export function activate(context: vscode.ExtensionContext): void {
   registerBuildCommands(context, commands)
   registerIdePickers(context, extensionSets, settingsSets)
   registerGerritPush(context)
+  registerScm(context)
   registerOmd(context, refreshAll, refreshOmd)
   registerLogs()
 

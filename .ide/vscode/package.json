@@ -255,6 +255,19 @@
         "icon": "$(cloud-upload)"
       },
       {
+        "command": "cmk.toggleSkipPreCommit",
+        "title": "CMK ▸ pre-commit ON — click to skip",
+        "icon": "$(verified-filled)"
+      },
+      {
+        "command": "cmk.toggleSkipPreCommit.skipped",
+        "title": "CMK ▸ pre-commit SKIPPED — click to re-enable",
+        "icon": {
+          "light": "icons/pre-commit-skipped.svg",
+          "dark": "icons/pre-commit-skipped.svg"
+        }
+      },
+      {
         "command": "cmk.bazelTestFile",
         "title": "CMK ▸ Test: Run File (Bazel)"
       },
@@ -421,6 +434,16 @@
           "command": "cmk.pushToGerrit",
           "group": "navigation",
           "when": "gitOpenRepositoryCount > 0"
+        },
+        {
+          "command": "cmk.toggleSkipPreCommit",
+          "group": "navigation",
+          "when": "gitOpenRepositoryCount > 0 && !cmk.skipPreCommitEnabled"
+        },
+        {
+          "command": "cmk.toggleSkipPreCommit.skipped",
+          "group": "navigation",
+          "when": "gitOpenRepositoryCount > 0 && cmk.skipPreCommitEnabled"
         }
       ],
       "editor/context": [

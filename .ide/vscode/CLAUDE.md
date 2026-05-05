@@ -130,6 +130,7 @@ Each section lives in its own folder under `src/sidebar/` with an `index.ts` (re
 | `setup/idePicker.ts`                  | Multi-select QuickPick for IDE setup families                            |
 | `setup/templates.ts`                  | File template creation                                                   |
 | `gerrit.ts`                           | Gerrit push integration                                                  |
+| `scm.ts`                              | Toggle to disable/re-enable `.git/hooks/pre-commit` via SCM title button |
 | `whatsNew.ts`                         | "What's New" markdown preview on version upgrade (reads `changelog/v*.md`) |
 
 ### Configuration (`config/`)

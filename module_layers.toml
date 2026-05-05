@@ -89,7 +89,6 @@ clean = [
 # Not yet clean:
 # azure_v2 — Edition, HostAddress
 # datadog — bypasses APIs to talk to the EC
-# gcp — Edition
 # jolokia — import hack, resolve by migrating the bakery plugin
 # metric_backend — cmk.metric_backend, cmk.utils.paths
 # otel
@@ -183,10 +182,7 @@ allows = [
 allows = [
   # FIXME
   "cmk.agent_based.v1",
-  # edition detection
-  "cmk.ccc.version",
-  # edition detection
-  "cmk.utils.paths",
+  "cmk.plugins.gcp_extended",
 ]
 
 [plugin_families.violations.jolokia]

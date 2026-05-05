@@ -6,9 +6,9 @@
 # mypy: disable-error-code="type-arg"
 
 from collections.abc import Callable, Iterable, Mapping, Sequence
-from typing import Final
 
-from cmk.ccc.version import Edition, edition
+# fallback to basic services if the extended plugin is not installed
+from cmk.plugins.gcp.rulesets.gcp_services_constant import GCP_SERVICES
 from cmk.rulesets.v1 import Help, Message, Title
 from cmk.rulesets.v1.form_specs import (
     DefaultValue,
@@ -22,28 +22,13 @@ from cmk.rulesets.v1.form_specs import (
 )
 from cmk.rulesets.v1.form_specs.validators import LengthInRange
 from cmk.rulesets.v1.rule_specs import SpecialAgent, Topic
-from cmk.utils.paths import omd_root
 
-_ALL_EDITION_GCP_SERVICES: Final = [
-    MultipleChoiceElement(name="gcs", title=Title("Google Cloud Storage (GCS)")),
-    MultipleChoiceElement(name="cloud_sql", title=Title("Cloud SQL")),
-    MultipleChoiceElement(name="filestore", title=Title("Filestore")),
-    MultipleChoiceElement(name="gce_storage", title=Title("GCE Storage")),
-    MultipleChoiceElement(name="http_lb", title=Title("HTTP(S) load balancer")),
-]
-
-_ULTIMATE_EDITION_GCP_SERVICES: Final = [
-    MultipleChoiceElement(name="cloud_run", title=Title("Cloud Run")),
-    MultipleChoiceElement(name="cloud_functions", title=Title("Cloud Functions")),
-    MultipleChoiceElement(name="redis", title=Title("Memorystore Redis")),
-]
-
-
-def get_gcp_services() -> Sequence[MultipleChoiceElement]:
-    if edition(omd_root) in (Edition.ULTIMATEMT, Edition.ULTIMATE, Edition.CLOUD):
-        return _ALL_EDITION_GCP_SERVICES + _ULTIMATE_EDITION_GCP_SERVICES
-
-    return _ALL_EDITION_GCP_SERVICES
+try:
+    from cmk.plugins.gcp_extended.rulesets.gcp_services_constant import (  # type: ignore[import-not-found, no-redef]
+        GCP_SERVICES,
+    )
+except ImportError:
+    pass
 
 
 def _get_edition_specific_choices(
@@ -84,12 +69,12 @@ def configuration_authentication() -> Mapping[str, DictElement]:
 
 
 def configuration_services() -> Mapping[str, DictElement]:
-    valid_service_choices = {c.name for c in get_gcp_services()}
+    valid_service_choices = {c.name for c in GCP_SERVICES}
     return {
         "services": DictElement(
             parameter_form=MultipleChoice(
                 title=Title("GCP services to monitor"),
-                elements=get_gcp_services(),
+                elements=GCP_SERVICES,
                 prefill=DefaultValue(list(valid_service_choices)),
                 # this migrate cannot be removed since it not actually a migration in the sense
                 # of updated rulesets, it implements logic for edition specific choices

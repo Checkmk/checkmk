@@ -14,8 +14,6 @@ py_library(
     imports = ["../../.."],
     visibility = ["//visibility:public"],
     deps = [
-        "//cmk/utils",
-        "//packages/cmk-ccc:version",
         "//packages/cmk-plugin-apis:agent_based",
         "//packages/cmk-plugin-apis:graphing",
         "//packages/cmk-plugin-apis:password_store",

@@ -7,6 +7,7 @@
 import argparse
 import ast
 import datetime
+import json
 from dataclasses import dataclass
 import fcntl
 import os
@@ -60,13 +61,13 @@ class Stash(BaseModel):
             removed = True
             self.ids.remove(werk_id.id)
             if not self.ids:
-                sys.stdout.write(f"\n{TTY_RED}This was your last reserved ID{TTY_NORMAL}\n\n")
+                sys.stderr.write(f"\n{TTY_RED}This was your last reserved ID{TTY_NORMAL}\n\n")
 
         if not removed:
             raise RuntimeError(f"Could not find werk_id {werk_id} in any project.")
 
     def add_ids(self, werk_ids: "Sequence[WerkId]") -> None:
-        self.ids.extend(werk_id.id for werk_id in werk_ids)
+        self.ids = list(set(self.ids).union(werk_id.id for werk_id in werk_ids))
 
 
 class LegacyStash(BaseModel):
@@ -240,6 +241,13 @@ def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     subparsers = parser.add_subparsers(dest="command")
     subparsers.required = True
+
+    # INIT
+    parser_init = subparsers.add_parser(
+        "init",
+        help="Initialize secret for reserving werk ids and migrate the legacy stash file.",
+    )
+    parser_init.set_defaults(func=lambda *_args, **_kwargs: main_init())
 
     # BLAME
     parser_blame = subparsers.add_parser("blame", help="Show who worked on a werk")
@@ -920,6 +928,39 @@ def dump_stash_to_file(paths: Paths, stash: "LegacyStash | Stash") -> None:
             raise TypeError(other)
 
 
+def _read_legacy_stash_file(paths: Paths) -> Sequence[int]:
+    if not paths.legacy_stash_file.exists():
+        return []
+
+    if not (content := paths.legacy_stash_file.read_text(encoding="utf-8")):
+        return []
+
+    if content[0] == "[":
+        raw_cmk_werk_ids = ast.literal_eval(content)
+    else:
+        parsed = json.loads(content)
+        raw_cmk_werk_ids = parsed.get("ids_by_project", parsed).get("cmk", [])
+
+    return [int(id_) for id_ in raw_cmk_werk_ids]
+
+
+def migrate_werk_ids_file(paths: Paths) -> None:
+    sys.stderr.write("Migrate legacy werk IDs file\n")
+    assert paths.secret_file.exists()
+
+    stash = (
+        Stash.model_validate_json(paths.stash_file.read_text(encoding="utf-8"))
+        if paths.stash_file.exists()
+        else Stash()
+    )
+    stash.add_ids([WerkId(id_) for id_ in _read_legacy_stash_file(paths)])
+
+    paths.stash_file.parent.mkdir(parents=True, exist_ok=True)
+    paths.stash_file.write_text(stash.model_dump_json(by_alias=True), encoding="utf-8")
+    paths.legacy_stash_file.unlink(missing_ok=True)
+    sys.stderr.write(f"Migrated werk IDs from {paths.legacy_stash_file} to {paths.stash_file}\n")
+
+
 def load_stash_from_file(paths: Paths) -> "LegacyStash | Stash":
     if paths.secret_file.exists():
         return (
@@ -933,7 +974,38 @@ def load_stash_from_file(paths: Paths) -> "LegacyStash | Stash":
 class WerkIDsClient:
     URL: Final = "https://werk-ids.lan.checkmk.net"
 
+    def ensure_connection(self) -> bool:
+        sys.stderr.write("Ensure connection to werk IDs server\n")
+        try:
+            response = requests.get(self.URL, timeout=5)
+            response.raise_for_status()
+            sys.stderr.write(f"OK: {response.status_code}\n")
+            return True
+        except requests.exceptions.RequestException:
+            traceback.print_exc(file=sys.stderr)
+            sys.stderr.write("Failed: could not connect\n")
+            return False
+
+    def test_connection(self, secret_file_path: Path) -> bool:
+        sys.stderr.write("Test connection to werk IDs server\n")
+        secret = secret_file_path.read_text(encoding="utf-8").strip()
+        try:
+            response = requests.get(
+                f"{self.URL}/connect",
+                verify=True,
+                headers={"Authorization": f"Bearer {secret}"},
+                timeout=5,
+            )
+            response.raise_for_status()
+            sys.stderr.write(f"OK: {response.status_code}\n")
+            return True
+        except requests.exceptions.RequestException:
+            traceback.print_exc(file=sys.stderr)
+            sys.stderr.write("Failed: could not connect\n")
+            return False
+
     def reserve_werk_ids(self, secret_file_path: Path, local_werk_ids_count: int) -> Sequence[int]:
+        sys.stderr.write("Reserve werk IDs\n")
         secret = secret_file_path.read_text(encoding="utf-8").strip()
         try:
             response = requests.post(
@@ -949,10 +1021,14 @@ class WerkIDsClient:
             return []
 
         if response.status_code == 200:
-            return [int(i) for i in response.json()["reserved_werk_ids"]]
+            reserved_werk_ids = response.json()["reserved_werk_ids"]
+            sys.stderr.write(f"Got {len(reserved_werk_ids)} new werk IDs\n")
+            return [int(i) for i in reserved_werk_ids]
 
         sys.stderr.write(
-            f"Could not reserve werk IDs (Status code: {response.status_code}, server: {self.URL}): {response.text}\n"
+            "Could not reserve werk IDs"
+            f" (Status code: {response.status_code}, server: {self.URL}):"
+            f" {response.text}\n"
         )
         return []
 
@@ -1005,7 +1081,7 @@ def main_new(args: argparse.Namespace) -> None:
     sys.stdout.write(TTY_GREEN + WERK_NOTES + TTY_NORMAL)
 
     paths = make_paths_object(Path.home())
-    stash = load_legacy_stash_from_file(paths)
+    stash = load_or_update_stash(paths, WerkIDsClient())
     werk_id = pick_id_from_stash(stash, get_config().project)
 
     metadata: WerkMetadata = {}
@@ -1056,6 +1132,27 @@ def get_werk_arg(arg: WerkId | None) -> WerkId:
     return wid
 
 
+def main_init() -> None:
+    if not WerkIDsClient().ensure_connection():
+        return
+
+    paths = make_paths_object(Path.home())
+
+    if paths.secret_file.exists() and WerkIDsClient().test_connection(paths.secret_file):
+        sys.stdout.write("Everything is fine.\n")
+        return
+
+    paths.secret_file.parent.mkdir(parents=True, exist_ok=True)
+    while True:
+        secret = get_input("Secret")
+        with paths.secret_file.open("w") as fp:
+            fp.write(secret)
+
+        if WerkIDsClient().test_connection(paths.secret_file):
+            migrate_werk_ids_file(paths)
+            break
+
+
 def main_blame(args: argparse.Namespace) -> None:
     wid = get_werk_arg(WerkId(args.id))
     os.system(f"git blame {werk_path_by_id(wid)}")  # nosec
@@ -1081,7 +1178,7 @@ def main_delete(args: argparse.Namespace) -> None:
             sys.stdout.write(f"Error removing werk file: {exc}.\n")
             continue
         sys.stdout.write(f"Deleted Werk {format_werk_id(werk_id)} ({werk_to_be_removed_title}).\n")
-        stash = load_legacy_stash_from_file(paths)
+        stash = load_stash_from_file(paths)
         add_id_to_stash(stash, werk_id, get_config().project)
         dump_stash_to_file(paths, stash)
         sys.stdout.write(f"You lucky bastard now own the Werk ID {format_werk_id(werk_id)}.\n")

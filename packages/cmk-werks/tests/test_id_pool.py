@@ -16,6 +16,8 @@ from cmk.werks.cli import (
     load_or_update_stash,
     load_stash_from_file,
     make_paths_object,
+    migrate_werk_ids_file,
+    Paths,
     pick_id_from_stash,
     Stash,
     WerkId,
@@ -60,7 +62,13 @@ def test_stash_free_id_unknown_raises() -> None:
 def test_stash_add_ids() -> None:
     stash = Stash(ids=[1])
     stash.add_ids([WerkId(2), WerkId(3)])
-    assert stash.ids == [1, 2, 3]
+    assert sorted(stash.ids) == [1, 2, 3]
+
+
+def test_stash_add_ids_deduplicates() -> None:
+    stash = Stash(ids=[1, 2])
+    stash.add_ids([WerkId(2), WerkId(3)])
+    assert sorted(stash.ids) == [1, 2, 3]
 
 
 # ---------------------------------------------------------------------------
@@ -249,7 +257,7 @@ def test_load_or_update_stash_reserves_ids_from_server(tmp_path: Path) -> None:
     stash = load_or_update_stash(paths, FakeWerkIDsClient())
 
     assert isinstance(stash, Stash)
-    assert stash.ids == [10, 20, 30, 40]
+    assert sorted(stash.ids) == [10, 20, 30, 40]
 
 
 def test_load_or_update_stash_uses_local_ids_when_server_empty(tmp_path: Path) -> None:
@@ -288,3 +296,94 @@ def test_load_stash_from_file_prefers_new_stash(tmp_path: Path) -> None:
     result = load_stash_from_file(paths)
     assert isinstance(result, Stash)
     assert result.ids == [5]
+
+
+# ---------------------------------------------------------------------------
+# Migration tests
+# ---------------------------------------------------------------------------
+
+
+def _write_secret(paths: Paths) -> None:
+    paths.secret_file.parent.mkdir(parents=True, exist_ok=True)
+    paths.secret_file.write_text("secret", encoding="utf-8")
+
+
+def test_migrate_no_legacy_file_writes_empty_stash(tmp_path: Path) -> None:
+    paths = make_paths_object(tmp_path)
+    _write_secret(paths)
+    migrate_werk_ids_file(paths)
+    assert paths.stash_file.exists()
+    assert Stash.model_validate_json(paths.stash_file.read_text(encoding="utf-8")).ids == []
+
+
+def test_migrate_empty_legacy_file_writes_empty_stash(tmp_path: Path) -> None:
+    paths = make_paths_object(tmp_path)
+    _write_secret(paths)
+    paths.legacy_stash_file.write_text("", encoding="utf-8")
+    migrate_werk_ids_file(paths)
+    assert paths.stash_file.exists()
+    assert Stash.model_validate_json(paths.stash_file.read_text(encoding="utf-8")).ids == []
+    assert not paths.legacy_stash_file.exists()
+
+
+def test_migrate_json_legacy_file(tmp_path: Path) -> None:
+    # Only "cmk" project IDs are migrated; other projects (e.g. "cloudmk") are dropped.
+    paths = make_paths_object(tmp_path)
+    _write_secret(paths)
+    legacy = LegacyStash(ids_by_project={"cmk": [10, 11], "cloudmk": [1000]})
+    paths.legacy_stash_file.write_text(legacy.model_dump_json(by_alias=True), encoding="utf-8")
+
+    migrate_werk_ids_file(paths)
+
+    assert paths.stash_file.exists()
+    new_stash = Stash.model_validate_json(paths.stash_file.read_text(encoding="utf-8"))
+    assert sorted(new_stash.ids) == [10, 11]
+    assert not paths.legacy_stash_file.exists()
+
+
+def test_migrate_list_legacy_file(tmp_path: Path) -> None:
+    paths = make_paths_object(tmp_path)
+    _write_secret(paths)
+    paths.legacy_stash_file.write_text("[42, 43]", encoding="utf-8")
+
+    migrate_werk_ids_file(paths)
+
+    new_stash = Stash.model_validate_json(paths.stash_file.read_text(encoding="utf-8"))
+    assert sorted(new_stash.ids) == [42, 43]
+    assert not paths.legacy_stash_file.exists()
+
+
+def test_migrate_werk_ids_file_merges_both_files(tmp_path: Path) -> None:
+    # When the new stash file already exists, legacy IDs are merged into it.
+    paths = make_paths_object(tmp_path)
+    paths.stash_file.parent.mkdir(parents=True, exist_ok=True)
+    paths.stash_file.write_text(Stash(ids=[1]).model_dump_json(by_alias=True), encoding="utf-8")
+    paths.legacy_stash_file.write_text(
+        LegacyStash(ids_by_project={"cmk": [2]}).model_dump_json(by_alias=True), encoding="utf-8"
+    )
+    paths.secret_file.parent.mkdir(parents=True, exist_ok=True)
+    paths.secret_file.write_text("secret", encoding="utf-8")
+
+    migrate_werk_ids_file(paths)
+
+    new_stash = Stash.model_validate_json(paths.stash_file.read_text(encoding="utf-8"))
+    assert sorted(new_stash.ids) == [1, 2]
+    assert not paths.legacy_stash_file.exists()
+
+
+def test_migrate_werk_ids_file_deduplicates_overlapping_ids(tmp_path: Path) -> None:
+    # IDs present in both the new stash and the legacy file must not be duplicated.
+    paths = make_paths_object(tmp_path)
+    _write_secret(paths)
+    paths.stash_file.parent.mkdir(parents=True, exist_ok=True)
+    paths.stash_file.write_text(Stash(ids=[1, 2]).model_dump_json(by_alias=True), encoding="utf-8")
+    paths.legacy_stash_file.write_text(
+        LegacyStash(ids_by_project={"cmk": [2, 3]}).model_dump_json(by_alias=True),
+        encoding="utf-8",
+    )
+
+    migrate_werk_ids_file(paths)
+
+    new_stash = Stash.model_validate_json(paths.stash_file.read_text(encoding="utf-8"))
+    assert sorted(new_stash.ids) == [1, 2, 3]
+    assert not paths.legacy_stash_file.exists()

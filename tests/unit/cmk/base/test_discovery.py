@@ -93,10 +93,7 @@ from cmk.helper_interface import SourceType
 from cmk.logwatch import config as logwatch_config
 from cmk.logwatch.config import ParameterLogwatchEc, ParameterLogwatchRules
 from cmk.plugins.collection.agent_based.df_section import agent_section_df
-from cmk.plugins.collection.agent_based.kernel import agent_section_kernel
 from cmk.plugins.collection.agent_based.labels import agent_section_labels
-from cmk.plugins.collection.agent_based.uptime import agent_section_uptime
-from cmk.plugins.liebert.agent_based.liebert_fans import snmp_section_liebert_fans
 from cmk.snmplib import SNMPRawDataElem
 from cmk.utils.everythingtype import EVERYTHING
 from cmk.utils.ip_lookup import IPStackConfig
@@ -1340,30 +1337,32 @@ def test__check_host_labels_changed() -> None:
     )
 
 
-def test__find_candidates(
-    monkeypatch: MonkeyPatch,
-    agent_based_plugins: AgentBasedPlugins,
-) -> None:
-    # plugins have been loaded by the fixture. Better: load the ones we need for this test
+def test__find_candidates(monkeypatch: MonkeyPatch) -> None:
     Scenario().apply(monkeypatch)
+
+    def _trivial(name: str) -> SectionPlugin:
+        return SectionPlugin(
+            supersedes=set(),
+            parsed_section_name=ParsedSectionName(name),
+            parse_function=lambda x: x,
+        )
+
     providers = {
-        # we just care about the keys here, content set to arbitrary values that can be parsed.
-        # section names are chosen arbitrarily.
         HostKey(HostName("test_node"), SourceType.HOST): (
             ParsedSectionsResolver(
                 SectionsParser(
                     host_sections=HostSections[AgentRawDataSection](
                         {
-                            SectionName("kernel"): [],  # host only
-                            SectionName("uptime"): [["123"]],  # host & mgmt
+                            SectionName("agent_only"): [["x"]],  # host only
+                            SectionName("shared"): [["x"]],  # host & mgmt
                         }
                     ),
                     host_name=HostName("test_node"),
                     error_handling=lambda *args, **kw: "error",
                 ),
                 section_plugins={
-                    SectionName("kernel"): _as_plugin(agent_section_kernel),
-                    SectionName("uptime"): _as_plugin(agent_section_uptime),
+                    SectionName("agent_only"): _trivial("agent_only"),
+                    SectionName("shared"): _trivial("shared"),
                 },
             )
         ),
@@ -1372,49 +1371,48 @@ def test__find_candidates(
                 SectionsParser(
                     host_sections=HostSections[Mapping[SectionName, SNMPRawDataElem]](
                         {
-                            # host & mgmt:
-                            SectionName("uptime"): [["123"]],
-                            # mgmt only:
-                            SectionName("liebert_fans"): [[["Fan", "67", "umin"]]],
-                            # is already mgmt_ prefixed:
-                            SectionName("mgmt_snmp_info"): [[["a", "b", "c", "d"]]],
+                            SectionName("shared"): [[["x"]]],  # host & mgmt
+                            SectionName("snmp_only"): [[["x"]]],  # mgmt only
+                            SectionName("mgmt_prefixed"): [[["x"]]],  # already mgmt_-prefixed
                         }
                     ),
                     host_name=HostName("test_node"),
                     error_handling=lambda *args, **kw: "error",
                 ),
                 section_plugins={
-                    SectionName("uptime"): _as_plugin(agent_section_uptime),
-                    SectionName("liebert_fans"): _as_plugin(snmp_section_liebert_fans),
-                    SectionName("mgmt_snmp_info"): SectionPlugin(
-                        supersedes=set(),
-                        parsed_section_name=ParsedSectionName("mgmt_snmp_info"),
-                        parse_function=lambda x: x,
-                    ),
+                    SectionName("shared"): _trivial("shared"),
+                    SectionName("snmp_only"): _trivial("snmp_only"),
+                    SectionName("mgmt_prefixed"): _trivial("mgmt_prefixed"),
                 },
             )
         ),
     }
+
+    # Synthetic plug-in catalog covering the algorithm's branches: a host-only
+    # plug-in, a plug-in whose section is provided on both sides, a plug-in whose
+    # section only appears on the management board, and a plug-in that is already
+    # management-prefixed.
+    candidates: list[tuple[CheckPluginName, list[ParsedSectionName]]] = [
+        (CheckPluginName("uses_agent_only"), [ParsedSectionName("agent_only")]),
+        (CheckPluginName("uses_shared"), [ParsedSectionName("shared")]),
+        (CheckPluginName("uses_snmp_only"), [ParsedSectionName("snmp_only")]),
+        (
+            CheckPluginName("mgmt_uses_mgmt_prefixed"),
+            [ParsedSectionName("mgmt_prefixed")],
+        ),
+    ]
     expected_plugins = {
-        CheckPluginName("docker_container_status_uptime"),
-        CheckPluginName("kernel"),
-        CheckPluginName("kernel_performance"),
-        CheckPluginName("kernel_util"),
-        CheckPluginName("mgmt_docker_container_status_uptime"),
-        CheckPluginName("mgmt_liebert_fans"),
-        CheckPluginName("mgmt_uptime"),
-        CheckPluginName("uptime"),
-        CheckPluginName("mgmt_podman_container_uptime"),
-        CheckPluginName("podman_container_uptime"),
+        # host side: non-mgmt plug-ins whose sections are available on the host
+        CheckPluginName("uses_agent_only"),
+        CheckPluginName("uses_shared"),
+        # mgmt side: every plug-in whose sections are available on mgmt, with the
+        # mgmt_ prefix added (idempotently)
+        CheckPluginName("mgmt_uses_shared"),
+        CheckPluginName("mgmt_uses_snmp_only"),
+        CheckPluginName("mgmt_uses_mgmt_prefixed"),
     }
 
-    assert (
-        find_plugins(
-            providers,
-            [(p.name, p.sections) for p in agent_based_plugins.check_plugins.values()],
-        )
-        == expected_plugins
-    )
+    assert find_plugins(providers, candidates) == expected_plugins
 
 
 _expected_services: dict = {

@@ -25,6 +25,7 @@ void main() {
     def artifact_directory = "${checkout_dir}/artifacts"
 
     def tarball_name = "check-mk-relay-${cmk_version}.tar"
+    def sbom_name = "check-mk-relay-${cmk_version}-bill-of-materials.json"
 
     print(
         """
@@ -50,11 +51,17 @@ void main() {
             stage(name: 'Build Image') {
                 // Only build the relay with ultimate edition sources
                 sh("""
-                    bazel build --cmk_edition=ultimate //omd/non-free/relay:image_tar
+                    bazel build --cmk_edition=ultimate //omd/non-free/relay:image_tar //omd/non-free/relay:sbom
                     mkdir -p ${artifact_directory}/${cmk_version_rc_aware}
                     cp \$(bazel cquery --cmk_edition=ultimate //omd/non-free/relay:image_tar --output=files) \
-                        ${artifact_directory}/${cmk_version_rc_aware}/${tarball_name};
+                        ${artifact_directory}/${cmk_version_rc_aware}/${tarball_name}
+                    cp \$(bazel cquery --cmk_edition=ultimate //omd/non-free/relay:bill_of_materials --output=files) \
+                        ${artifact_directory}/${cmk_version_rc_aware}/${sbom_name}
                 """)
+            }
+
+            stage(name: 'Archive SBOM') {
+                archiveArtifacts(artifacts: "${artifact_directory}/${cmk_version_rc_aware}/${sbom_name}")
             }
 
             stage(name: 'Upload tarball to internal deploy dest') {

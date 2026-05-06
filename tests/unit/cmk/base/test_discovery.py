@@ -16,7 +16,19 @@ from typing import NamedTuple
 import pytest
 from pytest import MonkeyPatch
 
-from cmk.agent_based.v2 import AgentSection, CheckPlugin, SimpleSNMPSection
+from cmk.agent_based.v2 import (
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    HostLabelGenerator,
+    StringTable,
+)
+from cmk.agent_based.v2 import (
+    HostLabel as _APIHostLabel,
+)
+from cmk.agent_based.v2 import (
+    Service as _APIService,
+)
 from cmk.base import config
 from cmk.base.checkers import (
     CMKFetcher,
@@ -68,12 +80,15 @@ from cmk.checkengine.fetcher import HostKey
 from cmk.checkengine.parser import AgentRawDataSection, HostSections, NO_SELECTION
 from cmk.checkengine.plugins import (
     AgentBasedPlugins,
+    AgentSectionPlugin,
     AutocheckEntry,
     CheckPluginName,
+    LegacyPluginLocation,
     ParsedSectionName,
     SectionName,
     ServiceID,
 )
+from cmk.checkengine.plugins import CheckPlugin as InternalCheckPlugin
 from cmk.checkengine.sectionparser import (
     ParsedSectionsResolver,
     Provider,
@@ -92,8 +107,6 @@ from cmk.fetchers.filecache import FileCacheOptions
 from cmk.helper_interface import SourceType
 from cmk.logwatch import config as logwatch_config
 from cmk.logwatch.config import ParameterLogwatchEc, ParameterLogwatchRules
-from cmk.plugins.collection.agent_based.df_section import agent_section_df
-from cmk.plugins.collection.agent_based.labels import agent_section_labels
 from cmk.snmplib import SNMPRawDataElem
 from cmk.utils.everythingtype import EVERYTHING
 from cmk.utils.ip_lookup import IPStackConfig
@@ -101,14 +114,112 @@ from cmk.utils.labels import DiscoveredHostLabelsStore, HostLabel
 from cmk.utils.rulesets import RuleSetName
 from tests.testlib.unit.base_configuration_scenario import Scenario
 
+# ---------------------------------------------------------------------------
+# Test-only plug-ins used by the realhost/cluster scenarios.
+#
+# These minimal fakes mirror just enough of a real section + check plug-in to
+# exercise the discovery engine wiring without depending on the product
+# plug-in catalogue:
+#   * _TEST_SECTION         — agent section that parses [["item", "value"], ...]
+#                             rows into a {item: value} dict.
+#   * _TEST_LABELS_SECTION  — agent section yielding host labels from
+#                             [["label_name", "label_value"], ...] rows.
+#   * _TEST_CHECK_PLUGIN    — check plug-in whose discovery function reads a
+#                             rule-driven "ignore" list from `params`, so the
+#                             host-label-conditional rule branch can be
+#                             exercised.
+# ---------------------------------------------------------------------------
 
-def _as_plugin(plugin: AgentSection | SimpleSNMPSection) -> SectionPlugin:
+_TEST_SECTION_NAME = SectionName("test_section")
+_TEST_PARSED_NAME = ParsedSectionName("test_section")
+_TEST_LABELS_NAME = SectionName("labels")
+_TEST_LABELS_PARSED = ParsedSectionName("labels")
+_TEST_PLUGIN_NAME = CheckPluginName("test_plugin")
+_TEST_DISCOVERY_RULESET = RuleSetName("test_discovery_ruleset")
+
+
+def _parse_kv(string_table: StringTable) -> Mapping[str, str]:
+    return {row[0]: row[1] for row in string_table if len(row) >= 2}
+
+
+def _host_label_function_test_labels(section: Mapping[str, str]) -> HostLabelGenerator:
+    for name, value in section.items():
+        yield _APIHostLabel(name, value)
+
+
+def _no_host_labels(section: Mapping[str, str]) -> HostLabelGenerator:
+    yield from ()
+
+
+def _discovery_function_test(
+    params: Mapping[str, object], section: Mapping[str, str]
+) -> DiscoveryResult:
+    raw_ignore = params.get("ignore") or ()
+    assert isinstance(raw_ignore, Sequence)
+    for item in section:
+        if item not in raw_ignore:
+            yield _APIService(item=item)
+
+
+_TEST_SECTION = AgentSectionPlugin(
+    name=_TEST_SECTION_NAME,
+    parsed_section_name=_TEST_PARSED_NAME,
+    parse_function=_parse_kv,
+    host_label_function=_no_host_labels,
+    host_label_default_parameters=None,
+    host_label_ruleset_name=None,
+    host_label_ruleset_type="merged",
+    supersedes=set(),
+    location=LegacyPluginLocation(file_name="<test>"),
+)
+
+_TEST_LABELS_SECTION = AgentSectionPlugin(
+    name=_TEST_LABELS_NAME,
+    parsed_section_name=_TEST_LABELS_PARSED,
+    parse_function=_parse_kv,
+    host_label_function=_host_label_function_test_labels,
+    host_label_default_parameters=None,
+    host_label_ruleset_name=None,
+    host_label_ruleset_type="merged",
+    supersedes=set(),
+    location=LegacyPluginLocation(file_name="<test>"),
+)
+
+
+def _check_function_unused(*args: object, **kw: object) -> CheckResult:
+    yield from ()
+
+
+_TEST_CHECK_PLUGIN = InternalCheckPlugin(
+    name=_TEST_PLUGIN_NAME,
+    sections=[_TEST_PARSED_NAME],
+    service_name="Test %s",
+    discovery_function=_discovery_function_test,
+    discovery_default_parameters={"ignore": ["item_b"]},
+    discovery_ruleset_name=_TEST_DISCOVERY_RULESET,
+    discovery_ruleset_type="merged",
+    check_function=_check_function_unused,
+    check_default_parameters=None,
+    check_ruleset_name=None,
+    cluster_check_function=None,
+    location=LegacyPluginLocation(file_name="<test>"),
+)
+
+_TEST_AGENT_SECTIONS: Mapping[SectionName, AgentSectionPlugin] = {
+    _TEST_SECTION_NAME: _TEST_SECTION,
+    _TEST_LABELS_NAME: _TEST_LABELS_SECTION,
+}
+
+_TEST_CHECK_PLUGINS: Mapping[CheckPluginName, InternalCheckPlugin] = {
+    _TEST_PLUGIN_NAME: _TEST_CHECK_PLUGIN,
+}
+
+
+def _section_plugin(plugin: AgentSectionPlugin) -> SectionPlugin:
     return SectionPlugin(
-        supersedes=set()
-        if plugin.supersedes is None
-        else {SectionName(n) for n in plugin.supersedes},
+        supersedes=plugin.supersedes,
+        parsed_section_name=plugin.parsed_section_name,
         parse_function=plugin.parse_function,
-        parsed_section_name=ParsedSectionName(plugin.parsed_section_name or plugin.name),
     )
 
 
@@ -1644,7 +1755,7 @@ def _realhost_scenario(monkeypatch: MonkeyPatch) -> RealHostScenario:
     DiscoveredHostLabelsStore(hostname).save(
         [
             HostLabel("existing_label", "bar", SectionName("foo")),
-            HostLabel("another_label", "true", SectionName("labels")),
+            HostLabel("another_label", "true", _TEST_LABELS_NAME),
         ]
     )
 
@@ -1654,39 +1765,16 @@ def _realhost_scenario(monkeypatch: MonkeyPatch) -> RealHostScenario:
                 SectionsParser(
                     host_sections=HostSections[AgentRawDataSection](
                         sections={
-                            SectionName("labels"): [
-                                [
-                                    '{"cmk/check_mk_server":"yes"}',
-                                ],
-                            ],
-                            SectionName("df"): [
-                                [
-                                    "/dev/sda1",
-                                    "vfat",
-                                    "523248",
-                                    "3668",
-                                    "519580",
-                                    "1%",
-                                    "/boot/test-efi",
-                                ],
-                                [
-                                    "tmpfs",
-                                    "tmpfs",
-                                    "8152916",
-                                    "244",
-                                    "8152672",
-                                    "1%",
-                                    "/opt/omd/sites/test-heute/tmp",
-                                ],
-                            ],
+                            _TEST_LABELS_NAME: [["cmk/check_mk_server", "yes"]],
+                            _TEST_SECTION_NAME: [["item_a", "ok"], ["item_b", "ok"]],
                         }
                     ),
                     host_name=hostname,
                     error_handling=lambda *args, **kw: "error",
                 ),
                 section_plugins={
-                    SectionName("labels"): _as_plugin(agent_section_labels),
-                    SectionName("df"): _as_plugin(agent_section_df),
+                    _TEST_LABELS_NAME: _section_plugin(_TEST_LABELS_SECTION),
+                    _TEST_SECTION_NAME: _section_plugin(_TEST_SECTION),
                 },
             )
         )
@@ -1719,7 +1807,7 @@ def _cluster_scenario(monkeypatch: pytest.MonkeyPatch) -> ClusterScenario:
             {
                 "id": "01",
                 "condition": {
-                    "service_description": [{"$regex": "fs_"}],
+                    "service_description": [{"$regex": "Test "}],
                     "host_name": [node1_hostname],
                 },
                 "value": True,
@@ -1738,39 +1826,16 @@ def _cluster_scenario(monkeypatch: pytest.MonkeyPatch) -> ClusterScenario:
                 SectionsParser(
                     host_sections=HostSections[AgentRawDataSection](
                         sections={
-                            SectionName("labels"): [
-                                [
-                                    '{"cmk/check_mk_server":"yes"}',
-                                ]
-                            ],
-                            SectionName("df"): [
-                                [
-                                    "/dev/sda1",
-                                    "vfat",
-                                    "523248",
-                                    "3668",
-                                    "519580",
-                                    "1%",
-                                    "/boot/test-efi",
-                                ],
-                                [
-                                    "tmpfs",
-                                    "tmpfs",
-                                    "8152916",
-                                    "244",
-                                    "8152672",
-                                    "1%",
-                                    "/opt/omd/sites/test-heute/tmp",
-                                ],
-                            ],
+                            _TEST_LABELS_NAME: [["cmk/check_mk_server", "yes"]],
+                            _TEST_SECTION_NAME: [["item_a", "ok"], ["item_b", "ok"]],
                         }
                     ),
                     host_name=node1_hostname,
                     error_handling=lambda *args, **kw: "error",
                 ),
                 section_plugins={
-                    SectionName("labels"): _as_plugin(agent_section_labels),
-                    SectionName("df"): _as_plugin(agent_section_df),
+                    _TEST_LABELS_NAME: _section_plugin(_TEST_LABELS_SECTION),
+                    _TEST_SECTION_NAME: _section_plugin(_TEST_SECTION),
                 },
             )
         ),
@@ -1779,39 +1844,16 @@ def _cluster_scenario(monkeypatch: pytest.MonkeyPatch) -> ClusterScenario:
                 SectionsParser(
                     host_sections=HostSections[AgentRawDataSection](
                         sections={
-                            SectionName("labels"): [
-                                [
-                                    '{"node2_live_label":"true"}',
-                                ],
-                            ],
-                            SectionName("df"): [
-                                [
-                                    "/dev/sda1",
-                                    "vfat",
-                                    "523248",
-                                    "3668",
-                                    "519580",
-                                    "1%",
-                                    "/boot/test-efi",
-                                ],
-                                [
-                                    "tmpfs",
-                                    "tmpfs",
-                                    "8152916",
-                                    "244",
-                                    "8152672",
-                                    "1%",
-                                    "/opt/omd/sites/test-heute2/tmp",
-                                ],
-                            ],
+                            _TEST_LABELS_NAME: [["node2_live_label", "true"]],
+                            _TEST_SECTION_NAME: [["item_a", "ok"], ["item_b", "ok"]],
                         }
                     ),
                     host_name=node2_hostname,
                     error_handling=lambda *args, **kw: "error",
                 ),
                 section_plugins={
-                    SectionName("labels"): _as_plugin(agent_section_labels),
-                    SectionName("df"): _as_plugin(agent_section_df),
+                    _TEST_LABELS_NAME: _section_plugin(_TEST_LABELS_SECTION),
+                    _TEST_SECTION_NAME: _section_plugin(_TEST_SECTION),
                 },
             )
         ),
@@ -1851,12 +1893,12 @@ class DiscoveryTestCase(NamedTuple):
 @pytest.mark.parametrize(
     "host_labels, expected_services",
     [
-        ((), {ServiceID(CheckPluginName("df"), "/boot/test-efi")}),
+        ((), {ServiceID(_TEST_PLUGIN_NAME, "item_a")}),
         (
-            (HostLabel("cmk/check_mk_server", "yes", SectionName("labels")),),
+            (HostLabel("cmk/check_mk_server", "yes", _TEST_LABELS_NAME),),
             {
-                ServiceID(CheckPluginName("df"), "/boot/test-efi"),
-                ServiceID(CheckPluginName("df"), "/opt/omd/sites/test-heute/tmp"),
+                ServiceID(_TEST_PLUGIN_NAME, "item_a"),
+                ServiceID(_TEST_PLUGIN_NAME, "item_b"),
             },
         ),
     ],
@@ -1865,7 +1907,6 @@ def test__discovery_considers_host_labels(
     host_labels: tuple[HostLabel],
     expected_services: set[ServiceID],
     realhost_scenario: RealHostScenario,
-    agent_based_plugins: AgentBasedPlugins,
 ) -> None:
     # this takes the detour via ruleset matcher :-(
     DiscoveredHostLabelsStore(realhost_scenario.hostname).save(host_labels)
@@ -1875,20 +1916,18 @@ def test__discovery_considers_host_labels(
     config_cache = realhost_scenario.config_cache
     providers = realhost_scenario.providers
 
-    # arrange
+    # The rule overrides the plug-in's default "ignore" list (which excludes
+    # "item_b") with an empty list, but only when the host carries the
+    # cmk/check_mk_server:yes label.
     plugins = DiscoveryPluginMapper(
         discovery_config=DiscoveryConfig(
             config_cache.ruleset_matcher,
             config_cache.label_manager.labels_of_host,
             rules={
-                RuleSetName("mssql_transactionlogs_discovery"): [],
-                RuleSetName("inventory_df_rules"): [
+                _TEST_DISCOVERY_RULESET: [
                     {
                         "id": "nobody-cares-about-the-id-in-this-test",
-                        "value": {
-                            "ignore_fs_types": ["tmpfs", "nfs", "smbfs", "cifs", "iso9660"],
-                            "never_ignore_mountpoints": ["~.*/omd/sites/[^/]+/tmp$"],
-                        },
+                        "value": {"ignore": []},
                         "condition": {
                             "host_label_groups": [("and", [("and", "cmk/check_mk_server:yes")])]
                         },
@@ -1896,7 +1935,7 @@ def test__discovery_considers_host_labels(
                 ],
             },
         ),
-        check_plugins=agent_based_plugins.check_plugins,
+        check_plugins=_TEST_CHECK_PLUGINS,
     )
     plugin_names = find_plugins(
         providers,
@@ -1922,7 +1961,7 @@ _discovery_test_cases = [
         load_labels=True,
         only_host_labels=False,
         expected_services={
-            (CheckPluginName("df"), "/boot/test-efi"),
+            (_TEST_PLUGIN_NAME, "item_a"),
         },
         on_realhost=ExpectedDiscoveryResultOnRealhost(
             expected_vanished_host_labels=[
@@ -1969,7 +2008,7 @@ _discovery_test_cases = [
         load_labels=False,
         only_host_labels=False,
         expected_services={
-            (CheckPluginName("df"), "/boot/test-efi"),
+            (_TEST_PLUGIN_NAME, "item_a"),
         },
         on_realhost=ExpectedDiscoveryResultOnRealhost(
             expected_vanished_host_labels=[],
@@ -2044,7 +2083,6 @@ _discovery_test_cases = [
 def test__discover_host_labels_and_services_on_realhost(
     realhost_scenario: RealHostScenario,
     discovery_test_case: DiscoveryTestCase,
-    agent_based_plugins: AgentBasedPlugins,
 ) -> None:
     if discovery_test_case.only_host_labels:
         # check for consistency of the test case
@@ -2055,10 +2093,9 @@ def test__discover_host_labels_and_services_on_realhost(
     host_name = realhost_scenario.hostname
     providers = realhost_scenario.providers
 
-    # arrange
     plugins = DiscoveryPluginMapper(
         discovery_config=_EmptyDiscoveryConfig(),
-        check_plugins=agent_based_plugins.check_plugins,
+        check_plugins=_TEST_CHECK_PLUGINS,
     )
     plugin_names = find_plugins(
         providers,
@@ -2078,12 +2115,10 @@ def test__discover_host_labels_and_services_on_realhost(
     assert services == discovery_test_case.expected_services
 
 
-@pytest.mark.usefixtures("agent_based_plugins")
 @pytest.mark.parametrize("discovery_test_case", _discovery_test_cases)
 def test__perform_host_label_discovery_on_realhost(
     realhost_scenario: RealHostScenario,
     discovery_test_case: DiscoveryTestCase,
-    agent_based_plugins: AgentBasedPlugins,
 ) -> None:
     scenario = realhost_scenario
 
@@ -2097,10 +2132,7 @@ def test__perform_host_label_discovery_on_realhost(
             scenario.hostname,
             HostLabelPluginMapper(
                 discovery_config=_EmptyDiscoveryConfig(),
-                sections={
-                    **agent_based_plugins.agent_sections,
-                    **agent_based_plugins.snmp_sections,
-                },
+                sections=_TEST_AGENT_SECTIONS,
             ),
             providers=scenario.providers,
             on_error=OnError.RAISE,
@@ -2118,36 +2150,29 @@ def test__perform_host_label_discovery_on_realhost(
 
 def test__discover_services_on_cluster(
     cluster_scenario: ClusterScenario,
-    agent_based_plugins: AgentBasedPlugins,
 ) -> None:
     assert discovery_by_host(
         cluster_scenario.config_cache.nodes(cluster_scenario.parent),
         cluster_scenario.providers,
         DiscoveryPluginMapper(
             discovery_config=_EmptyDiscoveryConfig(),
-            check_plugins=agent_based_plugins.check_plugins,
+            check_plugins=_TEST_CHECK_PLUGINS,
         ),
         OnError.RAISE,
     ) == {
         "test-node1": [
             AutocheckEntry(
-                check_plugin_name=CheckPluginName("df"),
-                item="/boot/test-efi",
-                parameters={
-                    "mountpoint_for_block_devices": "volume_name",
-                    "item_appearance": "mountpoint",
-                },
+                check_plugin_name=_TEST_PLUGIN_NAME,
+                item="item_a",
+                parameters={},
                 service_labels={},
             ),
         ],
         "test-node2": [
             AutocheckEntry(
-                check_plugin_name=CheckPluginName("df"),
-                item="/boot/test-efi",
-                parameters={
-                    "mountpoint_for_block_devices": "volume_name",
-                    "item_appearance": "mountpoint",
-                },
+                check_plugin_name=_TEST_PLUGIN_NAME,
+                item="item_a",
+                parameters={},
                 service_labels={},
             ),
         ],
@@ -2158,7 +2183,6 @@ def test__discover_services_on_cluster(
 def test__perform_host_label_discovery_on_cluster(
     cluster_scenario: ClusterScenario,
     discovery_test_case: DiscoveryTestCase,
-    agent_based_plugins: AgentBasedPlugins,
 ) -> None:
     scenario = cluster_scenario
     nodes = scenario.config_cache.nodes(scenario.parent)
@@ -2172,10 +2196,7 @@ def test__perform_host_label_discovery_on_cluster(
                 node,
                 HostLabelPluginMapper(
                     discovery_config=_EmptyDiscoveryConfig(),
-                    sections={
-                        **agent_based_plugins.agent_sections,
-                        **agent_based_plugins.snmp_sections,
-                    },
+                    sections=_TEST_AGENT_SECTIONS,
                 ),
                 providers=scenario.providers,
                 on_error=OnError.RAISE,

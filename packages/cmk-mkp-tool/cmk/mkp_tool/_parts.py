@@ -17,7 +17,7 @@ _PERMISSION_EXECUTABLE = 0o700
 _PERMISSION_NONEXECUTABLE = 0o600
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class PathConfig:
     # This is very confusing.
     # Those paths describe both where to put things when installing,

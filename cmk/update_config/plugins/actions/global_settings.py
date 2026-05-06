@@ -32,10 +32,7 @@ from cmk.utils.log import VERBOSE
 
 # List[(old_config_name, new_config_name, replacement_dict{old: new})]
 _RENAMED_GLOBALS: Sequence[tuple[str, str, Mapping[object, object]]] = []
-_REMOVED_OPTIONS: Sequence[str] = [
-    "hide_languages",
-    "enable_community_translations",
-]
+_REMOVED_OPTIONS: Sequence[str] = []
 
 
 class UpdateGlobalSettings(UpdateAction):

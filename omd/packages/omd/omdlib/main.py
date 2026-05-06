@@ -333,6 +333,9 @@ def walk_skel(
 ) -> Iterable[str]:
     # Files that should not be managed by the update process (anymore).
     ignored_files = [
+        # auth.secret is managed dynamical at runtime.
+        # Removed from skel to avoid it from showing up in omd diff.
+        "etc/auth.secret",
         # We have removed the unused htpasswd skel file, but we don't want to ask users if they wish
         # to delete their existing htpasswd.
         "etc/diskspace.conf",

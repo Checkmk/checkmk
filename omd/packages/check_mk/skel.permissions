@@ -1,4 +1,3 @@
-etc/auth.secret 0660
 etc/passwordlist.txt 0640
 etc/check_mk/conf.d 0770
 etc/check_mk/conf.d/wato 0770

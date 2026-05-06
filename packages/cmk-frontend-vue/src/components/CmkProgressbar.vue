@@ -62,7 +62,7 @@ const labelString = computed<string>(() => {
 })
 const progressRatio = computed(() => (max === 'unknown' ? 0 : value / max))
 
-const cmkProgressbaId = useId()
+const cmkProgressbarId = useId()
 </script>
 
 <template>
@@ -74,10 +74,10 @@ const cmkProgressbaId = useId()
     :aria-valuemax="max"
     :aria-valuemin="0"
     :aria-valuenow="value"
-    :aria-labelledby="cmkProgressbaId"
+    :aria-labelledby="cmkProgressbarId"
   >
     <label
-      :id="cmkProgressbaId"
+      :id="cmkProgressbarId"
       class="cmk-progress-label"
       :class="{ visible: label && max !== 'unknown' }"
     >

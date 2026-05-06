@@ -18,7 +18,7 @@ import pytest
 from cmk.utils.paths import mkbackup_lock_dir
 from tests.testlib.pytest_helpers.calls import exit_pytest_on_exceptions
 from tests.testlib.site import Site, SiteFactory
-from tests.testlib.utils import DISTROS_MISSING_WHITELIST_ENVIRONMENT_FOR_SU, run
+from tests.testlib.utils import check_output, DISTROS_MISSING_WHITELIST_ENVIRONMENT_FOR_SU, run
 
 logger = logging.getLogger(__name__)
 
@@ -115,30 +115,29 @@ def backup_lock_dir_fixture(
         # This omd call triggers the creation of the lock dir with the correct permissions. In
         # production there is always at least one command executed before being able to execute
         # the backup code. So we can assume it has been executed before.
-        run(["omd", "status", site_for_mkbackup_tests.id], sudo=True)
-        assert mkbackup_lock_dir.exists()
-        backup_permission_mask = oct(mkbackup_lock_dir.stat().st_mode)[-4:]
-        assert backup_permission_mask == "0770"
-        assert mkbackup_lock_dir.group() == "omd"
+        run(["omd", "status"], sudo=True, substitute_user=site_for_mkbackup_tests.id)
+        assert (
+            run(["test", "-d", mkbackup_lock_dir.as_posix()], check=False, sudo=True).returncode
+            == 0
+        )
+        backup_permission_mask = stat.S_IMODE(site_for_mkbackup_tests.file_mode(mkbackup_lock_dir))
+        assert backup_permission_mask == 0o770
+        backup_file_group = check_output(
+            ["stat", "-c", "%G", mkbackup_lock_dir.as_posix()]
+        ).rstrip()
+        assert backup_file_group == "omd"
 
     if request.param:
         _initialize_lock_dir()
         yield
     else:
-        lock_parent = mkbackup_lock_dir.parent
-        original_mode = stat.S_IMODE(lock_parent.stat().st_mode)
         run(["rm", "-r", str(mkbackup_lock_dir)], sudo=True)
-        assert not mkbackup_lock_dir.exists(), f"Expected '{mkbackup_lock_dir}' to be deleted!"
-        # mkbackup runs as the site user and must be able to create the lock dir itself.
-        # /run/lock is not world-writable on all distros, so grant access temporarily.
-        # 1777 (not 770): the site user is not in the parent's owning group, so we need o+w;
-        # the sticky bit matches the distro default and prevents cross-user lock deletion.
-        run(["chmod", "1777", str(lock_parent)], sudo=True)
-        try:
-            yield
-        finally:
-            run(["chmod", oct(original_mode).replace("0o", ""), str(lock_parent)], sudo=True)
-            _initialize_lock_dir()
+        assert not (
+            run(["test", "-d", mkbackup_lock_dir.as_posix()], check=False, sudo=True).returncode
+            == 0
+        ), f"Expected '{mkbackup_lock_dir}' to be deleted!"
+        yield
+        _initialize_lock_dir()
 
 
 @pytest.fixture(name="test_cfg", scope="function")

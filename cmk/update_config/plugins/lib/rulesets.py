@@ -27,10 +27,7 @@ from cmk.utils.rulesets.definition import RuleGroup
 from cmk.utils.rulesets.ruleset_matcher import RulesetName, TagCondition
 from cmk.utils.tags import TagGroupID
 
-REPLACED_RULESETS: Mapping[RulesetName, RulesetName] = {
-    "entersekt_soaprrors": "entersekt_soaperrors",  # 2.4 -> 2.5
-    "checkgroup_parameters:apc_symentra": "checkgroup_parameters:apc_symmetra",  # 2.4 -> 2.5
-}
+REPLACED_RULESETS: Mapping[RulesetName, RulesetName] = {}
 
 RULESETS_LOOSING_THEIR_ITEM: Iterable[RulesetName] = {}
 

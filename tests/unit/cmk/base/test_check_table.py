@@ -18,11 +18,13 @@ from cmk.checkengine.checking import ABCCheckingConfig, ServiceConfigurer
 from cmk.checkengine.parameters import TimespecificParameters, TimespecificParameterSet
 from cmk.checkengine.plugin_backend import get_check_plugin
 from cmk.checkengine.plugins import (
-    AgentBasedPlugins,
     AutocheckEntry,
+    CheckPlugin,
     CheckPluginName,
+    ParsedSectionName,
     ServiceID,
 )
+from cmk.checkengine.plugins._common import LegacyPluginLocation
 from cmk.utils.rulesets.ruleset_matcher import BundledHostRulesetMatcher
 from cmk.utils.servicename import ServiceName
 from cmk.utils.tags import TagGroupID, TagID
@@ -41,8 +43,38 @@ class CheckingConfigTest(ABCCheckingConfig):
         return self.rules.get(host_name, [])
 
 
+# Test-only check plug-ins. The tests below only ever read `service_name` and
+# `check_default_parameters` for `EnforcedServicesTable` lookups; they never
+# invoke `discovery_function` or `check_function`, so those are no-ops.
+def _make_plugin(
+    name: str, service_name: str, check_default_parameters: Mapping[str, object] | None
+) -> CheckPlugin:
+    return CheckPlugin(
+        name=CheckPluginName(name),
+        sections=[ParsedSectionName(name)],
+        service_name=service_name,
+        discovery_function=lambda *args, **kw: iter(()),
+        discovery_default_parameters=None,
+        discovery_ruleset_name=None,
+        discovery_ruleset_type="merged",
+        check_function=lambda *args, **kw: iter(()),
+        check_default_parameters=check_default_parameters,
+        check_ruleset_name=None,
+        cluster_check_function=None,
+        location=LegacyPluginLocation(file_name="<test>"),
+    )
+
+
+_TEST_CHECK_PLUGINS: Mapping[CheckPluginName, CheckPlugin] = {
+    CheckPluginName("smart_temp"): _make_plugin(
+        "smart_temp", "Temperature SMART %s", {"levels": (35, 40)}
+    ),
+    CheckPluginName("df"): _make_plugin("df", "Filesystem %s", None),
+}
+
+
 def test_cluster_ignores_nodes_parameters(
-    monkeypatch: pytest.MonkeyPatch, agent_based_plugins: AgentBasedPlugins
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     node = HostName("node")
     cluster = HostName("cluster")
@@ -77,7 +109,7 @@ def test_cluster_ignores_nodes_parameters(
             sid,
             (
                 None
-                if (p := get_check_plugin(sid.name, agent_based_plugins.check_plugins)) is None
+                if (p := get_check_plugin(sid.name, _TEST_CHECK_PLUGINS)) is None
                 else p.service_name
             ),
         )
@@ -85,7 +117,7 @@ def test_cluster_ignores_nodes_parameters(
     # a rule for the node:
     service_configurer = ServiceConfigurer(
         CheckingConfigTest({node: [{"levels_for_node": (1, 2)}]}),
-        plugins=agent_based_plugins.check_plugins,
+        plugins=_TEST_CHECK_PLUGINS,
         get_service_description=service_description_callback,
         get_effective_host=config_cache.effective_host,
         get_service_labels=config_cache.label_manager.labels_of_service,
@@ -93,7 +125,7 @@ def test_cluster_ignores_nodes_parameters(
 
     clustered_service = config_cache.check_table(
         cluster,
-        agent_based_plugins.check_plugins,
+        _TEST_CHECK_PLUGINS,
         service_configurer=service_configurer,
         service_name_config=service_name_config,
         enforced_services_table=lambda hn: {},
@@ -105,7 +137,7 @@ def test_cluster_ignores_nodes_parameters(
 
 
 def test_check_table_enforced_vs_discovered_precedence(
-    monkeypatch: pytest.MonkeyPatch, agent_based_plugins: AgentBasedPlugins
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     smart = CheckPluginName("smart_temp")
     node = HostName("node")
@@ -165,7 +197,7 @@ def test_check_table_enforced_vs_discovered_precedence(
     service_name_config = config_cache.make_passive_service_name_config(
         make_final_service_name_config(config_cache._loaded_config, config_cache.ruleset_matcher)
     )
-    check_plugins = agent_based_plugins.check_plugins
+    check_plugins = _TEST_CHECK_PLUGINS
     service_configurer = config_cache.make_service_configurer(check_plugins, service_name_config)
     enforced_services_table = EnforcedServicesTable(
         BundledHostRulesetMatcher(
@@ -427,7 +459,6 @@ def test_check_table(
     hostname_str: str,
     filter_mode: FilterMode,
     expected_result: HostCheckTable,
-    agent_based_plugins: AgentBasedPlugins,
 ) -> None:
     hostname = HostName(hostname_str)
 
@@ -551,16 +582,14 @@ def test_check_table(
             config_cache.label_manager.labels_of_host,
         ),
         service_name_config,
-        agent_based_plugins.check_plugins,
+        _TEST_CHECK_PLUGINS,
     )
 
     assert set(
         config_cache.check_table(
             hostname,
-            agent_based_plugins.check_plugins,
-            config_cache.make_service_configurer(
-                agent_based_plugins.check_plugins, service_name_config
-            ),
+            _TEST_CHECK_PLUGINS,
+            config_cache.make_service_configurer(_TEST_CHECK_PLUGINS, service_name_config),
             service_name_config,
             enforced_services_table,
             filter_mode=filter_mode,
@@ -646,7 +675,7 @@ def test_check_table_of_mgmt_boards(
 
 
 def test_check_table__static_checks_win(
-    monkeypatch: pytest.MonkeyPatch, agent_based_plugins: AgentBasedPlugins
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     hostname_str = "df_host"
     hostname = HostName(hostname_str)
@@ -679,15 +708,13 @@ def test_check_table__static_checks_win(
             config_cache.label_manager.labels_of_host,
         ),
         service_name_config,
-        agent_based_plugins.check_plugins,
+        _TEST_CHECK_PLUGINS,
     )
 
     chk_table = config_cache.check_table(
         hostname,
-        agent_based_plugins.check_plugins,
-        config_cache.make_service_configurer(
-            agent_based_plugins.check_plugins, service_name_config
-        ),
+        _TEST_CHECK_PLUGINS,
+        config_cache.make_service_configurer(_TEST_CHECK_PLUGINS, service_name_config),
         service_name_config,
         enforced_services_table,
     )

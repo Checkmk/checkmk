@@ -254,7 +254,7 @@ def _check_preview_table_row(
     )
 
     result = (
-        check_plugin.function(host_name, service, providers=providers).result
+        check_plugin.function(host_name, service, providers=providers, is_preview=True).result
         if check_plugin is not None
         else SubmittableServiceCheckResult.check_not_implemented()
     )

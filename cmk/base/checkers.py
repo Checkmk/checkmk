@@ -620,6 +620,7 @@ class CheckerPluginMapper(Mapping[CheckPluginName, CheckerPlugin]):
             service: ConfiguredService,
             *,
             providers: Mapping[HostKey, Provider],
+            is_preview: bool,
         ) -> AggregatedResult:
             check_function = _get_check_function(
                 plugin,
@@ -643,7 +644,7 @@ class CheckerPluginMapper(Mapping[CheckPluginName, CheckerPlugin]):
                 get_effective_host=self.config.effective_host,
                 snmp_backend=self.config.get_snmp_backend(host_name),
                 parameters=_compute_final_check_parameters(
-                    host_name, service, self.config, self._logger
+                    host_name, service, self.config, self._logger, is_preview
                 ),
             )
 
@@ -726,6 +727,7 @@ def _compute_final_check_parameters(
     service: ConfiguredService,
     checker_config: CheckerConfig,
     logger: logging.Logger,
+    is_preview: bool,
 ) -> Parameters:
     params = service.parameters.evaluate(checker_config.timeperiods_active.get)
 
@@ -762,6 +764,7 @@ def _compute_final_check_parameters(
         ),
         host_name=str(host_name),
         service_name=str(service.description),
+        is_preview=is_preview,
     )
     return Parameters({k: postprocess_configuration(v, config) for k, v in params.items()})
 
@@ -1092,6 +1095,7 @@ class PostprocessingServiceConfig:
     service_level: Callable[[], int]
     host_name: str
     service_name: str
+    is_preview: bool
 
 
 def postprocess_configuration(
@@ -1123,6 +1127,8 @@ def postprocess_configuration(
             return config.service_level()
         case tuple(("cmk_postprocessed", "service_name", _)):
             return config.service_name
+        case tuple(("cmk_postprocessed", "is_preview", _)):
+            return config.is_preview
         case tuple():
             return tuple(postprocess_configuration(v, config) for v in params)
         case list():

@@ -156,6 +156,7 @@ def test_only_from_injection() -> None:
         service_level=lambda: 42,
         host_name="not-relevant-for-test",
         service_name="not-relevant-for-test",
+        is_preview=False,
     )
     p: dict[str, object] = {
         "outer": {
@@ -176,6 +177,7 @@ def test_prediction_injection_legacy() -> None:
         service_level=lambda: 42,
         host_name="not-relevant-for-test",
         service_name="not-relevant-for-test",
+        is_preview=False,
     )
     p: dict[str, object] = {
         "pagefile": (
@@ -230,6 +232,7 @@ def test_prediction_injection() -> None:
         service_level=lambda: 42,
         host_name="not-relevant-for-test",
         service_name="not-relevant-for-test",
+        is_preview=False,
     )
     p: dict[str, object] = {
         "levels_upper": (
@@ -249,4 +252,25 @@ def test_prediction_injection() -> None:
             "predictive",
             ("my_reference_metric", *prediction),
         )
+    }
+
+
+def test_is_preview_injection() -> None:
+    p_config = checkers.PostprocessingServiceConfig(
+        only_from=lambda: ["not-relevant-for-test"],
+        prediction=lambda: InjectedParameters(meta_file_path_template="", predictions={}),
+        service_level=lambda: 42,
+        host_name="not-relevant-for-test",
+        service_name="not-relevant-for-test",
+        is_preview=True,
+    )
+    p: dict[str, object] = {
+        "outer": {
+            "inner": ("cmk_postprocessed", "is_preview", None),
+        },
+    }
+    assert checkers.postprocess_configuration(p, p_config) == {
+        "outer": {
+            "inner": True,
+        },
     }

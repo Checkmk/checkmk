@@ -59,6 +59,7 @@ class _CheckerFunction(Protocol):
         service: ConfiguredService,
         *,
         providers: Mapping[HostKey, Provider],
+        is_preview: bool,
     ) -> AggregatedResult: ...
 
 

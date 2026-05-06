@@ -241,7 +241,7 @@ def check_host_services(
             )
         else:
             plugin = check_plugins[service.check_plugin_name]
-            yield plugin.function(host_name, service, providers=providers)
+            yield plugin.function(host_name, service, providers=providers, is_preview=False)
 
 
 def _service_inside_check_period(

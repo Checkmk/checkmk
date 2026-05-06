@@ -45,6 +45,7 @@ class Section(NamedTuple):
 class PreDictLogwatchEc(CommonLogwatchEc):
     service_level: tuple[Literal["cmk_postprocessed"], Literal["service_level"], None]
     host_name: tuple[Literal["cmk_postprocessed"], Literal["host_name"], None]
+    is_preview: tuple[Literal["cmk_postprocessed"], Literal["is_preview"], None]
 
 
 class ParameterLogwatchGroups(TypedDict):

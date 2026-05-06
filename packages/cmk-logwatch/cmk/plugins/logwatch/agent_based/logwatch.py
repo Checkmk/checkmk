@@ -20,13 +20,14 @@
 
 import fnmatch
 import hashlib
+import io
 import re
 import time
 from collections import Counter
 from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
-from typing import IO, Literal, TypedDict
+from typing import IO, TypedDict
 
 from cmk.agent_based.v2 import (
     CheckPlugin,
@@ -52,9 +53,15 @@ ClusterSection = dict[str | None, logwatch.Section]
 GroupingPattern = tuple[str, str]
 
 
+class LogwatchParams(TypedDict):
+    host_name: str
+    is_preview: bool
+
+
 class DiscoveredGroupParams(TypedDict):
     group_patterns: Iterable[GroupingPattern]
     host_name: str
+    is_preview: bool
 
 
 _LOGWATCH_MAX_FILESIZE = 500000  # do not save more than 500k of messages
@@ -137,31 +144,32 @@ def _discovery_make_groups(
 
 def check_logwatch_node(
     item: str,
-    params: Mapping[Literal["host_name"], str],
+    params: LogwatchParams,
     section: logwatch.Section,
 ) -> CheckResult:
     """fall back to the cluster case with node=None"""
-    host_name = params["host_name"]
     rules_params = get_global_state().logwatch_rules_all(
-        host_name=host_name, plugin=check_plugin_logwatch, logfile=item
+        host_name=params["host_name"], plugin=check_plugin_logwatch, logfile=item
     )
-    yield from check_logwatch(item, rules_params, {None: section}, host_name)
+    yield from check_logwatch(
+        item, rules_params, {None: section}, params["host_name"], params["is_preview"]
+    )
 
 
 def check_logwatch_cluster(
     item: str,
-    params: Mapping[str, str],
+    params: LogwatchParams,
     section: Mapping[str, logwatch.Section | None],
 ) -> CheckResult:
-    host_name = params["host_name"]
     rules_params = get_global_state().logwatch_rules_all(
-        host_name=host_name, plugin=check_plugin_logwatch, logfile=item
+        host_name=params["host_name"], plugin=check_plugin_logwatch, logfile=item
     )
     yield from check_logwatch(
         item,
         rules_params,
         {k: v for k, v in section.items() if v is not None},
-        host_name,
+        params["host_name"],
+        params["is_preview"],
     )
 
 
@@ -170,6 +178,7 @@ def check_logwatch(
     params: Sequence[ParameterLogwatchRules],
     section: ClusterSection,
     host_name: str,
+    is_preview: bool,
 ) -> CheckResult:
     yield from logwatch.check_errors(section)
     yield from logwatch.check_unreadable_files(
@@ -194,6 +203,7 @@ def check_logwatch(
         found=item in logwatch.discoverable_items(*section.values()),
         max_filesize=_LOGWATCH_MAX_FILESIZE,
         host_name=host_name,
+        is_preview=is_preview,
     )
 
 
@@ -213,6 +223,7 @@ check_plugin_logwatch = CheckPlugin(
         # The next entry will be postprocessed by the backend.
         # Don't try this hack at home, we are trained professionals.
         "host_name": ("cmk_postprocessed", "host_name", None),
+        "is_preview": ("cmk_postprocessed", "is_preview", None),
     },
     cluster_check_function=check_logwatch_cluster,
 )
@@ -309,7 +320,9 @@ def check_logwatch_groups_node(
         plugin=check_plugin_logwatch_groups,
         logfile=item,
     )
-    yield from check_logwatch_groups(item, params, params_rules, {None: section})
+    yield from check_logwatch_groups(
+        item, params, params_rules, {None: section}, params["is_preview"]
+    )
 
 
 def check_logwatch_groups_cluster(
@@ -323,7 +336,11 @@ def check_logwatch_groups_cluster(
         logfile=item,
     )
     yield from check_logwatch_groups(
-        item, params, params_rules, {k: v for k, v in section.items() if v is not None}
+        item,
+        params,
+        params_rules,
+        {k: v for k, v in section.items() if v is not None},
+        params["is_preview"],
     )
 
 
@@ -332,6 +349,7 @@ def check_logwatch_groups(
     params: DiscoveredGroupParams,
     params_rules: Sequence[ParameterLogwatchRules],
     section: ClusterSection,
+    is_preview: bool,
 ) -> CheckResult:
     yield from logwatch.check_errors(section)
 
@@ -355,6 +373,7 @@ def check_logwatch_groups(
         found=True,
         max_filesize=_LOGWATCH_MAX_FILESIZE,
         host_name=params["host_name"],
+        is_preview=is_preview,
     )
 
 
@@ -384,6 +403,7 @@ check_plugin_logwatch_groups = CheckPlugin(
     check_default_parameters={
         "group_patterns": [],
         "host_name": ("cmk_postprocessed", "host_name", None),
+        "is_preview": ("cmk_postprocessed", "is_preview", None),
     },
     cluster_check_function=check_logwatch_groups_cluster,
 )
@@ -499,6 +519,7 @@ def check_logwatch_generic(
     found: bool,
     max_filesize: int,
     host_name: str,
+    is_preview: bool,
 ) -> CheckResult:
     config = get_global_state()
     logmsg_file_path = _logmsg_file_path(config.msg_dir, item, host_name)
@@ -512,9 +533,17 @@ def check_logwatch_generic(
     block_collector = LogwatchBlockCollector()
 
     logmsg_file_exists = logmsg_file_path.exists()
-    logmsg_file_handle = logmsg_file_path.open(
-        "r+" if logmsg_file_exists else "w", encoding="utf-8"
-    )
+    # In preview mode open read-only (or use an empty buffer) to avoid writing
+    # duplicate entries: the value store isn't persisted during preview, so every
+    # run would treat all current batches as unseen and append them again.
+    if is_preview:
+        logmsg_file_handle: IO[str] = (
+            logmsg_file_path.open("r", encoding="utf-8") if logmsg_file_exists else io.StringIO()
+        )
+    else:
+        logmsg_file_handle = logmsg_file_path.open(
+            "r+" if logmsg_file_exists else "w", encoding="utf-8"
+        )
 
     pattern_hash = hashlib.sha256(repr(reclassify_parameters).encode()).hexdigest()
     if not logmsg_file_exists:
@@ -523,7 +552,11 @@ def check_logwatch_generic(
     else:  # parse cached log lines
         reclassify = _patterns_changed(logmsg_file_handle, pattern_hash)
 
-        if not reclassify and _truncate_way_too_large_result(logmsg_file_path, max_filesize):
+        if (
+            not is_preview
+            and not reclassify
+            and _truncate_way_too_large_result(logmsg_file_path, max_filesize)
+        ):
             yield _dropped_msg_result(max_filesize)
             return
 
@@ -548,22 +581,28 @@ def check_logwatch_generic(
         )
     )
 
-    # when reclassifying, rewrite the whole file, otherwise append
-    if reclassify and block_collector.get_lines():
-        logmsg_file_handle.seek(0)
-        logmsg_file_handle.truncate()
-        logmsg_file_handle.write("[[[%s]]]\n" % pattern_hash)
+    if not is_preview:
+        # when reclassifying, rewrite the whole file, otherwise append
+        if reclassify and block_collector.get_lines():
+            logmsg_file_handle.seek(0)
+            logmsg_file_handle.truncate()
+            logmsg_file_handle.write("[[[%s]]]\n" % pattern_hash)
 
-    for line in block_collector.get_lines():
-        logmsg_file_handle.write(line)
+        for line in block_collector.get_lines():
+            logmsg_file_handle.write(line)
+
     # correct output size
     logmsg_file_handle.close()
 
-    if not block_collector.saw_lines:
+    if not is_preview and not block_collector.saw_lines:
         logmsg_file_path.unlink(missing_ok=True)
 
     # if logfile has reached maximum size, abort with critical state
-    if logmsg_file_path.exists() and logmsg_file_path.stat().st_size > max_filesize:
+    if (
+        not is_preview
+        and logmsg_file_path.exists()
+        and logmsg_file_path.stat().st_size > max_filesize
+    ):
         yield _dropped_msg_result(max_filesize)
         return
 

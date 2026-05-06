@@ -35,6 +35,7 @@ class ParameterLogwatchEc(CommonLogwatchEc):
 
     service_level: int
     host_name: str
+    is_preview: bool
 
 
 StateMap = Mapping[Literal["c_to", "w_to", "o_to", "._to"], Literal["C", "W", "O", "I", "."]]

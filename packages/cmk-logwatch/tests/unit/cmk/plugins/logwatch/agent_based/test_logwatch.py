@@ -207,7 +207,11 @@ def test_check_single(
         )
 
         assert (
-            list(logwatch.check_logwatch_node(log_name, {"host_name": "test-host"}, SECTION1))
+            list(
+                logwatch.check_logwatch_node(
+                    log_name, {"host_name": "test-host", "is_preview": False}, SECTION1
+                )
+            )
             == expected_result
         )
 
@@ -284,7 +288,7 @@ def test_check_logwatch_groups_node(
             list(
                 logwatch.check_logwatch_groups_node(
                     group_name,
-                    {"group_patterns": reg_pattern, "host_name": "test-host"},
+                    {"group_patterns": reg_pattern, "host_name": "test-host", "is_preview": False},
                     section,
                 )
             )
@@ -326,6 +330,7 @@ def test_logwatch_discover_single_restrict() -> None:
                 ParameterLogwatchEc(
                     host_name="irrelevant",
                     service_level=10,
+                    is_preview=False,
                     restrict_logfiles=[".*2"],
                 )
             ]
@@ -405,6 +410,7 @@ def test_check_logwatch_generic_no_messages(tmp_path: Path) -> None:
                 found=True,
                 max_filesize=logwatch._LOGWATCH_MAX_FILESIZE,  # noqa: SLF001
                 host_name="test-host",
+                is_preview=False,
             )
         ) == [
             Result(state=State.OK, summary="No error messages"),
@@ -430,6 +436,7 @@ def test_check_logwatch_generic_no_reclassify(tmp_path: Path) -> None:
                 found=True,
                 max_filesize=logwatch._LOGWATCH_MAX_FILESIZE,  # noqa: SLF001
                 host_name="test-host",
+                is_preview=False,
             )
         ) == [
             Result(state=State.CRIT, summary='1 CRIT messages (Last worst: "red alert")'),
@@ -466,6 +473,7 @@ def test_check_logwatch_generic_with_reclassification(tmp_path: Path) -> None:
                 found=True,
                 max_filesize=logwatch._LOGWATCH_MAX_FILESIZE,  # noqa: SLF001
                 host_name="test-host",
+                is_preview=False,
             )
         ) == [
             Result(state=State.CRIT, summary='2 CRIT messages (Last worst: "red alert")'),
@@ -490,6 +498,7 @@ def test_check_logwatch_generic_missing(tmp_path: Path) -> None:
                 found=False,
                 max_filesize=logwatch._LOGWATCH_MAX_FILESIZE,  # noqa: SLF001
                 host_name="test-host",
+                is_preview=False,
             )
         ) == [
             Result(state=State.UNKNOWN, summary="log not present anymore"),
@@ -517,6 +526,7 @@ def test_check_logwatch_generic_reclassify_to_ok_shows_summary(tmp_path: Path) -
                 found=True,
                 max_filesize=logwatch._LOGWATCH_MAX_FILESIZE,  # noqa: SLF001
                 host_name="test-host",
+                is_preview=False,
             )
         ) == [
             Result(state=State.OK, summary='2 OK messages (Last worst: "Second critical error")'),
@@ -537,6 +547,7 @@ def test_check_logwatch_generic_multiline_logline_to_summary_details(tmp_path: P
                 found=True,
                 max_filesize=logwatch._LOGWATCH_MAX_FILESIZE,  # noqa: SLF001
                 host_name="test-host",
+                is_preview=False,
             )
         ) == [
             Result(
@@ -545,3 +556,61 @@ def test_check_logwatch_generic_multiline_logline_to_summary_details(tmp_path: P
                 details='With a second line\nand a third line")',
             ),
         ]
+
+
+@pytest.mark.usefixtures("logmsg_file_path")
+def test_check_logwatch_generic_preview_no_file_written(tmp_path: Path) -> None:
+    """In preview mode, results are still produced but no logmsg file is created."""
+    with _logwatch_state(_LogwatchConfigDummy(msg_dir=tmp_path)):
+        item = "/tmp/app.log"
+        result = list(
+            logwatch.check_logwatch_generic(
+                item=item,
+                reclassify_parameters=logwatch_.ReclassifyParameters((), {}),
+                loglines=["C critical error"],
+                found=True,
+                max_filesize=logwatch._LOGWATCH_MAX_FILESIZE,  # noqa: SLF001
+                host_name="test-host",
+                is_preview=True,
+            )
+        )
+        assert result == [
+            Result(state=State.CRIT, summary='1 CRIT messages (Last worst: "critical error")')
+        ]
+        assert not logwatch._logmsg_file_path(tmp_path, item, "test-host").exists()  # noqa: SLF001
+
+
+@pytest.mark.usefixtures("logmsg_file_path")
+def test_check_logwatch_generic_preview_existing_file_unchanged(tmp_path: Path) -> None:
+    """In preview mode, an existing logmsg file is read for history but not modified."""
+    with _logwatch_state(_LogwatchConfigDummy(msg_dir=tmp_path)):
+        item = "/tmp/app.log"
+        # Normal run to populate the cache file.
+        list(
+            logwatch.check_logwatch_generic(
+                item=item,
+                reclassify_parameters=logwatch_.ReclassifyParameters((), {}),
+                loglines=["C existing error"],
+                found=True,
+                max_filesize=logwatch._LOGWATCH_MAX_FILESIZE,  # noqa: SLF001
+                host_name="test-host",
+                is_preview=False,
+            )
+        )
+        file_path = logwatch._logmsg_file_path(tmp_path, item, "test-host")  # noqa: SLF001
+        original_content = file_path.read_text()
+
+        # Preview run with new lines — file must remain unchanged.
+        result = list(
+            logwatch.check_logwatch_generic(
+                item=item,
+                reclassify_parameters=logwatch_.ReclassifyParameters((), {}),
+                loglines=["C new error seen only in preview"],
+                found=True,
+                max_filesize=logwatch._LOGWATCH_MAX_FILESIZE,  # noqa: SLF001
+                host_name="test-host",
+                is_preview=True,
+            )
+        )
+        assert result  # results are still yielded
+        assert file_path.read_text() == original_content

@@ -47,10 +47,11 @@ CHECK_DEFAULT_PARAMETERS: logwatch.PreDictLogwatchEc = {
     "method": "",  # local site
     "monitor_logfilelist": False,
     "monitor_logfile_access_state": 2,
-    # These next two entries will be postprocessed by the backend.
+    # These next three entries will be postprocessed by the backend.
     # Don't try this hack at home, we are trained professionals.
     "service_level": ("cmk_postprocessed", "service_level", None),
     "host_name": ("cmk_postprocessed", "host_name", None),
+    "is_preview": ("cmk_postprocessed", "is_preview", None),
 }
 
 
@@ -301,6 +302,7 @@ def check_logwatch_ec_common(
     yield from logwatch.check_errors(parsed)
 
     host_name = params["host_name"]
+    is_preview = params["is_preview"]
 
     log_filter = logwatch.LogFileFilter([params])
 
@@ -385,42 +387,46 @@ def check_logwatch_ec_common(
             )
             forwarded_logfiles.add(logfile)
 
-    try:
-        if forwarded_logfiles:
-            logfile_info = " from " + ", ".join(sorted(forwarded_logfiles))
-        else:
-            logfile_info = ""
+    logfile_info = (" from " + ", ".join(sorted(forwarded_logfiles))) if forwarded_logfiles else ""
 
-        result = message_forwarder(params["method"], syslog_messages, timestamp)
-
+    if is_preview:
         yield Result(
             state=State.OK,
-            summary="Forwarded %d messages%s" % (result.num_forwarded, logfile_info),
+            summary="Preview: %d messages would be forwarded%s"
+            % (len(syslog_messages), logfile_info),
         )
-        yield Metric("messages", result.num_forwarded)
+    else:
+        try:
+            result = message_forwarder(params["method"], syslog_messages, timestamp)
 
-        exc_txt = " (%s)" % result.exception if result.exception else ""
-
-        if result.num_spooled:
             yield Result(
-                state=State.WARN,
-                summary="Spooled %d messages%s" % (result.num_spooled, exc_txt),
+                state=State.OK,
+                summary="Forwarded %d messages%s" % (result.num_forwarded, logfile_info),
             )
+            yield Metric("messages", result.num_forwarded)
 
-        if result.num_dropped:
+            exc_txt = " (%s)" % result.exception if result.exception else ""
+
+            if result.num_spooled:
+                yield Result(
+                    state=State.WARN,
+                    summary="Spooled %d messages%s" % (result.num_spooled, exc_txt),
+                )
+
+            if result.num_dropped:
+                yield Result(
+                    state=State.CRIT,
+                    summary="Dropped %d messages%s" % (result.num_dropped, exc_txt),
+                )
+
+        except Exception as exc:
+            if message_forwarder.debug:
+                raise
             yield Result(
                 state=State.CRIT,
-                summary="Dropped %d messages%s" % (result.num_dropped, exc_txt),
+                summary="Failed to forward messages (%s). Lost %d messages."
+                % (exc, len(syslog_messages)),
             )
-
-    except Exception as exc:
-        if message_forwarder.debug:
-            raise
-        yield Result(
-            state=State.CRIT,
-            summary="Failed to forward messages (%s). Lost %d messages."
-            % (exc, len(syslog_messages)),
-        )
 
     if rclfd_total:
         yield Result(

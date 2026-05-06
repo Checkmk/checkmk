@@ -99,6 +99,7 @@ DEFAULT_TEST_PARAMETERS = ParameterLogwatchEc(
         **logwatch_ec.CHECK_DEFAULT_PARAMETERS,
         "service_level": 10,
         "host_name": "test-host",
+        "is_preview": False,
     }
 )
 
@@ -137,7 +138,11 @@ def _logwatch_state(config: _LogwatchConfigDummy) -> Iterator[None]:
         (_STRING_TABLE_NO_MESSAGES, [], []),
         (
             _STRING_TABLE_NO_MESSAGES,
-            [ParameterLogwatchEc(host_name="irrelevant", service_level=10, separate_checks=True)],
+            [
+                ParameterLogwatchEc(
+                    host_name="irrelevant", service_level=10, is_preview=False, separate_checks=True
+                )
+            ],
             [
                 Service(item="log1", parameters={"expected_logfiles": ["log1"]}),
                 Service(item="log2", parameters={"expected_logfiles": ["log2"]}),
@@ -149,7 +154,10 @@ def _logwatch_state(config: _LogwatchConfigDummy) -> Iterator[None]:
             _STRING_TABLE_NO_MESSAGES,
             [
                 ParameterLogwatchEc(
-                    host_name="irrelevant", service_level=10, restrict_logfiles=[".*"]
+                    host_name="irrelevant",
+                    service_level=10,
+                    is_preview=False,
+                    restrict_logfiles=[".*"],
                 )
             ],
             [],
@@ -160,6 +168,7 @@ def _logwatch_state(config: _LogwatchConfigDummy) -> Iterator[None]:
                 ParameterLogwatchEc(
                     host_name="irrelevant",
                     service_level=10,
+                    is_preview=False,
                     restrict_logfiles=[".*"],
                     separate_checks=True,
                 ),
@@ -177,6 +186,7 @@ def _logwatch_state(config: _LogwatchConfigDummy) -> Iterator[None]:
                 ParameterLogwatchEc(
                     host_name="irrelevant",
                     service_level=10,
+                    is_preview=False,
                     restrict_logfiles=[".*"],
                     separate_checks=False,
                 ),
@@ -187,7 +197,10 @@ def _logwatch_state(config: _LogwatchConfigDummy) -> Iterator[None]:
             _STRING_TABLE_NO_MESSAGES,
             [
                 ParameterLogwatchEc(
-                    host_name="irrelevant", service_level=10, restrict_logfiles=[".*"]
+                    host_name="irrelevant",
+                    service_level=10,
+                    is_preview=False,
+                    restrict_logfiles=[".*"],
                 ),
             ],
             [],
@@ -198,6 +211,7 @@ def _logwatch_state(config: _LogwatchConfigDummy) -> Iterator[None]:
                 ParameterLogwatchEc(
                     host_name="irrelevant",
                     service_level=10,
+                    is_preview=False,
                     restrict_logfiles=["log1"],
                     separate_checks=True,
                     method="pass me on!",
@@ -245,12 +259,23 @@ def test_logwatch_ec_inventory_single(
         (_STRING_TABLE_NO_MESSAGES, [], []),
         (
             _STRING_TABLE_NO_MESSAGES,
-            [ParameterLogwatchEc(host_name="irrelevant", service_level=10, separate_checks=True)],
+            [
+                ParameterLogwatchEc(
+                    host_name="irrelevant", service_level=10, is_preview=False, separate_checks=True
+                )
+            ],
             [],
         ),
         (
             _STRING_TABLE_NO_MESSAGES,
-            [ParameterLogwatchEc(host_name="irrelevant", service_level=10, separate_checks=False)],
+            [
+                ParameterLogwatchEc(
+                    host_name="irrelevant",
+                    service_level=10,
+                    is_preview=False,
+                    separate_checks=False,
+                )
+            ],
             [
                 Service(parameters={"expected_logfiles": ["log1", "log2", "log4", "log5"]}),
             ],
@@ -261,6 +286,7 @@ def test_logwatch_ec_inventory_single(
                 ParameterLogwatchEc(
                     host_name="irrelevant",
                     service_level=10,
+                    is_preview=False,
                     restrict_logfiles=[".*[12]"],
                     separate_checks=False,
                 )
@@ -322,6 +348,7 @@ class _FakeForwarder(MessageForwarder):
                 "expected_logfiles": ["log4"],
                 "host_name": "test-host",
                 "service_level": 10,
+                "is_preview": False,
             },
             {"node1": parse_logwatch(_STRING_TABLE_NO_MESSAGES)},
             [
@@ -382,6 +409,7 @@ def test_check_logwatch_ec_common_single_node_log_missing() -> None:
                     "expected_logfiles": ["log3"],
                     "service_level": 10,
                     "host_name": "test-host",
+                    "is_preview": False,
                 },
                 {
                     "node1": parse_logwatch(_STRING_TABLE_MESSAGES_LOG5),
@@ -489,14 +517,18 @@ def test_check_logwatch_ec_common_multiple_nodes_grouped(
             id="messages on one node",
         ),
         pytest.param(
-            {
-                "facility": 17,  # default to "local1"
-                "method": "",  # local site
-                "monitor_logfilelist": False,
-                "monitor_logfile_access_state": 2,
-                "expected_logfiles": ["log4"],
-                "service_level": 10,
-            },
+            ParameterLogwatchEc(
+                {
+                    "facility": 17,  # default to "local1"
+                    "method": "",  # local site
+                    "monitor_logfilelist": False,
+                    "monitor_logfile_access_state": 2,
+                    "expected_logfiles": ["log4"],
+                    "service_level": 10,
+                    "host_name": "test-host",
+                    "is_preview": False,
+                }
+            ),
             {
                 "node1": parse_logwatch(_STRING_TABLE_NO_MESSAGES),
                 "node2": parse_logwatch(_STRING_TABLE_MESSAGES_LOG1),
@@ -608,6 +640,7 @@ def test_check_logwatch_ec_common_multiple_nodes_logfile_missing() -> None:
                     "expected_logfiles": ["log3"],
                     "service_level": 10,
                     "host_name": "test-host",
+                    "is_preview": False,
                 },
                 {
                     "node1": parse_logwatch(_STRING_TABLE_MESSAGES_LOG1),
@@ -631,10 +664,7 @@ def test_check_logwatch_ec_common_spool(monkeypatch: pytest.MonkeyPatch, tmp_pat
         assert list(
             logwatch_ec.check_logwatch_ec_common(
                 "log1",
-                {
-                    **DEFAULT_TEST_PARAMETERS,
-                    "method": "spool:",
-                },
+                ParameterLogwatchEc({**DEFAULT_TEST_PARAMETERS, "method": "spool:"}),
                 {
                     "node1": SECTION1,
                 },
@@ -691,3 +721,40 @@ def test_check_logwatch_ec_common_batch_stored() -> None:
             "batch_id_occuring_in_bar",
             "batch_id_occuring_in_foo",
         )
+
+
+class _RaisingForwarder(MessageForwarder):
+    """Forwarder that fails the test if called — used to assert forwarding is skipped."""
+
+    def __init__(self) -> None:
+        pass
+
+    @property
+    def debug(self) -> bool:
+        return False
+
+    def __call__(
+        self,
+        method: str | tuple,
+        messages: Sequence[SyslogMessage],
+        timestamp: float,
+    ) -> ForwardedResult:
+        raise AssertionError("message_forwarder must not be called in preview mode")
+
+
+def test_check_logwatch_ec_common_preview_does_not_forward() -> None:
+    """In preview mode, messages are not forwarded and a summary of what would be sent is shown."""
+    with _logwatch_state(_LogwatchConfigDummy()):
+        result = list(
+            logwatch_ec.check_logwatch_ec_common(
+                "log1",
+                ParameterLogwatchEc({**DEFAULT_TEST_PARAMETERS, "is_preview": True}),
+                {"node1": parse_logwatch(_STRING_TABLE_MESSAGES_LOG1)},
+                logwatch_ec.check_plugin_logwatch_ec_single,
+                value_store={},
+                message_forwarder=_RaisingForwarder(),
+            )
+        )
+    assert result == [
+        Result(state=State.OK, summary="Preview: 2 messages would be forwarded from log1"),
+    ]

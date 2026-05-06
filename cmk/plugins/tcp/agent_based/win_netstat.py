@@ -45,6 +45,12 @@ win_netstat_states = {
     "HERGESTELLT": "ESTABLISHED",
     "WARTEND": "TIME_WAIT",
     "SCHLIESSEN_WARTEN": "CLOSE_WAIT",
+    "SYN_GESENDET": "SYN_SENT",
+    "SYN_EMPFANGEN": "SYN_RECV",
+    # Windows netstat uses underscore before digit (FIN_WAIT_1, FIN_WAIT_2),
+    # but ConnectionState enum uses FIN_WAIT1, FIN_WAIT2.
+    "FIN_WAIT_1": "FIN_WAIT1",
+    "FIN_WAIT_2": "FIN_WAIT2",
     # Add further states in any required language here. Sorry, Windows
     # has no "unset LANG" ;-)
 }

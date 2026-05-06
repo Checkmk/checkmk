@@ -34,6 +34,12 @@ _Section3 = SectionPaloAlto(
     ha_peer_state="unknown",
     ha_mode="disabled",
 )
+_Section4 = SectionPaloAlto(
+    firmware_version="5.0.6",
+    ha_local_state="passive",
+    ha_peer_state="initial",
+    ha_mode="active-passive",
+)
 
 
 def test_parse() -> None:
@@ -77,6 +83,16 @@ def test_discover() -> None:
                 Result(state=State.OK, notice="HA peer state: unknown"),
             ],
             id="mode disabled",
+        ),
+        pytest.param(
+            _Section4,
+            [
+                Result(state=State.OK, summary="Firmware Version: 5.0.6"),
+                Result(state=State.OK, summary="HA mode: active-passive"),
+                Result(state=State.OK, summary="HA local state: passive"),
+                Result(state=State.WARN, notice="HA peer state: initial"),
+            ],
+            id="mode initial",
         ),
     ],
 )

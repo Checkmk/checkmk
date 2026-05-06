@@ -151,12 +151,17 @@ defineExpose({ runActions })
 
 <template>
   <div class="mode-otel-finalize-configuration">
-    <ul class="mode-otel-finalize-configuration__items">
+    <ul
+      class="mode-otel-finalize-configuration__items"
+      role="list"
+      :aria-busy="state === 'running'"
+    >
       <li
         v-for="item in items"
         :key="item.key"
         class="mode-otel-finalize-configuration__item"
         :class="`mode-otel-finalize-configuration__item--${item.state}`"
+        role="listitem"
       >
         <span class="mode-otel-finalize-configuration__item-icon">
           <CmkIcon v-if="item.state === 'success'" name="check" size="small" variant="inline" />

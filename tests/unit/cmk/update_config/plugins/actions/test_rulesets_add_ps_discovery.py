@@ -8,20 +8,13 @@ import logging
 import pytest
 
 from cmk.gui.watolib.hosts_and_folders import folder_tree
-from cmk.gui.watolib.rulesets import Rule, RuleConditions, RuleOptions, Ruleset, RulesetCollection
+from cmk.gui.watolib.rulesets import Rule, Ruleset, RulesetCollection
 from cmk.gui.watolib.sample_config import INVENTORY_PROCESS_DISCOVERY_RULES
-from cmk.gui.watolib.sample_config._constants import _PS_COMMON_OPTS
 from cmk.update_config.plugins.actions.rulesets_add_ps_discovery import (
     _NEW_DEFAULT_RULE_IDS,
     add_ps_discovery_rules,
-    AUTOMATION_HELPER_RULE_ID,
-    OTEL_COLLECTOR_RULE_ID,
-    overwrite_ps_discovery_rules,
-    PROXMOX_RULE_IDS,
     PS_DISCOVERY_RULE_NAME,
-    RABBITMQ_RULE_ID,
     rule_present,
-    UI_JOB_SCHEDULER_RULE_ID,
 )
 
 
@@ -64,19 +57,6 @@ def test_update_with_one_preexisting_adds_new_defaults() -> None:
 
 
 @pytest.mark.usefixtures("request_context")
-def test_update_with_preexisting_ui_job_scheduler() -> None:
-    rulesets = _make_ruleset_collection_with_preexisting_rule(UI_JOB_SCHEDULER_RULE_ID)
-    assert rulesets.get_rulesets()[PS_DISCOVERY_RULE_NAME].num_rules() == 1
-
-    add_ps_discovery_rules(logging.getLogger(), rulesets)
-
-    ruleset = rulesets.get_rulesets()[PS_DISCOVERY_RULE_NAME]
-    assert ruleset.num_rules() == 1 + len(PROXMOX_RULE_IDS) + 1  # +1 for otel-collector
-    assert rule_present(ruleset, UI_JOB_SCHEDULER_RULE_ID)
-    assert rule_present(ruleset, OTEL_COLLECTOR_RULE_ID)
-
-
-@pytest.mark.usefixtures("request_context")
 def test_update_with_all_preexisting_adds_nothing() -> None:
     ruleset = Ruleset(PS_DISCOVERY_RULE_NAME)
     folder = folder_tree().root_folder()
@@ -94,79 +74,3 @@ def test_update_with_all_preexisting_adds_nothing() -> None:
     assert rulesets.get_rulesets()[PS_DISCOVERY_RULE_NAME].num_rules() == len(
         INVENTORY_PROCESS_DISCOVERY_RULES
     )
-
-
-@pytest.mark.usefixtures("request_context")
-@pytest.mark.parametrize(
-    ["rule_id", "preexisting", "expected"],
-    [
-        pytest.param(
-            RABBITMQ_RULE_ID,
-            None,
-            "~(?:.*bin/rabbitmq-server)",
-            id="no preexisting rule for rabbitmq",
-        ),
-        pytest.param(
-            RABBITMQ_RULE_ID,
-            "~(?:/omd/versions/.*/lib/erlang)|(?:.*bin/rabbitmq)",
-            "~(?:.*bin/rabbitmq-server)",
-            id="overwrite old default value in rule for rabbitmq",
-        ),
-        pytest.param(
-            RABBITMQ_RULE_ID,
-            "foobar",
-            "foobar",
-            id="keep manually changed value in rule for rabbitmq",
-        ),
-        pytest.param(
-            AUTOMATION_HELPER_RULE_ID,
-            None,
-            "~(?:.*cmk-automation-helper.*|gunicorn:.*automation-helper)",
-            id="no preexisting rule for automation helper",
-        ),
-        pytest.param(
-            AUTOMATION_HELPER_RULE_ID,
-            "~gunicorn:.*automation-helper",
-            "~(?:.*cmk-automation-helper.*|gunicorn:.*automation-helper)",
-            id="overwrite old default value in rule for automation helper",
-        ),
-        pytest.param(
-            AUTOMATION_HELPER_RULE_ID,
-            "foobar",
-            "foobar",
-            id="keep manually changed value in rule for automation helper",
-        ),
-    ],
-)
-def test_update_rule_default(rule_id: str, preexisting: str | None, expected: str) -> None:
-    ruleset = Ruleset(PS_DISCOVERY_RULE_NAME)
-    if preexisting is not None:
-        folder = folder_tree().root_folder()
-        ruleset.append_rule(
-            folder,
-            Rule(
-                id_=rule_id,
-                folder=folder,
-                ruleset=ruleset,
-                conditions=RuleConditions(folder.path()),
-                options=RuleOptions(
-                    disabled=False,
-                    description="",
-                    comment="",
-                    docu_url="",
-                    predefined_condition_id=None,
-                ),
-                value={"descr": "Something", "match": preexisting, **_PS_COMMON_OPTS},
-            ),
-        )
-
-    overwrite_ps_discovery_rules(
-        logging.getLogger(), RulesetCollection({PS_DISCOVERY_RULE_NAME: ruleset})
-    )
-
-    if preexisting is None:
-        assert ruleset.num_rules() == 0
-    else:
-        assert ruleset.num_rules() == 1
-        rule = ruleset.get_rule_by_id(rule_id)
-        assert rule.value["match"] == expected

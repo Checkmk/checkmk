@@ -14,21 +14,7 @@ from cmk.update_config.lib import ExpiryVersion
 from cmk.update_config.registry import update_action_registry, UpdateAction
 
 PS_DISCOVERY_RULE_NAME = "inventory_processes_rules"
-RABBITMQ_RULE_ID = "65a3dca4-8d71-45d8-8887-53ef0c63d06f"
-AUTOMATION_HELPER_RULE_ID = "94190e27-2836-488a-b6b4-f23f694a455e"
-UI_JOB_SCHEDULER_RULE_ID = "8b5616fb-a457-404e-a136-24065da7f170"
-OTEL_COLLECTOR_RULE_ID = "a0a69c72-d9ba-412a-a8cb-7a9a6abb4c6b"
-PROXMOX_RULE_IDS = frozenset(
-    {
-        "c7850d9b-847b-4ae6-b1a7-dc7b1d82a04e",
-        "bed89ece-0997-4052-ac1e-9a0ce369dd8a",
-        "e041c6f5-3b62-4de0-b4da-6e031c820c7c",
-        "23bd2fc2-a834-421c-8b7f-c790377f9d59",
-    }
-)
-_NEW_DEFAULT_RULE_IDS = (
-    frozenset({UI_JOB_SCHEDULER_RULE_ID, OTEL_COLLECTOR_RULE_ID}) | PROXMOX_RULE_IDS
-)
+_NEW_DEFAULT_RULE_IDS = frozenset[str]()
 
 
 class UpdatePSDiscovery(UpdateAction):
@@ -36,7 +22,6 @@ class UpdatePSDiscovery(UpdateAction):
     def __call__(self, logger: Logger) -> None:
         all_rulesets = AllRulesets.load_all_rulesets()
         add_ps_discovery_rules(logger, all_rulesets)
-        overwrite_ps_discovery_rules(logger, all_rulesets)
         all_rulesets.save(pprint_value=active_config.wato_pprint_config, debug=active_config.debug)
 
 
@@ -65,13 +50,6 @@ def add_new_default_rules(logger: Logger, ps_discovery_rules: Ruleset, root_fold
         if rule["id"] not in _NEW_DEFAULT_RULE_IDS or rule_present(ps_discovery_rules, rule["id"]):
             continue
 
-        if rule["id"] == UI_JOB_SCHEDULER_RULE_ID:
-            rule["options"]["comment"] = (
-                "This rule is shipped with Checkmk. It is added to give insights on the resource"
-                " usage of Checkmk servers. If you do not want this service, consider disabling"
-                " this rule, rather than deleting it. It will be added again during future"
-                " updates."
-            )
         logger.info("Adding: %s", rule["options"]["description"])
         ps_discovery_rules.prepend_rule(
             root_folder, Rule.from_config(root_folder, ps_discovery_rules, rule)
@@ -99,27 +77,6 @@ def overwrite_ps_discovery_rule(
         logger.info("Overwriting default value: %s", rule.rule_options.description)
     else:
         logger.debug("Rule for %s was changed. Nothing to do.", ps_descr)
-
-
-def overwrite_ps_discovery_rules(logger: Logger, all_rulesets: RulesetCollection) -> None:
-    if (ps_discovery_rules := all_rulesets.get_rulesets().get(PS_DISCOVERY_RULE_NAME)) is None:
-        return
-
-    rabbitmq_old_rule_match = "~(?:/omd/versions/.*/lib/erlang)|(?:.*bin/rabbitmq)"
-    rabbitmq_ps_descr = "self-monitoring of RabbitMQ"
-    overwrite_ps_discovery_rule(
-        logger, ps_discovery_rules, RABBITMQ_RULE_ID, rabbitmq_old_rule_match, rabbitmq_ps_descr
-    )
-
-    automation_helper_old_rule_match = "~gunicorn:.*automation-helper"
-    automation_helper_logging_id = "self-monitoring of automation helper"
-    overwrite_ps_discovery_rule(
-        logger,
-        ps_discovery_rules,
-        AUTOMATION_HELPER_RULE_ID,
-        automation_helper_old_rule_match,
-        automation_helper_logging_id,
-    )
 
 
 def rule_present(current_rules: Ruleset, rule_id: str) -> bool:

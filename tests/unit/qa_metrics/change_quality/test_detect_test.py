@@ -7,7 +7,11 @@ from __future__ import annotations
 
 import pytest
 
-from tests.qa_metrics.change_quality.detect_test import has_test_for_paths, is_test_path
+from tests.qa_metrics.change_quality.detect_test import (
+    attribute_test_for_change,
+    has_test_for_paths,
+    is_test_path,
+)
 
 
 @pytest.mark.parametrize(
@@ -55,3 +59,30 @@ def test_has_test_for_paths_none_match() -> None:
 
 def test_has_test_for_paths_empty() -> None:
     assert has_test_for_paths([]) is False
+
+
+@pytest.mark.parametrize(
+    "files_changed",
+    [
+        (".werks/19499.md",),
+        (".werks/19499",),
+        (".werks/19499", ".werks/19500.md"),
+        (),
+    ],
+)
+def test_attribute_test_for_change_returns_none_when_no_signal(
+    files_changed: tuple[str, ...],
+) -> None:
+    """Werk-add-only commits carry no signal: emit NULL, not False."""
+    assert attribute_test_for_change(files_changed) is None
+
+
+def test_attribute_test_for_change_true_when_test_present() -> None:
+    assert (
+        attribute_test_for_change((".werks/19499.md", "cmk/foo.py", "tests/unit/cmk/test_foo.py"))
+        is True
+    )
+
+
+def test_attribute_test_for_change_false_when_only_non_werk_non_test_files() -> None:
+    assert attribute_test_for_change((".werks/19499.md", "cmk/foo.py")) is False

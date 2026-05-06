@@ -221,7 +221,7 @@ def build_row(
         subject=info.subject or None,
         gerrit_change_id=info.gerrit_change_id,
         source_component=components.pick_component(info.files_changed, component_map),
-        has_test=detect_test.has_test_for_paths(info.files_changed),
+        has_test=detect_test.attribute_test_for_change(info.files_changed),
         files_changed=len(info.files_changed),
     )
 

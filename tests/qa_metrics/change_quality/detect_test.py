@@ -32,3 +32,18 @@ def is_test_path(path: str) -> bool:
 def has_test_for_paths(paths: Iterable[str]) -> bool:
     """True if any path in ``paths`` matches our test-file heuristic."""
     return any(is_test_path(p) for p in paths)
+
+
+def attribute_test_for_change(files_changed: Iterable[str]) -> bool | None:
+    """Like ``has_test_for_paths`` but returns ``None`` when no signal is available.
+
+    A commit whose only changes are ``.werks/<id>(.md)`` files (the werk-add
+    commit pattern: push fix, then push werk in a separate commit) carries no
+    signal about whether the actual fix had a test. Returning ``None`` rather
+    than False avoids the silent false-negatives we'd otherwise emit for that
+    workflow -- consumers should treat NULL as "unknown", not as "no test".
+    """
+    files = list(files_changed)
+    if not any(not p.startswith(".werks/") for p in files):
+        return None
+    return has_test_for_paths(files)

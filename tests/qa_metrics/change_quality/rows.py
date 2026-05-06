@@ -31,7 +31,7 @@ class ChangeTestedRow:
     subject: str | None
     gerrit_change_id: str | None
     source_component: str | None
-    has_test: bool
+    has_test: bool | None
     files_changed: int
 
     def to_db_dict(self) -> dict[str, Any]:

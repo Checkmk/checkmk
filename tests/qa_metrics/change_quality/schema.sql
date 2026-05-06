@@ -22,7 +22,10 @@ CREATE TABLE IF NOT EXISTS cmk_change_tested (
     gerrit_change_id VARCHAR,
     -- derived
     source_component VARCHAR,
-    has_test         BOOLEAN NOT NULL,
+    -- has_test is NULL when the commit changed only .werks/<id> files: in that
+    -- case the fix is in a separate commit and we have no signal. Treat NULL
+    -- as "unknown", not as False, in any consumer queries.
+    has_test         BOOLEAN,
     files_changed    INTEGER NOT NULL,
     -- Provenance: set on first INSERT (DB DEFAULT). Not in the row dataclass,
     -- so ON CONFLICT DO UPDATE leaves it untouched -- it tracks "first seen",
@@ -31,6 +34,10 @@ CREATE TABLE IF NOT EXISTS cmk_change_tested (
     PRIMARY KEY (werk_id, branch)
 );
 
+-- Migration for deployments created before has_test became nullable: drop
+-- the NOT NULL constraint idempotently. No-op on fresh tables.
+ALTER TABLE cmk_change_tested ALTER COLUMN has_test DROP NOT NULL;
+
 CREATE INDEX IF NOT EXISTS idx_cmk_change_tested_werk_date        ON cmk_change_tested(werk_date);
 CREATE INDEX IF NOT EXISTS idx_cmk_change_tested_werk_class       ON cmk_change_tested(werk_class);
 CREATE INDEX IF NOT EXISTS idx_cmk_change_tested_werk_component   ON cmk_change_tested(werk_component);
@@ -38,5 +45,6 @@ CREATE INDEX IF NOT EXISTS idx_cmk_change_tested_source_component ON cmk_change_
 CREATE INDEX IF NOT EXISTS idx_cmk_change_tested_branch           ON cmk_change_tested(branch);
 
 COMMENT ON TABLE cmk_change_tested IS
-  'Per-werk record of whether the introducing commit included a test file. '
+  'Per-werk record of whether the change included a test file. '
+  'has_test=NULL means no signal (werk added in a separate commit from the fix). '
   'PK (werk_id, branch) - cherry-picks produce one row per branch.';

@@ -34,7 +34,7 @@ from cmk.gui.openapi.framework.model.omitted import ApiOmitted
 from cmk.gui.valuespec import TimerangeValue
 from cmk.gui.watolib.hosts_and_folders import Folder, folder_tree
 from cmk.livestatus_client.expressions import QueryExpression
-from cmk.livestatus_client.types import Table
+from cmk.livestatus_client.types import Column, Table
 
 type AnnotatedHostName = Annotated[
     HostName,
@@ -436,7 +436,7 @@ def query_expression_validator(table: type[Table]) -> PlainValidator:
 
     def _parse(value: object) -> QueryExpression:
         if not isinstance(value, str | dict):
-            raise TypeError(f"Expected str or dict, got {value!r}")
+            raise ValueError(f"Expected str or dict, got {value!r}")
         if isinstance(value, str):
             try:
                 data: Mapping[str, object] = json.loads(value)
@@ -450,3 +450,48 @@ def query_expression_validator(table: type[Table]) -> PlainValidator:
             raise ValueError(str(e)) from e
 
     return PlainValidator(func=_parse, json_schema_input_type=str | dict[str, object])
+
+
+def columns_validator(
+    table: type[Table],
+    mandatory: list[Column | str] | None = None,
+) -> PlainValidator:
+    """Returns a pydantic PlainValidator that validates a list of Livestatus column names.
+
+    Equivalent to the marshmallow-based `column_field` for use in the new dataclass-based
+    framework. Intended to be used inside an annotation:
+    `Annotated[list[Column], columns_validator(Hosts, mandatory=[Hosts.name])]`
+
+    Accepts a list of column-name strings, validates each against the table, converts to Column
+    objects, and prepends any mandatory columns that are missing from the list.
+
+    Args:
+        table:     A Livestatus Table class used to validate column names.
+        mandatory: Columns that must always be present; prepended in order if absent.
+    """
+    _mandatory: list[str] = []
+    if mandatory:
+        for col in mandatory:
+            name = col.name if isinstance(col, Column) else col
+            if name not in table.__columns__():
+                raise ValueError(
+                    f"Mandatory column {name!r} is not a column of table {table.__tablename__!r}"
+                )
+            _mandatory.append(name)
+
+    def _parse(value: object) -> list[Column]:
+        if not isinstance(value, list):
+            raise ValueError(f"Expected list, got {type(value).__name__!r}")
+        columns: list[str] = []
+        for item in value:
+            if not isinstance(item, str):
+                raise ValueError(f"Expected str column name, got {type(item).__name__!r}")
+            if item not in table.__columns__():
+                raise ValueError(f"Unknown column {item!r} for table {table.__tablename__!r}")
+            columns.append(item)
+        for mand in reversed(_mandatory):
+            if mand not in columns:
+                columns.insert(0, mand)
+        return [getattr(table, col) for col in columns]
+
+    return PlainValidator(func=_parse, json_schema_input_type=list[str])

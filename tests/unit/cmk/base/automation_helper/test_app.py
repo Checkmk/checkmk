@@ -20,6 +20,7 @@ from fastapi.testclient import TestClient
 from pytest_mock import MockerFixture
 from starlette import status
 
+import cmk.utils.paths  # used in lambdas below
 from cmk.automations.models.helper import AutomationPayload, AutomationResponse
 from cmk.automations.results import ABCAutomationResult, SerializedResult
 from cmk.automations.types import AutomationID
@@ -260,7 +261,13 @@ def test_health_check(cache: Cache) -> None:
         cache,
         lambda plugins, get_builtin_host_labels: LoadingResult(
             loaded_config=loaded_config,
-            config_cache=ConfigCache(loaded_config, get_builtin_host_labels, Edition.COMMUNITY),
+            config_cache=ConfigCache(
+                loaded_config,
+                get_builtin_host_labels,
+                Edition.COMMUNITY,
+                autochecks_dir=cmk.utils.paths.autochecks_dir,
+                discovered_host_labels_dir=cmk.utils.paths.discovered_host_labels_dir,
+            ),
         ),
         lambda ruleset_matcher: None,
     ) as client:
@@ -461,7 +468,13 @@ def test_automation_cache_error_on_stale_config() -> None:
         FailingCache(fakeredis.FakeRedis()),
         lambda plugins, get_builtin_host_labels: LoadingResult(
             loaded_config=EMPTY_CONFIG,
-            config_cache=ConfigCache(EMPTY_CONFIG, get_builtin_host_labels, Edition.COMMUNITY),
+            config_cache=ConfigCache(
+                EMPTY_CONFIG,
+                get_builtin_host_labels,
+                Edition.COMMUNITY,
+                autochecks_dir=cmk.utils.paths.autochecks_dir,
+                discovered_host_labels_dir=cmk.utils.paths.discovered_host_labels_dir,
+            ),
         ),
         lambda ruleset_matcher: None,
     ) as client:

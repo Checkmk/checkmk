@@ -1447,7 +1447,9 @@ def _mode_flush(app: CheckmkBaseApp, hosts: list[HostName]) -> None:
 
         # autochecks
         count = sum(
-            remove_autochecks_of_host(node, host, effective_host_callback)
+            remove_autochecks_of_host(
+                node, host, effective_host_callback, cmk.utils.paths.autochecks_dir
+            )
             for node in (config_cache.nodes(host) or [host])
         )
         # config_cache.remove_autochecks(host)
@@ -2283,6 +2285,8 @@ def _mode_check_discovery(
                 ),
                 autochecks_config=autochecks_config,
                 enforced_services=enforced_services_table(hostname),
+                autochecks_dir=cmk.utils.paths.autochecks_dir,
+                discovered_host_labels_dir=cmk.utils.paths.discovered_host_labels_dir,
             )
         check_results = [
             *check_results,
@@ -2655,6 +2659,8 @@ def _mode_discover(app: CheckmkBaseApp, options: _DiscoveryOptions, args: list[s
             arg_only_new=options["discover"] == 1,
             only_host_labels="only-host-labels" in options,
             on_error=on_error,
+            autochecks_dir=cmk.utils.paths.autochecks_dir,
+            discovered_host_labels_dir=cmk.utils.paths.discovered_host_labels_dir,
         )
 
 

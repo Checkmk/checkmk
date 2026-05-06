@@ -2614,6 +2614,8 @@ def test_load_config_folder_paths(folder_path_test_config: LoadedConfigFragment)
         folder_path_test_config,
         (app := make_app()).get_builtin_host_labels,
         app.edition,
+        autochecks_dir=cmk.utils.paths.autochecks_dir,
+        discovered_host_labels_dir=cmk.utils.paths.discovered_host_labels_dir,
     )
 
     assert config_cache.host_path(HostName("main-host")) == "/"

@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import cmk.utils.paths
 from cmk.base.configlib.loaded_config import LoadedConfigFragment
 from cmk.base.core.nagios._create_config import NagiosCoreConfig
 from cmk.utils.labels import ABCLabelConfig, LabelManager, Labels
@@ -269,7 +270,13 @@ class EmptyLabelConfig(ABCLabelConfig):
 
 
 def make_trivial_label_manager() -> LabelManager:
-    return LabelManager(EmptyLabelConfig(), {}, {}, {})
+    return LabelManager(
+        EmptyLabelConfig(),
+        {},
+        {},
+        {},
+        discovered_host_labels_dir=cmk.utils.paths.discovered_host_labels_dir,
+    )
 
 
 def make_trivial_ruleset_matcher() -> RulesetMatcher:

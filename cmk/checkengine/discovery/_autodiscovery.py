@@ -13,7 +13,6 @@ from pathlib import Path
 from typing import assert_never, Literal
 
 import cmk.ccc.debug
-import cmk.utils.paths
 from cmk.ccc.exceptions import MKGeneralException, MKTimeout, OnError
 from cmk.ccc.hostaddress import HostName
 from cmk.checkengine.fetcher import FetcherFunction, HostKey
@@ -148,6 +147,8 @@ def automation_discovery(
     enforced_services: Container[ServiceID],
     on_error: OnError,
     section_error_handling: Callable[[SectionName, Sequence[object]], str],
+    autochecks_dir: Path,
+    discovered_host_labels_dir: Path,
 ) -> DiscoveryReport:
     console.verbose(f"  Doing discovery with '{settings!r}'...")
     results = {
@@ -184,7 +185,7 @@ def automation_discovery(
 
         if settings.update_host_labels and not is_cluster:
             host_labels = QualifiedDiscovery[HostLabel](
-                preexisting=DiscoveredHostLabelsStore(host_name).load(),
+                preexisting=DiscoveredHostLabelsStore(host_name, discovered_host_labels_dir).load(),
                 current=discover_host_labels(
                     host_name,
                     host_label_plugins,
@@ -192,7 +193,9 @@ def automation_discovery(
                     on_error=on_error,
                 ),
             )
-            DiscoveredHostLabelsStore(host_name).save(host_labels.present)
+            DiscoveredHostLabelsStore(host_name, discovered_host_labels_dir).save(
+                host_labels.present
+            )
             if not service_changes_requested:
                 results[host_name].diff_text = _make_diff(
                     host_labels.vanished, host_labels.new, (), ()
@@ -201,10 +204,13 @@ def automation_discovery(
         else:
             unchanged_labels = (
                 merge_cluster_labels(
-                    [DiscoveredHostLabelsStore(node).load() for node in cluster_nodes]
+                    [
+                        DiscoveredHostLabelsStore(node, discovered_host_labels_dir).load()
+                        for node in cluster_nodes
+                    ]
                 )
                 if is_cluster
-                else DiscoveredHostLabelsStore(host_name).load()
+                else DiscoveredHostLabelsStore(host_name, discovered_host_labels_dir).load()
             )
             host_labels = QualifiedDiscovery(
                 preexisting=unchanged_labels,
@@ -219,12 +225,9 @@ def automation_discovery(
         services_by_host_name = get_host_services_by_host_name(
             host_name,
             existing_services=(
-                {
-                    n: AutochecksStore(n, cmk.utils.paths.autochecks_dir).read()
-                    for n in cluster_nodes
-                }
+                {n: AutochecksStore(n, autochecks_dir).read() for n in cluster_nodes}
                 if is_cluster
-                else {host_name: AutochecksStore(host_name, cmk.utils.paths.autochecks_dir).read()}
+                else {host_name: AutochecksStore(host_name, autochecks_dir).read()}
             ),
             discovered_services=discovery_by_host(
                 cluster_nodes if is_cluster else (host_name,),
@@ -269,9 +272,10 @@ def automation_discovery(
                 host_name,
                 new_services_by_host,
                 autochecks_config.effective_host,
+                autochecks_dir,
             )
         else:
-            set_autochecks_of_real_hosts(host_name, new_services_by_host[host_name])
+            set_autochecks_of_real_hosts(host_name, new_services_by_host[host_name], autochecks_dir)
 
         results[host_name].host_labels = TransitionCounter(
             new=len(host_labels.new),
@@ -485,6 +489,8 @@ def autodiscovery(
     oldest_queued: float,
     enforced_services: Container[ServiceID],
     on_error: OnError,
+    autochecks_dir: Path,
+    discovered_host_labels_dir: Path,
 ) -> AutodiscoveryResult:
     reason = _may_rediscover(
         rediscovery_parameters=rediscovery_parameters,
@@ -517,6 +523,8 @@ def autodiscovery(
         service_filters=ServiceFilters.from_settings(rediscovery_parameters),
         enforced_services=enforced_services,
         on_error=on_error,
+        autochecks_dir=autochecks_dir,
+        discovered_host_labels_dir=discovered_host_labels_dir,
     )
     if result.error_text is not None:
         # for offline hosts the error message is empty. This is to remain

@@ -7,10 +7,10 @@
 import itertools
 from collections import Counter
 from collections.abc import Callable, Container, Mapping, Sequence
+from pathlib import Path
 
 import cmk.ccc.cleanup
 import cmk.ccc.debug
-import cmk.utils.paths
 from cmk.ccc import tty
 from cmk.ccc.exceptions import MKGeneralException, OnError
 from cmk.ccc.hostaddress import HostName
@@ -53,6 +53,8 @@ def commandline_discovery(
     arg_only_new: bool,
     only_host_labels: bool = False,
     on_error: OnError,
+    autochecks_dir: Path,
+    discovered_host_labels_dir: Path,
 ) -> None:
     """Implementing cmk -I and cmk -II
 
@@ -86,6 +88,8 @@ def commandline_discovery(
             load_labels=arg_only_new,
             only_host_labels=only_host_labels,
             on_error=on_error,
+            autochecks_dir=autochecks_dir,
+            discovered_host_labels_dir=discovered_host_labels_dir,
         )
 
     except Exception as e:
@@ -109,17 +113,23 @@ def _commandline_discovery_on_host(
     load_labels: bool,
     only_host_labels: bool,
     on_error: OnError,
+    autochecks_dir: Path,
+    discovered_host_labels_dir: Path,
 ) -> None:
     section.section_step("Analyse discovered host labels")
 
     host_labels = QualifiedDiscovery[HostLabel](
-        preexisting=DiscoveredHostLabelsStore(real_host_name).load() if load_labels else (),
+        preexisting=(
+            DiscoveredHostLabelsStore(real_host_name, discovered_host_labels_dir).load()
+            if load_labels
+            else ()
+        ),
         current=discover_host_labels(
             real_host_name, host_label_plugins, providers=providers, on_error=on_error
         ),
     )
 
-    DiscoveredHostLabelsStore(real_host_name).save(host_labels.present)
+    DiscoveredHostLabelsStore(real_host_name, discovered_host_labels_dir).save(host_labels.present)
     if host_labels.new or host_labels.vanished:  # add 'changed' once it exists.
         # Rulesets for service discovery can match based on the hosts labels.
         # The ruleset matcher does not properly handle the case where the host labels
@@ -136,7 +146,7 @@ def _commandline_discovery_on_host(
 
     section.section_step("Analyse discovered services")
 
-    autocheck_store = AutochecksStore(real_host_name, cmk.utils.paths.autochecks_dir)
+    autocheck_store = AutochecksStore(real_host_name, autochecks_dir)
     candidates = find_plugins(
         providers,
         [

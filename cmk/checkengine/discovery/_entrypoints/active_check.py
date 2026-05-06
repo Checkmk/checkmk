@@ -13,7 +13,6 @@ from pathlib import Path
 from typing import Literal
 
 import cmk.ccc.resulttype as result
-import cmk.utils.paths
 from cmk.ccc.exceptions import OnError
 from cmk.ccc.hostaddress import HostName
 from cmk.checkengine.checkresults import ActiveCheckResult
@@ -111,6 +110,8 @@ def execute_check_discovery(
     autochecks_config: AutochecksConfig,
     section_error_handling: Callable[[SectionName, Sequence[object]], str],
     enforced_services: Container[ServiceID],
+    autochecks_dir: Path,
+    discovered_host_labels_dir: Path,
 ) -> Sequence[ActiveCheckResult]:
     # Note: '--cache' is set in core_cmc, nagios template or even on CL and means:
     # 1. use caches as default:
@@ -146,14 +147,14 @@ def execute_check_discovery(
                 for node_name in cluster_nodes
             },
             existing_host_labels={
-                node_name: DiscoveredHostLabelsStore(node_name).load()
+                node_name: DiscoveredHostLabelsStore(node_name, discovered_host_labels_dir).load()
                 for node_name in cluster_nodes
             },
         )
 
     else:
         host_labels = QualifiedDiscovery[HostLabel](
-            preexisting=DiscoveredHostLabelsStore(host_name).load(),
+            preexisting=DiscoveredHostLabelsStore(host_name, discovered_host_labels_dir).load(),
             current=discover_host_labels(
                 host_name,
                 host_label_plugins,
@@ -165,9 +166,9 @@ def execute_check_discovery(
     services_by_host = get_host_services_by_host_name(
         host_name,
         existing_services=(
-            {n: AutochecksStore(n, cmk.utils.paths.autochecks_dir).read() for n in cluster_nodes}
+            {n: AutochecksStore(n, autochecks_dir).read() for n in cluster_nodes}
             if is_cluster
-            else {host_name: AutochecksStore(host_name, cmk.utils.paths.autochecks_dir).read()}
+            else {host_name: AutochecksStore(host_name, autochecks_dir).read()}
         ),
         discovered_services=discovery_by_host(
             cluster_nodes if is_cluster else (host_name,), providers, plugins, OnError.RAISE

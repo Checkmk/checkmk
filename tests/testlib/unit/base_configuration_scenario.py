@@ -15,6 +15,7 @@ from typing import Any, override
 
 from pytest import MonkeyPatch
 
+import cmk.utils.paths
 import cmk.utils.tags
 from cmk.base import config
 from cmk.base.app import make_app
@@ -32,7 +33,7 @@ from tests.testlib.common.utils2 import get_standard_linux_agent_output
 
 class _AutochecksMocker(AutochecksMemoizer):
     def __init__(self) -> None:
-        super().__init__()
+        super().__init__(cmk.utils.paths.autochecks_dir)
         self.raw_autochecks: dict[HostName, Sequence[AutocheckEntry]] = {}
 
     @override
@@ -54,6 +55,8 @@ class Scenario:
             ),
             self.get_builtin_host_labels,
             self._edition,
+            autochecks_dir=cmk.utils.paths.autochecks_dir,
+            discovered_host_labels_dir=cmk.utils.paths.discovered_host_labels_dir,
         )
 
     def __init__(self, site_id: str = "unit", edition: Edition = Edition.COMMUNITY) -> None:

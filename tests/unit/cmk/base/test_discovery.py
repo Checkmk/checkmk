@@ -1718,13 +1718,15 @@ def test_commandline_discovery(monkeypatch: MonkeyPatch) -> None:
         ignore_plugin=lambda *args, **kw: False,
         arg_only_new=False,
         on_error=OnError.RAISE,
+        autochecks_dir=cmk.utils.paths.autochecks_dir,
+        discovered_host_labels_dir=cmk.utils.paths.discovered_host_labels_dir,
     )
 
     entries = AutochecksStore(testhost, cmk.utils.paths.autochecks_dir).read()
     found = {e.id(): e.service_labels for e in entries}
     assert found == _EXPECTED_SERVICES
 
-    store = DiscoveredHostLabelsStore(testhost)
+    store = DiscoveredHostLabelsStore(testhost, cmk.utils.paths.discovered_host_labels_dir)
     assert store.load() == _EXPECTED_HOST_LABELS
 
 
@@ -1749,7 +1751,7 @@ def _realhost_scenario(monkeypatch: MonkeyPatch) -> RealHostScenario:
     ts.add_host(hostname, ipaddress=HostAddress("127.0.0.1"))
     config_cache = ts.apply(monkeypatch)
 
-    DiscoveredHostLabelsStore(hostname).save(
+    DiscoveredHostLabelsStore(hostname, cmk.utils.paths.discovered_host_labels_dir).save(
         [
             HostLabel("existing_label", "bar", SectionName("foo")),
             HostLabel("another_label", "true", _TEST_LABELS_NAME),
@@ -1813,7 +1815,7 @@ def _cluster_scenario(monkeypatch: pytest.MonkeyPatch) -> ClusterScenario:
     )
     config_cache = ts.apply(monkeypatch)
 
-    DiscoveredHostLabelsStore(node1_hostname).save(
+    DiscoveredHostLabelsStore(node1_hostname, cmk.utils.paths.discovered_host_labels_dir).save(
         [HostLabel("node1_existing_label", "true", SectionName("node1_plugin"))]
     )
 
@@ -1906,7 +1908,9 @@ def test__discovery_considers_host_labels(
     realhost_scenario: RealHostScenario,
 ) -> None:
     # this takes the detour via ruleset matcher :-(
-    DiscoveredHostLabelsStore(realhost_scenario.hostname).save(host_labels)
+    DiscoveredHostLabelsStore(
+        realhost_scenario.hostname, cmk.utils.paths.discovered_host_labels_dir
+    ).save(host_labels)
 
     # unpack for readability
     host_name = realhost_scenario.hostname
@@ -2121,7 +2125,9 @@ def test__perform_host_label_discovery_on_realhost(
 
     host_label_result = QualifiedDiscovery[HostLabel](
         preexisting=(
-            DiscoveredHostLabelsStore(scenario.hostname).load()
+            DiscoveredHostLabelsStore(
+                scenario.hostname, cmk.utils.paths.discovered_host_labels_dir
+            ).load()
             if discovery_test_case.load_labels
             else ()
         ),
@@ -2201,7 +2207,12 @@ def test__perform_host_label_discovery_on_cluster(
             for node in nodes
         },
         existing_host_labels=(
-            {node: DiscoveredHostLabelsStore(node).load() for node in nodes}
+            {
+                node: DiscoveredHostLabelsStore(
+                    node, cmk.utils.paths.discovered_host_labels_dir
+                ).load()
+                for node in nodes
+            }
             if discovery_test_case.load_labels
             else {}
         ),

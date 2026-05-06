@@ -25,7 +25,7 @@ import sys
 import time
 import uuid
 from collections.abc import Callable, Container, Iterable, Iterator, Mapping, Sequence
-from contextlib import redirect_stderr, redirect_stdout, suppress
+from contextlib import nullcontext, redirect_stderr, redirect_stdout, suppress
 from dataclasses import asdict, dataclass
 from itertools import chain, islice
 from pathlib import Path
@@ -463,6 +463,8 @@ def _automation_service_discovery(
             service_filters=None,
             enforced_services=env.enforced_services_table(hostname),
             on_error=on_error,
+            autochecks_dir=autochecks_dir,
+            discovered_host_labels_dir=discovered_host_labels_dir,
         )
 
         if results[hostname].error_text is None:
@@ -966,6 +968,8 @@ def _execute_discovery(
             },
             on_error=on_error,
             timeperiods_active=checker_config.timeperiods_active,
+            autochecks_dir=autochecks_dir,
+            discovered_host_labels_dir=discovered_host_labels_dir,
         )
     return CheckPreview(
         table={
@@ -1264,6 +1268,8 @@ def _execute_autodiscovery(
                         oldest_queued=oldest_queued,
                         enforced_services=env.enforced_services_table(host_name),
                         on_error=on_error,
+                        autochecks_dir=autochecks_dir,
+                        discovered_host_labels_dir=base_discovered_host_labels_dir,
                     )
                     if not autodiscovery_result.skipped:
                         (autodiscovery_queue.path / str(host_name)).unlink(
@@ -1289,10 +1295,7 @@ def _execute_autodiscovery(
         env.config_cache,
         env.plugins,
     )
-    with config.set_use_core_config(
-        autochecks_dir=autochecks_dir,
-        discovered_host_labels_dir=base_discovered_host_labels_dir,
-    ):
+    with nullcontext():  # TODO(igor): remove the nullcontext added for easier review
         try:
             cache_manager.clear_all()
             env.config_cache.initialize(app.get_builtin_host_labels)
@@ -1300,7 +1303,6 @@ def _execute_autodiscovery(
             bake_on_restart = app.make_bake_on_restart(env.loading_result, hosts_config.hosts)
             notify_relay = _make_configured_notify_relay(bool(env.loaded_config.relays))
 
-            # reset these to their original value to create a correct config
             if env.loaded_config.monitoring_core == "cmc":
                 do_reload(
                     env.config_cache,
@@ -1433,6 +1435,7 @@ def _automation_set_autochecks_v2(
             effective_host=set_autochecks_input.discovered_host,
             new_services=set_autochecks_input.target_services.values(),
             get_effective_host=get_effective_host_of_autocheck,
+            autochecks_dir=autochecks_dir,
         )
     else:
         desired_on_cluster = {s.id() for s in set_autochecks_input.target_services.values()}
@@ -1442,6 +1445,7 @@ def _automation_set_autochecks_v2(
                 effective_host=set_autochecks_input.discovered_host,
                 new_services=(s for s in services.values() if s.id() in desired_on_cluster),
                 get_effective_host=get_effective_host_of_autocheck,
+                autochecks_dir=autochecks_dir,
             )
 
     _trigger_discovery_check(
@@ -1463,7 +1467,7 @@ def _automation_update_host_labels(
 ) -> UpdateHostLabelsResult:
     """Set the new collection of discovered host labels"""
     hostname = HostName(args[0])
-    DiscoveredHostLabelsStore(hostname).save(
+    DiscoveredHostLabelsStore(hostname, discovered_host_labels_dir).save(
         [
             HostLabel.from_dict(name, hl_dict)
             for name, hl_dict in ast.literal_eval(sys.stdin.read()).items()

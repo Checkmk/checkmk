@@ -28,6 +28,7 @@ import cmk.ccc.debug
 # We're importing it here, so that this fails the linters if that is removed.
 # TODO: implement a dedicated minimal plugin
 import cmk.plugins.monitoring_plugins.server_side_calls.ftp
+import cmk.utils.paths
 from cmk.base import config
 from cmk.base.community_app import make_app
 from cmk.base.configlib.servicename import make_final_service_name_config
@@ -626,8 +627,16 @@ def test_create_nagios_servicedefs_active_check(
         EMPTY_CONFIG,
         (app := make_app()).get_builtin_host_labels,
         app.edition,
+        autochecks_dir=cmk.utils.paths.autochecks_dir,
+        discovered_host_labels_dir=cmk.utils.paths.discovered_host_labels_dir,
     )
-    config_cache.label_manager = LabelManager(FakeLabelConfig(service_labels), {}, {}, {})
+    config_cache.label_manager = LabelManager(
+        FakeLabelConfig(service_labels),
+        {},
+        {},
+        {},
+        discovered_host_labels_dir=cmk.utils.paths.discovered_host_labels_dir,
+    )
     monkeypatch.setattr(config_cache, "alias", lambda hn: {hostname: host_attrs["alias"]}[hn])
     monkeypatch.setattr(config_cache, "active_checks", lambda *args, **kw: active_checks)
 
@@ -813,6 +822,8 @@ def test_create_nagios_servicedefs_with_warnings(
         EMPTY_CONFIG,
         (app := make_app()).get_builtin_host_labels,
         app.edition,
+        autochecks_dir=cmk.utils.paths.autochecks_dir,
+        discovered_host_labels_dir=cmk.utils.paths.discovered_host_labels_dir,
     )
     monkeypatch.setattr(config_cache, "active_checks", lambda *args, **kw: active_checks)
 
@@ -896,6 +907,8 @@ def test_create_nagios_servicedefs_omit_service(
         EMPTY_CONFIG,
         (app := make_app()).get_builtin_host_labels,
         app.edition,
+        autochecks_dir=cmk.utils.paths.autochecks_dir,
+        discovered_host_labels_dir=cmk.utils.paths.discovered_host_labels_dir,
     )
     monkeypatch.setattr(config_cache, "active_checks", lambda *args, **kw: active_checks)
     monkeypatch.setattr(config_cache, "service_ignored", lambda *_: True)
@@ -974,6 +987,8 @@ def test_create_nagios_servicedefs_invalid_args(
         EMPTY_CONFIG,
         (app := make_app()).get_builtin_host_labels,
         app.edition,
+        autochecks_dir=cmk.utils.paths.autochecks_dir,
+        discovered_host_labels_dir=cmk.utils.paths.discovered_host_labels_dir,
     )
     monkeypatch.setattr(config_cache, "active_checks", lambda *args, **kw: active_checks)
 
@@ -1073,6 +1088,8 @@ def test_create_nagios_config_commands(
         EMPTY_CONFIG,
         (app := make_app()).get_builtin_host_labels,
         app.edition,
+        autochecks_dir=cmk.utils.paths.autochecks_dir,
+        discovered_host_labels_dir=cmk.utils.paths.discovered_host_labels_dir,
     )
     monkeypatch.setattr(config_cache, "active_checks", lambda *args, **kw: active_checks)
 

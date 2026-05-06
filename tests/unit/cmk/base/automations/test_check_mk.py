@@ -22,6 +22,7 @@ import cmk.ccc.resulttype as result
 # We're importing it here, so that this fails the linters if that is removed.
 # TODO: implement a dedicated minimal plugin
 import cmk.plugins.monitoring_plugins.server_side_calls.ftp
+import cmk.utils.paths
 from cmk.automations import results as automation_results
 from cmk.automations.results import DiagHostResult
 from cmk.base import config
@@ -114,7 +115,13 @@ class TestAutomationDiagHost:
             AgentBasedPlugins.empty(),
             config.LoadingResult(
                 loaded_config=loaded_config,
-                config_cache=ConfigCache(loaded_config, app.get_builtin_host_labels, app.edition),
+                config_cache=ConfigCache(
+                    loaded_config,
+                    app.get_builtin_host_labels,
+                    app.edition,
+                    autochecks_dir=cmk.utils.paths.autochecks_dir,
+                    discovered_host_labels_dir=cmk.utils.paths.discovered_host_labels_dir,
+                ),
             ),
         ) == DiagHostResult(
             0,
@@ -245,7 +252,13 @@ def test_automation_active_check(
     monkeypatch.setattr(config, config.load_resource_cfg_macros.__name__, lambda *a, **kw: {})
 
     app = make_app()
-    config_cache = config.ConfigCache(EMPTY_CONFIG, app.get_builtin_host_labels, app.edition)
+    config_cache = config.ConfigCache(
+        EMPTY_CONFIG,
+        app.get_builtin_host_labels,
+        app.edition,
+        autochecks_dir=cmk.utils.paths.autochecks_dir,
+        discovered_host_labels_dir=cmk.utils.paths.discovered_host_labels_dir,
+    )
     monkeypatch.setattr(config_cache, "active_checks", lambda *a, **kw: active_checks)
 
     active_check = AutomationActiveCheckTestable()
@@ -315,7 +328,13 @@ def test_automation_active_check_invalid_args(
         EMPTY_CONFIG, ipaddresses={HostName("my_host"): HostAddress("127.0.0.1")}
     )
     app = make_app()
-    config_cache = config.ConfigCache(loaded_config, app.get_builtin_host_labels, app.edition)
+    config_cache = config.ConfigCache(
+        loaded_config,
+        app.get_builtin_host_labels,
+        app.edition,
+        autochecks_dir=cmk.utils.paths.autochecks_dir,
+        discovered_host_labels_dir=cmk.utils.paths.discovered_host_labels_dir,
+    )
     monkeypatch.setattr(config_cache, "active_checks", lambda *a, **kw: active_checks)
 
     monkeypatch.setattr(cmk.ccc.debug, "enabled", lambda: False)

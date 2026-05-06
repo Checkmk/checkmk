@@ -23,13 +23,13 @@ def fixture_discovered_host_labels_dir(tmp_path: Path, monkeypatch: MonkeyPatch)
 
 def test_discovered_host_labels_store_file_path(discovered_host_labels_dir: Path) -> None:
     assert (
-        DiscoveredHostLabelsStore(HostName("host")).file_path
+        DiscoveredHostLabelsStore(HostName("host"), discovered_host_labels_dir).file_path
         == discovered_host_labels_dir / "host.mk"
     )
 
 
 def test_discovered_host_labels_store_load_default(discovered_host_labels_dir: Path) -> None:
-    store = DiscoveredHostLabelsStore(HostName("host"))
+    store = DiscoveredHostLabelsStore(HostName("host"), discovered_host_labels_dir)
     assert not store.file_path.exists()
     assert not store.load()
 
@@ -71,6 +71,7 @@ class TestLabelManager:
                 HostName("host-a"): {"cmk/site": "site_a"},
                 HostName("host-b"): {"cmk/site": "site_b"},
             },
+            discovered_host_labels_dir=cmk.utils.paths.discovered_host_labels_dir,
         )
         assert label_manager.labels_of_host(HostName("host-a")) == {"cmk/site": "site_a"}
         assert label_manager.labels_of_host(HostName("host-b")) == {"cmk/site": "site_b"}
@@ -96,6 +97,7 @@ class TestLabelManager:
                     "prio-1": "builtin-value",
                 },
             },
+            discovered_host_labels_dir=cmk.utils.paths.discovered_host_labels_dir,
         )
 
         assert label_manager.labels_of_host(HostName("horst")) == {
@@ -124,6 +126,7 @@ class TestLabelManager:
             nodes_of={},
             explicit_host_labels={},
             builtin_host_labels={},
+            discovered_host_labels_dir=cmk.utils.paths.discovered_host_labels_dir,
         )
 
         assert label_manager.labels_of_service(test_host, "CPU load", {}) == {
@@ -149,6 +152,7 @@ class TestLabelManager:
             nodes_of={},
             explicit_host_labels={},
             builtin_host_labels={},
+            discovered_host_labels_dir=cmk.utils.paths.discovered_host_labels_dir,
         )
 
         service_description = "CPU load"

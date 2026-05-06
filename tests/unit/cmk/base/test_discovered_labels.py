@@ -72,7 +72,7 @@ def discovered_host_labels_dir_fixture(tmp_path: Path, monkeypatch: MonkeyPatch)
 
 
 def test_discovered_host_labels_store_save(discovered_host_labels_dir: Path) -> None:
-    store = DiscoveredHostLabelsStore(HostName("host"))
+    store = DiscoveredHostLabelsStore(HostName("host"), discovered_host_labels_dir)
 
     labels = [HostLabel("xyz", "äbc", SectionName("sectionname"))]
 
@@ -104,7 +104,7 @@ def test_invalid_label_value_raises() -> None:
 def test_discovered_host_labels_path(discovered_host_labels_dir: Path) -> None:
     hostname = "test.host.de"
     assert not (discovered_host_labels_dir / hostname).exists()
-    DiscoveredHostLabelsStore(HostName(hostname)).save(
+    DiscoveredHostLabelsStore(HostName(hostname), discovered_host_labels_dir).save(
         [HostLabel("something", "wonderful", SectionName("norris"))]
     )
     assert (discovered_host_labels_dir / (hostname + ".mk")).exists()

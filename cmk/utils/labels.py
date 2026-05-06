@@ -10,9 +10,9 @@ import contextlib
 from abc import ABC, abstractmethod
 from ast import literal_eval
 from collections.abc import Callable, Iterable, Mapping, Sequence
+from pathlib import Path
 from typing import Any, Final, Literal, Self, TypedDict
 
-import cmk.utils.paths
 from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostName
@@ -175,10 +175,10 @@ class LabelsSerializer:
 class DiscoveredHostLabelsStore:
     """Managing persistence of discovered labels"""
 
-    def __init__(self, node_name: HostName) -> None:
+    def __init__(self, node_name: HostName, discovered_host_labels_dir: Path) -> None:
         super().__init__()
         self._store = store.ObjectStore(
-            path=cmk.utils.paths.discovered_host_labels_dir / f"{node_name}.mk",
+            path=discovered_host_labels_dir / f"{node_name}.mk",
             serializer=LabelsSerializer(),
         )
         self.file_path: Final = self._store.path
@@ -256,10 +256,17 @@ class LabelManager:
         nodes_of: Mapping[HostName, Sequence[HostName]],
         explicit_host_labels: Mapping[HostName, Labels],
         builtin_host_labels: Mapping[HostName, Labels],
+        *,
+        discovered_host_labels_dir: Path,
     ) -> None:
         self._nodes_of: Final = nodes_of
         self._label_config: Final = label_config
         self._builtin_host_labels: Final = builtin_host_labels
+        # Public + mutable: the keepalive checker reassigns this per command to point
+        # at the per-serial helper config dir. Long term we should detach the discovered
+        # host labels lookup from LabelManager and pass the dir through the call chain
+        # at the points where labels are actually read.
+        self.discovered_host_labels_dir = discovered_host_labels_dir
         self.explicit_host_labels: Mapping[HostName, Labels] = explicit_host_labels
 
         self.__labels_of_host: dict[HostName, Labels] = {}
@@ -300,9 +307,14 @@ class LabelManager:
 
     def _discovered_labels_of_host(self, hostname: HostName) -> Labels:
         host_labels = (
-            DiscoveredHostLabelsStore(hostname).load()
+            DiscoveredHostLabelsStore(hostname, self.discovered_host_labels_dir).load()
             if (nodes := self._nodes_of.get(hostname)) is None
-            else merge_cluster_labels([DiscoveredHostLabelsStore(node).load() for node in nodes])
+            else merge_cluster_labels(
+                [
+                    DiscoveredHostLabelsStore(node, self.discovered_host_labels_dir).load()
+                    for node in nodes
+                ]
+            )
         )
         return {l.name: l.value for l in host_labels}
 

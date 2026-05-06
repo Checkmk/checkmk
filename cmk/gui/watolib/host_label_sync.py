@@ -281,7 +281,9 @@ def _execute_site_sync(
 
 def get_host_labels_entry_of_host(host_name: HostName) -> UpdatedHostLabelsEntry:
     """Returns the host labels entry of the given host"""
-    path = DiscoveredHostLabelsStore(host_name).file_path
+    path = DiscoveredHostLabelsStore(
+        host_name, cmk.utils.paths.discovered_host_labels_dir
+    ).file_path
     with path.open() as f:
         return (path.name, path.stat().st_mtime, f.read())
 

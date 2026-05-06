@@ -679,9 +679,13 @@ def _perform_post_config_loading_actions(
         },
     )
 
-    config_cache = ConfigCache(loaded_config, get_builtin_host_labels, edition).initialize(
-        get_builtin_host_labels
-    )
+    config_cache = ConfigCache(
+        loaded_config,
+        get_builtin_host_labels,
+        edition,
+        autochecks_dir=cmk.utils.paths.autochecks_dir,
+        discovered_host_labels_dir=cmk.utils.paths.discovered_host_labels_dir,
+    ).initialize(get_builtin_host_labels)
 
     set_global_logwatch_config(
         loaded_config,
@@ -1037,31 +1041,6 @@ class PackedConfigStore:
     def read(self) -> Mapping[str, Any]:
         with self.path.open("rb") as f:
             return pickle.load(f)  # nosec B301 # BNS:c3c5e9
-
-
-@contextlib.contextmanager
-def set_use_core_config(
-    *, autochecks_dir: Path, discovered_host_labels_dir: Path
-) -> Iterator[None]:
-    """The keepalive helpers should always use the core configuration that
-    has been created with "cmk -U". This includes the dynamic configuration
-    parts like the autochecks.
-
-    Instead of loading e.g. the autochecks from the regular path
-    "var/check_mk/autochecks" the helper should always load the files from
-    "var/check_mk/core/autochecks" instead.
-
-    We ensure this by changing the global paths in cmk.utils.paths to point
-    to the helper paths."""
-    orig_autochecks_dir: Final = cmk.utils.paths.autochecks_dir
-    orig_discovered_host_labels_dir: Final = cmk.utils.paths.discovered_host_labels_dir
-    try:
-        cmk.utils.paths.autochecks_dir = autochecks_dir
-        cmk.utils.paths.discovered_host_labels_dir = discovered_host_labels_dir
-        yield
-    finally:
-        cmk.utils.paths.autochecks_dir = orig_autochecks_dir
-        cmk.utils.paths.discovered_host_labels_dir = orig_discovered_host_labels_dir
 
 
 def parse_hostname_list(
@@ -1508,10 +1487,15 @@ class ConfigCache:
         loaded_config: LoadedConfigFragment,
         get_builtin_host_labels: Callable[[SiteId], Labels],
         edition: cmk_version.Edition,
+        *,
+        autochecks_dir: Path,
+        discovered_host_labels_dir: Path,
     ) -> None:
         super().__init__()
         self._loaded_config: Final = loaded_config
         self.edition: Final = edition
+        self._autochecks_dir = autochecks_dir
+        self._discovered_host_labels_dir = discovered_host_labels_dir
         self.hosts_config = Hosts(hosts=(), clusters=(), shadow_hosts=())
         self.__enforced_services_table: dict[
             HostName,
@@ -1551,10 +1535,12 @@ class ConfigCache:
             self._nodes_cache,
         ) = _make_clusters_nodes_maps(self._loaded_config.clusters)
 
-        # TODO: remove this from the config cache. It is a completely
-        # self-contained object that should be passed around (if it really
-        # has to exist at all).
-        self.autochecks_memoizer = AutochecksMemoizer()
+        # Public + mutable: the keepalive checker reassigns this per command to point
+        # at the per-serial helper config dir. Long term we should detach the
+        # autochecks lookup from ConfigCache entirely (pass `get_autochecks` /
+        # AutochecksMemoizer to check_table and friends) so the dir can flow in
+        # as a function argument instead of being stored on the cache.
+        self.autochecks_memoizer = AutochecksMemoizer(self._autochecks_dir)
         self._effective_host_cache: dict[
             tuple[HostName, ServiceName, tuple[tuple[str, str], ...]],
             HostName,
@@ -1596,6 +1582,7 @@ class ConfigCache:
             self._nodes_cache,
             self._loaded_config.host_labels,
             builtin_host_labels=builtin_host_labels,
+            discovered_host_labels_dir=self._discovered_host_labels_dir,
         )
 
         self.ruleset_matcher.ruleset_optimizer.set_all_processed_hosts(

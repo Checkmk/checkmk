@@ -9,7 +9,6 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Literal
 
-import cmk.utils.paths
 from cmk.ccc import tty
 from cmk.ccc.exceptions import OnError
 from cmk.ccc.hostaddress import HostAddress, HostName
@@ -110,6 +109,8 @@ def get_check_preview(
     enforced_services: Mapping[ServiceID, ConfiguredService],
     on_error: OnError,
     timeperiods_active: Mapping[str, bool],
+    autochecks_dir: Path,
+    discovered_host_labels_dir: Path,
 ) -> CheckPreview:
     """Get the list of service of a host or cluster and guess the current state of
     all services if possible. Those are for example (only?) displayed in the UI discovery page
@@ -142,13 +143,13 @@ def get_check_preview(
                 for node_name in cluster_nodes
             },
             existing_host_labels={
-                node_name: DiscoveredHostLabelsStore(node_name).load()
+                node_name: DiscoveredHostLabelsStore(node_name, discovered_host_labels_dir).load()
                 for node_name in cluster_nodes
             },
         )
     else:
         host_labels = QualifiedDiscovery[HostLabel](
-            preexisting=DiscoveredHostLabelsStore(host_name).load(),
+            preexisting=DiscoveredHostLabelsStore(host_name, discovered_host_labels_dir).load(),
             current=discover_host_labels(
                 host_name,
                 host_label_plugins,
@@ -167,9 +168,9 @@ def get_check_preview(
     grouped_services_by_host = get_host_services_by_host_name(
         host_name,
         existing_services=(
-            {n: AutochecksStore(n, cmk.utils.paths.autochecks_dir).read() for n in cluster_nodes}
+            {n: AutochecksStore(n, autochecks_dir).read() for n in cluster_nodes}
             if is_cluster
-            else {host_name: AutochecksStore(host_name, cmk.utils.paths.autochecks_dir).read()}
+            else {host_name: AutochecksStore(host_name, autochecks_dir).read()}
         ),
         discovered_services=discovery_by_host(
             cluster_nodes if is_cluster else (host_name,), providers, discovery_plugins, on_error

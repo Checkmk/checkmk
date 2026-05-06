@@ -88,6 +88,8 @@ class TestModeDumpAgent:
                     loaded_config,
                     (app := make_app()).get_builtin_host_labels,
                     app.edition,
+                    autochecks_dir=cmk_paths.autochecks_dir,
+                    discovered_host_labels_dir=cmk_paths.discovered_host_labels_dir,
                 ),
             ),
         )
@@ -159,6 +161,8 @@ class TestModeDumpAgentUseWalk:
                     loaded_config,
                     (app := make_app()).get_builtin_host_labels,
                     app.edition,
+                    autochecks_dir=cmk_paths.autochecks_dir,
+                    discovered_host_labels_dir=cmk_paths.discovered_host_labels_dir,
                 ),
             ),
         )

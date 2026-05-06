@@ -137,6 +137,7 @@ from cmk.ccc.version import edition_supports_nagvis
 from cmk.checkengine.checkerplugin import ConfiguredService
 from cmk.checkengine.checking import compute_check_parameters, ServiceConfigurer
 from cmk.checkengine.discovery import (
+    AutochecksStore,
     autodiscovery,
     CheckPreview,
     CheckPreviewEntry,
@@ -1842,7 +1843,7 @@ def _automation_get_service_labels(
 
     # I think we might be computing something here that the caller already knew.
     discovered_services = env.service_configurer.configure_autochecks(
-        host_name, env.config_cache.autochecks_memoizer.read(host_name)
+        host_name, AutochecksStore(host_name, cmk.utils.paths.autochecks_dir).read()
     )
     discovered_labels = {s.description: s.labels for s in discovered_services}
 

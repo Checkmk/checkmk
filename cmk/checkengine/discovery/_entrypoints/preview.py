@@ -9,6 +9,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Literal
 
+import cmk.utils.paths
 from cmk.ccc import tty
 from cmk.ccc.exceptions import OnError
 from cmk.ccc.hostaddress import HostAddress, HostName
@@ -166,9 +167,9 @@ def get_check_preview(
     grouped_services_by_host = get_host_services_by_host_name(
         host_name,
         existing_services=(
-            {n: AutochecksStore(n).read() for n in cluster_nodes}
+            {n: AutochecksStore(n, cmk.utils.paths.autochecks_dir).read() for n in cluster_nodes}
             if is_cluster
-            else {host_name: AutochecksStore(host_name).read()}
+            else {host_name: AutochecksStore(host_name, cmk.utils.paths.autochecks_dir).read()}
         ),
         discovered_services=discovery_by_host(
             cluster_nodes if is_cluster else (host_name,), providers, discovery_plugins, on_error

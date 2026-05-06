@@ -10,6 +10,7 @@ from collections.abc import Callable, Container, Mapping, Sequence
 
 import cmk.ccc.cleanup
 import cmk.ccc.debug
+import cmk.utils.paths
 from cmk.ccc import tty
 from cmk.ccc.exceptions import MKGeneralException, OnError
 from cmk.ccc.hostaddress import HostName
@@ -135,7 +136,7 @@ def _commandline_discovery_on_host(
 
     section.section_step("Analyse discovered services")
 
-    autocheck_store = AutochecksStore(real_host_name)
+    autocheck_store = AutochecksStore(real_host_name, cmk.utils.paths.autochecks_dir)
     candidates = find_plugins(
         providers,
         [

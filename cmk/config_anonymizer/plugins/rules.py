@@ -463,7 +463,7 @@ class RulesStep(AnonymizeStep):
         all_service_descriptions = {}
         for folder_rel_path, folder in folder_tree().all_folders().items():
             for host in folder.hosts():
-                for entry in AutochecksStore(host).read():
+                for entry in AutochecksStore(host, paths.autochecks_dir).read():
                     discovered_service_description = autochecks_config.service_description(
                         host, entry
                     )

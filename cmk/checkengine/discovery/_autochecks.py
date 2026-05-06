@@ -9,6 +9,7 @@ from __future__ import annotations
 import ast
 from collections import defaultdict
 from collections.abc import Callable, Iterable, Mapping, Sequence
+from pathlib import Path
 from typing import NamedTuple, Protocol
 
 import cmk.utils.paths
@@ -52,10 +53,10 @@ class AutochecksSerializer:
 
 
 class AutochecksStore:
-    def __init__(self, host_name: HostName) -> None:
+    def __init__(self, host_name: HostName, base_dir: Path) -> None:
         self._host_name = host_name
         self._store = ObjectStore(
-            cmk.utils.paths.autochecks_dir / f"{host_name}.mk",
+            base_dir / f"{host_name}.mk",
             serializer=AutochecksSerializer(),
         )
 
@@ -127,8 +128,12 @@ class AutochecksMemoizer:
         self,
         hostname: HostName,
     ) -> Sequence[AutocheckEntry]:
+        # NOTE: this is buggy. Contrary to what one might think,
+        # `cmk.utils.paths.autochecks_dir` is *not* a constant.
         if hostname not in self._raw_autochecks_cache:
-            self._raw_autochecks_cache[hostname] = AutochecksStore(hostname).read()
+            self._raw_autochecks_cache[hostname] = AutochecksStore(
+                hostname, cmk.utils.paths.autochecks_dir
+            ).read()
         return self._raw_autochecks_cache[hostname]
 
 
@@ -137,7 +142,7 @@ def set_autochecks_of_real_hosts(
     new_services_with_nodes: Sequence[AutocheckServiceWithNodes],
 ) -> None:
     # TODO: use set_autochecks_for_effective_host instead
-    store = AutochecksStore(hostname)
+    store = AutochecksStore(hostname, cmk.utils.paths.autochecks_dir)
     # write new autochecks file for that host
     store.write(
         _consolidate_autochecks_of_real_hosts(
@@ -193,7 +198,7 @@ def set_autochecks_of_cluster(
     # Check whether the cluster host autocheck files are still existent.
     # Remove them. The autochecks are only stored in the nodes autochecks files
     # these days.
-    AutochecksStore(hostname).clear()
+    AutochecksStore(hostname, cmk.utils.paths.autochecks_dir).clear()
 
 
 def set_autochecks_for_effective_host(
@@ -203,7 +208,7 @@ def set_autochecks_for_effective_host(
     get_effective_host: _GetEffectiveHost,
 ) -> None:
     """Set all services of an effective host, and leave all other services alone."""
-    store = AutochecksStore(autochecks_owner)
+    store = AutochecksStore(autochecks_owner, cmk.utils.paths.autochecks_dir)
     store.write(
         _deduplicate(
             [
@@ -245,7 +250,7 @@ def remove_autochecks_of_host(
     Cluster aware means that the autocheck files of the nodes are handled. Instead
     of removing the whole file the file is loaded and only the services associated
     with the given cluster are removed."""
-    store = AutochecksStore(hostname)
+    store = AutochecksStore(hostname, cmk.utils.paths.autochecks_dir)
     existing_entries = store.read()
     new_entries = [
         existing

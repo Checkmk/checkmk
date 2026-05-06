@@ -15,6 +15,7 @@ from collections.abc import Callable, Iterable, Mapping, Sequence
 from pathlib import Path
 
 import cmk.ccc.resulttype as result
+import cmk.utils.paths
 from cmk.base.checkers import (
     CMKParser,
     CMKSummarizer,
@@ -193,7 +194,7 @@ def discover_services(
         on_error=OnError.RAISE,
     )
 
-    autochecks_store = AutochecksStore(hostname)
+    autochecks_store = AutochecksStore(hostname, cmk.utils.paths.autochecks_dir)
     autochecks = autochecks_store.read()
 
     discovered_services = [

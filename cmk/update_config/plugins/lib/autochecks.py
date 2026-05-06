@@ -75,7 +75,7 @@ def rewrite_yielding_errors(*, write: bool) -> Iterable[RewriteError]:
             hostname, all_rulesets, plugins.check_plugins
         )
         if write:
-            AutochecksStore(hostname).write(fixed_autochecks)
+            AutochecksStore(hostname, paths.autochecks_dir).write(fixed_autochecks)
 
 
 def _get_fixed_autochecks(
@@ -84,7 +84,7 @@ def _get_fixed_autochecks(
     check_plugins: Mapping[CheckPluginName, CheckPlugin],
 ) -> Generator[RewriteError, None, list[AutocheckEntry]]:
     try:
-        autochecks = AutochecksStore(host_name).read()
+        autochecks = AutochecksStore(host_name, paths.autochecks_dir).read()
     except Exception as exc:
         if debug.enabled():
             raise

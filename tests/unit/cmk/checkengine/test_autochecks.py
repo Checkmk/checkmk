@@ -58,14 +58,14 @@ def _entries() -> Sequence[AutocheckEntry]:
 
 class TestAutochecksStore:
     def test_clear(self) -> None:
-        store = AutochecksStore(HostName("herbert"))
+        store = AutochecksStore(HostName("herbert"), cmk.utils.paths.autochecks_dir)
         store.write(_entries())
         assert store.read()
         store.clear()
         assert not store.read()
 
     def test_write_read(self) -> None:
-        store = AutochecksStore(HostName("herbert"))
+        store = AutochecksStore(HostName("herbert"), cmk.utils.paths.autochecks_dir)
         store.write(_entries())
         assert store.read() == _entries()
 

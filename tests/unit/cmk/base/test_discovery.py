@@ -1720,7 +1720,7 @@ def test_commandline_discovery(monkeypatch: MonkeyPatch) -> None:
         on_error=OnError.RAISE,
     )
 
-    entries = AutochecksStore(testhost).read()
+    entries = AutochecksStore(testhost, cmk.utils.paths.autochecks_dir).read()
     found = {e.id(): e.service_labels for e in entries}
     assert found == _EXPECTED_SERVICES
 

@@ -125,11 +125,16 @@ def _parse_check_command_from_api(
                 else f"check-mk-{check_command.name}"
             )
         case translations_api.NagiosPlugin():
-            return (
+            name = (
                 check_command.name
                 if check_command.name.startswith("check_")
                 else f"check_{check_command.name}"
             )
+            # parse_perf_data normalizes the lookup key with .replace(".", "_");
+            # apply the same normalization here so registrations whose Nagios
+            # plugin name contains a dot (e.g. "check_ping.exe") match the key
+            # the lookup will produce. See cmk/gui/graphing/_translated_metrics.py.
+            return name.replace(".", "_")
 
 
 def _parse_translation(

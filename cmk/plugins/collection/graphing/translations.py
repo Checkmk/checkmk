@@ -826,9 +826,9 @@ translation_icmp = translations.Translation(
     name="icmp",
     check_commands=[translations.NagiosPlugin("icmp")],
     translations={
-        "~.*rta": translations.ScaleBy(0.001),
-        "~.*rtmax": translations.ScaleBy(0.001),
-        "~.*rtmin": translations.ScaleBy(0.001),
+        "~.*rta": translations.RenameToAndScaleBy("rta", 0.001),
+        "~.*rtmax": translations.RenameToAndScaleBy("rtmax", 0.001),
+        "~.*rtmin": translations.RenameToAndScaleBy("rtmin", 0.001),
     },
 )
 
@@ -836,7 +836,10 @@ translation_ping_exe = translations.Translation(
     name="ping_exe",
     check_commands=[translations.NagiosPlugin("check_ping.exe")],
     translations={
-        "~.*rta": translations.ScaleBy(0.001),
+        # Regex translations must carry an explicit rename target — otherwise the
+        # resolved metric is bucketed under the regex key itself and the graph
+        # (keyed on "rta") never sees the scaled value.
+        "~.*rta": translations.RenameToAndScaleBy("rta", 0.001),
     },
 )
 
@@ -1384,7 +1387,7 @@ translation_oracle_tablespaces = translations.Translation(
 translation_ping = translations.Translation(
     name="ping",
     check_commands=[translations.NagiosPlugin("ping")],
-    translations={"~.*rta": translations.ScaleBy(0.001)},
+    translations={"~.*rta": translations.RenameToAndScaleBy("rta", 0.001)},
 )
 
 translation_postfix_mailq = translations.Translation(

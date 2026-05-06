@@ -174,6 +174,72 @@ def test_parse_perf_data2(request_context: None, set_config: SetConfig) -> None:
                 deprecated="",
             ),
         ),
+        # CMK-33772: NagiosPlugin("check_ping.exe") and NagiosPlugin("check_tcp.exe")
+        # are registered by werk #16254. parse_perf_data normalizes the lookup key
+        # via .replace(".", "_"), so the registration must use the same key form.
+        # The check_ping.exe entry additionally relies on RenameToAndScaleBy so
+        # the resolved metric is bucketed under "rta" (the name the graph uses),
+        # not under the regex key.
+        (
+            "rta",
+            "check_ping_exe",
+            TranslationSpec(
+                name="rta",
+                scale=0.001,
+                auto_graph=True,
+                deprecated="",
+            ),
+        ),
+        (
+            "time",
+            "check_tcp_exe",
+            TranslationSpec(
+                name="response_time",
+                scale=1.0,
+                auto_graph=True,
+                deprecated="",
+            ),
+        ),
+        (
+            "rta",
+            "check_ping",
+            TranslationSpec(
+                name="rta",
+                scale=0.001,
+                auto_graph=True,
+                deprecated="",
+            ),
+        ),
+        (
+            "rta",
+            "check_icmp",
+            TranslationSpec(
+                name="rta",
+                scale=0.001,
+                auto_graph=True,
+                deprecated="",
+            ),
+        ),
+        (
+            "rtmax",
+            "check_icmp",
+            TranslationSpec(
+                name="rtmax",
+                scale=0.001,
+                auto_graph=True,
+                deprecated="",
+            ),
+        ),
+        (
+            "rtmin",
+            "check_icmp",
+            TranslationSpec(
+                name="rtmin",
+                scale=0.001,
+                auto_graph=True,
+                deprecated="",
+            ),
+        ),
     ],
 )
 def test_perfvar_translation(

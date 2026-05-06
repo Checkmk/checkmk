@@ -320,6 +320,11 @@
           "default": true,
           "description": "Suggest enabling/disabling language profiles based on file activity."
         },
+        "cmk.scm.autoShowGitOutputOnCommit": {
+          "type": "boolean",
+          "default": true,
+          "description": "Auto-open the built-in Git output channel when a git commit starts so pre-commit's output is visible."
+        },
         "cmk.profileDetector.inactivityMinutes": {
           "type": "number",
           "default": 30,

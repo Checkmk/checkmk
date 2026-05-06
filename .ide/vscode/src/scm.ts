@@ -92,4 +92,57 @@ export function registerScm(context: vscode.ExtensionContext): void {
   context.subscriptions.push(watcher)
 
   sync()
+
+  const progressItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 1002)
+  progressItem.command = 'git.showOutput'
+  progressItem.text = '$(sync~spin) pre-commit running…'
+  progressItem.tooltip = 'CMK: a git commit is in progress. Click to open the Git output channel.'
+  context.subscriptions.push(progressItem)
+
+  const QUIET_MS = 2000
+  const POLL_MS = 250
+  let pollTimer: NodeJS.Timeout | undefined
+  let lastSeen = 0
+  let outputShown = false
+
+  const lockPath = (): string | undefined => {
+    const repo = repoRoot()
+    return repo ? path.join(repo, '.git', 'index.lock') : undefined
+  }
+
+  const beginActivity = (): void => {
+    const lp = lockPath()
+    if (!lp) return
+    lastSeen = Date.now()
+    progressItem.show()
+    if (!outputShown) {
+      const cfg = vscode.workspace.getConfiguration('cmk.scm')
+      if (cfg.get<boolean>('autoShowGitOutputOnCommit', true)) {
+        void vscode.commands.executeCommand('git.showOutput')
+      }
+      outputShown = true
+    }
+    if (pollTimer) return
+    pollTimer = setInterval(() => {
+      if (fs.existsSync(lp)) {
+        lastSeen = Date.now()
+        return
+      }
+      if (Date.now() - lastSeen >= QUIET_MS) {
+        clearInterval(pollTimer!)
+        pollTimer = undefined
+        outputShown = false
+        progressItem.hide()
+      }
+    }, POLL_MS)
+  }
+
+  const indexLockWatcher = vscode.workspace.createFileSystemWatcher('**/.git/index.lock')
+  indexLockWatcher.onDidCreate(beginActivity)
+  indexLockWatcher.onDidChange(beginActivity)
+  context.subscriptions.push(indexLockWatcher, {
+    dispose: () => {
+      if (pollTimer) clearInterval(pollTimer)
+    }
+  })
 }

@@ -573,19 +573,16 @@ def _to_graph_metric_expression(
     consolidation_function: GraphConsolidationFunction,
     quantity: Quantity,
 ) -> GraphMetricExpression:
-    # TODO remove duplicate eval
     match quantity:
         case str():
-            return (
-                create_graph_metric_expression_from_translated_metric(
-                    site_id,
-                    host_name,
-                    service_name,
-                    translated_metrics[quantity],
-                    consolidation_function,
-                )
-                if evaluate_quantity(registered_metrics, quantity, translated_metrics).is_ok()
-                else GraphMetricConstantNA()
+            if quantity not in translated_metrics:
+                return GraphMetricConstantNA()
+            return create_graph_metric_expression_from_translated_metric(
+                site_id,
+                host_name,
+                service_name,
+                translated_metrics[quantity],
+                consolidation_function,
             )
         case metrics_api.Constant():
             return GraphMetricConstant(value=float(quantity.value))

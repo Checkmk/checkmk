@@ -20,6 +20,7 @@ from cmk.gui.rest_api_types.notifications_rule_types import (
     API_HTMLMailData,
     API_IlertData,
     API_JiraData,
+    API_JsmOperationsData,
     API_MKEventData,
     API_MSTeamsData,
     API_OpsGenieIssueData,
@@ -52,6 +53,7 @@ from cmk.gui.rest_api_types.notifications_rule_types import (
     CheckboxWithIntValue,
     CheckboxWithListOfExtraPropertiesValues,
     CheckboxWithListOfStrValues,
+    CheckboxWithListOfTypedRespondersValues,
     CheckboxWithStrValue,
     EnableSyncDeliveryViaSMTP,
     FromAndToEmailFields,
@@ -72,6 +74,8 @@ from cmk.utils.notify_types import (
     is_known_plugin,
     JiraIssuePluginModel,
     JiraPluginName,
+    JsmOperationsPluginModel,
+    JsmOperationsPluginName,
     MailPluginModel,
     MailPluginName,
     MicrosoftTeamsPluginModel,
@@ -989,6 +993,190 @@ class OpsGenieIssuePlugin:
 
 
 @dataclass
+class JsmOperationsPlugin:
+    plugin_name: ClassVar[JsmOperationsPluginName] = "jsm_operations"
+    option: PluginOptions = PluginOptions.CANCEL
+    api_key: APICheckmkPassword_FromKey = field(default_factory=APICheckmkPassword_FromKey)
+    disable_ssl_cert_verification: CheckboxTrueOrNone = field(default_factory=CheckboxTrueOrNone)
+    http_proxy: CheckboxHttpProxy = field(default_factory=CheckboxHttpProxy)
+    owner: CheckboxWithStrValue = field(default_factory=CheckboxWithStrValue)
+    source: CheckboxWithStrValue = field(default_factory=CheckboxWithStrValue)
+    priority: CheckboxOpsGeniePriority = field(default_factory=CheckboxOpsGeniePriority)
+    note_created: CheckboxWithStrValue = field(default_factory=CheckboxWithStrValue)
+    note_closed: CheckboxWithStrValue = field(default_factory=CheckboxWithStrValue)
+    host_desc: CheckboxWithStrValue = field(default_factory=CheckboxWithStrValue)
+    svc_desc: CheckboxWithStrValue = field(default_factory=CheckboxWithStrValue)
+    host_msg: CheckboxWithStrValue = field(default_factory=CheckboxWithStrValue)
+    svc_msg: CheckboxWithStrValue = field(default_factory=CheckboxWithStrValue)
+    teams: CheckboxWithListOfStrValues = field(default_factory=CheckboxWithListOfStrValues)
+    additional_responders: CheckboxWithListOfTypedRespondersValues = field(
+        default_factory=CheckboxWithListOfTypedRespondersValues
+    )
+    actions: CheckboxWithListOfStrValues = field(default_factory=CheckboxWithListOfStrValues)
+    tags: CheckboxWithListOfStrValues = field(default_factory=CheckboxWithListOfStrValues)
+    entity: CheckboxWithStrValue = field(default_factory=CheckboxWithStrValue)
+    extra_properties: CheckboxWithListOfExtraPropertiesValues = field(
+        default_factory=CheckboxWithListOfExtraPropertiesValues
+    )
+
+    @classmethod
+    def from_mk_file_format(
+        cls, pluginparams: JsmOperationsPluginModel | None
+    ) -> JsmOperationsPlugin:
+        if pluginparams is None:
+            return cls()
+
+        return cls(
+            option=PluginOptions.WITH_PARAMS,
+            api_key=APICheckmkPassword_FromKey.from_mk_file_format(
+                pluginparams["password"],
+            ),
+            disable_ssl_cert_verification=CheckboxTrueOrNone.from_mk_file_format(
+                pluginparams.get("ignore_ssl"),
+            ),
+            http_proxy=CheckboxHttpProxy.from_mk_file_format(
+                pluginparams.get("proxy_url"),
+            ),
+            owner=CheckboxWithStrValue.from_mk_file_format(
+                pluginparams.get("owner"),
+            ),
+            source=CheckboxWithStrValue.from_mk_file_format(
+                pluginparams.get("source"),
+            ),
+            priority=CheckboxOpsGeniePriority.from_mk_file_format(
+                pluginparams.get("priority"),
+            ),
+            note_created=CheckboxWithStrValue.from_mk_file_format(
+                pluginparams.get("note_created"),
+            ),
+            note_closed=CheckboxWithStrValue.from_mk_file_format(
+                pluginparams.get("note_closed"),
+            ),
+            host_desc=CheckboxWithStrValue.from_mk_file_format(
+                pluginparams.get("host_desc"),
+            ),
+            svc_desc=CheckboxWithStrValue.from_mk_file_format(
+                pluginparams.get("svc_desc"),
+            ),
+            host_msg=CheckboxWithStrValue.from_mk_file_format(
+                pluginparams.get("host_msg"),
+            ),
+            svc_msg=CheckboxWithStrValue.from_mk_file_format(
+                pluginparams.get("svc_msg"),
+            ),
+            teams=CheckboxWithListOfStrValues.from_mk_file_format(
+                pluginparams.get("teams"),
+            ),
+            additional_responders=CheckboxWithListOfTypedRespondersValues.from_mk_file_format(
+                pluginparams.get("responders"),
+            ),
+            actions=CheckboxWithListOfStrValues.from_mk_file_format(
+                pluginparams.get("actions"),
+            ),
+            tags=CheckboxWithListOfStrValues.from_mk_file_format(
+                pluginparams.get("tags"),
+            ),
+            entity=CheckboxWithStrValue.from_mk_file_format(
+                pluginparams.get("entity"),
+            ),
+            extra_properties=CheckboxWithListOfExtraPropertiesValues.from_mk_file_format(
+                pluginparams.get("elements"),
+            ),
+        )
+
+    @classmethod
+    def from_api_request(cls, incoming: APINotifyPlugin) -> JsmOperationsPlugin:
+        if incoming["option"] == PluginOptions.CANCEL:
+            return cls()
+
+        params = cast(API_JsmOperationsData, incoming["plugin_params"])
+
+        return cls(
+            option=PluginOptions.WITH_PARAMS,
+            api_key=APICheckmkPassword_FromKey.from_api_request(params["api_key"]),
+            disable_ssl_cert_verification=CheckboxTrueOrNone.from_api_request(
+                params["disable_ssl_cert_verification"]
+            ),
+            http_proxy=CheckboxHttpProxy.from_api_request(params["http_proxy"]),
+            owner=CheckboxWithStrValue.from_api_request(params["owner"]),
+            source=CheckboxWithStrValue.from_api_request(params["source"]),
+            priority=CheckboxOpsGeniePriority.from_api_request(params["priority"]),
+            note_created=CheckboxWithStrValue.from_api_request(params["note_while_creating"]),
+            note_closed=CheckboxWithStrValue.from_api_request(params["note_while_closing"]),
+            host_desc=CheckboxWithStrValue.from_api_request(params["desc_for_host_alerts"]),
+            svc_desc=CheckboxWithStrValue.from_api_request(params["desc_for_service_alerts"]),
+            host_msg=CheckboxWithStrValue.from_api_request(params["message_for_host_alerts"]),
+            svc_msg=CheckboxWithStrValue.from_api_request(params["message_for_service_alerts"]),
+            teams=CheckboxWithListOfStrValues.from_api_request(params["responsible_teams"]),
+            additional_responders=CheckboxWithListOfTypedRespondersValues.from_api_request(
+                params["additional_responders"],
+            ),
+            actions=CheckboxWithListOfStrValues.from_api_request(params["actions"]),
+            tags=CheckboxWithListOfStrValues.from_api_request(params["tags"]),
+            entity=CheckboxWithStrValue.from_api_request(params["entity"]),
+            extra_properties=CheckboxWithListOfExtraPropertiesValues.from_api_request(
+                params["extra_properties"],
+            ),
+        )
+
+    def api_response(self) -> APINotifyPlugin:
+        plugin_params: API_JsmOperationsData = {"plugin_name": self.__class__.plugin_name}
+        if self.option == "create_notification_with_the_following_parameters":
+            plugin_params.update(
+                {
+                    "api_key": self.api_key.api_response(),
+                    "disable_ssl_cert_verification": self.disable_ssl_cert_verification.api_response(),
+                    "http_proxy": self.http_proxy.api_response(),
+                    "owner": self.owner.api_response(),
+                    "source": self.source.api_response(),
+                    "priority": self.priority.api_response(),
+                    "note_while_creating": self.note_created.api_response(),
+                    "note_while_closing": self.note_closed.api_response(),
+                    "desc_for_host_alerts": self.host_desc.api_response(),
+                    "desc_for_service_alerts": self.svc_desc.api_response(),
+                    "message_for_host_alerts": self.host_msg.api_response(),
+                    "message_for_service_alerts": self.svc_msg.api_response(),
+                    "responsible_teams": self.teams.api_response(),
+                    "additional_responders": self.additional_responders.api_response(),
+                    "actions": self.actions.api_response(),
+                    "tags": self.tags.api_response(),
+                    "entity": self.entity.api_response(),
+                    "extra_properties": self.extra_properties.api_response(),
+                }
+            )
+        return APINotifyPlugin(option=self.option, plugin_params=plugin_params)
+
+    def to_mk_file_format(self) -> PluginNameWithParameters:
+        if self.option == "cancel_previous_notifications":
+            return (self.__class__.plugin_name, None)
+        r = {
+            "password": self.api_key.to_mk_file_format(),
+            "ignore_ssl": self.disable_ssl_cert_verification.to_mk_file_format(),
+            "proxy_url": self.http_proxy.to_mk_file_format(),
+            "owner": self.owner.to_mk_file_format(),
+            "source": self.source.to_mk_file_format(),
+            "priority": self.priority.to_mk_file_format(),
+            "note_created": self.note_created.to_mk_file_format(),
+            "note_closed": self.note_closed.to_mk_file_format(),
+            "host_desc": self.host_desc.to_mk_file_format(),
+            "svc_desc": self.svc_desc.to_mk_file_format(),
+            "host_msg": self.host_msg.to_mk_file_format(),
+            "svc_msg": self.svc_msg.to_mk_file_format(),
+            "teams": self.teams.to_mk_file_format(),
+            "responders": self.additional_responders.to_mk_file_format(),
+            "actions": self.actions.to_mk_file_format(),
+            "tags": self.tags.to_mk_file_format(),
+            "entity": self.entity.to_mk_file_format(),
+            "elements": self.extra_properties.to_mk_file_format(),
+        }
+
+        return (
+            self.__class__.plugin_name,
+            cast(JsmOperationsPluginModel, {k: v for k, v in r.items() if v is not None}),
+        )
+
+
+@dataclass
 class PagerDutyPlugin:
     plugin_name: ClassVar[PagerdutyPluginName] = "pagerduty"
     option: PluginOptions = PluginOptions.CANCEL
@@ -1882,6 +2070,9 @@ def get_plugin_from_mk_file(
         if notify_plugin[0] == "opsgenie_issues":
             return OpsGenieIssuePlugin.from_mk_file_format(notify_plugin[1])
 
+        if notify_plugin[0] == "jsm_operations":
+            return JsmOperationsPlugin.from_mk_file_format(notify_plugin[1])
+
         if notify_plugin[0] == "pagerduty":
             return PagerDutyPlugin.from_mk_file_format(notify_plugin[1])
 
@@ -1928,6 +2119,8 @@ def get_plugin_from_api_request(incoming: APINotifyPlugin) -> PluginAdapter | Cu
             return JiraIssuePlugin.from_api_request(incoming)
         case "opsgenie_issues":
             return OpsGenieIssuePlugin.from_api_request(incoming)
+        case "jsm_operations":
+            return JsmOperationsPlugin.from_api_request(incoming)
         case "pagerduty":
             return PagerDutyPlugin.from_api_request(incoming)
         case "pushover":

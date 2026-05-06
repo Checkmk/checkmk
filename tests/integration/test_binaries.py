@@ -89,6 +89,7 @@ BIN_BINARIES: Sequence[BinarySmoke] = [
 # Non-free binaries available in pro and above (skip on community)
 NONFREE_PRO_BINARIES: Sequence[BinarySmoke] = [
     BinarySmoke("jira_issues", expected_stderr=r"KeyError.*NOTIF", path=_NOTIF_PATH),
+    BinarySmoke("jsm_operations", expected_stderr=r"KeyError.*NOTIF", path=_NOTIF_PATH),
     BinarySmoke("servicenow", expected_stderr=r"KeyError.*NOTIF", path=_NOTIF_PATH),
 ]
 

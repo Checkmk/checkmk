@@ -756,6 +756,18 @@ class CheckboxOpsExtraPropertiesValue(CheckboxOutput):
     )
 
 
+class JsmTypedResponderOutput(BaseSchema):
+    type = fields.String(
+        enum=["user", "schedule", "escalation"],
+        example="user",
+    )
+    name = fields.String(example="alice@example.com")
+
+
+class CheckboxWithListOfTypedRespondersOutput(CheckboxOutput):
+    value = fields.List(fields.Nested(JsmTypedResponderOutput))
+
+
 class OpsgeniePluginResponse(PluginName):
     api_key = fields.Nested(OpsGeniePasswordResponse)
     domain = fields.Nested(CheckboxWithStrValueOutput)
@@ -771,6 +783,27 @@ class OpsgeniePluginResponse(PluginName):
     message_for_host_alerts = fields.Nested(CheckboxWithStrValueOutput)
     message_for_service_alerts = fields.Nested(CheckboxWithStrValueOutput)
     responsible_teams = fields.Nested(CheckboxWithListOfStrOutput)
+    actions = fields.Nested(CheckboxWithListOfStrOutput)
+    tags = fields.Nested(CheckboxWithListOfStrOutput)
+    entity = fields.Nested(CheckboxWithStrValueOutput)
+    extra_properties = fields.Nested(CheckboxOpsExtraPropertiesValue)
+
+
+class JsmOperationsPluginResponse(PluginName):
+    api_key = fields.Nested(OpsGeniePasswordResponse)
+    disable_ssl_cert_verification = DISABLE_SSL_CERT_VERIFICATION
+    http_proxy = fields.Nested(HttpProxyValue)
+    owner = fields.Nested(CheckboxWithStrValueOutput)
+    source = fields.Nested(CheckboxWithStrValueOutput)
+    priority = fields.Nested(CheckboxOpsGeniePriorityValue)
+    note_while_creating = fields.Nested(CheckboxWithStrValueOutput)
+    note_while_closing = fields.Nested(CheckboxWithStrValueOutput)
+    desc_for_host_alerts = fields.Nested(CheckboxWithStrValueOutput)
+    desc_for_service_alerts = fields.Nested(CheckboxWithStrValueOutput)
+    message_for_host_alerts = fields.Nested(CheckboxWithStrValueOutput)
+    message_for_service_alerts = fields.Nested(CheckboxWithStrValueOutput)
+    responsible_teams = fields.Nested(CheckboxWithListOfStrOutput)
+    additional_responders = fields.Nested(CheckboxWithListOfTypedRespondersOutput)
     actions = fields.Nested(CheckboxWithListOfStrOutput)
     tags = fields.Nested(CheckboxWithListOfStrOutput)
     entity = fields.Nested(CheckboxWithStrValueOutput)
@@ -1084,6 +1117,7 @@ class PluginBase(BaseSchema):
             "ilert": IlertPluginResponse,
             "jira_issues": JiraPluginResponse,
             "opsgenie_issues": OpsgeniePluginResponse,
+            "jsm_operations": JsmOperationsPluginResponse,
             "pagerduty": PagerDutyPluginResponse,
             "pushover": PushOverPluginResponse,
             "servicenow": ServiceNowPluginResponse,

@@ -619,16 +619,9 @@ def test_bom(bom_json: Bom) -> None:
     # I chose dependencies that are unlikely to be removed...
     assert "pkg:cargo/clap" in purls_wo_version
     assert "pkg:npm/d3" in purls_wo_version
-    assert "pkg:github/google/re2" in purls_wo_version
     assert "pkg:pypi/certifi" in purls_wo_version
 
 
-# Unskip with https://jira.lan.tribe29.com/browse/CMK-23389
-@pytest.mark.skip(
-    "Skip bom synchronous check while Bazel work is ongoing. "
-    "At the moment there is a lot of rework regarding WORKSPACE/MODULE.bazel (see CMK-20349)."
-    "That's why the bom generation is mostly wrong at the moment.",
-)
 def test_bom_csv_synchronous(bom_json: Bom, license_csv_rows: list[dict[str, str]]) -> None:
     """test that the csv and bom contain the same versions
 

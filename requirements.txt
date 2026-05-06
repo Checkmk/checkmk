@@ -4019,6 +4019,7 @@ pyparsing==3.2.5 \
     #   -r cmk/requirements.in
     #   httplib2
     #   matplotlib
+    #   pyspdx
 pypdf==6.10.2 \
     --hash=sha256:7d09ce108eff6bf67465d461b6ef352dcb8d84f7a91befc02f904455c6eea11d \
     --hash=sha256:aa53be9826655b51c96741e5d7983ca224d898ac0a77896e64636810517624aa
@@ -4061,6 +4062,10 @@ pysnmp==7.1.27 \
     #   -r cmk/requirements.in
     #   -r packages/cmk-ec/requirements.in
     #   snmpsim
+pyspdx==1.2.0 \
+    --hash=sha256:83515cbc384786f8c5fc56a4b903d985fde1d5fd127492d014209b3b726f1636 \
+    --hash=sha256:88d360cee40539c36d175d70c855c2a38bed86f77e758d3eda8c7db38629fe3f
+    # via -r omd/dev-requirements.in
 pyspnego==0.12.1 \
     --hash=sha256:7237cb47985ccf5da512106ddb2731e4f9cefec00991f76c054488eb95fb1a2d \
     --hash=sha256:ff4fb6df38202a012ea2a0f43091ae9680878443f0ea61c9ea0e2e8152a4b810
@@ -5494,6 +5499,10 @@ types-simplejson==3.20.0.20260518 \
     --hash=sha256:298c5b2fc2df3eb128d2077abd5bd1f5b0419dcf72fdf0551b2af2f03b1ff2b3 \
     --hash=sha256:f4792dbc1ab049fcaee5d99ca950bd6468ea462fe79af25fe8ca08b6bee313ac
     # via -r tests/dev-requirements.in
+types-toml==0.10.8.20260518 \
+    --hash=sha256:0e564ab05f6fde62a315b3b5a9b6624fda569399795d30a37e64705a70459303 \
+    --hash=sha256:80e10facd24fdeda9d5c672187d72be3ac284843788d67f5aae59e3e016db6fe
+    # via -r omd/dev-requirements.in
 types-webencodings==0.5.0.20260408 \
     --hash=sha256:19a2afe5c22d9b1e880b49ff823c7b531f473a390fe47ac903c0bdb5cd677dd9 \
     --hash=sha256:28c596619f367e43eee393d85f63e8d2fdb6874c654a8d441c37f8afe29c6d0d

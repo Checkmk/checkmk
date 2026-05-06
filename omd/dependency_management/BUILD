@@ -1,25 +1,114 @@
 load("@aspect_rules_py//py:defs.bzl", "py_binary")
+load("@bazel_skylib//rules:copy_file.bzl", "copy_file")
 load("@bazel_skylib//rules:run_binary.bzl", "run_binary")
 load("@cmk_requirements//:requirements.bzl", "requirement")
 load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
+load(":dependency_management.bzl", "bill_of_materials", "dependency_list")
+
+py_binary(
+    name = "list_dependencies_bin",
+    srcs = [
+        "cyclonedx.py",
+        "list_dependencies.py",
+        "pnpm_parser.py",
+    ],
+    imports = ["."],
+    main = "list_dependencies.py",
+    visibility = ["//omd:__subpackages__"],
+    deps = [
+        requirement("pydantic"),
+        requirement("pyyaml"),
+        requirement("toml"),
+    ],
+)
+
+py_binary(
+    name = "bill_of_materials_bin",
+    srcs = [
+        "create_bom.py",
+        "cyclonedx.py",
+    ],
+    data = [
+        "automatically_researched_licenses.json",
+        "manually_researched_licenses.json",
+    ],
+    imports = ["."],
+    main = "create_bom.py",
+    visibility = ["//omd:__subpackages__"],
+    deps = [
+        requirement("pydantic"),
+        requirement("pyyaml"),
+    ],
+)
+
+bill_of_materials(
+    name = "bill_of_materials",
+    dependencies = ":list_of_dependencies",
+    vulnerability_info = "vulnerability_info.yml",
+)
+
+py_binary(
+    name = "research_licenses",
+    srcs = [
+        "cyclonedx.py",
+        "research_licenses.py",
+    ],
+    args = [
+        "--dependencies",
+        "$(location list_of_dependencies)",
+        "--out",
+        "$(location automatically_researched_licenses.json)",
+    ],
+    data = [
+        "automatically_researched_licenses.json",
+        "manually_researched_licenses.json",
+        ":list_of_dependencies",
+    ],
+    imports = ["."],
+    main = "research_licenses.py",
+    deps = [
+        requirement("pydantic"),
+        requirement("pyspdx"),
+        requirement("requests"),
+    ],
+)
+
+dependency_list(
+    name = "list_of_dependencies",
+    manifest_srcs = [
+        "//requirements/rust/site:Cargo.lock",
+        "//requirements/rust/host:Cargo.lock",
+        "//:pnpm-lock.yaml",
+        "//:runtime-requirements.txt",
+    ],
+    sbom_target = select({
+        "@cmk//edition:" + edition: "//omd:deps_packages_" + edition + "_base"
+        for edition in [
+            "community",
+            "ultimate",
+            "pro",
+            "ultimatemt",
+            "cloud",
+        ]
+    }),
+)
 
 py_binary(
     name = "generate_bom_csv_py",
     srcs = ["generate_bom_csv.py"],
-    tags = ["manual"],
+    visibility = ["//omd:__subpackages__"],
 )
 
 run_binary(
     name = "generate_bom_csv",
-    srcs = ["//omd:bill-of-materials.json"],
+    srcs = [":bill_of_materials"],
     outs = ["bill-of-materials.csv"],
     args = [
         "--bom",
-        "$(location //omd:bill-of-materials.json)",
+        "$(location :bill_of_materials)",
         "--out",
         "$(location bill-of-materials.csv)",
     ],
-    tags = ["manual"],
     tool = ":generate_bom_csv_py",
 )
 
@@ -33,7 +122,6 @@ run_binary(
         "--csv",
         "$(location :generate_bom_csv)",
     ],
-    tags = ["manual"],
     tool = ":build_bom_texts_pdf_py",
 )
 
@@ -45,7 +133,6 @@ py_binary(
         "checkmk_logo.svg",
         ":license_texts",
     ],
-    tags = ["manual"],
     deps = [
         requirement("reportlab"),
         requirement("svglib"),
@@ -57,21 +144,24 @@ filegroup(
     srcs = glob([
         "license_texts/*.txt",
     ]),
-    tags = ["manual"],
+)
+
+# We used to ship it with the dashes, let's keep that
+copy_file(
+    name = "bill_of_materials_renamed",
+    src = ":bill_of_materials",
+    out = "bill-of-materials.json",
 )
 
 pkg_tar(
     name = "license_info",
     srcs = [
-        # ToDo: Build BOM in the same Workspace
-        "bill-of-materials.csv",
-        "//omd:bill-of-materials.json",
+        ":bill_of_materials_renamed",
         ":build_bom_texts_pdf",
         ":generate_bom_csv",
     ],
     package_dir = "share/doc/",
     package_file_name = "license_info_archive.tar",
     stamp = 1,
-    tags = ["manual"],
     visibility = ["//omd:__subpackages__"],
 )

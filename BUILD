@@ -22,6 +22,8 @@ exports_files(
         ".prettierignore",
         "AUTHORS",
         "COPYING",
+        "pnpm-lock.yaml",
+        "runtime-requirements.txt",
     ],
 )
 
@@ -101,6 +103,7 @@ compile_requirements_in(
         "//packages:python_requirements",
         "//packages:dev_python_requirements",
         "//scripts:requirements.in",
+        "//omd:dev-requirements.in",
     ] + select({
         "@//:gpl+nonfree_repo": [
             "//non-free/packages:python_requirements",

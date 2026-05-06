@@ -14,8 +14,9 @@ load("//bazel/rules:pkg_rpm_from_tar.bzl", "pkg_rpm_from_tar")
 load("//bazel/rules:write_omd_spec.bzl", "write_omd_spec")
 
 exports_files([
-    "bill-of-materials.json",
+    "dev-requirements.in",
     "requirements.txt",
+    "dev-requirements.in",
 ])
 
 pip_compile(
@@ -355,7 +356,7 @@ pkg_files(
 )
 
 [pkg_tar(
-    name = "deps_packages_" + edition,
+    name = "deps_packages_" + edition + "_base",
     srcs = [
         ":agents",
         ":agents_cfg_examples",
@@ -380,6 +381,7 @@ pkg_files(
     ],
     stamp = 1,
     tags = ["manual"],
+    visibility = ["//omd:__subpackages__"],
     deps = [
                "//bin:pkg_tar",
                "//active_checks:pkg_tar",
@@ -448,7 +450,6 @@ pkg_files(
                ":agents_scripts_super_server",
                ":agents_windows_base",
                ":agents_windows_signed_plugins",
-               "//omd/dependency_management:license_info",
            ] + select({
                "@cmk//distro:almalinux": ["//omd/packages/xinetd"],
                "@cmk//distro:sles": [
@@ -458,6 +459,21 @@ pkg_files(
                "//conditions:default": [],
            }) +
            edition_deps[edition],
+) for edition in [
+    "community",
+    "ultimate",
+    "pro",
+    "ultimatemt",
+    "cloud",
+]]
+
+[pkg_tar(
+    name = "deps_packages_" + edition,
+    tags = ["manual"],
+    deps = [
+        "//omd/dependency_management:license_info",
+        "deps_packages_" + edition + "_base",
+    ],
 ) for edition in [
     "community",
     "ultimate",
@@ -902,3 +918,17 @@ write_omd_spec(
         "ultimatemt",
     ]
 ]
+
+run_binary(
+    name = "generate_bom_csv",
+    srcs = ["bill-of-materials.json"],
+    outs = ["bill-of-materials.csv"],
+    args = [
+        "--bom",
+        "$(location bill-of-materials.json)",
+        "--out",
+        "$(location bill-of-materials.csv)",
+    ],
+    tags = ["manual"],
+    tool = "//omd/dependency_management:generate_bom_csv_py",
+)

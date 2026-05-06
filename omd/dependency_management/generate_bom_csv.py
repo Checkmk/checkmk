@@ -22,6 +22,7 @@ class Bom(TypedDict):
 
 LINKS = {
     "0BSD": "http://landley.net/toybox/license.html",
+    "AGPL-3.0-only": "https://www.gnu.org/licenses/agpl-3.0.txt",
     "Apache-2.0": "https://opensource.org/licenses/Apache-2.0",
     "Artistic-1.0": "https://opensource.org/licenses/Artistic-1.0",
     "Artistic-1.0-Perl": "http://dev.perl.org/licenses/artistic.html",
@@ -32,6 +33,7 @@ LINKS = {
     "BSL-1.0": "https://opensource.org/licenses/BSL-1.0",
     "BlueOak-1.0.0": "https://blueoakcouncil.org/license/1.0.0",
     "CC-BY-4.0": "https://creativecommons.org/licenses/by/4.0/legalcode",
+    "CC-BY-SA-4.0": "https://creativecommons.org/licenses/by-sa/4.0/legalcode",
     "CC0-1.0": "https://creativecommons.org/publicdomain/zero/1.0/legalcode",
     "CDDL-1.0": "https://opensource.org/licenses/cddl1",
     "CNRI-Python-GPL-Compatible": "http://www.python.org/download/releases/1.6.1/download_win/",

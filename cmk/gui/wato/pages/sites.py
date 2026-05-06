@@ -2,6 +2,7 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
 """Mode for managing sites"""
 
 # mypy: disable-error-code="unreachable"
@@ -33,6 +34,7 @@ import cmk.gui.watolib.audit_log as _audit_log
 import cmk.gui.watolib.changes as _changes
 import cmk.utils.paths
 from cmk.ccc.exceptions import MKGeneralException, MKTerminate, MKTimeout
+from cmk.ccc.regex import REGEX_ID
 from cmk.ccc.site import omd_site, SiteId
 from cmk.ccc.user import UserId
 from cmk.ccc.version import Edition
@@ -40,6 +42,18 @@ from cmk.gui import forms
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import active_config, Config
 from cmk.gui.exceptions import FinalizeRequest, MKUserError
+from cmk.gui.form_specs import (
+    create_validation_error_for_mk_user_error,
+    DisplayMode,
+    parse_data_from_field_id,
+    RawDiskData,
+    read_data_from_frontend,
+    render_form_spec,
+)
+from cmk.gui.form_specs.generators.alternative_utils import enable_deprecated_alternative
+from cmk.gui.form_specs.generators.dict_to_catalog import create_flat_catalog_from_dictionary
+from cmk.gui.form_specs.unstable import LegacyValueSpec
+from cmk.gui.form_specs.unstable.legacy_converter import Tuple
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.htmllib.tag_rendering import render_end_tag
@@ -80,21 +94,7 @@ from cmk.gui.utils.urls import (
     makeuri_contextless,
 )
 from cmk.gui.utils.user_errors import user_errors
-from cmk.gui.valuespec import (
-    Alternative,
-    Checkbox,
-    Dictionary,
-    DropdownChoice,
-    FixedValue,
-    HTTPUrl,
-    ID,
-    Integer,
-    MonitoredHostname,
-    NetworkPort,
-    TextInput,
-    Tuple,
-    ValueSpec,
-)
+from cmk.gui.valuespec import MonitoredHostname
 from cmk.gui.wato.pages._html_elements import wato_html_head
 from cmk.gui.wato.pages.global_settings import (
     ABCEditGlobalSettingMode,
@@ -156,6 +156,24 @@ from cmk.gui.watolib.sites import (
 from cmk.licensing.license_distribution_registry import distribute_license_to_remotes
 from cmk.licensing.registry import is_free
 from cmk.messaging import check_remote_connection, ConnectionFailed, ConnectionOK, ConnectionRefused
+from cmk.rulesets.internal.form_specs import (
+    SingleChoiceElementExtended,
+    SingleChoiceExtended,
+)
+from cmk.rulesets.v1 import Help, Label, Message, Title
+from cmk.rulesets.v1.form_specs import (
+    BooleanChoice,
+    CascadingSingleChoice,
+    CascadingSingleChoiceElement,
+    DefaultValue,
+    DictElement,
+    Dictionary,
+    FieldSize,
+    FixedValue,
+    Integer,
+    String,
+    validators,
+)
 from cmk.utils.encryption import CertificateDetails, fetch_certificate_details
 from cmk.utils.paths import omd_root
 
@@ -277,10 +295,10 @@ class ModeEditSite(WatoMode):
             )
         return menu
 
-    def _site_from_valuespec(self, config: Config) -> SiteConfiguration:
-        vs = self._valuespec(config)
-        raw_site_spec = vs.from_html_vars("site")
-        vs.validate_value(raw_site_spec, "site")
+    def _site_from_form_spec(self, config: Config) -> SiteConfiguration:
+        flat_catalog = self._flat_catalog(config)
+        raw_site_spec = parse_data_from_field_id(flat_catalog, "_edit_site_id")
+        assert isinstance(raw_site_spec, dict)
 
         site_spec = cast(SiteConfiguration, raw_site_spec)
         if self._new:
@@ -338,7 +356,7 @@ class ModeEditSite(WatoMode):
         return redirect(mode_url("sites"))
 
     def action(self, config: Config) -> ActionResult:
-        site_spec = self._site_from_valuespec(config)
+        site_spec = self._site_from_form_spec(config)
         return self.save_site_changes(
             site_spec,
             self._configured_sites,
@@ -347,60 +365,85 @@ class ModeEditSite(WatoMode):
         )
 
     def page(self, config: Config) -> None:
+        flat_catalog = self._flat_catalog(config)
         with html.form_context("site"):
-            self._valuespec(config).render_input("site", dict(self._site))
-
+            if request.has_var("_edit_site_id"):
+                # Re-render after a failed save: restore submitted values and show
+                # inline validation errors so the user doesn't lose their input.
+                render_form_spec(
+                    flat_catalog,
+                    "_edit_site_id",
+                    read_data_from_frontend("_edit_site_id"),
+                    do_validate=True,
+                )
+            else:
+                render_form_spec(
+                    flat_catalog, "_edit_site_id", RawDiskData(dict(self._site)), do_validate=False
+                )
             forms.end()
             html.hidden_fields()
 
-    def _valuespec(self, config: Config) -> Dictionary:
-        basic_elements = self._basic_elements(config)
-        livestatus_elements = self._livestatus_elements()
-        replication_elements = self._replication_elements()
+    def _flat_catalog(self, config: Config):  # type: ignore[no-untyped-def]
+        basic = self._basic_elements(config)
+        livestatus = self._livestatus_elements()
+        replication = self._replication_elements()
+        spec = Dictionary(elements={**basic, **livestatus, **replication})
+        headers = [
+            (_("Basic settings"), list(basic.keys())),
+            (_("Status connection"), list(livestatus.keys())),
+            (_("Configuration connection"), list(replication.keys())),
+        ]
+        return create_flat_catalog_from_dictionary(spec, headers=headers)
 
-        return Dictionary(
-            elements=basic_elements + livestatus_elements + replication_elements,
-            headers=[
-                (_("Basic settings"), [key for key, _vs in basic_elements]),
-                (_("Status connection"), [key for key, _vs in livestatus_elements]),
-                (_("Configuration connection"), [key for key, _vs in replication_elements]),
-            ],
-            render="form",
-            form_narrow=True,
-            optional_keys=[],
-        )
-
-    def _basic_elements(self, config: Config) -> list[tuple[str, ValueSpec]]:
+    def _basic_elements(self, config: Config) -> dict[str, DictElement]:
         if self._new:
-            vs_site_id: TextInput | FixedValue = ID(
-                title=_("Site ID"),
-                size=60,
-                allow_empty=False,
-                help=_(
+            id_form_spec: FixedValue | String = String(
+                title=Title("Site ID"),
+                help_text=Help(
                     "The site ID must be identical (case sensitive) with the instance's exact name."
                 ),
-                validate=self._validate_site_id,
+                field_size=FieldSize.LARGE,
+                custom_validate=[
+                    validators.LengthInRange(
+                        min_value=1,
+                        error_msg=Message("Site ID cannot be empty"),
+                    ),
+                    validators.MatchRegex(
+                        regex=REGEX_ID,
+                        error_msg=Message(
+                            "An identifier must only consist of letters, digits, dash and "
+                            "underscore and it must start with a letter or underscore."
+                        ),
+                    ),
+                    create_validation_error_for_mk_user_error(self._validate_site_id),
+                ],
             )
         else:
-            vs_site_id = FixedValue(
-                value=self._site_id,
-                title=_("Site ID"),
-            )
+            id_form_spec = FixedValue(value=self._site_id, title=Title("Site ID"))
 
-        return [
-            ("id", vs_site_id),
-            (
-                "alias",
-                TextInput(
-                    title=_("Alias"),
-                    size=60,
-                    help=_("An alias or description of the site."),
-                    allow_empty=False,
+        return {
+            "id": DictElement(required=True, parameter_form=id_form_spec),
+            "alias": DictElement(
+                required=True,
+                parameter_form=String(
+                    title=Title("Alias"),
+                    help_text=Help("An alias or description of the site."),
+                    field_size=FieldSize.LARGE,
+                    custom_validate=[
+                        validators.LengthInRange(
+                            min_value=1, error_msg=Message("Text field can not be empty")
+                        )
+                    ],
                 ),
             ),
-        ]
+        }
 
-    def _validate_site_id(self, value: str, varprefix: str) -> None:
+    @staticmethod
+    def _validate_multisiteurl(value: str) -> None:
+        if value:
+            validators.Url([validators.UrlProtocol.HTTP, validators.UrlProtocol.HTTPS])(value)
+
+    def _validate_site_id(self, value: str) -> None:
         if value in self._site_mgmt.load_sites():
             raise MKUserError("id", _("This ID is already being used by another connection."))
 
@@ -413,31 +456,38 @@ class ModeEditSite(WatoMode):
         # backend. See CMK-6968.
         if value == "%s_bi" % omd_site():
             raise MKUserError(
-                varprefix,
+                None,
                 _(
                     "You cannot connect remote sites named <tt>[central_site]_bi</tt>. You will "
                     "have to rename your remote site to be able to connect it with this site."
                 ),
             )
 
-    def _livestatus_elements(self) -> list[tuple[str, ValueSpec]]:
+    def _livestatus_elements(self) -> dict[str, DictElement]:
         proxy_docu_url = "https://checkmk.com/checkmk_multisite_modproxy.html"
         status_host_docu_url = "https://checkmk.com/checkmk_multisite_statushost.html"
-        site_choices = [
-            (sk, si.get("alias", sk)) for (sk, si) in self._site_mgmt.load_sites().items()
+        site_elements: list[SingleChoiceElementExtended[str]] = [
+            SingleChoiceElementExtended(  # astrein: disable=localization-checker
+                name=str(sk),
+                title=Title(si.get("alias", sk)),  # astrein: disable=localization-checker
+            )
+            for sk, si in self._site_mgmt.load_sites().items()
         ]
 
-        return [
-            ("socket", self._site_mgmt.connection_method_valuespec()),
-            ("proxy", self._site_mgmt.livestatus_proxy_valuespec()),
-            (
-                "timeout",
-                Integer(
-                    title=_("Connect timeout"),
-                    size=2,
-                    unit=_("Seconds"),
-                    minvalue=0,
-                    help=_(
+        return {
+            "socket": DictElement(
+                required=True,
+                parameter_form=self._site_mgmt.connection_method_form_spec(),
+            ),
+            "proxy": DictElement(
+                required=True,
+                parameter_form=self._site_mgmt.livestatus_proxy_form_spec(),
+            ),
+            "timeout": DictElement(
+                parameter_form=Integer(
+                    title=Title("Connect timeout"),
+                    unit_symbol="Seconds",
+                    help_text=Help(
                         "This sets the time that the GUI waits for a connection "
                         "to the site to be established before the site is "
                         "considered to be unreachable. It is highly recommended to set a value "
@@ -446,94 +496,108 @@ class ModeEditSite(WatoMode):
                         "Livestatus proxy daemon the GUI connects to the local proxy, in this "
                         "situation a lower value, like 2 seconds is recommended."
                     ),
+                    custom_validate=[
+                        validators.NumberInRange(
+                            min_value=0, error_msg=Message("Integer field can not be empty")
+                        )
+                    ],
                 ),
             ),
-            (
-                "persist",
-                Checkbox(
-                    title=_("Persistent connection"),
-                    label=_("Use persistent connections"),
-                    help=_(
+            "persist": DictElement(
+                parameter_form=BooleanChoice(
+                    title=Title("Persistent connection"),
+                    label=Label("Use persistent connections"),
+                    help_text=Help(
                         "If you enable persistent connections then the GUI will try to keep open "
                         "the connection to the remote sites. This brings a great speed up in high-latency "
                         "situations but locks a number of threads in the Livestatus module of the target site."
                     ),
                 ),
             ),
-            (
-                "url_prefix",
-                TextInput(
-                    title=_("URL prefix"),
-                    size=60,
-                    help=_(
-                        "The URL prefix will be prepended to links of add-ons like NagVis "
-                        "when a link to such applications points to a host or "
-                        "service on that site. You can either use an absolute URL prefix like <tt>http://some.host/mysite/</tt> "
-                        "or a relative URL like <tt>/mysite/</tt>. When using relative prefixes you need a mod_proxy "
-                        "configuration in your local system Apache that proxies such URLs to the according remote site. "
-                        'Please refer to the <a href="%s" target="_blank">User Guide</a> for details. '
-                        "The prefix should end with a slash. Omit the <tt>/nagvis/</tt> from the prefix."
-                    )
-                    % proxy_docu_url,
-                    allow_empty=True,
+            "url_prefix": DictElement(
+                parameter_form=String(
+                    title=Title("URL prefix"),
+                    field_size=FieldSize.LARGE,
+                    help_text=Help(  # astrein: disable=localization-checker
+                        _(
+                            "The URL prefix will be prepended to links of add-ons like NagVis "
+                            "when a link to such applications points to a host or "
+                            "service on that site. You can either use an absolute URL prefix like <tt>http://some.host/mysite/</tt> "
+                            "or a relative URL like <tt>/mysite/</tt>. When using relative prefixes you need a mod_proxy "
+                            "configuration in your local system Apache that proxies such URLs to the according remote site. "
+                            'Please refer to the <a href="%s" target="_blank">User Guide</a> for details. '
+                            "The prefix should end with a slash. Omit the <tt>/nagvis/</tt> from the prefix."
+                        )
+                        % proxy_docu_url
+                    ),
                 ),
             ),
-            (
-                "status_host",
-                Alternative(
-                    title=_("Status host"),
-                    elements=[
-                        FixedValue(value=None, title=_("No status host"), totext=""),
-                        Tuple(
-                            title=_("Use the following status host"),
-                            orientation="horizontal",
-                            elements=[
-                                DropdownChoice(
-                                    title=_("Site:"),
-                                    choices=site_choices,
-                                    sorted=True,
+            "status_host": DictElement(
+                parameter_form=enable_deprecated_alternative(
+                    wrapped_form_spec=CascadingSingleChoice(
+                        elements=[
+                            CascadingSingleChoiceElement(
+                                name="alternative_0",
+                                title=Title("No status host"),
+                                parameter_form=FixedValue(
+                                    value=None, title=Title("No status host"), label=Label("")
                                 ),
-                                self._vs_host(),
-                            ],
+                            ),
+                            CascadingSingleChoiceElement(
+                                name="alternative_1",
+                                title=Title("Use the following status host"),
+                                parameter_form=Tuple(
+                                    title=Title("Use the following status host"),
+                                    layout="horizontal",
+                                    elements=[
+                                        SingleChoiceExtended[str](
+                                            title=Title("Site:"),
+                                            elements=site_elements,
+                                        ),
+                                        LegacyValueSpec.wrap(MonitoredHostname(title=_("Host:"))),
+                                    ],
+                                ),
+                            ),
+                        ],
+                        help_text=Help(  # astrein: disable=localization-checker
+                            _(
+                                "By specifying a status host for each non-local connection "
+                                "you prevent graphical user interface (GUI) from running into timeouts when remote sites do not respond. "
+                                "You need to add the remote monitoring servers as hosts into your local monitoring "
+                                "site and use their host state as a reachability state of the remote site. Please "
+                                'refer to the <a href="%s" target="_blank">online documentation</a> for details.'
+                            )
+                            % status_host_docu_url
                         ),
-                    ],
-                    help=_(
-                        "By specifying a status host for each non-local connection "
-                        "you prevent graphical user interface (GUI) from running into timeouts when remote sites do not respond. "
-                        "You need to add the remote monitoring servers as hosts into your local monitoring "
-                        "site and use their host state as a reachability state of the remote site. Please "
-                        'refer to the <a href="%s" target="_blank">online documentation</a> for details.'
                     )
-                    % status_host_docu_url,
                 ),
             ),
-            (
-                "disabled",
-                Checkbox(
-                    title=_("Disable in status GUI"),
-                    label=_("Temporarily disable this connection"),
-                    help=_(
+            "disabled": DictElement(
+                parameter_form=BooleanChoice(
+                    title=Title("Disable in status GUI"),
+                    label=Label("Temporarily disable this connection"),
+                    help_text=Help(
                         "If you disable a connection, then no data of this site will be shown in the status GUI. "
                         "The replication is not affected by this, however."
                     ),
                 ),
             ),
-        ]
+        }
 
-    def _vs_host(self) -> MonitoredHostname:
-        return MonitoredHostname(title=_("Host:"))
-
-    def _replication_elements(self) -> list[tuple[str, ValueSpec]]:
-        elements: list[tuple[str, ValueSpec]] = [
-            (
-                "replication",
-                DropdownChoice(
-                    title=_("Enable replication"),
-                    choices=[
-                        (None, _("No replication with this site")),
-                        ("slave", _("Push configuration to this site")),
+    def _replication_elements(self) -> dict[str, DictElement]:
+        elements: dict[str, DictElement] = {
+            "replication": DictElement(
+                parameter_form=SingleChoiceExtended[None | str](
+                    elements=[
+                        SingleChoiceElementExtended(
+                            name=None, title=Title("No replication with this site")
+                        ),
+                        SingleChoiceElementExtended(
+                            name="slave", title=Title("Push configuration to this site")
+                        ),
                     ],
-                    help=_(
+                    title=Title("Enable replication"),
+                    help_text=Help(
                         "Replication allows you to manage several monitoring sites with a "
                         "logically centralized setup. Remote sites receive their configuration "
                         "from the central sites. <br><br>Note: Remote sites "
@@ -542,53 +606,55 @@ class ModeEditSite(WatoMode):
                     ),
                 ),
             ),
-            (
-                "message_broker_port",
-                NetworkPort(title=_("Message broker port"), default_value=5672),
+            "message_broker_port": DictElement(
+                parameter_form=Integer(
+                    title=Title("Message broker port"),
+                    prefill=DefaultValue(5672),
+                    custom_validate=[validators.NetworkPort()],
+                ),
             ),
-            (
-                "multisiteurl",
-                HTTPUrl(
-                    title=_("URL of remote site"),
-                    help=_(
+            "multisiteurl": DictElement(
+                parameter_form=String(
+                    title=Title("URL of remote site"),
+                    field_size=FieldSize.LARGE,
+                    help_text=Help(
                         "URL of the remote Checkmk including <tt>/check_mk/</tt>. "
                         "This URL is in many cases the same as the URL-Prefix but with <tt>check_mk/</tt> "
                         "appended, but it must always be an absolute URL. Please note, that "
                         "that URL will be fetched by the Apache server of the local "
                         "site itself, whilst the URL-Prefix is used by your local Browser."
                     ),
-                    allow_empty=True,
+                    custom_validate=[self._validate_multisiteurl],
                 ),
             ),
-            (
-                "disable_wato",
-                Checkbox(
-                    title=_("Disable remote configuration"),
-                    label=_("Disable configuration via Setup on this site"),
-                    help=_(
+            "disable_wato": DictElement(
+                parameter_form=BooleanChoice(
+                    title=Title("Disable remote configuration"),
+                    label=Label("Disable configuration via Setup on this site"),
+                    help_text=Help(
                         "It is recommended to disable access to Setup completely on the remote site. "
                         "Otherwise a user who does not know about the replication could make local "
                         "changes that are overridden at the next configuration activation."
                     ),
                 ),
             ),
-            (
-                "insecure",
-                Checkbox(
-                    title=_("Ignore TLS errors"),
-                    label=_("Ignore SSL certificate errors"),
-                    help=_(
+            "insecure": DictElement(
+                parameter_form=BooleanChoice(
+                    title=Title("Ignore TLS errors"),
+                    label=Label("Ignore SSL certificate errors"),
+                    help_text=Help(
                         "This might be needed to make the synchronization accept problems with "
                         "SSL certificates when using an SSL secured connection."
                     ),
                 ),
             ),
-            (
-                "user_login",
-                Checkbox(
-                    title=_("Direct login to web GUI allowed"),
-                    label=_("Users are allowed to directly log in into the web GUI of this site"),
-                    help=_(
+            "user_login": DictElement(
+                parameter_form=BooleanChoice(
+                    title=Title("Direct login to web GUI allowed"),
+                    label=Label(
+                        "Users are allowed to directly log in into the web GUI of this site"
+                    ),
+                    help_text=Help(
                         "When enabled, this site is marked for synchronization every time a web GUI "
                         "related option is changed and users are allowed to log in "
                         "to the web GUI of this site. "
@@ -596,54 +662,47 @@ class ModeEditSite(WatoMode):
                     ),
                 ),
             ),
-            (
-                "is_trusted",
-                Checkbox(
-                    title=_("Trust this site completely"),
-                    label=_("Trust this site completely"),
-                    help=_(
+            "is_trusted": DictElement(
+                parameter_form=BooleanChoice(
+                    title=Title("Trust this site completely"),
+                    label=Label("Trust this site completely"),
+                    help_text=Help(
                         "When this option is enabled the central site might get compromised by a rogue remote site. "
                         "If you disable this option, some features, such as HTML rendering in service descriptions for the services monitored on this remote site, will no longer work. "
                         "In case the sites are managed by different groups of people, especially when belonging to different organizations, we recommend to disable this setting."
                     ),
                 ),
             ),
-        ]
+        }
 
         if ldap_connections_are_configurable():
-            elements.append(
-                ("user_sync", self._site_mgmt.user_sync_valuespec(self._site_id, self._site))
+            elements["user_sync"] = DictElement(
+                parameter_form=self._site_mgmt.user_sync_form_spec(self._site_id, self._site)
             )
 
-        elements.extend(
-            [
-                (
-                    "replicate_ec",
-                    Checkbox(
-                        title=_("Replicate Event Console config"),
-                        label=_("Replicate Event Console configuration to this site"),
-                        help=_(
-                            "This option enables the distribution of global settings and rules of the Event Console "
-                            "to the remote site. Any change in the local Event Console settings will mark the site "
-                            "as <i>need sync</i>. A synchronization will automatically reload the Event Console of "
-                            "the remote site."
-                        ),
-                    ),
+        elements["replicate_ec"] = DictElement(
+            parameter_form=BooleanChoice(
+                title=Title("Replicate Event Console config"),
+                label=Label("Replicate Event Console configuration to this site"),
+                help_text=Help(
+                    "This option enables the distribution of global settings and rules of the Event Console "
+                    "to the remote site. Any change in the local Event Console settings will mark the site "
+                    "as <i>need sync</i>. A synchronization will automatically reload the Event Console of "
+                    "the remote site."
                 ),
-                (
-                    "replicate_mkps",
-                    Checkbox(
-                        title=_("Replicate extensions"),
-                        label=_("Replicate extensions (MKPs and files in <tt>~/local/</tt>)"),
-                        help=_(
-                            "If you enable the replication of MKPs then during each <i>Activate Changes</i> MKPs "
-                            "that are installed on your central site and all other files below the <tt>~/local/</tt> "
-                            "directory will be also transferred to the remote site. Note: <b>all other MKPs and files "
-                            "below <tt>~/local/</tt> on the remote site will be removed</b>."
-                        ),
-                    ),
+            ),
+        )
+        elements["replicate_mkps"] = DictElement(
+            parameter_form=BooleanChoice(
+                title=Title("Replicate extensions"),
+                label=Label("Replicate extensions (MKPs and files in <tt>~/local/</tt>)"),
+                help_text=Help(
+                    "If you enable the replication of MKPs then during each <i>Activate Changes</i> MKPs "
+                    "that are installed on your central site and all other files below the <tt>~/local/</tt> "
+                    "directory will be also transferred to the remote site. Note: <b>all other MKPs and files "
+                    "below <tt>~/local/</tt> on the remote site will be removed</b>."
                 ),
-            ]
+            ),
         )
         return elements
 
@@ -720,7 +779,7 @@ class ModeEditBrokerConnection(WatoMode):
         )
         return menu
 
-    def _validate_connection_id(self, connection_id: str, varprefix: str | None) -> None:
+    def _validate_connection_id(self, connection_id: str) -> None:
         if self._site_mgmt.broker_connection_id_exists(connection_id):
             raise MKUserError(
                 None,
@@ -731,9 +790,9 @@ class ModeEditBrokerConnection(WatoMode):
         if not transactions.check_transaction():
             return redirect(mode_url("sites"))
 
-        vs = self._valuespec(config)
-        raw_site_spec = vs.from_html_vars("broker_connection")
-        vs.validate_value(raw_site_spec, "broker_connection")
+        flat_catalog = self._flat_catalog(config)
+        raw_site_spec = parse_data_from_field_id(flat_catalog, "_edit_broker_connection_id")
+        assert isinstance(raw_site_spec, dict)
 
         try:
             source_site, dest_site = (
@@ -767,33 +826,31 @@ class ModeEditBrokerConnection(WatoMode):
         return redirect(mode_url("sites"))
 
     def page(self, config: Config) -> None:
+        connection_vs = (
+            {
+                "unique_id": self._edit_id if self._edit_id else "",
+                "connecter": self._connection.connecter.site_id,
+                "connectee": self._connection.connectee.site_id,
+            }
+            if self._connection
+            else {}
+        )
+        flat_catalog = self._flat_catalog(config)
         with html.form_context("broker_connection"):
-            connection_vs = (
-                {
-                    "unique_id": self._edit_id if self._edit_id else "",
-                    "connecter": self._connection.connecter.site_id,
-                    "connectee": self._connection.connectee.site_id,
-                }
-                if self._connection
-                else {}
+            render_form_spec(
+                flat_catalog,
+                "_edit_broker_connection_id",
+                RawDiskData(connection_vs),
+                do_validate=False,
             )
-
-            self._valuespec(config).render_input("broker_connection", connection_vs)
             forms.end()
             html.hidden_fields()
 
-    def _valuespec(self, config: Config) -> Dictionary:
-        basic_elements = self._basic_elements(config)
-
-        return Dictionary(
-            elements=basic_elements,
-            headers=[
-                (_("Connection"), [key for key, _vs in basic_elements]),
-            ],
-            render="form",
-            form_narrow=True,
-            optional_keys=[],
-            help=_(
+    def _flat_catalog(self, config: Config):  # type: ignore[no-untyped-def]
+        basic = self._basic_elements(config)
+        spec = Dictionary(
+            elements=basic,
+            help_text=Help(
                 "You can define pairs of sites here that will be able to directly "
                 "communicate, without routing the messages via the central site. "
                 "Messages themselves will be sent in both directions: from the "
@@ -804,52 +861,61 @@ class ModeEditBrokerConnection(WatoMode):
                 "peer."
             ),
         )
+        headers = [(_("Connection"), list(basic.keys()))]
+        return create_flat_catalog_from_dictionary(spec, headers=headers)
 
-    def _basic_elements(self, config: Config) -> list[tuple[str, ValueSpec]]:
-        replicated_sites_choices = [
-            (sk, si.get("alias", sk))
+    def _basic_elements(self, config: Config) -> dict[str, DictElement]:
+        replicated_sites_elements: list[SingleChoiceElementExtended[str]] = [
+            SingleChoiceElementExtended(  # astrein: disable=localization-checker
+                name=str(sk),
+                title=Title(si.get("alias", sk)),  # astrein: disable=localization-checker
+            )
             for sk, si in distributed_setup_remote_sites(config.sites).items()
         ]
 
-        return [
-            (
-                (
-                    "unique_id",
-                    FixedValue(
-                        value=self._edit_id,
-                        title=_("Unique ID"),
+        if self._edit_id:
+            unique_id_form_spec: FixedValue | String = FixedValue(
+                value=self._edit_id, title=Title("Unique ID")
+            )
+        else:
+            unique_id_form_spec = String(
+                title=Title("Unique ID"),
+                field_size=FieldSize.LARGE,
+                custom_validate=[
+                    validators.LengthInRange(
+                        min_value=1,
+                        error_msg=Message("Unique ID cannot be empty"),
                     ),
-                )
-                if self._edit_id
-                else (
-                    "unique_id",
-                    ID(
-                        title=_("Unique ID"),
-                        size=60,
-                        allow_empty=False,
-                        validate=self._validate_connection_id,
+                    validators.MatchRegex(
+                        regex=REGEX_ID,
+                        error_msg=Message(
+                            "An identifier must only consist of letters, digits, dash and "
+                            "underscore and it must start with a letter or underscore."
+                        ),
                     ),
-                )
-            ),
-            (
-                "connecter",
-                DropdownChoice(
-                    title=_("Initiating peer"),
-                    choices=replicated_sites_choices,
-                    sorted=True,
-                    help=_("Select the site that is establishing the TCP connection."),
+                    create_validation_error_for_mk_user_error(self._validate_connection_id),
+                ],
+            )
+
+        return {
+            "unique_id": DictElement(required=True, parameter_form=unique_id_form_spec),
+            "connecter": DictElement(
+                required=True,
+                parameter_form=SingleChoiceExtended[str](
+                    title=Title("Initiating peer"),
+                    elements=replicated_sites_elements,
+                    help_text=Help("Select the site that is establishing the TCP connection."),
                 ),
             ),
-            (
-                "connectee",
-                DropdownChoice(
-                    title=_("Accepting peer"),
-                    choices=replicated_sites_choices,
-                    sorted=True,
-                    help=_("Select the site that is accepting the TCP connection."),
+            "connectee": DictElement(
+                required=True,
+                parameter_form=SingleChoiceExtended[str](
+                    title=Title("Accepting peer"),
+                    elements=replicated_sites_elements,
+                    help_text=Help("Select the site that is accepting the TCP connection."),
                 ),
             ),
-        ]
+        }
 
 
 class ModeDistributedMonitoring(WatoMode):
@@ -989,7 +1055,7 @@ class ModeDistributedMonitoring(WatoMode):
                 transactions,
                 [
                     ("host_search_change_site", "on"),
-                    ("host_search_site", DropdownChoice.option_id(delete_id)),
+                    ("host_search_site", delete_id),
                     ("host_search", "1"),
                     ("folder", ""),
                     ("mode", "search"),
@@ -1336,8 +1402,13 @@ class ModeDistributedMonitoring(WatoMode):
         self, table: Table, site_id: SiteId, site: SiteConfiguration
     ) -> None:
         table.cell(_("Status connection"))
-        vs_connection = self._site_mgmt.connection_method_valuespec()
-        html.write_text_permissive(vs_connection.value_to_html(site["socket"]))
+        render_form_spec(
+            self._site_mgmt.connection_method_form_spec(),
+            "_connection_display_%s" % site_id,
+            RawDiskData(site["socket"]),
+            do_validate=False,
+            display_mode=DisplayMode.READONLY,
+        )
 
     def _show_status_connection_status(
         self, table: Table, site_id: SiteId, site: SiteConfiguration

@@ -798,6 +798,7 @@ excludes = ["cmk.gui.nonfree.pro.plugins", "cmk.gui.plugins"]
 [components."cmk.gui.nonfree.ultimatemt"]
 allows = [
   "@ccc",
+  "@plugin_apis",
   "@crypto",
   "@messaging",
   "cmk.backup",
@@ -1120,7 +1121,13 @@ allows = [
 ]
 
 [components."cmk.liveproxyd.gui"]
-allows = ["@ccc", "cmk.gui", "cmk.liveproxyd.shared", "cmk.utils"]
+allows = [
+  "@ccc",
+  "@plugin_apis",
+  "cmk.gui",
+  "cmk.liveproxyd.shared",
+  "cmk.utils",
+]
 
 [components."cmk.robotmk"]
 allows = [

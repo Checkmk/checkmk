@@ -36,6 +36,16 @@ from cmk.ccc.store import load_from_mk_file
 from cmk.gui import hooks, log
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
+from cmk.gui.form_specs.generators.cascading_choice_utils import (
+    CascadingDataConversion,
+    enable_deprecated_cascading_elements,
+)
+from cmk.gui.form_specs.generators.host_address import create_host_address
+from cmk.gui.form_specs.unstable.cascading_single_choice_extended import (
+    CascadingSingleChoiceExtended,
+    CascadingSingleChoiceLayout,
+)
+from cmk.gui.form_specs.unstable.legacy_converter import Tuple
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
@@ -52,17 +62,17 @@ from cmk.gui.userdb import connection_choices
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import makeactionuri
 from cmk.gui.valuespec import (
-    CascadingDropdown,
-    Checkbox,
-    Dictionary,
-    FixedValue,
-    HostAddress,
-    Integer,
+    Dictionary as _LegacyDictionary,
+)
+from cmk.gui.valuespec import (
+    FixedValue as _LegacyFixedValue,
+)
+from cmk.gui.valuespec import (
+    Integer as _LegacyInteger,
+)
+from cmk.gui.valuespec import (
     IPNetwork,
-    ListChoice,
     ListOfStrings,
-    TextInput,
-    Tuple,
     ValueSpec,
 )
 from cmk.gui.watolib.automation_commands import OMDStatus
@@ -81,6 +91,22 @@ from cmk.gui.watolib.global_settings import load_configuration_settings
 from cmk.gui.watolib.mode import mode_registry
 from cmk.gui.watolib.simple_config_file import ConfigFileRegistry, WatoSingleConfigFile
 from cmk.licensing.handler import LicenseState
+from cmk.rulesets.v1 import Help, Label, Message, Title
+from cmk.rulesets.v1.form_specs import (
+    BooleanChoice,
+    CascadingSingleChoice,
+    CascadingSingleChoiceElement,
+    DefaultValue,
+    DictElement,
+    Dictionary,
+    FixedValue,
+    FormSpec,
+    Integer,
+    MultipleChoice,
+    MultipleChoiceElement,
+    String,
+    validators,
+)
 from cmk.utils import paths
 from cmk.utils.automation_config import RemoteAutomationConfig
 
@@ -101,17 +127,17 @@ def register(config_file_registry: ConfigFileRegistry) -> None:
 
 
 class LivestatusProxyHook(Protocol):
-    def livestatus_proxy_valuespec(self) -> ValueSpec: ...
+    def livestatus_proxy_form_spec(self) -> FormSpec[Any]: ...
     def on_sites_saved(self, sites: SiteConfigurations) -> None: ...
     def affected_config_domains(self) -> list[ABCConfigDomain]: ...
 
 
 class NoOpLivestatusProxy:
-    def livestatus_proxy_valuespec(self) -> ValueSpec:
+    def livestatus_proxy_form_spec(self) -> FixedValue:
         return FixedValue(
             value=None,
-            title=_("Use Livestatus proxy daemon"),
-            totext=_("Connect directly (not available in Checkmk Community)"),
+            title=Title("Use Livestatus proxy daemon"),
+            label=Label("Connect directly (not available in Checkmk Community)"),
         )
 
     def on_sites_saved(self, sites: SiteConfigurations) -> None:
@@ -129,124 +155,129 @@ class SiteManagement:
         self._liveproxy_hook = liveproxy_hook or NoOpLivestatusProxy()
 
     @classmethod
-    def connection_method_valuespec(cls) -> CascadingDropdown:
-        return CascadingDropdown(
-            title=_("Connection"),
-            orientation="horizontal",
-            choices=cls._connection_choices(),
-            render=CascadingDropdown.Render.foldable,
-            help=_(
+    def connection_method_form_spec(cls) -> CascadingSingleChoiceExtended:
+        return CascadingSingleChoiceExtended(
+            title=Title("Connection"),
+            elements=cls._connection_choices(),
+            help_text=Help(
                 "When connecting to remote site please make sure "
                 "that Livestatus over TCP is activated there. You can use Unix sockets "
                 "to connect to foreign sites on localhost. Please make sure that this "
                 "site has proper read and write permissions to the Unix socket of the "
                 "foreign site."
             ),
+            layout=CascadingSingleChoiceLayout.vertical,
         )
 
-    def livestatus_proxy_valuespec(self) -> ValueSpec:
-        return self._liveproxy_hook.livestatus_proxy_valuespec()
+    def livestatus_proxy_form_spec(self) -> FormSpec[Any]:
+        return self._liveproxy_hook.livestatus_proxy_form_spec()
 
     @classmethod
-    def _connection_choices(cls) -> list[tuple[str, str, ValueSpec]]:
-        conn_choices: list[tuple[str, str, ValueSpec]] = [
-            (
-                "local",
-                _("Connect to the local site"),
-                FixedValue(
-                    value=None,
-                    totext="",
-                ),
+    def _connection_choices(cls) -> list[CascadingSingleChoiceElement]:
+        return [
+            CascadingSingleChoiceElement(
+                name="local",
+                title=Title("Connect to the local site"),
+                parameter_form=FixedValue(value=None, label=Label("")),
             ),
-            ("tcp", _("Connect via TCP (IPv4)"), cls._tcp_socket_valuespec(ipv6=False)),
-            ("tcp6", _("Connect via TCP (IPv6)"), cls._tcp_socket_valuespec(ipv6=True)),
-            (
-                "unix",
-                _("Connect via Unix socket"),
-                Dictionary(
-                    elements=[
-                        (
-                            "path",
-                            TextInput(
-                                label=_("Path:"),
-                                size=40,
-                                allow_empty=False,
+            CascadingSingleChoiceElement(
+                name="tcp",
+                title=Title("Connect via TCP (IPv4)"),
+                parameter_form=cls._tcp_socket_form_spec(ipv6=False),
+            ),
+            CascadingSingleChoiceElement(
+                name="tcp6",
+                title=Title("Connect via TCP (IPv6)"),
+                parameter_form=cls._tcp_socket_form_spec(ipv6=True),
+            ),
+            CascadingSingleChoiceElement(
+                name="unix",
+                title=Title("Connect via Unix socket"),
+                parameter_form=Dictionary(
+                    elements={
+                        "path": DictElement(
+                            required=True,
+                            parameter_form=String(
+                                label=Label("Path:"),
+                                custom_validate=[
+                                    validators.LengthInRange(
+                                        min_value=1,
+                                        error_msg=Message("Text field can not be empty"),
+                                    )
+                                ],
                             ),
-                        ),
-                    ],
-                    optional_keys=False,
+                        )
+                    }
                 ),
             ),
         ]
-        return conn_choices
 
     @classmethod
-    def _tcp_socket_valuespec(cls, ipv6: bool) -> Dictionary:
+    def _tcp_socket_form_spec(cls, ipv6: bool) -> Dictionary:
         return Dictionary(
-            elements=[
-                (
-                    "address",
-                    Tuple(
-                        title=_("TCP address to connect to"),
-                        orientation="float",
+            elements={
+                "address": DictElement(
+                    required=True,
+                    parameter_form=Tuple(
+                        title=Title("TCP address to connect to"),
+                        layout="horizontal",
                         elements=[
-                            HostAddress(
-                                label=_("Host:"),
+                            create_host_address(
                                 allow_empty=False,
-                                size=15,
                                 allow_ipv4_address=not ipv6,
                                 allow_ipv6_address=ipv6,
                             ),
                             Integer(
-                                label=_("Port:"),
-                                minvalue=1,
-                                maxvalue=65535,
-                                default_value=6557,
+                                label=Label("Port:"),
+                                prefill=DefaultValue(6557),
+                                custom_validate=[
+                                    validators.NetworkPort(),
+                                ],
                             ),
                         ],
                     ),
                 ),
-                ("tls", cls._tls_valuespec()),
-            ],
-            optional_keys=False,
+                "tls": DictElement(required=True, parameter_form=cls._tls_form_spec()),
+            }
         )
 
     @classmethod
-    def _tls_valuespec(cls) -> CascadingDropdown:
-        return CascadingDropdown(
-            title=_("Encryption"),
-            choices=[
-                (
-                    "plain_text",
-                    _("Plain text (unencrypted)"),
-                    FixedValue(value={}, totext=_("Use plain text, unencrypted transport")),
+    def _tls_form_spec(cls) -> CascadingSingleChoice:
+        return CascadingSingleChoice(
+            title=Title("Encryption"),
+            elements=[
+                CascadingSingleChoiceElement(
+                    name="plain_text",
+                    title=Title("Plain text (unencrypted)"),
+                    parameter_form=FixedValue(
+                        value={}, label=Label("Use plain text, unencrypted transport")
+                    ),
                 ),
-                (
-                    "encrypted",
-                    _("Encrypt data using TLS"),
-                    Dictionary(
-                        elements=[
-                            (
-                                "verify",
-                                Checkbox(
-                                    title=_("Verify server certificate"),
-                                    label=_(
+                CascadingSingleChoiceElement(
+                    name="encrypted",
+                    title=Title("Encrypt data using TLS"),
+                    parameter_form=Dictionary(
+                        elements={
+                            "verify": DictElement(
+                                required=True,
+                                parameter_form=BooleanChoice(
+                                    title=Title("Verify server certificate"),
+                                    label=Label(
                                         "Verify the Livestatus server certificate using the local site CA"
                                     ),
-                                    default_value=True,
-                                    help=_(
+                                    prefill=DefaultValue(True),
+                                    help_text=Help(
                                         "Either verify the server certificate using the site local CA or accept "
                                         "any certificate offered by the server. It is highly recommended to "
                                         "leave this enabled."
                                     ),
                                 ),
-                            ),
-                        ],
-                        optional_keys=False,
+                            )
+                        }
                     ),
                 ),
             ],
-            help=_(
+            help_text=Help(
                 "When connecting to Checkmk versions older than 1.6 you can only use plain text "
                 "transport. Starting with Checkmk 1.6 it is possible to use encrypted Livestatus "
                 "communication. Sites created with 1.6 will automatically use encrypted communication "
@@ -257,39 +288,72 @@ class SiteManagement:
         )
 
     @classmethod
-    def user_sync_valuespec(
+    def user_sync_form_spec(
         cls,
         site_id: SiteId | None,
         site_configuration: SiteConfiguration,
-    ) -> CascadingDropdown:
-        return CascadingDropdown(
-            title=_("Sync with LDAP connections"),
-            orientation="horizontal",
-            choices=[
-                (None, _("Disable automatic user synchronization (use central site users)")),
-                ("all", _("Sync users with all connections")),
-                (
-                    "list",
-                    _("Sync with the following LDAP connections"),
-                    ListChoice(
-                        choices=connection_choices,
-                        allow_empty=False,
+    ) -> FormSpec[Any]:
+        local = site_id is None or site_is_local(site_configuration)
+        return enable_deprecated_cascading_elements(
+            CascadingSingleChoiceExtended(
+                title=Title("Sync with LDAP connections"),
+                elements=[
+                    CascadingSingleChoiceElement(
+                        name="disabled",
+                        title=Title(
+                            "Disable automatic user synchronization (use central site users)"
+                        ),
+                        parameter_form=FixedValue(value=True, label=Label("")),
                     ),
+                    CascadingSingleChoiceElement(
+                        name="all",
+                        title=Title("Sync users with all connections"),
+                        parameter_form=FixedValue(value=True, label=Label("")),
+                    ),
+                    CascadingSingleChoiceElement(
+                        name="list",
+                        title=Title("Sync with the following LDAP connections"),
+                        parameter_form=MultipleChoice(
+                            custom_validate=[
+                                validators.LengthInRange(min_value=1, error_msg=Message(""))
+                            ],
+                            elements=[
+                                MultipleChoiceElement(  # astrein: disable=localization-checker
+                                    name=ident,
+                                    title=Title(label),  # astrein: disable=localization-checker
+                                )
+                                for ident, label in connection_choices()
+                            ],
+                        ),
+                    ),
+                ],
+                prefill=DefaultValue("all" if local else "disabled"),
+                help_text=Help(
+                    "By default the users are synchronized automatically in the interval configured "
+                    "in the connection. For example the LDAP connector synchronizes the users every "
+                    "five minutes by default. The interval can be changed for each connection "
+                    'individually in the <a href="wato.py?mode=ldap_config">connection settings</a>. '
+                    "Please note that the synchronization is only performed on the central site in "
+                    "distributed setups by default.<br>"
+                    "The remote sites don't perform automatic user synchronizations with the "
+                    "configured connections. But you can configure each site to either "
+                    "synchronize the users with all configured connections or a specific list of "
+                    "connections."
+                ),
+                layout=CascadingSingleChoiceLayout.horizontal,
+            ),
+            [
+                CascadingDataConversion(
+                    name_in_form_spec="disabled",
+                    value_on_disk=None,
+                    has_form_spec=False,
+                ),
+                CascadingDataConversion(
+                    name_in_form_spec="all",
+                    value_on_disk="all",
+                    has_form_spec=False,
                 ),
             ],
-            default_value="all" if site_id is None or site_is_local(site_configuration) else None,
-            help=_(
-                "By default the users are synchronized automatically in the interval configured "
-                "in the connection. For example the LDAP connector synchronizes the users every "
-                "five minutes by default. The interval can be changed for each connection "
-                'individually in the <a href="wato.py?mode=ldap_config">connection settings</a>. '
-                "Please note that the synchronization is only performed on the central site in "
-                "distributed setups by default.<br>"
-                "The remote sites don't perform automatic user synchronizations with the "
-                "configured connections. But you can configure each site to either "
-                "synchronize the users with all configured connections or a specific list of "
-                "connections."
-            ),
         )
 
     @classmethod
@@ -521,8 +585,7 @@ class SiteManagement:
 
         # User synchronization
         if ldap_connections_are_configurable():
-            user_sync_valuespec = cls.user_sync_valuespec(site_id, site_configuration)
-            user_sync_valuespec.validate_value(site_configuration.get("user_sync"), "user_sync")
+            pass  # FormSpec validation is handled by parse_data_from_field_id in the page layer
 
     @classmethod
     def load_sites(cls) -> SiteConfigurations:
@@ -632,7 +695,7 @@ site_management_registry = SiteManagementRegistry()
 
 
 # Don't use or change this ValueSpec, it is out-of-date. It can't be removed due to CMK-12228.
-class LivestatusViaTCP(Dictionary):
+class LivestatusViaTCP(_LegacyDictionary):
     def __init__(
         self,
         title: str | None = None,
@@ -642,11 +705,11 @@ class LivestatusViaTCP(Dictionary):
         elements: list[tuple[str, ValueSpec]] = [
             (
                 "port",
-                Integer(
+                _LegacyInteger(
                     title=_("TCP port"),
+                    default_value=tcp_port,
                     minvalue=1,
                     maxvalue=65535,
-                    default_value=tcp_port,
                 ),
             ),
             (
@@ -666,8 +729,8 @@ class LivestatusViaTCP(Dictionary):
             ),
             (
                 "tls",
-                FixedValue(
-                    value=True,
+                _LegacyFixedValue(
+                    True,
                     title=_("Encrypt communication"),
                     totext=_("Encrypt TCP Livestatus connections"),
                     help=_(

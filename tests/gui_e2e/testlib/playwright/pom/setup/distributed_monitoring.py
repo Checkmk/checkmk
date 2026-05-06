@@ -216,66 +216,62 @@ class AddSiteConnection(CmkPage):
     @property
     def form_site(self) -> Locator:
         """The form to add a new site connection."""
-        return self.main_area.locator("form#form_site")
+        return self.main_area.locator()
 
     @property
     def site_id_input(self) -> Locator:
         """The input field for the site ID."""
-        return self.form_site.locator("input[name='site_p_id']")
+        return self.form_site.get_by_label("Site ID")
 
     @property
     def site_alias_input(self) -> Locator:
         """The input field for the site alias."""
-        return self.form_site.locator("input[name='site_p_alias']")
+        return self.form_site.get_by_label("Alias")
 
     @property
     def connection_tcp_host_input(self) -> Locator:
         """The input field for the site host."""
-        return self.form_site.locator("input[name='site_p_socket_1_p_address_0']")
+        return self.form_site.get_by_role("group", name="TCP address to connect to").get_by_role(
+            "textbox"
+        )
 
     @property
     def connection_tcp_port_input(self) -> Locator:
         """The input field for the site port."""
-        return self.form_site.locator("input[name='site_p_socket_1_p_address_1']")
+        return self.form_site.get_by_label("Port:")
 
     @property
     def connection_encryptor_dropdown(self) -> DropdownHelper[EncryptionType]:
         """The dropdown for the encryption setting."""
-        connection_encryption_selector = self.form_site.get_by_role("combobox").filter(
-            has=self.locator("#select2-site_p_socket_1_p_tls_sel-container")
-        )
-        connection_encryption_options = self.main_area.locator(
-            "ul#select2-site_p_socket_1_p_tls_sel-results"
-        )
         return DropdownHelper[EncryptionType](
-            "Encryption", connection_encryption_selector, connection_encryption_options
+            "Encryption",
+            dropdown_box=self.form_site.get_by_role("combobox", name="Encryption"),
+            dropdown_list=self.form_site.get_by_role("listbox"),
         )
 
     @property
     def url_prefix_input(self) -> Locator:
         """The input field for the URL prefix."""
-        return self.form_site.locator("input[name='site_p_url_prefix']")
+        return self.form_site.get_by_label("URL prefix")
 
     @property
     def replication_type_dropdown(self) -> DropdownHelper[ReplicationType]:
         """The dropdown for the replication setting."""
-        replication_type_selector = self.form_site.get_by_role("combobox").filter(
-            has=self.locator("#select2-site_p_replication-container")
-        )
-        replication_type_options = self.main_area.locator("ul#select2-site_p_replication-results")
         return DropdownHelper[ReplicationType](
-            "Replication", replication_type_selector, replication_type_options
+            "Enable replication",
+            dropdown_box=self.form_site.get_by_role("combobox", name="Enable replication"),
+            dropdown_list=self.form_site.get_by_role("listbox"),
         )
 
     @property
     def message_broker_port_input(self) -> Locator:
         """The input field for the message broker port."""
-        return self.form_site.locator("input[name='site_p_message_broker_port']")
+        return self.form_site.get_by_label("Message broker port")
 
     @property
     def url_of_remote_site_input(self) -> Locator:
         """The input field for the URL of the remote site."""
-        return self.form_site.locator("input[name='site_p_multisiteurl']")
+        return self.form_site.get_by_label("URL of remote site")
 
     def fill_site_connection_form(self, remote_site: Site) -> None:
         """Fill the form to add a new site connection.

@@ -136,12 +136,13 @@ def check_jolokia_metrics_serv_req(item, params, info):
 
     req = saveint(serv["Requests"])
 
-    yield check_levels(
+    yield from check_levels_v2(
         req,
-        "Requests",
-        (params["levels_upper"] or (None, None)) + (params["levels_lower"] or (None, None)),
-        human_readable_func=str,
-        infoname="Requests",
+        metric_name="Requests",
+        levels_upper=params["levels_upper"],
+        levels_lower=params["levels_lower"],
+        render_func=str,
+        label="Requests",
     )
 
     try:
@@ -165,8 +166,8 @@ check_info["jolokia_metrics.serv_req"] = LegacyCheckDefinition(
     check_function=check_jolokia_metrics_serv_req,
     check_ruleset_name="jvm_requests",
     check_default_parameters={
-        "levels_lower": (-1, -1),
-        "levels_upper": (5000, 6000),
+        "levels_lower": ("no_levels", None),
+        "levels_upper": ("fixed", (5000, 6000)),
     },
 )
 

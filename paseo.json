@@ -3,7 +3,7 @@
     "teardown": [
       "bazel clean --expunge",
       "find ~/.cache/bazel-repo-contents -xtype l -delete 2>/dev/null || true",
-      "BRANCH=$(git branch --show-current) && git checkout --detach && git branch -D \"$BRANCH\""
+      "if git rev-parse --verify --quiet \"refs/heads/$PASEO_BRANCH_NAME\" >/dev/null 2>&1; then git checkout --detach && git branch -D \"$PASEO_BRANCH_NAME\"; fi"
     ]
   }
 }

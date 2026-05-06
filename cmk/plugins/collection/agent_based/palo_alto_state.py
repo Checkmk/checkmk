@@ -75,6 +75,7 @@ _STATE_MAPPING_DEFAULT: Mapping[str, int] = {
     "ha_peer_state_non_functional": int(State.CRIT),
     "ha_peer_state_suspended": int(State.CRIT),
     "ha_peer_state_unknown": int(State.UNKNOWN),
+    "ha_peer_state_initial": int(State.WARN),
 }
 
 

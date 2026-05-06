@@ -12,16 +12,6 @@ from cmk.agent_based.v2 import get_rate, get_value_store
 
 check_info = {}
 
-#   .--kernel--Counters----------------------------------------------------.
-#   |                ____                  _                               |
-#   |               / ___|___  _   _ _ __ | |_ ___ _ __ ___                |
-#   |              | |   / _ \| | | | '_ \| __/ _ \ '__/ __|               |
-#   |              | |__| (_) | |_| | | | | ||  __/ |  \__ \               |
-#   |               \____\___/ \__,_|_| |_|\__\___|_|  |___/               |
-#   |                                                                      |
-#   +----------------------------------------------------------------------+
-#   |  Check page faults, context switches and process creations           |
-#   '----------------------------------------------------------------------'
 
 kernel_counter_names = cmk.plugins.collection.agent_based.kernel.KERNEL_COUNTER_NAMES
 
@@ -32,54 +22,6 @@ kernel_metrics_names = {
     "pswpin": "page_swap_in",
     "pswpout": "page_swap_out",
 }
-
-
-# item is one of the keys in /proc/stat or /proc/vmstat
-def check_kernel(item, params, parsed):
-    timestamp, items = parsed
-
-    if timestamp is None:
-        return None
-
-    item_values = items.get(item)
-
-    if item_values is None:
-        return None
-
-    if len(item_values) > 1:
-        return 3, "item '%s' not unique (found %d times)" % (item, len(item_values))
-
-    counter, value = item_values[0]
-    per_sec = get_rate(get_value_store(), "counter", timestamp, value)
-    return check_levels(
-        per_sec,
-        counter,
-        params["levels"],
-        human_readable_func=lambda x: f"{x:.2f}/s",
-        boundaries=(0, None),
-    )
-
-
-# This check is deprecated. Please have a look at werk #8969.
-check_info["kernel"] = LegacyCheckDefinition(
-    name="kernel",
-    service_name="Kernel %s",
-    check_function=check_kernel,
-    check_ruleset_name="vm_counter",
-    check_default_parameters={"levels": None},
-)
-
-# .
-#   .--kernel.performance--Counters----------------------------------------.
-#   |    ____            __                                                |
-#   |   |  _ \ ___ _ __ / _| ___  _ __ _ __ ___   __ _ _ __   ___ ___      |
-#   |   | |_) / _ \ '__| |_ / _ \| '__| '_ ` _ \ / _` | '_ \ / __/ _ \     |
-#   |   |  __/  __/ |  |  _| (_) | |  | | | | | | (_| | | | | (_|  __/     |
-#   |   |_|   \___|_|  |_|  \___/|_|  |_| |_| |_|\__,_|_| |_|\___\___|     |
-#   |                                                                      |
-#   +----------------------------------------------------------------------+
-#   |  Check kernel performance counters                                   |
-#   '----------------------------------------------------------------------'
 
 
 def discover_kernel_performance(parsed):

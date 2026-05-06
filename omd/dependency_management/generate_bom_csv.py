@@ -31,6 +31,7 @@ LINKS = {
     "BSL-1.0": "https://opensource.org/licenses/BSL-1.0",
     "BlueOak-1.0.0": "https://blueoakcouncil.org/license/1.0.0",
     "CC-BY-4.0": "https://creativecommons.org/licenses/by/4.0/legalcode",
+    "CC-BY-SA-4.0": "https://creativecommons.org/licenses/by-sa/4.0/legalcode",
     "CC0-1.0": "https://creativecommons.org/publicdomain/zero/1.0/legalcode",
     "CDDL-1.0": "https://opensource.org/licenses/cddl1",
     "CDLA-Permissive-2.0": "https://spdx.org/licenses/CDLA-Permissive-2.0.html",

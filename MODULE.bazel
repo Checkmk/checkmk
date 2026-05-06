@@ -64,6 +64,16 @@ git_override(
     remote = "https://github.com/agoessling/rules_sphinx/",
 )
 
+bazel_dep(name = "supply_chain_tools", dev_dependency = True)
+
+# Not yet on BCR
+git_override(
+    module_name = "supply_chain_tools",
+    commit = "01cb081215f4a9ab15228330416bb47cb0d9ce43",
+    remote = "https://github.com/bazel-contrib/supply-chain/",
+    strip_prefix = "tools",
+)
+
 bazel_dep(name = "bazel_env.bzl", version = "0.5.0", dev_dependency = True)
 bazel_dep(
     name = "llvm_linux_x86_64",

@@ -4,7 +4,7 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import userEvent from '@testing-library/user-event'
-import { render, screen, waitFor } from '@testing-library/vue'
+import { fireEvent, render, screen, waitFor } from '@testing-library/vue'
 import { type GraphLines } from 'cmk-shared-typing/typescript/graph_designer'
 import { HttpResponse, http } from 'msw'
 import { setupServer } from 'msw/node'
@@ -532,6 +532,84 @@ test.each(graphLineTypesExceptQuery)(
     expect(inlineHelpTextElement).not.toBeInTheDocument()
   }
 )
+
+describe('Constant graph line empty-value validation', () => {
+  test('inline error does not appear before submit, even when value is cleared', async () => {
+    const graphLines: GraphLines = [
+      {
+        id: 0,
+        type: 'constant',
+        color: '#ff0000',
+        auto_title: 'Constant 100',
+        custom_title: '',
+        visible: true,
+        line_type: 'line',
+        mirrored: false,
+        value: 100
+      }
+    ]
+
+    render(GraphDesignerApp, {
+      props: {
+        graph_id: 'constant_inline_pre_submit',
+        graph_lines: graphLines,
+        graph_options: {
+          unit: 'first_entry_with_unit',
+          explicit_vertical_range: 'auto',
+          omit_zero_metrics: true
+        },
+        metric_backend_available: false,
+        create_services_available: false,
+        graph_renderer: fakeGraphRenderer
+      }
+    })
+
+    const constantInput = screen.getByDisplayValue('100')
+    await userEvent.clear(constantInput)
+
+    expect(screen.queryByText('Constant value must be a valid number')).not.toBeInTheDocument()
+  })
+
+  test('inline error appears after submit when value is cleared', async () => {
+    const graphLines: GraphLines = [
+      {
+        id: 0,
+        type: 'constant',
+        color: '#ff0000',
+        auto_title: 'Constant 100',
+        custom_title: '',
+        visible: true,
+        line_type: 'line',
+        mirrored: false,
+        value: 100
+      }
+    ]
+
+    render(GraphDesignerApp, {
+      props: {
+        graph_id: 'constant_inline_post_submit',
+        graph_lines: graphLines,
+        graph_options: {
+          unit: 'first_entry_with_unit',
+          explicit_vertical_range: 'auto',
+          omit_zero_metrics: true
+        },
+        metric_backend_available: false,
+        create_services_available: false,
+        graph_renderer: fakeGraphRenderer
+      }
+    })
+
+    const constantInput = screen.getByDisplayValue('100')
+    await userEvent.clear(constantInput)
+
+    const form = document.createElement('form')
+    document.body.appendChild(form)
+    fireEvent.submit(form)
+
+    await screen.findByText('Constant value must be a valid number')
+  })
+})
 
 // This is an integration test that covers the whole flow including the mocked
 // autocompleter interaction, so we need to increase the default timeout for this test.

@@ -11,7 +11,7 @@ import type {
   GraphOptionUnitCustomPrecision,
   GraphOptions
 } from 'cmk-shared-typing/typescript/graph_designer'
-import { ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 
 import usei18n from '@/lib/i18n'
 import useId from '@/lib/useId'
@@ -25,6 +25,7 @@ import CmkParagraph from '@/components/typography/CmkParagraph.vue'
 import CmkInput from '@/components/user-input/CmkInput.vue'
 
 import { extractUnitFields } from './converters'
+import { unitDigitsHasError, unitSymbolHasError } from './unitErrors'
 
 const { _t } = usei18n()
 
@@ -73,6 +74,33 @@ const precisionRoundingModeSuggestions: Suggestion[] = [
   { name: 'auto', title: _t('Auto') },
   { name: 'strict', title: _t('Strict') }
 ]
+
+const displayErrors = ref(false)
+
+const symbolErrors = computed<string[]>(() => {
+  if (!displayErrors.value) {
+    return []
+  }
+  return unitSymbolHasError(dataUnitChoice.value, dataNotation.value, dataNotationSymbol.value)
+    ? [_t('Symbol is required')]
+    : []
+})
+
+const digitsErrors = computed<string[]>(() => {
+  if (!displayErrors.value) {
+    return []
+  }
+  return unitDigitsHasError(dataUnitChoice.value, dataPrecisionDigits.value)
+    ? [_t('Digits must be a non-negative number')]
+    : []
+})
+
+function validate(): boolean {
+  displayErrors.value = true
+  return symbolErrors.value.length === 0 && digitsErrors.value.length === 0
+}
+
+defineExpose({ validate })
 
 const emit = defineEmits<{
   (
@@ -156,7 +184,12 @@ watch(
               :label="_t('Notation')"
             />
             <CmkIndent v-if="dataNotation !== 'time'">
-              <CmkInput v-model="dataNotationSymbol" placeholder="symbol" type="text" />
+              <CmkInput
+                v-model="dataNotationSymbol"
+                placeholder="symbol"
+                type="text"
+                :external-errors="symbolErrors"
+              />
             </CmkIndent>
           </CmkIndent>
           <CmkLabel>
@@ -180,7 +213,12 @@ watch(
                 <CmkLabel :for="digitsId">
                   {{ _t('Digits') }}
                 </CmkLabel>
-                <CmkInput :id="digitsId" v-model="dataPrecisionDigits" type="number" />
+                <CmkInput
+                  :id="digitsId"
+                  v-model="dataPrecisionDigits"
+                  type="number"
+                  :external-errors="digitsErrors"
+                />
               </div>
             </div>
           </CmkIndent>

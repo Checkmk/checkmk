@@ -199,6 +199,31 @@ def test_parse_perf_data2() -> None:
                 deprecated="",
             ),
         ),
+        # CMK-33772: NagiosPlugin("check_ping.exe") and NagiosPlugin("check_tcp.exe")
+        # are registered by werk #16254. parse_perf_data normalizes the lookup key
+        # via .replace(".", "_"), so the registration must use the same key form.
+        (
+            "rta",
+            "check_ping_exe",
+            TranslationSpec(
+                # ~.*rta is a regex entry — the spec keeps the original key as
+                # the name. What matters here is the scale being 0.001.
+                name="~.*rta",
+                scale=0.001,
+                auto_graph=True,
+                deprecated="",
+            ),
+        ),
+        (
+            "time",
+            "check_tcp_exe",
+            TranslationSpec(
+                name="response_time",
+                scale=1.0,
+                auto_graph=True,
+                deprecated="",
+            ),
+        ),
     ],
 )
 def test_perfvar_translation(

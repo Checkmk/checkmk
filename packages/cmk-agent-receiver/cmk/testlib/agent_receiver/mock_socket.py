@@ -5,6 +5,7 @@
 
 import contextlib
 import dataclasses
+import os
 import queue
 import secrets
 import select
@@ -122,8 +123,14 @@ def create_socket(
             delay=delay,
         )
         ms.start()
-        yield ms
-        ms.stop()
+        try:
+            yield ms
+        finally:
+            ms.stop()
+            try:
+                os.unlink(socket_path)
+            except FileNotFoundError:
+                pass
 
 
 @contextlib.contextmanager
@@ -133,7 +140,13 @@ def create_non_listening_socket(socket_path: str) -> Iterator[str]:
     ):
         # bind, but don't listen (also works without it)
         soc.bind(socket_path)
-        yield socket_path
+        try:
+            yield socket_path
+        finally:
+            try:
+                os.unlink(socket_path)
+            except FileNotFoundError:
+                pass
 
 
 @contextlib.contextmanager
@@ -177,6 +190,10 @@ def create_unresponsive_socket(socket_path: str) -> Iterator[str]:
     finally:
         stop_event.set()
         thread.join()
+        try:
+            os.unlink(socket_path)
+        except FileNotFoundError:
+            pass
 
 
 @contextlib.contextmanager
@@ -224,3 +241,7 @@ def create_crashy_socket(socket_path: str) -> Iterator[str]:
     finally:
         stop_event.set()
         thread.join()
+        try:
+            os.unlink(socket_path)
+        except FileNotFoundError:
+            pass

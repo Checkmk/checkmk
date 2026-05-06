@@ -7,6 +7,9 @@ vcrpy==7.0.0  # CMK-28526
 mypy-protobuf==3.7.0  # CMK-28939
 types-lxml==2025.11.25  # CMK-28940
 telnetlib3==2.0.8  # CMK-31264
+mypy==1.19.1
+types-docker==7.1.0.20260109
+azure-mgmt-compute==37.2.0
 aiohttp~=3.13.2
 annotated-types~=0.7.0
 apispec-oneofschema~=3.0.2

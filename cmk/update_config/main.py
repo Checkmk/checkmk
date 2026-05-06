@@ -217,11 +217,6 @@ def _load_pre_plugins(edition: Edition) -> None:
             if edition is Edition.COMMUNITY
             else load_plugins_with_exceptions("cmk.update_config.nonfree.pro.plugins.pre_actions")
         ),
-        (
-            load_plugins_with_exceptions("cmk.update_config.nonfree.ultimate.plugins.pre_actions")
-            if edition in (Edition.ULTIMATE, Edition.ULTIMATEMT)
-            else []
-        ),
     ):
         sys.stderr.write(f"Error in pre action plug-in {plugin}: {exc}\n")
         if debug.enabled():

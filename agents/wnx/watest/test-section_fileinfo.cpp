@@ -531,6 +531,12 @@ TEST(FileInfoTest, MakeFileInfoExisting) {
 }
 
 TEST(FileInfoTest, MakeFileInfoPagefile) {
+    // pagefile.sys exists but is locked (ec==32); skip if no pagefile at all
+    std::error_code ec;
+    const bool pagefile_present = fs::exists("c:\\pagefile.sys", ec);
+    if (!pagefile_present && ec.value() != 32) {
+        GTEST_SKIP() << "c:\\pagefile.sys not present on this system";
+    }
     for (auto mode : modes) {
         static const std::string name{"c:\\pagefile.sys"};
         auto x = details::MakeFileInfoString(name, mode);

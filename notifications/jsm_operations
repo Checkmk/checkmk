@@ -1,0 +1,21 @@
+#!/usr/bin/env python3
+# JSM Operations (Commercial editions only)
+# Bulk: no
+
+# Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
+import sys
+
+try:
+    from cmk.cee.notification_plugins import jsm_operations
+except ImportError:
+    sys.stderr.write(
+        "Jira Service Management Operations notification script is only "
+        "available with commercial editions.\n"
+    )
+    sys.exit(1)
+
+if __name__ == "__main__":
+    jsm_operations.main()

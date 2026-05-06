@@ -790,6 +790,7 @@ _EXPLICIT_FILE_TO_COMPONENT = {
     # CEE specific notification plugins
     ModulePath("notifications/servicenow"): Component("cmk.cee.notification_plugins"),
     ModulePath("notifications/jira_issues"): Component("cmk.cee.notification_plugins"),
+    ModulePath("notifications/jsm_operations"): Component("cmk.cee.notification_plugins"),
 }
 
 

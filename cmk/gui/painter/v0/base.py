@@ -379,6 +379,10 @@ class Cell:
 
         return columns
 
+    def has_link_spec(self) -> bool:
+        """Whether the column has a user-configured "Link to view / dashboard"."""
+        return self._link_spec is not None
+
     def _link_view(self, permitted_views: Mapping[ViewName, ViewSpec]) -> ViewSpec | None:
         if self._link_spec is None:
             return None

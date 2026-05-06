@@ -182,6 +182,41 @@ def test_parse_netstat(info: StringTable, expected_parsed: Section) -> None:
                 ),
             ],
         ),
+        pytest.param(
+            [
+                ["TCP", "172.29.0.40:1352", "172.29.0.40:62102", "FIN_WAIT_2"],
+                ["TCP", "172.29.0.40:62102", "172.29.0.40:1352", "FIN_WAIT_1"],
+            ],
+            [
+                Connection(
+                    proto="TCP",
+                    local_address=SplitIP("172.29.0.40", "1352"),
+                    remote_address=SplitIP("172.29.0.40", "62102"),
+                    state=ConnectionState.FIN_WAIT2,
+                ),
+                Connection(
+                    proto="TCP",
+                    local_address=SplitIP("172.29.0.40", "62102"),
+                    remote_address=SplitIP("172.29.0.40", "1352"),
+                    state=ConnectionState.FIN_WAIT1,
+                ),
+            ],
+            id="windows_fin_wait_states",
+        ),
+        pytest.param(
+            [
+                ["TCP", "10.1.1.99:12345", "10.1.1.100:80", "SYN_GESENDET"],
+            ],
+            [
+                Connection(
+                    proto="TCP",
+                    local_address=SplitIP("10.1.1.99", "12345"),
+                    remote_address=SplitIP("10.1.1.100", "80"),
+                    state=ConnectionState.SYN_SENT,
+                ),
+            ],
+            id="german_syn_gesendet",
+        ),
     ],
 )
 def test_parse_win_netstat(info: StringTable, expected_parsed: Section) -> None:

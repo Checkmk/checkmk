@@ -3,14 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="misc"
-# mypy: disable-error-code="type-arg"
-
 """Background tools required to register a check plug-in"""
 
 import functools
-from collections.abc import Callable, Generator, Mapping
-from typing import Any
+from collections.abc import Callable, Generator, Iterable, Mapping
 
 from cmk.agent_based.v1 import IgnoreResults, Metric, Result, Service
 from cmk.agent_based.v1.register import RuleSetType
@@ -63,8 +59,8 @@ def _requires_item(service_name: str) -> bool:
         return False
 
 
-def _filter_discovery(
-    generator: Callable[..., Generator[Any]],
+def _filter_discovery[**P](
+    generator: Callable[P, Iterable[object]],
     requires_item: bool,
 ) -> DiscoveryFunction:
     """Only let Services through
@@ -73,7 +69,7 @@ def _filter_discovery(
     """
 
     @functools.wraps(generator)
-    def filtered_generator(*args: Any, **kwargs: Any) -> Generator[Service]:
+    def filtered_generator(*args: P.args, **kwargs: P.kwargs) -> Generator[Service]:
         for element in generator(*args, **kwargs):
             if not isinstance(element, Service):
                 raise TypeError("unexpected type in discovery: %r" % type(element))
@@ -84,8 +80,8 @@ def _filter_discovery(
     return filtered_generator
 
 
-def _filter_check(
-    generator: Callable[..., Generator[Any]],
+def _filter_check[**P](
+    generator: Callable[P, Iterable[object]],
 ) -> CheckFunction:
     """Only let Result, Metric and IgnoreResults through
 
@@ -93,7 +89,9 @@ def _filter_check(
     """
 
     @functools.wraps(generator)
-    def filtered_generator(*args: Any, **kwargs: Any) -> Generator[Result | Metric | IgnoreResults]:
+    def filtered_generator(
+        *args: P.args, **kwargs: P.kwargs
+    ) -> Generator[Result | Metric | IgnoreResults]:
         for element in generator(*args, **kwargs):
             if not isinstance(element, Result | Metric | IgnoreResults):
                 raise TypeError("unexpected type in check function: %r" % type(element))
@@ -108,14 +106,14 @@ def _validate_kwargs(
     subscribed_sections: list[ParsedSectionName],
     service_name: str,
     requires_item: bool,
-    discovery_function: Callable,
+    discovery_function: DiscoveryFunction,
     discovery_default_parameters: Mapping[str, object] | None,
     discovery_ruleset_name: str | None,
     discovery_ruleset_type: RuleSetType,
-    check_function: Callable,
+    check_function: CheckFunction,
     check_default_parameters: Mapping[str, object] | None,
     check_ruleset_name: str | None,
-    cluster_check_function: Callable | None,
+    cluster_check_function: CheckFunction | None,
 ) -> None:
     _validate_service_name(plugin_name, service_name)
 
@@ -164,14 +162,14 @@ def create_check_plugin(
     name: str,
     sections: list[str] | None = None,
     service_name: str,
-    discovery_function: Callable,
+    discovery_function: DiscoveryFunction,
     discovery_default_parameters: Mapping[str, object] | None = None,
     discovery_ruleset_name: str | None = None,
     discovery_ruleset_type: RuleSetType = RuleSetType.MERGED,
-    check_function: Callable,
+    check_function: CheckFunction,
     check_default_parameters: Mapping[str, object] | None = None,
     check_ruleset_name: str | None = None,
-    cluster_check_function: Callable | None = None,
+    cluster_check_function: CheckFunction | None = None,
     location: PluginLocation | LegacyPluginLocation,
     validate_kwargs: bool = True,
 ) -> CheckPlugin:

@@ -82,13 +82,18 @@ defineExpose({ validate })
 </script>
 
 <template>
-  <div class="mode-otel-configure-prometheus-scraper__form">
+  <div
+    class="mode-otel-configure-prometheus-scraper__form"
+    role="group"
+    :aria-label="_t('Prometheus scraper')"
+  >
     <CmkLabel>{{ _t('Job name') }} <CmkLabelRequired /></CmkLabel>
     <CmkInput
       v-model="config.jobName"
       type="text"
       field-size="MEDIUM"
       :external-errors="jobNameErrors"
+      aria-required="true"
     />
 
     <CmkLabel
@@ -105,6 +110,7 @@ defineExpose({ validate })
       field-size="MEDIUM"
       placeholder="/metrics"
       :external-errors="metricsPathErrors"
+      aria-required="true"
     />
 
     <CmkLabel
@@ -121,6 +127,7 @@ defineExpose({ validate })
       field-size="MEDIUM"
       placeholder="0.0.0.0"
       :external-errors="addressErrors"
+      aria-required="true"
     />
 
     <CmkLabel>{{ _t('Port') }} <CmkLabelRequired /></CmkLabel>
@@ -129,6 +136,7 @@ defineExpose({ validate })
       type="number"
       placeholder="9090"
       :external-errors="portErrors"
+      aria-required="true"
     />
 
     <CmkLabel>{{ _t('Encryption') }}</CmkLabel>

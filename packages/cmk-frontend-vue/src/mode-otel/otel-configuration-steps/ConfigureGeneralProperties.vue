@@ -164,7 +164,11 @@ defineExpose({ validate })
 <template>
   <CmkInlineValidation v-if="loadError" :validation="[loadError]" />
 
-  <div class="mode-otel-configure-general-properties__form">
+  <div
+    class="mode-otel-configure-general-properties__form"
+    role="group"
+    :aria-label="_t('General properties')"
+  >
     <!-- Configuration name row -->
     <CmkLabel>{{ _t('Configuration name') }} <CmkLabelRequired /></CmkLabel>
     <CmkInput
@@ -173,6 +177,7 @@ defineExpose({ validate })
       field-size="MEDIUM"
       :placeholder="props.configNamePlaceholder"
       :external-errors="configNameErrors"
+      aria-required="true"
     />
 
     <!-- Site selection row -->

@@ -406,8 +406,8 @@ REDACT_PATTERNS: list[RedactPattern] = [
             "mkeventd.d/wato/global.mk",
         ],
         outer_regex=None,
-        replace_regex=re.compile(r"('credentials': )([\{\(][^)}]*[\}\)]|'.*?'|\".*?\")[,\}]"),
-        replacement=r"\1%s" % REDACT_STRING,
+        replace_regex=re.compile(r"('credentials': )(?:[\{\(][^)}]*[\}\)]|'.*?'|\".*?\")([,\}])"),
+        replacement=r"\1'%s'\2" % REDACT_STRING,
     ),
     # There are keys and certificates stored in different places.
     # Examples of strings to be redacted:

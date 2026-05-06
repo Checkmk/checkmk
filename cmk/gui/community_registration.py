@@ -131,7 +131,12 @@ def register_painters() -> None:
     painter_registry.register(graph.PainterHostPnpgraph)
 
 
-def register(edition: Edition, agent_bakery_enabled: bool, telemetry_enabled: bool) -> None:
+def register(
+    edition: Edition,
+    agent_bakery_enabled: bool,
+    telemetry_enabled: bool,
+    otel_collector_enabled: bool,
+) -> None:
     sample_config_generator_registry.register(SampleConfigGeneratorGroups)
     network_scan.register(host_attribute_registry, automation_command_registry, cron_job_registry)
     nagvis.register(permission_section_registry, permission_registry, snapin_registry)
@@ -192,6 +197,7 @@ def register(edition: Edition, agent_bakery_enabled: bool, telemetry_enabled: bo
         token_authenticated_page_registry,
         builtin_pagetype_topic_registry,
         agent_bakery_enabled,
+        otel_collector_enabled,
     )
 
     ldap_registration(

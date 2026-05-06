@@ -15,6 +15,7 @@ def test_community() -> None:
     assert licensed_features(Path(), Edition.COMMUNITY) == Features(
         bakery=FeatureFlag(enabled=False),
         telemetry=FeatureFlag(enabled=False),
+        otel_collector=FeatureFlag(enabled=False),
     )
 
 
@@ -22,6 +23,7 @@ def test_pro() -> None:
     assert licensed_features(Path(), Edition.PRO) == Features(
         bakery=FeatureFlag(enabled=True),
         telemetry=FeatureFlag(enabled=False),
+        otel_collector=FeatureFlag(enabled=False),
     )
 
 
@@ -33,4 +35,5 @@ def test_commercial(edition: Edition) -> None:
     assert licensed_features(Path(), edition) == Features(
         bakery=FeatureFlag(enabled=True),
         telemetry=FeatureFlag(enabled=True),
+        otel_collector=FeatureFlag(enabled=True),
     )

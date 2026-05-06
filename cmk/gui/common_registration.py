@@ -168,6 +168,7 @@ def register(
     token_authenticated_page_registry: TokenAuthenticatedPageRegistry,
     builtin_pagetype_topic_registry: pagetypes.BuiltinPagetypeTopicRegistry,
     agent_bakery_enabled: bool,
+    otel_collector_enabled: bool,
 ) -> None:
     hooks.register_thread_cache_cleanup()
     notification_parameter_registry.register_form_spec_plugin = register_plugin
@@ -363,6 +364,7 @@ def register(
         rulespec_registry,
         notification_parameter_registry,
         agent_bakery_enabled,
+        otel_collector_enabled,
     )
     welcome.register(page_registry, snapin_registry)
     search_registration.register(

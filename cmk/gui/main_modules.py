@@ -27,6 +27,7 @@ def register(edition: Edition) -> None:
     features = licensed_features(paths.omd_root, edition)
     agent_bakery_enabled = features.bakery.enabled
     telemetry_enabled = features.telemetry.enabled
+    otel_collector_enabled = features.otel_collector.enabled
 
     match edition:
         case Edition.PRO:
@@ -36,6 +37,7 @@ def register(edition: Edition) -> None:
                 edition,
                 agent_bakery_enabled=agent_bakery_enabled,
                 telemetry_enabled=telemetry_enabled,
+                otel_collector_enabled=otel_collector_enabled,
             )
 
         case Edition.ULTIMATEMT:
@@ -45,6 +47,7 @@ def register(edition: Edition) -> None:
                 edition,
                 agent_bakery_enabled=agent_bakery_enabled,
                 telemetry_enabled=telemetry_enabled,
+                otel_collector_enabled=otel_collector_enabled,
             )
 
         case Edition.ULTIMATE:
@@ -54,6 +57,7 @@ def register(edition: Edition) -> None:
                 edition,
                 agent_bakery_enabled=agent_bakery_enabled,
                 telemetry_enabled=telemetry_enabled,
+                otel_collector_enabled=otel_collector_enabled,
             )
 
         case Edition.CLOUD:
@@ -63,6 +67,7 @@ def register(edition: Edition) -> None:
                 edition,
                 agent_bakery_enabled=agent_bakery_enabled,
                 telemetry_enabled=telemetry_enabled,
+                otel_collector_enabled=otel_collector_enabled,
             )
 
         case Edition.COMMUNITY:
@@ -72,6 +77,7 @@ def register(edition: Edition) -> None:
                 edition,
                 agent_bakery_enabled=agent_bakery_enabled,
                 telemetry_enabled=telemetry_enabled,
+                otel_collector_enabled=otel_collector_enabled,
             )
 
         case _ as unreachable:

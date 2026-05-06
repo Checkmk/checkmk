@@ -21,12 +21,14 @@ class FeatureFlag:
 class FeatureName(StrEnum):
     BAKERY = auto()
     TELEMETRY = auto()
+    OTEL_COLLECTOR = auto()
 
 
 @dataclass(frozen=True)
 class Features:
     bakery: FeatureFlag
     telemetry: FeatureFlag
+    otel_collector: FeatureFlag
 
     def get_flag(self, name: FeatureName) -> FeatureFlag:
         match name:
@@ -34,6 +36,8 @@ class Features:
                 return self.bakery
             case FeatureName.TELEMETRY:
                 return self.telemetry
+            case FeatureName.OTEL_COLLECTOR:
+                return self.otel_collector
 
     def disabled(self) -> set[str]:
         return {f.name for f in fields(self) if not getattr(self, f.name).enabled}
@@ -47,6 +51,7 @@ def licensed_features(omd_root: Path, edition: Edition) -> Features:
             return Features(
                 bakery=FeatureFlag(enabled=False),
                 telemetry=FeatureFlag(enabled=False),
+                otel_collector=FeatureFlag(enabled=False),
             )
 
         case Edition.PRO:
@@ -60,18 +65,21 @@ def licensed_features(omd_root: Path, edition: Edition) -> Features:
             return Features(
                 bakery=FeatureFlag(enabled=True),
                 telemetry=FeatureFlag(enabled=True),
+                otel_collector=FeatureFlag(enabled=True),
             )
 
         case Edition.ULTIMATEMT:
             return Features(
                 bakery=FeatureFlag(enabled=True),
                 telemetry=FeatureFlag(enabled=True),
+                otel_collector=FeatureFlag(enabled=True),
             )
 
         case Edition.CLOUD:
             return Features(
                 bakery=FeatureFlag(enabled=True),
                 telemetry=FeatureFlag(enabled=True),
+                otel_collector=FeatureFlag(enabled=True),
             )
 
 
@@ -79,4 +87,5 @@ def _make_pro_features() -> Features:
     return Features(
         bakery=FeatureFlag(enabled=True),
         telemetry=FeatureFlag(enabled=False),
+        otel_collector=FeatureFlag(enabled=False),
     )

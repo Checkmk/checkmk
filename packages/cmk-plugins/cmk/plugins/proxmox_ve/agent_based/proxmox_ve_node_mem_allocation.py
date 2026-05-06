@@ -26,12 +26,16 @@ type Params = Mapping[
 
 
 def discover_proxmox_ve_node_mem_allocation(section: SectionNodeAllocation) -> DiscoveryResult:
-    yield Service()
+    if section.node_total_mem is not None and section.allocated_mem is not None:
+        yield Service()
 
 
 def check_proxmox_ve_node_mem_allocation(
     params: Params, section: SectionNodeAllocation
 ) -> CheckResult:
+    if section.node_total_mem is None or section.allocated_mem is None:
+        return
+
     yield from check_levels(
         value=(section.allocated_mem / section.node_total_mem) * 100,
         levels_upper=params["mem_allocation_ratio"],

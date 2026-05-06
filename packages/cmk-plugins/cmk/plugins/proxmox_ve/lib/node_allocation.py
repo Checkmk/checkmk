@@ -6,8 +6,8 @@ from pydantic import BaseModel
 
 
 class SectionNodeAllocation(BaseModel, frozen=True):
-    allocated_cpu: float
-    node_total_cpu: float
-    allocated_mem: float
-    node_total_mem: float
+    allocated_cpu: float | None = None
+    node_total_cpu: float | None = None
+    allocated_mem: float | None = None
+    node_total_mem: float | None = None
     status: str

@@ -20,9 +20,21 @@ SECTION = SectionNodeAllocation(
     status="ok",
 )
 
+SECTION_NO_MEM = SectionNodeAllocation(
+    allocated_cpu=20.0,
+    node_total_cpu=13.0,
+    allocated_mem=None,
+    node_total_mem=None,
+    status="ok",
+)
+
 
 def test_discover_proxmox_ve_node_mem_allocation() -> None:
     assert list(discover_proxmox_ve_node_mem_allocation(SECTION)) == [Service()]
+
+
+def test_discover_proxmox_ve_node_mem_allocation_missing_data() -> None:
+    assert list(discover_proxmox_ve_node_mem_allocation(SECTION_NO_MEM)) == []
 
 
 @pytest.mark.parametrize(
@@ -54,6 +66,28 @@ def test_discover_proxmox_ve_node_mem_allocation() -> None:
                 Result(state=State.OK, summary="Allocated Memory: 30.5 MiB"),
             ],
             id="Everything OK, no Levels",
+        ),
+        pytest.param(
+            {
+                "mem_allocation_ratio": ("no_levels", None),
+            },
+            SECTION_NO_MEM,
+            [],
+            id="No output when maxmem not reported",
+        ),
+        pytest.param(
+            {
+                "mem_allocation_ratio": ("no_levels", None),
+            },
+            SectionNodeAllocation(
+                allocated_cpu=20.0,
+                node_total_cpu=13.0,
+                allocated_mem=32000000.0,
+                node_total_mem=None,
+                status="ok",
+            ),
+            [],
+            id="No output when node total mem is missing",
         ),
     ],
 )

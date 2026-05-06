@@ -26,12 +26,16 @@ type Params = Mapping[
 
 
 def discover_proxmox_ve_node_cpu_allocation(section: SectionNodeAllocation) -> DiscoveryResult:
-    yield Service()
+    if section.node_total_cpu is not None and section.allocated_cpu is not None:
+        yield Service()
 
 
 def check_proxmox_ve_node_cpu_allocation(
     params: Params, section: SectionNodeAllocation
 ) -> CheckResult:
+    if section.node_total_cpu is None or section.allocated_cpu is None:
+        return
+
     yield from check_levels(
         value=(section.allocated_cpu / section.node_total_cpu) * 100,
         levels_upper=params["cpu_allocation_ratio"],

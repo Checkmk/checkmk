@@ -145,6 +145,7 @@ IGNORE_PATHS = [
     r".*test_data/.*",
     r"\.werks/first_free",
     r"agents/wnx/scripts/os_setup/msvc/vs-.*",
+    r"notifications/[^.]+$",
     # todo: discuss with CI team if we should ignore these
     r"bazel/.*",
     r"locale/.*",

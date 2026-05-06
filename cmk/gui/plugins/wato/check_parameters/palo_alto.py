@@ -35,6 +35,7 @@ _STATE_MAPPING_DEFAULT: Mapping[str, int] = {
     "ha_peer_state_non_functional": 2,
     "ha_peer_state_suspended": 2,
     "ha_peer_state_unknown": 3,
+    "ha_peer_state_initial": 1,
 }
 
 
@@ -186,6 +187,13 @@ def _parameter_valuespec_palo_alto() -> Dictionary:
                 key := "ha_peer_state_unknown",
                 MonitoringState(
                     title=_("State if ha peer state is unknown"),
+                    default_value=_STATE_MAPPING_DEFAULT[key],
+                ),
+            ),
+            (
+                key := "ha_peer_state_initial",
+                MonitoringState(
+                    title=_("State if ha peer state is initial"),
                     default_value=_STATE_MAPPING_DEFAULT[key],
                 ),
             ),

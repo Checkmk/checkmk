@@ -111,21 +111,21 @@ const openRelayOverviewPage = () => {
 
       <!-- Windows path -->
       <template v-else>
+        <InstallWSL2 :index="1" :is-completed="() => currentStep > 1" />
         <DownloadMsiInstaller
           :domain="props.domain"
           :site-name="props.site_name"
           :server-port="props.server_port ?? null"
-          :index="1"
-          :is-completed="() => currentStep > 1"
+          :index="2"
+          :is-completed="() => currentStep > 2"
         />
         <NameRelay
           v-model="relayAlias"
-          :index="2"
-          :is-completed="() => currentStep > 2"
+          :index="3"
+          :is-completed="() => currentStep > 3"
           :alias-validation-regex="props.alias_validation.regex"
           :alias-validation-regex-help="props.alias_validation.regex_help"
         />
-        <InstallWSL2 :index="3" :is-completed="() => currentStep > 3" />
         <RunMsiInstaller
           :relay-alias="relayAlias"
           :site-name="props.site_name"

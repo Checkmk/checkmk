@@ -1,5 +1,5 @@
 [[source]]
-url = "https://pypi.org/simple"
+url = "${PIPENV_PYPI_MIRROR}"
 verify_ssl = true
 name = "pypi"
 
@@ -16,6 +16,7 @@ botocore-stubs = "==1.34.15"  # used for type checking, keep version in sync wit
 bson = "==0.5.10"  # used by test_mk_mongodb unit test
 checkmk-dev-tools = "==2.0.3"  # provides tooling for build artifacts
 compiledb = "==0.10.1"  # used by the Livestatus/CMC Makefiles for building compile_command.json
+devpi-client = "==7.0.2" # Managing the devpi server
 dill = "==0.3.8"
 docker = "==7.1.0"  # used by test_docker test and mk_docker agent plugin
 dockerpty = "==0.4.1"  # used by dockerized tests for opening debug shells

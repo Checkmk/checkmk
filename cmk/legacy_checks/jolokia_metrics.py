@@ -267,12 +267,12 @@ def check_jolokia_metrics_bea_queue(item, params, info):
     if (length := app.get("QueueLength")) is None:
         return
 
-    yield check_levels(
+    yield from check_levels_v2(
         int(length),
-        "length",
-        params["levels"],
-        human_readable_func=str,
-        infoname="Queue length",
+        metric_name="length",
+        levels_upper=params["levels_upper"],
+        render_func=str,
+        label="Queue length",
     )
 
 
@@ -367,7 +367,7 @@ check_info["jolokia_metrics.bea_queue"] = LegacyCheckDefinition(
     check_function=check_jolokia_metrics_bea_queue,
     check_ruleset_name="jvm_queue",
     check_default_parameters={
-        "levels": (20, 50),
+        "levels_upper": ("fixed", (20, 50)),
     },
 )
 

@@ -10,10 +10,6 @@ from fastapi.testclient import TestClient
 
 from cmk.agent_receiver.lib.config import Config, get_config
 from cmk.agent_receiver.main import main_app
-from cmk.agent_receiver.relay.api.routers.relays.dependencies import (
-    get_forward_monitoring_data_handler,
-)
-from cmk.agent_receiver.relay.api.routers.relays.handlers import ForwardMonitoringDataHandler
 from cmk.testlib.agent_receiver.agent_receiver import AgentReceiverClient
 from cmk.testlib.agent_receiver.builder import AgentReceiverConfigBuilder, AgentReceiverSite
 from cmk.testlib.agent_receiver.native_wiremock import run_wiremock
@@ -52,15 +48,6 @@ def test_client(site_context: Config) -> Iterator[TestClient]:
     for endpoints that require localhost access.
     """
     app = main_app()
-
-    # Override the ForwardMonitoringDataHandler to use a shorter timeout for tests
-    def get_test_forward_monitoring_data_handler(config: Config) -> ForwardMonitoringDataHandler:
-        return ForwardMonitoringDataHandler(data_socket=config.raw_data_socket, socket_timeout=2.0)
-
-    app.dependency_overrides[get_forward_monitoring_data_handler] = (
-        get_test_forward_monitoring_data_handler
-    )
-
     client = TestClient(app)
     yield client
 

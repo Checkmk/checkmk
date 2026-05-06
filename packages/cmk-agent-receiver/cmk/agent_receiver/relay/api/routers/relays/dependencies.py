@@ -41,4 +41,6 @@ def get_relay_status_handler(
 def get_forward_monitoring_data_handler(
     config: Annotated[Config, fastapi.Depends(get_config)],
 ) -> ForwardMonitoringDataHandler:
-    return ForwardMonitoringDataHandler(data_socket=config.raw_data_socket)
+    return ForwardMonitoringDataHandler(
+        data_socket=config.raw_data_socket, socket_timeout=config.socket_timeout
+    )

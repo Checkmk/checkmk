@@ -19,6 +19,7 @@ class Config(BaseModel):
     site_name: str = Field(default_factory=lambda: os.environ["OMD_SITE"], exclude=True)
     task_ttl: float = 120.0
     max_pending_tasks_per_relay: int = 10
+    socket_timeout: float = 5.0
 
     @classmethod
     def load(cls, path: Path | None = None) -> Config:

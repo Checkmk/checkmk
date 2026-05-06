@@ -39,12 +39,14 @@ class AgentReceiverConfigBuilder:
         apache_port: int,
         task_ttl: float = 120.0,
         max_pending_tasks_per_relay: int = 10,
+        socket_timeout: float = 2.0,
     ) -> None:
         self._config = Config(
             omd_root=omd_root,
             site_name=site_name,
             task_ttl=task_ttl,
             max_pending_tasks_per_relay=max_pending_tasks_per_relay,
+            socket_timeout=socket_timeout,
         )
         self._apache_address = apache_address
         self._apache_port = apache_port

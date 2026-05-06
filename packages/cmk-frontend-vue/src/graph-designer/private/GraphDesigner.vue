@@ -1034,8 +1034,11 @@ const graphDesignerContentAsJson = computed(() => {
     {{ _t('Cannot save the form because it contains errors.') }}
   </CmkAlertBox>
   <div ref="graphContainerRef"></div>
-  <table class="data oddeven graph_designer_metrics" :aria-label="_t('Graph lines')">
-    <thead class="gd__thead">
+  <table
+    class="data oddeven graph_designer_metrics gd__metrics-table"
+    :aria-label="_t('Graph lines')"
+  >
+    <thead>
       <tr>
         <th class="header_narrow nowrap">#</th>
         <th class="header_buttons"></th>
@@ -1410,8 +1413,8 @@ const graphDesignerContentAsJson = computed(() => {
 </template>
 
 <style scoped>
-.gd__thead {
-  z-index: unset;
+.gd__metrics-table {
+  isolation: isolate;
 }
 
 .gd__yellow-border {

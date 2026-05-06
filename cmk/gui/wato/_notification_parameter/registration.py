@@ -8,6 +8,7 @@ from cmk.gui.watolib.notification_parameter import NotificationParameterRegistry
 from ._cisco_webex_teams import NotificationParameterCiscoWebexTeams
 from ._ilert import NotificationParameterILert
 from ._jira_issues import NotificationParameterJiraIssues
+from ._jsm_operations import NotificationParameterJsmOperations
 from ._mail import NotificationParameterASCIIMail
 from ._ms_teams import NotificationParameterMsTeams
 from ._opsgenie_issues import NotificationParameterOpsgenie
@@ -30,6 +31,7 @@ def register(notification_parameter_registry: NotificationParameterRegistry) -> 
     notification_parameter_registry.register(NotificationParameterASCIIMail)
     notification_parameter_registry.register(NotificationParameterILert)
     notification_parameter_registry.register(NotificationParameterJiraIssues)
+    notification_parameter_registry.register(NotificationParameterJsmOperations)
     notification_parameter_registry.register(NotificationParameterServiceNow)
     notification_parameter_registry.register(NotificationParameterOpsgenie)
     notification_parameter_registry.register(NotificationParameterSpectrum)

@@ -17,6 +17,7 @@ from cmk.shared_typing.configuration_entity import ConfigEntityType
         ("cisco_webex_teams", "Cisco Webex Teams parameter"),
         ("ilert", "iLert parameter"),
         ("jira_issues", "JIRA (Commercial editions only) parameter"),
+        ("jsm_operations", "JSM Operations (Commercial editions only) parameter"),
         ("mail", "HTML Email parameter"),
         ("mkeventd", "Forward Notification to Event Console parameter"),
         ("msteams", "Microsoft Teams parameter"),

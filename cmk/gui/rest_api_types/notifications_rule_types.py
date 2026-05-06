@@ -34,6 +34,8 @@ from cmk.utils.notify_types import (
     is_always_bulk,
     is_timeperiod_bulk,
     JiraPluginName,
+    JsmOperationsPluginName,
+    JsmResponder,
     MailPluginName,
     MatchRegex,
     MgmntPriorityType,
@@ -2573,6 +2575,56 @@ class WebhookURLOption:
 
 
 # ----------------------------------------------------------------
+JsmResponderTypeAPI = Literal["user", "schedule", "escalation"]
+
+
+class API_JsmTypedResponder(TypedDict):
+    type: JsmResponderTypeAPI
+    name: str
+
+
+class CheckboxListOfTypedRespondersAPIType(CheckboxStateType, total=False):
+    value: list[API_JsmTypedResponder]
+
+
+@dataclass
+class CheckboxWithListOfTypedRespondersValues:
+    value: list[API_JsmTypedResponder] | None = None
+
+    @classmethod
+    def from_mk_file_format(
+        cls,
+        data: list[JsmResponder] | None,
+    ) -> CheckboxWithListOfTypedRespondersValues:
+        if data is None:
+            return cls()
+        return cls(
+            value=[{"type": t, "name": n} for t, n in data],
+        )
+
+    @classmethod
+    def from_api_request(
+        cls,
+        data: CheckboxListOfTypedRespondersAPIType,
+    ) -> CheckboxWithListOfTypedRespondersValues:
+        if data["state"] == "disabled":
+            return cls()
+        return cls(value=data["value"])
+
+    def api_response(self) -> CheckboxListOfTypedRespondersAPIType:
+        state: CheckboxState = "disabled" if self.value is None else "enabled"
+        r: CheckboxListOfTypedRespondersAPIType = {"state": state}
+        if self.value is not None:
+            r["value"] = self.value
+        return r
+
+    def to_mk_file_format(self) -> list[tuple[str, str]] | None:
+        if self.value is None:
+            return None
+        return [(r["type"], r["name"]) for r in self.value]
+
+
+# ----------------------------------------------------------------
 class CheckboxListOfExtraPropertiesAPIType(CheckboxStateType, total=False):
     value: list[OpsgenieElement]
 
@@ -2875,6 +2927,28 @@ class API_OpsGenieIssueData(TypedDict, total=False):
     extra_properties: CheckboxListOfExtraPropertiesAPIType
 
 
+class API_JsmOperationsData(TypedDict, total=False):
+    plugin_name: Required[JsmOperationsPluginName]
+    api_key: APIKey
+    disable_ssl_cert_verification: CheckboxStateType
+    http_proxy: HttpProxyAPIValueType
+    owner: CheckboxStrAPIType
+    source: CheckboxStrAPIType
+    priority: OpsGeniePriorityAPIType
+    note_while_creating: CheckboxStrAPIType
+    note_while_closing: CheckboxStrAPIType
+    desc_for_host_alerts: CheckboxStrAPIType
+    desc_for_service_alerts: CheckboxStrAPIType
+    message_for_host_alerts: CheckboxStrAPIType
+    message_for_service_alerts: CheckboxStrAPIType
+    responsible_teams: CheckboxListOfStrAPIType
+    additional_responders: CheckboxListOfTypedRespondersAPIType
+    actions: CheckboxListOfStrAPIType
+    tags: CheckboxListOfStrAPIType
+    entity: CheckboxStrAPIType
+    extra_properties: CheckboxListOfExtraPropertiesAPIType
+
+
 class API_PagerDutyData(TypedDict, total=False):
     plugin_name: Required[PagerdutyPluginName]
     integration_key: APIKey
@@ -2985,6 +3059,7 @@ PluginType = (
     | API_IlertData
     | API_JiraData
     | API_OpsGenieIssueData
+    | API_JsmOperationsData
     | API_PagerDutyData
     | API_PushOverData
     | API_ServiceNowData

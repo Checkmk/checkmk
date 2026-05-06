@@ -104,8 +104,6 @@ wordlist_file = omd_root / "etc/passwordlist.txt"
 
 share_dir = _omd_path("share/check_mk")
 checks_dir = _omd_path("share/check_mk/checks")
-cmk_addons_plugins_dir = _omd_path("lib/python3/cmk_addons/plugins")
-cmk_plugins_dir = _omd_path("lib/python3/cmk/plugins")
 notifications_dir = _omd_path("share/check_mk/notifications")
 inventory_dir = _omd_path("share/check_mk/inventory")
 legacy_check_manpages_dir = _omd_path("share/check_mk/checkman")
@@ -133,8 +131,6 @@ nagios_plugins_dir = lib_dir / "nagios/plugins"
 local_root = _local_path(omd_root)
 local_share_dir = _local_path(share_dir)
 local_checks_dir = _local_path(checks_dir)
-local_cmk_addons_plugins_dir = _local_path(cmk_addons_plugins_dir)
-local_cmk_plugins_dir = _local_path(cmk_plugins_dir)
 local_agent_based_plugins_dir = _local_path(agent_based_plugins_dir)
 local_notifications_dir = _local_path(notifications_dir)
 local_inventory_dir = _local_path(inventory_dir)

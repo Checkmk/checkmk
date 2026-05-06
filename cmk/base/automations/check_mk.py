@@ -166,7 +166,12 @@ from cmk.checkengine.submitters import ServiceDetails, ServiceState
 from cmk.checkengine.summarize import summarize
 from cmk.checkengine.value_store import AllValueStoresStore, ValueStoreManager
 from cmk.core_client import CoreAction
-from cmk.discover_plugins import discover_families, PluginGroup
+from cmk.discover_plugins import (
+    addons_plugins_local_path,
+    discover_families,
+    PluginGroup,
+    plugins_local_path,
+)
 from cmk.fetchers import (
     ActivatedSecrets,
     AdHocSecrets,
@@ -235,8 +240,6 @@ from cmk.utils.paths import (
     discovered_host_labels_dir,
     local_agent_based_plugins_dir,
     local_checks_dir,
-    local_cmk_addons_plugins_dir,
-    local_cmk_plugins_dir,
     logwatch_dir,
     omd_root,
     precompiled_hostchecks_dir,
@@ -2503,18 +2506,17 @@ class AutomationRestart:
 
     def _check_plugins_have_changed(self, monitoring_core: Literal["nagios", "cmc"]) -> bool:
         last_time = self._time_of_last_core_restart(monitoring_core)
-        for checks_path in [
-            local_checks_dir,
-            local_agent_based_plugins_dir,
-            local_cmk_addons_plugins_dir,
-            local_cmk_plugins_dir,
-        ]:
-            if not checks_path.exists():
-                continue
-            this_time = self._last_modification(checks_path)
-            if this_time > last_time:
-                return True
-        return False
+        return any(
+            checks_path is not None
+            and checks_path.exists()
+            and self._last_modification(checks_path) > last_time
+            for checks_path in (
+                local_checks_dir,
+                local_agent_based_plugins_dir,
+                addons_plugins_local_path(),
+                plugins_local_path(),
+            )
+        )
 
     def _last_modification(self, path: Path) -> float:
         max_time = path.stat().st_mtime

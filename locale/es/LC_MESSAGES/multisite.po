@@ -19423,6 +19423,10 @@ msgid "Delete this MIB"
 msgstr "Borrar este MIB"
 
 #, fuzzy
+msgid "Delete this Prometheus configuration"
+msgstr "Borrar esta conexión"
+
+#, fuzzy
 msgid "Delete this Relay"
 msgstr "Borrar esta tecla"
 
@@ -19633,6 +19637,9 @@ msgstr "Borra"
 msgid "Deleting %s..."
 msgstr "Buscando '%s'..."
 
+msgid "Deleting will be available soon"
+msgstr ""
+
 msgid "Delimiter for file grouping"
 msgstr "Delimitador para la agrupación de archivos"
 
@@ -19754,6 +19761,10 @@ msgstr "Implementar el complemento StorCLI"
 #, fuzzy
 msgid "Deploy Windows Updates plug-in"
 msgstr "Implementar el plugin de Windows Updates"
+
+#, fuzzy
+msgid "Deploy Windows Updates plug-in and run asynchronously"
+msgstr "Despliegue del plugin MTR de forma asíncrona"
 
 #, fuzzy
 msgid ""
@@ -22774,6 +22785,10 @@ msgid "Edit this %s"
 msgstr "Editar este %s"
 
 #, fuzzy
+msgid "Edit this Prometheus configuration"
+msgstr "Añadir configuración de estado"
+
+#, fuzzy
 msgid "Edit this Relay"
 msgstr "Editar esta regla"
 
@@ -22893,6 +22908,9 @@ msgstr "Editado el %s '%s'"
 #, python-format
 msgid "Edited user profile for user %s"
 msgstr "Editado el perfil del usuario %s"
+
+msgid "Editing will be available soon"
+msgstr ""
 
 msgid "Edition"
 msgstr "Edición"
@@ -66966,19 +66984,10 @@ msgstr ""
 "(Microsoft Multipath IO)"
 
 #, fuzzy
-msgid ""
-"The Windows Updates plug-in checks for the number of pending updates. The "
-"default configuration will include the asynchronous execution and caching of "
-"the output for 4 hours (14400 seconds). You can still change these values "
-"with the Setup rule sets <i>Set cache age for plug-ins and local checks</i> "
-"and <i>Set execution mode for plug-ins and local checks</i>."
+msgid "The Windows Updates plug-in checks for the number of pending updates."
 msgstr ""
-"El complemento Windows Updates comprueba el número de actualizaciones "
-"pendientes. La configuración por defecto incluirá la ejecución asíncrona y "
-"el almacenamiento en caché de la salida durante 4 horas (14400 segundos). "
-"Aún puede cambiar estos valores con los conjuntos de reglas de configuración "
-"<i>Set cache age for plugins and local checks</i> y <i>Set execution mode "
-"for plugins and local checks</i>."
+"El plugin Windows Multipath comprueba el número de rutas en un MPIO "
+"(Microsoft Multipath IO)"
 
 msgid "The access key ID for your AWS account"
 msgstr "El ID de la clave de acceso de su cuenta de AWS"
@@ -92987,14 +92996,6 @@ msgstr ""
 "bajos se ordenarán primero. Los temas con el mismo número se ordenarán "
 "alfabéticamente."
 
-#, fuzzy
-msgid "Choose how to display your data"
-msgstr "No mostrar una fecha"
-
-#, fuzzy
-msgid "Visualization types"
-msgstr "Niveles de visualización"
-
 msgid "Automatically adjusted to available data"
 msgstr "Se ajusta automáticamente a los datos disponibles"
 
@@ -93465,6 +93466,14 @@ msgstr "Almacenar notificaciones para el análisis de reglas"
 #, fuzzy
 msgid "Additional graph options"
 msgstr "Opciones adicionales"
+
+#, fuzzy
+msgid "Choose how to display your data"
+msgstr "No mostrar una fecha"
+
+#, fuzzy
+msgid "Visualization types"
+msgstr "Niveles de visualización"
 
 msgid "Owner (private)"
 msgstr ""
@@ -95253,6 +95262,10 @@ msgid "Port must differ from the other protocol endpoint."
 msgstr ""
 
 #, fuzzy
+msgid "Configuration details:"
+msgstr "Archivos de configuración"
+
+#, fuzzy
 msgid " | created"
 msgstr "Archivo creado"
 
@@ -95424,6 +95437,41 @@ msgstr "Añadir una nueva configuración de usuario"
 #, fuzzy
 msgid "An unexpected error occurred. Please try again."
 msgstr "Se ha producido una excepción: %s"
+
+#, fuzzy
+msgid "newly created"
+msgstr "Archivo creado"
+
+#, fuzzy
+msgid "existing"
+msgstr "Prueba"
+
+msgid "Basic auth (user: %{user}, password: %{password})"
+msgstr ""
+
+#, fuzzy
+msgid "TLS enabled"
+msgstr "STARTTLS activado."
+
+#, fuzzy
+msgid "No encryption"
+msgstr "Codificación"
+
+#, fuzzy
+msgid "Event Console resource attribute"
+msgstr "Atributo de función"
+
+#, fuzzy
+msgid "The hosts will be created in the \"Telemetry\" folder."
+msgstr "Añadir configuración de estado"
+
+#, fuzzy
+msgid "gRPC protocol"
+msgstr "Protocolo"
+
+#, fuzzy
+msgid "HTTP protocol"
+msgstr "Protocolo"
 
 #, fuzzy
 msgid "Unexpected form data shape."
@@ -96555,6 +96603,21 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid ""
+#~ "The Windows Updates plug-in checks for the number of pending updates. The "
+#~ "default configuration will include the asynchronous execution and caching "
+#~ "of the output for 4 hours (14400 seconds). You can still change these "
+#~ "values with the Setup rule sets <i>Set cache age for plug-ins and local "
+#~ "checks</i> and <i>Set execution mode for plug-ins and local checks</i>."
+#~ msgstr ""
+#~ "El complemento Windows Updates comprueba el número de actualizaciones "
+#~ "pendientes. La configuración por defecto incluirá la ejecución asíncrona "
+#~ "y el almacenamiento en caché de la salida durante 4 horas (14400 "
+#~ "segundos). Aún puede cambiar estos valores con los conjuntos de reglas de "
+#~ "configuración <i>Set cache age for plugins and local checks</i> y <i>Set "
+#~ "execution mode for plugins and local checks</i>."
 
 #, fuzzy
 #~ msgid "Deploy Mailman plug-in"
@@ -102146,10 +102209,6 @@ msgstr ""
 
 #~ msgid "Don't show Summary"
 #~ msgstr "No mostrar Resumen"
-
-#, fuzzy
-#~ msgid "Host name resource attribute"
-#~ msgstr "Atributo de función"
 
 #, python-format
 #~ msgid "Host or service %ss"

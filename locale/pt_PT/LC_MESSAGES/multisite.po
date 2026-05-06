@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2026-05-01 17:50+0000\n"
+"PO-Revision-Date: 2026-05-05 17:50+0000\n"
 "Language-Team: Portuguese (Portugal) <https://translate.checkmk.com/projects/"
 "checkmk/dev/pt_PT/>\n"
 "Language: pt_PT\n"
@@ -19292,6 +19292,10 @@ msgid "Delete this MIB"
 msgstr "Apagar esta MIB"
 
 #, fuzzy
+msgid "Delete this Prometheus configuration"
+msgstr "Eliminar esta ligação"
+
+#, fuzzy
 msgid "Delete this Relay"
 msgstr "Apagar esta chave"
 
@@ -19501,6 +19505,9 @@ msgstr "Elimina"
 msgid "Deleting %s..."
 msgstr "Apanhando \"%s\"..."
 
+msgid "Deleting will be available soon"
+msgstr ""
+
 msgid "Delimiter for file grouping"
 msgstr "Delimitador para agrupamento de ficheiros"
 
@@ -19622,6 +19629,10 @@ msgstr "Implantar plugin StorCLI"
 #, fuzzy
 msgid "Deploy Windows Updates plug-in"
 msgstr "Implementar o plugin Windows Updates"
+
+#, fuzzy
+msgid "Deploy Windows Updates plug-in and run asynchronously"
+msgstr "Implantar o plugin MTR de forma assíncrona"
 
 #, fuzzy
 msgid ""
@@ -22605,6 +22616,10 @@ msgid "Edit this %s"
 msgstr "Editar esta %s"
 
 #, fuzzy
+msgid "Edit this Prometheus configuration"
+msgstr "Adicionar configuração do estado"
+
+#, fuzzy
 msgid "Edit this Relay"
 msgstr "Editar esta regra"
 
@@ -22724,6 +22739,9 @@ msgstr "Editado o %s \"%s\""
 #, python-format
 msgid "Edited user profile for user %s"
 msgstr "Perfil de utilizador editado para o utilizador %s"
+
+msgid "Editing will be available soon"
+msgstr ""
 
 msgid "Edition"
 msgstr "Edição"
@@ -66396,19 +66414,10 @@ msgstr ""
 "(Microsoft Multipath IO)"
 
 #, fuzzy
-msgid ""
-"The Windows Updates plug-in checks for the number of pending updates. The "
-"default configuration will include the asynchronous execution and caching of "
-"the output for 4 hours (14400 seconds). You can still change these values "
-"with the Setup rule sets <i>Set cache age for plug-ins and local checks</i> "
-"and <i>Set execution mode for plug-ins and local checks</i>."
+msgid "The Windows Updates plug-in checks for the number of pending updates."
 msgstr ""
-"O plugin Windows Updates verifica o número de actualizações pendentes. A "
-"configuração padrão incluirá a execução assíncrona e o armazenamento em "
-"cache da saída por 4 horas (14400 segundos). Pode ainda alterar estes "
-"valores com os conjuntos de regras de configuração <i>Definir a idade da "
-"cache para plugins e verificações locais</i> e <i>Definir o modo de execução "
-"para plugins e verificações locais</i>."
+"O plugin Multipath do Windows verifica o número de caminhos em uma MPIO "
+"(Microsoft Multipath IO)"
 
 msgid "The access key ID for your AWS account"
 msgstr "A ID da chave de acesso para a sua conta AWS"
@@ -92175,14 +92184,6 @@ msgstr ""
 "baixos serão ordenados primeiro. Tópicos com o mesmo número serão ordenados "
 "por ordem alfabética."
 
-#, fuzzy
-msgid "Choose how to display your data"
-msgstr "Não mostrar uma data"
-
-#, fuzzy
-msgid "Visualization types"
-msgstr "Níveis de visualização"
-
 msgid "Automatically adjusted to available data"
 msgstr "Ajuste automático aos dados disponíveis"
 
@@ -92652,6 +92653,14 @@ msgstr "Notas da loja para análise de regras"
 #, fuzzy
 msgid "Additional graph options"
 msgstr "Opções adicionais"
+
+#, fuzzy
+msgid "Choose how to display your data"
+msgstr "Não mostrar uma data"
+
+#, fuzzy
+msgid "Visualization types"
+msgstr "Níveis de visualização"
 
 msgid "Owner (private)"
 msgstr ""
@@ -94431,6 +94440,10 @@ msgid "Port must differ from the other protocol endpoint."
 msgstr ""
 
 #, fuzzy
+msgid "Configuration details:"
+msgstr "Ficheiros de configuração"
+
+#, fuzzy
 msgid " | created"
 msgstr "Arquivo criado"
 
@@ -94602,6 +94615,41 @@ msgstr "Adicionar nova configuração de usuário"
 #, fuzzy
 msgid "An unexpected error occurred. Please try again."
 msgstr "Ocorreu uma excepção: %s"
+
+#, fuzzy
+msgid "newly created"
+msgstr "Arquivo criado"
+
+#, fuzzy
+msgid "existing"
+msgstr "Testes"
+
+msgid "Basic auth (user: %{user}, password: %{password})"
+msgstr ""
+
+#, fuzzy
+msgid "TLS enabled"
+msgstr "STARTTLS ativado."
+
+#, fuzzy
+msgid "No encryption"
+msgstr "Criptografia"
+
+#, fuzzy
+msgid "Event Console resource attribute"
+msgstr "Redefinir atributos"
+
+#, fuzzy
+msgid "The hosts will be created in the \"Telemetry\" folder."
+msgstr "Adicionar configuração do estado"
+
+#, fuzzy
+msgid "gRPC protocol"
+msgstr "Protocolo"
+
+#, fuzzy
+msgid "HTTP protocol"
+msgstr "Protocolo"
 
 #, fuzzy
 msgid "Unexpected form data shape."
@@ -95734,6 +95782,21 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid ""
+#~ "The Windows Updates plug-in checks for the number of pending updates. The "
+#~ "default configuration will include the asynchronous execution and caching "
+#~ "of the output for 4 hours (14400 seconds). You can still change these "
+#~ "values with the Setup rule sets <i>Set cache age for plug-ins and local "
+#~ "checks</i> and <i>Set execution mode for plug-ins and local checks</i>."
+#~ msgstr ""
+#~ "O plugin Windows Updates verifica o número de actualizações pendentes. A "
+#~ "configuração padrão incluirá a execução assíncrona e o armazenamento em "
+#~ "cache da saída por 4 horas (14400 segundos). Pode ainda alterar estes "
+#~ "valores com os conjuntos de regras de configuração <i>Definir a idade da "
+#~ "cache para plugins e verificações locais</i> e <i>Definir o modo de "
+#~ "execução para plugins e verificações locais</i>."
 
 #, fuzzy
 #~ msgid "Deploy Mailman plug-in"
@@ -101281,10 +101344,6 @@ msgstr ""
 
 #~ msgid "Don't show Summary"
 #~ msgstr "Não mostrar Resumo"
-
-#, fuzzy
-#~ msgid "Host name resource attribute"
-#~ msgstr "Redefinir atributos"
 
 #, python-format
 #~ msgid "Host or service %ss"

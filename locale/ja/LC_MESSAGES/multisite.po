@@ -17981,6 +17981,10 @@ msgstr "このアイコンを削除します"
 msgid "Delete this MIB"
 msgstr "このMIBを削除する"
 
+#, fuzzy
+msgid "Delete this Prometheus configuration"
+msgstr "この接続を削除します"
+
 msgid "Delete this Relay"
 msgstr "このリレーを削除します"
 
@@ -18187,6 +18191,9 @@ msgstr "削除します"
 msgid "Deleting %s..."
 msgstr "%sを削除しています..."
 
+msgid "Deleting will be available soon"
+msgstr ""
+
 msgid "Delimiter for file grouping"
 msgstr "ファイルグループ化のためのデリミタ"
 
@@ -18291,6 +18298,10 @@ msgstr "StorCLIプラグインをデプロイする"
 
 msgid "Deploy Windows Updates plug-in"
 msgstr "WindowsUpdateプラグインをデプロイする"
+
+#, fuzzy
+msgid "Deploy Windows Updates plug-in and run asynchronously"
+msgstr "プラグインをデプロイし非同期実行する"
 
 msgid ""
 "Deploy a plug-in for monitoring the quarantine queue, tasks and updates of "
@@ -21047,6 +21058,10 @@ msgstr "ユーザー2要素認証を編集する"
 msgid "Edit this %s"
 msgstr "この %s を編集する"
 
+#, fuzzy
+msgid "Edit this Prometheus configuration"
+msgstr "Prometheusの設定を追加する"
+
 msgid "Edit this Relay"
 msgstr "このリレーを編集する"
 
@@ -21163,6 +21178,9 @@ msgstr "%s '%s' を編集しました"
 #, python-format
 msgid "Edited user profile for user %s"
 msgstr "ユーザ %s のプロファイルを編集しました"
+
+msgid "Editing will be available soon"
+msgstr ""
 
 msgid "Edition"
 msgstr "版"
@@ -61421,18 +61439,11 @@ msgstr ""
 "Windows Multipathプラグインは、MPIO（Microsoft Multipath IO）のパス数をチェッ"
 "クする"
 
-msgid ""
-"The Windows Updates plug-in checks for the number of pending updates. The "
-"default configuration will include the asynchronous execution and caching of "
-"the output for 4 hours (14400 seconds). You can still change these values "
-"with the Setup rule sets <i>Set cache age for plug-ins and local checks</i> "
-"and <i>Set execution mode for plug-ins and local checks</i>."
+#, fuzzy
+msgid "The Windows Updates plug-in checks for the number of pending updates."
 msgstr ""
-"Windows Updatesプラグインは、保留中の更新の数をチェックします。デフォルトの構"
-"成には、4時間(14400秒)の出力の非同期実行とキャッシュが含まれます。これらの値"
-"は、セットアップのルールセット <i>プラグインとローカルチェックのキャッシュ期"
-"間の設定</i> および <i>プラグインとローカルチェックの実行モードの設定</i>.を"
-"使用して変更できます。"
+"Windows Multipathプラグインは、MPIO（Microsoft Multipath IO）のパス数をチェッ"
+"クする"
 
 msgid "The access key ID for your AWS account"
 msgstr "AWSアカウントのアクセスキーID"
@@ -85299,12 +85310,6 @@ msgstr ""
 "いものから先に表示されます。番号が同じトピックはアルファベット順に並べ替えら"
 "れます。"
 
-msgid "Choose how to display your data"
-msgstr "データの表示方法を選択する"
-
-msgid "Visualization types"
-msgstr "可視化タイプの種類"
-
 msgid "Automatically adjusted to available data"
 msgstr "利用可能なデータに自動的に調整"
 
@@ -85740,6 +85745,12 @@ msgstr "サービスの通知のみの表示"
 
 msgid "Additional graph options"
 msgstr "追加のグラフオプション"
+
+msgid "Choose how to display your data"
+msgstr "データの表示方法を選択する"
+
+msgid "Visualization types"
+msgstr "可視化タイプの種類"
 
 msgid "Owner (private)"
 msgstr "Axis"
@@ -87534,6 +87545,10 @@ msgid "Port must differ from the other protocol endpoint."
 msgstr "ポート番号は、他のプロトコルエンドポイントとは異なる必要があります。"
 
 #, fuzzy
+msgid "Configuration details:"
+msgstr "設定ファイル"
+
+#, fuzzy
 msgid " | created"
 msgstr "作成されたファイル"
 
@@ -87730,6 +87745,41 @@ msgstr "OpenTelemetryの設定を管理する"
 #, fuzzy
 msgid "An unexpected error occurred. Please try again."
 msgstr "予期せぬエラーが発生しました"
+
+#, fuzzy
+msgid "newly created"
+msgstr "作成されたファイル"
+
+#, fuzzy
+msgid "existing"
+msgstr "テスト"
+
+msgid "Basic auth (user: %{user}, password: %{password})"
+msgstr ""
+
+#, fuzzy
+msgid "TLS enabled"
+msgstr "STARTTLSが有効になっています。"
+
+#, fuzzy
+msgid "No encryption"
+msgstr "暗号化"
+
+#, fuzzy
+msgid "Event Console resource attribute"
+msgstr "属性をリセット"
+
+#, fuzzy
+msgid "The hosts will be created in the \"Telemetry\" folder."
+msgstr "OpenTelemetry Collector を有効にする"
+
+#, fuzzy
+msgid "gRPC protocol"
+msgstr "プロトコル"
+
+#, fuzzy
+msgid "HTTP protocol"
+msgstr "プロトコル"
 
 #, fuzzy
 msgid "Unexpected form data shape."
@@ -89014,6 +89064,19 @@ msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
 "後で「ヘルプ」＞「Checkmkの学習」＞「ウェルカムページ」からアクセスできます"
+
+#~ msgid ""
+#~ "The Windows Updates plug-in checks for the number of pending updates. The "
+#~ "default configuration will include the asynchronous execution and caching "
+#~ "of the output for 4 hours (14400 seconds). You can still change these "
+#~ "values with the Setup rule sets <i>Set cache age for plug-ins and local "
+#~ "checks</i> and <i>Set execution mode for plug-ins and local checks</i>."
+#~ msgstr ""
+#~ "Windows Updatesプラグインは、保留中の更新の数をチェックします。デフォルト"
+#~ "の構成には、4時間(14400秒)の出力の非同期実行とキャッシュが含まれます。これ"
+#~ "らの値は、セットアップのルールセット <i>プラグインとローカルチェックの"
+#~ "キャッシュ期間の設定</i> および <i>プラグインとローカルチェックの実行モー"
+#~ "ドの設定</i>.を使用して変更できます。"
 
 #~ msgid "Deploy Mailman plug-in"
 #~ msgstr "Mailmanプラグインをデプロイする"
@@ -95336,10 +95399,6 @@ msgstr ""
 #~ "Checkmkが内部的にメトリクスを処理する方法の制限により、結果には矛盾するメ"
 #~ "トリクスが含まれており、このトップリストは不正確または不完全である可能性が"
 #~ "あります。"
-
-#, fuzzy
-#~ msgid "Host name resource attribute"
-#~ msgstr "属性をリセット"
 
 #, python-format
 #~ msgid "Host or service %ss"

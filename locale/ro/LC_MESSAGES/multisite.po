@@ -19304,6 +19304,10 @@ msgid "Delete this MIB"
 msgstr "Ștergeți această MIB"
 
 #, fuzzy
+msgid "Delete this Prometheus configuration"
+msgstr "Ștergeți această conexiune"
+
+#, fuzzy
 msgid "Delete this Relay"
 msgstr "Ștergeți această cheie"
 
@@ -19513,6 +19517,9 @@ msgstr "Șterge"
 msgid "Deleting %s..."
 msgstr "Fetching '%s'..."
 
+msgid "Deleting will be available soon"
+msgstr ""
+
 msgid "Delimiter for file grouping"
 msgstr "Delimitator pentru gruparea fișierelor"
 
@@ -19636,6 +19643,10 @@ msgstr "Implementarea pluginului StorCLI"
 #, fuzzy
 msgid "Deploy Windows Updates plug-in"
 msgstr "Implementarea pluginului Windows Updates"
+
+#, fuzzy
+msgid "Deploy Windows Updates plug-in and run asynchronously"
+msgstr "Implementarea pluginului MTR în mod asincron"
 
 #, fuzzy
 msgid ""
@@ -22634,6 +22645,10 @@ msgid "Edit this %s"
 msgstr "Editați acest %s"
 
 #, fuzzy
+msgid "Edit this Prometheus configuration"
+msgstr "Configurația stilului selectat"
+
+#, fuzzy
 msgid "Edit this Relay"
 msgstr "Editați această regulă"
 
@@ -22753,6 +22768,9 @@ msgstr "A fost editat %s \"%s"
 #, python-format
 msgid "Edited user profile for user %s"
 msgstr "Profil de utilizator editat pentru utilizator %s"
+
+msgid "Editing will be available soon"
+msgstr ""
 
 msgid "Edition"
 msgstr "Ediție"
@@ -66507,19 +66525,10 @@ msgstr ""
 "(Microsoft Multipath IO)."
 
 #, fuzzy
-msgid ""
-"The Windows Updates plug-in checks for the number of pending updates. The "
-"default configuration will include the asynchronous execution and caching of "
-"the output for 4 hours (14400 seconds). You can still change these values "
-"with the Setup rule sets <i>Set cache age for plug-ins and local checks</i> "
-"and <i>Set execution mode for plug-ins and local checks</i>."
+msgid "The Windows Updates plug-in checks for the number of pending updates."
 msgstr ""
-"Plugin-ul Windows Updates verifică numărul de actualizări în așteptare. "
-"Configurația implicită va include execuția asincronă și stocarea în cache a "
-"ieșirii timp de 4 ore (14400 de secunde). Puteți modifica în continuare "
-"aceste valori cu seturile de reguli de configurare <i>Set cache age for "
-"plugins and local checks</i> și <i>Set execution mode for plugins and local "
-"checks</i>."
+"Plugin-ul Windows Multipath verifică numărul de căi de acces într-un MPIO "
+"(Microsoft Multipath IO)."
 
 msgid "The access key ID for your AWS account"
 msgstr "ID-ul cheii de acces pentru contul dvs. AWS"
@@ -92415,14 +92424,6 @@ msgstr ""
 "mici vor fi ordonate mai întâi. Subiectele cu același număr vor fi sortate "
 "în ordine alfabetică."
 
-#, fuzzy
-msgid "Choose how to display your data"
-msgstr "Nu afișați o dată"
-
-#, fuzzy
-msgid "Visualization types"
-msgstr "Niveluri de vizualizare"
-
 msgid "Automatically adjusted to available data"
 msgstr "Se ajustează automat la datele disponibile"
 
@@ -92893,6 +92894,14 @@ msgstr "Stocarea notificărilor pentru analiza regulilor"
 #, fuzzy
 msgid "Additional graph options"
 msgstr "Opțiuni adiționale"
+
+#, fuzzy
+msgid "Choose how to display your data"
+msgstr "Nu afișați o dată"
+
+#, fuzzy
+msgid "Visualization types"
+msgstr "Niveluri de vizualizare"
 
 msgid "Owner (private)"
 msgstr ""
@@ -94684,6 +94693,10 @@ msgid "Port must differ from the other protocol endpoint."
 msgstr ""
 
 #, fuzzy
+msgid "Configuration details:"
+msgstr "Fișiere de configurare"
+
+#, fuzzy
 msgid " | created"
 msgstr "Fișier creat"
 
@@ -94856,6 +94869,41 @@ msgstr "Adaugp o noua configurație de utilizator"
 #, fuzzy
 msgid "An unexpected error occurred. Please try again."
 msgstr "S-a produs o excepție: %s"
+
+#, fuzzy
+msgid "newly created"
+msgstr "Fișier creat"
+
+#, fuzzy
+msgid "existing"
+msgstr "Testare"
+
+msgid "Basic auth (user: %{user}, password: %{password})"
+msgstr ""
+
+#, fuzzy
+msgid "TLS enabled"
+msgstr "STARTTLS activat."
+
+#, fuzzy
+msgid "No encryption"
+msgstr "Criptare"
+
+#, fuzzy
+msgid "Event Console resource attribute"
+msgstr "Resetarea atributelor"
+
+#, fuzzy
+msgid "The hosts will be created in the \"Telemetry\" folder."
+msgstr "Configurația stilului selectat"
+
+#, fuzzy
+msgid "gRPC protocol"
+msgstr "Protocol"
+
+#, fuzzy
+msgid "HTTP protocol"
+msgstr "Protocol"
 
 #, fuzzy
 msgid "Unexpected form data shape."
@@ -95993,6 +96041,21 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid ""
+#~ "The Windows Updates plug-in checks for the number of pending updates. The "
+#~ "default configuration will include the asynchronous execution and caching "
+#~ "of the output for 4 hours (14400 seconds). You can still change these "
+#~ "values with the Setup rule sets <i>Set cache age for plug-ins and local "
+#~ "checks</i> and <i>Set execution mode for plug-ins and local checks</i>."
+#~ msgstr ""
+#~ "Plugin-ul Windows Updates verifică numărul de actualizări în așteptare. "
+#~ "Configurația implicită va include execuția asincronă și stocarea în cache "
+#~ "a ieșirii timp de 4 ore (14400 de secunde). Puteți modifica în continuare "
+#~ "aceste valori cu seturile de reguli de configurare <i>Set cache age for "
+#~ "plugins and local checks</i> și <i>Set execution mode for plugins and "
+#~ "local checks</i>."
 
 #, fuzzy
 #~ msgid "Deploy Mailman plug-in"
@@ -101960,10 +102023,6 @@ msgstr ""
 
 #~ msgid "Don't show Summary"
 #~ msgstr "Nu arăta Rezumat"
-
-#, fuzzy
-#~ msgid "Host name resource attribute"
-#~ msgstr "Resetarea atributelor"
 
 #, python-format
 #~ msgid "Host or service %ss"

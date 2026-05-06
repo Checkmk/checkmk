@@ -566,6 +566,31 @@ class OpsGenieIssuesPluginModel(TypedDict, total=False):
     elements: list[OpsgenieElement]
 
 
+JsmResponderType = Literal["user", "schedule", "escalation"]
+JsmResponder = tuple[JsmResponderType, str]
+
+
+class JsmOperationsPluginModel(TypedDict, total=False):
+    password: CheckmkPassword
+    ignore_ssl: Literal[True]
+    proxy_url: ProxyUrl
+    owner: str
+    source: str
+    priority: OpsGeniePriorityPValueType
+    note_created: str
+    note_closed: str
+    host_msg: str
+    svc_msg: str
+    host_desc: str
+    svc_desc: str
+    teams: list[str]
+    responders: list[JsmResponder]
+    actions: list[str]
+    tags: list[str]
+    entity: str
+    elements: list[OpsgenieElement]
+
+
 class PagerDutyPluginModel(TypedDict):
     routing_key: tuple[Literal["routing_key", "store"], str]
     webhook_url: Literal["https://events.pagerduty.com/v2/enqueue"]
@@ -713,6 +738,9 @@ JiraNotify = tuple[JiraPluginName, JiraIssuePluginModel | None]
 OpsGeniePluginName = Literal["opsgenie_issues"]
 OpsgenieNotify = tuple[OpsGeniePluginName, OpsGenieIssuesPluginModel | None]
 
+JsmOperationsPluginName = Literal["jsm_operations"]
+JsmOperationsNotify = tuple[JsmOperationsPluginName, JsmOperationsPluginModel | None]
+
 PagerdutyPluginName = Literal["pagerduty"]
 PagerdutyNotify = tuple[PagerdutyPluginName, PagerDutyPluginModel | None]
 
@@ -751,6 +779,7 @@ KnownPluginParameters = (
     | IlertNotify
     | JiraNotify
     | OpsgenieNotify
+    | JsmOperationsNotify
     | PagerdutyNotify
     | PushoverNotify
     | ServiceNowNotify
@@ -772,6 +801,7 @@ BuiltInPluginNames = (
     | IlertPluginName
     | JiraPluginName
     | OpsGeniePluginName
+    | JsmOperationsPluginName
     | PagerdutyPluginName
     | PushoverPluginName
     | ServiceNowPluginName
@@ -791,6 +821,7 @@ NotifyPluginParamsDict = (
     | IlertPluginModel
     | JiraIssuePluginModel
     | OpsGenieIssuesPluginModel
+    | JsmOperationsPluginModel
     | PagerDutyPluginModel
     | PushoverPluginModel
     | ServiceNowPluginModel

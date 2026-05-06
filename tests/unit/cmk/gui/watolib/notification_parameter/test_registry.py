@@ -20,6 +20,7 @@ expected_plugins = [
     "cisco_webex_teams",
     "ilert",
     "jira_issues",
+    "jsm_operations",
     "mail",
     "mkeventd",
     "msteams",

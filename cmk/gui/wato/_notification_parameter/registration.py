@@ -12,6 +12,7 @@ from cmk.gui.watolib.notification_parameter import (
 from . import _cisco_webex_teams as cisco_webex_teams
 from . import _ilert as ilert
 from . import _jira_issues as jira_issues
+from . import _jsm_operations as jsm_operations
 from . import _mail as mail
 from . import _ms_teams as ms_teams
 from . import _opsgenie_issues as opsgenie_issues
@@ -94,6 +95,13 @@ def register(notification_parameter_registry: NotificationParameterRegistry) -> 
             ident="opsgenie_issues",
             spec=lambda: convert_dictionary_formspec_to_valuespec(opsgenie_issues.form_spec),
             form_spec=opsgenie_issues.form_spec,
+        )
+    )
+    notification_parameter_registry.register(
+        NotificationParameter(
+            ident="jsm_operations",
+            spec=lambda: convert_dictionary_formspec_to_valuespec(jsm_operations.form_spec),
+            form_spec=jsm_operations.form_spec,
         )
     )
     notification_parameter_registry.register(

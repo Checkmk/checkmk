@@ -1511,6 +1511,31 @@ class ListOfStrOneOfSchema(CheckboxOneOfSchema):
     }
 
 
+class JsmTypedResponder(BaseSchema):
+    type = fields.String(
+        enum=["user", "schedule", "escalation"],
+        required=True,
+        description="JSM Operations responder type. ``user`` adds an individual responder, ``schedule`` an on-call schedule, ``escalation`` an escalation policy.",
+        example="user",
+    )
+    name = fields.String(
+        required=True,
+        description="Identifier of the responder. For ``user`` this is the username (typically the email address); for ``schedule`` and ``escalation`` it is the configured name in JSM Operations.",
+        example="alice@example.com",
+    )
+
+
+class CheckboxWithListOfTypedResponders(Checkbox):
+    value = fields.List(fields.Nested(JsmTypedResponder))
+
+
+class ListOfTypedRespondersOneOfSchema(CheckboxOneOfSchema):
+    type_schemas = {
+        "disabled": Checkbox,
+        "enabled": CheckboxWithListOfTypedResponders,
+    }
+
+
 class ListOfExtraProperties(Checkbox):
     value = fields.List(
         fields.String(enum=list(get_args(OpsgenieElement))),
@@ -1524,6 +1549,95 @@ class ListOfExtraPropertiesOneOfSchema(CheckboxOneOfSchema):
         "disabled": Checkbox,
         "enabled": ListOfExtraProperties,
     }
+
+
+class JsmOperationsPluginCreate(BaseSchema):
+    plugin_name = fields.Constant(
+        "jsm_operations",
+        required=True,
+        description="The Jira Service Management Operations plug-in.",
+        example="jsm_operations",
+    )
+    api_key = fields.Nested(
+        OpsGenisStoreOrExplicitKeySelector,
+        required=True,
+    )
+    disable_ssl_cert_verification = DISABLE_SSL_CERT_VERIFICATION
+    http_proxy = HTTP_PROXY_CREATE
+    owner = fields.Nested(
+        StrValueOneOfSchema,
+        load_default=lambda: {"state": "disabled"},
+        description="Sets the assignee of the alert. Display name of an existing JSM user",
+    )
+    source = fields.Nested(
+        StrValueOneOfSchema,
+        load_default=lambda: {"state": "disabled"},
+        description="Source field of the alert. Default value is IP address of the incoming request",
+    )
+    priority = fields.Nested(
+        OpsGeniePriorityOneOfSchema,
+        load_default=lambda: {"state": "disabled"},
+    )
+    note_while_creating = fields.Nested(
+        StrValueOneOfSchema,
+        load_default=lambda: {"state": "disabled"},
+        description="Additional note that will be added while creating the alert",
+    )
+    note_while_closing = fields.Nested(
+        StrValueOneOfSchema,
+        load_default=lambda: {"state": "disabled"},
+        description="Additional note that will be added while closing the alert",
+    )
+    desc_for_host_alerts = fields.Nested(
+        StrValueOneOfSchema,
+        load_default=lambda: {"state": "disabled"},
+        description="Description field of host alert that is generally used to provide a detailed information about the alert",
+    )
+    desc_for_service_alerts = fields.Nested(
+        StrValueOneOfSchema,
+        load_default=lambda: {"state": "disabled"},
+        description="Description field of service alert that is generally used to provide a detailed information about the alert",
+    )
+    message_for_host_alerts = fields.Nested(
+        StrValueOneOfSchema,
+        load_default=lambda: {"state": "disabled"},
+        description="",
+    )
+    message_for_service_alerts = fields.Nested(
+        StrValueOneOfSchema,
+        load_default=lambda: {"state": "disabled"},
+        description="",
+    )
+    responsible_teams = fields.Nested(
+        ListOfStrOneOfSchema,
+        load_default=lambda: {"state": "disabled"},
+        description="Team names that will be added as responders for the alert. The integration's own team is always implicitly responsible; entries here add additional teams.",
+    )
+    additional_responders = fields.Nested(
+        ListOfTypedRespondersOneOfSchema,
+        load_default=lambda: {"state": "disabled"},
+        description="Additional non-team responders (user, on-call schedule, escalation policy) to attach to the alert.",
+    )
+    actions = fields.Nested(
+        ListOfStrOneOfSchema,
+        load_default=lambda: {"state": "disabled"},
+        description="Custom actions that will be available for the alert.",
+    )
+    tags = fields.Nested(
+        ListOfStrOneOfSchema,
+        load_default=lambda: {"state": "disabled"},
+        description="Tags of the alert.",
+    )
+    entity = fields.Nested(
+        StrValueOneOfSchema,
+        load_default=lambda: {"state": "disabled"},
+        description="Is used to specify which domain the alert is related to",
+    )
+    extra_properties = fields.Nested(
+        ListOfExtraPropertiesOneOfSchema,
+        description="A list of extra properties that will be included in the notification",
+        load_default=lambda: {"state": "disabled"},
+    )
 
 
 class OpsGeniePluginCreate(BaseSchema):
@@ -2284,6 +2398,7 @@ class PluginSelector(OneOfSchema):
         "ilert": IlertPluginCreate,
         "jira_issues": JiraPluginCreate,
         "opsgenie_issues": OpsGeniePluginCreate,
+        "jsm_operations": JsmOperationsPluginCreate,
         "pagerduty": PagerDutyPluginCreate,
         "pushover": PushOverPluginCreate,
         "servicenow": ServiceNowPluginCreate,

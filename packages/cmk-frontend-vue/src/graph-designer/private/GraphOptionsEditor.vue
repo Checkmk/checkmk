@@ -10,7 +10,7 @@ import type {
   GraphOptionUnitCustom,
   GraphOptions
 } from 'cmk-shared-typing/typescript/graph_designer'
-import { ref, watch } from 'vue'
+import { ref, useTemplateRef, watch } from 'vue'
 
 import usei18n from '@/lib/i18n'
 
@@ -65,10 +65,18 @@ watch(dataOmitZeroMetrics, () => {
     omit_zero_metrics: dataOmitZeroMetrics.value
   })
 })
+
+const unitEditorRef = useTemplateRef<InstanceType<typeof UnitEditor>>('unitEditor')
+
+function validate(): boolean {
+  return unitEditorRef.value?.validate() ?? true
+}
+
+defineExpose({ validate })
 </script>
 
 <template>
-  <UnitEditor :graph_options="props.graph_options" @update:unit="onUnitChange" />
+  <UnitEditor ref="unitEditor" :graph_options="props.graph_options" @update:unit="onUnitChange" />
   <ExplicitVerticalRangeEditor
     :graph_options="props.graph_options"
     @update:explicit-vertical-range="onExplicitVerticalRangeChange"

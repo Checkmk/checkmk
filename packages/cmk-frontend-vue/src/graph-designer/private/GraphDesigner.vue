@@ -17,7 +17,7 @@ import {
   type Transformation
 } from 'cmk-shared-typing/typescript/graph_designer'
 import type { Catalog } from 'cmk-shared-typing/typescript/vue_formspec_components'
-import { type Ref, computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { type Ref, computed, onBeforeUnmount, onMounted, ref, useTemplateRef, watch } from 'vue'
 
 import usei18n from '@/lib/i18n'
 import useDragging from '@/lib/useDragging'
@@ -61,6 +61,7 @@ import {
 } from '@/graph-designer/private/converters'
 import { fetchMetricColor } from '@/graph-designer/private/fetch_metric_properties'
 import { type AjaxGraph, type GraphRenderer, fetchAjaxGraph } from '@/graph-designer/private/graph'
+import { unitDigitsHasError, unitSymbolHasError } from '@/graph-designer/private/unitErrors'
 
 import type { Topic } from './type_defs'
 
@@ -536,6 +537,10 @@ async function addScalar() {
 }
 
 function addConstant() {
+  if (validateConstantValue(dataConstant.value).length > 0) {
+    displayErrors.value = true
+    return
+  }
   graphLines.value.push({
     id: nextIndex(),
     type: 'constant',
@@ -695,6 +700,10 @@ function applyMaximum() {
 }
 
 function applyTransformation() {
+  if (validatePercentile(dataTransformation.value).length > 0) {
+    displayErrors.value = true
+    return
+  }
   const firstOperand = selectedGraphLines.value[0]
   if (firstOperand) {
     addGraphLineWithSelection({
@@ -993,28 +1002,77 @@ function explicitRangeHasError() {
   return range.lower > range.upper
 }
 
-watch(
-  () => [dataExplicitVerticalRange.value],
-  async () => {
-    // Reset "submit error" banner when a user corrected the range values
-    if (!explicitRangeHasError()) {
-      hasSubmitError.value = false
-    }
-  },
-  { deep: true }
-)
+function validateConstantValue(value: number | undefined): string[] {
+  return typeof value === 'number' ? [] : [_t('Constant value must be a valid number')]
+}
 
-window.addEventListener('submit', (event) => {
-  const hasGraphLineErrors = graphLines.value.some((graphLine: GraphLine) => {
+function validatePercentile(value: number | undefined): string[] {
+  return typeof value === 'number' ? [] : [_t('Percentile must be a valid number')]
+}
+
+const displayErrors = ref(false)
+
+function constantErrors(value: number | undefined): string[] {
+  return displayErrors.value ? validateConstantValue(value) : []
+}
+
+function percentileErrors(value: number | undefined): string[] {
+  return displayErrors.value ? validatePercentile(value) : []
+}
+
+function unitHasError(): boolean {
+  if (dataUnit.value[0] !== 'custom') {
+    return false
+  }
+  const { notation, precision } = dataUnit.value[1]
+  const notationType = notation[0]
+  const symbol = notation[0] === 'time' ? '' : notation[1]
+  return (
+    unitSymbolHasError('custom', notationType, symbol) ||
+    unitDigitsHasError('custom', precision.digits)
+  )
+}
+
+function graphLinesHaveError(): boolean {
+  return graphLines.value.some((graphLine: GraphLine) => {
     if (graphLine.type === 'query') {
       return validateFormMetricBackendCustomQuery(undefined, graphLine).length > 0
     }
     if (graphLine.type === 'metric' || graphLine.type === 'scalar') {
       return validateMetricGraphLine(graphLine).length > 0
     }
+    if (graphLine.type === 'constant') {
+      return validateConstantValue(graphLine.value).length > 0
+    }
+    if (graphLine.type === 'transformation') {
+      return validatePercentile(graphLine.percentile).length > 0
+    }
     return false
   })
-  if (hasGraphLineErrors || explicitRangeHasError()) {
+}
+
+function formHasError(): boolean {
+  return graphLinesHaveError() || explicitRangeHasError() || unitHasError()
+}
+
+watch(
+  () => [dataExplicitVerticalRange.value, dataUnit.value, graphLines.value],
+  () => {
+    // Reset "submit error" banner once the user has corrected all errors
+    if (!formHasError()) {
+      hasSubmitError.value = false
+    }
+  },
+  { deep: true }
+)
+
+const graphOptionsEditorRef =
+  useTemplateRef<InstanceType<typeof GraphOptionsEditor>>('graphOptionsEditor')
+
+window.addEventListener('submit', (event) => {
+  if (formHasError()) {
+    graphOptionsEditorRef.value?.validate()
+    displayErrors.value = true
     hasSubmitError.value = true
     event.preventDefault()
     return
@@ -1206,6 +1264,7 @@ const graphDesignerContentAsJson = computed(() => {
             <CmkInput
               v-model="graphLine.value"
               type="number"
+              :external-errors="constantErrors(graphLine.value)"
               @update:model-value="updateGraphLineAutoTitle(graphLine)"
             />
           </div>
@@ -1213,6 +1272,7 @@ const graphDesignerContentAsJson = computed(() => {
             <CmkInput
               v-model="graphLine.percentile"
               type="number"
+              :external-errors="percentileErrors(graphLine.percentile)"
               @update:model-value="updateGraphLineAutoTitle(graphLine)"
             />
             {{ _t('of') }}
@@ -1316,7 +1376,11 @@ const graphDesignerContentAsJson = computed(() => {
     </template>
     <template #constant>
       <div>
-        <CmkInput v-model="dataConstant" type="number" />
+        <CmkInput
+          v-model="dataConstant"
+          type="number"
+          :external-errors="constantErrors(dataConstant)"
+        />
         <CmkButton @click="addConstant">
           {{ _t('Add') }}
         </CmkButton>
@@ -1351,7 +1415,11 @@ const graphDesignerContentAsJson = computed(() => {
     <template #transformation>
       <div v-if="transformationIsApplicable()">
         {{ _t('Percentile') }}
-        <CmkInput v-model="dataTransformation" type="number" />
+        <CmkInput
+          v-model="dataTransformation"
+          type="number"
+          :external-errors="percentileErrors(dataTransformation)"
+        />
         <CmkButton @click="applyTransformation">
           {{ _t('Apply') }}
         </CmkButton>
@@ -1360,6 +1428,7 @@ const graphDesignerContentAsJson = computed(() => {
     </template>
     <template #graph_options_custom>
       <GraphOptionsEditor
+        ref="graphOptionsEditor"
         :graph_options="computeGraphOptions()"
         @update:graph-options="updateGraphOptionsState"
       />

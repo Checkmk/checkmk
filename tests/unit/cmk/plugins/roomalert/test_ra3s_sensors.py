@@ -20,7 +20,7 @@ from cmk.plugins.roomalert.agent_based.ra3s_sensors import (
 
 
 def test_parse_ra3s_internal_section_temperature() -> None:
-    section = parse_ra3s_internal_section_temperature([["7400", "3000"]])
+    section = parse_ra3s_internal_section_temperature([["7400"], ["3000"]])
 
     assert section is not None
     assert section.temp_celsius == 30.0
@@ -28,7 +28,7 @@ def test_parse_ra3s_internal_section_temperature() -> None:
 
 
 def test_parse_ra3s_internal_section_temperature_fahrenheit_only() -> None:
-    section = parse_ra3s_internal_section_temperature([["7400", ""]])
+    section = parse_ra3s_internal_section_temperature([["7400"], [""]])
 
     assert section is not None
     assert section.temp_fahrenheit == 74.0
@@ -36,7 +36,7 @@ def test_parse_ra3s_internal_section_temperature_fahrenheit_only() -> None:
 
 
 def test_parse_ra3s_internal_section_temperature_celsius_only() -> None:
-    section = parse_ra3s_internal_section_temperature([["", "3000"]])
+    section = parse_ra3s_internal_section_temperature([[""], ["3000"]])
 
     assert section is not None
     assert section.temp_celsius == 30.0
@@ -44,11 +44,16 @@ def test_parse_ra3s_internal_section_temperature_celsius_only() -> None:
 
 
 def test_parse_ra3s_internal_section_temperature_both_empty() -> None:
-    assert parse_ra3s_internal_section_temperature([["", ""]]) is None
+    assert parse_ra3s_internal_section_temperature([[""], [""]]) is None
 
 
+# If there is just one value, we'll always get Fahrenheit.
 def test_parse_ra3s_internal_section_temperature_too_few_columns() -> None:
-    assert parse_ra3s_internal_section_temperature([["3000"]]) is None
+    section = parse_ra3s_internal_section_temperature([["3000"]])
+
+    assert section is not None
+    assert section.temp_fahrenheit == 30
+    assert section.temp_celsius is None
 
 
 def test_parse_ra3s_digital_with_temp() -> None:

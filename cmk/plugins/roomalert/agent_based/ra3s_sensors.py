@@ -29,7 +29,8 @@ class InternalSection(NamedTuple):
 
 def parse_ra3s_internal_section_temperature(string_table: StringTable) -> InternalSection | None:
     try:
-        tempf, tempc = string_table[0]
+        tempf = string_table[0][0] if len(string_table) > 0 else ""
+        tempc = string_table[1][0] if len(string_table) > 1 else ""
         if not tempf and not tempc:
             return None
 
@@ -41,14 +42,13 @@ def parse_ra3s_internal_section_temperature(string_table: StringTable) -> Intern
         return None
 
 
+# The only variant that works on real hardware
 snmp_section_ra3s_internal_sensors = SimpleSNMPSection(
     name="ra3s_internal_sensors",
     detect=DETECT_RA3S,
     fetch=SNMPTree(
-        base=".1.3.6.1.4.1.20916.1.13.1.1.1",
-        # both required because the hardware may not
-        # return tempc by itself.
-        oids=["1", "2"],  # internal-tempf, internal-tempc
+        base=".1.3.6.1.4.1.20916.1.13.1.1",
+        oids=["1"],  # top level for internal-tempf, internal-tempc
     ),
     parse_function=parse_ra3s_internal_section_temperature,
 )

@@ -20422,6 +20422,10 @@ msgstr "Ștergeți această pictogramă"
 msgid "Delete this MIB"
 msgstr "Ștergeți această MIB"
 
+#, fuzzy
+msgid "Delete this Prometheus configuration"
+msgstr "Ștergeți această conexiune"
+
 msgid "Delete this aggregation"
 msgstr "Ștergeți această agregare"
 
@@ -24128,6 +24132,10 @@ msgstr "Editați autentificarea cu doi factori a utilizatorului"
 msgid "Edit this %s"
 msgstr "Editați acest %s"
 
+#, fuzzy
+msgid "Edit this Prometheus configuration"
+msgstr "Configurația stilului selectat"
+
 msgid "Edit this aggregation"
 msgstr "Editați această agregare"
 
@@ -25372,6 +25380,10 @@ msgstr "Intrare"
 #, fuzzy
 msgid "Env creation"
 msgstr "Creații de evenimente"
+
+#, fuzzy
+msgid "Environment Metrics"
+msgstr "Variabile de mediu"
 
 #, fuzzy
 msgid "Environment Sensors"
@@ -55063,6 +55075,10 @@ msgid "Power"
 msgstr "Putere"
 
 #, fuzzy
+msgid "Power Subsystem"
+msgstr "Sistem de noduri"
+
+#, fuzzy
 msgid "Power Supplies"
 msgstr "Surse de alimentare"
 
@@ -74561,6 +74577,10 @@ msgstr "Este disponibil un singur conector de utilizator activ"
 #, python-format
 msgid "There job \"%s\" is not encrypted"
 msgstr "Acolo jobul \"%s\" nu este criptat"
+
+#, fuzzy
+msgid "Thermal Subsystem"
+msgstr "ID-ul sistemului SAP."
 
 msgid "Thermal information"
 msgstr "Informații termice"
@@ -96950,14 +96970,6 @@ msgstr ""
 "mici vor fi ordonate mai întâi. Subiectele cu același număr vor fi sortate "
 "în ordine alfabetică."
 
-#, fuzzy
-msgid "Choose how to display your data"
-msgstr "Nu afișați o dată"
-
-#, fuzzy
-msgid "Visualization types"
-msgstr "Niveluri de vizualizare"
-
 msgid "Automatically adjusted to available data"
 msgstr "Se ajustează automat la datele disponibile"
 
@@ -97424,6 +97436,14 @@ msgstr "Stocarea notificărilor pentru analiza regulilor"
 #, fuzzy
 msgid "Additional graph options"
 msgstr "Opțiuni adiționale"
+
+#, fuzzy
+msgid "Choose how to display your data"
+msgstr "Nu afișați o dată"
+
+#, fuzzy
+msgid "Visualization types"
+msgstr "Niveluri de vizualizare"
 
 msgid "Owner (private)"
 msgstr ""
@@ -99088,6 +99108,10 @@ msgid "Port must differ from the other protocol endpoint."
 msgstr ""
 
 #, fuzzy
+msgid "Configuration details:"
+msgstr "Fișiere de configurare"
+
+#, fuzzy
 msgid " | created"
 msgstr "Fișier creat"
 
@@ -99261,6 +99285,41 @@ msgstr "Adăugați, editați și ștergeți conexiuni InfluxDB."
 msgid "An unexpected error occurred. Please try again."
 msgstr ""
 "Nume de utilizator sau parolă incorectă. Vă rugăm să încercați din nou."
+
+#, fuzzy
+msgid "newly created"
+msgstr "Fișier creat"
+
+#, fuzzy
+msgid "existing"
+msgstr "Testare"
+
+msgid "Basic auth (user: %{user}, password: %{password})"
+msgstr ""
+
+#, fuzzy
+msgid "TLS enabled"
+msgstr "STARTTLS activat."
+
+#, fuzzy
+msgid "No encryption"
+msgstr "Criptare"
+
+#, fuzzy
+msgid "Event Console resource attribute"
+msgstr "Setări ale consolei de evenimente"
+
+#, fuzzy
+msgid "The hosts will be created in the \"Telemetry\" folder."
+msgstr "nu creați gazde gateway"
+
+#, fuzzy
+msgid "gRPC protocol"
+msgstr "Protocol"
+
+#, fuzzy
+msgid "HTTP protocol"
+msgstr "Protocol"
 
 #, fuzzy
 msgid "Unexpected form data shape."
@@ -101568,10 +101627,6 @@ msgstr ""
 #~ msgstr "Ieșirea plugin-ului"
 
 #, fuzzy
-#~ msgid "Power Subsystem"
-#~ msgstr "Sistem de noduri"
-
-#, fuzzy
 #~ msgid "Power Supply Name"
 #~ msgstr "Denumirea sursei de alimentare"
 
@@ -101995,10 +102050,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "The slot number"
 #~ msgstr "Numărul portului TCP"
-
-#, fuzzy
-#~ msgid "Thermal Subsystem"
-#~ msgstr "ID-ul sistemului SAP."
 
 #, fuzzy
 #~ msgid ""

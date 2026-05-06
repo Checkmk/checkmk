@@ -20371,6 +20371,10 @@ msgstr "Verwijder dit pictogram"
 msgid "Delete this MIB"
 msgstr "Verwijder deze MIB"
 
+#, fuzzy
+msgid "Delete this Prometheus configuration"
+msgstr "Verwijder deze verbinding"
+
 msgid "Delete this aggregation"
 msgstr "Verwijder deze aggregatie"
 
@@ -24058,6 +24062,10 @@ msgstr "Bewerk de gebruikersverificatie met twee factoren"
 msgid "Edit this %s"
 msgstr "Bewerk deze %s"
 
+#, fuzzy
+msgid "Edit this Prometheus configuration"
+msgstr "Configuratie toestand toevoegen"
+
 msgid "Edit this aggregation"
 msgstr "Bewerk deze aggregatie"
 
@@ -25285,6 +25293,10 @@ msgstr "Ingang"
 #, fuzzy
 msgid "Env creation"
 msgstr "Evenement creaties"
+
+#, fuzzy
+msgid "Environment Metrics"
+msgstr "Omgevingsvariabelen"
 
 #, fuzzy
 msgid "Environment Sensors"
@@ -54929,6 +54941,10 @@ msgid "Power"
 msgstr "Vermogen"
 
 #, fuzzy
+msgid "Power Subsystem"
+msgstr "Toestand knooppunt"
+
+#, fuzzy
 msgid "Power Supplies"
 msgstr "Stroomvoorziening"
 
@@ -74304,6 +74320,10 @@ msgstr "Er is slechts één actieve gebruikersconnector beschikbaar"
 #, python-format
 msgid "There job \"%s\" is not encrypted"
 msgstr "Er job \"%s\" is niet gecodeerd"
+
+#, fuzzy
+msgid "Thermal Subsystem"
+msgstr "De SAP-systeem-ID."
 
 msgid "Thermal information"
 msgstr "Thermische informatie"
@@ -96637,14 +96657,6 @@ msgstr ""
 "nummers worden eerst gesorteerd. Onderwerpen met hetzelfde nummer worden "
 "alfabetisch gesorteerd."
 
-#, fuzzy
-msgid "Choose how to display your data"
-msgstr "Geef geen datum weer"
-
-#, fuzzy
-msgid "Visualization types"
-msgstr "Visualisatieniveaus"
-
 msgid "Automatically adjusted to available data"
 msgstr "Automatisch aangepast aan beschikbare gegevens"
 
@@ -97109,6 +97121,14 @@ msgstr "Meldingen opslaan voor regelanalyse"
 #, fuzzy
 msgid "Additional graph options"
 msgstr "Extra opties"
+
+#, fuzzy
+msgid "Choose how to display your data"
+msgstr "Geef geen datum weer"
+
+#, fuzzy
+msgid "Visualization types"
+msgstr "Visualisatieniveaus"
 
 msgid "Owner (private)"
 msgstr ""
@@ -98765,6 +98785,10 @@ msgid "Port must differ from the other protocol endpoint."
 msgstr ""
 
 #, fuzzy
+msgid "Configuration details:"
+msgstr "Configuratiebestanden"
+
+#, fuzzy
 msgid " | created"
 msgstr "Bestand aangemaakt"
 
@@ -98937,6 +98961,41 @@ msgstr "InfluxDB verbindingen toevoegen, bewerken en verwijderen."
 #, fuzzy
 msgid "An unexpected error occurred. Please try again."
 msgstr "Er is een uitzondering opgetreden: %s"
+
+#, fuzzy
+msgid "newly created"
+msgstr "Bestand aangemaakt"
+
+#, fuzzy
+msgid "existing"
+msgstr "Test"
+
+msgid "Basic auth (user: %{user}, password: %{password})"
+msgstr ""
+
+#, fuzzy
+msgid "TLS enabled"
+msgstr "STARTTLS ingeschakeld."
+
+#, fuzzy
+msgid "No encryption"
+msgstr "Encryptie"
+
+#, fuzzy
+msgid "Event Console resource attribute"
+msgstr "Gebeurtenis Console instellingen"
+
+#, fuzzy
+msgid "The hosts will be created in the \"Telemetry\" folder."
+msgstr "geen gateway hosts aanmaken"
+
+#, fuzzy
+msgid "gRPC protocol"
+msgstr "Protocol"
+
+#, fuzzy
+msgid "HTTP protocol"
+msgstr "Protocol"
 
 #, fuzzy
 msgid "Unexpected form data shape."
@@ -101220,10 +101279,6 @@ msgstr ""
 #~ msgstr "Plugin uitgang"
 
 #, fuzzy
-#~ msgid "Power Subsystem"
-#~ msgstr "Toestand knooppunt"
-
-#, fuzzy
 #~ msgid "Power Supply Name"
 #~ msgstr "Naam stroomvoorziening"
 
@@ -101637,10 +101692,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "The slot number"
 #~ msgstr "TCP-poortnummer"
-
-#, fuzzy
-#~ msgid "Thermal Subsystem"
-#~ msgstr "De SAP-systeem-ID."
 
 #, fuzzy
 #~ msgid ""

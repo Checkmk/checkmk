@@ -20206,6 +20206,10 @@ msgstr "Cancella questa icona"
 msgid "Delete this MIB"
 msgstr "Cancellare questa MIB"
 
+#, fuzzy
+msgid "Delete this Prometheus configuration"
+msgstr "Cancellare questa connessione"
+
 msgid "Delete this aggregation"
 msgstr "Cancellare questa aggregazione"
 
@@ -23920,6 +23924,10 @@ msgstr "Modificare l'autenticazione a due fattori dell'utente"
 msgid "Edit this %s"
 msgstr "Modifica questo %s"
 
+#, fuzzy
+msgid "Edit this Prometheus configuration"
+msgstr "Configurazione dello stile selezionato"
+
 msgid "Edit this aggregation"
 msgstr "Modifica questa aggregazione"
 
@@ -25152,6 +25160,10 @@ msgstr "Ingresso"
 #, fuzzy
 msgid "Env creation"
 msgstr "Creazioni di eventi"
+
+#, fuzzy
+msgid "Environment Metrics"
+msgstr "Variabili d'ambiente"
 
 #, fuzzy
 msgid "Environment Sensors"
@@ -54743,6 +54755,10 @@ msgid "Power"
 msgstr "Potenza"
 
 #, fuzzy
+msgid "Power Subsystem"
+msgstr "Sistema di nodi"
+
+#, fuzzy
 msgid "Power Supplies"
 msgstr "Alimentatori"
 
@@ -74165,6 +74181,10 @@ msgstr "È disponibile un solo connettore utente attivo"
 #, python-format
 msgid "There job \"%s\" is not encrypted"
 msgstr "Il lavoro \"%s\" non è criptato"
+
+#, fuzzy
+msgid "Thermal Subsystem"
+msgstr "L'ID del sistema SAP."
 
 msgid "Thermal information"
 msgstr "Informazioni termiche"
@@ -96464,14 +96484,6 @@ msgstr ""
 "bassi saranno ordinati per primi. Gli argomenti con lo stesso numero saranno "
 "ordinati in ordine alfabetico."
 
-#, fuzzy
-msgid "Choose how to display your data"
-msgstr "Non visualizzare una data"
-
-#, fuzzy
-msgid "Visualization types"
-msgstr "Livelli di visualizzazione"
-
 msgid "Automatically adjusted to available data"
 msgstr "Adattato automaticamente ai dati disponibili"
 
@@ -96937,6 +96949,14 @@ msgstr "Memorizza le notifiche per l'analisi delle regole"
 #, fuzzy
 msgid "Additional graph options"
 msgstr "Opzioni aggiuntive"
+
+#, fuzzy
+msgid "Choose how to display your data"
+msgstr "Non visualizzare una data"
+
+#, fuzzy
+msgid "Visualization types"
+msgstr "Livelli di visualizzazione"
 
 msgid "Owner (private)"
 msgstr ""
@@ -98593,6 +98613,10 @@ msgid "Port must differ from the other protocol endpoint."
 msgstr ""
 
 #, fuzzy
+msgid "Configuration details:"
+msgstr "File di configurazione"
+
+#, fuzzy
 msgid " | created"
 msgstr "File creato"
 
@@ -98763,6 +98787,41 @@ msgstr "Aggiungere, modificare ed eliminare configurazioni OpenTelemetry."
 #, fuzzy
 msgid "An unexpected error occurred. Please try again."
 msgstr "Credenziali errate. Ritenta per favore."
+
+#, fuzzy
+msgid "newly created"
+msgstr "File creato"
+
+#, fuzzy
+msgid "existing"
+msgstr "Test"
+
+msgid "Basic auth (user: %{user}, password: %{password})"
+msgstr ""
+
+#, fuzzy
+msgid "TLS enabled"
+msgstr "STARTTLS abilitato."
+
+#, fuzzy
+msgid "No encryption"
+msgstr "Crittografia"
+
+#, fuzzy
+msgid "Event Console resource attribute"
+msgstr "Impostazioni della console eventi"
+
+#, fuzzy
+msgid "The hosts will be created in the \"Telemetry\" folder."
+msgstr "non creare host gateway"
+
+#, fuzzy
+msgid "gRPC protocol"
+msgstr "Protocollo"
+
+#, fuzzy
+msgid "HTTP protocol"
+msgstr "Protocollo"
 
 #, fuzzy
 msgid "Unexpected form data shape."
@@ -101079,10 +101138,6 @@ msgstr ""
 #~ msgstr "Uscita del plugin"
 
 #, fuzzy
-#~ msgid "Power Subsystem"
-#~ msgstr "Sistema di nodi"
-
-#, fuzzy
 #~ msgid "Power Supply Name"
 #~ msgstr "Nome dell'alimentatore"
 
@@ -101516,10 +101571,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "The slot number"
 #~ msgstr "Numero di porta TCP"
-
-#, fuzzy
-#~ msgid "Thermal Subsystem"
-#~ msgstr "L'ID del sistema SAP."
 
 #, fuzzy
 #~ msgid ""

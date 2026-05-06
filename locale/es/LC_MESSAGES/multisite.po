@@ -20492,6 +20492,10 @@ msgstr "Borrar este icono"
 msgid "Delete this MIB"
 msgstr "Borrar este MIB"
 
+#, fuzzy
+msgid "Delete this Prometheus configuration"
+msgstr "Borrar esta conexión"
+
 msgid "Delete this aggregation"
 msgstr "Borrar esta agregación"
 
@@ -24215,6 +24219,10 @@ msgstr "Editar la autenticación de dos factores del usuario"
 msgid "Edit this %s"
 msgstr "Editar este %s"
 
+#, fuzzy
+msgid "Edit this Prometheus configuration"
+msgstr "Añadir configuración de estado"
+
 msgid "Edit this aggregation"
 msgstr "Editar esta agregación"
 
@@ -25458,6 +25466,10 @@ msgstr "Entrada"
 #, fuzzy
 msgid "Env creation"
 msgstr "Creaciones de eventos"
+
+#, fuzzy
+msgid "Environment Metrics"
+msgstr "Variables de entorno"
 
 #, fuzzy
 msgid "Environment Sensors"
@@ -55331,6 +55343,10 @@ msgid "Power"
 msgstr "Potencia"
 
 #, fuzzy
+msgid "Power Subsystem"
+msgstr "Estado del nodo"
+
+#, fuzzy
 msgid "Power Supplies"
 msgstr "Fuentes de alimentación"
 
@@ -74869,6 +74885,10 @@ msgstr "Sólo hay un conector de usuario activo disponible"
 #, python-format
 msgid "There job \"%s\" is not encrypted"
 msgstr "El trabajo \"%s\" no está encriptado"
+
+#, fuzzy
+msgid "Thermal Subsystem"
+msgstr "El ID del sistema SAP."
 
 msgid "Thermal information"
 msgstr "Información térmica"
@@ -97350,14 +97370,6 @@ msgstr ""
 "bajos se ordenarán primero. Los temas con el mismo número se ordenarán "
 "alfabéticamente."
 
-#, fuzzy
-msgid "Choose how to display your data"
-msgstr "No mostrar una fecha"
-
-#, fuzzy
-msgid "Visualization types"
-msgstr "Niveles de visualización"
-
 msgid "Automatically adjusted to available data"
 msgstr "Se ajusta automáticamente a los datos disponibles"
 
@@ -97823,6 +97835,14 @@ msgstr "Almacenar notificaciones para el análisis de reglas"
 #, fuzzy
 msgid "Additional graph options"
 msgstr "Opciones adicionales"
+
+#, fuzzy
+msgid "Choose how to display your data"
+msgstr "No mostrar una fecha"
+
+#, fuzzy
+msgid "Visualization types"
+msgstr "Niveles de visualización"
 
 msgid "Owner (private)"
 msgstr ""
@@ -99482,6 +99502,10 @@ msgid "Port must differ from the other protocol endpoint."
 msgstr ""
 
 #, fuzzy
+msgid "Configuration details:"
+msgstr "Archivos de configuración"
+
+#, fuzzy
 msgid " | created"
 msgstr "Archivo creado"
 
@@ -99652,6 +99676,41 @@ msgstr "Añadir, editar y eliminar conexiones InfluxDB."
 #, fuzzy
 msgid "An unexpected error occurred. Please try again."
 msgstr "Usuario o contraseña incorrectos. Por favor, inténtelo de nuevo."
+
+#, fuzzy
+msgid "newly created"
+msgstr "Archivo creado"
+
+#, fuzzy
+msgid "existing"
+msgstr "Prueba"
+
+msgid "Basic auth (user: %{user}, password: %{password})"
+msgstr ""
+
+#, fuzzy
+msgid "TLS enabled"
+msgstr "STARTTLS activado."
+
+#, fuzzy
+msgid "No encryption"
+msgstr "Codificación"
+
+#, fuzzy
+msgid "Event Console resource attribute"
+msgstr "Configuración de la consola de eventos"
+
+#, fuzzy
+msgid "The hosts will be created in the \"Telemetry\" folder."
+msgstr "no crear hosts de puerta de enlace"
+
+#, fuzzy
+msgid "gRPC protocol"
+msgstr "Protocolo"
+
+#, fuzzy
+msgid "HTTP protocol"
+msgstr "Protocolo"
 
 #, fuzzy
 msgid "Unexpected form data shape."
@@ -101950,10 +102009,6 @@ msgstr ""
 #~ msgstr "Salida del plugin"
 
 #, fuzzy
-#~ msgid "Power Subsystem"
-#~ msgstr "Estado del nodo"
-
-#, fuzzy
 #~ msgid "Power Supply Name"
 #~ msgstr "Nombre de la fuente de alimentación"
 
@@ -102368,10 +102423,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "The slot number"
 #~ msgstr "Número de puerto TCP"
-
-#, fuzzy
-#~ msgid "Thermal Subsystem"
-#~ msgstr "El ID del sistema SAP."
 
 #, fuzzy
 #~ msgid ""

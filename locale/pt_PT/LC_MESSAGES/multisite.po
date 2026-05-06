@@ -4,9 +4,9 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
+"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2026-05-01 17:50+0000\n"
+"PO-Revision-Date: 2026-05-06 07:09+0000\n"
 "Language-Team: Portuguese (Portugal) <https://translate.checkmk.com/projects/"
 "checkmk/stable/pt_PT/>\n"
 "Language: pt_PT\n"
@@ -20370,6 +20370,10 @@ msgstr "Apagar este Ícone"
 msgid "Delete this MIB"
 msgstr "Apagar esta MIB"
 
+#, fuzzy
+msgid "Delete this Prometheus configuration"
+msgstr "Eliminar esta ligação"
+
 msgid "Delete this aggregation"
 msgstr "Eliminar esta agregação"
 
@@ -24053,6 +24057,10 @@ msgstr "Editar a autenticação de dois factores do utilizador"
 msgid "Edit this %s"
 msgstr "Editar esta %s"
 
+#, fuzzy
+msgid "Edit this Prometheus configuration"
+msgstr "Adicionar configuração do estado"
+
 msgid "Edit this aggregation"
 msgstr "Editar esta agregação"
 
@@ -25286,6 +25294,10 @@ msgstr "Entrada"
 #, fuzzy
 msgid "Env creation"
 msgstr "Criações de eventos"
+
+#, fuzzy
+msgid "Environment Metrics"
+msgstr "Variáveis de ambiente"
 
 #, fuzzy
 msgid "Environment Sensors"
@@ -54911,6 +54923,10 @@ msgid "Power"
 msgstr "Energia"
 
 #, fuzzy
+msgid "Power Subsystem"
+msgstr "Estado do nó"
+
+#, fuzzy
 msgid "Power Supplies"
 msgstr "Fontes de alimentação"
 
@@ -74260,6 +74276,10 @@ msgstr "Só existe um conector de utilizador activo disponível"
 #, python-format
 msgid "There job \"%s\" is not encrypted"
 msgstr "Há trabalho \"%s\" não é criptografado"
+
+#, fuzzy
+msgid "Thermal Subsystem"
+msgstr "O ID do sistema SAP."
 
 msgid "Thermal information"
 msgstr "Informação térmica"
@@ -93764,6 +93784,7 @@ msgstr "contando"
 msgid "cp437"
 msgstr "cp437"
 
+#, fuzzy
 msgid "crash report"
 msgid_plural "crash reports"
 msgstr[0] ""
@@ -94280,6 +94301,7 @@ msgstr "os anfitriões estão de pé e não têm problemas de serviço"
 msgid "hosts in total"
 msgstr "anfitriões no total"
 
+#, fuzzy
 msgid "hour"
 msgid_plural "hours"
 msgstr[0] ""
@@ -96531,14 +96553,6 @@ msgstr ""
 "baixos serão ordenados primeiro. Tópicos com o mesmo número serão ordenados "
 "por ordem alfabética."
 
-#, fuzzy
-msgid "Choose how to display your data"
-msgstr "Não mostrar uma data"
-
-#, fuzzy
-msgid "Visualization types"
-msgstr "Níveis de visualização"
-
 msgid "Automatically adjusted to available data"
 msgstr "Ajuste automático aos dados disponíveis"
 
@@ -97003,6 +97017,14 @@ msgstr "Notas da loja para análise de regras"
 #, fuzzy
 msgid "Additional graph options"
 msgstr "Opções adicionais"
+
+#, fuzzy
+msgid "Choose how to display your data"
+msgstr "Não mostrar uma data"
+
+#, fuzzy
+msgid "Visualization types"
+msgstr "Níveis de visualização"
 
 msgid "Owner (private)"
 msgstr ""
@@ -98658,6 +98680,10 @@ msgid "Port must differ from the other protocol endpoint."
 msgstr ""
 
 #, fuzzy
+msgid "Configuration details:"
+msgstr "Ficheiros de configuração"
+
+#, fuzzy
 msgid " | created"
 msgstr "Arquivo criado"
 
@@ -98830,6 +98856,41 @@ msgstr "Adicionar, editar e eliminar ligações InfluxDB."
 msgid "An unexpected error occurred. Please try again."
 msgstr ""
 "Nome de utilizador ou palavra-passe incorrectos. Por favor, tente novamente."
+
+#, fuzzy
+msgid "newly created"
+msgstr "Arquivo criado"
+
+#, fuzzy
+msgid "existing"
+msgstr "Testes"
+
+msgid "Basic auth (user: %{user}, password: %{password})"
+msgstr ""
+
+#, fuzzy
+msgid "TLS enabled"
+msgstr "STARTTLS ativado."
+
+#, fuzzy
+msgid "No encryption"
+msgstr "Criptografia"
+
+#, fuzzy
+msgid "Event Console resource attribute"
+msgstr "Configurações do console de eventos"
+
+#, fuzzy
+msgid "The hosts will be created in the \"Telemetry\" folder."
+msgstr "não criar hospedeiros de gateway"
+
+#, fuzzy
+msgid "gRPC protocol"
+msgstr "Protocolo"
+
+#, fuzzy
+msgid "HTTP protocol"
+msgstr "Protocolo"
 
 #, fuzzy
 msgid "Unexpected form data shape."
@@ -101126,10 +101187,6 @@ msgstr ""
 #~ msgstr "Saída do Plugin"
 
 #, fuzzy
-#~ msgid "Power Subsystem"
-#~ msgstr "Estado do nó"
-
-#, fuzzy
 #~ msgid "Power Supply Name"
 #~ msgstr "Nome da fonte de alimentação"
 
@@ -101561,10 +101618,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "The slot number"
 #~ msgstr "Número da porta TCP"
-
-#, fuzzy
-#~ msgid "Thermal Subsystem"
-#~ msgstr "O ID do sistema SAP."
 
 #, fuzzy
 #~ msgid ""

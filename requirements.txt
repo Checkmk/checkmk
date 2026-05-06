@@ -4009,7 +4009,6 @@ pyparsing==3.3.2 \
     #   -r cmk/requirements.in
     #   httplib2
     #   matplotlib
-    #   pyspdx
 pypdf==6.7.0 \
     --hash=sha256:62e85036d50839cbdf45b8067c2c1a1b925517514d7cba4cbe8755a6c2829bc9 \
     --hash=sha256:eb95e244d9f434e6cfd157272283339ef586e593be64ee699c620f756d5c3f7e
@@ -4046,10 +4045,6 @@ pysnmp==7.1.22 \
     # via
     #   -r packages/cmk-ec/requirements.in
     #   snmpsim
-pyspdx==1.2.0 \
-    --hash=sha256:83515cbc384786f8c5fc56a4b903d985fde1d5fd127492d014209b3b726f1636 \
-    --hash=sha256:88d360cee40539c36d175d70c855c2a38bed86f77e758d3eda8c7db38629fe3f
-    # via -r omd/dev-requirements.in
 pyspnego==0.12.0 \
     --hash=sha256:84cc8dae6ad21e04b37c50c1d3c743f05f193e39498f6010cc68ec1146afd007 \
     --hash=sha256:e1d9cd3520a87a1d6db8d68783b17edc4e1464eae3d51ead411a51c82dbaae67

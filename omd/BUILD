@@ -15,7 +15,7 @@ load("//bazel/rules:write_omd_spec.bzl", "write_omd_spec")
 
 exports_files([
     "requirements.txt",
-    "dev-requirements.in",
+    "bill-of-materials.json",
 ])
 
 py_binary(
@@ -673,7 +673,7 @@ pkg_files(
 )
 
 pkg_tar(
-    name = "deps_packages_base",
+    name = "deps_packages",
     srcs = [
         ":agents",
         ":agents_cfg_examples",
@@ -700,7 +700,6 @@ pkg_tar(
     ],
     stamp = 1,
     tags = ["manual"],
-    visibility = ["//omd:__subpackages__"],
     deps = [
         "//active_checks:pkg_tar",
         "//bin:pkg_tar",
@@ -771,6 +770,7 @@ pkg_tar(
         "//packages/unixcat:unixcat_tar",
         ":agents_scripts_super_server",
         ":agents_windows",
+        "//omd/dependency_management:license_info",
     ] + select({
         "@cmk//distro:almalinux": ["//omd/packages/xinetd"],
         "@cmk//distro:sles": [
@@ -779,16 +779,6 @@ pkg_tar(
         ],
         "//conditions:default": [],
     }) + edition_deps,
-)
-
-# If we include the bom in the initial tar, we have a circular dependency
-pkg_tar(
-    name = "deps_packages",
-    tags = ["manual"],
-    deps = [
-        ":deps_packages_base",
-        "//omd/dependency_management:license_info",
-    ],
 )
 
 pkg_tar(

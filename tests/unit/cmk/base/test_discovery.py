@@ -16,8 +16,8 @@ from typing import NamedTuple
 import pytest
 from pytest import MonkeyPatch
 
+import cmk.utils.paths
 from cmk.agent_based.v2 import (
-    CheckPlugin,
     CheckResult,
     DiscoveryResult,
     HostLabelGenerator,
@@ -105,8 +105,6 @@ from cmk.fetchers import (
 )
 from cmk.fetchers.filecache import FileCacheOptions
 from cmk.helper_interface import SourceType
-from cmk.logwatch import config as logwatch_config
-from cmk.logwatch.config import ParameterLogwatchEc, ParameterLogwatchRules
 from cmk.snmplib import SNMPRawDataElem
 from cmk.utils.everythingtype import EVERYTHING
 from cmk.utils.ip_lookup import IPStackConfig
@@ -1526,78 +1524,12 @@ def test__find_candidates(monkeypatch: MonkeyPatch) -> None:
     assert find_plugins(providers, candidates) == expected_plugins
 
 
-_expected_services: dict = {
-    (CheckPluginName("apache_status"), "127.0.0.1:5000"): {},
-    (CheckPluginName("apache_status"), "127.0.0.1:5004"): {},
-    (CheckPluginName("apache_status"), "127.0.0.1:5007"): {},
-    (CheckPluginName("apache_status"), "127.0.0.1:5008"): {},
-    (CheckPluginName("apache_status"), "127.0.0.1:5009"): {},
-    (CheckPluginName("apache_status"), "::1:80"): {},
-    (CheckPluginName("checkmk_agent"), None): {},
-    (CheckPluginName("cpu_loads"), None): {},
-    (CheckPluginName("cpu_threads"), None): {},
-    (CheckPluginName("df"), "/"): {},
-    (CheckPluginName("df"), "/boot"): {},
-    (CheckPluginName("df"), "/boot/efi"): {},
-    (CheckPluginName("diskstat"), "SUMMARY"): {},
-    (CheckPluginName("kernel_performance"), None): {},
-    (CheckPluginName("kernel_util"), None): {},
-    (CheckPluginName("livestatus_status"), "heute"): {},
-    (CheckPluginName("livestatus_status"), "test1"): {},
-    (CheckPluginName("livestatus_status"), "test2"): {},
-    (CheckPluginName("livestatus_status"), "test3"): {},
-    (CheckPluginName("livestatus_status"), "test_crawl"): {},
-    (CheckPluginName("lnx_if"), "2"): {},
-    (CheckPluginName("lnx_if"), "3"): {},
-    (CheckPluginName("lnx_thermal"), "Zone 0"): {},
-    (CheckPluginName("lnx_thermal"), "Zone 1"): {},
-    (CheckPluginName("logwatch"), "/var/log/auth.log"): {},
-    (CheckPluginName("logwatch"), "/var/log/kern.log"): {},
-    (CheckPluginName("logwatch"), "/var/log/syslog"): {},
-    (CheckPluginName("local"), "SäMB_Share_flr01"): {},
-    (CheckPluginName("mem_linux"), None): {},
-    (CheckPluginName("mkeventd_status"), "heute"): {},
-    (CheckPluginName("mkeventd_status"), "test1"): {},
-    (CheckPluginName("mkeventd_status"), "test2"): {},
-    (CheckPluginName("mkeventd_status"), "test3"): {},
-    (CheckPluginName("mkeventd_status"), "test_crawl"): {},
-    (CheckPluginName("mknotifyd"), "heute"): {},
-    (CheckPluginName("mknotifyd"), "heute_slave_1"): {},
-    (CheckPluginName("mknotifyd"), "test1"): {},
-    (CheckPluginName("mknotifyd"), "test2"): {},
-    (CheckPluginName("mknotifyd"), "test3"): {},
-    (CheckPluginName("mknotifyd"), "test_crawl"): {},
-    (CheckPluginName("mounts"), "/"): {},
-    (CheckPluginName("mounts"), "/boot"): {},
-    (CheckPluginName("mounts"), "/boot/efi"): {},
-    (CheckPluginName("ntp_time"), None): {},
-    (CheckPluginName("omd_apache"), "aq"): {},
-    (CheckPluginName("omd_apache"), "heute"): {},
-    (CheckPluginName("omd_apache"), "heute_slave_1"): {},
-    (CheckPluginName("omd_apache"), "onelogin"): {},
-    (CheckPluginName("omd_apache"), "stable"): {},
-    (CheckPluginName("omd_apache"), "stable_slave_1"): {},
-    (CheckPluginName("omd_apache"), "test1"): {},
-    (CheckPluginName("omd_apache"), "test2"): {},
-    (CheckPluginName("omd_apache"), "test3"): {},
-    (CheckPluginName("omd_apache"), "test_crawl"): {},
-    (CheckPluginName("omd_status"), "heute"): {},
-    (CheckPluginName("omd_status"), "test1"): {},
-    (CheckPluginName("omd_status"), "test2"): {},
-    (CheckPluginName("omd_status"), "test3"): {},
-    (CheckPluginName("omd_status"), "test_crawl"): {},
-    (CheckPluginName("postfix_mailq"), "default"): {},
-    (CheckPluginName("postfix_mailq_status"), "postfix"): {},
-    (CheckPluginName("tcp_conn_stats"), None): {},
-    (CheckPluginName("uptime"), None): {},
+_EXPECTED_SERVICES: Mapping[ServiceID, Mapping[str, str]] = {
+    ServiceID(_TEST_PLUGIN_NAME, "item_a"): {},
 }
 
-_expected_host_labels = [
-    HostLabel("cmk/os_family", "linux", SectionName("check_mk")),
-    HostLabel("cmk/os_type", "linux", SectionName("check_mk")),
-    HostLabel("cmk/os_platform", "ubuntu", SectionName("check_mk")),
-    HostLabel("cmk/os_name", "Ubuntu", SectionName("check_mk")),
-    HostLabel("cmk/os_version", "22.04", SectionName("check_mk")),
+_EXPECTED_HOST_LABELS = [
+    HostLabel("cmk/check_mk_server", "yes", _TEST_LABELS_NAME),
 ]
 
 
@@ -1608,35 +1540,50 @@ class _EmptyDiscoveryConfig(ABCDiscoveryConfig):
         return [] if rule_set_type == "all" else {}
 
 
-class _LogwatchConfigDummy:
-    def __init__(self) -> None:
-        self.base_spool_path = Path("/dev/null")
-        self.omd_root = Path("/dev/null")
-        self.msg_dir = Path("/dev/null")
-        self.debug = False
-
-    def logwatch_rules_all(
-        self, *, host_name: str, plugin: CheckPlugin, logfile: str
-    ) -> Sequence[ParameterLogwatchRules]:
-        return ()
-
-    def logwatch_ec_all(self, host_name: str) -> Sequence[ParameterLogwatchEc]:
-        return ()
-
-
 @pytest.mark.usefixtures("patch_omd_site")
-def test_commandline_discovery(
-    monkeypatch: MonkeyPatch,
-    agent_based_plugins: AgentBasedPlugins,
-) -> None:
+def test_commandline_discovery(monkeypatch: MonkeyPatch) -> None:
+    """End-to-end test of the commandline_discovery() entrypoint with a
+    minimal fake plug-in set. Beyond the discovered service result, this is
+    the only test in the module that covers:
+
+    1. The commandline_discovery() entrypoint — i.e. what ``cmk -I`` calls.
+       Other tests in this file call ``discover_services()`` /
+       ``discover_host_labels()`` directly.
+    2. Parser + fetcher wiring — :class:`CMKParser` + :class:`CMKFetcher`
+       constructed from a real :class:`ConfigCache` with the full
+       dependency graph (factories, secrets, IP-lookup callbacks, fetcher
+       trigger, etc.).
+    3. The ``datasource_programs`` → cached file → fetcher path.
+    4. Persistence side-effects — :meth:`AutochecksStore.read` and
+       :meth:`DiscoveredHostLabelsStore.load` after the pipeline runs.
+    """
     testhost = HostName("test-host")
     ts = Scenario()
     ts.add_host(testhost, ipaddress=HostAddress("127.0.0.1"))
-    ts.fake_standard_linux_agent_output(testhost)
+    ts.set_ruleset(
+        "datasource_programs",
+        [
+            {
+                "condition": {"host_name": [testhost]},
+                "id": "test-datasource",
+                "value": f"cat {cmk.utils.paths.tcp_cache_dir}/<HOST>",
+            }
+        ],
+    )
+    cache_path = cmk.utils.paths.tcp_cache_dir / testhost
+    cache_path.parent.mkdir(parents=True, exist_ok=True)
+    cache_path.write_text(
+        "<<<test_section>>>\nitem_a ok\nitem_b ok\n<<<labels>>>\ncmk/check_mk_server yes\n"
+    )
     config_cache = ts.apply(monkeypatch)
 
-    # damn you logwatch!!
-    logwatch_config.set_global_state(_LogwatchConfigDummy())
+    plugins = AgentBasedPlugins(
+        agent_sections=_TEST_AGENT_SECTIONS,
+        snmp_sections={},
+        check_plugins=_TEST_CHECK_PLUGINS,
+        inventory_plugins={},
+        errors=(),
+    )
 
     file_cache_options = FileCacheOptions()
     parser = CMKParser(
@@ -1675,7 +1622,7 @@ def test_commandline_discovery(
                 caching_config=lambda host_name: {},
             ),
         ),
-        plugins=agent_based_plugins,
+        plugins=plugins,
         default_address_family=lambda *a: socket.AddressFamily.AF_INET,
         file_cache_options=file_cache_options,
         force_snmp_cache_refresh=False,
@@ -1705,17 +1652,15 @@ def test_commandline_discovery(
         clear_ruleset_matcher_caches=config_cache.ruleset_matcher.clear_caches,
         parser=parser,
         fetcher=fetcher,
-        section_plugins=SectionPluginMapper(
-            {**agent_based_plugins.agent_sections, **agent_based_plugins.snmp_sections}
-        ),
+        section_plugins=SectionPluginMapper(_TEST_AGENT_SECTIONS),
         section_error_handling=lambda *args, **kw: "error",
         host_label_plugins=HostLabelPluginMapper(
             discovery_config=_EmptyDiscoveryConfig(),
-            sections={**agent_based_plugins.agent_sections, **agent_based_plugins.snmp_sections},
+            sections=_TEST_AGENT_SECTIONS,
         ),
         plugins=DiscoveryPluginMapper(
             discovery_config=_EmptyDiscoveryConfig(),
-            check_plugins=agent_based_plugins.check_plugins,
+            check_plugins=_TEST_CHECK_PLUGINS,
         ),
         run_plugin_names=EVERYTHING,
         ignore_plugin=lambda *args, **kw: False,
@@ -1725,10 +1670,10 @@ def test_commandline_discovery(
 
     entries = AutochecksStore(testhost).read()
     found = {e.id(): e.service_labels for e in entries}
-    assert found == _expected_services
+    assert found == _EXPECTED_SERVICES
 
     store = DiscoveredHostLabelsStore(testhost)
-    assert store.load() == _expected_host_labels
+    assert store.load() == _EXPECTED_HOST_LABELS
 
 
 class RealHostScenario(NamedTuple):

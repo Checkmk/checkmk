@@ -7,6 +7,7 @@ import fnmatch
 import logging
 import os
 import re
+import stat
 import subprocess
 from collections.abc import Generator, Iterator, Mapping
 from contextlib import contextmanager
@@ -15,7 +16,11 @@ from pathlib import Path
 import pytest
 
 from cmk.utils.paths import mkbackup_lock_dir
-from tests.testlib.common.utils2 import DISTROS_MISSING_WHITELIST_ENVIRONMENT_FOR_SU, run
+from tests.testlib.common.utils2 import (
+    check_output,
+    DISTROS_MISSING_WHITELIST_ENVIRONMENT_FOR_SU,
+    run,
+)
 from tests.testlib.pytest_helpers.calls import exit_pytest_on_exceptions
 from tests.testlib.site import Site, SiteFactory
 from tests.testlib.version import edition_from_env
@@ -120,18 +125,27 @@ def backup_lock_dir_fixture(
         # This omd call triggers the creation of the lock dir with the correct permissions. In
         # production there is always at least one command executed before being able to execute
         # the backup code. So we can assume it has been executed before.
-        run(["omd", "status", site_for_mkbackup_tests.id], sudo=True)
-        assert mkbackup_lock_dir.exists()
-        backup_permission_mask = oct(mkbackup_lock_dir.stat().st_mode)[-4:]
-        assert backup_permission_mask == "0770"
-        assert mkbackup_lock_dir.group() == "omd"
+        run(["omd", "status"], sudo=True, substitute_user=site_for_mkbackup_tests.id)
+        assert (
+            run(["test", "-d", mkbackup_lock_dir.as_posix()], check=False, sudo=True).returncode
+            == 0
+        )
+        backup_permission_mask = stat.S_IMODE(site_for_mkbackup_tests.file_mode(mkbackup_lock_dir))
+        assert backup_permission_mask == 0o770
+        backup_file_group = check_output(
+            ["stat", "-c", "%G", mkbackup_lock_dir.as_posix()]
+        ).rstrip()
+        assert backup_file_group == "omd"
 
     if request.param:
         _initialize_lock_dir()
         yield
     else:
         run(["rm", "-r", str(mkbackup_lock_dir)], sudo=True)
-        assert not mkbackup_lock_dir.exists(), f"Expected '{mkbackup_lock_dir}' to be deleted!"
+        assert not (
+            run(["test", "-d", mkbackup_lock_dir.as_posix()], check=False, sudo=True).returncode
+            == 0
+        ), f"Expected '{mkbackup_lock_dir}' to be deleted!"
         yield
         _initialize_lock_dir()
 
@@ -462,7 +476,6 @@ def test_mkbackup_list_jobs(site_for_mkbackup_tests: Site) -> None:
     assert "Tästjob" in p.stdout
 
 
-@pytest.mark.skip(reason="CMK-26691; investigating ...")
 @pytest.mark.usefixtures("test_cfg", "backup_lock_dir")
 def test_mkbackup_simple_backup(site_for_mkbackup_tests: Site) -> None:
     _execute_backup(site_for_mkbackup_tests)

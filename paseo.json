@@ -2,6 +2,7 @@
   "worktree": {
     "teardown": [
       "bazel clean --expunge",
+      "find ~/.cache/bazel-repo-contents -xtype l -delete 2>/dev/null || true",
       "BRANCH=$(git branch --show-current) && git checkout --detach && git branch -D \"$BRANCH\""
     ]
   }

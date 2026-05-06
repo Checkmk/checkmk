@@ -384,14 +384,17 @@ def _create_node_sections(
     running_vms = [
         vm for vm in all_vms.values() if vm["node"] == node["node"] and vm["status"] == "running"
     ]
+
+    has_maxcpu = "maxcpu" in node
+    has_maxmem = "maxmem" in node
     yield (
         "proxmox_ve_node_allocation",
         SectionNodeAllocation(
             status=node["status"],
-            node_total_cpu=node["maxcpu"],
-            allocated_cpu=sum(vm["maxcpu"] for vm in running_vms),
-            node_total_mem=node["maxmem"],
-            allocated_mem=sum(vm["maxmem"] for vm in running_vms),
+            node_total_cpu=node["maxcpu"] if has_maxcpu else None,
+            allocated_cpu=sum(vm["maxcpu"] for vm in running_vms) if has_maxcpu else None,
+            node_total_mem=node["maxmem"] if has_maxmem else None,
+            allocated_mem=sum(vm["maxmem"] for vm in running_vms) if has_maxmem else None,
         ).model_dump_json(),
     )
 

@@ -1343,13 +1343,16 @@ class Site:
         )
 
     def activate_changes_and_wait_for_site_restart(
-        self, timeout: int = 120, interval: int = 2
+        self,
+        timeout: int = 120,
+        interval: int = 2,
+        force_foreign_changes: bool = False,
     ) -> None:
         """Activate changes which require a site restart and wait until the site is
         fully running again.
         """
         try:
-            self.openapi.changes.activate()
+            self.openapi.changes.activate(force_foreign_changes=force_foreign_changes)
         except requests.exceptions.ConnectionError:
             # The activation may trigger a site restart that kills httpd before the
             # response is sent back. This is expected — proceed to wait for the site

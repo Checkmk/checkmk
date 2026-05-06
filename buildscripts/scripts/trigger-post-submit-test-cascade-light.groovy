@@ -21,6 +21,7 @@ void main() {
         "test-python3-typing",
         "test-unit-all",
     ];
+    job_names += env.USE_K8S_PLUGINS_SYSTEMTESTS == "1" ? ["test-plugins-siteless-k8s"] : [];
 
     print(
         """

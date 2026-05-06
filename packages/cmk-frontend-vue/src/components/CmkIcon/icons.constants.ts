@@ -893,6 +893,7 @@ export const unthemedIcons: Partial<Record<IconNames | '2fa' | '2fa-backup-codes
   'av-computation': lightIconAvComputationPng,
   availability: lightIconAvailabilitySvg,
   'aws-logo': lightIconAwsLogoSvg,
+  azure: lightIconAzureVmsSvg, // Intentional alias of the VMs icon
   'azure-storage': lightIconAzureStorageSvg,
   'azure-vms': lightIconAzureVmsSvg,
   back: lightIconBackPng,

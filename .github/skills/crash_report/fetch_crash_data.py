@@ -42,6 +42,14 @@ API_BASE = f"{BASE_URL}/gui/api/v1/statsapi"
 OMD_SITES_DIR = Path("/omd/sites")
 
 
+def crash_group_url(group_id: int | str) -> str:
+    return f"{BASE_URL}/gui/crashreportgroupview/show/{group_id}"
+
+
+def crash_report_url(crash_id: str) -> str:
+    return f"{BASE_URL}/gui/crashreportview/show/{crash_id}"
+
+
 class AuthenticationError(Exception):
     """Raised when no authentication token is available."""
 
@@ -318,7 +326,7 @@ def cmd_search(args: argparse.Namespace) -> None:
             exc_value, _ = anonymizer.anonymize_string(exc_value)
         exc_short = f"{exc_type}: {exc_value[:80]}" if exc_value else exc_type
         print(
-            f"| [{g['id']}]({g['url']}) | {g['crash_type']} | {g['num_crashes']} "
+            f"| [{g['id']}]({crash_group_url(g['id'])}) | {g['crash_type']} | {g['num_crashes']} "
             f"| {solved} | {exc_short} | {jira} |"
         )
 
@@ -352,7 +360,7 @@ def cmd_popular(args: argparse.Namespace) -> None:
             exc_value, _ = anonymizer.anonymize_string(exc_value)
         exc_short = f"{exc_type}: {exc_value[:80]}" if exc_value else exc_type
         print(
-            f"| [{g['id']}]({g['url']}) | {g['crash_type']} | {g['num_crashes']} "
+            f"| [{g['id']}]({crash_group_url(g['id'])}) | {g['crash_type']} | {g['num_crashes']} "
             f"| {exc_short} | {jira} |"
         )
 
@@ -433,7 +441,8 @@ def cmd_show(args: argparse.Namespace) -> None:
     group = report.get("group", {})
 
     print(f"# Crash Report: {report['crash_id']}\n")
-    print(f"*Source: {source}*\n")
+    print(f"*Source: {source}*")
+    print(f"*URL: {crash_report_url(report['crash_id'])}*\n")
 
     print("## Summary\n")
     print(f"- **Type:** {report['crash_type']}")
@@ -555,6 +564,7 @@ def cmd_group(args: argparse.Namespace) -> None:
     group, _ = anonymizer.anonymize_value(group)
 
     print(f"# Crash Group: {group['id']}\n")
+    print(f"*URL: {crash_group_url(group['id'])}*\n")
 
     solved_str = "Yes" if group.get("is_solved") else "No"
     print("## Summary\n")
@@ -587,7 +597,7 @@ def cmd_group(args: argparse.Namespace) -> None:
         print("|----------|---------|-------------|---------|")
         for c in crashes:
             print(
-                f"| {c['crash_id']} | {c['cmk_version']} "
+                f"| [{c['crash_id']}]({crash_report_url(c['crash_id'])}) | {c['cmk_version']} "
                 f"| {c['upload_time']} | {c['contact_mail']} |"
             )
 

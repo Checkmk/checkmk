@@ -549,10 +549,10 @@ resolved [--since DATE] [--branch BRANCH]
 
 5. **Present a summary table:**
 
-   | Group ID | Type  | Crash Group                           | Gerrit                                                            | Solved Versions   |
-   | -------- | ----- | ------------------------------------- | ----------------------------------------------------------------- | ----------------- |
-   | 42       | check | [Link](https://crash.checkmk.com/...) | [Change 12345](https://review.lan.tribe29.com/c/check_mk/+/12345) | 2.4.0p7, 2.3.0p25 |
-   | 57       | gui   | [Link](https://crash.checkmk.com/...) | [Change 12400](https://review.lan.tribe29.com/c/check_mk/+/12400) | 2.4.0p7           |
+   | Group ID | Type  | Crash Group                                                        | Gerrit                                                            | Solved Versions   |
+   | -------- | ----- | ------------------------------------------------------------------ | ----------------------------------------------------------------- | ----------------- |
+   | 42       | check | [Link](https://crash.checkmk.com/gui/crashreportgroupview/show/42) | [Change 12345](https://review.lan.tribe29.com/c/check_mk/+/12345) | 2.4.0p7, 2.3.0p25 |
+   | 57       | gui   | [Link](https://crash.checkmk.com/gui/crashreportgroupview/show/57) | [Change 12400](https://review.lan.tribe29.com/c/check_mk/+/12400) | 2.4.0p7           |
 
 **Note:** This command only finds crash groups fixed using the `Crash-Group-ID:` commit trailer convention. Older fixes without this trailer will not appear.
 
@@ -615,3 +615,12 @@ Note: Accessing local OMD site crash reports may require running as the site use
 - **Traceback file paths are NOT anonymized** — these are Checkmk source code paths needed for debugging.
 - The `stats` command returns only aggregate counts and needs no anonymization.
 - The API requires the crash reporting service to have the new `/search`, `/crash_report/<id>`, and `/crash_group/<id>` endpoints deployed. If you get 404 errors on these endpoints, fall back to the `popular` and `stats` commands which use the older API.
+
+## Web URL Patterns
+
+When linking to crash.checkmk.com in tables, summaries, or Jira tickets, build URLs from these patterns rather than relying on whatever URL the API returns:
+
+- Crash group: `https://crash.checkmk.com/gui/crashreportgroupview/show/<group_id>` (e.g. `https://crash.checkmk.com/gui/crashreportgroupview/show/4750`)
+- Individual crash report: `https://crash.checkmk.com/gui/crashreportview/show/<crash_id>` (e.g. `https://crash.checkmk.com/gui/crashreportview/show/7e669d16-498f-11f1-9f05-005056b4f96d`)
+
+The helper script exposes `crash_group_url(group_id)` and `crash_report_url(crash_id)` and uses them in all command output.

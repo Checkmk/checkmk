@@ -11,7 +11,7 @@ from cmk.agent_based.v2 import (
     Service,
     State,
 )
-from cmk.plugins.collection.agent_based.datapower_temp import (
+from cmk.plugins.datapower.agent_based.datapower_temp import (
     check_datapower_temp,
     discover_datapower_temp,
     parse_datapower_temp,

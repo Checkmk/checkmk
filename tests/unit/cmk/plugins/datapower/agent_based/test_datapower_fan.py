@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.plugins.collection.agent_based.datapower_fan import Fan, parse_datapower_fan
+from cmk.plugins.datapower.agent_based.datapower_fan import Fan, parse_datapower_fan
 
 
 def test_parse_datapower_fan() -> None:

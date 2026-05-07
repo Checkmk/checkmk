@@ -7,7 +7,7 @@
 import pytest
 
 from cmk.agent_based.v2 import Result, Service, State
-from cmk.plugins.collection.agent_based.datapower_fan import (
+from cmk.plugins.datapower.agent_based.datapower_fan import (
     check_datapower_fan,
     discover_datapower_fan,
     Fan,

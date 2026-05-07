@@ -73,7 +73,6 @@ sh_library(
         "hpux_statgrab",
         "ibm_mq",
         "jar_signature",
-        "kaspersky_av",
         "lnx_container_host_if.linux",
         "mailman3_lists",
         "mk_apt",

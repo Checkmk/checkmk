@@ -13,8 +13,8 @@ import pytest
 import time_machine
 
 from cmk.agent_based.v2 import Metric, Result, Service, State, StringTable
-from cmk.plugins.collection.agent_based import mqtt
-from cmk.plugins.collection.agent_based.mqtt import (
+from cmk.plugins.mqtt.agent_based import mqtt
+from cmk.plugins.mqtt.agent_based.mqtt import (
     check_mqtt_broker,
     check_mqtt_clients,
     check_mqtt_messages,

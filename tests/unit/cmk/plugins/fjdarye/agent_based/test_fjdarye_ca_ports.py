@@ -7,8 +7,8 @@ from collections.abc import Mapping, Sequence
 import pytest
 
 from cmk.agent_based.v2 import Metric, Result, Service, State, StringTable
-from cmk.plugins.collection.agent_based import fjdarye_ca_ports
-from cmk.plugins.collection.agent_based.fjdarye_ca_ports import (
+from cmk.plugins.fjdarye.agent_based import fjdarye_ca_ports
+from cmk.plugins.fjdarye.agent_based.fjdarye_ca_ports import (
     check_fjdarye_ca_ports,
     discover_fjdarye_ca_ports,
     parse_fjdarye_ca_ports,

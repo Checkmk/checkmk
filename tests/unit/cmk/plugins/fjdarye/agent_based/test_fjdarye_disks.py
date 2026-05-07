@@ -11,7 +11,7 @@ from typing import Any
 import pytest
 
 from cmk.agent_based.v2 import CheckResult, DiscoveryResult, Result, Service, State, StringTable
-from cmk.plugins.collection.agent_based.fjdarye_disks import (
+from cmk.plugins.fjdarye.agent_based.fjdarye_disks import (
     check_fjdarye_disks,
     check_fjdarye_disks_summary,
     discover_fjdarye_disks,

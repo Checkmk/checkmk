@@ -8,7 +8,7 @@ from collections.abc import Sequence
 import pytest
 
 from cmk.agent_based.v2 import CheckResult, DiscoveryResult, Result, Service, State, StringTable
-from cmk.plugins.collection.agent_based.fjdarye_summary_status import (
+from cmk.plugins.fjdarye.agent_based.fjdarye_summary_status import (
     check_fjdarye_sum,
     discover_fjdarye_sum,
     FjdaryeDeviceStatus,

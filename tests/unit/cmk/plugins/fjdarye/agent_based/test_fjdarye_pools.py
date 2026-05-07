@@ -8,7 +8,7 @@ from collections.abc import Mapping
 import pytest
 
 from cmk.agent_based.v2 import DiscoveryResult, Metric, Result, Service, State, StringTable
-from cmk.plugins.collection.agent_based.fjdarye_pools import (
+from cmk.plugins.fjdarye.agent_based.fjdarye_pools import (
     _check_fjdarye_pools,
     check_fjdarye_pools,
     discover_fjdarye_pools,

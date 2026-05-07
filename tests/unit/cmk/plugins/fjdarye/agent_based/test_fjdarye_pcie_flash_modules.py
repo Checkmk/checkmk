@@ -7,7 +7,7 @@ from collections.abc import Mapping, Sequence
 import pytest
 
 from cmk.agent_based.v2 import Metric, Result, Service, State, StringTable
-from cmk.plugins.collection.agent_based.fjdarye_pcie_flash_modules import (
+from cmk.plugins.fjdarye.agent_based.fjdarye_pcie_flash_modules import (
     check_fjdarye_pcie_flash_modules,
     discover_fjdarye_pcie_flash_modules,
     parse_fjdarye_pcie_flash_modules,

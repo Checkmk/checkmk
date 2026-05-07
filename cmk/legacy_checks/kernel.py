@@ -3,19 +3,26 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 
+from collections.abc import Mapping
+from typing import Any
 
-import cmk.plugins.collection.agent_based.kernel
-from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
-from cmk.agent_based.v2 import get_rate, get_value_store
+from cmk.agent_based.v2 import (
+    check_levels,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    FixedLevelsT,
+    get_rate,
+    get_value_store,
+    NoLevelsT,
+    Result,
+    Service,
+    State,
+)
+from cmk.plugins.collection.agent_based.kernel import KERNEL_COUNTER_NAMES, Section
 
-check_info = {}
-
-
-kernel_counter_names = cmk.plugins.collection.agent_based.kernel.KERNEL_COUNTER_NAMES
-
-kernel_metrics_names = {
+_KERNEL_METRICS_NAMES = {
     "ctxt": "context_switches",
     "processes": "process_creations",
     "pgmajfault": "major_page_faults",
@@ -24,53 +31,71 @@ kernel_metrics_names = {
 }
 
 
-def discover_kernel_performance(parsed):
-    _, items = parsed
-    for _, name in kernel_counter_names.items():
-        data = items.get(name)
-        if data is not None and len(data) > 0:
-            return [(None, {})]
-    return []
+def _fixed_or_no_levels(
+    levels: tuple[float | None, float | None] | None,
+) -> NoLevelsT | FixedLevelsT[float]:
+    if levels is None or levels[0] is None or levels[1] is None:
+        return ("no_levels", None)
+    return ("fixed", (levels[0], levels[1]))
 
 
-def check_kernel_performance(_no_item, params, parsed):
-    timestamp, items = parsed
+def discover_kernel_performance(section: Section) -> DiscoveryResult:
+    _, items = section
+    for name in KERNEL_COUNTER_NAMES.values():
+        if items.get(name):
+            yield Service()
+            return
+
+
+def check_kernel_performance(params: Mapping[str, Any], section: Section) -> CheckResult:
+    timestamp, items = section
     if timestamp is None:
         return
 
-    for _, item_name in kernel_counter_names.items():
+    for item_name in KERNEL_COUNTER_NAMES.values():
         item_values = items.get(item_name)
         if item_values is None:
             continue
 
         if len(item_values) > 1:
-            yield 3, "item '%s' not unique (found %d times)" % (item_name, len(item_values))
+            yield Result(
+                state=State.UNKNOWN,
+                summary=f"item {item_name!r} not unique (found {len(item_values)} times)",
+            )
 
         counter, value = item_values[0]
+        if not isinstance(value, int):
+            continue
         rate = get_rate(get_value_store(), counter, timestamp, value, raise_overflow=True)
+        metric_name = _KERNEL_METRICS_NAMES[counter]
 
-        if counter in ["pswpin", "pswpout"]:
-            levels = params.get(
-                "%s_levels" % kernel_metrics_names[counter], (None, None)
-            ) + params.get("%s_levels_lower" % kernel_metrics_names[counter], (None, None))
+        if counter in ("pswpin", "pswpout"):
+            yield from check_levels(
+                rate,
+                metric_name=metric_name,
+                levels_upper=_fixed_or_no_levels(params.get(f"{metric_name}_levels")),
+                levels_lower=_fixed_or_no_levels(params.get(f"{metric_name}_levels_lower")),
+                render_func=lambda x: f"{x:.2f}/s",
+                label=item_name,
+                boundaries=(0, None),
+            )
         else:
-            levels = params.get(counter)
-
-        yield check_levels(
-            rate,
-            kernel_metrics_names[counter],
-            levels,
-            human_readable_func=lambda x: f"{x:.2f}/s",
-            infoname=item_name,
-            boundaries=(0, None),
-        )
+            yield from check_levels(
+                rate,
+                metric_name=metric_name,
+                levels_upper=_fixed_or_no_levels(params.get(counter)),
+                render_func=lambda x: f"{x:.2f}/s",
+                label=item_name,
+                boundaries=(0, None),
+            )
 
 
-check_info["kernel.performance"] = LegacyCheckDefinition(
+check_plugin_kernel_performance = CheckPlugin(
     name="kernel_performance",
     service_name="Kernel Performance",
     sections=["kernel"],
     discovery_function=discover_kernel_performance,
     check_function=check_kernel_performance,
     check_ruleset_name="kernel_performance",
+    check_default_parameters={},
 )

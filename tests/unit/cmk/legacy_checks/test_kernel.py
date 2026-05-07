@@ -3,21 +3,15 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="misc"
-# mypy: disable-error-code="no-untyped-call"
-
 # NOTE: This file has been created by an LLM (from something that was worse).
 # It mostly serves as test to ensure we don't accidentally break anything.
 # If you encounter something weird in here, do not hesitate to replace this
 # test by something more appropriate.
 
-from collections.abc import Mapping
-from typing import Any
-
 import pytest
 import time_machine
 
-from cmk.agent_based.v2 import GetRateError
+from cmk.agent_based.v2 import GetRateError, Metric, Result, Service, State
 from cmk.legacy_checks import kernel
 from cmk.plugins.collection.agent_based.kernel import parse_kernel, Section
 
@@ -44,11 +38,7 @@ def parsed() -> Section:
 
 def test_discover_kernel_performance(parsed: Section) -> None:
     """Test kernel performance discovery function."""
-
-    result = kernel.discover_kernel_performance(parsed)
-
-    assert len(result) == 1
-    assert result[0] == (None, {})
+    assert list(kernel.discover_kernel_performance(parsed)) == [Service()]
 
 
 @time_machine.travel("2020-06-04 15:40:00")
@@ -68,21 +58,18 @@ def test_check_kernel_performance_no_params(
     }
     monkeypatch.setattr(kernel, "get_value_store", lambda: value_store)
 
-    results = list(kernel.check_kernel_performance(None, {}, parsed))
+    results = list(kernel.check_kernel_performance({}, parsed))
 
-    assert len(results) == 5
+    metrics = [r for r in results if isinstance(r, Metric)]
+    text_results = [r for r in results if isinstance(r, Result)]
 
     # All results should be OK (state 0) without thresholds
-    for result in results:
-        state, summary, metrics = result
-        assert state == 0
-        assert "/s" in summary  # Should have rate info
-        assert len(metrics) == 1
-        assert metrics[0][1] > 0  # Rate should be positive
-        assert len(metrics[0]) == 6  # Full metric tuple format
+    for result in text_results:
+        assert result.state == State.OK
+        assert "/s" in result.summary
 
     # Verify we have the expected metrics
-    metric_names = {result[2][0][0] for result in results}
+    metric_names = {m.name for m in metrics}
     expected_metrics = {
         "process_creations",
         "context_switches",
@@ -92,10 +79,13 @@ def test_check_kernel_performance_no_params(
     }
     assert metric_names == expected_metrics
 
+    for metric in metrics:
+        assert metric.value > 0
+
 
 @time_machine.travel("2020-06-04 15:40:00")
 def test_check_kernel_performance_with_thresholds(
-    parsed: tuple[float, Mapping[str, Any]], monkeypatch: pytest.MonkeyPatch
+    parsed: Section, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """Test kernel performance check function with threshold parameters."""
 
@@ -117,28 +107,28 @@ def test_check_kernel_performance_with_thresholds(
         "page_swap_out_levels_lower": (500.0, 100.0),
     }
 
-    results = list(kernel.check_kernel_performance(None, params, parsed))
-
-    assert len(results) == 5
+    results = list(kernel.check_kernel_performance(params, parsed))
+    text_results = [r for r in results if isinstance(r, Result)]
+    metrics = [r for r in results if isinstance(r, Metric)]
 
     # With threshold settings, we expect some results to be in warning/critical state
     warning_or_critical_found = False
-    for result in results:
-        state, summary, metrics = result
-        assert state in [0, 1, 2]  # OK, WARN, or CRIT
-        assert "/s" in summary
-        assert len(metrics) == 1
-        assert metrics[0][1] > 0  # Rate should be positive
-        if state in [1, 2]:
+    for result in text_results:
+        assert result.state in (State.OK, State.WARN, State.CRIT)
+        assert "/s" in result.summary
+        if result.state in (State.WARN, State.CRIT):
             warning_or_critical_found = True
-            assert "warn/crit" in summary  # Should show thresholds
+            assert "warn/crit" in result.summary
 
     # At least one metric should trigger warning/critical with these thresholds
     assert warning_or_critical_found
 
+    for metric in metrics:
+        assert metric.value > 0
+
 
 def test_check_kernel_performance_no_timestamp() -> None:
-    assert not list(kernel.check_kernel_performance(None, {}, (None, {})))
+    assert not list(kernel.check_kernel_performance({}, (None, {})))
 
 
 @time_machine.travel("2020-06-04 15:40:00")
@@ -146,23 +136,23 @@ def test_check_kernel_performance_missing_counters(monkeypatch: pytest.MonkeyPat
     """Test kernel performance check function with missing counters."""
 
     # Create parsed data with minimal counters
-    minimal_parsed = (11238.0, {"Context Switches": [("ctxt", 539210403)]})
+    minimal_parsed: Section = (11238, {"Context Switches": [("ctxt", 539210403)]})
 
     # Pre-populate value store
     base_time = 10000.0
     value_store: dict[str, object] = {"ctxt": (base_time, 500000000)}
     monkeypatch.setattr(kernel, "get_value_store", lambda: value_store)
 
-    results = list(kernel.check_kernel_performance(None, {}, minimal_parsed))
+    results = list(kernel.check_kernel_performance({}, minimal_parsed))
 
-    # Should only get results for available counters
-    assert len(results) == 1
+    text_results = [r for r in results if isinstance(r, Result)]
+    metrics = [r for r in results if isinstance(r, Metric)]
 
-    state, summary, metrics = results[0]
-    assert state == 0
-    assert "Context Switches:" in summary
+    assert len(text_results) == 1
+    assert text_results[0].state == State.OK
+    assert "Context Switches:" in text_results[0].summary
     assert len(metrics) == 1
-    assert metrics[0][0] == "context_switches"
+    assert metrics[0].name == "context_switches"
 
 
 @time_machine.travel("1970-01-01 00:00:00")
@@ -170,7 +160,7 @@ def test_check_kernel_performance_counter_reset(monkeypatch: pytest.MonkeyPatch)
     """Test kernel performance check function with missing counters."""
 
     # Create parsed data with minimal counters
-    minimal_parsed = (11238.0, {"Context Switches": [("ctxt", 0)]})
+    minimal_parsed: Section = (11238, {"Context Switches": [("ctxt", 0)]})
 
     # Pre-populate value store
     base_time = -60.0
@@ -178,7 +168,7 @@ def test_check_kernel_performance_counter_reset(monkeypatch: pytest.MonkeyPatch)
     monkeypatch.setattr(kernel, "get_value_store", lambda: value_store)
 
     with pytest.raises(GetRateError):
-        _ = list(kernel.check_kernel_performance(None, {}, minimal_parsed))
+        _ = list(kernel.check_kernel_performance({}, minimal_parsed))
 
 
 def test_kernel_parse_function_empty() -> None:
@@ -191,4 +181,4 @@ def test_kernel_parse_function_empty() -> None:
 
 
 def test_discover_kernel_performance_no_data() -> None:
-    assert not list(kernel.discover_kernel_performance((11238.0, {})))
+    assert not list(kernel.discover_kernel_performance((11238, {})))

@@ -6,8 +6,8 @@
 
 import pytest
 
-import cmk.plugins.collection.agent_based.kemp_loadmaster_realserver as klr
-import cmk.plugins.collection.agent_based.kemp_loadmaster_services as kls
+import cmk.plugins.kemp_loadmaster.agent_based.kemp_loadmaster_realserver as klr
+import cmk.plugins.kemp_loadmaster.agent_based.kemp_loadmaster_services as kls
 from cmk.agent_based.v2 import Result, Service, State, StringTable
 from cmk.plugins.kemp_loadmaster.lib import VSSection
 

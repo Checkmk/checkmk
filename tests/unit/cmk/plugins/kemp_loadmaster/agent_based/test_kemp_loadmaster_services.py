@@ -11,7 +11,7 @@ from collections.abc import Sequence
 import pytest
 
 from cmk.agent_based.v2 import Metric, Result, Service, State
-from cmk.plugins.collection.agent_based.kemp_loadmaster_services import (
+from cmk.plugins.kemp_loadmaster.agent_based.kemp_loadmaster_services import (
     check_kemp_loadmaster_services,
     discover_kemp_loadmaster_services,
     parse_kemp_loadmaster_services,

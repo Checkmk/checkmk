@@ -143,32 +143,33 @@ def check_openhardwaremonitor(
     params: Mapping[str, Sequence[float]],
     parsed: Mapping[str, Mapping[str, OpenhardwaremonitorSensor]],
 ) -> tuple[int, str, list[tuple[str, float]]] | None:
-    if item in parsed.get(sensor_type, {}):
-        data = parsed[sensor_type][item]
-        _check_openhardwaremonitor_wmistatus(data)
-        if "lower" in params:
-            status_lower = _openhardwaremonitor_expect_order(
-                params["lower"][1], params["lower"][0], data.reading
-            )
-        else:
-            status_lower = 0
-        if "upper" in params:
-            status_upper = _openhardwaremonitor_expect_order(
-                data.reading, params["upper"][0], params["upper"][1]
-            )
-        else:
-            status_upper = 0
+    if item not in parsed.get(sensor_type, {}):
+        return None
 
-        perfdata = []
-        if data.perf_var:
-            perfdata = [(data.perf_var, data.reading)]
-
-        return (
-            _openhardwaremonitor_worst_status(status_lower, status_upper),
-            f"{data.reading:.1f}{data.unit}",
-            perfdata,
+    data = parsed[sensor_type][item]
+    _check_openhardwaremonitor_wmistatus(data)
+    if "lower" in params:
+        status_lower = _openhardwaremonitor_expect_order(
+            params["lower"][1], params["lower"][0], data.reading
         )
-    return None
+    else:
+        status_lower = 0
+    if "upper" in params:
+        status_upper = _openhardwaremonitor_expect_order(
+            data.reading, params["upper"][0], params["upper"][1]
+        )
+    else:
+        status_upper = 0
+
+    perfdata = []
+    if data.perf_var:
+        perfdata = [(data.perf_var, data.reading)]
+
+    return (
+        _openhardwaremonitor_worst_status(status_lower, status_upper),
+        f"{data.reading:.1f}{data.unit}",
+        perfdata,
+    )
 
 
 def _check_openhardwaremonitor_wmistatus(data: OpenhardwaremonitorSensor) -> None:
@@ -309,11 +310,12 @@ def check_openhardwaremonitor_fan(
     params: Mapping[str, object],
     parsed: Mapping[str, Mapping[str, OpenhardwaremonitorSensor]],
 ) -> LegacyResult | None:
-    if item in parsed.get("Fan", {}):
-        data = parsed["Fan"][item]
-        _check_openhardwaremonitor_wmistatus(data)
-        return check_fan(data.reading, params)
-    return None
+    if item not in parsed.get("Fan", {}):
+        return None
+
+    data = parsed["Fan"][item]
+    _check_openhardwaremonitor_wmistatus(data)
+    return check_fan(data.reading, params)
 
 
 def discover_openhardwaremonitor_fan(

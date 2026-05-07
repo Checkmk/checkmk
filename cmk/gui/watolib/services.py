@@ -41,7 +41,7 @@ from cmk.automations.results import (
 )
 
 from cmk.checkengine.checking import CheckPluginName
-from cmk.checkengine.discovery import AutocheckEntry, CheckPreviewEntry
+from cmk.checkengine.discovery import AutocheckEntry, CheckPreviewEntry, DiscoverySettings
 
 import cmk.gui.watolib.changes as _changes
 from cmk.gui.background_job import (
@@ -1220,7 +1220,13 @@ class ServiceDiscoveryBackgroundJob(BackgroundJob):
         # TODO: In distributed sites this must not add a change on the remote site. We need to build
         # the way back to the central site and show the information there.
         local_discovery(
-            "refresh",
+            DiscoverySettings(
+                update_host_labels=True,
+                add_new_services=True,
+                remove_vanished_services=True,
+                update_changed_service_labels=True,
+                update_changed_service_parameters=True,
+            ).to_json(),
             [self.host_name],
             scan=True,
             raise_errors=False,

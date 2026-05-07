@@ -27,7 +27,7 @@ from cmk.automations.results import (
 )
 
 from cmk.checkengine.checking import CheckPluginName
-from cmk.checkengine.discovery import AutocheckEntry, CheckPreviewEntry
+from cmk.checkengine.discovery import AutocheckEntry, CheckPreviewEntry, DiscoverySettings
 
 mock_discovery_result = ServiceDiscoveryPreviewResult(
     check_table=[
@@ -1028,7 +1028,13 @@ def test_openapi_discovery_tabula_rasa(
     mock_set_autochecks.assert_not_called()
     assert mock_discovery.mock_calls == [
         call(
-            "refresh",
+            DiscoverySettings(
+                update_host_labels=True,
+                add_new_services=True,
+                remove_vanished_services=True,
+                update_changed_service_labels=True,
+                update_changed_service_parameters=True,
+            ).to_json(),
             ["example.com"],
             scan=True,
             raise_errors=False,

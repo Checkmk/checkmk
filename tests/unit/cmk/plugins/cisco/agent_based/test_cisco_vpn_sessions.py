@@ -7,7 +7,7 @@
 import pytest
 
 from cmk.agent_based.v2 import StringTable
-from cmk.plugins.collection.agent_based import cisco_vpn_sessions
+from cmk.plugins.cisco.agent_based import cisco_vpn_sessions
 
 DATA_0 = [["0", "0", "0", "13", "152", "13", "58", "10533", "87", "0", "0", "0", "2500"]]
 RESULT_0 = {

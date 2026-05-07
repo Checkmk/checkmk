@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.plugins.collection.agent_based.cisco_fru_power import FRU, parse_cisco_fru_power
+from cmk.plugins.cisco.agent_based.cisco_fru_power import FRU, parse_cisco_fru_power
 
 
 def test_parse_cisco_fru_power() -> None:

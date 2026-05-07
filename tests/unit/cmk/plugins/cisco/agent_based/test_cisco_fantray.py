@@ -8,7 +8,7 @@ from collections.abc import Sequence
 import pytest
 
 from cmk.agent_based.v2 import Result, State, StringTable
-from cmk.plugins.collection.agent_based.cisco_fantray import (
+from cmk.plugins.cisco.agent_based.cisco_fantray import (
     check_cisco_fantray,
     parse_cisco_fantray,
     Section,

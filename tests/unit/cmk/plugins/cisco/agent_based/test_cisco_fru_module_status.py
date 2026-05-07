@@ -5,7 +5,7 @@
 
 
 from cmk.agent_based.v2 import Result, Service, State
-from cmk.plugins.collection.agent_based import cisco_fru_module_status
+from cmk.plugins.cisco.agent_based import cisco_fru_module_status
 
 
 def test_parse() -> None:

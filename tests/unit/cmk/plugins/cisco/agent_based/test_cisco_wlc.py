@@ -8,7 +8,7 @@ from collections.abc import Mapping
 import pytest
 
 from cmk.agent_based.v2 import CheckResult, DiscoveryResult, Result, Service, State, StringTable
-from cmk.plugins.collection.agent_based.cisco_wlc import (
+from cmk.plugins.cisco.agent_based.cisco_wlc import (
     check_cisco_wlc,
     cluster_check_cisco_wlc,
     discovery_cisco_wlc,

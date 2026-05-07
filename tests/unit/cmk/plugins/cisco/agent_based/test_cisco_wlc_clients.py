@@ -10,7 +10,7 @@ import pytest
 
 from cmk.agent_based.internal import evaluate_snmp_detection
 from cmk.agent_based.v2 import CheckResult, Metric, Result, Service, State, StringTable
-from cmk.plugins.collection.agent_based.cisco_wlc_clients import (
+from cmk.plugins.cisco.agent_based.cisco_wlc_clients import (
     parse_cisco_wlc_9800_clients,
     parse_cisco_wlc_clients,
     snmp_section_cisco_wlc_9800_clients,

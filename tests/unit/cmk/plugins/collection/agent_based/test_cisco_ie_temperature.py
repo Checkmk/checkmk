@@ -9,8 +9,8 @@
 import pytest
 
 from cmk.agent_based.v2 import CheckResult, Metric, StringTable
-from cmk.plugins.collection.agent_based import cisco_ie_temp
-from cmk.plugins.collection.agent_based.cisco_ie_temp import Section, SensorId
+from cmk.plugins.cisco.agent_based import cisco_ie_temp
+from cmk.plugins.cisco.agent_based.cisco_ie_temp import Section, SensorId
 from cmk.plugins.lib.temperature import TempParamDict
 
 OK = 25

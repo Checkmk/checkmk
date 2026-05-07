@@ -10,8 +10,8 @@ from pytest import MonkeyPatch
 
 from cmk.agent_based.internal import evaluate_snmp_detection
 from cmk.agent_based.v2 import IgnoreResultsError, Metric, Result, Service, State, StringTable
-from cmk.plugins.collection.agent_based import cisco_vpn_tunnel
-from cmk.plugins.collection.agent_based.cisco_vpn_tunnel import (
+from cmk.plugins.cisco.agent_based import cisco_vpn_tunnel
+from cmk.plugins.cisco.agent_based.cisco_vpn_tunnel import (
     check_cisco_vpn_tunnel,
     CheckParameters,
     discover_cisco_vpn_tunnel,

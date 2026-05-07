@@ -8,7 +8,7 @@ import typing
 import pytest
 
 from cmk.agent_based.v2 import Metric, Result, Service, State
-from cmk.plugins.collection.agent_based.cisco_cpu_memory import (
+from cmk.plugins.cisco.agent_based.cisco_cpu_memory import (
     check_cisco_cpu_memory_multiitem,
     discover_cisco_cpu_memory_multiitem,
     parse_cisco_cpu_memory_multiitem,
@@ -38,7 +38,7 @@ STRING_TABLE = [
 @pytest.fixture(name="empty_value_store")
 def _empty_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(
-        "cmk.plugins.collection.agent_based.cisco_cpu_memory.get_value_store",
+        "cmk.plugins.cisco.agent_based.cisco_cpu_memory.get_value_store",
         lambda: typing.cast(typing.MutableMapping[str, typing.Any], {}),
     )
 

@@ -13,7 +13,7 @@ import pytest
 from cmk.agent_based.internal import evaluate_snmp_detection
 from cmk.agent_based.v1 import Metric, Result, Service, State
 from cmk.agent_based.v2 import CheckResult, StringTable
-from cmk.plugins.collection.agent_based import cisco_temperature as ct
+from cmk.plugins.cisco.agent_based import cisco_temperature as ct
 
 TABLE_CATALYST: Sequence[StringTable] = [
     [
@@ -162,7 +162,7 @@ TABLE_INVALID: Sequence[StringTable] = [
 @pytest.fixture(name="empty_value_store")
 def _empty_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(
-        "cmk.plugins.collection.agent_based.cisco_temperature.get_value_store",
+        "cmk.plugins.cisco.agent_based.cisco_temperature.get_value_store",
         lambda: typing.cast(typing.MutableMapping[str, typing.Any], {}),
     )
 

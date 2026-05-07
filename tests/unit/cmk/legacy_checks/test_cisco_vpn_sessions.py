@@ -17,7 +17,7 @@ from cmk.legacy_checks.cisco_vpn_sessions import (
     check_cisco_vpn_sessions,
     discover_cisco_vpn_sessions,
 )
-from cmk.plugins.collection.agent_based.cisco_vpn_sessions import parse_cisco_vpn_sessions
+from cmk.plugins.cisco.agent_based.cisco_vpn_sessions import parse_cisco_vpn_sessions
 
 
 def parsed() -> Mapping[str, Any]:

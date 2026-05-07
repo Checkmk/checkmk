@@ -8,7 +8,7 @@ from collections.abc import Mapping
 import pytest
 
 from cmk.agent_based.v2 import CheckResult, Metric, Result, Service, State
-from cmk.plugins.collection.agent_based.cisco_qos import (
+from cmk.plugins.cisco.agent_based.cisco_qos import (
     check_cisco_qos_,
     discover_cisco_qos,
     parse_cisco_qos,

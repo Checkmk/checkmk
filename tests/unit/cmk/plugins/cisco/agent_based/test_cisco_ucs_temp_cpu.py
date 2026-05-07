@@ -7,7 +7,7 @@ from collections.abc import Mapping
 import pytest
 
 from cmk.agent_based.v2 import CheckResult, Metric, Result, Service, State
-from cmk.plugins.collection.agent_based.cisco_ucs_temp_cpu import (
+from cmk.plugins.cisco.agent_based.cisco_ucs_temp_cpu import (
     _check_cisco_ucs_temp_cpu,
     discover_cisco_ucs_temp_cpu,
     parse_cisco_ucs_temp_cpu,

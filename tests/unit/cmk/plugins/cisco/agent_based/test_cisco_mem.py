@@ -9,7 +9,7 @@ from collections.abc import Iterable, Mapping
 import pytest
 
 from cmk.agent_based.v2 import CheckResult, Metric, Result, Service, State, StringTable
-from cmk.plugins.collection.agent_based.cisco_mem import (
+from cmk.plugins.cisco.agent_based.cisco_mem import (
     _idem_check_cisco_mem,
     CISCO_ASA_PRE_V9_PATTERN,
     discovery_cisco_mem,

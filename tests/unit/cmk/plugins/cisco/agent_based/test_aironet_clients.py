@@ -6,7 +6,7 @@
 import pytest
 
 from cmk.agent_based.internal import evaluate_snmp_detection
-from cmk.plugins.collection.agent_based import aironet_clients
+from cmk.plugins.cisco.agent_based import aironet_clients
 
 
 @pytest.mark.parametrize(

@@ -8,7 +8,7 @@ from collections.abc import Mapping
 import pytest
 
 from cmk.agent_based.v2 import CheckResult, DiscoveryResult, Result, Service, State, StringTable
-from cmk.plugins.collection.agent_based.cisco_asa_failover import (
+from cmk.plugins.cisco.agent_based.cisco_asa_failover import (
     check_cisco_asa_failover,
     discovery_cisco_asa_failover,
     parse_cisco_asa_failover,

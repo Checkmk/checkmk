@@ -6,8 +6,8 @@
 import pytest
 
 from cmk.agent_based.v2 import DiscoveryResult, Metric, Result, Service, State, StringTable
-from cmk.plugins.collection.agent_based import cisco_cpu_multiitem
-from cmk.plugins.collection.agent_based.cisco_cpu_multiitem import (
+from cmk.plugins.cisco.agent_based import cisco_cpu_multiitem
+from cmk.plugins.cisco.agent_based.cisco_cpu_multiitem import (
     check_cisco_cpu_multiitem,
     CPUInfo,
     discover_cisco_cpu_multiitem,

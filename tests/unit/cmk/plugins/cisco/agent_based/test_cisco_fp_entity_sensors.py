@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.agent_based.v2 import State
-from cmk.plugins.collection.agent_based.cisco_fp_entity_sensors import (
+from cmk.plugins.cisco.agent_based.cisco_fp_entity_sensors import (
     parse_cisco_fp_entity_sensors,
 )
 from cmk.plugins.lib.entity_sensors import EntitySensor

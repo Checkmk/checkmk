@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.agent_based.v2 import Result, Service, State, StringTable
-from cmk.plugins.collection.agent_based.cisco_fan import (
+from cmk.plugins.cisco.agent_based.cisco_fan import (
     check_cisco_fan,
     discover_cisco_fan,
     parse_cisco_fan,

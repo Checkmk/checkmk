@@ -8,7 +8,7 @@
 from collections.abc import Sequence
 
 from cmk.agent_based.v2 import Result, Service, State, StringTable
-from cmk.plugins.collection.agent_based.cisco_asa_conn import (
+from cmk.plugins.cisco.agent_based.cisco_asa_conn import (
     check_cisco_asa_conn,
     discover_cisco_asa_conn,
     NetworkInterfaceData,

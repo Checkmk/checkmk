@@ -6,7 +6,7 @@
 # mypy: disable-error-code="type-arg"
 
 from cmk.agent_based.v2 import Result, Service, State
-from cmk.plugins.collection.agent_based.cisco_secure import (
+from cmk.plugins.cisco.agent_based.cisco_secure import (
     check_cisco_secure,
     discover_cisco_secure,
     parse_cisco_secure,

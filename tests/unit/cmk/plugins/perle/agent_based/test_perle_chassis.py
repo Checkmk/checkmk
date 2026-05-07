@@ -6,7 +6,7 @@
 
 import pytest
 
-import cmk.plugins.collection.agent_based.perle_chassis as pc
+import cmk.plugins.perle.agent_based.perle_chassis as pc
 from cmk.agent_based.v2 import Attributes
 
 

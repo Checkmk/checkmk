@@ -7,7 +7,7 @@
 import pytest
 
 from cmk.agent_based.v2 import InventoryResult, StringTable, TableRow
-from cmk.plugins.collection.agent_based.perle_psmu import inventorize_perle_psmu, parse_perle_psmu
+from cmk.plugins.perle.agent_based.perle_psmu import inventorize_perle_psmu, parse_perle_psmu
 
 
 @pytest.mark.parametrize(

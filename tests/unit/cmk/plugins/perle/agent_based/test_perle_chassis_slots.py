@@ -7,7 +7,7 @@
 import pytest
 
 from cmk.agent_based.v2 import InventoryResult, TableRow
-from cmk.plugins.collection.agent_based.perle_chassis_slots import (
+from cmk.plugins.perle.agent_based.perle_chassis_slots import (
     inventorize_perle_chassis_slots,
     Section,
 )

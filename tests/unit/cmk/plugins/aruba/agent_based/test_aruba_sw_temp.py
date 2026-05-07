@@ -218,6 +218,45 @@ def test_discover_aruba_sw_temp_status(
     assert list(aruba_sw_temp.discover_aruba_sw_temp(section)) == result
 
 
+@pytest.mark.xfail(strict=True, reason="Crash group 4706: KeyError on unmodeled SensorStatus")
+@pytest.mark.parametrize(
+    "status, expected_state",
+    [
+        pytest.param("warning", State.WARN, id="warning"),
+        pytest.param("min", State.UNKNOWN, id="min"),
+        pytest.param("max", State.UNKNOWN, id="max"),
+        pytest.param("low_critical", State.UNKNOWN, id="low_critical"),
+        pytest.param("critical", State.UNKNOWN, id="critical"),
+        pytest.param("not_present", State.UNKNOWN, id="not_present"),
+        pytest.param("not_applicable", State.UNKNOWN, id="not_applicable"),
+    ],
+)
+def test_aruba_sw_temp_handles_extra_mib_status(
+    status: str,
+    expected_state: State,
+    empty_value_store: None,
+) -> None:
+    # The Aruba CX MIB returns sensor states beyond fault/normal/emergency/absent.
+    # 'warning' is mapped to WARN; any other unmodeled state must not crash and is
+    # reported as UNKNOWN with the raw vendor string.
+    section = aruba_sw_temp.parse_aruba_sw_temp(
+        [["1.3.1.1", "1/1-Inlet-Air", status, "27875", "17000", "31000"]]
+    )
+    assert list(aruba_sw_temp.discover_aruba_sw_temp(section)) == [
+        Service(item="1/1-Inlet-Air"),
+    ]
+    results = list(
+        aruba_sw_temp.check_aruba_sw_temp(
+            "1/1-Inlet-Air",
+            aruba_sw_temp.aruba_sw_temp_check_default_parameters,
+            section,
+        )
+    )
+    assert any(
+        isinstance(r, Result) and r.state is expected_state and status in r.summary for r in results
+    )
+
+
 @pytest.fixture
 def empty_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(

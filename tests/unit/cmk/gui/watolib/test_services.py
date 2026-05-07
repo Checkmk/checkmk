@@ -24,7 +24,7 @@ from cmk.automations.results import (
 )
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.user import UserId
-from cmk.checkengine.discovery import CheckPreviewEntry
+from cmk.checkengine.discovery import CheckPreviewEntry, DiscoverySettings
 from cmk.checkengine.plugins import AutocheckEntry, CheckPluginName, SectionName
 from cmk.gui.utils import transaction_manager
 from cmk.gui.utils.roles import UserPermissionSerializableConfig
@@ -200,6 +200,31 @@ def test_perform_discovery_tabula_rasa_action_with_no_previous_discovery_result(
         ]
     )
     assert discovery_result.check_table == MOCK_DISCOVERY_RESULT.check_table
+
+
+@pytest.mark.usefixtures("inline_background_jobs")
+def test_perform_discovery_tabula_rasa_removes_vanished_services(
+    sample_host: Host,
+    mock_discovery_preview: MagicMock,
+    mock_discovery: MagicMock,
+) -> None:
+    """TABULA_RASA must call local_discovery with remove_vanished_services=True so that
+    vanished services (including those matched by a 'Disabled services' rule, which since
+    werk c20678bc are classified as 'vanished') are dropped from the autochecks file."""
+    get_check_table(
+        sample_host,
+        DiscoveryAction.TABULA_RASA,
+        automation_config=LocalAutomationConfig(),
+        user_permission_config=UserPermissionSerializableConfig({}, {}, []),
+        raise_errors=True,
+        debug=False,
+        use_git=False,
+    )
+
+    mock_discovery.assert_called_once()
+    settings = mock_discovery.call_args.args[0]
+    assert isinstance(settings, DiscoverySettings)
+    assert settings.remove_vanished_services is True
 
 
 @pytest.mark.usefixtures("inline_background_jobs")

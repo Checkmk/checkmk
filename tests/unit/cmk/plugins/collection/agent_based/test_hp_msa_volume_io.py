@@ -5,7 +5,7 @@
 
 
 from cmk.agent_based.v2 import Result, State
-from cmk.plugins.collection.agent_based.diskstat_io import check_hp_msa_volume_io
+from cmk.plugins.hp_msa.agent_based.diskstat_io import check_hp_msa_volume_io
 
 _SECTION = {
     "VMFS_01": {

@@ -13,7 +13,7 @@ import pytest
 
 from cmk.agent_based.v2 import IgnoreResultsError, Metric, Result, State
 from cmk.plugins.aix.agent_based import aix_diskiod
-from cmk.plugins.collection.agent_based import diskstat_io
+from cmk.plugins.hp_msa.agent_based import diskstat_io
 
 DISK = {
     "read_throughput": 2437253982208,

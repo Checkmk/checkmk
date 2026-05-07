@@ -8,7 +8,7 @@ from collections.abc import Sequence
 import pytest
 
 from cmk.agent_based.v2 import Result, Service, State, StringTable
-from cmk.plugins.collection.agent_based.extreme_vsp_switches_power_supply import (
+from cmk.plugins.netextreme.agent_based.extreme_vsp_switches_power_supply import (
     check_vsp_switches_power_supply,
     discover_vsp_switches_power_supply,
     parse_vsp_switches_power_supply,

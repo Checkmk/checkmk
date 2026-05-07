@@ -7,7 +7,7 @@ from collections.abc import Sequence
 import pytest
 
 from cmk.agent_based.v2 import Metric, Result, Service, State, StringTable
-from cmk.plugins.collection.agent_based.extreme_vsp_switches_fan import (
+from cmk.plugins.netextreme.agent_based.extreme_vsp_switches_fan import (
     check_vsp_switches_fan,
     discover_vsp_switches_fan,
     parse_vsp_switches_fan,

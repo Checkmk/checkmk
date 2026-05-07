@@ -14,8 +14,8 @@ import pytest
 import time_machine
 
 from cmk.agent_based.v2 import Metric, Result, Service, State, StringTable
-from cmk.plugins.collection.agent_based import extreme_vsp_switches_cpu_util
-from cmk.plugins.collection.agent_based.extreme_vsp_switches_cpu_util import (
+from cmk.plugins.netextreme.agent_based import extreme_vsp_switches_cpu_util
+from cmk.plugins.netextreme.agent_based.extreme_vsp_switches_cpu_util import (
     check_vsp_switches_cpu_util,
     discover_vsp_switches_cpu_util,
     parse_vsp_switches_cpu_util,

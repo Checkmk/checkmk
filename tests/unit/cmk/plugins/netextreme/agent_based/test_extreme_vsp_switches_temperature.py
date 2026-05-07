@@ -11,13 +11,13 @@ from collections.abc import Sequence
 import pytest
 
 from cmk.agent_based.v2 import Metric, Result, Service, State, StringTable
-from cmk.plugins.collection.agent_based import extreme_vsp_switches_temperature
-from cmk.plugins.collection.agent_based.extreme_vsp_switches_temperature import (
+from cmk.plugins.lib.temperature import TempParamType
+from cmk.plugins.netextreme.agent_based import extreme_vsp_switches_temperature
+from cmk.plugins.netextreme.agent_based.extreme_vsp_switches_temperature import (
     check_vsp_switches_temperature,
     discover_vsp_switches_temperature,
     parse_vsp_switches_temperature,
 )
-from cmk.plugins.lib.temperature import TempParamType
 
 _STRING_TABLE = [
     ["INTERNAL MAC", "61"],

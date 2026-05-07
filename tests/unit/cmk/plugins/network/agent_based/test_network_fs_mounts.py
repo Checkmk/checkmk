@@ -23,8 +23,8 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
-from cmk.plugins.collection.agent_based import network_fs_mounts
 from cmk.plugins.lib.df import FILESYSTEM_DEFAULT_PARAMS
+from cmk.plugins.network.agent_based import network_fs_mounts
 
 NOW_SIMULATED = 581792400
 

@@ -6,7 +6,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 
-import CmkDateTimePicker from './CmkDateTimePicker.vue'
+import CmkDateTimePicker from '@/components/CmkDateTimePicker/CmkDateTimePicker.vue'
 
 const props = defineProps<{
   mode?: 'datetime' | 'date' | 'time'

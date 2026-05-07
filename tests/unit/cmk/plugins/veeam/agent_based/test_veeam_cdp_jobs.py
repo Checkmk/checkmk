@@ -10,7 +10,7 @@ import pytest
 import time_machine
 
 from cmk.agent_based.v2 import CheckResult, DiscoveryResult, Result, Service, State, StringTable
-from cmk.plugins.collection.agent_based import veeam_cdp_jobs
+from cmk.plugins.veeam.agent_based import veeam_cdp_jobs
 
 DATA = [
     ["Test 1", "1632216559.73749", "Running"],

@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.agent_based.v2 import Result, Service, State
-from cmk.plugins.collection.agent_based.veeam_jobs import (
+from cmk.plugins.veeam.agent_based.veeam_jobs import (
     check_veeam_jobs,
     discovery_veeam_jobs,
     parse_veeam_jobs,

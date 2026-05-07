@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.plugins.collection.agent_based.emc_vplex_if import parse_emc_vplex_if_pure
+from cmk.plugins.emc.agent_based.emc_vplex_if import parse_emc_vplex_if_pure
 from cmk.plugins.lib import interfaces
 
 

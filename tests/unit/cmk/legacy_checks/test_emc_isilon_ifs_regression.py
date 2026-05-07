@@ -15,7 +15,7 @@ from cmk.legacy_checks.emc_isilon_ifs import (
     check_emc_isilon_ifs,
     discover_emc_isilon_ifs,
 )
-from cmk.plugins.collection.agent_based.emc_isilon_ifs import parse_emc_isilon_ifs
+from cmk.plugins.emc.agent_based.emc_isilon_ifs import parse_emc_isilon_ifs
 from cmk.plugins.lib.df import FILESYSTEM_DEFAULT_LEVELS
 
 

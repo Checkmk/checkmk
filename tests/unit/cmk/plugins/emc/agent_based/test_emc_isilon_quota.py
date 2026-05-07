@@ -7,7 +7,7 @@
 import pytest
 
 from cmk.agent_based.v2 import Metric, Result, Service, State
-from cmk.plugins.collection.agent_based import emc_isilon_quota as eiq
+from cmk.plugins.emc.agent_based import emc_isilon_quota as eiq
 from cmk.plugins.lib import df
 
 STRING_TABLE = [["/ifs/data/pacs", "0", "1", "219902325555200", "0", "0", "3844608548041"]]

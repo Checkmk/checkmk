@@ -71,16 +71,15 @@ export const itemPanelConfig = {
 
 <script setup lang="ts">
 import {
+  PanelStateCreator,
   UclDetailPageAccessibility,
   UclDetailPageCodeExample,
   UclDetailPageComponent,
   UclDetailPageDeveloperPlayground,
   UclDetailPageHeader,
   UclDetailPageLayout,
-  UclPropertiesPanel,
-  createPanelState
+  UclPropertiesPanel
 } from '@ucl/_ucl/components/detail-page'
-import { ref } from 'vue'
 
 import CmkAccordion from '@/components/CmkAccordion/CmkAccordion.vue'
 import CmkAccordionItem from '@/components/CmkAccordion/CmkAccordionItem.vue'
@@ -91,9 +90,11 @@ import UclCmkAccordionDev from './UclCmkAccordionDev.vue'
 
 defineProps<{ screenshotMode: boolean }>()
 
-const propState = ref(createPanelState(panelConfig))
+const propState = new PanelStateCreator<typeof CmkAccordion, 'modelValue'>().createRef(panelConfig)
 
-const itemPropState = ref(createPanelState(itemPanelConfig))
+const itemPropState = new PanelStateCreator<typeof CmkAccordionItem, 'value'>().createRef(
+  itemPanelConfig
+)
 </script>
 
 <template>

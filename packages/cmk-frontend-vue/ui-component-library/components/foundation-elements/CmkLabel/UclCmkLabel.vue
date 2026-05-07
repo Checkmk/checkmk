@@ -45,21 +45,20 @@ export const panelConfig = {
 
 <script setup lang="ts">
 import {
+  PanelStateCreator,
   UclDetailPageAccessibility,
   UclDetailPageCodeExample,
   UclDetailPageComponent,
   UclDetailPageHeader,
   UclDetailPageLayout,
-  UclPropertiesPanel,
-  createPanelState
+  UclPropertiesPanel
 } from '@ucl/_ucl/components/detail-page'
-import { ref } from 'vue'
 
 import CmkLabel from '@/components/CmkLabel.vue'
 
 defineProps<{ screenshotMode: boolean }>()
 
-const propState = ref(createPanelState(panelConfig))
+const propState = new PanelStateCreator<typeof CmkLabel, 'for'>().createRef(panelConfig)
 </script>
 
 <template>

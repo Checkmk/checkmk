@@ -40,21 +40,20 @@ export const panelConfig = {
 
 <script setup lang="ts">
 import {
+  PanelStateCreator,
   UclDetailPageAccessibility,
   UclDetailPageCodeExample,
   UclDetailPageComponent,
   UclDetailPageHeader,
   UclDetailPageLayout,
-  UclPropertiesPanel,
-  createPanelState
+  UclPropertiesPanel
 } from '@ucl/_ucl/components/detail-page'
-import { ref } from 'vue'
 
 import CmkColorPicker from '@/components/CmkColorPicker.vue'
 
 defineProps<{ screenshotMode: boolean }>()
 
-const propState = ref(createPanelState(panelConfig))
+const propState = new PanelStateCreator<typeof CmkColorPicker>().createRef(panelConfig)
 </script>
 
 <template>

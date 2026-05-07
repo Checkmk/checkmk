@@ -41,16 +41,15 @@ export const panelConfig = {
 
 <script setup lang="ts">
 import {
+  PanelStateCreator,
   UclDetailPageAccessibility,
   UclDetailPageCodeExample,
   UclDetailPageComponent,
   UclDetailPageDeveloperPlayground,
   UclDetailPageHeader,
   UclDetailPageLayout,
-  UclPropertiesPanel,
-  createPanelState
+  UclPropertiesPanel
 } from '@ucl/_ucl/components/detail-page'
-import { ref } from 'vue'
 
 import CmkAlertBox from '@/components/CmkAlertBox.vue'
 
@@ -58,7 +57,7 @@ import UclCmkAlertBoxDev from './UclCmkAlertBoxDev.vue'
 
 defineProps<{ screenshotMode: boolean }>()
 
-const propState = ref(createPanelState(panelConfig))
+const propState = new PanelStateCreator<typeof CmkAlertBox>().createRef(panelConfig)
 </script>
 
 <template>

@@ -89,16 +89,15 @@ export const iconPanelConfig = {
 
 <script setup lang="ts">
 import {
+  PanelStateCreator,
   UclDetailPageAccessibility,
   UclDetailPageCodeExample,
   UclDetailPageComponent,
   UclDetailPageDeveloperPlayground,
   UclDetailPageHeader,
   UclDetailPageLayout,
-  UclPropertiesPanel,
-  createPanelState
+  UclPropertiesPanel
 } from '@ucl/_ucl/components/detail-page'
-import { ref } from 'vue'
 
 import CmkIcon from '@/components/CmkIcon'
 import CmkIconEmblem from '@/components/CmkIcon/CmkIconEmblem.vue'
@@ -107,8 +106,8 @@ import UclCmkIconEmblemDev from './UclCmkIconEmblemDev.vue'
 
 defineProps<{ screenshotMode: boolean }>()
 
-const emblemPropState = ref(createPanelState(emblemPanelConfig))
-const iconPropState = ref(createPanelState(iconPanelConfig))
+const emblemPropState = new PanelStateCreator<typeof CmkIconEmblem>().createRef(emblemPanelConfig)
+const iconPropState = new PanelStateCreator<typeof CmkIcon>().createRef(iconPanelConfig)
 </script>
 
 <template>

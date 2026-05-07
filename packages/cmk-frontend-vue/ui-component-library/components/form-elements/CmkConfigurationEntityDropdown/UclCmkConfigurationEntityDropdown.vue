@@ -35,6 +35,11 @@ export const a11yData = [
   }
 ]
 
+export type OmittedProps =
+  | 'modelValue'
+  | 'configEntityType'
+  | 'configEntityTypeSpecifier'
+  | 'initialElements'
 export const panelConfig = {
   label: { type: 'string' as const, title: 'Label', initialState: 'Select an entity' },
   validation: { type: 'string-array' as const, title: 'Validation Errors', initialState: [] },
@@ -48,22 +53,19 @@ export const panelConfig = {
     title: 'Allow Editing Existing',
     initialState: true
   }
-} satisfies PanelConfigFor<
-  typeof CmkConfigurationEntityDropdown,
-  'modelValue' | 'configEntityType' | 'configEntityTypeSpecifier' | 'initialElements'
->
+} satisfies PanelConfigFor<typeof CmkConfigurationEntityDropdown, OmittedProps>
 </script>
 
 <script setup lang="ts">
 import {
+  PanelStateCreator,
   UclDetailPageAccessibility,
   UclDetailPageCodeExample,
   UclDetailPageComponent,
   UclDetailPageDeveloperPlayground,
   UclDetailPageHeader,
   UclDetailPageLayout,
-  UclPropertiesPanel,
-  createPanelState
+  UclPropertiesPanel
 } from '@ucl/_ucl/components/detail-page'
 import type { ConfigEntityType } from 'cmk-shared-typing/typescript/configuration_entity'
 import type { String as FormSpecString } from 'cmk-shared-typing/typescript/vue_formspec_components'
@@ -85,7 +87,10 @@ defineProps<{ screenshotMode: boolean }>()
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const DEMO_ENTITY_TYPE = 'ucl_demo_entity' as any as ConfigEntityType
 
-const propState = ref(createPanelState(panelConfig))
+const propState = new PanelStateCreator<
+  typeof CmkConfigurationEntityDropdown,
+  OmittedProps
+>().createRef(panelConfig)
 
 const selectedId = ref<string | null>(null)
 

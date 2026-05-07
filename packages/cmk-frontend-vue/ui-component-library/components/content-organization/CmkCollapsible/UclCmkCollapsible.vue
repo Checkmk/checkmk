@@ -48,16 +48,15 @@ export const panelConfig = {
 
 <script setup lang="ts">
 import {
+  PanelStateCreator,
   UclDetailPageAccessibility,
   UclDetailPageCodeExample,
   UclDetailPageComponent,
   UclDetailPageDeveloperPlayground,
   UclDetailPageHeader,
   UclDetailPageLayout,
-  UclPropertiesPanel,
-  createPanelState
+  UclPropertiesPanel
 } from '@ucl/_ucl/components/detail-page'
-import { ref } from 'vue'
 
 import CmkCollapsible, { CmkCollapsibleTitle } from '@/components/CmkCollapsible'
 import CmkIndent from '@/components/CmkIndent.vue'
@@ -66,7 +65,7 @@ import UclCmkCollapsibleDev from './UclCmkCollapsibleDev.vue'
 
 defineProps<{ screenshotMode: boolean }>()
 
-const propState = ref(createPanelState(panelConfig))
+const propState = new PanelStateCreator<typeof CmkCollapsible, 'contentId'>().createRef(panelConfig)
 </script>
 
 <template>

@@ -60,7 +60,7 @@ export type PanelConfig = Record<string, PropDef>
 
 type InternalVueProps = 'key' | 'ref' | 'ref_for' | 'ref_key' | 'class' | 'style' | `on${string}`
 
-type UserProps<T> = Omit<ComponentProps<T>, InternalVueProps>
+export type UserProps<T> = Omit<ComponentProps<T>, InternalVueProps>
 
 export type PanelConfigFor<T, TOmit extends keyof UserProps<T> = never> = {
   [K in keyof UserProps<T> as K extends TOmit ? never : K]-?: PropDef

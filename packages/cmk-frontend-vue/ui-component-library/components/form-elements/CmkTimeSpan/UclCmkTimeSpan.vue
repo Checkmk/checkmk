@@ -41,13 +41,13 @@ export const panelConfig = {
 
 <script setup lang="ts">
 import {
+  PanelStateCreator,
   UclDetailPageAccessibility,
   UclDetailPageCodeExample,
   UclDetailPageComponent,
   UclDetailPageHeader,
   UclDetailPageLayout,
-  UclPropertiesPanel,
-  createPanelState
+  UclPropertiesPanel
 } from '@ucl/_ucl/components/detail-page'
 import { computed, ref } from 'vue'
 
@@ -56,7 +56,7 @@ import { type Magnitude } from '@/components/user-input/CmkTimeSpan/timeSpan'
 
 defineProps<{ screenshotMode: boolean }>()
 
-const propState = ref(createPanelState(panelConfig))
+const propState = new PanelStateCreator<typeof CmkTimeSpan, OmittedProps>().createRef(panelConfig)
 const data = ref<number | null>(0)
 
 const displayedMagnitudes = computed<Magnitude[]>(() => {

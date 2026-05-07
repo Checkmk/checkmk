@@ -35,9 +35,9 @@ import {
   UclDetailPageDeveloperPlayground,
   UclDetailPageHeader,
   UclDetailPageLayout,
-  UclPropertiesPanel,
-  createPanelState
+  UclPropertiesPanel
 } from '@ucl/_ucl/components/detail-page'
+import type { InferPanelState } from '@ucl/_ucl/types/prop-panel'
 import { ref, watch } from 'vue'
 
 import { useCmkErrorBoundary } from '@/components/CmkErrorBoundary'
@@ -49,7 +49,12 @@ defineProps<{ screenshotMode: boolean }>()
 // eslint-disable-next-line @typescript-eslint/naming-convention
 const { CmkErrorBoundary, error } = useCmkErrorBoundary()
 
-const propState = ref(createPanelState(panelConfig))
+// We're not using PanelStateCreator here as CmkErrorBoundary doesn't follow the usual pattern.
+const propState = ref(
+  Object.fromEntries(
+    Object.entries(panelConfig).map(([key, def]) => [key, def.initialState])
+  ) as InferPanelState<typeof panelConfig>
+)
 
 watch(
   () => propState.value.error,

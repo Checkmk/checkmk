@@ -91,16 +91,16 @@ export const panelConfig = {
 
 <script setup lang="ts">
 import {
+  PanelStateCreator,
   UclDetailPageAccessibility,
   UclDetailPageCodeExample,
   UclDetailPageComponent,
   UclDetailPageDeveloperPlayground,
   UclDetailPageHeader,
   UclDetailPageLayout,
-  UclPropertiesPanel,
-  createPanelState
+  UclPropertiesPanel
 } from '@ucl/_ucl/components/detail-page'
-import { computed, ref } from 'vue'
+import { computed } from 'vue'
 
 import CmkDropdown from '@/components/CmkDropdown'
 import { Response } from '@/components/CmkSuggestions/suggestions'
@@ -109,7 +109,10 @@ import UclCmkDropdownDev from './UclCmkDropdownDev.vue'
 
 defineProps<{ screenshotMode: boolean }>()
 
-const propState = ref(createPanelState(panelConfig))
+const propState = new PanelStateCreator<
+  typeof CmkDropdown,
+  'label' | 'options' | 'componentId' | 'noElementsText'
+>().createRef(panelConfig)
 
 const selectedOption = computed<string | null>({
   get: () => propState.value.selectedOption || null,

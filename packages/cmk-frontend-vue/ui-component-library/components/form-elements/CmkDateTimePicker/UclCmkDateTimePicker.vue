@@ -54,13 +54,13 @@ export const panelConfig = {
 
 <script setup lang="ts">
 import {
+  PanelStateCreator,
   UclDetailPageAccessibility,
   UclDetailPageCodeExample,
   UclDetailPageComponent,
   UclDetailPageHeader,
   UclDetailPageLayout,
-  UclPropertiesPanel,
-  createPanelState
+  UclPropertiesPanel
 } from '@ucl/_ucl/components/detail-page'
 import { ref } from 'vue'
 
@@ -68,7 +68,9 @@ import CmkDateTimePicker from '@/components/CmkDateTimePicker/CmkDateTimePicker.
 
 defineProps<{ screenshotMode: boolean }>()
 
-const propState = ref(createPanelState(panelConfig))
+const propState = new PanelStateCreator<typeof CmkDateTimePicker, 'date' | 'time'>().createRef(
+  panelConfig
+)
 const date = ref('2026-03-15')
 const time = ref('14:30')
 </script>

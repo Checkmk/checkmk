@@ -38,16 +38,21 @@ import {
   UclDetailPageComponent,
   UclDetailPageHeader,
   UclDetailPageLayout,
-  UclPropertiesPanel,
-  createPanelState
+  UclPropertiesPanel
 } from '@ucl/_ucl/components/detail-page'
+import type { InferPanelState } from '@ucl/_ucl/types/prop-panel'
 import { computed, ref } from 'vue'
 
 import TwoFactorAuth from '@/two-factor-auth/TwoFactorAuthApp.vue'
 
 defineProps<{ screenshotMode: boolean }>()
 
-const propState = ref(createPanelState(panelConfig))
+// We're not using PanelStateCreator here as TwoFactorAuth doesn't follow the usual pattern.
+const propState = ref(
+  Object.fromEntries(
+    Object.entries(panelConfig).map(([key, def]) => [key, def.initialState])
+  ) as InferPanelState<typeof panelConfig>
+)
 
 const dynamicAvailableMethods = computed<TwoFactorAuthType>(() => ({
   totp_credentials: propState.value.totp,

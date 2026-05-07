@@ -7,8 +7,8 @@ import userEvent from '@testing-library/user-event'
 import { render, screen } from '@testing-library/vue'
 import UclPropertiesPanel from '@ucl/_ucl/components/detail-page/UclPropertiesPanel.vue'
 import type { PanelConfig } from '@ucl/_ucl/types/prop-panel'
-import { createPanelState } from '@ucl/_ucl/types/prop-panel'
-import { type PropType, defineComponent, ref } from 'vue'
+import { PanelStateCreator } from '@ucl/_ucl/types/prop-panel'
+import { type PropType, defineComponent } from 'vue'
 
 import { copyToClipboard } from '@/lib/utils'
 
@@ -167,7 +167,7 @@ describe('prop type interactions update component', () => {
     return defineComponent({
       components: { UclPropertiesPanel, DummyComponent },
       setup() {
-        const propState = ref(createPanelState(dummyConfig))
+        const propState = new PanelStateCreator<typeof DummyComponent>().createRef(dummyConfig)
         return { propState, config: dummyConfig }
       },
       template: `

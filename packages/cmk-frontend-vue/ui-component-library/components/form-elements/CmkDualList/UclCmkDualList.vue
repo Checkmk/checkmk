@@ -62,15 +62,15 @@ export const panelConfig = {
 
 <script setup lang="ts">
 import {
+  PanelStateCreator,
   UclDetailPageAccessibility,
   UclDetailPageCodeExample,
   UclDetailPageComponent,
   UclDetailPageHeader,
   UclDetailPageLayout,
-  UclPropertiesPanel,
-  createPanelState
+  UclPropertiesPanel
 } from '@ucl/_ucl/components/detail-page'
-import { computed, ref } from 'vue'
+import { computed } from 'vue'
 
 import CmkDualList from '@/components/CmkDualList/CmkDualList.vue'
 
@@ -84,7 +84,10 @@ const elements: DualListElement[] = [
   { name: 'guest', title: 'Guest User' }
 ]
 
-const propState = ref(createPanelState(panelConfig))
+const propState = new PanelStateCreator<
+  typeof CmkDualList,
+  'data' | 'backendValidation' | 'validators' | 'elements'
+>().createRef(panelConfig)
 
 const selectedData = computed({
   get: (): DualListElement[] =>

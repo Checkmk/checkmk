@@ -54,9 +54,9 @@ import {
   UclDetailPageComponent,
   UclDetailPageHeader,
   UclDetailPageLayout,
-  UclPropertiesPanel,
-  createPanelState
+  UclPropertiesPanel
 } from '@ucl/_ucl/components/detail-page'
+import type { InferPanelState } from '@ucl/_ucl/types/prop-panel'
 import { ref, watch } from 'vue'
 
 import usei18n from '@/lib/i18n'
@@ -70,7 +70,12 @@ defineProps<{ screenshotMode: boolean }>()
 
 const { _t, _tn, switchLanguage, translationLoading } = usei18n()
 
-const propState = ref(createPanelState(panelConfig))
+// We're not using PanelStateCreator here as this is more of a custom dev demo page.
+const propState = ref(
+  Object.fromEntries(
+    Object.entries(panelConfig).map(([key, def]) => [key, def.initialState])
+  ) as InferPanelState<typeof panelConfig>
+)
 
 watch(
   () => propState.value.language,

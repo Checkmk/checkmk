@@ -59,16 +59,16 @@ export const panelConfig = {
 
 <script setup lang="ts">
 import {
+  PanelStateCreator,
   UclDetailPageAccessibility,
   UclDetailPageCodeExample,
   UclDetailPageComponent,
   UclDetailPageDeveloperPlayground,
   UclDetailPageHeader,
   UclDetailPageLayout,
-  UclPropertiesPanel,
-  createPanelState
+  UclPropertiesPanel
 } from '@ucl/_ucl/components/detail-page'
-import { computed, ref } from 'vue'
+import { computed } from 'vue'
 
 import CmkDialog from '@/components/CmkDialog.vue'
 
@@ -76,7 +76,7 @@ import UclCmkDialogDev from './UclCmkDialogDev.vue'
 
 defineProps<{ screenshotMode: boolean }>()
 
-const propState = ref(createPanelState(panelConfig))
+const propState = new PanelStateCreator<typeof CmkDialog>().createRef(panelConfig)
 
 const dialogProps = computed(() => ({
   variant: propState.value.variant,

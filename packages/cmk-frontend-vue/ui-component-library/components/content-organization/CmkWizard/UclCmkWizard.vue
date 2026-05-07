@@ -49,16 +49,16 @@ export const panelConfig = {
 
 <script setup lang="ts">
 import {
+  PanelStateCreator,
   UclDetailPageAccessibility,
   UclDetailPageCodeExample,
   UclDetailPageComponent,
   UclDetailPageDeveloperPlayground,
   UclDetailPageHeader,
   UclDetailPageLayout,
-  UclPropertiesPanel,
-  createPanelState
+  UclPropertiesPanel
 } from '@ucl/_ucl/components/detail-page'
-import { computed, ref } from 'vue'
+import { computed } from 'vue'
 
 import CmkWizard, {
   CmkWizardButton,
@@ -72,7 +72,7 @@ import UclCmkWizardDev from './UclCmkWizardDev.vue'
 
 defineProps<{ screenshotMode: boolean }>()
 
-const propState = ref(createPanelState(panelConfig))
+const propState = new PanelStateCreator<typeof CmkWizard, 'modelValue'>().createRef(panelConfig)
 
 const wizardStep = computed({
   get: () => Number(propState.value.currentStep as string),

@@ -42,15 +42,14 @@ export const panelConfig = {
 
 <script setup lang="ts">
 import {
+  PanelStateCreator,
   UclDetailPageAccessibility,
   UclDetailPageCodeExample,
   UclDetailPageComponent,
   UclDetailPageHeader,
   UclDetailPageLayout,
-  UclPropertiesPanel,
-  createPanelState
+  UclPropertiesPanel
 } from '@ucl/_ucl/components/detail-page'
-import { ref } from 'vue'
 
 import CmkToggleButtonGroup from '@/components/CmkToggleButtonGroup.vue'
 
@@ -67,7 +66,9 @@ const demoOptions: ToggleButtonOption[] = [
   }
 ]
 
-const propState = ref(createPanelState(panelConfig))
+const propState = new PanelStateCreator<typeof CmkToggleButtonGroup, 'options'>().createRef(
+  panelConfig
+)
 </script>
 
 <template>

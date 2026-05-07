@@ -80,16 +80,16 @@ export const panelConfig = {
 
 <script setup lang="ts">
 import {
+  PanelStateCreator,
   UclDetailPageAccessibility,
   UclDetailPageCodeExample,
   UclDetailPageComponent,
   UclDetailPageDeveloperPlayground,
   UclDetailPageHeader,
   UclDetailPageLayout,
-  UclPropertiesPanel,
-  createPanelState
+  UclPropertiesPanel
 } from '@ucl/_ucl/components/detail-page'
-import { computed, ref } from 'vue'
+import { computed } from 'vue'
 
 import CmkButton from '@/components/CmkButton'
 import CmkSlideInDialog from '@/components/CmkSlideInDialog.vue'
@@ -100,7 +100,9 @@ import UclCmkSlideInDialogDev from './UclCmkSlideInDialogDev.vue'
 
 defineProps<{ screenshotMode: boolean }>()
 
-const propState = ref(createPanelState(panelConfig))
+const propState = new PanelStateCreator<typeof CmkSlideInDialog, OmittedProps>().createRef(
+  panelConfig
+)
 
 const headerConfig = computed(() => ({
   title: propState.value.title,

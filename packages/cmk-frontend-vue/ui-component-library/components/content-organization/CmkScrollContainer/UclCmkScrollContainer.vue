@@ -43,15 +43,14 @@ export const panelConfig = {
 
 <script setup lang="ts">
 import {
+  PanelStateCreator,
   UclDetailPageAccessibility,
   UclDetailPageCodeExample,
   UclDetailPageComponent,
   UclDetailPageHeader,
   UclDetailPageLayout,
-  UclPropertiesPanel,
-  createPanelState
+  UclPropertiesPanel
 } from '@ucl/_ucl/components/detail-page'
-import { ref } from 'vue'
 
 import CmkScrollContainer from '@/components/CmkScrollContainer.vue'
 
@@ -68,7 +67,7 @@ ultrices mi. Duis semper blandit quam ut varius. Nam luctus neque nec magna inte
 consectetur velit rhoncus. Suspendisse ultrices neque in nulla ultrices, in tempor velit
 commodo. Integer congue dui at metus imperdiet, quis cursus magna blandit.`
 
-const propState = ref(createPanelState(panelConfig))
+const propState = new PanelStateCreator<typeof CmkScrollContainer>().createRef(panelConfig)
 </script>
 
 <template>

@@ -3,6 +3,8 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
+import { type Component, type Ref, ref } from 'vue'
+
 import type { Suggestion } from '@/components/CmkSuggestions'
 
 import type {
@@ -11,20 +13,24 @@ import type {
   MultilineStringPropDef,
   NumberPropDef,
   PanelConfig,
+  PanelConfigFor,
   PropDef,
   StringArrayPropDef,
-  StringPropDef
+  StringPropDef,
+  UserProps
 } from './prop-def'
 
-export type { PanelConfig, PanelConfigFor, PropDef } from './prop-def'
 export type {
   BoolPropDef,
   ListPropDef,
   MultilineStringPropDef,
   NumberPropDef,
+  PanelConfig,
+  PanelConfigFor,
+  PropDef,
   StringArrayPropDef,
   StringPropDef
-} from './prop-def'
+}
 
 export type Options<T> = { title: string; name: NonNullable<T> }
 
@@ -51,8 +57,10 @@ export type InferPanelState<T extends PanelConfig> = {
   [K in keyof T]: InferStateFromDef<T[K]>
 }
 
-export function createPanelState<T extends PanelConfig>(config: T): InferPanelState<T> {
-  return Object.fromEntries(
-    Object.entries(config).map(([key, def]) => [key, def.initialState])
-  ) as InferPanelState<T>
+export class PanelStateCreator<C extends Component, TOmit extends keyof UserProps<C> = never> {
+  createRef<T extends PanelConfigFor<C, TOmit> & PanelConfig>(config: T): Ref<InferPanelState<T>> {
+    return ref(
+      Object.fromEntries(Object.entries(config).map(([key, def]) => [key, def.initialState]))
+    ) as Ref<InferPanelState<T>>
+  }
 }

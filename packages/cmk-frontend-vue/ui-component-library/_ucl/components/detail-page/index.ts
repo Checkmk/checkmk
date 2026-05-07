@@ -3,7 +3,7 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-export { createPanelState } from '../../types/prop-panel'
+export { PanelStateCreator } from '../../types/prop-panel'
 export type { Options, PanelConfig, PanelConfigFor } from '../../types/prop-panel'
 export { default as UclDetailPageAccessibility } from './UclDetailPageAccessibilityTable.vue'
 export { default as UclDetailPageCodeExample } from './UclDetailPageCodeExample.vue'

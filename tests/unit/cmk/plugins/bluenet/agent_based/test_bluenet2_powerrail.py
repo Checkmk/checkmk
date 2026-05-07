@@ -7,7 +7,7 @@ from collections.abc import Sequence
 import pytest
 
 from cmk.agent_based.v2 import Metric, Result, Service, State, StringTable
-from cmk.plugins.collection.agent_based.bluenet2_powerrail import (
+from cmk.plugins.bluenet.agent_based.bluenet2_powerrail import (
     check_bluenet2_powerrail_inlet,
     check_bluenet2_powerrail_phases,
     check_bluenet2_powerrail_rcm_phases,

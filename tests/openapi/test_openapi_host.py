@@ -189,8 +189,8 @@ def test_openapi_livestatus_host_list_all(
     with mock_livestatus():
         resp = clients.Host.list_all(
             query={"missing_key_op": "foo"}, expect_ok=False
-        ).assert_rest_api_crash()
-        assert "KeyError: 'op'" in resp.json["detail"]
+        ).assert_status_code(400)
+        assert "'op'" in resp.json["fields"]["body.query"]["msg"]
 
         resp = clients.Host.list_all(
             query={
@@ -200,20 +200,26 @@ def test_openapi_livestatus_host_list_all(
             },
             expect_ok=False,
         ).assert_status_code(400)
-        assert "Unknown operator: invalid_operator" in resp.json["fields"]["query"]
+        assert "Unknown operator: invalid_operator" in resp.json["fields"]["body.query"]["msg"]
 
         resp = clients.Host.list_all(
             query={"op": "=", "left": "non_existing_column", "right": "heute"},
             expect_ok=False,
         ).assert_status_code(400)
-        assert "Table 'hosts' has no column 'non_existing_column'." in resp.json["fields"]["query"]
+        assert (
+            "Table 'hosts' has no column 'non_existing_column'."
+            in resp.json["fields"]["body.query"]["msg"]
+        )
 
         resp = clients.Host.list_all(
             query={"op": "=", "left": "name", "right": "heute"},
             columns=["non_existing_column"],
             expect_ok=False,
         ).assert_status_code(400)
-        assert resp.json["detail"] == "These fields have problems: columns"
+        assert (
+            "Unknown column 'non_existing_column' for table 'hosts'"
+            in resp.json["fields"]["body.columns"]["msg"]
+        )
 
         resp = clients.Host.list_all(
             query={"op": "=", "left": "name", "right": "heute"}, columns=["notes"]

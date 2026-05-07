@@ -3,13 +3,55 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Iterable, Mapping, Sequence
 from typing import assert_never
 
 from cmk.ccc.version import Edition
+from cmk.discover_plugins import discover_plugins_from_modules
+from cmk.gui.autocompleters import autocompleter_registry
+from cmk.gui.feature_registration import GuiFeaturePlugin, RegistrationContext
+from cmk.gui.graphing._metric_backend_registry import metric_backend_registry
 from cmk.gui.legacy_plugins import get_failed_plugins as get_failed_plugins
-from cmk.licensing.basics.options import get_license_options
+from cmk.gui.openapi import endpoint_family_registry, versioned_endpoint_registry
+from cmk.gui.sidebar import snapin_registry
+from cmk.gui.watolib.config_domain_name import config_domain_registry, config_variable_registry
+from cmk.gui.watolib.config_sync import replication_path_registry
+from cmk.licensing.basics.options import get_license_options, LicenseOptions
 from cmk.utils import paths
 
+
+def _build_context(edition: Edition, features: LicenseOptions) -> RegistrationContext:
+    return RegistrationContext(
+        edition=edition,
+        features=features,
+        autocompleter_registry=autocompleter_registry,
+        config_domain_registry=config_domain_registry,
+        config_variable_registry=config_variable_registry,
+        endpoint_family_registry=endpoint_family_registry,
+        metric_backend_registry=metric_backend_registry,
+        replication_path_registry=replication_path_registry,
+        snapin_registry=snapin_registry,
+        versioned_endpoint_registry=versioned_endpoint_registry,
+    )
+
+
+def load_feature_plugins(module_paths: Iterable[str], ctx: RegistrationContext) -> None:
+    for plugin in discover_plugins_from_modules(
+        {GuiFeaturePlugin: "feature_plugin_"},
+        module_paths,
+        skip_wrong_types=False,
+        raise_errors=True,
+    ).plugins.values():
+        if plugin.enabled(ctx):
+            plugin.register(ctx)
+
+
+# TODO: flatten this into Sequence[str]. For this we need to block the imports first
+_FEATURE_PLUGIN_MODULES: Mapping[Edition, Sequence[str]] = {
+    Edition.ULTIMATE: ["cmk.gui.nonfree.ultimate._metric_backend_registration"],
+    Edition.ULTIMATEMT: ["cmk.gui.nonfree.ultimate._metric_backend_registration"],
+    Edition.CLOUD: ["cmk.gui.nonfree.cloud._metric_backend_registration"],
+}
 _registered_edition: Edition | None = None
 
 
@@ -24,61 +66,36 @@ def register(edition: Edition) -> None:
         return
     _registered_edition = edition
 
-    license_options = get_license_options(paths.omd_root, edition)
-    agent_bakery_enabled = license_options.bakery.enabled
-    telemetry_enabled = license_options.telemetry.enabled
-    otel_collector_enabled = license_options.otel_collector.enabled
+    features = get_license_options(paths.omd_root, edition)
+    ctx = _build_context(edition, features)
 
     match edition:
         case Edition.PRO:
             import cmk.gui.nonfree.pro.registration  # type: ignore[import-not-found, import-untyped, unused-ignore]
 
-            cmk.gui.nonfree.pro.registration.register(
-                edition,
-                agent_bakery_enabled=agent_bakery_enabled,
-                telemetry_enabled=telemetry_enabled,
-                otel_collector_enabled=otel_collector_enabled,
-            )
+            cmk.gui.nonfree.pro.registration.register(ctx)
 
         case Edition.ULTIMATEMT:
             import cmk.gui.nonfree.ultimatemt.registration  # type: ignore[import-not-found, import-untyped, unused-ignore]
 
-            cmk.gui.nonfree.ultimatemt.registration.register(
-                edition,
-                agent_bakery_enabled=agent_bakery_enabled,
-                telemetry_enabled=telemetry_enabled,
-                otel_collector_enabled=otel_collector_enabled,
-            )
+            cmk.gui.nonfree.ultimatemt.registration.register(ctx)
 
         case Edition.ULTIMATE:
             import cmk.gui.nonfree.ultimate.registration  # type: ignore[import-not-found, import-untyped, unused-ignore]
 
-            cmk.gui.nonfree.ultimate.registration.register(
-                edition,
-                agent_bakery_enabled=agent_bakery_enabled,
-                telemetry_enabled=telemetry_enabled,
-                otel_collector_enabled=otel_collector_enabled,
-            )
+            cmk.gui.nonfree.ultimate.registration.register(ctx)
 
         case Edition.CLOUD:
             import cmk.gui.nonfree.cloud.registration  # type: ignore[import-not-found, import-untyped, unused-ignore]
 
-            cmk.gui.nonfree.cloud.registration.register(
-                edition,
-                agent_bakery_enabled=agent_bakery_enabled,
-                telemetry_enabled=telemetry_enabled,
-                otel_collector_enabled=otel_collector_enabled,
-            )
+            cmk.gui.nonfree.cloud.registration.register(ctx)
 
         case Edition.COMMUNITY:
             import cmk.gui.community_registration
 
-            cmk.gui.community_registration.register(
-                edition,
-                agent_bakery_enabled=agent_bakery_enabled,
-                telemetry_enabled=telemetry_enabled,
-                otel_collector_enabled=otel_collector_enabled,
-            )
+            cmk.gui.community_registration.register(ctx)
 
         case _ as unreachable:
             assert_never(unreachable)
+
+    load_feature_plugins(_FEATURE_PLUGIN_MODULES.get(edition, []), ctx)

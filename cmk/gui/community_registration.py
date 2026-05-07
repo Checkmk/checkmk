@@ -7,7 +7,6 @@
 
 import cmk.gui.wato._notification_parameter._mail as mail
 from cmk.backup.gui.registration import backup_register
-from cmk.ccc.version import Edition
 from cmk.gui import agent_commands, login, nagvis, sidebar, visuals
 from cmk.gui import plugin_registration as plugins
 from cmk.gui.agent_commands import agent_commands_registry
@@ -24,7 +23,9 @@ from cmk.gui.dashboard import (
     noop_builtin_dashboard_extender,
 )
 from cmk.gui.data_source import data_source_registry
-from cmk.gui.features import Features, features_registry
+from cmk.gui.feature_registration import RegistrationContext
+from cmk.gui.features import Features as GuiFeatures
+from cmk.gui.features import features_registry
 from cmk.gui.graphing import community_registration as graphing_community_registration
 from cmk.gui.graphing_main import PageHostServiceGraphPopup
 from cmk.gui.help_menu import (
@@ -132,11 +133,12 @@ def register_painters() -> None:
 
 
 def register(
-    edition: Edition,
-    agent_bakery_enabled: bool,
-    telemetry_enabled: bool,
-    otel_collector_enabled: bool,
+    ctx: RegistrationContext,
 ) -> None:
+    edition = ctx.edition
+    features = ctx.features
+    agent_bakery_enabled = features.bakery.enabled
+    otel_collector_enabled = features.otel_collector.enabled
     sample_config_generator_registry.register(SampleConfigGeneratorGroups)
     network_scan.register(host_attribute_registry, automation_command_registry, cron_job_registry)
     nagvis.register(permission_section_registry, permission_registry, snapin_registry)
@@ -208,7 +210,7 @@ def register(
     )
 
     features_registry.register(
-        Features(
+        GuiFeatures(
             edition,
             livestatus_only_sites_postprocess=lambda x: list(x) if x else None,
         )

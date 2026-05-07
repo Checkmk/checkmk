@@ -106,6 +106,27 @@ py_library(
 )
 
 py_library(
+    name = "feature_registration",
+    srcs = ["feature_registration.py"],
+    imports = ["../.."],
+    visibility = [
+        "//cmk:__subpackages__",
+        "//tests:__subpackages__",
+    ],
+    deps = [
+        ":autocompleters",
+        "//cmk/gui/graphing",
+        "//cmk/gui/openapi/framework",
+        "//cmk/gui/openapi/restful_objects",
+        "//cmk/gui/sidebar",
+        "//cmk/gui/watolib",
+        "//cmk/gui/watolib:config_infra",
+        "//packages/cmk-ccc:version",
+        "//packages/cmk-licensing",
+    ],
+)
+
+py_library(
     name = "type_defs",
     srcs = ["type_defs.py"],
     imports = ["../.."],
@@ -1811,6 +1832,7 @@ py_library(
         ":common_registration",
         ":cron",
         ":customer",
+        ":feature_registration",
         ":features",
         ":graphing_main",
         ":help_menu",
@@ -1996,9 +2018,18 @@ py_library(
         "//tests:__subpackages__",
     ],
     deps = [
+        ":autocompleters",
         ":community_registration",
+        ":feature_registration",
         ":legacy_plugins",
+        "//cmk/gui/graphing",
+        "//cmk/gui/openapi:openapi_init",
+        "//cmk/gui/sidebar",
+        "//cmk/gui/watolib",
+        "//cmk/gui/watolib:config_infra",
         "//packages/cmk-ccc:version",
+        "//packages/cmk-licensing",
+        "//packages/cmk-plugin-apis:discover_plugins",
     ],
 )
 

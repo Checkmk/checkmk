@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.agent_based.v2 import Result, Service, State
-from cmk.plugins.collection.agent_based.vutlan_ems_smoke import (
+from cmk.plugins.vutlan.agent_based.vutlan_ems_smoke import (
     check_plugin_vutlan_ems_smoke,
     SmokeSensor,
     snmp_section_vutlan_ems_smoke,

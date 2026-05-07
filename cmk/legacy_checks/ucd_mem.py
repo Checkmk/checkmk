@@ -9,7 +9,7 @@ from typing import Any
 
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition, LegacyResult
 from cmk.legacy_includes.mem import check_memory_element
-from cmk.plugins.collection.agent_based.ucd_mem import Section
+from cmk.plugins.ucd.agent_based.ucd_mem import Section
 
 check_info = {}
 

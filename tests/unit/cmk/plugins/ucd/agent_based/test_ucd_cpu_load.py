@@ -8,8 +8,8 @@ from collections.abc import Sequence
 import pytest
 
 from cmk.agent_based.v2 import StringTable
-from cmk.plugins.collection.agent_based.ucd_cpu_load import parse_ucd_cpu_load
 from cmk.plugins.lib.cpu import Load, Section
+from cmk.plugins.ucd.agent_based.ucd_cpu_load import parse_ucd_cpu_load
 
 
 @pytest.mark.parametrize(

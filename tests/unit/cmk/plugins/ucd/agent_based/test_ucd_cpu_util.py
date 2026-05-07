@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.agent_based.v2 import Metric, Result, Service, State
-from cmk.plugins.collection.agent_based import ucd_cpu_util as ucu
+from cmk.plugins.ucd.agent_based import ucd_cpu_util as ucu
 
 FREEZE_TIME = "1970-01-01 00:01:00Z"
 

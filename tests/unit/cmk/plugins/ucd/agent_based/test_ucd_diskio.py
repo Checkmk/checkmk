@@ -13,7 +13,7 @@ from collections.abc import MutableMapping, Sequence
 import pytest
 
 from cmk.agent_based.v2 import IgnoreResults, Metric, Result, Service, State, StringTable
-from cmk.plugins.collection.agent_based.ucd_diskio import (
+from cmk.plugins.ucd.agent_based.ucd_diskio import (
     _check_ucd_diskio,
     discover_ucd_diskio,
     parse_ucd_diskio,

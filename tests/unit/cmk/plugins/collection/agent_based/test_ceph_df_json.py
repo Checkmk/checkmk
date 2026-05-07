@@ -5,7 +5,7 @@
 
 import pytest
 
-import cmk.plugins.collection.agent_based.ceph_df_json_section as ceph_df
+import cmk.plugins.ceph.agent_based.ceph_df_json_section as ceph_df
 from cmk.agent_based.v2 import StringTable
 from cmk.plugins.lib.df import FSBlocks
 

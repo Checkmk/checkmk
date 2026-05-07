@@ -12,7 +12,7 @@ from functools import lru_cache
 import pytest
 
 from cmk.agent_based.v2 import Result, State
-from cmk.plugins.collection.agent_based import ceph_status
+from cmk.plugins.ceph.agent_based import ceph_status
 
 STRING_TABLE_1 = [
     ["{"],

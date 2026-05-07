@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.plugins.collection.agent_based import ceph_df
+from cmk.plugins.ceph.agent_based import ceph_df
 
 
 def test_sanitize_line() -> None:

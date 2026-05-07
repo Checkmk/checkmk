@@ -8,7 +8,7 @@ from collections.abc import Mapping
 import pytest
 
 from cmk.agent_based.v2 import CheckResult, Result, Service, State, StringTable
-from cmk.plugins.collection.agent_based.juniper_alarm import (
+from cmk.plugins.juniper.agent_based.juniper_alarm import (
     CHECK_DEFAULT_PARAMS,
     check_juniper_alarm,
     discover_juniper_alarm,

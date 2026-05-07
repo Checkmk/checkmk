@@ -9,13 +9,13 @@ from typing import Any
 import pytest
 
 from cmk.agent_based.v2 import CheckResult, Metric, Result, State, StringTable
-from cmk.plugins.collection.agent_based.juniper_trpz_aps import (
+from cmk.plugins.juniper.agent_based.juniper_trpz_aps import (
     check_juniper_trpz_aps,
     cluster_check_juniper_trpz_aps,
     parse_juniper_trpz_aps,
 )
-from cmk.plugins.collection.agent_based.juniper_trpz_aps import Section as SectionAps
-from cmk.plugins.collection.agent_based.juniper_trpz_aps_sessions import (
+from cmk.plugins.juniper.agent_based.juniper_trpz_aps import Section as SectionAps
+from cmk.plugins.juniper.agent_based.juniper_trpz_aps_sessions import (
     _check_common_juniper_trpz_aps_sessions,
     discovery_juniper_trpz_aps_sessions,
     parse_juniper_trpz_aps_sessions,

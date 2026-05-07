@@ -4,7 +4,10 @@ load("@cmk_requirements//:requirements.bzl", "requirement")
 py_test(
     name = "livestatus_utils",
     srcs = glob(["**/*.py"]),
-    args = ["tests/unit/cmk/gui/livestatus_utils"],
+    args = [
+        "--import-mode=importlib",
+        "tests/unit/cmk/gui/livestatus_utils",
+    ],
     env = {"EDITION": "community"},
     pytest_main = True,
     deps = [

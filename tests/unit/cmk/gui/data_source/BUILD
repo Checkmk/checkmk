@@ -4,7 +4,10 @@ load("@cmk_requirements//:requirements.bzl", "requirement")
 py_test(
     name = "data_source",
     srcs = glob(["**/*.py"]),
-    args = ["tests/unit/cmk/gui/data_source"],
+    args = [
+        "--import-mode=importlib",
+        "tests/unit/cmk/gui/data_source",
+    ],
     env = {"EDITION": "community"},
     pytest_main = True,
     deps = [

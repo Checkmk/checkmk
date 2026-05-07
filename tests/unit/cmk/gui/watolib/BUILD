@@ -4,7 +4,10 @@ load("@cmk_requirements//:requirements.bzl", "requirement")
 py_test(
     name = "watolib",
     srcs = glob(["**/*.py"]),
-    args = ["tests/unit/cmk/gui/watolib"],
+    args = [
+        "--import-mode=importlib",
+        "tests/unit/cmk/gui/watolib",
+    ],
     env = {"EDITION": "community"},
     pytest_main = True,
     deps = [
@@ -15,6 +18,7 @@ py_test(
         "//cmk/gui:logged_in",
         "//cmk/gui:login",
         "//cmk/gui/background_job/job",
+        "//cmk/gui/background_job/process",
         "//cmk/gui/form_specs",
         "//cmk/gui/userdb",
         "//cmk/gui/watolib",

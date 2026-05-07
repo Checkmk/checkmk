@@ -4,7 +4,10 @@ load("@cmk_requirements//:requirements.bzl", "requirement")
 py_test(
     name = "wsgi",
     srcs = glob(["**/*.py"]),
-    args = ["tests/unit/cmk/gui/wsgi"],
+    args = [
+        "--import-mode=importlib",
+        "tests/unit/cmk/gui/wsgi",
+    ],
     env = {"EDITION": "community"},
     pytest_main = True,
     deps = [

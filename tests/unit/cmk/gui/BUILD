@@ -44,7 +44,10 @@ py_library(
 py_test(
     name = "tests",
     srcs = glob(["test_*.py"]),
-    args = ["tests/unit/cmk/gui"],
+    args = [
+        "--import-mode=importlib",
+        "tests/unit/cmk/gui",
+    ],
     env = {
         "EDITION": "community",
     },
@@ -92,6 +95,7 @@ py_test(
         "//cmk/gui:view_utils",
         "//cmk/gui/availability",
         "//cmk/gui/background_job/job",
+        "//cmk/gui/background_job/process",
         "//cmk/gui/backup",
         "//cmk/gui/dashboard",
         "//cmk/gui/graphing",

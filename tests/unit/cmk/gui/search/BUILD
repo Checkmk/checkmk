@@ -4,7 +4,10 @@ load("@cmk_requirements//:requirements.bzl", "requirement")
 py_test(
     name = "search",
     srcs = glob(["**/*.py"]),
-    args = ["tests/unit/cmk/gui/search"],
+    args = [
+        "--import-mode=importlib",
+        "tests/unit/cmk/gui/search",
+    ],
     env = {"EDITION": "community"},
     pytest_main = True,
     deps = [
@@ -14,6 +17,7 @@ py_test(
         "//cmk/gui:logged_in",
         "//cmk/gui:session",
         "//cmk/gui:type_defs",
+        "//cmk/gui/background_job/process",
         "//cmk/gui/search",
         "//cmk/gui/utils:roles",
         "//tests/unit:conftest",

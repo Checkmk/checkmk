@@ -95,6 +95,7 @@ py_test(
         "//cmk/gui:icons",
         "//cmk/gui:logged_in",
         "//cmk/gui:type_defs",
+        "//cmk/gui/background_job/process",
         "//cmk/gui/fields",
         "//cmk/gui/form_specs",
         "//cmk/gui/graphing",

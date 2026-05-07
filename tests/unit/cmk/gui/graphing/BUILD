@@ -4,7 +4,10 @@ load("@cmk_requirements//:requirements.bzl", "requirement")
 py_test(
     name = "graphing",
     srcs = glob(["**/*.py"]),
-    args = ["tests/unit/cmk/gui/graphing"],
+    args = [
+        "--import-mode=importlib",
+        "tests/unit/cmk/gui/graphing",
+    ],
     env = {"EDITION": "community"},
     pytest_main = True,
     deps = [

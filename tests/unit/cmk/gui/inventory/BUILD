@@ -4,7 +4,10 @@ load("@cmk_requirements//:requirements.bzl", "requirement")
 py_test(
     name = "inventory",
     srcs = glob(["**/*.py"]),
-    args = ["tests/unit/cmk/gui/inventory"],
+    args = [
+        "--import-mode=importlib",
+        "tests/unit/cmk/gui/inventory",
+    ],
     env = {"EDITION": "community"},
     pytest_main = True,
     deps = [

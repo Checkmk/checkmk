@@ -34,7 +34,6 @@ pytest.register_assert_rewrite(
 
 
 from tests.testlib import fake_site  # noqa: E402
-from tests.testlib.common.repo import add_python_paths  # noqa: E402
 
 logger = logging.getLogger(__name__)
 logging.getLogger("faker").setLevel(logging.ERROR)
@@ -51,9 +50,7 @@ def cleanup_cmk() -> Generator[None]:
     yield from fake_site.cleanup_cmk_tmp_dir()
 
 
-# Run _fake_paths() and add_python_paths() before test execution
 fake_site.fake_paths()
-add_python_paths()
 
 
 @pytest.fixture(scope="session")

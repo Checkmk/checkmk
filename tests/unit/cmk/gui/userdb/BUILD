@@ -4,7 +4,10 @@ load("@cmk_requirements//:requirements.bzl", "requirement")
 py_test(
     name = "userdb",
     srcs = glob(["**/*.py"]),
-    args = ["tests/unit/cmk/gui/userdb"],
+    args = [
+        "--import-mode=importlib",
+        "tests/unit/cmk/gui/userdb",
+    ],
     env = {"EDITION": "community"},
     pytest_main = True,
     deps = [

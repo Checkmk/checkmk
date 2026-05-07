@@ -4,7 +4,10 @@ load("@cmk_requirements//:requirements.bzl", "requirement")
 py_test(
     name = "views",
     srcs = glob(["**/*.py"]),
-    args = ["tests/unit/cmk/gui/views"],
+    args = [
+        "--import-mode=importlib",
+        "tests/unit/cmk/gui/views",
+    ],
     env = {"EDITION": "community"},
     pytest_main = True,
     deps = [

@@ -4,7 +4,10 @@ load("@cmk_requirements//:requirements.bzl", "requirement")
 py_test(
     name = "wato",
     srcs = glob(["**/*.py"]),
-    args = ["tests/unit/cmk/gui/wato"],
+    args = [
+        "--import-mode=importlib",
+        "tests/unit/cmk/gui/wato",
+    ],
     env = {"EDITION": "community"},
     pytest_main = True,
     deps = [
@@ -15,6 +18,7 @@ py_test(
         "//cmk/gui:i18n",
         "//cmk/gui:permissions",
         "//cmk/gui:role_types",
+        "//cmk/gui/background_job/process",
         "//cmk/gui/plugins/wato",
         "//cmk/gui/valuespec",
         "//cmk/gui/wato",

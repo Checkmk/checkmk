@@ -8,7 +8,7 @@ from collections.abc import Sequence
 import pytest
 
 from cmk.agent_based.v2 import Result, Service, State, StringTable
-from cmk.plugins.collection.agent_based.vxvm_enclosures import (
+from cmk.plugins.vxvm.agent_based.vxvm_enclosures import (
     check_vxvm_enclosures,
     discover_vxvm_enclosures,
     parse_vxvm_enclosures,

@@ -9,7 +9,7 @@ import pytest
 
 from cmk.agent_based.internal import evaluate_snmp_detection
 from cmk.agent_based.v2 import StringTable
-from cmk.plugins.collection.agent_based import ups_power
+from cmk.plugins.ups.agent_based import ups_power
 
 # walks/usv-liebert
 DATA0: dict[str, str] = {

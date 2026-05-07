@@ -16,7 +16,7 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
-from cmk.plugins.collection.agent_based.ups_out_load import (
+from cmk.plugins.ups.agent_based.ups_out_load import (
     check_ups_out_load,
     discovery_ups,
     parse_ups_load,

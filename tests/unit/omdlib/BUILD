@@ -5,8 +5,6 @@ py_pytest_main(
     name = "__test__",
     deps = [
         requirement("pytest"),
-        # pytest-xdist for `--numprocesses=NPROC`
-        requirement("pytest-xdist"),
     ],
 )
 
@@ -17,7 +15,6 @@ py_test(
     args = [
         "--config-file=$(location @//:pyproject.toml)",
         "--import-mode=importlib",
-        "--numprocesses=4",
     ],
     data = ["@//:pyproject.toml"],
     env = {"EDITION": "community"},

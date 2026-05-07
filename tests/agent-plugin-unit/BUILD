@@ -17,8 +17,6 @@ py_test(
         "--config-file=$(location @//:pyproject.toml)",
         "--import-mode=importlib",
         "--random-order-bucket=global",
-        "--dist=loadfile",
-        "--numprocesses=4",
     ],
     data = ["@//:pyproject.toml"] + glob(["datasets/**"]),
     main = ":__test__.py",
@@ -26,8 +24,6 @@ py_test(
     visibility = ["//visibility:private"],
     deps = [
         ":__test__",
-        # pytest-xdist for `--numprocesses=NPROC`
-        requirement("pytest-xdist"),
         requirement("pytest-mock"),
         requirement("pytest-asyncio"),
         requirement("pytest-random-order"),

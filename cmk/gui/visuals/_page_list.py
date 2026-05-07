@@ -152,10 +152,9 @@ def page_list(
 
             del visuals[(user_id, delname)]
             save(what, visuals, user_id)
-            user_profile_async_replication_page(
-                back_url=request.get_url_input("back", visual_type.show_url)
-            )
             flash(_("Your %s has been deleted.") % visual_type.title)
+            if user_profile_async_replication_page(back_url=html.request.path):
+                return  # dialog owns the redirect — see SUP-27530
             html.final_javascript("cmk.utils.navigate_to_page(%s)" % json.dumps(html.request.path))
         except MKUserError as e:
             html.user_error(e)

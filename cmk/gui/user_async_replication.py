@@ -16,12 +16,23 @@ from cmk.gui.watolib.changes import add_change
 from cmk.gui.watolib.users import get_enabled_remote_sites_for_logged_in_user
 
 
-def user_profile_async_replication_page(back_url: str) -> None:
-    user_profile_async_replication_dialog(
-        sites=list(get_enabled_remote_sites_for_logged_in_user(user, active_config.sites)),
-        back_url=back_url,
-    )
+def user_profile_async_replication_page(back_url: str) -> bool:
+    """Render replication dialog and return True if the replication is started.
+
+    The dialog's JS ``finish()`` callback owns the redirect to ``back_url``;
+    callers MUST NOT emit a second redirect — doing so races with and cancels
+    the dialog's in-flight XHR, which is the request that actually pushes the
+    changed visual to the remote sites.
+
+    Returns False if no remote sites are configured (no dialog rendered).
+    Callers that have their own redirect path can use this return value to
+    avoid emitting it alongside the dialog. Callers that don't have a follow-up
+    redirect can simply ignore it.
+    """
+    sites = list(get_enabled_remote_sites_for_logged_in_user(user, active_config.sites))
+    user_profile_async_replication_dialog(sites=sites, back_url=back_url)
     html.footer()
+    return bool(sites)
 
 
 def user_profile_async_replication_dialog(sites: Sequence[SiteId], back_url: str) -> None:

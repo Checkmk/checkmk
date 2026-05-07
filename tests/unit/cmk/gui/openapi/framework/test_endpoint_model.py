@@ -79,6 +79,19 @@ def _query_list_endpoint_handler(query_param: Annotated[list[str], _QUERY_PARAM_
     raise NotImplementedError
 
 
+def _uppercased_list(value: list[str]) -> list[str]:
+    return [v.upper() for v in value]
+
+
+def _optional_list_query_handler(
+    items: Annotated[
+        Annotated[list[str], AfterValidator(_uppercased_list)] | None,
+        QueryParam(description="Optional list", example="x", is_list=True),
+    ] = None,
+) -> None:
+    raise NotImplementedError
+
+
 def _header_endpoint_handler(header_param: Annotated[str, _HEADER_PARAM]) -> None:
     raise NotImplementedError
 
@@ -544,3 +557,18 @@ def test_typed_response() -> None:
 
     model = EndpointModel.build(_handler)
     assert model.response_body_type is _TestBody
+
+
+def test_query_parameter_optional_list_with_values() -> None:
+    model = EndpointModel.build(_optional_list_query_handler)
+    bound = model._validate_request_parameters(
+        _request_data(query={"items": ["a", "b"]}), None, _api_context()
+    )
+    assert bound.arguments["items"] == ["A", "B"]
+
+
+def test_query_parameter_optional_list_default() -> None:
+    """Verify that the None default is preserved and the list validator is not invoked."""
+    model = EndpointModel.build(_optional_list_query_handler)
+    bound = model._validate_request_parameters(_request_data(), None, _api_context())
+    assert bound.arguments["items"] is None

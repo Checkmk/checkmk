@@ -10,7 +10,7 @@ import dataclasses
 import inspect
 import types
 from collections.abc import Iterator, Mapping
-from typing import cast, get_args, get_origin
+from typing import Any, cast, get_args, get_origin, Union
 
 from cmk.gui.openapi.restful_objects.type_defs import ErrorStatusCodeInt, StatusCodeInt
 from cmk.gui.openapi.restful_objects.utils import identify_expected_status_codes
@@ -198,17 +198,20 @@ class ParameterValidator:
             data.query_aliases.append(source.alias)
 
         if source.is_list:
-            origin = get_stripped_origin(param_info.annotation)
-            if not issubclass(origin, list):
-                if origin is types.UnionType:
-                    if any(
-                        issubclass(get_stripped_origin(arg), list)
-                        for arg in get_args(strip_annotated(param_info.annotation))
-                    ):
-                        return
-                raise ValueError(
-                    f"Query parameter '{name}' is marked as list, but its type is not a list"
-                )
+            # we have to use Any here, Annotated[...] | None creates Union (which is not a type)
+            # so checking for both UnionType and Union is necessary
+            origin: Any = get_stripped_origin(param_info.annotation)
+            if origin is types.UnionType or origin is Union:
+                if any(
+                    issubclass(get_stripped_origin(arg), list)
+                    for arg in get_args(strip_annotated(param_info.annotation))
+                ):
+                    return
+            elif isinstance(origin, type) and issubclass(origin, list):
+                return
+            raise ValueError(
+                f"Query parameter '{name}' is marked as list, but its type is not a list"
+            )
 
     @staticmethod
     def _validate_aliasing(source: str, names: set[str], aliases: list[str]) -> None:

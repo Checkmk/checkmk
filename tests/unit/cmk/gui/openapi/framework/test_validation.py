@@ -126,6 +126,22 @@ def test_query_is_list_supports_other_lists() -> None:
     ParameterValidator.validate_parsed_parameters(parameters)
 
 
+def test_query_is_list_supports_optional_list() -> None:
+    # Annotated[list[...], metadata] | None produces typing.Union (not types.UnionType),
+    # because the | operator on Annotated aliases goes through typing._AnnotatedAlias.__or__.
+    def handler(
+        _arg: Annotated[
+            Annotated[list[str], "validator"] | None,
+            QueryParam(description="...", example="...", is_list=True),
+        ] = None,
+    ) -> None:
+        pass
+
+    signature = inspect.signature(handler)
+    parameters = SignatureParametersProcessor.extract_annotated_parameters(signature)
+    ParameterValidator.validate_parsed_parameters(parameters)
+
+
 @dataclass
 class _Body:
     pass

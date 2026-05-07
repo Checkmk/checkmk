@@ -7,9 +7,9 @@ from collections.abc import Sequence
 
 import pytest
 
-import cmk.plugins.collection.agent_based.cadvisor_diskstat
+import cmk.plugins.cadvisor.agent_based.cadvisor_diskstat
 from cmk.agent_based.v2 import Service
-from cmk.plugins.collection.agent_based.cadvisor_diskstat import (
+from cmk.plugins.cadvisor.agent_based.cadvisor_diskstat import (
     check_cadvisor_diskstat,
     discover_cadvisor_diskstat,
     Section,
@@ -30,7 +30,7 @@ SECTION = {
 def empty_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
     store = dict[str, object]()
     monkeypatch.setattr(
-        cmk.plugins.collection.agent_based.cadvisor_diskstat, "get_value_store", lambda: store
+        cmk.plugins.cadvisor.agent_based.cadvisor_diskstat, "get_value_store", lambda: store
     )
 
 

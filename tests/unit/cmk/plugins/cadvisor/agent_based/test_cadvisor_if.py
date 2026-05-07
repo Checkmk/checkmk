@@ -10,7 +10,7 @@ import time_machine
 from pytest import MonkeyPatch
 
 from cmk.agent_based.v2 import Metric, Result, State
-from cmk.plugins.collection.agent_based import cadvisor_if
+from cmk.plugins.cadvisor.agent_based import cadvisor_if
 
 SECTION = {
     "if_out_discards": 0.0,

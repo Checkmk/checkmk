@@ -10,7 +10,9 @@ import pytest
 import time_machine
 
 from cmk.agent_based.v2 import Metric, Result, Service, State
-from cmk.plugins.collection.agent_based.storeonce4x_appliances import (
+from cmk.plugins.lib.df import FILESYSTEM_DEFAULT_PARAMS
+from cmk.plugins.storeonce import lib as storeonce
+from cmk.plugins.storeonce.agent_based.storeonce4x_appliances import (
     check_storeonce4x_appliances,
     check_storeonce4x_appliances_license,
     check_storeonce4x_appliances_storage,
@@ -19,8 +21,6 @@ from cmk.plugins.collection.agent_based.storeonce4x_appliances import (
     parse_storeonce4x_appliances,
     Section,
 )
-from cmk.plugins.lib.df import FILESYSTEM_DEFAULT_PARAMS
-from cmk.plugins.storeonce import lib as storeonce
 
 STRING_TABLE = [
     [

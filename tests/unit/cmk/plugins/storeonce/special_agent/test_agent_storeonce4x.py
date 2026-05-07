@@ -8,7 +8,7 @@ import responses
 import time_machine
 
 from cmk.password_store.v1_unstable import Secret
-from cmk.plugins.storeonce4x.special_agent.agent_storeonce4x import StoreOnceOauth2Session
+from cmk.plugins.storeonce.special_agent.agent_storeonce4x import StoreOnceOauth2Session
 
 #   .--defines-------------------------------------------------------------.
 #   |                      _       __ _                                    |

@@ -7,7 +7,7 @@ from collections.abc import Mapping
 
 import pytest
 
-from cmk.plugins.storeonce4x.server_side_calls.special_agent import special_agent_storeonce
+from cmk.plugins.storeonce.server_side_calls.special_agent4x import special_agent_storeonce
 from cmk.server_side_calls.v1 import HostConfig, IPv4Config, Secret, SpecialAgentCommand
 
 HOST_CONFIG = HostConfig(

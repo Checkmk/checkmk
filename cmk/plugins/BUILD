@@ -307,7 +307,7 @@ filegroup(
         "smb/libexec/check_disk_smb",
         "sql/libexec/check_sql",
         "storeonce/libexec/agent_storeonce",
-        "storeonce4x/libexec/agent_storeonce4x",
+        "storeonce/libexec/agent_storeonce4x",
         "tinkerforge/libexec/agent_tinkerforge",
         "traceroute/libexec/check_traceroute",
         "uniserv/libexec/check_uniserv",

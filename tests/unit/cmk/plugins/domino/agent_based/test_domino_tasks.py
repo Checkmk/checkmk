@@ -12,7 +12,7 @@ import pytest
 
 from cmk.agent_based.v2 import IgnoreResultsError, Metric, Result, State
 from cmk.checkengine.parameters import Parameters
-from cmk.plugins.collection.agent_based.domino_tasks import check_domino_tasks
+from cmk.plugins.domino.agent_based.domino_tasks import check_domino_tasks
 from cmk.plugins.lib import ps
 
 

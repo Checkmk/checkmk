@@ -12,7 +12,7 @@ import pytest
 
 from cmk.agent_based.v1 import Service
 from cmk.agent_based.v2 import CheckResult, DiscoveryResult, Metric, Result, State, StringTable
-from cmk.plugins.collection.agent_based.pse_poe import (
+from cmk.plugins.poe.agent_based.pse_poe import (
     check_pse_poe,
     discover_pse_poe,
     parse_pse_poe,

@@ -5,7 +5,7 @@
 
 
 from cmk.agent_based.v2 import Metric, Result, Service, State
-from cmk.plugins.collection.agent_based.memory_utilization import (
+from cmk.plugins.memory.agent_based.memory_utilization import (
     _check_memory_utilization,
     _discover_memory_utilization,
     Params,

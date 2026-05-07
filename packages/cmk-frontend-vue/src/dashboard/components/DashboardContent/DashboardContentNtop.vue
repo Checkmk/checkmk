@@ -6,15 +6,18 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import { onBeforeUnmount, onMounted, ref } from 'vue'
 
-import { useInjectCmkToken } from '@/dashboard/composables/useCmkToken'
-import { useSuppressEventOnPublicDashboard } from '@/dashboard/composables/useIsPublicDashboard'
+import usei18n from '@/lib/i18n'
 
+import { useInjectIsPublicDashboard } from '@/dashboard/composables/useIsPublicDashboard'
+
+import DashboardContentContainer from './DashboardContentContainer.vue'
 import { NtopBase, getIfid } from './ntop.ts'
 import type { ContentProps, NtopType } from './types.ts'
 
+const { _t } = usei18n()
+
 const props = defineProps<ContentProps>()
-const cmkToken = useInjectCmkToken()
-const suppressEventOnPublicDashboard = useSuppressEventOnPublicDashboard()
+const isPublicDashboard = useInjectIsPublicDashboard()
 
 let ntop: NtopBase | undefined = undefined
 const interfaceDivId: string = 'ntop_interface_quickstats'
@@ -23,19 +26,16 @@ let ifid: string
 const exception = ref<{ class: 'warning' | 'error'; msg: string } | null>(null)
 
 onMounted(async () => {
+  if (isPublicDashboard) {
+    return
+  }
   try {
-    ifid = await getIfid(cmkToken)
+    ifid = await getIfid()
     // Persist the resolved ifid to the URL so page reloads always use the same interface
     const url = new URL(window.location.href)
     url.searchParams.set('ifid', ifid)
     window.history.replaceState({}, '', url.toString())
-    ntop = new NtopBase(
-      props.content.type as NtopType,
-      interfaceDivId,
-      contentDivId,
-      ifid,
-      cmkToken
-    )
+    ntop = new NtopBase(props.content.type as NtopType, interfaceDivId, contentDivId, ifid)
   } catch (exc) {
     // Can't let the site crash because of ntop warnings, they are for the user
     // e.g. ntopng integration is not activated under global settings.
@@ -61,22 +61,28 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div v-if="exception" :class="['db-content-ntop__warning', exception.class]">
-    {{ exception.msg }}
-  </div>
-  <div
-    v-else
-    class="db-content-ntop__wrapper ntop"
-    :class="{ 'db-content-ntop__background': !!general_settings.render_background }"
-    @click.capture="suppressEventOnPublicDashboard"
-    @auxclick.capture="suppressEventOnPublicDashboard"
-    @mousedown.capture="suppressEventOnPublicDashboard"
-    @keydown.capture="suppressEventOnPublicDashboard"
-    @wheel.capture="suppressEventOnPublicDashboard"
+  <DashboardContentContainer
+    v-if="isPublicDashboard"
+    :effective-title="effectiveTitle"
+    :general_settings="general_settings"
   >
-    <div :id="interfaceDivId" class="ntop_interface_quickstats" />
-    <div :id="contentDivId" class="db-content-ntop" />
-  </div>
+    <div class="db-content-ntop__not-available">
+      {{ _t('Not available on shared dashboards') }}
+    </div>
+  </DashboardContentContainer>
+  <template v-else>
+    <div v-if="exception" :class="['db-content-ntop__warning', exception.class]">
+      {{ exception.msg }}
+    </div>
+    <div
+      v-else
+      class="db-content-ntop__wrapper ntop"
+      :class="{ 'db-content-ntop__background': !!general_settings.render_background }"
+    >
+      <div :id="interfaceDivId" class="ntop_interface_quickstats" />
+      <div :id="contentDivId" class="db-content-ntop" />
+    </div>
+  </template>
 </template>
 
 <style scoped>
@@ -92,5 +98,10 @@ onBeforeUnmount(() => {
 
 .db-content-ntop__warning {
   max-width: 95%;
+}
+
+.db-content-ntop__not-available {
+  padding: var(--spacing);
+  color: var(--font-color);
 }
 </style>

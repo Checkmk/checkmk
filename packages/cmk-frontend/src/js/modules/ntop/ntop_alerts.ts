@@ -23,10 +23,8 @@ import {
 } from './ntop_utils'
 
 export class NtopAlertsTabBar extends TabsBar {
-  _cmk_token: string | null
-  constructor(div_selector: string, cmk_token: string | undefined | null = null) {
+  constructor(div_selector: string) {
     super(div_selector)
-    this._cmk_token = typeof cmk_token !== 'undefined' ? cmk_token : null
   }
 
   override _get_tab_entries() {
@@ -707,21 +705,19 @@ abstract class ABCAlertsPage extends FigureBase<ABCAlertsPageData> {
 
 // Base class for all alert tabs
 export abstract class ABCAlertsTab<Page extends ABCAlertsPage = ABCAlertsPage> extends Tab {
-  _page_class: null | (new (div_selector: string, cmk_token?: string | null) => Page)
+  _page_class: null | (new (div_selector: string) => Page)
   _alerts_page!: Page
-  _cmk_token: string | null
-  constructor(tabs_bar: TabsBar, cmk_token: string | null = null) {
+  constructor(tabs_bar: TabsBar) {
     super(tabs_bar)
     this._page_class = null
     this._tab_selection.classed('ntop_alerts', true)
-    this._cmk_token = cmk_token
   }
 
   initialize() {
     const div_id = this.tab_id() + '_alerts_table'
     this._tab_selection.append('div').attr('id', div_id)
     if (this._page_class) {
-      this._alerts_page = new this._page_class('#' + div_id, this._cmk_token)
+      this._alerts_page = new this._page_class('#' + div_id)
       this._alerts_page.initialize()
     }
   }
@@ -746,8 +742,8 @@ export abstract class ABCAlertsTab<Page extends ABCAlertsPage = ABCAlertsPage> e
 //   |                          |___/       |___/                         |
 //   +--------------------------------------------------------------------+
 export class EngagedAlertsTab extends ABCAlertsTab<EngagedAlertsPage> {
-  constructor(tabs_bar: TabsBar, cmk_token: string | null = null) {
-    super(tabs_bar, cmk_token)
+  constructor(tabs_bar: TabsBar) {
+    super(tabs_bar)
     this._page_class = EngagedAlertsPage
   }
 
@@ -777,14 +773,9 @@ export interface Alert {
 }
 
 class EngagedAlertsPage extends ABCAlertsPage {
-  constructor(div_selector: string, cmk_token: string | null = null) {
+  constructor(div_selector: string) {
     super(div_selector)
-    if (cmk_token !== null) {
-      const http_var_string: string = new URLSearchParams({ 'cmk-token': cmk_token }).toString()
-      this._post_url = `ntop_engaged_alerts_token_auth.py?${http_var_string}`
-    } else {
-      this._post_url = 'ajax_ntop_engaged_alerts.py'
-    }
+    this._post_url = 'ajax_ntop_engaged_alerts.py'
   }
 
   override page_id() {
@@ -869,8 +860,8 @@ class EngagedAlertsPage extends ABCAlertsPage {
 //   |                                                                    |
 //   +--------------------------------------------------------------------+
 export class PastAlertsTab extends ABCAlertsTab {
-  constructor(tabs_bar: TabsBar, cmk_token: string | null = null) {
-    super(tabs_bar, cmk_token)
+  constructor(tabs_bar: TabsBar) {
+    super(tabs_bar)
     this._page_class = PastAlertsPage
   }
 
@@ -884,14 +875,9 @@ export class PastAlertsTab extends ABCAlertsTab {
 }
 
 class PastAlertsPage extends ABCAlertsPage {
-  constructor(div_selector: string, cmk_token: string | null = null) {
+  constructor(div_selector: string) {
     super(div_selector)
-    if (cmk_token !== null) {
-      const http_var_string: string = new URLSearchParams({ 'cmk-token': cmk_token }).toString()
-      this._post_url = `ntop_past_alerts_token_auth.py?${http_var_string}`
-    } else {
-      this._post_url = 'ajax_ntop_past_alerts.py'
-    }
+    this._post_url = 'ajax_ntop_past_alerts.py'
   }
 
   override page_id() {
@@ -951,8 +937,8 @@ class PastAlertsPage extends ABCAlertsPage {
 //   +--------------------------------------------------------------------+
 
 export class FlowAlertsTab extends ABCAlertsTab {
-  constructor(tabs_bar: TabsBar, cmk_token: string | null = null) {
-    super(tabs_bar, cmk_token)
+  constructor(tabs_bar: TabsBar) {
+    super(tabs_bar)
     this._page_class = FlowAlertsPage
   }
 
@@ -966,14 +952,9 @@ export class FlowAlertsTab extends ABCAlertsTab {
 }
 
 class FlowAlertsPage extends ABCAlertsPage {
-  constructor(div_selector: string, cmk_token: string | null = null) {
+  constructor(div_selector: string) {
     super(div_selector)
-    if (cmk_token !== null) {
-      const http_var_string: string = new URLSearchParams({ 'cmk-token': cmk_token }).toString()
-      this._post_url = `ntop_flow_alerts_token_auth.py?${http_var_string}`
-    } else {
-      this._post_url = 'ajax_ntop_flow_alerts.py'
-    }
+    this._post_url = 'ajax_ntop_flow_alerts.py'
   }
 
   override page_id() {

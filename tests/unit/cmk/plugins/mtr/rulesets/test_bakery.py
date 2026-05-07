@@ -5,7 +5,7 @@
 
 import pytest
 
-from cmk.plugins.collection.rulesets.mtr import migrate
+from cmk.plugins.mtr.rulesets.mtr import migrate
 
 
 @pytest.mark.parametrize(

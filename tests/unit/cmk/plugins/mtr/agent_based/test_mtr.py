@@ -8,7 +8,7 @@ from collections.abc import Sequence
 import pytest
 
 from cmk.agent_based.v2 import Metric, Result, Service, State
-from cmk.plugins.collection.agent_based.mtr import (
+from cmk.plugins.mtr.agent_based.mtr import (
     check_mtr,
     CheckParams,
     discover_mtr,

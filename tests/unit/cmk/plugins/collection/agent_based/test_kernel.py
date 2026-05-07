@@ -12,7 +12,7 @@ import pytest
 import time_machine
 
 from cmk.agent_based.v2 import GetRateError, Metric, Result, Service, State
-from cmk.legacy_checks import kernel
+from cmk.plugins.collection.agent_based import kernel
 from cmk.plugins.collection.agent_based.kernel import parse_kernel, Section
 
 

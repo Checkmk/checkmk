@@ -2540,15 +2540,6 @@ msgstr ""
 "prolungato. Questo è attualmente supportato solo sugli agenti linux e "
 "windows e sui dispositivi monitorati attraverso l'host-resource mib"
 
-#, fuzzy, python-format
-msgid ""
-"A site is allowed to be used in exactly one OpenTelemetry collector "
-"configuration: \n"
-"%s"
-msgstr ""
-"Un site è utilizzabile il una configurazione soltanto dei collettori "
-"OpenTelemetry: %s"
-
 msgid "A stored SNMP walk"
 msgstr "Una passeggiata SNMP memorizzata"
 
@@ -3143,9 +3134,6 @@ msgstr "Livelli assoluti in bit o byte al secondo"
 
 msgid "Absolute levels of active sessions"
 msgstr "Livelli assoluti di sessioni attive"
-
-msgid "Absolute limit"
-msgstr "Limite assoulto"
 
 msgid "Absolute number of active connections"
 msgstr "Numero assoluto di connessioni attive"
@@ -3947,10 +3935,6 @@ msgid "Add OID descriptions"
 msgstr "Aggiungere descrizioni OID"
 
 #, fuzzy
-msgid "Add OpenTelemetry Collector configuration"
-msgstr "Aggiungere una nuova configurazione utente"
-
-#, fuzzy
 msgid "Add OpenTelemetry configuration"
 msgstr "Aggiungere una nuova configurazione utente"
 
@@ -3959,10 +3943,6 @@ msgstr "Aggiungi prefisso"
 
 #, fuzzy
 msgid "Add Prometheus configuration"
-msgstr "Configurazione dello stile selezionato"
-
-#, fuzzy
-msgid "Add Prometheus scraper configuration"
 msgstr "Configurazione dello stile selezionato"
 
 #, fuzzy
@@ -4265,9 +4245,6 @@ msgstr "Aggiungi una nuova azione"
 msgid "Add new aggregation"
 msgstr "Aggiungere una nuova aggregazione"
 
-msgid "Add new credentials"
-msgstr "Aggiungere nuove credenziali"
-
 #, fuzzy
 msgid "Add new database"
 msgstr "Aggiungere un'istanza remota"
@@ -4336,9 +4313,6 @@ msgstr "Aggiungi una nuova riga"
 msgid "Add new rule"
 msgstr "Aggiungi una nuova riga"
 
-msgid "Add new scrape configuration"
-msgstr "Aggiungere una nuova configurazione di scraping"
-
 msgid "Add new service"
 msgstr "Aggiungere un nuovo servizio"
 
@@ -4350,9 +4324,6 @@ msgstr "Aggiungere un nuovo stato"
 
 msgid "Add new tag"
 msgstr "Aggiungi un nuovo tag"
-
-msgid "Add new target"
-msgstr "Aggiungere un nuovo target"
 
 msgid "Add new time"
 msgstr "Aggiungi un nuovo tempo"
@@ -6019,22 +5990,6 @@ msgstr "Tutte le code elencate qui saranno saltate."
 
 #, fuzzy
 msgid "All related configuration of the Prometheus scraper Quick Setup."
-msgstr ""
-"Specificare uno, più o tutti i siti su cui deve essere eseguita la "
-"connessione."
-
-#, fuzzy
-msgid ""
-"All related configuration of the integrated OpenTelemetry Collector "
-"Prometheus scraping."
-msgstr ""
-"Specificare uno, più o tutti i siti su cui deve essere eseguita la "
-"connessione."
-
-#, fuzzy
-msgid ""
-"All related configuration of the integrated OpenTelemetry Collector "
-"receivers."
 msgstr ""
 "Specificare uno, più o tutti i siti su cui deve essere eseguita la "
 "connessione."
@@ -7809,10 +7764,6 @@ msgstr "Impostazioni di autorizzazione"
 
 msgid "Authorizations per DB security group"
 msgstr "Autorizzazioni per gruppo di sicurezza DB"
-
-#, fuzzy
-msgid "Authorized user"
-msgstr "Siti autorizzati"
 
 msgid "Auto (DEFAULT)"
 msgstr "Auto (DEFAULT)"
@@ -12566,6 +12517,14 @@ msgid "Check command expanded"
 msgstr "Controllare il comando espanso"
 
 #, fuzzy
+msgid "Check command of the host, regex match"
+msgstr "Comando di controllo host espanso"
+
+#, fuzzy
+msgid "Check command of the service, regex match"
+msgstr "Nome alternativo del servizio, corrispondenza regex"
+
+#, fuzzy
 msgid "Check containers CPU utilization"
 msgstr "Controllare l'utilizzo della cpu dei contenitori"
 
@@ -12631,10 +12590,6 @@ msgstr "Controllare gli host con PING (ICMP Echo Request)"
 
 msgid "Check int."
 msgstr "Controlla int."
-
-#, fuzzy
-msgid "Check interval"
-msgstr "Intervallo di cache"
 
 #, fuzzy
 msgid "Check item"
@@ -14234,6 +14189,12 @@ msgstr "La data di fine deve essere successiva alla data di inizio. "
 #, fuzzy
 msgid "Cluster behavior"
 msgstr "Comportamento del cluster"
+
+msgid "Cluster collector: Container metrics cache size"
+msgstr ""
+
+msgid "Cluster collector: Machine sections cache size"
+msgstr ""
 
 msgid "Cluster health"
 msgstr "Cluster salute"
@@ -17366,10 +17327,6 @@ msgstr "Attualmente, ci sono %s non ancora attivati."
 msgid "Currently, there is one pending change not yet activated."
 msgstr "Attualmente c'è una modifica in sospeso non ancora attivata."
 
-#, fuzzy
-msgid "Custom"
-msgstr "Cliente"
-
 #, python-format
 msgid "Custom GUI design of %s"
 msgstr "Design GUI personalizzato di %s"
@@ -18457,14 +18414,6 @@ msgstr "Predefinito (%s)"
 
 msgid "Default BI visualization settings"
 msgstr "Impostazioni predefinite per la visualizzazione della BI"
-
-#, fuzzy
-msgid "Default IPv4"
-msgstr "Default"
-
-#, fuzzy
-msgid "Default IPv6"
-msgstr "Default"
 
 #, fuzzy
 msgid "Default behavior for 'Changes'"
@@ -22911,10 +22860,6 @@ msgstr ""
 msgid "Enable Livestatus access via network (TCP)"
 msgstr "Abilitare l'accesso a Livestatus via rete (TCP)"
 
-#, fuzzy
-msgid "Enable OpenTelemetry Collector"
-msgstr "Configurazione dello stile selezionato"
-
 msgid "Enable SMTP AUTH (LOGIN)"
 msgstr "Abilitare l'AUTH SMTP (LOGIN)"
 
@@ -23503,18 +23448,11 @@ msgstr ""
 msgid "Enter a valid IP address or host name."
 msgstr "Indirizzo IP dell'host"
 
-msgid "Enter a valid port number (example: 1234)."
-msgstr ""
-
 msgid "Enter address"
 msgstr "Inserire l'indirizzo"
 
 msgid "Enter alias (optional)"
 msgstr "Inserire l'alias (facoltativo)"
-
-#, fuzzy
-msgid "Enter credentials for basic authentication."
-msgstr "Credenziali per l'autenticazione di base HTTP"
 
 msgid "Enter group"
 msgstr "Inserire il gruppo"
@@ -27244,9 +27182,6 @@ msgstr "CPU"
 msgid "GPU utilization"
 msgstr "Utilizzo della CPU"
 
-msgid "GRPC-based OTLP receiver"
-msgstr ""
-
 msgid "GUI design"
 msgstr "Progettazione GUI"
 
@@ -28169,9 +28104,6 @@ msgstr "Bilanciatori di carico"
 #, fuzzy
 msgid "HTTP, TCP, email, ..."
 msgstr "HTTP, TCP, e-mail, ..."
-
-msgid "HTTP-based OTLP receiver"
-msgstr ""
 
 #, fuzzy
 msgid "HTTP: Active Requests"
@@ -31943,14 +31875,6 @@ msgid "IP address or FQDN of JVM web server"
 msgstr "Indirizzo IP o FQDN del webserver della JVM"
 
 #, fuzzy
-msgid "IP address or host name"
-msgstr "Indirizzo IP dell'host"
-
-#, fuzzy
-msgid "IP address or host name should not be empty"
-msgstr "Chiave segreta"
-
-#, fuzzy
 msgid "IP address or name of tunnel endpoint"
 msgstr "Indirizzo IP o nome dell'endpoint del tunnel"
 
@@ -32824,19 +32748,6 @@ msgstr ""
 "fornire qui il nome di quel modulo. Ma se ci sono diversi moduli in quella "
 "pagina, è necessario fornire il nome del modulo qui, per permettere al "
 "controllo di identificare l'elemento corretto del modulo."
-
-msgid ""
-"If this checkbox is activated, log messages received via OTLP are converted "
-"into syslog format and forwarded to the Event Console.<br>The Event Console "
-"is optimized for handling critical events, not for processing high-frequency "
-"log data. When forwarding OpenTelemetry logs, carefully consider:"
-"<ol><li><b>Which</b> messages are relevant<li><b>How many</b> messages you "
-"are sending<br></ol>Unfiltered or high-volume logs can degrade performance "
-"and reduce the usefulness of the Event Console. We recommend filtering and "
-"preprocessing your logs to only forward meaningful events. For more "
-"information, have a look at the <a href='https://docs.checkmk.com/latest/en/"
-"ec.html#tuning'>Event Console user guide.</a>"
-msgstr ""
 
 msgid "If this error persists, please contact the Checkmk support team."
 msgstr "Se l'errore persiste, contattare il team di assistenza Checkmk."
@@ -36652,10 +36563,6 @@ msgid "Job name"
 msgstr "Nome del lavoro"
 
 #, fuzzy
-msgid "Job name should not be empty."
-msgstr "Chiave segreta"
-
-#, fuzzy
 msgid "Job scheduler"
 msgstr "Pianificatore di rapporti"
 
@@ -38437,6 +38344,16 @@ msgstr "Limiti e livelli"
 msgid "Limits for the number of used states"
 msgstr "Limiti per il numero di stati utilizzati"
 
+msgid ""
+"Limits the number of Livestatus server processes that can be active "
+"simultaneously."
+msgstr ""
+
+msgid ""
+"Limits the number of simultaneous Livestatus connections allowed from a "
+"single source IP address."
+msgstr ""
+
 msgid "Limits utilization"
 msgstr "Limiti di utilizzo"
 
@@ -38696,9 +38613,6 @@ msgstr ""
 
 msgid "List of patterns to exclude"
 msgstr "Elenco dei modelli da escludere"
-
-msgid "List of users and passwords allowed to use this endpoint"
-msgstr ""
 
 msgid "List unpackaged files"
 msgstr "Elencare i file non confezionati"
@@ -41143,12 +41057,6 @@ msgstr "Età massima delle password"
 msgid "Maximum allowed age"
 msgstr "Età massima consentita"
 
-msgid ""
-"Maximum allowed staleness of metrics in seconds. A metric needs to send with "
-"a frequency higher than the configured interval to be able to be aggregated "
-"into a cumulative data stream."
-msgstr ""
-
 msgid "Maximum allowed uptime"
 msgstr "Tempo massimo di attività consentito"
 
@@ -41158,22 +41066,8 @@ msgstr "Utenti massimi consentiti"
 msgid "Maximum allowed validity"
 msgstr "Validità massima consentita"
 
-msgid ""
-"Maximum amount of memory targeted to be allocated by the process heap. Note "
-"that typically the total memory usage of process will be about 50MiB higher "
-"than this value. This defines the hard limit."
-msgstr ""
-
 msgid "Maximum amount of non-operational access points"
 msgstr "Quantità massima di punti di accesso non operativi"
-
-#, no-python-format
-msgid ""
-"Maximum amount of total memory targeted to be allocated by the process heap. "
-"This option is used to calculate the hard memory limit from the total "
-"available memory. For instance, setting the limit to 75% on a machine with "
-"1000 MiB total memory available will result in a 750 MiB hard limit."
-msgstr ""
 
 msgid "Maximum bulk size"
 msgstr "Dimensione massima della massa"
@@ -41284,24 +41178,6 @@ msgstr "Età massima del tronco"
 msgid "Maximum long output size"
 msgstr "Dimensione massima dell'uscita lunga"
 
-#, no-python-format
-msgid ""
-"Maximum memory spike allowed between the measurements of memory usage. The "
-"value must be less than the limit. This option is used to calculate the "
-"maximum spike value from the total available memory. For instance, setting "
-"the limit to 60% and the spike limit to 25% on a machine with 1000 MiB total "
-"memory available will result in a 600 MiB hard limit and a 350 MiB soft "
-"limit (the spike limit being equal to 250MiB)"
-msgstr ""
-
-#, no-python-format
-msgid ""
-"Maximum memory spike allowed between the measurements of memory usage. The "
-"value must be less than the limit. This option is used to calculate the "
-"maximum spike value. The soft limit value will be equal to (limit - spike "
-"limit). The recommended value for spike limit is about 20% limit."
-msgstr ""
-
 msgid "Maximum messages per save interval"
 msgstr "Messaggi massimi per intervallo di salvataggio"
 
@@ -41350,10 +41226,6 @@ msgid "Maximum number of connections or listeners"
 msgstr "Numero massimo di connessioni o ascoltatori"
 
 #, fuzzy
-msgid "Maximum number of data streams"
-msgstr "Numero massimo di tentativi di consegna"
-
-#, fuzzy
 msgid "Maximum number of database connections to open."
 msgstr "Numero massimo di connessioni o ascoltatori"
 
@@ -41378,6 +41250,10 @@ msgstr "Numero massimo di nodi superato %d/%d"
 msgid "Maximum number of open file descriptors"
 msgstr "Numero previsto di descrittori di file aperti"
 
+#, fuzzy
+msgid "Maximum number of parallel server instances"
+msgstr "Numero massimo di interruzioni del servizio"
+
 msgid "Maximum number of parsed lines per log file"
 msgstr "Numero massimo di linee analizzate per file di log"
 
@@ -41394,14 +41270,6 @@ msgstr "Numero massimo di nodi worker pronti"
 msgid "Maximum number of service outages"
 msgstr "Numero massimo di interruzioni del servizio"
 
-msgid ""
-"Maximum number of streams that can be processed concurrently. If the number "
-"of incoming data streams exceeds this limit they will be dropped. A value of "
-"0 disables the limit. Setting this limit can be useful to prevent high "
-"resource utilization of the processor when receiving data with at a high "
-"cardinality."
-msgstr ""
-
 msgid "Maximum number of threads"
 msgstr "Numero massimo di thread"
 
@@ -41410,6 +41278,10 @@ msgid "Maximum of %s"
 msgstr "Massimo di %s"
 
 msgid "Maximum parallel connections"
+msgstr "Massimo di connessioni parallele"
+
+#, fuzzy
+msgid "Maximum parallel connections per source IP address"
 msgstr "Massimo di connessioni parallele"
 
 msgid "Maximum possible value"
@@ -41485,10 +41357,6 @@ msgstr "Durata massima della bobina"
 
 msgid "Maximum spool size"
 msgstr "Dimensione massima della bobina"
-
-#, fuzzy
-msgid "Maximum staleness of data streams"
-msgstr "Numero massimo di tentativi di consegna"
 
 msgid "Maximum time since last start of job execution"
 msgstr "Tempo massimo dall'ultimo avvio dell'esecuzione del lavoro"
@@ -42092,18 +41960,6 @@ msgstr "Metriche"
 
 msgid "Metrics of service"
 msgstr "Metriche di servizio"
-
-#, fuzzy
-msgid "Metrics path"
-msgstr "Metriche"
-
-#, fuzzy
-msgid "Metrics path must be a string."
-msgstr "Il valore deve essere una stringa"
-
-#, fuzzy
-msgid "Metrics path must start with a '/'."
-msgstr "Il login non è consentito su questo sito."
 
 #, fuzzy
 msgid "Metrics related to sizing, e.g. number of helpers, hosts, services"
@@ -44795,10 +44651,6 @@ msgstr "Non selezionato"
 msgid "No empty folders for %s available to delete."
 msgstr ""
 
-#, fuzzy
-msgid "No endpoint"
-msgstr "Endpoints"
-
 msgid "No entries"
 msgstr "Nessuna voce"
 
@@ -47278,10 +47130,6 @@ msgstr "Un RRD per host/servizio (salva l'IO del disco, solo con CMC)"
 msgid "One condition needs to match (offensive)"
 msgstr "Le condizioni della regola non corrispondono."
 
-msgid ""
-"One host is created for each unique value of this resource attribute key."
-msgstr ""
-
 msgid "One hour"
 msgstr "Un'ora"
 
@@ -47677,22 +47525,6 @@ msgstr "OpenHardwareMonitor S.M.A.R.T."
 
 msgid "OpenLDAP"
 msgstr "OpenLDAP"
-
-#, fuzzy
-msgid "OpenTelemetry Collector"
-msgstr "Configurazione dello stile selezionato"
-
-#, fuzzy
-msgid "OpenTelemetry Collector configurations"
-msgstr "Configurazione dello stile selezionato"
-
-#, fuzzy
-msgid "OpenTelemetry Collector delta-to-cumulative processor"
-msgstr "Configurazione dello stile selezionato"
-
-#, fuzzy
-msgid "OpenTelemetry Collector memory limit"
-msgstr "Configurazione dello stile selezionato"
 
 #, fuzzy
 msgid "OpenTelemetry Quick Setup"
@@ -50149,10 +49981,6 @@ msgstr "Politica delle password per gli account locali"
 #, fuzzy
 msgid "Password properties"
 msgstr "Proprietà del cruscotto"
-
-#, fuzzy
-msgid "Password should not be empty."
-msgstr "Chiave di accesso"
 
 msgid "Password:"
 msgstr "Password:"
@@ -52676,18 +52504,6 @@ msgstr ""
 "Prometheus Scrape Targets (include Prometheus Exporters) per recuperare "
 "informazioni da"
 
-#, fuzzy
-msgid "Prometheus scraper"
-msgstr "Alertmanager"
-
-#, fuzzy
-msgid "Prometheus scraper configurations"
-msgstr "Configurazione dello stile selezionato"
-
-#, fuzzy
-msgid "Prometheus targets"
-msgstr "Alertmanager"
-
 msgid "Properties"
 msgstr "Proprietà"
 
@@ -53856,12 +53672,6 @@ msgstr ""
 msgid "Received messages"
 msgstr "Messaggi ricevuti"
 
-msgid "Receiver protocol GRPC"
-msgstr ""
-
-msgid "Receiver protocol HTTP"
-msgstr ""
-
 #, fuzzy
 msgid "Receiving traces is disabled"
 msgstr "Il sito è disabilitato"
@@ -54415,10 +54225,6 @@ msgstr "Livelli relativi"
 
 msgid "Relative levels of active sessions."
 msgstr "Livelli relativi di sessioni attive."
-
-#, fuzzy, no-python-format
-msgid "Relative limit in %"
-msgstr "Umidità relativa"
 
 #, fuzzy
 msgid "Relative time of alert"
@@ -55607,10 +55413,6 @@ msgstr "Gruppo di risorse"
 
 msgid "Resource Name"
 msgstr "Nome della risorsa"
-
-#, fuzzy
-msgid "Resource attribute for host name lookup"
-msgstr "Calcolo del nome host"
 
 #, fuzzy
 msgid "Resource consumption of Windows processes"
@@ -57454,14 +57256,6 @@ msgstr ""
 msgid "Score"
 msgstr "Punteggio"
 
-#, fuzzy
-msgid "Scrape configurations"
-msgstr "Attivare la configurazione"
-
-#, fuzzy
-msgid "Scrape interval"
-msgstr "Intervallo di scansione"
-
 msgid "Scratch Pool"
 msgstr ""
 
@@ -57971,10 +57765,6 @@ msgstr "Seleziona il tipo di porta dell'interfaccia"
 msgid "Select metrics to send to InfluxDB"
 msgstr "Selezionare le metriche da inviare a InfluxDB"
 
-#, fuzzy
-msgid "Select one site."
-msgstr "Selezionare il file"
-
 msgid ""
 "Select one user from a contact group with access to all hosts and services. "
 "This will prevent duplicate notifications, as selecting multiple users will "
@@ -58303,10 +58093,6 @@ msgstr "Invia eventi all'host syslog remoto"
 
 msgid "Send host metrics to Graphite"
 msgstr "Inviare le metriche dell'host a Graphite"
-
-#, fuzzy
-msgid "Send log messages to Event Console"
-msgstr "Invia gli eventi alla console eventi locale"
 
 msgid "Send message"
 msgstr "Invia il messaggio"
@@ -59173,10 +58959,6 @@ msgstr "Impostare i livelli assoluti"
 
 msgid "Set an individual idle timeout"
 msgstr "Impostare un timeout di inattività individuale"
-
-#, fuzzy
-msgid "Set at least one target."
-msgstr "Seleziona almeno un elemento"
 
 msgid "Set by rule pack"
 msgstr "Impostato dal pacchetto di regole"
@@ -61107,10 +60889,6 @@ msgid "Socket"
 msgstr "Presa"
 
 #, fuzzy
-msgid "Socket address to listen on"
-msgstr "Indirizzo o nome dell'host"
-
-#, fuzzy
 msgid "Socket detection method"
 msgstr "Rilevamento del fumo"
 
@@ -61994,12 +61772,6 @@ msgstr "Specificare i nomi delle code a cui applicare la regola"
 msgid "Specify roles of a control plane node"
 msgstr "Specificare i ruoli di un nodo del piano di controllo"
 
-#, fuzzy
-msgid "Specify sites this OpenTelemetry Collector should run on. "
-msgstr ""
-"Specificare uno, più o tutti i siti su cui deve essere eseguita la "
-"connessione."
-
 msgid "Specify storage account names that the rule should apply to"
 msgstr ""
 "Specificare i nomi degli account di archiviazione a cui la regola deve "
@@ -62374,10 +62146,6 @@ msgstr "Velocità"
 
 msgid "Speed of interface groups (Netapp only)"
 msgstr "Velocità dei gruppi di interfacce (solo Netapp)"
-
-#, fuzzy
-msgid "Spike limit"
-msgstr "Limiti di servizio"
 
 msgid "Spin retries (id 10)"
 msgstr ""
@@ -64649,9 +64417,6 @@ msgstr "Convalida del certificato SSL"
 msgid "TLS certificate verification"
 msgstr "Verifica del certificato SSL"
 
-msgid "TLS encryption must be enabled when using basic authentication."
-msgstr ""
-
 msgid "TLS processed bytes"
 msgstr "Byte elaborati TLS"
 
@@ -65034,10 +64799,6 @@ msgstr "Numero di percorsi falliti"
 #, fuzzy
 msgid "Tel2IP number of no answer SIP/H323 calls"
 msgstr "Numero di percorsi falliti"
-
-#, fuzzy
-msgid "Telemetry"
-msgstr "Configurazione dello stile selezionato"
 
 #, fuzzy
 msgid ""
@@ -65717,11 +65478,6 @@ msgid ""
 "for standard operations."
 msgstr ""
 
-msgid ""
-"The HTTP resource path on which to fetch metrics from targets. Must start "
-"with a '/'."
-msgstr ""
-
 #, fuzzy, python-format
 msgid "The ID %s is already used by another connection."
 msgstr "Questo id è già utilizzato da un'altra connessione."
@@ -65832,10 +65588,6 @@ msgstr ""
 "una vista. È possibile creare più viste con lo stesso titolo, ma solo una "
 "per nome di vista. Se si crea una vista che ha lo stesso nome di una vista "
 "incorporata, la propria vista la sovrascriverà (facendole da ombra)."
-
-#, fuzzy
-msgid "The IP address or host name the receiver should listen on."
-msgstr "Hostname, indirizzo IP o alias di host per cui l'evento è rilevante"
 
 msgid "The Index of the Overcurrent Protector"
 msgstr "L'indice del protettore di sovracorrente"
@@ -67128,16 +66880,6 @@ msgid ""
 msgstr ""
 
 msgid ""
-"The delta-to-cumulative processor converts timezones into cumulative "
-"aggregation temporality. This is necessary for compatibility reasons with "
-"the Checkmk metric backend, which only supports cumulative metrics. If your "
-"Collector receives metrics in delta aggregation temporality, you can "
-"configure this processor to be able to use these metrics in Checkmk. If your "
-"Collector only receives cumulative metrics or if you are unsure about the "
-"aggregation temporality of your metrics, you can safely ignore this."
-msgstr ""
-
-msgid ""
 "The description is optional and can be used for explanations or documentation"
 msgstr ""
 "La descrizione è opzionale e può essere usata per spiegazioni o "
@@ -68009,10 +67751,6 @@ msgid "The limit for the transport lag in <tt>v$dataguard_stats</tt>"
 msgstr "Il limite per il ritardo di trasporto in <tt>v$dataguard_stats</tt>"
 
 #, fuzzy
-msgid "The limit has to be bigger than the spike limit."
-msgstr "Il cluster deve avere almeno un nodo"
-
-#, fuzzy
 msgid "The log file"
 msgstr "Questo file di log"
 
@@ -68170,8 +67908,7 @@ msgstr "Il valore massimo consentito è %s."
 msgid ""
 "The maximum amount of memory that the metric backend is allowed to use, "
 "expressed as a fraction of the total available memory. Allows limiting the "
-"memory usage on low-memory systems. On hosts with low RAM and swap, you may "
-"want to set it to values larger than 100%."
+"memory usage on low-memory systems."
 msgstr ""
 
 #, fuzzy
@@ -68255,14 +67992,6 @@ msgstr ""
 "I livelli di memoria per un modulo specifico di questo host. Questo è "
 "rilevante per gli host che hanno diverse aree di memoria distinte, ad "
 "esempio le schede collegabili"
-
-msgid ""
-"The memory limiter processor is used to prevent out of memory situations on "
-"the Collector. The amount and type of data the Collector processes is "
-"environment-specific. The resource utilization of the Collector is also "
-"dependent on the configured processors. So, in consequence, it is important "
-"to put checks in place regarding memory usage."
-msgstr ""
 
 #, no-python-format
 msgid ""
@@ -68847,14 +68576,6 @@ msgstr ""
 "a uno dei tuoi host monitorati, quell'host sarà usato come genitore "
 "dell'host. Se non esiste un tale host, verrà creato un host gateway ping-"
 "only artificiale se non hai disabilitato questa caratteristica."
-
-#, fuzzy, python-format
-msgid ""
-"The password ID '%s' is not usable by the OTel Collector. It must contain "
-"only letters, digits and underscores."
-msgstr ""
-"Il nome della vista può contenere solo lettere, cifre e caratteri di "
-"sottolineatura."
 
 #, fuzzy
 msgid "The password cannot be changed (it is locked by the user connector)."
@@ -69501,10 +69222,6 @@ msgstr "Il programma che stai cercando di cancellare non esiste."
 
 msgid "The schedule you are trying to edit does not exist."
 msgstr "Il programma che stai cercando di modificare non esiste."
-
-#, fuzzy
-msgid "The scrape interval must be an integer higher than 0."
-msgstr "Il cluster deve avere almeno un nodo"
 
 msgid "The secret access key for your AWS account"
 msgstr "La chiave di accesso segreta per il tuo account AWS"
@@ -75551,13 +75268,6 @@ msgstr "Secondi prima del time out della connessione"
 msgid "Time before the expiration date of the certificate"
 msgstr "Il tempo trascorso dall'ultimo controllo del servizio"
 
-msgid ""
-"Time between measurements of memory usage. The recommended value is 1 "
-"second. If the expected traffic to the Collector is very spiky then decrease "
-"the check interval or increase spike limit to avoid memory usage going over "
-"the hard limit."
-msgstr ""
-
 msgid "Time between new checks of type Check_MK"
 msgstr "Tempo tra nuovi controlli di tipo Check_MK"
 
@@ -81241,8 +80951,16 @@ msgid "Upper levels on Site-to-site bandwidth in bytes per second"
 msgstr ""
 "Livelli superiori sulla larghezza di banda da sito a sito in byte al secondo"
 
+#, fuzzy
+msgid "Upper levels on container metrics cache size"
+msgstr "Livelli superiori per la dimensione totale dello spazio dei nomi"
+
 msgid "Upper levels on daily costs"
 msgstr "Livelli superiori sui costi giornalieri"
+
+#, fuzzy
+msgid "Upper levels on machine sections cache size"
+msgstr "Livelli superiori per le connessioni in uso"
 
 msgid "Upper levels on number of Point-to-site connections"
 msgstr "Livelli superiori sul numero di connessioni Point-to-site"
@@ -81922,6 +81640,11 @@ msgstr "Usa il seguente ID"
 
 msgid "Use the following color"
 msgstr "Usa il seguente colore"
+
+msgid ""
+"Use the following command to download an agent package in basic "
+"configuration:"
+msgstr ""
 
 msgid "Use the following credentials"
 msgstr "Usa le seguenti credenziali"
@@ -82639,10 +82362,6 @@ msgid "Username on the storage system. Read-only permissions are sufficient."
 msgstr ""
 "Nome utente sul sistema di archiviazione. I permessi di sola lettura sono "
 "sufficienti."
-
-#, fuzzy
-msgid "Username should not be empty."
-msgstr "Chiave segreta"
 
 msgid "Username:"
 msgstr "Nome utente:"
@@ -88072,6 +87791,14 @@ msgstr ""
 "Un host con il nome <b><tt>%s</tt></b> esiste già nella cartella <a "
 "href=\"%s\">%s</a>."
 
+msgid ""
+"You do not have the permissions required to download an agent package from "
+"the Agent Bakery. Ask your Checkmk administrator to grant you the required "
+"permissions. Alternatively, you can use the following command to download an "
+"agent package in basic configuration. Note that this package might lack "
+"desired plug-ins. You have to install them manually."
+msgstr ""
+
 msgid "You do not have the permissions to design this graph."
 msgstr "Non hai i permessi per disegnare questo grafico."
 
@@ -88279,10 +88006,6 @@ msgstr "È necessario selezionare almeno un utente."
 msgid "You have to specify a connector to migrate to."
 msgstr "È necessario specificare un connettore da migrare."
 
-#, fuzzy
-msgid "You have to specify at least one scrape configuration"
-msgstr "È necessario selezionare almeno un utente."
-
 msgid "You have used an invalid character"
 msgstr "Hai usato un carattere non valido"
 
@@ -88423,18 +88146,9 @@ msgstr ""
 msgid "You might want to add some helpful description for the attribute."
 msgstr "Potresti voler aggiungere qualche descrizione utile per l'attributo."
 
-#, fuzzy
-msgid "You must configure at least one receiver."
-msgstr "Dovete specificare almeno un elemento."
-
 #, python-format
 msgid "You must not provide more than %d characters."
 msgstr "Non devi fornire più di %d caratteri."
-
-msgid ""
-"You must set a resource attribute (e.g., service.name) so the system can "
-"determine the host name."
-msgstr ""
 
 msgid ""
 "You must specify a name for your Kubernetes cluster. The provided name will "
@@ -90041,10 +89755,6 @@ msgstr "non è una delle regex"
 msgid "is required"
 msgstr "è necessario"
 
-#, fuzzy
-msgid "is used in"
-msgstr "Questo utente"
-
 msgid "jitter"
 msgstr "jitter"
 
@@ -90852,10 +90562,6 @@ msgid "site"
 msgid_plural "sites"
 msgstr[0] "sito"
 msgstr[1] "siti"
-
-#, python-format
-msgid "site must be a list. Current type is: %s "
-msgstr "il sito deve essere una lista. Il tipo corrente è: %s "
 
 msgid "slots"
 msgstr "slot"
@@ -92490,6 +92196,10 @@ msgid "Specific host"
 msgstr "Siti specifici"
 
 #, fuzzy
+msgid "Custom"
+msgstr "Cliente"
+
+#, fuzzy
 msgid "Select at least one scope."
 msgstr "Seleziona almeno un elemento"
 
@@ -93668,11 +93378,6 @@ msgid "Install the agent"
 msgstr "Agente installato"
 
 #, fuzzy
-msgid ""
-"You do not have the required permissions to download monitoring agents. "
-msgstr "Non hai i permessi per modificare questo %s"
-
-#, fuzzy
 msgid "Next step: Register agent"
 msgstr "Destinatario"
 
@@ -94232,9 +93937,21 @@ msgstr "Nuova password"
 msgid "No passwords available"
 msgstr "Porte disponibili"
 
+msgid "TLS encryption must be enabled when using basic authentication."
+msgstr ""
+
+msgid ""
+"You must set a resource attribute (e.g., service.name) so the system can "
+"determine the host name."
+msgstr ""
+
 #, fuzzy
 msgid "Send log messages to event console"
 msgstr "Invia gli eventi alla console eventi locale"
+
+#, fuzzy
+msgid "Resource attribute for host name lookup"
+msgstr "Calcolo del nome host"
 
 msgid "Default IPv4 (0.0.0.0:${props.defaultPort})"
 msgstr ""
@@ -94244,6 +93961,14 @@ msgstr ""
 
 msgid "Port must differ from the other protocol endpoint."
 msgstr ""
+
+#, fuzzy
+msgid "Socket address to listen on"
+msgstr "Indirizzo o nome dell'host"
+
+#, fuzzy
+msgid "IP address or host name"
+msgstr "Indirizzo IP dell'host"
 
 #, fuzzy
 msgid "Configuration details:"
@@ -94302,6 +94027,10 @@ msgid ""
 "OpenTelemetry instrumentation can be set up in two ways, depending on your "
 "environment:"
 msgstr ""
+
+#, fuzzy
+msgid "OpenTelemetry Collector"
+msgstr "Configurazione dello stile selezionato"
 
 msgid ""
 "A vendor-agnostic proxy service that receives, processes, and forwards "
@@ -94391,6 +94120,19 @@ msgstr ""
 #, fuzzy
 msgid "Metrics path is required but not specified."
 msgstr "%s è richiesto ma non è stato specificato."
+
+#, fuzzy
+msgid "Metrics path must start with a '/'."
+msgstr "Il login non è consentito su questo sito."
+
+msgid ""
+"The HTTP resource path on which to fetch metrics from targets. Must start "
+"with a '/'."
+msgstr ""
+
+#, fuzzy
+msgid "Metrics path"
+msgstr "Metriche"
 
 msgid ""
 "The IP address or host name the OpenTelemetry Collector should listen on. To "
@@ -95591,6 +95333,210 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy, python-format
+#~ msgid ""
+#~ "A site is allowed to be used in exactly one OpenTelemetry collector "
+#~ "configuration: \n"
+#~ "%s"
+#~ msgstr ""
+#~ "Un site è utilizzabile il una configurazione soltanto dei collettori "
+#~ "OpenTelemetry: %s"
+
+#~ msgid "Absolute limit"
+#~ msgstr "Limite assoulto"
+
+#, fuzzy
+#~ msgid "Add OpenTelemetry Collector configuration"
+#~ msgstr "Aggiungere una nuova configurazione utente"
+
+#, fuzzy
+#~ msgid "Add Prometheus scraper configuration"
+#~ msgstr "Configurazione dello stile selezionato"
+
+#~ msgid "Add new credentials"
+#~ msgstr "Aggiungere nuove credenziali"
+
+#~ msgid "Add new scrape configuration"
+#~ msgstr "Aggiungere una nuova configurazione di scraping"
+
+#~ msgid "Add new target"
+#~ msgstr "Aggiungere un nuovo target"
+
+#, fuzzy
+#~ msgid ""
+#~ "All related configuration of the integrated OpenTelemetry Collector "
+#~ "Prometheus scraping."
+#~ msgstr ""
+#~ "Specificare uno, più o tutti i siti su cui deve essere eseguita la "
+#~ "connessione."
+
+#, fuzzy
+#~ msgid ""
+#~ "All related configuration of the integrated OpenTelemetry Collector "
+#~ "receivers."
+#~ msgstr ""
+#~ "Specificare uno, più o tutti i siti su cui deve essere eseguita la "
+#~ "connessione."
+
+#, fuzzy
+#~ msgid "Authorized user"
+#~ msgstr "Siti autorizzati"
+
+#, fuzzy
+#~ msgid "Check interval"
+#~ msgstr "Intervallo di cache"
+
+#, fuzzy
+#~ msgid "Default IPv4"
+#~ msgstr "Default"
+
+#, fuzzy
+#~ msgid "Default IPv6"
+#~ msgstr "Default"
+
+#, fuzzy
+#~ msgid "Enable OpenTelemetry Collector"
+#~ msgstr "Configurazione dello stile selezionato"
+
+#, fuzzy
+#~ msgid "Enter credentials for basic authentication."
+#~ msgstr "Credenziali per l'autenticazione di base HTTP"
+
+#, fuzzy
+#~ msgid "IP address or host name should not be empty"
+#~ msgstr "Chiave segreta"
+
+#, fuzzy
+#~ msgid "Job name should not be empty."
+#~ msgstr "Chiave segreta"
+
+#, fuzzy
+#~ msgid "Maximum number of data streams"
+#~ msgstr "Numero massimo di tentativi di consegna"
+
+#, fuzzy
+#~ msgid "Maximum staleness of data streams"
+#~ msgstr "Numero massimo di tentativi di consegna"
+
+#, fuzzy
+#~ msgid "Metrics path must be a string."
+#~ msgstr "Il valore deve essere una stringa"
+
+#, fuzzy
+#~ msgid "No endpoint"
+#~ msgstr "Endpoints"
+
+#, fuzzy
+#~ msgid "OpenTelemetry Collector configurations"
+#~ msgstr "Configurazione dello stile selezionato"
+
+#, fuzzy
+#~ msgid "OpenTelemetry Collector delta-to-cumulative processor"
+#~ msgstr "Configurazione dello stile selezionato"
+
+#, fuzzy
+#~ msgid "OpenTelemetry Collector memory limit"
+#~ msgstr "Configurazione dello stile selezionato"
+
+#, fuzzy
+#~ msgid "Password should not be empty."
+#~ msgstr "Chiave di accesso"
+
+#, fuzzy
+#~ msgid "Prometheus scraper"
+#~ msgstr "Alertmanager"
+
+#, fuzzy
+#~ msgid "Prometheus scraper configurations"
+#~ msgstr "Configurazione dello stile selezionato"
+
+#, fuzzy
+#~ msgid "Prometheus targets"
+#~ msgstr "Alertmanager"
+
+#, fuzzy, no-python-format
+#~ msgid "Relative limit in %"
+#~ msgstr "Umidità relativa"
+
+#, fuzzy
+#~ msgid "Scrape configurations"
+#~ msgstr "Attivare la configurazione"
+
+#, fuzzy
+#~ msgid "Scrape interval"
+#~ msgstr "Intervallo di scansione"
+
+#, fuzzy
+#~ msgid "Select one site."
+#~ msgstr "Selezionare il file"
+
+#, fuzzy
+#~ msgid "Send log messages to Event Console"
+#~ msgstr "Invia gli eventi alla console eventi locale"
+
+#, fuzzy
+#~ msgid "Set at least one target."
+#~ msgstr "Seleziona almeno un elemento"
+
+#, fuzzy
+#~ msgid "Specify sites this OpenTelemetry Collector should run on. "
+#~ msgstr ""
+#~ "Specificare uno, più o tutti i siti su cui deve essere eseguita la "
+#~ "connessione."
+
+#, fuzzy
+#~ msgid "Spike limit"
+#~ msgstr "Limiti di servizio"
+
+#, fuzzy
+#~ msgid "Telemetry"
+#~ msgstr "Configurazione dello stile selezionato"
+
+#, fuzzy
+#~ msgid "The IP address or host name the receiver should listen on."
+#~ msgstr "Hostname, indirizzo IP o alias di host per cui l'evento è rilevante"
+
+#, fuzzy
+#~ msgid "The limit has to be bigger than the spike limit."
+#~ msgstr "Il cluster deve avere almeno un nodo"
+
+#, fuzzy, python-format
+#~ msgid ""
+#~ "The password ID '%s' is not usable by the OTel Collector. It must contain "
+#~ "only letters, digits and underscores."
+#~ msgstr ""
+#~ "Il nome della vista può contenere solo lettere, cifre e caratteri di "
+#~ "sottolineatura."
+
+#, fuzzy
+#~ msgid "The scrape interval must be an integer higher than 0."
+#~ msgstr "Il cluster deve avere almeno un nodo"
+
+#, fuzzy
+#~ msgid "Username should not be empty."
+#~ msgstr "Chiave segreta"
+
+#, fuzzy
+#~ msgid "You have to specify at least one scrape configuration"
+#~ msgstr "È necessario selezionare almeno un utente."
+
+#, fuzzy
+#~ msgid "You must configure at least one receiver."
+#~ msgstr "Dovete specificare almeno un elemento."
+
+#, fuzzy
+#~ msgid "is used in"
+#~ msgstr "Questo utente"
+
+#, python-format
+#~ msgid "site must be a list. Current type is: %s "
+#~ msgstr "il sito deve essere una lista. Il tipo corrente è: %s "
+
+#, fuzzy
+#~ msgid ""
+#~ "You do not have the required permissions to download monitoring agents. "
+#~ msgstr "Non hai i permessi per modificare questo %s"
 
 #, fuzzy
 #~ msgid ""

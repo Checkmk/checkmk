@@ -2519,13 +2519,6 @@ msgstr ""
 "Dit wordt momenteel alleen ondersteund op Linux en Windows agents en op "
 "apparaten die worden gemonitord via de host-resource mib"
 
-#, fuzzy, python-format
-msgid ""
-"A site is allowed to be used in exactly one OpenTelemetry collector "
-"configuration: \n"
-"%s"
-msgstr "Nieuwe gebruikersconfiguratie toevoegen"
-
 msgid "A stored SNMP walk"
 msgstr "Een opgeslagen SNMP wandeling"
 
@@ -3128,10 +3121,6 @@ msgstr "Absolute niveaus in bits of bytes per seconde"
 
 msgid "Absolute levels of active sessions"
 msgstr "Absolute niveaus van actieve sessies"
-
-#, fuzzy
-msgid "Absolute limit"
-msgstr "Absoluut"
 
 msgid "Absolute number of active connections"
 msgstr "Absoluut aantal actieve verbindingen"
@@ -3971,10 +3960,6 @@ msgid "Add OID descriptions"
 msgstr "OID-beschrijvingen toevoegen"
 
 #, fuzzy
-msgid "Add OpenTelemetry Collector configuration"
-msgstr "Nieuwe gebruikersconfiguratie toevoegen"
-
-#, fuzzy
 msgid "Add OpenTelemetry configuration"
 msgstr "Nieuwe gebruikersconfiguratie toevoegen"
 
@@ -3983,10 +3968,6 @@ msgstr "Voorvoegsel toevoegen"
 
 #, fuzzy
 msgid "Add Prometheus configuration"
-msgstr "Configuratie toestand toevoegen"
-
-#, fuzzy
-msgid "Add Prometheus scraper configuration"
 msgstr "Configuratie toestand toevoegen"
 
 #, fuzzy
@@ -4292,10 +4273,6 @@ msgid "Add new aggregation"
 msgstr "Nieuwe aggregatie toevoegen"
 
 #, fuzzy
-msgid "Add new credentials"
-msgstr "Gebruik geloofsbrieven"
-
-#, fuzzy
 msgid "Add new database"
 msgstr "Externe instantie toevoegen"
 
@@ -4368,10 +4345,6 @@ msgid "Add new rule"
 msgstr "Nieuwe regel toevoegen"
 
 #, fuzzy
-msgid "Add new scrape configuration"
-msgstr "Nieuwe gebruikersconfiguratie toevoegen"
-
-#, fuzzy
 msgid "Add new service"
 msgstr "Nieuwe dienst toevoegen"
 
@@ -4383,10 +4356,6 @@ msgid "Add new status"
 msgstr "Nieuwe status toevoegen"
 
 msgid "Add new tag"
-msgstr "Nieuwe tag toevoegen"
-
-#, fuzzy
-msgid "Add new target"
 msgstr "Nieuwe tag toevoegen"
 
 msgid "Add new time"
@@ -6088,20 +6057,6 @@ msgstr "Alle wachtrijen die hier staan, worden overgeslagen."
 
 #, fuzzy
 msgid "All related configuration of the Prometheus scraper Quick Setup."
-msgstr ""
-"Specificeer één, meerdere of alle sites waarop deze verbinding moet lopen."
-
-#, fuzzy
-msgid ""
-"All related configuration of the integrated OpenTelemetry Collector "
-"Prometheus scraping."
-msgstr ""
-"Specificeer één, meerdere of alle sites waarop deze verbinding moet lopen."
-
-#, fuzzy
-msgid ""
-"All related configuration of the integrated OpenTelemetry Collector "
-"receivers."
 msgstr ""
 "Specificeer één, meerdere of alle sites waarop deze verbinding moet lopen."
 
@@ -7896,10 +7851,6 @@ msgstr "Autorisatie-instellingen"
 
 msgid "Authorizations per DB security group"
 msgstr "Autorisaties per DB-beveiligingsgroep"
-
-#, fuzzy
-msgid "Authorized user"
-msgstr "Toegestane sites"
 
 msgid "Auto (DEFAULT)"
 msgstr "Auto (DEFAULT)"
@@ -12676,6 +12627,14 @@ msgid "Check command expanded"
 msgstr "Controleer commando uitgebreid"
 
 #, fuzzy
+msgid "Check command of the host, regex match"
+msgstr "Commando gastheercontrole uitgebreid"
+
+#, fuzzy
+msgid "Check command of the service, regex match"
+msgstr "Alternatieve weergavenaam van de dienst, regex match"
+
+#, fuzzy
 msgid "Check containers CPU utilization"
 msgstr "Controleer containers cpu gebruik"
 
@@ -12745,10 +12704,6 @@ msgstr "Controleer hosts met PING (ICMP Echo Request)"
 
 msgid "Check int."
 msgstr "Check int."
-
-#, fuzzy
-msgid "Check interval"
-msgstr "Cache-interval"
 
 #, fuzzy
 msgid "Check item"
@@ -14347,6 +14302,12 @@ msgstr "Cluster en nodes moeten dezelfde datasource hebben. "
 #, fuzzy
 msgid "Cluster behavior"
 msgstr "Cluster gedrag"
+
+msgid "Cluster collector: Container metrics cache size"
+msgstr ""
+
+msgid "Cluster collector: Machine sections cache size"
+msgstr ""
 
 msgid "Cluster health"
 msgstr "Cluster gezondheid"
@@ -17504,10 +17465,6 @@ msgid "Currently, there is one pending change not yet activated."
 msgstr ""
 "Momenteel is er één wijziging in behandeling die nog niet is geactiveerd."
 
-#, fuzzy
-msgid "Custom"
-msgstr "Klant"
-
 #, python-format
 msgid "Custom GUI design of %s"
 msgstr "Aangepast GUI ontwerp van %s"
@@ -18602,14 +18559,6 @@ msgstr "Standaard (%s)"
 #, fuzzy
 msgid "Default BI visualization settings"
 msgstr "Standaard BI-visualisatie-instellingen"
-
-#, fuzzy
-msgid "Default IPv4"
-msgstr "Standaard"
-
-#, fuzzy
-msgid "Default IPv6"
-msgstr "Standaard"
 
 #, fuzzy
 msgid "Default behavior for 'Changes'"
@@ -23015,10 +22964,6 @@ msgstr ""
 msgid "Enable Livestatus access via network (TCP)"
 msgstr "Inschakelen Livestatus toegang via netwerk (TCP)"
 
-#, fuzzy
-msgid "Enable OpenTelemetry Collector"
-msgstr "Configuratie toestand toevoegen"
-
 msgid "Enable SMTP AUTH (LOGIN)"
 msgstr "SMTP AUTH (LOGIN) inschakelen"
 
@@ -23623,19 +23568,12 @@ msgstr ""
 msgid "Enter a valid IP address or host name."
 msgstr "IP-adres van gastheer"
 
-msgid "Enter a valid port number (example: 1234)."
-msgstr ""
-
 msgid "Enter address"
 msgstr "Voer adres in"
 
 #, fuzzy
 msgid "Enter alias (optional)"
 msgstr "Externe ID (facultatief)"
-
-#, fuzzy
-msgid "Enter credentials for basic authentication."
-msgstr "Inloggegevens voor HTTP Basis Authenticatie"
 
 msgid "Enter group"
 msgstr "Voer groep in"
@@ -27369,9 +27307,6 @@ msgstr "CPU"
 msgid "GPU utilization"
 msgstr "CPU-gebruik"
 
-msgid "GRPC-based OTLP receiver"
-msgstr ""
-
 msgid "GUI design"
 msgstr "GUI-ontwerp"
 
@@ -28299,9 +28234,6 @@ msgstr "Load balancers"
 #, fuzzy
 msgid "HTTP, TCP, email, ..."
 msgstr "HTTP, TCP, E-mail, ..."
-
-msgid "HTTP-based OTLP receiver"
-msgstr ""
 
 #, fuzzy
 msgid "HTTP: Active Requests"
@@ -32081,14 +32013,6 @@ msgid "IP address or FQDN of JVM web server"
 msgstr "IP-adres of FQDN van JVM webserver"
 
 #, fuzzy
-msgid "IP address or host name"
-msgstr "IP-adres van gastheer"
-
-#, fuzzy
-msgid "IP address or host name should not be empty"
-msgstr "Geheime sleutel"
-
-#, fuzzy
 msgid "IP address or name of tunnel endpoint"
 msgstr "IP-adres of naam van tunnel-eindpunt"
 
@@ -32966,19 +32890,6 @@ msgstr ""
 "naam van dat formulier hier niet op te geven. Maar als er meerdere "
 "formulieren op die pagina staan, moet u hier wel de naam van het formulier "
 "opgeven, zodat de controle het juiste formulier-element kan identificeren."
-
-msgid ""
-"If this checkbox is activated, log messages received via OTLP are converted "
-"into syslog format and forwarded to the Event Console.<br>The Event Console "
-"is optimized for handling critical events, not for processing high-frequency "
-"log data. When forwarding OpenTelemetry logs, carefully consider:"
-"<ol><li><b>Which</b> messages are relevant<li><b>How many</b> messages you "
-"are sending<br></ol>Unfiltered or high-volume logs can degrade performance "
-"and reduce the usefulness of the Event Console. We recommend filtering and "
-"preprocessing your logs to only forward meaningful events. For more "
-"information, have a look at the <a href='https://docs.checkmk.com/latest/en/"
-"ec.html#tuning'>Event Console user guide.</a>"
-msgstr ""
 
 #, fuzzy
 msgid "If this error persists, please contact the Checkmk support team."
@@ -36786,10 +36697,6 @@ msgid "Job name"
 msgstr "Naam van de baan"
 
 #, fuzzy
-msgid "Job name should not be empty."
-msgstr "Geheime sleutel"
-
-#, fuzzy
 msgid "Job scheduler"
 msgstr "Rapportplanner"
 
@@ -38595,6 +38502,16 @@ msgstr "Grenzen en niveaus"
 msgid "Limits for the number of used states"
 msgstr "Limieten voor het aantal gebruikte staten"
 
+msgid ""
+"Limits the number of Livestatus server processes that can be active "
+"simultaneously."
+msgstr ""
+
+msgid ""
+"Limits the number of simultaneous Livestatus connections allowed from a "
+"single source IP address."
+msgstr ""
+
 msgid "Limits utilization"
 msgstr "Beperkt gebruik"
 
@@ -38847,9 +38764,6 @@ msgstr ""
 
 msgid "List of patterns to exclude"
 msgstr "Lijst van uit te sluiten patronen"
-
-msgid "List of users and passwords allowed to use this endpoint"
-msgstr ""
 
 msgid "List unpackaged files"
 msgstr "Lijst van uitgepakte bestanden"
@@ -41302,12 +41216,6 @@ msgstr "Maximale leeftijd van wachtwoorden"
 msgid "Maximum allowed age"
 msgstr "Maximaal toegestane leeftijd"
 
-msgid ""
-"Maximum allowed staleness of metrics in seconds. A metric needs to send with "
-"a frequency higher than the configured interval to be able to be aggregated "
-"into a cumulative data stream."
-msgstr ""
-
 msgid "Maximum allowed uptime"
 msgstr "Maximaal toegestane uptime"
 
@@ -41318,22 +41226,8 @@ msgstr "Maximaal toegestane gebruikers"
 msgid "Maximum allowed validity"
 msgstr "Maximaal toegestane leeftijd"
 
-msgid ""
-"Maximum amount of memory targeted to be allocated by the process heap. Note "
-"that typically the total memory usage of process will be about 50MiB higher "
-"than this value. This defines the hard limit."
-msgstr ""
-
 msgid "Maximum amount of non-operational access points"
 msgstr "Maximumaantal niet-operationele toegangspunten"
-
-#, no-python-format
-msgid ""
-"Maximum amount of total memory targeted to be allocated by the process heap. "
-"This option is used to calculate the hard memory limit from the total "
-"available memory. For instance, setting the limit to 75% on a machine with "
-"1000 MiB total memory available will result in a 750 MiB hard limit."
-msgstr ""
 
 msgid "Maximum bulk size"
 msgstr "Maximale bulkgrootte"
@@ -41445,24 +41339,6 @@ msgstr "Maximale logleeftijd"
 msgid "Maximum long output size"
 msgstr "Maximale spoelgrootte"
 
-#, no-python-format
-msgid ""
-"Maximum memory spike allowed between the measurements of memory usage. The "
-"value must be less than the limit. This option is used to calculate the "
-"maximum spike value from the total available memory. For instance, setting "
-"the limit to 60% and the spike limit to 25% on a machine with 1000 MiB total "
-"memory available will result in a 600 MiB hard limit and a 350 MiB soft "
-"limit (the spike limit being equal to 250MiB)"
-msgstr ""
-
-#, no-python-format
-msgid ""
-"Maximum memory spike allowed between the measurements of memory usage. The "
-"value must be less than the limit. This option is used to calculate the "
-"maximum spike value. The soft limit value will be equal to (limit - spike "
-"limit). The recommended value for spike limit is about 20% limit."
-msgstr ""
-
 msgid "Maximum messages per save interval"
 msgstr "Maximum berichten per bewaarinterval"
 
@@ -41511,10 +41387,6 @@ msgid "Maximum number of connections or listeners"
 msgstr "Maximum aantal verbindingen of luisteraars"
 
 #, fuzzy
-msgid "Maximum number of data streams"
-msgstr "Maximum aantal leveringspogingen"
-
-#, fuzzy
 msgid "Maximum number of database connections to open."
 msgstr "Maximum aantal verbindingen of luisteraars"
 
@@ -41539,6 +41411,10 @@ msgstr "Maximum aantal knooppunten overschreden %d/%d"
 msgid "Maximum number of open file descriptors"
 msgstr "Verwacht aantal open file descriptors"
 
+#, fuzzy
+msgid "Maximum number of parallel server instances"
+msgstr "Maximum aantal dienstonderbrekingen"
+
 msgid "Maximum number of parsed lines per log file"
 msgstr "Maximum aantal geparseerde regels per logbestand"
 
@@ -41555,14 +41431,6 @@ msgstr "Maximum aantal gereedstaande werkstations"
 msgid "Maximum number of service outages"
 msgstr "Maximum aantal dienstonderbrekingen"
 
-msgid ""
-"Maximum number of streams that can be processed concurrently. If the number "
-"of incoming data streams exceeds this limit they will be dropped. A value of "
-"0 disables the limit. Setting this limit can be useful to prevent high "
-"resource utilization of the processor when receiving data with at a high "
-"cardinality."
-msgstr ""
-
 msgid "Maximum number of threads"
 msgstr "Maximaal aantal threads"
 
@@ -41571,6 +41439,10 @@ msgid "Maximum of %s"
 msgstr "Maximum"
 
 msgid "Maximum parallel connections"
+msgstr "Maximaal aantal parallelle verbindingen"
+
+#, fuzzy
+msgid "Maximum parallel connections per source IP address"
 msgstr "Maximaal aantal parallelle verbindingen"
 
 msgid "Maximum possible value"
@@ -41645,10 +41517,6 @@ msgstr "Maximale spoelduur"
 
 msgid "Maximum spool size"
 msgstr "Maximale spoelgrootte"
-
-#, fuzzy
-msgid "Maximum staleness of data streams"
-msgstr "Maximum aantal leveringspogingen"
 
 msgid "Maximum time since last start of job execution"
 msgstr "Maximale tijd sinds de laatste start van de taakuitvoering"
@@ -42248,18 +42116,6 @@ msgstr "Metriek"
 
 msgid "Metrics of service"
 msgstr "Metriek van de dienst"
-
-#, fuzzy
-msgid "Metrics path"
-msgstr "Metriek"
-
-#, fuzzy
-msgid "Metrics path must be a string."
-msgstr "De waarde moet een string zijn"
-
-#, fuzzy
-msgid "Metrics path must start with a '/'."
-msgstr "Inloggen is niet toegestaan op deze site."
 
 #, fuzzy
 msgid "Metrics related to sizing, e.g. number of helpers, hosts, services"
@@ -44967,10 +44823,6 @@ msgstr "Niet geselecteerd"
 msgid "No empty folders for %s available to delete."
 msgstr ""
 
-#, fuzzy
-msgid "No endpoint"
-msgstr "Eindpunt"
-
 msgid "No entries"
 msgstr "Geen inzendingen"
 
@@ -47476,10 +47328,6 @@ msgstr "Eén RRD per host/service (spaart disk IO, alleen met CMC)"
 msgid "One condition needs to match (offensive)"
 msgstr "De regelvoorwaarden komen niet overeen."
 
-msgid ""
-"One host is created for each unique value of this resource attribute key."
-msgstr ""
-
 msgid "One hour"
 msgstr "Een uur"
 
@@ -47877,22 +47725,6 @@ msgstr "OpenHardwareMonitor S.M.A.R.T."
 
 msgid "OpenLDAP"
 msgstr "OpenLDAP"
-
-#, fuzzy
-msgid "OpenTelemetry Collector"
-msgstr "Configuratie toestand toevoegen"
-
-#, fuzzy
-msgid "OpenTelemetry Collector configurations"
-msgstr "Configuratie toestand toevoegen"
-
-#, fuzzy
-msgid "OpenTelemetry Collector delta-to-cumulative processor"
-msgstr "Configuratie toestand toevoegen"
-
-#, fuzzy
-msgid "OpenTelemetry Collector memory limit"
-msgstr "Configuratie toestand toevoegen"
 
 #, fuzzy
 msgid "OpenTelemetry Quick Setup"
@@ -50341,10 +50173,6 @@ msgstr "Wachtwoordbeleid voor lokale accounts"
 #, fuzzy
 msgid "Password properties"
 msgstr "Eigenschappen van het dashboard"
-
-#, fuzzy
-msgid "Password should not be empty."
-msgstr "Toegangssleutel"
 
 msgid "Password:"
 msgstr "Wachtwoord:"
@@ -52878,18 +52706,6 @@ msgstr ""
 "Prometheus Scrape Targets (omvat Prometheus Exporters) om informatie op te "
 "halen uit"
 
-#, fuzzy
-msgid "Prometheus scraper"
-msgstr "Alertmanager"
-
-#, fuzzy
-msgid "Prometheus scraper configurations"
-msgstr "Configuratie toestand toevoegen"
-
-#, fuzzy
-msgid "Prometheus targets"
-msgstr "Alertmanager"
-
 msgid "Properties"
 msgstr "Eigenschappen"
 
@@ -54063,12 +53879,6 @@ msgstr ""
 msgid "Received messages"
 msgstr "Ontvangen berichten"
 
-msgid "Receiver protocol GRPC"
-msgstr ""
-
-msgid "Receiver protocol HTTP"
-msgstr ""
-
 #, fuzzy
 msgid "Receiving traces is disabled"
 msgstr "Site is uitgeschakeld"
@@ -54629,10 +54439,6 @@ msgstr "Relatieve niveaus"
 
 msgid "Relative levels of active sessions."
 msgstr "Relatieve niveaus van actieve sessies."
-
-#, fuzzy, no-python-format
-msgid "Relative limit in %"
-msgstr "Relatieve vochtigheid"
 
 #, fuzzy
 msgid "Relative time of alert"
@@ -55810,10 +55616,6 @@ msgstr "Hulpbron Groep"
 
 msgid "Resource Name"
 msgstr "Bronnaam"
-
-#, fuzzy
-msgid "Resource attribute for host name lookup"
-msgstr "Hostname berekening"
 
 #, fuzzy
 msgid "Resource consumption of Windows processes"
@@ -57663,14 +57465,6 @@ msgstr ""
 msgid "Score"
 msgstr "Score"
 
-#, fuzzy
-msgid "Scrape configurations"
-msgstr "Configuratie activeren"
-
-#, fuzzy
-msgid "Scrape interval"
-msgstr "Scan interval"
-
 msgid "Scratch Pool"
 msgstr ""
 
@@ -58186,10 +57980,6 @@ msgstr "Selecteer type interfacepoort"
 msgid "Select metrics to send to InfluxDB"
 msgstr "Selecteer metrieken om naar InfluxDB te sturen"
 
-#, fuzzy
-msgid "Select one site."
-msgstr "Selecteer bestand"
-
 msgid ""
 "Select one user from a contact group with access to all hosts and services. "
 "This will prevent duplicate notifications, as selecting multiple users will "
@@ -58523,10 +58313,6 @@ msgstr "Gebeurtenissen verzenden naar syslog host op afstand"
 
 msgid "Send host metrics to Graphite"
 msgstr "Stuur hostgegevens naar Graphite"
-
-#, fuzzy
-msgid "Send log messages to Event Console"
-msgstr "Gebeurtenissen verzenden naar lokale gebeurtenissenconsole"
 
 msgid "Send message"
 msgstr "Bericht verzenden"
@@ -59400,10 +59186,6 @@ msgstr "Absolute niveaus instellen"
 
 msgid "Set an individual idle timeout"
 msgstr "Stel een individuele idle timeout in"
-
-#, fuzzy
-msgid "Set at least one target."
-msgstr "Selecteer ten minste één element"
 
 msgid "Set by rule pack"
 msgstr "Ingesteld per regelpakket"
@@ -61339,10 +61121,6 @@ msgid "Socket"
 msgstr "Stopcontact"
 
 #, fuzzy
-msgid "Socket address to listen on"
-msgstr "Gastadres gezinnen"
-
-#, fuzzy
 msgid "Socket detection method"
 msgstr "Rookdetectie"
 
@@ -62205,11 +61983,6 @@ msgstr "Specificeer wachtrijnamen waarop de regel van toepassing moet zijn"
 msgid "Specify roles of a control plane node"
 msgstr "De rollen van een knooppunt van het besturingsvlak specificeren"
 
-#, fuzzy
-msgid "Specify sites this OpenTelemetry Collector should run on. "
-msgstr ""
-"Specificeer één, meerdere of alle sites waarop deze verbinding moet lopen."
-
 msgid "Specify storage account names that the rule should apply to"
 msgstr ""
 "Specificeer opslagrekeningnamen waarop de regel van toepassing moet zijn"
@@ -62585,10 +62358,6 @@ msgstr "Snelheid"
 
 msgid "Speed of interface groups (Netapp only)"
 msgstr "Snelheid van interfacegroepen (alleen Netapp)"
-
-#, fuzzy
-msgid "Spike limit"
-msgstr "Dienstbeperkingen"
 
 msgid "Spin retries (id 10)"
 msgstr ""
@@ -64872,9 +64641,6 @@ msgstr "SSL-certificaat validatie"
 msgid "TLS certificate verification"
 msgstr "SSL-certificaat verificatie"
 
-msgid "TLS encryption must be enabled when using basic authentication."
-msgstr ""
-
 #, fuzzy
 msgid "TLS processed bytes"
 msgstr "TLS Verwerkte bytes"
@@ -65263,10 +65029,6 @@ msgstr "Aantal mislukte paden"
 #, fuzzy
 msgid "Tel2IP number of no answer SIP/H323 calls"
 msgstr "Aantal mislukte paden"
-
-#, fuzzy
-msgid "Telemetry"
-msgstr "Configuratie toestand toevoegen"
 
 #, fuzzy
 msgid ""
@@ -65950,11 +65712,6 @@ msgid ""
 "for standard operations."
 msgstr ""
 
-msgid ""
-"The HTTP resource path on which to fetch metrics from targets. Must start "
-"with a '/'."
-msgstr ""
-
 #, fuzzy, python-format
 msgid "The ID %s is already used by another connection."
 msgstr "Deze id wordt al door een andere verbinding gebruikt."
@@ -66070,10 +65827,6 @@ msgstr ""
 "titel, maar slechts één per view naam. Als je een view maakt die dezelfde "
 "view naam heeft als een ingebouwde view, dan zal jouw view deze "
 "overschrijven (shadowing)."
-
-#, fuzzy
-msgid "The IP address or host name the receiver should listen on."
-msgstr "Hostnaam, IP-adres of host alias waarvoor de gebeurtenis relevant is"
 
 msgid "The Index of the Overcurrent Protector"
 msgstr "De Index van de Overstroom Beveiliger"
@@ -67366,16 +67119,6 @@ msgid ""
 msgstr ""
 
 msgid ""
-"The delta-to-cumulative processor converts timezones into cumulative "
-"aggregation temporality. This is necessary for compatibility reasons with "
-"the Checkmk metric backend, which only supports cumulative metrics. If your "
-"Collector receives metrics in delta aggregation temporality, you can "
-"configure this processor to be able to use these metrics in Checkmk. If your "
-"Collector only receives cumulative metrics or if you are unsure about the "
-"aggregation temporality of your metrics, you can safely ignore this."
-msgstr ""
-
-msgid ""
 "The description is optional and can be used for explanations or documentation"
 msgstr ""
 "De beschrijving is facultatief en kan worden gebruikt voor uitleg of "
@@ -68248,10 +67991,6 @@ msgid "The limit for the transport lag in <tt>v$dataguard_stats</tt>"
 msgstr "De limiet voor de transportvertraging in <tt>v$dataguard_stats</tt>"
 
 #, fuzzy
-msgid "The limit has to be bigger than the spike limit."
-msgstr "Het cluster moet ten minste één knooppunt hebben"
-
-#, fuzzy
 msgid "The log file"
 msgstr "Dit logbestand"
 
@@ -68405,8 +68144,7 @@ msgstr "{actual} is te laag. De minimaal toegestane waarde is {bound}."
 msgid ""
 "The maximum amount of memory that the metric backend is allowed to use, "
 "expressed as a fraction of the total available memory. Allows limiting the "
-"memory usage on low-memory systems. On hosts with low RAM and swap, you may "
-"want to set it to values larger than 100%."
+"memory usage on low-memory systems."
 msgstr ""
 
 #, fuzzy
@@ -68491,14 +68229,6 @@ msgid ""
 msgstr ""
 "De geheugenniveaus voor een specifieke module van deze host. Dit is relevant "
 "voor hosts die verschillende geheugengebieden hebben, b.v. pluggable kaarten"
-
-msgid ""
-"The memory limiter processor is used to prevent out of memory situations on "
-"the Collector. The amount and type of data the Collector processes is "
-"environment-specific. The resource utilization of the Collector is also "
-"dependent on the configured processors. So, in consequence, it is important "
-"to put checks in place regarding memory usage."
-msgstr ""
 
 #, no-python-format
 msgid ""
@@ -69072,13 +68802,6 @@ msgstr ""
 "van je gemonitorde hosts, dan zal die host worden gebruikt als de parent van "
 "de host. Als zo'n host niet bestaat, zal een kunstmatige ping-only gateway "
 "host worden aangemaakt als je deze functie niet hebt uitgeschakeld."
-
-#, fuzzy, python-format
-msgid ""
-"The password ID '%s' is not usable by the OTel Collector. It must contain "
-"only letters, digits and underscores."
-msgstr ""
-"De naam van de view mag alleen letters, cijfers en underscores bevatten."
 
 #, fuzzy
 msgid "The password cannot be changed (it is locked by the user connector)."
@@ -69715,10 +69438,6 @@ msgstr "Het schema dat u probeert te verwijderen bestaat niet."
 
 msgid "The schedule you are trying to edit does not exist."
 msgstr "De agenda die u probeert te bewerken bestaat niet."
-
-#, fuzzy
-msgid "The scrape interval must be an integer higher than 0."
-msgstr "Het cluster moet ten minste één knooppunt hebben"
 
 msgid "The secret access key for your AWS account"
 msgstr "De geheime toegangssleutel voor uw AWS account"
@@ -75734,13 +75453,6 @@ msgstr "Seconden voordat verbinding verbroken wordt"
 msgid "Time before the expiration date of the certificate"
 msgstr "De tijd sinds de laatste controle van de dienst"
 
-msgid ""
-"Time between measurements of memory usage. The recommended value is 1 "
-"second. If the expected traffic to the Collector is very spiky then decrease "
-"the check interval or increase spike limit to avoid memory usage going over "
-"the hard limit."
-msgstr ""
-
 #, fuzzy
 msgid "Time between new checks of type Check_MK"
 msgstr "Tijd tussen nieuwe controles van het type Checkmk"
@@ -81505,8 +81217,16 @@ msgstr "Bovengrens voor Point-to-site bandbreedte in bytes per seconde"
 msgid "Upper levels on Site-to-site bandwidth in bytes per second"
 msgstr "Bovenste niveaus op Site-to-site bandbreedte in bytes per seconde"
 
+#, fuzzy
+msgid "Upper levels on container metrics cache size"
+msgstr "Bovenste niveaus voor totale namespace grootte"
+
 msgid "Upper levels on daily costs"
 msgstr "Hogere niveaus op dagelijkse kosten"
+
+#, fuzzy
+msgid "Upper levels on machine sections cache size"
+msgstr "Bovenste niveaus voor verbindingen in gebruik"
 
 msgid "Upper levels on number of Point-to-site connections"
 msgstr "Bovenste niveaus op aantal Point-to-site verbindingen"
@@ -82192,6 +81912,11 @@ msgstr "Gebruik de volgende ID"
 
 msgid "Use the following color"
 msgstr "Gebruik de volgende kleur"
+
+msgid ""
+"Use the following command to download an agent package in basic "
+"configuration:"
+msgstr ""
 
 msgid "Use the following credentials"
 msgstr "Gebruik de volgende inloggegevens"
@@ -82901,10 +82626,6 @@ msgstr "Gebruikersnaam is onbekend"
 msgid "Username on the storage system. Read-only permissions are sufficient."
 msgstr ""
 "Gebruikersnaam op het opslagsysteem. Alleen-lezen permissies zijn voldoende."
-
-#, fuzzy
-msgid "Username should not be empty."
-msgstr "Geheime sleutel"
 
 msgid "Username:"
 msgstr "Gebruikersnaam:"
@@ -88359,6 +88080,14 @@ msgstr ""
 "Een host met de naam <b><tt>%s</tt></b> bestaat al in de map <a "
 "href=\"%s\">%s</a>."
 
+msgid ""
+"You do not have the permissions required to download an agent package from "
+"the Agent Bakery. Ask your Checkmk administrator to grant you the required "
+"permissions. Alternatively, you can use the following command to download an "
+"agent package in basic configuration. Note that this package might lack "
+"desired plug-ins. You have to install them manually."
+msgstr ""
+
 msgid "You do not have the permissions to design this graph."
 msgstr "U hebt niet de rechten om deze grafiek te ontwerpen."
 
@@ -88566,10 +88295,6 @@ msgstr "U moet ten minste één gebruiker selecteren."
 msgid "You have to specify a connector to migrate to."
 msgstr "U moet een connector opgeven waarnaar u wilt migreren."
 
-#, fuzzy
-msgid "You have to specify at least one scrape configuration"
-msgstr "U moet ten minste één gebruiker selecteren."
-
 msgid "You have used an invalid character"
 msgstr "U hebt een ongeldig teken gebruikt"
 
@@ -88686,18 +88411,9 @@ msgstr ""
 msgid "You might want to add some helpful description for the attribute."
 msgstr "Je zou een nuttige beschrijving van het attribuut kunnen toevoegen."
 
-#, fuzzy
-msgid "You must configure at least one receiver."
-msgstr "U moet ten minste één element opgeven."
-
 #, python-format
 msgid "You must not provide more than %d characters."
 msgstr "U mag niet meer dan %d tekens opgeven."
-
-msgid ""
-"You must set a resource attribute (e.g., service.name) so the system can "
-"determine the host name."
-msgstr ""
 
 msgid ""
 "You must specify a name for your Kubernetes cluster. The provided name will "
@@ -90317,10 +90033,6 @@ msgstr "is niet een van regex"
 msgid "is required"
 msgstr "is vereist"
 
-#, fuzzy
-msgid "is used in"
-msgstr "Deze gebruiker"
-
 msgid "jitter"
 msgstr "jitter"
 
@@ -91143,10 +90855,6 @@ msgid "site"
 msgid_plural "sites"
 msgstr[0] "website"
 msgstr[1] "website"
-
-#, fuzzy, python-format
-msgid "site must be a list. Current type is: %s "
-msgstr "Het type moet lijst zijn, maar is %s"
 
 msgid "slots"
 msgstr "slots"
@@ -92781,6 +92489,10 @@ msgid "Specific host"
 msgstr "Specifieke sites"
 
 #, fuzzy
+msgid "Custom"
+msgstr "Klant"
+
+#, fuzzy
 msgid "Select at least one scope."
 msgstr "Selecteer ten minste één element"
 
@@ -93965,11 +93677,6 @@ msgid "Install the agent"
 msgstr "Geïnstalleerde agent"
 
 #, fuzzy
-msgid ""
-"You do not have the required permissions to download monitoring agents. "
-msgstr "U heeft niet de rechten om deze %s te bewerken"
-
-#, fuzzy
 msgid "Next step: Register agent"
 msgstr "Ontvanger"
 
@@ -94526,9 +94233,21 @@ msgstr "Nieuw wachtwoord"
 msgid "No passwords available"
 msgstr "Beschikbare poorten"
 
+msgid "TLS encryption must be enabled when using basic authentication."
+msgstr ""
+
+msgid ""
+"You must set a resource attribute (e.g., service.name) so the system can "
+"determine the host name."
+msgstr ""
+
 #, fuzzy
 msgid "Send log messages to event console"
 msgstr "Gebeurtenissen verzenden naar lokale gebeurtenissenconsole"
+
+#, fuzzy
+msgid "Resource attribute for host name lookup"
+msgstr "Hostname berekening"
 
 msgid "Default IPv4 (0.0.0.0:${props.defaultPort})"
 msgstr ""
@@ -94538,6 +94257,14 @@ msgstr ""
 
 msgid "Port must differ from the other protocol endpoint."
 msgstr ""
+
+#, fuzzy
+msgid "Socket address to listen on"
+msgstr "Gastadres gezinnen"
+
+#, fuzzy
+msgid "IP address or host name"
+msgstr "IP-adres van gastheer"
 
 #, fuzzy
 msgid "Configuration details:"
@@ -94596,6 +94323,10 @@ msgid ""
 "OpenTelemetry instrumentation can be set up in two ways, depending on your "
 "environment:"
 msgstr ""
+
+#, fuzzy
+msgid "OpenTelemetry Collector"
+msgstr "Configuratie toestand toevoegen"
 
 msgid ""
 "A vendor-agnostic proxy service that receives, processes, and forwards "
@@ -94685,6 +94416,19 @@ msgstr ""
 #, fuzzy
 msgid "Metrics path is required but not specified."
 msgstr "JSON inloggegevens voor dienstaccount"
+
+#, fuzzy
+msgid "Metrics path must start with a '/'."
+msgstr "Inloggen is niet toegestaan op deze site."
+
+msgid ""
+"The HTTP resource path on which to fetch metrics from targets. Must start "
+"with a '/'."
+msgstr ""
+
+#, fuzzy
+msgid "Metrics path"
+msgstr "Metriek"
 
 msgid ""
 "The IP address or host name the OpenTelemetry Collector should listen on. To "
@@ -95880,6 +95624,209 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy, python-format
+#~ msgid ""
+#~ "A site is allowed to be used in exactly one OpenTelemetry collector "
+#~ "configuration: \n"
+#~ "%s"
+#~ msgstr "Nieuwe gebruikersconfiguratie toevoegen"
+
+#, fuzzy
+#~ msgid "Absolute limit"
+#~ msgstr "Absoluut"
+
+#, fuzzy
+#~ msgid "Add OpenTelemetry Collector configuration"
+#~ msgstr "Nieuwe gebruikersconfiguratie toevoegen"
+
+#, fuzzy
+#~ msgid "Add Prometheus scraper configuration"
+#~ msgstr "Configuratie toestand toevoegen"
+
+#, fuzzy
+#~ msgid "Add new credentials"
+#~ msgstr "Gebruik geloofsbrieven"
+
+#, fuzzy
+#~ msgid "Add new scrape configuration"
+#~ msgstr "Nieuwe gebruikersconfiguratie toevoegen"
+
+#, fuzzy
+#~ msgid "Add new target"
+#~ msgstr "Nieuwe tag toevoegen"
+
+#, fuzzy
+#~ msgid ""
+#~ "All related configuration of the integrated OpenTelemetry Collector "
+#~ "Prometheus scraping."
+#~ msgstr ""
+#~ "Specificeer één, meerdere of alle sites waarop deze verbinding moet lopen."
+
+#, fuzzy
+#~ msgid ""
+#~ "All related configuration of the integrated OpenTelemetry Collector "
+#~ "receivers."
+#~ msgstr ""
+#~ "Specificeer één, meerdere of alle sites waarop deze verbinding moet lopen."
+
+#, fuzzy
+#~ msgid "Authorized user"
+#~ msgstr "Toegestane sites"
+
+#, fuzzy
+#~ msgid "Check interval"
+#~ msgstr "Cache-interval"
+
+#, fuzzy
+#~ msgid "Default IPv4"
+#~ msgstr "Standaard"
+
+#, fuzzy
+#~ msgid "Default IPv6"
+#~ msgstr "Standaard"
+
+#, fuzzy
+#~ msgid "Enable OpenTelemetry Collector"
+#~ msgstr "Configuratie toestand toevoegen"
+
+#, fuzzy
+#~ msgid "Enter credentials for basic authentication."
+#~ msgstr "Inloggegevens voor HTTP Basis Authenticatie"
+
+#, fuzzy
+#~ msgid "IP address or host name should not be empty"
+#~ msgstr "Geheime sleutel"
+
+#, fuzzy
+#~ msgid "Job name should not be empty."
+#~ msgstr "Geheime sleutel"
+
+#, fuzzy
+#~ msgid "Maximum number of data streams"
+#~ msgstr "Maximum aantal leveringspogingen"
+
+#, fuzzy
+#~ msgid "Maximum staleness of data streams"
+#~ msgstr "Maximum aantal leveringspogingen"
+
+#, fuzzy
+#~ msgid "Metrics path must be a string."
+#~ msgstr "De waarde moet een string zijn"
+
+#, fuzzy
+#~ msgid "No endpoint"
+#~ msgstr "Eindpunt"
+
+#, fuzzy
+#~ msgid "OpenTelemetry Collector configurations"
+#~ msgstr "Configuratie toestand toevoegen"
+
+#, fuzzy
+#~ msgid "OpenTelemetry Collector delta-to-cumulative processor"
+#~ msgstr "Configuratie toestand toevoegen"
+
+#, fuzzy
+#~ msgid "OpenTelemetry Collector memory limit"
+#~ msgstr "Configuratie toestand toevoegen"
+
+#, fuzzy
+#~ msgid "Password should not be empty."
+#~ msgstr "Toegangssleutel"
+
+#, fuzzy
+#~ msgid "Prometheus scraper"
+#~ msgstr "Alertmanager"
+
+#, fuzzy
+#~ msgid "Prometheus scraper configurations"
+#~ msgstr "Configuratie toestand toevoegen"
+
+#, fuzzy
+#~ msgid "Prometheus targets"
+#~ msgstr "Alertmanager"
+
+#, fuzzy, no-python-format
+#~ msgid "Relative limit in %"
+#~ msgstr "Relatieve vochtigheid"
+
+#, fuzzy
+#~ msgid "Scrape configurations"
+#~ msgstr "Configuratie activeren"
+
+#, fuzzy
+#~ msgid "Scrape interval"
+#~ msgstr "Scan interval"
+
+#, fuzzy
+#~ msgid "Select one site."
+#~ msgstr "Selecteer bestand"
+
+#, fuzzy
+#~ msgid "Send log messages to Event Console"
+#~ msgstr "Gebeurtenissen verzenden naar lokale gebeurtenissenconsole"
+
+#, fuzzy
+#~ msgid "Set at least one target."
+#~ msgstr "Selecteer ten minste één element"
+
+#, fuzzy
+#~ msgid "Specify sites this OpenTelemetry Collector should run on. "
+#~ msgstr ""
+#~ "Specificeer één, meerdere of alle sites waarop deze verbinding moet lopen."
+
+#, fuzzy
+#~ msgid "Spike limit"
+#~ msgstr "Dienstbeperkingen"
+
+#, fuzzy
+#~ msgid "Telemetry"
+#~ msgstr "Configuratie toestand toevoegen"
+
+#, fuzzy
+#~ msgid "The IP address or host name the receiver should listen on."
+#~ msgstr ""
+#~ "Hostnaam, IP-adres of host alias waarvoor de gebeurtenis relevant is"
+
+#, fuzzy
+#~ msgid "The limit has to be bigger than the spike limit."
+#~ msgstr "Het cluster moet ten minste één knooppunt hebben"
+
+#, fuzzy, python-format
+#~ msgid ""
+#~ "The password ID '%s' is not usable by the OTel Collector. It must contain "
+#~ "only letters, digits and underscores."
+#~ msgstr ""
+#~ "De naam van de view mag alleen letters, cijfers en underscores bevatten."
+
+#, fuzzy
+#~ msgid "The scrape interval must be an integer higher than 0."
+#~ msgstr "Het cluster moet ten minste één knooppunt hebben"
+
+#, fuzzy
+#~ msgid "Username should not be empty."
+#~ msgstr "Geheime sleutel"
+
+#, fuzzy
+#~ msgid "You have to specify at least one scrape configuration"
+#~ msgstr "U moet ten minste één gebruiker selecteren."
+
+#, fuzzy
+#~ msgid "You must configure at least one receiver."
+#~ msgstr "U moet ten minste één element opgeven."
+
+#, fuzzy
+#~ msgid "is used in"
+#~ msgstr "Deze gebruiker"
+
+#, fuzzy, python-format
+#~ msgid "site must be a list. Current type is: %s "
+#~ msgstr "Het type moet lijst zijn, maar is %s"
+
+#, fuzzy
+#~ msgid ""
+#~ "You do not have the required permissions to download monitoring agents. "
+#~ msgstr "U heeft niet de rechten om deze %s te bewerken"
 
 #, fuzzy
 #~ msgid ""

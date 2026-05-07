@@ -7,8 +7,8 @@ from pathlib import Path
 
 import pytest
 
-from cmk.bakery.v1 import OS, Plugin
-from cmk.base.plugins.bakery.symantec_av import get_symantec_av_files
+from cmk.bakery.v2_unstable import OS, Plugin
+from cmk.plugins.symantec.bakery.symantec_av import bakery_plugin_symantec_av
 
 
 @pytest.mark.parametrize(
@@ -20,7 +20,7 @@ from cmk.base.plugins.bakery.symantec_av import get_symantec_av_files
         ),
         (
             {"deployment": ("cached", 3600.0)},
-            [Plugin(base_os=OS.LINUX, source=Path("symantec_av"), interval=3600)],
+            [Plugin(base_os=OS.LINUX, source=Path("symantec_av"), interval=3600.0)],
         ),
         (
             {"deployment": ("do_not_deploy", None)},
@@ -32,5 +32,6 @@ def test_symantec_av_files(
     conf: dict[str, object],
     expected_files: list[Plugin],
 ) -> None:
-    result = list(get_symantec_av_files(conf))
+    parsed = bakery_plugin_symantec_av.parameter_parser(conf)
+    result = list(bakery_plugin_symantec_av.files_function(parsed))
     assert result == expected_files

@@ -8,7 +8,7 @@ from collections.abc import Mapping, Sequence
 import pytest
 
 from cmk.agent_based.v2 import CheckResult, Result, Service, State, StringTable
-from cmk.plugins.collection.agent_based.wut_webio import (
+from cmk.plugins.wut.agent_based.wut_webio import (
     AS_DISCOVERED,
     check_wut_webio,
     DEFAULT_STATE_EVALUATION,

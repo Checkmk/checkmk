@@ -328,7 +328,7 @@ void test_package(Map args) {
         sh("""
             PACKAGE_PATH=${args.package_path} \
             PYTEST_ADDOPTS='${pytest_addopts}' \
-            make -C '${args.source_dir}/tests' VERSION=${args.cmk_version} test-packaging
+            make -C '${args.source_dir}/tests' test-packaging
         """);
     } finally {
         step([

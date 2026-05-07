@@ -30,21 +30,10 @@ py_test(
     visibility = ["//visibility:private"],
     deps = [
         ":__test__",
-        "//tests/unit:conftest",
         "//tests/testlib/common:empty_config",
         "//tests/testlib/common:utils",
         "//tests/testlib/unit",
-        # -----------------------------------------
-        # TODO: some base tests rely on plugins
-        # being discoverable.
-        # As long as these tests are not cleaned
-        # up (== work with dedicated plugins)
-        # we need to add the required plugins here.
-        "//cmk/plugins",
-        "//cmk/legacy_checks",
-        "//packages/cmk-plugins:graylog",
-        "//packages/cmk-logwatch:plugins",
-        # -----------------------------------------
+        "//tests/unit:conftest",
         requirement("pytest-mock"),
         requirement("pytest-asyncio"),
         requirement("pytest-random-order"),

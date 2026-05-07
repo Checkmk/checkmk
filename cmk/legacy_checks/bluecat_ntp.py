@@ -3,60 +3,77 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
+from collections.abc import Mapping
+from typing import Any
+
+from cmk.agent_based.v2 import (
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Result,
+    Service,
+    SimpleSNMPSection,
+    SNMPTree,
+    startswith,
+    State,
+    StringTable,
+)
+
+_OPER_STATE_MAP = {
+    1: "running normally",
+    2: "not running",
+    3: "currently starting",
+    4: "currently stopping",
+    5: "fault",
+}
+
+_SYS_LEAP_STATE_MAP = {
+    0: "no Warning",
+    1: "add second",
+    10: "subtract second",
+    11: "Alarm",
+}
 
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import SNMPTree, startswith, StringTable
-
-check_info = {}
+def parse_bluecat_ntp(string_table: StringTable) -> StringTable | None:
+    return string_table or None
 
 
-def discover_bluecat_ntp(info):
-    if len(info) > 0 and info[0][0] != "NULL":
-        return [(None, None)]
-    return []
+def discover_bluecat_ntp(section: StringTable) -> DiscoveryResult:
+    if section[0][0] != "NULL":
+        yield Service()
 
 
-def check_bluecat_ntp(item, params, info):
-    oper_state, sys_leap, stratum = map(int, info[0])
-    oper_states = {
-        1: "running normally",
-        2: "not running",
-        3: "currently starting",
-        4: "currently stopping",
-        5: "fault",
-    }
+def check_bluecat_ntp(
+    params: Mapping[str, Any],
+    section: StringTable,
+) -> CheckResult:
+    oper_state, sys_leap, stratum = map(int, section[0])
 
-    state = 0
+    state = State.OK
     if oper_state in params["oper_states"]["warning"]:
-        state = 1
+        state = State.WARN
     elif oper_state in params["oper_states"]["critical"]:
-        state = 2
-    yield state, "Process is %s" % oper_states[oper_state]
+        state = State.CRIT
+    yield Result(state=state, summary=f"Process is {_OPER_STATE_MAP[oper_state]}")
 
-    sys_leap_states = {0: "no Warning", 1: "add second", 10: "subtract second", 11: "Alarm"}
-    state = 0
+    state = State.OK
     if sys_leap == 11:
-        state = 2
+        state = State.CRIT
     elif sys_leap in [1, 10]:
-        state = 1
-    yield state, "Sys Leap: %s" % sys_leap_states[sys_leap]
+        state = State.WARN
+    yield Result(state=state, summary=f"Sys Leap: {_SYS_LEAP_STATE_MAP[sys_leap]}")
 
     warn, crit = params["stratum"]
-    state = 0
+    state = State.OK
     if stratum >= crit:
-        state = 2
+        state = State.CRIT
     elif stratum >= warn:
-        state = 1
-    yield state, "Stratum: %s" % stratum
+        state = State.WARN
+    yield Result(state=state, summary=f"Stratum: {stratum}")
 
 
-def parse_bluecat_ntp(string_table: StringTable) -> StringTable:
-    return string_table
-
-
-check_info["bluecat_ntp"] = LegacyCheckDefinition(
+snmp_section_bluecat_ntp = SimpleSNMPSection(
     name="bluecat_ntp",
     parse_function=parse_bluecat_ntp,
     detect=startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.13315"),
@@ -64,6 +81,10 @@ check_info["bluecat_ntp"] = LegacyCheckDefinition(
         base=".1.3.6.1.4.1.13315.3.1.4.2",
         oids=["1.1", "2.1", "2.2"],
     ),
+)
+
+check_plugin_bluecat_ntp = CheckPlugin(
+    name="bluecat_ntp",
     service_name="NTP",
     discovery_function=discover_bluecat_ntp,
     check_function=check_bluecat_ntp,

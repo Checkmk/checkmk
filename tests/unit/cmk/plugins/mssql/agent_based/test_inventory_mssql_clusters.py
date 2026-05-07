@@ -7,7 +7,7 @@
 import pytest
 
 from cmk.agent_based.v2 import InventoryResult, StringTable, TableRow
-from cmk.plugins.collection.agent_based.inventory_mssql_clusters import (
+from cmk.plugins.mssql.agent_based.inventory_mssql_clusters import (
     inventorize_mssql_clusters,
     parse_mssql_clusters,
 )

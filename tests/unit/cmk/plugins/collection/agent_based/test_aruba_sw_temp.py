@@ -218,7 +218,6 @@ def test_discover_aruba_sw_temp_status(
 
 
 @pytest.mark.usefixtures("initialised_item_state")
-@pytest.mark.xfail(strict=True, reason="Crash group 4706: KeyError on unmodeled SensorStatus")
 @pytest.mark.parametrize(
     "status, expected_state",
     [

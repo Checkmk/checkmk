@@ -12671,6 +12671,14 @@ msgid "Check command expanded"
 msgstr "チェックコマンドが展開されました"
 
 #, fuzzy
+msgid "Check command of the host, regex match"
+msgstr "ホストチェックコマンド(完全一致)"
+
+#, fuzzy
+msgid "Check command of the service, regex match"
+msgstr "サービスの代替表示名、正規表現との一致"
+
+#, fuzzy
 msgid "Check containers CPU utilization"
 msgstr "コンテナのCPU使用率を確認する"
 
@@ -68146,8 +68154,7 @@ msgstr "最大許容値は %sです。"
 msgid ""
 "The maximum amount of memory that the metric backend is allowed to use, "
 "expressed as a fraction of the total available memory. Allows limiting the "
-"memory usage on low-memory systems. On hosts with low RAM and swap, you may "
-"want to set it to values larger than 100%."
+"memory usage on low-memory systems."
 msgstr ""
 
 #, fuzzy
@@ -81703,6 +81710,11 @@ msgstr "次のIDを使用してください"
 msgid "Use the following color"
 msgstr "次の色を使用する"
 
+msgid ""
+"Use the following command to download an agent package in basic "
+"configuration:"
+msgstr ""
+
 msgid "Use the following credentials"
 msgstr "次の資格情報を使用します"
 
@@ -85498,6 +85510,14 @@ msgstr "Windowsプリンター構成"
 msgid "Windows Printer Queues and States"
 msgstr "Windowsプリンターのキューと状態"
 
+#, fuzzy
+msgid "Windows Server 2022"
+msgstr "Windowsサービス"
+
+#, fuzzy
+msgid "Windows Server 2025"
+msgstr "Windowsサービス"
+
 msgid "Windows Service Summary"
 msgstr "Windowsサービスの概要"
 
@@ -87575,6 +87595,14 @@ msgid ""
 msgstr ""
 "フォルダ%sに新しいホストを作成する権限がありません。別のフォルダを選択してく"
 "ださい。"
+
+msgid ""
+"You do not have the permissions required to download an agent package from "
+"the Agent Bakery. Ask your Checkmk administrator to grant you the required "
+"permissions. Alternatively, you can use the following command to download an "
+"agent package in basic configuration. Note that this package might lack "
+"desired plug-ins. You have to install them manually."
+msgstr ""
 
 msgid "You do not have the permissions to design this graph."
 msgstr "このグラフを設計する権限がありません。"
@@ -93122,11 +93150,6 @@ msgid "Install agent"
 msgstr "インストールされたエージェント"
 
 #, fuzzy
-msgid ""
-"You do not have the required permissions to download monitoring agents. "
-msgstr "この %sを編集する権限がありません"
-
-#, fuzzy
 msgid "Next step: Register agent"
 msgstr "次のステップ：受信者"
 
@@ -93913,6 +93936,24 @@ msgstr "Prometheus スクレイプ構成"
 msgid "Could not create the Prometheus scraper configuration"
 msgstr "この構成を適用しないでください"
 
+msgid ""
+"Insecure connection detected (HTTP). For better security, we recommend "
+"switching this Checkmk site to HTTPS."
+msgstr ""
+
+#, fuzzy
+msgid "Download the MSI installer"
+msgstr "snmpwalkをダウンロードする"
+
+msgid ""
+"Run the PowerShell command below on the Windows machine on which the Relay "
+"will be running "
+msgstr ""
+
+#, fuzzy
+msgid "Download relay MSI installer command"
+msgstr "ダウンロードしたエージェント"
+
 msgid "Run the installation script"
 msgstr ""
 
@@ -93951,6 +93992,17 @@ msgid "Download relay install script command"
 msgstr ""
 
 #, fuzzy
+msgid "Install WSL2"
+msgstr "インストール日"
+
+msgid "The Relay on Windows runs inside WSL2 (Windows Subsystem for Linux 2). "
+msgstr ""
+
+msgid ""
+"A system reboot may be required after installing WSL2 before proceeding."
+msgstr ""
+
+#, fuzzy
 msgid "A relay alias is required"
 msgstr "正規表現が必要"
 
@@ -93970,6 +94022,19 @@ msgid ""
 "This alias will be used to identify your Relay. It will automatically be "
 "inserted into the command shown in the next steps."
 msgstr ""
+
+#, fuzzy
+msgid "Run the MSI installer"
+msgstr "インストールされていない"
+
+msgid ""
+"On the Windows machine on which the Relay will be running, run the command "
+"below in an "
+msgstr ""
+
+#, fuzzy
+msgid "Note that the installation requires administrator privileges."
+msgstr "エージェント登録リクエストは処理なし"
 
 #, fuzzy
 msgid "Registration results"
@@ -94922,6 +94987,11 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid ""
+#~ "You do not have the required permissions to download monitoring agents. "
+#~ msgstr "この %sを編集する権限がありません"
 
 #, fuzzy
 #~ msgid "Specify at least one resource to cache."

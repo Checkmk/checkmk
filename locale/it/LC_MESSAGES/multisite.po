@@ -13183,6 +13183,14 @@ msgid "Check command expanded"
 msgstr "Controllare il comando espanso"
 
 #, fuzzy
+msgid "Check command of the host, regex match"
+msgstr "Comando di controllo host espanso"
+
+#, fuzzy
+msgid "Check command of the service, regex match"
+msgstr "Nome alternativo del servizio, corrispondenza regex"
+
+#, fuzzy
 msgid "Check containers CPU utilization"
 msgstr "Controllare l'utilizzo della cpu dei contenitori"
 
@@ -71603,8 +71611,7 @@ msgstr "Il valore massimo consentito è %s."
 msgid ""
 "The maximum amount of memory that the metric backend is allowed to use, "
 "expressed as a fraction of the total available memory. Allows limiting the "
-"memory usage on low-memory systems. On hosts with low RAM and swap, you may "
-"want to set it to values larger than 100%."
+"memory usage on low-memory systems."
 msgstr ""
 
 #, fuzzy
@@ -86117,6 +86124,11 @@ msgstr "Usa il seguente ID"
 msgid "Use the following color"
 msgstr "Usa il seguente colore"
 
+msgid ""
+"Use the following command to download an agent package in basic "
+"configuration:"
+msgstr ""
+
 msgid "Use the following credentials"
 msgstr "Usa le seguenti credenziali"
 
@@ -90226,6 +90238,14 @@ msgstr "Configurazione della stampante di Windows"
 msgid "Windows Printer Queues and States"
 msgstr "Code e stati delle stampanti di Windows"
 
+#, fuzzy
+msgid "Windows Server 2022"
+msgstr "Servizi di Windows"
+
+#, fuzzy
+msgid "Windows Server 2025"
+msgstr "Servizi di Windows"
+
 msgid "Windows Service Summary"
 msgstr "Riassunto del servizio di Windows"
 
@@ -92422,6 +92442,14 @@ msgid ""
 "You do not have permission to create a new host in the folder %s. Please "
 "choose a different folder."
 msgstr "Non hai i permessi per modificare il modello di previsione."
+
+msgid ""
+"You do not have the permissions required to download an agent package from "
+"the Agent Bakery. Ask your Checkmk administrator to grant you the required "
+"permissions. Alternatively, you can use the following command to download an "
+"agent package in basic configuration. Note that this package might lack "
+"desired plug-ins. You have to install them manually."
+msgstr ""
 
 msgid "You do not have the permissions to design this graph."
 msgstr "Non hai i permessi per disegnare questo grafico."
@@ -98096,11 +98124,6 @@ msgid "Install agent"
 msgstr "Agente installato"
 
 #, fuzzy
-msgid ""
-"You do not have the required permissions to download monitoring agents. "
-msgstr "Non hai i permessi per modificare questo %s"
-
-#, fuzzy
 msgid "Next step: Register agent"
 msgstr "Destinatario"
 
@@ -98885,6 +98908,24 @@ msgstr "Configurazione dello stile selezionato"
 msgid "Could not create the Prometheus scraper configuration"
 msgstr "Cancellare questa connessione"
 
+msgid ""
+"Insecure connection detected (HTTP). For better security, we recommend "
+"switching this Checkmk site to HTTPS."
+msgstr ""
+
+#, fuzzy
+msgid "Download the MSI installer"
+msgstr "Scaricare la passeggiata snmp"
+
+msgid ""
+"Run the PowerShell command below on the Windows machine on which the Relay "
+"will be running "
+msgstr ""
+
+#, fuzzy
+msgid "Download relay MSI installer command"
+msgstr "Agente scaricato"
+
 msgid "Run the installation script"
 msgstr ""
 
@@ -98923,6 +98964,17 @@ msgid "Download relay install script command"
 msgstr ""
 
 #, fuzzy
+msgid "Install WSL2"
+msgstr "Data di installazione"
+
+msgid "The Relay on Windows runs inside WSL2 (Windows Subsystem for Linux 2). "
+msgstr ""
+
+msgid ""
+"A system reboot may be required after installing WSL2 before proceeding."
+msgstr ""
+
+#, fuzzy
 msgid "A relay alias is required"
 msgstr "Espressione regolare richiesta"
 
@@ -98942,6 +98994,19 @@ msgid ""
 "This alias will be used to identify your Relay. It will automatically be "
 "inserted into the command shown in the next steps."
 msgstr ""
+
+#, fuzzy
+msgid "Run the MSI installer"
+msgstr "non installato"
+
+msgid ""
+"On the Windows machine on which the Relay will be running, run the command "
+"below in an "
+msgstr ""
+
+#, fuzzy
+msgid "Note that the installation requires administrator privileges."
+msgstr "Nessuna richiesta di registrazione di agenti elaborata"
 
 #, fuzzy
 msgid "Registration results"
@@ -99882,6 +99947,11 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid ""
+#~ "You do not have the required permissions to download monitoring agents. "
+#~ msgstr "Non hai i permessi per modificare questo %s"
 
 #, fuzzy
 #~ msgid "Specify at least one resource to cache."

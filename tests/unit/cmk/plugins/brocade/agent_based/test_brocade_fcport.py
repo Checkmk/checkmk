@@ -12,8 +12,8 @@ import pytest
 from cmk.agent_based.internal import evaluate_snmp_detection
 from cmk.agent_based.v1 import GetRateError, IgnoreResults, Metric, Result, Service, State
 from cmk.agent_based.v2 import StringByteTable, StringTable
+from cmk.plugins.brocade.agent_based import brocade_fcport as bf
 from cmk.plugins.brocade.lib import DISCOVERY_DEFAULT_PARAMETERS
-from cmk.plugins.collection.agent_based import brocade_fcport as bf
 
 STRING_TABLE_INDEX_1_MISSING = [
     [

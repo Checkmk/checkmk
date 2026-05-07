@@ -11,7 +11,7 @@ from collections.abc import Mapping, Sequence
 import pytest
 
 from cmk.agent_based.v2 import CheckResult, Metric, Result, Service, State
-from cmk.plugins.collection.agent_based import brocade_optical
+from cmk.plugins.brocade.agent_based import brocade_optical
 from cmk.plugins.lib import interfaces
 
 
@@ -100,7 +100,7 @@ def test_discover_brocade_optical(
 @pytest.fixture
 def empty_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(
-        "cmk.plugins.collection.agent_based.brocade_optical.get_value_store",
+        "cmk.plugins.brocade.agent_based.brocade_optical.get_value_store",
         lambda: {},
     )
 

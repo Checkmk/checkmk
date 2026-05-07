@@ -13,6 +13,14 @@ from inspect import signature
 import pytest
 
 from cmk.agent_based.v2 import Result, State, StringTable
+from cmk.plugins.ciena_ces.agent_based.ciena_health import (
+    _REFERENCES_5142,
+    _REFERENCES_5171,
+    check_ciena_health,
+    parse_ciena_health,
+    Section,
+    SNMPData,
+)
 from cmk.plugins.ciena_ces.lib import (
     FanStatus,
     LeoFanStatus,
@@ -20,14 +28,6 @@ from cmk.plugins.ciena_ces.lib import (
     LeoSystemState,
     PowerSupplyState,
     TceHealthStatus,
-)
-from cmk.plugins.collection.agent_based.ciena_health import (
-    _REFERENCES_5142,
-    _REFERENCES_5171,
-    check_ciena_health,
-    parse_ciena_health,
-    Section,
-    SNMPData,
 )
 
 

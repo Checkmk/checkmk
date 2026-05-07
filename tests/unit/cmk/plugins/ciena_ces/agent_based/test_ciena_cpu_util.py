@@ -7,9 +7,9 @@ from collections.abc import Mapping
 
 import pytest
 
-import cmk.plugins.collection.agent_based.ciena_cpu_util
+import cmk.plugins.ciena_ces.agent_based.ciena_cpu_util
 from cmk.agent_based.v2 import CheckResult, Metric, Result, State
-from cmk.plugins.collection.agent_based.ciena_cpu_util import (
+from cmk.plugins.ciena_ces.agent_based.ciena_cpu_util import (
     check_ciena_cpu_util_5142,
     check_ciena_cpu_util_5171,
     Section5171,
@@ -23,7 +23,7 @@ SECTION_5142 = 12
 def empty_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
     store = dict[str, object]()
     monkeypatch.setattr(
-        cmk.plugins.collection.agent_based.ciena_cpu_util, "get_value_store", lambda: store
+        cmk.plugins.ciena_ces.agent_based.ciena_cpu_util, "get_value_store", lambda: store
     )
 
 

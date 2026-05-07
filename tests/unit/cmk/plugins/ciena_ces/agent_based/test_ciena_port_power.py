@@ -8,7 +8,7 @@ from collections.abc import Sequence
 import pytest
 
 from cmk.agent_based.v2 import Metric, Result, State
-from cmk.plugins.collection.agent_based.ciena_port_power import (
+from cmk.plugins.ciena_ces.agent_based.ciena_port_power import (
     check_ciena_port_power,
     inf,
     PortPower,

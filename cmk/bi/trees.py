@@ -469,11 +469,21 @@ class BICompiledRule(ABCBICompiledNode):
     ) -> NodeComputeResult:
         state = self.aggregation_function.aggregate([result.state for result in results])
 
-        downtime_state = self.aggregation_function.aggregate(
-            [2 if result.in_downtime else 0 for result in results]
-        )
-        minimum_downtime_state = 1 if computation_options.escalate_downtimes_as_warn else 2
-        in_downtime = downtime_state >= minimum_downtime_state
+        if computation_options.downtime_only_on_full_problem_coverage:
+            in_downtime = False
+            if state != 0:
+                in_downtime = (
+                    self.aggregation_function.aggregate(
+                        [0 if result.in_downtime else result.state for result in results]
+                    )
+                    == 0
+                )
+        else:
+            downtime_state = self.aggregation_function.aggregate(
+                [2 if result.in_downtime else 0 for result in results]
+            )
+            minimum_downtime_state = 1 if computation_options.escalate_downtimes_as_warn else 2
+            in_downtime = downtime_state >= minimum_downtime_state
 
         is_acknowledged = False
         if state != 0:

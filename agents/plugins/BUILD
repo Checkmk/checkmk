@@ -83,7 +83,6 @@ sh_library(
         "jar_signature",
         "kaspersky_av",
         "lnx_container_host_if.linux",
-        "lnx_quota",
         "mailman3_lists",
         "mk_apt",
         "mk_cups_queues",

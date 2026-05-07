@@ -7,7 +7,7 @@
 import pytest
 
 from cmk.agent_based.internal import evaluate_snmp_detection
-from cmk.plugins.collection.agent_based.apc_symmetra_power import snmp_section_apc_symmetra_power
+from cmk.plugins.apc_symmetra.agent_based.apc_symmetra_power import snmp_section_apc_symmetra_power
 
 # SUP-12323
 DATA0: dict[str, str] = {

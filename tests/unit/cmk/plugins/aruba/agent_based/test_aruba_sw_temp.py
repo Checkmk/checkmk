@@ -218,7 +218,6 @@ def test_discover_aruba_sw_temp_status(
     assert list(aruba_sw_temp.discover_aruba_sw_temp(section)) == result
 
 
-@pytest.mark.xfail(strict=True, reason="Crash group 4706: KeyError on unmodeled SensorStatus")
 @pytest.mark.parametrize(
     "status, expected_state",
     [

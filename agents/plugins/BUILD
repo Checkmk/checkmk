@@ -114,7 +114,6 @@ sh_library(
         "runas",
         "smart",
         "smart_posix",
-        "vxvm",
         "zorp",
         "//agents/cfg_examples:agents_cfg_examples_sh",
     ],

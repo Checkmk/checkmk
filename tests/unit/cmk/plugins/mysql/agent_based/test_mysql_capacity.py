@@ -7,7 +7,7 @@
 import pytest
 
 from cmk.agent_based.v2 import Metric, Result, Service, State, StringTable
-from cmk.plugins.collection.agent_based import mysql_capacity
+from cmk.plugins.mysql.agent_based import mysql_capacity
 
 
 @pytest.mark.parametrize(

@@ -5,9 +5,9 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 
 <script setup lang="ts">
-import { marked } from 'marked'
 import { ref, watch } from 'vue'
 
+import { markdown } from '@/ai/lib/markdown'
 import type {
   MarkdownConversationElementContent,
   TBaseConversationElementEmits
@@ -20,7 +20,7 @@ const typedText = ref<string>('')
 const emit = defineEmits<TBaseConversationElementEmits>()
 
 async function renderMarkdown() {
-  parsedMarkdown.value = await marked.parse(props.content, { breaks: true })
+  parsedMarkdown.value = await markdown.parse(props.content)
 
   if (props.noAnimation) {
     typedText.value = parsedMarkdown.value
@@ -72,4 +72,80 @@ watch(
   white-space: pre-wrap;
   overflow-wrap: break-word;
 }
+
+/* stylelint-disable selector-pseudo-class-no-unknown */
+.ai-markdown-content :deep(table) {
+  width: 100%;
+  border-collapse: collapse;
+  margin: var(--dimension-4) 0;
+  font-size: inherit;
+}
+
+.ai-markdown-content :deep(th),
+.ai-markdown-content :deep(td) {
+  padding: var(--dimension-4);
+  text-align: left;
+  vertical-align: top;
+  border-bottom: var(--border-width-1) solid var(--default-border-color);
+}
+
+.ai-markdown-content :deep(thead th) {
+  font-weight: var(--font-weight-bold);
+  color: var(--font-color-dimmed);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.ai-markdown-content :deep(tbody tr:last-child td) {
+  border-bottom: none;
+}
+
+.ai-markdown-content :deep(h1),
+.ai-markdown-content :deep(h2),
+.ai-markdown-content :deep(h3),
+.ai-markdown-content :deep(h4) {
+  margin: var(--dimension-7) 0 var(--dimension-4);
+  padding-left: 0;
+  text-indent: 0;
+  font-size: var(--font-size-xlarge);
+  color: var(--font-color-dimmed);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.ai-markdown-content :deep(h2),
+.ai-markdown-content :deep(h3),
+.ai-markdown-content :deep(h4) {
+  font-size: var(--font-size-large);
+}
+
+.ai-markdown-content :deep(.ai-markdown-content__badge) {
+  display: inline-block;
+  padding: 0 var(--dimension-3);
+  border-radius: var(--dimension-2);
+  font-size: var(--font-size-small);
+  font-weight: var(--font-weight-bold);
+  letter-spacing: 0.05em;
+  line-height: 1.6;
+  white-space: nowrap;
+  color: var(--black);
+}
+
+.ai-markdown-content :deep(.ai-markdown-content__badge--ok) {
+  background-color: var(--color-corporate-green-50);
+}
+
+.ai-markdown-content :deep(.ai-markdown-content__badge--warn) {
+  background-color: var(--color-yellow-50);
+}
+
+.ai-markdown-content :deep(.ai-markdown-content__badge--crit) {
+  background-color: var(--color-light-red-50);
+  color: var(--white);
+}
+
+.ai-markdown-content :deep(.ai-markdown-content__badge--unknown) {
+  background-color: var(--color-orange-50);
+}
+/* stylelint-enable selector-pseudo-class-no-unknown */
 </style>

@@ -11,9 +11,9 @@ from collections.abc import Sequence
 import pytest
 
 from cmk.agent_based.v2 import CheckResult, Metric, Result, State, StringTable
-from cmk.plugins.collection.agent_based.printer_pages import parse_printer_pages
-from cmk.plugins.collection.agent_based.printer_pages_canon import parse_printer_pages_canon
-from cmk.plugins.collection.agent_based.printer_pages_ricoh import parse_printer_pages_ricoh
+from cmk.plugins.printer.agent_based.printer_pages import parse_printer_pages
+from cmk.plugins.printer.agent_based.printer_pages_canon import parse_printer_pages_canon
+from cmk.plugins.printer.agent_based.printer_pages_ricoh import parse_printer_pages_ricoh
 from cmk.plugins.printer.lib import check_printer_pages_types, Section
 
 

@@ -11,7 +11,7 @@ from collections.abc import Mapping, Sequence
 import pytest
 
 from cmk.agent_based.v2 import CheckResult, DiscoveryResult, Result, Service, State, StringTable
-from cmk.plugins.collection.agent_based.printer_io import (
+from cmk.plugins.printer.agent_based.printer_io import (
     check_printer_input,
     check_printer_output,
     discovery_printer_io,

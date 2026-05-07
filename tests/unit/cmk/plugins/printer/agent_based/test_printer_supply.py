@@ -16,7 +16,7 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
-from cmk.plugins.collection.agent_based.printer_supply import (
+from cmk.plugins.printer.agent_based.printer_supply import (
     check_printer_supply,
     CheckParams,
     discovery_printer_supply,

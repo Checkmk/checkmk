@@ -11,7 +11,7 @@ from unittest import mock
 import pytest
 
 from cmk.agent_based.v2 import CheckResult, Result, State, StringTable
-from cmk.plugins.collection.agent_based.printer_alerts import (
+from cmk.plugins.printer.agent_based.printer_alerts import (
     check_printer_alerts,
     discovery_printer_alerts,
     parse_printer_alerts,
@@ -66,7 +66,7 @@ def test_discover_always() -> None:
     ],
 )
 @mock.patch.dict(
-    "cmk.plugins.collection.agent_based.printer_alerts.PRINTER_ALERTS_TEXT_MAP",
+    "cmk.plugins.printer.agent_based.printer_alerts.PRINTER_ALERTS_TEXT_MAP",
     {
         "Energiesparen": State.OK,
         "Critical Error": State.CRIT,

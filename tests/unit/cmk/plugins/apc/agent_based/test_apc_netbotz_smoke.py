@@ -5,7 +5,7 @@
 import pytest
 
 from cmk.agent_based.v2 import CheckResult, DiscoveryResult, Result, Service, State, StringTable
-from cmk.plugins.collection.agent_based.apc_netbotz_smoke import (
+from cmk.plugins.apc.agent_based.apc_netbotz_smoke import (
     check_apc_netbotz_smoke,
     discover_apc_netbotz_smoke,
     parse_apc_netbotz_smoke,

@@ -7,7 +7,7 @@
 
 
 from cmk.agent_based.v2 import Metric, Result, Service, State
-from cmk.plugins.collection.agent_based.apc_inrow_fanspeed import (
+from cmk.plugins.apc.agent_based.apc_inrow_fanspeed import (
     check_apc_inrow_fanspeed,
     discover_apc_inrow_fanspeed,
     parse_apc_inrow_fanspeed,

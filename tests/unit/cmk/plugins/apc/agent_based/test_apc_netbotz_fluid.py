@@ -5,7 +5,7 @@
 import pytest
 
 from cmk.agent_based.v2 import CheckResult, DiscoveryResult, Result, Service, State, StringTable
-from cmk.plugins.collection.agent_based.apc_netbotz_fluid import (
+from cmk.plugins.apc.agent_based.apc_netbotz_fluid import (
     check_apc_netbotz_fluid,
     discover_apc_netbotz_fluid,
     FluidSensorSection,

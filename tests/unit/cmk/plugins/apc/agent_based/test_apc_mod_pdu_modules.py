@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.agent_based.v2 import Metric, Result, Service, State, StringTable
-from cmk.plugins.collection.agent_based.apc_mod_pdu_modules import (
+from cmk.plugins.apc.agent_based.apc_mod_pdu_modules import (
     check_apc_mod_pdu_modules,
     discover_apc_mod_pdu_modules,
     parse_apc_mod_pdu_modules,

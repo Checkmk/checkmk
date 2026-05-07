@@ -8,7 +8,7 @@ from collections.abc import Mapping, Sequence
 import pytest
 
 from cmk.agent_based.v2 import Result, Service, State, StringTable
-from cmk.plugins.collection.agent_based.apc_netbotz_drycontact import (
+from cmk.plugins.apc.agent_based.apc_netbotz_drycontact import (
     check_apc_netbotz_drycontact,
     Data,
     discover_apc_netbotz_drycontact,

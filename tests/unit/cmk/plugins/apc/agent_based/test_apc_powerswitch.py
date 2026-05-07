@@ -5,7 +5,7 @@
 
 
 from cmk.agent_based.v2 import Result, Service, State
-from cmk.plugins.collection.agent_based.apc_powerswitch import (
+from cmk.plugins.apc.agent_based.apc_powerswitch import (
     check_apc_powerswitch,
     discover_apc_powerswitch,
     parse_apc_powerswitch,

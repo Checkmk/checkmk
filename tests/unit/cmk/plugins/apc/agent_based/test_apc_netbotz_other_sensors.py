@@ -5,7 +5,7 @@
 
 
 from cmk.agent_based.v2 import Result, Service, State, StringTable
-from cmk.plugins.collection.agent_based.apc_netbotz_other_sensors import (
+from cmk.plugins.apc.agent_based.apc_netbotz_other_sensors import (
     check_apc_netbotz_other_sensors,
     discover_apc_netbotz_other_sensors,
     parse_apc_netbotz_other_sensors,

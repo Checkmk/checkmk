@@ -8,7 +8,7 @@ from collections.abc import Mapping, Sequence
 import pytest
 
 from cmk.agent_based.v2 import Metric, Result, State, StringTable
-from cmk.plugins.collection.agent_based.apc_netbotz_sensors import (
+from cmk.plugins.apc.agent_based.apc_netbotz_sensors import (
     check_apc_netbotz_sensors_dewpoint,
     check_apc_netbotz_sensors_humidity,
     check_apc_netbotz_sensors_temp,
@@ -35,7 +35,7 @@ TEST_INFO: list[StringTable] = [
 @pytest.fixture
 def empty_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(
-        "cmk.plugins.collection.agent_based.apc_netbotz_sensors.get_value_store",
+        "cmk.plugins.apc.agent_based.apc_netbotz_sensors.get_value_store",
         lambda: {},
     )
 

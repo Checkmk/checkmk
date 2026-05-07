@@ -5,7 +5,7 @@
 
 
 from cmk.agent_based.v2 import Result, State
-from cmk.plugins.collection.agent_based.apc_inrow_system_events import (
+from cmk.plugins.apc.agent_based.apc_inrow_system_events import (
     check_apc_inrow_system_events,
     discover_apc_inrow_system_events,
     parse_apc_inrow_system_events,

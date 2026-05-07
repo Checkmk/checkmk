@@ -7,7 +7,7 @@
 import pytest
 
 from cmk.agent_based.v2 import StringTable
-from cmk.plugins.collection.agent_based.hpux_cpu import parse_hpux_cpu
+from cmk.plugins.hpux.agent_based.hpux_cpu import parse_hpux_cpu
 from cmk.plugins.lib.cpu import Load, Section
 
 

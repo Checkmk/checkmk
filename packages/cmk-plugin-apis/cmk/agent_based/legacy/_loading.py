@@ -15,9 +15,13 @@ _LEGACY_CHECKS_NAMESPACE = "cmk.legacy_checks"
 
 
 def find_legacy_check_modules() -> tuple[str, ...]:
+    try:
+        namespace = importlib.import_module(_LEGACY_CHECKS_NAMESPACE)
+    except ModuleNotFoundError:
+        # happens in tests. When happens in prod, we can nuke `cmk.agent_based.legacy`.
+        return ()
     return tuple(
-        f"{_LEGACY_CHECKS_NAMESPACE}.{mod.name}"
-        for mod in pkgutil.iter_modules(importlib.import_module(_LEGACY_CHECKS_NAMESPACE).__path__)
+        f"{_LEGACY_CHECKS_NAMESPACE}.{mod.name}" for mod in pkgutil.iter_modules(namespace.__path__)
     )
 
 

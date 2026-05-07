@@ -41,6 +41,13 @@ export function isValidPort(value: number | undefined): boolean {
   return value !== undefined && Number.isInteger(value) && value >= 1 && value <= 65535
 }
 
+export function isValidPasswordIdForEnvVar(value: string): boolean {
+  /* POSIX environment-variable names must start with a letter or underscore,
+  followed by letters, digits, or underscores. The OTel Collector exports
+  the password-store ID as an env var, so the same rule applies here.*/
+  return /^[A-Za-z_][A-Za-z0-9_]*$/.test(value)
+}
+
 export function validateAddress(value: string, t: (s: string) => string): string[] {
   if (!value.trim()) {
     return [t('Enter a valid IP address or host name.')]

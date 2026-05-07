@@ -247,6 +247,59 @@ describe('ConfigureCollector', () => {
     })
   })
 
+  test('validate() returns false when selected password ID has invalid characters', async () => {
+    mockPasswordsResponse([{ id: 'bad-id', title: 'Bad ID' }])
+    const { compRef, grpcAuth, grpcEncryption } = renderComponent(true)
+
+    grpcAuth.value.method = 'basicauth'
+    grpcAuth.value.credential = { username: 'admin', password: 'bad-id' }
+    grpcEncryption.value = true
+
+    await waitFor(() => expect(compRef.value).toBeDefined())
+    await new Promise((r) => setTimeout(r, 0))
+
+    const result = compRef.value!.validate()
+    expect(result).toBe(false)
+    await screen.findByText(
+      'The selected password ID is not usable by the OTel Collector. ' +
+        'It must start with a letter or underscore and ' +
+        'contain only letters, digits and underscores.'
+    )
+  })
+
+  test('validate() returns true when selected password ID is env-var safe', async () => {
+    mockPasswordsResponse([{ id: 'good_id_1', title: 'Good ID' }])
+    const { compRef, grpcAuth, grpcEncryption } = renderComponent(true)
+
+    grpcAuth.value.method = 'basicauth'
+    grpcAuth.value.credential = { username: 'admin', password: 'good_id_1' }
+    grpcEncryption.value = true
+
+    await waitFor(() => expect(compRef.value).toBeDefined())
+    await new Promise((r) => setTimeout(r, 0))
+
+    const result = compRef.value!.validate()
+    expect(result).toBe(true)
+  })
+
+  describe('password ID env-var validation', () => {
+    test('error is shown immediately on selection without calling validate()', async () => {
+      mockPasswordsResponse([{ id: 'bad-id', title: 'Bad ID' }])
+      const { compRef, grpcAuth } = renderComponent(true)
+
+      grpcAuth.value.method = 'basicauth'
+      grpcAuth.value.credential = { username: 'admin', password: 'bad-id' }
+
+      await waitFor(() => expect(compRef.value).toBeDefined())
+
+      await screen.findByText(
+        'The selected password ID is not usable by the OTel Collector. ' +
+          'It must start with a letter or underscore and ' +
+          'contain only letters, digits and underscores.'
+      )
+    })
+  })
+
   describe('TLS validation', () => {
     test('validate() returns false when basicauth is selected without TLS', async () => {
       mockPasswordsResponse([{ id: 'pw1', title: 'Password 1' }])

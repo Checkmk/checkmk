@@ -18,6 +18,7 @@ import CmkLabelRequired from '@/components/user-input/CmkLabelRequired.vue'
 import FormButton from '@/form/private/FormButton.vue'
 
 import type { AuthConfig } from './otelTypes'
+import { isValidPasswordIdForEnvVar } from './validation.ts'
 
 const { _t } = usei18n()
 
@@ -62,10 +63,24 @@ const usernameErrors = computed<string[]>(() => {
 })
 
 const passwordErrors = computed<string[]>(() => {
-  if (!props.showErrors || auth.value.credential === null) {
+  if (auth.value.credential === null) {
     return []
   }
-  if (!auth.value.credential.password) {
+  if (auth.value.credential.password) {
+    // The env-var rule is about the format of the ID the user just selected,
+    // so flag it immediately rather than waiting for the next-step submit.
+    if (!isValidPasswordIdForEnvVar(auth.value.credential.password)) {
+      return [
+        _t(
+          'The selected password ID is not usable by the OTel Collector. ' +
+            'It must start with a letter or underscore and ' +
+            'contain only letters, digits and underscores.'
+        )
+      ]
+    }
+    return []
+  }
+  if (props.showErrors) {
     return [_t('Password is required but not specified.')]
   }
   return []

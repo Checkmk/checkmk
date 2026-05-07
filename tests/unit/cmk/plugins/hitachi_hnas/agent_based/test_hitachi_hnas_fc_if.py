@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.plugins.collection.agent_based.hitachi_hnas_fc_if import parse_hitachi_hnas_fc_if
+from cmk.plugins.hitachi_hnas.agent_based.hitachi_hnas_fc_if import parse_hitachi_hnas_fc_if
 
 _CLASSIC_HNAS_ROW = ["1", "0", "1", "32", "25088", "51200", "1", "2", "3", "4", "5", "6", "7", "8"]
 

@@ -14,8 +14,8 @@ import pytest
 import time_machine
 
 from cmk.agent_based.v2 import CheckResult, Metric, Result, State
-from cmk.plugins.collection.agent_based import hitachi_hnas_volume
-from cmk.plugins.collection.agent_based.hitachi_hnas_volume import (
+from cmk.plugins.hitachi_hnas.agent_based import hitachi_hnas_volume
+from cmk.plugins.hitachi_hnas.agent_based.hitachi_hnas_volume import (
     check_hitachi_hnas_virtual_volume,
     check_hitachi_hnas_volume,
     parse_hitachi_hnas_volume,

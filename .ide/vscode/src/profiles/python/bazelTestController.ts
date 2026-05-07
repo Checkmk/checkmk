@@ -412,7 +412,8 @@ function findTargetAncestor(item: vscode.TestItem): vscode.TestItem | undefined 
 
 function collectRunUnits(
   controller: vscode.TestController,
-  request: vscode.TestRunRequest
+  request: vscode.TestRunRequest,
+  populateFolder: (folder: vscode.TestItem) => void
 ): RunUnit[] {
   const excluded = new Set<string>()
   if (request.exclude) for (const e of request.exclude) excluded.add(e.id)
@@ -438,6 +439,7 @@ function collectRunUnits(
     const kind = classifyItem(item)
     if (kind === 'placeholder') return
     if (kind === 'folder') {
+      populateFolder(item)
       item.children.forEach(visit)
       return
     }
@@ -740,6 +742,12 @@ export function registerBazelTestController(): vscode.Disposable[] {
     }
   })
 
+  const populateFolder = (folder: vscode.TestItem): void => {
+    if (folder.children.size === 0) {
+      populateFolderChildren(controller, folder, labelCache, wsPath)
+    }
+  }
+
   const runHandler = async (
     request: vscode.TestRunRequest,
     cancellation: vscode.CancellationToken,
@@ -754,7 +762,8 @@ export function registerBazelTestController(): vscode.Disposable[] {
       if (k === undefined) return
       opts.kFilter = k
     }
-    const units = collectRunUnits(controller, request)
+    if (!triggered) await triggerDiscovery('test run requested')
+    const units = collectRunUnits(controller, request, populateFolder)
     if (units.length === 0) {
       notifyInfo('CMK: No Bazel test targets selected')
       return

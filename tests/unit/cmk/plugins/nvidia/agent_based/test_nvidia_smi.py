@@ -15,8 +15,8 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
-from cmk.plugins.collection.agent_based import nvidia_smi
 from cmk.plugins.lib.temperature import TempParamType
+from cmk.plugins.nvidia.agent_based import nvidia_smi
 
 
 @pytest.fixture

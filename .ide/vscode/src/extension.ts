@@ -23,9 +23,6 @@ import { createSite, registerOmd } from './omd/omd'
 import { registerRuffOnDemand, registerVitestOnDemand } from './profiles/onDemand'
 import { registerProfileDetector } from './profiles/profileDetector'
 import * as profileManager from './profiles/profileManager'
-import { registerBazelTestRunner } from './profiles/python/bazelTest'
-import { registerBazelTestController } from './profiles/python/bazelTestController'
-import { registerBazelTestsConfigView } from './profiles/python/bazelTestsConfigView'
 import { registerDynamicMypyTargets } from './profiles/python/dynamicMypyTargets'
 import { registerInterpreterResolver } from './profiles/python/interpreter'
 import { registerJemallocAllocator } from './profiles/python/jemallocAllocator'
@@ -41,6 +38,9 @@ import { registerGerritPush, registerSandboxBranch, registerScm } from './scm'
 import { registerIdePickers } from './setup/idePicker'
 import { registerTemplates } from './setup/templates'
 import { refreshAll, refreshOmd, registerSidebar } from './sidebar'
+import { registerBazelTestRunner } from './testing/bazelTest'
+import { registerBazelTestController } from './testing/bazelTestController'
+import { registerBazelTestsConfigView } from './testing/bazelTestsConfigView'
 import { registerWhatsNew, showWhatsNewIfNeeded } from './whatsNew'
 
 function toggleSettings(
@@ -146,6 +146,9 @@ export function activate(context: vscode.ExtensionContext): void {
     })
   )
 
+  // Bazel test discovery + runner — always on; serves both py_test and vitest_test targets.
+  context.subscriptions.push(...registerBazelTestController(), ...registerBazelTestsConfigView())
+
   // --- Family-gated features ---
 
   const pythonDisable = getDisableSettings('python')
@@ -162,8 +165,6 @@ export function activate(context: vscode.ExtensionContext): void {
         ...registerInterpreterResolver(),
         ...registerSnippets(),
         ...registerBazelTestRunner(),
-        ...registerBazelTestController(),
-        ...registerBazelTestsConfigView(),
         vscode.commands.registerCommand('cmk.python.restartLanguageServer', () =>
           vscode.commands.executeCommand('python.analysis.restartLanguageServer')
         ),

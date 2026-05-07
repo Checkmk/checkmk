@@ -5,8 +5,8 @@
  */
 import * as vscode from 'vscode'
 
-import { error, log } from '../../core/log'
-import { esc, getNonce } from '../../sidebar/html'
+import { error, log } from '../core/log'
+import { esc, getNonce } from '../sidebar/html'
 
 const EDITIONS = ['community', 'pro', 'ultimate', 'ultimatemt', 'cloud'] as const
 

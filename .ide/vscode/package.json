@@ -2,7 +2,7 @@
   "name": "cmk-vscode",
   "displayName": "CMK Dev Tools for VS Code",
   "description": "Build commands and helpers for Checkmk development",
-  "version": "0.2.4",
+  "version": "0.3.0",
   "publisher": "checkmk",
   "engines": {
     "vscode": "^1.85.0"
@@ -84,7 +84,7 @@
         {
           "type": "webview",
           "id": "cmk.bazelTests.config",
-          "name": "CMK ▸ Bazel Tests · Config",
+          "name": "CMK Tests · Config",
           "visibility": "collapsed"
         }
       ]
@@ -180,10 +180,6 @@
       {
         "command": "cmk.buildCmkFrontendVue",
         "title": "CMK ▸ Cmd: Build cmk-frontend-vue"
-      },
-      {
-        "command": "cmk.buildVitestDeps",
-        "title": "CMK ▸ Cmd: Build Vitest dependencies & Refresh Vitests"
       },
       {
         "command": "cmk.runUcl",
@@ -365,17 +361,7 @@
         "cmk.bazelTests.onDemand": {
           "type": "boolean",
           "default": true,
-          "description": "Defer Bazel test discovery (filesystem scan of tests/**/BUILD) until a Python test file is opened or the CMK ▸ Bazel Tests group in the Test Explorer is expanded. Each window reload starts with discovery off and waits for a trigger again. Set to false to discover eagerly at activation."
-        },
-        "cmk.ruff.testOnDemand": {
-          "type": "boolean",
-          "default": false,
-          "description": "When true, defer starting the Ruff language server until a Python file is opened in the editor. Not yet implemented — reserved for a future release."
-        },
-        "cmk.vitest.testOnDemand": {
-          "type": "boolean",
-          "default": false,
-          "description": "When true, defer vitest test discovery until a test file is opened or the Testing view is used. Not yet implemented — reserved for a future release."
+          "description": "Defer Bazel test discovery (filesystem scan of tests/**/BUILD, packages/**/BUILD, non-free/packages/**/BUILD for py_test and vitest_test rules) until a test file is opened or the CMK ▸ Bazel Tests group in the Test Explorer is expanded. Each window reload starts with discovery off and waits for a trigger again. Set to false to discover eagerly at activation."
         },
         "cmk.python.pylanceMemoryWarnMiB": {
           "type": "number",
@@ -492,10 +478,6 @@
         },
         {
           "command": "cmk.buildCmkFrontendVue",
-          "when": "cmk.frontendInstalled"
-        },
-        {
-          "command": "cmk.buildVitestDeps",
           "when": "cmk.frontendInstalled"
         },
         {

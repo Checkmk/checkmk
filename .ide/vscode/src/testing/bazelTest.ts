@@ -8,9 +8,9 @@ import * as fs from 'fs'
 import * as path from 'path'
 import * as vscode from 'vscode'
 
-import { shellEscape } from '../../core/config'
-import { notifyError, notifyInfo, notifyWarn } from '../../core/log'
-import { runCommand, waitForTask } from '../../core/tasks'
+import { shellEscape } from '../core/config'
+import { notifyError, notifyInfo, notifyWarn } from '../core/log'
+import { runCommand, waitForTask } from '../core/tasks'
 
 function getWorkspacePath(): string | undefined {
   return vscode.workspace.workspaceFolders?.[0]?.uri.fsPath

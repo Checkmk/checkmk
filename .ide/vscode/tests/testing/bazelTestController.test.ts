@@ -5,7 +5,7 @@
  */
 import { describe, expect, it } from 'vitest'
 
-import { parseJunitXml } from '../../../src/profiles/python/bazelTestController'
+import { parseJunitXml } from '../../src/testing/bazelTestController'
 
 describe('parseJunitXml', () => {
   it('parses a single passing testcase', () => {

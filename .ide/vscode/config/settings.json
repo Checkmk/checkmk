@@ -147,20 +147,15 @@
       "stylelint.enable": true,
       "prettier.useEditorConfig": false,
       "prettier.configPath": "bazel/tools/prettier.config.cjs",
-      "prettier.prettierPath": "./node_modules/prettier",
-      "vitest.disableWorkspaceWarning": true,
-      "vitest.filesWatcherInclude": "packages/cmk-frontend-vue/**/*"
+      "prettier.prettierPath": "./node_modules/prettier"
     },
     "workspace": {
-      "vitest.rootConfig": "${workspaceFolder}/packages/cmk-frontend-vue/vite.config.ts",
-      "vitest.configSearchPatternExclude": "{**/node_modules/**,**/vendor/**,**/.*/**,**/*.d.ts,**/*bazel*/*}",
       "js/ts.tsdk.path": "packages/cmk-frontend-vue/node_modules/typescript/lib"
     },
     "disableFolder": {
       "eslint.enable": false,
       "stylelint.enable": false,
-      "prettier.enable": false,
-      "vitest.enable": false
+      "prettier.enable": false
     }
   },
   "rust": {

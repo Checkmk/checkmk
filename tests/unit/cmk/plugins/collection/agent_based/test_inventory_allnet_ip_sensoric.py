@@ -8,7 +8,7 @@ from typing import Final
 import pytest
 
 from cmk.agent_based.v2 import Attributes
-from cmk.plugins.collection.agent_based import allnet_ip_sensoric as ais
+from cmk.plugins.allnet_ip_sensoric.agent_based import allnet_ip_sensoric as ais
 
 RAW_OUTPUT: Final = """
 sensor0.alarm0;0

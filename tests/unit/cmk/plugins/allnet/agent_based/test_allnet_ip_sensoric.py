@@ -15,7 +15,7 @@ from cmk.plugins.allnet.agent_based.allnet_ip_sensoric import (
     discover_allnet_ip_sensoric_temp,
     discover_allnet_ip_sensoric_tension,
 )
-from cmk.plugins.collection.agent_based.allnet_ip_sensoric import parse_allnet_ip_sensoric
+from cmk.plugins.allnet_ip_sensoric.agent_based.allnet_ip_sensoric import parse_allnet_ip_sensoric
 
 _SECTION = parse_allnet_ip_sensoric(
     [

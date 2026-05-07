@@ -14,7 +14,7 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
-from cmk.plugins.collection.agent_based import sap
+from cmk.plugins.sap.agent_based import sap
 
 SECTION = [
     sap.Entry(

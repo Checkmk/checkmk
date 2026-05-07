@@ -1734,7 +1734,7 @@ def test_openapi_discovery_tabula_rasa(
             DiscoverySettings(
                 update_host_labels=True,
                 add_new_services=True,
-                remove_vanished_services=False,
+                remove_vanished_services=True,
                 update_changed_service_labels=True,
                 update_changed_service_parameters=True,
             ),

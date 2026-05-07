@@ -305,13 +305,18 @@ def _get_post_discovery_autocheck_services(  # pylint: disable=too-many-branches
                 result.self_new += len(new)
                 post_discovery_services.update(new)
 
-        elif (  # pylint: disable=consider-using-in
-            check_transition == "unchanged" or check_transition == "ignored"
-        ):
+        elif check_transition == "unchanged":
             # keep currently existing valid services in any case
             post_discovery_services.update(
                 (DiscoveredService.id(s.service), s) for s in discovered_services_with_nodes
             )
+            result.self_kept += len(discovered_services_with_nodes)
+
+        elif check_transition == "ignored":
+            # services matched by a "Disabled services" rule must not be persisted
+            # to the autochecks file -- only monitored services are supposed to be
+            # there (see werk 19800).  Drop them from the post-discovery output;
+            # the disabled-services rule itself remains in place.
             result.self_kept += len(discovered_services_with_nodes)
 
         elif check_transition == "changed":

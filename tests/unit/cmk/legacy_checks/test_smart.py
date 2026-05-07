@@ -17,7 +17,7 @@ from cmk.legacy_checks.smart import (
     discover_smart_temp,
 )
 from cmk.legacy_includes.temperature import TempParamType
-from cmk.plugins.collection.agent_based.smart import parse_raw_values
+from cmk.plugins.smart.agent_based.smart import parse_raw_values
 
 
 def parsed() -> Mapping[str, Any]:

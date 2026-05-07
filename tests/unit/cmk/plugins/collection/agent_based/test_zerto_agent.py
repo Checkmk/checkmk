@@ -5,7 +5,7 @@
 
 
 from cmk.agent_based.v2 import Result, State
-from cmk.plugins.collection.agent_based.zerto import check, parse
+from cmk.plugins.zerto.agent_based.zerto import check, parse
 
 
 def test_parse_errors() -> None:

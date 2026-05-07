@@ -77,11 +77,7 @@ _TRUTHY_QUERY_VALUES = frozenset({"1", "t", "true", "y", "yes", "on"})
 
 
 def is_truthy_query_value(value: str | None) -> bool:
-    """Whether a query-parameter value is one of the conventional truthy strings.
-
-    Recognised values (case-insensitive, whitespace-trimmed):
-    1, t, true, y, yes, on.
-    """
+    """Whether a query-parameter value is one of the conventional truthy strings."""
     return value is not None and value.strip().lower() in _TRUTHY_QUERY_VALUES
 
 

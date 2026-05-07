@@ -8,10 +8,18 @@ from collections.abc import Sequence
 import pytest
 
 from cmk.bi.actions import BIStateOfServiceAction
+from cmk.bi.aggregation_functions import (
+    BIAggregationFunctionWorst,
+    BIAggregationFunctionWorstSerialized,
+)
 from cmk.bi.data_fetcher import BIStatusFetcher
+from cmk.bi.lib import BIAggregationComputationOptions, NodeComputeResult
 from cmk.bi.packs import BIAggregationPacks
 from cmk.bi.rule import BIRule
+from cmk.bi.rule_interface import BIRuleProperties
 from cmk.bi.searcher import BISearcher
+from cmk.bi.trees import BICompiledRule
+from cmk.bi.type_defs import ComputationConfigDict
 
 from .bi_test_data import sample_config
 
@@ -93,3 +101,65 @@ def test_rule_clone_name(
 
     cloned_rule = rule.clone(existing_rules)
     assert cloned_rule.id == expected_name
+
+
+@pytest.mark.parametrize(
+    "child_states, child_downtimes, expected_in_downtime",
+    [
+        pytest.param([2, 2], [True, True], True, id="all_failing_in_downtime"),
+        pytest.param([2, 2], [True, False], False, id="partial_failing_not_in_downtime"),
+        pytest.param([0, 0], [True, True], False, id="ok_aggregate_ignores_downtime"),
+        pytest.param([0, 2], [False, True], True, id="only_failing_component_in_downtime"),
+    ],
+)
+def test_downtime_only_on_full_problem_coverage(
+    child_states: list[int],
+    child_downtimes: list[bool],
+    expected_in_downtime: bool,
+) -> None:
+    rule = _make_compiled_rule()
+    children = [_make_child_result(s, d) for s, d in zip(child_states, child_downtimes)]
+    options = _make_computation_options(downtime_only_on_full_problem_coverage=True)
+
+    result = rule._process_node_compute_result(children, options)
+
+    assert result.in_downtime is expected_in_downtime
+
+
+def _make_compiled_rule() -> BICompiledRule:
+    aggr_config = BIAggregationFunctionWorstSerialized(type="worst", count=1, restrict_state=2)
+    return BICompiledRule(
+        rule_id="test_rule",
+        pack_id="test_pack",
+        nodes=[],
+        required_hosts=[],
+        properties=BIRuleProperties(
+            {"title": "", "comment": "", "docu_url": "", "icon": "", "state_messages": {}}
+        ),
+        aggregation_function=BIAggregationFunctionWorst(aggr_config),
+        node_visualization={},
+    )
+
+
+def _make_child_result(state: int, in_downtime: bool) -> NodeComputeResult:
+    return NodeComputeResult(
+        state=state,
+        in_downtime=in_downtime,
+        acknowledged=False,
+        output="",
+        in_service_period=True,
+        state_messages={},
+        custom_infos={},
+    )
+
+
+def _make_computation_options(
+    downtime_only_on_full_problem_coverage: bool,
+) -> BIAggregationComputationOptions:
+    config = ComputationConfigDict(
+        disabled=False,
+        use_hard_states=False,
+        escalate_downtimes_as_warn=False,
+        downtime_only_on_full_problem_coverage=downtime_only_on_full_problem_coverage,
+    )
+    return BIAggregationComputationOptions(config)

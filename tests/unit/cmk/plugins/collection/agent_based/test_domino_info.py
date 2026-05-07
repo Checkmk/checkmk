@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import pytest
 
 from cmk.agent_based.v2 import Result, Service, State, StringTable
 from cmk.plugins.collection.agent_based.domino_info import (
@@ -38,8 +37,7 @@ def test_check_domino_info() -> None:
     ]
 
 
-@pytest.mark.xfail(strict=True, reason="Crash group 4521: IndexError on empty section")
 def test_check_domino_info_empty_section_does_not_crash() -> None:
     # When the device responds to detection but the data OIDs return nothing,
-    # the section ends up empty. The check currently crashes with IndexError.
+    # the section ends up empty. The check must not crash.
     assert list(check_domino_info([])) == []

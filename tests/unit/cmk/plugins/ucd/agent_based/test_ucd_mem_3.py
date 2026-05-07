@@ -13,8 +13,12 @@
 import pytest
 
 from cmk.agent_based.v2 import Metric, Result, Service, State
-from cmk.legacy_checks.ucd_mem import check_ucd_mem, discover_ucd_mem
-from cmk.plugins.ucd.agent_based.ucd_mem import parse_ucd_mem, Section
+from cmk.plugins.ucd.agent_based.ucd_mem import (
+    check_ucd_mem,
+    discover_ucd_mem,
+    parse_ucd_mem,
+    Section,
+)
 
 
 @pytest.fixture(name="parsed", scope="module")

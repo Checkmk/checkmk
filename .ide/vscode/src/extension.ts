@@ -17,7 +17,6 @@ import {
 } from './core/config'
 import { error, log, notifyInfo, registerErrorHandlers } from './core/log'
 import { checkVersionMismatch } from './core/versionCheck'
-import { registerGerritPush } from './gerrit'
 import { checkForUpdates, isInstalled as isDevSiteInstalled } from './omd/devSiteTools'
 import { registerLogs } from './omd/logs'
 import { createSite, registerOmd } from './omd/omd'
@@ -38,7 +37,10 @@ import {
 } from './profiles/python/mypyConfig'
 import { registerPylanceHealth } from './profiles/python/pylanceHealth'
 import { registerSnippets } from './profiles/python/snippets'
-import { registerScm } from './scm'
+import { registerBranchSync } from './scm/branchSync'
+import { registerGerritPush } from './scm/gerrit'
+import { registerScm } from './scm/preCommit'
+import { registerSandboxBranch } from './scm/sandboxBranch'
 import { registerIdePickers } from './setup/idePicker'
 import { registerTemplates } from './setup/templates'
 import { refreshAll, refreshOmd, registerSidebar } from './sidebar'
@@ -110,6 +112,8 @@ export function activate(context: vscode.ExtensionContext): void {
   registerIdePickers(context, extensionSets, settingsSets)
   registerGerritPush(context)
   registerScm(context)
+  registerSandboxBranch(context)
+  registerBranchSync(context)
   registerOmd(context, refreshAll, refreshOmd)
   registerLogs()
 

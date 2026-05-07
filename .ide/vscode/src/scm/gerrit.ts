@@ -6,7 +6,7 @@
 import { execSync } from 'child_process'
 import * as vscode from 'vscode'
 
-import { log, notifyError, notifyInfo, notifyWarn } from './core/log'
+import { log, notifyError, notifyInfo, notifyWarn } from '../core/log'
 
 function getWorkspacePath(): string | undefined {
   return vscode.workspace.workspaceFolders?.[0]?.uri.fsPath

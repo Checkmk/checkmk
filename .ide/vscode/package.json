@@ -2,7 +2,7 @@
   "name": "cmk-vscode",
   "displayName": "CMK Dev Tools for VS Code",
   "description": "Build commands and helpers for Checkmk development",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "publisher": "checkmk",
   "engines": {
     "vscode": "^1.85.0"
@@ -255,6 +255,30 @@
         "icon": "$(cloud-upload)"
       },
       {
+        "command": "cmk.checkoutBranch",
+        "title": "CMK ▸ Git: Checkout Branch…",
+        "icon": "$(git-branch)"
+      },
+      {
+        "command": "cmk.createSandboxBranch",
+        "title": "CMK ▸ Git: Create Sandbox Branch…"
+      },
+      {
+        "command": "cmk.branchSync.synced",
+        "title": "CMK ▸ Branch in sync",
+        "icon": "$(check)"
+      },
+      {
+        "command": "cmk.branchSync.diverged",
+        "title": "CMK ▸ Branch diverged — click to sync",
+        "icon": "$(arrow-swap)"
+      },
+      {
+        "command": "cmk.branchSync.noupstream",
+        "title": "CMK ▸ No upstream — click to publish",
+        "icon": "$(cloud-upload)"
+      },
+      {
         "command": "cmk.toggleSkipPreCommit",
         "title": "CMK ▸ pre-commit ON — click to skip",
         "icon": "$(verified-filled)"
@@ -437,6 +461,26 @@
       "scm/title": [
         {
           "command": "cmk.pushToGerrit",
+          "group": "navigation",
+          "when": "gitOpenRepositoryCount > 0"
+        },
+        {
+          "command": "cmk.branchSync.synced",
+          "group": "navigation",
+          "when": "gitOpenRepositoryCount > 0 && cmk.branchSyncState == 'synced'"
+        },
+        {
+          "command": "cmk.branchSync.diverged",
+          "group": "navigation",
+          "when": "gitOpenRepositoryCount > 0 && cmk.branchSyncState == 'diverged'"
+        },
+        {
+          "command": "cmk.branchSync.noupstream",
+          "group": "navigation",
+          "when": "gitOpenRepositoryCount > 0 && cmk.branchSyncState == 'noupstream'"
+        },
+        {
+          "command": "cmk.checkoutBranch",
           "group": "navigation",
           "when": "gitOpenRepositoryCount > 0"
         },

@@ -7,7 +7,7 @@ import * as fs from 'fs'
 import * as path from 'path'
 import * as vscode from 'vscode'
 
-import { log, notifyError, notifyWarn } from './core/log'
+import { log, notifyError, notifyWarn } from '../core/log'
 
 const CONTEXT_KEY = 'cmk.skipPreCommitEnabled'
 

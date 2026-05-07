@@ -5,7 +5,7 @@
 
 import pytest
 
-from cmk.plugins.collection.rulesets.nginx_status import migrate
+from cmk.plugins.nginx.rulesets.nginx_status import migrate
 
 
 @pytest.mark.parametrize(

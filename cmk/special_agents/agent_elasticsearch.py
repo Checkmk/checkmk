@@ -22,18 +22,22 @@ def agent_elasticsearch_main(args: Args) -> int:
         # Node stats: https://www.elastic.co/guide/en/elasticsearch/reference/current/cluster-nodes-stats.html
         # Indices Stats: https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-stats.html
         section_urls_and_handlers = {
+            # handle_nodes only consumes the "process" sub-tree, so request that
+            # explicitly. Avoids parsing/serialization issues in unused stats
+            # categories (e.g. AWS OpenSearch occasionally returns HTTP 400 from
+            # /_nodes/_all/stats due to negative byte counts in jvm/fs/etc.).
             "cluster_health": ("/_cluster/health", handle_cluster_health),
-            "nodes": ("/_nodes/_all/stats", handle_nodes),
+            "nodes": ("/_nodes/stats/process", handle_nodes),
             "stats": ("/_stats/store,docs?ignore_unavailable=true", handle_stats),
         }
 
-        sections_to_query = set()
+        sections_to_query: list[str] = []
         if args.cluster_health:
-            sections_to_query.add("cluster_health")
+            sections_to_query.append("cluster_health")
         if args.nodes:
-            sections_to_query.add("nodes")
+            sections_to_query.append("nodes")
         if args.stats:
-            sections_to_query.add("stats")
+            sections_to_query.append("stats")
 
         try:
             for section in sections_to_query:
@@ -50,11 +54,26 @@ def agent_elasticsearch_main(args: Args) -> int:
                 try:
                     response = requests.get(url, auth=auth, verify=certcheck)  # nosec B113 # BNS:0b0eac
                 except requests.exceptions.RequestException as e:
-                    sys.stderr.write("Error: %s\n" % e)
+                    sys.stderr.write(f"Error: {e}\n")
                     if args.debug:
                         raise
+                    continue
 
-                handler(response.json())
+                if response.status_code != 200:
+                    sys.stderr.write(
+                        f"Error: HTTP {response.status_code} for {url}: {response.text[:200]}\n"
+                    )
+                    if args.debug:
+                        raise RuntimeError(f"HTTP {response.status_code} for {url}")
+                    continue
+
+                try:
+                    handler(response.json())
+                except ValueError as e:
+                    sys.stderr.write(f"Error decoding {url}: {e}\n")
+                    if args.debug:
+                        raise
+                    continue
 
         except Exception:
             if args.debug:

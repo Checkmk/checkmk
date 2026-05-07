@@ -6,7 +6,7 @@
 
 import pytest
 
-import cmk.plugins.collection.agent_based.infoblox_systeminfo as ibsi
+import cmk.plugins.infoblox.agent_based.infoblox_systeminfo as ibsi
 from cmk.agent_based.internal import evaluate_snmp_detection
 from cmk.agent_based.v2 import Attributes
 

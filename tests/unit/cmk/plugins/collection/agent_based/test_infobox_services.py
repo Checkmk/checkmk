@@ -8,7 +8,7 @@ from collections.abc import Sequence
 import pytest
 
 from cmk.agent_based.v2 import CheckResult, DiscoveryResult, Result, Service, State, StringTable
-from cmk.plugins.collection.agent_based.infoblox_services import (
+from cmk.plugins.infoblox.agent_based.infoblox_services import (
     check_infoblox_services,
     discovery_infoblox_services,
     parse_infoblox_services,

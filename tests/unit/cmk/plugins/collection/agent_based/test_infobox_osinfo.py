@@ -6,7 +6,7 @@
 
 import pytest
 
-import cmk.plugins.collection.agent_based.infoblox_osinfo as iboi
+import cmk.plugins.infoblox.agent_based.infoblox_osinfo as iboi
 from cmk.agent_based.v2 import Attributes
 
 

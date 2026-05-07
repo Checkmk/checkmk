@@ -306,7 +306,7 @@ just to signal that real build script was not called -->
                 <File Id="fil68F9AD67E8F26BC4712A85950742D48F" KeyPath="yes" Source="$(var.EncryptedPluginsFolder)\citrix_xenapp.ps1" DiskId="1"  />
             </Component>
             <Component Id="cmp832B7FCA61C9CFF8F1CA5C6FA13B5454" Guid="{46C91E1B-97E0-4261-94FA-2DD6B6651EDC}">
-                <File Id="fil2A101DFE6D15B518E2F1E50C87ECC221" KeyPath="yes" Source="$(var.EncryptedPluginsFolder)\hyperv_vms.ps1" DiskId="1"  />
+                <File Id="fil2A101DFE6D15B518E2F1E50C87ECC221" KeyPath="yes" Source="..\..\..\cmk\plugins\hyperv\agents\hyperv_vms.ps1" DiskId="1"  />
             </Component>
             <Component Id="cmpE9245496997CBB452C7AB2DD036AA4DD" Guid="{B53B231C-FFFF-405C-AAC4-88BE73233A66}">
                 <File Id="fil1DAD57269AB73A084B862EC3C5DE5A71" KeyPath="yes" Source="$(var.EncryptedPluginsFolder)\hyperv_vms_guestinfos.ps1" DiskId="1"  />

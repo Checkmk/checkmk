@@ -7,14 +7,10 @@
 import pytest
 
 from cmk.agent_based.v2 import InventoryResult, StringTable, TableRow
-from cmk.plugins.collection.agent_based.inventory_aix_packages import (
+from cmk.plugins.aix.agent_based.inventory_aix_packages import (
     inventorize_aix_packages,
     parse_aix_packages,
 )
-
-from .utils_inventory import sort_inventory_result
-
-# Note: package_type is faked
 
 
 @pytest.mark.parametrize(
@@ -116,15 +112,6 @@ from .utils_inventory import sort_inventory_result
                 ),
                 TableRow(
                     path=["software", "packages"],
-                    key_columns={"name": "ICU4C.rte"},
-                    inventory_columns={
-                        "summary": "International Components for Unicode",
-                        "version": "7.1.2.0",
-                        "package_type": "aix_type",
-                    },
-                ),
-                TableRow(
-                    path=["software", "packages"],
                     key_columns={"name": "Java6.sdk"},
                     inventory_columns={
                         "summary": "Java SDK 32-bit",
@@ -132,11 +119,18 @@ from .utils_inventory import sort_inventory_result
                         "package_type": "rpm",
                     },
                 ),
+                TableRow(
+                    path=["software", "packages"],
+                    key_columns={"name": "ICU4C.rte"},
+                    inventory_columns={
+                        "summary": "International Components for Unicode",
+                        "version": "7.1.2.0",
+                        "package_type": "aix_type",
+                    },
+                ),
             ],
         ),
     ],
 )
 def test_inv_aix_packages(raw_section: StringTable, expected_result: InventoryResult) -> None:
-    assert sort_inventory_result(
-        inventorize_aix_packages(parse_aix_packages(raw_section))
-    ) == sort_inventory_result(expected_result)
+    assert list(inventorize_aix_packages(parse_aix_packages(raw_section))) == expected_result

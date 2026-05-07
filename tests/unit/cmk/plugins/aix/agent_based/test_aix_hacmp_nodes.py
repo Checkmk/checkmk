@@ -6,7 +6,7 @@
 import pytest
 
 from cmk.agent_based.v2 import CheckResult, DiscoveryResult, Result, Service, State, StringTable
-from cmk.plugins.collection.agent_based.aix_hacmp_nodes import (
+from cmk.plugins.aix.agent_based.aix_hacmp_nodes import (
     check_aix_hacmp_nodes,
     discover_aix_hacmp_nodes,
     parse_aix_hacmp_nodes,

@@ -10,7 +10,7 @@ import dataclasses
 
 import pytest
 
-from cmk.plugins.collection.agent_based.aix_if import parse_aix_if_pure
+from cmk.plugins.aix.agent_based.aix_if import parse_aix_if_pure
 from cmk.plugins.lib.interfaces import Attributes, Counters, InterfaceWithCounters, Section
 
 # Below is an output from the support ticket

@@ -7,7 +7,7 @@
 import pytest
 
 from cmk.agent_based.v2 import Attributes
-from cmk.plugins.collection.agent_based import inventory_aix_baselevel
+from cmk.plugins.aix.agent_based import inventory_aix_baselevel
 
 
 @pytest.fixture(name="section")

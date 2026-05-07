@@ -4,7 +4,7 @@ catalog: app/ivantineurons
 license: GPLv2
 distribution: check_mk
 description:
- The special agent Ivanti Neurons for MDM (formerly MobileIron Cloud) 
+ The special agent Ivanti Neurons for MDM (formerly MobileIron Cloud)
  queries the cloud instance through the REST API.
 
  This check monitors the compliance state of each device managed via Ivanti Neurons for MDM.

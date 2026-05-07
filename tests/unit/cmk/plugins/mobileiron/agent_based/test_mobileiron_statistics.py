@@ -11,8 +11,8 @@ from typing import Any
 import pytest
 
 from cmk.agent_based.v2 import CheckResult, Metric, Result, State
-from cmk.plugins.collection.agent_based.mobileiron_section import parse_mobileiron_statistics
-from cmk.plugins.collection.agent_based.mobileiron_statistics import check_mobileiron_sourcehost
+from cmk.plugins.mobileiron.agent_based.mobileiron_section import parse_mobileiron_statistics
+from cmk.plugins.mobileiron.agent_based.mobileiron_statistics import check_mobileiron_sourcehost
 from cmk.plugins.mobileiron.lib import SourceHostSection
 
 DEVICE_DATA = parse_mobileiron_statistics([['{"non_compliant": 12, "total_count": 22}']])

@@ -6,10 +6,10 @@ import json
 from collections.abc import Iterable
 
 from cmk.agent_based.v2 import Attributes, TableRow
-from cmk.plugins.collection.agent_based.inventory_mobileiron import (
+from cmk.plugins.mobileiron.agent_based.inventory_mobileiron import (
     inventorize_mobileiron,
 )
-from cmk.plugins.collection.agent_based.mobileiron_section import parse_mobileiron
+from cmk.plugins.mobileiron.agent_based.mobileiron_section import parse_mobileiron
 
 DEVICE_DATA = parse_mobileiron(
     [

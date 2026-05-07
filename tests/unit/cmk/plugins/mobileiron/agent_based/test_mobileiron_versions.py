@@ -10,8 +10,8 @@ import pytest
 import time_machine
 
 from cmk.agent_based.v2 import CheckResult, Metric, Result, State
-from cmk.plugins.collection.agent_based.mobileiron_section import parse_mobileiron
-from cmk.plugins.collection.agent_based.mobileiron_versions import (
+from cmk.plugins.mobileiron.agent_based.mobileiron_section import parse_mobileiron
+from cmk.plugins.mobileiron.agent_based.mobileiron_versions import (
     _try_calculation_age,
     check_mobileiron_versions,
     Params,

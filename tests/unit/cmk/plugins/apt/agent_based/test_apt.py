@@ -11,7 +11,7 @@ from typing import Any
 import pytest
 
 from cmk.agent_based.v2 import Metric, Result, Service, State, StringTable
-from cmk.plugins.collection.agent_based.apt import (
+from cmk.plugins.apt.agent_based.apt import (
     _data_is_valid,
     check_apt,
     discover_apt,

@@ -94,7 +94,13 @@ def check_jenkins_metrics(
                 if is_undesired_memory_pool(key):
                     continue
 
-                memory_value = value_container["value"]
+                # TODO: parsing should really be done in the parse function, not the check. This is
+                # to fix a specific crash report. Eventually, this plugin needs to be reworked.
+                match raw_value := value_container["value"]:
+                    case int() | float():
+                        memory_value = float(raw_value)
+                    case _:
+                        continue
 
                 if memory_value == -1:
                     # Unspecified value - nothing to show here

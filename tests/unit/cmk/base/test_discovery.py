@@ -722,6 +722,55 @@ def test__get_post_discovery_services(
     assert result.self_removed == count_removed
 
 
+def test__get_post_discovery_services_drops_ignored_from_autochecks() -> None:
+    """Services matched by a 'Disabled services' rule (transition 'ignored') must not be
+    persisted to the autochecks file -- only monitored services are supposed to be there
+    (see werk 19800).  They are still counted as 'kept' so reporting/diff stays sensible.
+    """
+    services_by_transition: ServicesByTransition = {
+        "ignored": [
+            AutocheckServiceWithNodes(
+                DiscoveredItem[AutocheckEntry](
+                    new=AutocheckEntry(
+                        CheckPluginName("check_plugin_name"),
+                        "Ignored Item",
+                        {},
+                        {},
+                    ),
+                    previous=AutocheckEntry(
+                        CheckPluginName("check_plugin_name"),
+                        "Ignored Item",
+                        {},
+                        {},
+                    ),
+                ),
+                [],
+            ),
+        ],
+    }
+    result = DiscoveryResult()
+
+    post_discovery = _get_post_discovery_autocheck_services(
+        HostName("hostname"),
+        services_by_transition,
+        ServiceFilters.accept_all(),
+        result,
+        get_service_description=lambda hn, entry: f"Test Description {entry.item}",
+        settings=DiscoverySettings(
+            update_host_labels=True,
+            add_new_services=True,
+            remove_vanished_services=True,
+            update_changed_service_labels=True,
+            update_changed_service_parameters=True,
+        ),
+        keep_clustered_vanished_services=True,
+    )
+
+    assert post_discovery == {}
+    assert result.self_kept == 1
+    assert result.self_removed == 0
+
+
 def _get_params(rediscovery: RediscoveryParameters) -> DiscoveryCheckParameters:
     return DiscoveryCheckParameters(
         commandline_only=False,

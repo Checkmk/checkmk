@@ -7,8 +7,8 @@ from pathlib import Path
 
 import pytest
 
-from cmk.bakery.v1 import OS, Plugin
-from cmk.base.plugins.bakery.msexch_dag import get_msexch_files
+from cmk.bakery.v2_unstable import OS, Plugin
+from cmk.plugins.msexch.bakery.msexch_dag import bakery_plugin_msexch_dag
 
 
 @pytest.mark.parametrize(
@@ -20,7 +20,7 @@ from cmk.base.plugins.bakery.msexch_dag import get_msexch_files
         ),
         (
             {"deployment": ("cached", 3600.0)},
-            [Plugin(base_os=OS.WINDOWS, source=Path("msexch_dag.ps1"), interval=3600)],
+            [Plugin(base_os=OS.WINDOWS, source=Path("msexch_dag.ps1"), interval=3600.0)],
         ),
         (
             {"deployment": ("do_not_deploy", None)},
@@ -32,5 +32,6 @@ def test_msexch_dag_files(
     conf: dict[str, object],
     expected_files: list[Plugin],
 ) -> None:
-    result = list(get_msexch_files(conf))
+    parsed = bakery_plugin_msexch_dag.parameter_parser(conf)
+    result = list(bakery_plugin_msexch_dag.files_function(parsed))
     assert result == expected_files

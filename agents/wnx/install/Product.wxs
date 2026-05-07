@@ -336,7 +336,7 @@ just to signal that real build script was not called -->
                 <File Id="fil8D6029E4806FCF205FE8D37573EDFBA4" KeyPath="yes" Source="$(var.EncryptedPluginsFolder)\mk_oracle.ps1" DiskId="1"  />
             </Component>
             <Component Id="cmp06FAFC985397646477170C3A9EC578DF" Guid="{2F712A51-EB09-4BB6-B17B-F7ADC24D61E8}">
-                <File Id="fil1CA84851126C72D15B8FF7FBD056AD7F" KeyPath="yes" Source="$(var.EncryptedPluginsFolder)\msexch_dag.ps1" DiskId="1"  />
+                <File Id="fil1CA84851126C72D15B8FF7FBD056AD7F" KeyPath="yes" Source="..\..\..\cmk\plugins\msexch\agents\msexch_dag.ps1" DiskId="1"  />
             </Component>
             <Component Id="cmp2CF5BD4FBED2352573D1A8CEC68D99A8" Guid="{EC4BE995-16D5-48CE-BDD9-B7870D56A087}">
                 <File Id="filFAAA245C81E32BBF2AC489BF7B676C55" KeyPath="yes" Source="$(var.EncryptedPluginsFolder)\msexch_database.ps1" DiskId="1"  />

@@ -34,7 +34,7 @@ TO_SIGN_SCRIPTS = [
     "kaspersky_av_client.ps1",
     "mk_msoffice.ps1",
     "mk_oracle.ps1",
-    "msexch_dag.ps1",
+    "//cmk/plugins/msexch/agents:msexch_dag.ps1",
     "msexch_database.ps1",
     "nvidia_smi.ps1",
     "rds_licenses.ps1",

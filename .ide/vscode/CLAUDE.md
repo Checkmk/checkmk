@@ -129,8 +129,12 @@ Each section lives in its own folder under `src/sidebar/` with an `index.ts` (re
 | `omd/proxy.ts`                        | Unix socket → TCP proxy via socat (livestatus, Redis, etc.)              |
 | `setup/idePicker.ts`                  | Multi-select QuickPick for IDE setup families                            |
 | `setup/templates.ts`                  | File template creation                                                   |
-| `gerrit.ts`                           | Gerrit push integration                                                  |
-| `scm.ts`                              | Toggle to disable/re-enable `.git/hooks/pre-commit`; auto-shows Git output and a status bar spinner during commits via `.git/index.lock` watcher |
+| `scm/index.ts`                        | Barrel re-exporting all `scm/` register-functions                        |
+| `scm/git.ts`                          | Shared git helpers (`repoRoot`, `currentBranch`)                         |
+| `scm/gerrit.ts`                       | Gerrit push integration (status bar + push command)                      |
+| `scm/preCommit.ts`                    | Pre-commit hook toggle + commit-in-progress status bar spinner           |
+| `scm/sandboxBranch.ts`                | Branch checkout quickpick + Create Sandbox Branch (git workon)           |
+| `scm/branchSync.ts`                   | SCM-title sync state icon (synced / diverged / no-upstream)              |
 | `whatsNew.ts`                         | "What's New" markdown preview on version upgrade (reads `changelog/v*.md`) |
 
 ### Configuration (`config/`)

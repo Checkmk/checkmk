@@ -8,12 +8,9 @@ import * as path from 'path'
 import * as vscode from 'vscode'
 
 import { log, notifyError, notifyWarn } from '../core/log'
+import { repoRoot } from './git'
 
 const CONTEXT_KEY = 'cmk.skipPreCommitEnabled'
-
-function repoRoot(): string | undefined {
-  return vscode.workspace.workspaceFolders?.[0]?.uri.fsPath
-}
 
 function hookPaths(repo: string): { active: string; disabled: string } {
   return {

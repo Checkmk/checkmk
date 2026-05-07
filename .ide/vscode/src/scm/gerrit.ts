@@ -7,10 +7,7 @@ import { execSync } from 'child_process'
 import * as vscode from 'vscode'
 
 import { log, notifyError, notifyInfo, notifyWarn } from '../core/log'
-
-function getWorkspacePath(): string | undefined {
-  return vscode.workspace.workspaceFolders?.[0]?.uri.fsPath
-}
+import { repoRoot } from './git'
 
 function git(args: string, cwd: string): string {
   return execSync(`git ${args}`, { cwd, encoding: 'utf-8' }).trim()
@@ -48,7 +45,7 @@ export function registerGerritPush(context: vscode.ExtensionContext): void {
   context.subscriptions.push(
     vscode.commands.registerCommand('cmk.pushToGerrit', async () => {
       log('Push to Gerrit')
-      const cwd = getWorkspacePath()
+      const cwd = repoRoot()
       if (!cwd) {
         notifyError('CMK: No workspace folder found.')
         return

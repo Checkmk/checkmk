@@ -7,15 +7,12 @@ import * as vscode from 'vscode'
 
 import { log } from '../core/log'
 import { safeExec } from '../core/shell'
+import { repoRoot } from './git'
 
 const CONTEXT_KEY = 'cmk.branchSyncState'
 const REF_SEP = '<<CMK>>'
 
 type SyncState = 'unknown' | 'noupstream' | 'synced' | 'ahead' | 'behind' | 'diverged'
-
-function repoRoot(): string | undefined {
-  return vscode.workspace.workspaceFolders?.[0]?.uri.fsPath
-}
 
 function computeSyncState(cwd: string): SyncState {
   const branch = safeExec('git symbolic-ref --short HEAD', { cwd })

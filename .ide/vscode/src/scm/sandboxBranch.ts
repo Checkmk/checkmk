@@ -7,12 +7,9 @@ import * as vscode from 'vscode'
 
 import { log, notifyError } from '../core/log'
 import { safeExec } from '../core/shell'
+import { currentBranch, repoRoot } from './git'
 
 const COMMON_BASES = ['master', '2.4.0', '2.3.0', '2.2.0']
-
-function repoRoot(): string | undefined {
-  return vscode.workspace.workspaceFolders?.[0]?.uri.fsPath
-}
 
 type BranchInfo = {
   name: string
@@ -86,10 +83,6 @@ function listRemoteBaseBranches(cwd: string): string[] {
   for (const b of COMMON_BASES) if (all.includes(b)) ordered.push(b)
   for (const b of all) if (!ordered.includes(b)) ordered.push(b)
   return ordered
-}
-
-function currentBranch(cwd: string): string {
-  return safeExec('git rev-parse --abbrev-ref HEAD', { cwd })
 }
 
 async function checkoutRef(ref: string): Promise<void> {

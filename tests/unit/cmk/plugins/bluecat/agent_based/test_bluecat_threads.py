@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.agent_based.v2 import Metric, Result, State
-from cmk.legacy_checks.bluecat_threads import check_bluecat_threads
+from cmk.plugins.bluecat.agent_based.bluecat_threads import check_bluecat_threads
 
 
 def test_make_sure_bluecat_threads_can_handle_new_params_format() -> None:

@@ -3,8 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.plugins.collection.agent_based.docker_container_mem import parse_docker_container_mem
-from cmk.plugins.collection.agent_based.docker_container_mem_cgroupv2 import (
+from cmk.plugins.docker.agent_based.docker_container_mem import parse_docker_container_mem
+from cmk.plugins.docker.agent_based.docker_container_mem_cgroupv2 import (
     parse_docker_container_mem_cgroupv2,  # fmt: off
 )
 

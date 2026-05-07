@@ -23,10 +23,10 @@ from cmk.agent_based.v2 import (
 from cmk.agent_based.v2.render import iobandwidth
 from cmk.plugins.collection.agent_based import diskstat
 from cmk.plugins.collection.agent_based.diskstat import check_plugin_diskstat
-from cmk.plugins.collection.agent_based.docker_container_diskstat import (
+from cmk.plugins.docker.agent_based.docker_container_diskstat import (
     agent_section_docker_container_diskstat,
 )
-from cmk.plugins.collection.agent_based.docker_container_diskstat_cgroupv2 import (
+from cmk.plugins.docker.agent_based.docker_container_diskstat_cgroupv2 import (
     agent_section_docker_container_diskstat_cgroupv2,
     DockerDiskstatParser,
 )

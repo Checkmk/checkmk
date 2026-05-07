@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.agent_based.v2 import TableRow
-from cmk.plugins.collection.agent_based.inventory_docker_node_network import (
+from cmk.plugins.docker.agent_based.inventory_docker_node_network import (
     inventorize_docker_node_network,
     parse_docker_node_network,
 )

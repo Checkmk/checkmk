@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.agent_based.v2 import Attributes
-from cmk.plugins.collection.agent_based.inventory_docker_container_labels import (
+from cmk.plugins.docker.agent_based.inventory_docker_container_labels import (
     inventorize_docker_container_labels,
     parse_docker_container_labels,
 )

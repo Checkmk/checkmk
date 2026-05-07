@@ -6,13 +6,11 @@
 import pytest
 
 from cmk.agent_based.v2 import TableRow
-from cmk.plugins.collection.agent_based.inventory_docker_node_images import (
+from cmk.plugins.docker import lib as docker
+from cmk.plugins.docker.agent_based.inventory_docker_node_images import (
     inventorize_docker_node_images,
     parse_docker_node_images,
 )
-from cmk.plugins.docker import lib as docker
-
-from .utils_inventory import sort_inventory_result
 
 
 def test_inventorize_docker_node_images_empty() -> None:
@@ -101,9 +99,7 @@ AGENT_OUTPUT_NO_SIZE_AT_ALL = (
 
 def test_inventorize_docker_node_images() -> None:
     parsed = [line.split("\0") for line in AGENT_OUTPUT.split("\n")]
-    assert sort_inventory_result(
-        inventorize_docker_node_images(parse_docker_node_images(parsed))
-    ) == sort_inventory_result(
+    assert list(inventorize_docker_node_images(parse_docker_node_images(parsed))) == list(
         [
             TableRow(
                 path=["software", "applications", "docker", "images"],
@@ -140,9 +136,9 @@ def test_inventorize_docker_node_images() -> None:
 
 
 def test_inventorize_docker_node_images_labels_null() -> None:
-    assert sort_inventory_result(
+    assert list(
         inventorize_docker_node_images(parse_docker_node_images(AGENT_OUTPUT_NULL_LABELS_ST))
-    ) == sort_inventory_result(
+    ) == list(
         [
             TableRow(
                 path=["software", "applications", "docker", "images"],
@@ -166,9 +162,7 @@ def test_inventorize_docker_node_images_labels_null() -> None:
 
 def test_inventorize_docker_node_images_no_virtual_size() -> None:
     parsed = [line.split("\0") for line in AGENT_OUTPUT_NO_VIRTUAL_SIZE.split("\n")]
-    assert sort_inventory_result(
-        inventorize_docker_node_images(parse_docker_node_images(parsed))
-    ) == sort_inventory_result(
+    assert list(inventorize_docker_node_images(parse_docker_node_images(parsed))) == list(
         [
             TableRow(
                 path=["software", "applications", "docker", "images"],
@@ -206,9 +200,7 @@ def test_inventorize_docker_node_images_no_virtual_size() -> None:
 
 def test_inventorize_docker_node_images_no_size_at_all() -> None:
     parsed = [line.split("\0") for line in AGENT_OUTPUT_NO_SIZE_AT_ALL.split("\n")]
-    assert sort_inventory_result(
-        inventorize_docker_node_images(parse_docker_node_images(parsed))
-    ) == sort_inventory_result(
+    assert list(inventorize_docker_node_images(parse_docker_node_images(parsed))) == list(
         [
             TableRow(
                 path=["software", "applications", "docker", "images"],

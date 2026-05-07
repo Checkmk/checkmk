@@ -11,7 +11,7 @@ from zoneinfo import ZoneInfo
 import pytest
 import time_machine
 
-import cmk.plugins.collection.agent_based.docker_container_status as docker
+import cmk.plugins.docker.agent_based.docker_container_status as docker
 from cmk.agent_based.v2 import (
     CheckResult,
     DiscoveryResult,

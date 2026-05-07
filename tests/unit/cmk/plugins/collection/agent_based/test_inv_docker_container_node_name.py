@@ -6,7 +6,7 @@
 import pytest
 
 from cmk.agent_based.v2 import Attributes
-from cmk.plugins.collection.agent_based.inventory_docker_container_node_name import (
+from cmk.plugins.docker.agent_based.inventory_docker_container_node_name import (
     inventorize_docker_container_node_name,
     parse_docker_container_node_name,
     Section,

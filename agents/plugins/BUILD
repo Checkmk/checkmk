@@ -29,13 +29,6 @@ py_binary(
     visibility = ["//visibility:public"],
 )
 
-py_binary(
-    name = "nginx_status",
-    srcs = ["nginx_status.py"],
-    imports = ["."],
-    visibility = ["//visibility:public"],
-)
-
 py_library(
     name = "agent-plugins-python",
     srcs = [
@@ -49,7 +42,6 @@ py_library(
         "mk_podman.py",
         "mk_sap.py",
         "mk_tinkerforge.py",
-        "nginx_status.py",
     ],
     imports = ["."],
     visibility = ["//tests:__subpackages__"],

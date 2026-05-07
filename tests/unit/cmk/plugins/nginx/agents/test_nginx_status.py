@@ -6,7 +6,7 @@
 # mypy: disable-error-code="no-untyped-call"
 
 
-from agents.plugins import nginx_status
+from cmk.plugins.nginx.agents import nginx_status
 
 
 class TestExtractStatsFromNetstat:

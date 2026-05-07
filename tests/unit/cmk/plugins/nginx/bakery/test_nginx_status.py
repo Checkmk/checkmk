@@ -6,14 +6,16 @@
 from pathlib import Path
 from pprint import pformat
 
-from cmk.bakery.v1 import OS, Plugin, PluginConfig
-from cmk.base.plugins.bakery.nginx_status import get_nginx_status_files
+from cmk.bakery.v2_unstable import OS, Plugin, PluginConfig
+from cmk.plugins.nginx.bakery.nginx_status import bakery_plugin_nginx_status
 
 
 def test_nginx_status_files_static() -> None:
     servers = [{"protocol": "http", "address": "127.0.0.1", "port": 80}]
-    conf = {"deployment": ("sync", None), "instances": ("static", servers)}
-    result = sorted(get_nginx_status_files(conf), key=repr)
+    conf = bakery_plugin_nginx_status.parameter_parser(
+        {"deployment": ("sync", None), "instances": ("static", servers)}
+    )
+    result = sorted(bakery_plugin_nginx_status.files_function(conf), key=repr)
     expected = sorted(
         [
             Plugin(base_os=OS.LINUX, source=Path("nginx_status.py"), interval=None),
@@ -31,8 +33,10 @@ def test_nginx_status_files_static() -> None:
 
 def test_nginx_status_files_autodetect() -> None:
     ssl_ports = [443, 8443]
-    conf = {"deployment": ("sync", None), "instances": ("autodetect", ssl_ports)}
-    result = sorted(get_nginx_status_files(conf), key=repr)
+    conf = bakery_plugin_nginx_status.parameter_parser(
+        {"deployment": ("sync", None), "instances": ("autodetect", ssl_ports)}
+    )
+    result = sorted(bakery_plugin_nginx_status.files_function(conf), key=repr)
     expected = sorted(
         [
             Plugin(base_os=OS.LINUX, source=Path("nginx_status.py"), interval=None),
@@ -49,11 +53,11 @@ def test_nginx_status_files_autodetect() -> None:
 
 
 def test_nginx_status_files_no_instances() -> None:
-    conf = {"deployment": ("sync", None)}
-    result = list(get_nginx_status_files(conf))
+    conf = bakery_plugin_nginx_status.parameter_parser({"deployment": ("sync", None)})
+    result = list(bakery_plugin_nginx_status.files_function(conf))
     assert result == [Plugin(base_os=OS.LINUX, source=Path("nginx_status.py"), interval=None)]
 
 
 def test_nginx_status_files_do_not_deploy() -> None:
-    conf = {"deployment": ("do_not_deploy", None)}
-    assert list(get_nginx_status_files(conf)) == []
+    conf = bakery_plugin_nginx_status.parameter_parser({"deployment": ("do_not_deploy", None)})
+    assert list(bakery_plugin_nginx_status.files_function(conf)) == []

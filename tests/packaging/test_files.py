@@ -671,7 +671,6 @@ AGENT_PLUGINS_PREFIX = [
     "mk_mongodb",
     "mk_sap",
     "mk_tinkerforge",
-    "nginx_status",
 ]
 
 

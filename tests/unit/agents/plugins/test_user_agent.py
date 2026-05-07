@@ -11,7 +11,6 @@ import pytest
 # Do not add new stuff here.
 # The future lies in tests/plugins_consistency/agents.
 import apache_status  # type: ignore[import-not-found,unused-ignore]
-import nginx_status  # type: ignore[import-not-found,unused-ignore]
 from cmk.ccc import version
 
 
@@ -19,7 +18,6 @@ from cmk.ccc import version
     "user_agent",
     [
         apache_status.USER_AGENT,
-        nginx_status.USER_AGENT,
     ],
 )
 def test_user_agent_string(user_agent: str) -> None:

@@ -120,7 +120,6 @@ py_test(
         ":__test__",
         ":conftest",
         "//agents/plugins:apache_status",
-        "//agents/plugins:nginx_status",
         "//cmk:cmkpasswd",
         "//cmk/legacy_includes",
         "//cmk/product_usage:product_usage_cli",

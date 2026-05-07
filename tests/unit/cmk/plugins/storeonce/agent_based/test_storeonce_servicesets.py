@@ -11,14 +11,14 @@ import pytest
 import time_machine
 
 from cmk.agent_based.v2 import Metric, Result, Service, State
-from cmk.plugins.collection.agent_based.storeonce_servicesets import (
+from cmk.plugins.lib.df import FILESYSTEM_DEFAULT_PARAMS
+from cmk.plugins.storeonce import lib as storeonce
+from cmk.plugins.storeonce.agent_based.storeonce_servicesets import (
     check_storeonce_servicesets,
     check_storeonce_servicesets_capacity,
     discover_storeonce_servicesets,
     parse_storeonce_servicesets,
 )
-from cmk.plugins.lib.df import FILESYSTEM_DEFAULT_PARAMS
-from cmk.plugins.storeonce import lib as storeonce
 
 Section = storeonce.SectionServiceSets
 

@@ -19,7 +19,7 @@ _JSONSerializable = (
 )
 
 OSWalk = list[tuple[str, list[str], list[str]]]
-DiagnosticsCLParameters = list[str]
+DiagnosticsCLParameters = Sequence[str]
 DiagnosticsModesParameters = dict[str, Any]
 DiagnosticsOptionalParameters = dict[str, Any]
 CheckmkFilesMap = dict[str, Path]
@@ -149,7 +149,7 @@ COMPONENT_DIRECTORIES = {
 
 def serialize_wato_parameters(
     wato_parameters: DiagnosticsParameters, *, max_args: int
-) -> list[DiagnosticsCLParameters]:
+) -> Sequence[DiagnosticsCLParameters]:
     # TODO: reduce the number of branches and do the whole procedure in a more generic/elegant way
 
     parameters: dict[str, Any] = {}
@@ -208,7 +208,7 @@ def serialize_wato_parameters(
             licensing_files |= _extract_list_of_files(value.get("licensing_files"))
             log_files |= _extract_list_of_files(value.get("log_files"))
 
-    chunks: list[list[str]] = []
+    chunks: list[DiagnosticsCLParameters] = []
     if boolean_opts:
         chunks.append(boolean_opts)
 

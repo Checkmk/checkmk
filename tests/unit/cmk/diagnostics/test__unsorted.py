@@ -3,33 +3,61 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Sequence
 from pathlib import Path
 
 import pytest
 
-from cmk import diagnostics
+from cmk.ccc.site import SiteId
+from cmk.diagnostics import (
+    CheckmkFileSensitivity,
+    deserialize_cl_parameters,
+    deserialize_modes_parameters,
+    DiagnosticsCLParameters,
+    DiagnosticsModesParameters,
+    DiagnosticsOptionalParameters,
+    DiagnosticsParameters,
+    get_checkmk_file_info,
+    OPT_CHECKMK_CONFIG_FILES,
+    OPT_CHECKMK_CRASH_REPORTS,
+    OPT_CHECKMK_LOG_FILES,
+    OPT_CHECKMK_OVERVIEW,
+    OPT_COMP_BUSINESS_INTELLIGENCE,
+    OPT_COMP_GLOBAL_SETTINGS,
+    OPT_COMP_HOSTS_AND_FOLDERS,
+    OPT_COMP_NOTIFICATIONS,
+    OPT_LOCAL_FILES,
+    OPT_OMD_CONFIG,
+    OPT_PERFORMANCE_GRAPHS,
+    redact_passwords_in_content,
+    REDACT_STRING,
+    serialize_wato_parameters,
+)
 
 
 def test_diagnostics_serialize_wato_parameters_boolean() -> None:
-    assert sorted(
-        diagnostics.serialize_wato_parameters(
-            {  # type: ignore[typeddict-item]
-                "opt_info": {
-                    diagnostics.OPT_LOCAL_FILES: "ANY",
-                    diagnostics.OPT_OMD_CONFIG: "ANY",
-                    diagnostics.OPT_CHECKMK_CRASH_REPORTS: "ANY",
+    assert list(
+        serialize_wato_parameters(
+            DiagnosticsParameters(
+                site=SiteId("gnlpft"),
+                general=True,
+                timeout=99,
+                opt_info={
+                    OPT_LOCAL_FILES: "ANY",
+                    OPT_OMD_CONFIG: "ANY",
+                    OPT_CHECKMK_CRASH_REPORTS: "ANY",
                 },
-            },
+                comp_specific=None,
+                checkmk_server_host="hurz",
+            ),
             max_args=4096,
         )
     ) == [
-        sorted(
-            [
-                diagnostics.OPT_LOCAL_FILES,
-                diagnostics.OPT_OMD_CONFIG,
-                diagnostics.OPT_CHECKMK_CRASH_REPORTS,
-            ]
-        )
+        [
+            OPT_CHECKMK_CRASH_REPORTS,
+            OPT_LOCAL_FILES,
+            OPT_OMD_CONFIG,
+        ]
     ]
 
 
@@ -37,133 +65,167 @@ def test_diagnostics_serialize_wato_parameters_boolean() -> None:
     "wato_parameters, expected_parameters",
     [
         (
-            {
-                "checkmk_server_host": "",
-                "opt_info": {},
-            },
+            DiagnosticsParameters(
+                site=SiteId("gnlpft"),
+                general=True,
+                timeout=99,
+                opt_info={},
+                comp_specific=None,
+                checkmk_server_host="",
+            ),
             [[]],
         ),
         (
-            {
-                "checkmk_server_host": "",
-                "opt_info": {
-                    diagnostics.OPT_PERFORMANCE_GRAPHS: "ANY",
+            DiagnosticsParameters(
+                site=SiteId("gnlpft"),
+                general=True,
+                timeout=99,
+                opt_info={
+                    OPT_PERFORMANCE_GRAPHS: "ANY",
                 },
-            },
-            [[diagnostics.OPT_PERFORMANCE_GRAPHS, ""]],
+                comp_specific=None,
+                checkmk_server_host="",
+            ),
+            [[OPT_PERFORMANCE_GRAPHS, ""]],
         ),
         (
-            {
-                "checkmk_server_host": "myhost",
-                "opt_info": {
-                    diagnostics.OPT_PERFORMANCE_GRAPHS: "ANY",
+            DiagnosticsParameters(
+                site=SiteId("gnlpft"),
+                general=True,
+                timeout=99,
+                opt_info={
+                    OPT_PERFORMANCE_GRAPHS: "ANY",
                 },
-            },
-            [[diagnostics.OPT_PERFORMANCE_GRAPHS, "myhost"]],
+                comp_specific=None,
+                checkmk_server_host="myhost",
+            ),
+            [[OPT_PERFORMANCE_GRAPHS, "myhost"]],
         ),
         (
-            {
-                "checkmk_server_host": "myhost",
-                "opt_info": {
-                    diagnostics.OPT_PERFORMANCE_GRAPHS: "ANY",
-                    diagnostics.OPT_CHECKMK_OVERVIEW: "ANY",
+            DiagnosticsParameters(
+                site=SiteId("gnlpft"),
+                general=True,
+                timeout=99,
+                opt_info={
+                    OPT_PERFORMANCE_GRAPHS: "ANY",
+                    OPT_CHECKMK_OVERVIEW: "ANY",
                 },
-            },
+                comp_specific=None,
+                checkmk_server_host="myhost",
+            ),
             [
-                [diagnostics.OPT_PERFORMANCE_GRAPHS, "myhost"],
-                [diagnostics.OPT_CHECKMK_OVERVIEW, "myhost"],
+                [OPT_PERFORMANCE_GRAPHS, "myhost"],
+                [OPT_CHECKMK_OVERVIEW, "myhost"],
             ],
         ),
     ],
 )
 def test_diagnostics_serialize_wato_parameters_with_host(
-    wato_parameters: diagnostics.DiagnosticsParameters,
-    expected_parameters: list[list[str]],
+    wato_parameters: DiagnosticsParameters,
+    expected_parameters: Sequence[DiagnosticsCLParameters],
 ) -> None:
-    assert (
-        diagnostics.serialize_wato_parameters(wato_parameters, max_args=4096) == expected_parameters
-    )
+    assert serialize_wato_parameters(wato_parameters, max_args=4096) == expected_parameters
 
 
 @pytest.mark.parametrize(
     "wato_parameters, expected_parameters",
     [
         (
-            {
-                "opt_info": {},
-                "comp_specific": {},
-            },
+            DiagnosticsParameters(
+                site=SiteId("gnlpft"),
+                general=True,
+                timeout=99,
+                opt_info={},
+                comp_specific={},
+                checkmk_server_host="hurz",
+            ),
             [[]],
         ),
         (
-            {
-                "opt_info": {},
-                "comp_specific": {diagnostics.OPT_COMP_NOTIFICATIONS: {}},
-            },
+            DiagnosticsParameters(
+                site=SiteId("gnlpft"),
+                general=True,
+                timeout=99,
+                opt_info={},
+                comp_specific={OPT_COMP_NOTIFICATIONS: {}},
+                checkmk_server_host="hurz",
+            ),
             [[]],
         ),
         (
-            {
-                "opt_info": {
-                    diagnostics.OPT_CHECKMK_CONFIG_FILES: ("_ty", ["a", "b"]),
+            DiagnosticsParameters(
+                site=SiteId("gnlpft"),
+                general=True,
+                timeout=99,
+                opt_info={
+                    OPT_CHECKMK_CONFIG_FILES: ("_ty", ["a", "b"]),
                 },
-                "comp_specific": {
-                    diagnostics.OPT_COMP_NOTIFICATIONS: {
+                comp_specific={
+                    OPT_COMP_NOTIFICATIONS: {
                         "config_files": ("_ty", ["a", "b"]),
                         "log_files": ("_ty", ["a", "b"]),
                     },
                 },
-            },
+                checkmk_server_host="hurz",
+            ),
             [
-                [diagnostics.OPT_CHECKMK_CONFIG_FILES, "a,b"],
-                [diagnostics.OPT_CHECKMK_LOG_FILES, "a,b"],
+                [OPT_CHECKMK_CONFIG_FILES, "a,b"],
+                [OPT_CHECKMK_LOG_FILES, "a,b"],
             ],
         ),
         (
-            {
-                "opt_info": {
-                    diagnostics.OPT_CHECKMK_CONFIG_FILES: ("_ty", ["a1", "a2"]),
+            DiagnosticsParameters(
+                site=SiteId("gnlpft"),
+                general=True,
+                timeout=99,
+                opt_info={
+                    OPT_CHECKMK_CONFIG_FILES: ("_ty", ["a1", "a2"]),
                 },
-                "comp_specific": {
-                    diagnostics.OPT_COMP_NOTIFICATIONS: {
+                comp_specific={
+                    OPT_COMP_NOTIFICATIONS: {
                         "config_files": ("_ty", ["b1", "b2"]),
                         "log_files": ("_ty", ["c1", "c2"]),
                     },
                 },
-            },
+                checkmk_server_host="hurz",
+            ),
             [
-                [diagnostics.OPT_CHECKMK_CONFIG_FILES, "a1,a2,b1,b2"],
-                [diagnostics.OPT_CHECKMK_LOG_FILES, "c1,c2"],
+                [OPT_CHECKMK_CONFIG_FILES, "a1,a2,b1,b2"],
+                [OPT_CHECKMK_LOG_FILES, "c1,c2"],
             ],
         ),
         (
-            {
-                "opt_info": {
-                    diagnostics.OPT_CHECKMK_CONFIG_FILES: (
+            DiagnosticsParameters(
+                site=SiteId("gnlpft"),
+                general=True,
+                timeout=99,
+                opt_info={
+                    OPT_CHECKMK_CONFIG_FILES: (
                         "_ty",
                         ["a1", "a2", "a3", "a4", "a5"],
                     ),
                 },
-                "comp_specific": {
-                    diagnostics.OPT_COMP_NOTIFICATIONS: {
+                comp_specific={
+                    OPT_COMP_NOTIFICATIONS: {
                         "config_files": ("_ty", ["b1", "b2"]),
                         "log_files": ("_ty", ["c1", "c2"]),
                     },
                 },
-            },
+                checkmk_server_host="hurz",
+            ),
             [
-                [diagnostics.OPT_CHECKMK_CONFIG_FILES, "a1,a2,a3,a4"],
-                [diagnostics.OPT_CHECKMK_CONFIG_FILES, "a5,b1,b2"],
-                [diagnostics.OPT_CHECKMK_LOG_FILES, "c1,c2"],
+                [OPT_CHECKMK_CONFIG_FILES, "a1,a2,a3,a4"],
+                [OPT_CHECKMK_CONFIG_FILES, "a5,b1,b2"],
+                [OPT_CHECKMK_LOG_FILES, "c1,c2"],
             ],
         ),
     ],
 )
 def test_diagnostics_serialize_wato_parameters_files(
-    wato_parameters: diagnostics.DiagnosticsParameters,
-    expected_parameters: list[list[str]],
+    wato_parameters: DiagnosticsParameters,
+    expected_parameters: Sequence[DiagnosticsCLParameters],
 ) -> None:
-    assert diagnostics.serialize_wato_parameters(wato_parameters, max_args=5) == expected_parameters
+    assert serialize_wato_parameters(wato_parameters, max_args=5) == expected_parameters
 
 
 @pytest.mark.parametrize(
@@ -173,119 +235,119 @@ def test_diagnostics_serialize_wato_parameters_files(
         # boolean
         (
             [
-                diagnostics.OPT_LOCAL_FILES,
-                diagnostics.OPT_OMD_CONFIG,
-                diagnostics.OPT_CHECKMK_CRASH_REPORTS,
+                OPT_LOCAL_FILES,
+                OPT_OMD_CONFIG,
+                OPT_CHECKMK_CRASH_REPORTS,
             ],
             {
-                diagnostics.OPT_LOCAL_FILES: True,
-                diagnostics.OPT_OMD_CONFIG: True,
-                diagnostics.OPT_CHECKMK_CRASH_REPORTS: True,
+                OPT_LOCAL_FILES: True,
+                OPT_OMD_CONFIG: True,
+                OPT_CHECKMK_CRASH_REPORTS: True,
             },
             {
-                diagnostics.OPT_LOCAL_FILES: True,
-                diagnostics.OPT_OMD_CONFIG: True,
-                diagnostics.OPT_CHECKMK_CRASH_REPORTS: True,
+                OPT_LOCAL_FILES: True,
+                OPT_OMD_CONFIG: True,
+                OPT_CHECKMK_CRASH_REPORTS: True,
             },
         ),
         # files
         (
             [
-                diagnostics.OPT_CHECKMK_CONFIG_FILES,
+                OPT_CHECKMK_CONFIG_FILES,
                 "a,b",
-                diagnostics.OPT_CHECKMK_LOG_FILES,
+                OPT_CHECKMK_LOG_FILES,
                 "a,b",
             ],
             {
-                diagnostics.OPT_CHECKMK_CONFIG_FILES: "a,b",
-                diagnostics.OPT_CHECKMK_LOG_FILES: "a,b",
+                OPT_CHECKMK_CONFIG_FILES: "a,b",
+                OPT_CHECKMK_LOG_FILES: "a,b",
             },
             {
-                diagnostics.OPT_CHECKMK_CONFIG_FILES: ["a", "b"],
-                diagnostics.OPT_CHECKMK_LOG_FILES: ["a", "b"],
+                OPT_CHECKMK_CONFIG_FILES: ["a", "b"],
+                OPT_CHECKMK_LOG_FILES: ["a", "b"],
             },
         ),
         # with host
         (
             [
-                diagnostics.OPT_PERFORMANCE_GRAPHS,
+                OPT_PERFORMANCE_GRAPHS,
                 "myhost",
-                diagnostics.OPT_CHECKMK_OVERVIEW,
+                OPT_CHECKMK_OVERVIEW,
                 "myhost",
             ],
             {
-                diagnostics.OPT_PERFORMANCE_GRAPHS: "myhost",
-                diagnostics.OPT_CHECKMK_OVERVIEW: "myhost",
+                OPT_PERFORMANCE_GRAPHS: "myhost",
+                OPT_CHECKMK_OVERVIEW: "myhost",
             },
             {
-                diagnostics.OPT_PERFORMANCE_GRAPHS: "myhost",
-                diagnostics.OPT_CHECKMK_OVERVIEW: "myhost",
+                OPT_PERFORMANCE_GRAPHS: "myhost",
+                OPT_CHECKMK_OVERVIEW: "myhost",
             },
         ),
     ],
 )
 def test_diagnostics_deserialize(
-    cl_parameters: list[str],
-    modes_parameters: dict[str, str],
-    expected_parameters: dict[str, list[str]],
+    cl_parameters: DiagnosticsCLParameters,
+    modes_parameters: DiagnosticsModesParameters,
+    expected_parameters: DiagnosticsOptionalParameters,
 ) -> None:
-    assert diagnostics.deserialize_cl_parameters(cl_parameters) == expected_parameters
-    assert diagnostics.deserialize_modes_parameters(modes_parameters) == expected_parameters
+    assert deserialize_cl_parameters(cl_parameters) == expected_parameters
+    assert deserialize_modes_parameters(modes_parameters) == expected_parameters
 
 
-# 'sensitivity.value == diagnostics.CheckmkFileSensitivity.unknown' means not found
+# 'sensitivity.value == CheckmkFileSensitivity.unknown' means not found
 @pytest.mark.parametrize(
     "component, sensitivity_values",
     [
         (
-            diagnostics.OPT_COMP_GLOBAL_SETTINGS,
+            OPT_COMP_GLOBAL_SETTINGS,
             [
-                diagnostics.CheckmkFileSensitivity.insensitive,
-                diagnostics.CheckmkFileSensitivity.sensitive,
-                diagnostics.CheckmkFileSensitivity.unknown,
-                diagnostics.CheckmkFileSensitivity.unknown,
-                diagnostics.CheckmkFileSensitivity.unknown,
-                diagnostics.CheckmkFileSensitivity.unknown,
+                CheckmkFileSensitivity.insensitive,
+                CheckmkFileSensitivity.sensitive,
+                CheckmkFileSensitivity.unknown,
+                CheckmkFileSensitivity.unknown,
+                CheckmkFileSensitivity.unknown,
+                CheckmkFileSensitivity.unknown,
             ],
         ),
         (
-            diagnostics.OPT_COMP_HOSTS_AND_FOLDERS,
+            OPT_COMP_HOSTS_AND_FOLDERS,
             [
-                diagnostics.CheckmkFileSensitivity.unknown,
-                diagnostics.CheckmkFileSensitivity.unknown,
-                diagnostics.CheckmkFileSensitivity.sensitive,
-                diagnostics.CheckmkFileSensitivity.sensitive,
-                diagnostics.CheckmkFileSensitivity.sensitive,
-                diagnostics.CheckmkFileSensitivity.insensitive,
+                CheckmkFileSensitivity.unknown,
+                CheckmkFileSensitivity.unknown,
+                CheckmkFileSensitivity.sensitive,
+                CheckmkFileSensitivity.sensitive,
+                CheckmkFileSensitivity.sensitive,
+                CheckmkFileSensitivity.insensitive,
             ],
         ),
         (
-            diagnostics.OPT_COMP_NOTIFICATIONS,
+            OPT_COMP_NOTIFICATIONS,
             [
-                diagnostics.CheckmkFileSensitivity.unknown,
-                diagnostics.CheckmkFileSensitivity.unknown,
-                diagnostics.CheckmkFileSensitivity.sensitive,
-                diagnostics.CheckmkFileSensitivity.sensitive,
-                diagnostics.CheckmkFileSensitivity.sensitive,
-                diagnostics.CheckmkFileSensitivity.insensitive,
+                CheckmkFileSensitivity.unknown,
+                CheckmkFileSensitivity.unknown,
+                CheckmkFileSensitivity.sensitive,
+                CheckmkFileSensitivity.sensitive,
+                CheckmkFileSensitivity.sensitive,
+                CheckmkFileSensitivity.insensitive,
             ],
         ),
         (
-            diagnostics.OPT_COMP_BUSINESS_INTELLIGENCE,
+            OPT_COMP_BUSINESS_INTELLIGENCE,
             [
-                diagnostics.CheckmkFileSensitivity.unknown,
-                diagnostics.CheckmkFileSensitivity.unknown,
-                diagnostics.CheckmkFileSensitivity.unknown,
-                diagnostics.CheckmkFileSensitivity.unknown,
-                diagnostics.CheckmkFileSensitivity.unknown,
-                diagnostics.CheckmkFileSensitivity.unknown,
-                diagnostics.CheckmkFileSensitivity.sensitive,
+                CheckmkFileSensitivity.unknown,
+                CheckmkFileSensitivity.unknown,
+                CheckmkFileSensitivity.unknown,
+                CheckmkFileSensitivity.unknown,
+                CheckmkFileSensitivity.unknown,
+                CheckmkFileSensitivity.unknown,
+                CheckmkFileSensitivity.sensitive,
             ],
         ),
     ],
 )
 def test_diagnostics_get_checkmk_file_info_by_name(
-    component: str, sensitivity_values: list[diagnostics.CheckmkFileSensitivity]
+    component: str, sensitivity_values: Sequence[CheckmkFileSensitivity]
 ) -> None:
     rel_filepaths = [
         "path/to/sites.mk",
@@ -297,84 +359,79 @@ def test_diagnostics_get_checkmk_file_info_by_name(
         "multisite.d/wato/bi_config.bi",
     ]
     for rel_filepath, result in zip(rel_filepaths, sensitivity_values):
-        assert (
-            diagnostics.get_checkmk_file_info(rel_filepath, component).sensitivity.value
-            == result.value
-        )
+        assert get_checkmk_file_info(rel_filepath, component).sensitivity.value == result.value
 
 
 @pytest.mark.parametrize(
     "rel_filepath, sensitivity",
     [
-        ("apache.conf", diagnostics.CheckmkFileSensitivity.insensitive),
-        ("apache.d/wato/global.mk", diagnostics.CheckmkFileSensitivity.sensitive),
-        ("conf.d/microcore.mk", diagnostics.CheckmkFileSensitivity.insensitive),
-        ("conf.d/mkeventd.mk", diagnostics.CheckmkFileSensitivity.insensitive),
-        ("conf.d/pnp4nagios.mk", diagnostics.CheckmkFileSensitivity.insensitive),
-        ("conf.d/wato/.wato", diagnostics.CheckmkFileSensitivity.insensitive),
+        ("apache.conf", CheckmkFileSensitivity.insensitive),
+        ("apache.d/wato/global.mk", CheckmkFileSensitivity.sensitive),
+        ("conf.d/microcore.mk", CheckmkFileSensitivity.insensitive),
+        ("conf.d/mkeventd.mk", CheckmkFileSensitivity.insensitive),
+        ("conf.d/pnp4nagios.mk", CheckmkFileSensitivity.insensitive),
+        ("conf.d/wato/.wato", CheckmkFileSensitivity.insensitive),
         (
             "conf.d/wato/alert_handlers.mk",
-            diagnostics.CheckmkFileSensitivity.high_sensitive,
+            CheckmkFileSensitivity.high_sensitive,
         ),
-        ("conf.d/wato/contacts.mk", diagnostics.CheckmkFileSensitivity.sensitive),
-        ("conf.d/wato/global.mk", diagnostics.CheckmkFileSensitivity.sensitive),
-        ("conf.d/wato/groups.mk", diagnostics.CheckmkFileSensitivity.insensitive),
-        ("conf.d/wato/hosts.mk", diagnostics.CheckmkFileSensitivity.sensitive),
+        ("conf.d/wato/contacts.mk", CheckmkFileSensitivity.sensitive),
+        ("conf.d/wato/global.mk", CheckmkFileSensitivity.sensitive),
+        ("conf.d/wato/groups.mk", CheckmkFileSensitivity.insensitive),
+        ("conf.d/wato/hosts.mk", CheckmkFileSensitivity.sensitive),
         (
             "conf.d/wato/notifications.mk",
-            diagnostics.CheckmkFileSensitivity.sensitive,
+            CheckmkFileSensitivity.sensitive,
         ),
-        ("conf.d/wato/rules.mk", diagnostics.CheckmkFileSensitivity.sensitive),
-        ("conf.d/wato/tags.mk", diagnostics.CheckmkFileSensitivity.sensitive),
-        ("dcd.d/wato/global.mk", diagnostics.CheckmkFileSensitivity.sensitive),
-        ("liveproxyd.d/wato/global.mk", diagnostics.CheckmkFileSensitivity.sensitive),
-        ("main.mk", diagnostics.CheckmkFileSensitivity.insensitive),
-        ("mkeventd.d/wato/rules.mk", diagnostics.CheckmkFileSensitivity.sensitive),
+        ("conf.d/wato/rules.mk", CheckmkFileSensitivity.sensitive),
+        ("conf.d/wato/tags.mk", CheckmkFileSensitivity.sensitive),
+        ("dcd.d/wato/global.mk", CheckmkFileSensitivity.sensitive),
+        ("liveproxyd.d/wato/global.mk", CheckmkFileSensitivity.sensitive),
+        ("main.mk", CheckmkFileSensitivity.insensitive),
+        ("mkeventd.d/wato/rules.mk", CheckmkFileSensitivity.sensitive),
         (
             "mkeventd.d/wato/global.mk",
-            diagnostics.CheckmkFileSensitivity.sensitive,
+            CheckmkFileSensitivity.sensitive,
         ),
-        ("mkeventd.mk", diagnostics.CheckmkFileSensitivity.insensitive),
-        ("mknotifyd.d/wato/global.mk", diagnostics.CheckmkFileSensitivity.sensitive),
-        ("multisite.d/liveproxyd.mk", diagnostics.CheckmkFileSensitivity.insensitive),
-        ("multisite.d/mkeventd.mk", diagnostics.CheckmkFileSensitivity.insensitive),
-        ("multisite.d/sites.mk", diagnostics.CheckmkFileSensitivity.sensitive),
+        ("mkeventd.mk", CheckmkFileSensitivity.insensitive),
+        ("mknotifyd.d/wato/global.mk", CheckmkFileSensitivity.sensitive),
+        ("multisite.d/liveproxyd.mk", CheckmkFileSensitivity.insensitive),
+        ("multisite.d/mkeventd.mk", CheckmkFileSensitivity.insensitive),
+        ("multisite.d/sites.mk", CheckmkFileSensitivity.sensitive),
         (
             "multisite.d/wato/global.mk",
-            diagnostics.CheckmkFileSensitivity.sensitive,
+            CheckmkFileSensitivity.sensitive,
         ),
-        ("multisite.d/wato/groups.mk", diagnostics.CheckmkFileSensitivity.insensitive),
-        ("multisite.d/wato/tags.mk", diagnostics.CheckmkFileSensitivity.sensitive),
+        ("multisite.d/wato/groups.mk", CheckmkFileSensitivity.insensitive),
+        ("multisite.d/wato/tags.mk", CheckmkFileSensitivity.sensitive),
         (
             "multisite.d/wato/users.mk",
-            diagnostics.CheckmkFileSensitivity.sensitive,
+            CheckmkFileSensitivity.sensitive,
         ),
-        ("multisite.mk", diagnostics.CheckmkFileSensitivity.insensitive),
-        ("rrdcached.d/wato/global.mk", diagnostics.CheckmkFileSensitivity.sensitive),
-        ("alerts.log", diagnostics.CheckmkFileSensitivity.sensitive),
-        ("apache/access_log", diagnostics.CheckmkFileSensitivity.high_sensitive),
-        ("apache/error_log", diagnostics.CheckmkFileSensitivity.sensitive),
-        ("apache/stats", diagnostics.CheckmkFileSensitivity.high_sensitive),
-        ("cmc.log", diagnostics.CheckmkFileSensitivity.sensitive),
-        ("unknown.log", diagnostics.CheckmkFileSensitivity.unknown),
-        ("dcd.log", diagnostics.CheckmkFileSensitivity.sensitive),
-        ("diskspace.log", diagnostics.CheckmkFileSensitivity.insensitive),
-        ("liveproxyd.log", diagnostics.CheckmkFileSensitivity.sensitive),
-        ("liveproxyd.state", diagnostics.CheckmkFileSensitivity.sensitive),
-        ("mkeventd.log", diagnostics.CheckmkFileSensitivity.sensitive),
-        ("mknotifyd.log", diagnostics.CheckmkFileSensitivity.sensitive),
-        ("mknotifyd.state", diagnostics.CheckmkFileSensitivity.sensitive),
-        ("notify.log", diagnostics.CheckmkFileSensitivity.sensitive),
-        ("rrdcached.log", diagnostics.CheckmkFileSensitivity.sensitive),
-        ("web.log", diagnostics.CheckmkFileSensitivity.sensitive),
+        ("multisite.mk", CheckmkFileSensitivity.insensitive),
+        ("rrdcached.d/wato/global.mk", CheckmkFileSensitivity.sensitive),
+        ("alerts.log", CheckmkFileSensitivity.sensitive),
+        ("apache/access_log", CheckmkFileSensitivity.high_sensitive),
+        ("apache/error_log", CheckmkFileSensitivity.sensitive),
+        ("apache/stats", CheckmkFileSensitivity.high_sensitive),
+        ("cmc.log", CheckmkFileSensitivity.sensitive),
+        ("unknown.log", CheckmkFileSensitivity.unknown),
+        ("dcd.log", CheckmkFileSensitivity.sensitive),
+        ("diskspace.log", CheckmkFileSensitivity.insensitive),
+        ("liveproxyd.log", CheckmkFileSensitivity.sensitive),
+        ("liveproxyd.state", CheckmkFileSensitivity.sensitive),
+        ("mkeventd.log", CheckmkFileSensitivity.sensitive),
+        ("mknotifyd.log", CheckmkFileSensitivity.sensitive),
+        ("mknotifyd.state", CheckmkFileSensitivity.sensitive),
+        ("notify.log", CheckmkFileSensitivity.sensitive),
+        ("rrdcached.log", CheckmkFileSensitivity.sensitive),
+        ("web.log", CheckmkFileSensitivity.sensitive),
     ],
 )
 def test_diagnostics_file_info_of_comp_notifications(
-    rel_filepath: str, sensitivity: diagnostics.CheckmkFileSensitivity
+    rel_filepath: str, sensitivity: CheckmkFileSensitivity
 ) -> None:
-    assert (
-        diagnostics.get_checkmk_file_info(rel_filepath, None).sensitivity.value == sensitivity.value
-    )
+    assert get_checkmk_file_info(rel_filepath, None).sensitivity.value == sensitivity.value
 
 
 @pytest.mark.parametrize(
@@ -460,11 +517,9 @@ def test_diagnostics_redact_passwords(count: int, rel_filepath: str, content: st
     ]
     for password in passwords:
         redacted_content = "".join(
-            diagnostics.redact_passwords_in_content(
-                content.replace("TESTPW", password), Path(rel_filepath)
-            )
+            redact_passwords_in_content(content.replace("TESTPW", password), Path(rel_filepath))
         )
         # Password no longer in content
         assert password not in redacted_content
         # Only ONE substring should be redacted
-        assert redacted_content.count(diagnostics.REDACT_STRING) == count
+        assert redacted_content.count(REDACT_STRING) == count

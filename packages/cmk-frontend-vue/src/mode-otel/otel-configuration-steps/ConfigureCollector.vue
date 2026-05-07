@@ -23,7 +23,7 @@ import CollectorEndpointConfig from './CollectorEndpointConfig.vue'
 import PasswordStoreSlideIn from './PasswordStoreSlideIn.vue'
 import type { AuthConfig, EndpointConfig, EventConsoleConfig } from './otelTypes'
 import type { PasswordConfig } from './password_store_password.types.ts'
-import { isValidIpOrHostname, isValidPort } from './validation.ts'
+import { isValidIpOrHostname, isValidPasswordIdForEnvVar, isValidPort } from './validation.ts'
 
 const { _t } = usei18n()
 const createdSuffix = _t(' | created')
@@ -111,9 +111,13 @@ const portsConflict = computed(() => {
 })
 
 function authHasErrors(auth: AuthConfig): boolean {
-  return (
-    auth.method === 'basicauth' && (!auth.credential?.username.trim() || !auth.credential?.password)
-  )
+  if (auth.method !== 'basicauth') {
+    return false
+  }
+  if (!auth.credential?.username.trim() || !auth.credential?.password) {
+    return true
+  }
+  return !isValidPasswordIdForEnvVar(auth.credential.password)
 }
 
 function tlsHasErrors(auth: AuthConfig, encryption: boolean): boolean {

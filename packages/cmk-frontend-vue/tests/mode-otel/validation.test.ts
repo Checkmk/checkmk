@@ -5,7 +5,10 @@
  */
 import { describe, expect, it } from 'vitest'
 
-import { isValidIpOrHostname } from '@/mode-otel/otel-configuration-steps/validation'
+import {
+  isValidIpOrHostname,
+  isValidPasswordIdForEnvVar
+} from '@/mode-otel/otel-configuration-steps/validation'
 
 describe('isValidIpOrHostname', () => {
   describe('IPv4', () => {
@@ -46,4 +49,23 @@ describe('isValidIpOrHostname', () => {
       (h) => expect(isValidIpOrHostname(h)).toBe(false)
     )
   })
+})
+
+describe('isValidPasswordIdForEnvVar', () => {
+  it.each(['pw1', 'PW_1', 'a_b_c', 'A', '_', '_pw', '_1'])('accepts %s', (id) =>
+    expect(isValidPasswordIdForEnvVar(id)).toBe(true)
+  )
+  it.each([
+    ['empty', ''],
+    ['leading digit', '0123'],
+    ['leading digit', '1abc'],
+    ['hyphen', 'pw-1'],
+    ['space', 'pw 1'],
+    ['dot', 'pw.1'],
+    ['slash', 'pw/1'],
+    ['colon', 'pw:1'],
+    ['non-ascii', 'päss'],
+    ['dollar', 'pw$'],
+    ['plus', 'pw+1']
+  ])('rejects %s (%s)', (_desc, id) => expect(isValidPasswordIdForEnvVar(id)).toBe(false))
 })

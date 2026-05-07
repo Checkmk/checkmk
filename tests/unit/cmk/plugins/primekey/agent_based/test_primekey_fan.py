@@ -7,7 +7,7 @@
 import pytest
 
 from cmk.agent_based.v2 import CheckResult, Metric, Result, Service, State, StringTable
-from cmk.plugins.collection.agent_based.primekey_fan import _Section, check, discover, Fan, parse
+from cmk.plugins.primekey.agent_based.primekey_fan import _Section, check, discover, Fan, parse
 
 _SectionOk = {
     "CPU": Fan(speed=1000.0, state_fail=False),

@@ -8,7 +8,7 @@ from collections.abc import Mapping
 import pytest
 
 from cmk.agent_based.v2 import CheckResult, Metric, Result, Service, State
-from cmk.plugins.collection.agent_based.primekey_hsm_battery_voltage import (
+from cmk.plugins.primekey.agent_based.primekey_hsm_battery_voltage import (
     check,
     discover,
     HSMBattery,

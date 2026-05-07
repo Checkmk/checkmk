@@ -5,7 +5,7 @@
 
 
 from cmk.agent_based.v2 import Metric, Result, Service, State
-from cmk.plugins.collection.agent_based.primekey_db_usage import _Section, check, discover, parse
+from cmk.plugins.primekey.agent_based.primekey_db_usage import _Section, check, discover, parse
 
 
 def test_parse() -> None:

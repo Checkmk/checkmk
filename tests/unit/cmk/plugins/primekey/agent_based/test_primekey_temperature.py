@@ -6,17 +6,17 @@
 
 import pytest
 
-import cmk.plugins.collection.agent_based.primekey_temperature
+import cmk.plugins.primekey.agent_based.primekey_temperature
 from cmk.agent_based.v2 import Metric, Result, Service, State
-from cmk.plugins.collection.agent_based.primekey_temperature import check, discover, parse
 from cmk.plugins.lib.temperature import TempParamDict
+from cmk.plugins.primekey.agent_based.primekey_temperature import check, discover, parse
 
 
 @pytest.fixture
 def empty_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
     store = dict[str, object]()
     monkeypatch.setattr(
-        cmk.plugins.collection.agent_based.primekey_temperature, "get_value_store", lambda: store
+        cmk.plugins.primekey.agent_based.primekey_temperature, "get_value_store", lambda: store
     )
 
 

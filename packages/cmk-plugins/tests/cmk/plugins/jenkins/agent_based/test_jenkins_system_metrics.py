@@ -519,7 +519,6 @@ def test_jenkins_system_metrics_http_requests(section: Section) -> None:
     assert value == expected
 
 
-@pytest.mark.xfail(strict=True, reason="CMK-34656: unhandled bad data types")
 def test_jenkins_system_metrics_memory(section: Section) -> None:
     value = list(check_jenkins_metrics("Memory", {}, section))
     expected = [

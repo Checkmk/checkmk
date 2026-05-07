@@ -17,6 +17,8 @@ const OTEL_RECEIVERS_COLLECTION =
   'api/internal/domain-types/otel_collector_config_receivers/collections/all'
 const PROM_SCRAPE_COLLECTION =
   'api/internal/domain-types/otel_collector_config_prom_scrape/collections/all'
+const OTEL_BUNDLES_COLLECTION =
+  'api/internal/domain-types/otel_collector_config_bundles/collections/all'
 
 /**
  * Context handed to each post-save action. Holds values collected by the
@@ -471,6 +473,40 @@ export function createPrometheusScrapeConfigAction(
   }
 }
 
+export interface OTelBundleInput {
+  configName: string
+  siteId: string
+  passwordIds: string[]
+}
+
+/**
+ * Factory: builds the create-OTel-bundle action that locks the receiver/prom-scrape config,
+ * DCD connection, and any newly created passwords to a single QuickSetup configuration bundle.
+ * Must run after all other post-save actions so the configs it references already exist.
+ * Idempotent: if a bundle already exists for this config the backend returns the existing one.
+ */
+export function createOTelBundleAction(input: OTelBundleInput): PostSaveAction {
+  return {
+    key: 'createOTelBundle',
+    label: () => _t('Configuration bundle setup'),
+    execute: async () => {
+      try {
+        const response = await fetchRestAPI(OTEL_BUNDLES_COLLECTION, 'POST', {
+          title: input.configName,
+          site: input.siteId,
+          otel_config_id: input.configName,
+          dcd_connection_id: `quick_setup_${input.configName}`,
+          password_ids: input.passwordIds
+        })
+        await response.raiseForStatus()
+        return { ok: true }
+      } catch (err) {
+        return errorFromUnknown(err, _t('Could not create the configuration bundle'))
+      }
+    }
+  }
+}
+
 /**
  * Shared verify-and-add-change steps used by the OTel wizard, which builds
  * its final list as `[createReceiverConfigAction(...), ...POST_SAVE_ACTIONS]`
@@ -487,8 +523,8 @@ export const POST_SAVE_ACTIONS: readonly PostSaveAction[] = [
 /**
  * Builds the Prometheus QuickSetup finalize action list in the order the
  * checklist should display: collector on → backend on → scraper configured →
- * hosts auto-managed. Centralized here so the order is testable without
- * mounting the wizard component.
+ * hosts auto-managed → bundle locked. Centralized here so the order is
+ * testable without mounting the wizard component.
  */
 export function buildPrometheusFinalizeActions(
   input: PrometheusScrapeConfigInput
@@ -497,6 +533,7 @@ export function buildPrometheusFinalizeActions(
     enableCollectorAction,
     enableMetricBackendAction,
     createPrometheusScrapeConfigAction(input),
-    createDCDConnectorAction
+    createDCDConnectorAction,
+    createOTelBundleAction({ configName: input.id, siteId: input.siteId, passwordIds: [] })
   ]
 }

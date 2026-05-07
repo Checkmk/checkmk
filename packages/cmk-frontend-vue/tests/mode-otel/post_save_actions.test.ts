@@ -587,7 +587,8 @@ describe('buildPrometheusFinalizeActions', () => {
       'enableCollector',
       'enableMetricBackend',
       'createPrometheusScrapeConfig',
-      'createDCDConnector'
+      'createDCDConnector',
+      'createOTelBundle'
     ])
   })
 })

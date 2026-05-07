@@ -7,7 +7,7 @@
 import pytest
 
 from cmk.agent_based.v2 import Result, State
-from cmk.plugins.collection.agent_based import synology_raid
+from cmk.plugins.synology.agent_based import synology_raid
 
 SECTION_TABLE = [[f"Volume {i}", f"{i}"] for i in range(1, 22)]
 

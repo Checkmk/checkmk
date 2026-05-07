@@ -5,7 +5,7 @@
 
 
 from cmk.agent_based.v2 import Result, State
-from cmk.plugins.collection.agent_based import synology_info
+from cmk.plugins.synology.agent_based import synology_info
 
 SECTION_TABLE = [["DS218", "19A0QEN742405", "DSM 7.0-42218"]]
 

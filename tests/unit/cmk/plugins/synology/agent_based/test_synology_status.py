@@ -9,7 +9,7 @@
 import pytest
 
 from cmk.agent_based.v2 import Result, State
-from cmk.plugins.collection.agent_based import synology_status
+from cmk.plugins.synology.agent_based import synology_status
 
 SECTION_TABLE = [["0", "1"]]
 

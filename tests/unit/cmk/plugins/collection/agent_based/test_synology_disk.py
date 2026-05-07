@@ -6,7 +6,7 @@
 import pytest
 
 from cmk.agent_based.v2 import IgnoreResultsError, Metric, Result, State, StringTable
-from cmk.plugins.collection.agent_based import synology_disks
+from cmk.plugins.synology.agent_based import synology_disks
 
 
 @pytest.fixture

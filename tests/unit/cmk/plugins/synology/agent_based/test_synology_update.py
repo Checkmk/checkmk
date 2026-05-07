@@ -10,7 +10,7 @@ from typing import Any
 import pytest
 
 from cmk.agent_based.v2 import IgnoreResultsError, Result, Service, State
-from cmk.plugins.collection.agent_based import synology_update
+from cmk.plugins.synology.agent_based import synology_update
 
 SECTION_TABLE = [
     ["nana batman", "0"],

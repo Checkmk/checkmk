@@ -88,7 +88,6 @@ sh_library(
         "mk_iptables",
         "mk_logins",
         "mk_mysql",
-        "mk_nfsiostat",
         "mk_omreport",
         "mk_oracle",
         "mk_oracle_crs",

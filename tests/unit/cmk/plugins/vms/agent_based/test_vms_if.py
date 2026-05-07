@@ -4,8 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.plugins.collection.agent_based.vms_if import parse_vms_if_pure
 from cmk.plugins.lib import interfaces
+from cmk.plugins.vms.agent_based.vms_if import parse_vms_if_pure
 
 
 def test_parse_vms_if_pure() -> None:

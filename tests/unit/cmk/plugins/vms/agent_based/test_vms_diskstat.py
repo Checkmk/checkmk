@@ -7,8 +7,8 @@
 import pytest
 
 from cmk.agent_based.v2 import Service
-from cmk.plugins.collection.agent_based import vms_diskstat
 from cmk.plugins.lib.df import FILESYSTEM_DEFAULT_PARAMS
+from cmk.plugins.vms.agent_based import vms_diskstat
 
 STRING_TABLE = [
     ["$1$DGA1122:", "TEST_WORK", "1171743836", "1102431184", "0.00"],

@@ -5,7 +5,7 @@
 import pytest
 
 from cmk.agent_based.v2 import CheckResult, Metric, Result, Service, State
-from cmk.plugins.collection.agent_based import etherbox
+from cmk.plugins.etherbox2.agent_based import etherbox
 
 
 @pytest.fixture

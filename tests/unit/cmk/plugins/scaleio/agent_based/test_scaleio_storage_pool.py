@@ -9,7 +9,8 @@ from collections.abc import Sequence
 import pytest
 
 from cmk.agent_based.v2 import Result, Service, State, StringTable
-from cmk.plugins.collection.agent_based.scaleio_storage_pool import (
+from cmk.plugins.lib.df import FILESYSTEM_DEFAULT_PARAMS
+from cmk.plugins.scaleio.agent_based.scaleio_storage_pool import (
     _check_scaleio_storage_pool,
     _check_scaleio_storage_pool_disks,
     check_scaleio_storage_pool_rebalancerw,
@@ -20,7 +21,6 @@ from cmk.plugins.collection.agent_based.scaleio_storage_pool import (
     ScaleioStoragePoolSection,
     StoragePool,
 )
-from cmk.plugins.lib.df import FILESYSTEM_DEFAULT_PARAMS
 from cmk.plugins.scaleio.lib import DiskReadWrite, StorageConversionError
 
 SECTION = {

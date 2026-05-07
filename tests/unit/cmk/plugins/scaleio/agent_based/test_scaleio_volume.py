@@ -7,8 +7,8 @@ from collections.abc import Sequence
 import pytest
 
 from cmk.agent_based.v2 import Result, Service, State
-from cmk.plugins.collection.agent_based import scaleio_volume
-from cmk.plugins.collection.agent_based.scaleio_volume import (
+from cmk.plugins.scaleio.agent_based import scaleio_volume
+from cmk.plugins.scaleio.agent_based.scaleio_volume import (
     check_scaleio_volume,
     discover_scaleio_volume,
     ScaleioVolume,

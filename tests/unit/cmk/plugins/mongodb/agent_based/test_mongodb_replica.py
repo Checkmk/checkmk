@@ -8,7 +8,7 @@ from collections.abc import Sequence
 import pytest
 
 from cmk.agent_based.v2 import Result, State, StringTable
-from cmk.plugins.collection.agent_based.mongodb_replica import (
+from cmk.plugins.mongodb.agent_based.mongodb_replica import (
     check_mongodb_replica,
     parse_mongodb_replica,
     ReplicaSet,

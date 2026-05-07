@@ -7,7 +7,7 @@
 import pytest
 
 from cmk.agent_based.v2 import Attributes
-from cmk.plugins.collection.agent_based.solaris_uname import (
+from cmk.plugins.solaris.agent_based.solaris_uname import (
     inventorize_solaris_uname,
     parse_solaris_uname,
     Section,

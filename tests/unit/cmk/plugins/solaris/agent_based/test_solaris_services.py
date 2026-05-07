@@ -7,7 +7,7 @@
 import pytest
 
 from cmk.agent_based.v2 import Result, Service, State
-from cmk.plugins.collection.agent_based.solaris_services import (
+from cmk.plugins.solaris.agent_based.solaris_services import (
     check_solaris_services,
     check_solaris_services_summary,
     DISCOVER_NOTHING,

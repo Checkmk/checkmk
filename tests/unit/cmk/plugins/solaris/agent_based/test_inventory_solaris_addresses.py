@@ -7,7 +7,7 @@
 import pytest
 
 from cmk.agent_based.v2 import InventoryResult, StringTable, TableRow
-from cmk.plugins.collection.agent_based.inventory_solaris_addresses import (
+from cmk.plugins.solaris.agent_based.inventory_solaris_addresses import (
     inventorize_solaris_addresses,
     parse_solaris_addresses,
 )

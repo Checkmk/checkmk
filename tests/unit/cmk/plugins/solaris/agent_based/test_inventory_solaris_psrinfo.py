@@ -9,7 +9,7 @@ from typing import NamedTuple
 import pytest
 
 from cmk.agent_based.v2 import Attributes, InventoryResult, StringTable
-from cmk.plugins.collection.agent_based.inventory_solaris_psrinfo import (
+from cmk.plugins.solaris.agent_based.inventory_solaris_psrinfo import (
     inventorize_solaris_cpus,
     parse_solaris_psrinfo_physical,
     parse_solaris_psrinfo_table,

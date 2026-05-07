@@ -6,7 +6,7 @@
 
 import pytest
 
-import cmk.plugins.collection.agent_based.fireeye_sys_status as fss
+import cmk.plugins.fireeye.agent_based.fireeye_sys_status as fss
 from cmk.agent_based.v2 import Attributes, Result, Service, State
 
 

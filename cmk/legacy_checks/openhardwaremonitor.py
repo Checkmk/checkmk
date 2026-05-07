@@ -4,16 +4,24 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import re
-from collections.abc import Generator, Mapping, Sequence
+from collections.abc import Mapping, Sequence
 from typing import cast, NamedTuple, NotRequired, TypedDict
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition, LegacyResult
-from cmk.agent_based.v2 import IgnoreResultsError
-from cmk.legacy_includes.fan import check_fan
-from cmk.legacy_includes.temperature import check_temperature
-from cmk.plugins.lib.temperature import TempParamType
-
-check_info = {}
+from cmk.agent_based.v2 import (
+    AgentSection,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    get_value_store,
+    IgnoreResultsError,
+    Metric,
+    Result,
+    Service,
+    State,
+    StringTable,
+)
+from cmk.plugins.lib.fan import check_fan
+from cmk.plugins.lib.temperature import check_temperature, TempParamType
 
 # <<<openhardwaremonitor:sep(44)>>>
 # Index,Name,Parent,SensorType,Value
@@ -78,9 +86,10 @@ class _SmartReading(TypedDict, total=False):
     lower_bounds: bool
 
 
-def parse_openhardwaremonitor(
-    string_table: Sequence[Sequence[str]],
-) -> dict[str, dict[str, OpenhardwaremonitorSensor]]:
+Section = Mapping[str, Mapping[str, OpenhardwaremonitorSensor]]
+
+
+def parse_openhardwaremonitor(string_table: StringTable) -> Section:
     parsed: dict[str, dict[str, OpenhardwaremonitorSensor]] = {}
     for line in string_table:
         if line[0] == "Index":
@@ -120,75 +129,58 @@ def _create_openhardwaremonitor_full_name(parent: str, name: str) -> str:
     return (parent.replace("/", "") + " " + name).strip()
 
 
-def _openhardwaremonitor_worst_status(*args: int) -> int:
-    order = [0, 1, 3, 2]
-    return sorted(args, key=lambda x: order[x], reverse=True)[0]
+def _openhardwaremonitor_worst_state(*args: State) -> State:
+    order = {State.OK: 0, State.WARN: 1, State.UNKNOWN: 2, State.CRIT: 3}
+    return sorted(args, key=lambda s: order[s], reverse=True)[0]
 
 
-def _openhardwaremonitor_expect_order(*args: float | None) -> int:
+def _openhardwaremonitor_expect_order(*args: float | None) -> State:
     arglist = [x for x in args if x is not None]
     sorted_by_val = sorted(enumerate(arglist), key=lambda x: x[1])
-    return max(abs(x[0] - x[1][0]) for x in enumerate(sorted_by_val))
+    distance = max(abs(x[0] - x[1][0]) for x in enumerate(sorted_by_val))
+    return {0: State.OK, 1: State.WARN, 2: State.CRIT}.get(distance, State.UNKNOWN)
 
 
-def inventory_openhardwaremonitor(
-    sensor_type: str, parsed: Mapping[str, Mapping[str, OpenhardwaremonitorSensor]]
-) -> list[tuple[str, dict[str, object]]]:
-    return [(key, {}) for key in parsed.get(sensor_type, {})]
+def _inventory_items(sensor_type: str, section: Section) -> DiscoveryResult:
+    for key in section.get(sensor_type, {}):
+        yield Service(item=key)
 
 
-def check_openhardwaremonitor(
+def _check_openhardwaremonitor(
     sensor_type: str,
     item: str,
     params: Mapping[str, Sequence[float]],
-    parsed: Mapping[str, Mapping[str, OpenhardwaremonitorSensor]],
-) -> tuple[int, str, list[tuple[str, float]]] | None:
-    if item not in parsed.get(sensor_type, {}):
-        return None
+    section: Section,
+) -> CheckResult:
+    if item not in section.get(sensor_type, {}):
+        return
 
-    data = parsed[sensor_type][item]
+    data = section[sensor_type][item]
     _check_openhardwaremonitor_wmistatus(data)
     if "lower" in params:
-        status_lower = _openhardwaremonitor_expect_order(
+        state_lower = _openhardwaremonitor_expect_order(
             params["lower"][1], params["lower"][0], data.reading
         )
     else:
-        status_lower = 0
+        state_lower = State.OK
     if "upper" in params:
-        status_upper = _openhardwaremonitor_expect_order(
+        state_upper = _openhardwaremonitor_expect_order(
             data.reading, params["upper"][0], params["upper"][1]
         )
     else:
-        status_upper = 0
+        state_upper = State.OK
 
-    perfdata = []
-    if data.perf_var:
-        perfdata = [(data.perf_var, data.reading)]
-
-    return (
-        _openhardwaremonitor_worst_status(status_lower, status_upper),
-        f"{data.reading:.1f}{data.unit}",
-        perfdata,
+    yield Result(
+        state=_openhardwaremonitor_worst_state(state_lower, state_upper),
+        summary=f"{data.reading:.1f}{data.unit}",
     )
+    if data.perf_var:
+        yield Metric(data.perf_var, data.reading)
 
 
 def _check_openhardwaremonitor_wmistatus(data: OpenhardwaremonitorSensor) -> None:
     if data.WMIstatus.lower() == "timeout":
         raise IgnoreResultsError("WMI query timed out")
-
-
-def discover_openhardwaremonitor(
-    parsed: Mapping[str, Mapping[str, OpenhardwaremonitorSensor]],
-) -> list[tuple[str, dict[str, object]]]:
-    return inventory_openhardwaremonitor("Clock", parsed)
-
-
-def check_openhardwaremonitor_clock(
-    item: str,
-    params: Mapping[str, Sequence[float]],
-    parsed: Mapping[str, Mapping[str, OpenhardwaremonitorSensor]],
-) -> tuple[int, str, list[tuple[str, float]]] | None:
-    return check_openhardwaremonitor("Clock", item, params, parsed)
 
 
 #   .--clock---------------------------------------------------------------.
@@ -200,15 +192,32 @@ def check_openhardwaremonitor_clock(
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-check_info["openhardwaremonitor"] = LegacyCheckDefinition(
+
+def discover_openhardwaremonitor(section: Section) -> DiscoveryResult:
+    yield from _inventory_items("Clock", section)
+
+
+def check_openhardwaremonitor_clock(
+    item: str, params: Mapping[str, Sequence[float]], section: Section
+) -> CheckResult:
+    yield from _check_openhardwaremonitor("Clock", item, params, section)
+
+
+agent_section_openhardwaremonitor = AgentSection(
     name="openhardwaremonitor",
     parse_function=parse_openhardwaremonitor,
+)
+
+
+check_plugin_openhardwaremonitor = CheckPlugin(
+    name="openhardwaremonitor",
     service_name="Clock %s",
     discovery_function=discover_openhardwaremonitor,
     check_function=check_openhardwaremonitor_clock,
+    check_default_parameters={},
 )
 
-# .
+
 #   .--temp----------------------------------------------------------------.
 #   |                       _                                              |
 #   |                      | |_ ___ _ __ ___  _ __                         |
@@ -220,10 +229,8 @@ check_info["openhardwaremonitor"] = LegacyCheckDefinition(
 
 
 def check_openhardwaremonitor_temperature(
-    item: str,
-    params: Mapping[str, object],
-    parsed: Mapping[str, Mapping[str, OpenhardwaremonitorSensor]],
-) -> LegacyResult | None:
+    item: str, params: Mapping[str, object], section: Section
+) -> CheckResult:
     if "levels" in params:
         resolved_params = cast(TempParamType, params)
     else:
@@ -232,20 +239,22 @@ def check_openhardwaremonitor_temperature(
             next((v for k, v in params.items() if k in item), params["_default"]),
         )
 
-    if item in parsed.get("Temperature", {}):
-        data = parsed["Temperature"][item]
+    if item in section.get("Temperature", {}):
+        data = section["Temperature"][item]
         _check_openhardwaremonitor_wmistatus(data)
-        return check_temperature(data.reading, resolved_params, "openhardwaremonitor_%s" % item)
-    return None
+        yield from check_temperature(
+            data.reading,
+            resolved_params,
+            unique_name=f"openhardwaremonitor_{item}",
+            value_store=get_value_store(),
+        )
 
 
-def discover_openhardwaremonitor_temperature(
-    parsed: Mapping[str, Mapping[str, OpenhardwaremonitorSensor]],
-) -> list[tuple[str, dict[str, object]]]:
-    return inventory_openhardwaremonitor("Temperature", parsed)
+def discover_openhardwaremonitor_temperature(section: Section) -> DiscoveryResult:
+    yield from _inventory_items("Temperature", section)
 
 
-check_info["openhardwaremonitor.temperature"] = LegacyCheckDefinition(
+check_plugin_openhardwaremonitor_temperature = CheckPlugin(
     name="openhardwaremonitor_temperature",
     service_name="Temperature %s",
     sections=["openhardwaremonitor"],
@@ -262,21 +271,6 @@ check_info["openhardwaremonitor.temperature"] = LegacyCheckDefinition(
 )
 
 
-def discover_openhardwaremonitor_power(
-    parsed: Mapping[str, Mapping[str, OpenhardwaremonitorSensor]],
-) -> list[tuple[str, dict[str, object]]]:
-    return inventory_openhardwaremonitor("Power", parsed)
-
-
-def check_openhardwaremonitor_power(
-    item: str,
-    params: Mapping[str, Sequence[float]],
-    parsed: Mapping[str, Mapping[str, OpenhardwaremonitorSensor]],
-) -> tuple[int, str, list[tuple[str, float]]] | None:
-    return check_openhardwaremonitor("Power", item, params, parsed)
-
-
-# .
 #   .--power---------------------------------------------------------------.
 #   |                                                                      |
 #   |                    _ __   _____      _____ _ __                      |
@@ -286,15 +280,27 @@ def check_openhardwaremonitor_power(
 #   |                   |_|                                                |
 #   '----------------------------------------------------------------------'
 
-check_info["openhardwaremonitor.power"] = LegacyCheckDefinition(
+
+def discover_openhardwaremonitor_power(section: Section) -> DiscoveryResult:
+    yield from _inventory_items("Power", section)
+
+
+def check_openhardwaremonitor_power(
+    item: str, params: Mapping[str, Sequence[float]], section: Section
+) -> CheckResult:
+    yield from _check_openhardwaremonitor("Power", item, params, section)
+
+
+check_plugin_openhardwaremonitor_power = CheckPlugin(
     name="openhardwaremonitor_power",
     service_name="Power %s",
     sections=["openhardwaremonitor"],
     discovery_function=discover_openhardwaremonitor_power,
     check_function=check_openhardwaremonitor_power,
+    check_default_parameters={},
 )
 
-# .
+
 #   .--fan-----------------------------------------------------------------.
 #   |                            __                                        |
 #   |                           / _| __ _ _ __                             |
@@ -306,25 +312,21 @@ check_info["openhardwaremonitor.power"] = LegacyCheckDefinition(
 
 
 def check_openhardwaremonitor_fan(
-    item: str,
-    params: Mapping[str, object],
-    parsed: Mapping[str, Mapping[str, OpenhardwaremonitorSensor]],
-) -> LegacyResult | None:
-    if item not in parsed.get("Fan", {}):
-        return None
+    item: str, params: Mapping[str, object], section: Section
+) -> CheckResult:
+    if item not in section.get("Fan", {}):
+        return
 
-    data = parsed["Fan"][item]
+    data = section["Fan"][item]
     _check_openhardwaremonitor_wmistatus(data)
-    return check_fan(data.reading, params)
+    yield from check_fan(data.reading, params)
 
 
-def discover_openhardwaremonitor_fan(
-    parsed: Mapping[str, Mapping[str, OpenhardwaremonitorSensor]],
-) -> list[tuple[str, dict[str, object]]]:
-    return inventory_openhardwaremonitor("Fan", parsed)
+def discover_openhardwaremonitor_fan(section: Section) -> DiscoveryResult:
+    yield from _inventory_items("Fan", section)
 
 
-check_info["openhardwaremonitor.fan"] = LegacyCheckDefinition(
+check_plugin_openhardwaremonitor_fan = CheckPlugin(
     name="openhardwaremonitor_fan",
     service_name="Fan %s",
     sections=["openhardwaremonitor"],
@@ -334,7 +336,7 @@ check_info["openhardwaremonitor.fan"] = LegacyCheckDefinition(
     check_default_parameters={},
 )
 
-# .
+
 #   .--smart---------------------------------------------------------------.
 #   |                                             _                        |
 #   |                    ___ _ __ ___   __ _ _ __| |_                      |
@@ -349,51 +351,48 @@ openhardwaremonitor_smart_readings: dict[str, list[_SmartReading]] = {
 }
 
 
-def discover_openhardwaremonitor_smart(
-    parsed: Mapping[str, Mapping[str, OpenhardwaremonitorSensor]],
-) -> list[tuple[str, dict[str, object]]]:
+def discover_openhardwaremonitor_smart(section: Section) -> DiscoveryResult:
     devices = set()
     # find all devices for which at least one known smart reading is available
     for sensor_type in openhardwaremonitor_smart_readings:
-        for key in parsed.get(sensor_type, {}):
+        for key in section.get(sensor_type, {}):
             if "hdd" in key:
                 devices.add(key.split(" ")[0])
-    return [(dev, {}) for dev in devices]
+    for dev in devices:
+        yield Service(item=dev)
 
 
 def check_openhardwaremonitor_smart(
-    item: str,
-    params: Mapping[str, tuple[float, float]],
-    parsed: Mapping[str, Mapping[str, OpenhardwaremonitorSensor]],
-) -> Generator[tuple[int, str, list[tuple[str, float]]]]:
+    item: str, params: Mapping[str, tuple[float, float]], section: Section
+) -> CheckResult:
     for sensor_type, readings in openhardwaremonitor_smart_readings.items():
         for reading in readings:
-            reading_name = "{} {}".format(item, reading["name"])
+            reading_name = f"{item} {reading['name']}"
 
-            if reading_name not in parsed[sensor_type]:
+            if reading_name not in section[sensor_type]:
                 # what smart values ohm reports is device dependent
                 continue
 
             warn, crit = params[reading["key"]]
-            data = parsed[sensor_type][reading_name]
+            data = section[sensor_type][reading_name]
             _check_openhardwaremonitor_wmistatus(data)
 
             if reading.get("lower_bounds", False):
-                status = _openhardwaremonitor_expect_order(crit, warn, data.reading)
+                state = _openhardwaremonitor_expect_order(crit, warn, data.reading)
             else:
-                status = _openhardwaremonitor_expect_order(data.reading, warn, crit)
+                state = _openhardwaremonitor_expect_order(data.reading, warn, crit)
 
-            yield (
-                status,
-                "{} {:.1f}{}".format(reading["name"], data.reading, data.unit),
-                [(reading["key"], data.reading)],
+            yield Result(
+                state=state,
+                summary=f"{reading['name']} {data.reading:.1f}{data.unit}",
             )
+            yield Metric(reading["key"], data.reading)
 
 
 # the smart check is different from the others as it has one item per device and
 # combines different sensors per item (but not all, i.e. hdd temperature is still
 # reported as a temperature item)
-check_info["openhardwaremonitor.smart"] = LegacyCheckDefinition(
+check_plugin_openhardwaremonitor_smart = CheckPlugin(
     name="openhardwaremonitor_smart",
     service_name="SMART %s Stats",
     sections=["openhardwaremonitor"],

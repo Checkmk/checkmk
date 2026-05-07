@@ -6,7 +6,7 @@
 import pytest
 
 from cmk.agent_based.v2 import CheckResult, DiscoveryResult, Result, Service, State
-from cmk.plugins.collection.agent_based.datadog_monitors import (
+from cmk.plugins.datadog.agent_based.datadog_monitors import (
     check_datadog_monitors,
     CheckParams,
     discover_datadog_monitors,

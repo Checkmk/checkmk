@@ -8,7 +8,7 @@ from collections.abc import Mapping, Sequence
 import pytest
 
 from cmk.agent_based.v2 import CheckResult, Result, State, StringTable
-from cmk.plugins.collection.agent_based.f5_bigip_cluster_status import (
+from cmk.plugins.f5_bigip.agent_based.f5_bigip_cluster_status import (
     check_f5_bigip_cluster_status,
     check_f5_bigip_cluster_status_v11_2,
     cluster_check_f5_bigip_cluster_status,

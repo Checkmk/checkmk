@@ -10,7 +10,7 @@ from collections.abc import Mapping, Sequence
 import pytest
 
 from cmk.agent_based.v2 import LevelsT, Result, Service, State
-from cmk.plugins.collection.agent_based.f5_bigip_pool import (
+from cmk.plugins.f5_bigip.agent_based.f5_bigip_pool import (
     check_f5_bigip_pool,
     discover_f5_bigip_pool,
     f5_bigip_pool_get_down_members,

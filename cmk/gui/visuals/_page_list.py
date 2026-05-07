@@ -129,10 +129,10 @@ def page_list(  # pylint: disable=too-many-branches
 
             del visuals[(user_id, delname)]
             save(what, visuals, user_id)
-            user_profile_async_replication_page(
-                back_url=request.get_url_input("back", visual_type.show_url)
-            )
             flash(_("Your %s has been deleted.") % visual_type.title)
+            # Empty back url: reload current page
+            if user_profile_async_replication_page(back_url=""):
+                return  # dialog owns the redirect
             html.reload_whole_page()
         except MKUserError as e:
             html.user_error(e)

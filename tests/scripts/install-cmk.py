@@ -20,7 +20,6 @@ import requests
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 
 
-from tests.testlib.common.repo import add_python_paths
 from tests.testlib.package_manager import ABCPackageManager
 from tests.testlib.version import (
     CMKPackageInfo,
@@ -59,7 +58,6 @@ def parse_args() -> tuple[InstallCmkArgs, list[str]]:
 def main():
     args, _ = parse_args()
     operation = "uninstall" if args.uninstall else "install"
-    add_python_paths()
 
     pkg = CMKPackageInfo(version_from_env(), edition_from_env())
 

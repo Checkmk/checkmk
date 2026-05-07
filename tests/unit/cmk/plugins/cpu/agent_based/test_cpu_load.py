@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.agent_based.v2 import Metric, Result, State, StringTable
-from cmk.plugins.collection.agent_based.cpu import parse_cpu
+from cmk.plugins.cpu.agent_based.cpu import parse_cpu
 from cmk.plugins.lib.cpu_load import check_cpu_load
 
 STRING_TABLE: StringTable = [["0.88", "0.83", "0.87", "2/2148", "21050", "8"]]

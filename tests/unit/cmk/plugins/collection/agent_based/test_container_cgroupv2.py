@@ -8,7 +8,7 @@ import typing
 import pytest
 
 from cmk.agent_based.v1 import GetRateError, Metric, Result, State
-from cmk.plugins.collection.agent_based.cpu_utilization_os import check_cpu_utilization_os
+from cmk.plugins.cpu.agent_based.cpu_utilization_os import check_cpu_utilization_os
 from cmk.plugins.lib.container_cgroupv2 import parse_cpu
 from cmk.plugins.lib.cpu_utilization_os import SectionCpuUtilizationOs
 
@@ -50,7 +50,7 @@ AGENT_OUTPUT_1 = [
 def _empty_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
     store: typing.MutableMapping[str, typing.Any] = {}
     monkeypatch.setattr(
-        "cmk.plugins.collection.agent_based.cpu_utilization_os.get_value_store",
+        "cmk.plugins.cpu.agent_based.cpu_utilization_os.get_value_store",
         lambda: store,
     )
 

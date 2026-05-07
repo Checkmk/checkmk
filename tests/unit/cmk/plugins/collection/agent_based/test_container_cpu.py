@@ -5,13 +5,13 @@
 
 import pytest
 
-import cmk.plugins.collection.agent_based.cpu_utilization_os
+import cmk.plugins.cpu.agent_based.cpu_utilization_os
 from cmk.agent_based.v2 import GetRateError, Metric, Result, State, StringTable
-from cmk.plugins.collection.agent_based.cpu_utilization_os import check_plugin_cpu_utilization_os
 from cmk.plugins.collection.agent_based.lxc_container_cpu import agent_section_lxc_container_cpu
 from cmk.plugins.collection.agent_based.lxc_container_cpu_cgroupv2 import (
     agent_section_lxc_container_cpu_cgroupv2,
 )
+from cmk.plugins.cpu.agent_based.cpu_utilization_os import check_plugin_cpu_utilization_os
 from cmk.plugins.docker.agent_based.docker_container_cpu import (
     agent_section_docker_container_cpu,
 )
@@ -186,7 +186,7 @@ LXC_CONTAINER_CPU_CGROUPV2_10 = [
 def empty_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
     store = dict[str, object]()
     monkeypatch.setattr(
-        cmk.plugins.collection.agent_based.cpu_utilization_os, "get_value_store", lambda: store
+        cmk.plugins.cpu.agent_based.cpu_utilization_os, "get_value_store", lambda: store
     )
 
 

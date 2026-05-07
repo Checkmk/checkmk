@@ -11,8 +11,8 @@ from typing import Any
 import pytest
 
 from cmk.agent_based.v2 import CheckResult, Metric, Result, Service, State, StringTable
-from cmk.plugins.collection.agent_based.cpu import parse_cpu
-from cmk.plugins.collection.agent_based.cpu_threads import check_cpu_threads, discover_cpu_threads
+from cmk.plugins.cpu.agent_based.cpu import parse_cpu
+from cmk.plugins.cpu.agent_based.cpu_threads import check_cpu_threads, discover_cpu_threads
 from cmk.plugins.lib.cpu import Load, ProcessorType, Section, Threads
 
 

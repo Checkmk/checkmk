@@ -8,7 +8,7 @@ from collections.abc import Sequence
 import pytest
 
 from cmk.agent_based.v2 import Metric, Result, State, StringTable
-from cmk.plugins.collection.agent_based import pulse_secure_users
+from cmk.plugins.pulse_secure.agent_based import pulse_secure_users
 
 
 @pytest.mark.parametrize(

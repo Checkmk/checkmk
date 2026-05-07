@@ -5,7 +5,7 @@
 
 import pytest
 
-from cmk.plugins.collection.agent_based import ovs_bonding
+from cmk.plugins.bonding.agent_based import ovs_bonding
 
 DATA = [
     ["[bond1]"],

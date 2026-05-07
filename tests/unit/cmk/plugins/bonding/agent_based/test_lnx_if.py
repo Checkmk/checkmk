@@ -25,7 +25,7 @@ from cmk.agent_based.v2 import (
     TableRow,
 )
 from cmk.plugins.bonding import lib as bonding
-from cmk.plugins.collection.agent_based import lnx_if
+from cmk.plugins.bonding.agent_based import lnx_if
 from cmk.plugins.lib import interfaces
 from cmk.plugins.lib.interfaces import (
     AugmentedIPv4Interface,

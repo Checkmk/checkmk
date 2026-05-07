@@ -338,11 +338,18 @@ def _get_post_discovery_autocheck_services(
                     result.services.new += len(new)
                     post_discovery_services.update(new)
 
-            case "unchanged" | "ignored":
+            case "unchanged":
                 # keep currently existing valid services in any case
                 post_discovery_services.update(
                     (s.service.newer.id(), s) for s in discovered_services_with_nodes
                 )
+                result.services.kept += len(discovered_services_with_nodes)
+
+            case "ignored":
+                # services matched by a "Disabled services" rule must not be persisted
+                # to the autochecks file -- only monitored services are supposed to be
+                # there (see werk 19800).  Drop them from the post-discovery output;
+                # the disabled-services rule itself remains in place.
                 result.services.kept += len(discovered_services_with_nodes)
 
             case "changed":

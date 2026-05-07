@@ -8,13 +8,13 @@ import time
 import pytest
 
 from cmk.agent_based.v2 import Metric, Result, Service, State
-from cmk.plugins.collection.agent_based import lvm_vgs
-from cmk.plugins.collection.agent_based.lvm_vgs import (
+from cmk.plugins.lib.df import FILESYSTEM_DEFAULT_PARAMS
+from cmk.plugins.lvm.agent_based import lvm_vgs
+from cmk.plugins.lvm.agent_based.lvm_vgs import (
     check_lvm_vgs,
     discover_lvm_vgs,
     parse_lvm_vgs,
 )
-from cmk.plugins.lib.df import FILESYSTEM_DEFAULT_PARAMS
 
 STRING_TABLE = [
     ["vg_root", "1", "2", "0", "wz--n-", "20971520", "8388608"],  # ~20GB total, ~8GB free

@@ -41,6 +41,14 @@ def test_inventory_checkpoint_powersupply_empty() -> None:
     assert not list(inventory_checkpoint_powersupply([]))
 
 
+@pytest.mark.xfail(strict=True, reason="Crash group 4396: empty SNMP index crashes Service()")
+def test_inventory_checkpoint_powersupply_skips_empty_index() -> None:
+    # Some Check Point firewalls return a powerSupplyTable row with an empty
+    # powerSupplyIndex; discovery currently raises TypeError from Service(item='').
+    section = parse_checkpoint_powersupply([["", "Up"], ["1", "Up"]])
+    assert list(inventory_checkpoint_powersupply(section)) == [Service(item="1")]
+
+
 @pytest.mark.parametrize(
     "item, params, section, expected",
     [

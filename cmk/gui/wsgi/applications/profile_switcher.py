@@ -40,6 +40,8 @@ from wsgiref.types import StartResponse, WSGIApplication, WSGIEnvironment
 
 import pyprof2calltree
 
+from cmk.gui.utils.urls import is_truthy_query_value
+
 P = typing.ParamSpec("P")
 
 logger = logging.getLogger(__name__)
@@ -170,17 +172,9 @@ class ProfilingMiddleware(abc.ABC):
             logger.debug("Profile mode is False")
             return False
 
-        def is_truthy_query_param(query_string: str, *, param: str) -> bool:
-            if not query_string:
-                return False
-            truthy_values = {"1", "t", "true", "y", "yes", "on"}
-            params = urllib.parse.parse_qs(query_string)
-            return param in params and any(
-                value.lower() in truthy_values for value in params[param]
-            )
-
         # enable_by_var case
-        return is_truthy_query_param(environ.get("QUERY_STRING", ""), param="_profile")
+        params = urllib.parse.parse_qs(environ.get("QUERY_STRING", ""))
+        return any(is_truthy_query_value(value) for value in params.get("_profile", ()))
 
     def _save_profile_data(self) -> None:
         logger.debug("Saving profiling data")

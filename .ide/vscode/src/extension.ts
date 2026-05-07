@@ -37,7 +37,7 @@ import {
 } from './profiles/python/mypyConfig'
 import { registerPylanceHealth } from './profiles/python/pylanceHealth'
 import { registerSnippets } from './profiles/python/snippets'
-import { registerBranchSync, registerGerritPush, registerSandboxBranch, registerScm } from './scm'
+import { registerGerritPush, registerSandboxBranch, registerScm } from './scm'
 import { registerIdePickers } from './setup/idePicker'
 import { registerTemplates } from './setup/templates'
 import { refreshAll, refreshOmd, registerSidebar } from './sidebar'
@@ -110,7 +110,6 @@ export function activate(context: vscode.ExtensionContext): void {
   registerGerritPush(context)
   registerScm(context)
   registerSandboxBranch(context)
-  registerBranchSync(context)
   registerOmd(context, refreshAll, refreshOmd)
   registerLogs()
 

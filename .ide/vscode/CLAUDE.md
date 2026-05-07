@@ -134,7 +134,6 @@ Each section lives in its own folder under `src/sidebar/` with an `index.ts` (re
 | `scm/gerrit.ts`                       | Gerrit push integration (status bar + push command)                      |
 | `scm/preCommit.ts`                    | Pre-commit hook toggle + commit-in-progress status bar spinner           |
 | `scm/sandboxBranch.ts`                | Branch checkout quickpick + Create Sandbox Branch (git workon)           |
-| `scm/branchSync.ts`                   | SCM-title sync state icon (synced / diverged / no-upstream)              |
 | `whatsNew.ts`                         | "What's New" markdown preview on version upgrade (reads `changelog/v*.md`) |
 
 ### Configuration (`config/`)

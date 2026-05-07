@@ -24,4 +24,3 @@ item:
 discovery:
  One service is created for each application running inside a weblogic
  instance sent by the agent.
-

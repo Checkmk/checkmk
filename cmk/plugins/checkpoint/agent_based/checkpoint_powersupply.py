@@ -21,7 +21,8 @@ from cmk.plugins.checkpoint.lib import DETECT
 
 def discover_checkpoint_powersupply(section: StringTable) -> DiscoveryResult:
     for index, _dev_status in section:
-        yield Service(item=index)
+        if index != "":
+            yield Service(item=index)
 
 
 def check_checkpoint_powersupply(

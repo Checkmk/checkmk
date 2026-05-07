@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import logging
+import os
 from pathlib import Path
 from types import TracebackType
 from typing import NamedTuple, Self
@@ -37,6 +38,11 @@ class OpenLDAPManager:
         self.users = users
         self.content_file_path = ldif_path / "ldap_content.ldif"
         self.admin_password = admin_password
+        self._open_ldap_script_env_k8s = {
+            key: value
+            for key in ("POD_LABEL", "KUBERNETES_PORT")
+            if (value := os.environ.get(key)) is not None
+        }
 
     def __enter__(self) -> Self:
         self.setup_open_ldap()
@@ -78,6 +84,10 @@ class OpenLDAPManager:
         run(
             [str(self.setup_open_ldap_script), self.admin_password, str(self.content_file_path)],
             sudo=True,
+            env=self._open_ldap_script_env_k8s,
+            preserve_env=list(self._open_ldap_script_env_k8s.keys())
+            if os.environ.get("POD_LABEL")
+            else None,
         )
         logger.info("OpenLDAP is set up")
 

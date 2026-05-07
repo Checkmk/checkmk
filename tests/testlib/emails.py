@@ -10,6 +10,7 @@ and verify the content of received emails.
 
 import email
 import logging
+import os
 import time
 from collections.abc import Iterator
 from email.message import Message
@@ -42,6 +43,12 @@ class EmailManager:
         self.setup_postfix_script = scripts_folder / "setup_postfix.sh"
         self.teardown_postfix_script = scripts_folder / "teardown_postfix.sh"
         self._username = getuser()
+        self._is_k8s = os.environ.get("POD_LABEL")
+        self._postfix_script_env_k8s = {
+            key: value
+            for key in ("POD_LABEL", "KUBERNETES_PORT")
+            if (value := os.environ.get(key)) is not None
+        }
 
     def __enter__(self) -> Self:
         self.setup_postfix()
@@ -64,13 +71,23 @@ class EmailManager:
         """Install and configure Postfix to send emails to a local Maildir."""
         logger.info("Setting up postfix...")
 
-        run([str(self.setup_postfix_script), self._username], sudo=True)
+        run(
+            [str(self.setup_postfix_script), self._username],
+            sudo=True,
+            env=self._postfix_script_env_k8s,
+            preserve_env=list(self._postfix_script_env_k8s.keys()) if self._is_k8s else None,
+        )
         logger.info("Postfix is set up. Unread email folder: %s", self.unread_folder)
 
     def teardown_postfix(self) -> None:
         """Uninstall Postfix and delete all related files."""
         logger.info("Deleting postfix and related files...")
-        run([str(self.teardown_postfix_script), self._username], sudo=True)
+        run(
+            [str(self.teardown_postfix_script), self._username],
+            sudo=True,
+            env=self._postfix_script_env_k8s,
+            preserve_env=list(self._postfix_script_env_k8s.keys()) if self._is_k8s else None,
+        )
         logger.info("Postfix is deleted")
 
     def find_email_by_subject(self, email_subject: str | None = None) -> Path | None:

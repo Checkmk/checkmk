@@ -44,6 +44,7 @@ py_library(
         "cmk/agent_based/v2/clusterize.py",
         "cmk/agent_based/v2/render.py",
         "cmk/agent_based/v3_unstable/__init__.py",
+        "cmk/agent_based/v3_unstable/_check_levels.py",
         "cmk/agent_based/v3_unstable/_checking_classes.py",
     ],
     data = ["cmk/agent_based/py.typed"],

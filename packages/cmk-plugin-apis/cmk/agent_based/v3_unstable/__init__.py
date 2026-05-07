@@ -87,6 +87,13 @@ from cmk.agent_based.v2 import (
     TableRow,
 )
 
+from ._check_levels import (
+    check_levels,
+    FixedLevelsT,
+    LevelsT,
+    NoLevelsT,
+    PredictiveLevelsT,
+)
 from ._checking_classes import Metric
 
 type _DiscoveryFunction = _Callable[..., DiscoveryResult]
@@ -161,6 +168,11 @@ __all__ = [
     "not_matches",
     "not_startswith",
     "Attributes",
+    "check_levels",
+    "LevelsT",
+    "FixedLevelsT",
+    "NoLevelsT",
+    "PredictiveLevelsT",
     "clusterize",
     "get_average",
     "get_rate",

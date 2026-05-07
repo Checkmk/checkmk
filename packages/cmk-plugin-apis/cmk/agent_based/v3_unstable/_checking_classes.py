@@ -25,6 +25,8 @@ class Metric:
                       for visualization by the graphing system. It does not affect the service state.
         boundaries:   Additional information on the value domain for the graphing system.
 
+    If you create a Metric in this way, you may want to consider using :func:`check_levels`.
+
     Example:
 
         >>> my_metric = Metric("used_slots_percent", 23.0, levels=(80, 90), lower_levels=(5, 1), boundaries=(0, 100))

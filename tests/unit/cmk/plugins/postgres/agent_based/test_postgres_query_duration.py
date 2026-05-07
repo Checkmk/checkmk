@@ -8,7 +8,7 @@
 
 
 from cmk.agent_based.v2 import IgnoreResults, Result, State
-from cmk.plugins.collection.agent_based.postgres_query_duration import (
+from cmk.plugins.postgres.agent_based.postgres_query_duration import (
     check_postgres_query_duration,
     cluster_check_postgres_query_duration,
 )

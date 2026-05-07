@@ -7,7 +7,7 @@
 import pytest
 
 from cmk.agent_based.v2 import CheckResult, DiscoveryResult, Result, Service, State, StringTable
-from cmk.plugins.collection.agent_based.postgres_instances import (
+from cmk.plugins.postgres.agent_based.postgres_instances import (
     check_postgres_instances,
     check_postgres_processes,
     discover_postgres_instances,

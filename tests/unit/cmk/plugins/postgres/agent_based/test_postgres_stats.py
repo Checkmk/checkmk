@@ -10,7 +10,7 @@
 from typing import Any
 
 from cmk.agent_based.v2 import IgnoreResults, Result, Service, State
-from cmk.plugins.collection.agent_based import postgres_stats
+from cmk.plugins.postgres.agent_based import postgres_stats
 
 NOW = 1489840000
 

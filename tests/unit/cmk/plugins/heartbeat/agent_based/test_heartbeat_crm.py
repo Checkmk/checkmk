@@ -10,7 +10,7 @@ import pytest
 import time_machine
 
 from cmk.agent_based.v2 import Result, Service, State
-from cmk.plugins.collection.agent_based.heartbeat_crm import (
+from cmk.plugins.heartbeat.agent_based.heartbeat_crm import (
     _check_heartbeat_crm,
     _check_heartbeat_crm_resources,
     check_heartbeat_crm_resources,

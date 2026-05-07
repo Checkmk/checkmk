@@ -2,6 +2,7 @@
 # Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+import base64
 import json
 from typing import Annotated
 
@@ -9,12 +10,62 @@ import pytest
 from pydantic import TypeAdapter, ValidationError
 
 from cmk.gui.openapi.framework.model.common_fields import (
+    BinaryBase64,
     columns_validator,
     query_expression_validator,
 )
 from cmk.livestatus_client.expressions import BinaryExpression, NothingExpression, QueryExpression
 from cmk.livestatus_client.tables import Hosts
 from cmk.livestatus_client.types import Column
+
+
+class TestBinaryBase64:
+    @pytest.fixture(scope="class")
+    def adapter(self) -> TypeAdapter[BinaryBase64]:
+        return TypeAdapter(BinaryBase64)  # astrein: disable=pydantic-type-adapter
+
+    def test_is_bytes_subclass(self) -> None:
+        value = BinaryBase64(b"hello")
+        assert isinstance(value, bytes)
+        assert bytes(value) == b"hello"
+
+    def test_serializes_to_wire_format(self, adapter: TypeAdapter[BinaryBase64]) -> None:
+        data = b"hello world"
+        result = adapter.dump_python(BinaryBase64(data))
+        assert result == {
+            "value_type": "binary_base64",
+            "value": base64.encodebytes(data).decode("ascii"),
+        }
+
+    def test_serializes_empty_bytes(self, adapter: TypeAdapter[BinaryBase64]) -> None:
+        result = adapter.dump_python(BinaryBase64(b""))
+        assert result == {"value_type": "binary_base64", "value": ""}
+
+    def test_pydantic_accepts_binary_base64_instance(
+        self, adapter: TypeAdapter[BinaryBase64]
+    ) -> None:
+        value = BinaryBase64(b"data")
+        assert adapter.validate_python(value) == value
+
+    def test_validate_from_bytes(self, adapter: TypeAdapter[BinaryBase64]) -> None:
+        result = adapter.validate_python(b"hello")
+        assert isinstance(result, BinaryBase64)
+        assert bytes(result) == b"hello"
+
+    def test_validate_from_wire_format(self, adapter: TypeAdapter[BinaryBase64]) -> None:
+        data = b"hello world"
+        wire = {"value_type": "binary_base64", "value": base64.encodebytes(data).decode("ascii")}
+        result = adapter.validate_python(wire)
+        assert isinstance(result, BinaryBase64)
+        assert bytes(result) == data
+
+    def test_validate_rejects_invalid_dict(self, adapter: TypeAdapter[BinaryBase64]) -> None:
+        with pytest.raises(ValidationError, match="Expected bytes"):
+            adapter.validate_python({"not": "valid"})
+
+    def test_validate_rejects_non_bytes(self, adapter: TypeAdapter[BinaryBase64]) -> None:
+        with pytest.raises(ValidationError, match="Expected bytes"):
+            adapter.validate_python("not bytes")
 
 
 class TestQueryExpressionValidator:

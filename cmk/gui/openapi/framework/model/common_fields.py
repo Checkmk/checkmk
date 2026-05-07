@@ -2,6 +2,7 @@
 # Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+import base64
 import datetime as dt
 import ipaddress
 import json
@@ -41,6 +42,74 @@ type AnnotatedHostName = Annotated[
     TypedPlainValidator(str, HostName.parse),
     PlainSerializer(str, return_type=str),
 ]
+
+
+class BinaryBase64(bytes):
+    """Binary data encoded as base64 for use in REST API responses.
+
+    Serializes to {"value_type": "binary_base64", "value": "<base64>"}.
+    Validates from either raw bytes or the wire-format dict.
+    """
+
+    @classmethod
+    def __get_pydantic_core_schema__(
+        cls, _source_type: CoreSchema, _handler: GetCoreSchemaHandler
+    ) -> CoreSchema:
+        return core_schema.no_info_plain_validator_function(
+            cls._validate,
+            serialization=core_schema.plain_serializer_function_ser_schema(
+                cls._serialize,
+                info_arg=False,
+                return_schema=core_schema.dict_schema(),
+            ),
+        )
+
+    @classmethod
+    def __get_pydantic_json_schema__(
+        cls, _core_schema: CoreSchema, _handler: GetJsonSchemaHandler
+    ) -> JsonSchemaValue:
+        return {
+            "type": "object",
+            "properties": {
+                "value_type": {
+                    "const": "binary_base64",
+                    "description": "Indicates that the value is base64-encoded binary data",
+                },
+                "value": {"type": "string", "description": "Base64-encoded binary data"},
+            },
+            "required": ["value_type", "value"],
+        }
+
+    @classmethod
+    def _validate(cls, v: object) -> "BinaryBase64":
+        if isinstance(v, bytes):
+            return cls(v)
+        if (
+            isinstance(v, dict)
+            and v.get("value_type") == "binary_base64"
+            and isinstance(v.get("value"), str)
+        ):
+            return cls(base64.decodebytes(v["value"].encode("ascii")))
+        raise ValueError(f"Expected bytes or binary_base64 dict, got {v!r}")
+
+    @classmethod
+    def _serialize(cls, v: "BinaryBase64") -> dict[str, str]:
+        return {
+            "value_type": "binary_base64",
+            "value": base64.encodebytes(bytes(v)).decode("ascii"),
+        }
+
+
+type LivestatusValue = (
+    str
+    | int
+    | float
+    | bool
+    | None
+    | dict[str, LivestatusValue]
+    | list[LivestatusValue]
+    | BinaryBase64
+)
 
 
 def _validate_regex(value: str) -> str:

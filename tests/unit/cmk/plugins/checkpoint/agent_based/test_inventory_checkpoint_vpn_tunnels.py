@@ -6,7 +6,7 @@
 import pytest
 
 from cmk.agent_based.v2 import InventoryResult, StringTable, TableRow
-from cmk.plugins.collection.agent_based.inventory_checkpoint_vpn_tunnels import (
+from cmk.plugins.checkpoint.agent_based.inventory_checkpoint_vpn_tunnels import (
     inventorize_checkpoint_vpn_tunnels,
     parse_checkpoint_vpn_tunnels,
 )

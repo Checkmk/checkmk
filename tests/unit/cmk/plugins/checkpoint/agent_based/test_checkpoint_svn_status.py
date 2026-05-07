@@ -6,7 +6,7 @@
 import pytest
 
 from cmk.agent_based.v2 import Result, Service, State
-from cmk.plugins.collection.agent_based.checkpoint_svn_status import (
+from cmk.plugins.checkpoint.agent_based.checkpoint_svn_status import (
     check_checkpoint_svn_status,
     discover_checkpoint_svn_status,
 )

@@ -8,7 +8,7 @@ from collections.abc import Mapping
 import pytest
 
 from cmk.agent_based.v2 import Result, Service, State, StringTable
-from cmk.plugins.collection.agent_based.checkpoint_powersupply import (
+from cmk.plugins.checkpoint.agent_based.checkpoint_powersupply import (
     check_checkpoint_powersupply,
     check_plugin_checkpoint_powersupply,
     discover_checkpoint_powersupply,

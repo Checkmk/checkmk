@@ -1,16 +1,25 @@
-load("@aspect_rules_py//py:defs.bzl", "py_test")
+load("@aspect_rules_py//py:defs.bzl", "py_pytest_main", "py_test")
 load("@cmk_requirements//:requirements.bzl", "requirement")
+
+py_pytest_main(
+    name = "__test__",
+    deps = [
+        requirement("coverage"),
+        requirement("pytest"),
+    ],
+)
 
 py_test(
     name = "bi",
-    srcs = glob(["**/*.py"]),
+    srcs = ["__test__.py"] + glob(["**/*.py"]),
     args = [
         "--import-mode=importlib",
         "tests/unit/cmk/gui/bi",
     ],
     env = {"EDITION": "community"},
-    pytest_main = True,
+    main = ":__test__.py",
     deps = [
+        ":__test__",
         "//cmk/bi",
         "//cmk/gui:exceptions",
         "//cmk/gui/bi",

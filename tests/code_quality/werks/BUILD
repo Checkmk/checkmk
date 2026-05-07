@@ -1,16 +1,25 @@
-load("@aspect_rules_py//py:defs.bzl", "py_test")
+load("@aspect_rules_py//py:defs.bzl", "py_pytest_main", "py_test")
 load("@cmk_requirements//:requirements.bzl", "requirement")
+
+py_pytest_main(
+    name = "__test__",
+    deps = [
+        requirement("coverage"),
+        requirement("pytest"),
+    ],
+)
 
 py_test(
     name = "validation",
-    srcs = ["test_validate_werks.py"],
+    srcs = ["__test__.py"] + ["test_validate_werks.py"],
     data = [
         "//:defines.make",
         "//.werks",
         "//.werks:werks_config",
     ],
-    pytest_main = True,
+    main = ":__test__.py",
     deps = [
+        ":__test__",
         requirement("pytest"),
         "//cmk/utils",
         "//cmk/utils:werks",
@@ -21,7 +30,7 @@ py_test(
 
 py_test(
     name = "werks",
-    srcs = [
+    srcs = ["__test__.py"] + [
         "test_werks.py",
         "test_werks_commands.py",
     ],
@@ -31,16 +40,17 @@ py_test(
         "//.werks:werks_config",
     ],
     imports = ["../../.."],
+    main = ":__test__.py",
     # This test requires git, however, adding git as a dependency
     # would constantly invalidate the cache, forgoing most advantages
     # of running in Bazel.  Instead, we depend on `//.werks` and run
     # outside of the sandbox.
-    pytest_main = True,
     tags = [
         "manual",
         "no-sandbox",
     ],
     deps = [
+        ":__test__",
         requirement("gitpython"),
         requirement("pytest"),
         "//:pyproject-toml",

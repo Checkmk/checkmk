@@ -64,6 +64,7 @@ package_wheel(
 py_pytest_main(
     name = "__test__",
     deps = [
+        requirement("coverage"),
         requirement("pytest"),
     ],
 )

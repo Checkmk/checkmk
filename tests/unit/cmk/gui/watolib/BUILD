@@ -1,16 +1,25 @@
-load("@aspect_rules_py//py:defs.bzl", "py_test")
+load("@aspect_rules_py//py:defs.bzl", "py_pytest_main", "py_test")
 load("@cmk_requirements//:requirements.bzl", "requirement")
+
+py_pytest_main(
+    name = "__test__",
+    deps = [
+        requirement("coverage"),
+        requirement("pytest"),
+    ],
+)
 
 py_test(
     name = "watolib",
-    srcs = glob(["**/*.py"]),
+    srcs = ["__test__.py"] + glob(["**/*.py"]),
     args = [
         "--import-mode=importlib",
         "tests/unit/cmk/gui/watolib",
     ],
     env = {"EDITION": "community"},
-    pytest_main = True,
+    main = ":__test__.py",
     deps = [
+        ":__test__",
         "//cmk/gui:config",
         "//cmk/gui:ctx_stack",
         "//cmk/gui:exceptions",
@@ -29,7 +38,6 @@ py_test(
         "//tests/unit:conftest",
         "//tests/unit/cmk/gui:conftest",
         requirement("flask"),
-        requirement("pytest"),
         requirement("pytest-mock"),
         requirement("responses"),
         requirement("time-machine"),

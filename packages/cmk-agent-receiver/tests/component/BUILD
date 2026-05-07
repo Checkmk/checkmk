@@ -4,6 +4,7 @@ load("@cmk_requirements//:requirements.bzl", "requirement")
 py_pytest_main(
     name = "__component_test__",
     deps = [
+        requirement("coverage"),
         requirement("pytest"),
     ],
 )

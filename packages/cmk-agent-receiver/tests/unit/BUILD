@@ -4,6 +4,7 @@ load("@cmk_requirements//:requirements.bzl", "requirement")
 py_pytest_main(
     name = "__test__",
     deps = [
+        requirement("coverage"),
         requirement("pytest"),
     ],
 )
@@ -46,6 +47,7 @@ py_test(
 py_pytest_main(
     name = "__testlib_test__",
     deps = [
+        requirement("coverage"),
         requirement("pytest"),
     ],
 )

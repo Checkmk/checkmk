@@ -18,6 +18,7 @@ py_library(
 py_pytest_main(
     name = "__test__",
     deps = [
+        requirement("coverage"),
         requirement("pytest"),
     ],
 )

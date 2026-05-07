@@ -849,6 +849,7 @@ coverage[toml]==7.13.4 \
     --hash=sha256:fdfc1e28e7c7cdce44985b3043bc13bbd9c747520f94a4d7164af8260b3d91f0
     # via
     #   -c requirements.txt
+    #   -r tests/dev-requirements.in
     #   pytest-cov
 cryptography==48.0.0 \
     --hash=sha256:0890f502ddf7d9c6426129c3f49f5c0a39278ed7cd6322c8755ffca6ee675a13 \

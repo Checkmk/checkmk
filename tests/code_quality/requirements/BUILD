@@ -1,4 +1,4 @@
-load("@aspect_rules_py//py:defs.bzl", "py_library", "py_test")
+load("@aspect_rules_py//py:defs.bzl", "py_library", "py_pytest_main", "py_test")
 load("@cmk_requirements//:requirements.bzl", "all_requirements", "requirement")
 load("//bazel/rules:requirements_mapping.bzl", "requirements_mapping")
 
@@ -15,10 +15,18 @@ py_library(
     ],
 )
 
+py_pytest_main(
+    name = "__test__",
+    deps = [
+        requirement("coverage"),
+        requirement("pytest"),
+    ],
+)
+
 py_test(
     name = "requirements_files",
     size = "small",
-    srcs = ["test_requirements_files.py"],
+    srcs = ["__test__.py"] + ["test_requirements_files.py"],
     args = [
         "--import-mode=importlib",
     ],
@@ -41,9 +49,10 @@ py_test(
         "@//:gpl_repo": [],
     }),
     env_inherit = ["GERRIT_BRANCH"],
-    pytest_main = True,
+    main = ":__test__.py",
     tags = ["requirements"],
     deps = [
+        ":__test__",
         ":requirements_utils",
         requirement("pytest"),
         requirement("requirements-parser"),

@@ -1,6 +1,6 @@
 load("@aspect_rules_js//js:defs.bzl", "js_binary", "js_library", "js_run_binary", "js_run_devserver")
 load("@aspect_rules_js//npm:defs.bzl", "npm_link_package")
-load("@aspect_rules_py//py:defs.bzl", "py_test")
+load("@aspect_rules_py//py:defs.bzl", "py_pytest_main", "py_test")
 load("@bazel_skylib//rules:build_test.bzl", "build_test")
 load("@cmk_requirements//:requirements.bzl", "requirement")
 load("@npm//:defs.bzl", "npm_link_all_packages")
@@ -388,15 +388,23 @@ js_binary(
     tags = ["manual"],
 )
 
+py_pytest_main(
+    name = "__test__",
+    deps = [
+        requirement("coverage"),
+        requirement("pytest"),
+    ],
+)
+
 py_test(
     name = "test-code-integrity",
-    srcs = [
+    srcs = ["__test__.py"] + [
         "scripts/test_license_headers.py",
         "scripts/test_ucl_parity.py",
     ],
     data = glob(["**"]),
-    pytest_main = True,
-    deps = [requirement("pytest")],
+    main = ":__test__.py",
+    deps = [":__test__"],
 )
 
 build_test(

@@ -77,6 +77,9 @@ py_binary(
 py_pytest_main(
     name = "__test__",
     tags = ["no-mypy"],
+    deps = [
+        requirement("coverage"),
+    ],
 )
 
 py_test(

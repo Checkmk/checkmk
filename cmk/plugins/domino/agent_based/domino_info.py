@@ -37,6 +37,8 @@ def check_domino_info(section: StringTable) -> CheckResult:
         "4": (State.WARN, "crashed"),
         "5": (State.UNKNOWN, "unknown"),
     }
+    if not section:
+        return
     status, domain, name, release = section[0]
 
     state, state_readable = translate_status[status]

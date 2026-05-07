@@ -7,7 +7,7 @@ from collections.abc import Mapping
 
 import pytest
 
-from cmk.plugins.collection.rulesets.alertmanager import (
+from cmk.plugins.alertmanager.rulesets.alertmanager import (
     migrate_dropdown_ident,
     migrate_non_identifier_key,
 )

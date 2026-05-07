@@ -5,18 +5,16 @@
 
 
 from cmk.agent_based.v2 import Attributes, Result, State
-from cmk.plugins.citrix.lib_state import parse_citrix_state
-from cmk.plugins.collection.agent_based.citrix_state import (
+from cmk.plugins.citrix.agent_based.citrix_state import (
     check_citrix_state,
     check_citrix_state_controller,
     check_citrix_state_hosting_server,
     DEFAULT_PARAMS,
 )
-from cmk.plugins.collection.agent_based.inventory_citrix_state import (
+from cmk.plugins.citrix.agent_based.inventory_citrix_state import (
     inventorize_citrix_state,
 )
-
-from .utils_inventory import sort_inventory_result
+from cmk.plugins.citrix.lib_state import parse_citrix_state
 
 STRING_TABLE = [
     ["Catalog", "XenApp", "-", "Standard", "-", "RZ1"],
@@ -53,7 +51,7 @@ def test_inventorize_citrix_state() -> None:
         },
         status_attributes={},
     )
-    assert sort_inventory_result(inventorize_citrix_state(section)) == [expected]
+    assert list(inventorize_citrix_state(section)) == [expected]
 
 
 def test_check_citrix_state_controller() -> None:

@@ -6,8 +6,7 @@
 import pytest
 
 from cmk.agent_based.v2 import CheckResult, Metric, Result, State, StringTable
-from cmk.plugins.citrix.lib_controller import parse_citrix_controller, Section
-from cmk.plugins.collection.agent_based.citrix_controller import (
+from cmk.plugins.citrix.agent_based.citrix_controller import (
     check_citrix_controller,
     check_citrix_controller_licensing,
     check_citrix_controller_registered,
@@ -21,6 +20,7 @@ from cmk.plugins.collection.agent_based.citrix_controller import (
     discovery_citrix_controller_sessions,
     SessionParams,
 )
+from cmk.plugins.citrix.lib_controller import parse_citrix_controller, Section
 
 STRING_TABLE = [
     ["ControllerState", "Active"],

@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.agent_based.v2 import Attributes
-from cmk.plugins.collection.agent_based.inventory_fortiauthenticator_system import (
+from cmk.plugins.fortinet.agent_based.inventory_fortiauthenticator_system import (
     inventorize_fortiauthenticator_system,  # fmt: off
 )
 

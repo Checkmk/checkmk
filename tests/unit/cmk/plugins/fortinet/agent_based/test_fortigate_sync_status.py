@@ -8,7 +8,7 @@ from collections.abc import Sequence
 import pytest
 
 from cmk.agent_based.v2 import Result, Service, State, StringTable
-from cmk.plugins.collection.agent_based.fortigate_sync_status import (
+from cmk.plugins.fortinet.agent_based.fortigate_sync_status import (
     check_fortigate_sync_status,
     discover_fortigate_sync_status,
     parse_fortigate_sync_status,

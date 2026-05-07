@@ -5,7 +5,7 @@
 
 
 from cmk.agent_based.v2 import Metric, Result, State
-from cmk.plugins.collection.agent_based.fortigate_ap_connection import (
+from cmk.plugins.fortinet.agent_based.fortigate_ap_connection import (
     AccessPoint,
     check_fortigate_ap_connection,
     ConnectionState,

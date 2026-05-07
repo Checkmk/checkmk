@@ -7,7 +7,7 @@
 from collections.abc import Sequence
 
 from cmk.agent_based.v2 import StringTable, TableRow
-from cmk.plugins.collection.agent_based.inventory_fortinet_firewall import (
+from cmk.plugins.fortinet.agent_based.inventory_fortinet_firewall import (
     Interface,
     inventorize_fortinet_firewall,
     parse_fortinet_firewall_network_interfaces,

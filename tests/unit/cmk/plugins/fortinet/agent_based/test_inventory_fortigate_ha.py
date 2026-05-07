@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.agent_based.v2 import Attributes
-from cmk.plugins.collection.agent_based.inventory_fortigate_ha import (
+from cmk.plugins.fortinet.agent_based.inventory_fortigate_ha import (
     inventorize_fortigate_ha,
     parse_fortigate_ha,
 )

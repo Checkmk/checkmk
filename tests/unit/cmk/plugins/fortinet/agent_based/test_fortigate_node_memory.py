@@ -8,7 +8,7 @@ from collections.abc import Mapping, Sequence
 import pytest
 
 from cmk.agent_based.v2 import CheckResult, Metric, Result, Service, State, StringTable
-from cmk.plugins.collection.agent_based import fortigate_node_memory as fortigate_memory
+from cmk.plugins.fortinet.agent_based import fortigate_node_memory as fortigate_memory
 
 
 @pytest.mark.parametrize(

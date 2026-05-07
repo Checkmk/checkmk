@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.agent_based.v2 import TableRow
-from cmk.plugins.collection.agent_based.inventory_fortisandbox_software import (
+from cmk.plugins.fortinet.agent_based.inventory_fortisandbox_software import (
     inventorize_fortisandbox_software,
     parse_fortisandbox_software,
 )

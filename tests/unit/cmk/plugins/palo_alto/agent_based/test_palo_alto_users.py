@@ -11,7 +11,7 @@ from typing import Any
 import pytest
 
 from cmk.agent_based.v2 import CheckResult, Metric, Result, Service, State
-from cmk.plugins.collection.agent_based.palo_alto_users import (
+from cmk.plugins.palo_alto.agent_based.palo_alto_users import (
     check,
     cluster_check,
     discover,

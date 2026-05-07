@@ -35,20 +35,33 @@ from cmk.diagnostics import (
 )
 
 
+def diagnostics_parameters(
+    *,
+    site: SiteId = SiteId("gnlpft"),
+    timeout: int = 99,
+    checkmk_server_host: str = "",
+    opt_info: DiagnosticsOptionalParameters | None = None,
+    comp_specific: DiagnosticsOptionalParameters | None = None,
+) -> DiagnosticsParameters:
+    return DiagnosticsParameters(
+        site=site,
+        timeout=timeout,
+        checkmk_server_host=checkmk_server_host,
+        general=True,
+        opt_info={} if opt_info is None else opt_info,
+        comp_specific={} if comp_specific is None else comp_specific,
+    )
+
+
 def test_diagnostics_serialize_wato_parameters_boolean() -> None:
     assert list(
         serialize_wato_parameters(
-            DiagnosticsParameters(
-                site=SiteId("gnlpft"),
-                general=True,
-                timeout=99,
+            diagnostics_parameters(
                 opt_info={
                     OPT_LOCAL_FILES: "ANY",
                     OPT_OMD_CONFIG: "ANY",
                     OPT_CHECKMK_CRASH_REPORTS: "ANY",
                 },
-                comp_specific=None,
-                checkmk_server_host="hurz",
             ),
             max_args=4096,
         )
@@ -65,52 +78,26 @@ def test_diagnostics_serialize_wato_parameters_boolean() -> None:
     "wato_parameters, expected_parameters",
     [
         (
-            DiagnosticsParameters(
-                site=SiteId("gnlpft"),
-                general=True,
-                timeout=99,
-                opt_info={},
-                comp_specific=None,
-                checkmk_server_host="",
-            ),
+            diagnostics_parameters(),
             [[]],
         ),
         (
-            DiagnosticsParameters(
-                site=SiteId("gnlpft"),
-                general=True,
-                timeout=99,
-                opt_info={
-                    OPT_PERFORMANCE_GRAPHS: "ANY",
-                },
-                comp_specific=None,
-                checkmk_server_host="",
-            ),
+            diagnostics_parameters(opt_info={OPT_PERFORMANCE_GRAPHS: "ANY"}),
             [[OPT_PERFORMANCE_GRAPHS, ""]],
         ),
         (
-            DiagnosticsParameters(
-                site=SiteId("gnlpft"),
-                general=True,
-                timeout=99,
-                opt_info={
-                    OPT_PERFORMANCE_GRAPHS: "ANY",
-                },
-                comp_specific=None,
+            diagnostics_parameters(
+                opt_info={OPT_PERFORMANCE_GRAPHS: "ANY"},
                 checkmk_server_host="myhost",
             ),
             [[OPT_PERFORMANCE_GRAPHS, "myhost"]],
         ),
         (
-            DiagnosticsParameters(
-                site=SiteId("gnlpft"),
-                general=True,
-                timeout=99,
+            diagnostics_parameters(
                 opt_info={
                     OPT_PERFORMANCE_GRAPHS: "ANY",
                     OPT_CHECKMK_OVERVIEW: "ANY",
                 },
-                comp_specific=None,
                 checkmk_server_host="myhost",
             ),
             [
@@ -131,42 +118,24 @@ def test_diagnostics_serialize_wato_parameters_with_host(
     "wato_parameters, expected_parameters",
     [
         (
-            DiagnosticsParameters(
-                site=SiteId("gnlpft"),
-                general=True,
-                timeout=99,
-                opt_info={},
-                comp_specific={},
-                checkmk_server_host="hurz",
-            ),
+            diagnostics_parameters(),
             [[]],
         ),
         (
-            DiagnosticsParameters(
-                site=SiteId("gnlpft"),
-                general=True,
-                timeout=99,
-                opt_info={},
+            diagnostics_parameters(
                 comp_specific={OPT_COMP_NOTIFICATIONS: {}},
-                checkmk_server_host="hurz",
             ),
             [[]],
         ),
         (
-            DiagnosticsParameters(
-                site=SiteId("gnlpft"),
-                general=True,
-                timeout=99,
-                opt_info={
-                    OPT_CHECKMK_CONFIG_FILES: ("_ty", ["a", "b"]),
-                },
+            diagnostics_parameters(
+                opt_info={OPT_CHECKMK_CONFIG_FILES: ("_ty", ["a", "b"])},
                 comp_specific={
                     OPT_COMP_NOTIFICATIONS: {
                         "config_files": ("_ty", ["a", "b"]),
                         "log_files": ("_ty", ["a", "b"]),
                     },
                 },
-                checkmk_server_host="hurz",
             ),
             [
                 [OPT_CHECKMK_CONFIG_FILES, "a,b"],
@@ -174,20 +143,14 @@ def test_diagnostics_serialize_wato_parameters_with_host(
             ],
         ),
         (
-            DiagnosticsParameters(
-                site=SiteId("gnlpft"),
-                general=True,
-                timeout=99,
-                opt_info={
-                    OPT_CHECKMK_CONFIG_FILES: ("_ty", ["a1", "a2"]),
-                },
+            diagnostics_parameters(
+                opt_info={OPT_CHECKMK_CONFIG_FILES: ("_ty", ["a1", "a2"])},
                 comp_specific={
                     OPT_COMP_NOTIFICATIONS: {
                         "config_files": ("_ty", ["b1", "b2"]),
                         "log_files": ("_ty", ["c1", "c2"]),
                     },
                 },
-                checkmk_server_host="hurz",
             ),
             [
                 [OPT_CHECKMK_CONFIG_FILES, "a1,a2,b1,b2"],
@@ -195,10 +158,7 @@ def test_diagnostics_serialize_wato_parameters_with_host(
             ],
         ),
         (
-            DiagnosticsParameters(
-                site=SiteId("gnlpft"),
-                general=True,
-                timeout=99,
+            diagnostics_parameters(
                 opt_info={
                     OPT_CHECKMK_CONFIG_FILES: (
                         "_ty",
@@ -211,7 +171,6 @@ def test_diagnostics_serialize_wato_parameters_with_host(
                         "log_files": ("_ty", ["c1", "c2"]),
                     },
                 },
-                checkmk_server_host="hurz",
             ),
             [
                 [OPT_CHECKMK_CONFIG_FILES, "a1,a2,a3,a4"],

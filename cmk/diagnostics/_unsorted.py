@@ -28,13 +28,14 @@ DiagnosticsElementCSVResult = str
 DiagnosticsElementFilepaths = Iterator[Path]
 
 
+# NOTE: This must be in sync with cmk.gui.wato.pages.diagnostics.ModeDiagnostics._vs_diagnostics()
 class DiagnosticsParameters(TypedDict):
     site: SiteId
-    general: Literal[True]
     timeout: int
-    opt_info: DiagnosticsOptionalParameters | None
-    comp_specific: DiagnosticsOptionalParameters | None
     checkmk_server_host: str
+    general: Literal[True]
+    opt_info: DiagnosticsOptionalParameters
+    comp_specific: DiagnosticsOptionalParameters
 
 
 class FileMapConfig(TypedDict):
@@ -152,24 +153,18 @@ def serialize_wato_parameters(
 ) -> Sequence[DiagnosticsCLParameters]:
     # TODO: reduce the number of branches and do the whole procedure in a more generic/elegant way
 
-    parameters: dict[str, Any] = {}
+    parameters: dict[str, Any] = wato_parameters["opt_info"]
 
-    opt_info_parameters = wato_parameters.get("opt_info")
-    if opt_info_parameters is not None:
-        parameters |= opt_info_parameters
-
-    boolean_opts: list[str] = [
+    boolean_opts = [
         k for k in sorted(parameters.keys()) if k in _BOOLEAN_CONFIG_OPTS and parameters[k]
     ]
 
-    comp_specific_parameters = wato_parameters.get("comp_specific")
-    if comp_specific_parameters is not None:
-        parameters.update(comp_specific_parameters)
-
-        if comp_specific_parameters.get(OPT_COMP_BUSINESS_INTELLIGENCE, {}).pop(
-            OPT_BI_RUNTIME_DATA, None
-        ):
-            boolean_opts.append(OPT_BI_RUNTIME_DATA)
+    comp_specific_parameters = wato_parameters["comp_specific"]
+    parameters.update(comp_specific_parameters)
+    if comp_specific_parameters.get(OPT_COMP_BUSINESS_INTELLIGENCE, {}).pop(
+        OPT_BI_RUNTIME_DATA, None
+    ):
+        boolean_opts.append(OPT_BI_RUNTIME_DATA)
 
     opt_checkmk_server_host = wato_parameters.get("checkmk_server_host", "")
 

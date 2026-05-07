@@ -8,11 +8,12 @@
 # mypy: disable-error-code="type-arg"
 
 
-from collections.abc import Callable
+from collections.abc import Callable, Generator
 from typing import Any
 
 import pytest
 
+from cmk.agent_based.v1 import IgnoreResults, Metric, Result, State
 from cmk.checkengine.plugin_backend import check_plugins
 from cmk.checkengine.plugin_backend.utils import (
     create_subscribed_sections,
@@ -269,3 +270,45 @@ def test_get_registered_check_plugins_mgmt_factory() -> None:
     assert mgmt_plugin is not None
     assert mgmt_plugin.name.create_basic_name() == TEST_PLUGIN.name
     assert mgmt_plugin.service_name.startswith("Management Interface: ")
+
+
+@pytest.mark.parametrize(
+    "value",
+    [
+        Result(state=State.OK, summary="ok"),
+        Metric("metric_name", 1.0),
+        IgnoreResults(),
+    ],
+)
+def test_check_function_passes_valid_type(value: object) -> None:
+    def check_fn(section: object) -> Generator[object]:
+        yield value
+
+    plugin = check_plugins.create_check_plugin(
+        **{**MINIMAL_CREATION_KWARGS, "check_function": check_fn}
+    )
+    results = list(plugin.check_function(section=None))
+    assert len(results) == 1
+    assert results[0] is value
+
+
+def test_check_function_rejects_invalid_type() -> None:
+    def check_fn(section: object) -> Generator[str]:
+        yield "not a valid type"
+
+    plugin = check_plugins.create_check_plugin(
+        **{**MINIMAL_CREATION_KWARGS, "check_function": check_fn}
+    )
+    with pytest.raises(TypeError):
+        list(plugin.check_function(section=None))
+
+
+def test_check_function_empty() -> None:
+    def check_fn(section: object) -> Generator[object]:
+        return
+        yield
+
+    plugin = check_plugins.create_check_plugin(
+        **{**MINIMAL_CREATION_KWARGS, "check_function": check_fn}
+    )
+    assert list(plugin.check_function(section=None)) == []

@@ -6,7 +6,7 @@
 # mypy: disable-error-code="no-untyped-def"
 
 from cmk.agent_based.v2 import Metric, Result, State
-from cmk.plugins.collection.agent_based import bluecat_dhcp
+from cmk.plugins.bluecat.agent_based import bluecat_dhcp
 
 
 def check_bluecat_dhcp_ok():

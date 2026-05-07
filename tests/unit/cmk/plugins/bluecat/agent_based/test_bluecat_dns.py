@@ -6,7 +6,7 @@
 # mypy: disable-error-code="no-untyped-def"
 
 from cmk.agent_based.v2 import Result, State
-from cmk.plugins.collection.agent_based import bluecat_dns
+from cmk.plugins.bluecat.agent_based import bluecat_dns
 
 
 def check_bluecat_dns_ok():

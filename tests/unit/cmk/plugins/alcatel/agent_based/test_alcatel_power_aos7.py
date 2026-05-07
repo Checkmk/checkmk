@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.agent_based.v2 import Result, Service, State
-from cmk.plugins.collection.agent_based.alcatel_power_aos7 import (
+from cmk.plugins.alcatel.agent_based.alcatel_power_aos7 import (
     check_alcatel_power_aos7,
     discover_alcatel_power_aos7,
     parse_alcatel_power_aos7,

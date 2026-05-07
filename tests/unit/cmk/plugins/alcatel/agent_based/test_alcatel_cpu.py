@@ -6,7 +6,7 @@
 import pytest
 
 from cmk.agent_based.v2 import Metric, Result, State, StringTable
-from cmk.plugins.collection.agent_based.alcatel_cpu import (
+from cmk.plugins.alcatel.agent_based.alcatel_cpu import (
     check_alcatel_cpu,
     discover_alcatel_cpu,
     parse_alcatel_cpu,

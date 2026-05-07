@@ -8,7 +8,7 @@ from collections.abc import Sequence
 import pytest
 
 from cmk.agent_based.v2 import Result, Service, State, StringTable
-from cmk.plugins.collection.agent_based.alcatel_fans import (
+from cmk.plugins.alcatel.agent_based.alcatel_fans import (
     check_alcatel_fans,
     discover_alcatel_fans,
     parse_alcatel_fans,

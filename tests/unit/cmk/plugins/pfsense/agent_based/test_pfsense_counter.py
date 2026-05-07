@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.agent_based.v2 import Metric, Result, State
-from cmk.plugins.collection.agent_based.pfsense_counter import (
+from cmk.plugins.pfsense.agent_based.pfsense_counter import (
     check_pfsense_counter_pure,
     CheckParameters,
     PacketCounters,

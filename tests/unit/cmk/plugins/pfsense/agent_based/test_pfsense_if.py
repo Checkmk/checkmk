@@ -5,7 +5,7 @@
 
 
 from cmk.agent_based.v2 import Metric, Result, Service, State
-from cmk.plugins.collection.agent_based.pfsense_if import (
+from cmk.plugins.pfsense.agent_based.pfsense_if import (
     check_firewall_if_testable,
     DEFAULT_PARAMETERS,
     discover_pfsense_if,

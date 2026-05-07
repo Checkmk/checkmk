@@ -5,7 +5,7 @@
 
 import pytest
 
-from cmk.plugins.collection.rulesets.mcafee_av_client import migrate
+from cmk.plugins.mcafee.rulesets.mcafee_av_client import migrate
 
 
 @pytest.mark.parametrize(

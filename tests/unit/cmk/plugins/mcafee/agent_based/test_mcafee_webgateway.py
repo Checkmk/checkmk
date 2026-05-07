@@ -10,7 +10,7 @@ import pytest
 
 from cmk.agent_based.internal import evaluate_snmp_detection
 from cmk.agent_based.v2 import Metric, Result, Service, SimpleSNMPSection, State, StringTable
-from cmk.plugins.collection.agent_based import mcafee_webgateway
+from cmk.plugins.mcafee.agent_based import mcafee_webgateway
 
 WALK_MCAFEE: dict[str, str] = {
     ".1.3.6.1.2.1.1.1.0": "McAfee Web Gateway 7",

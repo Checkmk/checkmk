@@ -12,11 +12,11 @@ import pytest
 
 from cmk.agent_based.internal import evaluate_snmp_detection
 from cmk.agent_based.v2 import Metric, Result, Service, SimpleSNMPSection, State, StringTable
-from cmk.plugins.collection.agent_based import (
+from cmk.plugins.mcafee import libgateway
+from cmk.plugins.mcafee.agent_based import (
     mcafee_webgateway_misc,
     mcafee_webgateway_misc_section,
 )
-from cmk.plugins.mcafee import libgateway
 
 # SUP-13087
 WALK_MCAFEE: dict[str, str] = {

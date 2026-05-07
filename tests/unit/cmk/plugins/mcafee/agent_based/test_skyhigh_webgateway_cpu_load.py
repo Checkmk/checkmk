@@ -8,10 +8,10 @@ from collections.abc import Sequence
 import pytest
 
 from cmk.agent_based.v2 import StringTable
-from cmk.plugins.collection.agent_based.skyhigh_webgateway_cpu_load import (
+from cmk.plugins.lib.cpu import Load, Section
+from cmk.plugins.mcafee.agent_based.skyhigh_webgateway_cpu_load import (
     snmp_section_skyhigh_webgateway_cpu_load,
 )
-from cmk.plugins.lib.cpu import Load, Section
 
 
 def test_skyhigh_section_produces_cpu_section() -> None:

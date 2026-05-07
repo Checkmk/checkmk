@@ -5,7 +5,7 @@
 
 
 from cmk.agent_based.v2 import Result, Service, State
-from cmk.plugins.collection.agent_based.hp_proliant_mem import (
+from cmk.plugins.hp_proliant.agent_based.hp_proliant_mem import (
     check_hp_proliant_mem,
     discovery_hp_proliant_mem,
     Module,

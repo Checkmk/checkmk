@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.agent_based.v2 import Result, Service, State
-from cmk.plugins.collection.agent_based.hp_proliant_fans import (
+from cmk.plugins.hp_proliant.agent_based.hp_proliant_fans import (
     check_plugin_hp_proliant_fans,
     DISCLAIMER,
     Section,

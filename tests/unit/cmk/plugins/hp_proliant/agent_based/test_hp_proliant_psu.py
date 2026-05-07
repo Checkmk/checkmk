@@ -7,7 +7,7 @@
 import pytest
 
 from cmk.agent_based.v2 import Metric, Result, Service, State
-from cmk.plugins.collection.agent_based import hp_proliant_psu
+from cmk.plugins.hp_proliant.agent_based import hp_proliant_psu
 
 STING_TABLE = [["0", "1", "3", "2", "80", "460"], ["0", "2", "3", "2", "450", "460"]]
 PARAMS = hp_proliant_psu.Params(levels=(80.0, 90.0))

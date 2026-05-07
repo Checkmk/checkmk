@@ -6,7 +6,7 @@
 
 import pytest
 
-import cmk.plugins.collection.agent_based.hp_proliant_systeminfo as hps
+import cmk.plugins.hp_proliant.agent_based.hp_proliant_systeminfo as hps
 from cmk.agent_based.v2 import Attributes
 
 

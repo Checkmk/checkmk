@@ -17,7 +17,7 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
-from cmk.plugins.collection.agent_based.sap_hana_ess import (
+from cmk.plugins.sap_hana.agent_based.sap_hana_ess import (
     check_plugin_sap_hana_ess,
     parse_sap_hana_ess,
 )

@@ -13,13 +13,13 @@ import pytest
 import time_machine
 
 from cmk.agent_based.v2 import IgnoreResultsError, Metric, Result, Service, State, StringTable
-from cmk.plugins.collection.agent_based import sap_hana_diskusage as sap_hana_diskusage_module
-from cmk.plugins.collection.agent_based.sap_hana_diskusage import (
+from cmk.plugins.lib.df import FILESYSTEM_DEFAULT_PARAMS
+from cmk.plugins.sap_hana.agent_based import sap_hana_diskusage as sap_hana_diskusage_module
+from cmk.plugins.sap_hana.agent_based.sap_hana_diskusage import (
     check_sap_hana_diskusage,
     discovery_sap_hana_diskusage,
     parse_sap_hana_diskusage,
 )
-from cmk.plugins.lib.df import FILESYSTEM_DEFAULT_PARAMS
 
 NOW_SIMULATED = datetime.fromisoformat("1988-06-08 17:00:00.000000Z")
 LAST_TIME_EPOCH = (

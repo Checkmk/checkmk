@@ -10,7 +10,7 @@ from collections.abc import Mapping
 import pytest
 
 from cmk.agent_based.v2 import CheckResult, DiscoveryResult, Result, Service, State, StringTable
-from cmk.plugins.collection.agent_based.sap_hana_proc import (
+from cmk.plugins.sap_hana.agent_based.sap_hana_proc import (
     check_sap_hana_proc,
     discovery_sap_hana_proc,
     parse_sap_hana_proc,

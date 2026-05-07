@@ -8,7 +8,7 @@ from collections.abc import Mapping, Sequence
 import pytest
 
 from cmk.agent_based.v2 import CheckResult, Result, Service, State, StringTable
-from cmk.plugins.collection.agent_based.sap_hana_instance_status import (
+from cmk.plugins.sap_hana.agent_based.sap_hana_instance_status import (
     check_plugin_sap_hana_instance_status,
     InstanceProcess,
     InstanceStatus,

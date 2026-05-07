@@ -9,7 +9,7 @@
 import pytest
 
 from cmk.agent_based.v2 import CheckResult, DiscoveryResult, Result, Service, State, StringTable
-from cmk.plugins.collection.agent_based.sap_hana_replication_status import (
+from cmk.plugins.sap_hana.agent_based.sap_hana_replication_status import (
     check_plugin_sap_hana_replication_status,
     parse_sap_hana_replication_status,
 )

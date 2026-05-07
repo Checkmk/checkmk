@@ -9,11 +9,11 @@ from collections.abc import Mapping
 import pytest
 
 from cmk.agent_based.v2 import CheckResult, IgnoreResultsError, Metric, Result, State
-from cmk.plugins.collection.agent_based.sap_hana_fileinfo import (
+from cmk.plugins.fileinfo.lib.fileinfo_lib import Fileinfo, FileinfoItem
+from cmk.plugins.sap_hana.agent_based.sap_hana_fileinfo import (
     check_plugin_sap_hana_fileinfo,
     check_plugin_sap_hana_fileinfo_groups,
 )
-from cmk.plugins.fileinfo.lib.fileinfo_lib import Fileinfo, FileinfoItem
 
 
 @pytest.mark.parametrize(

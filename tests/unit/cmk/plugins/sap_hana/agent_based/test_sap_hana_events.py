@@ -18,7 +18,7 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
-from cmk.plugins.collection.agent_based.sap_hana_events import (
+from cmk.plugins.sap_hana.agent_based.sap_hana_events import (
     agent_section_sap_hana_events,
     check_plugin_sap_hana_events,
 )

@@ -17,7 +17,7 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
-from cmk.plugins.collection.agent_based import sap_hana_license
+from cmk.plugins.sap_hana.agent_based import sap_hana_license
 from cmk.plugins.sap_hana.lib import ParsedSection
 
 SECTION = {

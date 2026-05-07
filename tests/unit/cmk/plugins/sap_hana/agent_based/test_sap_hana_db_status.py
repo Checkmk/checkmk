@@ -9,7 +9,7 @@ from collections.abc import Mapping, Sequence
 import pytest
 
 from cmk.agent_based.v2 import CheckResult, IgnoreResultsError, Result, Service, State, StringTable
-from cmk.plugins.collection.agent_based import sap_hana_db_status as shds
+from cmk.plugins.sap_hana.agent_based import sap_hana_db_status as shds
 
 
 @pytest.mark.parametrize(

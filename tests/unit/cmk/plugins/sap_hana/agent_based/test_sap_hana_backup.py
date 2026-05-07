@@ -10,7 +10,7 @@ import pytest
 import time_machine
 
 from cmk.agent_based.v2 import IgnoreResultsError, Metric, Result, Service, State, StringTable
-from cmk.plugins.collection.agent_based import sap_hana_backup
+from cmk.plugins.sap_hana.agent_based import sap_hana_backup
 
 NOW_SIMULATED = datetime(2019, 1, 1, 22, tzinfo=ZoneInfo("UTC"))
 ITEM = "inst"

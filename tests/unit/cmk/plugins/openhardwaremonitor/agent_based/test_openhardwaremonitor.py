@@ -9,7 +9,7 @@ from typing import Any
 import pytest
 
 from cmk.agent_based.v2 import Metric, Result, Service, State, StringTable
-from cmk.legacy_checks.openhardwaremonitor import (
+from cmk.plugins.openhardwaremonitor.agent_based.openhardwaremonitor import (
     check_openhardwaremonitor_clock,
     discover_openhardwaremonitor,
     parse_openhardwaremonitor,

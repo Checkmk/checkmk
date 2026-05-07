@@ -5,7 +5,7 @@
 
 
 from cmk.agent_based.v2 import Metric, Result, Service, State
-from cmk.plugins.collection.agent_based import tcp_conn_stats
+from cmk.plugins.tcp.agent_based import tcp_conn_stats
 
 
 def test_discovery_winperf_section() -> None:

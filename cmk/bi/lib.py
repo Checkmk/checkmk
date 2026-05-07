@@ -250,6 +250,9 @@ class BIAggregationComputationOptions(ABCWithSchema):
         self.disabled = computation_config["disabled"]
         self.use_hard_states = computation_config["use_hard_states"]
         self.escalate_downtimes_as_warn = computation_config["escalate_downtimes_as_warn"]
+        self.downtime_only_on_full_problem_coverage = computation_config.get(
+            "downtime_only_on_full_problem_coverage", False
+        )
         self.freeze_aggregations = computation_config.get("freeze_aggregations", False)
 
     @classmethod
@@ -262,6 +265,7 @@ class BIAggregationComputationOptions(ABCWithSchema):
             "freeze_aggregations": self.freeze_aggregations,
             "use_hard_states": self.use_hard_states,
             "escalate_downtimes_as_warn": self.escalate_downtimes_as_warn,
+            "downtime_only_on_full_problem_coverage": self.downtime_only_on_full_problem_coverage,
         }
 
 
@@ -278,6 +282,11 @@ class BIAggregationComputationOptionsSchema(Schema):
         dump_default=False,
         example=False,
         description="Escalates downtimes based on aggregated WARN state instead of CRIT state.",
+    )
+    downtime_only_on_full_problem_coverage = Boolean(
+        dump_default=False,
+        example=False,
+        description="Show downtime only when all current problems are covered",
     )
     freeze_aggregations = Boolean(
         dump_default=False,

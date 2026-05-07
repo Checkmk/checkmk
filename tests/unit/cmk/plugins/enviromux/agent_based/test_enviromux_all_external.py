@@ -17,7 +17,7 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
-from cmk.plugins.collection.agent_based.enviromux_all_external import (
+from cmk.plugins.enviromux.agent_based.enviromux_all_external import (
     parse_enviromux_all_external,
 )
 from cmk.plugins.enviromux.lib import (

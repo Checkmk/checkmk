@@ -6,7 +6,7 @@
 import pytest
 
 from cmk.agent_based.v2 import CheckResult, DiscoveryResult, Result, Service, State, StringTable
-from cmk.plugins.collection.agent_based.enviromux_remote_input import (
+from cmk.plugins.enviromux.agent_based.enviromux_remote_input import (
     check_enviromux_remote_input,
     discover_enviromux_remote_input,
     InputStatus,

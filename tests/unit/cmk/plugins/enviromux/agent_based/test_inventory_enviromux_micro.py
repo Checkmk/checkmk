@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.agent_based.v2 import Attributes
-from cmk.plugins.collection.agent_based.inventory_enviromux_micro import (
+from cmk.plugins.enviromux.agent_based.inventory_enviromux_micro import (
     inventorize_enviromux_micro_information,
     parse_enviromux_micro_information,
 )

@@ -12,7 +12,7 @@ from collections.abc import Sequence
 import pytest
 
 from cmk.agent_based.v2 import Result, Service, State, StringTable
-from cmk.plugins.collection.agent_based.enviromux_digital import (
+from cmk.plugins.enviromux.agent_based.enviromux_digital import (
     check_enviromux_digital,
     discover_enviromux_digital,
 )

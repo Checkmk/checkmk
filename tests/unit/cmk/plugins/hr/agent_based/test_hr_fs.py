@@ -7,7 +7,7 @@
 import pytest
 
 from cmk.agent_based.v2 import Metric, Result, Service, State
-from cmk.plugins.collection.agent_based.hr_fs import (
+from cmk.plugins.hr.agent_based.hr_fs import (
     check_hr_fs_testable,
     discover_hr_fs,
     parse_hr_fs,

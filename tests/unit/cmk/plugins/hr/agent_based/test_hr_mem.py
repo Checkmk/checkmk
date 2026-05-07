@@ -8,7 +8,7 @@ from collections.abc import Sequence
 import pytest
 
 from cmk.agent_based.v2 import StringTable
-from cmk.plugins.collection.agent_based import hr_mem
+from cmk.plugins.hr.agent_based import hr_mem
 
 
 @pytest.mark.parametrize(

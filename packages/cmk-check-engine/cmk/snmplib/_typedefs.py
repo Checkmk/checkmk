@@ -45,14 +45,16 @@ SNMPRawValue = bytes
 SNMPRowInfo = list[tuple[OID, SNMPRawValue]]
 
 
+# TODO(mk): Clean is mandatory - parse/validate functionality should not be located in the typedefs
 def parse_oid_range_config(
     rule_values: Sequence[object],
 ) -> Mapping[SNMPSectionName, Sequence[RangeLimit]]:
     """Parse the OID range limits from the given config values."""
+    # Validation code below is a typical result when typing is bad or absent
     return {
         SNMPSectionName(v[0]): [_parse_range_limit(l) for l in v[1]]
         for v in reversed(rule_values)
-        if isinstance(v, tuple)
+        if isinstance(v, tuple) and v[1] is not None  # the rule can be OPTIONAL!
     }
 
 

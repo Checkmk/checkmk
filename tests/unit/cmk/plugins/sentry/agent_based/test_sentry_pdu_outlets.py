@@ -8,7 +8,7 @@ from collections.abc import Mapping, Sequence
 import pytest
 
 from cmk.agent_based.v2 import Result, Service, State, StringTable
-from cmk.plugins.collection.agent_based.sentry_pdu_outlets import (
+from cmk.plugins.sentry.agent_based.sentry_pdu_outlets import (
     check_sentry_pdu_outlets,
     check_sentry_pdu_outlets_v4,
     discovery_sentry_pdu_outlets,

@@ -259,7 +259,7 @@ def _section() -> Section:
                             "vm.memory.non-heap.committed": {"value": 192217088},
                             "vm.memory.non-heap.init": {"value": 7667712},
                             "vm.memory.non-heap.max": {"value": -1},
-                            "vm.memory.non-heap.usage": {"value": 0.9267636392452268},
+                            "vm.memory.non-heap.usage": {"value": "NaN"},
                             "vm.memory.non-heap.used": {"value": 178139808},
                             "vm.memory.pools.CodeHeap-'non-nmethods'.committed": {"value": 2752512},
                             "vm.memory.pools.CodeHeap-'non-nmethods'.init": {"value": 2555904},
@@ -519,6 +519,7 @@ def test_jenkins_system_metrics_http_requests(section: Section) -> None:
     assert value == expected
 
 
+@pytest.mark.xfail(strict=True, reason="CMK-34656: unhandled bad data types")
 def test_jenkins_system_metrics_memory(section: Section) -> None:
     value = list(check_jenkins_metrics("Memory", {}, section))
     expected = [
@@ -536,8 +537,6 @@ def test_jenkins_system_metrics_memory(section: Section) -> None:
         Metric("jenkins_memory_vm_memory_non_heap_committed", 192217088.0),
         Result(state=State.OK, notice="JVM memory: non-heap: initially requested: 7.31 MiB"),
         Metric("jenkins_memory_vm_memory_non_heap_init", 7667712.0),
-        Result(state=State.OK, notice="JVM memory: non-heap: usage: 92.68%"),
-        Metric("jenkins_memory_vm_memory_non_heap_usage", 92.67636392452268),
         Result(state=State.OK, summary="JVM memory: non-heap: used: 170 MiB"),
         Metric("jenkins_memory_vm_memory_non_heap_used", 178139808.0),
         Result(state=State.OK, notice="JVM memory pool G1-Eden-Space: available by OS: 248 MiB"),

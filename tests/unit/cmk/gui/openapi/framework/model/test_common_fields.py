@@ -12,7 +12,7 @@ from cmk.gui.openapi.framework.model.common_fields import (
     columns_validator,
     query_expression_validator,
 )
-from cmk.livestatus_client.expressions import BinaryExpression, QueryExpression
+from cmk.livestatus_client.expressions import BinaryExpression, NothingExpression, QueryExpression
 from cmk.livestatus_client.tables import Hosts
 from cmk.livestatus_client.types import Column
 
@@ -44,6 +44,36 @@ class TestQueryExpressionValidator:
     def test_invalid_type_raises(self, adapter: TypeAdapter[QueryExpression]) -> None:
         with pytest.raises(ValidationError):
             adapter.validate_python(42)
+
+    def test_empty_dict_raises_by_default(self, adapter: TypeAdapter[QueryExpression]) -> None:
+        with pytest.raises(ValidationError):
+            adapter.validate_python({})
+
+    def test_empty_string_raises_by_default(self, adapter: TypeAdapter[QueryExpression]) -> None:
+        with pytest.raises(ValidationError):
+            adapter.validate_python("")
+
+
+class TestQueryExpressionValidatorAllowEmpty:
+    @pytest.fixture(scope="class")
+    def adapter(self) -> TypeAdapter[QueryExpression]:
+        return TypeAdapter(  # astrein: disable=pydantic-type-adapter
+            Annotated[QueryExpression, query_expression_validator(Hosts, allow_empty=True)]
+        )
+
+    def test_empty_dict_returns_nothing_expression(
+        self, adapter: TypeAdapter[QueryExpression]
+    ) -> None:
+        assert isinstance(adapter.validate_python({}), NothingExpression)
+
+    def test_empty_string_returns_nothing_expression(
+        self, adapter: TypeAdapter[QueryExpression]
+    ) -> None:
+        assert isinstance(adapter.validate_python(""), NothingExpression)
+
+    def test_non_empty_expression_still_parsed(self, adapter: TypeAdapter[QueryExpression]) -> None:
+        result = adapter.validate_python({"op": "=", "left": "name", "right": "foo"})
+        assert isinstance(result, BinaryExpression)
 
 
 class TestColumnsValidator:

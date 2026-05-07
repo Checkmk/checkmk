@@ -33,7 +33,7 @@ from cmk.gui.openapi.framework.model.converter import TypedPlainValidator
 from cmk.gui.openapi.framework.model.omitted import ApiOmitted
 from cmk.gui.valuespec import TimerangeValue
 from cmk.gui.watolib.hosts_and_folders import Folder, folder_tree
-from cmk.livestatus_client.expressions import QueryExpression
+from cmk.livestatus_client.expressions import NothingExpression, QueryExpression
 from cmk.livestatus_client.types import Column, Table
 
 type AnnotatedHostName = Annotated[
@@ -411,7 +411,7 @@ def timerange_from_internal(
     raise ValueError(f"Invalid timerange value: {timerange}")
 
 
-def query_expression_validator(table: type[Table]) -> PlainValidator:
+def query_expression_validator(table: type[Table], *, allow_empty: bool = False) -> PlainValidator:
     """Returns a pydantic PlainValidator that parses and validates a JSON Livestatus query expression string.
 
     Equivalent to the marshmallow-based `query_field` for use in the new dataclass-based
@@ -428,6 +428,9 @@ def query_expression_validator(table: type[Table]) -> PlainValidator:
 
     Args:
         table: A Livestatus Table class used to validate column names in the expression.
+        allow_empty: If True, an empty dict or empty string is accepted and treated as
+            NothingExpression (no filter applied). Matches the behavior of the legacy
+            marshmallow query_field.
 
     Example JSON value:
         '{"op": "=", "left": "event_host", "right": "myhost"}'
@@ -437,6 +440,8 @@ def query_expression_validator(table: type[Table]) -> PlainValidator:
     def _parse(value: object) -> QueryExpression:
         if not isinstance(value, str | dict):
             raise ValueError(f"Expected str or dict, got {value!r}")
+        if allow_empty and (not value or value == "{}"):
+            return NothingExpression()
         if isinstance(value, str):
             try:
                 data: Mapping[str, object] = json.loads(value)

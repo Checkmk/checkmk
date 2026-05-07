@@ -5,7 +5,7 @@
 
 
 from cmk.agent_based.v2 import Result, State
-from cmk.plugins.collection.agent_based import prometheus_build
+from cmk.plugins.prometheus.agent_based import prometheus_build
 
 
 def test_check_prometheus_build() -> None:

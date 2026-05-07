@@ -70,10 +70,8 @@ def test_check_mem_linux_normal_usage() -> None:
     # Based on the test failure, the text contains "virtual memory" not just "used"
     assert "virtual memory" in summary_text.lower()
 
-    # Should have performance data in last result
-    last_result = result[-1]
-    assert len(last_result) == 3  # state, summary, perfdata
-    assert last_result[2] is not None  # Should have perfdata
+    # Should have performance data
+    assert [m for _state, _summary, metrics in result for m in metrics]
 
 
 def test_check_mem_linux_high_usage() -> None:
@@ -136,12 +134,7 @@ def test_check_mem_linux_with_swap_usage() -> None:
     # SwapUsed = SwapTotal - SwapFree = 2097152 - 1048576 = 1048576 (1GB)
 
     # Performance data should include swap metrics
-    last_result = result[-1]
-    perfdata = last_result[2]
-    assert perfdata is not None
-
-    # Should have various memory metrics
-    metric_names = [metric[0] for metric in perfdata]
+    metric_names = [m[0] for _state, _summary, metrics in result for m in metrics]
     assert any("swap" in name for name in metric_names)
 
 

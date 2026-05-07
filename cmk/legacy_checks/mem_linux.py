@@ -158,12 +158,12 @@ def _check_memory_dict(
     return results
 
 
-def check_mem_linux(_no_item, params, section):
-    if not section:
+def check_mem_linux(_no_item, params, augmented):
+    if not augmented:
         return
 
     # quick fix: stop modifying parsed data in place!
-    section = section.copy()
+    augmented = augmented.copy()
 
     # TODO: Currently some of these values are just set to generate the metrics later
     # See which ones we actually need.
@@ -171,33 +171,35 @@ def check_mem_linux(_no_item, params, section):
     # SReclaimable is not available for older kernels
     # SwapCached may be missing if swap is disabled, see crash 9d22dcb4-5260-11eb-8458-0b95bfca1bb1
     # Compute memory used by caches, that can be considered "free"
-    section["Caches"] = (
-        section["Cached"]
-        + section["Buffers"]
-        + section.get("SwapCached", 0)
-        + section.get("SReclaimable", 0)
+    augmented["Caches"] = (
+        augmented["Cached"]
+        + augmented["Buffers"]
+        + augmented.get("SwapCached", 0)
+        + augmented.get("SReclaimable", 0)
     )
 
     # RAM, https://github.com/Checkmk/checkmk/commit/1657414506bfe8f4001f3e10ef648947276ad75d
-    section["MemUsed"] = section["MemTotal"] - section["MemFree"] - section["Caches"]
-    section["SwapUsed"] = section["SwapTotal"] - section["SwapFree"]
-    section["TotalTotal"] = section["MemTotal"] + section["SwapTotal"]
-    section["TotalUsed"] = section["MemUsed"] + section["SwapUsed"]
+    augmented["MemUsed"] = augmented["MemTotal"] - augmented["MemFree"] - augmented["Caches"]
+    augmented["SwapUsed"] = augmented["SwapTotal"] - augmented["SwapFree"]
+    augmented["TotalTotal"] = augmented["MemTotal"] + augmented["SwapTotal"]
+    augmented["TotalUsed"] = augmented["MemUsed"] + augmented["SwapUsed"]
 
     # Disk Writeback
-    section["Pending"] = (
-        section["Dirty"]
-        + section.get("Writeback", 0)
-        + section.get("NFS_Unstable", 0)
-        + section.get("Bounce", 0)
-        + section.get("WritebackTmp", 0)
+    augmented["Pending"] = (
+        augmented["Dirty"]
+        + augmented.get("Writeback", 0)
+        + augmented.get("NFS_Unstable", 0)
+        + augmented.get("Bounce", 0)
+        + augmented.get("WritebackTmp", 0)
     )
 
-    results = {**_check_memory_dict(section, params)}
+    results = {**_check_memory_dict(augmented, params)}
 
     # show this always:
     yield results.pop("virtual", (0, ""))
 
+    # Note for migration: showing a result only in the details unless it is not ok
+    # is exactly what is achieved by usingg `Result(state=..., notice=...)`.
     details_results = []
     for state, text, metrics in results.values():
         if state:
@@ -210,20 +212,19 @@ def check_mem_linux(_no_item, params, section):
 
     # Now send performance data. We simply output *all* fields of section
     # except for a few really useless values
-    perfdata = []
-    for name, value in sorted(section.items()):
+    for name, value in sorted(augmented.items()):
         if name.startswith("DirectMap"):
             continue
         if (
-            name.startswith("Vmalloc") and section["VmallocTotal"] > 2**40
+            name.startswith("Vmalloc") and augmented["VmallocTotal"] > 2**40
         ):  # useless on 64 Bit system
             continue
         if name.startswith("Huge"):
-            if section["HugePages_Total"] == 0:  # omit useless data
+            if augmented["HugePages_Total"] == 0:  # omit useless data
                 continue
             if name == "Hugepagesize":
                 continue  # not needed
-            value = value * section["Hugepagesize"]  # convert number to actual memory size
+            value = value * augmented["Hugepagesize"]  # convert number to actual memory size
         metric_name = _camelcase_to_underscored(name.replace("(", "_").replace(")", ""))
         if metric_name not in {
             "mem_used",
@@ -233,12 +234,11 @@ def check_mem_linux(_no_item, params, section):
             "shmem",
             "page_tables",
         }:
-            perfdata.append((metric_name, value))
-    yield 0, "", perfdata
+            yield 0, "", [(metric_name, value)]
 
 
 # ThisIsACamel -> this_is_a_camel
-def _camelcase_to_underscored(name):
+def _camelcase_to_underscored(name: str) -> str:
     previous_lower = False
     previous_underscore = True
     result = ""

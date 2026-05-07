@@ -130,11 +130,8 @@ def test_mem_linux_check_vmalloc_chunk_regression(section: Mapping[str, int]) ->
             break
     assert swap_found, "Swap usage result not found"
 
-    # Check last result has extensive performance data
-    last_result = result[-1]
-    assert last_result[0] == 0  # State OK
-    assert last_result[1] == ""  # Empty summary for performance data only
-    assert len(last_result[2]) > 30  # Should have many performance metrics
+    # Check result contains extensive performance data
+    assert len([m for (state, summary, metrics) in result for m in metrics]) > 30
 
 
 def test_mem_linux_check_without_vmalloc_threshold(section: Mapping[str, int]) -> None:

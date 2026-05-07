@@ -9,9 +9,15 @@ Example cmdline: [sudo] ./teardown_postfix.sh $(whoami)"
 fi
 
 echo "Stop postfix..."
-if [ -f /.dockerenv ]; then
-    postfix stop
+# on k8s the env variable "POD_LABEL" is injected by Jenkins and might not be
+# detected properly inside a pytest. The other env variable "KUBERNETES_PORT"
+# is k8s native in every pod and independent of Jenkins env flags
+if [ -f /.dockerenv ] || [ -n "$POD_LABEL" ] || [ -n "$KUBERNETES_PORT" ]; then
+    echo "Dockerized or containerized environment detected (Docker or k8s)"
+    service postfix stop
+    echo "postfix stopped"
 else
+    echo "No docker, no k8s detected"
     systemctl stop postfix
 fi
 

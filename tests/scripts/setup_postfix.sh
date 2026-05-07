@@ -5,7 +5,7 @@ if [ -z "$1" ]; then
     echo "Error: A username is required as an argument.
 This script will create a Maildir for the provided username
 and configure Postfix to deliver emails to this Maildir.
-Example cmdline: [sudo] ./teardown_postfix.sh $(whoami)"
+Example cmdline: [sudo] ./setup_postfix.sh $(whoami)"
     exit 1
 fi
 
@@ -29,8 +29,16 @@ echo "Update virtual alias map..."
 postmap /etc/postfix/virtual
 
 echo "Start postfix..."
-if [ -f /.dockerenv ]; then
-    postfix start
+# on k8s the env variable "POD_LABEL" is injected by Jenkins and might not be
+# detected properly inside a pytest. The other env variable "KUBERNETES_PORT"
+# is k8s native in every pod and independent of Jenkins env flags
+if [ -f /.dockerenv ] || [ -n "$POD_LABEL" ] || [ -n "$KUBERNETES_PORT" ]; then
+    echo "Dockerized or containerized environment detected (Docker or k8s)"
+    service postfix start
+    echo "postfix started, wait for a short period of time to fully come up"
+    sleep 5
+    echo "Completed wait time, moving on"
 else
+    echo "No docker, no k8s detected"
     systemctl start postfix
 fi

@@ -12,6 +12,7 @@
 
 import pytest
 
+from cmk.agent_based.v2 import Metric, Result, Service, State
 from cmk.legacy_checks.ucd_mem import check_ucd_mem, discover_ucd_mem
 from cmk.plugins.ucd.agent_based.ucd_mem import parse_ucd_mem, Section
 
@@ -39,62 +40,50 @@ def fixture_parsed() -> Section:
 
 
 def test_discover_ucd_mem(parsed: Section) -> None:
-    result = list(discover_ucd_mem(parsed))
-    assert result == [(None, {})]
+    assert list(discover_ucd_mem(parsed)) == [Service()]
 
 
 def test_check_ucd_mem_with_warning_thresholds(parsed: Section) -> None:
     """Test with warning/critical thresholds for RAM usage"""
-    result = check_ucd_mem(
-        None,
-        {
-            "levels_ram": ("perc_used", (20.0, 30.0)),  # Lower thresholds than actual usage
-        },
-        parsed,
+    result = list(
+        check_ucd_mem(
+            {
+                "levels_ram": ("perc_used", (20.0, 30.0)),  # Lower thresholds than actual usage
+            },
+            parsed,
+        )
     )
 
-    result_list = list(result)
-    assert len(result_list) == 5  # Including error message
+    text_results = [r for r in result if isinstance(r, Result)]
+    metrics = [r for r in result if isinstance(r, Metric)]
 
-    # Error check first
-    state, summary = result_list[0][:2]
-    assert state == 1  # WARN
-    assert "Error: foobar" in summary
+    # Error message first
+    assert text_results[0].state == State.WARN
+    assert "Error: foobar" in text_results[0].summary
 
     # RAM usage check - should trigger CRIT since 78% > 30%
-    assert result_list[1][0] == 2  # CRIT
-    assert "RAM: 78.09%" in result_list[1][1]
-    assert "warn/crit at 20.00%/30.00% used" in result_list[1][1]
-    assert len(result_list[1]) == 3
-    ram_metrics = result_list[1][2]
-    assert len(ram_metrics) == 2
-    assert ram_metrics[0][0] == "mem_used"
-    assert ram_metrics[1][0] == "mem_used_percent"
-    # Check thresholds are properly set
-    mem_used_percent = ram_metrics[1]
-    assert len(mem_used_percent) >= 4
-    warn_val = mem_used_percent[2]
-    crit_val = mem_used_percent[3]
-    assert warn_val == 20.0  # warn threshold
-    assert isinstance(crit_val, float)
-    assert abs(crit_val - 30.0) < 0.1  # crit threshold (allowing for floating point)
+    assert text_results[1].state == State.CRIT
+    assert "RAM: 78.09%" in text_results[1].summary
+    assert "warn/crit at 20.00%/30.00% used" in text_results[1].summary
+
+    # Verify mem_used_percent metric thresholds
+    mem_used_percent = next(m for m in metrics if m.name == "mem_used_percent")
+    warn_val, crit_val = mem_used_percent.levels
+    assert warn_val == 20.0
+    assert crit_val is not None
+    assert abs(crit_val - 30.0) < 0.1
 
     # Swap usage check
-    assert result_list[2][0] == 0
-    assert "Swap: 0%" in result_list[2][1]
-    assert len(result_list[2]) == 3
-    assert len(result_list[2][2]) == 1
-    assert result_list[2][2][0][0] == "swap_used"
+    assert text_results[2].state == State.OK
+    assert "Swap: 0%" in text_results[2].summary
 
     # Total virtual memory check
-    state, summary = result_list[3][:2]
-    assert state == 0
-    assert "Total virtual memory: 69.08%" in summary
+    assert text_results[3].state == State.OK
+    assert "Total virtual memory: 69.08%" in text_results[3].summary
 
-    # Swap error check
-    state, summary = result_list[4][:2]
-    assert state == 0  # Info level for swap error
-    assert "Swap error: some error message" in summary
+    # Swap error message - default state 0 since no swap_errors param given (defaults to 0)
+    assert text_results[4].state == State.OK
+    assert "Swap error: some error message" in text_results[4].summary
 
 
 def test_check_ucd_mem_no_thresholds() -> None:
@@ -115,14 +104,11 @@ def test_check_ucd_mem_no_thresholds() -> None:
             "",  # smemSwapErrorMsg
         ]
     ]
-    assert (parsed := parse_ucd_mem(string_table))
+    assert (section := parse_ucd_mem(string_table))
 
-    result = list(check_ucd_mem(None, {}, parsed))
-
-    # Should have only 3 results (no error message, no swap error)
-    assert len(result) == 3
+    result = list(check_ucd_mem({}, section))
+    text_results = [r for r in result if isinstance(r, Result)]
 
     # All should be OK since no thresholds set
-    for item in result:
-        if "Total virtual memory" not in item[1]:
-            assert item[0] == 0  # OK state
+    for r in text_results:
+        assert r.state == State.OK

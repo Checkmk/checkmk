@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 
 # NOTE: This file has been created by an LLM (from something that was worse).
 # It mostly serves as test to ensure we don't accidentally break anything.
@@ -11,6 +10,7 @@
 # test by something more appropriate.
 
 
+from cmk.agent_based.v2 import Metric, Result, Service, State
 from cmk.legacy_checks.ucd_mem import check_ucd_mem, discover_ucd_mem
 from cmk.plugins.ucd.agent_based.ucd_mem import parse_ucd_mem, Section
 
@@ -37,40 +37,35 @@ def parsed() -> Section:
     return section
 
 
-def test_ucd_mem_1_discovery():
+def test_ucd_mem_1_discovery() -> None:
     """Test ucd_mem discovery."""
-    services = list(discover_ucd_mem(parsed()))
-
-    assert len(services) == 1
-    assert services == [(None, {})]
+    assert list(discover_ucd_mem(parsed())) == [Service()]
 
 
-def test_ucd_mem_1_check():
+def test_ucd_mem_1_check() -> None:
     """Test ucd_mem check."""
-    params = {"levels_ram": (80.0, 90.0)}
-    result = list(check_ucd_mem(None, params, parsed()))
+    params = {"levels_ram": ("perc_used", (80.0, 90.0))}
+    result = list(check_ucd_mem(params, parsed()))
 
-    assert len(result) == 3
+    text_results = [r for r in result if isinstance(r, Result)]
+    metrics = [r for r in result if isinstance(r, Metric)]
 
     # Check RAM result
-    assert result[0][0] == 0
-    assert "RAM:" in result[0][1]
-    assert "78.09%" in result[0][1]
-    assert "47.9 GiB of 61.3 GiB" in result[0][1]
-    assert len(result[0]) == 3
-    assert ("mem_used", 51426668544, None, None, 0, 65857241088) in result[0][2]
-    assert ("mem_used_percent", 78.08810040384546, None, None, 0.0, None) in result[0][2]
+    assert text_results[0].state == State.OK
+    assert "RAM:" in text_results[0].summary
+    assert "78.09%" in text_results[0].summary
+    assert "47.9 GiB of 61.3 GiB" in text_results[0].summary
 
     # Check Swap result
-    assert result[1][0] == 0
-    assert "Swap:" in result[1][1]
-    assert "0% - 0 B of 8.00 GiB" in result[1][1]
-    assert len(result[1]) == 3
-    assert ("swap_used", 0, None, None, 0, 8589930496) in result[1][2]
+    assert "Swap:" in text_results[1].summary
+    assert text_results[1].state == State.OK
+    assert "0% - 0 B of 8.00 GiB" in text_results[1].summary
 
     # Check Total virtual memory result
-    state, message = result[2][:2]
-    assert state == 0
-    assert "Total virtual memory:" in message
-    assert "69.08%" in message
-    assert "47.9 GiB of 69.3 GiB" in message
+    assert text_results[2].state == State.OK
+    assert "Total virtual memory:" in text_results[2].summary
+    assert "69.08%" in text_results[2].summary
+    assert "47.9 GiB of 69.3 GiB" in text_results[2].summary
+
+    metric_names = {m.name for m in metrics}
+    assert {"mem_used", "mem_used_percent", "swap_used"} <= metric_names

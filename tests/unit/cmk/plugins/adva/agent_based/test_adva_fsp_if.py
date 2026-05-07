@@ -8,7 +8,7 @@ from collections.abc import Mapping
 import pytest
 
 from cmk.agent_based.v2 import CheckResult, Metric, Result, Service, State
-from cmk.plugins.collection.agent_based import adva_fsp_if
+from cmk.plugins.adva.agent_based import adva_fsp_if
 
 SECTION = {
     "CH-1-4-C1": {

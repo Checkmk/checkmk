@@ -33,7 +33,6 @@ py_library(
     name = "agent-plugins-python",
     srcs = [
         "apache_status.py",
-        "isc_dhcpd.py",
         "mk_docker.py",
         "mk_filestats.py",
         "mk_inotify.py",

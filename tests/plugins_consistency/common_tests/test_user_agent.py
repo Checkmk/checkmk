@@ -13,6 +13,7 @@ from cmk.discover_plugins import discover_families
 
 _AGENTS_WITHOUT_USER_AGENT = {
     "cmk.plugins.ceph.agents.mk_ceph",
+    "cmk.plugins.collection.agents.isc_dhcpd",
     "cmk.plugins.plesk.agents.plesk_backups",
     "cmk.plugins.plesk.agents.plesk_domains",
     "cmk.plugins.mtr.agents.mtr",

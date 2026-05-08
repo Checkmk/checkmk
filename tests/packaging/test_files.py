@@ -663,7 +663,6 @@ def test_bom_csv_synchronous(bom_json: Bom, license_csv_rows: list[dict[str, str
 
 AGENT_PLUGINS_PREFIX = [
     "apache_status",
-    "isc_dhcpd",
     "mk_docker",
     "mk_filestats",
     "mk_inotify",

@@ -4,7 +4,6 @@
 # on the fly would significantly increase the load on the CI.
 #
 agents/plugins/apache_status.py
-agents/plugins/isc_dhcpd.py
 agents/plugins/mk_docker.py
 agents/plugins/mk_filestats.py
 agents/plugins/mk_inotify.py

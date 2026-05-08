@@ -36,14 +36,15 @@ Reload VS Code after installation (`Ctrl+Shift+P` → "Developer: Reload Window"
 
 ### 2. Run IDE Setup
 
-F1 → `CMK ▸ IDE: Setup (Install + Configure)` — select the families matching your work (Python, UI, Rust, etc.). Required families (Bazel, General) are included automatically.
+F1 → `CMK ▸ IDE: Setup (Install + Configure)` — select the families matching your work (Python, UI, Rust, C++, etc.). Required families (Bazel, General) are included automatically.
 
 ### 3. Build targets
 
 Check the status bar — click the CMK indicator to build any stale targets. At minimum:
 
 - **Python work:** Build venv
-- **UI work:** Build Vitest dependencies & Refresh Vitests
+- **UI work:** Build shared-typing + Build cmk-frontend
+- **C++ work:** Refresh C++ compile_commands.json
 
 ### 4. Verify
 
@@ -53,15 +54,16 @@ Open the Checkmk sidebar (activity bar icon) — the **Environment** section sho
 
 ### 1. Language Profiles
 
-Three status bar buttons (**Py**, **UI**, **Rs**) let you enable or disable language tooling per domain. Click a button to toggle the profile. This reduces resource usage by stopping language servers and disabling extension features you don't need.
+Four status bar buttons (**Py**, **UI**, **Rs**, **C++**) let you enable or disable language tooling per domain. Click a button to toggle the profile. This reduces resource usage by stopping language servers and disabling extension features you don't need.
 
 <img src="docs/profiles-mixed.png" alt="Language profiles with Python and UI enabled, Rust disabled">
 
 | Profile         | What it controls                                                                                 | Disable behavior                                                                          |
 | --------------- | ------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------- |
 | **Py** (Python) | Pylance language server, mypy daemon, interpreter resolution, Python snippets, Bazel test runner | Sets `python.languageServer: "None"`, `mypy.enabled: false`. Kills running dmypy daemons. |
-| **UI**          | ESLint, Stylelint, Prettier, prettier config watcher                                             | Sets `eslint.enable: false`, `stylelint.enable: false`, `prettier.enable: false`          |
+| **UI**          | ESLint, Stylelint, Prettier, Volar                                                               | Sets `eslint.enable: false`, `stylelint.enable: false`, `prettier.enable: false`          |
 | **Rs** (Rust)   | rust-analyzer language server                                                                    | Sets `rust-analyzer.initializeStopped: true`. Sends `rust-analyzer.stopServer` command.   |
+| **C++**         | clangd language server (background indexing, clang-tidy, formatting)                             | Sets `clangd.enable: false`.                                                              |
 
 **Status indicators:**
 
@@ -76,7 +78,7 @@ All enabled: <img src="docs/profiles-enabled.png" alt="All profiles enabled"> | 
 
 Profiles are persisted in `cmk.activeProfiles` in `.vscode/settings.json` and restored on reload. When a profile is disabled, its disable-settings are written to workspace settings so the corresponding extensions stop their heavy work (language servers, linters, etc.). When re-enabled, those settings are removed so the extensions resume normal operation.
 
-**Default state:** Python and UI are enabled by default on first use. Rust is disabled by default.
+**Default state:** Python and UI are enabled by default on first use. Rust and C++ are disabled by default.
 
 ### 2. Profile Detector
 
@@ -104,9 +106,8 @@ The extension monitors build targets and shows their status in the status bar:
 | cmk-frontend       | `packages/cmk-frontend/dist` symlink missing or broken                         |
 | node_modules       | `node_modules/` missing or out of sync with `pnpm-lock.yaml`                   |
 | mypy config        | `.vscode/.mypy.ini` missing                                                    |
-| prettier config    | `.vscode/.prettier.config.cjs` missing                                         |
 
-**Auto-refresh triggers:** extension activation, after CMK build tasks complete, source file changes in `packages/cmk-shared-typing/source/`, `packages/cmk-frontend/src/`, `requirements*.txt`, `pnpm-lock.yaml`, and git branch switches (`.git/HEAD`).
+**Auto-refresh triggers:** extension activation, after CMK build tasks complete, source file changes in `packages/cmk-shared-typing/source/`, `packages/cmk-frontend/src/`, the pinned requirements files (`requirements.txt`, `omd/requirements.txt`, `omd/requirements_lock.txt`, `omd/non-free/relay/requirements.txt`), `pnpm-lock.yaml`, and git branch switches (`.git/HEAD`).
 
 Click the status bar item to see stale targets and build commands in a QuickPick. When stale targets exist, a warning banner also appears at the top of the Environment sidebar section with a **Build All Stale** button.
 
@@ -116,20 +117,19 @@ Available via the command palette (F1) or by clicking the status bar. Build comm
 
 <img src="docs/build-menu.png" alt="Build Commands QuickPick">
 
-| Command                                       | Description                                                                                                                                                                                                |
-| --------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `Build venv`                                  | `bazel run //:create_venv` — creates/updates the Python venv with all dependencies including generated packages.                                                                                           |
-| `Build shared-typing`                         | Builds TS and PY types from `cmk-shared-typing` and symlinks the output into `cmk-frontend-vue/node_modules/`.                                                                                             |
-| `Build cmk-frontend`                          | Builds `cmk-frontend` (webpack) and symlinks `dist/` into the package directory.                                                                                                                           |
-| `Build cmk-frontend-vue`                      | Builds `cmk-frontend-vue` via Bazel.                                                                                                                                                                       |
-| `Build Vitest dependencies & Refresh Vitests` | Builds shared-typing (TS) + cmk-frontend, creates symlinks, then refreshes the VSCode test explorer.                                                                                                       |
-| `Run UI Component Library`                    | Starts the UI Component Library dev server via `ibazel`.                                                                                                                                                   |
-| `Install node_modules`                        | Builds the Bazel-pinned pnpm (`@pnpm//:pnpm`) and invokes it directly from the workspace cwd so `node_modules/` lands at the workspace root where ESLint, Prettier and Vitest can resolve their libraries. |
-| `Build All Stale`                             | Builds all targets that are currently stale, in sequence.                                                                                                                                                  |
-| `Build Menu`                                  | Opens the QuickPick with all build commands (same as clicking the status bar).                                                                                                                             |
-| `Refresh Build Status`                        | Manually re-checks all build targets.                                                                                                                                                                      |
-| `Regenerate mypy config`                      | Regenerates `.vscode/.mypy.ini` from `pyproject.toml`, stripping options unsupported by the installed mypy version.                                                                                        |
-| `Regenerate prettier config`                  | Regenerates `.vscode/.prettier.config.cjs` from `bazel/tools/prettier.config.cjs`, replacing `require()` with string-based plugin loading.                                                                 |
+| Command                             | Description                                                                                                                                                                                                |
+| ----------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Build venv`                        | `bazel run //:create_venv` — creates/updates the Python venv with all dependencies including generated packages.                                                                                           |
+| `Build shared-typing`               | Builds TS and PY types from `cmk-shared-typing` and symlinks the output into `cmk-frontend-vue/node_modules/`.                                                                                             |
+| `Build cmk-frontend`                | Builds `cmk-frontend` (webpack) and symlinks `dist/` into the package directory.                                                                                                                           |
+| `Build cmk-frontend-vue`            | Builds `cmk-frontend-vue` via Bazel.                                                                                                                                                                       |
+| `Run UI Component Library`          | Starts the UI Component Library dev server via `ibazel`.                                                                                                                                                   |
+| `Install node_modules`              | Builds the Bazel-pinned pnpm (`@pnpm//:pnpm`) and invokes it directly from the workspace cwd so `node_modules/` lands at the workspace root where ESLint, Prettier and Vitest can resolve their libraries. |
+| `Refresh C++ compile_commands.json` | Builds `bazel_env` and runs `//:refresh_compile_commands` so clangd picks up the latest compiler flags. Only visible when the C++ family is installed.                                                     |
+| `Build All Stale`                   | Builds all targets that are currently stale, in sequence.                                                                                                                                                  |
+| `Build Menu`                        | Opens the QuickPick with all build commands (same as clicking the status bar).                                                                                                                             |
+| `Refresh Build Status`              | Manually re-checks all build targets.                                                                                                                                                                      |
+| `Regenerate mypy config`            | Regenerates `.vscode/.mypy.ini` from `pyproject.toml`, stripping options unsupported by the installed mypy version.                                                                                        |
 
 ### 5. Dashboard
 
@@ -170,6 +170,10 @@ The activity bar icon shows a badge with the total number of issues across the w
 
 Clicking an item navigates to the relevant dashboard section or opens the appropriate settings.
 
+#### Profiles
+
+A card view that mirrors the status bar profile buttons (Py, UI, Rs, C++) in webview form. Each card shows the profile state (`ON` / `OFF` / `STALE`) and toggles the profile on click. Hidden by default — open from the activity bar menu when you want a larger surface than the status bar buttons.
+
 #### IDE Health
 
 Combined view of settings mismatches, extension health per family, and extension version info.
@@ -201,15 +205,17 @@ Each opens a QuickPick where you select which families to include. Required fami
 
 #### Extension families
 
-| Family       | Extensions                                                                                                       | Required              |
-| ------------ | ---------------------------------------------------------------------------------------------------------------- | --------------------- |
-| **Bazel**    | `BazelBuild.vscode-bazel`                                                                                        | Yes (locked)          |
-| **General**  | _(no extensions, settings only)_                                                                                 | Yes (locked)          |
-| **Python**   | `ms-python.python`, `ms-python.vscode-pylance`, `charliermarsh.ruff`, `matangover.mypy`                          | No                    |
-| **UI**       | `Vue.volar`, `dbaeumer.vscode-eslint`, `esbenp.prettier-vscode`, `stylelint.vscode-stylelint`, `vitest.explorer` | No                    |
-| **Rust**     | `rust-lang.rust-analyzer`, `swellaby.vscode-rust-test-adapter`                                                   | No (not pre-selected) |
-| **Markdown** | `davidanson.vscode-markdownlint`, `esbenp.prettier-vscode`                                                       | No                    |
-| **cSpell**   | `streetsidesoftware.code-spell-checker`                                                                          | No (not pre-selected) |
+| Family       | Extensions                                                                                                 | Required              |
+| ------------ | ---------------------------------------------------------------------------------------------------------- | --------------------- |
+| **Bazel**    | `BazelBuild.vscode-bazel`                                                                                  | Yes (locked)          |
+| **General**  | _(no extensions, settings only)_                                                                           | Yes (locked)          |
+| **Python**   | `ms-python.python`, `ms-python.vscode-pylance`, `charliermarsh.ruff`, `matangover.mypy`, `monosans.djlint` | No                    |
+| **UI**       | `Vue.volar`, `dbaeumer.vscode-eslint`, `esbenp.prettier-vscode`, `stylelint.vscode-stylelint`              | No                    |
+| **Rust**     | `rust-lang.rust-analyzer`                                                                                  | No (not pre-selected) |
+| **C++**      | `llvm-vs-code-extensions.vscode-clangd`                                                                    | No (not pre-selected) |
+| **LLDB**     | `vadimcn.vscode-lldb`                                                                                      | No (not pre-selected) |
+| **Markdown** | `davidanson.vscode-markdownlint`, `esbenp.prettier-vscode`                                                 | No                    |
+| **cSpell**   | `streetsidesoftware.code-spell-checker`                                                                    | No (not pre-selected) |
 
 #### Settings per family
 
@@ -217,14 +223,15 @@ Settings are applied at three scopes: **folder** (`.vscode/settings.json`), **wo
 
 The configure command shows a QuickPick with all new/changed settings where you can select which ones to apply.
 
-| Family      | Key settings                                                                                                                                                                                  |
-| ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Bazel**   | `bazel.buildifierExecutable` path                                                                                                                                                             |
-| **General** | `editor.formatOnSave`, `git.branchProtection` for master/main, `files.watcherExclude` / `search.exclude` for bazel-\*, .venv, node_modules, cache dirs                                        |
-| **Python**  | Ruff (formatter/linter on save, workspace scope), Pylance (analysis excludes, auto-import), pytest config, mypy (dmypy with auto-generated `.mypy.ini`), `pylint.enabled: false` (user scope) |
-| **UI**      | Prettier (TS/JS/Vue/JSON/CSS formatter, auto-generated config from Bazel source), Stylelint, Vitest (root config, search pattern excludes), editor code actions on save                       |
-| **Rust**    | rust-analyzer (linked projects for check-cert, check-http, cmk-agent-ctl, mk-oracle, mk-sql; clippy), format-on-save. Requires matching Rust toolchains installed via `rustup`.               |
-| **cSpell**  | Spell checker with Checkmk-specific dictionary (`.vscode/.cspell/checkmk.dict.txt`), auto-copied on configure                                                                                 |
+| Family      | Key settings                                                                                                                                                                                                         |
+| ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Bazel**   | `bazel.buildifierExecutable` path                                                                                                                                                                                    |
+| **General** | `editor.formatOnSave`, `git.branchProtection` for master/main, `files.watcherExclude` / `search.exclude` for bazel-\*, .venv, node_modules, cache dirs                                                               |
+| **Python**  | Ruff (formatter/linter on save, workspace scope), Pylance (analysis excludes, auto-import), pytest config, mypy (dmypy with auto-generated `.mypy.ini`), djlint for HTML/Jinja, `pylint.enabled: false` (user scope) |
+| **UI**      | Prettier (TS/JS/Vue/JSON/CSS formatter, `prettier.configPath` points at `bazel/tools/prettier.config.cjs`), Stylelint, ESLint flat config, editor code actions on save                                               |
+| **Rust**    | rust-analyzer (linked projects for check-cert, check-http, cmk-agent-ctl, mk-oracle, mk-sql; clippy), format-on-save. Requires matching Rust toolchains installed via `rustup`.                                      |
+| **C++**     | clangd as default formatter for C/C++ files, `clangd.path` pointing at `bazel-bin/bazel/tools/bazel_env/bin/clangd`, clangd flags (`--background-index`, `--clang-tidy`, `--compile-commands-dir`)                   |
+| **cSpell**  | Spell checker with Checkmk-specific dictionary (`.vscode/.cspell/checkmk.dict.txt`), auto-copied on configure                                                                                                        |
 
 ### 7. Code Snippets
 
@@ -252,9 +259,11 @@ F1 → `CMK ▸ New: Create from Template` — scaffolds new files with boilerpl
 
 Prompts for the plugin name, creates the directory structure, and opens the first file.
 
-### 9. Bazel Test Runner
+### 9. CMK Tests (Bazel-driven Test Explorer)
 
-Run Python tests via Bazel directly from the editor:
+Run Bazel tests for every supported language directly from the Test Explorer — no per-language test extension required.
+
+#### Editor commands (Python only)
 
 | Command                                      | Description                                  |
 | -------------------------------------------- | -------------------------------------------- |
@@ -263,9 +272,19 @@ Run Python tests via Bazel directly from the editor:
 
 The test runner finds the Bazel target by walking up the directory tree for BUILD files. If no target is found locally, it falls back to `bazel query`. Results stream live into the terminal panel (`--test_output=streamed`). Only available when the Python profile is active.
 
-#### CMK ▸ Bazel Tests Test Explorer group
+#### CMK Tests Test Explorer group
 
-A dedicated **CMK ▸ Bazel Tests** group appears in the Test Explorer view (alongside the standard pytest group). Each Bazel `py_test` target under `//tests/...` shows up as a tree node mirroring its package path, e.g. `tests / unit / cmk / gui / :tests`. Click Run on any node — a leaf, a folder, or the whole tree — to spawn `bazel test` for the selected targets. Output streams into the **Test Results** panel; per-test pass/fail is parsed from each target's JUnit `test.xml` so failing tests jump to the assertion line.
+A dedicated **CMK Tests** group appears in the Test Explorer view. It discovers Bazel targets across the workspace and groups them by package path (e.g. `tests / unit / cmk / gui / :tests`). Click Run on any node — a leaf, a folder, or the whole tree — to spawn `bazel test` for the selected targets. Output streams into the **Test Results** panel; per-test pass/fail is parsed from each target's JUnit `test.xml` so failing tests jump to the assertion line.
+
+Supported test rules (auto-discovered from `BUILD` files under `tests/`, `packages/`, `non-free/packages/`, `.ide/`):
+
+| Rule          | Language | Notes                                                                           |
+| ------------- | -------- | ------------------------------------------------------------------------------- |
+| `py_test`     | Python   | pytest, with `-k` keyword filter via the `Run with -k…` profile.                |
+| `py_doc_test` | Python   | Doctest targets.                                                                |
+| `vitest_test` | TS / Vue | Replaces the standalone Vitest extension — same hermetic version as CI.         |
+| `rust_test`   | Rust     | Replaces the standalone Rust test adapter — libtest output is parsed for cases. |
+| `cc_test`     | C / C++  | Bazel `cc_test` targets (e.g. `//packages/livestatus/...`).                     |
 
 Two run profiles:
 
@@ -274,11 +293,13 @@ Two run profiles:
 | `Run`          | Default. Runs the selected target(s) with the configured edition.                 |
 | `Run with -k…` | Prompts for a pytest `-k` keyword expression and forwards it via `--test_arg=-k`. |
 
-Run options are configured via the **CMK ▸ Bazel Tests · Config** webview inside the Testing view (or `CMK ▸ Test: Configure Bazel run options`). The form exposes a single field:
+Run options are configured via the **CMK Tests · Config** webview inside the Testing view (or `CMK ▸ Test: Configure Bazel run options`). The form exposes a single field:
 
 - **Edition** — `community` / `pro` / `ultimate` / `ultimatemt` / `cloud`, passed as `--cmk_edition=<edition>`. Persists in `cmk.bazelTests.edition` workspace setting.
 
-Site-related env vars (`VERSION`, `REUSE`, `CLEANUP`, `DEBUG`) are not exposed because they only matter for the Make-driven integration / composition / gui_e2e suites, which Bazel `py_test` targets don't run. The tree refreshes automatically when any `tests/**/BUILD` file changes; trigger a manual refresh via the Test Explorer's refresh button or `CMK ▸ Test: Refresh Bazel test targets`.
+Site-related env vars (`VERSION`, `REUSE`, `CLEANUP`, `DEBUG`) are not exposed because they only matter for the Make-driven integration / composition / gui_e2e suites, which Bazel test targets don't run. Discovery uses `find` to enumerate `BUILD` / `BUILD.bazel` files in the discovery roots; the tree refreshes automatically when any of those files changes. Trigger a manual refresh via the Test Explorer's refresh button or `CMK ▸ Test: Refresh Bazel test targets`.
+
+Because CMK Tests covers vitest and rust tests too, the standalone **Vitest** (`vitest.explorer`) and **Rust Test Adapter** (`swellaby.vscode-rust-test-adapter`) extensions are no longer recommended — they can be uninstalled or disabled.
 
 ### 10. Gerrit Push
 
@@ -289,7 +310,7 @@ F1 → `CMK ▸ Push to Gerrit` pushes commits for Gerrit code review. It:
 - Prompts for the target branch (defaults to `master`)
 - Shows the number of commits to be pushed before confirming
 
-Also available from the Tools section in the dashboard sidebar.
+Also available from the cloud-upload icon in the Source Control title bar, alongside `CMK ▸ Git: Checkout Branch…` and the pre-commit hook toggle.
 
 ### 11. Dynamic Mypy Targets
 
@@ -390,30 +411,20 @@ grep jemalloc /proc/$PID/maps | head -1
 tr '\0' '\n' < /proc/$PID/environ | grep -E 'LD_PRELOAD|PYTHONMALLOC'
 ```
 
-### 13. Test On-Demand
+### 13. CMK Tests On-Demand Discovery
 
-Per-tool opt-in for deferred startup of heavy tooling. Each window reload starts with the deferred tool off and waits for a trigger again — nothing is persisted.
+Bazel test discovery scans `BUILD` / `BUILD.bazel` files under `tests/`, `packages/`, `non-free/packages/` and `.ide/` to build the **CMK Tests** Test Explorer tree. On a large monorepo that scan is expensive, so by default it is deferred until you actually need tests.
 
-| Setting                   | Tool        | Default | Triggers                                                  |
-| ------------------------- | ----------- | ------- | --------------------------------------------------------- |
-| `cmk.bazelTests.onDemand` | Bazel tests | `true`  | Python test file opened, CMK ▸ Bazel Tests group expanded |
-| `cmk.vitest.testOnDemand` | vitest      | `false` | TS/Vue test file opened, Testing view opened              |
-| `cmk.ruff.testOnDemand`   | Ruff        | `false` | Python file opened                                        |
+| Setting                   | Default | Triggers                                              |
+| ------------------------- | ------- | ----------------------------------------------------- |
+| `cmk.bazelTests.onDemand` | `true`  | Test file opened, or the **CMK Tests** group expanded |
 
 **How it works:**
 
-- **File-open trigger** — only fires the tool whose file pattern matches. Opening a Python test file triggers Bazel test discovery; opening a `.test.ts`/`.spec.ts`/`.test.vue` triggers vitest; opening any Python file triggers Ruff. Tools never cross-trigger.
-- **Testing-view trigger** — Bazel test discovery also runs when the user expands the **CMK ▸ Bazel Tests** group in the Test Explorer (via `TestController.resolveHandler` on the root). Vitest activates similarly when the Testing view opens. Ruff doesn't listen to the Testing view.
-- On first trigger per session the extension performs the deferred work, logs to the CMK output channel, and (for Ruff/vitest) flips the relevant "enable" setting at workspace-folder scope.
-- On window reload the workspace-folder override is unset and the tool reverts to off. The cycle repeats.
-
-**What each tool defers:**
-
-- **Bazel tests** — defers the filesystem scan of `tests/**/BUILD` that powers the `CMK ▸ Bazel Tests` Test Explorer group. Set the setting to `false` to discover at activation instead.
-- **Ruff** — holds `ruff.enable: false` at folder scope on startup (shadowing the bundled workspace-scope `true`); on trigger, unsets the folder override so the workspace value (`true`) takes over and the Ruff LSP starts. Skipped if the user explicitly set `ruff.enable` at folder scope.
-- **vitest** — holds `vitest.configSearchPatternExclude: "**/*"` at folder scope on startup (excluding everything from config discovery); on trigger, unsets the folder override so the workspace-scope pattern takes over and vitest discovers configs normally. Skipped if the user explicitly set that key at folder scope.
-
-Set any of these to `false` to disable the on-demand behavior entirely for that tool — it then stays in whatever state you configure manually.
+- On activation the extension shows a placeholder hint in the **CMK Tests** group (`Open a test file or click ↻ to discover Bazel tests`) and skips the filesystem scan entirely.
+- Opening a Python / TS / Vue / Rust / C++ test file, or expanding the **CMK Tests** group in the Test Explorer (via `TestController.resolveHandler`), kicks off discovery and starts watching the BUILD files for changes.
+- First-trigger work is logged to the CMK output channel.
+- Set `cmk.bazelTests.onDemand` to `false` to scan eagerly at activation instead.
 
 ### 14. Pylance Memory Monitor
 
@@ -427,7 +438,7 @@ On first activation, the extension detects whether basic workspace settings (e.g
 
 ### UI-only setup
 
-In step 2, select only the UI family. Then run F1 → `CMK ▸ Cmd: Build Vitest dependencies & Refresh Vitests`.
+In step 2, select only the UI family. Then run F1 → `CMK ▸ Cmd: Build shared-typing` and `CMK ▸ Cmd: Build cmk-frontend` to populate the symlinks vitest and the TS server need.
 
 ### After a branch switch
 
@@ -441,10 +452,10 @@ F1 → `CMK ▸ New: Create from Template` → Check Plugin → enter plugin nam
 
 - **Pylance auto-import** suggests re-exports instead of barrel exports from `__init__.py`. mypy catches these via `no_implicit_reexport`.
 - **mypy IDE config** (`.vscode/.mypy.ini`) is auto-generated from `pyproject.toml` on activation and when `pyproject.toml` changes. Options unsupported by the installed mypy version are automatically stripped. `follow_imports` is overridden to `normal` (required by dmypy). Regenerate manually via `CMK ▸ Cmd: Regenerate mypy config`.
-- **Vitest** follows `bazel-*` symlinks during config discovery, causing errors. Mitigated by `vitest.configSearchPatternExclude`.
-- **Prettier config** (`.vscode/.prettier.config.cjs`) is auto-generated from `bazel/tools/prettier.config.cjs`, replacing `require()` with string-based plugin loading. Regenerates on source change or via `CMK ▸ Cmd: Regenerate prettier config`.
+- **Prettier config** is read directly from `bazel/tools/prettier.config.cjs` via `prettier.configPath`, so the prettier plugin loads the same config CI uses. There is no auto-generated copy in `.vscode/`.
 - **ESLint** extension follows `bazel-*` symlinks into protected directories, causing permission errors. Needs `bazel-*/**` in eslint global ignores in `eslint.config.mjs` (not yet implemented).
 - **Profile disable-settings** require the target extension to be installed. Settings for extensions that haven't activated yet (e.g., `rust-analyzer.initializeStopped`) are written via section-scoped configuration to avoid "not a registered configuration" errors.
 - **dmypy cleanup** kills all dmypy daemons for the workspace when the Python profile is disabled. Orphaned daemons from previous sessions are cleaned up periodically while the profile is active.
 - **Python Environments** (`ms-python.vscode-python-envs`) is detected as a high-resource extension that can cause performance issues. It respawns automatically after being stopped and cannot be disabled via settings — the Python extension re-launches it on activation. The Issues view warns when it is installed.
+- **C++ compile_commands.json** must be regenerated after BUILD changes via `CMK ▸ Cmd: Refresh C++ compile_commands.json`; clangd does not regenerate it automatically.
 - Build commands require `bazel` on PATH — ensure linuxbrew or your Bazel installation is available.

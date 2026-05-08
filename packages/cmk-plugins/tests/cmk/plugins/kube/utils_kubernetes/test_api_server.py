@@ -21,6 +21,7 @@ from cmk.plugins.kube.api_server import (
     _verify_version_support,
     CoreAPI,
     decompose_git_version,
+    SUPPORTED_VERSIONS,
     UnsupportedEndpointData,
     version_from_json,
 )
@@ -39,7 +40,18 @@ def _core_api() -> CoreAPI:
 
 
 CALL_API = "cmk.plugins.kube.api_server.send_request"
-SUPPORTED_VERSION_STR = "Supported versions are v1.30, v1.31, v1.32, v1.33."
+MIN_SUPPORTED_MINUS_ONE = (SUPPORTED_VERSIONS[0][0], SUPPORTED_VERSIONS[0][1] - 1)
+MAX_SUPPORTED_PLUS_ONE = (SUPPORTED_VERSIONS[-1][0], SUPPORTED_VERSIONS[-1][1] + 1)
+
+
+def dot_version(tpl: tuple[int, int]) -> str:
+    return f"v{tpl[0]}.{tpl[1]}"
+
+
+def supported_version_str() -> str:
+    # This will break if we ever have a patch version in SUPPORTED_VERSIONS
+    versions = [dot_version(version) for version in SUPPORTED_VERSIONS]
+    return f"Supported versions are {', '.join(versions)}."
 
 
 def test_raw_api_get_healthz_ok(core_api: CoreAPI) -> None:
@@ -293,32 +305,50 @@ def test_decompose_git_version(
 @pytest.mark.parametrize(
     "kubernetes_version, logs",
     [
-        (
+        pytest.param(
             api.UnknownKubernetesVersion(git_version=api.GitVersion("")),
             [
-                "WARNING Unsupported Kubernetes version ''. " + SUPPORTED_VERSION_STR,
+                "WARNING Unsupported Kubernetes version ''. " + supported_version_str(),
                 "WARNING Processing data is done on a best effort basis.",
             ],
+            id="empty version",
         ),
-        (
-            api.KubernetesVersion(git_version=api.GitVersion("v1.30.2"), major=1, minor=30),
-            [],
-        ),
-        (
-            api.KubernetesVersion(git_version=api.GitVersion("v1.31.0"), major=1, minor=31),
-            [],
-        ),
-        (
-            api.KubernetesVersion(git_version=api.GitVersion("v1.33.0"), major=1, minor=33),
-            [],
-        ),
-        (
-            api.KubernetesVersion(git_version=api.GitVersion("v1.34.0"), major=1, minor=34),
+        pytest.param(
+            api.KubernetesVersion(
+                git_version=api.GitVersion(f"{dot_version(MAX_SUPPORTED_PLUS_ONE)}.0"),
+                major=MAX_SUPPORTED_PLUS_ONE[0],
+                minor=MAX_SUPPORTED_PLUS_ONE[1],
+            ),
             [
-                "WARNING Unsupported Kubernetes version 'v1.34.0'. " + SUPPORTED_VERSION_STR,
+                f"WARNING Unsupported Kubernetes version '{dot_version(MAX_SUPPORTED_PLUS_ONE)}.0'. {supported_version_str()}",
                 "WARNING Processing data is done on a best effort basis.",
             ],
+            id=f"un-supported, version too high: {dot_version(MAX_SUPPORTED_PLUS_ONE)}",
         ),
+        pytest.param(
+            api.KubernetesVersion(
+                git_version=api.GitVersion(f"{dot_version(MIN_SUPPORTED_MINUS_ONE)}.0"),
+                major=MIN_SUPPORTED_MINUS_ONE[0],
+                minor=MIN_SUPPORTED_MINUS_ONE[1],
+            ),
+            [
+                f"WARNING Unsupported Kubernetes version '{dot_version(MIN_SUPPORTED_MINUS_ONE)}.0'. {supported_version_str()}",
+                "WARNING Processing data is done on a best effort basis.",
+            ],
+            id=f"un-supported, version too low: {dot_version(MIN_SUPPORTED_MINUS_ONE)}",
+        ),
+        *[
+            pytest.param(
+                api.KubernetesVersion(
+                    git_version=api.GitVersion(f"{dot_version(version)}.0"),
+                    major=version[0],
+                    minor=version[1],
+                ),
+                [],
+                id=f"supported version {dot_version(version)}",
+            )
+            for version in SUPPORTED_VERSIONS
+        ],
     ],
 )
 def test__verify_version_support_continue_processing(
@@ -326,6 +356,7 @@ def test__verify_version_support_continue_processing(
     logs: Sequence[str],
     caplog: pytest.LogCaptureFixture,
 ) -> None:
+    assert SUPPORTED_VERSIONS  # sanity check since we are dynamically parametrizing based on it.
     with caplog.at_level(logging.WARN):
         _verify_version_support(kubernetes_version)
     assert [formatter.format(record) for record in caplog.records] == logs
@@ -337,12 +368,12 @@ def test__verify_version_support_continue_processing(
         (
             api.KubernetesVersion(git_version=api.GitVersion("v1.16.0"), major=1, minor=16),
             "Unsupported Kubernetes version 'v1.16.0'. Aborting processing API data. "
-            + SUPPORTED_VERSION_STR,
+            + supported_version_str(),
         ),
         (
             api.KubernetesVersion(git_version=api.GitVersion("1.14.0"), major=1, minor=14),
             "Unsupported Kubernetes version '1.14.0'. Aborting processing API data. "
-            + SUPPORTED_VERSION_STR,
+            + supported_version_str(),
         ),
     ],
 )

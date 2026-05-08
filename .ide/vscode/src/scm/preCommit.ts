@@ -82,11 +82,16 @@ export function registerScm(context: vscode.ExtensionContext): void {
     vscode.commands.registerCommand('cmk.toggleSkipPreCommit.skipped', toggle)
   )
 
-  const watcher = vscode.workspace.createFileSystemWatcher('**/.git/hooks/pre-commit*')
-  watcher.onDidCreate(sync)
-  watcher.onDidDelete(sync)
-  watcher.onDidChange(sync)
-  context.subscriptions.push(watcher)
+  const wsFolder = vscode.workspace.workspaceFolders?.[0]
+  if (!wsFolder) return
+
+  const hookWatcher = vscode.workspace.createFileSystemWatcher(
+    new vscode.RelativePattern(wsFolder, '.git/hooks/pre-commit*')
+  )
+  hookWatcher.onDidCreate(sync)
+  hookWatcher.onDidDelete(sync)
+  hookWatcher.onDidChange(sync)
+  context.subscriptions.push(hookWatcher)
 
   sync()
 
@@ -102,14 +107,19 @@ export function registerScm(context: vscode.ExtensionContext): void {
   let lastSeen = 0
   let outputShown = false
 
-  const lockPath = (): string | undefined => {
+  const editMsgPath = (): string | undefined => {
     const repo = repoRoot()
-    return repo ? path.join(repo, '.git', 'index.lock') : undefined
+    return repo ? path.join(repo, '.git', 'COMMIT_EDITMSG') : undefined
   }
 
-  const beginActivity = (): void => {
-    const lp = lockPath()
-    if (!lp) return
+  const beginCommit = (): void => {
+    const repo = repoRoot()
+    if (!repo) return
+    // Only auto-surface output if the pre-commit hook is actually enabled.
+    if (isEnabled(repo)) return
+    if (!fs.existsSync(path.join(repo, '.git', 'hooks', 'pre-commit'))) return
+    const ep = editMsgPath()
+    if (!ep) return
     lastSeen = Date.now()
     progressItem.show()
     if (!outputShown) {
@@ -121,6 +131,7 @@ export function registerScm(context: vscode.ExtensionContext): void {
     }
     if (pollTimer) return
     pollTimer = setInterval(() => {
+      const lp = path.join(repo, '.git', 'index.lock')
       if (fs.existsSync(lp)) {
         lastSeen = Date.now()
         return
@@ -134,10 +145,12 @@ export function registerScm(context: vscode.ExtensionContext): void {
     }, POLL_MS)
   }
 
-  const indexLockWatcher = vscode.workspace.createFileSystemWatcher('**/.git/index.lock')
-  indexLockWatcher.onDidCreate(beginActivity)
-  indexLockWatcher.onDidChange(beginActivity)
-  context.subscriptions.push(indexLockWatcher, {
+  const commitWatcher = vscode.workspace.createFileSystemWatcher(
+    new vscode.RelativePattern(wsFolder, '.git/COMMIT_EDITMSG')
+  )
+  commitWatcher.onDidCreate(beginCommit)
+  commitWatcher.onDidChange(beginCommit)
+  context.subscriptions.push(commitWatcher, {
     dispose: () => {
       if (pollTimer) clearInterval(pollTimer)
     }

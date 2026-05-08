@@ -95,7 +95,6 @@ sh_library(
         "mk_sshd_config",
         "mk_suseconnect",
         "mk_tsm",
-        "mk_zypper",
         "nvidia_smi",
         "runas",
         "zorp",

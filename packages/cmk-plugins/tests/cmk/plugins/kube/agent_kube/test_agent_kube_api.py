@@ -13,7 +13,6 @@ from polyfactory.factories.pydantic_factory import ModelFactory
 
 import cmk.plugins.kube.agent_handlers.common
 from cmk.plugins.kube.agent_handlers.common import aggregate_resources
-from cmk.plugins.kube.api_server import SUPPORTED_VERSIONS
 from cmk.plugins.kube.schemata import api, section
 from cmk.plugins.kube.special_agents import agent_kube as agent
 from tests.cmk.plugins.kube.agent_kube.factory import (
@@ -431,21 +430,3 @@ def test_collect_workload_resources_from_agent_pods_no_pods_in_cluster() -> None
 
     assert memory_resources == empty_section
     assert cpu_resources == empty_section
-
-
-def test_version_verification_and_docstring_do_not_diverge():
-    """Keep _verify_version and arg_parser help text in sync.
-
-    Make sure to update the agent_kube.__doc__, since it is used by the arg_parser. Only
-    version_string is important, but we give a bit more context in order to ensure it is not
-    included for the wrong reason.
-
-    Note, that the __doc__ only mentions the supported versions. `LOWEST_FUNCTIONING_VERSION`
-    does not affect this text, since we only increment it, if a issue becomes known.
-    """
-
-    lowest_supported_version = min(SUPPORTED_VERSIONS)
-    version_string = f"v{lowest_supported_version[0]}.{lowest_supported_version[1]}"
-    assert f"agent requires Kubernetes version {version_string} or higher" in agent.__doc__.replace(
-        "\n", " "
-    )

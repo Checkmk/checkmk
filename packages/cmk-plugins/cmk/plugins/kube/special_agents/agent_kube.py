@@ -10,7 +10,6 @@
 Checkmk special agent for monitoring Kubernetes clusters.
 This agent is required for monitoring data provided by the Kubernetes API and the Checkmk collectors,
 which can optionally be deployed within a cluster.
-The agent requires Kubernetes version v1.30 or higher.
 Moreover, read access to the Kubernetes API endpoints monitored by Checkmk must be provided.
 """
 
@@ -70,7 +69,7 @@ from cmk.plugins.kube.agent_handlers.persistent_volume_claim_handler import (
     pod_attached_persistent_volume_claim_names,
     serialize_attached_volumes_from_kubelet_metrics,
 )
-from cmk.plugins.kube.api_server import APIData, from_kubernetes
+from cmk.plugins.kube.api_server import APIData, from_kubernetes, SUPPORTED_VERSIONS
 from cmk.plugins.kube.common import (
     LOGGER,
     lookup_name,
@@ -134,7 +133,9 @@ class MonitoredObject(enum.Enum):
 
 
 def parse_arguments(args: list[str]) -> argparse.Namespace:
+    minimum_supported = ".".join([str(x) for x in SUPPORTED_VERSIONS[0]])
     prog, description = __doc__.split("\n\n", maxsplit=1)
+    description += f"The agent requires Kubernetes version v{minimum_supported} or higher."
     p = argparse.ArgumentParser(prog=prog, description=description)
     p.add_argument("--debug", action="store_true", help="Debug mode: raise Python exceptions")
     p.add_argument(

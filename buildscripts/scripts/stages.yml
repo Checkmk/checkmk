@@ -42,17 +42,11 @@ VARIABLES:
     - NAME: CHANGED_TESTS_MAKEFILE
       SH: "echo '${CHANGED_FILES_REL}' | grep '^tests/Makefile' || true"
 
-    - NAME: CHANGED_PYTHON_FILES
-      SH: "git diff-tree --no-commit-id --name-only -r ${BASE_COMMIT_ID}..HEAD | xargs realpath | ${WORKSPACE}/scripts/find-python-files --filter --with-packages"
-
     - NAME: CHANGED_PYTHON_REQUIREMENTS
       SH: "echo '${CHANGED_FILES_REL}' | grep 'requirements.txt\\|requirements.in\\|constraints.txt' || true"
 
     - NAME: CHANGED_BAZEL_MODULES
       SH: "echo '${CHANGED_FILES_REL}' | grep '^MODULE.bazel' || true"
-
-    - NAME: CHANGED_FIND_PYTHON_FILES_SCRIPT
-      SH: "echo '${CHANGED_FILES_REL}' | grep '^scripts/find-python-files' || true"
 
     - NAME: CHANGED_RUN_UVENV_SCRIPT
       SH: "echo '${CHANGED_FILES_REL}' | grep '^scripts/run-uvenv' || true"
@@ -232,7 +226,7 @@ STAGES:
     - NAME: "Format repository"
       COMMAND: "bazel run //:format.check &> ${RESULTS}/format.txt"
       BAZEL_LOCKS_AMOUNT: 1
-      TEXT_ON_SKIP: "inconditional"
+      TEXT_ON_SKIP: "unconditional"
       RESULT_CHECK_FILE_PATTERN: "results/format.txt"
 
     - NAME: "Lint repository"
@@ -243,13 +237,12 @@ STAGES:
           set -e
           bazel run //scripts:sarif_preparse -- --root_dir=$PWD/bazel-bin --output ${RESULTS}/results.sarif || true
           exit $exit_code
-      TEXT_ON_SKIP: "inconditional"
+      TEXT_ON_SKIP: "unconditional"
       BAZEL_LOCKS_AMOUNT: 1
       RESULT_CHECK_TYPE: "SARIF"
       RESULT_CHECK_FILE_PATTERN: "results/results.sarif"
 
     - NAME: "Type repository with mypy"
-      ONLY_WHEN_NOT_EMPTY: CHANGED_REFERENCE_IMAGE,CHANGED_FIND_PYTHON_FILES_SCRIPT,CHANGED_PYTHON_FILES,CHANGED_BAZEL_FILES,CHANGED_BAZEL_MODULES
       COMMAND: |
           set +e
           ./buildscripts/scripts/bazel_mypy.sh
@@ -264,7 +257,7 @@ STAGES:
              > results/mypy-results.xml
           exit $exit_code
       BAZEL_LOCKS_AMOUNT: 1
-      TEXT_ON_SKIP: "No Python files changed"
+      TEXT_ON_SKIP: "unconditional"
       RESULT_CHECK_TYPE: "JUNIT"
       RESULT_CHECK_FILE_PATTERN: "results/mypy-results.xml"
 

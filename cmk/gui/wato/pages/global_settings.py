@@ -422,7 +422,7 @@ class ABCEditGlobalSettingMode(WatoMode):
                 _("Changed global configuration variable %s to %s.")
                 % (
                     escaping.escape_attribute(self._varname),
-                    self._valuespec.value_to_html(new_value),
+                    escaping.escape_attribute(self._valuespec.value_to_html(new_value)),
                 )
             )
 

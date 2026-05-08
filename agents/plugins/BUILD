@@ -67,7 +67,6 @@ sh_library(
     srcs = [
         ".f12",
         "asmcmd.sh",
-        "dnsclient",
         "hpux_lunstats",
         "hpux_statgrab",
         "ibm_mq",

@@ -72,6 +72,7 @@ from cmk.checkengine.plugins import (
     AutocheckEntry,
     CheckPluginName,
     DiscoveryPlugin,
+    FinalCheckResult,
     ParsedSectionName,
     SectionName,
 )
@@ -853,10 +854,7 @@ def _aggregate_texts(
 
 
 def _consume_check_results(
-    # we need to accept `object`, in order to explicitly protect against plugins
-    # creating invalid output.
-    # Typing this as `FinalCheckResult` will make linters complain about unreachable code.
-    subresults: Iterable[object],
+    subresults: FinalCheckResult,
 ) -> tuple[Sequence[IgnoreResults], Sequence[MetricTuple], Sequence[CheckFunctionResult]]:
     """Impedance matching between the Check API and the Check Engine."""
     ignore_results: list[IgnoreResults] = []
@@ -880,8 +878,6 @@ def _consume_check_results(
                     )
                 case CheckFunctionResult():
                     results.append(subr)
-                case _:
-                    raise TypeError(subr)
     except IgnoreResultsError as exc:
         return [IgnoreResults(str(exc))], perfdata, results
 

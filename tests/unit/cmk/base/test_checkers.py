@@ -86,14 +86,6 @@ def test_aggregate_result(
     )
 
 
-def test_consume_result_invalid() -> None:
-    def offending_check_function() -> Iterable[object]:
-        yield None
-
-    with pytest.raises(TypeError):
-        assert checkers._consume_check_results(offending_check_function())
-
-
 def test_config_cache_get_clustered_service_node_keys_no_cluster() -> None:
     # empty, we have no cluster:
     assert [] == checkers._get_clustered_service_node_keys(

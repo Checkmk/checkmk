@@ -10,6 +10,7 @@ import pytest
 from pydantic import AfterValidator
 from pytest_mock import MockerFixture
 
+from cmk.ccc.hostaddress import HostName
 from cmk.ccc.user import UserId
 from cmk.gui.config import active_config
 from cmk.gui.groups import GroupType
@@ -348,3 +349,100 @@ class TestHostConverter:
     def test_not_exists_fails_empty_host(self) -> None:
         with pytest.raises(ValueError, match="Host name cannot be empty"):
             HostConverter.not_exists("")
+
+    @pytest.fixture(name="host_is_not_monitored")
+    def fixture_host_is_not_monitored(
+        self,
+        sample_host: str,
+        mock_livestatus: MockLiveStatusConnection,
+    ) -> Iterator[str]:
+        mock_livestatus.expect_query(f"GET hosts\nColumns: name\nFilter: name = {sample_host}")
+        yield sample_host
+
+    @pytest.fixture(name="host_is_monitored")
+    def fixture_host_is_monitored(
+        self,
+        mock_livestatus: MockLiveStatusConnection,
+        host_is_not_monitored: str,
+    ) -> Iterator[str]:
+        mock_livestatus.add_table("hosts", [{"name": host_is_not_monitored}])
+        yield host_is_not_monitored
+
+    def test_should_be_monitored_passes(
+        self,
+        mock_livestatus: MockLiveStatusConnection,
+        host_is_monitored: str,
+    ) -> None:
+        with mock_livestatus:
+            assert host_is_monitored == HostConverter(should_be_monitored=True).host_name(
+                host_is_monitored
+            )
+
+    def test_should_be_monitored_fails(
+        self,
+        mock_livestatus: MockLiveStatusConnection,
+        host_is_not_monitored: str,
+    ) -> None:
+        with mock_livestatus, pytest.raises(ValueError, match="should be monitored"):
+            HostConverter(should_be_monitored=True).host_name(host_is_not_monitored)
+
+    def test_should_not_be_monitored_passes(
+        self,
+        mock_livestatus: MockLiveStatusConnection,
+        host_is_not_monitored: str,
+    ) -> None:
+        with mock_livestatus:
+            assert host_is_not_monitored == HostConverter(should_be_monitored=False).host_name(
+                host_is_not_monitored
+            )
+
+    def test_should_not_be_monitored_fails(
+        self,
+        mock_livestatus: MockLiveStatusConnection,
+        host_is_monitored: str,
+    ) -> None:
+        with mock_livestatus, pytest.raises(ValueError, match="should not be monitored"):
+            HostConverter(should_be_monitored=False).host_name(host_is_monitored)
+
+
+class TestHostConverterMonitoredHostName:
+    """Explicitly not using the other fixtures for host existence, as the monitored_host_name
+    converter should only check for monitoring status."""
+
+    HOST_NAME = "test_host"
+
+    @pytest.fixture(name="host_is_not_monitored")
+    def fixture_host_is_not_monitored(
+        self, mock_livestatus: MockLiveStatusConnection
+    ) -> Iterator[str]:
+        mock_livestatus.expect_query(f"GET hosts\nColumns: name\nFilter: name = {self.HOST_NAME}")
+        yield self.HOST_NAME
+
+    @pytest.fixture(name="host_is_monitored")
+    def fixture_host_is_monitored(
+        self,
+        mock_livestatus: MockLiveStatusConnection,
+        host_is_not_monitored: str,
+    ) -> Iterator[str]:
+        mock_livestatus.add_table("hosts", [{"name": host_is_not_monitored}])
+        yield host_is_not_monitored
+
+    @pytest.mark.usefixtures("request_context")
+    def test_passes_when_monitored(
+        self, mock_livestatus: MockLiveStatusConnection, host_is_monitored: str
+    ) -> None:
+        with mock_livestatus:
+            assert HostConverter.monitored_host_name(host_is_monitored) == HostName(
+                host_is_monitored
+            )
+
+    @pytest.mark.usefixtures("request_context")
+    def test_fails_when_not_monitored(
+        self, mock_livestatus: MockLiveStatusConnection, host_is_not_monitored: str
+    ) -> None:
+        with mock_livestatus, pytest.raises(ValueError, match="is not actively monitored"):
+            HostConverter.monitored_host_name(host_is_not_monitored)
+
+    def test_fails_empty_name(self) -> None:
+        with pytest.raises(ValueError, match="Host name cannot be empty"):
+            HostConverter.monitored_host_name("")

@@ -29,8 +29,9 @@ from cmk.gui.watolib import groups_io, tags
 from cmk.gui.watolib.hosts_and_folders import Host, strip_hostname_whitespace_chars
 from cmk.gui.watolib.passwords import load_passwords
 from cmk.gui.watolib.userroles import role_exists, RoleID
+from cmk.livestatus_client.expressions import LqSafe
 from cmk.livestatus_client.queries import Query
-from cmk.livestatus_client.tables import Hostgroups, Servicegroups
+from cmk.livestatus_client.tables import Hostgroups, Hosts, Servicegroups
 from cmk.utils.tags import TagGroupID, TagID
 
 
@@ -104,6 +105,7 @@ class HostConverter:
 
     permission_type: PermissionType = "monitor"
     should_be_cluster: bool | None = None
+    should_be_monitored: bool | None = None
 
     @staticmethod
     def _parse_host_name(value: str) -> HostName:
@@ -134,10 +136,25 @@ class HostConverter:
 
         return name
 
+    @classmethod
+    def monitored_host_name(cls, value: str) -> HostName:
+        """Returns HostName if the host is actively monitored; no Setup lookup.
+
+        Use when Setup existence does not matter — for example, reading live
+        host status, metrics, or scheduling downtimes.
+        """
+        name = cls._parse_host_name(value)
+        if not cls._host_is_monitored(name):
+            raise ValueError(
+                f"Host {name!r} is not actively monitored. Is the configuration activated?"
+            )
+        return name
+
     def _verify(self, host: Host) -> None:
         """Run all configured verifications for the host."""
         self._verify_user_permissions(host)
         self._verify_cluster(host)
+        self._verify_monitored(host)
 
     def _verify_user_permissions(self, host: Host) -> None:
         if self.permission_type == "monitor":
@@ -158,6 +175,27 @@ class HostConverter:
             raise ValueError(f"Host {host.name!r} is not a cluster host, but should be.")
         if not self.should_be_cluster and host.is_cluster():
             raise ValueError(f"Host {host.name!r} is a cluster host, but should not be.")
+
+    def _verify_monitored(self, host: Host) -> None:
+        if self.should_be_monitored is None:
+            return
+        monitored = HostConverter._host_is_monitored(host.name())
+        if self.should_be_monitored and not monitored:
+            raise ValueError(
+                f"Host {host.name()!r} should be monitored but it's not. "
+                "Activate the configuration?"
+            )
+        if not self.should_be_monitored and monitored:
+            raise ValueError(
+                f"Host {host.name()!r} should not be monitored but it is. "
+                "Activate the configuration?"
+            )
+
+    @staticmethod
+    def _host_is_monitored(name: HostName) -> bool:
+        return bool(
+            Query([Hosts.name], Hosts.name == LqSafe.sanitize(name)).first_value(sites.live())
+        )
 
 
 @dataclass(slots=True)

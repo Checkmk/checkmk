@@ -21,19 +21,32 @@ After **every** code change, rebuild and reinstall the VSIX:
 # Build the VSIX via Bazel
 bazel build //.ide/vscode:vsix
 
-# Resolve the VS Code profile for this workspace
+# Resolve the VS Code profile for this workspace.
+# Try the cwd folder URI first; if not associated, walk parents for a
+# *.code-workspace file (workspaces opened that way are keyed by the workspace
+# file URI in profileAssociations, not by the folder URI).
 PROFILE=$(python3 -c "
 import json, os
 storage = os.path.expanduser('~/.config/Code/User/globalStorage/storage.json')
 with open(storage) as f: d = json.load(f)
-ws = 'file://' + os.path.realpath('.')
 assoc = d.get('profileAssociations', {}).get('workspaces', {})
-pid = assoc.get(ws, '__default__profile__')
-if pid == '__default__profile__':
-    print('Default')
-else:
-    profiles = {p['location']: p['name'] for p in d.get('userDataProfiles', [])}
-    print(profiles.get(pid, 'Default'))
+profiles = {p['location']: p['name'] for p in d.get('userDataProfiles', [])}
+
+cwd = os.path.realpath('.')
+candidates = ['file://' + cwd]
+for parent in [cwd, os.path.dirname(cwd), os.path.expanduser('~')]:
+    if not os.path.isdir(parent):
+        continue
+    for f in sorted(os.listdir(parent)):
+        if f.endswith('.code-workspace'):
+            candidates.append('file://' + os.path.join(parent, f))
+
+pid = '__default__profile__'
+for k in candidates:
+    if k in assoc:
+        pid = assoc[k]
+        break
+print('Default' if pid == '__default__profile__' else profiles.get(pid, 'Default'))
 ")
 
 # Install into the resolved profile

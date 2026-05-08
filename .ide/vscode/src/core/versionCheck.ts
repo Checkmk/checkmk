@@ -26,28 +26,61 @@ function getWorkspaceVersion(): string | undefined {
   return pkg.version
 }
 
-// The extension is loaded into the *active* profile, so its globalStorageUri
-// encodes the profile location:
-//   default: <userDataDir>/User/globalStorage/<extId>
-//   custom : <userDataDir>/User/profiles/<profile-id>/globalStorage/<extId>
-// The display name (what `code --profile` accepts) is mapped via storage.json.
+// Resolve the profile name to pass to `code --profile`. We combine two signals
+// from storage.json so we don't silently fall back to "Default" when only one
+// is available:
+//   1. profileAssociations.workspaces[<wsUri>] — the profile VS Code opens this
+//      workspace into. Keyed by the workspace file URI for `.code-workspace`
+//      users, or by the folder URI for plain folders. We try both.
+//   2. globalStorageUri path — encodes the *currently running* profile:
+//        default: <userDataDir>/User/globalStorage/<extId>
+//        custom : <userDataDir>/User/profiles/<profile-id>/globalStorage/<extId>
+// We prefer (1) so the install lands where the workspace lives even if the
+// active VS Code window happens to be running in a different profile, and use
+// (2) only as a fallback when no association is recorded yet.
 function resolveActiveProfile(context: vscode.ExtensionContext): string {
   const storage = context.globalStorageUri.fsPath
-  const parts = storage.split(/[/\\]profiles[/\\]/)
-  if (parts.length < 2) return 'Default'
-
-  const profileLocation = parts[1].split(/[/\\]/)[0]
-  const userDir = parts[0]
+  const profileMatch = storage.match(/^(.+?)[/\\]profiles[/\\]([^/\\]+)[/\\]/)
+  const userDir = profileMatch ? profileMatch[1] : path.dirname(path.dirname(storage))
   const storageJson = path.join(userDir, 'globalStorage', 'storage.json')
-  if (!fs.existsSync(storageJson)) return 'Default'
 
-  try {
-    const data = JSON.parse(fs.readFileSync(storageJson, 'utf8'))
-    const profiles = (data.userDataProfiles ?? []) as Array<{ location: string; name: string }>
-    return profiles.find((p) => p.location === profileLocation)?.name ?? 'Default'
-  } catch {
-    return 'Default'
+  type ProfileEntry = { location: string; name: string }
+  type StorageJson = {
+    userDataProfiles?: ProfileEntry[]
+    profileAssociations?: { workspaces?: Record<string, string> }
   }
+  let data: StorageJson = {}
+  try {
+    if (fs.existsSync(storageJson)) {
+      data = JSON.parse(fs.readFileSync(storageJson, 'utf8')) as StorageJson
+    }
+  } catch {
+    /* ignore — fall through with empty data */
+  }
+  const profiles = data.userDataProfiles ?? []
+  const lookupName = (loc: string): string | undefined =>
+    loc === '__default__profile__' ? 'Default' : profiles.find((p) => p.location === loc)?.name
+
+  const associations = data.profileAssociations?.workspaces ?? {}
+  const wsCandidates: string[] = []
+  if (vscode.workspace.workspaceFile?.scheme === 'file') {
+    wsCandidates.push(vscode.workspace.workspaceFile.toString())
+  }
+  for (const folder of vscode.workspace.workspaceFolders ?? []) {
+    if (folder.uri.scheme === 'file') wsCandidates.push(folder.uri.toString())
+  }
+  for (const key of wsCandidates) {
+    const pid = associations[key]
+    if (!pid) continue
+    const name = lookupName(pid)
+    if (name) return name
+  }
+
+  if (profileMatch) {
+    const name = lookupName(profileMatch[2])
+    if (name) return name
+  }
+  return 'Default'
 }
 
 export async function rebuildExtension(context: vscode.ExtensionContext): Promise<void> {

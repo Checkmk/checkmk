@@ -47,7 +47,7 @@ const { _t } = usei18n()
 const props = defineProps<UnifiedSearchProps>()
 const mainMenu = getInjectedMainMenu()
 
-const searchId = `unified-search-${props.user_id}-${props.edition}`
+const searchId = `unified-search-${props.edition}-${props.site}-${props.user_id}`
 
 const api = new Api()
 

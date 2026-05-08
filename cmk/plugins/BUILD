@@ -15,6 +15,7 @@ py_library(
             "**/nonfree/**",
         ],
     ) + [
+        "//cmk/plugins/collection/agents",
         "//cmk/plugins/mtr/agents",
         "//cmk/plugins/nginx/agents",
         "//cmk/plugins/plesk/agents",

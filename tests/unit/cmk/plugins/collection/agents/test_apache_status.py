@@ -8,14 +8,13 @@
 # mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
-import sys
 from unittest.mock import Mock
 
 import pytest
 from _pytest.capture import CaptureFixture
 from _pytest.monkeypatch import MonkeyPatch
 
-from agents.plugins import apache_status
+from cmk.plugins.collection.agents import apache_status
 
 RESPONSE = "\n".join(("1st line", "2nd line", "3rd line"))
 
@@ -104,10 +103,6 @@ def test_urlopen_illegal_urls(scheme: str) -> None:
     ["http", "https"],
 )
 def test_urlopen_legal_urls(scheme: str, mocker: Mock) -> None:
-    mocked_urlopen = mocker.patch(
-        "agents.plugins.apache_status_2.urlopen"
-        if sys.version_info[0] == 2
-        else "agents.plugins.apache_status.urlopen"
-    )
+    mocked_urlopen = mocker.patch("cmk.plugins.collection.agents.apache_status.urlopen")
     apache_status.get_response_body(scheme, None, "127.0.0.1", "8080", "index.html")
     assert mocked_urlopen.call_count == 1  # no assert_called_once() in python < 3.6

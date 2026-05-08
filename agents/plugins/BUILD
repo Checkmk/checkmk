@@ -1,4 +1,4 @@
-load("@aspect_rules_py//py:defs.bzl", "py_binary")
+load("@aspect_rules_py//py:defs.bzl", "py_library")
 load("@cmk_requirements//:requirements.bzl", "requirement")
 
 exports_files(
@@ -22,17 +22,9 @@ filegroup(
     visibility = ["//visibility:public"],
 )
 
-py_binary(
-    name = "apache_status",
-    srcs = ["apache_status.py"],
-    imports = ["."],
-    visibility = ["//visibility:public"],
-)
-
 py_library(
     name = "agent-plugins-python",
     srcs = [
-        "apache_status.py",
         "mk_docker.py",
         "mk_filestats.py",
         "mk_inotify.py",

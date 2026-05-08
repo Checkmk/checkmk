@@ -42,6 +42,7 @@ from ._unsorted import OPT_COMP_CMC as OPT_COMP_CMC
 from ._unsorted import OPT_COMP_GLOBAL_SETTINGS as OPT_COMP_GLOBAL_SETTINGS
 from ._unsorted import OPT_COMP_HOSTS_AND_FOLDERS as OPT_COMP_HOSTS_AND_FOLDERS
 from ._unsorted import OPT_COMP_LICENSING as OPT_COMP_LICENSING
+from ._unsorted import OPT_COMP_METRIC_BACKEND as OPT_COMP_METRIC_BACKEND
 from ._unsorted import OPT_COMP_NOTIFICATIONS as OPT_COMP_NOTIFICATIONS
 from ._unsorted import OPT_LOCAL_FILES as OPT_LOCAL_FILES
 from ._unsorted import OPT_OMD_CONFIG as OPT_OMD_CONFIG

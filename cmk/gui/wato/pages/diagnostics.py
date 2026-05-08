@@ -41,6 +41,7 @@ from cmk.diagnostics import (
     OPT_COMP_GLOBAL_SETTINGS,
     OPT_COMP_HOSTS_AND_FOLDERS,
     OPT_COMP_LICENSING,
+    OPT_COMP_METRIC_BACKEND,
     OPT_COMP_NOTIFICATIONS,
     OPT_LOCAL_FILES,
     OPT_OMD_CONFIG,
@@ -542,8 +543,8 @@ class ModeDiagnostics(WatoMode[object]):
 
         return elements
 
-    def _get_component_specific_elements(self) -> list[tuple[str, ValueSpec[dict[str, Any]]]]:
-        elements: list[tuple[str, ValueSpec[dict[str, Any]]]] = [
+    def _get_component_specific_elements(self) -> list[tuple[str, ValueSpec[Any]]]:
+        elements: list[tuple[str, ValueSpec[Any]]] = [
             (
                 OPT_COMP_GLOBAL_SETTINGS,
                 Dictionary(
@@ -634,6 +635,20 @@ class ModeDiagnostics(WatoMode[object]):
                     ),
                 )
             )
+
+        if self._edition in (Edition.ULTIMATEMT, Edition.ULTIMATE):
+            elements.append(
+                (
+                    OPT_COMP_METRIC_BACKEND,
+                    FixedValue(
+                        value=True,
+                        totext="",
+                        title=_("Metric Backend Information"),
+                        help=_("Infomation about the database schema, revision, and footprint"),
+                    ),
+                )
+            )
+
         return elements
 
     def _get_bi_runtime_data(self) -> list[tuple[str, ValueSpec[object]]]:

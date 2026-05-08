@@ -73,6 +73,7 @@ from cmk.diagnostics import (
     OPT_CHECKMK_LICENSING_FILES,
     OPT_CHECKMK_LOG_FILES,
     OPT_CHECKMK_OVERVIEW,
+    OPT_COMP_METRIC_BACKEND,
     OPT_LOCAL_FILES,
     OPT_OMD_CONFIG,
     OPT_PERFORMANCE_GRAPHS,
@@ -121,7 +122,8 @@ def _mode_create_diagnostics_dump(app: CheckmkBaseApp, options: DiagnosticsModes
     )
 
 
-def _get_diagnostics_dump_sub_options() -> list[Option]:
+# FIXME: This function is out-of-sync with the actual options in cmk.diagostics!
+def _get_diagnostics_dump_sub_options(edition: cmk_version.Edition) -> list[Option]:
     sub_options = [
         Option(
             long_option=OPT_LOCAL_FILES,
@@ -182,7 +184,9 @@ def _get_diagnostics_dump_sub_options() -> list[Option]:
         ),
     ]
 
-    if cmk_version.edition(cmk.utils.paths.omd_root) is not cmk_version.Edition.COMMUNITY:
+    # NOTE: This condition has to be in sync with
+    # cmk.gui.wato.pages.diagnostics.ModeDiagnostics._get_operational_informtion_elements().
+    if edition is not cmk_version.Edition.COMMUNITY:
         sub_options.append(
             Option(
                 long_option=OPT_PERFORMANCE_GRAPHS,
@@ -194,6 +198,17 @@ def _get_diagnostics_dump_sub_options() -> list[Option]:
                 argument_descr="H",
             )
         )
+
+    # NOTE: This condition has to be in sync with
+    # cmk.gui.wato.pages.diagnostics.ModeDiagnostics._get_component_specific_elements().
+    if edition is cmk_version.Edition.ULTIMATE:
+        sub_options.append(
+            Option(
+                long_option=OPT_COMP_METRIC_BACKEND,
+                short_help=("Pack Infomation about the database schema, revision, and footprint."),
+            )
+        )
+
     return sub_options
 
 
@@ -205,7 +220,7 @@ mode_create_diagnostics_dump = Mode(
         "Create a dump containing information for diagnostic analysis "
         "in the folder var/check_mk/diagnostics."
     ],
-    sub_options=_get_diagnostics_dump_sub_options(),
+    sub_options=_get_diagnostics_dump_sub_options(cmk_version.edition(cmk.utils.paths.omd_root)),
 )
 
 

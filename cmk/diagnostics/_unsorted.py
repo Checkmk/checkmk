@@ -48,6 +48,11 @@ class FileMapConfig(TypedDict):
     ]
 
 
+# NOTE: The structure of the diagnostic option definitions below is horrible and needs some serious
+# fixing: There are several aspects to an option (component-related, boolean, etc.), and things get
+# *really* confusing when they are combined, see the chaos when (de)serializing the automation call
+# parameters below. Having a small class describing an option plus a list of its instances would be
+# far superior.
 OPT_APACHE_CONFIG = "apache-config"
 OPT_BI_RUNTIME_DATA = "bi-runtime-data"
 OPT_CHECKMK_CONFIG_FILES = "checkmk-config-files"
@@ -69,6 +74,7 @@ OPT_COMP_CMC = "cmc"
 OPT_COMP_GLOBAL_SETTINGS = "global-settings"
 OPT_COMP_HOSTS_AND_FOLDERS = "hosts-and-folders"
 OPT_COMP_LICENSING = "licensing"
+OPT_COMP_METRIC_BACKEND = "metric-backend"
 OPT_COMP_NOTIFICATIONS = "notifications"
 
 _OPTS_WITH_HOST = [
@@ -80,6 +86,7 @@ _BOOLEAN_CONFIG_OPTS = [
     OPT_APACHE_CONFIG,
     OPT_BI_RUNTIME_DATA,
     OPT_CHECKMK_CRASH_REPORTS,
+    OPT_COMP_METRIC_BACKEND,
     OPT_LOCAL_FILES,
     OPT_OMD_CONFIG,
 ]
@@ -161,10 +168,14 @@ def serialize_wato_parameters(
 
     comp_specific_parameters = wato_parameters["comp_specific"]
     parameters.update(comp_specific_parameters)
+    # FIXME: Here the parameter mangling chaos *really* begins...
     if comp_specific_parameters.get(OPT_COMP_BUSINESS_INTELLIGENCE, {}).pop(
         OPT_BI_RUNTIME_DATA, None
     ):
         boolean_opts.append(OPT_BI_RUNTIME_DATA)
+    if comp_specific_parameters.get(OPT_COMP_METRIC_BACKEND):
+        boolean_opts.append(OPT_COMP_METRIC_BACKEND)
+        del parameters[OPT_COMP_METRIC_BACKEND]
 
     opt_checkmk_server_host = wato_parameters.get("checkmk_server_host", "")
 
@@ -243,6 +254,7 @@ def _extract_list_of_files(value: tuple[str, list[str]] | None) -> set[str]:
     return set() if value is None else set(value[1])
 
 
+# Used for the Automation "create-diagnostics-dump"
 def deserialize_cl_parameters(
     cl_parameters: DiagnosticsCLParameters,
 ) -> DiagnosticsOptionalParameters:
@@ -266,6 +278,7 @@ def deserialize_cl_parameters(
     return deserialized_parameters
 
 
+# Used for the Mode "create-diagnostics-dump"
 def deserialize_modes_parameters(
     modes_parameters: DiagnosticsModesParameters,
 ) -> DiagnosticsOptionalParameters:

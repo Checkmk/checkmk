@@ -25,6 +25,7 @@ from cmk.diagnostics import (
     OPT_COMP_BUSINESS_INTELLIGENCE,
     OPT_COMP_GLOBAL_SETTINGS,
     OPT_COMP_HOSTS_AND_FOLDERS,
+    OPT_COMP_METRIC_BACKEND,
     OPT_COMP_NOTIFICATIONS,
     OPT_LOCAL_FILES,
     OPT_OMD_CONFIG,
@@ -62,6 +63,9 @@ def test_diagnostics_serialize_wato_parameters_boolean() -> None:
                     OPT_OMD_CONFIG: "ANY",
                     OPT_CHECKMK_CRASH_REPORTS: "ANY",
                 },
+                comp_specific={
+                    OPT_COMP_METRIC_BACKEND: True,
+                },
             ),
             max_args=4096,
         )
@@ -70,6 +74,7 @@ def test_diagnostics_serialize_wato_parameters_boolean() -> None:
             OPT_CHECKMK_CRASH_REPORTS,
             OPT_LOCAL_FILES,
             OPT_OMD_CONFIG,
+            OPT_COMP_METRIC_BACKEND,
         ]
     ]
 
@@ -197,16 +202,19 @@ def test_diagnostics_serialize_wato_parameters_files(
                 OPT_LOCAL_FILES,
                 OPT_OMD_CONFIG,
                 OPT_CHECKMK_CRASH_REPORTS,
+                OPT_COMP_METRIC_BACKEND,
             ],
             {
                 OPT_LOCAL_FILES: True,
                 OPT_OMD_CONFIG: True,
                 OPT_CHECKMK_CRASH_REPORTS: True,
+                OPT_COMP_METRIC_BACKEND: True,
             },
             {
                 OPT_LOCAL_FILES: True,
                 OPT_OMD_CONFIG: True,
                 OPT_CHECKMK_CRASH_REPORTS: True,
+                OPT_COMP_METRIC_BACKEND: True,
             },
         ),
         # files

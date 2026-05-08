@@ -9,7 +9,6 @@
 
 import json
 from collections.abc import Mapping
-from typing import Any
 
 import pytest
 from polyfactory.factories.pydantic_factory import ModelFactory
@@ -61,7 +60,7 @@ class CollectorHandlerLogFactory(ModelFactory):
 
 
 @pytest.fixture
-def raw_collector_metadata() -> Mapping[str, Any]:
+def raw_collector_metadata() -> Mapping[str, object]:
     return {
         "processing_log": {"status": "ok", "title": "title", "detail": "detail"},
         "cluster_collector": {
@@ -101,7 +100,7 @@ def raw_collector_metadata() -> Mapping[str, Any]:
     }
 
 
-def test_parse_collector_metadata(raw_collector_metadata: Mapping[str, Any]) -> None:
+def test_parse_collector_metadata(raw_collector_metadata: Mapping[str, object]) -> None:
     string_table_element = json.dumps(raw_collector_metadata)
     assert kube_collector_info.parse_collector_metadata(
         [[string_table_element]]
@@ -143,9 +142,11 @@ def test_parse_collector_metadata(raw_collector_metadata: Mapping[str, Any]) -> 
 
 
 def test_parse_collector_metadata_without_cache_stats(
-    raw_collector_metadata: Mapping[str, Any],
+    raw_collector_metadata: Mapping[str, object],
 ) -> None:
-    del raw_collector_metadata["cluster_collector"]["cache_health"]
+    cluster_collector = raw_collector_metadata["cluster_collector"]
+    assert isinstance(cluster_collector, dict)
+    del cluster_collector["cache_health"]
     string_table_element = json.dumps(raw_collector_metadata)
     assert kube_collector_info.parse_collector_metadata(
         [[string_table_element]]

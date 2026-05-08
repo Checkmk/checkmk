@@ -209,11 +209,14 @@ It is recommended to run all tests locally before submitting a PR.
 If you want to execute the full test suite, you can do this by executing these commands in the project base directory:
 
 ```console
-$ make -C tests test-bandit
-$ make -C tests test-unit
-$ make -C tests test-format
-$ make -C tests test-mypy-gpl
+$ bazel test //tests/unit/...
+$ bazel lint --fix -- //...
+$ bazel run //:format path/to/file.py
+$ bazel build --config=mypy //...
 ```
+
+See [BAZEL.md](BAZEL.md) for the full command reference including edition-specific
+testing, key CLI flags, and personal configuration.
 
 > We highly recommend integrating ruff and mypy into the editor you work with.
 > Most editors will notify you about issues the moment you edit the code.
@@ -472,14 +475,19 @@ def worst_service_state(*states: int, default: int) -> int:
   If your editor doesn't already come with Editorconfig support, install [one of the available plugins](https://editorconfig.org/#download).
 - We use [`ruff`](https://docs.astral.sh/ruff/) for automatic formatting of the Python code.
   Have a look [below](#automatic-formatting) for further information.
-- We use also `ruff` for automatic sorting of imports in Python code.
+- We use `ruff` (via `bazel lint`) for automatic sorting of imports in Python code.
+  Import sorting is a linting concern, not a formatting one.
 
-### Automatic formatting/sorting with ruff
+### Automatic formatting with ruff
 
 The `ruff` configuration file(s), `pyproject.toml`, live in the corresponding directories of the project repository, where `ruff` will pick it up automatically.
-`ruff` itself lives in a virtualenv managed by bazel/uv in `check_mk/.venv`, you can run it with `make format`.
+`ruff` itself lives in a virtualenv managed by bazel/uv in `check_mk/.venv`.
+To format files, use `bazel run //:format <FILES>`. To check formatting without
+modifying files, use `bazel run //:format.check <FILES>`.
 
-This make target will then format your codebase as well as sort the import statements.
+Formatting adjusts layout only — it does not sort Python imports. Import sorting
+is handled by linting: run `bazel lint --fix` after formatting if you need
+imports sorted.
 
 _NOTE_: You will also find other `pyproject.toml` files in our codebase (at the time of writing, e.g. under `packges/cmk-*`).
 Those are individual project settings for our own python packages and may differ from the top-level `pyproject.toml`.
@@ -498,13 +506,9 @@ $ ruff check --fix [the_file.py]
 
 #### Integration with CI
 
-Our CI executes `ruff` formatting/sorting test on the whole codebase:
-
-```console
-$ make -C tests test-format
-```
-
-Our review tests jobs prevent un-formatted code from being added to the repository.
+Our CI executes `ruff` formatting/sorting checks on the whole codebase via
+`bazel run //:format.check`. Our review test jobs prevent un-formatted code
+from being added to the repository.
 
 #### Editor integration with ruff:
 
@@ -512,7 +516,7 @@ Our review tests jobs prevent un-formatted code from being added to the reposito
 
 ### Type checking: mypy
 
-Code can be checked manually with `make -C tests test-mypy`.
+Code can be checked manually with `bazel build --config=mypy //...`.
 
 The configuration file is `mypy.ini` and lives in the root directory of the Checkmk repository.
 For info about how to type hint refer to [mypy docs - Type hints cheat sheet (Python 2)](https://mypy.readthedocs.io/en/latest/cheat_sheet.html#type-hints-cheat-sheet-python-2).

@@ -19,6 +19,8 @@ Always format, lint, and run tests after completing a task.
 Use `bazel run //:format <PATHS>` to format and `bazel lint --fix` to autofix lint findings.
 Report any remaining non-autofixable findings (including mypy) to the user.
 
+See [BAZEL.md](BAZEL.md) for the full developer command reference.
+
 ## Python Conventions
 
 - Python version per `pyproject.toml`; type hints required; pathlib over os.path

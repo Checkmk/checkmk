@@ -23,10 +23,6 @@ import {
 } from './ntop_utils'
 
 export class NtopAlertsTabBar extends TabsBar {
-  constructor(div_selector: string) {
-    super(div_selector)
-  }
-
   override _get_tab_entries() {
     return [EngagedAlertsTab, PastAlertsTab, FlowAlertsTab]
   }

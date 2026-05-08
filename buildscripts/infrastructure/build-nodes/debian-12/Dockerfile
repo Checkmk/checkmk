@@ -21,6 +21,7 @@ RUN apt-get install -y \
     python3-pip \
     strace \
     sudo \
+    systemd \
     vim
 
 RUN apt-get install -y --fix-missing \

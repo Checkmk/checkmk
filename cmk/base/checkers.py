@@ -791,7 +791,7 @@ def _get_check_function(
     @functools.wraps(check_function)
     def __check_function(*args: object, **kw: object) -> ServiceCheckResult:
         with value_store_manager.namespace(service.id()):
-            return _aggregate_results(consume_check_results(check_function(*args, **kw)))
+            return _aggregate_results(_consume_check_results(check_function(*args, **kw)))
 
     return __check_function
 
@@ -852,7 +852,7 @@ def _aggregate_texts(
     return "\n".join([", ".join(summaries)] + details)
 
 
-def consume_check_results(
+def _consume_check_results(
     # we need to accept `object`, in order to explicitly protect against plugins
     # creating invalid output.
     # Typing this as `FinalCheckResult` will make linters complain about unreachable code.

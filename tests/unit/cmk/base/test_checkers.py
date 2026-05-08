@@ -81,7 +81,7 @@ def test_aggregate_result(
     subresults: FinalCheckResult, aggregated_results: ServiceCheckResult
 ) -> None:
     assert (
-        checkers._aggregate_results(checkers.consume_check_results(subresults))
+        checkers._aggregate_results(checkers._consume_check_results(subresults))
         == aggregated_results
     )
 
@@ -91,7 +91,7 @@ def test_consume_result_invalid() -> None:
         yield None
 
     with pytest.raises(TypeError):
-        assert checkers.consume_check_results(offending_check_function())
+        assert checkers._consume_check_results(offending_check_function())
 
 
 def test_config_cache_get_clustered_service_node_keys_no_cluster() -> None:

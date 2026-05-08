@@ -75,7 +75,6 @@ sh_library(
         "lnx_container_host_if.linux",
         "mailman3_lists",
         "mk_apt",
-        "mk_cups_queues",
         "mk_db2.aix",
         "mk_db2.linux",
         "mk_errpt.aix",

@@ -67,7 +67,6 @@ sh_library(
     srcs = [
         ".f12",
         "asmcmd.sh",
-        "db2_mem",
         "dnsclient",
         "hpux_lunstats",
         "hpux_statgrab",

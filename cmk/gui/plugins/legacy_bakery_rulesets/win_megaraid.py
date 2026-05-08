@@ -3,59 +3,94 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Mapping
 
-from cmk.gui.agent_bakery import RulespecGroupMonitoringAgentsAgentPlugins
-from cmk.gui.i18n import _
-from cmk.gui.plugins.wato.utils import HostRulespec, rulespec_registry
-from cmk.gui.valuespec import Alternative, Dictionary, FixedValue, TextInput
-from cmk.utils.rulesets.definition import RuleGroup
+from cmk.rulesets.v1 import Help, Title
+from cmk.rulesets.v1.form_specs import (
+    CascadingSingleChoice,
+    CascadingSingleChoiceElement,
+    DefaultValue,
+    DictElement,
+    Dictionary,
+    FixedValue,
+    String,
+    TimeMagnitude,
+    TimeSpan,
+)
+from cmk.rulesets.v1.rule_specs import AgentConfig, Topic
+
+_DEFAULT_MEGACLI_PATH = r"C:\Program Files\LSI Corporation\MegaCLI\MegaCli.exe"
+_DEFAULT_TEMPDIR = r"C:\Temp"
 
 
-def _valuespec_agent_config_win_megaraid() -> Alternative:
-    return Alternative(
-        title=_("MegaRAID monitoring (Windows)"),
-        help=_(
-            "This plug-in uses the command line tool <tt>MegaCli.exe</tt> in order to provide "
-            "monitoring information of LSI RAID controllers and attached hard disks. You can "
-            "download this tool from <a href='http://www.lsi.com/'>LSI</a>."
+def migrate(value: object) -> Mapping[str, object]:
+    if isinstance(value, dict) and "deployment" in value:
+        return value
+    if value is None:
+        return {"deployment": ("do_not_deploy", None)}
+    if isinstance(value, dict):
+        result: dict[str, object] = {"deployment": ("sync", None)}
+        result.update(value)
+        return result
+    raise ValueError(f"Unexpected value: {value!r}")
+
+
+def _form_spec() -> Dictionary:
+    return Dictionary(
+        help_text=Help(
+            "This plug-in uses the command line tool MegaCli.exe in order to provide "
+            "monitoring information of LSI RAID controllers and attached hard disks."
         ),
-        elements=[
-            Dictionary(
-                title=_("Deploy MegaRAID plug-in"),
-                elements=[
-                    (
-                        "megacli",
-                        TextInput(
-                            title=_("Path to <tt>MegaCLI.exe</tt>"),
-                            size=64,
-                            allow_empty=False,
+        elements={
+            "deployment": DictElement(
+                required=True,
+                parameter_form=CascadingSingleChoice(
+                    title=Title("Deployment type"),
+                    elements=(
+                        CascadingSingleChoiceElement(
+                            name="sync",
+                            title=Title("Deploy the MegaRAID plug-in"),
+                            parameter_form=FixedValue(value=None),
+                        ),
+                        CascadingSingleChoiceElement(
+                            name="cached",
+                            title=Title("Deploy the plug-in and run it asynchronously"),
+                            parameter_form=TimeSpan(
+                                displayed_magnitudes=(
+                                    TimeMagnitude.HOUR,
+                                    TimeMagnitude.MINUTE,
+                                )
+                            ),
+                        ),
+                        CascadingSingleChoiceElement(
+                            name="do_not_deploy",
+                            title=Title("Do not deploy the MegaRAID plug-in"),
+                            parameter_form=FixedValue(value=None),
                         ),
                     ),
-                    (
-                        "tempdir",
-                        TextInput(
-                            title=_("Path to temporary directory (will be created)"),
-                            allow_empty=False,
-                        ),
-                    ),
-                ],
-                optional_keys=False,
+                    prefill=DefaultValue("sync"),
+                ),
             ),
-            FixedValue(
-                value=None, title=_("Do not deploy the MegaRAID plug-in"), totext=_("(disabled)")
+            "megacli": DictElement(
+                parameter_form=String(
+                    title=Title("Path to MegaCLI.exe"),
+                    prefill=DefaultValue(_DEFAULT_MEGACLI_PATH),
+                ),
             ),
-        ],
-        default_value={
-            "megacli": r"C:\Program Files\LSI Corporation\MegaCLI\MegaCli.exe",
-            "tempdir": r"C:\Temp",
+            "tempdir": DictElement(
+                parameter_form=String(
+                    title=Title("Path to temporary directory (will be created)"),
+                    prefill=DefaultValue(_DEFAULT_TEMPDIR),
+                ),
+            ),
         },
+        migrate=migrate,
     )
 
 
-rulespec_registry.register(
-    HostRulespec(
-        group=RulespecGroupMonitoringAgentsAgentPlugins,
-        name=RuleGroup.AgentConfig("win_megaraid"),
-        valuespec=_valuespec_agent_config_win_megaraid,
-    )
+rule_spec_win_megaraid = AgentConfig(
+    title=Title("MegaRAID monitoring (Windows)"),
+    name="win_megaraid",
+    topic=Topic.STORAGE,
+    parameter_form=_form_spec,
 )

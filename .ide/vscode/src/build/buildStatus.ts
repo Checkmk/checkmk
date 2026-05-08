@@ -120,7 +120,7 @@ export function createStatusBar(
   commands: Record<string, CommandEntry>,
   onBuildComplete?: () => void
 ): { refreshStatus: (precomputed?: BuildStatus) => void } {
-  const statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 50)
+  const statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 49)
   statusBarItem.command = 'cmk.statusBarMenu'
   statusBarItem.show()
   context.subscriptions.push(statusBarItem)

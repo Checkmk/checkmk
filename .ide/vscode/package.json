@@ -186,6 +186,10 @@
         "title": "CMK ▸ Cmd: Run UI Component Library"
       },
       {
+        "command": "cmk.refreshCompileCommands",
+        "title": "CMK ▸ Cmd: Refresh C++ compile_commands.json"
+      },
+      {
         "command": "cmk.installPicker",
         "title": "CMK ▸ IDE: Install Extensions"
       },
@@ -311,7 +315,8 @@
             "enum": [
               "python",
               "frontend",
-              "rust"
+              "rust",
+              "cpp"
             ]
           },
           "default": [
@@ -483,6 +488,10 @@
         {
           "command": "cmk.runUcl",
           "when": "cmk.frontendInstalled"
+        },
+        {
+          "command": "cmk.refreshCompileCommands",
+          "when": "cmk.cppInstalled"
         },
         {
           "command": "cmk.bazelTestFile",

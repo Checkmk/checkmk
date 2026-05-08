@@ -24,13 +24,15 @@ const PROFILE_LANGUAGES: Record<string, Set<string>> = {
     'scss',
     'html'
   ]),
-  rust: new Set(['rust'])
+  rust: new Set(['rust']),
+  cpp: new Set(['cpp', 'c'])
 }
 
 const PROFILE_EXTENSIONS: Record<string, Set<string>> = {
   python: new Set(['.py', '.pyi']),
   frontend: new Set(['.vue', '.ts', '.js', '.tsx', '.jsx', '.css', '.scss']),
-  rust: new Set(['.rs'])
+  rust: new Set(['.rs']),
+  cpp: new Set(['.cc', '.cpp', '.cxx', '.c', '.h', '.hh', '.hpp', '.hxx'])
 }
 
 // ── Thresholds ──

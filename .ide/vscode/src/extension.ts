@@ -208,6 +208,16 @@ export function activate(context: vscode.ExtensionContext): void {
     rustDisable
   )
 
+  const cppDisable = getDisableSettings('cpp')
+  const cppEnable = getEnableSettings('cpp')
+  profileManager.register(
+    'cpp',
+    () => {
+      return [toggleSettings(cppDisable, cppEnable)]
+    },
+    cppDisable
+  )
+
   profileManager.setOnRefresh(refreshAll)
   profileManager.init(context)
   registerProfileDetector(context)

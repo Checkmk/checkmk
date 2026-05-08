@@ -28,5 +28,10 @@
     "name": "Install node_modules",
     "command": "bazel build @pnpm//:pnpm && BAZEL_BINDIR=. \"$(bazel info bazel-bin)/external/aspect_rules_js++pnpm+pnpm/pnpm_/pnpm\" install",
     "requires": "frontend"
+  },
+  "cmk.refreshCompileCommands": {
+    "name": "Refresh C++ compile_commands.json",
+    "command": "bazel build //bazel/tools:bazel_env && bazel run //:refresh_compile_commands",
+    "requires": "cpp"
   }
 }

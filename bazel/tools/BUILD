@@ -112,6 +112,7 @@ bazel_env(
     toolchains = {},
     tools = {
         "bandit": ":bandit",
+        "clangd": "@clang-linux-x86_64//:bin/clangd",
         "genhtml": "@lcov//:genhtml",
         "mypy": ":mypy_cli_original",
         "osslsigncode": "@osslsigncode",

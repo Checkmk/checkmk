@@ -24,6 +24,14 @@
     "extensions": ["rust-lang.rust-analyzer"],
     "defaultPicked": false
   },
+  "cpp": {
+    "extensions": ["llvm-vs-code-extensions.vscode-clangd"],
+    "defaultPicked": false
+  },
+  "lldb": {
+    "extensions": ["vadimcn.vscode-lldb"],
+    "defaultPicked": false
+  },
   "general": {
     "extensions": [],
     "required": true

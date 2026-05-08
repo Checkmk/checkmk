@@ -12,7 +12,8 @@ import { log, notifyInfo } from '../core/log'
 const PRIORITIES: Record<string, number> = {
   python: 53,
   frontend: 52,
-  rust: 51
+  rust: 51,
+  cpp: 50
 }
 
 const DEFAULT_ACTIVE = ['python', 'frontend']
@@ -38,26 +39,8 @@ interface FamilyState {
   statusBarItem: vscode.StatusBarItem | null
 }
 
-const families: Record<string, FamilyState> = {
-  python: {
-    activate: null,
-    disableSettings: [],
-    disposables: [],
-    active: false,
-    hasIssues: false,
-    loading: false,
-    statusBarItem: null
-  },
-  frontend: {
-    activate: null,
-    disableSettings: [],
-    disposables: [],
-    active: false,
-    hasIssues: false,
-    loading: false,
-    statusBarItem: null
-  },
-  rust: {
+function makeFamilyState(): FamilyState {
+  return {
     activate: null,
     disableSettings: [],
     disposables: [],
@@ -66,6 +49,13 @@ const families: Record<string, FamilyState> = {
     loading: false,
     statusBarItem: null
   }
+}
+
+const families: Record<string, FamilyState> = {
+  python: makeFamilyState(),
+  frontend: makeFamilyState(),
+  rust: makeFamilyState(),
+  cpp: makeFamilyState()
 }
 
 let _context: vscode.ExtensionContext | null = null
@@ -80,10 +70,9 @@ export function register(
   activateFn: ActivateFn,
   disableSettings?: ScopedSetting[]
 ): void {
-  if (families[name]) {
-    families[name].activate = activateFn
-    families[name].disableSettings = disableSettings || []
-  }
+  if (!families[name]) families[name] = makeFamilyState()
+  families[name].activate = activateFn
+  families[name].disableSettings = disableSettings || []
 }
 
 export async function start(name: string): Promise<void> {

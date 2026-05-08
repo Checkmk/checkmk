@@ -3,6 +3,8 @@ export const FAMILY_DISPLAY: Record<string, string> = {
   python: 'Python',
   frontend: 'UI',
   rust: 'Rust',
+  cpp: 'C++',
+  lldb: 'LLDB Debug',
   bazel: 'Bazel',
   general: 'General',
   markdown: 'Markdown',
@@ -13,5 +15,6 @@ export const FAMILY_DISPLAY: Record<string, string> = {
 export const PROFILE_LABELS: Record<string, string> = {
   python: 'Py',
   frontend: 'UI',
-  rust: 'Rs'
+  rust: 'Rs',
+  cpp: 'C++'
 }

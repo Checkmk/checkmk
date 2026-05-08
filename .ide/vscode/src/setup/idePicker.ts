@@ -13,6 +13,7 @@ import {
   getRequiredFamilies,
   isDefaultPicked
 } from '../core/config'
+import { FAMILY_DISPLAY } from '../core/constants'
 import { log } from '../core/log'
 
 interface FamilyPickItem extends vscode.QuickPickItem {
@@ -21,12 +22,8 @@ interface FamilyPickItem extends vscode.QuickPickItem {
   isRequired?: boolean
 }
 
-const DISPLAY_NAMES: Record<string, string> = {
-  frontend: 'UI'
-}
-
 function displayName(name: string): string {
-  return DISPLAY_NAMES[name] || name.charAt(0).toUpperCase() + name.slice(1)
+  return FAMILY_DISPLAY[name] || name.charAt(0).toUpperCase() + name.slice(1)
 }
 
 async function pickFamilies(

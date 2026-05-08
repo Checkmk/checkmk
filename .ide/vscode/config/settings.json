@@ -178,6 +178,36 @@
       "rust-analyzer.initializeStopped": true
     }
   },
+  "cpp": {
+    "folder": {
+      "[cpp]": {
+        "editor.defaultFormatter": "llvm-vs-code-extensions.vscode-clangd",
+        "editor.formatOnSave": true
+      },
+      "[c]": {
+        "editor.defaultFormatter": "llvm-vs-code-extensions.vscode-clangd",
+        "editor.formatOnSave": true
+      },
+      "clangd.path": "${workspaceFolder}/bazel-bin/bazel/tools/bazel_env/bin/clangd"
+    },
+    "workspace": {
+      "clangd.arguments": [
+        "--background-index",
+        "--clang-tidy",
+        "--header-insertion=never",
+        "--completion-style=detailed",
+        "--pch-storage=memory",
+        "--compile-commands-dir=${workspaceFolder}",
+        "--limit-results=100",
+        "-j=4"
+      ],
+      "clangd.checkUpdates": false,
+      "clangd.onConfigChanged": "restart"
+    },
+    "disableWorkspace": {
+      "clangd.enable": false
+    }
+  },
   "bazel": {
     "folder": {
       "bazel.buildifierExecutable": "${which:buildifier}",

@@ -17,9 +17,9 @@ from typing import Any
 
 from cmk.agent_based.legacy.conversion import convert_legacy_results
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import CheckResult, Metric, Result, Service
+from cmk.agent_based.v2 import Metric, Result, Service
 from cmk.checkengine.parameters import Parameters
-from cmk.checkengine.plugins import CheckPlugin, LegacyPluginLocation
+from cmk.checkengine.plugins import CheckPlugin, FinalCheckResult, LegacyPluginLocation
 
 from .check_plugins import create_check_plugin
 
@@ -104,7 +104,7 @@ def _create_check_function(
 
     # 2) unwrap parameters and ensure it is a generator of valid instances
     @functools.wraps(sig_function)
-    def check_result_generator(*args: Any, **kwargs: Any) -> CheckResult:
+    def check_result_generator(*args: Any, **kwargs: Any) -> FinalCheckResult:
         assert not args, "pass arguments as keywords to check function"
         assert "params" in kwargs, f"'params' is missing in kwargs: {kwargs!r}"
         parameters = kwargs["params"]

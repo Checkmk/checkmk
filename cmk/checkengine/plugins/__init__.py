@@ -3,10 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from ._check import CheckFunction as CheckFunction
 from ._check import CheckPlugin as CheckPlugin
 from ._check import CheckPluginName as CheckPluginName
-from ._check import DiscoveryFunction as DiscoveryFunction
+from ._check import FinalCheckFunction as FinalCheckFunction
+from ._check import FinalCheckResult as FinalCheckResult
+from ._check import FinalDiscoveryFunction as FinalDiscoveryFunction
+from ._check import FinalDiscoveryResult as FinalDiscoveryResult
 from ._check import ServiceID as ServiceID
 from ._combined import AgentBasedPlugins as AgentBasedPlugins
 from ._common import LegacyPluginLocation as LegacyPluginLocation

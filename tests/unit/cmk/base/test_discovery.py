@@ -18,13 +18,11 @@ from pytest import MonkeyPatch
 
 import cmk.utils.paths
 from cmk.agent_based.v2 import (
-    CheckResult,
-    DiscoveryResult,
-    HostLabelGenerator,
-    StringTable,
+    HostLabel as _APIHostLabel,
 )
 from cmk.agent_based.v2 import (
-    HostLabel as _APIHostLabel,
+    HostLabelGenerator,
+    StringTable,
 )
 from cmk.agent_based.v2 import (
     Service as _APIService,
@@ -74,7 +72,10 @@ from cmk.checkengine.discovery._entrypoints.active_check import (
     _check_host_labels,
     _check_service_lists,
 )
-from cmk.checkengine.discovery._utils.filters import RediscoveryParameters, ServiceFilters
+from cmk.checkengine.discovery._utils.filters import (
+    RediscoveryParameters,
+    ServiceFilters,
+)
 from cmk.checkengine.discovery.types import DiscoveredItem
 from cmk.checkengine.fetcher import HostKey
 from cmk.checkengine.parser import AgentRawDataSection, HostSections, NO_SELECTION
@@ -83,6 +84,8 @@ from cmk.checkengine.plugins import (
     AgentSectionPlugin,
     AutocheckEntry,
     CheckPluginName,
+    FinalCheckResult,
+    FinalDiscoveryResult,
     LegacyPluginLocation,
     ParsedSectionName,
     SectionName,
@@ -151,7 +154,7 @@ def _no_host_labels(section: Mapping[str, str]) -> HostLabelGenerator:
 
 def _discovery_function_test(
     params: Mapping[str, object], section: Mapping[str, str]
-) -> DiscoveryResult:
+) -> FinalDiscoveryResult:
     raw_ignore = params.get("ignore") or ()
     assert isinstance(raw_ignore, Sequence)
     for item in section:
@@ -184,7 +187,7 @@ _TEST_LABELS_SECTION = AgentSectionPlugin(
 )
 
 
-def _check_function_unused(*args: object, **kw: object) -> CheckResult:
+def _check_function_unused(*args: object, **kw: object) -> FinalCheckResult:
     yield from ()
 
 

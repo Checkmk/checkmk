@@ -855,7 +855,7 @@ def _aggregate_texts(
 def consume_check_results(
     # we need to accept `object`, in order to explicitly protect against plugins
     # creating invalid output.
-    # Typing this as `CheckResult` will make linters complain about unreachable code.
+    # Typing this as `FinalCheckResult` will make linters complain about unreachable code.
     subresults: Iterable[object],
 ) -> tuple[Sequence[IgnoreResults], Sequence[MetricTuple], Sequence[CheckFunctionResult]]:
     """Impedance matching between the Check API and the Check Engine."""

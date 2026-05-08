@@ -10,11 +10,17 @@ from typing import Any, Literal
 
 import pytest
 
-from cmk.agent_based.v2 import CheckResult, IgnoreResults, IgnoreResultsError, Metric, Result, State
+from cmk.agent_based.v2 import IgnoreResults, IgnoreResultsError, Metric, Result, State
 from cmk.ccc.hostaddress import HostName
 from cmk.checkengine import value_store
 from cmk.checkengine.checking import cluster_mode
-from cmk.checkengine.plugins import CheckFunction, CheckPlugin, CheckPluginName, ServiceID
+from cmk.checkengine.plugins import (
+    CheckPlugin,
+    CheckPluginName,
+    FinalCheckFunction,
+    FinalCheckResult,
+    ServiceID,
+)
 from cmk.discover_plugins import PluginLocation
 
 TEST_SERVICE_ID = ServiceID(CheckPluginName("unit_test_plugin"), "unit_test_item")
@@ -53,7 +59,7 @@ def _get_test_check_plugin(**kwargs) -> CheckPlugin:  # type: ignore[no-untyped-
     )
 
 
-def _simple_check(section: Iterable[int]) -> CheckResult:
+def _simple_check(section: Iterable[int]) -> FinalCheckResult:
     """just a simple way to create test check results"""
     for value in section:
         try:
@@ -101,7 +107,7 @@ def test_get_cluster_check_function_native_ok(vsm: value_store.ValueStoreManager
 
 
 def _get_cluster_check_function(
-    check_function: CheckFunction,
+    check_function: FinalCheckFunction,
     *,
     mode: Literal["native", "failover", "worst", "best"],
     vsm: value_store.ValueStoreManager,
@@ -118,7 +124,7 @@ def _get_cluster_check_function(
     )
 
 
-def _simple_check_notice(section: Any) -> CheckResult:
+def _simple_check_notice(section: Any) -> FinalCheckResult:
     """just a simple way to create test check results"""
     yield Result(state=State.OK, notice="notice text moved to details")
     yield Result(
@@ -580,9 +586,9 @@ def test_cluster_check_failover_unprefered_node_is_not_ok(
 def test_summarizer_result_generation(
     node_results: cluster_mode.NodeResults,
     levels: tuple[float, float],
-    expected_general_results: CheckResult,
-    expected_primary_result: CheckResult,
-    expected_secondary_result: CheckResult,
+    expected_general_results: FinalCheckResult,
+    expected_primary_result: FinalCheckResult,
+    expected_secondary_result: FinalCheckResult,
 ) -> None:
     clusterization_parameters = {"primary_node": HostName("Nodebert")}
     summarizer = cluster_mode.Summarizer(
@@ -686,9 +692,9 @@ def test_summarizer_result_generation(
 def test_summarizer_result_generation_for_failover(
     node_results: cluster_mode.NodeResults,
     levels: tuple[float, float],
-    expected_general_results: CheckResult,
-    expected_primary_result: CheckResult,
-    expected_secondary_result: CheckResult,
+    expected_general_results: FinalCheckResult,
+    expected_primary_result: FinalCheckResult,
+    expected_secondary_result: FinalCheckResult,
 ) -> None:
     clusterization_parameters = {"primary_node": HostName("Nodebert")}
     summarizer = cluster_mode.Summarizer(

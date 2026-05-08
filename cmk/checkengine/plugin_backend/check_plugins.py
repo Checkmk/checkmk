@@ -7,14 +7,16 @@
 
 import functools
 from collections.abc import Callable, Generator, Iterable, Mapping
+from typing import get_args
 
 from cmk.agent_based.v1 import IgnoreResults, Metric, Result, Service
 from cmk.agent_based.v1.register import RuleSetType
 from cmk.checkengine.plugins import (
-    CheckFunction,
     CheckPlugin,
     CheckPluginName,
-    DiscoveryFunction,
+    FinalCheckFunction,
+    FinalCheckResult,
+    FinalDiscoveryFunction,
     LegacyPluginLocation,
     ParsedSectionName,
 )
@@ -28,6 +30,8 @@ from .utils import (
     validate_function_arguments,
     validate_ruleset_type,
 )
+
+_FINAL_CHECK_RESULT_ELEMENT_TYPE = get_args(FinalCheckResult.__value__)[0]
 
 MANAGEMENT_DESCR_PREFIX = "Management Interface: "
 
@@ -62,7 +66,7 @@ def _requires_item(service_name: str) -> bool:
 def _filter_discovery[**P](
     generator: Callable[P, Iterable[object]],
     requires_item: bool,
-) -> DiscoveryFunction:
+) -> FinalDiscoveryFunction:
     """Only let Services through
 
     This allows for better typing in base code.
@@ -82,7 +86,7 @@ def _filter_discovery[**P](
 
 def _filter_check[**P](
     generator: Callable[P, Iterable[object]],
-) -> CheckFunction:
+) -> FinalCheckFunction:
     """Only let Result, Metric and IgnoreResults through
 
     This allows for better typing in base code.
@@ -93,7 +97,7 @@ def _filter_check[**P](
         *args: P.args, **kwargs: P.kwargs
     ) -> Generator[Result | Metric | IgnoreResults]:
         for element in generator(*args, **kwargs):
-            if not isinstance(element, Result | Metric | IgnoreResults):
+            if not isinstance(element, _FINAL_CHECK_RESULT_ELEMENT_TYPE):
                 raise TypeError("unexpected type in check function: %r" % type(element))
             yield element
 
@@ -106,14 +110,14 @@ def _validate_kwargs(
     subscribed_sections: list[ParsedSectionName],
     service_name: str,
     requires_item: bool,
-    discovery_function: DiscoveryFunction,
+    discovery_function: FinalDiscoveryFunction,
     discovery_default_parameters: Mapping[str, object] | None,
     discovery_ruleset_name: str | None,
     discovery_ruleset_type: RuleSetType,
-    check_function: CheckFunction,
+    check_function: FinalCheckFunction,
     check_default_parameters: Mapping[str, object] | None,
     check_ruleset_name: str | None,
-    cluster_check_function: CheckFunction | None,
+    cluster_check_function: FinalCheckFunction | None,
 ) -> None:
     _validate_service_name(plugin_name, service_name)
 
@@ -162,14 +166,14 @@ def create_check_plugin(
     name: str,
     sections: list[str] | None = None,
     service_name: str,
-    discovery_function: DiscoveryFunction,
+    discovery_function: FinalDiscoveryFunction,
     discovery_default_parameters: Mapping[str, object] | None = None,
     discovery_ruleset_name: str | None = None,
     discovery_ruleset_type: RuleSetType = RuleSetType.MERGED,
-    check_function: CheckFunction,
+    check_function: FinalCheckFunction,
     check_default_parameters: Mapping[str, object] | None = None,
     check_ruleset_name: str | None = None,
-    cluster_check_function: CheckFunction | None = None,
+    cluster_check_function: FinalCheckFunction | None = None,
     location: PluginLocation | LegacyPluginLocation,
     validate_kwargs: bool = True,
 ) -> CheckPlugin:

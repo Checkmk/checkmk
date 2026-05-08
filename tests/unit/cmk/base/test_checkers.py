@@ -16,7 +16,6 @@ from cmk.agent_based.prediction_backend import (
     PredictionParameters,
 )
 from cmk.agent_based.v1 import Metric, Result, State
-from cmk.agent_based.v2 import CheckResult
 from cmk.base import checkers
 from cmk.ccc.hostaddress import HostName
 from cmk.checkengine.checkerplugin import ConfiguredService
@@ -27,7 +26,7 @@ from cmk.checkengine.checkresults import (
 )
 from cmk.checkengine.fetcher import HostKey
 from cmk.checkengine.parameters import TimespecificParameters, TimespecificParameterSet
-from cmk.checkengine.plugins import CheckPluginName
+from cmk.checkengine.plugins import CheckPluginName, FinalCheckResult
 from cmk.helper_interface import SourceType
 from cmk.utils.servicename import ServiceName
 
@@ -78,7 +77,9 @@ def make_service(desription: ServiceName) -> ConfiguredService:
         ),
     ],
 )
-def test_aggregate_result(subresults: CheckResult, aggregated_results: ServiceCheckResult) -> None:
+def test_aggregate_result(
+    subresults: FinalCheckResult, aggregated_results: ServiceCheckResult
+) -> None:
     assert (
         checkers._aggregate_results(checkers.consume_check_results(subresults))
         == aggregated_results

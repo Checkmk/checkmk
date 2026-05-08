@@ -12,10 +12,14 @@ from functools import partial
 from typing import Any, Final, Literal, NamedTuple, Protocol
 
 from cmk.agent_based.v1 import IgnoreResults, IgnoreResultsError, Metric, Result, State
-from cmk.agent_based.v2 import CheckResult
 from cmk.ccc.hostaddress import HostName
 from cmk.checkengine.checkresults import state_markers
-from cmk.checkengine.plugins import CheckPlugin, ServiceID
+from cmk.checkengine.plugins import (
+    CheckPlugin,
+    FinalCheckFunction,
+    FinalCheckResult,
+    ServiceID,
+)
 from cmk.checkengine.value_store import ValueStoreManager
 
 _Kwargs = Mapping[str, Any]
@@ -31,7 +35,7 @@ class Selector(Protocol):
     def __call__(self, *a: State) -> State: ...
 
 
-def _unfit_for_clustering(**_kw: object) -> CheckResult:
+def _unfit_for_clustering(**_kw: object) -> FinalCheckResult:
     """A cluster_check_function that displays a generic warning"""
     yield Result(
         state=State.UNKNOWN,
@@ -50,7 +54,7 @@ def get_cluster_check_function(
     service_id: ServiceID,
     plugin: CheckPlugin,
     value_store_manager: ValueStoreManager,
-) -> Callable[..., Iterable[object]]:
+) -> FinalCheckFunction:
     if mode == "native":
         return plugin.cluster_check_function or _unfit_for_clustering
 
@@ -112,7 +116,7 @@ def _cluster_check(
     levels_additional_nodes_count: tuple[float, float],
     unpreferred_node_state: State,
     **cluster_kwargs: Any,
-) -> CheckResult:
+) -> FinalCheckResult:
     summarizer = Summarizer(
         node_results=executor(check_function, cluster_kwargs),
         cluster_mode=cluster_mode,
@@ -173,7 +177,7 @@ class Summarizer:
             if node != self._pivoting and results
         )
 
-    def __call__(self) -> CheckResult:
+    def __call__(self) -> FinalCheckResult:
         if self.is_empty():
             self.raise_for_ignores()
             return
@@ -307,7 +311,7 @@ class Summarizer:
         count = len(self._secondary_nodes)
         return State.CRIT if count >= levels[1] else State(count >= levels[0])
 
-    def metrics(self) -> CheckResult:
+    def metrics(self) -> FinalCheckResult:
         used_node = self._metrics_node or self._pivoting
         if not (metrics := self._node_results.metrics.get(used_node, ())):
             return
@@ -331,7 +335,7 @@ class NodeCheckExecutor:
 
     def __call__(
         self,
-        check_function: Callable[..., CheckResult],
+        check_function: Callable[..., FinalCheckResult],
         cluster_kwargs: _Kwargs,
     ) -> NodeResults:
         """Dispatch the check function results for all nodes"""
@@ -378,7 +382,7 @@ class NodeCheckExecutor:
     def _consume_checkresult(
         self,
         node: HostName,
-        result_generator: CheckResult,
+        result_generator: FinalCheckResult,
         value_store_manager: ValueStoreManager,
     ) -> Sequence[Result | Metric | IgnoreResults]:
         with value_store_manager.namespace(self._service_id, host_name=node):

@@ -18,6 +18,7 @@
         "providers": { "$ref": "#/$defs/providers" },
         "user_id": { "type": "string" },
         "edition": { "$ref": "#/$defs/edition" },
+        "site": { "type": "string" },
         "icons_per_item": { "type": "boolean", "default": false }
       },
       "required": ["providers", "user_id", "edition"]

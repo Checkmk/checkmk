@@ -6,6 +6,7 @@
 
 from dataclasses import dataclass
 
+from cmk.ccc.site import omd_site
 from cmk.ccc.version import edition
 from cmk.gui.http import Request
 from cmk.gui.i18n import _l
@@ -35,6 +36,7 @@ def get_unified_search_config(request: Request) -> UnifiedSearchMainMenuData:
         ),
         user_id=str(user.id),
         edition=Edition(edition(paths.omd_root).short),
+        site=str(omd_site()),
         icons_per_item=bool(user.get_attribute("icons_per_item")),
     )
 

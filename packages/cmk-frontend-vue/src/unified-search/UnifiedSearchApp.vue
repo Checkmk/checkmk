@@ -45,7 +45,7 @@ declare const cmk: any
 
 const props = defineProps<UnifiedSearchProps>()
 
-const searchId = `unified-search-${props.user_id}-${props.edition}`
+const searchId = `unified-search-${props.edition}-${props.site}-${props.user_id}`
 
 const api = new Api()
 

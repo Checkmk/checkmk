@@ -52,7 +52,7 @@ except ImportError:
     pass
 
 if sys.version_info[:2] < (3, 5):  # noqa: UP036
-    RecursionError = RuntimeError  # noqa: A001
+    RecursionError = RuntimeError
 
 # #############################################################################
 

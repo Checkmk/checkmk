@@ -3,16 +3,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Iterator, Mapping, Sequence
+from collections.abc import Iterator, Sequence
 from pathlib import Path
 from pprint import pformat
 from typing import Literal
 
 from pydantic import BaseModel
 
-from cmk.utils.password_store import extract_formspec_password
-
-from .bakery_api.v1 import FileGenerator, OS, Plugin, PluginConfig, register
+from cmk.bakery.v2_unstable import BakeryPlugin, OS, Plugin, PluginConfig, Secret
 
 
 class Instance(BaseModel):
@@ -20,10 +18,7 @@ class Instance(BaseModel):
     sysnr: str
     client: str
     user: str
-    passwd: (
-        tuple[Literal["cmk_postprocessed"], Literal["stored_password"], tuple[str, str]]
-        | tuple[Literal["cmk_postprocessed"], Literal["explicit_password"], tuple[str, str]]
-    )
+    passwd: Secret
     trace: str
     lang: str
     host_prefix: str | None = None
@@ -40,16 +35,14 @@ class _Config(BaseModel):
     )
 
 
-def get_mk_sap_files(conf: Mapping[str, object]) -> FileGenerator:
-    config = _Config.model_validate(conf)
-    if config.deployment[0] == "do_not_deploy":
+def get_mk_sap_files(conf: _Config) -> Iterator[Plugin | PluginConfig]:
+    if conf.deployment[0] == "do_not_deploy":
         return
 
-    interval = None if (v := config.deployment[1]) is None else int(v)
-    yield Plugin(base_os=OS.LINUX, source=Path("mk_sap.py"), interval=interval)
+    yield Plugin(base_os=OS.LINUX, source=Path("mk_sap.py"), interval=conf.deployment[1])
     yield PluginConfig(
         base_os=OS.LINUX,
-        lines=list(_get_mk_sap_config(config)),
+        lines=list(_get_mk_sap_config(conf)),
         target=Path("sap.cfg"),
         include_header=True,
     )
@@ -64,7 +57,7 @@ def _get_mk_sap_config(config: _Config) -> Iterator[str]:
             "client": instance.client,
             "lang": instance.lang,
             "loglevel": "warn",
-            "passwd": extract_formspec_password(instance.passwd),
+            "passwd": instance.passwd.revealed,
             "sysnr": instance.sysnr,
             "trace": instance.trace,
             "user": instance.user,
@@ -79,7 +72,9 @@ def _get_mk_sap_config(config: _Config) -> Iterator[str]:
     yield from f"monitor_paths += {pformat(list(config.paths), width=120)}".split("\n")
 
 
-register.bakery_plugin(
+bakery_plugin_mk_sap = BakeryPlugin(
     name="mk_sap",
+    parameter_parser=_Config.model_validate,
+    default_parameters=None,
     files_function=get_mk_sap_files,
 )

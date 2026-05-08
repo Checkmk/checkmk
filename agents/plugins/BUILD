@@ -31,7 +31,6 @@ py_library(
         "mk_logwatch.py",
         "mk_mongodb.py",
         "mk_podman.py",
-        "mk_sap.py",
         "mk_tinkerforge.py",
     ],
     imports = ["."],

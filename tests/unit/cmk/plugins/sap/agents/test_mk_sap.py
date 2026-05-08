@@ -10,7 +10,7 @@ from collections import namedtuple
 
 import pytest
 
-from agents.plugins import mk_sap
+from cmk.plugins.sap.agents import mk_sap
 
 Value = namedtuple("Value", ["value"])
 

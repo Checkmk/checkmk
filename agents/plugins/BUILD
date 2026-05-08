@@ -82,7 +82,6 @@ sh_library(
         "mk_inventory.aix",
         "mk_inventory.linux",
         "mk_inventory.solaris",
-        "mk_iptables",
         "mk_mysql",
         "mk_omreport",
         "mk_oracle",

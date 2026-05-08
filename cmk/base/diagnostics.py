@@ -110,6 +110,7 @@ def _mode_create_diagnostics_dump(app: CheckmkBaseApp, options: DiagnosticsModes
     log.logger.setLevel(logging.INFO)
     omd_config = get_omd_config(cmk.utils.paths.omd_root)
     create_diagnostics_dump(
+        app.edition,
         load_config(
             discovery_rulesets=(),
             get_builtin_host_labels=app.get_builtin_host_labels,
@@ -244,11 +245,12 @@ def handler(
         # NOTE: All the stuff is logged on this level only, which is below the default WARNING level.
         log.logger.setLevel(logging.INFO)
         dump = DiagnosticsDump(
-            loading_result.loaded_config,
-            ctx.core_performance_settings,
-            omd_config,
-            cmk.utils.paths.omd_root,
-            deserialize_cl_parameters(args),
+            edition=ctx.edition,
+            loaded_config=loading_result.loaded_config,
+            core_performance_settings=ctx.core_performance_settings,
+            omd_config=omd_config,
+            omd_root=cmk.utils.paths.omd_root,
+            parameters=deserialize_cl_parameters(args),
         )
         dump.create()
         return CreateDiagnosticsDumpResult(
@@ -266,6 +268,7 @@ automation_create_diagnostics_dump = Automation(
 
 
 def create_diagnostics_dump(
+    edition: cmk_version.Edition,
     loaded_config: LoadedConfigFragment,
     parameters: DiagnosticsOptionalParameters | None,
     core_performance_settings: Callable[[LoadedConfigFragment], Mapping[str, int]],
@@ -273,7 +276,12 @@ def create_diagnostics_dump(
     omd_root: Path,
 ) -> None:
     dump = DiagnosticsDump(
-        loaded_config, core_performance_settings, omd_config, omd_root, parameters
+        edition=edition,
+        loaded_config=loaded_config,
+        core_performance_settings=core_performance_settings,
+        omd_config=omd_config,
+        omd_root=omd_root,
+        parameters=parameters,
     )
     dump.create()
 
@@ -343,6 +351,8 @@ class DiagnosticsDump:
 
     def __init__(
         self,
+        *,
+        edition: cmk_version.Edition,
         loaded_config: LoadedConfigFragment,
         core_performance_settings: Callable[[LoadedConfigFragment], Mapping[str, int]],
         omd_config: site.OMDConfig,
@@ -353,9 +363,9 @@ class DiagnosticsDump:
         self.omd_config = omd_config
         self.omd_root = omd_root
         self.fixed_elements = self._get_fixed_elements(
-            loaded_config, core_performance_settings, parameters
+            edition, loaded_config, core_performance_settings, parameters
         )
-        self.optional_elements = self._get_optional_elements(parameters)
+        self.optional_elements = self._get_optional_elements(edition, parameters)
         self.elements = self.fixed_elements + self.optional_elements
 
         dump_folder = cmk.utils.paths.diagnostics_dir
@@ -378,6 +388,7 @@ class DiagnosticsDump:
 
     def _get_fixed_elements(
         self,
+        edition: cmk_version.Edition,
         loaded_config: LoadedConfigFragment,
         core_performance_settings: Callable[[LoadedConfigFragment], Mapping[str, int]],
         parameters: DiagnosticsOptionalParameters | None,
@@ -397,7 +408,7 @@ class DiagnosticsDump:
             CMAJSONDiagnosticsElement(self.omd_root),
         ]
 
-        if cmk_version.edition(self.omd_root) is not cmk_version.Edition.COMMUNITY:
+        if edition is not cmk_version.Edition.COMMUNITY:
             fixed_elements.append(DCDDiagnosticsElement(self.omd_root))
 
         for identifier, command in COMPONENT_COMMANDS.items():
@@ -408,7 +419,7 @@ class DiagnosticsDump:
         return fixed_elements
 
     def _get_optional_elements(
-        self, parameters: DiagnosticsOptionalParameters | None
+        self, edition: cmk_version.Edition, parameters: DiagnosticsOptionalParameters | None
     ) -> list[ABCDiagnosticsElement]:
         if parameters is None:
             return []
@@ -481,7 +492,7 @@ class DiagnosticsDump:
                     )
 
         # CEE options
-        if cmk_version.edition(cmk.utils.paths.omd_root) is not cmk_version.Edition.COMMUNITY:
+        if edition is not cmk_version.Edition.COMMUNITY:
             rel_checkmk_core_files = parameters.get(OPT_CHECKMK_CORE_FILES)
             if rel_checkmk_core_files:
                 optional_elements.append(

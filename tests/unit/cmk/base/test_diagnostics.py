@@ -26,6 +26,7 @@ import cmk.utils.paths
 from cmk.base import diagnostics
 from cmk.ccc.crash_reporting import make_crash_report_base_path
 from cmk.ccc.hostaddress import HostName
+from cmk.ccc.version import Edition
 from cmk.inventory.structured_data import (
     deserialize_tree,
     InventoryStore,
@@ -37,7 +38,8 @@ from tests.testlib.common.empty_config import EMPTY_CONFIG
 
 def _make_diagnostics_dump() -> diagnostics.DiagnosticsDump:
     return diagnostics.DiagnosticsDump(
-        EMPTY_CONFIG,
+        edition=Edition.COMMUNITY,
+        loaded_config=EMPTY_CONFIG,
         core_performance_settings=lambda x: {},
         omd_config={},
         omd_root=Path("/omd/sites/no_site"),

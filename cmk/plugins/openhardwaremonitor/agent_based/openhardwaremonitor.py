@@ -129,11 +129,6 @@ def _create_openhardwaremonitor_full_name(parent: str, name: str) -> str:
     return (parent.replace("/", "") + " " + name).strip()
 
 
-def _openhardwaremonitor_worst_state(*args: State) -> State:
-    order = {State.OK: 0, State.WARN: 1, State.UNKNOWN: 2, State.CRIT: 3}
-    return sorted(args, key=lambda s: order[s], reverse=True)[0]
-
-
 def _openhardwaremonitor_expect_order(*args: float | None) -> State:
     arglist = [x for x in args if x is not None]
     sorted_by_val = sorted(enumerate(arglist), key=lambda x: x[1])
@@ -171,7 +166,7 @@ def _check_openhardwaremonitor(
         state_upper = State.OK
 
     yield Result(
-        state=_openhardwaremonitor_worst_state(state_lower, state_upper),
+        state=State.worst(state_lower, state_upper),
         summary=f"{data.reading:.1f}{data.unit}",
     )
     if data.perf_var:

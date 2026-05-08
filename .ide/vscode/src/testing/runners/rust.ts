@@ -50,6 +50,8 @@ function parseLibtestList(buf: string): string[] {
 
 const RUST_TEST_ATTR_RE =
   /^\s*#\[(?:test|tokio::test|async_std::test|rstest|wasm_bindgen_test|test_case|googletest::test)/
+const RUST_TEST_ATTR_FILE_RE =
+  /^\s*#\[(?:test|tokio::test|async_std::test|rstest|wasm_bindgen_test|test_case|googletest::test)/m
 const RUST_MOD_OPEN_RE = /^\s*(?:pub(?:\([^)]*\))?\s+)?mod\s+(\w+)\s*\{/
 const RUST_FN_RE = /^\s*(?:pub(?:\([^)]*\))?\s+)?(?:async\s+)?fn\s+(\w+)/
 
@@ -126,7 +128,7 @@ function discoverRustTestNamesFromSource(wsPath: string, target: string): string
           } catch {
             continue
           }
-          if (!RUST_TEST_ATTR_RE.test(content)) continue
+          if (!RUST_TEST_ATTR_FILE_RE.test(content)) continue
           const base = deriveRustModulePath(full, root)
           for (const t of parseRustTestsFromFile(content, base)) seen.add(t.fullName)
         }
@@ -333,11 +335,22 @@ export interface RustReportContext {
   cancelled: boolean
   xmlContent: string
   reportCase: (item: vscode.TestItem, c: JUnitTestCase) => void
+  scopedItems?: vscode.TestItem[]
 }
 
 export function reportRustTestRun(ctx: RustReportContext): void {
-  const { controller, run, item, wsPath, durationMs, exitCode, cancelled, xmlContent, reportCase } =
-    ctx
+  const {
+    controller,
+    run,
+    item,
+    wsPath,
+    durationMs,
+    exitCode,
+    cancelled,
+    xmlContent,
+    reportCase,
+    scopedItems
+  } = ctx
   const sysOut = extractSystemOut(xmlContent)
   const rustCases = parseLibtestOutput(sysOut)
   for (const c of rustCases) {
@@ -346,9 +359,16 @@ export function reportRustTestRun(ctx: RustReportContext): void {
   }
   if (cancelled) {
     run.skipped(item)
+    if (scopedItems) for (const ci of scopedItems) run.skipped(ci)
   } else if (rustCases.length === 0) {
-    if (exitCode === 0) run.passed(item, durationMs)
-    else run.failed(item, [new vscode.TestMessage(`bazel test exited ${exitCode}`)], durationMs)
+    if (exitCode === 0) {
+      run.passed(item, durationMs)
+      if (scopedItems) for (const ci of scopedItems) run.passed(ci, durationMs)
+    } else {
+      const msg = new vscode.TestMessage(`bazel test exited ${exitCode}`)
+      run.failed(item, [msg], durationMs)
+      if (scopedItems) for (const ci of scopedItems) run.failed(ci, [msg], durationMs)
+    }
   } else {
     const failed = rustCases.filter((c) => c.status === 'failed' || c.status === 'error').length
     if (failed > 0) {

@@ -191,10 +191,22 @@ export interface CcReportContext {
   cancelled: boolean
   cases: JUnitTestCase[]
   reportCase: (item: vscode.TestItem, c: JUnitTestCase) => void
+  scopedItems?: vscode.TestItem[]
 }
 
 export function reportCcTestRun(ctx: CcReportContext): void {
-  const { controller, run, item, wsPath, durationMs, exitCode, cancelled, cases, reportCase } = ctx
+  const {
+    controller,
+    run,
+    item,
+    wsPath,
+    durationMs,
+    exitCode,
+    cancelled,
+    cases,
+    reportCase,
+    scopedItems
+  } = ctx
   for (const c of cases) {
     const fullName = c.classname ? `${c.classname}.${c.name}` : c.name
     const funcItem = getOrCreateCcFunctionItem(controller, item, fullName, wsPath, c.file, c.line)
@@ -202,9 +214,16 @@ export function reportCcTestRun(ctx: CcReportContext): void {
   }
   if (cancelled) {
     run.skipped(item)
+    if (scopedItems) for (const ci of scopedItems) run.skipped(ci)
   } else if (cases.length === 0) {
-    if (exitCode === 0) run.passed(item, durationMs)
-    else run.failed(item, [new vscode.TestMessage(`bazel test exited ${exitCode}`)], durationMs)
+    if (exitCode === 0) {
+      run.passed(item, durationMs)
+      if (scopedItems) for (const ci of scopedItems) run.passed(ci, durationMs)
+    } else {
+      const msg = new vscode.TestMessage(`bazel test exited ${exitCode}`)
+      run.failed(item, [msg], durationMs)
+      if (scopedItems) for (const ci of scopedItems) run.failed(ci, [msg], durationMs)
+    }
   } else {
     const failed = cases.filter((c) => c.status === 'failed' || c.status === 'error').length
     if (failed > 0) {

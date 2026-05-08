@@ -19,7 +19,7 @@ function hookPaths(repo: string): { active: string; disabled: string } {
   }
 }
 
-function isEnabled(repo: string): boolean {
+function isSkipping(repo: string): boolean {
   const { active, disabled } = hookPaths(repo)
   return !fs.existsSync(active) && fs.existsSync(disabled)
 }
@@ -35,7 +35,7 @@ export function registerScm(context: vscode.ExtensionContext): void {
       statusItem.hide()
       return
     }
-    const skipping = isEnabled(repo)
+    const skipping = isSkipping(repo)
     void vscode.commands.executeCommand('setContext', CONTEXT_KEY, skipping)
     if (skipping) {
       statusItem.text = '$(warning) pre-commit OFF'
@@ -57,7 +57,7 @@ export function registerScm(context: vscode.ExtensionContext): void {
     }
     const { active, disabled } = hookPaths(repo)
     try {
-      if (isEnabled(repo)) {
+      if (isSkipping(repo)) {
         fs.renameSync(disabled, active)
         log('pre-commit hook re-enabled')
       } else if (fs.existsSync(active)) {
@@ -115,8 +115,7 @@ export function registerScm(context: vscode.ExtensionContext): void {
   const beginCommit = (): void => {
     const repo = repoRoot()
     if (!repo) return
-    // Only auto-surface output if the pre-commit hook is actually enabled.
-    if (isEnabled(repo)) return
+    if (isSkipping(repo)) return
     if (!fs.existsSync(path.join(repo, '.git', 'hooks', 'pre-commit'))) return
     const ep = editMsgPath()
     if (!ep) return

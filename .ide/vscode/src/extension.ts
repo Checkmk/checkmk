@@ -20,7 +20,6 @@ import { checkVersionMismatch } from './core/versionCheck'
 import { checkForUpdates, isInstalled as isDevSiteInstalled } from './omd/devSiteTools'
 import { registerLogs } from './omd/logs'
 import { createSite, registerOmd } from './omd/omd'
-import { registerRuffOnDemand, registerVitestOnDemand } from './profiles/onDemand'
 import { registerProfileDetector } from './profiles/profileDetector'
 import * as profileManager from './profiles/profileManager'
 import { registerDynamicMypyTargets } from './profiles/python/dynamicMypyTargets'
@@ -160,7 +159,6 @@ export function activate(context: vscode.ExtensionContext): void {
         ...registerDynamicMypyTargets(context),
         ...registerJemallocAllocator(context),
         ...registerPylanceHealth(refreshAll),
-        ...registerRuffOnDemand(),
         ...registerMypyConfigWatcher(),
         ...registerInterpreterResolver(),
         ...registerSnippets(),
@@ -185,7 +183,7 @@ export function activate(context: vscode.ExtensionContext): void {
   profileManager.register(
     'frontend',
     () => {
-      return [...registerVitestOnDemand(), toggleSettings(frontendDisable, frontendEnable)]
+      return [toggleSettings(frontendDisable, frontendEnable)]
     },
     frontendDisable
   )

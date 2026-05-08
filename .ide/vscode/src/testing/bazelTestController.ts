@@ -387,7 +387,8 @@ async function runOneUnit(
       exitCode,
       cancelled,
       xmlContent,
-      reportCase: (it, c) => reportCase(run, it, c)
+      reportCase: (it, c) => reportCase(run, it, c),
+      scopedItems: unit.scopedItems
     })
     return
   }
@@ -402,7 +403,8 @@ async function runOneUnit(
       exitCode,
       cancelled,
       cases,
-      reportCase: (it, c) => reportCase(run, it, c)
+      reportCase: (it, c) => reportCase(run, it, c),
+      scopedItems: unit.scopedItems
     })
     return
   }
@@ -636,10 +638,22 @@ export function registerBazelTestController(): vscode.Disposable[] {
     void triggerDiscovery('eager discovery (cmk.bazelTests.onDemand=false)')
   } else {
     const PYTHON_TEST_FILE = /(?:^|\/)test_[^/]+\.py$|_test\.py$|\/tests?\//
+    const RUST_FILE = /\.rs$/
+    const CC_FILE = /\.(cc|cpp|cxx)$/
+    const isUnderDiscoveryRoot = (fsPath: string): boolean => {
+      const rel = path.relative(wsPath, fsPath)
+      if (rel.startsWith('..')) return false
+      return DISCOVERY_ROOTS.some((r) => rel === r || rel.startsWith(r + path.sep))
+    }
     const matchesTestFile = (doc: vscode.TextDocument): boolean => {
       if (doc.uri.scheme !== 'file') return false
-      if (doc.languageId === 'python' && PYTHON_TEST_FILE.test(doc.uri.fsPath)) return true
-      return VITEST_FILE_REGEX.test(doc.uri.fsPath)
+      const fsPath = doc.uri.fsPath
+      if (doc.languageId === 'python' && PYTHON_TEST_FILE.test(fsPath)) return true
+      if (VITEST_FILE_REGEX.test(fsPath)) return true
+      if ((RUST_FILE.test(fsPath) || CC_FILE.test(fsPath)) && isUnderDiscoveryRoot(fsPath)) {
+        return true
+      }
+      return false
     }
     disposables.push(
       vscode.window.onDidChangeActiveTextEditor((editor) => {

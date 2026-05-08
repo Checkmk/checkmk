@@ -4,9 +4,9 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
+"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2026-05-06 07:09+0000\n"
+"PO-Revision-Date: 2026-05-08 08:11+0000\n"
 "Language-Team: Portuguese (Portugal) <https://translate.checkmk.com/projects/"
 "checkmk/stable/pt_PT/>\n"
 "Language: pt_PT\n"
@@ -61706,6 +61706,19 @@ msgstr ""
 msgid "Server-side command latency"
 msgstr "Latência do servidor"
 
+msgid ""
+"Serves the OTLP endpoint over TLS using the site's certificate. The client "
+"must trust the site CA at ~/etc/ssl/ca.pem. The certificate's server name "
+"matches the site ID, so set server_name_override (or the SDK equivalent) to "
+"the site ID.<br><br>Required when basic authentication is enabled."
+msgstr ""
+
+msgid ""
+"Serves the OTLP endpoint over TLS using the site's certificate. The client "
+"must trust the site CA at ~/etc/ssl/ca.pem. The certificate's server name "
+"matches the site ID."
+msgstr ""
+
 msgid "Service"
 msgstr "Serviço"
 
@@ -66304,6 +66317,10 @@ msgstr "Estado se o estado do par ha for Activo-Secundário"
 
 #, fuzzy
 msgid "State if ha peer state is disabled"
+msgstr "Estado se o estado do par ha estiver desactivado"
+
+#, fuzzy
+msgid "State if ha peer state is initial"
 msgstr "Estado se o estado do par ha estiver desactivado"
 
 #, fuzzy
@@ -93812,6 +93829,7 @@ msgstr "contando"
 msgid "cp437"
 msgstr "cp437"
 
+#, fuzzy
 msgid "crash report"
 msgid_plural "crash reports"
 msgstr[0] ""
@@ -94328,6 +94346,7 @@ msgstr "os anfitriões estão de pé e não têm problemas de serviço"
 msgid "hosts in total"
 msgstr "anfitriões no total"
 
+#, fuzzy
 msgid "hour"
 msgid_plural "hours"
 msgstr[0] ""

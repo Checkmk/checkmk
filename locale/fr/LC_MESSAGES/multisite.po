@@ -62232,6 +62232,19 @@ msgstr ""
 msgid "Server-side command latency"
 msgstr "Latence du serveur"
 
+msgid ""
+"Serves the OTLP endpoint over TLS using the site's certificate. The client "
+"must trust the site CA at ~/etc/ssl/ca.pem. The certificate's server name "
+"matches the site ID, so set server_name_override (or the SDK equivalent) to "
+"the site ID.<br><br>Required when basic authentication is enabled."
+msgstr ""
+
+msgid ""
+"Serves the OTLP endpoint over TLS using the site's certificate. The client "
+"must trust the site CA at ~/etc/ssl/ca.pem. The certificate's server name "
+"matches the site ID."
+msgstr ""
+
 msgid "Service"
 msgstr "Service"
 
@@ -66875,6 +66888,10 @@ msgstr "État si l'état de l'homologue est Actif-Secondaire"
 
 #, fuzzy
 msgid "State if ha peer state is disabled"
+msgstr "État si l'état de l'homologue est désactivé"
+
+#, fuzzy
+msgid "State if ha peer state is initial"
 msgstr "État si l'état de l'homologue est désactivé"
 
 #, fuzzy

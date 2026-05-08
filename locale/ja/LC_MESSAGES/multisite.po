@@ -58527,6 +58527,19 @@ msgstr "サーバ時間 (現在: %s)"
 msgid "Server-side command latency"
 msgstr "サーバーの待ち時間"
 
+msgid ""
+"Serves the OTLP endpoint over TLS using the site's certificate. The client "
+"must trust the site CA at ~/etc/ssl/ca.pem. The certificate's server name "
+"matches the site ID, so set server_name_override (or the SDK equivalent) to "
+"the site ID.<br><br>Required when basic authentication is enabled."
+msgstr ""
+
+msgid ""
+"Serves the OTLP endpoint over TLS using the site's certificate. The client "
+"must trust the site CA at ~/etc/ssl/ca.pem. The certificate's server name "
+"matches the site ID."
+msgstr ""
+
 msgid "Service"
 msgstr "サービス"
 
@@ -62918,6 +62931,10 @@ msgstr "haピア状態がActive-Secondaryな場合の状態"
 
 #, fuzzy
 msgid "State if ha peer state is disabled"
+msgstr "haピア状態が無効な場合の状態"
+
+#, fuzzy
+msgid "State if ha peer state is initial"
 msgstr "haピア状態が無効な場合の状態"
 
 #, fuzzy

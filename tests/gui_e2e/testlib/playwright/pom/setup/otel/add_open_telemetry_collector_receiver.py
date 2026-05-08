@@ -4,14 +4,16 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import logging
 import re
-from re import Pattern
 from typing import Any, override
 from urllib.parse import quote_plus
 
 from playwright.sync_api import expect, Locator, Page
 
-from tests.gui_e2e.testlib.playwright.helpers import DropdownListNameToID, LocatorHelper
+from tests.gui_e2e.testlib.playwright.helpers import DropdownListNameToID
 from tests.gui_e2e.testlib.playwright.pom.page import CmkPage
+from tests.gui_e2e.testlib.playwright.pom.setup.otel.new_password_slide_in import (
+    NewPasswordSlideIn,
+)
 from tests.gui_e2e.testlib.playwright.pom.setup.otel.open_telemetry_collector_receiver import (
     OpenTelemetryCollectorReceiver,
 )
@@ -35,7 +37,7 @@ class AddOpenTelemetryCollectorReceiver(CmkPage):
     ) -> None:
         self.page_title = "Add OpenTelemetry Collector"
         super().__init__(page, navigate_to_page)
-        self.new_password_slide_in = NewPasswordSlideIn(self.page)
+        self.new_password_slide_in = NewPasswordSlideIn(self.main_area.locator())
 
     @override
     def navigate(self) -> None:
@@ -144,18 +146,11 @@ class AddOpenTelemetryCollectorReceiver(CmkPage):
 
     def add_new_password(self, receiver_type: str, password_data: dict[str, str]) -> None:
         self.click_on_last_locator(self.create_password_button(receiver_type))
-        expect(
-            self.new_password_slide_in.title,
-            "The slide-in didn't open after clicking on 'Create' button",
-        ).to_be_visible()
-        self.new_password_slide_in.password_id_textfield.fill(password_data["id"])
-        self.new_password_slide_in.password_title_textfield.fill(password_data["title"])
-        self.new_password_slide_in.password_textfield.fill(password_data["password"])
-        self.new_password_slide_in.save_button.click()
-        expect(
-            self.new_password_slide_in.title,
-            "The slide-in didn't collapse after clicking on 'Save' button",
-        ).not_to_be_visible()
+        self.new_password_slide_in.fill_and_save(
+            password_id=password_data["id"],
+            title=password_data["title"],
+            password=password_data["password"],
+        )
 
     def _fill_collector_receiver_properties(
         self,
@@ -227,51 +222,3 @@ class AddOpenTelemetryCollectorReceiver(CmkPage):
             )
         logger.info("Save the OpenTelemetry Collector configuration")
         self.save_configuration_button.click()
-
-
-class NewPasswordSlideIn(LocatorHelper):
-    """Represents 'Setup > Hosts > OpenTelemetry collector
-    > Add OpenTelemetry Collector' slid-in for adding new password."""
-
-    @override
-    def locator(
-        self,
-        selector: str | None = None,
-        *,
-        has_text: Pattern[str] | str | None = None,
-        has_not_text: Pattern[str] | str | None = None,
-        has: Locator | None = None,
-        has_not: Locator | None = None,
-    ) -> Locator:
-        if not selector:
-            _loc = self._iframe_locator.get_by_label("New password")
-        else:
-            _loc = self._iframe_locator.locator(selector)
-        kwargs = self._build_locator_kwargs(
-            has_text=has_text,
-            has_not_text=has_not_text,
-            has=has,
-            has_not=has_not,
-        )
-        _loc = _loc.filter(**kwargs) if kwargs else _loc
-        return _loc
-
-    @property
-    def title(self) -> Locator:
-        return self.locator().get_by_role("heading", level=1)
-
-    @property
-    def save_button(self) -> Locator:
-        return self.locator().get_by_role("button", name="Save")
-
-    @property
-    def password_id_textfield(self) -> Locator:
-        return self.locator().get_by_role("textbox", name="Unique ID")
-
-    @property
-    def password_title_textfield(self) -> Locator:
-        return self.locator().get_by_role("textbox", name="Title")
-
-    @property
-    def password_textfield(self) -> Locator:
-        return self.locator().get_by_role("textbox", name="Password")

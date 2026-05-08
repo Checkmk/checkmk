@@ -3,51 +3,87 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Mapping
 
-from cmk.gui.agent_bakery import RulespecGroupMonitoringAgentsAgentPlugins
-from cmk.gui.i18n import _
-from cmk.gui.plugins.wato.utils import HostRulespec, rulespec_registry
-from cmk.gui.valuespec import Alternative, Dictionary, FixedValue, TextInput
-from cmk.utils.rulesets.definition import RuleGroup
+from cmk.rulesets.v1 import Help, Title
+from cmk.rulesets.v1.form_specs import (
+    CascadingSingleChoice,
+    CascadingSingleChoiceElement,
+    DefaultValue,
+    DictElement,
+    Dictionary,
+    FixedValue,
+    String,
+    TimeMagnitude,
+    TimeSpan,
+)
+from cmk.rulesets.v1.rule_specs import AgentConfig, Topic
 
 
-def _valuespec_agent_config_arcserve_backup() -> Alternative:
-    return Alternative(
-        title=_("Arcserve (German) backups (Windows)"),
-        help=_(
+def migrate(value: object) -> Mapping[str, object]:
+    if isinstance(value, dict) and "deployment" in value:
+        return value
+    if value is None:
+        return {"deployment": ("do_not_deploy", None)}
+    if isinstance(value, dict):
+        result: dict[str, object] = {"deployment": ("sync", None)}
+        if "sqlserver" in value:
+            result["sqlserver"] = value["sqlserver"]
+        return result
+    raise ValueError(f"Unexpected value: {value!r}")
+
+
+def _form_spec() -> Dictionary:
+    return Dictionary(
+        help_text=Help(
             "This plug-in monitors Arcserve backups by deploying a plug-in for the "
             "Arcserve server on Windows. This only supports the German version of "
             "Arcserve, since the log messages are in localized language."
         ),
-        elements=[
-            Dictionary(
-                title=_("Deploy Arcserve plug-in"),
-                elements=[
-                    (
-                        "sqlserver",
-                        TextInput(
-                            title=_("SQL-Server to connect to"),
-                            help=_("Put the name of the database here, e.g. SATURN\\ARCSERVE_DB"),
-                            allow_empty=False,
-                            regex=r"^[A-Za-z0-9_\\]+$",
-                            regex_error=_("You have used an invalid character"),
+        elements={
+            "deployment": DictElement(
+                required=True,
+                parameter_form=CascadingSingleChoice(
+                    title=Title("Deployment type"),
+                    elements=(
+                        CascadingSingleChoiceElement(
+                            name="sync",
+                            title=Title("Deploy the Arcserve plug-in"),
+                            parameter_form=FixedValue(value=None),
+                        ),
+                        CascadingSingleChoiceElement(
+                            name="cached",
+                            title=Title("Deploy the plug-in and run it asynchronously"),
+                            parameter_form=TimeSpan(
+                                displayed_magnitudes=(
+                                    TimeMagnitude.HOUR,
+                                    TimeMagnitude.MINUTE,
+                                )
+                            ),
+                        ),
+                        CascadingSingleChoiceElement(
+                            name="do_not_deploy",
+                            title=Title("Do not deploy the Arcserve plug-in"),
+                            parameter_form=FixedValue(value=None),
                         ),
                     ),
-                ],
-                optional_keys=False,
+                    prefill=DefaultValue("sync"),
+                ),
             ),
-            FixedValue(
-                value=None, title=_("Do not deploy the Arcserve plug-in"), totext=_("(disabled)")
+            "sqlserver": DictElement(
+                parameter_form=String(
+                    title=Title("SQL-Server to connect to"),
+                    help_text=Help(r"Put the name of the database here, e.g. SATURN\ARCSERVE_DB"),
+                ),
             ),
-        ],
-        default_value={"sqlserver": r"SATURN\ARCSERVE_DB"},
+        },
+        migrate=migrate,
     )
 
 
-rulespec_registry.register(
-    HostRulespec(
-        group=RulespecGroupMonitoringAgentsAgentPlugins,
-        name=RuleGroup.AgentConfig("arcserve_backup"),
-        valuespec=_valuespec_agent_config_arcserve_backup,
-    )
+rule_spec_arcserve_backup = AgentConfig(
+    title=Title("Arcserve (German) backups (Windows)"),
+    name="arcserve_backup",
+    topic=Topic.APPLICATIONS,
+    parameter_form=_form_spec,
 )

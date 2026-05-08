@@ -99,8 +99,6 @@ sh_library(
         "mk_zypper",
         "nvidia_smi",
         "runas",
-        "smart",
-        "smart_posix",
         "zorp",
         "//agents/cfg_examples:agents_cfg_examples_sh",
     ],

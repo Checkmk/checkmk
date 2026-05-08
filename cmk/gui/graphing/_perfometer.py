@@ -22,25 +22,12 @@ from cmk.gui.unit_formatter import AutoPrecision
 from cmk.gui.utils.temperate_unit import TemperatureUnit
 from cmk.gui.view_utils import get_themed_perfometer_bg_color
 
-from ._evaluations_from_api import evaluate_quantity, EvaluatedQuantity
+from ._evaluations_from_api import evaluate_quantity, EvaluatedQuantity, Quantity
 from ._from_api import RegisteredMetric
 from ._perfometer_superseding import PERFOMETER_SUPERSEDED_TO_SUPERSEDER
 from ._translated_metrics import TranslatedMetric
 from ._unit import ConvertibleUnitSpecification, DecimalNotation, user_specific_unit
 from ._utils import Linear
-
-type Quantity = (
-    str
-    | metrics_api.Constant
-    | metrics_api.WarningOf
-    | metrics_api.CriticalOf
-    | metrics_api.MinimumOf
-    | metrics_api.MaximumOf
-    | metrics_api.Sum
-    | metrics_api.Product
-    | metrics_api.Difference
-    | metrics_api.Fraction
-)
 
 
 @dataclass(frozen=True)

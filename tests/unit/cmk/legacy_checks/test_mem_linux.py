@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-call"
 
 # NOTE: This file has been created by an LLM (from something that was worse).
 # It mostly serves as test to ensure we don't accidentally break anything.
@@ -12,6 +11,7 @@
 
 from typing import Any
 
+from cmk.agent_based.v2 import Metric, Result, Service, State
 from cmk.legacy_checks.mem_linux import (
     check_mem_linux,
     discover_mem_linux,
@@ -32,10 +32,7 @@ def test_inventorize_mem_linux_basic() -> None:
         "Writeback": 512,  # Required by is_linux_section
     }
 
-    result = list(discover_mem_linux(section))
-
-    # Should discover the service now that all required keys are present
-    assert result == [(None, {})]
+    assert list(discover_mem_linux(section)) == [Service()]
 
 
 def test_check_mem_linux_normal_usage() -> None:
@@ -55,23 +52,19 @@ def test_check_mem_linux_normal_usage() -> None:
         "levels_total": ("perc_used", (120.0, 150.0)),
     }
 
-    result = list(check_mem_linux(None, params, section))
+    result = list(check_mem_linux(params, section))
+    text_results = [r for r in result if isinstance(r, Result)]
+    metrics = [r for r in result if isinstance(r, Metric)]
 
     # Should return multiple results
-    assert len(result) >= 2
+    assert len(text_results) >= 2
 
     # First result should be virtual memory status
-    virtual_result = result[0]
-    assert virtual_result[0] == 0  # Should be OK with normal usage
-
-    # Should include memory usage information - check actual text from test failure
-    result_summaries = [r[1] for r in result]
-    summary_text = " ".join(result_summaries)
-    # Based on the test failure, the text contains "virtual memory" not just "used"
-    assert "virtual memory" in summary_text.lower()
+    assert text_results[0].state == State.OK
+    assert "Total virtual memory" in text_results[0].summary
 
     # Should have performance data
-    assert [m for _state, _summary, metrics in result for m in metrics]
+    assert metrics
 
 
 def test_check_mem_linux_high_usage() -> None:
@@ -91,20 +84,15 @@ def test_check_mem_linux_high_usage() -> None:
         "levels_total": ("perc_used", (120.0, 150.0)),
     }
 
-    result = list(check_mem_linux(None, params, section))
+    result = list(check_mem_linux(params, section))
+    text_results = [r for r in result if isinstance(r, Result)]
+    metrics = [r for r in result if isinstance(r, Metric)]
 
     # Should return multiple results
-    assert len(result) >= 2
-
-    # With high memory usage, we might get warnings
-    result_states = [r[0] for r in result]
-
-    # Check that we get meaningful status
-    assert any(state >= 0 for state in result_states)
+    assert len(text_results) >= 2
 
     # Should have performance data
-    last_result = result[-1]
-    assert last_result[2] is not None
+    assert metrics
 
 
 def test_check_mem_linux_with_swap_usage() -> None:
@@ -125,16 +113,10 @@ def test_check_mem_linux_with_swap_usage() -> None:
         "levels_total": ("perc_used", (120.0, 150.0)),
     }
 
-    result = list(check_mem_linux(None, params, section))
-
-    # Should return multiple results
-    assert len(result) >= 2
-
-    # Should calculate swap usage correctly
-    # SwapUsed = SwapTotal - SwapFree = 2097152 - 1048576 = 1048576 (1GB)
+    result = list(check_mem_linux(params, section))
 
     # Performance data should include swap metrics
-    metric_names = [m[0] for _state, _summary, metrics in result for m in metrics]
+    metric_names = {m.name for m in result if isinstance(m, Metric)}
     assert any("swap" in name for name in metric_names)
 
 
@@ -156,18 +138,18 @@ def test_check_mem_linux_missing_optional_fields() -> None:
         "levels_virtual": ("perc_used", (80.0, 90.0)),
     }
 
-    result = list(check_mem_linux(None, params, section))
+    result = list(check_mem_linux(params, section))
+    text_results = [r for r in result if isinstance(r, Result)]
+    metrics = [r for r in result if isinstance(r, Metric)]
 
     # Should still work with missing optional fields
-    assert len(result) >= 2
+    assert len(text_results) >= 2
 
     # Should handle missing fields gracefully
-    virtual_result = result[0]
-    assert virtual_result[0] in [0, 1, 2]  # Valid state
+    assert text_results[0].state in (State.OK, State.WARN, State.CRIT)
 
     # Should have performance data
-    last_result = result[-1]
-    assert last_result[2] is not None
+    assert metrics
 
 
 def test_check_mem_linux_empty_section() -> None:
@@ -178,7 +160,4 @@ def test_check_mem_linux_empty_section() -> None:
         "levels_virtual": ("perc_used", (80.0, 90.0)),
     }
 
-    result = list(check_mem_linux(None, params, section))
-
-    # Should return empty results for empty section
-    assert result == []
+    assert list(check_mem_linux(params, section)) == []

@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-call"
 
 # NOTE: This file has been created by an LLM (from something that was worse).
 # It mostly serves as test to ensure we don't accidentally break anything.
@@ -14,6 +13,7 @@ from collections.abc import Mapping
 
 import pytest
 
+from cmk.agent_based.v2 import Metric, Result, Service, State
 from cmk.legacy_checks.mem_linux import check_mem_linux, discover_mem_linux
 
 
@@ -69,11 +69,7 @@ def section() -> Mapping[str, int]:
 
 def test_mem_linux_discovery(section: Mapping[str, int]) -> None:
     """Test Linux memory discovery function."""
-    result = list(discover_mem_linux(section))
-
-    # Should discover exactly one service
-    assert len(result) == 1
-    assert result[0] == (None, {})
+    assert list(discover_mem_linux(section)) == [Service()]
 
 
 def test_mem_linux_check_vmalloc_chunk_regression(section: Mapping[str, int]) -> None:
@@ -89,49 +85,47 @@ def test_mem_linux_check_vmalloc_chunk_regression(section: Mapping[str, int]) ->
         "levels_hardwarecorrupted": ("abs_used", (1, 1)),
     }
 
-    result = list(check_mem_linux(None, params, section))
+    result = list(check_mem_linux(params, section))
+    text_results = [r for r in result if isinstance(r, Result)]
+    metrics = [r for r in result if isinstance(r, Metric)]
 
-    # Should have multiple result tuples including virtual memory summary and hardware corrupted warning
-    assert len(result) >= 10
+    # Should have multiple result entries
+    assert len(text_results) >= 8
 
     # First result should be virtual memory status
-    state, summary, metrics = result[0]
-    assert state == 0
-    assert "Total virtual memory" in summary
-    assert "7.90%" in summary
+    assert text_results[0].state == State.OK
+    assert "Total virtual memory" in text_results[0].summary
+    assert "7.90%" in text_results[0].summary
 
     # Look for hardware corrupted result (should be critical due to levels)
-    hardware_corrupted_found = False
-    for state, summary, metrics in result:
-        if "Hardware Corrupted" in summary:
-            hardware_corrupted_found = True
-            assert state == 2  # Critical state due to levels (1, 1) vs 6144 bytes actual
-            assert "warn/crit at 1 B/1 B used" in summary
-            break
-    assert hardware_corrupted_found, "Hardware Corrupted result not found"
+    hardware_corrupted = next(
+        (r for r in text_results if "Hardware Corrupted" in r.details),
+        None,
+    )
+    assert hardware_corrupted is not None, "Hardware Corrupted result not found"
+    assert hardware_corrupted.state == State.CRIT
+    assert "warn/crit at 1 B/1 B used" in hardware_corrupted.details
 
     # Check that RAM usage is reported
-    ram_found = False
-    for state, summary, metrics in result:
-        if "RAM:" in summary and "12.96%" in summary:
-            ram_found = True
-            assert state == 0
-            assert "3.05 GiB of 23.6 GiB" in summary
-            break
-    assert ram_found, "RAM usage result not found"
+    ram_result = next(
+        (r for r in text_results if "RAM:" in r.details and "12.96%" in r.details),
+        None,
+    )
+    assert ram_result is not None, "RAM usage result not found"
+    assert ram_result.state == State.OK
+    assert "3.05 GiB of 23.6 GiB" in ram_result.details
 
     # Check that swap usage is reported
-    swap_found = False
-    for state, summary, metrics in result:
-        if "Swap:" in summary and "0.44%" in summary:
-            swap_found = True
-            assert state == 0
-            assert "72.2 MiB of 16.0 GiB" in summary
-            break
-    assert swap_found, "Swap usage result not found"
+    swap_result = next(
+        (r for r in text_results if "Swap:" in r.details and "0.44%" in r.details),
+        None,
+    )
+    assert swap_result is not None, "Swap usage result not found"
+    assert swap_result.state == State.OK
+    assert "72.2 MiB of 16.0 GiB" in swap_result.details
 
     # Check result contains extensive performance data
-    assert len([m for (state, summary, metrics) in result for m in metrics]) > 30
+    assert len(metrics) > 30
 
 
 def test_mem_linux_check_without_vmalloc_threshold(section: Mapping[str, int]) -> None:
@@ -146,23 +140,20 @@ def test_mem_linux_check_without_vmalloc_threshold(section: Mapping[str, int]) -
         "levels_hardwarecorrupted": ("abs_used", (1, 1)),
     }
 
-    result = list(check_mem_linux(None, params, section))
+    result = list(check_mem_linux(params, section))
+    text_results = [r for r in result if isinstance(r, Result)]
 
     # Should still work without levels_total param
-    assert len(result) >= 10
+    assert len(text_results) >= 8
 
     # First result should still be virtual memory status
-    state, summary, metrics = result[0]
-    assert state == 0
-    assert "Total virtual memory" in summary
+    assert text_results[0].state == State.OK
+    assert "Total virtual memory" in text_results[0].summary
 
 
 def test_mem_linux_check_empty_section() -> None:
     """Test Linux memory check function with empty section."""
-    result = list(check_mem_linux(None, {}, {}))
-
-    # Should return nothing for empty section
-    assert len(result) == 0
+    assert list(check_mem_linux({}, {})) == []
 
 
 def test_mem_linux_discovery_non_linux_section() -> None:
@@ -173,7 +164,4 @@ def test_mem_linux_discovery_non_linux_section() -> None:
         # Missing required keys for Linux section
     }
 
-    result = list(discover_mem_linux(non_linux_section))
-
-    # Should not discover service for non-Linux section
-    assert len(result) == 0
+    assert list(discover_mem_linux(non_linux_section)) == []

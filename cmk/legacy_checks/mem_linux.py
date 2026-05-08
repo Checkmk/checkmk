@@ -3,167 +3,195 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 
-from collections.abc import Mapping
+from collections.abc import Iterable, Mapping
 from typing import Any
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.legacy_includes.mem import check_memory_element
+from cmk.agent_based.v2 import (
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    IgnoreResults,
+    Metric,
+    Result,
+    Service,
+)
 from cmk.plugins.lib import memory
+from cmk.plugins.lib.memory import check_element
 
-check_info = {}
 
-
-def discover_mem_linux(section):
+def discover_mem_linux(section: memory.SectionMem) -> DiscoveryResult:
     if memory.is_linux_section(section):
-        yield None, {}
+        yield Service()
 
 
 # This function used to be shared with other plugins,
 # so it might be over generalized.
 def _check_memory_dict(
     meminfo: Mapping[str, Any], params: Mapping[str, Any]
-) -> Mapping[
-    str,
-    tuple[
-        int, str, list[tuple[str, float, float | None, float | None, float | None, float | None]]
-    ],
-]:
+) -> Mapping[str, list[IgnoreResults | Metric | Result]]:
     """Check a dictionary of Memory entries against levels.
 
     Only keys of meminfo that are checked below explicitly are considered.
     All other keys are ignored.
     """
-    results = {}  # dict[str, LegacyResult]()
+    results: dict[str, list[IgnoreResults | Metric | Result]] = {}
 
     # RAM
     if "MemUsed" in meminfo and "MemTotal" in meminfo:
-        results["ram"] = check_memory_element(
-            "RAM",
-            meminfo["MemUsed"],
-            meminfo["MemTotal"],
-            params.get("levels_ram"),
-            metric_name="mem_used",
-            create_percent_metric=True,
+        results["ram"] = list(
+            check_element(
+                "RAM",
+                meminfo["MemUsed"],
+                meminfo["MemTotal"],
+                params.get("levels_ram"),
+                metric_name="mem_used",
+                create_percent_metric=True,
+            )
         )
 
     # Swap
     if "SwapUsed" in meminfo and meminfo.get("SwapTotal"):
-        results["swap"] = check_memory_element(
-            "Swap",
-            meminfo["SwapUsed"],
-            meminfo["SwapTotal"],
-            params.get("levels_swap"),
-            metric_name="swap_used",
+        results["swap"] = list(
+            check_element(
+                "Swap",
+                meminfo["SwapUsed"],
+                meminfo["SwapTotal"],
+                params.get("levels_swap"),
+                metric_name="swap_used",
+            )
         )
     # Total virtual memory
     if all(k in meminfo for k in ("MemTotal", "MemUsed", "SwapTotal", "SwapUsed")):
         virtual_used = meminfo["MemUsed"] + meminfo["SwapUsed"]
         virtual_total = meminfo["MemTotal"] + meminfo["SwapTotal"]
-        results["virtual"] = check_memory_element(
-            "Total virtual memory",
-            virtual_used,
-            virtual_total,
-            params.get("levels_virtual"),
+        results["virtual"] = list(
+            check_element(
+                "Total virtual memory",
+                virtual_used,
+                virtual_total,
+                params.get("levels_virtual"),
+            )
         )
 
         # Committed memory, only if we have virtual_total
         if "Committed_AS" in meminfo:
-            results["committed"] = check_memory_element(
-                "Committed",
-                meminfo["Committed_AS"],
-                virtual_total,
-                params.get("levels_committed"),
-                label_total="virtual memory",
-                metric_name="mem_lnx_committed_as",
+            results["committed"] = list(
+                check_element(
+                    "Committed",
+                    meminfo["Committed_AS"],
+                    virtual_total,
+                    params.get("levels_committed"),
+                    label_total="virtual memory",
+                    metric_name="mem_lnx_committed_as",
+                )
             )
 
         # Commit limit
         if "CommitLimit" in meminfo:
-            results["commitlimit"] = check_memory_element(
-                "Commit Limit",
-                virtual_total - meminfo["CommitLimit"],
-                virtual_total,
-                params.get("levels_commitlimit"),
-                label_total="virtual memory",
+            results["commitlimit"] = list(
+                check_element(
+                    "Commit Limit",
+                    virtual_total - meminfo["CommitLimit"],
+                    virtual_total,
+                    params.get("levels_commitlimit"),
+                    label_total="virtual memory",
+                )
             )
 
     # Shared memory
     if "Shmem" in meminfo and "MemTotal" in meminfo:
-        results["shm"] = check_memory_element(
-            "Shared memory",
-            meminfo["Shmem"],
-            meminfo["MemTotal"],
-            params.get("levels_shm"),
-            label_total="RAM",
-            metric_name="mem_lnx_shmem",
+        results["shm"] = list(
+            check_element(
+                "Shared memory",
+                meminfo["Shmem"],
+                meminfo["MemTotal"],
+                params.get("levels_shm"),
+                label_total="RAM",
+                metric_name="mem_lnx_shmem",
+            )
         )
 
     # Page tables
     if "PageTables" in meminfo and "MemTotal" in meminfo:
-        results["pagetables"] = check_memory_element(
-            "Page tables",
-            meminfo["PageTables"],
-            meminfo["MemTotal"],
-            params.get("levels_pagetables"),
-            label_total="RAM",
-            metric_name="mem_lnx_page_tables",
+        results["pagetables"] = list(
+            check_element(
+                "Page tables",
+                meminfo["PageTables"],
+                meminfo["MemTotal"],
+                params.get("levels_pagetables"),
+                label_total="RAM",
+                metric_name="mem_lnx_page_tables",
+            )
         )
 
     # Disk Writeback
     if "Pending" in meminfo and "MemTotal" in meminfo:
-        results["pending"] = check_memory_element(
-            "Disk Writeback",
-            meminfo["Pending"],
-            meminfo["MemTotal"],
-            params.get("levels_writeback"),
-            label_total="RAM",
+        results["pending"] = list(
+            check_element(
+                "Disk Writeback",
+                meminfo["Pending"],
+                meminfo["MemTotal"],
+                params.get("levels_writeback"),
+                label_total="RAM",
+            )
         )
 
     # Available Memory
     if "MemAvailable" in meminfo and "MemTotal" in meminfo:
-        results["available"] = check_memory_element(
-            "RAM available",
-            meminfo["MemTotal"] - meminfo["MemAvailable"],
-            meminfo["MemTotal"],
-            params.get("levels_available"),
-            show_free=True,
+        results["available"] = list(
+            check_element(
+                "RAM available",
+                meminfo["MemTotal"] - meminfo["MemAvailable"],
+                meminfo["MemTotal"],
+                params.get("levels_available"),
+                show_free=True,
+            )
         )
 
     # VMalloc,
     # newer kernel version report wrong data,
     # i.d. VMalloc Chunk equal zero
     if "VmallocUsed" in meminfo and "VmallocChunk" in meminfo and meminfo["VmallocChunk"]:
-        results["vmalloc"] = check_memory_element(
-            "Largest Free VMalloc Chunk",
-            meminfo["VmallocTotal"] - meminfo["VmallocChunk"],
-            meminfo["VmallocTotal"],
-            params.get("levels_vmalloc"),
-            label_total="VMalloc Area",
-            show_free=True,
+        results["vmalloc"] = list(
+            check_element(
+                "Largest Free VMalloc Chunk",
+                meminfo["VmallocTotal"] - meminfo["VmallocChunk"],
+                meminfo["VmallocTotal"],
+                params.get("levels_vmalloc"),
+                label_total="VMalloc Area",
+                show_free=True,
+            )
         )
 
     # HardwareCorrupted
     if "HardwareCorrupted" in meminfo and "MemTotal" in meminfo:
-        results["corrupted"] = check_memory_element(
-            "Hardware Corrupted",
-            meminfo["HardwareCorrupted"],
-            meminfo["MemTotal"],
-            params.get("levels_hardwarecorrupted"),
-            label_total="RAM",
+        results["corrupted"] = list(
+            check_element(
+                "Hardware Corrupted",
+                meminfo["HardwareCorrupted"],
+                meminfo["MemTotal"],
+                params.get("levels_hardwarecorrupted"),
+                label_total="RAM",
+            )
         )
 
     return results
 
 
-def check_mem_linux(_no_item, params, augmented):
-    if not augmented:
+def _as_notice(items: Iterable[IgnoreResults | Metric | Result]) -> CheckResult:
+    for item in items:
+        if isinstance(item, Result):
+            yield Result(state=item.state, notice=item.summary)
+        else:
+            yield item
+
+
+def check_mem_linux(params: Mapping[str, Any], section: memory.SectionMem) -> CheckResult:
+    if not section:
         return
 
-    # quick fix: stop modifying parsed data in place!
-    augmented = augmented.copy()
+    augmented = dict(section)
 
     # TODO: Currently some of these values are just set to generate the metrics later
     # See which ones we actually need.
@@ -193,22 +221,15 @@ def check_mem_linux(_no_item, params, augmented):
         + augmented.get("WritebackTmp", 0)
     )
 
-    results = {**_check_memory_dict(augmented, params)}
+    results = dict(_check_memory_dict(augmented, params))
 
     # show this always:
-    yield results.pop("virtual", (0, ""))
+    yield from results.pop("virtual", [])
 
-    # Note for migration: showing a result only in the details unless it is not ok
-    # is exactly what is achieved by usingg `Result(state=..., notice=...)`.
-    details_results = []
-    for state, text, metrics in results.values():
-        if state:
-            yield state, text, metrics
-        else:
-            details_results.append((state, text, metrics))
-    MARK_AS_DETAILS = "\n"
-    for state, text, perf in details_results:
-        yield state, f"{MARK_AS_DETAILS}{text}", perf
+    # All other elements are shown only as details unless they are not OK.
+    # Result(state=..., notice=...) achieves exactly this behavior.
+    for items in results.values():
+        yield from _as_notice(items)
 
     # Now send performance data. We simply output *all* fields of section
     # except for a few really useless values
@@ -234,7 +255,7 @@ def check_mem_linux(_no_item, params, augmented):
             "shmem",
             "page_tables",
         }:
-            yield 0, "", [(metric_name, value)]
+            yield Metric(metric_name, value)
 
 
 # ThisIsACamel -> this_is_a_camel
@@ -260,7 +281,7 @@ def _camelcase_to_underscored(name: str) -> str:
     return result
 
 
-check_info["mem.linux"] = LegacyCheckDefinition(
+check_plugin_mem_linux = CheckPlugin(
     name="mem_linux",
     service_name="Memory",
     sections=["mem"],

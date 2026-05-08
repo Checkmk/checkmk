@@ -12,7 +12,6 @@ They almost all require a Git repository to be present.
 import logging
 import os
 import subprocess
-import sys
 from collections.abc import Callable
 from contextlib import suppress
 from functools import cache
@@ -48,12 +47,6 @@ def is_ultimate_repo() -> bool:
 
 def is_cloud_repo() -> bool:
     return is_non_free_repo()
-
-
-def add_protocols_path() -> None:
-    sys.path.insert(0, str(repo_path()))
-    if is_pro_repo():
-        sys.path.insert(0, os.path.join(repo_path(), "non-free", "packages", "cmc-protocols"))
 
 
 @cache

@@ -69,6 +69,13 @@ class EditDashboards(CmkPage):
             "//h3[@class='table'][text()='Built-in']/following-sibling::table[1]"
         )
 
+    @property
+    def _foreign_dashboards_table(self) -> Locator:
+        """Locator property for the 'Owned by other users' dashboards table."""
+        return self.main_area.locator(
+            "//h3[@class='table'][text()='Owned by other users']/following-sibling::table[1]"
+        )
+
     def navigate_to_dashboard(self, dashboard_name: str, *, is_customized: bool) -> None:
         """Navigate to a specific dashboard by clicking on it.
 
@@ -80,6 +87,14 @@ class EditDashboards(CmkPage):
             self._customized_dashboards_table if is_customized else self._built_in_dashboards_table
         )
         table.get_by_role("link", name=dashboard_name, exact=True).click()
+
+    def navigate_to_foreign_dashboard(self, dashboard_name: str) -> None:
+        """Navigate to a dashboard owned by another user.
+
+        Args:
+            dashboard_name: the name of the dashboard to navigate to.
+        """
+        self._foreign_dashboards_table.get_by_role("link", name=dashboard_name, exact=True).click()
 
     def delete_dashboard(self, dashboard_name: str) -> None:
         """Delete a dashboard by name and verify deletion.

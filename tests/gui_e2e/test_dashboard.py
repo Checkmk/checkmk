@@ -8,12 +8,14 @@ from collections.abc import Iterator
 from urllib.parse import quote_plus
 
 import pytest
-from playwright.sync_api import expect, Page
+from playwright.sync_api import BrowserContext, expect, Page
 
+from tests.gui_e2e.testlib.playwright.helpers import CmkCredentials
 from tests.gui_e2e.testlib.playwright.pom.customize.edit_dashboard import (
     EditDashboards,
     NewDashboardCharacteristics,
 )
+from tests.gui_e2e.testlib.playwright.pom.login import LoginPage
 from tests.gui_e2e.testlib.playwright.pom.monitor.custom_dashboard import CustomDashboard
 from tests.gui_e2e.testlib.playwright.pom.monitor.dashboard import MainDashboard
 from tests.gui_e2e.testlib.playwright.pom.monitor.empty_dashboard import EmptyDashboard
@@ -21,6 +23,8 @@ from tests.gui_e2e.testlib.playwright.pom.monitor.hosts_dashboard import (
     LinuxHostsDashboard,
     WindowsHostsDashboard,
 )
+from tests.gui_e2e.testlib.playwright.pom.setup.user import AddUser, UserData
+from tests.gui_e2e.testlib.playwright.pom.setup.users import Users
 from tests.gui_e2e.testlib.playwright.pom.sidebar.create_dashboard_sidebar import (
     CreateDashboardSidebar,
 )
@@ -31,6 +35,7 @@ from tests.gui_e2e.testlib.playwright.pom.sidebar.widget_wizard_sidebar import (
     WidgetType,
 )
 from tests.testlib.common.utils2 import is_cleanup_enabled
+from tests.testlib.site import Site
 
 
 @pytest.fixture(scope="function")
@@ -554,3 +559,63 @@ def test_builtin_dashboard_runtime_filter(
                 f"Actual message: {success_message.text_content()}"
             ),
         ).to_have_text(expected_message)
+
+
+def test_dashboard_created_by_another_user(
+    dashboard_page: MainDashboard,
+    new_browser_context_and_page: tuple[BrowserContext, Page],
+    test_site: Site,
+) -> None:
+    """Test that a dashboard created by a non-admin user is accessible by the admin.
+
+    Create a new user 'new_user', have them create a dashboard, then verify that the
+    original admin user can open and visualize it.
+
+    Steps:
+        1. Create a new user 'new_user' as admin.
+        2. Login as 'new_user' in a separate browser context.
+        3. Create a new dashboard as 'new_user' and save it.
+        4. Switch back to the admin user.
+        5. Open the dashboard created by 'new_user' and verify it is displayed correctly.
+        6. Cleanup: delete the dashboard and the user.
+    """
+    user_id: str = "new_user"
+    user_password: str = "cmkcmkcmkcmk"
+
+    new_user_data = UserData(
+        user_id=user_id,
+        full_name="New User",
+        password=user_password,
+    )
+    dashboard_name = "New User Dashboard"
+
+    # Step 1: Admin creates the new user
+    add_user_page = AddUser(dashboard_page.page)
+    add_user_page.fill_users_data(new_user_data)
+    add_user_page.save_button.click()
+    test_site.openapi.changes.activate(force_foreign_changes=True)
+
+    try:
+        # Step 2: Login as 'new_user' in a separate browser context
+        new_user_credentials = CmkCredentials(user_id, user_password)
+        _, new_page = new_browser_context_and_page
+        login_page = LoginPage(new_page, test_site.internal_url)
+        login_page.login(new_user_credentials)
+
+        # Step 3: 'new_user' creates a dashboard and saves it
+        _ = _create_new_dashboard(new_page, NewDashboardCharacteristics(name=dashboard_name))
+
+        # Steps 4 & 5: Back to admin — open the dashboard created by 'new_user'.
+        # It appears under "Owned by other users" in the Edit Dashboards page.
+        edit_dashboards = EditDashboards(dashboard_page.page)
+        edit_dashboards.navigate_to_foreign_dashboard(dashboard_name)
+
+        admin_view = CustomDashboard(dashboard_page.page, dashboard_name, navigate_to_page=False)
+        admin_view.validate_page()
+
+    finally:
+        if is_cleanup_enabled():
+            EditDashboards(dashboard_page.page).delete_dashboard(dashboard_name)
+            users_page = Users(dashboard_page.page)
+            users_page.delete_user(new_user_data.user_id, test_site.openapi.users)
+            users_page.activate_changes(test_site)

@@ -50,23 +50,6 @@ def is_cloud_repo() -> bool:
     return is_non_free_repo()
 
 
-def add_python_paths() -> None:
-    sys.path.insert(0, str(repo_path()))
-    if is_pro_repo():
-        sys.path.insert(0, os.path.join(repo_path(), "non-free", "packages", "cmk-update-agent"))
-        # TODO: Remove this once unit test targets pass EDITION per target (e.g.
-        # env={"EDITION": "community"} for gui_community). Currently all tests run
-        # with the ultimatemt edition, so community/pro/ultimate test targets end up
-        # importing nonfree code that depends on these packages.
-        sys.path.insert(
-            0, os.path.join(repo_path(), "non-free", "packages", "cmk-licensing-nonfree")
-        )
-    if is_ultimatemt_repo():
-        sys.path.insert(0, os.path.join(repo_path(), "non-free", "packages", "cmk-multi-tenancy"))
-    sys.path.insert(0, os.path.join(repo_path(), "omd/packages/omd"))
-    sys.path.insert(0, os.path.join(repo_path(), "agents/plugins"))
-
-
 def add_protocols_path() -> None:
     sys.path.insert(0, str(repo_path()))
     if is_pro_repo():

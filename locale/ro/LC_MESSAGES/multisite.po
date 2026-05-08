@@ -14273,14 +14273,6 @@ msgid "Cloud Based Environments"
 msgstr "Mediile bazate pe cloud"
 
 #, fuzzy
-msgid "Cloud Functions"
-msgstr "Conexiuni Active"
-
-#, fuzzy
-msgid "Cloud Run"
-msgstr "Cloud"
-
-#, fuzzy
 msgid "Cloud SQL"
 msgstr "Adresă"
 
@@ -41965,10 +41957,6 @@ msgid "Memory warning at"
 msgstr "Avertizare de memorie la"
 
 #, fuzzy
-msgid "Memorystore Redis"
-msgstr "cereri"
-
-#, fuzzy
 msgid "Menu placement"
 msgstr "Înlocuire"
 
@@ -63042,6 +63030,10 @@ msgid "State if ha peer state is disabled"
 msgstr "Stare dacă starea ha peer este dezactivată"
 
 #, fuzzy
+msgid "State if ha peer state is initial"
+msgstr "Stare dacă starea ha peer este dezactivată"
+
+#, fuzzy
 msgid "State if ha peer state is non-functional"
 msgstr "Stare dacă starea ha peer este nefuncțională"
 
@@ -74125,18 +74117,6 @@ msgstr ""
 #, fuzzy
 msgid "This rule set also covers Tomcat, Jolokia and JMX. "
 msgstr "Acest set de reguli acoperă, de asemenea, Tomcat, Jolokia și JMX. "
-
-#, fuzzy
-msgid ""
-"This rule set applies to several similar checks measuring various kernel "
-"events like context switches, process creations and major page faults. "
-"Please create separate rules for each type of kernel counter you want to set "
-"levels for."
-msgstr ""
-"Acest set de reguli se aplică la mai multe verificări similare care măsoară "
-"diverse evenimente din nucleu, cum ar fi schimbările de context, crearea de "
-"procese și erori majore de pagină. Vă rugăm să creați reguli separate pentru "
-"fiecare tip de contor din kernel pentru care doriți să stabiliți niveluri."
 
 #, fuzzy
 msgid ""
@@ -90159,9 +90139,6 @@ msgstr "locuri de muncă"
 msgid "kW"
 msgstr "kW"
 
-msgid "kernel counter"
-msgstr "contor kernel"
-
 #, fuzzy
 msgid "lan - IPMI v1.5 LAN Interface"
 msgstr "Interfața IPMI"
@@ -94569,6 +94546,10 @@ msgstr "credențiale JSON pentru contul de servicii"
 msgid "Metrics path must start with a '/'."
 msgstr "Autentificarea nu este permisă pe acest site."
 
+#, fuzzy
+msgid "Prometheus scraper"
+msgstr "Alertmanager"
+
 msgid ""
 "The HTTP resource path on which to fetch metrics from targets. Must start "
 "with a '/'."
@@ -95780,6 +95761,34 @@ msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
 
+#, fuzzy
+#~ msgid "Cloud Functions"
+#~ msgstr "Conexiuni Active"
+
+#, fuzzy
+#~ msgid "Cloud Run"
+#~ msgstr "Cloud"
+
+#, fuzzy
+#~ msgid "Memorystore Redis"
+#~ msgstr "cereri"
+
+#, fuzzy
+#~ msgid ""
+#~ "This rule set applies to several similar checks measuring various kernel "
+#~ "events like context switches, process creations and major page faults. "
+#~ "Please create separate rules for each type of kernel counter you want to "
+#~ "set levels for."
+#~ msgstr ""
+#~ "Acest set de reguli se aplică la mai multe verificări similare care "
+#~ "măsoară diverse evenimente din nucleu, cum ar fi schimbările de context, "
+#~ "crearea de procese și erori majore de pagină. Vă rugăm să creați reguli "
+#~ "separate pentru fiecare tip de contor din kernel pentru care doriți să "
+#~ "stabiliți niveluri."
+
+#~ msgid "kernel counter"
+#~ msgstr "contor kernel"
+
 #, fuzzy, python-format
 #~ msgid ""
 #~ "A site is allowed to be used in exactly one OpenTelemetry collector "
@@ -95890,10 +95899,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Password should not be empty."
 #~ msgstr "Cheie de acces"
-
-#, fuzzy
-#~ msgid "Prometheus scraper"
-#~ msgstr "Alertmanager"
 
 #, fuzzy
 #~ msgid "Prometheus scraper configurations"

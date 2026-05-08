@@ -13238,12 +13238,6 @@ msgstr "クラウド"
 msgid "Cloud Based Environments"
 msgstr "クラウドベースの環境"
 
-msgid "Cloud Functions"
-msgstr "クラウド機能"
-
-msgid "Cloud Run"
-msgstr "Cloud Run"
-
 msgid "Cloud SQL"
 msgstr "Cloud SQL"
 
@@ -38893,9 +38887,6 @@ msgstr "メモリ使用率: クラスター"
 msgid "Memory warning at"
 msgstr "メモリに関する警告"
 
-msgid "Memorystore Redis"
-msgstr "メモリストア Redis"
-
 msgid "Menu placement"
 msgstr "メニューの配置"
 
@@ -58193,6 +58184,10 @@ msgstr "HAピア状態がActive-Secondaryな場合の状態"
 msgid "State if ha peer state is disabled"
 msgstr "HAピア状態が無効な場合の状態"
 
+#, fuzzy
+msgid "State if ha peer state is initial"
+msgstr "HAピア状態が無効な場合の状態"
+
 msgid "State if ha peer state is non-functional"
 msgstr "HAピア状態が機能していない場合の状態"
 
@@ -68703,17 +68698,6 @@ msgstr ""
 
 msgid "This rule set also covers Tomcat, Jolokia and JMX. "
 msgstr "このルールセットは、Tomcat、Jolokia、およびJMXも対象としています。 "
-
-msgid ""
-"This rule set applies to several similar checks measuring various kernel "
-"events like context switches, process creations and major page faults. "
-"Please create separate rules for each type of kernel counter you want to set "
-"levels for."
-msgstr ""
-"このルールセットは、コンテキストスイッチ、プロセスの作成、主要なページフォー"
-"ルトなどのさまざまなカーネルイベントを回避するいくつかの同様のチェックに適用"
-"されます。レベルを設定するカーネルカウンターの種類ごとに個別のルールを作成し"
-"てください。"
 
 msgid ""
 "This rule set can be used to change MTR's (Matt's traceroute) WARNING and "
@@ -83248,9 +83232,6 @@ msgstr "仕事"
 msgid "kW"
 msgstr "kW"
 
-msgid "kernel counter"
-msgstr "カーネルカウンター"
-
 msgid "lan - IPMI v1.5 LAN Interface"
 msgstr "lan - IPMI v1.5 LANインターフェース"
 
@@ -87438,6 +87419,9 @@ msgstr "%s は必須だが指定はない。"
 msgid "Metrics path must start with a '/'."
 msgstr "メトリクスのパスは必ず「/」で始まる必要があります。"
 
+msgid "Prometheus scraper"
+msgstr "Prometheusスクレイパー"
+
 msgid ""
 "The HTTP resource path on which to fetch metrics from targets. Must start "
 "with a '/'."
@@ -88801,6 +88785,29 @@ msgid ""
 msgstr ""
 "後で「ヘルプ」＞「Checkmkの学習」＞「ウェルカムページ」からアクセスできます"
 
+#~ msgid "Cloud Functions"
+#~ msgstr "クラウド機能"
+
+#~ msgid "Cloud Run"
+#~ msgstr "Cloud Run"
+
+#~ msgid "Memorystore Redis"
+#~ msgstr "メモリストア Redis"
+
+#~ msgid ""
+#~ "This rule set applies to several similar checks measuring various kernel "
+#~ "events like context switches, process creations and major page faults. "
+#~ "Please create separate rules for each type of kernel counter you want to "
+#~ "set levels for."
+#~ msgstr ""
+#~ "このルールセットは、コンテキストスイッチ、プロセスの作成、主要なページ"
+#~ "フォールトなどのさまざまなカーネルイベントを回避するいくつかの同様のチェッ"
+#~ "クに適用されます。レベルを設定するカーネルカウンターの種類ごとに個別のルー"
+#~ "ルを作成してください。"
+
+#~ msgid "kernel counter"
+#~ msgstr "カーネルカウンター"
+
 #, python-format
 #~ msgid ""
 #~ "A site is allowed to be used in exactly one OpenTelemetry collector "
@@ -89002,9 +89009,6 @@ msgstr ""
 
 #~ msgid "Password should not be empty."
 #~ msgstr "パスワードは空欄にできません。"
-
-#~ msgid "Prometheus scraper"
-#~ msgstr "Prometheusスクレイパー"
 
 #~ msgid "Prometheus scraper configurations"
 #~ msgstr "Prometheusスクレイパーの設定"

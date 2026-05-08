@@ -4,9 +4,9 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
+"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2026-05-06 17:50+0000\n"
+"PO-Revision-Date: 2026-05-08 08:10+0000\n"
 "Language-Team: Portuguese (Portugal) <https://translate.checkmk.com/projects/"
 "checkmk/dev/pt_PT/>\n"
 "Language: pt_PT\n"
@@ -14267,14 +14267,6 @@ msgstr "Nuvem"
 
 msgid "Cloud Based Environments"
 msgstr "Ambientes baseados em nuvens"
-
-#, fuzzy
-msgid "Cloud Functions"
-msgstr "Ligações"
-
-#, fuzzy
-msgid "Cloud Run"
-msgstr "Nuvem"
 
 #, fuzzy
 msgid "Cloud SQL"
@@ -41902,10 +41894,6 @@ msgid "Memory warning at"
 msgstr "Aviso de memória em"
 
 #, fuzzy
-msgid "Memorystore Redis"
-msgstr "Recursos de memória"
-
-#, fuzzy
 msgid "Menu placement"
 msgstr "Substituição"
 
@@ -62936,6 +62924,10 @@ msgid "State if ha peer state is disabled"
 msgstr "Estado se o estado do par ha estiver desactivado"
 
 #, fuzzy
+msgid "State if ha peer state is initial"
+msgstr "Estado se o estado do par ha estiver desactivado"
+
+#, fuzzy
 msgid "State if ha peer state is non-functional"
 msgstr "Estado se o Estado homólogo não for funcional"
 
@@ -73910,18 +73902,6 @@ msgstr ""
 #, fuzzy
 msgid "This rule set also covers Tomcat, Jolokia and JMX. "
 msgstr "Este conjunto de regras também abrange Tomcat, Jolokia e JMX. "
-
-#, fuzzy
-msgid ""
-"This rule set applies to several similar checks measuring various kernel "
-"events like context switches, process creations and major page faults. "
-"Please create separate rules for each type of kernel counter you want to set "
-"levels for."
-msgstr ""
-"Este conjunto de regras aplica-se a várias verificações semelhantes que "
-"medem vários eventos do kernel como trocas de contexto, criações de "
-"processos e falhas de página principais. Por favor, crie regras separadas "
-"para cada tipo de contador de kernel para o qual você deseja definir níveis."
 
 #, fuzzy
 msgid ""
@@ -89167,6 +89147,7 @@ msgstr "contando"
 msgid "cp437"
 msgstr "cp437"
 
+#, fuzzy
 msgid "crash report"
 msgid_plural "crash reports"
 msgstr[0] ""
@@ -89672,6 +89653,7 @@ msgstr "os anfitriões estão de pé e não têm problemas de serviço"
 msgid "hosts in total"
 msgstr "anfitriões no total"
 
+#, fuzzy
 msgid "hour"
 msgid_plural "hours"
 msgstr[0] ""
@@ -89940,9 +89922,6 @@ msgstr "empregos"
 
 msgid "kW"
 msgstr "kW"
-
-msgid "kernel counter"
-msgstr "contador de kernel"
 
 #, fuzzy
 msgid "lan - IPMI v1.5 LAN Interface"
@@ -94317,6 +94296,10 @@ msgstr "Credenciais JSON para a conta de serviço"
 msgid "Metrics path must start with a '/'."
 msgstr "O login não é permitido neste site."
 
+#, fuzzy
+msgid "Prometheus scraper"
+msgstr "Gestor de alertas"
+
 msgid ""
 "The HTTP resource path on which to fetch metrics from targets. Must start "
 "with a '/'."
@@ -95523,6 +95506,34 @@ msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
 
+#, fuzzy
+#~ msgid "Cloud Functions"
+#~ msgstr "Ligações"
+
+#, fuzzy
+#~ msgid "Cloud Run"
+#~ msgstr "Nuvem"
+
+#, fuzzy
+#~ msgid "Memorystore Redis"
+#~ msgstr "Recursos de memória"
+
+#, fuzzy
+#~ msgid ""
+#~ "This rule set applies to several similar checks measuring various kernel "
+#~ "events like context switches, process creations and major page faults. "
+#~ "Please create separate rules for each type of kernel counter you want to "
+#~ "set levels for."
+#~ msgstr ""
+#~ "Este conjunto de regras aplica-se a várias verificações semelhantes que "
+#~ "medem vários eventos do kernel como trocas de contexto, criações de "
+#~ "processos e falhas de página principais. Por favor, crie regras separadas "
+#~ "para cada tipo de contador de kernel para o qual você deseja definir "
+#~ "níveis."
+
+#~ msgid "kernel counter"
+#~ msgstr "contador de kernel"
+
 #, fuzzy, python-format
 #~ msgid ""
 #~ "A site is allowed to be used in exactly one OpenTelemetry collector "
@@ -95633,10 +95644,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Password should not be empty."
 #~ msgstr "Chave de acesso"
-
-#, fuzzy
-#~ msgid "Prometheus scraper"
-#~ msgstr "Gestor de alertas"
 
 #, fuzzy
 #~ msgid "Prometheus scraper configurations"

@@ -14254,13 +14254,6 @@ msgstr "Cloud"
 msgid "Cloud Based Environments"
 msgstr "Cloud-gebaseerde omgevingen"
 
-msgid "Cloud Functions"
-msgstr "Wolk Functies"
-
-#, fuzzy
-msgid "Cloud Run"
-msgstr "Cloud"
-
 msgid "Cloud SQL"
 msgstr "Cloud SQL"
 
@@ -41890,9 +41883,6 @@ msgstr "Geheugengebruik: Cluster"
 msgid "Memory warning at"
 msgstr "Geheugenwaarschuwing bij"
 
-msgid "Memorystore Redis"
-msgstr "Geheugenopslag Redis"
-
 #, fuzzy
 msgid "Menu placement"
 msgstr "Vervanging"
@@ -62924,6 +62914,10 @@ msgid "State if ha peer state is disabled"
 msgstr "State if ha peer State is Disabled"
 
 #, fuzzy
+msgid "State if ha peer state is initial"
+msgstr "State if ha peer State is Disabled"
+
+#, fuzzy
 msgid "State if ha peer state is non-functional"
 msgstr "Staat als ha peer State niet functioneel is"
 
@@ -73953,18 +73947,6 @@ msgstr ""
 #, fuzzy
 msgid "This rule set also covers Tomcat, Jolokia and JMX. "
 msgstr "Deze regelset heeft ook betrekking op Tomcat, Jolokia en JMX. "
-
-#, fuzzy
-msgid ""
-"This rule set applies to several similar checks measuring various kernel "
-"events like context switches, process creations and major page faults. "
-"Please create separate rules for each type of kernel counter you want to set "
-"levels for."
-msgstr ""
-"Deze regelset is van toepassing op verscheidene gelijkaardige controles die "
-"verscheidene kernelgebeurtenissen meten zoals contextwissels, procescreaties "
-"en belangrijke paginafouten. Maak alstublieft afzonderlijke regels voor elk "
-"type kernelteller waarvoor u niveaus wilt instellen."
 
 #, fuzzy
 msgid ""
@@ -90042,9 +90024,6 @@ msgstr "banen"
 msgid "kW"
 msgstr "kW"
 
-msgid "kernel counter"
-msgstr "kernelteller"
-
 #, fuzzy
 msgid "lan - IPMI v1.5 LAN Interface"
 msgstr "IPMI-interface"
@@ -94421,6 +94400,10 @@ msgstr "JSON inloggegevens voor dienstaccount"
 msgid "Metrics path must start with a '/'."
 msgstr "Inloggen is niet toegestaan op deze site."
 
+#, fuzzy
+msgid "Prometheus scraper"
+msgstr "Alertmanager"
+
 msgid ""
 "The HTTP resource path on which to fetch metrics from targets. Must start "
 "with a '/'."
@@ -95625,6 +95608,32 @@ msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
 
+#~ msgid "Cloud Functions"
+#~ msgstr "Wolk Functies"
+
+#, fuzzy
+#~ msgid "Cloud Run"
+#~ msgstr "Cloud"
+
+#~ msgid "Memorystore Redis"
+#~ msgstr "Geheugenopslag Redis"
+
+#, fuzzy
+#~ msgid ""
+#~ "This rule set applies to several similar checks measuring various kernel "
+#~ "events like context switches, process creations and major page faults. "
+#~ "Please create separate rules for each type of kernel counter you want to "
+#~ "set levels for."
+#~ msgstr ""
+#~ "Deze regelset is van toepassing op verscheidene gelijkaardige controles "
+#~ "die verscheidene kernelgebeurtenissen meten zoals contextwissels, "
+#~ "procescreaties en belangrijke paginafouten. Maak alstublieft "
+#~ "afzonderlijke regels voor elk type kernelteller waarvoor u niveaus wilt "
+#~ "instellen."
+
+#~ msgid "kernel counter"
+#~ msgstr "kernelteller"
+
 #, fuzzy, python-format
 #~ msgid ""
 #~ "A site is allowed to be used in exactly one OpenTelemetry collector "
@@ -95733,10 +95742,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Password should not be empty."
 #~ msgstr "Toegangssleutel"
-
-#, fuzzy
-#~ msgid "Prometheus scraper"
-#~ msgstr "Alertmanager"
 
 #, fuzzy
 #~ msgid "Prometheus scraper configurations"

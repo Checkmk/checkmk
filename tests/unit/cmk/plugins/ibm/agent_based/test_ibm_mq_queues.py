@@ -8,7 +8,6 @@ import pytest
 
 from cmk.agent_based.v2 import InventoryResult, TableRow
 from cmk.plugins.ibm.agent_based.ibm_mq_queues import inventorize_ibm_mq_queues, Section
-from tests.unit.cmk.plugins.collection.agent_based.utils_inventory import sort_inventory_result
 
 
 @pytest.mark.parametrize(
@@ -69,6 +68,4 @@ from tests.unit.cmk.plugins.collection.agent_based.utils_inventory import sort_i
     ],
 )
 def test_inventorize_ibm_mq_queues(parsed: Section, expected_result: InventoryResult) -> None:
-    assert sort_inventory_result(inventorize_ibm_mq_queues(parsed)) == sort_inventory_result(
-        expected_result
-    )
+    assert list(inventorize_ibm_mq_queues(parsed)) == list(expected_result)

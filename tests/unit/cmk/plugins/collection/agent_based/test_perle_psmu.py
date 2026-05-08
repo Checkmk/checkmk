@@ -9,8 +9,6 @@ import pytest
 from cmk.agent_based.v2 import InventoryResult, StringTable, TableRow
 from cmk.plugins.collection.agent_based.perle_psmu import inventorize_perle_psmu, parse_perle_psmu
 
-from .utils_inventory import sort_inventory_result
-
 
 @pytest.mark.parametrize(
     "string_table, expected_result",
@@ -53,6 +51,4 @@ from .utils_inventory import sort_inventory_result
 def test_inventorize_perle_psmu(
     string_table: StringTable, expected_result: InventoryResult
 ) -> None:
-    assert sort_inventory_result(
-        inventorize_perle_psmu(parse_perle_psmu(string_table))
-    ) == sort_inventory_result(expected_result)
+    assert list(inventorize_perle_psmu(parse_perle_psmu(string_table))) == list(expected_result)

@@ -22,8 +22,6 @@ from cmk.plugins.collection.agent_based.mem_used import (
 )
 from cmk.plugins.lib import memory
 
-from .utils_inventory import sort_inventory_result
-
 
 @pytest.fixture
 def empty_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -809,9 +807,7 @@ def test_inventorize_memory(
     section: memory.SectionMemUsed,
     expected_result: Sequence[Attributes],
 ) -> None:
-    assert sort_inventory_result(inventorize_mem_used(section)) == sort_inventory_result(
-        expected_result
-    )
+    assert list(inventorize_mem_used(section)) == list(expected_result)
 
 
 @pytest.mark.parametrize(

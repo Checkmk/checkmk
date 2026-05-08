@@ -9,8 +9,6 @@ from cmk.plugins.collection.agent_based.inventory_fortigate_ha import (
     parse_fortigate_ha,
 )
 
-from .utils_inventory import sort_inventory_result
-
 SECTION = {
     "mode": "activePassive",
     "group_id": "11",
@@ -38,7 +36,7 @@ def test_parse_fortigate_ha() -> None:
 
 
 def test_inventorize_fortigate_ha() -> None:
-    assert sort_inventory_result(inventorize_fortigate_ha(SECTION)) == sort_inventory_result(
+    assert list(inventorize_fortigate_ha(SECTION)) == list(
         [
             Attributes(
                 path=["software", "applications", "fortinet", "fortigate_high_availability"],

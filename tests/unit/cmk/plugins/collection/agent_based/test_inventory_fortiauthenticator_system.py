@@ -8,18 +8,16 @@ from cmk.plugins.collection.agent_based.inventory_fortiauthenticator_system impo
     inventorize_fortiauthenticator_system,  # fmt: off
 )
 
-from .utils_inventory import sort_inventory_result
-
 
 def test_inventorize_fortiauthenticator_system() -> None:
-    assert sort_inventory_result(
+    assert list(
         inventorize_fortiauthenticator_system(
             {
                 "model": "FACVM",
                 "serial": "FAC-VMTM18000123",
             }
         )
-    ) == sort_inventory_result(
+    ) == list(
         [
             Attributes(
                 path=["hardware", "system"],

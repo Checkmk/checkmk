@@ -8,13 +8,9 @@ from cmk.plugins.collection.agent_based.inventory_fortisandbox_system import (
     inventorize_fortisandbox_system,
 )
 
-from .utils_inventory import sort_inventory_result
-
 
 def test_inventorize_fortisandbox_system() -> None:
-    assert sort_inventory_result(
-        inventorize_fortisandbox_system(["v2.52-build0340 (GA)"])
-    ) == sort_inventory_result(
+    assert list(inventorize_fortisandbox_system(["v2.52-build0340 (GA)"])) == list(
         [
             Attributes(
                 path=["software", "os"],

@@ -9,8 +9,6 @@ from cmk.plugins.docker.agent_based.inventory_docker_container_labels import (
     parse_docker_container_labels,
 )
 
-from .utils_inventory import sort_inventory_result
-
 AGENT_OUTPUT = (
     '@docker_version_info\0{"PluginVersion": "0.1", "DockerPyVersion": "4.1.0", "ApiVersion": "1.41"}\n'
     '{"com.docker.swarm.node.id": "x2my5tv8bqg0yh5jq98gzodr2", '
@@ -36,9 +34,7 @@ def test_inv_docker_container_labels_parse() -> None:
 
 def test_inv_docker_container_labels() -> None:
     info = [line.split("\0") for line in AGENT_OUTPUT.split("\n")]
-    assert sort_inventory_result(
-        inventorize_docker_container_labels(parse_docker_container_labels(info))
-    ) == sort_inventory_result(
+    assert list(inventorize_docker_container_labels(parse_docker_container_labels(info))) == list(
         [
             Attributes(
                 path=["software", "applications", "docker", "container"],

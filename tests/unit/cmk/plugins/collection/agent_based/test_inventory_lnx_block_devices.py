@@ -12,8 +12,6 @@ from cmk.plugins.collection.agent_based.inventory_lnx_block_devices import (
     parse_lnx_block_devices,
 )
 
-from .utils_inventory import sort_inventory_result
-
 
 @pytest.mark.parametrize(
     "string_table, expected_result",
@@ -49,6 +47,6 @@ from .utils_inventory import sort_inventory_result
     ],
 )
 def test_lnx_block_devices(string_table: StringTable, expected_result: InventoryResult) -> None:
-    assert sort_inventory_result(
-        inventorize_lnx_block_devices(parse_lnx_block_devices(string_table))
-    ) == sort_inventory_result(expected_result)
+    assert list(inventorize_lnx_block_devices(parse_lnx_block_devices(string_table))) == list(
+        expected_result
+    )

@@ -12,8 +12,6 @@ from cmk.plugins.collection.agent_based.inventory_solaris_addresses import (
     parse_solaris_addresses,
 )
 
-from .utils_inventory import sort_inventory_result
-
 
 @pytest.mark.parametrize(
     "string_table, expected_result",
@@ -56,20 +54,6 @@ from .utils_inventory import sort_inventory_result
                 TableRow(
                     path=["networking", "interfaces"],
                     key_columns={
-                        "index": 2,
-                    },
-                    inventory_columns={
-                        "description": "bge0",
-                        "alias": "bge0",
-                        "speed": 0,
-                        "phys_address": "0:3:ba:29:fc:cc",
-                        "port_type": 6,
-                    },
-                    status_columns={},
-                ),
-                TableRow(
-                    path=["networking", "interfaces"],
-                    key_columns={
                         "index": 3,
                     },
                     inventory_columns={
@@ -82,12 +66,26 @@ from .utils_inventory import sort_inventory_result
                     status_columns={},
                 ),
                 TableRow(
-                    path=["networking", "addresses"],
+                    path=["networking", "interfaces"],
                     key_columns={
-                        "device": "bge0",
+                        "index": 2,
                     },
                     inventory_columns={
-                        "address": "10.8.57.39",
+                        "description": "bge0",
+                        "alias": "bge0",
+                        "speed": 0,
+                        "phys_address": "0:3:ba:29:fc:cc",
+                        "port_type": 6,
+                    },
+                    status_columns={},
+                ),
+                TableRow(
+                    path=["networking", "addresses"],
+                    key_columns={
+                        "device": "lo0",
+                    },
+                    inventory_columns={
+                        "address": "127.0.0.1",
                         "type": "IPv4",
                     },
                     status_columns={},
@@ -106,10 +104,10 @@ from .utils_inventory import sort_inventory_result
                 TableRow(
                     path=["networking", "addresses"],
                     key_columns={
-                        "device": "lo0",
+                        "device": "bge0",
                     },
                     inventory_columns={
-                        "address": "127.0.0.1",
+                        "address": "10.8.57.39",
                         "type": "IPv4",
                     },
                     status_columns={},
@@ -121,6 +119,6 @@ from .utils_inventory import sort_inventory_result
 def test_inventorize_solaris_addresses(
     string_table: StringTable, expected_result: InventoryResult
 ) -> None:
-    assert sort_inventory_result(
-        inventorize_solaris_addresses(parse_solaris_addresses(string_table))
-    ) == sort_inventory_result(expected_result)
+    assert list(inventorize_solaris_addresses(parse_solaris_addresses(string_table))) == list(
+        expected_result
+    )

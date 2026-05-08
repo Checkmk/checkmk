@@ -12,8 +12,6 @@ from cmk.plugins.collection.agent_based.perle_chassis_slots import (
     Section,
 )
 
-from .utils_inventory import sort_inventory_result
-
 
 @pytest.mark.parametrize(
     "string_table, expected_result",
@@ -86,6 +84,4 @@ from .utils_inventory import sort_inventory_result
 def test_inventorize_perle_chassis_slots(
     string_table: Section, expected_result: InventoryResult
 ) -> None:
-    assert sort_inventory_result(
-        inventorize_perle_chassis_slots(string_table)
-    ) == sort_inventory_result(expected_result)
+    assert list(inventorize_perle_chassis_slots(string_table)) == list(expected_result)

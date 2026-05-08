@@ -12,8 +12,6 @@ from cmk.plugins.collection.agent_based.inventory_lnx_packages import (
     parse_lnx_packages,
 )
 
-from .utils_inventory import sort_inventory_result
-
 
 @pytest.mark.parametrize(
     "string_table, expected_result",
@@ -29,33 +27,6 @@ from .utils_inventory import sort_inventory_result
                 ["pacname3", "1.2.3-4", "amd64", "deb", "summary", "installed"],
             ],
             [
-                TableRow(
-                    path=["software", "packages"],
-                    key_columns={
-                        "name": "pacname2",
-                    },
-                    inventory_columns={
-                        "version": "1.2.3",
-                        "arch": "x86_64",
-                        "package_type": "deb",
-                        "summary": "summary",
-                    },
-                    status_columns={},
-                ),
-                TableRow(
-                    path=["software", "packages"],
-                    key_columns={
-                        "name": "pacname3",
-                    },
-                    inventory_columns={
-                        "version": "1.2.3",
-                        "arch": "x86_64",
-                        "package_type": "deb",
-                        "summary": "summary",
-                        "package_version": "4",
-                    },
-                    status_columns={},
-                ),
                 TableRow(
                     path=["software", "packages"],
                     key_columns={
@@ -84,6 +55,33 @@ from .utils_inventory import sort_inventory_result
                     },
                     status_columns={},
                 ),
+                TableRow(
+                    path=["software", "packages"],
+                    key_columns={
+                        "name": "pacname2",
+                    },
+                    inventory_columns={
+                        "version": "1.2.3",
+                        "arch": "x86_64",
+                        "package_type": "deb",
+                        "summary": "summary",
+                    },
+                    status_columns={},
+                ),
+                TableRow(
+                    path=["software", "packages"],
+                    key_columns={
+                        "name": "pacname3",
+                    },
+                    inventory_columns={
+                        "version": "1.2.3",
+                        "arch": "x86_64",
+                        "package_type": "deb",
+                        "summary": "summary",
+                        "package_version": "4",
+                    },
+                    status_columns={},
+                ),
             ],
         ),
     ],
@@ -91,6 +89,4 @@ from .utils_inventory import sort_inventory_result
 def test_inventorize_lnx_packages(
     string_table: StringTable, expected_result: InventoryResult
 ) -> None:
-    assert sort_inventory_result(
-        inventorize_lnx_packages(parse_lnx_packages(string_table))
-    ) == sort_inventory_result(expected_result)
+    assert list(inventorize_lnx_packages(parse_lnx_packages(string_table))) == list(expected_result)

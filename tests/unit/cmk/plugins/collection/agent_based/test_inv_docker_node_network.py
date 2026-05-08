@@ -9,8 +9,6 @@ from cmk.plugins.docker.agent_based.inventory_docker_node_network import (
     parse_docker_node_network,
 )
 
-from .utils_inventory import sort_inventory_result
-
 AGENT_OUTPUT = (
     '@docker_version_info\0{"PluginVersion": "0.1", "DockerPyVersion": "4.1.0", "ApiVersion": "1.41"}\n'
     '{"Name": "asd", "Id": "f42d7f03e6d710662f70ebab8d5ff83538a729022ae97ad65f92c479e98126af", "Scope": '
@@ -21,9 +19,7 @@ AGENT_OUTPUT = (
 
 def test_inv_docker_node_network() -> None:
     pre_parsed = [line.split("\0") for line in AGENT_OUTPUT.split("\n")]
-    assert sort_inventory_result(
-        inventorize_docker_node_network(parse_docker_node_network(pre_parsed))
-    ) == sort_inventory_result(
+    assert list(inventorize_docker_node_network(parse_docker_node_network(pre_parsed))) == list(
         [
             TableRow(
                 path=["software", "applications", "docker", "networks", "containers"],

@@ -11,7 +11,6 @@ from cmk.plugins.aruba.agent_based.aruba_wlc_aps import (
     inventorize_aruba_wlc_aps,
     parse_aruba_wlc_aps,
 )
-from tests.unit.cmk.plugins.collection.agent_based.utils_inventory import sort_inventory_result
 
 
 @pytest.mark.parametrize(
@@ -57,6 +56,6 @@ from tests.unit.cmk.plugins.collection.agent_based.utils_inventory import sort_i
 def test_inventorize_aruba_wlc_aps(
     raw_section: StringTable, expected_result: InventoryResult
 ) -> None:
-    assert sort_inventory_result(
-        inventorize_aruba_wlc_aps(parse_aruba_wlc_aps(raw_section))
-    ) == sort_inventory_result(expected_result)
+    assert list(inventorize_aruba_wlc_aps(parse_aruba_wlc_aps(raw_section))) == list(
+        expected_result
+    )

@@ -13,8 +13,6 @@ from cmk.plugins.collection.agent_based.inventory_lnx_sysctl import (
     parse_lnx_sysctl,
 )
 
-from .utils_inventory import sort_inventory_result
-
 
 @pytest.mark.parametrize(
     "info, params, inventory_data",
@@ -183,6 +181,4 @@ def test_inv_oracle_systemparameter(
     params: Mapping[str, Sequence[str]],
     inventory_data: InventoryResult,
 ) -> None:
-    assert sort_inventory_result(
-        inventorize_lnx_sysctl(params, parse_lnx_sysctl(info))
-    ) == sort_inventory_result(inventory_data)
+    assert list(inventorize_lnx_sysctl(params, parse_lnx_sysctl(info))) == list(inventory_data)

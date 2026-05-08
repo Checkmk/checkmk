@@ -11,8 +11,6 @@ from cmk.plugins.collection.agent_based.inventory_mobileiron import (
 )
 from cmk.plugins.collection.agent_based.mobileiron_section import parse_mobileiron
 
-from .utils_inventory import sort_inventory_result
-
 DEVICE_DATA = parse_mobileiron(
     [
         [
@@ -41,12 +39,6 @@ EXPECTED: Iterable[Attributes | TableRow] = [
             "serial": "asdf",
         },
     ),
-    Attributes(
-        path=["software", "os"],
-        inventory_attributes={
-            "type": "ANDROID",
-        },
-    ),
     TableRow(
         path=["networking", "addresses"],
         key_columns={
@@ -55,6 +47,12 @@ EXPECTED: Iterable[Attributes | TableRow] = [
         },
         inventory_columns={
             "type": "ipv4",
+        },
+    ),
+    Attributes(
+        path=["software", "os"],
+        inventory_attributes={
+            "type": "ANDROID",
         },
     ),
     Attributes(
@@ -68,6 +66,4 @@ EXPECTED: Iterable[Attributes | TableRow] = [
 
 
 def test_inventorize_mobileiron() -> None:
-    assert sort_inventory_result(inventorize_mobileiron(DEVICE_DATA)) == sort_inventory_result(
-        EXPECTED
-    )
+    assert list(inventorize_mobileiron(DEVICE_DATA)) == list(EXPECTED)

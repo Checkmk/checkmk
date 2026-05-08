@@ -12,8 +12,6 @@ from cmk.plugins.collection.agent_based.inventory_solaris_routes import (
     parse_solaris_routes,
 )
 
-from .utils_inventory import sort_inventory_result
-
 
 @pytest.mark.parametrize(
     "string_table, expected_result",
@@ -64,17 +62,6 @@ from .utils_inventory import sort_inventory_result
                 TableRow(
                     path=["networking", "routes"],
                     key_columns={
-                        "target": "1.0.0.0",
-                        "gateway": "1.2.3.8",
-                    },
-                    inventory_columns={
-                        "device": "aggr3",
-                    },
-                    status_columns={},
-                ),
-                TableRow(
-                    path=["networking", "routes"],
-                    key_columns={
                         "target": "1.2.30.0",
                         "gateway": "1.2.30.6",
                     },
@@ -97,6 +84,17 @@ from .utils_inventory import sort_inventory_result
                 TableRow(
                     path=["networking", "routes"],
                     key_columns={
+                        "target": "1.0.0.0",
+                        "gateway": "1.2.3.8",
+                    },
+                    inventory_columns={
+                        "device": "aggr3",
+                    },
+                    status_columns={},
+                ),
+                TableRow(
+                    path=["networking", "routes"],
+                    key_columns={
                         "target": "127.0.0.1",
                         "gateway": "127.0.0.1",
                     },
@@ -112,6 +110,6 @@ from .utils_inventory import sort_inventory_result
 def test_inventorize_solaris_routes(
     string_table: StringTable, expected_result: InventoryResult
 ) -> None:
-    assert sort_inventory_result(
-        inventorize_solaris_routes(parse_solaris_routes(string_table))
-    ) == sort_inventory_result(expected_result)
+    assert list(inventorize_solaris_routes(parse_solaris_routes(string_table))) == list(
+        expected_result
+    )

@@ -14,8 +14,6 @@ from cmk.plugins.collection.agent_based.inventory_snmp_extended_info import (
 )
 from cmk.plugins.lib.device_types import get_device_type_label
 
-from .utils_inventory import sort_inventory_result
-
 
 @pytest.mark.parametrize(
     "string_table, expected_result",
@@ -161,6 +159,6 @@ def test_inventorize_snmp_extended_info_host_labels(
 def test_inventorize_snmp_extended_info(
     string_table: StringTable, expected_result: InventoryResult
 ) -> None:
-    assert sort_inventory_result(
-        inventorize_snmp_extended_info(parse_snmp_extended_info(string_table))
-    ) == sort_inventory_result(expected_result)
+    assert list(inventorize_snmp_extended_info(parse_snmp_extended_info(string_table))) == list(
+        expected_result
+    )

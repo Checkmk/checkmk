@@ -13,8 +13,6 @@ from cmk.plugins.collection.agent_based.inv_if import inventorize_if, parse_inv_
 from cmk.plugins.lib import uptime
 from cmk.plugins.lib.inventory_interfaces import Interface
 
-from .utils_inventory import sort_inventory_result
-
 SECTION_INV_IF = SectionInvIf(
     interfaces=[
         Interface(
@@ -761,13 +759,13 @@ def test_parse_inv_if() -> None:
 
 def test_inventorize_if() -> None:
     with time_machine.travel(datetime.datetime.fromtimestamp(1601310544, tz=ZoneInfo("UTC"))):
-        assert sort_inventory_result(
+        assert list(
             inventorize_if(
                 {},
                 SECTION_INV_IF,
                 uptime.Section(7612999, None),
             )
-        ) == sort_inventory_result(
+        ) == list(
             [
                 TableRow(
                     path=["networking", "interfaces"],

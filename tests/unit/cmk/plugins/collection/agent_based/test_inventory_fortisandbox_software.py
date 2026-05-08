@@ -9,8 +9,6 @@ from cmk.plugins.collection.agent_based.inventory_fortisandbox_software import (
     parse_fortisandbox_software,
 )
 
-from .utils_inventory import sort_inventory_result
-
 SECTION = [
     ("Tracer engine", "5.2.50534"),
     ("Rating engine", "2.4.20034"),
@@ -33,9 +31,7 @@ def test_parse_fortisandbox_software_inv() -> None:
 
 
 def test_inventorize_fortisandbox_software() -> None:
-    assert sort_inventory_result(
-        inventorize_fortisandbox_software(SECTION)
-    ) == sort_inventory_result(
+    assert list(inventorize_fortisandbox_software(SECTION)) == list(
         [
             TableRow(
                 path=["software", "applications", "fortinet", "fortisandbox"],

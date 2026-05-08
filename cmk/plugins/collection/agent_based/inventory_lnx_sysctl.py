@@ -59,7 +59,7 @@ def inventorize_lnx_sysctl(
             include_patterns,
             exclude_patterns,
         ):
-            for value in values:
+            for value in sorted(values):
                 yield TableRow(
                     path=["software", "kernel_config"],
                     key_columns={

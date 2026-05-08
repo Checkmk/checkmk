@@ -9,17 +9,15 @@ from cmk.plugins.collection.agent_based.inventory_enviromux_micro import (
     parse_enviromux_micro_information,
 )
 
-from .utils_inventory import sort_inventory_result
-
 STRING_TABLE = [["test-name", "E-MICRO-T", "799", "3.20"]]
 
 
 def test_inventorize_enviromux_micro_information() -> None:
-    assert sort_inventory_result(
+    assert list(
         inventorize_enviromux_micro_information(
             parse_enviromux_micro_information(STRING_TABLE),
         )
-    ) == sort_inventory_result(
+    ) == list(
         [
             Attributes(
                 path=["hardware", "system"],
@@ -41,8 +39,8 @@ def test_inventorize_enviromux_micro_information() -> None:
 
 
 def test_inventorize_enviromux_micro_information_no_input() -> None:
-    assert sort_inventory_result(
+    assert list(
         inventorize_enviromux_micro_information(
             parse_enviromux_micro_information([]),
         )
-    ) == sort_inventory_result([])
+    ) == list([])

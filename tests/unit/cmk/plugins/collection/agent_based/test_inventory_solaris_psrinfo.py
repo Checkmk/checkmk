@@ -17,8 +17,6 @@ from cmk.plugins.collection.agent_based.inventory_solaris_psrinfo import (
     parse_solaris_psrinfo_virtual,
 )
 
-from .utils_inventory import sort_inventory_result
-
 
 class PsrInfo(NamedTuple):
     psrinfo: str | None
@@ -206,11 +204,11 @@ def _section[T](section_function: Callable[[StringTable], T], agent_output: str 
     ],
 )
 def test_inventorize_solaris_cpus(test_set: PsrInfo, expected_result: InventoryResult) -> None:
-    assert sort_inventory_result(
+    assert list(
         inventorize_solaris_cpus(
             _section(parse_solaris_psrinfo_physical, test_set.psrinfo_p),
             _section(parse_solaris_psrinfo_virtual, test_set.psrinfo),
             _section(parse_solaris_psrinfo_verbose, test_set.psrinfo_pv),
             _section(parse_solaris_psrinfo_table, test_set.psrinfo_t),
         )
-    ) == sort_inventory_result(expected_result)
+    ) == list(expected_result)

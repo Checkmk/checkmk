@@ -58,8 +58,8 @@ from cmk.gui.utils.temperate_unit import TemperatureUnit
                 color="#111111",
             ),
             [
-                HorizontalRule(value=5.0, rendered_value="5", color="#ffd000", title="Warning"),
                 HorizontalRule(value=10.0, rendered_value="10", color="#ff3232", title="Critical"),
+                HorizontalRule(value=5.0, rendered_value="5", color="#ffd000", title="Warning"),
             ],
             id="scalars-pos",
         ),

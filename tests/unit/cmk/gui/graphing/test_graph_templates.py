@@ -1430,10 +1430,10 @@ def test__evaluate_graph_plugins_2(
                     explicit_vertical_range=None,
                     horizontal_rules=[
                         HorizontalRule(
-                            value=1.0, rendered_value="1", color="#ffd000", title="Warning"
+                            value=2.0, rendered_value="2", color="#ff3232", title="Critical"
                         ),
                         HorizontalRule(
-                            value=2.0, rendered_value="2", color="#ff3232", title="Critical"
+                            value=1.0, rendered_value="1", color="#ffd000", title="Warning"
                         ),
                     ],
                     omit_zero_metrics=False,
@@ -1466,10 +1466,10 @@ def test__evaluate_graph_plugins_2(
                     explicit_vertical_range=None,
                     horizontal_rules=[
                         HorizontalRule(
-                            value=3.0, rendered_value="3", color="#ffd000", title="Warning"
+                            value=4.0, rendered_value="4", color="#ff3232", title="Critical"
                         ),
                         HorizontalRule(
-                            value=4.0, rendered_value="4", color="#ff3232", title="Critical"
+                            value=3.0, rendered_value="3", color="#ffd000", title="Warning"
                         ),
                     ],
                     omit_zero_metrics=False,

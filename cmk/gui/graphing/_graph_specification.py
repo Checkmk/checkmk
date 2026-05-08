@@ -83,6 +83,12 @@ class HorizontalRule(BaseModel, frozen=True):
     title: str
 
 
+def sort_horizontal_rules_in_decending_order(
+    horizontal_rules: Sequence[HorizontalRule],
+) -> Sequence[HorizontalRule]:
+    return sorted(horizontal_rules, key=lambda hr: hr.value, reverse=True)
+
+
 def compute_warn_crit_rules_from_translated_metric(
     user_specific_unit: UserSpecificUnit,
     translated_metric: TranslatedMetric,
@@ -140,7 +146,7 @@ def compute_warn_crit_rules_from_translated_metric(
                 title=_("Critical (lower)"),
             )
         )
-    return horizontal_rules
+    return sort_horizontal_rules_in_decending_order(horizontal_rules)
 
 
 class GraphMetric(BaseModel, frozen=True):

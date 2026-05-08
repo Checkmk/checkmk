@@ -267,16 +267,16 @@ def test_evaluate_graph_plugin_range(
             ),
             [
                 HorizontalRule(
-                    value=12.34,
-                    rendered_value="12.34 U",
-                    color="#ffd000",
-                    title="Warning of Metric",
-                ),
-                HorizontalRule(
                     value=56.78,
                     rendered_value="56.78 U",
                     color="#ff3232",
                     title="Critical of Metric",
+                ),
+                HorizontalRule(
+                    value=12.34,
+                    rendered_value="12.34 U",
+                    color="#ffd000",
+                    title="Warning of Metric",
                 ),
             ],
             id="graph-with-scalars-with-values",

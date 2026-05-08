@@ -30,7 +30,12 @@ from ._graph_metric_expressions import (
     GraphMetricExpression,
     GraphMetricOperation,
 )
-from ._graph_specification import GraphMetric, HorizontalRule, MinimalVerticalRange
+from ._graph_specification import (
+    GraphMetric,
+    HorizontalRule,
+    MinimalVerticalRange,
+    sort_horizontal_rules_in_decending_order,
+)
 from ._metrics import get_metric_spec
 from ._translated_metrics import TranslatedMetric
 from ._unit import ConvertibleUnitSpecification, user_specific_unit
@@ -596,7 +601,7 @@ def _evaluate_graph_scalars(
                 title=result.ok.title,
             )
         )
-    return horizontal_lines
+    return sort_horizontal_rules_in_decending_order(horizontal_lines)
 
 
 def evaluate_graph_plugin_scalars(

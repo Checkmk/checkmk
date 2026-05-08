@@ -26,7 +26,6 @@ from typing import (
     NoReturn,
     NotRequired,
     Self,
-    TYPE_CHECKING,
     TypedDict,
 )
 
@@ -43,9 +42,6 @@ from cmk.gui.rest_api_types.site_connection import SiteConfig
 from cmk.gui.type_defs import DismissableWarning, VisualContext
 from cmk.shared_typing.configuration_entity import ConfigEntityType
 from cmk.utils import paths
-
-if TYPE_CHECKING:
-    from cmk.gui.openapi.endpoints.downtime import FindByType
 
 JSON = int | str | bool | list[Any] | dict[str, Any] | None
 JSON_HEADERS = {"Accept": "application/json", "Content-Type": "application/json"}
@@ -1719,6 +1715,7 @@ class AgentClient(RestApiClient):
 
 class DowntimeClient(RestApiClient):
     domain: DomainType = "downtime"
+    type FindByType = Literal["query", "by_id", "params", "hostgroup", "servicegroup"]
 
     def get(self, downtime_id: int, site_id: str, expect_ok: bool = True) -> Response:
         return self.request(

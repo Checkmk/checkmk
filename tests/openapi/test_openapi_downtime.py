@@ -10,7 +10,7 @@ import datetime
 import pytest
 
 from cmk.ccc import version
-from cmk.gui.openapi.endpoints.downtime import _with_defaulted_timezone
+from cmk.gui.openapi.api_endpoints.downtime.models.request_models import _with_defaulted_timezone
 from cmk.livestatus_client.testing import MockLiveStatusConnection
 from cmk.utils import paths
 from tests.testlib.gui.web_test_app import SetConfig
@@ -941,7 +941,10 @@ def test_openapi_delete_downtime_non_existing_host_group(
         host_group="non-existent",
         expect_ok=False,
     ).assert_status_code(400)
-    assert resp.json["fields"]["hostgroup_name"] == ["Group missing: 'non-existent'"]
+    assert (
+        resp.json["fields"]["body.hostgroup.hostgroup_name"]["msg"]
+        == "Value error, Group missing: 'non-existent'"
+    )
 
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
@@ -953,7 +956,10 @@ def test_openapi_delete_downtime_non_existing_service_group(
         service_group="non-existent",
         expect_ok=False,
     ).assert_status_code(400)
-    assert resp.json["fields"]["servicegroup_name"] == ["Group missing: 'non-existent'"]
+    assert (
+        resp.json["fields"]["body.servicegroup.servicegroup_name"]["msg"]
+        == "Value error, Group missing: 'non-existent'"
+    )
 
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
@@ -973,9 +979,9 @@ def test_openapi_downtime_non_existing_instance(
         )
         resp.assert_status_code(400)
 
-    assert resp.json["fields"]["host_name"] == [
-        "Host 'non-existent' should be monitored but it's not. Activate the configuration?"
-    ]
+    assert resp.json["fields"]["body.host.host_name"]["msg"] == (
+        "Value error, Host 'non-existent' is not actively monitored. Is the configuration activated?"
+    )
 
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
@@ -1598,7 +1604,10 @@ def test_openapi_modify_downtime_non_existing_host_group(
         host_group="non-existent",
         expect_ok=False,
     ).assert_status_code(400)
-    assert resp.json["fields"]["hostgroup_name"] == ["Group missing: 'non-existent'"]
+    assert (
+        resp.json["fields"]["body.hostgroup.hostgroup_name"]["msg"]
+        == "Value error, Group missing: 'non-existent'"
+    )
 
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
@@ -1610,7 +1619,10 @@ def test_openapi_modify_downtime_non_existing_service_group(
         service_group="non-existent",
         expect_ok=False,
     ).assert_status_code(400)
-    assert resp.json["fields"]["servicegroup_name"] == ["Group missing: 'non-existent'"]
+    assert (
+        resp.json["fields"]["body.servicegroup.servicegroup_name"]["msg"]
+        == "Value error, Group missing: 'non-existent'"
+    )
 
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls")

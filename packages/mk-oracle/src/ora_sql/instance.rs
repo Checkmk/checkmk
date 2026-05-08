@@ -17,6 +17,7 @@
 use crate::config::{self, OracleConfig};
 use crate::emit::header;
 use crate::ora_sql::backend::{make_custom_spot, make_spot, ClosedSpot, Opened, OpenedSpot, Spot};
+use crate::ora_sql::perf::{Label, PerfTimer};
 use crate::ora_sql::section::Section;
 use crate::setup::{detect_runtime, Env};
 use crate::types::{InstanceName, SqlQuery, UseHostClient};
@@ -164,8 +165,15 @@ fn process_spot_works(works: Vec<SpotWorks>) -> Vec<String> {
                 .iter()
                 .flat_map(|(instance, query_blocks)| {
                     log::info!("Instance: {}", instance);
-                    let r = spot.clone().connect(None);
-                    match r {
+                    let session_timer =
+                        PerfTimer::start("session", Label::Block(&instance.to_string()));
+                    let r = {
+                        let connect_timer = PerfTimer::start("connection", Label::Inline);
+                        let conn = spot.clone().connect(None);
+                        connect_timer.stop();
+                        conn
+                    };
+                    let output = match r {
                         Ok(opened) => query_blocks
                             .iter()
                             .map(|query_block| {
@@ -176,6 +184,7 @@ fn process_spot_works(works: Vec<SpotWorks>) -> Vec<String> {
                                     instance,
                                     &query_block.queries,
                                     &query_block.post_processing,
+                                    &query_block.title,
                                 ));
                                 results.join("\n")
                             })
@@ -184,7 +193,9 @@ fn process_spot_works(works: Vec<SpotWorks>) -> Vec<String> {
                             log::error!("Failed to connect to instance {}: {}", instance, e);
                             vec![] // Skip this instance if connection fails
                         }
-                    }
+                    };
+                    session_timer.stop();
+                    output
                 })
                 .collect::<Vec<_>>()
         })
@@ -201,9 +212,12 @@ fn process_spot_works_para(works: Vec<SpotWorks>, threads: usize) -> Vec<String>
                 .iter()
                 .flat_map(|(instance, query_blocks)| {
                     log::info!("Instance: {}", instance);
+                    let session_timer =
+                        PerfTimer::start("session", Label::Block(&instance.to_string()));
                     let spots = open_spots(&spot, instance, threads);
                     if spots.is_empty() {
                         log::error!("Failed to connect to instance {}", instance);
+                        session_timer.stop();
                         return vec![];
                     }
                     let job_data: Vec<JobData> = make_job_data(spots, query_blocks);
@@ -231,6 +245,7 @@ fn process_spot_works_para(works: Vec<SpotWorks>, threads: usize) -> Vec<String>
                             })
                         }
                     });
+                    session_timer.stop();
                     Arc::try_unwrap(global_output)
                         .unwrap()
                         .into_inner()
@@ -246,16 +261,21 @@ fn open_spots(
     instance_name: &InstanceName,
     thread_count: usize,
 ) -> Vec<OpenedSpot> {
-    std::iter::repeat_with(|| spot.clone().connect(None))
-        .take(thread_count)
-        .filter_map(|r| match r {
-            Ok(conn) => Some(conn),
-            Err(e) => {
-                log::error!("Failed to connect to instance {}: {}", instance_name, e);
-                None
-            }
-        })
-        .collect::<Vec<_>>()
+    std::iter::repeat_with(|| {
+        let connect_timer = PerfTimer::start("connection", Label::Inline);
+        let conn = spot.clone().connect(None);
+        connect_timer.stop();
+        conn
+    })
+    .take(thread_count)
+    .filter_map(|r| match r {
+        Ok(conn) => Some(conn),
+        Err(e) => {
+            log::error!("Failed to connect to instance {}: {}", instance_name, e);
+            None
+        }
+    })
+    .collect::<Vec<_>>()
 }
 
 fn build_thread_pool(threads: usize) -> rayon::ThreadPool {
@@ -296,15 +316,21 @@ fn _exec_queries_on_spot(
     title: &str,
     post_processing: &PostProcessing,
 ) -> Vec<String> {
-    queries
+    let section_timer = PerfTimer::start("section", Label::Block(title));
+    let results = queries
         .iter()
         .flat_map(|query| {
             log::debug!("Executing query: {}", query.as_str());
-            let mut result = run_query(spot.query_table(query), post_processing, instance_name);
+            let query_timer = PerfTimer::start("query", Label::Inline);
+            let query_result = spot.query_table(query);
+            query_timer.stop();
+            let mut result = run_query(query_result, post_processing, instance_name);
             result.insert(0, title.to_string());
             result
         })
-        .collect::<Vec<String>>()
+        .collect::<Vec<String>>();
+    section_timer.stop();
+    results
 }
 
 const MAX_THREAD_COUNT: usize = 8;
@@ -319,15 +345,23 @@ fn _exec_queries(
     service_name: &InstanceName,
     queries: &[SqlQuery],
     post_processing: &PostProcessing,
+    title: &str,
 ) -> Vec<String> {
     log::info!("Connected to : {}", service_name);
-    queries
+    let section_timer = PerfTimer::start("section", Label::Block(title));
+    let results = queries
         .iter()
         .flat_map(|query| {
             log::debug!("Executing query: {}", query.as_str());
-            run_query(spot.query_table(query), post_processing, service_name)
+            let query_timer = PerfTimer::start("query", Label::Inline);
+            let query_result = spot.query_table(query);
+            query_timer.stop();
+            run_query(query_result, post_processing, service_name)
         })
-        .collect::<Vec<_>>()
+        .collect::<Vec<_>>();
+
+    section_timer.stop();
+    results
 }
 
 /// Render a `QueryResult` to agent-output lines. For custom-metric sections

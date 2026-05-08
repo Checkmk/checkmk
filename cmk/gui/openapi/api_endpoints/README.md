@@ -28,7 +28,7 @@ hence the specification can be rendered using the current state of your branch.
 To generate the specification file (`spec.yaml`), run the following command:
 
 ```bash
-bazel --cmk_edition=<community, pro, ultimate, ultimatemt, cloud> run //cmk/gui:generate_api_spec -- generate --version <internal, unstable, v1> --edition <community, pro, ultimate, ultimatemt, cloud> --out spec.yaml --format yaml
+bazel --cmk_edition=<community, pro, ultimate, ultimatemt, cloud> run //cmk/gui/openapi/spec/spec_generator:generate_api_spec -- generate --version <internal, unstable, v1> --edition <community, pro, ultimate, ultimatemt, cloud> --out spec.yaml --format yaml
 ```
 
 Then use `redocly` to preview and inspect the documentation:

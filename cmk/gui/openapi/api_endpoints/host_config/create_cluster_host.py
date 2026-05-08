@@ -27,7 +27,7 @@ from cmk.gui.openapi.restful_objects.constructors import collection_href
 from cmk.gui.openapi.shared_endpoint_families.host_config import HOST_CONFIG_FAMILY
 from cmk.gui.watolib import bakery
 from cmk.gui.watolib.hosts_and_folders import Host
-from cmk.licensing.basics.features import FeatureName
+from cmk.licensing.basics.options import OptionName
 
 from ._utils import host_etag, PERMISSIONS_CREATE, serialize_host
 from .models.response_models import HostConfigModel
@@ -60,7 +60,7 @@ def create_cluster_host_v1(
     body: CreateClusterHostModel,
     bake_agent: Annotated[
         bool | ApiOmitted,
-        RestrictFeatures(feature_name=FeatureName.BAKERY, which_field="bake_agent"),
+        RestrictFeatures(option_name=OptionName.BAKERY, which_field="bake_agent"),
         QueryParam(
             description=(
                 "Tries to bake the agents for the just created hosts. This process is started in the "

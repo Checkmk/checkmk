@@ -77,7 +77,7 @@ from cmk.gui.watolib.activate_changes import (
     update_config_generation as activate_changes_update_config_generation,
 )
 from cmk.gui.watolib.git import do_git_commit
-from cmk.licensing.basics.features import FeatureName
+from cmk.licensing.basics.options import OptionName
 from cmk.utils.paths import configuration_lockfile
 
 tracer = trace.get_tracer()
@@ -271,7 +271,7 @@ class Endpoint:
         family_name: str | None = None,
         supported_editions: set[Edition] | None = None,
         removed_in_version: APIVersion | None = None,
-        features_required: set[FeatureName] | None = None,
+        features_required: set[OptionName] | None = None,
     ):
         self.path = path
         self.link_relation = link_relation
@@ -299,7 +299,7 @@ class Endpoint:
         self.family_name = family_name
         self.supported_editions = supported_editions
         self.removed_in_version = removed_in_version
-        self.features_required: set[FeatureName] = features_required or set()
+        self.features_required: set[OptionName] = features_required or set()
 
         if deprecated_urls is not None:
             for url in deprecated_urls:

@@ -141,8 +141,8 @@ def test_openapi_add_host_bake_agent_rejected_without_feature(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     monkeypatch.setattr(
-        "cmk.gui.openapi.framework.model.restrict_features.is_feature_enabled",
-        lambda _omd_root, _feature: False,
+        "cmk.gui.openapi.framework.model.restrict_features.is_option_enabled",
+        lambda _omd_root, _option: False,
     )
 
     clients.HostConfig.create(

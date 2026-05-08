@@ -45,7 +45,7 @@ from cmk.gui.watolib.host_attributes import (
     MetricsAssociationAttributeFilters,
     MetricsAssociationEnabled,
 )
-from cmk.licensing.basics.features import FeatureName
+from cmk.licensing.basics.options import OptionName
 from cmk.utils.agent_registration import HostAgentConnectionMode
 from cmk.utils.tags import BuiltinTagConfig, TagGroupID
 
@@ -168,7 +168,7 @@ class BaseHostAttributeModel:
 
     bake_agent_package: Annotated[
         bool | ApiOmitted,
-        RestrictFeatures(feature_name=FeatureName.BAKERY, which_field="bake_agent_package"),
+        RestrictFeatures(option_name=OptionName.BAKERY, which_field="bake_agent_package"),
     ] = api_field(
         description="Bake agent packages for this folder even if it is empty. Requires the agent bakery feature to be licensed.",
         default_factory=ApiOmitted,

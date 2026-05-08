@@ -9,8 +9,8 @@ from pydantic import GetCoreSchemaHandler
 from pydantic_core import core_schema, CoreSchema
 
 from cmk.gui.openapi.framework.model import ApiOmitted
-from cmk.licensing.basics.features import FeatureName
-from cmk.licensing.registry import is_feature_enabled
+from cmk.licensing.basics.options import OptionName
+from cmk.licensing.registry import is_option_enabled
 from cmk.utils import paths
 
 
@@ -21,11 +21,11 @@ class RestrictFeatures:
     The field's description should document the feature requirement manually."""
 
     required_if_supported: bool = False
-    feature_name: FeatureName
+    option_name: OptionName
     which_field: str
 
     def _validate_features(self, value: object) -> object:
-        if is_feature_enabled(paths.omd_root, self.feature_name):
+        if is_option_enabled(paths.omd_root, self.option_name):
             if self.required_if_supported and isinstance(value, ApiOmitted):
                 raise ValueError(f"The {self.which_field} field is required with this license")
         elif not isinstance(value, ApiOmitted):

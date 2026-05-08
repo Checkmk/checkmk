@@ -12,7 +12,7 @@ from typing import Protocol
 
 from cmk.ccc.version import edition
 
-from .features import licensed_features
+from .options import get_license_options
 
 _GROUP_PREFIX = "cmk.features."
 _DISTRIBUTION_PREFIX = "cmk-"
@@ -25,8 +25,8 @@ class FinderP(Protocol):
 
 
 def apply_feature_filter(omd_root: Path, meta_path_finders: Iterable[FinderP]) -> Sequence[FinderP]:
-    features = licensed_features(omd_root, edition(omd_root))
-    blocked = files_for_disabled_features(features.disabled())
+    license_options = get_license_options(omd_root, edition(omd_root))
+    blocked = files_for_disabled_features(license_options.disabled())
     return [_FeatureFilterFinder(mpf, blocked) for mpf in meta_path_finders]
 
 

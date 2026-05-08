@@ -54,8 +54,8 @@ from cmk.gui.watolib.hosts_and_folders import (
 from cmk.gui.watolib.passwords import contact_group_choices, password_exists
 from cmk.gui.watolib.sites import site_management_registry
 from cmk.gui.watolib.tags import load_tag_config_read_only
-from cmk.licensing.basics.features import FeatureName
-from cmk.licensing.registry import is_feature_enabled
+from cmk.licensing.basics.options import OptionName
+from cmk.licensing.registry import is_option_enabled
 from cmk.livestatus_client.expressions import NothingExpression, QueryExpression
 from cmk.livestatus_client.queries import Query
 from cmk.livestatus_client.tables import Hostgroups, Hosts, Servicegroups
@@ -1041,7 +1041,7 @@ class _BakeAgentField(Boolean):
 
     @override
     def _validate(self, value: bool) -> None:
-        if not is_feature_enabled(paths.omd_root, FeatureName.BAKERY):
+        if not is_option_enabled(paths.omd_root, OptionName.BAKERY):
             raise self.make_error("feature_not_supported")
 
         super()._validate(value)

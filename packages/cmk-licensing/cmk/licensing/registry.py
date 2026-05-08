@@ -7,7 +7,7 @@ from collections.abc import Callable
 from pathlib import Path
 
 from cmk.ccc.version import Edition, edition
-from cmk.licensing.basics.features import FeatureName, licensed_features
+from cmk.licensing.basics.options import get_license_options, OptionName
 from cmk.licensing.community_handler import CommunityLicensingHandler
 from cmk.licensing.handler import (
     LicenseState,
@@ -96,8 +96,8 @@ def get_licensing_notification_handler(omd_root: Path) -> NotificationHandler:
     return _make_licensing_handler(omd_root).notification_handler
 
 
-def is_feature_enabled(omd_root: Path, feature: FeatureName) -> bool:
-    return licensed_features(omd_root, edition(omd_root)).get_flag(feature).enabled
+def is_option_enabled(omd_root: Path, option: OptionName) -> bool:
+    return get_license_options(omd_root, edition(omd_root)).get_flag(option).enabled
 
 
 def register_community_licensing_handler() -> None:

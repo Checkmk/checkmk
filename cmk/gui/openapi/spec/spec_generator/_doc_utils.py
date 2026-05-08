@@ -19,7 +19,7 @@ from cmk.gui.openapi.restful_objects.type_defs import OpenAPITag, TagGroup
 from cmk.gui.openapi.versioned_endpoint_map import EndpointVersionChange
 from cmk.gui.permissions import permission_registry
 from cmk.gui.utils import permission_verification as permissions
-from cmk.licensing.basics.features import FeatureName
+from cmk.licensing.basics.options import OptionName
 
 
 class DefaultStatusCodeDescription(enum.Enum):
@@ -69,7 +69,7 @@ def build_spec_description(
     permissions_required: permissions.BasePerm | None,
     permissions_description: Mapping[str, str] | None,
     version_change: EndpointVersionChange | None = None,
-    features_required: set[FeatureName] | None = None,
+    features_required: set[OptionName] | None = None,
 ) -> str:
     # The validator will complain on empty descriptions being set, even though it's valid.
     spec_description = _build_description(
@@ -138,7 +138,7 @@ def _build_description(
     werk_id: int | None = None,
     editions: Container[Edition] | None = None,
     version_change: EndpointVersionChange | None = None,
-    features_required: set[FeatureName] | None = None,
+    features_required: set[OptionName] | None = None,
 ) -> str:
     r"""Build a OperationSpecType description.
 

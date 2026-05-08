@@ -7,7 +7,7 @@ from typing import assert_never
 
 from cmk.ccc.version import Edition
 from cmk.gui.legacy_plugins import get_failed_plugins as get_failed_plugins
-from cmk.licensing.basics.features import licensed_features
+from cmk.licensing.basics.options import get_license_options
 from cmk.utils import paths
 
 _registered_edition: Edition | None = None
@@ -24,10 +24,10 @@ def register(edition: Edition) -> None:
         return
     _registered_edition = edition
 
-    features = licensed_features(paths.omd_root, edition)
-    agent_bakery_enabled = features.bakery.enabled
-    telemetry_enabled = features.telemetry.enabled
-    otel_collector_enabled = features.otel_collector.enabled
+    license_options = get_license_options(paths.omd_root, edition)
+    agent_bakery_enabled = license_options.bakery.enabled
+    telemetry_enabled = license_options.telemetry.enabled
+    otel_collector_enabled = license_options.otel_collector.enabled
 
     match edition:
         case Edition.PRO:

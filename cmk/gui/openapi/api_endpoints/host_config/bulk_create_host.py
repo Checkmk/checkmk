@@ -28,7 +28,7 @@ from cmk.gui.openapi.restful_objects.constructors import domain_type_action_href
 from cmk.gui.openapi.shared_endpoint_families.host_config import HOST_CONFIG_FAMILY
 from cmk.gui.watolib import bakery
 from cmk.gui.watolib.hosts_and_folders import Folder, Host
-from cmk.licensing.basics.features import FeatureName
+from cmk.licensing.basics.options import OptionName
 
 from ._utils import bulk_host_action_response, PERMISSIONS_CREATE
 from .create_host import CreateHostModel
@@ -59,7 +59,7 @@ def bulk_create_host_v1(
     body: BulkCreateHostModel,
     bake_agent: Annotated[
         bool | ApiOmitted,
-        RestrictFeatures(feature_name=FeatureName.BAKERY, which_field="bake_agent"),
+        RestrictFeatures(option_name=OptionName.BAKERY, which_field="bake_agent"),
         QueryParam(
             description=(
                 "Tries to bake the agents for the just created hosts. This process is started in the "

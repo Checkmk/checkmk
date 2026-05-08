@@ -614,7 +614,7 @@ allows = []
 [components."cmk.gui.main_modules"]
 allows = [
   "@ccc",
-  "cmk.licensing.basics.features",
+  "cmk.licensing.basics.options",
   "cmk.gui.community_registration",
   "cmk.gui.legacy_plugins",
   "cmk.gui.nonfree",
@@ -628,7 +628,7 @@ allows = [
   "cmk.gui",
   "cmk.gui.community_registration",
   "cmk.gui.nonfree",
-  "cmk.licensing.basics.features",
+  "cmk.licensing.basics.options",
   "cmk.utils.jsontype",
   "cmk.utils.paths",
 ]

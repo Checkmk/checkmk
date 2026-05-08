@@ -19,7 +19,7 @@ from cmk.gui.openapi.restful_objects.type_defs import (
     TagGroup,
 )
 from cmk.gui.utils import permission_verification as permissions
-from cmk.licensing.basics.features import FeatureName
+from cmk.licensing.basics.options import OptionName
 
 
 @dataclass
@@ -49,7 +49,7 @@ class SpecEndpoint:
     permissions_description: Mapping[str, str] | None
     does_redirects: bool
     supported_editions: set[Edition]
-    features_required: set[FeatureName]
+    features_required: set[OptionName]
 
 
 @dataclass

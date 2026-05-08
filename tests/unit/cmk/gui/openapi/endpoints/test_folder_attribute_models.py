@@ -6,7 +6,7 @@ import pytest
 from pydantic import TypeAdapter, ValidationError
 
 from cmk.gui.openapi.api_endpoints.models.folder_attribute_models import BaseFolderAttributeModel
-from cmk.licensing.basics.features import FeatureName
+from cmk.licensing.basics.options import OptionName
 
 
 def test_parents_validator(sample_host: str) -> None:
@@ -20,8 +20,8 @@ def test_bake_agent_package_allowed_when_bakery_feature_enabled(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     monkeypatch.setattr(
-        "cmk.gui.openapi.framework.model.restrict_features.is_feature_enabled",
-        lambda _omd_root, feature: feature is FeatureName.BAKERY,
+        "cmk.gui.openapi.framework.model.restrict_features.is_option_enabled",
+        lambda _omd_root, option: option is OptionName.BAKERY,
     )
 
     result = TypeAdapter(  # astrein: disable=pydantic-type-adapter
@@ -35,8 +35,8 @@ def test_bake_agent_package_rejected_when_bakery_feature_disabled(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     monkeypatch.setattr(
-        "cmk.gui.openapi.framework.model.restrict_features.is_feature_enabled",
-        lambda _omd_root, _feature: False,
+        "cmk.gui.openapi.framework.model.restrict_features.is_option_enabled",
+        lambda _omd_root, _option: False,
     )
 
     with pytest.raises(

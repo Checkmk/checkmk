@@ -129,6 +129,27 @@ def form_spec() -> Dictionary:
                     prefill=DefaultValue("deactivated"),
                 )
             ),
+            "query_filters": DictElement(
+                parameter_form=_custom_fields_fs(
+                    title=Title("Additional query filters"),
+                    help_text=Help(
+                        "Additional filters appended to the ServiceNow lookup "
+                        "query (<tt>sysparm_query</tt>) used to find an existing "
+                        "incident or case for a given Checkmk problem ID. On "
+                        "large ServiceNow instances the unfiltered lookup can "
+                        "time out; restricting it (e.g. by <tt>company</tt> or "
+                        "<tt>assignment_group</tt>) narrows the search to the "
+                        "scope managed by Checkmk. All filters are AND-combined "
+                        "with the existing problem ID lookup. Only fields and "
+                        "values that are also set on the issue when it is "
+                        "created (e.g. via <i>Custom fields</i>) will match."
+                    ),
+                    name_help=Help(
+                        "Name of the ServiceNow field to filter on, e.g. "
+                        "<tt>company</tt> or <tt>assignment_group</tt>."
+                    ),
+                )
+            ),
             "timeout": DictElement(
                 parameter_form=String(
                     title=Title("Set optional timeout for connections to ServiceNow"),
@@ -238,7 +259,15 @@ def _incident_fs() -> Dictionary:
                     prefill=DefaultValue("low"),
                 ),
             ),
-            "custom_fields": DictElement(parameter_form=_custom_fields_fs()),
+            "custom_fields": DictElement(
+                parameter_form=_custom_fields_fs(
+                    title=Title("Custom fields"),
+                    name_help=Help(
+                        "Enter the technical name of the field as defined "
+                        "in the ServiceNow database."
+                    ),
+                )
+            ),
             "ack_state": DictElement(
                 parameter_form=Dictionary(
                     title=Title("Settings for incident state in case of acknowledgment"),
@@ -446,7 +475,15 @@ def _case_fs() -> Dictionary:
                     prefill=DefaultValue("low"),
                 ),
             ),
-            "custom_fields": DictElement(parameter_form=_custom_fields_fs()),
+            "custom_fields": DictElement(
+                parameter_form=_custom_fields_fs(
+                    title=Title("Custom fields"),
+                    name_help=Help(
+                        "Enter the technical name of the field as defined "
+                        "in the ServiceNow database."
+                    ),
+                )
+            ),
             "recovery_state": DictElement(parameter_form=_recovery_state_fs(_("case"))),
         },
     )
@@ -575,9 +612,15 @@ def _get_state_choices(issue_type: str) -> list[tuple[str, Title]]:
     ]
 
 
-def _custom_fields_fs() -> List:
+def _custom_fields_fs(
+    *,
+    title: Title,
+    help_text: Help | None = None,
+    name_help: Help,
+) -> List:
     return List(
-        title=Title("Custom fields"),
+        title=title,
+        help_text=help_text,
         element_template=Dictionary(
             migrate=_migrate_custom_fields,
             elements={
@@ -586,16 +629,13 @@ def _custom_fields_fs() -> List:
                     required=True,
                     parameter_form=String(
                         title=Title("Name"),
-                        help_text=Help(
-                            "Enter the technical name of the field as defined "
-                            "in the ServiceNow database."
-                        ),
+                        help_text=name_help,
                         custom_validate=[
                             LengthInRange(min_value=1),
                             MatchRegex(
                                 regex="^[-a-z0-9A-Z_]*$",
                                 error_msg=Message(
-                                    "Invalid custom field. Only the characters a-z, A-Z, "
+                                    "Invalid field name. Only the characters a-z, A-Z, "
                                     "0-9, _ and - are allowed."
                                 ),
                             ),

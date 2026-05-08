@@ -12,7 +12,7 @@
 from typing import Any
 
 from cmk.agent_based.v2 import Metric, Result, Service, State
-from cmk.legacy_checks.mem_linux import (
+from cmk.plugins.memory.agent_based.mem_linux import (
     check_mem_linux,
     discover_mem_linux,
 )

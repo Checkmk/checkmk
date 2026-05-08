@@ -591,8 +591,6 @@ def _page_menu_entry_acknowledge(
     if int_filename:
         urivars.append(("file", form_file_to_ext(int_filename)))
 
-    ack_msg = _get_ack_msg(host_name, form_file_to_ext(int_filename) if int_filename else None)
-
     yield PageMenuEntry(
         title=label,
         icon_name=StaticIcon(IconNames.delete),
@@ -600,8 +598,11 @@ def _page_menu_entry_acknowledge(
             make_confirm_delete_link(
                 url=makeactionuri(request, transactions, urivars),
                 title=_("Clear logs by deleting all stored messages"),
-                message=_("This affects %s") % ack_msg,
-                confirm_button=_("Clear & Delete"),
+                message=_(
+                    "Clearing the log acknowledges and removes the stored messages."
+                    " Log files on the host stay unchanged."
+                ),
+                confirm_button=label,
             )
         ),
         is_shortcut=True,

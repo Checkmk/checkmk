@@ -19,6 +19,7 @@ py_library(
     imports = ["."],
     visibility = ["//visibility:public"],
     deps = [
+        "//packages/cmk-web/cmk/web/htmllib",
         "//packages/cmk-web/cmk/web/utils",
     ],
 )
@@ -27,6 +28,7 @@ py_doc_test(
     name = "doctest",
     size = "small",
     srcs = [
+        "//packages/cmk-web/cmk/web/htmllib",
         "//packages/cmk-web/cmk/web/utils",
     ],
     tags = ["no-mypy"],
@@ -35,6 +37,7 @@ py_doc_test(
 py_requirements_test(
     name = "requirements-test",
     libs = [
+        "//packages/cmk-web/cmk/web/htmllib",
         "//packages/cmk-web/cmk/web/utils",
     ],
     requirements_in = "requirements.in",
@@ -59,6 +62,7 @@ py_wheel(
     version = "1.0.0",
     deps = [
         ":cmk-web",
+        "//packages/cmk-web/cmk/web/htmllib",
         "//packages/cmk-web/cmk/web/utils",
     ],
 )

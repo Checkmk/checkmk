@@ -882,6 +882,7 @@ allows = [
   "cmk.utils.translations",
   "cmk.utils.unixsocket_http",
   "cmk.utils.urls",
+  "cmk.web.htmllib",
   "cmk.web.utils.html",
   "cmk.web.utils.escaping",
   "cmk.web.utils.speaklater",

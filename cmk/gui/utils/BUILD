@@ -243,7 +243,7 @@ py_library(
         "//tests:__subpackages__",
     ],
     deps = [
-        "//cmk/utils",
+        "//cmk/utils:paths",
         "//packages/cmk-ccc:version",
     ],
 )
@@ -470,7 +470,7 @@ py_library(
         "//cmk/gui:http",
         "//cmk/gui:i18n",
         "//cmk/gui:type_defs",
-        "//cmk/utils",
+        "//cmk/utils:paths",
         "//packages/cmk-ccc:version",
         requirement("flask"),
     ],

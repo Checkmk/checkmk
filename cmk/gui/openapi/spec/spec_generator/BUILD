@@ -61,7 +61,7 @@ py_library(
         "//cmk/gui/openapi/restful_objects:type_defs",
         "//cmk/gui/openapi/spec",
         "//cmk/gui/openapi/spec:utils",
-        "//cmk/utils",
+        "//cmk/utils:paths",
         "//packages/cmk-ccc:site",
         "//packages/cmk-ccc:store",
         "//packages/cmk-ccc:version",

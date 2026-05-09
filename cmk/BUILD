@@ -14,7 +14,7 @@ py_library(
     visibility = ["//:__subpackages__"],
     deps = [
         "//cmk/gui/utils:htpasswd",
-        "//cmk/utils",
+        "//cmk/utils:paths",
         "//packages/cmk-ccc:user",
         "//packages/cmk-ccc:version",
         "//packages/cmk-crypto",
@@ -660,6 +660,7 @@ py_wheel(
         "//cmk/special_agents",
         "//cmk/update_config",
         "//cmk/utils",
+        "//cmk/utils:paths",
     ],
 )
 

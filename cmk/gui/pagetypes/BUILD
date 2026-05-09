@@ -47,7 +47,7 @@ py_library(
         "//cmk/gui/utils:user_errors",
         "//cmk/gui/valuespec",
         "//cmk/gui/watolib:groups_io",
-        "//cmk/utils",
+        "//cmk/utils:paths",
         "//packages/cmk-ccc:exceptions",
         "//packages/cmk-ccc:plugin-registry",
         "//packages/cmk-ccc:store",

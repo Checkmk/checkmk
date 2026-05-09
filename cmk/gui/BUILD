@@ -84,9 +84,9 @@ py_library(
         "//tests:__subpackages__",
     ],
     deps = [
-        "//cmk/utils",
+        "//cmk/utils:paths",
         "//packages/cmk-ccc:site",
-        "//packages/cmk-livestatus-client",
+        "//packages/cmk-livestatus-client:py_livestatus",
     ],
 )
 
@@ -144,7 +144,7 @@ py_library(
         ":ctx_stack",
         ":hooks",
         "//cmk/gui/utils:speaklater",
-        "//cmk/utils",
+        "//cmk/utils:paths",
     ],
 )
 
@@ -240,7 +240,7 @@ py_library(
         ":exceptions",
         ":hooks",
         ":i18n",
-        "//cmk/utils",
+        "//cmk/utils:paths",
         "//packages/cmk-ccc:version",
     ],
 )
@@ -384,7 +384,7 @@ py_library(
         "//tests:__subpackages__",
     ],
     deps = [
-        "//cmk/utils",
+        "//cmk/utils:paths",
         "//packages/cmk-ccc:store",
     ],
 )
@@ -417,7 +417,7 @@ py_library(
     ],
     deps = [
         ":log",
-        "//cmk/utils",
+        "//cmk/utils:paths",
     ],
 )
 
@@ -884,7 +884,7 @@ py_library(
         "//cmk/gui/utils:escaping",
         "//cmk/gui/utils:mobile",
         "//cmk/gui/utils:urls",
-        "//cmk/utils",
+        "//cmk/utils:paths",
         "//packages/cmk-ccc:crash-reporting",
         "//packages/cmk-ccc:site",
         "//packages/cmk-ccc:version",

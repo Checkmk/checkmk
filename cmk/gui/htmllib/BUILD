@@ -98,7 +98,7 @@ py_library(
         "//cmk/gui/utils:transaction_manager",
         "//cmk/gui/utils:urls",
         "//cmk/gui/utils:user_errors",
-        "//cmk/utils",
+        "//cmk/utils:paths",
         "//packages/cmk-ccc:version",
         "//packages/cmk-shared-typing:cmk_shared_typing_py",
         requirement("flask"),

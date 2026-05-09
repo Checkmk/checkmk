@@ -226,7 +226,7 @@ py_library(
     imports = ["."],
     deps = [
         "//cmk/piggyback:backend",
-        "//cmk/utils",
+        "//cmk/utils:paths",
         "//packages/cmk-livestatus-client",
         "//packages/cmk-livestatus-client:py_livestatus",
     ],

@@ -14,12 +14,27 @@ exports_files([
 ])
 
 py_library(
+    name = "paths",
+    srcs = ["paths.py"],
+    visibility = [
+        "//bin:__subpackages__",
+        "//cmk:__subpackages__",
+        "//non-free/packages:__subpackages__",
+        "//non-free/tests:__subpackages__",
+        "//omd/packages:__subpackages__",
+        "//packages:__subpackages__",
+        "//tests:__subpackages__",
+    ],
+)
+
+py_library(
     name = "utils",
     srcs = glob(
         include = ["**/*.py"],
         exclude = [
             "**/community/**",
             "**/nonfree/**",
+            "paths.py",
         ],
     ),
     data = [
@@ -36,6 +51,7 @@ py_library(
         "//tests:__subpackages__",
     ],
     deps = [
+        ":paths",
         "//packages/cmk-ccc:config-path",
         "//packages/cmk-ccc:debug",
         "//packages/cmk-ccc:exceptions",

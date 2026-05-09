@@ -83,7 +83,7 @@ py_library(
     ],
     deps = [
         "//cmk/diskspace",
-        "//cmk/utils",
+        "//cmk/utils:paths",
         "//omd/packages/omd:omdlib",
     ],
 )

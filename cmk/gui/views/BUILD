@@ -421,7 +421,7 @@ py_library(
         "//cmk/gui/utils:user_errors",
         "//cmk/gui/valuespec",
         "//cmk/gui/visuals",
-        "//cmk/utils",
+        "//cmk/utils:paths",
         "//packages/cmk-ccc:hostaddress",
         "//packages/cmk-ccc:plugin-registry",
         "//packages/cmk-ccc:site",

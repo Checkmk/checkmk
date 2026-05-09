@@ -3,32 +3,64 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Mapping
 
-from cmk.gui.agent_bakery import RulespecGroupMonitoringAgentsWindowsAgent
-from cmk.gui.i18n import _
-from cmk.gui.plugins.wato.utils import HostRulespec, rulespec_registry
-from cmk.gui.valuespec import Checkbox
-from cmk.utils.rulesets.definition import RuleGroup
+from cmk.rulesets.v1 import Help, Title
+from cmk.rulesets.v1.form_specs import (
+    CascadingSingleChoice,
+    CascadingSingleChoiceElement,
+    DefaultValue,
+    DictElement,
+    Dictionary,
+    FixedValue,
+)
+from cmk.rulesets.v1.rule_specs import AgentConfig, Topic
 
 
-def _valuespec_agent_config_remove_legacy() -> Checkbox:
-    return Checkbox(
-        title=_("Legacy agent management"),
-        label=_("Uninstall the legacy (pre 1.6) agent after installation of the new Windows agent"),
-        help=_(
+def migrate(value: object) -> Mapping[str, object]:
+    if isinstance(value, dict) and "deployment" in value:
+        return value
+    if value:
+        return {"deployment": ("sync", None)}
+    return {"deployment": ("do_not_deploy", None)}
+
+
+def _form_spec() -> Dictionary:
+    return Dictionary(
+        help_text=Help(
             "Enable this option if you want to uninstall the legacy agent "
             "after the new Windows agent have been installed."
         ),
-        true_label="Uninstall legacy agent",
-        false_label="Retain legacy agent",
-        default_value=False,
+        elements={
+            "deployment": DictElement(
+                required=True,
+                parameter_form=CascadingSingleChoice(
+                    title=Title("Legacy agent management"),
+                    elements=(
+                        CascadingSingleChoiceElement(
+                            name="sync",
+                            title=Title(
+                                "Uninstall the legacy (pre 1.6) agent after installation of the new Windows agent"
+                            ),
+                            parameter_form=FixedValue(value=None),
+                        ),
+                        CascadingSingleChoiceElement(
+                            name="do_not_deploy",
+                            title=Title("Do not uninstall the legacy agent"),
+                            parameter_form=FixedValue(value=None),
+                        ),
+                    ),
+                    prefill=DefaultValue("sync"),
+                ),
+            ),
+        },
+        migrate=migrate,
     )
 
 
-rulespec_registry.register(
-    HostRulespec(
-        group=RulespecGroupMonitoringAgentsWindowsAgent,
-        name=RuleGroup.AgentConfig("remove_legacy"),
-        valuespec=_valuespec_agent_config_remove_legacy,
-    )
+rule_spec_remove_legacy = AgentConfig(
+    title=Title("Legacy agent management (Windows)"),
+    name="remove_legacy",
+    topic=Topic.WINDOWS,
+    parameter_form=_form_spec,
 )

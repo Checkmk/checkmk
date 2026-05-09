@@ -19,6 +19,7 @@ plugin_apis = [
   "cmk.dcd_connector_parameters.internal",
   "cmk.dcd_connectors.internal",
   "cmk.graphing.v1",
+  "cmk.graphing.v2_unstable",
   "cmk.inventory_ui.v1_unstable",
   "cmk.password_store.v1_unstable",
   "cmk.rulesets.internal",

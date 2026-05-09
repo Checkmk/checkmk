@@ -96,6 +96,8 @@ py_library(
         "cmk/graphing/v1/metrics.py",
         "cmk/graphing/v1/perfometers.py",
         "cmk/graphing/v1/translations.py",
+        "cmk/graphing/v2_unstable/__init__.py",
+        "cmk/graphing/v2_unstable/metrics.py",
     ],
     data = [
         "cmk/graphing/py.typed",

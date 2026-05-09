@@ -5,10 +5,17 @@
 
 import subprocess
 
+import pytest
+
 from cmk.utils.paths import mkbackup_lock_dir
 from tests.testlib.site import Site
+from tests.testlib.version import edition_from_env
 
 
+@pytest.mark.skipif(
+    edition_from_env().is_cloud_edition(),
+    reason="mkbackup is not shipped in the cloud edition",
+)
 def test_backup_dir(site: Site) -> None:
     backup_permission_mask = oct(mkbackup_lock_dir.stat().st_mode)[-4:]
     assert backup_permission_mask == "0770"

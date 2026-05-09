@@ -18,8 +18,14 @@ from cmk.utils.paths import mkbackup_lock_dir
 from tests.testlib.common.utils2 import DISTROS_MISSING_WHITELIST_ENVIRONMENT_FOR_SU, run
 from tests.testlib.pytest_helpers.calls import exit_pytest_on_exceptions
 from tests.testlib.site import Site, SiteFactory
+from tests.testlib.version import edition_from_env
 
 logger = logging.getLogger(__name__)
+
+pytestmark = pytest.mark.skipif(
+    edition_from_env().is_cloud_edition(),
+    reason="mkbackup is not shipped in the cloud edition",
+)
 
 
 @pytest.fixture(name="site_for_mkbackup_tests", scope="module")

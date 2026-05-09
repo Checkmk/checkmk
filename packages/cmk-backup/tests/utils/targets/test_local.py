@@ -9,9 +9,9 @@ from pathlib import Path
 
 import pytest
 
+from cmk.backup.utils.targets import TargetId
+from cmk.backup.utils.targets.local import LocalTarget
 from cmk.ccc.exceptions import MKGeneralException
-from cmk.utils.backup.targets import TargetId
-from cmk.utils.backup.targets.local import LocalTarget
 
 
 class TestLocalTarget:

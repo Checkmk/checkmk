@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import pytest
 
-from cmk.utils.backup.targets.aws_s3_bucket import _client_args, S3Params
+from cmk.backup.utils.targets.aws_s3_bucket import _client_args, S3Params
 
 
 class TestS3BucketEndpointUrl:

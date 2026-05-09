@@ -2,6 +2,7 @@ filegroup(
     name = "python_requirements",
     srcs = [
         "//packages/cmk-agent-receiver:requirements.in",
+        "//packages/cmk-backup:requirements.in",
         "//packages/cmk-ccc:requirements.in",
         "//packages/cmk-check-engine:requirements.in",
         "//packages/cmk-crypto:requirements.in",
@@ -30,6 +31,7 @@ filegroup(
     srcs = [
         "//packages/cmk-agent-receiver:dev-requirements.in",
         "//packages/cmk-astrein:requirements.in",
+        "//packages/cmk-backup:dev-requirements.in",
         "//packages/cmk-ccc:dev-requirements.in",
         "//packages/cmk-check-engine:dev-requirements.in",
         "//packages/cmk-crypto:dev-requirements.in",

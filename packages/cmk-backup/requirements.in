@@ -1,0 +1,4 @@
+azure-identity
+azure-storage-blob
+boto3
+pydantic

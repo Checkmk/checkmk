@@ -8,16 +8,16 @@ from collections.abc import Iterator, Mapping
 from pathlib import Path
 from typing import Final, Protocol, TypedDict
 
-from cmk.ccc.exceptions import MKGeneralException
-from cmk.utils.backup.targets.local import LocalTarget
-from cmk.utils.backup.type_defs import Backup, SiteBackupInfo
-from cmk.utils.backup.utils import (
+from cmk.backup.utils.targets.local import LocalTarget
+from cmk.backup.utils.type_defs import Backup, SiteBackupInfo
+from cmk.backup.utils.utils import (
     BACKUP_INFO_FILENAME,
     load_backup_info,
     log,
     UnrecognizedBackupTypeError,
     verify_backup_file,
 )
+from cmk.ccc.exceptions import MKGeneralException
 
 from ..job import Job
 from . import TargetId

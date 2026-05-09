@@ -299,6 +299,35 @@ allows = [
   "cmk.utils",
 ]
 
+[components."cmk.backup"]
+allows = [
+  "@ccc",
+  "@crypto",
+  "cmk.gui.breadcrumb",
+  "cmk.gui.config",
+  "cmk.gui.exceptions",
+  "cmk.gui.form_specs",
+  "cmk.gui.forms",
+  "cmk.gui.header",
+  "cmk.gui.htmllib",
+  "cmk.gui.http",
+  "cmk.gui.i18n",
+  "cmk.gui.key_mgmt",
+  "cmk.gui.logged_in",
+  "cmk.gui.main_menu",
+  "cmk.gui.page_menu",
+  "cmk.gui.pages",
+  "cmk.gui.table",
+  "cmk.gui.type_defs",
+  "cmk.gui.utils",
+  "cmk.gui.valuespec",
+  "cmk.gui.wato",
+  "cmk.gui.watolib",
+  "cmk.rulesets.internal",
+  "cmk.rulesets.v1",
+  "cmk.utils",
+]
+
 # only allow itself, this is the future :-)
 [components."cmk.bakery"]
 allows = []
@@ -672,6 +701,7 @@ allows = [
   "@livestatus_client",
   "@mkp_tool",
   "@plugin_apis",
+  "cmk.backup",
   "cmk.bakery.shared",
   "cmk.dcd.gui",
   "cmk.discover_plugins",
@@ -723,6 +753,7 @@ allows = [
   "@livestatus_client",
   "@metric_backend",
   "@plugin_apis",
+  "cmk.backup",
   "cmk.checkengine",
   "cmk.dcd.gui",
   "cmk.dcd.protocols",
@@ -756,6 +787,7 @@ allows = [
   "@ccc",
   "@crypto",
   "@messaging",
+  "cmk.backup",
   "cmk.bi",
   "cmk.dcd.gui",
   "cmk.gui",
@@ -830,10 +862,10 @@ allows = [
   "cmk.product_usage",
   "cmk.server_side_calls_backend",
   "cmk.shared_typing",
+  "cmk.backup",
   "cmk.utils.agent_registration",
   "cmk.utils.auto_queue",
   "cmk.utils.automation_config",
-  "cmk.utils.backup",
   "cmk.utils.certs",
   "cmk.utils.check_utils",
   "cmk.utils.config_warnings",
@@ -1178,17 +1210,6 @@ allows = ["cmk.ccc.hostaddress"]
 
 [components."cmk.utils.automation_config"]
 allows = ["cmk.ccc.site"]
-
-[components."cmk.utils.backup"]
-allows = [
-  "@crypto",
-  "cmk.ccc.exceptions",
-  "cmk.ccc.i18n",
-  "cmk.ccc.store",
-  "cmk.ccc.version",
-  "cmk.utils.password_store",
-  "cmk.utils.paths",
-]
 
 [components."cmk.utils.caching"]
 allows = []
@@ -1599,7 +1620,7 @@ allows = ["cmk.inventory", "cmk.utils.paths"]
 allows = ["cmk.utils.setup_search_index"]
 
 [file_dependencies."bin/mkbackup"]
-allows = ["@ccc", "cmk.utils"]
+allows = ["@ccc", "cmk.backup", "cmk.utils"]
 
 [file_dependencies."bin/mkp"]
 allows = ["@ccc", "@mkp_tool", "cmk.discover_plugins", "cmk.utils"]

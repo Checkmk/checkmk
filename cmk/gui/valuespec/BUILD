@@ -10,6 +10,7 @@ py_library(
         "//non-free/packages:__subpackages__",
         "//non-free/packages/cmk-dcd:__pkg__",
         "//non-free/packages/cmk-liveproxyd:__pkg__",
+        "//packages/cmk-backup:__pkg__",
         "//tests:__subpackages__",
     ],
     deps = [

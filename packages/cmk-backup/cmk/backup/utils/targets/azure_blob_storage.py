@@ -9,8 +9,8 @@ from collections.abc import Iterator
 from pathlib import Path
 from typing import assert_never, Final, Literal, TYPE_CHECKING, TypedDict, Union
 
+from cmk.backup.utils.targets.remote_interface import ProgressStepLogger, RemoteTarget
 from cmk.ccc.exceptions import MKGeneralException
-from cmk.utils.backup.targets.remote_interface import ProgressStepLogger, RemoteTarget
 from cmk.utils.password_store import extract, PasswordId
 
 if TYPE_CHECKING:

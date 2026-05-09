@@ -31,6 +31,7 @@ py_library(
     visibility = [
         "//cmk:__subpackages__",
         "//non-free/packages:__subpackages__",
+        "//packages/cmk-backup:__pkg__",
         "//tests:__subpackages__",
     ],
     deps = [
@@ -164,7 +165,6 @@ py_library(
         "//cmk/gui:view_utils",
         "//cmk/gui/background_job/job",
         "//cmk/gui/background_job/wato",
-        "//cmk/gui/backup",
         "//cmk/gui/dashboard",
         "//cmk/gui/form_specs",
         "//cmk/gui/htmllib:foldable_container",
@@ -218,6 +218,7 @@ py_library(
         "//cmk/gui/watolib:registries",
         "//cmk/gui/watolib:timeperiods",
         "//cmk/utils",
+        "//packages/cmk-backup:gui",
         "//packages/cmk-ccc:exceptions",
         "//packages/cmk-ccc:hostaddress",
         "//packages/cmk-ccc:plugin-registry",

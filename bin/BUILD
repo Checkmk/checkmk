@@ -82,7 +82,6 @@ pkg_files(
         ":init-redis.py",
         ":livedump",
         ":message-broker-certs",
-        ":mkbackup.py",
         ":mkevent",
         ":mkp.py",
     ],
@@ -104,7 +103,6 @@ pkg_files(
         "cmk-validate-config.py": "cmk-validate-config",
         "cmk-validate-plugins.py": "cmk-validate-plugins",
         "init-redis.py": "init-redis",
-        "mkbackup.py": "mkbackup",
         "mkp.py": "mkp",
     },
 )
@@ -280,13 +278,6 @@ py_library(
 py_library(
     name = "init_redis_py",
     srcs = ["init-redis.py"],
-    imports = ["."],
-    tags = ["no-mypy"],
-)
-
-py_library(
-    name = "mkbackup_py",
-    srcs = ["mkbackup.py"],
     imports = ["."],
     tags = ["no-mypy"],
 )

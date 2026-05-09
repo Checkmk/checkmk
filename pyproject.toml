@@ -67,6 +67,17 @@ ignore = [
   "ARG005",
   "SLF001",
 ]
+"packages/cmk-backup/*" = [
+  "A001",
+  "A002",
+  "A004",
+  "ARG001",
+  "ARG002",
+  "ARG003",
+  "ARG004",
+  "ARG005",
+  "SLF001",
+]
 "packages/cmk-ec/*" = ["ARG001", "ARG002"]
 "packages/cmk-logwatch/tests/*" = ["ARG001", "ARG002"]
 "packages/cmk-plugins/*" = ["ARG001", "ARG002"]

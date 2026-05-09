@@ -204,13 +204,13 @@ azure-identity==1.25.2 \
     --hash=sha256:1b40060553d01a72ba0d708b9a46d0f61f56312e215d8896d836653ffdc6753d
     # via
     #   -c requirements.txt
-    #   -r cmk/requirements.in
+    #   -r packages/cmk-backup/requirements.in
 azure-storage-blob==12.28.0 \
     --hash=sha256:00fb1db28bf6a7b7ecaa48e3b1d5c83bfadacc5a678b77826081304bd87d6461 \
     --hash=sha256:e7d98ea108258d29aa0efbfd591b2e2075fa1722a2fae8699f0b3c9de11eff41
     # via
     #   -c requirements.txt
-    #   -r cmk/requirements.in
+    #   -r packages/cmk-backup/requirements.in
 bcrypt==5.0.0 \
     --hash=sha256:046ad6db88edb3c5ece4369af997938fb1c19d6a699b9c1b27b0db432faae4c4 \
     --hash=sha256:0c418ca99fd47e9c59a301744d63328f17798b5947b0f791e9af3c1c499c2d0a \
@@ -322,7 +322,7 @@ boto3==1.42.49 \
     --hash=sha256:9cd252f640567b86e92b0a8ffdd4ade9a3018ee357c724bff6a21b8c8a41be0c
     # via
     #   -c requirements.txt
-    #   -r cmk/requirements.in
+    #   -r packages/cmk-backup/requirements.in
     #   -r packages/cmk-plugins/requirements.in
 botocore==1.42.49 \
     --hash=sha256:1c33544f72101eed4ccf903ebb667a803e14e25b2af4e0836e4b871da1c0af37 \
@@ -2644,6 +2644,7 @@ pydantic==2.12.5 \
     #   -r non-free/packages/cmk-robotmk/requirements.in
     #   -r non-free/packages/cmk-telemetry/requirements.in
     #   -r packages/cmk-agent-receiver/requirements.in
+    #   -r packages/cmk-backup/requirements.in
     #   -r packages/cmk-messaging/requirements.in
     #   -r packages/cmk-mkp-tool/requirements.in
     #   -r packages/cmk-plugin-apis/requirements.in

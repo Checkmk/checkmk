@@ -6,13 +6,13 @@
 """Raw edition and only raw edition specific registrations"""
 
 import cmk.gui.wato._notification_parameter._mail as mail
+from cmk.backup.gui.registration import backup_register
 from cmk.ccc.version import Edition
 from cmk.gui import agent_commands, login, nagvis, sidebar, visuals
 from cmk.gui import plugin_registration as plugins
 from cmk.gui.agent_commands import agent_commands_registry
 from cmk.gui.autocompleters import autocompleter_registry
 from cmk.gui.background_job.job import job_registry
-from cmk.gui.backup.registration import backup_register
 from cmk.gui.common_registration import register as common_registration
 from cmk.gui.cron import cron_job_registry
 from cmk.gui.custom_icons.registration import custom_icons_register

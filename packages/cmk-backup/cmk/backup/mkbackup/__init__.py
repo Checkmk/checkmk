@@ -23,27 +23,21 @@ from pathlib import Path
 from typing import IO, NamedTuple, NoReturn
 
 import cmk.ccc.version as cmk_version  # astrein: disable=cmk-module-layer-violation
-from cmk.ccc import daemon  # astrein: disable=cmk-module-layer-violation
-from cmk.ccc.exceptions import (  # astrein: disable=cmk-module-layer-violation
-    MKGeneralException,
-    MKTerminate,
-)
-from cmk.utils import render, schedule  # astrein: disable=cmk-module-layer-violation
-from cmk.utils.backup.config import Config  # astrein: disable=cmk-module-layer-violation
-from cmk.utils.backup.job import Job  # astrein: disable=cmk-module-layer-violation
-from cmk.utils.backup.targets import TargetId  # astrein: disable=cmk-module-layer-violation
-from cmk.utils.backup.targets.aws_s3_bucket import (  # astrein: disable=cmk-module-layer-violation
+from cmk.backup.utils.config import Config  # astrein: disable=cmk-module-layer-violation
+from cmk.backup.utils.job import Job  # astrein: disable=cmk-module-layer-violation
+from cmk.backup.utils.targets import TargetId  # astrein: disable=cmk-module-layer-violation
+from cmk.backup.utils.targets.aws_s3_bucket import (  # astrein: disable=cmk-module-layer-violation
     S3Target,
 )
-from cmk.utils.backup.targets.azure_blob_storage import (  # astrein: disable=cmk-module-layer-violation
+from cmk.backup.utils.targets.azure_blob_storage import (  # astrein: disable=cmk-module-layer-violation
     BlobStorageTarget,
 )
-from cmk.utils.backup.targets.local import (  # astrein: disable=cmk-module-layer-violation
+from cmk.backup.utils.targets.local import (  # astrein: disable=cmk-module-layer-violation
     LocalTarget,
 )
-from cmk.utils.backup.targets.protocol import Target  # astrein: disable=cmk-module-layer-violation
-from cmk.utils.backup.type_defs import SiteBackupInfo  # astrein: disable=cmk-module-layer-violation
-from cmk.utils.backup.utils import (  # astrein: disable=cmk-module-layer-violation
+from cmk.backup.utils.targets.protocol import Target  # astrein: disable=cmk-module-layer-violation
+from cmk.backup.utils.type_defs import SiteBackupInfo  # astrein: disable=cmk-module-layer-violation
+from cmk.backup.utils.utils import (  # astrein: disable=cmk-module-layer-violation
     current_site_id,
     do_site_backup,
     do_site_restore,
@@ -55,6 +49,12 @@ from cmk.utils.backup.utils import (  # astrein: disable=cmk-module-layer-violat
     SITE_BACKUP_MARKER,
     State,
 )
+from cmk.ccc import daemon  # astrein: disable=cmk-module-layer-violation
+from cmk.ccc.exceptions import (  # astrein: disable=cmk-module-layer-violation
+    MKGeneralException,
+    MKTerminate,
+)
+from cmk.utils import render, schedule  # astrein: disable=cmk-module-layer-violation
 from cmk.utils.paths import mkbackup_lock_dir  # astrein: disable=cmk-module-layer-violation
 
 ################
@@ -626,19 +626,24 @@ def main() -> None:
     mode.runner(mode_args, opt_dict, config)
 
 
-if __name__ == "__main__":
+def cli_main() -> int:
     try:
         main()
     except MKTerminate as exc:
         sys.stderr.write(f"{exc}\n")
-        sys.exit(1)
+        return 1
 
     except KeyboardInterrupt:
         sys.stderr.write("Terminated.\n")
-        sys.exit(0)
+        return 0
 
     except MKGeneralException as exc:
         sys.stderr.write(f"{exc}\n")
         if opt_debug:
             raise
-        sys.exit(3)
+        return 3
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(cli_main())

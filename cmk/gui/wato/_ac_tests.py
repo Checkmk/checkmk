@@ -18,13 +18,13 @@ from livestatus import LocalConnection, SiteConfiguration, SiteConfigurations
 
 import cmk.utils.paths
 import cmk.utils.render
+from cmk.backup.gui.handler import BackupConfig
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.site import SiteId
 from cmk.ccc.user import UserId
 from cmk.ccc.version import __version__
 from cmk.crypto.password import Password
 from cmk.gui import userdb
-from cmk.gui.backup.handler import BackupConfig
 from cmk.gui.config import active_config, Config
 from cmk.gui.http import request
 from cmk.gui.i18n import _

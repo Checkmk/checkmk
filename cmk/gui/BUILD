@@ -12,6 +12,7 @@ py_library(
     visibility = [
         "//cmk:__subpackages__",
         "//non-free/packages:__subpackages__",
+        "//packages/cmk-backup:__pkg__",
         "//tests:__subpackages__",
     ],
     deps = [
@@ -111,6 +112,7 @@ py_library(
     visibility = [
         "//cmk:__subpackages__",
         "//non-free/packages:__subpackages__",
+        "//packages/cmk-backup:__pkg__",
         "//tests:__subpackages__",
     ],
     deps = [
@@ -135,6 +137,7 @@ py_library(
         "//cmk:__subpackages__",
         "//non-free/packages:__subpackages__",
         "//omd/packages/appliance:__pkg__",
+        "//packages/cmk-backup:__pkg__",
         "//tests:__subpackages__",
     ],
     deps = [
@@ -165,6 +168,7 @@ py_library(
     visibility = [
         "//cmk:__subpackages__",
         "//non-free/packages:__subpackages__",
+        "//packages/cmk-backup:__pkg__",
         "//tests:__subpackages__",
     ],
     deps = [
@@ -489,6 +493,7 @@ py_library(
     visibility = [
         "//cmk:__subpackages__",
         "//non-free/packages:__subpackages__",
+        "//packages/cmk-backup:__pkg__",
         "//tests:__subpackages__",
     ],
     deps = [
@@ -518,6 +523,7 @@ py_library(
     visibility = [
         "//cmk:__subpackages__",
         "//non-free/packages:__subpackages__",
+        "//packages/cmk-backup:__pkg__",
         "//tests:__subpackages__",
     ],
     deps = [
@@ -613,6 +619,7 @@ py_library(
     visibility = [
         "//cmk:__subpackages__",
         "//non-free/packages:__subpackages__",
+        "//packages/cmk-backup:__pkg__",
         "//tests:__subpackages__",
     ],
     deps = [
@@ -641,6 +648,7 @@ py_library(
     imports = ["../.."],
     visibility = [
         "//cmk:__subpackages__",
+        "//packages/cmk-backup:__pkg__",
         "//tests:__subpackages__",
     ],
     deps = [
@@ -682,6 +690,7 @@ py_library(
     visibility = [
         "//cmk:__subpackages__",
         "//non-free/packages:__subpackages__",
+        "//packages/cmk-backup:__pkg__",
         "//tests:__subpackages__",
     ],
     deps = [
@@ -733,6 +742,7 @@ py_library(
     visibility = [
         "//cmk:__subpackages__",
         "//non-free/packages:__subpackages__",
+        "//packages/cmk-backup:__pkg__",
         "//tests:__subpackages__",
     ],
     deps = [
@@ -791,6 +801,7 @@ py_library(
     visibility = [
         "//cmk:__subpackages__",
         "//non-free/packages:__subpackages__",
+        "//packages/cmk-backup:__pkg__",
         "//tests:__subpackages__",
     ],
     deps = [
@@ -839,6 +850,7 @@ py_library(
         "//non-free/packages/cmk-robotmk:__pkg__",
         "//omd/packages:__subpackages__",
         "//omd/packages/appliance:__pkg__",
+        "//packages/cmk-backup:__pkg__",
         "//tests:__subpackages__",
     ],
     deps = [
@@ -886,6 +898,7 @@ py_library(
     visibility = [
         "//cmk:__subpackages__",
         "//non-free/packages:__subpackages__",
+        "//packages/cmk-backup:__pkg__",
         "//tests:__subpackages__",
     ],
     deps = [
@@ -1096,6 +1109,7 @@ py_library(
     imports = ["../.."],
     visibility = [
         "//cmk:__subpackages__",
+        "//packages/cmk-backup:__pkg__",
         "//tests:__subpackages__",
     ],
     deps = [
@@ -1809,7 +1823,6 @@ py_library(
         ":plugin_registration",
         ":sites",
         "//cmk/gui/background_job/job",
-        "//cmk/gui/backup",
         "//cmk/gui/custom_icons",
         "//cmk/gui/dashboard",
         "//cmk/gui/data_source",
@@ -1842,6 +1855,7 @@ py_library(
         "//cmk/gui/watolib:groups_io",
         "//cmk/gui/watolib:registries",
         "//cmk/gui/welcome",
+        "//packages/cmk-backup:gui",
         "//packages/cmk-ccc:version",
     ],
 )
@@ -2176,7 +2190,6 @@ py_library(
         "//cmk/gui/agent_registration",
         "//cmk/gui/availability",
         "//cmk/gui/background_job/job",
-        "//cmk/gui/backup",
         "//cmk/gui/bi",
         "//cmk/gui/bi:_compiler",
         "//cmk/gui/bi:bi_manager",
@@ -2322,6 +2335,7 @@ py_library(
         "//cmk/product_usage",
         "//cmk/server_side_calls_backend",
         "//cmk/utils",
+        "//packages/cmk-backup:gui",
         "//packages/cmk-ccc:archive",
         "//packages/cmk-ccc:cleanup",
         "//packages/cmk-ccc:config-path",

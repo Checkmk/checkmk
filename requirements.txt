@@ -203,7 +203,7 @@ azure-core==1.38.1 \
 azure-identity==1.25.2 \
     --hash=sha256:030dbaa720266c796221c6cdbd1999b408c079032c919fef725fcc348a540fe9 \
     --hash=sha256:1b40060553d01a72ba0d708b9a46d0f61f56312e215d8896d836653ffdc6753d
-    # via -r cmk/requirements.in
+    # via -r packages/cmk-backup/requirements.in
 azure-mgmt-compute==37.2.0 \
     --hash=sha256:23499d4d5ad2b2bf40a4c59df2684cc4c9cef0f9672a4e842bb9a1cf6b62f628 \
     --hash=sha256:70741c26ac94c30408a3b20f4fdfe93e6481e308b3c14a6dbefdfd4794028616
@@ -221,7 +221,7 @@ azure-mgmt-resource==25.0.0 \
 azure-storage-blob==12.28.0 \
     --hash=sha256:00fb1db28bf6a7b7ecaa48e3b1d5c83bfadacc5a678b77826081304bd87d6461 \
     --hash=sha256:e7d98ea108258d29aa0efbfd591b2e2075fa1722a2fae8699f0b3c9de11eff41
-    # via -r cmk/requirements.in
+    # via -r packages/cmk-backup/requirements.in
 babel==2.18.0 \
     --hash=sha256:b80b99a14bd085fcacfa15c9165f651fbb3406e66cc603abf11c5750937c992d \
     --hash=sha256:e2b422b277c2b9a9630c1d7903c2a00d0830c409c59ac8cae9081c92f1aeba35
@@ -344,7 +344,7 @@ boto3==1.42.49 \
     --hash=sha256:99e1df4361c3f6ff6ade65803c043ea96314826134962dd3b385433b309eb819 \
     --hash=sha256:9cd252f640567b86e92b0a8ffdd4ade9a3018ee357c724bff6a21b8c8a41be0c
     # via
-    #   -r cmk/requirements.in
+    #   -r packages/cmk-backup/requirements.in
     #   -r packages/cmk-plugins/requirements.in
 boto3-stubs[logs]==1.42.73 \
     --hash=sha256:36f625769b5505c4bc627f16244b98de9e10dae3ac36f1aa0f0ebe2f201dc138 \
@@ -3672,6 +3672,7 @@ pydantic==2.12.5 \
     #   -r non-free/packages/cmk-robotmk/requirements.in
     #   -r non-free/packages/cmk-telemetry/requirements.in
     #   -r packages/cmk-agent-receiver/requirements.in
+    #   -r packages/cmk-backup/requirements.in
     #   -r packages/cmk-messaging/requirements.in
     #   -r packages/cmk-mkp-tool/requirements.in
     #   -r packages/cmk-plugin-apis/requirements.in
@@ -4078,6 +4079,7 @@ pytest==8.4.2 \
     #   -r non-free/packages/cmk-telemetry/dev-requirements.in
     #   -r non-free/packages/cmk-update-agent/dev-requirements.in
     #   -r packages/cmk-agent-receiver/dev-requirements.in
+    #   -r packages/cmk-backup/dev-requirements.in
     #   -r packages/cmk-ccc/dev-requirements.in
     #   -r packages/cmk-check-engine/dev-requirements.in
     #   -r packages/cmk-crypto/dev-requirements.in

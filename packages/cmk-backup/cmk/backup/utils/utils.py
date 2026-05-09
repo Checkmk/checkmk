@@ -17,11 +17,11 @@ from hashlib import md5
 from pathlib import Path
 from typing import Final
 
+from cmk.backup.utils.job import Job, JobState
+from cmk.backup.utils.stream import BackupStream, RestoreStream
+from cmk.backup.utils.type_defs import Backup, RawBackupInfo, SiteBackupInfo
 from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException
-from cmk.utils.backup.job import Job, JobState
-from cmk.utils.backup.stream import BackupStream, RestoreStream
-from cmk.utils.backup.type_defs import Backup, RawBackupInfo, SiteBackupInfo
 
 SITE_BACKUP_MARKER = "Check_MK"
 BACKUP_INFO_FILENAME = "mkbackup.info"

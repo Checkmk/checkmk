@@ -10,9 +10,9 @@ from unittest import mock
 
 import pytest
 
+from cmk.backup.utils.stream import BackupStream, MKBackupStream, RestoreStream
 from cmk.crypto.certificate import Certificate, CertificatePEM
 from cmk.crypto.deprecated import certificate_md5_digest
-from cmk.utils.backup.stream import BackupStream, MKBackupStream, RestoreStream
 
 BACKUP_KEYS = {
     1: {
@@ -77,7 +77,7 @@ KEY_IDENT = "C0:4E:D4:4B:B4:AB:8B:3F:B4:09:32:CE:7D:A6:CF:76"
 
 
 @mock.patch(
-    "cmk.utils.backup.stream.MKBackupStream._load_backup_keys",
+    "cmk.backup.utils.stream.MKBackupStream._load_backup_keys",
     lambda _: BACKUP_KEYS,
 )
 @mock.patch("os.environ", {"MKBACKUP_PASSPHRASE": MKBACKUP_PASSPHRASE})

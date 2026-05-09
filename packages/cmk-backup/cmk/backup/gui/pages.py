@@ -10,9 +10,9 @@ from collections.abc import Collection
 from typing import override
 
 import cmk.utils.paths
+from cmk.backup.gui import handler
 from cmk.ccc.version import Edition
 from cmk.crypto.password import Password
-from cmk.gui.backup import handler
 from cmk.gui.config import active_config
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user

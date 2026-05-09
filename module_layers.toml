@@ -14,6 +14,7 @@ plugin_apis = [
   "cmk.agent_based.prediction_backend",
   "cmk.agent_based.v1",
   "cmk.agent_based.v2",
+  "cmk.agent_based.v3_unstable",
   "cmk.bakery.v2_unstable",
   "cmk.dcd_connector_parameters.internal",
   "cmk.dcd_connectors.internal",

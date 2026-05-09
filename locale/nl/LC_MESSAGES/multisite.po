@@ -4712,6 +4712,11 @@ msgstr "Extra opties"
 msgid "Additional header lines"
 msgstr "Extra kopregels"
 
+msgid ""
+"Additional hosts are created automatically if they do not yet exist. Adjust "
+"the connection  to modify the folder or properties."
+msgstr ""
+
 #, python-brace-format
 msgid ""
 "Additional hosts are created automatically if they do not yet exist. Adjust "
@@ -12144,6 +12149,10 @@ msgstr ""
 "Centrale site is versie >= 2.2 terwijl remote site een oudere versie is, "
 "update remote sites eerst"
 
+#, python-format
+msgid "Central site returned HTTP %d: %s"
+msgstr ""
+
 #, fuzzy
 msgid "Ceph (Linux)"
 msgstr "SUSEConnect (Linux)"
@@ -14978,6 +14987,10 @@ msgstr "Configuratie van de Datadog special agent."
 #, fuzzy
 msgid "Configuration of update plug-in"
 msgstr "Configuratie van update plugin"
+
+#, fuzzy
+msgid "Configuration properties"
+msgstr "Configuratiefout"
 
 #, python-format
 msgid ""
@@ -19510,10 +19523,6 @@ msgid "Deploy AD-Replication plug-in"
 msgstr "AD-Replicatie plugin implementeren"
 
 #, fuzzy
-msgid "Deploy Arcserve plug-in"
-msgstr "Inzet Arcserve plugin"
-
-#, fuzzy
 msgid "Deploy Hyper-V VM Guest Information plug-in"
 msgstr "Invoegtoepassing voor Hyper-V VM-gastinformatie implementeren"
 
@@ -19561,10 +19570,6 @@ msgid "Deploy Podman plug-in"
 msgstr "Implementeer Mailman plugin"
 
 #, fuzzy
-msgid "Deploy StorCLI plug-in"
-msgstr "StorCLI-invoegtoepassing implementeren"
-
-#, fuzzy
 msgid "Deploy Windows Updates plug-in"
 msgstr "Windows Updates plugin implementeren"
 
@@ -19584,10 +19589,6 @@ msgid "Deploy agents"
 msgstr "Agenten inzetten"
 
 #, fuzzy
-msgid "Deploy batch file plug-in - recommended for WinXP / Win2k upwards"
-msgstr "Deploy batch-bestand plugin - aanbevolen voor WinXP / Win2k en hoger"
-
-#, fuzzy
 msgid "Deploy configuration file"
 msgstr "Directory voor configuratiebestanden"
 
@@ -19603,8 +19604,8 @@ msgid "Deploy plug-in for DB2"
 msgstr "Implementeer plugin voor DB2"
 
 #, fuzzy
-msgid "Deploy plug-in for JAR signatures"
-msgstr "Implementeer plugin voor JAR handtekeningen"
+msgid "Deploy plug-in for Windows interfaces"
+msgstr "Implementeer geen plugin voor Windows interfaces"
 
 #, fuzzy
 msgid "Deploy plug-in for Windows system info"
@@ -19614,10 +19615,6 @@ msgstr "Implementeer plugin voor Windows Systeeminfo"
 msgid "Deploy plug-in that updates agent automatically"
 msgstr "Implementeer plugin die agent automatisch bijwerkt"
 
-#, fuzzy
-msgid "Deploy powershell plug-in - recommended for Win2k8 upwards"
-msgstr "Deploy powershell plugin - aanbevolen voor Win2k8 en hoger"
-
 #, fuzzy, python-format
 msgid "Deploy the %s plug-in and its configuration"
 msgstr "Implementeer de %s plugin en zijn configuratie"
@@ -19625,6 +19622,10 @@ msgstr "Implementeer de %s plugin en zijn configuratie"
 #, fuzzy, python-format
 msgid "Deploy the %s plug-in without configuration"
 msgstr "Zet de %s plugin in zonder configuratie"
+
+#, fuzzy
+msgid "Deploy the Arcserve plug-in"
+msgstr "Inzet Arcserve plugin"
 
 #, fuzzy
 msgid "Deploy the Checkmk EMC ScaleIO plug-in"
@@ -19657,6 +19658,10 @@ msgstr "De MySQL plugin implementeren"
 #, fuzzy
 msgid "Deploy the SAP HANA plug-in"
 msgstr "De SAP HANA plugin implementeren"
+
+#, fuzzy
+msgid "Deploy the StorCLI plug-in"
+msgstr "StorCLI-invoegtoepassing implementeren"
 
 #, fuzzy
 msgid "Deploy the TSM plug-in and run it asynchronously"
@@ -21192,10 +21197,6 @@ msgid "Do not deploy automatic agent update plug-in"
 msgstr "Implementeer geen automatische agent update plugin"
 
 #, fuzzy
-msgid "Do not deploy plug-in for JAR signatures"
-msgstr "Implementeer geen plugin voor JAR handtekeningen"
-
-#, fuzzy
 msgid "Do not deploy plug-in for MS Office 365"
 msgstr "Invoegtoepassing voor MS Office 365 niet implementeren"
 
@@ -22554,10 +22555,6 @@ msgid "Edit this %s"
 msgstr "Bewerk deze %s"
 
 #, fuzzy
-msgid "Edit this Prometheus configuration"
-msgstr "Configuratie toestand toevoegen"
-
-#, fuzzy
 msgid "Edit this Relay"
 msgstr "Wijzig deze regel"
 
@@ -22674,12 +22671,21 @@ msgstr "Bewerkte regel in regelset \"%s\" in map \"%s\""
 msgid "Edited the %s '%s'"
 msgstr "Bewerkte de %s '%s'"
 
+#, fuzzy, python-format
+msgid "Edited the OpenTelemetry collector configuration: '%s'"
+msgstr "Configuratie toestand toevoegen"
+
+#, fuzzy, python-format
+msgid "Edited the Prometheus configuration '%s'"
+msgstr "Configuratie toestand toevoegen"
+
+#, fuzzy, python-format
+msgid "Edited the connection '%s'"
+msgstr "Verbinding toegevoegd of bewerkt %s"
+
 #, python-format
 msgid "Edited user profile for user %s"
 msgstr "Bewerkt gebruikersprofiel voor gebruiker %s"
-
-msgid "Editing will be available soon"
-msgstr ""
 
 msgid "Edition"
 msgstr "Editie"
@@ -25798,11 +25804,6 @@ msgstr "Back-up van bestanden of bestandsgroepen"
 msgid "File patterns"
 msgstr "Bestandspatronen"
 
-msgid "File patterns must begin with <tt>/</tt> and must not contain spaces."
-msgstr ""
-"Bestandspatronen moeten beginnen met <tt>/</tt> en mogen geen spaties "
-"bevatten."
-
 #, python-format
 msgid "File removal test for remote storage failed. Original error message: %s"
 msgstr ""
@@ -26818,6 +26819,10 @@ msgstr "Doorsturen naar externe site door notificatie spooler"
 #, fuzzy
 msgid "Forwarding method"
 msgstr "Doorstuur Methode"
+
+#, python-format
+msgid "Forwarding the agent download to the central site failed: %s"
+msgstr ""
 
 #, python-format
 msgid "Found %d groups for synchronization."
@@ -35043,6 +35048,10 @@ msgstr "Info"
 msgid "Info:"
 msgstr "Info"
 
+#, fuzzy
+msgid "Infomation about the database schema, revision, and footprint"
+msgstr "Configuratie van het Checkmk-hardware- en software-inventarissysteem"
+
 msgid ""
 "Information about events and actions on events during the recent 24 hours."
 msgstr ""
@@ -42042,6 +42051,10 @@ msgid "Metric Backend"
 msgstr "Oracle gevallen"
 
 #, fuzzy
+msgid "Metric Backend Information"
+msgstr "Varnish Backend Verbindingen"
+
+#, fuzzy
 msgid "Metric backend"
 msgstr "Oracle gevallen"
 
@@ -45020,6 +45033,10 @@ msgstr "Geen zoekopdracht"
 msgid "No search, specify list of arguments"
 msgstr "Geen zoekfunctie, geef een lijst met argumenten"
 
+#, fuzzy, python-format
+msgid "No site with id \"%s\" is configured."
+msgstr "Geen IP-bereik geconfigureerd"
+
 #, fuzzy
 msgid "No smarthosts"
 msgstr "Smarthosts"
@@ -47717,6 +47734,10 @@ msgid "OpenLDAP"
 msgstr "OpenLDAP"
 
 #, fuzzy
+msgid "OpenTelemetry Collector"
+msgstr "Configuratie toestand toevoegen"
+
+#, fuzzy
 msgid "OpenTelemetry Quick Setup"
 msgstr "Configuratie toestand toevoegen"
 
@@ -50215,6 +50236,9 @@ msgstr "Pretty-Print configuratiebestanden"
 msgid "Path to PostgreSQL binary"
 msgstr "Database voor PostgreSQL"
 
+msgid "Path to StorCLI executable"
+msgstr ""
+
 #, fuzzy
 msgid "Path to Unix socket"
 msgstr "Pad naar unix socket"
@@ -50241,7 +50265,8 @@ msgid ""
 "certificate will not be used."
 msgstr ""
 
-msgid "Path-patterns where to search for Jar files"
+#, fuzzy
+msgid "Path-patterns where to search for JAR files"
 msgstr "Pad-patronen waar te zoeken naar Jar bestanden"
 
 msgid "Path:"
@@ -51722,6 +51747,10 @@ msgstr "Geef ten minste één waarde op"
 msgid "Please specify either host or folder or hash."
 msgstr "Specificeer host of hash."
 
+#, fuzzy
+msgid "Please specify either host or folder."
+msgstr "Specificeer host of hash."
+
 msgid "Please specify the extensions in lower case and without dot."
 msgstr "Geef de extensies op in kleine letters en zonder punt."
 
@@ -52695,6 +52724,10 @@ msgid "Prometheus scrape targets to fetch information from (deprecated)"
 msgstr ""
 "Prometheus Scrape Targets (omvat Prometheus Exporters) om informatie op te "
 "halen uit"
+
+#, fuzzy
+msgid "Prometheus scraper"
+msgstr "Alertmanager"
 
 msgid "Properties"
 msgstr "Eigenschappen"
@@ -57496,7 +57529,7 @@ msgid "Search %s"
 msgstr "Zoeken %s"
 
 #, fuzzy
-msgid "Search accross Checkmk"
+msgid "Search across Checkmk"
 msgstr "Welkom bij Checkmk Mobile."
 
 msgid "Search all entries one level below the base DN"
@@ -65024,6 +65057,16 @@ msgstr "Aantal mislukte paden"
 msgid "Tel2IP number of no answer SIP/H323 calls"
 msgstr "Aantal mislukte paden"
 
+msgid ""
+"Telemetry data are collected through the OpenTelemetry Collector. Adjust the "
+"Collector configuration to modify data collection"
+msgstr ""
+
+msgid ""
+"Telemetry data are collected through the Prometheus scraper. Adjust the "
+"scraper configuration to modify data collection"
+msgstr ""
+
 #, fuzzy
 msgid ""
 "Tell the Jolokia plug-in to stop waiting for a response from each configured "
@@ -66020,6 +66063,10 @@ msgstr ""
 "tot 100%"
 
 #, fuzzy
+msgid "The Prometheus configuration has been saved."
+msgstr "Configuratie toestand toevoegen"
+
+#, fuzzy
 msgid ""
 "The REST endpoint must begin with <tt>https://alert.victorops.com/"
 "integrations</tt>"
@@ -66544,6 +66591,19 @@ msgstr ""
 #, python-format
 msgid "The central (%s) and remote site (%s) are not compatible. Reason: %s"
 msgstr "De centrale (%s) en externe site (%s) zijn niet compatibel. Reden: %s"
+
+#, python-format
+msgid ""
+"The central site has no baked agent for %s. Run *Bake agents* on the central "
+"site or wait for the next automatic bake."
+msgstr ""
+
+#, python-format
+msgid ""
+"The central site refused the distributed-setup site secret (HTTP %d). The "
+"remote site may have lost its registration with the central site -- log in "
+"again under *Distributed monitoring* on the central site."
+msgstr ""
 
 #, python-format
 msgid "The character <tt>%s</tt> is not allowed here."
@@ -70935,6 +70995,14 @@ msgstr ""
 "worden gewijzigd."
 
 #, fuzzy
+msgid "This OpenTelemetry configuration does not exist."
+msgstr "Host configuratie"
+
+#, fuzzy
+msgid "This Prometheus configuration does not exist."
+msgstr "Deze samenvoeging bestaat niet."
+
+#, fuzzy
 msgid "This SLA has no computation plug-ins configured"
 msgstr "Deze SLA heeft geen computation plugins geconfigureerd"
 
@@ -72856,7 +72924,7 @@ msgstr ""
 #, fuzzy
 msgid ""
 "This plug-in checks the status and performance of network interfaces on "
-"Windows. Use the legacy plug-in for Windows versions without Powershell"
+"Windows. Use the legacy plug-in for Windows versions without Powershell."
 msgstr ""
 "Deze plugin controleert de status en prestaties van netwerk interfaces op "
 "Windows. Gebruik de legacy plugin voor Windows versies zonder Powershell"
@@ -74759,6 +74827,12 @@ msgstr "Deze site bestaat niet."
 msgid "This site is %s"
 msgstr "Deze site is %s"
 
+#, fuzzy
+msgid ""
+"This site is already assigned to another OpenTelemetry collector "
+"configuration."
+msgstr "Nieuwe gebruikersconfiguratie toevoegen"
+
 msgid "This site is currently down."
 msgstr "Deze site ligt momenteel plat."
 
@@ -76253,6 +76327,12 @@ msgstr "Token authenticatie"
 #, fuzzy
 msgid "Token bucket"
 msgstr "Token Bucket"
+
+#, python-format
+msgid ""
+"Token creation on site \"%s\" failed: %s. Make sure the central site is "
+"logged into the remote site (Distributed monitoring → Login)."
+msgstr ""
 
 #, fuzzy
 msgid "Token invalid"
@@ -81702,6 +81782,10 @@ msgstr "Gebruik inverteerbare C-stijl mangling"
 
 msgid "Use least critical of your and device's levels"
 msgstr "Gebruik het minst kritische van uw en apparaat niveaus"
+
+msgid ""
+"Use legacy batch file plug-in (wmic_if.bat) instead of PowerShell plug-in"
+msgstr ""
 
 msgid "Use local FQDN"
 msgstr "Gebruik lokale FQDN"
@@ -88277,9 +88361,6 @@ msgstr "U moet ten minste één gebruiker selecteren."
 msgid "You have to specify a connector to migrate to."
 msgstr "U moet een connector opgeven waarnaar u wilt migreren."
 
-msgid "You have used an invalid character"
-msgstr "U hebt een ongeldig teken gebruikt"
-
 msgid "You haven't defined any auxiliary tags."
 msgstr "Je hebt geen hulptags gedefinieerd."
 
@@ -89594,6 +89675,10 @@ msgstr "flexibel"
 msgid "folder"
 msgstr "map"
 
+#, fuzzy, python-format
+msgid "folder \"%s\""
+msgstr "Map: %s"
+
 #, fuzzy
 msgid "folder has to be omitted for agent_type=host_name."
 msgstr "De map is niet toegestaan voor een contactgroep."
@@ -89691,6 +89776,10 @@ msgid "host"
 msgid_plural "hosts"
 msgstr[0] "host"
 msgstr[1] "hosts"
+
+#, fuzzy, python-format
+msgid "host \"%s\""
+msgstr "op host %s"
 
 msgid "host in total"
 msgstr "host in totaal"
@@ -93165,6 +93254,14 @@ msgid "Metric name is required"
 msgstr "als macro met de naam"
 
 #, fuzzy
+msgid "Constant value must be a valid number"
+msgstr "De waarde moet een string zijn"
+
+#, fuzzy
+msgid "Percentile must be a valid number"
+msgstr "Datum moet een getalswaarde zijn"
+
+#, fuzzy
 msgid "Graph lines"
 msgstr "Grafiek afstemmingen"
 
@@ -93253,6 +93350,14 @@ msgstr "Standaard onderwerpen"
 
 msgid "Engineering scientific"
 msgstr ""
+
+#, fuzzy
+msgid "Symbol is required"
+msgstr "is vereist"
+
+#, fuzzy
+msgid "Digits must be a non-negative number"
+msgstr "Datum moet een getalswaarde zijn"
 
 #, fuzzy
 msgid "Notation"
@@ -94201,6 +94306,11 @@ msgid "Username is required but not specified."
 msgstr "JSON inloggegevens voor dienstaccount"
 
 #, fuzzy
+msgid "The selected password ID is not usable by the OTel Collector. "
+msgstr ""
+"De naam van de view mag alleen letters, cijfers en underscores bevatten."
+
+#, fuzzy
 msgid "Password is required but not specified."
 msgstr "JSON inloggegevens voor dienstaccount"
 
@@ -94303,10 +94413,6 @@ msgid ""
 "environment:"
 msgstr ""
 
-#, fuzzy
-msgid "OpenTelemetry Collector"
-msgstr "Configuratie toestand toevoegen"
-
 msgid ""
 "A vendor-agnostic proxy service that receives, processes, and forwards "
 "telemetry data. Use this when you want a centralised point to collect data "
@@ -94399,10 +94505,6 @@ msgstr "JSON inloggegevens voor dienstaccount"
 #, fuzzy
 msgid "Metrics path must start with a '/'."
 msgstr "Inloggen is niet toegestaan op deze site."
-
-#, fuzzy
-msgid "Prometheus scraper"
-msgstr "Alertmanager"
 
 msgid ""
 "The HTTP resource path on which to fetch metrics from targets. Must start "
@@ -95608,6 +95710,32 @@ msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
 
+#, fuzzy
+#~ msgid "Deploy batch file plug-in - recommended for WinXP / Win2k upwards"
+#~ msgstr ""
+#~ "Deploy batch-bestand plugin - aanbevolen voor WinXP / Win2k en hoger"
+
+#, fuzzy
+#~ msgid "Deploy plug-in for JAR signatures"
+#~ msgstr "Implementeer plugin voor JAR handtekeningen"
+
+#, fuzzy
+#~ msgid "Deploy powershell plug-in - recommended for Win2k8 upwards"
+#~ msgstr "Deploy powershell plugin - aanbevolen voor Win2k8 en hoger"
+
+#, fuzzy
+#~ msgid "Do not deploy plug-in for JAR signatures"
+#~ msgstr "Implementeer geen plugin voor JAR handtekeningen"
+
+#~ msgid ""
+#~ "File patterns must begin with <tt>/</tt> and must not contain spaces."
+#~ msgstr ""
+#~ "Bestandspatronen moeten beginnen met <tt>/</tt> en mogen geen spaties "
+#~ "bevatten."
+
+#~ msgid "You have used an invalid character"
+#~ msgstr "U hebt een ongeldig teken gebruikt"
+
 #~ msgid "Cloud Functions"
 #~ msgstr "Wolk Functies"
 
@@ -95633,13 +95761,6 @@ msgstr ""
 
 #~ msgid "kernel counter"
 #~ msgstr "kernelteller"
-
-#, fuzzy, python-format
-#~ msgid ""
-#~ "A site is allowed to be used in exactly one OpenTelemetry collector "
-#~ "configuration: \n"
-#~ "%s"
-#~ msgstr "Nieuwe gebruikersconfiguratie toevoegen"
 
 #, fuzzy
 #~ msgid "Absolute limit"
@@ -95796,13 +95917,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "The limit has to be bigger than the spike limit."
 #~ msgstr "Het cluster moet ten minste één knooppunt hebben"
-
-#, fuzzy, python-format
-#~ msgid ""
-#~ "The password ID '%s' is not usable by the OTel Collector. It must contain "
-#~ "only letters, digits and underscores."
-#~ msgstr ""
-#~ "De naam van de view mag alleen letters, cijfers en underscores bevatten."
 
 #, fuzzy
 #~ msgid "The scrape interval must be an integer higher than 0."
@@ -97154,10 +97268,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "service.name"
 #~ msgstr "Naam van de dienst"
-
-#, fuzzy
-#~ msgid "Port must be a whole number."
-#~ msgstr "Datum moet een getalswaarde zijn"
 
 #, fuzzy
 #~ msgid "Port must be between 1 and 65535."
@@ -100082,10 +100192,6 @@ msgstr ""
 #~ msgid "Activating changes: "
 #~ msgstr "Activeerde de veranderingen"
 
-#, fuzzy, python-format
-#~ msgid "Added the connection '%s'"
-#~ msgstr "Verbinding toegevoegd of bewerkt %s"
-
 #, fuzzy
 #~ msgid "An exception occurred"
 #~ msgstr "Er is een uitzondering opgetreden"
@@ -101935,10 +102041,6 @@ msgstr ""
 
 #, fuzzy
 #~ msgid "Telemetry is enabled"
-#~ msgstr "Configuratie toestand toevoegen"
-
-#, fuzzy
-#~ msgid "OpenTelemetry collector configurations"
 #~ msgstr "Configuratie toestand toevoegen"
 
 #~ msgid "Service discovery details"

@@ -4749,6 +4749,11 @@ msgstr "Options supplémentaires"
 msgid "Additional header lines"
 msgstr "Lignes d'en-tête supplémentaires"
 
+msgid ""
+"Additional hosts are created automatically if they do not yet exist. Adjust "
+"the connection  to modify the folder or properties."
+msgstr ""
+
 #, python-brace-format
 msgid ""
 "Additional hosts are created automatically if they do not yet exist. Adjust "
@@ -12221,6 +12226,10 @@ msgstr ""
 "Le site central est en version >= 2.2 alors que le site distant est en "
 "version plus ancienne, veuillez d'abord mettre à jour les sites distants"
 
+#, python-format
+msgid "Central site returned HTTP %d: %s"
+msgstr ""
+
 #, fuzzy
 msgid "Ceph (Linux)"
 msgstr "SUSEConnect (Linux)"
@@ -15088,6 +15097,10 @@ msgstr "Configuration de l'agent spécial Datadog."
 #, fuzzy
 msgid "Configuration of update plug-in"
 msgstr "Configuration du plugin de mise à jour"
+
+#, fuzzy
+msgid "Configuration properties"
+msgstr "Erreur de configuration"
 
 #, python-format
 msgid ""
@@ -19655,10 +19668,6 @@ msgid "Deploy AD-Replication plug-in"
 msgstr "Déployer le plugin AD-Réplication"
 
 #, fuzzy
-msgid "Deploy Arcserve plug-in"
-msgstr "Déployer le plugin Arcserve"
-
-#, fuzzy
 msgid "Deploy Hyper-V VM Guest Information plug-in"
 msgstr ""
 "Déployer le plugin pour les informations sur les invités des VM Hyper-V"
@@ -19707,10 +19716,6 @@ msgid "Deploy Podman plug-in"
 msgstr "Déployer le plugin Mailman"
 
 #, fuzzy
-msgid "Deploy StorCLI plug-in"
-msgstr "Déployer le plugin StorCLI"
-
-#, fuzzy
 msgid "Deploy Windows Updates plug-in"
 msgstr "Déployer le plugin Windows Updates"
 
@@ -19730,12 +19735,6 @@ msgid "Deploy agents"
 msgstr "Déployer des agents"
 
 #, fuzzy
-msgid "Deploy batch file plug-in - recommended for WinXP / Win2k upwards"
-msgstr ""
-"Plugin pour le fichier batch Deploy - recommandé pour les versions "
-"supérieures à WinXP / Win2k"
-
-#, fuzzy
 msgid "Deploy configuration file"
 msgstr "Répertoire pour les fichiers de configuration"
 
@@ -19751,8 +19750,8 @@ msgid "Deploy plug-in for DB2"
 msgstr "Déployer le plugin pour DB2"
 
 #, fuzzy
-msgid "Deploy plug-in for JAR signatures"
-msgstr "Déployer le plugin pour les signatures JAR"
+msgid "Deploy plug-in for Windows interfaces"
+msgstr "Ne pas déployer le plugin pour les interfaces Windows"
 
 #, fuzzy
 msgid "Deploy plug-in for Windows system info"
@@ -19762,10 +19761,6 @@ msgstr "Déployer un plugin pour Windows System Info"
 msgid "Deploy plug-in that updates agent automatically"
 msgstr "Déployer un plugin qui met à jour l'agent automatiquement"
 
-#, fuzzy
-msgid "Deploy powershell plug-in - recommended for Win2k8 upwards"
-msgstr "Deployer le plugin powershell - recommandé à partir de Win2k8"
-
 #, fuzzy, python-format
 msgid "Deploy the %s plug-in and its configuration"
 msgstr "Déployer le plugin %s et sa configuration"
@@ -19773,6 +19768,10 @@ msgstr "Déployer le plugin %s et sa configuration"
 #, fuzzy, python-format
 msgid "Deploy the %s plug-in without configuration"
 msgstr "Déployer le plugin %s sans configuration"
+
+#, fuzzy
+msgid "Deploy the Arcserve plug-in"
+msgstr "Déployer le plugin Arcserve"
 
 #, fuzzy
 msgid "Deploy the Checkmk EMC ScaleIO plug-in"
@@ -19805,6 +19804,10 @@ msgstr "Déployer le plugin MySQL"
 #, fuzzy
 msgid "Deploy the SAP HANA plug-in"
 msgstr "Déployer le plugin SAP HANA"
+
+#, fuzzy
+msgid "Deploy the StorCLI plug-in"
+msgstr "Déployer le plugin StorCLI"
 
 #, fuzzy
 msgid "Deploy the TSM plug-in and run it asynchronously"
@@ -21355,10 +21358,6 @@ msgid "Do not deploy automatic agent update plug-in"
 msgstr "Ne pas déployer le plugin de mise à jour automatique des agents"
 
 #, fuzzy
-msgid "Do not deploy plug-in for JAR signatures"
-msgstr "Ne pas déployer le plugin pour les signatures JAR"
-
-#, fuzzy
 msgid "Do not deploy plug-in for MS Office 365"
 msgstr "Ne pas déployer le plugin pour MS Office 365"
 
@@ -22734,10 +22733,6 @@ msgid "Edit this %s"
 msgstr "Modifier ce %s"
 
 #, fuzzy
-msgid "Edit this Prometheus configuration"
-msgstr "Ajouter une configuration d'état"
-
-#, fuzzy
 msgid "Edit this Relay"
 msgstr "Modifier cette règle"
 
@@ -22854,12 +22849,21 @@ msgstr "Règle éditée dans le jeu de règles \"%s\" dans le dossier \"%s\""
 msgid "Edited the %s '%s'"
 msgstr "Modifié le %s '%s'"
 
+#, fuzzy, python-format
+msgid "Edited the OpenTelemetry collector configuration: '%s'"
+msgstr "Ajouter une configuration d'état"
+
+#, fuzzy, python-format
+msgid "Edited the Prometheus configuration '%s'"
+msgstr "Ajouter une configuration d'état"
+
+#, fuzzy, python-format
+msgid "Edited the connection '%s'"
+msgstr "Ajouté la connexion '%s'"
+
 #, python-format
 msgid "Edited user profile for user %s"
 msgstr "Modification du profil de l'utilisateur %s"
-
-msgid "Editing will be available soon"
-msgstr ""
 
 msgid "Edition"
 msgstr "Edition"
@@ -26011,11 +26015,6 @@ msgstr "Sauvegarde de fichiers ou de groupes de fichiers"
 msgid "File patterns"
 msgstr "Modèles de fichiers"
 
-msgid "File patterns must begin with <tt>/</tt> and must not contain spaces."
-msgstr ""
-"Les modèles de fichiers doivent commencer par <tt>/</tt> et ne doivent pas "
-"contenir d'espaces."
-
 #, python-format
 msgid "File removal test for remote storage failed. Original error message: %s"
 msgstr ""
@@ -27036,6 +27035,10 @@ msgstr "Transmission au site distant par spooler de notification"
 #, fuzzy
 msgid "Forwarding method"
 msgstr "Méthode d'acheminement"
+
+#, python-format
+msgid "Forwarding the agent download to the central site failed: %s"
+msgstr ""
 
 #, python-format
 msgid "Found %d groups for synchronization."
@@ -35346,6 +35349,11 @@ msgstr "Info"
 msgid "Info:"
 msgstr "Info :"
 
+#, fuzzy
+msgid "Infomation about the database schema, revision, and footprint"
+msgstr ""
+"Configuration du système d'inventaire de matériel et de logiciels Checkmk"
+
 msgid ""
 "Information about events and actions on events during the recent 24 hours."
 msgstr ""
@@ -42385,6 +42393,10 @@ msgid "Metric Backend"
 msgstr "Instances Oracle"
 
 #, fuzzy
+msgid "Metric Backend Information"
+msgstr "Connexions au backend de Varnish"
+
+#, fuzzy
 msgid "Metric backend"
 msgstr "Instances Oracle"
 
@@ -45384,6 +45396,10 @@ msgstr "Pas de recherche"
 msgid "No search, specify list of arguments"
 msgstr "Pas de recherche, spécifier la liste des arguments"
 
+#, fuzzy, python-format
+msgid "No site with id \"%s\" is configured."
+msgstr "Aucune plage IP configurée"
+
 #, fuzzy
 msgid "No smarthosts"
 msgstr "Smarthosts"
@@ -48104,6 +48120,10 @@ msgid "OpenLDAP"
 msgstr "OpenLDAP"
 
 #, fuzzy
+msgid "OpenTelemetry Collector"
+msgstr "Ajouter une configuration d'état"
+
+#, fuzzy
 msgid "OpenTelemetry Quick Setup"
 msgstr "Ajouter une configuration d'état"
 
@@ -50611,6 +50631,9 @@ msgstr "Fichiers de configuration Pretty-Print"
 msgid "Path to PostgreSQL binary"
 msgstr "Base de données pour PostgreSQL"
 
+msgid "Path to StorCLI executable"
+msgstr ""
+
 #, fuzzy
 msgid "Path to Unix socket"
 msgstr "Chemin d'accès au socket unix"
@@ -50637,7 +50660,8 @@ msgid ""
 "certificate will not be used."
 msgstr ""
 
-msgid "Path-patterns where to search for Jar files"
+#, fuzzy
+msgid "Path-patterns where to search for JAR files"
 msgstr "Chemins d'accès où rechercher les fichiers Jar"
 
 msgid "Path:"
@@ -52147,6 +52171,10 @@ msgstr "Veuillez indiquer au moins une valeur"
 msgid "Please specify either host or folder or hash."
 msgstr "Veuillez spécifier l'hôte ou le hachage."
 
+#, fuzzy
+msgid "Please specify either host or folder."
+msgstr "Veuillez spécifier l'hôte ou le hachage."
+
 msgid "Please specify the extensions in lower case and without dot."
 msgstr "Veuillez spécifier les extensions en minuscules et sans point."
 
@@ -53130,6 +53158,10 @@ msgid "Prometheus scrape targets to fetch information from (deprecated)"
 msgstr ""
 "les cibles Prometheus Scrape (y compris les exportateurs Prometheus) pour "
 "récupérer des informations à partir des éléments suivants"
+
+#, fuzzy
+msgid "Prometheus scraper"
+msgstr "Alertmanager"
 
 msgid "Properties"
 msgstr "Propriétés"
@@ -57986,7 +58018,7 @@ msgid "Search %s"
 msgstr "Rechercher %s"
 
 #, fuzzy
-msgid "Search accross Checkmk"
+msgid "Search across Checkmk"
 msgstr "Bienvenue à Checkmk Mobile."
 
 msgid "Search all entries one level below the base DN"
@@ -65587,6 +65619,16 @@ msgstr "Nombre de chemins en panne"
 msgid "Tel2IP number of no answer SIP/H323 calls"
 msgstr "Nombre de chemins en panne"
 
+msgid ""
+"Telemetry data are collected through the OpenTelemetry Collector. Adjust the "
+"Collector configuration to modify data collection"
+msgstr ""
+
+msgid ""
+"Telemetry data are collected through the Prometheus scraper. Adjust the "
+"scraper configuration to modify data collection"
+msgstr ""
+
 #, fuzzy
 msgid ""
 "Tell the Jolokia plug-in to stop waiting for a response from each configured "
@@ -66594,6 +66636,10 @@ msgstr ""
 "intervalle de vérification. La plage possible est de 0% à 100%"
 
 #, fuzzy
+msgid "The Prometheus configuration has been saved."
+msgstr "Ajouter une configuration d'état"
+
+#, fuzzy
 msgid ""
 "The REST endpoint must begin with <tt>https://alert.victorops.com/"
 "integrations</tt>"
@@ -67120,6 +67166,19 @@ msgid "The central (%s) and remote site (%s) are not compatible. Reason: %s"
 msgstr ""
 "Le site central (%s) et le site distant (%s) ne sont pas compatibles. "
 "Raison : %s"
+
+#, python-format
+msgid ""
+"The central site has no baked agent for %s. Run *Bake agents* on the central "
+"site or wait for the next automatic bake."
+msgstr ""
+
+#, python-format
+msgid ""
+"The central site refused the distributed-setup site secret (HTTP %d). The "
+"remote site may have lost its registration with the central site -- log in "
+"again under *Distributed monitoring* on the central site."
+msgstr ""
 
 #, python-format
 msgid "The character <tt>%s</tt> is not allowed here."
@@ -71539,6 +71598,14 @@ msgstr ""
 "ultérieurement."
 
 #, fuzzy
+msgid "This OpenTelemetry configuration does not exist."
+msgstr "Configuration de l'hôte"
+
+#, fuzzy
+msgid "This Prometheus configuration does not exist."
+msgstr "Cette agrégation n'existe pas."
+
+#, fuzzy
 msgid "This SLA has no computation plug-ins configured"
 msgstr "Cet ANS n'a pas de plugins de calcul configurés"
 
@@ -73488,7 +73555,7 @@ msgstr ""
 #, fuzzy
 msgid ""
 "This plug-in checks the status and performance of network interfaces on "
-"Windows. Use the legacy plug-in for Windows versions without Powershell"
+"Windows. Use the legacy plug-in for Windows versions without Powershell."
 msgstr ""
 "Ce plugin vérifie l'état et les performances des interfaces réseau sous "
 "Windows. Utilisez l'ancien plugin pour les versions de Windows sans "
@@ -75435,6 +75502,12 @@ msgstr "Ce site n'existe pas."
 msgid "This site is %s"
 msgstr "Ce site est %s"
 
+#, fuzzy
+msgid ""
+"This site is already assigned to another OpenTelemetry collector "
+"configuration."
+msgstr "Ajouter une nouvelle configuration utilisateur"
+
 msgid "This site is currently down."
 msgstr "Ce site est actuellement en panne."
 
@@ -76937,6 +77010,12 @@ msgstr "Authentification par jeton"
 #, fuzzy
 msgid "Token bucket"
 msgstr "Seau à jetons"
+
+#, python-format
+msgid ""
+"Token creation on site \"%s\" failed: %s. Make sure the central site is "
+"logged into the remote site (Distributed monitoring → Login)."
+msgstr ""
 
 #, fuzzy
 msgid "Token invalid"
@@ -82422,6 +82501,10 @@ msgstr "Utiliser la gestion inversible de style C"
 
 msgid "Use least critical of your and device's levels"
 msgstr "Utiliser les niveaux les moins critiques pour vous et pour l'appareil"
+
+msgid ""
+"Use legacy batch file plug-in (wmic_if.bat) instead of PowerShell plug-in"
+msgstr ""
 
 msgid "Use local FQDN"
 msgstr "Utiliser le FQDN local"
@@ -89096,9 +89179,6 @@ msgstr "Vous devez sélectionner au moins un utilisateur."
 msgid "You have to specify a connector to migrate to."
 msgstr "Vous devez spécifier un connecteur vers lequel migrer."
 
-msgid "You have used an invalid character"
-msgstr "Vous avez utilisé un caractère non valide"
-
 msgid "You haven't defined any auxiliary tags."
 msgstr "Vous n'avez pas défini de balises auxiliaires."
 
@@ -90424,6 +90504,10 @@ msgstr "flexible"
 msgid "folder"
 msgstr "dossier"
 
+#, fuzzy, python-format
+msgid "folder \"%s\""
+msgstr "Dossier : %s"
+
 #, fuzzy
 msgid "folder has to be omitted for agent_type=host_name."
 msgstr "Le dossier n'est autorisé pour aucun groupe de contact."
@@ -90521,6 +90605,10 @@ msgid "host"
 msgid_plural "hosts"
 msgstr[0] "hôte"
 msgstr[1] "hôtes"
+
+#, fuzzy, python-format
+msgid "host \"%s\""
+msgstr "sur l'hôte %s"
 
 msgid "host in total"
 msgstr "hôte au total"
@@ -94001,6 +94089,14 @@ msgid "Metric name is required"
 msgstr "en tant que macro nommée"
 
 #, fuzzy
+msgid "Constant value must be a valid number"
+msgstr "La valeur doit être une chaîne de caractères"
+
+#, fuzzy
+msgid "Percentile must be a valid number"
+msgstr "La date doit être une valeur numérique"
+
+#, fuzzy
 msgid "Graph lines"
 msgstr "Accords graphiques"
 
@@ -94089,6 +94185,14 @@ msgstr "Thèmes standard"
 
 msgid "Engineering scientific"
 msgstr ""
+
+#, fuzzy
+msgid "Symbol is required"
+msgstr "est nécessaire"
+
+#, fuzzy
+msgid "Digits must be a non-negative number"
+msgstr "La date doit être une valeur numérique"
 
 #, fuzzy
 msgid "Notation"
@@ -95041,6 +95145,12 @@ msgid "Username is required but not specified."
 msgstr "Informations d'identification JSON pour le compte de service"
 
 #, fuzzy
+msgid "The selected password ID is not usable by the OTel Collector. "
+msgstr ""
+"Le nom de la vue ne peut contenir que des lettres, des chiffres et des "
+"caractères de soulignement."
+
+#, fuzzy
 msgid "Password is required but not specified."
 msgstr "Informations d'identification JSON pour le compte de service"
 
@@ -95144,10 +95254,6 @@ msgid ""
 "environment:"
 msgstr ""
 
-#, fuzzy
-msgid "OpenTelemetry Collector"
-msgstr "Ajouter une configuration d'état"
-
 msgid ""
 "A vendor-agnostic proxy service that receives, processes, and forwards "
 "telemetry data. Use this when you want a centralised point to collect data "
@@ -95240,10 +95346,6 @@ msgstr "Informations d'identification JSON pour le compte de service"
 #, fuzzy
 msgid "Metrics path must start with a '/'."
 msgstr "La connexion n'est pas autorisée sur ce site."
-
-#, fuzzy
-msgid "Prometheus scraper"
-msgstr "Alertmanager"
 
 msgid ""
 "The HTTP resource path on which to fetch metrics from targets. Must start "
@@ -96451,6 +96553,33 @@ msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
 
+#, fuzzy
+#~ msgid "Deploy batch file plug-in - recommended for WinXP / Win2k upwards"
+#~ msgstr ""
+#~ "Plugin pour le fichier batch Deploy - recommandé pour les versions "
+#~ "supérieures à WinXP / Win2k"
+
+#, fuzzy
+#~ msgid "Deploy plug-in for JAR signatures"
+#~ msgstr "Déployer le plugin pour les signatures JAR"
+
+#, fuzzy
+#~ msgid "Deploy powershell plug-in - recommended for Win2k8 upwards"
+#~ msgstr "Deployer le plugin powershell - recommandé à partir de Win2k8"
+
+#, fuzzy
+#~ msgid "Do not deploy plug-in for JAR signatures"
+#~ msgstr "Ne pas déployer le plugin pour les signatures JAR"
+
+#~ msgid ""
+#~ "File patterns must begin with <tt>/</tt> and must not contain spaces."
+#~ msgstr ""
+#~ "Les modèles de fichiers doivent commencer par <tt>/</tt> et ne doivent "
+#~ "pas contenir d'espaces."
+
+#~ msgid "You have used an invalid character"
+#~ msgstr "Vous avez utilisé un caractère non valide"
+
 #~ msgid "Cloud Functions"
 #~ msgstr "Fonctions du nuage"
 
@@ -96472,13 +96601,6 @@ msgstr ""
 
 #~ msgid "kernel counter"
 #~ msgstr "compteur de noyaux"
-
-#, fuzzy, python-format
-#~ msgid ""
-#~ "A site is allowed to be used in exactly one OpenTelemetry collector "
-#~ "configuration: \n"
-#~ "%s"
-#~ msgstr "Ajouter une nouvelle configuration utilisateur"
 
 #, fuzzy
 #~ msgid "Absolute limit"
@@ -96639,14 +96761,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "The limit has to be bigger than the spike limit."
 #~ msgstr "Le cluster doit avoir au moins un nœud"
-
-#, fuzzy, python-format
-#~ msgid ""
-#~ "The password ID '%s' is not usable by the OTel Collector. It must contain "
-#~ "only letters, digits and underscores."
-#~ msgstr ""
-#~ "Le nom de la vue ne peut contenir que des lettres, des chiffres et des "
-#~ "caractères de soulignement."
 
 #, fuzzy
 #~ msgid "The scrape interval must be an integer higher than 0."
@@ -98009,10 +98123,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "service.name"
 #~ msgstr "Nom du service"
-
-#, fuzzy
-#~ msgid "Port must be a whole number."
-#~ msgstr "La date doit être une valeur numérique"
 
 #, fuzzy
 #~ msgid "Port must be between 1 and 65535."
@@ -100890,10 +101000,6 @@ msgstr ""
 #~ msgid "Activating changes: "
 #~ msgstr "Activé les changements : "
 
-#, python-format
-#~ msgid "Added the connection '%s'"
-#~ msgstr "Ajouté la connexion '%s'"
-
 #, fuzzy
 #~ msgid "An exception occurred"
 #~ msgstr "Une exception s'est produite"
@@ -102744,10 +102850,6 @@ msgstr ""
 
 #, fuzzy
 #~ msgid "Telemetry is enabled"
-#~ msgstr "Ajouter une configuration d'état"
-
-#, fuzzy
-#~ msgid "OpenTelemetry collector configurations"
 #~ msgstr "Ajouter une configuration d'état"
 
 #~ msgid "Service discovery details"

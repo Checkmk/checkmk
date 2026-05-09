@@ -4914,6 +4914,15 @@ msgstr "Dettagli ulteriori"
 msgid "Additional header lines"
 msgstr "Linee di intestazione aggiuntive"
 
+#, fuzzy
+msgid ""
+"Additional hosts are created automatically if they do not yet exist. Adjust "
+"the connection  to modify the folder or properties."
+msgstr ""
+"Gli host aggiuntivi sono creati automaticamente se non esistono ancora. "
+"Modifica la connessione \"{dcd_title}\" per modificare la cartella o le "
+"proprietà."
+
 #, python-brace-format
 msgid ""
 "Additional hosts are created automatically if they do not yet exist. Adjust "
@@ -12691,6 +12700,10 @@ msgstr ""
 "Il sito centrale ha una versione >= 2.2 mentre il sito remoto ha una "
 "versione precedente, aggiornare prima i siti remoti"
 
+#, python-format
+msgid "Central site returned HTTP %d: %s"
+msgstr ""
+
 #, fuzzy
 msgid "Ceph (Linux)"
 msgstr "SUSEConnect (Linux)"
@@ -15598,6 +15611,10 @@ msgstr "Configurazione dell'agente speciale Datadog."
 #, fuzzy
 msgid "Configuration of update plug-in"
 msgstr "Configurazione del plugin di aggiornamento"
+
+#, fuzzy
+msgid "Configuration properties"
+msgstr "Errore di configurazione"
 
 #, python-format
 msgid ""
@@ -23932,10 +23949,6 @@ msgstr "Modificare l'autenticazione a due fattori dell'utente"
 msgid "Edit this %s"
 msgstr "Modifica questo %s"
 
-#, fuzzy
-msgid "Edit this Prometheus configuration"
-msgstr "Configurazione dello stile selezionato"
-
 msgid "Edit this aggregation"
 msgstr "Modifica questa aggregazione"
 
@@ -24055,6 +24068,10 @@ msgstr "Regola modificata nel ruleset \"%s\" nella cartella \"%s\""
 #, python-format
 msgid "Edited the %s '%s'"
 msgstr "Modificato il %s '%s'"
+
+#, fuzzy, python-format
+msgid "Edited the Prometheus configuration '%s'"
+msgstr "Configurazione dello stile selezionato"
 
 #, python-format
 msgid "Edited user profile for user %s"
@@ -28309,6 +28326,10 @@ msgstr "Inoltro al sito remoto tramite spooler di notifica"
 #, fuzzy
 msgid "Forwarding method"
 msgstr "Metodo di inoltro"
+
+#, python-format
+msgid "Forwarding the agent download to the central site failed: %s"
+msgstr ""
 
 #, python-format
 msgid "Found %d groups for synchronization."
@@ -47372,6 +47393,10 @@ msgstr "Nessuna ricerca"
 msgid "No search, specify list of arguments"
 msgstr "Nessuna ricerca, specificare l'elenco degli argomenti"
 
+#, fuzzy, python-format
+msgid "No site with id \"%s\" is configured."
+msgstr "Nessun intervallo IP configurato"
+
 #, fuzzy
 msgid "No smarthosts"
 msgstr "Smarthosts"
@@ -54364,6 +54389,10 @@ msgstr "Si prega di specificare almeno un valore"
 
 #, fuzzy
 msgid "Please specify either host or folder or hash."
+msgstr "Specificare l'host o l'hash."
+
+#, fuzzy
+msgid "Please specify either host or folder."
 msgstr "Specificare l'host o l'hash."
 
 msgid "Please specify the extensions in lower case and without dot."
@@ -68310,6 +68339,11 @@ msgstr ""
 msgid "Telemetry"
 msgstr "Elemento"
 
+msgid ""
+"Telemetry data are collected through the Prometheus scraper. Adjust the "
+"scraper configuration to modify data collection"
+msgstr ""
+
 #, fuzzy
 msgid ""
 "Tell the Jolokia plug-in to stop waiting for a response from each configured "
@@ -69342,6 +69376,10 @@ msgstr ""
 "possibile è da 0% a 100%"
 
 #, fuzzy
+msgid "The Prometheus configuration has been saved."
+msgstr "Configurazione dell'host"
+
+#, fuzzy
 msgid ""
 "The REST endpoint must begin with <tt>https://alert.victorops.com/"
 "integrations</tt>"
@@ -69919,6 +69957,19 @@ msgstr ""
 msgid "The central (%s) and remote site (%s) are not compatible. Reason: %s"
 msgstr ""
 "Il sito centrale (%s) e quello remoto (%s) non sono compatibili. Motivo: %s"
+
+#, python-format
+msgid ""
+"The central site has no baked agent for %s. Run *Bake agents* on the central "
+"site or wait for the next automatic bake."
+msgstr ""
+
+#, python-format
+msgid ""
+"The central site refused the distributed-setup site secret (HTTP %d). The "
+"remote site may have lost its registration with the central site -- log in "
+"again under *Distributed monitoring* on the central site."
+msgstr ""
 
 #, python-format
 msgid "The character <tt>%s</tt> is not allowed here."
@@ -72430,8 +72481,8 @@ msgstr ""
 
 #, fuzzy, python-format
 msgid ""
-"The password ID '%s' is not usable by the OTel collector. It must contain "
-"only letters, digits and underscores."
+"The password ID '%s' is not usable by the OTel collector. It must start with "
+"a letter or underscore and contain only letters, digits and underscores."
 msgstr ""
 "Il nome della vista può contenere solo lettere, cifre e caratteri di "
 "sottolineatura."
@@ -74684,6 +74735,10 @@ msgid "This ID is used as its unique identifier. It cannot be changed later."
 msgstr ""
 "Questo ID è usato come identificatore unico. Non può essere cambiato in "
 "seguito."
+
+#, fuzzy
+msgid "This Prometheus configuration does not exist."
+msgstr "Questa aggregazione non esiste."
 
 #, fuzzy
 msgid "This SLA has no computation plug-ins configured"
@@ -80389,6 +80444,12 @@ msgstr "Autenticazione basata su token"
 #, fuzzy
 msgid "Token bucket"
 msgstr "Secchio dei gettoni"
+
+#, python-format
+msgid ""
+"Token creation on site \"%s\" failed: %s. Make sure the central site is "
+"logged into the remote site (Distributed monitoring → Login)."
+msgstr ""
 
 #, fuzzy
 msgid "Token invalid"
@@ -94122,6 +94183,10 @@ msgstr "flessibile"
 msgid "folder"
 msgstr "cartella"
 
+#, fuzzy, python-format
+msgid "folder \"%s\""
+msgstr "Cartella: %s"
+
 #, fuzzy
 msgid "folder has to be omitted for agent_type=host_name."
 msgstr "La cartella non è ammessa per nessun gruppo di contatti."
@@ -94221,6 +94286,10 @@ msgid "host"
 msgid_plural "hosts"
 msgstr[0] "host"
 msgstr[1] "hosts"
+
+#, fuzzy, python-format
+msgid "host \"%s\""
+msgstr "su host %s"
 
 msgid "host in total"
 msgstr "ospite in totale"

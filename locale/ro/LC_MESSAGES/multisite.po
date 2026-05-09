@@ -5000,6 +5000,11 @@ msgstr "Opțiuni adiționale"
 msgid "Additional header lines"
 msgstr "Linii de header adiționale"
 
+msgid ""
+"Additional hosts are created automatically if they do not yet exist. Adjust "
+"the connection  to modify the folder or properties."
+msgstr ""
+
 #, python-brace-format
 msgid ""
 "Additional hosts are created automatically if they do not yet exist. Adjust "
@@ -12854,6 +12859,10 @@ msgstr ""
 "Site-ul central este versiunea >= 2.2 în timp ce site-ul la distanță este o "
 "versiune mai veche, vă rugăm să actualizați mai întâi site-urile la distanță"
 
+#, python-format
+msgid "Central site returned HTTP %d: %s"
+msgstr ""
+
 #, fuzzy
 msgid "Ceph (Linux)"
 msgstr "SUSEConnect (Linux)"
@@ -15779,6 +15788,10 @@ msgstr "Configurarea agentului special Datadog."
 #, fuzzy
 msgid "Configuration of update plug-in"
 msgstr "Configurarea plugin-ului de actualizare"
+
+#, fuzzy
+msgid "Configuration properties"
+msgstr "Eroare de configurare"
 
 #, python-format
 msgid ""
@@ -24140,10 +24153,6 @@ msgstr "Editați autentificarea cu doi factori a utilizatorului"
 msgid "Edit this %s"
 msgstr "Editați acest %s"
 
-#, fuzzy
-msgid "Edit this Prometheus configuration"
-msgstr "Configurația stilului selectat"
-
 msgid "Edit this aggregation"
 msgstr "Editați această agregare"
 
@@ -24264,6 +24273,10 @@ msgstr "Regulă editată în setul de reguli \"%s\" în folderul \"%s\""
 #, python-format
 msgid "Edited the %s '%s'"
 msgstr "A fost editat %s \"%s"
+
+#, fuzzy, python-format
+msgid "Edited the Prometheus configuration '%s'"
+msgstr "Configurația stilului selectat"
 
 #, python-format
 msgid "Edited user profile for user %s"
@@ -28545,6 +28558,10 @@ msgstr "Redirecționarea către site-ul la distanță prin spooler de notificare
 #, fuzzy
 msgid "Forwarding method"
 msgstr "Metoda de expediere"
+
+#, python-format
+msgid "Forwarding the agent download to the central site failed: %s"
+msgstr ""
 
 #, python-format
 msgid "Found %d groups for synchronization."
@@ -47671,6 +47688,10 @@ msgstr "Fără căutare"
 msgid "No search, specify list of arguments"
 msgstr "Fără căutare, specificați lista de argumente"
 
+#, fuzzy, python-format
+msgid "No site with id \"%s\" is configured."
+msgstr "Nu este configurat niciun interval IP"
+
 #, fuzzy
 msgid "No smarthosts"
 msgstr "Smarthost-uri"
@@ -54683,6 +54704,10 @@ msgstr "Vă rugăm să specificați cel puțin o valoare"
 
 #, fuzzy
 msgid "Please specify either host or folder or hash."
+msgstr "Vă rugăm să specificați gazda sau hash."
+
+#, fuzzy
+msgid "Please specify either host or folder."
 msgstr "Vă rugăm să specificați gazda sau hash."
 
 msgid "Please specify the extensions in lower case and without dot."
@@ -68738,6 +68763,11 @@ msgstr ""
 msgid "Telemetry"
 msgstr "Element"
 
+msgid ""
+"Telemetry data are collected through the Prometheus scraper. Adjust the "
+"scraper configuration to modify data collection"
+msgstr ""
+
 #, fuzzy
 msgid ""
 "Tell the Jolokia plug-in to stop waiting for a response from each configured "
@@ -69780,6 +69810,10 @@ msgstr ""
 "posibil este de la 0% la 100%."
 
 #, fuzzy
+msgid "The Prometheus configuration has been saved."
+msgstr "Configurație gazdă"
+
+#, fuzzy
 msgid ""
 "The REST endpoint must begin with <tt>https://alert.victorops.com/"
 "integrations</tt>"
@@ -70356,6 +70390,19 @@ msgid "The central (%s) and remote site (%s) are not compatible. Reason: %s"
 msgstr ""
 "Site-ul central (%s) și cel de la distanță (%s) nu sunt compatibile. "
 "Motivul: %s."
+
+#, python-format
+msgid ""
+"The central site has no baked agent for %s. Run *Bake agents* on the central "
+"site or wait for the next automatic bake."
+msgstr ""
+
+#, python-format
+msgid ""
+"The central site refused the distributed-setup site secret (HTTP %d). The "
+"remote site may have lost its registration with the central site -- log in "
+"again under *Distributed monitoring* on the central site."
+msgstr ""
 
 #, python-format
 msgid "The character <tt>%s</tt> is not allowed here."
@@ -72869,8 +72916,8 @@ msgstr ""
 
 #, fuzzy, python-format
 msgid ""
-"The password ID '%s' is not usable by the OTel collector. It must contain "
-"only letters, digits and underscores."
+"The password ID '%s' is not usable by the OTel collector. It must start with "
+"a letter or underscore and contain only letters, digits and underscores."
 msgstr ""
 "Numele vizualizării poate conține numai litere, cifre și caractere de "
 "subliniere."
@@ -75080,6 +75127,10 @@ msgid "This ID is used as its unique identifier. It cannot be changed later."
 msgstr ""
 "Acest ID este utilizat ca identificator unic al acestuia. Acesta nu poate fi "
 "modificat ulterior."
+
+#, fuzzy
+msgid "This Prometheus configuration does not exist."
+msgstr "Această agregare nu există."
 
 #, fuzzy
 msgid "This SLA has no computation plug-ins configured"
@@ -80851,6 +80902,12 @@ msgstr "Autentificare bazată pe token"
 #, fuzzy
 msgid "Token bucket"
 msgstr "Găleată de jetoane"
+
+#, python-format
+msgid ""
+"Token creation on site \"%s\" failed: %s. Make sure the central site is "
+"logged into the remote site (Distributed monitoring → Login)."
+msgstr ""
 
 #, fuzzy
 msgid "Token invalid"
@@ -94583,6 +94640,10 @@ msgstr "flexibil"
 msgid "folder"
 msgstr "dosar"
 
+#, fuzzy, python-format
+msgid "folder \"%s\""
+msgstr "Dosar: %s"
+
 #, fuzzy
 msgid "folder has to be omitted for agent_type=host_name."
 msgstr "Dosarul nu este permis pentru niciun grup de contacte."
@@ -94685,6 +94746,10 @@ msgid_plural "hosts"
 msgstr[0] "gazdă"
 msgstr[1] ""
 msgstr[2] ""
+
+#, fuzzy, python-format
+msgid "host \"%s\""
+msgstr "pe gazda %s"
 
 msgid "host in total"
 msgstr "gazdă în total"

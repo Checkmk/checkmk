@@ -4,7 +4,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
+"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
 "PO-Revision-Date: 2026-05-08 08:11+0000\n"
 "Language-Team: Portuguese (Portugal) <https://translate.checkmk.com/projects/"
@@ -4991,6 +4991,11 @@ msgstr "Opções adicionais"
 
 msgid "Additional header lines"
 msgstr "Linhas de cabeçalho adicionais"
+
+msgid ""
+"Additional hosts are created automatically if they do not yet exist. Adjust "
+"the connection  to modify the folder or properties."
+msgstr ""
 
 #, python-brace-format
 msgid ""
@@ -12812,6 +12817,10 @@ msgstr ""
 "O sítio central tem a versão >= 2.2 e o sítio remoto tem uma versão mais "
 "antiga, por favor actualize primeiro os sítios remotos"
 
+#, python-format
+msgid "Central site returned HTTP %d: %s"
+msgstr ""
+
 #, fuzzy
 msgid "Ceph (Linux)"
 msgstr "SUSEConnect (Linux)"
@@ -15739,6 +15748,10 @@ msgstr "Configuração do agente especial Datadog."
 #, fuzzy
 msgid "Configuration of update plug-in"
 msgstr "Configuração do plugin de atualização"
+
+#, fuzzy
+msgid "Configuration properties"
+msgstr "Erro de configuração"
 
 #, python-format
 msgid ""
@@ -24065,10 +24078,6 @@ msgstr "Editar a autenticação de dois factores do utilizador"
 msgid "Edit this %s"
 msgstr "Editar esta %s"
 
-#, fuzzy
-msgid "Edit this Prometheus configuration"
-msgstr "Adicionar configuração do estado"
-
 msgid "Edit this aggregation"
 msgstr "Editar esta agregação"
 
@@ -24189,6 +24198,10 @@ msgstr "Regra editada no conjunto de regras \"%s\" na pasta \"%s\""
 #, python-format
 msgid "Edited the %s '%s'"
 msgstr "Editado o %s \"%s\""
+
+#, fuzzy, python-format
+msgid "Edited the Prometheus configuration '%s'"
+msgstr "Adicionar configuração do estado"
 
 #, python-format
 msgid "Edited user profile for user %s"
@@ -28453,6 +28466,10 @@ msgstr "Encaminhar para o local remoto por spooler de notificação"
 #, fuzzy
 msgid "Forwarding method"
 msgstr "Método de Encaminhamento"
+
+#, python-format
+msgid "Forwarding the agent download to the central site failed: %s"
+msgstr ""
 
 #, python-format
 msgid "Found %d groups for synchronization."
@@ -47538,6 +47555,10 @@ msgstr "Nenhuma busca"
 msgid "No search, specify list of arguments"
 msgstr "Sem pesquisa, especificar lista de argumentos"
 
+#, fuzzy, python-format
+msgid "No site with id \"%s\" is configured."
+msgstr "Sem intervalo de IP configurado"
+
 #, fuzzy
 msgid "No smarthosts"
 msgstr "Smarthosts"
@@ -54537,6 +54558,10 @@ msgstr "Por favor, especifique pelo menos um valor"
 
 #, fuzzy
 msgid "Please specify either host or folder or hash."
+msgstr "Especifique o anfitrião ou o hash."
+
+#, fuzzy
+msgid "Please specify either host or folder."
 msgstr "Especifique o anfitrião ou o hash."
 
 msgid "Please specify the extensions in lower case and without dot."
@@ -68510,6 +68535,11 @@ msgstr ""
 msgid "Telemetry"
 msgstr "Elemento"
 
+msgid ""
+"Telemetry data are collected through the Prometheus scraper. Adjust the "
+"scraper configuration to modify data collection"
+msgstr ""
+
 #, fuzzy
 msgid ""
 "Tell the Jolokia plug-in to stop waiting for a response from each configured "
@@ -69544,6 +69574,10 @@ msgstr ""
 "0% a 100%"
 
 #, fuzzy
+msgid "The Prometheus configuration has been saved."
+msgstr "Configuração do anfitrião"
+
+#, fuzzy
 msgid ""
 "The REST endpoint must begin with <tt>https://alert.victorops.com/"
 "integrations</tt>"
@@ -70116,6 +70150,19 @@ msgstr ""
 msgid "The central (%s) and remote site (%s) are not compatible. Reason: %s"
 msgstr ""
 "O sítio central (%s) e o sítio remoto (%s) não são compatíveis. Motivo: %s"
+
+#, python-format
+msgid ""
+"The central site has no baked agent for %s. Run *Bake agents* on the central "
+"site or wait for the next automatic bake."
+msgstr ""
+
+#, python-format
+msgid ""
+"The central site refused the distributed-setup site secret (HTTP %d). The "
+"remote site may have lost its registration with the central site -- log in "
+"again under *Distributed monitoring* on the central site."
+msgstr ""
 
 #, python-format
 msgid "The character <tt>%s</tt> is not allowed here."
@@ -72593,8 +72640,8 @@ msgstr ""
 
 #, fuzzy, python-format
 msgid ""
-"The password ID '%s' is not usable by the OTel collector. It must contain "
-"only letters, digits and underscores."
+"The password ID '%s' is not usable by the OTel collector. It must start with "
+"a letter or underscore and contain only letters, digits and underscores."
 msgstr "O nome da vista só pode conter letras, dígitos e sublinhados."
 
 #, fuzzy
@@ -74773,6 +74820,10 @@ msgid "This ID is used as its unique identifier. It cannot be changed later."
 msgstr ""
 "Esta identificação é usada como identificador único. Não pode ser alterado "
 "mais tarde."
+
+#, fuzzy
+msgid "This Prometheus configuration does not exist."
+msgstr "Esta agregação não existe."
 
 #, fuzzy
 msgid "This SLA has no computation plug-ins configured"
@@ -80441,6 +80492,12 @@ msgstr "Autenticação por Token"
 #, fuzzy
 msgid "Token bucket"
 msgstr "Token Bucket"
+
+#, python-format
+msgid ""
+"Token creation on site \"%s\" failed: %s. Make sure the central site is "
+"logged into the remote site (Distributed monitoring → Login)."
+msgstr ""
 
 #, fuzzy
 msgid "Token invalid"
@@ -93829,7 +93886,6 @@ msgstr "contando"
 msgid "cp437"
 msgstr "cp437"
 
-#, fuzzy
 msgid "crash report"
 msgid_plural "crash reports"
 msgstr[0] ""
@@ -94184,6 +94240,10 @@ msgstr "flexível"
 msgid "folder"
 msgstr "pasta"
 
+#, fuzzy, python-format
+msgid "folder \"%s\""
+msgstr "Pasta: %s"
+
 #, fuzzy
 msgid "folder has to be omitted for agent_type=host_name."
 msgstr "A pasta não é permitida para nenhum grupo de contato."
@@ -94285,6 +94345,10 @@ msgid_plural "hosts"
 msgstr[0] "hospedeiro"
 msgstr[1] "hospedeiros"
 
+#, fuzzy, python-format
+msgid "host \"%s\""
+msgstr "no anfitrião %s"
+
 msgid "host in total"
 msgstr "anfitrião no total"
 
@@ -94346,7 +94410,6 @@ msgstr "os anfitriões estão de pé e não têm problemas de serviço"
 msgid "hosts in total"
 msgstr "anfitriões no total"
 
-#, fuzzy
 msgid "hour"
 msgid_plural "hours"
 msgstr[0] ""

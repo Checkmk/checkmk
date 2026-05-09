@@ -167,7 +167,7 @@ py_library(
     srcs = ["mkeventd.py"],
     imports = ["."],
     deps = [
-        "//cmk/utils",
+        "//cmk/utils:paths",
         "//packages/cmk-ec",
     ],
 )

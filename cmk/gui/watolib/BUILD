@@ -85,7 +85,7 @@ py_library(
         "//cmk/gui/utils:speaklater",
         "//cmk/gui/utils:transaction_manager",
         "//cmk/gui/utils:urls",
-        "//cmk/utils",
+        "//cmk/utils:paths",
         "//packages/cmk-ccc:plugin-registry",
         "//packages/cmk-ccc:resulttype",
         "//packages/cmk-ccc:site",

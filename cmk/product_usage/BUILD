@@ -35,7 +35,7 @@ py_library(
         "//cmk/base:app",
         "//cmk/base:config",
         "//cmk/product_usage",
-        "//cmk/utils",
+        "//cmk/utils:paths",
         "//packages/cmk-ccc:version",
     ],
 )

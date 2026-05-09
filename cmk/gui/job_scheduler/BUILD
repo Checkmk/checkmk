@@ -18,7 +18,7 @@ py_library(
         "//cmk/gui:session",
         "//cmk/gui:single_global_setting",
         "//cmk/gui/background_job/job",
-        "//cmk/utils",
+        "//cmk/utils:paths",
         "//packages/cmk-ccc:crash-reporting",
         "//packages/cmk-ccc:daemon",
         "//packages/cmk-ccc:exceptions",

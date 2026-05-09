@@ -76,7 +76,7 @@ py_library(
         "//cmk/gui/utils:urls",
         "//cmk/gui/utils:user_errors",
         "//cmk/gui/utils:user_frontend_settings_cookie",
-        "//cmk/utils",
+        "//cmk/utils:paths",
         "//packages/cmk-ccc:exceptions",
         "//packages/cmk-ccc:site",
         "//packages/cmk-ccc:store",

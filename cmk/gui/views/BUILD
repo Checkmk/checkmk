@@ -22,7 +22,7 @@ py_library(
         "//cmk/gui/utils:labels",
         "//cmk/gui/utils:roles",
         "//cmk/gui/visuals",
-        "//cmk/utils",
+        "//cmk/utils:paths",
         "//packages/cmk-ccc:plugin-registry",
         "//packages/cmk-ccc:user",
         "//packages/cmk-ccc:version",

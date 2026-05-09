@@ -25,7 +25,7 @@ py_library(
         "//cmk/gui/openapi/restful_objects:type_defs",
         "//cmk/gui/watolib",
         "//cmk/gui/watolib:groups_io",
-        "//cmk/utils",
+        "//cmk/utils:paths",
         "//packages/cmk-ccc:site",
         "//packages/cmk-ccc:version",
         "//packages/cmk-livestatus-client:py_livestatus",

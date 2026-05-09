@@ -489,7 +489,7 @@ py_library(
         "//cmk/gui:permissions",
         "//cmk/gui:role_types",
         "//cmk/gui:type_defs",
-        "//cmk/utils",
+        "//cmk/utils:paths",
         "//packages/cmk-ccc:store",
         "//packages/cmk-ccc:user",
     ],

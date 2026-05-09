@@ -22,6 +22,7 @@ config_setting(
     srcs = [
         "%s_requirements.txt" % module,
         ":git_wrapper",
+        "//:constraints.txt",
         "@freetds",
         "@openssl",
         "@python",
@@ -42,6 +43,7 @@ build_python_module(
     name = "netapp-ontap",
     srcs = [
         ":git_wrapper",
+        "//:constraints.txt",
         "@freetds",
         "@openssl",
         "@python",

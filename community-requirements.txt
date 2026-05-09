@@ -2887,6 +2887,7 @@ mypy==1.19.1 \
     --hash=sha256:f859fb09d9583a985be9a493d5cfc5515b56b08f7447759a0c5deaf68d80506e \
     --hash=sha256:ffcebe56eb09ff0c0885e750036a095e23793ba6c2e894e7e63f6d89ad51f22e
     # via
+    #   -c constraints.txt
     #   -c requirements.txt
     #   -r tests/dev-requirements.in
     #   pylsp-mypy

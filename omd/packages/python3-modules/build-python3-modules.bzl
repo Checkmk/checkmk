@@ -27,6 +27,7 @@ def build_python_module(name, srcs, outs, requirements = "", **kwargs):
     """This macro is creating an empty file.
     """
     requirements = requirements if requirements else "-r $$HOME/$(execpath %s_requirements.txt)" % name
+    constraints = "$$HOME/$(execpath //:constraints.txt)"
     openssl_dir = Label("@openssl").repo_name
     freetds_dir = Label("@freetds").repo_name
     python_dir = Label("@python").repo_name
@@ -43,6 +44,7 @@ def build_python_module(name, srcs, outs, requirements = "", **kwargs):
                 git_ssl_no_verify = "GIT_SSL_NO_VERIFY=true",
                 pyMajMin = PYTHON_MAJOR_DOT_MINOR,
                 requirements = requirements,
+                constraints = constraints,
                 openssl_dir = openssl_dir,
                 freetds_dir = freetds_dir,
                 python_dir = python_dir,
@@ -51,6 +53,7 @@ def build_python_module(name, srcs, outs, requirements = "", **kwargs):
                 git_ssl_no_verify = "",
                 pyMajMin = PYTHON_MAJOR_DOT_MINOR,
                 requirements = requirements,
+                constraints = constraints,
                 openssl_dir = openssl_dir,
                 freetds_dir = freetds_dir,
                 python_dir = python_dir,
@@ -136,6 +139,8 @@ build_cmd = """
       --no-warn-script-location \\
       --root-user-action=ignore \\
       --disable-pip-version-check \\
+      --use-feature=build-constraint \\
+      --build-constraint="{constraints}" \\
       --prefix="$$HOME/$$MODULE_NAME" \\
       {requirements} 2>&1 | tee "$$HOME/""$$MODULE_NAME""_pip_install.stdout"
 

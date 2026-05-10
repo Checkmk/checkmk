@@ -10,7 +10,7 @@
 import pytest
 
 from cmk.agent_based.v2 import Attributes, InventoryResult, TableRow
-from cmk.plugins.collection.agent_based.docker_node_info import inventorize_docker_node_info
+from cmk.plugins.docker.agent_based.docker_node_info import inventorize_docker_node_info
 from cmk.plugins.docker.lib import NodeInfoSection as Section
 
 

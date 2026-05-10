@@ -6,7 +6,7 @@ from collections.abc import Mapping
 
 import pytest
 
-from cmk.plugins.collection.rulesets.diskstat import _form_spec_diskstat_inventory
+from cmk.plugins.diskstat.rulesets.diskstat import _form_spec_diskstat_inventory
 from cmk.rulesets.v1.form_specs import Dictionary
 
 

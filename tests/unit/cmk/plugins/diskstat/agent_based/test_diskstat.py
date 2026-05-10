@@ -9,7 +9,7 @@ from collections.abc import Mapping, Sequence
 import pytest
 
 from cmk.agent_based.v2 import IgnoreResultsError, Metric, Result, Service, State
-from cmk.plugins.collection.agent_based import diskstat
+from cmk.plugins.diskstat.agent_based import diskstat
 from cmk.plugins.lib.diskstat import NoIOSection
 from cmk.plugins.lib.multipath import Group
 

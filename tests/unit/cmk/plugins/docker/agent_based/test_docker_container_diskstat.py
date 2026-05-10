@@ -21,8 +21,8 @@ from cmk.agent_based.v2 import (
     StringTable,
 )
 from cmk.agent_based.v2.render import iobandwidth
-from cmk.plugins.collection.agent_based import diskstat
-from cmk.plugins.collection.agent_based.diskstat import check_plugin_diskstat
+from cmk.plugins.diskstat.agent_based import diskstat
+from cmk.plugins.diskstat.agent_based.diskstat import check_plugin_diskstat
 from cmk.plugins.docker.agent_based.docker_container_diskstat import (
     agent_section_docker_container_diskstat,
 )

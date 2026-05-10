@@ -6,8 +6,8 @@
 import pytest
 
 from cmk.agent_based.v2 import IgnoreResultsError, Metric, Result, State, StringTable
-from cmk.plugins.collection.agent_based import diskstat
-from cmk.plugins.collection.agent_based.diskstat import check_diskstat
+from cmk.plugins.diskstat.agent_based import diskstat
+from cmk.plugins.diskstat.agent_based.diskstat import check_diskstat
 from cmk.plugins.docker.agent_based.docker_container_diskstat_cgroupv2 import (
     parse_docker_container_diskstat_cgroupv2,
 )

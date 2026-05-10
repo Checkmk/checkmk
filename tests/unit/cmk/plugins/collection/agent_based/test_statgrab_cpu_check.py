@@ -3,8 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.plugins.collection.agent_based.statgrab_cpu import parse_statgrab_cpu
 from cmk.plugins.lib.cpu_util import CPUInfo
+from cmk.plugins.statgrab.agent_based.statgrab_cpu import parse_statgrab_cpu
 
 STRING_TABLE = [
     ["idle", "100"],

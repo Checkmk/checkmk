@@ -4,8 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.plugins.collection.agent_based.statgrab_load import parse_statgrab_load
 from cmk.plugins.lib.cpu import Load, Section
+from cmk.plugins.statgrab.agent_based.statgrab_load import parse_statgrab_load
 
 
 def test_parse_statgrab_load() -> None:

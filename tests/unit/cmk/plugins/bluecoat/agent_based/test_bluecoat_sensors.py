@@ -7,7 +7,7 @@
 import pytest
 
 from cmk.agent_based.v2 import CheckResult, Metric, Result, Service, State
-from cmk.plugins.collection.agent_based.bluecoat_sensors import (
+from cmk.plugins.bluecoat.agent_based.bluecoat_sensors import (
     check_bluecoat_sensors,
     check_bluecoat_sensors_temp,
     discover_bluecoat_sensors,
@@ -195,7 +195,7 @@ def test_discover_bluecoat_sensors_temp() -> None:
 @pytest.fixture
 def empty_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(
-        "cmk.plugins.collection.agent_based.bluecoat_sensors.get_value_store",
+        "cmk.plugins.bluecoat.agent_based.bluecoat_sensors.get_value_store",
         lambda: {},
     )
 

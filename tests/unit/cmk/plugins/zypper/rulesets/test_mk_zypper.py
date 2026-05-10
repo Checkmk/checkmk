@@ -5,7 +5,7 @@
 
 import pytest
 
-from cmk.plugins.collection.rulesets.mk_zypper import migrate
+from cmk.plugins.zypper.rulesets.mk_zypper import migrate
 
 
 @pytest.mark.parametrize(

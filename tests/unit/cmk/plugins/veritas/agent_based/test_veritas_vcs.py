@@ -8,8 +8,8 @@ from collections.abc import Mapping, Sequence
 import pytest
 
 from cmk.agent_based.v2 import CheckResult, Result, Service, State
-from cmk.plugins.collection.agent_based import veritas_vcs
-from cmk.plugins.collection.agent_based.veritas_vcs import SubSection, Vcs
+from cmk.plugins.veritas.agent_based import veritas_vcs
+from cmk.plugins.veritas.agent_based.veritas_vcs import SubSection, Vcs
 
 STRING_TABLE = [
     ["ClusState", "RUNNING"],

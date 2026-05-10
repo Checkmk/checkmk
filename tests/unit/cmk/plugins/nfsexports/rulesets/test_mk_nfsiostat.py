@@ -5,7 +5,7 @@
 
 import pytest
 
-from cmk.plugins.collection.rulesets.mk_sshd_config import migrate
+from cmk.plugins.nfsexports.rulesets.mk_nfsiostat import migrate
 
 
 @pytest.mark.parametrize(

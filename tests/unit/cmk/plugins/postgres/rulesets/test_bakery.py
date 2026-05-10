@@ -9,7 +9,7 @@ from typing import Any
 
 import pytest
 
-from cmk.plugins.collection.rulesets.mk_postgres import (
+from cmk.plugins.postgres.rulesets.mk_postgres import (
     migrate,
     migrate_instance,
 )

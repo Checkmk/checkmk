@@ -5,7 +5,7 @@
 
 import pytest
 
-from cmk.plugins.collection.rulesets.mk_apt import migrate
+from cmk.plugins.apt.rulesets.mk_apt import migrate
 
 
 @pytest.mark.parametrize(

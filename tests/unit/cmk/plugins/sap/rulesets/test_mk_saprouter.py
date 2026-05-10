@@ -5,7 +5,7 @@
 
 import pytest
 
-from cmk.plugins.collection.rulesets.mk_saprouter import migrate
+from cmk.plugins.sap.rulesets.mk_saprouter import migrate
 
 
 @pytest.mark.parametrize(

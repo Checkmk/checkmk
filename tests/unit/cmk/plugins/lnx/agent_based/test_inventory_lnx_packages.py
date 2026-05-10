@@ -7,7 +7,7 @@
 import pytest
 
 from cmk.agent_based.v2 import InventoryResult, StringTable, TableRow
-from cmk.plugins.collection.agent_based.inventory_lnx_packages import (
+from cmk.plugins.lnx.agent_based.inventory_lnx_packages import (
     inventorize_lnx_packages,
     parse_lnx_packages,
 )

@@ -8,7 +8,7 @@ from collections.abc import Sequence
 import pytest
 
 from cmk.agent_based.v2 import CheckResult, Metric, Result, Service, State, StringTable
-from cmk.plugins.collection.agent_based import lnx_thermal
+from cmk.plugins.lnx.agent_based import lnx_thermal
 
 
 @pytest.fixture

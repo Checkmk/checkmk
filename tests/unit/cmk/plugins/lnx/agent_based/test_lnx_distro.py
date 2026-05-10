@@ -6,7 +6,7 @@
 from typing import Final
 
 from cmk.agent_based.v2 import Attributes
-from cmk.plugins.collection.agent_based.lnx_distro import inventorize_lnx_distro, parse_lnx_distro
+from cmk.plugins.lnx.agent_based.lnx_distro import inventorize_lnx_distro, parse_lnx_distro
 
 STRING_TABLE_RH_OLD: Final = [
     [

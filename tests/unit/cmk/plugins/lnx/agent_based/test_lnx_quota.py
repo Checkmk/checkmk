@@ -12,7 +12,7 @@ from typing import Any
 import pytest
 
 from cmk.agent_based.v2 import CheckResult, Result, Service, State, StringTable
-from cmk.plugins.collection.agent_based import lnx_quota
+from cmk.plugins.lnx.agent_based import lnx_quota
 
 _STRING_TABLE = [
     ["[[[usr:/]]]"],

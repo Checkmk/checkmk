@@ -8,7 +8,7 @@ from collections.abc import Mapping, Sequence
 import pytest
 
 from cmk.agent_based.v2 import InventoryResult, StringTable, TableRow
-from cmk.plugins.collection.agent_based.inventory_lnx_sysctl import (
+from cmk.plugins.lnx.agent_based.inventory_lnx_sysctl import (
     inventorize_lnx_sysctl,
     parse_lnx_sysctl,
 )

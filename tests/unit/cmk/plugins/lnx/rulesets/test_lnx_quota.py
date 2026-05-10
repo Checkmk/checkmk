@@ -5,7 +5,7 @@
 
 import pytest
 
-from cmk.plugins.collection.rulesets.lnx_quota import migrate
+from cmk.plugins.lnx.rulesets.lnx_quota import migrate
 
 
 @pytest.mark.parametrize(

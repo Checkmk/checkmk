@@ -8,7 +8,7 @@ from collections.abc import Mapping
 import pytest
 
 from cmk.agent_based.v2 import Attributes
-from cmk.plugins.collection.agent_based.lnx_uname import inventorize_lnx_uname, parse_lnx_uname
+from cmk.plugins.lnx.agent_based.lnx_uname import inventorize_lnx_uname, parse_lnx_uname
 
 
 @pytest.fixture(name="section", scope="module")

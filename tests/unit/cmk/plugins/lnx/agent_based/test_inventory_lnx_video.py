@@ -6,7 +6,7 @@
 import pytest
 
 from cmk.agent_based.v2 import InventoryResult, StringTable, TableRow
-from cmk.plugins.collection.agent_based.inventory_lnx_video import (
+from cmk.plugins.lnx.agent_based.inventory_lnx_video import (
     inventorize_lnx_video,
     parse_lnx_video,
 )

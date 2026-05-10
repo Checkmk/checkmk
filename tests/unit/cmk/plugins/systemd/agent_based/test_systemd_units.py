@@ -12,7 +12,7 @@ from typing import Any
 import pytest
 
 from cmk.agent_based.v2 import HostLabel, Metric, Result, Service, State
-from cmk.plugins.collection.agent_based.systemd_units import (
+from cmk.plugins.systemd.agent_based.systemd_units import (
     _services_split,
     CHECK_DEFAULT_PARAMETERS_SUMMARY,
     check_systemd_services,

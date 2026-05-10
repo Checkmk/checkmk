@@ -133,6 +133,21 @@ def test_migrate_required_status(
             },
             id="Everything set -> no change",
         ),
+        pytest.param(
+            {
+                "required_node_status": "True",
+                "subscription_expiration_days_levels": ("fixed", (30, 7)),
+            },
+            {
+                "required_node_status": NODE_STATUS_DEFAULT,
+                "subscription_expiration_days_levels": ("fixed", (30, 7)),
+            },
+            id="Node: truthy non-status string ('True') -> defaults",
+            marks=pytest.mark.xfail(
+                strict=True,
+                reason="Crash report 62e0ee30-2850-11f1-93b2-1ede86a9b091: _migrate_ruleset keeps truthy non-dict values unchanged instead of migrating to defaults",
+            ),
+        ),
     ],
 )
 def test_migrate_ruleset(

@@ -19680,10 +19680,6 @@ msgstr "Implantar el plugin de MS Office 365"
 msgid "Deploy MSSQL Server plug-in"
 msgstr "Implementar el complemento del servidor MSSQL"
 
-#, fuzzy
-msgid "Deploy MegaRAID plug-in"
-msgstr "Implementar el complemento MegaRAID"
-
 msgid "Deploy OpenHardwareMonitor (headless)"
 msgstr "Implementar OpenHardwareMonitor (sin periféricos)"
 
@@ -19784,6 +19780,10 @@ msgstr "Implementar el complemento docker"
 #, fuzzy
 msgid "Deploy the Jolokia plug-in"
 msgstr "Implementar el complemento Jolokia"
+
+#, fuzzy
+msgid "Deploy the MegaRAID plug-in"
+msgstr "Implementar el complemento MegaRAID"
 
 #, fuzzy
 msgid "Deploy the MySQL plug-in"
@@ -50604,9 +50604,6 @@ msgstr "No se permite el inicio de sesión en este sitio."
 msgid "Path to .pgpass file"
 msgstr "Ruta del archivo .pgpass"
 
-msgid "Path to <tt>MegaCLI.exe</tt>"
-msgstr "Ruta de acceso a <tt>MegaCLI.exe</tt>"
-
 msgid "Path to CA File"
 msgstr "Ruta de acceso al archivo CA"
 
@@ -50619,6 +50616,10 @@ msgstr "Ruta de acceso al archivo de claves de certificado"
 #, fuzzy
 msgid "Path to MRPE configuration file"
 msgstr "Archivos de configuración de Pretty-Print"
+
+#, fuzzy
+msgid "Path to MegaCLI.exe"
+msgstr "Ruta de acceso a <tt>MegaCLI.exe</tt>"
 
 #, fuzzy
 msgid "Path to PostgreSQL binary"
@@ -73684,9 +73685,8 @@ msgstr ""
 
 #, fuzzy
 msgid ""
-"This plug-in uses the command line tool <tt>MegaCli.exe</tt> in order to "
-"provide monitoring information of LSI RAID controllers and attached hard "
-"disks. You can download this tool from <a href='http://www.lsi.com/'>LSI</a>."
+"This plug-in uses the command line tool MegaCli.exe in order to provide "
+"monitoring information of LSI RAID controllers and attached hard disks."
 msgstr ""
 "Este plugin utiliza la herramienta de línea de comandos <tt>MegaCli.exe</tt> "
 "para proporcionar información de monitorización de las controladoras RAID de "

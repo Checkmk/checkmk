@@ -18238,9 +18238,6 @@ msgstr "MS Office 365プラグインをデプロイする"
 msgid "Deploy MSSQL Server plug-in"
 msgstr "MSSQL Serverプラグインを展開する"
 
-msgid "Deploy MegaRAID plug-in"
-msgstr "MegaRAIDプラグインをデプロイする"
-
 msgid "Deploy OpenHardwareMonitor (headless)"
 msgstr "OpenHardwareMonitorのデプロイ(ヘッドレス)"
 
@@ -18325,6 +18322,10 @@ msgstr "Dockerプラグインをデプロイする"
 
 msgid "Deploy the Jolokia plug-in"
 msgstr "Jolokiaプラグインをデプロイする"
+
+#, fuzzy
+msgid "Deploy the MegaRAID plug-in"
+msgstr "MegaRAIDプラグインをデプロイする"
 
 msgid "Deploy the MySQL plug-in"
 msgstr "MySQLプラグインをデプロイする"
@@ -46412,9 +46413,6 @@ msgstr "パスが'/'で始まることはできません"
 msgid "Path to .pgpass file"
 msgstr ".pgpassファイルへのパス"
 
-msgid "Path to <tt>MegaCLI.exe</tt>"
-msgstr "<tt>MegaCLI.exe</tt>へのパス"
-
 msgid "Path to CA File"
 msgstr "CAファイルのパス"
 
@@ -46426,6 +46424,10 @@ msgstr "証明書キーファイルへのパス"
 
 msgid "Path to MRPE configuration file"
 msgstr "MRPE設定ファイルへのパス"
+
+#, fuzzy
+msgid "Path to MegaCLI.exe"
+msgstr "<tt>MegaCLI.exe</tt>へのパス"
 
 msgid "Path to PostgreSQL binary"
 msgstr "PostGreSQLバイナリへのパス"
@@ -67856,10 +67858,10 @@ msgstr ""
 "ることにより、ローカルのDNSリゾルバをテストします。このツールはターゲットマ"
 "シ ンにインストールされていることが期待されています。"
 
+#, fuzzy
 msgid ""
-"This plug-in uses the command line tool <tt>MegaCli.exe</tt> in order to "
-"provide monitoring information of LSI RAID controllers and attached hard "
-"disks. You can download this tool from <a href='http://www.lsi.com/'>LSI</a>."
+"This plug-in uses the command line tool MegaCli.exe in order to provide "
+"monitoring information of LSI RAID controllers and attached hard disks."
 msgstr ""
 "このプラグインは、コマンドラインツール<tt>MegaCli.exe</tt> を使用して、LSI "
 "RAID コントローラと接続されたハードディスクの監視情報を提供します。このツール"

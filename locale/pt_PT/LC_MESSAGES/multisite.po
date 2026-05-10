@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2026-05-08 08:10+0000\n"
+"PO-Revision-Date: 2026-05-09 17:50+0000\n"
 "Language-Team: Portuguese (Portugal) <https://translate.checkmk.com/projects/"
 "checkmk/dev/pt_PT/>\n"
 "Language: pt_PT\n"
@@ -19547,10 +19547,6 @@ msgstr "Implementar o plug-in MS Office 365"
 msgid "Deploy MSSQL Server plug-in"
 msgstr "Implementar plugin MSSQL Server"
 
-#, fuzzy
-msgid "Deploy MegaRAID plug-in"
-msgstr "Implementar o plugin MegaRAID"
-
 msgid "Deploy OpenHardwareMonitor (headless)"
 msgstr "Implantar OpenHardwareMonitor (sem cabeça)"
 
@@ -19651,6 +19647,10 @@ msgstr "Implantar o plugin da doca"
 #, fuzzy
 msgid "Deploy the Jolokia plug-in"
 msgstr "Implementar o plugin Jolokia"
+
+#, fuzzy
+msgid "Deploy the MegaRAID plug-in"
+msgstr "Implementar o plugin MegaRAID"
 
 #, fuzzy
 msgid "Deploy the MySQL plug-in"
@@ -50195,9 +50195,6 @@ msgstr "O login não é permitido neste site."
 msgid "Path to .pgpass file"
 msgstr "Caminho para o arquivo .pgpass"
 
-msgid "Path to <tt>MegaCLI.exe</tt>"
-msgstr "Caminho para <tt>MegaCLI.exe</tt>"
-
 msgid "Path to CA File"
 msgstr "Caminho para o ficheiro CA"
 
@@ -50210,6 +50207,10 @@ msgstr "Caminho para o ficheiro da chave de certificado"
 #, fuzzy
 msgid "Path to MRPE configuration file"
 msgstr "Arquivos de configuração Pretty-Print"
+
+#, fuzzy
+msgid "Path to MegaCLI.exe"
+msgstr "Caminho para <tt>MegaCLI.exe</tt>"
 
 #, fuzzy
 msgid "Path to PostgreSQL binary"
@@ -73027,9 +73028,8 @@ msgstr ""
 
 #, fuzzy
 msgid ""
-"This plug-in uses the command line tool <tt>MegaCli.exe</tt> in order to "
-"provide monitoring information of LSI RAID controllers and attached hard "
-"disks. You can download this tool from <a href='http://www.lsi.com/'>LSI</a>."
+"This plug-in uses the command line tool MegaCli.exe in order to provide "
+"monitoring information of LSI RAID controllers and attached hard disks."
 msgstr ""
 "Este plugin usa a ferramenta de linha de comando <tt>MegaCli.exe</tt> a fim "
 "de fornecer informações de monitoramento de controladores RAID LSI e discos "

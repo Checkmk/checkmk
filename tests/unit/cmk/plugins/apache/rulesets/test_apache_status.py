@@ -5,7 +5,7 @@
 
 import pytest
 
-from cmk.plugins.collection.rulesets.apache_status import migrate
+from cmk.plugins.apache.rulesets.apache_status import migrate
 
 
 @pytest.mark.parametrize(

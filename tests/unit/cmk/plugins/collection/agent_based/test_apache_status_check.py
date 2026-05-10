@@ -9,7 +9,7 @@
 import pytest
 
 from cmk.agent_based.v2 import Metric, Result, Service, State, StringTable
-from cmk.plugins.collection.agent_based import apache_status
+from cmk.plugins.apache.agent_based import apache_status
 
 
 def make_agent_output_1():

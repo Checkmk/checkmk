@@ -8,7 +8,7 @@
 import pytest
 
 from cmk.agent_based.v2 import CheckResult, Result, Service, State, StringTable
-from cmk.plugins.collection.agent_based.quantum_libsmall_door import (
+from cmk.plugins.quantum.agent_based.quantum_libsmall_door import (
     _Section,
     check_quantum_libsmall_door,
     discovery_quantum_libsmall_door,

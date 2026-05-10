@@ -7,7 +7,7 @@ from collections.abc import Sequence
 import pytest
 
 from cmk.agent_based.v2 import CheckResult, DiscoveryResult, Result, Service, State, StringTable
-from cmk.plugins.collection.agent_based.quantum_libsmall_status import (
+from cmk.plugins.quantum.agent_based.quantum_libsmall_status import (
     _Section,
     check_quantum_libsmall_status,
     discovery_quantum_libsmall_status,

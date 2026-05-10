@@ -10,8 +10,8 @@ from collections.abc import Sequence
 import pytest
 
 from cmk.agent_based.v2 import Result, Service, State, StringTable
-from cmk.plugins.collection.agent_based import zpool_status
-from cmk.plugins.collection.agent_based.zpool_status import Section
+from cmk.plugins.zpool.agent_based import zpool_status
+from cmk.plugins.zpool.agent_based.zpool_status import Section
 
 
 @pytest.mark.parametrize("string_table, expected_result", [([], None)])

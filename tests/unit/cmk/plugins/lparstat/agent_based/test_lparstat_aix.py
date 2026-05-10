@@ -7,7 +7,7 @@
 from pytest import MonkeyPatch
 
 from cmk.agent_based.v2 import Attributes, Metric, Result, Service, State, StringTable
-from cmk.plugins.collection.agent_based import lparstat_aix as la
+from cmk.plugins.lparstat.agent_based import lparstat_aix as la
 
 
 def _parse(string_table: StringTable) -> la.Section:

@@ -7,8 +7,8 @@ from cmk.agent_based.v2 import Metric, Result, Service, State
 from cmk.plugins.apc.agent_based.apc_rackpdu_power import (
     check_apc_rackpdu_power,
     discover_apc_rackpdu_power,
+    parse_apc_rackpdu_power,
 )
-from cmk.plugins.collection.agent_based.apc_rackpdu_power import parse_apc_rackpdu_power
 
 
 def test_apc_rackpdu_power_discovery() -> None:

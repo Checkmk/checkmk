@@ -40,11 +40,17 @@ def _migrate_ruleset(value: object) -> Mapping[str, object]:
     if not isinstance(value, dict):
         raise TypeError(value)
 
-    if not value.get("required_node_status"):
-        value.pop("required_node_status", None)
+    node_status = _migrate_required_status(
+        value.pop("required_node_status", None), NODE_STATUS_DEFAULT
+    )
+    if node_status:
+        value["required_node_status"] = node_status
 
-    if not value.get("required_subscription_status"):
-        value.pop("required_subscription_status", None)
+    sub_status = _migrate_required_status(
+        value.pop("required_subscription_status", None), SUBSCRIPTION_STATUS_DEFAULT
+    )
+    if sub_status:
+        value["required_subscription_status"] = sub_status
 
     return value
 

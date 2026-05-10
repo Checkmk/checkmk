@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.plugins.collection.agent_based.rmon_stats import parse_rmon_stats
+from cmk.plugins.rmon.agent_based.rmon_stats import parse_rmon_stats
 
 
 def test_parse_rmon_stats_handles_empty_counter() -> None:

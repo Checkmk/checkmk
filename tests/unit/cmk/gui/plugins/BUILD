@@ -28,6 +28,7 @@ py_test(
         "//cmk/gui/inventory",
         "//cmk/gui/painter:v0_base",
         "//cmk/gui/plugins/wato",
+        "//cmk/gui/plugins/wato/check_parameters",
         "//cmk/gui/rule_specs:legacy_converter",
         "//cmk/gui/sidebar",
         "//cmk/gui/utils:html",

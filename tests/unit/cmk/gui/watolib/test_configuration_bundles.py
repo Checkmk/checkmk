@@ -373,7 +373,7 @@ def test_delete_config_bundle_passwords_does_not_affect_other_passwords(
 @pytest.mark.usefixtures("request_context")
 def test_create_and_delete_config_bundle_rules(other_folder: str, with_admin_login: UserId) -> None:
     bundle_id, bundle = _make_bundle()
-    ruleset_name = "checkgroup_parameters:local"
+    ruleset_name = "host_contactgroups"
     rules = [
         CreateRule(
             folder="",

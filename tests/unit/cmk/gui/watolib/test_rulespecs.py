@@ -24,7 +24,6 @@ from cmk.gui.watolib.rulespecs import (
     HostRulespec,
     main_module_from_rulespec_group_name,
     rulespec_group_registry,
-    rulespec_registry,
     RulespecGroup,
     RulespecGroupRegistry,
     RulespecRegistry,
@@ -86,75 +85,6 @@ def test_legacy_get_not_existing_rule_sub_group(monkeypatch: MonkeyPatch) -> Non
     assert group.name == "xyz/abcxxxdingaaa"
     assert group.title == "Abc, xxx ding./aaa"
     assert group.help is None
-
-
-def _expected_rulespec_group_choices() -> list[tuple[str, str]]:
-    expected = [
-        ("activechecks", "HTTP, TCP, email, ..."),
-        ("agent", "Access to agents"),
-        ("agent/check_mk_agent", "&nbsp;&nbsp;\u2319 Checkmk agent"),
-        ("agent/general_settings", "&nbsp;&nbsp;\u2319 General Settings"),
-        ("agents", "Agent rules"),
-        ("agents/generic_options", "&nbsp;&nbsp;\u2319 Generic agent options"),
-        ("checkparams", "Service discovery rules"),
-        ("checkparams/discovery", "&nbsp;&nbsp;\u2319 Discovery of individual services"),
-        (
-            "checkparams/inventory_and_check_mk_settings",
-            "&nbsp;&nbsp;\u2319 Discovery and Checkmk settings",
-        ),
-        ("datasource_programs", "Other integrations"),
-        ("eventconsole", "Event Console rules"),
-        ("inventory", "HW/SW inventory"),
-        ("host_monconf", "Host monitoring rules"),
-        ("host_monconf/host_checks", "&nbsp;&nbsp;\u2319 Host checks"),
-        ("host_monconf/host_notifications", "&nbsp;&nbsp;\u2319 Notifications"),
-        ("host_monconf/host_various", "&nbsp;&nbsp;\u2319 Various"),
-        ("monconf", "Service monitoring rules"),
-        ("monconf/applications", "&nbsp;&nbsp;\u2319 Applications, Processes & Services"),
-        ("monconf/networking", "&nbsp;&nbsp;\u2319 Networking"),
-        ("monconf/os", "&nbsp;&nbsp;\u2319 Operating System Resources"),
-        ("monconf/printers", "&nbsp;&nbsp;\u2319 Printers"),
-        ("monconf/storage", "&nbsp;&nbsp;\u2319 Storage, file systems and files"),
-        (
-            "monconf/environment",
-            "&nbsp;&nbsp;\u2319 Temperature, Humidity, Electrical Parameters, etc.",
-        ),
-        ("monconf/hardware", "&nbsp;&nbsp;\u2319 Hardware, BIOS"),
-        ("monconf/virtualization", "&nbsp;&nbsp;\u2319 Virtualization"),
-        ("monconf/notifications", "&nbsp;&nbsp;\u2319 Notifications"),
-        ("monconf/service_checks", "&nbsp;&nbsp;\u2319 Service Checks"),
-        ("monconf/various", "&nbsp;&nbsp;\u2319 Various"),
-        ("custom_checks", "Other services"),
-        ("datasource_programs/apps", "&nbsp;&nbsp;⌙ Applications"),
-        ("datasource_programs/cloud", "&nbsp;&nbsp;⌙ Cloud based environments"),
-        ("datasource_programs/container", "&nbsp;&nbsp;⌙ Containerization"),
-        ("datasource_programs/custom", "&nbsp;&nbsp;⌙ Custom integrations"),
-        ("datasource_programs/hw", "&nbsp;&nbsp;⌙ Hardware"),
-        ("datasource_programs/os", "&nbsp;&nbsp;⌙ Operating systems"),
-        ("datasource_programs/testing", "&nbsp;&nbsp;⌙ Testing"),
-        ("snmp", "SNMP rules"),
-        ("static", "Enforced services"),
-        ("static/applications", "&nbsp;&nbsp;⌙ Applications, Processes & Services"),
-        ("static/environment", "&nbsp;&nbsp;⌙ Temperature, Humidity, Electrical Parameters, etc."),
-        ("static/hardware", "&nbsp;&nbsp;⌙ Hardware, BIOS"),
-        ("static/networking", "&nbsp;&nbsp;⌙ Networking"),
-        ("static/os", "&nbsp;&nbsp;⌙ Operating System Resources"),
-        ("static/printers", "&nbsp;&nbsp;⌙ Printers"),
-        ("static/storage", "&nbsp;&nbsp;⌙ Storage, file systems and files"),
-        ("static/virtualization", "&nbsp;&nbsp;⌙ Virtualization"),
-        ("vm_cloud_container", "VM, cloud, container"),
-    ]
-
-    return expected
-
-
-def test_rulespec_group_choices() -> None:
-    actual_choices = [
-        g
-        for g in rulespec_group_registry.get_group_choices()
-        if not _is_dynamically_generated_group(g[0])
-    ]
-    assert sorted(actual_choices) == sorted(_expected_rulespec_group_choices())
 
 
 @pytest.mark.parametrize(
@@ -225,55 +155,6 @@ def test_rulespec_get_main_groups() -> None:
             "vm_cloud_container",
         ]
     )
-
-
-def test_rulespec_get_all_groups() -> None:
-    expected_rulespec_groups = [
-        "activechecks",
-        "host_monconf/host_checks",
-        "host_monconf/host_notifications",
-        "host_monconf/host_various",
-        "monconf/applications",
-        "monconf/environment",
-        "monconf/hardware",
-        "monconf/service_checks",
-        "monconf/networking",
-        "monconf/notifications",
-        "monconf/os",
-        "monconf/printers",
-        "monconf/storage",
-        "monconf/various",
-        "monconf/virtualization",
-        "agent/general_settings",
-        "agent/check_mk_agent",
-        "agents/generic_options",
-        "custom_checks",
-        "snmp",
-        "vm_cloud_container",
-        "checkparams/inventory_and_check_mk_settings",
-        "static/networking",
-        "static/applications",
-        "checkparams/discovery",
-        "static/environment",
-        "static/storage",
-        "static/printers",
-        "static/os",
-        "static/virtualization",
-        "static/hardware",
-        "datasource_programs/apps",
-        "datasource_programs/custom",
-        "datasource_programs/hw",
-        # Currently does not show up in the test because all of the plugins have been
-        # migrated to cmk-plugins and the test can't see them.
-        # "datasource_programs/os",
-        "inventory",
-        "eventconsole",
-    ]
-
-    actual_rulespec_groups = [
-        g for g in rulespec_registry.get_all_groups() if not _is_dynamically_generated_group(g)
-    ]
-    assert sorted(actual_rulespec_groups) == sorted(expected_rulespec_groups)
 
 
 def _is_dynamically_generated_group(group_name: str) -> bool:

@@ -82,6 +82,7 @@ py_binary(
             "//cmk/editions/nonfree:cloud",
             "//cmk/editions/nonfree:pro",
             "//cmk/editions/nonfree:ultimate",
+            "//cmk/gui/nonfree/ultimate/plugins/wato/check_parameters:stub",
         ],
         "@cmk//edition:community": [
             "//cmk/editions:community",
@@ -94,15 +95,18 @@ py_binary(
             "//cmk/editions:community",
             "//cmk/editions/nonfree:pro",
             "//cmk/editions/nonfree:ultimate",
+            "//cmk/gui/nonfree/ultimate/plugins/wato/check_parameters:stub",
         ],
         "@cmk//edition:ultimatemt": [
             "//cmk/editions:community",
             "//cmk/editions/nonfree:pro",
             "//cmk/editions/nonfree:ultimate",
             "//cmk/editions/nonfree:ultimatemt",
+            "//cmk/gui/nonfree/ultimate/plugins/wato/check_parameters:stub",
         ],
     }) + [
         ":_core",
+        "//cmk/gui/plugins/wato/check_parameters:stub",
         requirement("pyyaml"),
     ],
 )
@@ -122,6 +126,7 @@ py_binary(
         ],
     }) + [
         ":_core",
+        "//cmk/gui/plugins/wato/check_parameters:stub",
         requirement("pyyaml"),
     ],
 )

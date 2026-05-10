@@ -23,6 +23,7 @@ py_library(
         "//cmk/gui:script_helpers",
         "//cmk/gui:type_defs",
         "//cmk/gui/background_job/job",
+        "//cmk/gui/plugins/wato/check_parameters:stub",
         "//cmk/gui/search",
         "//cmk/gui/userdb",
         "//cmk/gui/watolib:password_store",

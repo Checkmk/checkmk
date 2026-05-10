@@ -39,6 +39,7 @@ py_test(
     deps = [
         ":__test__",
         ":conftest",
+        "//cmk/gui/plugins/wato/check_parameters",
         "//cmk/update_config",
         "//tests/unit:conftest",
         requirement("flask"),

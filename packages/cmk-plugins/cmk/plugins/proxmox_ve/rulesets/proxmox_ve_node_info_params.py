@@ -54,6 +54,8 @@ def _migrate_required_status(value: object, default_status: Mapping[str, int]) -
         return {}
 
     if isinstance(value, dict):
+        if "active" in value:
+            value["online"] = value.pop("active")
         return value
 
     if isinstance(value, str):
@@ -78,11 +80,11 @@ def _parameter_rulespec_proxmox_ve_node_info():
                     migrate=lambda v: _migrate_required_status(v, NODE_STATUS_DEFAULT),
                     title=Title("Node Status"),
                     elements={
-                        "active": DictElement(
+                        "online": DictElement(
                             group=DictGroup(),
                             required=True,
                             parameter_form=ServiceState(
-                                title=Title("Active"),
+                                title=Title("Online"),
                                 prefill=DefaultValue(ServiceState.OK),
                             ),
                         ),

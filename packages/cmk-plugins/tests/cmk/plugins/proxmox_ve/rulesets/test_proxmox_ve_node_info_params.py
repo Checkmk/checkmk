@@ -72,6 +72,23 @@ from cmk.plugins.proxmox_ve.rulesets.proxmox_ve_node_info_params import (
             {},
             id="Do not change already migrated values",
         ),
+        pytest.param(
+            _migrate_required_status(
+                {
+                    "required_node_status": {
+                        "active": 0,
+                        "offline": 1,
+                        "unknown": 1,
+                    },
+                    "required_subscription_status": None,
+                    "subscription_expiration_days_levels": ("fixed", (30, 7)),
+                },
+                NODE_STATUS_DEFAULT,
+            ),
+            NODE_STATUS_DEFAULT,
+            {},
+            id="Fix wrong default value 'active': 0 -> 'online': 0. Do not change already migrated values",
+        ),
     ],
 )
 def test_migrate_required_status(

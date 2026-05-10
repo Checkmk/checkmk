@@ -12,7 +12,7 @@ import pytest
 import time_machine
 
 from cmk.agent_based.v2 import Result, State, StringTable
-from cmk.plugins.apc_symmetra.agent_based.apc_symmetra_test import check_apc_test
+from cmk.plugins.apc.agent_based.apc_symmetra_test import check_apc_test
 
 
 @time_machine.travel("2020-01-13")

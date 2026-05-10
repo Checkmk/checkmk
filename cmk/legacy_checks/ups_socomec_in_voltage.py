@@ -9,7 +9,7 @@
 from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
 from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.legacy_includes.ups_in_voltage import check_ups_in_voltage
-from cmk.plugins.ups_socomec.lib import DETECT_SOCOMEC
+from cmk.plugins.ups.lib_socomec import DETECT_SOCOMEC
 
 check_info = {}
 

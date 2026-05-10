@@ -21,7 +21,7 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
-from cmk.plugins.apc_symmetra.agent_based.apc_symmetra_power import snmp_section_apc_symmetra_power
+from cmk.plugins.apc.agent_based.apc_symmetra_power import snmp_section_apc_symmetra_power
 from cmk.plugins.collection.agent_based.epower import check_epower, discover_epower
 from cmk.plugins.ups.agent_based.ups_power import snmp_section_ups_power
 

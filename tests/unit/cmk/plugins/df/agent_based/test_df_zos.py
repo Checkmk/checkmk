@@ -8,7 +8,7 @@ import typing
 import pytest
 
 from cmk.agent_based.v2 import Service
-from cmk.plugins.collection.agent_based import df_zos
+from cmk.plugins.df.agent_based import df_zos
 from cmk.plugins.lib.df import FILESYSTEM_DEFAULT_PARAMS
 
 STRING_TABLE = [
@@ -29,7 +29,7 @@ Filetag : T=off   codeset=0
 @pytest.fixture(name="empty_value_store")
 def _empty_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(
-        "cmk.plugins.collection.agent_based.df_zos.get_value_store",
+        "cmk.plugins.df.agent_based.df_zos.get_value_store",
         lambda: typing.cast(typing.MutableMapping[str, typing.Any], {}),
     )
 

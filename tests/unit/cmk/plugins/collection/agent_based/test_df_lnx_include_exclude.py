@@ -7,8 +7,8 @@
 
 from collections.abc import Mapping
 
-from cmk.plugins.collection.agent_based.df import discover_df
-from cmk.plugins.collection.agent_based.df_section import parse_df
+from cmk.plugins.df.agent_based.df import discover_df
+from cmk.plugins.df.agent_based.df_section import parse_df
 
 STRING_TABLE = [
     ["tmpfs", "tmpfs", "1620324", "2320", "1618004", "1%", "/run"],

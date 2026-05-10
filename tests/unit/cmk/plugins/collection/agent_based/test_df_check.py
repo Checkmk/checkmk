@@ -11,8 +11,8 @@ from collections.abc import Mapping, Sequence
 import pytest
 
 from cmk.agent_based.v2 import CheckResult, Metric, Result, Service, State, StringTable
-from cmk.plugins.collection.agent_based import df
-from cmk.plugins.collection.agent_based.df_section import parse_df
+from cmk.plugins.df.agent_based import df
+from cmk.plugins.df.agent_based.df_section import parse_df
 
 #   .--Test info sections--------------------------------------------------.
 #   |                _____         _     _        __                       |

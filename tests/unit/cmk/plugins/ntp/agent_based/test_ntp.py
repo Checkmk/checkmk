@@ -10,9 +10,9 @@ from zoneinfo import ZoneInfo
 import pytest
 import time_machine
 
-import cmk.plugins.collection.agent_based.ntp
+import cmk.plugins.ntp.agent_based.ntp
 from cmk.agent_based.v2 import Result, Service, State
-from cmk.plugins.collection.agent_based.ntp import (
+from cmk.plugins.ntp.agent_based.ntp import (
     _ntp_fmt_time,
     check_ntp,
     check_ntp_summary,
@@ -90,7 +90,7 @@ STRING_TABLE = [
 @pytest.fixture
 def empty_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
     store = dict[str, object]()
-    monkeypatch.setattr(cmk.plugins.collection.agent_based.ntp, "get_value_store", lambda: store)
+    monkeypatch.setattr(cmk.plugins.ntp.agent_based.ntp, "get_value_store", lambda: store)
 
 
 def test_check_ntp() -> None:
@@ -112,7 +112,7 @@ def test_check_ntp_summary() -> None:
 
 
 @mock.patch(
-    "cmk.plugins.collection.agent_based.ntp.get_value_store",
+    "cmk.plugins.ntp.agent_based.ntp.get_value_store",
     mock.Mock(return_value={"time_server": 1570001652.37}),
 )
 def test_check_ntp_timeserver_stored() -> None:

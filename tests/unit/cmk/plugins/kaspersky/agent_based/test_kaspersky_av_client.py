@@ -15,7 +15,7 @@ import pytest
 import time_machine
 
 from cmk.agent_based.v2 import Result, State, StringTable
-from cmk.plugins.collection.agent_based import kaspersky_av_client
+from cmk.plugins.kaspersky.agent_based import kaspersky_av_client
 
 
 @pytest.fixture(scope="module", autouse=True)

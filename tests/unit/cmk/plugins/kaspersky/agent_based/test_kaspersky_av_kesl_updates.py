@@ -14,7 +14,7 @@ import pytest
 import time_machine
 
 from cmk.agent_based.v2 import Result, State
-from cmk.plugins.collection.agent_based.kaspersky_av_kesl_updates import (
+from cmk.plugins.kaspersky.agent_based.kaspersky_av_kesl_updates import (
     check_kaspersky_av_kesl_updates,
     Section,
 )

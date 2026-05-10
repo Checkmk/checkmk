@@ -7,7 +7,7 @@
 import pytest
 
 from cmk.agent_based.v2 import CheckResult, Result, State, StringTable
-from cmk.plugins.collection.agent_based.kaspersky_av_tasks import (
+from cmk.plugins.kaspersky.agent_based.kaspersky_av_tasks import (
     check_kaspersky_av_tasks,
     parse_kaspersky_av_tasks,
     Section,

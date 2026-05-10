@@ -7,7 +7,7 @@
 import pytest
 
 from cmk.agent_based.v2 import CheckResult, Metric, Result, State
-from cmk.plugins.collection.agent_based.kaspersky_av_quarantine import (
+from cmk.plugins.kaspersky.agent_based.kaspersky_av_quarantine import (
     check_kaspersky_av_quarantine,
     Section,
 )

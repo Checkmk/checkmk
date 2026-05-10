@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.plugins.collection.server_side_calls.cert import (
+from cmk.plugins.checkmk.server_side_calls.cert import (
     CertEndpoint,
     CertificateDetails,
     generate_cert_services,

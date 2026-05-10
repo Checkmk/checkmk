@@ -7,7 +7,7 @@ from collections.abc import Mapping, Sequence
 
 from cryptography.x509.oid import ObjectIdentifier, SignatureAlgorithmOID
 
-from cmk.plugins.collection.server_side_calls.cert import (
+from cmk.plugins.checkmk.server_side_calls.cert import (
     ConnectionType,
 )
 from cmk.rulesets.internal.form_specs import InternalProxy

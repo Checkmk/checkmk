@@ -5,7 +5,7 @@
 
 import pytest
 
-from cmk.plugins.collection.server_side_calls.httpv2 import active_check_httpv2
+from cmk.plugins.monitoring_plugins.server_side_calls.httpv2 import active_check_httpv2
 from cmk.server_side_calls.v1 import ActiveCheckCommand, HostConfig, IPv4Config
 
 

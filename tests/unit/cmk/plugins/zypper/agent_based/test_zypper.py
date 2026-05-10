@@ -7,7 +7,7 @@
 import pytest
 
 from cmk.agent_based.v2 import CheckResult, Result, Service, State, StringTable
-from cmk.plugins.collection.agent_based import zypper
+from cmk.plugins.zypper.agent_based import zypper
 
 
 @pytest.mark.parametrize("string_table", [None])

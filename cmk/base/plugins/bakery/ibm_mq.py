@@ -3,36 +3,49 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping, Sequence
 from pathlib import Path
+from typing import Literal
+
+from pydantic import BaseModel
 
 from .bakery_api.v1 import FileGenerator, OS, Plugin, PluginConfig, register
 
 
-def get_ibm_mq_files(conf: dict[str, Iterable[str]]) -> FileGenerator:
-    yield Plugin(base_os=OS.LINUX, source=Path("ibm_mq"))
+class _Config(BaseModel):
+    deployment: tuple[Literal["do_not_deploy", "sync", "cached"], float | None]
+    only_qm: Sequence[str] = ()
+    skip_qm: Sequence[str] = ()
+    execute_as_another_user: str | None = None
 
-    if not conf:
+
+def get_ibm_mq_files(conf: Mapping[str, object]) -> FileGenerator:
+    config = _Config.model_validate(conf)
+    if config.deployment[0] == "do_not_deploy":
         return
 
-    yield PluginConfig(
+    yield Plugin(
         base_os=OS.LINUX,
-        lines=list(_get_ibm_mq_config(conf)),
-        target=Path("ibm_mq.cfg"),
-        include_header=True,
+        source=Path("ibm_mq"),
+        interval=None if (v := config.deployment[1]) is None else int(v),
     )
 
+    config_lines = list(_get_ibm_mq_config(config))
+    if config_lines:
+        yield PluginConfig(
+            base_os=OS.LINUX,
+            lines=config_lines,
+            target=Path("ibm_mq.cfg"),
+            include_header=True,
+        )
 
-def _get_ibm_mq_config(queue_settings: dict[str, Iterable[str]]) -> Iterable[str]:
-    only_qm = queue_settings.get("only_qm")
-    if only_qm:
-        yield "ONLY_QM=%s\n" % " ".join(only_qm)
-    skip_qm = queue_settings.get("skip_qm")
-    if skip_qm:
-        yield "SKIP_QM=%s\n" % " ".join(skip_qm)
 
-    another_user = queue_settings.get("execute_as_another_user")
-    if another_user == "mqm":
+def _get_ibm_mq_config(config: _Config) -> Iterable[str]:
+    if config.only_qm:
+        yield "ONLY_QM=%s\n" % " ".join(config.only_qm)
+    if config.skip_qm:
+        yield "SKIP_QM=%s\n" % " ".join(config.skip_qm)
+    if config.execute_as_another_user == "mqm":
         yield "EXEC_USER=MQM"
 
 

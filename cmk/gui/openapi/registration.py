@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.gui.background_job.job import BackgroundJobRegistry
 from cmk.gui.openapi.endpoints import (
     acknowledgement,
     activate_changes,
@@ -52,7 +51,6 @@ def register(
     endpoint_registry: EndpointRegistry,
     versioned_endpoint_registry: VersionedEndpointRegistry,
     endpoint_family_registry: EndpointFamilyRegistry,
-    job_registry: BackgroundJobRegistry,
 ) -> None:
     # TODO: once all legacy endpoints have been migrated the family registry should happen inside
     #  respective endpoint module

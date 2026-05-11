@@ -90,7 +90,6 @@ py_library(
         "//tests:__subpackages__",
     ],
     deps = [
-        "//cmk/gui/background_job/job",
         "//cmk/gui/openapi/api_endpoints",
         "//cmk/gui/openapi/endpoints",
         "//cmk/gui/openapi/framework",

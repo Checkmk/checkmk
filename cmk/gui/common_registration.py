@@ -341,7 +341,6 @@ def register(
         endpoint_registry,
         versioned_endpoint_registry,
         endpoint_family_registry,
-        job_registry,
     )
     availability_registration.register(
         versioned_endpoint_registry=versioned_endpoint_registry,

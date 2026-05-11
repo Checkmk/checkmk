@@ -3,44 +3,50 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="misc"
-# mypy: disable-error-code="no-untyped-call"
 
-from collections.abc import Mapping, Sequence
-from typing import Any
+from collections.abc import Sequence
 
 import pytest
 
-from cmk.agent_based.v2 import StringTable
+from cmk.agent_based.v2 import Result, Service, State, StringTable
 from cmk.legacy_checks.hp_psu import check_hp_psu, discover_hp_psu, parse_hp_psu
 
 
 @pytest.mark.parametrize(
     "string_table, expected_discoveries",
     [
-        ([["1", "3", "25"], ["2", "3", "23"]], [("1", None), ("2", None)]),
+        (
+            [["1", "3", "25"], ["2", "3", "23"]],
+            [Service(item="1"), Service(item="2")],
+        ),
     ],
 )
 def test_discover_hp_psu(
-    string_table: StringTable, expected_discoveries: Sequence[tuple[str, Mapping[str, Any]]]
+    string_table: StringTable, expected_discoveries: Sequence[Service]
 ) -> None:
-    """Test discovery function for hp_psu check."""
     parsed = parse_hp_psu(string_table)
-    result = list(discover_hp_psu(parsed))
-    assert sorted(result) == sorted(expected_discoveries)
+    assert sorted(discover_hp_psu(parsed), key=lambda s: s.item or "") == sorted(
+        expected_discoveries, key=lambda s: s.item or ""
+    )
 
 
 @pytest.mark.parametrize(
-    "item, params, string_table, expected_results",
+    "item, string_table, expected_results",
     [
-        ("1", {}, [["1", "3", "25"], ["2", "3", "23"]], [0, "Powered"]),
-        ("2", {}, [["1", "3", "25"], ["2", "3", "23"]], [0, "Powered"]),
+        (
+            "1",
+            [["1", "3", "25"], ["2", "3", "23"]],
+            [Result(state=State.OK, summary="Powered")],
+        ),
+        (
+            "2",
+            [["1", "3", "25"], ["2", "3", "23"]],
+            [Result(state=State.OK, summary="Powered")],
+        ),
     ],
 )
 def test_check_hp_psu(
-    item: str, params: Mapping[str, Any], string_table: StringTable, expected_results: Sequence[Any]
+    item: str, string_table: StringTable, expected_results: Sequence[Result]
 ) -> None:
-    """Test check function for hp_psu check."""
     parsed = parse_hp_psu(string_table)
-    result = list(check_hp_psu(item, params, parsed))
-    assert result == expected_results
+    assert list(check_hp_psu(item, parsed)) == expected_results

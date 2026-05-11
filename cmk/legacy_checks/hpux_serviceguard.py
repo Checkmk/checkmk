@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
-
 # <<<hpux_serviceguard:sep(124)>>>
 # summary=degraded
 # node:hgs-sd1-srv2|summary=ok
@@ -23,45 +21,54 @@
 # package:SDBP|summary=degraded
 
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import StringTable
+from cmk.agent_based.v2 import (
+    AgentSection,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Result,
+    Service,
+    State,
+    StringTable,
+)
 
-check_info = {}
 
-
-def discover_hpux_serviceguard(info):
-    inventory = []
-    for line in info:
+def discover_hpux_serviceguard(section: StringTable) -> DiscoveryResult:
+    for line in section:
         if len(line) == 1:
-            item = "Total Status"
+            yield Service(item="Total Status")
         else:
-            item = line[0]
-        inventory.append((item, None))
-    return inventory
+            yield Service(item=line[0])
 
 
-def check_hpux_serviceguard(item, _no_params, info):
-    for line in info:
+def check_hpux_serviceguard(item: str, section: StringTable) -> CheckResult:
+    for line in section:
         if (item == "Total Status" and len(line) == 1) or (item == line[0] and len(line) == 2):
             status = line[-1].split("=")[-1]
             if status == "ok":
-                code = 0
+                state = State.OK
             elif status == "degraded":
-                code = 1
+                state = State.WARN
             else:
-                code = 2
-            return (code, "state is %s" % status)
+                state = State.CRIT
+            yield Result(state=state, summary=f"state is {status}")
+            return
 
-    return (3, "No such item found")
+    yield Result(state=State.UNKNOWN, summary="No such item found")
 
 
 def parse_hpux_serviceguard(string_table: StringTable) -> StringTable:
     return string_table
 
 
-check_info["hpux_serviceguard"] = LegacyCheckDefinition(
+agent_section_hpux_serviceguard = AgentSection(
     name="hpux_serviceguard",
     parse_function=parse_hpux_serviceguard,
+)
+
+
+check_plugin_hpux_serviceguard = CheckPlugin(
+    name="hpux_serviceguard",
     service_name="Serviceguard %s",
     discovery_function=discover_hpux_serviceguard,
     check_function=check_hpux_serviceguard,

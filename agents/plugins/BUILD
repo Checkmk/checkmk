@@ -74,7 +74,6 @@ sh_library(
         "mk_oracle_crs",
         "mk_redis",
         "mk_sap_hana",
-        "mk_saprouter",
         "mk_scaleio",
         "mk_site_object_counts",
         "mk_tsm",

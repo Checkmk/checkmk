@@ -2,14 +2,14 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from collections.abc import Mapping
+from collections.abc import Iterable
 from pathlib import Path
 from shlex import quote
 from typing import Literal
 
 from pydantic import BaseModel
 
-from .bakery_api.v1 import FileGenerator, OS, Plugin, PluginConfig, register
+from cmk.bakery.v2_unstable import BakeryPlugin, OS, Plugin, PluginConfig
 
 
 class _Config(BaseModel):
@@ -18,17 +18,19 @@ class _Config(BaseModel):
     path: str = ""
 
 
-def get_mk_saprouter_files(conf: Mapping[str, object]) -> FileGenerator:
-    config = _Config.model_validate(conf)
-    if config.deployment[0] == "do_not_deploy":
+def get_mk_saprouter_files(conf: _Config) -> Iterable[Plugin | PluginConfig]:
+    if conf.deployment[0] == "do_not_deploy":
         return
 
-    interval = None if (v := config.deployment[1]) is None else int(v)
-    yield Plugin(base_os=OS.LINUX, source=Path("mk_saprouter"), interval=interval)
+    yield Plugin(
+        base_os=OS.LINUX,
+        source=Path("mk_saprouter"),
+        interval=conf.deployment[1],
+    )
 
     yield PluginConfig(
         base_os=OS.LINUX,
-        lines=_get_mk_saprouter_config(config),
+        lines=_get_mk_saprouter_config(conf),
         target=Path("saprouter.cfg"),
         include_header=True,
     )
@@ -41,7 +43,9 @@ def _get_mk_saprouter_config(config: _Config) -> list[str]:
     ]
 
 
-register.bakery_plugin(
+bakery_plugin_mk_saprouter = BakeryPlugin(
     name="mk_saprouter",
+    parameter_parser=_Config.model_validate,
+    default_parameters=None,
     files_function=get_mk_saprouter_files,
 )

@@ -3,16 +3,23 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
+from collections.abc import Mapping, MutableMapping
+from typing import Any
 
-
-# mypy: disable-error-code="var-annotated"
-
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.legacy_includes.ibm_svc import parse_ibm_svc_with_header
-from cmk.legacy_includes.temperature import check_temperature
-
-check_info = {}
+from cmk.agent_based.v2 import (
+    AgentSection,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    get_value_store,
+    Metric,
+    Result,
+    Service,
+    State,
+    StringTable,
+)
+from cmk.plugins.ibm.lib_svc import parse_ibm_svc_with_header
+from cmk.plugins.lib.temperature import check_temperature, TempParamType
 
 # Example output from agent:
 # <<<ibm_svc_enclosurestats:sep(58)>>>
@@ -29,8 +36,12 @@ check_info = {}
 # 4:temp_c:22:23:140410112836
 # 4:temp_f:71:73:140410112836
 
+Section = Mapping[str, Mapping[str, int]]
 
-def parse_ibm_svc_enclosurestats(info):
+
+def parse_ibm_svc_enclosurestats(
+    string_table: StringTable,
+) -> Section:
     dflt_header = [
         "enclosure_id",
         "stat_name",
@@ -38,8 +49,8 @@ def parse_ibm_svc_enclosurestats(info):
         "stat_peak",
         "stat_peak_time",
     ]
-    parsed = {}
-    for id_, rows in parse_ibm_svc_with_header(info, dflt_header).items():
+    parsed: dict[str, dict[str, int]] = {}
+    for id_, rows in parse_ibm_svc_with_header(string_table, dflt_header).items():
         for data in rows:
             try:
                 stat_current = int(data["stat_current"])
@@ -49,7 +60,7 @@ def parse_ibm_svc_enclosurestats(info):
     return parsed
 
 
-check_info["ibm_svc_enclosurestats"] = LegacyCheckDefinition(
+agent_section_ibm_svc_enclosurestats = AgentSection(
     name="ibm_svc_enclosurestats",
     parse_function=parse_ibm_svc_enclosurestats,
 )
@@ -64,20 +75,36 @@ check_info["ibm_svc_enclosurestats"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 
-def discover_ibm_svc_enclosurestats_temp(section):
+def discover_ibm_svc_enclosurestats_temp(section: Section) -> DiscoveryResult:
     for enclosure_id, data in section.items():
         if "temp_c" in data:
-            yield enclosure_id, {}
+            yield Service(item=enclosure_id)
 
 
-def check_ibm_svc_enclosurestats_temp(item, params, section):
+def _check_ibm_svc_enclosurestats_temp(
+    item: str,
+    params: TempParamType,
+    section: Section,
+    value_store: MutableMapping[str, Any],
+) -> CheckResult:
     data = section.get(item)
     if data is None:
-        return None
-    return check_temperature(data["temp_c"], params, "ibm_svc_enclosurestats_%s" % item)
+        return
+    yield from check_temperature(
+        data["temp_c"],
+        params,
+        unique_name=f"ibm_svc_enclosurestats_{item}",
+        value_store=value_store,
+    )
 
 
-check_info["ibm_svc_enclosurestats.temp"] = LegacyCheckDefinition(
+def check_ibm_svc_enclosurestats_temp(
+    item: str, params: TempParamType, section: Section
+) -> CheckResult:
+    yield from _check_ibm_svc_enclosurestats_temp(item, params, section, get_value_store())
+
+
+check_plugin_ibm_svc_enclosurestats_temp = CheckPlugin(
     name="ibm_svc_enclosurestats_temp",
     service_name="Temperature Enclosure %s",
     sections=["ibm_svc_enclosurestats"],
@@ -98,21 +125,22 @@ check_info["ibm_svc_enclosurestats.temp"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 
-def discover_ibm_svc_enclosurestats_power(section):
+def discover_ibm_svc_enclosurestats_power(section: Section) -> DiscoveryResult:
     for enclosure_id, data in section.items():
         if "power_w" in data:
-            yield enclosure_id, {}
+            yield Service(item=enclosure_id)
 
 
-def check_ibm_svc_enclosurestats_power(item, _no_params, section):
+def check_ibm_svc_enclosurestats_power(item: str, section: Section) -> CheckResult:
     data = section.get(item)
     if data is None:
-        return None
+        return
     stat_current = data["power_w"]
-    return 0, "%s Watt" % stat_current, [("power", stat_current)]
+    yield Result(state=State.OK, summary=f"{stat_current} Watt")
+    yield Metric("power", stat_current)
 
 
-check_info["ibm_svc_enclosurestats.power"] = LegacyCheckDefinition(
+check_plugin_ibm_svc_enclosurestats_power = CheckPlugin(
     name="ibm_svc_enclosurestats_power",
     service_name="Power Enclosure %s",
     sections=["ibm_svc_enclosurestats"],

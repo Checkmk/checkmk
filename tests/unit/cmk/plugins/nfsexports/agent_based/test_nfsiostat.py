@@ -9,8 +9,8 @@
 import pytest
 
 from cmk.agent_based.v2 import Metric, Result, State
-from cmk.plugins.collection.agent_based import nfsiostat
-from cmk.plugins.collection.agent_based.nfsiostat import Section
+from cmk.plugins.nfsexports.agent_based import nfsiostat
+from cmk.plugins.nfsexports.agent_based.nfsiostat import Section
 
 
 @pytest.fixture(name="section1", scope="module")

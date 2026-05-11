@@ -132,7 +132,7 @@ void main() {
                 withEnv(["GIT_SSH_COMMAND=ssh -o 'StrictHostKeyChecking no' -i ${KEYFILE} -l jenkins"]) {
                     // Since checkmk_ci:df2be57e we don't have the tags available anymore in the checkout
                     // however the werk tests heavily rely on them, so fetch them here
-                    sh("git fetch origin 'refs/tags/*:refs/tags/*'");
+                    sh("git fetch --depth=1 origin 'refs/tags/*:refs/tags/*'");
                 }
             }
         }

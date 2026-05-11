@@ -17,12 +17,19 @@
       "Vue.volar",
       "dbaeumer.vscode-eslint",
       "esbenp.prettier-vscode",
-      "stylelint.vscode-stylelint",
-      "vitest.explorer"
+      "stylelint.vscode-stylelint"
     ]
   },
   "rust": {
-    "extensions": ["rust-lang.rust-analyzer", "swellaby.vscode-rust-test-adapter"],
+    "extensions": ["rust-lang.rust-analyzer"],
+    "defaultPicked": false
+  },
+  "cpp": {
+    "extensions": ["llvm-vs-code-extensions.vscode-clangd"],
+    "defaultPicked": false
+  },
+  "lldb": {
+    "extensions": ["vadimcn.vscode-lldb"],
     "defaultPicked": false
   },
   "general": {

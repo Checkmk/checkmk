@@ -147,20 +147,15 @@
       "stylelint.enable": true,
       "prettier.useEditorConfig": false,
       "prettier.configPath": "bazel/tools/prettier.config.cjs",
-      "prettier.prettierPath": "./node_modules/prettier",
-      "vitest.disableWorkspaceWarning": true,
-      "vitest.filesWatcherInclude": "packages/cmk-frontend-vue/**/*"
+      "prettier.prettierPath": "./node_modules/prettier"
     },
     "workspace": {
-      "vitest.rootConfig": "${workspaceFolder}/packages/cmk-frontend-vue/vite.config.ts",
-      "vitest.configSearchPatternExclude": "{**/node_modules/**,**/vendor/**,**/.*/**,**/*.d.ts,**/*bazel*/*}",
       "js/ts.tsdk.path": "packages/cmk-frontend-vue/node_modules/typescript/lib"
     },
     "disableFolder": {
       "eslint.enable": false,
       "stylelint.enable": false,
-      "prettier.enable": false,
-      "vitest.enable": false
+      "prettier.enable": false
     }
   },
   "rust": {
@@ -181,6 +176,36 @@
     },
     "disableWorkspace": {
       "rust-analyzer.initializeStopped": true
+    }
+  },
+  "cpp": {
+    "folder": {
+      "[cpp]": {
+        "editor.defaultFormatter": "llvm-vs-code-extensions.vscode-clangd",
+        "editor.formatOnSave": true
+      },
+      "[c]": {
+        "editor.defaultFormatter": "llvm-vs-code-extensions.vscode-clangd",
+        "editor.formatOnSave": true
+      },
+      "clangd.path": "${workspaceFolder}/bazel-bin/bazel/tools/bazel_env/bin/clangd"
+    },
+    "workspace": {
+      "clangd.arguments": [
+        "--background-index",
+        "--clang-tidy",
+        "--header-insertion=never",
+        "--completion-style=detailed",
+        "--pch-storage=memory",
+        "--compile-commands-dir=${workspaceFolder}",
+        "--limit-results=100",
+        "-j=4"
+      ],
+      "clangd.checkUpdates": false,
+      "clangd.onConfigChanged": "restart"
+    },
+    "disableWorkspace": {
+      "clangd.enable": false
     }
   },
   "bazel": {

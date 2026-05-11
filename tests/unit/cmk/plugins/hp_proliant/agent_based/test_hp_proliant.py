@@ -5,7 +5,10 @@
 
 
 from cmk.agent_based.v2 import Result, Service, State
-from cmk.legacy_checks.hp_proliant import check_proliant_general, discover_proliant_general
+from cmk.plugins.hp_proliant.agent_based.hp_proliant import (
+    check_proliant_general,
+    discover_proliant_general,
+)
 
 
 def test_hp_proliant_discovery() -> None:

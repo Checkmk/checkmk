@@ -20,9 +20,9 @@ import time_machine
 from pytest_mock import MockerFixture
 
 from cmk.agent_based.v2 import Metric, render, Result, Service, State
-from cmk.plugins.collection.agent_based import ps_check, ps_section
 from cmk.plugins.lib import memory
 from cmk.plugins.lib import ps as ps_utils
+from cmk.plugins.ps.agent_based import ps_check, ps_section
 
 
 @pytest.fixture

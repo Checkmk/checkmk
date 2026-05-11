@@ -11,8 +11,8 @@ from collections.abc import Sequence
 import pytest
 
 from cmk.agent_based.v2 import StringTable
-from cmk.plugins.collection.agent_based import ps_section
 from cmk.plugins.lib import ps
+from cmk.plugins.ps.agent_based import ps_section
 
 
 def splitter(

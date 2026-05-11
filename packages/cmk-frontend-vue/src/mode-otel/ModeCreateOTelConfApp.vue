@@ -284,7 +284,7 @@ async function onSaveClick(): Promise<void> {
     <CmkWizardStep :index="1" :is-completed="() => currentStep > 1">
       <template #header>
         <CmkHeading>
-          {{ _t('Configure title and site') }}
+          {{ _t('General configuration properties') }}
         </CmkHeading>
         <CmkParagraph>{{
           _t(

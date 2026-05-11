@@ -465,7 +465,10 @@ http_archive(
     name = "stunnel",
     build_file = "//omd/packages/stunnel:BUILD.stunnel.bazel",
     patch_args = ["-p1"],
-    patches = ["//omd/packages/stunnel:0001-fix-hup-race-data-loss.patch"],
+    patches = [
+        "//omd/packages/stunnel:0001-fix-hup-race-data-loss.patch",
+        "//omd/packages/stunnel:0002-fix-hup-buffer-full-livelock.patch",
+    ],
     sha256 = "8727e53bb8b7528f850327a2a149158422c02183bc120d1d733cc65b1e2c349d",
     strip_prefix = "stunnel-5.78",
     urls = [

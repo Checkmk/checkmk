@@ -162,13 +162,17 @@ parse_options() {
     readonly RUN_BUILD RUN_UNIT_TESTS RUN_COMPONENT_TESTS RUN_CHECK_FORMAT RUN_CLIPPY RUN_FORMAT RUN_DOCUMENTATION RUN_DOCKER_TESTS ORACLE_DOCKER_VERSION JOBS
 }
 
+get_version_from_source() {
+    grep -oP '(?<=VERSION: &str = ")[^"]+' src/version.rs
+}
+
 run_build() {
     case "$(uname)" in
         'SunOS' | 'AIX')
             cargo build --release
             ;;
         *)
-            bazel build :all
+            bazel build --cmk_version="$(get_version_from_source)" :all
             ;;
     esac
 }

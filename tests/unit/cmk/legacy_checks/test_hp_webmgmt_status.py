@@ -3,16 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="misc"
-# mypy: disable-error-code="no-untyped-call"
-
 import pytest
 
 from cmk.legacy_checks.hp_webmgmt_status import check_hp_webmgmt_status
 
 
 @pytest.mark.parametrize(
-    "info",
+    "section",
     [
         pytest.param(
             [
@@ -32,6 +29,7 @@ from cmk.legacy_checks.hp_webmgmt_status import check_hp_webmgmt_status
         ),
     ],
 )
-def test_check_hp_webmgmt_status_missing_model_and_serial(info: list[list[list[str]]]) -> None:
-    result = check_hp_webmgmt_status("1", None, info)
-    assert result is not None
+def test_check_hp_webmgmt_status_missing_model_and_serial(
+    section: list[list[list[str]]],
+) -> None:
+    assert list(check_hp_webmgmt_status("1", section))

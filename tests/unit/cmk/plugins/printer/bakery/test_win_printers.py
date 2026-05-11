@@ -7,8 +7,8 @@ from pathlib import Path
 
 import pytest
 
-from cmk.bakery.v1 import OS, Plugin
-from cmk.base.plugins.bakery.win_printers import get_win_printers_files
+from cmk.bakery.v2_unstable import OS, Plugin
+from cmk.plugins.printer.bakery.win_printers import bakery_plugin_win_printers
 
 
 @pytest.mark.parametrize(
@@ -32,5 +32,6 @@ def test_win_printers_files(
     conf: dict[str, object],
     expected_files: list[Plugin],
 ) -> None:
-    result = list(get_win_printers_files(conf))
+    parsed = bakery_plugin_win_printers.parameter_parser(conf)
+    result = list(bakery_plugin_win_printers.files_function(parsed))
     assert result == expected_files

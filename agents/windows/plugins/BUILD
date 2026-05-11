@@ -40,7 +40,7 @@ TO_SIGN_SCRIPTS = [
     "rds_licenses.ps1",
     "sansymphony.ps1",
     "//cmk/plugins/veeam/agents:veeam_backup_status.ps1",
-    "win_printers.ps1",
+    "//cmk/plugins/printer/agents:win_printers.ps1",
     "windows_if.ps1",
     "windows_multipath.ps1",
     "windows_os_bonding.ps1",

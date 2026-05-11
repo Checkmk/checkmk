@@ -3,10 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
-# mypy: disable-error-code="possibly-undefined"
-
 # Example output from agent:
 # <<<hpux_multipath>>>
 #       LUN PATH INFORMATION FOR LUN : /dev/rtape/tape1_BEST
@@ -44,9 +40,19 @@
 # State                         = STANDBY
 
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
+from collections.abc import Mapping
+from typing import Any
 
-check_info = {}
+from cmk.agent_based.v2 import (
+    AgentSection,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Result,
+    Service,
+    State,
+    StringTable,
+)
 
 hpux_multipath_pathstates = {
     "ACTIVE": 0,
@@ -58,9 +64,14 @@ hpux_multipath_pathstates = {
 }
 
 
-def parse_hpux_multipath(info):
-    disks = {}
-    for line in info:
+Section = dict[str, tuple[str, list[int]]]
+
+
+def parse_hpux_multipath(string_table: StringTable) -> Section:
+    disks: Section = {}
+    disk = ""
+    paths: list[int] = []
+    for line in string_table:
         if ":" in line:
             disk = line[-1]
         elif line[0] == "World":
@@ -73,55 +84,61 @@ def parse_hpux_multipath(info):
     return disks
 
 
-def discover_hpux_multipath(parsed):
-    for wwid, (_disk, (active, standby, failed, unopen)) in parsed.items():
+def discover_hpux_multipath(section: Section) -> DiscoveryResult:
+    for wwid, (_disk, (active, standby, failed, unopen)) in section.items():
         if active + standby + failed >= 2:
-            yield wwid, {"expected": (active, standby, failed, unopen)}
+            yield Service(item=wwid, parameters={"expected": (active, standby, failed, unopen)})
 
 
-def hpux_multipath_format_pathstatus(pathcounts):
+def hpux_multipath_format_pathstatus(pathcounts: list[int] | tuple[int, ...]) -> str:
     infos = []
     for name, i in hpux_multipath_pathstates.items():
         c = pathcounts[i]
         if c > 0:
-            infos.append("%d %s" % (c, name))
+            infos.append(f"{c} {name}")
     return ", ".join(infos)
 
 
-def check_hpux_multipath(item, params, parsed):
+def check_hpux_multipath(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
     try:
-        disk, pathcounts = parsed[item]
+        disk, pathcounts = section[item]
     except KeyError:
         return
 
     if pathcounts[2] > 0:
-        yield (
-            2,
-            "%s: %d failed paths! (%s)"
-            % (disk, pathcounts[2], hpux_multipath_format_pathstatus(pathcounts)),
+        yield Result(
+            state=State.CRIT,
+            summary=f"{disk}: {pathcounts[2]} failed paths! ({hpux_multipath_format_pathstatus(pathcounts)})",
         )
         return
 
     expected = params["expected"]
     if list(pathcounts) != list(expected):
-        yield (
-            1,
-            "%s: Invalid path status %s (should be %s)"
-            % (
-                disk,
-                hpux_multipath_format_pathstatus(pathcounts),
-                hpux_multipath_format_pathstatus(expected),
+        yield Result(
+            state=State.WARN,
+            summary=(
+                f"{disk}: Invalid path status {hpux_multipath_format_pathstatus(pathcounts)} "
+                f"(should be {hpux_multipath_format_pathstatus(expected)})"
             ),
         )
     else:
-        yield 0, f"{disk}: {hpux_multipath_format_pathstatus(pathcounts)}"
+        yield Result(
+            state=State.OK,
+            summary=f"{disk}: {hpux_multipath_format_pathstatus(pathcounts)}",
+        )
 
 
-check_info["hpux_multipath"] = LegacyCheckDefinition(
+agent_section_hpux_multipath = AgentSection(
+    name="hpux_multipath",
+    parse_function=parse_hpux_multipath,
+)
+
+
+check_plugin_hpux_multipath = CheckPlugin(
     name="hpux_multipath",
     service_name="Multipath %s",
-    parse_function=parse_hpux_multipath,
     discovery_function=discover_hpux_multipath,
     check_function=check_hpux_multipath,
     check_ruleset_name="hpux_multipath",
+    check_default_parameters={},
 )

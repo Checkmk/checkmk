@@ -33,6 +33,9 @@ py_library(
     srcs = ["transformation/__main__.py"],
     imports = ["../.."],
     tags = ["no-mypy"],
-    visibility = ["//cmk:__pkg__"],
+    visibility = [
+        "//cmk:__pkg__",
+        "//cmk/editions:__pkg__",
+    ],
     deps = [":inventory"],
 )

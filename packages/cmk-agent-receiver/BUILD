@@ -106,6 +106,7 @@ py_library(
     imports = ["."],
     visibility = [
         "//cmk:__pkg__",
+        "//cmk/editions:__pkg__",
         "//packages/cmk-agent-receiver/tests:__subpackages__",
         "//tests:__subpackages__",
     ],

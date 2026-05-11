@@ -30,6 +30,7 @@ py_library(
         "//cmk/gui/watolib",
         "//cmk/gui/watolib:config_infra",
         "//cmk/gui/watolib:password_store",
+        "//cmk/plugins",
         "//packages/cmk-ccc:crash-reporting",
         "//tests:rest_api_client",
         "//tests/testlib/common:empty_config",

@@ -1803,6 +1803,15 @@ class OtelCollectorAPI(BaseAPI):
             raise UnexpectedResponse.from_response(response)
         return response
 
+    def delete_bundle(self, bundle_id: str, expect_ok: bool = True) -> requests.Response:
+        """Delete an OpenTelemetry Quick Setup configuration bundle via REST API."""
+        response = self.session.delete(
+            self.base_url + f"objects/otel_collector_config_bundles/{bundle_id}",
+        )
+        if expect_ok and response.status_code != 204:
+            raise UnexpectedResponse.from_response(response)
+        return response
+
     def disable(self, site_id: str) -> requests.Response:
         response = self.session.put(
             url=self.base_url + "/domain-types/otel_collector/actions/update/invoke",

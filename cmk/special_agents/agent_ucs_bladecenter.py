@@ -65,6 +65,10 @@ C_SERIES_REGEX = re.compile(
         |
         UCSC      # normal, direct form
         |
+        BE        # Business Edition (e.g. BE6H = BE6000H)
+        [0-9]+    # model number
+        [A-Z]?    # optional variant suffix
+        |
         HX        # hyperflex
         (AF)?     # optional "all flash"
         [0-9]{3}  # model number
@@ -448,7 +452,7 @@ class Server:
                     xml_objects = self._get_class_data(class_id)
                 except CommunicationException as e:
                     logging.debug("Server.get_data_from_entities: Failed to get data")
-                    if self.debug:
+                    if self.debug and "no class named" not in str(e):
                         raise CommunicationException(e)
                     continue  # skip entity
 

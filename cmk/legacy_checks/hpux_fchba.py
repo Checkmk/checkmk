@@ -3,9 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
-# mypy: disable-error-code="possibly-undefined"
-
 # <<<hpux_fchba>>>
 # /dev/fcd0
 #                        ISP Code version = 4.4.4
@@ -25,14 +22,24 @@
 #          Driver-Firmware Dump Available = NO
 
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
+from cmk.agent_based.v2 import (
+    AgentSection,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Result,
+    Service,
+    State,
+    StringTable,
+)
 
-check_info = {}
+Section = dict[str, dict[str, str]]
 
 
-def parse_hpux_fchba(info):
-    hbas = {}
-    for line in info:
+def parse_hpux_fchba(string_table: StringTable) -> Section:
+    hbas: Section = {}
+    hba: dict[str, str] = {}
+    for line in string_table:
         if line[0].startswith("/dev/"):
             name = line[0][5:]
             hba = {"name": name}
@@ -42,46 +49,52 @@ def parse_hpux_fchba(info):
     return hbas
 
 
-def discover_hpux_fchba(section):
-    return [(name, None) for name, hba in section.items() if hba["Driver state"] == "ONLINE"]
+def discover_hpux_fchba(section: Section) -> DiscoveryResult:
+    for name, hba in section.items():
+        if hba["Driver state"] == "ONLINE":
+            yield Service(item=name)
 
 
-def check_hpux_fchba(item, _no_params, section):
-    if item not in section:
-        return (3, "HBA noch found")
+def check_hpux_fchba(item: str, section: Section) -> CheckResult:
+    if (hba := section.get(item)) is None:
+        yield Result(state=State.UNKNOWN, summary="HBA noch found")
+        return
 
-    hba = section[item]
-
-    state = 0
+    state = State.OK
     infos = []
 
-    infos.append("Hardware Path: %s" % hba["Hardware Path is"])
+    infos.append(f"Hardware Path: {hba['Hardware Path is']}")
 
-    infos.append("Driver State: %s" % hba["Driver state"])
+    infos.append(f"Driver State: {hba['Driver state']}")
     if hba["Driver state"] != "ONLINE":
-        state = 2
+        state = State.CRIT
         infos[-1] += "(!!)"
 
-    infos.append("Topology: %s" % hba.get("Topology", "(none)"))
+    infos.append(f"Topology: {hba.get('Topology', '(none)')}")
     if hba.get("Topology") not in [
         "PTTOPT_FABRIC",
         "PRIVATE_LOOP",
         "PUBLIC_LOOP",
     ]:
-        state = 2
+        state = State.CRIT
         infos[-1] += "(!!)"
 
     if hba.get("Driver-Firmware Dump Available", "NO") != "NO":
         infos.append("Driver-Firmware Dump Available(!!)")
-        state = 2
+        state = State.CRIT
 
-    return (state, ", ".join(infos))
+    yield Result(state=state, summary=", ".join(infos))
 
 
-check_info["hpux_fchba"] = LegacyCheckDefinition(
+agent_section_hpux_fchba = AgentSection(
+    name="hpux_fchba",
+    parse_function=parse_hpux_fchba,
+)
+
+
+check_plugin_hpux_fchba = CheckPlugin(
     name="hpux_fchba",
     service_name="FC HBA %s",
-    parse_function=parse_hpux_fchba,
     discovery_function=discover_hpux_fchba,
     check_function=check_hpux_fchba,
 )

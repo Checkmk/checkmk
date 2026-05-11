@@ -82,7 +82,6 @@ sh_library(
         "mk_site_object_counts",
         "mk_sshd_config",
         "mk_tsm",
-        "nvidia_smi",
         "runas",
         "zorp",
         "//agents/cfg_examples:agents_cfg_examples_sh",

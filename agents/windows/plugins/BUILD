@@ -36,7 +36,7 @@ TO_SIGN_SCRIPTS = [
     "mk_oracle.ps1",
     "//cmk/plugins/msexch/agents:msexch_dag.ps1",
     "//cmk/plugins/msexch/agents:msexch_database.ps1",
-    "nvidia_smi.ps1",
+    "//cmk/plugins/nvidia/agents:nvidia_smi.ps1",
     "rds_licenses.ps1",
     "sansymphony.ps1",
     "veeam_backup_status.ps1",

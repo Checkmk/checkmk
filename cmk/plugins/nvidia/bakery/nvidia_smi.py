@@ -3,13 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Mapping
+from collections.abc import Iterable
 from pathlib import Path
 from typing import Literal
 
 from pydantic import BaseModel
 
-from .bakery_api.v1 import FileGenerator, OS, Plugin, PluginConfig, register
+from cmk.bakery.v2_unstable import BakeryPlugin, OS, Plugin, PluginConfig
 
 
 class _Config(BaseModel):
@@ -17,24 +17,25 @@ class _Config(BaseModel):
     nvidia_smi_path: str | None = None
 
 
-def get_nvidia_smi_files(conf: Mapping[str, object]) -> FileGenerator:
-    config = _Config.model_validate(conf)
-    if config.deployment[0] == "do_not_deploy":
+def get_nvidia_smi_files(conf: _Config) -> Iterable[Plugin | PluginConfig]:
+    if conf.deployment[0] == "do_not_deploy":
         return
 
-    interval = None if (v := config.deployment[1]) is None else int(v)
+    interval = conf.deployment[1]
     yield Plugin(base_os=OS.LINUX, source=Path("nvidia_smi"), interval=interval)
     yield Plugin(base_os=OS.WINDOWS, source=Path("nvidia_smi.ps1"), interval=interval)
-    if config.nvidia_smi_path is not None:
+    if conf.nvidia_smi_path is not None:
         yield PluginConfig(
             base_os=OS.WINDOWS,
-            lines=[f"$nvidia_smi_path = '{config.nvidia_smi_path}'"],
+            lines=[f"$nvidia_smi_path = '{conf.nvidia_smi_path}'"],
             target=Path("nvidia_smi_cfg.ps1"),
             include_header=True,
         )
 
 
-register.bakery_plugin(
+bakery_plugin_nvidia_smi = BakeryPlugin(
     name="nvidia_smi",
+    parameter_parser=_Config.model_validate,
+    default_parameters=None,
     files_function=get_nvidia_smi_files,
 )

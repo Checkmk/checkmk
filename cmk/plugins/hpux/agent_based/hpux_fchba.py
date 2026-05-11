@@ -57,7 +57,6 @@ def discover_hpux_fchba(section: Section) -> DiscoveryResult:
 
 def check_hpux_fchba(item: str, section: Section) -> CheckResult:
     if (hba := section.get(item)) is None:
-        yield Result(state=State.UNKNOWN, summary="HBA noch found")
         return
 
     state = State.OK

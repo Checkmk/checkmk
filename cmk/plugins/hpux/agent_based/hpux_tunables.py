@@ -88,7 +88,6 @@ def _check_tunable(
     section: Section, params: Mapping[str, Any], tunable: str, descr: str
 ) -> CheckResult:
     if tunable not in section:
-        yield Result(state=State.UNKNOWN, summary="tunable not found in agent output")
         return
 
     usage, threshold = section[tunable]

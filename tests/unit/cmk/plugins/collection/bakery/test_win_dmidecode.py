@@ -7,8 +7,8 @@ from pathlib import Path
 
 import pytest
 
-from cmk.bakery.v1 import OS, Plugin
-from cmk.base.plugins.bakery.win_dmidecode import get_win_dmidecode_files
+from cmk.bakery.v2_unstable import OS, Plugin
+from cmk.plugins.collection.bakery.win_dmidecode import bakery_plugin_win_dmidecode
 
 
 @pytest.mark.parametrize(
@@ -32,5 +32,6 @@ from cmk.base.plugins.bakery.win_dmidecode import get_win_dmidecode_files
     ],
 )
 def test_win_dmidecode_files(conf: dict[str, object], expected: list[Plugin]) -> None:
-    result = list(get_win_dmidecode_files(conf))
+    parsed = bakery_plugin_win_dmidecode.parameter_parser(conf)
+    result = list(bakery_plugin_win_dmidecode.files_function(parsed))
     assert result == expected

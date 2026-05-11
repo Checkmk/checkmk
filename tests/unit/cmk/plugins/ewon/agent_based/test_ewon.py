@@ -6,7 +6,7 @@
 import pytest
 
 from cmk.agent_based.v2 import Result, Service, State
-from cmk.plugins.collection.agent_based import ewon
+from cmk.plugins.ewon.agent_based import ewon
 
 STRING_TABLE = [
     ["1", "0", "System"],

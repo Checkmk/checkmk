@@ -236,6 +236,36 @@ def test_parse_perf_data2() -> None:
                 deprecated="",
             ),
         ),
+        (
+            "rta",
+            "check_icmp",
+            TranslationSpec(
+                name="rta",
+                scale=0.001,
+                auto_graph=True,
+                deprecated="",
+            ),
+        ),
+        (
+            "rtmax",
+            "check_icmp",
+            TranslationSpec(
+                name="rtmax",
+                scale=0.001,
+                auto_graph=True,
+                deprecated="",
+            ),
+        ),
+        (
+            "rtmin",
+            "check_icmp",
+            TranslationSpec(
+                name="rtmin",
+                scale=0.001,
+                auto_graph=True,
+                deprecated="",
+            ),
+        ),
     ],
 )
 def test_perfvar_translation(

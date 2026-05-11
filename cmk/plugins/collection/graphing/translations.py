@@ -813,9 +813,9 @@ translation_icmp = translations.Translation(
     name="icmp",
     check_commands=[translations.NagiosPlugin("icmp")],
     translations={
-        "~.*rta": translations.ScaleBy(0.001),
-        "~.*rtmax": translations.ScaleBy(0.001),
-        "~.*rtmin": translations.ScaleBy(0.001),
+        "~.*rta": translations.RenameToAndScaleBy("rta", 0.001),
+        "~.*rtmax": translations.RenameToAndScaleBy("rtmax", 0.001),
+        "~.*rtmin": translations.RenameToAndScaleBy("rtmin", 0.001),
     },
 )
 

@@ -11,7 +11,7 @@ from collections.abc import Mapping, Sequence
 import pytest
 
 from cmk.agent_based.v2 import Metric, Result, Service, State
-from cmk.plugins.collection.agent_based.isc_dhcpd import (
+from cmk.plugins.isc.agent_based.isc_dhcpd import (
     check_isc_dhcpd,
     DhcpdSection,
     discovery_isc_dhcpd,

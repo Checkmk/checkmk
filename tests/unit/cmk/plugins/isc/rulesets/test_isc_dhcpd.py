@@ -5,7 +5,7 @@
 
 import pytest
 
-from cmk.plugins.collection.rulesets.isc_dhcpd import migrate
+from cmk.plugins.isc.rulesets.isc_dhcpd import migrate
 
 
 @pytest.mark.parametrize(

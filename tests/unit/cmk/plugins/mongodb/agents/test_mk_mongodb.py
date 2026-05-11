@@ -13,7 +13,7 @@ from typing import Dict, Mapping, Tuple, Union
 import pymongo
 import pytest
 
-from agents.plugins import mk_mongodb
+from cmk.plugins.mongodb.agents import mk_mongodb
 
 
 def read_dataset(filename):

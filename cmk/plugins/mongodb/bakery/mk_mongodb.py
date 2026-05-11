@@ -4,15 +4,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import configparser
 import io
-from collections.abc import Mapping
+from collections.abc import Iterable
 from pathlib import Path
 from typing import assert_never, Literal
 
 from pydantic import BaseModel
 
-from cmk.utils.password_store import extract_formspec_password
-
-from .bakery_api.v1 import FileGenerator, OS, Plugin, PluginConfig, register
+from cmk.bakery.v2_unstable import BakeryPlugin, OS, Plugin, PluginConfig, Secret
 
 _CertKeyChoices = Literal["cert_filepath", "uploaded_cert_file"]
 
@@ -33,10 +31,7 @@ class _AuthConfig(BaseModel):
     ]
     auth_source: str
     username: str
-    password: (
-        tuple[Literal["cmk_postprocessed"], Literal["stored_password"], tuple[str, str]]
-        | tuple[Literal["cmk_postprocessed"], Literal["explicit_password"], tuple[str, str]]
-    )
+    password: Secret
     host: str | None = None
     port: int | None = None
     tls: _TlsConfig | None = None
@@ -60,7 +55,7 @@ class MongoDBConfigParser(configparser.ConfigParser):
 
 def _update_parser_with_cert(
     parser: MongoDBConfigParser, opt_name: _CertKeyChoices, value: str
-) -> FileGenerator:
+) -> Iterable[PluginConfig]:
     match opt_name:
         case "cert_filepath":
             parser["MONGODB"]["tls_cert_key_file"] = value
@@ -75,20 +70,19 @@ def _update_parser_with_cert(
             assert_never(opt_name)
 
 
-def get_mk_mongodb_files(conf: Mapping[str, object]) -> FileGenerator:
-    config = _Config.model_validate(conf)
-    if config.deployment[0] == "do_not_deploy":
+def get_mk_mongodb_files(conf: _Config) -> Iterable[Plugin | PluginConfig]:
+    if conf.deployment[0] == "do_not_deploy":
         return
 
-    interval = None if (v := config.deployment[1]) is None else int(v)
+    interval = conf.deployment[1]
     yield Plugin(base_os=OS.LINUX, source=Path("mk_mongodb.py"), interval=interval)
 
-    parser = make_config_parser(config.auth)
+    parser = make_config_parser(conf.auth)
 
     if (
-        config.auth is not None
-        and config.auth.tls is not None
-        and (ckf := config.auth.tls.cert_key_file) is not None
+        conf.auth is not None
+        and conf.auth.tls is not None
+        and (ckf := conf.auth.tls.cert_key_file) is not None
     ):
         yield from _update_parser_with_cert(parser, *ckf)
 
@@ -107,7 +101,7 @@ def make_config_parser(auth: _AuthConfig | None) -> MongoDBConfigParser:
 
     parser["MONGODB"] = {
         "username": auth.username,
-        "password": extract_formspec_password(auth.password),
+        "password": auth.password.revealed,
         "auth_source": auth.auth_source,
         "auth_mechanism": auth.auth_mechanism,
     }
@@ -129,7 +123,9 @@ def make_config_parser(auth: _AuthConfig | None) -> MongoDBConfigParser:
     return parser
 
 
-register.bakery_plugin(
+bakery_plugin_mk_mongodb = BakeryPlugin(
     name="mk_mongodb",
+    parameter_parser=_Config.model_validate,
+    default_parameters=None,
     files_function=get_mk_mongodb_files,
 )

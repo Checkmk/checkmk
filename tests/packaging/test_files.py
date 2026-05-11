@@ -665,7 +665,6 @@ AGENT_PLUGINS_PREFIX = [
     "mk_docker",
     "mk_inotify",
     "mk_logwatch",
-    "mk_mongodb",
     "mk_tinkerforge",
 ]
 

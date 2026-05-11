@@ -28,7 +28,6 @@ py_library(
         "mk_docker.py",
         "mk_inotify.py",
         "mk_logwatch.py",
-        "mk_mongodb.py",
         "mk_podman.py",
         "mk_tinkerforge.py",
     ],

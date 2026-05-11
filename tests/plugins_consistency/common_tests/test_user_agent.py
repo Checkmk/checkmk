@@ -15,6 +15,7 @@ _AGENTS_WITHOUT_USER_AGENT = {
     "cmk.plugins.ceph.agents.mk_ceph",
     "cmk.plugins.collection.agents.isc_dhcpd",
     "cmk.plugins.files.agents.mk_filestats",
+    "cmk.plugins.mongodb.agents.mk_mongodb",
     "cmk.plugins.mtr.agents.mtr",
     "cmk.plugins.plesk.agents.plesk_backups",
     "cmk.plugins.plesk.agents.plesk_domains",

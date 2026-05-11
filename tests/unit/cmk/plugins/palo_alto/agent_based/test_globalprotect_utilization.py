@@ -11,7 +11,7 @@ from typing import Any
 import pytest
 
 from cmk.agent_based.v2 import Metric, Result, Service, State, StringTable
-from cmk.plugins.collection.agent_based.globalprotect_utilization import (
+from cmk.plugins.palo_alto.agent_based.globalprotect_utilization import (
     check_globalprotect_utilization,
     discover_globalprotect_utilization,
     parse_globalprotect_utilization,

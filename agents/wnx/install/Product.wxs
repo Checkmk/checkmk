@@ -381,7 +381,7 @@ just to signal that real build script was not called -->
                 <File Id="fil6C6BD73C2966F9AD5B4D0A8392AC7458" KeyPath="yes" Source="$(var.EncryptedPluginsFolder)\windows_os_bonding.ps1" DiskId="1"  />
             </Component>
             <Component Id="cmp57F6981D839AA296FACB18CA0B80F385" Guid="{4E4D51FC-3829-4CE5-B26F-022DA372B3B0}">
-                <File Id="fil3C227A99C2CDD7FA84B1310AD2C5A01A" KeyPath="yes" Source="$(var.EncryptedPluginsFolder)\windows_tasks.ps1" DiskId="1"  />
+                <File Id="fil3C227A99C2CDD7FA84B1310AD2C5A01A" KeyPath="yes" Source="..\..\..\cmk\plugins\windows\agents\windows_tasks.ps1" DiskId="1"  />
             </Component>
             <Component Id="cmp23E4BF6C7C534A32BFE976FEA694B14F" Guid="{B79990AF-326A-4186-B942-F20F87331BDE}">
                 <File Id="fil2D476020F3EF4F4FA8E2AD8BCEBE0B3A" KeyPath="yes" Source="$(var.EncryptedPluginsFolder)\windows_updates.ps1" DiskId="1"  />

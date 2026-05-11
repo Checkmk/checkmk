@@ -202,13 +202,14 @@ def test_parse_perf_data2() -> None:
         # CMK-33772: NagiosPlugin("check_ping.exe") and NagiosPlugin("check_tcp.exe")
         # are registered by werk #16254. parse_perf_data normalizes the lookup key
         # via .replace(".", "_"), so the registration must use the same key form.
+        # The check_ping.exe entry additionally relies on RenameToAndScaleBy so
+        # the resolved metric is bucketed under "rta" (the name the graph uses),
+        # not under the regex key.
         (
             "rta",
             "check_ping_exe",
             TranslationSpec(
-                # ~.*rta is a regex entry — the spec keeps the original key as
-                # the name. What matters here is the scale being 0.001.
-                name="~.*rta",
+                name="rta",
                 scale=0.001,
                 auto_graph=True,
                 deprecated="",

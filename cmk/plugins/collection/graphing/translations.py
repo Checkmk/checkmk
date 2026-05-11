@@ -823,7 +823,10 @@ translation_ping_exe = translations.Translation(
     name="ping_exe",
     check_commands=[translations.NagiosPlugin("check_ping.exe")],
     translations={
-        "~.*rta": translations.ScaleBy(0.001),
+        # Regex translations must carry an explicit rename target — otherwise the
+        # resolved metric is bucketed under the regex key itself and the graph
+        # (keyed on "rta") never sees the scaled value.
+        "~.*rta": translations.RenameToAndScaleBy("rta", 0.001),
     },
 )
 

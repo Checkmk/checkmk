@@ -8,7 +8,7 @@ from collections.abc import Mapping
 import pytest
 
 from cmk.agent_based.v2 import CheckResult, Result, Service, State, StringTable
-from cmk.plugins.collection.agent_based.sshd_config import (
+from cmk.plugins.ssh.agent_based.sshd_config import (
     check_sshd_config,
     discover_sshd_config,
     parse_sshd_config,

@@ -3,14 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="misc"
-
-from collections.abc import Mapping, Sequence
-from typing import Any
+from collections.abc import Sequence
 
 import pytest
 
-from cmk.agent_based.v2 import StringTable
+from cmk.agent_based.v2 import Result, Service, State, StringTable
 from cmk.legacy_checks.hp_proliant_cpu import (
     check_hp_proliant_cpu,
     discover_hp_proliant_cpu,
@@ -21,39 +18,38 @@ from cmk.legacy_checks.hp_proliant_cpu import (
 @pytest.mark.parametrize(
     "string_table, expected_discoveries",
     [
-        ([["0", "0", "Intel Xeon", "2"], ["1", "0", "Intel Xeon", "2"]], [("0", {}), ("1", {})]),
+        (
+            [["0", "0", "Intel Xeon", "2"], ["1", "0", "Intel Xeon", "2"]],
+            [Service(item="0"), Service(item="1")],
+        ),
     ],
 )
 def test_discover_hp_proliant_cpu(
-    string_table: StringTable, expected_discoveries: Sequence[tuple[str, Mapping[str, Any]]]
+    string_table: StringTable, expected_discoveries: Sequence[Service]
 ) -> None:
-    """Test discovery function for hp_proliant_cpu check."""
     parsed = parse_hp_proliant_cpu(string_table)
-    result = list(discover_hp_proliant_cpu(parsed))
-    assert sorted(result) == sorted(expected_discoveries)
+    assert sorted(discover_hp_proliant_cpu(parsed), key=lambda s: s.item or "") == sorted(
+        expected_discoveries, key=lambda s: s.item or ""
+    )
 
 
 @pytest.mark.parametrize(
-    "item, params, string_table, expected_results",
+    "item, string_table, expected_results",
     [
         (
             "0",
-            {},
             [["0", "0", "Intel Xeon", "2"], ["1", "0", "Intel Xeon", "2"]],
-            [0, 'CPU0 "Intel Xeon" in slot 0 is in state "ok"'],
+            [Result(state=State.OK, summary='CPU0 "Intel Xeon" in slot 0 is in state "ok"')],
         ),
         (
             "1",
-            {},
             [["0", "0", "Intel Xeon", "2"], ["1", "0", "Intel Xeon", "2"]],
-            [0, 'CPU1 "Intel Xeon" in slot 0 is in state "ok"'],
+            [Result(state=State.OK, summary='CPU1 "Intel Xeon" in slot 0 is in state "ok"')],
         ),
     ],
 )
 def test_check_hp_proliant_cpu(
-    item: str, params: Mapping[str, Any], string_table: StringTable, expected_results: Sequence[Any]
+    item: str, string_table: StringTable, expected_results: Sequence[Result]
 ) -> None:
-    """Test check function for hp_proliant_cpu check."""
     parsed = parse_hp_proliant_cpu(string_table)
-    result = list(check_hp_proliant_cpu(item, params, parsed))
-    assert result == expected_results
+    assert list(check_hp_proliant_cpu(item, parsed)) == expected_results

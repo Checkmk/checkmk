@@ -366,7 +366,7 @@ just to signal that real build script was not called -->
                 <File Id="fil5662B4A07F89026B3C146D5EE4504E02" KeyPath="yes" Source="..\..\..\cmk\plugins\veeam\agents\veeam_backup_status.ps1" DiskId="1"  />
             </Component>
             <Component Id="cmp601FE4ED2C2FD3F546593475F9666973" Guid="{06DB2D8D-BCAE-4078-855B-29C1F7144BFA}">
-                <File Id="filEF6F805C99D9377D6BF80FE6B7E011F6" KeyPath="yes" Source="..\..\windows\plugins\windows_broadcom_bonding.bat" DiskId="1"  />
+                <File Id="filEF6F805C99D9377D6BF80FE6B7E011F6" KeyPath="yes" Source="..\..\..\cmk\plugins\windows\agents\windows_broadcom_bonding.bat" DiskId="1"  />
             </Component>
             <Component Id="cmp8A6994FC62D135D9A6BA2E01B62043FF" Guid="{C7694E56-009B-49B8-B846-8DF3FBBE1385}">
                 <File Id="fil87F308F055FD29281552B9E7CA175107" KeyPath="yes" Source="$(var.EncryptedPluginsFolder)\windows_if.ps1" DiskId="1"  />

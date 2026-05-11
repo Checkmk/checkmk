@@ -60,7 +60,6 @@ sh_library(
         "ibm_mq",
         "jar_signature",
         "lnx_container_host_if.linux",
-        "mailman3_lists",
         "mk_apt",
         "mk_db2.aix",
         "mk_db2.linux",

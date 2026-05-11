@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
-
 # Example output from agent:
 # <<<ibm_svc_eventlog:sep(58)>>>
 # 588:120404112526:mdiskgrp:6:md07_sas10k::alert:no:989001::Managed Disk Group space warning
@@ -16,18 +14,23 @@
 # 1690:130801070656:drive:59:::alert:no:981020::Managed Disk error count warning threshold met
 # 2058:131030112416:drive:42:::alert:no:981020::Managed Disk error count warning threshold met
 
+from cmk.agent_based.v2 import (
+    AgentSection,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Result,
+    Service,
+    State,
+    StringTable,
+)
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import StringTable
 
-check_info = {}
-
-
-def discover_ibm_svc_eventlog(info):
-    return [(None, None)]
+def discover_ibm_svc_eventlog(section: StringTable) -> DiscoveryResult:
+    yield Service()
 
 
-def check_ibm_svc_eventlog(item, _no_params, info):
+def check_ibm_svc_eventlog(section: StringTable) -> CheckResult:
     messagecount = 0
     last_err = ""
 
@@ -44,26 +47,34 @@ def check_ibm_svc_eventlog(item, _no_params, info):
         _error_code,
         description,
         *_,
-    ) in info:
+    ) in section:
         messagecount += 1
         last_err = description
 
     if messagecount > 0:
-        return 1, "%d messages not expired and not yet fixed found in event log, last was: %s" % (
-            messagecount,
-            last_err,
+        yield Result(
+            state=State.WARN,
+            summary=f"{messagecount} messages not expired and not yet fixed found in event log, last was: {last_err}",
         )
+        return
 
-    return 0, "No messages not expired and not yet fixed found in event log"
+    yield Result(
+        state=State.OK, summary="No messages not expired and not yet fixed found in event log"
+    )
 
 
 def parse_ibm_svc_eventlog(string_table: StringTable) -> StringTable:
     return string_table
 
 
-check_info["ibm_svc_eventlog"] = LegacyCheckDefinition(
+agent_section_ibm_svc_eventlog = AgentSection(
     name="ibm_svc_eventlog",
     parse_function=parse_ibm_svc_eventlog,
+)
+
+
+check_plugin_ibm_svc_eventlog = CheckPlugin(
+    name="ibm_svc_eventlog",
     service_name="Eventlog",
     discovery_function=discover_ibm_svc_eventlog,
     check_function=check_ibm_svc_eventlog,

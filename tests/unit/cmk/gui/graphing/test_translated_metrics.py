@@ -225,6 +225,16 @@ def test_parse_perf_data2() -> None:
                 deprecated="",
             ),
         ),
+        (
+            "rta",
+            "check_ping",
+            TranslationSpec(
+                name="rta",
+                scale=0.001,
+                auto_graph=True,
+                deprecated="",
+            ),
+        ),
     ],
 )
 def test_perfvar_translation(

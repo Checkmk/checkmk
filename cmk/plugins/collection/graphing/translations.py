@@ -1375,7 +1375,7 @@ translation_oracle_tablespaces = translations.Translation(
 translation_ping = translations.Translation(
     name="ping",
     check_commands=[translations.NagiosPlugin("ping")],
-    translations={"~.*rta": translations.ScaleBy(0.001)},
+    translations={"~.*rta": translations.RenameToAndScaleBy("rta", 0.001)},
 )
 
 translation_postfix_mailq = translations.Translation(

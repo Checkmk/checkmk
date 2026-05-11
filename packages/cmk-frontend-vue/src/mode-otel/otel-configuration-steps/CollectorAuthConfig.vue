@@ -71,11 +71,14 @@ const passwordErrors = computed<string[]>(() => {
     // so flag it immediately rather than waiting for the next-step submit.
     if (!isValidPasswordIdForEnvVar(auth.value.credential.password)) {
       return [
+        _t("The password ID '%{passwordId}' is not usable by the OTel Collector.", {
+          passwordId: auth.value.credential.password
+        }),
         _t(
-          'The selected password ID is not usable by the OTel Collector. ' +
-            'It must start with a letter or underscore and ' +
+          'It must start with a letter or underscore and ' +
             'contain only letters, digits and underscores.'
-        )
+        ),
+        _t('Please select a different password or create a new one with a valid ID.')
       ]
     }
     return []

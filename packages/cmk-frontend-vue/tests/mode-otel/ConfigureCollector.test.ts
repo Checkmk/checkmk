@@ -260,9 +260,9 @@ describe('ConfigureCollector', () => {
 
     const result = compRef.value!.validate()
     expect(result).toBe(false)
+    await screen.findByText("The password ID 'bad-id' is not usable by the OTel Collector.")
     await screen.findByText(
-      'The selected password ID is not usable by the OTel Collector. ' +
-        'It must start with a letter or underscore and ' +
+      'It must start with a letter or underscore and ' +
         'contain only letters, digits and underscores.'
     )
   })
@@ -292,9 +292,9 @@ describe('ConfigureCollector', () => {
 
       await waitFor(() => expect(compRef.value).toBeDefined())
 
+      await screen.findByText("The password ID 'bad-id' is not usable by the OTel Collector.")
       await screen.findByText(
-        'The selected password ID is not usable by the OTel Collector. ' +
-          'It must start with a letter or underscore and ' +
+        'It must start with a letter or underscore and ' +
           'contain only letters, digits and underscores.'
       )
     })

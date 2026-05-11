@@ -35,39 +35,39 @@
 
 import time
 
-from cmk.agent_based.legacy.v0_unstable import (
-    LegacyCheckDefinition,
-    LegacyDiscoveryResult,
-    LegacyResult,
-)
 from cmk.agent_based.v2 import (
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
     get_rate,
     get_value_store,
     IgnoreResultsError,
+    Metric,
     OIDEnd,
+    Result,
+    Service,
+    SimpleSNMPSection,
     SNMPTree,
     startswith,
+    State,
     StringTable,
 )
 
-check_info = {}
+
+def discover_hpux_snmp_cpu(section: StringTable) -> DiscoveryResult:
+    if section:
+        yield Service()
 
 
-def discover_hpux_snmp_cpu(info: StringTable) -> LegacyDiscoveryResult:
-    if len(info) > 0:
-        return [(None, {})]
-    return []
-
-
-def check_hpux_snmp_cpu(item: None, _no_params: None, info: StringTable) -> LegacyResult:
-    parts = dict(info)
+def check_hpux_snmp_cpu(section: StringTable) -> CheckResult:
+    parts = dict(section)
     this_time = time.time()
     total_rate = 0.0
     rates = []
     for what, oid in [("user", "13.0"), ("system", "14.0"), ("idle", "15.0"), ("nice", "16.0")]:
         value = int(parts[oid])
         rate = get_rate(
-            get_value_store(), "snmp_cpu_util.%s" % what, this_time, value, raise_overflow=True
+            get_value_store(), f"snmp_cpu_util.{what}", this_time, value, raise_overflow=True
         )
         total_rate += rate
         rates.append(rate)
@@ -75,42 +75,33 @@ def check_hpux_snmp_cpu(item: None, _no_params: None, info: StringTable) -> Lega
     if total_rate == 0:
         raise IgnoreResultsError("No counter counted. Time has ceased to flow.")
 
-    perfdata: list[
-        tuple[
-            str,
-            float,
-            int | float | None,
-            int | float | None,
-            int | float | None,
-            int | float | None,
-        ]
-    ] = []
     infos = []
+    metrics = []
     for what, rate in zip(["user", "system", "idle", "nice"], rates):
-        part = rate / total_rate  # fixed: true-division
-        perc = part * 100
-        perfdata.append((what, perc, None, None, 0.0, 100.0))
+        perc = rate / total_rate * 100
+        metrics.append(Metric(what, perc, boundaries=(0.0, 100.0)))
         infos.append(f"{what}: {perc:.0f}%")
 
-    return (0, ", ".join(infos), perfdata)
+    yield Result(state=State.OK, summary=", ".join(infos))
+    yield from metrics
 
 
 def parse_hpux_snmp_cs(string_table: StringTable) -> StringTable:
     return string_table
 
 
-check_info["hpux_snmp_cs"] = LegacyCheckDefinition(
+snmp_section_hpux_snmp_cs = SimpleSNMPSection(
     name="hpux_snmp_cs",
-    parse_function=parse_hpux_snmp_cs,
     detect=startswith(".1.3.6.1.2.1.1.1.0", "HP-UX"),
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.11.2.3.1",
         oids=[OIDEnd(), "1"],
     ),
+    parse_function=parse_hpux_snmp_cs,
 )
 
 
-check_info["hpux_snmp_cs.cpu"] = LegacyCheckDefinition(
+check_plugin_hpux_snmp_cs_cpu = CheckPlugin(
     name="hpux_snmp_cs_cpu",
     service_name="CPU utilization",
     sections=["hpux_snmp_cs"],

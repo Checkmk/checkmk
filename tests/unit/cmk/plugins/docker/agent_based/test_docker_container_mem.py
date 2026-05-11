@@ -6,8 +6,8 @@
 import pytest
 
 from cmk.agent_based.v2 import CheckResult, Metric, Result, State, StringTable
-from cmk.plugins.collection.agent_based import mem_used
 from cmk.plugins.docker.agent_based import docker_container_mem
+from cmk.plugins.memory.agent_based import mem_used
 
 # docker stats: 1007MiB / 4.347GiB
 PLUGIN_OUTPUT_MEM_NO_LIMIT = [

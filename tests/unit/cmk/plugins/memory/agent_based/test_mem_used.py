@@ -13,14 +13,14 @@ from typing import Any
 import pytest
 
 from cmk.agent_based.v2 import Attributes, CheckResult, Metric, Result, Service, State
-from cmk.plugins.collection.agent_based import mem_used
-from cmk.plugins.collection.agent_based.mem_used import (
+from cmk.plugins.lib import memory
+from cmk.plugins.memory.agent_based import mem_used
+from cmk.plugins.memory.agent_based.mem_used import (
     check_mem_used,
     discover_mem_used,
     inventorize_mem_used,
     MemBytes,
 )
-from cmk.plugins.lib import memory
 
 
 @pytest.fixture

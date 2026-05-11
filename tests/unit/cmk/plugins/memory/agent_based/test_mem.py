@@ -6,8 +6,8 @@
 import pytest
 
 from cmk.agent_based.v2 import StringTable
-from cmk.plugins.collection.agent_based.mem import parse_proc_meminfo_bytes
 from cmk.plugins.lib.memory import SectionMem
+from cmk.plugins.memory.agent_based.mem import parse_proc_meminfo_bytes
 
 
 @pytest.mark.parametrize(

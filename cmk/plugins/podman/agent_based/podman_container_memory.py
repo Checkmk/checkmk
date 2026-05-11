@@ -12,8 +12,8 @@ from cmk.agent_based.v2 import (
     DiscoveryResult,
     Service,
 )
-from cmk.plugins.collection.agent_based.mem_used import check_mem_used
 from cmk.plugins.lib.memory import SectionMemUsed
+from cmk.plugins.memory.agent_based.mem_used import check_mem_used
 
 from .lib import SectionPodmanContainerStats
 

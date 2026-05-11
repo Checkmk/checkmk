@@ -8,8 +8,8 @@
 
 import pytest
 
-from cmk.plugins.collection.agent_based.mem_total_sections import parse_mem_total_solaris
 from cmk.plugins.lib.memory import SectionMemTotal
+from cmk.plugins.memory.agent_based.mem_total_sections import parse_mem_total_solaris
 
 
 def test_simple():

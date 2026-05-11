@@ -5,7 +5,7 @@
 
 
 from cmk.agent_based.v2 import render, Result, Service, State
-from cmk.legacy_checks.hp_proliant_raid import (
+from cmk.plugins.hp_proliant.agent_based.hp_proliant_raid import (
     check_hp_proliant_raid,
     discover_hp_proliant_raid,
     parse_hp_proliant_raid,

@@ -9,7 +9,7 @@ from cmk.agent_based.v2 import (
     Result,
     State,
 )
-from cmk.plugins.collection.agent_based.disk_io_utilization import (
+from cmk.plugins.disk_io.agent_based.disk_io_utilization import (
     check_disk_io_utilization,
     Params,
 )

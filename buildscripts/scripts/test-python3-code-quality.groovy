@@ -26,7 +26,7 @@ void main() {
                     // this requires a lot of CPU power
                     // thereby switch to the larger container with more resources granted
                     container("minimal-ubuntu-checkmk-${container_safe_branch_name}") {
-                        sh("git fetch origin 'refs/tags/*:refs/tags/*'");
+                        sh("git fetch --depth=1 origin 'refs/tags/*:refs/tags/*'");
                     }
                 }
             }

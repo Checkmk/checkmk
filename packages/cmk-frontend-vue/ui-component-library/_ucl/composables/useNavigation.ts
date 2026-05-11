@@ -25,31 +25,30 @@ export interface NavFolder {
 
 export type NavItem = NavPage | NavFolder
 
-function buildNavTree(items: Array<Page | Folder>, parentPath: string): Array<NavItem> {
-  return items
-    .map((item): NavItem => {
-      const itemPath = `${parentPath}/${toSlug(item.name)}`
-      if (item instanceof Page) {
-        return {
-          type: 'page' as const,
-          name: item.name,
-          path: itemPath,
-          component: item.component
-        }
-      } else {
-        return {
-          type: 'folder' as const,
-          name: item.name,
-          path: itemPath,
-          isOpen: ref(item.defaultOpen),
-          children: buildNavTree(item.pages, itemPath)
-        }
-      }
-    })
-    .sort((a, b) => a.name.localeCompare(b.name))
+function toNavItem(item: Page | Folder, parentPath: string): NavItem {
+  const itemPath = `${parentPath}/${toSlug(item.name)}`
+  if (item instanceof Page) {
+    return {
+      type: 'page' as const,
+      name: item.name,
+      path: itemPath,
+      component: item.component
+    }
+  }
+  return {
+    type: 'folder' as const,
+    name: item.name,
+    path: itemPath,
+    isOpen: ref(item.defaultOpen),
+    children: item.pages
+      .map((child) => toNavItem(child, itemPath))
+      .sort((a, b) => a.name.localeCompare(b.name))
+  }
 }
 
-const navTrees = buildNavTree(roots, '') as NavFolder[]
+// Top-level roots keep their authored order (so Foundations lands above
+// Components regardless of name); nested folders sort alphabetically.
+const navTrees = roots.map((root) => toNavItem(root, '')) as NavFolder[]
 
 export function useNavigation() {
   function openPathToRoute(routePath: string) {

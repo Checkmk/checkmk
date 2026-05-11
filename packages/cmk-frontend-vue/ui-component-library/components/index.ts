@@ -6,6 +6,7 @@
 import { Folder, Page } from '@ucl/_ucl/types/page'
 
 import { pages as formSpecPages } from '../form'
+import UclColors from '../foundations/Colors/UclColors.vue'
 import { pages as i18nPages } from '../i18n'
 import { pages as twoFactorAuthPages } from '../two-factor-authentication'
 import UclCmkBadge from './basic-elements/CmkBadge/UclCmkBadge.vue'
@@ -105,6 +106,8 @@ const formElementsPages = [
   new Page('CmkToggleButtonGroup', UclCmkToggleButtonGroup)
 ]
 
+const foundationsPages = [new Page('Colors', UclColors)]
+
 const foundationElementsPages = [
   new Page('CmkIcon', UclCmkIcon),
   new Page('CmkIconEmblem', UclCmkIconEmblem),
@@ -140,6 +143,7 @@ const systemFeedbackPages = [
   new Page('CmkTooltip', UclCmkTooltip)
 ]
 export const roots = [
+  new Folder('Foundations', foundationsPages, true),
   new Folder(
     'Components',
     [

@@ -279,8 +279,8 @@ defineExpose({ validate, onPasswordCreated })
           <CmkParagraph class="mode-otel-configure-collector__tab-description">{{
             _t('Configure a GRPC-based OTLP receiver that will collect OpenTelemetry data.')
           }}</CmkParagraph>
-          <CmkLabel>{{ _t('Enable the GRPC-based OTLP receiver') }}</CmkLabel>
-          <CmkCheckbox v-model="grpcEnabled" />
+          <CmkLabel>{{ _t('GRPC-based receiver') }}</CmkLabel>
+          <CmkCheckbox v-model="grpcEnabled" :label="_t('Enable the GRPC-based OTLP receiver')" />
           <div
             :class="[
               'mode-otel-configure-collector__tab-body',
@@ -319,8 +319,8 @@ defineExpose({ validate, onPasswordCreated })
           <CmkParagraph class="mode-otel-configure-collector__tab-description">{{
             _t('Configure an HTTP-based OTLP receiver that will collect OpenTelemetry data.')
           }}</CmkParagraph>
-          <CmkLabel>{{ _t('Enable the HTTP-based OTLP receiver') }}</CmkLabel>
-          <CmkCheckbox v-model="httpEnabled" />
+          <CmkLabel>{{ _t('HTTP-based receiver') }}</CmkLabel>
+          <CmkCheckbox v-model="httpEnabled" :label="_t('Enable the HTTP-based OTLP receiver')" />
           <div
             :class="[
               'mode-otel-configure-collector__tab-body',

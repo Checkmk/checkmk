@@ -28,6 +28,7 @@ DomainType = Literal[
     "configuration_entity",
     "constant",
     "contact_group_config",
+    "custom_host_attribute",
     "customer",
     "dashboard",
     "dashboard_metadata",

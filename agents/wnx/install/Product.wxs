@@ -393,7 +393,7 @@ just to signal that real build script was not called -->
                 <File Id="fil70F9F92ED57B6C727E3FEDA8CD7856EB" KeyPath="yes" Source="..\..\..\cmk\plugins\collection\agents\win_dmidecode.bat" DiskId="1"  />
             </Component>
             <Component Id="cmp8B610C872802BC16FE56FCA23BF098AD" Guid="{BBB128AC-DBD9-4B88-8824-4602E33C2950}">
-                <File Id="filFBD6D6657D952271E70BBABB024D2F08" KeyPath="yes" Source="..\..\windows\plugins\win_license.bat" DiskId="1"  />
+                <File Id="filFBD6D6657D952271E70BBABB024D2F08" KeyPath="yes" Source="..\..\..\cmk\plugins\windows\agents\win_license.bat" DiskId="1"  />
             </Component>
             <Component Id="cmp11787B278B3DC312240FABB58B837C20" Guid="{768D5B88-D421-4C7A-96B4-436FF9C1F390}">
                 <File Id="fil46A0DC56ECCE3C41483B1E4CD7708C4D" KeyPath="yes" Source="$(var.EncryptedPluginsFolder)\win_printers.ps1" DiskId="1"  />

@@ -3478,6 +3478,14 @@ class OtelConfigClient(RestApiClient):
             api_version=APIVersion.INTERNAL,
         )
 
+    def delete_bundle(self, bundle_id: str, expect_ok: bool = True) -> Response:
+        return self.request(
+            "delete",
+            url=f"/objects/{self.bundles_domain}/{bundle_id}",
+            expect_ok=expect_ok,
+            api_version=APIVersion.INTERNAL,
+        )
+
     def edit(self, config_id: str, payload: Mapping[str, Any], expect_ok: bool = True) -> Response:
         return self.request(
             "put",

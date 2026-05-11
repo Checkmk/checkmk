@@ -5,7 +5,7 @@
 
 
 from cmk.agent_based.v2 import Result, Service, State
-from cmk.legacy_checks.ibm_svc_eventlog import (
+from cmk.plugins.ibm.agent_based.ibm_svc_eventlog import (
     check_ibm_svc_eventlog,
     discover_ibm_svc_eventlog,
     parse_ibm_svc_eventlog,

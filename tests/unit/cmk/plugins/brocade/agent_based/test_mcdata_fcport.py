@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.plugins.collection.agent_based.mcdata_fcport import parse_mcdata_fcport_pure
+from cmk.plugins.brocade.agent_based.mcdata_fcport import parse_mcdata_fcport_pure
 from cmk.plugins.lib import interfaces
 
 

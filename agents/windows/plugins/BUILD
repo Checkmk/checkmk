@@ -39,7 +39,7 @@ TO_SIGN_SCRIPTS = [
     "//cmk/plugins/nvidia/agents:nvidia_smi.ps1",
     "rds_licenses.ps1",
     "sansymphony.ps1",
-    "veeam_backup_status.ps1",
+    "//cmk/plugins/veeam/agents:veeam_backup_status.ps1",
     "win_printers.ps1",
     "windows_if.ps1",
     "windows_multipath.ps1",

@@ -7,8 +7,8 @@ from pathlib import Path
 
 import pytest
 
-from cmk.bakery.v1 import OS, Plugin
-from cmk.base.plugins.bakery.veeam_backup_status import get_veeam_backup_status_files
+from cmk.bakery.v2_unstable import OS, Plugin
+from cmk.plugins.veeam.bakery.veeam_backup_status import bakery_plugin_veeam_backup_status
 
 
 @pytest.mark.parametrize(
@@ -32,5 +32,6 @@ from cmk.base.plugins.bakery.veeam_backup_status import get_veeam_backup_status_
     ],
 )
 def test_veeam_backup_status_files(conf: dict[str, object], expected: list[Plugin]) -> None:
-    result = list(get_veeam_backup_status_files(conf))
+    parsed = bakery_plugin_veeam_backup_status.parameter_parser(conf)
+    result = list(bakery_plugin_veeam_backup_status.files_function(parsed))
     assert result == expected

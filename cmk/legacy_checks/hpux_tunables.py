@@ -3,10 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
-# mypy: disable-error-code="possibly-undefined"
-
 # Example output:
 # <<<hpux_tunables:sep(58)>>>
 # Tunable:        dbc_max_pct
@@ -43,69 +39,72 @@
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
+from collections.abc import Mapping
+from typing import Any
 
-check_info = {}
+from cmk.agent_based.v2 import (
+    AgentSection,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Metric,
+    Result,
+    Service,
+    State,
+    StringTable,
+)
+
+Section = dict[str, tuple[int, int]]
 
 
-def parse_hpux_tunables(info):
-    parsed = {}
-    for line in info:
+def parse_hpux_tunables(string_table: StringTable) -> Section:
+    parsed: Section = {}
+    key = ""
+    usage = 0
+    for line in string_table:
         if "Tunable" in line[0] or "Parameter" in line[0]:
             key = line[1].strip()
         elif "Usage" in line[0]:
             usage = int(line[1])
         elif "Setting" in line[0]:
             threshold = int(line[1])
-
             parsed[key] = (usage, threshold)
 
     return parsed
 
 
-check_info["hpux_tunables"] = LegacyCheckDefinition(
+agent_section_hpux_tunables = AgentSection(
     name="hpux_tunables",
     parse_function=parse_hpux_tunables,
 )
 
 
-def inventory_hpux_tunables(section, tunable):
+def _discover_tunable(section: Section, tunable: str) -> DiscoveryResult:
     if tunable in section:
-        return [(None, {})]
-    return []
+        yield Service()
 
 
-def check_hpux_tunables(section, params, tunable, descr):
-    if tunable in section:
-        usage, threshold = section[tunable]
-        perc = float(usage) / float(threshold) * 100
+def _check_tunable(
+    section: Section, params: Mapping[str, Any], tunable: str, descr: str
+) -> CheckResult:
+    if tunable not in section:
+        yield Result(state=State.UNKNOWN, summary="tunable not found in agent output")
+        return
 
-        if isinstance(params, tuple):
-            params = {
-                "levels": params,
-            }
-        warn, crit = params["levels"]
-        warn_perf = float(warn * threshold / 100)
-        crit_perf = float(crit * threshold / 100)
+    usage, threshold = section[tunable]
+    perc = float(usage) / float(threshold) * 100
 
-        yield (
-            0,
-            "%.2f%% used (%d/%d %s)" % (perc, usage, threshold, descr),
-            [(descr, usage, warn_perf, crit_perf, 0, threshold)],
-        )
+    warn, crit = params["levels"]
+    warn_perf = float(warn * threshold / 100)
+    crit_perf = float(crit * threshold / 100)
 
-        if perc > crit:
-            state = 2
-        elif perc > warn:
-            state = 1
-        else:
-            state = 0
+    yield Result(state=State.OK, summary=f"{perc:.2f}% used ({usage}/{threshold} {descr})")
+    yield Metric(descr, usage, levels=(warn_perf, crit_perf), boundaries=(0, threshold))
 
-        if state > 0:
-            yield state, f"(warn/crit at {warn}/{crit})"
-
-    else:
-        yield 3, "tunable not found in agent output"
+    if perc > crit:
+        yield Result(state=State.CRIT, summary=f"(warn/crit at {warn}/{crit})")
+    elif perc > warn:
+        yield Result(state=State.WARN, summary=f"(warn/crit at {warn}/{crit})")
 
 
 # .
@@ -121,18 +120,15 @@ def check_hpux_tunables(section, params, tunable, descr):
 #   '----------------------------------------------------------------------'
 
 
-def discover_hpux_tunables_nkthread(section):
-    tunable = "nkthread"
-    return inventory_hpux_tunables(section, tunable)
+def discover_hpux_tunables_nkthread(section: Section) -> DiscoveryResult:
+    yield from _discover_tunable(section, "nkthread")
 
 
-def check_hpux_tunables_nkthread(_no_item, params, section):
-    tunable = "nkthread"
-    descr = "threads"
-    return check_hpux_tunables(section, params, tunable, descr)
+def check_hpux_tunables_nkthread(params: Mapping[str, Any], section: Section) -> CheckResult:
+    yield from _check_tunable(section, params, "nkthread", "threads")
 
 
-check_info["hpux_tunables.nkthread"] = LegacyCheckDefinition(
+check_plugin_hpux_tunables_nkthread = CheckPlugin(
     name="hpux_tunables_nkthread",
     service_name="Number of threads",
     sections=["hpux_tunables"],
@@ -156,18 +152,15 @@ check_info["hpux_tunables.nkthread"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 
-def discover_hpux_tunables_nproc(section):
-    tunable = "nproc"
-    return inventory_hpux_tunables(section, tunable)
+def discover_hpux_tunables_nproc(section: Section) -> DiscoveryResult:
+    yield from _discover_tunable(section, "nproc")
 
 
-def check_hpux_tunables_nproc(_no_item, params, section):
-    tunable = "nproc"
-    descr = "processes"
-    return check_hpux_tunables(section, params, tunable, descr)
+def check_hpux_tunables_nproc(params: Mapping[str, Any], section: Section) -> CheckResult:
+    yield from _check_tunable(section, params, "nproc", "processes")
 
 
-check_info["hpux_tunables.nproc"] = LegacyCheckDefinition(
+check_plugin_hpux_tunables_nproc = CheckPlugin(
     name="hpux_tunables_nproc",
     service_name="Number of processes",
     sections=["hpux_tunables"],
@@ -189,18 +182,15 @@ check_info["hpux_tunables.nproc"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 
-def discover_hpux_tunables_maxfiles_lim(section):
-    tunable = "maxfiles_lim"
-    return inventory_hpux_tunables(section, tunable)
+def discover_hpux_tunables_maxfiles_lim(section: Section) -> DiscoveryResult:
+    yield from _discover_tunable(section, "maxfiles_lim")
 
 
-def check_hpux_tunables_maxfiles_lim(_no_item, params, section):
-    tunable = "maxfiles_lim"
-    descr = "files"
-    return check_hpux_tunables(section, params, tunable, descr)
+def check_hpux_tunables_maxfiles_lim(params: Mapping[str, Any], section: Section) -> CheckResult:
+    yield from _check_tunable(section, params, "maxfiles_lim", "files")
 
 
-check_info["hpux_tunables.maxfiles_lim"] = LegacyCheckDefinition(
+check_plugin_hpux_tunables_maxfiles_lim = CheckPlugin(
     name="hpux_tunables_maxfiles_lim",
     service_name="Number of open files",
     sections=["hpux_tunables"],
@@ -222,18 +212,15 @@ check_info["hpux_tunables.maxfiles_lim"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 
-def discover_hpux_tunables_semmni(section):
-    tunable = "semmni"
-    return inventory_hpux_tunables(section, tunable)
+def discover_hpux_tunables_semmni(section: Section) -> DiscoveryResult:
+    yield from _discover_tunable(section, "semmni")
 
 
-def check_hpux_tunables_semmni(_no_item, params, section):
-    tunable = "semmni"
-    descr = "semaphore_ids"
-    return check_hpux_tunables(section, params, tunable, descr)
+def check_hpux_tunables_semmni(params: Mapping[str, Any], section: Section) -> CheckResult:
+    yield from _check_tunable(section, params, "semmni", "semaphore_ids")
 
 
-check_info["hpux_tunables.semmni"] = LegacyCheckDefinition(
+check_plugin_hpux_tunables_semmni = CheckPlugin(
     name="hpux_tunables_semmni",
     service_name="Number of IPC Semaphore IDs",
     sections=["hpux_tunables"],
@@ -255,18 +242,15 @@ check_info["hpux_tunables.semmni"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 
-def discover_hpux_tunables_shmseg(section):
-    tunable = "shmseg"
-    return inventory_hpux_tunables(section, tunable)
+def discover_hpux_tunables_shmseg(section: Section) -> DiscoveryResult:
+    yield from _discover_tunable(section, "shmseg")
 
 
-def check_hpux_tunables_shmseg(_no_item, params, section):
-    tunable = "shmseg"
-    descr = "segments"
-    return check_hpux_tunables(section, params, tunable, descr)
+def check_hpux_tunables_shmseg(params: Mapping[str, Any], section: Section) -> CheckResult:
+    yield from _check_tunable(section, params, "shmseg", "segments")
 
 
-check_info["hpux_tunables.shmseg"] = LegacyCheckDefinition(
+check_plugin_hpux_tunables_shmseg = CheckPlugin(
     name="hpux_tunables_shmseg",
     service_name="Number of shared memory segments",
     sections=["hpux_tunables"],
@@ -288,18 +272,15 @@ check_info["hpux_tunables.shmseg"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 
-def discover_hpux_tunables_semmns(section):
-    tunable = "semmns"
-    return inventory_hpux_tunables(section, tunable)
+def discover_hpux_tunables_semmns(section: Section) -> DiscoveryResult:
+    yield from _discover_tunable(section, "semmns")
 
 
-def check_hpux_tunables_semmns(_no_item, params, section):
-    tunable = "semmns"
-    descr = "entries"
-    return check_hpux_tunables(section, params, tunable, descr)
+def check_hpux_tunables_semmns(params: Mapping[str, Any], section: Section) -> CheckResult:
+    yield from _check_tunable(section, params, "semmns", "entries")
 
 
-check_info["hpux_tunables.semmns"] = LegacyCheckDefinition(
+check_plugin_hpux_tunables_semmns = CheckPlugin(
     name="hpux_tunables_semmns",
     service_name="Number of IPC Semaphores",
     sections=["hpux_tunables"],

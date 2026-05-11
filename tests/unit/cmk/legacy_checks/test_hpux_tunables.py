@@ -4,13 +4,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="misc"
-# mypy: disable-error-code="no-untyped-call"
 
 from collections.abc import Callable
 from typing import Any
 
 import pytest
 
+from cmk.agent_based.v2 import Metric, Result, Service, State
 from cmk.legacy_checks.hpux_tunables import (
     check_hpux_tunables_maxfiles_lim,
     check_hpux_tunables_nkthread,
@@ -59,12 +59,12 @@ _INFO = [
 @pytest.mark.parametrize(
     "discovery_function, expected_discoveries",
     [
-        (discover_hpux_tunables_maxfiles_lim, [(None, {})]),
-        (discover_hpux_tunables_nkthread, [(None, {})]),
-        (discover_hpux_tunables_nproc, [(None, {})]),
-        (discover_hpux_tunables_semmni, [(None, {})]),
-        (discover_hpux_tunables_semmns, [(None, {})]),
-        (discover_hpux_tunables_shmseg, [(None, {})]),
+        (discover_hpux_tunables_maxfiles_lim, [Service()]),
+        (discover_hpux_tunables_nkthread, [Service()]),
+        (discover_hpux_tunables_nproc, [Service()]),
+        (discover_hpux_tunables_semmni, [Service()]),
+        (discover_hpux_tunables_semmns, [Service()]),
+        (discover_hpux_tunables_shmseg, [Service()]),
     ],
 )
 def test_discover_hpux_tunables(
@@ -73,7 +73,7 @@ def test_discover_hpux_tunables(
     """Test discovery functions for hpux_tunables checks."""
     parsed = parse_hpux_tunables(_INFO)
     result = list(discovery_function(parsed))
-    assert sorted(result) == sorted(expected_discoveries)
+    assert result == expected_discoveries
 
 
 @pytest.mark.parametrize(
@@ -82,53 +82,59 @@ def test_discover_hpux_tunables(
         (
             check_hpux_tunables_maxfiles_lim,
             {"levels": (85.0, 90.0)},
-            [(0, "0.24% used (152/63488 files)", [("files", 152, 53964.8, 57139.2, 0, 63488)])],
+            [
+                Result(state=State.OK, summary="0.24% used (152/63488 files)"),
+                Metric("files", 152, levels=(53964.8, 57139.2), boundaries=(0, 63488)),
+            ],
         ),
         (
             check_hpux_tunables_nkthread,
             {"levels": (80.0, 85.0)},
-            [(0, "15.61% used (1314/8416 threads)", [("threads", 1314, 6732.8, 7153.6, 0, 8416)])],
+            [
+                Result(state=State.OK, summary="15.61% used (1314/8416 threads)"),
+                Metric("threads", 1314, levels=(6732.8, 7153.6), boundaries=(0, 8416)),
+            ],
         ),
         (
             check_hpux_tunables_nproc,
             {"levels": (90.0, 96.0)},
             [
-                (
-                    0,
-                    "11.00% used (462/4200 processes)",
-                    [("processes", 462, 3780.0, 4032.0, 0, 4200)],
-                )
+                Result(state=State.OK, summary="11.00% used (462/4200 processes)"),
+                Metric("processes", 462, levels=(3780.0, 4032.0), boundaries=(0, 4200)),
             ],
         ),
         (
             check_hpux_tunables_semmni,
             {"levels": (85.0, 90.0)},
             [
-                (
-                    0,
-                    "0.98% used (41/4200 semaphore_ids)",
-                    [("semaphore_ids", 41, 3570.0, 3780.0, 0, 4200)],
-                )
+                Result(state=State.OK, summary="0.98% used (41/4200 semaphore_ids)"),
+                Metric("semaphore_ids", 41, levels=(3570.0, 3780.0), boundaries=(0, 4200)),
             ],
         ),
         (
             check_hpux_tunables_semmns,
             {"levels": (85.0, 90.0)},
-            [(0, "16.46% used (1383/8400 entries)", [("entries", 1383, 7140.0, 7560.0, 0, 8400)])],
+            [
+                Result(state=State.OK, summary="16.46% used (1383/8400 entries)"),
+                Metric("entries", 1383, levels=(7140.0, 7560.0), boundaries=(0, 8400)),
+            ],
         ),
         (
             check_hpux_tunables_shmseg,
             {"levels": (85.0, 90.0)},
-            [(0, "0.59% used (3/512 segments)", [("segments", 3, 435.2, 460.8, 0, 512)])],
+            [
+                Result(state=State.OK, summary="0.59% used (3/512 segments)"),
+                Metric("segments", 3, levels=(435.2, 460.8), boundaries=(0, 512)),
+            ],
         ),
     ],
 )
 def test_check_hpux_tunables(
-    check_function: Callable[[Any, dict[str, Any], Any], Any],
+    check_function: Callable[[dict[str, Any], Any], Any],
     params: dict[str, Any],
     expected_results: list[Any],
 ) -> None:
     """Test check functions for hpux_tunables checks."""
     parsed = parse_hpux_tunables(_INFO)
-    result = list(check_function(None, params, parsed))
+    result = list(check_function(params, parsed))
     assert result == expected_results

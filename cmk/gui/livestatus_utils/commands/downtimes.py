@@ -137,7 +137,7 @@ def modify_downtimes(
     connection: MultiSiteConnection,
     query: QueryExpression,
     site_id: SiteId | None,
-    end_time: dt.datetime | None = None,
+    end_time: dt.datetime | dt.timedelta | None = None,
     comment: str | None = None,
     user_id: UserId = UserId.builtin(),
 ) -> None:
@@ -884,7 +884,7 @@ def _modify_downtime(
     command: LivestatusCommand,
     downtime_id: int,
     site_id: SiteId | None,
-    end_time: dt.datetime | None,
+    end_time: dt.datetime | dt.timedelta | None,
     comment: str = "",
     user_id: UserId = UserId.builtin(),
 ) -> None:

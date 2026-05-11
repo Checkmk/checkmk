@@ -7,8 +7,8 @@ from pathlib import Path
 
 import pytest
 
-from cmk.bakery.v1 import OS, Plugin
-from cmk.base.plugins.bakery.mk_suseconnect import get_mk_suseconnect_files
+from cmk.bakery.v2_unstable import OS, Plugin
+from cmk.plugins.suseconnect.bakery.mk_suseconnect import bakery_plugin_mk_suseconnect
 
 
 @pytest.mark.parametrize(
@@ -32,5 +32,6 @@ def test_mk_suseconnect_files(
     conf: dict[str, object],
     expected_files: list[Plugin],
 ) -> None:
-    result = list(get_mk_suseconnect_files(conf))
+    parsed = bakery_plugin_mk_suseconnect.parameter_parser(conf)
+    result = list(bakery_plugin_mk_suseconnect.files_function(parsed))
     assert result == expected_files

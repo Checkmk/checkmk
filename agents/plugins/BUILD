@@ -82,7 +82,6 @@ sh_library(
         "mk_scaleio",
         "mk_site_object_counts",
         "mk_sshd_config",
-        "mk_suseconnect",
         "mk_tsm",
         "nvidia_smi",
         "runas",

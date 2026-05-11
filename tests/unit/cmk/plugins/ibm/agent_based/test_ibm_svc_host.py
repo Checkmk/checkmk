@@ -6,7 +6,7 @@
 import pytest
 
 from cmk.agent_based.v2 import Metric, Result, Service, State, StringTable
-from cmk.legacy_checks.ibm_svc_host import (
+from cmk.plugins.ibm.agent_based.ibm_svc_host import (
     _HostParams,
     check_ibm_svc_host,
     discover_ibm_svc_host,

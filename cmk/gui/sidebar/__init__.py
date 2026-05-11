@@ -436,19 +436,40 @@ class SidebarRenderer:
         sidebar_update_interval: float,
         kiosk: bool,
     ) -> None:
-        # TODO: Right now the method renders the full HTML page, i.e.
-        # the header, sidebar, and page content. Ideally we should
-        # split this up. Possible solutions might be:
-        #
-        #     1. If we remove the page side.py the code for the header
-        #        and the page content can be moved to the page index.py.
-        #     2. Alternatively, we could extract a helper function that
-        #        provides the header and body (without content). Then
-        #        helper could then be used by index.py and side.py.
-        #
-        # In both cases this method would only render the sidebar
-        # content afterwards.
+        self.render_chrome_open(
+            title=title,
+            config=config,
+            user_permissions=user_permissions,
+            sidebar_config=sidebar_config,
+            start_url=start_url,
+            screenshot_mode=screenshot_mode,
+            sidebar_notify_interval=sidebar_notify_interval,
+            show_scrollbar=show_scrollbar,
+            sidebar_update_interval=sidebar_update_interval,
+            kiosk=kiosk,
+        )
+        self._show_page_content(content)
+        self.render_chrome_close()
 
+    def render_chrome_open(
+        self,
+        *,
+        title: str | None,
+        config: Config,
+        user_permissions: UserPermissions,
+        sidebar_config: Sequence[tuple[str, str]],
+        start_url: str,
+        screenshot_mode: bool,
+        sidebar_notify_interval: int | None,
+        show_scrollbar: bool,
+        sidebar_update_interval: float,
+        kiosk: bool,
+    ) -> None:
+        """Render html_head, body open, and the navigation + sidebar chrome.
+
+        Stops before opening the content area. The caller renders content and
+        then calls :meth:`render_chrome_close`.
+        """
         html.html_head(
             title or _("Checkmk Sidebar"),
             main_javascript="side",
@@ -472,8 +493,9 @@ class SidebarRenderer:
                 show_scrollbar=show_scrollbar,
                 sidebar_update_interval=sidebar_update_interval,
             )
-        self._show_page_content(content)
 
+    def render_chrome_close(self) -> None:
+        """Close the page started by :meth:`render_chrome_open`."""
         html.body_end()
 
     def _show_body_start(

@@ -8,7 +8,7 @@
 
 import pytest
 
-from cmk.plugins.collection.agent_based.keepalived import hex2ip
+from cmk.plugins.keepalived.agent_based.keepalived import hex2ip
 
 
 @pytest.mark.parametrize(

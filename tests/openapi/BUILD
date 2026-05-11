@@ -18,6 +18,7 @@ py_library(
         "//cmk/gui/livestatus_utils",
         "//cmk/gui/utils:roles",
         "//cmk/gui/watolib:password_store",
+        "//cmk/plugins",
         "//packages/cmk-ccc:user",
         "//packages/cmk-ccc:version",
         "//packages/cmk-livestatus-client:py_livestatus",

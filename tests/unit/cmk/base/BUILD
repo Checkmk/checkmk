@@ -30,6 +30,7 @@ py_test(
     visibility = ["//visibility:private"],
     deps = [
         ":__test__",
+        "//cmk/plugins",
         "//tests/testlib/common:empty_config",
         "//tests/testlib/common:utils",
         "//tests/testlib/unit",

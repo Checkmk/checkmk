@@ -77,6 +77,9 @@ def _build_value_validation_for_class_with_input_hint(
     yield class_type(prefill=InputHint(prefill_value)), DEFAULT_VALUE, False
 
 
+pytestmark = pytest.mark.usefixtures("load_plugins")
+
+
 @pytest.mark.parametrize(
     "form_spec, value, valid",
     [

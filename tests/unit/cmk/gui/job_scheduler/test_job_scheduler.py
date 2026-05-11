@@ -18,7 +18,7 @@ def reraise_exception(exc: Exception) -> str:
     raise exc
 
 
-def test_run_scheduled_jobs() -> None:
+def test_run_scheduled_jobs(load_plugins: None) -> None:
     called = {
         "job1": 0,
         "job2": 0,
@@ -62,7 +62,7 @@ def test_run_scheduled_jobs() -> None:
     assert state.job_executions == {"job1": 3, "job2": 2}
 
 
-def test_run_scheduled_jobs_in_thread() -> None:
+def test_run_scheduled_jobs_in_thread(load_plugins: None) -> None:
     called = threading.Event()
     state = SchedulerState()
     jobs = [

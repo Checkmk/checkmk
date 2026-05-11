@@ -1042,6 +1042,7 @@ def test__evaluate_graph_plugins_1(
     check_command: str,
     registered_graphs: Mapping[str, graphs_api.Graph | graphs_api.Bidirectional],
     graph_ids: Sequence[str],
+    load_plugins: None,
 ) -> None:
     perfdata: Perfdata = [
         PerfDataTuple(metric_name=n, lookup_metric_name=n, value=0, unit_name="")
@@ -1089,6 +1090,7 @@ def test__evaluate_graph_plugins_2(
     check_command: str,
     registered_graphs: Mapping[str, graphs_api.Graph | graphs_api.Bidirectional],
     graph_ids: Sequence[str],
+    load_plugins: None,
 ) -> None:
     perfdata: Perfdata = [
         PerfDataTuple(
@@ -2122,7 +2124,7 @@ class _FakeTemplateGraphSpecificationFS(TemplateGraphSpecification):
         ]
 
 
-def test_template_recipes_fs() -> None:
+def test_template_recipes_fs(load_plugins: None) -> None:
     graph_specification = _FakeTemplateGraphSpecificationFS(
         site=SiteId("site_id"),
         host_name=HostName("host_name"),

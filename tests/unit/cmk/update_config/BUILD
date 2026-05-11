@@ -7,6 +7,7 @@ py_library(
     srcs = ["conftest.py"],
     visibility = [":__subpackages__"],
     deps = [
+        "//cmk/plugins",
         "//tests/testlib/unit",
         requirement("flask"),
         requirement("pytest"),

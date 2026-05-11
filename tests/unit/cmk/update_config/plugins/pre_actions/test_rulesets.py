@@ -22,6 +22,8 @@ from cmk.update_config.plugins.pre_actions.rulesets import PreUpdateRulesets
 from cmk.update_config.plugins.pre_actions.utils import ConflictMode
 from cmk.utils.rulesets.conditions import HostOrServiceConditions
 
+pytestmark = pytest.mark.usefixtures("load_plugins")
+
 
 @pytest.mark.parametrize(
     ["host_condition", "expected"],

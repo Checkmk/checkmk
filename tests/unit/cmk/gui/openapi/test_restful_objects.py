@@ -8,6 +8,7 @@
 import json
 from typing import get_args
 
+import pytest
 from werkzeug.test import create_environ
 
 import cmk.gui.openapi.restful_objects.decorators
@@ -23,6 +24,8 @@ from cmk.gui.openapi.restful_objects.constructors import (
 from cmk.gui.openapi.restful_objects.type_defs import StatusCode, StatusCodeInt
 from cmk.gui.script_helpers import application_and_request_context
 from cmk.livestatus_client.testing import MockLiveStatusConnection
+
+pytestmark = pytest.mark.usefixtures("load_plugins")
 
 
 def test_absolute_url_http() -> None:

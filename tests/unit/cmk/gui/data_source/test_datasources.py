@@ -7,7 +7,7 @@ from cmk.gui.data_source.registry import DataSourceRegistry, row_id
 from tests.testlib.rest_api_client import ClientRegistry
 
 
-def test_comment_row_id_is_unique_per_site() -> None:
+def test_comment_row_id_is_unique_per_site(load_plugins: None) -> None:
     # GIVEN
     registry = DataSourceRegistry()
     registry.register(DataSourceComments)

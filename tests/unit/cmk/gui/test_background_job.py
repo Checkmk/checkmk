@@ -36,7 +36,7 @@ from tests.testlib.common.utils import wait_until
 tracer = get_tracer()
 
 
-def test_registered_background_jobs() -> None:
+def test_registered_background_jobs(load_plugins: None) -> None:
     expected_jobs = [
         "ActivateChangesSchedulerBackgroundJob",
         "ParentScanBackgroundJob",

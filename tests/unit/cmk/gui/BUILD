@@ -15,6 +15,7 @@ py_library(
         "//cmk/gui/utils:roles",
         "//cmk/gui/watolib",
         "//cmk/gui/watolib:password_store",
+        "//cmk/plugins",
         "//cmk/utils",
         "//tests/testlib/unit",
         requirement("flask"),

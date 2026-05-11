@@ -11,6 +11,7 @@ py_library(
     deps = [
         "//cmk/gui:config",
         "//cmk/gui:http",
+        "//cmk/plugins",
         "//packages/cmk-ccc:user",
         "//tests/testlib/unit",
         requirement("flask"),

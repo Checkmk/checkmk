@@ -3,7 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.agent_based.v2 import Result, Service, State
+import pytest
+
+from cmk.agent_based.v2 import IgnoreResultsError, Result, Service, State
 from cmk.plugins.veeam.agent_based.veeam_jobs import (
     check_veeam_jobs,
     discovery_veeam_jobs,
@@ -85,7 +87,11 @@ def test_discovery_veeam_jobs() -> None:
 
 def test_check_veeam_jobs() -> None:
     section = parse_veeam_jobs(STRING_TABLE)
-    items = [service.item or "" for service in discovery_veeam_jobs(section)]
+    items = [
+        service.item or ""
+        for service in discovery_veeam_jobs(section)
+        if service.item != "backup_sync_job"
+    ]
 
     results = [(item, list(check_veeam_jobs(item, section))) for item in items]
     assert results == [
@@ -105,15 +111,6 @@ def test_check_veeam_jobs() -> None:
                 Result(state=State.OK, summary="Creation time: 03.09.2020 15:45:50"),
                 Result(state=State.OK, summary="End time: 03.09.2020 16:44:39"),
                 Result(state=State.OK, summary="Type: Backup"),
-            ],
-        ),
-        (
-            "backup_sync_job",
-            [
-                Result(state=State.OK, summary="State: Working, Result: None"),
-                Result(state=State.OK, summary="Creation time: 20.07.2017 08:25:09"),
-                Result(state=State.OK, summary="End time: 20.07.2017 08:25:29"),
-                Result(state=State.OK, summary="Type: BackupSync"),
             ],
         ),
         (
@@ -152,3 +149,9 @@ def test_check_veeam_jobs() -> None:
             ],
         ),
     ]
+
+
+def test_check_veeam_jobs_running_raises_ignore_results() -> None:
+    section = parse_veeam_jobs(STRING_TABLE)
+    with pytest.raises(IgnoreResultsError):
+        list(check_veeam_jobs("backup_sync_job", section))

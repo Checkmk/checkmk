@@ -5,7 +5,7 @@
 
 import pytest
 
-from cmk.legacy_checks.hp_webmgmt_status import check_hp_webmgmt_status
+from cmk.plugins.hp.agent_based.hp_webmgmt_status import check_hp_webmgmt_status
 
 
 @pytest.mark.parametrize(

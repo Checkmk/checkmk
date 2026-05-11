@@ -2047,7 +2047,6 @@ mode_browse_man = Mode(
 def _mode_automation(app: CheckmkBaseApp, args: list[str]) -> int:
     from cmk.automations.types import AutomationID
     from cmk.base.automations.automations import (
-        AutomationContext,
         AutomationError,
         Automations,
         discover_automations,
@@ -2080,18 +2079,8 @@ def _mode_automation(app: CheckmkBaseApp, args: list[str]) -> int:
             "cmk.automation.args": automation_args,
         },
     ):
-        ctx = AutomationContext(
-            edition=app.edition,
-            make_bake_on_restart=app.make_bake_on_restart,
-            create_core=app.create_core,
-            licensing_handler_factory=app.licensing_handler_factory,
-            make_fetcher_trigger=app.make_fetcher_trigger,
-            make_metric_backend_fetcher=app.make_metric_backend_fetcher,
-            get_builtin_host_labels=app.get_builtin_host_labels,
-            core_performance_settings=app.core_performance_settings,
-        )
         try:
-            result = automations.execute(ctx, name, automation_args)
+            result = automations.execute(app, name, automation_args)
         finally:
             profiling.output_profile()
         if isinstance(result, AutomationError):

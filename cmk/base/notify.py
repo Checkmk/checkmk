@@ -57,27 +57,17 @@ from cmk.automations.results import (
 )
 from cmk.automations.types import AutomationID
 from cmk.base import config, events
-from cmk.base.automations.automations import (
-    Automation,
-    AutomationContext,
-    load_config,
-    load_plugins,
-)
+from cmk.base.automations.automations import Automation, load_config, load_plugins
 from cmk.base.base_app import CheckmkBaseApp
 from cmk.base.modes.modes import Mode, Option
 from cmk.base.utils import register_sigint_handler
 from cmk.ccc import store
-from cmk.ccc.exceptions import (
-    MKGeneralException,
-    MKTimeout,
-)
+from cmk.ccc.exceptions import MKGeneralException, MKTimeout
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.regex import regex
 from cmk.ccc.timeout import Timeout
 from cmk.ccc.version import Edition
-from cmk.checkengine.plugins import (
-    AgentBasedPlugins,
-)
+from cmk.checkengine.plugins import AgentBasedPlugins
 from cmk.events.event_context import EnrichedEventContext, EventContext
 from cmk.events.log_to_history import (
     log_to_history,
@@ -822,7 +812,7 @@ def _notify_keepalive(
 
 
 def _automation_notification_replay(
-    ctx: AutomationContext,
+    app: CheckmkBaseApp,
     args: list[str],
     plugins: AgentBasedPlugins | None,
     loading_result: config.LoadingResult | None,
@@ -830,8 +820,8 @@ def _automation_notification_replay(
     plugins = plugins or load_plugins()  # do we really still need this?
     loading_result = loading_result or load_config(
         discovery_rulesets=(),
-        get_builtin_host_labels=ctx.get_builtin_host_labels,
-        edition=ctx.edition,
+        get_builtin_host_labels=app.get_builtin_host_labels,
+        edition=app.edition,
     )
     logger = logging.getLogger("cmk.base.automations")  # this might go nowhere.
 
@@ -841,7 +831,7 @@ def _automation_notification_replay(
         http_proxy_config.make_http_proxy_getter(loading_result.loaded_config.http_proxies),
         make_ensure_nagios(loading_result.loaded_config.monitoring_core),
         int(nr),
-        notification_config=make_notification_config(ctx.edition, loading_result),
+        notification_config=make_notification_config(app.edition, loading_result),
         define_servicegroups=loading_result.loaded_config.define_servicegroups,
         config_contacts=loading_result.loaded_config.contacts,
         all_timeperiods=get_all_timeperiods(loading_result.loaded_config.timeperiods),
@@ -853,7 +843,7 @@ def _automation_notification_replay(
 
 
 def _automation_notification_analyse(
-    ctx: AutomationContext,
+    app: CheckmkBaseApp,
     args: list[str],
     plugins: AgentBasedPlugins | None,
     loading_result: config.LoadingResult | None,
@@ -861,8 +851,8 @@ def _automation_notification_analyse(
     plugins = plugins or load_plugins()  # do we really still need this?
     loading_result = loading_result or load_config(
         discovery_rulesets=(),
-        get_builtin_host_labels=ctx.get_builtin_host_labels,
-        edition=ctx.edition,
+        get_builtin_host_labels=app.get_builtin_host_labels,
+        edition=app.edition,
     )
     logger = logging.getLogger("cmk.base.automations")  # this might go nowhere.
 
@@ -873,7 +863,7 @@ def _automation_notification_analyse(
             http_proxy_config.make_http_proxy_getter(loading_result.loaded_config.http_proxies),
             make_ensure_nagios(loading_result.loaded_config.monitoring_core),
             int(nr),
-            notification_config=make_notification_config(ctx.edition, loading_result),
+            notification_config=make_notification_config(app.edition, loading_result),
             define_servicegroups=loading_result.loaded_config.define_servicegroups,
             config_contacts=loading_result.loaded_config.contacts,
             all_timeperiods=get_all_timeperiods(loading_result.loaded_config.timeperiods),
@@ -885,7 +875,7 @@ def _automation_notification_analyse(
 
 
 def _automation_notification_test(
-    ctx: AutomationContext,
+    app: CheckmkBaseApp,
     args: list[str],
     plugins: AgentBasedPlugins | None,
     loading_result: config.LoadingResult | None,
@@ -896,8 +886,8 @@ def _automation_notification_test(
     plugins = plugins or load_plugins()  # do we really still need this?
     loading_result = loading_result or load_config(
         discovery_rulesets=(),
-        get_builtin_host_labels=ctx.get_builtin_host_labels,
-        edition=ctx.edition,
+        get_builtin_host_labels=app.get_builtin_host_labels,
+        edition=app.edition,
     )
     ensure_nagios = make_ensure_nagios(loading_result.loaded_config.monitoring_core)
     logger = logging.getLogger("cmk.base.automations")  # this might go nowhere.
@@ -908,7 +898,7 @@ def _automation_notification_test(
             loading_result.config_cache.notification_plugin_parameters,
             http_proxy_config.make_http_proxy_getter(loading_result.loaded_config.http_proxies),
             ensure_nagios,
-            notification_config=make_notification_config(ctx.edition, loading_result),
+            notification_config=make_notification_config(app.edition, loading_result),
             define_servicegroups=loading_result.loaded_config.define_servicegroups,
             config_contacts=loading_result.loaded_config.contacts,
             all_timeperiods=get_all_timeperiods(loading_result.loaded_config.timeperiods),
@@ -921,7 +911,7 @@ def _automation_notification_test(
 
 
 def _automation_get_bulks(
-    ctx: AutomationContext,
+    app: CheckmkBaseApp,
     args: list[str],
     plugins: AgentBasedPlugins | None,
     loading_result: config.LoadingResult | None,
@@ -931,8 +921,8 @@ def _automation_get_bulks(
     if loading_result is None:
         loading_result = load_config(
             discovery_rulesets=(),
-            get_builtin_host_labels=ctx.get_builtin_host_labels,
-            edition=ctx.edition,
+            get_builtin_host_labels=app.get_builtin_host_labels,
+            edition=app.edition,
         )
     return NotificationGetBulksResult(
         _find_bulks(

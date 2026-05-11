@@ -340,6 +340,7 @@ allows = ["@ccc", "cmk.bakery", "cmk.utils"]
 allows = [
   "cmk.automations",
   "cmk.base.automations",
+  "cmk.base.base_app",
   "cmk.base.config",
   "cmk.base.notify",
   "cmk.ccc.version",

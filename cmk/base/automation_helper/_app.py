@@ -22,7 +22,8 @@ from cmk.automations.results import ABCAutomationResult
 from cmk.automations.types import AutomationID
 from cmk.base import config
 from cmk.base.app import make_app
-from cmk.base.automations.automations import AutomationContext, AutomationError
+from cmk.base.automations.automations import AutomationError
+from cmk.base.base_app import CheckmkBaseApp
 from cmk.base.config import ConfigCache
 from cmk.ccc import tty
 from cmk.ccc import version as cmk_version
@@ -42,7 +43,7 @@ from ._tracer import TRACER
 class AutomationEngine(Protocol):
     def execute(
         self,
-        ctx: AutomationContext,
+        app: CheckmkBaseApp,
         cmd: AutomationID,
         args: list[str],
         plugins: AgentBasedPlugins | None,
@@ -288,16 +289,7 @@ def _execute_automation_endpoint(
         try:
             automation_start_time = time.time()
             result_or_error_code: ABCAutomationResult | int = engine.execute(
-                AutomationContext(
-                    edition=(app := make_app(edition)).edition,
-                    make_bake_on_restart=app.make_bake_on_restart,
-                    create_core=app.create_core,
-                    licensing_handler_factory=app.licensing_handler_factory,
-                    make_fetcher_trigger=app.make_fetcher_trigger,
-                    make_metric_backend_fetcher=app.make_metric_backend_fetcher,
-                    get_builtin_host_labels=app.get_builtin_host_labels,
-                    core_performance_settings=app.core_performance_settings,
-                ),
+                make_app(edition),
                 payload.name,
                 list(payload.args),
                 state.plugins,

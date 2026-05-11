@@ -36,7 +36,7 @@ import cmk.ccc.version as cmk_version
 import cmk.utils.paths
 from cmk.automations.results import CreateDiagnosticsDumpResult
 from cmk.automations.types import AutomationID
-from cmk.base.automations.automations import Automation, AutomationContext, load_config
+from cmk.base.automations.automations import Automation, load_config
 from cmk.base.base_app import CheckmkBaseApp
 from cmk.base.config import LoadingResult
 from cmk.base.configlib.loaded_config import LoadedConfigFragment
@@ -226,7 +226,7 @@ mode_create_diagnostics_dump = Mode(
 
 
 def handler(
-    ctx: AutomationContext,
+    app: CheckmkBaseApp,
     args: DiagnosticsCLParameters,
     plugins: AgentBasedPlugins | None,
     loading_result: LoadingResult | None,
@@ -236,8 +236,8 @@ def handler(
     if loading_result is None:
         loading_result = load_config(
             discovery_rulesets=(),
-            get_builtin_host_labels=ctx.get_builtin_host_labels,
-            edition=ctx.edition,
+            get_builtin_host_labels=app.get_builtin_host_labels,
+            edition=app.edition,
         )
     buf = io.StringIO()
     with redirect_stdout(buf), redirect_stderr(buf):
@@ -245,9 +245,9 @@ def handler(
         # NOTE: All the stuff is logged on this level only, which is below the default WARNING level.
         log.logger.setLevel(logging.INFO)
         dump = DiagnosticsDump(
-            edition=ctx.edition,
+            edition=app.edition,
             loaded_config=loading_result.loaded_config,
-            core_performance_settings=ctx.core_performance_settings,
+            core_performance_settings=app.core_performance_settings,
             omd_config=omd_config,
             omd_root=cmk.utils.paths.omd_root,
             parameters=deserialize_cl_parameters(args),

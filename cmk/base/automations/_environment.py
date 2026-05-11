@@ -30,11 +30,8 @@ from typing import Literal, overload
 
 import cmk.utils.paths
 from cmk.base import config
-from cmk.base.automations.automations import (
-    AutomationContext,
-    load_config,
-    load_plugins,
-)
+from cmk.base.automations.automations import load_config, load_plugins
+from cmk.base.base_app import CheckmkBaseApp
 from cmk.base.config import ConfigCache
 from cmk.base.configlib.checkengine import DiscoveryConfig
 from cmk.base.configlib.loaded_config import LoadedConfigFragment
@@ -96,14 +93,14 @@ class AutomationEnvironment:
     taking a required enum so the choice is always explicit at the call site.
     """
 
-    ctx: AutomationContext
+    app: CheckmkBaseApp
     plugins: AgentBasedPlugins
     loading_result: config.LoadingResult
 
     @classmethod
     def create(
         cls,
-        ctx: AutomationContext,
+        app: CheckmkBaseApp,
         plugins: AgentBasedPlugins | None,
         loading_result: config.LoadingResult | None,
     ) -> AutomationEnvironment:
@@ -113,10 +110,10 @@ class AutomationEnvironment:
         if loading_result is None:
             loading_result = load_config(
                 discovery_rulesets=extract_known_discovery_rulesets(plugins),
-                get_builtin_host_labels=ctx.get_builtin_host_labels,
-                edition=ctx.edition,
+                get_builtin_host_labels=app.get_builtin_host_labels,
+                edition=app.edition,
             )
-        return cls(ctx=ctx, plugins=plugins, loading_result=loading_result)
+        return cls(app=app, plugins=plugins, loading_result=loading_result)
 
     # --- Pass-through accessors (no caching — just re-expose what's already there).
 
@@ -243,7 +240,7 @@ class AutomationEnvironment:
         *,
         config_source: ConfigSource,
     ) -> FetcherTrigger:
-        return self.ctx.make_fetcher_trigger(
+        return self.app.make_fetcher_trigger(
             relay_id,
             self.trusted_ca_path(config_source=config_source),
         )

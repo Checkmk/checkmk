@@ -37,6 +37,7 @@ py_library(
         "//cmk/base:dump-host",
         "//cmk/base:snmp-plugin-store",
         "//cmk/base:utils",
+        "//cmk/base/automations",
         "//cmk/base/configlib",
         "//cmk/base/core",
         "//cmk/base/errorhandling",

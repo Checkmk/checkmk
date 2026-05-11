@@ -93,11 +93,11 @@ from cmk.base.automations._environment import (
 )
 from cmk.base.automations.automations import (
     Automation,
-    AutomationContext,
     load_config,
     load_plugins,
     MKAutomationError,
 )
+from cmk.base.base_app import CheckmkBaseApp
 from cmk.base.checkers import (
     CheckerConfig,
     CheckerPluginMapper,
@@ -311,7 +311,7 @@ def _extract_directive(directive: str, args: list[str]) -> tuple[bool, list[str]
 
 
 def _automation_service_discovery(
-    ctx: AutomationContext,
+    app: CheckmkBaseApp,
     args: list[str],
     plugins: AgentBasedPlugins | None,
     loading_result: config.LoadingResult | None,
@@ -337,7 +337,7 @@ def _automation_service_discovery(
     settings = DiscoverySettings.from_automation_arg(args[0])
     hostnames = [HostName(h) for h in islice(args, 1, None)]
 
-    env = AutomationEnvironment.create(ctx, plugins, loading_result)
+    env = AutomationEnvironment.create(app, plugins, loading_result)
     plugins = env.plugins
     config_cache = env.config_cache
     hosts_config = env.hosts_config
@@ -404,7 +404,7 @@ def _automation_service_discovery(
             path=cmk.utils.password_store.pending_secrets_path_site(),
             secrets=secrets,
         ),
-        metric_backend_fetcher_factory=lambda hn: ctx.make_metric_backend_fetcher(
+        metric_backend_fetcher_factory=lambda hn: app.make_metric_backend_fetcher(
             hn,
             config_cache.explicit_host_attributes,
             config_cache.check_mk_check_interval,
@@ -479,14 +479,14 @@ def _automation_service_discovery(
 
 
 def _automation_special_agent_discovery_preview(
-    ctx: AutomationContext,
+    app: CheckmkBaseApp,
     args: list[str],
     plugins: AgentBasedPlugins | None,
     loading_result: config.LoadingResult | None,
 ) -> ServiceDiscoveryPreviewResult:
     run_settings = DiagSpecialAgentInput.deserialize(sys.stdin.read())
 
-    env = AutomationEnvironment.create(ctx, plugins, loading_result)
+    env = AutomationEnvironment.create(app, plugins, loading_result)
 
     file_cache_options = FileCacheOptions(use_outdated=False, use_only_cache=False)
     ad_hoc_secrets = AdHocSecrets(
@@ -549,7 +549,7 @@ def _automation_special_agent_discovery_preview(
 
 
 def _automation_discovery_preview(
-    ctx: AutomationContext,
+    app: CheckmkBaseApp,
     args: list[str],
     plugins: AgentBasedPlugins | None,
     loading_result: config.LoadingResult | None,
@@ -561,7 +561,7 @@ def _automation_discovery_preview(
     # We intend to report the config warnings. Clear the global state :-(
     config_warnings.initialize()
 
-    env = AutomationEnvironment.create(ctx, plugins, loading_result)
+    env = AutomationEnvironment.create(app, plugins, loading_result)
     config_cache = env.config_cache
     label_manager = env.label_manager
     ip_lookup_config = env.ip_lookup_config
@@ -631,7 +631,7 @@ def _automation_discovery_preview(
         # avoid using cache unless prevent_fetching is set (-> fetch new data for rescan
         # and tabula rasa)
         max_cachefile_age=MaxAge.zero(),
-        metric_backend_fetcher_factory=lambda hn: ctx.make_metric_backend_fetcher(
+        metric_backend_fetcher_factory=lambda hn: app.make_metric_backend_fetcher(
             hn,
             config_cache.explicit_host_attributes,
             config_cache.check_mk_check_interval,
@@ -1028,13 +1028,13 @@ def _warn_service_name_conflicts(host_name: HostName, check_preview: CheckPrevie
 
 
 def _automation_autodiscovery(
-    ctx: AutomationContext,
+    app: CheckmkBaseApp,
     args: list[str],
     plugins: AgentBasedPlugins | None,
     loading_result: config.LoadingResult | None,
 ) -> AutodiscoveryResult:
     with redirect_stdout(open(os.devnull, "w")):
-        result = _execute_autodiscovery(ctx, plugins, loading_result)
+        result = _execute_autodiscovery(app, plugins, loading_result)
 
     return AutodiscoveryResult(*result)
 
@@ -1066,7 +1066,7 @@ def _make_configured_notify_relay(
 
 
 def _execute_autodiscovery(
-    ctx: AutomationContext,
+    app: CheckmkBaseApp,
     ab_plugins: AgentBasedPlugins | None,
     loading_result: config.LoadingResult | None,
 ) -> tuple[Mapping[HostName, DiscoveryReport], bool]:
@@ -1076,7 +1076,7 @@ def _execute_autodiscovery(
         console.verbose("No hosts to discover, returning.")
         return {}, False
 
-    env = AutomationEnvironment.create(ctx, ab_plugins, loading_result)
+    env = AutomationEnvironment.create(app, ab_plugins, loading_result)
 
     # error handling: we're redirecting stdout to /dev/null anyway,
     # and not using the collected errors. However, the config creation
@@ -1149,7 +1149,7 @@ def _execute_autodiscovery(
             ),
             secrets=secrets,
         ),
-        metric_backend_fetcher_factory=lambda hn: ctx.make_metric_backend_fetcher(
+        metric_backend_fetcher_factory=lambda hn: app.make_metric_backend_fetcher(
             hn,
             env.config_cache.explicit_host_attributes,
             env.config_cache.check_mk_check_interval,
@@ -1279,8 +1279,8 @@ def _execute_autodiscovery(
     if not activation_required:
         return discovery_results, False
 
-    core = ctx.create_core(
-        ctx.edition,
+    core = app.create_core(
+        app.edition,
         env.ruleset_matcher,
         env.label_manager,
         env.loaded_config,
@@ -1294,9 +1294,9 @@ def _execute_autodiscovery(
     ):
         try:
             cache_manager.clear_all()
-            env.config_cache.initialize(ctx.get_builtin_host_labels)
+            env.config_cache.initialize(app.get_builtin_host_labels)
             hosts_config = config.make_hosts_config(env.loaded_config)
-            bake_on_restart = ctx.make_bake_on_restart(env.loading_result, hosts_config.hosts)
+            bake_on_restart = app.make_bake_on_restart(env.loading_result, hosts_config.hosts)
             notify_relay = _make_configured_notify_relay(bool(env.loaded_config.relays))
 
             # reset these to their original value to create a correct config
@@ -1361,7 +1361,7 @@ def _execute_autodiscovery(
                 )
         finally:
             cache_manager.clear_all()
-            env.config_cache.initialize(ctx.get_builtin_host_labels)
+            env.config_cache.initialize(app.get_builtin_host_labels)
 
     return discovery_results, True
 
@@ -1397,14 +1397,14 @@ def _make_get_effective_host_of_autocheck_callback(
 # The last version to support the old 'set-autochecks' was 2.4
 # Consider changing the name back to 'set-autochecks' in 2.6
 def _automation_set_autochecks_v2(
-    ctx: AutomationContext,
+    app: CheckmkBaseApp,
     args: list[str],
     plugins: AgentBasedPlugins | None,
     loading_result: config.LoadingResult | None,
 ) -> SetAutochecksV2Result:
     set_autochecks_input = SetAutochecksInput.deserialize(sys.stdin.read())
 
-    env = AutomationEnvironment.create(ctx, plugins, loading_result)
+    env = AutomationEnvironment.create(app, plugins, loading_result)
 
     service_descriptions: Mapping[tuple[HostName, CheckPluginName, str | None], ServiceName] = {
         (host, autocheck_entry.check_plugin_name, autocheck_entry.item): service_name
@@ -1455,7 +1455,7 @@ def _automation_set_autochecks_v2(
 
 
 def _automation_update_host_labels(
-    ctx: AutomationContext,
+    app: CheckmkBaseApp,
     args: list[str],
     plugins: AgentBasedPlugins | None,
     loading_result: config.LoadingResult | None,
@@ -1472,8 +1472,8 @@ def _automation_update_host_labels(
     if loading_result is None:
         loading_result = load_config(
             discovery_rulesets=(),
-            get_builtin_host_labels=ctx.get_builtin_host_labels,
-            edition=ctx.edition,
+            get_builtin_host_labels=app.get_builtin_host_labels,
+            edition=app.edition,
         )
     _trigger_discovery_check(
         loading_result.config_cache,
@@ -1496,14 +1496,14 @@ class AutomationRenameHosts:
     # [("old1", "new1"), ("old2", "new2")])
     def execute(
         self,
-        ctx: AutomationContext,
+        app: CheckmkBaseApp,
         args: list[str],
         plugins: AgentBasedPlugins | None,
         loading_result: config.LoadingResult | None,
     ) -> RenameHostsResult:
         renamings: list[HistoryFilePair] = ast.literal_eval(sys.stdin.read())
 
-        env = AutomationEnvironment.create(ctx, plugins, loading_result)
+        env = AutomationEnvironment.create(app, plugins, loading_result)
 
         actions: list[str] = []
 
@@ -1519,8 +1519,8 @@ class AutomationRenameHosts:
             if self._finished_history_files[(oldname, newname)]:
                 actions.append("history")
 
-        core = ctx.create_core(
-            ctx.edition,
+        core = app.create_core(
+            app.edition,
             env.ruleset_matcher,
             env.label_manager,
             env.loaded_config,
@@ -1563,7 +1563,7 @@ class AutomationRenameHosts:
                             tag_list=env.config_cache.host_tags.tag_list,
                             service_dependencies=env.loaded_config.service_dependencies,
                         ),
-                        bake_on_restart=ctx.make_bake_on_restart(
+                        bake_on_restart=app.make_bake_on_restart(
                             env.loading_result, hosts_config.hosts
                         ),
                         notify_relay=_make_configured_notify_relay(bool(env.loaded_config.relays)),
@@ -1830,14 +1830,14 @@ s/(HOST|SERVICE) NOTIFICATION: ([^;]+);{oldregex};/\1 NOTIFICATION: \2;{newname}
 
 
 def _automation_get_service_labels(
-    ctx: AutomationContext,
+    app: CheckmkBaseApp,
     args: list[str],
     plugins: AgentBasedPlugins | None,
     loading_result: config.LoadingResult | None,
 ) -> GetServicesLabelsResult:
     host_name, services = HostName(args[0]), args[1:]
 
-    env = AutomationEnvironment.create(ctx, plugins, loading_result)
+    env = AutomationEnvironment.create(app, plugins, loading_result)
     env.ruleset_matcher.ruleset_optimizer.set_all_processed_hosts({host_name})
 
     # I think we might be computing something here that the caller already knew.
@@ -1859,7 +1859,7 @@ def _automation_get_service_labels(
 
 
 def _automation_get_service_name(
-    ctx: AutomationContext,
+    app: CheckmkBaseApp,
     args: list[str],
     plugins: AgentBasedPlugins | None,
     loading_result: config.LoadingResult | None,
@@ -1867,7 +1867,7 @@ def _automation_get_service_name(
     host_name = HostName(args[0])
     service_id = ServiceID(CheckPluginName(args[1]), ast.literal_eval(args[2]))
 
-    env = AutomationEnvironment.create(ctx, plugins, loading_result)
+    env = AutomationEnvironment.create(app, plugins, loading_result)
     env.ruleset_matcher.ruleset_optimizer.set_all_processed_hosts({host_name})
 
     return GetServiceNameResult(
@@ -1905,7 +1905,7 @@ class ServiceSearchContext:
 class AutomationAnalyseServices:
     def execute(
         self,
-        ctx: AutomationContext,
+        app: CheckmkBaseApp,
         args: list[str],
         plugins: AgentBasedPlugins | None,
         loading_result: config.LoadingResult | None,
@@ -1914,7 +1914,7 @@ class AutomationAnalyseServices:
         servicedesc = args[1]
         logger = logging.getLogger("cmk.base.automations")  # this might go nowhere.
 
-        env = AutomationEnvironment.create(ctx, plugins, loading_result)
+        env = AutomationEnvironment.create(app, plugins, loading_result)
         env.ruleset_matcher.ruleset_optimizer.set_all_processed_hosts({host_name})
 
         sctx = ServiceSearchContext(
@@ -2151,7 +2151,7 @@ class AutomationAnalyseServices:
 
 
 def _automation_analyse_host(
-    ctx: AutomationContext,
+    app: CheckmkBaseApp,
     args: list[str],
     plugins: AgentBasedPlugins | None,
     loading_result: config.LoadingResult | None,
@@ -2161,8 +2161,8 @@ def _automation_analyse_host(
     if loading_result is None:
         loading_result = load_config(
             discovery_rulesets=(),
-            get_builtin_host_labels=ctx.get_builtin_host_labels,
-            edition=ctx.edition,
+            get_builtin_host_labels=app.get_builtin_host_labels,
+            edition=app.edition,
         )
     ruleset_matcher = loading_result.config_cache.ruleset_matcher
     label_manager = loading_result.config_cache.label_manager
@@ -2175,7 +2175,7 @@ def _automation_analyse_host(
 
 
 def _automation_analyze_host_rule_matches(
-    ctx: AutomationContext,
+    app: CheckmkBaseApp,
     args: list[str],
     plugins: AgentBasedPlugins | None,
     loading_result: config.LoadingResult | None,
@@ -2187,8 +2187,8 @@ def _automation_analyze_host_rule_matches(
     if loading_result is None:
         loading_result = load_config(
             discovery_rulesets=(),
-            get_builtin_host_labels=ctx.get_builtin_host_labels,
-            edition=ctx.edition,
+            get_builtin_host_labels=app.get_builtin_host_labels,
+            edition=app.edition,
         )
     ruleset_matcher = loading_result.config_cache.ruleset_matcher
     label_manager = loading_result.config_cache.label_manager
@@ -2211,7 +2211,7 @@ def _automation_analyze_host_rule_matches(
 
 
 def _automation_analyze_service_rule_matches(
-    ctx: AutomationContext,
+    app: CheckmkBaseApp,
     args: list[str],
     plugins: AgentBasedPlugins | None,
     loading_result: config.LoadingResult | None,
@@ -2227,8 +2227,8 @@ def _automation_analyze_service_rule_matches(
     if loading_result is None:
         loading_result = load_config(
             discovery_rulesets=(),
-            get_builtin_host_labels=ctx.get_builtin_host_labels,
-            edition=ctx.edition,
+            get_builtin_host_labels=app.get_builtin_host_labels,
+            edition=app.edition,
         )
     ruleset_matcher = loading_result.config_cache.ruleset_matcher
     label_manager = loading_result.config_cache.label_manager
@@ -2257,7 +2257,7 @@ def _automation_analyze_service_rule_matches(
 
 
 def _automation_analyze_host_rule_effectiveness(
-    ctx: AutomationContext,
+    app: CheckmkBaseApp,
     args: list[str],
     plugins: AgentBasedPlugins | None,
     loading_result: config.LoadingResult | None,
@@ -2268,8 +2268,8 @@ def _automation_analyze_host_rule_effectiveness(
     if loading_result is None:
         loading_result = load_config(
             discovery_rulesets=(),
-            get_builtin_host_labels=ctx.get_builtin_host_labels,
-            edition=ctx.edition,
+            get_builtin_host_labels=app.get_builtin_host_labels,
+            edition=app.edition,
         )
     config_cache = loading_result.config_cache
     ruleset_matcher = config_cache.ruleset_matcher
@@ -2363,7 +2363,7 @@ class ABCDeleteHosts:
 class AutomationDeleteHosts(ABCDeleteHosts):
     def execute(
         self,
-        ctx: AutomationContext,
+        app: CheckmkBaseApp,
         args: list[str],
         plugins: AgentBasedPlugins | None,
         loading_result: config.LoadingResult | None,
@@ -2418,7 +2418,7 @@ class AutomationDeleteHostsKnownRemote(ABCDeleteHosts):
 
     def execute(
         self,
-        ctx: AutomationContext,
+        app: CheckmkBaseApp,
         args: list[str],
         plugins: AgentBasedPlugins | None,
         loading_result: config.LoadingResult | None,
@@ -2460,7 +2460,7 @@ class AutomationRestart:
 
     def execute(
         self,
-        ctx: AutomationContext,
+        app: CheckmkBaseApp,
         args: list[str],
         plugins: AgentBasedPlugins | None,
         loading_result: config.LoadingResult | None,
@@ -2470,15 +2470,15 @@ class AutomationRestart:
         else:
             nodes = None
 
-        env = AutomationEnvironment.create(ctx, plugins, loading_result)
+        env = AutomationEnvironment.create(app, plugins, loading_result)
         # Rebuild hosts_config from the loaded config rather than reading
         # env.hosts_config: the restart path historically uses make_hosts_config
         # here, preserving compatibility with shadow-host handling.
         hosts_config = config.make_hosts_config(env.loaded_config)
 
         rctx = RestartContext(
-            monitoring_core=ctx.create_core(
-                ctx.edition,
+            monitoring_core=app.create_core(
+                app.edition,
                 env.ruleset_matcher,
                 env.label_manager,
                 env.loaded_config,
@@ -2494,7 +2494,7 @@ class AutomationRestart:
                 tag_list=env.config_cache.host_tags.tag_list,
                 service_dependencies=env.loaded_config.service_dependencies,
             ),
-            bake_on_restart=ctx.make_bake_on_restart(env.loading_result, hosts_config.hosts),
+            bake_on_restart=app.make_bake_on_restart(env.loading_result, hosts_config.hosts),
             notify_relay=_make_configured_notify_relay(bool(env.loaded_config.relays)),
         )
 
@@ -2549,12 +2549,12 @@ class AutomationReload(AutomationRestart):
 
     def execute(
         self,
-        ctx: AutomationContext,
+        app: CheckmkBaseApp,
         args: list[str],
         plugins: AgentBasedPlugins | None,
         loading_result: config.LoadingResult | None,
     ) -> ReloadResult:
-        return ReloadResult(super().execute(ctx, args, plugins, loading_result).config_warnings)
+        return ReloadResult(super().execute(app, args, plugins, loading_result).config_warnings)
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -2625,7 +2625,7 @@ def _execute_silently(
 
 
 def _automation_get_configuration(
-    ctx: AutomationContext,
+    app: CheckmkBaseApp,
     args: list[str],
     plugins: AgentBasedPlugins | None,
     loading_result: config.LoadingResult | None,
@@ -2644,8 +2644,8 @@ def _automation_get_configuration(
 
     config.load(
         discovery_rulesets=(),
-        get_builtin_host_labels=ctx.get_builtin_host_labels,
-        edition=ctx.edition,
+        get_builtin_host_labels=app.get_builtin_host_labels,
+        edition=app.edition,
         with_conf_d=False,
     )
 
@@ -2659,7 +2659,7 @@ def _automation_get_configuration(
 
 
 def _automation_get_check_information(
-    ctx: AutomationContext,
+    app: CheckmkBaseApp,
     args: list[str],
     plugins: AgentBasedPlugins | None,
     loading_result: config.LoadingResult | None,
@@ -2705,7 +2705,7 @@ def _get_man_page_title(man_page_path_map: Mapping[str, Path], plugin_name: Chec
 
 
 def _automation_get_section_information(
-    ctx: AutomationContext,
+    app: CheckmkBaseApp,
     args: object,
     plugins: AgentBasedPlugins | None,
     loading_result: config.LoadingResult | None,
@@ -2732,7 +2732,7 @@ def _automation_get_section_information(
 
 
 def _automation_scan_parents(
-    ctx: AutomationContext,
+    app: CheckmkBaseApp,
     args: list[str],
     plugins: AgentBasedPlugins | None,
     loading_result: config.LoadingResult | None,
@@ -2747,7 +2747,7 @@ def _automation_scan_parents(
     if not cmk.base.parent_scan.traceroute_available():
         raise MKAutomationError("Cannot find binary <tt>traceroute</tt> in search path.")
 
-    env = AutomationEnvironment.create(ctx, plugins, loading_result)
+    env = AutomationEnvironment.create(app, plugins, loading_result)
 
     hosts_config = config.make_hosts_config(env.loaded_config)
 
@@ -2837,7 +2837,7 @@ def get_special_agent_commandline(
 
 
 def _automation_diag_special_agent(
-    ctx: AutomationContext,
+    app: CheckmkBaseApp,
     args: list[str],
     plugins: AgentBasedPlugins | None,
     loading_result: config.LoadingResult | None,
@@ -2918,7 +2918,7 @@ def _execute_diag_special_agent(
 
 
 def _automation_ping_host(
-    ctx: AutomationContext,
+    app: CheckmkBaseApp,
     args: list[str],
     plugins: AgentBasedPlugins | None,
     loaded_config: config.LoadingResult | None,
@@ -2961,7 +2961,7 @@ def _execute_ping(ip_or_dns_name: str, base_cmd: PingHostCmd) -> tuple[int, str]
 
 
 def _automation_diag_cmk_agent(
-    ctx: AutomationContext,
+    app: CheckmkBaseApp,
     args: list[str],
     _plugins: AgentBasedPlugins | None,
     _loading_result: config.LoadingResult | None,
@@ -3048,7 +3048,7 @@ def _automation_diag_cmk_agent(
 
 
 def _automation_diag_snmp(
-    ctx: AutomationContext,
+    app: CheckmkBaseApp,
     args: list[str],
     _plugins: AgentBasedPlugins | None,
     _loading_result: config.LoadingResult | None,
@@ -3169,7 +3169,7 @@ def _automation_diag_snmp(
 class AutomationDiagHost:
     def execute(
         self,
-        ctx: AutomationContext,
+        app: CheckmkBaseApp,
         args: list[str],
         plugins: AgentBasedPlugins | None,
         loading_result: config.LoadingResult | None,
@@ -3179,7 +3179,7 @@ class AutomationDiagHost:
         ipaddress = HostAddress(ipaddress)
         agent_port, snmp_timeout, snmp_retries = map(int, args[4:7])
 
-        env = AutomationEnvironment.create(ctx, plugins, loading_result)
+        env = AutomationEnvironment.create(app, plugins, loading_result)
         env.ruleset_matcher.ruleset_optimizer.set_all_processed_hosts({host_name})
         ip_address_of_bare = ip_lookup.make_lookup_ip_address(env.ip_lookup_config)
 
@@ -3229,7 +3229,7 @@ class AutomationDiagHost:
             if test == "agent":
                 return DiagHostResult(
                     *self._execute_agent(
-                        ctx,
+                        app,
                         env.loaded_config,
                         env.config_cache,
                         env.label_manager,
@@ -3309,7 +3309,7 @@ class AutomationDiagHost:
 
     def _execute_agent(
         self,
-        ctx: AutomationContext,
+        app: CheckmkBaseApp,
         loaded_config: LoadedConfigFragment,
         config_cache: config.ConfigCache,
         label_manager: LabelManager,
@@ -3355,7 +3355,7 @@ class AutomationDiagHost:
             )
         )
 
-        trigger = ctx.make_fetcher_trigger(host_relay_id, cmk.utils.paths.trusted_ca_file)
+        trigger = app.make_fetcher_trigger(host_relay_id, cmk.utils.paths.trusted_ca_file)
         for source in sources.make_sources(
             plugins,
             host_name,
@@ -3428,7 +3428,7 @@ class AutomationDiagHost:
             ),
             agent_connection_mode=config_cache.agent_connection_mode(host_name),
             check_mk_check_interval=config_cache.check_mk_check_interval(host_name),
-            metric_backend_fetcher=ctx.make_metric_backend_fetcher(
+            metric_backend_fetcher=app.make_metric_backend_fetcher(
                 host_name,
                 config_cache.explicit_host_attributes,
                 config_cache.check_mk_check_interval,
@@ -3650,7 +3650,7 @@ class AutomationDiagHost:
 class AutomationActiveCheck:
     def execute(
         self,
-        ctx: AutomationContext,
+        app: CheckmkBaseApp,
         args: list[str],
         plugins: AgentBasedPlugins | None,
         loading_result: config.LoadingResult | None,
@@ -3658,7 +3658,7 @@ class AutomationActiveCheck:
         host_name = HostName(args[0])
         plugin, item = args[1:]
 
-        env = AutomationEnvironment.create(ctx, plugins, loading_result)
+        env = AutomationEnvironment.create(app, plugins, loading_result)
         ip_family = env.ip_lookup_config.default_address_family(host_name)
 
         env.ruleset_matcher.ruleset_optimizer.set_all_processed_hosts({host_name})
@@ -3808,15 +3808,15 @@ class AutomationActiveCheck:
 
 
 def _automation_update_passwords_merged_file(
-    ctx: AutomationContext,
+    app: CheckmkBaseApp,
     args: list[str],
     plugins: AgentBasedPlugins | None,
     loading_result: config.LoadingResult | None,
 ) -> UpdatePasswordsMergedFileResult:
     loading_result = loading_result or load_config(
         discovery_rulesets=(),
-        get_builtin_host_labels=ctx.get_builtin_host_labels,
-        edition=ctx.edition,
+        get_builtin_host_labels=app.get_builtin_host_labels,
+        edition=app.edition,
     )
     cmk.utils.password_store.save(
         {k: s.reveal() for k, s in loading_result.config_cache.collect_passwords().items()},
@@ -3826,12 +3826,12 @@ def _automation_update_passwords_merged_file(
 
 
 def _automation_update_dns_cache(
-    ctx: AutomationContext,
+    app: CheckmkBaseApp,
     args: list[str],
     plugins: AgentBasedPlugins | None,
     loading_result: config.LoadingResult | None,
 ) -> UpdateDNSCacheResult:
-    env = AutomationEnvironment.create(ctx, plugins, loading_result)
+    env = AutomationEnvironment.create(app, plugins, loading_result)
 
     return UpdateDNSCacheResult(
         *ip_lookup.update_dns_cache(
@@ -3876,7 +3876,7 @@ def _execute_snmp_walk(snmp_config: SNMPHostConfig, backend: SNMPBackend) -> tup
 
 
 def _automation_get_agent_output(
-    ctx: AutomationContext,
+    app: CheckmkBaseApp,
     args: list[str],
     plugins: AgentBasedPlugins | None,
     loading_result: config.LoadingResult | None,
@@ -3894,7 +3894,7 @@ def _automation_get_agent_output(
     ty = args[1]
 
     # This loads the pending config:
-    env = AutomationEnvironment.create(ctx, plugins, loading_result)
+    env = AutomationEnvironment.create(app, plugins, loading_result)
     hosts_config = config.make_hosts_config(env.loaded_config)
 
     ip_stack_config = env.ip_lookup_config.ip_stack_config(hostname)
@@ -4014,7 +4014,7 @@ def _automation_get_agent_output(
                 ),
                 agent_connection_mode=env.config_cache.agent_connection_mode(hostname),
                 check_mk_check_interval=env.config_cache.check_mk_check_interval(hostname),
-                metric_backend_fetcher=ctx.make_metric_backend_fetcher(
+                metric_backend_fetcher=app.make_metric_backend_fetcher(
                     hostname,
                     env.config_cache.explicit_host_attributes,
                     env.config_cache.check_mk_check_interval,
@@ -4116,7 +4116,7 @@ def _automation_get_agent_output(
 
 
 def _automation_find_unknown_check_parameter_rule_sets(
-    ctx: AutomationContext,
+    app: CheckmkBaseApp,
     args: list[str],
     plugins: AgentBasedPlugins | None,
     loaded_config: config.LoadingResult | None,
@@ -4124,8 +4124,8 @@ def _automation_find_unknown_check_parameter_rule_sets(
     plugins = plugins or load_plugins()  # do we really still need this?
     loaded_config = loaded_config or load_config(
         discovery_rulesets=(),
-        get_builtin_host_labels=ctx.get_builtin_host_labels,
-        edition=ctx.edition,
+        get_builtin_host_labels=app.get_builtin_host_labels,
+        edition=app.edition,
     )
     known_check_rule_sets = {
         str(plugin.check_ruleset_name)

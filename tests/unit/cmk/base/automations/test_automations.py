@@ -7,7 +7,6 @@ from pytest import MonkeyPatch
 
 import cmk.base.automations.check_mk as automations
 from cmk.automations.results import AnalyseHostResult, GetServicesLabelsResult
-from cmk.base.automations.automations import AutomationContext
 from cmk.base.community_app import make_app
 from cmk.base.config import LoadingResult
 from cmk.ccc.hostaddress import HostName
@@ -39,16 +38,7 @@ def test_analyse_host(monkeypatch: MonkeyPatch) -> None:
         "explicit": "explicit",
     }
     assert automations.automation_analyse_host.handler(
-        AutomationContext(
-            edition=(app := make_app()).edition,
-            make_bake_on_restart=app.make_bake_on_restart,
-            create_core=app.create_core,
-            licensing_handler_factory=app.licensing_handler_factory,
-            make_fetcher_trigger=app.make_fetcher_trigger,
-            make_metric_backend_fetcher=app.make_metric_backend_fetcher,
-            get_builtin_host_labels=app.get_builtin_host_labels,
-            core_performance_settings=app.core_performance_settings,
-        ),
+        make_app(),
         ["test-host"],
         AgentBasedPlugins.empty(),
         LoadingResult(loaded_config=EMPTY_CONFIG, config_cache=config_cache),
@@ -90,16 +80,7 @@ def test_service_labels(monkeypatch: MonkeyPatch) -> None:
     config_cache = ts.apply(monkeypatch)
 
     assert automations.automation_get_services_labels.handler(
-        AutomationContext(
-            edition=(app := make_app()).edition,
-            make_bake_on_restart=app.make_bake_on_restart,
-            create_core=app.create_core,
-            licensing_handler_factory=app.licensing_handler_factory,
-            make_fetcher_trigger=app.make_fetcher_trigger,
-            make_metric_backend_fetcher=app.make_metric_backend_fetcher,
-            get_builtin_host_labels=app.get_builtin_host_labels,
-            core_performance_settings=app.core_performance_settings,
-        ),
+        make_app(),
         ["test-host", "CPU load", "CPU temp"],
         AgentBasedPlugins.empty(),
         LoadingResult(loaded_config=EMPTY_CONFIG, config_cache=config_cache),

@@ -26,7 +26,6 @@ from cmk.automations import results as automation_results
 from cmk.automations.results import DiagHostResult
 from cmk.base import config
 from cmk.base.automations import check_mk
-from cmk.base.automations.automations import AutomationContext
 from cmk.base.community_app import make_app
 from cmk.base.config import ConfigCache
 from cmk.ccc.hostaddress import HostAddress, HostName
@@ -105,20 +104,12 @@ class TestAutomationDiagHost:
         }
 
         loaded_config = replace(EMPTY_CONFIG, host_tags=configured_tags)
-
+        app = replace(
+            make_app(),
+            make_fetcher_trigger=lambda *args: _MockFetcherTrigger(raw_data.encode(), Path("/")),
+        )
         assert check_mk.AutomationDiagHost().execute(
-            AutomationContext(
-                edition=(app := make_app()).edition,
-                make_bake_on_restart=app.make_bake_on_restart,
-                create_core=app.create_core,
-                licensing_handler_factory=app.licensing_handler_factory,
-                make_fetcher_trigger=lambda *args: _MockFetcherTrigger(
-                    raw_data.encode("utf-8"), Path("/")
-                ),
-                make_metric_backend_fetcher=app.make_metric_backend_fetcher,
-                get_builtin_host_labels=app.get_builtin_host_labels,
-                core_performance_settings=app.core_performance_settings,
-            ),
+            app,
             args,
             AgentBasedPlugins.empty(),
             config.LoadingResult(
@@ -260,16 +251,7 @@ def test_automation_active_check(
     active_check = AutomationActiveCheckTestable()
     assert (
         active_check.execute(
-            AutomationContext(
-                edition=app.edition,
-                make_bake_on_restart=app.make_bake_on_restart,
-                create_core=app.create_core,
-                licensing_handler_factory=app.licensing_handler_factory,
-                make_fetcher_trigger=app.make_fetcher_trigger,
-                make_metric_backend_fetcher=app.make_metric_backend_fetcher,
-                get_builtin_host_labels=app.get_builtin_host_labels,
-                core_performance_settings=app.core_performance_settings,
-            ),
+            app,
             active_check_args,
             AgentBasedPlugins.empty(),
             config.LoadingResult(
@@ -340,16 +322,7 @@ def test_automation_active_check_invalid_args(
 
     active_check = check_mk.AutomationActiveCheck()
     active_check.execute(
-        AutomationContext(
-            edition=app.edition,
-            make_bake_on_restart=app.make_bake_on_restart,
-            create_core=app.create_core,
-            licensing_handler_factory=app.licensing_handler_factory,
-            make_fetcher_trigger=app.make_fetcher_trigger,
-            make_metric_backend_fetcher=app.make_metric_backend_fetcher,
-            get_builtin_host_labels=app.get_builtin_host_labels,
-            core_performance_settings=app.core_performance_settings,
-        ),
+        app,
         active_check_args,
         AgentBasedPlugins.empty(),
         config.LoadingResult(loaded_config=loaded_config, config_cache=config_cache),

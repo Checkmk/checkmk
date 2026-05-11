@@ -17,7 +17,6 @@ import time_machine
 from pytest_mock import MockerFixture
 
 from cmk.automations.results import ABCAutomationResult
-from cmk.base.automations.automations import AutomationContext
 from cmk.base.automations.check_mk import automation_analyze_host_rule_matches
 from cmk.base.community_app import make_app
 from cmk.ccc.hostaddress import HostName
@@ -217,21 +216,7 @@ def fixture_mock_analyze_host_rule_matches_automation(
         h: HostName, r: Sequence[Sequence[RuleSpec]], *, debug: bool
     ) -> ABCAutomationResult:
         with mocker.patch("sys.stdin", StringIO(repr(r))):
-            return automation_analyze_host_rule_matches.handler(
-                AutomationContext(
-                    edition=(app := make_app()).edition,
-                    make_bake_on_restart=app.make_bake_on_restart,
-                    create_core=app.create_core,
-                    licensing_handler_factory=app.licensing_handler_factory,
-                    make_fetcher_trigger=app.make_fetcher_trigger,
-                    make_metric_backend_fetcher=app.make_metric_backend_fetcher,
-                    get_builtin_host_labels=app.get_builtin_host_labels,
-                    core_performance_settings=app.core_performance_settings,
-                ),
-                [h],
-                None,
-                None,
-            )
+            return automation_analyze_host_rule_matches.handler(make_app(), [h], None, None)
 
     return mocker.patch.object(
         automatic_host_removal, "analyze_host_rule_matches", analyze_with_matcher

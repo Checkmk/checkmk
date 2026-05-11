@@ -177,7 +177,6 @@ py_library(
     ],
     deps = [
         ":config",
-        "//cmk/base/automations",
         "//cmk/base/configlib",
         "//cmk/base/core",
         "//cmk/base/modes:modes-registry",

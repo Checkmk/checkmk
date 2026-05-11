@@ -6,7 +6,7 @@
 import enum
 import os
 import sys
-from collections.abc import Callable, Iterable, Mapping, Sequence
+from collections.abc import Callable, Iterable, Mapping
 from contextlib import nullcontext, redirect_stdout
 from dataclasses import dataclass
 from typing import Final
@@ -16,24 +16,17 @@ from cmk import trace
 from cmk.automations.results import ABCAutomationResult
 from cmk.automations.types import AutomationID
 from cmk.base import config
-from cmk.base.configlib.loaded_config import LoadedConfigFragment
-from cmk.base.core.interface import MonitoringCore
+from cmk.base.base_app import CheckmkBaseApp
 from cmk.ccc import version as cmk_version
 from cmk.ccc.exceptions import MKGeneralException, MKTimeout
-from cmk.ccc.hostaddress import HostAddress
 from cmk.ccc.site import SiteId
 from cmk.ccc.timeout import Timeout
 from cmk.checkengine.plugins import AgentBasedPlugins
 from cmk.discover_plugins import discover_plugins_from_modules
-from cmk.fetchers import Fetcher, FetcherTriggerFactory
-from cmk.helper_interface import AgentRawData
-from cmk.licensing.handler import LicensingHandler
-from cmk.snmplib import SNMPPluginStore
 from cmk.utils import log
-from cmk.utils.labels import LabelManager, Labels
+from cmk.utils.labels import Labels
 from cmk.utils.log import console
 from cmk.utils.rulesets import RuleSetName
-from cmk.utils.rulesets.ruleset_matcher import RulesetMatcher
 
 tracer = trace.get_tracer()
 
@@ -49,44 +42,12 @@ class AutomationError(enum.IntEnum):
     UNKNOWN_ERROR = 2
 
 
-@dataclass(frozen=True, kw_only=True)
-class AutomationContext:
-    edition: cmk_version.Edition
-    make_bake_on_restart: Callable[
-        [config.LoadingResult, Sequence[HostAddress]], Callable[[], None]
-    ]
-    create_core: Callable[
-        [
-            cmk_version.Edition,
-            RulesetMatcher,
-            LabelManager,
-            LoadedConfigFragment,
-            SNMPPluginStore,
-            config.ConfigCache,
-            AgentBasedPlugins,
-        ],
-        MonitoringCore,
-    ]
-    licensing_handler_factory: Callable[[], LicensingHandler]
-    make_fetcher_trigger: FetcherTriggerFactory
-    make_metric_backend_fetcher: Callable[
-        [
-            HostAddress,
-            Callable[[HostAddress], config.ObjectAttributes],
-            Callable[[HostAddress], float],
-        ],
-        Fetcher[AgentRawData] | None,
-    ]
-    get_builtin_host_labels: Callable[[SiteId], Labels]
-    core_performance_settings: Callable[[LoadedConfigFragment], Mapping[str, int]]
-
-
 @dataclass(frozen=True)
 class Automation:
     name: AutomationID
     handler: Callable[
         [
-            AutomationContext,
+            CheckmkBaseApp,
             list[str],
             AgentBasedPlugins | None,
             config.LoadingResult | None,
@@ -124,7 +85,7 @@ class Automations:
     # automation helper.
     def execute(
         self,
-        ctx: AutomationContext,
+        app: CheckmkBaseApp,
         cmd: AutomationID,
         args: list[str],
         plugins: AgentBasedPlugins | None = None,
@@ -136,11 +97,11 @@ class Automations:
             if timeout is None
             else Timeout(timeout, message="Action timed out after %s seconds." % timeout)
         ):
-            return self._execute(ctx, cmd, remaining_args, plugins, loading_result)
+            return self._execute(app, cmd, remaining_args, plugins, loading_result)
 
     def _execute(
         self,
-        ctx: AutomationContext,
+        app: CheckmkBaseApp,
         cmd: AutomationID,
         args: list[str],
         plugins: AgentBasedPlugins | None,
@@ -157,7 +118,7 @@ class Automations:
                 )
 
             with tracer.span(f"execute_automation[{cmd}]"):
-                result = automation.handler(ctx, args, plugins, loading_result)
+                result = automation.handler(app, args, plugins, loading_result)
 
         except (MKGeneralException, MKTimeout) as e:
             console.error(f"{e}", file=sys.stderr)

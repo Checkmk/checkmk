@@ -32,7 +32,8 @@ from cmk.base.automation_helper._app import (
 )
 from cmk.base.automation_helper._cache import Cache, CacheError
 from cmk.base.automation_helper._config import ReloaderConfig
-from cmk.base.automations.automations import AutomationContext, AutomationError
+from cmk.base.automations.automations import AutomationError
+from cmk.base.base_app import CheckmkBaseApp
 from cmk.base.config import ConfigCache, LoadingResult
 from cmk.ccc.site import SiteId
 from cmk.ccc.version import Edition, Version
@@ -56,7 +57,7 @@ class _DummyAutomationResult(ABCAutomationResult):
 class _DummyAutomationEngineSuccess:
     def execute(
         self,
-        ctx: AutomationContext,
+        app: CheckmkBaseApp,
         cmd: str,
         args: list[str],
         plugins: AgentBasedPlugins | None,
@@ -70,7 +71,7 @@ class _DummyAutomationEngineSuccess:
 class _DummyAutomationEngineFailure:
     def execute(
         self,
-        ctx: AutomationContext,
+        app: CheckmkBaseApp,
         cmd: str,
         args: list[str],
         plugins: AgentBasedPlugins | None,
@@ -84,7 +85,7 @@ class _DummyAutomationEngineFailure:
 class _DummyAutomationEngineSystemExit:
     def execute(
         self,
-        ctx: AutomationContext,
+        app: CheckmkBaseApp,
         cmd: str,
         args: list[str],
         plugins: AgentBasedPlugins | None,

@@ -5,7 +5,7 @@
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timedelta
 from enum import Enum
 from typing import Literal, override
 
@@ -180,12 +180,24 @@ class RemoveServiceAcknowledgement(BaseRemoveAcknowledgement):
 class BaseModifyDowntime(Command, ABC):
     downtime_id: int
     start_time: datetime | None = None
-    end_time: datetime | None = None
+    end_time: datetime | timedelta | None = None
     recur_mode: int | None = None
     trigger_id: int | None = None
     duration: int | None = None
     user: UserId = UserId.builtin()
     comment: str | None = None
+
+    @property
+    def _end_time_arg(self) -> str | datetime | None:
+        """Serialize end_time for the wire format.
+
+        A timedelta is encoded as a signed seconds string (e.g. "+600", "-300") which the CMC
+        interprets as a relative adjustment to the downtime's current end time.
+        """
+        if isinstance(self.end_time, timedelta):
+            seconds = int(self.end_time.total_seconds())
+            return f"+{seconds}" if seconds >= 0 else str(seconds)
+        return self.end_time
 
 
 @dataclass(frozen=True)
@@ -199,7 +211,7 @@ class ModifyHostDowntime(BaseModifyDowntime):
         return [
             self.downtime_id,
             self.start_time,
-            self.end_time,
+            self._end_time_arg,
             self.recur_mode,
             self.trigger_id,
             self.duration,
@@ -219,7 +231,7 @@ class ModifyServiceDowntime(BaseModifyDowntime):
         return [
             self.downtime_id,
             self.start_time,
-            self.end_time,
+            self._end_time_arg,
             self.recur_mode,
             self.trigger_id,
             self.duration,

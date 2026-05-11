@@ -9,7 +9,7 @@ from collections.abc import Sequence
 import pytest
 
 from cmk.agent_based.v2 import Result, Service, State, StringTable
-from cmk.legacy_checks.hp_psu import check_hp_psu, discover_hp_psu, parse_hp_psu
+from cmk.plugins.hp.agent_based.hp_psu import check_hp_psu, discover_hp_psu, parse_hp_psu
 
 
 @pytest.mark.parametrize(

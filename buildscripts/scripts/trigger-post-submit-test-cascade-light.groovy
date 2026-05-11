@@ -17,11 +17,10 @@ void main() {
         "test-bazel-lint",
         "test-format",
         "test-github-actions",
-        "test-plugins-siteless",
+        "test-plugins-siteless-k8s",
         "test-python3-typing",
         "test-unit-all",
     ];
-    job_names += env.USE_K8S_PLUGINS_SYSTEMTESTS == "1" ? ["test-plugins-siteless-k8s"] : [];
 
     print(
         """

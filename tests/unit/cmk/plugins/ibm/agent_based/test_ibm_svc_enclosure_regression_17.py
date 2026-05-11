@@ -11,7 +11,7 @@
 import pytest
 
 from cmk.agent_based.v2 import Result, Service, State, StringTable
-from cmk.legacy_checks.ibm_svc_enclosure import (
+from cmk.plugins.ibm.agent_based.ibm_svc_enclosure import (
     check_ibm_svc_enclosure,
     discover_ibm_svc_enclosure,
     parse_ibm_svc_enclosure,

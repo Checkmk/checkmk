@@ -7,16 +7,16 @@ import pytest
 
 import cmk.plugins.cpu.agent_based.cpu_utilization_os
 from cmk.agent_based.v2 import GetRateError, Metric, Result, State, StringTable
-from cmk.plugins.collection.agent_based.lxc_container_cpu import agent_section_lxc_container_cpu
-from cmk.plugins.collection.agent_based.lxc_container_cpu_cgroupv2 import (
-    agent_section_lxc_container_cpu_cgroupv2,
-)
 from cmk.plugins.cpu.agent_based.cpu_utilization_os import check_plugin_cpu_utilization_os
 from cmk.plugins.docker.agent_based.docker_container_cpu import (
     agent_section_docker_container_cpu,
 )
 from cmk.plugins.docker.agent_based.docker_container_cpu_cgroupv2 import (
     agent_section_docker_container_cpu_cgroupv2,
+)
+from cmk.plugins.lxc.agent_based.lxc_container_cpu import agent_section_lxc_container_cpu
+from cmk.plugins.lxc.agent_based.lxc_container_cpu_cgroupv2 import (
+    agent_section_lxc_container_cpu_cgroupv2,
 )
 
 # the following string tables should display 150% cpu usage

@@ -7,6 +7,7 @@ import pytest
 
 from cmk.gui import sites
 from cmk.gui.utils.labels import _get_labels_from_livestatus, Label, LabelType
+from cmk.gui.visuals._autocompleters import label_autocompleter
 from cmk.livestatus_client.testing import MockLiveStatusConnection
 
 
@@ -186,3 +187,67 @@ def test_label_from_str(
     assert label.id == expected_key
     assert label.value == expected_value
     assert label.negate == expected_negate
+
+
+@pytest.mark.parametrize(
+    "object_type, expected_query, expected_choices",
+    [
+        pytest.param(
+            "host",
+            "GET hosts\nCache: reload\nColumns: labels",
+            {
+                "cmk/os_family:linux",
+                "cmk/docker_object:node",
+                "cmk/check_mk_server:yes",
+                "cmk/site:heute",
+            },
+            id="host labels only",
+        ),
+        pytest.param(
+            "service",
+            "GET services\nCache: reload\nColumns: labels",
+            {"test:servicelabel", "test2:servicelabel"},
+            id="service labels only",
+        ),
+        pytest.param(
+            None,
+            "GET labels\nCache: reload\nColumns: name value",
+            {
+                "cmk/os_family:linux",
+                "cmk/docker_object:node",
+                "cmk/check_mk_server:yes",
+                "servicelabel:servicelabel",
+            },
+            id="all labels when object_type omitted",
+        ),
+        pytest.param(
+            "bogus",
+            "GET labels\nCache: reload\nColumns: name value",
+            {
+                "cmk/os_family:linux",
+                "cmk/docker_object:node",
+                "cmk/check_mk_server:yes",
+                "servicelabel:servicelabel",
+            },
+            id="unknown object_type falls back to all",
+        ),
+    ],
+)
+def test_label_autocompleter_scopes_query_by_object_type(
+    object_type: str | None,
+    expected_query: str,
+    expected_choices: set[str],
+    request_context: None,
+    live: MockLiveStatusConnection,
+) -> None:
+    params = {"world": "core"}
+    if object_type is not None:
+        params["object_type"] = object_type
+
+    with live(expect_status_query=False):
+        live.expect_query(expected_query)
+        # Ignore arg-type as we pass `None` for config since it is not used in the label autocompleter
+        choices = label_autocompleter(config=None, value="", params=params)  # type: ignore[arg-type]
+
+    returned_label_ids = set(choice_id for choice_id, _choice_text in choices)
+    assert returned_label_ids == expected_choices

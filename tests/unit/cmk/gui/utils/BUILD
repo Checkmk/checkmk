@@ -45,6 +45,7 @@ py_test(
         "//cmk/gui/utils:transaction_manager",
         "//cmk/gui/utils:urls",
         "//cmk/gui/utils:user_errors",
+        "//cmk/gui/visuals",
         "//packages/cmk-ccc:user",
         "//packages/cmk-ccc:version",
         "//packages/cmk-crypto",

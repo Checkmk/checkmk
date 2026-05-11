@@ -131,7 +131,14 @@ def label_autocompleter(config: Config, value: str, params: dict) -> Choices:
     from cmk.gui.valuespec import Labels
 
     group_labels = params.get("context", {}).get("group_labels", [])
-    all_labels = Labels.get_labels(world=Labels.World(params["world"]), search_label=value)
+    object_type = params.get("object_type")
+    if object_type not in ("host", "service"):
+        object_type = None
+    all_labels = Labels.get_labels(
+        world=Labels.World(params["world"]),
+        search_label=value,
+        object_type=object_type,
+    )
     label_choices: Choices = [((":".join([id_, val])),) * 2 for id_, val in all_labels]
 
     if filtered_choices := [

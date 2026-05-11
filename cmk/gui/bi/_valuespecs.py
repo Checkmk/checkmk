@@ -440,6 +440,7 @@ class BIConfigHostSearch(BIHostSearch, ABCBIConfigSearch):
                     add_label=_("Add to condition"),
                     title=_("Host labels"),
                     help="",
+                    object_type="host",
                 ),
             ),
             ("host_choice", _bi_host_choice_vs(_("Filter host"))),
@@ -489,6 +490,7 @@ class BIConfigServiceSearch(BIServiceSearch, ABCBIConfigSearch):
                     add_label=_("Add to condition"),
                     title=_("Service Labels"),
                     help="",
+                    object_type="service",
                 ),
             ),
         ]

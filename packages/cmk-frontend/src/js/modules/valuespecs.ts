@@ -99,11 +99,15 @@ const dynamicParamsCallbacks = {
         group_labels.push(label.value)
       }
     }
-    return {
+    const params: Record<string, unknown> = {
       world: elem.dataset.world,
       context: { group_labels: group_labels },
       ...autocompleter.params
     }
+    if (elem.dataset.objectType) {
+      params.object_type = elem.dataset.objectType
+    }
+    return params
   }
 }
 

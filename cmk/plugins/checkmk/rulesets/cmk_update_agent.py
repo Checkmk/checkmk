@@ -487,12 +487,20 @@ def _is_ultimatemt_remote_site() -> bool:
     distributed_wato_file = paths.check_mk_config_dir / "distributed_wato.mk"
     if not distributed_wato_file.exists() or distributed_wato_file.stat().st_size == 0:
         return False
-    return load_from_mk_file(
+    is_distributed_setup_remote_site = load_from_mk_file(
         distributed_wato_file,
         key="is_distributed_setup_remote_site",
         default=False,
         lock=False,
     )
+    # On 2.4 site this option is called `is_wato_slave_site`
+    is_wato_slave_site = load_from_mk_file(
+        distributed_wato_file,
+        key="is_wato_slave_site",
+        default=False,
+        lock=False,
+    )
+    return is_distributed_setup_remote_site or is_wato_slave_site
 
 
 def _validate_signature_keys(value: Sequence[object]) -> None:

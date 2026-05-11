@@ -108,6 +108,7 @@ py_library(
     visibility = ["//:__subpackages__"],
     deps = [
         "//cmk/utils",
+        "//cmk/utils:redis",
         "//packages/cmk-ccc:crash-reporting",
         "//packages/cmk-ccc:debug",
         "//packages/cmk-ccc:site",
@@ -387,6 +388,7 @@ py_library(
         ":scripts",
         ":testlib",
         "//cmk/post_rename_site",
+        "//cmk/utils:redis",
         "//packages/cmk-agent-receiver",
         "//tests/testlib/common:utils",
     ] + select({

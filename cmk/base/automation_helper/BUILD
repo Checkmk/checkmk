@@ -16,6 +16,7 @@ py_library(
         "//cmk/base/automations",
         "//cmk/checkengine",
         "//cmk/utils",
+        "//cmk/utils:redis",
         "//packages/cmk-ccc:daemon",
         "//packages/cmk-ccc:site",
         "//packages/cmk-ccc:tty",

@@ -44,6 +44,8 @@ py_library(
         "//cmk/gui/utils:speaklater",
         "//cmk/gui/utils:urls",
         "//cmk/utils",
+        "//cmk/utils:encryption",
+        "//cmk/utils:images",
         "//packages/cmk-ccc:exceptions",
         "//packages/cmk-ccc:hostaddress",
         "//packages/cmk-ccc:plugin-registry",

@@ -218,6 +218,7 @@ py_library(
         "//cmk/gui/watolib:registries",
         "//cmk/gui/watolib:timeperiods",
         "//cmk/utils",
+        "//cmk/utils:encryption",
         "//packages/cmk-backup:gui",
         "//packages/cmk-ccc:exceptions",
         "//packages/cmk-ccc:hostaddress",

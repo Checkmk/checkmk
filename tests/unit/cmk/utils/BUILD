@@ -30,6 +30,10 @@ py_test(
     deps = [
         ":__test__",
         "//cmk/utils",
+        "//cmk/utils:images",
+        "//cmk/utils:msi_patch",
+        "//cmk/utils:redis",
+        "//cmk/utils:werks",
         "//packages/cmk-ccc:exceptions",
         "//packages/cmk-crypto",
         "//packages/cmk-plugin-apis:discover_plugins",

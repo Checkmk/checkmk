@@ -18,7 +18,7 @@ void main() {
         "test-github-actions",
         "test-groovy-lint",
         "test-integration-agent-plugin",
-        "test-plugins-siteless",
+        "test-plugins-siteless-k8s",
         "test-python3-astrein",
         "test-python3-bandit",
         "test-python3-code-quality",
@@ -28,7 +28,6 @@ void main() {
         "test-shell-unit",
         "test-shellcheck_agents",
     ];
-    job_names += env.USE_K8S_PLUGINS_SYSTEMTESTS == "1" ? ["test-plugins-siteless-k8s"] : [];
 
     print(
         """

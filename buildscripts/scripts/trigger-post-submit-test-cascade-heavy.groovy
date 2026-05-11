@@ -23,14 +23,14 @@ void main() {
         "test-integration-single-f12less-community",
         "test-integration-single-f12less-redfish",
         "test-integration-single-f12less-ultimatemt",
-        "test-plugins",
-        "test-plugins-piggyback",
+        "test-plugins-k8s",
+        "test-plugins-piggyback-k8s",
         "test-update-single-f12less-k8s",
         "test-update-single-f12less-community-pro-k8s",
         "test-update-single-f12less-pro-ultimate-k8s",
         "test-update-single-f12less-pro-ultimatemt-k8s",
     ];
-    job_names += env.USE_K8S_PLUGINS_SYSTEMTESTS == "1" ? ["test-plugins-k8s", "test-plugins-piggyback-k8s"] : [];
+    job_names += env.USE_K8S_GUI_CRAWL_SYSTEMTESTS == "1" ? ["test-gui-crawl-f12less-k8s"] : [];
 
     print(
         """

@@ -646,8 +646,20 @@ allows = [
   "@ccc",
   "cmk.discover_plugins",
   "cmk.gui",
+  "cmk.gui_plugins.internal",
   "cmk.licensing.basics.options",
   "cmk.utils.paths",
+]
+
+[components."cmk.gui_plugins.internal"]
+allows = [
+  "@ccc",
+  "cmk.gui.autocompleters",
+  "cmk.gui.graphing",
+  "cmk.gui.openapi",
+  "cmk.gui.sidebar",
+  "cmk.gui.watolib",
+  "cmk.licensing.basics.options",
 ]
 
 [components."cmk.gui.openapi.spec.spec_generator"]
@@ -706,6 +718,7 @@ allows = [
   "cmk.discover_plugins",
   "cmk.fields",
   "cmk.gui",
+  "cmk.gui_plugins.internal",
   "cmk.licensing",
   "cmk.liveproxyd.gui",
   "cmk.product_usage",
@@ -758,6 +771,7 @@ allows = [
   "cmk.dcd.protocols",
   "cmk.fields",
   "cmk.gui",
+  "cmk.gui_plugins.internal",
   "cmk.licensing",
   "cmk.liveproxyd.gui",
   "cmk.nonfree.ultimate.metric_backend.gui",
@@ -790,6 +804,7 @@ allows = [
   "cmk.bi",
   "cmk.dcd.gui",
   "cmk.gui",
+  "cmk.gui_plugins.internal",
   "cmk.inventory",
   "cmk.licensing",
   "cmk.liveproxyd.gui",
@@ -819,6 +834,7 @@ allows = [
   "cmk.dcd.gui",
   "cmk.fields",
   "cmk.gui",
+  "cmk.gui_plugins.internal",
   "cmk.licensing",
   "cmk.liveproxyd.gui",
   "cmk.nonfree.ultimate.metric_backend.gui.register",
@@ -854,6 +870,7 @@ allows = [
   "cmk.discover_plugins",
   "cmk.diskspace",
   "cmk.fields",
+  "cmk.gui_plugins.internal",
   "cmk.inventory",
   "cmk.inventory_ui",
   "cmk.licensing",

@@ -9,13 +9,13 @@ from typing import assert_never
 from cmk.ccc.version import Edition
 from cmk.discover_plugins import discover_plugins_from_modules
 from cmk.gui.autocompleters import autocompleter_registry
-from cmk.gui.feature_registration import GuiFeaturePlugin, RegistrationContext
 from cmk.gui.graphing._metric_backend_registry import metric_backend_registry
 from cmk.gui.legacy_plugins import get_failed_plugins as get_failed_plugins
 from cmk.gui.openapi import endpoint_family_registry, versioned_endpoint_registry
 from cmk.gui.sidebar import snapin_registry
 from cmk.gui.watolib.config_domain_name import config_domain_registry, config_variable_registry
 from cmk.gui.watolib.config_sync import replication_path_registry
+from cmk.gui_plugins.internal.feature_registration import GuiFeaturePlugin, RegistrationContext
 from cmk.licensing.basics.options import get_license_options, LicenseOptions
 from cmk.utils import paths
 

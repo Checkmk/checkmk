@@ -23,7 +23,6 @@ from cmk.gui.dashboard import (
     noop_builtin_dashboard_extender,
 )
 from cmk.gui.data_source import data_source_registry
-from cmk.gui.feature_registration import RegistrationContext
 from cmk.gui.features import Features as GuiFeatures
 from cmk.gui.features import features_registry
 from cmk.gui.graphing import community_registration as graphing_community_registration
@@ -119,6 +118,7 @@ from cmk.gui.watolib.snapshots import make_cre_snapshot_manager
 from cmk.gui.watolib.timeperiods import timeperiod_usage_finder_registry
 from cmk.gui.watolib.users import default_sites, user_features_registry, UserFeatures
 from cmk.gui.welcome.registry import welcome_card_registry, WelcomeCardUrl
+from cmk.gui_plugins.internal.feature_registration import RegistrationContext
 
 
 def register_pages() -> None:

@@ -139,7 +139,14 @@ defineExpose({ validate })
       aria-required="true"
     />
 
-    <CmkLabel>{{ _t('Encryption') }}</CmkLabel>
+    <CmkLabel
+      :help="
+        _t(
+          `Serves the OTLP endpoint over TLS using the site's certificate. The client must trust the site CA at ~/etc/ssl/ca.pem. The certificate's server name matches the site ID.`
+        )
+      "
+      >{{ _t('Encryption') }}</CmkLabel
+    >
     <CmkCheckbox v-model="config.encryption" :label="_t('Encrypt communication with TLS')" />
   </div>
 </template>

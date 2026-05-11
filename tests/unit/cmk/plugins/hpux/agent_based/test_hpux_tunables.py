@@ -11,7 +11,7 @@ from typing import Any
 import pytest
 
 from cmk.agent_based.v2 import Metric, Result, Service, State
-from cmk.legacy_checks.hpux_tunables import (
+from cmk.plugins.hpux.agent_based.hpux_tunables import (
     check_hpux_tunables_maxfiles_lim,
     check_hpux_tunables_nkthread,
     check_hpux_tunables_nproc,

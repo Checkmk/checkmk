@@ -16,8 +16,8 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
-from cmk.plugins.collection.agent_based import entity_sensors
-from cmk.plugins.collection.agent_based.entity_sensors import (
+from cmk.plugins.entity_sensors.agent_based import entity_sensors
+from cmk.plugins.entity_sensors.agent_based.entity_sensors import (
     check_entity_sensors_fan,
     check_entity_sensors_power_presence,
     check_entity_sensors_temp,

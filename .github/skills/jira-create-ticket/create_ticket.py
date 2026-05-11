@@ -19,6 +19,9 @@ Usage:
 
     # List all open roadmap epics (for LLM context)
     python3 create_ticket.py --find-epics --summary "unused but required"
+
+    # List allowed values for a custom select field
+    python3 create_ticket.py --list-options bug_detection
 """
 
 import argparse
@@ -155,6 +158,40 @@ CUSTOM_FIELDS = {
 }
 
 # ---------------------------------------------------------------------------
+# Custom field option discovery — fetch allowed values from Jira
+# ---------------------------------------------------------------------------
+
+
+def list_field_options(jira: Any, field_id: str, project: str) -> dict[str, Any]:
+    """Return the allowed values for a custom select field as a JSON-serializable dict.
+
+    Iterates through the project's issue types and returns the first issue type
+    on which the field has allowed values. Raises ``ValueError`` if no issue
+    type exposes the field with enumerable options.
+    """
+    types = jira.project_issue_types(project, maxResults=200)
+    for t in types:
+        fields = jira.project_issue_fields(project, t.raw["id"], maxResults=200)
+        field = next((f.raw for f in fields if f.raw.get("fieldId") == field_id), None)
+        if field is None:
+            continue
+        allowed: list[str] = [
+            name
+            for opt in field.get("allowedValues", [])
+            if not opt.get("disabled")
+            and (name := opt.get("value") or opt.get("name") or opt.get("id"))
+        ]
+        if allowed:
+            return {
+                "field": field.get("name") or field_id,
+                "field_id": field_id,
+                "issue_type": t.raw.get("name", ""),
+                "options": allowed,
+            }
+    raise ValueError(f"Field '{field_id}' has no enumerable options in project '{project}'")
+
+
+# ---------------------------------------------------------------------------
 # Issue creation
 # ---------------------------------------------------------------------------
 
@@ -238,11 +275,25 @@ def main() -> None:
         action="store_true",
         help="Print all open roadmap epics as JSON and exit",
     )
+    parser.add_argument(
+        "--list-options",
+        default=None,
+        metavar="FIELD_NAME",
+        help=(
+            "Print the allowed values for a custom select field as JSON and exit. "
+            f"Valid names: {', '.join(CUSTOM_FIELDS)}"
+        ),
+    )
 
     args = parser.parse_args()
 
     if args.bug_detection and args.issue_type != "Bug":
         parser.error("--bug-detection is only valid for Bug tickets")
+
+    if args.list_options and args.list_options not in CUSTOM_FIELDS:
+        parser.error(
+            f"Unknown custom field '{args.list_options}'. Valid: {', '.join(CUSTOM_FIELDS)}"
+        )
 
     # List components mode — dump compass data for LLM context
     if args.guess:
@@ -281,6 +332,16 @@ def main() -> None:
     if args.find_epics:
         epics = find_epics(jira)
         print(json.dumps(epics, indent=2))
+        sys.exit(0)
+
+    # List options mode — dump allowed values for a custom select field
+    if args.list_options:
+        try:
+            result = list_field_options(jira, CUSTOM_FIELDS[args.list_options], args.project)
+        except ValueError as e:
+            print(f"ERROR: {e}", file=sys.stderr)
+            sys.exit(1)
+        print(json.dumps(result, indent=2))
         sys.exit(0)
 
     issue = create_issue(

@@ -5,12 +5,12 @@
 
 from cmk.graphing.v1 import graphs, metrics, Title
 
-UNIT_TIME = metrics.Unit(metrics.TimeNotation())
+UNIT_MILLISECONDS = metrics.Unit(metrics.DecimalNotation("ms"))
 
 metric_e2e_latency = metrics.Metric(
     name="e2e_latency",
     title=Title("End-to-end latency"),
-    unit=UNIT_TIME,
+    unit=UNIT_MILLISECONDS,
     color=metrics.Color.DARK_YELLOW,
 )
 

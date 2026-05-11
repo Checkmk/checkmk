@@ -222,6 +222,7 @@ def fixture_mock_analyze_host_rule_matches_automation(
                     edition=(app := make_app()).edition,
                     make_bake_on_restart=app.make_bake_on_restart,
                     create_core=app.create_core,
+                    licensing_handler_factory=app.licensing_handler_factory,
                     make_fetcher_trigger=app.make_fetcher_trigger,
                     make_metric_backend_fetcher=app.make_metric_backend_fetcher,
                     get_builtin_host_labels=app.get_builtin_host_labels,

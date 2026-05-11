@@ -27,6 +27,7 @@ from cmk.checkengine.plugins import AgentBasedPlugins
 from cmk.discover_plugins import discover_plugins_from_modules
 from cmk.fetchers import Fetcher, FetcherTriggerFactory
 from cmk.helper_interface import AgentRawData
+from cmk.licensing.handler import LicensingHandler
 from cmk.snmplib import SNMPPluginStore
 from cmk.utils import log
 from cmk.utils.labels import LabelManager, Labels
@@ -66,6 +67,7 @@ class AutomationContext:
         ],
         MonitoringCore,
     ]
+    licensing_handler_factory: Callable[[], LicensingHandler]
     make_fetcher_trigger: FetcherTriggerFactory
     make_metric_backend_fetcher: Callable[
         [

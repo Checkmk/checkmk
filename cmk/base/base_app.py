@@ -22,7 +22,7 @@ from cmk.utils.rulesets.ruleset_matcher import RulesetMatcher
 from .config import ConfigCache, LoadingResult, ObjectAttributes
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class CheckmkBaseApp:
     """Provide features to the runtime
 

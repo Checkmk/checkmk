@@ -3,16 +3,23 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
+from collections.abc import Mapping
+from typing import Literal
 
+from cmk.agent_based.v2 import (
+    AgentSection,
+    check_levels,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Result,
+    Service,
+    State,
+    StringTable,
+)
+from cmk.plugins.ibm.lib_svc import parse_ibm_svc_with_header
 
-# mypy: disable-error-code="var-annotated"
-
-from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
-from cmk.legacy_includes.ibm_svc import parse_ibm_svc_with_header
-
-check_info = {}
+Section = Mapping[str, Mapping[str, str]]
 
 # Example output from agent:
 # <<<ibm_svc_enclosure:sep(58)>>>
@@ -42,12 +49,14 @@ check_info = {}
 # 1:online:control:9843-AE2:6860407:2:2:2:12
 
 
-def parse_ibm_svc_enclosure(string_table):
+def parse_ibm_svc_enclosure(
+    string_table: StringTable,
+) -> Section:
     dflt_header = _get_ibm_svc_enclosure_dflt_header(string_table)
     if dflt_header is None:
         return {}
 
-    parsed = {}
+    parsed: dict[str, Mapping[str, str]] = {}
     for id_, rows in parse_ibm_svc_with_header(string_table, dflt_header).items():
         try:
             data = rows[0]
@@ -57,25 +66,26 @@ def parse_ibm_svc_enclosure(string_table):
     return parsed
 
 
-def _try_int(string):
+def _try_int(value: str | None) -> int | None:
     try:
-        return int(string)
+        return int(value)  # type: ignore[arg-type]
     except (ValueError, TypeError):
         return None
 
 
-def check_ibm_svc_enclosure(item, params, parsed):
-    if not (data := parsed.get(item)):
+def check_ibm_svc_enclosure(
+    item: str,
+    params: Mapping[str, tuple[int, int] | bool],
+    section: Section,
+) -> CheckResult:
+    if not (data := section.get(item)):
         return
-    if params is None:
-        params = {}
 
     enclosure_status = data["status"]
-    if enclosure_status == "online":
-        status = 0
-    else:
-        status = 2
-    yield status, "Status: %s" % enclosure_status
+    yield Result(
+        state=State.OK if enclosure_status == "online" else State.CRIT,
+        summary=f"Status: {enclosure_status}",
+    )
 
     for key, label in [
         ("canisters", "canisters"),
@@ -83,33 +93,53 @@ def check_ibm_svc_enclosure(item, params, parsed):
         ("fan_modules", "fan modules"),
         ("sems", "secondary expander modules"),
     ]:
-        online = _try_int(data.get("online_%s" % key))
-        total = _try_int(data.get("total_%s" % key))
+        online = _try_int(data.get(f"online_{key}"))
+        total = _try_int(data.get(f"total_{key}"))
         if online is None:
             continue
         # Valid values for WATO rule value levels_lower_online_canisters are
         # False, which shall be mapped to (total, total) or (warn, crit).
-        levels_lower = params.get("levels_lower_online_%s" % key) or (total, total)
-        levels = (None, None) + levels_lower
-        state, infotext, _perfdata = check_levels(
-            online, None, levels, human_readable_func=int, infoname="Online %s" % label
+        raw_param = params.get(f"levels_lower_online_{key}")
+        levels_lower_typed: (
+            tuple[Literal["fixed"], tuple[int, int]] | tuple[Literal["no_levels"], None]
         )
-        if total is not None:
-            infotext += " of %s" % total
-        yield state, infotext
+        if isinstance(raw_param, tuple):
+            levels_lower_typed = ("fixed", raw_param)
+        elif total is not None:
+            levels_lower_typed = ("fixed", (total, total))
+        else:
+            levels_lower_typed = ("no_levels", None)
+        for result in check_levels(
+            online,
+            label=f"Online {label}",
+            levels_lower=levels_lower_typed,
+            render_func=str,
+        ):
+            if isinstance(result, Result) and total is not None:
+                yield Result(state=result.state, summary=f"{result.summary} of {total}")
+            else:
+                yield result
 
 
-def discover_ibm_svc_enclosure(section):
-    yield from ((item, {}) for item in section)
+def discover_ibm_svc_enclosure(
+    section: Section,
+) -> DiscoveryResult:
+    yield from (Service(item=item) for item in section)
 
 
-check_info["ibm_svc_enclosure"] = LegacyCheckDefinition(
+agent_section_ibm_svc_enclosure = AgentSection(
     name="ibm_svc_enclosure",
     parse_function=parse_ibm_svc_enclosure,
+)
+
+
+check_plugin_ibm_svc_enclosure = CheckPlugin(
+    name="ibm_svc_enclosure",
     service_name="Enclosure %s",
     discovery_function=discover_ibm_svc_enclosure,
     check_function=check_ibm_svc_enclosure,
     check_ruleset_name="ibm_svc_enclosure",
+    check_default_parameters={},
 )
 
 #   .--helper--------------------------------------------------------------.
@@ -122,7 +152,7 @@ check_info["ibm_svc_enclosure"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 
-def _get_ibm_svc_enclosure_dflt_header(info):
+def _get_ibm_svc_enclosure_dflt_header(info: StringTable) -> list[str] | None:
     try:
         first_line = info[0]
     except IndexError:

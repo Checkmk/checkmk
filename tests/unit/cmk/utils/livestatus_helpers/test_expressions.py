@@ -8,12 +8,11 @@ import pytest
 from cmk.livestatus_client.expressions import ScalarExpression
 
 
-def test_no_lq_injection() -> None:
-    """Newlines are capable to inject other headers, that's bad and this test
-    should check that"""
-
+def test_newline_in_field_name_raises() -> None:
     with pytest.raises(ValueError):
         ScalarExpression("f\noo")
 
+
+def test_newline_in_field_value_raises() -> None:
     with pytest.raises(ValueError):
         ScalarExpression("foo") == "bar\nfoo"

@@ -39,18 +39,19 @@ class TestVersion:
         with pytest.raises(ValueError):
             Version.from_str("1.2.3g5")
 
-    def test_invalid_combo(self) -> None:
-        # currently invalid.
+    @pytest.mark.parametrize(
+        "version_string",
+        [
+            pytest.param("1.2.3b5-2023.01.01", id="beta with date suffix"),
+            pytest.param("2.2.0rc1", id="rc without patch level"),
+            pytest.param("2.2.0p5-rc", id="patch with bare rc suffix"),
+            pytest.param("1.2.3-2023.12.24-rc1", id="stable daily with rc suffix"),
+            pytest.param("2023.12.24-rc1", id="daily with rc suffix"),
+        ],
+    )
+    def test_invalid_version_string_raises(self, version_string: str) -> None:
         with pytest.raises(ValueError):
-            Version.from_str("1.2.3b5-2023.01.01")
-        with pytest.raises(ValueError):
-            Version.from_str("2.2.0rc1")
-        with pytest.raises(ValueError):
-            Version.from_str("2.2.0p5-rc")
-        with pytest.raises(ValueError):
-            Version.from_str("1.2.3-2023.12.24-rc1")
-        with pytest.raises(ValueError):
-            Version.from_str("2023.12.24-rc1")
+            Version.from_str(version_string)
 
     @pytest.mark.parametrize(
         "vers",

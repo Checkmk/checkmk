@@ -91,10 +91,12 @@ def test_label() -> None:
     assert l.label == f"{name}:{value}"
 
 
-def test_label_validation() -> None:
+def test_invalid_label_name_raises() -> None:
     with pytest.raises(MKGeneralException, match="Invalid label name"):
         BaseLabel(b"\xc3\xbcbc", "abc")  # type: ignore[arg-type]
 
+
+def test_invalid_label_value_raises() -> None:
     with pytest.raises(MKGeneralException, match="Invalid label value"):
         BaseLabel("äbc", b"\xc3\xbcbc")  # type: ignore[arg-type]
 

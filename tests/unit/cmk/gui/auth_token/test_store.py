@@ -81,17 +81,20 @@ def test_expired_wo_expiration(tmp_path: Path) -> None:
     store.verify(f"0:{token.token_id}", now=some_time + datetime.timedelta(days=1, seconds=1))
 
 
-def test_invalid_token(tmp_path: Path) -> None:
+@pytest.mark.parametrize(
+    "token_str,expected_match",
+    [
+        pytest.param("invalid", "Could not parse token", id="unparseable token format"),
+        pytest.param(
+            "invalid:also invalid", "Invalid token version 'invalid'", id="invalid version field"
+        ),
+        pytest.param("0:foo", "Could not find token 'foo'", id="unknown token id"),
+    ],
+)
+def test_invalid_token_raises(tmp_path: Path, token_str: str, expected_match: str) -> None:
     store = TokenStore(tmp_path / "store.json")
-
-    with pytest.raises(InvalidToken, match="Could not parse token"):
-        store.verify("invalid", now=some_time)
-
-    with pytest.raises(InvalidToken, match="Invalid token version 'invalid'"):
-        store.verify("invalid:also invalid", now=some_time)
-
-    with pytest.raises(InvalidToken, match="Could not find token 'foo'"):
-        store.verify("0:foo", now=some_time)
+    with pytest.raises(InvalidToken, match=expected_match):
+        store.verify(token_str, now=some_time)
 
 
 def test_issued_at(tmp_path: Path) -> None:

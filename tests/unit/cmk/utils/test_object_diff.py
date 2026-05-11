@@ -13,13 +13,17 @@ def test_make_object_diff_nothing_changed() -> None:
     assert make_diff_text([], []) == "Nothing was changed."
 
 
-def test_make_object_diff_handling_none() -> None:
+@pytest.mark.parametrize(
+    "old,new",
+    [
+        pytest.param(None, None, id="both None"),
+        pytest.param(None, {}, id="old is None"),
+        pytest.param({"a": "2"}, None, id="new is None"),
+    ],
+)
+def test_make_object_diff_raises_when_argument_is_none(old: object, new: object) -> None:
     with pytest.raises(ValueError):
-        make_diff_text(None, None)
-    with pytest.raises(ValueError):
-        make_diff_text(None, {})
-    with pytest.raises(ValueError):
-        make_diff_text({"a": "2"}, None)
+        make_diff_text(old, new)
 
 
 def test_make_object_diff_str() -> None:

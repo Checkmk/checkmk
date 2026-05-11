@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.plugins.collection.agent_based.if32 import parse_if_pure
+from cmk.plugins.interfaces.agent_based.if32 import parse_if_pure
 from cmk.plugins.lib import interfaces
 
 

@@ -10,7 +10,7 @@ import cmk.plugins.bonding.agent_based.lnx_if
 import cmk.plugins.lib.interfaces
 from cmk.agent_based.v2 import Result
 from cmk.plugins.bonding.agent_based.lnx_if import check_lnx_if, discover_lnx_if
-from cmk.plugins.collection.agent_based.section_lnx_container_host_if import (
+from cmk.plugins.interfaces.agent_based.section_lnx_container_host_if import (
     parse_lnx_container_host_if_pure,
 )
 from cmk.plugins.lib.interfaces import (

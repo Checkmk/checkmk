@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.plugins.collection.agent_based.if_statgrab_net import parse_statgrab_net_pure
+from cmk.plugins.interfaces.agent_based.if_statgrab_net import parse_statgrab_net_pure
 from cmk.plugins.lib import interfaces
 
 _SECTION = [

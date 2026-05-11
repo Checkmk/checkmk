@@ -8,7 +8,7 @@ from collections.abc import Collection, Mapping
 import pytest
 
 from cmk.agent_based.v2 import StringByteTable
-from cmk.plugins.collection.agent_based.if_brocade_lancom import (
+from cmk.plugins.interfaces.agent_based.if_brocade_lancom import (
     parse_if_brocade_lancom,
     parse_if_lancom_pure,
 )

@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.agent_based.v2 import Result, State
-from cmk.plugins.collection.agent_based import if64
+from cmk.plugins.interfaces.agent_based import if64
 from cmk.plugins.lib import interfaces
 
 

@@ -7,7 +7,6 @@ import type SimpleBar from 'simplebar'
 import Swal from 'sweetalert2'
 
 import { call_ajax } from './ajax'
-import { close_popup } from './quicksearch'
 import type { CMKAjaxReponse } from './types'
 import {
   add_class,
@@ -22,20 +21,19 @@ import {
   update_contents
 } from './utils'
 
-let g_content_loc: null | string = null
 let g_scrollbar: SimpleBar | null | undefined = null
 
-function update_content_location_if_accessible() {
-  if (is_content_frame_accessible()) {
-    update_content_location()
-  }
-}
-
-export function initialize_sidebar() {
-  setInterval(function () {
-    update_content_location_if_accessible()
-  }, 1000)
-}
+// The main iframe is gone, so the sidebar no longer has a sibling frame to
+// observe. ``initialize_sidebar`` used to spawn a 1 Hz interval that polled
+// the content iframe's URL and pushed it onto ``window.parent.history`` via
+// ``replaceState`` to keep the address bar in sync. With each content page
+// now rendering its own URL directly there is nothing to poll, and the
+// helpers (``update_content_location*``, ``is_content_frame_accessible``,
+// ``register_edge_listeners``, ``on_mouse_leave``) have no remaining
+// callers. The Python side still emits ``cmk.sidebar.initialize_sidebar()``
+// after rendering the sidebar; we keep this as a no-op until that callsite
+// is removed.
+export function initialize_sidebar() {}
 
 export function register_event_handlers() {
   window.addEventListener(
@@ -46,26 +44,6 @@ export function register_event_handlers() {
     },
     false
   )
-}
-
-// This ends drag scrolling when moving the mouse out of the sidebar
-// frame while performing a drag scroll.
-// This is no 100% solution. When moving the mouse out of browser window
-// without moving the mouse over the edge elements the dragging is not ended.
-export function register_edge_listeners(obj: Window | null) {
-  // It is possible to open other domains in the content frame - don't register
-  // the event in that case. It is not permitted by most browsers!
-  if (!is_content_frame_accessible()) return
-
-  const edge = obj ? obj : parent.frames[0]
-  if (window.addEventListener !== null) edge.addEventListener('mousemove', on_mouse_leave, false)
-  else edge.onmousemove = on_mouse_leave
-}
-
-function on_mouse_leave() {
-  if (typeof close_popup != 'undefined') close_popup()
-  snapinTerminateDrag()
-  return false
 }
 
 /************************************************
@@ -271,64 +249,6 @@ function getSnapinTargetPos() {
 /************************************************
  * misc sidebar stuff
  *************************************************/
-
-// Checks if the sidebar can access the content frame. It might be denied
-// by the browser since it blocks cross domain access.
-export function is_content_frame_accessible() {
-  try {
-    parent.frames[0].document
-    return true
-  } catch (e) {
-    return false
-  }
-}
-
-export function update_content_location() {
-  // initialize the original title
-  //@ts-ignore
-  if (typeof window.parent['orig_title'] == 'undefined') {
-    //@ts-ignore
-    window.parent['orig_title'] = window.parent.document.title
-  }
-
-  const content_frame = parent.frames[0]
-
-  // Change the title to add the frame title to reflect the
-  // title of the content URL title (window title or tab title)
-  let page_title
-  if (content_frame.document.title != '') {
-    page_title =
-      //@ts-ignore
-      window.parent['orig_title'] + ' - ' + content_frame.document.title
-  } else {
-    //@ts-ignore
-    page_title = window.parent['orig_title']
-  }
-  window.parent.document.title = page_title
-
-  // Construct the URL to be called on page reload
-  const parts = window.parent.location.pathname.split('/')
-  parts.pop()
-  const cmk_path = parts.join('/')
-  const rel_url =
-    content_frame.location.pathname + content_frame.location.search + content_frame.location.hash
-  const index_url = cmk_path + '/index.py?start_url=' + encodeURIComponent(rel_url)
-
-  if (window.parent.history.replaceState) {
-    if (rel_url && rel_url != 'blank') {
-      // Update the URL to be called on reload, e.g. via F5, to switch to exactly this URL
-      window.parent.history.replaceState({}, page_title, index_url)
-
-      // only update the internal flag var if the url was not blank and has been updated
-      //otherwise try again on next scheduler run
-      g_content_loc = content_frame.document.location.href
-    }
-  } else {
-    // Only a browser without history.replaceState support reaches this. Sadly
-    // we have no F5/reload fix for them...
-    g_content_loc = content_frame.document.location.href
-  }
-}
 
 const g_scrolling = true
 

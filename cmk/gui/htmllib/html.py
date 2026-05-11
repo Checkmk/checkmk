@@ -16,7 +16,7 @@ import time
 import typing
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from functools import lru_cache
-from typing import Any, Literal
+from typing import Any
 
 from flask import current_app, session
 
@@ -368,7 +368,6 @@ class HTMLGenerator(HTMLWriter):
     def html_head(
         self,
         title: str,
-        main_javascript: str = "main",
         force: bool = False,
         *,
         lang: str,
@@ -376,13 +375,12 @@ class HTMLGenerator(HTMLWriter):
         load_frontend_vue: str,
         custom_style_sheet: str | None,
     ) -> None:
-        javascript_files = [main_javascript]
         if force or not self._header_sent:
             self.write_html(HTML.without_escaping("<!DOCTYPE HTML>\n"))
             self.open_html(lang=lang)
             self._head(
                 title,
-                javascript_files,
+                ["main"],
                 inject_js_profiling_code=inject_js_profiling_code,
                 load_frontend_vue=load_frontend_vue,
                 custom_style_sheet=custom_style_sheet,
@@ -392,7 +390,6 @@ class HTMLGenerator(HTMLWriter):
     def body_start(
         self,
         title: str = "",
-        main_javascript: Literal["main", "side"] = "main",
         force: bool = False,
         *,
         lang: str,
@@ -404,7 +401,6 @@ class HTMLGenerator(HTMLWriter):
     ) -> None:
         self.html_head(
             title,
-            main_javascript,
             force,
             lang=lang,
             inject_js_profiling_code=inject_js_profiling_code,

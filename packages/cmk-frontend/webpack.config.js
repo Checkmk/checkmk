@@ -50,7 +50,6 @@ module.exports = {
     main: './src/js/index.ts',
     mobile: './src/js/mobile.ts',
     tracking_entry: './src/js/tracking_entry.ts',
-    side: './src/js/side_index.ts',
     fonts_lato: './src/themes/facelift/fonts_inter.scss',
     facelift: './src/themes/facelift/theme.scss',
     modern_dark: './src/themes/modern-dark/theme.scss'

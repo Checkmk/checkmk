@@ -470,7 +470,6 @@ class SidebarRenderer:
         """
         html.html_head(
             title or _("Checkmk Sidebar"),
-            main_javascript="side",
             lang=user.language,
             inject_js_profiling_code=active_config.inject_js_profiling_code,
             load_frontend_vue=active_config.load_frontend_vue,

@@ -387,7 +387,7 @@ just to signal that real build script was not called -->
                 <File Id="fil2D476020F3EF4F4FA8E2AD8BCEBE0B3A" KeyPath="yes" Source="$(var.EncryptedPluginsFolder)\windows_updates.ps1" DiskId="1"  />
             </Component>
             <Component Id="cmp1C47F228C3994B4CAEF42FB94962ABD2" Guid="{B89DC847-FC4B-4868-A5D6-8F1B915D20CC}">
-                <File Id="fil22DEF483A73CED9FD288835C50E1B29E" KeyPath="yes" Source="..\..\windows\plugins\win_dhcp_pools.bat" DiskId="1"  />
+                <File Id="fil22DEF483A73CED9FD288835C50E1B29E" KeyPath="yes" Source="..\..\..\cmk\plugins\windows\agents\win_dhcp_pools.bat" DiskId="1"  />
             </Component>
             <Component Id="cmp96008BD5424F4E9D0BF1111A1E4EA3C3" Guid="{BCE8E91B-B645-4C89-A371-7ABF3F87121D}">
                 <File Id="fil70F9F92ED57B6C727E3FEDA8CD7856EB" KeyPath="yes" Source="..\..\..\cmk\plugins\collection\agents\win_dmidecode.bat" DiskId="1"  />

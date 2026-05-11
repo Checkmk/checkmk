@@ -7,7 +7,7 @@
 import pytest
 
 from cmk.agent_based.v2 import Attributes, Result, Service, State
-from cmk.plugins.collection.agent_based.snmp_info import (
+from cmk.plugins.snmp.agent_based.snmp_info import (
     check_snmp_info,
     discover_snmp_info,
     inventorize_snmp_info,

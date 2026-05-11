@@ -8,11 +8,11 @@ from collections.abc import Iterable
 import pytest
 
 from cmk.agent_based.v2 import Attributes, HostLabel, InventoryResult, StringTable, TableRow
-from cmk.plugins.collection.agent_based.inventory_snmp_extended_info import (
+from cmk.plugins.lib.device_types import get_device_type_label
+from cmk.plugins.snmp.agent_based.inventory_snmp_extended_info import (
     inventorize_snmp_extended_info,
     parse_snmp_extended_info,
 )
-from cmk.plugins.lib.device_types import get_device_type_label
 
 
 @pytest.mark.parametrize(

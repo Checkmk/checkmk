@@ -3,7 +3,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 BeforeAll {
-    $scriptPath = Join-Path $PSScriptRoot "..\plugins\windows_updates.ps1"
+    $scriptPath = Join-Path $PSScriptRoot "..\..\..\cmk\plugins\windows\agents\windows_updates.ps1"
     . $scriptPath
 }
 

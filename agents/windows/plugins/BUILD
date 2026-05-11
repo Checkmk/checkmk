@@ -45,7 +45,7 @@ TO_SIGN_SCRIPTS = [
     "//cmk/plugins/windows/agents:windows_multipath.ps1",
     "windows_os_bonding.ps1",
     "//cmk/plugins/windows/agents:windows_tasks.ps1",
-    "windows_updates.ps1",
+    "//cmk/plugins/windows/agents:windows_updates.ps1",
     "hyperv_host.ps1",
 ]
 

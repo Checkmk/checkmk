@@ -9,7 +9,7 @@ from collections.abc import Sequence
 import pytest
 
 from cmk.agent_based.v2 import Metric, Result, Service, State
-from cmk.legacy_checks.hp_proliant_temp import (
+from cmk.plugins.hp_proliant.agent_based.hp_proliant_temp import (
     check_hp_proliant_temp,
     discover_hp_proliant_temp,
     parse_hp_proliant_temp,

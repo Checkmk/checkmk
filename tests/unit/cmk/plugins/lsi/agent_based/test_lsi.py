@@ -8,7 +8,7 @@ from collections.abc import Mapping
 import pytest
 
 from cmk.agent_based.v2 import CheckResult, Result, Service, State
-from cmk.plugins.collection.agent_based.lsi import (
+from cmk.plugins.lsi.agent_based.lsi import (
     check_plugin_lsi_array,
     check_plugin_lsi_disk,
     parse_lsi,

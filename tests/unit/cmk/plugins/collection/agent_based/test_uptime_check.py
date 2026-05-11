@@ -14,8 +14,8 @@ import pytest
 import time_machine
 
 from cmk.agent_based.v2 import Metric, Result, State, StringTable
-from cmk.plugins.collection.agent_based import uptime
 from cmk.plugins.lib import uptime as uptime_utils
+from cmk.plugins.uptime.agent_based import uptime
 
 # Mark all tests in this file as check related tests
 

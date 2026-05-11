@@ -20,7 +20,7 @@ use clap::Parser;
 use std::path::PathBuf;
 
 #[derive(Parser, Default)]
-#[command(about = "Oracle plugin.", version = version::VERSION)]
+#[command(name = "mk-oracle", about = "Oracle plugin.", version = version::VERSION)]
 pub struct Args {
     /// Enable verbose output. Use once (-v) for logging level DEBUG and twice (-vv) for logging
     /// level TRACE.

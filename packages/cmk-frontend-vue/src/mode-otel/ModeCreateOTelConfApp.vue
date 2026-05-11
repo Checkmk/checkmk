@@ -34,10 +34,12 @@ import {
 import type { PasswordConfig } from './otel-configuration-steps/password_store_password.types.ts'
 import {
   type OTelAuthInput,
+  type OTelBundleInput,
   type OTelReceiverProtocolInput,
   type OTelSocketAddressInput,
   POST_SAVE_ACTIONS,
   type PostSaveAction,
+  createOTelBundleAction,
   createOTelReceiverConfigAction
 } from './otel-configuration-steps/post_save_actions.ts'
 
@@ -210,6 +212,11 @@ const finalizeActions = computed<readonly PostSaveAction[]>(() => {
   // The per-protocol enable checkboxes (`grpcEnabled` / `httpEnabled`) gate the
   // save payload here so the disabled tab's form state never reaches the
   // server, matching what the wizard shows the user.
+  const bundleInput: OTelBundleInput = {
+    configName: configName.value,
+    siteId: siteId.value,
+    passwordIds: passwordsToSave.value.map((p) => p.general_props.id)
+  }
   return [
     ...sharedActions.slice(0, -1),
     createOTelReceiverConfigAction({
@@ -233,7 +240,8 @@ const finalizeActions = computed<readonly PostSaveAction[]>(() => {
         : null,
       passwords: passwordsToSave.value
     }),
-    ...sharedActions.slice(-1)
+    ...sharedActions.slice(-1),
+    createOTelBundleAction(bundleInput)
   ]
 })
 

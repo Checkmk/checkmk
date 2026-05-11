@@ -5,7 +5,7 @@
 
 
 from cmk.agent_based.v2 import Attributes, TableRow
-from cmk.plugins.collection.agent_based import prtconf
+from cmk.plugins.aix.agent_based import prtconf
 
 INFO = [
     ["System Model", " IBM,8231-E2D"],

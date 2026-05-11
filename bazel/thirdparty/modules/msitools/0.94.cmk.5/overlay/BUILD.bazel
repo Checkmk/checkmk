@@ -60,6 +60,7 @@ configure_make(
         install -m 755 $${BUILD_TMPDIR}/.libs/msibuild $${INSTALLDIR}/bin/
         install -m 755 $${BUILD_TMPDIR}/libmsi/.libs/libmsi.so.0.0.0 $${INSTALLDIR}/lib
     """,
+    set_file_prefix_map = True,
     tags = ["manual"],
     targets = [
         "-C libmsi",

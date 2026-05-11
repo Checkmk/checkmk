@@ -133,3 +133,48 @@ class TestEnsureOverlayTmpfsHandling:
         # holding files open and preventing the user from diagnosing it.
         start_calls = [call for call in mock_omd.call_args_list if call.args[1] == "start"]
         assert start_calls == [], "site must stay stopped after umount failure for diagnosis"
+
+
+class TestMaterializeSymlinks:
+    """_materialize_symlinks rsyncs version-dir contents into the overlay upper layer."""
+
+    def test_rsync_preserves_xattrs(self, tmp_path: Path) -> None:
+        """The rsync invocation must include ``-X`` so ``security.capability``
+        xattrs (e.g. ``cap_net_bind_service+ep`` on ``mkeventd_open514``,
+        ``cap_net_raw+ep`` on ICMP helpers) survive materialization.  Without
+        it the merged overlay view exposes the upper-layer file without its
+        capability and the binary fails with EACCES at runtime.
+        """
+        site_root = tmp_path / "omd" / "sites" / "heute"
+        site_root.mkdir(parents=True)
+        upper = tmp_path / "upper"
+        upper.mkdir()
+        version_dir = tmp_path / "version"
+        bin_dir = version_dir / "bin"
+        bin_dir.mkdir(parents=True)
+        overlay_base = tmp_path / "overlay_base"
+        overlay_base.mkdir()
+
+        with (
+            patch("cmk.dev_deploy.site.overlay._upper_dir", return_value=upper),
+            patch("cmk.dev_deploy.site.overlay._version_dir", return_value=version_dir),
+            patch("cmk.dev_deploy.site.overlay._site_overlay_dir", return_value=overlay_base),
+            patch("cmk.dev_deploy.site.overlay.run_as_root") as mock_run_as_root,
+            patch("cmk.dev_deploy.site.overlay.subprocess.run") as mock_subprocess_run,
+        ):
+            mock_run_as_root.return_value = subprocess.CompletedProcess(
+                args=[], returncode=0, stdout="", stderr=""
+            )
+            mock_subprocess_run.return_value = subprocess.CompletedProcess(
+                args=[], returncode=0, stdout="0\t.", stderr=""
+            )
+
+            overlay._materialize_symlinks(site_root)  # noqa: SLF001
+
+        rsync_calls = [
+            c.args[0] for c in mock_run_as_root.call_args_list if c.args[0][:1] == ["rsync"]
+        ]
+        assert rsync_calls, "expected at least one rsync invocation"
+        for cmd in rsync_calls:
+            flags = cmd[1]
+            assert "X" in flags, f"rsync flags {flags!r} must include -X to preserve xattrs"

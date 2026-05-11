@@ -324,8 +324,13 @@ def _materialize_symlinks(site_root: Path) -> None:
         # -a preserves ownership (root) for Apache/WSGI.
         # -A preserves POSIX ACLs which grant the deploy user write access
         # to root-owned directories.
+        # -X preserves extended attributes, notably ``security.capability``
+        # carrying file capabilities (e.g. ``cap_net_bind_service+ep`` on
+        # ``bin/mkeventd_open514``, ``cap_net_raw+ep`` on ICMP helpers).
+        # Without it, the merged overlay view exposes the upper-layer file
+        # without its capability and the binary fails with EACCES.
         result = run_as_root(
-            ["rsync", "-aA", f"{target}/", f"{upper_entry}/"],
+            ["rsync", "-aAX", f"{target}/", f"{upper_entry}/"],
         )
         dir_elapsed = time.monotonic() - dir_start
 

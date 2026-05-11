@@ -43,7 +43,6 @@ py_library(
         "//cmk/gui/watolib:config_infra",
         "//cmk/gui/watolib:passwords",
         "//cmk/gui/watolib:registries",
-        "//cmk/plugins",
         "//cmk/utils",
         "//packages/cmk-ccc:exceptions",
         "//packages/cmk-ccc:site",

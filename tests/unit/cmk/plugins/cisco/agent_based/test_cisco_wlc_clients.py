@@ -15,7 +15,7 @@ from cmk.plugins.cisco.agent_based.cisco_wlc_clients import (
     parse_cisco_wlc_clients,
     snmp_section_cisco_wlc_9800_clients,
 )
-from cmk.plugins.collection.agent_based.wlc_clients import (
+from cmk.plugins.cisco.agent_based.wlc_clients import (
     check_plugin_wlc_clients,
     check_wlc_clients,
 )

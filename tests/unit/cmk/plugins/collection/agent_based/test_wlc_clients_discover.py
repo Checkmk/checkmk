@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.agent_based.v2 import Service
-from cmk.plugins.collection.agent_based.wlc_clients import discover_wlc_clients
+from cmk.plugins.cisco.agent_based.wlc_clients import discover_wlc_clients
 from cmk.plugins.lib.wlc_clients import ClientsTotal, WlcClientsSection
 
 

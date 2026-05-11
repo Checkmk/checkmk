@@ -3,71 +3,139 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="misc"
-# mypy: disable-error-code="no-untyped-call"
-
-from collections.abc import Mapping, Sequence
-from typing import Any
-
 import pytest
 
-from cmk.agent_based.v2 import StringTable
+from cmk.agent_based.v2 import Metric, Result, Service, State, StringTable
 from cmk.legacy_checks.ibm_svc_host import (
+    _HostParams,
     check_ibm_svc_host,
     discover_ibm_svc_host,
     parse_ibm_svc_host,
 )
 
+_STRING_TABLE: StringTable = [
+    ["0", "h_esx01", "2", "4", "degraded"],
+    ["1", "host206", "2", "2", "online"],
+    ["2", "host105", "2", "2", "online"],
+    ["3", "host106", "2", "2", "online"],
+]
+
 
 @pytest.mark.parametrize(
     "string_table, expected_discoveries",
     [
-        (
-            [
-                ["0", "h_esx01", "2", "4", "degraded"],
-                ["1", "host206", "2", "2", "online"],
-                ["2", "host105", "2", "2", "online"],
-                ["3", "host106", "2", "2", "online"],
-            ],
-            [(None, {})],
-        ),
+        (_STRING_TABLE, [Service()]),
+        ([], []),
     ],
 )
 def test_discover_ibm_svc_host(
-    string_table: StringTable, expected_discoveries: Sequence[tuple[str | None, Mapping[str, Any]]]
+    string_table: StringTable, expected_discoveries: list[Service]
 ) -> None:
-    """Test discovery function for ibm_svc_host check."""
     parsed = parse_ibm_svc_host(string_table)
-    result = list(discover_ibm_svc_host(parsed))
-    assert sorted(result) == sorted(expected_discoveries)
+    assert list(discover_ibm_svc_host(parsed)) == expected_discoveries
 
 
 @pytest.mark.parametrize(
-    "item, params, string_table, expected_results",
+    "params, string_table, expected_results",
     [
+        # No levels configured — all OK
         (
-            None,
             {},
+            _STRING_TABLE,
+            [
+                Result(state=State.OK, summary="Active: 3"),
+                Metric("active", 3.0),
+                Result(state=State.OK, summary="Inactive: 0"),
+                Metric("inactive", 0.0),
+                Result(state=State.OK, summary="Degraded: 1"),
+                Metric("degraded", 1.0),
+                Result(state=State.OK, summary="Offline: 0"),
+                Metric("offline", 0.0),
+                Result(state=State.OK, summary="Other: 0"),
+                Metric("other", 0.0),
+            ],
+        ),
+        # always_ok=False: degraded host triggers WARN
+        (
+            {"always_ok": False},
             [
                 ["0", "h_esx01", "2", "4", "degraded"],
                 ["1", "host206", "2", "2", "online"],
-                ["2", "host105", "2", "2", "online"],
-                ["3", "host106", "2", "2", "online"],
             ],
             [
-                (0, "3 active"),
-                (0, "0 inactive", [("inactive", 0, None, None)]),
-                (0, "1 degraded", [("degraded", 1, None, None)]),
-                (0, "0 offline", [("offline", 0, None, None)]),
-                (0, "0 other", [("other", 0, None, None)]),
+                Result(state=State.OK, summary="1 active, 0 inactive"),
+                Metric("active", 1.0),
+                Metric("inactive", 0.0),
+                Metric("degraded", 1.0),
+                Metric("offline", 0.0),
+                Metric("other", 0.0),
+                Result(state=State.WARN, summary="1 degraded"),
+            ],
+        ),
+        # always_ok=True: degraded host, but state forced to OK
+        (
+            {"always_ok": True},
+            [
+                ["0", "h_esx01", "2", "4", "degraded"],
+                ["1", "host206", "2", "2", "online"],
+            ],
+            [
+                Result(state=State.OK, summary="1 active, 0 inactive"),
+                Metric("active", 1.0),
+                Metric("inactive", 0.0),
+                Metric("degraded", 1.0),
+                Metric("offline", 0.0),
+                Metric("other", 0.0),
+                Result(state=State.OK, summary="1 degraded"),
+            ],
+        ),
+        # inactive_hosts warn level: inactive count at warn threshold
+        (
+            {"inactive_hosts": (1, 5)},
+            [
+                ["0", "h_esx01", "2", "4", "inactive"],
+                ["1", "host206", "2", "2", "online"],
+            ],
+            [
+                Result(state=State.OK, summary="Active: 1"),
+                Metric("active", 1.0),
+                Result(state=State.WARN, summary="Inactive: 1 (warn/crit at 1/5)"),
+                Metric("inactive", 1.0, levels=(1.0, 5.0)),
+                Result(state=State.OK, summary="Degraded: 0"),
+                Metric("degraded", 0.0),
+                Result(state=State.OK, summary="Offline: 0"),
+                Metric("offline", 0.0),
+                Result(state=State.OK, summary="Other: 0"),
+                Metric("other", 0.0),
+            ],
+        ),
+        # active_hosts warn level: active count below warn threshold
+        (
+            {"active_hosts": (5, 2)},
+            [
+                ["0", "host206", "2", "2", "online"],
+                ["1", "host207", "2", "2", "online"],
+                ["2", "host208", "2", "2", "online"],
+            ],
+            [
+                Result(state=State.WARN, summary="Active: 3 (warn/crit below 5/2)"),
+                Metric("active", 3.0),
+                Result(state=State.OK, summary="Inactive: 0"),
+                Metric("inactive", 0.0),
+                Result(state=State.OK, summary="Degraded: 0"),
+                Metric("degraded", 0.0),
+                Result(state=State.OK, summary="Offline: 0"),
+                Metric("offline", 0.0),
+                Result(state=State.OK, summary="Other: 0"),
+                Metric("other", 0.0),
             ],
         ),
     ],
 )
 def test_check_ibm_svc_host(
-    item: str, params: Mapping[str, Any], string_table: StringTable, expected_results: Sequence[Any]
+    params: _HostParams,
+    string_table: StringTable,
+    expected_results: list[Result | Metric],
 ) -> None:
-    """Test check function for ibm_svc_host check."""
     parsed = parse_ibm_svc_host(string_table)
-    result = list(check_ibm_svc_host(item, params, parsed))
-    assert result == expected_results
+    assert list(check_ibm_svc_host(params, parsed)) == expected_results

@@ -3,17 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
-# mypy: disable-error-code="type-arg"
-
-
-from collections.abc import Iterable, Mapping
-
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.legacy_includes.ibm_svc import parse_ibm_svc_with_header
-
-check_info = {}
-
 # Example output from agent:
 # <<<ibm_svc_host:sep(58)>>>
 # 0:h_esx01:2:4:degraded
@@ -21,10 +10,35 @@ check_info = {}
 # 2:host105:2:2:online
 # 3:host106:2:2:online
 
-Section = Mapping
+from collections.abc import Mapping, Sequence
+from typing import TypedDict
+
+from cmk.agent_based.v2 import (
+    AgentSection,
+    check_levels,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Metric,
+    Result,
+    Service,
+    State,
+    StringTable,
+)
+from cmk.legacy_includes.ibm_svc import parse_ibm_svc_with_header
+
+Section = Mapping[str, Sequence[Mapping[str, str]]]
 
 
-def parse_ibm_svc_host(string_table):
+class _HostParams(TypedDict, total=False):
+    active_hosts: tuple[int, int]
+    inactive_hosts: tuple[int, int]
+    degraded_hosts: tuple[int, int]
+    offline_hosts: tuple[int, int]
+    other_hosts: tuple[int, int]
+
+
+def parse_ibm_svc_host(string_table: StringTable) -> Section:
     dflt_header = [
         "id",
         "name",
@@ -39,23 +53,18 @@ def parse_ibm_svc_host(string_table):
     return parse_ibm_svc_with_header(string_table, dflt_header)
 
 
-def discover_ibm_svc_host(section: Section) -> Iterable[tuple[None, dict]]:
+def discover_ibm_svc_host(section: Section) -> DiscoveryResult:
     if section:
-        yield None, {}
+        yield Service()
 
 
-def check_ibm_svc_host(item, params, parsed):
-    if params is None:
-        # Old inventory rule until version 1.2.7
-        # params were None instead of empty dictionary
-        params = {"always_ok": False}
-
+def check_ibm_svc_host(params: _HostParams, section: Section) -> CheckResult:
     degraded = 0
     offline = 0
     active = 0
     inactive = 0
     other = 0
-    for rows in parsed.values():
+    for rows in section.values():
         for data in rows:
             status = data["status"]
             if status == "degraded":
@@ -70,55 +79,66 @@ def check_ibm_svc_host(item, params, parsed):
                 other += 1
 
     if "always_ok" in params:
-        # Old configuration rule
-        # This was used with only one parameter always_ok until version 1.2.7
-        perfdata = [
-            ("active", active),
-            ("inactive", inactive),
-            ("degraded", degraded),
-            ("offline", offline),
-            ("other", other),
-        ]
-        yield 0, f"{active} active, {inactive} inactive", perfdata
-
+        # Old configuration rule from before version 1.2.7
+        always_ok = bool(params.get("always_ok"))
+        yield Result(state=State.OK, summary=f"{active} active, {inactive} inactive")
+        yield Metric("active", active)
+        yield Metric("inactive", inactive)
+        yield Metric("degraded", degraded)
+        yield Metric("offline", offline)
+        yield Metric("other", other)
         if degraded > 0:
-            yield (not params["always_ok"] and 1 or 0), "%s degraded" % degraded
+            yield Result(
+                state=State.OK if always_ok else State.WARN,
+                summary=f"{degraded} degraded",
+            )
         if offline > 0:
-            yield (not params["always_ok"] and 2 or 0), "%s offline" % offline
+            yield Result(
+                state=State.OK if always_ok else State.CRIT,
+                summary=f"{offline} offline",
+            )
         if other > 0:
-            yield (not params["always_ok"] and 1 or 0), "%s in an unidentified state" % other
-    else:
-        warn, crit = params.get("active_hosts", (None, None))
+            yield Result(
+                state=State.OK if always_ok else State.WARN,
+                summary=f"{other} in an unidentified state",
+            )
+        return
 
-        if crit is not None and active <= crit:
-            yield 2, "%s active" % active
-        elif warn is not None and active <= warn:
-            yield 1, "%s active" % active
-        else:
-            yield 0, "%s active" % active
+    active_levels = params.get("active_hosts")
+    yield from check_levels(
+        active,
+        label="Active",
+        levels_lower=("fixed", active_levels) if active_levels else ("no_levels", None),
+        metric_name="active",
+        render_func=str,
+    )
 
-        for ident, value in [
-            ("inactive", inactive),
-            ("degraded", degraded),
-            ("offline", offline),
-            ("other", other),
-        ]:
-            warn, crit = params.get(ident + "_hosts", (None, None))
-
-            if crit is not None and value >= crit:
-                state = 2
-            if warn is not None and value >= warn:
-                state = 1
-            else:
-                state = 0
-            yield state, f"{value} {ident}", [(ident, value, warn, crit)]
+    for ident, value, raw_levels in [
+        ("inactive", inactive, params.get("inactive_hosts")),
+        ("degraded", degraded, params.get("degraded_hosts")),
+        ("offline", offline, params.get("offline_hosts")),
+        ("other", other, params.get("other_hosts")),
+    ]:
+        yield from check_levels(
+            value,
+            label=ident.capitalize(),
+            levels_upper=("fixed", raw_levels) if raw_levels else ("no_levels", None),
+            metric_name=ident,
+            render_func=str,
+        )
 
 
-check_info["ibm_svc_host"] = LegacyCheckDefinition(
+agent_section_ibm_svc_host = AgentSection(
     name="ibm_svc_host",
     parse_function=parse_ibm_svc_host,
+)
+
+
+check_plugin_ibm_svc_host = CheckPlugin(
+    name="ibm_svc_host",
     service_name="Hosts",
     discovery_function=discover_ibm_svc_host,
     check_function=check_ibm_svc_host,
     check_ruleset_name="ibm_svc_host",
+    check_default_parameters={},
 )

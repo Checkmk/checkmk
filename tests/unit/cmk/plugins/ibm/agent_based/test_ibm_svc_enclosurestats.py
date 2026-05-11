@@ -14,7 +14,7 @@ from typing import Any
 import pytest
 
 from cmk.agent_based.v2 import Metric, Result, Service, State
-from cmk.legacy_checks.ibm_svc_enclosurestats import (
+from cmk.plugins.ibm.agent_based.ibm_svc_enclosurestats import (
     _check_ibm_svc_enclosurestats_temp,
     check_ibm_svc_enclosurestats_power,
     discover_ibm_svc_enclosurestats_power,

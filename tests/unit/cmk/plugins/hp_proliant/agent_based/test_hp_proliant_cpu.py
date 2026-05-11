@@ -8,7 +8,7 @@ from collections.abc import Sequence
 import pytest
 
 from cmk.agent_based.v2 import Result, Service, State, StringTable
-from cmk.legacy_checks.hp_proliant_cpu import (
+from cmk.plugins.hp_proliant.agent_based.hp_proliant_cpu import (
     check_hp_proliant_cpu,
     discover_hp_proliant_cpu,
     parse_hp_proliant_cpu,

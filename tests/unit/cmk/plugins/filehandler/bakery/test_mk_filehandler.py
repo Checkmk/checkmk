@@ -7,8 +7,8 @@ from pathlib import Path
 
 import pytest
 
-from cmk.bakery.v1 import OS, Plugin
-from cmk.base.plugins.bakery.mk_filehandler import get_mk_filehandler_files
+from cmk.bakery.v2_unstable import OS, Plugin
+from cmk.plugins.filehandler.bakery.mk_filehandler import bakery_plugin_mk_filehandler
 
 
 @pytest.mark.parametrize(
@@ -32,5 +32,6 @@ from cmk.base.plugins.bakery.mk_filehandler import get_mk_filehandler_files
     ],
 )
 def test_mk_filehandler_files(conf: dict[str, object], expected: list[Plugin]) -> None:
-    result = list(get_mk_filehandler_files(conf))
+    parsed = bakery_plugin_mk_filehandler.parameter_parser(conf)
+    result = list(bakery_plugin_mk_filehandler.files_function(parsed))
     assert result == expected

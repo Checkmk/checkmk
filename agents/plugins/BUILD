@@ -65,7 +65,6 @@ sh_library(
         "mk_db2.aix",
         "mk_db2.linux",
         "mk_errpt.aix",
-        "mk_filehandler",
         "mk_informix",
         "mk_inventory.aix",
         "mk_inventory.linux",

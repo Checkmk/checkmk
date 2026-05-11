@@ -7,8 +7,6 @@ from collections.abc import Mapping, Sequence
 from typing import Any
 
 from cmk.ccc.site import omd_site
-from cmk.ccc.store import load_from_mk_file
-from cmk.ccc.version import Edition, edition
 from cmk.gui.config import active_config
 from cmk.gui.form_specs.unstable import MultipleChoiceExtended
 from cmk.gui.form_specs.unstable.multiple_choice import MultipleChoiceElementExtended
@@ -32,7 +30,6 @@ from cmk.rulesets.v1.form_specs import (
     validators,
 )
 from cmk.rulesets.v1.rule_specs import AgentConfig, CustomTopic
-from cmk.utils import paths
 
 DEFAULT_UPDATE_INTERVAL: int = 3600
 MAX_UPDATE_INTERVAL: int = 30 * 24 * 60 * 60  # 30 days
@@ -478,28 +475,6 @@ def _valuespec_updater_registration() -> SingleChoice:
     )
 
 
-def _is_ultimatemt_remote_site() -> bool:
-    # Mirror of the 2.4 guard `edition() is Edition.CME and is_wato_slave_site()`.
-    # Reading distributed_wato.mk directly avoids cmk.gui import
-    if edition(paths.omd_root) is not Edition.ULTIMATEMT:
-        return False
-    distributed_wato_file = paths.check_mk_config_dir / "distributed_wato.mk"
-    if not distributed_wato_file.exists() or distributed_wato_file.stat().st_size == 0:
-        return False
-    return load_from_mk_file(
-        distributed_wato_file,
-        key="is_distributed_setup_remote_site",
-        default=False,
-        lock=False,
-    )
-
-
-def _validate_signature_keys(value: Sequence[object]) -> None:
-    if _is_ultimatemt_remote_site():
-        return
-    validators.LengthInRange(min_value=1)(value)
-
-
 def _valuespec_signature_keys() -> MultipleChoiceExtended:
     return MultipleChoiceExtended(
         title=Title("Signature keys the agent will accept"),
@@ -516,7 +491,7 @@ def _valuespec_signature_keys() -> MultipleChoiceExtended:
             )
             for key in sorted(active_config.agent_signature_keys.values(), key=lambda k: k.alias)
         ],
-        custom_validate=(_validate_signature_keys,),
+        custom_validate=(validators.LengthInRange(min_value=1),),
     )
 
 

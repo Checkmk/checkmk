@@ -54,8 +54,8 @@ const open = defineModel<boolean>('open', { default: true })
 let timeoutId: number | null = null
 
 watch(
-  open,
-  (newOpen) => {
+  [open, () => props.autoDismiss],
+  ([newOpen]) => {
     if (timeoutId !== null) {
       clearTimeout(timeoutId)
       timeoutId = null

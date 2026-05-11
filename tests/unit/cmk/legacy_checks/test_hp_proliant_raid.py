@@ -3,10 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="misc"
-# mypy: disable-error-code="no-untyped-def"
 
-from cmk.agent_based.v2 import render
+from cmk.agent_based.v2 import render, Result, Service, State
 from cmk.legacy_checks.hp_proliant_raid import (
     check_hp_proliant_raid,
     discover_hp_proliant_raid,
@@ -28,25 +26,27 @@ def test_discover_hp_proliant_raid_no_snmp_data() -> None:
 
 
 def test_discover_hp_proliant_raid_aa() -> None:
-    discovery_results = list(discover_hp_proliant_raid(parse_hp_proliant_raid(STRING_TABLE)))
-    assert discovery_results == [
-        ("1", None),
-        ("2", None),
-        ("3", None),
-        ("4", None),
-        ("5", None),
-        ("6", None),
+    assert list(discover_hp_proliant_raid(parse_hp_proliant_raid(STRING_TABLE))) == [
+        Service(item="1"),
+        Service(item="2"),
+        Service(item="3"),
+        Service(item="4"),
+        Service(item="5"),
+        Service(item="6"),
     ]
 
 
 def test_check_hp_proliant_raid_item_not_found() -> None:
-    assert not list(check_hp_proliant_raid("!111elf", None, parse_hp_proliant_raid(STRING_TABLE)))
+    assert not list(check_hp_proliant_raid("!111elf", parse_hp_proliant_raid(STRING_TABLE)))
 
 
 def test_check_hp_proliant_raid() -> None:
-    assert list(check_hp_proliant_raid("1", None, parse_hp_proliant_raid(STRING_TABLE))) == [
-        (0, "Status: OK"),
-        (0, f"Logical volume size: {render.bytes(286070 * 1024 * 1024)}"),
+    assert list(check_hp_proliant_raid("1", parse_hp_proliant_raid(STRING_TABLE))) == [
+        Result(state=State.OK, summary="Status: OK"),
+        Result(
+            state=State.OK,
+            summary=f"Logical volume size: {render.bytes(286070 * 1024 * 1024)}",
+        ),
     ]
 
 
@@ -56,8 +56,11 @@ def test_check_hp_proliant_raid_progress_cannot_be_determined() -> None:
             ["1", "banana", "7", "286070", "4294967295"],
         ]
     )
-    assert list(check_hp_proliant_raid("banana 1", None, parsed)) == [
-        (1, "Status: rebuilding"),
-        (0, f"Logical volume size: {render.bytes(286070 * 1024 * 1024)}"),
-        (0, "Rebuild: undetermined"),
+    assert list(check_hp_proliant_raid("banana 1", parsed)) == [
+        Result(state=State.WARN, summary="Status: rebuilding"),
+        Result(
+            state=State.OK,
+            summary=f"Logical volume size: {render.bytes(286070 * 1024 * 1024)}",
+        ),
+        Result(state=State.OK, summary="Rebuild: undetermined"),
     ]

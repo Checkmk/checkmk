@@ -3,24 +3,52 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import typing
-from collections.abc import Iterable, Mapping, Sequence
+from collections.abc import Mapping
+from typing import NamedTuple
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import render, SNMPTree
+from cmk.agent_based.v2 import (
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    render,
+    Result,
+    Service,
+    SimpleSNMPSection,
+    SNMPTree,
+    State,
+    StringTable,
+)
 from cmk.plugins.hp_proliant.lib import DETECT, sanitize_item
 
-check_info = {}
 
-
-class HpProRaid(typing.NamedTuple):
+class HpProRaid(NamedTuple):
     name: str
     status: str
     size_bytes: int
     rebuild_percent: int
 
 
-def parse_hp_proliant_raid(string_table: Sequence[Sequence[str]]) -> dict[str, HpProRaid]:
+_MAP_STATES = {
+    "1": (State.UNKNOWN, "other"),
+    "2": (State.OK, "OK"),
+    "3": (State.CRIT, "failed"),
+    "4": (State.WARN, "unconfigured"),
+    "5": (State.WARN, "recovering"),
+    "6": (State.WARN, "ready for rebuild"),
+    "7": (State.WARN, "rebuilding"),
+    "8": (State.CRIT, "wrong drive"),
+    "9": (State.CRIT, "bad connect"),
+    "10": (State.CRIT, "overheating"),
+    "11": (State.WARN, "shutdown"),
+    "12": (State.WARN, "automatic data expansion"),
+    "13": (State.CRIT, "not available"),
+    "14": (State.WARN, "queued for expansion"),
+    "15": (State.WARN, "multi-path access degraded"),
+    "16": (State.WARN, "erasing"),
+}
+
+
+def parse_hp_proliant_raid(string_table: StringTable) -> dict[str, HpProRaid]:
     parsed: dict[str, HpProRaid] = {}
     for number, name, status, size_str, rebuild in string_table:
         itemname = sanitize_item(f"{name} {number}".strip())
@@ -37,41 +65,21 @@ def parse_hp_proliant_raid(string_table: Sequence[Sequence[str]]) -> dict[str, H
     return parsed
 
 
-def discover_hp_proliant_raid(
-    parsed: Mapping[str, HpProRaid],
-) -> Iterable[tuple[str, None]]:
-    for raid in parsed:
-        yield raid, None
+def discover_hp_proliant_raid(section: Mapping[str, HpProRaid]) -> DiscoveryResult:
+    for raid in section:
+        yield Service(item=raid)
 
 
-def check_hp_proliant_raid(
-    item: str, _no_params: None, parsed: Mapping[str, HpProRaid]
-) -> Iterable[tuple[int, str]]:
-    map_states = {
-        "1": (3, "other"),
-        "2": (0, "OK"),
-        "3": (2, "failed"),
-        "4": (1, "unconfigured"),
-        "5": (1, "recovering"),
-        "6": (1, "ready for rebuild"),
-        "7": (1, "rebuilding"),
-        "8": (2, "wrong drive"),
-        "9": (2, "bad connect"),
-        "10": (2, "overheating"),
-        "11": (1, "shutdown"),
-        "12": (1, "automatic data expansion"),
-        "13": (2, "not available"),
-        "14": (1, "queued for expansion"),
-        "15": (1, "multi-path access degraded"),
-        "16": (1, "erasing"),
-    }
-
-    if not (raid_stats := parsed.get(item)):
+def check_hp_proliant_raid(item: str, section: Mapping[str, HpProRaid]) -> CheckResult:
+    if not (raid_stats := section.get(item)):
         return
 
-    state, state_readable = map_states.get(raid_stats.status, (3, "unknown"))
-    yield state, f"Status: {state_readable}"
-    yield 0, f"Logical volume size: {render.bytes(raid_stats.size_bytes)}"
+    state, state_readable = _MAP_STATES.get(raid_stats.status, (State.UNKNOWN, "unknown"))
+    yield Result(state=state, summary=f"Status: {state_readable}")
+    yield Result(
+        state=State.OK,
+        summary=f"Logical volume size: {render.bytes(raid_stats.size_bytes)}",
+    )
 
     # From CPQIDA-MIB:
     # This value is the percent complete of the rebuild.
@@ -83,13 +91,16 @@ def check_hp_proliant_raid(
         return
 
     if raid_stats.rebuild_percent == 4294967295:
-        yield 0, "Rebuild: undetermined"
+        yield Result(state=State.OK, summary="Rebuild: undetermined")
         return
 
-    yield 0, f"Rebuild: {render.percent(raid_stats.rebuild_percent)}"
+    yield Result(
+        state=State.OK,
+        summary=f"Rebuild: {render.percent(raid_stats.rebuild_percent)}",
+    )
 
 
-check_info["hp_proliant_raid"] = LegacyCheckDefinition(
+snmp_section_hp_proliant_raid = SimpleSNMPSection(
     name="hp_proliant_raid",
     detect=DETECT,
     fetch=SNMPTree(
@@ -97,6 +108,11 @@ check_info["hp_proliant_raid"] = LegacyCheckDefinition(
         oids=["2", "14", "4", "9", "12"],
     ),
     parse_function=parse_hp_proliant_raid,
+)
+
+
+check_plugin_hp_proliant_raid = CheckPlugin(
+    name="hp_proliant_raid",
     service_name="Logical Device %s",
     discovery_function=discover_hp_proliant_raid,
     check_function=check_hp_proliant_raid,

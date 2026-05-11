@@ -19,7 +19,7 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
-from cmk.plugins.collection.agent_based import timesyncd
+from cmk.plugins.time.agent_based import timesyncd
 
 
 @pytest.fixture

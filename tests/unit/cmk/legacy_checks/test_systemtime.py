@@ -11,7 +11,7 @@ import pytest
 import time_machine
 
 from cmk.agent_based.v2 import Metric, Result, Service, State, StringTable
-from cmk.plugins.collection.agent_based.systemtime import (
+from cmk.plugins.time.agent_based.systemtime import (
     check_systemtime,
     discover_systemtime,
     Params,

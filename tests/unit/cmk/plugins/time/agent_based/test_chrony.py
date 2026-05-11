@@ -11,7 +11,7 @@ from zoneinfo import ZoneInfo
 import time_machine
 
 from cmk.agent_based.v2 import Metric, Result, State
-from cmk.plugins.collection.agent_based import chrony
+from cmk.plugins.time.agent_based import chrony
 
 
 def test_chrony_parse_errmsg() -> None:

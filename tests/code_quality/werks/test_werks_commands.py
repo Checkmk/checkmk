@@ -10,8 +10,6 @@ import os
 import subprocess
 from pathlib import Path
 
-import pytest
-
 from cmk.utils.werks.__main__ import main as cmk_utils_werks_main
 from cmk.werks.cli import main as cmk_werks_cli_main
 from cmk.werks.utils.__main__ import main as cmk_werks_main
@@ -48,8 +46,6 @@ def test_mail() -> None:
         ["git", "log", f"--before={four_weeks_ago}", "--format=%H", "--max-count=1"],
         text=True,
     ).strip()
-    if not assume_no_notes_but:
-        pytest.skip("No commit older than 4 weeks found")
 
     cmk_utils_werks_main(
         [

@@ -235,9 +235,9 @@ def test_email_validation_non_compliance(address: str) -> None:
 @pytest.mark.parametrize(
     "address",
     [
-        "text",
-        "user@foo",
-        "\t\n a@localhost \t\n",  # whitespace is removed in from_html_vars
+        pytest.param("text", id="no @ symbol"),
+        pytest.param("user@foo", id="local hostname only"),
+        pytest.param("\t\n a@localhost \t\n", id="whitespace around address"),
     ],
 )
 def test_email_validation_raises(address: str) -> None:

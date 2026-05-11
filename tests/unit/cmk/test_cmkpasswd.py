@@ -96,9 +96,9 @@ def test_main_success(htpasswd_path: Path) -> None:
 @pytest.mark.parametrize(
     "user,password,reason",
     [
-        ("", "\0", "password"),  # Null byte not allowed
-        ("longcat", 73 * "|", "password"),  # Too long for bcrypt
-        ("what?user?", "hunter2", "username"),  # Invalid username
+        pytest.param("", "\0", "password", id="null byte in password"),
+        pytest.param("longcat", 73 * "|", "password", id="password too long for bcrypt"),
+        pytest.param("what?user?", "hunter2", "username", id="invalid username characters"),
     ],
 )
 def test_main_errors(capsys: Capsys, user: str, password: str, reason: str) -> None:

@@ -6,7 +6,7 @@
 import pytest
 
 from cmk.agent_based.v2 import CheckResult, Metric, Result, Service, State, StringTable
-from cmk.plugins.collection.agent_based.cmk_site_statistics import (
+from cmk.plugins.checkmk.agent_based.cmk_site_statistics import (
     check_cmk_site_statistics,
     CMKSiteStatisticsSection,
     discover_cmk_site_statistics,
@@ -14,7 +14,7 @@ from cmk.plugins.collection.agent_based.cmk_site_statistics import (
     parse_cmk_site_statistics,
     ServiceStatistics,
 )
-from cmk.plugins.collection.agent_based.livestatus_status import LivestatusSection
+from cmk.plugins.checkmk.agent_based.livestatus_status import LivestatusSection
 
 _SECTION_CMK_SITE_STATISTICS = {
     "heute": (

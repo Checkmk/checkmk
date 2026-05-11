@@ -230,7 +230,7 @@ def test_create_check_plugin() -> None:
 def test_module_attribute(agent_based_plugins: AgentBasedPlugins) -> None:
     local_check = agent_based_plugins.check_plugins[CheckPluginName("local")]
     assert local_check.location == PluginLocation(
-        "cmk.plugins.collection.agent_based.local", "check_plugin_local"
+        "cmk.plugins.checkmk.agent_based.local", "check_plugin_local"
     )
 
 

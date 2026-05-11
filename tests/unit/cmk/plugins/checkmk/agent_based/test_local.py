@@ -7,7 +7,7 @@
 import pytest
 
 from cmk.agent_based.v2 import Metric, Result, Service, State
-from cmk.plugins.collection.agent_based import local
+from cmk.plugins.checkmk.agent_based import local
 from cmk.plugins.lib.cache_helper import CacheInfo
 
 

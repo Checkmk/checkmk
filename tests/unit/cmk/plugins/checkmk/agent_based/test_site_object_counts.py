@@ -5,7 +5,7 @@
 
 
 from cmk.agent_based.v2 import Metric, Result, State
-from cmk.plugins.collection.agent_based import site_object_counts
+from cmk.plugins.checkmk.agent_based import site_object_counts
 
 SECTION: site_object_counts.Section = {
     "heute": {"Service check commands": {"lnx_if": 3, "omd_apache": 2}, "Tags": {"snmp": 1}},

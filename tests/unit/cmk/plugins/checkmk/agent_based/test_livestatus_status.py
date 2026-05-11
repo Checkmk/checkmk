@@ -14,7 +14,7 @@ import pytest
 import time_machine
 
 from cmk.agent_based.v2 import CheckResult, Metric, Result, Service, State
-from cmk.plugins.collection.agent_based import livestatus_status
+from cmk.plugins.checkmk.agent_based import livestatus_status
 
 STRING_TABLE_STATUS = [
     ["[heute]"],

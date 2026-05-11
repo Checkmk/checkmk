@@ -6,7 +6,7 @@
 from typing import Final
 
 from cmk.agent_based.v2 import Metric, Result, Service, State
-from cmk.plugins.collection.agent_based.mrpe import (
+from cmk.plugins.checkmk.agent_based.mrpe import (
     check_mrpe,
     discover_mrpe,
     parse_mrpe,

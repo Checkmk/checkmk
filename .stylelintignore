@@ -14,3 +14,4 @@ packages/cmk-frontend/src/themes/facelift/scss/_views.scss
 packages/cmk-frontend/src/themes/facelift/scss/_wato.scss
 packages/cmk-frontend/src/themes/modern-dark/scss/_variables.scss
 packages/cmk-frontend/src/themes/modern-dark/theme.scss
+packages/cmk-frontend-vue/src/assets/breakpoints.scss

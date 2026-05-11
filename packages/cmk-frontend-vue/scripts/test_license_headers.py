@@ -121,6 +121,7 @@ CHECKER = {
     ".sh": Checker(omit_start_lines=1, remove_prefix="# "),
     ".vue": Checker(previous_lines=["<!--"], next_lines=["-->"]),
     ".css": Checker(previous_lines=["/**"], remove_prefix=" * ", next_lines=[" */"]),
+    ".scss": Checker(previous_lines=["/**"], remove_prefix=" * ", next_lines=[" */"]),
 }
 
 

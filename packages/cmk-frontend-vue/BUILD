@@ -98,7 +98,10 @@ js_library(
 
 css_library(
     name = "src_css",
-    srcs = glob(["src/**/*.css"]),
+    srcs = glob([
+        "src/**/*.css",
+        "src/**/*.scss",
+    ]),
 )
 
 vue_library(

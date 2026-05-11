@@ -1,0 +1,57 @@
+/**
+ * Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
+ * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+ * conditions defined in the file COPYING, which is part of this source code package.
+ */
+
+/**
+ * KEEP IN SYNC WITH:
+ *   - packages/cmk-frontend-vue/src/assets/breakpoints.css (:root --breakpoint-* vars)
+ *   - cmk/gui/dashboard/api/model/constants.py (RESPONSIVE_GRID_BREAKPOINTS)
+ *
+ * Canonical responsive breakpoint scale, mirrored from the dashboard grid's
+ * RESPONSIVE_GRID_BREAKPOINTS so views, dashboards, and shared UI components
+ * share one source of truth.
+ *
+ * Usage:
+ *   @use '@/assets/breakpoints' as bp;
+ *
+ *   .my-grid {
+ *     @include bp.container-up(m) { ... }   // component-level @container query
+ *     @include bp.viewport-up(l)  { ... }   // page-shell @media query
+ *   }
+ *
+ *   .my-card {
+ *     max-width: var(--breakpoint-xl);      // also exposed as :root vars
+ *   }
+ *
+ * The mixins emit compile-time pixel literals because CSS does not allow
+ * custom properties inside @media/@container query conditions. This module
+ * only defines mixins and a map — no top-level CSS — so `@use` from a
+ * scoped <style lang="scss"> contributes zero CSS to the bundle. The
+ * --breakpoint-* :root vars are emitted exactly once via breakpoints.css.
+ *
+ * Prefer @container queries for component-level layout; reserve @media
+ * for page-shell decisions where the viewport is the right reference frame.
+ */
+@use 'sass:map';
+
+$breakpoints: (
+  xs: 280px,
+  s: 535px,
+  m: 705px,
+  l: 961px,
+  xl: 1217px
+);
+
+@mixin viewport-up($name) {
+  @media (min-width: map.get($breakpoints, $name)) {
+    @content;
+  }
+}
+
+@mixin container-up($name) {
+  @container (min-width: map.get($breakpoints, $name)) {
+    @content;
+  }
+}

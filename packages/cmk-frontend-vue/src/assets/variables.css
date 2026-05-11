@@ -6,6 +6,7 @@
 @import url('./colors.css');
 @import url('./dimensions.css');
 @import url('./zindices.css');
+@import url('./breakpoints.css');
 
 :root {
   /* Colors */

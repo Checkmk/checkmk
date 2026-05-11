@@ -264,7 +264,16 @@ def configuration_authentication() -> Mapping[str, DictElement]:
         ),
         "tenant_name": DictElement(
             parameter_form=String(
-                title=Title("Tenant Name"),
+                title=Title("Tenant name"),
+                help_text=Help(
+                    "Enter the name of the tenant monitored by this special agent rule. "
+                    "This name will be used as a host label and will be included in the "
+                    "HW/SW inventory for the source host (on which the special agent runs) "
+                    "as well as all associated piggyback hosts (representing subscriptions "
+                    "and resources). This allows you to filter objects by tenant and display "
+                    "the inventory data as columns in your views. This is useful for setups "
+                    "where multiple tenants are monitored."
+                ),
                 custom_validate=(validators.LengthInRange(min_value=1),),
             ),
             required=True,

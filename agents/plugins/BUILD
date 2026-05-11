@@ -78,7 +78,6 @@ sh_library(
         "mk_saprouter",
         "mk_scaleio",
         "mk_site_object_counts",
-        "mk_sshd_config",
         "mk_tsm",
         "runas",
         "zorp",

@@ -6,7 +6,7 @@
 import pytest
 
 from cmk.agent_based.v2 import Attributes, InventoryResult, StringTable, TableRow
-from cmk.plugins.collection.agent_based.inventory_dmidecode import (
+from cmk.plugins.dmi.agent_based.inventory_dmidecode import (
     inventorize_dmidecode,
     parse_dmidecode,
 )

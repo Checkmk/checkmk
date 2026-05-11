@@ -5,7 +5,7 @@
 
 import pytest
 
-from cmk.plugins.collection.rulesets.win_dmidecode import migrate
+from cmk.plugins.dmi.rulesets.win_dmidecode import migrate
 
 
 @pytest.mark.parametrize(

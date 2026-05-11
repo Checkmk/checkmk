@@ -54,7 +54,14 @@ const eventConsoleErrors = computed((): string[] => {
 
 <template>
   <template v-if="encryptionAllowed">
-    <CmkLabel>{{ _t('Encryption') }}</CmkLabel>
+    <CmkLabel
+      :help="
+        _t(
+          `Serves the OTLP endpoint over TLS using the site's certificate. The client must trust the site CA at ~/etc/ssl/ca.pem. The certificate's server name matches the site ID, so set server_name_override (or the SDK equivalent) to the site ID.<br><br>Required when basic authentication is enabled.`
+        )
+      "
+      >{{ _t('Encryption') }}</CmkLabel
+    >
     <CmkCheckbox
       v-model="encryption"
       :label="_t('Encrypt communication with TLS')"

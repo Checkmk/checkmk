@@ -42,7 +42,7 @@ TO_SIGN_SCRIPTS = [
     "//cmk/plugins/veeam/agents:veeam_backup_status.ps1",
     "//cmk/plugins/printer/agents:win_printers.ps1",
     "windows_if.ps1",
-    "windows_multipath.ps1",
+    "//cmk/plugins/windows/agents:windows_multipath.ps1",
     "windows_os_bonding.ps1",
     "windows_tasks.ps1",
     "windows_updates.ps1",

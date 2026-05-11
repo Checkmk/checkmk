@@ -375,7 +375,7 @@ just to signal that real build script was not called -->
                 <File Id="fil0E43AE5883F9C6E509B57083C9A3184E" KeyPath="yes" Source="..\..\windows\plugins\windows_intel_bonding.bat" DiskId="1"  />
             </Component>
             <Component Id="cmp58B593286B37436B9B814D441B0350EE" Guid="{37E3122F-A09F-4693-BB22-6EC92F670A44}">
-                <File Id="fil70CE7AE7E9AC44A8BA2AEB7430BF8BC7" KeyPath="yes" Source="$(var.EncryptedPluginsFolder)\windows_multipath.ps1" DiskId="1"  />
+                <File Id="fil70CE7AE7E9AC44A8BA2AEB7430BF8BC7" KeyPath="yes" Source="..\..\..\cmk\plugins\windows\agents\windows_multipath.ps1" DiskId="1"  />
             </Component>
             <Component Id="cmp10FDAC6C36BC91AC9660DCD519E0EBD3" Guid="{1669BE8A-ED8E-45A9-891C-ED0F1D479CA1}">
                 <File Id="fil6C6BD73C2966F9AD5B4D0A8392AC7458" KeyPath="yes" Source="$(var.EncryptedPluginsFolder)\windows_os_bonding.ps1" DiskId="1"  />

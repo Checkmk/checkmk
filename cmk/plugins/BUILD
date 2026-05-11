@@ -16,6 +16,7 @@ py_library(
         ],
     ) + [
         "//cmk/plugins/collection/agents",
+        "//cmk/plugins/files/agents",
         "//cmk/plugins/mtr/agents",
         "//cmk/plugins/nginx/agents",
         "//cmk/plugins/plesk/agents",

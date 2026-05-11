@@ -3,13 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Iterable, Mapping, Sequence
+from collections.abc import Iterable, Sequence
 from pathlib import Path
 from typing import Literal
 
 from pydantic import BaseModel, Field
 
-from .bakery_api.v1 import FileGenerator, OS, Plugin, PluginConfig, register
+from cmk.bakery.v2_unstable import BakeryPlugin, OS, Plugin, PluginConfig
 
 
 class _Grouping(BaseModel):
@@ -39,28 +39,27 @@ class _Config(BaseModel):
     sections: list[_NamedSection] = Field(default_factory=list)
 
 
-def get_mk_filestats_files(conf: Mapping[str, object]) -> FileGenerator:
-    config = _Config.model_validate(conf)
-    if config.deployment[0] == "do_not_deploy":
+def get_mk_filestats_files(conf: _Config) -> Iterable[Plugin | PluginConfig]:
+    if conf.deployment[0] == "do_not_deploy":
         return
 
-    interval = None if (v := config.deployment[1]) is None else int(v)
+    interval = conf.deployment[1]
 
     for base_os in (OS.LINUX, OS.SOLARIS):
         yield Plugin(base_os=base_os, source=Path("mk_filestats.py"), interval=interval)
 
-    if not config.deploy_config:
+    if not conf.deploy_config:
         return
 
-    sections = config.sections
-    default = config.default
+    sections = conf.sections
+    default = conf.default
     if not (default.model_dump(exclude_defaults=True) or sections):
         return
     lines = list(
         _get_mk_filestats_config(
             sections,
             default,
-            config.subgroups_delimiter,
+            conf.subgroups_delimiter,
         )
     )
 
@@ -113,7 +112,9 @@ def _parse_grouping_options(
         yield f"grouping_{option_type}: {rule}"
 
 
-register.bakery_plugin(
+bakery_plugin_mk_filestats = BakeryPlugin(
     name="mk_filestats",
+    parameter_parser=_Config.model_validate,
+    default_parameters=None,
     files_function=get_mk_filestats_files,
 )

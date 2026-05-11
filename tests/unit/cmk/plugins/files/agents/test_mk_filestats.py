@@ -16,7 +16,7 @@ from typing import Mapping, Optional, Sequence, Tuple
 
 import pytest
 
-from agents.plugins import mk_filestats
+from cmk.plugins.files.agents import mk_filestats
 
 MYLAZYFILE = mk_filestats.FileStat.from_path(__file__, __file__)
 # Overwrite the path to be reproducable...

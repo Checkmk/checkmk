@@ -117,6 +117,12 @@ ignore = [
   "UP035", # PEP 585 (Type Hinting Generics In Standard Collections) is a Python 3.9 feature
   "UP045", # PEP 604 (Allow writing union types as X | Y) is a Python 3.10 feature
 ]
+"tests/unit/cmk/plugins/*/agents/*.py" = [
+  "UP006", # PEP 585 (Type Hinting Generics In Standard Collections) is a Python 3.9 feature
+  "UP007", # PEP 604 (Allow writing union types as X | Y) is a Python 3.10 feature
+  "UP035", # PEP 585 (Type Hinting Generics In Standard Collections) is a Python 3.9 feature
+  "UP045", # PEP 604 (Allow writing union types as X | Y) is a Python 3.10 feature
+]
 
 [tool.ruff.lint.mccabe]
 max-complexity = 64 # TODO: This is far too much, we need to lower this!

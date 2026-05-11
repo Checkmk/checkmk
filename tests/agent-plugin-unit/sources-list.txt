@@ -4,7 +4,6 @@
 # on the fly would significantly increase the load on the CI.
 #
 agents/plugins/mk_docker.py
-agents/plugins/mk_filestats.py
 agents/plugins/mk_inotify.py
 agents/plugins/mk_logwatch.py
 agents/plugins/mk_mongodb.py
@@ -12,14 +11,13 @@ agents/plugins/mk_podman.py
 agents/plugins/mk_tinkerforge.py
 cmk/plugins/collection/agents/apache_status.py
 cmk/plugins/collection/agents/isc_dhcpd.py
+cmk/plugins/files/agents/mk_filestats.py
 cmk/plugins/nginx/agents/nginx_status.py
 cmk/plugins/plesk/agents/plesk_backups.py
 cmk/plugins/plesk/agents/plesk_domains.py
 cmk/plugins/mtr/agents/mtr.py
 cmk/plugins/postgres/agents/mk_postgres.py
 cmk/plugins/sap/agents/mk_sap.py
-tests/agent-plugin-unit/datasets/mk_filestats/subdir/testfile2.html
-tests/agent-plugin-unit/datasets/mk_filestats/testfile1.txt
 tests/agent-plugin-unit/datasets/mk_logwatch/test_append.log
 tests/agent-plugin-unit/datasets/mk_logwatch/test_data_for_mk_logwatch.txt
 tests/agent-plugin-unit/datasets/mk_logwatch/test_data_for_mk_logwatch_crlf.txt
@@ -36,11 +34,13 @@ tests/agent-plugin-unit/datasets/mk_mongodb/mongo_output_router-4.0.10.json
 tests/agent-plugin-unit/datasets/mk_mongodb/mongo_output_shard-3.4.21.json
 tests/agent-plugin-unit/datasets/mk_mongodb/mongo_output_shard-3.6.13.json
 tests/agent-plugin-unit/datasets/mk_mongodb/mongo_output_shard-4.0.10.json
-tests/agent-plugin-unit/test_mk_filestats.py
 tests/agent-plugin-unit/test_mk_logwatch.py
 tests/agent-plugin-unit/test_mk_mongodb.py
 tests/agent-plugin-unit/test_mk_podman.py
 tests/unit/cmk/plugins/collection/agents/test_apache_status.py
+tests/unit/cmk/plugins/files/agents/datasets/mk_filestats/subdir/testfile2.html
+tests/unit/cmk/plugins/files/agents/datasets/mk_filestats/testfile1.txt
+tests/unit/cmk/plugins/files/agents/test_mk_filestats.py
 tests/unit/cmk/plugins/nginx/agents/test_nginx_status.py
 tests/unit/cmk/plugins/plesk/agents/test_plesk_backups.py
 tests/unit/cmk/plugins/plesk/agents/test_plesk_domains.py

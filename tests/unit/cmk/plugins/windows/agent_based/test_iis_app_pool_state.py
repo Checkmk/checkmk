@@ -7,7 +7,7 @@
 import pytest
 
 from cmk.agent_based.v2 import CheckResult, Result, State
-from cmk.plugins.collection.agent_based.iis_app_pool_state import (
+from cmk.plugins.windows.agent_based.iis_app_pool_state import (
     check_iis_app_pool_state,
     DefaultCheckParameters,
     IisAppPoolState,

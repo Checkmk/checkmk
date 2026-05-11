@@ -8,7 +8,7 @@ from collections.abc import Mapping, Sequence
 import pytest
 
 from cmk.agent_based.v2 import CheckResult, DiscoveryResult, Result, Service, State
-from cmk.plugins.collection.agent_based import services
+from cmk.plugins.windows.agent_based import services
 
 STRING_TABLE = [
     ["wscsvc", "running/auto", "Security", "Center"],

@@ -5,7 +5,7 @@
 
 import pytest
 
-from cmk.plugins.collection.rulesets.iis_app_pool_state import migrate
+from cmk.plugins.windows.rulesets.iis_app_pool_state import migrate
 
 
 @pytest.mark.parametrize(

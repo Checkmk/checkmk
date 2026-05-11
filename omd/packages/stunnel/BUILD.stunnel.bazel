@@ -10,11 +10,50 @@ filegroup(
 
 configure_make(
     name = "stunnel",
-    args = ["-j4"],
+    # Pass DESTDIR to make so `make install` writes into a throwaway
+    # staging directory inside $INSTALLDIR rather than to the literal
+    # /usr/lib/omd/stunnel paths we baked into the binary via
+    # configure_options below. The baked paths still appear in .rodata
+    # (-DLIBDIR / -DCONFDIR in src/Makefile.am) -- that is the whole
+    # point of the relocatable-binary scheme -- but the actual install
+    # layout is controlled here, and the bits we want are cherry-picked
+    # into the bin/lib/share layout by postfix_script before the staging
+    # tree is deleted.
+    args = [
+        "-j4",
+        "DESTDIR=$$INSTALLDIR$$/staging",
+    ],
     configure_options = [
         "--with-ssl=$$EXT_BUILD_DEPS/openssl",
-        "--with-bashcompdir=$$INSTALLDIR/share",
+        "--with-bashcompdir=/usr/share/bash-completion/completions",
         "LDFLAGS='-static-libstdc++ -static-libgcc'",
+        # The paths below get baked into the binary's .rodata via
+        # autoconf substitution: src/Makefile.am compiles stunnel with
+        # -DLIBDIR='"$(pkglibdir)"' and -DCONFDIR='"$(sysconfdir)/stunnel"'.
+        # LIBDIR is used in src/client.c to build
+        # LD_PRELOAD=$LIBDIR/libstunnel.so for transparent source IP
+        # mode; CONFDIR is the default config directory in src/options.c.
+        # We deliberately use omd-namespaced FHS paths rather than the
+        # bazel sandbox path or the final OMD install path because:
+        #   1. The path must be stable across builds and version-free
+        #      so one binary can be reused across many OMD versions
+        #      installed at /omd/versions/<VER>/.
+        #   2. FHS directories are conventionally root-owned, so the
+        #      (theoretically unreachable) compile-time defaults can't
+        #      be poisoned by a non-root attacker.
+        #   3. The omd/ infix prevents collision with a hypothetical
+        #      distro-packaged stunnel on the same host.
+        # These defaults are dead strings under correct OMD operation:
+        # the init script (skel/etc/init.d/stunnel) always invokes
+        # stunnel with an explicit config path
+        # (skel/etc/stunnel/server.conf), and OMD does not enable
+        # stunnel's transparent source IP mode (the only consumer of
+        # LIBDIR).
+        "--prefix=/usr",
+        "--bindir=/usr/lib/omd/stunnel",
+        "--libdir=/usr/lib/omd",
+        "--sysconfdir=/etc/omd",
+        "--localstatedir=/var/lib/omd/stunnel",
     ],
     env = {
         "PKG_CONFIG_PATH": ":".join([
@@ -36,8 +75,15 @@ configure_make(
         "libstunnel.so",
     ],
     postfix_script = """
-        mv $$INSTALLDIR/share/stunnel.bash $$INSTALLDIR/bin
+        set -e
+        mkdir -p $${INSTALLDIR}/bin $${INSTALLDIR}/lib/stunnel
+        install -m 755 $${INSTALLDIR}/staging/usr/lib/omd/stunnel/stunnel $${INSTALLDIR}/bin/stunnel
+        install -m 755 $${INSTALLDIR}/staging/usr/lib/omd/stunnel/stunnel3 $${INSTALLDIR}/bin/stunnel3
+        install -m 755 $${INSTALLDIR}/staging/usr/lib/omd/stunnel/libstunnel.so $${INSTALLDIR}/lib/stunnel/libstunnel.so
+        install -m 644 $${INSTALLDIR}/staging/usr/share/bash-completion/completions/stunnel.bash $${INSTALLDIR}/bin/stunnel.bash
+        rm -rf $${INSTALLDIR}/staging
     """,
+    set_file_prefix_map = True,
     visibility = ["//visibility:public"],
     deps = ["@openssl"],
 )

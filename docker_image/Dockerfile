@@ -74,7 +74,7 @@ RUN set -e \
     && mv /etc/apt/sources.list.bak /etc/apt/sources.list
 
 # Pure build time variable declarations (docker build --build-arg KEY=val)
-ARG CMK_VERSION="2.5.0p2"
+ARG CMK_VERSION="2.5.0p3"
 ARG CMK_EDITION
 # Distro codename is used to find the corresponding .deb package
 ARG DISTRO_CODENAME="jammy"

@@ -27,7 +27,7 @@ from cmk.server_side_programs.v1_unstable import report_agent_crashes, Storage, 
 
 from .semantic_version import SemanticVersion
 
-__version__ = "2.5.0p2"
+__version__ = "2.5.0p3"
 
 AGENT = "bazel_cache"
 

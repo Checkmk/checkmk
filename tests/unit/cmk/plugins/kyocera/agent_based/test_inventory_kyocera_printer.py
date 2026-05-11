@@ -6,7 +6,7 @@
 import pytest
 
 from cmk.agent_based.v2 import Attributes
-from cmk.plugins.collection.agent_based.inventory_kyocera_printer import (
+from cmk.plugins.kyocera.agent_based.inventory_kyocera_printer import (
     inventorize_kyocera_printer,
     KyoceraPrinter,
     parse_kyocera_printer,

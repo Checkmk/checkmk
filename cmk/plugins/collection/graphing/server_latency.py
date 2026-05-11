@@ -5,12 +5,12 @@
 
 from cmk.graphing.v1 import graphs, metrics, Title
 
-UNIT_TIME = metrics.Unit(metrics.TimeNotation())
+UNIT_MILLISECONDS = metrics.Unit(metrics.DecimalNotation("ms"))
 
 metric_server_latency = metrics.Metric(
     name="server_latency",
     title=Title("Server latency"),
-    unit=UNIT_TIME,
+    unit=UNIT_MILLISECONDS,
     color=metrics.Color.YELLOW,
 )
 

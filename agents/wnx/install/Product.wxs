@@ -291,7 +291,7 @@ just to signal that real build script was not called -->
 
         <DirectoryRef Id="plugins">
             <Component Id="cmp14A70A7296CB588F156BBC06BA51D2E3" Guid="{55386E71-BCE4-4E58-A7C1-7506317CF388}">
-                <File Id="fil0D8E5C0605B7AABBE4E3650D150DC37F" KeyPath="yes" Source = "..\..\windows\plugins\ad_replication.bat" DiskId="1" />
+                <File Id="fil0D8E5C0605B7AABBE4E3650D150DC37F" KeyPath="yes" Source = "..\..\..\cmk\plugins\windows\agents\ad_replication.bat" DiskId="1" />
             </Component>
             <Component Id="cmpBFADA0486A248D40B4365D85892EA124" Guid="{E51579A8-1B54-44F1-8939-9152B23D3ACC}">
                 <File Id="fil9D136F6EB743B60B3992FF7285F8B14D" KeyPath="yes" Source="$(var.EncryptedPluginsFolder)\arcserve_backup.ps1" DiskId="1" />

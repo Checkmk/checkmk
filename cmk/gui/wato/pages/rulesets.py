@@ -2817,6 +2817,7 @@ class VSExplicitConditions(Transform):
             title=_("Host labels"),
             help=_("Rule only applies to hosts matching the label conditions. ")
             + self._label_condition_help_text(),
+            object_type="host",
         )
 
     def _vs_service_label_condition(self) -> VSLabelGroups:
@@ -2826,6 +2827,7 @@ class VSExplicitConditions(Transform):
             title=_("Service labels"),
             help=_("Use this condition to select services based on the configured service labels. ")
             + self._label_condition_help_text(),
+            object_type="service",
         )
 
     def _vs_host_tag_condition(self) -> DictHostTagCondition:

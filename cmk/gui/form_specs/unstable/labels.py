@@ -5,7 +5,7 @@
 from collections.abc import Mapping
 from dataclasses import dataclass
 from enum import Enum
-from typing import TypeVar
+from typing import Literal, TypeVar
 
 from cmk.rulesets.v1.form_specs import FormSpec
 
@@ -32,3 +32,4 @@ class Labels(FormSpec[Mapping[str, str]]):
     world: World
     label_source: Source | None = None
     max_labels: int | None = None
+    object_type: Literal["host", "service"] | None = None

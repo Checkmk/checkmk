@@ -243,8 +243,14 @@ def tag_group_opt_autocompleter(config: Config, value: str, params: dict) -> Cho
 def label_autocompleter(config: Config, value: str, params: dict) -> Choices:
     """Return all known labels to support tagify label input dropdown completion"""
     group_labels: Sequence[str] = params.get("context", {}).get("group_labels", [])
+    object_type = params.get("object_type")
+    if object_type not in ("host", "service"):
+        object_type = None
+
     all_labels: Sequence[tuple[str, str]] = Labels.get_labels(
-        world=Labels.World(params["world"]), search_label=value
+        world=Labels.World(params["world"]),
+        search_label=value,
+        object_type=object_type,
     )
     # E.g.: [("label:abc", "label:abc"), ("label:xyz", "label:xyz")]
     label_choices: Choices = [((":".join([id_, val])),) * 2 for id_, val in all_labels]

@@ -280,7 +280,7 @@ class LabelGroupFilterComponent(BaseComponent):
     object_type: Literal["host", "service"]
 
     def render_html(self, filter_id: str, current_values: FilterHTTPVariables) -> None:
-        LabelGroups().render_input(
+        LabelGroups(object_type=self.object_type).render_input(
             self.id,
             AllLabelGroupsQuery(object_type=self.object_type).parse_value(current_values),
         )

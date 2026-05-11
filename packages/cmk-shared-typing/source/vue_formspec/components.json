@@ -1560,6 +1560,9 @@
                 "world": {
                   "type": "string"
                 },
+                "object_type": {
+                  "type": "string"
+                },
                 "context": {
                   "type": "object"
                 },

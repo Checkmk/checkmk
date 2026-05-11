@@ -157,6 +157,7 @@ function enable_label_input_fields(container: HTMLElement | HTMLDocument | null)
     const data_max_labels = element.getAttribute('data-max-labels')
     const max_labels = data_max_labels ? parseFloat(data_max_labels) : null
     const world = element.getAttribute('data-world')
+    const object_type = element.getAttribute('data-object-type')
 
     const tagify_args: CheckMKTagifyArgs = {
       pattern: /^[^:]+:.+$/,
@@ -259,13 +260,17 @@ function enable_label_input_fields(container: HTMLElement | HTMLDocument | null)
       // show loading animation and hide the suggestions dropdown
       tagify.loading(true).dropdown.hide.call(tagify)
 
+      const params: Record<string, unknown> = { world: world }
+      if (object_type) {
+        params.object_type = object_type
+      }
       const post_data =
         'request=' +
         encodeURIComponent(
           JSON.stringify({
             ident: 'label',
             value: value,
-            params: { world: world }
+            params: params
           })
         )
 

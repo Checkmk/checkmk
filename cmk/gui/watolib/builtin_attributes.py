@@ -1605,11 +1605,17 @@ class HostAttributeLabels(ABCHostAttributeValueSpec):
         return True
 
     def valuespec(self) -> ValueSpec:
-        return Labels(world=Labels.World.CONFIG, label_source=Labels.Source.EXPLICIT)
+        return Labels(
+            world=Labels.World.CONFIG,
+            label_source=Labels.Source.EXPLICIT,
+            object_type="host",
+        )
 
     def form_spec(self) -> fs_labels.Labels:
         return fs_labels.Labels(
-            world=fs_labels.World.CONFIG, label_source=fs_labels.Source.EXPLICIT
+            world=fs_labels.World.CONFIG,
+            label_source=fs_labels.Source.EXPLICIT,
+            object_type="host",
         )
 
     def openapi_field(self) -> gui_fields.Field:

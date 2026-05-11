@@ -57,7 +57,8 @@ class LabelsVisitor(FormSpecVisitor[Labels, _ParsedValueModel, _FallbackModel]):
                     data=shared_type_defs.AutocompleterData(
                         ident="label",
                         params=shared_type_defs.AutocompleterParams(
-                            world=self.form_spec.world.value
+                            world=self.form_spec.world.value,
+                            object_type=self.form_spec.object_type,
                         ),
                     ),
                 ),

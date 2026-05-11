@@ -7376,6 +7376,7 @@ class Labels(ValueSpec[LabelsModel]):
         # https://github.com/python/cpython/issues/90015
         label_source: "Labels.Source | None" = None,
         max_labels: int | None = None,
+        object_type: Literal["host", "service"] | None = None,
         # ValueSpec
         title: str | None = None,
         help: ValueSpecHelp | None = None,
@@ -7388,6 +7389,7 @@ class Labels(ValueSpec[LabelsModel]):
         self._label_source = label_source
         # Set to positive integer to limit the number of labels to add to this field
         self._max_labels = max_labels
+        self._object_type = object_type
 
     def help(self) -> str | HTML | None:
         h = super().help()
@@ -7444,15 +7446,18 @@ class Labels(ValueSpec[LabelsModel]):
     def render_input(self, varprefix: str, value: LabelsModel) -> None:
         html.help(self.help())
         label_type = "host_label" if "host_label" in varprefix else "service_label"
+        data_attrs: HTMLTagAttributes = {
+            "data-world": self._world.value,
+            "data-max-labels": (None if self._max_labels is None else str(self._max_labels)),
+        }
+        if self._object_type is not None:
+            data_attrs["data-object-type"] = self._object_type
         html.text_input(
             varprefix,
             default_value=encode_labels_for_http(value.items()),
             cssclass="labels" + " " + label_type,
             placeholder=_("Add some label"),
-            data_attrs={
-                "data-world": self._world.value,
-                "data-max-labels": (None if self._max_labels is None else str(self._max_labels)),
-            },
+            data_attrs=data_attrs,
         )
 
     def value_to_json(self, value: LabelsModel) -> JSONValue:
@@ -7462,12 +7467,19 @@ class Labels(ValueSpec[LabelsModel]):
         return json_value
 
     @classmethod
-    def get_labels(cls, world: "Labels.World", search_label: str) -> Sequence[tuple[str, str]]:
+    def get_labels(
+        cls,
+        world: "Labels.World",
+        search_label: str,
+        object_type: Literal["host", "service"] | None = None,
+    ) -> Sequence[tuple[str, str]]:
+        label_type = LabelType(object_type) if object_type else LabelType.ALL
+
         if world is cls.World.CONFIG:
-            return get_labels_from_config(LabelType.ALL, search_label)
+            return get_labels_from_config(label_type, search_label)
 
         if world is cls.World.CORE:
-            return get_labels_from_core(LabelType.ALL, search_label)
+            return get_labels_from_core(label_type, search_label)
 
         raise NotImplementedError()
 
@@ -7551,9 +7563,13 @@ class _SingleLabel(AjaxDropdownChoice):
         world: Labels.World,
         label_source: Labels.Source | None = None,
         strict: Literal["True", "False"] = "False",
+        object_type: Literal["host", "service"] | None = None,
         # DropdownChoice
         on_change: str | None = None,
     ):
+        html_attrs: HTMLTagAttributes = {"data-world": world.value}
+        if object_type is not None:
+            html_attrs["data-object-type"] = object_type
         super().__init__(
             regex=cmk.ccc.regex.regex(LABEL_REGEX),
             regex_error=_(
@@ -7564,7 +7580,7 @@ class _SingleLabel(AjaxDropdownChoice):
                 dynamic_params_callback_name="label_autocompleter",
             ),
             strict=strict,
-            html_attrs={"data-world": world.value},
+            html_attrs=html_attrs,
             on_change=(on_change if on_change else "cmk.valuespecs.single_label_on_change(this)"),
             cssclass=self.ident,
             default_value="",
@@ -7587,7 +7603,10 @@ class LabelGroup(ListOf):
         # ValueSpec
         title: str | None = None,
         help: ValueSpecHelp | None = None,
+        object_type: Literal["host", "service"] | None = None,
     ) -> None:
+        if object_type is not None:
+            self._sub_vs = _SingleLabel(world=Labels.World.CORE, object_type=object_type)
         super().__init__(
             valuespec=AndOrNotDropdown(
                 valuespec=self._sub_vs,
@@ -7657,7 +7676,10 @@ class LabelGroups(LabelGroup):
         # ValueSpec
         title: str | None = None,
         help: ValueSpecHelp | None = None,
+        object_type: Literal["host", "service"] | None = None,
     ) -> None:
+        if object_type is not None:
+            self._sub_vs = LabelGroup(object_type=object_type)
         super().__init__(
             show_empty_group_by_default,
             add_label,

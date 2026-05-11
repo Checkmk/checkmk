@@ -2299,7 +2299,7 @@ def _create_explicit_rule_conditions_dict(
                         autocompleter=Autocompleter(
                             data=AutocompleterData(
                                 ident="label",
-                                params=AutocompleterParams(world="core"),
+                                params=AutocompleterParams(world="core", object_type="host"),
                             ),
                             fetch_method=FetchMethod.ajax_vs_autocomplete,
                         ),
@@ -2358,7 +2358,7 @@ def _create_explicit_rule_conditions_dict(
                 autocompleter=Autocompleter(
                     data=AutocompleterData(
                         ident="label",
-                        params=AutocompleterParams(world="core"),
+                        params=AutocompleterParams(world="core", object_type="service"),
                     ),
                     fetch_method=FetchMethod.ajax_vs_autocomplete,
                 ),

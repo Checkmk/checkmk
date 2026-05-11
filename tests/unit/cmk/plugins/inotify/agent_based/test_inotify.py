@@ -8,8 +8,8 @@
 from collections import Counter
 
 from cmk.agent_based.v2 import Result, Service, State
-from cmk.plugins.collection.agent_based.inotify import _check_inotify as check_inotify
-from cmk.plugins.collection.agent_based.inotify import discover_inotify, parse_inotify, Section
+from cmk.plugins.inotify.agent_based.inotify import _check_inotify as check_inotify
+from cmk.plugins.inotify.agent_based.inotify import discover_inotify, parse_inotify, Section
 
 Params = dict[str, list[tuple[str, float, float]]]
 

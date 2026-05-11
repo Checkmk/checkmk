@@ -172,6 +172,9 @@
     --font-color-breadcrumb-inactive: var(--color-conference-grey-70);
     --font-color-breadcrumb-interactive: var(--color-conference-grey-100);
     --font-color-breadcrumb-hover: var(--color-corporate-green-70);
+
+    /* Cmk Link colors */
+    --cmk-link-hover-color: var(--color-corporate-green-70);
   }
 
   body[data-theme='modern-dark'] {
@@ -293,6 +296,9 @@
     --font-color-breadcrumb-inactive: var(--color-white-70);
     --font-color-breadcrumb-interactive: var(--color-white-100);
     --font-color-breadcrumb-hover: var(--color-corporate-green-50);
+
+    /* Cmk Link colors */
+    --cmk-link-hover-color: var(--color-corporate-green-50);
   }
 }
 

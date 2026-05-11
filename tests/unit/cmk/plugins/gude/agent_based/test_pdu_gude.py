@@ -5,7 +5,7 @@
 
 
 from cmk.agent_based.v2 import Metric, Result, State
-from cmk.plugins.collection.agent_based.pdu_gude import (
+from cmk.plugins.gude.agent_based.pdu_gude import (
     check_pdu_gude,
     GudePDUProperty,
     parse_pdu_gude,

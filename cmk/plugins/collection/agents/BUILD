@@ -11,3 +11,8 @@ py_library(
         "//tests:__subpackages__",
     ],
 )
+
+exports_files(
+    ["iis_app_pool_state.ps1"],
+    visibility = ["//agents/windows/plugins:__pkg__"],
+)

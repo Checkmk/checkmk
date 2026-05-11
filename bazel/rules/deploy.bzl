@@ -88,6 +88,7 @@ deploy_python = macro(
 
 COMMUNITY_WHEELS = [
     "//packages/cmk-agent-receiver:wheel",
+    "//packages/cmk-backup:wheel",
     "//packages/cmk-ccc:wheel",
     "//packages/cmk-check-engine:wheel",
     "//packages/cmk-crypto:wheel",
@@ -144,12 +145,12 @@ PRO_WHEELS = COMMUNITY_WHEELS + [
     "//non-free/packages/cmk-robotmk:wheel",
 ]
 
-CLOUD_WHEELS = PRO_WHEELS + [
+CLOUD_WHEELS = [p for p in PRO_WHEELS + [
     "//non-free/packages/cmk-cloud:wheel",
     "//non-free/packages/cmk-metric-backend:wheel",
     "//non-free/packages/cmk-otel-collector:wheel",
     "//non-free/packages/cmk-telemetry:wheel",
-]
+] if p != "//packages/cmk-backup:wheel"]  # Urks... Need some other structure here.
 
 ULTIMATE_WHEELS = PRO_WHEELS + [
     "//non-free/packages/cmk-metric-backend:wheel",

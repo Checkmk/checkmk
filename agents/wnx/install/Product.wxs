@@ -309,7 +309,7 @@ just to signal that real build script was not called -->
                 <File Id="fil2A101DFE6D15B518E2F1E50C87ECC221" KeyPath="yes" Source="..\..\..\cmk\plugins\hyperv\agents\hyperv_vms.ps1" DiskId="1"  />
             </Component>
             <Component Id="cmpE9245496997CBB452C7AB2DD036AA4DD" Guid="{B53B231C-FFFF-405C-AAC4-88BE73233A66}">
-                <File Id="fil1DAD57269AB73A084B862EC3C5DE5A71" KeyPath="yes" Source="$(var.EncryptedPluginsFolder)\hyperv_vms_guestinfos.ps1" DiskId="1"  />
+                <File Id="fil1DAD57269AB73A084B862EC3C5DE5A71" KeyPath="yes" Source="..\..\..\cmk\plugins\hyperv\agents\hyperv_vms_guestinfos.ps1" DiskId="1"  />
             </Component>
             <Component Id="cmpA9A726739B66479FB82C465AA6E52707" Guid="{225A673E-6F02-4862-9794-A5C570F68FDD}">
                 <File Id="fil41C94B135BE64B8AB9C22EFCF2796ADD" KeyPath="yes" Source="$(var.EncryptedPluginsFolder)\hyperv_host.ps1" DiskId="1"  />

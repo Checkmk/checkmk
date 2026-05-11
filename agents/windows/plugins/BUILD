@@ -28,7 +28,7 @@ TO_SIGN_SCRIPTS = [
     "citrix_farm.ps1",
     "citrix_licenses.ps1",
     "citrix_xenapp.ps1",
-    "hyperv_vms_guestinfos.ps1",
+    "//cmk/plugins/hyperv/agents:hyperv_vms_guestinfos.ps1",
     "//cmk/plugins/hyperv/agents:hyperv_vms.ps1",
     "iis_app_pool_state.ps1",
     "kaspersky_av_client.ps1",

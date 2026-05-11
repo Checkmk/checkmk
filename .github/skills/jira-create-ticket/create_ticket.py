@@ -162,19 +162,28 @@ CUSTOM_FIELDS = {
 # ---------------------------------------------------------------------------
 
 
-def list_field_options(jira: Any, field_id: str, project: str) -> dict[str, Any]:
+def list_field_options(
+    jira: Any, field_id: str, project: str, *, issue_type: str | None = None
+) -> dict[str, Any]:
     """Return the allowed values for a custom select field as a JSON-serializable dict.
 
-    Iterates through the project's issue types and returns the first issue type
-    on which the field has allowed values. Raises ``ValueError`` if no issue
-    type exposes the field with enumerable options.
+    If ``issue_type`` is given, looks up the field only on that issue type.
+    Otherwise iterates through the project's issue types and returns the first
+    one on which the field has allowed values. Raises ``ValueError`` on
+    unknown issue type, missing field, or empty allowed-values list.
     """
     types = jira.project_issue_types(project, maxResults=200)
+    if issue_type is not None:
+        types = [t for t in types if t.raw.get("name") == issue_type]
+        if not types:
+            raise ValueError(f"Unknown issue type: {issue_type}")
+
     for t in types:
         fields = jira.project_issue_fields(project, t.raw["id"], maxResults=200)
         field = next((f.raw for f in fields if f.raw.get("fieldId") == field_id), None)
         if field is None:
             continue
+        label = field.get("name") or field_id
         allowed: list[str] = [
             name
             for opt in field.get("allowedValues", [])
@@ -183,12 +192,52 @@ def list_field_options(jira: Any, field_id: str, project: str) -> dict[str, Any]
         ]
         if allowed:
             return {
-                "field": field.get("name") or field_id,
+                "field": label,
                 "field_id": field_id,
                 "issue_type": t.raw.get("name", ""),
                 "options": allowed,
             }
+        if issue_type is not None:
+            raise ValueError(f"Field '{label}' has no allowed values for issue type '{issue_type}'")
+
+    if issue_type is not None:
+        raise ValueError(f"Field '{field_id}' is not available for issue type '{issue_type}'")
     raise ValueError(f"Field '{field_id}' has no enumerable options in project '{project}'")
+
+
+def _resolve_custom_field_option(
+    jira: Any,
+    field_id: str,
+    value: str,
+    project: str,
+    issue_type: str,
+) -> str:
+    """Match a user-provided value against a Jira select-field's allowed options.
+
+    Looks up the field's allowed values on the given issue type via
+    ``list_field_options`` and performs case-insensitive matching (exact first,
+    then substring). Returns the canonical option on a single match. Raises
+    ``ValueError`` on no match or ambiguous match.
+    """
+    info = list_field_options(jira, field_id, project, issue_type=issue_type)
+    label = info["field"]
+    allowed: list[str] = info["options"]
+
+    needle = value.lower()
+    exact = [v for v in allowed if v.lower() == needle]
+    if len(exact) == 1:
+        return exact[0]
+    matches = exact or [v for v in allowed if needle in v.lower()]
+    if len(matches) == 1:
+        return matches[0]
+
+    allowed_list = ", ".join(allowed)
+    if not matches:
+        raise ValueError(f"Invalid '{label}' value '{value}'. Allowed values: {allowed_list}")
+    raise ValueError(
+        f"Ambiguous '{label}' value '{value}' matches multiple options "
+        f"({', '.join(matches)}). Allowed values: {allowed_list}"
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -303,6 +352,7 @@ def main() -> None:
 
     component = args.component
     developer_team = args.developer_team
+    bug_detection = args.bug_detection
 
     if args.dry_run:
         print("=== DRY RUN — would create issue with: ===")
@@ -319,7 +369,7 @@ def main() -> None:
                     "parent": args.parent,
                     "labels": ["jira-create-ticket"],
                     "link_epic": args.link_epic,
-                    "bug_detection": args.bug_detection,
+                    "bug_detection": bug_detection,
                 },
                 indent=2,
             )
@@ -344,6 +394,19 @@ def main() -> None:
         print(json.dumps(result, indent=2))
         sys.exit(0)
 
+    if bug_detection:
+        try:
+            bug_detection = _resolve_custom_field_option(
+                jira,
+                CUSTOM_FIELDS["bug_detection"],
+                bug_detection,
+                args.project,
+                args.issue_type,
+            )
+        except ValueError as e:
+            print(f"ERROR: {e}", file=sys.stderr)
+            sys.exit(1)
+
     issue = create_issue(
         jira,
         project=args.project,
@@ -355,7 +418,7 @@ def main() -> None:
         priority=args.priority,
         parent=args.parent,
         link_epic=args.link_epic,
-        bug_detection=args.bug_detection,
+        bug_detection=bug_detection,
     )
 
     url = f"{JIRA_SERVER}/browse/{issue.key}"

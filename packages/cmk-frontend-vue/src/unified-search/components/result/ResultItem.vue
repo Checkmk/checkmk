@@ -115,7 +115,6 @@ onBeforeUnmount(() => {
         v-if="props.target"
         ref="item-focus"
         :href="props.target.url"
-        target="main"
         class="result-item-handler"
         :class="{ focus: props.focus, indented: props.indented }"
         @click="target?.transition && showLoadingTransition(target.transition, props.title)"
@@ -166,7 +165,7 @@ onBeforeUnmount(() => {
         class="result-item-handler inline"
         :class="{ indented: props.indented }"
       >
-        <CmkLink ref="item-focus-inline" :href="ib.target.url" target="main" class="inline-button">
+        <CmkLink ref="item-focus-inline" :href="ib.target.url" class="inline-button">
           <CmkDynamicIcon v-if="ib.icon" :spec="ib.icon" size="small" class="result-item-icon" />
           {{ ib.title }}
         </CmkLink>

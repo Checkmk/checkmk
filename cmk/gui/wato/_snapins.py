@@ -84,7 +84,6 @@ def render_wato(config: Config, mini: bool) -> None:
                     class_=["show_more_mode"] if item.is_show_more else [],
                     title=item.title,
                     icon=migrate_to_static_icon(item.icon) or StaticIcon(IconNames.wato),
-                    target="main",
                 )
     else:
         show_main_menu(treename="wato", menu=menu, show_item_icons=True)

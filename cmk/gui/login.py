@@ -293,14 +293,6 @@ class LoginPage(Page):
         )
         origtarget = request.get_url_input("_origtarget", default_origtarget)
 
-        # Never allow the login page to be opened in the iframe. Redirect top page to login page.
-        # This will result in a full screen login page.
-        html.javascript(
-            """if(top != self) {
-    window.top.location.href = location;
-}"""
-        )
-
         # When someone calls the login page directly and is already authed redirect to main page
         if requested_file_name(request) == "login" and session.user.id:
             raise HTTPRedirect(origtarget)

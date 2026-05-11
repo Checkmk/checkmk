@@ -56,7 +56,7 @@ class VisualMenuItem(NamedTuple):
 
 
 def render_link(
-    text: str | HTML, url: str, target: str = "main", onclick: str | None = None
+    text: str | HTML, url: str, target: str | None = None, onclick: str | None = None
 ) -> HTML:
     # Convert relative links into absolute links. We have three kinds
     # of possible links and we change only [3]
@@ -75,12 +75,12 @@ def render_link(
     )
 
 
-def link(text: str | HTML, url: str, target: str = "main", onclick: str | None = None) -> None:
+def link(text: str | HTML, url: str, target: str | None = None, onclick: str | None = None) -> None:
     html.write_html(render_link(text, url, target=target, onclick=onclick))
 
 
 def bulletlink(
-    text: str, url: str | None, target: str = "main", onclick: str | None = None
+    text: str, url: str | None, target: str | None = None, onclick: str | None = None
 ) -> None:
     if url:
         html.open_li(class_="sidebar")
@@ -90,7 +90,7 @@ def bulletlink(
 
 def iconlink(text: str, url: str | None, icon: StaticIcon | DynamicIcon) -> None:
     if url:
-        html.open_a(class_=["iconlink", "link"], target="main", href=url)
+        html.open_a(class_=["iconlink", "link"], href=url)
         if isinstance(icon, StaticIcon):
             html.static_icon(icon, css_classes=["inline"])
         else:

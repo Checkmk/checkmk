@@ -256,7 +256,7 @@ async function fetchPendingChangesAjax(activationId?: string): Promise<void> {
 
 function openActivateChangesPage() {
   mainMenu.close()
-  window.open(props.activate_changes_url, 'main')
+  window.location.href = props.activate_changes_url
 }
 
 async function checkIfMenuActive(): Promise<void> {
@@ -423,7 +423,6 @@ onMounted(async () => {
           variant="secondary"
           class="cmk-button-secondary"
           :href="props.activate_changes_url"
-          target="main"
           @click="() => openActivateChangesPage()"
         >
           <CmkIcon variant="inline" name="frameurl" />

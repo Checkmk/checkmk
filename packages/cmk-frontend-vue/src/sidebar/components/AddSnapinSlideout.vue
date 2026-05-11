@@ -57,12 +57,7 @@ immediateWatch(
     :open="slideInOpen"
     @close="onClose"
   >
-    <a
-      class="sidebar-add-snapin-slideout__custom-button"
-      href="custom_snapins.py"
-      target="main"
-      @click="onClose"
-    >
+    <a class="sidebar-add-snapin-slideout__custom-button" href="custom_snapins.py" @click="onClose">
       <CmkIcon name="custom-snapin" />
       {{ _t('Custom sidebar elements') }}
     </a>

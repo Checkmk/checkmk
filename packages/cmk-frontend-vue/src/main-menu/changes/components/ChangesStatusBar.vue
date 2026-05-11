@@ -28,12 +28,12 @@ function handleClick(event: MouseEvent) {
 
   event.preventDefault()
   mainMenu.close()
-  window.open(props.activateChangesUrl, 'main')
+  window.location.href = props.activateChangesUrl
 }
 </script>
 
 <template>
-  <a :href="activateChangesUrl" target="main" class="mm-changes-status-bar" @click="handleClick">
+  <a :href="activateChangesUrl" class="mm-changes-status-bar" @click="handleClick">
     <div class="mm-changes-status-bar__item">
       <span class="mm-changes-status-bar__icon-with-count">
         <CmkMultitoneIcon

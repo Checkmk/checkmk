@@ -97,11 +97,7 @@ class SidebarSnapinAggregationGroupTree(SidebarSnapin):
                     isopen=user.get_tree_state(
                         "bi_aggregation_group_trees", aggr_group_tree, False
                     ),
-                    title=HTMLWriter.render_a(
-                        group,
-                        href=fetch_url,
-                        target="main",
-                    ),
+                    title=HTMLWriter.render_a(group, href=fetch_url),
                 ):
                     self._render_tree(attrs["__children__"])
             else:

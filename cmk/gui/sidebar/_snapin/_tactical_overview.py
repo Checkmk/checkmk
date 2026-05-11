@@ -232,7 +232,7 @@ class TacticalOverviewSnapin(CustomizableSidebarSnapin):
                 request, [*row.views.total, *context_vars], filename="view.py"
             )
             html.open_td(class_=["total", td_class])
-            html.a("%s" % amount, href=url, target="main")
+            html.a("%s" % amount, href=url)
             html.close_td()
 
             for value, ty in [(problems, "handled"), (unhandled_problems, "unhandled")]:
@@ -503,7 +503,6 @@ class TacticalOverviewSnapin(CustomizableSidebarSnapin):
             confirm_url,
             _("Confirm failed notifications"),
             StaticIcon(IconNames.delete),
-            target="main",
         )
 
         view_url = makeuri_contextless(
@@ -512,7 +511,7 @@ class TacticalOverviewSnapin(CustomizableSidebarSnapin):
             filename="view.py",
         )
 
-        html.a(_("%d failed notifications") % failed_notifications, target="main", href=view_url)
+        html.a(_("%d failed notifications") % failed_notifications, href=view_url)
         html.close_div()
         html.close_div()
 
@@ -551,8 +550,8 @@ class TacticalOverviewSnapin(CustomizableSidebarSnapin):
 
         if user.may("wato.sites"):
             url = makeuri_contextless(request, [("mode", "sites")], filename="wato.py")
-            html.icon_button(url, tooltip, StaticIcon(IconNames.sites), target="main")
-            html.a(message, target="main", href=url)
+            html.icon_button(url, tooltip, StaticIcon(IconNames.sites))
+            html.a(message, href=url)
         else:
             html.static_icon(StaticIcon(IconNames.sites), title=tooltip)
             html.write_text_permissive(message)

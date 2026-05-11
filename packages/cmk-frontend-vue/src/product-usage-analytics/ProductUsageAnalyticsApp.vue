@@ -95,7 +95,6 @@ const popupOpen = ref(true)
       <a
         class="product-usage-analytics-app__link"
         :href="props.global_settings_link"
-        target="main"
         @click="popupOpen = false"
         >{{ _t('Manage in global settings') }}</a
       >

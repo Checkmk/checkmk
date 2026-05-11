@@ -20,10 +20,6 @@ import OnboardingStepper from '@/welcome/components/OnboardingStepper.vue'
 import { type StepId, totalSteps } from '../steps/stepComponents'
 import { getWelcomeStageInformation, markStepAsComplete } from '../steps/utils'
 
-interface CmkWindow extends Window {
-  main: Window
-}
-
 const { _t } = usei18n()
 
 const slideInOpen = defineModel<boolean>('slideInOpen', { required: true })
@@ -51,17 +47,11 @@ async function stepCompleted(stepId: StepId): Promise<void> {
           stageInformation.value
       }
     })
-
-    // Update progress in welcome page if opened in main iframe
-    const mainIframe = (top!.frames as CmkWindow).main
-    if (mainIframe && mainIframe.location.href.indexOf('welcome.py') >= 0) {
-      mainIframe.location.reload()
-    }
   }
 }
 
 function openFullView() {
-  window.open('welcome.py', 'main')
+  window.location.href = 'welcome.py'
   closeSlideIn()
 }
 

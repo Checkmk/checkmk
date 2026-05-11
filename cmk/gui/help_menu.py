@@ -321,6 +321,5 @@ def _license_status() -> HTML | str:
         status_message = HTMLWriter.render_a(
             status_message,
             makeuri_contextless(request, [("mode", "licensing")], filename="wato.py"),
-            target="main",
         )
     return HTMLWriter.render_br() + status_message

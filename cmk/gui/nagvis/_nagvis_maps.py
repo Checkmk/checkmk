@@ -73,7 +73,7 @@ class NagVisMaps(SidebarSnapin):
                 + self._stale_class(map_cfg),
                 title=self._state_title(map_cfg),
             )
-            html.a(map_cfg["alias"], href=map_cfg["url"], class_="link", target="main")
+            html.a(map_cfg["alias"], href=map_cfg["url"], class_="link")
             html.close_td()
             html.close_tr()
 
@@ -143,10 +143,9 @@ class NagVisMaps(SidebarSnapin):
                     isopen=user.get_tree_state("nagvis", map_name, False),
                     title=map_cfg["alias"],
                     title_url=map_cfg["url"],
-                    title_target="main",
                     indent=False,
                 ):
                     self._show_tree_nodes(children[map_name], children)
             else:
-                html.a(map_cfg["alias"], href=map_cfg["url"], target="main", class_="link")
+                html.a(map_cfg["alias"], href=map_cfg["url"], class_="link")
             html.close_li()

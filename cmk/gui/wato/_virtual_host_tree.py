@@ -84,7 +84,7 @@ class VirtualHostTree(SidebarSnapin):
             html.p(
                 _(
                     "You have not defined any virtual host trees. You can do this "
-                    'in the <a href="%s" target="main">Global settings</a>.'
+                    'in the <a href="%s">Global settings</a>.'
                 )
                 % url
             )
@@ -150,7 +150,6 @@ class VirtualHostTree(SidebarSnapin):
                     self._tag_tree_url(tree_spec, path, "svcproblems", tag_groups),
                     _("Show the service problems contained in this branch"),
                     StaticIcon(IconNames.svc_problems),
-                    target="main",
                 )
 
             if path:
@@ -169,7 +168,7 @@ class VirtualHostTree(SidebarSnapin):
                 if "_num_hosts" in subtree:
                     node_title_text += " (%d)" % subtree["_num_hosts"]
 
-                node_title = HTMLWriter.render_a(node_title_text, href=url, target="main")
+                node_title = HTMLWriter.render_a(node_title_text, href=url)
 
                 if "_children" not in subtree:
                     if self._is_tag_subdir(path, cwd):
@@ -182,7 +181,6 @@ class VirtualHostTree(SidebarSnapin):
                                 url,
                                 _("Show the service problems contained in this branch"),
                                 StaticIcon(IconNames.svc_problems),
-                                target="main",
                             )
                         html.write_html(node_title)
                         html.br()

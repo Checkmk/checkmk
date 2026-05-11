@@ -643,7 +643,6 @@ class SidebarRenderer:
         html.open_div(id_="add_snapin")
         html.open_a(
             href=makeuri_contextless(request, [], filename="sidebar_add_snapin.py"),
-            target="main",
         )
         html.static_icon(StaticIcon(IconNames.add), title=_("Add elements to your sidebar"))
         html.close_a()

@@ -89,7 +89,6 @@ def get_activate_changes_nav_item_instance(
             hint=item.hint,
             url=None,
             get_url=get_activate_changes_full_page_url,
-            target="main",
         )
 
     return MainMenuItem(

@@ -155,7 +155,7 @@ def _render_quicksearch_results(results_by_topic: SearchResultsByTopic, query: S
             html.div(match_topic, class_="topic")
 
         for result in sorted(results, key=lambda x: x.title):
-            html.open_a(id_="result_%s" % query, href=result.url, target="main")
+            html.open_a(id_="result_%s" % query, href=result.url)
             html.write_text_permissive(
                 result.title
                 + (" %s" % HTMLWriter.render_b(result.context) if result.context else "")

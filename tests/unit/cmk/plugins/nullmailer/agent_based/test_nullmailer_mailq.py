@@ -11,7 +11,7 @@ from collections.abc import Sequence
 import pytest
 
 from cmk.agent_based.v2 import LevelsT, Metric, Result, State, StringTable
-from cmk.plugins.collection.agent_based.nullmailer_mailq import (
+from cmk.plugins.nullmailer.agent_based.nullmailer_mailq import (
     check_nullmailer_mailq,
     check_single_queue,
     NULLMAILER_MAILQ_DEFAULT_LEVELS,

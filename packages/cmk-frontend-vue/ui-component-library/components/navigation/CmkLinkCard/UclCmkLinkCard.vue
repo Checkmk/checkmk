@@ -115,7 +115,9 @@ const propState = new PanelStateCreator<typeof CmkLinkCard, 'callback'>().create
         <CmkLinkCard
           :title="propState.title"
           :subtitle="propState.subtitle"
-          :icon-name="propState.iconName as SimpleIcons"
+          :icon-name="
+            propState.iconName !== 'none' ? (propState.iconName as SimpleIcons) : undefined
+          "
           :url="propState.disabled ? undefined : propState.url"
           :borders="propState.borders as CmkLinkCardBorders"
           :contrast="propState.contrast as CmkLinkCardContrast"

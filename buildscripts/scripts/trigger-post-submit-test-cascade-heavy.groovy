@@ -30,6 +30,7 @@ void main() {
         "test-update-single-f12less-pro-ultimate-k8s",
         "test-update-single-f12less-pro-ultimatemt-k8s",
     ];
+    job_names += env.USE_K8S_GUI_CRAWL_SYSTEMTESTS == "1" ? ["test-gui-crawl-f12less-k8s"] : [];
 
     print(
         """

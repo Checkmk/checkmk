@@ -10,8 +10,8 @@ import typing as t
 
 import pytest
 
-from cmk.plugins.collection.agent_based import multipath
 from cmk.plugins.lib import multipath as multipath_utils
+from cmk.plugins.mounts.agent_based import multipath
 
 
 class TupleTestData(t.NamedTuple):

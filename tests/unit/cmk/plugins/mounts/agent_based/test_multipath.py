@@ -11,12 +11,12 @@ from typing import Final
 import pytest
 
 from cmk.agent_based.v2 import Result, Service, State
-from cmk.plugins.collection.agent_based.multipath import (
+from cmk.plugins.lib.multipath import Group, Section
+from cmk.plugins.mounts.agent_based.multipath import (
     check_multipath,
     discover_multipath,
     parse_multipath,
 )
-from cmk.plugins.lib.multipath import Group, Section
 
 STRING_TABLE: Final = [
     # First paths

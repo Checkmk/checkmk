@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2026-05-09 17:50+0000\n"
+"PO-Revision-Date: 2026-05-12 07:43+0000\n"
 "Language-Team: Portuguese (Portugal) <https://translate.checkmk.com/projects/"
 "checkmk/stable/pt_PT/>\n"
 "Language: pt_PT\n"
@@ -15043,6 +15043,12 @@ msgstr "O cluster e os nós devem ter a mesma fonte de dados. "
 msgid "Cluster behavior"
 msgstr "Comportamento de aglomeração"
 
+msgid "Cluster collector: Container metrics cache size"
+msgstr ""
+
+msgid "Cluster collector: Machine sections cache size"
+msgstr ""
+
 msgid "Cluster health"
 msgstr "Saúde do Aglomerado"
 
@@ -20611,6 +20617,9 @@ msgstr "Elimina"
 #, fuzzy, python-format
 msgid "Deleting %s..."
 msgstr "Apanhando \"%s\"..."
+
+msgid "Deleting will be available soon"
+msgstr ""
 
 msgid "Delimiter for file grouping"
 msgstr "Delimitador para agrupamento de ficheiros"
@@ -66309,6 +66318,10 @@ msgid "State if ha local state is disabled"
 msgstr "Estado se o Estado local for Desactivado"
 
 #, fuzzy
+msgid "State if ha local state is initial"
+msgstr "Estado se o Estado local for Desactivado"
+
+#, fuzzy
 msgid "State if ha local state is non-functional"
 msgstr "Indicar se o Estado local não é funcional"
 
@@ -68536,8 +68549,13 @@ msgid "Telemetry"
 msgstr "Elemento"
 
 msgid ""
+"Telemetry data are collected through the OpenTelemetry Collector. Adjust the "
+"Collector configuration to modify data collection"
+msgstr ""
+
+msgid ""
 "Telemetry data are collected through the Prometheus scraper. Adjust the "
-"scraper configuration to modify data collection"
+"scraper configuration to modify data collection."
 msgstr ""
 
 #, fuzzy
@@ -74820,6 +74838,10 @@ msgid "This ID is used as its unique identifier. It cannot be changed later."
 msgstr ""
 "Esta identificação é usada como identificador único. Não pode ser alterado "
 "mais tarde."
+
+#, fuzzy
+msgid "This OpenTelemetry configuration does not exist."
+msgstr "Esta agregação não existe."
 
 #, fuzzy
 msgid "This Prometheus configuration does not exist."
@@ -85602,8 +85624,16 @@ msgid "Upper levels on Site-to-site bandwidth in bytes per second"
 msgstr ""
 "Níveis superiores na largura de banda local a local em bytes por segundo"
 
+#, fuzzy
+msgid "Upper levels on container metrics cache size"
+msgstr "Níveis superiores para o tamanho total do namespace"
+
 msgid "Upper levels on daily costs"
 msgstr "Níveis superiores em custos diários"
+
+#, fuzzy
+msgid "Upper levels on machine sections cache size"
+msgstr "Níveis superiores para conexões em uso"
 
 msgid "Upper levels on number of Point-to-site connections"
 msgstr "Níveis superiores em número de ligações ponto-a-ponto"
@@ -98679,8 +98709,8 @@ msgid "Save OpenTelemetry configuration"
 msgstr "Configuração da consola de eventos"
 
 #, fuzzy
-msgid "Configure title and site"
-msgstr "Configurar níveis no fumo"
+msgid "General configuration properties"
+msgstr "Erro de configuração"
 
 #, fuzzy
 msgid ""
@@ -99057,6 +99087,14 @@ msgstr "Adicionar configuração do estado"
 
 #, fuzzy
 msgid "Could not create the Prometheus scraper configuration"
+msgstr "Eliminar esta ligação"
+
+#, fuzzy
+msgid "Configuration bundle setup"
+msgstr "Ficheiros de configuração"
+
+#, fuzzy
+msgid "Could not create the configuration bundle"
 msgstr "Eliminar esta ligação"
 
 msgid ""
@@ -100096,6 +100134,10 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Configure title and site"
+#~ msgstr "Configurar níveis no fumo"
 
 #, fuzzy
 #~ msgid ""

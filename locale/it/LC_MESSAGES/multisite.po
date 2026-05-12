@@ -14906,6 +14906,12 @@ msgstr "La data di fine deve essere successiva alla data di inizio. "
 msgid "Cluster behavior"
 msgstr "Comportamento del cluster"
 
+msgid "Cluster collector: Container metrics cache size"
+msgstr ""
+
+msgid "Cluster collector: Machine sections cache size"
+msgstr ""
+
 msgid "Cluster health"
 msgstr "Cluster salute"
 
@@ -20451,6 +20457,9 @@ msgstr "Cancella"
 #, fuzzy, python-format
 msgid "Deleting %s..."
 msgstr "Recupero di '%s'..."
+
+msgid "Deleting will be available soon"
+msgstr ""
 
 msgid "Delimiter for file grouping"
 msgstr "Delimitatore per il raggruppamento dei file"
@@ -66134,6 +66143,10 @@ msgid "State if ha local state is disabled"
 msgstr "Stato se lo Stato locale è disabilitato"
 
 #, fuzzy
+msgid "State if ha local state is initial"
+msgstr "Stato se lo Stato locale è disabilitato"
+
+#, fuzzy
 msgid "State if ha local state is non-functional"
 msgstr "Indicare se lo Stato locale non è funzionale"
 
@@ -68340,8 +68353,13 @@ msgid "Telemetry"
 msgstr "Elemento"
 
 msgid ""
+"Telemetry data are collected through the OpenTelemetry Collector. Adjust the "
+"Collector configuration to modify data collection"
+msgstr ""
+
+msgid ""
 "Telemetry data are collected through the Prometheus scraper. Adjust the "
-"scraper configuration to modify data collection"
+"scraper configuration to modify data collection."
 msgstr ""
 
 #, fuzzy
@@ -74735,6 +74753,10 @@ msgid "This ID is used as its unique identifier. It cannot be changed later."
 msgstr ""
 "Questo ID è usato come identificatore unico. Non può essere cambiato in "
 "seguito."
+
+#, fuzzy
+msgid "This OpenTelemetry configuration does not exist."
+msgstr "Questa aggregazione non esiste."
 
 #, fuzzy
 msgid "This Prometheus configuration does not exist."
@@ -85479,8 +85501,16 @@ msgid "Upper levels on Site-to-site bandwidth in bytes per second"
 msgstr ""
 "Livelli superiori sulla larghezza di banda da sito a sito in byte al secondo"
 
+#, fuzzy
+msgid "Upper levels on container metrics cache size"
+msgstr "Livelli superiori per la dimensione totale dello spazio dei nomi"
+
 msgid "Upper levels on daily costs"
 msgstr "Livelli superiori sui costi giornalieri"
+
+#, fuzzy
+msgid "Upper levels on machine sections cache size"
+msgstr "Livelli superiori per le connessioni in uso"
 
 msgid "Upper levels on number of Point-to-site connections"
 msgstr "Livelli superiori sul numero di connessioni Point-to-site"
@@ -98616,8 +98646,8 @@ msgid "Save OpenTelemetry configuration"
 msgstr "Configurazione della console eventi"
 
 #, fuzzy
-msgid "Configure title and site"
-msgstr "Configurare i livelli sul fumo"
+msgid "General configuration properties"
+msgstr "Errore di configurazione"
 
 #, fuzzy
 msgid ""
@@ -98992,6 +99022,14 @@ msgstr "Configurazione dello stile selezionato"
 
 #, fuzzy
 msgid "Could not create the Prometheus scraper configuration"
+msgstr "Cancellare questa connessione"
+
+#, fuzzy
+msgid "Configuration bundle setup"
+msgstr "File di configurazione"
+
+#, fuzzy
+msgid "Could not create the configuration bundle"
 msgstr "Cancellare questa connessione"
 
 msgid ""
@@ -100033,6 +100071,10 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Configure title and site"
+#~ msgstr "Configurare i livelli sul fumo"
 
 #, fuzzy
 #~ msgid ""

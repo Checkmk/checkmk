@@ -15148,6 +15148,12 @@ msgstr "Le cluster et les nœuds doivent avoir la même source de données. "
 msgid "Cluster behavior"
 msgstr "Comportement de la grappe"
 
+msgid "Cluster collector: Container metrics cache size"
+msgstr ""
+
+msgid "Cluster collector: Machine sections cache size"
+msgstr ""
+
 msgid "Cluster health"
 msgstr "Santé en cluster"
 
@@ -20778,6 +20784,9 @@ msgstr "Supprime"
 #, fuzzy, python-format
 msgid "Deleting %s..."
 msgstr "Récupération de '%s'..."
+
+msgid "Deleting will be available soon"
+msgstr ""
 
 msgid "Delimiter for file grouping"
 msgstr "Délimiteur pour le regroupement de fichiers"
@@ -66880,6 +66889,10 @@ msgid "State if ha local state is disabled"
 msgstr "Indiquer si l'État local est désactivé"
 
 #, fuzzy
+msgid "State if ha local state is initial"
+msgstr "Indiquer si l'État local est désactivé"
+
+#, fuzzy
 msgid "State if ha local state is non-functional"
 msgstr "Indiquer si l'État local est non fonctionnel"
 
@@ -69123,8 +69136,13 @@ msgid "Telemetry"
 msgstr "Élément"
 
 msgid ""
+"Telemetry data are collected through the OpenTelemetry Collector. Adjust the "
+"Collector configuration to modify data collection"
+msgstr ""
+
+msgid ""
 "Telemetry data are collected through the Prometheus scraper. Adjust the "
-"scraper configuration to modify data collection"
+"scraper configuration to modify data collection."
 msgstr ""
 
 #, fuzzy
@@ -75500,6 +75518,10 @@ msgid "This ID is used as its unique identifier. It cannot be changed later."
 msgstr ""
 "Cet ID est utilisé comme identifiant unique. Il ne peut pas être modifié "
 "ultérieurement."
+
+#, fuzzy
+msgid "This OpenTelemetry configuration does not exist."
+msgstr "Cette agrégation n'existe pas."
 
 #, fuzzy
 msgid "This Prometheus configuration does not exist."
@@ -86424,8 +86446,16 @@ msgid "Upper levels on Site-to-site bandwidth in bytes per second"
 msgstr ""
 "Niveaux supérieurs de la bande passante site à site en octets par seconde"
 
+#, fuzzy
+msgid "Upper levels on container metrics cache size"
+msgstr "Niveaux supérieurs pour la taille totale de l'espace de noms"
+
 msgid "Upper levels on daily costs"
 msgstr "Niveaux supérieurs sur les coûts journaliers"
+
+#, fuzzy
+msgid "Upper levels on machine sections cache size"
+msgstr "Niveaux supérieurs pour les connexions en cours d'utilisation"
 
 msgid "Upper levels on number of Point-to-site connections"
 msgstr "Niveaux supérieurs du nombre de connexions point à site"
@@ -99688,8 +99718,8 @@ msgid "Save OpenTelemetry configuration"
 msgstr "Configuration de la console d'événements"
 
 #, fuzzy
-msgid "Configure title and site"
-msgstr "Pas de niveaux sur les inodes"
+msgid "General configuration properties"
+msgstr "Erreur de configuration"
 
 #, fuzzy
 msgid ""
@@ -100067,6 +100097,14 @@ msgstr "Ajouter une configuration d'état"
 
 #, fuzzy
 msgid "Could not create the Prometheus scraper configuration"
+msgstr "Supprimer cette connexion"
+
+#, fuzzy
+msgid "Configuration bundle setup"
+msgstr "Fichiers de configuration"
+
+#, fuzzy
+msgid "Could not create the configuration bundle"
 msgstr "Supprimer cette connexion"
 
 msgid ""
@@ -101106,6 +101144,10 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Configure title and site"
+#~ msgstr "Pas de niveaux sur les inodes"
 
 #, fuzzy
 #~ msgid ""

@@ -40,6 +40,22 @@ def site(site_factory: SiteFactory, request: pytest.FixtureRequest) -> Generator
         )
 
 
+def _initialize_lock_dir(site: Site) -> None:
+    """Trigger creation of the backup lock dir via `omd status` (as root).
+
+    In production at least one site command runs as root before any backup command, which is what
+    creates `mkbackup_lock_dir` with the correct owner/permissions. The test user typically cannot
+    write to `/run/lock`, so the same setup must be performed explicitly here. The trailing
+    assertions guard against environment regressions.
+    """
+    run(["omd", "status"], sudo=True, substitute_user=site.id)
+    assert run(["test", "-d", mkbackup_lock_dir.as_posix()], check=False, sudo=True).returncode == 0
+    backup_permission_mask = stat.S_IMODE(site.file_mode(mkbackup_lock_dir))
+    assert backup_permission_mask == 0o770
+    backup_file_group = check_output(["stat", "-c", "%G", mkbackup_lock_dir.as_posix()]).rstrip()
+    assert backup_file_group == "omd"
+
+
 def _cleanup_restore_lock(site: Site) -> None:
     """Remove the restore-state file left behind by mkbackup restore.
 
@@ -100,7 +116,7 @@ def backup_path_fixture(site_for_mkbackup_tests: Site) -> Iterator[str]:
     ],
 )
 def backup_lock_dir_fixture(
-    site_for_mkbackup_tests: Site, request: pytest.FixtureRequest
+    site_for_mkbackup_tests: Site, request: pytest.FixtureRequest, test_cfg: None
 ) -> Iterator[None]:
     """Prepare two scenarios for testing.
 
@@ -109,26 +125,11 @@ def backup_lock_dir_fixture(
     2) The folder does not yet exist.
 
     In both scenarios `mkbackup` must not fail!
+
+    Depends on `test_cfg` so it runs *after* the lock dir was initialized there — required for the
+    "lock dir not existing" scenario to actually start from an empty state.
     """
-
-    def _initialize_lock_dir() -> None:
-        # This omd call triggers the creation of the lock dir with the correct permissions. In
-        # production there is always at least one command executed before being able to execute
-        # the backup code. So we can assume it has been executed before.
-        run(["omd", "status"], sudo=True, substitute_user=site_for_mkbackup_tests.id)
-        assert (
-            run(["test", "-d", mkbackup_lock_dir.as_posix()], check=False, sudo=True).returncode
-            == 0
-        )
-        backup_permission_mask = stat.S_IMODE(site_for_mkbackup_tests.file_mode(mkbackup_lock_dir))
-        assert backup_permission_mask == 0o770
-        backup_file_group = check_output(
-            ["stat", "-c", "%G", mkbackup_lock_dir.as_posix()]
-        ).rstrip()
-        assert backup_file_group == "omd"
-
     if request.param:
-        _initialize_lock_dir()
         yield
     else:
         run(["rm", "-r", str(mkbackup_lock_dir)], sudo=True)
@@ -137,13 +138,17 @@ def backup_lock_dir_fixture(
             == 0
         ), f"Expected '{mkbackup_lock_dir}' to be deleted!"
         yield
-        _initialize_lock_dir()
+        _initialize_lock_dir(site_for_mkbackup_tests)
 
 
 @pytest.fixture(name="test_cfg", scope="function")
 def test_cfg_fixture(site_for_mkbackup_tests: Site, backup_path: str) -> Iterator[None]:
     _cleanup_restore_lock(site_for_mkbackup_tests)
     site_for_mkbackup_tests.ensure_running()
+    # The site user typically cannot create `mkbackup_lock_dir` itself (no write access to
+    # `/run/lock`), so every test that invokes `mkbackup` relies on the dir being prepared as root
+    # beforehand. `backup_lock_dir` overrides this for its "lock dir not existing" scenario.
+    _initialize_lock_dir(site_for_mkbackup_tests)
 
     cfg = {
         "jobs": {

@@ -26,6 +26,7 @@ import CmkButtonSubmit from '@/components/CmkButtonSubmit.vue'
 import CmkDialog from '@/components/CmkDialog.vue'
 import CmkHtml from '@/components/CmkHtml.vue'
 import CmkIcon from '@/components/CmkIcon'
+import CmkScrollContainer from '@/components/CmkScrollContainer.vue'
 import CmkHeading from '@/components/typography/CmkHeading.vue'
 
 import { useSiteStatus } from '@/main-menu/changes/useSiteStatus'
@@ -431,105 +432,107 @@ onMounted(async () => {
           {{ _t('Open full view') }}
         </CmkButton>
       </div>
-      <UserSettingDialog
-        v-if="!new_installation"
-        :activate-changes-url="activate_changes_url"
-        :changes-action="props.navbar_changes_action ?? ''"
-        :user-name="user_name"
-      />
-      <CmkDialog
-        v-else
-        :message="
-          _t(`Changes are saved without affecting live monitoring, allowing you to review and adjust them safely.
-              Click 'Activate pending changes' to apply them.`)
-        "
-        :dismissal_button="{
-          title: _t('Do not show again'),
-          key: 'changes-info'
-        }"
-      />
-      <CmkAlertBox v-if="showNotAllowedMessage" variant="warning" class="cmk-alert-box">
-        {{ _t('Sorry, you are not allowed to activate changes of other users.') }}
-      </CmkAlertBox>
-
-      <CmkAlertBox
-        v-if="activationError"
-        variant="error"
-        class="cmk-alert-box"
-        :heading="activationError.title"
-      >
-        {{ activationError.detail }}
-      </CmkAlertBox>
-
-      <CmkAlertBox
-        v-if="sitesAndChanges.licenseMessage !== null"
-        variant="warning"
-        class="cmk-alert-box"
-      >
-        <CmkHtml :html="sitesAndChanges.licenseMessage" />
-      </CmkAlertBox>
-      <ChangesActivating
-        v-if="activateChangesInProgress"
-        :activating-on-sites="
-          recentlyActivatedSiteIds.length > 1
-            ? recentlyActivatedSiteIds
-            : recentlyActivatedSiteIds[0]
-        "
-        :restart-info="restartInfoShown"
-      >
-      </ChangesActivating>
-      <ChangesActivationResult
-        v-if="!activateChangesInProgress && numberOfSuccessfullyActivatedSites > 0"
-        type="success"
-        :title="activationSuccessTitle"
-        :info="_t('Everything is up to date')"
-        class="cmk-div-activation-result-container"
-      >
-      </ChangesActivationResult>
-      <CmkDialog
-        v-if="
-          sitesWithWarningsOrErrors &&
-          !activateChangesInProgress &&
-          showActivationResultWarningsErrors
-        "
-        :title="_t('Problems detected during activation')"
-        :message="_t('Some things may not be monitored properly.')"
-        :buttons="[
-          {
-            title: _t('Open full view'),
-            variant: sitesWithErrors ? 'danger' : 'warning',
-            onclick: () => openActivateChangesPage()
-          }
-        ]"
-        :variant="sitesWithErrors ? 'error' : 'warning'"
-      />
-
-      <ChangesStatusBar
-        v-if="!activateChangesInProgress"
-        :activate-changes-url="props.activate_changes_url"
-        :pending-changes="sitesAndChanges.pendingChanges.length"
-        :activation-issues="sitesWithActivationIssues.length"
-        :site-problems="sitesWithStatusProblems.length"
-      />
-
-      <div class="cmk-div-sites-and-pending-changes-container">
-        <SiteStatusList
-          v-model="selectedSites"
-          :sites="sitesAndChanges.sites"
-          :open="activationStatusCollapsible"
-          :activating="activateChangesInProgress"
-          :recently-activated-sites="recentlyActivatedSiteIds"
-          :pending-changes="sitesAndChanges.pendingChanges"
-          :user-has-activate-foreign="props.user_has_activate_foreign"
-        ></SiteStatusList>
-        <PendingChangesList
-          v-model:pending-changes="sitesAndChanges.pendingChanges"
-          v-model:number-of-foreign-changes="numberOfForeignChanges"
-          class="pending-changes-container"
-          :selected-sites="selectedSites"
-          :user-name="props.user_name"
+      <CmkScrollContainer type="outer" height="auto" class="cmk-changes-scroll-panel">
+        <UserSettingDialog
+          v-if="!new_installation"
+          :activate-changes-url="activate_changes_url"
+          :changes-action="props.navbar_changes_action ?? ''"
+          :user-name="user_name"
         />
-      </div>
+        <CmkDialog
+          v-else
+          :message="
+            _t(`Changes are saved without affecting live monitoring, allowing you to review and adjust them safely.
+                Click 'Activate pending changes' to apply them.`)
+          "
+          :dismissal_button="{
+            title: _t('Do not show again'),
+            key: 'changes-info'
+          }"
+        />
+        <CmkAlertBox v-if="showNotAllowedMessage" variant="warning" class="cmk-alert-box">
+          {{ _t('Sorry, you are not allowed to activate changes of other users.') }}
+        </CmkAlertBox>
+
+        <CmkAlertBox
+          v-if="activationError"
+          variant="error"
+          class="cmk-alert-box"
+          :heading="activationError.title"
+        >
+          {{ activationError.detail }}
+        </CmkAlertBox>
+
+        <CmkAlertBox
+          v-if="sitesAndChanges.licenseMessage !== null"
+          variant="warning"
+          class="cmk-alert-box"
+        >
+          <CmkHtml :html="sitesAndChanges.licenseMessage" />
+        </CmkAlertBox>
+        <ChangesActivating
+          v-if="activateChangesInProgress"
+          :activating-on-sites="
+            recentlyActivatedSiteIds.length > 1
+              ? recentlyActivatedSiteIds
+              : recentlyActivatedSiteIds[0]
+          "
+          :restart-info="restartInfoShown"
+        >
+        </ChangesActivating>
+        <ChangesActivationResult
+          v-if="!activateChangesInProgress && numberOfSuccessfullyActivatedSites > 0"
+          type="success"
+          :title="activationSuccessTitle"
+          :info="_t('Everything is up to date')"
+          class="cmk-div-activation-result-container"
+        >
+        </ChangesActivationResult>
+        <CmkDialog
+          v-if="
+            sitesWithWarningsOrErrors &&
+            !activateChangesInProgress &&
+            showActivationResultWarningsErrors
+          "
+          :title="_t('Problems detected during activation')"
+          :message="_t('Some things may not be monitored properly.')"
+          :buttons="[
+            {
+              title: _t('Open full view'),
+              variant: sitesWithErrors ? 'danger' : 'warning',
+              onclick: () => openActivateChangesPage()
+            }
+          ]"
+          :variant="sitesWithErrors ? 'error' : 'warning'"
+        />
+
+        <ChangesStatusBar
+          v-if="!activateChangesInProgress"
+          :activate-changes-url="props.activate_changes_url"
+          :pending-changes="sitesAndChanges.pendingChanges.length"
+          :activation-issues="sitesWithActivationIssues.length"
+          :site-problems="sitesWithStatusProblems.length"
+        />
+
+        <div class="cmk-div-sites-and-pending-changes-container">
+          <SiteStatusList
+            v-model="selectedSites"
+            :sites="sitesAndChanges.sites"
+            :open="activationStatusCollapsible"
+            :activating="activateChangesInProgress"
+            :recently-activated-sites="recentlyActivatedSiteIds"
+            :pending-changes="sitesAndChanges.pendingChanges"
+            :user-has-activate-foreign="props.user_has_activate_foreign"
+          ></SiteStatusList>
+          <PendingChangesList
+            v-model:pending-changes="sitesAndChanges.pendingChanges"
+            v-model:number-of-foreign-changes="numberOfForeignChanges"
+            class="pending-changes-container"
+            :selected-sites="selectedSites"
+            :user-name="props.user_name"
+          />
+        </div>
+      </CmkScrollContainer>
     </div>
   </DefaultPopup>
 </template>
@@ -582,6 +585,18 @@ div.cmk-alert-box {
   margin: var(--spacing-double);
 }
 
+.cmk-changes-scroll-panel {
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+
+  /* Space for the scrollbar, so that it doesn't overlap with the nested one for the changes list */
+  padding-right: var(--dimension-4);
+  box-sizing: border-box;
+}
+
 .cmk-div-buttons-container {
   display: flex;
   align-items: center;
@@ -593,9 +608,8 @@ div.cmk-alert-box {
   width: 100%;
   display: flex;
   flex-direction: column;
-  flex: 1 1 0;
-  min-height: 0;
-  overflow: hidden;
+  flex: 1;
+  min-height: 250px;
 }
 
 .cmk-div-activation-result-container {
@@ -616,9 +630,6 @@ div.cmk-alert-box {
 
 .pending-changes-container {
   width: 100%;
-  flex: 1;
-  min-height: 0;
-  overflow: hidden;
 }
 
 .sites-container {
@@ -653,17 +664,6 @@ div.cmk-alert-box {
 
 .cmk-button-submit {
   margin-right: 10px;
-}
-
-.cmk-scroll-pending-changes-container {
-  width: inherit;
-  display: flex;
-  flex-direction: column;
-}
-
-.cmk-collapsible-pending-changes {
-  width: 100%;
-  height: calc(100% - 158px);
 }
 
 /* stylelint-disable-next-line selector-pseudo-class-no-unknown */

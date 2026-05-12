@@ -75,6 +75,7 @@ function handleClick(event: MouseEvent) {
 .mm-changes-status-bar {
   display: flex;
   width: 100%;
+  box-sizing: border-box;
   justify-content: space-between;
   align-items: center;
   border-radius: var(--dimension-3);

@@ -19,7 +19,9 @@ from cmk.gui.openapi.framework.endpoint_link import (
     path_to_endpoint,
 )
 from cmk.gui.openapi.framework.model.base_models import LinkModel
+from cmk.gui.openapi.framework.model.omitted import ApiOmitted
 from cmk.gui.openapi.framework.registry import versioned_endpoint_registry
+from cmk.gui.openapi.restful_objects.constructors import expand_rel
 from cmk.gui.openapi.restful_objects.endpoint_family import endpoint_family_registry
 from cmk.gui.openapi.restful_objects.type_defs import LinkRelation
 from cmk.gui.openapi.versioned_endpoint_map import _discover_endpoints
@@ -86,6 +88,8 @@ def _path(version: APIVersion = APIVersion.V1, **parameters: str) -> str:
 def _link(
     version: APIVersion = APIVersion.V1,
     body: Mapping[str, object] | None = None,
+    as_self: bool = False,
+    title: str | None = None,
     **parameters: str,
 ) -> LinkModel:
     return link_to_endpoint(
@@ -95,6 +99,8 @@ def _link(
         host_url="https://example.com/",
         parameters=parameters,
         body=body,
+        as_self=as_self,
+        title=title,
     )
 
 
@@ -278,6 +284,30 @@ def test_link_to_endpoint_returns_link_model() -> None:
     parsed = urlparse(link.href)
     assert parsed.path.endswith("/check_mk/api/v1/objects/test_thing/abc")
     assert link.method == "POST"
-    assert link.rel == _LINK_REL
+    assert link.rel == expand_rel(_LINK_REL, {})
     assert link.type == "application/json"
     assert link.domainType == "link"
+
+
+def test_link_to_endpoint_as_self_sets_rel_to_self() -> None:
+    _register((APIVersion.V1, _handler_with_path_param), method="get")
+
+    link = _link(thing_id="abc", as_self=True)
+
+    assert link.rel == "self"
+
+
+def test_link_to_endpoint_title_is_set() -> None:
+    _register((APIVersion.V1, _handler_with_path_param), method="get")
+
+    link = _link(thing_id="abc", title="My label")
+
+    assert link.title == "My label"
+
+
+def test_link_to_endpoint_title_omitted_by_default() -> None:
+    _register((APIVersion.V1, _handler_with_path_param), method="get")
+
+    link = _link(thing_id="abc")
+
+    assert isinstance(link.title, ApiOmitted)

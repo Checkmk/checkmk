@@ -22,6 +22,7 @@ from cmk.gui.openapi.framework.endpoint_model import Parameters, SignatureParame
 from cmk.gui.openapi.framework.model.base_models import LinkModel
 from cmk.gui.openapi.framework.model.omitted import ApiOmitted
 from cmk.gui.openapi.framework.registry import EndpointDefinition
+from cmk.gui.openapi.restful_objects.constructors import expand_rel
 from cmk.gui.openapi.restful_objects.type_defs import EndpointFamilyName, LinkRelation
 from cmk.gui.openapi.versioned_endpoint_map import discover_endpoints
 
@@ -192,8 +193,11 @@ def link_to_endpoint(
     link_relation: LinkRelation,
     version: APIVersion,
     host_url: str,
+    *,
     parameters: Mapping[str, str] | None = None,
     body: Mapping[str, object] | None = None,
+    as_self: bool = False,
+    title: str | None = None,
 ) -> LinkModel:
     """Return a :class:`LinkModel` (with absolute href) for a registered endpoint.
 
@@ -211,6 +215,12 @@ def link_to_endpoint(
     If the endpoint expects a request body, ``body`` is included in the
     returned :class:`LinkModel`.
 
+    If ``as_self`` is ``True``, the returned link's ``rel`` is set to
+    ``"self"`` instead of the expanded endpoint link relation.
+
+    If ``title`` is provided it is included in the returned :class:`LinkModel`
+    as a human-readable label.
+
     Raises:
         EndpointLinkNotFoundError: the requested version has no endpoint
             matching ``(family, link_relation)``.
@@ -225,11 +235,13 @@ def link_to_endpoint(
     _validate_body(info, body)
     absolute = f"{host_url.rstrip('/')}{path}"
     method = cast(Literal["GET", "POST", "PUT", "DELETE"], endpoint.metadata.method.upper())
+    rel = "self" if as_self else expand_rel(endpoint.metadata.link_relation, {})
     return LinkModel(
-        rel=endpoint.metadata.link_relation,
+        rel=rel,
         href=absolute,
         method=method,
         type=endpoint.metadata.content_type or "application/json",
         domainType="link",
+        title=title if title is not None else ApiOmitted(),
         body_params=body if body is not None else ApiOmitted(),
     )

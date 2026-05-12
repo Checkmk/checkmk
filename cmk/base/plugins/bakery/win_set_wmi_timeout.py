@@ -3,16 +3,24 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Mapping
+
+from pydantic import BaseModel
+
 from .bakery_api.v1 import (
     register,
-    WindowsConfigContent,
     WindowsConfigEntry,
     WindowsConfigGenerator,
 )
 
 
-def get_win_set_wmi_timeout_windows_config(conf: WindowsConfigContent) -> WindowsConfigGenerator:
-    yield WindowsConfigEntry(path=["global", "wmi_timeout"], content=conf)
+class _Config(BaseModel):
+    wmi_timeout: int = 3
+
+
+def get_win_set_wmi_timeout_windows_config(conf: Mapping[str, object]) -> WindowsConfigGenerator:
+    config = _Config.model_validate(conf)
+    yield WindowsConfigEntry(path=["global", "wmi_timeout"], content=config.wmi_timeout)
 
 
 register.bakery_plugin(

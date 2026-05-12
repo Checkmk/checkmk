@@ -3,32 +3,49 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Mapping
 
-from cmk.gui.agent_bakery import RulespecGroupMonitoringAgentsWindowsAgent
-from cmk.gui.i18n import _
-from cmk.gui.plugins.wato.utils import HostRulespec, rulespec_registry
-from cmk.gui.valuespec import Integer
-from cmk.utils.rulesets.definition import RuleGroup
+from cmk.rulesets.v1 import Help, Title
+from cmk.rulesets.v1.form_specs import (
+    DefaultValue,
+    DictElement,
+    Dictionary,
+    Integer,
+)
+from cmk.rulesets.v1.rule_specs import AgentConfig, Topic
 
 
-def _valuespec_agent_config_win_set_wmi_timeout() -> Integer:
-    return Integer(
-        title=_("Windows WMI Timeout"),
-        unit=_("seconds"),
-        default_value=3,
-        minvalue=2,
-        maxvalue=12,
-        help=_(
+def migrate(value: object) -> Mapping[str, object]:
+    if isinstance(value, dict) and "wmi_timeout" in value:
+        return value
+    if isinstance(value, int):
+        return {"wmi_timeout": value}
+    raise ValueError(f"Unexpected value: {value!r}")
+
+
+def _form_spec() -> Dictionary:
+    return Dictionary(
+        help_text=Help(
             "Increase this value if WMI-based services are switching "
             "constantly into stale state. Default value is 3."
         ),
+        elements={
+            "wmi_timeout": DictElement(
+                required=True,
+                parameter_form=Integer(
+                    title=Title("WMI timeout"),
+                    unit_symbol="s",
+                    prefill=DefaultValue(3),
+                ),
+            ),
+        },
+        migrate=migrate,
     )
 
 
-rulespec_registry.register(
-    HostRulespec(
-        group=RulespecGroupMonitoringAgentsWindowsAgent,
-        name=RuleGroup.AgentConfig("win_set_wmi_timeout"),
-        valuespec=_valuespec_agent_config_win_set_wmi_timeout,
-    )
+rule_spec_win_set_wmi_timeout = AgentConfig(
+    title=Title("Windows WMI Timeout"),
+    name="win_set_wmi_timeout",
+    topic=Topic.WINDOWS,
+    parameter_form=_form_spec,
 )

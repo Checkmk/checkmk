@@ -10,16 +10,16 @@ from cmk.base.plugins.bakery.win_set_wmi_timeout import (
 
 
 def test_win_set_wmi_timeout_windows_config() -> None:
-    conf = 30
+    conf = {"wmi_timeout": 30}
     result = list(get_win_set_wmi_timeout_windows_config(conf))
     assert result == [
         WindowsConfigEntry(path=["global", "wmi_timeout"], content=30),
     ]
 
 
-def test_win_set_wmi_timeout_windows_config_string() -> None:
-    conf = "60"
+def test_win_set_wmi_timeout_windows_config_default() -> None:
+    conf: dict[str, object] = {}
     result = list(get_win_set_wmi_timeout_windows_config(conf))
     assert result == [
-        WindowsConfigEntry(path=["global", "wmi_timeout"], content="60"),
+        WindowsConfigEntry(path=["global", "wmi_timeout"], content=3),
     ]

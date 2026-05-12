@@ -13,8 +13,8 @@ import { computed, onBeforeUnmount, ref, useTemplateRef } from 'vue'
 
 import { immediateWatch } from '@/lib/watch'
 
-import CmkButton from '@/components/CmkButton'
 import CmkDynamicIcon from '@/components/CmkIcon/CmkDynamicIcon/CmkDynamicIcon.vue'
+import CmkLink from '@/components/CmkLink.vue'
 import CmkZebra from '@/components/CmkZebra.vue'
 
 import { showLoadingTransition } from '@/loading-transition/loadingTransition'
@@ -166,14 +166,10 @@ onBeforeUnmount(() => {
         class="result-item-handler inline"
         :class="{ indented: props.indented }"
       >
-        <CmkButton ref="item-focus-inline" :href="ib.target.url" class="inline-button">
-          <div v-if="ib.icon" class="result-item-inner-start">
-            <CmkDynamicIcon :spec="ib.icon" size="small" class="result-item-icon" />
-          </div>
-          <div class="result-item-inner-end">
-            {{ ib.title }}
-          </div>
-        </CmkButton>
+        <CmkLink ref="item-focus-inline" :href="ib.target.url" target="main" class="inline-button">
+          <CmkDynamicIcon v-if="ib.icon" :spec="ib.icon" size="small" class="result-item-icon" />
+          {{ ib.title }}
+        </CmkLink>
       </div>
     </component>
   </li>
@@ -227,7 +223,6 @@ onBeforeUnmount(() => {
     &.inline {
       padding: 0 var(--spacing);
       flex: 1;
-      margin-left: 1px;
       box-sizing: border-box;
       height: auto;
       position: relative;
@@ -239,17 +234,8 @@ onBeforeUnmount(() => {
       }
 
       .inline-button {
-        height: 20px;
-        width: 100%;
-
-        &:active,
-        &:focus {
-          border: 1px solid var(--success);
-          outline: none;
-        }
-
         .result-item-icon {
-          margin-right: var(--dimension-4);
+          margin-right: var(--dimension-3);
         }
       }
     }

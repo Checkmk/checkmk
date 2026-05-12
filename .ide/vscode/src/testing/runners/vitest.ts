@@ -74,12 +74,16 @@ export function findVitestTestLine(filePath: string, name: string): number | und
   return undefined
 }
 
-export function vitestCaseToFilePath(wsPath: string, c: JUnitTestCase): string | undefined {
+export function vitestCaseToFilePath(
+  wsPath: string,
+  c: JUnitTestCase,
+  targetPkg?: string
+): string | undefined {
   if (c.file) {
     const abs = path.isAbsolute(c.file) ? c.file : path.join(wsPath, c.file)
     if (fs.existsSync(abs)) return abs
   }
-  // classname format: "//<pkg>:<dotted>" (per vite.config classnameTemplate).
+  // classname format: "//<pkg>:<dotted>" (legacy source-discovery format).
   const m = /^\/\/([^:]+):(.+)$/.exec(c.classname)
   if (m) {
     const inner = m[2].replace(/\./g, '/')
@@ -87,6 +91,12 @@ export function vitestCaseToFilePath(wsPath: string, c: JUnitTestCase): string |
       const candidate = path.join(wsPath, m[1], inner + ext)
       if (fs.existsSync(candidate)) return candidate
     }
+  }
+  // Vitest's default JUnit classname is the source file path relative to the
+  // vitest cwd (which under Bazel is the package directory).
+  if (targetPkg && c.classname) {
+    const direct = path.join(wsPath, targetPkg, c.classname)
+    if (fs.existsSync(direct)) return direct
   }
   const parts = c.classname.split('.')
   for (let len = parts.length; len > 0; len--) {
@@ -98,13 +108,23 @@ export function vitestCaseToFilePath(wsPath: string, c: JUnitTestCase): string |
   return undefined
 }
 
-export function vitestCaseFilePath(wsPath: string, c: JUnitTestCase): string {
-  const resolved = vitestCaseToFilePath(wsPath, c)
+export function vitestCaseFilePath(wsPath: string, c: JUnitTestCase, targetPkg?: string): string {
+  const resolved = vitestCaseToFilePath(wsPath, c, targetPkg)
   if (resolved) return resolved
   if (c.file) {
     return path.isAbsolute(c.file) ? c.file : path.join(wsPath, c.file)
   }
+  if (targetPkg) return path.join(wsPath, targetPkg, c.classname)
   return path.join(wsPath, c.classname.replace(/\./g, '/') + '.test.ts')
+}
+
+/** Vitest JUnit emits test names as "describe > nested > it". Discovery
+ *  captures only the `it()` first arg, so the full describe path doesn't
+ *  match the existing function item. Strip everything up to and including
+ *  the last " > " so reported cases land on the discovered items. */
+export function vitestCaseLeafName(name: string): string {
+  const idx = name.lastIndexOf(' > ')
+  return idx >= 0 ? name.slice(idx + 3) : name
 }
 
 export function buildVitestArgs(opts: RunOptions, scope: RuleScope): string[] {

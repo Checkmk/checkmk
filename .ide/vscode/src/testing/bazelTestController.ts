@@ -41,7 +41,8 @@ import {
   buildVitestArgs,
   discoverVitestTestsForTarget,
   findVitestTestLine,
-  vitestCaseFilePath
+  vitestCaseFilePath,
+  vitestCaseLeafName
 } from './runners/vitest'
 import {
   classifyItem,
@@ -322,7 +323,7 @@ function caseFilePath(
   kind: RuleKind,
   targetPkg?: string
 ): string {
-  if (kind === 'vitest_test') return vitestCaseFilePath(wsPath, c)
+  if (kind === 'vitest_test') return vitestCaseFilePath(wsPath, c, targetPkg)
   return pyCaseFilePath(wsPath, c, targetPkg)
 }
 
@@ -443,7 +444,18 @@ async function runOneUnit(
     const parent = getOrCreateSyntheticFolderChain(controller, item, wsPath, rel, unit.kind)
     const fileItem = getOrCreateFileItem(controller, item, parent, wsPath, rel)
     const line = c.line !== undefined ? c.line - 1 : undefined
-    const funcItem = getOrCreateFunctionItem(controller, fileItem, filePath, c.name, line, findLine)
+    // Vitest emits "describe > it" as the case name; discovery captured only
+    // the it-name. Use the leaf so cases merge into the discovered items
+    // instead of appearing as duplicate siblings.
+    const funcName = unit.kind === 'vitest_test' ? vitestCaseLeafName(c.name) : c.name
+    const funcItem = getOrCreateFunctionItem(
+      controller,
+      fileItem,
+      filePath,
+      funcName,
+      line,
+      findLine
+    )
     reportCase(run, funcItem, c)
   }
 

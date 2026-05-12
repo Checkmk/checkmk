@@ -6,6 +6,7 @@
 import { describe, expect, it } from 'vitest'
 
 import { parseJunitXml } from '../../src/testing/bazelTestController'
+import { vitestCaseLeafName } from '../../src/testing/runners/vitest'
 
 describe('parseJunitXml', () => {
   it('parses a single passing testcase', () => {
@@ -91,5 +92,29 @@ describe('parseJunitXml', () => {
     const cases = parseJunitXml(xml)
     expect(cases).toHaveLength(3)
     expect(cases.map((c) => c.status)).toEqual(['passed', 'failed', 'skipped'])
+  })
+})
+
+describe('vitestCaseLeafName', () => {
+  it('returns the bare it-name when no describe is present', () => {
+    expect(vitestCaseLeafName('returns null on unsupported platforms')).toBe(
+      'returns null on unsupported platforms'
+    )
+  })
+
+  it('strips a single describe prefix', () => {
+    expect(
+      vitestCaseLeafName('detectJemallocPathAsync > returns null on unsupported platforms')
+    ).toBe('returns null on unsupported platforms')
+  })
+
+  it('strips nested describe prefixes', () => {
+    expect(vitestCaseLeafName('outer > inner > the actual test')).toBe('the actual test')
+  })
+
+  it('preserves " > " inside the leaf when it is the last segment', () => {
+    // " > " only counts as a separator between describe levels in vitest's
+    // JUnit name, so any " > " in the it-name itself appears at the tail.
+    expect(vitestCaseLeafName('describe > a > b > c')).toBe('c')
   })
 })

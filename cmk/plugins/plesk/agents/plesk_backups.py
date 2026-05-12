@@ -128,11 +128,9 @@ def main():
                 if not l or l[0] == "d":
                     subdir = "/" + l.split()[-1] if l else ""
                     dir_files = []  # type: list[str]
-                    ftp_conn.retrlines(
-                        "LIST {}{}".format(base_dir, subdir), callback=dir_files.append
-                    )
+                    ftp_conn.retrlines("LIST %s%s" % (base_dir, subdir), callback=dir_files.append)
                     for ln in dir_files:
-                        size += get_size(ftp_conn, "{}{}".format(base_dir, subdir), ln)
+                        size += get_size(ftp_conn, "%s%s" % (base_dir, subdir), ln)
                 else:
                     size += int(l.split()[-5])
                 return size
@@ -145,7 +143,7 @@ def main():
                 )
 
         except Exception as e:
-            output.append("{} 2 {}".format(domain, e))
+            output.append("%s 2 %s" % (domain, e))
 
     # Write cache and output
     sys.stdout.write("%s\n" % "\n".join(output))

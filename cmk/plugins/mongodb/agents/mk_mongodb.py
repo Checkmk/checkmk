@@ -474,7 +474,9 @@ def _get_collections_information(client):
     :return: dictionary with collections information
     """
     collections_dict = _recursive_defaultdict()
-    for collection in client.config.collections.find({}, {"_id", "unique", "dropped", "noBalance"}):
+    for collection in client.config.collections.find(
+        {}, set(["_id", "unique", "dropped", "noBalance"])
+    ):
         database_name, collection_name = _split_namespace(collection.get("_id"))
         collection.pop("_id", None)
         collections_dict[database_name][collection_name] = collection
@@ -534,7 +536,7 @@ def _count_chunks_per_shard(client, databases):  # pylint: disable=too-many-bran
 
     if int(mongodb_version.split(".", 1)[0]) <= 4:
         chunks = client.config.chunks
-        chunks_list = chunks.find({}, {"ns", "shard", "jumbo"})
+        chunks_list = chunks.find({}, set(["ns", "shard", "jumbo"]))
         database_set = set()
         for chunk in chunks_list:
             # get database, collection and shard names
@@ -633,7 +635,7 @@ def section_locks(server_status):
         for what in ["activeClients", "currentQueue"]:
             if what in global_lock_info:
                 for key, value in global_lock_info[what].items():
-                    sys.stdout.write("{} {} {}\n".format(what, key, value))
+                    sys.stdout.write("%s %s %s\n" % (what, key, value))
 
 
 def section_by_keys(section_name, keys, server_status, output_key=False):
@@ -785,7 +787,7 @@ def section_logwatch(client):
             state = "W"
 
         if output_all or get_timestamp(line) > last_timestamp:
-            sys.stdout.write("{} {}\n".format(state, line))
+            sys.stdout.write("%s %s\n" % (state, line))
 
     update_statefile(state_file, startup_warnings)
 
@@ -971,12 +973,12 @@ class PyMongoConfigTransformer:
         if username is not None:
             password_element = ""
             if password is not None:
-                password_element = f":{quote_plus(self._config.password)}"
+                password_element = ":{}".format(quote_plus(self._config.password))
             uri = "mongodb://{}{}@{}:{}".format(
                 quote_plus(self._config.username), password_element, host, port
             )
         else:
-            uri = f"mongodb://{host}:{port}"
+            uri = "mongodb://{}:{}".format(host, port)
         pymongo_config["host"] = uri
         return pymongo_config
 

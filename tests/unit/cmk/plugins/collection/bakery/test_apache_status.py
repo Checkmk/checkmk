@@ -42,7 +42,7 @@ def test_apache_status_files_autodetect() -> None:
             Plugin(base_os=OS.LINUX, source=Path("apache_status.py"), interval=None),
             PluginConfig(
                 base_os=OS.LINUX,
-                lines=[f"ssl_ports = {ssl_ports!r}"],
+                lines=["ssl_ports = %r" % (ssl_ports,)],
                 target=Path("apache_status.cfg"),
                 include_header=True,
             ),

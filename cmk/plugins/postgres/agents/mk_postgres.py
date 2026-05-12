@@ -126,7 +126,7 @@ UTF_8_NEWLINE_CHARS = re.compile(r"[\n\r\u2028\u000B\u0085\u2028\u2029]+")  # fm
 class OSNotImplementedError(NotImplementedError):
     def __str__(self):
         # type: () -> str
-        return f"The OS type ({platform.system()}) is not yet implemented."
+        return "The OS type ({}) is not yet implemented.".format(platform.system())
 
 
 if IS_LINUX:
@@ -260,7 +260,7 @@ class PostgresBase:
 
     def get_sessions(self, row, idle):
         """Gets idle and open sessions"""
-        condition = "{} = {}".format(row, idle)
+        condition = "%s = %s" % (row, idle)
 
         sql_cmd = (
             "SELECT %s, count(*) FROM pg_stat_activity WHERE %s IS NOT NULL GROUP BY (%s);"
@@ -345,7 +345,7 @@ class PostgresBase:
         """
 
         out = subprocess_check_output(
-            ["{}{}pg_isready".format(self.psql_binary_dirname, os.sep), "-p", self.pg_port],
+            ["%s%spg_isready" % (self.psql_binary_dirname, os.sep), "-p", self.pg_port],
         )
 
         sys.stdout.write("%s\n" % ensure_str(out))
@@ -479,7 +479,7 @@ class PostgresWin(PostgresBase):
             extra_args += " -t"
 
         if mixed_cmd:
-            cmd_str = 'cmd /c echo {} | cmd /c ""{}" -X {} -A -0 -F"{}" -U {}"'.format(
+            cmd_str = 'cmd /c echo %s | cmd /c ""%s" -X %s -A -0 -F"%s" -U %s"' % (
                 sql_cmd,
                 self.psql_binary_path,
                 extra_args,
@@ -488,7 +488,7 @@ class PostgresWin(PostgresBase):
             )
 
         else:
-            cmd_str = 'cmd /c ""{}" -X {} -A -0 -F"{}" -U {} -c "{}"" '.format(
+            cmd_str = 'cmd /c ""%s" -X %s -A -0 -F"%s" -U %s -c "%s"" ' % (
                 self.psql_binary_path,
                 extra_args,
                 field_sep,
@@ -596,7 +596,7 @@ class PostgresWin(PostgresBase):
             PID = PID.split("ProcessId=")[1]
             if self.is_postgres_process(cmd_line):
                 if task.find(self.name) != -1:
-                    out += "{} {}\n".format(PID, cmd_line)
+                    out += "%s %s\n" % (PID, cmd_line)
         return out.rstrip()
 
     def get_stats(self, databases):
@@ -625,7 +625,7 @@ class PostgresWin(PostgresBase):
 
         cur_rows_only = False
         for cnt, database in enumerate(databases):
-            query = "{} \\c {} \\\\ {}".format(query, database, sql_cmd_lastvacuum)
+            query = "%s \\c %s \\\\ %s" % (query, database, sql_cmd_lastvacuum)
             if cnt == 0:
                 query = "%s \\pset tuples_only on" % query
 
@@ -778,7 +778,7 @@ class PostgresWin(PostgresBase):
         cur_rows_only = False
         output = ""
         for idx, database in enumerate(databases):
-            query = "\\pset footer off \\\\ \\c {} \\\\ {}".format(database, bloat_query)
+            query = "\\pset footer off \\\\ \\c %s \\\\ %s" % (database, bloat_query)
             if idx == 0:
                 query = "%s \\pset tuples_only on" % query
             output += self.run_sql_as_db_user(query, mixed_cmd=True, rows_only=cur_rows_only)
@@ -957,7 +957,7 @@ class PostgresLinux(PostgresBase):
 
         cur_rows_only = False
         for cnt, database in enumerate(databases):
-            query = "{}\n\\c {}\n{}".format(query, database, sql_cmd_lastvacuum)
+            query = "%s\n\\c %s\n%s" % (query, database, sql_cmd_lastvacuum)
             if cnt == 0:
                 query = "%s\n\\pset tuples_only on" % query
 
@@ -1106,7 +1106,7 @@ class PostgresLinux(PostgresBase):
 
         cur_rows_only = False
         for idx, database in enumerate(databases):
-            query = "{}\n\\c {}\n{}".format(query, database, bloat_query)
+            query = "%s\n\\c %s\n%s" % (query, database, bloat_query)
             if idx == 0:
                 query = "%s\n\\pset tuples_only on" % query
 

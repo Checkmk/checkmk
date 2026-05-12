@@ -265,11 +265,13 @@ class PatternIterator:
                 if os.path.isdir(item):
                     # equivalent to `find -type f`
                     for currentpath, _folders, file_names in os.walk(item):
-                        yield from self._file_stats(
+                        for file_stat in self._file_stats(
                             [os.path.join(currentpath, fn) for fn in file_names]
-                        )
+                        ):
+                            yield file_stat
                 else:
-                    yield from self._file_stats([item])
+                    for file_stat in self._file_stats([item]):
+                        yield file_stat
 
 
 def get_file_iterator(config):
@@ -439,7 +441,7 @@ def _grouping_construct_group_name(parent_group_name, child_group_name=""):
 
     format_specifiers_count = parent_group_name.count("%s")
     if not format_specifiers_count:
-        return ("{} {}".format(parent_group_name, child_group_name)).strip()
+        return ("%s %s" % (parent_group_name, child_group_name)).strip()
 
     if not child_group_name:
         return parent_group_name
@@ -539,7 +541,7 @@ def output_aggregator_extremes_only(group_name, files_iter):
         if max_size.size is None or filestat.size > max_size.size:
             max_size = filestat
 
-    for extreme_file in {min_age, max_age, min_size, max_size}:
+    for extreme_file in set((min_age, max_age, min_size, max_size)):
         yield extreme_file.dumps()
     yield repr({"type": "summary", "count": count})
 

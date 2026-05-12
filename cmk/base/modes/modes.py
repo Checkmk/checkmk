@@ -117,16 +117,20 @@ class Modes:
         return options
 
     def help(self) -> str:
-        return f"""WAYS TO CALL:
-{self._short_help()}
+        return """WAYS TO CALL:
+%s
 
 OPTIONS:
-{self._general_option_help()}
+%s
 
 NOTES:
-{self._long_help()}
+%s
 
-"""
+""" % (
+            self._short_help(),
+            self._general_option_help(),
+            self._long_help(),
+        )
 
     def _short_help(self) -> str:
         texts = []

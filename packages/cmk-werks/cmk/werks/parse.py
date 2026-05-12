@@ -99,7 +99,12 @@ def _parse_markdown_werk(content: str, werk_id: str) -> tuple[dict[str, str], st
             "First element after the header needs to be the title as a h1 headline. "
             "The line has to start with '#'."
         )
-    metadata["title"] = title.removeprefix("#").strip()
+    parsed_title = title.removeprefix("#").strip()
+    if "\n" in parsed_title or "\r" in parsed_title:
+        raise WerkError(
+            f"Werk title must be a single line, but contains a newline: {parsed_title!r}"
+        )
+    metadata["title"] = parsed_title
 
     # we parse the table on our own, converting it to html and parsing the html is quite slow
     metadata.update(markdown_table_to_dict(md_table))

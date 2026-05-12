@@ -86,7 +86,7 @@ void main() {
     }
 
     smart_stage(
-        name: "Fetch git notes/werk_mail",
+        name: "Fetch git notes/werk_mail{_fixes}",
         condition: params.CIPARAM_GIT_FETCH_NOTES,
     ) {
         dir("${checkout_dir}") {
@@ -111,6 +111,7 @@ void main() {
                             origin \
                             \$(cat .git/FETCH_HEAD | cut -f 1)
                         git fetch origin 'refs/notes/werk_mail:refs/notes/werk_mail'
+                        git fetch origin 'refs/notes/werk_mail_fixup:refs/notes/werk_mail_fixup'
                     """);
                 }
             }

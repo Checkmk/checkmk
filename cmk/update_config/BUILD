@@ -81,6 +81,8 @@ py_library(
         "//cmk/gui/watolib:registries",
         "//cmk/gui/wsgi",
         "//cmk/utils",
+        "//cmk/utils:redis",
+        "//cmk/utils:werks",
         "//packages/cmk-ccc:debug",
         "//packages/cmk-ccc:exceptions",
         "//packages/cmk-ccc:hostaddress",

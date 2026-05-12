@@ -28,19 +28,146 @@ py_library(
 )
 
 py_library(
+    name = "encryption",
+    srcs = ["encryption.py"],
+    visibility = [
+        "//bin:__subpackages__",
+        "//cmk:__subpackages__",
+        "//non-free/packages:__subpackages__",
+        "//non-free/tests:__subpackages__",
+        "//omd/packages:__subpackages__",
+        "//packages:__subpackages__",
+        "//tests:__subpackages__",
+    ],
+    deps = [
+        "//packages/cmk-ccc:exceptions",
+        "//packages/cmk-crypto",
+        requirement("pyopenssl"),
+    ],
+)
+
+py_library(
+    name = "images",
+    srcs = ["images.py"],
+    visibility = [
+        "//bin:__subpackages__",
+        "//cmk:__subpackages__",
+        "//non-free/packages:__subpackages__",
+        "//non-free/tests:__subpackages__",
+        "//omd/packages:__subpackages__",
+        "//packages:__subpackages__",
+        "//tests:__subpackages__",
+    ],
+    deps = [
+        requirement("pillow"),
+    ],
+)
+
+py_library(
+    name = "msi_patch",
+    srcs = [
+        "msi_engine.py",
+        "msi_patch.py",
+    ],
+    visibility = [
+        "//bin:__subpackages__",
+        "//cmk:__subpackages__",
+        "//non-free/packages:__subpackages__",
+        "//non-free/tests:__subpackages__",
+        "//omd/packages:__subpackages__",
+        "//packages:__subpackages__",
+        "//tests:__subpackages__",
+    ],
+    deps = [
+        "//packages/cmk-ccc:version",
+        requirement("pyyaml"),
+    ],
+)
+
+py_library(
+    name = "redis",
+    srcs = [
+        "caching_redis.py",
+        "redis.py",
+    ],
+    visibility = [
+        "//bin:__subpackages__",
+        "//cmk:__subpackages__",
+        "//non-free/packages:__subpackages__",
+        "//non-free/tests:__subpackages__",
+        "//omd/packages:__subpackages__",
+        "//packages:__subpackages__",
+        "//tests:__subpackages__",
+    ],
+    deps = [
+        ":paths",
+        "//packages/cmk-ccc:exceptions",
+        requirement("redis"),
+    ],
+)
+
+py_library(
+    name = "unixsocket_http",
+    srcs = ["unixsocket_http.py"],
+    visibility = [
+        "//bin:__subpackages__",
+        "//cmk:__subpackages__",
+        "//non-free/packages:__subpackages__",
+        "//non-free/tests:__subpackages__",
+        "//omd/packages:__subpackages__",
+        "//packages:__subpackages__",
+        "//tests:__subpackages__",
+    ],
+    deps = [
+        requirement("requests"),
+        requirement("urllib3"),
+    ],
+)
+
+py_library(
+    name = "werks",
+    srcs = glob(["werks/**/*.py"]),
+    data = [
+        "werks/mail/templates/mail.txt.jinja2",
+        "//cmk/utils/werks/announce/templates:j2_templates",
+    ],
+    visibility = [
+        "//bin:__subpackages__",
+        "//cmk:__subpackages__",
+        "//non-free/packages:__subpackages__",
+        "//non-free/tests:__subpackages__",
+        "//omd/packages:__subpackages__",
+        "//packages:__subpackages__",
+        "//tests:__subpackages__",
+    ],
+    deps = [
+        ":utils",
+        "//packages/cmk-ccc:store",
+        "//packages/cmk-ccc:version",
+        "//packages/cmk-werks",
+        requirement("GitPython"),
+        requirement("jinja2"),
+    ],
+)
+
+py_library(
     name = "utils",
     srcs = glob(
         include = ["**/*.py"],
         exclude = [
             "**/community/**",
             "**/nonfree/**",
+            "caching_redis.py",
+            "encryption.py",
+            "images.py",
+            "msi_engine.py",
+            "msi_patch.py",
             "paths.py",
+            "redis.py",
+            "unixsocket_http.py",
+            "werks/**",
         ],
     ),
-    data = [
-        "werks/mail/templates/mail.txt.jinja2",
-        "//cmk/utils/werks/announce/templates:j2_templates",
-    ],
     visibility = [
         "//bin:__subpackages__",
         "//cmk:__subpackages__",
@@ -72,18 +199,9 @@ py_library(
         "//packages/cmk-plugin-apis:password_store",
         "//packages/cmk-trace",
         "//packages/cmk-web",
-        "//packages/cmk-werks",
         requirement("cryptography"),
-        requirement("GitPython"),
-        requirement("jinja2"),
-        requirement("pillow"),
         requirement("pydantic"),
-        requirement("pyopenssl"),
         requirement("python-dateutil"),
-        requirement("pyyaml"),
-        requirement("redis"),
-        requirement("requests"),
-        requirement("urllib3"),
     ],
 )
 
@@ -145,5 +263,5 @@ py_binary(
     srcs = ["werks/__main__.py"],
     tags = ["manual"],
     visibility = ["//visibility:public"],
-    deps = [":utils"],
+    deps = [":werks"],
 )

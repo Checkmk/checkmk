@@ -13,6 +13,7 @@ py_test(
     deps = [
         requirement("pytest"),
         "//cmk/utils",
+        "//cmk/utils:werks",
         "//packages/cmk-werks",
         "//tests/code_quality:bazel_utils",
     ],
@@ -44,6 +45,7 @@ py_test(
         requirement("pytest"),
         "//:pyproject-toml",
         "//cmk/utils",
+        "//cmk/utils:werks",
         "//packages/cmk-ccc:version",
         "//packages/cmk-werks",
         "//tests/code_quality:bazel_utils",

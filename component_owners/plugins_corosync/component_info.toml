@@ -3,5 +3,8 @@ display_name = "Plugins: Corosync"
 has_support_component = true
 members_required = 1
 description = """
--
+Linux HA cluster software plugins. Covers Corosync (totem latency) and
+Heartbeat (its predecessor: CRM resource state, node status,
+rscstatus). Heartbeat is largely obsolete but still deployed on legacy
+installations; both products covered by this component.
 """

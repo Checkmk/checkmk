@@ -3,5 +3,10 @@ display_name = "Plugins: Network"
 has_support_component = true
 members_required = 1
 description = """
--
+Generic networking-stack plugins. Covers network interface counters
+(if64/if32 and variants), Linux/OVS/Windows bonding, iptables, OpenVPN
+clients, BGP peering, generic SNMP plugins (snmp_info, snmp_uptime,
+extended inventory), UCD-SNMP host plugins, and protocol helpers (CDP,
+LLDP, NFS mounts). Vendor-specific networking hardware (Cisco, Juniper,
+...) live in their own component.
 """

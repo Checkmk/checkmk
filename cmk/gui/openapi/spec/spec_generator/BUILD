@@ -78,31 +78,26 @@ py_binary(
     visibility = ["//:__subpackages__"],
     deps = select({
         "@cmk//edition:cloud": [
-            "//cmk/editions:community",
-            "//cmk/editions/nonfree:cloud",
-            "//cmk/editions/nonfree:pro",
-            "//cmk/editions/nonfree:ultimate",
+            "//cmk/gui/nonfree/cloud",
             "//cmk/gui/nonfree/ultimate/plugins/wato/check_parameters:stub",
+            "//cmk/plugins:plugins_cloud",
         ],
         "@cmk//edition:community": [
-            "//cmk/editions:community",
+            "//cmk/plugins:plugins_community",
         ],
         "@cmk//edition:pro": [
-            "//cmk/editions:community",
-            "//cmk/editions/nonfree:pro",
+            "//cmk/gui/nonfree/pro",
+            "//cmk/plugins:plugins_pro",
         ],
         "@cmk//edition:ultimate": [
-            "//cmk/editions:community",
-            "//cmk/editions/nonfree:pro",
-            "//cmk/editions/nonfree:ultimate",
+            "//cmk/gui/nonfree/ultimate",
             "//cmk/gui/nonfree/ultimate/plugins/wato/check_parameters:stub",
+            "//cmk/plugins:plugins_ultimate",
         ],
         "@cmk//edition:ultimatemt": [
-            "//cmk/editions:community",
-            "//cmk/editions/nonfree:pro",
-            "//cmk/editions/nonfree:ultimate",
-            "//cmk/editions/nonfree:ultimatemt",
             "//cmk/gui/nonfree/ultimate/plugins/wato/check_parameters:stub",
+            "//cmk/gui/nonfree/ultimatemt",
+            "//cmk/plugins:plugins_ultimatemt",
         ],
     }) + [
         ":_core",
@@ -118,11 +113,11 @@ py_binary(
     visibility = ["//:__subpackages__"],
     deps = select({
         "@//:gpl+nonfree_repo": [
-            "//cmk/editions:community",
-            "//cmk/editions/nonfree:pro",
+            "//cmk/gui/nonfree/pro",
+            "//cmk/plugins:plugins_pro",
         ],
         "@//:gpl_repo": [
-            "//cmk/editions:community",
+            "//cmk/plugins:plugins_community",
         ],
     }) + [
         ":_core",

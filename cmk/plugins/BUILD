@@ -173,6 +173,7 @@ py_library(
     visibility = [
         "//cmk:__pkg__",
         "//cmk/editions/nonfree:__subpackages__",
+        "//cmk/gui/openapi/spec/spec_generator:__pkg__",
         "//tests:__subpackages__",
     ],
     deps = [

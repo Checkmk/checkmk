@@ -12,7 +12,7 @@ void main() {
     // The pod templates uses - instead.
     def container_safe_branch_name = safe_branch_name.replace(".", "-");
 
-    stage('Fetch tags') {
+    stage('Fetch tags/notes') {
         dir("${checkout_dir}") {
             withCredentials([
                 sshUserPrivateKey(
@@ -26,7 +26,16 @@ void main() {
                     // this requires a lot of CPU power
                     // thereby switch to the larger container with more resources granted
                     container("minimal-ubuntu-checkmk-${container_safe_branch_name}") {
-                        sh("git fetch --depth=1 origin 'refs/tags/*:refs/tags/*'");
+                        sh("""
+                            git fetch \
+                                --no-tags \
+                                --shallow-since=\$(date --date='4 weeks ago' --iso=seconds) \
+                                origin \
+                                \$(cat .git/FETCH_HEAD | cut -f 1)
+                            git fetch origin 'refs/notes/werk_mail:refs/notes/werk_mail'
+                            git fetch origin 'refs/notes/werk_mail_fixup:refs/notes/werk_mail_fixup'
+                            git fetch --depth=1 origin 'refs/tags/*:refs/tags/*'
+                        """);
                     }
                 }
             }

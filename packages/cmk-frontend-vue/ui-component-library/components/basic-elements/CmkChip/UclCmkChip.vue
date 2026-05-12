@@ -62,8 +62,18 @@ export const panelConfig = {
     ] satisfies Options<Variants>[],
     initialState: 'fill' as const
   },
-  asDiv: { type: 'boolean' as const, title: 'Render as Div', initialState: false },
-  disabled: { type: 'boolean' as const, title: 'Disabled', initialState: false }
+  asDiv: {
+    type: 'boolean' as const,
+    title: 'Non-interactive (as div)',
+    initialState: false,
+    help: 'Renders the chip as a div instead of a button. Use for non-interactive display purposes.'
+  },
+  disabled: {
+    type: 'boolean' as const,
+    title: 'Disabled',
+    initialState: false,
+    help: 'No Effect when rendered as a div. A div is non-interactive by nature, therefore cannot be set to disabled.'
+  }
 } satisfies PanelConfigFor<typeof CmkChip>
 </script>
 

@@ -4,12 +4,17 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from pathlib import Path
-from typing import Optional
+from typing import Mapping, Optional
 from unittest.mock import MagicMock, patch
 
 import pytest
 
-from agents.plugins.mk_podman import get_piggyback_host, get_socket_owner, PiggybackNameMethod
+from agents.plugins.mk_podman import (
+    _skip_container,
+    get_piggyback_host,
+    get_socket_owner,
+    PiggybackNameMethod,
+)
 
 
 def test_get_socket_owner_returns_username() -> None:
@@ -112,3 +117,52 @@ def test_get_piggyback_host(
     with patch("os.uname", return_value=("", "fakehost", "", "", "")):
         result = get_piggyback_host(container_id, container_name, piggyback_name_method, nodename)
     assert result == expected
+
+
+@pytest.mark.parametrize(
+    "container, keep_non_zero_exit_containers, expected",
+    [
+        pytest.param(
+            {"State": "running", "ExitCode": 0},
+            True,
+            False,
+            id="running container is never skipped",
+        ),
+        pytest.param(
+            {"State": "paused", "ExitCode": 0},
+            True,
+            False,
+            id="paused container is never skipped",
+        ),
+        pytest.param(
+            {"State": "exited", "ExitCode": 0},
+            True,
+            True,
+            id="exited with code 0 is always skipped",
+        ),
+        pytest.param(
+            {"State": "exited", "ExitCode": 0},
+            False,
+            True,
+            id="exited with code 0 is skipped regardless of keep_non_zero setting",
+        ),
+        pytest.param(
+            {"State": "exited", "ExitCode": 1},
+            True,
+            False,
+            id="exited with non-zero is kept when keep_non_zero_exit_containers=True",
+        ),
+        pytest.param(
+            {"State": "exited", "ExitCode": 1},
+            False,
+            True,
+            id="exited with non-zero is skipped when keep_non_zero_exit_containers=False",
+        ),
+    ],
+)
+def test_skip_container(
+    container: Mapping[str, object],
+    keep_non_zero_exit_containers: bool,
+    expected: bool,
+) -> None:
+    assert _skip_container(container, keep_non_zero_exit_containers) == expected

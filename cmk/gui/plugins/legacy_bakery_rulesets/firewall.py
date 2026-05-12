@@ -3,60 +3,83 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Mapping
 
-from cmk.gui.agent_bakery import RulespecGroupMonitoringAgentsWindowsAgent
-from cmk.gui.i18n import _
-from cmk.gui.plugins.wato.utils import HostRulespec, rulespec_registry
-from cmk.gui.valuespec import Dictionary, DropdownChoice
-from cmk.utils.rulesets.definition import RuleGroup
+from cmk.rulesets.v1 import Help, Title
+from cmk.rulesets.v1.form_specs import (
+    DefaultValue,
+    DictElement,
+    Dictionary,
+    SingleChoice,
+    SingleChoiceElement,
+)
+from cmk.rulesets.v1.rule_specs import AgentConfig, Topic
 
 
-def _valuespec_agent_config_firewall() -> Dictionary:
+def migrate(value: object) -> Mapping[str, object]:
+    if isinstance(value, dict) and "mode" in value:
+        return value
+    raise ValueError(f"Unexpected value: {value!r}")
+
+
+def _form_spec() -> Dictionary:
     return Dictionary(
-        title=_("Windows Firewall"),
-        elements=[
-            (
-                "mode",
-                DropdownChoice(
-                    title=_("Mode"),
-                    label=_("Manage Windows firewall rules for Checkmk agent"),
-                    help=_(
+        title=Title("Windows Firewall"),
+        elements={
+            "mode": DictElement(
+                required=True,
+                parameter_form=SingleChoice(
+                    title=Title("Mode"),
+                    help_text=Help(
                         "Use this rule set to automatically configure the firewall rules that are "
                         "needed to communicate with the Checkmk Windows agent on the monitored "
                         "Windows hosts."
                     ),
-                    choices=[
-                        ("none", _("Do not configure Windows Firewall")),
-                        ("remove", _("Remove Windows Firewall configuration if present")),
-                        ("configure", _("Configure Windows Firewall to allow host monitoring")),
+                    elements=[
+                        SingleChoiceElement(
+                            name="none",
+                            title=Title("Do not configure Windows Firewall"),
+                        ),
+                        SingleChoiceElement(
+                            name="remove",
+                            title=Title("Remove Windows Firewall configuration if present"),
+                        ),
+                        SingleChoiceElement(
+                            name="configure",
+                            title=Title("Configure Windows Firewall to allow host monitoring"),
+                        ),
                     ],
-                    default_value="configure",
+                    prefill=DefaultValue("configure"),
                 ),
             ),
-            (
-                "port",
-                DropdownChoice(
-                    title=_("Port"),
-                    label=_("Ports to open"),
-                    help=_(
+            "port": DictElement(
+                required=True,
+                parameter_form=SingleChoice(
+                    title=Title("Port"),
+                    help_text=Help(
                         "This setting determines how ports will be enabled in Windows Firewall."
                     ),
-                    choices=[
-                        ("auto", _("Required port")),
-                        ("all", _("All ports")),
+                    elements=[
+                        SingleChoiceElement(
+                            name="auto",
+                            title=Title("Required port"),
+                        ),
+                        SingleChoiceElement(
+                            name="all",
+                            title=Title("All ports"),
+                        ),
                     ],
-                    default_value="auto",
+                    prefill=DefaultValue("auto"),
                 ),
             ),
-        ],
-        optional_keys=False,
+        },
+        migrate=migrate,
     )
 
 
-rulespec_registry.register(
-    HostRulespec(
-        group=RulespecGroupMonitoringAgentsWindowsAgent,
-        name=RuleGroup.AgentConfig("firewall"),
-        valuespec=_valuespec_agent_config_firewall,
-    )
+rule_spec_firewall = AgentConfig(
+    title=Title("Windows Firewall"),
+    name="firewall",
+    topic=Topic.WINDOWS,
+    parameter_form=_form_spec,
 )

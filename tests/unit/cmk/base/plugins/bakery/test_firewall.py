@@ -3,15 +3,15 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.bakery.v1 import WindowsConfigContent, WindowsConfigEntry
+from cmk.bakery.v1 import WindowsConfigEntry
 from cmk.base.plugins.bakery.firewall import get_firewall_windows_config
 
 
 def test_firewall_windows_config() -> None:
-    conf: dict[str, WindowsConfigContent] = {"mode": "configure", "port": 6556}
+    conf = {"mode": "configure", "port": "auto"}
     result = list(get_firewall_windows_config(conf))
     expected = [
         WindowsConfigEntry(path=["system", "firewall", "mode"], content="configure"),
-        WindowsConfigEntry(path=["system", "firewall", "port"], content=6556),
+        WindowsConfigEntry(path=["system", "firewall", "port"], content="auto"),
     ]
     assert result == expected

@@ -3,17 +3,27 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Mapping
+from typing import Literal
+
+from pydantic import BaseModel
+
 from .bakery_api.v1 import (
     register,
-    WindowsConfigContent,
     WindowsConfigEntry,
     WindowsConfigGenerator,
 )
 
 
-def get_firewall_windows_config(conf: dict[str, WindowsConfigContent]) -> WindowsConfigGenerator:
-    yield WindowsConfigEntry(path=["system", "firewall", "mode"], content=conf["mode"])
-    yield WindowsConfigEntry(path=["system", "firewall", "port"], content=conf["port"])
+class _Config(BaseModel):
+    mode: Literal["none", "remove", "configure"]
+    port: Literal["auto", "all"]
+
+
+def get_firewall_windows_config(conf: Mapping[str, object]) -> WindowsConfigGenerator:
+    config = _Config.model_validate(conf)
+    yield WindowsConfigEntry(path=["system", "firewall", "mode"], content=config.mode)
+    yield WindowsConfigEntry(path=["system", "firewall", "port"], content=config.port)
 
 
 register.bakery_plugin(

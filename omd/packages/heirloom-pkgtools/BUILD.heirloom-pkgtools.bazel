@@ -13,7 +13,38 @@ filegroup(
 
 make(
     name = "heirloom-pkgtools",
-    args = ["-j4"],
+    # The make rule from rules_foreign_cc passes PREFIX=$$INSTALLDIR$$
+    # (the bazel sandbox install dir) to make by default. mk.config
+    # derives SADMDIR=$(PREFIX)/sadm and bakes it into the binary via
+    # -DSADMDIR='"$(SADMDIR)"' (mk.config:114). SADMDIR is referenced
+    # extensively in libpkg / libinst / pkgcmds -- e.g.
+    # PKGSEC = SADMDIR "/security" in libpkg/pkglib.h:347 -- so without
+    # an override the binaries leak a path like
+    #   .../sandbox/.../heirloom-pkgtools/sadm/security
+    # into the shipped artifact's .rodata.
+    #
+    # Override SADMDIR / VSADMDIR directly with omd-namespaced FHS paths
+    # (matching the convention used for nagios / stunnel) so the baked
+    # strings are stable across builds, version-free, and don't collide
+    # with a hypothetical distro-packaged pkgtools on the build host.
+    # These defaults are dead strings under correct OMD use: pkgmk and
+    # pkgtrans run only at OMD package-build time and accept -k / -R /
+    # -d to override the compiled-in keystore / altroot / destdir.
+    #
+    # install_prefix sets PREFIX=/usr (FHS standard) which keeps the
+    # other PATHS macros (BINDIR, SBINDIR, MANDIR -- mk.config:109-116)
+    # off of the bazel sandbox path. BINDIR / SBINDIR are dropped from
+    # all C source by the binpath patches in
+    # omd/packages/heirloom-pkgtools/patches/{0003,0006}-*binpath.dif,
+    # so their values are unreferenced and never make it into .rodata.
+    # VSADMREL (mk.config:116) is computed by stripping the leading "/"
+    # from VSADMDIR, so it's omd-namespaced automatically.
+    args = [
+        "-j4",
+        "SADMDIR=/usr/lib/omd/heirloom-pkgtools/sadm",
+        "VSADMDIR=/var/lib/omd/heirloom-pkgtools/sadm",
+    ],
+    install_prefix = "/usr",
     lib_source = ":all_srcs",
     out_bin_dir = "bin",
     out_binaries = [
@@ -30,6 +61,7 @@ make(
         done
 
     """,
+    set_file_prefix_map = True,
     targets = [""],
     visibility = ["//visibility:public"],
 )

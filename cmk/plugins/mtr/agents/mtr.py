@@ -82,7 +82,9 @@ def read_config():
             if not cfg.read(config_file):
                 sys.stdout.write("**ERROR** Failed to parse configuration file %s!\n" % config_file)
         except Exception as e:
-            sys.stdout.write(f"**ERROR** Failed to parse config file {config_file}: {repr(e)}\n")
+            sys.stdout.write(
+                "**ERROR** Failed to parse config file {}: {}\n".format(config_file, repr(e))
+            )
 
     if len(cfg.sections()) == 0:
         sys.stdout.write("**ERROR** Configuration defines no hosts!\n")
@@ -135,7 +137,7 @@ def save_status(current_status):
         for host, hostdict in current_status.items():
             hopnum = len(hostdict["hops"].keys())
             lastreport = hostdict["lasttime"]
-            hoststring = f"{host}|{lastreport}|{hopnum}"
+            hoststring = "{}|{}|{}".format(host, lastreport, hopnum)
             for hop in hostdict["hops"].keys():
                 hi = hostdict["hops"][hop]
                 hoststring += "|{}|{}|{}|{}|{}|{}|{}|{}".format(
@@ -279,7 +281,7 @@ def output_report(host, status):
 
     hopnum = len(hostdict["hops"].keys())
     lastreport = hostdict["lasttime"]
-    hoststring = f"{host}|{lastreport}|{hopnum}"
+    hoststring = "{}|{}|{}".format(host, lastreport, hopnum)
     for hop in hostdict["hops"].keys():
         hi = hostdict["hops"][hop]
         hoststring += "|{}|{}|{}|{}|{}|{}|{}|{}".format(

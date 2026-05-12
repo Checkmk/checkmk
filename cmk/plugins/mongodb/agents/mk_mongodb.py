@@ -633,7 +633,7 @@ def section_locks(server_status):
         for what in ["activeClients", "currentQueue"]:
             if what in global_lock_info:
                 for key, value in global_lock_info[what].items():
-                    sys.stdout.write(f"{what} {key} {value}\n")
+                    sys.stdout.write("{} {} {}\n".format(what, key, value))
 
 
 def section_by_keys(section_name, keys, server_status, output_key=False):
@@ -785,7 +785,7 @@ def section_logwatch(client):
             state = "W"
 
         if output_all or get_timestamp(line) > last_timestamp:
-            sys.stdout.write(f"{state} {line}\n")
+            sys.stdout.write("{} {}\n".format(state, line))
 
     update_statefile(state_file, startup_warnings)
 

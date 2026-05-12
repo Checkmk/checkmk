@@ -260,7 +260,7 @@ class PostgresBase:
 
     def get_sessions(self, row, idle):
         """Gets idle and open sessions"""
-        condition = f"{row} = {idle}"
+        condition = "{} = {}".format(row, idle)
 
         sql_cmd = (
             "SELECT %s, count(*) FROM pg_stat_activity WHERE %s IS NOT NULL GROUP BY (%s);"
@@ -345,7 +345,7 @@ class PostgresBase:
         """
 
         out = subprocess_check_output(
-            [f"{self.psql_binary_dirname}{os.sep}pg_isready", "-p", self.pg_port],
+            ["{}{}pg_isready".format(self.psql_binary_dirname, os.sep), "-p", self.pg_port],
         )
 
         sys.stdout.write("%s\n" % ensure_str(out))
@@ -596,7 +596,7 @@ class PostgresWin(PostgresBase):
             PID = PID.split("ProcessId=")[1]
             if self.is_postgres_process(cmd_line):
                 if task.find(self.name) != -1:
-                    out += f"{PID} {cmd_line}\n"
+                    out += "{} {}\n".format(PID, cmd_line)
         return out.rstrip()
 
     def get_stats(self, databases):
@@ -625,7 +625,7 @@ class PostgresWin(PostgresBase):
 
         cur_rows_only = False
         for cnt, database in enumerate(databases):
-            query = f"{query} \\c {database} \\\\ {sql_cmd_lastvacuum}"
+            query = "{} \\c {} \\\\ {}".format(query, database, sql_cmd_lastvacuum)
             if cnt == 0:
                 query = "%s \\pset tuples_only on" % query
 
@@ -778,7 +778,7 @@ class PostgresWin(PostgresBase):
         cur_rows_only = False
         output = ""
         for idx, database in enumerate(databases):
-            query = f"\\pset footer off \\\\ \\c {database} \\\\ {bloat_query}"
+            query = "\\pset footer off \\\\ \\c {} \\\\ {}".format(database, bloat_query)
             if idx == 0:
                 query = "%s \\pset tuples_only on" % query
             output += self.run_sql_as_db_user(query, mixed_cmd=True, rows_only=cur_rows_only)
@@ -957,7 +957,7 @@ class PostgresLinux(PostgresBase):
 
         cur_rows_only = False
         for cnt, database in enumerate(databases):
-            query = f"{query}\n\\c {database}\n{sql_cmd_lastvacuum}"
+            query = "{}\n\\c {}\n{}".format(query, database, sql_cmd_lastvacuum)
             if cnt == 0:
                 query = "%s\n\\pset tuples_only on" % query
 
@@ -1106,7 +1106,7 @@ class PostgresLinux(PostgresBase):
 
         cur_rows_only = False
         for idx, database in enumerate(databases):
-            query = f"{query}\n\\c {database}\n{bloat_query}"
+            query = "{}\n\\c {}\n{}".format(query, database, bloat_query)
             if idx == 0:
                 query = "%s\n\\pset tuples_only on" % query
 

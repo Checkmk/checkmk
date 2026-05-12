@@ -71,7 +71,7 @@ def get_instance_name(host, port_nr, conf):
     Get Instance name either from config
     or from detected sites
     """
-    search = f"{host}:{port_nr}"
+    search = "{}:{}".format(host, port_nr)
     if search in conf["custom"]:
         return conf["custom"][search]
     if "omd_sites" in conf:
@@ -232,7 +232,7 @@ def urlopen_with_ssl(request, timeout):
 
 
 def get_response(proto, cafile, address, portspec, page):
-    url = f"{proto}://{address}{portspec}/{page}?auto"
+    url = "{}://{}{}/{}?auto".format(proto, address, portspec, page)
     request = Request(url, headers={"Accept": "text/plain", "User-Agent": USER_AGENT})
     is_local = address in ("127.0.0.1", "[::1]", "localhost")
     # Try to fetch the status page for each server
@@ -246,7 +246,7 @@ def get_response(proto, cafile, address, portspec, page):
         if "unknown protocol" in str(exc):
             # HACK: workaround misconfigurations where port 443 is used for
             # serving non ssl secured http
-            url = f"http://{address}{portspec}/server-status?auto"
+            url = "http://{}{}/server-status?auto".format(address, portspec)
             return urlopen_(url, timeout=5)
         raise
 
@@ -297,12 +297,12 @@ def main():
                     break
                 if not name:
                     name = get_instance_name(address, port, get_instance_name_map(config))
-                sys.stdout.write(f"{address}|{port}|{name}|{line}\n")
+                sys.stdout.write("{}|{}|{}|{}\n".format(address, port, name, line))
         except HTTPError as exc:
-            sys.stderr.write(f"HTTP-Error ({address}{portspec}): {exc.code} {exc}\n")
+            sys.stderr.write("HTTP-Error ({}{}): {} {}\n".format(address, portspec, exc.code, exc))
 
         except Exception as exc:
-            sys.stderr.write(f"Exception ({address}{portspec}): {exc}\n")
+            sys.stderr.write("Exception ({}{}): {}\n".format(address, portspec, exc))
 
     return 0
 

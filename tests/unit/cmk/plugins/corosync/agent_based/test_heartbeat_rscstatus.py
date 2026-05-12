@@ -8,7 +8,7 @@ from collections.abc import Mapping, Sequence
 import pytest
 
 from cmk.agent_based.v2 import Result, Service, State, StringTable
-from cmk.plugins.heartbeat.agent_based.heartbeat_rscstatus import (
+from cmk.plugins.corosync.agent_based.heartbeat_rscstatus import (
     check_heartbeat_rscstatus,
     discover_heartbeat_rscstatus,
     parse_heartbeat_rscstatus,

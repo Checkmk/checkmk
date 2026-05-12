@@ -107,20 +107,17 @@ SUFFIX = ".tar.gz"
 
 def _mode_create_diagnostics_dump(app: CheckmkBaseApp, options: DiagnosticsModesParameters) -> None:
     # NOTE: All the stuff is logged on this level only, which is below the default WARNING level.
-    log.logger.setLevel(logging.INFO)
-    omd_config = get_omd_config(cmk.utils.paths.omd_root)
-    create_diagnostics_dump(
-        app.edition,
-        load_config(
-            discovery_rulesets=(),
-            get_builtin_host_labels=app.get_builtin_host_labels,
-            edition=app.edition,
-        ).loaded_config,
-        deserialize_modes_parameters(options),
-        app.core_performance_settings,
-        omd_config,
+    dump = create_diagnostics_dump(
+        app,
         cmk.utils.paths.omd_root,
+        deserialize_modes_parameters(options),
+        None,
     )
+    section.section_step("Creating diagnostics dump", verbose=False)
+    if dump.tarfile_created:
+        console.info(f"{_format_filepath(dump.tarfile_path)}")
+    else:
+        console.info(f"{_GAP}No dump")
 
 
 # FIXME: This function is out-of-sync with the actual options in cmk.diagostics!
@@ -231,28 +228,12 @@ def handler(
     plugins: AgentBasedPlugins | None,
     loading_result: LoadingResult | None,
 ) -> CreateDiagnosticsDumpResult:
-    omd_config = get_omd_config(cmk.utils.paths.omd_root)
-
-    if loading_result is None:
-        loading_result = load_config(
-            discovery_rulesets=(),
-            get_builtin_host_labels=app.get_builtin_host_labels,
-            edition=app.edition,
-        )
     buf = io.StringIO()
     with redirect_stdout(buf), redirect_stderr(buf):
         log.setup_console_logging()
-        # NOTE: All the stuff is logged on this level only, which is below the default WARNING level.
-        log.logger.setLevel(logging.INFO)
-        dump = DiagnosticsDump(
-            edition=app.edition,
-            loaded_config=loading_result.loaded_config,
-            core_performance_settings=app.core_performance_settings,
-            omd_config=omd_config,
-            omd_root=cmk.utils.paths.omd_root,
-            parameters=deserialize_cl_parameters(args),
+        dump = create_diagnostics_dump(
+            app, cmk.utils.paths.omd_root, deserialize_cl_parameters(args), loading_result
         )
-        dump.create()
         return CreateDiagnosticsDumpResult(
             output=buf.getvalue(),
             tarfile_path=str(dump.tarfile_path),
@@ -268,28 +249,28 @@ automation_create_diagnostics_dump = Automation(
 
 
 def create_diagnostics_dump(
-    edition: cmk_version.Edition,
-    loaded_config: LoadedConfigFragment,
-    parameters: DiagnosticsOptionalParameters | None,
-    core_performance_settings: Callable[[LoadedConfigFragment], Mapping[str, int]],
-    omd_config: site.OMDConfig,
+    app: CheckmkBaseApp,
     omd_root: Path,
-) -> None:
+    parameters: DiagnosticsOptionalParameters,
+    loading_result: LoadingResult | None,
+) -> DiagnosticsDump:
+    log.logger.setLevel(logging.INFO)
+    if loading_result is None:
+        loading_result = load_config(
+            discovery_rulesets=(),
+            get_builtin_host_labels=app.get_builtin_host_labels,
+            edition=app.edition,
+        )
     dump = DiagnosticsDump(
-        edition=edition,
-        loaded_config=loaded_config,
-        core_performance_settings=core_performance_settings,
-        omd_config=omd_config,
+        edition=app.edition,
+        loaded_config=loading_result.loaded_config,
+        core_performance_settings=app.core_performance_settings,
+        omd_config=get_omd_config(omd_root),
         omd_root=omd_root,
         parameters=parameters,
     )
     dump.create()
-
-    section.section_step("Creating diagnostics dump", verbose=False)
-    if dump.tarfile_created:
-        console.info(f"{_format_filepath(dump.tarfile_path)}")
-    else:
-        console.info(f"{_GAP}No dump")
+    return dump
 
 
 #   .--format helper-------------------------------------------------------.

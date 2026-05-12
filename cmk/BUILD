@@ -567,13 +567,7 @@ py_wheel(
         "//cmk/special_agents",
         "//cmk/update_config",
         "//cmk/utils",
-        "//cmk/utils:encryption",
-        "//cmk/utils:images",
-        "//cmk/utils:msi_patch",
         "//cmk/utils:paths",
-        "//cmk/utils:redis",
-        "//cmk/utils:unixsocket_http",
-        "//cmk/utils:werks",
     ],
 )
 

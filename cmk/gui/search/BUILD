@@ -50,7 +50,6 @@ py_library(
         "//cmk/gui/watolib",
         "//cmk/gui/watolib:registries",
         "//cmk/utils",
-        "//cmk/utils:redis",
         "//packages/cmk-ccc:exceptions",
         "//packages/cmk-ccc:plugin-registry",
         "//packages/cmk-ccc:version",

@@ -12,7 +12,6 @@ py_library(
     deps = [
         "//cmk/fields",
         "//cmk/utils",
-        "//cmk/utils:redis",
         "//packages/cmk-ccc:plugin-registry",
         "//packages/cmk-livestatus-client:py_livestatus",
         requirement("marshmallow"),

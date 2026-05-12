@@ -24,7 +24,6 @@ py_library(
         "//cmk/gui/watolib:config_infra",
         "//cmk/gui/watolib:groups_io",
         "//cmk/utils",
-        "//cmk/utils:redis",
         "//packages/cmk-ccc:hostaddress",
         "//packages/cmk-ccc:site",
         "//packages/cmk-ccc:store",

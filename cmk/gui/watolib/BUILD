@@ -296,8 +296,6 @@ py_library(
         "//cmk/piggyback:hub",
         "//cmk/server_side_calls_backend",
         "//cmk/utils",
-        "//cmk/utils:encryption",
-        "//cmk/utils:redis",
         "//packages/cmk-ccc:archive",
         "//packages/cmk-ccc:exceptions",
         "//packages/cmk-ccc:hostaddress",

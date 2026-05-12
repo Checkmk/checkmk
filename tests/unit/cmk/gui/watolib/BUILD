@@ -24,7 +24,6 @@ py_test(
         "//cmk/gui/watolib",
         "//cmk/gui/watolib:config_infra",
         "//cmk/gui/watolib:registries",
-        "//cmk/utils:redis",
         "//omd/packages/omd:omdlib",
         "//tests/unit:conftest",
         "//tests/unit/cmk/gui:conftest",

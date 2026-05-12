@@ -20,7 +20,6 @@ py_library(
     deps = [
         "//cmk/checkengine",
         "//cmk/utils",
-        "//cmk/utils:unixsocket_http",
         "//packages/cmk-ccc:exceptions",
         "//packages/cmk-ccc:i18n",
         "//packages/cmk-ccc:plugin-registry",

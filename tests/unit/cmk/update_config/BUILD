@@ -42,7 +42,6 @@ py_test(
         ":conftest",
         "//cmk/gui/plugins/wato/check_parameters",
         "//cmk/update_config",
-        "//cmk/utils:werks",
         "//tests/unit:conftest",
         requirement("flask"),
         requirement("pytest"),

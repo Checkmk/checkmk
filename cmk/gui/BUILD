@@ -435,7 +435,6 @@ py_library(
         ":i18n",
         ":type_defs",
         "//cmk/utils",
-        "//cmk/utils:images",
         requirement("reportlab"),
     ],
 )
@@ -451,7 +450,6 @@ py_library(
     deps = [
         ":i18n",
         "//cmk/utils",
-        "//cmk/utils:unixsocket_http",
         "//packages/cmk-ccc:resulttype",
         requirement("requests"),
     ],
@@ -469,7 +467,6 @@ py_library(
         ":i18n",
         ":theme",
         "//cmk/utils",
-        "//cmk/utils:images",
     ],
 )
 
@@ -1173,7 +1170,6 @@ py_library(
         "//cmk/gui/utils:urls",
         "//cmk/gui/valuespec",
         "//cmk/utils",
-        "//cmk/utils:werks",
         "//packages/cmk-ccc:version",
         "//packages/cmk-plugin-apis:discover_plugins",
         "//packages/cmk-werks",

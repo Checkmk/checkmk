@@ -247,7 +247,6 @@ py_library(
         "//cmk/gui/watolib",
         "//cmk/update_config",
         "//cmk/utils",
-        "//cmk/utils:redis",
         "//packages/cmk-ccc:version",
         "//packages/cmk-mkp-tool",
         "//packages/cmk-plugin-apis:discover_plugins",

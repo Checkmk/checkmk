@@ -1805,3 +1805,250 @@ def test_cputimeseconds_parse(raw_string: str, expected: float) -> None:
 def test_cputimeseconds_parse_nonsense(raw_string: str) -> None:
     with pytest.raises(ValueError):
         CpuTimeSeconds.parse_raw(raw=raw_string)
+
+
+#   '----------------------------------------------------------------------'
+#   |  Tests for the new agent output format and plugin parsing
+#   '----------------------------------------------------------------------'
+RAW_OUTPUT = """[uptime]
+3600.5
+[show]
+Id=rsyslog.service
+LoadState=loaded
+ActiveState=active
+SubState=running
+UnitFileState=enabled
+Description=System Logging Service
+StateChangeTimestampMonotonic=600000000
+MemoryCurrent=10485760
+CPUUsageNSec=1500000000
+TasksCurrent=5
+
+Id=alsa-state.service
+LoadState=loaded
+ActiveState=inactive
+SubState=dead
+UnitFileState=disabled
+Description=Manage Sound Card State
+StateChangeTimestampMonotonic=100000000
+MemoryCurrent=18446744073709551615
+CPUUsageNSec=18446744073709551615
+TasksCurrent=18446744073709551615
+
+Id=phpsessionclean.service
+LoadState=loaded
+ActiveState=activating
+SubState=start
+UnitFileState=static
+Description=Clean PHP session files
+StateChangeTimestampMonotonic=3599500000
+MemoryCurrent=18446744073709551615
+CPUUsageNSec=18446744073709551615
+TasksCurrent=18446744073709551615
+"""
+RANDOMIZED_RAW_OUTPUT = """[uptime]
+3600.5
+[show]
+Id=rsyslog.service
+LoadState=loaded
+ActiveState=active
+SubState=running
+UnitFileState=enabled
+Description=System Logging Service
+StateChangeTimestampMonotonic=600000000
+MemoryCurrent=10485760
+CPUUsageNSec=1500000000
+TasksCurrent=5
+
+MemoryCurrent=18446744073709551615
+LoadState=loaded
+ActiveState=inactive
+SubState=dead
+Id=alsa-state.service
+UnitFileState=disabled
+Description=Manage Sound Card State
+StateChangeTimestampMonotonic=100000000
+CPUUsageNSec=18446744073709551615
+TasksCurrent=18446744073709551615
+
+Description=Clean PHP session files
+LoadState=loaded
+ActiveState=activating
+SubState=start
+UnitFileState=static
+StateChangeTimestampMonotonic=3599500000
+MemoryCurrent=18446744073709551615
+CPUUsageNSec=18446744073709551615
+TasksCurrent=18446744073709551615
+Id=phpsessionclean.service
+"""
+
+
+def _show_string_table(raw: str) -> list[list[str]]:
+    """Helper: turn a literal block of agent output into the list-of-lists
+    StringTable shape the parse function receives. Mirrors the default
+    whitespace-split agent semantics."""
+    return [line.split(" ") for line in raw.splitlines()]
+
+
+@pytest.mark.parametrize(
+    "raw",
+    [RAW_OUTPUT, RANDOMIZED_RAW_OUTPUT],
+)
+def test_parse_show_format_basic(raw: str) -> None:
+    parsed = parse(_show_string_table(raw))
+    assert parsed is not None
+    assert set(parsed.services) == {"rsyslog", "alsa-state", "phpsessionclean"}
+
+    rsyslog = parsed.services["rsyslog"]
+    assert rsyslog.active_status == "active"
+    assert rsyslog.current_state == "running"
+    assert rsyslog.enabled_status == "enabled"
+    assert rsyslog.description == "System Logging Service"
+    assert rsyslog.time_since_change == timedelta(seconds=3000.5)
+    assert rsyslog.memory == Memory(bytes=10485760)
+    assert rsyslog.cpu_seconds == CpuTimeSeconds(value=1.5)
+    assert rsyslog.number_of_tasks == 5
+
+    alsa = parsed.services["alsa-state"]
+    assert alsa.active_status == "inactive"
+    assert alsa.memory is None
+    assert alsa.cpu_seconds is None
+    assert alsa.number_of_tasks is None
+    assert alsa.time_since_change == timedelta(seconds=3500.5)
+
+    php = parsed.services["phpsessionclean"]
+    assert php.active_status == "activating"
+    assert php.time_since_change == timedelta(seconds=1.0)
+
+
+def test_parse_show_format_sentinels() -> None:
+    raw = """[uptime]
+100.0
+[show]
+Id=foo.service
+LoadState=loaded
+ActiveState=active
+SubState=running
+UnitFileState=enabled
+Description=Foo
+StateChangeTimestampMonotonic=50000000
+MemoryCurrent=18446744073709551615
+CPUUsageNSec=18446744073709551615
+TasksCurrent=18446744073709551615
+"""
+    parsed = parse(_show_string_table(raw))
+    assert parsed is not None
+    foo = parsed.services["foo"]
+    assert foo.memory is None
+    assert foo.cpu_seconds is None
+    assert foo.number_of_tasks is None
+
+
+def test_parse_show_format_never_run() -> None:
+    raw = """[uptime]
+100.0
+[show]
+Id=neverran.service
+LoadState=loaded
+ActiveState=inactive
+SubState=dead
+UnitFileState=disabled
+Description=Never started
+StateChangeTimestampMonotonic=0
+MemoryCurrent=18446744073709551615
+CPUUsageNSec=18446744073709551615
+TasksCurrent=18446744073709551615
+"""
+    parsed = parse(_show_string_table(raw))
+    assert parsed is not None
+    assert parsed.services["neverran"].time_since_change is None
+
+
+def test_parse_show_format_templated_unit() -> None:
+    raw = """[uptime]
+100.0
+[show]
+Id=getty@tty1.service
+LoadState=loaded
+ActiveState=active
+SubState=running
+UnitFileState=enabled
+Description=Getty on tty1
+StateChangeTimestampMonotonic=10000000
+MemoryCurrent=18446744073709551615
+CPUUsageNSec=18446744073709551615
+TasksCurrent=18446744073709551615
+"""
+    parsed = parse(_show_string_table(raw))
+    assert parsed is not None
+    assert "getty@tty1" in parsed.services
+    assert parsed.services["getty@tty1"].active_status == "active"
+
+
+def test_parse_show_format_description_with_spaces() -> None:
+    raw = """[uptime]
+100.0
+[show]
+Id=foo.service
+LoadState=loaded
+ActiveState=active
+SubState=running
+UnitFileState=enabled
+Description=One Two Three Four
+StateChangeTimestampMonotonic=10000000
+MemoryCurrent=18446744073709551615
+CPUUsageNSec=18446744073709551615
+TasksCurrent=18446744073709551615
+"""
+    parsed = parse(_show_string_table(raw))
+    assert parsed is not None
+    assert parsed.services["foo"].description == "One Two Three Four"
+
+
+def test_parse_dispatch_picks_legacy_when_show_absent() -> None:
+    """Old agents without the `[show]` marker must still parse via the legacy path."""
+    raw = """[list-unit-files]
+foo.service enabled enabled
+[status]
+● foo.service - Foo
+Loaded: loaded (/lib/systemd/system/foo.service; enabled)
+Active: active (running) since Mon 2024-08-19 07:09:30 CEST; 1 day 4h ago
+[all]
+foo.service loaded active running Foo
+"""
+    parsed = parse(_show_string_table(raw))
+    assert parsed is not None
+    assert "foo" in parsed.services
+    assert parsed.services["foo"].active_status == "active"
+
+
+def test_parse_dispatch_picks_show_when_marker_present() -> None:
+    """If both legacy and new markers appear, the new path wins."""
+    raw = """[list-unit-files]
+foo.service enabled enabled
+[status]
+● foo.service - Foo
+Loaded: loaded (/lib/systemd/system/foo.service; enabled)
+Active: activating (start) since Mon 2024-08-19 07:09:30 CEST; 29min ago
+[all]
+foo.service loaded activating start Foo
+[uptime]
+100.0
+[show]
+Id=foo.service
+LoadState=loaded
+ActiveState=active
+SubState=running
+UnitFileState=enabled
+Description=Foo
+StateChangeTimestampMonotonic=50000000
+MemoryCurrent=18446744073709551615
+CPUUsageNSec=18446744073709551615
+TasksCurrent=18446744073709551615
+"""
+    parsed = parse(_show_string_table(raw))
+    assert parsed is not None
+    foo = parsed.services["foo"]
+    assert foo.active_status == "active"
+    assert foo.time_since_change == timedelta(seconds=50.0)

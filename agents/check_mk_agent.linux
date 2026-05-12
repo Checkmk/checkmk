@@ -783,13 +783,18 @@ section_df() {
 section_systemd() {
     if inpath systemctl; then
         echo '<<<systemd_units>>>'
-        # use plain to force ASCII output that is simpler to parse
-        echo "[list-unit-files]"
-        systemctl list-unit-files --full --no-legend --no-pager --plain --type service --type socket | tr -s ' '
-        echo "[status]"
-        systemctl status --all --type service --type socket --no-pager --lines 0 | tr -s ' '
-        echo "[all]"
-        systemctl --all --type service --type socket --full --no-legend --no-pager --plain | sed '/^$/q' | tr -s ' '
+        # Single atomic snapshot via `systemctl show` (one dbus round trip).
+        # All properties of all units are captured at the same instant, which
+        # eliminates the cross-section race that affected the previous
+        # two-call `[status]` + `[all]` output.
+        echo "[uptime]"
+        cut -d' ' -f1 /proc/uptime
+        echo "[show]"
+        LC_ALL=C systemctl show \
+            --type=service --type=socket \
+            --all \
+            --no-pager \
+            --property=Id,LoadState,ActiveState,SubState,UnitFileState,Description,StateChangeTimestampMonotonic,MemoryCurrent,CPUUsageNSec,TasksCurrent
     fi
 }
 

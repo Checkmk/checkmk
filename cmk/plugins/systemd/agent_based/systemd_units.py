@@ -129,6 +129,22 @@ _STATUS_SYMBOLS = {"●", "○", "↻", "×", "x", "*"}
 
 MEMORY_PATTERN = re.compile(r"(\d+(\.\d+)?)([BKMGT]?)")
 
+# systemd's `(uint64_t) -1` sentinel meaning "not measured / accounting off"
+# for MemoryCurrent, CPUUsageNSec, TasksCurrent.
+_UINT64_MAX = 2**64 - 1
+
+
+def _parse_sentinel_int(raw: str | None) -> int | None:
+    if not raw:
+        return None
+    try:
+        value = int(raw)
+    except ValueError:
+        return None
+    if value == _UINT64_MAX:
+        return None
+    return value
+
 
 @dataclass(frozen=True)
 class Memory:
@@ -159,6 +175,11 @@ class Memory:
         return cls(
             int(float(value) * {"B": 1, "K": 1024, "M": 1024**2, "G": 1024**3, "T": 1024**4}[unit])
         )
+
+    @classmethod
+    def from_value(cls, value: str | None) -> Self | None:
+        int_value = _parse_sentinel_int(value)
+        return cls(bytes=int_value) if int_value is not None else None
 
     def render(self) -> str:
         return render.bytes(self.bytes)
@@ -232,6 +253,11 @@ class CpuTimeSeconds:
                 if v is not None
             )
         )
+
+    @classmethod
+    def from_value(cls, value: str | None) -> Self | None:
+        ns = _parse_sentinel_int(value)
+        return cls(value=ns / 1_000_000_000) if ns is not None else None
 
 
 # See: https://www.freedesktop.org/software/systemd/man/systemd.unit.html
@@ -378,6 +404,32 @@ class UnitEntry:
             ),
         )
 
+    @classmethod
+    def parse(
+        cls, block: Mapping[str, str], uptime_seconds: float
+    ) -> tuple[UnitTypes, "UnitEntry"] | None:
+        unit_id = block.get("Id")
+        if not unit_id:
+            return None
+        name_unit = UnitEntry._parse_name_and_unit_type(unit_id)
+        if name_unit is None:
+            return None
+        name, unit_type = name_unit
+        return unit_type, UnitEntry(
+            name=name,
+            loaded_status=block.get("LoadState", ""),
+            active_status=block.get("ActiveState", ""),
+            current_state=block.get("SubState", ""),
+            description=block.get("Description", ""),
+            enabled_status=block.get("UnitFileState") or None,
+            time_since_change=_elapsed_from_monotonic(
+                block.get("StateChangeTimestampMonotonic"), uptime_seconds
+            ),
+            memory=Memory.from_value(block.get("MemoryCurrent")),
+            cpu_seconds=CpuTimeSeconds.from_value(block.get("CPUUsageNSec")),
+            number_of_tasks=_parse_sentinel_int(block.get("TasksCurrent")),
+        )
+
 
 Units = Mapping[str, UnitEntry]
 
@@ -503,6 +555,14 @@ def _parse_status(source: Iterator[Sequence[str]]) -> Mapping[str, UnitStatus]:
 def parse(string_table: StringTable) -> Section | None:
     if not string_table:
         return None
+    if any(line and line[0] == "[show]" for line in string_table):
+        return _parse_show_format(string_table)
+
+    # TODO: For release 3.1 anything related to the legacy parsing can be removed
+    return _parse_legacy_format(string_table)
+
+
+def _parse_legacy_format(string_table: StringTable) -> Section | None:
     # This is a hack to know about possible markers that start a new section. Just looking for a "[" is
     # not enough as that can be contained in the systemd output. We also cannot change the section markers
     # as we have to consume agent output from previous versions. A better way would be to have a unique
@@ -519,6 +579,77 @@ def parse(string_table: StringTable) -> Section | None:
     enabled_status_collection = _parse_list_unit_files(iter(sections["list-unit-files"]))
     status_details = _parse_status(iter(sections["status"]))
     return _parse_all(iter(sections["all"]), enabled_status_collection, status_details)
+
+
+def _parse_show_format(string_table: StringTable) -> Section | None:
+    """Parse the atomic `[uptime]` + `[show]` format produced by a single
+    ``systemctl show`` invocation. See ``section_systemd`` in
+    ``agents/check_mk_agent.linux``.
+    """
+    section_lines: dict[str, list[Sequence[str]]] = defaultdict(list)
+    current: str | None = None
+    for line in string_table:
+        if not line:
+            if current is not None:
+                section_lines[current].append(line)
+            continue
+        if line[0] in ("[uptime]", "[show]"):
+            current = line[0][1:-1]
+            continue
+        if current is not None:
+            section_lines[current].append(line)
+
+    uptime_lines = section_lines.get("uptime") or []
+    if not uptime_lines or not uptime_lines[0]:
+        return None
+    try:
+        uptime_seconds = float(uptime_lines[0][0])
+    except ValueError:
+        return None
+
+    services: dict[str, UnitEntry] = {}
+    sockets: dict[str, UnitEntry] = {}
+    for block in _iter_show_blocks(section_lines.get("show") or []):
+        parsed = UnitEntry.parse(block, uptime_seconds)
+        if parsed is None:
+            continue
+        unit_type, entry = parsed
+        if unit_type is UnitTypes.service:
+            services[entry.name] = entry
+        elif unit_type is UnitTypes.socket:
+            sockets[entry.name] = entry
+    return Section(services=services, sockets=sockets)
+
+
+def _iter_show_blocks(lines: Iterable[Sequence[str]]) -> Iterator[dict[str, str]]:
+    """Yield one dict per unit. Block boundary = number of properties defined in agent."""
+    block: dict[str, str] = {}
+    for line in lines:
+        if not line or all(not word for word in line):
+            continue
+        raw = " ".join(line)
+        if "=" not in raw:
+            continue
+        key, value = raw.split("=", 1)
+        block[key] = value
+        if len(block) == 10:
+            yield block
+            block = {}
+
+
+def _elapsed_from_monotonic(raw: str | None, uptime_seconds: float) -> timedelta | None:
+    if not raw:
+        return None
+    try:
+        ts_us = int(raw)
+    except ValueError:
+        return None
+    if ts_us <= 0:
+        return None
+    elapsed = uptime_seconds - ts_us / 1_000_000
+    if elapsed < 0:
+        return None
+    return timedelta(seconds=elapsed)
 
 
 def discover_host_labels(

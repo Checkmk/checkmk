@@ -8,7 +8,7 @@ import { render, screen } from '@testing-library/vue'
 import UclPropertiesPanel from '@ucl/_ucl/components/detail-page/UclPropertiesPanel.vue'
 import type { PanelConfig } from '@ucl/_ucl/types/prop-panel'
 import { PanelStateCreator } from '@ucl/_ucl/types/prop-panel'
-import { type PropType, defineComponent } from 'vue'
+import { type PropType, defineComponent, ref } from 'vue'
 
 import { copyToClipboard } from '@/lib/utils'
 
@@ -230,5 +230,49 @@ describe('prop type interactions update component', () => {
     await userEvent.click(screen.getByRole('combobox', { name: 'List' }))
     await userEvent.click(await screen.findByRole('option', { name: 'Option B' }))
     expect(screen.getByTestId('list-prop')).toHaveTextContent('option-b')
+  })
+
+  test('aria-observable state propagates to ARIA attributes', async () => {
+    const ariaConfig = {
+      checked: { type: 'boolean', title: 'Checked', initialState: false },
+      disabled: { type: 'boolean', title: 'Disabled', initialState: false },
+      label: { type: 'string', title: 'Label', initialState: 'initial' }
+    } satisfies PanelConfig
+
+    const ariaApp = defineComponent({
+      components: { UclPropertiesPanel },
+      setup() {
+        const propState = ref({ checked: false, disabled: false, label: 'initial' })
+        return { propState, config: ariaConfig }
+      },
+      template: `
+        <UclPropertiesPanel :config="config" v-model="propState" />
+        <input
+          type="checkbox"
+          :aria-label="propState.label"
+          :checked="propState.checked"
+          :disabled="propState.disabled"
+        />
+      `
+    })
+
+    render(ariaApp)
+
+    const mirror = screen.getByRole('checkbox', { name: 'initial' })
+    // Panel switches have no accessible name — order follows config: [0] Checked, [1] Disabled
+    const [checkedSwitch, disabledSwitch] = screen.getAllByRole('checkbox')
+
+    expect(mirror).not.toBeChecked()
+    expect(mirror).toBeEnabled()
+
+    await userEvent.click(checkedSwitch!)
+    expect(mirror).toBeChecked()
+
+    await userEvent.click(disabledSwitch!)
+    expect(mirror).toBeDisabled()
+
+    await userEvent.clear(screen.getByLabelText('Label'))
+    await userEvent.type(screen.getByLabelText('Label'), 'renamed')
+    expect(mirror).toHaveAccessibleName('renamed')
   })
 })

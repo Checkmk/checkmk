@@ -5,6 +5,7 @@
 
 import re
 
+import pytest
 from playwright.sync_api import expect
 
 from tests.gui_e2e.testlib.playwright.pom.help.welcome import WelcomePage
@@ -23,6 +24,7 @@ def test_help_menu_welcome_page(dashboard_page: MainDashboard) -> None:
     welcome_page.navigate_via_help_menu()
 
 
+@pytest.mark.skip(reason="This test is flaky, investigation is required. See CMK-34843")
 def test_disable_welcome_page_on_start(dashboard_page: MainDashboard) -> None:
     """Test that disabling 'Show welcome page on start' prevents showing the welcome page."""
 

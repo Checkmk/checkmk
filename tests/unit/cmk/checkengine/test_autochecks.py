@@ -70,7 +70,6 @@ class TestAutochecksStore:
         assert store.read() == _entries()
 
 
-@pytest.mark.usefixtures("agent_based_plugins")
 @pytest.mark.parametrize(
     "autochecks_content,expected_result",
     [

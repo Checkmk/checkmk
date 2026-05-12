@@ -20,7 +20,6 @@ from cmk.checkengine.plugin_backend.utils import (
     validate_function_arguments,
 )
 from cmk.checkengine.plugins import (
-    AgentBasedPlugins,
     CheckPlugin,
     CheckPluginName,
     InventoryPluginName,
@@ -225,13 +224,6 @@ def test_create_check_plugin() -> None:
     assert plugin.check_function.__name__ == MINIMAL_CREATION_KWARGS["check_function"].__name__
     assert plugin.check_default_parameters is None
     assert plugin.check_ruleset_name is None
-
-
-def test_module_attribute(agent_based_plugins: AgentBasedPlugins) -> None:
-    local_check = agent_based_plugins.check_plugins[CheckPluginName("local")]
-    assert local_check.location == PluginLocation(
-        "cmk.plugins.checkmk.agent_based.local", "check_plugin_local"
-    )
 
 
 TEST_PLUGIN = CheckPlugin(

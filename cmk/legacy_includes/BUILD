@@ -11,7 +11,6 @@ py_library(
         "//tests:__subpackages__",
     ],
     deps = [
-        "//cmk/plugins",
         "//packages/cmk-plugin-apis:agent_based",
         "//packages/cmk-plugins:aws",
         "//packages/cmk-plugins:graylog",

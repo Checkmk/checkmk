@@ -11,6 +11,7 @@ from http import HTTPStatus
 from pathlib import Path
 from typing import assert_never, final, NewType
 
+import httpx
 from pydantic import BaseModel, Field
 
 from ...agent_receiver.lib.auth import B64SiteInternalSecret
@@ -150,6 +151,26 @@ class SiteMock:
                     assert_never(op)
 
             self._set_scenario_get(used_relays, name=name, state=state)
+
+    def add_relay(self, relay_id: str, alias: str | None = None) -> None:
+        resp = httpx.post(
+            f"{self.base_url}/domain-types/relay/collections/all",
+            headers={"Content-Type": "application/json", "Authorization": self.user.bearer},
+            json={
+                "alias": alias or relay_id,
+                "siteid": self.site_name,
+                "num_fetchers": 17,
+                "log_level": "INFO",
+            },
+        )
+        assert resp.status_code == HTTPStatus.OK, resp.text
+
+    def delete_relay(self, relay_id: str) -> None:
+        resp = httpx.delete(
+            f"{self.base_url}/objects/relay/{relay_id}",
+            headers={"Authorization": self.user.bearer},
+        )
+        assert resp.status_code == HTTPStatus.NO_CONTENT, resp.text
 
     def _set_relay_del(self, relayid: Relay, name: str, prev: State, next: State) -> None:  # noqa: A002
         mapping = WMapping(

@@ -5,16 +5,22 @@
 
 from http import HTTPStatus
 
+from fastapi.testclient import TestClient
+
 from cmk.relay_protocols.tasks import FetchAdHocTask
-from cmk.testlib.agent_receiver.agent_receiver import AgentReceiverClient, register_relay
+from cmk.testlib.agent_receiver.clients import (
+    RelayClient,
+    RelayRegistrationClient,
+    SiteClient,
+)
 from cmk.testlib.agent_receiver.relay import random_relay_id
-from cmk.testlib.agent_receiver.site_mock import OP, SiteMock
+from cmk.testlib.agent_receiver.site_mock import OP, SiteMock, User
 
 
 def test_create_task_unknown_relay(
-    agent_receiver: AgentReceiverClient,
+    test_client: TestClient,
     site: SiteMock,
-    site_name: str,
+    user: User,
 ) -> None:
     """Verify that tasks can be created for unknown relay IDs as the site is responsible for handling such cases.
 
@@ -27,12 +33,13 @@ def test_create_task_unknown_relay(
     # to handle such cases.
     relay_id = random_relay_id()
     site.set_scenario([], [(relay_id, OP.ADD)])
-    register_relay(agent_receiver, name="relay1", relay_id=relay_id)
-    agent_receiver.apply_config(site.push_config([relay_id]))
+    reg = RelayRegistrationClient(test_client, site.site_name)
+    reg.register("relay1", relay_id, user)
 
-    with agent_receiver.with_client_ip("127.0.0.1"):
-        response = agent_receiver.push_task(
-            relay_id="bad_relay_id", spec=FetchAdHocTask(payload=".."), site_cn=site_name
-        )
+    relay = RelayClient(test_client, site.site_name, relay_id)
+    relay.apply_config(site.push_config([relay_id]))
+
+    client = SiteClient(test_client, site.site_name)
+    response = client.push_task("bad_relay_id", FetchAdHocTask(payload=".."))
     assert response.status_code == HTTPStatus.OK
     assert response.json()["task_id"] is not None

@@ -6,16 +6,16 @@
 import uuid
 from http import HTTPStatus
 
+from fastapi.testclient import TestClient
+
 from cmk.relay_protocols.tasks import FetchAdHocTask
-from cmk.testlib.agent_receiver.agent_receiver import AgentReceiverClient
+from cmk.testlib.agent_receiver.clients import RelayClient, SiteClient
 from cmk.testlib.agent_receiver.site_mock import SiteMock
-from cmk.testlib.agent_receiver.tasks import get_relay_tasks, push_task
 
 
 def test_store_fetching_task(
-    agent_receiver: AgentReceiverClient,
+    test_client: TestClient,
     site: SiteMock,
-    site_name: str,
 ) -> None:
     """Verify that a fetching task can be stored and later retrieved with the correct payload.
 
@@ -26,25 +26,22 @@ def test_store_fetching_task(
     """
     relay_id = str(uuid.uuid4())
     site.set_scenario(relay_id)
-    agent_receiver.apply_config(site.push_config([relay_id]))
 
-    push_task(
-        agent_receiver=agent_receiver,
-        relay_id=relay_id,
-        spec=FetchAdHocTask(payload="any payload"),
-        site_cn=site_name,
-    )
+    relay = RelayClient(test_client, site.site_name, relay_id)
+    relay.apply_config(site.push_config([relay_id]))
 
-    tasks_1 = get_relay_tasks(agent_receiver, relay_id)
+    site_c = SiteClient(test_client, site.site_name)
+    site_c.create_task(relay_id, FetchAdHocTask(payload="any payload"))
+
+    tasks_1 = relay.get_task_list()
     assert len(tasks_1.tasks) == 1
     assert isinstance(tasks_1.tasks[0].spec, FetchAdHocTask)
     assert tasks_1.tasks[0].spec.payload == "any payload"
 
 
 def test_store_fetching_tasks_does_not_affect_other_relays(
-    agent_receiver: AgentReceiverClient,
+    test_client: TestClient,
     site: SiteMock,
-    site_name: str,
 ) -> None:
     """Verify that storing tasks for one relay does not affect the tasks of other relays.
 
@@ -57,38 +54,30 @@ def test_store_fetching_tasks_does_not_affect_other_relays(
     relay_id_B = str(uuid.uuid4())
     site.set_scenario([relay_id_A, relay_id_B])
 
-    agent_receiver.apply_config(site.push_config([relay_id_A, relay_id_B]))
+    relay_a = RelayClient(test_client, site.site_name, relay_id_A)
+    relay_a.apply_config(site.push_config([relay_id_A, relay_id_B]))
 
-    push_task(
-        agent_receiver=agent_receiver,
-        relay_id=relay_id_A,
-        spec=FetchAdHocTask(payload=".."),
-        site_cn=site_name,
-    )
+    site_c = SiteClient(test_client, site.site_name)
+    site_c.create_task(relay_id_A, FetchAdHocTask(payload=".."))
 
-    tasks_A = get_relay_tasks(agent_receiver, relay_id_A)
+    tasks_A = relay_a.get_task_list()
     assert len(tasks_A.tasks) == 1
-    tasks_B = get_relay_tasks(agent_receiver, relay_id_B)
+    relay_b = RelayClient(test_client, site.site_name, relay_id_B)
+    tasks_B = relay_b.get_task_list()
     assert len(tasks_B.tasks) == 0
 
-    push_task(
-        agent_receiver=agent_receiver,
-        relay_id=relay_id_A,
-        spec=FetchAdHocTask(payload=".."),
-        site_cn=site_name,
-    )
+    site_c.create_task(relay_id_A, FetchAdHocTask(payload=".."))
 
-    tasks_A = get_relay_tasks(agent_receiver, relay_id_A)
+    tasks_A = relay_a.get_task_list()
     assert len(tasks_A.tasks) == 2
     assert tasks_A.tasks[1].id != tasks_A.tasks[0].id
-    tasks_B = get_relay_tasks(agent_receiver, relay_id_B)
+    tasks_B = relay_b.get_task_list()
     assert len(tasks_B.tasks) == 0
 
 
 def test_store_fetching_task_non_existent_relay(
-    agent_receiver: AgentReceiverClient,
+    test_client: TestClient,
     site: SiteMock,
-    site_name: str,
 ) -> None:
     """Verify that tasks can be stored for a relay even when the relay does not have a configured folder.
 
@@ -99,17 +88,14 @@ def test_store_fetching_task_non_existent_relay(
     """
     relay_id = str(uuid.uuid4())
     site.set_scenario(relay_id)
-    agent_receiver.apply_config(site.push_config([]))
+    site.push_config([])
 
-    with agent_receiver.with_client_ip("127.0.0.1"):
-        response = agent_receiver.push_task(
-            relay_id=relay_id,
-            spec=FetchAdHocTask(payload=".."),
-            site_cn=site_name,
-        )
+    site_c = SiteClient(test_client, site.site_name)
+    response = site_c.push_task(relay_id, FetchAdHocTask(payload=".."))
 
     assert response.status_code == HTTPStatus.OK
-    tasks = get_relay_tasks(agent_receiver, relay_id)
+    relay = RelayClient(test_client, site.site_name, relay_id)
+    tasks = relay.get_task_list()
     assert len(tasks.tasks) == 1
     assert isinstance(tasks.tasks[0].spec, FetchAdHocTask)
     assert tasks.tasks[0].spec.payload == ".."

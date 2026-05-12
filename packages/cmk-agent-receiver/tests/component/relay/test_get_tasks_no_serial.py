@@ -3,15 +3,18 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import uuid
+from http import HTTPStatus
 
-from cmk.testlib.agent_receiver.agent_receiver import AgentReceiverClient
+from fastapi.testclient import TestClient
+
+from cmk.relay_protocols.tasks import TaskListResponse
+from cmk.testlib.agent_receiver.clients import RelayClient
 from cmk.testlib.agent_receiver.site_mock import SiteMock
-from cmk.testlib.agent_receiver.tasks import get_relay_tasks
 
 
 def test_get_tasks_works_if_no_serial_is_given(
     site: SiteMock,
-    agent_receiver: AgentReceiverClient,
+    test_client: TestClient,
 ) -> None:
     """Verify that requesting tasks without providing a serial succeeds and returns an empty task list.
 
@@ -24,7 +27,10 @@ def test_get_tasks_works_if_no_serial_is_given(
     site.set_scenario([relay_id_1])
     site.push_config([relay_id_1])
 
-    agent_receiver.set_serial(None)
-    relay_1_tasks = get_relay_tasks(agent_receiver, relay_id_1, status="PENDING").tasks
+    # Create relay client without calling apply_config() - this means no Serial header is sent
+    relay = RelayClient(test_client, site.site_name, relay_id_1)
+    response = relay.get_tasks(status="PENDING")
+    assert response.status_code == HTTPStatus.OK, response.text
+    relay_1_tasks = TaskListResponse.model_validate(response.json()).tasks
 
     assert len(relay_1_tasks) == 0

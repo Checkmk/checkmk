@@ -17,8 +17,8 @@ from http import HTTPStatus
 from pathlib import Path
 from unittest.mock import patch
 
-import httpx
 import pytest
+from fastapi.testclient import TestClient
 
 from cmk.agent_receiver.lib.config import Config
 from cmk.agent_receiver.relay.lib.shared_types import RelayID
@@ -27,15 +27,20 @@ from cmk.relay_protocols.relays import RelayRefreshCertResponse, RelayState, Rel
 from cmk.relay_protocols.tasks import (
     FetchAdHocTask,
     ResultType,
+    TaskCreateResponse,
+    TaskListResponse,
     TaskResponse,
     TaskStatus,
 )
 from cmk.testlib.agent_receiver import certs as certslib
-from cmk.testlib.agent_receiver.agent_receiver import AgentReceiverClient, register_relay
+from cmk.testlib.agent_receiver.clients import (
+    RelayClient,
+    RelayRegistrationClient,
+    SiteClient,
+)
 from cmk.testlib.agent_receiver.mock_socket import create_socket
 from cmk.testlib.agent_receiver.relay_config_generator import RelayConfig
 from cmk.testlib.agent_receiver.site_mock import OP, SiteMock, User
-from cmk.testlib.agent_receiver.tasks import get_relay_tasks, push_task
 
 HOST = "testhost"
 TEST_SOCKET_TIMEOUT = 2.0
@@ -43,22 +48,10 @@ MONITORING_PAYLOAD = b"monitoring payload"
 
 
 @pytest.fixture
-def site_client(site: SiteMock, user: User) -> httpx.Client:
-    return httpx.Client(
-        base_url=site.base_url,
-        headers={
-            "Content-Type": "application/json",
-            "Authorization": user.bearer,
-        },
-    )
-
-
-@pytest.fixture
 def relay_in_pending_deletion(
     site: SiteMock,
-    site_client: httpx.Client,
-    agent_receiver: AgentReceiverClient,
-    site_name: str,
+    test_client: TestClient,
+    user: User,
 ) -> Iterator[tuple[RelayID, RelayConfig]]:
     """Set up a relay that is registered, activated, fully operational, then put into
     PENDING_DELETION by deleting it from the site without activating the change.
@@ -70,20 +63,24 @@ def relay_in_pending_deletion(
     site.set_scenario(relays=[], changes=[(relay_id, OP.ADD), (relay_id, OP.DEL)])
 
     # Register relay and create config folder
-    register_relay(agent_receiver, "test_relay", relay_id)
+    reg = RelayRegistrationClient(test_client, site.site_name)
+    reg.register("test_relay", relay_id, user)
     serial_folder = site.push_config([relay_id])
-    agent_receiver.apply_config(serial_folder)
+
+    relay = RelayClient(test_client, site.site_name, relay_id)
+    relay.apply_config(serial_folder)
 
     # Activate config - relay is operating normally
-    with agent_receiver.with_client_ip("127.0.0.1"):
-        resp = agent_receiver.activate_config(site_cn=site_name)
+    site_op = SiteClient(test_client, site.site_name)
+    resp = site_op.activate_config()
     assert resp.status_code == HTTPStatus.OK, resp.text
 
     # Relay completes its config task (fully operational)
-    pending = get_relay_tasks(agent_receiver, relay_id, status="PENDING")
+    tasks_resp = relay.get_tasks(status="PENDING")
+    assert tasks_resp.status_code == HTTPStatus.OK, tasks_resp.text
+    pending = TaskListResponse.model_validate(tasks_resp.json())
     assert len(pending.tasks) == 1
-    resp = agent_receiver.update_task(
-        relay_id=relay_id,
+    resp = relay.update_task(
         task_id=pending.tasks[0].id,
         result_type="OK",
         result_payload="Config applied",
@@ -91,10 +88,10 @@ def relay_in_pending_deletion(
     assert resp.status_code < 400, resp.text
 
     # Delete relay from site without activating the deletion change
-    site_client.delete(f"/objects/relay/{relay_id}")
+    site.delete_relay(relay_id)
 
     # Verify PENDING_DELETION
-    status_resp = agent_receiver.get_relay_status(relay_id)
+    status_resp = relay.get_status()
     assert status_resp.status_code == HTTPStatus.OK, status_resp.text
     status = RelayStatusResponse.model_validate_json(status_resp.text)
     assert status.state == RelayState.PENDING_DELETION
@@ -124,17 +121,18 @@ def _assert_no_errors_in_logs(site_context: Config) -> None:
     )
 
 
-def _assert_agent_receiver_healthy(agent_receiver: AgentReceiverClient) -> None:
+def _assert_agent_receiver_healthy(test_client: TestClient, site_name: str) -> None:
     """Verify the agent-receiver is still responsive via its health endpoint."""
-    resp = agent_receiver.client.get(f"/{agent_receiver.site_name}/agent-receiver/openapi.json")
+    resp = test_client.get(f"/{site_name}/agent-receiver/openapi.json")
     assert resp.status_code == HTTPStatus.OK, f"Health check failed: {resp.status_code}"
 
 
 def test_relay_pending_deletion_submit_data_ok(
     relay_in_pending_deletion: tuple[RelayID, RelayConfig],
-    agent_receiver: AgentReceiverClient,
+    test_client: TestClient,
     site_context: Config,
     tmpdir: Path,
+    site: SiteMock,
 ) -> None:
     """Verify that a relay in PENDING_DELETION can still push monitoring data successfully.
 
@@ -153,23 +151,23 @@ def test_relay_pending_deletion_submit_data_ok(
     socket_path = f"{tmpdir}/{secrets.token_urlsafe(8)}.sock"
     with patch.object(Config, "raw_data_socket", socket_path):
         with create_socket(socket_path=socket_path, socket_timeout=TEST_SOCKET_TIMEOUT) as ms:
-            resp = agent_receiver.forward_monitoring_data(
-                relay_id=relay_id,
-                monitoring_data=monitoring_data,
-            )
+            relay = RelayClient(test_client, site.site_name, relay_id)
+            relay.apply_config(serial_folder)
+            resp = relay.forward_monitoring_data(monitoring_data)
             connection_data = ms.data_queue.get(timeout=TEST_SOCKET_TIMEOUT)
     assert resp.status_code == HTTPStatus.NO_CONTENT, resp.text
     _, received_payload = connection_data.data.split(b"\n", 1)
     assert received_payload == MONITORING_PAYLOAD
 
-    _assert_agent_receiver_healthy(agent_receiver)
+    _assert_agent_receiver_healthy(test_client, site.site_name)
     _assert_no_errors_in_logs(site_context)
 
 
 def test_relay_pending_deletion_get_relay_tasks(
     relay_in_pending_deletion: tuple[RelayID, RelayConfig],
-    agent_receiver: AgentReceiverClient,
+    test_client: TestClient,
     site_context: Config,
+    site: SiteMock,
 ) -> None:
     """Verify that a relay in PENDING_DELETION can still retrieve its task list.
 
@@ -182,19 +180,22 @@ def test_relay_pending_deletion_get_relay_tasks(
     3. Assert agent-receiver returns 200 OK with the task list
     4. Assert agent-receiver is still healthy and logs contain no errors
     """
-    relay_id, _ = relay_in_pending_deletion
+    relay_id, serial_folder = relay_in_pending_deletion
 
-    tasks_resp = agent_receiver.get_relay_tasks(relay_id)
+    relay = RelayClient(test_client, site.site_name, relay_id)
+    relay.apply_config(serial_folder)
+    tasks_resp = relay.get_tasks()
     assert tasks_resp.status_code == HTTPStatus.OK, tasks_resp.text
 
-    _assert_agent_receiver_healthy(agent_receiver)
+    _assert_agent_receiver_healthy(test_client, site.site_name)
     _assert_no_errors_in_logs(site_context)
 
 
 def test_relay_pending_deletion_refresh_cert(
     relay_in_pending_deletion: tuple[RelayID, RelayConfig],
-    agent_receiver: AgentReceiverClient,
+    test_client: TestClient,
     site_context: Config,
+    site: SiteMock,
 ) -> None:
     """Verify that a relay in PENDING_DELETION can still refresh its certificate.
 
@@ -209,24 +210,26 @@ def test_relay_pending_deletion_refresh_cert(
     4. Assert the returned certificate has the correct relay_id as CN
     5. Assert agent-receiver is still healthy and logs contain no errors
     """
-    relay_id, _ = relay_in_pending_deletion
+    relay_id, serial_folder = relay_in_pending_deletion
 
-    resp = agent_receiver.refresh_cert(relay_id)
+    relay = RelayClient(test_client, site.site_name, relay_id)
+    relay.apply_config(serial_folder)
+    resp = relay.refresh_cert()
     assert resp.status_code == HTTPStatus.OK, resp.text
 
     refresh_response = RelayRefreshCertResponse.model_validate_json(resp.text)
     cert = certslib.read_certificate(refresh_response.client_cert)
     assert cert.subject.common_name == relay_id
 
-    _assert_agent_receiver_healthy(agent_receiver)
+    _assert_agent_receiver_healthy(test_client, site.site_name)
     _assert_no_errors_in_logs(site_context)
 
 
 def test_relay_pending_deletion_with_fetch_adhoc_task(
     relay_in_pending_deletion: tuple[RelayID, RelayConfig],
-    agent_receiver: AgentReceiverClient,
+    test_client: TestClient,
     site_context: Config,
-    site_name: str,
+    site: SiteMock,
 ) -> None:
     """Verify agent-receiver handles FetchAdHocTask results when relay is PENDING_DELETION.
 
@@ -241,18 +244,19 @@ def test_relay_pending_deletion_with_fetch_adhoc_task(
     3. Push another FetchAdHocTask and relay reports ERROR - assert task is FAILED
     4. Assert agent-receiver is still healthy and logs contain no errors
     """
-    relay_id, _ = relay_in_pending_deletion
+    relay_id, serial_folder = relay_in_pending_deletion
+
+    relay = RelayClient(test_client, site.site_name, relay_id)
+    relay.apply_config(serial_folder)
+    site_op = SiteClient(test_client, site.site_name)
 
     # Push a task and relay reports OK
-    ok_task = push_task(
-        agent_receiver,
-        relay_id,
-        FetchAdHocTask(payload="fetch host data"),
-        site_name,
-    )
-    ok_resp = agent_receiver.update_task(
-        relay_id=relay_id,
-        task_id=ok_task.task_id,
+    ok_task_resp = site_op.push_task(relay_id, FetchAdHocTask(payload="fetch host data"))
+    assert ok_task_resp.status_code == HTTPStatus.OK, ok_task_resp.text
+    ok_task_id = TaskCreateResponse.model_validate(ok_task_resp.json()).task_id
+
+    ok_resp = relay.update_task(
+        task_id=ok_task_id,
         result_type="OK",
         result_payload="Host data fetched",
     )
@@ -262,15 +266,15 @@ def test_relay_pending_deletion_with_fetch_adhoc_task(
     assert ok_result.result_type == ResultType.OK
 
     # Push a task and relay reports ERROR
-    error_task = push_task(
-        agent_receiver,
+    error_task_resp = site_op.push_task(
         relay_id,
         FetchAdHocTask(payload="fetch host data again"),
-        site_name,
     )
-    error_resp = agent_receiver.update_task(
-        relay_id=relay_id,
-        task_id=error_task.task_id,
+    assert error_task_resp.status_code == HTTPStatus.OK, error_task_resp.text
+    error_task_id = TaskCreateResponse.model_validate(error_task_resp.json()).task_id
+
+    error_resp = relay.update_task(
+        task_id=error_task_id,
         result_type="ERROR",
         result_payload="Host unreachable",
     )
@@ -279,5 +283,5 @@ def test_relay_pending_deletion_with_fetch_adhoc_task(
     assert error_result.status == TaskStatus.FAILED
     assert error_result.result_type == ResultType.ERROR
 
-    _assert_agent_receiver_healthy(agent_receiver)
+    _assert_agent_receiver_healthy(test_client, site.site_name)
     _assert_no_errors_in_logs(site_context)

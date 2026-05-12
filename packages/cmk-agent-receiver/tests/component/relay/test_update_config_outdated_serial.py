@@ -3,17 +3,19 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import uuid
+from http import HTTPStatus
 
-from cmk.relay_protocols.tasks import RelayConfigTask, TaskStatus
-from cmk.testlib.agent_receiver.agent_receiver import AgentReceiverClient
+from fastapi.testclient import TestClient
+
+from cmk.relay_protocols.tasks import RelayConfigTask, TaskListResponse, TaskStatus
+from cmk.testlib.agent_receiver.clients import RelayClient
 from cmk.testlib.agent_receiver.relay_config_generator import assert_config_tar
 from cmk.testlib.agent_receiver.site_mock import SiteMock
-from cmk.testlib.agent_receiver.tasks import get_relay_tasks
 
 
 def test_config_update_triggered_by_outdated_serial(
     site: SiteMock,
-    agent_receiver: AgentReceiverClient,
+    test_client: TestClient,
 ) -> None:
     """Verify that requesting tasks with an outdated serial automatically triggers creation of a config update task with the current serial.
 
@@ -27,10 +29,11 @@ def test_config_update_triggered_by_outdated_serial(
     site.set_scenario([relay_id_1, relay_id_2])
     old_config = site.push_config([relay_id_1, relay_id_2])
 
-    agent_receiver.apply_config(old_config)
+    relay_1 = RelayClient(test_client, site.site_name, relay_id_1)
+    relay_1.apply_config(old_config)
     new_config = site.push_config([relay_id_1, relay_id_2])
 
-    relay_1_tasks = get_relay_tasks(agent_receiver, relay_id_1, status="PENDING").tasks
+    relay_1_tasks = _get_relay_tasks(relay_1, status="PENDING").tasks
 
     assert len(relay_1_tasks) == 1
     task = relay_1_tasks[0]
@@ -39,14 +42,15 @@ def test_config_update_triggered_by_outdated_serial(
     assert_config_tar(new_config, relay_id_1, task.spec.tar_data)
 
     # relay applies the new config — no update task created
-    agent_receiver.apply_config(new_config)
-    relay_2_tasks = get_relay_tasks(agent_receiver, relay_id_2, status="PENDING").tasks
+    relay_1.apply_config(new_config)
+    relay_2 = RelayClient(test_client, site.site_name, relay_id_2)
+    relay_2_tasks = _get_relay_tasks(relay_2, status="PENDING").tasks
     assert len(relay_2_tasks) == 0
 
 
 def test_config_update_triggered_by_outdated_serial_is_generated_once(
     site: SiteMock,
-    agent_receiver: AgentReceiverClient,
+    test_client: TestClient,
 ) -> None:
     """Verify that a config update task is created only once when an outdated serial is detected, not on every request.
 
@@ -59,10 +63,11 @@ def test_config_update_triggered_by_outdated_serial_is_generated_once(
     site.set_scenario([relay_id_1])
     old_config = site.push_config([relay_id_1])
 
-    agent_receiver.apply_config(old_config)
+    relay_1 = RelayClient(test_client, site.site_name, relay_id_1)
+    relay_1.apply_config(old_config)
     new_config = site.push_config([relay_id_1])
 
-    relay_1_tasks = get_relay_tasks(agent_receiver, relay_id_1, status="PENDING").tasks
+    relay_1_tasks = _get_relay_tasks(relay_1, status="PENDING").tasks
 
     assert len(relay_1_tasks) == 1
     task = relay_1_tasks[0]
@@ -70,14 +75,14 @@ def test_config_update_triggered_by_outdated_serial_is_generated_once(
     assert task.spec.serial == new_config.serial.value
     assert_config_tar(new_config, relay_id_1, task.spec.tar_data)
 
-    tasklist = get_relay_tasks(agent_receiver, relay_id_1, status="PENDING").tasks
+    tasklist = _get_relay_tasks(relay_1, status="PENDING").tasks
     assert len(tasklist) == 1
     assert tasklist[0].id == task.id
 
 
 def test_config_update_triggered_by_old_serial_twice_in_a_row(
     site: SiteMock,
-    agent_receiver: AgentReceiverClient,
+    test_client: TestClient,
 ) -> None:
     """Verify that when the configuration changes, requesting with an outdated serial creates a new config task with the updated serial.
 
@@ -91,10 +96,11 @@ def test_config_update_triggered_by_old_serial_twice_in_a_row(
     site.set_scenario([relay_id_1])
 
     config_a = site.push_config([relay_id_1])
-    agent_receiver.apply_config(config_a)
+    relay_1 = RelayClient(test_client, site.site_name, relay_id_1)
+    relay_1.apply_config(config_a)
     config_b = site.push_config([relay_id_1])
 
-    tasks_a_first = get_relay_tasks(agent_receiver, relay_id_1, status="PENDING").tasks
+    tasks_a_first = _get_relay_tasks(relay_1, status="PENDING").tasks
 
     assert len(tasks_a_first) == 1, (
         f"Expected exactly one task for relay {relay_id_1}, got: {tasks_a_first}"
@@ -105,10 +111,10 @@ def test_config_update_triggered_by_old_serial_twice_in_a_row(
     assert first_task.spec.serial == config_b.serial.value
     assert_config_tar(config_b, relay_id_1, first_task.spec.tar_data)
 
-    agent_receiver.apply_config(config_b)
+    relay_1.apply_config(config_b)
     config_c = site.push_config([relay_id_1])
 
-    tasks_a_after = get_relay_tasks(agent_receiver, relay_id_1, status="PENDING").tasks
+    tasks_a_after = _get_relay_tasks(relay_1, status="PENDING").tasks
 
     assert len(tasks_a_after) == 2, (
         f"Expected exactly two tasks for relay {relay_id_1}, got: {tasks_a_after}"
@@ -118,3 +124,10 @@ def test_config_update_triggered_by_old_serial_twice_in_a_row(
     assert new_task_config.status == TaskStatus.PENDING
     assert new_task_config.spec.serial == config_c.serial.value
     assert_config_tar(config_c, relay_id_1, new_task_config.spec.tar_data)
+
+
+def _get_relay_tasks(relay: RelayClient, status: str | None = None) -> TaskListResponse:
+    """Get relay tasks using the relay client."""
+    response = relay.get_tasks(status=status)
+    assert response.status_code == HTTPStatus.OK, response.text
+    return TaskListResponse.model_validate(response.json())

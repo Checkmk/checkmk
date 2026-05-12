@@ -4,12 +4,15 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import logging
 
+from fastapi.testclient import TestClient
+
 from cmk.agent_receiver.lib.config import get_config
-from cmk.testlib.agent_receiver.agent_receiver import AgentReceiverClient
+from cmk.testlib.agent_receiver.site_mock import SiteMock
 
 
 def test_middleware_adds_request_id_to_logs(
-    agent_receiver: AgentReceiverClient,
+    site: SiteMock,
+    test_client: TestClient,
 ) -> None:
     """Verify that the middleware correctly binds the request ID to the logging context for request tracing.
 
@@ -19,8 +22,8 @@ def test_middleware_adds_request_id_to_logs(
     3. Verify trace ID appears in log file
     """
     trace_id = "test-logging-integration-12345"
-    response = agent_receiver.client.get(
-        f"/{agent_receiver.site_name}/agent-receiver/openapi.json", headers={"x-trace-id": trace_id}
+    response = test_client.get(
+        f"/{site.site_name}/agent-receiver/openapi.json", headers={"x-trace-id": trace_id}
     )
     assert response.headers["x-request-id"] == trace_id
 

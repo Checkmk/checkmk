@@ -5,19 +5,22 @@
 
 import time
 import uuid
+from http import HTTPStatus
 
 import pytest
+from fastapi.testclient import TestClient
 
 from cmk.agent_receiver.relay.lib.shared_types import Serial
 from cmk.relay_protocols.tasks import (
     RelayConfigTask,
     ResultType,
+    TaskListResponse,
     TaskResponse,
     TaskStatus,
 )
-from cmk.testlib.agent_receiver.agent_receiver import AgentReceiverClient
+from cmk.testlib.agent_receiver.clients import RelayClient, SiteClient
+from cmk.testlib.agent_receiver.relay_config_generator import RelayConfig
 from cmk.testlib.agent_receiver.site_mock import SiteMock
-from cmk.testlib.agent_receiver.tasks import add_tasks, get_all_tasks, get_relay_tasks
 
 RESPONSE_PAYLOAD = "some response payload"
 TASKS_COUNT = 5
@@ -32,12 +35,11 @@ TASKS_COUNT = 5
 )
 def test_updating_task_should_change_stored_task_object(
     relay_id: str,
-    agent_receiver: AgentReceiverClient,
+    test_client: TestClient,
     result_type_input: str,
     result_type_output: ResultType,
     expected_status: TaskStatus,
     site: SiteMock,
-    site_name: str,
 ) -> None:
     """Verify that updating a task with a result modifies the stored task object and sets the correct task status based on the result type.
 
@@ -46,15 +48,15 @@ def test_updating_task_should_change_stored_task_object(
     2. Update the task with a result
     3. Verify the stored task contains the result and correct status
     """
+    relay = RelayClient(test_client, site.site_name, relay_id)
+    relay.apply_config(site.push_config([relay_id]))
 
-    agent_receiver.apply_config(site.push_config([relay_id]))
-
-    task_ids = add_tasks(1, agent_receiver, relay_id, site_name)
+    site_c = SiteClient(test_client, site.site_name)
+    task_ids = site_c.add_tasks(1, relay_id)
     task_id = task_ids[0]
 
     # do the update
-    update_response = agent_receiver.update_task(
-        relay_id=relay_id,
+    update_response = relay.update_task(
         task_id=task_id,
         result_type=result_type_input,
         result_payload=RESPONSE_PAYLOAD,
@@ -72,7 +74,7 @@ def test_updating_task_should_change_stored_task_object(
         result_payload=RESPONSE_PAYLOAD,
     )
 
-    stored_tasks = get_all_tasks(agent_receiver, relay_id)
+    stored_tasks = relay.get_task_list().tasks
     task = find_task_with_id(task_id, stored_tasks)
     assert_task(
         task,
@@ -85,11 +87,10 @@ def test_updating_task_should_change_stored_task_object(
 
 @pytest.mark.parametrize("result_type_input", ["OK", "ERROR"])
 def test_task_no_longer_pending(
-    agent_receiver: AgentReceiverClient,
+    test_client: TestClient,
     relay_id: str,
     result_type_input: str,
     site: SiteMock,
-    site_name: str,
 ) -> None:
     """Verify that once a task has been updated with a result, it no longer appears in the list of pending tasks.
 
@@ -98,37 +99,36 @@ def test_task_no_longer_pending(
     2. Update the task with a result
     3. Verify the task no longer appears in pending tasks list
     """
+    relay = RelayClient(test_client, site.site_name, relay_id)
+    relay.apply_config(site.push_config([relay_id]))
 
-    agent_receiver.apply_config(site.push_config([relay_id]))
-
-    task_ids = add_tasks(3, agent_receiver, relay_id, site_name)
+    site_c = SiteClient(test_client, site.site_name)
+    task_ids = site_c.add_tasks(3, relay_id)
     task_id = task_ids[1]
 
-    all_tasks = get_all_tasks(agent_receiver, relay_id)
+    all_tasks = relay.get_task_list().tasks
     task = find_task_with_id(task_id, all_tasks)
     assert_is_pending_task(task, task_id=task_id)
 
-    all_pending_tasks = get_pending_tasks(agent_receiver, relay_id)
+    all_pending_tasks = relay.get_task_list(status="PENDING").tasks
     task = find_task_with_id(task_id, all_pending_tasks)
     assert_is_pending_task(task, task_id)
 
-    _ = agent_receiver.update_task(
-        relay_id=relay_id,
+    _ = relay.update_task(
         task_id=task_id,
         result_type=result_type_input,
         result_payload=RESPONSE_PAYLOAD,
     )
-    all_pending_tasks = get_pending_tasks(agent_receiver, relay_id)
+    all_pending_tasks = relay.get_task_list(status="PENDING").tasks
     assert_task_not_in_the_list(task_id, all_pending_tasks)
 
 
 @pytest.mark.parametrize("result_type_input", ["OK", "ERROR"])
 def test_timestamps_are_handled(
-    agent_receiver: AgentReceiverClient,
+    test_client: TestClient,
     relay_id: str,
     result_type_input: str,
     site: SiteMock,
-    site_name: str,
 ) -> None:
     """Verify that updating a task modifies the update_timestamp but preserves the creation_timestamp.
 
@@ -137,26 +137,26 @@ def test_timestamps_are_handled(
     2. Update the task after a delay
     3. Verify creation_timestamp unchanged and update_timestamp increased
     """
+    relay = RelayClient(test_client, site.site_name, relay_id)
+    relay.apply_config(site.push_config([relay_id]))
 
-    agent_receiver.apply_config(site.push_config([relay_id]))
-
-    task_ids = add_tasks(1, agent_receiver, relay_id, site_name)
+    site_c = SiteClient(test_client, site.site_name)
+    task_ids = site_c.add_tasks(1, relay_id)
     task_id = task_ids[0]
 
-    all_tasks = get_all_tasks(agent_receiver, relay_id)
+    all_tasks = relay.get_task_list().tasks
     task_when_created = find_task_with_id(task_id, all_tasks)
 
     # sleep a bit to ensure different update timestamp
     time.sleep(0.05)
 
-    _ = agent_receiver.update_task(
-        relay_id=relay_id,
+    _ = relay.update_task(
         task_id=task_id,
         result_type=result_type_input,
         result_payload=RESPONSE_PAYLOAD,
     )
 
-    all_tasks = get_all_tasks(agent_receiver, relay_id)
+    all_tasks = relay.get_task_list().tasks
     task = find_task_with_id(task_id, all_tasks)
 
     assert task.creation_timestamp == task_when_created.creation_timestamp
@@ -165,11 +165,10 @@ def test_timestamps_are_handled(
 
 @pytest.mark.parametrize("result_type_input", ["OK", "ERROR"])
 def test_the_other_tasks_are_not_changed(
-    agent_receiver: AgentReceiverClient,
+    test_client: TestClient,
     relay_id: str,
     result_type_input: str,
     site: SiteMock,
-    site_name: str,
 ) -> None:
     """Verify that updating one task does not modify any other tasks that belong to the same relay.
 
@@ -178,22 +177,22 @@ def test_the_other_tasks_are_not_changed(
     2. Update one task with a result
     3. Verify other tasks remain unchanged
     """
+    relay = RelayClient(test_client, site.site_name, relay_id)
+    relay.apply_config(site.push_config([relay_id]))
 
-    agent_receiver.apply_config(site.push_config([relay_id]))
-
-    task_ids = add_tasks(3, agent_receiver, relay_id, site_name)
+    site_c = SiteClient(test_client, site.site_name)
+    task_ids = site_c.add_tasks(3, relay_id)
     task_id = task_ids[1]
 
-    orig_tasks = get_all_tasks(agent_receiver, relay_id)
+    orig_tasks = relay.get_task_list().tasks
 
-    _ = agent_receiver.update_task(
-        relay_id=relay_id,
+    _ = relay.update_task(
         task_id=task_id,
         result_type=result_type_input,
         result_payload=RESPONSE_PAYLOAD,
     )
 
-    current_tasks = get_all_tasks(agent_receiver, relay_id)
+    current_tasks = relay.get_task_list().tasks
 
     other_task_ids = set(task_ids)
     other_task_ids.remove(task_id)
@@ -205,8 +204,8 @@ def test_the_other_tasks_are_not_changed(
 
 
 def test_finishing_config_task(
+    test_client: TestClient,
     relay_id: str,
-    agent_receiver: AgentReceiverClient,
     site: SiteMock,
 ) -> None:
     """
@@ -218,23 +217,29 @@ def test_finishing_config_task(
     3. Update serial in client and acknowledge the task with result_type "OK"
     4. Assert that there are no pending tasks and the task is now in FINISHED status
     """
-    site.push_config([relay_id])
+    pushed_config = site.push_config([relay_id])
 
-    agent_receiver.set_serial(Serial.default())
-    relay_tasks = get_relay_tasks(agent_receiver, relay_id, status="PENDING").tasks
+    relay = RelayClient(test_client, site.site_name, relay_id)
+    # Start with outdated serial to trigger config task
+    relay.apply_config(RelayConfig(serial=Serial.default(), files={}))
+    relay_tasks_resp = relay.get_tasks(status="PENDING")
+    assert relay_tasks_resp.status_code == HTTPStatus.OK, relay_tasks_resp.text
+    relay_tasks = TaskListResponse.model_validate(relay_tasks_resp.json()).tasks
     assert len(relay_tasks) == 1
     assert isinstance(relay_tasks[0].spec, RelayConfigTask)
 
-    agent_receiver.set_serial(Serial(relay_tasks[0].spec.serial))
-    response = agent_receiver.update_task(
-        relay_id=relay_id,
+    # Apply the config with the serial from the config task
+    relay.apply_config(
+        RelayConfig(serial=Serial(relay_tasks[0].spec.serial), files=pushed_config.files)
+    )
+    response = relay.update_task(
         task_id=relay_tasks[0].id,
         result_type="OK",
         result_payload="It's done",
     )
     assert response.status_code < 400, response.text
-    assert 0 == len(get_relay_tasks(agent_receiver, relay_id, status="PENDING").tasks)
-    finished_tasks = get_relay_tasks(agent_receiver, relay_id, status="FINISHED").tasks
+    assert 0 == len(relay.get_task_list(status="PENDING").tasks)
+    finished_tasks = relay.get_task_list(status="FINISHED").tasks
     assert 1 == len(finished_tasks)
     assert relay_tasks[0].id == finished_tasks[0].id
 
@@ -244,10 +249,6 @@ def relay_id(site: SiteMock) -> str:
     relay_id = str(uuid.uuid4())
     site.set_scenario(relay_id)
     return relay_id
-
-
-def get_pending_tasks(agent_receiver: AgentReceiverClient, relay_id: str) -> list[TaskResponse]:
-    return get_relay_tasks(agent_receiver, relay_id, status="PENDING").tasks
 
 
 def find_task_with_id(task_id: str, tasks: list[TaskResponse]) -> TaskResponse:

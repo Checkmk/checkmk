@@ -14,7 +14,6 @@ from cmk.agent_receiver.relay.api.routers.relays.dependencies import (
     get_forward_monitoring_data_handler,
 )
 from cmk.agent_receiver.relay.api.routers.relays.handlers import ForwardMonitoringDataHandler
-from cmk.testlib.agent_receiver.agent_receiver import AgentReceiverClient
 from cmk.testlib.agent_receiver.builder import AgentReceiverConfigBuilder, AgentReceiverSite
 from cmk.testlib.agent_receiver.native_wiremock import run_wiremock
 from cmk.testlib.agent_receiver.site_mock import SiteMock, User
@@ -22,15 +21,10 @@ from cmk.testlib.agent_receiver.wiremock import Wiremock
 
 
 @pytest.fixture()
-def site_name() -> str:
-    return "my_component_test_site"
-
-
-@pytest.fixture()
-def ar_site(wiremock: Wiremock, tmp_path: pathlib.Path, site_name: str) -> AgentReceiverSite:
+def ar_site(wiremock: Wiremock, tmp_path: pathlib.Path) -> AgentReceiverSite:
     return AgentReceiverConfigBuilder(
-        omd_root=tmp_path / site_name,
-        site_name=site_name,
+        omd_root=tmp_path / "some-test-name",
+        site_name="some-test-name",
         apache_address=wiremock.wiremock_hostname,
         apache_port=wiremock.port,
     ).build()
@@ -46,11 +40,6 @@ def site_context(ar_site: AgentReceiverSite, monkeypatch: pytest.MonkeyPatch) ->
 
 @pytest.fixture()
 def test_client(site_context: Config) -> Iterator[TestClient]:
-    """Test client for agent receiver.
-
-    Use this with AgentReceiverClient.with_client_ip() context manager
-    for endpoints that require localhost access.
-    """
     app = main_app()
 
     # Override the ForwardMonitoringDataHandler to use a shorter timeout for tests
@@ -94,19 +83,3 @@ def site(wiremock: Wiremock, user: User, ar_site: AgentReceiverSite) -> SiteMock
         ar_site.internal_credentials,
         ar_site.config.omd_root,
     )
-
-
-@pytest.fixture
-def agent_receiver(
-    test_client: TestClient, site_context: Config, user: User
-) -> AgentReceiverClient:
-    """Agent receiver client with dynamic IP control.
-
-    Use with_client_ip() context manager for localhost-only operations:
-        with agent_receiver.with_client_ip("127.0.0.1"):
-            agent_receiver.push_task(...)
-
-    Use directly for relay operations:
-        agent_receiver.get_relay_tasks(...)
-    """
-    return AgentReceiverClient(test_client, site_context.site_name, user)

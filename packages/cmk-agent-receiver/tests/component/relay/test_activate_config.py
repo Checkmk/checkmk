@@ -8,36 +8,21 @@ from __future__ import annotations
 import uuid
 from http import HTTPStatus
 
-import httpx
-import pytest
+from fastapi.testclient import TestClient
 
 from cmk.agent_receiver.relay.lib.shared_types import Serial
 from cmk.relay_protocols.tasks import RelayConfigTask, TaskResponse, TaskStatus
-from cmk.testlib.agent_receiver.agent_receiver import AgentReceiverClient
+from cmk.testlib.agent_receiver.clients import RelayClient, SiteClient
 from cmk.testlib.agent_receiver.relay_config_generator import assert_config_tar, RelayConfig
 from cmk.testlib.agent_receiver.site_mock import (
     OP,
     SiteMock,
-    User,
 )
-from cmk.testlib.agent_receiver.tasks import get_relay_tasks
-
-
-@pytest.fixture
-def site_client(site: SiteMock, user: User) -> httpx.Client:
-    return httpx.Client(
-        base_url=site.base_url,
-        headers={
-            "Content-Type": "application/json",
-            "Authorization": user.bearer,
-        },
-    )
 
 
 def test_activation_performed_by_user_creates_config_tasks_for_each_relay(
+    test_client: TestClient,
     site: SiteMock,
-    agent_receiver: AgentReceiverClient,
-    site_name: str,
 ) -> None:
     """Verify that user-triggered config activation creates a relay config task for each configured relay.
 
@@ -52,22 +37,24 @@ def test_activation_performed_by_user_creates_config_tasks_for_each_relay(
     site.set_scenario([relay_id_a, relay_id_b])
 
     serial_folder = site.push_config([relay_id_a, relay_id_b])
-    agent_receiver.apply_config(serial_folder)
+    relay_a = RelayClient(test_client, site.site_name, relay_id_a)
+    relay_a.apply_config(serial_folder)
+    relay_b = RelayClient(test_client, site.site_name, relay_id_b)
+    relay_b.apply_config(serial_folder)
 
     # Simulate user activation. Call to the endpoint that creates a ActivateConfigTask for each relay
-    with agent_receiver.with_client_ip("127.0.0.1"):
-        resp = agent_receiver.activate_config(site_cn=site_name)
+    site_ar = SiteClient(test_client, site.site_name)
+    resp = site_ar.activate_config()
     assert resp.status_code == HTTPStatus.OK, resp.text
 
     # Assert each relay has exactly one pending config task with correct serial
-    _assert_single_pending_config_task(agent_receiver, serial_folder, relay_id_a)
-    _assert_single_pending_config_task(agent_receiver, serial_folder, relay_id_b)
+    _assert_single_pending_config_task(relay_a, serial_folder)
+    _assert_single_pending_config_task(relay_b, serial_folder)
 
 
 def test_activation_performed_twice_with_same_config(
+    test_client: TestClient,
     site: SiteMock,
-    agent_receiver: AgentReceiverClient,
-    site_name: str,
 ) -> None:
     """Verify that performing config activation twice with the same configuration does not create duplicate tasks.
 
@@ -82,31 +69,32 @@ def test_activation_performed_twice_with_same_config(
     site.set_scenario([relay_id_a, relay_id_b])
 
     serial_folder = site.push_config([relay_id_a, relay_id_b])
-    agent_receiver.apply_config(serial_folder)
+    relay_a = RelayClient(test_client, site.site_name, relay_id_a)
+    relay_a.apply_config(serial_folder)
+    relay_b = RelayClient(test_client, site.site_name, relay_id_b)
+    relay_b.apply_config(serial_folder)
 
     # Simulate user activation. Call to the endpoint that creates a ActivateConfigTask for each relay
-    with agent_receiver.with_client_ip("127.0.0.1"):
-        resp = agent_receiver.activate_config(site_cn=site_name)
+    site_ar = SiteClient(test_client, site.site_name)
+    resp = site_ar.activate_config()
     assert resp.status_code == HTTPStatus.OK, resp.text
 
     # Assert each relay has exactly one pending config task with correct serial
-    _assert_single_pending_config_task(agent_receiver, serial_folder, relay_id_a)
-    _assert_single_pending_config_task(agent_receiver, serial_folder, relay_id_b)
+    _assert_single_pending_config_task(relay_a, serial_folder)
+    _assert_single_pending_config_task(relay_b, serial_folder)
 
     # Simulate second user activation.
-    with agent_receiver.with_client_ip("127.0.0.1"):
-        resp = agent_receiver.activate_config(site_cn=site_name)
+    resp = site_ar.activate_config()
     assert resp.status_code == HTTPStatus.OK, resp.text
 
     # Assert each relay has exactly one pending config task with correct serial
-    _assert_single_pending_config_task(agent_receiver, serial_folder, relay_id_a)
-    _assert_single_pending_config_task(agent_receiver, serial_folder, relay_id_b)
+    _assert_single_pending_config_task(relay_a, serial_folder)
+    _assert_single_pending_config_task(relay_b, serial_folder)
 
 
 def test_activation_performed_twice_with_new_config(
+    test_client: TestClient,
     site: SiteMock,
-    agent_receiver: AgentReceiverClient,
-    site_name: str,
 ) -> None:
     """Verify that performing activation with a new configuration creates new config tasks with the updated serial.
 
@@ -121,36 +109,37 @@ def test_activation_performed_twice_with_new_config(
     site.set_scenario([relay_id_a, relay_id_b])
 
     config_a = site.push_config([relay_id_a, relay_id_b])
-    agent_receiver.apply_config(config_a)
+    relay_a = RelayClient(test_client, site.site_name, relay_id_a)
+    relay_a.apply_config(config_a)
+    relay_b = RelayClient(test_client, site.site_name, relay_id_b)
+    relay_b.apply_config(config_a)
 
     # Simulate user activation. Call to the endpoint that creates a ActivateConfigTask for each relay
-    with agent_receiver.with_client_ip("127.0.0.1"):
-        resp = agent_receiver.activate_config(site_cn=site_name)
+    site_ar = SiteClient(test_client, site.site_name)
+    resp = site_ar.activate_config()
     assert resp.status_code == HTTPStatus.OK, resp.text
 
     # Assert each relay has exactly one pending config task with correct serial
-    _assert_single_pending_config_task(agent_receiver, config_a, relay_id_a)
-    _assert_single_pending_config_task(agent_receiver, config_a, relay_id_b)
+    _assert_single_pending_config_task(relay_a, config_a)
+    _assert_single_pending_config_task(relay_b, config_a)
 
     # Create a new configuration folder simulating a new config activation by user
     config_b = site.push_config([relay_id_a, relay_id_b])
-    agent_receiver.apply_config(config_b)
+    relay_a.apply_config(config_b)
+    relay_b.apply_config(config_b)
 
     # Simulate second user activation.
-    with agent_receiver.with_client_ip("127.0.0.1"):
-        resp = agent_receiver.activate_config(site_cn=site_name)
+    resp = site_ar.activate_config()
     assert resp.status_code == HTTPStatus.OK, resp.text
 
     # Assert each relay has the new pending config task with correct serial
-    _assert_pending_config_task_is_present(agent_receiver, config_b, relay_id_a)
-    _assert_pending_config_task_is_present(agent_receiver, config_b, relay_id_b)
+    _assert_pending_config_task_is_present(relay_a, config_b)
+    _assert_pending_config_task_is_present(relay_b, config_b)
 
 
 def test_new_relays_when_activation_performed(
+    test_client: TestClient,
     site: SiteMock,
-    site_client: httpx.Client,
-    agent_receiver: AgentReceiverClient,
-    site_name: str,
 ) -> None:
     """Verify that activation creates config tasks for newly added relays while maintaining tasks for existing relays.
 
@@ -166,49 +155,44 @@ def test_new_relays_when_activation_performed(
     site.set_scenario(relays=[relay_id_a, relay_id_b], changes=[(relay_id_c, OP.ADD)])
 
     config_a = site.push_config([relay_id_a, relay_id_b])
-    agent_receiver.apply_config(config_a)
+    relay_a = RelayClient(test_client, site.site_name, relay_id_a)
+    relay_a.apply_config(config_a)
+    relay_b = RelayClient(test_client, site.site_name, relay_id_b)
+    relay_b.apply_config(config_a)
 
     # Simulate user activation. Call to the endpoint that creates a ActivateConfigTask for each relay
-    with agent_receiver.with_client_ip("127.0.0.1"):
-        resp = agent_receiver.activate_config(site_cn=site_name)
+    site_ar = SiteClient(test_client, site.site_name)
+    resp = site_ar.activate_config()
     assert resp.status_code == HTTPStatus.OK, resp.text
 
     # Assert each relay has exactly one pending config task with correct serial
-    _assert_single_pending_config_task(agent_receiver, config_a, relay_id_a)
-    _assert_single_pending_config_task(agent_receiver, config_a, relay_id_b)
-    tasks = get_relay_tasks(agent_receiver, relay_id_c)
+    _assert_single_pending_config_task(relay_a, config_a)
+    _assert_single_pending_config_task(relay_b, config_a)
+    tasks = RelayClient(test_client, site.site_name, relay_id_c).get_task_list()
     assert len(tasks.tasks) == 0
 
     # Add new relay in the site mock
-    site_client.post(
-        "/domain-types/relay/collections/all",
-        json={
-            "alias": relay_id_c,
-            "siteid": site.site_name,
-            "num_fetchers": 17,
-            "log_level": "INFO",
-        },
-    )
+    site.add_relay(relay_id_c)
     # Create a new configuration folder with new relays in site simulating a new config activation by user
     config_b = site.push_config([relay_id_a, relay_id_b, relay_id_c])
-    agent_receiver.apply_config(config_b)
+    relay_a.apply_config(config_b)
+    relay_b.apply_config(config_b)
+    relay_c = RelayClient(test_client, site.site_name, relay_id_c)
+    relay_c.apply_config(config_b)
 
     # Simulate second user activation.
-    with agent_receiver.with_client_ip("127.0.0.1"):
-        resp = agent_receiver.activate_config(site_cn=site_name)
+    resp = site_ar.activate_config()
     assert resp.status_code == HTTPStatus.OK, resp.text
 
     # Assert each relay has the new pending config task with correct serial
-    _assert_pending_config_task_is_present(agent_receiver, config_b, relay_id_a)
-    _assert_pending_config_task_is_present(agent_receiver, config_b, relay_id_b)
-    _assert_pending_config_task_is_present(agent_receiver, config_b, relay_id_c)
+    _assert_pending_config_task_is_present(relay_a, config_b)
+    _assert_pending_config_task_is_present(relay_b, config_b)
+    _assert_pending_config_task_is_present(relay_c, config_b)
 
 
 def test_removed_relays_when_activation_performed(
+    test_client: TestClient,
     site: SiteMock,
-    site_client: httpx.Client,
-    agent_receiver: AgentReceiverClient,
-    site_name: str,
 ) -> None:
     """Verify that activation correctly handles scenarios where relays have been removed from the configuration.
 
@@ -223,40 +207,41 @@ def test_removed_relays_when_activation_performed(
     site.set_scenario(relays=[relay_id_a, relay_id_b], changes=[(relay_id_a, OP.DEL)])
 
     config_a = site.push_config([relay_id_a, relay_id_b])
-    agent_receiver.apply_config(config_a)
+    relay_a = RelayClient(test_client, site.site_name, relay_id_a)
+    relay_a.apply_config(config_a)
+    relay_b = RelayClient(test_client, site.site_name, relay_id_b)
+    relay_b.apply_config(config_a)
 
     # Simulate user activation. Call to the endpoint that creates a ActivateConfigTask for each relay
-    with agent_receiver.with_client_ip("127.0.0.1"):
-        resp = agent_receiver.activate_config(site_cn=site_name)
+    site_ar = SiteClient(test_client, site.site_name)
+    resp = site_ar.activate_config()
     assert resp.status_code == HTTPStatus.OK, resp.text
 
     # Assert each relay has exactly one pending config task with correct serial
-    _assert_single_pending_config_task(agent_receiver, config_a, relay_id_a)
-    _assert_single_pending_config_task(agent_receiver, config_a, relay_id_b)
+    _assert_single_pending_config_task(relay_a, config_a)
+    _assert_single_pending_config_task(relay_b, config_a)
 
     # Remove relay_a in the site mock
-    site_client.delete(f"/objects/relay/{relay_id_a}")
+    site.delete_relay(relay_id_a)
     # Create a new configuration folder with new relays in site simulating a new config activation by user
     config_b = site.push_config([relay_id_b])
-    agent_receiver.apply_config(config_b)
+    relay_b.apply_config(config_b)
 
     # Simulate second user activation.
-    with agent_receiver.with_client_ip("127.0.0.1"):
-        resp = agent_receiver.activate_config(site_cn=site_name)
+    resp = site_ar.activate_config()
     assert resp.status_code == HTTPStatus.OK, resp.text
 
     # Assert each relay has the new pending config task with correct serial
-    _assert_pending_config_task_is_present(agent_receiver, config_b, relay_id_b)
+    _assert_pending_config_task_is_present(relay_b, config_b)
 
     # Currently tasks for removed relays are not deleted. They remain in the system.
     # This case must be handled eventually if proper logic for removed relays is defined.
-    _assert_pending_config_task_is_present(agent_receiver, config_a, relay_id_a)
+    _assert_pending_config_task_is_present(relay_a, config_a)
 
 
 def test_activation_with_no_relays(
+    test_client: TestClient,
     site: SiteMock,
-    agent_receiver: AgentReceiverClient,
-    site_name: str,
 ) -> None:
     """Verify that config activation succeeds gracefully when no relays are configured.
 
@@ -268,11 +253,12 @@ def test_activation_with_no_relays(
     # Start AR with no relays configured in the site
     site.set_scenario([])
 
-    agent_receiver.apply_config(site.push_config([]))
+    # No relays to apply config to, but we still push the config
+    site.push_config([])
 
     # Simulate user activation with no relays
-    with agent_receiver.with_client_ip("127.0.0.1"):
-        resp = agent_receiver.activate_config(site_cn=site_name)
+    site_ar = SiteClient(test_client, site.site_name)
+    resp = site_ar.activate_config()
     assert resp.status_code == HTTPStatus.OK, resp.text
 
     # No tasks should be created since there are no relays
@@ -280,9 +266,8 @@ def test_activation_with_no_relays(
 
 
 def test_activation_with_mixed_relay_task_states(
+    test_client: TestClient,
     site: SiteMock,
-    agent_receiver: AgentReceiverClient,
-    site_name: str,
 ) -> None:
     """Verify that activation creates new pending tasks only for relays whose previous config tasks are finished, not for those with pending tasks.
 
@@ -297,40 +282,41 @@ def test_activation_with_mixed_relay_task_states(
     site.set_scenario([relay_id_a, relay_id_b])
 
     serial_folder = site.push_config([relay_id_a, relay_id_b])
-    agent_receiver.apply_config(serial_folder)
+    relay_a = RelayClient(test_client, site.site_name, relay_id_a)
+    relay_a.apply_config(serial_folder)
+    relay_b = RelayClient(test_client, site.site_name, relay_id_b)
+    relay_b.apply_config(serial_folder)
 
     # First activation - creates pending tasks for both relays
-    with agent_receiver.with_client_ip("127.0.0.1"):
-        resp = agent_receiver.activate_config(site_cn=site_name)
+    site_ar = SiteClient(test_client, site.site_name)
+    resp = site_ar.activate_config()
     assert resp.status_code == HTTPStatus.OK, resp.text
 
     # Verify both relays have pending tasks
-    _assert_single_pending_config_task(agent_receiver, serial_folder, relay_id_a)
-    _assert_single_pending_config_task(agent_receiver, serial_folder, relay_id_b)
+    _assert_single_pending_config_task(relay_a, serial_folder)
+    _assert_single_pending_config_task(relay_b, serial_folder)
 
     # Simulate that relay_a's task completed (this would normally happen via relay processing)
     # For this test, we'll assume the task status changed externally
     # The key test is that activation should still work and not create duplicates
-    tasks_a = get_relay_tasks(agent_receiver, relay_id_a)
-    _ = agent_receiver.update_task(
-        relay_id=relay_id_a,
+    tasks_a = relay_a.get_task_list()
+    _ = relay_a.update_task(
         task_id=tasks_a.tasks[0].id,
         result_type="OK",
         result_payload="Config update successful message",
     )
-    _assert_single_pending_config_task(agent_receiver, serial_folder, relay_id_b)
-    tasks = get_relay_tasks(agent_receiver, relay_id_a)
+    _assert_single_pending_config_task(relay_b, serial_folder)
+    tasks = relay_a.get_task_list()
     assert len(tasks.tasks) == 1
     assert tasks.tasks[0].status == TaskStatus.FINISHED
 
     # Second activation - should create new pending tasks ONLY for relay_id_a since its previous task is finished
-    with agent_receiver.with_client_ip("127.0.0.1"):
-        resp = agent_receiver.activate_config(site_cn=site_name)
+    resp = site_ar.activate_config()
     assert resp.status_code == HTTPStatus.OK, resp.text
 
-    _assert_single_pending_config_task(agent_receiver, serial_folder, relay_id_b)
+    _assert_single_pending_config_task(relay_b, serial_folder)
 
-    tasks_a = get_relay_tasks(agent_receiver, relay_id_a)
+    tasks_a = relay_a.get_task_list()
     assert len(tasks_a.tasks) == 2
     assert all(
         isinstance(task.spec, RelayConfigTask) and task.spec.serial == serial_folder.serial.value
@@ -342,9 +328,8 @@ def test_activation_with_mixed_relay_task_states(
 
 
 def test_activation_with_relay_pending_activation_handles_gracefully(
+    test_client: TestClient,
     site: SiteMock,
-    agent_receiver: AgentReceiverClient,
-    site_name: str,
 ) -> None:
     """Verify that activation gracefully handles relays pending activation without errors.
 
@@ -372,11 +357,14 @@ def test_activation_with_relay_pending_activation_handles_gracefully(
     # Create config folders only for two relays - third relay is pending activation
     # This simulates the scenario where a relay is registered but not yet configured
     serial_folder = site.push_config([relay_id_configured_1, relay_id_configured_2])
-    agent_receiver.apply_config(serial_folder)
+    relay_1 = RelayClient(test_client, site.site_name, relay_id_configured_1)
+    relay_1.apply_config(serial_folder)
+    relay_2 = RelayClient(test_client, site.site_name, relay_id_configured_2)
+    relay_2.apply_config(serial_folder)
 
     # Perform config activation - this should succeed despite pending relay
-    with agent_receiver.with_client_ip("127.0.0.1"):
-        resp = agent_receiver.activate_config(site_cn=site_name)
+    site_ar = SiteClient(test_client, site.site_name)
+    resp = site_ar.activate_config()
 
     # Verify activation succeeded
     assert resp.status_code == HTTPStatus.OK, (
@@ -385,11 +373,12 @@ def test_activation_with_relay_pending_activation_handles_gracefully(
     )
 
     # Verify configured relays have tasks created
-    _assert_single_pending_config_task(agent_receiver, serial_folder, relay_id_configured_1)
-    _assert_single_pending_config_task(agent_receiver, serial_folder, relay_id_configured_2)
+    _assert_single_pending_config_task(relay_1, serial_folder)
+    _assert_single_pending_config_task(relay_2, serial_folder)
 
     # Verify pending relay has no tasks (correctly skipped as expected behavior)
-    tasks_pending = get_relay_tasks(agent_receiver, relay_id_pending)
+    relay_pending = RelayClient(test_client, site.site_name, relay_id_pending)
+    tasks_pending = relay_pending.get_task_list()
     assert len(tasks_pending.tasks) == 0, (
         f"Expected no tasks for pending relay {relay_id_pending} (not yet configured), "
         f"but found {len(tasks_pending.tasks)} tasks: {tasks_pending.tasks}"
@@ -397,11 +386,10 @@ def test_activation_with_relay_pending_activation_handles_gracefully(
 
 
 def _assert_single_pending_config_task(
-    agent_receiver: AgentReceiverClient,
+    relay: RelayClient,
     serial_folder: RelayConfig,
-    relay_id: str,
 ) -> None:
-    resp = get_relay_tasks(agent_receiver, relay_id)
+    resp = relay.get_task_list()
     assert len(resp.tasks) == 1, resp
 
     task = _assert_config_task_exists(
@@ -409,21 +397,20 @@ def _assert_single_pending_config_task(
         expected_status=TaskStatus.PENDING,
         expected_serial=serial_folder.serial,
     )
-    assert_config_tar(serial_folder, relay_id, task.tar_data)
+    assert_config_tar(serial_folder, relay.relay_id, task.tar_data)
 
 
 def _assert_pending_config_task_is_present(
-    agent_receiver: AgentReceiverClient,
+    relay: RelayClient,
     serial_folder: RelayConfig,
-    relay_id: str,
 ) -> None:
-    resp = get_relay_tasks(agent_receiver, relay_id)
+    resp = relay.get_task_list()
     task = _assert_config_task_exists(
         resp.tasks,
         expected_status=TaskStatus.PENDING,
         expected_serial=serial_folder.serial,
     )
-    assert_config_tar(serial_folder, relay_id, task.tar_data)
+    assert_config_tar(serial_folder, relay.relay_id, task.tar_data)
 
 
 def _assert_config_task_exists(

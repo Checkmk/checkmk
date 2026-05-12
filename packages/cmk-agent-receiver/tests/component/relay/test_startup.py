@@ -13,19 +13,17 @@ from fastapi.testclient import TestClient
 from cmk.agent_receiver.lib.config import Config
 from cmk.agent_receiver.main import main_app
 from cmk.agent_receiver.relay.lib.shared_types import Serial
-from cmk.relay_protocols.tasks import RelayConfigTask, TaskResponse, TaskStatus
-from cmk.testlib.agent_receiver.agent_receiver import AgentReceiverClient
-from cmk.testlib.agent_receiver.site_mock import SiteMock, User
-from cmk.testlib.agent_receiver.tasks import get_relay_tasks
+from cmk.relay_protocols.tasks import RelayConfigTask, TaskListResponse, TaskResponse, TaskStatus
+from cmk.testlib.agent_receiver.clients import RelayClient
+from cmk.testlib.agent_receiver.relay_config_generator import RelayConfig
+from cmk.testlib.agent_receiver.site_mock import SiteMock
 
 # In order to test the lifespan function, we have to use TestClient with "with":
 # https://fastapi.tiangolo.com/advanced/testing-events/
 
 
 @pytest.mark.parametrize("edition", ["ultimatemt", "ultimate", "cloud"])
-def test_startup_with_relays(
-    site: SiteMock, site_context: Config, user: User, edition: str
-) -> None:
+def test_startup_with_relays(site: SiteMock, site_context: Config, edition: str) -> None:
     """Verify that starting the agent receiver application with a supported edition creates relay config tasks for all configured relays.
 
     Test steps:
@@ -39,7 +37,7 @@ def test_startup_with_relays(
     site.set_scenario(relays)
     relay_config = site.push_config(relays)
 
-    tasks = _do_test_and_get_tasks(relays[0], relay_config.serial, site_context, user)
+    tasks = _do_test_and_get_tasks(relays[0], relay_config.serial, site_context)
 
     assert len(tasks) == 1
     task = tasks[0]
@@ -48,7 +46,7 @@ def test_startup_with_relays(
 
 
 @pytest.mark.parametrize("edition", ["ultimatemt", "ultimate", "cloud"])
-def test_no_relays_folder(site: SiteMock, site_context: Config, user: User, edition: str) -> None:
+def test_no_relays_folder(site: SiteMock, site_context: Config, edition: str) -> None:
     """Verify that starting the application does not create relay config tasks when the relays folder is missing.
 
     Test steps:
@@ -63,15 +61,13 @@ def test_no_relays_folder(site: SiteMock, site_context: Config, user: User, edit
     shutil.rmtree(site_context.helper_config_dir / "latest/relays")
     _create_version_folder(site_context.omd_root, edition)
 
-    tasks = _do_test_and_get_tasks(relays[0], relay_config.serial, site_context, user)
+    tasks = _do_test_and_get_tasks(relays[0], relay_config.serial, site_context)
 
     assert len(tasks) == 0
 
 
 @pytest.mark.parametrize("edition", ["ultimatemt", "ultimate", "cloud"])
-def test_empty_relays_folder(
-    site: SiteMock, site_context: Config, user: User, edition: str
-) -> None:
+def test_empty_relays_folder(site: SiteMock, site_context: Config, edition: str) -> None:
     """Verify that starting the application does not create relay config tasks when the relays folder exists but is empty.
 
     Test steps:
@@ -88,15 +84,13 @@ def test_empty_relays_folder(
 
     _create_version_folder(site_context.omd_root, edition)
 
-    tasks = _do_test_and_get_tasks(relays[0], relay_config.serial, site_context, user)
+    tasks = _do_test_and_get_tasks(relays[0], relay_config.serial, site_context)
 
     assert len(tasks) == 0
 
 
 @pytest.mark.parametrize("edition", ["community", "pro"])
-def test_unsupported_editions(
-    site: SiteMock, site_context: Config, user: User, edition: str
-) -> None:
+def test_unsupported_editions(site: SiteMock, site_context: Config, edition: str) -> None:
     """Verify that starting the application with an unsupported edition does not create relay config tasks.
 
     Test steps:
@@ -110,18 +104,20 @@ def test_unsupported_editions(
     relay_config = site.push_config(relays)
     _create_version_folder(site_context.omd_root, edition)
 
-    tasks = _do_test_and_get_tasks(relays[0], relay_config.serial, site_context, user)
+    tasks = _do_test_and_get_tasks(relays[0], relay_config.serial, site_context)
 
     assert len(tasks) == 0
 
 
 def _do_test_and_get_tasks(
-    relay_id: str, serial: Serial, site_context: Config, user: User
+    relay_id: str, serial: Serial, site_context: Config
 ) -> list[TaskResponse]:
     app = main_app()
     with TestClient(app) as client:
-        agent_receiver = AgentReceiverClient(client, site_context.site_name, user, serial)
-        return get_relay_tasks(agent_receiver, relay_id).tasks
+        relay = RelayClient(client, site_context.site_name, relay_id)
+        relay.apply_config(RelayConfig(serial=serial, files={}))
+        tasks_resp = relay.get_tasks()
+        return TaskListResponse.model_validate(tasks_resp.json()).tasks
 
 
 def _create_version_folder(omd_root: Path, edition: str) -> None:

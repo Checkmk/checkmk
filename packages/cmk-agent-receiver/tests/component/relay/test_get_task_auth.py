@@ -11,10 +11,11 @@ import uuid
 from http import HTTPStatus
 
 import pytest
+from fastapi.testclient import TestClient
 
-from cmk.testlib.agent_receiver.agent_receiver import AgentReceiverClient
+from cmk.relay_protocols.tasks import FetchAdHocTask
+from cmk.testlib.agent_receiver.clients import SiteClient
 from cmk.testlib.agent_receiver.site_mock import SiteMock
-from cmk.testlib.agent_receiver.tasks import add_tasks
 
 
 @pytest.mark.parametrize(
@@ -27,7 +28,7 @@ from cmk.testlib.agent_receiver.tasks import add_tasks
 )
 def test_get_task_with_various_invalid_cns(
     site: SiteMock,
-    agent_receiver: AgentReceiverClient,
+    test_client: TestClient,
     invalid_cn: str,
     description: str,
 ) -> None:
@@ -43,14 +44,10 @@ def test_get_task_with_various_invalid_cns(
     relay_id = str(uuid.uuid4())
     site.set_scenario([relay_id])
 
-    agent_receiver.apply_config(site.push_config([relay_id]))
+    site.push_config([relay_id])
 
-    with agent_receiver.with_client_ip("127.0.0.1"):
-        response = agent_receiver.get_task(
-            relay_id=relay_id,
-            task_id=str(uuid.uuid4()),
-            site_cn=invalid_cn,
-        )
+    client_invalid = SiteClient(test_client, site.site_name, cn=invalid_cn)
+    response = client_invalid.get_task(relay_id=relay_id, task_id=str(uuid.uuid4()))
 
     assert response.status_code == HTTPStatus.FORBIDDEN, (
         f"Expected 403 for {description} (CN: {invalid_cn!r}), got {response.status_code}: {response.text}"
@@ -62,8 +59,7 @@ def test_get_task_with_various_invalid_cns(
 
 def test_get_task_with_valid_cn_and_localhost(
     site: SiteMock,
-    agent_receiver: AgentReceiverClient,
-    site_name: str,
+    test_client: TestClient,
 ) -> None:
     """Verify get-task succeeds with correct CN and localhost.
 
@@ -77,25 +73,23 @@ def test_get_task_with_valid_cn_and_localhost(
     relay_id = str(uuid.uuid4())
     site.set_scenario([relay_id])
 
-    agent_receiver.apply_config(site.push_config([relay_id]))
+    site.push_config([relay_id])
 
-    task_ids = add_tasks(1, agent_receiver, relay_id, site_name)
-    task_id = str(task_ids[0])
+    # Create a task first
+    site_ops = SiteClient(test_client, site.site_name)
+    task_resp = site_ops.push_task(relay_id, FetchAdHocTask(payload=".."))
+    assert task_resp.status_code == HTTPStatus.OK
+    task_id = task_resp.json()["task_id"]
 
-    with agent_receiver.with_client_ip("127.0.0.1"):
-        response = agent_receiver.get_task(
-            relay_id=relay_id,
-            task_id=task_id,
-            site_cn=site_name,
-        )
+    client = SiteClient(test_client, site.site_name)
+    response = client.get_task(relay_id=relay_id, task_id=task_id)
 
     assert response.status_code == HTTPStatus.OK, response.text
 
 
 def test_get_task_cn_check_without_localhost(
     site: SiteMock,
-    agent_receiver: AgentReceiverClient,
-    site_name: str,
+    test_client: TestClient,
 ) -> None:
     """Verify get-task requires localhost even with valid CN.
 
@@ -109,14 +103,13 @@ def test_get_task_cn_check_without_localhost(
     relay_id = str(uuid.uuid4())
     site.set_scenario([relay_id])
 
-    agent_receiver.apply_config(site.push_config([relay_id]))
+    site.push_config([relay_id])
 
-    with agent_receiver.with_client_ip("192.168.1.100"):
-        response = agent_receiver.get_task(
-            relay_id=relay_id,
-            task_id=str(uuid.uuid4()),
-            site_cn=site_name,
-        )
+    client_remote = SiteClient(test_client, site.site_name, source_ip="192.168.1.100")
+    response = client_remote.get_task(
+        relay_id=relay_id,
+        task_id=str(uuid.uuid4()),
+    )
 
     assert response.status_code == HTTPStatus.FORBIDDEN, response.text
     assert "Request must originate from localhost" in response.text

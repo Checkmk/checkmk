@@ -17,10 +17,9 @@ from cmk.agent_receiver.relay.api.routers.relays.dependencies import (
 )
 from cmk.agent_receiver.relay.api.routers.relays.handlers import ForwardMonitoringDataHandler
 from cmk.relay_protocols.tasks import FetchAdHocTask
-from cmk.testlib.agent_receiver.agent_receiver import AgentReceiverClient
 from cmk.testlib.agent_receiver.builder import AgentReceiverConfigBuilder
+from cmk.testlib.agent_receiver.clients import RelayClient, SiteClient
 from cmk.testlib.agent_receiver.site_mock import SiteMock, User
-from cmk.testlib.agent_receiver.tasks import add_tasks, get_all_tasks
 from cmk.testlib.agent_receiver.wiremock import Wiremock
 
 
@@ -30,7 +29,7 @@ def _setup(
     monkeypatch: pytest.MonkeyPatch,
     *,
     max_pending_tasks_per_relay: int,
-) -> tuple[SiteMock, AgentReceiverClient, str]:
+) -> tuple[SiteMock, TestClient]:
     site_name = "my_component_test_site"
     ar_site = AgentReceiverConfigBuilder(
         omd_root=tmp_path / site_name,
@@ -54,9 +53,8 @@ def _setup(
         ForwardMonitoringDataHandler(data_socket=config.raw_data_socket, socket_timeout=2.0)
     )
     client = TestClient(app)
-    agent_receiver = AgentReceiverClient(client, site_name, user)
 
-    return site, agent_receiver, site_name
+    return site, client
 
 
 def test_cannot_push_more_pending_tasks_than_allowed(
@@ -72,25 +70,21 @@ def test_cannot_push_more_pending_tasks_than_allowed(
     3. Verify request is rejected with FORBIDDEN status
     """
     task_count = 3
-    site, agent_receiver, site_name = _setup(
+    site, test_client = _setup(
         wiremock, tmp_path, monkeypatch, max_pending_tasks_per_relay=task_count
     )
 
     relay_id = add_relays(site, 1)[0]
-    agent_receiver.apply_config(site.push_config([relay_id]))
+
+    relay = RelayClient(test_client, site.site_name, relay_id)
+    relay.apply_config(site.push_config([relay_id]))
 
     # add maximum number of tasks allowed
-
-    task_ids = add_tasks(task_count, agent_receiver, relay_id, site_name)
+    site_c = SiteClient(test_client, site.site_name)
+    task_ids = site_c.add_tasks(task_count, relay_id)
 
     # An additional task cannot be pushed
-
-    with agent_receiver.with_client_ip("127.0.0.1"):
-        response = agent_receiver.push_task(
-            relay_id=relay_id,
-            spec=FetchAdHocTask(payload=".."),
-            site_cn=site_name,
-        )
+    response = site_c.push_task(relay_id, FetchAdHocTask(payload=".."))
 
     assert response.status_code == HTTPStatus.FORBIDDEN, response.text
     assert response.json() == {
@@ -98,8 +92,7 @@ def test_cannot_push_more_pending_tasks_than_allowed(
     }
 
     # The list of tasks is unchanged
-
-    current_tasks = {str(t.id) for t in get_all_tasks(agent_receiver, relay_id)}
+    current_tasks = {str(t.id) for t in relay.get_task_list().tasks}
     assert current_tasks == set(task_ids)
 
 
@@ -116,33 +109,30 @@ def test_cannot_push_more_tasks_after_marking_a_task_as_finished(
     3. Verify new task is accepted successfully
     """
     task_count = 3
-    site, agent_receiver, site_name = _setup(
+    site, test_client = _setup(
         wiremock, tmp_path, monkeypatch, max_pending_tasks_per_relay=task_count
     )
 
     relay_id = add_relays(site, 1)[0]
-    agent_receiver.apply_config(site.push_config([relay_id]))
+
+    relay = RelayClient(test_client, site.site_name, relay_id)
+    relay.apply_config(site.push_config([relay_id]))
 
     # add maximum number of tasks allowed
-    task_id, *_ = add_tasks(task_count, agent_receiver, relay_id, site_name)
+    site_c = SiteClient(test_client, site.site_name)
+    task_id, *_ = site_c.add_tasks(task_count, relay_id)
 
-    agent_receiver.update_task(
-        relay_id=relay_id,
+    relay.update_task(
         task_id=task_id,
         result_type="OK",
         result_payload="done",
     )
 
-    with agent_receiver.with_client_ip("127.0.0.1"):
-        response = agent_receiver.push_task(
-            relay_id=relay_id,
-            spec=FetchAdHocTask(payload=".."),
-            site_cn=site_name,
-        )
+    response = site_c.push_task(relay_id, FetchAdHocTask(payload=".."))
 
     assert response.status_code == HTTPStatus.OK, response.text
 
-    current_tasks = {str(t.id) for t in get_all_tasks(agent_receiver, relay_id)}
+    current_tasks = {str(t.id) for t in relay.get_task_list().tasks}
     assert len(current_tasks) == task_count + 1
 
 
@@ -159,24 +149,18 @@ def test_each_relay_has_its_own_limit(
     3. Verify relay B accepts task despite relay A being full
     """
     task_count = 5
-    site, agent_receiver, site_name = _setup(
+    site, test_client = _setup(
         wiremock, tmp_path, monkeypatch, max_pending_tasks_per_relay=task_count
     )
 
     relay_id_A, relay_id_B = add_relays(site, 2)
 
     # add maximum number of tasks allowed to relay A
-
-    _ = add_tasks(task_count, agent_receiver, relay_id_A, site_name)
+    site_c = SiteClient(test_client, site.site_name)
+    _ = site_c.add_tasks(task_count, relay_id_A)
 
     # we should still be able to add tasks to relay B
-
-    with agent_receiver.with_client_ip("127.0.0.1"):
-        response = agent_receiver.push_task(
-            relay_id=relay_id_B,
-            spec=FetchAdHocTask(payload=".."),
-            site_cn=site_name,
-        )
+    response = site_c.push_task(relay_id_B, FetchAdHocTask(payload=".."))
     assert response.status_code == HTTPStatus.OK, response.text
 
 

@@ -11,8 +11,9 @@ import uuid
 from http import HTTPStatus
 
 import pytest
+from fastapi.testclient import TestClient
 
-from cmk.testlib.agent_receiver.agent_receiver import AgentReceiverClient
+from cmk.testlib.agent_receiver.clients import RelayClient, SiteClient
 from cmk.testlib.agent_receiver.site_mock import SiteMock
 
 
@@ -25,8 +26,8 @@ from cmk.testlib.agent_receiver.site_mock import SiteMock
     ],
 )
 def test_activate_config_with_various_invalid_cns(
+    test_client: TestClient,
     site: SiteMock,
-    agent_receiver: AgentReceiverClient,
     invalid_cn: str,
     description: str,
 ) -> None:
@@ -46,11 +47,13 @@ def test_activate_config_with_various_invalid_cns(
     relay_id = str(uuid.uuid4())
     site.set_scenario([relay_id])
 
-    agent_receiver.apply_config(site.push_config([relay_id]))
+    config = site.push_config([relay_id])
+    relay = RelayClient(test_client, site.site_name, relay_id)
+    relay.apply_config(config)
 
     # Test: Activate config with invalid CN
-    with agent_receiver.with_client_ip("127.0.0.1"):
-        response = agent_receiver.activate_config(site_cn=invalid_cn)
+    client = SiteClient(test_client, site.site_name, cn=invalid_cn)
+    response = client.activate_config()
 
     # Assert: Request is forbidden
     assert response.status_code == HTTPStatus.FORBIDDEN, (
@@ -62,9 +65,8 @@ def test_activate_config_with_various_invalid_cns(
 
 
 def test_activate_config_with_valid_cn_and_localhost(
+    test_client: TestClient,
     site: SiteMock,
-    agent_receiver: AgentReceiverClient,
-    site_name: str,
 ) -> None:
     """Verify activate-config succeeds with correct CN and localhost.
 
@@ -82,20 +84,23 @@ def test_activate_config_with_valid_cn_and_localhost(
     relay_id_b = str(uuid.uuid4())
     site.set_scenario([relay_id_a, relay_id_b])
 
-    agent_receiver.apply_config(site.push_config([relay_id_a, relay_id_b]))
+    config = site.push_config([relay_id_a, relay_id_b])
+    relay_a = RelayClient(test_client, site.site_name, relay_id_a)
+    relay_a.apply_config(config)
+    relay_b = RelayClient(test_client, site.site_name, relay_id_b)
+    relay_b.apply_config(config)
 
     # Test: Activate config with correct CN from localhost
-    with agent_receiver.with_client_ip("127.0.0.1"):
-        response = agent_receiver.activate_config(site_cn=site_name)
+    client = SiteClient(test_client, site.site_name)
+    response = client.activate_config()
 
     # Assert: Request succeeds
     assert response.status_code == HTTPStatus.OK, response.text
 
 
 def test_activate_config_cn_check_without_localhost(
+    test_client: TestClient,
     site: SiteMock,
-    agent_receiver: AgentReceiverClient,
-    site_name: str,
 ) -> None:
     """Verify activate-config requires localhost even with valid CN.
 
@@ -113,11 +118,13 @@ def test_activate_config_cn_check_without_localhost(
     relay_id = str(uuid.uuid4())
     site.set_scenario([relay_id])
 
-    agent_receiver.apply_config(site.push_config([relay_id]))
+    config = site.push_config([relay_id])
+    relay = RelayClient(test_client, site.site_name, relay_id)
+    relay.apply_config(config)
 
     # Test: Activate config with correct CN but from non-localhost
-    with agent_receiver.with_client_ip("192.168.1.100"):
-        response = agent_receiver.activate_config(site_cn=site_name)
+    client = SiteClient(test_client, site.site_name, source_ip="192.168.1.100")
+    response = client.activate_config()
 
     # Assert: Request is forbidden (localhost check fails)
     assert response.status_code == HTTPStatus.FORBIDDEN, response.text

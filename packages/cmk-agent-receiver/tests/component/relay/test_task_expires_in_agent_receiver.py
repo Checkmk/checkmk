@@ -7,13 +7,17 @@ import pathlib
 import time
 
 import pytest
+from fastapi.testclient import TestClient
 
 from cmk.relay_protocols.tasks import FetchAdHocTask
-from cmk.testlib.agent_receiver.agent_receiver import AgentReceiverClient, register_relay
 from cmk.testlib.agent_receiver.builder import AgentReceiverConfigBuilder, AgentReceiverSite
+from cmk.testlib.agent_receiver.clients import (
+    RelayClient,
+    RelayRegistrationClient,
+    SiteClient,
+)
 from cmk.testlib.agent_receiver.relay import random_relay_id
-from cmk.testlib.agent_receiver.site_mock import OP, SiteMock
-from cmk.testlib.agent_receiver.tasks import get_relay_tasks, push_task
+from cmk.testlib.agent_receiver.site_mock import OP, SiteMock, User
 from cmk.testlib.agent_receiver.wiremock import Wiremock
 
 
@@ -36,8 +40,8 @@ def ar_site(wiremock: Wiremock, tmp_path: pathlib.Path, site_name: str) -> Agent
 
 def test_task_expires_in_agent_receiver(
     site: SiteMock,
-    agent_receiver: AgentReceiverClient,
-    site_name: str,
+    test_client: TestClient,
+    user: User,
 ) -> None:
     """Verify that tasks expire and are automatically removed after the configured TTL (time-to-live) period.
 
@@ -51,19 +55,17 @@ def test_task_expires_in_agent_receiver(
     # Step 1: Register relay
     relay_id = random_relay_id()
     site.set_scenario([], [(relay_id, OP.ADD)])
-    register_relay(agent_receiver, "Wonderful_relay", relay_id)
-    agent_receiver.apply_config(site.push_config([relay_id]))
+    RelayRegistrationClient(test_client, site.site_name).register("Wonderful_relay", relay_id, user)
+
+    relay = RelayClient(test_client, site.site_name, relay_id)
+    relay.apply_config(site.push_config([relay_id]))
 
     # Step 2: Add a task
-    task_response = push_task(
-        agent_receiver=agent_receiver,
-        relay_id=relay_id,
-        spec=FetchAdHocTask(payload=".."),
-        site_cn=site_name,
-    )
+    site_c = SiteClient(test_client, site.site_name)
+    task_response = site_c.create_task(relay_id, FetchAdHocTask(payload=".."))
 
     # Verify task is present initially
-    tasks_initial = get_relay_tasks(agent_receiver, relay_id)
+    tasks_initial = relay.get_task_list()
     assert len(tasks_initial.tasks) == 1
     assert tasks_initial.tasks[0].id == task_response.task_id
 
@@ -71,14 +73,14 @@ def test_task_expires_in_agent_receiver(
     time.sleep((expiration_time) + 0.1)  # Adding a small buffer to ensure we are past expiration
 
     # Step 4: Verify task is no longer present
-    tasks_final = get_relay_tasks(agent_receiver, relay_id)
+    tasks_final = relay.get_task_list()
     assert len(tasks_final.tasks) == 0
 
 
 def test_task_expiration_resets_on_update(
     site: SiteMock,
-    agent_receiver: AgentReceiverClient,
-    site_name: str,
+    test_client: TestClient,
+    user: User,
 ) -> None:
     """Verify that the task expiration timer is reset when a task is updated, extending its lifetime.
 
@@ -93,24 +95,21 @@ def test_task_expiration_resets_on_update(
     # Register relay
     relay_id = random_relay_id()
     site.set_scenario([], [(relay_id, OP.ADD)])
-    register_relay(agent_receiver, "Wonderful_relay", relay_id)
-    agent_receiver.apply_config(site.push_config([relay_id]))
+    RelayRegistrationClient(test_client, site.site_name).register("Wonderful_relay", relay_id, user)
+
+    relay = RelayClient(test_client, site.site_name, relay_id)
+    relay.apply_config(site.push_config([relay_id]))
 
     # Step 2: Add a task
-    task_response = push_task(
-        agent_receiver=agent_receiver,
-        relay_id=relay_id,
-        spec=FetchAdHocTask(payload=".."),
-        site_cn=site_name,
-    )
+    site_c = SiteClient(test_client, site.site_name)
+    task_response = site_c.create_task(relay_id, FetchAdHocTask(payload=".."))
     task_id = task_response.task_id
 
     # Step 3: Wait half of expiration time
     time.sleep((expiration_time / 2) + 0.1)  # Adding a small buffer to ensure we are past half
 
     # Step 4: Update the task
-    agent_receiver.update_task(
-        relay_id=relay_id,
+    relay.update_task(
         task_id=task_id,
         result_type="OK",
         result_payload="task updated",
@@ -122,7 +121,7 @@ def test_task_expiration_resets_on_update(
     time.sleep((expiration_time / 2) + 0.1)  # Adding a small buffer to ensure we are past half
 
     # Step 6: Verify the task is still present
-    tasks_response = get_relay_tasks(agent_receiver, relay_id)
+    tasks_response = relay.get_task_list()
     assert len(tasks_response.tasks) == 1, "Task should have not expired and be present"
     assert tasks_response.tasks[0].id == task_response.task_id
 
@@ -130,14 +129,14 @@ def test_task_expiration_resets_on_update(
     time.sleep((expiration_time / 2) + 0.1)  # Adding a small buffer to ensure we are past half
 
     # Step 8: Verify the task has expired
-    tasks_response = get_relay_tasks(agent_receiver, relay_id)
+    tasks_response = relay.get_task_list()
     assert len(tasks_response.tasks) == 0, "Task should have expired and not be present"
 
 
 def test_completed_tasks_expiration(
     site: SiteMock,
-    agent_receiver: AgentReceiverClient,
-    site_name: str,
+    test_client: TestClient,
+    user: User,
 ) -> None:
     """Verify that tasks expire after their TTL regardless of whether they are pending, finished, or failed.
 
@@ -152,41 +151,32 @@ def test_completed_tasks_expiration(
     # Register relay
     relay_id = random_relay_id()
     site.set_scenario([], [(relay_id, OP.ADD)])
-    register_relay(agent_receiver, "Wonderful_relay", relay_id)
-    agent_receiver.apply_config(site.push_config([relay_id]))
+    RelayRegistrationClient(test_client, site.site_name).register("Wonderful_relay", relay_id, user)
+
+    relay = RelayClient(test_client, site.site_name, relay_id)
+    relay.apply_config(site.push_config([relay_id]))
 
     # Step 2: Add a tasks
-    task_a_response = push_task(
-        agent_receiver=agent_receiver,
-        relay_id=relay_id,
-        spec=FetchAdHocTask(payload="test task A payload"),
-        site_cn=site_name,
-    )
+    site_c = SiteClient(test_client, site.site_name)
+    task_a_response = site_c.create_task(relay_id, FetchAdHocTask(payload="test task A payload"))
     task_a_id = task_a_response.task_id
 
-    task_b_response = push_task(
-        agent_receiver=agent_receiver,
-        relay_id=relay_id,
-        spec=FetchAdHocTask(payload="test task B payload"),
-        site_cn=site_name,
-    )
+    task_b_response = site_c.create_task(relay_id, FetchAdHocTask(payload="test task B payload"))
     task_b_id = task_b_response.task_id
 
     # Step 3: Update the tasks
-    agent_receiver.update_task(
-        relay_id=relay_id,
+    relay.update_task(
         task_id=task_a_id,
         result_type="OK",
         result_payload="task updated",
     )
-    agent_receiver.update_task(
-        relay_id=relay_id,
+    relay.update_task(
         task_id=task_b_id,
         result_type="ERROR",
         result_payload="task updated",
     )
     # Step 4: Verify tasks are present initially
-    tasks_response = get_relay_tasks(agent_receiver, relay_id)
+    tasks_response = relay.get_task_list()
     assert len(tasks_response.tasks) == 2, "Both tasks should be present initially"
     assert tasks_response.tasks[0].id in {task_a_id, task_b_id}
     assert tasks_response.tasks[1].id in {task_a_id, task_b_id}
@@ -195,5 +185,5 @@ def test_completed_tasks_expiration(
     time.sleep(expiration_time + 0.1)
 
     # Step 6: Verify tasks are no longer present
-    tasks_response = get_relay_tasks(agent_receiver, relay_id)
+    tasks_response = relay.get_task_list()
     assert len(tasks_response.tasks) == 0, "All tasks should have expired and not be present"

@@ -5,14 +5,16 @@
 import uuid
 from http import HTTPStatus
 
+from fastapi.testclient import TestClient
+
 from cmk.relay_protocols.tasks import HEADERS
-from cmk.testlib.agent_receiver.agent_receiver import AgentReceiverClient
+from cmk.testlib.agent_receiver.clients import RelayClient
 from cmk.testlib.agent_receiver.site_mock import SiteMock
 
 
 def test_get_tasks_returns_version_header(
     site: SiteMock,
-    agent_receiver: AgentReceiverClient,
+    test_client: TestClient,
 ) -> None:
     """Verify that the get tasks endpoint includes the version header in the response.
 
@@ -26,7 +28,8 @@ def test_get_tasks_returns_version_header(
     site.set_scenario([relay_id])
     site.push_config([relay_id])
 
-    response = agent_receiver.get_relay_tasks(relay_id)
+    relay = RelayClient(test_client, site.site_name, relay_id)
+    response = relay.get_tasks()
 
     assert response.status_code == HTTPStatus.OK, response.text
     assert HEADERS.VERSION in response.headers

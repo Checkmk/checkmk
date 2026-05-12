@@ -12,15 +12,18 @@ The GET /{relay_id}/status endpoint returns:
 
 from http import HTTPStatus
 
+from fastapi.testclient import TestClient
+
 from cmk.relay_protocols.relays import RelayState, RelayStatusResponse
-from cmk.testlib.agent_receiver.agent_receiver import AgentReceiverClient, register_relay
+from cmk.testlib.agent_receiver.clients import RelayClient, RelayRegistrationClient
 from cmk.testlib.agent_receiver.relay import random_relay_id
-from cmk.testlib.agent_receiver.site_mock import OP, SiteMock
+from cmk.testlib.agent_receiver.site_mock import OP, SiteMock, User
 
 
 def test_get_relay_status_returns_configured_when_both_api_and_config_exist(
     site: SiteMock,
-    agent_receiver: AgentReceiverClient,
+    test_client: TestClient,
+    user: User,
 ) -> None:
     """Verify that GET /{relay_id}/status returns CONFIGURED when relay exists in both API and local config.
 
@@ -34,13 +37,15 @@ def test_get_relay_status_returns_configured_when_both_api_and_config_exist(
     site.set_scenario([], [(relay_id, OP.ADD)])
 
     # Register the relay - this sets up CMK API to return the relay
-    register_relay(agent_receiver, "test_relay", relay_id)
+    reg = RelayRegistrationClient(test_client, site.site_name)
+    reg.register("test_relay", relay_id, user)
 
     # Create local config folder
     site.push_config([relay_id])
 
     # Call the endpoint
-    resp = agent_receiver.get_relay_status(relay_id)
+    relay = RelayClient(test_client, site.site_name, relay_id)
+    resp = relay.get_status()
 
     assert resp.status_code == HTTPStatus.OK
     response = RelayStatusResponse.model_validate_json(resp.text)
@@ -50,7 +55,7 @@ def test_get_relay_status_returns_configured_when_both_api_and_config_exist(
 
 def test_get_relay_status_returns_404_when_relay_not_found(
     site: SiteMock,
-    agent_receiver: AgentReceiverClient,
+    test_client: TestClient,
 ) -> None:
     """Verify that GET /{relay_id}/status returns 404 when relay doesn't exist anywhere.
 
@@ -62,14 +67,16 @@ def test_get_relay_status_returns_404_when_relay_not_found(
     relay_id = random_relay_id()
     site.set_scenario([])
 
-    resp = agent_receiver.get_relay_status(relay_id)
+    relay = RelayClient(test_client, site.site_name, relay_id)
+    resp = relay.get_status()
 
     assert resp.status_code == HTTPStatus.NOT_FOUND
 
 
 def test_get_relay_status_returns_pending_activation_when_api_exists_but_no_config(
     site: SiteMock,
-    agent_receiver: AgentReceiverClient,
+    test_client: TestClient,
+    user: User,
 ) -> None:
     """Verify that GET /{relay_id}/status returns PENDING_ACTIVATION when relay exists in API but not in local config.
 
@@ -87,12 +94,14 @@ def test_get_relay_status_returns_pending_activation_when_api_exists_but_no_conf
     site.set_scenario([], [(relay_id, OP.ADD)])
 
     # Register the relay - CMK API will return it
-    register_relay(agent_receiver, "test_relay", relay_id)
+    reg = RelayRegistrationClient(test_client, site.site_name)
+    reg.register("test_relay", relay_id, user)
 
     # Don't create local config folder - simulates pending state
 
     # Call the endpoint
-    resp = agent_receiver.get_relay_status(relay_id)
+    relay = RelayClient(test_client, site.site_name, relay_id)
+    resp = relay.get_status()
 
     assert resp.status_code == HTTPStatus.OK
     response = RelayStatusResponse.model_validate_json(resp.text)
@@ -102,7 +111,7 @@ def test_get_relay_status_returns_pending_activation_when_api_exists_but_no_conf
 
 def test_get_relay_status_returns_pending_deletion_when_config_exists_but_not_in_api(
     site: SiteMock,
-    agent_receiver: AgentReceiverClient,
+    test_client: TestClient,
 ) -> None:
     """Verify that GET /{relay_id}/status returns PENDING_DELETION when config exists but API returns 404.
 
@@ -122,7 +131,8 @@ def test_get_relay_status_returns_pending_deletion_when_config_exists_but_not_in
     site.push_config([relay_id])
 
     # Call the endpoint
-    resp = agent_receiver.get_relay_status(relay_id)
+    relay = RelayClient(test_client, site.site_name, relay_id)
+    resp = relay.get_status()
 
     assert resp.status_code == HTTPStatus.OK
     response = RelayStatusResponse.model_validate_json(resp.text)
@@ -132,7 +142,8 @@ def test_get_relay_status_returns_pending_deletion_when_config_exists_but_not_in
 
 def test_get_relay_status_returns_502_on_api_error(
     site: SiteMock,
-    agent_receiver: AgentReceiverClient,
+    test_client: TestClient,
+    user: User,
 ) -> None:
     """Verify that GET /{relay_id}/status returns 502 when CMK API returns an error.
 
@@ -147,7 +158,8 @@ def test_get_relay_status_returns_502_on_api_error(
     site.set_scenario([], [(relay_id, OP.ADD)])
 
     # Register the relay first
-    register_relay(agent_receiver, "test_relay", relay_id)
+    reg = RelayRegistrationClient(test_client, site.site_name)
+    reg.register("test_relay", relay_id, user)
 
     # Create local config folder
     site.push_config([relay_id])
@@ -155,14 +167,16 @@ def test_get_relay_status_returns_502_on_api_error(
     # Mock API error
     site.mock_relay_get_error(relay_id, HTTPStatus.INTERNAL_SERVER_ERROR, "Internal server error")
 
-    resp = agent_receiver.get_relay_status(relay_id)
+    relay = RelayClient(test_client, site.site_name, relay_id)
+    resp = relay.get_status()
 
     assert resp.status_code == HTTPStatus.BAD_GATEWAY
 
 
 def test_get_relay_status_returns_502_on_bad_request(
     site: SiteMock,
-    agent_receiver: AgentReceiverClient,
+    test_client: TestClient,
+    user: User,
 ) -> None:
     """Verify that GET /{relay_id}/status returns 502 when CMK API returns 400 Bad Request.
 
@@ -177,7 +191,8 @@ def test_get_relay_status_returns_502_on_bad_request(
     site.set_scenario([], [(relay_id, OP.ADD)])
 
     # Register the relay first
-    register_relay(agent_receiver, "test_relay", relay_id)
+    reg = RelayRegistrationClient(test_client, site.site_name)
+    reg.register("test_relay", relay_id, user)
 
     # Create local config folder
     site.push_config([relay_id])
@@ -185,6 +200,7 @@ def test_get_relay_status_returns_502_on_bad_request(
     # Mock API error
     site.mock_relay_get_error(relay_id, HTTPStatus.BAD_REQUEST, "Bad request from API")
 
-    resp = agent_receiver.get_relay_status(relay_id)
+    relay = RelayClient(test_client, site.site_name, relay_id)
+    resp = relay.get_status()
 
     assert resp.status_code == HTTPStatus.BAD_GATEWAY

@@ -7,18 +7,23 @@ from http import HTTPStatus
 
 import pytest
 from dateutil.relativedelta import relativedelta
+from fastapi.testclient import TestClient
 
-from cmk.relay_protocols.tasks import FetchAdHocTask
+from cmk.relay_protocols.tasks import FetchAdHocTask, TaskListResponse
 from cmk.testlib.agent_receiver import certs as certslib
-from cmk.testlib.agent_receiver.agent_receiver import AgentReceiverClient, register_relay
+from cmk.testlib.agent_receiver.clients import (
+    RelayClient,
+    RelayRegistrationClient,
+    SiteClient,
+)
 from cmk.testlib.agent_receiver.relay import random_relay_id
-from cmk.testlib.agent_receiver.site_mock import OP, SiteMock
-from cmk.testlib.agent_receiver.tasks import get_relay_tasks, push_task
+from cmk.testlib.agent_receiver.site_mock import OP, SiteMock, User
 
 
 def test_a_relay_can_be_registered(
     site: SiteMock,
-    agent_receiver: AgentReceiverClient,
+    test_client: TestClient,
+    user: User,
 ) -> None:
     """Verify that a relay can be registered with the agent receiver and tasks can be retrieved for it.
 
@@ -29,19 +34,21 @@ def test_a_relay_can_be_registered(
     """
     relay_id = random_relay_id()
     site.set_scenario([], [(relay_id, OP.ADD)])
-    _, resp = agent_receiver.register_relay(relay_id, "relay1")
-    assert resp.status_code == HTTPStatus.OK
 
-    agent_receiver.apply_config(site.push_config([relay_id]))
+    reg = RelayRegistrationClient(test_client, site.site_name)
+    reg.register("relay1", relay_id, user)
 
-    resp = agent_receiver.get_relay_tasks(relay_id)
+    relay = RelayClient(test_client, site.site_name, relay_id)
+    relay.apply_config(site.push_config([relay_id]))
+
+    resp = relay.get_tasks()
     assert resp.status_code == HTTPStatus.OK
 
 
 def test_registering_a_relay_does_not_affect_other_relays(
-    agent_receiver: AgentReceiverClient,
     site: SiteMock,
-    site_name: str,
+    test_client: TestClient,
+    user: User,
 ) -> None:
     """Verify that registering a new relay does not affect tasks belonging to other already registered relays.
 
@@ -53,26 +60,30 @@ def test_registering_a_relay_does_not_affect_other_relays(
     relay_1_id = random_relay_id()
     relay_2_id = random_relay_id()
     site.set_scenario([], [(relay_1_id, OP.ADD), (relay_2_id, OP.ADD)])
-    register_relay(agent_receiver, "relay1", relay_1_id)
-    agent_receiver.apply_config(site.push_config([relay_1_id]))
 
-    push_task(
-        agent_receiver=agent_receiver,
-        relay_id=relay_1_id,
-        spec=FetchAdHocTask(payload=".."),
-        site_cn=site_name,
-    )
+    reg = RelayRegistrationClient(test_client, site.site_name)
+    reg.register("relay1", relay_1_id, user)
 
-    register_relay(agent_receiver, "relay2", relay_2_id)
-    agent_receiver.apply_config(site.push_config([relay_1_id, relay_2_id]))
+    relay_1 = RelayClient(test_client, site.site_name, relay_1_id)
+    relay_1.apply_config(site.push_config([relay_1_id]))
 
-    tasks_A = get_relay_tasks(agent_receiver, relay_1_id)
+    site_op = SiteClient(test_client, site.site_name)
+    site_op.create_task(relay_1_id, FetchAdHocTask(payload=".."))
+
+    reg.register("relay2", relay_2_id, user)
+
+    relay_1.apply_config(site.push_config([relay_1_id, relay_2_id]))
+
+    tasks_resp = relay_1.get_tasks()
+    assert tasks_resp.status_code == HTTPStatus.OK
+    tasks_A = TaskListResponse.model_validate(tasks_resp.json())
     assert len(tasks_A.tasks) == 1
 
 
 def test_relay_registration_rejected_on_remote_site(
     site: SiteMock,
-    agent_receiver: AgentReceiverClient,
+    test_client: TestClient,
+    user: User,
 ) -> None:
     """Verify that relay registration is rejected when the agent receiver runs on a remote site.
 
@@ -81,13 +92,15 @@ def test_relay_registration_rejected_on_remote_site(
     2. Attempt to register a relay
     3. Verify registration is rejected with 403 and an informative error message
     """
+    reg = RelayRegistrationClient(test_client, site.site_name)
+
     distributed_mk = site.omd_root / "etc/omd/distributed.mk"
     distributed_mk.write_text("is_wato_remote_site = True\n")
 
     relay_id = random_relay_id()
     site.set_scenario([], [(relay_id, OP.ADD)])
 
-    _, resp = agent_receiver.register_relay(relay_id, "relay1")
+    resp = reg.register_with_user(relay_id, "relay1", user)
 
     assert resp.status_code == HTTPStatus.FORBIDDEN
     assert "remote site" in resp.json()["detail"].lower()
@@ -95,7 +108,8 @@ def test_relay_registration_rejected_on_remote_site(
 
 def test_relay_registration_allowed_on_central_site_in_distributed_setup(
     site: SiteMock,
-    agent_receiver: AgentReceiverClient,
+    test_client: TestClient,
+    user: User,
 ) -> None:
     """Verify that relay registration is allowed on a central site in a distributed setup.
 
@@ -104,20 +118,22 @@ def test_relay_registration_allowed_on_central_site_in_distributed_setup(
     2. Register a relay
     3. Verify registration succeeds
     """
+    reg = RelayRegistrationClient(test_client, site.site_name)
+
     distributed_mk = site.omd_root / "etc/omd/distributed.mk"
     distributed_mk.write_text("is_wato_remote_site = False\n")
 
     relay_id = random_relay_id()
     site.set_scenario([], [(relay_id, OP.ADD)])
 
-    _, resp = agent_receiver.register_relay(relay_id, "relay1")
+    resp = reg.register_with_user(relay_id, "relay1", user)
 
     assert resp.status_code == HTTPStatus.OK
 
 
 def test_a_relay_can_be_registered_with_token_auth(
     site: SiteMock,
-    agent_receiver: AgentReceiverClient,
+    test_client: TestClient,
 ) -> None:
     """Verify that a relay can be registered using CMK-TOKEN authentication.
 
@@ -125,9 +141,11 @@ def test_a_relay_can_be_registered_with_token_auth(
     1. Register a relay using a CMK-TOKEN authorization header
     2. Verify registration succeeds with 200
     """
+    reg = RelayRegistrationClient(test_client, site.site_name)
+
     relay_id = random_relay_id()
     site.set_scenario([], [(relay_id, OP.ADD)])
-    resp = agent_receiver.register_relay_with_token(
+    resp = reg.register_with_token(
         relay_id, "token-relay", token="0:550e8400-e29b-41d4-a716-446655440000"
     )
     assert resp.status_code == HTTPStatus.OK
@@ -136,7 +154,8 @@ def test_a_relay_can_be_registered_with_token_auth(
 
 def test_certificate_validity_period(
     site: SiteMock,
-    agent_receiver: AgentReceiverClient,
+    test_client: TestClient,
+    user: User,
 ) -> None:
     """Verify that the certificate returned by the registration endpoint has the desired
     validity period.
@@ -145,9 +164,11 @@ def test_certificate_validity_period(
     1. Register a relay with the agent receiver
     2. Check the validity of the returned certificate
     """
+    reg = RelayRegistrationClient(test_client, site.site_name)
+
     relay_id = random_relay_id()
     site.set_scenario([], [(relay_id, OP.ADD)])
-    _, resp = agent_receiver.register_relay(relay_id, "relay1")
+    resp = reg.register_with_user(relay_id, "relay1", user)
     assert resp.status_code == HTTPStatus.OK
 
     # Verify that the certificate has correct validity period bounds.
@@ -170,7 +191,8 @@ def test_certificate_validity_period(
 )
 def test_registration_rejects_non_uuid_relay_id(
     site: SiteMock,
-    agent_receiver: AgentReceiverClient,
+    test_client: TestClient,
+    user: User,
     malformed_relay_id: str,
 ) -> None:
     """reject relay_id values that are not valid UUIDs.
@@ -179,6 +201,8 @@ def test_registration_rejects_non_uuid_relay_id(
     1. Attempt to register a relay with a non-UUID relay_id
     2. Verify the request is rejected with 422 Unprocessable Entity
     """
+    reg = RelayRegistrationClient(test_client, site.site_name)
+
     site.set_scenario([], [(malformed_relay_id, OP.ADD)])
-    _, resp = agent_receiver.register_relay(malformed_relay_id, "relay")
+    resp = reg.register_with_user(malformed_relay_id, "relay", user)
     assert resp.status_code == HTTPStatus.UNPROCESSABLE_ENTITY

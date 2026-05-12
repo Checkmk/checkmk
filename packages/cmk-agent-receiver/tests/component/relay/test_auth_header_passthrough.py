@@ -7,39 +7,39 @@ from http import HTTPMethod, HTTPStatus
 import pytest
 from fastapi.testclient import TestClient
 
-from cmk.testlib.agent_receiver.agent_receiver import AgentReceiverClient
 from cmk.testlib.agent_receiver.certs import generate_csr_pair
+from cmk.testlib.agent_receiver.clients import RelayRegistrationClient
 from cmk.testlib.agent_receiver.relay import random_relay_id
-from cmk.testlib.agent_receiver.site_mock import OP, SiteMock
+from cmk.testlib.agent_receiver.site_mock import OP, SiteMock, User
 from cmk.testlib.agent_receiver.wiremock import Request, Response, Wiremock, WMapping
 
 
 def test_bearer_auth_header_passed_to_site_api_unchanged(
     wiremock: Wiremock,
     site: SiteMock,
-    agent_receiver: AgentReceiverClient,
+    test_client: TestClient,
+    user: User,
 ) -> None:
     relay_id = random_relay_id()
     site.set_scenario([], [(relay_id, OP.ADD)])
 
-    _, resp = agent_receiver.register_relay(relay_id, "test-relay")
-    assert resp.status_code == HTTPStatus.OK
+    reg = RelayRegistrationClient(test_client, site.site_name)
+    reg.register("test-relay", relay_id, user)
 
-    assert _get_site_api_auth_headers(wiremock, site) == [
-        agent_receiver.client.headers["Authorization"]
-    ]
+    assert _get_site_api_auth_headers(wiremock, site) == [user.bearer]
 
 
 def test_token_auth_header_passed_to_site_api_unchanged(
     wiremock: Wiremock,
     site: SiteMock,
-    agent_receiver: AgentReceiverClient,
+    test_client: TestClient,
 ) -> None:
     relay_id = random_relay_id()
     token = "0:550e8400-e29b-41d4-a716-446655440000"
     site.set_scenario([], [(relay_id, OP.ADD)])
 
-    resp = agent_receiver.register_relay_with_token(relay_id, "test-relay", token=token)
+    reg = RelayRegistrationClient(test_client, site.site_name)
+    resp = reg.register_with_token(relay_id, "test-relay", token=token)
     assert resp.status_code == HTTPStatus.OK
 
     assert _get_site_api_auth_headers(wiremock, site) == [f"CMK-TOKEN {token}"]
@@ -54,13 +54,13 @@ def test_token_auth_header_passed_to_site_api_unchanged(
 )
 def test_auth_header_rejected_for_unsupported_format(
     test_client: TestClient,
-    site_name: str,
+    site: SiteMock,
     auth_header: str,
 ) -> None:
     relay_id = random_relay_id()
     csr_pair = generate_csr_pair(cn=relay_id)
     resp = test_client.post(
-        f"/{site_name}/relays/",
+        f"/{site.site_name}/relays/",
         headers={"Authorization": auth_header},
         json={
             "relay_id": relay_id,

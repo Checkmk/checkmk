@@ -9,12 +9,17 @@ from http import HTTPStatus
 
 import pytest
 from dateutil.relativedelta import relativedelta
+from fastapi.testclient import TestClient
 
 from cmk.agent_receiver.lib.config import Config
 from cmk.crypto.certificate import Certificate, CertificatePEM, CertificateWithPrivateKey
 from cmk.relay_protocols.relays import RelayRefreshCertResponse
 from cmk.testlib.agent_receiver import certs as certslib
-from cmk.testlib.agent_receiver.agent_receiver import AgentReceiverClient, register_relay
+from cmk.testlib.agent_receiver.agent_receiver import AgentReceiverClient
+from cmk.testlib.agent_receiver.clients import (
+    RelayClient,
+    RelayRegistrationClient,
+)
 from cmk.testlib.agent_receiver.relay import random_relay_id
 from cmk.testlib.agent_receiver.runner import AgentReceiverRunner
 from cmk.testlib.agent_receiver.site_mock import OP, SiteMock, User
@@ -29,7 +34,7 @@ def ar_runner(site_context: Config) -> Iterator[AgentReceiverRunner]:
 
 
 def test_cert_refresh(
-    ar_runner: AgentReceiverRunner,
+    test_client: TestClient,
     site: SiteMock,
     user: User,
 ) -> None:
@@ -44,18 +49,12 @@ def test_cert_refresh(
     relay_id = random_relay_id()
     site.set_scenario([], [(relay_id, OP.ADD)])
 
-    with ar_runner.http_client() as client:
-        priv_key, resp = AgentReceiverClient(client, site.site_name, user).register_relay(
-            relay_id, "relay1"
-        )
-        relay_cert = CertificateWithPrivateKey(
-            certificate=Certificate.load_pem(CertificatePEM(resp.json()["client_cert"].encode())),
-            private_key=priv_key,
-        )
+    # Register the relay first
+    RelayRegistrationClient(test_client, site.site_name).register("test_relay", relay_id, user)
 
-    # ClientCertWorker injects the cert CN as INJECTED_UUID_HEADER, authenticating the relay.
-    with ar_runner.mtls_client(relay_cert) as client:
-        resp = AgentReceiverClient(client, site.site_name, user).refresh_cert(relay_id)
+    # Refresh the certificate
+    relay = RelayClient(test_client, site.site_name, relay_id)
+    resp = relay.refresh_cert()
 
     assert resp.status_code == HTTPStatus.OK
     refresh_response = RelayRefreshCertResponse.model_validate_json(resp.text)
@@ -105,8 +104,8 @@ def test_relay_cert_rotation_rejected_for_wrong_relay(
 
 
 def test_cert_refresh_unknown_relay(
+    test_client: TestClient,
     site: SiteMock,
-    agent_receiver: AgentReceiverClient,
 ) -> None:
     """Verify that cert refresh fails for an unregistered relay.
 
@@ -117,13 +116,15 @@ def test_cert_refresh_unknown_relay(
     """
     relay_id = random_relay_id()
     site.set_scenario([], [(relay_id, OP.ADD)])
-    resp = agent_receiver.refresh_cert(relay_id)
+    relay = RelayClient(test_client, site.site_name, relay_id)
+    resp = relay.refresh_cert()
     assert resp.status_code == HTTPStatus.NOT_FOUND
 
 
 def test_cert_refresh_api_bad_request(
+    test_client: TestClient,
     site: SiteMock,
-    agent_receiver: AgentReceiverClient,
+    user: User,
 ) -> None:
     """Verify that cert refresh handles 400 Bad Request from Checkmk API.
 
@@ -135,17 +136,19 @@ def test_cert_refresh_api_bad_request(
     """
     relay_id = random_relay_id()
     site.set_scenario([], [(relay_id, OP.ADD)])
-    register_relay(agent_receiver, "test_relay", relay_id)
+    RelayRegistrationClient(test_client, site.site_name).register("test_relay", relay_id, user)
 
     site.mock_relay_get_error(relay_id, HTTPStatus.BAD_REQUEST, "Bad request from API")
 
-    resp = agent_receiver.refresh_cert(relay_id)
+    relay = RelayClient(test_client, site.site_name, relay_id)
+    resp = relay.refresh_cert()
     assert resp.status_code == HTTPStatus.BAD_GATEWAY
 
 
 def test_cert_refresh_api_internal_error(
+    test_client: TestClient,
     site: SiteMock,
-    agent_receiver: AgentReceiverClient,
+    user: User,
 ) -> None:
     """Verify that cert refresh handles 500 Internal Server Error from Checkmk API.
 
@@ -157,17 +160,19 @@ def test_cert_refresh_api_internal_error(
     """
     relay_id = random_relay_id()
     site.set_scenario([], [(relay_id, OP.ADD)])
-    register_relay(agent_receiver, "test_relay", relay_id)
+    RelayRegistrationClient(test_client, site.site_name).register("test_relay", relay_id, user)
 
     site.mock_relay_get_error(relay_id, HTTPStatus.INTERNAL_SERVER_ERROR, "Internal server error")
 
-    resp = agent_receiver.refresh_cert(relay_id)
+    relay = RelayClient(test_client, site.site_name, relay_id)
+    resp = relay.refresh_cert()
     assert resp.status_code == HTTPStatus.BAD_GATEWAY
 
 
 def test_cert_refresh_api_service_unavailable(
+    test_client: TestClient,
     site: SiteMock,
-    agent_receiver: AgentReceiverClient,
+    user: User,
 ) -> None:
     """Verify that cert refresh handles 503 Service Unavailable from Checkmk API.
 
@@ -179,9 +184,10 @@ def test_cert_refresh_api_service_unavailable(
     """
     relay_id = random_relay_id()
     site.set_scenario([], [(relay_id, OP.ADD)])
-    register_relay(agent_receiver, "test_relay", relay_id)
+    RelayRegistrationClient(test_client, site.site_name).register("test_relay", relay_id, user)
 
     site.mock_relay_get_error(relay_id, HTTPStatus.SERVICE_UNAVAILABLE, "Service unavailable")
 
-    resp = agent_receiver.refresh_cert(relay_id)
+    relay = RelayClient(test_client, site.site_name, relay_id)
+    resp = relay.refresh_cert()
     assert resp.status_code == HTTPStatus.BAD_GATEWAY

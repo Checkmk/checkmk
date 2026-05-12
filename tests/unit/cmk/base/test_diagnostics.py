@@ -92,7 +92,7 @@ def test_diagnostics_dump_create() -> None:
     assert diagnostics_dump.dump_folder.exists()
     assert diagnostics_dump.dump_folder.name == "diagnostics"
 
-    diagnostics_dump._create_tarfile()
+    diagnostics_dump._create_tarfile(Path("/omd/sites/no_site"))
 
     tarfiles = diagnostics_dump.dump_folder.iterdir()
     assert len(list(tarfiles)) == 1
@@ -140,8 +140,8 @@ def test_diagnostics_element_wrapper() -> None:
     assert wrapper.description == "Bla"
 
 
-def test_diagnostics_element_general(tmp_path: Path) -> None:
-    diagnostics_element = diagnostics.GeneralDiagnosticsElement(tmp_path)
+def test_diagnostics_element_general() -> None:
+    diagnostics_element = diagnostics.GeneralDiagnosticsElement()
     assert diagnostics_element.ident == "general"
     assert diagnostics_element.title == "General"
     assert diagnostics_element.description == (
@@ -150,16 +150,18 @@ def test_diagnostics_element_general(tmp_path: Path) -> None:
 
 
 @pytest.mark.usefixtures("patch_omd_site")
-def test_diagnostics_element_general_content(
-    tmp_path: Path,
-) -> None:
-    diagnostics_element = diagnostics.GeneralDiagnosticsElement(cmk.utils.paths.omd_root)
-    tmppath = tmp_path.joinpath("tmp")
-    filepath = next(diagnostics_element.add_or_get_files(tmppath))
+def test_diagnostics_element_general_content(tmp_path: Path) -> None:
+    diagnostics_element = diagnostics.GeneralDiagnosticsElement()
+    tmp_dump_folder = tmp_path.joinpath("tmp")
+    filepath = next(
+        diagnostics_element.add_or_get_files(
+            omd_root=cmk.utils.paths.omd_root, tmp_dump_folder=tmp_dump_folder
+        )
+    )
 
     assert isinstance(tmp_path, Path)
     assert isinstance(filepath, Path)
-    assert filepath == tmppath.joinpath("general.json")
+    assert filepath == tmp_dump_folder.joinpath("general.json")
 
     info_keys = [
         "time",
@@ -177,9 +179,8 @@ def test_diagnostics_element_general_content(
     assert sorted(content.keys()) == sorted(info_keys)
 
 
-def test_diagnostics_element_perfdata(tmp_path: Path) -> None:
+def test_diagnostics_element_perfdata() -> None:
     diagnostics_element = diagnostics.PerfDataDiagnosticsElement(
-        tmp_path,
         EMPTY_CONFIG,
         core_performance_settings=lambda x: {},
     )
@@ -190,8 +191,8 @@ def test_diagnostics_element_perfdata(tmp_path: Path) -> None:
     )
 
 
-def test_diagnostics_element_hw_info(tmp_path: Path) -> None:
-    diagnostics_element = diagnostics.HWDiagnosticsElement(tmp_path)
+def test_diagnostics_element_hw_info() -> None:
+    diagnostics_element = diagnostics.HWDiagnosticsElement()
     assert diagnostics_element.ident == "hwinfo"
     assert diagnostics_element.title == "HW Information"
     assert diagnostics_element.description == ("Hardware information of the Checkmk server")
@@ -237,8 +238,8 @@ physical id : 0""")
     }
 
 
-def test_diagnostics_element_vendor_info(tmp_path: Path) -> None:
-    diagnostics_element = diagnostics.VendorDiagnosticsElement(tmp_path)
+def test_diagnostics_element_vendor_info() -> None:
+    diagnostics_element = diagnostics.VendorDiagnosticsElement()
     assert diagnostics_element.ident == "vendorinfo"
     assert diagnostics_element.title == "Vendor Information"
     assert diagnostics_element.description == ("HW vendor information of the Checkmk server")
@@ -280,8 +281,8 @@ def test_diagnostics_element_vendor_info_content(
     assert dict(diagnostics_element)["bios_vendor"] == "Dull Ink"
 
 
-def test_diagnostics_element_environment(tmp_path: Path) -> None:
-    diagnostics_element = diagnostics.EnvironmentDiagnosticsElement(tmp_path)
+def test_diagnostics_element_environment() -> None:
+    diagnostics_element = diagnostics.EnvironmentDiagnosticsElement()
     assert diagnostics_element.ident == "environment"
     assert diagnostics_element.title == "Environment Variables"
     assert diagnostics_element.description == ("Variables set in the site user's environment")
@@ -296,12 +297,14 @@ def test_diagnostics_element_environment_content(
         for key, value in environment_vars.items():
             m.setenv(key, value)
 
-        diagnostics_element = diagnostics.EnvironmentDiagnosticsElement(tmp_path)
-        tmppath = tmp_path.joinpath("tmp")
-        filepath = next(diagnostics_element.add_or_get_files(tmppath))
+        diagnostics_element = diagnostics.EnvironmentDiagnosticsElement()
+        tmp_dump_folder = tmp_path.joinpath("tmp")
+        filepath = next(
+            diagnostics_element.add_or_get_files(omd_root=tmp_path, tmp_dump_folder=tmp_dump_folder)
+        )
 
         assert isinstance(filepath, Path)
-        assert filepath == tmppath.joinpath("environment.json")
+        assert filepath == tmp_dump_folder.joinpath("environment.json")
 
         content = json.loads(filepath.open().read())
         assert "France" in content
@@ -312,8 +315,8 @@ def test_diagnostics_element_environment_content(
         assert content["OMD_SITE"] == cmk.ccc.site.omd_site()
 
 
-def test_diagnostics_element_filesize(tmp_path: Path) -> None:
-    diagnostics_element = diagnostics.FilesSizeCSVDiagnosticsElement(tmp_path)
+def test_diagnostics_element_filesize() -> None:
+    diagnostics_element = diagnostics.FilesSizeCSVDiagnosticsElement()
     assert diagnostics_element.ident == "file_size"
     assert diagnostics_element.title == "File Size"
     assert diagnostics_element.description == ("List of all files in the site including their size")
@@ -322,7 +325,7 @@ def test_diagnostics_element_filesize(tmp_path: Path) -> None:
 @pytest.mark.usefixtures("monkeypatch")
 def test_diagnostics_element_filesize_content(tmp_path: Path) -> None:
     omd_root = tmp_path.joinpath("omd_root")
-    diagnostics_element = diagnostics.FilesSizeCSVDiagnosticsElement(omd_root)
+    diagnostics_element = diagnostics.FilesSizeCSVDiagnosticsElement()
 
     test_dir = omd_root.joinpath("local/share/check_mk/checks")
     test_dir.mkdir(parents=True, exist_ok=True)
@@ -332,12 +335,14 @@ def test_diagnostics_element_filesize_content(tmp_path: Path) -> None:
     with test_file.open("w", encoding="utf-8") as f:
         f.write(test_content)
 
-    tmppath = tmp_path.joinpath("tmp")
+    tmp_dump_folder = tmp_path.joinpath("tmp")
     with patch("pathlib.Path.group", return_value=test_group):
-        filepath = next(diagnostics_element.add_or_get_files(tmppath))
+        filepath = next(
+            diagnostics_element.add_or_get_files(omd_root=omd_root, tmp_dump_folder=tmp_dump_folder)
+        )
 
     assert isinstance(filepath, Path)
-    assert filepath == tmppath.joinpath("file_size.csv")
+    assert filepath == tmp_dump_folder.joinpath("file_size.csv")
 
     column_headers = [
         "path",
@@ -364,8 +369,8 @@ def test_diagnostics_element_filesize_content(tmp_path: Path) -> None:
     assert group_of[str(test_file)] == test_group
 
 
-def test_diagnostics_element_dpkg(tmp_path: Path) -> None:
-    diagnostics_element = diagnostics.DpkgCSVDiagnosticsElement(tmp_path)
+def test_diagnostics_element_dpkg() -> None:
+    diagnostics_element = diagnostics.DpkgCSVDiagnosticsElement()
     assert diagnostics_element.ident == "dpkg_packages"
     assert diagnostics_element.title == "Dpkg packages information"
     assert diagnostics_element.description == (
@@ -376,7 +381,7 @@ def test_diagnostics_element_dpkg(tmp_path: Path) -> None:
 @pytest.mark.usefixtures("monkeypatch")
 def test_diagnostics_element_filesize_content_ignores_temporary_file(tmp_path: Path) -> None:
     omd_root = tmp_path.joinpath("omd_root")
-    diagnostics_element = diagnostics.FilesSizeCSVDiagnosticsElement(omd_root)
+    diagnostics_element = diagnostics.FilesSizeCSVDiagnosticsElement()
 
     # test_dir = cmk.utils.paths.local_checks_dir
     test_dir = omd_root.joinpath("local/share/check_mk/checks")
@@ -385,9 +390,11 @@ def test_diagnostics_element_filesize_content_ignores_temporary_file(tmp_path: P
 
     test_dir.joinpath(".session_info.mk.newodhsmg3r").write_text("test\n")
 
-    tmppath = tmp_path.joinpath("tmp")
+    tmp_dump_folder = tmp_path.joinpath("tmp")
     with patch("pathlib.Path.group", return_value="dummygroup"):
-        filepath = next(diagnostics_element.add_or_get_files(tmppath))
+        filepath = next(
+            diagnostics_element.add_or_get_files(omd_root=omd_root, tmp_dump_folder=tmp_dump_folder)
+        )
 
     with open(filepath, newline="") as csvfile:
         files = [
@@ -420,12 +427,14 @@ ii  accountsservice                                             22.07.5-2ubuntu1
     with monkeypatch.context() as m:
         m.setenv("PATH", str(test_bin_dir))
 
-        diagnostics_element = diagnostics.DpkgCSVDiagnosticsElement(tmp_path)
-        tmppath = tmp_path.joinpath("tmp")
-        filepath = next(diagnostics_element.add_or_get_files(tmppath))
+        diagnostics_element = diagnostics.DpkgCSVDiagnosticsElement()
+        tmp_dump_folder = tmp_path.joinpath("tmp")
+        filepath = next(
+            diagnostics_element.add_or_get_files(omd_root=tmp_path, tmp_dump_folder=tmp_dump_folder)
+        )
 
         assert isinstance(filepath, Path)
-        assert filepath == tmppath.joinpath("dpkg_packages.csv")
+        assert filepath == tmp_dump_folder.joinpath("dpkg_packages.csv")
 
         content = filepath.open().read()
 
@@ -434,8 +443,8 @@ ii  accountsservice                                             22.07.5-2ubuntu1
         shutil.rmtree(str(test_bin_dir))
 
 
-def test_diagnostics_element_rpm(tmp_path: Path) -> None:
-    diagnostics_element = diagnostics.RpmCSVDiagnosticsElement(tmp_path)
+def test_diagnostics_element_rpm() -> None:
+    diagnostics_element = diagnostics.RpmCSVDiagnosticsElement()
     assert diagnostics_element.ident == "rpm_packages"
     assert diagnostics_element.title == "Rpm packages information"
     assert diagnostics_element.description == (
@@ -463,12 +472,14 @@ tzdata;2023c;1.el9;noarch"
     with monkeypatch.context() as m:
         m.setenv("PATH", str(test_bin_dir))
 
-        diagnostics_element = diagnostics.RpmCSVDiagnosticsElement(tmp_path)
-        tmppath = tmp_path.joinpath("tmp")
-        filepath = next(diagnostics_element.add_or_get_files(tmppath))
+        diagnostics_element = diagnostics.RpmCSVDiagnosticsElement()
+        tmp_dump_folder = tmp_path.joinpath("tmp")
+        filepath = next(
+            diagnostics_element.add_or_get_files(omd_root=tmp_path, tmp_dump_folder=tmp_dump_folder)
+        )
 
         assert isinstance(filepath, Path)
-        assert filepath == tmppath.joinpath("rpm_packages.csv")
+        assert filepath == tmp_dump_folder.joinpath("rpm_packages.csv")
 
         content = filepath.open().read()
 
@@ -477,8 +488,8 @@ tzdata;2023c;1.el9;noarch"
         shutil.rmtree(str(test_bin_dir))
 
 
-def test_diagnostics_element_omd_config(tmp_path: Path) -> None:
-    diagnostics_element = diagnostics.OMDConfigDiagnosticsElement(tmp_path, omd_config={})
+def test_diagnostics_element_omd_config() -> None:
+    diagnostics_element = diagnostics.OMDConfigDiagnosticsElement(omd_config={})
     assert diagnostics_element.ident == "omd_config"
     assert diagnostics_element.title == "OMD Config"
     assert diagnostics_element.description == (
@@ -516,13 +527,15 @@ def test_diagnostics_element_omd_config_content(
         "CONFIG_TMPFS": "on",
     }
 
-    diagnostics_element = diagnostics.OMDConfigDiagnosticsElement(tmp_path, omd_config=omd_config)
+    diagnostics_element = diagnostics.OMDConfigDiagnosticsElement(omd_config=omd_config)
 
-    tmppath = tmp_path.joinpath("tmp")
-    filepath = next(diagnostics_element.add_or_get_files(tmppath))
+    tmp_dump_folder = tmp_path.joinpath("tmp")
+    filepath = next(
+        diagnostics_element.add_or_get_files(omd_root=tmp_path, tmp_dump_folder=tmp_dump_folder)
+    )
 
     assert isinstance(filepath, Path)
-    assert filepath == tmppath.joinpath("omd_config.json")
+    assert filepath == tmp_dump_folder.joinpath("omd_config.json")
 
     info_keys = [
         "CONFIG_ADMIN_MAIL",
@@ -732,7 +745,7 @@ def test_diagnostics_element_checkmk_files(
     tmp_path: Path,
 ) -> None:
     files = ["/path/to/raw-conf-file1", "/path/to/raw-conf-file2"]
-    diagnostics_element = diag_elem(tmp_path, files)
+    diagnostics_element = diag_elem(files)
     assert diagnostics_element.ident == ident
     assert diagnostics_element.title == title
     assert diagnostics_element.description == ("{} {}".format(description, ", ".join(files)))
@@ -753,11 +766,15 @@ def test_diagnostics_element_checkmk_files_error(
     ),
 ) -> None:
     short_test_conf_filepath = "/no/such/file"
-    diagnostics_element = diag_elem(cmk.utils.paths.omd_root, [short_test_conf_filepath])
-    tmppath = tmp_path.joinpath("tmp")
+    diagnostics_element = diag_elem([short_test_conf_filepath])
+    tmp_dump_folder = tmp_path.joinpath("tmp")
 
     with pytest.raises(diagnostics.DiagnosticsElementError) as e:
-        next(diagnostics_element.add_or_get_files(tmppath))
+        next(
+            diagnostics_element.add_or_get_files(
+                omd_root=cmk.utils.paths.omd_root, tmp_dump_folder=tmp_dump_folder
+            )
+        )
         assert "No such files %s" % short_test_conf_filepath == str(e)
 
 
@@ -791,12 +808,16 @@ def test_diagnostics_element_checkmk_files_content(
 
     relative_path = str(Path(test_dir).relative_to(cmk.utils.paths.omd_root))
     short_test_conf_filepath = str(Path(test_conf_filepath).relative_to(test_dir))
-    diagnostics_element = diag_elem(cmk.utils.paths.omd_root, [short_test_conf_filepath])
-    tmppath = tmp_path / "tmp"
-    tmppath.mkdir(parents=True, exist_ok=True)
-    filepath = next(diagnostics_element.add_or_get_files(tmppath))
+    diagnostics_element = diag_elem([short_test_conf_filepath])
+    tmp_dump_folder = tmp_path / "tmp"
+    tmp_dump_folder.mkdir(parents=True, exist_ok=True)
+    filepath = next(
+        diagnostics_element.add_or_get_files(
+            omd_root=cmk.utils.paths.omd_root, tmp_dump_folder=tmp_dump_folder
+        )
+    )
 
-    assert filepath == tmppath.joinpath(f"{relative_path}/test/{test_filename}")
+    assert filepath == tmp_dump_folder.joinpath(f"{relative_path}/test/{test_filename}")
 
     with filepath.open("r", encoding="utf-8") as f:
         content = f.read()
@@ -804,10 +825,8 @@ def test_diagnostics_element_checkmk_files_content(
     assert content == "testvar = testvalue"
 
 
-def test_diagnostics_element_performance_graphs(tmp_path: Path) -> None:
-    diagnostics_element = diagnostics.PerformanceGraphsDiagnosticsElement(
-        tmp_path, "", omd_config={}
-    )
+def test_diagnostics_element_performance_graphs() -> None:
+    diagnostics_element = diagnostics.PerformanceGraphsDiagnosticsElement("", omd_config={})
     assert diagnostics_element.ident == "performance_graphs"
     assert diagnostics_element.title == "Time series graphs of Checkmk server"
     assert diagnostics_element.description == (
@@ -860,9 +879,7 @@ def test_diagnostics_element_performance_graphs_error(
         "CONFIG_APACHE_TCP_ADDR": "127.0.0.1",
         "CONFIG_APACHE_TCP_PORT": "5000",
     }
-    diagnostics_element = diagnostics.PerformanceGraphsDiagnosticsElement(
-        tmp_path, "", omd_config=omd_config
-    )
+    diagnostics_element = diagnostics.PerformanceGraphsDiagnosticsElement("", omd_config=omd_config)
 
     monkeypatch.setattr(livestatus, "LocalConnection", _fake_local_connection(host_list))
 
@@ -880,17 +897,25 @@ def test_diagnostics_element_performance_graphs_error(
     with automation_dir.joinpath("automation.secret").open("w") as f:
         f.write("my-123-password")
 
-    tmppath = tmp_path.joinpath("tmp")
-    tmppath.mkdir(parents=True, exist_ok=True)
+    tmp_dump_folder = tmp_path.joinpath("tmp")
+    tmp_dump_folder.mkdir(parents=True, exist_ok=True)
 
     if warning:
         with pytest.raises(diagnostics.DiagnosticsElementWarning) as w:
-            next(diagnostics_element.add_or_get_files(tmppath))
+            next(
+                diagnostics_element.add_or_get_files(
+                    omd_root=tmp_path, tmp_dump_folder=tmp_dump_folder
+                )
+            )
             assert warning == str(w)
 
     if error:
         with pytest.raises(diagnostics.DiagnosticsElementError) as e:
-            next(diagnostics_element.add_or_get_files(tmppath))
+            next(
+                diagnostics_element.add_or_get_files(
+                    omd_root=tmp_path, tmp_dump_folder=tmp_dump_folder
+                )
+            )
             assert error == str(e)
 
     shutil.rmtree(str(automation_dir))
@@ -915,9 +940,7 @@ def test_diagnostics_element_performance_graphs_content(
         "CONFIG_APACHE_TCP_ADDR": "127.0.0.1",
         "CONFIG_APACHE_TCP_PORT": "5000",
     }
-    diagnostics_element = diagnostics.PerformanceGraphsDiagnosticsElement(
-        tmp_path, "", omd_config=omd_config
-    )
+    diagnostics_element = diagnostics.PerformanceGraphsDiagnosticsElement("", omd_config=omd_config)
 
     monkeypatch.setattr(livestatus, "LocalConnection", _fake_local_connection(host_list))
 
@@ -935,18 +958,20 @@ def test_diagnostics_element_performance_graphs_content(
     with automation_dir.joinpath("automation.secret").open("w") as f:
         f.write("my-123-password")
 
-    tmppath = tmp_path.joinpath("tmp")
-    tmppath.mkdir(parents=True, exist_ok=True)
-    filepath = next(diagnostics_element.add_or_get_files(tmppath))
+    tmp_dump_folder = tmp_path.joinpath("tmp")
+    tmp_dump_folder.mkdir(parents=True, exist_ok=True)
+    filepath = next(
+        diagnostics_element.add_or_get_files(omd_root=tmp_path, tmp_dump_folder=tmp_dump_folder)
+    )
 
     assert isinstance(filepath, Path)
-    assert filepath == tmppath.joinpath("performance_graphs.pdf")
+    assert filepath == tmp_dump_folder.joinpath("performance_graphs.pdf")
 
     shutil.rmtree(str(automation_dir))
 
 
-def test_diagnostics_element_se_linux(tmp_path: Path) -> None:
-    diagnostics_element = diagnostics.SELinuxJSONDiagnosticsElement(tmp_path)
+def test_diagnostics_element_se_linux() -> None:
+    diagnostics_element = diagnostics.SELinuxJSONDiagnosticsElement()
     assert diagnostics_element.ident == "selinux"
     assert diagnostics_element.title == "SELinux information"
     assert diagnostics_element.description == (
@@ -974,12 +999,14 @@ def test_diagnostics_element_se_linux_content(
     with monkeypatch.context() as m:
         m.setenv("PATH", str(test_bin_dir))
 
-        diagnostics_element = diagnostics.SELinuxJSONDiagnosticsElement(tmp_path)
-        tmppath = tmp_path.joinpath("tmp")
-        filepath = next(diagnostics_element.add_or_get_files(tmppath))
+        diagnostics_element = diagnostics.SELinuxJSONDiagnosticsElement()
+        tmp_dump_folder = tmp_path.joinpath("tmp")
+        filepath = next(
+            diagnostics_element.add_or_get_files(omd_root=tmp_path, tmp_dump_folder=tmp_dump_folder)
+        )
 
         assert isinstance(filepath, Path)
-        assert filepath == tmppath.joinpath("selinux.json")
+        assert filepath == tmp_dump_folder.joinpath("selinux.json")
 
         content = json.loads(filepath.open().read())
 
@@ -988,8 +1015,8 @@ def test_diagnostics_element_se_linux_content(
         shutil.rmtree(str(test_bin_dir))
 
 
-def test_diagnostics_element_cma(tmp_path: Path) -> None:
-    diagnostics_element = diagnostics.CMAJSONDiagnosticsElement(tmp_path)
+def test_diagnostics_element_cma() -> None:
+    diagnostics_element = diagnostics.CMAJSONDiagnosticsElement()
     assert diagnostics_element.ident == "appliance"
     assert diagnostics_element.title == "Checkmk appliance information"
     assert diagnostics_element.description == (
@@ -1009,13 +1036,15 @@ def test_diagnostics_element_cma_content(tmp_path: Path) -> None:
     with patch("builtins.open") as bo:
         bo.side_effect = open_side_effect
 
-        diagnostics_element = diagnostics.CMAJSONDiagnosticsElement(tmp_path)
-        tmppath = tmp_path.joinpath("tmp")
-        tmppath.mkdir(parents=True, exist_ok=True)
-        filepath = next(diagnostics_element.add_or_get_files(tmppath))
+        diagnostics_element = diagnostics.CMAJSONDiagnosticsElement()
+        tmp_dump_folder = tmp_path.joinpath("tmp")
+        tmp_dump_folder.mkdir(parents=True, exist_ok=True)
+        filepath = next(
+            diagnostics_element.add_or_get_files(omd_root=tmp_path, tmp_dump_folder=tmp_dump_folder)
+        )
 
         assert isinstance(filepath, Path)
-        assert filepath == tmppath.joinpath("appliance.json")
+        assert filepath == tmp_dump_folder.joinpath("appliance.json")
 
         content = json.loads(filepath.open().read())
 
@@ -1024,7 +1053,7 @@ def test_diagnostics_element_cma_content(tmp_path: Path) -> None:
 
 
 def test_diagnostics_element_crash_dumps(tmp_path: Path) -> None:
-    diagnostics_element = diagnostics.CrashDumpsDiagnosticsElement(tmp_path)
+    diagnostics_element = diagnostics.CrashDumpsDiagnosticsElement()
     assert diagnostics_element.ident == "crashdumps"
     assert diagnostics_element.title == "The latest crash dumps of each type"
     assert diagnostics_element.description == (
@@ -1042,14 +1071,18 @@ def test_diagnostics_element_crash_dumps_content(tmp_path: Path) -> None:
     with test_crash_filepath.open("w", encoding="utf-8") as f:
         f.write('{ "testvar": "testvalue"}')
 
-    diagnostics_element = diagnostics.CrashDumpsDiagnosticsElement(omd_root)
-    tmppath = tmp_path.joinpath("tmp")
-    tmppath.mkdir(parents=True, exist_ok=True)
-    filepath = next(diagnostics_element.add_or_get_files(tmppath))
+    diagnostics_element = diagnostics.CrashDumpsDiagnosticsElement()
+    tmp_dump_folder = tmp_path.joinpath("tmp")
+    tmp_dump_folder.mkdir(parents=True, exist_ok=True)
+    filepath = next(
+        diagnostics_element.add_or_get_files(omd_root=omd_root, tmp_dump_folder=tmp_dump_folder)
+    )
 
     relative_path = make_crash_report_base_path(omd_root).relative_to(omd_root)
     test_filename = f"{test_uuid}.tar.gz"
-    assert filepath == tmppath.joinpath(relative_path).joinpath(f"{category}/{test_filename}")
+    assert filepath == tmp_dump_folder.joinpath(relative_path).joinpath(
+        f"{category}/{test_filename}"
+    )
 
     import tarfile
 

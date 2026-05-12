@@ -269,7 +269,7 @@ def create_diagnostics_dump(
         omd_root=omd_root,
         parameters=parameters,
     )
-    dump.create()
+    dump.create(omd_root)
     return dump
 
 
@@ -342,11 +342,10 @@ class DiagnosticsDump:
     ) -> None:
         self.log: list[str] = []
         self.omd_config = omd_config
-        self.omd_root = omd_root
         self.fixed_elements = self._get_fixed_elements(
             edition, loaded_config, core_performance_settings, parameters
         )
-        self.optional_elements = self._get_optional_elements(edition, parameters)
+        self.optional_elements = self._get_optional_elements(omd_root, edition, parameters)
         self.elements = self.fixed_elements + self.optional_elements
 
         dump_folder = cmk.utils.paths.diagnostics_dir
@@ -375,51 +374,52 @@ class DiagnosticsDump:
         parameters: DiagnosticsOptionalParameters | None,
     ) -> list[ABCDiagnosticsElement]:
         fixed_elements = [
-            ParametersDiagnosticsElement(self.omd_root, parameters),
-            GeneralDiagnosticsElement(self.omd_root),
-            PerfDataDiagnosticsElement(self.omd_root, loaded_config, core_performance_settings),
-            HWDiagnosticsElement(self.omd_root),
-            VendorDiagnosticsElement(self.omd_root),
-            EnvironmentDiagnosticsElement(self.omd_root),
-            FilesSizeCSVDiagnosticsElement(self.omd_root),
-            PipFreezeDiagnosticsElement(self.omd_root),
-            SELinuxJSONDiagnosticsElement(self.omd_root),
-            DpkgCSVDiagnosticsElement(self.omd_root),
-            RpmCSVDiagnosticsElement(self.omd_root),
-            CMAJSONDiagnosticsElement(self.omd_root),
+            ParametersDiagnosticsElement(parameters),
+            GeneralDiagnosticsElement(),
+            PerfDataDiagnosticsElement(loaded_config, core_performance_settings),
+            HWDiagnosticsElement(),
+            VendorDiagnosticsElement(),
+            EnvironmentDiagnosticsElement(),
+            FilesSizeCSVDiagnosticsElement(),
+            PipFreezeDiagnosticsElement(),
+            SELinuxJSONDiagnosticsElement(),
+            DpkgCSVDiagnosticsElement(),
+            RpmCSVDiagnosticsElement(),
+            CMAJSONDiagnosticsElement(),
         ]
 
         if edition is not cmk_version.Edition.COMMUNITY:
-            fixed_elements.append(DCDDiagnosticsElement(self.omd_root))
+            fixed_elements.append(DCDDiagnosticsElement())
 
         for identifier, command in COMPONENT_COMMANDS.items():
-            fixed_elements.append(
-                CheckmkCommandDiagnosticsElementTextDump(self.omd_root, identifier, command)
-            )
+            fixed_elements.append(CheckmkCommandDiagnosticsElementTextDump(identifier, command))
 
         return fixed_elements
 
     def _get_optional_elements(
-        self, edition: cmk_version.Edition, parameters: DiagnosticsOptionalParameters | None
+        self,
+        omd_root: Path,
+        edition: cmk_version.Edition,
+        parameters: DiagnosticsOptionalParameters | None,
     ) -> list[ABCDiagnosticsElement]:
         if parameters is None:
             return []
 
         optional_elements: list[ABCDiagnosticsElement] = []
         if parameters.get(OPT_LOCAL_FILES):
-            optional_elements.append(MKPFindTextDiagnosticsElement(self.omd_root))
-            optional_elements.append(MKPShowTextDiagnosticsElement(self.omd_root))
-            optional_elements.append(MKPListTextDiagnosticsElement(self.omd_root))
+            optional_elements.append(MKPFindTextDiagnosticsElement())
+            optional_elements.append(MKPShowTextDiagnosticsElement())
+            optional_elements.append(MKPListTextDiagnosticsElement())
 
         if parameters.get(OPT_OMD_CONFIG):
-            optional_elements.append(OMDConfigDiagnosticsElement(self.omd_root, self.omd_config))
+            optional_elements.append(OMDConfigDiagnosticsElement(self.omd_config))
 
         if OPT_CHECKMK_OVERVIEW in parameters:
             content = ""
             exception_for_later = None
             try:
                 content = _get_checkmk_overview_content(
-                    InventoryStore(self.omd_root),
+                    InventoryStore(omd_root),
                     parameters.get(OPT_CHECKMK_OVERVIEW, ""),
                 )
             except Exception as e:
@@ -444,76 +444,69 @@ class DiagnosticsDump:
             )
 
         if parameters.get(OPT_CHECKMK_CRASH_REPORTS):
-            optional_elements.append(CrashDumpsDiagnosticsElement(self.omd_root))
+            optional_elements.append(CrashDumpsDiagnosticsElement())
 
         if parameters.get(OPT_BI_RUNTIME_DATA):
-            optional_elements.append(BIDataDiagnosticsElement(self.omd_root))
+            optional_elements.append(BIDataDiagnosticsElement())
 
         rel_checkmk_config_files = parameters.get(OPT_CHECKMK_CONFIG_FILES)
         if rel_checkmk_config_files:
-            optional_elements.append(
-                CheckmkConfigFilesDiagnosticsElement(self.omd_root, rel_checkmk_config_files)
-            )
+            optional_elements.append(CheckmkConfigFilesDiagnosticsElement(rel_checkmk_config_files))
 
         rel_checkmk_log_files = parameters.get(OPT_CHECKMK_LOG_FILES)
         if rel_checkmk_log_files:
-            optional_elements.append(
-                CheckmkLogFilesDiagnosticsElement(self.omd_root, rel_checkmk_log_files)
-            )
+            optional_elements.append(CheckmkLogFilesDiagnosticsElement(rel_checkmk_log_files))
 
         for dir_comp in COMPONENT_DIRECTORIES:
             if dir_comp in parameters:
                 for directory in COMPONENT_DIRECTORIES[dir_comp]["abs_dirs"]:
                     optional_elements.append(
-                        CheckmkDirectoryDiagnosticsElement(self.omd_root, directory, rel=False)
+                        CheckmkDirectoryDiagnosticsElement(directory, rel=False)
                     )
                 for directory in COMPONENT_DIRECTORIES[dir_comp]["rel_dirs"]:
                     optional_elements.append(
-                        CheckmkDirectoryDiagnosticsElement(self.omd_root, directory, rel=True)
+                        CheckmkDirectoryDiagnosticsElement(directory, rel=True)
                     )
 
         # CEE options
         if edition is not cmk_version.Edition.COMMUNITY:
             rel_checkmk_core_files = parameters.get(OPT_CHECKMK_CORE_FILES)
             if rel_checkmk_core_files:
-                optional_elements.append(
-                    CheckmkCoreFilesDiagnosticsElement(self.omd_root, rel_checkmk_core_files)
-                )
-                optional_elements.append(CMCDumpDiagnosticsElement(self.omd_root))
+                optional_elements.append(CheckmkCoreFilesDiagnosticsElement(rel_checkmk_core_files))
+                optional_elements.append(CMCDumpDiagnosticsElement())
 
             if OPT_PERFORMANCE_GRAPHS in parameters:
                 optional_elements.append(
                     PerformanceGraphsDiagnosticsElement(
-                        self.omd_root, parameters.get(OPT_PERFORMANCE_GRAPHS, ""), self.omd_config
+                        parameters.get(OPT_PERFORMANCE_GRAPHS, ""), self.omd_config
                     )
                 )
 
             rel_checkmk_licensing_files = parameters.get(OPT_CHECKMK_LICENSING_FILES)
             if rel_checkmk_licensing_files:
                 optional_elements.append(
-                    CheckmkLicensingFilesDiagnosticsElement(
-                        self.omd_root,
-                        rel_checkmk_licensing_files,
-                    )
+                    CheckmkLicensingFilesDiagnosticsElement(rel_checkmk_licensing_files)
                 )
 
         return optional_elements
 
-    def create(self) -> None:
+    def create(self, omd_root: Path) -> None:
         self._create_dump_folder()
-        self._create_tarfile()
+        self._create_tarfile(omd_root)
         self._cleanup_dump_folder()
 
     def _create_dump_folder(self) -> None:
         self._section_step("Create dump folder")
         self.dump_folder.mkdir(parents=True, exist_ok=True)
 
-    def _create_tarfile(self) -> None:
+    def _create_tarfile(self, omd_root: Path) -> None:
         with (
             tarfile.open(name=self.tarfile_path, mode="w:gz") as tar,
             tempfile.TemporaryDirectory(dir=self.dump_folder) as tmp_dump_folder,
         ):
-            for filepath in self._get_filepaths(Path(tmp_dump_folder)):
+            for filepath in self._get_filepaths(
+                omd_root=omd_root, tmp_dump_folder=Path(tmp_dump_folder)
+            ):
                 rel_path = str(filepath).replace(str(tmp_dump_folder), "")
                 tar.add(str(filepath), arcname=rel_path)
                 self.tarfile_created = True
@@ -527,7 +520,7 @@ class DiagnosticsDump:
         store.save_text_to_file(logfile, "\n".join(self.log))
         return logfile
 
-    def _get_filepaths(self, tmp_dump_folder: Path) -> list[Path]:
+    def _get_filepaths(self, *, omd_root: Path, tmp_dump_folder: Path) -> list[Path]:
         self._section_step("Collect diagnostics information", verbose=False)
 
         filepaths = []
@@ -536,7 +529,9 @@ class DiagnosticsDump:
             self._console(f"{_format_description(element.description)}", "info")
 
             try:
-                for filepath in element.add_or_get_files(tmp_dump_folder):
+                for filepath in element.add_or_get_files(
+                    omd_root=omd_root, tmp_dump_folder=tmp_dump_folder
+                ):
                     filepaths.append(filepath)
 
             except DiagnosticsElementError as e:
@@ -634,9 +629,6 @@ class DiagnosticsElementInfo(Exception):
 
 
 class ABCDiagnosticsElement(abc.ABC):
-    def __init__(self, omd_root: Path) -> None:
-        self.omd_root = omd_root
-
     @property
     @abc.abstractmethod
     def ident(self) -> str:
@@ -653,7 +645,9 @@ class ABCDiagnosticsElement(abc.ABC):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def add_or_get_files(self, tmp_dump_folder: Path) -> DiagnosticsElementFilepaths:
+    def add_or_get_files(
+        self, *, omd_root: Path, tmp_dump_folder: Path
+    ) -> DiagnosticsElementFilepaths:
         # Please note the case if there are more than one filepath results. A Python generator
         # is executed until the first raise. Then it will be stopped and all generator states
         # are gone. Correctly calculated filepaths till then are yielded.
@@ -663,13 +657,15 @@ class ABCDiagnosticsElement(abc.ABC):
 
 class ABCDiagnosticsElementTextDump(ABCDiagnosticsElement):
     @override
-    def add_or_get_files(self, tmp_dump_folder: Path) -> DiagnosticsElementFilepaths:
+    def add_or_get_files(
+        self, *, omd_root: Path, tmp_dump_folder: Path
+    ) -> DiagnosticsElementFilepaths:
         filepath = tmp_dump_folder.joinpath(self.ident)
-        store.save_text_to_file(filepath, self._collect_infos())
+        store.save_text_to_file(filepath, self._collect_infos(omd_root))
         yield filepath
 
     @abc.abstractmethod
-    def _collect_infos(self) -> str:
+    def _collect_infos(self, omd_root: Path) -> str:
         raise NotImplementedError()
 
 
@@ -695,7 +691,7 @@ class _DiagnosticsElementWrapper(ABCDiagnosticsElementTextDump):
         return self._wrapped.description
 
     @override
-    def _collect_infos(self) -> str:
+    def _collect_infos(self, omd_root: Path) -> str:
         if self._wrapped.exception:
             raise self._wrapped.exception
         return self._wrapped.content
@@ -703,8 +699,10 @@ class _DiagnosticsElementWrapper(ABCDiagnosticsElementTextDump):
 
 class ABCDiagnosticsElementJSONDump(ABCDiagnosticsElement):
     @override
-    def add_or_get_files(self, tmp_dump_folder: Path) -> DiagnosticsElementFilepaths:
-        infos = self._collect_infos()
+    def add_or_get_files(
+        self, *, omd_root: Path, tmp_dump_folder: Path
+    ) -> DiagnosticsElementFilepaths:
+        infos = self._collect_infos(omd_root)
         if not infos:
             raise DiagnosticsElementInfo("No data")
 
@@ -713,14 +711,16 @@ class ABCDiagnosticsElementJSONDump(ABCDiagnosticsElement):
         yield filepath
 
     @abc.abstractmethod
-    def _collect_infos(self) -> DiagnosticsElementJSONResult:
+    def _collect_infos(self, omd_root: Path) -> DiagnosticsElementJSONResult:
         raise NotImplementedError()
 
 
 class ABCDiagnosticsElementCSVDump(ABCDiagnosticsElement):
     @override
-    def add_or_get_files(self, tmp_dump_folder: Path) -> DiagnosticsElementFilepaths:
-        infos = self._collect_infos()
+    def add_or_get_files(
+        self, *, omd_root: Path, tmp_dump_folder: Path
+    ) -> DiagnosticsElementFilepaths:
+        infos = self._collect_infos(omd_root)
         if not infos:
             raise DiagnosticsElementInfo("No data")
 
@@ -729,7 +729,7 @@ class ABCDiagnosticsElementCSVDump(ABCDiagnosticsElement):
         yield filepath
 
     @abc.abstractmethod
-    def _collect_infos(self) -> DiagnosticsElementCSVResult:
+    def _collect_infos(self, omd_root: Path) -> DiagnosticsElementCSVResult:
         raise NotImplementedError()
 
 
@@ -737,8 +737,7 @@ class ABCDiagnosticsElementCSVDump(ABCDiagnosticsElement):
 
 
 class ParametersDiagnosticsElement(ABCDiagnosticsElementTextDump):
-    def __init__(self, omd_root: Path, parameters: DiagnosticsOptionalParameters | None) -> None:
-        super().__init__(omd_root)
+    def __init__(self, parameters: DiagnosticsOptionalParameters | None) -> None:
         self.parameters = parameters
 
     @property
@@ -753,7 +752,7 @@ class ParametersDiagnosticsElement(ABCDiagnosticsElementTextDump):
     def description(self) -> str:
         return _("The parameters that were provided to create the Diagnostics dump.")
 
-    def _collect_infos(self) -> str:
+    def _collect_infos(self, omd_root: Path) -> str:
         return str(self.parameters)
 
 
@@ -776,11 +775,11 @@ class FilesSizeCSVDiagnosticsElement(ABCDiagnosticsElementCSVDump):
     def description(self) -> str:
         return _("List of all files in the site including their size")
 
-    def _collect_infos(self) -> DiagnosticsElementCSVResult:
+    def _collect_infos(self, omd_root: Path) -> DiagnosticsElementCSVResult:
         csv_data = []
         csv_data.append("size;path;owner;group;mode;changed")
         tmp_file_regex = re.compile(r"^\..*\.new.*")
-        for dirpath, _dirnames, filenames in os.walk(self.omd_root):
+        for dirpath, _dirnames, filenames in os.walk(omd_root):
             for file in filenames:
                 f = Path(dirpath).joinpath(file)
                 if f.is_symlink():
@@ -819,7 +818,7 @@ class DpkgCSVDiagnosticsElement(ABCDiagnosticsElementCSVDump):
     def description(self) -> str:
         return _("Output of `dpkg -l`. See the corresponding command line help for more details.")
 
-    def _collect_infos(self) -> DiagnosticsElementCSVResult:
+    def _collect_infos(self, omd_root: Path) -> DiagnosticsElementCSVResult:
         if not (dpkg_binary := shutil.which("dpkg")):
             return ""
 
@@ -845,7 +844,7 @@ class RpmCSVDiagnosticsElement(ABCDiagnosticsElementCSVDump):
     def description(self) -> str:
         return _("Output of `rpm -qa`. See the corresponding command line help for more details.")
 
-    def _collect_infos(self) -> DiagnosticsElementCSVResult:
+    def _collect_infos(self, omd_root: Path) -> DiagnosticsElementCSVResult:
         if not (rpm_binary := shutil.which("rpm")):
             return ""
 
@@ -888,8 +887,8 @@ class GeneralDiagnosticsElement(ABCDiagnosticsElementJSONDump):
             "OS, Checkmk version and edition, Time, Core, Python version and paths, Architecture"
         )
 
-    def _collect_infos(self) -> DiagnosticsElementJSONResult:
-        version_infos = cmk_version.get_general_version_infos(self.omd_root)
+    def _collect_infos(self, omd_root: Path) -> DiagnosticsElementJSONResult:
+        version_infos = cmk_version.get_general_version_infos(omd_root)
         time_obj = datetime.fromtimestamp(version_infos.get("time", 0.0))
         return {
             "arch": platform.machine(),
@@ -907,11 +906,9 @@ class GeneralDiagnosticsElement(ABCDiagnosticsElementJSONDump):
 class PerfDataDiagnosticsElement(ABCDiagnosticsElementJSONDump):
     def __init__(
         self,
-        omd_root: Path,
         load_config: LoadedConfigFragment,
         core_performance_settings: Callable[[LoadedConfigFragment], Mapping[str, int]],
     ) -> None:
-        super().__init__(omd_root)
         self._loaded_config: Final = load_config
         self._core_performance_settings: Final = core_performance_settings
 
@@ -930,7 +927,7 @@ class PerfDataDiagnosticsElement(ABCDiagnosticsElementJSONDump):
     def description(self) -> str:
         return _("Metrics related to sizing, e.g. number of helpers, hosts, services")
 
-    def _collect_infos(self) -> DiagnosticsElementJSONResult:
+    def _collect_infos(self, omd_root: Path) -> DiagnosticsElementJSONResult:
         # Get the runtime performance data from livestatus
         query = "GET status\nColumnHeaders: on"
         result = livestatus.LocalConnection().query(query)
@@ -1049,7 +1046,7 @@ class HWDiagnosticsElement(ABCDiagnosticsElementJSONDump):
     def description(self) -> str:
         return _("Hardware information of the Checkmk server")
 
-    def _collect_infos(self) -> DiagnosticsElementJSONResult:
+    def _collect_infos(self, omd_root: Path) -> DiagnosticsElementJSONResult:
         return collect_infos_hw(Path("/proc"))
 
 
@@ -1093,7 +1090,7 @@ class VendorDiagnosticsElement(ABCDiagnosticsElementJSONDump):
     def description(self) -> str:
         return _("HW vendor information of the Checkmk server")
 
-    def _collect_infos(self) -> DiagnosticsElementJSONResult:
+    def _collect_infos(self, omd_root: Path) -> DiagnosticsElementJSONResult:
         return collect_infos_vendor(Path("/sys/class/dmi/id"))
 
 
@@ -1113,7 +1110,7 @@ class EnvironmentDiagnosticsElement(ABCDiagnosticsElementJSONDump):
     def description(self) -> str:
         return _("Variables set in the site user's environment")
 
-    def _collect_infos(self) -> DiagnosticsElementJSONResult:
+    def _collect_infos(self, omd_root: Path) -> DiagnosticsElementJSONResult:
         # Get the environment variables
 
         return dict(os.environ)
@@ -1135,7 +1132,7 @@ class PipFreezeDiagnosticsElement(ABCDiagnosticsElementJSONDump):
     def description(self) -> str:
         return _("The installed Python modules and their versions")
 
-    def _collect_infos(self) -> DiagnosticsElementJSONResult:
+    def _collect_infos(self, omd_root: Path) -> DiagnosticsElementJSONResult:
         # Execute pip freeze and convert to JSON
 
         lines = subprocess.check_output(["pip3", "freeze", "--all"], text=True).split("\n")
@@ -1161,7 +1158,7 @@ class MKPFindTextDiagnosticsElement(ABCDiagnosticsElementJSONDump):
             "See the corresponding command line help for more details."
         )
 
-    def _collect_infos(self) -> DiagnosticsElementJSONResult:
+    def _collect_infos(self, omd_root: Path) -> DiagnosticsElementJSONResult:
         try:
             return dict(
                 json.loads(subprocess.check_output(["mkp", "find", "--all", "--json"], text=True))
@@ -1190,7 +1187,7 @@ class MKPShowTextDiagnosticsElement(ABCDiagnosticsElementJSONDump):
             "See the corresponding command line help for more details."
         )
 
-    def _collect_infos(self) -> DiagnosticsElementJSONResult:
+    def _collect_infos(self, omd_root: Path) -> DiagnosticsElementJSONResult:
         try:
             return dict(
                 json.loads(subprocess.check_output(["mkp", "show-all", "--json"], text=True))
@@ -1218,7 +1215,7 @@ class MKPListTextDiagnosticsElement(ABCDiagnosticsElementJSONDump):
             "Output of `mkp list --json`. See the corresponding command line help for more details."
         )
 
-    def _collect_infos(self) -> DiagnosticsElementJSONResult:
+    def _collect_infos(self, omd_root: Path) -> DiagnosticsElementJSONResult:
         try:
             return dict(json.loads(subprocess.check_output(["mkp", "list", "--json"], text=True)))
         except subprocess.CalledProcessError as e:
@@ -1242,7 +1239,7 @@ class SELinuxJSONDiagnosticsElement(ABCDiagnosticsElementJSONDump):
     def description(self) -> str:
         return _("Output of `sestatus`. See the corresponding command line help for more details.")
 
-    def _collect_infos(self) -> DiagnosticsElementJSONResult:
+    def _collect_infos(self, omd_root: Path) -> DiagnosticsElementJSONResult:
         if not (selinux_binary := shutil.which("sestatus")):
             return {}
 
@@ -1280,7 +1277,7 @@ class CMAJSONDiagnosticsElement(ABCDiagnosticsElementJSONDump):
     def description(self) -> str:
         return _("Information about the appliance hardware and firmware version.")
 
-    def _collect_infos(self) -> DiagnosticsElementJSONResult:
+    def _collect_infos(self, omd_root: Path) -> DiagnosticsElementJSONResult:
         cma_infos: dict[str, str | dict[str, str]] = {}
 
         if hw_content := _try_to_read("/etc/cma/hw"):
@@ -1293,8 +1290,7 @@ class CMAJSONDiagnosticsElement(ABCDiagnosticsElementJSONDump):
 
 
 class OMDConfigDiagnosticsElement(ABCDiagnosticsElementJSONDump):
-    def __init__(self, omd_root: Path, omd_config: site.OMDConfig) -> None:
-        super().__init__(omd_root)
+    def __init__(self, omd_config: site.OMDConfig) -> None:
         self._omd_config = omd_config
 
     @override
@@ -1314,7 +1310,7 @@ class OMDConfigDiagnosticsElement(ABCDiagnosticsElementJSONDump):
             "Apache mode and TCP address and port, core, Liveproxy daemon and Livestatus TCP mode, event daemon config, graphical user interface (GUI) authorization, NSCA mode, TMP file system mode"
         )
 
-    def _collect_infos(self) -> DiagnosticsElementJSONResult:
+    def _collect_infos(self, omd_root: Path) -> DiagnosticsElementJSONResult:
         return self._omd_config
 
 
@@ -1345,8 +1341,7 @@ def _get_checkmk_overview_content(inventory_store: InventoryStore, checkmk_serve
 
 
 class ABCCheckmkFilesDiagnosticsElement(ABCDiagnosticsElement):
-    def __init__(self, omd_root: Path, rel_checkmk_files: list[str]) -> None:
-        super().__init__(omd_root)
+    def __init__(self, rel_checkmk_files: list[str]) -> None:
         self.rel_checkmk_files = rel_checkmk_files
         self.file_map_config = self._file_map_config
 
@@ -1364,7 +1359,9 @@ class ABCCheckmkFilesDiagnosticsElement(ABCDiagnosticsElement):
     def _file_map_config(self) -> FileMapConfig:
         raise NotImplementedError()
 
-    def _copy_and_decrypt(self, rel_filepath: Path, tmp_dump_folder: Path) -> Path | None:
+    def _copy_and_decrypt(
+        self, *, omd_root: Path, rel_filepath: Path, tmp_dump_folder: Path
+    ) -> Path | None:
         checkmk_files_map = self._checkmk_files_map
 
         filepath = checkmk_files_map.get(str(rel_filepath))
@@ -1375,7 +1372,7 @@ class ABCCheckmkFilesDiagnosticsElement(ABCDiagnosticsElement):
         # We want to pack a folder hierarchy.
 
         filename = Path(filepath).name
-        subfolder = Path(str(filepath).replace(str(self.omd_root) + "/", "")).parent
+        subfolder = Path(str(filepath).replace(str(omd_root) + "/", "")).parent
 
         # Create relative path in tmp tree
         tmp_folder = tmp_dump_folder.joinpath(subfolder)
@@ -1420,11 +1417,15 @@ class ABCCheckmkFilesDiagnosticsElement(ABCDiagnosticsElement):
         return tmp_filepath
 
     @override
-    def add_or_get_files(self, tmp_dump_folder: Path) -> DiagnosticsElementFilepaths:
+    def add_or_get_files(
+        self, *, omd_root: Path, tmp_dump_folder: Path
+    ) -> DiagnosticsElementFilepaths:
         unknown_files = []
 
         for rel_filepath in self.rel_checkmk_files:
-            tmp_filepath = self._copy_and_decrypt(Path(rel_filepath), tmp_dump_folder)
+            tmp_filepath = self._copy_and_decrypt(
+                omd_root=omd_root, rel_filepath=Path(rel_filepath), tmp_dump_folder=tmp_dump_folder
+            )
 
             if tmp_filepath is None:
                 unknown_files.append(str(rel_filepath))
@@ -1490,8 +1491,7 @@ class CheckmkLogFilesDiagnosticsElement(ABCCheckmkFilesDiagnosticsElement):
 
 
 class CheckmkDirectoryDiagnosticsElement(ABCDiagnosticsElement):
-    def __init__(self, omd_root: Path, directory: str | Path, rel: bool = False) -> None:
-        super().__init__(omd_root)
+    def __init__(self, directory: str | Path, rel: bool = False) -> None:
         if isinstance(directory, str):
             self.directory = Path(directory)
         else:
@@ -1515,10 +1515,12 @@ class CheckmkDirectoryDiagnosticsElement(ABCDiagnosticsElement):
         return _("Configuration files from %s") % str(self.directory)
 
     @override
-    def add_or_get_files(self, tmp_dump_folder: Path) -> DiagnosticsElementFilepaths:
+    def add_or_get_files(
+        self, *, omd_root: Path, tmp_dump_folder: Path
+    ) -> DiagnosticsElementFilepaths:
         abs_path = self.directory
         if self.rel:
-            abs_path = self.omd_root / self.directory
+            abs_path = omd_root / self.directory
 
         if not abs_path.exists():
             return
@@ -1528,7 +1530,7 @@ class CheckmkDirectoryDiagnosticsElement(ABCDiagnosticsElement):
                 source_file = Path(path).joinpath(file)
 
                 if self.rel:
-                    tmp_target_folder = tmp_dump_folder / Path(path).relative_to(self.omd_root)
+                    tmp_target_folder = tmp_dump_folder / Path(path).relative_to(omd_root)
                 else:
                     tmp_target_folder = tmp_dump_folder / "os_root" / Path(path).relative_to("/")
 
@@ -1545,8 +1547,7 @@ class CheckmkDirectoryDiagnosticsElement(ABCDiagnosticsElement):
 
 
 class CheckmkCommandDiagnosticsElementTextDump(ABCDiagnosticsElementTextDump):
-    def __init__(self, omd_root: Path, identifier: str, command: list[str]) -> None:
-        super().__init__(omd_root)
+    def __init__(self, identifier: str, command: list[str]) -> None:
         self.identifier = identifier
         self.command = command
 
@@ -1567,13 +1568,13 @@ class CheckmkCommandDiagnosticsElementTextDump(ABCDiagnosticsElementTextDump):
         return _("Output of %s") % " ".join(self.command)
 
     @override
-    def _collect_infos(self) -> str:
+    def _collect_infos(self, omd_root: Path) -> str:
         try:
             output = subprocess.check_output(
                 self.command,
                 text=True,
                 stderr=subprocess.STDOUT,
-                cwd=self.omd_root,
+                cwd=omd_root,
             )
 
         except subprocess.CalledProcessError:
@@ -1643,10 +1644,7 @@ class CheckmkLicensingFilesDiagnosticsElement(ABCCheckmkFilesDiagnosticsElement)
 
 
 class PerformanceGraphsDiagnosticsElement(ABCDiagnosticsElement):
-    def __init__(
-        self, omd_root: Path, checkmk_server_host: str, omd_config: site.OMDConfig
-    ) -> None:
-        super().__init__(omd_root)
+    def __init__(self, checkmk_server_host: str, omd_config: site.OMDConfig) -> None:
         self.checkmk_server_host = checkmk_server_host
         self.omd_config = omd_config
 
@@ -1668,7 +1666,9 @@ class PerformanceGraphsDiagnosticsElement(ABCDiagnosticsElement):
         )
 
     @override
-    def add_or_get_files(self, tmp_dump_folder: Path) -> DiagnosticsElementFilepaths:
+    def add_or_get_files(
+        self, *, omd_root: Path, tmp_dump_folder: Path
+    ) -> DiagnosticsElementFilepaths:
         checkmk_server_host = verify_checkmk_server_host(self.checkmk_server_host)
         response = self._get_response(checkmk_server_host)
 
@@ -1733,7 +1733,9 @@ class BIDataDiagnosticsElement(ABCDiagnosticsElement):
         )
 
     @override
-    def add_or_get_files(self, tmp_dump_folder: Path) -> DiagnosticsElementFilepaths:
+    def add_or_get_files(
+        self, *, omd_root: Path, tmp_dump_folder: Path
+    ) -> DiagnosticsElementFilepaths:
         tmpdir = tmp_dump_folder.joinpath("tmp/check_mk/bi_cache")
         tmpdir.mkdir(parents=True, exist_ok=True)
 
@@ -1758,8 +1760,10 @@ class CrashDumpsDiagnosticsElement(ABCDiagnosticsElement):
         return _("Returns the latest crash dumps of each type as found in var/checkmk/crashes")
 
     @override
-    def add_or_get_files(self, tmp_dump_folder: Path) -> DiagnosticsElementFilepaths:
-        for category in make_crash_report_base_path(self.omd_root).glob("*"):
+    def add_or_get_files(
+        self, *, omd_root: Path, tmp_dump_folder: Path
+    ) -> DiagnosticsElementFilepaths:
+        for category in make_crash_report_base_path(omd_root).glob("*"):
             tmpdir = tmp_dump_folder.joinpath("var/check_mk/crashes/%s" % category.name)
             tmpdir.mkdir(parents=True, exist_ok=True)
 
@@ -1804,8 +1808,10 @@ class CMCDumpDiagnosticsElement(ABCDiagnosticsElement):
         )
 
     @override
-    def add_or_get_files(self, tmp_dump_folder: Path) -> DiagnosticsElementFilepaths:
-        command = [str(Path(self.omd_root).joinpath("bin/cmcdump"))]
+    def add_or_get_files(
+        self, *, omd_root: Path, tmp_dump_folder: Path
+    ) -> DiagnosticsElementFilepaths:
+        command = [str(Path(omd_root).joinpath("bin/cmcdump"))]
 
         for dump_args in (None, "--config"):
             tmpdir = tmp_dump_folder.joinpath("var/check_mk/core")
@@ -1848,7 +1854,7 @@ class DCDDiagnosticsElement(ABCDiagnosticsElementTextDump):
             "Executes the commands cmk-dcd -Bv and cmk-dcd -Cv."
         )
 
-    def _collect_infos(self) -> str:
+    def _collect_infos(self, omd_root: Path) -> str:
         if not (cmk_dcd_binary := shutil.which("cmk-dcd")):
             return ""
 

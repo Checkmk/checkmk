@@ -8,7 +8,7 @@ from collections.abc import Sequence
 import pytest
 
 from cmk.agent_based.v2 import Result, Service, State, StringTable
-from cmk.legacy_checks.hp_fan import check_hp_fan, discover_hp_fan, parse_hp_fan
+from cmk.plugins.hp.agent_based.hp_fan import check_hp_fan, discover_hp_fan, parse_hp_fan
 
 
 @pytest.mark.parametrize(

@@ -245,6 +245,7 @@ py_library(
         requirement("opentelemetry-instrumentation-requests"),
     ] + select({
         "//:gpl+nonfree_repo": [
+            "//non-free/packages/cmk-update-agent:cmk-update-agent-py",
             "//non-free/tests/testlib/system:metric_backend",
             "//non-free/tests/testlib/system:opentelemetry",
             "//non-free/tests/testlib/system/cloud",
@@ -394,6 +395,8 @@ py_library(
         "//tests/testlib/common:utils",
     ] + select({
         "//:gpl+nonfree_repo": [
+            "//non-free/packages/cmk-liveproxyd",
+            "//non-free/packages/cmk-telemetry:plugins-custom-query",
             "//non-free/tests/testlib/system:metric_backend",
             "//non-free/tests/testlib/system:opentelemetry",
             "//non-free/tests/testlib/system/cloud",

@@ -58,6 +58,7 @@ configure_make(
         "libcrypto.so",
         "libcrypto.so.3",
     ],
+    set_file_prefix_map = True,
     targets = [
         "build_programs",
         "install_sw",
@@ -101,6 +102,7 @@ configure_make(
         "libssl.a",
         "libcrypto.a",
     ],
+    set_file_prefix_map = True,
     targets = [
         "build_libs",
         "install_dev",

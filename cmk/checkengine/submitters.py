@@ -47,8 +47,17 @@ def _sanitize_perftext(
 def _serialize_metric(mt: MetricTuple) -> str:
     return (
         f"{mt.name}={_serialize_value(mt.value)}"
-        f";{_serialize_value(mt.warn)};{_serialize_value(mt.crit)}"
+        f";{_serialize_range(mt.warn_lower, mt.warn)}"
+        f";{_serialize_range(mt.crit_lower, mt.crit)}"
         f";{_serialize_value(mt.min_)};{_serialize_value(mt.max_)}"
+    )
+
+
+def _serialize_range(lower: float | None, upper: float | None) -> str:
+    return (
+        f"{serialized_lower}:{_serialize_value(upper)}"
+        if (serialized_lower := _serialize_value(lower))
+        else _serialize_value(upper)
     )
 
 

@@ -32,6 +32,34 @@ from cmk.checkengine.submitters import _serialize_metric
             "m=5;10;20;;",
             id="upper_levels_only",
         ),
+        pytest.param(
+            MetricTuple(
+                name="x",
+                value=5.0,
+                warn=10.0,
+                crit=20.0,
+                min_=None,
+                max_=None,
+                warn_lower=1.0,
+                crit_lower=2.0,
+            ),
+            "x=5;1:10;2:20;;",
+            id="lower_and_upper_levels",
+        ),
+        pytest.param(
+            MetricTuple(
+                name="x",
+                value=5.0,
+                warn=None,
+                crit=None,
+                min_=None,
+                max_=None,
+                warn_lower=1.0,
+                crit_lower=2.0,
+            ),
+            "x=5;1:;2:;;",
+            id="lower_levels_only",
+        ),
     ],
 )
 def test_serialize_metric(metric: MetricTuple, expected: str) -> None:

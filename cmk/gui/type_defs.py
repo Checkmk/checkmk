@@ -735,6 +735,8 @@ class PerfDataTuple:
     unit_name: str
     warn: float | None = None
     crit: float | None = None
+    warn_lower: float | None = None
+    crit_lower: float | None = None
     min_: float | None = None
     max_: float | None = None
 

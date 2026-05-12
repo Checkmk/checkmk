@@ -12,6 +12,7 @@ from cmk.gui.graphing._from_api import RegisteredMetric
 from cmk.gui.graphing._legacy import check_metrics, CheckMetricEntry
 from cmk.gui.graphing._translated_metrics import (
     _parse_check_command,
+    _parse_range,
     find_matching_translation,
     lookup_metric_translations_for_check_command,
     parse_perf_data,
@@ -575,3 +576,61 @@ def test_lookup_metric_translations_for_check_command(
 )
 def test__parse_check_command(check_command: str, expected: str) -> None:
     assert _parse_check_command(check_command) == expected
+
+
+@pytest.mark.parametrize(
+    "val, expected",
+    [
+        pytest.param(None, (None, None), id="none"),
+        pytest.param("", (None, None), id="empty"),
+        pytest.param("10", (None, 10), id="upper-only"),
+        pytest.param("1:10", (1, 10), id="lower-and-upper"),
+        pytest.param("10:", (10, None), id="lower-only"),
+        pytest.param("1.5:10.5", (1.5, 10.5), id="floats"),
+    ],
+)
+def test__parse_range(val: str | None, expected: tuple[float | None, float | None]) -> None:
+    assert _parse_range(val) == expected
+
+
+def test_parse_perf_data_with_lower_levels() -> None:
+    perf_data, _ = parse_perf_data("metric=5;1:6;2:7;;", "check", debug=False)
+    assert len(perf_data) == 1
+    assert perf_data[0].warn == 6
+    assert perf_data[0].crit == 7
+    assert perf_data[0].warn_lower == 1
+    assert perf_data[0].crit_lower == 2
+
+
+def test_translate_metrics_with_lower_levels() -> None:
+    translated_metric = translate_metrics(
+        [
+            PerfDataTuple(
+                metric_name="m",
+                lookup_metric_name="m",
+                value=5.0,
+                unit_name="",
+                warn=10.0,
+                crit=20.0,
+                warn_lower=1.0,
+                crit_lower=2.0,
+            )
+        ],
+        "check_mk-test",
+        {
+            "m": RegisteredMetric(
+                name="m",
+                title_localizer=lambda _localizer: "M",
+                unit_spec=ConvertibleUnitSpecification(
+                    notation=DecimalNotation(symbol=""),
+                    precision=AutoPrecision(digits=2),
+                ),
+                color="",
+            )
+        },
+        temperature_unit=TemperatureUnit.CELSIUS,
+    )["m"]
+    assert translated_metric.scalar.warn == 10.0
+    assert translated_metric.scalar.crit == 20.0
+    assert translated_metric.scalar.warn_lower == 1.0
+    assert translated_metric.scalar.crit_lower == 2.0

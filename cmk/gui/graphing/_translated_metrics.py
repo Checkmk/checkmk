@@ -66,6 +66,25 @@ def _float_or_int(val: str | None) -> int | float | None:
             return None
 
 
+def _parse_range(val: str | None) -> tuple[float | None, float | None]:
+    """Parse Nagios range notation into (lower, upper).
+
+    "10"   -> (None, 10)   upper only
+    "1:10" -> (1, 10)      range
+    "10:"  -> (10, None)   lower only
+    ""     -> (None, None)
+    """
+    if not val:
+        return None, None
+    if ":" not in val:
+        return None, _float_or_int(val)
+    lower_str, upper_str = val.split(":", 1)
+    return (
+        _float_or_int(lower_str) if lower_str else None,
+        _float_or_int(upper_str) if upper_str else None,
+    )
+
+
 def _split_unit(value_text: str) -> tuple[float | None, str | None]:
     "separate value from unit"
     if not value_text or value_text.isspace():
@@ -126,14 +145,18 @@ def parse_perf_data(
             if value is None or unit_name is None:
                 continue  # ignore useless empty variable
 
+            warn_lower, warn = _parse_range(value_parts[0])
+            crit_lower, crit = _parse_range(value_parts[1])
             perf_data.append(
                 PerfDataTuple(
                     metric_name=varname,
                     lookup_metric_name=_compute_lookup_metric_name(varname),
                     value=value,
                     unit_name=unit_name,
-                    warn=_float_or_int(value_parts[0]),
-                    crit=_float_or_int(value_parts[1]),
+                    warn=warn,
+                    crit=crit,
+                    warn_lower=warn_lower,
+                    crit_lower=crit_lower,
                     min_=_float_or_int(value_parts[2]),
                     max_=_float_or_int(value_parts[3]),
                 )
@@ -203,6 +226,8 @@ class Original:
 class ScalarBounds:
     warn: float | None = None
     crit: float | None = None
+    warn_lower: float | None = None
+    crit_lower: float | None = None
     min_: float | None = None
     max_: float | None = None
 
@@ -229,6 +254,8 @@ def _translated_scalar(
     return ScalarBounds(
         warn=_conversion(perf_data_tuple.warn),
         crit=_conversion(perf_data_tuple.crit),
+        warn_lower=_conversion(perf_data_tuple.warn_lower),
+        crit_lower=_conversion(perf_data_tuple.crit_lower),
         min_=_conversion(perf_data_tuple.min_),
         max_=_conversion(perf_data_tuple.max_),
     )

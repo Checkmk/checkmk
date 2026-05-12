@@ -30,6 +30,8 @@ class MetricTuple:
     crit: float | None
     min_: float | None
     max_: float | None
+    warn_lower: float | None = None
+    crit_lower: float | None = None
 
 
 @dataclasses.dataclass(frozen=True)

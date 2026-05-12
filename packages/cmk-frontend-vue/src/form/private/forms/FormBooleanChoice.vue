@@ -29,7 +29,7 @@ const [validation, value] = useValidation<boolean>(
   <CmkCheckbox
     v-model="value"
     :label="untranslated(spec.label ?? '')"
-    :help="untranslated(spec.help)"
+    :help="untranslated(spec.title ? '' : spec.help)"
     :external-errors="validation"
   />
 </template>

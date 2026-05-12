@@ -36,7 +36,7 @@ def get_apache_status_files(conf: _Config) -> Iterable[Plugin | PluginConfig]:
 def _get_apache_status_config(mode: str, data: object) -> list[str]:
     if mode == "static":
         return ["servers = %s" % pformat(data)]
-    return ["ssl_ports = %r" % (data,)]
+    return [f"ssl_ports = {data!r}"]
 
 
 bakery_plugin_apache_status = BakeryPlugin(

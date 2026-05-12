@@ -3,14 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="misc"
-
-from collections.abc import Mapping, Sequence
-from typing import Any
+from collections.abc import Sequence
 
 import pytest
 
-from cmk.agent_based.v2 import StringTable
+from cmk.agent_based.v2 import Result, Service, State, StringTable
 from cmk.legacy_checks.hp_fan import check_hp_fan, discover_hp_fan, parse_hp_fan
 
 
@@ -19,31 +16,37 @@ from cmk.legacy_checks.hp_fan import check_hp_fan, discover_hp_fan, parse_hp_fan
     [
         (
             [["0", "2", "5"], ["1", "3", "3"], ["2", "4", "1"]],
-            [("2/0", None), ("3/1", None), ("4/2", None)],
+            [Service(item="2/0"), Service(item="3/1"), Service(item="4/2")],
         ),
     ],
 )
 def test_discover_hp_fan(
-    string_table: StringTable, expected_discoveries: Sequence[tuple[str, None]]
+    string_table: StringTable, expected_discoveries: Sequence[Service]
 ) -> None:
-    """Test discovery function for hp_fan check."""
     parsed = parse_hp_fan(string_table)
-    result = list(discover_hp_fan(parsed))
-    assert sorted(result) == sorted(expected_discoveries)
+    assert sorted(discover_hp_fan(parsed)) == sorted(expected_discoveries)
 
 
 @pytest.mark.parametrize(
-    "item, params, string_table, expected_results",
+    "item, string_table, expected_result",
     [
-        ("2/0", {}, [["0", "2", "5"], ["1", "3", "3"], ["2", "4", "1"]], (0, "ok")),
-        ("3/1", {}, [["0", "2", "5"], ["1", "3", "3"], ["2", "4", "1"]], (1, "underspeed")),
-        ("4/2", {}, [["0", "2", "5"], ["1", "3", "3"], ["2", "4", "1"]], (2, "removed")),
+        (
+            "2/0",
+            [["0", "2", "5"], ["1", "3", "3"], ["2", "4", "1"]],
+            Result(state=State.OK, summary="ok"),
+        ),
+        (
+            "3/1",
+            [["0", "2", "5"], ["1", "3", "3"], ["2", "4", "1"]],
+            Result(state=State.WARN, summary="underspeed"),
+        ),
+        (
+            "4/2",
+            [["0", "2", "5"], ["1", "3", "3"], ["2", "4", "1"]],
+            Result(state=State.CRIT, summary="removed"),
+        ),
     ],
 )
-def test_check_hp_fan(
-    item: str, params: Mapping[str, Any], string_table: StringTable, expected_results: Sequence[Any]
-) -> None:
-    """Test check function for hp_fan check."""
+def test_check_hp_fan(item: str, string_table: StringTable, expected_result: Result) -> None:
     parsed = parse_hp_fan(string_table)
-    result = check_hp_fan(item, params, parsed)
-    assert result == expected_results
+    assert list(check_hp_fan(item, parsed)) == [expected_result]

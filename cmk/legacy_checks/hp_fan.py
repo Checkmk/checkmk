@@ -4,12 +4,33 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from collections.abc import Iterator, Mapping
+from collections.abc import Mapping
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import all_of, any_of, contains, OIDEnd, SNMPTree, StringTable
+from cmk.agent_based.v2 import (
+    all_of,
+    any_of,
+    CheckPlugin,
+    CheckResult,
+    contains,
+    DiscoveryResult,
+    OIDEnd,
+    Result,
+    Service,
+    SimpleSNMPSection,
+    SNMPTree,
+    State,
+    StringTable,
+)
 
-check_info = {}
+_STATUS_MAP: dict[str, tuple[State, str]] = {
+    "0": (State.UNKNOWN, "unknown"),
+    "1": (State.CRIT, "removed"),
+    "2": (State.CRIT, "off"),
+    "3": (State.WARN, "underspeed"),
+    "4": (State.WARN, "overspeed"),
+    "5": (State.OK, "ok"),
+    "6": (State.UNKNOWN, "maxstate"),
+}
 
 
 def parse_hp_fan(string_table: StringTable) -> Mapping[str, str]:
@@ -18,25 +39,18 @@ def parse_hp_fan(string_table: StringTable) -> Mapping[str, str]:
     }
 
 
-def discover_hp_fan(parsed: Mapping[str, str]) -> Iterator[tuple[str, None]]:
-    for fan in parsed:
-        yield fan, None
+def discover_hp_fan(section: Mapping[str, str]) -> DiscoveryResult:
+    yield from (Service(item=fan) for fan in section)
 
 
-def check_hp_fan(item: str, _no_params: object, parsed: Mapping[str, str]) -> tuple[int, str]:
-    statemap = {
-        "0": (3, "unknown"),
-        "1": (2, "removed"),
-        "2": (2, "off"),
-        "3": (1, "underspeed"),
-        "4": (1, "overspeed"),
-        "5": (0, "ok"),
-        "6": (3, "maxstate"),
-    }
-    return statemap[parsed[item]]
+def check_hp_fan(item: str, section: Mapping[str, str]) -> CheckResult:
+    if (raw := section.get(item)) is None:
+        return
+    state, status_txt = _STATUS_MAP[raw]
+    yield Result(state=state, summary=status_txt)
 
 
-check_info["hp_fan"] = LegacyCheckDefinition(
+snmp_section_hp_fan = SimpleSNMPSection(
     name="hp_fan",
     detect=all_of(
         contains(".1.3.6.1.2.1.1.1.0", "hp"),
@@ -49,6 +63,11 @@ check_info["hp_fan"] = LegacyCheckDefinition(
         oids=[OIDEnd(), "2", "4"],
     ),
     parse_function=parse_hp_fan,
+)
+
+
+check_plugin_hp_fan = CheckPlugin(
+    name="hp_fan",
     service_name="Fan %s",
     discovery_function=discover_hp_fan,
     check_function=check_hp_fan,

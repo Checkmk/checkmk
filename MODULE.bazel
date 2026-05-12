@@ -121,7 +121,7 @@ single_version_override(
     patches = ["//omd/packages/foreign_cc:symlink.patch"],
 )
 
-bazel_dep(name = "rules_foreign_cc", version = "0.11.1")
+bazel_dep(name = "rules_foreign_cc", version = "0.15.1")
 
 http_archive = use_repo_rule("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 

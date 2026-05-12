@@ -51,28 +51,28 @@ configure_make(
     postfix_script = """
         # Fixup wrong man page installation path
         # (There is a --mandir configure option, but it does not work)
-        mkdir -p $INSTALLDIR/share/man/man8
-        mv $INSTALLDIR/man/man8/npcd.8 $INSTALLDIR/share/man/man8/npcd.8
-        rmdir $INSTALLDIR/man/man8
-        rmdir $INSTALLDIR/man
+        mkdir -p $$INSTALLDIR/share/man/man8
+        mv $$INSTALLDIR/man/man8/npcd.8 $$INSTALLDIR/share/man/man8/npcd.8
+        rmdir $$INSTALLDIR/man/man8
+        rmdir $$INSTALLDIR/man
 
         # Remove installer
-        rm $INSTALLDIR/share/pnp4nagios/htdocs/install.php
-        rm -rf $INSTALLDIR/etc/pnp4nagios
-        rmdir $INSTALLDIR/etc || true
-        rm -rf $INSTALLDIR/var/pnp4nagios
-        rmdir $INSTALLDIR/var || true
-        rm -rf $INSTALLDIR/tmp/pnp4nagios
-        rmdir $INSTALLDIR/tmp || true
+        rm $$INSTALLDIR/share/pnp4nagios/htdocs/install.php
+        rm -rf $$INSTALLDIR/etc/pnp4nagios
+        rmdir $$INSTALLDIR/etc || true
+        rm -rf $$INSTALLDIR/var/pnp4nagios
+        rmdir $$INSTALLDIR/var || true
+        rm -rf $$INSTALLDIR/tmp/pnp4nagios
+        rmdir $$INSTALLDIR/tmp || true
 
-        mkdir -p $INSTALLDIR/share/doc/pnp4nagios
-        install -m 644 $BUILD_TMPDIR/README  $INSTALLDIR/share/doc/pnp4nagios
-        install -m 644 $BUILD_TMPDIR/COPYING $INSTALLDIR/share/doc/pnp4nagios
-        install -m 644 $BUILD_TMPDIR/AUTHORS $INSTALLDIR/share/doc/pnp4nagios
-        install -m 644 $BUILD_TMPDIR/THANKS  $INSTALLDIR/share/doc/pnp4nagios
+        mkdir -p $$INSTALLDIR/share/doc/pnp4nagios
+        install -m 644 $$BUILD_TMPDIR/README  $$INSTALLDIR/share/doc/pnp4nagios
+        install -m 644 $$BUILD_TMPDIR/COPYING $$INSTALLDIR/share/doc/pnp4nagios
+        install -m 644 $$BUILD_TMPDIR/AUTHORS $$INSTALLDIR/share/doc/pnp4nagios
+        install -m 644 $$BUILD_TMPDIR/THANKS  $$INSTALLDIR/share/doc/pnp4nagios
 
         # Do not ship kohana (unused pnp4nagios UI dependency)
-        rm -rf ${INSTALLDIR}/lib/kohana
+        rm -rf $${INSTALLDIR}/lib/kohana
     """,
     targets = [
         "all",

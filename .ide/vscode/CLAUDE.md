@@ -332,12 +332,37 @@ clearing the spinner. `showSectionLoading()` is reserved for destructive or full
 
 ## Key Patterns
 
-- **`safeExec(cmd, opts)`** (`core/shell.ts`): `execSync` wrapper that returns empty string on failure
+- **`safeExecAsync(cmd, opts)` / `shellExecAsync(cmd, opts)`** (`core/shell.ts`): Awaitable subprocess helpers. Return trimmed stdout, or empty string on failure / timeout. **Always prefer these over the sync variants.**
+- **`safeExec` / `shellExec`** (`core/shell.ts`): Sync `execSync` wrappers. Legacy — do not introduce new call sites. Each one blocks the extension host's event loop (which is shared with `vscode.git` and every other extension) for the duration of the subprocess. See "No new blocking sync calls" below.
 - **`runCommand(name, cmd)`**: Creates a VS Code `ShellExecution` task shown in the terminal panel
 - **`waitForTask(exec)`**: Returns a promise that resolves with the exit code when the task finishes
 - **`refreshAll()`**: Refreshes state cache + all section providers. Exported from `sidebar.ts` and passed to `registerOmd()` as callback.
 - **Context keys**: Set via `vscode.commands.executeCommand('setContext', key, value)` to control `when` clauses in `package.json`
 - **CSP**: Webviews use nonce-based Content-Security-Policy. All inline styles and scripts must carry the nonce. External resources require explicit CSP directives (e.g. `font-src` for codicons). CSS is imported as text at build time and injected into the `<style>` tag with nonce.
+
+### No new blocking sync calls
+
+Never introduce `execSync`, `safeExec`, `shellExec`, or any other synchronous
+subprocess call. The extension host is single-threaded and shared with
+`vscode.git` (and every other extension), so even a 100 ms sync exec stalls
+the SCM view, the file explorer, and Pylance startup.
+
+When a getter is on the sidebar refresh path (anything reachable from
+`refreshStateCache()` or section `render()`):
+
+- **Always** use `safeExecAsync` / `shellExecAsync` / `gitAsync`.
+- For hot-path values needed synchronously during render, use the
+  **stale-while-revalidate** pattern: keep the last value in a module-level
+  cache, return it (or an empty placeholder on first call) synchronously,
+  and kick off an async refresh whose completion calls a stored
+  `onRefresh` callback (set via a `setXxxRefreshCallback(cb)` exporter
+  wired up in `sidebar.ts`). Existing examples:
+  `sidebar/environment/index.ts`, `omd/devSiteTools.ts`, `omd/omd.ts`
+  (`getOmdStatus` + `setOmdStatusRefreshCallback`),
+  `profiles/python/jemallocAllocator.ts`.
+
+`fs.*Sync` is fine for local file reads / stats — those return in
+microseconds. Subprocess invocations are the only thing to avoid.
 
 ## Commits
 

@@ -165,7 +165,10 @@ export async function handleMessage(
         await vscode.commands.executeCommand('extension.open', 'ms-python.vscode-python-envs')
       } else {
         await vscode.commands.executeCommand(msg.commandId as string)
-        refreshAll()
+        // When the click came from an async button (e.g. build target), the
+        // command spawns a CMK task and returns immediately. Skip the refresh
+        // here so the spinner survives until onDidEndTaskProcess fires.
+        if (!msg.deferRefresh) refreshAll()
       }
       return true
     case 'runMakeSetup': {
@@ -297,7 +300,7 @@ export function render(state: StateCache, codiconUri?: vscode.Uri, cspSource?: s
       return `<div class="build-row ${cls}">
       <span class="card-icon">${icon}</span>
       <span class="build-name">${s.label}</span>
-      <button class="btn btn-small btn-icon" data-action="exec" data-id="${s.commandId}" title="${btnTitle}"><span class="codicon ${btnIcon}"></span></button>
+      <button class="btn btn-small btn-icon" data-action="exec" data-async="true" data-id="${s.commandId}" title="${btnTitle}"><span class="codicon ${btnIcon}"></span></button>
     </div>`
     })
     .join('')

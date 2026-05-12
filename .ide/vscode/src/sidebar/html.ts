@@ -105,7 +105,7 @@ ${body}
       'apply-all-mismatches',
       'toggle-profile',
     ]);
-    if (ASYNC_ACTIONS.has(action)) {
+    if (ASYNC_ACTIONS.has(action) || el.dataset.async === 'true') {
       el.setAttribute('disabled', 'true');
       el.style.pointerEvents = 'none';
       el.style.opacity = '0.5';
@@ -122,7 +122,7 @@ ${body}
       }
     }
     switch (action) {
-      case 'exec': vscode.postMessage({ type: 'executeCommand', commandId: id }); break;
+      case 'exec': vscode.postMessage({ type: 'executeCommand', commandId: id, deferRefresh: el.dataset.async === 'true' }); break;
       case 'toggle-profile': vscode.postMessage({ type: 'toggleProfile', name: id }); break;
       case 'install-ext': vscode.postMessage({ type: 'installExtension', extensionId: id }); break;
       case 'toggle-accordion': {

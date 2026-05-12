@@ -13,7 +13,6 @@ import os
 import sys
 from collections import OrderedDict
 from collections.abc import Mapping, Sequence
-from typing import Optional
 
 import pytest
 
@@ -43,7 +42,7 @@ def test_lazy_file() -> None:
 @pytest.mark.parametrize(
     "config", [({}), ({"input_unknown": None}), ({"input_one": None, "input_two": None})]
 )
-def test_get_file_iterator_invalid(config: Mapping[str, Optional[str]]) -> None:
+def test_get_file_iterator_invalid(config: Mapping[str, str | None]) -> None:
     with pytest.raises(ValueError):
         mk_filestats.get_file_iterator(config)
 
@@ -56,7 +55,7 @@ def test_get_file_iterator_invalid(config: Mapping[str, Optional[str]]) -> None:
     ],
 )
 def test_get_file_iterator_pattern(
-    config: Mapping[str, Optional[str]], pat_list: Sequence[str]
+    config: Mapping[str, str | None], pat_list: Sequence[str]
 ) -> None:
     iter_obj = mk_filestats.get_file_iterator(config)
     assert isinstance(iter_obj, mk_filestats.PatternIterator)
@@ -111,7 +110,7 @@ def test_path_filter(reg_pat: str, paths: Sequence[str], results: Sequence[bool]
         {"filter_size": "!=käse"},
     ],
 )
-def test_get_file_filters_invalid(config: Mapping[str, Optional[str]]) -> None:
+def test_get_file_filters_invalid(config: Mapping[str, str | None]) -> None:
     with pytest.raises(ValueError):
         mk_filestats.get_file_filters(config)
 

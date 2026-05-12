@@ -13,6 +13,7 @@ from __future__ import annotations
 import functools
 import logging
 import socket
+import sys
 import time
 from collections.abc import Callable, Container, Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
@@ -32,6 +33,7 @@ from cmk.agent_based.prediction_backend import (
 )
 from cmk.agent_based.v1 import IgnoreResults, IgnoreResultsError, Metric, State
 from cmk.agent_based.v1 import Result as CheckFunctionResult
+from cmk.agent_based.v3_unstable import Metric as MetricV3Unstable
 from cmk.base.config import ConfigCache
 from cmk.base.errorhandling import create_check_crash_dump
 from cmk.base.sources import (
@@ -856,6 +858,16 @@ def _aggregate_texts(
     return "\n".join([", ".join(summaries)] + details)
 
 
+def _clamp(v: float | None) -> float | None:
+    if v is None:
+        return None
+    if v > sys.float_info.max:
+        return sys.float_info.max
+    if v < -sys.float_info.max:
+        return -sys.float_info.max
+    return v
+
+
 def _consume_check_results(
     subresults: FinalCheckResult,
 ) -> tuple[Sequence[IgnoreResults], Sequence[MetricTuple], Sequence[CheckFunctionResult]]:
@@ -868,15 +880,18 @@ def _consume_check_results(
             match subr:
                 case IgnoreResults():
                     ignore_results.append(subr)
-                case Metric():
+                case Metric() | MetricV3Unstable():
+                    lower_levels = getattr(subr, "lower_levels", (None, None))
                     perfdata.append(
                         MetricTuple(
                             name=subr.name,
                             value=subr.value,
-                            warn=subr.levels[0],
-                            crit=subr.levels[1],
-                            min_=subr.boundaries[0],
-                            max_=subr.boundaries[1],
+                            warn=_clamp(subr.levels[0]),
+                            crit=_clamp(subr.levels[1]),
+                            min_=_clamp(subr.boundaries[0]),
+                            max_=_clamp(subr.boundaries[1]),
+                            warn_lower=_clamp(lower_levels[0]),
+                            crit_lower=_clamp(lower_levels[1]),
                         )
                     )
                 case CheckFunctionResult():

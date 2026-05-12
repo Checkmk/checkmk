@@ -14,6 +14,7 @@ from typing import Any
 import pytest
 
 from cmk.agent_based.v1 import IgnoreResults, Metric, Result, Service, State
+from cmk.agent_based.v3_unstable import Metric as MetricV3Unstable
 from cmk.checkengine.plugin_backend import check_plugins
 from cmk.checkengine.plugin_backend.utils import (
     create_subscribed_sections,
@@ -270,6 +271,7 @@ def test_get_registered_check_plugins_mgmt_factory() -> None:
         Result(state=State.OK, summary="ok"),
         Metric("metric_name", 1.0),
         IgnoreResults(),
+        MetricV3Unstable("metric_name", 1.0),
     ],
 )
 def test_check_function_passes_valid_type(value: object) -> None:

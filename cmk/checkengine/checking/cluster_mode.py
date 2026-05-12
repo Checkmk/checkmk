@@ -12,6 +12,7 @@ from functools import partial
 from typing import Any, Final, Literal, NamedTuple, Protocol
 
 from cmk.agent_based.v1 import IgnoreResults, IgnoreResultsError, Metric, Result, State
+from cmk.agent_based.v3_unstable import Metric as MetricV3Unstable
 from cmk.ccc.hostaddress import HostName
 from cmk.checkengine.checkresults import state_markers
 from cmk.checkengine.plugins import (
@@ -133,7 +134,7 @@ def _cluster_check(
 
 class NodeResults(NamedTuple):
     results: Mapping[HostName, Sequence[Result]]
-    metrics: Mapping[HostName, Sequence[Metric]]
+    metrics: Mapping[HostName, Sequence[Metric | MetricV3Unstable]]
     ignore_results: Mapping[HostName, Sequence[IgnoreResults]]
 
 
@@ -347,7 +348,7 @@ class NodeCheckExecutor:
             elements = self._consume_checkresult(
                 node, check_function(**kwargs), self._value_store_manager
             )
-            metrics[node] = [e for e in elements if isinstance(e, Metric)]
+            metrics[node] = [e for e in elements if isinstance(e, (Metric, MetricV3Unstable))]
             ignores[node] = [e for e in elements if isinstance(e, IgnoreResults)]
             results[node] = [e for e in elements if isinstance(e, Result)]
 
@@ -384,7 +385,7 @@ class NodeCheckExecutor:
         node: HostName,
         result_generator: FinalCheckResult,
         value_store_manager: ValueStoreManager,
-    ) -> Sequence[Result | Metric | IgnoreResults]:
+    ) -> Sequence[Result | Metric | MetricV3Unstable | IgnoreResults]:
         with value_store_manager.namespace(self._service_id, host_name=node):
             try:
                 return list(result_generator)

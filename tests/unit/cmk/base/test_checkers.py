@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+import sys
 import time
 from collections.abc import Iterable, Mapping
 from typing import Literal
@@ -16,6 +17,7 @@ from cmk.agent_based.prediction_backend import (
     PredictionParameters,
 )
 from cmk.agent_based.v1 import Metric, Result, State
+from cmk.agent_based.v3_unstable import Metric as MetricV3Unstable
 from cmk.base import checkers
 from cmk.ccc.hostaddress import HostName
 from cmk.checkengine.checkerplugin import ConfiguredService
@@ -274,3 +276,27 @@ def test_is_preview_injection() -> None:
             "inner": True,
         },
     }
+
+
+def test_consume_check_results_clamps_inf_levels() -> None:
+    _, perfdata, _ = checkers._consume_check_results(
+        [MetricV3Unstable("m", 1.0, levels=(float("inf"), float("-inf")))]
+    )
+    assert len(perfdata) == 1
+    assert perfdata[0].warn == sys.float_info.max
+    assert perfdata[0].crit == -sys.float_info.max
+
+
+def test_consume_check_results_clamps_inf_lower_levels() -> None:
+    _, perfdata, _ = checkers._consume_check_results(
+        [
+            MetricV3Unstable(
+                "m",
+                1.0,
+                lower_levels=(float("inf"), float("-inf")),
+            )
+        ]
+    )
+    assert len(perfdata) == 1
+    assert perfdata[0].warn_lower == sys.float_info.max
+    assert perfdata[0].crit_lower == -sys.float_info.max

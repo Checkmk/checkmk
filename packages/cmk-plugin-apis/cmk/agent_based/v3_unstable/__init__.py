@@ -36,6 +36,7 @@ from collections.abc import Callable as _Callable
 from collections.abc import Iterable as _Iterable
 from collections.abc import Mapping as _Mapping
 from dataclasses import dataclass as _dataclass
+from typing import Any as _Any
 from typing import Final as _Final
 
 from cmk.agent_based.v2 import (
@@ -48,7 +49,6 @@ from cmk.agent_based.v2 import (
     contains,
     DiscoveryResult,
     endswith,
-    entry_point_prefixes,
     equals,
     exists,
     get_average,
@@ -134,6 +134,42 @@ class CheckPlugin:
 
     def __post_init__(self) -> None:
         _ = _validate_name(self.name)
+
+
+def entry_point_prefixes() -> _Mapping[
+    type[
+        AgentSection[_Any]
+        | CheckPlugin
+        | InventoryPlugin
+        | SimpleSNMPSection[_Any, _Any]
+        | SNMPSection[_Any, _Any]
+    ],
+    str,
+]:
+    """Return the types of plug-ins and their respective prefixes that can be discovered by Checkmk.
+
+    These types can be used to create plug-ins that can be discovered by Checkmk.
+    To be discovered, the plug-in must be of one of the types returned by this function and its name
+    must start with the corresponding prefix.
+
+    Example:
+    ********
+
+    >>> for plugin_type, prefix in entry_point_prefixes().items():
+    ...     print(f'{prefix}... = {plugin_type.__name__}(...)')
+    snmp_section_... = SimpleSNMPSection(...)
+    snmp_section_... = SNMPSection(...)
+    agent_section_... = AgentSection(...)
+    check_plugin_... = CheckPlugin(...)
+    inventory_plugin_... = InventoryPlugin(...)
+    """
+    return {
+        SimpleSNMPSection: "snmp_section_",
+        SNMPSection: "snmp_section_",
+        AgentSection: "agent_section_",
+        CheckPlugin: "check_plugin_",
+        InventoryPlugin: "inventory_plugin_",
+    }
 
 
 __all__ = [

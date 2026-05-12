@@ -15,6 +15,7 @@ from collections.abc import Callable, Iterable, Mapping, Sequence
 from typing import assert_never
 
 from cmk.agent_based import v2 as agent_based_v2
+from cmk.agent_based import v3_unstable as agent_based_v3_unstable
 from cmk.base.config import (  # astrein: disable=cmk-module-layer-violation
     load_all_plugins,
 )
@@ -25,6 +26,7 @@ from cmk.checkengine.checkresults import (  # astrein: disable=cmk-module-layer-
     ActiveCheckResult,
 )
 from cmk.checkengine.plugin_backend import (  # astrein: disable=cmk-module-layer-violation
+    ENTRY_POINT_PREFIXES,
     extract_known_discovery_rulesets,
 )
 from cmk.checkengine.plugins import (  # astrein: disable=cmk-module-layer-violation  # astrein: disable=cmk-module-layer-violation
@@ -40,8 +42,12 @@ from cmk.gui.form_specs import (  # astrein: disable=cmk-module-layer-violation
     RawDiskData,
     VisitorOptions,
 )
-from cmk.gui.rule_specs.types import RuleSpec  # astrein: disable=cmk-module-layer-violation
-from cmk.gui.script_helpers import gui_context  # astrein: disable=cmk-module-layer-violation
+from cmk.gui.rule_specs.types import (  # astrein: disable=cmk-module-layer-violation
+    RuleSpec,
+)
+from cmk.gui.script_helpers import (  # astrein: disable=cmk-module-layer-violation
+    gui_context,
+)
 from cmk.gui.watolib.rulespecs import (  # astrein: disable=cmk-module-layer-violation
     FormSpecNotImplementedError,
     rulespec_registry,
@@ -66,6 +72,7 @@ _AgentBasedPlugins = (
     | agent_based_v2.SNMPSection
     | agent_based_v2.AgentSection
     | agent_based_v2.CheckPlugin
+    | agent_based_v3_unstable.CheckPlugin
     | agent_based_v2.InventoryPlugin
 )
 
@@ -175,7 +182,7 @@ def _validate_agent_based_plugin_v2_ruleset_ref(
                 f"non-existent rule spec '{ruleset_ref}'"
             )
         # we're validating against the enforces service rule in this case
-        assert isinstance(plugin, agent_based_v2.CheckPlugin)
+        assert isinstance(plugin, (agent_based_v2.CheckPlugin, agent_based_v3_unstable.CheckPlugin))
         params = (plugin.name, "item" if "%s" in plugin.service_name else None, default_params)
 
     else:
@@ -213,7 +220,7 @@ def _validate_referenced_rule_spec() -> ActiveCheckResult:
     # only for check API v2
     discovered_plugins: DiscoveredPlugins[_AgentBasedPlugins] = discover_all_plugins(
         PluginGroup.AGENT_BASED,
-        agent_based_v2.entry_point_prefixes(),
+        ENTRY_POINT_PREFIXES,
         skip_wrong_types=False,
         raise_errors=False,  # already raised during loading validation if enabled
     )
@@ -223,7 +230,7 @@ def _validate_referenced_rule_spec() -> ActiveCheckResult:
     with gui_context():
         for plugin in discovered_plugins.plugins.values():
             match plugin:
-                case agent_based_v2.CheckPlugin():
+                case agent_based_v2.CheckPlugin() | agent_based_v3_unstable.CheckPlugin():
                     if (
                         error := _validate_agent_based_plugin_v2_ruleset_ref(
                             plugin,

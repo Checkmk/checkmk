@@ -11,7 +11,7 @@ from importlib import import_module
 from typing import assert_never
 
 import cmk.trace
-from cmk.agent_based import v2
+from cmk.agent_based import v2, v3_unstable
 from cmk.agent_based.legacy import find_legacy_check_modules
 from cmk.checkengine import plugins
 from cmk.checkengine.plugins import SectionName
@@ -28,8 +28,15 @@ from .inventory_plugins import create_inventory_plugin
 from .section_plugins import create_agent_section_plugin, create_snmp_section_plugin
 
 _ABPlugins = (
-    v2.SimpleSNMPSection | v2.SNMPSection | v2.AgentSection | v2.CheckPlugin | v2.InventoryPlugin
+    v2.SimpleSNMPSection
+    | v2.SNMPSection
+    | v2.AgentSection
+    | v2.CheckPlugin
+    | v2.InventoryPlugin
+    | v3_unstable.CheckPlugin
 )
+
+ENTRY_POINT_PREFIXES = dict(v2.entry_point_prefixes()) | dict(v3_unstable.entry_point_prefixes())
 
 tracer = cmk.trace.get_tracer()
 
@@ -45,7 +52,7 @@ def load_all_plugins(
     with tracer.span("discover_plugins"):
         discovered_plugins: DiscoveredPlugins[_ABPlugins] = discover_all_plugins(
             PluginGroup.AGENT_BASED,
-            v2.entry_point_prefixes(),
+            ENTRY_POINT_PREFIXES,
             skip_wrong_types=False,
             raise_errors=raise_errors,
         )
@@ -56,7 +63,7 @@ def load_all_plugins(
         # prevents unrelated migrations from creating merge conflict.
         if not_yet_moved_plugins := find_legacy_check_modules():
             more_discovered_plugins = discover_plugins_from_modules(
-                v2.entry_point_prefixes(),
+                ENTRY_POINT_PREFIXES,
                 not_yet_moved_plugins,
                 skip_wrong_types=False,
                 raise_errors=raise_errors,
@@ -143,6 +150,7 @@ def _register_plugin_by_type(
     | v2.SimpleSNMPSection
     | v2.SNMPSection
     | v2.CheckPlugin
+    | v3_unstable.CheckPlugin
     | v2.InventoryPlugin,
     registered_agent_sections: dict[SectionName, plugins.AgentSectionPlugin],
     registered_snmp_sections: dict[SectionName, plugins.SNMPSectionPlugin],
@@ -168,7 +176,7 @@ def _register_plugin_by_type(
                 registered_snmp_sections,
                 validate=validate,
             )
-        case v2.CheckPlugin():
+        case v2.CheckPlugin() | v3_unstable.CheckPlugin():
             _register_check_plugin(plugin, location, registered_check_plugins)
         case v2.InventoryPlugin():
             _register_inventory_plugin(plugin, location, registered_inventory_plugins)
@@ -209,7 +217,7 @@ def _register_snmp_section(
 
 
 def _register_check_plugin(
-    check: v2.CheckPlugin,
+    check: v2.CheckPlugin | v3_unstable.CheckPlugin,
     location: PluginLocation,
     registered_check_plugins: dict[plugins.CheckPluginName, plugins.CheckPlugin],
 ) -> None:

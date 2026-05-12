@@ -9,6 +9,7 @@ from collections.abc import Callable, Iterable, Mapping
 from typing import Final, NamedTuple
 
 from cmk.agent_based.v2 import IgnoreResults, Metric, Result, Service
+from cmk.agent_based.v3_unstable import Metric as MetricV3Unstable
 from cmk.discover_plugins import PluginLocation
 from cmk.utils.rulesets import RuleSetName
 from cmk.utils.servicename import Item
@@ -16,7 +17,7 @@ from cmk.utils.servicename import Item
 from ._common import LegacyPluginLocation, RuleSetTypeName
 from ._sections import ParsedSectionName
 
-type FinalCheckResult = Iterable[IgnoreResults | Metric | Result]
+type FinalCheckResult = Iterable[IgnoreResults | Metric | Result | MetricV3Unstable]
 type FinalCheckFunction = Callable[..., FinalCheckResult]
 type FinalDiscoveryResult = Iterable[Service]
 type FinalDiscoveryFunction = Callable[..., FinalDiscoveryResult]

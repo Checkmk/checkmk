@@ -10,7 +10,7 @@ import * as vscode from 'vscode'
 
 import { shellEscape } from '../core/config'
 import { log } from '../core/log'
-import { safeExec } from '../core/shell'
+import { safeExecAsync } from '../core/shell'
 import { runCommand, waitForTask } from '../core/tasks'
 import { ensureKeepaliveAuth, hasKeepalive, runInKeepaliveTerminal } from './sudoBridge'
 
@@ -134,9 +134,9 @@ async function listAllSiteLogFiles(site: string): Promise<SiteLogListing> {
   const findCmd = `find ${shellEscape(baseDir)} -type f -print 2>/dev/null`
 
   // Fast paths that don't need sudo or run via the caller's TTY
-  const direct = safeExec(findCmd, { timeout: 5000 })
+  const direct = await safeExecAsync(findCmd, { timeout: 5000 })
   if (direct) return { files: direct.split('\n').filter(Boolean), failed: false }
-  const sudoN = safeExec(`sudo -n ${findCmd}`, { timeout: 5000 })
+  const sudoN = await safeExecAsync(`sudo -n ${findCmd}`, { timeout: 5000 })
   if (sudoN) return { files: sudoN.split('\n').filter(Boolean), failed: false }
 
   // Prefer the keepalive bridge. If no session is active, auto-prompt auth.

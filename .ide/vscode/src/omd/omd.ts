@@ -10,7 +10,7 @@ import * as vscode from 'vscode'
 
 import { shellEscape } from '../core/config'
 import { error, log } from '../core/log'
-import { safeExec, safeExecAsync } from '../core/shell'
+import { safeExecAsync } from '../core/shell'
 import { runCommand, waitForTask } from '../core/tasks'
 import { promptSocketProxy, registerProxyCleanup } from './proxy'
 import {
@@ -236,7 +236,7 @@ export async function forceRefreshOmdStatusFiles(): Promise<void> {
 
 export async function createSite(): Promise<void> {
   log('Create OMD site wizard')
-  const defaultVersion = detectBranchVersion()
+  const defaultVersion = await detectBranchVersion()
   const version = await vscode.window.showInputBox({
     prompt: 'Checkmk version to install',
     placeHolder: 'e.g. 2.5, 2.4.0p9, 2.5.0-daily',
@@ -291,8 +291,8 @@ export async function createSite(): Promise<void> {
   }
 }
 
-function detectBranchVersion(): string {
-  const branch = safeExec('git rev-parse --abbrev-ref HEAD 2>/dev/null')
+async function detectBranchVersion(): Promise<string> {
+  const branch = await safeExecAsync('git rev-parse --abbrev-ref HEAD 2>/dev/null')
   if (!branch) return ''
   const m = branch.match(/(\d+\.\d+(?:\.\d+)?)/)
   return m ? m[1] : ''

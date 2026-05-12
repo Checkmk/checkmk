@@ -3,12 +3,13 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { execFile, execSync } from 'child_process'
+import { execFile } from 'child_process'
 import * as fs from 'fs'
 import * as path from 'path'
 import * as vscode from 'vscode'
 
 import { error, notifyInfo } from '../../core/log'
+import { safeExecAsync } from '../../core/shell'
 import { versionAtLeast } from '../../core/version'
 
 const PACKAGE_BASE_DIRS = ['packages', 'non-free/packages']
@@ -395,7 +396,7 @@ export async function generateAndWriteMypyConfig(wsPath: string): Promise<boolea
   const content = buildMypyIniContent(version, config, wsPath, excludeRegex)
   const changed = writeMypyIniIfChanged(wsPath, content)
   if (changed) {
-    killDmypyDaemons(wsPath, { killAll: true })
+    await killDmypyDaemons(wsPath, { killAll: true })
   }
   return changed
 }
@@ -417,7 +418,7 @@ function writeMypyIniIfChanged(wsPath: string, content: string): boolean {
   return true
 }
 
-function killDmypyDaemons(wsPath: string, { killAll = false } = {}): void {
+async function killDmypyDaemons(wsPath: string, { killAll = false } = {}): Promise<void> {
   try {
     let activePid: number | null = null
     if (!killAll) {
@@ -433,10 +434,9 @@ function killDmypyDaemons(wsPath: string, { killAll = false } = {}): void {
       if (!activePid) return
     }
 
-    const output = execSync(`ps -eo pid,args | grep '[d]mypy' | grep -F "${wsPath}/"`, {
-      encoding: 'utf8',
+    const output = await safeExecAsync(`ps -eo pid,args | grep '[d]mypy' | grep -F "${wsPath}/"`, {
       timeout: 3000
-    }).trim()
+    })
 
     if (!output) return
 
@@ -478,7 +478,14 @@ export function registerMypyConfigWatcher(): vscode.Disposable[] {
 
   const disposables: vscode.Disposable[] = []
 
-  const cleanupInterval = setInterval(() => killDmypyDaemons(wsPath), 5 * 60 * 1000)
+  const cleanupInterval = setInterval(
+    () => {
+      killDmypyDaemons(wsPath).catch((err) =>
+        error(`dmypy cleanup failed: ${(err as Error).message}`)
+      )
+    },
+    5 * 60 * 1000
+  )
   disposables.push({
     dispose: () => {
       clearInterval(cleanupInterval)
@@ -529,8 +536,8 @@ export function registerMypyConfigWatcher(): vscode.Disposable[] {
   return disposables
 }
 
-export function killAllDmypyDaemons(): void {
+export async function killAllDmypyDaemons(): Promise<void> {
   const wsPath = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath
   if (!wsPath) return
-  killDmypyDaemons(wsPath, { killAll: true })
+  await killDmypyDaemons(wsPath, { killAll: true })
 }

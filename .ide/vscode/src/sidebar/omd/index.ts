@@ -77,7 +77,7 @@ export async function handleMessage(
       return true
     }
     case 'omdProxyStop': {
-      stopProxy(msg.site as string, msg.service as string)
+      await stopProxy(msg.site as string, msg.service as string)
       refreshOmd()
       return true
     }

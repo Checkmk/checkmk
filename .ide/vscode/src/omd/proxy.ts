@@ -1,8 +1,8 @@
 import * as path from 'path'
 import * as vscode from 'vscode'
 
-import { log, notifyWarn } from '../core/log'
-import { safeExec } from '../core/shell'
+import { error, log, notifyWarn } from '../core/log'
+import { safeExecAsync } from '../core/shell'
 
 // ── Known sockets ──
 
@@ -62,8 +62,13 @@ export function getActiveProxies(): ProxyInfo[] {
   }))
 }
 
-export function startProxy(site: string, service: string, socketPath: string, port: number): void {
-  if (!safeExec('which socat')) {
+export async function startProxy(
+  site: string,
+  service: string,
+  socketPath: string,
+  port: number
+): Promise<void> {
+  if (!(await safeExecAsync('which socat'))) {
     notifyWarn(
       'CMK ▸ OMD: socat not found',
       'Install socat to use socket proxying: sudo apt install socat'
@@ -81,7 +86,7 @@ export function startProxy(site: string, service: string, socketPath: string, po
   }
 
   log(`Proxy start: ${service}@${site} :${port} → ${socketPath}`)
-  const sudoCached = !!safeExec('sudo -n true 2>/dev/null', { timeout: 1000 })
+  const sudoCached = !!(await safeExecAsync('sudo -n true 2>/dev/null', { timeout: 1000 }))
   const socatCmd = `sudo -u "${site}" socat TCP-LISTEN:${port},fork,reuseaddr,bind=127.0.0.1 UNIX-CONNECT:${socketPath}`
   const terminal = vscode.window.createTerminal({
     name: `Proxy: ${service}@${site} :${port}`,
@@ -96,41 +101,49 @@ export function startProxy(site: string, service: string, socketPath: string, po
   let polls = 0
   entry.pollTimer = setInterval(() => {
     polls++
-    if (safeExec(`ss -tln | grep ':${port} '`, { timeout: 1000 })) {
-      entry.ready = true
-      if (entry.pollTimer) clearInterval(entry.pollTimer)
-      entry.pollTimer = undefined
-      triggerRefresh()
-    } else if (polls >= 30) {
-      if (entry.pollTimer) clearInterval(entry.pollTimer)
-      entry.pollTimer = undefined
-    }
+    void (async () => {
+      try {
+        if (await safeExecAsync(`ss -tln | grep ':${port} '`, { timeout: 1000 })) {
+          entry.ready = true
+          if (entry.pollTimer) clearInterval(entry.pollTimer)
+          entry.pollTimer = undefined
+          triggerRefresh()
+        } else if (polls >= 30) {
+          if (entry.pollTimer) clearInterval(entry.pollTimer)
+          entry.pollTimer = undefined
+        }
+      } catch (err) {
+        error(`proxy ss poll failed: ${(err as Error).message}`)
+      }
+    })()
   }, 1000)
 }
 
-export function stopProxy(site: string, service: string): void {
+export async function stopProxy(site: string, service: string): Promise<void> {
   const idx = _activeProxies.findIndex((p) => p.site === site && p.service === service)
   if (idx === -1) return
   log(`Proxy stop: ${service}@${site}`)
   const entry = _activeProxies[idx]
   if (entry.pollTimer) clearInterval(entry.pollTimer)
-  killSocatOnPort(entry.port)
-  entry.terminal.dispose()
   _activeProxies.splice(idx, 1)
   triggerRefresh()
+  await killSocatOnPort(entry.port)
+  entry.terminal.dispose()
 }
 
-export function stopAllProxies(): void {
-  for (const entry of _activeProxies) {
-    try {
-      if (entry.pollTimer) clearInterval(entry.pollTimer)
-      killSocatOnPort(entry.port)
-      entry.terminal.dispose()
-    } catch {
-      /* ignore */
-    }
-  }
-  _activeProxies.length = 0
+export async function stopAllProxies(): Promise<void> {
+  const entries = _activeProxies.splice(0, _activeProxies.length)
+  await Promise.all(
+    entries.map(async (entry) => {
+      try {
+        if (entry.pollTimer) clearInterval(entry.pollTimer)
+        await killSocatOnPort(entry.port)
+        entry.terminal.dispose()
+      } catch {
+        /* ignore */
+      }
+    })
+  )
 }
 
 export function registerProxyCleanup(
@@ -168,7 +181,7 @@ export async function promptAndStartProxy(
       [{ label: 'Stop proxy', description: `:${existing.port}` }, { label: 'Cancel' }],
       { placeHolder: `Proxy for ${service}@${site} is active on port ${existing.port}` }
     )
-    if (action?.label === 'Stop proxy') stopProxy(site, service)
+    if (action?.label === 'Stop proxy') await stopProxy(site, service)
     return
   }
 
@@ -183,7 +196,7 @@ export async function promptAndStartProxy(
     }
   })
   if (!portStr) return
-  startProxy(site, service, socketPath, parseInt(portStr, 10))
+  await startProxy(site, service, socketPath, parseInt(portStr, 10))
 }
 
 export async function promptSocketProxy(site: string): Promise<void> {
@@ -218,13 +231,15 @@ export async function promptSocketProxy(site: string): Promise<void> {
 
 // ── Internal ──
 
-function killSocatOnPort(port: number): void {
-  const pid = safeExec(`sudo lsof -ti TCP:${port} -sTCP:LISTEN`, { timeout: 3000 })
-  if (pid) {
-    for (const p of pid.split('\n').filter(Boolean)) {
-      safeExec(`sudo kill ${p}`, { timeout: 2000 })
-    }
-  }
+async function killSocatOnPort(port: number): Promise<void> {
+  const pid = await safeExecAsync(`sudo lsof -ti TCP:${port} -sTCP:LISTEN`, { timeout: 3000 })
+  if (!pid) return
+  await Promise.all(
+    pid
+      .split('\n')
+      .filter(Boolean)
+      .map((p) => safeExecAsync(`sudo kill ${p}`, { timeout: 2000 }))
+  )
 }
 
 function triggerRefresh(): void {

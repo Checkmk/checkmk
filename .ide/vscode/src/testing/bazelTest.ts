@@ -3,13 +3,13 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { execSync } from 'child_process'
 import * as fs from 'fs'
 import * as path from 'path'
 import * as vscode from 'vscode'
 
 import { shellEscape } from '../core/config'
 import { notifyError, notifyInfo, notifyWarn } from '../core/log'
+import { safeExecAsync } from '../core/shell'
 import { runCommand, waitForTask } from '../core/tasks'
 
 function getWorkspacePath(): string | undefined {
@@ -40,19 +40,14 @@ function findBazelTarget(filePath: string, wsPath: string): string | null {
   return null
 }
 
-function queryBazelTarget(filePath: string, wsPath: string): string | null {
+async function queryBazelTarget(filePath: string, wsPath: string): Promise<string | null> {
   const relPath = path.relative(wsPath, filePath)
-  try {
-    const result = execSync(`bazel query 'attr(srcs, "${relPath}", //tests/...)' 2>/dev/null`, {
-      cwd: wsPath,
-      encoding: 'utf-8',
-      timeout: 15000
-    }).trim()
-    const targets = result.split('\n').filter(Boolean)
-    return targets[0] || null
-  } catch {
-    return null
-  }
+  const result = await safeExecAsync(
+    `bazel query 'attr(srcs, "${relPath}", //tests/...)' 2>/dev/null`,
+    { cwd: wsPath, timeout: 15000 }
+  )
+  const targets = result.split('\n').filter(Boolean)
+  return targets[0] || null
 }
 
 export function registerBazelTestRunner(): vscode.Disposable[] {
@@ -81,7 +76,7 @@ export function registerBazelTestRunner(): vscode.Disposable[] {
       let target = findBazelTarget(filePath, wsPath)
       if (!target) {
         notifyInfo('CMK: Querying Bazel for target (this may take a moment)...')
-        target = queryBazelTarget(filePath, wsPath)
+        target = await queryBazelTarget(filePath, wsPath)
       }
 
       if (!target) {
@@ -148,7 +143,7 @@ export function registerBazelTestRunner(): vscode.Disposable[] {
       let target = findBazelTarget(filePath, wsPath)
       if (!target) {
         notifyInfo('CMK: Querying Bazel for target...')
-        target = queryBazelTarget(filePath, wsPath)
+        target = await queryBazelTarget(filePath, wsPath)
       }
 
       if (!target) {

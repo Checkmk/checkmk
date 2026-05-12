@@ -287,7 +287,7 @@ export async function applyAllocatorSetting(
     if (current === wrapperPath) {
       await updateDmypyExecutable(wsFolder, undefined)
       log('cmk.mypy.allocator=default — released mypy.dmypyExecutable')
-      killAllDmypyDaemons()
+      await killAllDmypyDaemons()
     }
     await updateRunUsingInterpreter(wsFolder, undefined)
     deleteWrapperIfPresent(wrapperPath)
@@ -331,7 +331,7 @@ export async function applyAllocatorSetting(
   const interpreterChanged = runUsingInterpreterBefore !== false
   await updateRunUsingInterpreter(wsFolder, false)
 
-  if (dmypyChanged || interpreterChanged) killAllDmypyDaemons()
+  if (dmypyChanged || interpreterChanged) await killAllDmypyDaemons()
 }
 
 /** Snapshot for the IDE Health sidebar — covers both the opt-in recommendation

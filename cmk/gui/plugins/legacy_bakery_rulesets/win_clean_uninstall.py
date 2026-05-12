@@ -3,46 +3,66 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Mapping
 
-from cmk.gui.agent_bakery import RulespecGroupMonitoringAgentsWindowsAgent
-from cmk.gui.i18n import _
-from cmk.gui.plugins.wato.utils import HostRulespec, rulespec_registry
-from cmk.gui.valuespec import DropdownChoice
-from cmk.utils.rulesets.definition import RuleGroup
+from cmk.rulesets.v1 import Help, Title
+from cmk.rulesets.v1.form_specs import (
+    DefaultValue,
+    DictElement,
+    Dictionary,
+    SingleChoice,
+    SingleChoiceElement,
+)
+from cmk.rulesets.v1.rule_specs import AgentConfig, Topic
 
 
-def _valuespec_agent_config_win_clean_uninstall() -> DropdownChoice[str]:
-    return DropdownChoice(
-        title=_("Clean up Checkmk agent program data directory on uninstall"),
-        label=_("On Checkmk agent uninstallation"),
-        help=_(
-            "Choose what to do with the files under <tt>%PROGRAMDATA%\\checkmk</tt>:"
-            "<ul>"
-            "<li><i>Do not remove anything</i>: Leave all files in place after uninstallation.</li>"
-            "<li><i>Remove data managed by the Checkmk agent</i>: Remove only files that got"
-            " created on Checkmk agent installation. This includes files that came from bakery"
-            " plugins, even if they have been edited by a user. Keep runtime files that have been"
-            " created after installation, like state files, registration files, and logs.</li>"
-            "<li><i>Remove all files and subdirectories</i>: Remove all files regardless of their origin.</li>"
-            "</ul>"
-            "<b>Caution</b>: Uninstallation also happens on every agent update!"
-            " As a consequence, this rule will break automatic agent updates and TLS encrypted"
-            " agent communication on setting <i>Remove all files and subdirectories</i>, since the"
-            " removed files also include your agent updater and agent controller registrations."
+def migrate(value: object) -> Mapping[str, object]:
+    if isinstance(value, dict) and "cleanup_mode" in value:
+        return value
+    if isinstance(value, str):
+        return {"cleanup_mode": value}
+    raise ValueError(f"Unexpected value: {value!r}")
+
+
+def _form_spec() -> Dictionary:
+    return Dictionary(
+        help_text=Help(
+            "Choose what to do with the files under %PROGRAMDATA%\\checkmk on "
+            "Checkmk agent uninstallation. Note: Uninstallation also happens on every "
+            "agent update. Setting 'Remove all files and subdirectories' will break "
+            "automatic agent updates and TLS encrypted agent communication, since the "
+            "removed files include the agent updater and agent controller registrations."
         ),
-        choices=[
-            ("none", _("Do not remove anything")),
-            ("smart", _("Remove data managed by the Checkmk agent")),
-            ("all", _("Remove all files and subdirectories")),
-        ],
-        default_value="none",
+        elements={
+            "cleanup_mode": DictElement(
+                required=True,
+                parameter_form=SingleChoice(
+                    title=Title("On Checkmk agent uninstallation"),
+                    elements=[
+                        SingleChoiceElement(
+                            name="none",
+                            title=Title("Do not remove anything"),
+                        ),
+                        SingleChoiceElement(
+                            name="smart",
+                            title=Title("Remove data managed by the Checkmk agent"),
+                        ),
+                        SingleChoiceElement(
+                            name="all",
+                            title=Title("Remove all files and subdirectories"),
+                        ),
+                    ],
+                    prefill=DefaultValue("none"),
+                ),
+            ),
+        },
+        migrate=migrate,
     )
 
 
-rulespec_registry.register(
-    HostRulespec(
-        group=RulespecGroupMonitoringAgentsWindowsAgent,
-        name=RuleGroup.AgentConfig("win_clean_uninstall"),
-        valuespec=_valuespec_agent_config_win_clean_uninstall,
-    )
+rule_spec_win_clean_uninstall = AgentConfig(
+    title=Title("Clean up Checkmk agent program data directory on uninstall"),
+    name="win_clean_uninstall",
+    topic=Topic.WINDOWS,
+    parameter_form=_form_spec,
 )

@@ -9,15 +9,16 @@ from cmk.base.plugins.bakery.win_clean_uninstall import (
 )
 
 
-def test_win_clean_uninstall_windows_config_yes() -> None:
-    result = list(get_win_clean_uninstall_windows_config("yes"))
-    assert result == [
-        WindowsSystemConfigEntry(name="cleanup_uninstall", content="yes"),
-    ]
+def test_win_clean_uninstall_windows_config_none() -> None:
+    result = list(get_win_clean_uninstall_windows_config({"cleanup_mode": "none"}))
+    assert result == [WindowsSystemConfigEntry(name="cleanup_uninstall", content="none")]
 
 
-def test_win_clean_uninstall_windows_config_no() -> None:
-    result = list(get_win_clean_uninstall_windows_config("no"))
-    assert result == [
-        WindowsSystemConfigEntry(name="cleanup_uninstall", content="no"),
-    ]
+def test_win_clean_uninstall_windows_config_smart() -> None:
+    result = list(get_win_clean_uninstall_windows_config({"cleanup_mode": "smart"}))
+    assert result == [WindowsSystemConfigEntry(name="cleanup_uninstall", content="smart")]
+
+
+def test_win_clean_uninstall_windows_config_all() -> None:
+    result = list(get_win_clean_uninstall_windows_config({"cleanup_mode": "all"}))
+    assert result == [WindowsSystemConfigEntry(name="cleanup_uninstall", content="all")]

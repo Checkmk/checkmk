@@ -8,7 +8,8 @@
 
 import json
 import os
-from typing import Dict, Mapping, Tuple, Union
+from collections.abc import Mapping
+from typing import Union
 
 import pymongo
 import pytest
@@ -258,7 +259,7 @@ def test_router_instance_mongodb_3_4() -> None:
     ],
 )
 def test_read_config(
-    config: Mapping[str, str], expected_pymongo_config: Dict[str, Union[str, bool]]
+    config: Mapping[str, str], expected_pymongo_config: dict[str, Union[str, bool]]
 ) -> None:
     """
     see if the config is corretly transformed to pymongo arguments
@@ -330,7 +331,7 @@ def test_read_config(
     ],
 )
 def test_transform_config(
-    pymongo_version: Tuple[int, int, int], pymongo_config: Mapping[str, Union[str, bool]]
+    pymongo_version: tuple[int, int, int], pymongo_config: Mapping[str, Union[str, bool]]
 ) -> None:
     class DummyConfig(mk_mongodb.Config):
         def __init__(self) -> None:

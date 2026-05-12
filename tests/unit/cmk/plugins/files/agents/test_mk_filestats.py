@@ -12,7 +12,8 @@ import configparser
 import os
 import sys
 from collections import OrderedDict
-from typing import Mapping, Optional, Sequence, Tuple
+from collections.abc import Mapping, Sequence
+from typing import Optional
 
 import pytest
 
@@ -73,7 +74,7 @@ def test_get_file_iterator_pattern(
     ],
 )
 def test_numeric_filter(
-    operator: str, values: Tuple[float, int, str], results: Tuple[bool, bool, bool]
+    operator: str, values: tuple[float, int, str], results: tuple[bool, bool, bool]
 ) -> None:
     num_filter = mk_filestats.AbstractNumericFilter("%s1024" % operator)
     for value, result in zip(values, results):

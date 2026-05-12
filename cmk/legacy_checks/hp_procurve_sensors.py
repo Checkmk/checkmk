@@ -8,33 +8,9 @@
 
 # Relevant SNMP OIDs:
 # .1.3.6.1.4.1.11.2.14.11.1.2.6.1.1.1 1
-# .1.3.6.1.4.1.11.2.14.11.1.2.6.1.1.2 2
-# .1.3.6.1.4.1.11.2.14.11.1.2.6.1.1.3 3
-# .1.3.6.1.4.1.11.2.14.11.1.2.6.1.1.4 4
 # .1.3.6.1.4.1.11.2.14.11.1.2.6.1.2.1 SNMPv2-SMI::enterprises.11.2.3.7.8.3.2
-# .1.3.6.1.4.1.11.2.14.11.1.2.6.1.2.2 SNMPv2-SMI::enterprises.11.2.3.7.8.3.1
-# .1.3.6.1.4.1.11.2.14.11.1.2.6.1.2.3 SNMPv2-SMI::enterprises.11.2.3.7.8.3.1
-# .1.3.6.1.4.1.11.2.14.11.1.2.6.1.2.4 SNMPv2-SMI::enterprises.11.2.3.7.8.3.3
-# .1.3.6.1.4.1.11.2.14.11.1.2.6.1.3.1 1
-# .1.3.6.1.4.1.11.2.14.11.1.2.6.1.3.2 1
-# .1.3.6.1.4.1.11.2.14.11.1.2.6.1.3.3 1
-# .1.3.6.1.4.1.11.2.14.11.1.2.6.1.3.4 1
 # .1.3.6.1.4.1.11.2.14.11.1.2.6.1.4.1 4
-# .1.3.6.1.4.1.11.2.14.11.1.2.6.1.4.2 4
-# .1.3.6.1.4.1.11.2.14.11.1.2.6.1.4.3 5
-# .1.3.6.1.4.1.11.2.14.11.1.2.6.1.4.4 4
-# .1.3.6.1.4.1.11.2.14.11.1.2.6.1.5.1 0
-# .1.3.6.1.4.1.11.2.14.11.1.2.6.1.5.2 0
-# .1.3.6.1.4.1.11.2.14.11.1.2.6.1.5.3 0
-# .1.3.6.1.4.1.11.2.14.11.1.2.6.1.5.4 0
-# .1.3.6.1.4.1.11.2.14.11.1.2.6.1.6.1 0
-# .1.3.6.1.4.1.11.2.14.11.1.2.6.1.6.2 0
-# .1.3.6.1.4.1.11.2.14.11.1.2.6.1.6.3 0
-# .1.3.6.1.4.1.11.2.14.11.1.2.6.1.6.4 0
 # .1.3.6.1.4.1.11.2.14.11.1.2.6.1.7.1 "Fan Sensor"
-# .1.3.6.1.4.1.11.2.14.11.1.2.6.1.7.2 "Power Supply Sensor"
-# .1.3.6.1.4.1.11.2.14.11.1.2.6.1.7.3 "Redundant Power Supply Sensor"
-# .1.3.6.1.4.1.11.2.14.11.1.2.6.1.7.4 "Over-temperature Sensor"
 
 # Status codes:
 # 1 => unknown,
@@ -43,65 +19,67 @@
 # 4 => good,
 # 5 => notPresent
 
-# GENERAL MAPS:
+from cmk.agent_based.v2 import (
+    any_of,
+    CheckPlugin,
+    CheckResult,
+    contains,
+    DiscoveryResult,
+    Result,
+    Service,
+    SimpleSNMPSection,
+    SNMPTree,
+    State,
+    StringTable,
+)
 
-
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import any_of, contains, SNMPTree, StringTable
-
-check_info = {}
-
-hp_procurve_status_map = {
-    "1": "unknown",
-    "2": "bad",
-    "3": "warning",
-    "4": "good",
-    "5": "notPresent",
+_STATUS_MAP: dict[str, tuple[State, str]] = {
+    "1": (State.UNKNOWN, "unknown"),
+    "2": (State.CRIT, "bad"),
+    "3": (State.WARN, "warning"),
+    "4": (State.OK, "good"),
+    "5": (State.WARN, "notPresent"),
 }
-hp_procurve_status2nagios_map = {"unknown": 3, "bad": 2, "warning": 1, "good": 0, "notPresent": 1}
+
+_SENSOR_TYPE_SUFFIX_MAP = {
+    "11.2.3.7.8.3.1": "PSU",
+    "11.2.3.7.8.3.2": "FAN",
+    "11.2.3.7.8.3.3": "Temp",
+    "11.2.3.7.8.3.4": "FutureSlot",
+}
 
 
-def get_hp_procurve_sensor_type(type_input: str) -> str:
-    type_ = ""
-    if type_input.endswith("11.2.3.7.8.3.1"):
-        type_ = "PSU"
-    elif type_input.endswith("11.2.3.7.8.3.2"):
-        type_ = "FAN"
-    elif type_input.endswith("11.2.3.7.8.3.3"):
-        type_ = "Temp"
-    elif type_input.endswith("11.2.3.7.8.3.4"):
-        type_ = "FutureSlot"
-    return type_
-
-
-def discover_hp_procurve_sensors(info: StringTable) -> list[tuple[str, None]]:
-    inventory: list[tuple[str, None]] = []
-    for line in info:
-        if len(line) == 4 and hp_procurve_status_map[line[2]] != "notPresent":
-            inventory.append((line[0], None))
-    return inventory
-
-
-def check_hp_procurve_sensors(item: str, _not_used: None, info: StringTable) -> tuple[int, str]:
-    for line in info:
-        if line[0] == item:
-            procurve_status = hp_procurve_status_map[line[2]]
-            status = hp_procurve_status2nagios_map[procurve_status]
-
-            return (
-                status,
-                f'Condition of {get_hp_procurve_sensor_type(line[1])} "{line[3]}" is {procurve_status}',
-            )
-    return (3, "item not found in snmp data")
+def _sensor_type(type_input: str) -> str:
+    for suffix, name in _SENSOR_TYPE_SUFFIX_MAP.items():
+        if type_input.endswith(suffix):
+            return name
+    return ""
 
 
 def parse_hp_procurve_sensors(string_table: StringTable) -> StringTable:
     return string_table
 
 
-check_info["hp_procurve_sensors"] = LegacyCheckDefinition(
+def discover_hp_procurve_sensors(section: StringTable) -> DiscoveryResult:
+    for line in section:
+        if len(line) == 4 and _STATUS_MAP[line[2]][1] != "notPresent":
+            yield Service(item=line[0])
+
+
+def check_hp_procurve_sensors(item: str, section: StringTable) -> CheckResult:
+    for line in section:
+        if line[0] == item:
+            state, status_readable = _STATUS_MAP[line[2]]
+            yield Result(
+                state=state,
+                summary=f'Condition of {_sensor_type(line[1])} "{line[3]}" is {status_readable}',
+            )
+            return
+    yield Result(state=State.UNKNOWN, summary="item not found in snmp data")
+
+
+snmp_section_hp_procurve_sensors = SimpleSNMPSection(
     name="hp_procurve_sensors",
-    parse_function=parse_hp_procurve_sensors,
     detect=any_of(
         contains(".1.3.6.1.2.1.1.2.0", ".11.2.3.7.11"),
         contains(".1.3.6.1.2.1.1.2.0", ".11.2.3.7.8"),
@@ -110,6 +88,12 @@ check_info["hp_procurve_sensors"] = LegacyCheckDefinition(
         base=".1.3.6.1.4.1.11.2.14.11.1.2.6.1",
         oids=["1", "2", "4", "7"],
     ),
+    parse_function=parse_hp_procurve_sensors,
+)
+
+
+check_plugin_hp_procurve_sensors = CheckPlugin(
+    name="hp_procurve_sensors",
     service_name="Sensor %s",
     discovery_function=discover_hp_procurve_sensors,
     check_function=check_hp_procurve_sensors,

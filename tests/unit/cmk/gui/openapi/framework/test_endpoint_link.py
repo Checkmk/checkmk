@@ -311,3 +311,29 @@ def test_link_to_endpoint_title_omitted_by_default() -> None:
     link = _link(thing_id="abc")
 
     assert isinstance(link.title, ApiOmitted)
+
+
+# -- PathParam alias ---------------------------------------------------------
+
+
+def _handler_with_aliased_path_param(
+    thing: Annotated[str, PathParam(alias="thing_id", description="Thing ID", example="abc")],
+) -> None:
+    return None
+
+
+def test_path_to_endpoint_aliased_path_param_uses_alias() -> None:
+    """Passing the alias fills the path template even though the Python param name differs."""
+    _register((APIVersion.V1, _handler_with_aliased_path_param))
+
+    path = _path(thing_id="abc")
+
+    assert path.endswith("/check_mk/api/v1/objects/test_thing/abc")
+
+
+def test_path_to_endpoint_aliased_path_param_rejects_internal_name() -> None:
+    """Passing the internal parameter name instead of the alias is rejected as unknown."""
+    _register((APIVersion.V1, _handler_with_aliased_path_param))
+
+    with pytest.raises(EndpointLinkParameterError, match="Unknown parameter 'thing'"):
+        _path(thing="abc")

@@ -73,37 +73,31 @@ def _resolve(
 def _fill(path: str, parameters: Mapping[str, str], handler_params: Parameters) -> str:
     """Fill a path template using handler-annotated parameter classification.
 
-    Path parameters (``PathParam``) fill ``{placeholder}``s in the template — the
-    template's placeholder names must match the handler's parameter names, so
-    path values are keyed by the original parameter name even when a ``PathParam``
-    declares an ``alias`` (the alias is only used on the user-facing side).
-    Query parameters (``QueryParam``) are appended as a query string.
-    Unknown parameters raise :class:`EndpointLinkParameterError`.
+    ``parameters`` keys must be the names as described in the API documentation. Path parameters
+    fill the corresponding placeholders in the template; query parameters are appended as a query
+    string. Unknown keys raise :class:`EndpointLinkParameterError`.
     """
-    # Map user-facing key (alias or name) → original parameter name for the path;
-    # queries can use the user-facing key directly since ``urlencode`` just
-    # serializes whatever keys we hand it.
-    path_key_to_name = {(param.alias or name): name for name, param in handler_params.path.items()}
+    path_keys = {(param.alias or name): name for name, param in handler_params.path.items()}
     query_names = {param.alias or name for name, param in handler_params.query.items()}
 
     path_values: dict[str, str] = {}
     query_values: dict[str, str] = {}
     for key, value in parameters.items():
-        if key in path_key_to_name:
-            path_values[path_key_to_name[key]] = quote(value, safe="")
+        if key in path_keys:
+            path_values[key] = quote(value, safe="")
         elif key in query_names:
             query_values[key] = value
         else:
             raise EndpointLinkParameterError(
                 f"Unknown parameter {key!r}. "
-                f"Known path parameters: {sorted(path_key_to_name)}, "
+                f"Known path parameters: {sorted(path_keys)}, "
                 f"known query parameters: {sorted(query_names)}"
             )
 
     missing = {
         param.alias or name
         for name, param in handler_params.path.items()
-        if param.default is dataclasses.MISSING and name not in path_values
+        if param.default is dataclasses.MISSING and (param.alias or name) not in path_values
     }
     if missing:
         raise EndpointLinkParameterError(f"Missing path parameters: {sorted(missing)}")
@@ -168,10 +162,8 @@ def path_to_endpoint(
     Use this for ``response.location`` redirects. For a full HATEOAS link
     (with rel/method/type/absolute href) use :func:`link_to_endpoint`.
 
-    The ``parameters`` mapping is split by inspecting the handler function's
-    ``PathParam`` / ``QueryParam`` annotations: annotated path parameters fill
-    ``{placeholder}``s in the path template, annotated query parameters are
-    appended as a query string. Unrecognised keys are rejected.
+    ``parameters`` keys must be the names as described in the API documentation.
+    Unrecognised keys are rejected.
 
     Raises:
         EndpointLinkNotFoundError: the requested version has no endpoint
@@ -207,10 +199,8 @@ def link_to_endpoint(
     ``host_url`` is the scheme+host (e.g. ``https://example.com/``) that the
     returned ``href`` should be prefixed with.
 
-    The ``parameters`` mapping is split by inspecting the handler function's
-    ``PathParam`` / ``QueryParam`` annotations: annotated path parameters fill
-    ``{placeholder}``s in the path template, annotated query parameters are
-    appended as a query string. Unrecognised keys are rejected.
+    ``parameters`` keys must be the names as described in the API documentation.
+    Unrecognised keys are rejected.
 
     If the endpoint expects a request body, ``body`` is included in the
     returned :class:`LinkModel`.

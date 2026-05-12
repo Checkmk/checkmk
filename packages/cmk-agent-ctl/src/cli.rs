@@ -10,8 +10,9 @@ use clap::{Parser, Subcommand};
 #[derive(Parser)]
 #[command(about = "Checkmk agent controller.", version = version::VERSION)]
 pub struct Cli {
-    /// Enable verbose output. Use once (-v) for logging level INFO and twice (-vv) for logging
-    /// level DEBUG.
+    /// Enable verbose output. Use once (-v) for logging level INFO, twice (-vv) for
+    /// logging level DEBUG, and three times (-vvv) for logging level TRACE.
+    /// Applies to both `log` and `tracing` messages.
     #[arg(short, long, action = clap::ArgAction::Count)]
     verbose: u8,
 
@@ -314,7 +315,8 @@ pub struct RenewCertificateOpts {
 impl Cli {
     pub fn logging_level(&self) -> String {
         String::from(match self.verbose {
-            2.. => "debug",
+            3.. => "trace",
+            2 => "debug",
             1 => "info",
             _ => "warn",
         })
@@ -350,6 +352,14 @@ mod tests {
             })
             .logging_level(),
             "debug"
+        );
+        assert_eq!(
+            (Cli {
+                verbose: 3,
+                mode: Mode::Dump
+            })
+            .logging_level(),
+            "trace"
         );
     }
 

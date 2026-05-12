@@ -1,5 +1,5 @@
 {
-  "checksum": "1944952a1fc85cb8338fe67f754f0a940f4b947b49d2f546263e965a78d42866",
+  "checksum": "1791560d4389d9e926f592e69b35091b96f3e999d7b0544be593519f96b43be2",
   "crates": {
     "addr2line 0.24.2": {
       "name": "addr2line",
@@ -3308,6 +3308,10 @@
             {
               "id": "toml 0.8.23",
               "target": "toml"
+            },
+            {
+              "id": "tracing 0.1.41",
+              "target": "tracing"
             },
             {
               "id": "uuid 1.18.0",

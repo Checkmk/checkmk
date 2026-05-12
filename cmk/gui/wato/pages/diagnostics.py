@@ -130,7 +130,12 @@ def register(
     automation_command_registry: AutomationCommandRegistry,
     job_registry: BackgroundJobRegistry,
 ) -> None:
-    page_registry.register(PageEndpoint("download_diagnostics_dump", PageDownloadDiagnosticsDump()))
+    page_registry.register(
+        PageEndpoint(
+            "download_diagnostics_dump",
+            PageDownloadDiagnosticsDump(cmk.utils.paths.diagnostics_dir),
+        )
+    )
     mode_registry.register(ModeDiagnostics)
     automation_command_registry.register(AutomationDiagnosticsDumpGetFile)
     automation_command_registry.register(AutomationDiagnosticsDumpOsWalk)
@@ -138,6 +143,12 @@ def register(
 
 
 class ModeDiagnostics(WatoMode[object]):
+    # NOTE: ModeRegistry currently still contains types, not instances, so we can have no argument
+    # here. When this has been fixed, we can pass the diagnostics directory at registration time!
+    def __init__(self, edition: Edition) -> None:
+        super().__init__(edition)
+        self._diagnostics_dir = cmk.utils.paths.diagnostics_dir
+
     @classmethod
     def name(cls) -> str:
         return "diagnostics"
@@ -252,6 +263,7 @@ class ModeDiagnostics(WatoMode[object]):
                         user_permission_config=UserPermissionSerializableConfig.from_global_config(
                             config
                         ),
+                        diagnostics_dir=self._diagnostics_dir,
                         debug=config.debug,
                     ),
                 ),
@@ -825,6 +837,7 @@ class ModeDiagnostics(WatoMode[object]):
 class DiagnosticsDumpArgs(BaseModel, frozen=True):
     params: DiagnosticsParameters
     automation_config: LocalAutomationConfig | RemoteAutomationConfig
+    diagnostics_dir: Path
     user_permission_config: UserPermissionSerializableConfig
     debug: bool
 
@@ -832,13 +845,7 @@ class DiagnosticsDumpArgs(BaseModel, frozen=True):
 def diagnostics_dump_entry_point(
     job_interface: BackgroundProcessInterface, args: DiagnosticsDumpArgs
 ) -> None:
-    DiagnosticsDumpBackgroundJob().do_execute(
-        args.params,
-        job_interface,
-        automation_config=args.automation_config,
-        user_permission_config=args.user_permission_config,
-        debug=args.debug,
-    )
+    DiagnosticsDumpBackgroundJob().do_execute(job_interface, args)
 
 
 class DiagnosticsDumpBackgroundJob(BackgroundJob):
@@ -855,53 +862,38 @@ class DiagnosticsDumpBackgroundJob(BackgroundJob):
         return makeuri(request, [])
 
     def do_execute(
-        self,
-        diagnostics_parameters: DiagnosticsParameters,
-        job_interface: BackgroundProcessInterface,
-        user_permission_config: UserPermissionSerializableConfig,
-        *,
-        automation_config: LocalAutomationConfig | RemoteAutomationConfig,
-        debug: bool,
+        self, job_interface: BackgroundProcessInterface, args: DiagnosticsDumpArgs
     ) -> None:
         with job_interface.gui_context(
-            UserPermissions.from_serialized_config(user_permission_config, permission_registry)
+            UserPermissions.from_serialized_config(args.user_permission_config, permission_registry)
         ):
-            self._do_execute(
-                diagnostics_parameters,
-                job_interface,
-                automation_config=automation_config,
-                debug=debug,
-            )
+            self._do_execute(job_interface, args)
 
     def _do_execute(
-        self,
-        diagnostics_parameters: DiagnosticsParameters,
-        job_interface: BackgroundProcessInterface,
-        *,
-        automation_config: LocalAutomationConfig | RemoteAutomationConfig,
-        debug: bool,
+        self, job_interface: BackgroundProcessInterface, args: DiagnosticsDumpArgs
     ) -> None:
         job_interface.send_progress_update(_("Diagnostics dump started..."))
 
-        chunks = serialize_wato_parameters(diagnostics_parameters, max_args=_get_max_args())
+        chunks = serialize_wato_parameters(args.params, max_args=_get_max_args())
 
-        site = diagnostics_parameters["site"]
+        site = args.params["site"]
         results = []
         for chunk in chunks:
             chunk_result = create_diagnostics_dump(
-                automation_config,
+                args.automation_config,
                 chunk,
-                diagnostics_parameters["timeout"],
-                debug=debug,
+                args.params["timeout"],
+                debug=args.debug,
             )
             results.append(chunk_result)
 
         if len(results) > 1:
             result = _merge_results(
-                automation_config,
-                results,
-                diagnostics_parameters["timeout"],
-                debug=debug,
+                automation_config=args.automation_config,
+                results=results,
+                diagnostics_dir=args.diagnostics_dir,
+                timeout=args.params["timeout"],
+                debug=args.debug,
             )
             # The remote tarfiles will be downloaded and the link will point to the local site.
             download_site_id = omd_site()
@@ -922,7 +914,7 @@ class DiagnosticsDumpBackgroundJob(BackgroundJob):
                 [
                     ("site", download_site_id),
                     ("tarfile_name", str(Path(tarfile_path).name)),
-                    ("timeout", diagnostics_parameters["timeout"]),
+                    ("timeout", args.params["timeout"]),
                 ],
                 filename="download_diagnostics_dump.py",
             )
@@ -952,10 +944,11 @@ def _get_max_args() -> int:
 
 
 def _merge_results(
+    *,
     automation_config: LocalAutomationConfig | RemoteAutomationConfig,
     results: Sequence[CreateDiagnosticsDumpResult],
+    diagnostics_dir: Path,
     timeout: int,
-    *,
     debug: bool,
 ) -> CreateDiagnosticsDumpResult:
     output: str = ""
@@ -969,9 +962,10 @@ def _merge_results(
                 tarfile_localpath = result.tarfile_path
             else:
                 tarfile_localpath = _get_tarfile_from_remotesite(
-                    automation_config,
-                    Path(result.tarfile_path).name,
-                    timeout,
+                    automation_config=automation_config,
+                    diagnostics_dir=diagnostics_dir,
+                    tarfile_name=Path(result.tarfile_path).name,
+                    timeout=timeout,
                     debug=debug,
                 )
             tarfile_paths.append(tarfile_localpath)
@@ -979,28 +973,35 @@ def _merge_results(
     return CreateDiagnosticsDumpResult(
         output=output,
         tarfile_created=tarfile_created,
-        tarfile_path=_join_sub_tars(tarfile_paths),
+        tarfile_path=str(_join_sub_tars(diagnostics_dir, tarfile_paths)),
     )
 
 
 def _get_tarfile_from_remotesite(
+    *,
     automation_config: RemoteAutomationConfig,
+    diagnostics_dir: Path,
     tarfile_name: str,
     timeout: int,
-    *,
     debug: bool,
 ) -> str:
-    cmk.utils.paths.diagnostics_dir.mkdir(parents=True, exist_ok=True)
-    tarfile_localpath = _create_file_path()
+    diagnostics_dir.mkdir(parents=True, exist_ok=True)
+    tarfile_localpath = str(_create_file_path(diagnostics_dir))
     with open(tarfile_localpath, "wb") as file:
         file.write(
-            _get_diagnostics_dump_file(automation_config, tarfile_name, timeout, debug=debug)
+            _get_diagnostics_dump_file(
+                automation_config=automation_config,
+                diagnostics_dir=diagnostics_dir,
+                tarfile_name=tarfile_name,
+                timeout=timeout,
+                debug=debug,
+            )
         )
     return tarfile_localpath
 
 
-def _join_sub_tars(tarfile_paths: Sequence[str]) -> str:
-    tarfile_path = _create_file_path()
+def _join_sub_tars(diagnostics_dir: Path, tarfile_paths: Sequence[str]) -> Path:
+    tarfile_path = _create_file_path(diagnostics_dir)
     with tarfile.open(name=tarfile_path, mode="w:gz") as dest:
         for filepath in tarfile_paths:
             with CheckmkTarArchive.from_path(Path(filepath)) as sub_tar:
@@ -1011,15 +1012,15 @@ def _join_sub_tars(tarfile_paths: Sequence[str]) -> str:
     return tarfile_path
 
 
-def _create_file_path() -> str:
-    return str(
-        cmk.utils.paths.diagnostics_dir.joinpath("sddump_" + str(uuid.uuid4())).with_suffix(
-            ".tar.gz"
-        )
-    )
+def _create_file_path(diagnostics_dir: Path) -> Path:
+    return (diagnostics_dir / f"sddump_{uuid.uuid4()}").with_suffix(".tar.gz")
 
 
 class PageDownloadDiagnosticsDump(Page):
+    def __init__(self, diagnostics_dir: Path) -> None:
+        super().__init__()
+        self._diagnostics_dir = diagnostics_dir
+
     @override
     def page(self, ctx: PageContext) -> None:
         if not user.may("wato.diagnostics"):
@@ -1033,9 +1034,10 @@ class PageDownloadDiagnosticsDump(Page):
         _validate_diagnostics_dump_tarfile_name(tarfile_name)
 
         file_content = _get_diagnostics_dump_file(
-            make_automation_config(ctx.config.sites[site_id]),
-            tarfile_name,
-            timeout,
+            automation_config=make_automation_config(ctx.config.sites[site_id]),
+            diagnostics_dir=self._diagnostics_dir,
+            tarfile_name=tarfile_name,
+            timeout=timeout,
             debug=ctx.config.debug,
         )
 
@@ -1079,25 +1081,37 @@ def _os_walk_of_folder(site: str | None, base_folder: Path, timeout: int) -> OSW
 
 
 class AutomationDiagnosticsDumpGetFile(AutomationCommand[str]):
+    # NOTE: AutomationCommandRegistry currently still contains types, not instances, so
+    # we can have no argument here. When this has been fixed, we can pass the diagnostics
+    # directory at registration time!
+    def __init__(self) -> None:
+        super().__init__()
+        self._diagnostics_dir = cmk.utils.paths.diagnostics_dir
+
     def command_name(self) -> str:
         return "diagnostics-dump-get-file"
 
     def execute(self, api_request: str) -> bytes:
-        return _get_local_diagnostics_dump_file(api_request)
+        return _get_local_diagnostics_dump_file(
+            diagnostics_dir=self._diagnostics_dir, tarfile_name=api_request
+        )
 
     def get_request(self, config: Config, request: Request) -> str:
         return request.get_ascii_input_mandatory("tarfile_name")
 
 
 def _get_diagnostics_dump_file(
+    *,
     automation_config: LocalAutomationConfig | RemoteAutomationConfig,
+    diagnostics_dir: Path,
     tarfile_name: str,
     timeout: int,
-    *,
     debug: bool,
 ) -> bytes:
     if isinstance(automation_config, LocalAutomationConfig):
-        return _get_local_diagnostics_dump_file(tarfile_name)
+        return _get_local_diagnostics_dump_file(
+            diagnostics_dir=diagnostics_dir, tarfile_name=tarfile_name
+        )
 
     raw_response = do_remote_automation(
         automation_config,
@@ -1112,9 +1126,9 @@ def _get_diagnostics_dump_file(
     return raw_response
 
 
-def _get_local_diagnostics_dump_file(tarfile_name: str) -> bytes:
+def _get_local_diagnostics_dump_file(*, diagnostics_dir: Path, tarfile_name: str) -> bytes:
     _validate_diagnostics_dump_tarfile_name(tarfile_name)
-    tarfile_path = cmk.utils.paths.diagnostics_dir.joinpath(tarfile_name)
+    tarfile_path = diagnostics_dir / tarfile_name
     with tarfile_path.open("rb") as f:
         return f.read()
 

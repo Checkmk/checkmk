@@ -108,14 +108,17 @@ SUFFIX = ".tar.gz"
 def _mode_create_diagnostics_dump(app: CheckmkBaseApp, options: DiagnosticsModesParameters) -> None:
     # NOTE: All the stuff is logged on this level only, which is below the default WARNING level.
     dump = create_diagnostics_dump(
-        app,
-        cmk.utils.paths.omd_root,
-        deserialize_modes_parameters(options),
-        None,
+        app=app,
+        omd_root=cmk.utils.paths.omd_root,
+        diagnostics_dir=cmk.utils.paths.diagnostics_dir,
+        parameters=deserialize_modes_parameters(options),
+        loading_result=None,
     )
     section.section_step("Creating diagnostics dump", verbose=False)
     if dump.tarfile_created:
-        console.info(f"{_format_filepath(dump.tarfile_path)}")
+        console.info(
+            f"{_format_filepath(omd_root=cmk.utils.paths.omd_root, filepath=dump.tarfile_path)}"
+        )
     else:
         console.info(f"{_GAP}No dump")
 
@@ -232,7 +235,11 @@ def handler(
     with redirect_stdout(buf), redirect_stderr(buf):
         log.setup_console_logging()
         dump = create_diagnostics_dump(
-            app, cmk.utils.paths.omd_root, deserialize_cl_parameters(args), loading_result
+            app=app,
+            omd_root=cmk.utils.paths.omd_root,
+            diagnostics_dir=cmk.utils.paths.diagnostics_dir,
+            parameters=deserialize_cl_parameters(args),
+            loading_result=loading_result,
         )
         return CreateDiagnosticsDumpResult(
             output=buf.getvalue(),
@@ -249,8 +256,10 @@ automation_create_diagnostics_dump = Automation(
 
 
 def create_diagnostics_dump(
+    *,
     app: CheckmkBaseApp,
     omd_root: Path,
+    diagnostics_dir: Path,
     parameters: DiagnosticsOptionalParameters,
     loading_result: LoadingResult | None,
 ) -> DiagnosticsDump:
@@ -267,6 +276,7 @@ def create_diagnostics_dump(
         core_performance_settings=app.core_performance_settings,
         omd_config=get_omd_config(omd_root),
         omd_root=omd_root,
+        diagnostics_dir=diagnostics_dir,
         parameters=parameters,
     )
     dump.create(omd_root)
@@ -285,8 +295,8 @@ def create_diagnostics_dump(
 _GAP = 4 * " "
 
 
-def _format_filepath(filepath: Path) -> str:
-    return f"{_GAP}{str(filepath.relative_to(cmk.utils.paths.omd_root))}"
+def _format_filepath(*, omd_root: Path, filepath: Path) -> str:
+    return f"{_GAP}{str(filepath.relative_to(omd_root))}"
 
 
 def _format_title(title: str) -> str:
@@ -338,7 +348,8 @@ class DiagnosticsDump:
         core_performance_settings: Callable[[LoadedConfigFragment], Mapping[str, int]],
         omd_config: site.OMDConfig,
         omd_root: Path,
-        parameters: DiagnosticsOptionalParameters | None = None,
+        diagnostics_dir: Path,
+        parameters: DiagnosticsOptionalParameters | None,
     ) -> None:
         self.log: list[str] = []
         self.omd_config = omd_config
@@ -348,10 +359,8 @@ class DiagnosticsDump:
         self.optional_elements = self._get_optional_elements(omd_root, edition, parameters)
         self.elements = self.fixed_elements + self.optional_elements
 
-        dump_folder = cmk.utils.paths.diagnostics_dir
-        self.dump_folder = dump_folder
-        _file_name = "sddump_%s" % str(uuid.uuid4())
-        self.tarfile_path = dump_folder.joinpath(_file_name).with_suffix(SUFFIX)
+        self.dump_folder = diagnostics_dir
+        self.tarfile_path = (diagnostics_dir / f"sddump_{uuid.uuid4()}").with_suffix(SUFFIX)
         self.tarfile_created = False
 
     def _console(self, message: str, severity: str) -> None:
@@ -493,7 +502,7 @@ class DiagnosticsDump:
     def create(self, omd_root: Path) -> None:
         self._create_dump_folder()
         self._create_tarfile(omd_root)
-        self._cleanup_dump_folder()
+        self._cleanup_dump_folder(omd_root)
 
     def _create_dump_folder(self) -> None:
         self._section_step("Create dump folder")
@@ -516,7 +525,7 @@ class DiagnosticsDump:
             tar.add(str(log_filepath), arcname=rel_path)
 
     def _write_console_output_to_file(self, tmp_dump_folder: Path) -> Path:
-        logfile = tmp_dump_folder.joinpath("console_%s.log" % str(datetime.now().timestamp()))
+        logfile = tmp_dump_folder / f"console_{datetime.now().timestamp()}.log"
         store.save_text_to_file(logfile, "\n".join(self.log))
         return logfile
 
@@ -552,7 +561,7 @@ class DiagnosticsDump:
 
         return filepaths
 
-    def _cleanup_dump_folder(self) -> None:
+    def _cleanup_dump_folder(self, omd_root: Path) -> None:
         if not self.tarfile_created:
             # Remove empty tarfile path
             self._remove_file(self.tarfile_path)
@@ -566,7 +575,10 @@ class DiagnosticsDump:
             "Cleanup dump folder", add_info="keep last %d dumps" % self._keep_num_dumps
         )
         for _mtime, filepath in dumps:
-            self._console(f"{_format_filepath(filepath)}", "verbose")
+            self._console(
+                f"{_format_filepath(omd_root=omd_root, filepath=filepath)}",
+                "verbose",
+            )
             self._remove_file(filepath)
 
     def _remove_file(self, filepath: Path) -> None:
@@ -660,7 +672,7 @@ class ABCDiagnosticsElementTextDump(ABCDiagnosticsElement):
     def add_or_get_files(
         self, *, omd_root: Path, tmp_dump_folder: Path
     ) -> DiagnosticsElementFilepaths:
-        filepath = tmp_dump_folder.joinpath(self.ident)
+        filepath = tmp_dump_folder / self.ident
         store.save_text_to_file(filepath, self._collect_infos(omd_root))
         yield filepath
 
@@ -706,7 +718,7 @@ class ABCDiagnosticsElementJSONDump(ABCDiagnosticsElement):
         if not infos:
             raise DiagnosticsElementInfo("No data")
 
-        filepath = tmp_dump_folder.joinpath(self.ident).with_suffix(".json")
+        filepath = (tmp_dump_folder / self.ident).with_suffix(".json")
         store.save_text_to_file(filepath, json.dumps(infos, sort_keys=True, indent=4))
         yield filepath
 
@@ -724,7 +736,7 @@ class ABCDiagnosticsElementCSVDump(ABCDiagnosticsElement):
         if not infos:
             raise DiagnosticsElementInfo("No data")
 
-        filepath = tmp_dump_folder.joinpath(self.ident).with_suffix(".csv")
+        filepath = (tmp_dump_folder / self.ident).with_suffix(".csv")
         store.save_text_to_file(filepath, infos)
         yield filepath
 
@@ -781,7 +793,7 @@ class FilesSizeCSVDiagnosticsElement(ABCDiagnosticsElementCSVDump):
         tmp_file_regex = re.compile(r"^\..*\.new.*")
         for dirpath, _dirnames, filenames in os.walk(omd_root):
             for file in filenames:
-                f = Path(dirpath).joinpath(file)
+                f = Path(dirpath, file)
                 if f.is_symlink():
                     continue
                 if re.match(tmp_file_regex, f.name):
@@ -952,8 +964,7 @@ def collect_infos_hw(proc_base_path: Path) -> DiagnosticsElementJSONResult:
         ("loadavg", _load_avg_proc_parser),
         ("cpuinfo", _cpuinfo_proc_parser),
     ]:
-        filepath = proc_base_path.joinpath(procfile)
-        if content := _try_to_read(filepath):
+        if content := _try_to_read(proc_base_path / procfile):
             hw_info[procfile] = parser(content)
 
     return hw_info
@@ -1736,10 +1747,10 @@ class BIDataDiagnosticsElement(ABCDiagnosticsElement):
     def add_or_get_files(
         self, *, omd_root: Path, tmp_dump_folder: Path
     ) -> DiagnosticsElementFilepaths:
-        tmpdir = tmp_dump_folder.joinpath("tmp/check_mk/bi_cache")
+        tmpdir = tmp_dump_folder / "tmp/check_mk/bi_cache"
         tmpdir.mkdir(parents=True, exist_ok=True)
 
-        shutil.copytree(cmk.utils.paths.tmp_dir.joinpath("bi_cache"), tmpdir, dirs_exist_ok=True)
+        shutil.copytree(cmk.utils.paths.tmp_dir / "bi_cache", tmpdir, dirs_exist_ok=True)
         yield tmpdir
 
 

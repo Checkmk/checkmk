@@ -35,6 +35,8 @@ from cmk.inventory.structured_data import (
 )
 from tests.testlib.common.empty_config import EMPTY_CONFIG
 
+_OMD_ROOT = Path("/omd/sites/no_site")
+
 
 def _make_diagnostics_dump() -> diagnostics.DiagnosticsDump:
     return diagnostics.DiagnosticsDump(
@@ -42,7 +44,9 @@ def _make_diagnostics_dump() -> diagnostics.DiagnosticsDump:
         loaded_config=EMPTY_CONFIG,
         core_performance_settings=lambda x: {},
         omd_config={},
-        omd_root=Path("/omd/sites/no_site"),
+        omd_root=_OMD_ROOT,
+        diagnostics_dir=cmk.utils.paths.diagnostics_dir,
+        parameters=None,
     )
 
 
@@ -92,7 +96,7 @@ def test_diagnostics_dump_create() -> None:
     assert diagnostics_dump.dump_folder.exists()
     assert diagnostics_dump.dump_folder.name == "diagnostics"
 
-    diagnostics_dump._create_tarfile(Path("/omd/sites/no_site"))
+    diagnostics_dump._create_tarfile(_OMD_ROOT)
 
     tarfiles = diagnostics_dump.dump_folder.iterdir()
     assert len(list(tarfiles)) == 1
@@ -107,7 +111,7 @@ def test_diagnostics_cleanup_dump_folder() -> None:
     for nr in range(10):
         diagnostics_dump.dump_folder.joinpath("dummy-%s.tar.gz" % nr).touch()
 
-    diagnostics_dump._cleanup_dump_folder()
+    diagnostics_dump._cleanup_dump_folder(_OMD_ROOT)
 
     tarfiles = diagnostics_dump.dump_folder.iterdir()
     assert len(list(tarfiles)) == diagnostics_dump._keep_num_dumps

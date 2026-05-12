@@ -1,0 +1,7 @@
+type = "Component"
+display_name = "Plugins: IPR400"
+has_support_component = true
+members_required = 0
+description = """
+Plugins for IPR (Internet Protocol Radio) IPR400 PMR gateways.
+"""

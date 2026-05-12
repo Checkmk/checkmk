@@ -1,0 +1,7 @@
+type = "Component"
+display_name = "Plugins: NFS Exports"
+has_support_component = true
+members_required = 0
+description = """
+Plugins for Linux NFS server state and per-mount IO statistics.
+"""

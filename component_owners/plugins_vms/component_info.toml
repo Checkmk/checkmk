@@ -1,0 +1,7 @@
+type = "Component"
+display_name = "Plugins: OpenVMS Host"
+has_support_component = true
+members_required = 0
+description = """
+OpenVMS-specific host plugins.
+"""

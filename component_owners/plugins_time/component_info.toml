@@ -1,0 +1,7 @@
+type = "Component"
+display_name = "Plugins: Time Synchronisation"
+has_support_component = true
+members_required = 0
+description = """
+Time-synchronisation plugins across OSes (chrony, systemd-timesyncd, classic systemtime, macOS Time Machine clock check).
+"""

@@ -1,0 +1,7 @@
+type = "Component"
+display_name = "Plugins: H3C"
+has_support_component = true
+members_required = 0
+description = """
+Plugins for H3C/HPE FlexNetwork LAN switches.
+"""

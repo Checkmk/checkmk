@@ -1,0 +1,7 @@
+type = "Component"
+display_name = "Plugins: Orion Telecom"
+has_support_component = true
+members_required = 0
+description = """
+Plugins for Orion Telecom power-distribution and battery shelves.
+"""

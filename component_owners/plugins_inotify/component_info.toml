@@ -1,0 +1,7 @@
+type = "Component"
+display_name = "Plugins: inotify"
+has_support_component = true
+members_required = 0
+description = """
+Plugin for a Linux inotify-based file/directory watch agent.
+"""

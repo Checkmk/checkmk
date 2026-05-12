@@ -1,0 +1,7 @@
+type = "Component"
+display_name = "Plugins: Epson"
+has_support_component = true
+members_required = 0
+description = """
+Plugin for Epson projector/beamer lamp lifetime.
+"""

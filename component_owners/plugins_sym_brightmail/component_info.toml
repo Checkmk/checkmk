@@ -1,0 +1,7 @@
+type = "Component"
+display_name = "Plugins: Symantec Brightmail"
+has_support_component = true
+members_required = 0
+description = """
+Plugin for the Symantec Brightmail mail-security gateway.
+"""

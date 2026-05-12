@@ -1,0 +1,7 @@
+type = "Component"
+display_name = "Plugins: Skype for Business"
+has_support_component = true
+members_required = 0
+description = """
+Manpages for Skype for Business (formerly Lync) plugins. Source plugins live in cmk/legacy_checks/.
+"""

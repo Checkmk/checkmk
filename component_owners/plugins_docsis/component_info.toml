@@ -1,0 +1,7 @@
+type = "Component"
+display_name = "Plugins: DOCSIS"
+has_support_component = true
+members_required = 0
+description = """
+Plugins for DOCSIS cable modems and CMTS equipment.
+"""

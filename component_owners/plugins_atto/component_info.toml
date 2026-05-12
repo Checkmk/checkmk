@@ -1,0 +1,7 @@
+type = "Component"
+display_name = "Plugins: ATTO FibreBridge"
+has_support_component = true
+members_required = 0
+description = """
+Plugins for ATTO FibreBridge FC-to-SAS bridges.
+"""

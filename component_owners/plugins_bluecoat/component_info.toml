@@ -1,0 +1,7 @@
+type = "Component"
+display_name = "Plugins: Blue Coat"
+has_support_component = true
+members_required = 0
+description = """
+Plugins for Blue Coat (Symantec) ProxySG appliances.
+"""

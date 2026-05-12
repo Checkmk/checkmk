@@ -1,0 +1,7 @@
+type = "Component"
+display_name = "Plugins: Quantum"
+has_support_component = true
+members_required = 0
+description = """
+Plugins for Quantum tape libraries and disk-backup appliances.
+"""

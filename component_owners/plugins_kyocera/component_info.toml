@@ -1,0 +1,7 @@
+type = "Component"
+display_name = "Plugins: Kyocera"
+has_support_component = true
+members_required = 0
+description = """
+Inventory plugin for Kyocera printers.
+"""

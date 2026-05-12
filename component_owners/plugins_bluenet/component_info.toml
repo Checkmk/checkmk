@@ -1,0 +1,7 @@
+type = "Component"
+display_name = "Plugins: Bachmann BlueNet"
+has_support_component = true
+members_required = 0
+description = """
+Plugins for Bachmann BlueNet and BlueNet2 PDUs.
+"""

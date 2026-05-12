@@ -1,0 +1,7 @@
+type = "Component"
+display_name = "Plugins: JAR Signature"
+has_support_component = true
+members_required = 0
+description = """
+Plugin that verifies the signature of a Java JAR file.
+"""

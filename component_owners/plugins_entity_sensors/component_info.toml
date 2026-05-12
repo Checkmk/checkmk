@@ -1,0 +1,7 @@
+type = "Component"
+display_name = "Plugins: Entity Sensors"
+has_support_component = true
+members_required = 0
+description = """
+Generic plugins for the ENTITY-SENSOR-MIB (any SNMP device exposing it).
+"""

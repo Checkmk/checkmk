@@ -1,0 +1,7 @@
+type = "Component"
+display_name = "Plugins: eWON"
+has_support_component = true
+members_required = 0
+description = """
+Plugin for HMS/eWON industrial M2M gateways.
+"""

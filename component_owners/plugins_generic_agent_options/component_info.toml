@@ -1,0 +1,7 @@
+type = "Component"
+display_name = "Plugins: Generic Agent Options"
+has_support_component = true
+members_required = 0
+description = """
+Cross-cutting options and rulesets for the Checkmk agent regardless of OS.
+"""

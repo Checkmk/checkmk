@@ -18,8 +18,8 @@ void main() {
         "test-format",
         "test-github-actions",
         "test-plugins-siteless-k8s",
-        // code-quality tests execute the werk tests which need all git tags available in the checkout
-        "test-python3-code-quality",
+        // the werk test needs all git tags available in the checkout
+        "test-werks",
         "test-python3-typing",
         "test-unit-all",
     ];

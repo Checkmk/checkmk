@@ -44,7 +44,7 @@ void main() {
 
     dir("${checkout_dir}") {
         test_jenkins_helper.execute_test([
-            name: "test-code-quality",
+            name: "test-werks",
             cmd: "bazel test //tests/code_quality/werks",
         ]);
     }

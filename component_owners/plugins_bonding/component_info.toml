@@ -1,7 +1,0 @@
-type = "Component"
-display_name = "Plugins: Bonding"
-has_support_component = true
-members_required = 1
-description = """
--
-"""

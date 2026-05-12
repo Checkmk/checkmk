@@ -49,6 +49,4 @@ if __name__ == "__main__":
         completed = _get_text(item.getElementsByTagName("Complete"))
         targetname = _get_text(item.getElementsByTagName("TargetName"))
         instancename = _get_text(item.getElementsByTagName("InstanceName"))
-        sys.stdout.write(
-            "{}|{}|{}|{}|{}\n".format(application, result, completed, targetname, instancename)
-        )
+        sys.stdout.write(f"{application}|{result}|{completed}|{targetname}|{instancename}\n")

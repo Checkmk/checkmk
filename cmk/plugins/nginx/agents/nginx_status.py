@@ -179,8 +179,8 @@ def _is_ip_v6_address(address: str) -> bool:
 def _make_url(proto: str, address: str, port: int, page: str) -> str:
     """Construct a URL from its components, taking care of IPv6 addresses."""
     if _is_ip_v6_address(address):
-        return "{}://[{}]:{}/{}".format(proto, address, port, page)
-    return "{}://{}:{}/{}".format(proto, address, port, page)
+        return f"{proto}://[{address}]:{port}/{page}"
+    return f"{proto}://{address}:{port}/{page}"
 
 
 def main():
@@ -237,7 +237,7 @@ def main():
                 if line.lstrip()[0] == "<":
                     # seems to be html output. Skip this server.
                     break
-                sys.stdout.write("{} {} {}\n".format(address, port, line))
+                sys.stdout.write(f"{address} {port} {line}\n")
         except HTTPError as e:
             sys.stderr.write("HTTP-Error (%s:%d): %s %s\n" % (address, port, e.code, e))
 

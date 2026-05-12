@@ -439,7 +439,7 @@ def _grouping_construct_group_name(parent_group_name, child_group_name=""):
 
     format_specifiers_count = parent_group_name.count("%s")
     if not format_specifiers_count:
-        return ("{} {}".format(parent_group_name, child_group_name)).strip()
+        return (f"{parent_group_name} {child_group_name}").strip()
 
     if not child_group_name:
         return parent_group_name

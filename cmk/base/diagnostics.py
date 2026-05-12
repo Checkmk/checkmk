@@ -22,7 +22,6 @@ import urllib.parse
 import uuid
 from collections.abc import Callable, Mapping
 from contextlib import redirect_stderr, redirect_stdout
-from dataclasses import dataclass
 from datetime import datetime
 from functools import cache
 from pathlib import Path
@@ -90,16 +89,6 @@ from cmk.utils.local_secrets import SiteInternalSecret
 from cmk.utils.log import console, section
 
 # TODO: why is there localization in this module?
-
-
-# I think for proper separation, we need to pass these from the outside to this module.
-@dataclass(frozen=True, kw_only=True)
-class _DiagnosticsElement:
-    ident: str
-    title: str
-    description: str
-    content: str
-    exception: Exception | None
 
 
 SUFFIX = ".tar.gz"
@@ -275,7 +264,6 @@ def create_diagnostics_dump(
         loaded_config=loading_result.loaded_config,
         core_performance_settings=app.core_performance_settings,
         omd_config=get_omd_config(omd_root),
-        omd_root=omd_root,
         diagnostics_dir=diagnostics_dir,
         parameters=parameters,
     )
@@ -335,6 +323,8 @@ def _format_info(info: str) -> str:
 #   '----------------------------------------------------------------------'
 
 
+# TODO: This is not really a class: The constructor creates a description of what should be
+# collected and create() does the actual retrieval.
 class DiagnosticsDump:
     """Caring about the persistance of diagnostics dumps in the local site"""
 
@@ -347,18 +337,14 @@ class DiagnosticsDump:
         loaded_config: LoadedConfigFragment,
         core_performance_settings: Callable[[LoadedConfigFragment], Mapping[str, int]],
         omd_config: site.OMDConfig,
-        omd_root: Path,
         diagnostics_dir: Path,
         parameters: DiagnosticsOptionalParameters | None,
     ) -> None:
         self.log: list[str] = []
-        self.omd_config = omd_config
-        self.fixed_elements = self._get_fixed_elements(
+        self.elements = self._get_fixed_elements(
             edition, loaded_config, core_performance_settings, parameters
-        )
-        self.optional_elements = self._get_optional_elements(omd_root, edition, parameters)
-        self.elements = self.fixed_elements + self.optional_elements
-
+        ) + self._get_optional_elements(edition, parameters, omd_config)
+        # TODO: These don't really belong here, they should simply be returned by create()
         self.dump_folder = diagnostics_dir
         self.tarfile_path = (diagnostics_dir / f"sddump_{uuid.uuid4()}").with_suffix(SUFFIX)
         self.tarfile_created = False
@@ -407,9 +393,9 @@ class DiagnosticsDump:
 
     def _get_optional_elements(
         self,
-        omd_root: Path,
         edition: cmk_version.Edition,
         parameters: DiagnosticsOptionalParameters | None,
+        omd_config: site.OMDConfig,
     ) -> list[ABCDiagnosticsElement]:
         if parameters is None:
             return []
@@ -421,35 +407,11 @@ class DiagnosticsDump:
             optional_elements.append(MKPListTextDiagnosticsElement())
 
         if parameters.get(OPT_OMD_CONFIG):
-            optional_elements.append(OMDConfigDiagnosticsElement(self.omd_config))
+            optional_elements.append(OMDConfigDiagnosticsElement(omd_config))
 
         if OPT_CHECKMK_OVERVIEW in parameters:
-            content = ""
-            exception_for_later = None
-            try:
-                content = _get_checkmk_overview_content(
-                    InventoryStore(omd_root),
-                    parameters.get(OPT_CHECKMK_OVERVIEW, ""),
-                )
-            except Exception as e:
-                exception_for_later = e
-
             optional_elements.append(
-                _DiagnosticsElementWrapper(
-                    _DiagnosticsElement(
-                        ident="checkmk_overview.json",
-                        title=_("Checkmk overview of Checkmk server"),
-                        description=_(
-                            "Checkmk agent, number, version and edition of sites, cluster host; "
-                            "number of hosts, services, CMK Helper, Live Helper, "
-                            "Helper usage; state of daemons: Apache, Core, Crontab, "
-                            "DCD, Liveproxyd, MKEventd, MKNotifyd, RRDCached "
-                            "(agent plug-in mk_inventory needs to be installed)"
-                        ),
-                        content=content,
-                        exception=exception_for_later,
-                    )
-                )
+                CheckmkOverviewDiagnosticsElement(parameters[OPT_CHECKMK_OVERVIEW])
             )
 
         if parameters.get(OPT_CHECKMK_CRASH_REPORTS):
@@ -487,7 +449,7 @@ class DiagnosticsDump:
             if OPT_PERFORMANCE_GRAPHS in parameters:
                 optional_elements.append(
                     PerformanceGraphsDiagnosticsElement(
-                        parameters.get(OPT_PERFORMANCE_GRAPHS, ""), self.omd_config
+                        parameters.get(OPT_PERFORMANCE_GRAPHS, ""), omd_config
                     )
                 )
 
@@ -679,34 +641,6 @@ class ABCDiagnosticsElementTextDump(ABCDiagnosticsElement):
     @abc.abstractmethod
     def _collect_infos(self, omd_root: Path) -> str:
         raise NotImplementedError()
-
-
-class _DiagnosticsElementWrapper(ABCDiagnosticsElementTextDump):
-    """Temporary wrapper to prepare for a cleaner diagnostics API (WIP)"""
-
-    def __init__(self, wrapped: _DiagnosticsElement):
-        self._wrapped: Final = wrapped
-
-    @override
-    @property
-    def ident(self) -> str:
-        return self._wrapped.ident
-
-    @override
-    @property
-    def title(self) -> str:
-        return self._wrapped.title
-
-    @override
-    @property
-    def description(self) -> str:
-        return self._wrapped.description
-
-    @override
-    def _collect_infos(self, omd_root: Path) -> str:
-        if self._wrapped.exception:
-            raise self._wrapped.exception
-        return self._wrapped.content
 
 
 class ABCDiagnosticsElementJSONDump(ABCDiagnosticsElement):
@@ -1323,6 +1257,36 @@ class OMDConfigDiagnosticsElement(ABCDiagnosticsElementJSONDump):
 
     def _collect_infos(self, omd_root: Path) -> DiagnosticsElementJSONResult:
         return self._omd_config
+
+
+class CheckmkOverviewDiagnosticsElement(ABCDiagnosticsElementTextDump):
+    def __init__(self, checkmk_server_host: str) -> None:
+        self.checkmk_server_host = checkmk_server_host
+
+    @override
+    @property
+    def ident(self) -> str:
+        return "checkmk_overview"
+
+    @override
+    @property
+    def title(self) -> str:
+        return _("Checkmk Overview of Checkmk Server")
+
+    @override
+    @property
+    def description(self) -> str:
+        return _(
+            "Checkmk Agent, Number, version and edition of sites, cluster host; "
+            "number of hosts, services, CMK Helper, Live Helper, "
+            "Helper usage; state of daemons: Apache, Core, Crontab, "
+            "DCD, Liveproxyd, MKEventd, MKNotifyd, RRDCached "
+            "(Agent plug-in mk_inventory needs to be installed)"
+        )
+
+    @override
+    def _collect_infos(self, omd_root: Path) -> str:
+        return _get_checkmk_overview_content(InventoryStore(omd_root), self.checkmk_server_host)
 
 
 # TODO: some of this should go to the inventory component

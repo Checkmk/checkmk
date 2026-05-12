@@ -44,7 +44,6 @@ def _make_diagnostics_dump() -> diagnostics.DiagnosticsDump:
         loaded_config=EMPTY_CONFIG,
         core_performance_settings=lambda x: {},
         omd_config={},
-        omd_root=_OMD_ROOT,
         diagnostics_dir=cmk.utils.paths.diagnostics_dir,
         parameters=None,
     )
@@ -127,21 +126,6 @@ def test_diagnostics_cleanup_dump_folder() -> None:
 #   |              \___|_|\___|_| |_| |_|\___|_| |_|\__|___/               |
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
-
-
-def test_diagnostics_element_wrapper() -> None:
-    wrapper = diagnostics._DiagnosticsElementWrapper(
-        diagnostics._DiagnosticsElement(
-            ident="ident",
-            title="Title",
-            description="Bla",
-            content="hallo",
-            exception=None,
-        )
-    )
-    assert wrapper.ident == "ident"
-    assert wrapper.title == "Title"
-    assert wrapper.description == "Bla"
 
 
 def test_diagnostics_element_general() -> None:

@@ -6,10 +6,10 @@
 import * as vscode from 'vscode'
 
 import { log, notifyError } from '../core/log'
-import { safeExec } from '../core/shell'
-import { currentBranch, repoRoot } from './git'
+import { currentBranch, gitAsync, repoRoot } from './git'
 
 const COMMON_BASES = ['master', '2.4.0', '2.3.0', '2.2.0']
+const REMOTE_BRANCH_CAP = 100
 
 type BranchInfo = {
   name: string
@@ -52,7 +52,7 @@ function parseRefs(out: string): BranchInfo[] {
     .filter((b) => b.name && !b.name.endsWith('/HEAD'))
 }
 
-function refsFormat(): string {
+function refsFormatArg(): string {
   const parts = [
     '%(refname:short)',
     '%(objectname:short)',
@@ -62,21 +62,32 @@ function refsFormat(): string {
     '%(upstream:short)',
     '%(upstream:track)'
   ]
-  return `'--format=${parts.join(REF_SEP)}'`
+  return `--format=${parts.join(REF_SEP)}`
 }
 
-function listLocalBranches(cwd: string): BranchInfo[] {
-  const out = safeExec(`git for-each-ref ${refsFormat()} refs/heads/`, { cwd })
-  return parseRefs(out)
+async function listLocalBranches(cwd: string): Promise<BranchInfo[]> {
+  const out = await gitAsync(cwd, [
+    'for-each-ref',
+    refsFormatArg(),
+    '--sort=-committerdate',
+    'refs/heads/'
+  ])
+  return parseRefs(out ?? '')
 }
 
-function listRemoteBranches(cwd: string): BranchInfo[] {
-  const out = safeExec(`git for-each-ref ${refsFormat()} refs/remotes/`, { cwd })
-  return parseRefs(out)
+async function listRemoteBranches(cwd: string): Promise<BranchInfo[]> {
+  const out = await gitAsync(cwd, [
+    'for-each-ref',
+    refsFormatArg(),
+    '--sort=-committerdate',
+    `--count=${REMOTE_BRANCH_CAP}`,
+    'refs/remotes/'
+  ])
+  return parseRefs(out ?? '')
 }
 
-function listRemoteBaseBranches(cwd: string): string[] {
-  const all = listRemoteBranches(cwd)
+async function listRemoteBaseBranches(cwd: string): Promise<string[]> {
+  const all = (await listRemoteBranches(cwd))
     .map((b) => b.name.replace(/^origin\//, ''))
     .filter((b) => b)
   const ordered: string[] = []
@@ -106,7 +117,7 @@ async function checkoutRef(ref: string): Promise<void> {
 }
 
 async function pickBaseBranch(cwd: string): Promise<string | undefined> {
-  const bases = listRemoteBaseBranches(cwd)
+  const bases = await listRemoteBaseBranches(cwd)
   const items = bases.length > 0 ? bases : COMMON_BASES
   return vscode.window.showQuickPick(items, {
     title: 'CMK ▸ Create Sandbox Branch',
@@ -167,31 +178,28 @@ function refDetail(b: BranchInfo): string {
   return [b.who, b.hash, b.when].filter(Boolean).join(' · ')
 }
 
-async function checkoutBranch(): Promise<void> {
-  const cwd = repoRoot()
-  if (!cwd) {
-    notifyError('CMK: No workspace folder found.')
-    return
+const CREATE_ITEMS: CheckoutItem[] = [
+  { label: '$(plus) Create new branch...', action: 'create-branch' },
+  { label: '$(plus) Create new branch from...', action: 'create-branch-from' },
+  {
+    label: '$(plus) Create Sandbox Branch...',
+    description: 'via git workon',
+    action: 'create-sandbox'
   }
-  const local = listLocalBranches(cwd)
-  const remote = listRemoteBranches(cwd)
-  const current = currentBranch(cwd)
-  const remoteByName = new Map(remote.map((b) => [b.name, b.hash]))
+]
 
-  const items: CheckoutItem[] = [
-    { label: '$(plus) Create new branch...', action: 'create-branch' },
-    { label: '$(plus) Create new branch from...', action: 'create-branch-from' },
-    {
-      label: '$(plus) Create Sandbox Branch...',
-      description: 'via git workon',
-      action: 'create-sandbox'
-    }
-  ]
+function buildCheckoutItems(
+  local: BranchInfo[],
+  remote: BranchInfo[],
+  current: string
+): CheckoutItem[] {
+  const remoteByName = new Map(remote.map((b) => [b.name, b.hash]))
+  const items: CheckoutItem[] = [...CREATE_ITEMS]
 
   const localCurrent = current ? local.find((b) => b.name === current) : undefined
   const sortedLocal = [
     ...(localCurrent ? [localCurrent] : []),
-    ...local.filter((b) => b.name !== current).sort((a, b) => b.ts - a.ts)
+    ...local.filter((b) => b.name !== current)
   ]
   if (sortedLocal.length > 0) {
     items.push({ label: 'branches', kind: vscode.QuickPickItemKind.Separator })
@@ -218,15 +226,48 @@ async function checkoutBranch(): Promise<void> {
       })
     }
   }
+  return items
+}
 
-  const pick = await vscode.window.showQuickPick(items, {
-    title: 'Select a ref to checkout',
-    placeHolder: '',
-    matchOnDetail: true
+async function checkoutBranch(): Promise<void> {
+  const cwd = repoRoot()
+  if (!cwd) {
+    notifyError('CMK: No workspace folder found.')
+    return
+  }
+
+  // Open the QuickPick immediately with the create-branch options so the user
+  // sees the UI before the git for-each-ref calls finish.
+  const qp = vscode.window.createQuickPick<CheckoutItem>()
+  qp.title = 'Select a ref to checkout'
+  qp.matchOnDetail = true
+  qp.busy = true
+  qp.items = CREATE_ITEMS
+  qp.show()
+
+  const loadingPromise = Promise.all([
+    listLocalBranches(cwd),
+    listRemoteBranches(cwd),
+    Promise.resolve(currentBranch(cwd))
+  ]).then(([local, remote, current]) => {
+    qp.items = buildCheckoutItems(local, remote, current)
+    qp.busy = false
+    return current
   })
-  if (!pick) return
 
-  switch (pick.action) {
+  const pickedItem = await new Promise<CheckoutItem | undefined>((resolve) => {
+    qp.onDidAccept(() => {
+      const item = qp.selectedItems[0]
+      qp.hide()
+      resolve(item)
+    })
+    qp.onDidHide(() => resolve(undefined))
+  })
+  const current = await loadingPromise
+  qp.dispose()
+  if (!pickedItem) return
+
+  switch (pickedItem.action) {
     case 'create-sandbox':
       await createSandboxBranch()
       return
@@ -237,7 +278,7 @@ async function checkoutBranch(): Promise<void> {
       await vscode.commands.executeCommand('git.branchFrom')
       return
     case 'checkout':
-      if (pick.ref && pick.ref !== current) await checkoutRef(pick.ref)
+      if (pickedItem.ref && pickedItem.ref !== current) await checkoutRef(pickedItem.ref)
       return
   }
 }

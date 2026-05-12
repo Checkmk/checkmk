@@ -3,31 +3,25 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { execSync } from 'child_process'
 import * as vscode from 'vscode'
 
 import { log, notifyError, notifyInfo, notifyWarn } from '../core/log'
-import { repoRoot } from './git'
+import { gitAsync, repoRoot } from './git'
 
-function git(args: string, cwd: string): string {
-  return execSync(`git ${args}`, { cwd, encoding: 'utf-8' }).trim()
+async function getCurrentBranch(cwd: string): Promise<string | null> {
+  return gitAsync(cwd, ['rev-parse', '--abbrev-ref', 'HEAD'])
 }
 
-function getCurrentBranch(cwd: string): string {
-  return git('rev-parse --abbrev-ref HEAD', cwd)
+async function getUnpushedCommitCount(cwd: string, remoteBranch: string): Promise<number | null> {
+  const ranged = await gitAsync(cwd, ['rev-list', '--count', `${remoteBranch}..HEAD`])
+  if (ranged !== null) return parseInt(ranged, 10) || 0
+  const all = await gitAsync(cwd, ['rev-list', '--count', 'HEAD'])
+  return all !== null ? parseInt(all, 10) || 0 : null
 }
 
-function getUnpushedCommitCount(cwd: string, remoteBranch: string): number {
-  try {
-    return parseInt(git(`rev-list --count ${remoteBranch}..HEAD`, cwd), 10)
-  } catch {
-    return parseInt(git('rev-list --count HEAD', cwd), 10)
-  }
-}
-
-function hasUncommittedChanges(cwd: string): boolean {
-  const status = git('status --porcelain', cwd)
-  return status.length > 0
+async function hasUncommittedChanges(cwd: string): Promise<boolean> {
+  const status = await gitAsync(cwd, ['status', '--porcelain'])
+  return !!status && status.length > 0
 }
 
 function createGerritStatusBar(context: vscode.ExtensionContext): void {
@@ -51,10 +45,14 @@ export function registerGerritPush(context: vscode.ExtensionContext): void {
         return
       }
 
-      let branch: string
-      try {
-        branch = getCurrentBranch(cwd)
-      } catch {
+      // Kick off branch + dirty-tree checks in parallel — git status on a
+      // large working tree alone can take ~250 ms, so don't serialise.
+      const [branch, dirty] = await vscode.window.withProgress(
+        { location: vscode.ProgressLocation.Window, title: 'CMK: Checking git state…' },
+        () => Promise.all([getCurrentBranch(cwd), hasUncommittedChanges(cwd)])
+      )
+
+      if (branch === null) {
         notifyError('CMK: Not a git repository or git is not available.')
         return
       }
@@ -64,7 +62,7 @@ export function registerGerritPush(context: vscode.ExtensionContext): void {
         return
       }
 
-      if (hasUncommittedChanges(cwd)) {
+      if (dirty) {
         const proceed = await vscode.window.showWarningMessage(
           'CMK: You have uncommitted changes. Push anyway?',
           'Push',
@@ -84,18 +82,12 @@ export function registerGerritPush(context: vscode.ExtensionContext): void {
 
       const refSpec = `HEAD:refs/for/${targetBranch}`
 
-      let commitCount: number | string
-      let commitLog = ''
-      try {
-        commitCount = getUnpushedCommitCount(cwd, `origin/${targetBranch}`)
-        commitLog = git(`log --oneline origin/${targetBranch}..HEAD`, cwd)
-      } catch {
-        try {
-          commitCount = getUnpushedCommitCount(cwd, `origin/${targetBranch}`)
-        } catch {
-          commitCount = '?'
-        }
-      }
+      const [countResult, logResult] = await Promise.all([
+        getUnpushedCommitCount(cwd, `origin/${targetBranch}`),
+        gitAsync(cwd, ['log', '--oneline', `origin/${targetBranch}..HEAD`])
+      ])
+      const commitCount: number | string = countResult ?? '?'
+      const commitLog = logResult ?? ''
 
       const commitLines = commitLog
         ? commitLog

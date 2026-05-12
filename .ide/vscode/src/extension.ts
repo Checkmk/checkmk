@@ -17,7 +17,7 @@ import {
 } from './core/config'
 import { error, log, notifyInfo, registerErrorHandlers } from './core/log'
 import { checkVersionMismatch } from './core/versionCheck'
-import { checkForUpdates, isInstalled as isDevSiteInstalled } from './omd/devSiteTools'
+import { checkForUpdates, isInstalledAsync as isDevSiteInstalledAsync } from './omd/devSiteTools'
 import { registerLogs } from './omd/logs'
 import { createSite, registerOmd } from './omd/omd'
 import { registerProfileDetector } from './profiles/profileDetector'
@@ -113,7 +113,12 @@ export function activate(context: vscode.ExtensionContext): void {
   registerLogs()
 
   // cmk-dev-site: create site command + update check
-  vscode.commands.executeCommand('setContext', 'cmk.devSiteInstalled', isDevSiteInstalled())
+  // Detect cmk-dev-install-site asynchronously so the up-to-3s subprocess
+  // call doesn't block activate() — and with it the rest of the extension
+  // host, including vscode.git's SCM view loading.
+  void isDevSiteInstalledAsync().then((installed) => {
+    vscode.commands.executeCommand('setContext', 'cmk.devSiteInstalled', installed)
+  })
   context.subscriptions.push(
     vscode.commands.registerCommand('cmk.omdCreateSite', () => {
       log('Create OMD site')

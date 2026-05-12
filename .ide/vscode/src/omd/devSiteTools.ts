@@ -6,7 +6,7 @@
 import * as vscode from 'vscode'
 
 import { log } from '../core/log'
-import { safeExec } from '../core/shell'
+import { safeExec, safeExecAsync } from '../core/shell'
 import { runCommand, waitForTask } from '../core/tasks'
 import { versionNewer } from '../core/version'
 
@@ -17,8 +17,18 @@ function getInstalledVersion(): string {
   return safeExec('cmk-dev-install-site --version', { timeout: 3000 })
 }
 
+async function getInstalledVersionAsync(): Promise<string> {
+  return safeExecAsync('cmk-dev-install-site --version', { timeout: 3000 })
+}
+
 export function isInstalled(): boolean {
   return !!getInstalledVersion()
+}
+
+/** Async version of isInstalled — does not block the event loop. Prefer this
+ *  during extension activation so we don't stall vscode.git's SCM view load. */
+export async function isInstalledAsync(): Promise<boolean> {
+  return !!(await getInstalledVersionAsync())
 }
 
 function getLatestPypiVersion(): string {

@@ -17,6 +17,8 @@ import {
   BRIDGE_DIR,
   KEEPALIVE_READY,
   clearKeepaliveReady,
+  ensureKeepaliveAuth,
+  hasKeepalive,
   runInKeepaliveTerminal,
   setKeepaliveTerminal
 } from './sudoBridge'
@@ -58,12 +60,18 @@ function sudoSh(inner: string): string {
 }
 
 /**
- * Run a sudo-requiring OMD command, preferring the authenticated keepalive
- * terminal (no re-prompt) and falling back to a dedicated task terminal.
- * Returns the exit code, or -1 if the command could not be launched.
+ * Run a sudo-requiring OMD command through the authenticated keepalive
+ * terminal. If no keepalive session is active, auto-prompts the user to
+ * authenticate first. Falls back to a dedicated task terminal only if the
+ * bridge times out. Returns the exit code, or -1 if the command could not
+ * be launched (or the user declined to authenticate).
  */
 export async function runOmdSudo(label: string, inner: string): Promise<number> {
-  const bridged = await runInKeepaliveTerminal(inner, 60_000)
+  if (!hasKeepalive()) {
+    const authed = await ensureKeepaliveAuth()
+    if (!authed) return -1
+  }
+  const bridged = await runInKeepaliveTerminal(inner, 300_000)
   if (bridged) return bridged.exitCode
   const exec = runCommand(label, sudoSh(inner))
   if (!exec) return -1

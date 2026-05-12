@@ -110,6 +110,7 @@ export interface StateCache {
 
 export interface SectionContext {
   refreshAll: () => void
+  refreshOmd: () => void
   showSectionLoading: (...sections: string[]) => void
 }
 

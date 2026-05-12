@@ -262,7 +262,7 @@ async function handleMessage(msg: WebviewMessage): Promise<void> {
     return
   }
 
-  const ctx = { refreshAll, showSectionLoading }
+  const ctx = { refreshAll, refreshOmd, showSectionLoading }
   for (const mod of Object.values(sectionModules)) {
     if (await mod.handleMessage(msg, ctx)) return
   }

@@ -17,19 +17,19 @@ import sectionCss from './style.css'
 
 export async function handleMessage(
   msg: WebviewMessage,
-  { refreshAll, showSectionLoading }: SectionContext
+  { refreshAll, refreshOmd, showSectionLoading }: SectionContext
 ): Promise<boolean> {
   switch (msg.type) {
     case 'omdSiteAction': {
       log(`OMD site ${msg.action}: ${msg.site}`)
       await omdServiceCommand(msg.action as string, msg.site as string, '')
-      refreshAll()
+      refreshOmd()
       return true
     }
     case 'omdServiceAction': {
       log(`OMD service ${msg.action}: ${msg.service} on ${msg.site}`)
       await omdServiceCommand(msg.action as string, msg.site as string, msg.service as string)
-      refreshAll()
+      refreshOmd()
       return true
     }
     case 'omdOpenBrowser': {
@@ -73,17 +73,17 @@ export async function handleMessage(
       if (!socketRel) return true
       const socketPath = path.join('/omd/sites', msg.site as string, socketRel)
       await promptAndStartProxy(msg.site as string, service, socketPath)
-      refreshAll()
+      refreshOmd()
       return true
     }
     case 'omdProxyStop': {
       stopProxy(msg.site as string, msg.service as string)
-      refreshAll()
+      refreshOmd()
       return true
     }
     case 'omdProxySite': {
       await promptSocketProxy(msg.site as string)
-      refreshAll()
+      refreshOmd()
       return true
     }
     case 'omdDeleteSite': {
@@ -96,7 +96,7 @@ export async function handleMessage(
       if (confirm === 'Delete') {
         showSectionLoading('omd')
         await omdServiceCommand('rm', msg.site as string, '')
-        refreshAll()
+        refreshOmd()
       }
       return true
     }

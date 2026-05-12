@@ -136,10 +136,17 @@ def deploy_to_website(CMK_VERS) {
         def SYMLINK_PATH = smb_base_path + TARGET_VERSION;
 
         // We also do not want to keep rc versions on the archive.
-        // So rename the folder in case we have a rc
+        // Move contents of the RC folder into the release folder. Using mv with glob (src/*)
+        // avoids the nested-folder trap of "mv src dest/" when dest already exists. Skip
+        // entirely on re-runs when CMK_VERS no longer exists (already deployed).
         if (TARGET_VERSION != CMK_VERS) {
-            execute_cmd_on_archive_server("mkdir -p ${downloads_path}${CMK_VERS};");
-            execute_cmd_on_archive_server("mv ${downloads_path}${CMK_VERS} ${downloads_path}${TARGET_VERSION}/;");
+            assert CMK_VERS : "CMK_VERS must not be empty (would make operations unsafe on ${downloads_path})";
+            assert TARGET_VERSION : "TARGET_VERSION must not be empty (would make operations unsafe on ${downloads_path})";
+            execute_cmd_on_archive_server(
+                "mkdir -p ${downloads_path}${TARGET_VERSION} && " +
+                "mv ${downloads_path}${CMK_VERS}/* ${downloads_path}${TARGET_VERSION}/ && " +
+                "rmdir ${downloads_path}${CMK_VERS} || true"
+            );
         }
         execute_cmd_on_archive_server("ln -sf --no-dereference ${downloads_path}${TARGET_VERSION} ${SYMLINK_PATH};");
     }

@@ -84,6 +84,7 @@ class Redirect(RestSessionException):
 class BakingStatus(NamedTuple):
     state: str
     started: float
+    exceptions: Sequence[str] = []
 
 
 class User(NamedTuple):
@@ -914,6 +915,7 @@ class AgentsAPI(BaseAPI):
         return BakingStatus(
             state=result["state"],
             started=result["started"],
+            exceptions=result.get("loginfo", {}).get("JobException", []),
         )
 
     def sign(self, key_id: int, passphrase: str) -> None:

@@ -10,6 +10,7 @@ import pytest
 from cmk.graphing.v1 import metrics as metrics_api
 from cmk.graphing.v1 import perfometers as perfometers_api
 from cmk.graphing.v1 import Title
+from cmk.graphing.v2_unstable import metrics as metrics_v2_unstable_api
 from cmk.gui.graphing._evaluations_from_api import evaluate_quantity
 from cmk.gui.graphing._perfometer import _perfometer_plugin_matches
 from cmk.gui.graphing._translated_metrics import (
@@ -526,6 +527,22 @@ def test__perfometer_plugin_matches(
             2.0,
             id="metrics_api.Fraction",
         ),
+        pytest.param(
+            metrics_v2_unstable_api.LowerWarningOf("name"),
+            {
+                "name": _make_translated_metric("name", ScalarBounds(warn=99.0, warn_lower=3.0)),
+            },
+            3.0,
+            id="metrics_v2_unstable_api.LowerWarningOf",
+        ),
+        pytest.param(
+            metrics_v2_unstable_api.LowerCriticalOf("name"),
+            {
+                "name": _make_translated_metric("name", ScalarBounds(crit=99.0, crit_lower=2.0)),
+            },
+            2.0,
+            id="metrics_v2_unstable_api.LowerCriticalOf",
+        ),
     ],
 )
 def test_evaluate_quantity(
@@ -540,6 +557,8 @@ def test_evaluate_quantity(
         | metrics_api.Product
         | metrics_api.Difference
         | metrics_api.Fraction
+        | metrics_v2_unstable_api.LowerWarningOf
+        | metrics_v2_unstable_api.LowerCriticalOf
     ),
     translated_metrics: Mapping[str, TranslatedMetric],
     expected_value: float,

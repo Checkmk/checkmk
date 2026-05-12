@@ -15,6 +15,7 @@ from cmk.ccc.resulttype import Error, OK, Result
 from cmk.ccc.site import SiteId
 from cmk.graphing.v1 import graphs as graphs_api
 from cmk.graphing.v1 import metrics as metrics_api
+from cmk.graphing.v2_unstable import metrics as metrics_v2_unstable_api
 from cmk.gui.color import Color, parse_color_from_api
 from cmk.gui.i18n import _, translate_to_current_language
 from cmk.gui.utils.temperate_unit import TemperatureUnit
@@ -37,6 +38,8 @@ from ._unit import ConvertibleUnitSpecification, user_specific_unit
 type Quantity = (
     str
     | metrics_api.Constant
+    | metrics_v2_unstable_api.LowerWarningOf
+    | metrics_v2_unstable_api.LowerCriticalOf
     | metrics_api.WarningOf
     | metrics_api.CriticalOf
     | metrics_api.MinimumOf
@@ -91,6 +94,70 @@ def evaluate_quantity(
                     unit=parse_unit_from_api(quantity.unit),
                     color=parse_color_from_api(quantity.color).value,
                     value=quantity.value,
+                )
+            )
+        case metrics_v2_unstable_api.LowerWarningOf():
+            if not (translated_metric := translated_metrics.get(quantity.metric_name)):
+                return Error(
+                    EvaluationError(
+                        reason=f"No such translated metric of {quantity.metric_name!r}",
+                        metric_name=quantity.metric_name,
+                    )
+                )
+            if (warn_lower_value := translated_metric.scalar.warn_lower) is None:
+                return Error(
+                    EvaluationError(
+                        reason=f"No such lower warning value of {quantity.metric_name!r}",
+                        metric_name=quantity.metric_name,
+                    )
+                )
+            if (
+                result := evaluate_quantity(
+                    registered_metrics, quantity.metric_name, translated_metrics
+                )
+            ).is_error():
+                return result
+            return OK(
+                EvaluatedQuantity(
+                    title=(
+                        _("Warning (lower) of %s")
+                        % get_metric_spec(quantity.metric_name, registered_metrics).title
+                    ),
+                    unit=result.ok.unit,
+                    color=Color.WARN.value,
+                    value=warn_lower_value,
+                )
+            )
+        case metrics_v2_unstable_api.LowerCriticalOf():
+            if not (translated_metric := translated_metrics.get(quantity.metric_name)):
+                return Error(
+                    EvaluationError(
+                        reason=f"No such translated metric of {quantity.metric_name!r}",
+                        metric_name=quantity.metric_name,
+                    )
+                )
+            if (crit_lower_value := translated_metric.scalar.crit_lower) is None:
+                return Error(
+                    EvaluationError(
+                        reason=f"No such lower critical value of {quantity.metric_name!r}",
+                        metric_name=quantity.metric_name,
+                    )
+                )
+            if (
+                result := evaluate_quantity(
+                    registered_metrics, quantity.metric_name, translated_metrics
+                )
+            ).is_error():
+                return result
+            return OK(
+                EvaluatedQuantity(
+                    title=(
+                        _("Critical (lower) of %s")
+                        % get_metric_spec(quantity.metric_name, registered_metrics).title
+                    ),
+                    unit=result.ok.unit,
+                    color=Color.CRIT.value,
+                    value=crit_lower_value,
                 )
             )
         case metrics_api.WarningOf():
@@ -308,6 +375,10 @@ def _create_quantity_id(
             return f"Metric({quantity},{consolidation_function})"
         case metrics_api.Constant():
             return f"Constant({quantity.value})"
+        case metrics_v2_unstable_api.LowerWarningOf():
+            return f"LowerWarningOf({_create_quantity_id(quantity.metric_name, consolidation_function)})"
+        case metrics_v2_unstable_api.LowerCriticalOf():
+            return f"LowerCriticalOf({_create_quantity_id(quantity.metric_name, consolidation_function)})"
         case metrics_api.WarningOf():
             return f"WarningOf({_create_quantity_id(quantity.metric_name, consolidation_function)})"
         case metrics_api.CriticalOf():

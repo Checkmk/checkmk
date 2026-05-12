@@ -16,6 +16,7 @@ from typing import assert_never, Self
 
 from cmk.graphing.v1 import metrics as metrics_api
 from cmk.graphing.v1 import perfometers as perfometers_api
+from cmk.graphing.v2_unstable import metrics as metrics_v2_unstable_api
 from cmk.gui.color import Color
 from cmk.gui.log import logger
 from cmk.gui.unit_formatter import AutoPrecision
@@ -34,7 +35,9 @@ from ._utils import Linear
 class _MetricNamesOrScalars:
     _metric_names: list[str]
     _scalars: list[
-        metrics_api.WarningOf
+        metrics_v2_unstable_api.LowerWarningOf
+        | metrics_v2_unstable_api.LowerCriticalOf
+        | metrics_api.WarningOf
         | metrics_api.CriticalOf
         | metrics_api.MinimumOf
         | metrics_api.MaximumOf
@@ -89,7 +92,9 @@ class _MetricNamesOrScalars:
     def scalars(
         self,
     ) -> Sequence[
-        metrics_api.WarningOf
+        metrics_v2_unstable_api.LowerWarningOf
+        | metrics_v2_unstable_api.LowerCriticalOf
+        | metrics_api.WarningOf
         | metrics_api.CriticalOf
         | metrics_api.MinimumOf
         | metrics_api.MaximumOf
@@ -140,6 +145,10 @@ def _perfometer_plugin_matches(
 
         scalar_bounds = translated_metrics[scalar.metric_name].scalar
         match scalar:
+            case metrics_v2_unstable_api.LowerWarningOf():
+                scalar_value = scalar_bounds.warn_lower
+            case metrics_v2_unstable_api.LowerCriticalOf():
+                scalar_value = scalar_bounds.crit_lower
             case metrics_api.WarningOf():
                 scalar_value = scalar_bounds.warn
             case metrics_api.CriticalOf():

@@ -86,6 +86,8 @@ class HorizontalRule(BaseModel, frozen=True):
 def compute_warn_crit_rules_from_translated_metric(
     user_specific_unit: UserSpecificUnit,
     translated_metric: TranslatedMetric,
+    *,
+    is_bidirectional: bool = False,
 ) -> Sequence[HorizontalRule]:
     horizontal_rules = []
     if (warn_value := translated_metric.scalar.warn) is not None and warn_value not in (
@@ -110,6 +112,32 @@ def compute_warn_crit_rules_from_translated_metric(
                 rendered_value=user_specific_unit.formatter.render(crit_value),
                 color=Color.CRIT.value,
                 title=_("Critical"),
+            )
+        )
+    if (
+        (warn_lower_value := translated_metric.scalar.warn_lower) is not None
+        and warn_lower_value not in (float("inf"), float("-inf"))
+        and not (is_bidirectional and warn_lower_value < 0)
+    ):
+        horizontal_rules.append(
+            HorizontalRule(
+                value=warn_lower_value,
+                rendered_value=user_specific_unit.formatter.render(warn_lower_value),
+                color=Color.WARN.value,
+                title=_("Warning (lower)"),
+            )
+        )
+    if (
+        (crit_lower_value := translated_metric.scalar.crit_lower) is not None
+        and crit_lower_value not in (float("inf"), float("-inf"))
+        and not (is_bidirectional and crit_lower_value < 0)
+    ):
+        horizontal_rules.append(
+            HorizontalRule(
+                value=crit_lower_value,
+                rendered_value=user_specific_unit.formatter.render(crit_lower_value),
+                color=Color.CRIT.value,
+                title=_("Critical (lower)"),
             )
         )
     return horizontal_rules

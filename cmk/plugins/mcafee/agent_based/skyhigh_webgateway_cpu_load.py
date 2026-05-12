@@ -12,7 +12,7 @@ This section specifically targets Skyhigh devices for CPU load only.
 
 from cmk.agent_based.v2 import SNMPSection, SNMPTree
 from cmk.plugins.mcafee.libgateway import DETECT_SKYHIGH_WEBGATEWAY
-from cmk.plugins.ucd.agent_based.ucd_cpu_load import parse_ucd_cpu_load
+from cmk.plugins.network.agent_based.ucd_cpu_load import parse_ucd_cpu_load
 
 snmp_section_skyhigh_webgateway_cpu_load = SNMPSection(
     name="skyhigh_webgateway_cpu_load",

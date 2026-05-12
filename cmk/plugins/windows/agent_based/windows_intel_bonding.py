@@ -5,7 +5,7 @@
 
 
 from cmk.agent_based.v2 import AgentSection, StringTable
-from cmk.plugins.bonding import lib as bonding
+from cmk.plugins.network import lib_bonding as bonding
 
 
 def _get_real_adapter_name(bond: str, name: str) -> str:

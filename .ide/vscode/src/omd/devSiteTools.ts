@@ -5,34 +5,27 @@
  */
 import * as vscode from 'vscode'
 
-import { log } from '../core/log'
-import { safeExec, safeExecAsync } from '../core/shell'
+import { error, log } from '../core/log'
+import { safeExecAsync } from '../core/shell'
 import { runCommand, waitForTask } from '../core/tasks'
 import { versionNewer } from '../core/version'
 
 const PYPI_CHECK_KEY = 'cmk.devSiteTools.lastPypiCheck'
 const CHECK_INTERVAL_MS = 24 * 60 * 60 * 1000
-
-function getInstalledVersion(): string {
-  return safeExec('cmk-dev-install-site --version', { timeout: 3000 })
-}
+const DEV_SITE_CACHE_TTL = 5 * 60 * 1000
 
 async function getInstalledVersionAsync(): Promise<string> {
   return safeExecAsync('cmk-dev-install-site --version', { timeout: 3000 })
 }
 
-export function isInstalled(): boolean {
-  return !!getInstalledVersion()
-}
-
-/** Async version of isInstalled — does not block the event loop. Prefer this
- *  during extension activation so we don't stall vscode.git's SCM view load. */
+/** Detect whether cmk-dev-install-site is on PATH. Async so we don't stall
+ *  vscode.git's SCM view load during extension activation. */
 export async function isInstalledAsync(): Promise<boolean> {
   return !!(await getInstalledVersionAsync())
 }
 
-function getLatestPypiVersion(): string {
-  const raw = safeExec('curl -s https://pypi.org/pypi/cmk-dev-site/json 2>/dev/null', {
+async function getLatestPypiVersionAsync(): Promise<string> {
+  const raw = await safeExecAsync('curl -s https://pypi.org/pypi/cmk-dev-site/json 2>/dev/null', {
     timeout: 10000
   })
   if (!raw) return ''
@@ -48,10 +41,10 @@ export async function checkForUpdates(context: vscode.ExtensionContext): Promise
   const lastCheck = context.globalState.get<number>(PYPI_CHECK_KEY, 0) ?? 0
   if (Date.now() - lastCheck < CHECK_INTERVAL_MS) return
 
-  const installed = getInstalledVersion()
+  const installed = await getInstalledVersionAsync()
   if (!installed) return
 
-  const latest = getLatestPypiVersion()
+  const latest = await getLatestPypiVersionAsync()
   if (!latest || !versionNewer(latest, installed)) {
     context.globalState.update(PYPI_CHECK_KEY, Date.now())
     return
@@ -76,8 +69,47 @@ export interface DevSiteToolsState {
   installedVersion: string
 }
 
+const EMPTY_STATE: DevSiteToolsState = { installed: false, installedVersion: '' }
+
+let _stateCache: { state: DevSiteToolsState; timestamp: number } | null = null
+let _stateFetchPromise: Promise<void> | null = null
+let _onDevSiteRefresh: (() => void) | null = null
+
+export function setDevSiteRefreshCallback(cb: () => void): void {
+  _onDevSiteRefresh = cb
+}
+
+/** Sync getter used during sidebar render. Returns the last known value (or
+ *  empty placeholders) immediately and triggers a background refresh that
+ *  re-renders the sidebar when the new value lands. */
 export function getDevSiteToolsState(): DevSiteToolsState {
-  const installed = isInstalled()
-  const installedVersion = installed ? getInstalledVersion() : ''
-  return { installed, installedVersion }
+  if (_stateCache && Date.now() - _stateCache.timestamp < DEV_SITE_CACHE_TTL) {
+    return _stateCache.state
+  }
+  void scheduleDevSiteRefresh()
+  return _stateCache?.state ?? EMPTY_STATE
+}
+
+async function scheduleDevSiteRefresh(): Promise<void> {
+  if (_stateFetchPromise) return _stateFetchPromise
+  _stateFetchPromise = (async () => {
+    try {
+      const installedVersion = await getInstalledVersionAsync()
+      const state: DevSiteToolsState = {
+        installed: !!installedVersion,
+        installedVersion
+      }
+      _stateCache = { state, timestamp: Date.now() }
+      _onDevSiteRefresh?.()
+    } catch (err) {
+      error(`devSiteTools refresh failed: ${(err as Error).message}`)
+    } finally {
+      _stateFetchPromise = null
+    }
+  })()
+  return _stateFetchPromise
+}
+
+export function invalidateDevSiteToolsCache(): void {
+  _stateCache = null
 }

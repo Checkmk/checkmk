@@ -9,8 +9,8 @@ import * as path from 'path'
 import * as vscode from 'vscode'
 
 import { shellEscape } from '../core/config'
-import { log } from '../core/log'
-import { safeExec } from '../core/shell'
+import { error, log } from '../core/log'
+import { safeExec, safeExecAsync } from '../core/shell'
 import { runCommand, waitForTask } from '../core/tasks'
 import { promptSocketProxy, registerProxyCleanup } from './proxy'
 import {
@@ -155,6 +155,22 @@ function parseOmdStatusBare(raw: string): OmdStatus {
   return { overall, services }
 }
 
+const UNKNOWN_STATUS: OmdStatus = { overall: -1, services: [] }
+const SUDO_STATUS_CACHE_TTL = 30 * 1000
+
+interface SudoStatusCacheEntry {
+  status: OmdStatus
+  timestamp: number
+}
+
+const _sudoStatusCache: Map<string, SudoStatusCacheEntry> = new Map()
+const _sudoStatusInflight: Map<string, Promise<void>> = new Map()
+let _onOmdStatusRefresh: (() => void) | null = null
+
+export function setOmdStatusRefreshCallback(cb: () => void): void {
+  _onOmdStatusRefresh = cb
+}
+
 export function getOmdStatus(siteName: string): OmdStatus {
   const statusFile = path.join(STATUS_DIR, `${siteName}.status`)
   try {
@@ -167,10 +183,34 @@ export function getOmdStatus(siteName: string): OmdStatus {
     /* ignore */
   }
 
-  const raw = safeExec(`sudo -n omd status --bare ${shellEscape(siteName)} 2>/dev/null`, {
-    timeout: 1000
-  })
-  return parseOmdStatusBare(raw)
+  const cached = _sudoStatusCache.get(siteName)
+  if (cached && Date.now() - cached.timestamp < SUDO_STATUS_CACHE_TTL) {
+    return cached.status
+  }
+  void scheduleSudoStatusRefresh(siteName)
+  return cached?.status ?? UNKNOWN_STATUS
+}
+
+async function scheduleSudoStatusRefresh(siteName: string): Promise<void> {
+  const existing = _sudoStatusInflight.get(siteName)
+  if (existing) return existing
+  const promise = (async () => {
+    try {
+      const raw = await safeExecAsync(
+        `sudo -n omd status --bare ${shellEscape(siteName)} 2>/dev/null`,
+        { timeout: 1000 }
+      )
+      const status = parseOmdStatusBare(raw)
+      _sudoStatusCache.set(siteName, { status, timestamp: Date.now() })
+      _onOmdStatusRefresh?.()
+    } catch (err) {
+      error(`omd status refresh failed for ${siteName}: ${(err as Error).message}`)
+    } finally {
+      _sudoStatusInflight.delete(siteName)
+    }
+  })()
+  _sudoStatusInflight.set(siteName, promise)
+  return promise
 }
 
 export async function forceRefreshOmdStatusFiles(): Promise<void> {

@@ -9,7 +9,7 @@ import * as vscode from 'vscode'
 
 import { resolveVariables } from '../../core/config'
 import { error, log, notifyError, notifyInfo, notifyWarn } from '../../core/log'
-import { safeExec } from '../../core/shell'
+import { safeExecAsync } from '../../core/shell'
 import { killAllDmypyDaemons } from './mypyConfig'
 
 const SETTING_ALLOCATOR = 'cmk.mypy.allocator'
@@ -36,15 +36,43 @@ export interface AllocatorSnapshot {
 
 let extContextRef: vscode.ExtensionContext | null = null
 
-/** Detect the absolute path to libjemalloc on the host. Returns null on miss
- *  — we do not guess paths and do not fall back to bare-name preload. */
-export function detectJemallocPath(): string | null {
+// Platform-stable results — detected once, cached for the session. Results
+// either include a hit (string / InstallCommand) or an explicit miss (null).
+let _jemallocPath: string | null | undefined = undefined
+let _jemallocPathInflight: Promise<void> | null = null
+let _installCmd: InstallCommand | null | undefined = undefined
+let _installCmdInflight: Promise<void> | null = null
+let _onAllocatorRefresh: (() => void) | null = null
+
+export function setAllocatorRefreshCallback(cb: () => void): void {
+  _onAllocatorRefresh = cb
+}
+
+/** Async detection of libjemalloc — never blocks the event loop. */
+export async function detectJemallocPathAsync(): Promise<string | null> {
+  if (_jemallocPath !== undefined) return _jemallocPath
+  if (_jemallocPathInflight) {
+    await _jemallocPathInflight
+    return _jemallocPath ?? null
+  }
+  _jemallocPathInflight = (async () => {
+    try {
+      _jemallocPath = await probeJemallocPath()
+    } finally {
+      _jemallocPathInflight = null
+    }
+  })()
+  await _jemallocPathInflight
+  return _jemallocPath ?? null
+}
+
+async function probeJemallocPath(): Promise<string | null> {
   if (process.platform === 'linux') {
-    const line = safeExec("ldconfig -p | awk '/libjemalloc\\.so\\.2/ {print $NF; exit}'")
+    const line = await safeExecAsync("ldconfig -p | awk '/libjemalloc\\.so\\.2/ {print $NF; exit}'")
     return line && fs.existsSync(line) ? line : null
   }
   if (process.platform === 'darwin') {
-    const prefix = safeExec('brew --prefix jemalloc')
+    const prefix = await safeExecAsync('brew --prefix jemalloc')
     if (!prefix) return null
     const candidate = path.join(prefix, 'lib', 'libjemalloc.dylib')
     return fs.existsSync(candidate) ? candidate : null
@@ -52,14 +80,54 @@ export function detectJemallocPath(): string | null {
   return null
 }
 
-/** Return the right install command for the host, or null on unsupported OS. */
-export function installCommandForPlatform(): InstallCommand | null {
+/** Sync getter for hot paths. Returns the cached value if known, otherwise
+ *  null and schedules an async probe whose completion triggers a sidebar
+ *  refresh. */
+export function detectJemallocPath(): string | null {
+  if (_jemallocPath !== undefined) return _jemallocPath
+  if (!_jemallocPathInflight) {
+    _jemallocPathInflight = (async () => {
+      try {
+        _jemallocPath = await probeJemallocPath()
+        _onAllocatorRefresh?.()
+      } catch (err) {
+        error(`jemalloc probe failed: ${(err as Error).message}`)
+      } finally {
+        _jemallocPathInflight = null
+      }
+    })()
+  }
+  return null
+}
+
+/** Async resolution of the platform's install command for libjemalloc. */
+export async function installCommandForPlatformAsync(): Promise<InstallCommand | null> {
+  if (_installCmd !== undefined) return _installCmd
+  if (_installCmdInflight) {
+    await _installCmdInflight
+    return _installCmd ?? null
+  }
+  _installCmdInflight = (async () => {
+    try {
+      _installCmd = await probeInstallCommand()
+    } finally {
+      _installCmdInflight = null
+    }
+  })()
+  await _installCmdInflight
+  return _installCmd ?? null
+}
+
+async function probeInstallCommand(): Promise<InstallCommand | null> {
   if (process.platform === 'linux') {
-    if (safeExec('command -v apt-get'))
-      return { label: 'apt', command: 'sudo apt install -y libjemalloc2' }
-    if (safeExec('command -v dnf')) return { label: 'dnf', command: 'sudo dnf install -y jemalloc' }
-    if (safeExec('command -v pacman'))
-      return { label: 'pacman', command: 'sudo pacman -S --needed jemalloc' }
+    const [apt, dnf, pacman] = await Promise.all([
+      safeExecAsync('command -v apt-get'),
+      safeExecAsync('command -v dnf'),
+      safeExecAsync('command -v pacman')
+    ])
+    if (apt) return { label: 'apt', command: 'sudo apt install -y libjemalloc2' }
+    if (dnf) return { label: 'dnf', command: 'sudo dnf install -y jemalloc' }
+    if (pacman) return { label: 'pacman', command: 'sudo pacman -S --needed jemalloc' }
     return null
   }
   if (process.platform === 'darwin') return { label: 'brew', command: 'brew install jemalloc' }
@@ -149,7 +217,7 @@ function openInstallTerminal(install: InstallCommand): void {
  *  terminal running the correct install command on Accept. We do not silently
  *  degrade — the setting stays armed so a reload after install activates it. */
 async function notifyMissingLibrary(): Promise<void> {
-  const install = installCommandForPlatform()
+  const install = await installCommandForPlatformAsync()
   if (!install) {
     await notifyWarn(
       'CMK ▸ Mypy: jemalloc not detected on this platform.',
@@ -169,11 +237,11 @@ async function notifyMissingLibrary(): Promise<void> {
 /** Handler for the `cmk.mypy.installJemalloc` command. Idempotent: if the
  *  library is already on the host we say so instead of re-running install. */
 async function installJemallocCommand(): Promise<void> {
-  if (detectJemallocPath()) {
+  if (await detectJemallocPathAsync()) {
     await notifyInfo('CMK ▸ Mypy: libjemalloc already installed.')
     return
   }
-  const install = installCommandForPlatform()
+  const install = await installCommandForPlatformAsync()
   if (!install) {
     await notifyError(
       'CMK ▸ Mypy: No supported install path for this platform.',
@@ -233,7 +301,7 @@ export async function applyAllocatorSetting(
     return
   }
 
-  const libPath = detectJemallocPath()
+  const libPath = await detectJemallocPathAsync()
   if (!libPath) {
     log('cmk.mypy.allocator=jemalloc but libjemalloc not detected — notifying')
     await notifyMissingLibrary()

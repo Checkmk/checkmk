@@ -42,3 +42,15 @@ export function shellExec(cmd: string, options?: { timeout?: number; cwd?: strin
   const shell = process.env.SHELL || '/bin/bash'
   return safeExec(`${shell} -ic '${cmd.replace(/'/g, "'\\''")}'`, options)
 }
+
+/** Async counterpart to shellExec. Tries the direct command first, falls back
+ *  to the user's interactive shell on miss. Does not block the event loop. */
+export async function shellExecAsync(
+  cmd: string,
+  options?: { timeout?: number; cwd?: string }
+): Promise<string> {
+  const direct = await safeExecAsync(cmd, options)
+  if (direct) return direct
+  const shell = process.env.SHELL || '/bin/bash'
+  return safeExecAsync(`${shell} -ic '${cmd.replace(/'/g, "'\\''")}'`, options)
+}

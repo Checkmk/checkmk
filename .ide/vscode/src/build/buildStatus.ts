@@ -3,12 +3,12 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { execSync } from 'child_process'
 import * as fs from 'fs'
 import * as path from 'path'
 import * as vscode from 'vscode'
 
 import * as profileManager from '../profiles/profileManager'
+import { gitAsync } from '../scm/git'
 
 export interface BuildTarget {
   ok: boolean
@@ -180,14 +180,9 @@ export function createStatusBar(
     ]
 
     let _lastBranch = ''
-    try {
-      _lastBranch = execSync('git rev-parse --abbrev-ref HEAD', {
-        cwd: wsPath,
-        encoding: 'utf-8'
-      }).trim()
-    } catch {
-      /* ignore */
-    }
+    void gitAsync(wsPath, ['rev-parse', '--abbrev-ref', 'HEAD']).then((b) => {
+      if (b !== null) _lastBranch = b
+    })
 
     for (const { pattern, events, delay, branchSwitch } of watchers) {
       const watcher = vscode.workspace.createFileSystemWatcher(
@@ -197,7 +192,7 @@ export function createStatusBar(
         ? () =>
             setTimeout(() => {
               refreshStatus()
-              if (branchSwitch) notifyBranchSwitch()
+              if (branchSwitch) void notifyBranchSwitch()
             }, delay)
         : () => refreshStatus()
       if (events.includes('change')) watcher.onDidChange(handler)
@@ -206,16 +201,9 @@ export function createStatusBar(
       context.subscriptions.push(watcher)
     }
 
-    function notifyBranchSwitch(): void {
-      let newBranch: string
-      try {
-        newBranch = execSync('git rev-parse --abbrev-ref HEAD', {
-          cwd: wsPath,
-          encoding: 'utf-8'
-        }).trim()
-      } catch {
-        return
-      }
+    async function notifyBranchSwitch(): Promise<void> {
+      const newBranch = await gitAsync(wsPath, ['rev-parse', '--abbrev-ref', 'HEAD'])
+      if (newBranch === null) return
       if (newBranch === _lastBranch) return
       _lastBranch = newBranch
 

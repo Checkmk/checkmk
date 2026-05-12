@@ -13,12 +13,20 @@ import { type ExtensionSets, loadConfig } from './core/config'
 import { error, log, notifyInfo, notifyWarn } from './core/log'
 import { runCommand, waitForTask } from './core/tasks'
 import { getVersionMismatch, rebuildExtension } from './core/versionCheck'
-import { getDevSiteToolsState } from './omd/devSiteTools'
-import { detectOmdSites, forceRefreshOmdStatusFiles, getOmdStatus } from './omd/omd'
+import { getDevSiteToolsState, setDevSiteRefreshCallback } from './omd/devSiteTools'
+import {
+  detectOmdSites,
+  forceRefreshOmdStatusFiles,
+  getOmdStatus,
+  setOmdStatusRefreshCallback
+} from './omd/omd'
 import { getActiveProxies } from './omd/proxy'
 import * as profileManager from './profiles/profileManager'
 import { getMypyTargetsSnapshot } from './profiles/python/dynamicMypyTargets'
-import { getAllocatorSnapshot } from './profiles/python/jemallocAllocator'
+import {
+  getAllocatorSnapshot,
+  setAllocatorRefreshCallback
+} from './profiles/python/jemallocAllocator'
 import { getPylanceHealthSnapshot } from './profiles/python/pylanceHealth'
 import * as environmentSection from './sidebar/environment'
 import { renderLoading } from './sidebar/html'
@@ -116,6 +124,7 @@ function refreshStateCache(): StateCache {
         python: '',
         pythonPath: '',
         node: '',
+        pnpm: '',
         bazel: '',
         bazelisk: '',
         docker: '',
@@ -301,6 +310,11 @@ export function registerSidebar(
   _refreshStatusBar = refreshStatusBar ?? null
   _extensionsConfig = loadConfig<ExtensionSets>('extensions')
   _settingsConfig = loadConfig<Record<string, SettingsEntry>>('settings')
+
+  environmentSection.setEnvironmentRefreshCallback(refreshAll)
+  setDevSiteRefreshCallback(refreshAll)
+  setOmdStatusRefreshCallback(refreshOmd)
+  setAllocatorRefreshCallback(refreshAll)
 
   for (const section of SECTIONS) {
     const provider = new SectionViewProvider(context, section)

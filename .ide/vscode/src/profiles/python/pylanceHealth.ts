@@ -7,7 +7,7 @@ import * as fs from 'fs'
 import * as vscode from 'vscode'
 
 import { error, log, notifyWarn } from '../../core/log'
-import { safeExec } from '../../core/shell'
+import { safeExecAsync } from '../../core/shell'
 
 const POLL_MS = 60_000
 const WARN_SETTING = 'cmk.python.pylanceMemoryWarnMiB'
@@ -43,8 +43,8 @@ function thresholdMiB(): number {
   return vscode.workspace.getConfiguration().get<number>(WARN_SETTING, WARN_DEFAULT) ?? WARN_DEFAULT
 }
 
-function findPylancePid(): number | null {
-  const out = safeExec("pgrep -f 'vscode-pylance-[0-9].*server.bundle.js'")
+async function findPylancePid(): Promise<number | null> {
+  const out = await safeExecAsync("pgrep -f 'vscode-pylance-[0-9].*server.bundle.js'")
   if (!out) return null
   const pid = parseInt(out.split('\n')[0].trim(), 10)
   return Number.isFinite(pid) ? pid : null
@@ -76,8 +76,8 @@ async function maybeNotify(snap: PylanceHealthSnapshot): Promise<void> {
   }
 }
 
-function poll(onRefresh?: () => void): void {
-  const pid = findPylancePid()
+async function poll(onRefresh?: () => void): Promise<void> {
+  const pid = await findPylancePid()
   const rss = pid !== null ? readRssMiB(pid) : null
   const threshold = thresholdMiB()
   const over = rss !== null && rss > threshold
@@ -100,9 +100,7 @@ function poll(onRefresh?: () => void): void {
     log(`Pylance (pid ${pid}) RSS = ${rss} MiB (threshold ${threshold})`)
   }
   if (visibilityChanged && onRefresh) onRefresh()
-  maybeNotify(latest).catch((err) =>
-    error(`pylanceHealth notify failed: ${(err as Error).message}`)
-  )
+  await maybeNotify(latest)
 }
 
 /** Register the Pylance memory watcher. Linux only — uses /proc. No-op on
@@ -115,7 +113,9 @@ export function registerPylanceHealth(onRefresh?: () => void): vscode.Disposable
   if (process.platform !== 'linux') return []
   latest = { ...latest, monitored: true }
   onRefresh?.()
-  const tick = (): void => poll(onRefresh)
+  const tick = (): void => {
+    poll(onRefresh).catch((err) => error(`pylanceHealth poll failed: ${(err as Error).message}`))
+  }
   tick()
   const earlyPoll = setTimeout(tick, 15_000)
   const interval = setInterval(tick, POLL_MS)

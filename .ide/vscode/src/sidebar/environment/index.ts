@@ -9,8 +9,8 @@ import * as path from 'path'
 import * as vscode from 'vscode'
 
 import type { BuildStatus } from '../../build/buildStatus'
-import { log } from '../../core/log'
-import { safeExec, shellExec } from '../../core/shell'
+import { error, log } from '../../core/log'
+import { safeExecAsync, shellExecAsync } from '../../core/shell'
 import { getNonce, wrap } from '../html'
 import type {
   EnvironmentInfo,
@@ -21,79 +21,118 @@ import type {
 } from '../types'
 import sectionCss from './style.css'
 
+const EMPTY_ENV: EnvironmentInfo = {
+  python: '',
+  pythonPath: '',
+  node: '',
+  pnpm: '',
+  bazel: '',
+  bazelisk: '',
+  docker: '',
+  gcc: '',
+  pyenv: false,
+  systemReady: false
+}
+
 let _envCache: { info: EnvironmentInfo; timestamp: number } | null = null
+let _envFetchPromise: Promise<void> | null = null
+let _onEnvRefresh: (() => void) | null = null
 const ENV_CACHE_TTL = 5 * 60 * 1000
+
+export function setEnvironmentRefreshCallback(cb: () => void): void {
+  _onEnvRefresh = cb
+}
 
 export function invalidateEnvironmentCache(): void {
   _envCache = null
 }
 
+/** Sync entry point used during sidebar render. Returns cached info if fresh;
+ *  otherwise returns the last value (or empty placeholders) and kicks off a
+ *  background refresh that triggers the sidebar to re-render when done. */
 export function getEnvironmentInfo(wsPath?: string): EnvironmentInfo {
   if (_envCache && Date.now() - _envCache.timestamp < ENV_CACHE_TTL) {
     return _envCache.info
   }
-  const env: EnvironmentInfo = {
-    python: '',
-    pythonPath: '',
-    node: '',
-    pnpm: '',
-    bazel: '',
-    bazelisk: '',
-    docker: '',
-    gcc: '',
-    pyenv: false,
-    systemReady: false
-  }
+  void scheduleEnvironmentRefresh(wsPath)
+  return _envCache?.info ?? EMPTY_ENV
+}
+
+async function scheduleEnvironmentRefresh(wsPath?: string): Promise<void> {
+  if (_envFetchPromise) return _envFetchPromise
+  _envFetchPromise = (async () => {
+    try {
+      const info = await fetchEnvironmentInfo(wsPath)
+      _envCache = { info, timestamp: Date.now() }
+      _onEnvRefresh?.()
+    } catch (err) {
+      error(`environment refresh failed: ${(err as Error).message}`)
+    } finally {
+      _envFetchPromise = null
+    }
+  })()
+  return _envFetchPromise
+}
+
+async function fetchEnvironmentInfo(wsPath?: string): Promise<EnvironmentInfo> {
   const venvPython = wsPath ? path.join(wsPath, '.venv', 'bin', 'python') : ''
-  if (venvPython && fs.existsSync(venvPython)) {
-    env.python =
-      safeExec(`"${venvPython}" --version`, { cwd: wsPath }).replace('Python ', '') + ' (venv)'
+  const hasVenv = !!venvPython && fs.existsSync(venvPython)
+
+  const pnpm = readPnpmVersion(wsPath)
+  const bazel = readBazelVersion(wsPath)
+  const pyenv = fs.existsSync(path.join(os.homedir(), '.pyenv', 'bin', 'pyenv'))
+
+  const [pythonRaw, nodeRaw, bazeliskRaw, dockerRaw, gccRaw] = await Promise.all([
+    hasVenv
+      ? safeExecAsync(`"${venvPython}" --version`, { cwd: wsPath })
+      : safeExecAsync('python3 --version', { cwd: wsPath }),
+    safeExecAsync('node --version', { cwd: wsPath }),
+    shellExecAsync('bazelisk version', { cwd: wsPath }),
+    shellExecAsync('docker --version', { cwd: wsPath }),
+    shellExecAsync('gcc --version', { cwd: wsPath })
+  ])
+
+  const env: EnvironmentInfo = { ...EMPTY_ENV }
+  if (hasVenv) {
+    env.python = pythonRaw.replace('Python ', '') + ' (venv)'
     env.pythonPath = path.join(wsPath!, '.venv')
   } else {
-    const sysPython = safeExec('python3 --version', { cwd: wsPath }).replace('Python ', '')
-    env.python = sysPython ? `${sysPython} (system)` : 'not found'
-    env.pythonPath = ''
+    env.python = pythonRaw ? `${pythonRaw.replace('Python ', '')} (system)` : 'not found'
   }
-  env.node = safeExec('node --version', { cwd: wsPath }).replace('v', '')
-  if (wsPath) {
-    try {
-      const jsModule = fs.readFileSync(
-        path.join(wsPath, 'bazel', 'module', 'js.MODULE.bazel'),
-        'utf-8'
-      )
-      const match = jsModule.match(/pnpm_version\s*=\s*"([^"]+)"/)
-      env.pnpm = match ? `${match[1]} (Bazel)` : 'not found'
-    } catch {
-      env.pnpm = 'not found'
-    }
-  } else {
-    env.pnpm = 'not found'
-  }
-  if (wsPath) {
-    try {
-      env.bazel = fs.readFileSync(path.join(wsPath, '.bazelversion'), 'utf-8').trim()
-    } catch {
-      env.bazel = 'not found'
-    }
-  } else {
-    env.bazel = 'not found'
-  }
-  const bazeliskRaw = shellExec('bazelisk version', { cwd: wsPath })
+  env.node = nodeRaw.replace('v', '')
+  env.pnpm = pnpm
+  env.bazel = bazel
   const bazeliskMatch = bazeliskRaw.match(/Bazelisk version:\s*(\S+)/)
   env.bazelisk = bazeliskMatch ? bazeliskMatch[1] : 'not found'
-  env.docker =
-    shellExec('docker --version', { cwd: wsPath })
-      .replace(/Docker version\s+/, '')
-      .replace(/,.*/, '') || 'not found'
-  env.gcc =
-    shellExec('gcc --version', { cwd: wsPath })
-      .split('\n')[0]
-      .replace(/.*\)\s*/, '') || 'not found'
-  env.pyenv = fs.existsSync(path.join(os.homedir(), '.pyenv', 'bin', 'pyenv'))
+  env.docker = dockerRaw.replace(/Docker version\s+/, '').replace(/,.*/, '') || 'not found'
+  env.gcc = gccRaw.split('\n')[0].replace(/.*\)\s*/, '') || 'not found'
+  env.pyenv = pyenv
   env.systemReady =
     env.bazel !== 'not found' && env.docker !== 'not found' && env.gcc !== 'not found' && env.pyenv
-  _envCache = { info: env, timestamp: Date.now() }
   return env
+}
+
+function readPnpmVersion(wsPath?: string): string {
+  if (!wsPath) return 'not found'
+  try {
+    const jsModule = fs.readFileSync(
+      path.join(wsPath, 'bazel', 'module', 'js.MODULE.bazel'),
+      'utf-8'
+    )
+    const match = jsModule.match(/pnpm_version\s*=\s*"([^"]+)"/)
+    return match ? `${match[1]} (Bazel)` : 'not found'
+  } catch {
+    return 'not found'
+  }
+}
+
+function readBazelVersion(wsPath?: string): string {
+  if (!wsPath) return 'not found'
+  try {
+    return fs.readFileSync(path.join(wsPath, '.bazelversion'), 'utf-8').trim()
+  } catch {
+    return 'not found'
+  }
 }
 
 export function getOnboardingState(

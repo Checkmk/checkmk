@@ -132,6 +132,7 @@ class ApiContext:
     config: ApiConfig
     version: APIVersion
     etag: ApiETagHandler
+    host_url: str
     user_id: UserId | None
     token: AuthToken | None
 
@@ -141,6 +142,7 @@ class ApiContext:
         config: Config,
         version: APIVersion,
         etag_if_match: ETags,
+        host_url: str,
         user_id: UserId | None,
         token: AuthToken | None,
     ) -> Self:
@@ -151,6 +153,7 @@ class ApiContext:
                 enabled=config.rest_api_etag_locking,
                 if_match=etag_if_match,
             ),
+            host_url=host_url,
             user_id=user_id,
             token=token,
         )

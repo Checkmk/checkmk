@@ -283,6 +283,7 @@ def _api_context() -> ApiContext:
         config=Config(),
         version=APIVersion.UNSTABLE,
         etag_if_match=ETags(),
+        host_url="http://localhost/",
         user_id=None,
         token=None,
     )

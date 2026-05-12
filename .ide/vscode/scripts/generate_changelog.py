@@ -10,9 +10,12 @@ conventional commit format documented in CLAUDE.md
 optional `CMK-<NNN>` on line 3), groups them by version and writes
 `.ide/vscode/changelog/v<version>.md`.
 
-Files for old versions are deterministic (immutable history) so re-running the
-script produces no diff. The HEAD version's file is rewritten on each run; run
-this script after a `git commit --amend` that changes the bump commit.
+Only the file for the version currently in `.ide/vscode/package.json` is
+rewritten on each run; files for older (already-released) versions are left
+alone if they already exist, so any manual prose / notes added to a released
+changelog survive subsequent regeneration. Missing changelog files for older
+versions are still generated. Run this script after a `git commit --amend`
+that changes the bump commit.
 
 Usage:
     bazel run //.ide/vscode:generate_changelog
@@ -22,6 +25,7 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import json
 import re
 import subprocess
 import sys
@@ -35,6 +39,16 @@ JIRA_RE = re.compile(r"^(CMK-\d+)\s*$")
 
 COMMIT_SEP = "<<<COMMIT>>>"
 FIELD_SEP = "<<<FIELD>>>"
+
+
+def current_package_version(root: Path) -> str | None:
+    """Read `.ide/vscode/package.json`'s version field."""
+    pkg = root / VSCODE_DIR_REL / "package.json"
+    try:
+        version = json.loads(pkg.read_text()).get("version")
+    except (OSError, json.JSONDecodeError):
+        return None
+    return version if isinstance(version, str) else None
 
 
 def repo_root() -> Path:
@@ -126,9 +140,12 @@ def main() -> int:
     changelog_dir = root / VSCODE_DIR_REL / "changelog"
     changelog_dir.mkdir(exist_ok=True)
 
+    current_version = current_package_version(root)
+
     by_version = collect_commits(root)
     written = 0
     skipped_old = 0
+    skipped_user_edited = 0
     for version, commits in by_version.items():
         ver = parse_version(version)
         if ver is None or ver < floor:
@@ -138,11 +155,19 @@ def main() -> int:
         new_content = render_changelog(version, commits)
         if path.exists() and path.read_text() == new_content:
             continue
+        # Only the current package.json version is regenerated. Older versions
+        # may carry hand-written notes / curated wording that the auto-generated
+        # bullet list can't reproduce; preserve those by not overwriting if a
+        # file already exists.
+        if path.exists() and version != current_version:
+            skipped_user_edited += 1
+            continue
         path.write_text(new_content)
         print(f"Wrote {path.relative_to(root)}")  # noqa: T201
         written += 1
     print(  # noqa: T201
-        f"Done. {written} file(s) updated, {skipped_old} version(s) skipped (< v{args.since_version})."
+        f"Done. {written} file(s) updated, {skipped_old} version(s) skipped (< v{args.since_version}),"
+        f" {skipped_user_edited} existing file(s) preserved (not the current package.json version)."
     )
     return 0
 

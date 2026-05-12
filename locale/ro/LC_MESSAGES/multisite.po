@@ -19546,10 +19546,6 @@ msgid "Deploy Hyper-V monitoring plug-ins"
 msgstr "Implementarea plugin-urilor Unitrends"
 
 #, fuzzy
-msgid "Deploy IBM MQ plug-in"
-msgstr "Implementarea plugin-ului IBM MQ"
-
-#, fuzzy
 msgid "Deploy Inotify plug-in"
 msgstr "Implementați plugin-ul Inotify"
 
@@ -19609,10 +19605,6 @@ msgstr "Distribuie fișiere personalizate cu agentul"
 #, fuzzy
 msgid "Deploy plug-in for Ceph"
 msgstr "Implementarea plugin-ului pentru DAG"
-
-#, fuzzy
-msgid "Deploy plug-in for DB2"
-msgstr "Implementarea plugin-ului pentru DB2"
 
 #, fuzzy
 msgid "Deploy plug-in for Windows interfaces"
@@ -21277,10 +21269,6 @@ msgid "Do not deploy the Docker plug-in"
 msgstr "Nu implementați plugin-ul docker"
 
 #, fuzzy
-msgid "Do not deploy the IBM MQ plug-in"
-msgstr "Nu implementați extensia IBM MQ"
-
-#, fuzzy
 msgid "Do not deploy the Jolokia plug-in"
 msgstr "Nu implementați plugin-ul Jolokia"
 
@@ -21479,6 +21467,10 @@ msgstr "Nu traduceți capcanele SNMP"
 
 msgid "Do not trust"
 msgstr "Nu aveți încredere"
+
+#, fuzzy
+msgid "Do not uninstall the legacy agent"
+msgstr "De asemenea, contactați agentul Checkmk"
 
 msgid "Do not use 'aws:' prefix for the key."
 msgstr "Nu utilizați prefixul 'aws:' pentru cheie."
@@ -37619,6 +37611,10 @@ msgid ""
 msgstr ""
 
 msgid "Legacy agent management"
+msgstr "Gestionarea agenților vechi"
+
+#, fuzzy
+msgid "Legacy agent management (Windows)"
 msgstr "Gestionarea agenților vechi"
 
 #, fuzzy
@@ -63025,6 +63021,10 @@ msgid "State if ha local state is disabled"
 msgstr "Stare dacă statul local este dezactivat"
 
 #, fuzzy
+msgid "State if ha local state is initial"
+msgstr "Stare dacă statul local este dezactivat"
+
+#, fuzzy
 msgid "State if ha local state is non-functional"
 msgstr "Stabiliți dacă statul local este nefuncțional"
 
@@ -65170,7 +65170,7 @@ msgstr ""
 
 msgid ""
 "Telemetry data are collected through the Prometheus scraper. Adjust the "
-"scraper configuration to modify data collection"
+"scraper configuration to modify data collection."
 msgstr ""
 
 #, fuzzy
@@ -94365,8 +94365,8 @@ msgid "Save OpenTelemetry configuration"
 msgstr "Adaugp o noua configurație de utilizator"
 
 #, fuzzy
-msgid "Configure title and site"
-msgstr "Configurați nivelurile de fum"
+msgid "General configuration properties"
+msgstr "Eroare de configurare"
 
 #, fuzzy
 msgid ""
@@ -95860,6 +95860,22 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Deploy IBM MQ plug-in"
+#~ msgstr "Implementarea plugin-ului IBM MQ"
+
+#, fuzzy
+#~ msgid "Deploy plug-in for DB2"
+#~ msgstr "Implementarea plugin-ului pentru DB2"
+
+#, fuzzy
+#~ msgid "Do not deploy the IBM MQ plug-in"
+#~ msgstr "Nu implementați extensia IBM MQ"
+
+#, fuzzy
+#~ msgid "Configure title and site"
+#~ msgstr "Configurați nivelurile de fum"
 
 #, fuzzy
 #~ msgid "Deploy batch file plug-in - recommended for WinXP / Win2k upwards"

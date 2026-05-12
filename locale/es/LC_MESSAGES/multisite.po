@@ -19665,10 +19665,6 @@ msgid "Deploy Hyper-V monitoring plug-ins"
 msgstr "Implementar complementos de Unitrends"
 
 #, fuzzy
-msgid "Deploy IBM MQ plug-in"
-msgstr "Implementar complemento de IBM MQ"
-
-#, fuzzy
 msgid "Deploy Inotify plug-in"
 msgstr "Implementar el complemento Inotify"
 
@@ -19728,10 +19724,6 @@ msgstr "Implementar archivos personalizados con el agente"
 #, fuzzy
 msgid "Deploy plug-in for Ceph"
 msgstr "Implementar complemento para DAG"
-
-#, fuzzy
-msgid "Deploy plug-in for DB2"
-msgstr "Implementar complemento para DB2"
 
 #, fuzzy
 msgid "Deploy plug-in for Windows interfaces"
@@ -21414,10 +21406,6 @@ msgid "Do not deploy the Docker plug-in"
 msgstr "No desplegar el plugin docker"
 
 #, fuzzy
-msgid "Do not deploy the IBM MQ plug-in"
-msgstr "No despliegue el plugin IBM MQ"
-
-#, fuzzy
 msgid "Do not deploy the Jolokia plug-in"
 msgstr "No despliegue el plugin de Jolokia"
 
@@ -21617,6 +21605,10 @@ msgstr "No traducir los traps SNMP"
 #, fuzzy
 msgid "Do not trust"
 msgstr "No agrupar"
+
+#, fuzzy
+msgid "Do not uninstall the legacy agent"
+msgstr "Contacte también con el agente de Checkmk"
 
 msgid "Do not use 'aws:' prefix for the key."
 msgstr "No utilice el prefijo 'aws:' para la clave."
@@ -37801,6 +37793,10 @@ msgid ""
 msgstr ""
 
 msgid "Legacy agent management"
+msgstr "Gestión de agentes heredados"
+
+#, fuzzy
+msgid "Legacy agent management (Windows)"
 msgstr "Gestión de agentes heredados"
 
 #, fuzzy
@@ -63456,6 +63452,10 @@ msgid "State if ha local state is disabled"
 msgstr "Estado si ha local Estado es Desactivado"
 
 #, fuzzy
+msgid "State if ha local state is initial"
+msgstr "Estado si ha local Estado es Desactivado"
+
+#, fuzzy
 msgid "State if ha local state is non-functional"
 msgstr "Indicar si el Estado local no es funcional"
 
@@ -65622,7 +65622,7 @@ msgstr ""
 
 msgid ""
 "Telemetry data are collected through the Prometheus scraper. Adjust the "
-"scraper configuration to modify data collection"
+"scraper configuration to modify data collection."
 msgstr ""
 
 #, fuzzy
@@ -94938,8 +94938,8 @@ msgid "Save OpenTelemetry configuration"
 msgstr "Añadir una nueva configuración de usuario"
 
 #, fuzzy
-msgid "Configure title and site"
-msgstr "Sin niveles en los inodos"
+msgid "General configuration properties"
+msgstr "Error de configuración"
 
 #, fuzzy
 msgid ""
@@ -96425,6 +96425,22 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Deploy IBM MQ plug-in"
+#~ msgstr "Implementar complemento de IBM MQ"
+
+#, fuzzy
+#~ msgid "Deploy plug-in for DB2"
+#~ msgstr "Implementar complemento para DB2"
+
+#, fuzzy
+#~ msgid "Do not deploy the IBM MQ plug-in"
+#~ msgstr "No despliegue el plugin IBM MQ"
+
+#, fuzzy
+#~ msgid "Configure title and site"
+#~ msgstr "Sin niveles en los inodos"
 
 #, fuzzy
 #~ msgid "Deploy batch file plug-in - recommended for WinXP / Win2k upwards"

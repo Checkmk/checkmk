@@ -18226,9 +18226,6 @@ msgstr "Hyper-V VMゲスト情報用のプラグインをデプロイする"
 msgid "Deploy Hyper-V monitoring plug-ins"
 msgstr "Hyper-V 監視プラグインをデプロイする"
 
-msgid "Deploy IBM MQ plug-in"
-msgstr "IBMMQプラグインをデプロイする"
-
 msgid "Deploy Inotify plug-in"
 msgstr "Inotifyプラグインをデプロイする"
 
@@ -18279,9 +18276,6 @@ msgstr "エージェントを使用してカスタムファイルをデプロイ
 
 msgid "Deploy plug-in for Ceph"
 msgstr "Ceph用プラグインを展開する"
-
-msgid "Deploy plug-in for DB2"
-msgstr "DB2用のプラグインをデプロイする"
 
 #, fuzzy
 msgid "Deploy plug-in for Windows interfaces"
@@ -19787,9 +19781,6 @@ msgstr "Dockerコンテナプラグインをデプロイしないでください
 msgid "Do not deploy the Docker plug-in"
 msgstr "Dockerプラグインをデプロイしないでください"
 
-msgid "Do not deploy the IBM MQ plug-in"
-msgstr "IBM MQプラグインをデプロイしないでください"
-
 msgid "Do not deploy the Jolokia plug-in"
 msgstr "Jolokiaプラグインをデプロイしないでください"
 
@@ -19965,6 +19956,10 @@ msgstr "SNMPトラップを変換しないでください"
 
 msgid "Do not trust"
 msgstr "信用しないでください"
+
+#, fuzzy
+msgid "Do not uninstall the legacy agent"
+msgstr "Checkmkエージェントにも連絡してください"
 
 msgid "Do not use 'aws:' prefix for the key."
 msgstr "キーに'aws:' プレフィックスを使用しないでください。"
@@ -34867,6 +34862,10 @@ msgstr ""
 "す）。"
 
 msgid "Legacy agent management"
+msgstr "レガシーエージェント管理"
+
+#, fuzzy
+msgid "Legacy agent management (Windows)"
 msgstr "レガシーエージェント管理"
 
 msgid "Legacy check plug-ins (outdated, ignored)"
@@ -58202,6 +58201,10 @@ msgstr "HAローカル状態がアクティブ-セカンダリである場合の
 msgid "State if ha local state is disabled"
 msgstr "HAローカル状態が無効な場合の状態"
 
+#, fuzzy
+msgid "State if ha local state is initial"
+msgstr "HAローカル状態が無効な場合の状態"
+
 msgid "State if ha local state is non-functional"
 msgstr "haローカル状態が機能しない場合の状態"
 
@@ -60178,7 +60181,7 @@ msgstr ""
 
 msgid ""
 "Telemetry data are collected through the Prometheus scraper. Adjust the "
-"scraper configuration to modify data collection"
+"scraper configuration to modify data collection."
 msgstr ""
 
 msgid ""
@@ -87238,8 +87241,8 @@ msgid "Save OpenTelemetry configuration"
 msgstr "OpenTelemetryの設定を管理する"
 
 #, fuzzy
-msgid "Configure title and site"
-msgstr "煙のレベルを設定する"
+msgid "General configuration properties"
+msgstr "設定バンドル・プロパティ"
 
 #, fuzzy
 msgid ""
@@ -88905,6 +88908,19 @@ msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
 "後で「ヘルプ」＞「Checkmkの学習」＞「ウェルカムページ」からアクセスできます"
+
+#~ msgid "Deploy IBM MQ plug-in"
+#~ msgstr "IBMMQプラグインをデプロイする"
+
+#~ msgid "Deploy plug-in for DB2"
+#~ msgstr "DB2用のプラグインをデプロイする"
+
+#~ msgid "Do not deploy the IBM MQ plug-in"
+#~ msgstr "IBM MQプラグインをデプロイしないでください"
+
+#, fuzzy
+#~ msgid "Configure title and site"
+#~ msgstr "煙のレベルを設定する"
 
 #~ msgid "Deploy batch file plug-in - recommended for WinXP / Win2k upwards"
 #~ msgstr "バッチファイルプラグインをデプロイする-WinXP / Win2k以降推奨"

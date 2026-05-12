@@ -4,9 +4,9 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
+"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2026-05-10 20:08+0000\n"
+"PO-Revision-Date: 2026-05-12 07:43+0000\n"
 "Language-Team: Portuguese (Portugal) <https://translate.checkmk.com/projects/"
 "checkmk/dev/pt_PT/>\n"
 "Language: pt_PT\n"
@@ -19532,10 +19532,6 @@ msgid "Deploy Hyper-V monitoring plug-ins"
 msgstr "Implantar plugins Unitrends"
 
 #, fuzzy
-msgid "Deploy IBM MQ plug-in"
-msgstr "Implantar plug-in IBM MQ"
-
-#, fuzzy
 msgid "Deploy Inotify plug-in"
 msgstr "Implantar plugin de Inotificação"
 
@@ -19595,10 +19591,6 @@ msgstr "Implantar arquivos personalizados com o agente"
 #, fuzzy
 msgid "Deploy plug-in for Ceph"
 msgstr "Implantar plugin para DAG"
-
-#, fuzzy
-msgid "Deploy plug-in for DB2"
-msgstr "Implementar plugin para o DB2"
 
 #, fuzzy
 msgid "Deploy plug-in for Windows interfaces"
@@ -21254,10 +21246,6 @@ msgid "Do not deploy the Docker plug-in"
 msgstr "Não utilize o plug-in da doca"
 
 #, fuzzy
-msgid "Do not deploy the IBM MQ plug-in"
-msgstr "Não implante o plug-in IBM MQ"
-
-#, fuzzy
 msgid "Do not deploy the Jolokia plug-in"
 msgstr "Não implante o plugin Jolokia"
 
@@ -21456,6 +21444,10 @@ msgstr "Não traduzir as armadilhas SNMP"
 #, fuzzy
 msgid "Do not trust"
 msgstr "Não agrupar"
+
+#, fuzzy
+msgid "Do not uninstall the legacy agent"
+msgstr "Contacte também o agente Checkmk"
 
 msgid "Do not use 'aws:' prefix for the key."
 msgstr "Não use o prefixo 'aws:' para a chave."
@@ -37527,6 +37519,10 @@ msgid ""
 msgstr ""
 
 msgid "Legacy agent management"
+msgstr "Gestão de agentes legados"
+
+#, fuzzy
+msgid "Legacy agent management (Windows)"
 msgstr "Gestão de agentes legados"
 
 #, fuzzy
@@ -62920,6 +62916,10 @@ msgid "State if ha local state is disabled"
 msgstr "Estado se o Estado local for Desactivado"
 
 #, fuzzy
+msgid "State if ha local state is initial"
+msgstr "Estado se o Estado local for Desactivado"
+
+#, fuzzy
 msgid "State if ha local state is non-functional"
 msgstr "Indicar se o Estado local não é funcional"
 
@@ -65070,7 +65070,7 @@ msgstr ""
 
 msgid ""
 "Telemetry data are collected through the Prometheus scraper. Adjust the "
-"scraper configuration to modify data collection"
+"scraper configuration to modify data collection."
 msgstr ""
 
 #, fuzzy
@@ -89226,6 +89226,7 @@ msgstr "contando"
 msgid "cp437"
 msgstr "cp437"
 
+#, fuzzy
 msgid "crash report"
 msgid_plural "crash reports"
 msgstr[0] ""
@@ -89739,6 +89740,7 @@ msgstr "os anfitriões estão de pé e não têm problemas de serviço"
 msgid "hosts in total"
 msgstr "anfitriões no total"
 
+#, fuzzy
 msgid "hour"
 msgid_plural "hours"
 msgstr[0] ""
@@ -94115,8 +94117,8 @@ msgid "Save OpenTelemetry configuration"
 msgstr "Adicionar nova configuração de usuário"
 
 #, fuzzy
-msgid "Configure title and site"
-msgstr "Configurar níveis no fumo"
+msgid "General configuration properties"
+msgstr "Erro de configuração"
 
 #, fuzzy
 msgid ""
@@ -95602,6 +95604,22 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Deploy IBM MQ plug-in"
+#~ msgstr "Implantar plug-in IBM MQ"
+
+#, fuzzy
+#~ msgid "Deploy plug-in for DB2"
+#~ msgstr "Implementar plugin para o DB2"
+
+#, fuzzy
+#~ msgid "Do not deploy the IBM MQ plug-in"
+#~ msgstr "Não implante o plug-in IBM MQ"
+
+#, fuzzy
+#~ msgid "Configure title and site"
+#~ msgstr "Configurar níveis no fumo"
 
 #, fuzzy
 #~ msgid "Deploy batch file plug-in - recommended for WinXP / Win2k upwards"

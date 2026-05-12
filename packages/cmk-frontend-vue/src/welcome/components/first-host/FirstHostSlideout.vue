@@ -5,7 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { inject, ref } from 'vue'
 
 import usei18n from '@/lib/i18n'
 import usePersistentRef from '@/lib/usePersistentRef'
@@ -30,6 +30,7 @@ import { finalStepText, tabs } from './FirstHostSlideoutContent'
 const { _t } = usei18n()
 
 const slideInOpen = defineModel<boolean>({ required: true })
+const isIndexPage = inject<boolean>('firstHostSlideoutIsIndexPage', false)
 const openedTab = usePersistentRef<string | number>(
   'first-host-slideout-opened-tab',
   'deb',
@@ -44,7 +45,11 @@ function onClose() {
 }
 
 function goToHostOverview() {
-  window.location.href = 'wato.py?mode=folder'
+  if (isIndexPage) {
+    window.location.href = 'index.py?start_url=wato.py%3Fmode%3Dfolder'
+  } else {
+    window.location.href = 'wato.py?mode=folder'
+  }
 }
 </script>
 
@@ -55,6 +60,7 @@ function goToHostOverview() {
       closeButton: true
     }"
     :open="slideInOpen"
+    :is-index-page="isIndexPage"
     @close="onClose"
   >
     <CmkTabs v-model="openedTab" @update:model-value="() => (currentStep = 1)">

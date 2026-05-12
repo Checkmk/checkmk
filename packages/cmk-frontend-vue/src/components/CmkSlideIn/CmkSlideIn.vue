@@ -103,6 +103,7 @@ onBeforeUnmount(() => {
         :class="slideInVariants({ size: size, borderColor: borderColor })"
         :aria-describedby="undefined"
         :aria-label="props.ariaLabel"
+        :force-mount="true"
         @escape-key-down="emit('close')"
         @open-auto-focus.prevent
         @close-auto-focus.prevent

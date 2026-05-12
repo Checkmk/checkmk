@@ -426,7 +426,7 @@ def check(pyrfc, cfg_entry):
                     last_alert = alerts[-1]
                     dt = parse_dt(last_alert["ALERTDATE"], last_alert["ALERTTIME"])
                     alert_state, alert_msg = alert_details(conn, cfg_entry, last_alert)
-                    last_msg = "%s: %s - %s" % (
+                    last_msg = "{}: {} - {}".format(
                         dt,
                         STATE_VALUE_MAP[alert_state["VALUE"]][1],
                         alert_msg,
@@ -460,7 +460,7 @@ def check(pyrfc, cfg_entry):
                 )
 
     for host, host_sap in sap_data.items():
-        sys.stdout.write("<<<<%s%s>>>>\n" % (cfg_entry.get("host_prefix", ""), host))
+        sys.stdout.write("<<<<{}{}>>>>\n".format(cfg_entry.get("host_prefix", ""), host))
         sys.stdout.write("<<<sap:sep(9)>>>\n")
         sys.stdout.write("%s\n" % "\n".join(host_sap))
     sys.stdout.write("<<<<>>>>\n")
@@ -500,12 +500,14 @@ def main():
                 sys.stdout.write("<<<sap_state:sep(9)>>>\n%s\tOK\n" % entry["ashost"])
             except SapError as e:
                 sys.stderr.write("ERROR: %s\n" % e)
-                sys.stdout.write("<<<sap_state:sep(9)>>>\n%s\t%s\n" % (entry["ashost"], e))
+                sys.stdout.write("<<<sap_state:sep(9)>>>\n{}\t{}\n".format(entry["ashost"], e))
                 processed_all = False
             except Exception as e:
                 sys.stderr.write("ERROR: Unhandled exception (%s)\n" % e)
                 sys.stdout.write(
-                    "<<<sap_state:sep(9)>>>\n%s\tUnhandled exception (%s)\n" % (entry["ashost"], e)
+                    "<<<sap_state:sep(9)>>>\n{}\tUnhandled exception ({})\n".format(
+                        entry["ashost"], e
+                    )
                 )
                 processed_all = False
 

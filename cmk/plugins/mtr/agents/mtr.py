@@ -83,7 +83,7 @@ def read_config():
                 sys.stdout.write("**ERROR** Failed to parse configuration file %s!\n" % config_file)
         except Exception as e:
             sys.stdout.write(
-                "**ERROR** Failed to parse config file %s: %s\n" % (config_file, repr(e))
+                "**ERROR** Failed to parse config file {}: {}\n".format(config_file, repr(e))
             )
 
     if len(cfg.sections()) == 0:
@@ -125,7 +125,9 @@ def read_status():
                     }
             except Exception as e:
                 sys.stdout.write(
-                    "*ERROR** (BUG) Could not parse status line: %s, reason: %s\n" % (line, repr(e))
+                    "*ERROR** (BUG) Could not parse status line: {}, reason: {}\n".format(
+                        line, repr(e)
+                    )
                 )
     return current_status
 
@@ -135,10 +137,10 @@ def save_status(current_status):
         for host, hostdict in current_status.items():
             hopnum = len(hostdict["hops"].keys())
             lastreport = hostdict["lasttime"]
-            hoststring = "%s|%s|%s" % (host, lastreport, hopnum)
+            hoststring = "{}|{}|{}".format(host, lastreport, hopnum)
             for hop in hostdict["hops"].keys():
                 hi = hostdict["hops"][hop]
-                hoststring += "|%s|%s|%s|%s|%s|%s|%s|%s" % (
+                hoststring += "|{}|{}|{}|{}|{}|{}|{}|{}".format(
                     hi["hopname"],
                     hi["loss"],
                     hi["snt"],
@@ -279,10 +281,10 @@ def output_report(host, status):
 
     hopnum = len(hostdict["hops"].keys())
     lastreport = hostdict["lasttime"]
-    hoststring = "%s|%s|%s" % (host, lastreport, hopnum)
+    hoststring = "{}|{}|{}".format(host, lastreport, hopnum)
     for hop in hostdict["hops"].keys():
         hi = hostdict["hops"][hop]
-        hoststring += "|%s|%s|%s|%s|%s|%s|%s|%s" % (
+        hoststring += "|{}|{}|{}|{}|{}|{}|{}|{}".format(
             hi["hopname"],
             hi["loss"],
             hi["snt"],

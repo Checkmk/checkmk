@@ -50,5 +50,5 @@ if __name__ == "__main__":
         targetname = _get_text(item.getElementsByTagName("TargetName"))
         instancename = _get_text(item.getElementsByTagName("InstanceName"))
         sys.stdout.write(
-            "%s|%s|%s|%s|%s\n" % (application, result, completed, targetname, instancename)
+            "{}|{}|{}|{}|{}\n".format(application, result, completed, targetname, instancename)
         )

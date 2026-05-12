@@ -116,6 +116,6 @@ check_plugin_mssql_counters_transactions = CheckPlugin(
     service_name="MSSQL %s Transactions",
     discovery_function=discovery_mssql_counters_transactions,
     check_default_parameters={},
-    check_ruleset_name="mssql_counters_locks",
+    check_ruleset_name="mssql_counters_transactions",
     check_function=check_mssql_counters_transactions,
 )

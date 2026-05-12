@@ -3,14 +3,22 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 
+from collections.abc import Mapping
+from typing import Any
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import any_of, contains, SNMPTree, StringTable
-from cmk.legacy_includes.mem import check_memory_element
-
-check_info = {}
+from cmk.agent_based.v2 import (
+    any_of,
+    CheckPlugin,
+    CheckResult,
+    contains,
+    DiscoveryResult,
+    Service,
+    SimpleSNMPSection,
+    SNMPTree,
+    StringTable,
+)
+from cmk.plugins.lib.memory import check_element
 
 # FIXME
 # The WATO group 'memory_simple' needs an item and the service_description should
@@ -26,34 +34,36 @@ check_info = {}
 # hpLocalMemAllocBytes   1.3.6.1.4.1.11.2.14.11.5.1.1.2.1.1.1.7
 
 
-def discover_hp_procurve_mem(info):
-    if len(info) == 1 and int(info[0][0]) >= 0:
-        yield None, {}
-
-
-def check_hp_procurve_mem(_no_item, params, info):
-    if len(info) != 1:
-        return None
-
-    if isinstance(params, tuple):
-        params = {"levels": ("perc_used", params)}
-    mem_total, mem_used = (int(mem) for mem in info[0])
-    return check_memory_element(
-        "Usage",
-        mem_used,
-        mem_total,
-        params.get("levels"),
-        metric_name="mem_used",
-    )
-
-
 def parse_hp_procurve_mem(string_table: StringTable) -> StringTable:
     return string_table
 
 
-check_info["hp_procurve_mem"] = LegacyCheckDefinition(
+def discover_hp_procurve_mem(section: StringTable) -> DiscoveryResult:
+    if len(section) == 1 and int(section[0][0]) >= 0:
+        yield Service()
+
+
+def check_hp_procurve_mem(params: Mapping[str, Any], section: StringTable) -> CheckResult:
+    if len(section) != 1:
+        return
+
+    levels = params.get("levels")
+    if isinstance(levels, tuple) and len(levels) == 2 and not isinstance(levels[0], str):
+        # legacy params: a plain (warn, crit) tuple
+        levels = ("perc_used", levels)
+
+    mem_total, mem_used = (int(mem) for mem in section[0])
+    yield from check_element(
+        "Usage",
+        mem_used,
+        mem_total,
+        levels,
+        metric_name="mem_used",
+    )
+
+
+snmp_section_hp_procurve_mem = SimpleSNMPSection(
     name="hp_procurve_mem",
-    parse_function=parse_hp_procurve_mem,
     detect=any_of(
         contains(".1.3.6.1.2.1.1.2.0", ".11.2.3.7.11"),
         contains(".1.3.6.1.2.1.1.2.0", ".11.2.3.7.8"),
@@ -62,6 +72,12 @@ check_info["hp_procurve_mem"] = LegacyCheckDefinition(
         base=".1.3.6.1.4.1.11.2.14.11.5.1.1.2.1.1.1",
         oids=["5", "7"],
     ),
+    parse_function=parse_hp_procurve_mem,
+)
+
+
+check_plugin_hp_procurve_mem = CheckPlugin(
+    name="hp_procurve_mem",
     service_name="Memory",
     discovery_function=discover_hp_procurve_mem,
     check_function=check_hp_procurve_mem,

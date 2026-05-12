@@ -147,6 +147,23 @@ def _agent_config_mk_podman() -> Dictionary:
                 required=True,
                 parameter_form=_connection_method_form(),
             ),
+            "keep_non_zero_exit_containers": DictElement(
+                required=True,
+                parameter_form=BooleanChoice(
+                    title=Title("Keep containers exited with non-zero exit code in monitoring"),
+                    label=Label("Keep containers exited with non-zero exit code"),
+                    help_text=Help(
+                        "When enabled (default), containers that have exited with a non-zero exit "
+                        "code will continue to be monitored individually. When disabled, they are "
+                        "removed from individual monitoring. "
+                        "Note: containers exited with exit code 0 are always removed from "
+                        "individual monitoring regardless of this setting. "
+                        "All exited containers are still counted in the container count service "
+                        "on the Podman host."
+                    ),
+                    prefill=DefaultValue(True),
+                ),
+            ),
             "piggyback_name_method": DictElement(
                 required=True,
                 parameter_form=SingleChoice(

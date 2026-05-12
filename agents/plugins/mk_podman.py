@@ -68,6 +68,7 @@ DEFAULT_CFG_SECTION = {
     "socket_detection_method": "auto",
     "socket_paths": "",
     "piggyback_name_method": "nodename_name",
+    "keep_non_zero_exit_containers": "true",
 }
 
 DEFAULT_SOCKET_PATH = "/run/podman/podman.sock"
@@ -111,6 +112,7 @@ class PodmanConfig(TypedDict):
     connection_method: ConnectionMethod
     socket_detection: Union[AutomaticSocketDetectionMethod, tuple[Literal["manual"], Sequence[str]]]
     piggyback_name_method: PiggybackNameMethod
+    keep_non_zero_exit_containers: bool
 
 
 def _parse_piggyback_name_method(value: str | None, cfg_file: Path) -> PiggybackNameMethod:
@@ -161,6 +163,10 @@ def load_cfg(cfg_file: Path = DEFAULT_CFG_FILE) -> Union[PodmanConfig, None]:
             conf_dict.get("piggyback_name_method"), cfg_file
         )
 
+        keep_non_zero_exit_containers = (
+            conf_dict.get("keep_non_zero_exit_containers", "true") == "true"
+        )
+
         if method == "manual" and socket_paths_str:
             socket_paths = [p.strip() for p in socket_paths_str.split(",") if p.strip()]
             LOGGER.info("Config loaded from %s: manual socket paths: %s", cfg_file, socket_paths)
@@ -168,12 +174,14 @@ def load_cfg(cfg_file: Path = DEFAULT_CFG_FILE) -> Union[PodmanConfig, None]:
                 connection_method=connection_method,
                 socket_detection=("manual", socket_paths),
                 piggyback_name_method=piggyback_name_method,
+                keep_non_zero_exit_containers=keep_non_zero_exit_containers,
             )
         LOGGER.info("Config loaded from %s: socket detection method: %s", cfg_file, method)
         return PodmanConfig(
             connection_method=connection_method,
             socket_detection=AutomaticSocketDetectionMethod(method),
             piggyback_name_method=piggyback_name_method,
+            keep_non_zero_exit_containers=keep_non_zero_exit_containers,
         )
 
     except Exception as e:
@@ -527,14 +535,27 @@ def query_raw_stats_cli(
         return Error("podman stats", f"Failed to parse JSON: {e}")
 
 
+def _skip_container(
+    container: Mapping[str, object],
+    keep_non_zero_exit_containers: bool,
+) -> bool:
+    state = str(container.get("State", ""))
+    exit_code = container.get("ExitCode") or 0
+    return bool(state == "exited" and (not keep_non_zero_exit_containers or exit_code == 0))
+
+
 def handle_containers_stats_cli(
     containers: Sequence[Mapping[str, object]],
     container_stats: Mapping[str, object],
     piggyback_name_method: PiggybackNameMethod,
     nodename: Union[str, None] = None,
     run_as_user: Union[str, None] = None,
+    keep_non_zero_exit_containers: bool = True,
 ) -> None:
     for container in containers:
+        if _skip_container(container, keep_non_zero_exit_containers):
+            continue
+
         container_id = str(container.get("Id", ""))
         target_host = get_piggyback_host(
             container_id,
@@ -560,6 +581,7 @@ def handle_containers_stats_cli(
 def run_cli_queries_for_user(
     piggyback_name_method: PiggybackNameMethod,
     run_as_user: Union[str, None] = None,
+    keep_non_zero_exit_containers: bool = True,
 ) -> None:
     LOGGER.info("Running CLI queries as user: %s", run_as_user or "root")
     containers_section = query_containers_cli(run_as_user)
@@ -590,16 +612,20 @@ def run_cli_queries_for_user(
             piggyback_name_method=piggyback_name_method,
             nodename=nodename,
             run_as_user=run_as_user,
+            keep_non_zero_exit_containers=keep_non_zero_exit_containers,
         )
     else:
         write_section(containers_section)
 
 
-def run_cli_queries(piggyback_name_method: PiggybackNameMethod) -> None:
+def run_cli_queries(
+    piggyback_name_method: PiggybackNameMethod,
+    keep_non_zero_exit_containers: bool = True,
+) -> None:
     podman_users = find_podman_users_from_conmon()
 
     for user in podman_users:
-        run_cli_queries_for_user(piggyback_name_method, user)
+        run_cli_queries_for_user(piggyback_name_method, user, keep_non_zero_exit_containers)
 
 
 # =============================================================================
@@ -746,9 +772,13 @@ def handle_containers_stats(
     session: Session,
     piggyback_name_method: PiggybackNameMethod = PiggybackNameMethod.NODENAME_NAME,
     nodename: Union[str, None] = None,
+    keep_non_zero_exit_containers: bool = True,
 ) -> None:
     socket_owner = get_socket_owner(Path(socket_path))
     for container in containers:
+        if _skip_container(container, keep_non_zero_exit_containers):
+            continue
+
         container_id = str(container.get("Id", ""))
         target_host = get_piggyback_host(
             container_id,
@@ -785,9 +815,13 @@ def main() -> None:
     # Write empty errors section to indicate successful start
     write_serialized_section("errors", json.dumps({}))
 
+    keep_non_zero_exit_containers = (
+        config.get("keep_non_zero_exit_containers", True) if config else True
+    )
+
     if config is not None and config["connection_method"] is ConnectionMethod.CLI:
         LOGGER.info("Connection method: CLI (from config).")
-        run_cli_queries(piggyback_name_method)
+        run_cli_queries(piggyback_name_method, keep_non_zero_exit_containers)
         return
 
     socket_paths = get_socket_paths(config)
@@ -843,6 +877,7 @@ def main() -> None:
                     session=session,
                     piggyback_name_method=piggyback_name_method,
                     nodename=nodename,
+                    keep_non_zero_exit_containers=keep_non_zero_exit_containers,
                 )
             else:
                 write_section(containers_section)

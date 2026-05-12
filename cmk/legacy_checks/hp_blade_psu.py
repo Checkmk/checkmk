@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 
 # Author: Lars Michelsen <lm@mathias-kettner.de>
 
@@ -18,26 +17,29 @@
 # '.1.3.6.1.4.1.232.22.2.5.1.1.1.16' => 'cpqRackPowerSupplyPresent',
 # '.1.3.6.1.4.1.232.22.2.5.1.1.1.17' => 'cpqRackPowerSupplyCondition',
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import SNMPTree, StringTable
+from cmk.agent_based.v2 import (
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Metric,
+    Result,
+    Service,
+    SimpleSNMPSection,
+    SNMPTree,
+    State,
+    StringTable,
+)
 from cmk.plugins.hp_blade.lib import DETECT_HP_BLADE
 
-check_info = {}
-
-# GENERAL MAPS:
-hp_blade_present_map = {1: "other", 2: "absent", 3: "present"}
-hp_blade_status_map = {1: "Other", 2: "Ok", 3: "Degraded", 4: "Failed"}
-
-hp_blade_status2nagios_map = {
-    "Other": 2,
-    "Ok": 0,
-    "Degraded": 1,
-    "Failed": 2,
+_PRESENT_MAP = {1: "other", 2: "absent", 3: "present"}
+_STATUS_MAP: dict[int, tuple[State, str]] = {
+    1: (State.CRIT, "Other"),
+    2: (State.OK, "Ok"),
+    3: (State.WARN, "Degraded"),
+    4: (State.CRIT, "Failed"),
 }
 
-# PSU MAPS:
-
-hp_blade_psu_status = {
+_PSU_STATUS = {
     1: "noError",
     2: "generalFailure",
     3: "bistFailure",
@@ -56,7 +58,7 @@ hp_blade_psu_status = {
     16: "calibrationTableInvalid",
 }
 
-hp_blade_psu_inputline_status = {
+_INPUTLINE_STATUS = {
     1: "noError",
     2: "lineOverVoltage",
     3: "lineUnderVoltage",
@@ -66,58 +68,58 @@ hp_blade_psu_inputline_status = {
 }
 
 
-def discover_hp_blade_psu(info):
-    return [(line[0], None) for line in info if hp_blade_present_map[int(line[1])] == "present"]
-
-
-def check_hp_blade_psu(item, params, info):
-    for line in info:
-        if line[0] == item:
-            present_state = hp_blade_present_map[int(line[1])]
-            if present_state != "present":
-                return (
-                    2,
-                    "PSU was present but is not available anymore."
-                    " (Present state: %s" % present_state,
-                )
-
-            snmp_state = hp_blade_status_map[int(line[2])]
-            status = hp_blade_status2nagios_map[snmp_state]
-
-            detail_output = ""
-            if status == 0:
-                detail_output = ", Output: %sW" % line[3]
-            else:
-                # FIXME: This should probably append strings, not overwrite them...
-                detail_output = (" (%s)" % hp_blade_psu_status[4]) if int(line[4]) >= 1 else ""
-                detail_output = (
-                    (", Inputline: %s" % hp_blade_psu_inputline_status[5])
-                    if int(line[5]) >= 1
-                    else ""
-                )
-
-            perfdata = [("output", line[3])]
-
-            return (
-                status,
-                f"PSU is {snmp_state}{detail_output} (S/N: {line[6]})",
-                perfdata,
-            )
-    return (3, "item not found in snmp data")
-
-
 def parse_hp_blade_psu(string_table: StringTable) -> StringTable:
     return string_table
 
 
-check_info["hp_blade_psu"] = LegacyCheckDefinition(
+def discover_hp_blade_psu(section: StringTable) -> DiscoveryResult:
+    for line in section:
+        if _PRESENT_MAP[int(line[1])] == "present":
+            yield Service(item=line[0])
+
+
+def check_hp_blade_psu(item: str, section: StringTable) -> CheckResult:
+    for line in section:
+        if line[0] != item:
+            continue
+        present_state = _PRESENT_MAP[int(line[1])]
+        if present_state != "present":
+            yield Result(
+                state=State.CRIT,
+                summary=f"PSU was present but is not available anymore. (Present state: {present_state}",
+            )
+            return
+
+        state, snmp_state = _STATUS_MAP[int(line[2])]
+
+        if state is State.OK:
+            detail_output = f", Output: {line[3]}W"
+        else:
+            # FIXME: This should probably append strings, not overwrite them...
+            detail_output = f" ({_PSU_STATUS[4]})" if int(line[4]) >= 1 else ""
+            detail_output = f", Inputline: {_INPUTLINE_STATUS[5]}" if int(line[5]) >= 1 else ""
+
+        yield Result(
+            state=state,
+            summary=f"PSU is {snmp_state}{detail_output} (S/N: {line[6]})",
+        )
+        yield Metric("output", float(line[3]))
+        return
+
+
+snmp_section_hp_blade_psu = SimpleSNMPSection(
     name="hp_blade_psu",
-    parse_function=parse_hp_blade_psu,
     detect=DETECT_HP_BLADE,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.232.22.2.5.1.1.1",
         oids=["3", "16", "17", "10", "14", "15", "5"],
     ),
+    parse_function=parse_hp_blade_psu,
+)
+
+
+check_plugin_hp_blade_psu = CheckPlugin(
+    name="hp_blade_psu",
     service_name="PSU %s",
     discovery_function=discover_hp_blade_psu,
     check_function=check_hp_blade_psu,

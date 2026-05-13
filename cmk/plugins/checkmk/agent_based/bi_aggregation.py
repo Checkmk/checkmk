@@ -19,6 +19,7 @@ from cmk.agent_based.v2 import (
 )
 
 Section = Mapping[str, Any]
+state_markers = ("", "(!)", "(!!)", "(?)")
 
 
 class ErrorInfo(TypedDict, total=False):
@@ -52,6 +53,9 @@ class AggregationError:
     notice: str
     details: str
     affects_state: bool
+
+    def __str__(self) -> str:
+        return f"{self.details} {state_markers[int(self.state)]}{' [affects state]' if self.affects_state else ''}"
 
 
 def parse_bi_aggregation(string_table: StringTable) -> Section:
@@ -153,18 +157,8 @@ def check_bi_aggregation(item: str, section: Section) -> CheckResult:
         return
 
     aggregations = get_aggregations(bi_data["infos"])
-    errors = list(get_aggregation_errors(aggregations, bool(overall_state)))
-
-    if errors_affecting_state := [e for e in errors if e.affects_state]:
-        yield Result(state=State.OK, notice="Aggregation problems affecting the state:")
-        yield from (
-            Result(state=e.state, notice=e.notice, details=e.details)
-            for e in errors_affecting_state
-        )
-
-    if other_errors := [e for e in errors if not e.affects_state]:
-        yield Result(state=State.OK, notice="Aggregation problems not affecting the state:")
-        yield from (Result(state=e.state, notice=e.notice, details=e.details) for e in other_errors)
+    for error in get_aggregation_errors(aggregations, bool(overall_state)):
+        yield Result(state=State.OK, notice="Error during aggregation", details=str(error))
 
 
 check_plugin_bi_aggregation = CheckPlugin(

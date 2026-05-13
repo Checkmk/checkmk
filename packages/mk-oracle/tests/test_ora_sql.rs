@@ -400,7 +400,7 @@ async fn test_remote_tns_custom_instance_connection() {
 
     assert!(r.is_ok());
     let table = r.unwrap();
-    assert_eq!(table.len(), 2);
+    assert_eq!(table.len(), 2, "{:?}", table);
     assert_eq!(table[0], "<<<oracle_instance>>>");
     let rows: Vec<&str> = table[1].split("\n").collect();
     assert_eq!(rows[0], "<<<oracle_instance:sep(124)>>>");

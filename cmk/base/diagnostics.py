@@ -20,7 +20,7 @@ import textwrap
 import traceback
 import urllib.parse
 import uuid
-from collections.abc import Callable, Mapping
+from collections.abc import Callable, Mapping, Sequence
 from contextlib import redirect_stderr, redirect_stdout
 from datetime import datetime
 from functools import cache
@@ -253,22 +253,25 @@ def create_diagnostics_dump(
     loading_result: LoadingResult | None,
 ) -> DiagnosticsDump:
     log.logger.setLevel(logging.INFO)
-    if loading_result is None:
-        loading_result = load_config(
-            discovery_rulesets=(),
-            get_builtin_host_labels=app.get_builtin_host_labels,
+    return DiagnosticsDump(
+        elements=diagnostics_elements_for(
             edition=app.edition,
-        )
-    dump = DiagnosticsDump(
-        edition=app.edition,
-        loaded_config=loading_result.loaded_config,
-        core_performance_settings=app.core_performance_settings,
-        omd_config=get_omd_config(omd_root),
+            loaded_config=(
+                load_config(
+                    discovery_rulesets=(),
+                    get_builtin_host_labels=app.get_builtin_host_labels,
+                    edition=app.edition,
+                )
+                if loading_result is None
+                else loading_result
+            ).loaded_config,
+            core_performance_settings=app.core_performance_settings,
+            omd_config=get_omd_config(omd_root),
+            parameters=parameters,
+        ),
         diagnostics_dir=diagnostics_dir,
-        parameters=parameters,
+        omd_root=omd_root,
     )
-    dump.create(omd_root)
-    return dump
 
 
 #   .--format helper-------------------------------------------------------.
@@ -323,8 +326,84 @@ def _format_info(info: str) -> str:
 #   '----------------------------------------------------------------------'
 
 
-# TODO: This is not really a class: The constructor creates a description of what should be
-# collected and create() does the actual retrieval.
+def diagnostics_elements_for(
+    *,
+    edition: cmk_version.Edition,
+    loaded_config: LoadedConfigFragment,
+    core_performance_settings: Callable[[LoadedConfigFragment], Mapping[str, int]],
+    omd_config: site.OMDConfig,
+    parameters: DiagnosticsOptionalParameters,
+) -> list[ABCDiagnosticsElement]:
+    elements = [
+        ParametersDiagnosticsElement(parameters),
+        GeneralDiagnosticsElement(),
+        PerfDataDiagnosticsElement(loaded_config, core_performance_settings),
+        HWDiagnosticsElement(),
+        VendorDiagnosticsElement(),
+        EnvironmentDiagnosticsElement(),
+        FilesSizeCSVDiagnosticsElement(),
+        PipFreezeDiagnosticsElement(),
+        SELinuxJSONDiagnosticsElement(),
+        DpkgCSVDiagnosticsElement(),
+        RpmCSVDiagnosticsElement(),
+        CMAJSONDiagnosticsElement(),
+    ]
+
+    if edition is not cmk_version.Edition.COMMUNITY:
+        elements.append(DCDDiagnosticsElement())
+
+    for identifier, command in COMPONENT_COMMANDS.items():
+        elements.append(CheckmkCommandDiagnosticsElementTextDump(identifier, command))
+
+    if parameters.get(OPT_LOCAL_FILES):
+        elements.append(MKPFindTextDiagnosticsElement())
+        elements.append(MKPShowTextDiagnosticsElement())
+        elements.append(MKPListTextDiagnosticsElement())
+
+    if parameters.get(OPT_OMD_CONFIG):
+        elements.append(OMDConfigDiagnosticsElement(omd_config))
+
+    if OPT_CHECKMK_OVERVIEW in parameters:
+        elements.append(CheckmkOverviewDiagnosticsElement(parameters[OPT_CHECKMK_OVERVIEW]))
+
+    if parameters.get(OPT_CHECKMK_CRASH_REPORTS):
+        elements.append(CrashDumpsDiagnosticsElement())
+
+    if parameters.get(OPT_BI_RUNTIME_DATA):
+        elements.append(BIDataDiagnosticsElement())
+
+    if rel_checkmk_config_files := parameters.get(OPT_CHECKMK_CONFIG_FILES):
+        elements.append(CheckmkConfigFilesDiagnosticsElement(rel_checkmk_config_files))
+
+    if rel_checkmk_log_files := parameters.get(OPT_CHECKMK_LOG_FILES):
+        elements.append(CheckmkLogFilesDiagnosticsElement(rel_checkmk_log_files))
+
+    for dir_comp in COMPONENT_DIRECTORIES:
+        if dir_comp in parameters:
+            for directory in COMPONENT_DIRECTORIES[dir_comp]["abs_dirs"]:
+                elements.append(CheckmkDirectoryDiagnosticsElement(directory, rel=False))
+            for directory in COMPONENT_DIRECTORIES[dir_comp]["rel_dirs"]:
+                elements.append(CheckmkDirectoryDiagnosticsElement(directory, rel=True))
+
+    if edition is not cmk_version.Edition.COMMUNITY:
+        if rel_checkmk_core_files := parameters.get(OPT_CHECKMK_CORE_FILES):
+            elements.append(CheckmkCoreFilesDiagnosticsElement(rel_checkmk_core_files))
+            elements.append(CMCDumpDiagnosticsElement())
+
+        if OPT_PERFORMANCE_GRAPHS in parameters:
+            elements.append(
+                PerformanceGraphsDiagnosticsElement(
+                    parameters.get(OPT_PERFORMANCE_GRAPHS, ""), omd_config
+                )
+            )
+
+        if rel_checkmk_licensing_files := parameters.get(OPT_CHECKMK_LICENSING_FILES):
+            elements.append(CheckmkLicensingFilesDiagnosticsElement(rel_checkmk_licensing_files))
+
+    return elements
+
+
+# Not really a class...
 class DiagnosticsDump:
     """Caring about the persistance of diagnostics dumps in the local site"""
 
@@ -333,150 +412,40 @@ class DiagnosticsDump:
     def __init__(
         self,
         *,
-        edition: cmk_version.Edition,
-        loaded_config: LoadedConfigFragment,
-        core_performance_settings: Callable[[LoadedConfigFragment], Mapping[str, int]],
-        omd_config: site.OMDConfig,
+        elements: Sequence[ABCDiagnosticsElement],
         diagnostics_dir: Path,
-        parameters: DiagnosticsOptionalParameters | None,
+        omd_root: Path,
     ) -> None:
-        self.log: list[str] = []
-        self.elements = self._get_fixed_elements(
-            edition, loaded_config, core_performance_settings, parameters
-        ) + self._get_optional_elements(edition, parameters, omd_config)
-        # TODO: These don't really belong here, they should simply be returned by create()
+        self.log = list[str]()
         self.dump_folder = diagnostics_dir
         self.tarfile_path = (diagnostics_dir / f"sddump_{uuid.uuid4()}").with_suffix(SUFFIX)
         self.tarfile_created = False
+        self._create_dump_folder()
+        self._create_tarfile(elements, omd_root)
+        self._cleanup_dump_folder(omd_root)
 
     def _console(self, message: str, severity: str) -> None:
         if severity == "verbose":
             console.verbose(message)
         else:
             console.info(message)
-
         self.log.append(message)
 
     def _section_step(self, message: str, verbose: bool = True, add_info: str = "") -> None:
         section.section_step(message, verbose=verbose, add_info=add_info)
         self.log.append("+ " + message.upper())
 
-    def _get_fixed_elements(
-        self,
-        edition: cmk_version.Edition,
-        loaded_config: LoadedConfigFragment,
-        core_performance_settings: Callable[[LoadedConfigFragment], Mapping[str, int]],
-        parameters: DiagnosticsOptionalParameters | None,
-    ) -> list[ABCDiagnosticsElement]:
-        fixed_elements = [
-            ParametersDiagnosticsElement(parameters),
-            GeneralDiagnosticsElement(),
-            PerfDataDiagnosticsElement(loaded_config, core_performance_settings),
-            HWDiagnosticsElement(),
-            VendorDiagnosticsElement(),
-            EnvironmentDiagnosticsElement(),
-            FilesSizeCSVDiagnosticsElement(),
-            PipFreezeDiagnosticsElement(),
-            SELinuxJSONDiagnosticsElement(),
-            DpkgCSVDiagnosticsElement(),
-            RpmCSVDiagnosticsElement(),
-            CMAJSONDiagnosticsElement(),
-        ]
-
-        if edition is not cmk_version.Edition.COMMUNITY:
-            fixed_elements.append(DCDDiagnosticsElement())
-
-        for identifier, command in COMPONENT_COMMANDS.items():
-            fixed_elements.append(CheckmkCommandDiagnosticsElementTextDump(identifier, command))
-
-        return fixed_elements
-
-    def _get_optional_elements(
-        self,
-        edition: cmk_version.Edition,
-        parameters: DiagnosticsOptionalParameters | None,
-        omd_config: site.OMDConfig,
-    ) -> list[ABCDiagnosticsElement]:
-        if parameters is None:
-            return []
-
-        optional_elements: list[ABCDiagnosticsElement] = []
-        if parameters.get(OPT_LOCAL_FILES):
-            optional_elements.append(MKPFindTextDiagnosticsElement())
-            optional_elements.append(MKPShowTextDiagnosticsElement())
-            optional_elements.append(MKPListTextDiagnosticsElement())
-
-        if parameters.get(OPT_OMD_CONFIG):
-            optional_elements.append(OMDConfigDiagnosticsElement(omd_config))
-
-        if OPT_CHECKMK_OVERVIEW in parameters:
-            optional_elements.append(
-                CheckmkOverviewDiagnosticsElement(parameters[OPT_CHECKMK_OVERVIEW])
-            )
-
-        if parameters.get(OPT_CHECKMK_CRASH_REPORTS):
-            optional_elements.append(CrashDumpsDiagnosticsElement())
-
-        if parameters.get(OPT_BI_RUNTIME_DATA):
-            optional_elements.append(BIDataDiagnosticsElement())
-
-        rel_checkmk_config_files = parameters.get(OPT_CHECKMK_CONFIG_FILES)
-        if rel_checkmk_config_files:
-            optional_elements.append(CheckmkConfigFilesDiagnosticsElement(rel_checkmk_config_files))
-
-        rel_checkmk_log_files = parameters.get(OPT_CHECKMK_LOG_FILES)
-        if rel_checkmk_log_files:
-            optional_elements.append(CheckmkLogFilesDiagnosticsElement(rel_checkmk_log_files))
-
-        for dir_comp in COMPONENT_DIRECTORIES:
-            if dir_comp in parameters:
-                for directory in COMPONENT_DIRECTORIES[dir_comp]["abs_dirs"]:
-                    optional_elements.append(
-                        CheckmkDirectoryDiagnosticsElement(directory, rel=False)
-                    )
-                for directory in COMPONENT_DIRECTORIES[dir_comp]["rel_dirs"]:
-                    optional_elements.append(
-                        CheckmkDirectoryDiagnosticsElement(directory, rel=True)
-                    )
-
-        # CEE options
-        if edition is not cmk_version.Edition.COMMUNITY:
-            rel_checkmk_core_files = parameters.get(OPT_CHECKMK_CORE_FILES)
-            if rel_checkmk_core_files:
-                optional_elements.append(CheckmkCoreFilesDiagnosticsElement(rel_checkmk_core_files))
-                optional_elements.append(CMCDumpDiagnosticsElement())
-
-            if OPT_PERFORMANCE_GRAPHS in parameters:
-                optional_elements.append(
-                    PerformanceGraphsDiagnosticsElement(
-                        parameters.get(OPT_PERFORMANCE_GRAPHS, ""), omd_config
-                    )
-                )
-
-            rel_checkmk_licensing_files = parameters.get(OPT_CHECKMK_LICENSING_FILES)
-            if rel_checkmk_licensing_files:
-                optional_elements.append(
-                    CheckmkLicensingFilesDiagnosticsElement(rel_checkmk_licensing_files)
-                )
-
-        return optional_elements
-
-    def create(self, omd_root: Path) -> None:
-        self._create_dump_folder()
-        self._create_tarfile(omd_root)
-        self._cleanup_dump_folder(omd_root)
-
     def _create_dump_folder(self) -> None:
         self._section_step("Create dump folder")
         self.dump_folder.mkdir(parents=True, exist_ok=True)
 
-    def _create_tarfile(self, omd_root: Path) -> None:
+    def _create_tarfile(self, elements: Sequence[ABCDiagnosticsElement], omd_root: Path) -> None:
         with (
             tarfile.open(name=self.tarfile_path, mode="w:gz") as tar,
             tempfile.TemporaryDirectory(dir=self.dump_folder) as tmp_dump_folder,
         ):
             for filepath in self._get_filepaths(
-                omd_root=omd_root, tmp_dump_folder=Path(tmp_dump_folder)
+                elements=elements, omd_root=omd_root, tmp_dump_folder=Path(tmp_dump_folder)
             ):
                 rel_path = str(filepath).replace(str(tmp_dump_folder), "")
                 tar.add(str(filepath), arcname=rel_path)
@@ -491,11 +460,13 @@ class DiagnosticsDump:
         store.save_text_to_file(logfile, "\n".join(self.log))
         return logfile
 
-    def _get_filepaths(self, *, omd_root: Path, tmp_dump_folder: Path) -> list[Path]:
+    def _get_filepaths(
+        self, *, elements: Sequence[ABCDiagnosticsElement], omd_root: Path, tmp_dump_folder: Path
+    ) -> list[Path]:
         self._section_step("Collect diagnostics information", verbose=False)
 
         filepaths = []
-        for element in self.elements:
+        for element in elements:
             self._console(f"{_format_title(element.title)}", "info")
             self._console(f"{_format_description(element.description)}", "info")
 
@@ -526,25 +497,22 @@ class DiagnosticsDump:
     def _cleanup_dump_folder(self, omd_root: Path) -> None:
         if not self.tarfile_created:
             # Remove empty tarfile path
-            self._remove_file(self.tarfile_path)
+            self.tarfile_path.unlink(missing_ok=True)
 
         dumps = sorted(
-            [(dump.stat().st_mtime, dump) for dump in self.dump_folder.glob("*%s" % SUFFIX)],
+            ((dump.stat().st_mtime, dump) for dump in self.dump_folder.glob(f"*{SUFFIX}")),
             key=lambda t: t[0],
         )[: -self._keep_num_dumps]
 
         self._section_step(
-            "Cleanup dump folder", add_info="keep last %d dumps" % self._keep_num_dumps
+            "Cleanup dump folder", add_info=f"keep last {self._keep_num_dumps} dumps"
         )
         for _mtime, filepath in dumps:
             self._console(
                 f"{_format_filepath(omd_root=omd_root, filepath=filepath)}",
                 "verbose",
             )
-            self._remove_file(filepath)
-
-    def _remove_file(self, filepath: Path) -> None:
-        filepath.unlink(missing_ok=True)
+            filepath.unlink(missing_ok=True)
 
 
 # .

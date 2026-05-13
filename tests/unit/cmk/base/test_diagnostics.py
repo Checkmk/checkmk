@@ -35,17 +35,14 @@ from cmk.inventory.structured_data import (
 )
 from tests.testlib.common.empty_config import EMPTY_CONFIG
 
-_OMD_ROOT = Path("/omd/sites/no_site")
 
-
-def _make_diagnostics_dump() -> diagnostics.DiagnosticsDump:
-    return diagnostics.DiagnosticsDump(
+def _diagnostics_elements() -> Sequence[diagnostics.ABCDiagnosticsElement]:
+    return diagnostics.diagnostics_elements_for(
         edition=Edition.COMMUNITY,
         loaded_config=EMPTY_CONFIG,
         core_performance_settings=lambda x: {},
         omd_config={},
-        diagnostics_dir=cmk.utils.paths.diagnostics_dir,
-        parameters=None,
+        parameters={},
     )
 
 
@@ -81,13 +78,18 @@ def test_diagnostics_dump_elements() -> None:
     fixed_element_classes = {
         diagnostics.GeneralDiagnosticsElement,
     }
-    element_classes = {type(e) for e in _make_diagnostics_dump().elements}
+    element_classes = {type(e) for e in _diagnostics_elements()}
     assert fixed_element_classes.issubset(element_classes)
 
 
 @pytest.mark.usefixtures("mock_livestatus")
-def test_diagnostics_dump_create() -> None:
-    diagnostics_dump = _make_diagnostics_dump()
+def test_diagnostics_dump_create(tmp_path: Path) -> None:
+    elements = _diagnostics_elements()
+    diagnostics_dump = diagnostics.DiagnosticsDump(
+        elements=elements,
+        diagnostics_dir=tmp_path / "var/check_mk/diagnostics",
+        omd_root=tmp_path,
+    )
     diagnostics_dump._create_dump_folder()
 
     assert isinstance(diagnostics_dump.dump_folder, Path)
@@ -95,22 +97,27 @@ def test_diagnostics_dump_create() -> None:
     assert diagnostics_dump.dump_folder.exists()
     assert diagnostics_dump.dump_folder.name == "diagnostics"
 
-    diagnostics_dump._create_tarfile(_OMD_ROOT)
+    diagnostics_dump._create_tarfile(elements, tmp_path)
 
     tarfiles = diagnostics_dump.dump_folder.iterdir()
     assert len(list(tarfiles)) == 1
     assert all(tarfile.suffix == ".tar.gz" for tarfile in tarfiles)
 
 
-def test_diagnostics_cleanup_dump_folder() -> None:
-    diagnostics_dump = _make_diagnostics_dump()
+def test_diagnostics_cleanup_dump_folder(tmp_path: Path) -> None:
+    elements = _diagnostics_elements()
+    diagnostics_dump = diagnostics.DiagnosticsDump(
+        elements=elements,
+        diagnostics_dir=tmp_path / "var/check_mk/diagnostics",
+        omd_root=tmp_path,
+    )
     diagnostics_dump._create_dump_folder()
 
     # Fake existing tarfiles
     for nr in range(10):
         diagnostics_dump.dump_folder.joinpath("dummy-%s.tar.gz" % nr).touch()
 
-    diagnostics_dump._cleanup_dump_folder(_OMD_ROOT)
+    diagnostics_dump._cleanup_dump_folder(tmp_path)
 
     tarfiles = diagnostics_dump.dump_folder.iterdir()
     assert len(list(tarfiles)) == diagnostics_dump._keep_num_dumps

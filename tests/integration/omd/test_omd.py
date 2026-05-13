@@ -6,6 +6,7 @@
 # mypy: disable-error-code="comparison-overlap"
 # mypy: disable-error-code="redundant-expr"
 
+import shutil
 import tempfile
 from collections.abc import Iterator
 from pathlib import Path
@@ -674,6 +675,59 @@ def test_run_omd_cleanup_no_orphaned_versions(site: Site, _orphan_version_guard:
     assert active_version in p.stdout, (
         f"Expected active version {active_version!r} to be kept by cleanup"
     )
+
+
+@pytest.mark.skipif(not is_containerized(), reason="Test might affect installed Checkmk packages")
+@pytest.mark.skipif(shutil.which("dpkg") is None, reason="DEB-only: requires dpkg and dpkg-deb")
+def test_run_omd_cleanup_removes_orphaned_version(
+    site: Site, _orphan_version_guard: None, tmp_path: Path
+) -> None:
+    """Test 'omd cleanup' removes a version that is installed but not used by any site.
+
+    A minimal fake .deb package is built at test-time and installed so that the
+    package manager recognizes it. 'omd cleanup' then treats it as an orphaned
+    version and must uninstall and remove it.
+    """
+    fake_version = "0.0.0.fake"
+    # Resolve symlinks so dpkg -S matches the physical path queried by omd cleanup
+    physical_versions = Path("/omd/versions").resolve()
+    fake_version_dir = physical_versions / fake_version
+
+    pkg_root = Path(tmp_path) / "pkg"
+    debian = pkg_root / "DEBIAN"
+    debian.mkdir(parents=True)
+    (debian / "control").write_text(
+        "Package: check-mk-fake\n"
+        "Version: 0.0.0\n"
+        "Architecture: all\n"
+        "Maintainer: Test Suite <test@example.com>\n"
+        "Description: Fake OMD version for testing omd cleanup\n"
+    )
+    # Mirror the physical path inside the package root so dpkg registers it
+    fake_in_pkg = pkg_root / str(fake_version_dir).lstrip("/")
+    fake_in_pkg.mkdir(parents=True)
+    (fake_in_pkg / "placeholder").write_text("fake")
+
+    deb_path = Path(tmp_path) / "fake.deb"
+    run(["dpkg-deb", "--build", str(pkg_root), str(deb_path)], sudo=False, check=True)
+    run(["dpkg", "-i", str(deb_path)], sudo=True, check=True)
+
+    try:
+        assert fake_version_dir.exists(), "Pre-condition: fake version directory must exist"
+
+        p = run(["omd", "cleanup"], sudo=True, check=False)
+        assert p.returncode == 0, "omd cleanup should succeed"
+        assert p.stderr == "", "No error output expected"
+        assert fake_version in p.stdout, (
+            f"Expected fake version '{fake_version}' to appear in output"
+        )
+        assert "Uninstalling" in p.stdout, "Expected cleanup to uninstall the orphaned version"
+        assert not fake_version_dir.exists(), "Fake version directory must be removed by cleanup"
+        assert Path(site.package.version_path()).exists(), "Real version must be preserved"
+    finally:
+        run(["apt-get", "-y", "purge", "check-mk-fake"], sudo=True, check=False)
+        if fake_version_dir.exists():
+            run(["rm", "-rf", str(fake_version_dir)], sudo=True, check=False)
 
 
 # TODO: Add tests for these modes (also check -h of each mode)

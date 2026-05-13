@@ -44,11 +44,13 @@ def _initialize_lock_dir(site: Site) -> None:
     """Trigger creation of the backup lock dir via `omd status` (as root).
 
     In production at least one site command runs as root before any backup command, which is what
-    creates `mkbackup_lock_dir` with the correct owner/permissions. The test user typically cannot
-    write to `/run/lock`, so the same setup must be performed explicitly here. The trailing
-    assertions guard against environment regressions.
+    creates `mkbackup_lock_dir` with the correct owner/permissions (see
+    `omdlib.backup.ensure_mkbackup_lock_dir_rights`, called at the top of `omd`'s `main()`).
+    The site user cannot write to `/run/lock` — and that function silently swallows the resulting
+    `PermissionError` — so this setup must be performed by running `omd` as root, not via
+    `substitute_user`. The trailing assertions guard against environment regressions.
     """
-    run(["omd", "status"], sudo=True, substitute_user=site.id)
+    run(["omd", "status", site.id], sudo=True)
     assert run(["test", "-d", mkbackup_lock_dir.as_posix()], check=False, sudo=True).returncode == 0
     backup_permission_mask = stat.S_IMODE(site.file_mode(mkbackup_lock_dir))
     assert backup_permission_mask == 0o770

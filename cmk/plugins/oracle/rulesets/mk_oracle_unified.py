@@ -645,7 +645,20 @@ def _main() -> Dictionary:
             "cache_age": DictElement(
                 parameter_form=Integer(
                     title=Title("Cache age"),
-                    help_text=Help("How old (in minutes) the cache file is allowed to be."),
+                    help_text=Help(
+                        "How old (in seconds) the cache file for builtin sections is allowed to be."
+                    ),
+                    prefill=DefaultValue(600),
+                ),
+                required=False,
+            ),
+            "custom_metrics_cache_age": DictElement(
+                parameter_form=Integer(
+                    title=Title("Custom Metrics cache age"),
+                    help_text=Help(
+                        "How old (in seconds) the cache file for custom metrics is allowed to be."
+                    ),
+                    custom_validate=(validators.NumberInRange(min_value=30),),
                     prefill=DefaultValue(600),
                 ),
                 required=False,

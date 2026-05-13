@@ -189,6 +189,7 @@ expected_yaml_lines_min = [
     "    cache_age: 600",
     "    connection:",
     "      hostname: localhost",
+    "    custom_metrics_cache_age: 600",
 ]
 
 # 2. Full config
@@ -300,6 +301,7 @@ expected_yaml_lines_full = [
     "      port: 1521",
     "      timeout: 10",
     "      tns_admin: /etc/oracle/tns",
+    "    custom_metrics_cache_age: 600",
     "    discovery:",
     "      enabled: true",
     "      exclude:",
@@ -394,6 +396,7 @@ expected_yaml_lines_section = [
     "      oracle_local_registry: some_registry",
     "      port: 1521",
     "      tns_admin: some_tns_admin",
+    "    custom_metrics_cache_age: 600",
     "    sections:",
     "    - instance:",
     "        is_async: false",
@@ -447,6 +450,7 @@ expected_yaml_lines_instance_sid = [
     "    cache_age: 600",
     "    connection:",
     "      hostname: localhost",
+    "    custom_metrics_cache_age: 600",
     "    instances:",
     "    - service_name: SIDONLY",
 ]
@@ -529,6 +533,7 @@ expected_yaml_lines_discovery_instances = [
     "      hostname: localhost",
     "      port: 1521",
     "      timeout: 5",
+    "    custom_metrics_cache_age: 600",
     "    discovery:",
     "      enabled: true",
     "    instances:",
@@ -591,6 +596,7 @@ expected_yaml_lines_use_host_client_always = [
     "    connection:",
     "      hostname: localhost",
     "      port: 1521",
+    "    custom_metrics_cache_age: 600",
     "    options:",
     "      use_host_client: always",
 ]
@@ -640,6 +646,7 @@ expected_yaml_lines_use_host_client_path = [
     "    connection:",
     "      hostname: localhost",
     "      port: 1521",
+    "    custom_metrics_cache_age: 600",
     "    options:",
     "      use_host_client: /path/to/client",
 ]
@@ -690,6 +697,7 @@ expected_yaml_lines_deploy_oracle_binaries = [
     "    connection:",
     "      hostname: localhost",
     "      port: 1521",
+    "    custom_metrics_cache_age: 600",
 ]
 
 # 9. Main config with wallet auth, connection
@@ -732,6 +740,7 @@ expected_yaml_lines_wallet_auth = [
     "    connection:",
     "      hostname: localhost",
     "      port: 1521",
+    "    custom_metrics_cache_age: 600",
 ]
 
 
@@ -762,3 +771,80 @@ def _process(config: GuiConfig) -> Sequence[Plugin | PluginConfig | SystemBinary
 )
 def test_oracle_min(config: GuiConfig, expected: Sequence[str]) -> None:
     assert _process(config) == _combine(files_base, expected), "name"
+
+
+# --- custom_metrics_cache_age tests ---
+
+oracle_config_custom_metrics_cache_age: GuiConfig = GuiConfig(
+    deploy=(DEPLOY, None),
+    main=GuiMainConf(
+        auth=GuiAuthConf(
+            auth_type=(
+                OracleAuthType.STANDARD,
+                GuiAuthUserPasswordData(
+                    username="cmk",
+                    password=Secret("pw", "", ""),
+                ),
+            ),
+            role=None,
+        ),
+        connection=GuiConnectionConf(
+            host="localhost",
+            port=None,
+            timeout=None,
+            tns_admin=None,
+        ),
+        options=None,
+        cache_age=None,
+        custom_metrics_cache_age=120,
+        discovery=None,
+        sections=None,
+    ),
+    instances=None,
+)
+
+expected_yaml_lines_custom_metrics_cache_age = [
+    "---",
+    "oracle:",
+    "  main:",
+    "    authentication:",
+    "      password: pw",
+    "      type: standard",
+    "      username: cmk",
+    "    cache_age: 600",
+    "    connection:",
+    "      hostname: localhost",
+    "    custom_metrics_cache_age: 120",
+]
+
+
+def test_custom_metrics_cache_age_in_yaml() -> None:
+    assert _process(oracle_config_custom_metrics_cache_age) == _combine(
+        files_base, expected_yaml_lines_custom_metrics_cache_age
+    )
+
+
+@pytest.mark.parametrize(
+    ["custom_metrics_cache_age", "expected"],
+    [
+        (None, 600),
+        (120, 120),
+        (30, 30),
+        (900, 900),
+    ],
+)
+def test_get_active_custom_metrics_cache_age(
+    custom_metrics_cache_age: int | None, expected: int
+) -> None:
+    conf = GuiMainConf(
+        auth=GuiAuthConf(
+            auth_type=(
+                OracleAuthType.STANDARD,
+                GuiAuthUserPasswordData(username="u", password=Secret("p", "", "")),
+            ),
+            role=None,
+        ),
+        connection=GuiConnectionConf(host="localhost", port=None, timeout=None, tns_admin=None),
+        custom_metrics_cache_age=custom_metrics_cache_age,
+    )
+    assert conf.get_active_custom_metrics_cache_age() == expected

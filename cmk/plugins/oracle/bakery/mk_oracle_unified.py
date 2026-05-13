@@ -176,12 +176,17 @@ class GuiMainConf(BaseModel):
     connection: GuiConnectionConf
     options: GuiAdditionalOptionsConf | None = None
     cache_age: int | None = None
+    custom_metrics_cache_age: int | None = None
     discovery: GuiDiscoveryConf | None = None
     sections: GuiSectionOptions | None = None
 
     def get_active_cache_age(self) -> int:
         """Return cache age in seconds, default is 600 seconds: must be in sync with agent plugin"""
         return self.cache_age or 600
+
+    def get_active_custom_metrics_cache_age(self) -> int:
+        """Return metrics cache age in seconds, default is 600 seconds: must be in sync with agent plugin"""
+        return self.custom_metrics_cache_age or 600
 
 
 class GuiInstanceAdditionalOptionsConf(BaseModel):
@@ -255,6 +260,7 @@ class OracleMain(BaseModel):
     connection: OracleConnection | None
     options: OracleAdditionalOptions | None = None
     cache_age: int | None = None
+    custom_metrics_cache_age: int | None = None
     discovery: OracleDiscovery | None = None
     sections: Sequence[Mapping[str, OracleSection]] | None = None
     instances: list[OracleInstance] | None = None
@@ -307,6 +313,7 @@ def _get_oracle_dict(config: GuiConfig) -> OracleMain:
         sections=_get_oracle_sections(main_config.sections),
         instances=_get_oracle_instances(instances_config),
         cache_age=main_config.get_active_cache_age(),
+        custom_metrics_cache_age=main_config.get_active_custom_metrics_cache_age(),
     )
 
 

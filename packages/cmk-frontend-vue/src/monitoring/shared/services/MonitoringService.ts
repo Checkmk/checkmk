@@ -1,0 +1,65 @@
+/**
+ * Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
+ * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+ * conditions defined in the file COPYING, which is part of this source code package.
+ */
+import { type Ref, ref, shallowRef } from 'vue'
+
+import { POLL_INTERVAL_MS } from '@/monitoring/shared/constants'
+
+export interface PagedResponse<T> {
+  items: T[]
+  meta: {
+    total: number
+  }
+}
+
+export abstract class MonitoringService<T> {
+  readonly items: Ref<T[]> = shallowRef<T[]>([])
+  readonly total: Ref<number> = ref(0)
+  readonly loading: Ref<boolean> = ref(false)
+
+  private initialFetchTimer: ReturnType<typeof setTimeout> | null = null
+  private pollTimer: ReturnType<typeof setInterval> | null = null
+
+  constructor(pollIntervalMs: number = POLL_INTERVAL_MS) {
+    // Defer the first fetch so subclass constructors finish initializing
+    // their fields before fetchBatch() is invoked.
+    this.initialFetchTimer = setTimeout(() => {
+      this.initialFetchTimer = null
+      void this.fetch()
+    }, 0)
+    this.pollTimer = setInterval(() => {
+      void this.fetch()
+    }, pollIntervalMs)
+  }
+
+  protected abstract fetchBatch(): Promise<PagedResponse<T>>
+
+  stopPolling(): void {
+    if (this.initialFetchTimer !== null) {
+      clearTimeout(this.initialFetchTimer)
+      this.initialFetchTimer = null
+    }
+    if (this.pollTimer !== null) {
+      clearInterval(this.pollTimer)
+      this.pollTimer = null
+    }
+  }
+
+  private async fetch(): Promise<void> {
+    if (this.loading.value) {
+      return
+    }
+    this.loading.value = true
+    try {
+      const response = await this.fetchBatch()
+      this.items.value = response.items
+      this.total.value = response.meta.total
+    } catch (error: unknown) {
+      console.error('MonitoringService: fetchBatch failed', error)
+    } finally {
+      this.loading.value = false
+    }
+  }
+}

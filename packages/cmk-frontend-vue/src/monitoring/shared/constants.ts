@@ -4,3 +4,4 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 export const DEFAULT_BATCH_SIZE = 1000
+export const POLL_INTERVAL_MS = 30_000

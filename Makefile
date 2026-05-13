@@ -77,7 +77,6 @@ dist: $(SOURCE_BUILT_AGENTS) $(SOURCE_BUILT_AGENT_UPDATER)
 	if [ -f COMMIT ]; then \
 	    rm COMMIT ; \
 	fi
-	bazel build --cmk_edition=$(EDITION) //omd/dependency_management:license_info && tar xf "$$(bazel cquery --output=files //omd/dependency_management:license_info)" --strip 2 --touch -C check-mk-$(EDITION)-$(VERSION)/omd/
 	tar -cz -f check-mk-$(EDITION)-$(VERSION).tar.gz \
 	    $(TAROPTS) \
 	    --exclude=bazel-* \

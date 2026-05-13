@@ -75,34 +75,7 @@ void main() {
     }
 
     inside_container_minimal(safe_branch_name: safe_branch_name) {
-        def stages = [
-            "Trigger Build BOM": {
-                smart_stage(
-                    name: "Trigger Build BOM",
-                    raiseOnError: true,
-                    condition: ! params.FAKE_ARTIFACTS,
-                ) {
-                    smart_build(
-                        // see global-defaults.yml, needs to run in minimal container
-                        use_upstream_build: true,
-                        force_build: force_build,
-                        relative_job_name: "${branch_base_folder}/builders/build-cmk-bom",
-                        build_params: [
-                            CUSTOM_GIT_REF: effective_git_ref,
-                            VERSION: version,
-                            EDITION: edition,
-                            DISABLE_CACHE: disable_cache,
-                        ],
-                        build_params_no_check: [
-                            CIPARAM_OVERRIDE_BUILD_NODE: params.CIPARAM_OVERRIDE_BUILD_NODE,
-                            CIPARAM_CLEANUP_WORKSPACE: params.CIPARAM_CLEANUP_WORKSPACE,
-                            CIPARAM_BISECT_COMMENT: params.CIPARAM_BISECT_COMMENT,
-                        ],
-                        download: false,
-                    );
-                }
-            },
-        ];
+        def stages = [:];
 
         if (!params.FAKE_ARTIFACTS) {
             stages += package_helper.provide_agent_binaries(
@@ -186,7 +159,7 @@ void main() {
         dir("${checkout_dir}") {
             show_duration("archiveArtifacts") {
                 archiveArtifacts(
-                    artifacts: "*.deb, *.rpm, *.cma, ${bazel_log_prefix}*, omd/bill-of-materials.json",
+                    artifacts: "*.deb, *.rpm, *.cma, ${bazel_log_prefix}*, bill-of-materials.*",
                     fingerprint: true,
                 );
             }

@@ -1184,17 +1184,3 @@ sh_library(
         "run-binreplace",
     ],
 )
-
-run_binary(
-    name = "generate_bom_csv",
-    srcs = ["bill-of-materials.json"],
-    outs = ["bill-of-materials.csv"],
-    args = [
-        "--bom",
-        "$(location bill-of-materials.json)",
-        "--out",
-        "$(location bill-of-materials.csv)",
-    ],
-    tags = ["manual"],
-    tool = "//omd/dependency_management:generate_bom_csv_py",
-)

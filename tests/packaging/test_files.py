@@ -198,6 +198,14 @@ def _file_exists_in_package(package_path: str, version_rel_path: str) -> bool:
     if package_path.endswith(".cma"):
         return f"{omd_version}/{version_rel_path}" in file_list
 
+    if package_path.endswith(".tar.gz"):
+        if "-docker-" in package_path:
+            raise NotImplementedError()
+        return (
+            f"check-mk-{_edition_from_pkg_path(package_path)}-{_version_from_pkg_path(package_path)}/{version_rel_path}"
+            in file_list
+        )
+
     raise NotImplementedError()
 
 
@@ -668,34 +676,30 @@ def test_not_rc_tag(package_path: str) -> None:
 Bom = dict
 
 
-@pytest.fixture(name="bom_json", scope="module")
+@cache
 def load_bom(package_path: str) -> Bom:
     return json.loads(
         _get_file_from_package(
             package_path,
-            "omd/bill-of-materials.json"
-            if package_path.endswith(".tar.gz")
-            else "share/doc/bill-of-materials.json",
+            "share/doc/bill-of-materials.json",
         )
     )
 
 
-@pytest.fixture(name="license_csv_rows", scope="module")
-def load_license_csv(package_path: str) -> list[dict[str, str]]:
-    license_file = io.StringIO(
-        _get_file_from_package(
-            package_path,
-            "omd/bill-of-materials.csv"
-            if package_path.endswith(".tar.gz")
-            else "share/doc/bill-of-materials.csv",
-        ).decode("utf-8")
-    )
-    reader = csv.DictReader(license_file)
-    return list(reader)
+def test_no_license_info_in_src_package(package_path: str) -> None:
+    if not package_path.endswith(".tar.gz"):
+        pytest.skip("Only checks src packages")
+    assert not _file_exists_in_package(package_path, "omd/bill-of-materials.json")
+    assert not _file_exists_in_package(package_path, "omd/bill-of-materials.csv")
 
 
-def test_bom(bom_json: Bom) -> None:
+def test_bom(package_path: str) -> None:
     """Check that there is a BOM and it contains dependencies from various eco-systems"""
+    if package_path.endswith(".tar.gz"):
+        pytest.skip("No more license info in source packages")
+
+    bom_json = load_bom(package_path)
+
     purls_wo_version = {c["purl"].split("@", 1)[0] for c in bom_json["components"] if "purl" in c}
 
     # These are manually picked and should represent dependencies from our various ecosystems.
@@ -705,10 +709,22 @@ def test_bom(bom_json: Bom) -> None:
     assert "pkg:pypi/certifi" in purls_wo_version
 
 
-def test_bom_csv_synchronous(bom_json: Bom, license_csv_rows: list[dict[str, str]]) -> None:
+def test_bom_csv_synchronous(package_path: str) -> None:
     """test that the csv and bom contain the same versions
 
     let's just check for certifi and openssl since I know they are updated constantly"""
+    if package_path.endswith(".tar.gz"):
+        pytest.skip("No more license info in source packages")
+
+    bom_json = load_bom(package_path)
+
+    license_file = io.StringIO(
+        _get_file_from_package(
+            package_path,
+            "share/doc/bill-of-materials.csv",
+        ).decode("utf-8")
+    )
+    license_csv_reader = csv.DictReader(license_file)
 
     openssl_version: str | None = None
     # we have multiple certifis (agent updater 2x and in a site)
@@ -723,7 +739,7 @@ def test_bom_csv_synchronous(bom_json: Bom, license_csv_rows: list[dict[str, str
     assert openssl_version is not None
     assert certifi_versions
 
-    for row in license_csv_rows:
+    for row in license_csv_reader:
         if row["Name"] == "openssl":
             assert row["Version"] == openssl_version
         if row["Name"] == "Python module: certifi":

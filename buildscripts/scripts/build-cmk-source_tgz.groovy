@@ -24,7 +24,6 @@ void main() {
     def force_build = params.DISABLE_JENKINS_CACHE == true;
     def safe_branch_name = versioning.safe_branch_name();
     def branch_version = versioning.get_branch_version(checkout_dir);
-    def branch_base_folder = package_helper.branch_base_folder(false);
     def cmk_version_rc_aware = versioning.get_cmk_version(safe_branch_name, branch_version, version);
     def cmk_version = versioning.strip_rc_number_from_version(cmk_version_rc_aware);
 
@@ -55,34 +54,7 @@ void main() {
         }
     }
 
-    def stages = [
-        "Build BOM": {
-            smart_stage(
-                name: "Build BOM",
-                raiseOnError: true,
-            ) {
-                smart_build(
-                    // see global-defaults.yml, needs to run in minimal container
-                    use_upstream_build: true,
-                    force_build: force_build,
-                    relative_job_name: "${branch_base_folder}/builders/build-cmk-bom",
-                    build_params: [
-                        CUSTOM_GIT_REF: effective_git_ref,
-                        VERSION: version,
-                        EDITION: edition,
-                        DISABLE_CACHE: disable_cache,
-                    ],
-                    build_params_no_check: [
-                        CIPARAM_OVERRIDE_BUILD_NODE: params.CIPARAM_OVERRIDE_BUILD_NODE,
-                        CIPARAM_CLEANUP_WORKSPACE: params.CIPARAM_CLEANUP_WORKSPACE,
-                        CIPARAM_BISECT_COMMENT: params.CIPARAM_BISECT_COMMENT,
-                    ],
-                    no_remove_others: true, // do not delete other files in the dest dir
-                    dest: "/checkmk/",
-                );
-            }
-        },
-    ];
+    def stages = [:];
 
     if (!params.FAKE_ARTIFACTS) {
         stages += package_helper.provide_agent_binaries(

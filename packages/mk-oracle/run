@@ -269,10 +269,13 @@ run_test_component_remote_host() {
     ssh $SSH_ARGS "${HOST_ADDRESS}" <<EOF
         set -e
         mkdir -p "${TEST_BINARY_REMOTE_PATH}/runtimes/plugins/packages/mk-oracle"
+        mkdir -p "${TEST_BINARY_REMOTE_PATH}/tests/files/tns"
 EOF
-    # copy Oracle DB plug-in test-binary to the remote-host and run the tests
+    # copy Oracle DB plug-in test-binary and test data to the remote-host
     # shellcheck disable=SC2086
     scp $SSH_ARGS "${TEST_BINARY_LOCAL_PATH}" "${HOST_ADDRESS}":"${TEST_BINARY_REMOTE_PATH}"
+    # shellcheck disable=SC2086
+    scp $SSH_ARGS tests/files/tns/tnsnames.ora "${HOST_ADDRESS}":"${TEST_BINARY_REMOTE_PATH}/tests/files/tns/"
     # shellcheck disable=SC2086,SC2087,SC2029
     ssh $SSH_ARGS "${HOST_ADDRESS}" <<EOF
         set -e
@@ -281,6 +284,7 @@ EOF
         export CI_ORA2_DB_TEST="${CI_ORA2_DB_TEST}"
         export MK_CONFDIR="${TEST_BINARY_REMOTE_PATH}"
         export MK_LIBDIR="${TEST_BINARY_REMOTE_PATH}"/runtimes
+        export TNS_ADMIN="${TEST_BINARY_REMOTE_PATH}/tests/files/tns"
         chmod +x ./"${TEST_NAME}"
         ./"${TEST_NAME}"
 EOF

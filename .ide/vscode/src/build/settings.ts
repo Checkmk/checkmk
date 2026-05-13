@@ -141,6 +141,64 @@ export interface SettingsEntry {
   disableFolder?: Record<string, SettingValue>
   disableWorkspace?: Record<string, SettingValue>
   disableUser?: Record<string, SettingValue>
+  unsetFolder?: string[]
+  unsetWorkspace?: string[]
+  unsetUser?: string[]
+}
+
+type Inspection = ReturnType<vscode.WorkspaceConfiguration['inspect']>
+
+interface UnsetScope {
+  target: vscode.ConfigurationTarget
+  label: 'folder' | 'workspace' | 'user'
+  getter: (i: Inspection) => unknown
+}
+
+const UNSET_SCOPE_FOLDER: UnsetScope = {
+  target: vscode.ConfigurationTarget.WorkspaceFolder,
+  label: 'folder',
+  getter: (i) => i?.workspaceFolderValue
+}
+const UNSET_SCOPE_WORKSPACE: UnsetScope = {
+  target: vscode.ConfigurationTarget.Workspace,
+  label: 'workspace',
+  getter: (i) => i?.workspaceValue
+}
+const UNSET_SCOPE_USER: UnsetScope = {
+  target: vscode.ConfigurationTarget.Global,
+  label: 'user',
+  getter: (i) => i?.globalValue
+}
+
+function collectUnsetItems(settingsEntry: SettingsEntry): SettingChangeItem[] {
+  const items: SettingChangeItem[] = []
+  const wsFolder = vscode.workspace.workspaceFolders?.[0]?.uri
+  const scopedKeys: ReadonlyArray<readonly [UnsetScope, readonly string[]]> = [
+    [UNSET_SCOPE_FOLDER, settingsEntry.unsetFolder ?? []],
+    [UNSET_SCOPE_WORKSPACE, settingsEntry.unsetWorkspace ?? []],
+    [UNSET_SCOPE_USER, settingsEntry.unsetUser ?? []]
+  ]
+  for (const [scope, keys] of scopedKeys) {
+    if (keys.length === 0) continue
+    const resource =
+      scope.target === vscode.ConfigurationTarget.WorkspaceFolder ? wsFolder : undefined
+    for (const key of keys) {
+      const inspection = vscode.workspace.getConfiguration(undefined, resource).inspect(key)
+      const actual = scope.getter(inspection)
+      if (actual === undefined) continue
+      const compactOld = JSON.stringify(actual)
+      items.push({
+        type: 'changed',
+        label: `$(remove) [${scope.label}] ${key}`,
+        description: `${compactOld.length > 30 ? compactOld.substring(0, 27) + '...' : compactOld} → <unset>`,
+        picked: true,
+        settingKey: key,
+        settingValue: undefined,
+        settingTarget: scope.target
+      })
+    }
+  }
+  return items
 }
 
 export function buildEffectiveSettings(
@@ -177,8 +235,14 @@ export async function applySettings(
   const folderChanges = collectChanges(folderSettings, vscode.ConfigurationTarget.WorkspaceFolder)
   const workspaceChanges = collectChanges(workspaceSettings, vscode.ConfigurationTarget.Workspace)
   const userChanges = collectChanges(userSettings, vscode.ConfigurationTarget.Global)
+  const unsetItems = collectUnsetItems(settingsEntry)
 
-  const allItems = [...folderChanges.items, ...workspaceChanges.items, ...userChanges.items]
+  const allItems = [
+    ...folderChanges.items,
+    ...workspaceChanges.items,
+    ...userChanges.items,
+    ...unsetItems
+  ]
   const totalSame = folderChanges.sameCount + workspaceChanges.sameCount + userChanges.sameCount
 
   if (allItems.length === 0) {

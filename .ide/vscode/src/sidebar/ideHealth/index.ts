@@ -187,6 +187,52 @@ export function getSettingsMismatches(
     }
   }
 
+  for (const [family, settingsEntry] of Object.entries(settingsSets)) {
+    const displayName = FAMILY_DISPLAY[family] || family
+    const unsetScopes: Array<{
+      keys: readonly string[]
+      label: 'folder' | 'workspace' | 'user'
+      getter: (i: Inspection, key: string) => unknown
+    }> = [
+      {
+        keys: settingsEntry.unsetFolder ?? [],
+        label: 'folder',
+        getter: (i, key) => i?.workspaceFolderValue ?? folderFileSettings[key]
+      },
+      {
+        keys: settingsEntry.unsetWorkspace ?? [],
+        label: 'workspace',
+        getter: (i, key) =>
+          i?.workspaceValue ??
+          (isFolderWorkspace ? (i?.workspaceFolderValue ?? folderFileSettings[key]) : undefined)
+      },
+      {
+        keys: settingsEntry.unsetUser ?? [],
+        label: 'user',
+        getter: (i) => i?.globalValue
+      }
+    ]
+    for (const { keys, label, getter } of unsetScopes) {
+      if (keys.length === 0) continue
+      const resource = label === 'folder' ? wsFolder : undefined
+      const cfg = vscode.workspace.getConfiguration(undefined, resource)
+      for (const key of keys) {
+        const dedupeKey = `${key}@${label}`
+        if (seen.has(dedupeKey)) continue
+        const actual = getter(cfg.inspect(key), key)
+        if (actual === undefined) continue
+        seen.add(dedupeKey)
+        mismatches.push({
+          key,
+          expected: undefined,
+          actual,
+          family: displayName,
+          scope: label
+        })
+      }
+    }
+  }
+
   return suppressAllocatorManagedKeys(mismatches)
 }
 

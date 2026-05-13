@@ -7,10 +7,13 @@
 # mypy: disable-error-code="redundant-expr"
 
 import tempfile
+from collections.abc import Iterator
 from pathlib import Path
 
+import pytest
+
 from tests.testlib.common.utils import wait_until
-from tests.testlib.common.utils2 import run
+from tests.testlib.common.utils2 import is_containerized, run
 from tests.testlib.site import Site, SiteFactory
 from tests.testlib.version import CMKPackageInfo, edition_from_env, version_from_env
 
@@ -24,6 +27,47 @@ def _ensure_cloud_initial_config() -> None:
     )
 
     create_cloud_initial_config()
+
+
+def _get_orphaned_versions() -> list[str]:
+    """Return installed OMD versions that are not used by any site."""
+    versions_path = Path("/omd/versions")
+    sites_path = Path("/omd/sites")
+    try:
+        candidates = list(versions_path.iterdir())
+    except OSError:
+        return []
+    in_use: set[str] = set()
+    if sites_path.exists():
+        for site_dir in sites_path.iterdir():
+            link = site_dir / "version"
+            if link.is_symlink():
+                in_use.add(link.readlink().name)
+    return [v.name for v in candidates if v.name not in in_use]
+
+
+@pytest.fixture(scope="function")
+def _orphan_version_guard() -> Iterator[None]:
+    """Shield pre-existing orphaned OMD versions from being removed during the cleanup test.
+
+    For each orphaned version a minimal fake site directory is created under /omd/sites/ with
+    only a 'version' symlink.  omd cleanup resolves in-use versions solely through that symlink,
+    so the version is kept without any real site being present.  The fake directories are removed
+    unconditionally when the module finishes.
+    """
+    fake_site_dirs: list[Path] = []
+    for i, version in enumerate(_get_orphaned_versions()):
+        fake_site = Path("/omd/sites") / f"_cleanup_guard_{i}"
+        run(["mkdir", "-p", str(fake_site)], sudo=True, check=True)
+        run(
+            ["ln", "-s", f"/omd/versions/{version}", str(fake_site / "version")],
+            sudo=True,
+            check=True,
+        )
+        fake_site_dirs.append(fake_site)
+    yield
+    for fake_site in fake_site_dirs:
+        run(["rm", "-rf", str(fake_site)], sudo=True, check=False)
 
 
 def test_run_omd(site: Site) -> None:
@@ -612,6 +656,24 @@ def test_run_omd_diff_empty_on_fresh_site() -> None:
     finally:
         if site is not None and site.exists():
             site.rm()
+
+
+@pytest.mark.skipif(not is_containerized(), reason="Test might affect installed Checkmk packages")
+def test_run_omd_cleanup_no_orphaned_versions(site: Site, _orphan_version_guard: None) -> None:
+    """Test 'omd cleanup' when all installed versions are in use.
+
+    Verifies that cleanup completes successfully and does not remove the active version.
+    """
+    p = run(["omd", "cleanup"], sudo=True, check=False)
+    assert p.returncode == 0, "omd cleanup should succeed"
+    assert p.stderr == "", "No error output expected"
+    assert Path(site.package.version_path()).exists(), (
+        "Active version must not be removed by cleanup"
+    )
+    active_version = site.package.omd_version()
+    assert active_version in p.stdout, (
+        f"Expected active version {active_version!r} to be kept by cleanup"
+    )
 
 
 # TODO: Add tests for these modes (also check -h of each mode)

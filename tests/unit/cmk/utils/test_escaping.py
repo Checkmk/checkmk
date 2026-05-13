@@ -148,7 +148,7 @@ def test_a_unescaping() -> None:
     # I guess this should be considered a bug
     assert (
         escaping.escape_permissive('<a href="bar" style="">foo</a>', escape_links=False)
-        == '<a href="bar&quot; style=&quot;">foo</a>'
+        == "&lt;a href=&quot;bar&quot; style=&quot;&quot;&gt;foo</a>"
     )
     assert (
         escaping.escape_permissive('<a style=""href="bar">foo</a>', escape_links=False)

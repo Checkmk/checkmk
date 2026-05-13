@@ -46,9 +46,10 @@ export function operatorPhrase(operator: Operator): string {
 export function pillLabel(condition: AttributeCondition): string {
   const prefix = attributeTypePrefix(condition.attributeType)
   const phrase = operatorPhrase(condition.operator)
+  const key = condition.key ?? ''
   const isExistence = condition.operator === 'exists' || condition.operator === 'not_exists'
   if (isExistence) {
-    return `${prefix}${condition.key} ${phrase}`
+    return `${prefix}${key} ${phrase}`
   }
-  return `${prefix}${condition.key} ${phrase} ${condition.value}`
+  return `${prefix}${key} ${phrase} ${condition.value}`
 }

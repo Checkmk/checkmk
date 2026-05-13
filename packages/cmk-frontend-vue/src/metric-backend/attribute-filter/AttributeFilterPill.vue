@@ -9,7 +9,9 @@ import { computed } from 'vue'
 
 import usei18n from '@/lib/i18n'
 
+import CmkDropdown from '@/components/CmkDropdown/CmkDropdown.vue'
 import CmkIconButton from '@/components/CmkIconButton.vue'
+import type { QuerySuggestionsFn } from '@/components/CmkSuggestions/types'
 
 import { attributeTypePrefix, operatorPhrase, pillLabel } from './pill-label'
 import type { AttributeCondition } from './types'
@@ -19,6 +21,7 @@ const { _t } = usei18n()
 const props = withDefaults(
   defineProps<{
     condition: AttributeCondition
+    querySuggestions: QuerySuggestionsFn
     ariaLabel?: string | undefined
     removable?: boolean
   }>(),
@@ -27,6 +30,7 @@ const props = withDefaults(
 
 const emit = defineEmits<{
   (e: 'remove'): void
+  (e: 'update:key', value: string | null): void
 }>()
 
 const fullLabel = computed(() => pillLabel(props.condition))
@@ -51,8 +55,15 @@ const isExistence = computed(
       >
       <span
         class="metric-backend-attribute-filter-pill__segment metric-backend-attribute-filter-pill__segment--key"
-        >{{ condition.key }}</span
       >
+        <CmkDropdown
+          :selected-option="condition.key"
+          :options="{ type: 'callback-filtered', querySuggestions }"
+          :label="_t('Attribute key')"
+          :input-hint="_t('Attribute key')"
+          @update:selected-option="(value) => emit('update:key', value)"
+        />
+      </span>
       <span
         class="metric-backend-attribute-filter-pill__segment metric-backend-attribute-filter-pill__segment--operator"
         >{{ operatorText }}</span

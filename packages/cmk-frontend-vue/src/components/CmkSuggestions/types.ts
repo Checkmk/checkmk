@@ -33,9 +33,13 @@ type SuggestionsFiltered = {
   suggestions: Array<Suggestion> | Array<Section>
 }
 
+export type QuerySuggestionsFn = (
+  query: string
+) => Promise<ErrorResponse | WarningResponse | Response>
+
 type SuggestionsCallbackFiltered = {
   type: 'callback-filtered'
-  querySuggestions: (query: string) => Promise<ErrorResponse | WarningResponse | Response>
+  querySuggestions: QuerySuggestionsFn
 }
 
 export class NoSelection {

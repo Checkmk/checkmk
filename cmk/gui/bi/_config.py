@@ -47,7 +47,6 @@ from cmk.gui.page_menu import (
     PageMenuTopic,
 )
 from cmk.gui.pages import AjaxPage, PageContext, PageEndpoint, PageRegistry, PageResult
-from cmk.gui.permissions import Permission, PermissionRegistry
 from cmk.gui.site_config import wato_site_ids
 from cmk.gui.table import init_rowselect, table_element
 from cmk.gui.type_defs import (
@@ -96,7 +95,7 @@ from cmk.gui.valuespec import (
     ValueSpecText,
     ValueSpecValidateFunc,
 )
-from cmk.gui.wato import ContactGroupSelection, PERMISSION_SECTION_WATO, TileMenuRenderer
+from cmk.gui.wato import ContactGroupSelection, TileMenuRenderer
 from cmk.gui.watolib import changes as changes_
 from cmk.gui.watolib.audit_log import LogMessage
 from cmk.gui.watolib.config_domains import ConfigDomainGUI
@@ -129,7 +128,6 @@ def register(
     main_module_topic_registry: MainModuleTopicRegistry,
     main_module_registry: MainModuleRegistry,
     mode_registry: ModeRegistry,
-    permission_registry: PermissionRegistry,
 ) -> None:
     page_registry.register(PageEndpoint("ajax_bi_rule_preview", AjaxBIRulePreview()))
     page_registry.register(PageEndpoint("ajax_bi_aggregation_preview", AjaxBIAggregationPreview()))
@@ -144,32 +142,6 @@ def register(
     mode_registry.register(BIModeEditAggregation)
     mode_registry.register(BIModeAggregations)
     mode_registry.register(ModeBIRuleTree)
-
-    permission_registry.register(
-        Permission(
-            section=PERMISSION_SECTION_WATO,
-            name="bi_rules",
-            title=_l("Business Intelligence rules and aggregations"),
-            description=_l(
-                "Use the Setup BI module, create, modify and delete BI rules and "
-                "aggregations in packs that you are a contact of."
-            ),
-            defaults=["admin", "user"],
-        )
-    )
-
-    permission_registry.register(
-        Permission(
-            section=PERMISSION_SECTION_WATO,
-            name="bi_admin",
-            title=_l("Business Intelligence administration"),
-            description=_l(
-                "Edit all rules and aggregations for Business Intelligence, "
-                "create, modify and delete rule packs."
-            ),
-            defaults=["admin"],
-        )
-    )
 
 
 MainModuleTopicBI = MainModuleTopic(

@@ -282,10 +282,7 @@ def register(
     rulespec_registry.register(ExtraServiceConfECContact)
     rulespec_registry.register(RulespecLogwatchEC)
 
-    permission_registry.register(ConfigureECPermission)
-    permission_registry.register(ConfigureECRulesPermission)
-    permission_registry.register(ActivateECPermission)
-    permission_registry.register(SwitchSlaveReplicationPermission)
+    register_permissions(permission_registry)
 
     match_item_generator_registry.register(MatchItemEventConsole)
     match_item_generator_registry.register(
@@ -322,6 +319,13 @@ def register(
             site_path=str(ec_paths.mkp_rule_pack_dir.value.relative_to(cmk.utils.paths.omd_root)),
         )
     )
+
+
+def register_permissions(permission_registry: PermissionRegistry) -> None:
+    permission_registry.register(ConfigureECPermission)
+    permission_registry.register(ConfigureECRulesPermission)
+    permission_registry.register(ActivateECPermission)
+    permission_registry.register(SwitchSlaveReplicationPermission)
 
 
 def match_event_rule(

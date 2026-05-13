@@ -180,6 +180,12 @@ def register(
     declare_1to1_sorter("history_who", cmp_simple_string)
     declare_1to1_sorter("history_addinfo", cmp_simple_string)
 
+    register_permissions(permission_registry)
+
+    builtin_pagetype_topic_registry.register(_ec_pagetype_topic())
+
+
+def register_permissions(permission_registry: PermissionRegistry) -> None:
     permission_registry.register(PermissionECSeeAll)
     permission_registry.register(PermissionECSeeUnrelated)
     permission_registry.register(PermissionECSeeInTacticalOverview)
@@ -190,8 +196,6 @@ def register(
     permission_registry.register(PermissionECCustomActions)
     permission_registry.register(PermissionECArchiveEvent)
     permission_registry.register(PermissionECArchiveEventsOfHost)
-
-    builtin_pagetype_topic_registry.register(_ec_pagetype_topic())
 
 
 def _ec_pagetype_topic() -> BuiltinPagetypeTopic:

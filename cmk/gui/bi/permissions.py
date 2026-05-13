@@ -4,7 +4,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _, _l
-from cmk.gui.permissions import Permission, PermissionSection
+from cmk.gui.permissions import (
+    Permission,
+    PermissionRegistry,
+    PermissionSection,
+    PermissionSectionRegistry,
+)
+from cmk.gui.wato._permissions import PERMISSION_SECTION_WATO
 
 PERMISSION_SECTION_BI = PermissionSection(
     name="bi",
@@ -24,3 +30,37 @@ PermissionBISeeAll = Permission(
     ),
     defaults=["admin", "guest"],
 )
+
+
+PermissionBIRules = Permission(
+    section=PERMISSION_SECTION_WATO,
+    name="bi_rules",
+    title=_l("Business Intelligence rules and aggregations"),
+    description=_l(
+        "Use the Setup BI module, create, modify and delete BI rules and "
+        "aggregations in packs that you are a contact of."
+    ),
+    defaults=["admin", "user"],
+)
+
+
+PermissionBIAdmin = Permission(
+    section=PERMISSION_SECTION_WATO,
+    name="bi_admin",
+    title=_l("Business Intelligence administration"),
+    description=_l(
+        "Edit all rules and aggregations for Business Intelligence, "
+        "create, modify and delete rule packs."
+    ),
+    defaults=["admin"],
+)
+
+
+def register_permissions(
+    permission_section_registry: PermissionSectionRegistry,
+    permission_registry: PermissionRegistry,
+) -> None:
+    permission_section_registry.register(PERMISSION_SECTION_BI)
+    permission_registry.register(PermissionBISeeAll)
+    permission_registry.register(PermissionBIRules)
+    permission_registry.register(PermissionBIAdmin)

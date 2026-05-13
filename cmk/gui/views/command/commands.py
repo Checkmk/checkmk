@@ -116,6 +116,13 @@ def register(
     command_registry.register(CommandRemoveDowntimesHostServicesTable)
     command_registry.register(CommandRemoveDowntimesDowntimesTable)
     command_registry.register(CommandRemoveComments)
+    register_permissions(permission_section_registry, permission_registry)
+
+
+def register_permissions(
+    permission_section_registry: PermissionSectionRegistry,
+    permission_registry: PermissionRegistry,
+) -> None:
     permission_section_registry.register(PERMISSION_SECTION_ACTION)
     permission_registry.register(PermissionActionReschedule)
     permission_registry.register(PermissionActionNotifications)

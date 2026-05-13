@@ -16,6 +16,18 @@ from cmk.web.utils.urls import is_allowed_url
             True,
             id="Link to service",
         ),
+        (
+            "javascript:alert('XSS')",
+            False,
+        ),
+        (
+            "&#106;&#97;&#118;&#97;&#115;&#99;&#114;&#105;&#112;&#116;&#58;alert&#40;&#96;XSS&#96;&#41;",
+            False,
+        ),
+        (
+            'foo " onmouseover="alert(1)"',
+            False,
+        ),
     ],
 )
 def test_is_allowed_url_regression(url: str, expected: bool) -> None:

@@ -452,18 +452,18 @@ class DiagnosticsDump:
     def _create_tarfile(self, elements: Sequence[ABCDiagnosticsElement], omd_root: Path) -> None:
         with (
             tarfile.open(name=self.tarfile_path, mode="w:gz") as tar,
-            tempfile.TemporaryDirectory(dir=self.dump_folder) as tmp_dump_folder,
+            tempfile.TemporaryDirectory(dir=self.dump_folder) as tmp_dump_folder_str,
         ):
+            tmp_dump_folder = Path(tmp_dump_folder_str)
             for filepath in self._get_filepaths(
-                elements=elements, omd_root=omd_root, tmp_dump_folder=Path(tmp_dump_folder)
+                elements=elements, omd_root=omd_root, tmp_dump_folder=tmp_dump_folder
             ):
-                rel_path = str(filepath).replace(str(tmp_dump_folder), "")
-                tar.add(str(filepath), arcname=rel_path)
+                tar.add(filepath, arcname=filepath.relative_to(tmp_dump_folder))
                 self.tarfile_created = True
 
-            log_filepath = self._write_console_output_to_file(Path(tmp_dump_folder))
-            rel_path = str(log_filepath).replace(str(tmp_dump_folder), "")
-            tar.add(str(log_filepath), arcname=rel_path)
+            log_filepath = self._write_console_output_to_file(tmp_dump_folder)
+            tar.add(log_filepath, arcname=log_filepath.relative_to(tmp_dump_folder))
+            # Hmmm, why don't we do a 'self.tarfile_created = True' here?
 
     def _write_console_output_to_file(self, tmp_dump_folder: Path) -> Path:
         logfile = tmp_dump_folder / f"console_{datetime.now().timestamp()}.log"
@@ -971,7 +971,7 @@ def collect_infos_vendor(sys_path: Path) -> DiagnosticsElementJSONResult:
     vendor_info = {}
 
     for sys_file in _SYS_FILES:
-        file_content = store.load_text_from_file(sys_path.joinpath(sys_file)).replace("\n", "")
+        file_content = store.load_text_from_file(sys_path / sys_file).replace("\n", "")
         if sys_file == "chassis_asset_tag":
             if file_content == _AZURE_TAG:
                 vendor_info[sys_file] = "Azure"
@@ -1310,24 +1310,22 @@ class ABCCheckmkFilesDiagnosticsElement(ABCDiagnosticsElement):
         # Respect file path (2), otherwise the paths of same named files are forgotten (1).
         # We want to pack a folder hierarchy.
 
-        filename = Path(filepath).name
-        subfolder = Path(str(filepath).replace(str(omd_root) + "/", "")).parent
-
+        subfolder = filepath.relative_to(omd_root).parent
         # Create relative path in tmp tree
-        tmp_folder = tmp_dump_folder.joinpath(subfolder)
+        tmp_folder = tmp_dump_folder / subfolder
         tmp_folder.mkdir(parents=True, exist_ok=True)
 
         # Decrypt if file is encrypted, else only copy
         encryption = CheckmkFileEncryption.none
 
-        tmp_filepath = tmp_folder.joinpath(filename)
+        tmp_filepath = tmp_folder / filepath.name
         file_info = CheckmkFileInfoByRelFilePathMap.get(str(rel_filepath))
 
         if file_info is not None:
             encryption = file_info.encryption
 
         if encryption == CheckmkFileEncryption.rot47:
-            with Path(filepath).open("rb") as source:
+            with filepath.open("rb") as source:
                 json_data = json.dumps(deserialize_dump(source.read()), sort_keys=True, indent=4)
                 store.save_text_to_file(tmp_filepath, json_data)
         # We 'encrypt' only license thingies at the moment, so there is currently no need to
@@ -1456,28 +1454,16 @@ class CheckmkDirectoryDiagnosticsElement(ABCDiagnosticsElement):
     def add_or_get_files(
         self, *, omd_root: Path, tmp_dump_folder: Path
     ) -> DiagnosticsElementFilepaths:
-        abs_path = self.directory
-        if self.rel:
-            abs_path = omd_root / self.directory
-
-        if not abs_path.exists():
-            return
-
-        for path, dirs, files in os.walk(abs_path):
+        abs_path = (omd_root if self.rel else Path("")) / self.directory
+        for path, _dirs, files in abs_path.walk():
+            tmp_target_folder = tmp_dump_folder / (
+                path.relative_to(omd_root) if self.rel else "os_root" / path.relative_to("/")
+            )
             for file in files:
-                source_file = Path(path).joinpath(file)
-
-                if self.rel:
-                    tmp_target_folder = tmp_dump_folder / Path(path).relative_to(omd_root)
-                else:
-                    tmp_target_folder = tmp_dump_folder / "os_root" / Path(path).relative_to("/")
-
-                tmp_file = tmp_target_folder.joinpath(file)
+                tmp_file = tmp_target_folder / file
                 tmp_target_folder.mkdir(parents=True, exist_ok=True)
-
                 if not tmp_file.exists():
-                    shutil.copy(str(source_file), str(tmp_file))
-
+                    shutil.copy(path / file, tmp_file)
                 yield tmp_file
 
 
@@ -1622,7 +1608,7 @@ class PerformanceGraphsDiagnosticsElement(ABCDiagnosticsElement):
         if response.content[:5].hex() != "255044462d":
             raise DiagnosticsElementError("Verification of PDF document header failed")
 
-        filepath = tmp_dump_folder.joinpath(self.ident).with_suffix(".pdf")
+        filepath = (tmp_dump_folder / self.ident).with_suffix(".pdf")
         with filepath.open("wb") as f:
             f.write(response.content)
 
@@ -1702,7 +1688,7 @@ class CrashDumpsDiagnosticsElement(ABCDiagnosticsElement):
         self, *, omd_root: Path, tmp_dump_folder: Path
     ) -> DiagnosticsElementFilepaths:
         for category in make_crash_report_base_path(omd_root).glob("*"):
-            tmpdir = tmp_dump_folder.joinpath("var/check_mk/crashes/%s" % category.name)
+            tmpdir = tmp_dump_folder / "var/check_mk/crashes" / category.name
             tmpdir.mkdir(parents=True, exist_ok=True)
 
             sorted_dumps = sorted(
@@ -1716,12 +1702,11 @@ class CrashDumpsDiagnosticsElement(ABCDiagnosticsElement):
 
                 # Pack the dump into a .tar.gz, so it can easily be uploaded
                 # to https://crash.checkmk.com/
-                tarfile_path = tmpdir.joinpath(dumpfile_path.name).with_suffix(".tar.gz")
+                tarfile_path = (tmpdir / dumpfile_path.name).with_suffix(".tar.gz")
 
                 with tarfile.open(name=tarfile_path, mode="w:gz") as tar:
                     for file in dumpfile_path.iterdir():
-                        rel_path = str(file).replace(str(dumpfile_path) + "/", "")
-                        tar.add(str(file), arcname=rel_path)
+                        tar.add(file, arcname=file.relative_to(dumpfile_path))
 
                 yield tarfile_path
 
@@ -1749,10 +1734,10 @@ class CMCDumpDiagnosticsElement(ABCDiagnosticsElement):
     def add_or_get_files(
         self, *, omd_root: Path, tmp_dump_folder: Path
     ) -> DiagnosticsElementFilepaths:
-        command = [str(Path(omd_root).joinpath("bin/cmcdump"))]
+        command = [str(omd_root / "bin/cmcdump")]
 
         for dump_args in (None, "--config"):
-            tmpdir = tmp_dump_folder.joinpath("var/check_mk/core")
+            tmpdir = tmp_dump_folder / "var/check_mk/core"
             tmpdir.mkdir(parents=True, exist_ok=True)
             suffix = ""
 
@@ -1769,10 +1754,9 @@ class CMCDumpDiagnosticsElement(ABCDiagnosticsElement):
                 ConsoleLogger().error(str(e))
                 continue
 
-            filepath = tmpdir.joinpath(f"{self.ident}{suffix}")
+            filepath = tmpdir / f"{self.ident}{suffix}"
             with filepath.open("w") as f:
                 f.write(output)
-
             yield filepath
 
 

@@ -105,9 +105,7 @@ def _mode_create_diagnostics_dump(app: CheckmkBaseApp, options: DiagnosticsModes
     )
     section.section_step("Creating diagnostics dump", verbose=False)
     if dump.tarfile_created:
-        console.info(
-            f"{_format_filepath(omd_root=cmk.utils.paths.omd_root, filepath=dump.tarfile_path)}"
-        )
+        console.info(f"{_format_filepath(dump.tarfile_path.relative_to(cmk.utils.paths.omd_root))}")
     else:
         console.info(f"{_GAP}No dump")
 
@@ -286,8 +284,8 @@ def create_diagnostics_dump(
 _GAP = 4 * " "
 
 
-def _format_filepath(*, omd_root: Path, filepath: Path) -> str:
-    return f"{_GAP}{str(filepath.relative_to(omd_root))}"
+def _format_filepath(filepath: Path) -> str:
+    return f"{_GAP}{filepath}"
 
 
 def _format_title(title: str) -> str:
@@ -424,11 +422,8 @@ class DiagnosticsDump:
         self._create_tarfile(elements, omd_root)
         self._cleanup_dump_folder(omd_root)
 
-    def _console(self, message: str, severity: str) -> None:
-        if severity == "verbose":
-            console.verbose(message)
-        else:
-            console.info(message)
+    def _console(self, message: str, *, verbose: bool = True) -> None:
+        (console.verbose if verbose else console.info)(message)
         self.log.append(message)
 
     def _section_step(self, message: str, verbose: bool = True, add_info: str = "") -> None:
@@ -467,8 +462,8 @@ class DiagnosticsDump:
 
         filepaths = []
         for element in elements:
-            self._console(f"{_format_title(element.title)}", "info")
-            self._console(f"{_format_description(element.description)}", "info")
+            self._console(f"{_format_title(element.title)}")
+            self._console(f"{_format_description(element.description)}")
 
             try:
                 for filepath in element.add_or_get_files(
@@ -477,19 +472,19 @@ class DiagnosticsDump:
                     filepaths.append(filepath)
 
             except DiagnosticsElementError as e:
-                self._console(f"{_format_error(str(e))}", "info")
+                self._console(f"{_format_error(str(e))}")
                 continue
 
             except DiagnosticsElementWarning as e:
-                self._console(f"{_format_warn(str(e))}", "info")
+                self._console(f"{_format_warn(str(e))}")
                 continue
 
             except DiagnosticsElementInfo as e:
-                self._console(f"{_format_info(str(e))}", "info")
+                self._console(f"{_format_info(str(e))}")
                 continue
 
             except Exception:
-                self._console(f"{_format_error(traceback.format_exc())}", "info")
+                self._console(f"{_format_error(traceback.format_exc())}")
                 continue
 
         return filepaths
@@ -508,10 +503,7 @@ class DiagnosticsDump:
             "Cleanup dump folder", add_info=f"keep last {self._keep_num_dumps} dumps"
         )
         for _mtime, filepath in dumps:
-            self._console(
-                f"{_format_filepath(omd_root=omd_root, filepath=filepath)}",
-                "verbose",
-            )
+            self._console(f"{_format_filepath(filepath.relative_to(omd_root))}", verbose=True)
             filepath.unlink(missing_ok=True)
 
 

@@ -14,7 +14,7 @@ import pytest
 import time_machine
 
 from cmk.agent_based.v2 import Service
-from cmk.legacy_checks.checkpoint_packets import (
+from cmk.plugins.checkpoint.agent_based.checkpoint_packets import (
     check_checkpoint_packets,
     discover_checkpoint_packets,
     parse_checkpoint_packets,

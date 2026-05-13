@@ -16,9 +16,10 @@ import yaml
 
 from cmk.ccc import store
 from cmk.ccc.version import Edition
-from cmk.gui import main_modules
+from cmk.gui.legacy_plugins import get_failed_plugins
 from cmk.gui.openapi.framework.api_config import APIConfig, APIVersion
 from cmk.gui.openapi.restful_objects.type_defs import EndpointTarget
+from cmk.gui.openapi.spec import editions
 from cmk.gui.openapi.spec.spec_generator._core import _make_spec, populate_spec
 
 OutputFormat = Literal["yaml", "dict"]
@@ -85,9 +86,9 @@ def list_versions(args: argparse.Namespace) -> None:
 
 def process_version(args: argparse.Namespace) -> None:
     edition = Edition.from_long_edition(args.edition)
-    main_modules.register(edition)
+    editions.register(edition)
 
-    if errors := main_modules.get_failed_plugins():
+    if errors := get_failed_plugins():
         sys.exit(f"The following errors occurred during plug-in loading: {errors!r}")
 
     version = APIVersion.from_string(args.version)

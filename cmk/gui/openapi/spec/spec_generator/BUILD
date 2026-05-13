@@ -1,4 +1,4 @@
-load("@aspect_rules_py//py:defs.bzl", "py_binary", "py_library")
+load("@aspect_rules_py//py:defs.bzl", "py_library")
 load("@cmk_requirements//:requirements.bzl", "requirement")
 
 exports_files(["generate_api_spec.py"])
@@ -68,53 +68,5 @@ py_library(
         requirement("apispec"),
         requirement("apispec-oneofschema"),
         requirement("openapi-spec-validator"),
-    ],
-)
-
-py_binary(
-    name = "generate_api_spec",
-    srcs = ["generate_api_spec.py"],
-    main = "generate_api_spec.py",
-    visibility = ["//:__subpackages__"],
-    deps = select({
-        "@cmk//edition:cloud": [
-            "//cmk/gui/nonfree/cloud",
-            "//cmk/gui/nonfree/ultimate/plugins/wato/check_parameters:stub",
-        ],
-        "@cmk//edition:community": [],
-        "@cmk//edition:pro": [
-            "//cmk/gui/nonfree/pro",
-        ],
-        "@cmk//edition:ultimate": [
-            "//cmk/gui/nonfree/ultimate",
-            "//cmk/gui/nonfree/ultimate/plugins/wato/check_parameters:stub",
-        ],
-        "@cmk//edition:ultimatemt": [
-            "//cmk/gui/nonfree/ultimate/plugins/wato/check_parameters:stub",
-            "//cmk/gui/nonfree/ultimatemt",
-        ],
-    }) + [
-        ":_core",
-        "//cmk/gui/plugins/wato/check_parameters:stub",
-        "//cmk/plugins",  # Why? Really?
-        requirement("pyyaml"),
-    ],
-)
-
-py_binary(
-    name = "generate_api_spec_all_editions",
-    srcs = ["generate_api_spec.py"],
-    main = "generate_api_spec.py",
-    visibility = ["//:__subpackages__"],
-    deps = select({
-        "@//:gpl+nonfree_repo": [
-            "//cmk/gui/nonfree/pro",
-        ],
-        "@//:gpl_repo": [],
-    }) + [
-        ":_core",
-        "//cmk/gui/plugins/wato/check_parameters:stub",
-        "//cmk/plugins",  # Why? Really?
-        requirement("pyyaml"),
     ],
 )

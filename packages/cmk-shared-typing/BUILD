@@ -98,7 +98,10 @@ run_binary(
         "--out",
         "$(execpath openapi_spec_internal.yaml)",
     ],
-    tool = "//cmk/gui/openapi/spec/spec_generator:generate_api_spec_all_editions",
+    tool = select({
+        "@//:gpl+nonfree_repo": "//cmk/gui/openapi/spec/editions/nonfree/pro:generate_api_spec",
+        "@//:gpl_repo": "//cmk/gui/openapi/spec/editions/community:generate_api_spec",
+    }),
 )
 
 openapi_typescript.openapi_typescript(

@@ -675,6 +675,16 @@ allows = [
   "cmk.utils.paths",
 ]
 
+[components."cmk.gui.openapi.spec.editions"]
+allows = [
+  "@ccc",
+  "cmk.dcd.gui",
+  "cmk.gui",
+  "cmk.gui.nonfree",
+  "cmk.nonfree.ultimate.metric_backend",
+  "cmk.otel_collector",
+]
+
 [components."cmk.gui.plugins"]
 allows = [
   "@ccc",

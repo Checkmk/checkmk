@@ -345,6 +345,14 @@ _EDITION_SELECT = select({
     "@cmk//edition:ultimatemt": ["ultimatemt"],
 })
 
+_GENERATE_API_SPEC_TOOL = select({
+    "@cmk//edition:cloud": "//cmk/gui/openapi/spec/editions/nonfree/cloud:generate_api_spec",
+    "@cmk//edition:community": "//cmk/gui/openapi/spec/editions/community:generate_api_spec",
+    "@cmk//edition:pro": "//cmk/gui/openapi/spec/editions/nonfree/pro:generate_api_spec",
+    "@cmk//edition:ultimate": "//cmk/gui/openapi/spec/editions/nonfree/ultimate:generate_api_spec",
+    "@cmk//edition:ultimatemt": "//cmk/gui/openapi/spec/editions/nonfree/ultimatemt:generate_api_spec",
+})
+
 run_binary(
     name = "generate_doc.spec",
     outs = ["doc.spec"],
@@ -362,7 +370,7 @@ run_binary(
         "dict",
     ],
     tags = ["manual"],
-    tool = "//cmk/gui/openapi/spec/spec_generator:generate_api_spec",
+    tool = _GENERATE_API_SPEC_TOOL,
 )
 
 run_binary(
@@ -382,7 +390,7 @@ run_binary(
         "dict",
     ],
     tags = ["manual"],
-    tool = "//cmk/gui/openapi/spec/spec_generator:generate_api_spec",
+    tool = _GENERATE_API_SPEC_TOOL,
 )
 
 run_binary(
@@ -402,7 +410,7 @@ run_binary(
         "dict",
     ],
     tags = ["manual"],
-    tool = "//cmk/gui/openapi/spec/spec_generator:generate_api_spec",
+    tool = _GENERATE_API_SPEC_TOOL,
 )
 
 run_binary(
@@ -422,7 +430,7 @@ run_binary(
         "dict",
     ],
     tags = ["manual"],
-    tool = "//cmk/gui/openapi/spec/spec_generator:generate_api_spec",
+    tool = _GENERATE_API_SPEC_TOOL,
 )
 
 pkg_files(

@@ -24079,8 +24079,16 @@ msgid "Edited the %s '%s'"
 msgstr "Modificato il %s '%s'"
 
 #, fuzzy, python-format
+msgid "Edited the OpenTelemetry collector configuration: '%s'"
+msgstr "Configurazione della console eventi"
+
+#, fuzzy, python-format
 msgid "Edited the Prometheus configuration '%s'"
 msgstr "Configurazione dello stile selezionato"
+
+#, fuzzy, python-format
+msgid "Edited the connection '%s'"
+msgstr "Aggiunta la connessione '%s'"
 
 #, python-format
 msgid "Edited user profile for user %s"
@@ -68354,7 +68362,7 @@ msgstr "Elemento"
 
 msgid ""
 "Telemetry data are collected through the OpenTelemetry Collector. Adjust the "
-"Collector configuration to modify data collection"
+"Collector configuration to modify data collection."
 msgstr ""
 
 msgid ""
@@ -78879,6 +78887,14 @@ msgstr "Questo sito non esiste."
 #, python-format
 msgid "This site is %s"
 msgstr "Questo sito è %s"
+
+#, fuzzy
+msgid ""
+"This site is already assigned to another OpenTelemetry collector "
+"configuration."
+msgstr ""
+"Un site è utilizzabile il una configurazione soltanto dei collettori "
+"OpenTelemetry: %s"
 
 msgid "This site is currently down."
 msgstr "Questo sito è attualmente inattivo."
@@ -97781,6 +97797,14 @@ msgstr "Un nome per la macro è richiesto"
 msgid "Metric name is required"
 msgstr "Un nome per la macro è richiesto"
 
+#, fuzzy
+msgid "Constant value must be a valid number"
+msgstr "Il valore deve essere una stringa"
+
+#, fuzzy
+msgid "Percentile must be a valid number"
+msgstr "Si prega di inserire un numero valido"
+
 msgid "Visible"
 msgstr "Visibile"
 
@@ -97852,6 +97876,14 @@ msgstr "Argomenti standard"
 
 msgid "Engineering scientific"
 msgstr ""
+
+#, fuzzy
+msgid "Symbol is required"
+msgstr "è necessario"
+
+#, fuzzy
+msgid "Digits must be a non-negative number"
+msgstr "La data deve essere un valore numerico"
 
 #, fuzzy
 msgid "Notation"
@@ -98725,6 +98757,15 @@ msgstr "Cancellare questa connessione"
 #, fuzzy
 msgid "Username is required but not specified."
 msgstr "%s è richiesto ma non è stato specificato."
+
+msgid "The password ID '%{passwordId}' is not usable by the OTel Collector."
+msgstr ""
+
+msgid "It must start with a letter or underscore and "
+msgstr ""
+
+msgid "Please select a different password or create a new one with a valid ID."
+msgstr ""
 
 #, fuzzy
 msgid "Password is required but not specified."

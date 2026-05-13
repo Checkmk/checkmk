@@ -24284,8 +24284,16 @@ msgid "Edited the %s '%s'"
 msgstr "A fost editat %s \"%s"
 
 #, fuzzy, python-format
+msgid "Edited the OpenTelemetry collector configuration: '%s'"
+msgstr "Configurația Consola de evenimente"
+
+#, fuzzy, python-format
 msgid "Edited the Prometheus configuration '%s'"
 msgstr "Configurația stilului selectat"
+
+#, fuzzy, python-format
+msgid "Edited the connection '%s'"
+msgstr "A fost adăugată conexiunea '%s'"
 
 #, python-format
 msgid "Edited user profile for user %s"
@@ -68778,7 +68786,7 @@ msgstr "Element"
 
 msgid ""
 "Telemetry data are collected through the OpenTelemetry Collector. Adjust the "
-"Collector configuration to modify data collection"
+"Collector configuration to modify data collection."
 msgstr ""
 
 msgid ""
@@ -79329,6 +79337,12 @@ msgstr "Acest site nu există."
 #, python-format
 msgid "This site is %s"
 msgstr "Acest site este %s"
+
+#, fuzzy
+msgid ""
+"This site is already assigned to another OpenTelemetry collector "
+"configuration."
+msgstr "Adaugp o noua configurație de utilizator"
 
 msgid "This site is currently down."
 msgstr "Acest site este în prezent indisponibil."
@@ -98269,6 +98283,14 @@ msgstr "ca macro numit"
 msgid "Metric name is required"
 msgstr "ca macro numit"
 
+#, fuzzy
+msgid "Constant value must be a valid number"
+msgstr "Valoarea trebuie să fie un șir de caractere"
+
+#, fuzzy
+msgid "Percentile must be a valid number"
+msgstr "Vă rugăm să introduceți un număr valid"
+
 msgid "Visible"
 msgstr "Vizibil"
 
@@ -98340,6 +98362,14 @@ msgstr "Teme standard"
 
 msgid "Engineering scientific"
 msgstr ""
+
+#, fuzzy
+msgid "Symbol is required"
+msgstr "este necesară"
+
+#, fuzzy
+msgid "Digits must be a non-negative number"
+msgstr "Data trebuie să fie o valoare numerică"
 
 #, fuzzy
 msgid "Notation"
@@ -99216,6 +99246,15 @@ msgstr "Ștergeți această conexiune"
 #, fuzzy
 msgid "Username is required but not specified."
 msgstr "credențiale JSON pentru contul de servicii"
+
+msgid "The password ID '%{passwordId}' is not usable by the OTel Collector."
+msgstr ""
+
+msgid "It must start with a letter or underscore and "
+msgstr ""
+
+msgid "Please select a different password or create a new one with a valid ID."
+msgstr ""
 
 #, fuzzy
 msgid "Password is required but not specified."

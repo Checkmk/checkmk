@@ -23067,8 +23067,16 @@ msgid "Edited the %s '%s'"
 msgstr "%s '%s' を編集しました"
 
 #, fuzzy, python-format
+msgid "Edited the OpenTelemetry collector configuration: '%s'"
+msgstr "Open Telemetryコレクターの設定"
+
+#, fuzzy, python-format
 msgid "Edited the Prometheus configuration '%s'"
 msgstr "Prometheus スクレイプ構成"
+
+#, fuzzy, python-format
+msgid "Edited the connection '%s'"
+msgstr "接続 %s を追加"
 
 #, python-format
 msgid "Edited user profile for user %s"
@@ -65043,7 +65051,7 @@ msgstr "要素"
 
 msgid ""
 "Telemetry data are collected through the OpenTelemetry Collector. Adjust the "
-"Collector configuration to modify data collection"
+"Collector configuration to modify data collection."
 msgstr ""
 
 msgid ""
@@ -75171,6 +75179,14 @@ msgstr "このサイトは存在しません。"
 #, python-format
 msgid "This site is %s"
 msgstr "このサイトは%sです"
+
+#, fuzzy
+msgid ""
+"This site is already assigned to another OpenTelemetry collector "
+"configuration."
+msgstr ""
+"1つのサイトは、ちょうど1つのOpenTelemetryコレクター構成で使用することができま"
+"す。：%s"
 
 msgid "This site is currently down."
 msgstr "このサイトは現在ダウンしています。"
@@ -92819,6 +92835,14 @@ msgstr "マクロ名は必須"
 msgid "Metric name is required"
 msgstr "マクロ名は必須"
 
+#, fuzzy
+msgid "Constant value must be a valid number"
+msgstr "値は文字列であること"
+
+#, fuzzy
+msgid "Percentile must be a valid number"
+msgstr "有効な数値を入力してください"
+
 msgid "Visible"
 msgstr "目に見える"
 
@@ -92883,6 +92907,14 @@ msgstr "標準的で科学的な"
 
 msgid "Engineering scientific"
 msgstr "科学的エンジニアリング"
+
+#, fuzzy
+msgid "Symbol is required"
+msgstr "必須"
+
+#, fuzzy
+msgid "Digits must be a non-negative number"
+msgstr "日付は数値である必要があります"
 
 msgid "Notation"
 msgstr "注記"
@@ -93743,6 +93775,15 @@ msgstr "この構成を適用しないでください"
 #, fuzzy
 msgid "Username is required but not specified."
 msgstr "%s は必須だが指定はない。"
+
+msgid "The password ID '%{passwordId}' is not usable by the OTel Collector."
+msgstr ""
+
+msgid "It must start with a letter or underscore and "
+msgstr ""
+
+msgid "Please select a different password or create a new one with a valid ID."
+msgstr ""
 
 #, fuzzy
 msgid "Password is required but not specified."

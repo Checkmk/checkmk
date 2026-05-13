@@ -11,15 +11,6 @@ import type { CmkSpaceVariants } from '@/components/CmkSpace.vue'
 import codeExample from './UclCmkSpaceCodeExample.vue?raw'
 
 export const panelConfig = {
-  direction: {
-    type: 'list' as const,
-    title: 'Direction',
-    options: [
-      { title: 'Horizontal', name: 'horizontal' },
-      { title: 'Vertical', name: 'vertical' }
-    ] satisfies Options<CmkSpaceVariants['direction']>[],
-    initialState: 'horizontal' as const
-  },
   size: {
     type: 'list' as const,
     title: 'Size',
@@ -29,7 +20,7 @@ export const panelConfig = {
     ] satisfies Options<CmkSpaceVariants['size']>[],
     initialState: 'medium' as const
   }
-} satisfies PanelConfigFor<typeof CmkSpace>
+} satisfies PanelConfigFor<typeof CmkSpace, 'direction'>
 </script>
 
 <script setup lang="ts">
@@ -48,7 +39,7 @@ import CmkSpace from '@/components/CmkSpace.vue'
 
 defineProps<{ screenshotMode: boolean }>()
 
-const propState = new PanelStateCreator<typeof CmkSpace>().createRef(panelConfig)
+const propState = new PanelStateCreator<typeof CmkSpace, 'direction'>().createRef(panelConfig)
 </script>
 
 <template>
@@ -56,9 +47,25 @@ const propState = new PanelStateCreator<typeof CmkSpace>().createRef(panelConfig
     <UclDetailPageHeader>CmkSpace</UclDetailPageHeader>
 
     <UclDetailPageComponent>
-      <CmkButton variant="secondary">First Element</CmkButton>
-      <CmkSpace :direction="propState.direction" :size="propState.size" />
-      <CmkButton variant="primary">Second Element</CmkButton>
+      <div class="ucl-cmk-space">
+        <div class="ucl-cmk-space__example">
+          <span class="ucl-cmk-space__label">Horizontal Direction</span>
+          <div class="ucl-cmk-space__row">
+            <CmkButton variant="secondary">First Element</CmkButton>
+            <CmkSpace direction="horizontal" :size="propState.size" />
+            <CmkButton variant="primary">Second Element</CmkButton>
+          </div>
+        </div>
+
+        <div class="ucl-cmk-space__example">
+          <span class="ucl-cmk-space__label">Vertical Direction</span>
+          <div class="ucl-cmk-space__column">
+            <CmkButton variant="secondary">First Element</CmkButton>
+            <CmkSpace direction="vertical" :size="propState.size" />
+            <CmkButton variant="primary">Second Element</CmkButton>
+          </div>
+        </div>
+      </div>
 
       <template #properties>
         <UclPropertiesPanel v-model="propState" :config="panelConfig" />
@@ -70,3 +77,35 @@ const propState = new PanelStateCreator<typeof CmkSpace>().createRef(panelConfig
     <UclDetailPageAccessibility :data="[]" />
   </UclDetailPageLayout>
 </template>
+
+<style scoped>
+.ucl-cmk-space {
+  display: flex;
+  flex-direction: column;
+  gap: var(--dimension-10);
+  align-items: flex-start;
+}
+
+.ucl-cmk-space__example {
+  display: flex;
+  flex-direction: column;
+  gap: var(--dimension-4);
+}
+
+.ucl-cmk-space__label {
+  font-size: var(--font-size-small, 0.75rem);
+  opacity: 0.6;
+}
+
+.ucl-cmk-space__row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+
+.ucl-cmk-space__column {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+</style>

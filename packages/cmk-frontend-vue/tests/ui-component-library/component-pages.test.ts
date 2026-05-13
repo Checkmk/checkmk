@@ -326,7 +326,7 @@ test('CmkLabelRequired page renders its component', () => {
 
 test('CmkSpace page renders its component', () => {
   render(UclCmkSpace, { props: { screenshotMode: false } })
-  within(componentPreview()).getByRole('button', { name: 'First Element' })
+  within(componentPreview()).getAllByRole('button', { name: 'First Element' })
 })
 
 test('CmkZebra page renders its component', () => {

@@ -49,21 +49,22 @@ function navigateUrl(url: string) {
       class="mm-default-popup__header"
       :class="{ 'mm-default-popup--small': props.header }"
     >
-      <CmkButton
-        v-if="
-          props.header.trigger_button && mainMenu.triggerHeader(props.header.trigger_button.mode)
-        "
-        class="mm-default-popup__header-trigger-button"
-        :variant="
-          !props.header.trigger_button.color || props.header.trigger_button.color === 'default'
-            ? 'optional'
-            : props.header.trigger_button.color
-        "
-        @click="navigateUrl(props.header.trigger_button.target_url)"
-      >
-        {{ mainMenu.triggerHeader(props.header.trigger_button.mode) }}
-      </CmkButton>
       <div class="mm-default-popup__header-left">
+        <CmkButton
+          v-if="
+            props.header.trigger_button && mainMenu.triggerHeader(props.header.trigger_button.mode)
+          "
+          class="mm-default-popup__header-trigger-button"
+          :variant="
+            !props.header.trigger_button.color || props.header.trigger_button.color === 'default'
+              ? 'optional'
+              : props.header.trigger_button.color
+          "
+          @click="navigateUrl(props.header.trigger_button.target_url)"
+        >
+          {{ mainMenu.triggerHeader(props.header.trigger_button.mode) }}
+        </CmkButton>
+
         <CmkHeading v-if="props.header.title" type="h2"></CmkHeading>
         <!-- eslint-disable vue/no-v-html -->
         <span
@@ -121,8 +122,6 @@ function navigateUrl(url: string) {
     padding: 0 var(--dimension-5) 0 var(--dimension-7);
 
     .mm-default-popup__header-trigger-button {
-      left: 0;
-      position: absolute;
       margin-left: var(--dimension-3);
       height: var(--dimension-7);
       font-weight: var(--font-weight-default);
@@ -167,6 +166,8 @@ function navigateUrl(url: string) {
 
       .mm-default-popup__header-left {
         flex: 1;
+        display: flex;
+        flex-direction: column;
       }
 
       .mm-default-popup__header-left-info {

@@ -3,19 +3,28 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
+from collections.abc import Mapping
 
-
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import SNMPTree
-from cmk.legacy_includes.temperature import check_temperature
+from cmk.agent_based.v2 import (
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    get_value_store,
+    Result,
+    Service,
+    SimpleSNMPSection,
+    SNMPTree,
+    State,
+    StringTable,
+)
 from cmk.plugins.brocade.lib import DETECT_MLX
+from cmk.plugins.lib.temperature import check_temperature, TempParamType
 
-check_info = {}
+Section = Mapping[str, float]
 
 
-def parse_brocade_mlx_temp(string_table):
-    parsed = {}
+def parse_brocade_mlx_temp(string_table: StringTable) -> Section:
+    parsed: dict[str, float] = {}
     for temp_descr, temp_value in string_table:
         if temp_value and temp_value != "0":
             item = (
@@ -29,22 +38,30 @@ def parse_brocade_mlx_temp(string_table):
     return parsed
 
 
-def discover_brocade_mlx_temp(parsed):
-    for item in parsed:
-        yield item, {}
+def discover_brocade_mlx_temp(section: Section) -> DiscoveryResult:
+    for item in section:
+        yield Service(item=item)
 
 
-def check_brocade_mlx_temp(item, params, parsed):
-    if item in parsed:
-        return check_temperature(parsed[item], params, "brocade_mlx_temp_%s" % item)
+def check_brocade_mlx_temp(item: str, params: TempParamType, section: Section) -> CheckResult:
+    if item in section:
+        yield from check_temperature(
+            section[item],
+            params,
+            unique_name=f"brocade_mlx_temp_{item}",
+            value_store=get_value_store(),
+        )
+        return
     if "Module" in item and "Sensor" not in item:
         # item discovered in 1.2.6 had the sensor-id stripped and module id replaced
         # so it's impossible to look by that name
-        return 3, "check had an incompatible change, please re-discover this host"
-    return None
+        yield Result(
+            state=State.UNKNOWN,
+            summary="check had an incompatible change, please re-discover this host",
+        )
 
 
-check_info["brocade_mlx_temp"] = LegacyCheckDefinition(
+snmp_section_brocade_mlx_temp = SimpleSNMPSection(
     name="brocade_mlx_temp",
     detect=DETECT_MLX,
     fetch=SNMPTree(
@@ -52,6 +69,11 @@ check_info["brocade_mlx_temp"] = LegacyCheckDefinition(
         oids=["3", "4"],
     ),
     parse_function=parse_brocade_mlx_temp,
+)
+
+
+check_plugin_brocade_mlx_temp = CheckPlugin(
+    name="brocade_mlx_temp",
     service_name="Temperature %s",
     discovery_function=discover_brocade_mlx_temp,
     check_function=check_brocade_mlx_temp,

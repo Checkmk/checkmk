@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import html
 import urllib.parse
 from collections.abc import Collection
 
@@ -35,7 +36,7 @@ def is_allowed_url(
     """
 
     try:
-        parsed = urllib.parse.urlparse(url)
+        parsed = urllib.parse.urlparse(html.unescape(url))
     except ValueError:
         return False
 

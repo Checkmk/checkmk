@@ -19,7 +19,8 @@ import CmkSuggestions, {
   SelectionWithTitle,
   type Suggestion,
   type SuggestionValue,
-  type Suggestions
+  type Suggestions,
+  flattenSuggestions
 } from '@/components/CmkSuggestions'
 import ArrowDown from '@/components/graphics/ArrowDown.vue'
 import CmkLabelRequired from '@/components/user-input/CmkLabelRequired.vue'
@@ -111,7 +112,7 @@ async function getCurrentSelectionState(
       } else if (selected === null) {
         return { value: new NoSelection(), buttonLabel: inputHint }
       }
-      currentOptions = options.suggestions
+      currentOptions = flattenSuggestions(options.suggestions)
       break
     }
     case 'callback-filtered': {
@@ -125,7 +126,7 @@ async function getCurrentSelectionState(
         return { value: new Selection(selected), buttonLabel: untranslated(selected) }
       } else {
         callbackFilteredErrorMessage.value = null
-        currentOptions = result.choices
+        currentOptions = flattenSuggestions(result.choices)
       }
       break
     }

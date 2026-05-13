@@ -6,7 +6,7 @@
 import type { Autocompleter } from 'cmk-shared-typing/typescript/vue_formspec_components'
 import { type ComputedRef, type Ref, ref, watch } from 'vue'
 
-import { Response } from '@/components/CmkSuggestions'
+import { Response, flattenSuggestions } from '@/components/CmkSuggestions'
 
 import { fetchSuggestions } from '@/form/private/FormAutocompleter/autocompleter'
 
@@ -34,7 +34,7 @@ export function useLabelValueAutocomplete(
       }
       const result = await fetchSuggestions(autocompleter.value, val)
       if (result instanceof Response) {
-        const match = result.choices.find((s) => s.name === val)
+        const match = flattenSuggestions(result.choices).find((s) => s.name === val)
         model.value = { value: val, label: match ? (match.title as string) : val }
       } else {
         model.value = { value: val, label: val }

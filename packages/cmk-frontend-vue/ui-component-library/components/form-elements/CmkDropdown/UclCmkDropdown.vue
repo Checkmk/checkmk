@@ -5,7 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script lang="ts">
 import { type Options, type PanelConfigFor } from '@ucl/_ucl/components/detail-page'
-import type { ListPropDef } from '@ucl/_ucl/types/prop-def'
+import type { BoolPropDef, ListPropDef } from '@ucl/_ucl/types/prop-def'
 
 import { type ButtonVariants } from '@/components/CmkDropdown/CmkDropdownButton.vue'
 import { type Suggestions } from '@/components/CmkSuggestions'
@@ -49,6 +49,7 @@ export const panelConfig = {
     ],
     initialState: 'fixed'
   },
+  sectioned: { type: 'boolean' as const, title: 'Sectioned suggestions', initialState: false },
   width: {
     type: 'list' as const,
     title: 'Width',
@@ -86,7 +87,7 @@ export const panelConfig = {
 } satisfies PanelConfigFor<
   typeof CmkDropdown,
   'label' | 'options' | 'componentId' | 'noElementsText'
-> & { optionsType: ListPropDef }
+> & { optionsType: ListPropDef; sectioned: BoolPropDef }
 </script>
 
 <script setup lang="ts">
@@ -128,7 +129,37 @@ const dynamicOptions = computed<Suggestions>(() => {
     { name: '3', title: 'Option Three' }
   ]
 
+  const sectionedSuggestions = [
+    {
+      title: 'Primary',
+      suggestions: baseSuggestions
+    },
+    {
+      title: 'Secondary',
+      suggestions: [
+        { name: '4', title: 'Option One Secondary' },
+        { name: '5', title: 'Option Two Secondary' }
+      ]
+    }
+  ]
+
   if (propState.value.optionsType === 'callback') {
+    if (propState.value.sectioned) {
+      return {
+        type: 'callback-filtered',
+        querySuggestions: async (query: string) => {
+          const lowerCaseQuery = query.toLowerCase()
+          return new Response(
+            sectionedSuggestions.map((section) => ({
+              title: section.title,
+              suggestions: section.suggestions.filter((s) =>
+                s.title.toLowerCase().includes(lowerCaseQuery)
+              )
+            }))
+          )
+        }
+      }
+    }
     // The two extra rows have a `name` that does not appear in the `title`,
     // so callback queries like `cmk` or `snmp` exercise the name-only-match
     // highlight path — which is only reachable when the backend can match
@@ -151,9 +182,15 @@ const dynamicOptions = computed<Suggestions>(() => {
       }
     }
   } else if (propState.value.optionsType === 'filtered') {
-    return { type: 'filtered', suggestions: baseSuggestions }
+    return {
+      type: 'filtered',
+      suggestions: propState.value.sectioned ? sectionedSuggestions : baseSuggestions
+    }
   } else {
-    return { type: 'fixed', suggestions: baseSuggestions }
+    return {
+      type: 'fixed',
+      suggestions: propState.value.sectioned ? sectionedSuggestions : baseSuggestions
+    }
   }
 })
 </script>

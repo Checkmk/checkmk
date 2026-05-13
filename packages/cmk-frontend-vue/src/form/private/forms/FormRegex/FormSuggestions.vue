@@ -11,6 +11,7 @@ import usei18n from '@/lib/i18n'
 
 import CmkScrollContainer from '@/components/CmkScrollContainer.vue'
 import { ErrorResponse, Response, type Suggestion } from '@/components/CmkSuggestions/suggestions'
+import { flattenSuggestions } from '@/components/CmkSuggestions/types'
 
 import { fetchSuggestions } from '@/form/private/FormAutocompleter/autocompleter'
 
@@ -49,7 +50,7 @@ async function suggestionCallback(query: string): Promise<ErrorResponse | Respon
     return newValue
   }
 
-  const result: Array<Suggestion> = newValue.choices.filter(
+  const result: Array<Suggestion> = flattenSuggestions(newValue.choices).filter(
     (element: Suggestion) =>
       element.name === null || (element.name.length > 0 && element.title.length > 0)
   )

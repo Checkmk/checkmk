@@ -9,14 +9,33 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/vue'
 import CmkSuggestions, {
   NoSelection,
   Response,
+  type Section,
   SelectionWithTitle,
-  type Suggestion
+  type Suggestion,
+  type Suggestions
 } from '@/components/CmkSuggestions'
 
 const flatSuggestions: Suggestion[] = [
   { name: 'option1', title: 'Option One' },
   { name: 'option2', title: 'Option Two' },
   { name: 'option3', title: 'Option Three' }
+]
+
+const twoSections: Section[] = [
+  {
+    title: 'Section A',
+    suggestions: [
+      { name: 'a1', title: 'Alpha One' },
+      { name: 'a2', title: 'Alpha Two' }
+    ]
+  },
+  {
+    title: 'Section B',
+    suggestions: [
+      { name: 'b1', title: 'Beta One' },
+      { name: 'b2', title: 'Beta Two' }
+    ]
+  }
 ]
 
 test('renders a flat fixed suggestion list', async () => {
@@ -50,21 +69,41 @@ test('clicking a suggestion emits select-suggestion with that item', async () =>
   expect(emitted('select-suggestion')![0]).toEqual([{ name: 'option2', title: 'Option Two' }])
 })
 
-test('shows noResultsHint when the suggestion list is empty', async () => {
-  render(CmkSuggestions, {
-    props: {
-      selectedSuggestion: new NoSelection(),
-      suggestions: { type: 'fixed', suggestions: [] as Suggestion[] },
-      role: 'option',
-      noResultsHint: 'No matches'
-    }
-  })
+test.each([
+  {
+    name: 'flat empty list',
+    suggestions: { type: 'fixed', suggestions: [] as Suggestion[] } as Suggestions,
+    filter: undefined as string | undefined
+  },
+  {
+    name: 'filtered sectioned list with no matches',
+    suggestions: { type: 'filtered', suggestions: twoSections } as Suggestions,
+    filter: 'zzz'
+  }
+])(
+  'shows noResultsHint and no options or headings when empty: $name',
+  async ({ suggestions, filter }) => {
+    const user = userEvent.setup()
+    render(CmkSuggestions, {
+      props: {
+        selectedSuggestion: new NoSelection(),
+        suggestions,
+        role: 'option',
+        noResultsHint: 'No matches'
+      }
+    })
 
-  // The hint is rendered as a plain <li> with no role or accessible name,
-  // so visible text is the only signal available for this assertion.
-  await screen.findByText('No matches')
-  expect(screen.queryByRole('option')).toBeNull()
-})
+    if (filter !== undefined) {
+      await user.type(screen.getByLabelText('filter'), filter)
+    }
+
+    // The hint is rendered as a plain <li> with no role or accessible name,
+    // so visible text is the only signal available for this assertion.
+    await screen.findByText('No matches')
+    expect(screen.queryByRole('option')).toBeNull()
+    expect(screen.queryByRole('heading')).toBeNull()
+  }
+)
 
 test('filtered mode narrows visible options when typing into the filter', async () => {
   const user = userEvent.setup()
@@ -234,4 +273,120 @@ test('fixed mode never renders <mark>', async () => {
 
   expect(container.querySelector('mark')).toBeNull()
   expect(container.querySelector('span.input')?.classList.contains('hidden')).toBe(true)
+})
+
+test('renders sticky headers and items when more than one section is present', async () => {
+  render(CmkSuggestions, {
+    props: {
+      selectedSuggestion: new NoSelection(),
+      suggestions: { type: 'fixed', suggestions: twoSections },
+      role: 'option'
+    }
+  })
+
+  const headerA = await screen.findByRole('heading', { name: 'Section A' })
+  await screen.findByRole('heading', { name: 'Section B' })
+  expect(headerA).toHaveClass('cmk-suggestions__section-header')
+
+  expect(screen.getAllByRole('option')).toHaveLength(4)
+  await screen.findByRole('option', { name: 'Alpha One' })
+  await screen.findByRole('option', { name: 'Alpha Two' })
+  await screen.findByRole('option', { name: 'Beta One' })
+  await screen.findByRole('option', { name: 'Beta Two' })
+})
+
+test('omits headers when only one section is present', async () => {
+  render(CmkSuggestions, {
+    props: {
+      selectedSuggestion: new NoSelection(),
+      suggestions: {
+        type: 'fixed',
+        suggestions: [{ title: 'Only', suggestions: twoSections[0]!.suggestions }]
+      },
+      role: 'option'
+    }
+  })
+
+  await screen.findByRole('option', { name: 'Alpha One' })
+  expect(screen.queryByRole('heading', { name: 'Only' })).toBeNull()
+  expect(screen.queryByRole('heading')).toBeNull()
+})
+
+test('drops sections whose items are all filtered out, including their header', async () => {
+  const user = userEvent.setup()
+  render(CmkSuggestions, {
+    props: {
+      selectedSuggestion: new NoSelection(),
+      suggestions: { type: 'filtered', suggestions: twoSections },
+      role: 'option'
+    }
+  })
+
+  await screen.findByRole('heading', { name: 'Section A' })
+
+  await user.type(screen.getByLabelText('filter'), 'Beta')
+
+  await screen.findByRole('option', { name: 'Beta One' })
+  // Only Section B survives; with a single surviving section, headers are
+  // omitted entirely.
+  expect(screen.queryByRole('heading')).toBeNull()
+  expect(screen.queryByRole('option', { name: 'Alpha One' })).toBeNull()
+  expect(screen.queryByRole('option', { name: 'Alpha Two' })).toBeNull()
+})
+
+test('callback-filtered renders sectioned response with headers when more than one section', async () => {
+  render(CmkSuggestions, {
+    props: {
+      selectedSuggestion: new NoSelection(),
+      suggestions: {
+        type: 'callback-filtered',
+        querySuggestions: async () => new Response(twoSections)
+      },
+      role: 'option'
+    }
+  })
+
+  await screen.findByRole('heading', { name: 'Section A' })
+  await screen.findByRole('heading', { name: 'Section B' })
+  expect(screen.getAllByRole('option')).toHaveLength(4)
+  await screen.findByRole('option', { name: 'Alpha One' })
+  await screen.findByRole('option', { name: 'Beta Two' })
+})
+
+test('callback-filtered omits header when sectioned response has a single section', async () => {
+  render(CmkSuggestions, {
+    props: {
+      selectedSuggestion: new NoSelection(),
+      suggestions: {
+        type: 'callback-filtered',
+        querySuggestions: async () =>
+          new Response([{ title: 'Only', suggestions: twoSections[0]!.suggestions }])
+      },
+      role: 'option'
+    }
+  })
+
+  await screen.findByRole('option', { name: 'Alpha One' })
+  expect(screen.queryByRole('heading', { name: 'Only' })).toBeNull()
+  expect(screen.queryByRole('heading')).toBeNull()
+})
+
+test('keyboard navigation skips headers and clicking a header does not select', async () => {
+  const user = userEvent.setup()
+  const { emitted } = render(CmkSuggestions, {
+    props: {
+      selectedSuggestion: new NoSelection(),
+      suggestions: { type: 'fixed', suggestions: twoSections },
+      role: 'option'
+    }
+  })
+
+  await screen.findByRole('option', { name: 'Alpha One' })
+
+  await user.click(screen.getByRole('heading', { name: 'Section A' }))
+  expect(emitted('select-suggestion')).toBeUndefined()
+
+  await user.click(screen.getByRole('option', { name: 'Beta One' }))
+  expect(emitted('select-suggestion')).toBeTruthy()
+  expect(emitted('select-suggestion')![0]).toEqual([{ name: 'b1', title: 'Beta One' }])
 })

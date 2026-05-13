@@ -13,61 +13,70 @@
 # '.1.3.6.1.4.1.232.22.2.3.1.3.1.11' => 'cpqRackCommonEnclosureFanCondition',
 
 
-from cmk.agent_based.legacy.v0_unstable import (
-    LegacyCheckDefinition,
-    LegacyDiscoveryResult,
+from cmk.agent_based.v2 import (
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Result,
+    Service,
+    SimpleSNMPSection,
+    SNMPTree,
+    State,
+    StringTable,
 )
-from cmk.agent_based.v2 import SNMPTree, StringTable
 from cmk.plugins.hp_blade.lib import DETECT_HP_BLADE
 
-check_info = {}
+_PRESENT_MAP: dict[int, str] = {1: "other", 2: "absent", 3: "present"}
 
-# GENERAL MAPS:
-
-hp_blade_present_map = {1: "other", 2: "absent", 3: "present"}
-hp_blade_status_map = {1: "Other", 2: "Ok", 3: "Degraded", 4: "Failed"}
-
-hp_blade_status2nagios_map = {
-    "Other": 2,
-    "Ok": 0,
-    "Degraded": 1,
-    "Failed": 2,
+_STATUS_MAP: dict[int, tuple[State, str]] = {
+    1: (State.CRIT, "Other"),
+    2: (State.OK, "Ok"),
+    3: (State.WARN, "Degraded"),
+    4: (State.CRIT, "Failed"),
 }
-
-
-def discover_hp_blade_fan(info: StringTable) -> LegacyDiscoveryResult:
-    return [(line[0], {}) for line in info if hp_blade_present_map[int(line[1])] == "present"]
-
-
-def check_hp_blade_fan(item: str, params: object, info: StringTable) -> tuple[int, str]:
-    for line in info:
-        if line[0] == item:
-            present_state = hp_blade_present_map[int(line[1])]
-            if present_state != "present":
-                return (
-                    2,
-                    "FAN was present but is not available anymore"
-                    " (Present state: %s)" % present_state,
-                )
-
-            snmp_state = hp_blade_status_map[int(line[2])]
-            status = hp_blade_status2nagios_map[snmp_state]
-            return (status, "FAN condition is %s" % (snmp_state))
-    return (3, "item not found in snmp data")
 
 
 def parse_hp_blade_fan(string_table: StringTable) -> StringTable:
     return string_table
 
 
-check_info["hp_blade_fan"] = LegacyCheckDefinition(
+snmp_section_hp_blade_fan = SimpleSNMPSection(
     name="hp_blade_fan",
-    parse_function=parse_hp_blade_fan,
     detect=DETECT_HP_BLADE,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.232.22.2.3.1.3.1",
         oids=["3", "8", "11"],
     ),
+    parse_function=parse_hp_blade_fan,
+)
+
+
+def discover_hp_blade_fan(section: StringTable) -> DiscoveryResult:
+    for line in section:
+        if _PRESENT_MAP[int(line[1])] == "present":
+            yield Service(item=line[0])
+
+
+def check_hp_blade_fan(item: str, section: StringTable) -> CheckResult:
+    for line in section:
+        if line[0] != item:
+            continue
+        present_state = _PRESENT_MAP[int(line[1])]
+        if present_state != "present":
+            yield Result(
+                state=State.CRIT,
+                summary=(
+                    f"FAN was present but is not available anymore (Present state: {present_state})"
+                ),
+            )
+            return
+        state, state_readable = _STATUS_MAP[int(line[2])]
+        yield Result(state=state, summary=f"FAN condition is {state_readable}")
+        return
+
+
+check_plugin_hp_blade_fan = CheckPlugin(
+    name="hp_blade_fan",
     service_name="FAN %s",
     discovery_function=discover_hp_blade_fan,
     check_function=check_hp_blade_fan,

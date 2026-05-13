@@ -36,6 +36,7 @@ py_test(
         "//cmk/gui/htmllib:generator",
         "//cmk/gui/userdb",
         "//cmk/gui/utils:compatibility",
+        "//cmk/gui/utils:confirm_with_preview",
         "//cmk/gui/utils:encrypter",
         "//cmk/gui/utils:filter",
         "//cmk/gui/utils:flashed_messages",

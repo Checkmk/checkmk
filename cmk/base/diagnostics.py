@@ -103,11 +103,15 @@ def _mode_create_diagnostics_dump(app: CheckmkBaseApp, options: DiagnosticsModes
         parameters=deserialize_modes_parameters(options),
         loading_result=None,
     )
-    section.section_step("Creating diagnostics dump", verbose=False)
+    logger = ConsoleLogger()
+    logger.section_step("Creating diagnostics dump", verbose=False)
     if dump.tarfile_created:
-        console.info(f"{_format_filepath(dump.tarfile_path.relative_to(cmk.utils.paths.omd_root))}")
+        logger.filepath(
+            dump.tarfile_path.relative_to(cmk.utils.paths.omd_root),
+            verbose=False,
+        )
     else:
-        console.info(f"{_GAP}No dump")
+        logger.message("No dump")
 
 
 # FIXME: This function is out-of-sync with the actual options in cmk.diagostics!
@@ -281,36 +285,55 @@ def create_diagnostics_dump(
 #   |                                                   |_|                |
 #   '----------------------------------------------------------------------'
 
-_GAP = 4 * " "
 
+class ConsoleLogger:
+    _GAP: Final = 4 * " "
 
-def _format_filepath(filepath: Path) -> str:
-    return f"{_GAP}{filepath}"
+    def __init__(self) -> None:
+        self._log = list[str]()
 
+    def _info(self, message: str) -> None:
+        console.info(message)
+        self._log.append(message)
 
-def _format_title(title: str) -> str:
-    return f"{_GAP}{tty.green}{title}{tty.normal}:"
+    def _verbose(self, message: str) -> None:
+        console.verbose(message)
+        self._log.append(message)
 
+    def content(self) -> str:
+        return "\n".join(self._log)
 
-def _format_description(description: str) -> str:
-    return textwrap.fill(
-        description,
-        width=52,
-        initial_indent=2 * _GAP,
-        subsequent_indent=2 * _GAP,
-    )
+    def section_step(self, message: str, *, add_info: str = "", verbose: bool = True) -> None:
+        section.section_step(message, add_info=add_info, verbose=verbose)
+        self._log.append("+ " + message.upper())
 
+    def message(self, message: str) -> None:
+        self._info(f"{self._GAP}{message}")
 
-def _format_error(error: str) -> str:
-    return f"{2 * _GAP}{tty.error} - {error}"
+    def filepath(self, filepath: Path, *, verbose: bool = True) -> None:
+        (self._verbose if verbose else self._info)(f"{self._GAP}{filepath}")
 
+    def title(self, title: str) -> None:
+        self._info(f"{self._GAP}{tty.green}{title}{tty.normal}:")
 
-def _format_warn(warn: str) -> str:
-    return f"{2 * _GAP}{tty.warn} - {warn}"
+    def description(self, description: str) -> None:
+        self._info(
+            textwrap.fill(
+                description,
+                width=52,
+                initial_indent=2 * self._GAP,
+                subsequent_indent=2 * self._GAP,
+            )
+        )
 
+    def info(self, info: str) -> None:
+        self._info(f"{2 * self._GAP}{tty.blue}{tty.bold}INFO{tty.normal} - {info}")
 
-def _format_info(info: str) -> str:
-    return f"{2 * _GAP}{tty.blue}{tty.bold}INFO{tty.normal} - {info}"
+    def warn(self, warn: str) -> None:
+        self._info(f"{2 * self._GAP}{tty.warn} - {warn}")
+
+    def error(self, error: str) -> None:
+        self._info(f"{2 * self._GAP}{tty.error} - {error}")
 
 
 # .
@@ -414,7 +437,7 @@ class DiagnosticsDump:
         diagnostics_dir: Path,
         omd_root: Path,
     ) -> None:
-        self.log = list[str]()
+        self._logger = ConsoleLogger()
         self.dump_folder = diagnostics_dir
         self.tarfile_path = (diagnostics_dir / f"sddump_{uuid.uuid4()}").with_suffix(SUFFIX)
         self.tarfile_created = False
@@ -422,16 +445,8 @@ class DiagnosticsDump:
         self._create_tarfile(elements, omd_root)
         self._cleanup_dump_folder(omd_root)
 
-    def _console(self, message: str, *, verbose: bool = True) -> None:
-        (console.verbose if verbose else console.info)(message)
-        self.log.append(message)
-
-    def _section_step(self, message: str, verbose: bool = True, add_info: str = "") -> None:
-        section.section_step(message, verbose=verbose, add_info=add_info)
-        self.log.append("+ " + message.upper())
-
     def _create_dump_folder(self) -> None:
-        self._section_step("Create dump folder")
+        self._logger.section_step("Create dump folder")
         self.dump_folder.mkdir(parents=True, exist_ok=True)
 
     def _create_tarfile(self, elements: Sequence[ABCDiagnosticsElement], omd_root: Path) -> None:
@@ -452,41 +467,30 @@ class DiagnosticsDump:
 
     def _write_console_output_to_file(self, tmp_dump_folder: Path) -> Path:
         logfile = tmp_dump_folder / f"console_{datetime.now().timestamp()}.log"
-        store.save_text_to_file(logfile, "\n".join(self.log))
+        store.save_text_to_file(logfile, self._logger.content())
         return logfile
 
     def _get_filepaths(
         self, *, elements: Sequence[ABCDiagnosticsElement], omd_root: Path, tmp_dump_folder: Path
     ) -> list[Path]:
-        self._section_step("Collect diagnostics information", verbose=False)
-
+        self._logger.section_step("Collect diagnostics information", verbose=False)
         filepaths = []
         for element in elements:
-            self._console(f"{_format_title(element.title)}")
-            self._console(f"{_format_description(element.description)}")
-
+            self._logger.title(element.title)
+            self._logger.description(element.description)
             try:
                 for filepath in element.add_or_get_files(
                     omd_root=omd_root, tmp_dump_folder=tmp_dump_folder
                 ):
                     filepaths.append(filepath)
-
-            except DiagnosticsElementError as e:
-                self._console(f"{_format_error(str(e))}")
-                continue
-
-            except DiagnosticsElementWarning as e:
-                self._console(f"{_format_warn(str(e))}")
-                continue
-
             except DiagnosticsElementInfo as e:
-                self._console(f"{_format_info(str(e))}")
-                continue
-
+                self._logger.info(str(e))
+            except DiagnosticsElementWarning as e:
+                self._logger.warn(str(e))
+            except DiagnosticsElementError as e:
+                self._logger.error(str(e))
             except Exception:
-                self._console(f"{_format_error(traceback.format_exc())}")
-                continue
-
+                self._logger.error(traceback.format_exc())
         return filepaths
 
     def _cleanup_dump_folder(self, omd_root: Path) -> None:
@@ -499,11 +503,11 @@ class DiagnosticsDump:
             key=lambda t: t[0],
         )[: -self._keep_num_dumps]
 
-        self._section_step(
+        self._logger.section_step(
             "Cleanup dump folder", add_info=f"keep last {self._keep_num_dumps} dumps"
         )
         for _mtime, filepath in dumps:
-            self._console(f"{_format_filepath(filepath.relative_to(omd_root))}", verbose=True)
+            self._logger.filepath(filepath.relative_to(omd_root))
             filepath.unlink(missing_ok=True)
 
 
@@ -1069,7 +1073,7 @@ class MKPFindTextDiagnosticsElement(ABCDiagnosticsElementJSONDump):
                 json.loads(subprocess.check_output(["mkp", "find", "--all", "--json"], text=True))
             )
         except subprocess.CalledProcessError as e:
-            console.info(f"{_format_error(str(e.stderr))}\n")
+            ConsoleLogger().error(str(e.stderr))
             return {}
 
 
@@ -1098,7 +1102,7 @@ class MKPShowTextDiagnosticsElement(ABCDiagnosticsElementJSONDump):
                 json.loads(subprocess.check_output(["mkp", "show-all", "--json"], text=True))
             )
         except subprocess.CalledProcessError as e:
-            console.info(f"{_format_error(str(e.stderr))}\n")
+            ConsoleLogger().error(str(e.stderr))
             return {}
 
 
@@ -1124,7 +1128,7 @@ class MKPListTextDiagnosticsElement(ABCDiagnosticsElementJSONDump):
         try:
             return dict(json.loads(subprocess.check_output(["mkp", "list", "--json"], text=True)))
         except subprocess.CalledProcessError as e:
-            console.info(f"{_format_error(str(e.stderr))}\n")
+            ConsoleLogger().error(str(e.stderr))
             return {}
 
 
@@ -1346,8 +1350,7 @@ class ABCCheckmkFilesDiagnosticsElement(ABCDiagnosticsElement):
         passwords_redacted = redact_passwords_in_file(tmp_filepath, rel_filepath)
 
         if passwords_redacted:
-            redact_message = f"Redacted {passwords_redacted} passwords in file {rel_filepath}"
-            console.info(f"{_format_info(redact_message)}")
+            ConsoleLogger().info(f"Redacted {passwords_redacted} passwords in file {rel_filepath}")
 
         return tmp_filepath
 
@@ -1763,7 +1766,7 @@ class CMCDumpDiagnosticsElement(ABCDiagnosticsElement):
                 )
 
             except subprocess.CalledProcessError as e:
-                console.info(f"{_format_error(str(e))}")
+                ConsoleLogger().error(str(e))
                 continue
 
             filepath = tmpdir.joinpath(f"{self.ident}{suffix}")

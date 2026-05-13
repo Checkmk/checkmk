@@ -3,17 +3,32 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 
-from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
-from cmk.agent_based.v2 import any_of, equals, render, SNMPTree, startswith
-from cmk.legacy_includes.cpu_util import check_cpu_util
+import time
+from collections.abc import Mapping
+from typing import Any
 
-check_info = {}
+from cmk.agent_based.v2 import (
+    any_of,
+    check_levels,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    equals,
+    get_value_store,
+    render,
+    Service,
+    SimpleSNMPSection,
+    SNMPTree,
+    startswith,
+    StringTable,
+)
+from cmk.plugins.lib.cpu_util import check_cpu_util
+
+Section = Mapping[str, int]
 
 
-def parse_brocade_sys(string_table):
+def parse_brocade_sys(string_table: StringTable) -> Section | None:
     try:
         return {
             "cpu_util": int(string_table[0][0]),
@@ -23,59 +38,7 @@ def parse_brocade_sys(string_table):
         return None
 
 
-#   .--Memory--------------------------------------------------------------.
-#   |               __  __                                                 |
-#   |              |  \/  | ___ _ __ ___   ___  _ __ _   _                 |
-#   |              | |\/| |/ _ \ '_ ` _ \ / _ \| '__| | | |                |
-#   |              | |  | |  __/ | | | | | (_) | |  | |_| |                |
-#   |              |_|  |_|\___|_| |_| |_|\___/|_|   \__, |                |
-#   |                                                |___/                 |
-#   '----------------------------------------------------------------------'
-
-
-def discover_brocade_sys_mem(parsed):
-    yield None, {}
-
-
-def check_brocade_sys_mem(item, params, parsed):
-    yield check_levels(
-        parsed["mem_used_percent"],
-        "mem_used_percent",
-        params["levels"],
-        human_readable_func=render.percent,
-    )
-
-
-check_info["brocade_sys.mem"] = LegacyCheckDefinition(
-    name="brocade_sys_mem",
-    service_name="Memory",
-    sections=["brocade_sys"],
-    discovery_function=discover_brocade_sys_mem,
-    check_function=check_brocade_sys_mem,
-    check_ruleset_name="memory_relative",
-    check_default_parameters={"levels": None},
-)
-
-# .
-#   .--CPU-----------------------------------------------------------------.
-#   |                           ____ ____  _   _                           |
-#   |                          / ___|  _ \| | | |                          |
-#   |                         | |   | |_) | | | |                          |
-#   |                         | |___|  __/| |_| |                          |
-#   |                          \____|_|    \___/                           |
-#   |                                                                      |
-#   '----------------------------------------------------------------------'
-
-
-def discover_brocade_sys(parsed):
-    return [(None, {})]
-
-
-def check_brocade_sys(item, params, parsed):
-    return check_cpu_util(parsed["cpu_util"], params)
-
-
-check_info["brocade_sys"] = LegacyCheckDefinition(
+snmp_section_brocade_sys = SimpleSNMPSection(
     name="brocade_sys",
     detect=any_of(
         startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.1588.2.1.1"),
@@ -86,8 +49,52 @@ check_info["brocade_sys"] = LegacyCheckDefinition(
         oids=["1", "6"],
     ),
     parse_function=parse_brocade_sys,
+)
+
+
+def discover_brocade_sys_mem(section: Section) -> DiscoveryResult:
+    yield Service()
+
+
+def check_brocade_sys_mem(params: Mapping[str, Any], section: Section) -> CheckResult:
+    levels = params["levels"]
+    yield from check_levels(
+        section["mem_used_percent"],
+        metric_name="mem_used_percent",
+        levels_upper=("fixed", levels) if levels is not None else ("no_levels", None),
+        render_func=render.percent,
+    )
+
+
+check_plugin_brocade_sys_mem = CheckPlugin(
+    name="brocade_sys_mem",
+    service_name="Memory",
+    sections=["brocade_sys"],
+    discovery_function=discover_brocade_sys_mem,
+    check_function=check_brocade_sys_mem,
+    check_ruleset_name="memory_relative",
+    check_default_parameters={"levels": None},
+)
+
+
+def discover_brocade_sys(section: Section) -> DiscoveryResult:
+    yield Service()
+
+
+def check_brocade_sys(params: Mapping[str, Any], section: Section) -> CheckResult:
+    yield from check_cpu_util(
+        util=section["cpu_util"],
+        params=params,
+        value_store=get_value_store(),
+        this_time=time.time(),
+    )
+
+
+check_plugin_brocade_sys = CheckPlugin(
+    name="brocade_sys",
     service_name="CPU utilization",
     discovery_function=discover_brocade_sys,
     check_function=check_brocade_sys,
     check_ruleset_name="cpu_utilization",
+    check_default_parameters={},
 )

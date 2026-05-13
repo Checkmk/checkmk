@@ -3,67 +3,78 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
-# mypy: disable-error-code="var-annotated"
+from typing import NamedTuple
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import SNMPTree
-from cmk.legacy_includes.temperature import check_temperature
+from cmk.agent_based.v2 import (
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    get_value_store,
+    Result,
+    Service,
+    SimpleSNMPSection,
+    SNMPTree,
+    State,
+    StringTable,
+)
 from cmk.plugins.avaya.lib import DETECT_AVAYA
+from cmk.plugins.lib.temperature import check_temperature, TempParamType
 
-check_info = {}
+
+class Section(NamedTuple):
+    fanstate: list[str]
+    temp: list[str]
 
 
-def parse_avaya_88xx(string_table):
-    parsed = {"fanstate": [], "temp": []}
+_FAN_STATE_MAP: dict[str, tuple[State, str]] = {
+    "1": (State.UNKNOWN, "Reported Unknown"),
+    "2": (State.OK, "Running"),
+    "3": (State.CRIT, "Down"),
+}
+
+
+def parse_avaya_88xx(string_table: StringTable) -> Section:
+    section = Section(fanstate=[], temp=[])
     for line in string_table:
-        parsed["fanstate"].append(line[0])
-        parsed["temp"].append(line[1])
-
-    return parsed
-
-
-def discover_avaya_88xx_fan(parsed):
-    for idx, _state in enumerate(parsed["fanstate"]):
-        yield str(idx), None
+        section.fanstate.append(line[0])
+        section.temp.append(line[1])
+    return section
 
 
-def check_avaya_88xx_fan(item, _no_params, parsed):
-    fans = parsed["fanstate"]
-    if len(fans) < int(item):
-        return None
-
-    map_fan_state = {
-        "1": ("Reported Unknown", 3),
-        "2": ("Running", 0),
-        "3": ("Down", 2),
-    }
-    text, state = map_fan_state.get(fans[int(item)], (None, None))
-    if not text:
-        return None
-
-    return state, text
-
-
-def discover_avaya_88xx(parsed):
-    sensors = parsed["temp"]
-    for idx, temp in enumerate(sensors):
+def discover_avaya_88xx(section: Section) -> DiscoveryResult:
+    for idx, temp in enumerate(section.temp):
         if temp:
-            yield str(idx), {}
+            yield Service(item=str(idx))
 
 
-def check_avaya_88xx(item, params, parsed):
-    sensors = parsed["temp"]
-    if len(sensors) < int(item):
-        return None
-
-    reading = sensors[int(item)]
+def check_avaya_88xx(item: str, params: TempParamType, section: Section) -> CheckResult:
+    if len(section.temp) < int(item):
+        return
+    reading = section.temp[int(item)]
     if reading:
-        return check_temperature(int(reading), params, "avaya_88xx_%s" % item)
-    return None
+        yield from check_temperature(
+            int(reading),
+            params,
+            unique_name=f"avaya_88xx_{item}",
+            value_store=get_value_store(),
+        )
 
 
-check_info["avaya_88xx"] = LegacyCheckDefinition(
+def discover_avaya_88xx_fan(section: Section) -> DiscoveryResult:
+    for idx, _state in enumerate(section.fanstate):
+        yield Service(item=str(idx))
+
+
+def check_avaya_88xx_fan(item: str, section: Section) -> CheckResult:
+    if len(section.fanstate) < int(item):
+        return
+    if (entry := _FAN_STATE_MAP.get(section.fanstate[int(item)])) is None:
+        return
+    state, text = entry
+    yield Result(state=state, summary=text)
+
+
+snmp_section_avaya_88xx = SimpleSNMPSection(
     name="avaya_88xx",
     detect=DETECT_AVAYA,
     # RAPID-CITY MIB,
@@ -72,6 +83,11 @@ check_info["avaya_88xx"] = LegacyCheckDefinition(
         oids=["2", "3"],
     ),
     parse_function=parse_avaya_88xx,
+)
+
+
+check_plugin_avaya_88xx = CheckPlugin(
+    name="avaya_88xx",
     service_name="Temperature Fan %s",
     discovery_function=discover_avaya_88xx,
     check_function=check_avaya_88xx,
@@ -81,7 +97,8 @@ check_info["avaya_88xx"] = LegacyCheckDefinition(
     },
 )
 
-check_info["avaya_88xx.fan"] = LegacyCheckDefinition(
+
+check_plugin_avaya_88xx_fan = CheckPlugin(
     name="avaya_88xx_fan",
     service_name="Fan %s Status",
     sections=["avaya_88xx"],

@@ -3,9 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-any-return"
-# mypy: disable-error-code="no-untyped-def"
-
 # Author: Lars Michelsen <lm@mathias-kettner.de>
 
 # Blades:
@@ -25,82 +22,87 @@
 # '.1.3.6.1.4.1.232.22.2.4.1.1.1.25' => 'cpqRackServerBladePowered',
 
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import SNMPTree, StringTable
+from cmk.agent_based.v2 import (
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Result,
+    Service,
+    SimpleSNMPSection,
+    SNMPTree,
+    State,
+    StringTable,
+)
 from cmk.plugins.hp_blade.lib import DETECT_HP_BLADE
 
-check_info = {}
+_PRESENT_MAP: dict[int, str] = {1: "other", 2: "absent", 3: "present"}
 
-# GENERAL MAPS:
-
-hp_blade_present_map = {1: "other", 2: "absent", 3: "present"}
-hp_blade_status_map = {1: "Other", 2: "Ok", 3: "Degraded", 4: "Failed"}
-
-hp_blade_status2nagios_map = {
-    "Other": 2,
-    "Ok": 0,
-    "Degraded": 1,
-    "Failed": 2,
+_STATUS_MAP: dict[int, tuple[State, str]] = {
+    1: (State.CRIT, "Other"),
+    2: (State.OK, "Ok"),
+    3: (State.WARN, "Degraded"),
+    4: (State.CRIT, "Failed"),
 }
-
-
-def saveint(i: object) -> int:
-    """Tries to cast a string to an integer and return it. In case this
-    fails, it returns 0.
-
-    Advice: Please don't use this function in new code. It is understood as
-    bad style these days, because in case you get 0 back from this function,
-    you can not know whether it is really 0 or something went wrong."""
-    try:
-        return int(i)  # type: ignore[call-overload]
-    except (TypeError, ValueError):
-        return 0
-
-
-def discover_hp_blade_blades(info):
-    return [
-        (line[0], None) for line in info if hp_blade_present_map.get(int(line[1]), "") == "present"
-    ]
-
-
-def check_hp_blade_blades(item, params, info):
-    for line in info:
-        if line[0] == item:
-            present_state = hp_blade_present_map[int(line[1])]
-            if present_state != "present":
-                return (
-                    2,
-                    "Blade was present but is not available anymore"
-                    " (Present state: %s)" % present_state,
-                )
-
-            # Status field can be an empty string.
-            # Seems not to be implemented. The MIB file tells me that this value
-            # should represent a state but is empty. So set it to "fake" OK and
-            # display the other gathered information.
-            state = saveint(line[2] or "2")
-
-            snmp_state = hp_blade_status_map[state]
-            status = hp_blade_status2nagios_map[snmp_state]
-            return (
-                status,
-                f"Blade status is {snmp_state} (Product: {line[3]} Name: {line[4]} S/N: {line[5]})",
-            )
-    return (3, "item not found in snmp data")
 
 
 def parse_hp_blade_blades(string_table: StringTable) -> StringTable:
     return string_table
 
 
-check_info["hp_blade_blades"] = LegacyCheckDefinition(
+snmp_section_hp_blade_blades = SimpleSNMPSection(
     name="hp_blade_blades",
-    parse_function=parse_hp_blade_blades,
     detect=DETECT_HP_BLADE,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.232.22.2.4.1.1.1",
         oids=["3", "12", "21", "17", "4", "16"],
     ),
+    parse_function=parse_hp_blade_blades,
+)
+
+
+def discover_hp_blade_blades(section: StringTable) -> DiscoveryResult:
+    for line in section:
+        if _PRESENT_MAP.get(int(line[1])) == "present":
+            yield Service(item=line[0])
+
+
+def check_hp_blade_blades(item: str, section: StringTable) -> CheckResult:
+    for line in section:
+        if line[0] != item:
+            continue
+        present_state = _PRESENT_MAP[int(line[1])]
+        if present_state != "present":
+            yield Result(
+                state=State.CRIT,
+                summary=(
+                    f"Blade was present but is not available anymore"
+                    f" (Present state: {present_state})"
+                ),
+            )
+            return
+
+        # Status field can be an empty string.
+        # Seems not to be implemented. The MIB file tells me that this value
+        # should represent a state but is empty. So set it to "fake" OK and
+        # display the other gathered information.
+        try:
+            raw_state = int(line[2])
+        except (TypeError, ValueError):
+            raw_state = 2
+
+        state, state_readable = _STATUS_MAP[raw_state]
+        yield Result(
+            state=state,
+            summary=(
+                f"Blade status is {state_readable} "
+                f"(Product: {line[3]} Name: {line[4]} S/N: {line[5]})"
+            ),
+        )
+        return
+
+
+check_plugin_hp_blade_blades = CheckPlugin(
+    name="hp_blade_blades",
     service_name="Blade %s",
     discovery_function=discover_hp_blade_blades,
     check_function=check_hp_blade_blades,

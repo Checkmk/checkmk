@@ -293,11 +293,21 @@ def wait_until_host_has_services(
     timeout: int = 120,
     interval: int = 20,
 ) -> None:
-    wait_until(
-        lambda: _query_hosts_service_count(site, hostname) > n_services_min,
-        timeout=timeout,
-        interval=interval,
-    )
+    try:
+        wait_until(
+            lambda: _query_hosts_service_count(site, hostname) > n_services_min,
+            timeout=timeout,
+            interval=interval,
+        )
+    except TimeoutError:
+        logger.error(
+            "wait_until_host_has_services timed out for host %r on site %r. "
+            "Dumping diagnostics:\n%s",
+            hostname,
+            site.id,
+            _wait_for_services_diagnostics(site, hostname),
+        )
+        raise
 
 
 def _query_hosts_service_count(site: Site, hostname: HostName) -> int:
@@ -309,6 +319,51 @@ def _query_hosts_service_count(site: Site, hostname: HostName) -> int:
         ).ok
         else 0
     )
+
+
+def _wait_for_services_diagnostics(site: Site, hostname: HostName) -> str:
+    """Collect diagnostics to explain why services never showed up on the host.
+
+    The typical cause is the central site's core being unreachable (see
+    CMK-34867), which the bare TimeoutError from `wait_until` does not
+    surface. Dump enough state to tell apart "core dead" from "discovery
+    never produced services" from "host not created yet".
+    """
+    parts: list[str] = []
+    try:
+        omd_status = site.omd("status")
+        parts.append(f"omd status (rc={omd_status.returncode}):\n{omd_status.stdout}")
+    except Exception as exc:
+        parts.append(f"Could not run 'omd status': {exc!r}")
+    try:
+        host_response = site.openapi.get(f"objects/host_config/{hostname}")
+        parts.append(
+            f"GET host_config/{hostname} -> {host_response.status_code}: {host_response.text[:500]}"
+        )
+    except Exception as exc:
+        parts.append(f"Could not read host_config: {exc!r}")
+    try:
+        services_response = site.openapi.get(f"objects/host/{hostname}/collections/services")
+        parts.append(
+            f"GET host/{hostname}/collections/services -> {services_response.status_code}: "
+            f"{services_response.text[:500]}"
+        )
+    except Exception as exc:
+        parts.append(f"Could not read monitoring services: {exc!r}")
+    try:
+        pending = site.openapi.changes.get_pending()
+        parts.append(f"Pending changes ({len(pending)}): {pending}")
+    except Exception as exc:
+        parts.append(f"Could not list pending changes: {exc!r}")
+    for log_rel_path, tail_lines in (("var/log/cmc.log", 30), ("var/log/web.log", 50)):
+        try:
+            log_lines = site.read_file(log_rel_path).splitlines()
+            parts.append(
+                f"Last {tail_lines} lines of {log_rel_path}:\n" + "\n".join(log_lines[-tail_lines:])
+            )
+        except Exception as exc:
+            parts.append(f"Could not read {log_rel_path}: {exc!r}")
+    return "\n\n".join(parts)
 
 
 def wait_for_baking_job(central_site: Site, expected_start_time: float) -> None:

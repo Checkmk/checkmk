@@ -3,101 +3,90 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
-
 # FIXME:
 # - no camel case in check parameters
 # - use friendly output of values. Output
 #   "Ingress Dequeue Packets" instead of "brcdTMStatsIngressDequeuePkts"
 
 
-import re
 import time
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import get_rate, get_value_store, SNMPTree, StringTable
+from cmk.agent_based.v2 import (
+    check_levels,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    get_rate,
+    get_value_store,
+    Service,
+    SimpleSNMPSection,
+    SNMPTree,
+    StringTable,
+)
 from cmk.plugins.brocade.lib import DETECT_MLX
 
-LEVELS = {
-    "brcdTMStatsTotalIngressPktsCnt": (1000, 10000),
-    "brcdTMStatsIngressEnqueuePkts": (1000, 10000),
-    "brcdTMStatsEgressEnqueuePkts": (1000, 10000),
-    "brcdTMStatsIngressDequeuePkts": (1000, 10000),
-    "brcdTMStatsIngressTotalQDiscardPkts": (1000, 10000),
-    "brcdTMStatsIngressOldestDiscardPkts": (1000, 10000),
-    "brcdTMStatsEgressDiscardPkts": (1000, 10000),
-}
+_LEVELS = (1000.0, 10000.0)
 
-
-check_info = {}
-
-
-def discover_brocade_tm(info):
-    inventory = []
-    for line in info:
-        inventory.append((line[0], None))
-    return inventory
-
-
-def check_brocade_tm(item, _no_params, info):
-    for line in info:
-        if line[0] == item:
-            tm = {}
-
-            tm["TotalIngressPktsCnt"] = line[1]
-            tm["IngressEnqueuePkts"] = line[2]
-            tm["EgressEnqueuePkts"] = line[3]
-            tm["IngressDequeuePkts"] = line[4]
-            tm["IngressTotalQDiscardPkts"] = line[5]
-            tm["IngressOldestDiscardPkts"] = line[6]
-            tm["EgressDiscardPkts"] = line[7]
-
-            now = time.time()
-            infotext = ""
-            perfdata = []
-            overall_state = 0
-
-            value_store = get_value_store()
-            for name, counter in tm.items():
-                rate = get_rate(
-                    value_store, f"{name}.{item}", now, int(counter), raise_overflow=True
-                )
-
-                warn, crit = LEVELS["brcdTMStats" + name]
-                if re.search("Discard", name):
-                    if rate > crit:
-                        state = 2
-                        sym = "(!!)"
-                    elif rate > warn:
-                        state = 1
-                        sym = "(!)"
-                    else:
-                        state = 0
-                        sym = ""
-                else:
-                    state = 0
-                    sym = ""
-                infotext += f"{name}: {rate:.1f}{sym}, "
-                perfdata.append((name, rate, warn, crit))
-                overall_state = max(overall_state, state)
-
-            return (overall_state, infotext, perfdata)
-
-    return (3, "Interface not found")
+_COUNTERS = (
+    "TotalIngressPktsCnt",
+    "IngressEnqueuePkts",
+    "EgressEnqueuePkts",
+    "IngressDequeuePkts",
+    "IngressTotalQDiscardPkts",
+    "IngressOldestDiscardPkts",
+    "EgressDiscardPkts",
+)
 
 
 def parse_brocade_tm(string_table: StringTable) -> StringTable:
     return string_table
 
 
-check_info["brocade_tm"] = LegacyCheckDefinition(
+def discover_brocade_tm(section: StringTable) -> DiscoveryResult:
+    for line in section:
+        yield Service(item=line[0])
+
+
+def check_brocade_tm(item: str, section: StringTable) -> CheckResult:
+    for line in section:
+        if line[0] != item:
+            continue
+        now = time.time()
+        value_store = get_value_store()
+        for name, counter in zip(_COUNTERS, line[1:]):
+            rate = get_rate(value_store, f"{name}.{item}", now, int(counter), raise_overflow=True)
+            metric_name = f"brcdTMStats{name}"
+            if "Discard" in name:
+                yield from check_levels(
+                    rate,
+                    metric_name=metric_name,
+                    levels_upper=("fixed", _LEVELS),
+                    label=name,
+                    render_func=lambda v: f"{v:.1f}",
+                )
+            else:
+                yield from check_levels(
+                    rate,
+                    metric_name=metric_name,
+                    label=name,
+                    render_func=lambda v: f"{v:.1f}",
+                )
+        return
+
+
+snmp_section_brocade_tm = SimpleSNMPSection(
     name="brocade_tm",
-    parse_function=parse_brocade_tm,
     detect=DETECT_MLX,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.1991.1.14.2.1.2.2.1",
         oids=["3", "4", "5", "6", "9", "11", "13", "15"],
     ),
+    parse_function=parse_brocade_tm,
+)
+
+
+check_plugin_brocade_tm = CheckPlugin(
+    name="brocade_tm",
     service_name="TM %s",
     discovery_function=discover_brocade_tm,
     check_function=check_brocade_tm,

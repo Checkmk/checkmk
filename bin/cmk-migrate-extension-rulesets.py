@@ -94,6 +94,12 @@ def _parse_args(args: Sequence[str]) -> argparse.Namespace:
         help="Logging level",
     )
 
+    parser.add_argument(
+        "--include-bakery",
+        action="store_true",
+        help="Include the migrations of bakery rulesets",
+    )
+
     return parser.parse_args(args)
 
 
@@ -137,9 +143,18 @@ def _mkps_modules(mkps: Sequence[str]) -> set[str]:
     return modules
 
 
-def _discover_load_plugins(modules: set[str]) -> set[str]:
+def _discover_load_plugins(modules: set[str], include_bakery: bool) -> set[str]:
+    used_entry_points = (
+        entry_point_prefixes()
+        if include_bakery
+        else {
+            type_: prefix
+            for type_, prefix in entry_point_prefixes().items()
+            if type_ is not AgentConfig
+        }
+    )
     discovered = discover_plugins_from_modules(
-        entry_point_prefixes(),
+        used_entry_points,
         modules,
         skip_wrong_types=False,
         raise_errors=True,
@@ -217,7 +232,7 @@ def migrate_extension_rulesets(args: argparse.Namespace) -> int:
     if not modules:
         return 0
 
-    affected_ruleset_names = _discover_load_plugins(modules)
+    affected_ruleset_names = _discover_load_plugins(modules, include_bakery=args.include_bakery)
     if not affected_ruleset_names:
         logger.info("No rule sets contained in enabled extensions")
         return 0

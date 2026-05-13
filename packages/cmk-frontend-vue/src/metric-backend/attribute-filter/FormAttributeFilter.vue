@@ -8,7 +8,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 import usei18n from '@/lib/i18n'
 
 import AttributeFilterPill from './AttributeFilterPill.vue'
-import type { AttributeFilterModel } from './types'
+import type { AttributeFilterModel, ConnectedCondition } from './types'
 
 const { _t } = usei18n()
 
@@ -17,10 +17,20 @@ defineProps<{
 }>()
 
 const model = defineModel<AttributeFilterModel>({ default: () => [] })
+
+function removeCondition(target: ConnectedCondition): void {
+  model.value = model.value.filter((c) => c !== target)
+}
 </script>
 
 <template>
   <div role="group" :aria-label="ariaLabel ?? _t('Attribute filter')">
-    <AttributeFilterPill v-for="entry in model" :key="entry.id" :condition="entry" />
+    <AttributeFilterPill
+      v-for="entry in model"
+      :key="entry.id"
+      :condition="entry"
+      removable
+      @remove="removeCondition(entry)"
+    />
   </div>
 </template>

@@ -7,12 +7,26 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import { computed } from 'vue'
 
+import usei18n from '@/lib/i18n'
+
+import CmkIconButton from '@/components/CmkIconButton.vue'
+
 import { attributeTypePrefix, operatorPhrase, pillLabel } from './pill-label'
 import type { AttributeCondition } from './types'
 
-const props = defineProps<{
-  condition: AttributeCondition
-  ariaLabel?: string | undefined
+const { _t } = usei18n()
+
+const props = withDefaults(
+  defineProps<{
+    condition: AttributeCondition
+    ariaLabel?: string | undefined
+    removable?: boolean
+  }>(),
+  { removable: false }
+)
+
+const emit = defineEmits<{
+  (e: 'remove'): void
 }>()
 
 const fullLabel = computed(() => pillLabel(props.condition))
@@ -49,11 +63,23 @@ const isExistence = computed(
         >{{ condition.value }}</span
       >
     </span>
+    <CmkIconButton
+      v-if="removable"
+      class="metric-backend-attribute-filter-pill__remove"
+      name="close"
+      size="small"
+      :title="_t('Remove condition')"
+      :aria-label="_t('Remove condition')"
+      @mousedown.prevent
+      @click.stop="emit('remove')"
+    />
   </span>
 </template>
 
 <style scoped>
 .metric-backend-attribute-filter-pill {
+  display: inline-flex;
+  align-items: stretch;
   background: var(--ux-theme-3);
   border: 1px solid var(--ux-theme-4);
   padding-right: var(--dimension-3);
@@ -62,6 +88,12 @@ const isExistence = computed(
 
 .metric-backend-attribute-filter-pill__segment {
   padding: var(--dimension-2) var(--dimension-3);
+}
+
+.metric-backend-attribute-filter-pill__remove {
+  display: inline-flex;
+  align-items: center;
+  padding: 0 var(--dimension-2);
 }
 
 /* Attribute-type prefix and operator render as dimmed/italic metadata around key/value. */

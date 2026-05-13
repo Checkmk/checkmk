@@ -20,6 +20,20 @@ _STRING_TABLE: StringTable = [
     ["3", "host106", "2", "2", "online"],
 ]
 
+# 7 online hosts + 3 offline hosts — used to test offline thresholds
+_STRING_TABLE_WITH_OFFLINE: StringTable = [
+    ["0", "host1", "2", "2", "online"],
+    ["1", "host2", "2", "2", "online"],
+    ["2", "host3", "2", "2", "online"],
+    ["3", "host4", "2", "2", "online"],
+    ["4", "host5", "2", "2", "online"],
+    ["5", "host6", "2", "2", "online"],
+    ["6", "host7", "2", "2", "online"],
+    ["7", "host8", "2", "2", "offline"],
+    ["8", "host9", "2", "2", "offline"],
+    ["9", "host10", "2", "2", "offline"],
+]
+
 
 @pytest.mark.parametrize(
     "string_table, expected_discoveries",
@@ -126,6 +140,40 @@ def test_discover_ibm_svc_host(
                 Metric("degraded", 0.0),
                 Result(state=State.OK, summary="Offline: 0"),
                 Metric("offline", 0.0),
+                Result(state=State.OK, summary="Other: 0"),
+                Metric("other", 0.0),
+            ],
+        ),
+        # offline_hosts warn level: offline count exceeds warn but not crit
+        (
+            {"offline_hosts": (2, 5)},
+            _STRING_TABLE_WITH_OFFLINE,
+            [
+                Result(state=State.OK, summary="Active: 7"),
+                Metric("active", 7.0),
+                Result(state=State.OK, summary="Inactive: 0"),
+                Metric("inactive", 0.0),
+                Result(state=State.OK, summary="Degraded: 0"),
+                Metric("degraded", 0.0),
+                Result(state=State.WARN, summary="Offline: 3 (warn/crit at 2/5)"),
+                Metric("offline", 3.0, levels=(2.0, 5.0)),
+                Result(state=State.OK, summary="Other: 0"),
+                Metric("other", 0.0),
+            ],
+        ),
+        # offline_crit_takes_priority_over_warn: crit=3 matches offline count — must yield CRIT, not WARN
+        (
+            {"offline_hosts": (2, 3)},
+            _STRING_TABLE_WITH_OFFLINE,
+            [
+                Result(state=State.OK, summary="Active: 7"),
+                Metric("active", 7.0),
+                Result(state=State.OK, summary="Inactive: 0"),
+                Metric("inactive", 0.0),
+                Result(state=State.OK, summary="Degraded: 0"),
+                Metric("degraded", 0.0),
+                Result(state=State.CRIT, summary="Offline: 3 (warn/crit at 2/3)"),
+                Metric("offline", 3.0, levels=(2.0, 3.0)),
                 Result(state=State.OK, summary="Other: 0"),
                 Metric("other", 0.0),
             ],

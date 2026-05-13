@@ -71,7 +71,7 @@ def check_azure_usagedetails(item: str, params: Mapping[str, Any], section: Sect
     yield Result(state=State.OK, summary=f"Subscription: {data['subscription_id']}")
 
 
-agent_section_azure_virtualmachines = AgentSection(
+agent_section_azure_usagedetails = AgentSection(
     name="azure_v2_usagedetails",
     parse_function=parse_azure_usagedetails,
 )

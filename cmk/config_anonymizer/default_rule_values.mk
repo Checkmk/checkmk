@@ -7728,7 +7728,7 @@ static_checks['azure_traffic_manager_qps'] = [
 static_checks.setdefault('azure_usagedetails', [])
 
 static_checks['azure_usagedetails'] = [
-{'id': 'ca839c25-154b-4ec4-95a8-ec3f0dce9998', 'value': ('azure_usagedetails', '', {}), 'condition': {}, 'options': {'disabled': False}},
+{'id': 'ca839c25-154b-4ec4-95a8-ec3f0dce9998', 'value': ('azure_usagedetails', 'item_name', {}), 'condition': {}, 'options': {'disabled': False}},
 ] + static_checks['azure_usagedetails']
 
 

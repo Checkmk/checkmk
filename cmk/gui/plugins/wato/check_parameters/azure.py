@@ -651,43 +651,6 @@ rulespec_registry.register(
 )
 
 
-def _parameter_valuespec_azure_usagedetails() -> Dictionary:
-    return Dictionary(
-        help=_(
-            "To obtain the data required for this check, please configure"
-            ' the data source program "Microsoft Azure".'
-        ),
-        elements=[
-            (
-                "levels",
-                Tuple(
-                    title=_("Upper levels on daily costs"),
-                    help=_(
-                        "The levels on costs will be considered to be in the currency"
-                        " corresponding to the reported data."
-                    ),
-                    elements=[
-                        Float(title=_("Warning at")),
-                        Float(title=_("Critical at")),
-                    ],
-                ),
-            ),
-        ],
-    )
-
-
-rulespec_registry.register(
-    CheckParameterRulespecWithItem(
-        check_group_name="azure_usagedetails",
-        group=RulespecGroupCheckParametersApplications,
-        item_spec=lambda: TextInput(title=_("Service Type")),
-        match_type="dict",
-        parameter_valuespec=_parameter_valuespec_azure_usagedetails,
-        title=lambda: _("Azure usage details (costs) (deprecated)"),
-    )
-)
-
-
 def _parameter_valuespec_storage() -> Dictionary:
     return Dictionary(
         title=_("Levels storage"),

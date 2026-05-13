@@ -273,12 +273,36 @@ SECTION = nvidia_smi.Section(
 )
 
 
+EMPTY_SECTION = nvidia_smi.Section(
+    timestamp=None,
+    driver_version=None,
+    cuda_version=None,
+    attached_gpus=None,
+    gpus={},
+)
+
+
+# linux_no_devices and windows_nvidia_smi_missing capture verbatim agent
+# outputs that today reach parse_nvidia_smi as non-XML and used to crash it
+# with xml.etree.ElementTree.ParseError:
+#   * linux_no_devices: SUP-28831 — RHEL host with installed nvidia-smi but
+#     no visible GPU returns "No devices were found".
+#   * windows_nvidia_smi_missing: crash group 3616 — Windows agent plugin
+#     emits a "not found in:" error block when nvidia-smi.exe is absent.
 @pytest.mark.parametrize(
     "string_table, expected_result",
     [
-        (
-            STRING_TABLE,
-            SECTION,
+        pytest.param(STRING_TABLE, SECTION, id="valid_xml"),
+        pytest.param([["No devices were found"]], EMPTY_SECTION, id="linux_no_devices"),
+        pytest.param(
+            [
+                ["ERROR: nvidia-smi.exe was not found in:"],
+                ["-  (configured path)"],
+                ["- C:\\Program Files\\NVIDIA Corporation\\NVSMI\\nvidia-smi.exe (default path)"],
+                ["- system PATH"],
+            ],
+            EMPTY_SECTION,
+            id="windows_nvidia_smi_missing",
         ),
     ],
 )
@@ -287,33 +311,6 @@ def test_parse_nvidia_smi(
     expected_result: nvidia_smi.Section,
 ) -> None:
     assert nvidia_smi.parse_nvidia_smi(string_table) == expected_result
-
-
-# Inputs captured verbatim from real agents that emit non-XML on the nvidia_smi
-# section. They must be tolerated, not crash the parser with xml.etree.ParseError.
-#   * linux_no_devices: SUP-28831 — RHEL host with installed nvidia-smi but no
-#     visible GPU returns "No devices were found".
-#   * windows_nvidia_smi_missing: crash group 3616 — Windows agent plugin emits
-#     a "not found in:" error block when nvidia-smi.exe is absent.
-@pytest.mark.xfail(strict=True, reason="Crash group 3616: ParseError on non-XML nvidia-smi output")
-@pytest.mark.parametrize(
-    "string_table",
-    [
-        pytest.param([["No devices were found"]], id="linux_no_devices"),
-        pytest.param(
-            [
-                ["ERROR: nvidia-smi.exe was not found in:"],
-                ["-  (configured path)"],
-                ["- C:\\Program Files\\NVIDIA Corporation\\NVSMI\\nvidia-smi.exe (default path)"],
-                ["- system PATH"],
-            ],
-            id="windows_nvidia_smi_missing",
-        ),
-    ],
-)
-def test_parse_nvidia_smi_non_xml_output(string_table: StringTable) -> None:
-    section = nvidia_smi.parse_nvidia_smi(string_table)
-    assert section.gpus == {}
 
 
 @pytest.mark.parametrize(

@@ -106,8 +106,6 @@ allows = [
   "cmk.ccc.version",
   # FormSpec validation
   "cmk.ccc.hostaddress",
-  # FIXME
-  "cmk.plugins.azure.lib",
   "cmk.utils.http_proxy_config",
   # edition detection
   "cmk.utils.paths",

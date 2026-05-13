@@ -3,77 +3,29 @@ Copyright (C) 2024 Checkmk GmbH - License: GNU General Public License v2
 This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 conditions defined in the file COPYING, which is part of this source code package.
 -->
-<script lang="ts">
-export type Suggestions = SuggestionsFixed | SuggestionsFiltered | SuggestionsCallbackFiltered
-
-type SuggestionsFixed = {
-  type: 'fixed'
-  suggestions: Array<Suggestion>
-}
-
-type SuggestionsFiltered = {
-  type: 'filtered'
-  suggestions: Array<Suggestion>
-}
-
-type SuggestionsCallbackFiltered = {
-  type: 'callback-filtered'
-  querySuggestions: (query: string) => Promise<ErrorResponse | WarningResponse | Response>
-}
-
-export class NoSelection {
-  getName(): null {
-    return null
-  }
-  getTitle(): null {
-    return null
-  }
-}
-
-export class Selection {
-  value: string
-  constructor(value: string) {
-    this.value = value
-  }
-  getName(): string {
-    return this.value
-  }
-  getTitle(): null {
-    return null
-  }
-}
-
-export class SelectionWithTitle {
-  // we are tightly coupled with CmkDropdown. We have to look up the title
-  // there, and want to save one request, so we have to transport the title...
-  name: string // id / backend value
-  title: string // label / human readable
-  constructor(name: string, title: string) {
-    this.name = name
-    this.title = title
-  }
-  getName(): string {
-    return this.name
-  }
-  getTitle(): string {
-    return this.title
-  }
-}
-
-export type SuggestionValue = NoSelection | SelectionWithTitle | Selection
-</script>
-
 <script setup lang="ts">
 import { type Ref, computed, nextTick, ref, useTemplateRef } from 'vue'
 
 import usei18n from '@/lib/i18n'
+import type { TranslatedString } from '@/lib/i18nString'
 import { useDebounceRef } from '@/lib/useDebounce'
 import { immediateWatch } from '@/lib/watch'
 
 import CmkHtml from '@/components/CmkHtml.vue'
 import CmkScrollContainer from '@/components/CmkScrollContainer.vue'
 
-import { ErrorResponse, Response, type Suggestion, WarningResponse } from './suggestions'
+import { ErrorResponse, type Suggestion, WarningResponse } from './suggestions'
+import {
+  NoSelection,
+  type Section,
+  type SuggestionValue,
+  type Suggestions,
+  isSectioned
+} from './types'
+
+type DisplayItem =
+  | { kind: 'item'; suggestion: Suggestion }
+  | { kind: 'header'; title: TranslatedString }
 
 const { _t } = usei18n()
 
@@ -107,7 +59,15 @@ const filterString = ref<string>(
 )
 const suggestionInputRef = ref<HTMLInputElement | null>(null)
 
-const filteredSuggestions = ref<Array<Suggestion>>([])
+const displayItems = ref<Array<DisplayItem>>([])
+const filteredSuggestions = computed<Array<Suggestion>>(() =>
+  displayItems.value
+    .filter((d): d is { kind: 'item'; suggestion: Suggestion } => d.kind === 'item')
+    .map((d) => d.suggestion)
+)
+const hasSectionHeaders = computed<boolean>(() =>
+  displayItems.value.some((d) => d.kind === 'header')
+)
 const activeSuggestion: Ref<Suggestion | null> = ref(null) // null means no suggestion is highlighted, (no suggestions are selectable)
 const isSelectedSuggestionSetAsFilter = ref(false)
 
@@ -141,21 +101,70 @@ function findSuggestionAsIndex(
   return currentElement.index
 }
 
-async function getSuggestions(
+function flatten(items: Array<Suggestion>): Array<DisplayItem> {
+  return items.map((s) => ({ kind: 'item', suggestion: s }))
+}
+
+function buildSectionedDisplayItems(
+  sections: Array<Section>,
+  query: string,
+  doFilter: boolean
+): Array<DisplayItem> {
+  const lowerCaseQuery = query.toLowerCase()
+  const survivingSections = sections
+    .map((section) => ({
+      title: section.title,
+      items: doFilter
+        ? section.suggestions.filter((s) => s.title.toLowerCase().includes(lowerCaseQuery))
+        : section.suggestions
+    }))
+    .filter((section) => section.items.length > 0)
+
+  if (survivingSections.length <= 1) {
+    return flatten(survivingSections[0]?.items ?? [])
+  }
+
+  const sectionedDisplayItems: Array<DisplayItem> = []
+  for (const section of survivingSections) {
+    sectionedDisplayItems.push({ kind: 'header', title: section.title })
+    for (const item of section.items) {
+      sectionedDisplayItems.push({ kind: 'item', suggestion: item })
+    }
+  }
+  return sectionedDisplayItems
+}
+
+function buildDisplayItems(
+  input: Array<Suggestion> | Array<Section>,
+  query: string,
+  doFilter: boolean
+): Array<DisplayItem> {
+  if (isSectioned(input)) {
+    return buildSectionedDisplayItems(input, query, doFilter)
+  }
+  const lowerCaseQuery = query.toLowerCase()
+  const items = doFilter
+    ? input.filter((s) => s.title.toLowerCase().includes(lowerCaseQuery))
+    : input
+  return flatten(items)
+}
+
+async function getDisplayItems(
   suggestions: Suggestions,
   query: string
-): Promise<Response | ErrorResponse | WarningResponse> {
+): Promise<Array<DisplayItem> | ErrorResponse | WarningResponse> {
   switch (suggestions.type) {
     case 'filtered':
-      return new Response(
-        suggestions.suggestions.filter(({ title }) =>
-          title.toLowerCase().includes(query.toLowerCase())
-        )
-      )
-    case 'callback-filtered':
-      return await suggestions.querySuggestions(query)
+      return buildDisplayItems(suggestions.suggestions, query, true)
     case 'fixed':
-      return new Response(suggestions.suggestions)
+      return buildDisplayItems(suggestions.suggestions, '', false)
+    case 'callback-filtered': {
+      const response = await suggestions.querySuggestions(query)
+      if (response instanceof ErrorResponse || response instanceof WarningResponse) {
+        return response
+      }
+      return buildDisplayItems(response.choices, '', false)
+    }
   }
 }
 
@@ -208,7 +217,7 @@ async function handleSuggestionsUpdate(
   query: string,
   newSelectedSuggestion: SuggestionValue
 ): Promise<void> {
-  const result = await getSuggestions(newSuggestions, query)
+  const result = await getDisplayItems(newSuggestions, query)
 
   if (result instanceof ErrorResponse) {
     error.value = result.error
@@ -216,13 +225,13 @@ async function handleSuggestionsUpdate(
   } else if (result instanceof WarningResponse) {
     warning.value = result.warning
     error.value = ''
-    filteredSuggestions.value = result.choices
+    displayItems.value = buildDisplayItems(result.choices, '', false)
     activeSuggestion.value = null
     setSiblingOrFirstActive(0)
   } else {
     error.value = ''
     warning.value = ''
-    filteredSuggestions.value = result.choices
+    displayItems.value = result
     const foundSuggestion =
       newSelectedSuggestion instanceof NoSelection
         ? null
@@ -364,36 +373,50 @@ defineExpose({
       <li v-if="error" class="cmk-suggestions--error"><CmkHtml :html="error" /></li>
       <li v-if="warning" class="cmk-suggestions--warning"><CmkHtml :html="warning" /></li>
       <!-- eslint-disable vue/valid-v-for vue/require-v-for-key since the index in suggestionRefs does not get correctly updated when using the suggestion name as key -->
-      <li
-        v-for="suggestion in filteredSuggestions"
-        ref="suggestionRefs"
-        tabindex="-1"
-        :role="role"
-        :aria-label="suggestion.title"
-        :class="{
-          selectable: suggestion.name !== null,
-          selected: suggestion.name === activeSuggestion?.name
-        }"
-        @click="selectSuggestion(suggestion)"
-      >
-        <!-- eslint-enable vue/valid-v-for -->
-        <template v-for="render in [getRowRender(suggestion)]">
-          <template v-if="render.kind === 'title-match'">
-            <span>{{ render.parts.before }}</span
-            ><mark>{{ render.parts.match }}</mark
-            ><span>{{ render.parts.after }}</span>
+      <template v-for="(item, idx) in displayItems">
+        <li
+          v-if="item.kind === 'header'"
+          :key="`h-${idx}`"
+          class="cmk-suggestions__section-header"
+          role="heading"
+          aria-level="3"
+          :aria-label="item.title"
+          tabindex="-1"
+          @mousedown.prevent
+        >
+          {{ item.title }}
+        </li>
+        <li
+          v-else
+          ref="suggestionRefs"
+          tabindex="-1"
+          :role="role"
+          :aria-label="item.suggestion.title"
+          :class="{
+            selectable: item.suggestion.name !== null,
+            selected: item.suggestion.name === activeSuggestion?.name,
+            'cmk-suggestions__item--in-section': hasSectionHeaders
+          }"
+          @click="selectSuggestion(item.suggestion)"
+        >
+          <template v-for="render in [getRowRender(item.suggestion)]">
+            <template v-if="render.kind === 'title-match'">
+              <span>{{ render.parts.before }}</span
+              ><mark>{{ render.parts.match }}</mark
+              ><span>{{ render.parts.after }}</span>
+            </template>
+            <template v-else-if="render.kind === 'name-match'"
+              >{{ item.suggestion.title
+              }}<span class="cmk-suggestions__name-match">
+                ({{ render.nameParts.before }}<mark>{{ render.nameParts.match }}</mark
+                >{{ render.nameParts.after }})</span
+              >
+            </template>
+            <template v-else>{{ item.suggestion.title }}</template>
           </template>
-          <template v-else-if="render.kind === 'name-match'"
-            >{{ suggestion.title
-            }}<span class="cmk-suggestions__name-match">
-              ({{ render.nameParts.before }}<mark>{{ render.nameParts.match }}</mark
-              >{{ render.nameParts.after }})</span
-            >
-          </template>
-          <template v-else>{{ suggestion.title }}</template>
-        </template>
-        <!-- eslint-enable vue/require-v-for-key -->
-      </li>
+        </li>
+      </template>
+      <!-- eslint-enable vue/valid-v-for vue/require-v-for-key -->
       <li v-if="filteredSuggestions.length === 0 && noResultsHint !== ''">
         {{ noResultsHint }}
       </li>
@@ -481,7 +504,22 @@ defineExpose({
         color: var(--default-select-hover-color);
       }
     }
+
+    &.cmk-suggestions__item--in-section {
+      padding-left: 18px;
+    }
   }
+}
+
+.cmk-suggestions__section-header {
+  position: sticky;
+  top: 0;
+  padding: 6px;
+  background-color: var(--default-form-element-bg-color);
+  color: var(--font-color);
+  font-size: var(--font-size-small);
+  font-weight: 700;
+  cursor: default;
 }
 
 .cmk-suggestions--error,

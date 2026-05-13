@@ -16,7 +16,8 @@ import {
   ErrorResponse,
   Response,
   type Suggestion,
-  WarningResponse
+  WarningResponse,
+  flattenSuggestions
 } from '@/components/CmkSuggestions'
 
 import { fetchSuggestions } from '@/form/private/FormAutocompleter/autocompleter'
@@ -49,7 +50,7 @@ async function suggestionCallback(
     return newValue
   }
 
-  let result: Array<Suggestion> = newValue.choices.filter(
+  let result: Array<Suggestion> = flattenSuggestions(newValue.choices).filter(
     (element: Suggestion) =>
       element.name === null || (element.name.length > 0 && element.title.length > 0)
   )

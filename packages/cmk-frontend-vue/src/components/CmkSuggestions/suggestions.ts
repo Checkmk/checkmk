@@ -5,6 +5,8 @@
  */
 import type { TranslatedString } from '@/lib/i18nString'
 
+import type { Section } from './types'
+
 export interface Suggestion {
   name: string | null /* name is null for unselectable suggestions */
   title: TranslatedString
@@ -20,18 +22,18 @@ export class ErrorResponse {
 
 export class WarningResponse {
   warning: string
-  choices: Array<Suggestion>
+  choices: Array<Suggestion> | Array<Section>
 
-  constructor(warning: string, choices: Array<Suggestion> = []) {
+  constructor(warning: string, choices: Array<Suggestion> | Array<Section> = []) {
     this.warning = warning
     this.choices = choices
   }
 }
 
 export class Response {
-  choices: Array<Suggestion>
+  choices: Array<Suggestion> | Array<Section>
 
-  constructor(choices: Array<Suggestion>) {
+  constructor(choices: Array<Suggestion> | Array<Section>) {
     this.choices = choices
   }
 }

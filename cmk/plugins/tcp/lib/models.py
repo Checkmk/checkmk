@@ -20,6 +20,7 @@ class ConnectionState(StrEnum):
     FIN_WAIT1 = "FIN_WAIT1"
     FIN_WAIT2 = "FIN_WAIT2"
     BOUND = "BOUND"
+    UNDEFINED = "UNDEFINED"
 
 
 @dataclass(frozen=True)

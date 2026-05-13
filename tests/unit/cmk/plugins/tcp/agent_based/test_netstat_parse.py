@@ -231,6 +231,62 @@ def test_parse_netstat(info: StringTable, expected_parsed: Section) -> None:
             ],
             id="german_syn_empfangen",
         ),
+        pytest.param(
+            [
+                ["TCP", "10.1.1.99:12345", "10.1.1.100:80", "SYN_RECEIVED"],
+            ],
+            [
+                Connection(
+                    proto="TCP",
+                    local_address=SplitIP("10.1.1.99", "12345"),
+                    remote_address=SplitIP("10.1.1.100", "80"),
+                    state=ConnectionState.SYN_RECV,
+                ),
+            ],
+            id="syn_received_mapping",
+        ),
+        pytest.param(
+            [
+                ["TCP", "10.1.1.99:12345", "10.1.1.100:80", "TIMED_WAIT"],
+            ],
+            [
+                Connection(
+                    proto="TCP",
+                    local_address=SplitIP("10.1.1.99", "12345"),
+                    remote_address=SplitIP("10.1.1.100", "80"),
+                    state=ConnectionState.TIME_WAIT,
+                ),
+            ],
+            id="timed_wait_mapping",
+        ),
+        pytest.param(
+            [
+                ["TCP", "10.1.1.99:12345", "10.1.1.100:80", "ESTAB"],
+            ],
+            [
+                Connection(
+                    proto="TCP",
+                    local_address=SplitIP("10.1.1.99", "12345"),
+                    remote_address=SplitIP("10.1.1.100", "80"),
+                    state=ConnectionState.ESTABLISHED,
+                ),
+            ],
+            id="estab_mapping",
+        ),
+        pytest.param(
+            [
+                ["TCP", "10.1.1.99:12345", "10.1.1.100:80", "TOTALLY_UNKNOWN"],
+            ],
+            [
+                Connection(
+                    proto="TCP",
+                    local_address=SplitIP("10.1.1.99", "12345"),
+                    remote_address=SplitIP("10.1.1.100", "80"),
+                    state=ConnectionState.UNDEFINED,
+                ),
+            ],
+            id="unknown_state_falls_back_to_undefined",
+        ),
     ],
 )
 def test_parse_win_netstat(info: StringTable, expected_parsed: Section) -> None:

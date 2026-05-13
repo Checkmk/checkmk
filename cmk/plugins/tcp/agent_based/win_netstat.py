@@ -51,6 +51,9 @@ win_netstat_states = {
     # but ConnectionState enum uses FIN_WAIT1, FIN_WAIT2.
     "FIN_WAIT_1": "FIN_WAIT1",
     "FIN_WAIT_2": "FIN_WAIT2",
+    "SYN_RECEIVED": "SYN_RECV",
+    "TIMED_WAIT": "TIME_WAIT",
+    "ESTAB": "ESTABLISHED",
     # Add further states in any required language here. Sorry, Windows
     # has no "unset LANG" ;-)
 }
@@ -71,7 +74,9 @@ def parse_win_netstat(string_table: StringTable) -> Section:
                 proto=cast(Protocol, proto),
                 local_address=split_ip_address(local),
                 remote_address=split_ip_address(remote),
-                state=ConnectionState[win_netstat_states.get(connstate, connstate)],
+                state=ConnectionState.__members__.get(
+                    win_netstat_states.get(connstate, connstate), ConnectionState.UNDEFINED
+                ),
             )
         )
     return connections

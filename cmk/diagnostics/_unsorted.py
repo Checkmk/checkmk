@@ -38,7 +38,8 @@ class DiagnosticsParameters(TypedDict):
     comp_specific: DiagnosticsOptionalParameters
 
 
-class FileMapConfig(TypedDict):
+@dataclass(frozen=True, kw_only=True)
+class FileMapConfig:
     file_type: Literal["config", "core", "licensing", "log"]
     component_folder: Path
     base_folder: Path

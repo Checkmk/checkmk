@@ -391,7 +391,8 @@ def diagnostics_elements_for(
         elements.append(CrashDumpsDiagnosticsElement())
 
     if parameters.get(OPT_BI_RUNTIME_DATA):
-        elements.append(BIDataDiagnosticsElement())
+        # HACK, should be in the COMPONENT_DIRECTORIES loop below
+        elements.append(CheckmkDirectoryDiagnosticsElement("tmp/check_mk/bi_cache", rel=True))
 
     if rel_checkmk_config_files := parameters.get(OPT_CHECKMK_CONFIG_FILES):
         elements.append(CheckmkConfigFilesDiagnosticsElement(rel_checkmk_config_files))
@@ -1634,37 +1635,6 @@ class PerformanceGraphsDiagnosticsElement(ABCDiagnosticsElement):
             },
             timeout=900,
         )
-
-
-class BIDataDiagnosticsElement(ABCDiagnosticsElement):
-    @override
-    @property
-    def ident(self) -> str:
-        return "bi_runtime_data"
-
-    @override
-    @property
-    def title(self) -> str:
-        return _("Business Intelligence runtime data")
-
-    @override
-    @property
-    def description(self) -> str:
-        return _(
-            "Cached data from Business Intelligence. "
-            "Contains states, downtimes, acknowledgements and service periods "
-            "for all hosts/services included in a BI aggregation."
-        )
-
-    @override
-    def add_or_get_files(
-        self, *, omd_root: Path, tmp_dump_folder: Path
-    ) -> DiagnosticsElementFilepaths:
-        tmpdir = tmp_dump_folder / "tmp/check_mk/bi_cache"
-        tmpdir.mkdir(parents=True, exist_ok=True)
-
-        shutil.copytree(cmk.utils.paths.tmp_dir / "bi_cache", tmpdir, dirs_exist_ok=True)
-        yield tmpdir
 
 
 class CrashDumpsDiagnosticsElement(ABCDiagnosticsElement):

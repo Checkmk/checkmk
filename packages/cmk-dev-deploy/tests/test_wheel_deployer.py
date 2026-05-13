@@ -29,6 +29,7 @@ from cmk.dev_deploy.deployers.wheel_deployer import (
     _compute_protected_children,
     _expand_co_dependents,
     _generate_dist_info,
+    _remove_deleted_files,
     _selective_rmtree,
     _subdirs_overlap,
     deploy_wheels,
@@ -1190,3 +1191,73 @@ class TestCleanPackageProtectedChildren:
         )
 
         assert not licensing.exists()
+
+
+class TestRemoveDeletedFiles:
+    """Tests for _remove_deleted_files: routing by package prefix only."""
+
+    def test_removes_file_outside_current_source_subdirs(self, tmp_path: Path) -> None:
+        """Deletions in a now-empty (and thus manifest-absent) subdir must still
+        be cleaned -- the original symptom: ``cmk/plugins/collection/agent_based/``
+        gets emptied upstream, drops out of source_subdirs, and its leftover
+        files from the version package survive the next deploy.
+        """
+        site = _make_site(tmp_path)
+        site_packages = site.root / "lib" / "python3"
+        stale = site_packages / "cmk" / "plugins" / "collection" / "agent_based" / "prtconf.py"
+        stale.parent.mkdir(parents=True)
+        stale.write_text("# stale from version package")
+        pyc = stale.parent / "__pycache__" / "prtconf.cpython-313.pyc"
+        pyc.parent.mkdir()
+        pyc.write_text("# stale bytecode")
+
+        # source_subdirs no longer mentions plugins/collection/agent_based/
+        # because the directory is empty in the current source tree.
+        spec = _make_wheel_spec(
+            package="cmk",
+            source_subdirs=("plugins/aix/agent_based/",),
+        )
+
+        _remove_deleted_files(
+            ("cmk/plugins/collection/agent_based/prtconf.py",),
+            [spec],
+            site_packages,
+            site,
+        )
+
+        assert not stale.exists()
+        assert not pyc.exists()
+
+    def test_skips_deletions_outside_package_prefix(self, tmp_path: Path) -> None:
+        """A deletion outside the spec's package prefix is ignored."""
+        site = _make_site(tmp_path)
+        site_packages = site.root / "lib" / "python3"
+        unrelated = site_packages / "other_pkg" / "file.py"
+        unrelated.parent.mkdir(parents=True)
+        unrelated.write_text("# untouched")
+
+        spec = _make_wheel_spec(package="cmk", source_subdirs=("base/",))
+
+        _remove_deleted_files(
+            ("other_pkg/file.py",),
+            [spec],
+            site_packages,
+            site,
+        )
+
+        assert unrelated.exists()
+
+    def test_no_op_when_target_already_gone(self, tmp_path: Path) -> None:
+        """A deletion whose target is missing in the site is silently skipped."""
+        site = _make_site(tmp_path)
+        site_packages = site.root / "lib" / "python3"
+        site_packages.mkdir(parents=True)
+
+        spec = _make_wheel_spec(package="cmk", source_subdirs=("base/",))
+
+        _remove_deleted_files(
+            ("cmk/base/never_deployed.py",),
+            [spec],
+            site_packages,
+            site,
+        )

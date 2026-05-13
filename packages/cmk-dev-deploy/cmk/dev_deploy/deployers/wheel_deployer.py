@@ -801,7 +801,16 @@ def _remove_deleted_files(
     site_packages: Path,
     site: SiteInfo,
 ) -> None:
-    """Remove files from deploy targets that were deleted between commits."""
+    """Remove files from deploy targets that were deleted between commits.
+
+    Only the ``spec.package`` prefix is used to route deletions; the
+    ``source_subdirs`` list is intentionally NOT consulted.  When an entire
+    subdir is emptied upstream, that subdir disappears from the auto-derived
+    manifest, and filtering by it would silently skip the very deletions
+    that left orphans in the site (e.g. ``cmk/plugins/collection/agent_based/``
+    after its files moved to ``aix/``, ``disk_io/``, etc.).  A missing
+    destination is a no-op, so over-matching is safe.
+    """
     removed = 0
     for spec in specs:
         file_root, _di_root = _get_deploy_roots(spec, site, site_packages)
@@ -810,14 +819,10 @@ def _remove_deleted_files(
             if not deleted.startswith(prefix):
                 continue
             rel = deleted[len(prefix) :]
-            # Check the file falls within a deployed subdir
-            if not any(rel.startswith(sd) for sd in spec.source_subdirs):
-                continue
             target = file_root / rel
             if target.is_file():
                 target.unlink()
                 removed += 1
-                # Also remove .pyc
                 pyc = (
                     target.parent
                     / "__pycache__"

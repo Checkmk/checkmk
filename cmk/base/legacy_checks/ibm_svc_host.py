@@ -108,7 +108,7 @@ def check_ibm_svc_host(item, params, parsed):
 
             if crit is not None and value >= crit:
                 state = 2
-            if warn is not None and value >= warn:
+            elif warn is not None and value >= warn:
                 state = 1
             else:
                 state = 0

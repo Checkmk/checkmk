@@ -28,9 +28,7 @@ import { type UseAdditionalOptions, useAdditionalOptions } from './useAdditional
 
 const CONTENT_TYPE = 'average_scatterplot'
 export interface UseScatterplot
-  extends UseWidgetHandler,
-    UseWidgetVisualizationOptions,
-    UseAdditionalOptions {
+  extends UseWidgetHandler, UseWidgetVisualizationOptions, UseAdditionalOptions {
   timeRange: Ref<GraphTimerange>
   widgetProps: Ref<WidgetProps>
 }

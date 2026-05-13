@@ -69,12 +69,12 @@ Four status bar buttons (**Py**, **UI**, **Rs**, **C++**) let you enable or disa
 
 All enabled: <img src="docs/profiles-enabled.png" alt="All profiles enabled"> | All disabled: <img src="docs/profiles-disabled.png" alt="All profiles disabled">
 
-| Icon    | Meaning                                      |
-| ------- | -------------------------------------------- |
-| `○ Py`  | Profile inactive — language tooling disabled |
-| `✓ Py`  | Profile active and healthy                   |
+| Icon   | Meaning                                      |
+| ------ | -------------------------------------------- |
+| `○ Py` | Profile inactive — language tooling disabled |
+| `✓ Py` | Profile active and healthy                   |
 | `⚠ Py` | Profile active but has stale build targets   |
-| `⟳ Py`  | Profile switching (loading)                  |
+| `⟳ Py` | Profile switching (loading)                  |
 
 Profiles are persisted in `cmk.activeProfiles` in `.vscode/settings.json` and restored on reload. When a profile is disabled, its disable-settings are written to workspace settings so the corresponding extensions stop their heavy work (language servers, linters, etc.). When re-enabled, those settings are removed so the extensions resume normal operation.
 
@@ -374,9 +374,9 @@ Long-running dmypy daemons accumulate fine-grained state and, under Python's def
 
 **IDE Health status row** at the top of the Mypy card, mirroring the _All settings match_ pattern:
 
-| State                           | Row                                   | Icon buttons                                         |
-| ------------------------------- | ------------------------------------- | ---------------------------------------------------- |
-| jemalloc active + healthy       | `✓ jemalloc active`                   | _circle-slash_ — disable                             |
+| State                           | Row                                  | Icon buttons                                         |
+| ------------------------------- | ------------------------------------ | ---------------------------------------------------- |
+| jemalloc active + healthy       | `✓ jemalloc active`                  | _circle-slash_ — disable                             |
 | jemalloc enabled, misconfigured | `⚠ jemalloc enabled — not active`    | _circle-slash_ — disable, _wrench_ banner → re-apply |
 | Default, libjemalloc present    | `⚠ jemalloc available — not enabled` | _wrench_ — enable                                    |
 | Default, libjemalloc missing    | `⚠ jemalloc not installed`           | _package_ — install                                  |

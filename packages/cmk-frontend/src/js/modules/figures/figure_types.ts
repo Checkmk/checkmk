@@ -95,8 +95,10 @@ export interface FigureData<D = any, P = any> {
   plot_definitions: P[]
 }
 
-export interface SingleMetricData
-  extends FigureData<SingleMetricDataData, SingleMetricDataPlotDefinitions> {
+export interface SingleMetricData extends FigureData<
+  SingleMetricDataData,
+  SingleMetricDataPlotDefinitions
+> {
   data: SingleMetricDataData[]
   title: string
   title_url: string

@@ -32,9 +32,7 @@ import {
 const DEFAULT_COLOR_SCHEMAS = ['default_metric', 'default_theme']
 const CONTENT_TYPE = 'single_timeseries'
 export interface UseGraph
-  extends UseWidgetHandler,
-    UseGraphRenderOptions,
-    UseWidgetVisualizationOptions {
+  extends UseWidgetHandler, UseGraphRenderOptions, UseWidgetVisualizationOptions {
   timeRange: Ref<GraphTimerange>
   color: Ref<string>
 }

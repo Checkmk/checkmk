@@ -32,9 +32,7 @@ import {
 
 const CONTENT_TYPE = 'combined_graph'
 export interface UseCombinedGraph
-  extends UseWidgetHandler,
-    UseGraphRenderOptions,
-    UseWidgetVisualizationOptions {
+  extends UseWidgetHandler, UseGraphRenderOptions, UseWidgetVisualizationOptions {
   timeRange: Ref<GraphTimerange>
   presentation: Ref<CombinedGraphContentPresentation>
 

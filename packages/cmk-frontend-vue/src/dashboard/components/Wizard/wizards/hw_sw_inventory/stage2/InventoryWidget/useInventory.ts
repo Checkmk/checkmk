@@ -30,10 +30,7 @@ type ToggleFunction = (value: boolean) => void
 
 const CONTENT_TYPE = 'inventory'
 export interface UseInventory
-  extends UseWidgetHandler,
-    UseWidgetVisualizationOptions,
-    UseLinkContent,
-    UseValidate {
+  extends UseWidgetHandler, UseWidgetVisualizationOptions, UseLinkContent, UseValidate {
   toggleTitleUrl: ToggleFunction
 
   //Validation

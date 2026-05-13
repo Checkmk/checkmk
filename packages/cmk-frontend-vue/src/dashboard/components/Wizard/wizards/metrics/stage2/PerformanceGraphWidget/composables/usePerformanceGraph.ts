@@ -31,9 +31,7 @@ import {
 
 const CONTENT_TYPE = 'performance_graph'
 export interface UsePerformanceGraph
-  extends UseWidgetHandler,
-    UseGraphRenderOptions,
-    UseWidgetVisualizationOptions {
+  extends UseWidgetHandler, UseGraphRenderOptions, UseWidgetVisualizationOptions {
   timeRange: Ref<GraphTimerange>
 
   widgetProps: Ref<WidgetProps>

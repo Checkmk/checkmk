@@ -33,9 +33,7 @@ type TimeRangeType = 'current' | 'window'
 const CONTENT_TYPE = 'problem_graph'
 
 export interface UsePercentageOfServiceProblems
-  extends UseWidgetHandler,
-    UseWidgetVisualizationOptions,
-    UseGraphRenderOptions {
+  extends UseWidgetHandler, UseWidgetVisualizationOptions, UseGraphRenderOptions {
   timeRangeType: Ref<TimeRangeType>
   timeRange: Ref<GraphTimerange>
 }

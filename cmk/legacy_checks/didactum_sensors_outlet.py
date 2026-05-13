@@ -4,36 +4,22 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from collections.abc import Mapping
-from typing import Any
-
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition, LegacyResult
-from cmk.agent_based.v2 import DiscoveryResult, SNMPTree
-from cmk.legacy_includes.didactum import (
+from cmk.agent_based.v2 import (
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    SimpleSNMPSection,
+    SNMPTree,
+)
+from cmk.plugins.didactum.lib import (
+    check_didactum_sensor_status,
+    DETECT_DIDACTUM,
     discover_didactum_sensors,
     parse_didactum_sensors,
+    Section,
 )
-from cmk.plugins.didactum.lib import DETECT_DIDACTUM
 
-check_info = {}
-
-
-def discover_didactum_sensors_outlet_relay(
-    parsed: Mapping[str, Mapping[str, Mapping[str, Any]]],
-) -> DiscoveryResult:
-    return discover_didactum_sensors(parsed, "relay")
-
-
-def check_didactum_sensors_outlet_relay(
-    item: str, params: Any, parsed: Mapping[str, Mapping[str, Mapping[str, Any]]]
-) -> LegacyResult | None:
-    if item in parsed.get("relay", {}):
-        data = parsed["relay"][item]
-        return data["state"], "Status: %s" % data["state_readable"]
-    return None
-
-
-check_info["didactum_sensors_outlet"] = LegacyCheckDefinition(
+snmp_section_didactum_sensors_outlet = SimpleSNMPSection(
     name="didactum_sensors_outlet",
     detect=DETECT_DIDACTUM,
     fetch=SNMPTree(
@@ -41,6 +27,19 @@ check_info["didactum_sensors_outlet"] = LegacyCheckDefinition(
         oids=["4", "5", "6", "7"],
     ),
     parse_function=parse_didactum_sensors,
+)
+
+
+def discover_didactum_sensors_outlet_relay(section: Section) -> DiscoveryResult:
+    yield from discover_didactum_sensors(section, "relay")
+
+
+def check_didactum_sensors_outlet_relay(item: str, section: Section) -> CheckResult:
+    yield from check_didactum_sensor_status(item, section, "relay")
+
+
+check_plugin_didactum_sensors_outlet = CheckPlugin(
+    name="didactum_sensors_outlet",
     service_name="Relay %s",
     discovery_function=discover_didactum_sensors_outlet_relay,
     check_function=check_didactum_sensors_outlet_relay,

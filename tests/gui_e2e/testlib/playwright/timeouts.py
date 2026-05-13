@@ -17,6 +17,8 @@ TIMEOUT_ACTIVATE_CHANGES = 120
 TIMEOUT_ACTIVATE_CHANGES_MS = TIMEOUT_ACTIVATE_CHANGES * 1000
 # timeout for ui animations
 ANIMATION_TIMEOUT = 1000  # 750 ms (animation) + 250 ms (buffer)
+# timeout for AI response (mocked routes, so network is instant; allow for rendering overhead)
+TIMEOUT_AI_RESPONSE = 10_000
 
 
 @contextmanager

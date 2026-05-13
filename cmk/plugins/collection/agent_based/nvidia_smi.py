@@ -147,7 +147,16 @@ def _let_pydantic_check_power_state(value: str | None) -> PowerState:
 
 
 def parse_nvidia_smi(string_table: StringTable) -> Section:
-    xml = ElementTree.fromstring("".join([element[0] for element in string_table]))
+    try:
+        xml = ElementTree.fromstring("".join([element[0] for element in string_table]))
+    except ElementTree.ParseError:
+        return Section(
+            timestamp=None,
+            driver_version=None,
+            cuda_version=None,
+            attached_gpus=None,
+            gpus={},
+        )
     # find the element name for power_readings
     power_readings_element = "gpu_power_readings"
     if xml.find(f"gpu/{power_readings_element}") is None:

@@ -38,7 +38,6 @@ void main() {
 
     def safe_branch_name = versioning.safe_branch_name();
     def branch_version = versioning.get_branch_version(checkout_dir);
-    def branch_base_folder = package_helper.branch_base_folder(false);
 
     // FIXME
     def cmk_version_rc_aware = versioning.get_cmk_version(safe_branch_name, branch_version, version);
@@ -108,50 +107,7 @@ void main() {
         }
     }
 
-    def stages = [
-        "Build BOM": {
-            def build_instance = null;
-            def artifacts_base_dir = "tmp_artifacts";
-
-            smart_stage(
-                name: "Build BOM",
-                raiseOnError: true,
-            ) {
-                build_instance = smart_build(
-                    // see global-defaults.yml, needs to run in minimal container
-                    use_upstream_build: true,
-                    force_build: params.DISABLE_JENKINS_CACHE == true,
-                    relative_job_name: "${branch_base_folder}/builders/build-cmk-bom",
-                    build_params: [
-                        CUSTOM_GIT_REF: effective_git_ref,
-                        VERSION: version,
-                        EDITION: edition,
-                        DISABLE_CACHE: disable_cache,
-                    ],
-                    build_params_no_check: [
-                        CIPARAM_OVERRIDE_BUILD_NODE: params.CIPARAM_OVERRIDE_BUILD_NODE,
-                        CIPARAM_CLEANUP_WORKSPACE: params.CIPARAM_CLEANUP_WORKSPACE,
-                        CIPARAM_BISECT_COMMENT: params.CIPARAM_BISECT_COMMENT,
-                    ],
-                    no_remove_others: true, // do not delete other files in the dest dir
-                    dest: "${artifacts_base_dir}",
-                );
-            }
-
-            smart_stage(
-                name: "Copy artifacts",
-                condition: build_instance,
-                raiseOnError: true,
-            ) {
-                // copyArtifacts seems not to work with k8s
-                sh("""
-                    # needed only because upstream_build() only downloads relative
-                    # to `base-dir` which has to be `checkout_dir`
-                    cp ${checkout_dir}/${artifacts_base_dir}/omd/* ${checkout_dir}/omd
-                """);
-            }
-        },
-    ];
+    def stages = [:];
 
     if (!params.FAKE_ARTIFACTS) {
         stages += package_helper.provide_agent_binaries(

@@ -14,7 +14,6 @@ load("//bazel/rules:pkg_rpm_from_tar.bzl", "pkg_rpm_from_tar")
 load("//bazel/rules:write_omd_spec.bzl", "write_omd_spec")
 
 exports_files([
-    "dev-requirements.in",
     "requirements.txt",
     "dev-requirements.in",
 ])
@@ -918,17 +917,3 @@ write_omd_spec(
         "ultimatemt",
     ]
 ]
-
-run_binary(
-    name = "generate_bom_csv",
-    srcs = ["bill-of-materials.json"],
-    outs = ["bill-of-materials.csv"],
-    args = [
-        "--bom",
-        "$(location bill-of-materials.json)",
-        "--out",
-        "$(location bill-of-materials.csv)",
-    ],
-    tags = ["manual"],
-    tool = "//omd/dependency_management:generate_bom_csv_py",
-)

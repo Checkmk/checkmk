@@ -104,6 +104,46 @@ const debouncedFilterString = useDebounceRef(filterString)
 const effectiveFilterString = () =>
   suggestions.type === 'callback-filtered' ? debouncedFilterString.value : filterString.value
 
+type SplitParts = { before: string; match: string; after: string }
+
+function splitOnQuery(text: string, query: string): SplitParts | null {
+  const index = text.toLowerCase().indexOf(query.toLowerCase())
+  if (index === -1) {
+    return null
+  }
+  return {
+    before: text.slice(0, index),
+    match: text.slice(index, index + query.length),
+    after: text.slice(index + query.length)
+  }
+}
+
+type RowRender =
+  | { kind: 'plain' }
+  | { kind: 'title-match'; parts: SplitParts }
+  | { kind: 'name-match'; nameParts: SplitParts }
+
+function getRowRender(suggestion: Suggestion): RowRender {
+  if (!showFilter.value) {
+    return { kind: 'plain' }
+  }
+  const query = filterString.value
+  if (query === '') {
+    return { kind: 'plain' }
+  }
+  const titleParts = splitOnQuery(suggestion.title, query)
+  if (titleParts !== null) {
+    return { kind: 'title-match', parts: titleParts }
+  }
+  if (suggestion.name !== null) {
+    const nameParts = splitOnQuery(suggestion.name, query)
+    if (nameParts !== null) {
+      return { kind: 'name-match', nameParts }
+    }
+  }
+  return { kind: 'plain' }
+}
+
 async function handleSuggestionsUpdate(
   newSuggestions: Suggestions,
   query: string,
@@ -270,14 +310,30 @@ defineExpose({
         ref="suggestionRefs"
         tabindex="-1"
         :role="role"
+        :aria-label="suggestion.title"
         :class="{
           selectable: suggestion.name !== null,
           selected: suggestion.name === activeSuggestion?.name
         }"
         @click="selectSuggestion(suggestion)"
       >
-        <!-- eslint-enable vue/valid-v-for vue/require-v-for-key -->
-        {{ suggestion.title }}
+        <!-- eslint-enable vue/valid-v-for -->
+        <template v-for="render in [getRowRender(suggestion)]">
+          <template v-if="render.kind === 'title-match'">
+            <span>{{ render.parts.before }}</span
+            ><mark>{{ render.parts.match }}</mark
+            ><span>{{ render.parts.after }}</span>
+          </template>
+          <template v-else-if="render.kind === 'name-match'"
+            >{{ suggestion.title
+            }}<span class="cmk-suggestions__name-match">
+              ({{ render.nameParts.before }}<mark>{{ render.nameParts.match }}</mark
+              >{{ render.nameParts.after }})</span
+            >
+          </template>
+          <template v-else>{{ suggestion.title }}</template>
+        </template>
+        <!-- eslint-enable vue/require-v-for-key -->
       </li>
       <li v-if="filteredSuggestions.length === 0 && noResultsHint !== ''">
         {{ noResultsHint }}
@@ -301,6 +357,22 @@ defineExpose({
   margin: 0;
   padding: 0;
   list-style-type: none;
+
+  mark {
+    background: transparent;
+    color: var(--default-select-focus-color);
+    font-weight: normal;
+  }
+
+  .cmk-suggestions__name-match {
+    color: var(--font-color-dimmed);
+    font-size: 0.9em;
+
+    mark {
+      color: var(--default-select-focus-color);
+      font-weight: normal;
+    }
+  }
 
   /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
   span.input {
@@ -340,6 +412,10 @@ defineExpose({
       /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
       &.selected {
         color: var(--default-select-focus-color);
+
+        mark {
+          font-weight: 700;
+        }
       }
 
       &:hover {

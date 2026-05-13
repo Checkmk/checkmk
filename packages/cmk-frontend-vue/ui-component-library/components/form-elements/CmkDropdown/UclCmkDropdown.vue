@@ -129,14 +129,26 @@ const dynamicOptions = computed<Suggestions>(() => {
   ]
 
   if (propState.value.optionsType === 'callback') {
+    // The two extra rows have a `name` that does not appear in the `title`,
+    // so callback queries like `cmk` or `snmp` exercise the name-only-match
+    // highlight path — which is only reachable when the backend can match
+    // on `name` and return the row even though the title does not contain
+    // the query.
+    const callbackSuggestions = [
+      ...baseSuggestions,
+      { name: 'cmk_agent', title: 'Checkmk Agent' },
+      { name: 'snmp', title: 'Simple Network Management Protocol' }
+    ]
     return {
       type: 'callback-filtered',
-      querySuggestions: async (query: string) =>
-        new Response(
-          baseSuggestions.filter(
-            (s) => s.title.toLowerCase().includes(query.toLowerCase()) || s.name === query
+      querySuggestions: async (query: string) => {
+        const q = query.toLowerCase()
+        return new Response(
+          callbackSuggestions.filter(
+            (s) => s.title.toLowerCase().includes(q) || s.name.toLowerCase().includes(q)
           )
         )
+      }
     }
   } else if (propState.value.optionsType === 'filtered') {
     return { type: 'filtered', suggestions: baseSuggestions }

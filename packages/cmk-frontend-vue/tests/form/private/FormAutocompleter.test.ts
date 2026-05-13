@@ -63,7 +63,7 @@ describe('FormAutocompleter', () => {
     // https://testing-library.com/docs/dom-testing-library/api-events/
 
     await waitFor(() => {
-      expect(screen.getByText('OS Windows', { exact: false })).toBeInTheDocument()
+      expect(screen.getByRole('option', { name: 'OS Windows' })).toBeInTheDocument()
     })
 
     await fireEvent.keyDown(input, { key: 'Enter' })
@@ -87,8 +87,8 @@ describe('FormAutocompleter', () => {
     await fireEvent.focus(input)
 
     await waitFor(() => {
-      expect(screen.getByText('OS Windows')).toBeInTheDocument()
-      expect(screen.getByText('OS Linux')).toBeInTheDocument()
+      expect(screen.getByRole('option', { name: 'OS Windows' })).toBeInTheDocument()
+      expect(screen.getByRole('option', { name: 'OS Linux' })).toBeInTheDocument()
     })
   })
 
@@ -108,8 +108,8 @@ describe('FormAutocompleter', () => {
     await fireEvent.update(input, 'os')
 
     await waitFor(() => {
-      expect(screen.getByText('OS Windows')).toBeInTheDocument()
-      expect(screen.getByText('OS Linux')).toBeInTheDocument()
+      expect(screen.getByRole('option', { name: 'OS Windows' })).toBeInTheDocument()
+      expect(screen.getByRole('option', { name: 'OS Linux' })).toBeInTheDocument()
     })
   })
 
@@ -129,8 +129,8 @@ describe('FormAutocompleter', () => {
     await fireEvent.update(input, 'os:w')
 
     await waitFor(() => {
-      expect(screen.getByText('OS Windows')).toBeInTheDocument()
-      expect(screen.queryByText('OS Linux')).not.toBeInTheDocument()
+      expect(screen.getByRole('option', { name: 'OS Windows' })).toBeInTheDocument()
+      expect(screen.queryByRole('option', { name: 'OS Linux' })).not.toBeInTheDocument()
     })
   })
 
@@ -154,9 +154,9 @@ describe('FormAutocompleter', () => {
     await fireEvent.update(input, 'os')
 
     await waitFor(() => {
-      expect(screen.getByText('OS Windows')).toBeInTheDocument()
+      expect(screen.getByRole('option', { name: 'OS Windows' })).toBeInTheDocument()
     })
-    await fireEvent.click(screen.getByText('OS Windows'))
+    await fireEvent.click(screen.getByRole('option', { name: 'OS Windows' }))
 
     expect(selectedValue).toBe('os:windows')
   })
@@ -182,14 +182,14 @@ describe('FormAutocompleter', () => {
 
     // suggestions should show up
     await waitFor(() => {
-      expect(screen.getByText('OS Windows')).toBeInTheDocument()
-      expect(screen.getByText('OS Linux')).toBeInTheDocument()
+      expect(screen.getByRole('option', { name: 'OS Windows' })).toBeInTheDocument()
+      expect(screen.getByRole('option', { name: 'OS Linux' })).toBeInTheDocument()
     })
 
     await userEvent.type(screen.getByRole('textbox'), 'linux')
 
     // suggestions are filtered, so windows should go away
-    await waitForElementToBeRemoved(() => screen.getByText('OS Windows'))
+    await waitForElementToBeRemoved(() => screen.getByRole('option', { name: 'OS Windows' }))
 
     // lets choose the only element in the list
     await userEvent.keyboard('[ArrowDown][Enter]')

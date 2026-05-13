@@ -3,18 +3,20 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Mapping
-from typing import Any
-
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import DiscoveryResult, SNMPTree
-from cmk.legacy_includes.didactum import (
+from cmk.agent_based.v2 import (
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    SimpleSNMPSection,
+    SNMPTree,
+)
+from cmk.plugins.didactum.lib import (
+    check_didactum_sensor_status,
+    DETECT_DIDACTUM,
     discover_didactum_sensors,
     parse_didactum_sensors,
+    Section,
 )
-from cmk.plugins.didactum.lib import DETECT_DIDACTUM
-
-check_info = {}
 
 # .1.3.6.1.4.1.46501.5.1.1.4.101001 dry --> DIDACTUM-SYSTEM-MIB::ctlInternalSensorsDiscretType.101001
 # .1.3.6.1.4.1.46501.5.1.1.4.101002 dry --> DIDACTUM-SYSTEM-MIB::ctlInternalSensorsDiscretType.101002
@@ -34,26 +36,7 @@ check_info = {}
 # .1.3.6.1.4.1.46501.5.1.1.7.101004 0 --> DIDACTUM-SYSTEM-MIB::ctlInternalSensorsDiscretValue.101004
 
 
-def discover_didactum_sensors_discrete_dry(
-    parsed: Mapping[str, Mapping[str, Any]],
-) -> DiscoveryResult:
-    yield from discover_didactum_sensors(parsed, "dry")
-    yield from discover_didactum_sensors(parsed, "smoke")
-
-
-def check_didactum_sensors_discrete_dry(
-    item: str, params: Mapping[str, Any], parsed: Mapping[str, Mapping[str, Any]]
-) -> tuple[int, str]:
-    if item in parsed.get("dry", {}):
-        data = parsed["dry"][item]
-    elif item in parsed.get("smoke", {}):
-        data = parsed["smoke"][item]
-    else:
-        return 3, "Discrete sensor %s not found in SNMP data." % item
-    return data["state"], "Status: %s" % data["state_readable"]
-
-
-check_info["didactum_sensors_discrete"] = LegacyCheckDefinition(
+snmp_section_didactum_sensors_discrete = SimpleSNMPSection(
     name="didactum_sensors_discrete",
     detect=DETECT_DIDACTUM,
     fetch=SNMPTree(
@@ -61,6 +44,20 @@ check_info["didactum_sensors_discrete"] = LegacyCheckDefinition(
         oids=["4", "5", "6"],
     ),
     parse_function=parse_didactum_sensors,
+)
+
+
+def discover_didactum_sensors_discrete_dry(section: Section) -> DiscoveryResult:
+    yield from discover_didactum_sensors(section, "dry")
+    yield from discover_didactum_sensors(section, "smoke")
+
+
+def check_didactum_sensors_discrete_dry(item: str, section: Section) -> CheckResult:
+    yield from check_didactum_sensor_status(item, section, "dry", "smoke")
+
+
+check_plugin_didactum_sensors_discrete = CheckPlugin(
+    name="didactum_sensors_discrete",
     service_name="Discrete sensor %s",
     discovery_function=discover_didactum_sensors_discrete_dry,
     check_function=check_didactum_sensors_discrete_dry,

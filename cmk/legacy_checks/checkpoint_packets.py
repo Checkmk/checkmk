@@ -3,26 +3,34 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
-
-
-import time
-
-from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
-from cmk.agent_based.v2 import get_rate, get_value_store, SNMPTree
-from cmk.plugins.checkpoint.lib import DETECT
-
-check_info = {}
-
 # .1.3.6.1.2.1.1.1.0 Linux gateway1 2.6.18-92cp #1 SMP Tue Dec 4 21:44:22 IST 2012 i686
 # .1.3.6.1.4.1.2620.1.1.4.0 131645
 # .1.3.6.1.4.1.2620.1.1.5.0 0
 # .1.3.6.1.4.1.2620.1.1.6.0 1495
 # .1.3.6.1.4.1.2620.1.1.7.0 16297
 
+import time
+from collections.abc import Mapping, Sequence
 
-def parse_checkpoint_packets(string_table):
-    parsed = {}
+from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v2 import (
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    get_rate,
+    get_value_store,
+    Service,
+    SNMPSection,
+    SNMPTree,
+    StringTable,
+)
+from cmk.plugins.checkpoint.lib import DETECT
+
+Section = Mapping[str, int]
+
+
+def parse_checkpoint_packets(string_table: Sequence[StringTable]) -> Section:
+    parsed: dict[str, int] = {}
     for key, main_index, sub_index in [
         ("Accepted", 0, 0),
         ("Rejected", 0, 1),
@@ -38,26 +46,27 @@ def parse_checkpoint_packets(string_table):
     return parsed
 
 
-def discover_checkpoint_packets(parsed):
-    if parsed:
-        return [(None, {})]
-    return []
+def discover_checkpoint_packets(section: Section) -> DiscoveryResult:
+    if section:
+        yield Service()
 
 
-def check_checkpoint_packets(_no_item, params, parsed):
+def check_checkpoint_packets(
+    params: Mapping[str, tuple[float, float]], section: Section
+) -> CheckResult:
     this_time = time.time()
-    for name, value in parsed.items():
+    for name, value in section.items():
         key = name.lower()
-        yield check_levels(
+        yield from check_levels(
             get_rate(get_value_store(), key, this_time, value, raise_overflow=True),
-            key,
-            params.get(key),
-            human_readable_func=lambda x: f"{x:.1f} pkts/s",
-            infoname=name,
+            levels_upper=params.get(key),
+            metric_name=key,
+            render_func=lambda x: f"{x:.1f} pkts/s",
+            label=name,
         )
 
 
-check_info["checkpoint_packets"] = LegacyCheckDefinition(
+snmp_section_checkpoint_packets = SNMPSection(
     name="checkpoint_packets",
     detect=DETECT,
     fetch=[
@@ -71,6 +80,11 @@ check_info["checkpoint_packets"] = LegacyCheckDefinition(
         ),
     ],
     parse_function=parse_checkpoint_packets,
+)
+
+
+check_plugin_checkpoint_packets = CheckPlugin(
+    name="checkpoint_packets",
     service_name="Packet Statistics",
     discovery_function=discover_checkpoint_packets,
     check_function=check_checkpoint_packets,

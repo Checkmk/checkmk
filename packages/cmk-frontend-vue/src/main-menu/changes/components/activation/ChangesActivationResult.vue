@@ -12,10 +12,17 @@ const props = defineProps<{ type: 'success' | 'warning'; title: string; info: st
 
 <template>
   <div>
-    <CmkAlertBox :variant="props.type" class="mm-changes-activation-result" :dismissible="true">
-      <template #heading>
-        {{ props.title }}
-      </template>
+    <CmkAlertBox
+      v-if="props.type === 'success'"
+      variant="success"
+      class="mm-changes-activation-result"
+      :dismissible="true"
+    >
+      <template #heading>{{ props.title }}</template>
+      {{ props.info }}
+    </CmkAlertBox>
+    <CmkAlertBox v-else variant="warning" class="mm-changes-activation-result">
+      <template #heading>{{ props.title }}</template>
       {{ props.info }}
     </CmkAlertBox>
   </div>

@@ -8,7 +8,10 @@ import { type VariantProps, cva } from 'class-variance-authority'
 import { computed, onUnmounted, watch } from 'vue'
 
 import usei18n from '@/lib/i18n'
+import type { TranslatedString } from '@/lib/i18nString'
 
+import type { ButtonVariants } from '@/components/CmkButton'
+import CmkButton from '@/components/CmkButton'
 import CmkIcon from '@/components/CmkIcon'
 import CmkMultitoneIcon from '@/components/CmkIcon/CmkMultitoneIcon.vue'
 
@@ -18,34 +21,47 @@ const { _t } = usei18n()
 
 const propsCva = cva('', {
   variants: {
-    variant: {
-      error: 'cmk-alert-box--error',
-      warning: 'cmk-alert-box--warning',
-      success: 'cmk-alert-box--success',
-      info: 'cmk-alert-box--info',
-      loading: 'cmk-alert-box--loading'
-    },
     size: {
       small: 'cmk-alert-box--small',
       medium: 'cmk-alert-box--medium'
     }
   },
   defaultVariants: {
-    variant: 'info',
     size: 'medium'
   }
 })
 
-export type Variants = VariantProps<typeof propsCva>['variant']
+export type Variants = 'error' | 'warning' | 'success' | 'info' | 'loading'
 export type Sizes = VariantProps<typeof propsCva>['size']
 
-export interface CmkAlertBoxProps {
-  variant?: Variants
+const DISMISSIBLE_VARIANTS = ['info', 'success'] as const
+type DismissibleVariants = (typeof DISMISSIBLE_VARIANTS)[number]
+
+const ALERT_TO_BUTTON_VARIANT = {
+  error: 'danger',
+  warning: 'warning',
+  success: 'success',
+  info: 'info',
+  loading: 'info'
+} as const satisfies Record<NonNullable<Variants>, ButtonVariants['variant']>
+
+type BaseProps = {
   size?: Sizes
   heading?: string | undefined
   autoDismiss?: boolean | undefined
-  dismissible?: boolean | undefined
+  mainButton?: { title: TranslatedString; onclick: () => void }
+  buttons?: {
+    title: TranslatedString
+    variant: ButtonVariants['variant']
+    onclick: () => void
+  }[]
 }
+
+export type CmkAlertBoxProps = BaseProps &
+  (
+    | { variant?: DismissibleVariants; dismissible?: boolean }
+    | { variant: Exclude<Variants, DismissibleVariants>; dismissible?: false }
+  )
 
 const props = defineProps<CmkAlertBoxProps>()
 
@@ -75,6 +91,16 @@ onUnmounted(() => {
     timeoutId = null
   }
 })
+
+const mainButtonVariant = computed(() => ALERT_TO_BUTTON_VARIANT[props.variant ?? 'info'])
+
+const showCloseButton = computed(
+  () =>
+    !!props.dismissible &&
+    !props.mainButton &&
+    !props.buttons?.length &&
+    DISMISSIBLE_VARIANTS.includes(props.variant ?? 'info')
+)
 
 const alertIconName = computed(() => {
   switch (props.variant) {
@@ -107,7 +133,8 @@ const alertIconColor = computed(() => {
   <div
     v-if="open"
     class="cmk-alert-box"
-    :class="propsCva({ variant, size })"
+    :class="propsCva({ size })"
+    :style="{ background: `var(--cmk-alert-box-${variant ?? 'info'}-bg-color)` }"
     :role="variant === 'error' || variant === 'warning' ? 'alert' : 'status'"
   >
     <div class="cmk-alert-box__icon">
@@ -121,9 +148,22 @@ const alertIconColor = computed(() => {
       <div class="cmk-alert-box__body">
         <slot />
       </div>
+      <div v-if="mainButton || buttons?.length" class="cmk-alert-box__actions">
+        <CmkButton v-if="mainButton" :variant="mainButtonVariant" @click="mainButton.onclick">
+          {{ mainButton.title }}
+        </CmkButton>
+        <!-- eslint-disable vue/valid-v-for since no unique identifier is present for key -->
+        <template v-for="button in buttons">
+          <CmkButton :variant="button.variant" @click="button.onclick">
+            <CmkIcon v-if="button.variant === 'optional'" name="cancel" variant="inline" />
+            {{ button.title }}
+          </CmkButton>
+        </template>
+        <!-- eslint-enable vue/valid-v-for -->
+      </div>
     </div>
     <button
-      v-if="props.dismissible"
+      v-if="showCloseButton"
       class="cmk-alert-box__close"
       type="button"
       :aria-label="_t('Close')"
@@ -138,19 +178,20 @@ const alertIconColor = computed(() => {
 /* TODO: try to unify this component with component FormValidation. the styling should be the same
          for all error messages, so the same base component should be used. */
 .cmk-alert-box {
+  color: var(--font-color);
   display: flex;
-  align-items: center;
-  padding: var(--dimension-4) var(--dimension-5);
+  align-items: flex-start;
+  padding: var(--dimension-5);
   border-radius: var(--border-radius);
   margin: 12px 0;
-  gap: var(--dimension-5);
+  gap: var(--dimension-4);
 }
 
 .cmk-alert-box__icon {
   flex-shrink: 0;
   width: 20px;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
 }
 
@@ -159,9 +200,20 @@ const alertIconColor = computed(() => {
   flex-direction: column;
   justify-content: center;
   align-items: flex-start;
-  gap: var(--dimension-3);
+  gap: var(--dimension-2);
   max-width: 100%;
   flex: 1;
+  min-width: 0;
+}
+
+.cmk-alert-box__body {
+  width: 100%;
+  white-space: pre-line;
+}
+
+/* stylelint-disable-next-line selector-pseudo-class-no-unknown, checkmk/vue-bem-naming-convention */
+.cmk-alert-box__text :deep(.cmk-heading) {
+  width: 100%;
 }
 
 .cmk-alert-box__close {
@@ -174,32 +226,18 @@ const alertIconColor = computed(() => {
   justify-content: center;
 }
 
-.cmk-alert-box--error {
-  color: var(--font-color);
-  background: color-mix(in srgb, var(--color-dark-red-50) 50%, transparent);
-}
-
-.cmk-alert-box--warning {
-  color: var(--font-color);
-  background-color: color-mix(in srgb, var(--color-yellow-50) 25%, transparent);
-}
-
-.cmk-alert-box--success {
-  color: var(--font-color);
-  background: color-mix(in srgb, var(--color-corporate-green-50) 25%, transparent);
-}
-
-.cmk-alert-box--info,
-.cmk-alert-box--loading {
-  color: var(--font-color);
-  background-color: color-mix(in srgb, var(--color-dark-blue-50) 25%, transparent);
-}
-
 .cmk-alert-box--small {
   padding: var(--dimension-1) var(--dimension-5);
 
   .cmk-alert-box__icon {
     width: 14px;
   }
+}
+
+.cmk-alert-box__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--dimension-4);
+  margin-top: calc(var(--dimension-5) - var(--dimension-2));
 }
 </style>

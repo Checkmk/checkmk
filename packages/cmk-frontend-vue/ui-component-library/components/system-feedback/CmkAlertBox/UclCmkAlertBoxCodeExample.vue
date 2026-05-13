@@ -6,13 +6,40 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import { ref } from 'vue'
 
+import usei18n from '@/lib/i18n'
+
 import CmkAlertBox from '@/components/CmkAlertBox.vue'
 
-const isAlertOpen = ref(true)
+const { _t } = usei18n()
+
+const isOpen = ref(true)
+
+const mainButton = {
+  title: _t('Confirm'),
+  onclick: () => {
+    isOpen.value = false
+  }
+}
+const buttons = [
+  {
+    title: _t('Edit'),
+    variant: 'secondary' as const,
+    onclick: () => {
+      isOpen.value = false
+    }
+  }
+]
 </script>
 
 <template>
-  <CmkAlertBox v-model:open="isAlertOpen" variant="info" size="medium" heading="Alert Heading">
-    This is an important alert message that requires your attention.
+  <CmkAlertBox
+    v-if="isOpen"
+    variant="warning"
+    size="medium"
+    heading="Confirm deletion"
+    :main-button="mainButton"
+    :buttons="buttons"
+  >
+    This action cannot be undone. Are you sure you want to continue?
   </CmkAlertBox>
 </template>

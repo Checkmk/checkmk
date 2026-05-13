@@ -10,6 +10,22 @@ import { type Sizes, type Variants } from '@/components/CmkAlertBox.vue'
 
 import codeExample from './UclCmkAlertBoxCodeExample.vue?raw'
 
+export const a11yData = [
+  {
+    keys: ['Tab'],
+    description:
+      'Moves keyboard focus to the button. While the focus outline is hidden from view, its underlying functionality remains intact.'
+  },
+  {
+    keys: [['Shift', 'Tab']],
+    description: 'Moves focus in reverse order through the interactive elements within the dialog.'
+  },
+  {
+    keys: ['Enter', 'Space'],
+    description: 'Activates the focused action or dismissal button within the dialog.'
+  }
+]
+
 export const panelConfig = {
   open: { type: 'boolean' as const, title: 'Open', initialState: true },
   variant: {
@@ -34,8 +50,15 @@ export const panelConfig = {
     initialState: 'medium' as const
   },
   heading: { type: 'string' as const, title: 'Heading', initialState: 'Alert Heading' },
-  dismissible: { type: 'boolean' as const, title: 'Dismissable', initialState: false },
-  autoDismiss: { type: 'boolean' as const, title: 'Auto Dismiss (6s)', initialState: false }
+  dismissible: {
+    type: 'boolean' as const,
+    title: 'Dismissible',
+    initialState: false,
+    help: 'Only available for info and success variants. Only has effect when no buttons are enabled.'
+  },
+  autoDismiss: { type: 'boolean' as const, title: 'Auto Dismiss (6s)', initialState: false },
+  mainButton: { type: 'boolean' as const, title: 'Main Button', initialState: false },
+  buttons: { type: 'boolean' as const, title: 'Secondary Buttons', initialState: false }
 } satisfies PanelConfigFor<typeof CmkAlertBox>
 </script>
 
@@ -50,14 +73,39 @@ import {
   UclDetailPageLayout,
   UclPropertiesPanel
 } from '@ucl/_ucl/components/detail-page'
+import { computed } from 'vue'
 
-import CmkAlertBox from '@/components/CmkAlertBox.vue'
+import CmkAlertBox, { type CmkAlertBoxProps } from '@/components/CmkAlertBox.vue'
 
 import UclCmkAlertBoxDev from './UclCmkAlertBoxDev.vue'
 
 defineProps<{ screenshotMode: boolean }>()
 
 const propState = new PanelStateCreator<typeof CmkAlertBox>().createRef(panelConfig)
+
+const alertBoxProps = computed(
+  () =>
+    ({
+      open: propState.value.open,
+      variant: propState.value.variant,
+      size: propState.value.size,
+      heading: propState.value.heading,
+      autoDismiss: propState.value.autoDismiss,
+      dismissible: propState.value.dismissible,
+      ...(propState.value.mainButton && {
+        mainButton: { title: 'Confirm', onclick: () => console.log('Confirm clicked') }
+      }),
+      ...(propState.value.buttons && {
+        buttons: [
+          {
+            title: 'Edit',
+            variant: 'secondary' as const,
+            onclick: () => console.log('Edit clicked')
+          }
+        ]
+      })
+    }) as CmkAlertBoxProps & { open: boolean }
+)
 </script>
 
 <template>
@@ -65,14 +113,7 @@ const propState = new PanelStateCreator<typeof CmkAlertBox>().createRef(panelCon
     <UclDetailPageHeader>CmkAlertBox</UclDetailPageHeader>
 
     <UclDetailPageComponent>
-      <CmkAlertBox
-        v-model:open="propState.open"
-        :variant="propState.variant"
-        :size="propState.size"
-        :heading="propState.heading"
-        :auto-dismiss="propState.autoDismiss"
-        :dismissible="propState.dismissible"
-      >
+      <CmkAlertBox v-bind="alertBoxProps" v-model:open="propState.open">
         This is a demonstration of the alert box content. You can put any long text or HTML elements
         in here to showcase wrapping and layout.
       </CmkAlertBox>
@@ -84,7 +125,7 @@ const propState = new PanelStateCreator<typeof CmkAlertBox>().createRef(panelCon
 
     <UclDetailPageCodeExample :code="codeExample" />
 
-    <UclDetailPageAccessibility :data="[]" />
+    <UclDetailPageAccessibility :data="a11yData" />
 
     <UclDetailPageDeveloperPlayground>
       <UclCmkAlertBoxDev :screenshot-mode="screenshotMode" />

@@ -176,6 +176,13 @@
 
     /* Cmk Link colors */
     --cmk-link-hover-color: var(--color-corporate-green-70);
+
+    /* Cmk Alert Box */
+    --cmk-alert-box-error-bg-color: var(--color-dark-red-20);
+    --cmk-alert-box-warning-bg-color: var(--color-yellow-20);
+    --cmk-alert-box-success-bg-color: var(--color-corporate-green-20);
+    --cmk-alert-box-info-bg-color: var(--color-dark-blue-20);
+    --cmk-alert-box-loading-bg-color: var(--color-daylight-grey-40);
   }
 
   body[data-theme='modern-dark'] {
@@ -300,6 +307,13 @@
 
     /* Cmk Link colors */
     --cmk-link-hover-color: var(--color-corporate-green-50);
+
+    /* Cmk Alert Box */
+    --cmk-alert-box-error-bg-color: var(--color-dark-red-80);
+    --cmk-alert-box-warning-bg-color: var(--color-yellow-80);
+    --cmk-alert-box-success-bg-color: var(--color-corporate-green-80);
+    --cmk-alert-box-info-bg-color: var(--color-dark-blue-80);
+    --cmk-alert-box-loading-bg-color: var(--color-midnight-grey-60);
   }
 }
 

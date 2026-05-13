@@ -4933,6 +4933,10 @@ msgstr "Afectat %s: %s"
 msgid "Affected by service"
 msgstr "Afectat de serviciu"
 
+#, fuzzy
+msgid "Affected child hosts (host notifications only)"
+msgstr "Detalii pentru notificările gazdei"
+
 msgid ""
 "Affected folders with an explicit reference to this tag group and that are "
 "affected by the change"
@@ -12941,6 +12945,18 @@ msgstr "Verifică $PERIODNAME$ '$TITLE$'"
 msgid "Checkmk AI feature usage notice"
 msgstr "Utilizarea Checkmk fetcher"
 
+#, fuzzy
+msgid ""
+"Checkmk Agent, Number, version and edition of sites, cluster host; number of "
+"hosts, services, CMK Helper, Live Helper, Helper usage; state of daemons: "
+"Apache, Core, Crontab, DCD, Liveproxyd, MKEventd, MKNotifyd, RRDCached "
+"(Agent plug-in mk_inventory needs to be installed)"
+msgstr ""
+"Checkmk Agent, numărul, versiunea și ediția site-urilor, gazda clusterului; "
+"numărul de gazde, servicii, CMK Helper, Live Helper, utilizarea Helper; "
+"starea demonilor: Apache, Core, Crontag, DCD, Liveproxyd, MKEventd, "
+"MKNotifyd, RRDCached (trebuie instalat pluginul agentului mk_inventory)"
+
 # georgem ##############
 #, fuzzy
 msgid "Checkmk Cloud is not allowed in distributed monitoring."
@@ -12972,6 +12988,10 @@ msgstr "Checkmk Mobile"
 
 msgid "Checkmk Overview"
 msgstr "Checkmk Prezentare generală"
+
+#, fuzzy
+msgid "Checkmk Overview of Checkmk Server"
+msgstr "Checkmk Prezentare generală a serverului Checkmk"
 
 msgid "Checkmk Sidebar"
 msgstr "Bara laterală Checkmk"
@@ -13111,10 +13131,6 @@ msgstr ""
 
 msgid "Checkmk helper usage"
 msgstr "Utilizarea ajutorului Checkmk"
-
-#, fuzzy
-msgid "Checkmk overview of Checkmk server"
-msgstr "Checkmk Prezentare generală a serverului Checkmk"
 
 msgid "Checkmk server URL"
 msgstr "URL-ul serverului Checkmk"
@@ -13725,19 +13741,11 @@ msgstr ""
 "TRB140."
 
 msgid ""
-"Choose what to do with the files under <tt>%PROGRAMDATA%\\checkmk</tt>:"
-"<ul><li><i>Do not remove anything</i>: Leave all files in place after "
-"uninstallation.</li><li><i>Remove data managed by the Checkmk agent</i>: "
-"Remove only files that got created on Checkmk agent installation. This "
-"includes files that came from bakery plugins, even if they have been edited "
-"by a user. Keep runtime files that have been created after installation, "
-"like state files, registration files, and logs.</li><li><i>Remove all files "
-"and subdirectories</i>: Remove all files regardless of their origin.</li></"
-"ul><b>Caution</b>: Uninstallation also happens on every agent update! As a "
-"consequence, this rule will break automatic agent updates and TLS encrypted "
-"agent communication on setting <i>Remove all files and subdirectories</i>, "
-"since the removed files also include your agent updater and agent controller "
-"registrations."
+"Choose what to do with the files under %PROGRAMDATA%\\checkmk on Checkmk "
+"agent uninstallation. Note: Uninstallation also happens on every agent "
+"update. Setting 'Remove all files and subdirectories' will break automatic "
+"agent updates and TLS encrypted agent communication, since the removed files "
+"include the agent updater and agent controller registrations."
 msgstr ""
 
 #, fuzzy
@@ -19639,10 +19647,6 @@ msgid "Deploy the Checkmk HW/SW inventory plug-in"
 msgstr "Implementați plugin-ul Checkmk Inventory"
 
 #, fuzzy
-msgid "Deploy the Checkmk object counts plug-in"
-msgstr "Implementați plugin-ul de contorizare a obiectelor Checkmk"
-
-#, fuzzy
 msgid "Deploy the Docker container plug-in"
 msgstr "Implementați plugin-ul containerului docker"
 
@@ -21247,10 +21251,6 @@ msgstr "Nu implementați pluginul Checkmk EMC ScaleIO"
 #, fuzzy
 msgid "Do not deploy the Checkmk HW/SW inventory plug-in"
 msgstr "Nu implementați pluginul Checkmk Inventory"
-
-#, fuzzy
-msgid "Do not deploy the Checkmk site objects plug-in"
-msgstr "Nu implementați plugin-ul Checkmk site objects"
 
 #, fuzzy
 msgid "Do not deploy the DB2 memory plug-in"
@@ -35475,6 +35475,10 @@ msgid "Insufficient permissions to view exception details."
 msgstr ""
 
 #, fuzzy
+msgid "Integer field can not be empty"
+msgstr "Cheia secretă"
+
+#, fuzzy
 msgid "Integer field cannot be empty"
 msgstr "Cheia secretă"
 
@@ -40504,9 +40508,6 @@ msgid ""
 "Manage Relay configurations. Relays allow a Checkmk site to monitor SNMP "
 "based devices residing in a network that is not reachable from the internet."
 msgstr ""
-
-msgid "Manage Windows firewall rules for Checkmk agent"
-msgstr "Gestionați regulile de firewall Windows pentru agentul Checkmk"
 
 msgid "Manage and create Checkmk extension packages (MKPs)."
 msgstr "Gestionați și creați pachete de extensii Checkmk (MKP)."
@@ -52143,9 +52144,6 @@ msgstr "Porturi"
 msgid "Ports available"
 msgstr "Porturi disponibile"
 
-msgid "Ports to open"
-msgstr "Porturi de deschis"
-
 msgid "Ports: Port Utilization (FC and iSCSI)"
 msgstr ""
 
@@ -60803,6 +60801,10 @@ msgstr ""
 msgid "Site ID"
 msgstr "ID-ul sitului"
 
+#, fuzzy
+msgid "Site ID cannot be empty"
+msgstr "Cheia secretă"
+
 #, python-format
 msgid "Site ID mismatch. Our ID is '%s', but you are saying we are '%s'."
 msgstr ""
@@ -60828,6 +60830,10 @@ msgstr "Denumirea alternativă a subiectului certificatului"
 
 msgid "Site certificate validity"
 msgstr "Valabilitatea certificatului site-ului"
+
+#, fuzzy
+msgid "Site configuration"
+msgstr "Configurație gazdă"
 
 msgid "Site connection"
 msgstr "Conexiune la site"
@@ -63658,9 +63664,6 @@ msgstr "Nivelurile epocii de stare și media"
 msgid "Status flapping"
 msgstr "Stare de fluturare"
 
-msgid "Status host"
-msgstr "Stare gazdă"
-
 msgid "Status notification period"
 msgstr "Perioada de notificare a statutului"
 
@@ -65165,7 +65168,7 @@ msgstr "Numărul de trasee eșuate"
 
 msgid ""
 "Telemetry data are collected through the OpenTelemetry Collector. Adjust the "
-"Collector configuration to modify data collection"
+"Collector configuration to modify data collection."
 msgstr ""
 
 msgid ""
@@ -80263,6 +80266,10 @@ msgid "Unique ID %s already exists."
 msgstr "Există deja un pachet de reguli cu acest ID."
 
 #, fuzzy
+msgid "Unique ID cannot be empty"
+msgstr "Cheia secretă"
+
+#, fuzzy
 msgid "Unique ID should not be empty."
 msgstr "Cheia secretă"
 
@@ -84412,6 +84419,10 @@ msgstr "Erori de transmisie CTIO"
 
 msgid "WLC WiFi client connections"
 msgstr "Conexiuni client WLC WiFi"
+
+#, fuzzy
+msgid "WMI timeout"
+msgstr "Timpul de inactivitate"
 
 msgid "WSUS (Windows Updates)"
 msgstr "WSUS (Actualizări Windows)"
@@ -94448,10 +94459,16 @@ msgid "Username is required but not specified."
 msgstr "credențiale JSON pentru contul de servicii"
 
 #, fuzzy
-msgid "The selected password ID is not usable by the OTel Collector. "
+msgid "The password ID '%{passwordId}' is not usable by the OTel Collector."
 msgstr ""
 "Numele vizualizării poate conține numai litere, cifre și caractere de "
 "subliniere."
+
+msgid "It must start with a letter or underscore and "
+msgstr ""
+
+msgid "Please select a different password or create a new one with a valid ID."
+msgstr ""
 
 #, fuzzy
 msgid "Password is required but not specified."
@@ -94471,6 +94488,13 @@ msgstr ""
 msgid ""
 "You must set a resource attribute (e.g., service.name) so the system can "
 "determine the host name."
+msgstr ""
+
+msgid ""
+"Serves the OTLP endpoint over TLS using the site's certificate. The client "
+"must trust the site CA at ~/etc/ssl/ca.pem. The certificate's server name "
+"matches the site ID, so set server_name_override (or the SDK equivalent) to "
+"the site ID.<br><br>Required when basic authentication is enabled."
 msgstr ""
 
 #, fuzzy
@@ -94517,11 +94541,17 @@ msgid ""
 "Configure a GRPC-based OTLP receiver that will collect OpenTelemetry data."
 msgstr ""
 
+msgid "GRPC-based receiver"
+msgstr ""
+
 msgid "Enable the GRPC-based OTLP receiver"
 msgstr ""
 
 msgid ""
 "Configure an HTTP-based OTLP receiver that will collect OpenTelemetry data."
+msgstr ""
+
+msgid "HTTP-based receiver"
 msgstr ""
 
 msgid "Enable the HTTP-based OTLP receiver"
@@ -94665,6 +94695,12 @@ msgid ""
 "use '0.0.0.0' or '::'."
 msgstr ""
 
+msgid ""
+"Serves the OTLP endpoint over TLS using the site's certificate. The client "
+"must trust the site CA at ~/etc/ssl/ca.pem. The certificate's server name "
+"matches the site ID."
+msgstr ""
+
 #, fuzzy
 msgid "Missing site selection"
 msgstr "Lipsește selecția necesară."
@@ -94784,6 +94820,14 @@ msgstr "Configurația stilului selectat"
 
 #, fuzzy
 msgid "Could not create the Prometheus scraper configuration"
+msgstr "Adaugp o noua configurație de utilizator"
+
+#, fuzzy
+msgid "Configuration bundle setup"
+msgstr "Fișiere de configurare"
+
+#, fuzzy
+msgid "Could not create the configuration bundle"
 msgstr "Adaugp o noua configurație de utilizator"
 
 msgid ""
@@ -95860,6 +95904,23 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Deploy the Checkmk object counts plug-in"
+#~ msgstr "Implementați plugin-ul de contorizare a obiectelor Checkmk"
+
+#, fuzzy
+#~ msgid "Do not deploy the Checkmk site objects plug-in"
+#~ msgstr "Nu implementați plugin-ul Checkmk site objects"
+
+#~ msgid "Manage Windows firewall rules for Checkmk agent"
+#~ msgstr "Gestionați regulile de firewall Windows pentru agentul Checkmk"
+
+#~ msgid "Ports to open"
+#~ msgstr "Porturi de deschis"
+
+#~ msgid "Status host"
+#~ msgstr "Stare gazdă"
 
 #, fuzzy
 #~ msgid "Deploy IBM MQ plug-in"
@@ -102303,19 +102364,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Cannot delete rules that are managed by quick setup."
 #~ msgstr "Nu puteți șterge rolurile care sunt încă în uz (%s)!"
-
-#, fuzzy
-#~ msgid ""
-#~ "Checkmk Agent, Number, version and edition of sites, cluster host; number "
-#~ "of hosts, services, CMK Helper, Live Helper, Helper usage; state of "
-#~ "daemons: Apache, Core, Crontab, DCD, Liveproxyd, MKEventd, MKNotifyd, "
-#~ "RRDCached (Agent plug-in mk_inventory needs to be installed)"
-#~ msgstr ""
-#~ "Checkmk Agent, numărul, versiunea și ediția site-urilor, gazda "
-#~ "clusterului; numărul de gazde, servicii, CMK Helper, Live Helper, "
-#~ "utilizarea Helper; starea demonilor: Apache, Core, Crontag, DCD, "
-#~ "Liveproxyd, MKEventd, MKNotifyd, RRDCached (trebuie instalat pluginul "
-#~ "agentului mk_inventory)"
 
 #, fuzzy
 #~ msgid "ClientId"

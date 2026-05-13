@@ -4870,6 +4870,10 @@ msgstr "%s influenzati: %s"
 msgid "Affected by service"
 msgstr "Interessato dal servizio"
 
+#, fuzzy
+msgid "Affected child hosts (host notifications only)"
+msgstr "Dettagli per le notifiche degli host"
+
 msgid ""
 "Affected folders with an explicit reference to this tag group and that are "
 "affected by the change"
@@ -12821,6 +12825,18 @@ msgid "Checkmk AI feature usage notice"
 msgstr "Uso del checkmk fetcher"
 
 #, fuzzy
+msgid ""
+"Checkmk Agent, Number, version and edition of sites, cluster host; number of "
+"hosts, services, CMK Helper, Live Helper, Helper usage; state of daemons: "
+"Apache, Core, Crontab, DCD, Liveproxyd, MKEventd, MKNotifyd, RRDCached "
+"(Agent plug-in mk_inventory needs to be installed)"
+msgstr ""
+"Checkmk Agent, Numero, versione ed edizione dei siti, Cluster host; Numero "
+"di host, servizi, CMK Helper, Live Helper, utilizzo degli Helper; Stato dei "
+"demoni: Apache, Core, Crontag, DCD, Liveproxyd, MKEventd, MKNotifyd, "
+"RRDCached (il plugin mk_inventory dell'agente deve essere installato)"
+
+#, fuzzy
 msgid "Checkmk Cloud is not allowed in distributed monitoring."
 msgstr "Il CSE non è consentito nel monitoraggio distribuito."
 
@@ -12850,6 +12866,10 @@ msgstr "Checkmk Mobile"
 
 msgid "Checkmk Overview"
 msgstr "Checkmk Panoramica"
+
+#, fuzzy
+msgid "Checkmk Overview of Checkmk Server"
+msgstr "Checkmk Panoramica del server Checkmk"
 
 msgid "Checkmk Sidebar"
 msgstr "Barra laterale di Checkmk"
@@ -12988,10 +13008,6 @@ msgstr ""
 
 msgid "Checkmk helper usage"
 msgstr "Uso dell'helper Checkmk"
-
-#, fuzzy
-msgid "Checkmk overview of Checkmk server"
-msgstr "Checkmk Panoramica del server Checkmk"
 
 msgid "Checkmk server URL"
 msgstr "URL del server Checkmk"
@@ -13600,19 +13616,11 @@ msgstr ""
 "TRB140."
 
 msgid ""
-"Choose what to do with the files under <tt>%PROGRAMDATA%\\checkmk</tt>:"
-"<ul><li><i>Do not remove anything</i>: Leave all files in place after "
-"uninstallation.</li><li><i>Remove data managed by the Checkmk agent</i>: "
-"Remove only files that got created on Checkmk agent installation. This "
-"includes files that came from bakery plugins, even if they have been edited "
-"by a user. Keep runtime files that have been created after installation, "
-"like state files, registration files, and logs.</li><li><i>Remove all files "
-"and subdirectories</i>: Remove all files regardless of their origin.</li></"
-"ul><b>Caution</b>: Uninstallation also happens on every agent update! As a "
-"consequence, this rule will break automatic agent updates and TLS encrypted "
-"agent communication on setting <i>Remove all files and subdirectories</i>, "
-"since the removed files also include your agent updater and agent controller "
-"registrations."
+"Choose what to do with the files under %PROGRAMDATA%\\checkmk on Checkmk "
+"agent uninstallation. Note: Uninstallation also happens on every agent "
+"update. Setting 'Remove all files and subdirectories' will break automatic "
+"agent updates and TLS encrypted agent communication, since the removed files "
+"include the agent updater and agent controller registrations."
 msgstr ""
 
 #, fuzzy
@@ -19486,10 +19494,6 @@ msgid "Deploy the Checkmk HW/SW inventory plug-in"
 msgstr "Distribuire il plugin Checkmk Inventory"
 
 #, fuzzy
-msgid "Deploy the Checkmk object counts plug-in"
-msgstr "Distribuire il plugin Checkmk per il conteggio degli oggetti"
-
-#, fuzzy
 msgid "Deploy the Docker container plug-in"
 msgstr "Distribuire il plugin per container docker"
 
@@ -21099,10 +21103,6 @@ msgstr "Non distribuire il plugin Checkmk EMC ScaleIO"
 #, fuzzy
 msgid "Do not deploy the Checkmk HW/SW inventory plug-in"
 msgstr "Non distribuire il plugin Checkmk Inventory"
-
-#, fuzzy
-msgid "Do not deploy the Checkmk site objects plug-in"
-msgstr "Non distribuire il plugin Checkmk site objects"
 
 #, fuzzy
 msgid "Do not deploy the DB2 memory plug-in"
@@ -35261,6 +35261,10 @@ msgid "Insufficient permissions to view exception details."
 msgstr ""
 
 #, fuzzy
+msgid "Integer field can not be empty"
+msgstr "Chiave segreta"
+
+#, fuzzy
 msgid "Integer field cannot be empty"
 msgstr "Chiave segreta"
 
@@ -40277,9 +40281,6 @@ msgid ""
 "Manage Relay configurations. Relays allow a Checkmk site to monitor SNMP "
 "based devices residing in a network that is not reachable from the internet."
 msgstr ""
-
-msgid "Manage Windows firewall rules for Checkmk agent"
-msgstr "Gestire le regole del firewall di Windows per l'agente Checkmk"
 
 msgid "Manage and create Checkmk extension packages (MKPs)."
 msgstr "Gestire e creare pacchetti di estensioni Checkmk (MKP)."
@@ -51868,9 +51869,6 @@ msgstr "Porte"
 msgid "Ports available"
 msgstr "Porte disponibili"
 
-msgid "Ports to open"
-msgstr "Porte da aprire"
-
 msgid "Ports: Port Utilization (FC and iSCSI)"
 msgstr "Porte: Utilizzo delle porte (FiberChannel e iSCSI)"
 
@@ -60478,6 +60476,10 @@ msgstr ""
 msgid "Site ID"
 msgstr "ID del sito"
 
+#, fuzzy
+msgid "Site ID cannot be empty"
+msgstr "Chiave segreta"
+
 #, python-format
 msgid "Site ID mismatch. Our ID is '%s', but you are saying we are '%s'."
 msgstr ""
@@ -60503,6 +60505,10 @@ msgstr "Nome alternativo del soggetto del certificato"
 
 msgid "Site certificate validity"
 msgstr "Validità del certificato del sito"
+
+#, fuzzy
+msgid "Site configuration"
+msgstr "Configurazione dell'host"
 
 msgid "Site connection"
 msgstr "Collegamento al sito"
@@ -63330,9 +63336,6 @@ msgstr "Livelli di epoche di stato e media"
 msgid "Status flapping"
 msgstr "Stato di sbattimento"
 
-msgid "Status host"
-msgstr "Stato dell'host"
-
 msgid "Status notification period"
 msgstr "Periodo di notifica dello stato"
 
@@ -64831,7 +64834,7 @@ msgstr "Numero di percorsi falliti"
 
 msgid ""
 "Telemetry data are collected through the OpenTelemetry Collector. Adjust the "
-"Collector configuration to modify data collection"
+"Collector configuration to modify data collection."
 msgstr ""
 
 msgid ""
@@ -79902,6 +79905,10 @@ msgid "Unique ID %s already exists."
 msgstr "Un pacchetto di regole con questo ID esiste già."
 
 #, fuzzy
+msgid "Unique ID cannot be empty"
+msgstr "Chiave segreta"
+
+#, fuzzy
 msgid "Unique ID should not be empty."
 msgstr "Chiave segreta"
 
@@ -84026,6 +84033,10 @@ msgstr "Errori di trasmissione CTIO"
 
 msgid "WLC WiFi client connections"
 msgstr "Connessioni client WLC WiFi"
+
+#, fuzzy
+msgid "WMI timeout"
+msgstr "Timeout inattivo"
 
 msgid "WSUS (Windows Updates)"
 msgstr "WSUS (aggiornamenti di Windows)"
@@ -94013,10 +94024,16 @@ msgid "Username is required but not specified."
 msgstr "%s è richiesto ma non è stato specificato."
 
 #, fuzzy
-msgid "The selected password ID is not usable by the OTel Collector. "
+msgid "The password ID '%{passwordId}' is not usable by the OTel Collector."
 msgstr ""
 "Il nome della vista può contenere solo lettere, cifre e caratteri di "
 "sottolineatura."
+
+msgid "It must start with a letter or underscore and "
+msgstr ""
+
+msgid "Please select a different password or create a new one with a valid ID."
+msgstr ""
 
 #, fuzzy
 msgid "Password is required but not specified."
@@ -94036,6 +94053,13 @@ msgstr ""
 msgid ""
 "You must set a resource attribute (e.g., service.name) so the system can "
 "determine the host name."
+msgstr ""
+
+msgid ""
+"Serves the OTLP endpoint over TLS using the site's certificate. The client "
+"must trust the site CA at ~/etc/ssl/ca.pem. The certificate's server name "
+"matches the site ID, so set server_name_override (or the SDK equivalent) to "
+"the site ID.<br><br>Required when basic authentication is enabled."
 msgstr ""
 
 #, fuzzy
@@ -94082,11 +94106,17 @@ msgid ""
 "Configure a GRPC-based OTLP receiver that will collect OpenTelemetry data."
 msgstr ""
 
+msgid "GRPC-based receiver"
+msgstr ""
+
 msgid "Enable the GRPC-based OTLP receiver"
 msgstr ""
 
 msgid ""
 "Configure an HTTP-based OTLP receiver that will collect OpenTelemetry data."
+msgstr ""
+
+msgid "HTTP-based receiver"
 msgstr ""
 
 msgid "Enable the HTTP-based OTLP receiver"
@@ -94229,6 +94259,12 @@ msgid ""
 "use '0.0.0.0' or '::'."
 msgstr ""
 
+msgid ""
+"Serves the OTLP endpoint over TLS using the site's certificate. The client "
+"must trust the site CA at ~/etc/ssl/ca.pem. The certificate's server name "
+"matches the site ID."
+msgstr ""
+
 #, fuzzy
 msgid "Missing site selection"
 msgstr "Manca la selezione richiesta."
@@ -94348,6 +94384,14 @@ msgstr "Configurazione dello stile selezionato"
 
 #, fuzzy
 msgid "Could not create the Prometheus scraper configuration"
+msgstr "Aggiungere una nuova configurazione utente"
+
+#, fuzzy
+msgid "Configuration bundle setup"
+msgstr "File di configurazione"
+
+#, fuzzy
+msgid "Could not create the configuration bundle"
 msgstr "Aggiungere una nuova configurazione utente"
 
 msgid ""
@@ -95422,6 +95466,23 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Deploy the Checkmk object counts plug-in"
+#~ msgstr "Distribuire il plugin Checkmk per il conteggio degli oggetti"
+
+#, fuzzy
+#~ msgid "Do not deploy the Checkmk site objects plug-in"
+#~ msgstr "Non distribuire il plugin Checkmk site objects"
+
+#~ msgid "Manage Windows firewall rules for Checkmk agent"
+#~ msgstr "Gestire le regole del firewall di Windows per l'agente Checkmk"
+
+#~ msgid "Ports to open"
+#~ msgstr "Porte da aprire"
+
+#~ msgid "Status host"
+#~ msgstr "Stato dell'host"
 
 #, fuzzy
 #~ msgid "Deploy IBM MQ plug-in"
@@ -101688,19 +101749,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Cannot delete rules that are managed by quick setup."
 #~ msgstr "Non puoi cancellare i ruoli che sono ancora in uso (%s)!"
-
-#, fuzzy
-#~ msgid ""
-#~ "Checkmk Agent, Number, version and edition of sites, cluster host; number "
-#~ "of hosts, services, CMK Helper, Live Helper, Helper usage; state of "
-#~ "daemons: Apache, Core, Crontab, DCD, Liveproxyd, MKEventd, MKNotifyd, "
-#~ "RRDCached (Agent plug-in mk_inventory needs to be installed)"
-#~ msgstr ""
-#~ "Checkmk Agent, Numero, versione ed edizione dei siti, Cluster host; "
-#~ "Numero di host, servizi, CMK Helper, Live Helper, utilizzo degli Helper; "
-#~ "Stato dei demoni: Apache, Core, Crontag, DCD, Liveproxyd, MKEventd, "
-#~ "MKNotifyd, RRDCached (il plugin mk_inventory dell'agente deve essere "
-#~ "installato)"
 
 #, fuzzy
 #~ msgid "ClientId"

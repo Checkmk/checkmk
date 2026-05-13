@@ -162,10 +162,8 @@ class ModeDiagnostics(WatoMode[object]):
         self._checkmk_files_map: dict[str, CheckmkFilesMap] = {}
         for file_map in _FILE_MAPS:
             self._checkmk_files_map[file_map.file_type] = file_map.map_generator(
-                file_map.base_folder,
-                file_map.component_folder,
-                _os_walk_of_folder(self._site, file_map.base_folder, 10),
                 self._site,
+                lambda base_folder: _os_walk_of_folder(self._site, base_folder, 10),
             )
 
         self._collect_dump = bool(request.get_ascii_input("_collect_dump"))

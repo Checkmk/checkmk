@@ -41,12 +41,27 @@ class DiagnosticsParameters(TypedDict):
 @dataclass(frozen=True, kw_only=True)
 class FileMapConfig:
     file_type: Literal["config", "core", "licensing", "log"]
-    component_folder: Path
     base_folder: Path
-    map_generator: Callable[
-        [Path, Path, list[tuple[str, list[str], list[str]]], str | None],
-        dict[str, Path],
-    ]
+    keep: Callable[[Path], bool]
+
+    def site_specific_base_folder(self, site: str | None) -> Path:
+        # NOTE: This is quite fragile!
+        return Path(str(self.base_folder).replace(omd_site(), site)) if site else self.base_folder
+
+    def map_generator(
+        self,
+        site: str | None,
+        walker: Callable[[Path], OSWalk],
+    ) -> CheckmkFilesMap:
+        files_map = CheckmkFilesMap()
+        site_specific_base_folder = self.site_specific_base_folder(site)
+        for root, _dirs, files in walker(self.base_folder):
+            for file_name in files:
+                filepath = Path(root) / file_name
+                if self.keep(filepath):
+                    rel_filepath = str(filepath.relative_to(site_specific_base_folder))
+                    files_map.setdefault(rel_filepath, filepath)
+        return files_map
 
 
 # NOTE: The structure of the diagnostic option definitions below is horrible and needs some serious
@@ -516,102 +531,32 @@ def redact_passwords_in_file(filepath: Path, rel_filepath: Path) -> int:
 # +----------------------------------------------------------------+
 
 
-def _get_site_specific_base_folder(base_folder: Path, site: str | None) -> Path:
-    if site:
-        return Path(str(base_folder).replace(omd_site(), site))
-
-    return base_folder
-
-
-def _get_checkmk_config_files_map(
-    base_folder: Path, component_folder: Path, walk: OSWalk, site: str | None
-) -> CheckmkFilesMap:
-    files_map: CheckmkFilesMap = {}
-    base_folder = _get_site_specific_base_folder(base_folder, site)
-    for root, _dirs, files in walk:
-        for file_name in files:
-            if file_name == "ca-certificates.mk":
-                continue
-            filepath = Path(root).joinpath(file_name)
-            if filepath.suffix in (".mk", ".conf", ".bi") or filepath.name == ".wato":
-                rel_filepath = str(filepath.relative_to(base_folder))
-                files_map.setdefault(rel_filepath, filepath)
-    return files_map
-
-
-def _get_checkmk_core_files_map(
-    base_folder: Path, component_folder: Path, walk: OSWalk, site: str | None
-) -> CheckmkFilesMap:
-    files_map: CheckmkFilesMap = {}
-    base_folder = _get_site_specific_base_folder(base_folder, site)
-    for root, _dirs, files in walk:
-        for file_name in files:
-            filepath = Path(root).joinpath(file_name)
-            if filepath.stem in ("state", "history", "config"):
-                rel_filepath = str(filepath.relative_to(base_folder))
-                files_map.setdefault(rel_filepath, filepath)
-    return files_map
-
-
-def _get_checkmk_licensing_files_map(
-    base_folder: Path, component_folder: Path, walk: OSWalk, site: str | None
-) -> CheckmkFilesMap:
-    files_map: CheckmkFilesMap = {}
-    base_folder = _get_site_specific_base_folder(base_folder, site)
-    for root, _dirs, files in walk:
-        for file_name in files:
-            filepath = Path(root).joinpath(file_name)
-            rel_filepath = str(filepath.relative_to(base_folder))
-            files_map.setdefault(rel_filepath, filepath)
-    return files_map
-
-
-def _get_checkmk_log_files_map(
-    base_folder: Path, component_folder: Path, walk: OSWalk, site: str | None
-) -> CheckmkFilesMap:
-    files_map: CheckmkFilesMap = {}
-    base_folder = _get_site_specific_base_folder(base_folder, site)
-    for root, _dirs, files in walk:
-        for file_name in files:
-            filepath = Path(root) / file_name
-            if (
-                filepath.suffix in (".log", ".1", ".state")
-                or filepath.name
-                in (
-                    "access_log",
-                    "error_log",
-                    "stats",
-                )
-                or filepath.name.startswith("update.log")
-            ):
-                rel_filepath = str(filepath.relative_to(base_folder))
-                files_map.setdefault(rel_filepath, filepath)
-    return files_map
-
-
 FILE_MAP_CONFIG = FileMapConfig(
     file_type="config",
-    component_folder=cmk.utils.paths.default_config_dir,
     base_folder=cmk.utils.paths.default_config_dir,
-    map_generator=_get_checkmk_config_files_map,
+    keep=lambda path: (
+        path.name != "ca-certificates.mk"
+        and (path.suffix in (".mk", ".conf", ".bi") or path.name == ".wato")
+    ),
 )
 FILE_MAP_CORE = FileMapConfig(
     file_type="core",
-    component_folder=cmk.utils.paths.var_dir.joinpath("core"),
     base_folder=cmk.utils.paths.var_dir,
-    map_generator=_get_checkmk_core_files_map,
+    keep=lambda path: path.stem in ("state", "history", "config"),
 )
 FILE_MAP_LICENSING = FileMapConfig(
     file_type="licensing",
-    component_folder=cmk.utils.paths.var_dir.joinpath("licensing"),
     base_folder=cmk.utils.paths.var_dir,
-    map_generator=_get_checkmk_licensing_files_map,
+    keep=lambda path: True,
 )
 FILE_MAP_LOG = FileMapConfig(
     file_type="log",
-    component_folder=cmk.utils.paths.log_dir,
     base_folder=cmk.utils.paths.log_dir,
-    map_generator=_get_checkmk_log_files_map,
+    keep=lambda path: (
+        path.suffix in (".log", ".1", ".state")
+        or path.name in ("access_log", "error_log", "stats")
+        or path.name.startswith("update.log")
+    ),
 )
 
 

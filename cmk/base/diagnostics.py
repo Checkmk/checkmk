@@ -1288,10 +1288,8 @@ class ABCCheckmkFilesDiagnosticsElement(ABCDiagnosticsElement):
     @property
     def _checkmk_files_map(self) -> CheckmkFilesMap:
         return self.file_map_config.map_generator(
-            self.file_map_config.base_folder,
-            self.file_map_config.component_folder,
-            list(os.walk(self.file_map_config.base_folder)),
             None,
+            lambda base_folder: list(os.walk(base_folder)),
         )
 
     @property

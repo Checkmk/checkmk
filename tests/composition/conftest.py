@@ -5,6 +5,7 @@
 
 import logging
 import os
+import time
 from collections.abc import Iterator
 from pathlib import Path
 from shutil import which
@@ -114,6 +115,58 @@ def _installed_agent_ctl_in_unknown_state(central_site: Site, tmp_path: Path) ->
 def _agent_ctl(installed_agent_ctl_in_unknown_state: Path) -> Iterator[Path]:
     with agent_controller_daemon(installed_agent_ctl_in_unknown_state):
         yield installed_agent_ctl_in_unknown_state
+
+
+@pytest.fixture(autouse=True)
+def _verify_central_livestatus_alive(
+    central_site: Site,
+    request: pytest.FixtureRequest,
+) -> Iterator[None]:
+    """Fail fast with diagnostics if the central site's livestatus is dead.
+
+    Mitigation for CMK-34867: under back-to-back activations cmc can die
+    silently mid-reload, leaving Apache up but livestatus refusing connections.
+    Without this guard the symptom only surfaces minutes later as a cascade of
+    unrelated test failures (e.g. activate-changes 409 "site offline"), which
+    masks the actual point of failure. The probe runs both before and after
+    each test so the culprit test (the one whose activation killed the core)
+    is the one that fails.
+    """
+    _assert_central_livestatus_alive(central_site, when=f"before {request.node.name}")
+    yield
+    _assert_central_livestatus_alive(central_site, when=f"after {request.node.name}")
+
+
+def _assert_central_livestatus_alive(site: Site, *, when: str) -> None:
+    last_error: BaseException | None = None
+    for _ in range(3):
+        try:
+            site.live.query_value("GET status\nColumns: program_start\n")
+            return
+        except Exception as exc:
+            last_error = exc
+            time.sleep(1)
+    diagnostics = _collect_central_diagnostics(site)
+    pytest.fail(
+        f"Central site livestatus is unreachable {when} (see CMK-34867).\n"
+        f"Last error: {last_error!r}\n\n{diagnostics}",
+        pytrace=False,
+    )
+
+
+def _collect_central_diagnostics(site: Site) -> str:
+    parts: list[str] = []
+    try:
+        omd_status = site.omd("status")
+        parts.append(f"omd status (rc={omd_status.returncode}):\n{omd_status.stdout}")
+    except Exception as exc:
+        parts.append(f"Could not run 'omd status': {exc!r}")
+    try:
+        cmc_lines = site.read_file("var/log/cmc.log").splitlines()
+        parts.append("Last 30 lines of var/log/cmc.log:\n" + "\n".join(cmc_lines[-30:]))
+    except Exception as exc:
+        parts.append(f"Could not read var/log/cmc.log: {exc!r}")
+    return "\n\n".join(parts)
 
 
 @pytest.fixture(scope="session", name="ensure_cron")

@@ -241,12 +241,6 @@ node_hardware_nwadapter = Node(
     ),
 )
 
-node_hardware_storage = Node(
-    name="hardware_storage",
-    path=["hardware", "storage"],
-    title=Title("Storage"),
-)
-
 node_hardware_storage_controller = Node(
     name="hardware_storage_controller",
     path=["hardware", "storage", "controller"],
@@ -254,30 +248,6 @@ node_hardware_storage_controller = Node(
     attributes={
         "version": TextField(Title("Version")),
     },
-)
-
-node_hardware_storage_disks = Node(
-    name="hardware_storage_disks",
-    path=["hardware", "storage", "disks"],
-    title=Title("Block devices"),
-    attributes={
-        "size": NumberField(Title("Size"), render=UNIT_BYTES),
-    },
-    table=Table(
-        columns={
-            "fsnode": TextField(Title("File system node")),
-            "controller": TextField(Title("Controller")),
-            "signature": TextField(Title("Disk ID")),
-            "bus": TextField(Title("Bus")),
-            "drive_index": TextField(Title("Drive")),
-            "local": TextField(Title("Local")),
-            "product": TextField(Title("Product")),
-            "serial": TextField(Title("Serial number")),
-            "size": NumberField(Title("Size"), render=UNIT_BYTES),
-            "type": TextField(Title("Type")),
-            "vendor": TextField(Title("Vendor")),
-        },
-    ),
 )
 
 node_hardware_system_nodes = Node(
@@ -302,23 +272,6 @@ node_hardware_uploaded_files = Node(
     attributes={
         "call_progress_tones": TextField(Title("Call progress tones")),
     },
-)
-
-node_hardware_video = Node(
-    name="hardware_video",
-    path=["hardware", "video"],
-    title=Title("Graphic cards"),
-    table=Table(
-        columns={
-            "slot": TextField(Title("Slot")),
-            "name": TextField(Title("Graphic card name")),
-            "subsystem": TextField(Title("Vendor and device ID")),
-            "driver": TextField(Title("Driver")),
-            "driver_version": TextField(Title("Driver version")),
-            "driver_date": TextField(Title("Driver date")),
-            "graphic_memory": NumberField(Title("Memory"), render=UNIT_BYTES),
-        },
-    ),
 )
 
 node_hardware_volumes = Node(

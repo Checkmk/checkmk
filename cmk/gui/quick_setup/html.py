@@ -23,6 +23,11 @@ def register_bundle_group_edit_mode(bundle_group: str, mode_name: str) -> None:
 
 
 def _quick_setup_link(ident: GlobalIdent) -> str:
+    return quick_setup_link_url(ident)
+
+
+def quick_setup_link_url(ident: GlobalIdent) -> str:
+    """Returns the URL to the Quick Setup overview page for the given locked_by ident."""
     bundle_id = BundleId(ident["instance_id"])
     bundles = load_configuration_bundles()
     if bundle_id in bundles:

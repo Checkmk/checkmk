@@ -8,7 +8,6 @@ from cmk.inventory_ui.v1_unstable import (
     Table,
     TextField,
     Title,
-    View,
 )
 
 node_networking_kube = Node(
@@ -19,24 +18,6 @@ node_networking_kube = Node(
         columns={
             "ip": TextField(Title("IP address")),
             "address_type": TextField(Title("Type")),
-        },
-    ),
-)
-
-
-node_networking_device_uplinks = Node(
-    name="networking_device_uplinks",
-    path=["networking", "uplinks"],
-    title=Title("Device uplinks"),
-    table=Table(
-        view=View(name="invdeviceuplinks", title=Title("Device uplinks")),
-        columns={
-            "interface": TextField(Title("Interface")),
-            "protocol": TextField(Title("Protocol")),
-            "address": TextField(Title("Address")),
-            "gateway": TextField(Title("Gateway")),
-            "public_address": TextField(Title("Public address")),
-            "assignment_mode": TextField(Title("Assignment mode")),
         },
     ),
 )

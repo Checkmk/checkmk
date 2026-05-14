@@ -590,7 +590,15 @@ def _validate_host_attributes_for_quick_setup(host: Host, body: dict[str, Any]) 
     constructors.object_href("host_config", "{host_name}"),
     ".../update",
     method="put",
-    path_params=[HOST_NAME],
+    path_params=[
+        {
+            "host_name": gui_fields.HostField(
+                description="A host name.",
+                should_exist=True,
+                permission_type="setup_write",
+            )
+        }
+    ],
     etag="both",
     request_schema=UpdateHost,
     response_schema=HostConfigSchema,

@@ -101,7 +101,7 @@ def test_openapi_missing_host(clients: ClientRegistry) -> None:
     resp.assert_status_code(404)
     assert resp.json == {
         "detail": "These fields have problems: host_name",
-        "fields": {"host_name": ["Host not found: 'foobar'"]},
+        "fields": {"host_name": ["Host not found or access denied: 'foobar'"]},
         "status": 404,
         "title": "Not Found",
     }
@@ -1486,6 +1486,155 @@ def test_show_host_requires_permission_cmk_25482(
         "get",
         url="/objects/host_config/heute",
         api_version=api_version,
+        expect_ok=False,
+    )
+    resp.assert_status_code(404)
+
+
+@pytest.mark.parametrize("api_version", [APIVersion.V1, APIVersion.UNSTABLE])
+def test_update_host_accessible_to_folder_contact(
+    clients: ClientRegistry,
+    api_version: APIVersion,
+) -> None:
+    """A user who is a member of the folder's contact group can update a host's config
+    even without the 'wato.see_all_folders' permission (which is only held by admins)."""
+    clients.ContactGroup.create("folder_cg", alias="folder_cg")
+    clients.User.create(
+        username="folder_member",
+        fullname="folder_member",
+        customer=None,
+        roles=["user"],
+        contactgroups=["folder_cg"],
+        auth_option={"auth_type": "password", "password": "supersecretish"},
+    )
+    clients.Folder.create(
+        title="restricted_folder",
+        parent="/",
+        folder_name="restricted_folder",
+        attributes={"contactgroups": {"groups": ["folder_cg"], "recurse_perms": True}},
+    )
+    clients.HostConfig.create(host_name="restricted_host", folder="/restricted_folder")
+
+    clients.HostConfig.set_credentials("folder_member", "supersecretish")
+
+    resp = clients.HostConfig.request(
+        "put",
+        url="/objects/host_config/restricted_host",
+        body={"update_attributes": {"alias": "renamed"}},
+        api_version=api_version,
+        headers={"If-Match": "*"},
+    )
+    resp.assert_status_code(200)
+
+
+@pytest.mark.parametrize("api_version", [APIVersion.V1, APIVersion.UNSTABLE])
+def test_update_host_inaccessible_to_non_folder_contact(
+    clients: ClientRegistry,
+    api_version: APIVersion,
+) -> None:
+    """A user who is NOT a member of the folder's contact group gets 404, indistinguishable
+    from a host that does not exist, so that host existence is not leaked."""
+    clients.ContactGroup.create("correct_cg", alias="correct_cg")
+    clients.ContactGroup.create("wrong_cg", alias="wrong_cg")
+    clients.User.create(
+        username="wrong_member",
+        fullname="wrong_member",
+        customer=None,
+        contactgroups=["wrong_cg"],
+        auth_option={"auth_type": "password", "password": "supersecretish"},
+    )
+    clients.Folder.create(
+        title="restricted_folder",
+        parent="/",
+        folder_name="restricted_folder",
+        attributes={"contactgroups": {"groups": ["correct_cg"], "recurse_perms": True}},
+    )
+    clients.HostConfig.create(host_name="restricted_host", folder="/restricted_folder")
+
+    clients.HostConfig.set_credentials("wrong_member", "supersecretish")
+
+    resp = clients.HostConfig.request(
+        "put",
+        url="/objects/host_config/restricted_host",
+        body={"update_attributes": {"alias": "renamed"}},
+        api_version=api_version,
+        headers={"If-Match": "*"},
+        expect_ok=False,
+    )
+    resp.assert_status_code(404)
+
+
+def test_update_host_v1_unifies_404_for_missing_and_forbidden(
+    clients: ClientRegistry,
+) -> None:
+    """The V1 update_host endpoint must return identical 404 responses for a non-existent
+    host and an existing host the user has no read access to, so existence is not leaked."""
+    clients.ContactGroup.create("correct_cg", alias="correct_cg")
+    clients.ContactGroup.create("wrong_cg", alias="wrong_cg")
+    clients.User.create(
+        username="wrong_member",
+        fullname="wrong_member",
+        customer=None,
+        contactgroups=["wrong_cg"],
+        auth_option={"auth_type": "password", "password": "supersecretish"},
+    )
+    clients.Folder.create(
+        title="restricted_folder",
+        parent="/",
+        folder_name="restricted_folder",
+        attributes={"contactgroups": {"groups": ["correct_cg"], "recurse_perms": True}},
+    )
+    clients.HostConfig.create(host_name="restricted_host", folder="/restricted_folder")
+
+    clients.HostConfig.set_credentials("wrong_member", "supersecretish")
+
+    resp_existing = clients.HostConfig.request(
+        "put",
+        url="/objects/host_config/restricted_host",
+        body={"update_attributes": {"alias": "renamed"}},
+        api_version=APIVersion.V1,
+        headers={"If-Match": "*"},
+        expect_ok=False,
+    )
+    resp_missing = clients.HostConfig.request(
+        "put",
+        url="/objects/host_config/nonexistent_host",
+        body={"update_attributes": {"alias": "renamed"}},
+        api_version=APIVersion.V1,
+        headers={"If-Match": "*"},
+        expect_ok=False,
+    )
+    resp_existing.assert_status_code(404)
+    resp_missing.assert_status_code(404)
+    assert resp_existing.json["detail"] == resp_missing.json["detail"]
+    assert resp_existing.json["title"] == resp_missing.json["title"]
+
+
+@pytest.mark.usefixtures("with_host")
+@pytest.mark.parametrize("api_version", [APIVersion.V1, APIVersion.UNSTABLE])
+def test_update_host_denied_for_user_without_permissions(
+    clients: ClientRegistry,
+    api_version: APIVersion,
+) -> None:
+    """Regression test: update_host must not be accessible to users without any host-write
+    permission (no wato.see_all_folders, no contact group membership)."""
+    clients.User.create(
+        username="no_permission_user",
+        fullname="no_permission_user",
+        customer=None,
+        roles=["guest"],
+        contactgroups=[],
+        auth_option={"auth_type": "password", "password": "supersecretish"},
+    )
+
+    clients.HostConfig.set_credentials("no_permission_user", "supersecretish")
+
+    resp = clients.HostConfig.request(
+        "put",
+        url="/objects/host_config/heute",
+        body={"update_attributes": {"alias": "renamed"}},
+        api_version=api_version,
+        headers={"If-Match": "*"},
         expect_ok=False,
     )
     resp.assert_status_code(404)

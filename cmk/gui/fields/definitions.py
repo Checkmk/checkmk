@@ -17,7 +17,7 @@ import re
 import uuid
 from collections.abc import Callable, Collection, Iterable, Mapping, MutableMapping
 from datetime import datetime, UTC
-from typing import Any, Literal, override
+from typing import Any, Literal, NoReturn, override
 
 import marshmallow
 from cryptography.x509 import CertificateSigningRequest, load_pem_x509_csr
@@ -609,6 +609,14 @@ class HostField(base.String):
         except ValueError as e:
             raise ValidationError(str(e)) from e
 
+    def _raise_not_found(self, host_name: HostAddress) -> NoReturn:
+        # Prevent host enumeration: Return the same error whether the host
+        # doesn't exist or the user simply lacks read permissions for it.
+        error_key = (
+            "should_exist" if self._permission_type == "monitor" else "not_found_or_no_permission"
+        )
+        raise self.make_error(error_key, host_name=host_name)
+
     @override
     def _validate(self, value: HostAddress) -> None:
         super()._validate(value)
@@ -626,14 +634,14 @@ class HostField(base.String):
 
         if self._should_exist is not None:
             if self._should_exist and host is None:
-                raise self.make_error("should_exist", host_name=value)
+                self._raise_not_found(value)
 
             if not self._should_exist and host is not None:
                 raise self.make_error("should_not_exist", host_name=value)
 
         if self._should_be_cluster is not None:
             if host is None:
-                raise self.make_error("should_exist", host_name=value)
+                self._raise_not_found(value)
 
             if self._should_be_cluster and not host.is_cluster():
                 raise self.make_error("should_be_cluster", host_name=value)

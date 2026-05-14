@@ -1174,17 +1174,6 @@ node_software_configuration_organisation = Node(
     },
 )
 
-node_software_os_service_packs = Node(
-    name="software_os_service_packs",
-    path=["software", "os", "service_packs"],
-    title=Title("Service packs"),
-    table=Table(
-        columns={
-            "name": TextField(Title("Name")),
-        },
-    ),
-)
-
 node_software_applications_podman = Node(
     name="software_applications_podman",
     path=["software", "applications", "podman"],

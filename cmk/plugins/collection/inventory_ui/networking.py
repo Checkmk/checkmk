@@ -23,68 +23,6 @@ node_networking_kube = Node(
     ),
 )
 
-node_networking_sip_interfaces = Node(
-    name="networking_sip_interfaces",
-    path=["networking", "sip_interfaces"],
-    title=Title("SIP interfaces"),
-    table=Table(
-        columns={
-            "index": TextField(Title("Index")),
-            "name": TextField(Title("Name")),
-            "application_type": TextField(Title("Application Type")),
-            "sys_interface": TextField(Title("System interface")),
-            "device": TextField(Title("Device")),
-            "tcp_port": TextField(Title("TCP Port")),
-            "gateway": TextField(Title("Gateway")),
-        },
-    ),
-)
-
-node_networking_tunnels = Node(
-    name="networking_tunnels",
-    path=["networking", "tunnels"],
-    title=Title("Networking tunnels"),
-    table=Table(
-        view=View(name="invtunnels", title=Title("Networking tunnels")),
-        columns={
-            "peername": TextField(Title("Peer name")),
-            "index": TextField(Title("Index")),
-            "peerip": TextField(Title("Peer IP address")),
-            "sourceip": TextField(Title("Source IP address")),
-            "tunnelinterface": TextField(Title("Tunnel interface")),
-            "linkpriority": TextField(Title("Link priority")),
-        },
-    ),
-)
-
-node_networking_wlan = Node(
-    name="networking_wlan",
-    path=["networking", "wlan"],
-    title=Title("WLAN"),
-)
-
-node_networking_wlan_controller = Node(
-    name="networking_wlan_controller",
-    path=["networking", "wlan", "controller"],
-    title=Title("Controller"),
-)
-
-node_networking_wlan_controller_accesspoints = Node(
-    name="networking_wlan_controller_accesspoints",
-    path=["networking", "wlan", "controller", "accesspoints"],
-    title=Title("Access points"),
-    table=Table(
-        columns={
-            "name": TextField(Title("Name")),
-            "group": TextField(Title("Group")),
-            "ip_addr": TextField(Title("IP address")),
-            "model": TextField(Title("Model")),
-            "serial": TextField(Title("Serial number")),
-            "sys_location": TextField(Title("System location")),
-        },
-    ),
-)
-
 
 node_networking_device_uplinks = Node(
     name="networking_device_uplinks",

@@ -211,36 +211,6 @@ node_hardware_firmware_redfish = Node(
     ),
 )
 
-node_hardware_memory = Node(
-    name="hardware_memory",
-    path=["hardware", "memory"],
-    title=Title("Memory (RAM)"),
-    attributes={
-        "total_ram_usable": NumberField(Title("Total usable RAM"), render=UNIT_BYTES),
-        "total_swap": NumberField(Title("Total swap space"), render=UNIT_BYTES),
-        "total_vmalloc": NumberField(Title("Virtual addresses for mapping"), render=UNIT_BYTES),
-    },
-)
-
-node_hardware_nwadapter = Node(
-    name="hardware_nwadapter",
-    path=["hardware", "nwadapter"],
-    title=Title("Network adapters"),
-    table=Table(
-        columns={
-            "name": TextField(Title("Name")),
-            "type": TextField(Title("Type")),
-            "macaddress": TextField(Title("Physical address (MAC)")),
-            "speed": NumberField(Title("Speed"), render=UNIT_BITS_PER_SECOND),
-            "gateway": TextField(Title("Gateway")),
-            "ipv4_address": TextField(Title("IPv4 address")),
-            "ipv6_address": TextField(Title("IPv6 address")),
-            "ipv4_subnet": TextField(Title("IPv4 subnet")),
-            "ipv6_subnet": TextField(Title("IPv6 subnet")),
-        },
-    ),
-)
-
 node_hardware_storage_controller = Node(
     name="hardware_storage_controller",
     path=["hardware", "storage", "controller"],
@@ -261,38 +231,6 @@ node_hardware_system_nodes = Node(
             "model": TextField(Title("Model name")),
             "product": TextField(Title("Product")),
             "serial": TextField(Title("Serial number")),
-        },
-    ),
-)
-
-node_hardware_uploaded_files = Node(
-    name="hardware_uploaded_files",
-    path=["hardware", "uploaded_files"],
-    title=Title("Uploaded files"),
-    attributes={
-        "call_progress_tones": TextField(Title("Call progress tones")),
-    },
-)
-
-node_hardware_volumes = Node(
-    name="hardware_volumes",
-    path=["hardware", "volumes"],
-    title=Title("Volumes"),
-)
-
-node_hardware_volumes_physical_volumes = Node(
-    name="hardware_volumes_physical_volumes",
-    path=["hardware", "volumes", "physical_volumes"],
-    title=Title("Physical volumes"),
-    table=Table(
-        columns={
-            "volume_group_name": TextField(Title("Volume group name")),
-            "physical_volume_name": TextField(Title("Physical volume name")),
-            "physical_volume_status": TextField(Title("Physical volume status")),
-            "physical_volume_total_partitions": TextField(
-                Title("Physical volume total partitions")
-            ),
-            "physical_volume_free_partitions": TextField(Title("Physical volume free partitions")),
         },
     ),
 )

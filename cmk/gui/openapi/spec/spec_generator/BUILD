@@ -80,28 +80,23 @@ py_binary(
         "@cmk//edition:cloud": [
             "//cmk/gui/nonfree/cloud",
             "//cmk/gui/nonfree/ultimate/plugins/wato/check_parameters:stub",
-            "//cmk/plugins:plugins_cloud",
         ],
-        "@cmk//edition:community": [
-            "//cmk/plugins:plugins_community",
-        ],
+        "@cmk//edition:community": [],
         "@cmk//edition:pro": [
             "//cmk/gui/nonfree/pro",
-            "//cmk/plugins:plugins_pro",
         ],
         "@cmk//edition:ultimate": [
             "//cmk/gui/nonfree/ultimate",
             "//cmk/gui/nonfree/ultimate/plugins/wato/check_parameters:stub",
-            "//cmk/plugins:plugins_ultimate",
         ],
         "@cmk//edition:ultimatemt": [
             "//cmk/gui/nonfree/ultimate/plugins/wato/check_parameters:stub",
             "//cmk/gui/nonfree/ultimatemt",
-            "//cmk/plugins:plugins_ultimatemt",
         ],
     }) + [
         ":_core",
         "//cmk/gui/plugins/wato/check_parameters:stub",
+        "//cmk/plugins",  # Why? Really?
         requirement("pyyaml"),
     ],
 )
@@ -114,14 +109,12 @@ py_binary(
     deps = select({
         "@//:gpl+nonfree_repo": [
             "//cmk/gui/nonfree/pro",
-            "//cmk/plugins:plugins_pro",
         ],
-        "@//:gpl_repo": [
-            "//cmk/plugins:plugins_community",
-        ],
+        "@//:gpl_repo": [],
     }) + [
         ":_core",
         "//cmk/gui/plugins/wato/check_parameters:stub",
+        "//cmk/plugins",  # Why? Really?
         requirement("pyyaml"),
     ],
 )

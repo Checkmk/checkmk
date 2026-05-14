@@ -5,7 +5,7 @@ py_library(
     name = "community",
     srcs = [],
     data = [
-        "//cmk/plugins:checkman_community",
+        "//cmk/plugins:checkman",
         "//cmk/plugins:libexec",
         "//packages/cmk-plugins:checkman_all",
         "//packages/cmk-plugins:libexec_all",
@@ -32,7 +32,6 @@ py_library(
         "//cmk/piggyback:backend",
         "//cmk/piggyback:hub",
         "//cmk/plugins",
-        "//cmk/plugins:plugins_community",
         "//cmk/post_rename_site",
         "//cmk/post_rename_site:internal",
         "//cmk/post_rename_site/plugins",

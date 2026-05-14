@@ -28,7 +28,7 @@ py_test(
         exclude = ["conftest.py"],
     ),
     data = [
-        "//cmk/plugins:checkman_community",
+        "//cmk/plugins:checkman",
         "//cmk/plugins:libexec",
         "//packages/cmk-plugins:checkman_all",
         "//packages/cmk-plugins:libexec_all",
@@ -39,7 +39,7 @@ py_test(
         ":conftest",
         "//:pyproject-toml",
         "//cmk/checkengine",
-        "//cmk/plugins:plugins_community",
+        "//cmk/plugins",
         "//tests/plugins_consistency/common_tests",
         "//tests/testlib/unit",
         requirement("pytest-mock"),

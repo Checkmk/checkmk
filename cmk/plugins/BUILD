@@ -11,6 +11,7 @@ py_library(
     srcs = glob(
         include = ["**/*.py"],
         exclude = [
+            # this does not match, but keep it as a safeguard for now
             "**/community/**",
             "**/nonfree/**",
         ],
@@ -88,163 +89,14 @@ py_library(
     ],
 )
 
-py_library(
-    name = "plugins_community",
-    srcs = glob(
-        include = ["**/community/**/*.py"],
-        allow_empty = True,
-        exclude = ["**/nonfree/**"],
-    ),
-    imports = ["../.."],
-    deps = [":plugins"],
-)
-
-py_library(
-    name = "plugins_pro",
-    srcs = glob(
-        include = [
-            "**/nonfree/**/pro/**/*.py",
-            "**/nonfree/**/*.py",
-        ],
-        allow_empty = True,
-        exclude = [
-            "**/nonfree/**/cloud/**",
-            "**/nonfree/**/ultimate/**",
-            "**/nonfree/**/ultimatemt/**",
-        ],
-    ),
-    imports = ["../.."],
-    visibility = [
-        "//cmk:__subpackages__",
-        "//tests:__subpackages__",
-    ],
-    deps = [
-        ":plugins",
-        ":plugins_community",
-        requirement("robotframework"),
-    ],
-)
-
-py_library(
-    name = "plugins_ultimate",
-    srcs = glob(
-        include = [
-            "**/nonfree/**/ultimate/**/*.py",
-            "**/nonfree/__init__.py",
-        ],
-        allow_empty = True,
-    ),
-    imports = ["../.."],
-    deps = [
-        ":plugins",
-        ":plugins_community",
-        ":plugins_pro",
-    ],
-)
-
-py_library(
-    name = "plugins_cloud",
-    srcs = glob(
-        include = [
-            "**/nonfree/**/cloud/**/*.py",
-            "**/nonfree/__init__.py",
-        ],
-        allow_empty = True,
-    ),
-    imports = ["../.."],
-    deps = [
-        ":plugins",
-        ":plugins_community",
-        ":plugins_pro",
-        ":plugins_ultimate",
-    ],
-)
-
-py_library(
-    name = "plugins_ultimatemt",
-    srcs = glob(
-        include = [
-            "**/nonfree/**/ultimatemt/**/*.py",
-            "**/nonfree/__init__.py",
-        ],
-        allow_empty = True,
-    ),
-    imports = ["../.."],
-    visibility = [
-        "//cmk:__pkg__",
-        "//cmk/editions/nonfree:__subpackages__",
-        "//cmk/gui/openapi/spec/spec_generator:__pkg__",
-        "//tests:__subpackages__",
-    ],
-    deps = [
-        ":plugins",
-        ":plugins_community",
-        ":plugins_pro",
-        ":plugins_ultimate",
-    ],
-)
-
 filegroup(
-    name = "checkman_community",
+    name = "checkman",
     srcs = glob(
         ["**/checkman/**"],
-        exclude = [
-            "**/OWNERS",
-            "**/checkman/nonfree/**",
-        ],
     ),
     visibility = [
         "//cmk:__subpackages__",
         "//tests:__subpackages__",
-    ],
-)
-
-filegroup(
-    name = "checkman_pro",
-    srcs = glob(
-        ["**/checkman/nonfree/pro/**"],
-        allow_empty = True,
-        exclude = ["**/OWNERS"],
-    ) + [
-        ":checkman_community",
-    ],
-)
-
-filegroup(
-    name = "checkman_ultimate",
-    srcs = glob(
-        ["**/checkman/nonfree/ultimate/**"],
-        allow_empty = True,
-        exclude = ["**/OWNERS"],
-    ) + [
-        ":checkman_community",
-        ":checkman_pro",
-    ],
-)
-
-filegroup(
-    name = "checkman_cloud",
-    srcs = glob(
-        ["**/checkman/nonfree/cloud/**"],
-        allow_empty = True,
-        exclude = ["**/OWNERS"],
-    ) + [
-        ":checkman_community",
-        ":checkman_pro",
-        ":checkman_ultimate",
-    ],
-)
-
-filegroup(
-    name = "checkman_ultimatemt",
-    srcs = glob(
-        ["**/checkman/nonfree/ultimatemt/**"],
-        allow_empty = True,
-        exclude = ["**/OWNERS"],
-    ) + [
-        ":checkman_community",
-        ":checkman_pro",
-        ":checkman_ultimate",
     ],
 )
 

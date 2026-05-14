@@ -1180,17 +1180,6 @@ node_software_applications_vmwareesx = Node(
     ),
 )
 
-node_software_bios = Node(
-    name="software_bios",
-    path=["software", "bios"],
-    title=Title("BIOS"),
-    attributes={
-        "vendor": TextField(Title("Vendor")),
-        "version": TextField(Title("Version")),
-        "date": NumberField(Title("Date"), render=_render_date),
-    },
-)
-
 node_software_configuration_organisation = Node(
     name="software_configuration_organisation",
     path=["software", "configuration", "organisation"],

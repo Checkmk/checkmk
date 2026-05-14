@@ -10161,10 +10161,6 @@ msgstr "Administrare Business Intelligence"
 msgid "Business Intelligence rules and aggregations"
 msgstr "Reguli și agregări Business Intelligence"
 
-#, fuzzy
-msgid "Business Intelligence runtime data"
-msgstr "Informații de afaceri"
-
 msgid "Business reporting"
 msgstr "Raportarea afacerilor"
 
@@ -17151,6 +17147,14 @@ msgid "Critical"
 msgstr "Critică"
 
 #, fuzzy
+msgid "Critical (lower)"
+msgstr "Critic mai jos"
+
+#, fuzzy, python-format
+msgid "Critical (lower) of %s"
+msgstr "Critic dacă %s"
+
+#, fuzzy
 msgid "Critical Event Rate"
 msgstr "Rata evenimentelor critice"
 
@@ -23705,6 +23709,15 @@ msgid ""
 msgstr ""
 "Introduceți numele senzorului. În modul unic, acesta poate fi citit din "
 "descrierile serviciilor 'IPMI Sensor ...'."
+
+msgid ""
+"Enter the name of the tenant monitored by this special agent rule. This name "
+"will be used as a host label and will be included in the HW/SW inventory for "
+"the source host (on which the special agent runs) as well as all associated "
+"piggyback hosts (representing subscriptions and resources). This allows you "
+"to filter objects by tenant and display the inventory data as columns in "
+"your views. This is useful for setups where multiple tenants are monitored."
+msgstr ""
 
 msgid ""
 "Enter the plain name of the share only, e. g. <tt>iso</tt>, <b>not</b> the "
@@ -46838,6 +46851,10 @@ msgstr "Numărul de subiecte în direct"
 msgid "Number of total and running sessions"
 msgstr "Numărul de sesiuni totale și în curs de desfășurare"
 
+#, fuzzy
+msgid "Number of tracked transactions per second."
+msgstr "Numărul de conexiuni noi pe secundă"
+
 msgid "Number of unacknowlegded alerts"
 msgstr "Numărul de alerte neacceptate"
 
@@ -46886,6 +46903,10 @@ msgstr "Numărul de ACL-uri Web"
 
 msgid "Number of write IOPS"
 msgstr "Numărul de IOPS de scriere"
+
+#, fuzzy
+msgid "Number of write transactions per second."
+msgstr "Numărul de conexiuni noi pe secundă"
 
 msgid "Number of zombie jobs"
 msgstr "Numărul de locuri de muncă zombi"
@@ -65311,6 +65332,10 @@ msgstr "Valoarea trebuie să fie un șir de caractere"
 msgid "Tenant Name"
 msgstr "Numele ventilatorului"
 
+#, fuzzy
+msgid "Tenant name"
+msgstr "Numele ventilatorului"
+
 msgid "TenantID"
 msgstr "TenantID"
 
@@ -71540,6 +71565,12 @@ msgstr ""
 "Acest plugin monitorizează starea mașinilor virtuale Hyper-V pe gazdele "
 "Window."
 
+#, fuzzy
+msgid "This check monitors the transactions of MSSQL tablespaces."
+msgstr ""
+"Această verificare monitorizează informațiile legate de blocare ale "
+"tablespace-urilor MSSQL."
+
 msgid "This check returns CRIT if the connection to the remote site failed."
 msgstr ""
 "Această verificare returnează CRIT în cazul în care conexiunea cu site-ul la "
@@ -76982,6 +77013,10 @@ msgstr "Numărul total de fluxuri nivel superior"
 msgid "Total number of tapes"
 msgstr "Numărul total de benzi"
 
+#, fuzzy
+msgid "Total number of transactions per second."
+msgstr "Operațiuni IO totale pe secundă"
+
 msgid "Total number of unassigned shards"
 msgstr "Numărul total de fragmente neatribuite"
 
@@ -79321,6 +79356,10 @@ msgstr "Traceroute"
 msgid "Traceroute with MTR"
 msgstr "Traceroute cu MTR"
 
+#, fuzzy
+msgid "Tracked Transactions / sec"
+msgstr "Crearea de fire pe secundă"
+
 msgid "Traffic"
 msgstr "Trafic"
 
@@ -79350,6 +79389,10 @@ msgid "Transactionlog"
 msgstr "Jurnal de tranzacții"
 
 msgid "Transactions"
+msgstr "Tranzacții"
+
+#, fuzzy
+msgid "Transactions / sec"
 msgstr "Tranzacții"
 
 msgid "Transferredsize"
@@ -84556,6 +84599,14 @@ msgstr ""
 msgid "Warning"
 msgstr "Avertisment"
 
+#, fuzzy
+msgid "Warning (lower)"
+msgstr "Avertismentul de mai jos"
+
+#, fuzzy, python-format
+msgid "Warning (lower) of %s"
+msgstr "Avertisment dacă %s"
+
 msgid "Warning above"
 msgstr "Avertismentul de mai sus"
 
@@ -86732,6 +86783,10 @@ msgstr "Operațiuni IO de scriere pe secundă"
 
 msgid "Write Latency"
 msgstr "Latență de scriere"
+
+#, fuzzy
+msgid "Write Transactions / sec"
+msgstr "Operațiuni de scriere/s"
 
 msgid "Write access to all hosts and folders"
 msgstr "Acces de scriere la toate gazdele și folderele"
@@ -91180,6 +91235,10 @@ msgstr "astazi"
 msgid "tomorrow"
 msgstr "maine"
 
+#, fuzzy
+msgid "transactions/sec"
+msgstr "Tranzacții"
+
 msgid "two days"
 msgstr "doua zile"
 
@@ -93580,7 +93639,7 @@ msgstr "Fișiere deschise"
 msgid ""
 "Changes are saved without affecting live monitoring, allowing you to review "
 "and adjust them safely.\n"
-"              Click 'Activate pending changes' to apply them."
+"                Click 'Activate pending changes' to apply them."
 msgstr ""
 
 #, fuzzy
@@ -95904,6 +95963,10 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Business Intelligence runtime data"
+#~ msgstr "Informații de afaceri"
 
 #, fuzzy
 #~ msgid "Deploy the Checkmk object counts plug-in"

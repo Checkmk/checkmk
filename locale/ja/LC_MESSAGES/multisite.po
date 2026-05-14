@@ -9431,9 +9431,6 @@ msgstr "ビジネスインテリジェンス(BI)の管理"
 msgid "Business Intelligence rules and aggregations"
 msgstr "ビジネスインテリジェンスルールと集計"
 
-msgid "Business Intelligence runtime data"
-msgstr "ビジネスインテリジェンス ランタイムデータ"
-
 msgid "Business reporting"
 msgstr "ビジネスレポーティング"
 
@@ -15948,6 +15945,14 @@ msgstr "クリティカル/ダウン"
 msgid "Critical"
 msgstr "クリティカル"
 
+#, fuzzy
+msgid "Critical (lower)"
+msgstr "下回るとクリティカル"
+
+#, fuzzy, python-format
+msgid "Critical (lower) of %s"
+msgstr "%sクリティカル"
+
 msgid "Critical Event Rate"
 msgstr "クリティカルイベント率"
 
@@ -22087,6 +22092,15 @@ msgid ""
 msgstr ""
 "センサー名を入力します。シングルモードでは、これはサービス「IPMIセンサー」の"
 "サービス名から読み取ることができます。"
+
+msgid ""
+"Enter the name of the tenant monitored by this special agent rule. This name "
+"will be used as a host label and will be included in the HW/SW inventory for "
+"the source host (on which the special agent runs) as well as all associated "
+"piggyback hosts (representing subscriptions and resources). This allows you "
+"to filter objects by tenant and display the inventory data as columns in "
+"your views. This is useful for setups where multiple tenants are monitored."
+msgstr ""
 
 msgid ""
 "Enter the plain name of the share only, e. g. <tt>iso</tt>, <b>not</b> the "
@@ -43317,6 +43331,10 @@ msgstr "ライブのトピック数"
 msgid "Number of total and running sessions"
 msgstr "合計と実行中のセッション数"
 
+#, fuzzy
+msgid "Number of tracked transactions per second."
+msgstr "1秒あたりの新しい接続数"
+
 msgid "Number of unacknowlegded alerts"
 msgstr "未通知アラートの数"
 
@@ -43364,6 +43382,10 @@ msgstr "Web ACLの数"
 
 msgid "Number of write IOPS"
 msgstr "書き込みIOPS数"
+
+#, fuzzy
+msgid "Number of write transactions per second."
+msgstr "1秒あたりの新しい接続数"
 
 msgid "Number of zombie jobs"
 msgstr "ゾンビジョブの数"
@@ -60290,6 +60312,10 @@ msgstr "テナントIDは有効なUUIDである必要があります。"
 msgid "Tenant Name"
 msgstr "テナント名"
 
+#, fuzzy
+msgid "Tenant name"
+msgstr "テナント名"
+
 msgid "TenantID"
 msgstr "テナントID"
 
@@ -66256,6 +66282,10 @@ msgid ""
 "This check monitors the status of time synchronization for Windows hosts."
 msgstr "このチェックは、Windowsホストの時刻同期の状態を監視します。"
 
+#, fuzzy
+msgid "This check monitors the transactions of MSSQL tablespaces."
+msgstr "このチェックは、MSSQLテーブルスペースのロック関連情報を監視します。"
+
 msgid "This check returns CRIT if the connection to the remote site failed."
 msgstr "このチェックは、リモートサイトへの接続が失敗した場合にCRITを返します。"
 
@@ -71394,6 +71424,10 @@ msgstr "ストリーム総数の上位レベル"
 msgid "Total number of tapes"
 msgstr "テープの総数"
 
+#, fuzzy
+msgid "Total number of transactions per second."
+msgstr "1秒あたりの合計IO操作"
+
 msgid "Total number of unassigned shards"
 msgstr "未割当シャード総数"
 
@@ -73234,6 +73268,10 @@ msgstr "Traceroute"
 msgid "Traceroute with MTR"
 msgstr "MTRを使用したTraceroute"
 
+#, fuzzy
+msgid "Tracked Transactions / sec"
+msgstr "1秒あたりのスレッド作成数"
+
 msgid "Traffic"
 msgstr "トラフィック"
 
@@ -73262,6 +73300,10 @@ msgid "Transactionlog"
 msgstr "トランザクションログ"
 
 msgid "Transactions"
+msgstr "トランザクション"
+
+#, fuzzy
+msgid "Transactions / sec"
 msgstr "トランザクション"
 
 msgid "Transferredsize"
@@ -77992,6 +78034,14 @@ msgstr ""
 msgid "Warning"
 msgstr "警告"
 
+#, fuzzy
+msgid "Warning (lower)"
+msgstr "以下の警告"
+
+#, fuzzy, python-format
+msgid "Warning (lower) of %s"
+msgstr "%s警告"
+
 msgid "Warning above"
 msgstr "上記の警告"
 
@@ -80041,6 +80091,10 @@ msgstr "1秒あたりの書き込みIO操作"
 
 msgid "Write Latency"
 msgstr "レイテンシーを書く"
+
+#, fuzzy
+msgid "Write Transactions / sec"
+msgstr "書き込み操作/秒"
 
 msgid "Write access to all hosts and folders"
 msgstr "すべてのホストとフォルダへの書き込みアクセス"
@@ -84228,6 +84282,10 @@ msgstr "今日"
 msgid "tomorrow"
 msgstr "明日"
 
+#, fuzzy
+msgid "transactions/sec"
+msgstr "トランザクション"
+
 msgid "two days"
 msgstr "二日"
 
@@ -86365,10 +86423,11 @@ msgstr "保留中の変更をアクティブ化する"
 msgid "Open full view"
 msgstr "ファイルを開く"
 
+#, fuzzy
 msgid ""
 "Changes are saved without affecting live monitoring, allowing you to review "
 "and adjust them safely.\n"
-"              Click 'Activate pending changes' to apply them."
+"                Click 'Activate pending changes' to apply them."
 msgstr ""
 "変更内容はライブモニタリングに影響を与えることなく保存されるため、安全に確認"
 "や調整を行うことができます。\n"
@@ -88942,6 +89001,9 @@ msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
 "後で「ヘルプ」＞「Checkmkの学習」＞「ウェルカムページ」からアクセスできます"
+
+#~ msgid "Business Intelligence runtime data"
+#~ msgstr "ビジネスインテリジェンス ランタイムデータ"
 
 #, fuzzy
 #~ msgid ""

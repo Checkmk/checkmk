@@ -10169,10 +10169,6 @@ msgstr "Business Intelligence Administratie"
 msgid "Business Intelligence rules and aggregations"
 msgstr "Business Intelligence Regels en Aggregaties"
 
-#, fuzzy
-msgid "Business Intelligence runtime data"
-msgstr "Business Intelligence"
-
 msgid "Business reporting"
 msgstr "Bedrijfsrapportage"
 
@@ -17139,6 +17135,14 @@ msgid "Critical"
 msgstr "Kritisch"
 
 #, fuzzy
+msgid "Critical (lower)"
+msgstr "Kritisch onder"
+
+#, fuzzy, python-format
+msgid "Critical (lower) of %s"
+msgstr "Kritisch als %s"
+
+#, fuzzy
 msgid "Critical Event Rate"
 msgstr "Critical event rate"
 
@@ -23663,6 +23667,15 @@ msgid ""
 msgstr ""
 "Voer de naam van de sensor in. In single mode kan dit worden afgelezen van "
 "de servicebeschrijvingen van de services 'IPMI Sensor ...'."
+
+msgid ""
+"Enter the name of the tenant monitored by this special agent rule. This name "
+"will be used as a host label and will be included in the HW/SW inventory for "
+"the source host (on which the special agent runs) as well as all associated "
+"piggyback hosts (representing subscriptions and resources). This allows you "
+"to filter objects by tenant and display the inventory data as columns in "
+"your views. This is useful for setups where multiple tenants are monitored."
+msgstr ""
 
 msgid ""
 "Enter the plain name of the share only, e. g. <tt>iso</tt>, <b>not</b> the "
@@ -46758,6 +46771,10 @@ msgid "Number of total and running sessions"
 msgstr "Aantal totale en lopende sessies"
 
 #, fuzzy
+msgid "Number of tracked transactions per second."
+msgstr "Aantal nieuwe verbindingen per seconde"
+
+#, fuzzy
 msgid "Number of unacknowlegded alerts"
 msgstr "Aantal onbekende signaleringen"
 
@@ -46807,6 +46824,10 @@ msgstr "Aantal Web ACL's"
 
 msgid "Number of write IOPS"
 msgstr "Aantal schrijf IOPS"
+
+#, fuzzy
+msgid "Number of write transactions per second."
+msgstr "Aantal nieuwe verbindingen per seconde"
 
 msgid "Number of zombie jobs"
 msgstr "Aantal zombiebanen"
@@ -65206,6 +65227,10 @@ msgstr "De waarde moet een string zijn"
 msgid "Tenant Name"
 msgstr "Naam ventilator"
 
+#, fuzzy
+msgid "Tenant name"
+msgstr "Naam ventilator"
+
 msgid "TenantID"
 msgstr "TenantID"
 
@@ -71414,6 +71439,12 @@ msgid ""
 "This check monitors the status of time synchronization for Windows hosts."
 msgstr "Deze plugin controleert de status van Hyper-V VM's op Window hosts."
 
+#, fuzzy
+msgid "This check monitors the transactions of MSSQL tablespaces."
+msgstr ""
+"Deze controle controleert locking gerelateerde informatie van MSSQL "
+"tablespaces."
+
 msgid "This check returns CRIT if the connection to the remote site failed."
 msgstr ""
 "Deze controle geeft CRIT terug als de verbinding met de site op afstand is "
@@ -76795,6 +76826,10 @@ msgstr "Totaal aantal stromen bovenbouw"
 msgid "Total number of tapes"
 msgstr "Totaal aantal banden"
 
+#, fuzzy
+msgid "Total number of transactions per second."
+msgstr "Totaal IO operaties per seconde"
+
 msgid "Total number of unassigned shards"
 msgstr "Totaal aantal niet-toegewezen shards"
 
@@ -79209,6 +79244,10 @@ msgstr "Traceroute"
 msgid "Traceroute with MTR"
 msgstr "Traceroute met MTR"
 
+#, fuzzy
+msgid "Tracked Transactions / sec"
+msgstr "Draad creaties per seconde"
+
 msgid "Traffic"
 msgstr "Verkeer"
 
@@ -79240,6 +79279,10 @@ msgid "Transactionlog"
 msgstr "Transactielog"
 
 msgid "Transactions"
+msgstr "Transacties"
+
+#, fuzzy
+msgid "Transactions / sec"
 msgstr "Transacties"
 
 msgid "Transferredsize"
@@ -84438,6 +84481,14 @@ msgstr ""
 msgid "Warning"
 msgstr "Waarschuwing"
 
+#, fuzzy
+msgid "Warning (lower)"
+msgstr "Waarschuwing hieronder"
+
+#, fuzzy, python-format
+msgid "Warning (lower) of %s"
+msgstr "Waarschuwing als %s"
+
 msgid "Warning above"
 msgstr "Waarschuwing boven"
 
@@ -86612,6 +86663,10 @@ msgstr "Schrijf IO operaties per seconde"
 
 msgid "Write Latency"
 msgstr "Schrijf latentie"
+
+#, fuzzy
+msgid "Write Transactions / sec"
+msgstr "Schrijfbewerkingen/s"
 
 msgid "Write access to all hosts and folders"
 msgstr "Schrijftoegang tot alle hosts en mappen"
@@ -91061,6 +91116,10 @@ msgstr "vandaag"
 msgid "tomorrow"
 msgstr "morgen"
 
+#, fuzzy
+msgid "transactions/sec"
+msgstr "Transacties"
+
 msgid "two days"
 msgstr "twee dagen"
 
@@ -93446,7 +93505,7 @@ msgstr "Open bestanden"
 msgid ""
 "Changes are saved without affecting live monitoring, allowing you to review "
 "and adjust them safely.\n"
-"              Click 'Activate pending changes' to apply them."
+"                Click 'Activate pending changes' to apply them."
 msgstr ""
 
 #, fuzzy
@@ -95753,6 +95812,10 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Business Intelligence runtime data"
+#~ msgstr "Business Intelligence"
 
 #, fuzzy
 #~ msgid "Deploy the Checkmk object counts plug-in"

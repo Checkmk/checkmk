@@ -10070,10 +10070,6 @@ msgstr "Amministrazione della Business Intelligence"
 msgid "Business Intelligence rules and aggregations"
 msgstr "Regole e aggregazioni di business intelligence"
 
-#, fuzzy
-msgid "Business Intelligence runtime data"
-msgstr "Intelligenza aziendale"
-
 msgid "Business reporting"
 msgstr "Rapporti d'affari"
 
@@ -17008,6 +17004,14 @@ msgid "Critical"
 msgstr "Critico"
 
 #, fuzzy
+msgid "Critical (lower)"
+msgstr "Critico in basso"
+
+#, fuzzy, python-format
+msgid "Critical (lower) of %s"
+msgstr "Critico se %s"
+
+#, fuzzy
 msgid "Critical Event Rate"
 msgstr "Tasso di eventi critici"
 
@@ -23555,6 +23559,15 @@ msgid ""
 msgstr ""
 "Inserire il nome del sensore. In modalità singola, questo può essere letto "
 "dalle descrizioni dei servizi 'IPMI Sensor ...'."
+
+msgid ""
+"Enter the name of the tenant monitored by this special agent rule. This name "
+"will be used as a host label and will be included in the HW/SW inventory for "
+"the source host (on which the special agent runs) as well as all associated "
+"piggyback hosts (representing subscriptions and resources). This allows you "
+"to filter objects by tenant and display the inventory data as columns in "
+"your views. This is useful for setups where multiple tenants are monitored."
+msgstr ""
 
 msgid ""
 "Enter the plain name of the share only, e. g. <tt>iso</tt>, <b>not</b> the "
@@ -46578,6 +46591,10 @@ msgstr "Numero di argomenti in diretta"
 msgid "Number of total and running sessions"
 msgstr "Numero di sessioni totali e in corso"
 
+#, fuzzy
+msgid "Number of tracked transactions per second."
+msgstr "Numero di nuove connessioni al secondo"
+
 msgid "Number of unacknowlegded alerts"
 msgstr "Numero di segnalazioni non riconosciute"
 
@@ -46626,6 +46643,10 @@ msgstr "Numero di Web ACL"
 
 msgid "Number of write IOPS"
 msgstr "Numero di IOPS in scrittura"
+
+#, fuzzy
+msgid "Number of write transactions per second."
+msgstr "Numero di nuove connessioni al secondo"
 
 msgid "Number of zombie jobs"
 msgstr "Numero di lavori zombie"
@@ -64975,6 +64996,10 @@ msgstr "Il valore deve essere una stringa"
 msgid "Tenant Name"
 msgstr "Nome del ventilatore"
 
+#, fuzzy
+msgid "Tenant name"
+msgstr "Nome del ventilatore"
+
 msgid "TenantID"
 msgstr "ID inquilino"
 
@@ -71217,6 +71242,12 @@ msgid ""
 "This check monitors the status of time synchronization for Windows hosts."
 msgstr "Questo plugin controlla lo stato delle VM Hyper-V sugli host Window."
 
+#, fuzzy
+msgid "This check monitors the transactions of MSSQL tablespaces."
+msgstr ""
+"Questo controllo monitora le informazioni relative al bloccaggio dei "
+"tablespace MSSQL."
+
 msgid "This check returns CRIT if the connection to the remote site failed."
 msgstr ""
 "Questo controllo restituisce CRIT se la connessione al sito remoto è fallita."
@@ -76618,6 +76649,10 @@ msgstr "Numero totale di flussi di livello superiore"
 msgid "Total number of tapes"
 msgstr "Numero totale di nastri"
 
+#, fuzzy
+msgid "Total number of transactions per second."
+msgstr "Operazioni IO totali al secondo"
+
 msgid "Total number of unassigned shards"
 msgstr "Numero totale di frammenti non assegnati"
 
@@ -78957,6 +78992,10 @@ msgstr "Traceroute"
 msgid "Traceroute with MTR"
 msgstr "Traceroute con MTR"
 
+#, fuzzy
+msgid "Tracked Transactions / sec"
+msgstr "Creazioni di thread al secondo"
+
 msgid "Traffic"
 msgstr "Traffico"
 
@@ -78986,6 +79025,10 @@ msgid "Transactionlog"
 msgstr "Transactionlog"
 
 msgid "Transactions"
+msgstr "Transazioni"
+
+#, fuzzy
+msgid "Transactions / sec"
 msgstr "Transazioni"
 
 msgid "Transferredsize"
@@ -84166,6 +84209,14 @@ msgstr ""
 msgid "Warning"
 msgstr "Attenzione"
 
+#, fuzzy
+msgid "Warning (lower)"
+msgstr "Attenzione qui sotto"
+
+#, fuzzy, python-format
+msgid "Warning (lower) of %s"
+msgstr "Attenzione se %s"
+
 msgid "Warning above"
 msgstr "Avvertimento di cui sopra"
 
@@ -86338,6 +86389,10 @@ msgstr "Operazioni IO in scrittura al secondo"
 
 msgid "Write Latency"
 msgstr "Latenza di scrittura"
+
+#, fuzzy
+msgid "Write Transactions / sec"
+msgstr "Scrittura Operazioni/s"
 
 msgid "Write access to all hosts and folders"
 msgstr "Accesso in scrittura a tutti gli host e alle cartelle"
@@ -90770,6 +90825,10 @@ msgstr "oggi"
 msgid "tomorrow"
 msgstr "domani"
 
+#, fuzzy
+msgid "transactions/sec"
+msgstr "Transazioni"
+
 msgid "two days"
 msgstr "due giorni"
 
@@ -93150,7 +93209,7 @@ msgstr "Aprire i file"
 msgid ""
 "Changes are saved without affecting live monitoring, allowing you to review "
 "and adjust them safely.\n"
-"              Click 'Activate pending changes' to apply them."
+"                Click 'Activate pending changes' to apply them."
 msgstr ""
 
 #, fuzzy
@@ -95466,6 +95525,10 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Business Intelligence runtime data"
+#~ msgstr "Intelligenza aziendale"
 
 #, fuzzy
 #~ msgid "Deploy the Checkmk object counts plug-in"

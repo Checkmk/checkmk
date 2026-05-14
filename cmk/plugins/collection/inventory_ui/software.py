@@ -1191,12 +1191,6 @@ node_software_bios = Node(
     },
 )
 
-node_software_configuration = Node(
-    name="software_configuration",
-    path=["software", "configuration"],
-    title=Title("Configuration"),
-)
-
 node_software_configuration_organisation = Node(
     name="software_configuration_organisation",
     path=["software", "configuration", "organisation"],
@@ -1207,28 +1201,6 @@ node_software_configuration_organisation = Node(
         "network_id": TextField(Title("Network ID")),
         "network_name": TextField(Title("Network name")),
         "address": TextField(Title("Address")),
-    },
-)
-
-node_software_configuration_snmp_info = Node(
-    name="software_configuration_snmp_info",
-    path=["software", "configuration", "snmp_info"],
-    title=Title("SNMP information"),
-    attributes={
-        "contact": TextField(Title("Contact")),
-        "location": TextField(Title("Location")),
-        "name": TextField(Title("System name")),
-    },
-)
-
-node_software_firmware = Node(
-    name="software_firmware",
-    path=["software", "firmware"],
-    title=Title("Firmware"),
-    attributes={
-        "vendor": TextField(Title("Vendor")),
-        "version": TextField(Title("Version")),
-        "platform_level": TextField(Title("Platform firmware level")),
     },
 )
 

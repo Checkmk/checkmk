@@ -36,12 +36,6 @@ node_hardware_chassis = Node(
     title=Title("Chassis"),
 )
 
-node_hardware_components = Node(
-    name="hardware_components",
-    path=["hardware", "components"],
-    title=Title("Physical components"),
-)
-
 node_hardware_components_backplanes = Node(
     name="hardware_components_backplanes",
     path=["hardware", "components", "backplanes"],
@@ -118,56 +112,12 @@ node_hardware_components_fans = Node(
     ),
 )
 
-node_hardware_components_modules = Node(
-    name="hardware_components_modules",
-    path=["hardware", "components", "modules"],
-    title=Title("Modules"),
-    table=Table(
-        view=View(name="invmodule", title=Title("Modules")),
-        columns={
-            "index": TextField(Title("Index")),
-            "name": TextField(Title("Name")),
-            "description": TextField(Title("Description")),
-            "software": TextField(Title("Software")),
-            "serial": TextField(Title("Serial number")),
-            "model": TextField(Title("Model name")),
-            "manufacturer": TextField(Title("Manufacturer")),
-            "bootloader": TextField(Title("Bootloader")),
-            "firmware": TextField(Title("Firmware")),
-            "type": TextField(Title("Type")),
-            "location": TextField(Title("Location")),
-            "ha_status": TextField(Title("HA status")),
-            "software_version": TextField(Title("Software version")),
-            "license_key_list": TextField(Title("License key list")),
-        },
-    ),
-)
-
 node_hardware_components_others = Node(
     name="hardware_components_others",
     path=["hardware", "components", "others"],
     title=Title("Other entities"),
     table=Table(
         view=View(name="invother", title=Title("Other entities")),
-        columns={
-            "index": TextField(Title("Index")),
-            "name": TextField(Title("Name")),
-            "description": TextField(Title("Description")),
-            "software": TextField(Title("Software")),
-            "serial": TextField(Title("Serial number")),
-            "manufacturer": TextField(Title("Manufacturer")),
-            "model": TextField(Title("Model name")),
-            "location": TextField(Title("Location")),
-        },
-    ),
-)
-
-node_hardware_components_psus = Node(
-    name="hardware_components_psus",
-    path=["hardware", "components", "psus"],
-    title=Title("Power supplies"),
-    table=Table(
-        view=View(name="invpsu", title=Title("Power supplies")),
         columns={
             "index": TextField(Title("Index")),
             "name": TextField(Title("Name")),

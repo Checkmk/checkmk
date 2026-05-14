@@ -2960,6 +2960,12 @@ msgstr "API-sleutel voor iLert waarschuwingsserver"
 msgid "API key header"
 msgstr "API-sleutel"
 
+msgid ""
+"API key of the JSM Operations integration that should receive the alerts. "
+"Create or open an API integration (or the dedicated Checkmk integration) in "
+"JSM Operations and copy the value shown there."
+msgstr ""
+
 #, fuzzy
 msgid ""
 "API key to use. Depending on your opsgenie subscription you can use global "
@@ -4713,6 +4719,10 @@ msgid "Add resource tag"
 msgstr "Bron tag toevoegen"
 
 #, fuzzy
+msgid "Add responder"
+msgstr "Map toevoegen"
+
+#, fuzzy
 msgid "Add restriction"
 msgstr "Beperking van de locatie"
 
@@ -5018,6 +5028,10 @@ msgstr "Extra opties"
 #, fuzzy
 msgid "Additional plug-in output"
 msgstr "Extra plug-in uitgang"
+
+#, fuzzy
+msgid "Additional responders"
+msgstr "Extra opties"
 
 msgid "Additional rules for outliers"
 msgstr "Aanvullende regels voor uitschieters"
@@ -25242,6 +25256,15 @@ msgstr ""
 "de servicebeschrijvingen van de services 'IPMI Sensor ...'."
 
 msgid ""
+"Enter the name of the tenant monitored by this special agent rule. This name "
+"will be used as a host label and will be included in the HW/SW inventory for "
+"the source host (on which the special agent runs) as well as all associated "
+"piggyback hosts (representing subscriptions and resources). This allows you "
+"to filter objects by tenant and display the inventory data as columns in "
+"your views. This is useful for setups where multiple tenants are monitored."
+msgstr ""
+
+msgid ""
 "Enter the plain name of the share only, e. g. <tt>iso</tt>, <b>not</b> the "
 "full UNC like <tt>\\\\servername\\iso</tt>"
 msgstr ""
@@ -25483,6 +25506,14 @@ msgstr "Escaleer downtimes op basis van geaggregeerde CRIT status"
 
 msgid "Escalate downtimes based on aggregated WARN state"
 msgstr "Escaleer downtimes gebaseerd op geaggregeerde WARN status"
+
+#, fuzzy
+msgid "Escalation name"
+msgstr "Lokalisaties"
+
+#, fuzzy
+msgid "Escalation policy"
+msgstr "Lokalisaties"
 
 #, fuzzy
 msgid "Escalations"
@@ -37375,6 +37406,10 @@ msgid "Integrating Prometheus"
 msgstr "Integratie van Prometheus"
 
 #, fuzzy
+msgid "Integration API key"
+msgstr "Integratie Toets"
+
+#, fuzzy
 msgid "Integration team"
 msgstr "Integratie Toets"
 
@@ -38407,6 +38442,10 @@ msgstr "JMX monitoring van Java JVM's met Jolokia"
 
 msgid "JQL query: "
 msgstr "JQL query: "
+
+#, fuzzy
+msgid "JSM Operations parameters"
+msgstr "Optionele parameters"
 
 #, fuzzy
 msgid "JSON credentials are required but not specified."
@@ -47820,6 +47859,11 @@ msgstr "Niet-heap geheugengebruik"
 msgid "Non-resident items"
 msgstr "Niet-ingezetenen"
 
+msgid ""
+"Non-team responders to attach to the alert. JSM Operations will route the "
+"alert to these in addition to the responsible teams."
+msgstr ""
+
 msgid "None"
 msgstr ""
 
@@ -49327,6 +49371,10 @@ msgid "Number of total and running sessions"
 msgstr "Aantal totale en lopende sessies"
 
 #, fuzzy
+msgid "Number of tracked transactions per second."
+msgstr "Aantal nieuwe verbindingen per seconde"
+
+#, fuzzy
 msgid "Number of unacknowlegded alerts"
 msgstr "Aantal onbekende signaleringen"
 
@@ -49376,6 +49424,10 @@ msgstr "Aantal Web ACL's"
 
 msgid "Number of write IOPS"
 msgstr "Aantal schrijf IOPS"
+
+#, fuzzy
+msgid "Number of write transactions per second."
+msgstr "Aantal nieuwe verbindingen per seconde"
 
 msgid "Number of zombie jobs"
 msgstr "Aantal zombiebanen"
@@ -49888,6 +49940,10 @@ msgstr ""
 "tekst, bijvoorbeeld een regel uit een logfile. Met behulp van dit "
 "dialoogvenster is het mogelijk om je hele set logfile patronen te analyseren "
 "en te debuggen."
+
+#, fuzzy
+msgid "On-call schedule"
+msgstr "Oracle Scheduler Job"
 
 #, fuzzy
 msgid ""
@@ -57803,6 +57859,10 @@ msgid "Remove pattern"
 msgstr "Verwijder filter"
 
 #, fuzzy
+msgid "Remove responder"
+msgstr "Verwijderd: %s"
+
+#, fuzzy
 msgid "Remove scheduled downtimes?"
 msgstr "<b>verwijder alle geplande downtimes</b> van "
 
@@ -60499,6 +60559,10 @@ msgstr "Uitvaltijden plannen"
 msgid "Schedule execution"
 msgstr "Plan uitvoering"
 
+#, fuzzy
+msgid "Schedule name"
+msgstr "Taaknaam planner"
+
 msgid "Schedule title"
 msgstr "Titel van het schema"
 
@@ -63009,6 +63073,12 @@ msgid ""
 "tnsnames.ora, sqlnet.ora, or wallet files. The plug-in must have read access "
 "to all files in this directory. If not specified, the default plug-in's "
 "config directory will be used."
+msgstr ""
+
+msgid ""
+"Sets the assignee of the alert. JSM Operations shows this as the alert's "
+"assignee in the alert detail view; the value is the display name of an "
+"existing JSM user."
 msgstr ""
 
 msgid ""
@@ -68501,6 +68571,11 @@ msgid "Tasks are discovered regardless of scheduled task state."
 msgstr ""
 
 msgid ""
+"Team names that will be added as responders for the alert. The integration's "
+"own team is always implicitly responsible; entries here add additional teams."
+msgstr ""
+
+msgid ""
 "Team names which will be responsible for the alert. If the API Key belongs "
 "to a team integration, this field will be overwritten with the owner team."
 msgstr ""
@@ -68695,6 +68770,10 @@ msgstr ""
 
 #, fuzzy
 msgid "Tenant Name"
+msgstr "Naam ventilator"
+
+#, fuzzy
+msgid "Tenant name"
 msgstr "Naam ventilator"
 
 msgid "TenantID"
@@ -75305,6 +75384,12 @@ msgid ""
 "This check monitors the status of time synchronization for Windows hosts."
 msgstr "Deze plugin controleert de status van Hyper-V VM's op Window hosts."
 
+#, fuzzy
+msgid "This check monitors the transactions of MSSQL tablespaces."
+msgstr ""
+"Deze controle controleert locking gerelateerde informatie van MSSQL "
+"tablespaces."
+
 msgid "This check returns CRIT if the connection to the remote site failed."
 msgstr ""
 "Deze controle geeft CRIT terug als de verbinding met de site op afstand is "
@@ -81091,6 +81176,10 @@ msgstr "Totaal aantal stromen bovenbouw"
 msgid "Total number of tapes"
 msgstr "Totaal aantal banden"
 
+#, fuzzy
+msgid "Total number of transactions per second."
+msgstr "Totaal IO operaties per seconde"
+
 msgid "Total number of unassigned shards"
 msgstr "Totaal aantal niet-toegewezen shards"
 
@@ -83539,6 +83628,10 @@ msgstr "Traceroute met MTR"
 msgid "Track downtimes"
 msgstr "Stilstandstijden bijhouden"
 
+#, fuzzy
+msgid "Tracked Transactions / sec"
+msgstr "Draad creaties per seconde"
+
 msgid "Traffic"
 msgstr "Verkeer"
 
@@ -83570,6 +83663,10 @@ msgid "Transactionlog"
 msgstr "Transactielog"
 
 msgid "Transactions"
+msgstr "Transacties"
+
+#, fuzzy
+msgid "Transactions / sec"
 msgstr "Transacties"
 
 msgid "Transferredsize"
@@ -87152,6 +87249,13 @@ msgstr "Beheer van wachtwoorden"
 
 msgid "Username"
 msgstr "Gebruikersnaam"
+
+#, fuzzy
+msgid "Username (email)"
+msgstr "Gebruikersnaam"
+
+msgid "Username (typically the email address) of an existing JSM user."
+msgstr ""
 
 #, fuzzy
 msgid "Username / password"
@@ -91181,6 +91285,10 @@ msgstr "Schrijf IO operaties per seconde"
 
 msgid "Write Latency"
 msgstr "Schrijf latentie"
+
+#, fuzzy
+msgid "Write Transactions / sec"
+msgstr "Schrijfbewerkingen/s"
 
 msgid "Write access to all hosts and folders"
 msgstr "Schrijftoegang tot alle hosts en mappen"
@@ -95803,6 +95911,10 @@ msgstr "vandaag"
 msgid "tomorrow"
 msgstr "morgen"
 
+#, fuzzy
+msgid "transactions/sec"
+msgstr "Transacties"
+
 msgid "two days"
 msgstr "twee dagen"
 
@@ -98976,11 +99088,17 @@ msgid ""
 "Configure a GRPC-based OTLP receiver that will collect OpenTelemetry data."
 msgstr ""
 
+msgid "GRPC-based receiver"
+msgstr ""
+
 msgid "Enable the GRPC-based OTLP receiver"
 msgstr ""
 
 msgid ""
 "Configure an HTTP-based OTLP receiver that will collect OpenTelemetry data."
+msgstr ""
+
+msgid "HTTP-based receiver"
 msgstr ""
 
 msgid "Enable the HTTP-based OTLP receiver"

@@ -2989,6 +2989,12 @@ msgstr "Cheia API pentru serverul de alertă iLert"
 msgid "API key header"
 msgstr "Antet cheie API"
 
+msgid ""
+"API key of the JSM Operations integration that should receive the alerts. "
+"Create or open an API integration (or the dedicated Checkmk integration) in "
+"JSM Operations and copy the value shown there."
+msgstr ""
+
 #, fuzzy
 msgid ""
 "API key to use. Depending on your opsgenie subscription you can use global "
@@ -4725,6 +4731,10 @@ msgid "Add resource tag"
 msgstr "Adăugați eticheta resursă"
 
 #, fuzzy
+msgid "Add responder"
+msgstr "Adăugați un dosar"
+
+#, fuzzy
 msgid "Add restriction"
 msgstr "Restricție de amplasare"
 
@@ -5026,6 +5036,10 @@ msgstr "Opțiuni adiționale"
 #, fuzzy
 msgid "Additional plug-in output"
 msgstr "Output adițional de la Plugin"
+
+#, fuzzy
+msgid "Additional responders"
+msgstr "Opțiuni adiționale"
 
 msgid "Additional rules for outliers"
 msgstr "Reguli suplimentare pentru valorile aberante"
@@ -25328,6 +25342,15 @@ msgstr ""
 "descrierile serviciilor 'IPMI Sensor ...'."
 
 msgid ""
+"Enter the name of the tenant monitored by this special agent rule. This name "
+"will be used as a host label and will be included in the HW/SW inventory for "
+"the source host (on which the special agent runs) as well as all associated "
+"piggyback hosts (representing subscriptions and resources). This allows you "
+"to filter objects by tenant and display the inventory data as columns in "
+"your views. This is useful for setups where multiple tenants are monitored."
+msgstr ""
+
+msgid ""
 "Enter the plain name of the share only, e. g. <tt>iso</tt>, <b>not</b> the "
 "full UNC like <tt>\\\\servername\\iso</tt>"
 msgstr ""
@@ -25569,6 +25592,14 @@ msgstr "Escaladarea timpilor de oprire pe baza stării CRIT agregate"
 
 msgid "Escalate downtimes based on aggregated WARN state"
 msgstr "Escaladarea timpilor de oprire pe baza stării WARN agregate"
+
+#, fuzzy
+msgid "Escalation name"
+msgstr "Localizări"
+
+#, fuzzy
+msgid "Escalation policy"
+msgstr "Localizări"
 
 #, fuzzy
 msgid "Escalations"
@@ -37512,6 +37543,10 @@ msgid "Integrating Prometheus"
 msgstr "Integrarea Prometheus"
 
 #, fuzzy
+msgid "Integration API key"
+msgstr "Cheia de integrare"
+
+#, fuzzy
 msgid "Integration team"
 msgstr "Cheia de integrare"
 
@@ -38545,6 +38580,10 @@ msgstr "Monitorizarea JMX a JVM-urilor Java folosind Jolokia"
 
 msgid "JQL query: "
 msgstr "Interogare JQL: "
+
+#, fuzzy
+msgid "JSM Operations parameters"
+msgstr "Parametrii opționali"
 
 #, fuzzy
 msgid "JSON credentials are required but not specified."
@@ -47948,6 +47987,11 @@ msgstr "Utilizarea memoriei non-heap"
 msgid "Non-resident items"
 msgstr "Articole nerezidente"
 
+msgid ""
+"Non-team responders to attach to the alert. JSM Operations will route the "
+"alert to these in addition to the responsible teams."
+msgstr ""
+
 msgid "None"
 msgstr "Nici unul"
 
@@ -49462,6 +49506,10 @@ msgstr "Numărul de subiecte în direct"
 msgid "Number of total and running sessions"
 msgstr "Numărul de sesiuni totale și în curs de desfășurare"
 
+#, fuzzy
+msgid "Number of tracked transactions per second."
+msgstr "Numărul de conexiuni noi pe secundă"
+
 msgid "Number of unacknowlegded alerts"
 msgstr "Numărul de alerte neacceptate"
 
@@ -49510,6 +49558,10 @@ msgstr "Numărul de ACL-uri Web"
 
 msgid "Number of write IOPS"
 msgstr "Numărul de IOPS de scriere"
+
+#, fuzzy
+msgid "Number of write transactions per second."
+msgstr "Numărul de conexiuni noi pe secundă"
 
 msgid "Number of zombie jobs"
 msgstr "Numărul de locuri de muncă zombi"
@@ -50008,6 +50060,10 @@ msgstr ""
 "în raport cu un text personalizat, de exemplu, o linie dintr-un fișier de "
 "jurnal. Cu ajutorul acestei ferestre de dialog este posibil să analizați și "
 "să depanați întregul set de modele de fișiere jurnal."
+
+#, fuzzy
+msgid "On-call schedule"
+msgstr "Scheduler Oracle Scheduler Job"
 
 #, fuzzy
 msgid ""
@@ -57934,6 +57990,10 @@ msgstr "Îndepărtați numai serviciile dispărute corespunzătoare"
 msgid "Remove pattern"
 msgstr "Eliminați filtrul"
 
+#, fuzzy
+msgid "Remove responder"
+msgstr "Eliminat: %s"
+
 msgid "Remove scheduled downtimes?"
 msgstr "Eliminați perioadele de întrerupere programate?"
 
@@ -60637,6 +60697,10 @@ msgstr "Programarea perioadelor de oprire"
 msgid "Schedule execution"
 msgstr "Programarea execuției"
 
+#, fuzzy
+msgid "Schedule name"
+msgstr "Numele lucrării Scheduler"
+
 msgid "Schedule title"
 msgstr "Titlul programului"
 
@@ -63204,6 +63268,12 @@ msgid ""
 "tnsnames.ora, sqlnet.ora, or wallet files. The plug-in must have read access "
 "to all files in this directory. If not specified, the default plug-in's "
 "config directory will be used."
+msgstr ""
+
+msgid ""
+"Sets the assignee of the alert. JSM Operations shows this as the alert's "
+"assignee in the alert detail view; the value is the display name of an "
+"existing JSM user."
 msgstr ""
 
 #, fuzzy
@@ -68733,6 +68803,11 @@ msgid "Tasks are discovered regardless of scheduled task state."
 msgstr "Sarcinile sunt descoperite indiferent de Starea sarcinii programate."
 
 msgid ""
+"Team names that will be added as responders for the alert. The integration's "
+"own team is always implicitly responsible; entries here add additional teams."
+msgstr ""
+
+msgid ""
 "Team names which will be responsible for the alert. If the API Key belongs "
 "to a team integration, this field will be overwritten with the owner team."
 msgstr ""
@@ -68926,6 +69001,10 @@ msgstr ""
 
 #, fuzzy
 msgid "Tenant Name"
+msgstr "Numele ventilatorului"
+
+#, fuzzy
+msgid "Tenant name"
 msgstr "Numele ventilatorului"
 
 msgid "TenantID"
@@ -75576,6 +75655,12 @@ msgstr ""
 "Acest plugin monitorizează starea mașinilor virtuale Hyper-V pe gazdele "
 "Window."
 
+#, fuzzy
+msgid "This check monitors the transactions of MSSQL tablespaces."
+msgstr ""
+"Această verificare monitorizează informațiile legate de blocare ale "
+"tablespace-urilor MSSQL."
+
 msgid "This check returns CRIT if the connection to the remote site failed."
 msgstr ""
 "Această verificare returnează CRIT în cazul în care conexiunea cu site-ul la "
@@ -81451,6 +81536,10 @@ msgstr "Numărul total de fluxuri nivel superior"
 msgid "Total number of tapes"
 msgstr "Numărul total de benzi"
 
+#, fuzzy
+msgid "Total number of transactions per second."
+msgstr "Operațiuni IO totale pe secundă"
+
 msgid "Total number of unassigned shards"
 msgstr "Numărul total de fragmente neatribuite"
 
@@ -83824,6 +83913,10 @@ msgstr "Traceroute cu MTR"
 msgid "Track downtimes"
 msgstr "Urmăriți timpii de oprire"
 
+#, fuzzy
+msgid "Tracked Transactions / sec"
+msgstr "Crearea de fire pe secundă"
+
 msgid "Traffic"
 msgstr "Trafic"
 
@@ -83853,6 +83946,10 @@ msgid "Transactionlog"
 msgstr "Jurnal de tranzacții"
 
 msgid "Transactions"
+msgstr "Tranzacții"
+
+#, fuzzy
+msgid "Transactions / sec"
 msgstr "Tranzacții"
 
 msgid "Transferredsize"
@@ -87441,6 +87538,13 @@ msgstr "Gestionarea parolelor"
 
 msgid "Username"
 msgstr "Nume utilizator"
+
+#, fuzzy
+msgid "Username (email)"
+msgstr "Nume utilizator"
+
+msgid "Username (typically the email address) of an existing JSM user."
+msgstr ""
 
 #, fuzzy
 msgid "Username / password"
@@ -91480,6 +91584,10 @@ msgstr "Operațiuni IO de scriere pe secundă"
 
 msgid "Write Latency"
 msgstr "Latență de scriere"
+
+#, fuzzy
+msgid "Write Transactions / sec"
+msgstr "Operațiuni de scriere/s"
 
 msgid "Write access to all hosts and folders"
 msgstr "Acces de scriere la toate gazdele și folderele"
@@ -96108,6 +96216,10 @@ msgstr "astazi"
 msgid "tomorrow"
 msgstr "maine"
 
+#, fuzzy
+msgid "transactions/sec"
+msgstr "Tranzacții"
+
 msgid "two days"
 msgstr "doua zile"
 
@@ -99299,11 +99411,17 @@ msgid ""
 "Configure a GRPC-based OTLP receiver that will collect OpenTelemetry data."
 msgstr ""
 
+msgid "GRPC-based receiver"
+msgstr ""
+
 msgid "Enable the GRPC-based OTLP receiver"
 msgstr ""
 
 msgid ""
 "Configure an HTTP-based OTLP receiver that will collect OpenTelemetry data."
+msgstr ""
+
+msgid "HTTP-based receiver"
 msgstr ""
 
 msgid "Enable the HTTP-based OTLP receiver"

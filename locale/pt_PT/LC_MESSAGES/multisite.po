@@ -4,9 +4,9 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
+"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2026-05-12 07:43+0000\n"
+"PO-Revision-Date: 2026-05-14 15:42+0000\n"
 "Language-Team: Portuguese (Portugal) <https://translate.checkmk.com/projects/"
 "checkmk/stable/pt_PT/>\n"
 "Language: pt_PT\n"
@@ -2968,6 +2968,12 @@ msgstr "Chave API para o servidor de alerta iLert"
 msgid "API key header"
 msgstr "chave API"
 
+msgid ""
+"API key of the JSM Operations integration that should receive the alerts. "
+"Create or open an API integration (or the dedicated Checkmk integration) in "
+"JSM Operations and copy the value shown there."
+msgstr ""
+
 #, fuzzy
 msgid ""
 "API key to use. Depending on your opsgenie subscription you can use global "
@@ -4716,6 +4722,10 @@ msgid "Add resource tag"
 msgstr "Adicionar etiqueta de recurso"
 
 #, fuzzy
+msgid "Add responder"
+msgstr "Adicionar pasta"
+
+#, fuzzy
 msgid "Add restriction"
 msgstr "Restrição do sítio"
 
@@ -5018,6 +5028,10 @@ msgstr "Opções adicionais"
 #, fuzzy
 msgid "Additional plug-in output"
 msgstr "Saída de Plugin Adicional"
+
+#, fuzzy
+msgid "Additional responders"
+msgstr "Opções adicionais"
 
 msgid "Additional rules for outliers"
 msgstr "Regras adicionais para os casos anómalos"
@@ -25244,6 +25258,15 @@ msgstr ""
 "descrições de serviço dos serviços 'IPMI Sensor ...'."
 
 msgid ""
+"Enter the name of the tenant monitored by this special agent rule. This name "
+"will be used as a host label and will be included in the HW/SW inventory for "
+"the source host (on which the special agent runs) as well as all associated "
+"piggyback hosts (representing subscriptions and resources). This allows you "
+"to filter objects by tenant and display the inventory data as columns in "
+"your views. This is useful for setups where multiple tenants are monitored."
+msgstr ""
+
+msgid ""
 "Enter the plain name of the share only, e. g. <tt>iso</tt>, <b>not</b> the "
 "full UNC like <tt>\\\\servername\\iso</tt>"
 msgstr ""
@@ -25484,6 +25507,14 @@ msgstr "Escalar os tempos de paragem com base no estado de CRIT agregado"
 
 msgid "Escalate downtimes based on aggregated WARN state"
 msgstr "Escalar os tempos de paragem com base no estado agregado de WARN"
+
+#, fuzzy
+msgid "Escalation name"
+msgstr "Localizações"
+
+#, fuzzy
+msgid "Escalation policy"
+msgstr "Localizações"
 
 #, fuzzy
 msgid "Escalations"
@@ -37373,6 +37404,10 @@ msgid "Integrating Prometheus"
 msgstr "Integração do Prometheus"
 
 #, fuzzy
+msgid "Integration API key"
+msgstr "Chave de Integração"
+
+#, fuzzy
 msgid "Integration team"
 msgstr "Chave de Integração"
 
@@ -38404,6 +38439,10 @@ msgstr "JMX monitorização de JVMs Java usando Jolokia"
 
 msgid "JQL query: "
 msgstr "Consulta JQL: "
+
+#, fuzzy
+msgid "JSM Operations parameters"
+msgstr "Parâmetros opcionais"
 
 #, fuzzy
 msgid "JSON credentials are required but not specified."
@@ -47816,6 +47855,11 @@ msgstr "Utilização de memória não compacta"
 msgid "Non-resident items"
 msgstr "Itens não-residentes"
 
+msgid ""
+"Non-team responders to attach to the alert. JSM Operations will route the "
+"alert to these in addition to the responsible teams."
+msgstr ""
+
 msgid "None"
 msgstr ""
 
@@ -49323,6 +49367,10 @@ msgid "Number of total and running sessions"
 msgstr "Número de sessões totais e em curso"
 
 #, fuzzy
+msgid "Number of tracked transactions per second."
+msgstr "Número de novas ligações por segundo"
+
+#, fuzzy
 msgid "Number of unacknowlegded alerts"
 msgstr "Número de alertas desconhecidos"
 
@@ -49372,6 +49420,10 @@ msgstr "Número de Web ACLs"
 
 msgid "Number of write IOPS"
 msgstr "Número de IOPS de escrita"
+
+#, fuzzy
+msgid "Number of write transactions per second."
+msgstr "Número de novas ligações por segundo"
 
 msgid "Number of zombie jobs"
 msgstr "Número de empregos de zumbi"
@@ -49867,6 +49919,10 @@ msgstr ""
 "um texto personalizado, por exemplo, uma linha de um arquivo de log. Usando "
 "este diálogo é possível analisar e depurar todo o seu conjunto de padrões de "
 "arquivos de log."
+
+#, fuzzy
+msgid "On-call schedule"
+msgstr "Trabalho de Programador Oracle"
 
 #, fuzzy
 msgid ""
@@ -57784,6 +57840,10 @@ msgid "Remove pattern"
 msgstr "Remover filtro"
 
 #, fuzzy
+msgid "Remove responder"
+msgstr "Removido: %s"
+
+#, fuzzy
 msgid "Remove scheduled downtimes?"
 msgstr "Remover todos os tempos de inatividade programados?"
 
@@ -60497,6 +60557,10 @@ msgstr "Horário de paradas"
 msgid "Schedule execution"
 msgstr "Programação da execução"
 
+#, fuzzy
+msgid "Schedule name"
+msgstr "Nome do trabalho do agendador"
+
 msgid "Schedule title"
 msgstr "Título do horário"
 
@@ -63001,6 +63065,12 @@ msgid ""
 "tnsnames.ora, sqlnet.ora, or wallet files. The plug-in must have read access "
 "to all files in this directory. If not specified, the default plug-in's "
 "config directory will be used."
+msgstr ""
+
+msgid ""
+"Sets the assignee of the alert. JSM Operations shows this as the alert's "
+"assignee in the alert detail view; the value is the display name of an "
+"existing JSM user."
 msgstr ""
 
 msgid ""
@@ -68504,6 +68574,11 @@ msgid "Tasks are discovered regardless of scheduled task state."
 msgstr ""
 
 msgid ""
+"Team names that will be added as responders for the alert. The integration's "
+"own team is always implicitly responsible; entries here add additional teams."
+msgstr ""
+
+msgid ""
 "Team names which will be responsible for the alert. If the API Key belongs "
 "to a team integration, this field will be overwritten with the owner team."
 msgstr ""
@@ -68696,6 +68771,10 @@ msgstr ""
 
 #, fuzzy
 msgid "Tenant Name"
+msgstr "Nome do Fã"
+
+#, fuzzy
+msgid "Tenant name"
 msgstr "Nome do Fã"
 
 msgid "TenantID"
@@ -75260,6 +75339,12 @@ msgid ""
 "This check monitors the status of time synchronization for Windows hosts."
 msgstr "Este plugin monitora o estado dos Hyper-V VMs em hosts Window."
 
+#, fuzzy
+msgid "This check monitors the transactions of MSSQL tablespaces."
+msgstr ""
+"Esta verificação monitoriza a informação relacionada com o bloqueio de "
+"tabelas MSSQL."
+
 msgid "This check returns CRIT if the connection to the remote site failed."
 msgstr "Esta verificação devolve o CRIT se a ligação ao local remoto falhar."
 
@@ -81042,6 +81127,10 @@ msgstr "Número total de fluxos nível superior"
 msgid "Total number of tapes"
 msgstr "Número total de fitas"
 
+#, fuzzy
+msgid "Total number of transactions per second."
+msgstr "Total de operações IO por segundo"
+
 msgid "Total number of unassigned shards"
 msgstr "Número total de cacos não atribuídos"
 
@@ -83490,6 +83579,10 @@ msgstr "Traceroute com MTR"
 msgid "Track downtimes"
 msgstr "Tempos de paragem"
 
+#, fuzzy
+msgid "Tracked Transactions / sec"
+msgstr "Criações de linhas por segundo"
+
 msgid "Traffic"
 msgstr "Tráfego"
 
@@ -83521,6 +83614,10 @@ msgid "Transactionlog"
 msgstr "Transactionlog"
 
 msgid "Transactions"
+msgstr "Transacções"
+
+#, fuzzy
+msgid "Transactions / sec"
 msgstr "Transacções"
 
 msgid "Transferredsize"
@@ -87088,6 +87185,13 @@ msgstr "Gestão de palavras-passe"
 
 msgid "Username"
 msgstr "Nome de usuário"
+
+#, fuzzy
+msgid "Username (email)"
+msgstr "Nome de usuário"
+
+msgid "Username (typically the email address) of an existing JSM user."
+msgstr ""
 
 #, fuzzy
 msgid "Username / password"
@@ -91093,6 +91197,10 @@ msgstr "Escrever operações IO por segundo"
 msgid "Write Latency"
 msgstr "Escrever Latência"
 
+#, fuzzy
+msgid "Write Transactions / sec"
+msgstr "Escrever Operações/s"
+
 msgid "Write access to all hosts and folders"
 msgstr "Acesso de escrita a todos os anfitriões e pastas"
 
@@ -93930,6 +94038,7 @@ msgstr "contando"
 msgid "cp437"
 msgstr "cp437"
 
+#, fuzzy
 msgid "crash report"
 msgid_plural "crash reports"
 msgstr[0] ""
@@ -94454,6 +94563,7 @@ msgstr "os anfitriões estão de pé e não têm problemas de serviço"
 msgid "hosts in total"
 msgstr "anfitriões no total"
 
+#, fuzzy
 msgid "hour"
 msgid_plural "hours"
 msgstr[0] ""
@@ -95695,6 +95805,10 @@ msgstr "hoje"
 
 msgid "tomorrow"
 msgstr "amanhã"
+
+#, fuzzy
+msgid "transactions/sec"
+msgstr "Transacções"
 
 msgid "two days"
 msgstr "dois dias"
@@ -98869,11 +98983,17 @@ msgid ""
 "Configure a GRPC-based OTLP receiver that will collect OpenTelemetry data."
 msgstr ""
 
+msgid "GRPC-based receiver"
+msgstr ""
+
 msgid "Enable the GRPC-based OTLP receiver"
 msgstr ""
 
 msgid ""
 "Configure an HTTP-based OTLP receiver that will collect OpenTelemetry data."
+msgstr ""
+
+msgid "HTTP-based receiver"
 msgstr ""
 
 msgid "Enable the HTTP-based OTLP receiver"

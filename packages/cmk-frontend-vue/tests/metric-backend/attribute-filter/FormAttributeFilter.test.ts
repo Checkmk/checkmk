@@ -27,7 +27,7 @@ function makeModel(): AttributeFilterModel {
       key: '',
       operator: 'eq',
       value: '',
-      connector: 'AND'
+      connector: null
     },
     {
       id: 'pill-b',
@@ -35,7 +35,7 @@ function makeModel(): AttributeFilterModel {
       key: 'otel.library.name',
       operator: 'eq',
       value: '',
-      connector: 'AND'
+      connector: 'OR'
     }
   ]
 }
@@ -48,7 +48,7 @@ function singlePill(overrides: Partial<AttributeFilterModel[number]> = {}): Attr
       key: 'service.name',
       operator: 'eq',
       value: '',
-      connector: 'AND',
+      connector: null,
       ...overrides
     }
   ]
@@ -190,7 +190,7 @@ test('picking a key with a resolver hit does not auto-open the type dropdown', a
   expect(typeCombobox.getAttribute('aria-expanded')).toBe('false')
 })
 
-test('remove drops the targeted row by id, leaving siblings intact', async () => {
+test('removing the head drops it by id, promotes the next row and nulls its connector', async () => {
   const { model } = renderForm(makeModel())
   const pillA = pillsInOrder()[0]!
   const pillALabel = pillLabel(makeModel()[0]!)
@@ -198,8 +198,46 @@ test('remove drops the targeted row by id, leaving siblings intact', async () =>
 
   expect(model.value).toHaveLength(1)
   expect(model.value![0]!.id).toBe('pill-b')
+  expect(model.value![0]!.connector).toBe(null)
   // The removed pill must be gone from the DOM, not just from the model.
   expect(screen.queryByRole('group', { name: pillALabel })).toBeNull()
+})
+
+test('empty-state add button creates a single row with documented defaults', async () => {
+  const { model } = renderForm([])
+  await userEvent.click(screen.getByRole('button', { name: 'Add condition' }))
+
+  expect(model.value).toHaveLength(1)
+  expect(model.value![0]).toMatchObject({
+    attributeType: null,
+    key: '',
+    operator: 'eq',
+    value: '',
+    connector: null
+  })
+  expect(model.value![0]!.id).toEqual(expect.any(String))
+  expect(model.value![0]!.id.length).toBeGreaterThan(0)
+})
+
+test('per-pill add button inserts a fresh row at index + 1, leaving siblings intact', async () => {
+  const { model } = renderForm(makeModel())
+  await userEvent.click(
+    screen.getByRole('button', { name: 'Add condition after previous condition' })
+  )
+
+  expect(model.value).toHaveLength(3)
+  expect(model.value![0]!.id).toBe('pill-a')
+  expect(model.value![2]!.id).toBe('pill-b')
+  expect(model.value![1]).toMatchObject({
+    attributeType: null,
+    key: '',
+    operator: 'eq',
+    value: '',
+    connector: 'OR'
+  })
+  expect(model.value![1]!.id).toEqual(expect.any(String))
+  expect(model.value![1]!.id).not.toBe('pill-a')
+  expect(model.value![1]!.id).not.toBe('pill-b')
 })
 
 test('value is preserved when switching between two comparison operators', async () => {

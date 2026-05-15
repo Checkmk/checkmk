@@ -457,7 +457,7 @@ def diagnostics_elements_for(
     omd_config: site.OMDConfig,
     parameters: DiagnosticsOptionalParameters,
 ) -> list[ABCDiagnosticsElement]:
-    elements = [
+    elements: list[ABCDiagnosticsElement] = [
         ParametersDiagnosticsElement(parameters),
         GeneralDiagnosticsElement(),
         PerfDataDiagnosticsElement(loaded_config, core_performance_settings),
@@ -696,67 +696,23 @@ class ABCDiagnosticsElement(abc.ABC):
 
 
 class ABCDiagnosticsElementTextDump(ABCDiagnosticsElement):
-    @property
-    @abc.abstractmethod
-    def ident(self) -> str:
-        raise NotImplementedError()
-
     @override
     def add_or_get_files(
         self, *, omd_root: Path, tmp_dump_folder: Path
     ) -> DiagnosticsElementFilepaths:
-        filepath = tmp_dump_folder / self.ident
-        store.save_text_to_file(filepath, self._collect_infos(omd_root))
-        yield filepath
-
-    @abc.abstractmethod
-    def _collect_infos(self, omd_root: Path) -> str:
-        raise NotImplementedError()
-
-
-class ABCDiagnosticsElementJSONDump(ABCDiagnosticsElement):
-    @property
-    @abc.abstractmethod
-    def ident(self) -> str:
-        raise NotImplementedError()
-
-    @override
-    def add_or_get_files(
-        self, *, omd_root: Path, tmp_dump_folder: Path
-    ) -> DiagnosticsElementFilepaths:
-        infos = self._collect_infos(omd_root)
-        if not infos:
+        if not (infos := self.contents(omd_root)):
             raise DiagnosticsElementInfo("No data")
-
-        filepath = tmp_dump_folder / self.ident
+        filepath = tmp_dump_folder / self.filename
         store.save_text_to_file(filepath, infos)
         yield filepath
 
-    @abc.abstractmethod
-    def _collect_infos(self, omd_root: Path) -> str:
-        raise NotImplementedError()
-
-
-class ABCDiagnosticsElementCSVDump(ABCDiagnosticsElement):
     @property
     @abc.abstractmethod
-    def ident(self) -> str:
+    def filename(self) -> str:
         raise NotImplementedError()
 
-    @override
-    def add_or_get_files(
-        self, *, omd_root: Path, tmp_dump_folder: Path
-    ) -> DiagnosticsElementFilepaths:
-        infos = self._collect_infos(omd_root)
-        if not infos:
-            raise DiagnosticsElementInfo("No data")
-
-        filepath = tmp_dump_folder / self.ident
-        store.save_text_to_file(filepath, infos)
-        yield filepath
-
     @abc.abstractmethod
-    def _collect_infos(self, omd_root: Path) -> str:
+    def contents(self, omd_root: Path) -> str:
         raise NotImplementedError()
 
 
@@ -767,31 +723,30 @@ class ParametersDiagnosticsElement(ABCDiagnosticsElementTextDump):
     def __init__(self, parameters: DiagnosticsOptionalParameters | None) -> None:
         self.parameters = parameters
 
-    @property
-    def ident(self) -> str:
-        return "parameters_%s" % str(datetime.now().timestamp())
-
+    @override
     @property
     def title(self) -> str:
         return _("Parameters")
 
+    @override
     @property
     def description(self) -> str:
         return _("The parameters that were provided to create the Diagnostics dump.")
 
-    def _collect_infos(self, omd_root: Path) -> str:
+    @override
+    @property
+    def filename(self) -> str:
+        return "parameters_%s" % str(datetime.now().timestamp())
+
+    @override
+    def contents(self, omd_root: Path) -> str:
         return str(self.parameters)
 
 
 #   ---csv dumps-----------------------------------------------------------
 
 
-class FilesSizeCSVDiagnosticsElement(ABCDiagnosticsElementCSVDump):
-    @override
-    @property
-    def ident(self) -> str:
-        return "file_size.csv"
-
+class FilesSizeCSVDiagnosticsElement(ABCDiagnosticsElementTextDump):
     @override
     @property
     def title(self) -> str:
@@ -802,7 +757,13 @@ class FilesSizeCSVDiagnosticsElement(ABCDiagnosticsElementCSVDump):
     def description(self) -> str:
         return _("List of all files in the site including their size")
 
-    def _collect_infos(self, omd_root: Path) -> str:
+    @override
+    @property
+    def filename(self) -> str:
+        return "file_size.csv"
+
+    @override
+    def contents(self, omd_root: Path) -> str:
         csv_data = []
         csv_data.append("size;path;owner;group;mode;changed")
         tmp_file_regex = re.compile(r"^\..*\.new.*")
@@ -829,12 +790,7 @@ class FilesSizeCSVDiagnosticsElement(ABCDiagnosticsElementCSVDump):
         return "\n".join(csv_data)
 
 
-class DpkgCSVDiagnosticsElement(ABCDiagnosticsElementCSVDump):
-    @override
-    @property
-    def ident(self) -> str:
-        return "dpkg_packages.csv"
-
+class DpkgCSVDiagnosticsElement(ABCDiagnosticsElementTextDump):
     @override
     @property
     def title(self) -> str:
@@ -845,7 +801,13 @@ class DpkgCSVDiagnosticsElement(ABCDiagnosticsElementCSVDump):
     def description(self) -> str:
         return _("Output of `dpkg -l`. See the corresponding command line help for more details.")
 
-    def _collect_infos(self, omd_root: Path) -> str:
+    @override
+    @property
+    def filename(self) -> str:
+        return "dpkg_packages.csv"
+
+    @override
+    def contents(self, omd_root: Path) -> str:
         if not (dpkg_binary := shutil.which("dpkg")):
             return ""
 
@@ -855,12 +817,7 @@ class DpkgCSVDiagnosticsElement(ABCDiagnosticsElementCSVDump):
         )
 
 
-class RpmCSVDiagnosticsElement(ABCDiagnosticsElementCSVDump):
-    @override
-    @property
-    def ident(self) -> str:
-        return "rpm_packages.csv"
-
+class RpmCSVDiagnosticsElement(ABCDiagnosticsElementTextDump):
     @override
     @property
     def title(self) -> str:
@@ -871,7 +828,13 @@ class RpmCSVDiagnosticsElement(ABCDiagnosticsElementCSVDump):
     def description(self) -> str:
         return _("Output of `rpm -qa`. See the corresponding command line help for more details.")
 
-    def _collect_infos(self, omd_root: Path) -> str:
+    @override
+    @property
+    def filename(self) -> str:
+        return "rpm_packages.csv"
+
+    @override
+    def contents(self, omd_root: Path) -> str:
         if not (rpm_binary := shutil.which("rpm")):
             return ""
 
@@ -896,12 +859,7 @@ class RpmCSVDiagnosticsElement(ABCDiagnosticsElementCSVDump):
 #   ---json dumps-----------------------------------------------------------
 
 
-class GeneralDiagnosticsElement(ABCDiagnosticsElementJSONDump):
-    @override
-    @property
-    def ident(self) -> str:
-        return "general.json"
-
+class GeneralDiagnosticsElement(ABCDiagnosticsElementTextDump):
     @override
     @property
     def title(self) -> str:
@@ -914,7 +872,13 @@ class GeneralDiagnosticsElement(ABCDiagnosticsElementJSONDump):
             "OS, Checkmk version and edition, Time, Core, Python version and paths, Architecture"
         )
 
-    def _collect_infos(self, omd_root: Path) -> str:
+    @override
+    @property
+    def filename(self) -> str:
+        return "general.json"
+
+    @override
+    def contents(self, omd_root: Path) -> str:
         version_infos = cmk_version.get_general_version_infos(omd_root)
         time_obj = datetime.fromtimestamp(version_infos.get("time", 0.0))
         return json.dumps(
@@ -934,7 +898,7 @@ class GeneralDiagnosticsElement(ABCDiagnosticsElementJSONDump):
         )
 
 
-class PerfDataDiagnosticsElement(ABCDiagnosticsElementJSONDump):
+class PerfDataDiagnosticsElement(ABCDiagnosticsElementTextDump):
     def __init__(
         self,
         load_config: LoadedConfigFragment,
@@ -942,11 +906,6 @@ class PerfDataDiagnosticsElement(ABCDiagnosticsElementJSONDump):
     ) -> None:
         self._loaded_config: Final = load_config
         self._core_performance_settings: Final = core_performance_settings
-
-    @override
-    @property
-    def ident(self) -> str:
-        return "perfdata.json"
 
     @override
     @property
@@ -958,7 +917,13 @@ class PerfDataDiagnosticsElement(ABCDiagnosticsElementJSONDump):
     def description(self) -> str:
         return _("Metrics related to sizing, e.g. number of helpers, hosts, services")
 
-    def _collect_infos(self, omd_root: Path) -> str:
+    @override
+    @property
+    def filename(self) -> str:
+        return "perfdata.json"
+
+    @override
+    def contents(self, omd_root: Path) -> str:
         result = livestatus.LocalConnection().query("GET status\nColumnHeaders: on")
         performance_data = {
             key: result[1][i]
@@ -969,14 +934,9 @@ class PerfDataDiagnosticsElement(ABCDiagnosticsElementJSONDump):
         return json.dumps(performance_data, sort_keys=True, indent=4)
 
 
-class HWDiagnosticsElement(ABCDiagnosticsElementJSONDump):
+class HWDiagnosticsElement(ABCDiagnosticsElementTextDump):
     def __init__(self, proc_path: Path = Path("/proc")) -> None:
         self._proc_path = proc_path
-
-    @override
-    @property
-    def ident(self) -> str:
-        return "hwinfo.json"
 
     @override
     @property
@@ -988,7 +948,13 @@ class HWDiagnosticsElement(ABCDiagnosticsElementJSONDump):
     def description(self) -> str:
         return _("Hardware information of the Checkmk server")
 
-    def _collect_infos(self, omd_root: Path) -> str:
+    @override
+    @property
+    def filename(self) -> str:
+        return "hwinfo.json"
+
+    @override
+    def contents(self, omd_root: Path) -> str:
         hw_info: dict[str, dict[str, str]] = {}
         for procfile, parser in [
             ("meminfo", _meminfo_proc_parser),
@@ -1071,14 +1037,9 @@ def _load_avg_proc_parser(content: list[str]) -> dict[str, str]:
     return dict(zip(["loadavg_1", "loadavg_5", "loadavg_15"], content[0].split()))
 
 
-class VendorDiagnosticsElement(ABCDiagnosticsElementJSONDump):
+class VendorDiagnosticsElement(ABCDiagnosticsElementTextDump):
     def __init__(self, dmi_id_path: Path = Path("/sys/class/dmi/id")) -> None:
         self._dmi_id_path = dmi_id_path
-
-    @override
-    @property
-    def ident(self) -> str:
-        return "vendorinfo.json"
 
     @override
     @property
@@ -1090,7 +1051,13 @@ class VendorDiagnosticsElement(ABCDiagnosticsElementJSONDump):
     def description(self) -> str:
         return _("HW vendor information of the Checkmk server")
 
-    def _collect_infos(self, omd_root: Path) -> str:
+    @override
+    @property
+    def filename(self) -> str:
+        return "vendorinfo.json"
+
+    @override
+    def contents(self, omd_root: Path) -> str:
         _SYS_FILES = [
             "bios_vendor",
             "bios_version",
@@ -1110,12 +1077,7 @@ class VendorDiagnosticsElement(ABCDiagnosticsElementJSONDump):
         return json.dumps(vendor_info, sort_keys=True, indent=4)
 
 
-class EnvironmentDiagnosticsElement(ABCDiagnosticsElementJSONDump):
-    @override
-    @property
-    def ident(self) -> str:
-        return "environment.json"
-
+class EnvironmentDiagnosticsElement(ABCDiagnosticsElementTextDump):
     @override
     @property
     def title(self) -> str:
@@ -1126,16 +1088,17 @@ class EnvironmentDiagnosticsElement(ABCDiagnosticsElementJSONDump):
     def description(self) -> str:
         return _("Variables set in the site user's environment")
 
-    def _collect_infos(self, omd_root: Path) -> str:
+    @override
+    @property
+    def filename(self) -> str:
+        return "environment.json"
+
+    @override
+    def contents(self, omd_root: Path) -> str:
         return json.dumps(dict(os.environ), sort_keys=True, indent=4)
 
 
-class PipFreezeDiagnosticsElement(ABCDiagnosticsElementJSONDump):
-    @override
-    @property
-    def ident(self) -> str:
-        return "pip_freeze.json"
-
+class PipFreezeDiagnosticsElement(ABCDiagnosticsElementTextDump):
     @override
     @property
     def title(self) -> str:
@@ -1146,7 +1109,13 @@ class PipFreezeDiagnosticsElement(ABCDiagnosticsElementJSONDump):
     def description(self) -> str:
         return _("The installed Python modules and their versions")
 
-    def _collect_infos(self, omd_root: Path) -> str:
+    @override
+    @property
+    def filename(self) -> str:
+        return "pip_freeze.json"
+
+    @override
+    def contents(self, omd_root: Path) -> str:
         return json.dumps(
             {
                 l.split("==")[0]: l.split("==")[1]
@@ -1158,12 +1127,7 @@ class PipFreezeDiagnosticsElement(ABCDiagnosticsElementJSONDump):
         )
 
 
-class MKPFindTextDiagnosticsElement(ABCDiagnosticsElementJSONDump):
-    @override
-    @property
-    def ident(self) -> str:
-        return "mkp_find_all.json"
-
+class MKPFindTextDiagnosticsElement(ABCDiagnosticsElementTextDump):
     @override
     @property
     def title(self) -> str:
@@ -1177,7 +1141,13 @@ class MKPFindTextDiagnosticsElement(ABCDiagnosticsElementJSONDump):
             "See the corresponding command line help for more details."
         )
 
-    def _collect_infos(self, omd_root: Path) -> str:
+    @override
+    @property
+    def filename(self) -> str:
+        return "mkp_find_all.json"
+
+    @override
+    def contents(self, omd_root: Path) -> str:
         try:
             return subprocess.check_output(["mkp", "find", "--all", "--json"], text=True)
         except subprocess.CalledProcessError as e:
@@ -1185,12 +1155,7 @@ class MKPFindTextDiagnosticsElement(ABCDiagnosticsElementJSONDump):
             return "{}"
 
 
-class MKPShowTextDiagnosticsElement(ABCDiagnosticsElementJSONDump):
-    @override
-    @property
-    def ident(self) -> str:
-        return "mkp_show_all.json"
-
+class MKPShowTextDiagnosticsElement(ABCDiagnosticsElementTextDump):
     @override
     @property
     def title(self) -> str:
@@ -1204,7 +1169,13 @@ class MKPShowTextDiagnosticsElement(ABCDiagnosticsElementJSONDump):
             "See the corresponding command line help for more details."
         )
 
-    def _collect_infos(self, omd_root: Path) -> str:
+    @override
+    @property
+    def filename(self) -> str:
+        return "mkp_show_all.json"
+
+    @override
+    def contents(self, omd_root: Path) -> str:
         try:
             return subprocess.check_output(["mkp", "show-all", "--json"], text=True)
         except subprocess.CalledProcessError as e:
@@ -1212,12 +1183,7 @@ class MKPShowTextDiagnosticsElement(ABCDiagnosticsElementJSONDump):
             return "{}"
 
 
-class MKPListTextDiagnosticsElement(ABCDiagnosticsElementJSONDump):
-    @override
-    @property
-    def ident(self) -> str:
-        return "mkp_list.json"
-
+class MKPListTextDiagnosticsElement(ABCDiagnosticsElementTextDump):
     @override
     @property
     def title(self) -> str:
@@ -1230,7 +1196,13 @@ class MKPListTextDiagnosticsElement(ABCDiagnosticsElementJSONDump):
             "Output of `mkp list --json`. See the corresponding command line help for more details."
         )
 
-    def _collect_infos(self, omd_root: Path) -> str:
+    @override
+    @property
+    def filename(self) -> str:
+        return "mkp_list.json"
+
+    @override
+    def contents(self, omd_root: Path) -> str:
         try:
             return subprocess.check_output(["mkp", "list", "--json"], text=True)
         except subprocess.CalledProcessError as e:
@@ -1238,12 +1210,7 @@ class MKPListTextDiagnosticsElement(ABCDiagnosticsElementJSONDump):
             return "{}"
 
 
-class SELinuxJSONDiagnosticsElement(ABCDiagnosticsElementJSONDump):
-    @override
-    @property
-    def ident(self) -> str:
-        return "selinux.json"
-
+class SELinuxJSONDiagnosticsElement(ABCDiagnosticsElementTextDump):
     @override
     @property
     def title(self) -> str:
@@ -1254,7 +1221,13 @@ class SELinuxJSONDiagnosticsElement(ABCDiagnosticsElementJSONDump):
     def description(self) -> str:
         return _("Output of `sestatus`. See the corresponding command line help for more details.")
 
-    def _collect_infos(self, omd_root: Path) -> str:
+    @override
+    @property
+    def filename(self) -> str:
+        return "selinux.json"
+
+    @override
+    def contents(self, omd_root: Path) -> str:
         return json.dumps(
             {
                 line.split(":")[0]: line.split(":")[1].lstrip()
@@ -1271,20 +1244,12 @@ class SELinuxJSONDiagnosticsElement(ABCDiagnosticsElementJSONDump):
 def _try_to_read(filename: str | Path) -> list[str]:
     try:
         with open(filename) as f:
-            content = f.readlines()
-
+            return [l.rstrip() for l in f.readlines()]
     except (PermissionError, FileNotFoundError):
         return []
 
-    return [l.rstrip() for l in content]
 
-
-class CMAJSONDiagnosticsElement(ABCDiagnosticsElementJSONDump):
-    @override
-    @property
-    def ident(self) -> str:
-        return "appliance.json"
-
+class CMAJSONDiagnosticsElement(ABCDiagnosticsElementTextDump):
     @override
     @property
     def title(self) -> str:
@@ -1295,7 +1260,13 @@ class CMAJSONDiagnosticsElement(ABCDiagnosticsElementJSONDump):
     def description(self) -> str:
         return _("Information about the appliance hardware and firmware version.")
 
-    def _collect_infos(self, omd_root: Path) -> str:
+    @override
+    @property
+    def filename(self) -> str:
+        return "appliance.json"
+
+    @override
+    def contents(self, omd_root: Path) -> str:
         cma_infos: dict[str, str | dict[str, str]] = {}
         if hw_content := _try_to_read("/etc/cma/hw"):
             cma_infos["hw"] = dict([l.replace("'", "").split("=") for l in hw_content if "=" in l])
@@ -1304,14 +1275,9 @@ class CMAJSONDiagnosticsElement(ABCDiagnosticsElementJSONDump):
         return json.dumps(cma_infos, sort_keys=True, indent=4)
 
 
-class OMDConfigDiagnosticsElement(ABCDiagnosticsElementJSONDump):
+class OMDConfigDiagnosticsElement(ABCDiagnosticsElementTextDump):
     def __init__(self, omd_config: site.OMDConfig) -> None:
         self._omd_config = omd_config
-
-    @override
-    @property
-    def ident(self) -> str:
-        return "omd_config.json"
 
     @override
     @property
@@ -1325,18 +1291,19 @@ class OMDConfigDiagnosticsElement(ABCDiagnosticsElementJSONDump):
             "Apache mode and TCP address and port, core, Liveproxy daemon and Livestatus TCP mode, event daemon config, graphical user interface (GUI) authorization, NSCA mode, TMP file system mode"
         )
 
-    def _collect_infos(self, omd_root: Path) -> str:
+    @override
+    @property
+    def filename(self) -> str:
+        return "omd_config.json"
+
+    @override
+    def contents(self, omd_root: Path) -> str:
         return json.dumps(self._omd_config, sort_keys=True, indent=4)
 
 
 class CheckmkOverviewDiagnosticsElement(ABCDiagnosticsElementTextDump):
     def __init__(self, checkmk_server_host: str) -> None:
         self.checkmk_server_host = checkmk_server_host
-
-    @override
-    @property
-    def ident(self) -> str:
-        return "checkmk_overview"
 
     @override
     @property
@@ -1355,7 +1322,12 @@ class CheckmkOverviewDiagnosticsElement(ABCDiagnosticsElementTextDump):
         )
 
     @override
-    def _collect_infos(self, omd_root: Path) -> str:
+    @property
+    def filename(self) -> str:
+        return "checkmk_overview"
+
+    @override
+    def contents(self, omd_root: Path) -> str:
         return _get_checkmk_overview_content(InventoryStore(omd_root), self.checkmk_server_host)
 
 
@@ -1480,11 +1452,6 @@ class ABCCheckmkFilesDiagnosticsElement(ABCDiagnosticsElement):
 class CheckmkConfigFilesDiagnosticsElement(ABCCheckmkFilesDiagnosticsElement):
     @override
     @property
-    def _file_map_config(self) -> FileMapConfig:
-        return FILE_MAP_CONFIG
-
-    @override
-    @property
     def title(self) -> str:
         return _("Checkmk Configuration Files")
 
@@ -1495,13 +1462,13 @@ class CheckmkConfigFilesDiagnosticsElement(ABCCheckmkFilesDiagnosticsElement):
             self.rel_checkmk_files
         )
 
-
-class CheckmkLogFilesDiagnosticsElement(ABCCheckmkFilesDiagnosticsElement):
     @override
     @property
     def _file_map_config(self) -> FileMapConfig:
-        return FILE_MAP_LOG
+        return FILE_MAP_CONFIG
 
+
+class CheckmkLogFilesDiagnosticsElement(ABCCheckmkFilesDiagnosticsElement):
     @override
     @property
     def title(self) -> str:
@@ -1513,6 +1480,11 @@ class CheckmkLogFilesDiagnosticsElement(ABCCheckmkFilesDiagnosticsElement):
         return _("Log files ('*.log' or '*.state') from var/log: %s") % ", ".join(
             self.rel_checkmk_files
         )
+
+    @override
+    @property
+    def _file_map_config(self) -> FileMapConfig:
+        return FILE_MAP_LOG
 
 
 #   ---directory dumps------------------------------------------------------------
@@ -1564,11 +1536,6 @@ class CheckmkCommandDiagnosticsElementTextDump(ABCDiagnosticsElementTextDump):
 
     @override
     @property
-    def ident(self) -> str:
-        return f"command_{self._command_id}{self._suffix}"
-
-    @override
-    @property
     def title(self) -> str:
         return _("Command %s") % self._command_id
 
@@ -1578,7 +1545,12 @@ class CheckmkCommandDiagnosticsElementTextDump(ABCDiagnosticsElementTextDump):
         return _("Output of %s") % " ".join(self._command)
 
     @override
-    def _collect_infos(self, omd_root: Path) -> str:
+    @property
+    def filename(self) -> str:
+        return f"command_{self._command_id}{self._suffix}"
+
+    @override
+    def contents(self, omd_root: Path) -> str:
         try:
             return subprocess.check_output(
                 self._command,
@@ -1604,11 +1576,6 @@ class CheckmkCommandDiagnosticsElementTextDump(ABCDiagnosticsElementTextDump):
 class CheckmkCoreFilesDiagnosticsElement(ABCCheckmkFilesDiagnosticsElement):
     @override
     @property
-    def _file_map_config(self) -> FileMapConfig:
-        return FILE_MAP_CORE
-
-    @override
-    @property
     def title(self) -> str:
         return _("Checkmk Core Files")
 
@@ -1619,13 +1586,13 @@ class CheckmkCoreFilesDiagnosticsElement(ABCCheckmkFilesDiagnosticsElement):
             self.rel_checkmk_files
         )
 
-
-class CheckmkLicensingFilesDiagnosticsElement(ABCCheckmkFilesDiagnosticsElement):
     @override
     @property
     def _file_map_config(self) -> FileMapConfig:
-        return FILE_MAP_LICENSING
+        return FILE_MAP_CORE
 
+
+class CheckmkLicensingFilesDiagnosticsElement(ABCCheckmkFilesDiagnosticsElement):
     @override
     @property
     def title(self) -> str:
@@ -1637,6 +1604,11 @@ class CheckmkLicensingFilesDiagnosticsElement(ABCCheckmkFilesDiagnosticsElement)
         return _(
             "Licensing files (data, config and logs) from var/check_mk/licensing, etc/check_mk/multisite.d and var/log: %s"
         ) % ", ".join(self.rel_checkmk_files)
+
+    @override
+    @property
+    def _file_map_config(self) -> FileMapConfig:
+        return FILE_MAP_LICENSING
 
 
 class PerformanceGraphsDiagnosticsElement(ABCDiagnosticsElement):
@@ -1788,10 +1760,6 @@ class CMCDumpDiagnosticsElement(ABCDiagnosticsElement):
 
 class DCDDiagnosticsElement(ABCDiagnosticsElementTextDump):
     @property
-    def ident(self) -> str:
-        return "dcd"
-
-    @property
     def title(self) -> str:
         return _("DCD cycles and batches.")
 
@@ -1802,7 +1770,12 @@ class DCDDiagnosticsElement(ABCDiagnosticsElementTextDump):
             "Executes the commands cmk-dcd -Bv and cmk-dcd -Cv."
         )
 
-    def _collect_infos(self, omd_root: Path) -> str:
+    @property
+    def filename(self) -> str:
+        return "dcd"
+
+    @override
+    def contents(self, omd_root: Path) -> str:
         if not (cmk_dcd_binary := shutil.which("cmk-dcd")):
             return ""
 

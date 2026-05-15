@@ -969,17 +969,35 @@ class PerfDataDiagnosticsElement(ABCDiagnosticsElementJSONDump):
         return json.dumps(performance_data, sort_keys=True, indent=4)
 
 
-def collect_infos_hw(proc_base_path: Path) -> dict[str, dict[str, str]]:
-    # Get the information from the proc files
-    hw_info: dict[str, dict[str, str]] = {}
-    for procfile, parser in [
-        ("meminfo", _meminfo_proc_parser),
-        ("loadavg", _load_avg_proc_parser),
-        ("cpuinfo", _cpuinfo_proc_parser),
-    ]:
-        if content := _try_to_read(proc_base_path / procfile):
-            hw_info[procfile] = parser(content)
-    return hw_info
+class HWDiagnosticsElement(ABCDiagnosticsElementJSONDump):
+    def __init__(self, proc_path: Path = Path("/proc")) -> None:
+        self._proc_path = proc_path
+
+    @override
+    @property
+    def ident(self) -> str:
+        return "hwinfo.json"
+
+    @override
+    @property
+    def title(self) -> str:
+        return _("HW Information")
+
+    @override
+    @property
+    def description(self) -> str:
+        return _("Hardware information of the Checkmk server")
+
+    def _collect_infos(self, omd_root: Path) -> str:
+        hw_info: dict[str, dict[str, str]] = {}
+        for procfile, parser in [
+            ("meminfo", _meminfo_proc_parser),
+            ("loadavg", _load_avg_proc_parser),
+            ("cpuinfo", _cpuinfo_proc_parser),
+        ]:
+            if content := _try_to_read(self._proc_path / procfile):
+                hw_info[procfile] = parser(content)
+        return json.dumps(hw_info, sort_keys=True, indent=4)
 
 
 def _meminfo_proc_parser(content: list[str]) -> dict[str, str]:
@@ -1053,47 +1071,10 @@ def _load_avg_proc_parser(content: list[str]) -> dict[str, str]:
     return dict(zip(["loadavg_1", "loadavg_5", "loadavg_15"], content[0].split()))
 
 
-class HWDiagnosticsElement(ABCDiagnosticsElementJSONDump):
-    @override
-    @property
-    def ident(self) -> str:
-        return "hwinfo.json"
-
-    @override
-    @property
-    def title(self) -> str:
-        return _("HW Information")
-
-    @override
-    @property
-    def description(self) -> str:
-        return _("Hardware information of the Checkmk server")
-
-    def _collect_infos(self, omd_root: Path) -> str:
-        return json.dumps(collect_infos_hw(Path("/proc")), sort_keys=True, indent=4)
-
-
-def collect_infos_vendor(sys_path: Path) -> dict[str, str]:
-    _SYS_FILES = [
-        "bios_vendor",
-        "bios_version",
-        "sys_vendor",
-        "product_name",
-        "chassis_asset_tag",
-    ]
-    _AZURE_TAG = "7783-7084-3265-9085-8269-3286-77"
-    vendor_info = {}
-    for sys_file in _SYS_FILES:
-        file_content = store.load_text_from_file(sys_path / sys_file).replace("\n", "")
-        vendor_info[sys_file] = (
-            ("Azure" if file_content == _AZURE_TAG else "Other")
-            if sys_file == "chassis_asset_tag"
-            else file_content
-        )
-    return vendor_info
-
-
 class VendorDiagnosticsElement(ABCDiagnosticsElementJSONDump):
+    def __init__(self, dmi_id_path: Path = Path("/sys/class/dmi/id")) -> None:
+        self._dmi_id_path = dmi_id_path
+
     @override
     @property
     def ident(self) -> str:
@@ -1110,7 +1091,23 @@ class VendorDiagnosticsElement(ABCDiagnosticsElementJSONDump):
         return _("HW vendor information of the Checkmk server")
 
     def _collect_infos(self, omd_root: Path) -> str:
-        return json.dumps(collect_infos_vendor(Path("/sys/class/dmi/id")), sort_keys=True, indent=4)
+        _SYS_FILES = [
+            "bios_vendor",
+            "bios_version",
+            "sys_vendor",
+            "product_name",
+            "chassis_asset_tag",
+        ]
+        _AZURE_TAG = "7783-7084-3265-9085-8269-3286-77"
+        vendor_info = {}
+        for sys_file in _SYS_FILES:
+            file_content = store.load_text_from_file(self._dmi_id_path / sys_file).replace("\n", "")
+            vendor_info[sys_file] = (
+                ("Azure" if file_content == _AZURE_TAG else "Other")
+                if sys_file == "chassis_asset_tag"
+                else file_content
+            )
+        return json.dumps(vendor_info, sort_keys=True, indent=4)
 
 
 class EnvironmentDiagnosticsElement(ABCDiagnosticsElementJSONDump):

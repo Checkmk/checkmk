@@ -186,27 +186,18 @@ def test_diagnostics_element_perfdata() -> None:
     )
 
 
-def test_diagnostics_element_hw_info() -> None:
-    diagnostics_element = diagnostics.HWDiagnosticsElement()
-    assert diagnostics_element.ident == "hwinfo.json"
-    assert diagnostics_element.title == "HW Information"
-    assert diagnostics_element.description == ("Hardware information of the Checkmk server")
-
-
-def test_diagnostics_element_hw_info_content(
-    tmp_path: Path,
-) -> None:
-    proc_base_path = tmp_path.joinpath("proc")
-    proc_base_path.mkdir(exist_ok=True)
+def test_diagnostics_element_hw_info(tmp_path: Path) -> None:
+    proc_path = tmp_path.joinpath("proc")
+    proc_path.mkdir(exist_ok=True)
 
     # Create three fake proc files
-    with open(proc_base_path / "meminfo", "w", encoding="utf-8") as f:
+    with open(proc_path / "meminfo", "w", encoding="utf-8") as f:
         f.write("MemTotal:       32663516 kB")
 
-    with open(proc_base_path / "loadavg", "w", encoding="utf-8") as f:
+    with open(proc_path / "loadavg", "w", encoding="utf-8") as f:
         f.write("1.19 1.58 1.75 2/1922 891074")
 
-    with open(proc_base_path / "cpuinfo", "w", encoding="utf-8") as f:
+    with open(proc_path / "cpuinfo", "w", encoding="utf-8") as f:
         f.write("""processor : 0
 physical id : 0
 processor   : 1
@@ -216,64 +207,52 @@ physical id : 0
 processor   : 3
 physical id : 0""")
 
-    diagnostics_element = diagnostics.collect_infos_hw(proc_base_path)
+    diagnostics_element = diagnostics.HWDiagnosticsElement(proc_path)
+    infos = diagnostics_element._collect_infos(tmp_path.joinpath("omd_root"))
 
-    info_keys = [
-        "cpuinfo",
-        "loadavg",
-        "meminfo",
-    ]
-
-    assert sorted(diagnostics_element.keys()) == sorted(info_keys)
-    assert isinstance(diagnostics_element, dict)
-    assert diagnostics_element == {
+    assert diagnostics_element.ident == "hwinfo.json"
+    assert diagnostics_element.title == "HW Information"
+    assert diagnostics_element.description == ("Hardware information of the Checkmk server")
+    assert json.loads(infos) == {
         "meminfo": {"MemTotal": "32663516 kB"},
         "loadavg": {"loadavg_1": "1.19", "loadavg_5": "1.58", "loadavg_15": "1.75"},
         "cpuinfo": {"physical_id": "0", "num_logical_processors": "4", "cpus": 1},
     }
 
 
-def test_diagnostics_element_vendor_info() -> None:
-    diagnostics_element = diagnostics.VendorDiagnosticsElement()
+def test_diagnostics_element_vendor_info(tmp_path: Path) -> None:
+    dmi_id_path = tmp_path.joinpath("sys/class/dmi/id")
+    dmi_id_path.mkdir(parents=True, exist_ok=True)
+
+    # Create five fake sys files
+    with open(dmi_id_path / "bios_vendor", "w", encoding="utf-8") as f:
+        f.write("Dull Ink")
+
+    with open(dmi_id_path / "bios_version", "w", encoding="utf-8") as f:
+        f.write("1.2.3")
+
+    with open(dmi_id_path / "sys_vendor", "w", encoding="utf-8") as f:
+        f.write("Dull Ink")
+
+    with open(dmi_id_path / "product_name", "w", encoding="utf-8") as f:
+        f.write("Longitude 4")
+
+    with open(dmi_id_path / "chassis_asset_tag", "w", encoding="utf-8") as f:
+        f.write("")
+
+    diagnostics_element = diagnostics.VendorDiagnosticsElement(dmi_id_path)
+    infos = diagnostics_element._collect_infos(tmp_path.joinpath("omd_root"))
+
     assert diagnostics_element.ident == "vendorinfo.json"
     assert diagnostics_element.title == "Vendor Information"
     assert diagnostics_element.description == ("HW vendor information of the Checkmk server")
-
-
-def test_diagnostics_element_vendor_info_content(
-    tmp_path: Path,
-) -> None:
-    sys_path = tmp_path.joinpath("sys/class/dmi/id")
-    sys_path.mkdir(parents=True, exist_ok=True)
-
-    # Create five fake sys files
-    with open(sys_path / "bios_vendor", "w", encoding="utf-8") as f:
-        f.write("Dull Ink")
-
-    with open(sys_path / "bios_version", "w", encoding="utf-8") as f:
-        f.write("1.2.3")
-
-    with open(sys_path / "sys_vendor", "w", encoding="utf-8") as f:
-        f.write("Dull Ink")
-
-    with open(sys_path / "product_name", "w", encoding="utf-8") as f:
-        f.write("Longitude 4")
-
-    with open(sys_path / "chassis_asset_tag", "w", encoding="utf-8") as f:
-        f.write("")
-
-    diagnostics_element = diagnostics.collect_infos_vendor(sys_path)
-
-    info_keys = [
-        "bios_vendor",
-        "bios_version",
-        "sys_vendor",
-        "product_name",
-        "chassis_asset_tag",
-    ]
-
-    assert sorted(diagnostics_element.keys()) == sorted(info_keys)
-    assert dict(diagnostics_element)["bios_vendor"] == "Dull Ink"
+    assert json.loads(infos) == {
+        "bios_vendor": "Dull Ink",
+        "bios_version": "1.2.3",
+        "chassis_asset_tag": "Other",
+        "product_name": "Longitude 4",
+        "sys_vendor": "Dull Ink",
+    }
 
 
 def test_diagnostics_element_environment() -> None:

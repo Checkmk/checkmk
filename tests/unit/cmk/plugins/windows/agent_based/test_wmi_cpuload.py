@@ -1659,3 +1659,37 @@ def test_check_wmi_cpuload_ok_counter(
         )
         == check_results
     )
+
+
+def test_check_wmi_cpuload_crit_per_core_load1(monkeypatch: MonkeyPatch) -> None:
+    monkeypatch.setattr(
+        wmi_cpuload,
+        "get_value_store",
+        lambda: {
+            "last_timestamp": 145649841.123,
+            "load_5min": (1.123, 145649841.123, 3.45),
+            "load_15min": (1.123, 145649841.123, 2.45),
+        },
+    )
+    section = Section(
+        load=12,
+        timestamp=145649941.123,
+        processor_type=ProcessorType.logical,
+        n_cores=2,
+    )
+    assert list(
+        check_wmi_cpuload(
+            {"levels1": (2.0, 4.0), "levels5": None, "levels15": None},
+            section,
+        )
+    ) == [
+        Result(state=State.OK, summary="15 min load: 3.16"),
+        Metric("load15", 3.157896497656376),
+        Result(state=State.OK, summary="15 min load per core: 1.58 (2 logical cores)"),
+        Result(state=State.CRIT, summary="1 min load: 12.00 (warn/crit at 4.00/8.00)"),
+        Metric("load1", 12.0, levels=(4.0, 8.0), boundaries=(0.0, 2.0)),
+        Result(state=State.OK, notice="1 min load per core: 6.00 (2 logical cores)"),
+        Result(state=State.OK, notice="5 min load: 5.21"),
+        Metric("load5", 5.2138605028359475),
+        Result(state=State.OK, notice="5 min load per core: 2.61 (2 logical cores)"),
+    ]

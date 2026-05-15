@@ -19,15 +19,15 @@ metric_pd_exclusivesnapshot = metrics.Metric(
 )
 metric_pd_bandwidth_tx = metrics.Metric(
     name="pd_bandwidth_tx",
-    title=Title("Tx"),
-    unit=UNIT_COUNTER,
-    color=metrics.Color.DARK_YELLOW,
+    title=Title("Transmitted bandwidth"),
+    unit=UNIT_BYTES_PER_SECOND,
+    color=metrics.Color.RED,
 )
 metric_pd_bandwidth_rx = metrics.Metric(
     name="pd_bandwidth_rx",
-    title=Title("Rx"),
-    unit=UNIT_COUNTER,
-    color=metrics.Color.DARK_PURPLE,
+    title=Title("Received bandwidth"),
+    unit=UNIT_BYTES_PER_SECOND,
+    color=metrics.Color.GREEN,
 )
 metric_prism_cluster_mem_used = metrics.Metric(
     name="prism_cluster_mem_used",

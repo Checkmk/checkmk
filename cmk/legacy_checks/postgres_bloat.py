@@ -3,14 +3,22 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="index"
-# mypy: disable-error-code="no-untyped-def"
+from collections.abc import Mapping
+from typing import Any
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import IgnoreResultsError, render
+from cmk.agent_based.v2 import (
+    AgentSection,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    IgnoreResultsError,
+    Metric,
+    render,
+    Result,
+    Service,
+    State,
+)
 from cmk.plugins.postgres import lib as postgres
-
-check_info = {}
 
 # <<<postgres_bloat>>>
 # [databases_start]
@@ -33,22 +41,26 @@ check_info = {}
 # ...
 
 
-def discover_postgres_bloat(parsed):
-    return [(entry, {}) for entry, values in parsed.items() if values]
+def discover_postgres_bloat(section: postgres.Section) -> DiscoveryResult:
+    for entry, values in section.items():
+        if values:
+            yield Service(item=entry)
 
 
-def check_postgres_bloat(item, params, parsed):
-    database = parsed.get(item)
+def check_postgres_bloat(
+    item: str, params: Mapping[str, Any], section: postgres.Section
+) -> CheckResult:
+    database = section.get(item)
     if not database:
         # In case of missing information we assume that the login into
         # the database has failed and we simply skip this check. It won't
         # switch to UNKNOWN, but will get stale.
         raise IgnoreResultsError("Login into database failed")
 
-    table_perc_max = None
-    table_abs_max = None
-    index_perc_max = None
-    index_abs_max = None
+    table_perc_max: Mapping[str, str] | None = None
+    table_abs_max: Mapping[str, str] | None = None
+    index_perc_max: Mapping[str, str] | None = None
+    index_abs_max: Mapping[str, str] | None = None
 
     table_abs_total = 0
     index_abs_total = 0
@@ -74,34 +86,38 @@ def check_postgres_bloat(item, params, parsed):
             index_abs_max = line
 
         for what, bloat, wasted in [("table", tbloat, twasted), ("index", ibloat, iwasted)]:
-            if "%s_bloat_perc" % what in params:
-                warn, crit = params["%s_bloat_perc" % what]
+            if f"{what}_bloat_perc" in params:
+                warn, crit = params[f"{what}_bloat_perc"]
                 if bloat >= crit:
-                    yield 2, "{} {} bloat: {}% (too high)".format(line["tablename"], what, bloat)
+                    yield Result(
+                        state=State.CRIT,
+                        summary=f"{line['tablename']} {what} bloat: {bloat}% (too high)",
+                    )
                     show_levels = True
                 elif bloat >= warn:
-                    yield 1, "{} {} bloat: {}% (too high)".format(line["tablename"], what, bloat)
+                    yield Result(
+                        state=State.WARN,
+                        summary=f"{line['tablename']} {what} bloat: {bloat}% (too high)",
+                    )
                     show_levels = True
 
-            if "%s_bloat_abs" % what in params:
-                warn, crit = params["%s_bloat_abs" % what]
+            if f"{what}_bloat_abs" in params:
+                warn, crit = params[f"{what}_bloat_abs"]
                 if wasted >= crit:
-                    yield (
-                        2,
-                        "{} wasted {} bytes: {} (too high)".format(
-                            line["tablename"],
-                            what,
-                            render.bytes(wasted),
+                    yield Result(
+                        state=State.CRIT,
+                        summary=(
+                            f"{line['tablename']} wasted {what} bytes: "
+                            f"{render.bytes(wasted)} (too high)"
                         ),
                     )
                     show_levels = True
                 elif wasted >= warn:
-                    yield (
-                        1,
-                        "{} wasted {} bytes: {} (too high)".format(
-                            line["tablename"],
-                            what,
-                            render.bytes(wasted),
+                    yield Result(
+                        state=State.WARN,
+                        summary=(
+                            f"{line['tablename']} wasted {what} bytes: "
+                            f"{render.bytes(wasted)} (too high)"
                         ),
                     )
                     show_levels = True
@@ -109,55 +125,55 @@ def check_postgres_bloat(item, params, parsed):
     if show_levels:
         levels_info = ["Levels:"]
         for what in ["table", "index"]:
-            if "%s_bloat_perc" % what in params:
+            if f"{what}_bloat_perc" in params:
+                warn, crit = params[f"{what}_bloat_perc"]
+                levels_info.append(f"{what.title()} Perc ({warn:.0f}%/{crit:.0f}%)")
+            if f"{what}_bloat_abs" in params:
+                warn, crit = params[f"{what}_bloat_abs"]
                 levels_info.append(
-                    "%s Perc (%.0f%%/%.0f%%)" % ((what.title(),) + params["%s_bloat_perc" % what])
+                    f"{what.title()} Abs ({render.bytes(int(warn))}/{render.bytes(int(crit))})"
                 )
-            if "%s_bloat_abs" % what in params:
-                levels_info.append(
-                    "%s Abs (%s/%s)"
-                    % (
-                        (what.title(),)
-                        + tuple(render.bytes(int(x)) for x in params["%s_bloat_abs" % what])
-                    )
-                )
-        yield 0, " ".join(levels_info)
+        yield Result(state=State.OK, summary=" ".join(levels_info))
     else:
         # No errors. Show some general information
         for what, perc_max, abs_max in [
             ("table", table_perc_max, table_abs_max),
             ("index", index_perc_max, index_abs_max),
         ]:
-            yield (
-                0,
-                "Maximum {} bloat at {}: {}".format(
-                    what,
-                    perc_max["tablename"],
-                    render.percent(float(perc_max["%sbloat" % what[0]])),
+            assert perc_max is not None and abs_max is not None
+            yield Result(
+                state=State.OK,
+                summary=(
+                    f"Maximum {what} bloat at {perc_max['tablename']}: "
+                    f"{render.percent(float(perc_max[f'{what[0]}bloat']))}"
                 ),
             )
-            yield (
-                0,
-                "Maximum wasted {}space at {}: {}".format(
-                    what,
-                    abs_max["tablename"],
-                    render.bytes(int(abs_max["wasted%sbytes" % (what == "index" and "i" or "")])),
+            wasted_key = "wastedibytes" if what == "index" else "wastedbytes"
+            yield Result(
+                state=State.OK,
+                summary=(
+                    f"Maximum wasted {what}space at {abs_max['tablename']}: "
+                    f"{render.bytes(int(abs_max[wasted_key]))}"
                 ),
             )
 
     # Summary information
     for what, total_value in [("table", table_abs_total), ("index", index_abs_total)]:
-        yield (
-            0,
-            "Summary of top %d wasted %sspace: %s"
-            % (len(database), what, render.bytes(total_value)),
-            [("%sspace_wasted" % what, total_value)],
+        yield Result(
+            state=State.OK,
+            summary=f"Summary of top {len(database)} wasted {what}space: {render.bytes(total_value)}",
         )
+        yield Metric(f"{what}space_wasted", total_value)
 
 
-check_info["postgres_bloat"] = LegacyCheckDefinition(
+agent_section_postgres_bloat = AgentSection(
     name="postgres_bloat",
     parse_function=postgres.parse_dbs,
+)
+
+
+check_plugin_postgres_bloat = CheckPlugin(
+    name="postgres_bloat",
     service_name="PostgreSQL Bloat %s",
     discovery_function=discover_postgres_bloat,
     check_function=check_postgres_bloat,

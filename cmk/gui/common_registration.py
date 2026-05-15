@@ -234,6 +234,7 @@ def register(
     monitor_hosts_registration.register(
         endpoint_family_registry,
         versioned_endpoint_registry,
+        page_registry,
     )
     crash_reporting.register(
         page_registry,

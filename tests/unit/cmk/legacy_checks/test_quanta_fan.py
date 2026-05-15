@@ -3,18 +3,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="misc"
-
-from collections.abc import Mapping, Sequence
-from typing import Any
+from collections.abc import Sequence
 
 import pytest
 
 from cmk.agent_based.internal import evaluate_snmp_detection
-from cmk.agent_based.v2 import StringTable
+from cmk.agent_based.v2 import Metric, Result, Service, State, StringTable
 from cmk.legacy_checks.quanta_fan import check_quanta_fan, discover_quanta_fan
-from cmk.legacy_includes.quanta import parse_quanta
-from cmk.plugins.quanta.lib import DETECT_QUANTA
+from cmk.plugins.quanta.lib import DETECT_QUANTA, parse_quanta
 
 
 @pytest.mark.parametrize(
@@ -43,165 +39,100 @@ def test_detect_quanta_fan(
     )
 
 
-@pytest.mark.parametrize(
-    "info, expected_discoveries",
+_INFO: list[StringTable] = [
     [
-        (
-            [
-                [
-                    ["1", "3", "Fan_SYS0_1", "1000", "1500", "800", "-99", "500"],
-                    ["2", "3", "Fan_SYS0_2", "1400", "1200", "1000", "-99", "500"],
-                    ["4", "3", "Fan_SYS1_2", "9200", "10000", "-99", "-99", "500"],
-                    ["5", "3", "Fan_SYS2_1", "11300", "-99", "-99", "1000", "500"],
-                    ["6", "3", "Fan_SYS2_2", "1400", "-99", "-99", "2000", "1000"],
-                    ["7", "3", "Fan_SYS3_1", "500", "-99", "-99", "2000", "1500"],
-                    ["8", "3", "Fan_SYS3_2", "9300", "-99", "-99", "-99", "500"],
-                ]
-            ],
-            [
-                ("Fan_SYS0_1", {}),
-                ("Fan_SYS0_2", {}),
-                ("Fan_SYS1_2", {}),
-                ("Fan_SYS2_1", {}),
-                ("Fan_SYS2_2", {}),
-                ("Fan_SYS3_1", {}),
-                ("Fan_SYS3_2", {}),
-            ],
-        ),
-    ],
-)
-def test_discover_quanta_fan(
-    info: StringTable, expected_discoveries: Sequence[tuple[str, Mapping[str, Any]]]
-) -> None:
-    """Test discovery function for quanta_fan check."""
+        ["1", "3", "Fan_SYS0_1", "1000", "1500", "800", "-99", "500"],
+        ["2", "3", "Fan_SYS0_2", "1400", "1200", "1000", "-99", "500"],
+        ["4", "3", "Fan_SYS1_2", "9200", "10000", "-99", "-99", "500"],
+        ["5", "3", "Fan_SYS2_1", "11300", "-99", "-99", "1000", "500"],
+        ["6", "3", "Fan_SYS2_2", "1400", "-99", "-99", "2000", "1000"],
+        ["7", "3", "Fan_SYS3_1", "500", "-99", "-99", "2000", "1500"],
+        ["8", "3", "Fan_SYS3_2", "9300", "-99", "-99", "-99", "500"],
+    ]
+]
 
-    parsed = parse_quanta(info)
+
+def test_discover_quanta_fan() -> None:
+    parsed = parse_quanta(_INFO)
     result = list(discover_quanta_fan(parsed))
-    assert sorted(result) == sorted(expected_discoveries)
+    assert result == [
+        Service(item="Fan_SYS0_1"),
+        Service(item="Fan_SYS0_2"),
+        Service(item="Fan_SYS1_2"),
+        Service(item="Fan_SYS2_1"),
+        Service(item="Fan_SYS2_2"),
+        Service(item="Fan_SYS3_1"),
+        Service(item="Fan_SYS3_2"),
+    ]
 
 
 @pytest.mark.parametrize(
-    "item, params, info, expected_results",
+    "item, expected_results",
     [
         (
             "Fan_SYS0_1",
-            {},
             [
-                [
-                    ["1", "3", "Fan_SYS0_1", "1000", "1500", "800", "-99", "500"],
-                    ["2", "3", "Fan_SYS0_2", "1400", "1200", "1000", "-99", "500"],
-                    ["4", "3", "Fan_SYS1_2", "9200", "10000", "-99", "-99", "500"],
-                    ["5", "3", "Fan_SYS2_1", "11300", "-99", "-99", "1000", "500"],
-                    ["6", "3", "Fan_SYS2_2", "1400", "-99", "-99", "2000", "1000"],
-                    ["7", "3", "Fan_SYS3_1", "500", "-99", "-99", "2000", "1500"],
-                    ["8", "3", "Fan_SYS3_2", "9300", "-99", "-99", "-99", "500"],
-                ]
+                Result(state=State.OK, summary="Status: OK"),
+                Result(
+                    state=State.WARN,
+                    summary="Speed: 1000 RPM (warn/crit at 800 RPM/1500 RPM)",
+                ),
             ],
-            [(0, "Status: OK"), (1, "Speed: 1000 RPM (warn/crit at 800 RPM/1500 RPM)", [])],
         ),
         (
             "Fan_SYS0_2",
-            {},
             [
-                [
-                    ["1", "3", "Fan_SYS0_1", "1000", "1500", "800", "-99", "500"],
-                    ["2", "3", "Fan_SYS0_2", "1400", "1200", "1000", "-99", "500"],
-                    ["4", "3", "Fan_SYS1_2", "9200", "10000", "-99", "-99", "500"],
-                    ["5", "3", "Fan_SYS2_1", "11300", "-99", "-99", "1000", "500"],
-                    ["6", "3", "Fan_SYS2_2", "1400", "-99", "-99", "2000", "1000"],
-                    ["7", "3", "Fan_SYS3_1", "500", "-99", "-99", "2000", "1500"],
-                    ["8", "3", "Fan_SYS3_2", "9300", "-99", "-99", "-99", "500"],
-                ]
+                Result(state=State.OK, summary="Status: OK"),
+                Result(
+                    state=State.CRIT,
+                    summary="Speed: 1400 RPM (warn/crit at 1000 RPM/1200 RPM)",
+                ),
             ],
-            [(0, "Status: OK"), (2, "Speed: 1400 RPM (warn/crit at 1000 RPM/1200 RPM)", [])],
         ),
         (
             "Fan_SYS1_2",
-            {},
             [
-                [
-                    ["1", "3", "Fan_SYS0_1", "1000", "1500", "800", "-99", "500"],
-                    ["2", "3", "Fan_SYS0_2", "1400", "1200", "1000", "-99", "500"],
-                    ["4", "3", "Fan_SYS1_2", "9200", "10000", "-99", "-99", "500"],
-                    ["5", "3", "Fan_SYS2_1", "11300", "-99", "-99", "1000", "500"],
-                    ["6", "3", "Fan_SYS2_2", "1400", "-99", "-99", "2000", "1000"],
-                    ["7", "3", "Fan_SYS3_1", "500", "-99", "-99", "2000", "1500"],
-                    ["8", "3", "Fan_SYS3_2", "9300", "-99", "-99", "-99", "500"],
-                ]
+                Result(state=State.OK, summary="Status: OK"),
+                Result(state=State.OK, summary="Speed: 9200 RPM"),
             ],
-            [(0, "Status: OK"), (0, "Speed: 9200 RPM", [])],
         ),
         (
             "Fan_SYS2_1",
-            {},
             [
-                [
-                    ["1", "3", "Fan_SYS0_1", "1000", "1500", "800", "-99", "500"],
-                    ["2", "3", "Fan_SYS0_2", "1400", "1200", "1000", "-99", "500"],
-                    ["4", "3", "Fan_SYS1_2", "9200", "10000", "-99", "-99", "500"],
-                    ["5", "3", "Fan_SYS2_1", "11300", "-99", "-99", "1000", "500"],
-                    ["6", "3", "Fan_SYS2_2", "1400", "-99", "-99", "2000", "1000"],
-                    ["7", "3", "Fan_SYS3_1", "500", "-99", "-99", "2000", "1500"],
-                    ["8", "3", "Fan_SYS3_2", "9300", "-99", "-99", "-99", "500"],
-                ]
+                Result(state=State.OK, summary="Status: OK"),
+                Result(state=State.OK, summary="Speed: 11300 RPM"),
             ],
-            [(0, "Status: OK"), (0, "Speed: 11300 RPM", [])],
         ),
         (
             "Fan_SYS2_2",
-            {},
             [
-                [
-                    ["1", "3", "Fan_SYS0_1", "1000", "1500", "800", "-99", "500"],
-                    ["2", "3", "Fan_SYS0_2", "1400", "1200", "1000", "-99", "500"],
-                    ["4", "3", "Fan_SYS1_2", "9200", "10000", "-99", "-99", "500"],
-                    ["5", "3", "Fan_SYS2_1", "11300", "-99", "-99", "1000", "500"],
-                    ["6", "3", "Fan_SYS2_2", "1400", "-99", "-99", "2000", "1000"],
-                    ["7", "3", "Fan_SYS3_1", "500", "-99", "-99", "2000", "1500"],
-                    ["8", "3", "Fan_SYS3_2", "9300", "-99", "-99", "-99", "500"],
-                ]
+                Result(state=State.OK, summary="Status: OK"),
+                Result(
+                    state=State.WARN,
+                    summary="Speed: 1400 RPM (warn/crit below 2000 RPM/1000 RPM)",
+                ),
             ],
-            [(0, "Status: OK"), (1, "Speed: 1400 RPM (warn/crit below 2000 RPM/1000 RPM)", [])],
         ),
         (
             "Fan_SYS3_1",
-            {},
             [
-                [
-                    ["1", "3", "Fan_SYS0_1", "1000", "1500", "800", "-99", "500"],
-                    ["2", "3", "Fan_SYS0_2", "1400", "1200", "1000", "-99", "500"],
-                    ["4", "3", "Fan_SYS1_2", "9200", "10000", "-99", "-99", "500"],
-                    ["5", "3", "Fan_SYS2_1", "11300", "-99", "-99", "1000", "500"],
-                    ["6", "3", "Fan_SYS2_2", "1400", "-99", "-99", "2000", "1000"],
-                    ["7", "3", "Fan_SYS3_1", "500", "-99", "-99", "2000", "1500"],
-                    ["8", "3", "Fan_SYS3_2", "9300", "-99", "-99", "-99", "500"],
-                ]
+                Result(state=State.OK, summary="Status: OK"),
+                Result(
+                    state=State.CRIT,
+                    summary="Speed: 500 RPM (warn/crit below 2000 RPM/1500 RPM)",
+                ),
             ],
-            [(0, "Status: OK"), (2, "Speed: 500 RPM (warn/crit below 2000 RPM/1500 RPM)", [])],
         ),
         (
             "Fan_SYS3_2",
-            {},
             [
-                [
-                    ["1", "3", "Fan_SYS0_1", "1000", "1500", "800", "-99", "500"],
-                    ["2", "3", "Fan_SYS0_2", "1400", "1200", "1000", "-99", "500"],
-                    ["4", "3", "Fan_SYS1_2", "9200", "10000", "-99", "-99", "500"],
-                    ["5", "3", "Fan_SYS2_1", "11300", "-99", "-99", "1000", "500"],
-                    ["6", "3", "Fan_SYS2_2", "1400", "-99", "-99", "2000", "1000"],
-                    ["7", "3", "Fan_SYS3_1", "500", "-99", "-99", "2000", "1500"],
-                    ["8", "3", "Fan_SYS3_2", "9300", "-99", "-99", "-99", "500"],
-                ]
+                Result(state=State.OK, summary="Status: OK"),
+                Result(state=State.OK, summary="Speed: 9300 RPM"),
             ],
-            [(0, "Status: OK"), (0, "Speed: 9300 RPM", [])],
         ),
     ],
 )
-def test_check_quanta_fan(
-    item: str, params: Mapping[str, Any], info: StringTable, expected_results: Sequence[Any]
-) -> None:
-    """Test check function for quanta_fan check."""
-
-    parsed = parse_quanta(info)
-    result = list(check_quanta_fan(item, params, parsed))
+def test_check_quanta_fan(item: str, expected_results: Sequence[object]) -> None:
+    parsed = parse_quanta(_INFO)
+    result = [r for r in check_quanta_fan(item, {}, parsed) if not isinstance(r, Metric)]
     assert result == expected_results

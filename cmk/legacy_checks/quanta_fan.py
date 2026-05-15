@@ -4,20 +4,20 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from collections.abc import Mapping, MutableMapping
+from collections.abc import Mapping
 from typing import Any
 
-from cmk.agent_based.legacy.v0_unstable import (
-    LegacyCheckDefinition,
-    LegacyCheckResult,
-    LegacyDiscoveryResult,
+from cmk.agent_based.v2 import (
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Result,
+    Service,
+    SNMPSection,
+    SNMPTree,
 )
-from cmk.agent_based.v2 import SNMPTree
-from cmk.legacy_includes.fan import check_fan
-from cmk.legacy_includes.quanta import Item, parse_quanta
-from cmk.plugins.quanta.lib import DETECT_QUANTA
-
-check_info = {}
+from cmk.plugins.lib.fan import check_fan
+from cmk.plugins.quanta.lib import DETECT_QUANTA, Item, parse_quanta
 
 # .1.3.6.1.4.1.7244.1.2.1.3.3.1.1.1 1
 # .1.3.6.1.4.1.7244.1.2.1.3.3.1.1.2 2
@@ -44,13 +44,18 @@ check_info = {}
 # .1.3.6.1.4.1.7244.1.2.1.3.3.1.9.2 500
 
 
-def check_quanta_fan(
-    item: str, params: Mapping[str, Any], parsed: MutableMapping[str, Item]
-) -> LegacyCheckResult:
-    if not (entry := parsed.get(item)):
+Section = Mapping[str, Item]
+
+
+def discover_quanta_fan(section: Section) -> DiscoveryResult:
+    yield from (Service(item=item) for item in section)
+
+
+def check_quanta_fan(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
+    if not (entry := section.get(item)):
         return
 
-    yield entry.status[0], "Status: %s" % entry.status[1]
+    yield Result(state=entry.status[0], summary=f"Status: {entry.status[1]}")
 
     if entry.value is None or entry.value == -99:
         return
@@ -60,14 +65,10 @@ def check_quanta_fan(
         "lower": params.get("lower", entry.lower_levels),
     }
 
-    yield check_fan(entry.value, levels)
+    yield from check_fan(entry.value, levels)
 
 
-def discover_quanta_fan(section: MutableMapping[str, Item]) -> LegacyDiscoveryResult:
-    yield from ((item, {}) for item in section)
-
-
-check_info["quanta_fan"] = LegacyCheckDefinition(
+snmp_section_quanta_fan = SNMPSection(
     name="quanta_fan",
     detect=DETECT_QUANTA,
     fetch=[
@@ -77,8 +78,14 @@ check_info["quanta_fan"] = LegacyCheckDefinition(
         )
     ],
     parse_function=parse_quanta,
+)
+
+
+check_plugin_quanta_fan = CheckPlugin(
+    name="quanta_fan",
     service_name="Fan %s",
     discovery_function=discover_quanta_fan,
     check_function=check_quanta_fan,
     check_ruleset_name="hw_fans",
+    check_default_parameters={},
 )

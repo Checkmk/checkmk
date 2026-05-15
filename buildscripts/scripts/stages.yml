@@ -125,7 +125,7 @@ STAGES:
         - "CI_TEST_SQL_DB_ENDPOINT"
       ENV_VARS:
         BAZEL_TEST_LOGS_DEST: "../results/unit"
-        BAZEL_EXTRA_TAG_FILTERS: "-cpp"
+        BAZEL_EXTRA_TAG_FILTERS: "-cpp,-requires-git"
       DIR: "tests"
       COMMAND: |
           make_rc=0

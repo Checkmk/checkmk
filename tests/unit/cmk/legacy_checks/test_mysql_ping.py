@@ -4,14 +4,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="misc"
-# mypy: disable-error-code="no-untyped-call"
 
-from collections.abc import Mapping, Sequence
-from typing import Any
+from collections.abc import Sequence
 
 import pytest
 
-from cmk.agent_based.v2 import StringTable
+from cmk.agent_based.v2 import Result, Service, State, StringTable
 from cmk.legacy_checks.mysql_ping import (
     check_mysql_ping,
     discover_mysql_ping,
@@ -30,25 +28,25 @@ from cmk.legacy_checks.mysql_ping import (
                 ["[[moth]]"],
                 ["mysqld", "is", "alive"],
             ],
-            [("mysql", {}), ("elephant", {}), ("moth", {})],
+            [Service(item="mysql"), Service(item="elephant"), Service(item="moth")],
         ),
     ],
 )
 def test_discover_mysql_ping(
-    string_table: StringTable, expected_discoveries: Sequence[tuple[str, Mapping[str, Any]]]
+    string_table: StringTable, expected_discoveries: Sequence[Service]
 ) -> None:
-    """Test discovery function for mysql_ping check."""
     parsed = parse_mysql_ping(string_table)
     result = list(discover_mysql_ping(parsed))
-    assert sorted(result) == sorted(expected_discoveries)
+    assert sorted(result, key=lambda s: s.item or "") == sorted(
+        expected_discoveries, key=lambda s: s.item or ""
+    )
 
 
 @pytest.mark.parametrize(
-    "item, params, string_table, expected_results",
+    "item, string_table, expected_results",
     [
         (
             "mysql",
-            {},
             [
                 ["this", "line", "is", "no", "longer", "ignored"],
                 ["[[elephant]]"],
@@ -56,11 +54,10 @@ def test_discover_mysql_ping(
                 ["[[moth]]"],
                 ["mysqld", "is", "alive"],
             ],
-            [(2, "this line is no longer ignored")],
+            [Result(state=State.CRIT, summary="this line is no longer ignored")],
         ),
         (
             "elephant",
-            {},
             [
                 ["this", "line", "is", "no", "longer", "ignored"],
                 ["[[elephant]]"],
@@ -68,11 +65,15 @@ def test_discover_mysql_ping(
                 ["[[moth]]"],
                 ["mysqld", "is", "alive"],
             ],
-            [(2, "mysqladmin: connect to server at 'localhost' failed")],
+            [
+                Result(
+                    state=State.CRIT,
+                    summary="mysqladmin: connect to server at 'localhost' failed",
+                )
+            ],
         ),
         (
             "moth",
-            {},
             [
                 ["this", "line", "is", "no", "longer", "ignored"],
                 ["[[elephant]]"],
@@ -80,14 +81,13 @@ def test_discover_mysql_ping(
                 ["[[moth]]"],
                 ["mysqld", "is", "alive"],
             ],
-            [(0, "MySQL Daemon is alive")],
+            [Result(state=State.OK, summary="MySQL Daemon is alive")],
         ),
     ],
 )
 def test_check_mysql_ping(
-    item: str, params: Mapping[str, Any], string_table: StringTable, expected_results: Sequence[Any]
+    item: str, string_table: StringTable, expected_results: Sequence[Result]
 ) -> None:
-    """Test check function for mysql_ping check."""
     parsed = parse_mysql_ping(string_table)
-    result = list(check_mysql_ping(item, params, parsed))
+    result = list(check_mysql_ping(item, parsed))
     assert result == expected_results

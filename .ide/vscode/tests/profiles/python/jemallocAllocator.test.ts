@@ -27,11 +27,14 @@ describe('buildWrapperScript', () => {
       '/ws/.venv/bin/dmypy'
     )
     expect(script).toMatch(/^#!\/usr\/bin\/env bash\n/)
+    expect(script).toContain('DMYPY="/ws/.venv/bin/dmypy"')
+    expect(script).toContain('if [ ! -x "$DMYPY" ]; then')
+    expect(script).toContain('dmypy not found')
     expect(script).toContain(
       'export LD_PRELOAD="${LD_PRELOAD:+$LD_PRELOAD:}/usr/lib/x86_64-linux-gnu/libjemalloc.so.2"'
     )
     expect(script).toContain('export PYTHONMALLOC=malloc')
-    expect(script).toContain('exec "/ws/.venv/bin/dmypy" "$@"')
+    expect(script).toContain('exec "$DMYPY" "$@"')
     expect(script).not.toContain('DYLD_INSERT_LIBRARIES')
   })
 
@@ -52,7 +55,8 @@ describe('buildWrapperScript', () => {
     vi.resetModules()
     const { buildWrapperScript } = await import('../../../src/profiles/python/jemallocAllocator')
     const script = buildWrapperScript('/lib/libjemalloc.so.2', '/ws/"quirky"/dmypy')
-    expect(script).toContain('exec "/ws/\\"quirky\\"/dmypy" "$@"')
+    expect(script).toContain('DMYPY="/ws/\\"quirky\\"/dmypy"')
+    expect(script).toContain('exec "$DMYPY" "$@"')
   })
 })
 

@@ -3,24 +3,28 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="comparison-overlap"
+from collections.abc import Mapping, Sequence
+from typing import Any
 
-# mypy: disable-error-code="no-untyped-def"
+from cmk.agent_based.v1 import check_levels as check_levels_v1
+from cmk.agent_based.v2 import (
+    AgentSection,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Result,
+    Service,
+    State,
+    StringTable,
+)
 
-# TODO WATORule
+Section = Mapping[str, Sequence[Mapping[str, str]]]
 
 
-# mypy: disable-error-code="var-annotated"
-
-from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
-
-check_info = {}
-
-
-def parse_informix_tabextents(string_table):
-    parsed = {}
-    instance = None
-    entry = None
+def parse_informix_tabextents(string_table: StringTable) -> Section:
+    parsed: dict[str, list[dict[str, str]]] = {}
+    instance: str | None = None
+    entry: dict[str, str] | None = None
     for line in string_table:
         if instance is not None and line == ["(constant)", "TABEXTENTS"]:
             entry = {}
@@ -36,40 +40,43 @@ def parse_informix_tabextents(string_table):
     return parsed
 
 
-def discover_informix_tabextents(parsed):
-    return [(instance, {}) for instance in parsed]
+def discover_informix_tabextents(section: Section) -> DiscoveryResult:
+    for instance in section:
+        yield Service(item=instance)
 
 
-def check_informix_tabextents(item, params, parsed):
-    if item in parsed:
-        max_extents = -1
-        long_output = []
-        for entry in parsed[item]:
-            max_extents = max(max_extents, int(entry["extents"]))
-            long_output.append(
-                "[{}/{}] Extents: {}, Rows: {}".format(
-                    entry["db"], entry["tab"], entry["extents"], entry["nrows"]
-                )
-            )
+def check_informix_tabextents(
+    item: str, params: Mapping[str, Any], section: Section
+) -> CheckResult:
+    if item not in section:
+        return
 
-        warn, crit = params["levels"]
-
-        long_output_str = "\n".join(long_output)
-        state, infotext, perfdata = check_levels(
-            max_extents,
-            "max_extents",
-            (warn, crit),
-            infoname="Maximal extents",
-            human_readable_func=str,
+    max_extents = -1
+    long_output = []
+    for entry in section[item]:
+        max_extents = max(max_extents, int(entry["extents"]))
+        long_output.append(
+            f"[{entry['db']}/{entry['tab']}] Extents: {entry['extents']}, Rows: {entry['nrows']}"
         )
 
-        return state, f"{infotext}\n{long_output_str}", perfdata
-    return None
+    yield from check_levels_v1(
+        max_extents,
+        metric_name="max_extents",
+        levels_upper=params["levels"],
+        label="Maximal extents",
+        render_func=str,
+    )
+    yield Result(state=State.OK, notice="\n".join(long_output))
 
 
-check_info["informix_tabextents"] = LegacyCheckDefinition(
+agent_section_informix_tabextents = AgentSection(
     name="informix_tabextents",
     parse_function=parse_informix_tabextents,
+)
+
+
+check_plugin_informix_tabextents = CheckPlugin(
+    name="informix_tabextents",
     service_name="Informix Table Extents %s",
     discovery_function=discover_informix_tabextents,
     check_function=check_informix_tabextents,

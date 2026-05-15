@@ -121,7 +121,12 @@ def summarize_piggyback(
         PiggybackMetaData.deserialize(raw_file_info)
         for (raw_file_info,) in host_sections.sections.get(summary_section, [])
     ]:
-        return [_summarize_single_piggyback_source(info, config, now) for info in meta_infos]
+        results = [_summarize_single_piggyback_source(info, config, now) for info in meta_infos]
+        if expect_data and all(
+            meta.is_outdated(now, config.max_cache_age(meta.source)) for meta in meta_infos
+        ):
+            results.append(ActiveCheckResult(1, "All piggyback data sources outdated."))
+        return results
 
     if expect_data:
         return [ActiveCheckResult(1, "Missing data")]
@@ -129,12 +134,15 @@ def summarize_piggyback(
 
 
 def _summarize_single_piggyback_source(
-    meta: PiggybackMetaData, config: PiggybackConfig, now: float
+    meta: PiggybackMetaData,
+    config: PiggybackConfig,
+    now: int,
 ) -> ActiveCheckResult:
-    if (age := now - meta.last_update) > (allowed := config.max_cache_age(meta.source)):
+    allowed = config.max_cache_age(meta.source)
+    if meta.is_outdated(now=now, max_age=allowed):
         return ActiveCheckResult(
             0,
-            f"Piggyback data outdated (age: {_render_time(age)}, allowed: {_render_time(allowed)})",
+            f"Piggyback data outdated (age: {_render_time(now - meta.last_update)}, allowed: {_render_time(allowed)})",
         )
 
     if meta.last_contact is None or (meta.last_update < meta.last_contact):

@@ -66,32 +66,58 @@ class TestPiggybackSummarizer:
             expect_data=True,
         ) == [ActiveCheckResult(1, "Missing data")]
 
-    @pytest.mark.parametrize("expect_data", [True, False])
-    def test_summarize_outdated_data_regardless_of_is_piggyback_option(
-        self, expect_data: bool
+    @pytest.mark.parametrize(
+        "expect_data, expected_results",
+        [
+            # When the host is not flagged as a piggyback host, keep the lenient
+            # state-0 semantic: no data is treated like no problem.
+            pytest.param(
+                False,
+                [ActiveCheckResult(0, "Piggyback data outdated (age: 0:00:20, allowed: 0:00:10)")],
+                id="expected=False",
+            ),
+            # When the host IS a piggyback host, outdated data is a real issue and
+            # discovery should not act destructively on it -> WARN (state 1).
+            pytest.param(
+                True,
+                [
+                    ActiveCheckResult(
+                        0, "Piggyback data outdated (age: 0:00:20, allowed: 0:00:10)"
+                    ),
+                    ActiveCheckResult(1, "All piggyback data sources outdated."),
+                ],
+                id="expected=True",
+            ),
+        ],
+    )
+    def test_summarize_outdated_data_state_depends_on_is_piggyback_option(
+        self, expect_data: bool, expected_results: list[ActiveCheckResult]
     ) -> None:
         now = int(time.time())
-        assert summarize_piggyback(
-            host_sections=HostSections(
-                {
-                    SectionName("piggyback_source_summary"): [
-                        [
-                            PiggybackMetaData(
-                                source=HostAddress("source"),
-                                piggybacked=HostName("hostname"),
-                                last_update=now - 20,
-                                last_contact=now - 10,
-                            ).serialize()
-                        ]
-                    ],
-                }
-            ),
-            hostname=HostName("hostname"),
-            ipaddress=HostAddress("1.2.3.4"),
-            time_settings=[(None, "max_cache_age", 10)],
-            expect_data=expect_data,
-            now=now,
-        ) == [ActiveCheckResult(0, "Piggyback data outdated (age: 0:00:20, allowed: 0:00:10)")]
+        assert (
+            summarize_piggyback(
+                host_sections=HostSections(
+                    {
+                        SectionName("piggyback_source_summary"): [
+                            [
+                                PiggybackMetaData(
+                                    source=HostAddress("source"),
+                                    piggybacked=HostName("hostname"),
+                                    last_update=now - 20,
+                                    last_contact=now - 10,
+                                ).serialize()
+                            ]
+                        ],
+                    }
+                ),
+                hostname=HostName("hostname"),
+                ipaddress=HostAddress("1.2.3.4"),
+                time_settings=[(None, "max_cache_age", 10)],
+                expect_data=expect_data,
+                now=now,
+            )
+            == expected_results
+        )
 
     @pytest.mark.parametrize("expect_data", [True, False])
     def test_summarize_abandoned_data_without_tolerance_regardless_of_is_piggyback_option(

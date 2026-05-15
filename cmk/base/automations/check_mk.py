@@ -20,14 +20,12 @@ import subprocess
 import sys
 import time
 import uuid
-from collections.abc import Callable, Container, Iterable, Iterator, Mapping, Sequence
+from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from contextlib import redirect_stderr, redirect_stdout, suppress
 from dataclasses import asdict, dataclass
 from itertools import chain, islice
 from pathlib import Path
 from typing import Any
-
-import livestatus
 
 import cmk.ccc.debug
 from cmk.ccc import store, version
@@ -43,7 +41,6 @@ from cmk.utils.caching import cache_manager
 from cmk.utils.config_path import LATEST_CONFIG
 from cmk.utils.diagnostics import deserialize_cl_parameters, DiagnosticsCLParameters
 from cmk.utils.encoding import ensure_str_with_fallback
-from cmk.utils.everythingtype import EVERYTHING
 from cmk.utils.hostaddress import HostAddress, HostName, Hosts
 from cmk.utils.labels import DiscoveredHostLabelsStore, HostLabel
 from cmk.utils.log import console
@@ -787,13 +784,6 @@ def _execute_autodiscovery(
         return {}, False
 
     console.verbose("Autodiscovery: Discovering all hosts marked by discovery check:")
-    try:
-        response = livestatus.LocalConnection().query("GET hosts\nColumns: name state")
-        process_hosts: Container[HostName] = {
-            HostName(name) for name, state in response if state == 0
-        }
-    except (livestatus.MKLivestatusNotFoundError, livestatus.MKLivestatusSocketError):
-        process_hosts = EVERYTHING
 
     activation_required = False
     rediscovery_reference_time = time.time()
@@ -810,9 +800,6 @@ def _execute_autodiscovery(
             for host_name in autodiscovery_queue:
                 if time.monotonic() > start + limit:
                     raise TimeoutError(message)
-
-                if host_name not in process_hosts:
-                    continue
 
                 def section_error_handling(
                     section_name: SectionName,

@@ -48,12 +48,8 @@ export interface AttributeCondition {
 export type Connector = 'AND' | 'OR'
 
 export interface ConnectedCondition extends AttributeCondition {
-  connector: Connector
+  connector: Connector | null
   id: string
 }
 
-// The first entry's `connector` is semantically meaningless (nothing precedes
-// it). The flat array shape is so we can render
-// connectors between adjacent pills and introduce OR / AND-grouping without
-// churning the data contract. Consumers must ignore `model[0].connector`.
 export type AttributeFilterModel = ConnectedCondition[]

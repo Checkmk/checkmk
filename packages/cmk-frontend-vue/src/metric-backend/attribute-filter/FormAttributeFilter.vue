@@ -7,6 +7,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import usei18n from '@/lib/i18n'
 
+import CmkIconButton from '@/components/CmkIconButton.vue'
 import type { QuerySuggestionsFn } from '@/components/CmkSuggestions/types'
 
 import AttributeFilterPill from './AttributeFilterPill.vue'
@@ -37,7 +38,15 @@ const props = withDefaults(
 const model = defineModel<AttributeFilterModel>({ default: () => [] })
 
 function removeCondition(target: ConnectedCondition): void {
-  model.value = model.value.filter((c) => c.id !== target.id)
+  const idx = model.value.findIndex((c) => c.id === target.id)
+  if (idx < 0) {
+    return
+  }
+  const next = model.value.filter((c) => c.id !== target.id)
+  if (idx === 0 && next.length > 0) {
+    next[0] = { ...next[0]!, connector: null }
+  }
+  model.value = next
 }
 
 // Apply the inferred type in the same mutation as the key; only override when
@@ -68,22 +77,73 @@ function updateOperator(target: ConnectedCondition, value: Operator): void {
 function updateValue(target: ConnectedCondition, value: string): void {
   model.value = model.value.map((c) => (c.id === target.id ? { ...c, value } : c))
 }
+
+// Distinguish per-pill add buttons in screen readers via positional aria-label.
+function addConditionLabel(entry: ConnectedCondition): string {
+  return entry.key
+    ? _t('Add condition after %{key}', { key: entry.key })
+    : _t('Add condition after previous condition')
+}
+
+function addCondition(index: number): void {
+  const fresh: ConnectedCondition = {
+    id: crypto.randomUUID(),
+    attributeType: null,
+    key: '',
+    operator: 'eq',
+    value: '',
+    connector: index === 0 ? null : 'OR'
+  }
+  model.value = [...model.value.slice(0, index), fresh, ...model.value.slice(index)]
+}
 </script>
 
 <template>
-  <div role="group" :aria-label="ariaLabel ?? _t('Attribute filter')">
-    <AttributeFilterPill
-      v-for="entry in model"
-      :key="entry.id"
-      :condition="entry"
-      :query-suggestions="querySuggestions"
-      :query-value-suggestions="queryValueSuggestions"
-      removable
-      @remove="removeCondition(entry)"
-      @update:key="(value) => updateKey(entry, value)"
-      @update:attribute-type="(value) => updateAttributeType(entry, value)"
-      @update:operator="(value) => updateOperator(entry, value)"
-      @update:value="(value) => updateValue(entry, value)"
+  <div
+    class="metric-backend-form-attribute-filter"
+    role="group"
+    :aria-label="ariaLabel ?? _t('Attribute filter')"
+  >
+    <CmkIconButton
+      v-if="model.length === 0"
+      class="metric-backend-form-attribute-filter__add"
+      name="add"
+      size="large"
+      :title="_t('Add condition')"
+      :aria-label="_t('Add condition')"
+      @mousedown.prevent
+      @click="addCondition(0)"
     />
+    <template v-for="(entry, index) in model" :key="entry.id">
+      <AttributeFilterPill
+        :condition="entry"
+        :query-suggestions="querySuggestions"
+        :query-value-suggestions="queryValueSuggestions"
+        removable
+        @remove="removeCondition(entry)"
+        @update:key="(value) => updateKey(entry, value)"
+        @update:attribute-type="(value) => updateAttributeType(entry, value)"
+        @update:operator="(value) => updateOperator(entry, value)"
+        @update:value="(value) => updateValue(entry, value)"
+      />
+      <CmkIconButton
+        class="metric-backend-form-attribute-filter__add"
+        name="add"
+        size="large"
+        :title="_t('Add condition')"
+        :aria-label="addConditionLabel(entry)"
+        @mousedown.prevent
+        @click="addCondition(index + 1)"
+      />
+    </template>
   </div>
 </template>
+
+<style scoped>
+.metric-backend-form-attribute-filter {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--dimension-3) var(--dimension-4);
+}
+</style>

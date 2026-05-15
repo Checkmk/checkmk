@@ -39,7 +39,7 @@ const filters = ref<AttributeFilterModel>([
     key: 'service.name',
     operator: 'eq',
     value: 'frontend',
-    connector: 'AND'
+    connector: null
   }
 ])
 

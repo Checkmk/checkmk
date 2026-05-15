@@ -15,11 +15,14 @@ from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefiniti
 check_info = {}
 
 
+_UNATTRIBUTED = "Unattributed"
+
+
 def parse_azure_usagedetails(string_table):
     parsed = {}
     for detail in list(parse_resources(string_table).values()):
         props = detail.properties
-        service_name = props["ResourceType"].split("/")[0]
+        service_name = (props.get("ResourceType") or "").strip().split("/")[0] or _UNATTRIBUTED
         data = parsed.setdefault(
             service_name,
             {

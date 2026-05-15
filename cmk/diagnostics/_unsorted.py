@@ -23,8 +23,6 @@ DiagnosticsCLParameters = Sequence[str]
 DiagnosticsModesParameters = dict[str, Any]
 DiagnosticsOptionalParameters = dict[str, Any]
 CheckmkFilesMap = dict[str, Path]
-DiagnosticsElementJSONResult = Mapping[str, _JSONSerializable]
-DiagnosticsElementCSVResult = str
 DiagnosticsElementFilepaths = Iterator[Path]
 
 

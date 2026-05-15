@@ -11,9 +11,7 @@ from ._unsorted import CheckmkFilesMap as CheckmkFilesMap
 from ._unsorted import deserialize_cl_parameters as deserialize_cl_parameters
 from ._unsorted import deserialize_modes_parameters as deserialize_modes_parameters
 from ._unsorted import DiagnosticsCLParameters as DiagnosticsCLParameters
-from ._unsorted import DiagnosticsElementCSVResult as DiagnosticsElementCSVResult
 from ._unsorted import DiagnosticsElementFilepaths as DiagnosticsElementFilepaths
-from ._unsorted import DiagnosticsElementJSONResult as DiagnosticsElementJSONResult
 from ._unsorted import DiagnosticsModesParameters as DiagnosticsModesParameters
 from ._unsorted import DiagnosticsOptionalParameters as DiagnosticsOptionalParameters
 from ._unsorted import DiagnosticsParameters as DiagnosticsParameters

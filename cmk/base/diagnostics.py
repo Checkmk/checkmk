@@ -53,9 +53,7 @@ from cmk.diagnostics import (
     deserialize_cl_parameters,
     deserialize_modes_parameters,
     DiagnosticsCLParameters,
-    DiagnosticsElementCSVResult,
     DiagnosticsElementFilepaths,
-    DiagnosticsElementJSONResult,
     DiagnosticsModesParameters,
     DiagnosticsOptionalParameters,
     FILE_MAP_CONFIG,
@@ -731,11 +729,11 @@ class ABCDiagnosticsElementJSONDump(ABCDiagnosticsElement):
             raise DiagnosticsElementInfo("No data")
 
         filepath = tmp_dump_folder / self.ident
-        store.save_text_to_file(filepath, json.dumps(infos, sort_keys=True, indent=4))
+        store.save_text_to_file(filepath, infos)
         yield filepath
 
     @abc.abstractmethod
-    def _collect_infos(self, omd_root: Path) -> DiagnosticsElementJSONResult:
+    def _collect_infos(self, omd_root: Path) -> str:
         raise NotImplementedError()
 
 
@@ -758,7 +756,7 @@ class ABCDiagnosticsElementCSVDump(ABCDiagnosticsElement):
         yield filepath
 
     @abc.abstractmethod
-    def _collect_infos(self, omd_root: Path) -> DiagnosticsElementCSVResult:
+    def _collect_infos(self, omd_root: Path) -> str:
         raise NotImplementedError()
 
 
@@ -804,7 +802,7 @@ class FilesSizeCSVDiagnosticsElement(ABCDiagnosticsElementCSVDump):
     def description(self) -> str:
         return _("List of all files in the site including their size")
 
-    def _collect_infos(self, omd_root: Path) -> DiagnosticsElementCSVResult:
+    def _collect_infos(self, omd_root: Path) -> str:
         csv_data = []
         csv_data.append("size;path;owner;group;mode;changed")
         tmp_file_regex = re.compile(r"^\..*\.new.*")
@@ -847,7 +845,7 @@ class DpkgCSVDiagnosticsElement(ABCDiagnosticsElementCSVDump):
     def description(self) -> str:
         return _("Output of `dpkg -l`. See the corresponding command line help for more details.")
 
-    def _collect_infos(self, omd_root: Path) -> DiagnosticsElementCSVResult:
+    def _collect_infos(self, omd_root: Path) -> str:
         if not (dpkg_binary := shutil.which("dpkg")):
             return ""
 
@@ -873,7 +871,7 @@ class RpmCSVDiagnosticsElement(ABCDiagnosticsElementCSVDump):
     def description(self) -> str:
         return _("Output of `rpm -qa`. See the corresponding command line help for more details.")
 
-    def _collect_infos(self, omd_root: Path) -> DiagnosticsElementCSVResult:
+    def _collect_infos(self, omd_root: Path) -> str:
         if not (rpm_binary := shutil.which("rpm")):
             return ""
 
@@ -916,20 +914,24 @@ class GeneralDiagnosticsElement(ABCDiagnosticsElementJSONDump):
             "OS, Checkmk version and edition, Time, Core, Python version and paths, Architecture"
         )
 
-    def _collect_infos(self, omd_root: Path) -> DiagnosticsElementJSONResult:
+    def _collect_infos(self, omd_root: Path) -> str:
         version_infos = cmk_version.get_general_version_infos(omd_root)
         time_obj = datetime.fromtimestamp(version_infos.get("time", 0.0))
-        return {
-            "arch": platform.machine(),
-            "time_human_readable": time_obj.isoformat(sep=" "),
-            "time": version_infos["time"],
-            "os": version_infos["os"],
-            "version": version_infos["version"],
-            "edition": version_infos["edition"],
-            "core": version_infos["core"],
-            "python_version": version_infos["python_version"],
-            "python_paths": list(version_infos["python_paths"]),
-        }
+        return json.dumps(
+            {
+                "arch": platform.machine(),
+                "time_human_readable": time_obj.isoformat(sep=" "),
+                "time": version_infos["time"],
+                "os": version_infos["os"],
+                "version": version_infos["version"],
+                "edition": version_infos["edition"],
+                "core": version_infos["core"],
+                "python_version": version_infos["python_version"],
+                "python_paths": list(version_infos["python_paths"]),
+            },
+            sort_keys=True,
+            indent=4,
+        )
 
 
 class PerfDataDiagnosticsElement(ABCDiagnosticsElementJSONDump):
@@ -956,26 +958,20 @@ class PerfDataDiagnosticsElement(ABCDiagnosticsElementJSONDump):
     def description(self) -> str:
         return _("Metrics related to sizing, e.g. number of helpers, hosts, services")
 
-    def _collect_infos(self, omd_root: Path) -> DiagnosticsElementJSONResult:
-        # Get the runtime performance data from livestatus
-        query = "GET status\nColumnHeaders: on"
-        result = livestatus.LocalConnection().query(query)
+    def _collect_infos(self, omd_root: Path) -> str:
+        result = livestatus.LocalConnection().query("GET status\nColumnHeaders: on")
         performance_data = {
             key: result[1][i]
             for i in range(0, len(result[0]))
             if (key := result[0][i]) not in ["license_usage_history"]
         }
-
         performance_data.update(self._core_performance_settings(self._loaded_config))
+        return json.dumps(performance_data, sort_keys=True, indent=4)
 
-        return performance_data
 
-
-def collect_infos_hw(proc_base_path: Path) -> DiagnosticsElementJSONResult:
+def collect_infos_hw(proc_base_path: Path) -> dict[str, dict[str, str]]:
     # Get the information from the proc files
-
     hw_info: dict[str, dict[str, str]] = {}
-
     for procfile, parser in [
         ("meminfo", _meminfo_proc_parser),
         ("loadavg", _load_avg_proc_parser),
@@ -983,7 +979,6 @@ def collect_infos_hw(proc_base_path: Path) -> DiagnosticsElementJSONResult:
     ]:
         if content := _try_to_read(proc_base_path / procfile):
             hw_info[procfile] = parser(content)
-
     return hw_info
 
 
@@ -1074,11 +1069,11 @@ class HWDiagnosticsElement(ABCDiagnosticsElementJSONDump):
     def description(self) -> str:
         return _("Hardware information of the Checkmk server")
 
-    def _collect_infos(self, omd_root: Path) -> DiagnosticsElementJSONResult:
-        return collect_infos_hw(Path("/proc"))
+    def _collect_infos(self, omd_root: Path) -> str:
+        return json.dumps(collect_infos_hw(Path("/proc")), sort_keys=True, indent=4)
 
 
-def collect_infos_vendor(sys_path: Path) -> DiagnosticsElementJSONResult:
+def collect_infos_vendor(sys_path: Path) -> dict[str, str]:
     _SYS_FILES = [
         "bios_vendor",
         "bios_version",
@@ -1088,17 +1083,13 @@ def collect_infos_vendor(sys_path: Path) -> DiagnosticsElementJSONResult:
     ]
     _AZURE_TAG = "7783-7084-3265-9085-8269-3286-77"
     vendor_info = {}
-
     for sys_file in _SYS_FILES:
         file_content = store.load_text_from_file(sys_path / sys_file).replace("\n", "")
-        if sys_file == "chassis_asset_tag":
-            if file_content == _AZURE_TAG:
-                vendor_info[sys_file] = "Azure"
-            else:
-                vendor_info[sys_file] = "Other"
-        else:
-            vendor_info[sys_file] = file_content
-
+        vendor_info[sys_file] = (
+            ("Azure" if file_content == _AZURE_TAG else "Other")
+            if sys_file == "chassis_asset_tag"
+            else file_content
+        )
     return vendor_info
 
 
@@ -1118,8 +1109,8 @@ class VendorDiagnosticsElement(ABCDiagnosticsElementJSONDump):
     def description(self) -> str:
         return _("HW vendor information of the Checkmk server")
 
-    def _collect_infos(self, omd_root: Path) -> DiagnosticsElementJSONResult:
-        return collect_infos_vendor(Path("/sys/class/dmi/id"))
+    def _collect_infos(self, omd_root: Path) -> str:
+        return json.dumps(collect_infos_vendor(Path("/sys/class/dmi/id")), sort_keys=True, indent=4)
 
 
 class EnvironmentDiagnosticsElement(ABCDiagnosticsElementJSONDump):
@@ -1138,10 +1129,8 @@ class EnvironmentDiagnosticsElement(ABCDiagnosticsElementJSONDump):
     def description(self) -> str:
         return _("Variables set in the site user's environment")
 
-    def _collect_infos(self, omd_root: Path) -> DiagnosticsElementJSONResult:
-        # Get the environment variables
-
-        return dict(os.environ)
+    def _collect_infos(self, omd_root: Path) -> str:
+        return json.dumps(dict(os.environ), sort_keys=True, indent=4)
 
 
 class PipFreezeDiagnosticsElement(ABCDiagnosticsElementJSONDump):
@@ -1160,11 +1149,16 @@ class PipFreezeDiagnosticsElement(ABCDiagnosticsElementJSONDump):
     def description(self) -> str:
         return _("The installed Python modules and their versions")
 
-    def _collect_infos(self, omd_root: Path) -> DiagnosticsElementJSONResult:
-        # Execute pip freeze and convert to JSON
-
-        lines = subprocess.check_output(["pip3", "freeze", "--all"], text=True).split("\n")
-        return {l.split("==")[0]: l.split("==")[1] for l in lines if "==" in l}
+    def _collect_infos(self, omd_root: Path) -> str:
+        return json.dumps(
+            {
+                l.split("==")[0]: l.split("==")[1]
+                for l in subprocess.check_output(["pip3", "freeze", "--all"], text=True).split("\n")
+                if "==" in l
+            },
+            sort_keys=True,
+            indent=4,
+        )
 
 
 class MKPFindTextDiagnosticsElement(ABCDiagnosticsElementJSONDump):
@@ -1186,14 +1180,12 @@ class MKPFindTextDiagnosticsElement(ABCDiagnosticsElementJSONDump):
             "See the corresponding command line help for more details."
         )
 
-    def _collect_infos(self, omd_root: Path) -> DiagnosticsElementJSONResult:
+    def _collect_infos(self, omd_root: Path) -> str:
         try:
-            return dict(
-                json.loads(subprocess.check_output(["mkp", "find", "--all", "--json"], text=True))
-            )
+            return subprocess.check_output(["mkp", "find", "--all", "--json"], text=True)
         except subprocess.CalledProcessError as e:
             ConsoleLogger().error(str(e.stderr))
-            return {}
+            return "{}"
 
 
 class MKPShowTextDiagnosticsElement(ABCDiagnosticsElementJSONDump):
@@ -1215,14 +1207,12 @@ class MKPShowTextDiagnosticsElement(ABCDiagnosticsElementJSONDump):
             "See the corresponding command line help for more details."
         )
 
-    def _collect_infos(self, omd_root: Path) -> DiagnosticsElementJSONResult:
+    def _collect_infos(self, omd_root: Path) -> str:
         try:
-            return dict(
-                json.loads(subprocess.check_output(["mkp", "show-all", "--json"], text=True))
-            )
+            return subprocess.check_output(["mkp", "show-all", "--json"], text=True)
         except subprocess.CalledProcessError as e:
             ConsoleLogger().error(str(e.stderr))
-            return {}
+            return "{}"
 
 
 class MKPListTextDiagnosticsElement(ABCDiagnosticsElementJSONDump):
@@ -1243,12 +1233,12 @@ class MKPListTextDiagnosticsElement(ABCDiagnosticsElementJSONDump):
             "Output of `mkp list --json`. See the corresponding command line help for more details."
         )
 
-    def _collect_infos(self, omd_root: Path) -> DiagnosticsElementJSONResult:
+    def _collect_infos(self, omd_root: Path) -> str:
         try:
-            return dict(json.loads(subprocess.check_output(["mkp", "list", "--json"], text=True)))
+            return subprocess.check_output(["mkp", "list", "--json"], text=True)
         except subprocess.CalledProcessError as e:
             ConsoleLogger().error(str(e.stderr))
-            return {}
+            return "{}"
 
 
 class SELinuxJSONDiagnosticsElement(ABCDiagnosticsElementJSONDump):
@@ -1267,15 +1257,18 @@ class SELinuxJSONDiagnosticsElement(ABCDiagnosticsElementJSONDump):
     def description(self) -> str:
         return _("Output of `sestatus`. See the corresponding command line help for more details.")
 
-    def _collect_infos(self, omd_root: Path) -> DiagnosticsElementJSONResult:
-        if not (selinux_binary := shutil.which("sestatus")):
-            return {}
-
-        return {
-            line.split(":")[0]: line.split(":")[1].lstrip()
-            for line in subprocess.check_output(selinux_binary, text=True).split("\n")
-            if ":" in line
-        }
+    def _collect_infos(self, omd_root: Path) -> str:
+        return json.dumps(
+            {
+                line.split(":")[0]: line.split(":")[1].lstrip()
+                for line in subprocess.check_output(selinux_binary, text=True).split("\n")
+                if ":" in line
+            }
+            if (selinux_binary := shutil.which("sestatus"))
+            else {},
+            sort_keys=True,
+            indent=4,
+        )
 
 
 def _try_to_read(filename: str | Path) -> list[str]:
@@ -1305,16 +1298,13 @@ class CMAJSONDiagnosticsElement(ABCDiagnosticsElementJSONDump):
     def description(self) -> str:
         return _("Information about the appliance hardware and firmware version.")
 
-    def _collect_infos(self, omd_root: Path) -> DiagnosticsElementJSONResult:
+    def _collect_infos(self, omd_root: Path) -> str:
         cma_infos: dict[str, str | dict[str, str]] = {}
-
         if hw_content := _try_to_read("/etc/cma/hw"):
             cma_infos["hw"] = dict([l.replace("'", "").split("=") for l in hw_content if "=" in l])
-
         if fw_content := _try_to_read("/ro/usr/share/cma/version"):
             cma_infos["fw"] = fw_content[0]
-
-        return cma_infos
+        return json.dumps(cma_infos, sort_keys=True, indent=4)
 
 
 class OMDConfigDiagnosticsElement(ABCDiagnosticsElementJSONDump):
@@ -1338,8 +1328,8 @@ class OMDConfigDiagnosticsElement(ABCDiagnosticsElementJSONDump):
             "Apache mode and TCP address and port, core, Liveproxy daemon and Livestatus TCP mode, event daemon config, graphical user interface (GUI) authorization, NSCA mode, TMP file system mode"
         )
 
-    def _collect_infos(self, omd_root: Path) -> DiagnosticsElementJSONResult:
-        return self._omd_config
+    def _collect_infos(self, omd_root: Path) -> str:
+        return json.dumps(self._omd_config, sort_keys=True, indent=4)
 
 
 class CheckmkOverviewDiagnosticsElement(ABCDiagnosticsElementTextDump):

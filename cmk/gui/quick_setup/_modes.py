@@ -734,6 +734,14 @@ class ModeConfigurationBundle(WatoMode):
         match self._rule_group_type:
             case RuleGroupType.SPECIAL_AGENTS:
                 self._verify_special_agent_vars()
+            case RuleGroupType.OTEL_COLLECTOR:
+                raise MKUserError(
+                    None,
+                    _(
+                        "OpenTelemetry configuration bundles are managed via the "
+                        "OpenTelemetry or Prometheus Quick Setup pages."
+                    ),
+                )
             case _:
                 raise MKUserError(
                     None,

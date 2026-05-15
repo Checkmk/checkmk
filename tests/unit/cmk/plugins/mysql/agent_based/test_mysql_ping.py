@@ -10,7 +10,7 @@ from collections.abc import Sequence
 import pytest
 
 from cmk.agent_based.v2 import Result, Service, State, StringTable
-from cmk.legacy_checks.mysql_ping import (
+from cmk.plugins.mysql.agent_based.mysql_ping import (
     check_mysql_ping,
     discover_mysql_ping,
     parse_mysql_ping,

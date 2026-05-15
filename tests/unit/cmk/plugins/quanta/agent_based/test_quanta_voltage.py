@@ -8,7 +8,10 @@ from collections.abc import Sequence
 import pytest
 
 from cmk.agent_based.v2 import Metric, Result, Service, State, StringTable
-from cmk.legacy_checks.quanta_voltage import check_quanta_voltage, discover_quanta_voltage
+from cmk.plugins.quanta.agent_based.quanta_voltage import (
+    check_quanta_voltage,
+    discover_quanta_voltage,
+)
 from cmk.plugins.quanta.lib import parse_quanta
 
 _INFO: list[StringTable] = [

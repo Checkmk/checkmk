@@ -3,19 +3,25 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
+from collections.abc import Mapping
+
+from cmk.agent_based.v2 import (
+    AgentSection,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Result,
+    Service,
+    State,
+    StringTable,
+)
+
+Section = Mapping[str, Mapping[str, str]]
 
 
-# mypy: disable-error-code="var-annotated"
-
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-
-check_info = {}
-
-
-def parse_informix_status(string_table):
-    parsed = {}
-    instance = None
+def parse_informix_status(string_table: StringTable) -> Section:
+    parsed: dict[str, dict[str, str]] = {}
+    instance: str | None = None
     for line in string_table:
         if line[0].startswith("[[[") and line[0].endswith("]]]"):
             instance = line[0][3:-3]
@@ -28,43 +34,49 @@ def parse_informix_status(string_table):
     return parsed
 
 
-def discover_informix_status(parsed):
-    return [(instance, {}) for instance in parsed]
+def discover_informix_status(section: Section) -> DiscoveryResult:
+    for instance in section:
+        yield Service(item=instance)
 
 
-def check_informix_status(item, params, parsed):
+def check_informix_status(item: str, section: Section) -> CheckResult:
     map_states = {
-        "0": (0, "initialization"),
-        "1": (1, "quiescent"),
-        "2": (1, "recovery"),
-        "3": (1, "backup"),
-        "4": (2, "shutdown"),
-        "5": (0, "online"),
-        "6": (1, "abort"),
-        "7": (1, "single user"),
-        "-1": (2, "offline"),
-        "255": (2, "offline"),
+        "0": (State.OK, "initialization"),
+        "1": (State.WARN, "quiescent"),
+        "2": (State.WARN, "recovery"),
+        "3": (State.WARN, "backup"),
+        "4": (State.CRIT, "shutdown"),
+        "5": (State.OK, "online"),
+        "6": (State.WARN, "abort"),
+        "7": (State.WARN, "single user"),
+        "-1": (State.CRIT, "offline"),
+        "255": (State.CRIT, "offline"),
     }
 
-    if item in parsed:
-        data = parsed[item]
-        state, state_readable = map_states[data["Status"]]
-        infotext = "Status: %s" % state_readable
+    if item not in section:
+        return
+    data = section[item]
+    state, state_readable = map_states[data["Status"]]
+    infotext = f"Status: {state_readable}"
 
-        server_version = data.get("Server Version")
-        if server_version:
-            infotext += ", Version: %s" % server_version
+    server_version = data.get("Server Version")
+    if server_version:
+        infotext += f", Version: {server_version}"
 
-        port = data.get("PORT")
-        if port:
-            infotext += ", Port: %s" % port.split(" ")[1]
-        return state, infotext
-    return None
+    port = data.get("PORT")
+    if port:
+        infotext += f", Port: {port.split(' ')[1]}"
+    yield Result(state=state, summary=infotext)
 
 
-check_info["informix_status"] = LegacyCheckDefinition(
+agent_section_informix_status = AgentSection(
     name="informix_status",
     parse_function=parse_informix_status,
+)
+
+
+check_plugin_informix_status = CheckPlugin(
+    name="informix_status",
     service_name="Informix Instance %s",
     discovery_function=discover_informix_status,
     check_function=check_informix_status,

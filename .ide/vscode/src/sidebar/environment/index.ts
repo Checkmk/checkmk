@@ -187,69 +187,8 @@ export async function handleMessage(
 
 export function render(state: StateCache, codiconUri?: vscode.Uri, cspSource?: string): string {
   const nonce = getNonce()
-  const { buildStatus, environment, onboarding, onboardingDismissed } = state
-
-  let onboardingHtml = ''
-  if (onboarding && !onboarding.allDone && !onboardingDismissed) {
-    const steps = [
-      {
-        key: 'system',
-        label: 'System Setup',
-        description: 'Install bazel, pyenv, docker, gcc via <code>make setup</code>',
-        done: onboarding.systemDone,
-        action: 'run-make-setup',
-        actionLabel: '<span class="codicon codicon-play"></span> Run make setup',
-        actionId: ''
-      },
-      {
-        key: 'venv',
-        label: 'Build .venv',
-        description: 'Create the Python virtual environment',
-        done: onboarding.venvDone,
-        action: 'exec',
-        actionLabel: '<span class="codicon codicon-wrench"></span> Build .venv',
-        actionId: 'cmk.buildVenv'
-      },
-      {
-        key: 'ide',
-        label: 'IDE Setup',
-        description: 'Install extensions and configure settings',
-        done: onboarding.ideDone,
-        action: 'exec',
-        actionLabel: '<span class="codicon codicon-settings-gear"></span> Configure IDE',
-        actionId: 'cmk.setupPicker'
-      }
-    ]
-
-    const stepHtml = steps
-      .map((s, i) => {
-        const isCurrent = s.key === onboarding.currentStep
-        const icon = s.done
-          ? '<span class="step-icon done">&#10003;</span>'
-          : `<span class="step-icon ${isCurrent ? 'current' : 'pending'}">${i + 1}</span>`
-        const actionBtn = isCurrent
-          ? `<button class="btn btn-small btn-ghost" data-action="${s.action}" data-id="${s.actionId}">${s.actionLabel}</button>`
-          : ''
-        return `<div class="onboarding-step ${s.done ? 'done' : ''} ${isCurrent ? 'current' : ''}">
-        ${icon}
-        <div class="step-body">
-          <div class="step-label">${s.label}</div>
-          ${isCurrent ? `<div class="step-desc">${s.description}</div>` : ''}
-          ${actionBtn}
-        </div>
-      </div>`
-      })
-      .join('')
-
-    onboardingHtml = `
-      <div class="onboarding-banner">
-        <div class="onboarding-header">
-          <span class="onboarding-title">Getting Started</span>
-          <button class="btn btn-small btn-icon" data-action="onboarding-dismiss" title="Dismiss">&#10005;</button>
-        </div>
-        ${stepHtml}
-      </div>`
-  }
+  const { buildStatus, environment } = state
+  // "Getting Started" onboarding moved to the Cockpit section (overview/index.ts).
 
   const envRows =
     `<div class="env-grid">` +
@@ -281,37 +220,21 @@ export function render(state: StateCache, codiconUri?: vscode.Uri, cspSource?: s
       .join('') +
     `</div>`
 
-  const configCommands = new Set(['cmk.regenerateMypyConfig'])
-  const staleTargets = Object.values(buildStatus).filter((s) => !s.ok)
-  const staleBanner =
-    staleTargets.length > 0
-      ? `<div class="banner banner-warn">
-        <span>${staleTargets.length} build target(s) need updating: ${staleTargets.map((s) => s.label).join(', ')}</span>
-        <button class="btn btn-small" data-action="exec" data-id="cmk.buildAllStale"><span class="codicon codicon-run-all"></span> Build All</button>
-      </div>`
-      : ''
+  // Build target list: a flat per-target row so users can see at a glance
+  // which targets exist and their status. "Build all stale" lives in the Cockpit.
   const buildCards = Object.entries(buildStatus)
     .map(([, s]) => {
       const icon = s.ok ? '&#10003;' : '&#10007;'
       const cls = s.ok ? 'ok' : 'stale'
-      const isRegen = configCommands.has(s.commandId)
-      const btnIcon = 'codicon-sync'
-      const btnTitle = isRegen ? 'Regenerate' : 'Build'
+      const btnTitle = s.commandId === 'cmk.regenerateMypyConfig' ? 'Regenerate' : 'Build'
       return `<div class="build-row ${cls}">
       <span class="card-icon">${icon}</span>
       <span class="build-name">${s.label}</span>
-      <button class="btn btn-small btn-icon" data-action="exec" data-async="true" data-id="${s.commandId}" title="${btnTitle}"><span class="codicon ${btnIcon}"></span></button>
+      <button class="btn btn-small btn-icon" data-action="exec" data-async="true" data-id="${s.commandId}" title="${btnTitle}"><span class="codicon codicon-sync"></span></button>
     </div>`
     })
     .join('')
-
   const divider = buildCards ? '<div class="section-divider"></div>' : ''
 
-  return wrap(
-    nonce,
-    sectionCss,
-    `${onboardingHtml}${envRows}${divider}${staleBanner}${buildCards}`,
-    codiconUri,
-    cspSource
-  )
+  return wrap(nonce, sectionCss, `${envRows}${divider}${buildCards}`, codiconUri, cspSource)
 }

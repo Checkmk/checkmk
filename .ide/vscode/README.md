@@ -133,13 +133,34 @@ Available via the command palette (F1) or by clicking the status bar. Build comm
 
 ### 5. Dashboard
 
-The sidebar dashboard groups related information into collapsible webview sections.
+The sidebar dashboard groups related information into collapsible webview sections. Default visibility on first install: **Cockpit** and **OMD Sites** expanded; **Environment**, **IDE Health**, **Issues**, **Activity** collapsed; **Profiles** hidden.
+
+#### Cockpit
+
+Top-of-sidebar at-a-glance status. Three or four collapsible domain rows — **Builds · Settings · Health · Git** — each with:
+
+- A coloured glyph + domain title + status badge (e.g. `Builds 3 stale`, `Settings no drift`, `Health all green`, `Git clean`)
+- A row-level primary-action button when something is wrong (e.g. **Build all**, **Apply all**, **Restart**, **Reset**)
+- An "open section" icon that jumps to the related sidebar view (`Settings`/`Health` → IDE Health; `Git` → Source Control)
+- A per-row chevron that expands an inline list of the underlying items, each with its own action button — e.g. each stale build target, each drifted setting, each Pylance/allocator issue
+
+Severity propagates from items to the row. Active-profile-family settings drift, missing required extensions of an active family, and Pylance crashes are **critical** (red); inactive-profile drift, non-profile-family drift, stale build targets, and Git checks are **warning** (yellow); dismissed items stay visible as **info** (blue) with a **Restore** action; everything else is **ok** (green). OMD is intentionally **not** in the Cockpit — it owns the dedicated **OMD Sites** section directly below.
+
+Items that support being silenced (Git pre-commit hook bypassed, jemalloc recommendation) carry a small **X** icon next to the action. Clicking it writes a `cmk.cockpit.*.ignore*` setting and the item flips to blue/info — visible in the row, no longer counted in the activity-bar badge, and one click away from being restored. Settings: `cmk.cockpit.git.ignorePreCommit` (folder scope) and `cmk.cockpit.jemalloc.ignoreRecommendation` (user scope, shared with the IDE Health jemalloc dismiss button).
+
+The **Getting Started** onboarding wizard renders at the top of the Cockpit when system / venv / IDE setup is incomplete and not dismissed.
+
+`cmk.sidebar.density` (default `compact`) toggles a tighter padding pass across all sidebar webviews.
+
+#### Activity
+
+A chronological feed of the last 50 CMK events (build completed, OMD start, profile toggle, settings apply, benchmark run, Gerrit push, …). Backed by a 200-entry ring buffer fed by every `log()` / `warn()` / `error()` call in the extension — no extra instrumentation needed at call sites. Refreshes within ~1 s of any new event. Header buttons: refresh, **Open CMK Output ↗** to jump to the output channel, and clear-buffer (session-only). Each row also has a hover-only **copy icon** that puts `YYYY-MM-DD HH:MM:SS [LEVEL] message` on the clipboard, and a `title` tooltip with the full message when the row is ellipsized.
 
 #### Environment
 
-Shows system tool versions (Python, Node.js, Bazel, Bazelisk, Docker, GCC) and build target status. Includes a system readiness indicator that checks for required tools and pyenv. The Python row has a **Rebuild** button. Stale build targets are listed below with Build/Regenerate buttons.
+Shows system tool versions (Python, Node.js, Bazel, Bazelisk, Docker, GCC) and a system readiness indicator. The Python row has a **Rebuild** button.
 
-On first use, an **onboarding checklist** guides you through the initial setup steps: system prerequisites, venv build, and IDE configuration.
+Below the env grid, every build target is listed as a flat `✓ / ✗` row with its own **rebuild** icon button. The **Build all stale** affordance lives in the **Cockpit** Builds row (it also drives the status bar `$(check) CMK` / `$(warning) CMK (N)` indicator).
 
 #### OMD Sites
 
@@ -161,31 +182,43 @@ Expanding a site shows individual service status with per-service start/stop/res
 
 #### Issues (Activity Bar Badge)
 
-The activity bar icon shows a badge with the total number of issues across the workspace. The Issues view lists all detected problems:
+The activity bar icon shows a badge with the total number of issues across the workspace. The Issues view is the canonical flat list of everything the **Cockpit** rolls up:
 
-- Stale build targets
-- Settings mismatches
-- Missing required extensions
+- Stale build targets (`venv` is critical; others are warning)
+- Settings mismatches (critical on active profile family; warning otherwise)
+- Missing required extensions (critical when family is active, warning otherwise)
+- Extension version mismatch (critical on minor/major bump, warning on patch)
+- Pylance over RSS threshold, crashed, or extension inactive (a 30-second startup grace window suppresses the "crashed" / "inactive" warnings while Pylance is spinning up)
+- jemalloc allocator stale or recommendation
+- Mypy targets staged changes pending apply; dismissed file-open prompts (info)
+- dmypy daemon stale — `.vscode/.mypy.ini` edited since the daemon started; click to restart
+- Bazel disk cache over the configured threshold — click to delete it after confirmation
+- OMD auth required or stopped sites
+- Pre-commit hook bypassed (warning), pre-commit hook never installed (info — click to run `pre-commit install`)
+- `tests/qa-test-data` submodule dirty
+- **Startup performance regression** — recent CMK sidebar startup median ≥ 1.3× the prior 20-run baseline (requires `cmk.benchmarkStartup` and ≥ 25 runs of history); click to open the chart
 - High-resource extensions that should be disabled (e.g. Python Environments)
+- `cmk-dev-site` not installed; workspace missing `.ide/vscode/config/`
 
-Clicking an item navigates to the relevant dashboard section or opens the appropriate settings.
+Rows are sorted critical → warning, then by domain, then alphabetical. Icons are severity-tinted; the description ends with the action verb (`· Apply All`, `· Restart`, `· Install`, …). The view title shows `2 critical · 5 warning` when non-empty. Clicking an item runs the primary action (apply, restart, install, …) or navigates to the relevant view.
 
 #### Profiles
 
-A card view that mirrors the status bar profile buttons (Py, UI, Rs, C++) in webview form. Each card shows the profile state (`ON` / `OFF` / `STALE`) and toggles the profile on click. Hidden by default — open from the activity bar menu when you want a larger surface than the status bar buttons.
+A card view that mirrors the status bar profile buttons (Py, UI, Rs, C++) in webview form. Each card shows the profile state (`ON` / `OFF`) and severity (`WARN` / `CRIT` when its associated builds or settings have drift), and toggles the profile on click. Severity is derived from the same `getDomainSummary` aggregator that drives the Cockpit, so the card colours always match the Cockpit's Builds and Settings rows for that family. Hidden by default — open from the activity bar menu when you want a larger surface than the status bar buttons.
 
 #### IDE Health
 
-Combined view of settings mismatches, extension health per family, and extension version info.
+Combined view of settings mismatches, extension health per family, and extension version info. Acts as the **details** drawer for what the Cockpit summarises in its Settings and Health rows.
 
-**Version info** shows the installed extension version. When the workspace contains a newer version (e.g. after a branch switch), an update banner prompts to rebuild and install.
+**Version info** shows the installed extension version. Update prompts and version-mismatch surfacing happen in the Cockpit Health row + Issues view rather than as a banner here.
 
 **Settings** are grouped by plugin family in collapsible accordion sections. Each family group shows:
 
 - **Apply {Family}** button — fix all mismatches for that family
 - Per-setting **Wrench** icon — apply a single setting
 - Per-setting **Copy** icon — copy the full JSON key+value to clipboard
-- **Apply All** button at the top — fix all mismatches across all families at once
+
+(The historical top-of-section **Apply All** button has been removed; the Cockpit Settings row's `Apply all` button handles the bulk action.)
 
 If no workspace configuration files are found in `.ide/vscode/config/`, a warning banner is shown advising to evaluate extensions and settings independently.
 
@@ -394,7 +427,9 @@ The same states surface in the **Issues** tree + activity bar badge, so you don'
 
 The **Install jemalloc** button opens a terminal pre-populated with the right command for your OS. If libjemalloc is missing when you flip the setting to `"jemalloc"`, the extension surfaces a one-shot notification with the same Install action and leaves the setting armed — install, reload, the feature activates. The extension never silently falls back to the default allocator.
 
-**How it works:** on activation the extension probes `ldconfig -p` (Linux) or `brew --prefix jemalloc` (macOS), writes a small wrapper script to the extension's global storage that sets `LD_PRELOAD` (Linux) or `DYLD_INSERT_LIBRARIES` (macOS) to the detected library path, points `mypy.dmypyExecutable` at the wrapper, and forces `mypy.runUsingActiveInterpreter: false` at workspace-folder scope so matangover actually calls the wrapper. After a successful apply, stale dmypy daemons are killed so matangover respawns fresh under the wrapper on the next mypy check. Flipping the setting back to `"default"` releases both overrides and deletes the wrapper.
+**How it works:** on activation the extension probes `ldconfig -p` (Linux) or `brew --prefix jemalloc` (macOS), writes a small wrapper script to the extension's global storage that sets `LD_PRELOAD` (Linux) or `DYLD_INSERT_LIBRARIES` (macOS) to the detected library path, points `mypy.dmypyExecutable` at the wrapper, and forces `mypy.runUsingActiveInterpreter: false` at workspace-folder scope so matangover actually calls the wrapper. After a successful apply, stale dmypy daemons are killed so matangover respawns fresh under the wrapper on the next mypy check. Flipping the setting back to `"default"` deletes the wrapper and **restores the bundled defaults** (`mypy.dmypyExecutable = "<workspace>/.venv/bin/dmypy"`, `mypy.runUsingActiveInterpreter = true`) so matangover keeps using the venv-pinned `dmypy` — earlier builds left those keys unset, causing matangover to fall back to `python -m mypy.dmypy` against `$PATH`.
+
+The cockpit recommendation can be silenced via its **X** icon (or the IDE Health status row's _circle-slash_ button) — both write `cmk.cockpit.jemalloc.ignoreRecommendation` (user scope), so the recommendation stays dismissed across workspaces. The item then stays visible in the Cockpit Health row in **info** (blue) state with a **Restore** action.
 
 The two settings the extension takes over (`mypy.dmypyExecutable`, `mypy.runUsingActiveInterpreter`) are filtered out of the _Settings_ mismatch UI while jemalloc is active, so you don't get prompted to revert the extension's own overrides. A pre-existing _custom_ `mypy.dmypyExecutable` (i.e. not the Checkmk default) is never overwritten — the extension logs and skips.
 

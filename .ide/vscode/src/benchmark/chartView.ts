@@ -106,6 +106,9 @@ function renderTotalChart(runs: BenchmarkRun[], maxTotal: number): string {
   const barW = Math.max(2, plotW / runs.length - barGap)
   const yMax = niceCeil(maxTotal)
 
+  const bands = renderVersionBands(runs, padL, barW, barGap, padT, plotH)
+  const avgLines = renderVersionAverageLines(runs, padL, barW, barGap, padT, plotH, yMax)
+
   const bars = runs
     .map((r, i) => {
       const x = padL + i * (barW + barGap)
@@ -121,12 +124,48 @@ function renderTotalChart(runs: BenchmarkRun[], maxTotal: number): string {
   const yTicks = renderYTicks(yMax, padL, padT, plotW, plotH)
 
   return `<svg class="bench-svg" viewBox="0 0 ${w} ${h}" preserveAspectRatio="xMinYMin meet" role="img" aria-label="Total startup time per run">
+    ${bands}
     ${yTicks}
     ${separators}
     ${bars}
+    ${avgLines}
     <line x1="${padL}" y1="${padT + plotH}" x2="${padL + plotW}" y2="${padT + plotH}" class="axis"/>
     <line x1="${padL}" y1="${padT}" x2="${padL}" y2="${padT + plotH}" class="axis"/>
   </svg>`
+}
+
+/** Per-version average totalMs as a dashed horizontal line over the segment. */
+function renderVersionAverageLines(
+  runs: BenchmarkRun[],
+  padL: number,
+  barW: number,
+  barGap: number,
+  padT: number,
+  plotH: number,
+  yMax: number
+): string {
+  if (runs.length === 0) return ''
+  const out: string[] = []
+  let segStart = 0
+  for (let i = 1; i <= runs.length; i++) {
+    if (i === runs.length || runs[i].version !== runs[segStart].version) {
+      const segment = runs.slice(segStart, i)
+      const avg = segment.reduce((s, r) => s + r.totalMs, 0) / segment.length
+      const x = padL + segStart * (barW + barGap) - barGap / 2
+      const xEnd = padL + (i - 1) * (barW + barGap) + barW + barGap / 2
+      const y = padT + plotH - (avg / yMax) * plotH
+      const ver = runs[segStart].version
+      const label = `v${ver} avg: ${avg.toFixed(1)}ms (${segment.length} run${segment.length === 1 ? '' : 's'})`
+      out.push(
+        `<line x1="${x}" y1="${y}" x2="${xEnd}" y2="${y}" class="avg-line"><title>${esc(label)}</title></line>`
+      )
+      out.push(
+        `<text x="${xEnd - 2}" y="${y - 3}" class="avg-label" text-anchor="end">${Math.round(avg)}</text>`
+      )
+      segStart = i
+    }
+  }
+  return out.join('')
 }
 
 function renderStackedChart(
@@ -146,6 +185,8 @@ function renderStackedChart(
   const barGap = 2
   const barW = Math.max(2, plotW / runs.length - barGap)
   const yMax = niceCeil(maxTotal)
+
+  const bands = renderVersionBands(runs, padL, barW, barGap, padT, plotH)
 
   const bars = runs
     .map((r, i) => {
@@ -170,12 +211,59 @@ function renderStackedChart(
   const yTicks = renderYTicks(yMax, padL, padT, plotW, plotH)
 
   return `<svg class="bench-svg" viewBox="0 0 ${w} ${h}" preserveAspectRatio="xMinYMin meet" role="img" aria-label="Per-phase contribution per run">
+    ${bands}
     ${yTicks}
     ${separators}
     ${bars}
     <line x1="${padL}" y1="${padT + plotH}" x2="${padL + plotW}" y2="${padT + plotH}" class="axis"/>
     <line x1="${padL}" y1="${padT}" x2="${padL}" y2="${padT + plotH}" class="axis"/>
   </svg>`
+}
+
+const VERSION_BAND_PALETTE = [
+  'rgba(91, 155, 213, 0.10)',
+  'rgba(200, 120, 224, 0.10)',
+  'rgba(21, 209, 160, 0.10)',
+  'rgba(229, 160, 13, 0.10)',
+  'rgba(224, 80, 80, 0.10)',
+  'rgba(122, 90, 208, 0.10)'
+]
+
+/** Backdrop bands — one per consecutive run of the same extension version.
+ *  Same version → same colour (cycles through the palette), so a slice of bars
+ *  belonging to one version is visually grouped without obscuring the bars. */
+function renderVersionBands(
+  runs: BenchmarkRun[],
+  padL: number,
+  barW: number,
+  barGap: number,
+  padT: number,
+  plotH: number
+): string {
+  if (runs.length === 0) return ''
+  const versionColors = new Map<string, string>()
+  let idx = 0
+  for (const r of runs) {
+    if (!versionColors.has(r.version)) {
+      versionColors.set(r.version, VERSION_BAND_PALETTE[idx % VERSION_BAND_PALETTE.length])
+      idx++
+    }
+  }
+  const out: string[] = []
+  let segStart = 0
+  for (let i = 1; i <= runs.length; i++) {
+    if (i === runs.length || runs[i].version !== runs[segStart].version) {
+      const ver = runs[segStart].version
+      const x = padL + segStart * (barW + barGap) - barGap / 2
+      const xEnd = padL + (i - 1) * (barW + barGap) + barW + barGap / 2
+      const width = xEnd - x
+      out.push(
+        `<rect x="${x}" y="${padT}" width="${width}" height="${plotH}" fill="${versionColors.get(ver)}"><title>v${esc(ver)}</title></rect>`
+      )
+      segStart = i
+    }
+  }
+  return out.join('')
 }
 
 function renderSeparators(
@@ -192,12 +280,20 @@ function renderSeparators(
     const cur = runs[i]
     const branchChange = prev.branch !== cur.branch
     const versionChange = prev.version !== cur.version
-    if (!branchChange && !versionChange) continue
+    const vsCodeChange =
+      (prev.vsCodeVersion ?? '') !== (cur.vsCodeVersion ?? '') &&
+      // skip the "first time we recorded it" upgrade-from-undefined case
+      (prev.vsCodeVersion ?? '') !== '' &&
+      (cur.vsCodeVersion ?? '') !== ''
+    if (!branchChange && !versionChange && !vsCodeChange) continue
     const x = padL + i * (barW + barGap) - barGap / 2
-    const cls = versionChange ? 'sep version' : 'sep branch'
+    // Priority: extension version > VS Code version > branch.
+    const cls = versionChange ? 'sep version' : vsCodeChange ? 'sep vscode' : 'sep branch'
     const titleText = versionChange
-      ? `Version change: v${prev.version} → v${cur.version}`
-      : `Branch change: ${prev.branch || '?'} → ${cur.branch || '?'}`
+      ? `Extension version change: v${prev.version} → v${cur.version}`
+      : vsCodeChange
+        ? `VS Code version change: ${prev.vsCodeVersion} → ${cur.vsCodeVersion}`
+        : `Branch change: ${prev.branch || '?'} → ${cur.branch || '?'}`
     lines.push(
       `<line x1="${x}" y1="${padT}" x2="${x}" y2="${padT + plotH}" class="${cls}"><title>${esc(titleText)}</title></line>`
     )
@@ -351,7 +447,8 @@ function niceCeil(v: number): number {
 }
 
 function tooltip(r: BenchmarkRun): string {
-  return `${new Date(r.ts).toLocaleString()}\nv${r.version} · ${r.branch || '?'}\ntotal: ${r.totalMs}ms`
+  const code = r.vsCodeVersion ? ` · code ${r.vsCodeVersion}` : ''
+  return `${new Date(r.ts).toLocaleString()}\nv${r.version} · ${r.branch || '?'}${code}\ntotal: ${r.totalMs}ms`
 }
 
 const panelCss = `
@@ -393,6 +490,9 @@ const panelCss = `
 .bench-svg .tick { fill: var(--vscode-descriptionForeground); font-size: 9px; font-family: var(--vscode-editor-font-family); }
 .bench-svg .sep.branch { stroke: var(--cmk-yellow); stroke-width: 1; stroke-dasharray: 2 2; opacity: 0.7; }
 .bench-svg .sep.version { stroke: var(--cmk-green); stroke-width: 1.2; opacity: 0.9; }
+.bench-svg .sep.vscode { stroke: #5b9bd5; stroke-width: 1.2; stroke-dasharray: 4 2; opacity: 0.9; }
+.bench-svg .avg-line { stroke: var(--vscode-foreground); stroke-width: 1.5; stroke-dasharray: 6 3; opacity: 0.65; pointer-events: stroke; }
+.bench-svg .avg-label { fill: var(--vscode-foreground); font-size: 9px; font-family: var(--vscode-editor-font-family); opacity: 0.7; }
 .bench-legend {
   display: flex;
   flex-wrap: wrap;

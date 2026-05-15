@@ -6,6 +6,7 @@
 import * as vscode from 'vscode'
 
 import { registerStartupBenchmarks } from './benchmark/startup'
+import { registerBazelCache } from './build/bazelCache'
 import { type CommandEntry, createStatusBar } from './build/buildStatus'
 import { type SettingsEntry, registerBuildCommands, updateContextKeys } from './build/settings'
 import {
@@ -23,6 +24,7 @@ import { registerLogs } from './omd/logs'
 import { createSite, registerOmd } from './omd/omd'
 import { registerProfileDetector } from './profiles/profileDetector'
 import * as profileManager from './profiles/profileManager'
+import { registerDmypyHealth } from './profiles/python/dmypyHealth'
 import { registerDynamicMypyTargets } from './profiles/python/dynamicMypyTargets'
 import { registerInterpreterResolver } from './profiles/python/interpreter'
 import { registerJemallocAllocator } from './profiles/python/jemallocAllocator'
@@ -35,6 +37,7 @@ import {
 import { registerPylanceHealth } from './profiles/python/pylanceHealth'
 import { registerSnippets } from './profiles/python/snippets'
 import { registerGerritPush, registerSandboxBranch, registerScm } from './scm'
+import { registerGitFixers } from './scm/gitState'
 import { registerIdePickers } from './setup/idePicker'
 import { registerTemplates } from './setup/templates'
 import { refreshAll, refreshOmd, registerSidebar } from './sidebar'
@@ -109,6 +112,8 @@ export function activate(context: vscode.ExtensionContext): void {
   registerIdePickers(context, extensionSets, settingsSets)
   registerGerritPush(context)
   registerScm(context)
+  context.subscriptions.push(...registerGitFixers())
+  context.subscriptions.push(...registerBazelCache())
   registerSandboxBranch(context)
   registerOmd(context, refreshAll, refreshOmd)
   registerLogs()
@@ -166,6 +171,7 @@ export function activate(context: vscode.ExtensionContext): void {
         ...registerJemallocAllocator(context),
         ...registerPylanceHealth(refreshAll),
         ...registerMypyConfigWatcher(),
+        ...registerDmypyHealth(),
         ...registerInterpreterResolver(),
         ...registerSnippets(),
         ...registerBazelTestRunner(),

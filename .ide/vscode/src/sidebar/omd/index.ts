@@ -123,9 +123,7 @@ export function render(state: StateCache, codiconUri?: vscode.Uri, cspSource?: s
     return wrap(
       nonce,
       sectionCss,
-      devSiteBanner +
-        `<div class="card"><span class="card-label">No OMD sites found</span></div>` +
-        createBtn,
+      devSiteBanner + `<div class="omd-empty">No OMD sites found</div>` + createBtn,
       codiconUri,
       cspSource
     )

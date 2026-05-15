@@ -7,8 +7,6 @@ import * as fs from 'fs'
 import * as path from 'path'
 import * as vscode from 'vscode'
 
-import { shellExec } from './shell'
-
 // ── Config types ──
 
 export interface CommandConfig {
@@ -79,13 +77,43 @@ export function loadConfig<T = unknown>(name: string): T {
   return JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'config', `${name}.json`), 'utf8'))
 }
 
+/**
+ * Pure-JS `which`: walks $PATH with `fs.existsSync` instead of spawning a
+ * subprocess. Sub-millisecond and never stalls the extension host event
+ * loop. Results cached for the session — PATH doesn't change at runtime.
+ */
+const _whichCache = new Map<string, string>()
+function whichSync(bin: string): string {
+  if (_whichCache.has(bin)) return _whichCache.get(bin) || ''
+  const PATH = process.env.PATH || ''
+  const exts = process.platform === 'win32' ? (process.env.PATHEXT || '.EXE').split(';') : ['']
+  let resolved = ''
+  for (const dir of PATH.split(path.delimiter)) {
+    if (!dir) continue
+    for (const ext of exts) {
+      const candidate = path.join(dir, bin + ext)
+      try {
+        if (fs.existsSync(candidate)) {
+          resolved = candidate
+          break
+        }
+      } catch {
+        // ignore
+      }
+    }
+    if (resolved) break
+  }
+  _whichCache.set(bin, resolved)
+  return resolved
+}
+
 export function resolveVariables(value: SettingValue): SettingValue {
   const wsPath = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath
   if (!wsPath) return value
   if (typeof value === 'string') {
     return value
       .replace(/\$\{cmk-ext:workspaceFolder\}/g, wsPath)
-      .replace(/\$\{which:([^}]+)\}/g, (_m, bin) => shellExec(`which ${bin}`))
+      .replace(/\$\{which:([^}]+)\}/g, (_m, bin) => whichSync(bin))
   }
   if (Array.isArray(value)) {
     return value.map((v) => resolveVariables(v))

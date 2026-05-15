@@ -67,6 +67,7 @@ export interface MypyTargetsInfo {
   stagedActiveRemove: string[]
   stagedBaselineAdd: string[]
   stagedBaselineRemove: string[]
+  dismissedPromptedTargets: string[]
   catalog: string[]
 }
 
@@ -86,6 +87,37 @@ export interface PylanceHealthInfo {
   overThreshold: boolean
   extensionActive: boolean
   monitored: boolean
+  /** True during the startup grace window after the extension first activated.
+   *  Consumers should suppress "extension not active" / "no process" warnings
+   *  while this is true — Pylance is just spinning up. */
+  inStartupGrace: boolean
+}
+
+export interface GitStateInfo {
+  preCommitSkipping: boolean
+  preCommitDismissed: boolean
+  preCommitMissing: boolean
+  qaTestDataDirty: boolean
+}
+
+export interface DmypyHealthInfo {
+  running: boolean
+  stale: boolean
+  configMtimeMs: number | null
+  daemonStartMs: number | null
+}
+
+export interface BazelCacheInfo {
+  sizeBytes: number | null
+  thresholdGiB: number
+  cachePath: string | null
+  overThreshold: boolean
+}
+
+export interface StartupRegressionInfo {
+  newMed: number
+  oldMed: number
+  ratio: number
 }
 
 export interface StateCache {
@@ -106,6 +138,10 @@ export interface StateCache {
   mypyTargets: MypyTargetsInfo
   allocator: AllocatorInfo
   pylanceHealth: PylanceHealthInfo
+  gitState: GitStateInfo
+  startupRegression: StartupRegressionInfo | null
+  dmypyHealth: DmypyHealthInfo
+  bazelCache: BazelCacheInfo
 }
 
 export interface SectionContext {

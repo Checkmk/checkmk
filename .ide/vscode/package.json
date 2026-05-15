@@ -2,7 +2,7 @@
   "name": "cmk-vscode",
   "displayName": "CMK Dev Tools for VS Code",
   "description": "Build commands and helpers for Checkmk development",
-  "version": "0.3.2",
+  "version": "0.4.0",
   "publisher": "checkmk",
   "engines": {
     "vscode": "^1.85.0"
@@ -54,8 +54,14 @@
       "cmk-dashboard": [
         {
           "type": "webview",
+          "id": "cmk.dashboard.overview",
+          "name": "Cockpit"
+        },
+        {
+          "type": "webview",
           "id": "cmk.dashboard.environment",
-          "name": "Environment"
+          "name": "Environment",
+          "visibility": "collapsed"
         },
         {
           "type": "webview",
@@ -77,7 +83,14 @@
         },
         {
           "id": "cmk.dashboard.badge",
-          "name": "Issues"
+          "name": "Issues",
+          "visibility": "collapsed"
+        },
+        {
+          "type": "webview",
+          "id": "cmk.dashboard.activity",
+          "name": "Activity",
+          "visibility": "collapsed"
         }
       ],
       "test": [
@@ -95,9 +108,23 @@
         "title": "CMK ▸ Dashboard"
       },
       {
+        "command": "cmk.dashboard.refresh.overview",
+        "title": "Refresh",
+        "icon": "$(refresh)"
+      },
+      {
         "command": "cmk.dashboard.refresh.environment",
         "title": "Refresh",
         "icon": "$(refresh)"
+      },
+      {
+        "command": "cmk.dashboard.refresh.activity",
+        "title": "Refresh",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "cmk.activity.clear",
+        "title": "CMK ▸ Activity: Clear buffer"
       },
       {
         "command": "cmk.dashboard.refresh.ideHealth",
@@ -238,8 +265,32 @@
         "title": "CMK ▸ Mypy: Discard Staged Targets"
       },
       {
+        "command": "cmk.mypy.reviewDismissedPrompts",
+        "title": "CMK ▸ Mypy: Review Dismissed Prompts…"
+      },
+      {
+        "command": "cmk.mypy.clearDismissedPrompts",
+        "title": "CMK ▸ Mypy: Clear Dismissed Prompts"
+      },
+      {
+        "command": "cmk.mypy.restartDmypy",
+        "title": "CMK ▸ Mypy: Restart dmypy daemon"
+      },
+      {
+        "command": "cmk.bazel.cleanDiskCache",
+        "title": "CMK ▸ Bazel: Clean disk cache"
+      },
+      {
+        "command": "cmk.installPreCommit",
+        "title": "CMK ▸ Git: Install pre-commit hook"
+      },
+      {
         "command": "cmk.mypy.installJemalloc",
         "title": "CMK ▸ Mypy: Install jemalloc"
+      },
+      {
+        "command": "cmk.mypy.enableJemalloc",
+        "title": "CMK ▸ Mypy: Enable jemalloc allocator"
       },
       {
         "command": "cmk.mypy.reapplyJemalloc",
@@ -315,6 +366,14 @@
       {
         "command": "cmk.benchmarkCancelSamples",
         "title": "CMK ▸ Cancel Startup Sampler"
+      },
+      {
+        "command": "cmk.benchmarkTrimRecent",
+        "title": "CMK ▸ Benchmark: Trim Recent Runs…"
+      },
+      {
+        "command": "cmk.fixQaTestDataSubmodule",
+        "title": "CMK ▸ Git: Reset tests/qa-test-data to tracked SHA"
       }
     ],
     "configuration": {
@@ -375,6 +434,13 @@
           "default": "default",
           "description": "Launch dmypy under jemalloc to cap long-running RSS growth. Requires libjemalloc installed on the host (apt install libjemalloc2 / dnf install jemalloc / brew install jemalloc). If the library is not detected the extension notifies once and leaves the setting armed — install, reload, feature activates."
         },
+        "cmk.bazel.cacheSizeWarnGiB": {
+          "type": "number",
+          "default": 50,
+          "minimum": 1,
+          "scope": "application",
+          "description": "Warn in the Cockpit when the Bazel disk_cache (path read from .bazelrc) exceeds this many GiB. Machine-wide setting; Bazel's disk cache is shared across all workspaces."
+        },
         "cmk.bazelTests.onDemand": {
           "type": "boolean",
           "default": true,
@@ -402,6 +468,27 @@
           "type": "boolean",
           "default": false,
           "description": "Record per-phase timings for the first sidebar refresh on each window load. Appends to a per-workspace history; view with CMK ▸ Show Startup Benchmarks. When recent runs are materially slower than baseline, a notification offers to view the chart."
+        },
+        "cmk.sidebar.density": {
+          "type": "string",
+          "enum": [
+            "comfortable",
+            "compact"
+          ],
+          "default": "compact",
+          "description": "Sidebar row spacing."
+        },
+        "cmk.cockpit.git.ignorePreCommit": {
+          "type": "boolean",
+          "default": false,
+          "scope": "resource",
+          "description": "Suppress the cockpit warning when the git pre-commit hook is bypassed (e.g. you intentionally moved .git/hooks/pre-commit aside)."
+        },
+        "cmk.cockpit.jemalloc.ignoreRecommendation": {
+          "type": "boolean",
+          "default": false,
+          "scope": "application",
+          "description": "Suppress the cockpit recommendation to enable jemalloc for dmypy. Persists across workspaces (user scope)."
         }
       }
     },
@@ -414,8 +501,18 @@
     "menus": {
       "view/title": [
         {
+          "command": "cmk.dashboard.refresh.overview",
+          "when": "view == cmk.dashboard.overview",
+          "group": "navigation"
+        },
+        {
           "command": "cmk.dashboard.refresh.environment",
           "when": "view == cmk.dashboard.environment",
+          "group": "navigation"
+        },
+        {
+          "command": "cmk.dashboard.refresh.activity",
+          "when": "view == cmk.dashboard.activity",
           "group": "navigation"
         },
         {
@@ -582,7 +679,29 @@
           "when": "cmk.pythonInstalled"
         },
         {
+          "command": "cmk.mypy.reviewDismissedPrompts",
+          "when": "cmk.pythonInstalled"
+        },
+        {
+          "command": "cmk.mypy.clearDismissedPrompts",
+          "when": "cmk.pythonInstalled"
+        },
+        {
+          "command": "cmk.mypy.restartDmypy",
+          "when": "cmk.pythonInstalled"
+        },
+        {
+          "command": "cmk.bazel.cleanDiskCache"
+        },
+        {
+          "command": "cmk.installPreCommit"
+        },
+        {
           "command": "cmk.mypy.installJemalloc",
+          "when": "cmk.pythonInstalled"
+        },
+        {
+          "command": "cmk.mypy.enableJemalloc",
           "when": "cmk.pythonInstalled"
         },
         {

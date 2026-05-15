@@ -57,6 +57,7 @@ let pendingApply: NodeJS.Timeout | null = null
 let pendingWsPath: string | null = null
 let extContext: vscode.ExtensionContext | null = null
 const promptedTargets = new Set<string>()
+const dismissedPrompts = new Set<string>()
 
 function isEnabled(): boolean {
   return vscode.workspace.getConfiguration('cmk.mypy').get<boolean>(SETTING_ENABLED, false)
@@ -137,20 +138,23 @@ function onDocOpened(wsPath: string, doc: vscode.TextDocument): void {
       if (choice === STAGE) {
         stagedActiveAdd.add(target)
         stagedActiveRemove.delete(target)
+        dismissedPrompts.delete(target)
         log(`Dynamic mypy targets: staged add "${target}" (user)`)
-        vscode.commands.executeCommand('cmk.dashboard.refresh.ideHealth')
+        refreshCockpitAndIdeHealth()
       } else if (choice === ACTIVATE) {
         activeTargets.add(target)
         stagedActiveAdd.delete(target)
         stagedActiveRemove.delete(target)
+        dismissedPrompts.delete(target)
         log(`Dynamic mypy targets: activated "${target}" (user)`)
         scheduleApply(wsPath)
-        vscode.commands.executeCommand('cmk.dashboard.refresh.ideHealth')
+        refreshCockpitAndIdeHealth()
       } else if (choice === BASELINE) {
         activeTargets.add(target)
         stagedActiveAdd.delete(target)
         stagedActiveRemove.delete(target)
         stagedBaselineAdd.delete(target)
+        dismissedPrompts.delete(target)
         const current = getBaselineSetting()
         if (!current.includes(target)) {
           vscode.workspace
@@ -162,11 +166,20 @@ function onDocOpened(wsPath: string, doc: vscode.TextDocument): void {
         }
         log(`Dynamic mypy targets: added "${target}" to baseline (user)`)
         scheduleApply(wsPath)
-        vscode.commands.executeCommand('cmk.dashboard.refresh.ideHealth')
+        refreshCockpitAndIdeHealth()
       } else {
-        // Dismissed — keep promptedTargets entry so we don't re-ask this session
+        // Dismissed — record so the cockpit can surface "N prompts not acted on".
+        // Keep promptedTargets entry so we don't re-ask this session.
+        dismissedPrompts.add(target)
+        log(`Dynamic mypy targets: prompt dismissed for "${target}"`)
+        refreshCockpitAndIdeHealth()
       }
     })
+}
+
+function refreshCockpitAndIdeHealth(): void {
+  vscode.commands.executeCommand('cmk.dashboard.refresh.overview')
+  vscode.commands.executeCommand('cmk.dashboard.refresh.ideHealth')
 }
 
 export function registerDynamicMypyTargets(context: vscode.ExtensionContext): vscode.Disposable[] {
@@ -227,6 +240,7 @@ export function registerDynamicMypyTargets(context: vscode.ExtensionContext): vs
       activeTargets = baselineTargets(catalog)
       clearStagedAll()
       promptedTargets.clear()
+      dismissedPrompts.clear()
       await persistAndApply(wsPath)
       notifyInfo(`CMK ▸ Mypy: Applied baseline (${activeTargets.size} targets)`)
     }),
@@ -284,10 +298,56 @@ export function registerDynamicMypyTargets(context: vscode.ExtensionContext): vs
           stagedActiveAdd.delete(t)
           stagedActiveRemove.delete(t)
           promptedTargets.delete(t)
+          dismissedPrompts.delete(t)
         }
       }
       scheduleApply(wsPath)
       notifyInfo(`CMK ▸ Mypy: Activated ${picked.length} target(s)`)
+      refreshCockpitAndIdeHealth()
+    }),
+    vscode.commands.registerCommand('cmk.mypy.clearDismissedPrompts', () => {
+      if (dismissedPrompts.size === 0) {
+        notifyInfo('CMK ▸ Mypy: No dismissed prompts to clear')
+        return
+      }
+      const n = dismissedPrompts.size
+      dismissedPrompts.clear()
+      notifyInfo(`CMK ▸ Mypy: Cleared ${n} dismissed prompt(s)`)
+      refreshCockpitAndIdeHealth()
+    }),
+    vscode.commands.registerCommand('cmk.mypy.reviewDismissedPrompts', async () => {
+      if (dismissedPrompts.size === 0) {
+        notifyInfo('CMK ▸ Mypy: No dismissed prompts to review')
+        return
+      }
+      const items = [...dismissedPrompts].sort()
+      const picked = await vscode.window.showQuickPick(items, {
+        canPickMany: true,
+        placeHolder: 'Select targets to activate — unpicked stay dismissed',
+        title: `Mypy targets — ${items.length} dismissed prompt(s)`
+      })
+      if (!picked) return
+      if (picked.length === 0) {
+        // Confirmed with nothing picked — clear the dismissed list so the
+        // cockpit chip goes away (user has acknowledged it).
+        dismissedPrompts.clear()
+        notifyInfo('CMK ▸ Mypy: Cleared dismissed-prompt list')
+        refreshCockpitAndIdeHealth()
+        return
+      }
+      const catalog = discoverMypyTargets(wsPath)
+      for (const t of picked) {
+        if (catalog.includes(t) && !activeTargets.has(t)) {
+          activeTargets.add(t)
+          stagedActiveAdd.delete(t)
+          stagedActiveRemove.delete(t)
+        }
+        dismissedPrompts.delete(t)
+        promptedTargets.delete(t)
+      }
+      scheduleApply(wsPath)
+      notifyInfo(`CMK ▸ Mypy: Activated ${picked.length} target(s)`)
+      refreshCockpitAndIdeHealth()
     }),
     {
       dispose: () => {
@@ -316,6 +376,7 @@ export function getMypyTargetsSnapshot(wsPath: string | undefined): {
   stagedActiveRemove: string[]
   stagedBaselineAdd: string[]
   stagedBaselineRemove: string[]
+  dismissedPromptedTargets: string[]
   catalog: string[]
 } {
   const catalog = wsPath ? discoverMypyTargets(wsPath) : []
@@ -330,6 +391,7 @@ export function getMypyTargetsSnapshot(wsPath: string | undefined): {
     stagedActiveRemove: [...stagedActiveRemove].sort(),
     stagedBaselineAdd: [...stagedBaselineAdd].sort(),
     stagedBaselineRemove: [...stagedBaselineRemove].sort(),
+    dismissedPromptedTargets: [...dismissedPrompts].sort(),
     catalog: [...catalog].sort()
   }
 }
@@ -339,6 +401,7 @@ export function activateTarget(target: string): void {
   if (!wsPath) return
   const catalog = discoverMypyTargets(wsPath)
   if (!catalog.includes(target)) return
+  dismissedPrompts.delete(target)
   if (stagedActiveRemove.delete(target)) return
   if (activeTargets.has(target)) return
   stagedActiveAdd.add(target)
@@ -360,6 +423,7 @@ async function writeBaseline(next: string[]): Promise<void> {
 
 export function addTargetToBaseline(target: string): void {
   if (ALWAYS_ON_TARGETS.includes(target)) return
+  dismissedPrompts.delete(target)
   if (stagedBaselineRemove.delete(target)) return
   const current = getBaselineSetting()
   if (!current.includes(target)) stagedBaselineAdd.add(target)

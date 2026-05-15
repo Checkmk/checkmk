@@ -4,10 +4,10 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import { execFile } from 'child_process'
+import * as fs from 'fs'
+import * as path from 'path'
 import { promisify } from 'util'
 import * as vscode from 'vscode'
-
-import { safeExec } from '../core/shell'
 
 const execFileAsync = promisify(execFile)
 
@@ -15,8 +15,39 @@ export function repoRoot(): string | undefined {
   return vscode.workspace.workspaceFolders?.[0]?.uri.fsPath
 }
 
+/** Resolve the real git directory for `cwd`, handling worktrees / submodules
+ *  where `.git` is a file containing `gitdir: <path>`. */
+function gitDir(cwd: string): string | null {
+  try {
+    const gitPath = path.join(cwd, '.git')
+    const st = fs.statSync(gitPath)
+    if (st.isDirectory()) return gitPath
+    if (st.isFile()) {
+      const content = fs.readFileSync(gitPath, 'utf8').trim()
+      const m = content.match(/^gitdir:\s+(.+)$/)
+      if (m) return path.isAbsolute(m[1]) ? m[1] : path.resolve(cwd, m[1])
+    }
+  } catch {
+    // ignore
+  }
+  return null
+}
+
+/** Read the current branch from `.git/HEAD` directly — no subprocess, no
+ *  event-loop stall on the activation path. Returns the branch name, the
+ *  detached SHA (truncated to 12 chars), or '' when the directory is not a
+ *  git workspace. */
 export function currentBranch(cwd: string): string {
-  return safeExec('git rev-parse --abbrev-ref HEAD', { cwd })
+  const dir = gitDir(cwd)
+  if (!dir) return ''
+  try {
+    const content = fs.readFileSync(path.join(dir, 'HEAD'), 'utf8').trim()
+    if (content.startsWith('ref: refs/heads/')) return content.slice('ref: refs/heads/'.length)
+    if (content.startsWith('ref: ')) return content.slice('ref: '.length)
+    return content.slice(0, 12)
+  } catch {
+    return ''
+  }
 }
 
 /** Run `git <args>` asynchronously without going through a shell.

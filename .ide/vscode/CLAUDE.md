@@ -89,7 +89,30 @@ This means switching branches updates configs without rebuilding the VSIX.
 The sidebar has one activity bar container (`cmk-dashboard`) with multiple webview sections.
 Each section is a `SectionViewProvider` instance registered via `vscode.window.registerWebviewViewProvider()`.
 
-**Sections** (defined in `SECTIONS` array): `environment`, `omd`, `ideHealth`, `profiles`
+**Sections** (defined in `SECTIONS` array, in display order): `overview` (Cockpit), `environment`, `omd`, `ideHealth`, `profiles`, `activity`. The `cmk.dashboard.badge` Issues tree view sits between Profiles and Activity, registered separately because it's a `TreeDataProvider` rather than a webview.
+
+The **Cockpit** (`overview`) is the curated dashboard — three to four collapsible domain rows (Builds, Settings, Health, Git) derived from `getDomainSummary` in `src/sidebar/overview/domainSummary.ts`. Each row knows its severity, badge text, primary action, "open section" target, and a list of per-item drill-down rows. OMD is intentionally **not** in the cockpit — it owns its own dedicated section below. The Getting Started onboarding wizard also lives in the Cockpit (renders at the top when not all-done and not dismissed).
+
+**Severity tiers**: `Severity = 'ok' | 'info' | 'warning' | 'critical'`. `info` renders in blue (`--cmk-blue` / `--cmk-blue-dim`) and represents user-dismissed items — they stay visible in the cockpit with a `Restore` action, but don't auto-expand the row, don't render a row-level action button, and are excluded from the activity-bar badge count. `SEV_RANK = { ok: 0, info: 1, warning: 2, critical: 3 }`. Rollups should use `maxSev` / `reduce` rather than `some(critical) ? critical : 'warning'` so `info` propagates correctly.
+
+**Dismiss / restore**: per-item buttons. A `DomainItem.dismissCommand` (+ optional `dismissTitle`) renders an X icon next to the row action. Dismiss writes a cmk setting at the appropriate scope; on the next refresh the same item re-emerges with `severity: 'info'`, `actionLabel: 'Restore'`, and `command: <restore command>`. Commands currently wired this way:
+
+- Pre-commit hook bypassed — `cmk.cockpit.git.dismissPreCommit` ↔ `cmk.cockpit.git.restorePreCommitWarning`; setting `cmk.cockpit.git.ignorePreCommit` (folder scope).
+- Jemalloc recommendation — `cmk.cockpit.jemalloc.dismissRecommendation` ↔ `cmk.cockpit.jemalloc.restoreRecommendation`; setting `cmk.cockpit.jemalloc.ignoreRecommendation` (user scope). The legacy workspaceState key `cmk.mypy.allocator.recommendationDismissed` is OR'd on read for backward compatibility and cleared on restore.
+- Mypy dismissed prompts — the chip itself is an info item; its X runs `cmk.mypy.clearDismissedPrompts`, which clears the in-memory set rather than writing a setting.
+
+**Health-row chips not covered by dismiss/restore:**
+
+- **dmypy daemon stale** — `dmypyHealth.stale` flags when `.vscode/.mypy.ini` mtime > `.dmypy.json` mtime (plus 2 s skew). Action `cmk.mypy.restartDmypy` calls `killAllDmypyDaemons()`; the daemon respawns on the next type check. Gated on `mypyTargets.pythonProfileActive`.
+- **Bazel disk cache over threshold** — `bazelCache.overThreshold` compares `du -sb` of the cache path (read from `--disk_cache` in `.bazelrc`) against `cmk.bazel.cacheSizeWarnGiB` (default 50, `application` scope because the cache is machine-wide). Stale-while-revalidate with a 5-minute TTL. Action `cmk.bazel.cleanDiskCache` `rm -rf`s the cache after a modal confirm.
+
+**Git pre-commit info chip:** `gitState.preCommitMissing` (both `.git/hooks/pre-commit` and the cmk-disabled stash absent) is **info** (not warning) — it's a discoverability nudge for fresh clones, not an active problem. Action `cmk.installPreCommit` runs `pre-commit install` via `runCommand`. Distinct from `preCommitSkipping` (warning).
+
+The IDE Health jemalloc dismiss button and the cockpit dismiss-X share `dismissAllocatorRecommendation()` so a single click suppresses the recommendation everywhere.
+
+The **Activity** section renders the last 50 events from a 200-entry ring buffer fed by every `log()` / `warn()` / `error()` call in `core/log.ts`. Categories are regex-derived from message prefix. The section auto-refreshes via a callback registered with `setActivityRefreshCallback`.
+
+The Cockpit re-renders fast: a 5-second interval calls a lightweight `refreshOverview()` that re-renders only the overview provider without rebuilding `_stateCache`. Configuration changes are debounced at 100 ms (was 500 ms) so settings edits land in the cockpit within ~150 ms.
 
 Each section lives in its own folder under `src/sidebar/` with an `index.ts` (render + message handling + data helpers) and a `style.css`. Shared utilities live in `src/sidebar/html.ts` (esc, getNonce, wrap, renderLoading) and `src/sidebar/base.css`.
 
@@ -114,14 +137,18 @@ Each section lives in its own folder under `src/sidebar/` with an `index.ts` (re
 | File                                  | Purpose                                                                  |
 | ------------------------------------- | ------------------------------------------------------------------------ |
 | `sidebar.ts`                          | Sidebar orchestrator: state cache, section providers, message dispatch   |
-| `sidebar/html.ts`                     | Shared HTML utilities: esc, getNonce, wrap, renderLoading                |
-| `sidebar/base.css`                    | Shared CSS (cards, buttons, badges, env rows, ext-family)                |
-| `sidebar/types.ts`                    | Shared sidebar type definitions                                          |
-| `sidebar/issues.ts`                   | IssuesProvider tree + activity bar badge                                 |
-| `sidebar/environment/`                | Environment section (render, messages, data helpers, CSS)                |
-| `sidebar/profiles/`                   | Profiles section (render, messages, CSS)                                 |
-| `sidebar/ideHealth/`                  | IDE Health section (render, messages, data helpers, CSS)                 |
+| `sidebar/html.ts`                     | Shared HTML utilities: esc, getNonce, wrap (with density class), renderLoading |
+| `sidebar/base.css`                    | Shared CSS (cards, buttons, badges, env rows, ext-family, compact density overrides) |
+| `sidebar/types.ts`                    | Shared sidebar type definitions, incl. `GitStateInfo`                    |
+| `sidebar/issues.ts`                   | IssuesProvider tree + activity bar badge (consumes `enumerateIssues` + `sortIssues` + `summaryHeader`) |
+| `sidebar/overview/`                   | Cockpit section (chip rows, per-item drill-down, onboarding banner)      |
+| `sidebar/overview/domainSummary.ts`   | Shared aggregator — `enumerateIssues`, `getDomainSummary`, `sortIssues`, `summaryHeader`, `getProfileSeverity` (used by both Cockpit and Issues view) |
+| `sidebar/activity/`                   | Activity feed section (ring-buffer-backed event log)                     |
+| `sidebar/environment/`                | Environment section (env-grid + per-target build rows; "Build all stale" stays in the Cockpit) |
+| `sidebar/profiles/`                   | Profiles section (cards reflect cockpit severity per family)             |
+| `sidebar/ideHealth/`                  | IDE Health section — Settings / Extensions / Python details (Apply-All header and version banner removed; surfaced in Cockpit instead) |
 | `sidebar/omd/`                        | OMD Sites section (render, messages, CSS)                                |
+| `scm/gitState.ts`                     | Stale-while-revalidate getter for `preCommitSkipping` + `preCommitMissing` + `qaTestDataDirty`; registers `cmk.installPreCommit` + `cmk.fixQaTestDataSubmodule` |
 | `core/config.ts`                      | JSON config loading (workspace-first), variable resolution, shell escape |
 | `core/constants.ts`                   | Display names for families (`FAMILY_DISPLAY`) and profile labels         |
 | `core/shell.ts`                       | `safeExec()` wrapper around `execSync`, returns empty string on failure  |
@@ -132,10 +159,12 @@ Each section lives in its own folder under `src/sidebar/` with an `index.ts` (re
 | `profiles/profileManager.ts`          | Language profile lifecycle (Py/UI/Rs)                                    |
 | `profiles/profileDetector.ts`         | Auto-suggest profiles from file activity                                 |
 | `profiles/python/mypyConfig.ts`       | Auto-generate `.mypy.ini` from `pyproject.toml`                          |
+| `profiles/python/dmypyHealth.ts`      | `getDmypyHealthSnapshot()` + `cmk.mypy.restartDmypy` — detect daemon vs config drift |
 | `profiles/python/interpreter.ts`      | Python interpreter resolution                                            |
 | `profiles/python/snippets.ts`         | Code snippet registration                                                |
 | `profiles/python/bazelTest.ts`        | Bazel-based Python test runner                                           |
 | `build/buildStatus.ts`                | Build target staleness detection, status bar                             |
+| `build/bazelCache.ts`                 | `getBazelCacheSnapshot()` + `cmk.bazel.cleanDiskCache` — disk-cache size vs. `cmk.bazel.cacheSizeWarnGiB` |
 | `build/settings.ts`                   | Settings mismatch detection, apply logic, context keys                   |
 | `omd/omd.ts`                          | OMD site discovery, status, auth, service commands, site creation        |
 | `omd/devSiteTools.ts`                 | cmk-dev-site install/update detection, PyPI update check                 |

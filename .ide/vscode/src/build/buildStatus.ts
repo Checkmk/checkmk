@@ -162,7 +162,7 @@ export function createStatusBar(
   context.subscriptions.push(
     vscode.tasks.onDidEndTaskProcess((e) => {
       if (e.execution.task.source === 'CMK') {
-        setTimeout(() => (onBuildComplete ? onBuildComplete() : refreshStatus()), 1000)
+        setTimeout(() => (onBuildComplete ? onBuildComplete() : refreshStatus()), 200)
       }
     })
   )

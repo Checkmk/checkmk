@@ -24,7 +24,10 @@ export const SAMPLER_MAX = 50
 
 export interface BenchmarkRun {
   ts: number
+  /** cmk-vscode extension version (from package.json). */
   version: string
+  /** VS Code application version at the time of the run. */
+  vsCodeVersion?: string
   branch: string
   totalMs: number
   phases: Record<string, number>
@@ -97,6 +100,7 @@ export async function flushBenchmarkRun(context: vscode.ExtensionContext): Promi
   const run: BenchmarkRun = {
     ts: Date.now(),
     version,
+    vsCodeVersion: vscode.version,
     branch,
     totalMs: round(totalMs),
     phases: roundPhases(phases)
@@ -292,8 +296,33 @@ export function registerStartupBenchmarks(context: vscode.ExtensionContext): vsc
     vscode.commands.registerCommand('cmk.benchmarkRunSamples', () => runSamplesCommand(context)),
     vscode.commands.registerCommand('cmk.benchmarkCancelSamples', () =>
       cancelSamplesCommand(context)
-    )
+    ),
+    vscode.commands.registerCommand('cmk.benchmarkTrimRecent', () => trimRecentRunsCommand(context))
   ]
+}
+
+async function trimRecentRunsCommand(context: vscode.ExtensionContext): Promise<void> {
+  const history = getBenchmarkHistory(context)
+  if (history.length === 0) {
+    notifyInfo('CMK: No benchmark runs recorded.')
+    return
+  }
+  const answer = await vscode.window.showInputBox({
+    prompt: `Trim the most recent N runs from history (1–${history.length})`,
+    value: '5',
+    validateInput: (v) => {
+      const n = Number(v)
+      if (!Number.isFinite(n) || !Number.isInteger(n)) return 'Enter an integer'
+      if (n < 1 || n > history.length) return `Must be between 1 and ${history.length}`
+      return null
+    }
+  })
+  if (!answer) return
+  const n = Number(answer)
+  const trimmed = history.slice(0, history.length - n)
+  await context.workspaceState.update(HISTORY_KEY, trimmed)
+  log(`[benchmark] trimmed last ${n} run(s); ${trimmed.length} remain`)
+  notifyInfo(`CMK: Dropped ${n} benchmark run${n === 1 ? '' : 's'}. ${trimmed.length} remain.`)
 }
 
 async function runSamplesCommand(context: vscode.ExtensionContext): Promise<void> {

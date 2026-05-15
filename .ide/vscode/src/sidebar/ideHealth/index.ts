@@ -493,7 +493,6 @@ export function render(state: StateCache, codiconUri?: vscode.Uri, cspSource?: s
     pythonEnvsActive,
     extensionHealth,
     settingsMismatches,
-    versionMismatch,
     configInWorkspace,
     mypyTargets,
     allocator,
@@ -524,13 +523,8 @@ export function render(state: StateCache, codiconUri?: vscode.Uri, cspSource?: s
       </div>`
     : ''
 
-  const versionBanner = versionMismatch
-    ? `<div class="banner">
-        <span class="banner-icon">&#9888;</span>
-        <span class="banner-text">Update available: <b>v${esc(versionMismatch.installed)}</b> → <b>v${esc(versionMismatch.workspace)}</b></span>
-        <button class="btn btn-small" data-action="exec" data-id="cmk.rebuildExtension"><span class="codicon codicon-package"></span> Install</button>
-      </div>`
-    : ''
+  // Version-mismatch banner removed: cockpit chip + Issues entry cover this.
+  const versionBanner = ''
 
   const pyEnvsBanner = pythonEnvsActive
     ? `
@@ -557,7 +551,8 @@ export function render(state: StateCache, codiconUri?: vscode.Uri, cspSource?: s
   if (settingsMismatches.length === 0) {
     settingsHtml = renderStatusRow({ level: 'ok', label: 'All settings match' })
   } else {
-    const applyBtn = `<div class="apply-wrapper"><button class="btn" data-action="apply-all-mismatches"><span class="codicon codicon-wrench"></span> Apply All (${settingsMismatches.length})</button></div>`
+    // "Apply All" removed: the cockpit Settings chip handles the bulk action.
+    const applyBtn = ''
     const grouped = new Map<string, SettingsMismatch[]>()
     for (const m of settingsMismatches) {
       const key = m.family

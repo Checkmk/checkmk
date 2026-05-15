@@ -292,12 +292,25 @@ export async function applyAllocatorSetting(
     current === undefined || current === wrapperPath || isDefaultDmypyValue(current, wsFolder)
 
   if (mode === 'default') {
-    if (current === wrapperPath) {
-      await updateDmypyExecutable(wsFolder, undefined)
-      log('cmk.mypy.allocator=default — released mypy.dmypyExecutable')
-      await killAllDmypyDaemons()
+    // Restore the bundled defaults instead of leaving the keys unset — matangover
+    // falls back to `python -m mypy.dmypy` when `mypy.dmypyExecutable` is empty,
+    // which breaks the venv-pinned setup. Only overwrite when we owned the prior
+    // value (our wrapper, the bundled default literal, or unset) — never clobber
+    // a custom user-managed dmypy path.
+    if (weOwn) {
+      const previousDmypy = current
+      const previousRun = vscode.workspace
+        .getConfiguration('mypy', wsFolder)
+        .get<boolean>(RUN_USING_INTERPRETER_SETTING)
+      await updateDmypyExecutable(wsFolder, defaultDmypyPath(wsFolder))
+      await updateRunUsingInterpreter(wsFolder, true)
+      log(
+        `cmk.mypy.allocator=default — restored mypy.dmypyExecutable=${defaultDmypyPath(wsFolder)}, runUsingActiveInterpreter=true`
+      )
+      if (previousDmypy === wrapperPath || previousRun === false) {
+        await killAllDmypyDaemons()
+      }
     }
-    await updateRunUsingInterpreter(wsFolder, undefined)
     deleteWrapperIfPresent(wrapperPath)
     return
   }
@@ -354,11 +367,14 @@ export function getAllocatorSnapshot(): AllocatorSnapshot {
         .getConfiguration('mypy', wsFolder)
         .get<boolean>(RUN_USING_INTERPRETER_SETTING, true) ?? true)
     : true
+  const workspaceDismissed = extContextRef?.workspaceState.get<boolean>(DISMISS_KEY, false) ?? false
+  const userDismissed = vscode.workspace
+    .getConfiguration('cmk.cockpit.jemalloc')
+    .get<boolean>('ignoreRecommendation', false)
   return {
     mode: readAllocatorMode(),
     libraryAvailable: detectJemallocPath() !== null,
-    recommendationDismissed:
-      extContextRef?.workspaceState.get<boolean>(DISMISS_KEY, false) ?? false,
+    recommendationDismissed: workspaceDismissed || userDismissed,
     wrapperExists,
     dmypyExecutableMatches: wrapperPath !== null && currentDmypy === wrapperPath,
     runUsingInterpreterOff: runUsingInterpreter === false
@@ -384,9 +400,15 @@ export async function reapplyJemallocAllocator(): Promise<void> {
   await notifyInfo('CMK ▸ Mypy: re-applied allocator settings.')
 }
 
-/** Persist the "don't recommend jemalloc again" choice at workspace scope. */
+/** Persist the "don't recommend jemalloc again" choice at user scope so a
+ *  single click suppresses the recommendation everywhere — both the cockpit
+ *  item dismiss-X and the IDE Health status-row dismiss button now share this
+ *  single source of truth. The legacy workspaceState DISMISS_KEY remains
+ *  honoured on read for users who dismissed before this change. */
 export async function dismissAllocatorRecommendation(): Promise<void> {
-  if (extContextRef) await extContextRef.workspaceState.update(DISMISS_KEY, true)
+  await vscode.workspace
+    .getConfiguration('cmk.cockpit.jemalloc')
+    .update('ignoreRecommendation', true, vscode.ConfigurationTarget.Global)
 }
 
 /** Flip `cmk.mypy.allocator` to "jemalloc" at workspace scope. Invoked from
@@ -443,6 +465,26 @@ export function registerJemallocAllocator(context: vscode.ExtensionContext): vsc
         error(`installJemalloc command failed: ${(err as Error).message}`)
       )
     ),
+    vscode.commands.registerCommand('cmk.mypy.enableJemalloc', () =>
+      enableJemallocFromRecommendation().catch((err) =>
+        error(`enableJemalloc command failed: ${(err as Error).message}`)
+      )
+    ),
+    vscode.commands.registerCommand('cmk.cockpit.jemalloc.dismissRecommendation', async () => {
+      await dismissAllocatorRecommendation()
+      log(
+        'cockpit: jemalloc recommendation dismissed (cmk.cockpit.jemalloc.ignoreRecommendation=true)'
+      )
+    }),
+    vscode.commands.registerCommand('cmk.cockpit.jemalloc.restoreRecommendation', async () => {
+      await vscode.workspace
+        .getConfiguration('cmk.cockpit.jemalloc')
+        .update('ignoreRecommendation', undefined, vscode.ConfigurationTarget.Global)
+      // Clear the legacy workspaceState flag too so previously-dismissed
+      // workspaces stay un-dismissed.
+      if (extContextRef) await extContextRef.workspaceState.update(DISMISS_KEY, undefined)
+      log('cockpit: jemalloc recommendation restored')
+    }),
     vscode.commands.registerCommand('cmk.mypy.reapplyJemalloc', () =>
       reapplyJemallocAllocator().catch((err) =>
         error(`reapplyJemalloc command failed: ${(err as Error).message}`)

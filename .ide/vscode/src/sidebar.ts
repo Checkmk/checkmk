@@ -7,11 +7,12 @@ import * as fs from 'fs'
 import * as path from 'path'
 import * as vscode from 'vscode'
 
-import { flushBenchmarkRun, time } from './benchmark/startup'
+import { detectRegression, flushBenchmarkRun, getBenchmarkHistory, time } from './benchmark/startup'
+import { getBazelCacheSnapshot, setBazelCacheRefreshCallback } from './build/bazelCache'
 import { type BuildStatus, checkBuildStatus } from './build/buildStatus'
 import type { SettingsEntry } from './build/settings'
 import { type ExtensionSets, loadConfig } from './core/config'
-import { error, log, notifyInfo, notifyWarn } from './core/log'
+import { error, log, notifyInfo, notifyWarn, setActivityRefreshCallback } from './core/log'
 import { runCommand, waitForTask } from './core/tasks'
 import { getVersionMismatch, rebuildExtension } from './core/versionCheck'
 import { getDevSiteToolsState, setDevSiteRefreshCallback } from './omd/devSiteTools'
@@ -23,27 +24,33 @@ import {
 } from './omd/omd'
 import { getActiveProxies } from './omd/proxy'
 import * as profileManager from './profiles/profileManager'
+import { getDmypyHealthSnapshot } from './profiles/python/dmypyHealth'
 import { getMypyTargetsSnapshot } from './profiles/python/dynamicMypyTargets'
 import {
   getAllocatorSnapshot,
   setAllocatorRefreshCallback
 } from './profiles/python/jemallocAllocator'
 import { getPylanceHealthSnapshot } from './profiles/python/pylanceHealth'
+import { getGitState, setGitStateRefreshCallback } from './scm/gitState'
+import * as activitySection from './sidebar/activity'
 import * as environmentSection from './sidebar/environment'
 import { renderLoading } from './sidebar/html'
 import * as ideHealthSection from './sidebar/ideHealth'
 import { type IssueItem, IssuesProvider, updateIssues } from './sidebar/issues'
 import * as omdSection from './sidebar/omd'
+import * as overviewSection from './sidebar/overview'
 import * as profilesSection from './sidebar/profiles'
 import type { SectionModule, StateCache, WebviewMessage } from './sidebar/types'
 
-const SECTIONS = ['environment', 'omd', 'ideHealth', 'profiles'] as const
+const SECTIONS = ['overview', 'environment', 'omd', 'ideHealth', 'profiles', 'activity'] as const
 
 const sectionModules: Record<string, SectionModule> = {
+  overview: overviewSection,
   environment: environmentSection,
   profiles: profilesSection,
   ideHealth: ideHealthSection,
-  omd: omdSection
+  omd: omdSection,
+  activity: activitySection
 }
 
 // ── Shared state ──
@@ -121,7 +128,23 @@ function refreshStateCache(): StateCache {
       })(),
       mypyTargets: { ...mypySnapshot, pythonProfileActive },
       allocator: time('getAllocatorSnapshot', () => getAllocatorSnapshot()),
-      pylanceHealth: time('getPylanceHealthSnapshot', () => getPylanceHealthSnapshot())
+      pylanceHealth: time('getPylanceHealthSnapshot', () => getPylanceHealthSnapshot()),
+      gitState: time('getGitState', () => {
+        const g = getGitState()
+        const folder = vscode.workspace.workspaceFolders?.[0]
+        const preCommitDismissed = vscode.workspace
+          .getConfiguration('cmk.cockpit.git', folder?.uri)
+          .get<boolean>('ignorePreCommit', false)
+        return {
+          preCommitSkipping: g.preCommitSkipping,
+          preCommitDismissed,
+          preCommitMissing: g.preCommitMissing,
+          qaTestDataDirty: g.qaTestDataDirty
+        }
+      }),
+      startupRegression: _context ? detectRegression(getBenchmarkHistory(_context)) : null,
+      dmypyHealth: time('getDmypyHealthSnapshot', () => getDmypyHealthSnapshot()),
+      bazelCache: time('getBazelCacheSnapshot', () => getBazelCacheSnapshot())
     }
 
     updateIssues(_issuesView, _issuesProvider, _stateCache)
@@ -178,6 +201,7 @@ function refreshStateCache(): StateCache {
         stagedActiveRemove: [],
         stagedBaselineAdd: [],
         stagedBaselineRemove: [],
+        dismissedPromptedTargets: [],
         catalog: []
       },
       allocator: {
@@ -194,7 +218,22 @@ function refreshStateCache(): StateCache {
         thresholdMiB: 2048,
         overThreshold: false,
         extensionActive: false,
-        monitored: false
+        monitored: false,
+        inStartupGrace: false
+      },
+      gitState: {
+        preCommitSkipping: false,
+        preCommitDismissed: false,
+        preCommitMissing: false,
+        qaTestDataDirty: false
+      },
+      startupRegression: null,
+      dmypyHealth: { running: false, stale: false, configMtimeMs: null, daemonStartMs: null },
+      bazelCache: {
+        sizeBytes: null,
+        thresholdGiB: 50,
+        cachePath: null,
+        overThreshold: false
       }
     }
   }
@@ -318,6 +357,19 @@ export function refreshAll(): void {
   _refreshStatusBar?.(_stateCache?.buildStatus)
 }
 
+/**
+ * Re-render just the cockpit using the existing state cache. Cheaper than
+ * `refreshAll()` (no recompute); used by the auto-refresh interval and by
+ * actions that don't materially change StateCache.
+ */
+export function refreshOverview(): void {
+  if (!_stateCache) {
+    refreshAll()
+    return
+  }
+  _providers['overview']?.refresh()
+}
+
 export function registerSidebar(
   context: vscode.ExtensionContext,
   commands: Record<string, unknown>,
@@ -334,6 +386,9 @@ export function registerSidebar(
   setDevSiteRefreshCallback(refreshAll)
   setOmdStatusRefreshCallback(refreshOmd)
   setAllocatorRefreshCallback(refreshAll)
+  setActivityRefreshCallback(() => _providers['activity']?.refresh())
+  setGitStateRefreshCallback(() => refreshOverview())
+  setBazelCacheRefreshCallback(() => refreshOverview())
 
   for (const section of SECTIONS) {
     const provider = new SectionViewProvider(context, section)
@@ -405,15 +460,31 @@ export function registerSidebar(
     configWatcher.onDidChange(() => refreshAll())
     configWatcher.onDidCreate(() => refreshAll())
     context.subscriptions.push(configWatcher)
+
+    // Cockpit hyper-reactivity: watch the canonical venv binary so build-status
+    // changes (rebuild, clean) reflect within ~100 ms.
+    const venvWatcher = vscode.workspace.createFileSystemWatcher(
+      new vscode.RelativePattern(wsPath, '.venv/bin/python')
+    )
+    venvWatcher.onDidCreate(() => refreshAll())
+    venvWatcher.onDidChange(() => refreshAll())
+    venvWatcher.onDidDelete(() => refreshAll())
+    context.subscriptions.push(venvWatcher)
   }
 
   let configDebounce: ReturnType<typeof setTimeout> | null = null
   context.subscriptions.push(
     vscode.workspace.onDidChangeConfiguration(() => {
       if (configDebounce) clearTimeout(configDebounce)
-      configDebounce = setTimeout(() => refreshAll(), 500)
+      configDebounce = setTimeout(() => refreshAll(), 100)
     })
   )
+
+  // Overview-only auto-refresh: cheap re-render every 5 s catches background-
+  // resolved state (OMD stale-while-revalidate, Pylance memory poll, dev-site
+  // update check) without paying the cost of a full refreshAll.
+  const overviewInterval = setInterval(() => refreshOverview(), 5000)
+  context.subscriptions.push({ dispose: () => clearInterval(overviewInterval) })
 
   for (const section of SECTIONS) {
     context.subscriptions.push(

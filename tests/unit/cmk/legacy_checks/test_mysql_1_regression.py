@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="misc"
-# mypy: disable-error-code="no-untyped-call"
 
 # NOTE: This file has been created by an LLM (from something that was worse).
 # It mostly serves as test to ensure we don't accidentally break anything.
@@ -16,6 +15,7 @@ from typing import Any
 
 import pytest
 
+from cmk.agent_based.v2 import Metric, Result, Service, State
 from cmk.legacy_checks import mysql
 
 
@@ -52,154 +52,123 @@ def parsed() -> Mapping[str, Mapping[str, Any]]:
 
 
 def test_mysql_version_discovery(parsed: Mapping[str, Mapping[str, Any]]) -> None:
-    """Test MySQL version discovery function."""
     discovery_func = mysql._discover_keys({"version"})
     result = list(discovery_func(parsed))
-
-    # Should discover exactly one service
-    assert len(result) == 1
-    assert result[0] == ("mysql", {})
+    assert result == [Service(item="mysql")]
 
 
 def test_mysql_version_check(parsed: Mapping[str, Mapping[str, Any]]) -> None:
-    """Test MySQL version check function."""
-    result = list(mysql.check_mysql_version("mysql", {}, parsed))
-
-    # Should have exactly one result
-    assert len(result) == 1
-
-    state, summary = result[0]
-    assert state == 0
-    assert "Version: Cheesgrater Edition" in summary
+    result = list(mysql.check_mysql_version("mysql", parsed))
+    assert result == [Result(state=State.OK, summary="Version: Cheesgrater Edition")]
 
 
 def test_mysql_sessions_discovery(parsed: Mapping[str, Mapping[str, Any]]) -> None:
-    """Test MySQL sessions discovery function."""
     result = list(mysql.discover_mysql_sessions(parsed))
-
-    # Should discover exactly one service (data has > 200 entries)
-    assert len(result) == 1
-    assert result[0] == ("mysql", {})
+    assert result == [Service(item="mysql")]
 
 
 def test_mysql_sessions_check(
     parsed: Mapping[str, Mapping[str, Any]], monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """Test MySQL sessions check function."""
     # Pre-populate value store to avoid GetRateError
     value_store: dict[str, object] = {"mysql.sessions": (0, 2)}
     monkeypatch.setattr(mysql, "get_value_store", lambda: value_store)
 
     result = list(mysql.check_mysql_sessions("mysql", {}, parsed))
 
-    # Should have exactly 3 results (total, running, connections rate)
-    assert len(result) == 3
+    # 3 sub-checks × (Result + Metric) = 6 items
+    assert len(result) == 6
 
-    # Check total sessions result
-    state, summary, metrics = result[0]
-    assert state == 0
-    assert "3 total" in summary
-    assert len(metrics) == 1
-    assert metrics[0][0] == "total_sessions"
-    assert metrics[0][1] == 3
+    # Results at indexes 0, 2, 4; metrics at 1, 3, 5
+    assert isinstance(result[0], Result)
+    assert result[0].state == State.OK
+    assert "3 total" in result[0].summary
+    assert isinstance(result[1], Metric)
+    assert result[1].name == "total_sessions"
+    assert result[1].value == 3.0
 
-    # Check running sessions result
-    state, summary, metrics = result[1]
-    assert state == 0
-    assert "23 running" in summary
-    assert len(metrics) == 1
-    assert metrics[0][0] == "running_sessions"
-    assert metrics[0][1] == 23
+    assert isinstance(result[2], Result)
+    assert result[2].state == State.OK
+    assert "23 running" in result[2].summary
+    assert isinstance(result[3], Metric)
+    assert result[3].name == "running_sessions"
+    assert result[3].value == 23.0
 
-    # Check connections rate result
-    state, summary, metrics = result[2]
-    assert state == 0
-    assert "connections/s" in summary
-    assert len(metrics) == 1
-    assert metrics[0][0] == "connect_rate"
+    assert isinstance(result[4], Result)
+    assert result[4].state == State.OK
+    assert "connections/s" in result[4].summary
+    assert isinstance(result[5], Metric)
+    assert result[5].name == "connect_rate"
 
 
 def test_mysql_connections_discovery(parsed: Mapping[str, Mapping[str, Any]]) -> None:
-    """Test MySQL connections discovery function."""
     discovery_func = mysql._discover_keys(
         {"Max_used_connections", "max_connections", "Threads_connected"}
     )
     result = list(discovery_func(parsed))
-
-    # Should discover exactly one service
-    assert len(result) == 1
-    assert result[0] == ("mysql", {})
+    assert result == [Service(item="mysql")]
 
 
 def test_mysql_connections_check(parsed: Mapping[str, Mapping[str, Any]]) -> None:
-    """Test MySQL connections check function."""
     params = {"perc_used": (75, 80), "perc_conn_threads": (40, 50)}
     result = list(mysql.check_mysql_connections("mysql", params, parsed))
 
-    # Should have exactly 5 results
-    assert len(result) == 5
+    # First Result + Metric for perc_used, then 2 raw Metrics, then Result + Metric for perc_conn_threads, then 1 metric
+    # Total = 2 + 2 + 2 + 1 = 7 entries
+    assert len(result) == 7
 
-    # Check max parallel connections result
-    state, summary, metrics = result[0]
-    assert state == 0
-    assert "Max. parallel connections since server start: 50.00%" in summary
-    assert len(metrics) == 1
-    assert metrics[0][0] == "connections_perc_used"
-    assert metrics[0][1] == 50.0
+    assert isinstance(result[0], Result)
+    assert result[0].state == State.OK
+    assert "Max. parallel connections since server start: 50.00%" in result[0].summary
+    assert isinstance(result[1], Metric)
+    assert result[1].name == "connections_perc_used"
+    assert result[1].value == 50.0
 
-    # Check current connections result (should be critical)
-    state, summary, metrics = result[3]
-    assert state == 2
-    assert "Currently open connections: 75.00%" in summary
-    assert "(warn/crit at 40.00%/50.00%)" in summary
-    assert len(metrics) == 1
-    assert metrics[0][0] == "connections_perc_conn_threads"
-    assert metrics[0][1] == 75.0
+    # 2 raw metrics: connections_max_used and connections_max
+    assert isinstance(result[2], Metric) and result[2].name == "connections_max_used"
+    assert isinstance(result[3], Metric) and result[3].name == "connections_max"
+
+    # Currently open: state CRIT (75% >= 50%)
+    assert isinstance(result[4], Result)
+    assert result[4].state == State.CRIT
+    assert "Currently open connections: 75.00%" in result[4].summary
+    assert isinstance(result[5], Metric)
+    assert result[5].name == "connections_perc_conn_threads"
+    assert result[5].value == 75.0
+
+    assert isinstance(result[6], Metric) and result[6].name == "connections_conn_threads"
 
 
 def test_mysql_innodb_io_discovery(parsed: Mapping[str, Mapping[str, Any]]) -> None:
-    """Test MySQL InnoDB I/O discovery function."""
     discovery_func = mysql._discover_keys({"Innodb_data_read"})
     result = list(discovery_func(parsed))
-
-    # Should discover exactly one service
-    assert len(result) == 1
-    assert result[0] == ("mysql", {})
+    assert result == [Service(item="mysql")]
 
 
 def test_mysql_innodb_io_check(
     parsed: Mapping[str, Mapping[str, Any]], monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """Test MySQL InnoDB I/O check function."""
     # Pre-populate value store to avoid GetRateError
     value_store: dict[str, object] = {"read": (0.0, 1024), "write": (0.0, 2048)}
     monkeypatch.setattr(mysql, "get_value_store", lambda: value_store)
 
     result = list(mysql.check_mysql_iostat("mysql", {}, parsed))
 
-    # Should have exactly 3 results (read, write, perfdata)
-    assert len(result) == 3
+    # For each direction (read, write): Result + Metric = 2 items each => 4 total
+    assert len(result) == 4
 
-    # Check read result
-    state, summary = result[0][:2]
-    assert state == 0
-    assert "Read: 0.00 B/s" in summary
+    assert isinstance(result[0], Result)
+    assert result[0].state == State.OK
+    assert "Read: 0.00 B/s" in result[0].summary
+    assert isinstance(result[1], Metric) and result[1].name == "read"
 
-    # Check write result
-    state, summary = result[1][:2]
-    assert state == 0
-    assert "Write: 0.00 B/s" in summary
-
-    # Check perfdata result
-    state, summary, metrics = result[2]
-    assert state == 0
-    assert len(metrics) == 2
-    assert metrics[0][0] == "read"
-    assert metrics[1][0] == "write"
+    assert isinstance(result[2], Result)
+    assert result[2].state == State.OK
+    assert "Write: 0.00 B/s" in result[2].summary
+    assert isinstance(result[3], Metric) and result[3].name == "write"
 
 
 def test_mysql_parse_function() -> None:
-    """Test MySQL parse function with the exact dataset."""
     string_table = [
         ["version", "Cheesgrater Edition"],
         ["Aborted_clients", "0"],
@@ -212,11 +181,9 @@ def test_mysql_parse_function() -> None:
 
     result = mysql.parse_mysql(string_table)
 
-    # Should parse exactly one MySQL instance
     assert "mysql" in result
     mysql_data = result["mysql"]
 
-    # Check parsed values
     assert mysql_data["version"] == "Cheesgrater Edition"
     assert mysql_data["Aborted_clients"] == 0
     assert mysql_data["Threads_connected"] == 3
@@ -227,19 +194,12 @@ def test_mysql_parse_function() -> None:
 
 
 def test_mysql_version_discovery_empty_section() -> None:
-    """Test MySQL version discovery function with empty section."""
     discovery_func = mysql._discover_keys({"version"})
     result = list(discovery_func({}))
-
-    # Should not discover any service for empty section
-    assert len(result) == 0
+    assert result == []
 
 
 def test_mysql_sessions_discovery_insufficient_data() -> None:
-    """Test MySQL sessions discovery function with insufficient data."""
-    # Create parsed data with < 200 entries
     small_parsed = {"mysql": {"version": "test", "Threads_connected": "3"}}
     result = list(mysql.discover_mysql_sessions(small_parsed))
-
-    # Should not discover any service with insufficient data
-    assert len(result) == 0
+    assert result == []

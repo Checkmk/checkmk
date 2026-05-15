@@ -3,20 +3,26 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="misc"
-# mypy: disable-error-code="no-untyped-def"
-# mypy: disable-error-code="type-arg"
-
-
 import time
-from collections.abc import Iterable, Mapping
-from typing import Any, Protocol
+from collections.abc import Callable, Mapping, Sequence
+from typing import Any
 
-from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
-from cmk.agent_based.v2 import get_average, get_rate, get_value_store, render
+from cmk.agent_based.v1 import check_levels as check_levels_v1
+from cmk.agent_based.v2 import (
+    AgentSection,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    get_average,
+    get_rate,
+    get_value_store,
+    Metric,
+    render,
+    Result,
+    Service,
+    State,
+)
 from cmk.plugins.mysql.agent_based.lib import mysql_parse_per_item
-
-check_info = {}
 
 # <<<mysql>>>
 # [[mysql]]
@@ -33,28 +39,13 @@ check_info = {}
 # Com_alter_db    0
 # Com_alter_db_upgrade    0
 
-#   .--Helpers-------------------------------------------------------------.
-#   |                  _   _      _                                        |
-#   |                 | | | | ___| |_ __   ___ _ __ ___                    |
-#   |                 | |_| |/ _ \ | '_ \ / _ \ '__/ __|                   |
-#   |                 |  _  |  __/ | |_) |  __/ |  \__ \                   |
-#   |                 |_| |_|\___|_| .__/ \___|_|  |___/                   |
-#   |                              |_|                                     |
-#   '----------------------------------------------------------------------'
-
 
 Section = Mapping[str, Mapping[str, Any]]
 
-Service = tuple[str, dict]
-
-
-class DiscoveryFunction(Protocol):
-    def __call__(self, section: Section) -> Iterable[Service]: ...
-
 
 @mysql_parse_per_item
-def parse_mysql(string_table):
-    data = {}
+def parse_mysql(string_table: Sequence[Sequence[str]]) -> Mapping[str, Any]:  # type: ignore[misc]
+    data: dict[str, Any] = {}
     for line in string_table:
         try:
             data[line[0]] = int(line[1])
@@ -65,28 +56,35 @@ def parse_mysql(string_table):
     return data
 
 
-def _discover_keys(keys: set[str]) -> DiscoveryFunction:
-    def discover(section: Section) -> Iterable[Service]:
-        yield from ((instance, {}) for instance, data in section.items() if keys <= set(data))
+def _discover_keys(keys: set[str]) -> Callable[[Section], DiscoveryResult]:
+    def discover(section: Section) -> DiscoveryResult:
+        for instance, data in section.items():
+            if keys <= set(data):
+                yield Service(item=instance)
 
     return discover
 
 
-def check_mysql_version(item, _no_params, parsed):
-    if not (data := parsed.get(item)):
+def check_mysql_version(item: str, section: Section) -> CheckResult:
+    if not (data := section.get(item)):
         return
-    version = data.get("version")
-    if version:
-        yield 0, "Version: %s" % version
+    if version := data.get("version"):
+        yield Result(state=State.OK, summary=f"Version: {version}")
 
 
-check_info["mysql"] = LegacyCheckDefinition(
+agent_section_mysql = AgentSection(
     name="mysql",
     parse_function=parse_mysql,
+)
+
+
+check_plugin_mysql = CheckPlugin(
+    name="mysql",
     service_name="MySQL Version %s",
     discovery_function=_discover_keys({"version"}),
     check_function=check_mysql_version,
 )
+
 
 # .
 #   .--Sessions------------------------------------------------------------.
@@ -99,8 +97,10 @@ check_info["mysql"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 
-def discover_mysql_sessions(section: Section) -> Iterable[Service]:
-    yield from ((instance, {}) for instance, data in section.items() if len(data) > 200)
+def discover_mysql_sessions(section: Section) -> DiscoveryResult:
+    for instance, data in section.items():
+        if len(data) > 200:
+            yield Service(item=instance)
 
 
 # params:
@@ -110,8 +110,8 @@ def discover_mysql_sessions(section: Section) -> Iterable[Service]:
 # }
 
 
-def check_mysql_sessions(item, params, parsed):
-    if not (data := parsed.get(item)):
+def check_mysql_sessions(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
+    if not (data := section.get(item)):
         return
     total_sessions = data["Threads_connected"]
     running_sessions = data["Threads_running"]
@@ -119,29 +119,31 @@ def check_mysql_sessions(item, params, parsed):
         get_value_store(), "mysql.sessions", time.time(), data["Connections"], raise_overflow=True
     )
 
-    for value, perfvar, what, format_str, unit in [
-        (total_sessions, "total_sessions", "total", "%d %s%s", ""),
-        (running_sessions, "running_sessions", "running", "%d %s%s", ""),
-        (connects, "connect_rate", "connections", "%.2f %s%s", "/s"),
+    for value, perfvar, what, fmt, unit in [
+        (total_sessions, "total_sessions", "total", "%d", ""),
+        (running_sessions, "running_sessions", "running", "%d", ""),
+        (connects, "connect_rate", "connections", "%.2f", "/s"),
     ]:
         levels = params.get(what)
-        infotext = format_str % (value, what, unit)
-        yield check_levels(
+        infotext = f"{fmt % value} {what}{unit}"
+        yield from check_levels_v1(
             value,
-            perfvar,
-            levels,
-            infoname=infotext,
+            metric_name=perfvar,
+            levels_upper=levels,
+            label=infotext,
         )
 
 
-check_info["mysql.sessions"] = LegacyCheckDefinition(
+check_plugin_mysql_sessions = CheckPlugin(
     name="mysql_sessions",
     service_name="MySQL Sessions %s",
     sections=["mysql"],
     discovery_function=discover_mysql_sessions,
     check_function=check_mysql_sessions,
     check_ruleset_name="mysql_sessions",
+    check_default_parameters={},
 )
+
 
 # .
 #   .--InnoDB-IO-----------------------------------------------------------.
@@ -154,8 +156,8 @@ check_info["mysql.sessions"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 
-def check_mysql_iostat(item, params, parsed):
-    if not (data := parsed.get(item)):
+def check_mysql_iostat(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
+    if not (data := section.get(item)):
         return
     if not ("Innodb_data_read" in data and "Innodb_data_written" in data):
         return
@@ -175,64 +177,47 @@ def check_diskstat_line(
     params: Mapping[str, Any],
     read_value: int,
     write_value: int,
-) -> Iterable[tuple[int, str, list] | tuple[int, str]]:
+) -> CheckResult:
     average_range = params.get("average")
     if average_range == 0:
         average_range = None  # disable averaging when 0 is set
 
     value_store = get_value_store()
 
-    # collect perfdata, apparently we want to re-order them
-    perfdata: list = []
-
     for metric_name, value in (("read", read_value), ("write", write_value)):
-        # unpack levels now, need also for perfdata
         levels = params.get(f"{metric_name}_bytes")
-        if isinstance(levels, tuple):
-            warn, crit = levels
-        else:
-            warn, crit = None, None
 
-        bytes_per_sec = get_rate(
-            get_value_store(), metric_name, this_time, value, raise_overflow=True
-        )
+        bytes_per_sec = get_rate(value_store, metric_name, this_time, value, raise_overflow=True)
 
-        # compute average of the rate over ___ minutes
         if average_range is not None:
-            perfdata.append((metric_name, bytes_per_sec, warn, crit))
+            # yield the un-averaged rate as a metric for reference
+            yield Metric(metric_name, bytes_per_sec)
             bytes_per_sec = get_average(
                 value_store, f"{metric_name}.avg", this_time, bytes_per_sec, average_range
             )
-            metric_name_suffix = ".avg"
+            check_metric_name = f"{metric_name}.avg"
         else:
-            metric_name_suffix = ""
+            check_metric_name = metric_name
 
-        # check levels (no predictive)
-        state, text, extraperf = check_levels(
+        yield from check_levels_v1(
             bytes_per_sec,
-            metric_name + metric_name_suffix,
-            levels,
-            human_readable_func=render.iobandwidth,
-            infoname=metric_name.capitalize(),
+            metric_name=check_metric_name,
+            levels_upper=levels,
+            render_func=render.iobandwidth,
+            label=metric_name.capitalize(),
         )
-        yield state, text
-        perfdata += extraperf
-
-    # Add performance data for averaged IO
-    if average_range is not None:
-        perfdata = [perfdata[0], perfdata[2], perfdata[1], perfdata[3]]
-
-    yield 0, "", perfdata
 
 
-check_info["mysql.innodb_io"] = LegacyCheckDefinition(
+check_plugin_mysql_innodb_io = CheckPlugin(
     name="mysql_innodb_io",
     service_name="MySQL InnoDB IO %s",
     sections=["mysql"],
     discovery_function=_discover_keys({"Innodb_data_read"}),
     check_function=check_mysql_iostat,
     check_ruleset_name="mysql_innodb_io",
+    check_default_parameters={},
 )
+
 
 # .
 #   .--Connections---------------------------------------------------------.
@@ -245,12 +230,12 @@ check_info["mysql.innodb_io"] = LegacyCheckDefinition(
 #   +----------------------------------------------------------------------+
 
 
-def check_mysql_connections(item, params, parsed):
-    if not (data := parsed.get(item)):
+def check_mysql_connections(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
+    if not (data := section.get(item)):
         return
 
     if "Max_used_connections" not in data:
-        yield 3, "Connection information is missing"
+        yield Result(state=State.UNKNOWN, summary="Connection information is missing")
         return
 
     # The maximum number of connections that have been in use simultaneously
@@ -266,47 +251,29 @@ def check_mysql_connections(item, params, parsed):
     perc_used = conn / max_conn * 100
     perc_conn_threads = conn_threads / max_conn * 100
 
-    status_txt = "Max. parallel connections since server start"
-    yield check_levels(
-        value=perc_used,
-        dsname="connections_perc_used",
-        params=params.get("perc_used"),
-        human_readable_func=render.percent,
-        infoname=status_txt,
+    yield from check_levels_v1(
+        perc_used,
+        metric_name="connections_perc_used",
+        levels_upper=params.get("perc_used"),
+        render_func=render.percent,
+        label="Max. parallel connections since server start",
     )
 
-    yield check_levels(
-        value=conn,
-        dsname="connections_max_used",
-        params=None,
-        human_readable_func=lambda x: "",
+    yield Metric("connections_max_used", conn)
+    yield Metric("connections_max", max_conn)
+
+    yield from check_levels_v1(
+        perc_conn_threads,
+        metric_name="connections_perc_conn_threads",
+        levels_upper=params.get("perc_conn_threads"),
+        render_func=render.percent,
+        label="Currently open connections",
     )
 
-    yield check_levels(
-        value=max_conn,
-        dsname="connections_max",
-        params=None,
-        human_readable_func=lambda x: "",
-    )
-
-    status_txt = "Currently open connections"
-    yield check_levels(
-        value=perc_conn_threads,
-        dsname="connections_perc_conn_threads",
-        params=params.get("perc_conn_threads"),
-        human_readable_func=render.percent,
-        infoname=status_txt,
-    )
-
-    yield check_levels(
-        value=conn_threads,
-        dsname="connections_conn_threads",
-        params=None,
-        human_readable_func=lambda x: "",
-    )
+    yield Metric("connections_conn_threads", conn_threads)
 
 
-check_info["mysql.connections"] = LegacyCheckDefinition(
+check_plugin_mysql_connections = CheckPlugin(
     name="mysql_connections",
     service_name="MySQL Connections %s",
     sections=["mysql"],
@@ -315,7 +282,9 @@ check_info["mysql.connections"] = LegacyCheckDefinition(
     ),
     check_function=check_mysql_connections,
     check_ruleset_name="mysql_connections",
+    check_default_parameters={},
 )
+
 
 # .
 #   .--Galera Sync Status--------------------------------------------------.
@@ -325,46 +294,38 @@ check_info["mysql.connections"] = LegacyCheckDefinition(
 #   |       | |_| | (_| | |  __/ | | (_| |  ___) | |_| | | | | (__         |
 #   |        \____|\__,_|_|\___|_|  \__,_| |____/ \__, |_| |_|\___|        |
 #   |                                             |___/                    |
-#   |                    ____  _        _                                  |
-#   |                   / ___|| |_ __ _| |_ _   _ ___                      |
-#   |                   \___ \| __/ _` | __| | | / __|                     |
-#   |                    ___) | || (_| | |_| |_| \__ \                     |
-#   |                   |____/ \__\__,_|\__|\__,_|___/                     |
-#   |                                                                      |
-#   +----------------------------------------------------------------------+
+#   '----------------------------------------------------------------------'
 
 
 def _has_wsrep_provider(data: Mapping[str, object]) -> bool:
     return data.get("wsrep_provider") not in (None, "none")
 
 
-def discover_mysql_galerasync(parsed):
-    for instance, data in parsed.items():
+def discover_mysql_galerasync(section: Section) -> DiscoveryResult:
+    for instance, data in section.items():
         if _has_wsrep_provider(data) and "wsrep_local_state_comment" in data:
-            yield instance, {}
+            yield Service(item=instance)
 
 
-def check_mysql_galerasync(item, _no_params, parsed):
-    if not (data := parsed.get(item)):
+def check_mysql_galerasync(item: str, section: Section) -> CheckResult:
+    if not (data := section.get(item)):
         return
     wsrep_local_state_comment = data.get("wsrep_local_state_comment")
     if wsrep_local_state_comment is None:
         return
 
-    if wsrep_local_state_comment == "Synced":
-        state = 0
-    else:
-        state = 2
-    yield state, "WSREP local state comment: %s" % wsrep_local_state_comment
+    state = State.OK if wsrep_local_state_comment == "Synced" else State.CRIT
+    yield Result(state=state, summary=f"WSREP local state comment: {wsrep_local_state_comment}")
 
 
-check_info["mysql.galerasync"] = LegacyCheckDefinition(
+check_plugin_mysql_galerasync = CheckPlugin(
     name="mysql_galerasync",
     service_name="MySQL Galera Sync %s",
     sections=["mysql"],
     discovery_function=discover_mysql_galerasync,
     check_function=check_mysql_galerasync,
 )
+
 
 # .
 #   .--Galera Donor--------------------------------------------------------.
@@ -374,34 +335,34 @@ check_info["mysql.galerasync"] = LegacyCheckDefinition(
 #   |    | |_| | (_| | |  __/ | | (_| | | |_| | (_) | | | | (_) | |        |
 #   |     \____|\__,_|_|\___|_|  \__,_| |____/ \___/|_| |_|\___/|_|        |
 #   |                                                                      |
-#   +----------------------------------------------------------------------+
+#   '----------------------------------------------------------------------'
 
 
-def discover_mysql_galeradonor(parsed):
-    for instance, data in parsed.items():
+def discover_mysql_galeradonor(section: Section) -> DiscoveryResult:
+    for instance, data in section.items():
         if _has_wsrep_provider(data) and "wsrep_sst_donor" in data:
-            yield instance, {"wsrep_sst_donor": data["wsrep_sst_donor"]}
+            yield Service(item=instance, parameters={"wsrep_sst_donor": data["wsrep_sst_donor"]})
 
 
-def check_mysql_galeradonor(item, params, parsed):
-    if not (data := parsed.get(item)):
+def check_mysql_galeradonor(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
+    if not (data := section.get(item)):
         return
     wsrep_sst_donor = data.get("wsrep_sst_donor")
     if wsrep_sst_donor is None:
         return
 
-    state = 0
-    infotext = "WSREP SST donor: %s" % wsrep_sst_donor
+    state = State.OK
+    infotext = f"WSREP SST donor: {wsrep_sst_donor}"
 
     p_wsrep_sst_donor = params["wsrep_sst_donor"]
     if wsrep_sst_donor != p_wsrep_sst_donor:
-        state = 1
-        infotext += " (at discovery: %s)" % p_wsrep_sst_donor
+        state = State.WARN
+        infotext += f" (at discovery: {p_wsrep_sst_donor})"
 
-    yield state, infotext
+    yield Result(state=state, summary=infotext)
 
 
-check_info["mysql.galeradonor"] = LegacyCheckDefinition(
+check_plugin_mysql_galeradonor = CheckPlugin(
     name="mysql_galeradonor",
     service_name="MySQL Galera Donor %s",
     sections=["mysql"],
@@ -409,6 +370,7 @@ check_info["mysql.galeradonor"] = LegacyCheckDefinition(
     check_function=check_mysql_galeradonor,
     check_default_parameters={},
 )
+
 
 # .
 #   .--Galera Startup------------------------------------------------------.
@@ -418,35 +380,36 @@ check_info["mysql.galeradonor"] = LegacyCheckDefinition(
 #   || |_| | (_| | |  __/ | | (_| |  ___) | || (_| | |  | |_| |_| | |_) |  |
 #   | \____|\__,_|_|\___|_|  \__,_| |____/ \__\__,_|_|   \__|\__,_| .__/   |
 #   |                                                             |_|      |
-#   +----------------------------------------------------------------------+
+#   '----------------------------------------------------------------------'
 
 
-def discover_mysql_galerastartup(parsed):
-    for instance, data in parsed.items():
+def discover_mysql_galerastartup(section: Section) -> DiscoveryResult:
+    for instance, data in section.items():
         if _has_wsrep_provider(data) and "wsrep_cluster_address" in data:
-            yield instance, {}
+            yield Service(item=instance)
 
 
-def check_mysql_galerastartup(item, _no_params, parsed):
-    if not (data := parsed.get(item)):
+def check_mysql_galerastartup(item: str, section: Section) -> CheckResult:
+    if not (data := section.get(item)):
         return
     wsrep_cluster_address = data.get("wsrep_cluster_address")
     if wsrep_cluster_address is None:
         return
 
     if wsrep_cluster_address == "gcomm://":
-        yield 2, "WSREP cluster address is empty"
+        yield Result(state=State.CRIT, summary="WSREP cluster address is empty")
     else:
-        yield 0, "WSREP cluster address: %s" % wsrep_cluster_address
+        yield Result(state=State.OK, summary=f"WSREP cluster address: {wsrep_cluster_address}")
 
 
-check_info["mysql.galerastartup"] = LegacyCheckDefinition(
+check_plugin_mysql_galerastartup = CheckPlugin(
     name="mysql_galerastartup",
     service_name="MySQL Galera Startup %s",
     sections=["mysql"],
     discovery_function=discover_mysql_galerastartup,
     check_function=check_mysql_galerastartup,
 )
+
 
 # .
 #   .--Galera Cluster Size-------------------------------------------------.
@@ -456,40 +419,34 @@ check_info["mysql.galerastartup"] = LegacyCheckDefinition(
 #   |   | |_| | (_| | |  __/ | | (_| | | |___| | |_| \__ \ ||  __/ |       |
 #   |    \____|\__,_|_|\___|_|  \__,_|  \____|_|\__,_|___/\__\___|_|       |
 #   |                                                                      |
-#   |                           ____  _                                    |
-#   |                          / ___|(_)_______                            |
-#   |                          \___ \| |_  / _ \                           |
-#   |                           ___) | |/ /  __/                           |
-#   |                          |____/|_/___\___|                           |
-#   |                                                                      |
-#   +----------------------------------------------------------------------+
+#   '----------------------------------------------------------------------'
 
 
-def discover_mysql_galerasize(parsed):
-    for instance, data in parsed.items():
+def discover_mysql_galerasize(section: Section) -> DiscoveryResult:
+    for instance, data in section.items():
         if _has_wsrep_provider(data) and "wsrep_cluster_size" in data:
-            yield instance, {"invsize": data["wsrep_cluster_size"]}
+            yield Service(item=instance, parameters={"invsize": data["wsrep_cluster_size"]})
 
 
-def check_mysql_galerasize(item, params, parsed):
-    if not (data := parsed.get(item)):
+def check_mysql_galerasize(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
+    if not (data := section.get(item)):
         return
     wsrep_cluster_size = data.get("wsrep_cluster_size")
     if wsrep_cluster_size is None:
         return
 
-    state = 0
-    infotext = "WSREP cluster size: %s" % wsrep_cluster_size
+    state = State.OK
+    infotext = f"WSREP cluster size: {wsrep_cluster_size}"
 
     p_wsrep_cluster_size = params["invsize"]
     if wsrep_cluster_size != p_wsrep_cluster_size:
-        state = 2
-        infotext += " (at discovery: %s)" % p_wsrep_cluster_size
+        state = State.CRIT
+        infotext += f" (at discovery: {p_wsrep_cluster_size})"
 
-    yield state, infotext
+    yield Result(state=state, summary=infotext)
 
 
-check_info["mysql.galerasize"] = LegacyCheckDefinition(
+check_plugin_mysql_galerasize = CheckPlugin(
     name="mysql_galerasize",
     service_name="MySQL Galera Size %s",
     sections=["mysql"],
@@ -497,6 +454,7 @@ check_info["mysql.galerasize"] = LegacyCheckDefinition(
     check_function=check_mysql_galerasize,
     check_default_parameters={},
 )
+
 
 # .
 #   .--Galera Status-------------------------------------------------------.
@@ -506,30 +464,27 @@ check_info["mysql.galerasize"] = LegacyCheckDefinition(
 #   |    | |_| | (_| | |  __/ | | (_| |  ___) | || (_| | |_| |_| \__ \     |
 #   |     \____|\__,_|_|\___|_|  \__,_| |____/ \__\__,_|\__|\__,_|___/     |
 #   |                                                                      |
-#   +----------------------------------------------------------------------+
+#   '----------------------------------------------------------------------'
 
 
-def discover_mysql_galerastatus(parsed):
-    for instance, data in parsed.items():
+def discover_mysql_galerastatus(section: Section) -> DiscoveryResult:
+    for instance, data in section.items():
         if _has_wsrep_provider(data) and "wsrep_cluster_status" in data:
-            yield instance, {}
+            yield Service(item=instance)
 
 
-def check_mysql_galerastatus(item, _no_params, parsed):
-    if not (data := parsed.get(item)):
+def check_mysql_galerastatus(item: str, section: Section) -> CheckResult:
+    if not (data := section.get(item)):
         return
     wsrep_cluster_status = data.get("wsrep_cluster_status")
     if wsrep_cluster_status is None:
         return
 
-    if wsrep_cluster_status == "Primary":
-        state = 0
-    else:
-        state = 2
-    yield state, "WSREP cluster status: %s" % wsrep_cluster_status
+    state = State.OK if wsrep_cluster_status == "Primary" else State.CRIT
+    yield Result(state=state, summary=f"WSREP cluster status: {wsrep_cluster_status}")
 
 
-check_info["mysql.galerastatus"] = LegacyCheckDefinition(
+check_plugin_mysql_galerastatus = CheckPlugin(
     name="mysql_galerastatus",
     service_name="MySQL Galera Status %s",
     sections=["mysql"],

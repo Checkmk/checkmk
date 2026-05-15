@@ -7,7 +7,7 @@ import math
 import time
 from collections.abc import MutableMapping
 from itertools import islice
-from typing import Literal, NamedTuple, TypedDict
+from typing import Literal, NamedTuple, NotRequired, TypedDict
 
 from cmk.agent_based.v1 import check_levels as check_levels_v1
 from cmk.agent_based.v2 import (
@@ -130,9 +130,14 @@ VSResultPercent = (
 )
 
 
+class PodPhaseCountLevels(TypedDict, total=False):
+    pending: NotRequired[tuple[int, int]]
+
+
 class Params(TypedDict):
     pending: VSResultAge
     free: VSResultPercent
+    pod_phase_count_levels: NotRequired[PodPhaseCountLevels]
 
 
 _DEFAULT_PARAMS = Params(pending="no_levels", free=("levels_perc", (10.0, 5.0)))
@@ -153,6 +158,8 @@ def check_kube_pods(
         pod_name: old_resource_store.get(pod_name, now) for pod_name in section.pending
     }
 
+    phase_count_levels = params.get("pod_phase_count_levels", {})
+
     for resource in _POD_RESOURCES_FIELDS:
         pod_names = getattr(section, resource)
         pod_count = len(pod_names)
@@ -163,12 +170,14 @@ def check_kube_pods(
                 summary=summary,
                 details=f"{summary}{_view_pod_list(pod_names)}",
             )
-        elif resource == "pending" and params["pending"] != "no_levels":
-            yield _check_phase_duration_pods(
+        elif resource == "pending":
+            yield _check_pending(
                 summary,
+                pod_count,
                 now,
                 value_store["pending"],
-                Levels(*params["pending"][1]),
+                params["pending"],
+                phase_count_levels.get("pending"),
             )
         else:
             yield Result(
@@ -178,6 +187,43 @@ def check_kube_pods(
 
         if resource != "unknown":
             yield Metric(name=f"kube_pod_{resource}", value=pod_count)
+
+
+def _check_pending(
+    summary: str,
+    pod_count: int,
+    now: float,
+    resource_store: PodPhaseTimes,
+    duration_param: VSResultAge,
+    count_levels: tuple[int, int] | None,
+) -> Result:
+    count_state = State.OK
+    if count_levels is not None:
+        count_result = next(
+            iter(
+                check_levels_v1(
+                    value=pod_count,
+                    levels_upper=count_levels,
+                    label="Pending",
+                    render_func=lambda x: str(int(x)),
+                    metric_name=None,
+                )
+            )
+        )
+        count_state = count_result.state
+        if count_state is not State.OK:
+            summary = count_result.summary
+
+    if duration_param == "no_levels":
+        return Result(state=count_state, summary=summary)
+
+    duration_result = _check_phase_duration_pods(
+        summary, now, resource_store, Levels(*duration_param[1])
+    )
+    return Result(
+        state=State.worst(count_state, duration_result.state),
+        summary=duration_result.summary,
+    )
 
 
 def check_free_pods(

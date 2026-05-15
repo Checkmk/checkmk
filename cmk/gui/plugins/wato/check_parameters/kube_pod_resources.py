@@ -50,6 +50,24 @@ def _parameter_valuespec_kube_pod_resources(help_text: str) -> Dictionary:
                     default_value="levels_perc",
                 ),
             ),
+            (
+                "pod_phase_count_levels",
+                Dictionary(
+                    title=_("Define levels for pod count per phase"),
+                    elements=[
+                        (
+                            "pending",
+                            Tuple(
+                                title=_("Upper levels for pending pod count"),
+                                elements=[
+                                    Integer(title=_("Warning at"), default_value=5),
+                                    Integer(title=_("Critical at"), default_value=10),
+                                ],
+                            ),
+                        ),
+                    ],
+                ),
+            ),
         ],
         help=help_text,
     )

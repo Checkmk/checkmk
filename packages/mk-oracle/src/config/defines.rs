@@ -50,6 +50,7 @@ pub mod keys {
     pub const CUSTOM_METRICS: &str = "custom_metrics";
     pub const SQL: &str = "sql";
     pub const CACHE_AGE: &str = "cache_age";
+    pub const CUSTOM_METRICS_CACHE_AGE: &str = "custom_metrics_cache_age";
     pub const IS_ASYNC: &str = "is_async";
     pub const DISABLED: &str = "disabled";
     pub const SEP: &str = "sep";
@@ -107,6 +108,7 @@ pub mod defaults {
     pub const CONNECTION_PORT: u16 = 1521;
     pub const CONNECTION_TIMEOUT: u64 = 5;
     pub const SECTIONS_CACHE_AGE: u32 = 600;
+    pub const CUSTOM_METRICS_CACHE_AGE: u32 = 600;
     pub const DISCOVERY_DETECT: bool = true;
 
     pub const TRUST_SERVER_CERTIFICATE: bool = true;

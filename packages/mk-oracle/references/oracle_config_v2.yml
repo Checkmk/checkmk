@@ -63,6 +63,7 @@ oracle:
     - tablespaces:
       is_async: yes
     cache_age: 600 # optional, default: 600
+    custom_metrics_cache_age: 600 # optional, default: 600
     piggyback_host: "mypiggybackhost" # optional
     discovery: # optional, defines instances to be monitored
       detect: yes # optional

@@ -552,6 +552,7 @@ oracle:
       - performance:
       - sessions:
     cache_age: 600
+    custom_metrics_cache_age: 600
     piggyback_host: 'mypiggybackhost'
 ```
 

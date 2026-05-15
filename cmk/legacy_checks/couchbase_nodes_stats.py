@@ -3,55 +3,51 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 
+import time
+from collections.abc import Mapping
+from typing import Any, Literal
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.legacy_includes.cpu_util import check_cpu_util
-from cmk.legacy_includes.mem import check_memory_element, MEMORY_DEFAULT_LEVELS
-from cmk.plugins.couchbase.lib import parse_couchbase_lines
-
-check_info = {}
-
-
-def discover_couchbase_nodes_stats(section):
-    yield from ((item, {}) for item in section)
-
-
-check_info["couchbase_nodes_stats"] = LegacyCheckDefinition(
-    name="couchbase_nodes_stats",
-    parse_function=parse_couchbase_lines,
-    discovery_function=discover_couchbase_nodes_stats,
+from cmk.agent_based.v2 import (
+    AgentSection,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    get_value_store,
+    Service,
 )
+from cmk.plugins.couchbase.lib import parse_couchbase_lines, Section
+from cmk.plugins.lib.cpu_util import check_cpu_util
+from cmk.plugins.lib.memory import check_element
+
+_MEMORY_DEFAULT_LEVELS: Mapping[str, Any] = {"levels": (150.0, 200.0)}
 
 
-def check_couchbase_nodes_cpu_util(item, params, parsed):
-    if not (data := parsed.get(item)):
+def discover_couchbase_nodes_stats(section: Section) -> DiscoveryResult:
+    yield from (Service(item=item) for item in section)
+
+
+def check_couchbase_nodes_cpu_util(
+    item: str, params: Mapping[str, Any], section: Section
+) -> CheckResult:
+    if not (data := section.get(item)):
         return
-
     try:
-        yield from check_cpu_util(float(data["cpu_utilization_rate"]), params)
+        util = float(data["cpu_utilization_rate"])
     except (ValueError, KeyError):
         return
+    yield from check_cpu_util(
+        util=util,
+        params=params,
+        value_store=get_value_store(),
+        this_time=time.time(),
+    )
 
 
-def discover_couchbase_nodes_stats_cpu_util(section):
-    yield from ((item, {}) for item in section)
-
-
-check_info["couchbase_nodes_stats.cpu_util"] = LegacyCheckDefinition(
-    name="couchbase_nodes_stats_cpu_util",
-    service_name="Couchbase %s CPU utilization",
-    sections=["couchbase_nodes_stats"],
-    discovery_function=discover_couchbase_nodes_stats_cpu_util,
-    check_function=check_couchbase_nodes_cpu_util,
-    check_ruleset_name="cpu_utilization_multiitem",
-)
-
-
-def check_couchbase_nodes_mem(item, params, parsed):
-    if not (data := parsed.get(item)):
+def check_couchbase_nodes_mem(
+    item: str, params: Mapping[str, Any], section: Section
+) -> CheckResult:
+    if not (data := section.get(item)):
         return
     try:
         mem_total = data["mem_total"]
@@ -62,16 +58,19 @@ def check_couchbase_nodes_mem(item, params, parsed):
         return
 
     warn_ram, crit_ram = params.get("levels", (None, None))
+    mode: Literal["abs_used", "perc_used"] = (
+        "abs_used" if isinstance(warn_ram, int) else "perc_used"
+    )
 
-    yield check_memory_element(
+    yield from check_element(
         "RAM",
         mem_total - mem_free,
         mem_total,
-        ("abs_used" if isinstance(warn_ram, int) else "perc_used", (warn_ram, crit_ram)),
+        (mode, (warn_ram, crit_ram)),
         metric_name="mem_used",
     )
 
-    yield check_memory_element(
+    yield from check_element(
         "Swap",
         swap_used,
         swap_total,
@@ -80,16 +79,29 @@ def check_couchbase_nodes_mem(item, params, parsed):
     )
 
 
-def discover_couchbase_nodes_stats_mem(section):
-    yield from ((item, {}) for item in section)
+agent_section_couchbase_nodes_stats = AgentSection(
+    name="couchbase_nodes_stats",
+    parse_function=parse_couchbase_lines,
+)
 
 
-check_info["couchbase_nodes_stats.mem"] = LegacyCheckDefinition(
+check_plugin_couchbase_nodes_stats_cpu_util = CheckPlugin(
+    name="couchbase_nodes_stats_cpu_util",
+    service_name="Couchbase %s CPU utilization",
+    sections=["couchbase_nodes_stats"],
+    discovery_function=discover_couchbase_nodes_stats,
+    check_function=check_couchbase_nodes_cpu_util,
+    check_ruleset_name="cpu_utilization_multiitem",
+    check_default_parameters={},
+)
+
+
+check_plugin_couchbase_nodes_stats_mem = CheckPlugin(
     name="couchbase_nodes_stats_mem",
     service_name="Couchbase %s Memory",
     sections=["couchbase_nodes_stats"],
-    discovery_function=discover_couchbase_nodes_stats_mem,
+    discovery_function=discover_couchbase_nodes_stats,
     check_function=check_couchbase_nodes_mem,
     check_ruleset_name="memory_multiitem",
-    check_default_parameters=MEMORY_DEFAULT_LEVELS,
+    check_default_parameters=_MEMORY_DEFAULT_LEVELS,
 )

@@ -474,6 +474,8 @@ export async function omdServiceCommand(
     omdAction = `omd enable ${siteName}`
   } else if (action === 'disable') {
     omdAction = `omd disable ${siteName}`
+  } else if (action === 'rm') {
+    omdAction = `omd -f rm ${siteName}`
   } else if (serviceName) {
     omdAction = `omd ${action} ${siteName} ${serviceName}`
   } else {

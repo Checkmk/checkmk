@@ -8,20 +8,22 @@ import re
 from collections.abc import Callable, Mapping
 from typing import TypedDict
 
-from cmk.agent_based.legacy.v0_unstable import (
-    LegacyCheckDefinition,
-    LegacyCheckResult,
-    LegacyDiscoveryResult,
+from cmk.agent_based.v2 import (
+    AgentSection,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Result,
+    Service,
+    State,
+    StringTable,
 )
-from cmk.agent_based.v2 import StringTable
 from cmk.plugins.sap_hana import lib as sap_hana
 
-check_info = {}
-
-_SAP_HANA_CONNECT_STATE_MAP: Mapping[str, tuple[int, Callable[[str], bool]]] = {
-    "Worker: OK": (0, lambda inp: inp == "0"),
-    "Standby: OK": (0, lambda inp: inp == "1"),
-    "No connect": (2, lambda inp: inp not in ("0", "1")),
+_SAP_HANA_CONNECT_STATE_MAP: Mapping[str, tuple[State, Callable[[str], bool]]] = {
+    "Worker: OK": (State.OK, lambda inp: inp == "0"),
+    "Standby: OK": (State.OK, lambda inp: inp == "1"),
+    "No connect": (State.CRIT, lambda inp: inp not in ("0", "1")),
 }
 
 
@@ -29,7 +31,7 @@ class Instance(TypedDict):
     server_node: str
     driver_version: str
     timestamp: str
-    cmk_state: int
+    cmk_state: State
     message: str
 
 
@@ -45,7 +47,7 @@ def parse_sap_hana_connect(string_table: StringTable) -> Section:
                 "server_node": "not found",
                 "driver_version": "not found",
                 "timestamp": "not found",
-                "cmk_state": 3,
+                "cmk_state": State.UNKNOWN,
                 "message": " ".join(lines[0]),
             },
         )
@@ -70,26 +72,30 @@ def parse_sap_hana_connect(string_table: StringTable) -> Section:
     return parsed
 
 
-def check_sap_hana_connect(item: str, _no_params: object, parsed: Section) -> LegacyCheckResult:
-    if not (data := parsed.get(item)):
+def check_sap_hana_connect(item: str, section: Section) -> CheckResult:
+    if not (data := section.get(item)):
         return
-    state = data["cmk_state"]
-    message = "{}\nODBC Driver Version: {}, Server Node: {}, Timestamp: {}".format(
-        data["message"],
-        data["driver_version"],
-        data["server_node"],
-        data["timestamp"],
+    details = (
+        f"ODBC Driver Version: {data['driver_version']}, "
+        f"Server Node: {data['server_node']}, "
+        f"Timestamp: {data['timestamp']}"
     )
-    yield state, message
+    yield Result(state=data["cmk_state"], summary=data["message"], details=details)
 
 
-def discover_sap_hana_connect(section: Section) -> LegacyDiscoveryResult:
-    yield from ((item, {}) for item in section)
+def discover_sap_hana_connect(section: Section) -> DiscoveryResult:
+    for item in section:
+        yield Service(item=item)
 
 
-check_info["sap_hana_connect"] = LegacyCheckDefinition(
+agent_section_sap_hana_connect = AgentSection(
     name="sap_hana_connect",
     parse_function=parse_sap_hana_connect,
+)
+
+
+check_plugin_sap_hana_connect = CheckPlugin(
+    name="sap_hana_connect",
     service_name="SAP HANA CONNECT %s",
     discovery_function=discover_sap_hana_connect,
     check_function=check_sap_hana_connect,

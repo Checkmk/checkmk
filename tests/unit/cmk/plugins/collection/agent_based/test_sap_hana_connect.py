@@ -6,7 +6,7 @@
 
 import pytest
 
-from cmk.agent_based.v2 import StringTable
+from cmk.agent_based.v2 import State, StringTable
 from cmk.legacy_checks.sap_hana_connect import parse_sap_hana_connect
 
 INFO_0 = [
@@ -40,7 +40,7 @@ INFO_1 = [
 def test_sap_hana_connect_missing_serverdb(info: StringTable) -> None:
     assert parse_sap_hana_connect(info) == {
         "YYY 11": {
-            "cmk_state": 0,
+            "cmk_state": State.OK,
             "driver_version": "02.12.0025 (2022-05-06).",
             "message": "Worker: OK",
             "server_node": "lllllllllllll:30003",

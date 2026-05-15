@@ -5,12 +5,11 @@
 
 # mypy: disable-error-code="misc"
 
-from collections.abc import Mapping, Sequence
-from typing import Any
+from collections.abc import Sequence
 
 import pytest
 
-from cmk.agent_based.v2 import StringTable
+from cmk.agent_based.v2 import Result, Service, State, StringTable
 from cmk.legacy_checks.sap_hana_connect import (
     check_sap_hana_connect,
     discover_sap_hana_connect,
@@ -58,25 +57,32 @@ from cmk.legacy_checks.sap_hana_connect import (
                 ["[[H44 44]]"],
                 ["Wrong Password", "Error connecting to ODBC Driver"],
             ],
-            [("H00 00", {}), ("H11 11", {}), ("H22 22", {}), ("H33 33", {}), ("H44 44", {})],
+            [
+                Service(item="H00 00"),
+                Service(item="H11 11"),
+                Service(item="H22 22"),
+                Service(item="H33 33"),
+                Service(item="H44 44"),
+            ],
         ),
     ],
 )
 def test_discover_sap_hana_connect(
-    string_table: StringTable, expected_discoveries: Sequence[tuple[str, Mapping[str, Any]]]
+    string_table: StringTable, expected_discoveries: Sequence[Service]
 ) -> None:
     """Test discovery function for sap_hana_connect check."""
     parsed = parse_sap_hana_connect(string_table)
     result = list(discover_sap_hana_connect(parsed))
-    assert sorted(result) == sorted(expected_discoveries)
+    assert sorted(result, key=lambda s: s.item or "") == sorted(
+        expected_discoveries, key=lambda s: s.item or ""
+    )
 
 
 @pytest.mark.parametrize(
-    "item, params, string_table, expected_results",
+    "item, string_table, expected_results",
     [
         (
             "H00 00",
-            {},
             [
                 ["[[H00 00]]"],
                 ["retcode: 1"],
@@ -114,15 +120,15 @@ def test_discover_sap_hana_connect(
                 ["Wrong Password", "Error connecting to ODBC Driver"],
             ],
             [
-                (
-                    0,
-                    "Standby: OK\nODBC Driver Version: not found, Server Node: not found, Timestamp: not found",
+                Result(
+                    state=State.OK,
+                    summary="Standby: OK",
+                    details="ODBC Driver Version: not found, Server Node: not found, Timestamp: not found",
                 )
             ],
         ),
         (
             "H11 11",
-            {},
             [
                 ["[[H00 00]]"],
                 ["retcode: 1"],
@@ -160,15 +166,15 @@ def test_discover_sap_hana_connect(
                 ["Wrong Password", "Error connecting to ODBC Driver"],
             ],
             [
-                (
-                    0,
-                    "Worker: OK\nODBC Driver Version: SAP HDB 1.00 (2013-10-15)., Server Node: Hana-host:3inst13, Timestamp: 2013-11-12 15:44:55",
+                Result(
+                    state=State.OK,
+                    summary="Worker: OK",
+                    details="ODBC Driver Version: SAP HDB 1.00 (2013-10-15)., Server Node: Hana-host:3inst13, Timestamp: 2013-11-12 15:44:55",
                 )
             ],
         ),
         (
             "H22 22",
-            {},
             [
                 ["[[H00 00]]"],
                 ["retcode: 1"],
@@ -206,15 +212,15 @@ def test_discover_sap_hana_connect(
                 ["Wrong Password", "Error connecting to ODBC Driver"],
             ],
             [
-                (
-                    0,
-                    "Standby: OK\nODBC Driver Version: SAP HDB 1.00 (2013-10-15)., Server Node: Hana-host:3inst13, Timestamp: 2013-11-12 15:44:55",
+                Result(
+                    state=State.OK,
+                    summary="Standby: OK",
+                    details="ODBC Driver Version: SAP HDB 1.00 (2013-10-15)., Server Node: Hana-host:3inst13, Timestamp: 2013-11-12 15:44:55",
                 )
             ],
         ),
         (
             "H33 33",
-            {},
             [
                 ["[[H00 00]]"],
                 ["retcode: 1"],
@@ -252,15 +258,15 @@ def test_discover_sap_hana_connect(
                 ["Wrong Password", "Error connecting to ODBC Driver"],
             ],
             [
-                (
-                    2,
-                    "No connect\nODBC Driver Version: SAP HDB 1.00 (2013-10-15)., Server Node: Hana-host:3inst13, Timestamp: 2013-11-12 15:44:55",
+                Result(
+                    state=State.CRIT,
+                    summary="No connect",
+                    details="ODBC Driver Version: SAP HDB 1.00 (2013-10-15)., Server Node: Hana-host:3inst13, Timestamp: 2013-11-12 15:44:55",
                 )
             ],
         ),
         (
             "H44 44",
-            {},
             [
                 ["[[H00 00]]"],
                 ["retcode: 1"],
@@ -298,18 +304,19 @@ def test_discover_sap_hana_connect(
                 ["Wrong Password", "Error connecting to ODBC Driver"],
             ],
             [
-                (
-                    3,
-                    "Wrong Password Error connecting to ODBC Driver\nODBC Driver Version: not found, Server Node: not found, Timestamp: not found",
+                Result(
+                    state=State.UNKNOWN,
+                    summary="Wrong Password Error connecting to ODBC Driver",
+                    details="ODBC Driver Version: not found, Server Node: not found, Timestamp: not found",
                 )
             ],
         ),
     ],
 )
 def test_check_sap_hana_connect(
-    item: str, params: Mapping[str, Any], string_table: StringTable, expected_results: Sequence[Any]
+    item: str, string_table: StringTable, expected_results: Sequence[Result]
 ) -> None:
     """Test check function for sap_hana_connect check."""
     parsed = parse_sap_hana_connect(string_table)
-    result = list(check_sap_hana_connect(item, params, parsed))
+    result = list(check_sap_hana_connect(item, parsed))
     assert result == expected_results

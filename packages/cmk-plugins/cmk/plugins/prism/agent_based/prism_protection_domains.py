@@ -95,13 +95,13 @@ def check_prism_protection_domains(
         exclusivesnapshot = int(exclusive_raw) if exclusive_raw is not None else 0
         yield Metric("pd_exclusivesnapshot", exclusivesnapshot)
 
-        bandwidthtx_raw = stats.get("replication_received_bandwidth_kBps")
-        if bandwidthtx_raw is not None:
-            yield Metric("pd_bandwidthtx", float(bandwidthtx_raw))
+        # API reports in kBps; emit B/s so the graph's UNIT_BYTES_PER_SECOND
+        # auto-scales sanely (kB/s, MB/s, ...).
+        if (bandwidthrx_raw := stats.get("replication_received_bandwidth_kBps")) is not None:
+            yield Metric("pd_bandwidth_rx", float(bandwidthrx_raw) * 1000)
 
-        bandwidthrx_raw = stats.get("replication_transmitted_bandwidth_kBps")
-        if bandwidthrx_raw is not None:
-            yield Metric("pd_bandwidthrx", float(bandwidthrx_raw))
+        if (bandwidthtx_raw := stats.get("replication_transmitted_bandwidth_kBps")) is not None:
+            yield Metric("pd_bandwidth_tx", float(bandwidthtx_raw) * 1000)
 
         summary = (
             f"Type: Async DR, "

@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
-
 # <<<postgres_conn_time>>>
 # 0.063
 
@@ -14,16 +12,26 @@
 # 0.063
 
 
-# mypy: disable-error-code="var-annotated"
+from collections.abc import Mapping
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import IgnoreResultsError
+from cmk.agent_based.v2 import (
+    AgentSection,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    IgnoreResultsError,
+    Metric,
+    Result,
+    Service,
+    State,
+    StringTable,
+)
 
-check_info = {}
+Section = Mapping[str, float]
 
 
-def parse_postgres_conn_time(string_table):
-    parsed = {}
+def parse_postgres_conn_time(string_table: StringTable) -> Section:
+    parsed: dict[str, float] = {}
     instance_name = ""
     for line in string_table:
         if line[0].startswith("[[[") and line[0].endswith("]]]"):
@@ -33,15 +41,17 @@ def parse_postgres_conn_time(string_table):
     return parsed
 
 
-def discover_postgres_conn_time(parsed):
-    for instance_name in parsed:
-        yield instance_name, None
+def discover_postgres_conn_time(section: Section) -> DiscoveryResult:
+    for instance_name in section:
+        yield Service(item=instance_name)
 
 
-def check_postgres_conn_time(item, _no_params, parsed):
-    if item in parsed:
-        conn_time = parsed[item]
-        return 0, "%s seconds" % conn_time, [("connection_time", conn_time)]
+def check_postgres_conn_time(item: str, section: Section) -> CheckResult:
+    if item in section:
+        conn_time = section[item]
+        yield Result(state=State.OK, summary=f"{conn_time} seconds")
+        yield Metric("connection_time", conn_time)
+        return
 
     # In case of missing information we assume that the login into
     # the database has failed and we simply skip this check. It won't
@@ -49,9 +59,14 @@ def check_postgres_conn_time(item, _no_params, parsed):
     raise IgnoreResultsError("Login into database failed")
 
 
-check_info["postgres_conn_time"] = LegacyCheckDefinition(
+agent_section_postgres_conn_time = AgentSection(
     name="postgres_conn_time",
     parse_function=parse_postgres_conn_time,
+)
+
+
+check_plugin_postgres_conn_time = CheckPlugin(
+    name="postgres_conn_time",
     service_name="PostgreSQL Connection Time %s",
     discovery_function=discover_postgres_conn_time,
     check_function=check_postgres_conn_time,

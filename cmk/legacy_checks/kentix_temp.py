@@ -3,18 +3,21 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="type-arg"
-
-from collections.abc import Iterable, Mapping
+from collections.abc import Mapping, Sequence
 from typing import Final, NamedTuple
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import SNMPTree, StringTable
-from cmk.legacy_includes.temperature import check_temperature
+from cmk.agent_based.v2 import (
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    get_value_store,
+    Service,
+    SNMPSection,
+    SNMPTree,
+    StringTable,
+)
 from cmk.plugins.kentix.lib import DETECT_KENTIX
-from cmk.plugins.lib.temperature import TempParamType
-
-check_info = {}
+from cmk.plugins.lib.temperature import check_temperature, TempParamType
 
 _TABLES: Final = {
     "2": "LAN",
@@ -31,7 +34,7 @@ class Sensor(NamedTuple):
 Section = Mapping[str, Sensor]
 
 
-def parse_kentix_temp(string_table: list[StringTable]) -> Section:
+def parse_kentix_temp(string_table: Sequence[StringTable]) -> Section:
     return {
         item: Sensor(
             reading=float(value) / 10,
@@ -43,26 +46,25 @@ def parse_kentix_temp(string_table: list[StringTable]) -> Section:
     }
 
 
-def discover_kentix_temp(section: Section) -> Iterable[tuple[str, dict]]:
-    yield from ((item, {}) for item in section)
+def discover_kentix_temp(section: Section) -> DiscoveryResult:
+    yield from (Service(item=item) for item in section)
 
 
-def check_kentix_temp(
-    item: str, params: TempParamType, section: Section
-) -> Iterable[tuple[int, str, list]]:
+def check_kentix_temp(item: str, params: TempParamType, section: Section) -> CheckResult:
     if (sensor := section.get(item)) is None:
         return
 
-    yield check_temperature(
-        sensor.reading,
-        params,
-        "kentix_temp_%s" % item,
+    yield from check_temperature(
+        reading=sensor.reading,
+        params=params,
+        unique_name=f"kentix_temp_{item}",
+        value_store=get_value_store(),
         dev_levels=sensor.dev_levels,
         dev_levels_lower=sensor.dev_levels_lower,
     )
 
 
-check_info["kentix_temp"] = LegacyCheckDefinition(
+snmp_section_kentix_temp = SNMPSection(
     name="kentix_temp",
     detect=DETECT_KENTIX,
     fetch=[
@@ -76,8 +78,14 @@ check_info["kentix_temp"] = LegacyCheckDefinition(
         ),
     ],
     parse_function=parse_kentix_temp,
+)
+
+
+check_plugin_kentix_temp = CheckPlugin(
+    name="kentix_temp",
     service_name="Temperature %s",
     discovery_function=discover_kentix_temp,
     check_function=check_kentix_temp,
     check_ruleset_name="temperature",
+    check_default_parameters={},
 )

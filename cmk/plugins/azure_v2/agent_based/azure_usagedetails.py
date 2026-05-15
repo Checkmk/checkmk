@@ -24,11 +24,14 @@ from cmk.plugins.azure_v2.agent_based.lib import parse_resources
 Section = Mapping[str, Any]
 
 
+_UNATTRIBUTED = "Unattributed"
+
+
 def parse_azure_usagedetails(string_table: StringTable) -> Section:
     parsed: dict[str, Any] = {}
     for detail in parse_resources(string_table).values():
         props = detail.properties
-        service_name = props["ResourceType"].split("/")[0]
+        service_name = (props.get("ResourceType") or "").strip().split("/")[0] or _UNATTRIBUTED
         data = parsed.setdefault(
             service_name,
             {

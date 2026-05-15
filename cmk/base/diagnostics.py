@@ -92,6 +92,23 @@ from cmk.utils.log import console, section
 
 SUFFIX = ".tar.gz"
 
+
+def clickhouse_query(sql: str) -> list[str]:
+    return [
+        "clickhouse",
+        "client",
+        "--config",
+        "etc/clickhouse-server/config.xml",
+        "--user",
+        "checkmk_read_write",
+        "--secure",
+        "--format",
+        "JSONEachRow",
+        "--query",
+        sql,
+    ]
+
+
 COMPONENT_COMMANDS = {
     "df": ["df"],
     "df-i": ["df", "-i"],
@@ -104,17 +121,44 @@ COMPONENT_COMMANDS = {
     # irritating from a user POV. Basically the same holds for the other commands: Is e.g. "ss"
     # installed everywhere? Does "top" support the tons of options above? I somehow doubt that this
     # is universally the case.
-    "otel-licenses": [
-        "clickhouse",
-        "client",
-        "--config",
-        "etc/clickhouse-server/config.xml",
-        "--user",
-        "checkmk_read_write",
-        "--secure",
-        "--query",
-        "SELECT count FROM checkmk.licensing_active_series_count order by bucket_start desc limit 1;",
-    ],
+    "otel-licenses": clickhouse_query("""
+SELECT count
+FROM checkmk.licensing_active_series_count
+ORDER BY bucket_start DESC
+LIMIT 1;
+        """),
+}
+
+METRIC_BACKEND_COMMANDS = {
+    "metric-backend-schema": clickhouse_query("""
+SELECT *
+FROM system.tables
+WHERE database = 'checkmk';
+        """),
+    "metric-backend-revision": clickhouse_query("""
+SELECT *
+FROM checkmk._revision;
+        """),
+    "metric-backend-footprint": clickhouse_query("""
+SELECT table,
+       SUM(rows) AS rows,
+       SUM(bytes_on_disk) AS bytes_on_disk,
+       SUM(data_compressed_bytes) AS data_compressed_bytes,
+       SUM(data_uncompressed_bytes) AS data_uncompressed_bytes,
+       SUM(primary_key_size) AS primary_key_size,
+       SUM(marks_bytes) AS marks_bytes,
+       SUM(secondary_indices_compressed_bytes) AS secondary_indices_compressed_bytes,
+       SUM(secondary_indices_uncompressed_bytes) AS secondary_indices_uncompressed_bytes,
+       SUM(secondary_indices_marks_bytes) AS secondary_indices_marks_bytes,
+       MAX(modification_time) AS modification_time,
+       MAX(remove_time) AS remove_time,
+       any(engine) AS engine,
+       any(path) AS path
+FROM system.parts
+WHERE active
+  AND database = 'checkmk'
+GROUP BY table;
+        """),
 }
 
 COMPONENT_DIRECTORIES = {
@@ -418,6 +462,10 @@ def diagnostics_elements_for(
 
     for identifier, command in COMPONENT_COMMANDS.items():
         elements.append(CheckmkCommandDiagnosticsElementTextDump(identifier, command))
+
+    if parameters.get(OPT_COMP_METRIC_BACKEND):
+        for identifier, command in METRIC_BACKEND_COMMANDS.items():
+            elements.append(CheckmkCommandDiagnosticsElementTextDump(identifier, command))
 
     if parameters.get(OPT_LOCAL_FILES):
         elements.append(MKPFindTextDiagnosticsElement())

@@ -8,8 +8,6 @@ from ._unsorted import CheckmkFileInfo as CheckmkFileInfo
 from ._unsorted import CheckmkFileInfoByRelFilePathMap as CheckmkFileInfoByRelFilePathMap
 from ._unsorted import CheckmkFileSensitivity as CheckmkFileSensitivity
 from ._unsorted import CheckmkFilesMap as CheckmkFilesMap
-from ._unsorted import COMPONENT_COMMANDS as COMPONENT_COMMANDS
-from ._unsorted import COMPONENT_DIRECTORIES as COMPONENT_DIRECTORIES
 from ._unsorted import deserialize_cl_parameters as deserialize_cl_parameters
 from ._unsorted import deserialize_modes_parameters as deserialize_modes_parameters
 from ._unsorted import DiagnosticsCLParameters as DiagnosticsCLParameters

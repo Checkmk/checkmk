@@ -114,51 +114,6 @@ _FILES_OPTS = [
     OPT_CHECKMK_LOG_FILES,
 ]
 
-COMPONENT_COMMANDS = {
-    "df": ["df"],
-    "df-i": ["df", "-i"],
-    "ip-a": ["ip", "a"],
-    "ss-tulpen": ["ss", "-tulpen"],
-    "w": ["w"],
-    "top": ["top", "-b", "-n", "1", "-H", "-c", "-w", "512", "-o", "-PID", "-1"],
-    # TODO: The command below will result in user-visible errors when there is no ClickHouse (e.g.
-    # for the pro edition!) or ClickHouse is there, but not enabled. This is quite bad and
-    # irritating from a user POV. Basically the same holds for the other commands: Is e.g. "ss"
-    # installed everywhere? Does "top" support the tons of options above? I somehow doubt that this
-    # is universally the case.
-    "otel-licenses": [
-        "clickhouse",
-        "client",
-        "--config",
-        "etc/clickhouse-server/config.xml",
-        "--user",
-        "checkmk_read_write",
-        "--secure",
-        "--query",
-        "SELECT count FROM checkmk.licensing_active_series_count order by bucket_start desc limit 1;",
-    ],
-}
-
-COMPONENT_DIRECTORIES = {
-    OPT_APACHE_CONFIG: {
-        "abs_dirs": [
-            "/etc/apache2",
-            "/etc/httpd",
-            "/opt/omd/apache",
-        ],
-        "rel_dirs": [
-            "etc/apache",
-        ],
-    },
-    OPT_OMD_CONFIG: {
-        "abs_dirs": [],
-        "rel_dirs": [
-            "etc/omd",
-        ],
-    },
-}
-
-
 # +---------------------------------------------------------------------------------+
 # |                                                                                 |
 # |    __   _          __                  _       _ _          _   _               |

@@ -50,8 +50,6 @@ from cmk.diagnostics import (
     CheckmkFileEncryption,
     CheckmkFileInfoByRelFilePathMap,
     CheckmkFilesMap,
-    COMPONENT_COMMANDS,
-    COMPONENT_DIRECTORIES,
     deserialize_cl_parameters,
     deserialize_modes_parameters,
     DiagnosticsCLParameters,
@@ -65,6 +63,7 @@ from cmk.diagnostics import (
     FILE_MAP_LICENSING,
     FILE_MAP_LOG,
     FileMapConfig,
+    OPT_APACHE_CONFIG,
     OPT_BI_RUNTIME_DATA,
     OPT_CHECKMK_CONFIG_FILES,
     OPT_CHECKMK_CORE_FILES,
@@ -92,6 +91,50 @@ from cmk.utils.log import console, section
 
 
 SUFFIX = ".tar.gz"
+
+COMPONENT_COMMANDS = {
+    "df": ["df"],
+    "df-i": ["df", "-i"],
+    "ip-a": ["ip", "a"],
+    "ss-tulpen": ["ss", "-tulpen"],
+    "w": ["w"],
+    "top": ["top", "-b", "-n", "1", "-H", "-c", "-w", "512", "-o", "-PID", "-1"],
+    # TODO: The command below will result in user-visible errors when there is no ClickHouse (e.g.
+    # for the pro edition!) or ClickHouse is there, but not enabled. This is quite bad and
+    # irritating from a user POV. Basically the same holds for the other commands: Is e.g. "ss"
+    # installed everywhere? Does "top" support the tons of options above? I somehow doubt that this
+    # is universally the case.
+    "otel-licenses": [
+        "clickhouse",
+        "client",
+        "--config",
+        "etc/clickhouse-server/config.xml",
+        "--user",
+        "checkmk_read_write",
+        "--secure",
+        "--query",
+        "SELECT count FROM checkmk.licensing_active_series_count order by bucket_start desc limit 1;",
+    ],
+}
+
+COMPONENT_DIRECTORIES = {
+    OPT_APACHE_CONFIG: {
+        "abs_dirs": [
+            "/etc/apache2",
+            "/etc/httpd",
+            "/opt/omd/apache",
+        ],
+        "rel_dirs": [
+            "etc/apache",
+        ],
+    },
+    OPT_OMD_CONFIG: {
+        "abs_dirs": [],
+        "rel_dirs": [
+            "etc/omd",
+        ],
+    },
+}
 
 
 def _mode_create_diagnostics_dump(app: CheckmkBaseApp, options: DiagnosticsModesParameters) -> None:

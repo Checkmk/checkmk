@@ -8,7 +8,7 @@ from collections.abc import Mapping
 import pytest
 
 from cmk.agent_based.v2 import StringTable
-from cmk.legacy_checks.sap_hana_ess_migration import parse_sap_hana_ess_migration
+from cmk.plugins.sap_hana.agent_based.sap_hana_ess_migration import parse_sap_hana_ess_migration
 
 
 @pytest.mark.parametrize(

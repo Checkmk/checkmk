@@ -53,6 +53,7 @@ def _section_payload(
     readytostartcontainers: bool | None = None,
     resizepending: bool | None = False,
     resizeinprogress: bool | None = False,
+    allcontainersrestarting: bool | None = False,
     age_minutes: int = 0,
     disruptiontarget: PodCondition | None = None,
 ) -> dict[str, Any]:
@@ -78,6 +79,7 @@ def _section_payload(
         "ready": _payload(ready, age_minutes),
         "resizepending": _payload(resizepending, age_minutes),
         "resizeinprogress": _payload(resizeinprogress, age_minutes),
+        "allcontainersrestarting": _payload(allcontainersrestarting, age_minutes),
     }
     if disruptiontarget is not None:
         payload["disruptiontarget"] = disruptiontarget.model_dump()
@@ -107,6 +109,7 @@ def test_parse() -> None:
     assert section.ready == _expected_condition(True)
     assert section.resizepending == _expected_condition(False)
     assert section.resizeinprogress == _expected_condition(False)
+    assert section.allcontainersrestarting == _expected_condition(False)
 
 
 _T = True
@@ -122,16 +125,17 @@ class _ParseCase:
     ready: bool | None
     resizepending: bool | None
     resizeinprogress: bool | None
+    allcontainersrestarting: bool | None
 
 
 @pytest.mark.parametrize(
     "case",
     [
-        _ParseCase("all_ok", _T, _T, _T, _T, _F, _F),
-        _ParseCase("initialized_scheduled", _T, _T, _F, _F, _F, _F),
-        _ParseCase("unscheduled", None, _F, None, None, None, None),
-        _ParseCase("unscheduled_uninitialized", _F, _F, None, None, None, None),
-        _ParseCase("all_not_ok", _F, _F, _F, _F, _T, _T),
+        _ParseCase("all_ok", _T, _T, _T, _T, _F, _F, _F),
+        _ParseCase("initialized_scheduled", _T, _T, _F, _F, _F, _F, _F),
+        _ParseCase("unscheduled", None, _F, None, None, None, None, None),
+        _ParseCase("unscheduled_uninitialized", _F, _F, None, None, None, None, None),
+        _ParseCase("all_not_ok", _F, _F, _F, _F, _T, _T, _T),
     ],
     ids=lambda c: c.name,
 )
@@ -151,6 +155,7 @@ def test_parse_multi(case: _ParseCase) -> None:
             ready=case.ready,
             resizepending=case.resizepending,
             resizeinprogress=case.resizeinprogress,
+            allcontainersrestarting=case.allcontainersrestarting,
         )
     )
     assert section.initialized == _expected_condition(case.initialized)
@@ -159,6 +164,7 @@ def test_parse_multi(case: _ParseCase) -> None:
     assert section.ready == _expected_condition(case.ready)
     assert section.resizepending == _expected_condition(case.resizepending)
     assert section.resizeinprogress == _expected_condition(case.resizeinprogress)
+    assert section.allcontainersrestarting == _expected_condition(case.allcontainersrestarting)
 
 
 def test_parse_fails_when_all_conditions_empty() -> None:
@@ -188,6 +194,7 @@ _TEST_PARAMS: Mapping[str, VSResultAge] = {
     "ready": ("levels", (5 * MINUTE, 10 * MINUTE)),
     "resizepending": ("levels", (5 * MINUTE, 10 * MINUTE)),
     "resizeinprogress": ("levels", (5 * MINUTE, 10 * MINUTE)),
+    "allcontainersrestarting": ("levels", (5 * MINUTE, 10 * MINUTE)),
 }
 
 _ALL_NO_LEVELS: Mapping[str, VSResultAge] = {
@@ -259,6 +266,7 @@ def test_check_summaries_when_all_status_unexpected(age_minutes: int) -> None:
         hasnetwork=False,
         resizepending=True,
         resizeinprogress=True,
+        allcontainersrestarting=True,
         age_minutes=age_minutes,
     )
     results = list(kube_pod_conditions._check(TIMESTAMP, {}, section))
@@ -273,6 +281,7 @@ def test_check_summaries_when_all_status_unexpected(age_minutes: int) -> None:
             ("ready", False),
             ("resizepending", True),
             ("resizeinprogress", True),
+            ("allcontainersrestarting", True),
         ]
     ]
     assert [r.summary for r in results if isinstance(r, Result)] == expected
@@ -296,5 +305,6 @@ def test_check_disruption_target_condition() -> None:
         "READY: True",
         "RESIZEPENDING: False",
         "RESIZEINPROGRESS: False",
+        "ALLCONTAINERSRESTARTING: False",
         "DISRUPTIONTARGET: True (EvictionByEvictionAPI: EvictionAPI: evicting)",
     ]

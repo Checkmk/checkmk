@@ -4,9 +4,25 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.agent_based.v2 import Metric, Result
+import pytest
+
+from cmk.agent_based.v2 import IgnoreResultsError, Metric, Result
 from cmk.plugins.vsphere.agent_based import esx_vsphere_vm, esx_vsphere_vm_cpu
 from cmk.plugins.vsphere.lib import esx_vsphere
+
+_SECTION_NO_CPU = esx_vsphere.SectionESXVm(
+    mounted_devices=(),
+    snapshots=(),
+    status=None,
+    power_state=None,
+    memory=None,
+    cpu=None,
+    datastores=(),
+    heartbeat=None,
+    host=None,
+    name=None,
+    systime=None,
+)
 
 
 def test_parse_esx_vsphere_cpu() -> None:
@@ -66,3 +82,14 @@ def test_check_cpu_usage_metrics() -> None:
     check_result = list(esx_vsphere_vm_cpu.check_cpu(section))
     metrics = [r for r in check_result if isinstance(r, Metric)]
     assert [m.name for m in metrics] == ["demand"]
+
+
+def test_check_cpu_raises_when_cpu_missing() -> None:
+    # Lock in the "VM powered off" branch: cpu=None must raise
+    # IgnoreResultsError. The plugin has no configurable params, so the
+    # only state-relevant branch is this control-flow guard.
+    with pytest.raises(
+        IgnoreResultsError,
+        match=r"^No information about CPU usage\. VM is probably powered off\.$",
+    ):
+        list(esx_vsphere_vm_cpu.check_cpu(_SECTION_NO_CPU))

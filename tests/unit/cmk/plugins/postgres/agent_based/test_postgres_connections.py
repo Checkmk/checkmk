@@ -11,7 +11,7 @@ from typing import Any
 import pytest
 
 from cmk.agent_based.v2 import Metric, Result, Service, State, StringTable
-from cmk.legacy_checks.postgres_connections import (
+from cmk.plugins.postgres.agent_based.postgres_connections import (
     check_postgres_connections,
     discover_postgres_connections,
 )

@@ -13,7 +13,7 @@
 """Pattern 5: Standalone test with embedded test data for PostgreSQL connection monitoring."""
 
 from cmk.agent_based.v2 import Result, Service, State
-from cmk.legacy_checks.postgres_connections import (
+from cmk.plugins.postgres.agent_based.postgres_connections import (
     check_postgres_connections,
     discover_postgres_connections,
 )

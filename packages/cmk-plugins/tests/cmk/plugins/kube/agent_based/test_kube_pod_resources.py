@@ -511,6 +511,169 @@ def test_check_kube_pod_resources_with_capacity_overall_look(
     assert result == expected_result
 
 
+def test_pending_count_levels_absent_yields_no_extra_result() -> None:
+    result = tuple(
+        _check_kube_pod_resources(
+            0.1,
+            {},
+            Params(pending="no_levels", free="no_levels"),
+            PodResources(pending=["p1", "p2"]),
+            None,
+        )
+    )
+    # Without pod_phase_count_levels we keep the original layout: 5 phase results + 4 metrics.
+    assert len(result) == 9
+
+
+@pytest.mark.parametrize(
+    "pod_count,count_levels,pending_seconds,duration_param,expected_state,expected_summary",
+    [
+        pytest.param(
+            2,
+            (10, 20),
+            30,
+            ("levels", (60, 120)),
+            State.OK,
+            "Pending: 2",
+            id="neither_trips",
+        ),
+        pytest.param(
+            15,
+            (10, 20),
+            30,
+            ("levels", (60, 120)),
+            State.WARN,
+            "Pending: 15 (warn/crit at 10/20)",
+            id="count_warn_only",
+        ),
+        pytest.param(
+            25,
+            (10, 20),
+            30,
+            ("levels", (60, 120)),
+            State.CRIT,
+            "Pending: 25 (warn/crit at 10/20)",
+            id="count_crit_only",
+        ),
+        pytest.param(
+            2,
+            (10, 20),
+            90,
+            ("levels", (60, 120)),
+            State.WARN,
+            "Pending: 2, thereof 2 (pod-0, pod-1) for longer than 1 minute 0 seconds",
+            id="duration_warn_only",
+        ),
+        pytest.param(
+            2,
+            (10, 20),
+            200,
+            ("levels", (60, 120)),
+            State.CRIT,
+            "Pending: 2, thereof 2 (pod-0, pod-1) for longer than 2 minutes 0 seconds",
+            id="duration_crit_only",
+        ),
+        pytest.param(
+            15,
+            (10, 20),
+            90,
+            ("levels", (60, 120)),
+            State.WARN,
+            "Pending: 15 (warn/crit at 10/20), thereof 15 (pod-0, pod-1, pod-2, ...) for longer than 1 minute 0 seconds",
+            id="both_warn",
+        ),
+        pytest.param(
+            15,
+            (10, 20),
+            200,
+            ("levels", (60, 120)),
+            State.CRIT,
+            "Pending: 15 (warn/crit at 10/20), thereof 15 (pod-0, pod-1, pod-2, ...) for longer than 2 minutes 0 seconds",
+            id="count_warn_duration_crit",
+        ),
+        pytest.param(
+            25,
+            (10, 20),
+            90,
+            ("levels", (60, 120)),
+            State.CRIT,
+            "Pending: 25 (warn/crit at 10/20), thereof 25 (pod-0, pod-1, pod-2, ...) for longer than 1 minute 0 seconds",
+            id="count_crit_duration_warn",
+        ),
+        pytest.param(
+            25,
+            (10, 20),
+            200,
+            ("levels", (60, 120)),
+            State.CRIT,
+            "Pending: 25 (warn/crit at 10/20), thereof 25 (pod-0, pod-1, pod-2, ...) for longer than 2 minutes 0 seconds",
+            id="both_crit",
+        ),
+        pytest.param(
+            2,
+            (10, 20),
+            30,
+            "no_levels",
+            State.OK,
+            "Pending: 2",
+            id="count_below_warn_duration_disabled",
+        ),
+        pytest.param(
+            15,
+            (10, 20),
+            30,
+            "no_levels",
+            State.WARN,
+            "Pending: 15 (warn/crit at 10/20)",
+            id="count_warn_duration_disabled",
+        ),
+        pytest.param(
+            25,
+            (10, 20),
+            30,
+            "no_levels",
+            State.CRIT,
+            "Pending: 25 (warn/crit at 10/20)",
+            id="count_crit_duration_disabled",
+        ),
+    ],
+)
+def test_pending_count_and_duration_interaction(
+    pod_count: int,
+    count_levels: tuple[int, int],
+    pending_seconds: float,
+    duration_param: object,
+    expected_state: State,
+    expected_summary: str,
+) -> None:
+    """
+    Verify the merged Pending Result when count-based and time-based level rules both apply.
+    Structured so that adding analogous coverage for other phases later (e.g. Failed) only
+    requires swapping the section field and result index.
+    """
+    pods = [f"pod-{i}" for i in range(pod_count)]
+    now = 1000.0
+    value_store: ValueStore = {"pending": {pod: now - pending_seconds for pod in pods}}
+    result = tuple(
+        _check_kube_pod_resources(
+            now,
+            value_store,
+            Params(
+                pending=duration_param,  # type: ignore[typeddict-item]
+                free="no_levels",
+                pod_phase_count_levels={"pending": count_levels},
+            ),
+            PodResources(pending=pods),
+            None,
+        )
+    )
+    pending_result = result[2]
+    assert isinstance(pending_result, Result)
+    assert pending_result.state == expected_state
+    assert pending_result.summary == expected_summary
+    assert len(result) == 9
+
+
 def test_pod_resource_fields() -> None:
     """
     _POD_RESOURCES_FIELDS is used, if do not have an instance of type PodResources. Instead, we

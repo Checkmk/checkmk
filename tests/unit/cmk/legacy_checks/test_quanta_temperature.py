@@ -3,135 +3,89 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="misc"
-# mypy: disable-error-code="no-untyped-call"
-
-from collections.abc import Mapping, Sequence
-from typing import Any
+from collections.abc import Sequence
 
 import pytest
 
-from cmk.agent_based.v2 import StringTable
+from cmk.agent_based.v2 import Metric, Result, Service, State, StringTable
 from cmk.legacy_checks.quanta_temperature import (
     check_quanta_temperature,
     discover_quanta_temperature,
 )
-from cmk.legacy_includes.quanta import parse_quanta
+from cmk.plugins.quanta.lib import parse_quanta
 
 
-@pytest.mark.parametrize(
-    "info, expected_discoveries",
+@pytest.fixture
+def empty_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(
+        "cmk.legacy_checks.quanta_temperature.get_value_store",
+        lambda: {},
+    )
+
+
+_INFO: list[StringTable] = [
     [
-        (
-            [
-                [
-                    ["1", "3", "Temp_PCI1_Outlet\x01", "41", "85", "80", "-99", "-99"],
-                    ["2", "3", "Temp_CPU0_Inlet", "37", "75", "70", "-99", "-99"],
-                    ["2", "3", "Temp_CPU1_Inlet", "37", "75", "-99", "-99", "-99"],
-                    ["7", "1", "Temp_DIMM_AB", "-99", "85", "84", "-99", "-99"],
-                    ["7", "2", "Temp_DIMM_CD", "-99", "85", "84", "95", "100"],
-                ]
-            ],
-            [
-                ("Temp_CPU0_Inlet", {}),
-                ("Temp_CPU1_Inlet", {}),
-                ("Temp_DIMM_AB", {}),
-                ("Temp_DIMM_CD", {}),
-                ("Temp_PCI1_Outlet", {}),
-            ],
-        ),
-    ],
-)
-def test_discover_quanta_temperature(
-    info: StringTable, expected_discoveries: Sequence[tuple[str, Mapping[str, Any]]]
-) -> None:
-    """Test discovery function for quanta_temperature check."""
+        ["1", "3", "Temp_PCI1_Outlet\x01", "41", "85", "80", "-99", "-99"],
+        ["2", "3", "Temp_CPU0_Inlet", "37", "75", "70", "-99", "-99"],
+        ["2", "3", "Temp_CPU1_Inlet", "37", "75", "-99", "-99", "-99"],
+        ["7", "1", "Temp_DIMM_AB", "-99", "85", "84", "-99", "-99"],
+        ["7", "2", "Temp_DIMM_CD", "-99", "85", "84", "95", "100"],
+    ]
+]
 
-    parsed = parse_quanta(info)
-    result = list(discover_quanta_temperature(parsed))
-    assert sorted(result) == sorted(expected_discoveries)
+
+def test_discover_quanta_temperature() -> None:
+    parsed = parse_quanta(_INFO)
+    result = sorted(discover_quanta_temperature(parsed), key=lambda s: s.item or "")
+    assert result == [
+        Service(item="Temp_CPU0_Inlet"),
+        Service(item="Temp_CPU1_Inlet"),
+        Service(item="Temp_DIMM_AB"),
+        Service(item="Temp_DIMM_CD"),
+        Service(item="Temp_PCI1_Outlet"),
+    ]
 
 
 @pytest.mark.parametrize(
-    "item, params, info, expected_results",
+    "item, expected_results",
     [
         (
             "Temp_CPU0_Inlet",
-            {},
             [
-                [
-                    ["1", "3", "Temp_PCI1_Outlet\x01", "41", "85", "80", "-99", "-99"],
-                    ["2", "3", "Temp_CPU0_Inlet", "37", "75", "70", "-99", "-99"],
-                    ["2", "3", "Temp_CPU1_Inlet", "37", "75", "-99", "-99", "-99"],
-                    ["7", "1", "Temp_DIMM_AB", "-99", "85", "84", "-99", "-99"],
-                    ["7", "2", "Temp_DIMM_CD", "-99", "85", "84", "95", "100"],
-                ]
+                Metric("temp", 37.0, levels=(70.0, 75.0)),
+                Result(state=State.OK, summary="Temperature: 37.0 °C"),
+                Result(state=State.OK, notice="State on device: OK"),
+                Result(
+                    state=State.OK,
+                    notice="Configuration: prefer user levels over device levels (used device levels)",
+                ),
             ],
-            [(0, "37.0 °C", [("temp", 37.0, 70.0, 75.0)])],
-        ),
-        (
-            "Temp_CPU1_Inlet",
-            {},
-            [
-                [
-                    ["1", "3", "Temp_PCI1_Outlet\x01", "41", "85", "80", "-99", "-99"],
-                    ["2", "3", "Temp_CPU0_Inlet", "37", "75", "70", "-99", "-99"],
-                    ["2", "3", "Temp_CPU1_Inlet", "37", "75", "-99", "-99", "-99"],
-                    ["7", "1", "Temp_DIMM_AB", "-99", "85", "84", "-99", "-99"],
-                    ["7", "2", "Temp_DIMM_CD", "-99", "85", "84", "95", "100"],
-                ]
-            ],
-            [(0, "37.0 °C", [("temp", 37.0, 75.0, 75.0)])],
         ),
         (
             "Temp_DIMM_AB",
-            {},
-            [
-                [
-                    ["1", "3", "Temp_PCI1_Outlet\x01", "41", "85", "80", "-99", "-99"],
-                    ["2", "3", "Temp_CPU0_Inlet", "37", "75", "70", "-99", "-99"],
-                    ["2", "3", "Temp_CPU1_Inlet", "37", "75", "-99", "-99", "-99"],
-                    ["7", "1", "Temp_DIMM_AB", "-99", "85", "84", "-99", "-99"],
-                    ["7", "2", "Temp_DIMM_CD", "-99", "85", "84", "95", "100"],
-                ]
-            ],
-            [(1, "Status: other")],
+            [Result(state=State.WARN, summary="Status: other")],
         ),
         (
             "Temp_DIMM_CD",
-            {},
-            [
-                [
-                    ["1", "3", "Temp_PCI1_Outlet\x01", "41", "85", "80", "-99", "-99"],
-                    ["2", "3", "Temp_CPU0_Inlet", "37", "75", "70", "-99", "-99"],
-                    ["2", "3", "Temp_CPU1_Inlet", "37", "75", "-99", "-99", "-99"],
-                    ["7", "1", "Temp_DIMM_AB", "-99", "85", "84", "-99", "-99"],
-                    ["7", "2", "Temp_DIMM_CD", "-99", "85", "84", "95", "100"],
-                ]
-            ],
-            [(3, "Status: unknown")],
+            [Result(state=State.UNKNOWN, summary="Status: unknown")],
         ),
         (
             "Temp_PCI1_Outlet",
-            {},
             [
-                [
-                    ["1", "3", "Temp_PCI1_Outlet\x01", "41", "85", "80", "-99", "-99"],
-                    ["2", "3", "Temp_CPU0_Inlet", "37", "75", "70", "-99", "-99"],
-                    ["2", "3", "Temp_CPU1_Inlet", "37", "75", "-99", "-99", "-99"],
-                    ["7", "1", "Temp_DIMM_AB", "-99", "85", "84", "-99", "-99"],
-                    ["7", "2", "Temp_DIMM_CD", "-99", "85", "84", "95", "100"],
-                ]
+                Metric("temp", 41.0, levels=(80.0, 85.0)),
+                Result(state=State.OK, summary="Temperature: 41.0 °C"),
+                Result(state=State.OK, notice="State on device: OK"),
+                Result(
+                    state=State.OK,
+                    notice="Configuration: prefer user levels over device levels (used device levels)",
+                ),
             ],
-            [(0, "41.0 °C", [("temp", 41.0, 80.0, 85.0)])],
         ),
     ],
 )
 def test_check_quanta_temperature(
-    item: str, params: Mapping[str, Any], info: StringTable, expected_results: Sequence[Any]
+    item: str, expected_results: Sequence[object], empty_value_store: None
 ) -> None:
-    """Test check function for quanta_temperature check."""
-
-    parsed = parse_quanta(info)
-    result = list(check_quanta_temperature(item, params, parsed))
+    parsed = parse_quanta(_INFO)
+    result = list(check_quanta_temperature(item, {}, parsed))
     assert result == expected_results

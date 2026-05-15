@@ -4,10 +4,10 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
+import { useMswWorker } from '@ucl/_ucl/composables/useMswWorker'
 import type { Autocompleter, Labels } from 'cmk-shared-typing/typescript/vue_formspec_components'
 import { HttpResponse, http } from 'msw'
-import { setupWorker } from 'msw/browser'
-import { computed, onBeforeMount, onBeforeUnmount, ref } from 'vue'
+import { computed, ref } from 'vue'
 
 import FormReadonly from '@/form/FormReadonly.vue'
 import FormLabels from '@/form/private/forms/FormLabels.vue'
@@ -70,25 +70,12 @@ async function interceptor({ request }: { request: Request }) {
     severity: 'success'
   })
 }
-const worker = setupWorker(
-  ...[
-    http.post(
-      new RegExp(`${location.protocol}//${location.host}/ajax_vs_autocomplete.py`),
-      interceptor
-    )
-  ]
-)
-
-onBeforeMount(async () => {
-  await worker.start()
-  mockLoaded.value = true
-})
-
-onBeforeUnmount(() => {
-  worker.stop()
-})
-
-const mockLoaded = ref<boolean>(false)
+const { mockLoaded } = useMswWorker([
+  http.post(
+    new RegExp(`${location.protocol}//${location.host}/ajax_vs_autocomplete.py`),
+    interceptor
+  )
+])
 </script>
 
 <template>

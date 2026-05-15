@@ -7,6 +7,7 @@
 
 from typing import Any
 
+from cmk.agent_based.v2 import Service
 from cmk.legacy_checks.postgres_stat_database import (
     discover_postgres_stat_database,
     discover_postgres_stat_database_size,
@@ -103,19 +104,19 @@ def test_parse() -> None:
 
 
 def test_discover_database_size() -> None:
-    assert discover_postgres_stat_database_size(section()) == [
-        ("MAIN/template0", {}),
-        ("MAIN/template1", {}),
-        ("MAIN/nnnnnn", {}),
-        ("MAIN/postgres", {}),
+    assert list(discover_postgres_stat_database_size(section())) == [
+        Service(item="MAIN/template0"),
+        Service(item="MAIN/template1"),
+        Service(item="MAIN/nnnnnn"),
+        Service(item="MAIN/postgres"),
     ]
 
 
 def test_discover_database() -> None:
     assert list(discover_postgres_stat_database(section())) == [
-        ("MAIN/access_to_shared_objects", {}),
-        ("MAIN/template0", {}),
-        ("MAIN/template1", {}),
-        ("MAIN/nnnnnn", {}),
-        ("MAIN/postgres", {}),
+        Service(item="MAIN/access_to_shared_objects"),
+        Service(item="MAIN/template0"),
+        Service(item="MAIN/template1"),
+        Service(item="MAIN/nnnnnn"),
+        Service(item="MAIN/postgres"),
     ]

@@ -3,21 +3,28 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import re
 
-from cmk.gui.agent_bakery import RulespecGroupMonitoringAgentsLinuxUnixAgent
-from cmk.gui.i18n import _
-from cmk.gui.plugins.wato.utils import (
-    HostRulespec,
-    rulespec_registry,
+from cmk.rulesets.v1 import Help, Message, Title
+from cmk.rulesets.v1.form_specs import (
+    DefaultValue,
+    DictElement,
+    Dictionary,
+    String,
+    validators,
 )
-from cmk.gui.valuespec import AbsoluteDirname, Dictionary
-from cmk.utils.rulesets.definition import RuleGroup
+from cmk.rulesets.v1.rule_specs import AgentConfig, Topic
+
+_ABSOLUTE_PATH_PATTERN = re.compile(r"^(/|(/[^/]+)+)$")
+_ABSOLUTE_PATH_VALIDATOR = validators.MatchRegex(
+    _ABSOLUTE_PATH_PATTERN,
+    Message("Please enter a valid absolute pathname with / as a path separator."),
+)
 
 
-def _valuespec_agent_config_agent_paths() -> Dictionary:
+def _form_spec() -> Dictionary:
     return Dictionary(
-        title=_("Installation paths for agent files (Linux, Unix) (deprecated)"),
-        help=_(
+        help_text=Help(
             "The agent installation path configuration now simplifies to one single directory,"
             " which can be configured with the new <i>Customize agent package</i> rule set."
             "<br>When configuring <i>Customize agent package</i>, matching rules from"
@@ -26,55 +33,50 @@ def _valuespec_agent_config_agent_paths() -> Dictionary:
             " this rule set until the agent update is done. The agent package will read the"
             " old installation paths to migrate your files to the new directory structure."
         ),
-        elements=[
-            (
-                "bin",
-                AbsoluteDirname(
-                    title=_("Directory for binaries (executables)"),
-                    default_value="/usr/bin",
-                    help=_(
+        elements={
+            "bin": DictElement(
+                parameter_form=String(
+                    title=Title("Directory for binaries (executables)"),
+                    help_text=Help(
                         "In this directory will be installed <tt>check_mk_agent</tt>,"
                         " <tt>waitmax</tt> and possibly other binaries that are needed"
                         " by the agent."
                     ),
-                    allow_empty=False,
+                    prefill=DefaultValue("/usr/bin"),
+                    custom_validate=(_ABSOLUTE_PATH_VALIDATOR,),
                 ),
             ),
-            (
-                "config",
-                AbsoluteDirname(
-                    title=_("Directory for configuration files"),
-                    default_value="/etc/check_mk",
-                    allow_empty=False,
+            "config": DictElement(
+                parameter_form=String(
+                    title=Title("Directory for configuration files"),
+                    prefill=DefaultValue("/etc/check_mk"),
+                    custom_validate=(_ABSOLUTE_PATH_VALIDATOR,),
                 ),
             ),
-            (
-                "lib",
-                AbsoluteDirname(
-                    title=_("Base directory for <tt>plug-ins</tt> and <tt>local</tt>"),
-                    default_value="/usr/lib/check_mk_agent",
-                    allow_empty=False,
+            "lib": DictElement(
+                parameter_form=String(
+                    title=Title("Base directory for plug-ins and local"),
+                    prefill=DefaultValue("/usr/lib/check_mk_agent"),
+                    custom_validate=(_ABSOLUTE_PATH_VALIDATOR,),
                 ),
             ),
-            (
-                "var",
-                AbsoluteDirname(
-                    title=_("Base directory for variable data (caches, state files)"),
-                    default_value="/var/lib/check_mk_agent",
-                    help=_(
+            "var": DictElement(
+                parameter_form=String(
+                    title=Title("Base directory for variable data (caches, state files)"),
+                    help_text=Help(
                         "If you change this paths away from its default then the package "
                         "will <b>not</b> delete the contents of that directory when uninstalling."
                     ),
-                    allow_empty=False,
+                    prefill=DefaultValue("/var/lib/check_mk_agent"),
+                    custom_validate=(_ABSOLUTE_PATH_VALIDATOR,),
                 ),
             ),
-            (
-                "tmp",
-                AbsoluteDirname(
-                    title=_(
+            "tmp": DictElement(
+                parameter_form=String(
+                    title=Title(
                         "Directory for storage of temporary data (set TMPDIR environment variable)"
                     ),
-                    help=_(
+                    help_text=Help(
                         "Some agent commands or plug-ins may follow the environment variable"
                         " TMPDIR for storage of temporary files."
                         " For some reasons, you might want to adapt this path."
@@ -82,19 +84,17 @@ def _valuespec_agent_config_agent_paths() -> Dictionary:
                         ' is mounted with a "noexec"-flag. Please note that the'
                         " Checkmk Agent does no automatic cleaning on this custom path."
                     ),
-                    allow_empty=False,
+                    custom_validate=(_ABSOLUTE_PATH_VALIDATOR,),
                 ),
             ),
-        ],
+        },
     )
 
 
-rulespec_registry.register(
-    HostRulespec(
-        group=RulespecGroupMonitoringAgentsLinuxUnixAgent,
-        match_type="dict",
-        name=RuleGroup.AgentConfig("agent_paths"),
-        valuespec=_valuespec_agent_config_agent_paths,
-        deprecation_planned=True,
-    )
+rule_spec_agent_paths = AgentConfig(
+    title=Title("Installation paths for agent files (Linux, Unix)"),
+    name="agent_paths",
+    topic=Topic.OPERATING_SYSTEM,
+    parameter_form=_form_spec,
+    is_deprecated=True,
 )

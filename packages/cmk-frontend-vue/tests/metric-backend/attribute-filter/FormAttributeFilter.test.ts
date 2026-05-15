@@ -40,11 +40,29 @@ function makeModel(): AttributeFilterModel {
   ]
 }
 
+function singlePill(overrides: Partial<AttributeFilterModel[number]> = {}): AttributeFilterModel {
+  return [
+    {
+      id: 'pill-a',
+      attributeType: 'resource',
+      key: 'service.name',
+      operator: 'eq',
+      value: '',
+      connector: 'AND',
+      ...overrides
+    }
+  ]
+}
+
 function querySuggestions(query: string): Promise<Response> {
   const lower = query.toLowerCase()
   return Promise.resolve(
     new Response(KEY_SUGGESTIONS.filter((s) => s.name.toLowerCase().includes(lower)))
   )
+}
+
+function echoQueryValueSuggestions(_: unknown, query: string): Promise<Response> {
+  return Promise.resolve(new Response(query ? [{ name: query, title: query }] : []))
 }
 
 function renderForm(
@@ -55,12 +73,18 @@ function renderForm(
   const wrapperComponent = defineComponent({
     components: { FormAttributeFilter },
     setup() {
-      return { model, querySuggestions, resolveAttributeType: resolve }
+      return {
+        model,
+        querySuggestions,
+        queryValueSuggestions: echoQueryValueSuggestions,
+        resolveAttributeType: resolve
+      }
     },
     template: `
       <FormAttributeFilter
         v-model="model"
         :query-suggestions="querySuggestions"
+        :query-value-suggestions="queryValueSuggestions"
         :resolve-attribute-type="resolveAttributeType"
       />
     `
@@ -176,4 +200,59 @@ test('remove drops the targeted row by id, leaving siblings intact', async () =>
   expect(model.value![0]!.id).toBe('pill-b')
   // The removed pill must be gone from the DOM, not just from the model.
   expect(screen.queryByRole('group', { name: pillALabel })).toBeNull()
+})
+
+test('value is preserved when switching between two comparison operators', async () => {
+  const { model } = renderForm(singlePill({ operator: 'eq', value: 'foo' }))
+
+  await pickOperator(pillsInOrder()[0]!, 'starts with')
+
+  expect(model.value![0]).toMatchObject({ operator: 'starts_with', value: 'foo' })
+  expect(screen.getByRole('combobox', { name: 'Attribute value' })).toHaveTextContent('foo')
+})
+
+test('value is cleared when switching to an existence operator and stays empty on return', async () => {
+  const { model } = renderForm(singlePill({ operator: 'eq', value: 'foo' }))
+
+  await pickOperator(pillsInOrder()[0]!, 'exists')
+
+  expect(model.value![0]).toMatchObject({ operator: 'exists', value: '' })
+  expect(screen.queryByRole('combobox', { name: 'Attribute value' })).toBeNull()
+
+  await pickOperator(pillsInOrder()[0]!, 'is')
+
+  expect(model.value![0]).toMatchObject({ operator: 'eq', value: '' })
+})
+
+test('switching from an existence operator to a value-taking operator auto-opens the value dropdown', async () => {
+  renderForm(singlePill({ operator: 'exists', value: '' }))
+
+  await pickOperator(pillsInOrder()[0]!, 'is')
+
+  expect(screen.getByRole('combobox', { name: 'Attribute value' })).toHaveAttribute(
+    'aria-expanded',
+    'true'
+  )
+})
+
+test('same-family swap with a populated value does not auto-open the value dropdown', async () => {
+  renderForm(singlePill({ operator: 'eq', value: 'foo' }))
+
+  await pickOperator(pillsInOrder()[0]!, 'starts with')
+
+  expect(screen.getByRole('combobox', { name: 'Attribute value' })).toHaveAttribute(
+    'aria-expanded',
+    'false'
+  )
+})
+
+test('same-family swap with an empty value auto-opens the value dropdown', async () => {
+  renderForm(singlePill({ operator: 'eq', value: '' }))
+
+  await pickOperator(pillsInOrder()[0]!, 'starts with')
+
+  expect(screen.getByRole('combobox', { name: 'Attribute value' })).toHaveAttribute(
+    'aria-expanded',
+    'true'
+  )
 })

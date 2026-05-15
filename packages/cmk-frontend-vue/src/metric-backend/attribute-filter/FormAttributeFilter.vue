@@ -10,13 +10,24 @@ import usei18n from '@/lib/i18n'
 import type { QuerySuggestionsFn } from '@/components/CmkSuggestions/types'
 
 import AttributeFilterPill from './AttributeFilterPill.vue'
-import type { AttributeFilterModel, AttributeType, ConnectedCondition, Operator } from './types'
+import { operatorTakesValue } from './types'
+import type {
+  AttributeCondition,
+  AttributeFilterModel,
+  AttributeType,
+  ConnectedCondition,
+  Operator
+} from './types'
 
 const { _t } = usei18n()
 
 const props = withDefaults(
   defineProps<{
     querySuggestions: QuerySuggestionsFn
+    queryValueSuggestions: (
+      condition: AttributeCondition,
+      query: string
+    ) => ReturnType<QuerySuggestionsFn>
     resolveAttributeType?: ((key: string) => AttributeType) | undefined
     ariaLabel?: string | undefined
   }>(),
@@ -45,7 +56,17 @@ function updateAttributeType(target: ConnectedCondition, value: AttributeType): 
 }
 
 function updateOperator(target: ConnectedCondition, value: Operator): void {
-  model.value = model.value.map((c) => (c.id === target.id ? { ...c, operator: value } : c))
+  model.value = model.value.map((c) => {
+    if (c.id !== target.id) {
+      return c
+    }
+    const clearValue = operatorTakesValue(c.operator) !== operatorTakesValue(value)
+    return { ...c, operator: value, ...(clearValue ? { value: '' } : {}) }
+  })
+}
+
+function updateValue(target: ConnectedCondition, value: string): void {
+  model.value = model.value.map((c) => (c.id === target.id ? { ...c, value } : c))
 }
 </script>
 
@@ -56,11 +77,13 @@ function updateOperator(target: ConnectedCondition, value: Operator): void {
       :key="entry.id"
       :condition="entry"
       :query-suggestions="querySuggestions"
+      :query-value-suggestions="queryValueSuggestions"
       removable
       @remove="removeCondition(entry)"
       @update:key="(value) => updateKey(entry, value)"
       @update:attribute-type="(value) => updateAttributeType(entry, value)"
       @update:operator="(value) => updateOperator(entry, value)"
+      @update:value="(value) => updateValue(entry, value)"
     />
   </div>
 </template>

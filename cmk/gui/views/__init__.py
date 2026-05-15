@@ -15,7 +15,8 @@ from cmk.gui.i18n import _, _u
 from cmk.gui.legacy_plugins import load_web_plugins
 from cmk.gui.painter.v0 import painter_registry, register_painter
 from cmk.gui.permissions import declare_dynamic_permissions, declare_permission
-from cmk.gui.type_defs import Perfdata, VisualLinkSpec
+from cmk.gui.type_defs import Perfdata, ViewSpec, VisualLinkSpec
+from cmk.gui.utils.speaklater import LazyText
 from cmk.gui.view_utils import cmp_service_name_equiv, get_labels, render_labels, render_tag_groups
 from cmk.gui.views.sorter import sorter_registry
 from cmk.gui.visuals.filter import filter_registry
@@ -71,11 +72,12 @@ def register() -> None:
 
     visuals.declare_visual_permissions("views", _("views"))
 
-    # Declare permissions for built-in views
+    # Declare permissions for built-in views.
+    # Be lazy with the title, it uses plugins that might not yet be loaded.
     for name, view_spec in multisite_builtin_views.items():
         declare_permission(
             "view.%s" % name,
-            format_view_title(name, view_spec),
+            _lazy_view_title(name, view_spec),
             "{} - {}".format(name, _u(str(view_spec["description"]))),
             default_authorized_builtin_role_ids,
         )
@@ -83,6 +85,10 @@ def register() -> None:
     # Make sure that custom views also have permissions
     declare_dynamic_permissions(lambda: visuals.declare_custom_permissions("views"))
     declare_dynamic_permissions(lambda: visuals.declare_packaged_visuals_permissions("views"))
+
+
+def _lazy_view_title(name: str, view_spec: ViewSpec) -> LazyText:
+    return LazyText(lambda: format_view_title(name, view_spec))
 
 
 def _register_pre_21_plugin_api() -> None:

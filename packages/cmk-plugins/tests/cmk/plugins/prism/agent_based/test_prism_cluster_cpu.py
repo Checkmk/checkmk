@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="misc"
-
 from collections.abc import Mapping, Sequence
 from typing import Any
 
@@ -19,8 +17,9 @@ from cmk.plugins.prism.agent_based.prism_cluster_cpu import (
 
 @pytest.fixture
 def empty_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
+    value_store: dict[str, tuple[float, float]] = {}
     monkeypatch.setattr(
-        "cmk.plugins.prism.agent_based.prism_cluster_cpu.get_value_store", lambda: {}
+        "cmk.plugins.prism.agent_based.prism_cluster_cpu.get_value_store", lambda: value_store
     )
 
 
@@ -76,7 +75,7 @@ SECTION = {
         ),
     ],
 )
-def test_discovery_prism_host_stats(
+def test_discovery_prism_host_stats(  # type: ignore[misc]
     section: Mapping[str, Any],
     expected_discovery_result: Sequence[Service],
 ) -> None:
@@ -97,7 +96,7 @@ def test_discovery_prism_host_stats(
         ),
     ],
 )
-def test_check_prism_cluster_cpu(
+def test_check_prism_cluster_cpu(  # type: ignore[misc]
     params: Mapping[str, Any],
     section: Mapping[str, Any],
     expected_check_result: Sequence[Result],
@@ -112,3 +111,20 @@ def test_check_prism_cluster_cpu(
         )
         == expected_check_result
     )
+
+
+def test_check_prism_cluster_cpu_crit(empty_value_store: None) -> None:
+    high_cpu_section = {
+        "stats": {
+            "hypervisor_cpu_usage_ppm": "950000",
+        },
+    }
+    assert list(
+        check_prism_cluster_cpu(
+            params={"levels": (80.0, 90.0)},
+            section=high_cpu_section,
+        )
+    ) == [
+        Result(state=State.CRIT, summary="Total CPU: 95.00% (warn/crit at 80.00%/90.00%)"),
+        Metric("util", 95.0, levels=(80.0, 90.0), boundaries=(0.0, None)),
+    ]

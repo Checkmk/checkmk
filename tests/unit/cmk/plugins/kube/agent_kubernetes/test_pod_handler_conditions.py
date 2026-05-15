@@ -20,28 +20,28 @@ def test_pod_conditions_start_up() -> None:
         conditions=[
             api.PodCondition(
                 status=True,
-                type=api.ConditionType.INITIALIZED,
+                type=api.PodConditionType.INITIALIZED,
                 custom_type=None,
                 reason=None,
                 detail=None,
             ),
             api.PodCondition(
                 status=False,
-                type=api.ConditionType.READY,
+                type=api.PodConditionType.READY,
                 custom_type=None,
                 reason="ContainersNotReady",
                 detail="containers with unready status: [unready_container]",
             ),
             api.PodCondition(
                 status=False,
-                type=api.ConditionType.CONTAINERSREADY,
+                type=api.PodConditionType.CONTAINERSREADY,
                 custom_type=None,
                 reason="ContainersNotReady",
                 detail="containers with unready status: [unready_container]",
             ),
             api.PodCondition(
                 status=True,
-                type=api.ConditionType.PODSCHEDULED,
+                type=api.PodConditionType.PODSCHEDULED,
                 custom_type=None,
                 reason=None,
                 detail=None,
@@ -78,7 +78,7 @@ def test_pod_conditions_start_up_missing_fields() -> None:
         conditions=[
             api.PodCondition(
                 status=True,
-                type=api.ConditionType.PODSCHEDULED,
+                type=api.PodConditionType.PODSCHEDULED,
                 custom_type=None,
                 reason=None,
                 detail=None,

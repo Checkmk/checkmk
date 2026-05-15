@@ -3,20 +3,25 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="type-arg"
-
 #
 # 2017 comNET GmbH, Bjoern Mueller
 
 # Default levels from http://www.detectcarbonmonoxide.com/co-health-risks/
 
-from collections.abc import Iterable
+from collections.abc import Mapping
+from typing import Any
 
-from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
-from cmk.agent_based.v2 import SNMPTree, StringTable
+from cmk.agent_based.v1 import check_levels as check_levels_v1
+from cmk.agent_based.v2 import (
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Service,
+    SimpleSNMPSection,
+    SNMPTree,
+    StringTable,
+)
 from cmk.plugins.kentix.lib import DETECT_KENTIX
-
-check_info = {}
 
 
 def parse_kentix_co(string_table: StringTable) -> int | None:
@@ -30,21 +35,21 @@ def parse_kentix_co(string_table: StringTable) -> int | None:
     return None
 
 
-def discover_kentix_co(section: int) -> Iterable[tuple[None, dict]]:
-    yield None, {}
+def discover_kentix_co(section: int) -> DiscoveryResult:
+    yield Service()
 
 
-def check_kentix_co(item: str, params: dict, section: int) -> Iterable:
-    return check_levels(
+def check_kentix_co(params: Mapping[str, Any], section: int) -> CheckResult:
+    yield from check_levels_v1(
         section,
-        "parts_per_million",
-        params["levels_ppm"],
-        human_readable_func=lambda x: f"{x} ppm",
-        infoname="CO concentration",
+        metric_name="parts_per_million",
+        levels_upper=params["levels_ppm"],
+        render_func=lambda x: f"{x} ppm",
+        label="CO concentration",
     )
 
 
-check_info["kentix_co"] = LegacyCheckDefinition(
+snmp_section_kentix_co = SimpleSNMPSection(
     name="kentix_co",
     detect=DETECT_KENTIX,
     fetch=SNMPTree(
@@ -52,6 +57,11 @@ check_info["kentix_co"] = LegacyCheckDefinition(
         oids=["2.1.4.1", "3.1.3.1"],
     ),
     parse_function=parse_kentix_co,
+)
+
+
+check_plugin_kentix_co = CheckPlugin(
+    name="kentix_co",
     service_name="Carbon Monoxide",
     discovery_function=discover_kentix_co,
     check_function=check_kentix_co,

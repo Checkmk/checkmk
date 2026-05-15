@@ -109,37 +109,53 @@ def clickhouse_query(sql: str) -> list[str]:
     ]
 
 
-COMPONENT_COMMANDS = {
-    "df": ["df"],
-    "df-i": ["df", "-i"],
-    "ip-a": ["ip", "a"],
-    "ss-tulpen": ["ss", "-tulpen"],
-    "w": ["w"],
-    "top": ["top", "-b", "-n", "1", "-H", "-c", "-w", "512", "-o", "-PID", "-1"],
+COMPONENT_COMMANDS = [
+    ("df", ".out", ["df"]),
+    ("df-i", ".out", ["df", "-i"]),
+    ("ip-a", ".out", ["ip", "a"]),
+    ("ss-tulpen", ".out", ["ss", "-tulpen"]),
+    ("w", ".out", ["w"]),
+    ("top", ".out", ["top", "-b", "-n", "1", "-H", "-c", "-w", "512", "-o", "-PID", "-1"]),
     # TODO: The command below will result in user-visible errors when there is no ClickHouse (e.g.
     # for the pro edition!) or ClickHouse is there, but not enabled. This is quite bad and
     # irritating from a user POV. Basically the same holds for the other commands: Is e.g. "ss"
     # installed everywhere? Does "top" support the tons of options above? I somehow doubt that this
     # is universally the case.
-    "otel-licenses": clickhouse_query("""
+    (
+        "otel-licenses",
+        ".json",
+        clickhouse_query("""
 SELECT count
 FROM checkmk.licensing_active_series_count
 ORDER BY bucket_start DESC
 LIMIT 1;
         """),
-}
+    ),
+]
 
-METRIC_BACKEND_COMMANDS = {
-    "metric-backend-schema": clickhouse_query("""
+
+METRIC_BACKEND_COMMANDS = [
+    (
+        "metric-backend-schema",
+        ".json",
+        clickhouse_query("""
 SELECT *
 FROM system.tables
 WHERE database = 'checkmk';
         """),
-    "metric-backend-revision": clickhouse_query("""
+    ),
+    (
+        "metric-backend-revision",
+        ".json",
+        clickhouse_query("""
 SELECT *
 FROM checkmk._revision;
         """),
-    "metric-backend-footprint": clickhouse_query("""
+    ),
+    (
+        "metric-backend-footprint",
+        ".json",
+        clickhouse_query("""
 SELECT table,
        SUM(rows) AS rows,
        SUM(bytes_on_disk) AS bytes_on_disk,
@@ -159,7 +175,8 @@ WHERE active
   AND database = 'checkmk'
 GROUP BY table;
         """),
-}
+    ),
+]
 
 COMPONENT_DIRECTORIES = {
     OPT_APACHE_CONFIG: {
@@ -460,12 +477,12 @@ def diagnostics_elements_for(
     if edition is not cmk_version.Edition.COMMUNITY:
         elements.append(DCDDiagnosticsElement())
 
-    for identifier, command in COMPONENT_COMMANDS.items():
-        elements.append(CheckmkCommandDiagnosticsElementTextDump(identifier, command))
+    for command_id, suffix, command in COMPONENT_COMMANDS:
+        elements.append(CheckmkCommandDiagnosticsElementTextDump(command_id, suffix, command))
 
     if parameters.get(OPT_COMP_METRIC_BACKEND):
-        for identifier, command in METRIC_BACKEND_COMMANDS.items():
-            elements.append(CheckmkCommandDiagnosticsElementTextDump(identifier, command))
+        for command_id, suffix, command in METRIC_BACKEND_COMMANDS:
+            elements.append(CheckmkCommandDiagnosticsElementTextDump(command_id, suffix, command))
 
     if parameters.get(OPT_LOCAL_FILES):
         elements.append(MKPFindTextDiagnosticsElement())
@@ -1553,31 +1570,31 @@ class CheckmkDirectoryDiagnosticsElement(ABCDiagnosticsElement):
 
 
 class CheckmkCommandDiagnosticsElementTextDump(ABCDiagnosticsElementTextDump):
-    def __init__(self, identifier: str, command: list[str]) -> None:
-        self.identifier = identifier
-        self.command = command
+    def __init__(self, command_id: str, suffix: str, command: list[str]) -> None:
+        self._command_id = command_id
+        self._suffix = suffix
+        self._command = command
 
     @override
     @property
     def ident(self) -> str:
-        # Unused because we directly pack the .mk or .conf file
-        return "command_%s.out" % self.identifier
+        return f"command_{self._command_id}{self._suffix}"
 
     @override
     @property
     def title(self) -> str:
-        return _("Command %s") % self.identifier
+        return _("Command %s") % self._command_id
 
     @override
     @property
     def description(self) -> str:
-        return _("Output of %s") % " ".join(self.command)
+        return _("Output of %s") % " ".join(self._command)
 
     @override
     def _collect_infos(self, omd_root: Path) -> str:
         try:
             return subprocess.check_output(
-                self.command,
+                self._command,
                 text=True,
                 stderr=subprocess.STDOUT,
                 cwd=omd_root,
@@ -1585,12 +1602,12 @@ class CheckmkCommandDiagnosticsElementTextDump(ABCDiagnosticsElementTextDump):
 
         except subprocess.CalledProcessError:
             raise DiagnosticsElementError(
-                "Command %s returned an unexpected error." % " ".join(self.command)
+                "Command %s returned an unexpected error." % " ".join(self._command)
             )
 
         except FileNotFoundError:
             raise DiagnosticsElementInfo(
-                "Command %s not available on this system." % " ".join(self.command)
+                "Command %s not available on this system." % " ".join(self._command)
             )
 
 

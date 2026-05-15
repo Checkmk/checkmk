@@ -71,9 +71,13 @@ const propState = new PanelStateCreator<typeof CmkTabs>().createRef(panelConfig)
     <UclDetailPageComponent>
       <CmkTabs v-model="propState.modelValue">
         <template #tabs>
-          <CmkTab id="tab-1"><CmkIcon name="search" /> Search</CmkTab>
-          <CmkTab id="tab-2"><CmkIcon name="info-circle" /> Information</CmkTab>
-          <CmkTab id="tab-3" :disabled="true"><CmkIcon name="close" /> Disabled</CmkTab>
+          <CmkTab id="tab-1" class="ucl-cmk-tabs"><CmkIcon name="search" /> Search</CmkTab>
+          <CmkTab id="tab-2" class="ucl-cmk-tabs"
+            ><CmkIcon name="info-circle" /> Information</CmkTab
+          >
+          <CmkTab id="tab-3" :disabled="true" class="ucl-cmk-tabs"
+            ><CmkIcon name="close" /> Disabled</CmkTab
+          >
         </template>
 
         <template #tab-contents>
@@ -102,3 +106,24 @@ const propState = new PanelStateCreator<typeof CmkTabs>().createRef(panelConfig)
     <UclDetailPageAccessibility :data="a11yData" />
   </UclDetailPageLayout>
 </template>
+<style scoped>
+.ucl-cmk-tabs {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+
+  > h2 {
+    margin: 0;
+    padding: 0;
+  }
+
+  /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
+  > .cmk-icon {
+    margin-right: 16px;
+  }
+}
+
+p {
+  padding-left: 10px;
+}
+</style>

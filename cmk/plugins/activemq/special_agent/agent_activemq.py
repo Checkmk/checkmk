@@ -24,7 +24,7 @@ from cmk.server_side_programs.v1_unstable import (
     vcrtrace,
 )
 
-__version__ = "2.5.0p3"
+__version__ = "2.5.0p4"
 
 AGENT = "activemq"
 

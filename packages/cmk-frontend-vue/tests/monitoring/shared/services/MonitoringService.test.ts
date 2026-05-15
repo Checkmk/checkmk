@@ -11,6 +11,8 @@ import {
   type PagedResponse
 } from '@/monitoring/shared/services/MonitoringService'
 
+import { makeResponse } from './testHelpers'
+
 interface TestItem {
   id: string
   value: number
@@ -27,10 +29,6 @@ class TestService extends MonitoringService<TestItem> {
   protected fetchBatch(): Promise<PagedResponse<TestItem>> {
     return this.fetchBatchMock()
   }
-}
-
-function makeResponse(items: TestItem[], total: number): PagedResponse<TestItem> {
-  return { items, meta: { total } }
 }
 
 describe('MonitoringService', () => {

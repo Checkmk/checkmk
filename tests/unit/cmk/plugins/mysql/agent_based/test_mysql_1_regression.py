@@ -16,7 +16,7 @@ from typing import Any
 import pytest
 
 from cmk.agent_based.v2 import Metric, Result, Service, State
-from cmk.legacy_checks import mysql
+from cmk.plugins.mysql.agent_based import mysql
 
 
 @pytest.fixture

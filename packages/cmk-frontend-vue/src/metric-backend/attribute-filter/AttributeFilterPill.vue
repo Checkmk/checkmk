@@ -5,7 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 
 <script setup lang="ts">
-import { computed, nextTick, useTemplateRef, watch } from 'vue'
+import { computed, nextTick, ref, useTemplateRef, watch } from 'vue'
 
 import usei18n from '@/lib/i18n'
 
@@ -23,6 +23,10 @@ const props = withDefaults(
   defineProps<{
     condition: AttributeCondition
     querySuggestions: QuerySuggestionsFn
+    queryValueSuggestions: (
+      condition: AttributeCondition,
+      query: string
+    ) => ReturnType<QuerySuggestionsFn>
     ariaLabel?: string | undefined
     removable?: boolean
   }>(),
@@ -34,20 +38,59 @@ const emit = defineEmits<{
   (e: 'update:key', value: string): void
   (e: 'update:attributeType', value: AttributeType): void
   (e: 'update:operator', value: Operator): void
+  (e: 'update:value', value: string): void
 }>()
 
 const fullLabel = computed(() => pillLabel(props.condition))
 const showValue = computed(() => operatorTakesValue(props.condition.operator))
 
+const valueOptions = computed(() => ({
+  type: 'callback-filtered' as const,
+  querySuggestions: (query: string) => props.queryValueSuggestions(props.condition, query)
+}))
+
+const valueDropdownRef = useTemplateRef<InstanceType<typeof CmkDropdown>>('valueDropdownRef')
+const pendingValueOpen = ref(false)
+
 function onKeyUpdate(value: string | null): void {
   emit('update:key', value ?? '')
 }
 
+function onValueUpdate(value: string | null): void {
+  emit('update:value', value ?? '')
+}
+
 function onOperatorUpdate(value: string | null): void {
-  if (value !== null && isOperator(value)) {
-    emit('update:operator', value)
+  if (value === null || !isOperator(value)) {
+    return
+  }
+  const prevOperatorTookValue = operatorTakesValue(props.condition.operator)
+  emit('update:operator', value)
+  if (!operatorTakesValue(value)) {
+    return
+  }
+  if (prevOperatorTookValue && props.condition.value !== '') {
+    return
+  }
+  if (prevOperatorTookValue) {
+    valueDropdownRef.value?.open()
+  } else {
+    pendingValueOpen.value = true
   }
 }
+
+// flush:'post' so the v-if-mounted value <CmkDropdown> ref is populated before we call `open()`.
+watch(
+  showValue,
+  (next, prev) => {
+    if (!next || prev || !pendingValueOpen.value) {
+      return
+    }
+    pendingValueOpen.value = false
+    valueDropdownRef.value?.open()
+  },
+  { flush: 'post' }
+)
 
 const attributeTypeInput = computed<string | null>({
   get: () => props.condition.attributeType,
@@ -153,9 +196,16 @@ const operatorOptions = computed(() => ({
       <span
         v-if="showValue"
         class="metric-backend-attribute-filter-pill__segment metric-backend-attribute-filter-pill__segment--value"
-        :aria-label="_t('Attribute value')"
-        >{{ condition.value }}</span
       >
+        <CmkDropdown
+          ref="valueDropdownRef"
+          :selected-option="condition.value || null"
+          :options="valueOptions"
+          :label="_t('Attribute value')"
+          :input-hint="_t('Attribute value')"
+          @update:selected-option="onValueUpdate"
+        />
+      </span>
     </span>
     <CmkIconButton
       v-if="removable"

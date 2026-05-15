@@ -4,7 +4,7 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import { userEvent } from '@testing-library/user-event'
-import { render, screen } from '@testing-library/vue'
+import { render, screen, waitFor } from '@testing-library/vue'
 import { defineComponent, ref } from 'vue'
 
 import { Response } from '@/components/CmkSuggestions/suggestions'
@@ -14,6 +14,10 @@ import type { AttributeCondition, Operator } from '@/metric-backend/attribute-fi
 
 function noopQuerySuggestions(_: string): Promise<Response> {
   return Promise.resolve(new Response([]))
+}
+
+function echoQueryValueSuggestions(_: AttributeCondition, query: string): Promise<Response> {
+  return Promise.resolve(new Response(query ? [{ name: query, title: query }] : []))
 }
 
 function renderPill(initialOperator: Operator = 'eq', value = 'GET') {
@@ -29,13 +33,24 @@ function renderPill(initialOperator: Operator = 'eq', value = 'GET') {
       function onUpdateOperator(operator: Operator) {
         condition.value = { ...condition.value, operator }
       }
-      return { condition, onUpdateOperator, querySuggestions: noopQuerySuggestions }
+      function onUpdateValue(value: string) {
+        condition.value = { ...condition.value, value }
+      }
+      return {
+        condition,
+        onUpdateOperator,
+        onUpdateValue,
+        querySuggestions: noopQuerySuggestions,
+        queryValueSuggestions: echoQueryValueSuggestions
+      }
     },
     template: `
       <AttributeFilterPill
         :condition="condition"
         :query-suggestions="querySuggestions"
+        :query-value-suggestions="queryValueSuggestions"
         @update:operator="onUpdateOperator"
+        @update:value="onUpdateValue"
       />
     `
   })
@@ -53,7 +68,7 @@ test('selecting a comparison operator emits the new operator and keeps the value
   await pickOperator('is not')
 
   expect(condition.value.operator).toBe('neq')
-  expect(screen.getByLabelText('Attribute value')).toHaveTextContent('GET')
+  await waitFor(() => expect(screen.getByLabelText('Attribute value')).toHaveTextContent('GET'))
 })
 
 test('selecting an existence operator hides the value segment, switching back restores it', async () => {
@@ -65,5 +80,5 @@ test('selecting an existence operator hides the value segment, switching back re
 
   await pickOperator('is')
   expect(condition.value.operator).toBe('eq')
-  expect(screen.getByLabelText('Attribute value')).toHaveTextContent('GET')
+  await waitFor(() => expect(screen.getByLabelText('Attribute value')).toHaveTextContent('GET'))
 })

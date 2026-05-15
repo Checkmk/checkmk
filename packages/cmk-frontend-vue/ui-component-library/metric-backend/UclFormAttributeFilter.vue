@@ -8,7 +8,7 @@ import { type PanelConfigFor } from '@ucl/_ucl/components/detail-page'
 
 export const panelConfig = {} satisfies PanelConfigFor<
   typeof FormAttributeFilter,
-  'modelValue' | 'querySuggestions' | 'resolveAttributeType' | 'ariaLabel'
+  'modelValue' | 'querySuggestions' | 'queryValueSuggestions' | 'resolveAttributeType' | 'ariaLabel'
 >
 </script>
 
@@ -24,7 +24,11 @@ import { Response } from '@/components/CmkSuggestions/suggestions'
 import type { Section } from '@/components/CmkSuggestions/types'
 
 import FormAttributeFilter from '@/metric-backend/attribute-filter/FormAttributeFilter.vue'
-import type { AttributeFilterModel, AttributeType } from '@/metric-backend/attribute-filter/types'
+import type {
+  AttributeCondition,
+  AttributeFilterModel,
+  AttributeType
+} from '@/metric-backend/attribute-filter/types'
 
 defineProps<{ screenshotMode: boolean }>()
 
@@ -104,6 +108,28 @@ function resolveAttributeType(key: string): AttributeType {
   const section = dummyKeySections.find((s) => s.suggestions.some((sug) => sug.name === key))
   return section?.attributeType ?? null
 }
+
+const dummyValuePresets: Record<string, string[]> = {
+  'service.name': ['frontend', 'checkout', 'payments'],
+  'http.method': ['GET', 'POST', 'PUT', 'DELETE'],
+  'http.status_code': ['200', '404', '500']
+}
+
+async function queryValueSuggestions(
+  condition: AttributeCondition,
+  query: string
+): Promise<Response> {
+  const needle = query.toLowerCase()
+  const presets = condition.key !== null ? (dummyValuePresets[condition.key] ?? []) : []
+  const matches = presets
+    .filter((v: string) => v.toLowerCase().includes(needle))
+    .map((v: string) => ({ name: v, title: v }))
+  // Echo the typed query so free-text entry is selectable (mirrors the real backend).
+  if (query !== '' && !matches.some((m: { name: string }) => m.name === query)) {
+    matches.push({ name: query, title: query })
+  }
+  return new Response(matches)
+}
 </script>
 
 <template>
@@ -114,6 +140,7 @@ function resolveAttributeType(key: string): AttributeType {
       <FormAttributeFilter
         v-model="filters"
         :query-suggestions="querySuggestions"
+        :query-value-suggestions="queryValueSuggestions"
         :resolve-attribute-type="resolveAttributeType"
       />
     </UclDetailPageComponent>

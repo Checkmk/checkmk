@@ -266,6 +266,7 @@ impl Section {
 pub struct Sections {
     sections: Vec<Section>,
     cache_age: u32,
+    custom_metrics_cache_age: u32,
 }
 
 impl Default for Sections {
@@ -273,6 +274,7 @@ impl Default for Sections {
         Self {
             sections: get_predefined_sections(),
             cache_age: defaults::SECTIONS_CACHE_AGE,
+            custom_metrics_cache_age: defaults::CUSTOM_METRICS_CACHE_AGE,
         }
     }
 }
@@ -346,6 +348,12 @@ impl Sections {
             log::debug!("Using default cache age");
             default.cache_age()
         });
+        let custom_metrics_cache_age = yaml
+            .get_int::<u32>(keys::CUSTOM_METRICS_CACHE_AGE)
+            .unwrap_or_else(|| {
+                log::debug!("Using default metrics cache age");
+                default.custom_metrics_cache_age()
+            });
         let mut sections = Sections::get_sections(yaml.get(keys::SECTIONS), None, None)
             .unwrap_or_else(|| {
                 log::debug!("Using default sections");
@@ -362,6 +370,7 @@ impl Sections {
         Ok(Self {
             sections,
             cache_age,
+            custom_metrics_cache_age,
         })
     }
 
@@ -394,6 +403,10 @@ impl Sections {
 
     pub fn cache_age(&self) -> u32 {
         self.cache_age
+    }
+
+    pub fn custom_metrics_cache_age(&self) -> u32 {
+        self.custom_metrics_cache_age
     }
 
     pub fn select(&self, kinds: &[SectionKind]) -> Vec<&Section> {
@@ -511,6 +524,10 @@ sections:
         assert_eq!(asyncs, PREDEFINED_ASYNC_SECTIONS);
 
         assert_eq!(s.cache_age(), defaults::SECTIONS_CACHE_AGE);
+        assert_eq!(
+            s.custom_metrics_cache_age(),
+            defaults::CUSTOM_METRICS_CACHE_AGE
+        );
 
         assert_eq!(
             Sections::from_yaml(&create_yaml("_sections:\n"), &Sections::default())

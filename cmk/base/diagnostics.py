@@ -661,11 +661,6 @@ class DiagnosticsElementInfo(Exception):
 class ABCDiagnosticsElement(abc.ABC):
     @property
     @abc.abstractmethod
-    def ident(self) -> str:
-        raise NotImplementedError()
-
-    @property
-    @abc.abstractmethod
     def title(self) -> str:
         raise NotImplementedError()
 
@@ -686,6 +681,11 @@ class ABCDiagnosticsElement(abc.ABC):
 
 
 class ABCDiagnosticsElementTextDump(ABCDiagnosticsElement):
+    @property
+    @abc.abstractmethod
+    def ident(self) -> str:
+        raise NotImplementedError()
+
     @override
     def add_or_get_files(
         self, *, omd_root: Path, tmp_dump_folder: Path
@@ -700,6 +700,11 @@ class ABCDiagnosticsElementTextDump(ABCDiagnosticsElement):
 
 
 class ABCDiagnosticsElementJSONDump(ABCDiagnosticsElement):
+    @property
+    @abc.abstractmethod
+    def ident(self) -> str:
+        raise NotImplementedError()
+
     @override
     def add_or_get_files(
         self, *, omd_root: Path, tmp_dump_folder: Path
@@ -718,6 +723,11 @@ class ABCDiagnosticsElementJSONDump(ABCDiagnosticsElement):
 
 
 class ABCDiagnosticsElementCSVDump(ABCDiagnosticsElement):
+    @property
+    @abc.abstractmethod
+    def ident(self) -> str:
+        raise NotImplementedError()
+
     @override
     def add_or_get_files(
         self, *, omd_root: Path, tmp_dump_folder: Path
@@ -1466,12 +1476,6 @@ class ABCCheckmkFilesDiagnosticsElement(ABCDiagnosticsElement):
 class CheckmkConfigFilesDiagnosticsElement(ABCCheckmkFilesDiagnosticsElement):
     @override
     @property
-    def ident(self) -> str:
-        # Unused because we directly pack the .mk or .conf file
-        return "checkmk_config_files"
-
-    @override
-    @property
     def _file_map_config(self) -> FileMapConfig:
         return FILE_MAP_CONFIG
 
@@ -1489,12 +1493,6 @@ class CheckmkConfigFilesDiagnosticsElement(ABCCheckmkFilesDiagnosticsElement):
 
 
 class CheckmkLogFilesDiagnosticsElement(ABCCheckmkFilesDiagnosticsElement):
-    @override
-    @property
-    def ident(self) -> str:
-        # Unused because we directly pack the .log or .state file
-        return "checkmk_log_files"
-
     @override
     @property
     def _file_map_config(self) -> FileMapConfig:
@@ -1523,12 +1521,6 @@ class CheckmkDirectoryDiagnosticsElement(ABCDiagnosticsElement):
         else:
             self.directory = directory
         self.rel = rel
-
-    @override
-    @property
-    def ident(self) -> str:
-        # Unused because we directly pack the .mk or .conf file
-        return "checkmk_directory"
 
     @override
     @property
@@ -1608,12 +1600,6 @@ class CheckmkCommandDiagnosticsElementTextDump(ABCDiagnosticsElementTextDump):
 class CheckmkCoreFilesDiagnosticsElement(ABCCheckmkFilesDiagnosticsElement):
     @override
     @property
-    def ident(self) -> str:
-        # Unused because we directly pack the config, state and history file
-        return "checkmk_core_files"
-
-    @override
-    @property
     def _file_map_config(self) -> FileMapConfig:
         return FILE_MAP_CORE
 
@@ -1631,12 +1617,6 @@ class CheckmkCoreFilesDiagnosticsElement(ABCCheckmkFilesDiagnosticsElement):
 
 
 class CheckmkLicensingFilesDiagnosticsElement(ABCCheckmkFilesDiagnosticsElement):
-    @override
-    @property
-    def ident(self) -> str:
-        # Unused because we directly pack the config, state and history file
-        return "checkmk_licensing_files"
-
     @override
     @property
     def _file_map_config(self) -> FileMapConfig:
@@ -1659,11 +1639,6 @@ class PerformanceGraphsDiagnosticsElement(ABCDiagnosticsElement):
     def __init__(self, checkmk_server_host: str, omd_config: site.OMDConfig) -> None:
         self.checkmk_server_host = checkmk_server_host
         self.omd_config = omd_config
-
-    @override
-    @property
-    def ident(self) -> str:
-        return "performance_graphs"
 
     @override
     @property
@@ -1696,7 +1671,7 @@ class PerformanceGraphsDiagnosticsElement(ABCDiagnosticsElement):
         if response.content[:5].hex() != "255044462d":
             raise DiagnosticsElementError("Verification of PDF document header failed")
 
-        filepath = (tmp_dump_folder / self.ident).with_suffix(".pdf")
+        filepath = tmp_dump_folder / "performance_graphs.pdf"
         with filepath.open("wb") as f:
             f.write(response.content)
 
@@ -1725,11 +1700,6 @@ class PerformanceGraphsDiagnosticsElement(ABCDiagnosticsElement):
 
 
 class CrashDumpsDiagnosticsElement(ABCDiagnosticsElement):
-    @override
-    @property
-    def ident(self) -> str:
-        return "crashdumps"
-
     @override
     @property
     def title(self) -> str:
@@ -1771,11 +1741,6 @@ class CrashDumpsDiagnosticsElement(ABCDiagnosticsElement):
 class CMCDumpDiagnosticsElement(ABCDiagnosticsElement):
     @override
     @property
-    def ident(self) -> str:
-        return "cmcdump"
-
-    @override
-    @property
     def title(self) -> str:
         return _("Config and state dumps of the CMC")
 
@@ -1811,7 +1776,7 @@ class CMCDumpDiagnosticsElement(ABCDiagnosticsElement):
                 ConsoleLogger().error(str(e))
                 continue
 
-            filepath = tmpdir / f"{self.ident}{suffix}"
+            filepath = tmpdir / f"cmcdump{suffix}"
             with filepath.open("w") as f:
                 f.write(output)
             yield filepath

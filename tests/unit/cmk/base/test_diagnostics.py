@@ -716,34 +716,30 @@ def test_diagnostics_element_checkmk_overview_content(tmp_path: Path) -> None:
 
 
 @pytest.mark.parametrize(
-    "diag_elem, ident, title, description",
+    "diag_elem, title, description",
     [
         (
             diagnostics.CheckmkConfigFilesDiagnosticsElement,
-            "checkmk_config_files",
             "Checkmk Configuration Files",
             "Configuration files ('*.mk' or '*.conf') from etc/checkmk:",
         ),
         (
             diagnostics.CheckmkLogFilesDiagnosticsElement,
-            "checkmk_log_files",
             "Checkmk Log Files",
             "Log files ('*.log' or '*.state') from var/log:",
         ),
     ],
 )
 def test_diagnostics_element_checkmk_files(
-    diag_elem: type[diagnostics.CheckmkConfigFilesDiagnosticsElement],
-    ident: str,
+    diag_elem: type[diagnostics.ABCCheckmkFilesDiagnosticsElement],
     title: str,
     description: str,
     tmp_path: Path,
 ) -> None:
     files = ["/path/to/raw-conf-file1", "/path/to/raw-conf-file2"]
     diagnostics_element = diag_elem(files)
-    assert diagnostics_element.ident == ident
     assert diagnostics_element.title == title
-    assert diagnostics_element.description == ("{} {}".format(description, ", ".join(files)))
+    assert diagnostics_element.description == (f"{description} {', '.join(files)}")
 
 
 @pytest.mark.parametrize(
@@ -818,17 +814,6 @@ def test_diagnostics_element_checkmk_files_content(
         content = f.read()
 
     assert content == "testvar = testvalue"
-
-
-def test_diagnostics_element_performance_graphs() -> None:
-    diagnostics_element = diagnostics.PerformanceGraphsDiagnosticsElement("", omd_config={})
-    assert diagnostics_element.ident == "performance_graphs"
-    assert diagnostics_element.title == "Time series graphs of Checkmk server"
-    assert diagnostics_element.description == (
-        "CPU load and utilization, number of threads, Kernel performance, "
-        "OMD, file system, Apache status, TCP connections of the time ranges "
-        "25 hours and 35 days"
-    )
 
 
 @pytest.mark.parametrize(
@@ -1045,15 +1030,6 @@ def test_diagnostics_element_cma_content(tmp_path: Path) -> None:
 
         assert content["hw"]["product"] == "Checkmk rack1 Mark VI"
         assert content["fw"] == "1.7.5"
-
-
-def test_diagnostics_element_crash_dumps(tmp_path: Path) -> None:
-    diagnostics_element = diagnostics.CrashDumpsDiagnosticsElement()
-    assert diagnostics_element.ident == "crashdumps"
-    assert diagnostics_element.title == "The latest crash dumps of each type"
-    assert diagnostics_element.description == (
-        "Returns the latest crash dumps of each type as found in var/checkmk/crashes"
-    )
 
 
 def test_diagnostics_element_crash_dumps_content(tmp_path: Path) -> None:

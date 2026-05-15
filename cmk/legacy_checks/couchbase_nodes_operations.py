@@ -3,15 +3,30 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
+from collections.abc import Mapping
+from typing import Any, Literal
 
-from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
+from cmk.agent_based.v2 import (
+    AgentSection,
+    check_levels,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Service,
+    StringTable,
+)
 
-check_info = {}
+type Section = Mapping[str | None, float]
 
 
-def parse_couchbase_nodes_operations(string_table):
-    parsed = dict[str | None, float]()
+def _levels_upper(
+    levels: tuple[float, float] | None,
+) -> tuple[Literal["fixed"], tuple[float, float]] | None:
+    return ("fixed", levels) if levels is not None else None
+
+
+def parse_couchbase_nodes_operations(string_table: StringTable) -> Section:
+    parsed: dict[str | None, float] = {}
     for line in string_table:
         if len(line) < 2:
             continue
@@ -20,44 +35,66 @@ def parse_couchbase_nodes_operations(string_table):
             parsed[node] = float(raw_value)
         except ValueError:
             continue
-    total = sum(parsed.values())
-    parsed[None] = total
+    parsed[None] = sum(parsed.values())
     return parsed
 
 
-def discover_couchbase_buckets_nodes_operations(section):
-    yield from ((item, {}) for item in section if item is not None)
+def discover_couchbase_nodes_operations(section: Section) -> DiscoveryResult:
+    yield from (Service(item=item) for item in section if item is not None)
 
 
-def discover_couchbase_buckets_nodes_operations_total(section):
-    yield from ((item, {}) for item in section if item is None)
+def discover_couchbase_nodes_operations_total(section: Section) -> DiscoveryResult:
+    if None in section:
+        yield Service()
 
 
-# We deliberately do not use @get_parsed_item_data here to also account for the case where the
-# Couchbase server does 0 operations / sec. This case would result in "UNKN - Item not found in
-# agent output" because parsed[item] would evaluate to False in get_parsed_item_data
-def check_couchbase_nodes_operations(item, params, parsed):
-    if item not in parsed or (not parsed[item] and parsed[item] != 0):
-        return None
-    return check_levels(
-        parsed[item], "op_s", params.get("ops"), human_readable_func=lambda x: f"{x:.2f}/s"
+# We deliberately do not bail out early on a 0 value to also account for the case where the
+# Couchbase server does 0 operations / sec.
+def _check(value: float | None, params: Mapping[str, Any]) -> CheckResult:
+    if value is None:
+        return
+    yield from check_levels(
+        value,
+        levels_upper=_levels_upper(params.get("ops")),
+        metric_name="op_s",
+        render_func=lambda x: f"{x:.2f}/s",
     )
 
 
-check_info["couchbase_nodes_operations"] = LegacyCheckDefinition(
+def check_couchbase_nodes_operations(
+    item: str, params: Mapping[str, Any], section: Section
+) -> CheckResult:
+    yield from _check(section.get(item), params)
+
+
+def check_couchbase_nodes_operations_total(
+    params: Mapping[str, Any], section: Section
+) -> CheckResult:
+    yield from _check(section.get(None), params)
+
+
+agent_section_couchbase_nodes_operations = AgentSection(
     name="couchbase_nodes_operations",
     parse_function=parse_couchbase_nodes_operations,
-    service_name="Couchbase %s Operations",
-    discovery_function=discover_couchbase_buckets_nodes_operations,
-    check_function=check_couchbase_nodes_operations,
-    check_ruleset_name="couchbase_ops",
 )
 
-check_info["couchbase_nodes_operations.total"] = LegacyCheckDefinition(
+
+check_plugin_couchbase_nodes_operations = CheckPlugin(
+    name="couchbase_nodes_operations",
+    service_name="Couchbase %s Operations",
+    discovery_function=discover_couchbase_nodes_operations,
+    check_function=check_couchbase_nodes_operations,
+    check_ruleset_name="couchbase_ops",
+    check_default_parameters={},
+)
+
+
+check_plugin_couchbase_nodes_operations_total = CheckPlugin(
     name="couchbase_nodes_operations_total",
     service_name="Couchbase Total Operations",
     sections=["couchbase_nodes_operations"],
-    discovery_function=discover_couchbase_buckets_nodes_operations_total,
-    check_function=check_couchbase_nodes_operations,
+    discovery_function=discover_couchbase_nodes_operations_total,
+    check_function=check_couchbase_nodes_operations_total,
     check_ruleset_name="couchbase_ops_nodes",
+    check_default_parameters={},
 )

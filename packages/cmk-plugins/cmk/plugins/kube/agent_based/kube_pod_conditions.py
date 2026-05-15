@@ -130,6 +130,17 @@ def _check(now: float, params: Mapping[str, VSResultAge], section: PodConditions
             get_age_levels_for(params, "resizeinprogress"),
             invert=True,
         )
+    # The AllContainersRestarting condition *only* shows up if at least one
+    # container in the pod spec has a `restartPolicyRules` entry with
+    # `action: RestartAllContainers`. Otherwise our section field will be None.
+    if section.allcontainersrestarting is not None:  # v1.35+
+        yield from _check_condition(
+            now,
+            "allcontainersrestarting",
+            section.allcontainersrestarting,
+            get_age_levels_for(params, "allcontainersrestarting"),
+            invert=True,
+        )
     if (disruptiontarget := section.disruptiontarget) is not None:
         yield Result(
             state=State.OK,
@@ -165,6 +176,7 @@ check_plugin_kube_pod_conditions = CheckPlugin(
         "ready": "no_levels",
         "resizepending": ("levels", (300, 600)),
         "resizeinprogress": ("levels", (300, 600)),
+        "allcontainersrestarting": ("levels", (300, 600)),
     },
     check_ruleset_name="kube_pod_conditions",
 )

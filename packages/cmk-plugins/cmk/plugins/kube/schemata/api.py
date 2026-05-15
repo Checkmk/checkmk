@@ -778,6 +778,7 @@ class PodConditionType(enum.StrEnum):
     DISRUPTIONTARGET = "disruptiontarget"
     PODRESIZEPENDING = "resizepending"
     PODRESIZEINPROGRESS = "resizeinprogress"
+    ALLCONTAINERSRESTARTING = "allcontainersrestarting"
 
     @classmethod
     def from_kube_api(cls, condition: str) -> Self | None:
@@ -800,6 +801,8 @@ class PodConditionType(enum.StrEnum):
                 return cls.PODRESIZEPENDING
             case "PodResizeInProgress":
                 return cls.PODRESIZEINPROGRESS
+            case "AllContainersRestarting":
+                return cls.ALLCONTAINERSRESTARTING
             case _:
                 return None
 

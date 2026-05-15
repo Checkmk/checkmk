@@ -20,6 +20,7 @@ from cmk.plugins.kube.schemata.api import PodConditionType
         ("DisruptionTarget", PodConditionType.DISRUPTIONTARGET),
         ("PodResizePending", PodConditionType.PODRESIZEPENDING),
         ("PodResizeInProgress", PodConditionType.PODRESIZEINPROGRESS),
+        ("AllContainersRestarting", PodConditionType.ALLCONTAINERSRESTARTING),
     ],
 )
 def test_known_condition_type(type_str: str, expected_type: PodConditionType) -> None:

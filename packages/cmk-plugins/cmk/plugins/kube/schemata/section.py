@@ -345,6 +345,7 @@ class PodConditions(Section):
     # https://kubernetes.io/docs/tasks/configure-pod-container/resize-container-resources/#pod-resize-status
     resizepending: PodCondition | None = Field(None)
     resizeinprogress: PodCondition | None = Field(None)
+    allcontainersrestarting: PodCondition | None = Field(None)
 
 
 class PodContainers(Section):

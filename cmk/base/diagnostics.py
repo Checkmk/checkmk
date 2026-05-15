@@ -713,7 +713,7 @@ class ABCDiagnosticsElementJSONDump(ABCDiagnosticsElement):
         if not infos:
             raise DiagnosticsElementInfo("No data")
 
-        filepath = (tmp_dump_folder / self.ident).with_suffix(".json")
+        filepath = tmp_dump_folder / self.ident
         store.save_text_to_file(filepath, json.dumps(infos, sort_keys=True, indent=4))
         yield filepath
 
@@ -736,7 +736,7 @@ class ABCDiagnosticsElementCSVDump(ABCDiagnosticsElement):
         if not infos:
             raise DiagnosticsElementInfo("No data")
 
-        filepath = (tmp_dump_folder / self.ident).with_suffix(".csv")
+        filepath = tmp_dump_folder / self.ident
         store.save_text_to_file(filepath, infos)
         yield filepath
 
@@ -775,7 +775,7 @@ class FilesSizeCSVDiagnosticsElement(ABCDiagnosticsElementCSVDump):
     @override
     @property
     def ident(self) -> str:
-        return "file_size"
+        return "file_size.csv"
 
     @override
     @property
@@ -818,7 +818,7 @@ class DpkgCSVDiagnosticsElement(ABCDiagnosticsElementCSVDump):
     @override
     @property
     def ident(self) -> str:
-        return "dpkg_packages"
+        return "dpkg_packages.csv"
 
     @override
     @property
@@ -844,7 +844,7 @@ class RpmCSVDiagnosticsElement(ABCDiagnosticsElementCSVDump):
     @override
     @property
     def ident(self) -> str:
-        return "rpm_packages"
+        return "rpm_packages.csv"
 
     @override
     @property
@@ -885,7 +885,7 @@ class GeneralDiagnosticsElement(ABCDiagnosticsElementJSONDump):
     @override
     @property
     def ident(self) -> str:
-        return "general"
+        return "general.json"
 
     @override
     @property
@@ -927,7 +927,7 @@ class PerfDataDiagnosticsElement(ABCDiagnosticsElementJSONDump):
     @override
     @property
     def ident(self) -> str:
-        return "perfdata"
+        return "perfdata.json"
 
     @override
     @property
@@ -1045,7 +1045,7 @@ class HWDiagnosticsElement(ABCDiagnosticsElementJSONDump):
     @override
     @property
     def ident(self) -> str:
-        return "hwinfo"
+        return "hwinfo.json"
 
     @override
     @property
@@ -1089,7 +1089,7 @@ class VendorDiagnosticsElement(ABCDiagnosticsElementJSONDump):
     @override
     @property
     def ident(self) -> str:
-        return "vendorinfo"
+        return "vendorinfo.json"
 
     @override
     @property
@@ -1109,7 +1109,7 @@ class EnvironmentDiagnosticsElement(ABCDiagnosticsElementJSONDump):
     @override
     @property
     def ident(self) -> str:
-        return "environment"
+        return "environment.json"
 
     @override
     @property
@@ -1131,7 +1131,7 @@ class PipFreezeDiagnosticsElement(ABCDiagnosticsElementJSONDump):
     @override
     @property
     def ident(self) -> str:
-        return "pip_freeze"
+        return "pip_freeze.json"
 
     @override
     @property
@@ -1238,7 +1238,7 @@ class SELinuxJSONDiagnosticsElement(ABCDiagnosticsElementJSONDump):
     @override
     @property
     def ident(self) -> str:
-        return "selinux"
+        return "selinux.json"
 
     @override
     @property
@@ -1276,7 +1276,7 @@ class CMAJSONDiagnosticsElement(ABCDiagnosticsElementJSONDump):
     @override
     @property
     def ident(self) -> str:
-        return "appliance"
+        return "appliance.json"
 
     @override
     @property
@@ -1307,7 +1307,7 @@ class OMDConfigDiagnosticsElement(ABCDiagnosticsElementJSONDump):
     @override
     @property
     def ident(self) -> str:
-        return "omd_config"
+        return "omd_config.json"
 
     @override
     @property

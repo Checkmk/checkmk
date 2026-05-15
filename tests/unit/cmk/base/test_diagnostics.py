@@ -137,7 +137,7 @@ def test_diagnostics_cleanup_dump_folder(tmp_path: Path) -> None:
 
 def test_diagnostics_element_general() -> None:
     diagnostics_element = diagnostics.GeneralDiagnosticsElement()
-    assert diagnostics_element.ident == "general"
+    assert diagnostics_element.ident == "general.json"
     assert diagnostics_element.title == "General"
     assert diagnostics_element.description == (
         "OS, Checkmk version and edition, Time, Core, Python version and paths, Architecture"
@@ -179,7 +179,7 @@ def test_diagnostics_element_perfdata() -> None:
         EMPTY_CONFIG,
         core_performance_settings=lambda x: {},
     )
-    assert diagnostics_element.ident == "perfdata"
+    assert diagnostics_element.ident == "perfdata.json"
     assert diagnostics_element.title == "Metrics"
     assert diagnostics_element.description == (
         "Metrics related to sizing, e.g. number of helpers, hosts, services"
@@ -188,7 +188,7 @@ def test_diagnostics_element_perfdata() -> None:
 
 def test_diagnostics_element_hw_info() -> None:
     diagnostics_element = diagnostics.HWDiagnosticsElement()
-    assert diagnostics_element.ident == "hwinfo"
+    assert diagnostics_element.ident == "hwinfo.json"
     assert diagnostics_element.title == "HW Information"
     assert diagnostics_element.description == ("Hardware information of the Checkmk server")
 
@@ -235,7 +235,7 @@ physical id : 0""")
 
 def test_diagnostics_element_vendor_info() -> None:
     diagnostics_element = diagnostics.VendorDiagnosticsElement()
-    assert diagnostics_element.ident == "vendorinfo"
+    assert diagnostics_element.ident == "vendorinfo.json"
     assert diagnostics_element.title == "Vendor Information"
     assert diagnostics_element.description == ("HW vendor information of the Checkmk server")
 
@@ -278,7 +278,7 @@ def test_diagnostics_element_vendor_info_content(
 
 def test_diagnostics_element_environment() -> None:
     diagnostics_element = diagnostics.EnvironmentDiagnosticsElement()
-    assert diagnostics_element.ident == "environment"
+    assert diagnostics_element.ident == "environment.json"
     assert diagnostics_element.title == "Environment Variables"
     assert diagnostics_element.description == ("Variables set in the site user's environment")
 
@@ -312,7 +312,7 @@ def test_diagnostics_element_environment_content(
 
 def test_diagnostics_element_filesize() -> None:
     diagnostics_element = diagnostics.FilesSizeCSVDiagnosticsElement()
-    assert diagnostics_element.ident == "file_size"
+    assert diagnostics_element.ident == "file_size.csv"
     assert diagnostics_element.title == "File Size"
     assert diagnostics_element.description == ("List of all files in the site including their size")
 
@@ -366,7 +366,7 @@ def test_diagnostics_element_filesize_content(tmp_path: Path) -> None:
 
 def test_diagnostics_element_dpkg() -> None:
     diagnostics_element = diagnostics.DpkgCSVDiagnosticsElement()
-    assert diagnostics_element.ident == "dpkg_packages"
+    assert diagnostics_element.ident == "dpkg_packages.csv"
     assert diagnostics_element.title == "Dpkg packages information"
     assert diagnostics_element.description == (
         "Output of `dpkg -l`. See the corresponding command line help for more details."
@@ -440,7 +440,7 @@ ii  accountsservice                                             22.07.5-2ubuntu1
 
 def test_diagnostics_element_rpm() -> None:
     diagnostics_element = diagnostics.RpmCSVDiagnosticsElement()
-    assert diagnostics_element.ident == "rpm_packages"
+    assert diagnostics_element.ident == "rpm_packages.csv"
     assert diagnostics_element.title == "Rpm packages information"
     assert diagnostics_element.description == (
         "Output of `rpm -qa`. See the corresponding command line help for more details."
@@ -485,7 +485,7 @@ tzdata;2023c;1.el9;noarch"
 
 def test_diagnostics_element_omd_config() -> None:
     diagnostics_element = diagnostics.OMDConfigDiagnosticsElement(omd_config={})
-    assert diagnostics_element.ident == "omd_config"
+    assert diagnostics_element.ident == "omd_config.json"
     assert diagnostics_element.title == "OMD Config"
     assert diagnostics_element.description == (
         "Apache mode and TCP address and port, core, "
@@ -952,7 +952,7 @@ def test_diagnostics_element_performance_graphs_content(
 
 def test_diagnostics_element_se_linux() -> None:
     diagnostics_element = diagnostics.SELinuxJSONDiagnosticsElement()
-    assert diagnostics_element.ident == "selinux"
+    assert diagnostics_element.ident == "selinux.json"
     assert diagnostics_element.title == "SELinux information"
     assert diagnostics_element.description == (
         "Output of `sestatus`. See the corresponding command line help for more details."
@@ -997,7 +997,7 @@ def test_diagnostics_element_se_linux_content(
 
 def test_diagnostics_element_cma() -> None:
     diagnostics_element = diagnostics.CMAJSONDiagnosticsElement()
-    assert diagnostics_element.ident == "appliance"
+    assert diagnostics_element.ident == "appliance.json"
     assert diagnostics_element.title == "Checkmk appliance information"
     assert diagnostics_element.description == (
         "Information about the appliance hardware and firmware version."

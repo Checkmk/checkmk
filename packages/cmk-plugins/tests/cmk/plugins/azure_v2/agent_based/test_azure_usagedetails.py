@@ -63,6 +63,59 @@ def test_discover_azure_usagedetails(
 
 
 @pytest.mark.parametrize(
+    "string_table, expected",
+    [
+        pytest.param(
+            [
+                ["Resource"],
+                [
+                    '{"id": "x", "name": "x", "type": "x", "group": "x", "properties": {"ResourceType": "microsoft.compute/disks", "Cost": 10.0, "Currency": "EUR"}}'
+                ],
+            ],
+            [Service(item="microsoft.compute"), Service(item="Summary")],
+            id="resource_type_with_slash",
+        ),
+        pytest.param(
+            [
+                ["Resource"],
+                [
+                    '{"id": "x", "name": "x", "type": "x", "group": "x", "properties": {"ResourceType": "", "Cost": 10.0, "Currency": "EUR"}}'
+                ],
+            ],
+            [Service(item="Unattributed"), Service(item="Summary")],
+            id="empty_resource_type",
+        ),
+        pytest.param(
+            [
+                ["Resource"],
+                [
+                    '{"id": "x", "name": "x", "type": "x", "group": "x", "properties": {"ResourceType": "   ", "Cost": 10.0, "Currency": "EUR"}}'
+                ],
+            ],
+            [Service(item="Unattributed"), Service(item="Summary")],
+            id="whitespace_only_resource_type",
+        ),
+        pytest.param(
+            [
+                ["Resource"],
+                [
+                    '{"id": "x", "name": "x", "type": "x", "group": "x", "properties": {"Cost": 10.0, "Currency": "EUR"}}'
+                ],
+            ],
+            [Service(item="Unattributed"), Service(item="Summary")],
+            id="missing_resource_type",
+        ),
+    ],
+)
+def test_discover_azure_usagedetails_resource_type_parsing(
+    string_table: StringTable, expected: list[Service]
+) -> None:
+    parsed = parse_azure_usagedetails(string_table)
+    result = list(discover_azure_usagedetails(parsed))
+    assert sorted(result) == sorted(expected)
+
+
+@pytest.mark.parametrize(
     "item, params, string_table, expected_results",
     [
         (

@@ -3,16 +3,23 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
+from collections.abc import Mapping, Sequence
+from typing import Any
 
-
-# mypy: disable-error-code="var-annotated"
-
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import any_of, OIDEnd, SNMPTree, startswith
-from cmk.legacy_includes.elphase import check_elphase
-
-check_info = {}
+from cmk.agent_based.v2 import (
+    any_of,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    OIDEnd,
+    Service,
+    SNMPSection,
+    SNMPTree,
+    startswith,
+    State,
+    StringTable,
+)
+from cmk.plugins.lib.elphase import check_elphase, ElPhase, ReadingWithState
 
 # Knowledge from customer:
 # Devices with OID_END=38 are 12 port power switches with two powerbanks.
@@ -23,61 +30,54 @@ check_info = {}
 # Once it's plugged in, the state is "on". Thus we use PortState in
 # discovering function.
 
+_TABLES = (19, 38)
 
-def parse_gude_powerbanks(string_table):
-    map_port_states = {
-        "0": (2, "off"),
-        "1": (0, "on"),
-    }
-    map_channel_states = {
-        "0": (2, "data not active"),
-        "1": (0, "data valid"),
-    }
+_PORT_STATES = {
+    "0": (State.CRIT, "off"),
+    "1": (State.OK, "on"),
+}
+_CHANNEL_STATES = {
+    "0": (State.CRIT, "data not active"),
+    "1": (State.OK, "data valid"),
+}
 
+Section = Mapping[str, ElPhase]
+
+
+def parse_gude_powerbanks(string_table: Sequence[StringTable]) -> Section:
     ports = dict(string_table[0])
 
-    parsed = {}
+    parsed: dict[str, ElPhase] = {}
     for oid, block in zip(_TABLES, string_table[2:]):
-        for (
-            idx,
-            dev_state,
-            energy_str,
-            active_power_str,
-            current_str,
-            volt_str,
-            freq_str,
-            appower_str,
-        ) in block:
-            device_state = (
-                map_port_states[ports[idx]] if oid == 19 else map_channel_states[dev_state]
+        for idx, dev_state, energy, active_power, current, volt, freq, appower in block:
+            device_state = _PORT_STATES[ports[idx]] if oid == 19 else _CHANNEL_STATES[dev_state]
+            parsed[idx] = ElPhase(
+                device_state=device_state,
+                energy=ReadingWithState(value=float(energy)),
+                power=ReadingWithState(value=float(active_power)),
+                current=ReadingWithState(value=float(current) * 0.001),
+                voltage=ReadingWithState(value=float(volt)),
+                frequency=ReadingWithState(value=float(freq) * 0.01),
+                appower=ReadingWithState(value=float(appower)),
             )
-
-            parsed.setdefault(idx, {"device_state": device_state})
-
-            for what, key, factor in [
-                (energy_str, "energy", 1.0),
-                (active_power_str, "power", 1.0),
-                (current_str, "current", 0.001),
-                (volt_str, "voltage", 1.0),
-                (freq_str, "frequency", 0.01),
-                (appower_str, "appower", 1.0),
-            ]:
-                parsed[idx][key] = float(what) * factor
 
     return parsed
 
 
-def discover_gude_powerbanks(parsed):
-    return [
-        (powerbank, {})
-        for powerbank, attrs in parsed.items()
-        if attrs["device_state"][1] not in ["off", "data not active"]
-    ]
+def discover_gude_powerbanks(section: Section) -> DiscoveryResult:
+    for powerbank, elphase in section.items():
+        assert elphase.device_state is not None
+        if elphase.device_state[1] not in ("off", "data not active"):
+            yield Service(item=powerbank)
 
 
-_TABLES = (19, 38)
+def check_gude_powerbanks(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
+    if (elphase := section.get(item)) is None:
+        return
+    yield from check_elphase(params, elphase)
 
-check_info["gude_powerbanks"] = LegacyCheckDefinition(
+
+snmp_section_gude_powerbanks = SNMPSection(
     name="gude_powerbanks",
     detect=any_of(
         startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.28507.19"),
@@ -98,9 +98,14 @@ check_info["gude_powerbanks"] = LegacyCheckDefinition(
         for table in _TABLES
     ],
     parse_function=parse_gude_powerbanks,
+)
+
+
+check_plugin_gude_powerbanks = CheckPlugin(
+    name="gude_powerbanks",
     service_name="Powerbank %s",
     discovery_function=discover_gude_powerbanks,
-    check_function=check_elphase,
+    check_function=check_gude_powerbanks,
     check_ruleset_name="el_inphase",
     check_default_parameters={
         "voltage": (220, 210),

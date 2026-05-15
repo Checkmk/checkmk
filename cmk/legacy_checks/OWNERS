@@ -2,18 +2,12 @@ set noparent  # don't inherit owners information from parent folders
 
 file:/component_owners/plugins/OWNERS_DEFINITION
 
-per-file arris_*=file:/component_owners/plugins_arris/OWNERS_DEFINITION
-per-file arris_*=set noparent
-per-file avaya_*=file:/component_owners/plugins_avaya/OWNERS_DEFINITION
-per-file avaya_*=set noparent
 per-file aws*=file:/component_owners/plugins_aws/OWNERS_DEFINITION
 per-file aws*=set noparent
 per-file azure*=file:/component_owners/plugins_azure/OWNERS_DEFINITION
 per-file azure*=set noparent
 per-file barracuda_*=file:/component_owners/plugins_barracuda/OWNERS_DEFINITION
 per-file barracuda_*=set noparent
-per-file brocade*=file:/component_owners/plugins_brocade/OWNERS_DEFINITION
-per-file brocade*=set noparent
 per-file bvip_*=file:/component_owners/plugins_bvip/OWNERS_DEFINITION
 per-file bvip_*=set noparent
 per-file casa_*=file:/component_owners/plugins_casa/OWNERS_DEFINITION
@@ -34,8 +28,6 @@ per-file ddn_s2a_*=file:/component_owners/plugins_ddn_s2a/OWNERS_DEFINITION
 per-file ddn_s2a_*=set noparent
 per-file decru_*=file:/component_owners/plugins_decru/OWNERS_DEFINITION
 per-file decru_*=set noparent
-per-file didactum_*=file:/component_owners/plugins_didactum/OWNERS_DEFINITION
-per-file didactum_*=set noparent
 per-file docker_*=file:/component_owners/plugins_docker/OWNERS_DEFINITION
 per-file docker_*=set noparent
 per-file dotnet_*=file:/component_owners/plugins_windows/OWNERS_DEFINITION
@@ -66,8 +58,6 @@ per-file gude_*=file:/component_owners/plugins_gude/OWNERS_DEFINITION
 per-file gude_*=set noparent
 per-file hitachi_*=file:/component_owners/plugins_hitachi/OWNERS_DEFINITION
 per-file hitachi_*=set noparent
-per-file hp_*=file:/component_owners/plugins_hp/OWNERS_DEFINITION
-per-file hp_*=set noparent
 per-file ibm_*=file:/component_owners/plugins_ibm/OWNERS_DEFINITION
 per-file ibm_*=set noparent
 per-file infoblox_*=file:/component_owners/plugins_infoblox/OWNERS_DEFINITION

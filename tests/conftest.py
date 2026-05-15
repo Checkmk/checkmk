@@ -380,10 +380,6 @@ def pytest_configure(config: pytest.Config) -> None:
     )
     config.addinivalue_line(
         "markers",
-        "skip_on_code_coverage: skip the tests when code-coverage measurement is active",
-    )
-    config.addinivalue_line(
-        "markers",
         "skip_if_faked_artifacts: skip test when --package-contains-faked-artifacts is set",
     )
 

@@ -310,9 +310,8 @@ test-unit-all: test-doctest
 #
 test-unit-all-coverage:
 	cd .. && \
-	    bazel coverage --test_verbose_timeout_warnings //tests/unit/ \
+	    bazel coverage --test_verbose_timeout_warnings //tests/unit/... \
 	    --test_env=TZ=$(RANDOM_TZ) \
-	    --test_arg="-m" --test_arg="not skip_on_code_coverage" \
 		$(BAZEL_COVERAGE_ARGS) ; \
 	    export PATH=$$PATH:$$(bazel run //bazel/tools:bazel_env print-path) && \
 		genhtml --title "Checkmk Unit Test Coverage"  \

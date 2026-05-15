@@ -8,8 +8,7 @@ from collections.abc import Mapping
 import pytest
 
 from cmk.agent_based.v2 import StringTable
-
-from .checktestlib import Check
+from cmk.legacy_checks.sap_hana_ess_migration import parse_sap_hana_ess_migration
 
 
 @pytest.mark.parametrize(
@@ -42,5 +41,4 @@ from .checktestlib import Check
 def test_parse_sap_hana_ess_migration(
     info: StringTable, expected_result: Mapping[str, Mapping[str, str]]
 ) -> None:
-    result = Check("sap_hana_ess_migration").run_parse(info)
-    assert result == expected_result
+    assert parse_sap_hana_ess_migration(info) == expected_result

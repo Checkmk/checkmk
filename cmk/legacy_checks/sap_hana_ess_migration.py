@@ -3,33 +3,34 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="arg-type"
-
 import datetime
 from collections.abc import Mapping
 from typing import TypedDict
 
-from cmk.agent_based.legacy.v0_unstable import (
-    LegacyCheckDefinition,
-    LegacyCheckResult,
-    LegacyDiscoveryResult,
+from cmk.agent_based.v2 import (
+    AgentSection,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    IgnoreResultsError,
+    Result,
+    Service,
+    State,
+    StringTable,
 )
-from cmk.agent_based.v2 import IgnoreResultsError, StringTable
 from cmk.plugins.sap_hana import lib as sap_hana
-
-check_info = {}
 
 
 class StateInfo(TypedDict):
-    cmk_state: int
+    cmk_state: State
     state_readable: str
 
 
 # With reference to SQL sample output (see internal ticket SUP-253)
 sap_hana_ess_migration_state_map: Mapping[str, StateInfo] = {
-    "Done (error)": {"cmk_state": 2, "state_readable": "Done with errors."},
-    "Installing": {"cmk_state": 1, "state_readable": "Installation in progress."},
-    "Done (okay)": {"cmk_state": 0, "state_readable": "Done without errors."},
+    "Done (error)": {"cmk_state": State.CRIT, "state_readable": "Done with errors."},
+    "Installing": {"cmk_state": State.WARN, "state_readable": "Installation in progress."},
+    "Done (okay)": {"cmk_state": State.OK, "state_readable": "Done without errors."},
 }
 
 
@@ -63,31 +64,36 @@ def parse_sap_hana_ess_migration(string_table: StringTable) -> Section:
     return parsed
 
 
-def discover_sap_hana_ess_migration(section: Section) -> LegacyDiscoveryResult:
-    yield from ((item, {}) for item in section)
+def discover_sap_hana_ess_migration(section: Section) -> DiscoveryResult:
+    for item in section:
+        yield Service(item=item)
 
 
-def check_sap_hana_ess_migration(item: str, params: object, section: Section) -> LegacyCheckResult:
+def check_sap_hana_ess_migration(item: str, section: Section) -> CheckResult:
     if not (data := section.get(item)):
         return
     if not data["log"]:
         raise IgnoreResultsError("Login into database failed.")
 
-    key = None
-    for ident in sap_hana_ess_migration_state_map:
+    states: StateInfo = {
+        "cmk_state": State.UNKNOWN,
+        "state_readable": f"Unknown [{data['log']}]",
+    }
+    for ident, info in sap_hana_ess_migration_state_map.items():
         if ident.lower() in data["log"].lower():
-            key = ident
-
-    states: StateInfo = sap_hana_ess_migration_state_map.get(
-        key, {"cmk_state": 3, "state_readable": "Unknown [%s]" % data["log"]}
-    )
-    infotext = "ESS State: {} Timestamp: {}".format(states["state_readable"], data["timestamp"])
-    yield states["cmk_state"], infotext
+            states = info
+    infotext = f"ESS State: {states['state_readable']} Timestamp: {data['timestamp']}"
+    yield Result(state=states["cmk_state"], summary=infotext)
 
 
-check_info["sap_hana_ess_migration"] = LegacyCheckDefinition(
+agent_section_sap_hana_ess_migration = AgentSection(
     name="sap_hana_ess_migration",
     parse_function=parse_sap_hana_ess_migration,
+)
+
+
+check_plugin_sap_hana_ess_migration = CheckPlugin(
+    name="sap_hana_ess_migration",
     service_name="SAP HANA ESS Migration %s",
     discovery_function=discover_sap_hana_ess_migration,
     check_function=check_sap_hana_ess_migration,

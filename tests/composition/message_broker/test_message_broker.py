@@ -251,6 +251,7 @@ def test_unsupported_tls_versions(
             central_site.message_broker_port,
             broker_ca,
             tls_version,
+            might_expect_client_cert=True,
         )
 
 
@@ -263,4 +264,5 @@ def test_supported_tls_versions(
         central_site.message_broker_port,
         broker_ca,
         tls_version,
+        might_expect_client_cert=True,
     )

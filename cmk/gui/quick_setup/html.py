@@ -7,13 +7,29 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
 from cmk.gui.table import Table
 from cmk.gui.utils.html import HTML
-from cmk.gui.watolib.configuration_bundle_store import is_locked_by_quick_setup
+from cmk.gui.watolib.configuration_bundle_store import (
+    BundleId,
+    is_locked_by_quick_setup,
+    load_configuration_bundles,
+)
 from cmk.gui.watolib.mode import mode_url
 from cmk.utils.global_ident_type import GlobalIdent
 
+_BUNDLE_GROUP_EDIT_MODES: dict[str, str] = {}
+
+
+def register_bundle_group_edit_mode(bundle_group: str, mode_name: str) -> None:
+    _BUNDLE_GROUP_EDIT_MODES[bundle_group] = mode_name
+
 
 def _quick_setup_link(ident: GlobalIdent) -> str:
-    return mode_url("edit_configuration_bundle", bundle_id=ident["instance_id"])
+    bundle_id = BundleId(ident["instance_id"])
+    bundles = load_configuration_bundles()
+    if bundle_id in bundles:
+        bundle_group = bundles[bundle_id]["group"]
+        if bundle_group in _BUNDLE_GROUP_EDIT_MODES:
+            return mode_url(_BUNDLE_GROUP_EDIT_MODES[bundle_group], bundle_id=bundle_id)
+    return mode_url("edit_configuration_bundle", bundle_id=bundle_id)
 
 
 def quick_setup_render_link(ident: GlobalIdent) -> HTML:

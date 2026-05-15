@@ -14,6 +14,7 @@ class RuleGroupType(enum.Enum):
     INV_EXPORTS = "inv_exports"
     INV_PARAMETERS = "inv_parameters"
     NOTIFICATION_PARAMETERS = "notification_parameters"
+    OTEL_COLLECTOR = "otel_collector"
     SPECIAL_AGENTS = "special_agents"
     STATIC_CHECKS = "static_checks"
     CHECKGROUP_PARAMETERS = "checkgroup_parameters"

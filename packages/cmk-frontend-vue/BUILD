@@ -211,6 +211,7 @@ SRCS = [
     ":src_vue",
     ":src_css",
     ":compile_i18n",
+    ":node_modules/@tanstack",
     ":node_modules/@testing-library",
     ":node_modules/@tsconfig",
     ":node_modules/@vitejs",

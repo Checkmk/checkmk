@@ -36,7 +36,8 @@ export function checkBuildStatus(wsPath: string): BuildStatus {
   }
 
   const venvCfg = path.join(wsPath, '.venv', 'pyvenv.cfg')
-  status.venv.ok = fs.existsSync(venvCfg)
+  const requiredBins = ['python', 'dmypy', 'ruff'].map((b) => path.join(wsPath, '.venv', 'bin', b))
+  status.venv.ok = fs.existsSync(venvCfg) && requiredBins.every((p) => fs.existsSync(p))
 
   const sharedTypingLink = path.join(
     wsPath,

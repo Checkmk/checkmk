@@ -16,6 +16,8 @@ function makeHost(overrides: Partial<HostEntry> = {}): HostEntry {
     state: 'UP',
     ip: '10.0.0.1',
     alias: 'host 1',
+    site_id: 'local',
+    num_services: 0,
     num_services_ok: 0,
     num_services_warn: 0,
     num_services_crit: 0,

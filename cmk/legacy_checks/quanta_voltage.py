@@ -3,15 +3,21 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 
+from collections.abc import Mapping
+from typing import Any
 
-from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
-from cmk.agent_based.v2 import SNMPTree
-from cmk.legacy_includes.quanta import parse_quanta
-from cmk.plugins.quanta.lib import DETECT_QUANTA
-
-check_info = {}
+from cmk.agent_based.v1 import check_levels as check_levels_v1
+from cmk.agent_based.v2 import (
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Result,
+    Service,
+    SNMPSection,
+    SNMPTree,
+)
+from cmk.plugins.quanta.lib import DETECT_QUANTA, Item, parse_quanta
 
 # .1.3.6.1.4.1.7244.1.2.1.3.5.1.1.14 14
 # .1.3.6.1.4.1.7244.1.2.1.3.5.1.1.15 15
@@ -38,27 +44,39 @@ check_info = {}
 # .1.3.6.1.4.1.7244.1.2.1.3.5.1.9.15 806
 
 
-def check_quanta_voltage(item, params, parsed):
-    if not (entry := parsed.get(item)):
+Section = Mapping[str, Item]
+
+
+def _levels(levels: tuple[float | None, float | None]) -> tuple[float, float] | None:
+    warn, crit = levels
+    if warn is None or crit is None:
+        return None
+    return warn, crit
+
+
+def discover_quanta_voltage(section: Section) -> DiscoveryResult:
+    yield from (Service(item=item) for item in section)
+
+
+def check_quanta_voltage(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
+    if not (entry := section.get(item)):
         return
-    yield entry.status[0], "Status: %s" % entry.status[1]
+    yield Result(state=entry.status[0], summary=f"Status: {entry.status[1]}")
 
     if entry.value in (-99, None):
         return
 
-    yield check_levels(
+    assert entry.value is not None
+    yield from check_levels_v1(
         entry.value,
-        "voltage",
-        params.get("levels", entry.upper_levels) + params.get("levels_lower", entry.lower_levels),
-        human_readable_func=lambda x: f"{x:.2f} V",
+        metric_name="voltage",
+        levels_upper=params.get("levels", _levels(entry.upper_levels)),
+        levels_lower=params.get("levels_lower", _levels(entry.lower_levels)),
+        render_func=lambda x: f"{x:.2f} V",
     )
 
 
-def discover_quanta_voltage(section):
-    yield from ((item, {}) for item in section)
-
-
-check_info["quanta_voltage"] = LegacyCheckDefinition(
+snmp_section_quanta_voltage = SNMPSection(
     name="quanta_voltage",
     detect=DETECT_QUANTA,
     fetch=[
@@ -68,8 +86,14 @@ check_info["quanta_voltage"] = LegacyCheckDefinition(
         )
     ],
     parse_function=parse_quanta,
+)
+
+
+check_plugin_quanta_voltage = CheckPlugin(
+    name="quanta_voltage",
     service_name="Voltage %s",
     discovery_function=discover_quanta_voltage,
     check_function=check_quanta_voltage,
     check_ruleset_name="voltage",
+    check_default_parameters={},
 )

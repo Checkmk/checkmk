@@ -11,7 +11,7 @@ from typing import override
 
 import cmk.ccc.plugin_registry
 from cmk.gui.type_defs import PermissionName, RoleName
-from cmk.gui.utils.speaklater import LazyString
+from cmk.gui.utils.speaklater import LazyString, LazyText
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -47,8 +47,8 @@ class Permission(abc.ABC):
         self,
         section: PermissionSection,
         name: str,
-        title: str | LazyString,
-        description: str | LazyString,
+        title: str | LazyString | LazyText,
+        description: str | LazyString | LazyText,
         defaults: Sequence[RoleName],
     ) -> None:
         self._section = section
@@ -142,8 +142,8 @@ def declare_permission_section(
 
 def declare_permission(
     name: PermissionName,
-    title: str | LazyString,
-    description: str | LazyString,
+    title: str | LazyString | LazyText,
+    description: str | LazyString | LazyText,
     defaults: Sequence[RoleName],
 ) -> None:
     section_name, permission_name = name.split(".", 1)

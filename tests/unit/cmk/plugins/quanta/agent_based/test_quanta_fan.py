@@ -9,7 +9,7 @@ import pytest
 
 from cmk.agent_based.internal import evaluate_snmp_detection
 from cmk.agent_based.v2 import Metric, Result, Service, State, StringTable
-from cmk.legacy_checks.quanta_fan import check_quanta_fan, discover_quanta_fan
+from cmk.plugins.quanta.agent_based.quanta_fan import check_quanta_fan, discover_quanta_fan
 from cmk.plugins.quanta.lib import DETECT_QUANTA, parse_quanta
 
 

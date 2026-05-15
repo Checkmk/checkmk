@@ -17,7 +17,7 @@ class JSONPodCondition(TypedDict):
 
 
 def pod_condition(condition: JSONPodCondition) -> api.PodCondition:
-    type_ = api.ConditionType.from_kube_api(condition["type"])
+    type_ = api.PodConditionType.from_kube_api(condition["type"])
     custom_type = None if type_ is not None else condition["type"]
     return api.PodCondition(
         # TODO: CMK-33030, the JSON type is right, the api model is wrong

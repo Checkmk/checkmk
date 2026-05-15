@@ -759,7 +759,7 @@ class ContainerStatus(BaseModel):
     restart_count: int
 
 
-class ConditionType(enum.StrEnum):
+class PodConditionType(enum.StrEnum):
     """
     DISRUPTIONTARGET
         * condition is only present if the pod is actually disrupted by one of listed
@@ -812,7 +812,7 @@ class PodCondition(BaseModel):
     """
 
     status: ConditionStatus
-    type: ConditionType | None = None
+    type: PodConditionType | None = None
     custom_type: str | None = None
     reason: str | None = None
     detail: str | None = None

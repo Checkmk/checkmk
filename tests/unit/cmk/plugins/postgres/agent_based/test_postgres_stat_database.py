@@ -10,7 +10,7 @@ from typing import Any
 import pytest
 
 from cmk.agent_based.v2 import Metric, Result, State, StringTable
-from cmk.legacy_checks.postgres_stat_database import (
+from cmk.plugins.postgres.agent_based.postgres_stat_database import (
     check_postgres_stat_database_size,
     parse_postgres_stat_database,
 )

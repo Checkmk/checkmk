@@ -8,7 +8,7 @@
 from typing import Any
 
 from cmk.agent_based.v2 import Service
-from cmk.legacy_checks.postgres_stat_database import (
+from cmk.plugins.postgres.agent_based.postgres_stat_database import (
     discover_postgres_stat_database,
     discover_postgres_stat_database_size,
     parse_postgres_stat_database,

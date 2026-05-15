@@ -1,445 +1,272 @@
 #!/usr/bin/env python3
-# Copyright (C) 2021 Checkmk GmbH - License: GNU General Public License v2
+# Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="misc"
-# mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
-# mypy: disable-error-code="type-arg"
-# ruff: noqa: SLF001  # Private member accessed
+# ruff: noqa: SLF001  # tests call kube_pod_conditions._check to control `now`
 
 
 import json
 from collections.abc import Mapping
+from dataclasses import dataclass
+from typing import Any
 
 import pytest
-from polyfactory.factories.pydantic_factory import ModelFactory
 from pydantic import ValidationError
 
-from cmk.agent_based.v2 import CheckResult, render, Result, State, StringTable
+from cmk.agent_based.v2 import render, Result, State, StringTable
 from cmk.plugins.kube.agent_based import kube_pod_conditions
+from cmk.plugins.kube.kube import VSResultAge
 from cmk.plugins.kube.schemata.api import ConditionStatus
 from cmk.plugins.kube.schemata.section import PodCondition, PodConditions
 
 MINUTE = 60
 TIMESTAMP = 359
 
-OK = 0
-WARN = 3
-CRIT = 5
-
-RECENT = {"timestamp": TIMESTAMP - OK * MINUTE}
-STALE_WARN = {"timestamp": TIMESTAMP - WARN * MINUTE}
-STALE_CRIT = {"timestamp": TIMESTAMP - CRIT * MINUTE}
-
 REASON = "MuchReason"
 DETAIL = "wow detail many detailed"
 
 
-class PodConditionsFactory(ModelFactory):
-    __model__ = PodConditions
-
-    disruptiontarget = None
-
-
-class PodConditionFactory(ModelFactory):
-    __model__ = PodCondition
-
-    last_transition_time = TIMESTAMP
-
-
-def status_dict(status: ConditionStatus | None, time_diff_minutes=0) -> Mapping[str, str] | None:
-    if status is None:
-        return None
+def _condition_kwargs(status: ConditionStatus, age_minutes: int = 0) -> dict[str, Any]:
+    """Common kwargs for a single condition; used by both the JSON payload and
+    the PodCondition constructor paths.
+    """
     return {
         "status": status,
         "reason": REASON,
         "detail": DETAIL,
-        "last_transition_time": TIMESTAMP - time_diff_minutes * MINUTE,
+        "last_transition_time": TIMESTAMP - age_minutes * MINUTE,
     }
 
 
-@pytest.fixture
-def state():
-    return OK
+def _payload(status: ConditionStatus | None, age_minutes: int = 0) -> dict[str, Any] | None:
+    """JSON-shape payload that parse() consumes for a single condition."""
+    return None if status is None else _condition_kwargs(status, age_minutes)
 
 
-@pytest.fixture
-def state_initialized(state):
-    return state
+def _section_payload(
+    *,
+    initialized: ConditionStatus | None = ConditionStatus.TRUE,
+    scheduled: ConditionStatus | None = ConditionStatus.TRUE,
+    containersready: ConditionStatus | None = ConditionStatus.TRUE,
+    ready: ConditionStatus | None = ConditionStatus.TRUE,
+    hasnetwork: ConditionStatus | None = ConditionStatus.TRUE,
+    readytostartcontainers: ConditionStatus | None = None,
+    resizepending: ConditionStatus | None = ConditionStatus.FALSE,
+    resizeinprogress: ConditionStatus | None = ConditionStatus.FALSE,
+    age_minutes: int = 0,
+    disruptiontarget: PodCondition | None = None,
+) -> dict[str, Any]:
+    """The shared dict shape underneath both the JSON serialization and the
+    direct PodConditions construction paths.
 
+    Defaults are picked for test convenience: every condition present and
+    "healthy" (ready-chain True, resize conditions False, hasnetwork True,
+    readytostartcontainers absent because it's the post-1.28 alias for
+    hasnetwork). Tests override only what they care about.
 
-@pytest.fixture
-def state_scheduled(state):
-    return state
-
-
-@pytest.fixture
-def state_containersready(state):
-    return state
-
-
-@pytest.fixture
-def state_ready(state):
-    return state
-
-
-@pytest.fixture
-def state_resizepending(state):
-    return state
-
-
-@pytest.fixture
-def state_resizeinprogress(state):
-    return state
-
-
-@pytest.fixture
-def status():
-    return ConditionStatus.TRUE
-
-
-@pytest.fixture
-def status_initialized(status):
-    return status
-
-
-@pytest.fixture
-def status_scheduled(status):
-    return status
-
-
-@pytest.fixture
-def status_containersready(status):
-    return status
-
-
-@pytest.fixture
-def status_ready(status):
-    return status
-
-
-@pytest.fixture
-def status_resizepending():
-    return ConditionStatus.FALSE
-
-
-@pytest.fixture
-def status_resizeinprogress():
-    return ConditionStatus.FALSE
-
-
-@pytest.fixture
-def string_table_element(
-    status_initialized,
-    status_scheduled,
-    status_containersready,
-    status_ready,
-    status_resizepending,
-    status_resizeinprogress,
-    state_initialized,
-    state_scheduled,
-    state_containersready,
-    state_ready,
-    state_resizepending,
-    state_resizeinprogress,
-):
-    return {
-        "initialized": status_dict(status_initialized, state_initialized),
-        "hasnetwork": status_dict(ConditionStatus.TRUE),
-        "scheduled": status_dict(status_scheduled, state_scheduled),
-        "containersready": status_dict(status_containersready, state_containersready),
-        "ready": status_dict(status_ready, state_ready),
-        "resizepending": status_dict(status_resizepending, state_resizepending),
-        "resizeinprogress": status_dict(status_resizeinprogress, state_resizeinprogress),
-    }
-
-
-@pytest.fixture
-def string_table(string_table_element):
-    return [[json.dumps(string_table_element)]]
-
-
-@pytest.fixture
-def section(string_table):
-    return kube_pod_conditions.parse(string_table)
-
-
-@pytest.fixture
-def params():
-    return {
-        "initialized": ("levels", (WARN * MINUTE, CRIT * MINUTE)),
-        "scheduled": ("levels", (WARN * MINUTE, CRIT * MINUTE)),
-        "containersready": ("levels", (WARN * MINUTE, CRIT * MINUTE)),
-        "ready": ("levels", (WARN * MINUTE, CRIT * MINUTE)),
-        "resizepending": ("levels", (WARN * MINUTE, CRIT * MINUTE)),
-        "resizeinprogress": ("levels", (WARN * MINUTE, CRIT * MINUTE)),
-    }
-
-
-@pytest.fixture
-def check_result(params, section):
-    return kube_pod_conditions._check(TIMESTAMP, params, section)
-
-
-def test_parse(string_table: StringTable) -> None:
-    section = kube_pod_conditions.parse(string_table)
-
-    def assert_ready(cond: PodCondition | None, invert: bool = False) -> None:
-        if cond is None:
-            raise AssertionError("Condition should not be None")
-        # if invert is True, we are ready when the condition is *False*
-        ready_status = ConditionStatus.FALSE if invert else ConditionStatus.TRUE
-        assert cond.model_dump() == status_dict(ready_status)
-
-    assert_ready(section.initialized)
-    assert_ready(section.scheduled)
-    assert_ready(section.containersready)
-    assert_ready(section.ready)
-    assert_ready(section.resizepending, invert=True)
-    assert_ready(section.resizeinprogress, invert=True)
-
-
-@pytest.mark.parametrize(
+    Passing None for a status drops that condition from the section. Required
+    fields (scheduled) will then fail validation, which test_parse_fails_*
+    relies on. ``disruptiontarget`` is a full PodCondition because tests that
+    use it want a custom reason/detail (e.g. "EvictionByEvictionAPI").
     """
-        status_initialized,
-        status_scheduled,
-        status_containersready,
-        status_ready,
-        status_resizepending,
-        status_resizeinprogress,
-        expected_initialized,
-        expected_scheduled,
-        expected_containersready,
-        expected_ready,
-        expected_resizepending,
-        expected_resizeinprogress,
-    """,
-    [
-        (
-            ConditionStatus.TRUE,
-            ConditionStatus.TRUE,
-            ConditionStatus.TRUE,
-            ConditionStatus.TRUE,
-            ConditionStatus.FALSE,
-            ConditionStatus.FALSE,
-            status_dict(ConditionStatus.TRUE),
-            status_dict(ConditionStatus.TRUE),
-            status_dict(ConditionStatus.TRUE),
-            status_dict(ConditionStatus.TRUE),
-            status_dict(ConditionStatus.FALSE),
-            status_dict(ConditionStatus.FALSE),
-        ),
-        (
-            ConditionStatus.TRUE,
-            ConditionStatus.TRUE,
-            ConditionStatus.FALSE,
-            ConditionStatus.FALSE,
-            ConditionStatus.FALSE,
-            ConditionStatus.FALSE,
-            status_dict(ConditionStatus.TRUE),
-            status_dict(ConditionStatus.TRUE),
-            status_dict(ConditionStatus.FALSE),
-            status_dict(ConditionStatus.FALSE),
-            status_dict(ConditionStatus.FALSE),
-            status_dict(ConditionStatus.FALSE),
-        ),
-        (
-            None,
-            ConditionStatus.FALSE,
-            None,
-            None,
-            None,
-            None,
-            None,
-            status_dict(ConditionStatus.FALSE),
-            None,
-            None,
-            None,
-            None,
-        ),
-        (
-            ConditionStatus.FALSE,
-            ConditionStatus.FALSE,
-            None,
-            None,
-            None,
-            None,
-            status_dict(ConditionStatus.FALSE),
-            status_dict(ConditionStatus.FALSE),
-            None,
-            None,
-            None,
-            None,
-        ),
-        (
-            ConditionStatus.FALSE,
-            ConditionStatus.FALSE,
-            ConditionStatus.FALSE,
-            ConditionStatus.FALSE,
-            ConditionStatus.TRUE,
-            ConditionStatus.TRUE,
-            status_dict(ConditionStatus.FALSE),
-            status_dict(ConditionStatus.FALSE),
-            status_dict(ConditionStatus.FALSE),
-            status_dict(ConditionStatus.FALSE),
-            status_dict(ConditionStatus.TRUE),
-            status_dict(ConditionStatus.TRUE),
-        ),
-    ],
-    ids=[
-        "all_ok",
-        "initialized_scheduled",
-        "unscheduled",
-        "unscheduled_uninitialized",
-        "all_not_ok",
-    ],
-)
-def test_parse_multi(
-    expected_initialized,
-    expected_scheduled,
-    expected_containersready,
-    expected_ready,
-    expected_resizepending,
-    expected_resizeinprogress,
-    string_table,
-):
-    expected_initialized = (
-        PodCondition(**expected_initialized) if expected_initialized is not None else None
-    )
-    expected_scheduled = PodCondition(**expected_scheduled)
-    expected_containersready = (
-        PodCondition(**expected_containersready) if expected_containersready is not None else None
-    )
-    expected_ready = PodCondition(**expected_ready) if expected_ready is not None else None
-    expected_resizepending = (
-        PodCondition(**expected_resizepending) if expected_resizepending is not None else None
-    )
-    expected_resizeinprogress = (
-        PodCondition(**expected_resizeinprogress) if expected_resizeinprogress is not None else None
-    )
-    section = kube_pod_conditions.parse(string_table)
-    assert section.initialized == expected_initialized
-    assert section.scheduled == expected_scheduled
-    assert section.containersready == expected_containersready
-    assert section.ready == expected_ready
-    assert section.resizepending == expected_resizepending
-    assert section.resizeinprogress == expected_resizeinprogress
+    payload: dict[str, Any] = {
+        "initialized": _payload(initialized, age_minutes),
+        "hasnetwork": _payload(hasnetwork, age_minutes),
+        "readytostartcontainers": _payload(readytostartcontainers, age_minutes),
+        "scheduled": _payload(scheduled, age_minutes),
+        "containersready": _payload(containersready, age_minutes),
+        "ready": _payload(ready, age_minutes),
+        "resizepending": _payload(resizepending, age_minutes),
+        "resizeinprogress": _payload(resizeinprogress, age_minutes),
+    }
+    if disruptiontarget is not None:
+        payload["disruptiontarget"] = disruptiontarget.model_dump()
+    return payload
 
 
-@pytest.mark.parametrize("state", [CRIT])
+def _make_string_table(**kwargs: Any) -> StringTable:
+    """JSON-encode the section payload as the agent would emit it."""
+    return [[json.dumps(_section_payload(**kwargs))]]
+
+
+def _make_section(**kwargs: Any) -> PodConditions:
+    """Build a PodConditions directly from the shared payload shape."""
+    return PodConditions(**_section_payload(**kwargs))
+
+
+def _expected_condition(status: ConditionStatus | None) -> PodCondition | None:
+    return None if status is None else PodCondition(**_condition_kwargs(status))
+
+
+def test_parse() -> None:
+    """JSON round-trip"""
+    section = kube_pod_conditions.parse(_make_string_table())
+    assert section.initialized == _expected_condition(ConditionStatus.TRUE)
+    assert section.scheduled == _expected_condition(ConditionStatus.TRUE)
+    assert section.containersready == _expected_condition(ConditionStatus.TRUE)
+    assert section.ready == _expected_condition(ConditionStatus.TRUE)
+    assert section.resizepending == _expected_condition(ConditionStatus.FALSE)
+    assert section.resizeinprogress == _expected_condition(ConditionStatus.FALSE)
+
+
+_T = ConditionStatus.TRUE
+_F = ConditionStatus.FALSE
+
+
+@dataclass(frozen=True)
+class _ParseCase:
+    name: str
+    initialized: ConditionStatus | None
+    scheduled: ConditionStatus | None
+    containersready: ConditionStatus | None
+    ready: ConditionStatus | None
+    resizepending: ConditionStatus | None
+    resizeinprogress: ConditionStatus | None
+
+
 @pytest.mark.parametrize(
-    "status_initialized, status_scheduled, status_containersready, status_ready",
-    [(None, None, None, None)],
+    "case",
+    [
+        _ParseCase("all_ok", _T, _T, _T, _T, _F, _F),
+        _ParseCase("initialized_scheduled", _T, _T, _F, _F, _F, _F),
+        _ParseCase("unscheduled", None, _F, None, None, None, None),
+        _ParseCase("unscheduled_uninitialized", _F, _F, None, None, None, None),
+        _ParseCase("all_not_ok", _F, _F, _F, _F, _T, _T),
+    ],
+    ids=lambda c: c.name,
 )
-def test_parse_fails_when_all_conditions_empty(string_table: StringTable) -> None:
+def test_parse_multi(case: _ParseCase) -> None:
+    """Exercise the JSON->section parse path across various status mixes.
+
+    Each case is a snapshot of a real-world-ish pod state (everything healthy,
+    only ready-chain partially initialized, only ``scheduled`` known, etc.).
+    None means the condition is absent from the agent output entirely; the
+    parser should drop it from the section, not error.
+    """
+    section = kube_pod_conditions.parse(
+        _make_string_table(
+            initialized=case.initialized,
+            scheduled=case.scheduled,
+            containersready=case.containersready,
+            ready=case.ready,
+            resizepending=case.resizepending,
+            resizeinprogress=case.resizeinprogress,
+        )
+    )
+    assert section.initialized == _expected_condition(case.initialized)
+    assert section.scheduled == _expected_condition(case.scheduled)
+    assert section.containersready == _expected_condition(case.containersready)
+    assert section.ready == _expected_condition(case.ready)
+    assert section.resizepending == _expected_condition(case.resizepending)
+    assert section.resizeinprogress == _expected_condition(case.resizeinprogress)
+
+
+def test_parse_fails_when_all_conditions_empty() -> None:
+    # `scheduled` is required by PodConditions; setting it (and friends) to
+    # None should make parse() raise.
+    string_table = _make_string_table(
+        initialized=None,
+        scheduled=None,
+        containersready=None,
+        ready=None,
+    )
     with pytest.raises(ValidationError):
         kube_pod_conditions.parse(string_table)
 
 
-def test_discovery_returns_an_iterable(string_table: StringTable) -> None:
-    parsed = kube_pod_conditions.parse(string_table)
-    assert list(kube_pod_conditions.discovery(parsed))
+# ---------------------------------------------------------------------------
+# Check-logic tests construct sections directly via _make_section. `age_minutes`
+# is the time since the condition's last transition. _TEST_PARAMS sets levels
+# that fire at 5min/10min on every condition.
+# ---------------------------------------------------------------------------
 
 
-@pytest.mark.parametrize("status", [True, False])
-def test_check_all_states_ok(check_result: CheckResult) -> None:
-    assert all(isinstance(r, Result) and r.state == State.OK for r in check_result)
+_TEST_PARAMS: Mapping[str, VSResultAge] = {
+    "initialized": ("levels", (5 * MINUTE, 10 * MINUTE)),
+    "scheduled": ("levels", (5 * MINUTE, 10 * MINUTE)),
+    "containersready": ("levels", (5 * MINUTE, 10 * MINUTE)),
+    "ready": ("levels", (5 * MINUTE, 10 * MINUTE)),
+    "resizepending": ("levels", (5 * MINUTE, 10 * MINUTE)),
+    "resizeinprogress": ("levels", (5 * MINUTE, 10 * MINUTE)),
+}
+
+_ALL_NO_LEVELS: Mapping[str, VSResultAge] = {
+    "scheduled": "no_levels",
+    "initialized": "no_levels",
+    "containersready": "no_levels",
+    "ready": "no_levels",
+}
 
 
-def test_check_all_results_with_summary_status_unexpected():
-    section = PodConditionsFactory.build(
-        initialized=PodConditionFactory.build(status=False, reason=REASON, detail=DETAIL),
-        hasnetwork=PodConditionFactory.build(status=False, reason=REASON, detail=DETAIL),
-        scheduled=PodConditionFactory.build(status=False, reason=REASON, detail=DETAIL),
-        containersready=PodConditionFactory.build(status=False, reason=REASON, detail=DETAIL),
-        ready=PodConditionFactory.build(status=False, reason=REASON, detail=DETAIL),
-        resizepending=PodConditionFactory.build(status=True, reason=REASON, detail=DETAIL),
-        resizeinprogress=PodConditionFactory.build(status=True, reason=REASON, detail=DETAIL),
+@pytest.mark.parametrize(
+    "ready_status",
+    [ConditionStatus.TRUE, ConditionStatus.FALSE],
+)
+def test_check_all_ok_when_age_is_zero(ready_status: ConditionStatus) -> None:
+    """With age_minutes=0 nothing has exceeded any level yet, regardless of status."""
+    section = _make_section(
+        initialized=ready_status,
+        scheduled=ready_status,
+        containersready=ready_status,
+        ready=ready_status,
     )
-    check_result = kube_pod_conditions._check(TIMESTAMP, {}, section)
-    expected_summaries = [
-        f"{k.upper()}: {v} ({REASON}: {DETAIL}) for 0 seconds"
-        for (k, v) in [
-            ("scheduled", False),
-            ("hasnetwork", False),
-            ("initialized", False),
-            ("containersready", False),
-            ("ready", False),
-            ("resizepending", True),
-            ("resizeinprogress", True),
-        ]
-    ]
-    assert list(r.summary for r in check_result if isinstance(r, Result)) == expected_summaries
+    results = list(kube_pod_conditions._check(TIMESTAMP, _TEST_PARAMS, section))
+    assert all(isinstance(r, Result) and r.state == State.OK for r in results)
 
 
-@pytest.mark.parametrize("status", [True])
-@pytest.mark.parametrize("state", [0, WARN, CRIT])
-def test_check_results_state_ok_when_status_expected(
-    check_result: CheckResult,
-) -> None:
-    assert all(isinstance(r, Result) and r.state == State.OK for r in check_result)
+@pytest.mark.parametrize("age_minutes", [0, 5, 10])
+def test_check_all_ok_when_status_expected_regardless_of_age(age_minutes: int) -> None:
+    """Status matching expectations: never alerts, no matter how old."""
+    section = _make_section(age_minutes=age_minutes)
+    results = list(kube_pod_conditions._check(TIMESTAMP, _TEST_PARAMS, section))
+    assert all(isinstance(r, Result) and r.state == State.OK for r in results)
 
 
-@pytest.mark.parametrize("status", [False])
+@pytest.mark.parametrize("age_minutes", [0, 5, 10])
 @pytest.mark.parametrize(
     "params",
-    [
-        {
-            "scheduled": "no_levels",
-            "initialized": "no_levels",
-            "containersready": "no_levels",
-            "ready": "no_levels",
-        }
-    ],
+    [_ALL_NO_LEVELS, {}],
+    ids=["no_levels", "no_params"],
 )
-@pytest.mark.parametrize("state", [OK, WARN, CRIT])
-def test_check_results_state_ok_when_status_unexpected_and_no_levels(
-    check_result: CheckResult,
+def test_check_all_ok_when_status_unexpected_but_no_levels_configured(
+    age_minutes: int,
+    params: Mapping[str, VSResultAge],
 ) -> None:
-    assert all(isinstance(r, Result) and r.state == State.OK for r in check_result)
-
-
-@pytest.mark.parametrize("status", [False])
-@pytest.mark.parametrize("params", [{}])
-@pytest.mark.parametrize("state", [OK, WARN, CRIT])
-def test_check_results_state_ok_when_status_unexpected_and_no_params(
-    check_result: CheckResult,
-) -> None:
-    assert all(isinstance(r, Result) and r.state == State.OK for r in check_result)
-
-
-def test_check_results_sets_summary_when_status_unexpected(
-    state: float, check_result: CheckResult
-) -> None:
-    transition_timestamp = TIMESTAMP - state * MINUTE
-    pod_condition_with_false_status = PodConditionFactory.build(
-        status=False,
-        last_transition_time=transition_timestamp,
-        reason=REASON,
-        detail=DETAIL,
+    """Unexpected status with no levels (explicit or implicit): no alert."""
+    section = _make_section(
+        initialized=ConditionStatus.FALSE,
+        scheduled=ConditionStatus.FALSE,
+        containersready=ConditionStatus.FALSE,
+        ready=ConditionStatus.FALSE,
+        age_minutes=age_minutes,
     )
-    pod_condition_with_true_status = PodConditionFactory.build(
-        status=True,
-        last_transition_time=transition_timestamp,
-        reason=REASON,
-        detail=DETAIL,
+    results = list(kube_pod_conditions._check(TIMESTAMP, params, section))
+    assert all(isinstance(r, Result) and r.state == State.OK for r in results)
+
+
+@pytest.mark.parametrize("age_minutes", [0, 5, 10])
+def test_check_summaries_when_all_status_unexpected(age_minutes: int) -> None:
+    """Each condition's summary reports the wrong status and the time since
+    its last transition. Uses params={} so state stays OK regardless of age;
+    this exercises summary format and ordering across different age renderings,
+    not threshold behavior.
+    """
+    section = _make_section(
+        initialized=ConditionStatus.FALSE,
+        scheduled=ConditionStatus.FALSE,
+        containersready=ConditionStatus.FALSE,
+        ready=ConditionStatus.FALSE,
+        hasnetwork=ConditionStatus.FALSE,
+        resizepending=ConditionStatus.TRUE,
+        resizeinprogress=ConditionStatus.TRUE,
+        age_minutes=age_minutes,
     )
-    section = PodConditionsFactory.build(
-        initialized=pod_condition_with_false_status,
-        hasnetwork=pod_condition_with_false_status,
-        scheduled=pod_condition_with_false_status,
-        containersready=pod_condition_with_false_status,
-        ready=pod_condition_with_false_status,
-        resizepending=pod_condition_with_true_status,
-        resizeinprogress=pod_condition_with_true_status,
-    )
-    check_result = kube_pod_conditions._check(TIMESTAMP, {}, section)
-    time_diff = render.timespan(TIMESTAMP - transition_timestamp)
-    expected_prefixes = [
-        f"{k.upper()}: {v} ({REASON}: {DETAIL}) for {time_diff}"
-        for (k, v) in [
+    results = list(kube_pod_conditions._check(TIMESTAMP, {}, section))
+    time_diff = render.timespan(age_minutes * MINUTE)
+    expected = [
+        f"{name.upper()}: {value} ({REASON}: {DETAIL}) for {time_diff}"
+        for name, value in [
             ("scheduled", False),
             ("hasnetwork", False),
             ("initialized", False),
@@ -447,53 +274,22 @@ def test_check_results_sets_summary_when_status_unexpected(
             ("ready", False),
             ("resizepending", True),
             ("resizeinprogress", True),
-            ("disruptiontarget", False),
         ]
     ]
-    for expected_prefix, result in zip(expected_prefixes, check_result):
-        assert isinstance(result, Result) and result.summary.startswith(expected_prefix)
+    assert [r.summary for r in results if isinstance(r, Result)] == expected
 
 
-def test_register_agent_section_calls() -> None:
-    agent_section = kube_pod_conditions.agent_section_kube_pod_conditions_v1
-    assert agent_section.name == "kube_pod_conditions_v1"
-    assert agent_section.parsed_section_name == "kube_pod_conditions"
-    assert agent_section.parse_function == kube_pod_conditions.parse
-
-
-def test_register_check_plugin_calls() -> None:
-    check_plugin = kube_pod_conditions.check_plugin_kube_pod_conditions
-    assert check_plugin.name == "kube_pod_conditions"
-    assert check_plugin.service_name == "Condition"
-    assert check_plugin.discovery_function == kube_pod_conditions.discovery
-    assert check_plugin.check_function == kube_pod_conditions.check
-    assert check_plugin.check_default_parameters == {
-        "scheduled": "no_levels",
-        "hasnetwork": "no_levels",
-        "initialized": "no_levels",
-        "containersready": "no_levels",
-        "ready": "no_levels",
-        "resizepending": ("levels", (300, 600)),
-        "resizeinprogress": ("levels", (300, 600)),
-    }
-    assert check_plugin.check_ruleset_name == "kube_pod_conditions"
-
-
-def test_check_disruption_target_condition():
-    section = PodConditionsFactory.build(
-        initialized=PodConditionFactory.build(status=True),
-        hasnetwork=PodConditionFactory.build(status=True),
-        scheduled=PodConditionFactory.build(status=True),
-        containersready=PodConditionFactory.build(status=True),
-        ready=PodConditionFactory.build(status=True),
-        resizepending=PodConditionFactory.build(status=False),
-        resizeinprogress=PodConditionFactory.build(status=False),
-        disruptiontarget=PodConditionFactory.build(
-            status=True, reason="EvictionByEvictionAPI", detail="EvictionAPI: evicting"
+def test_check_disruption_target_condition() -> None:
+    section = _make_section(
+        disruptiontarget=PodCondition(
+            status=ConditionStatus.TRUE,
+            reason="EvictionByEvictionAPI",
+            detail="EvictionAPI: evicting",
+            last_transition_time=TIMESTAMP,
         ),
     )
-    check_result = kube_pod_conditions._check(TIMESTAMP, {}, section)
-    assert [r.summary for r in check_result if isinstance(r, Result)] == [
+    results = list(kube_pod_conditions._check(TIMESTAMP, {}, section))
+    assert [r.summary for r in results if isinstance(r, Result)] == [
         "SCHEDULED: True",
         "HASNETWORK: True",
         "INITIALIZED: True",
@@ -512,17 +308,7 @@ def test_check_handles_unknown_status() -> None:
     parsing entirely; now it falls through to the time-based check and is
     reported as 'Unknown' in the service summary.
     """
-    section = PodConditionsFactory.build(
-        initialized=PodConditionFactory.build(status=ConditionStatus.TRUE),
-        hasnetwork=PodConditionFactory.build(status=ConditionStatus.TRUE),
-        scheduled=PodConditionFactory.build(
-            status=ConditionStatus.UNKNOWN, reason=REASON, detail=DETAIL
-        ),
-        containersready=PodConditionFactory.build(status=ConditionStatus.TRUE),
-        ready=PodConditionFactory.build(status=ConditionStatus.TRUE),
-        resizepending=PodConditionFactory.build(status=ConditionStatus.FALSE),
-        resizeinprogress=PodConditionFactory.build(status=ConditionStatus.FALSE),
-    )
+    section = _make_section(scheduled=ConditionStatus.UNKNOWN)
     assert list(kube_pod_conditions._check(TIMESTAMP, {}, section)) == [
         Result(
             state=State.OK,

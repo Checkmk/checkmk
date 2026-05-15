@@ -3,8 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="type-arg"
+# mypy: disable-error-code="misc"
 
 # NOTE: This file has been created by an LLM (from something that was worse).
 # It mostly serves as test to ensure we don't accidentally break anything.
@@ -15,7 +14,7 @@ from collections.abc import Mapping, Sequence
 
 import pytest
 
-from cmk.agent_based.v2 import IgnoreResultsError
+from cmk.agent_based.v2 import IgnoreResultsError, Metric, Result, Service, State
 from cmk.legacy_checks.postgres_connections import (
     check_postgres_connections,
     discover_postgres_connections,
@@ -42,17 +41,14 @@ def parsed() -> Mapping[str, Sequence[Mapping[str, str]]]:
 
 
 def test_postgres_connections_discovery() -> None:
-    """Test discovery of postgres_connections items."""
     discovery_result = list(discover_postgres_connections(parsed()))
-
-    expected: list[tuple[str, dict]] = [("app", {}), ("app_test", {}), ("postgres", {})]
-
-    # Sort for comparison since order may vary
-    assert sorted(discovery_result) == sorted(expected)
+    expected = [Service(item="app"), Service(item="app_test"), Service(item="postgres")]
+    assert sorted(discovery_result, key=lambda s: s.item or "") == sorted(
+        expected, key=lambda s: s.item or ""
+    )
 
 
 def test_postgres_connections_check_app() -> None:
-    """Test check function for app database (normal case)."""
     params = {
         "levels_perc_active": (80.0, 90.0),
         "levels_perc_idle": (80.0, 90.0),
@@ -60,51 +56,30 @@ def test_postgres_connections_check_app() -> None:
 
     results = list(check_postgres_connections("app", params, parsed()))
 
-    assert len(results) == 4
-
-    # Check active connections
-    state, summary, metrics = results[0]
-    assert state == 0  # OK
-    assert "Used active connections: 0" in summary
-    assert metrics == [("active_connections", 0.0, None, None, 0, 100.0)]
-
-    # Check active percentage
-    state, summary, metrics = results[1]
-    assert state == 0  # OK
-    assert "Used active percentage: 0%" in summary
-    assert metrics == []
-
-    # Check idle connections
-    state, summary, metrics = results[2]
-    assert state == 0  # OK
-    assert "Used idle connections: 1" in summary
-    assert metrics == [("idle_connections", 1.0, None, None, 0, 100.0)]
-
-    # Check idle percentage
-    state, summary, metrics = results[3]
-    assert state == 0  # OK
-    assert "Used idle percentage: 1.00%" in summary
-    assert metrics == []
+    # active=0 (string "0" is truthy, so not skipped); idle=1
+    assert results == [
+        Result(state=State.OK, summary="Used active connections: 0"),
+        Metric("active_connections", 0.0, boundaries=(0.0, 100.0)),
+        Result(state=State.OK, summary="Used active percentage: 0%"),
+        Result(state=State.OK, summary="Used idle connections: 1"),
+        Metric("idle_connections", 1.0, boundaries=(0.0, 100.0)),
+        Result(state=State.OK, summary="Used idle percentage: 1.00%"),
+    ]
 
 
 def test_postgres_connections_check_app_test_warning() -> None:
-    """Test check function for app_test database with warning levels."""
     params = {"levels_perc_active": (80.0, 90.0), "levels_perc_idle": (1.0, 5.0)}
 
     results = list(check_postgres_connections("app_test", params, parsed()))
 
-    assert len(results) == 4
-
-    # Check idle percentage (should be warning)
-    state, summary, metrics = results[3]
-    assert state == 1  # WARNING
-    assert "Used idle percentage: 2.00%" in summary
-    assert "warn/crit at 1.00%/5.00%" in summary
-    assert metrics == []
+    # active=0 -> skipped; idle=2, percentage 2% triggers WARN
+    assert isinstance(results[-1], Result)
+    assert results[-1].state == State.WARN
+    assert "Used idle percentage: 2.00%" in results[-1].summary
+    assert "warn/crit at 1.00%/5.00%" in results[-1].summary
 
 
 def test_postgres_connections_check_postgres_critical() -> None:
-    """Test check function for postgres database with critical levels."""
     params = {
         "levels_perc_active": (80.0, 90.0),
         "levels_perc_idle": (80.0, 90.0),
@@ -113,18 +88,13 @@ def test_postgres_connections_check_postgres_critical() -> None:
 
     results = list(check_postgres_connections("postgres", params, parsed()))
 
-    assert len(results) == 4
-
-    # Check active connections (should be critical)
-    state, summary, metrics = results[0]
-    assert state == 2  # CRITICAL
-    assert "Used active connections: 9" in summary
-    assert "warn/crit at 2/5" in summary
-    assert metrics == [("active_connections", 9.0, 2, 5, 0, 100.0)]
+    assert isinstance(results[0], Result)
+    assert results[0].state == State.CRIT
+    assert "Used active connections: 9" in results[0].summary
+    assert "warn/crit at 2/5" in results[0].summary
 
 
 def test_postgres_connections_check_missing_item() -> None:
-    """Test check function for missing database item."""
     params = {"levels_perc_active": (80.0, 90.0), "levels_perc_idle": (80.0, 90.0)}
 
     with pytest.raises(IgnoreResultsError):

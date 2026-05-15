@@ -3,8 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
+# mypy: disable-error-code="misc"
 
 # NOTE: This file has been created by an LLM (from something that was worse).
 # It mostly serves as test to ensure we don't accidentally break anything.
@@ -13,6 +12,7 @@
 
 """Pattern 5: Standalone test with embedded test data for PostgreSQL connection monitoring."""
 
+from cmk.agent_based.v2 import Result, Service, State
 from cmk.legacy_checks.postgres_connections import (
     check_postgres_connections,
     discover_postgres_connections,
@@ -20,9 +20,7 @@ from cmk.legacy_checks.postgres_connections import (
 from cmk.plugins.postgres.lib import parse_dbs
 
 
-def test_postgres_connection_old_discovery():
-    """Test discovery of PostgreSQL connection databases."""
-    # Pattern 5d: Database monitoring data
+def test_postgres_connection_old_discovery() -> None:
     string_table = [
         ["[databases_start]"],
         ["postgres"],
@@ -35,15 +33,12 @@ def test_postgres_connection_old_discovery():
     parsed = parse_dbs(string_table)
     result = list(discover_postgres_connections(parsed))
 
-    # Should discover both databases
     assert len(result) == 2
-    assert ("adwebconnect", {}) in result
-    assert ("postgres", {}) in result
+    assert Service(item="adwebconnect") in result
+    assert Service(item="postgres") in result
 
 
-def test_postgres_connection_old_check_adwebconnect():
-    """Test PostgreSQL connection check for adwebconnect database."""
-    # Pattern 5d: Database monitoring data
+def test_postgres_connection_old_check_adwebconnect() -> None:
     string_table = [
         ["[databases_start]"],
         ["postgres"],
@@ -58,17 +53,15 @@ def test_postgres_connection_old_check_adwebconnect():
 
     results = list(check_postgres_connections("adwebconnect", params, parsed))
 
-    # Should report no active and idle connections for adwebconnect
-    assert len(results) == 2
-    assert results[0][0] == 0  # OK state
-    assert "No active connections" in results[0][1]
-    assert results[1][0] == 0  # OK state
-    assert "No idle connections" in results[1][1]
+    # No active and idle: each yields Result + Metric = 4 items total
+    assert len(results) == 4
+    assert isinstance(results[0], Result) and results[0].state == State.OK
+    assert "No active connections" in results[0].summary
+    assert isinstance(results[2], Result) and results[2].state == State.OK
+    assert "No idle connections" in results[2].summary
 
 
-def test_postgres_connection_old_check_postgres():
-    """Test PostgreSQL connection check for postgres database."""
-    # Pattern 5d: Database monitoring data
+def test_postgres_connection_old_check_postgres() -> None:
     string_table = [
         ["[databases_start]"],
         ["postgres"],
@@ -83,9 +76,9 @@ def test_postgres_connection_old_check_postgres():
 
     results = list(check_postgres_connections("postgres", params, parsed))
 
-    # Should report no active and idle connections for postgres too (since no data for adwebconnect)
-    assert len(results) == 2
-    assert results[0][0] == 0  # OK state
-    assert "No active connections" in results[0][1]
-    assert results[1][0] == 0  # OK state
-    assert "No idle connections" in results[1][1]
+    # No active and idle: each yields Result + Metric = 4 items total
+    assert len(results) == 4
+    assert isinstance(results[0], Result) and results[0].state == State.OK
+    assert "No active connections" in results[0].summary
+    assert isinstance(results[2], Result) and results[2].state == State.OK
+    assert "No idle connections" in results[2].summary

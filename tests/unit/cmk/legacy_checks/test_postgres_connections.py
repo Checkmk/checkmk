@@ -4,14 +4,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="misc"
-# mypy: disable-error-code="no-untyped-call"
 
 from collections.abc import Mapping, Sequence
 from typing import Any
 
 import pytest
 
-from cmk.agent_based.v2 import StringTable
+from cmk.agent_based.v2 import Metric, Result, Service, State, StringTable
 from cmk.legacy_checks.postgres_connections import (
     check_postgres_connections,
     discover_postgres_connections,
@@ -35,18 +34,18 @@ from cmk.plugins.postgres.lib import parse_dbs
                 ["app", "100", "1", "0"],
                 ["app_test", "100", "2", "0"],
             ],
-            [("app", {}), ("app_test", {}), ("postgres", {})],
+            [Service(item="app"), Service(item="app_test"), Service(item="postgres")],
         ),
     ],
 )
 def test_discover_postgres_connections(
-    info: StringTable, expected_discoveries: Sequence[tuple[str, Mapping[str, Any]]]
+    info: StringTable, expected_discoveries: Sequence[Service]
 ) -> None:
-    """Test discovery function for postgres_connections check."""
-
     parsed = parse_dbs(info)
     result = list(discover_postgres_connections(parsed))
-    assert sorted(result) == sorted(expected_discoveries)
+    assert sorted(result, key=lambda s: s.item or "") == sorted(
+        expected_discoveries, key=lambda s: s.item or ""
+    )
 
 
 @pytest.mark.parametrize(
@@ -67,15 +66,14 @@ def test_discover_postgres_connections(
                 ["app", "100", "1", "0"],
                 ["app_test", "100", "2", "0"],
             ],
+            # active=0 (not skipped because "0" is truthy), idle=1
             [
-                (
-                    0,
-                    "Used active connections: 0",
-                    [("active_connections", 0.0, None, None, 0, 100.0)],
-                ),
-                (0, "Used active percentage: 0%", []),
-                (0, "Used idle connections: 1", [("idle_connections", 1.0, None, None, 0, 100.0)]),
-                (0, "Used idle percentage: 1.00%", []),
+                Result(state=State.OK, summary="Used active connections: 0"),
+                Metric("active_connections", 0.0, boundaries=(0.0, 100.0)),
+                Result(state=State.OK, summary="Used active percentage: 0%"),
+                Result(state=State.OK, summary="Used idle connections: 1"),
+                Metric("idle_connections", 1.0, boundaries=(0.0, 100.0)),
+                Result(state=State.OK, summary="Used idle percentage: 1.00%"),
             ],
         ),
         (
@@ -93,15 +91,17 @@ def test_discover_postgres_connections(
                 ["app", "100", "1", "0"],
                 ["app_test", "100", "2", "0"],
             ],
+            # active=0 (not skipped); idle=2, perc=2% warns
             [
-                (
-                    0,
-                    "Used active connections: 0",
-                    [("active_connections", 0.0, None, None, 0, 100.0)],
+                Result(state=State.OK, summary="Used active connections: 0"),
+                Metric("active_connections", 0.0, boundaries=(0.0, 100.0)),
+                Result(state=State.OK, summary="Used active percentage: 0%"),
+                Result(state=State.OK, summary="Used idle connections: 2"),
+                Metric("idle_connections", 2.0, boundaries=(0.0, 100.0)),
+                Result(
+                    state=State.WARN,
+                    summary="Used idle percentage: 2.00% (warn/crit at 1.00%/5.00%)",
                 ),
-                (0, "Used active percentage: 0%", []),
-                (0, "Used idle connections: 2", [("idle_connections", 2.0, None, None, 0, 100.0)]),
-                (1, "Used idle percentage: 2.00% (warn/crit at 1.00%/5.00%)", []),
             ],
         ),
         (
@@ -124,14 +124,15 @@ def test_discover_postgres_connections(
                 ["app_test", "100", "2", "0"],
             ],
             [
-                (
-                    2,
-                    "Used active connections: 9 (warn/crit at 2/5)",
-                    [("active_connections", 9.0, 2, 5, 0, 100.0)],
+                Result(
+                    state=State.CRIT,
+                    summary="Used active connections: 9 (warn/crit at 2/5)",
                 ),
-                (0, "Used active percentage: 9.00%", []),
-                (0, "Used idle connections: 4", [("idle_connections", 4.0, None, None, 0, 100.0)]),
-                (0, "Used idle percentage: 4.00%", []),
+                Metric("active_connections", 9.0, levels=(2.0, 5.0), boundaries=(0.0, 100.0)),
+                Result(state=State.OK, summary="Used active percentage: 9.00%"),
+                Result(state=State.OK, summary="Used idle connections: 4"),
+                Metric("idle_connections", 4.0, boundaries=(0.0, 100.0)),
+                Result(state=State.OK, summary="Used idle percentage: 4.00%"),
             ],
         ),
     ],
@@ -139,8 +140,6 @@ def test_discover_postgres_connections(
 def test_check_postgres_connections(
     item: str, params: Mapping[str, Any], info: StringTable, expected_results: Sequence[Any]
 ) -> None:
-    """Test check function for postgres_connections check."""
-
     parsed = parse_dbs(info)
     result = list(check_postgres_connections(item, params, parsed))
     assert result == expected_results

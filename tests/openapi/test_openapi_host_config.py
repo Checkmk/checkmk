@@ -1639,6 +1639,59 @@ def test_update_host_denied_for_user_without_permissions(
     resp.assert_status_code(404)
 
 
+@pytest.mark.usefixtures("with_host")
+@pytest.mark.parametrize(
+    "roles, pw_attempt, expected_existing, expected_missing",
+    [
+        ([], "correctpassword", 404, 404),
+        ([], "wrong", 401, 401),
+        (["admin"], "correctpassword", 200, 404),
+        (["admin"], "wrong", 401, 401),
+    ],
+)
+def test_show_host_permission_enforcement(
+    clients: ClientRegistry,
+    roles: list[str],
+    pw_attempt: str,
+    expected_existing: int,
+    expected_missing: int,
+) -> None:
+    """Permissions on GET /objects/host_config/{host_name} must always be enforced.
+
+    Test all Checkmk built-in roles, a roleless user, a non-existent user, and the admin baseline.
+    Admin is the only role permitted to read a host. All other attempts must return a 404 error.
+    This ensures that unauthorized users cannot verify if a host exists
+    """
+    # Built-in roles in from cmk/gui/config.py
+    clients.User.create(
+        username="username",
+        fullname="fullname",
+        customer=None,
+        roles=roles,
+        contactgroups=[],
+        auth_option={"auth_type": "password", "password": "correctpassword"},
+    )
+
+    existing_host = "heute"  # created by the with_host fixture
+    non_existing_host = "host_that_does_not_exist"
+
+    clients.HostConfig.set_credentials("username", pw_attempt)
+
+    resp_existing = clients.HostConfig.request(
+        "get",
+        url=f"/objects/host_config/{existing_host}",
+        expect_ok=False,
+    )
+    assert resp_existing.status_code == expected_existing
+
+    resp_missing = clients.HostConfig.request(
+        "get",
+        url=f"/objects/host_config/{non_existing_host}",
+        expect_ok=False,
+    )
+    assert resp_missing.status_code == expected_missing
+
+
 def test_openapi_list_hosts_does_not_show_inaccessible_hosts(
     clients: ClientRegistry,
 ) -> None:

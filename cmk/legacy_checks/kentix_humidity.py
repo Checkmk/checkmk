@@ -3,16 +3,22 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="type-arg"
-
-from collections.abc import Iterable, Mapping
+from collections.abc import Sequence
 from typing import NamedTuple
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import SNMPTree
+from cmk.agent_based.v2 import (
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Metric,
+    Result,
+    Service,
+    SNMPSection,
+    SNMPTree,
+    State,
+    StringTable,
+)
 from cmk.plugins.kentix.lib import DETECT_KENTIX
-
-check_info = {}
 
 
 class Section(NamedTuple):
@@ -22,7 +28,7 @@ class Section(NamedTuple):
     text: str
 
 
-def parse_kentix_humidity(string_table: list[list[list[str]]]) -> Section | None:
+def parse_kentix_humidity(string_table: Sequence[StringTable]) -> Section | None:
     info = string_table[0] or string_table[1]
     if not info:
         return None
@@ -35,34 +41,22 @@ def parse_kentix_humidity(string_table: list[list[list[str]]]) -> Section | None
     )
 
 
-def discover_kentix_humidity(section: Section) -> Iterable[tuple[None, dict]]:
-    yield None, {}
+def discover_kentix_humidity(section: Section) -> DiscoveryResult:
+    yield Service()
 
 
-def check_kentix_humidity(
-    _no_item: None, _no_params: Mapping[str, object], section: Section
-) -> Iterable:
-    perfdata = [("humidity", section.reading, section.upper_warn, None)]
-    infotext = (
+def check_kentix_humidity(section: Section) -> CheckResult:
+    summary = (
         f"{section.reading:.1f}% (min/max at {section.lower_warn:.1f}%/{section.upper_warn:.1f}%)"
     )
     if section.reading >= section.upper_warn or section.reading <= section.lower_warn:
-        state = 1
-        infotext = f"{section.text}:  {infotext}"
+        yield Result(state=State.WARN, summary=f"{section.text}:  {summary}")
     else:
-        state = 0
-    return state, infotext, perfdata
+        yield Result(state=State.OK, summary=summary)
+    yield Metric("humidity", section.reading, levels=(section.upper_warn, None))
 
 
-_OIDS = [
-    "1",  # humidityValue
-    "2",  # humidityMin
-    "3",  # humidityMax
-    "5",  # humidityAlarmtext
-]
-
-
-check_info["kentix_humidity"] = LegacyCheckDefinition(
+snmp_section_kentix_humidity = SNMPSection(
     name="kentix_humidity",
     detect=DETECT_KENTIX,
     fetch=[
@@ -76,6 +70,11 @@ check_info["kentix_humidity"] = LegacyCheckDefinition(
         ),
     ],
     parse_function=parse_kentix_humidity,
+)
+
+
+check_plugin_kentix_humidity = CheckPlugin(
+    name="kentix_humidity",
     service_name="Humidity",
     discovery_function=discover_kentix_humidity,
     check_function=check_kentix_humidity,

@@ -221,3 +221,21 @@ code {
   font-size: 0.85em;
   color: var(--vscode-descriptionForeground);
 }
+
+.btn-icon.benchmark-on {
+  color: var(--cmk-green);
+}
+
+.btn-icon.benchmark-on .codicon {
+  animation: pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.45;
+  }
+}

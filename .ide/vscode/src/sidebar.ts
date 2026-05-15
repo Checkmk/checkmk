@@ -7,6 +7,7 @@ import * as fs from 'fs'
 import * as path from 'path'
 import * as vscode from 'vscode'
 
+import { flushBenchmarkRun, time } from './benchmark/startup'
 import { type BuildStatus, checkBuildStatus } from './build/buildStatus'
 import type { SettingsEntry } from './build/settings'
 import { type ExtensionSets, loadConfig } from './core/config'
@@ -62,26 +63,40 @@ const _providers: Record<string, SectionViewProvider> = {}
 
 function refreshStateCache(): StateCache {
   try {
-    _extensionsConfig = loadConfig<ExtensionSets>('extensions')
-    _settingsConfig = loadConfig<Record<string, SettingsEntry>>('settings')
+    _extensionsConfig = time('loadConfig.extensions', () => loadConfig<ExtensionSets>('extensions'))
+    _settingsConfig = time('loadConfig.settings', () =>
+      loadConfig<Record<string, SettingsEntry>>('settings')
+    )
 
     const wsPath = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath
-    const buildStatus = wsPath ? checkBuildStatus(wsPath) : {}
-    const profiles = profileManager.getAll()
+    const buildStatus = time('checkBuildStatus', () => (wsPath ? checkBuildStatus(wsPath) : {}))
+    const profiles = time('profileManager.getAll', () => profileManager.getAll())
     const pyEnvsExt = vscode.extensions.getExtension('ms-python.vscode-python-envs')
     const pythonEnvsActive = !!pyEnvsExt && pyEnvsExt.isActive
-    const environment = environmentSection.getEnvironmentInfo(wsPath)
-    const extensionHealth = ideHealthSection.getExtensionHealth(_extensionsConfig)
-    const settingsMismatches = ideHealthSection.getSettingsMismatches(_settingsConfig)
-    const omdSites = detectOmdSites().map((site) => {
-      const status = getOmdStatus(site.name)
-      return { ...site, status }
-    })
-    const activeProxies = getActiveProxies()
-    const devSiteTools = getDevSiteToolsState()
-    const versionMismatch = _context ? getVersionMismatch(_context) : null
-    const onboarding = environmentSection.getOnboardingState(environment, buildStatus, _context)
-    const mypySnapshot = getMypyTargetsSnapshot(wsPath)
+    const environment = time('getEnvironmentInfo', () =>
+      environmentSection.getEnvironmentInfo(wsPath)
+    )
+    const extensionHealth = time('getExtensionHealth', () =>
+      ideHealthSection.getExtensionHealth(_extensionsConfig)
+    )
+    const settingsMismatches = time('getSettingsMismatches', () =>
+      ideHealthSection.getSettingsMismatches(_settingsConfig)
+    )
+    const omdSites = time('detectOmdSites+status', () =>
+      detectOmdSites().map((site) => {
+        const status = getOmdStatus(site.name)
+        return { ...site, status }
+      })
+    )
+    const activeProxies = time('getActiveProxies', () => getActiveProxies())
+    const devSiteTools = time('getDevSiteToolsState', () => getDevSiteToolsState())
+    const versionMismatch = time('getVersionMismatch', () =>
+      _context ? getVersionMismatch(_context) : null
+    )
+    const onboarding = time('getOnboardingState', () =>
+      environmentSection.getOnboardingState(environment, buildStatus, _context)
+    )
+    const mypySnapshot = time('getMypyTargetsSnapshot', () => getMypyTargetsSnapshot(wsPath))
     const pythonProfileActive = profileManager.isActive('python')
     _stateCache = {
       buildStatus,
@@ -105,11 +120,15 @@ function refreshStateCache(): StateCache {
         )
       })(),
       mypyTargets: { ...mypySnapshot, pythonProfileActive },
-      allocator: getAllocatorSnapshot(),
-      pylanceHealth: getPylanceHealthSnapshot()
+      allocator: time('getAllocatorSnapshot', () => getAllocatorSnapshot()),
+      pylanceHealth: time('getPylanceHealthSnapshot', () => getPylanceHealthSnapshot())
     }
 
     updateIssues(_issuesView, _issuesProvider, _stateCache)
+
+    if (_context) {
+      void flushBenchmarkRun(_context)
+    }
 
     return _stateCache
   } catch (err) {

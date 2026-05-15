@@ -303,6 +303,18 @@
       {
         "command": "cmk.whatsNew.reset",
         "title": "CMK ▸ Dev: Reset What's New marker"
+      },
+      {
+        "command": "cmk.showStartupBenchmarks",
+        "title": "CMK ▸ Show Startup Benchmarks"
+      },
+      {
+        "command": "cmk.benchmarkRunSamples",
+        "title": "CMK ▸ Run Startup Samples…"
+      },
+      {
+        "command": "cmk.benchmarkCancelSamples",
+        "title": "CMK ▸ Cancel Startup Sampler"
       }
     ],
     "configuration": {
@@ -385,6 +397,11 @@
           ],
           "default": "pro",
           "description": "Checkmk edition passed to bazel as --cmk_edition=<edition> when running tests via the CMK ▸ Bazel Tests Test Explorer group."
+        },
+        "cmk.benchmarkStartup": {
+          "type": "boolean",
+          "default": false,
+          "description": "Record per-phase timings for the first sidebar refresh on each window load. Appends to a per-workspace history; view with CMK ▸ Show Startup Benchmarks. When recent runs are materially slower than baseline, a notification offers to view the chart."
         }
       }
     },

@@ -5,6 +5,7 @@
  */
 import * as vscode from 'vscode'
 
+import { registerStartupBenchmarks } from './benchmark/startup'
 import { type CommandEntry, createStatusBar } from './build/buildStatus'
 import { type SettingsEntry, registerBuildCommands, updateContextKeys } from './build/settings'
 import {
@@ -230,6 +231,8 @@ export function activate(context: vscode.ExtensionContext): void {
   showWhatsNewIfNeeded(context).catch((err) =>
     error(`What's new failed: ${(err as Error).message}`)
   )
+
+  context.subscriptions.push(...registerStartupBenchmarks(context))
 
   // --- First-run wizard ---
   const SETUP_DONE_KEY = 'cmk.setupWizardDismissed'

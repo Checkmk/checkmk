@@ -474,6 +474,14 @@ export async function handleMessage(
       refreshAll()
       return true
     }
+    case 'toggleBenchmark': {
+      const cfg = vscode.workspace.getConfiguration('cmk')
+      const current = cfg.get<boolean>('benchmarkStartup', false)
+      await cfg.update('benchmarkStartup', !current, vscode.ConfigurationTarget.Workspace)
+      notifyInfo(`CMK: Startup benchmark recording ${!current ? 'enabled' : 'disabled'}.`)
+      refreshAll()
+      return true
+    }
     default:
       return false
   }
@@ -495,6 +503,16 @@ export function render(state: StateCache, codiconUri?: vscode.Uri, cspSource?: s
   const installedVersion = vscode.extensions.getExtension('checkmk.cmk-vscode')?.packageJSON
     ?.version as string | undefined
 
+  const benchmarkOn = vscode.workspace
+    .getConfiguration('cmk')
+    .get<boolean>('benchmarkStartup', false)
+  const benchmarkBtn = `<button class="btn btn-small btn-icon ${benchmarkOn ? 'benchmark-on' : ''}" data-action="toggle-benchmark" title="${benchmarkOn ? 'Disable startup benchmark recording' : 'Enable startup benchmark recording'}">
+    <span class="codicon codicon-pulse"></span>
+  </button>
+  <button class="btn btn-small btn-icon" data-action="exec" data-id="cmk.showStartupBenchmarks" title="Show startup benchmark chart">
+    <span class="codicon codicon-graph"></span>
+  </button>`
+
   const versionHtml = installedVersion
     ? `<div class="env-row">
         <span class="env-label">Extension</span>
@@ -502,6 +520,7 @@ export function render(state: StateCache, codiconUri?: vscode.Uri, cspSource?: s
         <button class="btn btn-small btn-icon" data-action="exec" data-id="cmk.pickChangelog" title="Browse changelog">
           <span class="codicon codicon-history"></span>
         </button>
+        ${benchmarkBtn}
       </div>`
     : ''
 

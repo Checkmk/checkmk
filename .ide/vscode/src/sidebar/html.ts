@@ -73,7 +73,9 @@ export function wrap(
   .codicon-list-selection::before { content: "\\eb85"; }
   .codicon-new-collection::before { content: "\\ec58"; }
   .codicon-check::before { content: "\\eab2"; }
-  .codicon-close::before { content: "\\ea76"; }`
+  .codicon-close::before { content: "\\ea76"; }
+  .codicon-pulse::before { content: "\\eb31"; }
+  .codicon-graph::before { content: "\\eb03"; }`
     : ''
   return `<!DOCTYPE html>
 <html lang="en">
@@ -176,6 +178,7 @@ ${body}
       case 'mypy-allocator-disable': vscode.postMessage({ type: 'mypyAllocatorDisable' }); break;
       case 'mypy-allocator-dismiss': vscode.postMessage({ type: 'mypyAllocatorDismiss' }); break;
       case 'mypy-allocator-reapply': vscode.postMessage({ type: 'mypyAllocatorReapply' }); break;
+      case 'toggle-benchmark': vscode.postMessage({ type: 'toggleBenchmark' }); break;
     }
   });
   // Restore accordion open/close state

@@ -1584,7 +1584,7 @@ class CheckmkCommandDiagnosticsElementTextDump(ABCDiagnosticsElementTextDump):
     @override
     def _collect_infos(self, omd_root: Path) -> str:
         try:
-            output = subprocess.check_output(
+            return subprocess.check_output(
                 self.command,
                 text=True,
                 stderr=subprocess.STDOUT,
@@ -1600,8 +1600,6 @@ class CheckmkCommandDiagnosticsElementTextDump(ABCDiagnosticsElementTextDump):
             raise DiagnosticsElementInfo(
                 "Command %s not available on this system." % " ".join(self.command)
             )
-
-        return "\n".join(output.split("\n"))
 
 
 #   ---cee dumps------------------------------------------------------------

@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="misc"
-# mypy: disable-error-code="no-untyped-call"
 
 # NOTE: This file has been created by an LLM (from something that was worse).
 # It mostly serves as test to ensure we don't accidentally break anything.
@@ -16,7 +15,7 @@ from typing import Any
 
 import pytest
 
-from cmk.agent_based.v2 import StringTable
+from cmk.agent_based.v2 import Result, Service, StringTable
 from cmk.legacy_checks.mongodb_cluster import (
     check_mongodb_cluster_balancer,
     check_mongodb_cluster_databases,
@@ -37,21 +36,22 @@ from cmk.legacy_checks.mongodb_cluster import (
                 ]
             ],
             [
-                ("jumboDB1", {}),
-                ("noColDB1", {}),
-                ("shardedDB1", {}),
-                ("unshardedDB2", {}),
+                Service(item="jumboDB1"),
+                Service(item="noColDB1"),
+                Service(item="shardedDB1"),
+                Service(item="unshardedDB2"),
             ],
         ),
     ],
 )
 def test_discover_mongodb_cluster_databases_regression(
-    string_table: StringTable, expected_discoveries: Sequence[tuple[str, Mapping[str, Any]]]
+    string_table: StringTable, expected_discoveries: Sequence[Service]
 ) -> None:
-    """Test discovery function for mongodb_cluster databases regression test."""
     parsed = parse_mongodb_cluster(string_table)
     result = list(discover_mongodb_cluster_databases(parsed))
-    assert sorted(result) == sorted(expected_discoveries)
+    assert sorted(result, key=lambda s: s.item or "") == sorted(
+        expected_discoveries, key=lambda s: s.item or ""
+    )
 
 
 @pytest.mark.parametrize(
@@ -64,44 +64,39 @@ def test_discover_mongodb_cluster_databases_regression(
                 ]
             ],
             [
-                ("jumboDB1.collections1", {}),
-                ("shardedDB1.collections1", {}),
-                ("shardedDB1.collections2", {}),
-                ("unshardedDB2.collections1", {}),
-                ("unshardedDB2.collections2", {}),
+                Service(item="jumboDB1.collections1"),
+                Service(item="shardedDB1.collections1"),
+                Service(item="shardedDB1.collections2"),
+                Service(item="unshardedDB2.collections1"),
+                Service(item="unshardedDB2.collections2"),
             ],
         ),
     ],
 )
 def test_discover_mongodb_cluster_collections_regression(
-    string_table: StringTable, expected_discoveries: Sequence[tuple[str, Mapping[str, Any]]]
+    string_table: StringTable, expected_discoveries: Sequence[Service]
 ) -> None:
-    """Test discovery function for mongodb_cluster collections regression test."""
     parsed = parse_mongodb_cluster(string_table)
     result = list(discover_mongodb_cluster_shards(parsed))
-    assert sorted(result) == sorted(expected_discoveries)
+    assert sorted(result, key=lambda s: s.item or "") == sorted(
+        expected_discoveries, key=lambda s: s.item or ""
+    )
 
 
 @pytest.mark.parametrize(
-    "string_table, expected_discoveries",
+    "string_table",
     [
-        (
+        [
             [
-                [
-                    '{"balancer":{"numBalancerRounds":26,"balancer_enabled":true,"mode":"full","inBalancerRound":false}}'
-                ]
-            ],
-            [(None, {})],
-        ),
+                '{"balancer":{"numBalancerRounds":26,"balancer_enabled":true,"mode":"full","inBalancerRound":false}}'
+            ]
+        ],
     ],
 )
-def test_discover_mongodb_cluster_balancer_regression(
-    string_table: StringTable, expected_discoveries: Sequence[tuple[None, Mapping[str, Any]]]
-) -> None:
-    """Test discovery function for mongodb_cluster balancer regression test."""
+def test_discover_mongodb_cluster_balancer_regression(string_table: StringTable) -> None:
     parsed = parse_mongodb_cluster(string_table)
     result = list(discover_mongodb_cluster_balancer(parsed))
-    assert sorted(result) == sorted(expected_discoveries)
+    assert result == [Service()]
 
 
 @pytest.mark.parametrize(
@@ -132,15 +127,12 @@ def test_discover_mongodb_cluster_balancer_regression(
 def test_check_mongodb_cluster_databases_regression(
     item: str, params: Mapping[str, Any], string_table: StringTable, expected_checks: list[str]
 ) -> None:
-    """Test check function for mongodb_cluster databases regression test."""
     parsed = parse_mongodb_cluster(string_table)
     result = list(check_mongodb_cluster_databases(item, params, parsed))
 
-    # Check that we get the expected number of results
     assert len(result) == 3
 
-    # Check that all expected messages are present
-    messages = [str(msg) for _, msg, *_ in result]
+    messages = [r.summary for r in result if isinstance(r, Result)]
     for expected_check in expected_checks:
         assert any(expected_check in msg for msg in messages), (
             f"Expected '{expected_check}' not found in {messages}"
@@ -148,34 +140,27 @@ def test_check_mongodb_cluster_databases_regression(
 
 
 @pytest.mark.parametrize(
-    "item, params, string_table, expected_collection_type",
+    "string_table, expected_collection_type",
     [
         (
-            None,
-            {},
             [['{"balancer":{"balancer_enabled":true}}']],
             "enabled",
         ),
         (
-            None,
-            {},
             [['{"balancer":{"balancer_enabled":false}}']],
             "disabled",
         ),
     ],
 )
 def test_check_mongodb_cluster_balancer_regression(
-    item: None, params: Mapping[str, Any], string_table: StringTable, expected_collection_type: str
+    string_table: StringTable, expected_collection_type: str
 ) -> None:
-    """Test check function for mongodb_cluster balancer regression test."""
     parsed = parse_mongodb_cluster(string_table)
-    result = list(check_mongodb_cluster_balancer(item, params, parsed))
+    result = list(check_mongodb_cluster_balancer(parsed))
 
-    # Check that we get a result
     assert len(result) >= 1
 
-    # Check that the balancer status is as expected
-    messages = [str(msg) for _, msg, *_ in result]
+    messages = [r.summary for r in result if isinstance(r, Result)]
     assert any(f"Balancer: {expected_collection_type}" in msg for msg in messages), (
         f"Expected 'Balancer: {expected_collection_type}' not found in {messages}"
     )

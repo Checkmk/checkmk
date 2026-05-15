@@ -8,7 +8,7 @@ from collections.abc import Sequence
 import pytest
 
 from cmk.agent_based.v2 import Metric, Result, Service, State, StringTable
-from cmk.legacy_checks.quanta_temperature import (
+from cmk.plugins.quanta.agent_based.quanta_temperature import (
     check_quanta_temperature,
     discover_quanta_temperature,
 )
@@ -18,7 +18,7 @@ from cmk.plugins.quanta.lib import parse_quanta
 @pytest.fixture
 def empty_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(
-        "cmk.legacy_checks.quanta_temperature.get_value_store",
+        "cmk.plugins.quanta.agent_based.quanta_temperature.get_value_store",
         lambda: {},
     )
 

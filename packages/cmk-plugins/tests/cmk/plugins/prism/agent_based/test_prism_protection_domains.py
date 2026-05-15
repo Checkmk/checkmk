@@ -10,7 +10,7 @@ from typing import Any
 
 import pytest
 
-from cmk.agent_based.v2 import Result, Service, State
+from cmk.agent_based.v2 import Metric, Result, Service, State
 from cmk.plugins.prism.agent_based.prism_protection_domains import (
     check_prism_protection_domains,
     discovery_prism_protection_domains,
@@ -108,6 +108,38 @@ def test_check_prism_protection_domains(
         )
         == expected_check_result
     )
+
+
+def test_check_prism_protection_domains_async_dr_bandwidth_metrics() -> None:
+    """
+    The check must yield bandwidth metrics with:
+    - The right name (rx/tx not swapped vs the API field).
+    - Values in B/s, scaled up from the API's kBps by 1000.
+
+    Historical context: pd_bandwidthtx used to read from
+    `replication_received_bandwidth_kBps` (swap bug) and emit the raw kBps
+    value as an unlabeled number. Both are fixed; this test pins the fix.
+    """
+    section = {
+        "PD": {
+            "active": True,
+            "name": "PD",
+            "metro_avail": None,
+            "remote_site_names": ["remote"],
+            "stats": {
+                "replication_received_bandwidth_kBps": "5",
+                "replication_transmitted_bandwidth_kBps": "7",
+            },
+            "vms": [],
+        },
+    }
+    metrics = {
+        m.name: m.value
+        for m in check_prism_protection_domains(item="PD", params={}, section=section)
+        if isinstance(m, Metric)
+    }
+    assert metrics["pd_bandwidth_rx"] == 5000.0
+    assert metrics["pd_bandwidth_tx"] == 7000.0
 
 
 def test_check_prism_protection_domains_async_dr_without_usage_stats() -> None:

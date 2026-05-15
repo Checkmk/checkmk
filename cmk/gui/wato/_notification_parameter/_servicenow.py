@@ -328,7 +328,43 @@ def _incident_fs() -> Dictionary:
                     },
                 ),
             ),
+            "ack_custom_fields": DictElement(
+                parameter_form=_custom_fields_fs(
+                    title=Title("Custom fields on acknowledgement"),
+                    help_text=Help(
+                        "Optional name/value pairs that are merged into the "
+                        "PUT request sent to ServiceNow when an "
+                        "acknowledgement notification fires. Names entered "
+                        "here override the plug-in's defaults (e.g. "
+                        "<tt>work_notes</tt> or <tt>state</tt>); fields not "
+                        "listed here keep their default values."
+                    ),
+                    name_help=Help(
+                        "Enter the technical name of the field as defined "
+                        "in the ServiceNow database."
+                    ),
+                )
+            ),
             "recovery_state": DictElement(parameter_form=_recovery_state_fs(_("incident"))),
+            "recovery_custom_fields": DictElement(
+                parameter_form=_custom_fields_fs(
+                    title=Title("Custom fields on recovery"),
+                    help_text=Help(
+                        "Optional name/value pairs that are merged into the "
+                        "PUT request sent to ServiceNow when a recovery "
+                        "notification fires. Typical use is overriding "
+                        "<tt>close_code</tt> or supplying mandatory closure "
+                        "fields such as <tt>u_root_cause</tt> required by "
+                        "your ServiceNow workflow. Names entered here "
+                        "override the plug-in's defaults; fields not listed "
+                        "here keep their default values."
+                    ),
+                    name_help=Help(
+                        "Enter the technical name of the field as defined "
+                        "in the ServiceNow database."
+                    ),
+                )
+            ),
             "dt_state": DictElement(
                 parameter_form=Dictionary(
                     title=Title("Settings for incident state in case of downtime"),
@@ -432,6 +468,23 @@ def _incident_fs() -> Dictionary:
                     },
                 ),
             ),
+            "downtime_custom_fields": DictElement(
+                parameter_form=_custom_fields_fs(
+                    title=Title("Custom fields on downtime"),
+                    help_text=Help(
+                        "Optional name/value pairs that are merged into the "
+                        "PUT request sent to ServiceNow when a downtime "
+                        "start/end/cancel notification fires. Names entered "
+                        "here override the plug-in's defaults (e.g. "
+                        "<tt>work_notes</tt> or <tt>state</tt>); fields not "
+                        "listed here keep their default values."
+                    ),
+                    name_help=Help(
+                        "Enter the technical name of the field as defined "
+                        "in the ServiceNow database."
+                    ),
+                )
+            ),
         },
     )
 
@@ -485,6 +538,25 @@ def _case_fs() -> Dictionary:
                 )
             ),
             "recovery_state": DictElement(parameter_form=_recovery_state_fs(_("case"))),
+            "recovery_custom_fields": DictElement(
+                parameter_form=_custom_fields_fs(
+                    title=Title("Custom fields on recovery"),
+                    help_text=Help(
+                        "Optional name/value pairs that are merged into the "
+                        "PUT request sent to ServiceNow when a recovery "
+                        "notification fires. Typical use is overriding "
+                        "<tt>resolution_code</tt> or supplying mandatory "
+                        "closure fields required by your ServiceNow "
+                        "workflow. Names entered here override the plug-in's "
+                        "defaults; fields not listed here keep their default "
+                        "values."
+                    ),
+                    name_help=Help(
+                        "Enter the technical name of the field as defined "
+                        "in the ServiceNow database."
+                    ),
+                )
+            ),
         },
     )
 

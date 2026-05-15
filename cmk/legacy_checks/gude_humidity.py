@@ -3,24 +3,23 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="type-arg"
-
-from collections.abc import Iterable, Mapping
+from collections.abc import Mapping, Sequence
 from itertools import chain
+from typing import Any
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition, LegacyResult
 from cmk.agent_based.v2 import (
     any_of,
+    CheckPlugin,
+    CheckResult,
     DiscoveryResult,
     OIDEnd,
     Service,
+    SNMPSection,
     SNMPTree,
     startswith,
     StringTable,
 )
-from cmk.legacy_includes.humidity import check_humidity
-
-check_info = {}
+from cmk.plugins.lib.humidity import check_humidity
 
 # 19:1100, 38:822X
 # .1.3.6.1.4.1.28507.**.1.6.1.1.3.1 498 --> GUDEADS-EPC****-MIB::epc****HygroSensor.1
@@ -29,7 +28,7 @@ check_info = {}
 Section = Mapping[str, float]
 
 
-def parse_gude_humidity(string_table: list[StringTable]) -> Section:
+def parse_gude_humidity(string_table: Sequence[StringTable]) -> Section:
     return {
         f"Sensor {index}": float(reading) / 10
         for index, reading in chain.from_iterable(string_table)
@@ -40,13 +39,13 @@ def discover_gude_humidity(section: Section) -> DiscoveryResult:
     yield from (Service(item=name) for name, reading in section.items() if reading != -999.9)
 
 
-def check_gude_humidity(item: str, params: tuple, section: Section) -> Iterable[LegacyResult]:
+def check_gude_humidity(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
     if (reading := section.get(item)) is None:
         return
-    yield check_humidity(reading, params)
+    yield from check_humidity(reading, params)
 
 
-check_info["gude_humidity"] = LegacyCheckDefinition(
+snmp_section_gude_humidity = SNMPSection(
     name="gude_humidity",
     detect=any_of(
         startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.28507.19"),
@@ -62,6 +61,11 @@ check_info["gude_humidity"] = LegacyCheckDefinition(
         for table in ["19", "38", "66", "67"]
     ],
     parse_function=parse_gude_humidity,
+)
+
+
+check_plugin_gude_humidity = CheckPlugin(
+    name="gude_humidity",
     service_name="Humidity %s",
     discovery_function=discover_gude_humidity,
     check_function=check_gude_humidity,

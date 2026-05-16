@@ -671,11 +671,11 @@ def _perform_post_config_loading_actions(
 
     loaded_config = LoadedConfigFragment(
         experimental=experimental,
-        discovery_rules=discovery_settings,
+        discovery_parameters=discovery_settings,
         **{
             f.name: loaded_context[f.name]
             for f in dataclasses.fields(LoadedConfigFragment)
-            if f.name not in {"experimental", "discovery_rules"}
+            if f.name not in {"experimental", "discovery_parameters"}
         },
     )
 

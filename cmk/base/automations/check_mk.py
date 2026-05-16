@@ -867,7 +867,7 @@ def _execute_discovery(
     discovery_config = DiscoveryConfig(
         ruleset_matcher,
         label_manager.labels_of_host,
-        loaded_config.discovery_rules,
+        loaded_config.discovery_parameters,
     )
     checking_config = CheckingConfig(
         ruleset_matcher,
@@ -1317,7 +1317,7 @@ def _execute_autodiscovery(
                     core,
                     env.plugins,
                     locking_mode=env.loaded_config.restart_locking,
-                    discovery_rules=env.loaded_config.discovery_rules,
+                    discovery_rules=env.loaded_config.discovery_parameters,
                     hosts_to_update=None,
                     service_depends_on=config.ServiceDependsOn(
                         tag_list=env.config_cache.host_tags.tag_list,
@@ -1351,7 +1351,7 @@ def _execute_autodiscovery(
                         service_dependencies=env.loaded_config.service_dependencies,
                     ),
                     locking_mode=env.loaded_config.restart_locking,
-                    discovery_rules=env.loaded_config.discovery_rules,
+                    discovery_rules=env.loaded_config.discovery_parameters,
                     duplicates=sorted(
                         hosts_config.duplicates(
                             lambda hn: (
@@ -2603,7 +2603,7 @@ def _execute_silently(
                 rctx.monitoring_core,
                 env.plugins,
                 action=action,
-                discovery_rules=env.loaded_config.discovery_rules,
+                discovery_rules=env.loaded_config.discovery_parameters,
                 hosts_to_update=hosts_to_update,
                 service_depends_on=rctx.service_depends_on,
                 locking_mode=env.loaded_config.restart_locking,

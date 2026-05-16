@@ -11,7 +11,7 @@ from cmk.utils.rulesets.ruleset_matcher import RulesetMatcher
 
 EMPTY_CONFIG = LoadedConfigFragment(
     experimental={},
-    discovery_rules={},
+    discovery_parameters={},
     checkgroup_parameters={},
     logwatch_rules=(),
     static_checks={},

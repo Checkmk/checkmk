@@ -1694,7 +1694,7 @@ def _mode_update(app: CheckmkBaseApp) -> None:
                 passive_service_name_config=service_name_config,
                 enforced_services_table=enfored_services_table,
                 plugins=plugins,
-                discovery_rules=loading_result.loaded_config.discovery_rules,
+                discovery_rules=loading_result.loaded_config.discovery_parameters,
                 get_ip_stack_config=ip_lookup_config.ip_stack_config,
                 default_address_family=ip_lookup_config.default_address_family,
                 ip_address_of=ip_address_of,
@@ -1809,7 +1809,7 @@ def _mode_restart(app: CheckmkBaseApp, args: Sequence[HostName]) -> None:
             tag_list=loading_result.config_cache.host_tags.tag_list,
             service_dependencies=loaded_config.service_dependencies,
         ),
-        discovery_rules=loaded_config.discovery_rules,
+        discovery_rules=loaded_config.discovery_parameters,
         duplicates=sorted(
             hosts_config.duplicates(
                 lambda hn: (
@@ -1908,7 +1908,7 @@ def _mode_reload(app: CheckmkBaseApp, args: Sequence[HostName]) -> None:
             tag_list=loading_result.config_cache.host_tags.tag_list,
             service_dependencies=loaded_config.service_dependencies,
         ),
-        discovery_rules=loaded_config.discovery_rules,
+        discovery_rules=loaded_config.discovery_parameters,
         duplicates=sorted(
             hosts_config.duplicates(
                 lambda hn: (
@@ -2154,7 +2154,7 @@ def _mode_check_discovery(
     discovery_config = DiscoveryConfig(
         ruleset_matcher,
         label_manager.labels_of_host,
-        loaded_config.discovery_rules,
+        loaded_config.discovery_parameters,
     )
     ip_lookup_config = config_cache.ip_lookup_config()
     ip_address_of = ip_lookup.ConfiguredIPLookup(
@@ -2493,7 +2493,7 @@ def _mode_discover(app: CheckmkBaseApp, options: _DiscoveryOptions, args: list[s
     discovery_config = DiscoveryConfig(
         ruleset_matcher,
         label_manager.labels_of_host,
-        loaded_config.discovery_rules,
+        loaded_config.discovery_parameters,
     )
     hosts_config = config.make_hosts_config(loaded_config)
     service_name_config = config_cache.make_passive_service_name_config(

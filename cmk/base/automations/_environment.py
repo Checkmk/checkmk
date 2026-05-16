@@ -189,7 +189,7 @@ class AutomationEnvironment:
         return DiscoveryConfig(
             self.ruleset_matcher,
             self.label_manager.labels_of_host,
-            self.loaded_config.discovery_rules,
+            self.loaded_config.discovery_parameters,
         )
 
     # --- Variant builders --------------------------------------------------

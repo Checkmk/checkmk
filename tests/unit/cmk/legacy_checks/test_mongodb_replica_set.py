@@ -3,15 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code=no-untyped-call
-
 import datetime
 from zoneinfo import ZoneInfo
 
 import pytest
 import time_machine
 
-from cmk.agent_based.v2 import Result
+from cmk.agent_based.v2 import Result, Service, State
 from cmk.legacy_checks import mongodb_replica_set
 
 _STRING_TABLE = [
@@ -78,78 +76,64 @@ _STRING_TABLE_PYMONGO_3 = [
 
 @pytest.fixture
 def empty_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
-    store = dict[str, object]()
+    store: dict[str, object] = {}
     monkeypatch.setattr(mongodb_replica_set, "get_value_store", lambda: store)
 
 
 def test_discover_mongodb_replica_set() -> None:
     section = mongodb_replica_set.parse_mongodb_replica_set(_STRING_TABLE)
-    assert list(mongodb_replica_set.discover_mongodb_replica_set(section)) == [(None, {})]
+    assert list(mongodb_replica_set.discover_mongodb_replica_set(section)) == [Service()]
 
 
 @pytest.mark.parametrize(
-    ["string_table", "expected_result"],
+    ["string_table", "expected_notice"],
     [
         [
             _STRING_TABLE,
-            [
-                (0, "", []),
-                (0, "", []),
+            "\n".join(
                 (
-                    0,
-                    "\n".join(
-                        (
-                            "",
-                            "source: mvgenmongodb02:27017",
-                            "syncedTo: 2022-08-01 10:28:52 (UTC)",
-                            "member (mvgenmongodb02:27017) is 1s (0h) behind primary (mvgenmongodb01:27017)",
-                            "",
-                            "source: mvgenmongodb03:27017",
-                            "syncedTo: 2022-08-01 10:28:53 (UTC)",
-                            "member (mvgenmongodb03:27017) is 0s (0h) behind primary (mvgenmongodb01:27017)",
-                            "",
-                        )
-                    ),
-                ),
-            ],
+                    "",
+                    "source: mvgenmongodb02:27017",
+                    "syncedTo: 2022-08-01 10:28:52 (UTC)",
+                    "member (mvgenmongodb02:27017) is 1s (0h) behind primary (mvgenmongodb01:27017)",
+                    "",
+                    "source: mvgenmongodb03:27017",
+                    "syncedTo: 2022-08-01 10:28:53 (UTC)",
+                    "member (mvgenmongodb03:27017) is 0s (0h) behind primary (mvgenmongodb01:27017)",
+                    "",
+                )
+            ),
         ],
         [
             _STRING_TABLE_PYMONGO_3,
-            [
-                (0, "", []),
-                (0, "", []),
+            "\n".join(
                 (
-                    0,
-                    "\n".join(
-                        (
-                            "",
-                            "source: bbbbbbbbbbbbbbbbbbbbbb.bbbbbb:27017",
-                            "syncedTo: 2024-05-13 12:41:07 (UTC)",
-                            "member (bbbbbbbbbbbbbbbbbbbbbb.bbbbbb:27017) is 2s (0h) behind primary (aaaaaaaaaaaaaaaaaaaaaa.aaaaaa:27017)",
-                            "",
-                            "source: cccccccccccccccccccccc.cccccc:27017",
-                            "syncedTo: 2024-05-13 12:41:07 (UTC)",
-                            "member (cccccccccccccccccccccc.cccccc:27017) is 2s (0h) behind primary (aaaaaaaaaaaaaaaaaaaaaa.aaaaaa:27017)",
-                            "",
-                        )
-                    ),
-                ),
-            ],
+                    "",
+                    "source: bbbbbbbbbbbbbbbbbbbbbb.bbbbbb:27017",
+                    "syncedTo: 2024-05-13 12:41:07 (UTC)",
+                    "member (bbbbbbbbbbbbbbbbbbbbbb.bbbbbb:27017) is 2s (0h) behind primary (aaaaaaaaaaaaaaaaaaaaaa.aaaaaa:27017)",
+                    "",
+                    "source: cccccccccccccccccccccc.cccccc:27017",
+                    "syncedTo: 2024-05-13 12:41:07 (UTC)",
+                    "member (cccccccccccccccccccccc.cccccc:27017) is 2s (0h) behind primary (aaaaaaaaaaaaaaaaaaaaaa.aaaaaa:27017)",
+                    "",
+                )
+            ),
         ],
     ],
 )
 @pytest.mark.usefixtures("empty_value_store")
 def test_check_mongodb_replica_set(
     string_table: list[list[str]],
-    expected_result: list[Result],
+    expected_notice: str,
 ) -> None:
     section = mongodb_replica_set.parse_mongodb_replica_set(string_table)
     with time_machine.travel(datetime.datetime.fromtimestamp(1659514516, tz=ZoneInfo("UTC"))):
-        assert (
-            list(
-                mongodb_replica_set.check_mongodb_replica_set_lag(
-                    None, mongodb_replica_set.CHECK_DEFAULT_PARAMETERS, section
-                )
+        result = list(
+            mongodb_replica_set.check_mongodb_replica_set_lag(
+                mongodb_replica_set.CHECK_DEFAULT_PARAMETERS, section
             )
-            == expected_result
         )
+    # With an empty value store, lag values are recorded but no Result/Metric is yielded for them yet.
+    # Only the long-output Result remains.
+    assert result == [Result(state=State.OK, notice=expected_notice)]

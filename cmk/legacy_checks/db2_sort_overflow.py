@@ -3,14 +3,21 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
+from collections.abc import Mapping
+from typing import Any
 
-
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import IgnoreResultsError
-from cmk.plugins.db2.agent_based.lib import parse_db2_dbs
-
-check_info = {}
+from cmk.agent_based.v2 import (
+    AgentSection,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    IgnoreResultsError,
+    Metric,
+    Result,
+    Service,
+    State,
+)
+from cmk.plugins.db2.agent_based.lib import parse_db2_dbs, Section
 
 # <<<db2_sort_overflow>>>
 # [[[test:datenbank1]]]
@@ -18,36 +25,48 @@ check_info = {}
 # Sort overflows 3
 
 
-def discover_db2_sort_overflow(parsed):
-    for key in parsed[1]:
-        yield key, {}
+def discover_db2_sort_overflow(section: Section) -> DiscoveryResult:
+    for key in section[1]:
+        yield Service(item=key)
 
 
-def check_db2_sort_overflow(item, params, parsed):
-    db = parsed[1].get(item)
+def check_db2_sort_overflow(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
+    db = section[1].get(item)
     if not db:
         raise IgnoreResultsError("Login into database failed")
 
-    total, overflows = tuple(float(x[-1]) for x in db)
+    total, overflows = (float(x[-1]) for x in db)
     if total > 0:
         overflow_perc = overflows * 100 / total
     else:
         overflow_perc = 0.0
-    warn, crit = params.get("levels_perc")
+    warn, crit = params["levels_perc"]
     if overflow_perc >= crit:
-        yield 2, f"{overflow_perc:.1f}% sort overflow (levels at {warn:.1f}%/{crit:.1f}%)"
+        yield Result(
+            state=State.CRIT,
+            summary=f"{overflow_perc:.1f}% sort overflow (levels at {warn:.1f}%/{crit:.1f}%)",
+        )
     elif overflow_perc >= warn:
-        yield 1, f"{overflow_perc:.1f}% sort overflow (levels at {warn:.1f}%/{crit:.1f}%)"
+        yield Result(
+            state=State.WARN,
+            summary=f"{overflow_perc:.1f}% sort overflow (levels at {warn:.1f}%/{crit:.1f}%)",
+        )
     else:
-        yield 0, "%.1f%% sort overflow" % overflow_perc
+        yield Result(state=State.OK, summary=f"{overflow_perc:.1f}% sort overflow")
 
-    yield 0, "Sort overflows: %d" % overflows
-    yield 0, "Total sorts: %d" % total, [("sort_overflow", overflow_perc, warn, crit, 0, 100)]
+    yield Result(state=State.OK, summary=f"Sort overflows: {int(overflows)}")
+    yield Result(state=State.OK, summary=f"Total sorts: {int(total)}")
+    yield Metric("sort_overflow", overflow_perc, levels=(warn, crit), boundaries=(0, 100))
 
 
-check_info["db2_sort_overflow"] = LegacyCheckDefinition(
+agent_section_db2_sort_overflow = AgentSection(
     name="db2_sort_overflow",
     parse_function=parse_db2_dbs,
+)
+
+
+check_plugin_db2_sort_overflow = CheckPlugin(
+    name="db2_sort_overflow",
     service_name="DB2 Sort Overflow %s",
     discovery_function=discover_db2_sort_overflow,
     check_function=check_db2_sort_overflow,

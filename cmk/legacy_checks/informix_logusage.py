@@ -3,23 +3,29 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="comparison-overlap"
+from collections.abc import Mapping, Sequence
+from typing import Any
 
-# mypy: disable-error-code="no-untyped-def"
+from cmk.agent_based.v1 import check_levels as check_levels_v1
+from cmk.agent_based.v2 import (
+    AgentSection,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    render,
+    Result,
+    Service,
+    State,
+    StringTable,
+)
+
+Section = Mapping[str, Sequence[Mapping[str, str]]]
 
 
-# mypy: disable-error-code="var-annotated"
-
-from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
-from cmk.agent_based.v2 import render
-
-check_info = {}
-
-
-def parse_informix_logusage(string_table):
-    parsed = {}
-    instance = None
-    entry = None
+def parse_informix_logusage(string_table: StringTable) -> Section:
+    parsed: dict[str, list[dict[str, str]]] = {}
+    instance: str | None = None
+    entry: dict[str, str] | None = None
     for line in string_table:
         if instance is not None and line == ["(constant)", "LOGUSAGE"]:
             entry = {}
@@ -39,62 +45,67 @@ def parse_informix_logusage(string_table):
     return parsed
 
 
-def discover_informix_logusage(parsed):
-    return [(instance, {}) for instance in parsed]
+def discover_informix_logusage(section: Section) -> DiscoveryResult:
+    for instance in section:
+        yield Service(item=instance)
 
 
-def check_informix_logusage(item, params, parsed):
-    if item in parsed:
-        data = parsed[item]
-        logfiles = len(data)
-        if not logfiles:
-            yield 1, "Log information missing"
-            return
+def check_informix_logusage(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
+    if item not in section:
+        return
+    data = section[item]
+    logfiles = len(data)
+    if not logfiles:
+        yield Result(state=State.WARN, summary="Log information missing")
+        return
 
-        size = 0
-        used = 0
-        for entry in data:
-            pagesize = int(entry["sh_pagesize"])
-            size += int(entry["size"]) * pagesize
-            used += int(entry["used"]) * pagesize
+    size = 0
+    used = 0
+    for entry in data:
+        pagesize = int(entry["sh_pagesize"])
+        size += int(entry["size"]) * pagesize
+        used += int(entry["used"]) * pagesize
 
-        yield check_levels(
-            logfiles,
-            "file_count",
-            None,
-            infoname="Files",
-            human_readable_func=str,
-        )
-        yield check_levels(
-            size,
-            "log_files_total",
-            params.get("levels"),
-            infoname="Size",
-            human_readable_func=render.bytes,
-        )
-        yield check_levels(
-            used,
-            "log_files_used",
-            None,
-            infoname="Used",
-            human_readable_func=render.bytes,
-        )
+    yield from check_levels_v1(
+        logfiles,
+        metric_name="file_count",
+        label="Files",
+        render_func=str,
+    )
+    yield from check_levels_v1(
+        size,
+        metric_name="log_files_total",
+        levels_upper=params.get("levels"),
+        label="Size",
+        render_func=render.bytes,
+    )
+    yield from check_levels_v1(
+        used,
+        metric_name="log_files_used",
+        label="Used",
+        render_func=render.bytes,
+    )
 
-        if not size:
-            return
+    if not size:
+        return
 
-        yield check_levels(
-            used * 100.0 / size,
-            "log_files_used_perc",
-            params["levels_perc"],
-            infoname="Usage",
-            human_readable_func=render.percent,
-        )
+    yield from check_levels_v1(
+        used * 100.0 / size,
+        metric_name="log_files_used_perc",
+        levels_upper=params["levels_perc"],
+        label="Usage",
+        render_func=render.percent,
+    )
 
 
-check_info["informix_logusage"] = LegacyCheckDefinition(
+agent_section_informix_logusage = AgentSection(
     name="informix_logusage",
     parse_function=parse_informix_logusage,
+)
+
+
+check_plugin_informix_logusage = CheckPlugin(
+    name="informix_logusage",
     service_name="Informix Log Usage %s",
     discovery_function=discover_informix_logusage,
     check_function=check_informix_logusage,

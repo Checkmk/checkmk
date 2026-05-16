@@ -126,7 +126,7 @@ def register(
     page_registry.register(PageEndpoint("ajax_fetch_topology", AjaxFetchTopology()))
     icon_and_action_registry.register(NetworkTopologyIcon)
     cron_job_registry.register(
-        CronJob(
+        CronJob[Config](
             name="cleanup_topology_layouts",
             callable=cleanup_topology_layouts,
             interval=timedelta(days=1),

@@ -16,7 +16,7 @@ from pathlib import Path
 
 from cmk import trace
 from cmk.ccc import store
-from cmk.gui.config import active_config
+from cmk.gui.config import active_config, Config
 from cmk.gui.cron import cron_job_registry, CronJob
 from cmk.gui.script_helpers import gui_context
 from cmk.gui.session import SuperUserContext
@@ -103,7 +103,9 @@ def reset_scheduling(job_id: str) -> None:
         )
 
 
-def _jobs_to_run(jobs: Sequence[CronJob], job_runs: dict[str, datetime.datetime]) -> list[CronJob]:
+def _jobs_to_run(
+    jobs: Sequence[CronJob[Config]], job_runs: dict[str, datetime.datetime]
+) -> list[CronJob[Config]]:
     return [
         job
         for job in jobs
@@ -113,7 +115,7 @@ def _jobs_to_run(jobs: Sequence[CronJob], job_runs: dict[str, datetime.datetime]
 
 
 def _run_scheduled_jobs(
-    jobs: Sequence[CronJob],
+    jobs: Sequence[CronJob[Config]],
     state: SchedulerState,
     crash_report_callback: Callable[[Exception], str],
     job_runs: dict[str, datetime.datetime],
@@ -169,7 +171,7 @@ def _run_scheduled_jobs(
 
 @tracer.instrument()
 def run_scheduled_jobs(
-    jobs: Sequence[CronJob],
+    jobs: Sequence[CronJob[Config]],
     state: SchedulerState,
     crash_report_callback: Callable[[Exception], str],
 ) -> None:
@@ -184,7 +186,7 @@ def run_scheduled_jobs(
 
 
 def job_thread_main(
-    job: CronJob, origin_span: trace.Link, crash_report_callback: Callable[[Exception], str]
+    job: CronJob[Config], origin_span: trace.Link, crash_report_callback: Callable[[Exception], str]
 ) -> None:
     try:
         with (

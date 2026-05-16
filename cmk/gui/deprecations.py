@@ -540,7 +540,7 @@ def execute_deprecation_tests_and_notify_users(config: Config) -> None:
 
 def register(cron_job_registry: CronJobRegistry) -> None:
     cron_job_registry.register(
-        CronJob(
+        CronJob[Config](
             name="execute_deprecation_tests_and_notify_users",
             callable=execute_deprecation_tests_and_notify_users,
             interval=datetime.timedelta(days=1),

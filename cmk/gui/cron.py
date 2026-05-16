@@ -12,13 +12,12 @@ from functools import partial
 from typing import override
 
 from cmk.ccc.plugin_registry import Registry
-from cmk.gui.config import Config
 
 
 @dataclass
-class CronJob:
+class CronJob[T]:
     name: str
-    callable: Callable[[Config], None] | partial
+    callable: Callable[[T], None] | partial
     interval: timedelta
     run_in_thread: bool = False
 

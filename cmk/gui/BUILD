@@ -925,7 +925,7 @@ py_library(
         "//tests:__subpackages__",
     ],
     deps = [
-        ":config",
+        "//packages/cmk-ccc:plugin-registry",
     ],
 )
 

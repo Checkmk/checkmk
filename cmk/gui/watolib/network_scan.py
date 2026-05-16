@@ -226,7 +226,7 @@ def register(
     host_attribute_registry.register(builtin_attributes.HostAttributeNetworkScanResult)
     automation_command_registry.register(AutomationNetworkScan)
     cron_job_registry.register(
-        CronJob(
+        CronJob[Config](
             name="execute_network_scan_job",
             callable=execute_network_scan_job,
             interval=timedelta(minutes=1),

@@ -8,6 +8,7 @@ from __future__ import annotations
 from datetime import timedelta
 
 import cmk.utils.paths
+from cmk.gui.config import Config
 from cmk.gui.cron import CronJob, CronJobRegistry
 from cmk.gui.openapi.framework.registry import VersionedEndpointRegistry
 from cmk.gui.openapi.restful_objects.endpoint_family import EndpointFamilyRegistry
@@ -74,7 +75,7 @@ def register(
     config_variable_registry.register(ConfigVariableInventoryCleanup)
     page_registry.register(PageEndpoint("host_inv_api", page_host_inv_api))
     cron_job_registry.register(
-        CronJob(
+        CronJob[Config](
             name="execute_inventory_cleanup_job",
             callable=InventoryCleanup(cmk.utils.paths.omd_root),
             interval=timedelta(hours=24),

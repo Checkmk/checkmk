@@ -6,6 +6,7 @@
 from datetime import timedelta
 
 from cmk.gui.background_job.job import BackgroundJobRegistry
+from cmk.gui.config import Config
 from cmk.gui.cron import CronJob, CronJobRegistry
 from cmk.gui.pages import PageEndpoint, PageRegistry
 from cmk.gui.watolib.groups_io import ContactGroupUsageFinderRegistry
@@ -34,7 +35,7 @@ def register(
     user_attributes.register(user_attribute_registry)
 
     cron_job_registry.register(
-        CronJob(
+        CronJob[Config](
             name="execute_userdb_job",
             callable=execute_userdb_job,
             interval=timedelta(minutes=1),
@@ -42,7 +43,7 @@ def register(
     )
 
     cron_job_registry.register(
-        CronJob(
+        CronJob[Config](
             name="execute_user_profile_cleanup_job",
             callable=execute_user_profile_cleanup_job,
             interval=timedelta(hours=1),

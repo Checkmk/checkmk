@@ -25,12 +25,12 @@ def test_run_scheduled_jobs(load_plugins: None) -> None:
     }
     state = SchedulerState()
     jobs = [
-        CronJob(
+        CronJob[Config](
             name="job1",
             callable=lambda config: called.update({"job1": called["job1"] + 1}),
             interval=timedelta(minutes=1),
         ),
-        CronJob(
+        CronJob[Config](
             name="job2",
             callable=lambda config: called.update({"job2": called["job2"] + 1}),
             interval=timedelta(minutes=5),
@@ -66,7 +66,7 @@ def test_run_scheduled_jobs_in_thread(load_plugins: None) -> None:
     called = threading.Event()
     state = SchedulerState()
     jobs = [
-        CronJob(
+        CronJob[Config](
             name="threaded_job",
             callable=lambda config: called.set(),
             run_in_thread=True,
@@ -93,7 +93,7 @@ def test_run_scheduled_jobs_in_thread_does_not_start_twice(
         shall_terminate.wait()
 
     jobs = [
-        CronJob(
+        CronJob[Config](
             name="threaded_job",
             callable=_wait,
             run_in_thread=True,

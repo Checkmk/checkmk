@@ -116,7 +116,7 @@ class DiscoveredHostLabelSyncResponse:
 
 def register(cron_job_registry: CronJobRegistry) -> None:
     cron_job_registry.register(
-        CronJob(
+        CronJob[Config](
             name="execute_host_label_sync_job",
             callable=execute_host_label_sync_job,
             interval=timedelta(minutes=1),

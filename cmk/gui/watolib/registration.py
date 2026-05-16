@@ -13,6 +13,7 @@ from cmk.ccc import version
 from cmk.gui import hooks
 from cmk.gui.autocompleters import AutocompleterRegistry
 from cmk.gui.background_job.job import BackgroundJobRegistry
+from cmk.gui.config import Config
 from cmk.gui.cron import CronJob, CronJobRegistry
 from cmk.gui.form_specs.unstable import SingleChoiceEditable
 from cmk.gui.form_specs.unstable.time_specific import TimeSpecific
@@ -235,7 +236,7 @@ def _register_host_attribute(host_attribute_registry: HostAttributeRegistry) -> 
 
 def _register_cronjobs(cron_job_registry: CronJobRegistry) -> None:
     cron_job_registry.register(
-        CronJob(
+        CronJob[Config](
             name="execute_activation_cleanup_job",
             callable=execute_activation_cleanup_job,
             interval=timedelta(minutes=1),
@@ -243,14 +244,14 @@ def _register_cronjobs(cron_job_registry: CronJobRegistry) -> None:
         )
     )
     cron_job_registry.register(
-        CronJob(
+        CronJob[Config](
             name="rebuild_folder_lookup_cache",
             callable=rebuild_folder_lookup_cache,
             interval=timedelta(minutes=1),
         )
     )
     cron_job_registry.register(
-        CronJob(
+        CronJob[Config](
             name="execute_host_removal_job",
             callable=automatic_host_removal.execute_host_removal_job,
             interval=timedelta(minutes=1),
@@ -258,7 +259,7 @@ def _register_cronjobs(cron_job_registry: CronJobRegistry) -> None:
         )
     )
     cron_job_registry.register(
-        CronJob(
+        CronJob[Config](
             name="execute_autodiscovery",
             callable=autodiscovery.execute_autodiscovery,
             interval=timedelta(minutes=5),

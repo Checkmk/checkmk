@@ -123,7 +123,7 @@ def register(
 ) -> None:
     page_registry.register(PageEndpoint("message", page_message))
     cron_job_registry.register(
-        CronJob(
+        CronJob[Config](
             name="execute_user_messages_spool_job",
             callable=_execute_user_messages_spool_job,
             # Usually there are no spooled messages, and the job is very fast then.

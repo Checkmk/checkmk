@@ -7,6 +7,7 @@ from datetime import timedelta
 
 from cmk.ccc.version import Edition
 from cmk.gui.background_job.job._manager import execute_housekeeping_job
+from cmk.gui.config import Config
 from cmk.gui.cron import CronJob, CronJobRegistry
 from cmk.gui.pages import PageRegistry
 from cmk.gui.permissions import PermissionRegistry, PermissionSectionRegistry
@@ -31,7 +32,7 @@ def register(
 ) -> None:
     automation_command_registry.register(AutomationBackgroundJobSnapshot)
     cron_job_registry.register(
-        CronJob(
+        CronJob[Config](
             name="execute_housekeeping_job",
             callable=execute_housekeeping_job,
             interval=timedelta(minutes=1),

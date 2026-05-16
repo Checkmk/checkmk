@@ -42,7 +42,7 @@ def register(
     cron_job_registry: CronJobRegistry,
 ) -> None:
     cron_job_registry.register(
-        CronJob(
+        CronJob[Config](
             name="execute_sync_remote_sites",
             callable=_execute_sync_remote_sites,
             interval=timedelta(minutes=1),

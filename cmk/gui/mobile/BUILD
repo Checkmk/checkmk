@@ -16,6 +16,7 @@ py_library(
         "//cmk/gui:i18n",
         "//cmk/gui:log",
         "//cmk/gui:logged_in",
+        "//cmk/gui:login",
         "//cmk/gui:page_menu",
         "//cmk/gui:page_menu_utils",
         "//cmk/gui:pages",

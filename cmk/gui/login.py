@@ -15,7 +15,6 @@ from typing import override
 from urllib.parse import unquote
 
 import cmk.ccc.version as cmk_version
-import cmk.gui.mobile
 import cmk.utils.paths
 from cmk.ccc.site import omd_site, url_prefix
 from cmk.ccc.user import UserId
@@ -29,7 +28,7 @@ from cmk.gui.header import make_header
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import Request, response
-from cmk.gui.i18n import _, ungettext
+from cmk.gui.i18n import _, localize, ungettext
 from cmk.gui.logged_in import (
     LoggedInNobody,
     LoggedInRemoteSite,
@@ -129,17 +128,16 @@ class LoginPage(Page):
     def page(self, ctx: PageContext) -> None:
         # Initialize the cmk.gui.i18n for the login dialog. This might be
         # overridden later after user login
-        cmk.gui.i18n.localize(ctx.request.var("lang", ctx.config.default_language))
+        localize(ctx.request.var("lang", ctx.config.default_language))
 
         self._do_login(ctx.request, ctx.config)
 
         if ctx.request.has_var("_plain_error"):
             raise MKAuthException(_("Invalid login credentials."))
 
-        if is_mobile(ctx.request, response):
-            cmk.gui.mobile.page_login(ctx.config)
-            return
+        self._render(ctx)
 
+    def _render(self, ctx: PageContext) -> None:
         self._show_login_page(ctx.request, ctx.config)
 
     def _do_login(self, request: Request, config: Config) -> None:
@@ -147,9 +145,8 @@ class LoginPage(Page):
         if not request.var(LOGIN_BUTTON_ID):
             return
 
+        username: UserId | None = None
         try:
-            username: UserId | None = None  # make sure it's defined in the except block
-
             if not config.user_login and not is_site_login():
                 raise MKUserError(None, _("Login is not allowed on this site."))
 

@@ -1783,7 +1783,6 @@ py_library(
         ":theme",
         "//cmk/gui/htmllib:generator",
         "//cmk/gui/htmllib:html",
-        "//cmk/gui/mobile",
         "//cmk/gui/userdb",
         "//cmk/gui/utils:html",
         "//cmk/gui/utils:mobile",

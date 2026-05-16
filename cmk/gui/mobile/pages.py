@@ -14,10 +14,11 @@ from cmk.gui.display_options import display_options
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
-from cmk.gui.http import Request, request
+from cmk.gui.http import Request, request, response
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.logged_in import user
+from cmk.gui.login import LoginPage
 from cmk.gui.page_menu import PageMenuEntry, PageMenuLink
 from cmk.gui.page_menu_utils import collect_context_links
 from cmk.gui.pages import Page, PageContext, PageResult
@@ -31,6 +32,7 @@ from cmk.gui.utils import escaping
 from cmk.gui.utils.confirm_with_preview import command_confirm_dialog
 from cmk.gui.utils.escaping import escape_text
 from cmk.gui.utils.html import HTML
+from cmk.gui.utils.mobile import is_mobile
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.urls import makeuri, requested_file_name
 from cmk.gui.utils.user_errors import user_errors
@@ -183,7 +185,7 @@ def jqm_page_index_topic_renderer(topic: str, items: Items) -> None:
     html.close_ul()
 
 
-def page_login(config: Config) -> None:
+def _page_login(config: Config) -> None:
     title = _("Checkmk Mobile")
     mobile_html_head(title)
     jqm_page_header(title, id_="login")
@@ -235,6 +237,15 @@ def page_login(config: Config) -> None:
     html.close_div()
     html.close_div()  # close page-div
     mobile_html_foot()
+
+
+class MobileLoginPage(LoginPage):
+    @override
+    def _render(self, ctx: PageContext) -> None:
+        if is_mobile(ctx.request, response):
+            _page_login(ctx.config)
+            return
+        super()._render(ctx)
 
 
 class PageMobileIndex(Page):

@@ -52,7 +52,6 @@ def resolve_proxy_config(proxy_setting: ProxySetting) -> ProxyConfig:
 
     this_edition = edition(paths.omd_root)
     base_config = load(
-        discovery_rulesets=(),
         get_builtin_host_labels=make_app(this_edition).get_builtin_host_labels,
         edition=this_edition,
     )

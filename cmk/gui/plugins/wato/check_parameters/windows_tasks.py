@@ -12,6 +12,7 @@ from cmk.gui.plugins.wato.utils import (
     RulespecGroupCheckParametersDiscovery,
 )
 from cmk.gui.valuespec import Dictionary, FixedValue, ListOf, MonitoringState, TextInput
+from cmk.utils.rulesets.definition import RuleGroup
 
 _STATE = {0: "OK", 1: "WARN", 2: "CRIT"}
 
@@ -118,7 +119,7 @@ rulespec_registry.register(
     HostRulespec(
         group=RulespecGroupCheckParametersDiscovery,
         match_type="dict",
-        name="windows_tasks_discovery",
+        name=RuleGroup.DiscoveryParameters("windows_tasks_discovery"),
         valuespec=_valuespec_windows_tasks_discovery,
     )
 )

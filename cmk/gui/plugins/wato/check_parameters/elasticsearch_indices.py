@@ -16,6 +16,7 @@ from cmk.gui.plugins.wato.utils import (
     RulespecGroupCheckParametersDiscovery,
 )
 from cmk.gui.valuespec import Dictionary, Integer, Percentage, TextInput, Tuple
+from cmk.utils.rulesets.definition import RuleGroup
 
 
 def _parameter_valuespec_elasticsearch_indices_discovery() -> Dictionary:
@@ -87,7 +88,7 @@ rulespec_registry.register(
     HostRulespec(
         group=RulespecGroupCheckParametersDiscovery,
         match_type="dict",
-        name="elasticsearch_indices_disovery",
+        name=RuleGroup.DiscoveryParameters("elasticsearch_indices_disovery"),
         valuespec=_parameter_valuespec_elasticsearch_indices_discovery,
     )
 )

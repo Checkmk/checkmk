@@ -21,7 +21,6 @@ from cmk.base.modes.check_mk import run_checking
 from cmk.ccc.config_path import detect_latest_config_path
 from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.checkengine.plugin_backend import (
-    extract_known_discovery_rulesets,
     load_selected_plugins,
 )
 from cmk.discover_plugins import PluginLocation
@@ -100,7 +99,6 @@ def main() -> int:
         app = make_app(cmk_version.edition(omd_root))
         loading_result = config.load_packed_config(
             active_config_path,
-            discovery_rulesets=extract_known_discovery_rulesets(plugins),
             get_builtin_host_labels=app.get_builtin_host_labels,
             edition=app.edition,
             # Note: CONFIG.ip{,v6}addresses is populated not only with the values

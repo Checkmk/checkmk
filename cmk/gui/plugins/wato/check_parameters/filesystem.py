@@ -26,6 +26,7 @@ from cmk.gui.valuespec import (
     TextInput,
     TextOrRegExp,
 )
+from cmk.utils.rulesets.definition import RuleGroup
 
 
 def _validate_discovery_filesystem_params(value: dict[str, Any], varprefix: str) -> None:
@@ -133,7 +134,7 @@ rulespec_registry.register(
     HostRulespec(
         group=RulespecGroupCheckParametersDiscovery,
         match_type="dict",
-        name="inventory_df_rules",
+        name=RuleGroup.DiscoveryParameters("inventory_df_rules"),
         valuespec=_valuespec_inventory_df_rules,
     )
 )
@@ -224,7 +225,7 @@ rulespec_registry.register(
     HostRulespec(
         group=RulespecGroupCheckParametersDiscovery,
         match_type="all",
-        name="filesystem_groups",
+        name=RuleGroup.DiscoveryParameters("filesystem_groups"),
         valuespec=_valuespec_filesystem_groups,
     )
 )
@@ -278,7 +279,7 @@ rulespec_registry.register(
     HostRulespec(
         group=RulespecGroupCheckParametersDiscovery,
         match_type="list",
-        name="discovery_qtree",
+        name=RuleGroup.DiscoveryParameters("discovery_qtree"),
         valuespec=_discovery_valuespec_qtree_quota,
     )
 )

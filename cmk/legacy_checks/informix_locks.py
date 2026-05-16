@@ -4,19 +4,18 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 from typing import Any
 
-from cmk.agent_based.legacy.v0_unstable import (
-    check_levels,
-    LegacyCheckDefinition,
-    LegacyDiscoveryResult,
+from cmk.agent_based.v1 import check_levels as check_levels_v1
+from cmk.agent_based.v2 import (
+    AgentSection,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Service,
+    StringTable,
 )
-from cmk.agent_based.v2 import StringTable
-
-check_info = {}
 
 Section = Mapping[str, Mapping[str, str]]
 
@@ -34,25 +33,34 @@ def parse_informix_locks(string_table: StringTable) -> Section:
     return parsed
 
 
-def discover_informix_locks(parsed: Section) -> LegacyDiscoveryResult:
-    return [(instance, {}) for instance in parsed]
+def discover_informix_locks(section: Section) -> DiscoveryResult:
+    for instance in section:
+        yield Service(item=instance)
 
 
-def check_informix_locks(
-    item: str, params: Mapping[str, Any], parsed: Section
-) -> tuple[int, str, list[Any]] | None:
-    if item in parsed:
-        data = parsed[item]
-        locks = int(data["locks"])
-        warn, crit = params["levels"]
+def check_informix_locks(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
+    if item not in section:
+        return
+    data = section[item]
+    locks = int(data["locks"])
+    warn, crit = params["levels"]
 
-        return check_levels(locks, "locks", (warn, crit), infoname=f"Type: {data['type']}, Locks")
-    return None
+    yield from check_levels_v1(
+        locks,
+        metric_name="locks",
+        levels_upper=(warn, crit),
+        label=f"Type: {data['type']}, Locks",
+    )
 
 
-check_info["informix_locks"] = LegacyCheckDefinition(
+agent_section_informix_locks = AgentSection(
     name="informix_locks",
     parse_function=parse_informix_locks,
+)
+
+
+check_plugin_informix_locks = CheckPlugin(
+    name="informix_locks",
     service_name="Informix Locks %s",
     discovery_function=discover_informix_locks,
     check_function=check_informix_locks,

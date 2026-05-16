@@ -11,7 +11,6 @@ remote sites in distributed Setup."""
 import ast
 import enum
 import json
-import os
 from collections.abc import Collection, Iterator, Sequence
 from pathlib import Path
 from typing import Literal, override
@@ -70,6 +69,7 @@ from cmk.gui.watolib.activate_changes import (
 )
 from cmk.gui.watolib.automation_commands import AutomationCommand, AutomationCommandRegistry
 from cmk.gui.watolib.automations import MKAutomationException
+from cmk.gui.watolib.backup_snapshots import get_last_wato_snapshot_file
 from cmk.gui.watolib.config_domain_name import ABCConfigDomain, DomainRequest, DomainRequests
 from cmk.gui.watolib.hosts_and_folders import folder_preserving_link, folder_tree, Host
 from cmk.gui.watolib.mode import ModeRegistry, WatoMode
@@ -128,29 +128,6 @@ def _extract_snapshot(snapshot_file: str) -> None:
         raise NotImplementedError()
     with CheckmkTarArchive.from_path(filepath, streaming=False, compression="*") as opened_file:
         backup_snapshots.extract_snapshot(opened_file, backup_snapshots.backup_domains)
-
-
-def _get_snapshots() -> list[str]:
-    snapshots: list[str] = []
-    try:
-        for f in os.listdir(backup_snapshots.snapshot_dir):
-            if os.path.isfile(backup_snapshots.snapshot_dir + f):
-                snapshots.append(f)
-        snapshots.sort(reverse=True)
-    except OSError:
-        pass
-    return snapshots
-
-
-def get_last_wato_snapshot_file(*, debug: bool) -> None | str:
-    for snapshot_file in _get_snapshots():
-        status = backup_snapshots.get_snapshot_status(
-            snapshot=snapshot_file,
-            debug=debug,
-        )
-        if status["type"] == "automatic" and not status["broken"]:
-            return snapshot_file
-    return None
 
 
 class ModeRevertChanges(WatoMode):

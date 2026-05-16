@@ -754,3 +754,24 @@ def _wipe_directory(path: str) -> None:
                 os.remove(p)
             except FileNotFoundError:
                 pass
+
+
+def _list_snapshots() -> list[str]:
+    snapshots: list[str] = []
+    try:
+        for f in os.listdir(snapshot_dir):
+            if os.path.isfile(snapshot_dir + f):
+                snapshots.append(f)
+        snapshots.sort(reverse=True)
+    except OSError:
+        pass
+    return snapshots
+
+
+def get_last_wato_snapshot_file(*, debug: bool) -> None | str:
+    """Return the filename of the latest non-broken automatic snapshot, or None."""
+    for snapshot_file in _list_snapshots():
+        status = get_snapshot_status(snapshot=snapshot_file, debug=debug)
+        if status["type"] == "automatic" and not status["broken"]:
+            return snapshot_file
+    return None

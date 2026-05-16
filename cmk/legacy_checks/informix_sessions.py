@@ -3,21 +3,25 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
+from collections.abc import Mapping
+from typing import Any
 
-# TODO WATO
+from cmk.agent_based.v1 import check_levels as check_levels_v1
+from cmk.agent_based.v2 import (
+    AgentSection,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Service,
+    StringTable,
+)
+
+Section = Mapping[str, str]
 
 
-# mypy: disable-error-code="var-annotated"
-
-from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
-
-check_info = {}
-
-
-def parse_informix_sessions(string_table):
-    parsed = {}
-    instance = None
+def parse_informix_sessions(string_table: StringTable) -> Section:
+    parsed: dict[str, str] = {}
+    instance: str | None = None
     for line in string_table:
         if line[0].startswith("[[[") and line[0].endswith("]]]"):
             instance = line[0][3:-3]
@@ -28,22 +32,33 @@ def parse_informix_sessions(string_table):
     return parsed
 
 
-def discover_informix_sessions(parsed):
-    return [(instance, {}) for instance in parsed]
+def discover_informix_sessions(section: Section) -> DiscoveryResult:
+    for instance in section:
+        yield Service(item=instance)
 
 
-def check_informix_sessions(item, params, parsed):
-    if item in parsed:
-        sessions = int(parsed[item])
-        warn, crit = params["levels"]
+def check_informix_sessions(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
+    if item not in section:
+        return
+    sessions = int(section[item])
+    warn, crit = params["levels"]
 
-        return check_levels(sessions, "sessions", (warn, crit), infoname="Sessions")
-    return None
+    yield from check_levels_v1(
+        sessions,
+        metric_name="sessions",
+        levels_upper=(warn, crit),
+        label="Sessions",
+    )
 
 
-check_info["informix_sessions"] = LegacyCheckDefinition(
+agent_section_informix_sessions = AgentSection(
     name="informix_sessions",
     parse_function=parse_informix_sessions,
+)
+
+
+check_plugin_informix_sessions = CheckPlugin(
+    name="informix_sessions",
     service_name="Informix Sessions %s",
     discovery_function=discover_informix_sessions,
     check_function=check_informix_sessions,

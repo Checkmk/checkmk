@@ -10,7 +10,7 @@ import pytest
 import time_machine
 
 from cmk.agent_based.v2 import Result, Service, State
-from cmk.legacy_checks import mongodb_replica_set
+from cmk.plugins.mongodb.agent_based import mongodb_replica_set
 
 _STRING_TABLE = [
     [

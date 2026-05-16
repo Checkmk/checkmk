@@ -21495,9 +21495,6 @@ msgstr "Nu utilizați un prefix"
 msgid "Do not use absolute levels"
 msgstr "Nu utilizați niveluri absolute"
 
-msgid "Do not validate server certificate during port query"
-msgstr "Nu validați certificatul serverului în timpul interogării portului"
-
 #, fuzzy
 msgid "Do not verify the server certificate (unsafe)"
 msgstr "Nu validați certificatul serverului în timpul interogării portului"
@@ -34107,9 +34104,6 @@ msgstr "Ignoră perioada de notificare"
 
 msgid "Ignore port types during discovery"
 msgstr "Ignoră tipurile de port în timpul descoperirii"
-
-msgid "Ignore proxies configured on the target system"
-msgstr "Ignoră proxy-urile configurate pe sistemul țintă"
 
 msgid "Ignore scheduled downtimes"
 msgstr "Ignorați perioadele de întrerupere programate"
@@ -95963,6 +95957,12 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#~ msgid "Do not validate server certificate during port query"
+#~ msgstr "Nu validați certificatul serverului în timpul interogării portului"
+
+#~ msgid "Ignore proxies configured on the target system"
+#~ msgstr "Ignoră proxy-urile configurate pe sistemul țintă"
 
 #, fuzzy
 #~ msgid "Business Intelligence runtime data"

@@ -21634,9 +21634,6 @@ msgstr "No utilice un prefijo de espacio de nombres"
 msgid "Do not use absolute levels"
 msgstr "No utilice niveles absolutos"
 
-msgid "Do not validate server certificate during port query"
-msgstr "No validar el certificado del servidor durante la consulta del puerto"
-
 #, fuzzy
 msgid "Do not verify the server certificate (unsafe)"
 msgstr "No validar el certificado del servidor durante la consulta del puerto"
@@ -34298,9 +34295,6 @@ msgstr "Ignorar el periodo de notificación"
 
 msgid "Ignore port types during discovery"
 msgstr "Ignorar los tipos de puerto durante la detección"
-
-msgid "Ignore proxies configured on the target system"
-msgstr "Ignorar los proxies configurados en el sistema de destino"
 
 msgid "Ignore scheduled downtimes"
 msgstr "Ignorar los tiempos de inactividad programados"
@@ -96528,6 +96522,13 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#~ msgid "Do not validate server certificate during port query"
+#~ msgstr ""
+#~ "No validar el certificado del servidor durante la consulta del puerto"
+
+#~ msgid "Ignore proxies configured on the target system"
+#~ msgstr "Ignorar los proxies configurados en el sistema de destino"
 
 #, fuzzy
 #~ msgid "Business Intelligence runtime data"

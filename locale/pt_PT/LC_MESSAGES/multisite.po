@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2026-05-14 15:42+0000\n"
+"PO-Revision-Date: 2026-05-16 13:19+0000\n"
 "Language-Team: Portuguese (Portugal) <https://translate.checkmk.com/projects/"
 "checkmk/dev/pt_PT/>\n"
 "Language: pt_PT\n"
@@ -21473,9 +21473,6 @@ msgstr "Não use um prefixo de namespace"
 msgid "Do not use absolute levels"
 msgstr "Não usar níveis absolutos"
 
-msgid "Do not validate server certificate during port query"
-msgstr "Não validar o certificado do servidor durante a consulta do porto"
-
 #, fuzzy
 msgid "Do not verify the server certificate (unsafe)"
 msgstr "Não validar o certificado do servidor durante a consulta do porto"
@@ -34044,9 +34041,6 @@ msgstr "Ignorar o período de notificação"
 
 msgid "Ignore port types during discovery"
 msgstr "Ignorar tipos de portos durante a descoberta"
-
-msgid "Ignore proxies configured on the target system"
-msgstr "Ignorar proxies configurados no sistema de destino"
 
 msgid "Ignore scheduled downtimes"
 msgstr "Ignorar os tempos de paragem programados"
@@ -95707,6 +95701,12 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#~ msgid "Do not validate server certificate during port query"
+#~ msgstr "Não validar o certificado do servidor durante a consulta do porto"
+
+#~ msgid "Ignore proxies configured on the target system"
+#~ msgstr "Ignorar proxies configurados no sistema de destino"
 
 #, fuzzy
 #~ msgid "Business Intelligence runtime data"

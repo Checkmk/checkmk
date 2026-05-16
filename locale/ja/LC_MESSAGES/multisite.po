@@ -19972,9 +19972,6 @@ msgstr "接頭辞は使用しないでください"
 msgid "Do not use absolute levels"
 msgstr "絶対レベルを使用しないでください"
 
-msgid "Do not validate server certificate during port query"
-msgstr "ポート照会時にサーバー証明書を検証しない"
-
 msgid "Do not verify the server certificate (unsafe)"
 msgstr "サーバー証明書を検証しないでください（安全でない）"
 
@@ -31591,9 +31588,6 @@ msgstr "通知期間を無視する"
 
 msgid "Ignore port types during discovery"
 msgstr "検出中にポートタイプを無視する"
-
-msgid "Ignore proxies configured on the target system"
-msgstr "ターゲットシステムで設定されたプロキシを無視する"
 
 msgid "Ignore scheduled downtimes"
 msgstr "スケジュールされたダウンタイムを無視する"
@@ -89001,6 +88995,12 @@ msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
 "後で「ヘルプ」＞「Checkmkの学習」＞「ウェルカムページ」からアクセスできます"
+
+#~ msgid "Do not validate server certificate during port query"
+#~ msgstr "ポート照会時にサーバー証明書を検証しない"
+
+#~ msgid "Ignore proxies configured on the target system"
+#~ msgstr "ターゲットシステムで設定されたプロキシを無視する"
 
 #~ msgid "Business Intelligence runtime data"
 #~ msgstr "ビジネスインテリジェンス ランタイムデータ"

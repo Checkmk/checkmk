@@ -4,9 +4,9 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
+"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2026-02-13 21:34+0000\n"
+"PO-Revision-Date: 2026-05-16 13:19+0000\n"
 "Language-Team: Italian <https://translate.checkmk.com/projects/checkmk/dev/"
 "it/>\n"
 "Language: it\n"
@@ -14,7 +14,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
-"X-Generator: Weblate 5.12.2\n"
+"X-Generator: Weblate 5.16.2\n"
 
 msgid " "
 msgstr " "
@@ -31,22 +31,20 @@ msgstr " %s, durata dell'interruzione %s"
 msgid " (%d times)"
 msgstr " (%d volte)"
 
-#, fuzzy
 msgid " (application load balancers only)"
 msgstr " (Solo I bilanciatori di carico delle applicazioni)"
 
 msgid " (copy)"
 msgstr " (copia)"
 
-#, fuzzy
 msgid " (data incomplete, maximum number of nodes reached)"
 msgstr " (Dati incompleti, numero massimo di nodi superato)"
 
-#, fuzzy, python-format
+#, python-format
 msgid " (duration: %s)"
 msgstr " (Durata: %s)"
 
-#, fuzzy, python-format
+#, python-format
 msgid " (duration: %s, %s IO: %s/s)"
 msgstr " (Durata: %s, %s IO: %s/s)"
 
@@ -81,11 +79,9 @@ msgstr " (livelli superiori)"
 msgid " (worst state: %s)"
 msgstr " (stato peggiore: %s)"
 
-#, fuzzy
 msgid " - Checkmk security notice"
 msgstr " - Avviso di sicurezza Checkmk"
 
-#, fuzzy
 msgid " - broken"
 msgstr " - Rotto"
 
@@ -116,7 +112,7 @@ msgstr " Terminato a: %s."
 
 #, fuzzy
 msgid " Finished."
-msgstr "Finito."
+msgstr " Finito."
 
 msgid ""
 " If this action was not triggered by you, contact your administrator for "
@@ -218,7 +214,7 @@ msgstr " o int"
 msgid " to:"
 msgstr " a:"
 
-#, fuzzy, python-brace-format
+#, python-brace-format
 msgid " {iofile.name} {size_text} {io_text}"
 msgstr " {iofile.name} {size_text} {io_text}"
 
@@ -243,7 +239,7 @@ msgstr ""
 "Per questo motivo è necessario applicare i delimitatori al di fuori del "
 "gruppo."
 
-#, fuzzy, python-format
+#, python-format
 msgid "#%s of unknown rule set %r"
 msgstr "#%s set di regole sconosciute %r"
 
@@ -251,7 +247,7 @@ msgid "#Containers"
 msgstr "#contenitori"
 
 msgid "#Containers exited"
-msgstr "#Container terminati"
+msgstr "#Containers fermati"
 
 msgid "#Containers paused"
 msgstr "#contenitori in pausa"
@@ -452,7 +448,7 @@ msgid_plural "%d discovery parameters removed"
 msgstr[0] "%d parametro di discovery rimosso"
 msgstr[1] "%d parametri di discovery rimossi"
 
-#, fuzzy, python-format
+#, python-format
 msgid "%d errors occurred:"
 msgstr "Si sono verificati %d errori:"
 
@@ -520,32 +516,36 @@ msgstr[1] "%d rimosse etichette"
 msgid "%d rows"
 msgstr "%d righe"
 
-#, fuzzy, python-format
+#, python-format
 msgid "%d service(s) moved to disabled services table. Monitoring is disabled."
 msgstr ""
-"Aggiungi tutti i servizi rilevati ma non ancora monitorati al monitoraggio."
+"%d servizi spostati nella tabella dei servizi disabilitati. Il monitoraggio "
+"è disabilitato."
 
-#, fuzzy, python-format
+#, python-format
 msgid "%d service(s) moved to monitored services table. Monitoring is enabled."
 msgstr ""
-"Aggiungi tutti i servizi rilevati ma non ancora monitorati al monitoraggio."
+"%d servizi spostati nella tabella dei servizi abilitati. Il monitoraggio è "
+"abilitato."
 
-#, fuzzy, python-format
+#, python-format
 msgid ""
 "%d service(s) moved to undecided services table. Monitoring is disabled."
 msgstr ""
-"Aggiungi tutti i servizi rilevati ma non ancora monitorati al monitoraggio."
+"%d servizi spostati nella tablella dei servizi non ancora definiti. Il "
+"monitoraggio è disabilitato."
 
-#, fuzzy, python-format
+#, python-format
 msgid ""
 "%d service(s) moved to vanished services table. Monitoring is enabled, but "
 "service is in status UNKNOWN."
 msgstr ""
-"Aggiungi tutti i servizi rilevati ma non ancora monitorati al monitoraggio."
+"%d servizi spostati nella tabella dei servizi scomparsi. Il monitoraggio è "
+"abilitato, ma lo stato dei servizi è SCONOSCIUTO."
 
-#, fuzzy, python-format
+#, python-format
 msgid "%d service(s) removed. Monitoring is disabled."
-msgstr "Regole di monitoraggio del servizio"
+msgstr "%d servizi rimossi. Il monitoraggio è disabilitato."
 
 #, python-format
 msgid "%d site is %s."
@@ -591,7 +591,7 @@ msgstr "%s"
 msgid "%s (%s)"
 msgstr "%s (%s)"
 
-#, fuzzy, python-format
+#, python-format
 msgid "%s (customer missing)"
 msgstr "%s (Cliente mancante)"
 
@@ -623,7 +623,7 @@ msgstr "%s Clicca sull'icona per scaricare i dati."
 
 #, python-format
 msgid "%s Click on the icon to review."
-msgstr "%s Clicca sull'icona per rivedere."
+msgstr "%s Clicca sull'icona per scaricare i dati."
 
 #, python-format
 msgid "%s Locks"
@@ -645,11 +645,11 @@ msgstr "%s Recupera il file dump creato"
 msgid "%s by host"
 msgstr "%s da host"
 
-#, fuzzy, python-format
+#, python-format
 msgid "%s can only be deleted via OAuth2 connection"
-msgstr "%s Può essere cancellata solamente dall'Installazione rapida"
+msgstr "%s Può essere cancellata tramite la connessione OAuth2"
 
-#, fuzzy, python-format
+#, python-format
 msgid "%s can only be deleted via Quick Setup"
 msgstr "%s Può essere cancellata solamente dall'Installazione rapida"
 
@@ -676,7 +676,7 @@ msgstr "%s è stato eliminato."
 msgid "%s instances"
 msgstr "%s Istanze"
 
-#, fuzzy, python-format
+#, python-format
 msgid "%s is locked by Quick Setup."
 msgstr "%s è bloccata dall'installazione rapida."
 
@@ -744,7 +744,7 @@ msgstr "server %s"
 msgid "%s this customer"
 msgstr "%s questo cliente"
 
-#, fuzzy, python-format
+#, python-format
 msgid ""
 "%s uses an API (%s) which is marked as deprecated in Checkmk %s and will be "
 "removed in Checkmk %s (file: %s)."
@@ -752,15 +752,15 @@ msgstr ""
 "%s utilizza una API (%s) che è marcata come deprecata in Checkmk %s e verrà "
 "rimossa in Checkmk %s (File: %s)."
 
-#, fuzzy, python-format
+#, python-format
 msgid ""
 "%s uses an API (%s) which was marked as deprecated in Checkmk %s and is "
 "removed in Checkmk %s (file: %s)."
 msgstr ""
-"%s utilizza una API (%s) che è marcata come deprecata in Checkmk %s e sarà "
+"%s utilizza una API (%s) che è marcata come deprecata in Checkmk %s ed è "
 "rimossa in Checkmk %s (File: %s)."
 
-#, fuzzy, python-format
+#, python-format
 msgid ""
 "%s uses an API (%s) which was marked as deprecated in Checkmk %s and will be "
 "removed in Checkmk %s (file: %s)."
@@ -768,7 +768,7 @@ msgstr ""
 "%s Utilizza una API (%s) che è marcata come deprecata in Checkmk %s e sarà "
 "rimossa in Checkmk %s (File: %s)."
 
-#, fuzzy, python-format
+#, python-format
 msgid "%s uses an API (%s) which was removed in Checkmk %s (file: %s)."
 msgstr "%s utilizza una API (%s) che è stata rimossa in Checkmk %s (File: %s)."
 
@@ -788,9 +788,9 @@ msgstr "%s%% OK"
 msgid "%s: %s"
 msgstr "%s: %s"
 
-#, fuzzy, python-format
+#, python-format
 msgid "%s: Cannot parse manual page: %s"
-msgstr "%s: Impossibile analizzare la pagina man: %s"
+msgstr "%s: Impossibile analizzare la pagina di manuale: %s"
 
 #, python-format
 msgid "%s: Download agent output"
@@ -849,11 +849,9 @@ msgstr ""
 msgid "'Minor' state"
 msgstr "Stato \"minore"
 
-#, fuzzy
 msgid "'WARNING' state"
-msgstr "Stato 'Info"
+msgstr "Stato 'WARNING'"
 
-#, fuzzy
 msgid ""
 "'git' command was not found on this system, but it is required for "
 "versioning the configuration. Please either install 'git' or disable git "
@@ -868,7 +866,7 @@ msgid "(0 is current period)"
 msgstr "(0 è il periodo corrente)"
 
 msgid "(Do not impose levels, always be OK)"
-msgstr "(Non imporre soglie, lascia sempre OK)"
+msgstr "(Non imporre livelli, sarà sempre OK)"
 
 msgid "(Edit presets)"
 msgstr "(Modifica delle preimpostazioni)"
@@ -913,9 +911,8 @@ msgstr "(incorporato)"
 msgid "(default is %r for %s/TLS)"
 msgstr "(l'impostazione predefinita è %r per %s/TLS)"
 
-#, fuzzy
 msgid "(deprecated)"
-msgstr "Deprecato"
+msgstr "(deprecato)"
 
 msgid "(disabled)"
 msgstr "(disattivato)"
@@ -962,13 +959,12 @@ msgstr "(nessuno)"
 msgid "(nothing selected)"
 msgstr "(niente di selezionato)"
 
-#, fuzzy, python-format
+#, python-format
 msgid "(old version: %s, new version: %s)"
 msgstr "(Vecchia versione: %s, Nuova versione: %s)"
 
-#, fuzzy
 msgid "(only works with the Checkmk Micro Core)"
-msgstr "(funziona solamente con il microcore)"
+msgstr "(funziona solamente Checkmk Micro Core)"
 
 msgid "(overrides <b>username</b>)"
 msgstr "(sovrascrive <b>username</b>)"
@@ -1000,7 +996,7 @@ msgstr ", "
 
 #, python-format
 msgid ", +%d more"
-msgstr ", +%d altri"
+msgstr ", +%d in più"
 
 msgid ", but it is overruled by a match in a previous rule pack."
 msgstr ""
@@ -1110,9 +1106,8 @@ msgstr "15 minuti"
 msgid "17"
 msgstr "17"
 
-#, fuzzy
 msgid "2 - down"
-msgstr "giù"
+msgstr "2 - giù"
 
 msgid "2 weeks back"
 msgstr "2 settimane indietro"
@@ -1208,9 +1203,8 @@ msgstr "68% - Una deviazione standard"
 msgid "7 days back (this day last week)"
 msgstr "7 giorni indietro (questo giorno la settimana scorsa)"
 
-#, fuzzy
 msgid "7-segment display UID"
-msgstr "display a 7 segmenti uid"
+msgstr "UID display a 7 segmenti"
 
 msgid "7-segment display brightness"
 msgstr "Luminosità del display a 7 segmenti"
@@ -1275,28 +1269,26 @@ msgstr ""
 "non essere più in grado di aggiornarsi. Potrebbe essere necessario "
 "aggiornare manualmente tutti gli agenti!"
 
-#, fuzzy
 msgid ""
 "<b>Beware:</b> Deleting this key means that you will not be able to encrypt "
 "or sign backups with the key. Already created backups which have been "
 "encrypted, cannot be decrypted without access to this key. So please be sure "
 "that you either have a backup or don't need this key anymore."
 msgstr ""
-"<b> Attenzione: </b> L'eliminazione di questa chiave significa che non sarà "
+"<b>Attenzione:</b>  L'eliminazione di questa chiave significa che non sarà "
 "possibile crittografare o firmare i backup con la chiave. I backup già "
 "creati che sono stati crittografati non possono essere decifrati senza "
-"accedere a questa chiave. Assicuratevi quindi di avere un backup o di non "
+"accedere a questa chiave. Assicuratevi quindi di averne un backup o di non "
 "aver più bisogno di questa chiave."
 
-#, fuzzy
 msgid ""
 "<b>Beware:</b> The OAuth2 connection may be used in checks. If you delete "
 "the connection, the checks won't be able to authenticate with this "
 "connection anymore."
 msgstr ""
-"<b> Attenzione: </b> La password può essere utilizzata nei controlli. Se si "
-"elimina la password, i controlli non saranno più in grado di autenticarsi "
-"con questa password."
+"<b>Attenzione </b> La connessione OAuth2 può essere utilizzata in alcuni "
+"controlli. Se si elimina la connessione, i controlli non saranno più in "
+"grado di autenticarsi utilizzandola."
 
 #, python-format
 msgid ""
@@ -1381,17 +1373,15 @@ msgstr ""
 "specificare nomi dei servizi specifici. I tag globali saranno ignorati per "
 "questi servizi."
 
-#, fuzzy
 msgid "<b>Negate:</b> apply to <b>all</b> except listed entries above"
 msgstr ""
-"<b>Negare:</b> fare applicare la regola per <b>tutti ma</b> le voci di cui "
+"<b>Negare:</b> applicare la regola per <b>tutti tranne</b> le voci di cui "
 "sopra"
 
-#, fuzzy
 msgid "<b>Negate:</b> apply to <b>all</b> except listed hosts above"
 msgstr ""
 "<b>Negare:</b> fare in modo che la regola si applichi a <b>tutti gli host "
-"tranne</b> quelli di cui sopra"
+"tranne tranne</b> quelli di cui sopra"
 
 #, python-format
 msgid ""
@@ -1432,13 +1422,13 @@ msgstr ""
 "dedicato utilizzando <a href='%s'>IPMI</a> o SNMP.<br><a href='%s' "
 "target='_blank'>Maggiori informazioni sulle interfacce di gestione.</a>"
 
-#, fuzzy, python-format
+#, python-format
 msgid ""
 "<b>Warning: </b> the IP address lookup of <b>%s</b> has failed. The core has "
 "been started by using the address <tt>0.0.0.0</tt> for the while. Please "
 "update your DNS or configure an IP address for the affected host."
 msgstr ""
-"<b>WARNING: </b> la ricerca dell'indirizzo IP di <b>%s</b> è fallita. Il "
+"<b>Attenzione: </b> la ricerca dell'indirizzo IP di <b>%s</b> è fallita. Il "
 "core è stato avviato utilizzando l'indirizzo <tt>0.0.0.0</tt> per il "
 "momento. Per favore aggiorna il tuo DNS o configura un indirizzo IP per "
 "l'host interessato."
@@ -1476,14 +1466,13 @@ msgstr ""
 "far sì che la chiamata al singolo programma venga eseguita correttamente in "
 "tutti i contesti di esecuzione (interfaccia utente e console)."
 
-#, fuzzy
 msgid ""
 "<br><b>Note</b>: Some files may contain highly sensitive data like "
 "passwords. These files are marked with 'H'. Other files may include IP "
 "addresses, host names, usernames, mail addresses or phone numbers and are "
 "marked with 'M'."
 msgstr ""
-"<br>Nota: Alcuni file possono contenere dati altamente sensibili come "
+"<br><b>Nota:</b> Alcuni file possono contenere dati altamente sensibili come "
 "password. Questi file sono contrassegnati con 'H'. Altri file possono "
 "includere indirizzi IP, nomi di host, nomi utente, indirizzi e-mail o numeri "
 "di telefono, e sono contrassegnati con 'M'."
@@ -2821,7 +2810,6 @@ msgstr "APT normale e aggiornamenti di sicurezza (Linux)"
 msgid "ARM 64-bit only"
 msgstr ""
 
-#, fuzzy
 msgid "ASCII email"
 msgstr "Email ASCII"
 
@@ -5213,31 +5201,24 @@ msgstr ""
 msgid "Agent deployment status"
 msgstr "Stato di distribuzione dell'agente"
 
-#, fuzzy
 msgid "Agent deployment: downloaded agent hash"
 msgstr "Distribuzione dell'agente: Hash dell'agente scaricato"
 
-#, fuzzy
 msgid "Agent deployment: icons"
 msgstr "Distribuzione dell'agente: Icone"
 
-#, fuzzy
 msgid "Agent deployment: installed agent hash"
 msgstr "Distribuzione dell'agente: Hash dell'agente installato"
 
-#, fuzzy
 msgid "Agent deployment: last contact"
 msgstr "Distribuzione dell'agente: Ultimo contatto"
 
-#, fuzzy
 msgid "Agent deployment: last download"
 msgstr "Distribuzione dell'agente: Ultimo download"
 
-#, fuzzy
 msgid "Agent deployment: last error"
 msgstr "Distribuzione dell'agente: Ultimo errore"
 
-#, fuzzy
 msgid "Agent deployment: target agent hash"
 msgstr "Distribuzione dell'agente: Hash dell'agente di destinazione"
 
@@ -5275,7 +5256,6 @@ msgstr "Accoppiamento di agenti"
 msgid "Agent plug-ins"
 msgstr "Plugin degli agenti di monitoraggio"
 
-#, fuzzy
 msgid "Agent plug-ins: Regular expression to exclude plug-ins"
 msgstr "Plugin dell'agente: Espressione regolare per escludere i plugin"
 
@@ -5323,11 +5303,9 @@ msgstr "Gli aggiornamenti dell'agente sono disabilitati per l'hostname %s:"
 msgid "Agent updates are enabled"
 msgstr "Gli aggiornamenti dell'agente sono abilitati"
 
-#, fuzzy
 msgid "Agent user"
-msgstr "Regole dell'agente"
+msgstr "Utente dell'agente"
 
-#, fuzzy
 msgid "Agent version"
 msgstr "Versione agente"
 
@@ -5424,7 +5402,6 @@ msgstr "Nome dell'aggregazione regex"
 msgid "Aggregation not configured to be frozen"
 msgstr "Aggregazione non configurata per essere congelata"
 
-#, fuzzy
 msgid "Aggregation of downtimes"
 msgstr "Aggregazione dei tempi di inattività"
 
@@ -5493,7 +5470,6 @@ msgstr ""
 msgid "Alert handler configuration"
 msgstr "Configurazione del gestore degli avvisi"
 
-#, fuzzy
 msgid "Alert handler execution"
 msgstr "Esecuzioni dei gestori di allarmi"
 
@@ -21348,11 +21324,6 @@ msgstr "Non utilizzare un prefisso"
 msgid "Do not use absolute levels"
 msgstr "Non usare livelli assoluti"
 
-msgid "Do not validate server certificate during port query"
-msgstr ""
-"Non convalidare il certificato del server durante l'interrogazione della "
-"porta"
-
 #, fuzzy
 msgid "Do not verify the server certificate (unsafe)"
 msgstr ""
@@ -33903,9 +33874,6 @@ msgstr "Ignora il periodo di notifica"
 
 msgid "Ignore port types during discovery"
 msgstr "Ignora i tipi di porta durante il rilevamento"
-
-msgid "Ignore proxies configured on the target system"
-msgstr "Ignorare i proxy configurati sul sistema di destinazione"
 
 msgid "Ignore scheduled downtimes"
 msgstr "Ignorare i tempi di inattività programmati"
@@ -95525,6 +95493,14 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#~ msgid "Do not validate server certificate during port query"
+#~ msgstr ""
+#~ "Non convalidare il certificato del server durante l'interrogazione della "
+#~ "porta"
+
+#~ msgid "Ignore proxies configured on the target system"
+#~ msgstr "Ignorare i proxy configurati sul sistema di destinazione"
 
 #, fuzzy
 #~ msgid "Business Intelligence runtime data"

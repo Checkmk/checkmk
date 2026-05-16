@@ -21469,9 +21469,6 @@ msgstr "Gebruik geen namespace voorvoegsel"
 msgid "Do not use absolute levels"
 msgstr "Gebruik geen absolute niveaus"
 
-msgid "Do not validate server certificate during port query"
-msgstr "Servercertificaat niet valideren tijdens poortverzoek"
-
 #, fuzzy
 msgid "Do not verify the server certificate (unsafe)"
 msgstr "Servercertificaat niet valideren tijdens poortverzoek"
@@ -34043,9 +34040,6 @@ msgstr "Negeer kennisgevingstermijn"
 
 msgid "Ignore port types during discovery"
 msgstr "Negeer poorttypes tijdens het zoeken"
-
-msgid "Ignore proxies configured on the target system"
-msgstr "Negeer proxies geconfigureerd op het doelsysteem"
 
 msgid "Ignore scheduled downtimes"
 msgstr "Negeer geplande downtimes"
@@ -95812,6 +95806,12 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#~ msgid "Do not validate server certificate during port query"
+#~ msgstr "Servercertificaat niet valideren tijdens poortverzoek"
+
+#~ msgid "Ignore proxies configured on the target system"
+#~ msgstr "Negeer proxies geconfigureerd op het doelsysteem"
 
 #, fuzzy
 #~ msgid "Business Intelligence runtime data"

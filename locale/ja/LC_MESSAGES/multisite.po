@@ -93098,7 +93098,7 @@ msgstr "ファイルを開く"
 msgid ""
 "Changes are saved without affecting live monitoring, allowing you to review "
 "and adjust them safely.\n"
-"              Click 'Activate pending changes' to apply them."
+"                Click 'Activate pending changes' to apply them."
 msgstr ""
 
 #, fuzzy

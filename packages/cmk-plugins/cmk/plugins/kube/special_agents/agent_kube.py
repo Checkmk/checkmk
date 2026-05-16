@@ -79,7 +79,7 @@ from cmk.plugins.kube.prometheus_api import ResponseSuccess
 from cmk.plugins.kube.schemata import api, section
 from cmk.server_side_programs.v1_unstable import report_agent_crashes, vcrtrace
 
-__VERSION__ = "2.6.0b1"
+__version__ = "2.6.0b1"
 
 AGENT_NAME = "kube"
 
@@ -1362,7 +1362,7 @@ def _main_with_setup(
         return _main(arguments, checkmk_host_settings)
 
 
-@report_agent_crashes(AGENT_NAME, __VERSION__)
+@report_agent_crashes(AGENT_NAME, __version__)
 def main(args: list[str] | None = None) -> int:
     if args is None:
         args = sys.argv[1:]

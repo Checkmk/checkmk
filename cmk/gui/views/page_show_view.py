@@ -46,6 +46,7 @@ from cmk.gui.type_defs import (
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.view import View
+from cmk.gui.view_breadcrumbs import view_breadcrumb
 from cmk.gui.view_renderer import ABCViewRenderer, GUIViewRenderer
 from cmk.gui.visuals import (
     filters_allowed_for_infos,
@@ -217,6 +218,7 @@ def _process_regular_view(
 def _process_availability_view(view_renderer: ABCViewRenderer, config: Config) -> None:
     view = view_renderer.view
     all_active_filters = get_all_active_filters(view)
+    breadcrumb = view_breadcrumb(view)
 
     # Fork to availability view. We just need the filter headers, since we do not query the normal
     # hosts and service table, but "statehist". This is *not* true for BI availability, though (see
@@ -226,7 +228,14 @@ def _process_availability_view(view_renderer: ABCViewRenderer, config: Config) -
         # all 'amount_*', 'duration_fetch_rows' and 'duration_filter_rows' will be set in:
         show_view_func = functools.partial(
             availability.show_availability_page,
-            view=view,
+            name=view.name,
+            spec=view.spec,
+            context=view.context,
+            infos=view.datasource.infos,
+            only_sites=view.only_sites,
+            missing_single_infos=view.missing_single_infos,
+            process_tracking=view.process_tracking,
+            breadcrumb=breadcrumb,
             filterheaders=filterheaders,
         )
 
@@ -237,7 +246,11 @@ def _process_availability_view(view_renderer: ABCViewRenderer, config: Config) -
         # 'amount_rows_after_limit' will be set in:
         show_view_func = functools.partial(
             availability.show_bi_availability,
-            view=view,
+            name=view.name,
+            spec=view.spec,
+            context=view.context,
+            process_tracking=view.process_tracking,
+            breadcrumb=breadcrumb,
             aggr_rows=rows,
         )
 

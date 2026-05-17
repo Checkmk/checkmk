@@ -17,8 +17,6 @@ py_library(
         "//cmk/gui:logged_in",
         "//cmk/gui:num_split",
         "//cmk/gui:type_defs",
-        "//cmk/gui:view",
-        "//cmk/gui:view_breadcrumbs",
         "//cmk/gui:view_utils",
         "//cmk/gui/bi:bi_manager",
         "//cmk/gui/bi:foldable_tree_renderer",

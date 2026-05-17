@@ -5,7 +5,7 @@
 
 import json
 import time
-from collections.abc import Iterator
+from collections.abc import Iterator, Sequence
 
 import cmk.ccc.version as cmk_version
 from cmk.ccc.hostaddress import HostName
@@ -49,15 +49,24 @@ from cmk.gui.page_menu import (
 from cmk.gui.painter.v0.helpers import format_plugin_output
 from cmk.gui.table import table_element
 from cmk.gui.top_heading import top_heading
-from cmk.gui.type_defs import FilterHeader, IconNames, Rows, StaticIcon
+from cmk.gui.type_defs import (
+    FilterHeader,
+    FilterName,
+    IconNames,
+    InfoName,
+    Rows,
+    StaticIcon,
+    ViewName,
+    ViewProcessTracking,
+    ViewSpec,
+    VisualContext,
+)
 from cmk.gui.utils import escaping
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.urls import makeuri
 from cmk.gui.utils.user_errors import user_errors
 from cmk.gui.valuespec import ValueSpec
-from cmk.gui.view import View
-from cmk.gui.view_breadcrumbs import view_breadcrumb
 from cmk.gui.visuals import page_menu_topic_add_to, view_title
 from cmk.utils import paths
 from cmk.utils.servicename import ServiceName
@@ -167,18 +176,25 @@ def _show_availability_options_controls() -> None:
 # is (currently) called by views.py, when showing a view but
 # availability mode is activated.
 def show_availability_page(
-    view: View,
-    filterheaders: FilterHeader,
     *,
+    name: ViewName,
+    spec: ViewSpec,
+    context: VisualContext,
+    infos: Sequence[InfoName],
+    only_sites: list[SiteId] | None,
+    missing_single_infos: set[FilterName],
+    process_tracking: ViewProcessTracking,
+    breadcrumb: Breadcrumb,
+    filterheaders: FilterHeader,
     debug: bool,
 ) -> None:
     user.need_permission("general.see_availability")
 
     # We make reports about hosts, services or BI aggregates
     what: AVObjectType
-    if "service" in view.datasource.infos:
+    if "service" in infos:
         what = "service"
-    elif "aggr_name" in view.datasource.infos:
+    elif "aggr_name" in infos:
         what = "bi"
     else:
         what = "host"
@@ -220,11 +236,10 @@ def show_availability_page(
         av_object = (None, None, request.get_str_input_mandatory("av_aggr"))
         title += av_object[2]
     else:
-        title += view_title(view.spec, view.context)
+        title += view_title(spec, context)
 
     title += " - " + range_title
 
-    breadcrumb = view_breadcrumb(view)
     assert breadcrumb[-1].url is not None
     breadcrumb.append(
         BreadcrumbItem(
@@ -261,14 +276,14 @@ def show_availability_page(
         )
         av_rawdata, has_reached_logrow_limit = availability.get_availability_rawdata(
             what,
-            view.context,
+            context,
             filterheaders,
-            view.only_sites,
+            only_sites,
             av_object=av_object,
             include_output=av_mode == "timeline",
             include_long_output=include_long_output,
             avoptions=avoptions,
-            view_process_tracking=view.process_tracking,
+            view_process_tracking=process_tracking,
         )
         av_data = availability.compute_availability(what, av_rawdata, avoptions)
 
@@ -297,7 +312,7 @@ def show_availability_page(
             breadcrumb,
             page_menu=(
                 _page_menu_availability(
-                    breadcrumb, view, what, av_mode, av_object, time_range, avoptions
+                    breadcrumb, name, what, av_mode, av_object, time_range, avoptions
                 )
                 if display_options.enabled(display_options.B)
                 else None
@@ -316,7 +331,6 @@ def show_availability_page(
                 "cmk.page_menu.open_popup(%s);" % json.dumps("popup_" + form_name)
             )
 
-    missing_single_infos = view.missing_single_infos
     if missing_single_infos:
         raise MKUserError(
             None,
@@ -358,7 +372,7 @@ def show_availability_page(
 
 def _page_menu_availability(
     breadcrumb: Breadcrumb,
-    view: View,
+    view_name: ViewName,
     what: AVObjectType,
     av_mode: AVMode,
     av_object: AVObjectSpec,
@@ -416,7 +430,7 @@ def _page_menu_availability(
                 name="export",
                 title=_("Export"),
                 topics=page_menu_topic_add_to(
-                    visual_type="availability", name=view.name, source_type="availability"
+                    visual_type="availability", name=view_name, source_type="availability"
                 )
                 + [
                     PageMenuTopic(
@@ -803,9 +817,13 @@ def render_timeline_bar(
 # logic for getting the aggregates. As soon as we have cleaned of the visuals,
 # filters, contexts etc we can unify the code!
 def show_bi_availability(
-    view: View,
-    aggr_rows: Rows,
     *,
+    name: ViewName,
+    spec: ViewSpec,
+    context: VisualContext,
+    process_tracking: ViewProcessTracking,
+    breadcrumb: Breadcrumb,
+    aggr_rows: Rows,
     debug: bool,
 ) -> None:
     user.need_permission("general.see_availability")
@@ -816,7 +834,7 @@ def show_bi_availability(
     avoptions = availability.get_availability_options_from_request("bi")
     _save_availability_options_after_update(avoptions)
 
-    title = view_title(view.spec, view.context)
+    title = view_title(spec, context)
     if av_mode == "timeline":
         title = _("Timeline of") + " " + title
     else:
@@ -833,7 +851,6 @@ def show_bi_availability(
             inline_help_as_text=user.inline_help_as_text,
         )
 
-        breadcrumb = view_breadcrumb(view)
         assert breadcrumb[-1].url is not None
         breadcrumb.append(
             BreadcrumbItem(
@@ -849,7 +866,7 @@ def show_bi_availability(
 
         # Dummy time_range, this is not needed for the BI
         page_menu = _page_menu_availability(
-            breadcrumb, view, "bi", av_mode, av_object, (0.0, 0.0), avoptions
+            breadcrumb, name, "bi", av_mode, av_object, (0.0, 0.0), avoptions
         )
 
         # This hack is needed because of some BI specific link. May be generalized in the future
@@ -913,7 +930,7 @@ def show_bi_availability(
             av_rawdata,
             has_reached_logrow_limit,
         ) = availability.get_bi_availability(avoptions, aggr_rows, timewarp)
-        view.process_tracking.amount_rows_after_limit = len(av_rawdata)
+        process_tracking.amount_rows_after_limit = len(av_rawdata)
 
         for timeline_container in timeline_containers:
             tree = timeline_container.aggr_tree

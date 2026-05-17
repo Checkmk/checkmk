@@ -8,7 +8,10 @@ from collections.abc import Mapping, Sequence
 import pytest
 
 from cmk.agent_based.v2 import Metric, Result, Service, State, StringTable
-from cmk.legacy_checks.db2_connections import check_db2_connections, discover_db2_connections
+from cmk.plugins.db2.agent_based.db2_connections import (
+    check_db2_connections,
+    discover_db2_connections,
+)
 from cmk.plugins.db2.agent_based.lib import parse_db2_dbs
 
 

@@ -8,7 +8,7 @@ from collections.abc import Sequence
 import pytest
 
 from cmk.agent_based.v2 import Metric, Result, Service, State, StringTable
-from cmk.legacy_checks.db2_bp_hitratios import (
+from cmk.plugins.db2.agent_based.db2_bp_hitratios import (
     check_db2_bp_hitratios,
     discover_db2_bp_hitratios,
     parse_db2_bp_hitratios,

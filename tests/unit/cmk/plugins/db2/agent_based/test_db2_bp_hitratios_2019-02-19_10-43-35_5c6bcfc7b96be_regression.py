@@ -13,7 +13,7 @@ from collections.abc import Mapping
 import pytest
 
 from cmk.agent_based.v2 import IgnoreResultsError, Metric, Result, Service, State
-from cmk.legacy_checks.db2_bp_hitratios import (
+from cmk.plugins.db2.agent_based.db2_bp_hitratios import (
     check_db2_bp_hitratios,
     discover_db2_bp_hitratios,
     parse_db2_bp_hitratios,

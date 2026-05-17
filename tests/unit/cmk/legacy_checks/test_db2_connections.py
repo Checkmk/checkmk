@@ -3,15 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="misc"
-# mypy: disable-error-code="no-untyped-call"
-
 from collections.abc import Mapping, Sequence
-from typing import Any
 
 import pytest
 
-from cmk.agent_based.v2 import StringTable
+from cmk.agent_based.v2 import Metric, Result, Service, State, StringTable
 from cmk.legacy_checks.db2_connections import check_db2_connections, discover_db2_connections
 from cmk.plugins.db2.agent_based.lib import parse_db2_dbs
 
@@ -30,17 +26,18 @@ from cmk.plugins.db2.agent_based.lib import parse_db2_dbs
                 ["connections", "42"],
                 ["latency", "0:1,03"],
             ],
-            [("db2taddm:CMDBS1", None), ("db2taddm:CMDBS1de", None)],
+            [Service(item="db2taddm:CMDBS1"), Service(item="db2taddm:CMDBS1de")],
         ),
     ],
 )
 def test_discover_db2_connections(
-    info: StringTable, expected_discoveries: Sequence[tuple[str, Mapping[str, Any]]]
+    info: StringTable,
+    expected_discoveries: Sequence[Service],
 ) -> None:
     """Test discovery function for db2_connections check."""
     parsed = parse_db2_dbs(info)
     result = list(discover_db2_connections(parsed))
-    assert sorted(result) == sorted(expected_discoveries)
+    assert result == list(expected_discoveries)
 
 
 @pytest.mark.parametrize(
@@ -60,9 +57,11 @@ def test_discover_db2_connections(
                 ["latency", "0:1,03"],
             ],
             [
-                (0, "Connections: 40.00", [("connections", 40, 150, 200)]),
-                (0, "Port: 50214"),
-                (0, "Latency: 1003.00 ms", [("latency", 1003)]),
+                Result(state=State.OK, summary="Connections: 40.00"),
+                Metric("connections", 40, levels=(150.0, 200.0)),
+                Result(state=State.OK, summary="Port: 50214"),
+                Result(state=State.OK, summary="Latency: 1003.00 ms"),
+                Metric("latency", 1003),
             ],
         ),
         (
@@ -79,15 +78,20 @@ def test_discover_db2_connections(
                 ["latency", "0:1,03"],
             ],
             [
-                (0, "Connections: 42.00", [("connections", 42, 150, 200)]),
-                (0, "Port: 50213"),
-                (0, "Latency: 1003.00 ms", [("latency", 1003)]),
+                Result(state=State.OK, summary="Connections: 42.00"),
+                Metric("connections", 42, levels=(150.0, 200.0)),
+                Result(state=State.OK, summary="Port: 50213"),
+                Result(state=State.OK, summary="Latency: 1003.00 ms"),
+                Metric("latency", 1003),
             ],
         ),
     ],
 )
 def test_check_db2_connections(
-    item: str, params: Mapping[str, Any], info: StringTable, expected_results: Sequence[Any]
+    item: str,
+    params: Mapping[str, tuple[int, int]],
+    info: StringTable,
+    expected_results: Sequence[Result | Metric],
 ) -> None:
     """Test check function for db2_connections check."""
     parsed = parse_db2_dbs(info)

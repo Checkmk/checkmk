@@ -3,14 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="misc"
-
-from collections.abc import Mapping, Sequence
-from typing import Any
+from collections.abc import Sequence
 
 import pytest
 
-from cmk.agent_based.v2 import StringTable
+from cmk.agent_based.v2 import Metric, Result, Service, State, StringTable
 from cmk.legacy_checks.db2_bp_hitratios import (
     check_db2_bp_hitratios,
     discover_db2_bp_hitratios,
@@ -36,25 +33,24 @@ from cmk.legacy_checks.db2_bp_hitratios import (
                 ["[[[serv1:XYZ]]]"],
                 ["node", "0", "foo1.bar2.baz3", "0"],
             ],
-            [("serv0:ABC DPF 0 foo1.bar2.baz3 0:IBMDEFAULTBP", {})],
+            [Service(item="serv0:ABC DPF 0 foo1.bar2.baz3 0:IBMDEFAULTBP")],
         ),
     ],
 )
 def test_discover_db2_bp_hitratios(
-    string_table: StringTable, expected_discoveries: Sequence[tuple[str, Mapping[str, Any]]]
+    string_table: StringTable, expected_discoveries: Sequence[Service]
 ) -> None:
     """Test discovery function for db2_bp_hitratios check."""
     parsed = parse_db2_bp_hitratios(string_table)
     result = list(discover_db2_bp_hitratios(parsed))
-    assert sorted(result) == sorted(expected_discoveries)
+    assert result == list(expected_discoveries)
 
 
 @pytest.mark.parametrize(
-    "item, params, string_table, expected_results",
+    "item, string_table, expected_results",
     [
         (
             "serv0:ABC DPF 0 foo1.bar2.baz3 0:IBMDEFAULTBP",
-            {},
             [
                 ["[[[serv0:ABC]]]"],
                 ["node", "0", "foo1.bar2.baz3", "0"],
@@ -70,18 +66,22 @@ def test_discover_db2_bp_hitratios(
                 ["node", "0", "foo1.bar2.baz3", "0"],
             ],
             [
-                (0, "Total: 83.62%", [("total_hitratio", 83.62, None, None, 0, 100)]),
-                (0, "Data: 78.70%", [("data_hitratio", 78.7, None, None, 0, 100)]),
-                (0, "Index: 99.74%", [("index_hitratio", 99.74, None, None, 0, 100)]),
-                (0, "XDA: 50.00%", [("xda_hitratio", 50.0, None, None, 0, 100)]),
+                Result(state=State.OK, summary="Total: 83.62%"),
+                Metric("total_hitratio", 83.62, boundaries=(0.0, 100.0)),
+                Result(state=State.OK, summary="Data: 78.70%"),
+                Metric("data_hitratio", 78.7, boundaries=(0.0, 100.0)),
+                Result(state=State.OK, summary="Index: 99.74%"),
+                Metric("index_hitratio", 99.74, boundaries=(0.0, 100.0)),
+                Result(state=State.OK, summary="XDA: 50.00%"),
+                Metric("xda_hitratio", 50.0, boundaries=(0.0, 100.0)),
             ],
         ),
     ],
 )
 def test_check_db2_bp_hitratios(
-    item: str, params: Mapping[str, Any], string_table: StringTable, expected_results: Sequence[Any]
+    item: str, string_table: StringTable, expected_results: Sequence[Result | Metric]
 ) -> None:
     """Test check function for db2_bp_hitratios check."""
     parsed = parse_db2_bp_hitratios(string_table)
-    result = list(check_db2_bp_hitratios(item, params, parsed))
-    assert result == expected_results
+    result = list(check_db2_bp_hitratios(item, parsed))
+    assert result == list(expected_results)

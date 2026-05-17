@@ -4088,6 +4088,7 @@ pytest==8.4.2 \
     #   -r packages/cmk-dev-deploy/dev-requirements.in
     #   -r packages/cmk-ec/dev-requirements.in
     #   -r packages/cmk-events/dev-requirements.in
+    #   -r packages/cmk-graphing-engine/dev-requirements.in
     #   -r packages/cmk-licensing/dev-requirements.in
     #   -r packages/cmk-livestatus-client/dev-requirements.in
     #   -r packages/cmk-logwatch/dev-requirements.in

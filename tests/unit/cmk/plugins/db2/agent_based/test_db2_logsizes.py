@@ -8,7 +8,7 @@ from collections.abc import Mapping, Sequence
 import pytest
 
 from cmk.agent_based.v2 import Metric, Result, Service, State, StringTable
-from cmk.legacy_checks.db2_logsizes import (
+from cmk.plugins.db2.agent_based.db2_logsizes import (
     _check_db2_logsizes,
     discover_db2_logsizes,
     parse_db2_logsizes,

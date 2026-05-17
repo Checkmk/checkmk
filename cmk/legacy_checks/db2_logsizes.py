@@ -3,18 +3,26 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
-# mypy: disable-error-code="possibly-undefined"
 
+from collections.abc import Mapping, MutableMapping
+from typing import Any
 
-# mypy: disable-error-code="var-annotated"
-
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import IgnoreResultsError
-from cmk.legacy_includes.df import df_check_filesystem_single
+from cmk.agent_based.v2 import (
+    AgentSection,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    get_value_store,
+    IgnoreResultsError,
+    Result,
+    Service,
+    State,
+    StringTable,
+)
 from cmk.plugins.db2.agent_based.lib import parse_db2_dbs
+from cmk.plugins.lib.df import df_check_filesystem_single
 
-check_info = {}
+Section = Mapping[str, Mapping[str, list[str]]]
 
 # <<<db2_logsizes>>>
 # [[[db2taddm:CMDBS1]]]
@@ -25,18 +33,18 @@ check_info = {}
 # logsecond 100
 
 
-def parse_db2_logsizes(string_table):
+def parse_db2_logsizes(string_table: StringTable) -> Section:
     pre_parsed = parse_db2_dbs(string_table)
     global_timestamp = pre_parsed[0]
-    parsed = {}
+    parsed: dict[str, dict[str, list[str]]] = {}
     for key, values in pre_parsed[1].items():
-        instance_info = {}
+        instance_info: dict[str, list[str]] = {}
         for value in values:
             instance_info.setdefault(value[0], []).append(" ".join(map(str, (value[1:]))))
         # Some databases run in DPF mode. Means that the database is split over several nodes
         # Each node has its own logfile for the same database. We create one service for each logfile
-        if "TIMESTAMP" not in instance_info:
-            instance_info["TIMESTAMP"] = [global_timestamp]
+        if "TIMESTAMP" not in instance_info and global_timestamp is not None:
+            instance_info["TIMESTAMP"] = [str(global_timestamp)]
 
         if "node" in instance_info:
             for node in instance_info["node"]:
@@ -47,14 +55,19 @@ def parse_db2_logsizes(string_table):
     return parsed
 
 
-def discover_db2_logsizes(parsed):
-    for db, db_info in parsed.items():
+def discover_db2_logsizes(section: Section) -> DiscoveryResult:
+    for db, db_info in section.items():
         if "logfilsiz" in db_info:
-            yield db, {}
+            yield Service(item=db)
 
 
-def check_db2_logsizes(item, params, parsed):
-    db = parsed.get(item)
+def _check_db2_logsizes(
+    value_store: MutableMapping[str, Any],
+    item: str,
+    params: Mapping[str, Any],
+    section: Section,
+) -> CheckResult:
+    db = section.get(item)
 
     if not db:
         raise IgnoreResultsError("Login into database failed")
@@ -71,18 +84,18 @@ def check_db2_logsizes(item, params, parsed):
     #            '4 wasv091 4',
     #            '5 wasv091 5'],
 
+    data_offset = 0
     if "node" in db:
         node_key = " ".join(item.split()[2:])
         for idx, node in enumerate(db["node"]):
             if node == node_key:
                 data_offset = idx
-    else:
-        data_offset = 0
 
     timestamp = int(db["TIMESTAMP"][0])
 
     if "logfilsiz" not in db:
-        return 3, "Invalid database info"
+        yield Result(state=State.UNKNOWN, summary="Invalid database info")
+        return
 
     total = (
         int(db["logfilsiz"][data_offset])
@@ -91,17 +104,35 @@ def check_db2_logsizes(item, params, parsed):
     )
     usedspace = db["usedspace"][data_offset]
     if usedspace == "-":
-        return 3, "Can not read usedspace"
+        yield Result(state=State.UNKNOWN, summary="Can not read usedspace")
+        return
     free = total - int(usedspace)
 
-    return df_check_filesystem_single(
-        item, total >> 20, free >> 20, 0, None, None, params, this_time=timestamp
+    yield from df_check_filesystem_single(
+        value_store=value_store,
+        mountpoint=item,
+        filesystem_size=total >> 20,
+        free_space=free >> 20,
+        reserved_space=0,
+        inodes_total=None,
+        inodes_avail=None,
+        params=params,
+        this_time=timestamp,
     )
 
 
-check_info["db2_logsizes"] = LegacyCheckDefinition(
+def check_db2_logsizes(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
+    yield from _check_db2_logsizes(get_value_store(), item, params, section)
+
+
+agent_section_db2_logsizes = AgentSection(
     name="db2_logsizes",
     parse_function=parse_db2_logsizes,
+)
+
+
+check_plugin_db2_logsizes = CheckPlugin(
+    name="db2_logsizes",
     service_name="DB2 Logsize %s",
     discovery_function=discover_db2_logsizes,
     check_function=check_db2_logsizes,

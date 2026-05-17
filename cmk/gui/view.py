@@ -5,36 +5,27 @@
 
 from collections.abc import Iterable, Mapping, Sequence
 
-from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
-from cmk.gui import pagetypes, visuals
-from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem, make_topic_breadcrumb
 from cmk.gui.config import active_config
 from cmk.gui.data_source import ABCDataSource, data_source_registry
 from cmk.gui.display_options import display_options
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
-from cmk.gui.main_menu import main_menu_registry
 from cmk.gui.painter.v0 import all_painters, Cell, JoinCell, Painter
 from cmk.gui.type_defs import (
     ColumnSpec,
     FilterName,
-    HTTPVariables,
     SorterSpec,
     ViewProcessTracking,
     ViewSpec,
     VisualContext,
 )
 from cmk.gui.utils.roles import UserPermissions
-from cmk.gui.utils.urls import append_site_from_request, makeuri_contextless
-from cmk.gui.view_breadcrumbs import make_host_breadcrumb, make_service_breadcrumb
 from cmk.gui.views.layout import Layout, layout_registry
 from cmk.gui.views.sort_url import compute_sort_url_parameter
 from cmk.gui.views.sorter import all_sorters, Sorter, SorterEntry
-from cmk.gui.visuals import get_missing_single_infos_group_aware, view_title
-from cmk.utils.servicename import ServiceName
+from cmk.gui.visuals import get_missing_single_infos_group_aware
 
 
 class View:
@@ -57,7 +48,7 @@ class View:
         self._want_checkboxes: bool = False
         self._warning_messages: list[str] = []
         self.process_tracking = ViewProcessTracking()
-        self._user_permissions = user_permissions
+        self.user_permissions = user_permissions
 
     @property
     def datasource(self) -> ABCDataSource:
@@ -100,7 +91,7 @@ class View:
                             e, registered_sorters, registered_painters
                         ),
                         registered_painters,
-                        self._user_permissions,
+                        self.user_permissions,
                     )
                 )
             elif col_type == "column":
@@ -111,7 +102,7 @@ class View:
                             e, registered_sorters, registered_painters
                         ),
                         registered_painters,
-                        self._user_permissions,
+                        self.user_permissions,
                     )
                 )
             else:
@@ -129,7 +120,7 @@ class View:
                 e,
                 self._compute_sort_url_parameter(e, registered_sorters, registered_painters),
                 registered_painters,
-                self._user_permissions,
+                self.user_permissions,
             )
             for e in self.spec["group_painters"]
             if e.name in registered_painters
@@ -167,7 +158,7 @@ class View:
             self._user_sorters or [],
             registered_sorters,
             registered_painters,
-            self._user_permissions,
+            self.user_permissions,
         )
 
     def _get_sorter_entries(
@@ -286,116 +277,6 @@ class View:
                 options.add("num_columns")
 
         return sorted(options)
-
-    def breadcrumb(self) -> Breadcrumb:
-        """Render the breadcrumb for the current view
-
-        In case of views we not only have a hierarchy of
-
-        1. main menu
-        2. main menu topic
-
-        We also have a hierarchy between some of the views (see _host_hierarchy_breadcrumb).  But
-        this is not the case for all views. A lot of the views are direct children of the topic
-        level.
-        """
-
-        # View without special hierarchy
-        if "host" not in self.spec["single_infos"] or "host" in self.missing_single_infos:
-            request_vars: HTTPVariables = [("view_name", self.name)]
-            request_vars += list(
-                visuals.get_singlecontext_vars(self.context, self.spec["single_infos"]).items()
-            )
-            request_vars = append_site_from_request(request_vars)
-
-            breadcrumb = make_topic_breadcrumb(
-                main_menu_registry.menu_monitoring(),
-                pagetypes.PagetypeTopics.get_topic(
-                    self.spec["topic"], self._user_permissions
-                ).title(),
-            )
-            breadcrumb.append(
-                BreadcrumbItem(
-                    title=view_title(self.spec, self.context),
-                    url=makeuri_contextless(request, request_vars),
-                    id=f"view_{self.name}",
-                )
-            )
-            return breadcrumb
-
-        # Now handle the views within the host view hierarchy
-        return self._host_hierarchy_breadcrumb(self._user_permissions)
-
-    def _host_hierarchy_breadcrumb(self, user_permissions: UserPermissions) -> Breadcrumb:
-        """Realize the host hierarchy breadcrumb
-
-        All hosts
-         |
-         + host home view
-           |
-           + host views
-           |
-           + service home view
-             |
-             + service views
-        """
-        try:
-            host_name = HostName(self.context["host"]["host"])
-        except ValueError:
-            raise MKUserError("host", _("Invalid host name"))
-        breadcrumb = make_host_breadcrumb(host_name, user_permissions)
-
-        if self.name == "host":
-            # In case we are on the host homepage, we have the final breadcrumb
-            return breadcrumb
-
-        # 3a) level: other single host pages
-        if "service" not in self.spec["single_infos"]:
-            # All other single host pages are right below the host home page
-            breadcrumb.append(
-                BreadcrumbItem(
-                    title=view_title(self.spec, self.context),
-                    url=makeuri_contextless(
-                        request,
-                        append_site_from_request(
-                            [
-                                ("view_name", self.name),
-                                ("host", str(host_name)),
-                            ]
-                        ),
-                    ),
-                    id=f"view_{self.name}",
-                )
-            )
-            return breadcrumb
-
-        breadcrumb = make_service_breadcrumb(
-            host_name, ServiceName(self.context["service"]["service"]), user_permissions
-        )
-
-        if self.name == "service":
-            # In case we are on the service home page, we have the final breadcrumb
-            return breadcrumb
-
-        # All other single service pages are right below the host home page
-        breadcrumb.append(
-            BreadcrumbItem(
-                title=view_title(self.spec, self.context),
-                url=makeuri_contextless(
-                    request,
-                    append_site_from_request(
-                        [
-                            ("view_name", self.name),
-                            ("host", str(host_name)),
-                            ("service", self.context["service"]["service"]),
-                        ]
-                    ),
-                ),
-                id=f"view_{self.name}",
-            )
-        )
-
-        return breadcrumb
 
     @property
     def missing_single_infos(self) -> set[FilterName]:

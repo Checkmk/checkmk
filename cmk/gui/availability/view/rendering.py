@@ -57,6 +57,7 @@ from cmk.gui.utils.urls import makeuri
 from cmk.gui.utils.user_errors import user_errors
 from cmk.gui.valuespec import ValueSpec
 from cmk.gui.view import View
+from cmk.gui.view_breadcrumbs import view_breadcrumb
 from cmk.gui.visuals import page_menu_topic_add_to, view_title
 from cmk.utils import paths
 from cmk.utils.servicename import ServiceName
@@ -223,7 +224,7 @@ def show_availability_page(
 
     title += " - " + range_title
 
-    breadcrumb = view.breadcrumb()
+    breadcrumb = view_breadcrumb(view)
     assert breadcrumb[-1].url is not None
     breadcrumb.append(
         BreadcrumbItem(
@@ -832,7 +833,7 @@ def show_bi_availability(
             inline_help_as_text=user.inline_help_as_text,
         )
 
-        breadcrumb = view.breadcrumb()
+        breadcrumb = view_breadcrumb(view)
         assert breadcrumb[-1].url is not None
         breadcrumb.append(
             BreadcrumbItem(

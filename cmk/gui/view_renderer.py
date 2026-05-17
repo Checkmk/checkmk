@@ -51,6 +51,7 @@ from cmk.gui.utils.selection_id import SelectionId
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import DocReference, makeuri, makeuri_contextless
 from cmk.gui.view import View
+from cmk.gui.view_breadcrumbs import view_breadcrumb
 from cmk.gui.views.command import Command, do_actions, get_command_groups, should_show_command_form
 from cmk.gui.views.page_ajax_filters import AjaxInitialViewFilters
 from cmk.gui.visuals import view_title
@@ -164,7 +165,7 @@ class GUIViewRenderer(ABCViewRenderer):
             )
 
         if display_options.enabled(display_options.T):
-            breadcrumb = self.view.breadcrumb()
+            breadcrumb = view_breadcrumb(self.view)
             top_heading(
                 html,
                 request,
@@ -386,7 +387,7 @@ class GUIViewRenderer(ABCViewRenderer):
     def _page_menu(
         self, rows: Rows, show_filters: list[Filter], user_permissions: UserPermissions
     ) -> PageMenu:
-        breadcrumb: Breadcrumb = self.view.breadcrumb()
+        breadcrumb: Breadcrumb = view_breadcrumb(self.view)
         if not display_options.enabled(display_options.B):
             return PageMenu()  # No buttons -> no menu
 

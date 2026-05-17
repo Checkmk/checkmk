@@ -3,26 +3,43 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
+
+from collections.abc import Mapping
+from typing import Any
+
+from cmk.agent_based.v1 import check_levels as check_levels_v1
+from cmk.agent_based.v2 import (
+    AgentSection,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    IgnoreResultsError,
+    render,
+    Result,
+    Service,
+    State,
+    StringTable,
+)
 
 
-from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
-from cmk.agent_based.v2 import IgnoreResultsError, render, StringTable
-
-check_info = {}
+def parse_db2_mem(string_table: StringTable) -> StringTable:
+    return string_table
 
 
-def discover_db2_mem(info):
-    return [(x[1], {}) for x in info if x[0] == "Instance"]
+def discover_db2_mem(section: StringTable) -> DiscoveryResult:
+    for line in section:
+        if line[0] == "Instance":
+            yield Service(item=line[1])
 
 
-def check_db2_mem(item, params, info):
-    if not info:
+def check_db2_mem(item: str, params: Mapping[str, Any], section: StringTable) -> CheckResult:
+    if not section:
         raise IgnoreResultsError("Login into database failed")
 
     in_block = False
-    limit, usage = None, None
-    for line in info:
+    limit: int | None = None
+    usage: int | None = None
+    for line in section:
         if line[1] == item:
             in_block = True
         elif in_block is True:
@@ -43,31 +60,30 @@ def check_db2_mem(item, params, info):
         return
 
     perc_free = (limit - usage) / limit * 100.0
-    yield 0, f"Max {render.bytes(limit)}"
-    yield check_levels(
+    yield Result(state=State.OK, summary=f"Max {render.bytes(limit)}")
+    yield from check_levels_v1(
         usage,
-        "mem_used",
-        None,
-        human_readable_func=render.bytes,
-        infoname="Used",
+        metric_name="mem_used",
+        render_func=render.bytes,
+        label="Used",
         boundaries=(0, limit),
     )
-    yield check_levels(
+    yield from check_levels_v1(
         perc_free,
-        None,
-        (None, None) + (params["levels_lower"] or (None, None)),
-        human_readable_func=render.percent,
-        infoname="Free",
+        levels_lower=params["levels_lower"],
+        render_func=render.percent,
+        label="Free",
     )
 
 
-def parse_db2_mem(string_table: StringTable) -> StringTable:
-    return string_table
-
-
-check_info["db2_mem"] = LegacyCheckDefinition(
+agent_section_db2_mem = AgentSection(
     name="db2_mem",
     parse_function=parse_db2_mem,
+)
+
+
+check_plugin_db2_mem = CheckPlugin(
+    name="db2_mem",
     service_name="Memory %s",
     discovery_function=discover_db2_mem,
     check_function=check_db2_mem,

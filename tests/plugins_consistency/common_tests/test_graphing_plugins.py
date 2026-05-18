@@ -17,6 +17,7 @@ from cmk.graphing.v1 import graphs as graphs_v1
 from cmk.graphing.v1 import metrics as metrics_v1
 from cmk.graphing.v1 import perfometers as perfometers_v1
 from cmk.graphing.v1 import translations as translations_api
+from cmk.graphing.v2_unstable import metrics as metrics_v2_unstable
 from cmk.gui.graphing_main import _load_graphing_plugins
 
 
@@ -52,6 +53,8 @@ def _collect_metric_names_from_quantity(
     quantity: (
         str
         | metrics_v1.Constant
+        | metrics_v2_unstable.LowerWarningOf
+        | metrics_v2_unstable.LowerCriticalOf
         | metrics_v1.WarningOf
         | metrics_v1.CriticalOf
         | metrics_v1.MinimumOf
@@ -66,7 +69,9 @@ def _collect_metric_names_from_quantity(
         case str():
             yield quantity
         case (
-            metrics_v1.WarningOf()
+            metrics_v2_unstable.LowerWarningOf()
+            | metrics_v2_unstable.LowerCriticalOf()
+            | metrics_v1.WarningOf()
             | metrics_v1.CriticalOf()
             | metrics_v1.MinimumOf()
             | metrics_v1.MaximumOf()

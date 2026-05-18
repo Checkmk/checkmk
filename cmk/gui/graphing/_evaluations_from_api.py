@@ -537,6 +537,8 @@ def _is_scalar(quantity: Quantity) -> bool:
             return False
         case (
             metrics_v1.Constant()
+            | metrics_v2_unstable.LowerWarningOf()
+            | metrics_v2_unstable.LowerCriticalOf()
             | metrics_v1.WarningOf()
             | metrics_v1.CriticalOf()
             | metrics_v1.MinimumOf()
@@ -663,7 +665,9 @@ def _to_graph_metric_expression(
         case metrics_v1.Constant():
             return GraphMetricConstant(value=float(quantity.value))
         case (
-            metrics_v1.WarningOf()
+            metrics_v2_unstable.LowerWarningOf()
+            | metrics_v2_unstable.LowerCriticalOf()
+            | metrics_v1.WarningOf()
             | metrics_v1.CriticalOf()
             | metrics_v1.MinimumOf()
             | metrics_v1.MaximumOf()
@@ -764,7 +768,9 @@ def _extract_metric_names(quantity: Quantity) -> Iterator[str]:
         case metrics_v1.Constant():
             yield from ()
         case (
-            metrics_v1.WarningOf()
+            metrics_v2_unstable.LowerWarningOf()
+            | metrics_v2_unstable.LowerCriticalOf()
+            | metrics_v1.WarningOf()
             | metrics_v1.CriticalOf()
             | metrics_v1.MinimumOf()
             | metrics_v1.MaximumOf()

@@ -47,6 +47,12 @@ class _MetricNamesOrScalars:
         match quantity:
             case str():
                 self._metric_names.append(quantity)
+            case metrics_v2_unstable.LowerWarningOf():
+                self._metric_names.append(quantity.metric_name)
+                self._scalars.append(quantity)
+            case metrics_v2_unstable.LowerCriticalOf():
+                self._metric_names.append(quantity.metric_name)
+                self._scalars.append(quantity)
             case metrics_v1.WarningOf():
                 self._metric_names.append(quantity.metric_name)
                 self._scalars.append(quantity)

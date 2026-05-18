@@ -144,7 +144,7 @@ def test_migration_forward_method(old: str, new: object, request_context: None) 
                 "application": ("subject", None),
                 "host": "me.too@checkmk.com",
                 "body_limit": 1000,
-                "cleanup": ("delete", None),
+                "cleanup": ("delete", "delete"),
             },
             id="cleanup_true_becomes_delete",
         ),
@@ -155,7 +155,7 @@ def test_migration_forward_method(old: str, new: object, request_context: None) 
         ),
         pytest.param(
             {"cleanup": ("delete", None)},
-            {"cleanup": ("delete", None)},
+            {"cleanup": ("delete", "delete")},
             id="cleanup_delete_already_migrated",
         ),
         pytest.param(

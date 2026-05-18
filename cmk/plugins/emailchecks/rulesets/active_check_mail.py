@@ -183,15 +183,15 @@ def _migrate_application(
     return ("subject", None) if value is None else ("spec", str(value))
 
 
-def _migrate_cleanup(value: object) -> tuple[Literal["delete"], None] | tuple[Literal["move"], str]:
+def _migrate_cleanup(
+    value: object,
+) -> tuple[Literal["delete"], Literal["delete"]] | tuple[Literal["move"], str]:
     match value:
-        case True:
-            return "delete", None
+        case True | ("delete", _):
+            return "delete", "delete"
         case str(s):
             return "move", s
-        case tuple(("delete", None)):
-            return "delete", None
-        case tuple(("move", str() as folder)):
+        case ("move", str() as folder):
             return "move", folder
     raise ValueError(f"Invalid cleanup value: {value!r}")
 

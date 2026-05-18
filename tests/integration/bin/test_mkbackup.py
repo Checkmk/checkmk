@@ -124,7 +124,14 @@ def backup_path_fixture(site_for_mkbackup_tests: Site) -> Iterator[str]:
     name="backup_lock_dir",
     params=[
         pytest.param(True, id="lock dir exists"),
-        pytest.param(False, id="lock dir not existing"),
+        pytest.param(
+            False,
+            id="lock dir not existing",
+            marks=pytest.mark.skipif(
+                os.environ.get("DISTRO") in ("almalinux-10", "sles-16.0"),
+                reason="CMK-31764: lock dir recreation fails on almalinux-10 and sles-16.0",
+            ),
+        ),
     ],
 )
 def backup_lock_dir_fixture(

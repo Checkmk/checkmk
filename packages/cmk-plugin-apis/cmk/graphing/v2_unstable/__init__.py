@@ -47,12 +47,12 @@ Example::
 
 from collections.abc import Mapping
 
-from cmk.graphing.v1 import graphs as graphs
-from cmk.graphing.v1 import perfometers as perfometers
 from cmk.graphing.v1 import translations as translations
 from cmk.graphing.v1._localize import Title as Title
 
+from . import graphs as graphs
 from . import metrics as metrics
+from . import perfometers as perfometers
 
 
 def entry_point_prefixes() -> Mapping[

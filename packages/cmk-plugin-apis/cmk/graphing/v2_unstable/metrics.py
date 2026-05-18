@@ -59,7 +59,7 @@ __all__ = [
 
 
 @dataclass(frozen=True)
-class LowerWarningOf(WarningOf):
+class LowerWarningOf:
     """
     Extracts the lower warning level of a metric by its name. It can be used within other metric
     operations, perfometers or graphs.
@@ -73,9 +73,15 @@ class LowerWarningOf(WarningOf):
         LowerWarningOf(metric_name='metric-name')
     """
 
+    metric_name: str
+
+    def __post_init__(self) -> None:
+        if not self.metric_name:
+            raise ValueError(self.metric_name)
+
 
 @dataclass(frozen=True)
-class LowerCriticalOf(CriticalOf):
+class LowerCriticalOf:
     """
     Extracts the lower critical level of a metric by its name. It can be used within other metric
     operations, perfometers or graphs.
@@ -88,3 +94,9 @@ class LowerCriticalOf(CriticalOf):
         >>> LowerCriticalOf("metric-name")
         LowerCriticalOf(metric_name='metric-name')
     """
+
+    metric_name: str
+
+    def __post_init__(self) -> None:
+        if not self.metric_name:
+            raise ValueError(self.metric_name)

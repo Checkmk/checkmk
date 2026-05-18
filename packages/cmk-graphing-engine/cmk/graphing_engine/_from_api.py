@@ -8,6 +8,7 @@ from typing import assert_never
 
 from cmk.graphing.v1 import graphs as graphs_v1
 from cmk.graphing.v1 import metrics as metrics_v1
+from cmk.graphing.v2_unstable import graphs as graphs_v2_unstable
 from cmk.graphing.v2_unstable import metrics as metrics_v2_unstable
 
 from ._objects import (
@@ -47,6 +48,8 @@ type _ApiQuantity = (
     | metrics_v1.Constant
     | metrics_v1.WarningOf
     | metrics_v1.CriticalOf
+    | metrics_v2_unstable.LowerWarningOf
+    | metrics_v2_unstable.LowerCriticalOf
     | metrics_v1.MinimumOf
     | metrics_v1.MaximumOf
     | metrics_v1.Sum
@@ -240,7 +243,7 @@ def _parse_bound(
 
 
 def _parse_minimal_range(
-    minimal_range: graphs_v1.MinimalRange,
+    minimal_range: graphs_v1.MinimalRange | graphs_v2_unstable.MinimalRange,
     localizer: Callable[[str], str],
 ) -> MinimalRange:
     return MinimalRange(
@@ -249,7 +252,10 @@ def _parse_minimal_range(
     )
 
 
-def _parse_graph(graph: graphs_v1.Graph, localizer: Callable[[str], str]) -> Graph:
+def _parse_graph(
+    graph: graphs_v1.Graph | graphs_v2_unstable.Graph,
+    localizer: Callable[[str], str],
+) -> Graph:
     return Graph(
         name=graph.name,
         title=graph.title.localize(localizer),
@@ -270,13 +276,18 @@ def _parse_graph(graph: graphs_v1.Graph, localizer: Callable[[str], str]) -> Gra
 
 
 def parse_graph_from_api(
-    graph: graphs_v1.Graph | graphs_v1.Bidirectional,
+    graph: (
+        graphs_v1.Graph
+        | graphs_v1.Bidirectional
+        | graphs_v2_unstable.Graph
+        | graphs_v2_unstable.Bidirectional
+    ),
     localizer: Callable[[str], str],
 ) -> Graph | Bidirectional:
     match graph:
-        case graphs_v1.Graph():
+        case graphs_v1.Graph() | graphs_v2_unstable.Graph():
             return _parse_graph(graph, localizer)
-        case graphs_v1.Bidirectional():
+        case graphs_v1.Bidirectional() | graphs_v2_unstable.Bidirectional():
             return Bidirectional(
                 name=graph.name,
                 title=graph.title.localize(localizer),

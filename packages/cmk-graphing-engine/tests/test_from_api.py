@@ -6,6 +6,7 @@
 from cmk.graphing.v1 import graphs as graphs_v1
 from cmk.graphing.v1 import metrics as metrics_v1
 from cmk.graphing.v1 import Title
+from cmk.graphing.v2_unstable import graphs as graphs_v2_unstable
 from cmk.graphing.v2_unstable import metrics as metrics_v2_unstable
 from cmk.graphing_engine import (
     AutoPrecision,
@@ -146,7 +147,7 @@ def test_parse_graph_from_api_maps_warning_critical_minimum_maximum() -> None:
 
 
 def test_parse_graph_from_api_maps_lower_warning_and_critical() -> None:
-    graph = graphs_v1.Graph(
+    graph = graphs_v2_unstable.Graph(
         name="g",
         title=Title("t"),
         simple_lines=[

@@ -16,7 +16,7 @@ from typing import Any
 import pytest
 
 from cmk.agent_based.v2 import GetRateError, Service
-from cmk.legacy_checks import msexch_activesync
+from cmk.plugins.msexch.agent_based import msexch_activesync
 from cmk.plugins.windows.agent_based import libwmi as wmi
 from cmk.plugins.windows.agent_based.libwmi import parse_wmi_table
 

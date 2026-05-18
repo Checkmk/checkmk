@@ -11,7 +11,7 @@ from typing import Any
 import pytest
 
 from cmk.agent_based.v2 import Metric, Result, Service, State, StringTable
-from cmk.legacy_checks.citrix_licenses import (
+from cmk.plugins.citrix.agent_based.citrix_licenses import (
     check_citrix_licenses,
     discover_citrix_licenses,
     parse_citrix_licenses,

@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.inventory_ui.v1_unstable import (
-    BoolField,
     DecimalNotation,
     IECNotation,
     Node,
@@ -185,28 +184,6 @@ node_hardware_cpu_nodes = Node(
             "node_name": TextField(Title("Node name")),
             "cores": NumberField(Title("#Cores"), render=UNIT_COUNT),
             "model": TextField(Title("CPU model")),
-        },
-    ),
-)
-
-node_hardware_firmware = Node(
-    name="hardware_firmware",
-    path=["hardware", "firmware"],
-    title=Title("Firmware"),
-)
-
-node_hardware_firmware_redfish = Node(
-    name="hardware_firmware_redfish",
-    path=["hardware", "firmware", "redfish"],
-    title=Title("Redfish"),
-    table=Table(
-        view=View(name="invfirmwareredfish", title=Title("Redfish")),
-        columns={
-            "component": TextField(Title("Component")),
-            "version": TextField(Title("Version")),
-            "location": TextField(Title("Location")),
-            "description": TextField(Title("Description")),
-            "updateable": BoolField(Title("Update possible")),
         },
     ),
 )

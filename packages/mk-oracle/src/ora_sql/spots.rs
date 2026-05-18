@@ -22,7 +22,26 @@ use crate::types::{InstanceName, SqlBindParam, SqlQuery};
 
 use anyhow::Result;
 
-type InstanceWorks = (InstanceName, Vec<(Vec<SqlQuery>, String)>);
+/// Controls how SQL result rows are rendered into agent output.
+///
+/// `Passthrough` is used for custom-metric blocks: each SELECT-ed cell is
+/// emitted as-is, with no column-separator rewriting.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum PostProcessing {
+    Standard,
+    Passthrough,
+}
+
+/// One block of queries to execute for a section, along with the agent
+/// header(s) that precede the rows and a flag controlling output formatting.
+#[derive(Debug, Clone)]
+pub struct QueryBlock {
+    pub queries: Vec<SqlQuery>,
+    pub title: String,
+    pub post_processing: PostProcessing,
+}
+
+type InstanceWorks = (InstanceName, Vec<QueryBlock>);
 type SpotWorkResults = (ClosedSpot, Result<Vec<InstanceWorks>>);
 pub type SpotWorks = (ClosedSpot, Vec<InstanceWorks>);
 type SpotErrors = (ClosedSpot, anyhow::Error);
@@ -100,9 +119,17 @@ fn _make_closed_ok(
                     }
                     section
                         .find_queries(get_sql_dir(), info.0, info.1, params)
-                        .map(|q| (q, section.to_work_header()))
+                        .map(|q| QueryBlock {
+                            queries: q,
+                            title: section.to_work_header_for(service),
+                            post_processing: if section.item_value().is_some() {
+                                PostProcessing::Passthrough
+                            } else {
+                                PostProcessing::Standard
+                            },
+                        })
                 })
-                .collect::<Vec<(Vec<SqlQuery>, String)>>();
+                .collect::<Vec<QueryBlock>>();
             (service.clone(), queries)
         })
         .collect::<Vec<InstanceWorks>>();

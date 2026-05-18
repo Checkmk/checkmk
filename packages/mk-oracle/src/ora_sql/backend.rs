@@ -283,6 +283,14 @@ impl QueryResult {
 
         Ok(result)
     }
+
+    /// Pass-through formatter for custom-metric output: each SELECT-ed row is
+    /// emitted as-is, one column value per output line. Used for the
+    /// custom_metrics sections.
+    pub fn into_rows_passthrough(self) -> Result<Vec<String>> {
+        let result: Vec<String> = self.0?.into_iter().flatten().collect();
+        Ok(result)
+    }
 }
 
 impl Spot<Opened> {
@@ -442,5 +450,30 @@ oracle:
             obtain_config_credentials(make_config_with_auth_type("standard").unwrap().auth())
                 .is_some()
         );
+    }
+
+    #[test]
+    fn test_query_result_passthrough_emits_each_cell_as_is() {
+        let rows = vec![
+            vec!["details:All OK".to_string()],
+            vec!["perfdata:cache_hit_ratio=98;90;80;100".to_string()],
+            vec!["exit:0".to_string()],
+        ];
+        let lines = QueryResult(Ok(rows)).into_rows_passthrough().unwrap();
+        assert_eq!(
+            lines,
+            vec![
+                "details:All OK".to_string(),
+                "perfdata:cache_hit_ratio=98;90;80;100".to_string(),
+                "exit:0".to_string(),
+            ]
+        );
+    }
+
+    #[test]
+    fn test_query_result_format_joins_columns() {
+        let rows = vec![vec!["a".to_string(), "b".to_string(), "c".to_string()]];
+        let lines = QueryResult(Ok(rows)).format("|").unwrap();
+        assert_eq!(lines, vec!["a|b|c".to_string()]);
     }
 }

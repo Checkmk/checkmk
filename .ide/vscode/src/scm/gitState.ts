@@ -34,6 +34,16 @@ export function setGitStateRefreshCallback(cb: (() => void) | null): void {
 }
 
 /**
+ * Force the next `getGitState()` to re-probe, regardless of TTL. Used by
+ * external watchers (e.g. the `.git/hooks/pre-commit*` watcher in sidebar.ts)
+ * that already know the underlying state has changed and want the cockpit
+ * to converge on the next refresh without waiting for the 5 s TTL.
+ */
+export function invalidateGitState(): void {
+  _state = { ..._state, lastUpdated: 0 }
+}
+
+/**
  * Hard-reset `tests/qa-test-data` to the gitlink tracked by the parent repo,
  * discarding any local changes inside the submodule. Asks for confirmation
  * first because this is destructive.
@@ -89,13 +99,20 @@ export function registerGitFixers(): vscode.Disposable[] {
       )
       if (choice !== 'Reset') return
       log('git: hard-resetting tests/qa-test-data to tracked gitlink')
-      // Reset the submodule's working tree to HEAD, drop untracked files, then
-      // pull the gitlink commit checked out forcefully. Done as one task in a
-      // visible terminal so the user can see what happened.
+      // Read the tracked gitlink SHA from the parent's index and checkout the
+      // submodule worktree at exactly that SHA. Avoids `git submodule update
+      // --init --force` because that falls back to the relative `../qa-test-
+      // data` URL declared in .gitmodules, which git 2.38+ refuses over the
+      // `file://` transport — so the action would fail with "fatal: transport
+      // 'file' not allowed" even when the submodule is already correct.
+      // If the tracked SHA happens to be missing locally, we fetch first.
       const inner = [
+        "TRACKED_SHA=$(git ls-tree HEAD tests/qa-test-data | awk '{print $3}')",
+        'test -n "$TRACKED_SHA" || { echo "qa-test-data not tracked in HEAD"; exit 1; }',
         'git -C tests/qa-test-data reset --hard',
         'git -C tests/qa-test-data clean -fdx',
-        'git submodule update --init --force --checkout tests/qa-test-data'
+        'git -C tests/qa-test-data cat-file -e "$TRACKED_SHA" 2>/dev/null || git -C tests/qa-test-data fetch origin',
+        'git -C tests/qa-test-data checkout --force --detach "$TRACKED_SHA"'
       ].join(' && ')
       const exec = runCommand('Reset tests/qa-test-data', inner)
       if (!exec) {

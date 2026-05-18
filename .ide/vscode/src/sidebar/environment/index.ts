@@ -10,6 +10,7 @@ import * as vscode from 'vscode'
 
 import type { BuildStatus } from '../../build/buildStatus'
 import { error, log } from '../../core/log'
+import { loadPersisted, savePersisted } from '../../core/persistedCache'
 import { safeExecAsync, shellExecAsync } from '../../core/shell'
 import { getNonce, wrap } from '../html'
 import type {
@@ -37,7 +38,9 @@ const EMPTY_ENV: EnvironmentInfo = {
 let _envCache: { info: EnvironmentInfo; timestamp: number } | null = null
 let _envFetchPromise: Promise<void> | null = null
 let _onEnvRefresh: (() => void) | null = null
+let _envHydrated = false
 const ENV_CACHE_TTL = 5 * 60 * 1000
+const PERSIST_KEY = 'cmk.env.snapshot'
 
 export function setEnvironmentRefreshCallback(cb: () => void): void {
   _onEnvRefresh = cb
@@ -47,10 +50,18 @@ export function invalidateEnvironmentCache(): void {
   _envCache = null
 }
 
+function hydrateEnvFromPersisted(): void {
+  if (_envHydrated) return
+  _envHydrated = true
+  const persisted = loadPersisted<{ info: EnvironmentInfo; timestamp: number }>(PERSIST_KEY)
+  if (persisted) _envCache = persisted
+}
+
 /** Sync entry point used during sidebar render. Returns cached info if fresh;
  *  otherwise returns the last value (or empty placeholders) and kicks off a
  *  background refresh that triggers the sidebar to re-render when done. */
 export function getEnvironmentInfo(wsPath?: string): EnvironmentInfo {
+  hydrateEnvFromPersisted()
   if (_envCache && Date.now() - _envCache.timestamp < ENV_CACHE_TTL) {
     return _envCache.info
   }
@@ -64,6 +75,7 @@ async function scheduleEnvironmentRefresh(wsPath?: string): Promise<void> {
     try {
       const info = await fetchEnvironmentInfo(wsPath)
       _envCache = { info, timestamp: Date.now() }
+      savePersisted(PERSIST_KEY, _envCache)
       _onEnvRefresh?.()
     } catch (err) {
       error(`environment refresh failed: ${(err as Error).message}`)

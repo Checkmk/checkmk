@@ -64,17 +64,36 @@ export function shellEscape(s: string): string {
   return "'" + String(s).replace(/'/g, "'\\''") + "'"
 }
 
+interface ConfigCacheEntry {
+  path: string
+  mtimeMs: number
+  parsed: unknown
+}
+const _configCache = new Map<string, ConfigCacheEntry>()
+
+function readConfigCached(filePath: string): unknown {
+  let mtimeMs: number
+  try {
+    mtimeMs = fs.statSync(filePath).mtimeMs
+  } catch {
+    throw new Error(`config not found: ${filePath}`)
+  }
+  const cached = _configCache.get(filePath)
+  if (cached && cached.mtimeMs === mtimeMs) return cached.parsed
+  const parsed = JSON.parse(fs.readFileSync(filePath, 'utf8'))
+  _configCache.set(filePath, { path: filePath, mtimeMs, parsed })
+  return parsed
+}
+
 export function loadConfig<T = unknown>(name: string): T {
   // Prefer workspace config (branch-aware, always fresh)
   const wsPath = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath
   if (wsPath) {
     const wsConfig = path.join(wsPath, '.ide', 'vscode', 'config', `${name}.json`)
-    if (fs.existsSync(wsConfig)) {
-      return JSON.parse(fs.readFileSync(wsConfig, 'utf8'))
-    }
+    if (fs.existsSync(wsConfig)) return readConfigCached(wsConfig) as T
   }
   // Fallback to bundled config in installed VSIX
-  return JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'config', `${name}.json`), 'utf8'))
+  return readConfigCached(path.join(__dirname, '..', 'config', `${name}.json`)) as T
 }
 
 /**

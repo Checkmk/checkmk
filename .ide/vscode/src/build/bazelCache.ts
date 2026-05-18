@@ -9,6 +9,7 @@ import * as path from 'path'
 import * as vscode from 'vscode'
 
 import { error, log, notifyError, notifyInfo } from '../core/log'
+import { loadPersisted, savePersisted } from '../core/persistedCache'
 import { safeExecAsync } from '../core/shell'
 import { runCommand, waitForTask } from '../core/tasks'
 
@@ -21,6 +22,13 @@ export interface BazelCacheSnapshot {
 
 const DEFAULT_THRESHOLD_GIB = 50
 const TTL_MS = 5 * 60 * 1000
+const PERSIST_KEY = 'cmk.bazelCache.snapshot'
+
+interface PersistedSnapshot {
+  snapshot: BazelCacheSnapshot
+  cacheDirMtimeMs: number
+  timestamp: number
+}
 
 const EMPTY: BazelCacheSnapshot = {
   sizeBytes: null,
@@ -31,8 +39,28 @@ const EMPTY: BazelCacheSnapshot = {
 
 let _snapshot: BazelCacheSnapshot = EMPTY
 let _lastUpdated = 0
+let _lastCacheDirMtimeMs = 0
 let _inflight: Promise<void> | null = null
 let _onRefresh: (() => void) | null = null
+let _hydrated = false
+
+function hydrateFromPersisted(): void {
+  if (_hydrated) return
+  _hydrated = true
+  const persisted = loadPersisted<PersistedSnapshot>(PERSIST_KEY)
+  if (!persisted) return
+  _snapshot = persisted.snapshot
+  _lastUpdated = persisted.timestamp
+  _lastCacheDirMtimeMs = persisted.cacheDirMtimeMs
+}
+
+function cacheDirMtimeMs(cachePath: string): number {
+  try {
+    return fs.statSync(cachePath).mtimeMs
+  } catch {
+    return 0
+  }
+}
 
 export function setBazelCacheRefreshCallback(cb: (() => void) | null): void {
   _onRefresh = cb
@@ -89,6 +117,8 @@ function shellQuote(s: string): string {
  * the probe completes and triggers `_onRefresh`.
  */
 export function getBazelCacheSnapshot(): BazelCacheSnapshot {
+  hydrateFromPersisted()
+
   const wsPath = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath
   if (!wsPath) return EMPTY
 
@@ -106,6 +136,28 @@ export function getBazelCacheSnapshot(): BazelCacheSnapshot {
         if (!cachePath || !fs.existsSync(cachePath)) {
           _snapshot = { ...EMPTY, thresholdGiB, cachePath }
           _lastUpdated = Date.now()
+          _lastCacheDirMtimeMs = 0
+          persistSnapshot()
+          _onRefresh?.()
+          return
+        }
+        // Cheap mtime stat: if the cache dir hasn't been touched since the
+        // last probe, the bytes count cannot have changed and we can skip
+        // the expensive `du -sb` walk entirely.
+        const dirMtime = cacheDirMtimeMs(cachePath)
+        if (
+          dirMtime > 0 &&
+          dirMtime === _lastCacheDirMtimeMs &&
+          _snapshot.sizeBytes !== null &&
+          _snapshot.cachePath === cachePath
+        ) {
+          _snapshot = {
+            ..._snapshot,
+            thresholdGiB,
+            overThreshold: _snapshot.sizeBytes > thresholdGiB * 1024 ** 3
+          }
+          _lastUpdated = Date.now()
+          persistSnapshot()
           _onRefresh?.()
           return
         }
@@ -117,6 +169,8 @@ export function getBazelCacheSnapshot(): BazelCacheSnapshot {
           overThreshold: sizeBytes !== null && sizeBytes > thresholdGiB * 1024 ** 3
         }
         _lastUpdated = Date.now()
+        _lastCacheDirMtimeMs = dirMtime
+        persistSnapshot()
         _onRefresh?.()
       } catch (err) {
         error(`bazelCache probe failed: ${(err as Error).message}`)
@@ -127,6 +181,14 @@ export function getBazelCacheSnapshot(): BazelCacheSnapshot {
   }
 
   return view
+}
+
+function persistSnapshot(): void {
+  savePersisted<PersistedSnapshot>(PERSIST_KEY, {
+    snapshot: _snapshot,
+    cacheDirMtimeMs: _lastCacheDirMtimeMs,
+    timestamp: _lastUpdated
+  })
 }
 
 export function registerBazelCache(): vscode.Disposable[] {

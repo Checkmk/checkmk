@@ -18,6 +18,7 @@ import {
   writeSetting
 } from './core/config'
 import { error, log, notifyInfo, registerErrorHandlers } from './core/log'
+import { bindPersistedCacheContext } from './core/persistedCache'
 import { checkVersionMismatch } from './core/versionCheck'
 import { checkForUpdates, isInstalledAsync as isDevSiteInstalledAsync } from './omd/devSiteTools'
 import { registerLogs } from './omd/logs'
@@ -91,6 +92,7 @@ function toggleSettings(
 export function activate(context: vscode.ExtensionContext): void {
   log('Extension activating')
   registerErrorHandlers()
+  bindPersistedCacheContext(context)
   const commands = loadConfig<Record<string, CommandEntry>>('commands')
   const extensionSets = loadConfig<ExtensionSets>('extensions')
   const settingsSets = loadConfig<Record<string, SettingsEntry>>('settings')
@@ -156,8 +158,38 @@ export function activate(context: vscode.ExtensionContext): void {
     })
   )
 
-  // Bazel test discovery + runner — always on; serves both py_test and vitest_test targets.
-  context.subscriptions.push(...registerBazelTestController(), ...registerBazelTestsConfigView())
+  // Bazel test discovery + runner — deferred until the first Python /
+  // TypeScript editor activates, or 10 s elapse, whichever fires first. The
+  // test controller's own discovery is already lazy, but the registration
+  // itself does enough work to be worth keeping off the activate() path.
+  let bazelTestsRegistered = false
+  const registerBazelTestsOnce = (): void => {
+    if (bazelTestsRegistered) return
+    bazelTestsRegistered = true
+    disposeBazelTestsTriggers()
+    context.subscriptions.push(...registerBazelTestController(), ...registerBazelTestsConfigView())
+  }
+  const bazelTestsTriggers: vscode.Disposable[] = []
+  const disposeBazelTestsTriggers = (): void => {
+    for (const d of bazelTestsTriggers) {
+      try {
+        d.dispose()
+      } catch {
+        // ignore
+      }
+    }
+  }
+  bazelTestsTriggers.push(
+    vscode.window.onDidChangeActiveTextEditor((ed) => {
+      if (!ed) return
+      const lang = ed.document.languageId
+      if (lang === 'python' || lang === 'typescript' || lang === 'typescriptreact')
+        registerBazelTestsOnce()
+    })
+  )
+  const bazelTestsFallback = setTimeout(registerBazelTestsOnce, 10_000)
+  bazelTestsTriggers.push({ dispose: () => clearTimeout(bazelTestsFallback) })
+  context.subscriptions.push(...bazelTestsTriggers)
 
   // --- Family-gated features ---
 
@@ -231,12 +263,19 @@ export function activate(context: vscode.ExtensionContext): void {
   profileManager.setOnRefresh(refreshAll)
   profileManager.init(context)
   registerProfileDetector(context)
-  checkVersionMismatch(context)
 
   context.subscriptions.push(...registerWhatsNew(context))
-  showWhatsNewIfNeeded(context).catch((err) =>
-    error(`What's new failed: ${(err as Error).message}`)
-  )
+
+  // Defer the version-mismatch dialog and the What's New popup by 2 s —
+  // neither needs to land before the user can interact, and both can pop
+  // blocking modals that drag the perceived activate path.
+  const deferred = setTimeout(() => {
+    checkVersionMismatch(context)
+    showWhatsNewIfNeeded(context).catch((err) =>
+      error(`What's new failed: ${(err as Error).message}`)
+    )
+  }, 2000)
+  context.subscriptions.push({ dispose: () => clearTimeout(deferred) })
 
   context.subscriptions.push(...registerStartupBenchmarks(context))
 

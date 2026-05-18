@@ -7,7 +7,13 @@ import * as fs from 'fs'
 import * as path from 'path'
 import * as vscode from 'vscode'
 
-import { detectRegression, flushBenchmarkRun, getBenchmarkHistory, time } from './benchmark/startup'
+import {
+  detectRegression,
+  flushBenchmarkRun,
+  getBenchmarkHistory,
+  isBenchmarkEnabled,
+  time
+} from './benchmark/startup'
 import { getBazelCacheSnapshot, setBazelCacheRefreshCallback } from './build/bazelCache'
 import { type BuildStatus, checkBuildStatus } from './build/buildStatus'
 import type { SettingsEntry } from './build/settings'
@@ -31,7 +37,7 @@ import {
   setAllocatorRefreshCallback
 } from './profiles/python/jemallocAllocator'
 import { getPylanceHealthSnapshot } from './profiles/python/pylanceHealth'
-import { getGitState, setGitStateRefreshCallback } from './scm/gitState'
+import { getGitState, invalidateGitState, setGitStateRefreshCallback } from './scm/gitState'
 import * as activitySection from './sidebar/activity'
 import * as environmentSection from './sidebar/environment'
 import { renderLoading } from './sidebar/html'
@@ -142,7 +148,8 @@ function refreshStateCache(): StateCache {
           qaTestDataDirty: g.qaTestDataDirty
         }
       }),
-      startupRegression: _context ? detectRegression(getBenchmarkHistory(_context)) : null,
+      startupRegression:
+        _context && isBenchmarkEnabled() ? detectRegression(getBenchmarkHistory(_context)) : null,
       dmypyHealth: time('getDmypyHealthSnapshot', () => getDmypyHealthSnapshot()),
       bazelCache: time('getBazelCacheSnapshot', () => getBazelCacheSnapshot())
     }
@@ -306,6 +313,10 @@ class SectionViewProvider implements vscode.WebviewViewProvider {
     if (!this._view) return
     this._view.webview.html = renderLoading()
   }
+
+  isVisible(): boolean {
+    return !!this._view?.visible
+  }
 }
 
 function showSectionLoading(...sections: string[]): void {
@@ -367,7 +378,31 @@ export function refreshOverview(): void {
     refreshAll()
     return
   }
+  // Pull the latest SWR-backed slices before re-rendering. Without this, the
+  // 5 s auto-refresh tick and the gitState/bazelCache callbacks both read
+  // back the frozen snapshot from the last full refreshStateCache() — e.g.
+  // re-enabling the pre-commit hook would leave the cockpit's "bypassed"
+  // chip stuck on the previous state until the user triggered refreshAll().
+  const g = getGitState()
+  const folder = vscode.workspace.workspaceFolders?.[0]
+  const preCommitDismissed = vscode.workspace
+    .getConfiguration('cmk.cockpit.git', folder?.uri)
+    .get<boolean>('ignorePreCommit', false)
+  _stateCache = {
+    ..._stateCache,
+    gitState: {
+      preCommitSkipping: g.preCommitSkipping,
+      preCommitDismissed,
+      preCommitMissing: g.preCommitMissing,
+      qaTestDataDirty: g.qaTestDataDirty
+    },
+    bazelCache: getBazelCacheSnapshot()
+  }
   _providers['overview']?.refresh()
+}
+
+function overviewConsumersVisible(): boolean {
+  return _providers['overview']?.isVisible() ?? false
 }
 
 export function registerSidebar(
@@ -461,6 +496,22 @@ export function registerSidebar(
     configWatcher.onDidCreate(() => refreshAll())
     context.subscriptions.push(configWatcher)
 
+    // Pre-commit toggle reactivity: watch the active hook *and* the cmk-
+    // disabled stash so cockpit `bypassed` chip changes land within ~100 ms
+    // of the toggle. Invalidates gitState's TTL so the next refresh doesn't
+    // read back the cached pre-toggle value.
+    const preCommitWatcher = vscode.workspace.createFileSystemWatcher(
+      new vscode.RelativePattern(wsPath, '.git/hooks/pre-commit*')
+    )
+    const onPreCommitChange = (): void => {
+      invalidateGitState()
+      refreshAll()
+    }
+    preCommitWatcher.onDidCreate(onPreCommitChange)
+    preCommitWatcher.onDidChange(onPreCommitChange)
+    preCommitWatcher.onDidDelete(onPreCommitChange)
+    context.subscriptions.push(preCommitWatcher)
+
     // Cockpit hyper-reactivity: watch the canonical venv binary so build-status
     // changes (rebuild, clean) reflect within ~100 ms.
     const venvWatcher = vscode.workspace.createFileSystemWatcher(
@@ -482,8 +533,13 @@ export function registerSidebar(
 
   // Overview-only auto-refresh: cheap re-render every 5 s catches background-
   // resolved state (OMD stale-while-revalidate, Pylance memory poll, dev-site
-  // update check) without paying the cost of a full refreshAll.
-  const overviewInterval = setInterval(() => refreshOverview(), 5000)
+  // update check) without paying the cost of a full refreshAll. Skipped
+  // whenever no cockpit consumer is visible — saves ~720 HTML rebuilds/hour
+  // of pure churn while the user is editing code in another sidebar.
+  const overviewInterval = setInterval(() => {
+    if (!overviewConsumersVisible()) return
+    refreshOverview()
+  }, 5000)
   context.subscriptions.push({ dispose: () => clearInterval(overviewInterval) })
 
   for (const section of SECTIONS) {

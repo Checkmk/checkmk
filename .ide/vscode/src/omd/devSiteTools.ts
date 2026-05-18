@@ -6,6 +6,7 @@
 import * as vscode from 'vscode'
 
 import { error, log } from '../core/log'
+import { loadPersisted, savePersisted } from '../core/persistedCache'
 import { safeExecAsync } from '../core/shell'
 import { runCommand, waitForTask } from '../core/tasks'
 import { versionNewer } from '../core/version'
@@ -70,19 +71,29 @@ export interface DevSiteToolsState {
 }
 
 const EMPTY_STATE: DevSiteToolsState = { installed: false, installedVersion: '' }
+const PERSIST_KEY = 'cmk.devSite.snapshot'
 
 let _stateCache: { state: DevSiteToolsState; timestamp: number } | null = null
 let _stateFetchPromise: Promise<void> | null = null
 let _onDevSiteRefresh: (() => void) | null = null
+let _devSiteHydrated = false
 
 export function setDevSiteRefreshCallback(cb: () => void): void {
   _onDevSiteRefresh = cb
+}
+
+function hydrateDevSiteFromPersisted(): void {
+  if (_devSiteHydrated) return
+  _devSiteHydrated = true
+  const persisted = loadPersisted<{ state: DevSiteToolsState; timestamp: number }>(PERSIST_KEY)
+  if (persisted) _stateCache = persisted
 }
 
 /** Sync getter used during sidebar render. Returns the last known value (or
  *  empty placeholders) immediately and triggers a background refresh that
  *  re-renders the sidebar when the new value lands. */
 export function getDevSiteToolsState(): DevSiteToolsState {
+  hydrateDevSiteFromPersisted()
   if (_stateCache && Date.now() - _stateCache.timestamp < DEV_SITE_CACHE_TTL) {
     return _stateCache.state
   }
@@ -100,6 +111,7 @@ async function scheduleDevSiteRefresh(): Promise<void> {
         installedVersion
       }
       _stateCache = { state, timestamp: Date.now() }
+      savePersisted(PERSIST_KEY, _stateCache)
       _onDevSiteRefresh?.()
     } catch (err) {
       error(`devSiteTools refresh failed: ${(err as Error).message}`)

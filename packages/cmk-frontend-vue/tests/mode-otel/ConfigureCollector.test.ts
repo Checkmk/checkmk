@@ -677,7 +677,7 @@ describe('ConfigureCollector', () => {
     function makePasswordConfig(id: string, title: string): PasswordConfig {
       return {
         general_props: { id, title, comment: '', docu_url: '' },
-        password_props: { password: 'secret', owned_by: ['admins', null], share_with: [] }
+        password_props: { password: ['secret', false], owned_by: ['admins', null], share_with: [] }
       }
     }
 

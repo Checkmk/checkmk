@@ -12,7 +12,7 @@ export interface PasswordConfig {
     docu_url: string
   }
   password_props: {
-    password: string
+    password: [string, boolean]
     owned_by: ['admins', null] | ['contact_group', string]
     share_with: string[]
   }

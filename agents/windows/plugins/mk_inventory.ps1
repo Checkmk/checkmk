@@ -392,9 +392,12 @@ function GetSoftwareFromFilesystem {
 
 Initialize
 $result = CreateTimestamp
-Write-Output $result
 if ($result -eq "Exiting the script because timestamp is too young.") {
     return
+}
+else {
+    # other cases are irrelevant: problems with I/O, lack of STATE_DIR, etc.
+    # some additional diags will be added with separate commit
 }
 $timeUntil = GetTimeUntil
 

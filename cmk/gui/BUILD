@@ -1181,29 +1181,6 @@ py_library(
 )
 
 py_library(
-    name = "product_usage_analytics_popup",
-    srcs = ["product_usage_analytics_popup.py"],
-    imports = ["../.."],
-    visibility = [
-        "//cmk:__subpackages__",
-        "//tests:__subpackages__",
-    ],
-    deps = [
-        ":config",
-        ":http",
-        ":log",
-        ":logged_in",
-        ":site_config",
-        "//cmk/gui/htmllib:html",
-        "//cmk/gui/utils:product_usage_analytics_popup_cookie",
-        "//cmk/gui/utils:urls",
-        "//cmk/product_usage",
-        "//cmk/utils:paths",
-        "//packages/cmk-shared-typing:cmk_shared_typing_py",
-    ],
-)
-
-py_library(
     name = "help",
     srcs = ["help.py"],
     imports = ["../.."],
@@ -2143,7 +2120,6 @@ py_library(
         ":permissions",
         ":plugin_registration",
         ":prediction",
-        ":product_usage_analytics_popup",
         ":pseudo_users",
         ":query_filters",
         ":role_types",
@@ -2275,7 +2251,6 @@ py_library(
         "//cmk/gui/utils:output_funnel",
         "//cmk/gui/utils:permission_verification",
         "//cmk/gui/utils:popups",
-        "//cmk/gui/utils:product_usage_analytics_popup_cookie",
         "//cmk/gui/utils:regex",
         "//cmk/gui/utils:rendering",
         "//cmk/gui/utils:request_context",

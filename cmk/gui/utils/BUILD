@@ -352,20 +352,6 @@ py_library(
 )
 
 py_library(
-    name = "product_usage_analytics_popup_cookie",
-    srcs = ["product_usage_analytics_popup_cookie.py"],
-    imports = ["../../.."],
-    visibility = [
-        "//cmk:__subpackages__",
-        "//tests:__subpackages__",
-    ],
-    deps = [
-        "//cmk/gui:http",
-        "//packages/cmk-ccc:site",
-    ],
-)
-
-py_library(
     name = "user_frontend_settings_cookie",
     srcs = ["user_frontend_settings_cookie.py"],
     imports = ["../../.."],

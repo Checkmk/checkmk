@@ -40,7 +40,7 @@ from cmk.gui.openapi.restful_objects.endpoint_family import EndpointFamilyRegist
 from cmk.gui.page_menu import PageMenu, PageMenuDropdown, PageMenuTopic
 from cmk.gui.pages import AjaxPage, PageContext, PageEndpoint, PageRegistry, PageResult
 from cmk.gui.permissions import permission_registry, PermissionSectionRegistry
-from cmk.gui.product_usage_analytics_popup import render_product_usage_analytics_popup
+from cmk.gui.product_usage_analytics.popup import render_product_usage_analytics_popup
 from cmk.gui.theme.current_theme import theme
 from cmk.gui.type_defs import IconNames, StaticIcon
 from cmk.gui.user_sites import get_configured_site_choices

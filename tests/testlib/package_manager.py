@@ -243,7 +243,7 @@ class ABCPackageManager(abc.ABC):
     def _execute(self, cmd: list[str | Path]) -> None:
         # Workaround to fix package installation issues
         # - systemctl in docker leads to: Failed to connect to bus: No such file or directory
-        if Path("/.dockerenv").exists():
+        if Path("/.dockerenv").exists() or bool(os.environ.get("POD_LABEL")):
             systemctl = Path("/bin/systemctl")
             if systemctl.exists():
                 run(["rm", "-f", systemctl.as_posix()], sudo=True)

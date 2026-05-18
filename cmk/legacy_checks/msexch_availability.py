@@ -3,36 +3,37 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
-
-
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.plugins.windows.agent_based.libwmi import parse_wmi_table
-from cmk.plugins.windows.agent_based.libwmi_legacy import (
-    inventory_wmi_table_total,
-    wmi_yield_raw_persec,
+from cmk.agent_based.v2 import AgentSection, CheckPlugin, CheckResult, DiscoveryResult
+from cmk.plugins.windows.agent_based.libwmi import (
+    check_wmi_raw_persec,
+    discover_wmi_table_total,
+    parse_wmi_table,
+    WMISection,
 )
 
-check_info = {}
+
+def discover_msexch_availability(section: WMISection) -> DiscoveryResult:
+    yield from discover_wmi_table_total(section)
 
 
-def discover_msexch_availability(parsed):
-    return inventory_wmi_table_total(parsed)
-
-
-def check_msexch_availability(item, params, parsed):
-    yield from wmi_yield_raw_persec(
-        parsed[""],
-        item,
+def check_msexch_availability(section: WMISection) -> CheckResult:
+    yield from check_wmi_raw_persec(
+        section[""],
+        "",
         "AvailabilityRequestssec",
-        infoname="Requests/sec",
-        perfvar="requests_per_sec",
+        metric_name="requests_per_sec",
+        label="Requests/sec",
     )
 
 
-check_info["msexch_availability"] = LegacyCheckDefinition(
+agent_section_msexch_availability = AgentSection(
     name="msexch_availability",
     parse_function=parse_wmi_table,
+)
+
+
+check_plugin_msexch_availability = CheckPlugin(
+    name="msexch_availability",
     service_name="Exchange Availability Service",
     discovery_function=discover_msexch_availability,
     check_function=check_msexch_availability,

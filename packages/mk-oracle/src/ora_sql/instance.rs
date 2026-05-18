@@ -28,7 +28,7 @@ use crate::config::defines::defaults::SECTION_SEPARATOR;
 use crate::config::ora_sql::CustomInstance;
 use crate::config::section::names;
 use crate::ora_sql::detect::dump_detected_sids;
-use crate::ora_sql::spots::{make_spot_work_results, SpotWorks};
+use crate::ora_sql::spots::{make_spot_work_results, PostProcessing, QueryBlock, SpotWorks};
 use anyhow::{Context, Result};
 use std::sync::{Arc, Mutex};
 
@@ -156,16 +156,21 @@ fn process_spot_works(works: Vec<SpotWorks>) -> Vec<String> {
             log::info!("Spot: {:?}", spot.target());
             instance_works
                 .iter()
-                .flat_map(|(instance, queries)| {
+                .flat_map(|(instance, query_blocks)| {
                     log::info!("Instance: {}", instance);
                     let r = spot.clone().connect(None);
                     match r {
-                        Ok(opened) => queries
+                        Ok(opened) => query_blocks
                             .iter()
-                            .map(|(query, title)| {
-                                log::info!("Query: {}", title);
-                                let mut results = vec![title.clone()];
-                                results.extend(_exec_queries(&opened, instance, query));
+                            .map(|query_block| {
+                                log::info!("Query: {}", query_block.title);
+                                let mut results = vec![query_block.title.clone()];
+                                results.extend(_exec_queries(
+                                    &opened,
+                                    instance,
+                                    &query_block.queries,
+                                    &query_block.post_processing,
+                                ));
                                 results.join("\n")
                             })
                             .collect::<Vec<String>>(),
@@ -188,14 +193,14 @@ fn process_spot_works_para(works: Vec<SpotWorks>, threads: usize) -> Vec<String>
             log::info!("Spot: {:?}", spot.target());
             instance_works
                 .iter()
-                .flat_map(|(instance, queries)| {
+                .flat_map(|(instance, query_blocks)| {
                     log::info!("Instance: {}", instance);
                     let spots = open_spots(&spot, instance, threads);
                     if spots.is_empty() {
                         log::error!("Failed to connect to instance {}", instance);
                         return vec![];
                     }
-                    let job_data: Vec<JobData> = make_job_data(spots, queries);
+                    let job_data: Vec<JobData> = make_job_data(spots, query_blocks);
                     let thread_pool = build_thread_pool(threads);
                     let global_output = Arc::new(Mutex::new(Vec::new()));
                     thread_pool.scope(|scope| {
@@ -203,16 +208,16 @@ fn process_spot_works_para(works: Vec<SpotWorks>, threads: usize) -> Vec<String>
                             let thread_output = Arc::clone(&global_output);
                             scope.spawn(move |_| {
                                 let result = job
-                                    .blocks
+                                    .query_blocks
                                     .iter()
-                                    .flat_map(|block| {
-                                        let (queries, title) = block;
+                                    .flat_map(|query_block| {
                                         log::debug!("Executing queries for instance: {}", instance);
                                         _exec_queries_on_spot(
                                             &job.spot,
                                             instance,
-                                            queries,
-                                            title.as_str(),
+                                            &query_block.queries,
+                                            query_block.title.as_str(),
+                                            &query_block.post_processing,
                                         )
                                     })
                                     .collect::<Vec<String>>();
@@ -255,24 +260,24 @@ fn build_thread_pool(threads: usize) -> rayon::ThreadPool {
         .unwrap()
 }
 
-/// builds a table [(OpenedSpot, ([Query, ...], Title)), ...]
-fn make_job_data(spots: Vec<Spot<Opened>>, queries: &[(Vec<SqlQuery>, String)]) -> Vec<JobData> {
+/// builds a table [(OpenedSpot, [QueryBlock, ...]), ...]
+fn make_job_data(spots: Vec<Spot<Opened>>, query_blocks: &[QueryBlock]) -> Vec<JobData> {
     let job_count = spots.len();
-    let chunk_size = queries.len().div_ceil(job_count);
-    let query_chunks = queries.chunks(chunk_size);
+    let chunk_size = query_blocks.len().div_ceil(job_count);
+    let chunks = query_blocks.chunks(chunk_size);
     println!(
         "{} {} {} {}",
-        queries.len(),
+        query_blocks.len(),
         job_count,
         chunk_size,
-        query_chunks.len()
+        chunks.len()
     );
     spots
         .into_iter()
-        .zip(query_chunks)
+        .zip(chunks)
         .map(|(spot, chunk)| JobData {
             spot,
-            blocks: chunk.to_vec(),
+            query_blocks: chunk.to_vec(),
         })
         .collect::<Vec<_>>()
 }
@@ -283,22 +288,13 @@ fn _exec_queries_on_spot(
     instance_name: &InstanceName,
     queries: &[SqlQuery],
     title: &str,
+    post_processing: &PostProcessing,
 ) -> Vec<String> {
     queries
         .iter()
         .flat_map(|query| {
             log::debug!("Executing query: {}", query.as_str());
-            let mut result = spot
-                .query_table(query)
-                .format(&SECTION_SEPARATOR.to_string())
-                .unwrap_or_else(|e| {
-                    log::error!(
-                        "Failed to execute query for instance {}: {}",
-                        instance_name,
-                        e
-                    );
-                    vec![e.to_string()]
-                });
+            let mut result = run_query(spot.query_table(query), post_processing, instance_name);
             result.insert(0, title.to_string());
             result
         })
@@ -309,33 +305,43 @@ const MAX_THREAD_COUNT: usize = 8;
 
 struct JobData {
     spot: Spot<Opened>,
-    blocks: Vec<(Vec<SqlQuery>, String)>,
+    query_blocks: Vec<QueryBlock>,
 }
 
 fn _exec_queries(
     spot: &OpenedSpot,
     service_name: &InstanceName,
     queries: &[SqlQuery],
+    post_processing: &PostProcessing,
 ) -> Vec<String> {
     log::info!("Connected to : {}", service_name);
     queries
         .iter()
         .flat_map(|query| {
             log::debug!("Executing query: {}", query.as_str());
-            let result = spot
-                .query_table(query)
-                .format(&SECTION_SEPARATOR.to_string())
-                .unwrap_or_else(|e| {
-                    log::error!(
-                        "Failed to execute query for instance {}: {}",
-                        service_name,
-                        e
-                    );
-                    vec![e.to_string()]
-                });
-            result
+            run_query(spot.query_table(query), post_processing, service_name)
         })
         .collect::<Vec<_>>()
+}
+
+/// Render a `QueryResult` to agent-output lines. For custom-metric sections
+/// (`PostProcessing::Passthrough`) each SELECT-ed cell is emitted as-is — the
+/// SQL is contracted to already produce `details:...` / `perfdata:...` /
+/// `exit:...` rows. For predefined sections we join the row's columns with the
+/// standard agent separator.
+fn run_query(
+    result: crate::ora_sql::backend::QueryResult,
+    post_processing: &PostProcessing,
+    instance: &InstanceName,
+) -> Vec<String> {
+    let outcome = match post_processing {
+        PostProcessing::Passthrough => result.into_rows_passthrough(),
+        PostProcessing::Standard => result.format(&SECTION_SEPARATOR.to_string()),
+    };
+    outcome.unwrap_or_else(|e| {
+        log::error!("Failed to execute query for instance {}: {}", instance, e);
+        vec![e.to_string()]
+    })
 }
 
 // tested only in integration tests

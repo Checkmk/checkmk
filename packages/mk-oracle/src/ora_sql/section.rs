@@ -17,7 +17,7 @@
 use crate::config::{self, section, section::names};
 use crate::emit::{header, signaling_header};
 use crate::ora_sql::sqls;
-use crate::types::{InstanceNumVersion, SectionName, Tenant};
+use crate::types::{InstanceName, InstanceNumVersion, ItemValue, SectionName, Tenant};
 use crate::types::{SectionAffinity, SqlBindParam, SqlQuery};
 use crate::{constants, utils};
 use anyhow::Result;
@@ -39,6 +39,8 @@ pub struct Section {
     cache_age: Option<u32>,
     header_name: String,
     section_affinity: SectionAffinity,
+    item_value: Option<ItemValue>,
+    inline_sql: Option<String>,
 }
 
 impl Section {
@@ -59,6 +61,8 @@ impl Section {
             cache_age,
             header_name: section.name().clone().into(),
             section_affinity: section.affinity().clone(),
+            item_value: section.item_value().cloned(),
+            inline_sql: section.sql().map(str::to_owned),
         }
     }
 
@@ -75,7 +79,31 @@ impl Section {
             names::ASM_INSTANCE => names::INSTANCE, // ASM_INSTANCE is an instance section
             _ => &self.header_name,
         };
-        header(&(real_name.to_string() + &self.cached_header()), self.sep)
+        // For custom-metric sections the cached marker lives on the subsection
+        // header (see to_work_header_for); the section header stays plain so
+        // the existing oracle_sql server-side parser continues to work.
+        let suffix = if self.item_value.is_some() {
+            String::new()
+        } else {
+            self.cached_header()
+        };
+        header(&(real_name.to_string() + &suffix), self.sep)
+    }
+
+    /// Build the instance-aware emit header for this section.
+    /// For predefined sections this is just the section header
+    /// (`<<<oracle_xxx:sep(N)>>>`). For custom-metric sections it additionally
+    /// emits the subsection header `[[[<ORACLE_ID>|<item>]]]`, with `|cached(...)`
+    /// appended when the metric is async.
+    pub fn to_work_header_for(&self, instance: &InstanceName) -> String {
+        let section_header = self.to_work_header();
+        match self.item_value.as_ref() {
+            None => section_header,
+            Some(item) => {
+                let cached = self.cached_subsection_suffix();
+                format!("{}\n[[[{}|{}{}]]]", section_header, instance, item, cached)
+            }
+        }
     }
 
     fn cached_header(&self) -> String {
@@ -88,6 +116,26 @@ impl Section {
                 )
             })
             .unwrap_or_default()
+    }
+
+    fn cached_subsection_suffix(&self) -> String {
+        self.cache_age
+            .map(|age| {
+                format!(
+                    "|cached({},{})",
+                    utils::get_utc_now().unwrap_or_default(),
+                    age
+                )
+            })
+            .unwrap_or_default()
+    }
+
+    pub fn item_value(&self) -> Option<&ItemValue> {
+        self.item_value.as_ref()
+    }
+
+    pub fn inline_sql(&self) -> Option<&str> {
+        self.inline_sql.as_deref()
     }
 
     pub fn name(&self) -> &SectionName {
@@ -126,7 +174,9 @@ impl Section {
         params: &[SqlBindParam],
     ) -> Option<Vec<SqlQuery>> {
         Some(
-            self.find_custom_query(sql_dir, instance_version)
+            self.inline_sql
+                .clone()
+                .or_else(|| self.find_custom_query(sql_dir, instance_version))
                 .or_else(|| {
                     get_sql_id(&self.header_name)
                         .and_then(|s| Self::find_known_query(s, instance_version, tenant))
@@ -295,5 +345,67 @@ mod tests {
         assert_eq!(get_sql_id(names::IO_STATS).unwrap(), sqls::Id::IoStats);
         // TODO: add all..
         assert!(get_sql_id("").is_none());
+    }
+
+    fn make_custom_metric_section(name: &str, async_: bool, cache_age: u32) -> Section {
+        let item = ItemValue::from(name.to_string());
+        let mut builder = section::SectionBuilder::new(name)
+            .sql("select 'details:hi' from dual")
+            .set_item_value(item);
+        if async_ {
+            builder = builder.set_async(true);
+        }
+        Section::new(&builder.build(), cache_age)
+    }
+
+    #[test]
+    fn test_custom_metric_section_header_uses_sep_58() {
+        let sync = make_custom_metric_section("product_price", false, 600);
+        assert_eq!(sync.to_work_header(), "<<<oracle_sql:sep(58)>>>");
+
+        // Even for an async metric, the section header stays plain — the
+        // cached(...) marker lives on the subsection header per tech design.
+        let async_ = make_custom_metric_section("last_sessions", true, 600);
+        assert_eq!(async_.to_work_header(), "<<<oracle_sql:sep(58)>>>");
+    }
+
+    #[test]
+    fn test_custom_metric_work_header_for_includes_subsection() {
+        let sync = make_custom_metric_section("product_price", false, 600);
+        let header = sync.to_work_header_for(&InstanceName::from("ORCL"));
+        assert_eq!(header, "<<<oracle_sql:sep(58)>>>\n[[[ORCL|product_price]]]");
+    }
+
+    #[test]
+    fn test_async_cached_marker_lives_on_subsection_header() {
+        let async_ = make_custom_metric_section("last_sessions", true, 600);
+        let header = async_.to_work_header_for(&InstanceName::from("ORCL"));
+        // section header must not carry cached(...)
+        assert!(header.starts_with("<<<oracle_sql:sep(58)>>>\n"));
+        // subsection header must carry cached(...,600)]]] suffix
+        assert!(
+            header.contains("[[[ORCL|last_sessions|cached("),
+            "subsection header missing cached marker: {header}"
+        );
+        assert!(header.ends_with(",600)]]]"), "unexpected tail: {header}");
+    }
+
+    #[test]
+    fn test_inline_sql_takes_precedence_over_file_lookup() {
+        let cfg_section = section::SectionBuilder::new("product_price")
+            .sql("select 'details:inline' from dual")
+            .set_item_value(ItemValue::from("product_price".to_string()))
+            .build();
+        let runtime = Section::new(&cfg_section, 0);
+        let queries = runtime
+            .find_queries(
+                None, // no sql_dir -> file lookup is a no-op
+                InstanceNumVersion::from(0),
+                Tenant::All,
+                &[],
+            )
+            .expect("inline sql should yield queries");
+        assert_eq!(queries.len(), 1);
+        assert_eq!(queries[0].as_str(), "select 'details:inline' from dual");
     }
 }

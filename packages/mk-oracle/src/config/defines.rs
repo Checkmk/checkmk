@@ -47,7 +47,8 @@ pub mod keys {
     pub const ENGINE: &str = "engine";
 
     pub const SECTIONS: &str = "sections";
-    pub const CUSTOM_QUERIES: &str = "custom_queries";
+    pub const CUSTOM_METRICS: &str = "custom_metrics";
+    pub const SQL: &str = "sql";
     pub const CACHE_AGE: &str = "cache_age";
     pub const IS_ASYNC: &str = "is_async";
     pub const DISABLED: &str = "disabled";
@@ -110,4 +111,5 @@ pub mod defaults {
 
     pub const TRUST_SERVER_CERTIFICATE: bool = true;
     pub const SECTION_SEPARATOR: char = '|';
+    pub const CUSTOM_METRIC_SEPARATOR: char = ':';
 }

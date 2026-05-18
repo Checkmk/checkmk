@@ -74,9 +74,7 @@ def snmpsim_fixture(site: Site, snmp_data_dir: Path) -> Iterator[None]:
 
         try:
             for process_def in process_definitions:
-                wait_until(
-                    _create_listening_condition(process_def), timeout=TIMEOUT_AFTER, interval=1
-                )
+                wait_until(lambda: _is_listening(process_def), timeout=TIMEOUT_AFTER, interval=1)
 
             yield
         finally:
@@ -184,13 +182,6 @@ def _create_auth_list():
             "--v3-priv-proto=AES192",
         ],
     ]
-
-
-# This function is needed because Pylint raises these two error if
-# you create a function depending on a loop variable inside the loop:
-# W0631 (undefined-loop-variable), W0640 (cell-var-from-loop)
-def _create_listening_condition(process_def):
-    return lambda: _is_listening(process_def)
 
 
 def _is_listening(process_def: ProcessDef) -> bool:

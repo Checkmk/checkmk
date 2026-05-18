@@ -75,7 +75,7 @@ void main() {
         |USE_CASE:.......................... │${params.USE_CASE}│
         |CIPARAM_REMOVE_RC_CANDIDATES:...... │${params.CIPARAM_REMOVE_RC_CANDIDATES}│
         |CIPARAM_OVERRIDE_DOCKER_TAG_BUILD:. │${params.CIPARAM_OVERRIDE_DOCKER_TAG_BUILD}│
-        |FAKE_ARTIFACTS:............ │${params.FAKE_ARTIFACTS}│
+        |FAKE_ARTIFACTS:.................... │${params.FAKE_ARTIFACTS}│
         |cmk_version:....................... │${cmk_version}│
         |cmk_version_rc_aware:.............. │${cmk_version_rc_aware}│
         |deliverables_dir:.................. │${deliverables_dir}│

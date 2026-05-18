@@ -17,8 +17,7 @@ void main() {
     def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
     def package_helper = load("${checkout_dir}/buildscripts/scripts/utils/package_helper.groovy");
 
-    // TODO: we should always use USE_CASE directly from the job parameters
-    def use_case = (USE_CASE == "fips") ? USE_CASE : "daily_tests";
+    def use_case = (params.USE_CASE == "fips") ? params.USE_CASE : "daily_tests";
     def all_distros = [];
     def selected_distros = [];
     def safe_branch_name = versioning.safe_branch_name();
@@ -28,9 +27,9 @@ void main() {
         // run everything requiring python in this container
         all_distros = versioning.get_distros(override: "all");
         selected_distros = versioning.get_distros(
-            edition: EDITION,
+            edition: params.EDITION,
             use_case: use_case,
-            override: OVERRIDE_DISTROS
+            override: params.OVERRIDE_DISTROS
         );
     }
 

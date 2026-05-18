@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Mapping, Sequence
+from collections.abc import Iterator, Mapping, Sequence
 
 import pytest
 
@@ -28,6 +28,7 @@ from cmk.gui.graphing._graph_templates import (
     sort_registered_graph_plugins,
     TemplateGraphSpecification,
 )
+from cmk.gui.graphing._legacy import check_metrics
 from cmk.gui.graphing._rrd import HostGraphRow, ServiceGraphRow
 from cmk.gui.graphing._translated_metrics import (
     compute_translated_metrics,
@@ -891,6 +892,59 @@ def test_resolve_graph_id_from_index_no_metrics(monkeypatch: pytest.MonkeyPatch)
         )
         is None
     )
+
+
+# Synthetic `check_metrics` translations that mirror the production
+# perf-data → metric-name mappings the parametrise cases below assume.
+# The real production translations come from graphing plug-ins under
+# `cmk/plugins/*/graphing/`.
+# We register the synthetic equivalents directly into the global registry
+# the test target shares with production code so the test covers the full
+# `translate_metrics`→ `_evaluate_graph_plugins` integration without
+# depending on any specific plug-in being on the runfiles path.
+_SYNTHETIC_GRAPH_TEMPLATE_TRANSLATIONS = {
+    "check_mk-kernel_util": {
+        "wait": {"name": "io_wait"},
+        "guest": {"name": "cpu_util_guest"},
+        "steal": {"name": "cpu_util_steal"},
+    },
+    "check_mk-lxc_container_cpu": {
+        "wait": {"name": "io_wait"},
+    },
+    "check_mk-winperf_processor_util": {
+        "util": {"name": "util_numcpu_as_max"},
+    },
+    "check_mk-statgrab_cpu": {
+        "guest": {"name": "cpu_util_guest"},
+        "steal": {"name": "cpu_util_steal"},
+    },
+    "check_mk-statgrab_mem": {
+        "ramused": {"name": "mem_used"},
+        "swapused": {"name": "swap_used"},
+        "memused": {"name": "mem_lnx_total_used"},
+    },
+    "check_mk-lparstat_aix_cpu_util": {
+        "wait": {"name": "io_wait"},
+    },
+}
+
+
+@pytest.fixture(autouse=True)
+def _install_synthetic_translations() -> Iterator[None]:
+    """Mutate the shared `check_metrics` dict with the synthetic translations
+    needed by `test__evaluate_graph_plugins_*` and `test_template_recipes_fs`,
+    then restore the previous state on teardown."""
+    saved = {k: check_metrics.get(k) for k in _SYNTHETIC_GRAPH_TEMPLATE_TRANSLATIONS}
+    for check_command, translations in _SYNTHETIC_GRAPH_TEMPLATE_TRANSLATIONS.items():
+        check_metrics[check_command] = translations  # type: ignore[assignment]
+    try:
+        yield
+    finally:
+        for check_command, previous in saved.items():
+            if previous is None:
+                check_metrics.pop(check_command, None)
+            else:
+                check_metrics[check_command] = previous
 
 
 @pytest.mark.parametrize(

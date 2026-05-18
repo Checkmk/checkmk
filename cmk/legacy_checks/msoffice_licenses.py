@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
-
 # Example output:
 # <<<msoffice_licenses>>>
 # mggraph:VISIOCLIENT 11 0 10
@@ -19,17 +17,28 @@
 # mggraph:PROJECTPROFESSIONAL 10 0 10
 # mggraph:ATP_ENTERPRISE 1040 0 988
 
+from collections.abc import Mapping
+from typing import Any
 
-# mypy: disable-error-code="var-annotated"
+from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v2 import (
+    AgentSection,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Metric,
+    render,
+    Result,
+    Service,
+    State,
+    StringTable,
+)
 
-from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
-from cmk.agent_based.v2 import render
-
-check_info = {}
+Section = Mapping[str, Any]
 
 
-def parse_msoffice_licenses(string_table):
-    parsed = {}
+def parse_msoffice_licenses(string_table: StringTable) -> Section:
+    parsed: dict[str, Any] = {}
 
     for line in string_table:
         if len(line) >= 1 and "Microsoft.Graph module is not installed" in " ".join(line):
@@ -51,67 +60,68 @@ def parse_msoffice_licenses(string_table):
     return parsed
 
 
-def check_msoffice_licenses(item, params, parsed):
-    if "_error" in parsed:
-        yield 2, parsed["_error"]
+def discover_msoffice_licenses(section: Section) -> DiscoveryResult:
+    yield from (Service(item=item) for item in section)
+
+
+def check_msoffice_licenses(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
+    if "_error" in section:
+        yield Result(state=State.CRIT, summary=str(section["_error"]))
         return
-    if not (item_data := parsed.get(item)):
+    if not (item_data := section.get(item)):
         return
     lcs_active = item_data["active"]
     lcs_consumed = item_data["consumed"]
 
-    if lcs_active:
-        warn, crit = params["usage"]
-        warn_abs, crit_abs = None, None
-        warn_perc, crit_perc = None, None
-        if isinstance(warn, float):
-            warn_perc, crit_perc = warn, crit
-        else:
-            warn_abs, crit_abs = warn, crit
-
-        # the agent plug-in also gathers the last 3 unused licenses with no
-        # active licenses. To handle this, we only output consumed licenses for
-        # licenses with active ones
-        yield check_levels(
-            lcs_consumed,
-            "licenses",
-            (warn_abs, crit_abs),
-            human_readable_func=int,
-            infoname="Consumed licenses",
-        )
-
-        yield (
-            0,
-            "Active licenses: %s" % lcs_active,
-            [("licenses_total", lcs_active)],
-        )
-
-        usage = lcs_consumed * 100.0 / (lcs_active)
-        yield check_levels(
-            usage,
-            "license_percentage",
-            (warn_perc, crit_perc),
-            human_readable_func=render.percent,
-            infoname="Usage",
-            boundaries=(0, 100),
-        )
-
-    else:
-        yield 0, "No active licenses"
+    if not lcs_active:
+        yield Result(state=State.OK, summary="No active licenses")
         return
+
+    warn, crit = params["usage"]
+    levels_abs: tuple[float, float] | None = None
+    levels_perc: tuple[float, float] | None = None
+    if isinstance(warn, float):
+        levels_perc = (warn, crit)
+    else:
+        levels_abs = (warn, crit)
+
+    # the agent plug-in also gathers the last 3 unused licenses with no
+    # active licenses. To handle this, we only output consumed licenses for
+    # licenses with active ones
+    yield from check_levels(
+        lcs_consumed,
+        levels_upper=levels_abs,
+        metric_name="licenses",
+        render_func=lambda v: str(int(v)),
+        label="Consumed licenses",
+    )
+
+    yield Result(state=State.OK, summary=f"Active licenses: {lcs_active}")
+    yield Metric("licenses_total", lcs_active)
+
+    usage = lcs_consumed * 100.0 / lcs_active
+    yield from check_levels(
+        usage,
+        levels_upper=levels_perc,
+        metric_name="license_percentage",
+        render_func=render.percent,
+        label="Usage",
+        boundaries=(0, 100),
+    )
 
     lcs_warning_units = item_data["warning_units"]
     if lcs_warning_units:
-        yield 0, " Warning units: %s" % lcs_warning_units
+        yield Result(state=State.OK, summary=f" Warning units: {lcs_warning_units}")
 
 
-def discover_msoffice_licenses(section):
-    yield from ((item, {}) for item in section)
-
-
-check_info["msoffice_licenses"] = LegacyCheckDefinition(
+agent_section_msoffice_licenses = AgentSection(
     name="msoffice_licenses",
     parse_function=parse_msoffice_licenses,
+)
+
+
+check_plugin_msoffice_licenses = CheckPlugin(
+    name="msoffice_licenses",
     service_name="MS Office Licenses %s",
     discovery_function=discover_msoffice_licenses,
     check_function=check_msoffice_licenses,

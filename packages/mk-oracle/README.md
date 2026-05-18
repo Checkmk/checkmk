@@ -13,6 +13,7 @@
   - [Discovery](#discovery)
   - [Options](#options)
   - [Sections](#sections)
+  - [Custom SQL Metrics](#custom-sql-metrics)
   - [Complete Configuration Example](#complete-configuration-example)
 - [Oracle Wallet Authentication](#oracle-wallet-authentication)
   - [Default Configuration](#default-configuration)
@@ -442,6 +443,71 @@ sections:
   - tablespaces:
       is_async: yes
 ```
+
+### Custom SQL Metrics
+
+Use `custom_metrics` to define ad-hoc SQL queries whose output is emitted under the legacy `oracle_sql` agent section. Each entry is keyed by the **item name** that becomes the service item on the Checkmk site (the `<item>` in `[[[SID|item]]]`).
+
+```yaml
+oracle:
+  main:
+    connection:
+      hostname: localhost
+    authentication:
+      username: system
+      password: oracle
+      type: standard
+    custom_metrics:
+      - product_price: # item name -> service "<SID> SQL product_price"
+          sql: "SELECT 'details:Price OK' FROM dual"
+    instances:
+      - service_name: FREE
+        custom_metrics:
+          - last_sessions: # runs only against this instance
+              sql: "SELECT 'details:per-instance' FROM dual"
+```
+
+Resulting agent output:
+
+```
+<<<oracle_sql:sep(58)>>>
+[[[FREE|product_price]]]
+details:Price OK
+<<<oracle_sql:sep(58)>>>
+[[[FREE|last_sessions]]]
+details:per-instance
+```
+
+#### Placement and merge rules
+
+- `custom_metrics` may appear at the **global** level (under `oracle.main`) or under any **per-instance** entry (`oracle.main.instances[*]`).
+- A given instance executes the union of global and its own per-instance metrics.
+- If a global and a per-instance entry share the same item name, the per-instance one wins.
+
+#### SQL contract
+
+Each SQL must produce rows with a single string column whose value starts with one of the recognised prefixes:
+
+| Prefix      | Purpose                                                |
+| ----------- | ------------------------------------------------------ |
+| `details:`  | First line of the service summary                      |
+| `perfdata:` | `NAME=VALUE;WARN;CRIT;MAX` performance metric          |
+| `long:`     | Additional lines in the long service output            |
+| `exit:`     | Service state: `0=OK`, `1=WARN`, `2=CRIT`, `3=UNKNOWN` |
+
+The plugin emits the section header (`<<<oracle_sql:sep(58)>>>`) and the subsection header (`[[[<SID>|<item>]]]`) itself; the SQL only provides the body rows.
+
+Each row returned by the SQL is emitted **as-is**: the plugin does not reinterpret, reorder, or join columns. In practice this means custom-metric SQL should `SELECT` a single string column whose value is already a complete line (e.g. `'details:OK'`), and emit one such row per output line.
+
+#### Differences from the legacy `mk_oracle` bash plugin
+
+Custom SQL metrics in this plugin replace the legacy `SQLS_*` configuration variables and `SQLS_SECTIONS` shell-function-based sections. Key differences:
+
+- **No SQL\*Plus directives.** Statements run through the Oracle OCI driver, not `sqlplus`, so `PROMPT`, `SET …`, `SPOOL`, `WHENEVER SQLERROR`, and similar `SQL*Plus`-only commands are not available. Use plain SQL.
+- **Inline SQL only.** Define the query inline via `sql: "..."`. The legacy `SQLS_DIR` / `SQLS_SQL` file-based form is not supported in this iteration.
+- **Item name is the YAML key.** Equivalent to the legacy `SQLS_ITEM_NAME` (replaces `SQLS_SECTIONS` shell functions).
+- **Cache marker location.** For cached (async) sections, the legacy `cached(<since>,<age>)` marker is emitted on the **subsection** header `[[[<SID>|<item>|cached(...)]]]`, not on the section header. The section header is always plain `<<<oracle_sql:sep(58)>>>`.
+- **Separator is fixed at `:` (ASCII 58).** The output is always emitted under `oracle_sql:sep(58)` so the existing server-side `oracle_sql` check plugin processes it unchanged.
 
 ### Complete Configuration Example
 

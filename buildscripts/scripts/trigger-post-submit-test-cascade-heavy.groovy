@@ -24,12 +24,20 @@ def main() {
         "test-update-cee",
     ];
 
+    def trigger_xss_crawl = false;
+    // The time 1800-2000 has been chosen to not collide with the CI maintenance window
+    if (Calendar.getInstance().get(Calendar.HOUR_OF_DAY) in 18..20) {
+        trigger_xss_crawl = true;
+    }
+
     print(
         """
         |===== CONFIGURATION ===============================
         |safe_branch_name:.... │${safe_branch_name}│
         |job_names:........... │${job_names}│
         |checkout_dir:........ │${checkout_dir}│
+        |branch_base_folder:.. │${checkout_dir}│
+        |trigger_xss_crawl:... │${trigger_xss_crawl}│
         |===================================================
         """.stripMargin());
 
@@ -56,6 +64,31 @@ def main() {
             }
         }]
     }
+
+    stages += [("Test XSS") : {
+        smart_stage(
+            name: "Trigger test-xss",
+            condition: trigger_xss_crawl,
+        ) {
+            smart_build(
+                // see global-defaults.yml, needs to run in minimal container
+                use_upstream_build: true,
+                force_build: force_build,
+                relative_job_name: "${branch_base_folder}/heavy/test-xss-crawl-node",
+                build_params: [
+                    CUSTOM_GIT_REF: effective_git_ref,
+                ],
+                build_params_no_check: [
+                    CIPARAM_OVERRIDE_BUILD_NODE: params.CIPARAM_OVERRIDE_BUILD_NODE,
+                    CIPARAM_CLEANUP_WORKSPACE: params.CIPARAM_CLEANUP_WORKSPACE,
+                    CIPARAM_BISECT_COMMENT: params.CIPARAM_BISECT_COMMENT,
+                    CIPARAM_OVERRIDE_DOCKER_TAG_BUILD: params.CIPARAM_OVERRIDE_DOCKER_TAG_BUILD,
+                ],
+                no_remove_others: true, // do not delete other files in the dest dir
+                download: false,    // use copyArtifacts to avoid nested directories
+            );
+        }
+    }]
 
     inside_container_minimal(safe_branch_name: safe_branch_name) {
         currentBuild.result = parallel(stages).values().every { it } ? "SUCCESS" : "FAILURE";

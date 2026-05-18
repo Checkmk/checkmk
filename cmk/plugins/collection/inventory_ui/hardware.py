@@ -173,12 +173,3 @@ node_hardware_components_unknowns = Node(
         },
     ),
 )
-
-node_hardware_storage_controller = Node(
-    name="hardware_storage_controller",
-    path=["hardware", "storage", "controller"],
-    title=Title("Controller"),
-    attributes={
-        "version": TextField(Title("Version")),
-    },
-)

@@ -17,6 +17,7 @@ py_library(
     visibility = ["//visibility:public"],
     deps = [
         "//packages/cmk-plugin-apis:agent_based",
+        "//packages/cmk-plugin-apis:inventory_ui",
         "//packages/cmk-plugins/cmk/plugins/lib",
     ],
 )

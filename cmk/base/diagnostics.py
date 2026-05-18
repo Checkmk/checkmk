@@ -574,7 +574,7 @@ class DiagnosticsDump:
 
     def _write_console_output_to_file(self, tmp_dump_folder: Path) -> Path:
         logfile = tmp_dump_folder / f"console_{datetime.now().timestamp()}.log"
-        store.save_text_to_file(logfile, self._logger.content())
+        logfile.write_text(self._logger.content())
         return logfile
 
     def _get_filepaths(
@@ -703,7 +703,7 @@ class ABCDiagnosticsElementTextDump(ABCDiagnosticsElement):
         if not (infos := self.contents(omd_root)):
             raise DiagnosticsElementInfo("No data")
         filepath = tmp_dump_folder / self.filename
-        store.save_text_to_file(filepath, infos)
+        filepath.write_text(infos)
         yield filepath
 
     @property
@@ -1068,7 +1068,7 @@ class VendorDiagnosticsElement(ABCDiagnosticsElementTextDump):
         _AZURE_TAG = "7783-7084-3265-9085-8269-3286-77"
         vendor_info = {}
         for sys_file in _SYS_FILES:
-            file_content = store.load_text_from_file(self._dmi_id_path / sys_file).replace("\n", "")
+            file_content = (self._dmi_id_path / sys_file).read_text().replace("\n", "")
             vendor_info[sys_file] = (
                 ("Azure" if file_content == _AZURE_TAG else "Other")
                 if sys_file == "chassis_asset_tag"
@@ -1401,25 +1401,27 @@ class ABCCheckmkFilesDiagnosticsElement(ABCDiagnosticsElement):
             encryption = file_info.encryption
 
         if encryption == CheckmkFileEncryption.rot47:
-            with filepath.open("rb") as source:
-                json_data = json.dumps(deserialize_dump(source.read()), sort_keys=True, indent=4)
-                store.save_text_to_file(tmp_filepath, json_data)
+            tmp_filepath.write_text(
+                json.dumps(deserialize_dump(filepath.read_bytes()), sort_keys=True, indent=4)
+            )
         # We 'encrypt' only license thingies at the moment, so there is currently no need to
         # sanitize encrypted files
-        elif str(rel_filepath) == "multisite.d/sites.mk":
-            sites = store.load_from_mk_file(
-                filepath, key="sites", default=livestatus.SiteConfigurations({}), lock=False
-            )
+        elif rel_filepath == Path("multisite.d/sites.mk"):
             store.save_to_mk_file(
                 tmp_filepath,
                 key="sites",
                 value={
                     siteid: livestatus.sanitize_site_configuration(config)
-                    for siteid, config in sites.items()
+                    for siteid, config in store.load_from_mk_file(
+                        filepath,
+                        key="sites",
+                        default=livestatus.SiteConfigurations({}),
+                        lock=False,
+                    ).items()
                 },
             )
         else:
-            shutil.copy(str(filepath), str(tmp_filepath))
+            shutil.copy(filepath, tmp_filepath)
 
         passwords_redacted = redact_passwords_in_file(tmp_filepath, rel_filepath)
 
@@ -1648,9 +1650,7 @@ class PerformanceGraphsDiagnosticsElement(ABCDiagnosticsElement):
             raise DiagnosticsElementError("Verification of PDF document header failed")
 
         filepath = tmp_dump_folder / "performance_graphs.pdf"
-        with filepath.open("wb") as f:
-            f.write(response.content)
-
+        filepath.write_bytes(response.content)
         yield filepath
 
     def _get_response(self, checkmk_server_host: str) -> requests.Response:
@@ -1747,14 +1747,12 @@ class CMCDumpDiagnosticsElement(ABCDiagnosticsElement):
                 output = subprocess.check_output(
                     command, stderr=subprocess.STDOUT, timeout=15, encoding="utf-8"
                 )
-
             except subprocess.CalledProcessError as e:
                 ConsoleLogger().error(str(e))
                 continue
 
             filepath = tmpdir / f"cmcdump{suffix}"
-            with filepath.open("w") as f:
-                f.write(output)
+            filepath.write_text(output)
             yield filepath
 
 

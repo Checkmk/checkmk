@@ -632,7 +632,7 @@ def test_filters_filter_table(
 
     with time_machine.travel(datetime.datetime(2018, 4, 15, 16, 50, tzinfo=ZoneInfo("CET"))):
         context: VisualContext = {test.ident: dict(test.request_vars)}
-        filt = filter_registry[test.ident]
+        filt = test.filter if test.filter is not None else filter_registry[test.ident]
         assert filt.filter_table(context, test.rows) == test.expected_rows
 
 

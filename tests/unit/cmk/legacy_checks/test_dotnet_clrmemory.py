@@ -4,14 +4,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="misc"
-# mypy: disable-error-code="no-untyped-call"
 
 from collections.abc import Mapping, Sequence
 from typing import Any
 
 import pytest
 
-from cmk.agent_based.v2 import StringTable
+from cmk.agent_based.v2 import Metric, Result, Service, State, StringTable
 from cmk.legacy_checks.dotnet_clrmemory import (
     check_dotnet_clrmemory,
     discover_dotnet_clrmemory,
@@ -725,17 +724,17 @@ from cmk.plugins.windows.agent_based.libwmi import parse_wmi_table
                     "131097013721920000",
                 ],
             ],
-            [("_Global_", {})],
+            [Service(item="_Global_")],
         ),
     ],
 )
 def test_discover_dotnet_clrmemory(
-    info: StringTable, expected_discoveries: Sequence[tuple[str, Mapping[str, Any]]]
+    info: StringTable, expected_discoveries: Sequence[Service]
 ) -> None:
     """Test discovery function for dotnet_clrmemory check."""
     parsed = parse_wmi_table(info)
     result = list(discover_dotnet_clrmemory(parsed))
-    assert sorted(result) == sorted(expected_discoveries)
+    assert result == expected_discoveries
 
 
 @pytest.mark.parametrize(
@@ -1447,17 +1446,22 @@ def test_discover_dotnet_clrmemory(
                 ],
             ],
             [
-                (
-                    0,
-                    "Time spent in Garbage Collection: 2.54%",
-                    [("percent", 2.5363462051694157, 10.0, 15.0, 0, 100)],
-                )
+                Result(state=State.OK, summary="Time spent in Garbage Collection: 2.54%"),
+                Metric(
+                    "percent",
+                    2.5363462051694157,
+                    levels=(10.0, 15.0),
+                    boundaries=(0.0, 100.0),
+                ),
             ],
         ),
     ],
 )
 def test_check_dotnet_clrmemory(
-    item: str, params: Mapping[str, Any], info: StringTable, expected_results: Sequence[Any]
+    item: str,
+    params: Mapping[str, Any],
+    info: StringTable,
+    expected_results: Sequence[Result | Metric],
 ) -> None:
     """Test check function for dotnet_clrmemory check."""
     parsed = parse_wmi_table(info)

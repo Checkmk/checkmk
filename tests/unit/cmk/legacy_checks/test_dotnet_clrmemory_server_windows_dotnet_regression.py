@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-call"
-
 # NOTE: This file has been created by an LLM (from something that was worse).
 # It mostly serves as test to ensure we don't accidentally break anything.
 # If you encounter something weird in here, do not hesitate to replace this
@@ -18,6 +16,7 @@ showing _Global_ instance with moderate garbage collection overhead.
 
 import pytest
 
+from cmk.agent_based.v2 import Metric, Result, Service, State
 from cmk.legacy_checks.dotnet_clrmemory import (
     check_dotnet_clrmemory,
     discover_dotnet_clrmemory,
@@ -216,52 +215,51 @@ def fixture_parsed_wmi(test_data: list[list[str]]) -> WMISection:
 def test_dotnet_clrmemory_discovery(parsed_wmi: WMISection) -> None:
     """Test discovery of .NET CLR Memory instances."""
     discovery_result = list(discover_dotnet_clrmemory(parsed_wmi))
-    assert len(discovery_result) == 1
-    assert discovery_result[0] == ("_Global_", {})
+    assert discovery_result == [Service(item="_Global_")]
 
 
 def test_dotnet_clrmemory_check_global_instance(parsed_wmi: WMISection) -> None:
     """Test check of _Global_ instance showing 1.84% GC time."""
     check_result = list(check_dotnet_clrmemory("_Global_", {"upper": (10.0, 15.0)}, parsed_wmi))
 
-    assert len(check_result) == 1
-    status, message, perfdata = check_result[0]  # type: ignore[misc]
+    assert len(check_result) == 2
+    result_obj, metric = check_result
+    assert isinstance(result_obj, Result)
+    assert isinstance(metric, Metric)
 
-    assert status == 0  # OK state
-    assert "Time spent in Garbage Collection: 1.84%" in message
-    assert len(perfdata) == 1
-    assert perfdata[0][0] == "percent"
-    # Check that the percentage is approximately 1.84%
-    assert abs(perfdata[0][1] - 1.8385322768796544) < 0.001
-    assert perfdata[0][2] == 10.0  # type: ignore[misc]
-    assert perfdata[0][3] == 15.0  # type: ignore[misc]
+    assert result_obj.state == State.OK
+    assert "Time spent in Garbage Collection: 1.84%" in result_obj.summary
+
+    assert metric.name == "percent"
+    assert abs(metric.value - 1.8385322768796544) < 0.001
+    assert metric.levels == (10.0, 15.0)
 
 
 def test_dotnet_clrmemory_threshold_warning(parsed_wmi: WMISection) -> None:
     """Test warning threshold behavior."""
-    # Set lower thresholds to trigger warning
     check_result = list(check_dotnet_clrmemory("_Global_", {"upper": (1.0, 2.0)}, parsed_wmi))
 
-    assert len(check_result) == 1
-    status, message, perfdata = check_result[0]  # type: ignore[misc]
+    assert len(check_result) == 2
+    result_obj, _metric = check_result
+    assert isinstance(result_obj, Result)
 
-    assert status == 1  # Warning state
-    assert "Time spent in Garbage Collection: 1.84%" in message
+    assert result_obj.state == State.WARN
+    assert "Time spent in Garbage Collection: 1.84%" in result_obj.summary
 
 
 def test_dotnet_clrmemory_threshold_critical(parsed_wmi: WMISection) -> None:
     """Test critical threshold behavior."""
-    # Set very low thresholds to trigger critical
     check_result = list(check_dotnet_clrmemory("_Global_", {"upper": (0.5, 1.0)}, parsed_wmi))
 
-    assert len(check_result) == 1
-    status, message, perfdata = check_result[0]  # type: ignore[misc]
+    assert len(check_result) == 2
+    result_obj, _metric = check_result
+    assert isinstance(result_obj, Result)
 
-    assert status == 2  # Critical state
-    assert "Time spent in Garbage Collection: 1.84%" in message
+    assert result_obj.state == State.CRIT
+    assert "Time spent in Garbage Collection: 1.84%" in result_obj.summary
 
 
 def test_dotnet_clrmemory_nonexistent_item(parsed_wmi: WMISection) -> None:
     """Test check of non-existent instance."""
     check_result = list(check_dotnet_clrmemory("NonExistent", {"upper": (10.0, 15.0)}, parsed_wmi))
-    assert len(check_result) == 0  # No results for non-existent instance
+    assert check_result == []

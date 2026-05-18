@@ -3,18 +3,15 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-call"
-
 # NOTE: This file has been created by an LLM (from something that was worse).
 # It mostly serves as test to ensure we don't accidentally break anything.
 # If you encounter something weird in here, do not hesitate to replace this
 # test by something more appropriate.
 
-from typing import Any
 
 import pytest
 
-from cmk.agent_based.v2 import StringTable
+from cmk.agent_based.v2 import Metric, Result, Service, State, StringTable
 from cmk.legacy_checks.dotnet_clrmemory import (
     check_dotnet_clrmemory,
     discover_dotnet_clrmemory,
@@ -143,86 +140,71 @@ def parsed_fixture(string_table: StringTable) -> WMISection:
 def test_discover_dotnet_clrmemory(parsed: WMISection) -> None:
     """Test discovery function finds Global entry with default parameters"""
     result = list(discover_dotnet_clrmemory(parsed))
-
-    assert len(result) == 1
-    item, params = result[0]
-    assert item == "_Global_"
-    assert params == {}
+    assert result == [Service(item="_Global_")]
 
 
 def test_check_dotnet_clrmemory_global(parsed: WMISection) -> None:
     """Test check function for _Global_ item showing 8.78% GC time"""
     result = list(check_dotnet_clrmemory("_Global_", {"upper": (10.0, 15.0)}, parsed))
 
-    assert len(result) == 1
-    state, summary, metrics = result[0]  # type: ignore[misc]
+    assert len(result) == 2
+    result_obj, metric = result
+    assert isinstance(result_obj, Result)
+    assert isinstance(metric, Metric)
 
-    # Verify state and summary
-    assert state == 0
-    assert "Time spent in Garbage Collection: 8.78%" in summary
+    assert result_obj.state == State.OK
+    assert "Time spent in Garbage Collection: 8.78%" in result_obj.summary
 
-    # Verify metrics
-    assert len(metrics) == 1
-    metric_name, value, warn, crit, min_val, max_val = metrics[0]  # type: ignore[misc]
-    assert metric_name == "percent"
-    assert abs(value - 8.778833599942464) < 0.0001  # Check calculated percentage
-    assert warn == 10.0
-    assert crit == 15.0
-    assert min_val == 0
-    assert max_val == 100
+    assert metric.name == "percent"
+    assert abs(metric.value - 8.778833599942464) < 0.0001
+    assert metric.levels == (10.0, 15.0)
+    assert metric.boundaries == (0.0, 100.0)
 
 
-def test_check_dotnet_clrmemory_sqlservr(parsed: dict[str, Any]) -> None:
+def test_check_dotnet_clrmemory_sqlservr(parsed: WMISection) -> None:
     """Test check function for sqlservr#3 item with 0% GC time"""
     result = list(check_dotnet_clrmemory("sqlservr#3", {"upper": (10.0, 15.0)}, parsed))
 
-    assert len(result) == 1
-    state, summary, metrics = result[0]  # type: ignore[misc]
+    assert len(result) == 2
+    result_obj, metric = result
+    assert isinstance(result_obj, Result)
+    assert isinstance(metric, Metric)
 
-    # Verify state and summary
-    assert state == 0
-    assert "Time spent in Garbage Collection: 0%" in summary
+    assert result_obj.state == State.OK
+    assert "Time spent in Garbage Collection: 0%" in result_obj.summary
 
-    # Verify metrics
-    assert len(metrics) == 1
-    metric_name, value, warn, crit, min_val, max_val = metrics[0]  # type: ignore[misc]
-    assert metric_name == "percent"
-    assert value == 0.0  # Zero GC time for SQL Server process
-    assert warn == 10.0
-    assert crit == 15.0
+    assert metric.name == "percent"
+    assert metric.value == 0.0
+    assert metric.levels == (10.0, 15.0)
 
 
-def test_check_dotnet_clrmemory_high_gc_warning(parsed: dict[str, Any]) -> None:
+def test_check_dotnet_clrmemory_high_gc_warning(parsed: WMISection) -> None:
     """Test check function with GC time triggering warning"""
-    # Use lower thresholds to test warning behavior with 8.78% GC time
     result = list(check_dotnet_clrmemory("_Global_", {"upper": (5.0, 12.0)}, parsed))
 
-    assert len(result) == 1
-    state, summary, metrics = result[0]  # type: ignore[misc]
+    assert len(result) == 2
+    result_obj, _metric = result
+    assert isinstance(result_obj, Result)
 
-    # Should be WARNING since 8.78% is between 5.0% warn and 12.0% crit
-    assert state == 1
-    assert "Time spent in Garbage Collection: 8.78%" in summary
-    assert "(warn/crit at 5.00%/12.00%)" in summary
+    assert result_obj.state == State.WARN
+    assert "Time spent in Garbage Collection: 8.78%" in result_obj.summary
+    assert "(warn/crit at 5.00%/12.00%)" in result_obj.summary
 
 
-def test_check_dotnet_clrmemory_high_gc_critical(parsed: dict[str, Any]) -> None:
+def test_check_dotnet_clrmemory_high_gc_critical(parsed: WMISection) -> None:
     """Test check function with GC time triggering critical"""
-    # Use very low thresholds to test critical behavior with 8.78% GC time
     result = list(check_dotnet_clrmemory("_Global_", {"upper": (2.0, 7.0)}, parsed))
 
-    assert len(result) == 1
-    state, summary, metrics = result[0]  # type: ignore[misc]
+    assert len(result) == 2
+    result_obj, _metric = result
+    assert isinstance(result_obj, Result)
 
-    # Should be CRITICAL since 8.78% > 7.0% critical threshold
-    assert state == 2
-    assert "Time spent in Garbage Collection: 8.78%" in summary
-    assert "(warn/crit at 2.00%/7.00%)" in summary
+    assert result_obj.state == State.CRIT
+    assert "Time spent in Garbage Collection: 8.78%" in result_obj.summary
+    assert "(warn/crit at 2.00%/7.00%)" in result_obj.summary
 
 
-def test_check_dotnet_clrmemory_nonexistent_item(parsed: dict[str, Any]) -> None:
+def test_check_dotnet_clrmemory_nonexistent_item(parsed: WMISection) -> None:
     """Test check function with non-existent item"""
     result = list(check_dotnet_clrmemory("nonexistent", {"upper": (10.0, 15.0)}, parsed))
-
-    # Should return empty list for non-existent items
-    assert len(result) == 0
+    assert result == []

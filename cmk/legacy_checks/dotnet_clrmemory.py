@@ -3,17 +3,18 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
-
 from collections.abc import Mapping
 from typing import Any
 
-from cmk.agent_based.legacy.v0_unstable import (
-    check_levels,
-    LegacyCheckDefinition,
-    LegacyCheckResult,
+from cmk.agent_based.v1 import check_levels as check_levels_v1
+from cmk.agent_based.v2 import (
+    AgentSection,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    render,
+    Service,
 )
-from cmk.agent_based.v2 import render
 from cmk.plugins.windows.agent_based.libwmi import parse_wmi_table, WMISection
 from cmk.plugins.windows.agent_based.libwmi_legacy import (
     inventory_wmi_table_instances,
@@ -35,34 +36,39 @@ def _wmi_filter_global_only(
     return True
 
 
-check_info = {}
+def discover_dotnet_clrmemory(section: WMISection) -> DiscoveryResult:
+    for item, _parameters in inventory_wmi_table_instances(
+        section, filt=_wmi_filter_global_only, levels={}
+    ):
+        yield Service(item=item)
 
 
 def check_dotnet_clrmemory(
-    item: str, params: Mapping[str, Any], parsed: WMISection
-) -> LegacyCheckResult:
+    item: str, params: Mapping[str, Any], section: WMISection
+) -> CheckResult:
     try:
-        average = wmi_calculate_raw_average(parsed[""], item, "PercentTimeinGC", 100)
+        average = wmi_calculate_raw_average(section[""], item, "PercentTimeinGC", 100)
     except KeyError:
         return
 
-    yield check_levels(
+    yield from check_levels_v1(
         average,
-        "percent",
-        params["upper"],
-        infoname="Time spent in Garbage Collection",
-        human_readable_func=render.percent,
+        metric_name="percent",
+        levels_upper=params["upper"],
+        label="Time spent in Garbage Collection",
+        render_func=render.percent,
         boundaries=(0, 100),
     )
 
 
-def discover_dotnet_clrmemory(parsed):
-    return inventory_wmi_table_instances(parsed, filt=_wmi_filter_global_only, levels={})
-
-
-check_info["dotnet_clrmemory"] = LegacyCheckDefinition(
+agent_section_dotnet_clrmemory = AgentSection(
     name="dotnet_clrmemory",
     parse_function=parse_wmi_table,
+)
+
+
+check_plugin_dotnet_clrmemory = CheckPlugin(
+    name="dotnet_clrmemory",
     service_name="DotNet Memory Management %s",
     discovery_function=discover_dotnet_clrmemory,
     check_function=check_dotnet_clrmemory,

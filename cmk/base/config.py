@@ -888,7 +888,7 @@ def save_packed_config(
 ) -> None:
     """Create and store a precompiled configuration for Checkmk helper processes"""
     PackedConfigStore.from_serial(config_path).write(
-        PackedConfigGenerator(config_cache, discovery_rules).generate()
+        PackedConfigGenerator(config_cache, discovery_rules, globals()).generate()
     )
 
 
@@ -920,10 +920,14 @@ class PackedConfigGenerator:
     ]
 
     def __init__(
-        self, config_cache: ConfigCache, discovery_rules: Mapping[RuleSetName, Sequence[RuleSpec]]
+        self,
+        config_cache: ConfigCache,
+        discovery_rules: Mapping[RuleSetName, Sequence[RuleSpec]],
+        loaded_config: Mapping[str, object],
     ) -> None:
         self._config_cache = config_cache
         self._discovery_rules = discovery_rules
+        self._loaded_config = loaded_config
 
     def generate(self) -> Mapping[str, Any]:
         helper_config: dict[str, Any] = {}
@@ -998,13 +1002,11 @@ class PackedConfigGenerator:
 
         variable_defaults = get_default_config()
 
-        global_variables = globals()
-
         for varname, default_value in variable_defaults.items():
             if varname in self._skipped_config_variable_names:
                 continue
 
-            val = global_variables[varname]
+            val = self._loaded_config[varname]
 
             if val == default_value:
                 continue

@@ -191,7 +191,9 @@ def _is_listening(process_def: ProcessDef) -> bool:
     snmpsimd_died = exitcode is not None
     if snmpsimd_died:
         logger.error(
-            "=============================================snmpsimd dead from the beginning"
+            "============================================="
+            " snmpsimd dead from the beginning (exit code %d)",
+            exitcode,
         )
     process = _snmpsimd_process(process_def)
     snmpsimd_proc_found = process is not None

@@ -234,7 +234,7 @@ def test_get_missing_single_infos_missing_context() -> None:
 
 def test_get_context_specs_no_info_limit() -> None:
     result = visuals.get_context_specs(["host"], list(visual_info_registry.keys()))
-    expected = [
+    expected = {
         "aggr",
         "aggr_group",
         "comment",
@@ -245,50 +245,13 @@ def test_get_context_specs_no_info_limit() -> None:
         "history",
         "host",
         "hostgroup",
-        "invbackplane",
-        "invcdpcache",
-        "invchassis",
-        "invmerakilicenses",
-        "invmerakinetworks",
-        "invmerakiorganisations",
-        "invcmksites",
-        "invcmkversions",
-        "invcontainer",
-        "invdeviceuplinks",
-        "invdockercontainers",
-        "invdockerimages",
-        "invfan",
-        "invfirmwareredfish",
-        "invibmmqchannels",
-        "invibmmqmanagers",
-        "invibmmqqueues",
-        "invinterface",
-        "invipaddresses",
-        "invkernelconfig",
-        "invlldpcache",
-        "invmodule",
-        "invoradataguardstats",
-        "invorainstance",
-        "invorapga",
-        "invorarecoveryarea",
-        "invorasga",
-        "invorasystemparameter",
-        "invoratablespace",
-        "invother",
-        "invpsu",
-        "invsensor",
-        "invstack",
-        "invswpac",
-        "invsyntheticmonitoringplans",
-        "invsyntheticmonitoringtests",
-        "invtunnels",
-        "invunknown",
         "log",
         "service",
         "servicegroup",
-    ]
+    }
 
-    assert {r[0] for r in result} == set(expected)
+    # depending on the tests sandbox, there might be results created from inventory_ui plugins
+    assert {r for r, *_ in result if not r.startswith("inv")} == expected
 
 
 def test_get_context_specs_only_host_and_service_info() -> None:

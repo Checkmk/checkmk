@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="misc"
-# mypy: disable-error-code="no-untyped-call"
 
 # NOTE: This file has been created by an LLM (from something that was worse).
 # It mostly serves as test to ensure we don't accidentally break anything.
@@ -16,9 +15,9 @@ from typing import Any
 
 import pytest
 
-from cmk.agent_based.v2 import GetRateError
+from cmk.agent_based.v2 import GetRateError, Service
 from cmk.legacy_checks import msexch_autodiscovery
-from cmk.plugins.windows.agent_based import libwmi_legacy as wmi
+from cmk.plugins.windows.agent_based import libwmi as wmi
 from cmk.plugins.windows.agent_based.libwmi import parse_wmi_table
 
 
@@ -72,20 +71,15 @@ def parsed() -> Mapping[str, Any]:
 def test_msexch_autodiscovery_discovery(parsed: Mapping[str, Any]) -> None:
     """Test Microsoft Exchange Autodiscovery discovery function."""
     result = list(msexch_autodiscovery.discover_msexch_autodiscovery(parsed))
-
-    # Should discover exactly one service (empty string as item name)
-    assert len(result) == 1
-    assert result[0] == (None, {})
+    assert result == [Service(item=None)]
 
 
 @pytest.mark.usefixtures("empty_value_store")
 def test_msexch_autodiscovery_check(parsed: Mapping[str, Any]) -> None:
     """Test Microsoft Exchange Autodiscovery check function."""
-    # Based on the original dataset, this should produce a rate of 0.00 requests/sec
     # The rate calculation gets GetRateError on first run due to initialization
-    # Should get GetRateError on first check (normal behavior)
     with pytest.raises(GetRateError):
-        list(msexch_autodiscovery.check_msexch_autodiscovery(None, {}, parsed))
+        list(msexch_autodiscovery.check_msexch_autodiscovery(parsed))
 
 
 def test_msexch_autodiscovery_parse_function() -> None:
@@ -128,4 +122,4 @@ def test_msexch_autodiscovery_check_no_data() -> None:
     """Test Microsoft Exchange Autodiscovery check function with no data."""
     # Check function expects key "" to exist, so it will raise KeyError on missing data
     with pytest.raises(KeyError):
-        list(msexch_autodiscovery.check_msexch_autodiscovery(None, {}, {}))
+        list(msexch_autodiscovery.check_msexch_autodiscovery({}))

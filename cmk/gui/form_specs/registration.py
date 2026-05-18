@@ -17,6 +17,7 @@ from cmk.gui.form_specs.unstable import (
     LegacyValueSpec,
     ListUniqueSelection,
     OptionalChoice,
+    StaticText,
     TimePicker,
 )
 from cmk.gui.form_specs.unstable.legacy_converter import (
@@ -108,6 +109,7 @@ from .visitors.multiple_choice import MultipleChoiceVisitor
 from .visitors.optional_choice import OptionalChoiceVisitor
 from .visitors.simple_password import SimplePasswordVisitor
 from .visitors.single_choice import SingleChoiceVisitor
+from .visitors.static_text import StaticTextVisitor
 from .visitors.string import StringVisitor
 from .visitors.time_picker import TimePickerVisitor
 from .visitors.time_span import TimeSpanVisitor
@@ -140,6 +142,7 @@ def register_form_specs() -> None:
     register_visitor_class(CascadingSingleChoiceExtended, CascadingSingleChoiceVisitor)
     register_visitor_class(LegacyValueSpec, LegacyValuespecVisitor)
     register_visitor_class(FixedValue, FixedValueVisitor)
+    register_visitor_class(StaticText, StaticTextVisitor)
     register_visitor_class(BooleanChoice, BooleanChoiceVisitor)
     register_visitor_class(MultilineText, MultilineTextVisitor)
     register_visitor_class(CommentTextArea, CommentTextAreaVisitor)

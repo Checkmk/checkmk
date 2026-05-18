@@ -13,7 +13,7 @@ import re
 import time
 from collections.abc import Collection, Mapping
 from multiprocessing import JoinableQueue, Process
-from typing import Any, cast, NamedTuple, override, Protocol
+from typing import Any, cast, NamedTuple, Protocol
 
 from livestatus import (
     BrokerConnection,
@@ -37,7 +37,7 @@ from cmk.gui import hooks, log
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.form_specs.generators.host_address import create_host_address
-from cmk.gui.form_specs.unstable import LegacyValueSpec
+from cmk.gui.form_specs.unstable import StaticText
 from cmk.gui.form_specs.unstable.cascading_single_choice_extended import (
     CascadingSingleChoiceExtended,
     CascadingSingleChoiceLayout,
@@ -152,36 +152,6 @@ class NoOpLivestatusProxy:
 
     def affected_config_domains(self) -> list[ABCConfigDomain]:
         return []
-
-
-class _DynamicFixedValueText(_LegacyFixedValue):
-    """Read-only display of a dynamically-injected string.
-
-    Behaves like the legacy `FixedValue` valuespec but skips the strict
-    equality check in `validate_datatype` so that values different from the
-    configured default (which is what render-time injection produces) pass
-    through cleanly.
-    """
-
-    @override
-    def validate_datatype(self, value: str, varprefix: str) -> None:
-        if not isinstance(value, str):
-            raise MKUserError(varprefix, _("Expected string"))
-
-
-class _DynamicFixedValueTextBlock(_DynamicFixedValueText):
-    """Multi-line variant of `_DynamicFixedValueText` rendered inside ``<pre>``.
-
-    Newlines in the dynamically-injected value are preserved so a free-form
-    text representation (e.g. a list of inherited connections) renders the
-    way it was assembled.
-    """
-
-    @override
-    def render_input(self, varprefix: str, value: str) -> None:
-        html.open_pre(class_="vs_fixed_value")
-        html.write_text(value or "")
-        html.close_pre()
 
 
 class DropKeySentinel:
@@ -453,34 +423,28 @@ class SiteManagement:
         )
 
     @staticmethod
-    def _saml_metadata_endpoint_widget() -> LegacyValueSpec:
-        return LegacyValueSpec.wrap(
-            _DynamicFixedValueText(
-                value="-",
-                title=_("Metadata endpoint URL"),
-                help=_(
-                    "URL where this site serves the SAML Service Provider metadata "
-                    "for this connection. Derived from the site's <i>Server URL for "
-                    "SAML ACS callback</i> and the connection ID. The URL is only "
-                    "shown after saving the site configuration and reopening this "
-                    "dialog."
-                ),
-            )
+    def _saml_metadata_endpoint_widget() -> StaticText:
+        return StaticText(
+            title=Title("Metadata endpoint URL"),
+            help_text=Help(
+                "URL where this site serves the SAML Service Provider metadata "
+                "for this connection. Derived from the site's <i>Server URL for "
+                "SAML ACS callback</i> and the connection ID. The URL is only "
+                "shown after saving the site configuration and reopening this "
+                "dialog."
+            ),
         )
 
     @staticmethod
-    def _saml_acs_endpoint_widget() -> LegacyValueSpec:
-        return LegacyValueSpec.wrap(
-            _DynamicFixedValueText(
-                value="-",
-                title=_("Assertion Consumer Service URL"),
-                help=_(
-                    "URL where this site receives SAML responses from the IdP for "
-                    "this connection. Register this URL with the IdP's client "
-                    "configuration. The URL is only shown after saving the site "
-                    "configuration and reopening this dialog."
-                ),
-            )
+    def _saml_acs_endpoint_widget() -> StaticText:
+        return StaticText(
+            title=Title("Assertion Consumer Service URL"),
+            help_text=Help(
+                "URL where this site receives SAML responses from the IdP for "
+                "this connection. Register this URL with the IdP's client "
+                "configuration. The URL is only shown after saving the site "
+                "configuration and reopening this dialog."
+            ),
         )
 
     @classmethod
@@ -543,23 +507,21 @@ class SiteManagement:
         )
 
     @classmethod
-    def _central_site_connections_widget(cls) -> LegacyValueSpec:
+    def _central_site_connections_widget(cls) -> StaticText:
         """Read-only multi-line text display of the inherited central-site connections.
 
-        The text is assembled at render time by `populate_saml_site_endpoint_urls()`
+        The text is injected at render time by `central_site_inherited_summary()`
         from the central site's own `authentication_connections`: one line per
         LDAP entry, and three indented lines per SAML entry (connection ID,
         metadata endpoint URL, ACS URL).
         """
-        return LegacyValueSpec.wrap(
-            _DynamicFixedValueTextBlock(
-                value="-",
-                title=_("Inherited from central site"),
-                help=_(
-                    "Read-only summary of the connections inherited from the "
-                    "central site. Refreshed each time this dialog is opened."
-                ),
-            )
+        return StaticText(
+            title=Title("Inherited from central site"),
+            help_text=Help(
+                "Read-only summary of the connections inherited from the "
+                "central site. Refreshed each time this dialog is opened."
+            ),
+            multiline=True,
         )
 
     @classmethod

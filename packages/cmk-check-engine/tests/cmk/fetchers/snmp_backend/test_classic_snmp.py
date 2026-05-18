@@ -6,6 +6,7 @@
 
 import logging
 from collections.abc import Sequence
+from pathlib import Path
 from typing import NamedTuple
 
 import pytest
@@ -41,6 +42,7 @@ def test_snmp_port_spec(port: int, expected: str) -> None:
         snmpv3_contexts=[],
         character_encoding=None,
         snmp_backend=SNMPBackendEnum.CLASSIC,
+        stored_walk_path=Path("/tmp/foo"),
     )
     assert ClassicSNMPBackend(snmp_config, logger)._snmp_port_spec() == expected  # noqa: SLF001
 
@@ -68,6 +70,7 @@ def test_snmp_proto_spec(is_ipv6: bool, expected: str) -> None:
         snmpv3_contexts=[],
         character_encoding=None,
         snmp_backend=SNMPBackendEnum.CLASSIC,
+        stored_walk_path=Path("/tmp/foo"),
     )
     assert ClassicSNMPBackend(snmp_config, logger)._snmp_proto_spec() == expected  # noqa: SLF001
 
@@ -97,6 +100,7 @@ class SNMPSettings(NamedTuple):
                     snmpv3_contexts=[],
                     character_encoding=None,
                     snmp_backend=SNMPBackendEnum.CLASSIC,
+                    stored_walk_path=Path("/tmp/foo"),
                 ),
                 context_name="",
             ),
@@ -131,6 +135,7 @@ class SNMPSettings(NamedTuple):
                     snmpv3_contexts=[],
                     character_encoding=None,
                     snmp_backend=SNMPBackendEnum.CLASSIC,
+                    stored_walk_path=Path("/tmp/foo"),
                 ),
                 context_name="blabla",
             ),
@@ -167,6 +172,7 @@ class SNMPSettings(NamedTuple):
                     snmpv3_contexts=[],
                     character_encoding=None,
                     snmp_backend=SNMPBackendEnum.CLASSIC,
+                    stored_walk_path=Path("/tmp/foo"),
                 ),
                 context_name="blabla",
             ),
@@ -210,6 +216,7 @@ class SNMPSettings(NamedTuple):
                     snmpv3_contexts=[],
                     character_encoding=None,
                     snmp_backend=SNMPBackendEnum.CLASSIC,
+                    stored_walk_path=Path("/tmp/foo"),
                 ),
                 context_name="",
             ),
@@ -247,6 +254,7 @@ class SNMPSettings(NamedTuple):
                     snmpv3_contexts=[],
                     character_encoding=None,
                     snmp_backend=SNMPBackendEnum.CLASSIC,
+                    stored_walk_path=Path("/tmp/foo"),
                 ),
                 context_name="",
             ),

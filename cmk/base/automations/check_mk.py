@@ -3122,6 +3122,7 @@ def _automation_diag_snmp(
         snmpv3_contexts=[],
         character_encoding=None,
         snmp_backend=SNMPBackendEnum.INLINE,
+        stored_walk_path=cmk.utils.paths.snmpwalks_dir,
     )
 
     # Clear cached SNMP sessions so that changed port/version/timing are respected.
@@ -3136,9 +3137,7 @@ def _automation_diag_snmp(
                 oids=[BackendOIDSpec(c, "string", False) for c in "1456"],
             ),
             walk_cache={},
-            backend=make_snmp_backend(
-                snmp_config, log.logger, stored_walk_path=cmk.utils.paths.snmpwalks_dir
-            ),
+            backend=make_snmp_backend(snmp_config, log.logger),
             log=log.logger.debug,
         )
     except Exception as e:
@@ -3625,6 +3624,7 @@ class AutomationDiagHost:
             snmpv3_contexts=snmp_config.snmpv3_contexts,
             character_encoding=snmp_config.character_encoding,
             snmp_backend=snmp_config.snmp_backend,
+            stored_walk_path=cmk.utils.paths.snmpwalks_dir,
         )
 
         data = get_snmp_table(
@@ -3634,9 +3634,7 @@ class AutomationDiagHost:
                 oids=[BackendOIDSpec(c, "string", False) for c in "1456"],
             ),
             walk_cache={},
-            backend=make_snmp_backend(
-                snmp_config, log.logger, stored_walk_path=cmk.utils.paths.snmpwalks_dir
-            ),
+            backend=make_snmp_backend(snmp_config, log.logger),
             log=log.logger.debug,
         )
 
@@ -4084,12 +4082,7 @@ def _automation_get_agent_output(
             snmp_config = env.config_cache.make_snmp_config(
                 hostname, ip_family, ipaddress, SourceType.HOST, backend_override=None
             )
-            backend = make_snmp_backend(
-                snmp_config,
-                log.logger,
-                use_cache=False,
-                stored_walk_path=cmk.utils.paths.snmpwalks_dir,
-            )
+            backend = make_snmp_backend(snmp_config, log.logger, use_cache=False)
 
             info, walk_errors = _execute_snmp_walk(snmp_config, backend)
             if walk_errors:

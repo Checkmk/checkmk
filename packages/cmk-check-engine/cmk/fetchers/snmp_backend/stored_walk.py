@@ -18,9 +18,9 @@ __all__ = ["StoredWalkSNMPBackend"]
 
 
 class StoredWalkSNMPBackend(SNMPBackend):
-    def __init__(self, snmp_config: SNMPHostConfig, logger: logging.Logger, path: Path) -> None:
+    def __init__(self, snmp_config: SNMPHostConfig, logger: logging.Logger) -> None:
         super().__init__(snmp_config, logger)
-        self.path: Final = path
+        self.path: Final = snmp_config.stored_walk_path / snmp_config.hostname
         if not self.path.exists():
             raise FetcherError(f"No snmpwalk file {self.path}")
 

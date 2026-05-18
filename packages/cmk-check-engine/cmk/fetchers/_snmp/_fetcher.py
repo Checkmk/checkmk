@@ -163,11 +163,14 @@ class SNMPFetcher(Fetcher[SNMPRawData]):
         )
 
     def open(self) -> None:
+        # TODO: Why is this stored_walk_path different from the one in the self.snmp_config?
+        snmp_config = dataclasses.replace(
+            self.snmp_config, stored_walk_path=self.base_path / self.relative_stored_walk_path
+        )
         self._backend = make_backend(
-            self.snmp_config,
+            snmp_config,
             self._logger,
             use_cache=self.force_stored_walks,
-            stored_walk_path=self.base_path / self.relative_stored_walk_path,
         )
 
     def close(self) -> None:

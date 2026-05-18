@@ -10,6 +10,7 @@ import enum
 import logging
 from collections.abc import Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
+from pathlib import Path
 from typing import (
     Any,
     Final,
@@ -177,6 +178,7 @@ class SNMPHostConfig:
     snmpv3_contexts: Sequence[SNMPContextConfig]
     character_encoding: str | None
     snmp_backend: SNMPBackendEnum
+    stored_walk_path: Path
 
     @property
     def use_bulkwalk(self) -> bool:
@@ -201,6 +203,7 @@ class SNMPHostConfig:
             str(sn): rl for sn, rl in serialized["oid_range_limits"].items()
         }
         serialized["snmpv3_contexts"] = [c.serialize() for c in self.snmpv3_contexts]
+        serialized["stored_walk_path"] = serialized["stored_walk_path"].as_posix()
         return serialized
 
     @classmethod
@@ -214,6 +217,7 @@ class SNMPHostConfig:
         serialized_["snmpv3_contexts"] = [
             SNMPContextConfig.deserialize(c) for c in serialized_["snmpv3_contexts"]
         ]
+        serialized_["stored_walk_path"] = Path(serialized_["stored_walk_path"])
         return cls(**serialized_)
 
 

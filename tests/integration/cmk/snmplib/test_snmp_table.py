@@ -49,7 +49,7 @@ def test_get_data_types(
     expected_response: str,
 ) -> None:
     backend_type = backend_type_dockerized
-    response = get_single_oid(site, oid, backend_type, default_config(backend_type))[0]
+    response = get_single_oid(site, oid, backend_type, default_config(site, backend_type))[0]
     assert response == expected_response
     assert isinstance(response, str)
 
@@ -58,7 +58,7 @@ def test_get_data_types(
         site,
         tree=BackendSNMPTree(base=oid_start, oids=[BackendOIDSpec(oid_end, "string", False)]),
         backend_type=backend_type,
-        config=default_config(backend_type),
+        config=default_config(site, backend_type),
     )
 
     assert table[0][0] == expected_response
@@ -70,7 +70,7 @@ def test_get_simple_snmp_table_not_resolvable(site: Site, backend_type: SNMPBack
         pytest.skip("Not relevant")
 
     config = dataclasses.replace(
-        default_config(backend_type), ipaddress=HostAddress("unknown_host.internal.")
+        default_config(site, backend_type), ipaddress=HostAddress("unknown_host.internal.")
     )
 
     # TODO: Unify different error messages
@@ -97,7 +97,7 @@ def test_get_simple_snmp_table_wrong_credentials(site: Site, backend_type: SNMPB
     if backend_type is SNMPBackendEnum.STORED_WALK:
         pytest.skip("Not relevant")
 
-    config = dataclasses.replace(default_config(backend_type), credentials="dingdong")
+    config = dataclasses.replace(default_config(site, backend_type), credentials="dingdong")
 
     # TODO: Unify different error messages
     if config.snmp_backend is SNMPBackendEnum.INLINE:
@@ -124,7 +124,7 @@ def test_get_simple_snmp_table_bulkwalk(
     site: Site, backend_type_dockerized: SNMPBackendEnum, bulk: bool
 ) -> None:
     backend_type = backend_type_dockerized
-    config = dataclasses.replace(default_config(backend_type), bulkwalk_enabled=bulk)
+    config = dataclasses.replace(default_config(site, backend_type), bulkwalk_enabled=bulk)
     table, _ = get_snmp_table(site, INFO_TREE, backend_type, config)
 
     assert table == [
@@ -141,7 +141,9 @@ def test_get_simple_snmp_table_fills_cache(
     site: Site, backend_type_dockerized: SNMPBackendEnum
 ) -> None:
     backend_type = backend_type_dockerized
-    _, walk_cache = get_snmp_table(site, INFO_TREE, backend_type, default_config(backend_type))
+    _, walk_cache = get_snmp_table(
+        site, INFO_TREE, backend_type, default_config(site, backend_type)
+    )
     assert sorted(walk_cache) == [
         (".1.3.6.1.2.1.1.1.0", "f3a8901547f4c88fd9947f9e401ce2", False),
         (".1.3.6.1.2.1.1.2.0", "f3a8901547f4c88fd9947f9e401ce2", False),
@@ -151,7 +153,7 @@ def test_get_simple_snmp_table_fills_cache(
 
 def test_get_simple_snmp_table(site: Site, backend_type_dockerized: SNMPBackendEnum) -> None:
     backend_type = backend_type_dockerized
-    table, _ = get_snmp_table(site, INFO_TREE, backend_type, default_config(backend_type))
+    table, _ = get_snmp_table(site, INFO_TREE, backend_type, default_config(site, backend_type))
 
     assert table == [
         [
@@ -176,7 +178,7 @@ def test_get_simple_snmp_table_oid_end(
             BackendOIDSpec(SpecialColumn.END, "string", False),
         ],
     )
-    table, _ = get_snmp_table(site, oid_info, backend_type, default_config(backend_type))
+    table, _ = get_snmp_table(site, oid_info, backend_type, default_config(site, backend_type))
 
     assert table == [
         ["1", "lo", "24", "1"],
@@ -198,7 +200,7 @@ def test_get_simple_snmp_table_oid_string(
             BackendOIDSpec(SpecialColumn.STRING, "string", False),
         ],
     )
-    table, _ = get_snmp_table(site, oid_info, backend_type, default_config(backend_type))
+    table, _ = get_snmp_table(site, oid_info, backend_type, default_config(site, backend_type))
 
     assert table == [
         ["1", "lo", "24", ".1.3.6.1.2.1.2.2.1.1.1"],
@@ -220,7 +222,7 @@ def test_get_simple_snmp_table_oid_bin(
             BackendOIDSpec(SpecialColumn.BIN, "string", False),
         ],
     )
-    table, _ = get_snmp_table(site, oid_info, backend_type, default_config(backend_type))
+    table, _ = get_snmp_table(site, oid_info, backend_type, default_config(site, backend_type))
 
     assert table == [
         ["1", "lo", "24", "\x01\x03\x06\x01\x02\x01\x02\x02\x01\x01\x01"],
@@ -242,7 +244,7 @@ def test_get_simple_snmp_table_oid_end_bin(
             BackendOIDSpec(SpecialColumn.END_BIN, "string", False),
         ],
     )
-    table, _ = get_snmp_table(site, oid_info, backend_type, default_config(backend_type))
+    table, _ = get_snmp_table(site, oid_info, backend_type, default_config(site, backend_type))
 
     assert table == [
         ["1", "lo", "24", "\x01"],
@@ -259,7 +261,7 @@ def test_get_simple_snmp_table_with_hex_str(
         oids=[BackendOIDSpec("6", "string", False)],
     )
 
-    table, _ = get_snmp_table(site, oid_info, backend_type, default_config(backend_type))
+    table, _ = get_snmp_table(site, oid_info, backend_type, default_config(site, backend_type))
 
     assert table == [
         [""],

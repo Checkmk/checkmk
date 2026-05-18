@@ -1803,6 +1803,7 @@ class ConfigCache:
                 ],
                 character_encoding=self._snmp_character_encoding(host_name),
                 snmp_backend=self.get_snmp_backend(host_name),
+                stored_walk_path=cmk.utils.paths.snmpwalks_dir,
             ),
         )
         if backend_override:

@@ -22,24 +22,29 @@ from pathlib import Path
 
 from dateutil.relativedelta import relativedelta
 
-from livestatus import SiteConfiguration
+from livestatus import SiteConfiguration, SiteConfigurations
 
 import cmk.gui.site_config
-import cmk.gui.watolib.changes
-import cmk.gui.watolib.global_settings
-from cmk.ccc.site import SiteId
+from cmk.ccc.site import omd_site, SiteId
 from cmk.crypto.certificate import Certificate, CertificatePEM
-from cmk.gui import main_modules
-from cmk.gui.config import Config, load_config
-from cmk.gui.script_helpers import gui_context
+from cmk.gui.config import load_config
+from cmk.gui.wato._check_mk_configuration import ConfigVariableTrustedCertificateAuthorities
 from cmk.gui.watolib.activate_changes import ActivateChanges
+from cmk.gui.watolib.audit_log import make_audit_log_change_hook
 from cmk.gui.watolib.automations import (
     do_remote_automation,
     ENV_VARIABLE_FORCE_CLI_INTERFACE,
     make_automation_config,
 )
-from cmk.gui.watolib.config_domain_name import config_variable_registry
 from cmk.gui.watolib.config_domains import ConfigDomainCACertificates, ConfigDomainSiteCertificate
+from cmk.gui.watolib.pending_changes import (
+    Change,
+    ChangeScope,
+    index_update_change_hook,
+    PendingChanges,
+    PendingChangesStore,
+)
+from cmk.gui.watolib.sidebar_reload import sidebar_reload_change_hook
 from cmk.utils.automation_config import RemoteAutomationConfig
 from cmk.utils.certs import (
     cert_dir,
@@ -58,20 +63,14 @@ def _force_automations_cli_interface() -> Iterator[None]:
         os.environ.pop(ENV_VARIABLE_FORCE_CLI_INTERFACE, None)
 
 
-@contextmanager
-def _site_gui_context(site_id: SiteId) -> Iterator[tuple[SiteConfiguration, Config]]:
-    if errors := main_modules.get_failed_plugins():
-        raise RuntimeError(f"The following errors occurred during plug-in loading: {errors!r}")
+def _verify_site(site_id: SiteId, site_config: SiteConfigurations) -> SiteConfiguration:
+    if (site := site_config.get(site_id)) is None:
+        raise ValueError(f"Aborting, site {site_id} does not exist")
 
-    with gui_context(), _force_automations_cli_interface():
-        config = load_config()
-        if (site_config := config.sites.get(site_id)) is None:
-            raise ValueError(f"Aborting, site {site_id} does not exist")
+    if ActivateChanges.get_number_of_pending_changes(sites=list(site_config), count_limit=1):
+        raise ValueError("Aborting, there are still pending changes to review")
 
-        if ActivateChanges.get_number_of_pending_changes(sites=list(config.sites), count_limit=1):
-            raise ValueError("Aborting, there are still pending changes to review")
-
-        yield site_config, config
+    return site
 
 
 def _days_until_10_years_from_today() -> int:
@@ -119,9 +118,16 @@ def start_rotate_site_ca_certificate(
             "before initiating a new rotation."
         )
 
-    with _site_gui_context(site_id) as (site, config):
-        current_settings = cmk.gui.watolib.global_settings.load_configuration_settings()
-        new_settings = dict(current_settings)
+    config = load_config()
+    site = _verify_site(site_id, config.sites)
+    with _force_automations_cli_interface():
+        ca_domain = ConfigDomainCACertificates()
+        current_ca_settings = ca_domain.load_full_config()
+        new_ca_settings = dict(current_ca_settings)
+        new_ca_settings.setdefault(
+            "trusted_certificate_authorities",
+            ca_domain.default_globals()["trusted_certificate_authorities"],
+        )
 
         is_local_rotation = cmk.gui.site_config.site_is_local(site)
 
@@ -170,28 +176,39 @@ def start_rotate_site_ca_certificate(
             new_ca_certificate = automation_response
 
         # Add site-ca certificate to the trusted store
-        new_settings["trusted_certificate_authorities"]["trusted_cas"].append(new_ca_certificate)
-        cmk.gui.watolib.global_settings.save_global_settings(new_settings)
+        new_ca_settings["trusted_certificate_authorities"]["trusted_cas"].append(new_ca_certificate)
+        ca_domain.save(new_ca_settings)
         ConfigDomainCACertificates.log_changes(
-            current_settings.get("trusted_certificate_authorities"),
-            new_settings["trusted_certificate_authorities"],
+            current_ca_settings.get("trusted_certificate_authorities"),
+            new_ca_settings["trusted_certificate_authorities"],
         )
-        config_variable = config_variable_registry["trusted_certificate_authorities"]
 
-        cmk.gui.watolib.changes.add_change(
-            action_name="edit-configvar",
-            text=f"Added new Site CA certificate for site {site_id} to trusted CAs store",
-            user_id=None,
-            sites=list(config.sites.keys()),
-            domains=list(config_variable.all_domains()),
-            need_sync=True,
-            need_restart=True,
-            need_apache_reload=True,
-            domain_settings={
-                domain.ident(): {"need_apache_reload": config_variable.need_apache_reload()}
-                for domain in config_variable.all_domains()
-            },
-            use_git=config.wato_use_git,
+        pending_changes = PendingChanges(
+            activation_sites=config.sites,
+            local_site=omd_site(),
+            acting_user=None,
+            store=PendingChangesStore(),
+            hooks=(
+                make_audit_log_change_hook(use_git=config.wato_use_git),
+                sidebar_reload_change_hook,
+                index_update_change_hook,
+            ),
+        )
+        pending_changes.add(
+            Change(
+                action_name="edit-configvar",
+                text=f"Added new Site CA certificate for site {site_id} to trusted CAs store",
+                domains=[ca_domain.ident()],
+                domain_settings={
+                    ca_domain.ident(): {
+                        "need_apache_reload": ConfigVariableTrustedCertificateAuthorities.need_apache_reload()
+                    }
+                },
+                force_sync=True,
+                force_restart=True,
+                force_apache_reload=True,
+            ),
+            ChangeScope.sites(list(config.sites.keys())),
         )
 
         sys.stdout.write(
@@ -226,7 +243,8 @@ def finalize_rotate_site_ca_certificate(
     if site_id != SiteId(rotating_site_id):
         raise ValueError("Aborting, site ID does not match the one in the state file")
 
-    with _site_gui_context(site_id) as (site, _):
+    site = _verify_site(site_id, load_config().sites)
+    with _force_automations_cli_interface():
         # Finalize local site certificate rotation
         if cmk.gui.site_config.site_is_local(site):
             if not (staged_ca_path := SiteCA.root_ca_path(_scratch_dir(omd_root))).exists():
@@ -316,7 +334,8 @@ def rotate_site_certificate(
 ) -> None:
     expiry_ = _days_until_10_years_from_today() if expiry is None else expiry
 
-    with _site_gui_context(site_id) as (site, config):
+    site = _verify_site(site_id, load_config().sites)
+    with _force_automations_cli_interface():
         if cmk.gui.site_config.site_is_local(site):
             sans = (
                 ConfigDomainSiteCertificate()

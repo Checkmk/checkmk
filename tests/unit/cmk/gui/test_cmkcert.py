@@ -7,7 +7,7 @@
 # mypy: disable-error-code="no-untyped-def"
 
 from pathlib import Path
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import pytest
 from pytest_mock import MockerFixture
@@ -165,9 +165,7 @@ def test_init_cert_does_not_replace_existing(
 
 
 def test_rotate_site(mocker: MockerFixture, omd_root: Path, site_ca: Path) -> None:
-    mocker.patch(
-        "cmk.gui.cmkcert.cmkcert_rotate._site_gui_context"
-    ).return_value = _mock_site_gui_context(mocker)
+    _mock_site_and_config(mocker)
     _create_dummy(omd_root, "site-ca")
     _create_dummy(omd_root, "site")
 
@@ -190,9 +188,7 @@ def test_rotate_site(mocker: MockerFixture, omd_root: Path, site_ca: Path) -> No
 
 
 def test_rotate_site_wo_site_ca(mocker: MockerFixture, omd_root: Path) -> None:
-    mocker.patch(
-        "cmk.gui.cmkcert.cmkcert_rotate._site_gui_context"
-    ).return_value = _mock_site_gui_context(mocker)
+    _mock_site_and_config(mocker)
 
     _create_dummy(omd_root, "site")
 
@@ -206,13 +202,15 @@ def test_rotate_site_wo_site_ca(mocker: MockerFixture, omd_root: Path) -> None:
         )
 
 
-def _mock_site_gui_context(mocker: MockerFixture) -> MagicMock:
+def _mock_site_and_config(mocker: MockerFixture) -> None:
     mocker.patch("cmk.gui.site_config.site_is_local").return_value = True
-    mocker.patch("cmk.gui.watolib.global_settings.load_configuration_settings").return_value = {
+    mocker.patch(
+        "cmk.gui.watolib.config_domains.ConfigDomainCACertificates.load_full_config"
+    ).return_value = {
         "trusted_certificate_authorities": {"trusted_cas": [], "use_system_wide_cas": False}
     }
 
-    mock_site = SiteConfigurations(
+    mock_sites = SiteConfigurations(
         {
             SiteId("test_site"): {
                 "alias": "Local site test_site",
@@ -238,11 +236,12 @@ def _mock_site_gui_context(mocker: MockerFixture) -> MagicMock:
         }
     )
 
-    mock_context = MagicMock()
-    mock_context.__enter__.return_value = (mock_site, Config(sites=mock_site))
-    mock_context.__exit__.return_value = None
-
-    return mock_context
+    mocker.patch("cmk.gui.cmkcert.cmkcert_rotate.load_config").return_value = Config(
+        sites=mock_sites
+    )
+    mocker.patch("cmk.gui.cmkcert.cmkcert_rotate._verify_site").return_value = mock_sites[
+        SiteId("test_site")
+    ]
 
 
 def test_rotate_site_ca(
@@ -250,14 +249,10 @@ def test_rotate_site_ca(
     omd_root: Path,
     site_ca: Path,
 ) -> None:
-    mocker.patch(
-        "cmk.gui.cmkcert.cmkcert_rotate._site_gui_context"
-    ).return_value = _mock_site_gui_context(mocker)
+    _mock_site_and_config(mocker)
 
-    with patch("cmk.gui.watolib.changes.add_change") as mock_add_change:
-        with patch(
-            "cmk.gui.watolib.global_settings.save_global_settings"
-        ) as mock_save_global_settings:
+    with patch("cmk.gui.cmkcert.cmkcert_rotate.PendingChanges") as mock_pending_changes:
+        with patch("cmk.gui.watolib.config_domains.ConfigDomainCACertificates.save") as mock_save:
             _run_rotate(
                 omd_root=omd_root,
                 site_id=_site_id(),
@@ -265,8 +260,8 @@ def test_rotate_site_ca(
                 expiry=90,
                 finalize=False,
             )
-            mock_add_change.assert_called_once()
-            mock_save_global_settings.assert_called_once()
+            mock_pending_changes.return_value.add.assert_called_once()
+            mock_save.assert_called_once()
 
     # site-ca rotation requires a second call with finalize=True to complete the rotation
     _run_rotate(

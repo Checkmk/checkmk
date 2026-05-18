@@ -7,7 +7,6 @@ from cmk.inventory_ui.v1_unstable import (
     DecimalNotation,
     IECNotation,
     Node,
-    NumberField,
     SINotation,
     StrictPrecision,
     Table,
@@ -175,19 +174,6 @@ node_hardware_components_unknowns = Node(
     ),
 )
 
-node_hardware_cpu_nodes = Node(
-    name="hardware_cpu_nodes",
-    path=["hardware", "cpu", "nodes"],
-    title=Title("Node processor"),
-    table=Table(
-        columns={
-            "node_name": TextField(Title("Node name")),
-            "cores": NumberField(Title("#Cores"), render=UNIT_COUNT),
-            "model": TextField(Title("CPU model")),
-        },
-    ),
-)
-
 node_hardware_storage_controller = Node(
     name="hardware_storage_controller",
     path=["hardware", "storage", "controller"],
@@ -195,19 +181,4 @@ node_hardware_storage_controller = Node(
     attributes={
         "version": TextField(Title("Version")),
     },
-)
-
-node_hardware_system_nodes = Node(
-    name="hardware_system_nodes",
-    path=["hardware", "system", "nodes"],
-    title=Title("Node system"),
-    table=Table(
-        columns={
-            "node_name": TextField(Title("Node name")),
-            "id": TextField(Title("ID")),
-            "model": TextField(Title("Model name")),
-            "product": TextField(Title("Product")),
-            "serial": TextField(Title("Serial number")),
-        },
-    ),
 )

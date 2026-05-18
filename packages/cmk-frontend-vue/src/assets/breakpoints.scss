@@ -45,13 +45,13 @@ $breakpoints: (
 );
 
 @mixin viewport-up($name) {
-  @media (min-width: map.get($breakpoints, $name)) {
+  @media (min-width: #{map.get($breakpoints, $name)}) {
     @content;
   }
 }
 
 @mixin container-up($name) {
-  @container (min-width: map.get($breakpoints, $name)) {
+  @container (min-width: #{map.get($breakpoints, $name)}) {
     @content;
   }
 }

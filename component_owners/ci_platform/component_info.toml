@@ -1,5 +1,6 @@
 type = "Component"
 display_name = "CI Platform"
+has_support_component = true
 members_required = 3
 description = """
 - The CI system works reliably and performs well

@@ -282,7 +282,7 @@ class RawHostsStorage(ABCHostsStorage[HostsData]):
 
 
 @cache
-def make_experimental_hosts_storage(storage_format: StorageFormat) -> ABCHostsStorage | None:
+def _make_experimental_hosts_storage(storage_format: StorageFormat) -> ABCHostsStorage | None:
     if storage_format == StorageFormat.RAW:
         return RawHostsStorage()
     if storage_format == StorageFormat.PICKLE:
@@ -307,7 +307,7 @@ def get_host_storage_loaders(storage_format: StorageFormat) -> list[ABCHostsStor
 def _make_experimental_base_hosts_storage_loader(
     storage_format: StorageFormat,
 ) -> ABCHostsStorageLoader | None:
-    if storage := make_experimental_hosts_storage(storage_format):
+    if storage := _make_experimental_hosts_storage(storage_format):
         return ExperimentalStorageLoader(storage)
     return None
 

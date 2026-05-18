@@ -710,9 +710,6 @@ class GeneralConfig:
     bi_use_legacy_compilation: bool = False
     wato_hide_help_in_lists: bool = True
 
-    # new in 2.1
-    config_storage_format: Literal["standard", "raw", "pickle", "anon"] = "pickle"
-
     # Development tools
 
     inject_js_profiling_code: bool = False

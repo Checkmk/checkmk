@@ -148,11 +148,9 @@ from cmk.utils import config_warnings, ip_lookup, password_store
 from cmk.utils.agent_registration import connection_mode_from_host_config, HostAgentConnectionMode
 from cmk.utils.caching import cache_manager
 from cmk.utils.check_utils import maincheckify, section_name_of
-from cmk.utils.experimental_config import load_experimental_config
 from cmk.utils.host_storage import (
     apply_hosts_file_to_object,
     get_host_storage_loaders,
-    get_storage_format,
     StorageFormat,
 )
 from cmk.utils.ip_lookup import IPLookup, IPLookupOptional, IPStackConfig
@@ -570,18 +568,12 @@ def load(
     globals().update(get_default_config())
     target_context = globals()
 
-    # Load assorted experimental parameters if any
-    experimental_config = load_experimental_config(cmk.utils.paths.default_config_dir)
-
-    storage_format = get_storage_format(experimental_config.get("config_storage_format"))
-
-    _load_config(target_context, storage_format, with_conf_d=with_conf_d)
+    _load_config(target_context, StorageFormat.PICKLE, with_conf_d=with_conf_d)
 
     loading_result = _perform_post_config_loading_actions(
         target_context,
         discovery_rulesets,
         get_builtin_host_labels,
-        experimental_config,
         edition=edition,
     )
 
@@ -646,7 +638,6 @@ def load_packed_config(
         globals(),
         discovery_rulesets,
         get_builtin_host_labels,
-        load_experimental_config(cmk.utils.paths.default_config_dir),
         edition=edition,
     )
 
@@ -655,7 +646,6 @@ def _perform_post_config_loading_actions(
     loaded_context: dict[str, Any],
     discovery_rulesets: Iterable[RuleSetName],
     get_builtin_host_labels: Callable[[SiteId], Labels],
-    experimental: Mapping[str, object],
     *,
     edition: cmk_version.Edition,
 ) -> LoadingResult:
@@ -670,12 +660,11 @@ def _perform_post_config_loading_actions(
     _drop_invalid_ssc_rules(loaded_context)
 
     loaded_config = LoadedConfigFragment(
-        experimental=experimental,
         discovery_parameters=discovery_settings,
         **{
             f.name: loaded_context[f.name]
             for f in dataclasses.fields(LoadedConfigFragment)
-            if f.name not in {"experimental", "discovery_parameters"}
+            if f.name != "discovery_parameters"
         },
     )
 

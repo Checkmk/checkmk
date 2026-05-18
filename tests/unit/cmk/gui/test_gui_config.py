@@ -140,7 +140,6 @@ def test_default_config_from_plugins() -> None:
         "bi_use_legacy_compilation",
         "broker_connections",
         "sites",
-        "config_storage_format",
         "tags",
         "enable_login_via_get",
         "enable_deprecated_automation_user_authentication",

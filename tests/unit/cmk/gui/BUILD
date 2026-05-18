@@ -93,7 +93,6 @@ py_test(
         "//cmk/gui/wato",
         "//cmk/gui/watolib",
         "//cmk/gui/watolib:config_infra",
-        "//cmk/plugins",
         "//cmk/utils",
         "//packages/cmk-backup:gui",
         "//packages/cmk-ccc:crash-reporting",

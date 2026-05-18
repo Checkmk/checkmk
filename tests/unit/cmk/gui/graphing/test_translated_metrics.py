@@ -9,7 +9,7 @@ from collections.abc import Mapping
 import pytest
 
 from cmk.gui.graphing._from_api import RegisteredMetric
-from cmk.gui.graphing._legacy import check_metrics, CheckMetricEntry
+from cmk.gui.graphing._legacy import CheckMetricEntry
 from cmk.gui.graphing._translated_metrics import (
     _parse_check_command,
     _parse_range,
@@ -167,6 +167,27 @@ def test_parse_perf_data2() -> None:
         parse_perf_data("hi ho", None, debug=True)
 
 
+# Synthetic check_metrics covering the perf-var translation shapes exercised
+# below:
+# * rename + scale (lnx_if::in, hr_mem::memused)
+# * scale-only (check_ping::rta, check_icmp::rta)
+# * rename-only (check_tcp_exe::time)
+# * no-rename + scale (check_ping_exe::rta)
+# * fake "check_mk-imaginary" case covers `find_matching_translation`'s default branch
+_SYNTHETIC_CHECK_METRICS: Mapping[str, Mapping[MetricName, CheckMetricEntry]] = {
+    "check_mk-lnx_if": {MetricName("in"): {"name": "if_in_bps", "scale": 8}},
+    "check_mk-hr_mem": {MetricName("memused"): {"name": "mem_lnx_total_used", "scale": 1024**2}},
+    "check_ping_exe": {MetricName("rta"): {"scale": 0.001}},
+    "check_tcp_exe": {MetricName("time"): {"name": "response_time"}},
+    "check_ping": {MetricName("rta"): {"scale": 0.001}},
+    "check_icmp": {
+        MetricName("rta"): {"scale": 0.001},
+        MetricName("rtmax"): {"scale": 0.001},
+        MetricName("rtmin"): {"scale": 0.001},
+    },
+}
+
+
 @pytest.mark.parametrize(
     "perf_name, check_command, expected_translation_spec",
     [
@@ -274,7 +295,7 @@ def test_perfvar_translation(
     assert (
         find_matching_translation(
             MetricName(perf_name),
-            lookup_metric_translations_for_check_command(check_metrics, check_command),
+            lookup_metric_translations_for_check_command(_SYNTHETIC_CHECK_METRICS, check_command),
         )
         == expected_translation_spec
     )

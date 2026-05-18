@@ -314,6 +314,45 @@ def test_lookup_components_skips_rename_lookup_when_all_paths_on_head(
     }
 
 
+def test_lookup_components_classifies_utf8_once_per_path(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """``_is_utf8_decodable`` streams the entire file (up to 64 KiB per read).
+    The old code ran it twice per HEAD path -- once to build the queryable
+    set, once to count ``skipped_non_utf8`` -- doubling I/O on every ``--full``
+    run for no benefit. Each unique HEAD path should be classified once.
+    """
+    from collections import Counter
+
+    from tests.qa_metrics.change_quality import components as comp_module
+
+    _touch(tmp_path, "cmk/a.py", "cmk/b.py", "cmk/c.py")
+
+    calls: Counter[Path] = Counter()
+    real = comp_module._is_utf8_decodable
+
+    def tracking(path: Path) -> bool:
+        calls[path] += 1
+        return real(path)
+
+    monkeypatch.setattr(comp_module, "_is_utf8_decodable", tracking)
+
+    def fake_run(args: Sequence[str], **kwargs: Any) -> subprocess.CompletedProcess[str]:
+        positional = list(args[4:])
+        stdout = json.dumps({p: "stub" for p in positional})
+        return subprocess.CompletedProcess(args=list(args), returncode=0, stdout=stdout, stderr="")
+
+    monkeypatch.setattr(subprocess, "run", fake_run)
+    lookup_components(["cmk/a.py", "cmk/b.py", "cmk/c.py"], tmp_path)
+
+    assert set(calls) == {
+        tmp_path / "cmk/a.py",
+        tmp_path / "cmk/b.py",
+        tmp_path / "cmk/c.py",
+    }
+    assert all(n == 1 for n in calls.values()), f"called more than once: {dict(calls)}"
+
+
 def test_pick_component_picks_majority() -> None:
     files = ["cmk/gui/a.py", "cmk/gui/b.py", "cmk/base/c.py"]
     component_map = {

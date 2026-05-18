@@ -169,17 +169,16 @@ def lookup_components(
         return None
 
     head_name_per_orig = {p: _head_name(p) for p in all_paths}
-    # Dedupe across input paths that map to the same HEAD name (rename chains
-    # A->C and B->C, or duplicate inputs).
-    queryable_set = {
-        hp for hp in head_name_per_orig.values() if hp is not None and _is_utf8_decodable(repo / hp)
-    }
-    queryable = sorted(queryable_set)
+    # Cache the UTF-8 check per unique HEAD path: ``_is_utf8_decodable`` streams
+    # the file contents to check decoding, and multiple originals can map to
+    # the same HEAD via rename collapsing or duplicate inputs. Classify each
+    # unique HEAD path once.
+    unique_heads = {hp for hp in head_name_per_orig.values() if hp is not None}
+    utf8_ok = {hp for hp in unique_heads if _is_utf8_decodable(repo / hp)}
+    queryable = sorted(utf8_ok)
     skipped_unresolvable = sum(1 for hp in head_name_per_orig.values() if hp is None)
     skipped_non_utf8 = sum(
-        1
-        for hp in head_name_per_orig.values()
-        if hp is not None and not _is_utf8_decodable(repo / hp)
+        1 for hp in head_name_per_orig.values() if hp is not None and hp not in utf8_ok
     )
 
     result: dict[str, str | None] = dict.fromkeys(all_paths)

@@ -25,7 +25,7 @@ import sys
 import time
 import uuid
 from collections.abc import Callable, Container, Iterable, Iterator, Mapping, Sequence
-from contextlib import nullcontext, redirect_stderr, redirect_stdout, suppress
+from contextlib import redirect_stderr, redirect_stdout, suppress
 from dataclasses import asdict, dataclass
 from itertools import chain, islice
 from pathlib import Path
@@ -1295,76 +1295,72 @@ def _execute_autodiscovery(
         env.config_cache,
         env.plugins,
     )
-    with nullcontext():  # TODO(igor): remove the nullcontext added for easier review
-        try:
-            cache_manager.clear_all()
-            env.config_cache.initialize(app.get_builtin_host_labels)
-            hosts_config = config.make_hosts_config(env.loaded_config)
-            bake_on_restart = app.make_bake_on_restart(env.loading_result, hosts_config.hosts)
-            notify_relay = _make_configured_notify_relay(bool(env.loaded_config.relays))
 
-            if env.loaded_config.monitoring_core == "cmc":
-                do_reload(
-                    env.config_cache,
-                    hosts_config,
-                    env.final_service_name_config,
-                    env.passive_service_name_config,
-                    env.enforced_services_table,
-                    env.ip_lookup_config.ip_stack_config,
-                    env.ip_lookup_config.default_address_family,
-                    ip_address_of,
-                    ip_address_of_mgmt,
-                    core,
-                    env.plugins,
-                    locking_mode=env.loaded_config.restart_locking,
-                    discovery_rules=env.loaded_config.discovery_parameters,
-                    hosts_to_update=None,
-                    service_depends_on=config.ServiceDependsOn(
-                        tag_list=env.config_cache.host_tags.tag_list,
-                        service_dependencies=env.loaded_config.service_dependencies,
+    try:
+        cache_manager.clear_all()
+        env.config_cache.initialize(app.get_builtin_host_labels)
+        hosts_config = config.make_hosts_config(env.loaded_config)
+        bake_on_restart = app.make_bake_on_restart(env.loading_result, hosts_config.hosts)
+        notify_relay = _make_configured_notify_relay(bool(env.loaded_config.relays))
+
+        if env.loaded_config.monitoring_core == "cmc":
+            do_reload(
+                env.config_cache,
+                hosts_config,
+                env.final_service_name_config,
+                env.passive_service_name_config,
+                env.enforced_services_table,
+                env.ip_lookup_config.ip_stack_config,
+                env.ip_lookup_config.default_address_family,
+                ip_address_of,
+                ip_address_of_mgmt,
+                core,
+                env.plugins,
+                locking_mode=env.loaded_config.restart_locking,
+                discovery_rules=env.loaded_config.discovery_parameters,
+                hosts_to_update=None,
+                service_depends_on=config.ServiceDependsOn(
+                    tag_list=env.config_cache.host_tags.tag_list,
+                    service_dependencies=env.loaded_config.service_dependencies,
+                ),
+                duplicates=sorted(
+                    hosts_config.duplicates(
+                        lambda hn: env.config_cache.is_active(hn) and env.config_cache.is_online(hn)
                     ),
-                    duplicates=sorted(
-                        hosts_config.duplicates(
-                            lambda hn: (
-                                env.config_cache.is_active(hn) and env.config_cache.is_online(hn)
-                            )
-                        ),
+                ),
+                bake_on_restart=bake_on_restart,
+                notify_relay=notify_relay,
+            )
+        else:
+            do_restart(
+                env.config_cache,
+                hosts_config,
+                env.final_service_name_config,
+                env.passive_service_name_config,
+                env.enforced_services_table,
+                env.ip_lookup_config.ip_stack_config,
+                env.ip_lookup_config.default_address_family,
+                ip_address_of,
+                ip_address_of_mgmt,
+                core,
+                env.plugins,
+                service_depends_on=config.ServiceDependsOn(
+                    tag_list=env.config_cache.host_tags.tag_list,
+                    service_dependencies=env.loaded_config.service_dependencies,
+                ),
+                locking_mode=env.loaded_config.restart_locking,
+                discovery_rules=env.loaded_config.discovery_parameters,
+                duplicates=sorted(
+                    hosts_config.duplicates(
+                        lambda hn: env.config_cache.is_active(hn) and env.config_cache.is_online(hn)
                     ),
-                    bake_on_restart=bake_on_restart,
-                    notify_relay=notify_relay,
-                )
-            else:
-                do_restart(
-                    env.config_cache,
-                    hosts_config,
-                    env.final_service_name_config,
-                    env.passive_service_name_config,
-                    env.enforced_services_table,
-                    env.ip_lookup_config.ip_stack_config,
-                    env.ip_lookup_config.default_address_family,
-                    ip_address_of,
-                    ip_address_of_mgmt,
-                    core,
-                    env.plugins,
-                    service_depends_on=config.ServiceDependsOn(
-                        tag_list=env.config_cache.host_tags.tag_list,
-                        service_dependencies=env.loaded_config.service_dependencies,
-                    ),
-                    locking_mode=env.loaded_config.restart_locking,
-                    discovery_rules=env.loaded_config.discovery_parameters,
-                    duplicates=sorted(
-                        hosts_config.duplicates(
-                            lambda hn: (
-                                env.config_cache.is_active(hn) and env.config_cache.is_online(hn)
-                            )
-                        ),
-                    ),
-                    bake_on_restart=bake_on_restart,
-                    notify_relay=notify_relay,
-                )
-        finally:
-            cache_manager.clear_all()
-            env.config_cache.initialize(app.get_builtin_host_labels)
+                ),
+                bake_on_restart=bake_on_restart,
+                notify_relay=notify_relay,
+            )
+    finally:
+        cache_manager.clear_all()
+        env.config_cache.initialize(app.get_builtin_host_labels)
 
     return discovery_results, True
 

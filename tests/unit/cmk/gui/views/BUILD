@@ -22,7 +22,6 @@ py_test(
         ":__test__",
         "//cmk/gui:config",
         "//cmk/gui:display_options",
-        "//cmk/gui:exporter",
         "//cmk/gui:http",
         "//cmk/gui:logged_in",
         "//cmk/gui:num_split",

@@ -21,8 +21,9 @@ from cmk.gui.views.sorter import sorter_registry
 from cmk.gui.visuals.filter import filter_registry
 from cmk.gui.visuals.info import visual_info_registry
 
-from . import icon, inventory
+from . import exporter, icon, inventory
 from .command import register_legacy_command
+from .exporter import exporter_registry
 from .icon import Icon, icon_and_action_registry
 from .inventory import register_table_views_and_columns
 from .sorter import register_sorter
@@ -38,6 +39,7 @@ multisite_icons_and_actions: dict[str, dict[str, Any]] = {}
 
 
 def register() -> None:
+    exporter.register(exporter_registry)
     _register_pre_21_plugin_api()
     load_web_plugins("views", globals())
     inventory.register_inv_paint_functions(globals())
@@ -105,7 +107,6 @@ def _register_pre_21_plugin_api() -> None:
     from cmk.gui import (
         data_source,
         display_options,
-        exporter,
         painter_options,
         visual_link,
     )
@@ -113,7 +114,7 @@ def _register_pre_21_plugin_api() -> None:
         icons,
     )
 
-    from . import command, layout, sorter, store
+    from . import command, exporter, layout, sorter, store
 
     for name in (
         "ABCDataSource",

@@ -11,15 +11,15 @@
 
 import abc
 import re
+import time
 from collections.abc import Callable, Hashable, Iterator, Sequence
 from typing import Any, override
 
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.gui.config import active_config
 from cmk.gui.data_source import row_id
-from cmk.gui.exporter import output_csv_headers
 from cmk.gui.htmllib.html import html
-from cmk.gui.http import Request, request
+from cmk.gui.http import ContentDispositionType, Request, request, response
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.painter.v0 import Cell, EmptyCell
@@ -849,7 +849,12 @@ class LayoutMatrix(Layout):
         cells: Sequence[Cell],
         user_permissions: UserPermissions,
     ) -> None:
-        output_csv_headers(view)
+        filename = "{}-{}.csv".format(
+            view["name"],
+            time.strftime("%Y-%m-%d_%H-%M-%S", time.localtime(time.time())),
+        )
+        response.set_content_type("text/csv")
+        response.set_content_disposition(ContentDispositionType.ATTACHMENT, filename)
 
         groups, unique_row_ids, matrix_cells = list(
             create_matrices(rows, group_cells, cells, num_columns=None)

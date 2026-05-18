@@ -43,6 +43,16 @@ def output_csv_headers(view: ViewSpec) -> None:
 exporter_registry = ViewExporterRegistry()
 
 
+def register(view_exporter_registry: ViewExporterRegistry) -> None:
+    view_exporter_registry.register(Exporter(name="python-raw", handler=_export_python_raw))
+    view_exporter_registry.register(Exporter(name="python", handler=_export_python))
+    view_exporter_registry.register(Exporter(name="json", handler=_export_json))
+    view_exporter_registry.register(Exporter(name="json_export", handler=_export_json_export))
+    view_exporter_registry.register(Exporter(name="jsonp", handler=_export_jsonp))
+    view_exporter_registry.register(Exporter(name="csv_export", handler=_export_csv_export))
+    view_exporter_registry.register(Exporter(name="csv", handler=_export_csv))
+
+
 def _export_python_raw(
     row_cells: Sequence[Cell],
     group_cells: Sequence[Cell],
@@ -51,14 +61,6 @@ def _export_python_raw(
     view_spec: ViewSpec,
 ) -> None:
     response.set_data(repr(rows))
-
-
-exporter_registry.register(
-    Exporter(
-        name="python-raw",
-        handler=_export_python_raw,
-    )
-)
 
 
 def _export_python(
@@ -88,14 +90,6 @@ def _export_python(
         resp.append("],")
     resp.append("\n]\n")
     response.set_data("".join(resp))
-
-
-exporter_registry.register(
-    Exporter(
-        name="python",
-        handler=_export_python,
-    )
-)
 
 
 def _get_json_body(
@@ -137,14 +131,6 @@ def _export_json(
     response.set_data(_get_json_body(row_cells, group_cells, rows, view_name, view_spec))
 
 
-exporter_registry.register(
-    Exporter(
-        name="json",
-        handler=_export_json,
-    )
-)
-
-
 def _export_json_export(
     row_cells: Sequence[Cell],
     group_cells: Sequence[Cell],
@@ -165,14 +151,6 @@ def _export_json_export(
     response.set_data(_get_json_body(row_cells, group_cells, rows, view_name, view_spec))
 
 
-exporter_registry.register(
-    Exporter(
-        name="json_export",
-        handler=_export_json_export,
-    )
-)
-
-
 def _export_jsonp(
     row_cells: Sequence[Cell],
     group_cells: Sequence[Cell],
@@ -188,14 +166,6 @@ def _export_jsonp(
     )
 
 
-exporter_registry.register(
-    Exporter(
-        name="jsonp",
-        handler=_export_jsonp,
-    )
-)
-
-
 def _export_csv_export(
     row_cells: Sequence[Cell],
     group_cells: Sequence[Cell],
@@ -205,14 +175,6 @@ def _export_csv_export(
 ) -> None:
     output_csv_headers(view_spec)
     _export_csv(row_cells, group_cells, rows, view_name, view_spec)
-
-
-exporter_registry.register(
-    Exporter(
-        name="csv_export",
-        handler=_export_csv_export,
-    )
-)
 
 
 def _export_csv(
@@ -249,11 +211,3 @@ def _export_csv(
 
 def _format_for_csv(raw_data: str | HTML) -> str:
     return escaping.strip_tags(unescape(str(raw_data))).replace("\n", " ").replace('"', '""')
-
-
-exporter_registry.register(
-    Exporter(
-        name="csv",
-        handler=_export_csv,
-    )
-)

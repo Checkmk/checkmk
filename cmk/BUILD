@@ -314,7 +314,6 @@ py_wheel(
         "//cmk/gui:display_options",
         "//cmk/gui:dynamic_icon",
         "//cmk/gui:exceptions",
-        "//cmk/gui:exporter",
         "//cmk/gui:features",
         "//cmk/gui:figures",
         "//cmk/gui:flask_app",

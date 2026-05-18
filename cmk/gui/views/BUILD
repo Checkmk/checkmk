@@ -122,7 +122,6 @@ py_library(
     ],
     deps = [
         "//cmk/gui:config",
-        "//cmk/gui:exporter",
         "//cmk/gui:http",
         "//cmk/gui:i18n",
         "//cmk/gui:logged_in",
@@ -347,6 +346,7 @@ py_library(
         "_permissions.py",
         "availability.py",
         "datasource_selection.py",
+        "exporter.py",
         "page_ajax_reschedule.py",
         "page_create_view.py",
         "page_edit_view.py",
@@ -376,7 +376,6 @@ py_library(
         "//cmk/gui:ctx_stack",
         "//cmk/gui:display_options",
         "//cmk/gui:exceptions",
-        "//cmk/gui:exporter",
         "//cmk/gui:forms",
         "//cmk/gui:header",
         "//cmk/gui:http",

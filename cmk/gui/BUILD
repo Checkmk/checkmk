@@ -1468,25 +1468,6 @@ py_library(
 )
 
 py_library(
-    name = "exporter",
-    srcs = ["exporter.py"],
-    imports = ["../.."],
-    visibility = [
-        "//cmk:__subpackages__",
-        "//tests:__subpackages__",
-    ],
-    deps = [
-        ":http",
-        ":logged_in",
-        ":type_defs",
-        "//cmk/gui/painter:v0_base",
-        "//cmk/gui/utils:escaping",
-        "//cmk/gui/utils:html",
-        "//packages/cmk-ccc:plugin-registry",
-    ],
-)
-
-py_library(
     name = "view_breadcrumbs",
     srcs = ["view_breadcrumbs.py"],
     imports = ["../.."],
@@ -2120,7 +2101,6 @@ py_library(
         ":display_options",
         ":dynamic_icon",
         ":exceptions",
-        ":exporter",
         ":features",
         ":figures",
         ":flask_app",

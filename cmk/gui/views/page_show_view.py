@@ -24,7 +24,6 @@ from cmk.gui.ctx_stack import g
 from cmk.gui.data_source import data_source_registry
 from cmk.gui.display_options import display_options
 from cmk.gui.exceptions import MKMissingDataError, MKUserError
-from cmk.gui.exporter import exporter_registry
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import Request, request
 from cmk.gui.i18n import _
@@ -56,6 +55,7 @@ from cmk.gui.visuals import (
 from cmk.gui.visuals.filter import Filter
 
 from . import availability
+from .exporter import exporter_registry
 from .row_post_processing import post_process_rows
 from .sorter import SorterEntry, SorterProtocol
 from .store import get_all_views, get_permitted_views

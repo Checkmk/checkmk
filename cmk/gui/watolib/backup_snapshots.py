@@ -757,15 +757,13 @@ def _wipe_directory(path: str) -> None:
 
 
 def _list_snapshots() -> list[str]:
-    snapshots: list[str] = []
     try:
-        for f in os.listdir(snapshot_dir):
-            if os.path.isfile(snapshot_dir + f):
-                snapshots.append(f)
-        snapshots.sort(reverse=True)
+        return sorted(
+            (p.name for p in Path(snapshot_dir).iterdir() if p.is_file()),
+            reverse=True,
+        )
     except OSError:
-        pass
-    return snapshots
+        return []
 
 
 def get_last_wato_snapshot_file(*, debug: bool) -> None | str:

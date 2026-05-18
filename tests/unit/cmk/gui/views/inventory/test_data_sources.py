@@ -9,10 +9,11 @@ from livestatus import LivestatusResponse, LivestatusRow, OnlySites
 
 import cmk.gui.inventory
 import cmk.gui.utils
+from cmk.ccc.user import UserId
+from cmk.gui.type_defs import ViewSpec
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.view import View
 from cmk.gui.views.inventory._data_sources import RowTableInventory, RowTableInventoryHistory
-from cmk.gui.views.store import multisite_builtin_views
 
 EXPECTED_INV_KEYS = [
     "site",
@@ -38,9 +39,52 @@ EXPECTED_INV_HIST_KEYS = [
 
 @pytest.fixture(name="view")
 def fixture_view() -> View:
-    """Provide some arbitrary view for testing"""
-    view_spec = multisite_builtin_views["invinterface_of_host"]
-    return View("invdockerimages", view_spec, view_spec["context"], UserPermissions({}, {}, {}, []))
+    """A minimal synthetic view for the RowTableInventory.query tests.
+
+    The tests below only consume `view.datasource` (a `hosts` datasource is
+    sufficient — the row table classes mock out `_get_raw_data`) and don't
+    inspect any view-spec field, so we construct the smallest valid
+    `ViewSpec` here instead of fishing a plug-in-provided view out of
+    `multisite_builtin_views`.
+    """
+    view_spec = ViewSpec(
+        name="synthetic_test_view",
+        datasource="hosts",
+        title="synthetic test view",
+        description="",
+        owner=UserId.builtin(),
+        public=True,
+        hidden=False,
+        hidebutton=True,
+        topic="other",
+        sort_index=99,
+        is_show_more=False,
+        icon=None,
+        single_infos=[],
+        context={},
+        link_from={},
+        add_context_to_title=False,
+        packaged=False,
+        main_menu_search_terms=[],
+        layout="table",
+        num_columns=1,
+        browser_reload=0,
+        column_headers="pergroup",
+        user_sortable=True,
+        play_sounds=False,
+        force_checkboxes=False,
+        mustsearch=False,
+        mobile=False,
+        group_painters=[],
+        painters=[],
+        sorters=[],
+    )
+    return View(
+        "synthetic_test_view",
+        view_spec,
+        view_spec.get("context", {}),
+        UserPermissions({}, {}, {}, []),
+    )
 
 
 class RowTableInventoryTest1(RowTableInventory):

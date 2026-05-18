@@ -5,12 +5,10 @@
 
 
 from cmk.gui.type_defs import Rows
-from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.view import View
+from cmk.gui.views.inventory._row_post_processor import _add_inventory_data
 from cmk.gui.views.row_post_processing import post_process_rows, row_post_processor_registry
-from cmk.gui.views.store import multisite_builtin_views
 from cmk.inventory.structured_data import ImmutableTree
-from cmk.livestatus_client.testing import MockLiveStatusConnection
 
 
 def test_post_processor_registrations() -> None:
@@ -28,26 +26,17 @@ def test_post_process_rows_not_failing_on_empty_rows(view: View) -> None:
     assert not rows
 
 
-def test_post_process_rows_adds_inventory_data(
-    mock_livestatus: MockLiveStatusConnection, request_context: None
-) -> None:
-    inv_view = inventory_view()
-    host_row = {"site": "ding", "host_name": "dong"}
+def test_add_inventory_data_attaches_immutable_tree_to_rows(request_context: None) -> None:
+    """`_add_inventory_data` loads the inventory tree for each row and stores
+    it under `host_inventory`. The tree itself comes from `load_tree`, which
+    returns an empty `ImmutableTree` when the host has no on-disk inventory —
+    that's the case here, since the test doesn't materialise any host files.
+    What we're asserting is the post-processor's contract: every row that
+    carries a `host_name` ends up with a `host_inventory` of type
+    `ImmutableTree`, regardless of which view triggered the post-processing.
+    """
+    host_row: dict[str, object] = {"site": "ding", "host_name": "dong"}
     rows: Rows = [host_row]
-    mock_livestatus.expect_query(
-        "GET services\nColumns: host_has_been_checked host_name host_state service_check_command "
-        "service_description service_perf_data service_plugin_output service_pnpgraph_present "
-        "service_staleness service_state\nFilter: service_description = CPU load\n"
-        "Filter: service_description = CPU utilization\nOr: 2"
-    )
-    with mock_livestatus():
-        post_process_rows(inv_view, [], rows)
+    _add_inventory_data(rows)
     assert rows == [host_row]
     assert isinstance(host_row["host_inventory"], ImmutableTree)
-
-
-def inventory_view() -> View:
-    view_spec = multisite_builtin_views["inv_hosts_cpu"].copy()
-    return View(
-        "inv_hosts_cpu", view_spec, view_spec.get("context", {}), UserPermissions({}, {}, {}, [])
-    )

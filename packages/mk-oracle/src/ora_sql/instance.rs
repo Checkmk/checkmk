@@ -130,7 +130,13 @@ pub async fn generate_data(
         .collect();
 
     let (root_spots, root_errors) = connect_spots(all, None);
-    let (work_spots, work_errors) = make_spot_work_results(root_spots, sections, ora_sql.params());
+    let (work_spots, work_errors) = make_spot_work_results(
+        root_spots,
+        sections,
+        ora_sql.instances(),
+        ora_sql.product().cache_age(),
+        ora_sql.params(),
+    );
     let results = if ora_sql.options().threads() > 1 {
         process_spot_works_para(work_spots, ora_sql.options().threads())
     } else {

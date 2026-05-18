@@ -15,7 +15,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use super::defines::{defaults, keys, values};
-use super::section::{Section, SectionKind, Sections};
+use super::section::{names, Section, SectionKind, Sections};
 use super::yaml::{Get, Yaml};
 use crate::config::authentication::Authentication;
 use crate::config::connection::Connection;
@@ -23,8 +23,8 @@ use crate::config::options::Options;
 use crate::config::target::TargetId;
 use crate::ora_sql::detect::get_local_sid_names;
 use crate::types::{
-    DescriptorSid, HostName, InstanceAlias, InstanceName, ServiceName, ServiceType, Sid,
-    SqlBindParam,
+    DescriptorSid, HostName, InstanceAlias, InstanceName, SectionName, ServiceName, ServiceType,
+    Sid, SqlBindParam,
 };
 use anyhow::{anyhow, bail, Context, Result};
 use std::collections::hash_map::DefaultHasher;
@@ -388,6 +388,7 @@ pub struct CustomInstance {
     target_id: Option<TargetId>,
     alias: Option<InstanceAlias>,
     piggyback: Option<Piggyback>,
+    custom_metrics: Vec<Section>,
 }
 
 impl CustomInstance {
@@ -404,6 +405,7 @@ impl CustomInstance {
             target_id,
             alias,
             piggyback,
+            custom_metrics: vec![],
         }
     }
 
@@ -413,13 +415,23 @@ impl CustomInstance {
         main_conn: &Connection,
         sections: &Sections,
     ) -> Result<Self> {
-        Ok(Self::new(
-            ensure_auth(yaml, main_auth)?,
-            ensure_conn(yaml, main_conn)?,
-            TargetId::from_yaml(yaml)?,
-            yaml.get_string(keys::ALIAS).map(InstanceAlias::from),
-            Piggyback::from_yaml(yaml, sections)?,
-        ))
+        Ok(Self {
+            auth: ensure_auth(yaml, main_auth)?,
+            conn: ensure_conn(yaml, main_conn)?,
+            target_id: TargetId::from_yaml(yaml)?,
+            alias: yaml.get_string(keys::ALIAS).map(InstanceAlias::from),
+            piggyback: Piggyback::from_yaml(yaml, sections)?,
+            custom_metrics: Sections::get_sections(
+                yaml.get(keys::CUSTOM_METRICS),
+                Some(defaults::CUSTOM_METRIC_SEPARATOR),
+                Some(&SectionName::from(names::CUSTOM_METRIC.to_string())),
+            )
+            .unwrap_or_default(),
+        })
+    }
+
+    pub fn custom_metrics(&self) -> &[Section] {
+        &self.custom_metrics
     }
 
     /// may be overridden with a connection value
@@ -547,10 +559,9 @@ oracle:
       timeout: 11 # optional, default 5
       tns_admin: "/path/to/oracle/config/files/" # optional, default: agent plugin config folder. Points to the location of sqlnet.ora and tnsnames.ora
       oracle_local_registry: "/etc/oracle/olr.loc" # optional, default: folder of oracle configuration files like oratab
-    custom_metrics: # additional queries which generates <<<oracle_sql>>>> + item [SID|name] for each instance
-      - my_custom_metric: # for item generation, mandatory
-          sql: "select * from dual" # optional
-          is_async: no # optional, default: no
+    custom_metrics: # additional queries that produce <<<oracle_sql:sep(58)>>> + [[[SID|item_name]]] for each instance
+      - my_custom_metric: # item name (mandatory); becomes the subsection item
+          sql: "select 'details:hello' from dual" # inline SQL executed against the instance
     sections: # optional
       - instance: # special section
           affinity: "all" # optional, default: "db", values: "all", "db", "asm"
@@ -758,6 +769,8 @@ piggyback:
             custom.item_value().map(|v| v.as_str()),
             Some("my_custom_metric")
         );
+        assert_eq!(custom.sql(), Some("select 'details:hello' from dual"));
+        assert_eq!(custom.sep(), defaults::CUSTOM_METRIC_SEPARATOR);
 
         product.sections().iter().for_each(|s| {
             if s.name().as_str() == names::CUSTOM_METRIC {
@@ -771,6 +784,77 @@ piggyback:
         let instances = c.instances();
         assert_eq!(instances.len(), 2);
         assert_eq!(c.mode, Mode::Special);
+    }
+
+    #[test]
+    fn test_per_instance_custom_metrics_parsed_and_override_globals() {
+        const YAML: &str = r#"
+oracle:
+  main:
+    authentication:
+      username: u
+      password: p
+      type: standard
+    connection:
+      hostname: localhost
+    custom_metrics:
+      - shared_metric:
+          sql: "select 'details:GLOBAL' from dual"
+      - global_only:
+          sql: "select 'details:global_only' from dual"
+    instances:
+      - service_name: INST_A
+        custom_metrics:
+          - shared_metric:
+              sql: "select 'details:PER_INSTANCE' from dual"
+          - instance_only:
+              sql: "select 'details:instance_only' from dual"
+      - service_name: INST_B
+"#;
+        let c = Config::from_string(YAML).unwrap().unwrap();
+        // Global custom_metrics live on Sections — both global entries present.
+        let global_custom: Vec<_> = c
+            .product()
+            .sections()
+            .iter()
+            .filter_map(|s| s.item_value().map(|v| (v.as_str(), s.sql())))
+            .collect();
+        assert!(
+            global_custom.contains(&("shared_metric", Some("select 'details:GLOBAL' from dual"))),
+            "global custom_metrics: {global_custom:?}"
+        );
+        assert!(
+            global_custom.contains(&(
+                "global_only",
+                Some("select 'details:global_only' from dual")
+            )),
+            "global custom_metrics: {global_custom:?}"
+        );
+
+        let instances = c.instances();
+        let inst_a = &instances[0];
+        let inst_a_metrics: Vec<_> = inst_a
+            .custom_metrics()
+            .iter()
+            .map(|s| (s.item_value().unwrap().as_str(), s.sql()))
+            .collect();
+        // Per-instance: same shared_metric name, but per-instance SQL.
+        assert!(
+            inst_a_metrics.contains(&(
+                "shared_metric",
+                Some("select 'details:PER_INSTANCE' from dual")
+            )),
+            "per-instance metrics for INST_A: {inst_a_metrics:?}"
+        );
+        assert!(
+            inst_a_metrics.contains(&(
+                "instance_only",
+                Some("select 'details:instance_only' from dual")
+            )),
+            "per-instance metrics for INST_A: {inst_a_metrics:?}"
+        );
+        // INST_B has no per-instance custom_metrics.
+        assert!(instances[1].custom_metrics().is_empty());
     }
 
     #[test]

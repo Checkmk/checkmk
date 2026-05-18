@@ -156,15 +156,15 @@ test-gui-crawl: prepare-playwright
 	$(PYTEST) $(PYTEST_SYSTEM_TEST_ARGS) $(realpath gui_crawl)/test_gui_crawl.py
 
 test-xss-crawl: prepare-playwright
-	XSS_CRAWL=1 $(PYTEST) $(PYTEST_SYSTEM_TEST_ARGS) $(realpath gui_crawl)/test_gui_crawl.py --numprocesses=1
+	XSS_CRAWL=1 $(PYTEST) $(PYTEST_SYSTEM_TEST_ARGS) $(realpath gui_crawl)/test_gui_crawl.py
 
 test-gui-e2e test-gui-e2e-pro: prepare-playwright # full e2e test is done for pro
 	$(PYTEST) --cmk-edition pro --screenshot=only-on-failure --output="$$RESULT_PATH/" --tracing=retain-on-failure \
-	$(PYTEST_SYSTEM_TEST_ARGS) $(realpath gui_e2e) --numprocesses=1
+	$(PYTEST_SYSTEM_TEST_ARGS) $(realpath gui_e2e)
 
 test-gui-e2e-non-free: prepare-playwright # limited e2e test for non-free editions (pro or higher)
 	$(PYTEST) --screenshot=only-on-failure --output="$$RESULT_PATH/" --tracing=retain-on-failure \
-	$(PYTEST_SYSTEM_TEST_ARGS) --cmk-edition $(EDITION) $(realpath gui_e2e)/nonfree --numprocesses=1
+	$(PYTEST_SYSTEM_TEST_ARGS) --cmk-edition $(EDITION) $(realpath gui_e2e)/nonfree
 
 test-gui-e2e-ultimate:
 	EDITION=ultimate $(MAKE) test-gui-e2e-non-free

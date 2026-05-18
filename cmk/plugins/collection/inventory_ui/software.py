@@ -217,13 +217,3 @@ node_software_applications_synthetic_monitoring_scheduler_config = Node(
         },
     ),
 )
-node_software_applications_vmwareesx = Node(
-    name="software_applications_vmwareesx",
-    path=["software", "applications", "vmwareesx"],
-    title=Title("VMware ESX"),
-    table=Table(
-        columns={
-            "clusters": TextField(Title("Clusters")),
-        },
-    ),
-)

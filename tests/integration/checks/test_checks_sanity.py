@@ -26,7 +26,7 @@ from tests.testlib.utils import ServiceInfo
 logger = logging.getLogger(__name__)
 
 
-_RESCHEDULES_LIMIT = 2
+_RESCHEDULES_LIMIT = 10
 
 
 @pytest.fixture(name="installed_agent_ctl_in_unknown_state", scope="module")

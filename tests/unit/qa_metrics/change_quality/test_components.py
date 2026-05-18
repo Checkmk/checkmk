@@ -5,6 +5,7 @@
 
 from __future__ import annotations
 
+import json
 import subprocess
 from collections.abc import Sequence
 from pathlib import Path
@@ -21,7 +22,7 @@ def _touch(repo: Path, *paths: str) -> None:
         (repo / p).write_text("")
 
 
-def test_lookup_components_parses_script_output(
+def test_lookup_components_parses_json_output(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
     _touch(
@@ -37,10 +38,12 @@ def test_lookup_components_parses_script_output(
         return subprocess.CompletedProcess(
             args=list(args),
             returncode=0,
-            stdout=(
-                "cmk/gui/main.py: ui_framework\n"
-                "cmk/base/config.py: null\n"
-                "cmk/plugins/aws/agent_based/check.py: plugins_aws\n"
+            stdout=json.dumps(
+                {
+                    "cmk/gui/main.py": "ui_framework",
+                    "cmk/base/config.py": None,
+                    "cmk/plugins/aws/agent_based/check.py": "plugins_aws",
+                }
             ),
             stderr="",
         )
@@ -57,7 +60,7 @@ def test_lookup_components_parses_script_output(
         "cmk/base/config.py": None,
         "cmk/plugins/aws/agent_based/check.py": "plugins_aws",
     }
-    assert captured["args"][:2] == ["cmk-components", "component"]
+    assert captured["args"][:4] == ["cmk-components", "component", "--mode", "json"]
 
 
 def test_lookup_components_skips_paths_not_on_disk(
@@ -73,7 +76,7 @@ def test_lookup_components_skips_paths_not_on_disk(
         return subprocess.CompletedProcess(
             args=list(args),
             returncode=0,
-            stdout="cmk/gui/main.py: ui_framework\n",
+            stdout=json.dumps({"cmk/gui/main.py": "ui_framework"}),
             stderr="",
         )
 
@@ -107,7 +110,7 @@ def test_lookup_components_skips_non_utf8_files(
         return subprocess.CompletedProcess(
             args=list(args),
             returncode=0,
-            stdout="cmk/ok.py: ui_framework\n",
+            stdout=json.dumps({"cmk/ok.py": "ui_framework"}),
             stderr="",
         )
 
@@ -142,6 +145,26 @@ def test_lookup_components_aborts_on_nonzero_rc(
         lookup_components(["cmk/ok.py"], tmp_path)
 
 
+def test_lookup_components_raises_on_non_json_output(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """rc=0 with malformed JSON (e.g. an upstream regression of the output
+    contract) must fail loudly, not be parsed as 'no answers'."""
+    _touch(tmp_path, "cmk/ok.py")
+
+    def fake_run(args: Sequence[str], **kwargs: Any) -> subprocess.CompletedProcess[str]:
+        return subprocess.CompletedProcess(
+            args=list(args),
+            returncode=0,
+            stdout="cmk/ok.py: ui_framework\n",  # legacy --mode script output
+            stderr="",
+        )
+
+    monkeypatch.setattr(subprocess, "run", fake_run)
+    with pytest.raises(RuntimeError, match=r"non-JSON output"):
+        lookup_components(["cmk/ok.py"], tmp_path)
+
+
 def test_lookup_components_empty_input(tmp_path: Path) -> None:
     assert lookup_components([], tmp_path) == {}
 
@@ -161,8 +184,8 @@ def test_lookup_components_batches_to_avoid_arg_max(
 
     def fake_run(args: Sequence[str], **kwargs: Any) -> subprocess.CompletedProcess[str]:
         calls.append(list(args))
-        positional = list(args[4:])  # drop ["cmk-components", "component", "--mode", "script"]
-        stdout = "".join(f"{p}: stub\n" for p in positional)
+        positional = list(args[4:])  # drop ["cmk-components", "component", "--mode", "json"]
+        stdout = json.dumps({p: "stub" for p in positional})
         return subprocess.CompletedProcess(args=list(args), returncode=0, stdout=stdout, stderr="")
 
     monkeypatch.setattr(subprocess, "run", fake_run)

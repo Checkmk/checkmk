@@ -12,7 +12,7 @@ gerrit's REST API per path (cached locally by the tool itself).
 Two-step flow used by ``push.py``:
 
 1. Walk all commits, collect every unique non-test path → batch a single
-   ``cmk-components component --mode script`` invocation to populate a lookup.
+   ``cmk-components component --mode json`` invocation to populate a lookup.
 2. For each row, ``pick_component(files_changed, lookup)`` returns the majority
    component for that change.
 """
@@ -20,6 +20,7 @@ Two-step flow used by ``push.py``:
 from __future__ import annotations
 
 import codecs
+import json
 import logging
 import subprocess
 from collections.abc import Iterable, Mapping
@@ -74,7 +75,7 @@ def lookup_components(
 ) -> dict[str, str | None]:
     """Return ``{path: component_name_or_None}`` for ``paths``.
 
-    Invokes ``cmk-components component --mode script`` -- batched into
+    Invokes ``cmk-components component --mode json`` -- batched into
     chunks of ``batch_size`` to stay under the OS ``ARG_MAX`` limit -- for
     every path that (a) exists on disk in ``repo`` and (b) looks like a
     text file. Paths that don't satisfy both get ``None`` without ever
@@ -108,7 +109,7 @@ def lookup_components(
     for batch_start in range(0, len(queryable), batch_size):
         batch = queryable[batch_start : batch_start + batch_size]
         proc = subprocess.run(
-            ["cmk-components", "component", "--mode", "script", *batch],
+            ["cmk-components", "component", "--mode", "json", *batch],
             capture_output=True,
             text=True,
             check=False,
@@ -118,13 +119,20 @@ def lookup_components(
                 f"cmk-components exited rc={proc.returncode}. "
                 f"Refusing to push partial data. stderr:\n{proc.stderr}"
             )
-        # --mode script emits lines `path: component` or `path: null`.
-        for line in proc.stdout.splitlines():
-            path, _, component = line.partition(":")
-            path = path.strip()
-            component = component.strip()
+        # --mode json emits a single ``{path: component | null}`` object for
+        # the batch; ``null`` deserialises directly to Python ``None``. No
+        # terminal-formatted output means no $COLUMNS-dependent wrapping
+        # and no string sentinels to special-case.
+        try:
+            batch_results = json.loads(proc.stdout)
+        except json.JSONDecodeError as e:
+            raise RuntimeError(
+                f"cmk-components --mode json emitted non-JSON output: {e}. "
+                f"stdout (first 500 chars):\n{proc.stdout[:500]}"
+            ) from e
+        for path, component in batch_results.items():
             if path in result:
-                result[path] = None if component == "null" or not component else component
+                result[path] = component
     return result
 
 

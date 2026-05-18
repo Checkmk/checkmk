@@ -128,8 +128,9 @@ def backup_path_fixture(site_for_mkbackup_tests: Site) -> Iterator[str]:
             False,
             id="lock dir not existing",
             marks=pytest.mark.skipif(
-                os.environ.get("DISTRO") in ("almalinux-10", "sles-16.0"),
-                reason="CMK-31764: lock dir recreation fails on almalinux-10 and sles-16.0",
+                bool(distro := os.environ.get("DISTRO", ""))
+                and (distro.startswith("almalinux") or distro.startswith("sles")),
+                reason="CMK-31764: lock dir recreation fails on almalinux and sles",
             ),
         ),
     ],

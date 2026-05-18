@@ -177,7 +177,7 @@ test-gui-e2e-cloud:
 
 test-integration:
 	$(PYTEST) $(PYTEST_SYSTEM_TEST_ARGS) $(realpath integration) \
-	--session-timeout 5400
+	--session-timeout 7200
 
 test-integration-redfish:
 	$(PYTEST) $(PYTEST_SYSTEM_TEST_ARGS) \

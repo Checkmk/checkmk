@@ -28,11 +28,28 @@ py_library(
     imports = ["."],
     visibility = ["//visibility:public"],
     deps = [
+        ":helper-interface",
         "//packages/cmk-ccc:cleanup",
         "//packages/cmk-ccc:debug",
         "//packages/cmk-ccc:exceptions",
         "//packages/cmk-ccc:hostaddress",
         "//packages/cmk-ccc:tty",
+    ],
+)
+
+py_library(
+    name = "snmp-backends",
+    srcs = [
+        "cmk/snmp_backends/_utils.py",
+        "cmk/snmp_backends/classic.py",
+        "cmk/snmp_backends/stored_walk.py",
+    ],
+    data = ["cmk/snmp_backends/py.typed"],
+    imports = ["."],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":helper-interface",
+        ":snmplib",
     ],
 )
 
@@ -75,9 +92,6 @@ py_library(
         "cmk/fetchers/filecache/_cache.py",
         "cmk/fetchers/filecache/_snmp.py",
         "cmk/fetchers/snmp_backend/__init__.py",
-        "cmk/fetchers/snmp_backend/_utils.py",
-        "cmk/fetchers/snmp_backend/classic.py",
-        "cmk/fetchers/snmp_backend/stored_walk.py",
     ] + glob(
         [
             "cmk/fetchers/_utils/*.py",
@@ -88,6 +102,7 @@ py_library(
     visibility = ["//visibility:public"],
     deps = [
         ":helper-interface",
+        ":snmp-backends",
         ":snmplib",
         requirement("pyghmi"),
         "//packages/cmk-ccc:hostaddress",
@@ -141,6 +156,19 @@ py_test(
     ],
 )
 
+py_test(
+    name = "snmp-backends-tests",
+    size = "small",
+    srcs = glob(["tests/cmk/snmp_backends/**/*.py"]) + [":__test__.py"],
+    main = "__test__.py",
+    deps = [
+        "__test__",
+        "snmp-backends",
+        "snmplib",
+        requirement("pytest"),
+    ],
+)
+
 py_wheel(
     name = "wheel",
     distribution = "cmk-check-engine",
@@ -151,6 +179,7 @@ py_wheel(
     deps = [
         ":fetchers",
         ":helper-interface",
+        ":snmp-backends",
         ":snmplib",
     ],
 )

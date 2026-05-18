@@ -7,10 +7,9 @@
 import logging
 from types import ModuleType
 
+from cmk.snmp_backends.classic import ClassicSNMPBackend as ClassicSNMPBackend
+from cmk.snmp_backends.stored_walk import StoredWalkSNMPBackend as StoredWalkSNMPBackend
 from cmk.snmplib import SNMPBackend, SNMPBackendEnum, SNMPHostConfig
-
-from .classic import ClassicSNMPBackend as ClassicSNMPBackend
-from .stored_walk import StoredWalkSNMPBackend as StoredWalkSNMPBackend
 
 inline: ModuleType | None = None
 try:

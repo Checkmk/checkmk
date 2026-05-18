@@ -9,8 +9,8 @@ from pathlib import Path
 
 import pytest
 
-import cmk.fetchers.snmp_backend._utils as utils
-from cmk.fetchers.snmp_backend import StoredWalkSNMPBackend
+import cmk.snmp_backends._utils as utils
+from cmk.snmp_backends.stored_walk import StoredWalkSNMPBackend
 
 
 @pytest.mark.parametrize(

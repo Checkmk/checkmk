@@ -635,6 +635,8 @@ allows = [
   "@relay_protocols",
   "cmk.helper_interface",
   "cmk.inline_snmp",
+  "cmk.snmp_backends.classic",
+  "cmk.snmp_backends.stored_walk",
   "cmk.snmplib",
 ]
 
@@ -1024,6 +1026,9 @@ allows = []
 
 [components."cmk.special_agents"]
 allows = ["@ccc", "@plugin_apis", "cmk.utils.password_store", "cmk.utils.paths"]
+
+[components."cmk.snmp_backends"]
+allows = ["@ccc", "cmk.helper_interface", "cmk.snmplib"]
 
 [components."cmk.snmplib"]
 allows = ["@ccc", "cmk.agent_based.v1"]

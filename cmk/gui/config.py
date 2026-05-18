@@ -20,6 +20,7 @@ from typing import Any, Final
 
 import cmk.utils.tags
 from cmk import trace
+from cmk.ccc.site import SiteId
 from cmk.gui import log
 from cmk.gui.ctx_stack import request_local_attr, set_global_var
 from cmk.gui.exceptions import MKConfigError
@@ -287,3 +288,9 @@ def _config_plugin_modules() -> list[ModuleType]:
         for name, module in list(sys.modules.items())
         if name.startswith("cmk.gui.plugins.config.") and module is not None
     ]
+
+
+def get_page_heading(config: Config, site_id: SiteId) -> str:
+    if "%s" in config.page_heading:
+        return config.page_heading % (config.sites[site_id]["alias"])
+    return config.page_heading

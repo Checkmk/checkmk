@@ -22,7 +22,7 @@ from cmk.crypto.password import Password
 from cmk.gui import userdb
 from cmk.gui.auth import is_site_login
 from cmk.gui.breadcrumb import Breadcrumb
-from cmk.gui.config import active_config, Config
+from cmk.gui.config import active_config, Config, get_page_heading
 from cmk.gui.exceptions import FinalizeRequest, HTTPRedirect, MKAuthException, MKUserError
 from cmk.gui.header import make_header
 from cmk.gui.htmllib.generator import HTMLWriter
@@ -35,7 +35,6 @@ from cmk.gui.logged_in import (
     LoggedInSuperUser,
     user,
 )
-from cmk.gui.main import get_page_heading
 from cmk.gui.pages import Page, PageContext, PageEndpoint, PageRegistry
 from cmk.gui.permissions import permission_registry
 from cmk.gui.saml2_login import show_saml2_login
@@ -272,7 +271,7 @@ class LoginPage(Page):
         html.add_body_css_class("login")
         make_header(
             html,
-            get_page_heading(config),
+            get_page_heading(config, omd_site()),
             Breadcrumb(),
             debug=active_config.debug,
             lang=user.language,

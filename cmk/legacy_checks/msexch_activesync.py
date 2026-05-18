@@ -3,34 +3,37 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
-
-
-# mypy: disable-error-code="arg-type"
-
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.plugins.windows.agent_based.libwmi import parse_wmi_table
-from cmk.plugins.windows.agent_based.libwmi_legacy import (
-    inventory_wmi_table_total,
-    wmi_yield_raw_persec,
+from cmk.agent_based.v2 import AgentSection, CheckPlugin, CheckResult, DiscoveryResult
+from cmk.plugins.windows.agent_based.libwmi import (
+    check_wmi_raw_persec,
+    discover_wmi_table_total,
+    parse_wmi_table,
+    WMISection,
 )
 
-check_info = {}
+
+def discover_msexch_activesync(section: WMISection) -> DiscoveryResult:
+    yield from discover_wmi_table_total(section)
 
 
-def discover_msexch_activesync(parsed):
-    return inventory_wmi_table_total(parsed)
-
-
-def check_msexch_activesync(_no_item, _no_params, parsed):
-    yield from wmi_yield_raw_persec(
-        parsed[""], None, "RequestsPersec", infoname="Requests/sec", perfvar="requests_per_sec"
+def check_msexch_activesync(section: WMISection) -> CheckResult:
+    yield from check_wmi_raw_persec(
+        section[""],
+        "",
+        "RequestsPersec",
+        metric_name="requests_per_sec",
+        label="Requests/sec",
     )
 
 
-check_info["msexch_activesync"] = LegacyCheckDefinition(
+agent_section_msexch_activesync = AgentSection(
     name="msexch_activesync",
     parse_function=parse_wmi_table,
+)
+
+
+check_plugin_msexch_activesync = CheckPlugin(
+    name="msexch_activesync",
     service_name="Exchange ActiveSync",
     discovery_function=discover_msexch_activesync,
     check_function=check_msexch_activesync,

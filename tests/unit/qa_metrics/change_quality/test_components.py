@@ -66,12 +66,15 @@ def test_lookup_components_parses_json_output(
 def test_lookup_components_skips_paths_not_on_disk(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
-    """Paths that no longer exist on HEAD must be skipped before invocation,
-    otherwise cmk-components 404s and aborts the whole batch."""
+    """Paths that no longer exist on HEAD and aren't renamed to a path that
+    does must be skipped before invocation, otherwise cmk-components 404s
+    and aborts the whole batch."""
     _touch(tmp_path, "cmk/gui/main.py")  # only this one exists
     captured: dict[str, Any] = {}
 
     def fake_run(args: Sequence[str], **kwargs: Any) -> subprocess.CompletedProcess[str]:
+        if args[0] == "git":
+            return subprocess.CompletedProcess(args=list(args), returncode=0, stdout="", stderr="")
         captured["args"] = list(args)
         return subprocess.CompletedProcess(
             args=list(args),
@@ -195,6 +198,120 @@ def test_lookup_components_batches_to_avoid_arg_max(
     assert len(calls) == 3, calls  # 5 paths / batch=2 -> 2 + 2 + 1
     assert {len(c) - 4 for c in calls} == {1, 2}
     assert result == dict.fromkeys(paths, "stub")
+
+
+def test_lookup_components_follows_renames(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    """A historical path renamed to a name still on HEAD must classify via
+    its HEAD name instead of falling back to None.
+
+    Regression: ``lookup_components`` used to silently drop any path missing
+    from disk on HEAD, so commits older than the last reorganisation of the
+    codebase classified as ``source_component=None`` even when the source
+    file had simply moved.
+    """
+    _touch(tmp_path, "cmk/new/subdir/thing.py")
+    captured: dict[str, list[str]] = {}
+
+    def fake_run(args: Sequence[str], **kwargs: Any) -> subprocess.CompletedProcess[str]:
+        if args[0] == "git":
+            return subprocess.CompletedProcess(
+                args=list(args),
+                returncode=0,
+                stdout="R100\tcmk/old/thing.py\tcmk/new/subdir/thing.py\n",
+                stderr="",
+            )
+        captured["cmk_args"] = list(args)
+        positional = list(args[4:])
+        return subprocess.CompletedProcess(
+            args=list(args),
+            returncode=0,
+            stdout=json.dumps({p: "ui_framework" for p in positional}),
+            stderr="",
+        )
+
+    monkeypatch.setattr(subprocess, "run", fake_run)
+
+    result = lookup_components(["cmk/old/thing.py"], tmp_path)
+    assert result == {"cmk/old/thing.py": "ui_framework"}
+    # cmk-components is queried with the HEAD name, never the historical name.
+    assert "cmk/new/subdir/thing.py" in captured["cmk_args"]
+    assert "cmk/old/thing.py" not in captured["cmk_args"]
+
+
+def test_lookup_components_collapses_rename_chains(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """Multi-step renames A->B->C must resolve both A and B to C's component.
+    The rename map walks chains forward to their HEAD endpoint."""
+    _touch(tmp_path, "cmk/final.py")
+
+    def fake_run(args: Sequence[str], **kwargs: Any) -> subprocess.CompletedProcess[str]:
+        if args[0] == "git":
+            return subprocess.CompletedProcess(
+                args=list(args),
+                returncode=0,
+                stdout=("R100\tcmk/a.py\tcmk/b.py\nR100\tcmk/b.py\tcmk/final.py\n"),
+                stderr="",
+            )
+        positional = list(args[4:])
+        return subprocess.CompletedProcess(
+            args=list(args),
+            returncode=0,
+            stdout=json.dumps({p: "ui_framework" for p in positional}),
+            stderr="",
+        )
+
+    monkeypatch.setattr(subprocess, "run", fake_run)
+
+    # Both the original (A) and intermediate (B) names should resolve.
+    result = lookup_components(["cmk/a.py", "cmk/b.py"], tmp_path)
+    assert result == {"cmk/a.py": "ui_framework", "cmk/b.py": "ui_framework"}
+
+
+def test_lookup_components_returns_none_for_deleted_without_rename(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """A stale path with no rename to a still-existing HEAD path must
+    classify as None. The rename map can't recover deletions."""
+
+    def fake_run(args: Sequence[str], **kwargs: Any) -> subprocess.CompletedProcess[str]:
+        if args[0] == "git":
+            return subprocess.CompletedProcess(args=list(args), returncode=0, stdout="", stderr="")
+        raise AssertionError(f"unexpected cmk-components call: {args}")
+
+    monkeypatch.setattr(subprocess, "run", fake_run)
+
+    result = lookup_components(["cmk/gone_forever.py"], tmp_path)
+    assert result == {"cmk/gone_forever.py": None}
+
+
+def test_lookup_components_skips_rename_lookup_when_all_paths_on_head(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """If every input path exists on HEAD, the rename map is wasted work --
+    skip the ``git log`` invocation entirely. Walking 12 years of HEAD
+    history just to confirm 'no stale paths' would dominate per-run cost
+    in the incremental path."""
+    _touch(tmp_path, "cmk/gui/main.py", "cmk/base/config.py")
+
+    def fake_run(args: Sequence[str], **kwargs: Any) -> subprocess.CompletedProcess[str]:
+        if args[0] == "git":
+            raise AssertionError(f"git invoked but all paths are on HEAD: {args}")
+        positional = list(args[4:])
+        return subprocess.CompletedProcess(
+            args=list(args),
+            returncode=0,
+            stdout=json.dumps({p: "ui_framework" for p in positional}),
+            stderr="",
+        )
+
+    monkeypatch.setattr(subprocess, "run", fake_run)
+
+    result = lookup_components(["cmk/gui/main.py", "cmk/base/config.py"], tmp_path)
+    assert result == {
+        "cmk/gui/main.py": "ui_framework",
+        "cmk/base/config.py": "ui_framework",
+    }
 
 
 def test_pick_component_picks_majority() -> None:

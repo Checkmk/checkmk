@@ -8,12 +8,21 @@ import { provideWizardContext } from '@/components/CmkWizard/utils.ts'
 
 export interface CmkWizardProps {
   mode: 'overview' | 'guided'
+  /**
+   * When true, all navigation (next/prev/goto) becomes a no-op. Used to lock
+   * the wizard after a terminal action like a successful save, so the user
+   * cannot edit earlier steps whose data has already been persisted.
+   */
+  locked?: boolean
 }
 
-const props = defineProps<CmkWizardProps>()
+const props = withDefaults(defineProps<CmkWizardProps>(), { locked: false })
 const currentStep = defineModel<number>({ required: true })
 
 function setStep(step: number) {
+  if (props.locked) {
+    return
+  }
   currentStep.value = step
 }
 
@@ -27,6 +36,7 @@ function previousStep() {
 
 provideWizardContext({
   mode: () => props.mode,
+  locked: () => props.locked,
   isSelected: (step: number) => step === currentStep.value,
   navigation: {
     next: nextStep,

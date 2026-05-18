@@ -448,8 +448,13 @@ class GraphTemplate:
 
 def _parse_raw_graph_range(
     raw_graph_range: tuple[int | str, int | str],
-) -> FixedGraphTemplateRange:
-    return FixedGraphTemplateRange(
+) -> MinimalGraphTemplateRange:
+    # Legacy graph_info["range"] is a hint for the initial axis extent, not a hard
+    # clip: patterns like (0, "util,100,MAX") express "at least 0..100, expand if
+    # higher". Evaluated as a Fixed range against scalar metrics only, historical
+    # peaks above the current value get clipped (SUP-28579). Parsing as Minimal
+    # matches the explicit MinimalRange semantics of the 2.4 graphing API.
+    return MinimalGraphTemplateRange(
         min=parse_expression(raw_graph_range[0], {}),
         max=parse_expression(raw_graph_range[1], {}),
     )

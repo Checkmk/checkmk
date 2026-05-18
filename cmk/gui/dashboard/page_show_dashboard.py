@@ -12,7 +12,7 @@ from dataclasses import asdict
 from typing import Literal
 
 import cmk.ccc.version as cmk_version
-from cmk.gui import visuals
+from cmk.gui import hooks, visuals
 from cmk.gui.exceptions import MKAuthException
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import Request
@@ -149,6 +149,13 @@ def page_dashboard_app(ctx: PageContext) -> None:
     }
 
     html.vue_component("cmk-dashboard", data=page_properties)
+
+    # Allow extensions to render extra components in the dashboard page context.
+    # Used by the "Explain with AI" feature to attach its event listener to the
+    # parent dashboard document so panels triggered from dashlet iframes render
+    # at dashboard scope, not inside the dashlet.
+    hooks.call("dashboard-page-rendered")
+
     html.footer()
 
 

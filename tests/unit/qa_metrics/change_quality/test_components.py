@@ -168,6 +168,32 @@ def test_lookup_components_raises_on_non_json_output(
         lookup_components(["cmk/ok.py"], tmp_path)
 
 
+def test_lookup_components_raises_on_partial_output(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """cmk-components may exit 0 yet silently omit some queried paths from
+    its output (e.g. an internal exception swallowed mid-batch). The whole
+    batch must fail loudly -- otherwise the omitted paths land in postgres
+    as invisible NULLs, the same failure mode the non-zero rc check already
+    defends against."""
+    _touch(tmp_path, "cmk/a.py", "cmk/b.py")
+
+    def fake_run(args: Sequence[str], **kwargs: Any) -> subprocess.CompletedProcess[str]:
+        if args[0] == "git":
+            return subprocess.CompletedProcess(args=list(args), returncode=0, stdout="", stderr="")
+        # Drop cmk/b.py silently -- emit only a.py's answer.
+        return subprocess.CompletedProcess(
+            args=list(args),
+            returncode=0,
+            stdout=json.dumps({"cmk/a.py": "ui_framework"}),
+            stderr="",
+        )
+
+    monkeypatch.setattr(subprocess, "run", fake_run)
+    with pytest.raises(RuntimeError, match=r"cmk-components returned no line for 1 of 2"):
+        lookup_components(["cmk/a.py", "cmk/b.py"], tmp_path)
+
+
 def test_lookup_components_empty_input(tmp_path: Path) -> None:
     assert lookup_components([], tmp_path) == {}
 

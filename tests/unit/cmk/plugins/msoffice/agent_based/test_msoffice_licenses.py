@@ -11,7 +11,7 @@ from typing import Any
 import pytest
 
 from cmk.agent_based.v2 import Metric, Result, Service, State
-from cmk.legacy_checks.msoffice_licenses import (
+from cmk.plugins.msoffice.agent_based.msoffice_licenses import (
     check_msoffice_licenses,
     discover_msoffice_licenses,
     parse_msoffice_licenses,

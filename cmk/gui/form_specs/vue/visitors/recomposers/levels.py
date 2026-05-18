@@ -407,4 +407,5 @@ def recompose(form_spec: FormSpec[Any]) -> TransformDataForLegacyFormatOrRecompo
         ),
         from_disk=_transform_from_disk,
         to_disk=_transform_to_disk,
+        migrate=form_spec.migrate,
     )

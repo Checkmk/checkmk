@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
-
 # Example Output:
 # <<<msexch_replhealth:sep(58)>>>
 # RunspaceId       : d58353f4-f868-43b2-8404-25875841a47b
@@ -26,44 +24,51 @@
 # IsValid          : True
 #
 
-
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import StringTable
-
-check_info = {}
-
-
-def discover_msexch_replhealth(info):
-    for line in info:
-        if line[0].strip().lower() == "check":
-            yield line[1].strip(), None
-
-
-def check_msexch_replhealth(item, _no_params, info):
-    getit = False
-    for line in info:
-        if len(line) == 2:
-            key, val = (i.strip() for i in line)
-            if key == "Check" and val == item:
-                getit = True
-            elif key == "Result" and getit:
-                if val == "Passed" or val.endswith("fung bestanden"):
-                    infotxt = "Test Passed"
-                    state = 0
-                else:
-                    infotxt = val
-                    state = 1
-                return state, infotxt
-    return None
+from cmk.agent_based.v2 import (
+    AgentSection,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Result,
+    Service,
+    State,
+    StringTable,
+)
 
 
 def parse_msexch_replhealth(string_table: StringTable) -> StringTable:
     return string_table
 
 
-check_info["msexch_replhealth"] = LegacyCheckDefinition(
+def discover_msexch_replhealth(section: StringTable) -> DiscoveryResult:
+    for line in section:
+        if line[0].strip().lower() == "check":
+            yield Service(item=line[1].strip())
+
+
+def check_msexch_replhealth(item: str, section: StringTable) -> CheckResult:
+    getit = False
+    for line in section:
+        if len(line) == 2:
+            key, val = (i.strip() for i in line)
+            if key == "Check" and val == item:
+                getit = True
+            elif key == "Result" and getit:
+                if val == "Passed" or val.endswith("fung bestanden"):
+                    yield Result(state=State.OK, summary="Test Passed")
+                else:
+                    yield Result(state=State.WARN, summary=val)
+                return
+
+
+agent_section_msexch_replhealth = AgentSection(
     name="msexch_replhealth",
     parse_function=parse_msexch_replhealth,
+)
+
+
+check_plugin_msexch_replhealth = CheckPlugin(
+    name="msexch_replhealth",
     service_name="Exchange Replication Health %s",
     discovery_function=discover_msexch_replhealth,
     check_function=check_msexch_replhealth,

@@ -3,16 +3,20 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# Snapshot tests of the rulespec_(group_)registry contents, asserting the full set
-# of groups and rulesets registered by the community plugin chain. They live in
-# this directory because they require the //cmk/gui/plugins/wato:check_parameters
-# carrier so the dynamically-generated `static/<X>` subgroups (e.g. static/printers,
-# static/virtualization) and the `monconf/virtualization` group get populated by
-# legacy rulespec registration. Without check_parameters loaded the registries are
-# strict subsets and these snapshots are off by 3 entries.
+import pytest
 
+from cmk.ccc.version import Edition
+from cmk.gui import main_modules
 from cmk.gui.rule_specs.legacy_converter import GENERATED_GROUP_PREFIX
 from cmk.gui.watolib.rulespecs import rulespec_group_registry, rulespec_registry
+
+
+@pytest.fixture(scope="module", autouse=True)
+def _load_gui_plugins() -> None:
+    """Run the gui edition's full plug-in registration chain so the rulespec
+    registries are populated with the production set the snapshots assert on.
+    """
+    main_modules.register(Edition.COMMUNITY)
 
 
 def _is_dynamically_generated_group(group_name: str) -> bool:
@@ -20,8 +24,12 @@ def _is_dynamically_generated_group(group_name: str) -> bool:
     return group_name.rsplit("/", maxsplit=1)[-1].startswith(GENERATED_GROUP_PREFIX)
 
 
-def _expected_rulespec_group_choices() -> list[tuple[str, str]]:
-    expected = [
+def test_rulespec_group_choices() -> None:
+    assert {
+        g
+        for g in rulespec_group_registry.get_group_choices()
+        if not _is_dynamically_generated_group(g[0])
+    } == {
         ("activechecks", "HTTP, TCP, email, ..."),
         ("agent", "Access to agents"),
         ("agent/check_mk_agent", "&nbsp;&nbsp;⌙ Checkmk agent"),
@@ -75,22 +83,13 @@ def _expected_rulespec_group_choices() -> list[tuple[str, str]]:
         ("static/storage", "&nbsp;&nbsp;⌙ Storage, file systems and files"),
         ("static/virtualization", "&nbsp;&nbsp;⌙ Virtualization"),
         ("vm_cloud_container", "VM, cloud, container"),
-    ]
-
-    return expected
-
-
-def test_rulespec_group_choices() -> None:
-    actual_choices = [
-        g
-        for g in rulespec_group_registry.get_group_choices()
-        if not _is_dynamically_generated_group(g[0])
-    ]
-    assert sorted(actual_choices) == sorted(_expected_rulespec_group_choices())
+    }
 
 
 def test_rulespec_get_all_groups() -> None:
-    expected_rulespec_groups = [
+    assert {
+        g for g in rulespec_registry.get_all_groups() if not _is_dynamically_generated_group(g)
+    } == {
         "activechecks",
         "host_monconf/host_checks",
         "host_monconf/host_notifications",
@@ -125,14 +124,7 @@ def test_rulespec_get_all_groups() -> None:
         "datasource_programs/apps",
         "datasource_programs/custom",
         "datasource_programs/hw",
-        # Currently does not show up in the test because all of the plugins have been
-        # migrated to cmk-plugins and the test can't see them.
-        # "datasource_programs/os",
+        "datasource_programs/os",
         "inventory",
         "eventconsole",
-    ]
-
-    actual_rulespec_groups = [
-        g for g in rulespec_registry.get_all_groups() if not _is_dynamically_generated_group(g)
-    ]
-    assert sorted(actual_rulespec_groups) == sorted(expected_rulespec_groups)
+    }

@@ -26,6 +26,7 @@ py_library(
         "//cmk/fields",
         "//cmk/gui:app",
         "//cmk/gui/openapi/spec/spec_generator:_core",
+        "//cmk/gui/plugins/wato/check_parameters",
         "//cmk/inventory",
         "//cmk/inventory:cmk_inventory_main",
         "//cmk/legacy_checks",

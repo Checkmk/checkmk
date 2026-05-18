@@ -116,6 +116,49 @@ class TestPiggybackSummarizer:
             == expected_results
         )
 
+    def test_summarize_outdated_data_with_fresh_source_does_not_add_aggregate_warning(
+        self,
+    ) -> None:
+        # Container/VM moved between source hosts: the old source's piggyback
+        # file is still on disk but stale, while the new source provides
+        # fresh data. The aggregate WARN MUST NOT be added in this case --
+        # discovery has to be able to proceed to transition the host to the
+        # new source rather than wait for the daily piggyback cleanup job.
+        now = int(time.time())
+        assert summarize_piggyback(
+            host_sections=HostSections(
+                {
+                    SectionName("piggyback_source_summary"): [
+                        [
+                            PiggybackMetaData(
+                                source=HostAddress("old_source"),
+                                piggybacked=HostName("hostname"),
+                                last_update=now - 20,
+                                last_contact=now - 10,
+                            ).serialize()
+                        ],
+                        [
+                            PiggybackMetaData(
+                                source=HostAddress("new_source"),
+                                piggybacked=HostName("hostname"),
+                                last_update=now,
+                                last_contact=now - 1,
+                            ).serialize()
+                        ],
+                    ],
+                }
+            ),
+            config=PiggybackConfig(HostName("hostname"), [(None, "max_cache_age", 10)]),
+            expect_data=True,
+            now=now,
+        ) == [
+            ActiveCheckResult(
+                state=0,
+                summary="Piggyback data outdated (age: 0:00:20, allowed: 0:00:10)",
+            ),
+            ActiveCheckResult(state=0, summary="Successfully processed from source 'new_source'"),
+        ]
+
     @pytest.mark.parametrize("expect_data", [True, False])
     def test_summarize_abandoned_data_without_tolerance_regardless_of_is_piggyback_option(
         self, expect_data: bool

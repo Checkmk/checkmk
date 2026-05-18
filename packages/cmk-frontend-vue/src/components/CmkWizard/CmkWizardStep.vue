@@ -46,7 +46,8 @@ function onClickGoTo() {
     :class="{
       'cmk-wizard-step--active': context.isSelected(index) && context.mode() !== 'overview',
       'cmk-wizard-step--complete': isCompleted() && context.mode() !== 'overview',
-      'cmk-wizard-step--overview': context.mode() === 'overview'
+      'cmk-wizard-step--overview': context.mode() === 'overview',
+      'cmk-wizard-step--locked': context.locked()
     }"
     :aria-current="isActive ? 'step' : undefined"
     @click="onClickGoTo"
@@ -149,7 +150,11 @@ function onClickGoTo() {
     }
   }
 
-  &.cmk-wizard-step--complete:not(.cmk-wizard-step--active, .cmk-wizard-step--overview) {
+  &.cmk-wizard-step--complete:not(
+      .cmk-wizard-step--active,
+      .cmk-wizard-step--overview,
+      .cmk-wizard-step--locked
+    ) {
     &::before {
       cursor: pointer;
     }

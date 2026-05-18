@@ -129,6 +129,57 @@ describe('CmkWizardStep', () => {
   })
 })
 
+describe('CmkWizardStep locked wizard', () => {
+  const twoStepLockedWizard = defineComponent({
+    components: { CmkWizard, CmkWizardStep, CmkWizardButton },
+    setup() {
+      // Start on step 2 so step 1 is "completed" — that's the post-save
+      // shape where the wizard gets locked.
+      const currentStep = ref(2)
+      return { currentStep }
+    },
+    template: `
+      <CmkWizard v-model="currentStep" mode="guided" :locked="true">
+        <CmkWizardStep :index="1" :is-completed="() => currentStep > 1">
+          <template #header><h2>Step 1 heading</h2></template>
+          <template #content><div data-testid="content-1">Content 1</div></template>
+        </CmkWizardStep>
+        <CmkWizardStep :index="2" :is-completed="() => currentStep > 2">
+          <template #header><h2>Step 2 heading</h2></template>
+          <template #content><div data-testid="content-2">Content 2</div></template>
+          <template #actions>
+            <CmkWizardButton type="previous" />
+          </template>
+        </CmkWizardStep>
+      </CmkWizard>
+    `
+  })
+
+  test('Previous button does not navigate when wizard is locked', async () => {
+    const user = userEvent.setup()
+    render(twoStepLockedWizard)
+
+    expect(screen.getByTestId('content-2')).toBeVisible()
+
+    await user.click(screen.getByRole('button', { name: /previous step/i }))
+
+    // Still on step 2 — navigation was blocked.
+    expect(screen.getByTestId('content-2')).toBeVisible()
+    expect(screen.getByTestId('content-1')).not.toBeVisible()
+  })
+
+  test('clicking a completed step header does not navigate when locked', async () => {
+    const user = userEvent.setup()
+    render(twoStepLockedWizard)
+
+    await user.click(screen.getByText('Step 1 heading'))
+
+    // Step 1 is completed but the locked wizard refused the jump.
+    expect(screen.getByTestId('content-2')).toBeVisible()
+    expect(screen.getByTestId('content-1')).not.toBeVisible()
+  })
+})
+
 describe('CmkWizardStep overview mode', () => {
   test('all step content is visible simultaneously', () => {
     render(twoStepOverviewWizard)

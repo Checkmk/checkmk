@@ -5,7 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 
 <script setup lang="ts">
-import { computed, ref, useTemplateRef } from 'vue'
+import { computed, ref, useTemplateRef, watch } from 'vue'
 
 import usei18n from '@/lib/i18n'
 
@@ -95,6 +95,27 @@ const finalizeActions = computed<readonly PostSaveAction[]>(() => {
  */
 const saveState = ref<FinalizeState>('idle')
 
+// Single source of truth for the finalize-step index — also bound to the
+// matching <CmkWizardStep :index="STEP_FINALIZE"> in the template, so adding
+// or reordering steps cannot silently desynchronise the watch below.
+const STEP_FINALIZE = 3
+
+// Once the post-save actions succeed, the configs already exist on the
+// backend. Force the user back to the finalize step in guided mode so they
+// cannot edit earlier-step form fields — which would otherwise look editable
+// but never get saved. The wizard's `locked` binding below also disables
+// Previous / step-badge navigation.
+watch(saveState, (value) => {
+  if (value === 'success') {
+    currentMode.value = 'guided'
+    currentStep.value = STEP_FINALIZE
+  }
+})
+
+// Hide the mode toggle and the Previous buttons once the save succeeds, so
+// the user cannot route around the wizard's `locked` binding visually.
+const showBackControls = computed(() => saveState.value !== 'success')
+
 const saveButtonLabel = computed(() =>
   saveState.value === 'success'
     ? _t('Finish & go to Activate changes')
@@ -126,8 +147,8 @@ async function onSaveClick(): Promise<void> {
 </script>
 
 <template>
-  <CmkWizardModeToggle v-model="currentMode" />
-  <CmkWizard v-model="currentStep" :mode="currentMode">
+  <CmkWizardModeToggle v-if="showBackControls" v-model="currentMode" />
+  <CmkWizard v-model="currentStep" :mode="currentMode" :locked="!showBackControls">
     <CmkWizardStep :index="1" :is-completed="() => currentStep > 1">
       <template #header>
         <CmkHeading>
@@ -169,10 +190,10 @@ async function onSaveClick(): Promise<void> {
       </template>
       <template #actions>
         <CmkWizardButton type="next" :validation-cb="validatePrometheusScraper" />
-        <CmkWizardButton type="previous" />
+        <CmkWizardButton v-if="showBackControls" type="previous" />
       </template>
     </CmkWizardStep>
-    <CmkWizardStep :index="3" :is-completed="() => currentStep > 3">
+    <CmkWizardStep :index="STEP_FINALIZE" :is-completed="() => currentStep > STEP_FINALIZE">
       <template #header>
         <CmkHeading>
           {{ _t('Finalize configuration') }}
@@ -212,7 +233,7 @@ async function onSaveClick(): Promise<void> {
           :disabled="saveButtonDisabled"
           @click="onSaveClick"
         />
-        <CmkWizardButton type="previous" />
+        <CmkWizardButton v-if="showBackControls" type="previous" />
       </template>
     </CmkWizardStep>
   </CmkWizard>

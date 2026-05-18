@@ -7,6 +7,13 @@ import { type InjectionKey, inject, provide } from 'vue'
 
 export interface WizardContext {
   mode: () => 'overview' | 'guided'
+  /**
+   * Optional so existing/parallel providers (real CmkWizard, test mocks,
+   * branches that pre-date the lock-after-save feature) keep satisfying the
+   * interface and default to "not locked". Readers see it as non-optional
+   * because `getWizardContext` fills the default in.
+   */
+  locked?: () => boolean
   isSelected: (index: number) => boolean
   navigation: WizardNavigation
 }
@@ -23,10 +30,10 @@ export function provideWizardContext(context: WizardContext): void {
   provide(wizardContextProvider, context)
 }
 
-export function getWizardContext(): WizardContext {
+export function getWizardContext(): WizardContext & { locked: () => boolean } {
   const context = inject(wizardContextProvider)
   if (context === undefined) {
     throw Error('can only be used inside a CmkWizard')
   }
-  return context
+  return { locked: () => false, ...context }
 }

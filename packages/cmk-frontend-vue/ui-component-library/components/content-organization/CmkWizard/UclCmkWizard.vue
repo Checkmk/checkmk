@@ -43,6 +43,11 @@ export const panelConfig = {
       { title: 'Step 3', name: '3' }
     ],
     initialState: '1'
+  },
+  locked: {
+    type: 'boolean' as const,
+    title: 'Locked',
+    initialState: false
   }
 } satisfies PanelConfigFor<typeof CmkWizard, 'modelValue'> & { currentStep: ListPropDef }
 </script>
@@ -99,7 +104,7 @@ const wizardMode = computed({
           <CmkWizardModeToggle v-model="wizardMode" />
         </div>
 
-        <CmkWizard v-model="wizardStep" :mode="wizardMode">
+        <CmkWizard v-model="wizardStep" :mode="wizardMode" :locked="propState.locked as boolean">
           <CmkWizardStep :index="1" :is-completed="() => wizardStep > 1">
             <template #header><CmkHeading type="h3">Step 1: Introduction</CmkHeading></template>
             <template #content>

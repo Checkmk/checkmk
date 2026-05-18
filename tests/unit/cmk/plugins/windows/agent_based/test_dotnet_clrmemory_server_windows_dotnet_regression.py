@@ -9,15 +9,15 @@
 # test by something more appropriate.
 
 """
-Test regression scenarios for .NET CLR Memory monitoring showing 4.08% GC time.
+Test regression scenarios for .NET CLR Memory monitoring showing 1.84% GC time.
 This test covers the dotnet_clrmemory check with WMI data from a Windows server
-showing _Global_ instance with higher garbage collection overhead.
+showing _Global_ instance with moderate garbage collection overhead.
 """
 
 import pytest
 
 from cmk.agent_based.v2 import Metric, Result, Service, State
-from cmk.legacy_checks.dotnet_clrmemory import (
+from cmk.plugins.windows.agent_based.dotnet_clrmemory import (
     check_dotnet_clrmemory,
     discover_dotnet_clrmemory,
 )
@@ -26,7 +26,7 @@ from cmk.plugins.windows.agent_based.libwmi import parse_wmi_table, WMISection
 
 @pytest.fixture(name="test_data")
 def fixture_test_data() -> list[list[str]]:
-    """WMI data for .NET CLR Memory regression test with 4.08% GC time."""
+    """WMI data for .NET CLR Memory regression test with 1.84% GC time."""
     return [
         [
             "AllocatedBytesPersec",
@@ -64,144 +64,144 @@ def fixture_test_data() -> list[list[str]]:
             "Timestamp_Sys100NS",
         ],
         [
-            "342508834992",
+            "21380464834160",
             "",
             "",
-            "3200",
+            "13821",
             "0",
             "14318180",
             "10000000",
-            "433175112",
-            "23101720",
-            "35139360",
-            "3347712",
-            "59379192",
-            "21526728",
+            "2012417216",
+            "4762504",
+            "28497416",
+            "718488",
+            "257543384",
+            "239855984",
             "_Global_",
-            "116045280",
-            "40551",
-            "6458",
-            "2250",
-            "1302",
-            "86",
-            "110",
-            "8487",
-            "266633216",
-            "9663578112",
-            "175321424",
+            "525896784",
+            "45499",
+            "894395",
+            "717878",
+            "531223",
+            "68441",
+            "2517",
+            "3222",
+            "2800212096",
+            "64290166912",
+            "78964360",
             "-1",
             "0",
-            "313116",
-            "23101720",
-            "3347712",
+            "491512",
+            "4762504",
+            "718488",
             "0",
-            "18557575439465",
-            "131407216716290000",
+            "57866201615573",
+            "131407819020030000",
         ],
         [
-            "70522792",
+            "1034323144",
             "",
             "",
-            "253",
+            "421",
             "0",
             "14318180",
             "10000000",
-            "29636664",
-            "633280",
-            "645880",
-            "3347712",
-            "4912856",
-            "939496",
+            "13107200",
+            "0",
+            "1041864",
+            "0",
+            "12959776",
+            "8008032",
             "powershell",
-            "8831224",
-            "1344",
-            "198",
-            "39",
-            "13",
+            "22009672",
+            "3195",
+            "64",
+            "6",
+            "4",
             "0",
-            "10",
-            "52",
-            "36143104",
-            "1073737728",
+            "34",
+            "47",
+            "75497472",
+            "2155872256",
             "0",
-            "689347",
-            "3872",
+            "453642218",
+            "8544",
             "0",
-            "633280",
-            "3347712",
             "0",
-            "18557575439465",
-            "131407216716290000",
+            "0",
+            "0",
+            "57866201615573",
+            "131407819020030000",
         ],
         [
-            "272026042680",
+            "26556067040",
             "",
             "",
-            "2947",
+            "12972",
             "0",
             "14318180",
             "10000000",
-            "403538448",
-            "22468440",
-            "34493480",
-            "0",
-            "54466336",
-            "20587232",
+            "171793984",
+            "1121296",
+            "1121488",
+            "1008",
+            "8512416",
+            "6165288",
             "w3wp",
-            "107214272",
-            "39207",
-            "6260",
-            "2211",
-            "1289",
-            "86",
-            "100",
-            "8435",
-            "230489600",
-            "8589930496",
-            "175321424",
-            "689347",
-            "3132",
-            "313116",
-            "22468440",
+            "15799192",
+            "1267",
+            "339",
+            "121",
+            "7",
             "0",
+            "214",
+            "47",
+            "188348800",
+            "5368707456",
+            "6451",
+            "453642218",
+            "8544",
+            "40072",
+            "1121296",
+            "1008",
             "0",
-            "18557575439465",
-            "131407216716290000",
+            "57866201615573",
+            "131407819020030000",
         ],
         [
-            "7909916312",
+            "28505439528",
             "",
             "",
-            "469",
+            "35",
             "0",
             "14318180",
             "10000000",
-            "6291456",
-            "974888",
-            "1668344",
+            "171793984",
+            "35560",
+            "6990272",
             "0",
-            "20297936",
-            "2014816",
-            "WmiPrvSE",
-            "23981096",
-            "22337",
-            "1230",
-            "363",
+            "82755208",
+            "2618360",
+            "Microsoft.Exchange.EdgeSyncSvc",
+            "19863824",
+            "939",
+            "1043",
+            "109",
+            "38",
+            "0",
+            "142",
             "13",
+            "294911520",
+            "2415919104",
+            "0",
+            "453642218",
+            "8584",
+            "35560",
+            "35560",
             "0",
             "0",
-            "6770",
-            "29421568",
-            "402644992",
-            "48875",
-            "689347",
-            "2708",
-            "17108",
-            "974888",
-            "0",
-            "0",
-            "18557575439465",
-            "131407216716290000",
+            "57866201615573",
+            "131407819020030000",
         ],
     ]
 
@@ -219,7 +219,7 @@ def test_dotnet_clrmemory_discovery(parsed_wmi: WMISection) -> None:
 
 
 def test_dotnet_clrmemory_check_global_instance(parsed_wmi: WMISection) -> None:
-    """Test check of _Global_ instance showing 4.08% GC time."""
+    """Test check of _Global_ instance showing 1.84% GC time."""
     check_result = list(check_dotnet_clrmemory("_Global_", {"upper": (10.0, 15.0)}, parsed_wmi))
 
     assert len(check_result) == 2
@@ -228,35 +228,35 @@ def test_dotnet_clrmemory_check_global_instance(parsed_wmi: WMISection) -> None:
     assert isinstance(metric, Metric)
 
     assert result_obj.state == State.OK
-    assert "Time spent in Garbage Collection: 4.08%" in result_obj.summary
+    assert "Time spent in Garbage Collection: 1.84%" in result_obj.summary
 
     assert metric.name == "percent"
-    assert abs(metric.value - 4.082020000573718) < 0.001
+    assert abs(metric.value - 1.8385322768796544) < 0.001
     assert metric.levels == (10.0, 15.0)
 
 
 def test_dotnet_clrmemory_threshold_warning(parsed_wmi: WMISection) -> None:
     """Test warning threshold behavior."""
-    check_result = list(check_dotnet_clrmemory("_Global_", {"upper": (3.0, 5.0)}, parsed_wmi))
+    check_result = list(check_dotnet_clrmemory("_Global_", {"upper": (1.0, 2.0)}, parsed_wmi))
 
     assert len(check_result) == 2
     result_obj, _metric = check_result
     assert isinstance(result_obj, Result)
 
     assert result_obj.state == State.WARN
-    assert "Time spent in Garbage Collection: 4.08%" in result_obj.summary
+    assert "Time spent in Garbage Collection: 1.84%" in result_obj.summary
 
 
 def test_dotnet_clrmemory_threshold_critical(parsed_wmi: WMISection) -> None:
     """Test critical threshold behavior."""
-    check_result = list(check_dotnet_clrmemory("_Global_", {"upper": (2.0, 3.0)}, parsed_wmi))
+    check_result = list(check_dotnet_clrmemory("_Global_", {"upper": (0.5, 1.0)}, parsed_wmi))
 
     assert len(check_result) == 2
     result_obj, _metric = check_result
     assert isinstance(result_obj, Result)
 
     assert result_obj.state == State.CRIT
-    assert "Time spent in Garbage Collection: 4.08%" in result_obj.summary
+    assert "Time spent in Garbage Collection: 1.84%" in result_obj.summary
 
 
 def test_dotnet_clrmemory_nonexistent_item(parsed_wmi: WMISection) -> None:

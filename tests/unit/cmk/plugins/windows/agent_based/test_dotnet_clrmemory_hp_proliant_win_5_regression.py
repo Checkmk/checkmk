@@ -12,7 +12,7 @@
 import pytest
 
 from cmk.agent_based.v2 import Metric, Result, Service, State, StringTable
-from cmk.legacy_checks.dotnet_clrmemory import (
+from cmk.plugins.windows.agent_based.dotnet_clrmemory import (
     check_dotnet_clrmemory,
     discover_dotnet_clrmemory,
 )
@@ -21,7 +21,7 @@ from cmk.plugins.windows.agent_based.libwmi import parse_wmi_table, WMISection
 
 @pytest.fixture(name="string_table")
 def string_table_fixture() -> StringTable:
-    """Test data for .NET CLR Memory with Windows Server showing 8.78% GC time"""
+    """Test data for .NET CLR Memory with HP Proliant Windows server"""
     return [
         [
             "AllocatedBytesPersec",
@@ -59,74 +59,73 @@ def string_table_fixture() -> StringTable:
             "Timestamp_Sys100NS",
         ],
         [
-            "766573506832",
+            "687389776176",
             "",
             "",
-            "761",
+            "1498",
             "0",
-            "2240904",
+            "2734511",
             "10000000",
-            "12582912",
-            "2708256",
-            "3461688",
-            "124320",
-            "60014800",
-            "3584288",
+            "893649480",
+            "8245000",
+            "19597152",
+            "386480",
+            "66266864",
+            "10647216",
             "_Global_",
-            "67060776",
-            "20831",
-            "60934",
-            "7064",
-            "1038",
-            "388",
-            "0",
-            "392",
-            "79908864",
-            "805289984",
-            "377048032",
+            "96511232",
+            "113029",
+            "128183",
+            "116842",
+            "4553",
+            "67",
+            "616",
+            "36628",
+            "233213952",
+            "22950764544",
+            "108935240",
             "-1",
             "0",
-            "406627",
-            "2708256",
-            "124320",
+            "588533",
+            "8245000",
+            "386480",
             "0",
-            "4227247572262",
-            "131350801098190000",
+            "12303331941741",
+            "131097013721920000",
         ],
         [
-            "0",
+            "661680",
             "",
             "",
             "0",
             "0",
-            "2240904",
+            "2734511",
             "10000000",
+            "4194304",
+            "0",
+            "24",
+            "0",
+            "164512",
+            "34600",
+            "MonitoringHost",
+            "199136",
+            "42",
+            "16",
+            "16",
             "0",
             "0",
             "0",
+            "1",
+            "4358144",
+            "4194304",
+            "0",
+            "-1",
+            "5324",
+            "588533",
             "0",
             "0",
-            "0",
-            "sqlservr#3",
-            "0",
-            "26",
-            "0",
-            "0",
-            "0",
-            "0",
-            "0",
-            "2",
-            "0",
-            "0",
-            "0",
-            "0",
-            "0",
-            "406627",
-            "0",
-            "0",
-            "0",
-            "4227247572262",
-            "131350801098190000",
+            "12303331941741",
+            "131097013721920000",
         ],
     ]
 
@@ -144,7 +143,7 @@ def test_discover_dotnet_clrmemory(parsed: WMISection) -> None:
 
 
 def test_check_dotnet_clrmemory_global(parsed: WMISection) -> None:
-    """Test check function for _Global_ item showing 8.78% GC time"""
+    """Test check function for _Global_ item"""
     result = list(check_dotnet_clrmemory("_Global_", {"upper": (10.0, 15.0)}, parsed))
 
     assert len(result) == 2
@@ -153,17 +152,17 @@ def test_check_dotnet_clrmemory_global(parsed: WMISection) -> None:
     assert isinstance(metric, Metric)
 
     assert result_obj.state == State.OK
-    assert "Time spent in Garbage Collection: 8.78%" in result_obj.summary
+    assert "Time spent in Garbage Collection: 2.54%" in result_obj.summary
 
     assert metric.name == "percent"
-    assert abs(metric.value - 8.778833599942464) < 0.0001
+    assert abs(metric.value - 2.5363462051694157) < 0.0001
     assert metric.levels == (10.0, 15.0)
     assert metric.boundaries == (0.0, 100.0)
 
 
-def test_check_dotnet_clrmemory_sqlservr(parsed: WMISection) -> None:
-    """Test check function for sqlservr#3 item with 0% GC time"""
-    result = list(check_dotnet_clrmemory("sqlservr#3", {"upper": (10.0, 15.0)}, parsed))
+def test_check_dotnet_clrmemory_monitoring_host(parsed: WMISection) -> None:
+    """Test check function for MonitoringHost item"""
+    result = list(check_dotnet_clrmemory("MonitoringHost", {"upper": (10.0, 15.0)}, parsed))
 
     assert len(result) == 2
     result_obj, metric = result
@@ -178,33 +177,26 @@ def test_check_dotnet_clrmemory_sqlservr(parsed: WMISection) -> None:
     assert metric.levels == (10.0, 15.0)
 
 
-def test_check_dotnet_clrmemory_high_gc_warning(parsed: WMISection) -> None:
-    """Test check function with GC time triggering warning"""
-    result = list(check_dotnet_clrmemory("_Global_", {"upper": (5.0, 12.0)}, parsed))
+def test_check_dotnet_clrmemory_nonexistent_item(parsed: WMISection) -> None:
+    """Test check function with non-existent item"""
+    result = list(check_dotnet_clrmemory("nonexistent", {"upper": (10.0, 15.0)}, parsed))
+    assert result == []
+
+
+def test_check_dotnet_clrmemory_high_gc_time(parsed: WMISection) -> None:
+    """Test check function with high GC time triggering warning/critical"""
+    result = list(check_dotnet_clrmemory("_Global_", {"upper": (1.0, 3.0)}, parsed))
 
     assert len(result) == 2
     result_obj, _metric = result
     assert isinstance(result_obj, Result)
 
     assert result_obj.state == State.WARN
-    assert "Time spent in Garbage Collection: 8.78%" in result_obj.summary
-    assert "(warn/crit at 5.00%/12.00%)" in result_obj.summary
+    assert "Time spent in Garbage Collection: 2.54%" in result_obj.summary
+    assert "(warn/crit at 1.00%/3.00%)" in result_obj.summary
 
 
-def test_check_dotnet_clrmemory_high_gc_critical(parsed: WMISection) -> None:
-    """Test check function with GC time triggering critical"""
-    result = list(check_dotnet_clrmemory("_Global_", {"upper": (2.0, 7.0)}, parsed))
-
-    assert len(result) == 2
-    result_obj, _metric = result
-    assert isinstance(result_obj, Result)
-
-    assert result_obj.state == State.CRIT
-    assert "Time spent in Garbage Collection: 8.78%" in result_obj.summary
-    assert "(warn/crit at 2.00%/7.00%)" in result_obj.summary
-
-
-def test_check_dotnet_clrmemory_nonexistent_item(parsed: WMISection) -> None:
-    """Test check function with non-existent item"""
-    result = list(check_dotnet_clrmemory("nonexistent", {"upper": (10.0, 15.0)}, parsed))
-    assert result == []
+def test_check_dotnet_clrmemory_no_parameters(parsed: WMISection) -> None:
+    """Test check function with no upper level parameters"""
+    with pytest.raises(KeyError):
+        list(check_dotnet_clrmemory("_Global_", {}, parsed))

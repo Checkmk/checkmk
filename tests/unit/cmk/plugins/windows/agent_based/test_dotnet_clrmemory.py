@@ -11,7 +11,7 @@ from typing import Any
 import pytest
 
 from cmk.agent_based.v2 import Metric, Result, Service, State, StringTable
-from cmk.legacy_checks.dotnet_clrmemory import (
+from cmk.plugins.windows.agent_based.dotnet_clrmemory import (
     check_dotnet_clrmemory,
     discover_dotnet_clrmemory,
 )

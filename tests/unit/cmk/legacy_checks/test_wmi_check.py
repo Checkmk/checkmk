@@ -114,7 +114,7 @@ def test_wmi_cpu_load_no_discovery(check_name: str, info: StringTable) -> None:
 
 
 def test_dotnet_clrmemory_no_discovery_on_timeout() -> None:
-    from cmk.legacy_checks.dotnet_clrmemory import discover_dotnet_clrmemory
+    from cmk.plugins.windows.agent_based.dotnet_clrmemory import discover_dotnet_clrmemory
     from cmk.plugins.windows.agent_based.libwmi import parse_wmi_table
 
     assert not list(discover_dotnet_clrmemory(parse_wmi_table([["WMItimeout"]])))

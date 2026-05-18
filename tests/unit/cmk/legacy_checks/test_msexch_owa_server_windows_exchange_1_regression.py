@@ -15,9 +15,9 @@ from typing import Any
 
 import pytest
 
-from cmk.agent_based.v2 import GetRateError
+from cmk.agent_based.v2 import GetRateError, Service
 from cmk.legacy_checks import msexch_owa
-from cmk.plugins.windows.agent_based import libwmi_legacy as wmi
+from cmk.plugins.windows.agent_based import libwmi as wmi
 from cmk.plugins.windows.agent_based.libwmi import parse_wmi_table
 
 
@@ -66,17 +66,15 @@ def fixture_parsed() -> Mapping[str, Any]:
 def test_msexch_owa_discovery(parsed: Mapping[str, Any]) -> None:
     """Test discovery function returns correct items."""
     result = list(msexch_owa.discover_msexch_owa(parsed))
-    assert result == [(None, {})]
+    assert result == [Service(item=None)]
 
 
 @pytest.mark.usefixtures("empty_value_store")
 def test_msexch_owa_check(parsed: Mapping[str, Any]) -> None:
     """Test Microsoft Exchange OWA check function."""
-    # Based on the original dataset, this should produce rates for OWA metrics
     # The rate calculation gets GetRateError on first run due to initialization
-    # Should get GetRateError on first check (normal behavior)
     with pytest.raises(GetRateError):
-        list(msexch_owa.check_msexch_owa(None, {}, parsed))
+        list(msexch_owa.check_msexch_owa(parsed))
 
 
 def test_msexch_owa_parse_function() -> None:
@@ -130,7 +128,7 @@ def test_msexch_owa_check_no_data() -> None:
     parsed: Mapping[str, Any] = {"": {}}
 
     try:
-        result = list(msexch_owa.check_msexch_owa(None, {}, parsed))
+        result = list(msexch_owa.check_msexch_owa(parsed))
         # Should have empty results or raise an error
         assert len(result) >= 0
     except Exception:

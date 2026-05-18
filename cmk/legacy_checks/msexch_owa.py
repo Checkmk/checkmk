@@ -3,41 +3,46 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-
-# mypy: disable-error-code="arg-type"
-
-from collections.abc import Mapping
-
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition, LegacyCheckResult
-from cmk.plugins.windows.agent_based.libwmi import parse_wmi_table, WMISection
-from cmk.plugins.windows.agent_based.libwmi_legacy import (
-    inventory_wmi_table_total,
-    wmi_yield_raw_counter,
-    wmi_yield_raw_persec,
+from cmk.agent_based.v2 import AgentSection, CheckPlugin, CheckResult, DiscoveryResult
+from cmk.plugins.windows.agent_based.libwmi import (
+    check_wmi_raw_counter,
+    check_wmi_raw_persec,
+    discover_wmi_table_total,
+    parse_wmi_table,
+    WMISection,
 )
 
-check_info = {}
+
+def discover_msexch_owa(section: WMISection) -> DiscoveryResult:
+    yield from discover_wmi_table_total(section)
 
 
-def discover_msexch_owa(parsed: WMISection) -> list[tuple[None, dict[str, object]]]:
-    return inventory_wmi_table_total(parsed)
-
-
-def check_msexch_owa(
-    _no_item: None, params: Mapping[str, object], parsed: WMISection
-) -> LegacyCheckResult:
-    table = parsed[""]
-    yield from wmi_yield_raw_persec(
-        table, None, "RequestsPersec", infoname="Requests/sec", perfvar="requests_per_sec"
+def check_msexch_owa(section: WMISection) -> CheckResult:
+    table = section[""]
+    yield from check_wmi_raw_persec(
+        table,
+        "",
+        "RequestsPersec",
+        metric_name="requests_per_sec",
+        label="Requests/sec",
     )
-    yield from wmi_yield_raw_counter(
-        table, None, "CurrentUniqueUsers", infoname="Unique users", perfvar="current_users"
+    yield from check_wmi_raw_counter(
+        table,
+        "",
+        "CurrentUniqueUsers",
+        metric_name="current_users",
+        label="Unique users",
     )
 
 
-check_info["msexch_owa"] = LegacyCheckDefinition(
+agent_section_msexch_owa = AgentSection(
     name="msexch_owa",
     parse_function=parse_wmi_table,
+)
+
+
+check_plugin_msexch_owa = CheckPlugin(
+    name="msexch_owa",
     service_name="Exchange OWA",
     discovery_function=discover_msexch_owa,
     check_function=check_msexch_owa,

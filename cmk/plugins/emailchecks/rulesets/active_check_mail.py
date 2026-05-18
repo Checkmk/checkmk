@@ -3,15 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="exhaustive-match"
-
-
-from collections.abc import Mapping
-from typing import Literal
 
 from cmk.ccc.version import Edition, edition
 from cmk.ec.syslog import SyslogFacility
-from cmk.plugins.emailchecks.forwarding_option import ECForwarding
 from cmk.rulesets.v1 import Help, Title
 from cmk.rulesets.v1.form_specs import (
     CascadingSingleChoice,
@@ -69,36 +63,6 @@ def _valuespec_active_checks_mail() -> Dictionary:
             ),
         },
     )
-
-
-def _migrate_method(
-    value: object,
-) -> tuple[Literal["ec"], ECForwarding] | tuple[Literal["syslog"], Mapping[str, object]]:
-    match value:
-        # already migrated cases:
-        case "ec", ("local", ""):
-            return "ec", ("local", "")
-        case "ec", ("socket", str(socket)):
-            return "ec", ("socket", socket)
-        case "ec", ("spool_local", ""):
-            return "ec", ("spool_local", "")
-        case "ec", ("spool", str(spooldir)):
-            return "ec", ("spool", spooldir)
-        case "syslog", dict() as syslog_forwarding:
-            return "syslog", syslog_forwarding
-        # actual migration:
-        case ("udp" | "tcp" as protocol, str(address), int(port)):
-            return "syslog", {"protocol": protocol, "address": address, "port": port}
-        case "":
-            return "ec", ("local", "")
-        case "spool:":
-            return "ec", ("spool_local", "")
-        case str(spooldir) if spooldir.startswith("spool:"):
-            return "ec", ("spool", spooldir[6:])
-        case str(socket):
-            return "ec", ("socket", socket)
-
-    raise ValueError(f"Invalid method value: {value!r}")
 
 
 def _ec_forwarding() -> CascadingSingleChoice:
@@ -168,36 +132,6 @@ def _syslog_forwarding() -> Dictionary:
     )
 
 
-def _migrate_facility(value: object) -> tuple[str, int]:
-    match value:
-        case tuple((str(s), int(i))):
-            return (s, i)
-        case int(i):
-            return next(
-                (name, facility) for facility, name in SyslogFacility.NAMES.items() if facility == i
-            )
-    raise ValueError(f"Invalid facility value: {value!r}")
-
-
-def _migrate_application(
-    value: object,
-) -> tuple[Literal["subject"], None] | tuple[Literal["spec"], str]:
-    return ("subject", None) if value is None else ("spec", str(value))
-
-
-def _migrate_cleanup(value: object) -> tuple[Literal["delete"], None] | tuple[Literal["move"], str]:
-    match value:
-        case True:
-            return "delete", None
-        case str(s):
-            return "move", s
-        case tuple(("delete", None)):
-            return "delete", None
-        case tuple(("move", str() as folder)):
-            return "move", folder
-    raise ValueError(f"Invalid cleanup value: {value!r}")
-
-
 def _forward_to_ec_form() -> Dictionary:
     return Dictionary(
         title=Title("Forward mails as events to Event Console"),
@@ -218,7 +152,6 @@ def _forward_to_ec_form() -> Dictionary:
                             parameter_form=_syslog_forwarding(),
                         ),
                     ),
-                    migrate=_migrate_method,
                 ),
             ),
             "match_subject": DictElement(
@@ -247,7 +180,6 @@ def _forward_to_ec_form() -> Dictionary:
                     ],
                     # our tests will fail if this is no longer found in syslog_facilities
                     prefill=DefaultValue("mail"),
-                    migrate=_migrate_facility,
                 ),
             ),
             "application": DictElement(
@@ -274,7 +206,6 @@ def _forward_to_ec_form() -> Dictionary:
                             ),
                         ),
                     ),
-                    migrate=_migrate_application,
                 ),
             ),
             "host": DictElement(
@@ -324,7 +255,6 @@ def _forward_to_ec_form() -> Dictionary:
                             ),
                         ),
                     ),
-                    migrate=_migrate_cleanup,
                 ),
             ),
         },

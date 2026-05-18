@@ -92,6 +92,7 @@ const defaultValues = {
 }
 
 const FORM_SPEC_URL = `${location.protocol}//${location.host}/api/internal/domain-types/form_spec/collections/:entity_type`
+const LIST_PASSWORDS_URL = `${location.protocol}//${location.host}/api/internal/domain-types/passwordstore_password/collections/:entity_type_specifier`
 
 const server = setupServer()
 
@@ -106,6 +107,16 @@ function mockFormSpec(overrideDefaultValues: Record<string, unknown> = defaultVa
           schema: passwordCatalogSchema,
           default_values: overrideDefaultValues
         }
+      })
+    )
+  )
+}
+
+function mockListPasswords(existingIds: string[] = []) {
+  server.use(
+    http.get(LIST_PASSWORDS_URL, () =>
+      HttpResponse.json({
+        value: existingIds.map((id) => ({ id, title: id }))
       })
     )
   )
@@ -177,6 +188,7 @@ describe('PasswordStoreSlideIn', () => {
       general_props: { id: 'my-password', title: 'My Password', comment: '', docu_url: '' },
       password_props: { password: 'secret' }
     })
+    mockListPasswords()
     const { emitted } = render(PasswordStoreSlideIn, { props: { open: true } })
 
     await flushPromises()
@@ -193,5 +205,92 @@ describe('PasswordStoreSlideIn', () => {
         }
       ]
     ])
+  })
+
+  test('shows validation error when ID is empty on save', async () => {
+    mockFormSpec()
+    render(PasswordStoreSlideIn, { props: { open: true } })
+
+    await flushPromises()
+    await fireEvent.click(screen.getByRole('button', { name: 'Save' }))
+    await flushPromises()
+
+    expect(screen.getAllByText('An empty value is not allowed here').length).toBeGreaterThan(0)
+  })
+
+  test('shows validation error when title is empty on save', async () => {
+    mockFormSpec({
+      general_props: { id: 'my-password', title: '', comment: '', docu_url: '' },
+      password_props: { password: 'secret' }
+    })
+    mockListPasswords()
+    render(PasswordStoreSlideIn, { props: { open: true } })
+
+    await flushPromises()
+    await fireEvent.click(screen.getByRole('button', { name: 'Save' }))
+    await flushPromises()
+
+    expect(screen.getAllByText('An empty value is not allowed here').length).toBeGreaterThan(0)
+  })
+
+  test('shows validation error when password is empty on save', async () => {
+    mockFormSpec({
+      general_props: { id: 'my-password', title: 'My Password', comment: '', docu_url: '' },
+      password_props: { password: '' }
+    })
+    mockListPasswords()
+    render(PasswordStoreSlideIn, { props: { open: true } })
+
+    await flushPromises()
+    await fireEvent.click(screen.getByRole('button', { name: 'Save' }))
+    await flushPromises()
+
+    expect(screen.getAllByText('An empty value is not allowed here').length).toBeGreaterThan(0)
+  })
+
+  test('treats whitespace-only ID as empty on save', async () => {
+    mockFormSpec({
+      general_props: { id: '   ', title: 'My Password', comment: '', docu_url: '' },
+      password_props: { password: 'secret' }
+    })
+    render(PasswordStoreSlideIn, { props: { open: true } })
+
+    await flushPromises()
+    await fireEvent.click(screen.getByRole('button', { name: 'Save' }))
+    await flushPromises()
+
+    expect(screen.getAllByText('An empty value is not allowed here').length).toBeGreaterThan(0)
+  })
+
+  test('trims whitespace from ID and emits created on success', async () => {
+    mockFormSpec({
+      general_props: { id: '  my-pw  ', title: 'My Password', comment: '', docu_url: '' },
+      password_props: { password: 'secret' }
+    })
+    mockListPasswords()
+    const { emitted } = render(PasswordStoreSlideIn, { props: { open: true } })
+
+    await flushPromises()
+    await fireEvent.click(screen.getByRole('button', { name: 'Save' }))
+    await flushPromises()
+
+    expect(emitted().created).toMatchObject([[{ general_props: { id: 'my-pw' } }]])
+  })
+
+  test('shows validation error when password ID already exists', async () => {
+    mockFormSpec({
+      general_props: { id: 'existing-pw', title: 'My Password', comment: '', docu_url: '' },
+      password_props: { password: 'secret' }
+    })
+    mockListPasswords(['existing-pw'])
+    render(PasswordStoreSlideIn, { props: { open: true } })
+
+    await flushPromises()
+    await fireEvent.click(screen.getByRole('button', { name: 'Save' }))
+    await flushPromises()
+
+    expect(
+      screen.getByText('This ID is already in use. Please choose another one.')
+    ).toBeInTheDocument()
   })
 })

@@ -12,6 +12,7 @@ import usei18n from '@/lib/i18n'
 import client, { unwrap } from '@/lib/rest-api-client/client'
 
 import CmkSlideInDialog from '@/components/CmkSlideInDialog.vue'
+import { configEntityAPI } from '@/components/user-input/CmkConfigurationEntityDropdown/configuration_entity'
 
 import type { API, Payload } from '@/form/FormEditAsync.vue'
 import FormEditAsync from '@/form/FormEditAsync.vue'
@@ -72,13 +73,64 @@ const api: API<string, PasswordConfig> = {
     _objectId: string | null,
     data: Record<string, unknown>
   ): Promise<SetDataResult<PasswordConfig>> => {
-    if (isPasswordConfig(data)) {
-      return { type: 'success', entity: data }
+    const gp = data['general_props']
+    if (typeof gp === 'object' && gp !== null) {
+      const gpRecord = gp as Record<string, unknown>
+      if (typeof gpRecord['id'] === 'string') {
+        gpRecord['id'] = gpRecord['id'].trim()
+      }
     }
-    const validationMessages: ValidationMessages = [
-      { location: [], message: _t('Unexpected form data shape.'), replacement_value: data }
-    ]
-    return { type: 'error', validationMessages }
+
+    if (!isPasswordConfig(data)) {
+      const validationMessages: ValidationMessages = [
+        { location: [], message: _t('Unexpected form data shape.'), replacement_value: data }
+      ]
+      return { type: 'error', validationMessages }
+    }
+
+    const validationMessages: ValidationMessages = []
+
+    if (!data.general_props.id) {
+      validationMessages.push({
+        location: ['general_props', 'id'],
+        message: _t('An empty value is not allowed here'),
+        replacement_value: ''
+      })
+    }
+    if (!data.general_props.title) {
+      validationMessages.push({
+        location: ['general_props', 'title'],
+        message: _t('An empty value is not allowed here'),
+        replacement_value: ''
+      })
+    }
+    if (!data.password_props.password[0]) {
+      validationMessages.push({
+        location: ['password_props', 'password'],
+        message: _t('An empty value is not allowed here'),
+        replacement_value: data.password_props.password
+      })
+    }
+
+    if (data.general_props.id) {
+      const existing = await configEntityAPI.listEntities(
+        'passwordstore_password',
+        'passwordstore_password'
+      )
+      if (existing.some((e) => e.ident === data.general_props.id)) {
+        validationMessages.push({
+          location: ['general_props', 'id'],
+          message: _t('This ID is already in use. Please choose another one.'),
+          replacement_value: data.general_props.id
+        })
+      }
+    }
+
+    if (validationMessages.length > 0) {
+      return { type: 'error', validationMessages }
+    }
+
+    return { type: 'success', entity: data }
   }
 }
 </script>

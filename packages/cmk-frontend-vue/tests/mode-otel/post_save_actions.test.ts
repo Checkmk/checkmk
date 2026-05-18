@@ -21,7 +21,7 @@ function makePasswordConfig(id: string, title = id): PasswordConfig {
   return {
     general_props: { id, title, comment: '', docu_url: '' },
     password_props: {
-      password: 'secret',
+      password: ['secret', false],
       owned_by: ['admins', null],
       share_with: []
     }

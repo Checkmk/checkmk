@@ -547,10 +547,9 @@ oracle:
       timeout: 11 # optional, default 5
       tns_admin: "/path/to/oracle/config/files/" # optional, default: agent plugin config folder. Points to the location of sqlnet.ora and tnsnames.ora
       oracle_local_registry: "/etc/oracle/olr.loc" # optional, default: folder of oracle configuration files like oratab
-    custom_queries: # additional queries which generates <<<oracle_sql>>>> + item [SID|name] for each instance
-      - my_custom_query: # for item generation, mandatory
-          text: "select * from dual" # optional
-          file: "my_custom_query_file" # optional by default the same as name of the section
+    custom_metrics: # additional queries which generates <<<oracle_sql>>>> + item [SID|name] for each instance
+      - my_custom_metric: # for item generation, mandatory
+          sql: "select * from dual" # optional
           is_async: no # optional, default: no
     sections: # optional
       - instance: # special section
@@ -754,15 +753,16 @@ piggyback:
         assert_eq!(c.piggyback_host(), Some("some_pb_host"));
         assert!(!c.discovery().detect);
         let custom = product.sections().last().unwrap();
-        assert_eq!(custom.name().as_str(), names::ORACLE_SQL_SECTION);
+        assert_eq!(custom.name().as_str(), names::CUSTOM_METRIC);
         assert_eq!(
             custom.item_value().map(|v| v.as_str()),
-            Some("my_custom_query")
+            Some("my_custom_metric")
         );
 
         product.sections().iter().for_each(|s| {
-            if s.name().as_str() == names::ORACLE_SQL_SECTION {
+            if s.name().as_str() == names::CUSTOM_METRIC {
                 assert!(s.item_value().is_some());
+                assert!(s.sql().is_some());
             } else {
                 assert!(s.item_value().is_none());
             }

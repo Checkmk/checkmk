@@ -44,7 +44,7 @@ pub mod names {
     pub const IO_STATS: &str = "iostats";
     pub const ASM_DISK_GROUP: &str = "asm_diskgroup";
     pub const TS_QUOTAS: &str = "ts_quotas";
-    pub const ORACLE_SQL_SECTION: &str = "oracle_sql"; // virtual section for custom queries
+    pub const CUSTOM_METRIC: &str = "sql";
 }
 
 static DEFAULT_AFFINITY_MAP: LazyLock<HashMap<&str, SectionAffinity>> = LazyLock::new(|| {
@@ -185,14 +185,17 @@ impl SectionBuilder {
     }
 
     pub fn build(self) -> Section {
-        let name = if self.item_value.is_some() {
-            names::ORACLE_SQL_SECTION.to_string()
+        let (name, sep) = if self.item_value.is_some() {
+            (
+                names::CUSTOM_METRIC.to_string(),
+                defaults::CUSTOM_METRIC_SEPARATOR,
+            )
         } else {
-            self.name
+            (self.name, self.sep)
         };
         Section {
             name: SectionName::from(name),
-            sep: self.sep,
+            sep,
             kind: if self.is_disabled {
                 SectionKind::Disabled
             } else if self.is_async {
@@ -310,7 +313,10 @@ impl Section {
     }
     fn from_yaml_entry(name: &str, yaml: &Yaml) -> Self {
         let c = yaml.get_string(keys::SEP).and_then(|s| s.chars().next());
-        let builder = SectionBuilder::new(name).sep(c);
+        let mut builder = SectionBuilder::new(name).sep(c);
+        if let Some(sql_text) = yaml.get_string(keys::SQL) {
+            builder = builder.sql(sql_text);
+        }
 
         let affinity = yaml
             .get_string(keys::AFFINITY)
@@ -340,39 +346,46 @@ impl Sections {
             log::debug!("Using default cache age");
             default.cache_age()
         });
-        let mut sections = Sections::get_sections(yaml.get(keys::SECTIONS)).unwrap_or_else(|| {
-            log::debug!("Using default sections");
-            default.sections().clone()
-        });
-        let custom_queries = Sections::get_sections(yaml.get(keys::CUSTOM_QUERIES))
-            .unwrap_or_default()
-            .into_iter()
-            .map(|s| {
-                let item = ItemValue::from(s.name().as_str().to_string());
-                Section {
-                    name: SectionName::from(names::ORACLE_SQL_SECTION.to_string()),
-                    item_value: Some(item),
-                    ..s
-                }
-            })
-            .collect::<Vec<Section>>();
-        sections.extend(custom_queries);
+        let mut sections = Sections::get_sections(yaml.get(keys::SECTIONS), None, None)
+            .unwrap_or_else(|| {
+                log::debug!("Using default sections");
+                default.sections().clone()
+            });
+        sections.extend(
+            Sections::get_sections(
+                yaml.get(keys::CUSTOM_METRICS),
+                Some(defaults::CUSTOM_METRIC_SEPARATOR),
+                Some(&SectionName::from(names::CUSTOM_METRIC.to_string())),
+            )
+            .unwrap_or_default(),
+        );
         Ok(Self {
             sections,
             cache_age,
         })
     }
 
-    fn get_sections(yaml: &Yaml) -> Option<Vec<Section>> {
+    pub fn get_sections(
+        yaml: &Yaml,
+        sep_override: Option<char>,
+        section_name_override: Option<&SectionName>,
+    ) -> Option<Vec<Section>> {
         if yaml.is_badvalue() {
             return None;
         }
-        if let Some(sections) = yaml.as_vec() {
-            let l: Vec<Section> = sections.iter().flat_map(Section::from_yaml).collect();
-            Some(l)
-        } else {
-            None
-        }
+        let entries = yaml.as_vec()?;
+        let sections = entries.iter().flat_map(Section::from_yaml);
+        Some(match section_name_override {
+            Some(section_name) => sections
+                .map(|s| Section {
+                    item_value: Some(ItemValue::from(s.name().as_str().to_string())),
+                    name: section_name.clone(),
+                    sep: sep_override.unwrap_or(s.sep),
+                    ..s
+                })
+                .collect(),
+            None => sections.collect(),
+        })
     }
 
     pub fn sections(&self) -> &Vec<Section> {
@@ -525,8 +538,11 @@ _nothing: "nothing"
 
     fn create_yaml_sections_with_custom() -> Yaml {
         const SOURCE: &str = r#"
-custom_queries:
-  - custom1:
+custom_metrics:
+  - product_price:
+      sql: "select 'details:hello' from dual"
+  - last_sessions:
+      sql: "select 'details:async' from dual"
       is_async: yes
 
 sections:
@@ -536,14 +552,23 @@ sections:
     }
 
     #[test]
-    fn test_sections_with_custom_queries() {
+    fn test_sections_with_custom_metrics() {
         let s =
             Sections::from_yaml(&create_yaml_sections_with_custom(), &Sections::default()).unwrap();
         let sections: &Vec<Section> = s.sections();
-        assert_eq!(sections.len(), 2);
+        assert_eq!(sections.len(), 3);
         assert!(sections[0].item_value().is_none());
         assert_eq!(sections[0].kind(), SectionKind::Sync);
-        assert_eq!(sections[1].item_value().unwrap().as_str(), "custom1");
-        assert_eq!(sections[1].kind(), SectionKind::Async);
+
+        assert_eq!(sections[1].name().as_str(), names::CUSTOM_METRIC);
+        assert_eq!(sections[1].item_value().unwrap().as_str(), "product_price");
+        assert_eq!(sections[1].kind(), SectionKind::Sync);
+        assert_eq!(sections[1].sep(), defaults::CUSTOM_METRIC_SEPARATOR);
+        assert_eq!(sections[1].sql(), Some("select 'details:hello' from dual"));
+
+        assert_eq!(sections[2].name().as_str(), names::CUSTOM_METRIC);
+        assert_eq!(sections[2].item_value().unwrap().as_str(), "last_sessions");
+        assert_eq!(sections[2].kind(), SectionKind::Async);
+        assert_eq!(sections[2].sep(), defaults::CUSTOM_METRIC_SEPARATOR);
     }
 }

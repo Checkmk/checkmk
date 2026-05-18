@@ -44,6 +44,7 @@ from .automation_commands import AutomationCommand
 from .automations import AnnotatedHostName, do_remote_automation
 from .changes import add_change
 from .check_mk_automations import rename_hosts
+from .config_domains import ConfigDomainCore
 from .hosts_and_folders import (
     call_hook_hosts_changed,
     Folder,
@@ -303,6 +304,7 @@ def _rename_host_in_rulesets(
                 user_id=user.id,
                 object_ref=folder.object_ref(),
                 sites=folder.all_site_ids(),
+                domains=[ConfigDomainCore()],
                 use_git=use_git,
             )
             rulesets.save_folder(pprint_value=pprint_value, debug=debug)
@@ -344,6 +346,7 @@ def _rename_hosts_in_check_mk(
             sites=[site_id],
             need_restart=False,
             prevent_discard_changes=True,
+            domains=[ConfigDomainCore()],
             use_git=use_git,
         )
 

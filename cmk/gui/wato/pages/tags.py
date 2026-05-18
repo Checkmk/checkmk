@@ -62,6 +62,7 @@ from cmk.gui.valuespec import (
     ValueSpec,
 )
 from cmk.gui.wato.pages._html_elements import wato_html_head
+from cmk.gui.watolib.config_domains import ConfigDomainCore
 from cmk.gui.watolib.host_attributes import all_host_attributes
 from cmk.gui.watolib.hosts_and_folders import Folder, folder_preserving_link, Host, make_action_link
 from cmk.gui.watolib.main_menu import MenuItem
@@ -236,6 +237,7 @@ class ModeTags(ABCTagMode):
                 action_name="edit-tags",
                 text=_("Removed tag group %s (%s)") % (message, del_id),
                 user_id=user.id,
+                domains=[ConfigDomainCore()],
                 use_git=use_git,
             )
             if isinstance(message, str):
@@ -281,6 +283,7 @@ class ModeTags(ABCTagMode):
                 action_name="edit-tags",
                 text=_("Removed auxiliary tag %s (%s)") % (message, del_id),
                 user_id=user.id,
+                domains=[ConfigDomainCore()],
                 use_git=use_git,
             )
             if isinstance(message, str):
@@ -304,6 +307,7 @@ class ModeTags(ABCTagMode):
             action_name="edit-tags",
             text=_("Changed order of tag groups"),
             user_id=user.id,
+            domains=[ConfigDomainCore()],
             use_git=use_git,
         )
         return None
@@ -851,6 +855,7 @@ class ModeEditTagGroup(ABCEditTagMode):
                 action_name="edit-hosttags",
                 text=_("Created new host tag group '%s'") % changed_tag_group.id,
                 user_id=user.id,
+                domains=[ConfigDomainCore()],
                 use_git=config.wato_use_git,
             )
             flash(_("Created new host tag group '%s'") % changed_tag_group.title)
@@ -887,6 +892,7 @@ class ModeEditTagGroup(ABCEditTagMode):
             action_name="edit-hosttags",
             text=_("Edited host tag group %s (%s)") % (message, self._id),
             user_id=user.id,
+            domains=[ConfigDomainCore()],
             use_git=config.wato_use_git,
         )
         if isinstance(message, str):

@@ -50,6 +50,7 @@ from cmk.gui.utils.urls import make_confirm_delete_link
 from cmk.gui.valuespec import Dictionary, DictionaryEntry, FixedValue, RuleComment, TextInput
 from cmk.gui.wato import TileMenuRenderer
 from cmk.gui.watolib.changes import add_change
+from cmk.gui.watolib.config_domains import ConfigDomainCore
 from cmk.gui.watolib.configuration_bundle_store import (
     BundleId,
     ConfigBundle,
@@ -311,6 +312,7 @@ class ModeEditConfigurationBundles(WatoMode):
             text=_("Deleted Quick Setup {bundle_id}").format(bundle_id=bundle_id),
             user_id=user.id,
             prevent_discard_changes=prevent_discard_changes,
+            domains=[ConfigDomainCore()],
             use_git=use_git,
         )
 

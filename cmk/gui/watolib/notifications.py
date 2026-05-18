@@ -64,6 +64,7 @@ from cmk.gui.rest_api_types.notifications_types import (
 )
 from cmk.gui.type_defs import GlobalSettings
 from cmk.gui.watolib.changes import add_change
+from cmk.gui.watolib.config_domains import ConfigDomainCore
 from cmk.gui.watolib.simple_config_file import (
     ConfigFileRegistry,
     WatoListConfigFile,
@@ -125,6 +126,7 @@ class NotificationRuleConfigFile(WatoListConfigFile[EventRule]):
             text=_("Changed notification rule #%s") % rule_number,
             user_id=user.id,
             need_restart=False,
+            domains=[ConfigDomainCore()],
             use_git=use_git,
         )
 
@@ -142,6 +144,7 @@ class NotificationRuleConfigFile(WatoListConfigFile[EventRule]):
             text=_("Created new notification rule"),
             user_id=user.id,
             need_restart=False,
+            domains=[ConfigDomainCore()],
             use_git=use_git,
         )
         self.save(rules, pprint_value=pprint_value)
@@ -159,6 +162,7 @@ class NotificationRuleConfigFile(WatoListConfigFile[EventRule]):
             text=_("Deleted notification rule #%s") % rule_number,
             user_id=user.id,
             need_restart=False,
+            domains=[ConfigDomainCore()],
             use_git=use_git,
         )
         self.save(rules, pprint_value=pprint_value)

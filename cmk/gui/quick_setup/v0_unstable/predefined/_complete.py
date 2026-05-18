@@ -44,6 +44,7 @@ from cmk.gui.watolib.automations import (
     remote_automation_config_from_site_config,
 )
 from cmk.gui.watolib.changes import add_change
+from cmk.gui.watolib.config_domains import ConfigDomainCore
 from cmk.gui.watolib.configuration_bundle_store import BundleId, ConfigBundle
 from cmk.gui.watolib.configuration_bundles import (
     create_config_bundle,
@@ -394,6 +395,7 @@ def _create_and_save_special_agent_bundle(
         text=_("Created Quick Setup {bundle_id}").format(bundle_id=bundle_id),
         user_id=user.id,
         prevent_discard_changes=True,
+        domains=[ConfigDomainCore()],
         use_git=active_config.wato_use_git,
     )
 

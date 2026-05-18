@@ -25,6 +25,7 @@ from cmk.utils.timeperiod import (
 )
 
 from . import changes as _changes
+from .config_domain_name import config_domain_registry, CORE
 
 TIMEPERIOD_ID_PATTERN = r"^[-a-z0-9A-Z_]+\Z"
 TimeperiodUsage = tuple[str, str]
@@ -124,6 +125,7 @@ def delete_timeperiod(
         action_name="edit-timeperiods",
         text=_("Deleted time period %s") % name,
         user_id=user_id,
+        domains=[config_domain_registry[CORE]],
         use_git=use_git,
     )
 
@@ -149,6 +151,7 @@ def modify_timeperiod(
         action_name="edit-timeperiods",
         text=_("Modified time period %s") % name,
         user_id=user_id,
+        domains=[config_domain_registry[CORE]],
         use_git=use_git,
     )
 
@@ -174,6 +177,7 @@ def create_timeperiod(
         action_name="edit-timeperiods",
         text=_("Created new time period %s") % name,
         user_id=user_id,
+        domains=[config_domain_registry[CORE]],
         use_git=use_git,
     )
 

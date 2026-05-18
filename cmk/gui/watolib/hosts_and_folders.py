@@ -2333,6 +2333,7 @@ class Folder(FolderProtocol):
             object_ref=new_subfolder.object_ref(),
             sites=[new_subfolder.site_id()],
             diff_text=diff_attributes({}, None, new_subfolder.attributes, None),
+            domains=[config_domain_registry[CORE_DOMAIN]],
             use_git=use_git,
         )
         hooks.call("folder-created", new_subfolder)
@@ -2360,6 +2361,7 @@ class Folder(FolderProtocol):
             user_id=user.id,
             object_ref=self.object_ref(),
             sites=subfolder.all_site_ids(),
+            domains=[config_domain_registry[CORE_DOMAIN]],
             use_git=use_git,
         )
         del self._subfolders[name]
@@ -2438,6 +2440,7 @@ class Folder(FolderProtocol):
             user_id=user.id,
             object_ref=moved_subfolder.object_ref(),
             sites=affected_sites,
+            domains=[config_domain_registry[CORE_DOMAIN]],
             use_git=use_git,
         )
         need_sidebar_reload()
@@ -2503,6 +2506,7 @@ class Folder(FolderProtocol):
             object_ref=self.object_ref(),
             sites=affected_sites,
             diff_text=diff,
+            domains=[config_domain_registry[CORE_DOMAIN]],
             use_git=use_git,
         )
 
@@ -2780,6 +2784,7 @@ class Folder(FolderProtocol):
                 user_id=user.id,
                 object_ref=host.object_ref(),
                 sites=affected_sites,
+                domains=[config_domain_registry[CORE_DOMAIN]],
                 use_git=use_git,
             )
 
@@ -2837,6 +2842,7 @@ class Folder(FolderProtocol):
             user_id=user.id,
             object_ref=self.object_ref(),
             sites=self.all_site_ids(),
+            domains=[config_domain_registry[CORE_DOMAIN]],
             use_git=use_git,
         )
         self.save(pprint_value=pprint_value)
@@ -3731,6 +3737,7 @@ class Host:
             user_id=user.id,
             object_ref=self.object_ref(),
             sites=[self.site_id()],
+            domains=[config_domain_registry[CORE_DOMAIN]],
             use_git=use_git,
         )
         self.folder().save_hosts(pprint_value=pprint_value)
@@ -3752,6 +3759,7 @@ class Host:
             user_id=user.id,
             object_ref=self.object_ref(),
             sites=[self.site_id()],
+            domains=[config_domain_registry[CORE_DOMAIN]],
             use_git=use_git,
         )
         self.folder().save_hosts(pprint_value=pprint_value)
@@ -3765,6 +3773,7 @@ class Host:
             object_ref=self.object_ref(),
             sites=[self.site_id(), omd_site()],
             prevent_discard_changes=True,
+            domains=[config_domain_registry[CORE_DOMAIN]],
             use_git=use_git,
         )
         self._name = new_name

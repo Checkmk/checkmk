@@ -38,6 +38,7 @@ from cmk.gui.session import SuperUserContext
 from cmk.gui.site_config import is_distributed_setup_remote_site
 from cmk.gui.watolib.automations import ENV_VARIABLE_FORCE_CLI_INTERFACE
 from cmk.gui.watolib.changes import ActivateChangesWriter, add_change
+from cmk.gui.watolib.config_domains import ConfigDomainCore
 from cmk.gui.wsgi.blueprints.global_vars import set_global_vars
 from cmk.update_config.plugins.pre_actions.utils import ConflictMode
 from cmk.utils import log, paths
@@ -276,6 +277,7 @@ def update_config(edition: Edition, logger: logging.Logger) -> Literal[0, 1]:
                 text="Successfully updated Checkmk configuration",
                 user_id=None,
                 need_sync=True,
+                domains=[ConfigDomainCore()],
                 use_git=False,
             )
 

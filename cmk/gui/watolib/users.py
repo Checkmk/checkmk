@@ -30,6 +30,7 @@ from cmk.gui.utils.security_log_events import UserManagementEvent
 from cmk.gui.valuespec import Age, Alternative, EmailAddress, FixedValue
 from cmk.gui.watolib.audit_log import log_audit
 from cmk.gui.watolib.changes import add_change
+from cmk.gui.watolib.config_domains import ConfigDomainCore
 from cmk.gui.watolib.notifications import NotificationRuleConfigFile
 from cmk.gui.watolib.objref import ObjectRef, ObjectRefType
 from cmk.gui.watolib.simple_config_file import ConfigFileRegistry, WatoSingleConfigFile
@@ -123,6 +124,7 @@ def delete_users(
             text=_l("Deleted user: %s") % ", ".join(deleted_users),
             user_id=acting_user.id,
             sites=None if affected_sites == "all" else list(affected_sites),
+            domains=[ConfigDomainCore()],
             use_git=use_git,
         )
         userdb.save_users(
@@ -197,6 +199,7 @@ def edit_user(
         text=_l("Modified user: %s") % user_id,
         user_id=acting_user.id,
         sites=None if affected_sites == "all" else list(affected_sites),
+        domains=[ConfigDomainCore()],
         use_git=use_git,
     )
 
@@ -255,6 +258,7 @@ def create_user(
         text=_l("Created new user: %s") % user_id,
         user_id=acting_user.id,
         sites=None if affected_sites == "all" else list(affected_sites),
+        domains=[ConfigDomainCore()],
         use_git=use_git,
     )
 
@@ -321,6 +325,7 @@ def remove_custom_attribute_from_all_users(
             text=_l("Modified users: %s") % ", ".join(modified_users_info),
             user_id=user.id,
             sites=None if affected_sites == "all" else list(affected_sites),
+            domains=[ConfigDomainCore()],
             use_git=use_git,
         )
         userdb.save_users(

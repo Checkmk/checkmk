@@ -215,7 +215,7 @@ class UserConnectionConfigFile(WatoListConfigFile[ConfigurableUserConnectionSpec
         connection_id: str,
         connection_type: Literal["ldap", "saml2"],
         sites: list[SiteId],
-        domains: Sequence[ABCConfigDomain] | None,
+        domains: Sequence[ABCConfigDomain],
         pprint_value: bool,
         use_git: bool,
     ) -> None:
@@ -235,7 +235,7 @@ class UserConnectionConfigFile(WatoListConfigFile[ConfigurableUserConnectionSpec
         cfg: list[ConfigurableUserConnectionSpec],
         connection_type: Literal["ldap", "saml2"],
         sites: list[SiteId],
-        domains: Sequence[ABCConfigDomain] | None,
+        domains: Sequence[ABCConfigDomain],
         pprint_value: bool,
         use_git: bool,
     ) -> None:
@@ -256,7 +256,7 @@ class UserConnectionConfigFile(WatoListConfigFile[ConfigurableUserConnectionSpec
         connection_id: str,
         connection_type: Literal["ldap", "saml2"],
         sites: list[SiteId],
-        domains: Sequence[ABCConfigDomain] | None,
+        domains: Sequence[ABCConfigDomain],
         pprint_value: bool,
         use_git: bool,
     ) -> None:
@@ -278,7 +278,7 @@ class UserConnectionConfigFile(WatoListConfigFile[ConfigurableUserConnectionSpec
         connection_type: Literal["ldap", "saml2"],
         to_index: int,
         sites: list[SiteId],
-        domains: Sequence[ABCConfigDomain] | None,
+        domains: Sequence[ABCConfigDomain],
         pprint_value: bool,
         use_git: bool,
     ) -> None:

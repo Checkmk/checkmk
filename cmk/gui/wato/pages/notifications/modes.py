@@ -153,6 +153,7 @@ from cmk.gui.watolib.check_mk_automations import (
     notification_replay,
     notification_test,
 )
+from cmk.gui.watolib.config_domains import ConfigDomainCore
 from cmk.gui.watolib.global_settings import load_configuration_settings
 from cmk.gui.watolib.hosts_and_folders import folder_preserving_link, make_action_link
 from cmk.gui.watolib.mode import mode_registry, mode_url, ModeRegistry, redirect, WatoMode
@@ -698,6 +699,7 @@ class ABCNotificationsMode(ABCEventsMode[EventRule]):
             text=text,
             user_id=user.id,
             need_restart=False,
+            domains=[ConfigDomainCore()],
             use_git=use_git,
         )
 
@@ -3967,6 +3969,7 @@ class ABCNotificationParameterMode(WatoMode):
             text=text,
             user_id=user.id,
             need_restart=False,
+            domains=[ConfigDomainCore()],
             use_git=use_git,
         )
 
@@ -4306,6 +4309,7 @@ class ModeNotificationParameters(ABCNotificationParameterMode):
             user_id=user.id,
             text=text,
             need_restart=False,
+            domains=[ConfigDomainCore()],
             use_git=use_git,
         )
 

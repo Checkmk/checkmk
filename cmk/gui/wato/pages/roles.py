@@ -59,6 +59,7 @@ from cmk.gui.utils.urls import (
     makeuri_contextless,
 )
 from cmk.gui.watolib import userroles
+from cmk.gui.watolib.config_domains import ConfigDomainCore
 from cmk.gui.watolib.hosts_and_folders import folder_preserving_link, make_action_link
 from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
 from cmk.gui.watolib.userroles import RoleID
@@ -127,6 +128,7 @@ class ModeRoles(WatoMode):
                 text=_("Deleted role '%s'") % role_id,
                 user_id=user.id,
                 sites=get_login_sites(config.sites),
+                domains=[ConfigDomainCore()],
                 use_git=config.wato_use_git,
             )
 
@@ -138,6 +140,7 @@ class ModeRoles(WatoMode):
                 text=_("Created new role '%s'") % cloned_role.name,
                 user_id=user.id,
                 sites=get_login_sites(config.sites),
+                domains=[ConfigDomainCore()],
                 use_git=config.wato_use_git,
             )
 
@@ -284,6 +287,7 @@ class ModeRoleTwoFactor(WatoMode):
             text=_("Modified user role '%s'") % self._role_id,
             user_id=user.id,
             sites=get_login_sites(config.sites),
+            domains=[ConfigDomainCore()],
             use_git=config.wato_use_git,
         )
         return redirect(mode_url(ModeRoles.name()))
@@ -376,6 +380,7 @@ class ModeEditRole(WatoMode):
             text=_("Modified user role '%s'") % new_id,
             user_id=user.id,
             sites=get_login_sites(config.sites),
+            domains=[ConfigDomainCore()],
             use_git=config.wato_use_git,
         )
         return url

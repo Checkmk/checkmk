@@ -8,7 +8,6 @@ import time
 from collections.abc import Iterable, Iterator, Sequence
 from contextlib import contextmanager
 
-import cmk.gui.watolib.git
 import cmk.gui.watolib.sidebar_reload
 from cmk.ccc.site import omd_site, SiteId
 from cmk.ccc.user import UserId
@@ -20,7 +19,6 @@ from cmk.gui.utils.misc import gen_id
 from cmk.gui.watolib.audit_log import log_audit, LogMessage
 from cmk.gui.watolib.config_domain_name import (
     ABCConfigDomain,
-    config_domain_registry,
     DomainSettings,
 )
 from cmk.gui.watolib.objref import ObjectRef
@@ -34,12 +32,12 @@ def add_change(
     text: LogMessage,
     user_id: UserId | None,
     use_git: bool,
+    domains: Sequence[ABCConfigDomain],
     object_ref: ObjectRef | None = None,
     diff_text: str | None = None,
     need_sync: bool | None = None,
     need_restart: bool | None = None,
     need_apache_reload: bool | None = None,
-    domains: Sequence[ABCConfigDomain] | None = None,
     sites: Sequence[SiteId] | None = None,
     domain_settings: DomainSettings | None = None,
     prevent_discard_changes: bool = False,
@@ -97,7 +95,7 @@ class ActivateChangesWriter:
         need_sync: bool | None,
         need_restart: bool | None,
         need_apache_reload: bool | None,
-        domains: Sequence[ABCConfigDomain] | None,
+        domains: Sequence[ABCConfigDomain],
         sites: Iterable[SiteId] | None,
         domain_settings: DomainSettings | None,
         prevent_discard_changes: bool = False,
@@ -105,10 +103,6 @@ class ActivateChangesWriter:
     ) -> None:
         if not ActivateChangesWriter._enabled:
             return
-
-        # Default to a core only change
-        if domains is None:
-            domains = [config_domain_registry["check_mk"]]
 
         # All replication sites in case no specific site is given
         if sites is None:

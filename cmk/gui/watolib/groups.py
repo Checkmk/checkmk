@@ -27,6 +27,7 @@ from cmk.gui.utils.speaklater import LazyString
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.valuespec import DualListChoice
 from cmk.gui.watolib.changes import add_change
+from cmk.gui.watolib.config_domains import ConfigDomainCore
 from cmk.gui.watolib.global_settings import load_configuration_settings
 from cmk.gui.watolib.groups_io import (
     contact_group_usage_finder_registry,
@@ -192,6 +193,7 @@ def _add_group_change(
         text=text,
         user_id=user.id,
         sites=customer_api().customer_group_sites(group),
+        domains=[ConfigDomainCore()],
         use_git=use_git,
     )
 

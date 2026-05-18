@@ -44,6 +44,7 @@ from cmk.gui.type_defs import (
 from cmk.gui.userdb import get_user_attributes
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import make_confirm_delete_link, makeactionuri, makeuri, makeuri_contextless
+from cmk.gui.watolib.config_domains import ConfigDomainCore
 from cmk.gui.watolib.custom_attributes import (
     load_custom_attrs_from_mk_file,
     save_custom_attrs_to_mk_file,
@@ -200,6 +201,7 @@ class ModeEditCustomAttr[T: CustomAttrSpec](WatoMode):
                 action_name="edit-%sattr" % self._type,
                 text=_("Create new %s attribute %s") % (self._type, self._name),
                 user_id=user.id,
+                domains=[ConfigDomainCore()],
                 use_git=config.wato_use_git,
             )
         else:
@@ -207,6 +209,7 @@ class ModeEditCustomAttr[T: CustomAttrSpec](WatoMode):
                 action_name="edit-%sattr" % self._type,
                 text=_("Modified %s attribute %s") % (self._type, self._name),
                 user_id=user.id,
+                domains=[ConfigDomainCore()],
                 use_git=config.wato_use_git,
             )
             self._attr["title"] = title
@@ -536,6 +539,7 @@ class ModeCustomAttrs[T_CustomAttrSpec: CustomAttrSpec](WatoMode):
             action_name="edit-%sattrs" % self._type,
             text=_("Deleted attribute %s") % (delname),
             user_id=user.id,
+            domains=[ConfigDomainCore()],
             use_git=config.wato_use_git,
         )
         return redirect(self.mode_url())

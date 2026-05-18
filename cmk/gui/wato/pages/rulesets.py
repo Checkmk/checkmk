@@ -137,6 +137,7 @@ from cmk.gui.watolib.check_mk_automations import (
     find_unknown_check_parameter_rule_sets,
     get_check_information,
 )
+from cmk.gui.watolib.config_domains import ConfigDomainCore
 from cmk.gui.watolib.config_hostname import ConfigHostname
 from cmk.gui.watolib.configuration_bundle_store import is_locked_by_quick_setup
 from cmk.gui.watolib.host_label_sync import execute_host_label_sync
@@ -2399,6 +2400,7 @@ class ABCEditRuleMode(WatoMode):
             sites=affected_sites,
             diff_text=self._ruleset.diff_rules(self._orig_rule, self._rule),
             object_ref=self._rule.object_ref(),
+            domains=[ConfigDomainCore()],
             use_git=config.wato_use_git,
         )
 

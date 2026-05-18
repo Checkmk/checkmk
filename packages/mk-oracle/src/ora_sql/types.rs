@@ -68,6 +68,10 @@ impl Target {
     pub fn service_type(&self) -> Option<&ServiceType> {
         self.target_id.as_ref().and_then(|t| t.service_type())
     }
+
+    pub fn target_id(&self) -> Option<&TargetId> {
+        self.target_id.as_ref()
+    }
 }
 
 impl Target {

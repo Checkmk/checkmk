@@ -14,6 +14,7 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+use crate::config::ora_sql::CustomInstance;
 use crate::ora_sql::backend::{ClosedSpot, OpenedSpot};
 use crate::ora_sql::custom::get_sql_dir;
 use crate::ora_sql::section::Section;
@@ -49,6 +50,8 @@ type SpotErrors = (ClosedSpot, anyhow::Error);
 pub fn make_spot_work_results(
     spots: Vec<OpenedSpot>,
     sections: Vec<Section>,
+    custom_instances: &[CustomInstance],
+    global_cache_age: u32,
     params: &[SqlBindParam],
 ) -> (Vec<SpotWorks>, Vec<SpotErrors>) {
     let work_results = spots
@@ -56,9 +59,11 @@ pub fn make_spot_work_results(
         .map(|spot| {
             let instance_candidates = WorkInstances::new(&spot, None);
             let closed = spot.close();
+            let merged_sections =
+                merge_per_instance_sections(&sections, &closed, custom_instances, global_cache_age);
             match instance_candidates {
                 Err(ref e) => _make_closed_error(closed, e),
-                Ok(instances) => _make_closed_ok(closed, instances, &sections, params),
+                Ok(instances) => _make_closed_ok(closed, instances, &merged_sections, params),
             }
         })
         .collect::<Vec<SpotWorkResults>>();
@@ -73,6 +78,51 @@ pub fn make_spot_work_results(
             (ok, err)
         },
     )
+}
+
+/// Merge the global section list with per-instance `custom_metrics` of the
+/// `CustomInstance` whose target matches this spot. Per-instance entries
+/// override global entries that share the same `item_value` (per tech design:
+/// "If a global and a per-instance query share the same item_name, the
+/// per-instance one wins.").
+fn merge_per_instance_sections(
+    global: &[Section],
+    spot: &ClosedSpot,
+    custom_instances: &[CustomInstance],
+    global_cache_age: u32,
+) -> Vec<Section> {
+    let spot_target_id = spot.target().target_id();
+    let per_instance_runtime: Vec<Section> = custom_instances
+        .iter()
+        .find(|custom_instance| custom_instance.target_id() == spot_target_id)
+        .map(|custom_instance| {
+            custom_instance
+                .custom_metrics()
+                .iter()
+                .map(|cs| Section::new(cs, global_cache_age))
+                .collect()
+        })
+        .unwrap_or_default();
+
+    if per_instance_runtime.is_empty() {
+        return global.to_vec();
+    }
+    let overridden_items: std::collections::HashSet<&str> = per_instance_runtime
+        .iter()
+        .filter_map(|s| s.item_value().map(|v| v.as_str()))
+        .collect();
+
+    let mut merged: Vec<Section> = global
+        .iter()
+        .filter(|s| {
+            s.item_value()
+                .map(|v| !overridden_items.contains(v.as_str()))
+                .unwrap_or(true)
+        })
+        .cloned()
+        .collect();
+    merged.extend(per_instance_runtime);
+    merged
 }
 
 fn _make_closed_error(closed: ClosedSpot, e: &anyhow::Error) -> SpotWorkResults {

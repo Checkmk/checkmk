@@ -10,7 +10,7 @@ from typing import Any
 
 import pytest
 
-from cmk.agent_based.v2 import StringTable
+from cmk.agent_based.v2 import Metric, Result, Service, State, StringTable
 from cmk.legacy_checks.citrix_sessions import (
     check_citrix_sessions,
     discover_citrix_sessions,
@@ -23,42 +23,43 @@ from cmk.legacy_checks.citrix_sessions import (
     [
         (
             [["sessions", "1"], ["active_sessions", "1"], ["inactive_sessions", "0"]],
-            [(None, {"total": (60, 65), "active": (60, 65), "inactive": (10, 15)})],
+            [Service(parameters={"total": (60, 65), "active": (60, 65), "inactive": (10, 15)})],
         ),
     ],
 )
 def test_discover_citrix_sessions(
     string_table: StringTable,
-    expected_discoveries: Sequence[tuple[None, dict[str, tuple[int, int]]]],
+    expected_discoveries: Sequence[Service],
 ) -> None:
     """Test discovery function for citrix_sessions check."""
     parsed = parse_citrix_sessions(string_table)
     result = list(discover_citrix_sessions(parsed))
-    assert sorted(result) == sorted(expected_discoveries)
+    assert result == expected_discoveries
 
 
 @pytest.mark.parametrize(
-    "item, params, string_table, expected_results",
+    "params, string_table, expected_results",
     [
         (
-            None,
             {"active": (60, 65), "inactive": (10, 15), "total": (60, 65)},
             [["sessions", "1"], ["active_sessions", "1"], ["inactive_sessions", "0"]],
             [
-                (0, "Total: 1.00", [("total", 1, 60, 65)]),
-                (0, "Active: 1.00", [("active", 1, 60, 65)]),
-                (0, "Inactive: 0.00", [("inactive", 0, 10, 15)]),
+                Result(state=State.OK, summary="Total: 1.00"),
+                Metric("total", 1.0, levels=(60.0, 65.0)),
+                Result(state=State.OK, summary="Active: 1.00"),
+                Metric("active", 1.0, levels=(60.0, 65.0)),
+                Result(state=State.OK, summary="Inactive: 0.00"),
+                Metric("inactive", 0.0, levels=(10.0, 15.0)),
             ],
         ),
     ],
 )
 def test_check_citrix_sessions(
-    item: None,
     params: Mapping[str, Any],
     string_table: StringTable,
-    expected_results: Sequence[Any],
+    expected_results: Sequence[Result | Metric],
 ) -> None:
     """Test check function for citrix_sessions check."""
     parsed = parse_citrix_sessions(string_table)
-    result = list(check_citrix_sessions(item, params, parsed))
+    result = list(check_citrix_sessions(params, parsed))
     assert result == expected_results

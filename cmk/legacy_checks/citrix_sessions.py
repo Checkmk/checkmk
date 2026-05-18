@@ -9,13 +9,20 @@
 # inactive_sessions 0
 
 
-from collections.abc import Iterator, Mapping
+from collections.abc import Mapping
 from typing import Any
 
-from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
-from cmk.agent_based.v2 import StringTable
-
-check_info = {}
+from cmk.agent_based.v1 import check_levels as check_levels_v1
+from cmk.agent_based.v2 import (
+    AgentSection,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Result,
+    Service,
+    State,
+    StringTable,
+)
 
 citrix_sessions_default_levels: dict[str, tuple[int, int]] = {
     "total": (60, 65),
@@ -24,22 +31,25 @@ citrix_sessions_default_levels: dict[str, tuple[int, int]] = {
 }
 
 
-def discover_citrix_sessions(
-    info: StringTable,
-) -> list[tuple[None, dict[str, tuple[int, int]]]]:
-    return [(None, citrix_sessions_default_levels)]
+def parse_citrix_sessions(string_table: StringTable) -> StringTable:
+    return string_table
 
 
-def check_citrix_sessions(
-    _no_item: None, params: Mapping[str, Any], info: StringTable
-) -> Iterator[tuple[int, str] | tuple[int, str, list[Any]]]:
+def discover_citrix_sessions(section: StringTable) -> DiscoveryResult:
+    yield Service(parameters=citrix_sessions_default_levels)
+
+
+def check_citrix_sessions(params: Mapping[str, Any], section: StringTable) -> CheckResult:
     session: dict[str, int] = {}
-    for line in info:
+    for line in section:
         if len(line) > 1:
             session.setdefault(line[0], int(line[1]))
 
     if not session:
-        yield 3, "Could not collect session information. Please check the agent configuration."
+        yield Result(
+            state=State.UNKNOWN,
+            summary="Could not collect session information. Please check the agent configuration.",
+        )
         return
 
     for key, what in [
@@ -49,23 +59,25 @@ def check_citrix_sessions(
     ]:
         if session.get(key) is None:
             continue
-        yield check_levels(
+        yield from check_levels_v1(
             session[key],
-            what,
-            params.get(what),
-            infoname=what.title(),
+            metric_name=what,
+            levels_upper=params.get(what),
+            label=what.title(),
         )
 
 
-def parse_citrix_sessions(string_table: StringTable) -> StringTable:
-    return string_table
-
-
-check_info["citrix_sessions"] = LegacyCheckDefinition(
+agent_section_citrix_sessions = AgentSection(
     name="citrix_sessions",
     parse_function=parse_citrix_sessions,
+)
+
+
+check_plugin_citrix_sessions = CheckPlugin(
+    name="citrix_sessions",
     service_name="Citrix Sessions",
     discovery_function=discover_citrix_sessions,
     check_function=check_citrix_sessions,
     check_ruleset_name="citrix_sessions",
+    check_default_parameters=citrix_sessions_default_levels,
 )

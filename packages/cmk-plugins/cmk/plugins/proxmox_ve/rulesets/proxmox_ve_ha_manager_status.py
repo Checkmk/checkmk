@@ -21,10 +21,10 @@ def _parameter_valuespec_proxmox_ve_ha_manager_status():
             "differing_service_state": DictElement(
                 required=True,
                 parameter_form=ServiceState(
-                    title=Title("Service state for Differing Service States"),
+                    title=Title("Service state for differing VM/LXC states"),
                     help_text=Help(
-                        "If a service's current state differs from its requested state, "
-                        "the state of the Service will be set to this value."
+                        "The state of the Proxmox VE HA Manager Watcher service will be set to this value "
+                        "if the current state of a VM/LXC differs from its requested state"
                     ),
                     prefill=DefaultValue(ServiceState.WARN),
                 ),

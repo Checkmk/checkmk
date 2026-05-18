@@ -148,6 +148,7 @@ def test_diagnostics_element_general() -> None:
 def test_diagnostics_element_general_content(tmp_path: Path) -> None:
     diagnostics_element = diagnostics.GeneralDiagnosticsElement()
     tmp_dump_folder = tmp_path.joinpath("tmp")
+    tmp_dump_folder.mkdir(parents=True, exist_ok=True)
     filepath = next(
         diagnostics_element.add_or_get_files(
             omd_root=cmk.utils.paths.omd_root, tmp_dump_folder=tmp_dump_folder
@@ -273,6 +274,7 @@ def test_diagnostics_element_environment_content(
 
         diagnostics_element = diagnostics.EnvironmentDiagnosticsElement()
         tmp_dump_folder = tmp_path.joinpath("tmp")
+        tmp_dump_folder.mkdir(parents=True, exist_ok=True)
         filepath = next(
             diagnostics_element.add_or_get_files(omd_root=tmp_path, tmp_dump_folder=tmp_dump_folder)
         )
@@ -310,6 +312,7 @@ def test_diagnostics_element_filesize_content(tmp_path: Path) -> None:
         f.write(test_content)
 
     tmp_dump_folder = tmp_path.joinpath("tmp")
+    tmp_dump_folder.mkdir(parents=True, exist_ok=True)
     with patch("pathlib.Path.group", return_value=test_group):
         filepath = next(
             diagnostics_element.add_or_get_files(omd_root=omd_root, tmp_dump_folder=tmp_dump_folder)
@@ -365,6 +368,7 @@ def test_diagnostics_element_filesize_content_ignores_temporary_file(tmp_path: P
     test_dir.joinpath(".session_info.mk.newodhsmg3r").write_text("test\n")
 
     tmp_dump_folder = tmp_path.joinpath("tmp")
+    tmp_dump_folder.mkdir(parents=True, exist_ok=True)
     with patch("pathlib.Path.group", return_value="dummygroup"):
         filepath = next(
             diagnostics_element.add_or_get_files(omd_root=omd_root, tmp_dump_folder=tmp_dump_folder)
@@ -403,6 +407,7 @@ ii  accountsservice                                             22.07.5-2ubuntu1
 
         diagnostics_element = diagnostics.DpkgCSVDiagnosticsElement()
         tmp_dump_folder = tmp_path.joinpath("tmp")
+        tmp_dump_folder.mkdir(parents=True, exist_ok=True)
         filepath = next(
             diagnostics_element.add_or_get_files(omd_root=tmp_path, tmp_dump_folder=tmp_dump_folder)
         )
@@ -448,6 +453,7 @@ tzdata;2023c;1.el9;noarch"
 
         diagnostics_element = diagnostics.RpmCSVDiagnosticsElement()
         tmp_dump_folder = tmp_path.joinpath("tmp")
+        tmp_dump_folder.mkdir(parents=True, exist_ok=True)
         filepath = next(
             diagnostics_element.add_or_get_files(omd_root=tmp_path, tmp_dump_folder=tmp_dump_folder)
         )
@@ -504,6 +510,7 @@ def test_diagnostics_element_omd_config_content(
     diagnostics_element = diagnostics.OMDConfigDiagnosticsElement(omd_config=omd_config)
 
     tmp_dump_folder = tmp_path.joinpath("tmp")
+    tmp_dump_folder.mkdir(parents=True, exist_ok=True)
     filepath = next(
         diagnostics_element.add_or_get_files(omd_root=tmp_path, tmp_dump_folder=tmp_dump_folder)
     )
@@ -738,6 +745,7 @@ def test_diagnostics_element_checkmk_files_error(
     short_test_conf_filepath = "/no/such/file"
     diagnostics_element = diag_elem([short_test_conf_filepath])
     tmp_dump_folder = tmp_path.joinpath("tmp")
+    tmp_dump_folder.mkdir(parents=True, exist_ok=True)
 
     with pytest.raises(diagnostics.DiagnosticsElementError) as e:
         next(
@@ -960,6 +968,7 @@ def test_diagnostics_element_se_linux_content(
 
         diagnostics_element = diagnostics.SELinuxJSONDiagnosticsElement()
         tmp_dump_folder = tmp_path.joinpath("tmp")
+        tmp_dump_folder.mkdir(parents=True, exist_ok=True)
         filepath = next(
             diagnostics_element.add_or_get_files(omd_root=tmp_path, tmp_dump_folder=tmp_dump_folder)
         )

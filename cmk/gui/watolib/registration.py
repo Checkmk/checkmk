@@ -34,6 +34,7 @@ from . import (
     groups,
     host_attributes,
     rulespec_groups,
+    sample_config,
 )
 from .activate_changes import (
     ActivateChangesSchedulerBackgroundJob,
@@ -95,13 +96,6 @@ from .rulespecs import (
     RulespecGroupEnforcedServices,
     RulespecGroupRegistry,
 )
-from .sample_config import (
-    ConfigGeneratorAcknowledgeInitialWerks,
-    ConfigGeneratorBasicWATOConfig,
-    ConfigGeneratorInitialAdminUser,
-    ConfigGeneratorLocalSiteConnection,
-    ConfigGeneratorRegistrationUser,
-)
 from .services import ServiceDiscoveryBackgroundJob
 from .single_choice_editable_visitor import SingleChoiceEditableVisitor
 from .time_specific_visitor import TimeSpecificVisitor
@@ -157,11 +151,7 @@ def register(
     automation_command_registry.register(AutomationAgentRegistrationTokenCreate)
     automation_command_registry.register(AutomationCheckAnalyzeConfig)
     automation_command_registry.register(AutomationDiscoveredHostLabelSync)
-    sample_config_generator_registry.register(ConfigGeneratorBasicWATOConfig)
-    sample_config_generator_registry.register(ConfigGeneratorLocalSiteConnection)
-    sample_config_generator_registry.register(ConfigGeneratorAcknowledgeInitialWerks)
-    sample_config_generator_registry.register(ConfigGeneratorRegistrationUser)
-    sample_config_generator_registry.register(ConfigGeneratorInitialAdminUser)
+    sample_config.register(sample_config_generator_registry)
     contact_group_usage_finder_registry_.register(find_usages_of_contact_group_in_hosts_and_folders)
     contact_group_usage_finder_registry_.register(
         find_usages_of_contact_group_in_notification_rules

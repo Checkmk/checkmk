@@ -11,15 +11,11 @@ from ._constants import (
     USE_NEW_DESCRIPTIONS_FOR_SETTING,
 )
 from ._impl import (
-    ConfigGeneratorAcknowledgeInitialWerks,
-    ConfigGeneratorBasicWATOConfig,
-    ConfigGeneratorInitialAdminUser,
-    ConfigGeneratorLocalSiteConnection,
-    ConfigGeneratorRegistrationUser,
     get_default_notification_rule,
     init_wato_datastructures,
     new_notification_parameter_id,
     new_notification_rule_id,
+    register,
     SampleConfigGeneratorGroups,
 )
 
@@ -27,15 +23,11 @@ __all__ = [
     "SampleConfigGeneratorABCGroups",
     "SampleConfigGeneratorGroups",
     "CMK_INV_RULES",
-    "ConfigGeneratorAcknowledgeInitialWerks",
-    "ConfigGeneratorLocalSiteConnection",
-    "ConfigGeneratorBasicWATOConfig",
-    "ConfigGeneratorInitialAdminUser",
-    "ConfigGeneratorRegistrationUser",
     "new_notification_parameter_id",
     "new_notification_rule_id",
     "get_default_notification_rule",
     "init_wato_datastructures",
+    "register",
     "INVENTORY_PROCESS_DISCOVERY_RULES",
     "USE_NEW_DESCRIPTIONS_FOR_SETTING",
 ]

@@ -28,6 +28,7 @@ from cmk.gui.utils.htpasswd import Htpasswd
 from cmk.gui.watolib.config_domain_name import (
     sample_config_generator_registry,
     SampleConfigGenerator,
+    SampleConfigGeneratorRegistry,
 )
 from cmk.gui.watolib.config_domains import ConfigDomainCACertificates
 from cmk.gui.watolib.global_settings import save_global_settings
@@ -369,3 +370,11 @@ class ConfigGeneratorRegistrationUser(SampleConfigGenerator):
             now=datetime.now(),
             pprint_value=True,
         )
+
+
+def register(sample_config_generator_registry_: SampleConfigGeneratorRegistry) -> None:
+    sample_config_generator_registry_.register(ConfigGeneratorBasicWATOConfig)
+    sample_config_generator_registry_.register(ConfigGeneratorLocalSiteConnection)
+    sample_config_generator_registry_.register(ConfigGeneratorAcknowledgeInitialWerks)
+    sample_config_generator_registry_.register(ConfigGeneratorRegistrationUser)
+    sample_config_generator_registry_.register(ConfigGeneratorInitialAdminUser)

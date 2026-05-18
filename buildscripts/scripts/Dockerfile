@@ -19,9 +19,11 @@ FROM ${IMAGE_BASE}
 # make is required by scripts/fake-artifacts, see CMK-21338, requires +9MB
 # coreutils, grep is required by validate_changes.py/find-[python,shell]-files
 # to get "sort --zero-terminated" and "grep --binary-files=", requires +2MB
+# rsync is required to upload artifacts to tstbuilds, requires +1MB
+# openssh is required to login with rsync to remote servers, requires +5MB
 # cache removal saves 3MB
 RUN apk update && \
-    apk add bash git make coreutils grep && \
+    apk add bash git make coreutils grep rsync openssh && \
     rm -rf /var/cache/apk/*
 
 # install checkmk-dev-tools to run ci-artifacts

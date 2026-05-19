@@ -10,10 +10,6 @@
 #  network.
 
 case "${1}" in
-    default)
-        PORT=$("${OMD_ROOT}/lib/omd/next_free_port" RABBITMQ_DIST_PORT 25672)
-        echo "${PORT}"
-        ;;
     choices)
         echo "[0-9]{1,5}"
         ;;

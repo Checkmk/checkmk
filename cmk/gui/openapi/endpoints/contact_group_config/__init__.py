@@ -62,7 +62,7 @@ from cmk.gui.openapi.restful_objects import constructors, Endpoint, response_sch
 from cmk.gui.openapi.restful_objects.parameters import GROUP_NAME_FIELD
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.openapi.utils import ProblemException, serve_json
-from cmk.gui.session import SuperUserContext
+from cmk.gui.session_context import SuperUserContext
 from cmk.gui.utils import permission_verification as permissions
 from cmk.gui.watolib.groups import (
     add_group,

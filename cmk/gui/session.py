@@ -10,9 +10,6 @@
 
 from __future__ import annotations
 
-import contextlib
-from collections.abc import Container, Iterator
-from contextlib import AbstractContextManager as ContextManager
 from datetime import datetime
 from typing import cast, override
 
@@ -37,10 +34,10 @@ from cmk.gui.logged_in import (
     LoggedInRemoteSite,
     LoggedInSuperUser,
     LoggedInUser,
-    UserDefaultConfig,
 )
 from cmk.gui.permissions import permission_registry
 from cmk.gui.pseudo_users import PseudoUserId, RemoteSitePseudoUser, SiteInternalPseudoUser
+from cmk.gui.session_context import _user_defaults
 from cmk.gui.type_defs import AuthType, SessionInfo, SessionState, SessionStateMachine
 from cmk.gui.userdb.session import auth_cookie_value
 from cmk.gui.userdb.store import convert_idle_timeout, load_custom_attr
@@ -51,14 +48,6 @@ from cmk.gui.wsgi.utils import dict_property
 from cmk.utils.security_event import log_security_event
 
 tracer = trace.get_tracer()
-
-
-def _user_defaults() -> UserDefaultConfig:
-    return UserDefaultConfig(
-        users=config.active_config.multisite_users,
-        default_language=config.active_config.default_language,
-        default_show_mode=config.active_config.show_mode,
-    )
 
 
 class CheckmkFileBasedSession(dict, SessionMixin):
@@ -534,48 +523,3 @@ class FileBasedSession(SessionInterface):
 # Casting the original LocalProxy, so "from flask import session" and our own
 # session object will always return the same objects.
 session: CheckmkFileBasedSession = cast(CheckmkFileBasedSession, flask.session)
-
-
-@contextlib.contextmanager
-def _UserContext(user_obj: LoggedInUser) -> Iterator[None]:
-    """Managing authenticated user context
-
-    After the user has been authenticated, initialize the global user object."""
-    old_user: LoggedInUser = session.user
-    session.user = user_obj
-    try:
-        yield
-    finally:
-        session.user = old_user
-
-
-def UserContext(
-    user_id: UserId,
-    user_permissions: UserPermissions,
-    *,
-    explicit_permissions: Container[str] = frozenset(),
-) -> ContextManager[None]:
-    """Execute a block of code as another user
-
-    After the block exits, the previous user will be replaced again.
-    """
-    return _UserContext(
-        LoggedInUser(
-            user_id,
-            user_permissions,
-            defaults=_user_defaults(),
-            explicitly_given_permissions=explicit_permissions,
-        )
-    )
-
-
-def SuperUserContext() -> ContextManager[None]:
-    """Execute a block code as the superuser
-
-    After the block exits, the previous user will be replaced again.
-
-    Returns:
-        The context manager.
-
-    """
-    return _UserContext(LoggedInSuperUser())

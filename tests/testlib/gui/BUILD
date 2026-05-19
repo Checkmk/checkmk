@@ -21,6 +21,7 @@ py_library(
         "//cmk/gui:http",
         "//cmk/gui:main_modules",
         "//cmk/gui:script_helpers",
+        "//cmk/gui:session_context",
         "//cmk/gui:type_defs",
         "//cmk/gui/background_job/job",
         "//cmk/gui/plugins/wato/check_parameters:stub",

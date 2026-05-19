@@ -14,7 +14,7 @@ from cmk.gui.livestatus_utils.commands.comment import (
     delete_host_comment,
     delete_service_comment,
 )
-from cmk.gui.session import SuperUserContext
+from cmk.gui.session_context import SuperUserContext
 from cmk.livestatus_client.testing import MockLiveStatusConnection
 
 

@@ -249,6 +249,7 @@ py_library(
         "//cmk/gui:main_modules",
         "//cmk/gui:script_helpers",
         "//cmk/gui:session",
+        "//cmk/gui:session_context",
         "//cmk/gui/watolib",
         "//cmk/utils",
     ],

@@ -41,6 +41,7 @@ py_library(
         "//cmk/gui:pages",
         "//cmk/gui:permissions",
         "//cmk/gui:session",
+        "//cmk/gui:session_context",
         "//cmk/gui:type_defs",
         "//cmk/gui/background_job/job",
         "//cmk/gui/utils:loading_transition",

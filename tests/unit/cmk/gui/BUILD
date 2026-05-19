@@ -95,6 +95,7 @@ py_test(
         "//cmk/gui:role_types",
         "//cmk/gui:script_helpers",
         "//cmk/gui:session",
+        "//cmk/gui:session_context",
         "//cmk/gui:site_config",
         "//cmk/gui:sites",
         "//cmk/gui:table",

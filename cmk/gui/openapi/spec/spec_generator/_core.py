@@ -423,7 +423,7 @@ from cmk.gui.openapi.spec.spec_generator._type_defs import DocEndpoint
 from cmk.gui.openapi.spec.utils import spec_path
 from cmk.gui.openapi.versioned_endpoint_map import compute_endpoint_changes, discover_endpoints
 from cmk.gui.script_helpers import gui_context
-from cmk.gui.session import SuperUserContext
+from cmk.gui.session_context import SuperUserContext
 from cmk.utils.paths import omd_root
 
 Ident = tuple[str, str]

@@ -25,6 +25,7 @@ py_test(
         "//cmk/gui:i18n",
         "//cmk/gui:logged_in",
         "//cmk/gui:session",
+        "//cmk/gui:session_context",
         "//cmk/gui:type_defs",
         "//cmk/gui/background_job/process",
         "//cmk/gui/search",

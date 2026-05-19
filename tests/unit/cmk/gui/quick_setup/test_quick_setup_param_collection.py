@@ -21,7 +21,7 @@ from cmk.gui.quick_setup.v0_unstable.predefined import (
 )
 from cmk.gui.quick_setup.v0_unstable.type_defs import ParsedFormData
 from cmk.gui.quick_setup.v0_unstable.widgets import FormSpecId
-from cmk.gui.session import UserContext
+from cmk.gui.session_context import UserContext
 from cmk.gui.utils.roles import UserPermissions
 from cmk.password_store.v1_unstable import Secret
 from cmk.server_side_calls_backend import load_special_agents

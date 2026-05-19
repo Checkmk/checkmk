@@ -57,7 +57,7 @@ from cmk.gui.search.match_items import (
 from cmk.gui.search.match_items import (
     MatchItemsByTopic as MatchItemsByTopic,
 )
-from cmk.gui.session import SuperUserContext
+from cmk.gui.session_context import SuperUserContext
 from cmk.gui.type_defs import SearchQuery, SearchResult, SearchResultsByTopic
 from cmk.gui.utils.loading_transition import LoadingTransition
 from cmk.gui.utils.output_funnel import output_funnel

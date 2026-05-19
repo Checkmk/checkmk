@@ -57,7 +57,7 @@ from cmk.gui.log import logger
 from cmk.gui.logged_in import LoggedInUser, user
 from cmk.gui.page_menu import confirmed_form_submit_options
 from cmk.gui.pages import PageContext
-from cmk.gui.session import session
+from cmk.gui.session_context import get_session_csrf_token
 from cmk.gui.site_config import is_distributed_setup_remote_site
 from cmk.gui.type_defs import (
     Choices,
@@ -3912,8 +3912,8 @@ def folder_preserving_link(add_vars: HTTPVariables) -> str:
 
 def make_action_link(vars_: HTTPVariables) -> str:
     session_vars: HTTPVariables = [("_transid", transactions.get())]
-    if session and hasattr(session, "session_info"):
-        session_vars.append(("_csrf_token", session.session_info.csrf_token))
+    if (csrf_token := get_session_csrf_token()) is not None:
+        session_vars.append(("_csrf_token", csrf_token))
 
     return folder_preserving_link(vars_ + session_vars)
 

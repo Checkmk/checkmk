@@ -242,6 +242,7 @@ py_library(
         "//cmk/gui:rulespec",
         "//cmk/gui:script_helpers",
         "//cmk/gui:session",
+        "//cmk/gui:session_context",
         "//cmk/gui/rule_specs:loader",
         "//cmk/gui/rule_specs:types",
         "//cmk/gui/watolib",

@@ -14,6 +14,7 @@ py_library(
         "//cmk/gui:i18n",
         "//cmk/gui:logged_in",
         "//cmk/gui:permissions",
+        "//cmk/gui:session_context",
         "//cmk/gui/fields:base",
         "//cmk/gui/openapi/framework",
         "//cmk/gui/openapi/framework:core",

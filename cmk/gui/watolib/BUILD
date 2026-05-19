@@ -264,6 +264,7 @@ py_library(
         "//cmk/gui:permissions",
         "//cmk/gui:role_types",
         "//cmk/gui:session",
+        "//cmk/gui:session_context",
         "//cmk/gui:site_config",
         "//cmk/gui:sites",
         "//cmk/gui:type_defs",

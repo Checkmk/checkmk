@@ -11,7 +11,7 @@ import pytest
 
 import cmk.utils.paths
 from cmk.gui.script_helpers import application_and_request_context
-from cmk.gui.session import SuperUserContext
+from cmk.gui.session_context import SuperUserContext
 from cmk.gui.watolib import groups_io
 from cmk.gui.watolib.groups_io import contact_group_usage_finder_registry
 

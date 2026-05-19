@@ -1241,6 +1241,25 @@ py_library(
 )
 
 py_library(
+    name = "session_context",
+    srcs = ["session_context.py"],
+    imports = ["../.."],
+    visibility = [
+        "//bin:__pkg__",
+        "//cmk:__subpackages__",
+        "//omd/packages/check_mk:__pkg__",
+        "//tests:__subpackages__",
+    ],
+    deps = [
+        ":config",
+        ":logged_in",
+        "//cmk/gui/utils:roles",
+        "//packages/cmk-ccc:user",
+        requirement("flask"),
+    ],
+)
+
+py_library(
     name = "session",
     srcs = ["session.py"],
     imports = ["../.."],
@@ -1258,6 +1277,7 @@ py_library(
         ":logged_in",
         ":permissions",
         ":pseudo_users",
+        ":session_context",
         ":type_defs",
         "//cmk/gui/userdb",
         "//cmk/gui/utils:flashed_messages",
@@ -2129,6 +2149,7 @@ py_library(
         ":script_helpers",
         ":search_menu",
         ":session",
+        ":session_context",
         ":single_global_setting",
         ":site_config",
         ":sites",

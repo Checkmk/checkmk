@@ -499,6 +499,7 @@ allows = [
   "cmk.gui.log",
   "cmk.gui.main_modules",
   "cmk.gui.session",
+  "cmk.gui.session_context",
   "cmk.gui.site_config",
   "cmk.gui.script_helpers",
   "cmk.gui.watolib.attributes",

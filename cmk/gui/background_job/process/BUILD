@@ -17,6 +17,7 @@ py_library(
         "//cmk/gui:i18n",
         "//cmk/gui:log",
         "//cmk/gui:session",
+        "//cmk/gui:session_context",
         "//cmk/gui:single_global_setting",
         "//cmk/gui/background_job/job",
         "//cmk/gui/utils:roles",

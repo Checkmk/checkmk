@@ -57,6 +57,7 @@ py_library(
         "//cmk/gui:permissions",
         "//cmk/gui:script_helpers",
         "//cmk/gui:session",
+        "//cmk/gui:session_context",
         "//cmk/gui:site_config",
         "//cmk/gui:type_defs",
         "//cmk/gui:unit_formatter",

@@ -26,6 +26,7 @@ py_test(
         "//cmk/gui:http",
         "//cmk/gui:logged_in",
         "//cmk/gui:login",
+        "//cmk/gui:session_context",
         "//cmk/gui/background_job/job",
         "//cmk/gui/background_job/process",
         "//cmk/gui/form_specs",

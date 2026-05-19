@@ -51,6 +51,7 @@ py_test(
         "//cmk/gui:logged_in",
         "//cmk/gui:script_helpers",
         "//cmk/gui:session",
+        "//cmk/gui:session_context",
         "//cmk/gui/fields",
         "//cmk/gui/fields:base",
         "//cmk/gui/openapi:openapi_init",

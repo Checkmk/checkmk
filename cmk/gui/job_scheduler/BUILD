@@ -16,6 +16,7 @@ py_library(
         "//cmk/gui:main_modules",
         "//cmk/gui:script_helpers",
         "//cmk/gui:session",
+        "//cmk/gui:session_context",
         "//cmk/gui:single_global_setting",
         "//cmk/gui/background_job/job",
         "//cmk/utils:paths",

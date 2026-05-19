@@ -7,7 +7,7 @@ import pytest
 
 from cmk.gui import sites
 from cmk.gui.livestatus_utils.commands.lowlevel import send_command
-from cmk.gui.session import SuperUserContext
+from cmk.gui.session_context import SuperUserContext
 from cmk.livestatus_client.testing import MockLiveStatusConnection
 
 

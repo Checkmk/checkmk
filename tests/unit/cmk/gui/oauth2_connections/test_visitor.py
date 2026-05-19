@@ -18,7 +18,7 @@ from cmk.gui.form_specs import (
 from cmk.gui.form_specs.unstable.oauth2_connection_setup import OAuth2ConnectionSetup
 from cmk.gui.form_specs.visitors.single_choice import SingleChoiceVisitor
 from cmk.gui.oauth2_connections.wato import _modes as oauth2_modes
-from cmk.gui.session import UserContext
+from cmk.gui.session_context import UserContext
 from cmk.gui.utils.roles import UserPermissions
 from cmk.shared_typing import vue_formspec_components as shared_type_defs
 

@@ -44,7 +44,7 @@ from cmk.gui.background_job.job._store import JobStatusSpecUpdate, JobStatusStor
 from cmk.gui.crash_handler import create_gui_crash_report
 from cmk.gui.features import features_registry
 from cmk.gui.i18n import _
-from cmk.gui.session import SuperUserContext, UserContext
+from cmk.gui.session_context import SuperUserContext, UserContext
 from cmk.gui.single_global_setting import load_gui_log_levels
 from cmk.gui.utils.roles import UserPermissions
 from cmk.trace import (

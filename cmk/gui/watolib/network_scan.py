@@ -26,7 +26,7 @@ from cmk.gui.http import Request
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.permissions import permission_registry
-from cmk.gui.session import UserContext
+from cmk.gui.session_context import UserContext
 from cmk.gui.site_config import is_distributed_setup_remote_site, site_is_local
 from cmk.gui.utils.roles import UserPermissions
 from cmk.utils.paths import configuration_lockfile

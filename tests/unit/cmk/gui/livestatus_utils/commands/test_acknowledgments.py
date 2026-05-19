@@ -11,7 +11,7 @@ from cmk.gui.livestatus_utils.commands.acknowledgments import (
     acknowledge_host_problem,
     acknowledge_service_problem,
 )
-from cmk.gui.session import SuperUserContext
+from cmk.gui.session_context import SuperUserContext
 from cmk.livestatus_client.testing import MockLiveStatusConnection
 
 

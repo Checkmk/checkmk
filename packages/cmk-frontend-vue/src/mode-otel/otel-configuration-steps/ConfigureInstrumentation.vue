@@ -37,6 +37,7 @@ const props = defineProps<{
   httpAuth: AuthConfig
   grpcEventConsole: EventConsoleConfig | null
   httpEventConsole: EventConsoleConfig | null
+  cloudGrpcEndpoint?: string | null
 }>()
 
 const activeTab = ref('collector')
@@ -52,12 +53,21 @@ const snippetInput = computed<CollectorSnippetInput>(() => ({
       }
     : null,
   grpcInfo: props.grpcEnabled
-    ? {
-        endpoint: props.grpcEndpoint,
-        tlsEnabled: props.grpcTlsEnabled,
-        auth: props.grpcAuth,
-        eventConsole: props.grpcEventConsole !== null
-      }
+    ? props.cloudGrpcEndpoint
+      ? {
+          endpoint: props.grpcEndpoint,
+          tlsEnabled: true,
+          tlsSimple: true,
+          auth: props.grpcAuth,
+          eventConsole: props.grpcEventConsole !== null,
+          overrideEndpoint: props.cloudGrpcEndpoint
+        }
+      : {
+          endpoint: props.grpcEndpoint,
+          tlsEnabled: props.grpcTlsEnabled,
+          auth: props.grpcAuth,
+          eventConsole: props.grpcEventConsole !== null
+        }
     : null
 }))
 

@@ -6,10 +6,6 @@
 #  If receiving traces is configured, you can customize the UI port here.
 
 case "$1" in
-    default)
-        PORT=$("$OMD_ROOT"/lib/omd/next_free_port TRACE_JAEGER_UI_PORT 16686)
-        echo "$PORT"
-        ;;
     choices)
         echo "@{NETWORK_PORT}"
         ;;

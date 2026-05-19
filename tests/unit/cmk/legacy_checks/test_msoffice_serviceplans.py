@@ -3,12 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-call"
-
 from collections.abc import Mapping
 
 import pytest
 
+from cmk.agent_based.v2 import Result, State
 from cmk.legacy_checks.msoffice_serviceplans import (
     check_msoffice_serviceplans,
     parse_msoffice_serviceplans,
@@ -16,15 +15,17 @@ from cmk.legacy_checks.msoffice_serviceplans import (
 
 
 @pytest.mark.parametrize(
-    "params, expected_status, expected_levels_info",
+    "params, expected_state, expected_levels_info",
     [
-        ({}, 0, ""),
-        ({"levels": (1, 3)}, 1, " (warn/crit at 1/3)"),
-        ({"levels": (0, 1)}, 2, " (warn/crit at 0/1)"),
+        ({}, State.OK, ""),
+        ({"levels": (1, 3)}, State.WARN, " (warn/crit at 1/3)"),
+        ({"levels": (0, 1)}, State.CRIT, " (warn/crit at 0/1)"),
     ],
 )
-def test_check_win_license(
-    params: Mapping[str, tuple[float, float]], expected_status: int, expected_levels_info: str
+def test_check_msoffice_serviceplans(
+    params: Mapping[str, tuple[float, float]],
+    expected_state: State,
+    expected_levels_info: str,
 ) -> None:
     assert list(
         check_msoffice_serviceplans(
@@ -40,6 +41,6 @@ def test_check_win_license(
             ),
         ),
     ) == [
-        (expected_status, "Success: 2, Pending: 2%s" % expected_levels_info),
-        (0, "Pending Services: plan-pending-1, plan-pen ding-2"),
+        Result(state=expected_state, summary=f"Success: 2, Pending: 2{expected_levels_info}"),
+        Result(state=State.OK, summary="Pending Services: plan-pending-1, plan-pen ding-2"),
     ]

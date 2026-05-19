@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
-
 # Example output:
 # <<<msoffice_serviceplans>>>
 # mggraph:VISIOCLIENT ONEDRIVE_BASIC Success
@@ -17,30 +15,41 @@
 # mggraph:WINDOWS_STORE WINDOWS_STORE PendingActivation
 
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import StringTable
+from collections.abc import Mapping
+from typing import Any
 
-check_info = {}
+from cmk.agent_based.v2 import (
+    AgentSection,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Result,
+    Service,
+    State,
+    StringTable,
+)
 
 
-def discover_msoffice_serviceplans(info):
-    for line in info:
+def discover_msoffice_serviceplans(section: StringTable) -> DiscoveryResult:
+    for line in section:
         if len(line) >= 1 and "Microsoft.Graph module is not installed" in " ".join(line):
-            yield "_error", {}
+            yield Service(item="_error")
             return
-        yield line[0], {}
+        yield Service(item=line[0])
 
 
-def check_msoffice_serviceplans(item, params, info):
+def check_msoffice_serviceplans(
+    item: str, params: Mapping[str, Any], section: StringTable
+) -> CheckResult:
     success = 0
     pending = 0
     pending_list = []
     warn, crit = params.get("levels", (None, None))
-    for line in info:
+    for line in section:
         if len(line) >= 1 and "Microsoft.Graph module is not installed" in " ".join(line):
-            yield (
-                2,
-                "MS Office agent plugin requires installation of the Powershell Module Microsoft.Graph for all users, see werk #18609",
+            yield Result(
+                state=State.CRIT,
+                summary="MS Office agent plugin requires installation of the Powershell Module Microsoft.Graph for all users, see werk #18609",
             )
             return
 
@@ -51,28 +60,34 @@ def check_msoffice_serviceplans(item, params, info):
             elif status == "PendingActivation":
                 pending += 1
                 pending_list.append(plan)
-    state = 0
-    infotext = "Success: %d, Pending: %d" % (success, pending)
+    state = State.OK
+    infotext = f"Success: {success}, Pending: {pending}"
     if crit and pending >= crit:
-        state = 2
+        state = State.CRIT
     elif warn and pending >= warn:
-        state = 1
-    if state:
-        infotext += " (warn/crit at %d/%d)" % (warn, crit)
-    yield state, infotext
+        state = State.WARN
+    if state is not State.OK:
+        infotext += f" (warn/crit at {warn}/{crit})"
+    yield Result(state=state, summary=infotext)
     if pending_list:
-        yield 0, "Pending Services: %s" % ", ".join(pending_list)
+        yield Result(state=State.OK, summary=f"Pending Services: {', '.join(pending_list)}")
 
 
 def parse_msoffice_serviceplans(string_table: StringTable) -> StringTable:
     return string_table
 
 
-check_info["msoffice_serviceplans"] = LegacyCheckDefinition(
+agent_section_msoffice_serviceplans = AgentSection(
     name="msoffice_serviceplans",
     parse_function=parse_msoffice_serviceplans,
+)
+
+
+check_plugin_msoffice_serviceplans = CheckPlugin(
+    name="msoffice_serviceplans",
     service_name="MS Office Serviceplans %s",
     discovery_function=discover_msoffice_serviceplans,
     check_function=check_msoffice_serviceplans,
     check_ruleset_name="msoffice_serviceplans",
+    check_default_parameters={},
 )

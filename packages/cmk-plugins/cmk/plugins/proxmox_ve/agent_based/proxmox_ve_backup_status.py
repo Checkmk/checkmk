@@ -50,9 +50,8 @@ def parse_proxmox_ve_vm_backup_status(
     string_table: StringTable,
 ) -> Section:
     result = BackupData()
-
+    
     backup_json = json.loads(string_table[0][0])
-
     backup_data = backup_json["last_backup"] or {}
     if "started_time" in backup_data:
         # the datetime object has timezone information

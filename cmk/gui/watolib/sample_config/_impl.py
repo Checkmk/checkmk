@@ -14,6 +14,7 @@ from livestatus import SiteConfiguration, SiteConfigurations
 from cmk.ccc import store
 from cmk.ccc.site import omd_site, url_prefix
 from cmk.ccc.user import UserId
+from cmk.gui import werks
 from cmk.gui.groups import GroupSpec
 from cmk.gui.log import logger
 from cmk.gui.userdb import (
@@ -291,9 +292,6 @@ class ConfigGeneratorAcknowledgeInitialWerks(SampleConfigGenerator):
         return 40
 
     def generate(self) -> None:
-        # Local import has been added to quick-fix an import cycle between cmk.gui.werks and watolib
-        from cmk.gui import werks
-
         werks.acknowledge_all_werks(check_permission=False)
 
 

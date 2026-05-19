@@ -276,7 +276,7 @@ describe('enumerateIssues', () => {
     expect(issues[0].id).toBe('pylance:over-threshold')
   })
 
-  it('flags OMD auth as critical when any site status is unknown', () => {
+  it('flags OMD auth as warning when any site status is unknown', () => {
     const issues = enumerateIssues(
       emptyState({
         omdSites: [
@@ -293,7 +293,7 @@ describe('enumerateIssues', () => {
       })
     )
     expect(issues[0].id).toBe('omd:auth')
-    expect(issues[0].severity).toBe('critical')
+    expect(issues[0].severity).toBe('warning')
   })
 
   it('flags OMD stopped sites as warning when no auth needed', () => {

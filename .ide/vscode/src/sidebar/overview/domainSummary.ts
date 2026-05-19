@@ -483,14 +483,14 @@ export function enumerateIssues(state: StateCache): Issue[] {
     })
   }
 
-  // OMD: auth required → critical; any stopped site (without needing auth) → warning.
+  // OMD: auth required or any stopped site (without needing auth) → warning.
   if (omdSites && omdSites.length > 0) {
     const needsAuth = omdSites.some((s) => s.status.overall === -1)
     if (needsAuth) {
       out.push({
         id: 'omd:auth',
         domain: 'omd',
-        severity: 'critical',
+        severity: 'warning',
         label: 'OMD authentication',
         description: 'sudo required · Authenticate',
         tooltip:
@@ -605,7 +605,7 @@ export function getDomainSummary(state: StateCache): DomainSummary {
   let omdSeverity: Severity = 'ok'
   let omdBadge: string
   if (auth) {
-    omdSeverity = 'critical'
+    omdSeverity = 'warning'
     omdBadge = 'sudo required'
   } else if (stoppedIssue) {
     omdSeverity = 'warning'

@@ -17,14 +17,13 @@
 import pytest
 
 from cmk.legacy_checks import skype
-from cmk.plugins.windows.agent_based import libwmi_legacy as wmi
 from cmk.plugins.windows.agent_based.libwmi import parse_wmi_table
 
 
 @pytest.fixture
 def empty_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
     store = dict[str, object]()
-    monkeypatch.setattr(wmi, "get_value_store", lambda: store)
+    monkeypatch.setattr(skype, "get_value_store", lambda: store)
 
 
 @pytest.fixture(name="skype_edge_parsed")

@@ -189,18 +189,3 @@ def test_lower_level_rules_shown() -> None:
         _make_metric(ScalarBounds(warn_lower=2.0, crit_lower=1.0)),
     )
     assert [r.title for r in rules] == ["Warning (lower)", "Critical (lower)"]
-
-
-def test_lower_level_rules_hidden_when_bidirectional_and_negative() -> None:
-    rules = compute_warn_crit_rules_from_translated_metric(
-        user_specific_unit(
-            ConvertibleUnitSpecification(
-                notation=DecimalNotation(symbol=""),
-                precision=AutoPrecision(digits=2),
-            ),
-            TemperatureUnit.CELSIUS,
-        ),
-        _make_metric(ScalarBounds(warn_lower=-2.0, crit_lower=-1.0)),
-        is_bidirectional=True,
-    )
-    assert rules == []

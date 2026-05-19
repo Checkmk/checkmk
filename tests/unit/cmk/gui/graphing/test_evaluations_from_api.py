@@ -12,6 +12,8 @@ from cmk.ccc.site import SiteId
 from cmk.graphing.v1 import graphs as graphs_v1
 from cmk.graphing.v1 import metrics as metrics_v1
 from cmk.graphing.v1 import Title as TitleV1
+from cmk.graphing.v2_unstable import graphs as graphs_v2_unstable
+from cmk.graphing.v2_unstable import metrics as metrics_v2_unstable
 from cmk.gui.graphing._evaluations_from_api import (
     evaluate_graph_plugin_metrics,
     evaluate_graph_plugin_range,
@@ -347,6 +349,48 @@ def test_evaluate_graph_plugin_scalars(
         )
         == expected
     )
+
+
+def test_evaluate_graph_plugin_scalars_bidirectional_drops_out_of_range_rules() -> None:
+    # warn_lower is negative: in the upper sub-graph it would render below
+    # zero, in the lower sub-graph (factor=-1) it would render above zero —
+    # outside either half of the bidirectional visualization. The rule must
+    # be dropped.
+    rules = evaluate_graph_plugin_scalars(
+        {},
+        graphs_v2_unstable.Bidirectional(
+            name="graph",
+            title=TitleV1("Graph"),
+            upper=graphs_v2_unstable.Graph(
+                name="graph_upper",
+                title=TitleV1("Graph upper"),
+                compound_lines=["metric"],
+                simple_lines=[metrics_v2_unstable.LowerWarningOf("metric")],
+            ),
+            lower=graphs_v2_unstable.Graph(
+                name="graph_lower",
+                title=TitleV1("Graph lower"),
+                compound_lines=["metric"],
+                simple_lines=[metrics_v2_unstable.LowerWarningOf("metric")],
+            ),
+        ),
+        {
+            "metric": TranslatedMetric(
+                originals=[Original("metric", 1.0)],
+                value=123.456,
+                scalar=ScalarBounds(warn_lower=-2.0),
+                auto_graph=True,
+                title="Metric",
+                unit_spec=ConvertibleUnitSpecification(
+                    notation=DecimalNotation(symbol="U"),
+                    precision=AutoPrecision(digits=2),
+                ),
+                color="#123456",
+            )
+        },
+        temperature_unit=TemperatureUnit.CELSIUS,
+    )
+    assert rules == []
 
 
 @pytest.mark.parametrize(

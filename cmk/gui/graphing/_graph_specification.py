@@ -91,8 +91,6 @@ def sort_horizontal_rules_in_decending_order(
 def compute_warn_crit_rules_from_translated_metric(
     user_specific_unit: UserSpecificUnit,
     translated_metric: TranslatedMetric,
-    *,
-    is_bidirectional: bool = False,
 ) -> Sequence[HorizontalRule]:
     horizontal_rules = []
     if (warn_value := translated_metric.scalar.warn) is not None and warn_value not in (
@@ -120,9 +118,10 @@ def compute_warn_crit_rules_from_translated_metric(
             )
         )
     if (
-        (warn_lower_value := translated_metric.scalar.warn_lower) is not None
-        and warn_lower_value not in (float("inf"), float("-inf"))
-        and not (is_bidirectional and warn_lower_value < 0)
+        warn_lower_value := translated_metric.scalar.warn_lower
+    ) is not None and warn_lower_value not in (
+        float("inf"),
+        float("-inf"),
     ):
         horizontal_rules.append(
             HorizontalRule(
@@ -133,9 +132,10 @@ def compute_warn_crit_rules_from_translated_metric(
             )
         )
     if (
-        (crit_lower_value := translated_metric.scalar.crit_lower) is not None
-        and crit_lower_value not in (float("inf"), float("-inf"))
-        and not (is_bidirectional and crit_lower_value < 0)
+        crit_lower_value := translated_metric.scalar.crit_lower
+    ) is not None and crit_lower_value not in (
+        float("inf"),
+        float("-inf"),
     ):
         horizontal_rules.append(
             HorizontalRule(

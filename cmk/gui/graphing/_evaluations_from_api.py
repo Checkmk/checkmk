@@ -624,23 +624,28 @@ def evaluate_graph_plugin_scalars(
                 temperature_unit=temperature_unit,
             )
         case graphs_v1.Bidirectional() | graphs_v2_unstable.Bidirectional():
-            return list(
-                _evaluate_graph_scalars(
-                    registered_metrics,
-                    graph_plugin.upper,
-                    translated_metrics,
-                    factor=1,
-                    temperature_unit=temperature_unit,
-                )
-            ) + list(
-                _evaluate_graph_scalars(
-                    registered_metrics,
-                    graph_plugin.lower,
-                    translated_metrics,
-                    factor=-1,
-                    temperature_unit=temperature_unit,
-                )
+            # A bidirectional graph splits the y-axis into a non-negative upper
+            # half and a non-positive lower half (the lower half's source values
+            # are mirrored through factor=-1). A horizontal rule whose value
+            # falls outside its half cannot be drawn — typically a lower-level
+            # threshold whose source value is itself negative.
+            upper_rules = _evaluate_graph_scalars(
+                registered_metrics,
+                graph_plugin.upper,
+                translated_metrics,
+                factor=1,
+                temperature_unit=temperature_unit,
             )
+            lower_rules = _evaluate_graph_scalars(
+                registered_metrics,
+                graph_plugin.lower,
+                translated_metrics,
+                factor=-1,
+                temperature_unit=temperature_unit,
+            )
+            return [r for r in upper_rules if r.value >= 0] + [
+                r for r in lower_rules if r.value <= 0
+            ]
 
 
 def _to_graph_metric_expression(

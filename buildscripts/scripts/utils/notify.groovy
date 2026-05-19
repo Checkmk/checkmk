@@ -74,11 +74,6 @@ void notify_error(error) {
                 notify_emails += "aws-saas-checkmk-dev@checkmk.com";
             }
 
-            /// Inform nile devs if our extensions fail
-            if (projectname.contains("test-extension-compatibility")) {
-                notify_emails.addAll(TEAM_NILE_MAIL.split(","));
-            }
-
             /// Inform werk workers if something's wrong with the werk jobs
             if (projectname.startsWith("werks/")) {
                 notify_emails.addAll(email_address_team_werks);

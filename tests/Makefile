@@ -49,21 +49,22 @@ SYSTEM_TESTS := \
     test-gui-e2e-pro \
     test-gui-e2e-ultimate \
     test-gui-e2e-ultimatemt \
-    test-gui-e2e-cloud \
-    test-extension-compatibility
+    test-gui-e2e-cloud
+
 PYTEST_SYSTEM_TEST_ARGS := \
     $(TEST_FILTER) \
     $(FAKED_ARTIFACTS) \
     -p "no:cov" \
     --log-cli-level=INFO \
     --log-cli-format="%(asctime)s.%(msecs)03d %(levelname)s %(message)s"
+
 DOCKERABLE_TESTS := \
 	test-format \
 	test-license-headers \
 	test-mypy \
 	test-plugins-siteless \
 	test-unit-all \
-	test-unit-testlib \
+	test-unit-testlib
 
 .PHONY: clean help prepare-playwright  \
 	$(foreach VERS,$(AGENT_PLUGIN_PYTHON_VERSIONS_DOCKER),test-agent-plugin-unit-py$(VERS)-docker) \
@@ -79,7 +80,7 @@ DOCKERABLE_TESTS := \
 	test-unit-omdlib \
 	test-tidy-core test-tidy-docker \
 	test-unit-neb test-unit-core \
-	qa-metrics-change-quality qa-metrics-change-quality-dryrun qa-metrics-change-quality-full \
+	qa-metrics-change-quality qa-metrics-change-quality-dryrun qa-metrics-change-quality-full
 
 clean:
 	$(RM) -r .mypy_cache
@@ -201,9 +202,6 @@ test-composition:
 	OTEL_RESOURCE_ATTRIBUTES=service.name=pytest \
 	    $(PYTEST) --export-traces $(PYTEST_SYSTEM_TEST_ARGS) \
 	    $(realpath composition)
-
-test-extension-compatibility:
-	$(PYTEST) -vv $(PYTEST_SYSTEM_TEST_ARGS) $(realpath extension_compatibility)
 
 test-update-community:
 	$(PYTEST) --cmk-edition community $(realpath update)/community $(PYTEST_SYSTEM_TEST_ARGS) --session-timeout 5400

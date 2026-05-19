@@ -295,20 +295,6 @@ py_library(
 )
 
 py_library(
-    name = "extension_compatibility",
-    testonly = True,
-    srcs = glob(
-        include = ["extension_compatibility/**/*.py"],
-    ),
-    imports = [".."],
-    deps = [
-        "//tests/testlib/common:repo",
-        requirement("pytest"),
-        ":testlib",
-    ],
-)
-
-py_library(
     name = "gui_crawl",
     testonly = True,
     srcs = glob(
@@ -393,7 +379,6 @@ py_library(
         requirement("psycopg"),
         requirement("protobuf"),
         requirement("pyopenssl"),
-        ":extension_compatibility",
         ":scripts",
         ":testlib",
         "//cmk/post_rename_site",

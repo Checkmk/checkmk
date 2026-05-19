@@ -333,6 +333,19 @@ def complete_raw_context(
             # from that one, but we try to keep this simple here.
             enriched_context["MICROTIME"] = "%d" % (time.time() * 1000000)
 
+        # Pre-render the state-change timestamps in the originating site's local
+        # timezone. In distributed setups the central site processes forwarded
+        # notifications in its own timezone, which would otherwise hide where
+        # and when the event actually happened.
+        if host_state_change := enriched_context.get("LASTHOSTSTATECHANGE"):
+            enriched_context["LASTHOSTSTATECHANGE_LOCAL"] = time.strftime(
+                "%Y-%m-%d %H:%M:%S %Z", time.localtime(int(host_state_change))
+            )
+        if service_state_change := enriched_context.get("LASTSERVICESTATECHANGE"):
+            enriched_context["LASTSERVICESTATECHANGE_LOCAL"] = time.strftime(
+                "%Y-%m-%d %H:%M:%S %Z", time.localtime(int(service_state_change))
+            )
+
         enriched_context["HOSTURL"] = "/check_mk/index.py?start_url=view.py?%s" % quote(
             urlencode(
                 [

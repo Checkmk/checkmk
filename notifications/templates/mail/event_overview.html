@@ -41,9 +41,9 @@
                    line-height: 1.4;
                    mso-line-height-rule: exactly">
             {% if service_notification %}
-               {{ data.LASTSERVICESTATECHANGE | timestamp() if data.get('LASTSERVICESTATECHANGE') else 'N/A'}}
+               {{ data.LASTSERVICESTATECHANGE_LOCAL if data.get("LASTSERVICESTATECHANGE_LOCAL") else (data.LASTSERVICESTATECHANGE | timestamp() if data.get('LASTSERVICESTATECHANGE') else 'N/A') }}
             {% else %}
-               {{ data.LASTHOSTSTATECHANGE | timestamp() if data.get('LASTHOSTSTATECHANGE') else 'N/A'}}
+               {{ data.LASTHOSTSTATECHANGE_LOCAL if data.get("LASTHOSTSTATECHANGE_LOCAL") else (data.LASTHOSTSTATECHANGE | timestamp() if data.get('LASTHOSTSTATECHANGE') else 'N/A') }}
             {% endif %}
         </td>
     </tr>

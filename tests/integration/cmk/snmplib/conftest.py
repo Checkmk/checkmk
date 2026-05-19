@@ -59,16 +59,17 @@ def snmpsim_fixture(site: Site, snmp_data_dir: Path) -> Iterator[None]:
     log.logger.setLevel(logging.DEBUG)
     debug.enable()
 
-    with_sudo = os.geteuid() == 0
+    has_root_permissions = os.geteuid() == 0
+    as_user = "testuser" if has_root_permissions else None
 
     # In the CI the tests are started as root and snmpsimd needs to be started as
     # "testuser" user. We need to provide a tmp path which is writable by that user.
     with TemporaryDirectory(prefix="snmpsim_") as d:
-        if with_sudo:
-            shutil.chown(d, "testuser", "testuser")
+        if as_user:
+            shutil.chown(d, as_user, as_user)
 
         process_definitions = [
-            _define_process(idx, auth, Path(d), snmp_data_dir, with_sudo)
+            _define_process(idx, auth, Path(d), snmp_data_dir, as_user)
             for idx, auth in enumerate(_create_auth_list())
         ]
 
@@ -90,25 +91,27 @@ def snmpsim_fixture(site: Site, snmp_data_dir: Path) -> Iterator[None]:
             logger.debug("Stopped snmpsimd.")
 
 
-def _define_process(index, auth, tmp_path, snmp_data_dir, with_sudo):
+def _define_process(index, auth, tmp_path, snmp_data_dir, as_user: None | str) -> ProcessDef:
     port = 1337 + index
 
     # The tests are executed as root user in the containerized environment, which snmpsimd does not
     # like. Switch the user context to 'testuser' to execute the daemon.
     # When executed on a dev system, we run as lower privileged user and don't have to switch the
     # context.
-    sudo = ["sudo", "-u", "testuser"] if with_sudo else []
 
     proc_tmp_path = tmp_path / f"snmpsim{index}"
     proc_tmp_path.mkdir(parents=True, exist_ok=True)
-    if with_sudo:
-        shutil.chown(proc_tmp_path, "testuser", "testuser")
+
+    command_prefix = []
+    if as_user:
+        command_prefix = ["sudo", "-u", as_user]
+        shutil.chown(proc_tmp_path, as_user, as_user)
 
     return ProcessDef(
-        with_sudo=with_sudo,
+        with_sudo=bool(as_user),
         port=port,
         process=subprocess.Popen(
-            sudo
+            command_prefix
             + [
                 f"{repo_path()}/.venv/bin/snmpsim-command-responder",
                 "--log-level=error",

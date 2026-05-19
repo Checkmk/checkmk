@@ -242,7 +242,10 @@ def _is_listening(process_def: ProcessDef) -> bool:
 
     logger.debug("snmpsimd is running")
 
-    if num_sockets < 2:
+    if (not is_containerized()) and num_sockets < 2:
+        # For Kubernetes the socket check might fail due to missing permissions.
+        # We assume the responder is up and running with the correct amount of sockets there.
+        logger.debug("not enough open sockets")
         return False
 
     logger.debug("snmpsimd has opened it's sockets")

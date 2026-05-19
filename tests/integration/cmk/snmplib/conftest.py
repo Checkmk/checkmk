@@ -59,8 +59,9 @@ def snmpsim_fixture(site: Site, snmp_data_dir: Path) -> Iterator[None]:
     log.logger.setLevel(logging.DEBUG)
     debug.enable()
 
-    has_root_permissions = os.geteuid() == 0
-    as_user = "testuser" if has_root_permissions else None
+    # Run the SNMP simulator as site user.
+    # Don't run it as this user when running inside Kubernetes.
+    as_user = None if is_containerized() else site.id
 
     # In the CI the tests are started as root and snmpsimd needs to be started as
     # "testuser" user. We need to provide a tmp path which is writable by that user.
@@ -93,11 +94,6 @@ def snmpsim_fixture(site: Site, snmp_data_dir: Path) -> Iterator[None]:
 
 def _define_process(index, auth, tmp_path, snmp_data_dir, as_user: None | str) -> ProcessDef:
     port = 1337 + index
-
-    # The tests are executed as root user in the containerized environment, which snmpsimd does not
-    # like. Switch the user context to 'testuser' to execute the daemon.
-    # When executed on a dev system, we run as lower privileged user and don't have to switch the
-    # context.
 
     proc_tmp_path = tmp_path / f"snmpsim{index}"
     proc_tmp_path.mkdir(parents=True, exist_ok=True)

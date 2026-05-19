@@ -13,6 +13,7 @@ from omdlib.config_hooks import (
     _default_APACHE_TCP_PORT,
     _default_LIVESTATUS_TCP_PORT,
     _default_RABBITMQ_DIST_PORT,
+    _default_RABBITMQ_MANAGEMENT_PORT,
     _next_free_port,
     _report_error,
 )
@@ -128,6 +129,28 @@ def test_default_RABBITMQ_DIST_PORT_warns_on_unreadable_site(
 
     site_configs = _build_site_configs("mysite", tmp_path)
     _default_RABBITMQ_DIST_PORT("mysite", site_configs)
+
+    assert "ghost" in capsys.readouterr().err
+
+
+def test_default_RABBITMQ_MANAGEMENT_PORT_cross_key_conflict(tmp_path: Path) -> None:
+    sites = tmp_path / "sites"
+    _make_site(sites, "other", "CONFIG_RABBITMQ_PORT='15671'\n")
+    _make_site(sites, "mysite", "")
+
+    site_configs = _build_site_configs("mysite", tmp_path)
+    assert _default_RABBITMQ_MANAGEMENT_PORT("mysite", site_configs) == "15672"
+
+
+def test_default_RABBITMQ_MANAGEMENT_PORT_warns_on_unreadable_site(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    sites = tmp_path / "sites"
+    _make_site(sites, "mysite", "")
+    (sites / "ghost").mkdir(parents=True)
+
+    site_configs = _build_site_configs("mysite", tmp_path)
+    _default_RABBITMQ_MANAGEMENT_PORT("mysite", site_configs)
 
     assert "ghost" in capsys.readouterr().err
 

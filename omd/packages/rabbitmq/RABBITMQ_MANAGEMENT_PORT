@@ -17,10 +17,6 @@ HERE
 }
 
 case "$1" in
-    default)
-        PORT=$("$OMD_ROOT/lib/omd/next_free_port" RABBITMQ_MANAGEMENT_PORT 15671)
-        echo "$PORT"
-        ;;
     choices)
         echo "[0-9]{1,5}"
         ;;

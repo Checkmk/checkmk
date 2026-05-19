@@ -14796,9 +14796,6 @@ msgstr "Parámetros del modelo"
 msgid "Cleanup strategy"
 msgstr "Mensajes de limpieza"
 
-msgid "Clear & Delete"
-msgstr "Borrar & Suprimir"
-
 msgid "Clear log"
 msgstr "Borrar el registro"
 
@@ -14811,6 +14808,11 @@ msgstr "Borrar los registros eliminando todos los mensajes almacenados"
 #, fuzzy
 msgid "Cleared"
 msgstr "estado 'Borrado'"
+
+msgid ""
+"Clearing the log acknowledges and removes the stored messages. Log files on "
+"the host stay unchanged."
+msgstr ""
 
 msgid ""
 "Click \"Add user\" under Users, select \"Access key - Programmatic access\", "
@@ -75641,10 +75643,6 @@ msgstr ""
 "Actualmente sólo se soporta en agentes de linux y windows, así como en "
 "dispositivos monitorizados a través del mib de recursos del host"
 
-#, python-format
-msgid "This affects %s"
-msgstr "Esto afecta a %s"
-
 msgid "This affects all rule packs."
 msgstr "Esto afecta a todos los paquetes de reglas."
 
@@ -101110,6 +101108,13 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#~ msgid "Clear & Delete"
+#~ msgstr "Borrar & Suprimir"
+
+#, python-format
+#~ msgid "This affects %s"
+#~ msgstr "Esto afecta a %s"
 
 #, fuzzy
 #~ msgid "Configure title and site"

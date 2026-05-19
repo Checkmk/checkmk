@@ -4,7 +4,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
+"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
 "PO-Revision-Date: 2026-05-16 13:19+0000\n"
 "Language-Team: Italian <https://translate.checkmk.com/projects/checkmk/"
@@ -1417,12 +1417,13 @@ msgid ""
 "collisions can occur if containers with the same name exist on more than one "
 "Docker node."
 msgstr ""
-"Le <a href='wato.py?mode=edit_ruleset&varname=piggyback_translation'>"
-"Traduzioni piggyback</a> sono eseguite prima che il connettore piggyback "
-"crei gli host. Utilizzale, ad esempio, in una configurazione con più nodi "
-"Docker per anteporre ai containers il nome del nodo Docker corrispondente. "
-"Altrimenti, possono verificarsi collisioni di nomi se dei containers con lo "
-"stesso nome esistono su più di un nodo Docker."
+"Le <a href='wato.py?"
+"mode=edit_ruleset&varname=piggyback_translation'>Traduzioni piggyback</a> "
+"sono eseguite prima che il connettore piggyback crei gli host. Utilizzale, "
+"ad esempio, in una configurazione con più nodi Docker per anteporre ai "
+"containers il nome del nodo Docker corrispondente. Altrimenti, possono "
+"verificarsi collisioni di nomi se dei containers con lo stesso nome esistono "
+"su più di un nodo Docker."
 
 msgid ""
 "<b>Beware:</b> Deleting this key means that you will not be able to create "
@@ -14550,9 +14551,6 @@ msgstr "Parametri predefiniti"
 msgid "Cleanup strategy"
 msgstr "Messaggi di pulizia"
 
-msgid "Clear & Delete"
-msgstr "Cancellare e cancellare"
-
 msgid "Clear log"
 msgstr "Cancella registro"
 
@@ -14565,6 +14563,11 @@ msgstr "Cancella i registri eliminando tutti i messaggi memorizzati"
 #, fuzzy
 msgid "Cleared"
 msgstr "Stato 'Cleared' (liberato)"
+
+msgid ""
+"Clearing the log acknowledges and removes the stored messages. Log files on "
+"the host stay unchanged."
+msgstr ""
 
 msgid ""
 "Click \"Add user\" under Users, select \"Access key - Programmatic access\", "
@@ -74912,10 +74915,6 @@ msgstr ""
 "attualmente supportato solo sugli agenti linux e windows così come sui "
 "dispositivi monitorati attraverso l'host-resource mib"
 
-#, python-format
-msgid "This affects %s"
-msgstr "Questo influisce su %s"
-
 msgid "This affects all rule packs."
 msgstr "Questo riguarda tutti i pacchetti di regole."
 
@@ -100201,6 +100200,13 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#~ msgid "Clear & Delete"
+#~ msgstr "Cancellare e cancellare"
+
+#, python-format
+#~ msgid "This affects %s"
+#~ msgstr "Questo influisce su %s"
 
 #, fuzzy
 #~ msgid "Configure title and site"

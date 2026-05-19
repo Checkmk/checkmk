@@ -14710,9 +14710,6 @@ msgstr "Modelparameters"
 msgid "Cleanup strategy"
 msgstr "Berichten opruimen"
 
-msgid "Clear & Delete"
-msgstr "Wis & Wis"
-
 msgid "Clear log"
 msgstr "Logboek wissen"
 
@@ -14725,6 +14722,11 @@ msgstr "Logboeken wissen door alle opgeslagen berichten te verwijderen"
 #, fuzzy
 msgid "Cleared"
 msgstr "Status 'bevestigd'"
+
+msgid ""
+"Clearing the log acknowledges and removes the stored messages. Log files on "
+"the host stay unchanged."
+msgstr ""
 
 msgid ""
 "Click \"Add user\" under Users, select \"Access key - Programmatic access\", "
@@ -75068,10 +75070,6 @@ msgstr ""
 "alleen ondersteund op Linux en Windows agents en op apparaten die worden "
 "gemonitord via de host-resource mib"
 
-#, python-format
-msgid "This affects %s"
-msgstr "Dit beïnvloedt %s"
-
 msgid "This affects all rule packs."
 msgstr "Dit geldt voor alle regelpakketten."
 
@@ -100394,6 +100392,13 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#~ msgid "Clear & Delete"
+#~ msgstr "Wis & Wis"
+
+#, python-format
+#~ msgid "This affects %s"
+#~ msgstr "Dit beïnvloedt %s"
 
 #, fuzzy
 #~ msgid "Configure title and site"

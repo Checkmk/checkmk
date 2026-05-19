@@ -14821,9 +14821,6 @@ msgstr "Paramètres du modèle"
 msgid "Cleanup strategy"
 msgstr "Messages de nettoyage"
 
-msgid "Clear & Delete"
-msgstr "Effacer & ; Supprimer"
-
 msgid "Clear log"
 msgstr "Effacer le journal"
 
@@ -14836,6 +14833,11 @@ msgstr "Effacer les journaux en supprimant tous les messages stockés"
 #, fuzzy
 msgid "Cleared"
 msgstr "État \"effacé\""
+
+msgid ""
+"Clearing the log acknowledges and removes the stored messages. Log files on "
+"the host stay unchanged."
+msgstr ""
 
 msgid ""
 "Click \"Add user\" under Users, select \"Access key - Programmatic access\", "
@@ -75709,10 +75711,6 @@ msgstr ""
 "nombre de cœurs. Ceci n'est actuellement supporté que par les agents linux "
 "et windows ainsi que par les appareils surveillés par le host-resource mib"
 
-#, python-format
-msgid "This affects %s"
-msgstr "Cela concerne %s"
-
 msgid "This affects all rule packs."
 msgstr "Cela concerne tous les paquets de règles."
 
@@ -101301,6 +101299,13 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#~ msgid "Clear & Delete"
+#~ msgstr "Effacer & ; Supprimer"
+
+#, python-format
+#~ msgid "This affects %s"
+#~ msgstr "Cela concerne %s"
 
 #, fuzzy
 #~ msgid "Configure title and site"

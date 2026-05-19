@@ -14753,9 +14753,6 @@ msgstr "Parametrii impliciți"
 msgid "Cleanup strategy"
 msgstr "Mesaje de curățare"
 
-msgid "Clear & Delete"
-msgstr "Ștergeți & Ștergeți"
-
 msgid "Clear log"
 msgstr "Ștergeți jurnalul"
 
@@ -14768,6 +14765,11 @@ msgstr "Ștergeți jurnalele prin ștergerea tuturor mesajelor stocate"
 #, fuzzy
 msgid "Cleared"
 msgstr "Starea \"Liber"
+
+msgid ""
+"Clearing the log acknowledges and removes the stored messages. Log files on "
+"the host stay unchanged."
+msgstr ""
 
 msgid ""
 "Click \"Add user\" under Users, select \"Access key - Programmatic access\", "
@@ -75336,10 +75338,6 @@ msgstr ""
 "Linux și Windows, precum și pe dispozitivele monitorizate prin intermediul "
 "mib host-resource mib"
 
-#, python-format
-msgid "This affects %s"
-msgstr "Acest lucru afectează %s."
-
 msgid "This affects all rule packs."
 msgstr "Acest lucru afectează toate pachetele de reguli."
 
@@ -100725,6 +100723,13 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#~ msgid "Clear & Delete"
+#~ msgstr "Ștergeți & Ștergeți"
+
+#, python-format
+#~ msgid "This affects %s"
+#~ msgstr "Acest lucru afectează %s."
 
 #, fuzzy
 #~ msgid "Configure title and site"

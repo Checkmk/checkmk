@@ -4,7 +4,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
+"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
 "PO-Revision-Date: 2026-05-16 08:09+0000\n"
 "Language-Team: Portuguese (Portugal) <https://translate.checkmk.com/projects/"
@@ -14718,9 +14718,6 @@ msgstr "Parâmetros por defeito"
 msgid "Cleanup strategy"
 msgstr "Mensagens de limpeza"
 
-msgid "Clear & Delete"
-msgstr "Limpar & Apagar"
-
 msgid "Clear log"
 msgstr "Limpar registo"
 
@@ -14733,6 +14730,11 @@ msgstr "Limpar os registos, eliminando todas as mensagens armazenadas"
 #, fuzzy
 msgid "Cleared"
 msgstr "Estado 'limpo'"
+
+msgid ""
+"Clearing the log acknowledges and removes the stored messages. Log files on "
+"the host stay unchanged."
+msgstr ""
 
 msgid ""
 "Click \"Add user\" under Users, select \"Access key - Programmatic access\", "
@@ -75026,10 +75028,6 @@ msgstr ""
 "atualmente suportado apenas em agentes linux e windows, bem como em "
 "dispositivos monitorados através da rede de recursos de host"
 
-#, python-format
-msgid "This affects %s"
-msgstr "Isto afecta %s"
-
 msgid "This affects all rule packs."
 msgstr "Isto afecta todos os pacotes de regras."
 
@@ -94038,7 +94036,6 @@ msgstr "contando"
 msgid "cp437"
 msgstr "cp437"
 
-#, fuzzy
 msgid "crash report"
 msgid_plural "crash reports"
 msgstr[0] ""
@@ -94563,7 +94560,6 @@ msgstr "os anfitriões estão de pé e não têm problemas de serviço"
 msgid "hosts in total"
 msgstr "anfitriões no total"
 
-#, fuzzy
 msgid "hour"
 msgid_plural "hours"
 msgstr[0] ""
@@ -100291,6 +100287,13 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#~ msgid "Clear & Delete"
+#~ msgstr "Limpar & Apagar"
+
+#, python-format
+#~ msgid "This affects %s"
+#~ msgstr "Isto afecta %s"
 
 #, fuzzy
 #~ msgid "Configure title and site"

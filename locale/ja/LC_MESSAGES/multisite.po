@@ -14005,9 +14005,6 @@ msgstr "クリーンアップパラメータ"
 msgid "Cleanup strategy"
 msgstr "クリーンアップストラテジー"
 
-msgid "Clear & Delete"
-msgstr "クリアと削除"
-
 msgid "Clear log"
 msgstr "ログをクリアする"
 
@@ -14019,6 +14016,11 @@ msgstr "保存メッセージをすべて削除しログをクリアする"
 
 msgid "Cleared"
 msgstr "クリア"
+
+msgid ""
+"Clearing the log acknowledges and removes the stored messages. Log files on "
+"the host stay unchanged."
+msgstr ""
 
 msgid ""
 "Click \"Add user\" under Users, select \"Access key - Programmatic access\", "
@@ -71371,10 +71373,6 @@ msgstr ""
 "ント、およびhost-resourcemibを介して監視されるデバイスでのみサポートされてい"
 "ます"
 
-#, python-format
-msgid "This affects %s"
-msgstr "これは%sに影響します"
-
 msgid "This affects all rule packs."
 msgstr "これはすべてのルールパックに影響します。"
 
@@ -95269,6 +95267,13 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#~ msgid "Clear & Delete"
+#~ msgstr "クリアと削除"
+
+#, python-format
+#~ msgid "This affects %s"
+#~ msgstr "これは%sに影響します"
 
 #, fuzzy
 #~ msgid "Configure title and site"

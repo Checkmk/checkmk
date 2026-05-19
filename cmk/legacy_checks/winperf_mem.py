@@ -3,9 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
-# mypy: disable-error-code="possibly-undefined"
-
 # Example output from agent:
 # <<<winperf_mem>>>
 # 1440580801.44 4 3579545
@@ -41,55 +38,68 @@
 # 1378 613 large_rawcount
 
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import get_rate, get_value_store, StringTable
+from collections.abc import Mapping
+from typing import Any
 
-check_info = {}
-
-
-def discover_winperf_mem(info):
-    if len(info) > 1:
-        return [(None, {})]
-    return []
-
-
-def check_winperf_mem(_unused, params, info):
-    init_line = info[0]
-    this_time = float(init_line[0])
-
-    lines = iter(info)
-    try:
-        while True:
-            line = next(lines)
-            if line[0] == "36":
-                page_counter = int(line[1])
-                break
-    except StopIteration:
-        pass
-
-    pages_per_sec = get_rate(
-        get_value_store(), "pages_count", this_time, page_counter, raise_overflow=True
-    )
-    state = 0
-    if "pages_per_second" in params:
-        warn, crit = params["pages_per_second"]
-        if pages_per_sec >= crit:
-            state = 2
-        elif pages_per_sec >= warn:
-            state = 1
-
-    yield state, "Pages/s: %d" % pages_per_sec, [("mem_pages_rate", pages_per_sec)]
+from cmk.agent_based.v2 import (
+    AgentSection,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    get_rate,
+    get_value_store,
+    Metric,
+    Result,
+    Service,
+    State,
+    StringTable,
+)
 
 
 def parse_winperf_mem(string_table: StringTable) -> StringTable:
     return string_table
 
 
-check_info["winperf_mem"] = LegacyCheckDefinition(
+def discover_winperf_mem(section: StringTable) -> DiscoveryResult:
+    if len(section) > 1:
+        yield Service()
+
+
+def check_winperf_mem(params: Mapping[str, Any], section: StringTable) -> CheckResult:
+    this_time = float(section[0][0])
+
+    page_counter = 0
+    for line in section:
+        if line[0] == "36":
+            page_counter = int(line[1])
+            break
+
+    pages_per_sec = get_rate(
+        get_value_store(), "pages_count", this_time, page_counter, raise_overflow=True
+    )
+    state = State.OK
+    if "pages_per_second" in params:
+        warn, crit = params["pages_per_second"]
+        if pages_per_sec >= crit:
+            state = State.CRIT
+        elif pages_per_sec >= warn:
+            state = State.WARN
+
+    yield Result(state=state, summary=f"Pages/s: {pages_per_sec:.0f}")
+    yield Metric("mem_pages_rate", pages_per_sec)
+
+
+agent_section_winperf_mem = AgentSection(
     name="winperf_mem",
     parse_function=parse_winperf_mem,
+)
+
+
+check_plugin_winperf_mem = CheckPlugin(
+    name="winperf_mem",
     service_name="Memory Pages",
     discovery_function=discover_winperf_mem,
     check_function=check_winperf_mem,
     check_ruleset_name="mem_pages",
+    check_default_parameters={},
 )

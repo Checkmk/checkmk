@@ -3,29 +3,67 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
-
 
 import time
+from collections.abc import Mapping
+from typing import Any
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import get_rate, get_value_store, StringTable
+from cmk.agent_based.v2 import (
+    AgentSection,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    get_rate,
+    get_value_store,
+    Metric,
+    Result,
+    State,
+    StringTable,
+)
 
-check_info = {}
+
+def parse_wmic_process(string_table: StringTable) -> StringTable:
+    return string_table
 
 
-def check_wmic_process(item, params, info):
-    name, memwarn, memcrit, pagewarn, pagecrit, cpuwarn, cpucrit = params
+def discover_wmic_process(section: StringTable) -> DiscoveryResult:
+    # wmic_process is only available as an enforced/manual service.
+    yield from ()
+
+
+def check_wmic_process(
+    item: str,
+    params: Mapping[str, Any],
+    section: StringTable,
+) -> CheckResult:
+    if not section:
+        return
+    legend, *lines = section
+
+    # The corresponding WATO ruleset still uses a positional tuple, but that does
+    # not work in the backend, so this whole function is unreachable.
+    # CMK-35057: decide on whether to fix the rule or remove the check entirely.
+    #
+    # **If** we decide to fix it, this is what the parameters should look like.
+    # adding this here to be able to migrate and keep all linters happy.
+    match params:
+        case {
+            "name": str(name),
+            "mem_levels": ("fixed", (float(memwarn), float(memcrit))),
+            "page_levels": ("fixed", (float(pagewarn), float(pagecrit))),
+            "cpu_levels": ("fixed", (float(cpuwarn), float(cpucrit))),
+        }:
+            pass
+        case _:
+            raise TypeError(params)
+
     count, mem, page, userc, kernelc = 0, 0, 0, 0, 0
     cpucores = 1
-    if len(info) == 0:
-        return (3, "No output from agent in section wmic_process")
 
     value_store = get_value_store()
     now = time.time()
 
-    legend = info[0]
-    for line in info[1:]:
+    for line in lines:
         psinfo = dict(zip(legend, line))
         if psinfo.get("Name") is None:
             continue
@@ -41,63 +79,68 @@ def check_wmic_process(item, params, info):
     mem_mb = mem / 1048576.0
     page_mb = page / 1048576.0
     user_per_sec = get_rate(
-        value_store, "wmic_process.user.%s.%d" % (name, count), now, userc, raise_overflow=True
+        value_store, f"wmic_process.user.{name}.{count}", now, userc, raise_overflow=True
     )
     kernel_per_sec = get_rate(
-        value_store, "wmic_process.kernel.%s.%d" % (name, count), now, kernelc, raise_overflow=True
+        value_store, f"wmic_process.kernel.{name}.{count}", now, kernelc, raise_overflow=True
     )
     user_perc = (user_per_sec / 100000.0) / cpucores
     kernel_perc = (kernel_per_sec / 100000.0) / cpucores
     cpu_perc = user_perc + kernel_perc
-    perfdata = [
-        ("mem", mem_mb, memwarn, memcrit),
-        ("page", page_mb, pagewarn, pagecrit),
-        ("user", user_perc, cpuwarn, cpucrit, 0, 100),
-        ("kernel", kernel_perc, cpuwarn, cpucrit, 0, 100),
-    ]
 
-    messages = []
-    messages.append("%d processes" % count)
-    state = 0
+    messages = [f"{count} processes"]
+    state = State.OK
 
     msg = f"{user_perc:.0f}%/{kernel_perc:.0f}% User/Kernel"
     if cpu_perc >= cpucrit:
-        state = 2
-        msg += "(!!) (critical at %d%%)" % cpucrit
+        state = State.CRIT
+        msg += f"(!!) (critical at {cpucrit:.0f}%)"
     elif cpu_perc >= cpuwarn:
-        state = 1
-        msg += "(!) (warning at %d%%)" % cpuwarn
+        state = State.WARN
+        msg += f"(!) (warning at {cpuwarn:.0f}%)"
     messages.append(msg)
 
-    msg = "%.1fMB RAM" % mem_mb
+    msg = f"{mem_mb:.1f}MB RAM"
     if 0 < memcrit <= mem_mb:
-        state = 2
-        msg += "(!!) (critical at %d MB)" % memcrit
+        state = State.CRIT
+        msg += f"(!!) (critical at {memcrit} MB)"
     elif 0 < memwarn <= mem_mb:
-        state = max(1, state)
-        msg += "(!) (warning at %d MB)" % memwarn
+        state = State.worst(state, State.WARN)
+        msg += f"(!) (warning at {memwarn} MB)"
     messages.append(msg)
 
-    msg = "%1.fMB Page" % page_mb
+    msg = f"{page_mb:.0f}MB Page"
     if page_mb >= pagecrit:
-        state = 2
-        msg += "(!!) (critical at %d MB)" % pagecrit
+        state = State.CRIT
+        msg += f"(!!) (critical at {pagecrit} MB)"
     elif page_mb >= pagewarn:
-        state = max(state, 1)
-        msg += "(!) (warning at %d MB)" % pagewarn
+        state = State.worst(state, State.WARN)
+        msg += f"(!) (warning at {pagewarn} MB)"
     messages.append(msg)
 
-    return (state, ", ".join(messages), perfdata)
+    yield Result(state=state, summary=", ".join(messages))
+    yield Metric("mem", mem_mb, levels=(memwarn, memcrit))
+    yield Metric("page", page_mb, levels=(pagewarn, pagecrit))
+    yield Metric("user", user_perc, levels=(cpuwarn, cpucrit), boundaries=(0, 100))
+    yield Metric("kernel", kernel_perc, levels=(cpuwarn, cpucrit), boundaries=(0, 100))
 
 
-def parse_wmic_process(string_table: StringTable) -> StringTable:
-    return string_table
-
-
-check_info["wmic_process"] = LegacyCheckDefinition(
+agent_section_wmic_process = AgentSection(
     name="wmic_process",
     parse_function=parse_wmic_process,
+)
+
+
+check_plugin_wmic_process = CheckPlugin(
+    name="wmic_process",
     service_name="Process %s",
+    discovery_function=discover_wmic_process,
     check_function=check_wmic_process,
     check_ruleset_name="wmic_process",
+    check_default_parameters={
+        "name": "",
+        "mem_levels": ("fixed", (0.0, 0.0)),
+        "page_levels": ("fixed", (0.0, 0.0)),
+        "cpu_levels": ("fixed", (0.0, 0.0)),
+    },
 )

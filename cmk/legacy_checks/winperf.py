@@ -4,36 +4,40 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from collections.abc import Mapping
-from typing import Any
+from cmk.agent_based.v1 import check_levels as check_levels_v1
+from cmk.agent_based.v2 import (
+    AgentSection,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    get_rate,
+    get_value_store,
+    IgnoreResultsError,
+    Metric,
+    render,
+    Result,
+    Service,
+    State,
+    StringTable,
+)
 
-from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
-from cmk.agent_based.v2 import get_rate, get_value_store, IgnoreResultsError, render, StringTable
 
-check_info = {}
+def parse_winperf(string_table: StringTable) -> StringTable:
+    return string_table
 
 
-def discover_win_cpuusage(info: StringTable) -> list[tuple[None, dict[str, object]]]:
-    for line in info:
+def discover_win_cpuusage(section: StringTable) -> DiscoveryResult:
+    for line in section:
         try:
             if line[0] == "238:6":
-                return [(None, {})]
+                yield Service()
+                return
         except Exception:
             pass
-    return []
 
 
-def check_win_cpuusage(
-    item: None, params: Mapping[str, Any] | tuple[float, float] | None, info: StringTable
-) -> tuple[int, str, list[Any]] | tuple[int, str]:
-    if isinstance(params, tuple):
-        levels: tuple[float, float] | None = params
-    elif isinstance(params, dict):
-        levels = params.get("levels")
-    else:  # legacy: old params may be None
-        levels = None
-
-    for line in info:
+def check_win_cpuusage(section: StringTable) -> CheckResult:
+    for line in section:
         if line[0] == "238:6":
             this_time = int(float(line[1]))
             # Windows sends one counter for each CPU plus one counter that
@@ -43,7 +47,7 @@ def check_win_cpuusage(
             for cpu in range(0, num_cpus):
                 ticks = int(line[2 + cpu])
                 ticks_per_sec = get_rate(
-                    get_value_store(), "cpuusage.%d" % cpu, this_time, ticks, raise_overflow=True
+                    get_value_store(), f"cpuusage.{cpu}", this_time, ticks, raise_overflow=True
                 )
                 secs_per_sec = ticks_per_sec / 10000000.0
                 used_perc = 100 * (1 - secs_per_sec)
@@ -55,40 +59,35 @@ def check_win_cpuusage(
             elif used_perc > 100:
                 used_perc = 100
 
-            if num_cpus == 1:
-                num_txt = ""
-            else:
-                num_txt = " / %d CPUs" % num_cpus
+            num_txt = "" if num_cpus == 1 else f" / {num_cpus} CPUs"
 
-            return check_levels(
+            yield from check_levels_v1(
                 used_perc,
-                "cpuusage",
-                levels,
-                human_readable_func=render.percent,
-                infoname="Used%s" % num_txt,
+                metric_name="cpuusage",
+                render_func=render.percent,
+                label=f"Used{num_txt}",
                 boundaries=(0, 100),
             )
+            return
 
-    return (3, "counter for cpu (238:6) not found")
+    yield Result(state=State.UNKNOWN, summary="counter for cpu (238:6) not found")
 
 
-def discover_win_diskstat(info: StringTable) -> list[tuple[None, None]]:
-    for line in info:
+def discover_win_diskstat(section: StringTable) -> DiscoveryResult:
+    for line in section:
         try:
             if line[0] == "2:16" or line[0] == "2:18":
-                return [(None, None)]
+                yield Service()
+                return
         except Exception:
             pass
-    return []
 
 
-def check_win_diskstat(
-    item: None, params: Mapping[str, Any] | None, info: StringTable
-) -> tuple[int, str, list[Any]] | None:
+def check_win_diskstat(section: StringTable) -> CheckResult:
     read_bytes_ctr = 0
     write_bytes_ctr = 0
     this_time = None
-    for line in info:
+    for line in section:
         if line[0] == "2:16":
             read_bytes_ctr = int(line[2])
         elif line[0] == "2:18":
@@ -97,7 +96,7 @@ def check_win_diskstat(
             break
 
     if not this_time:
-        return None
+        return
 
     try:
         read_per_sec = get_rate(
@@ -114,25 +113,21 @@ def check_win_diskstat(
         )
         raise e
 
-    perfdata = [("read", "%dc" % read_bytes_ctr), ("write", "%dc" % write_bytes_ctr)]
-    return (
-        0,
-        f"reading {read_per_sec / 1024.0**2:.1f} MB/s, writing {write_per_sec / 1024.0**2:.1f} MB/s",
-        perfdata,
+    yield Result(
+        state=State.OK,
+        summary=f"reading {read_per_sec / 1024.0**2:.1f} MB/s, writing {write_per_sec / 1024.0**2:.1f} MB/s",
     )
+    yield Metric("read", read_bytes_ctr)
+    yield Metric("write", write_bytes_ctr)
 
 
-def parse_winperf(string_table: StringTable) -> StringTable:
-    return string_table
-
-
-check_info["winperf"] = LegacyCheckDefinition(
+agent_section_winperf = AgentSection(
     name="winperf",
     parse_function=parse_winperf,
 )
 
 
-check_info["winperf.cpuusage"] = LegacyCheckDefinition(
+check_plugin_winperf_cpuusage = CheckPlugin(
     name="winperf_cpuusage",
     service_name="CPU Usage",
     sections=["winperf"],
@@ -140,7 +135,8 @@ check_info["winperf.cpuusage"] = LegacyCheckDefinition(
     check_function=check_win_cpuusage,
 )
 
-check_info["winperf.diskstat"] = LegacyCheckDefinition(
+
+check_plugin_winperf_diskstat = CheckPlugin(
     name="winperf_diskstat",
     service_name="Disk IO",
     sections=["winperf"],

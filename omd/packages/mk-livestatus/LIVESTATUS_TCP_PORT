@@ -7,10 +7,6 @@
 #  can configure that port here.
 
 case "$1" in
-    default)
-        PORT=$($OMD_ROOT/lib/omd/next_free_port LIVESTATUS_TCP_PORT 6557)
-        echo "$PORT"
-        ;;
     choices)
         echo "[0-9]{1,5}"
         ;;

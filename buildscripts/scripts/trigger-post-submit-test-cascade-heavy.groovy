@@ -31,6 +31,7 @@ void main() {
         "test-update-community-pro",
         "test-update-pro-ultimate",
         "test-update-pro-ultimatemt",
+        "winagt-test-mk-oracle",
     ];
 
     def trigger_xss_crawl = false;

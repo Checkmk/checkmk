@@ -237,6 +237,11 @@ def _default_TRACE_JAEGER_ADMIN_PORT(site_name: str, site_configs: _SiteConfigs)
     return str(_next_free_port("TRACE_JAEGER_ADMIN_PORT", site_name, 14269, site_configs.configs))
 
 
+def _default_TRACE_RECEIVE_PORT(site_name: str, site_configs: _SiteConfigs) -> str:
+    _report_error("TRACE_RECEIVE_PORT", site_configs.sites_with_unreadable_configs)
+    return str(_next_free_port("TRACE_RECEIVE_PORT", site_name, 4417, site_configs.configs))
+
+
 def load_config(site: "SiteContext", verbose: bool, omd_path: Path = Path("/omd/")) -> Config:
     """Load all variables from omd/sites.conf. These variables always begin with
     CONFIG_. The reason is that this file can be sources with the shell.
@@ -268,6 +273,8 @@ def load_config(site: "SiteContext", verbose: bool, omd_path: Path = Path("/omd/
                         config[hook_name] = _default_TRACE_JAEGER_ADMIN_PORT(
                             site.name, site_configs
                         )
+                    case "TRACE_RECEIVE_PORT":
+                        config[hook_name] = _default_TRACE_RECEIVE_PORT(site.name, site_configs)
                     case _:
                         config[hook_name] = _call_hook(
                             site, hook_name, ["default", edition(Path(site_home)).long], verbose

@@ -9,6 +9,7 @@ import { pages as formSpecPages } from '../form'
 import UclBreakpoints from '../foundations/Breakpoints/UclBreakpoints.vue'
 import UclColors from '../foundations/Colors/UclColors.vue'
 import { pages as i18nPages } from '../i18n'
+import { pages as monitoringPages } from '../monitoring'
 import { pages as twoFactorAuthPages } from '../two-factor-authentication'
 import UclCmkBadge from './basic-elements/CmkBadge/UclCmkBadge.vue'
 import UclCmkButton from './basic-elements/CmkButton/UclCmkButton.vue'
@@ -161,6 +162,7 @@ export const roots = [
   new Folder('Developer Playground', [
     new Folder('Form Spec Elements', formSpecPages),
     new Folder('I18n', i18nPages),
+    new Folder('Monitoring', monitoringPages),
     new Folder('Two Factor Authentication', twoFactorAuthPages)
   ])
 ]

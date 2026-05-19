@@ -48,8 +48,8 @@ const serviceCounts = computed(() => ({
     <CmkTag variant="fill" :color="STATE_COLOR[row.state]" :content="stateLabel[row.state]" />
   </MonitoringTableCell>
   <MonitoringTableCell>{{ row.name }}</MonitoringTableCell>
-  <MonitoringTableCell breakpoint="l">{{ row.alias }}</MonitoringTableCell>
-  <MonitoringTableCell breakpoint="m">{{ row.ip }}</MonitoringTableCell>
+  <MonitoringTableCell hide-below="l">{{ row.alias }}</MonitoringTableCell>
+  <MonitoringTableCell hide-below="m">{{ row.ip }}</MonitoringTableCell>
   <MonitoringTableCell>
     <CmkTag variant="fill" color="success" :content="serviceCounts.ok" />
   </MonitoringTableCell>

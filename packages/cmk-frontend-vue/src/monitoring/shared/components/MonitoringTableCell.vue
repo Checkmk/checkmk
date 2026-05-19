@@ -4,52 +4,47 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-// Cells with `breakpoint` are hidden on viewports narrower than the canonical
-// breakpoint of the same name (see `@/assets/breakpoints`).
-type CellBreakpoint = 's' | 'm' | 'l' | 'xl'
+import { computed, inject, ref, useSlots } from 'vue'
 
-defineProps<{
-  breakpoint?: CellBreakpoint
+import {
+  type BreakpointValue,
+  type CellBreakpoints,
+  MONITORING_TABLE_WIDTH,
+  resolveBreakpoint
+} from './MonitoringTableContext'
+
+const props = defineProps<{
+  breakpoints?: CellBreakpoints | undefined
+  hideBelow?: BreakpointValue | undefined
 }>()
+
+const slots = useSlots()
+const containerWidth = inject(MONITORING_TABLE_WIDTH, ref<number>(Number.POSITIVE_INFINITY))
+
+const visible = computed(() => {
+  if (props.hideBelow === undefined) {
+    return true
+  }
+  return containerWidth.value >= resolveBreakpoint(props.hideBelow)
+})
+
+const activeSlot = computed<string>(() => {
+  if (props.breakpoints) {
+    const ranked = Object.entries(props.breakpoints)
+      .map(([name, value]) => [name, resolveBreakpoint(value)] as const)
+      .sort((a, b) => b[1] - a[1])
+    for (const [name, threshold] of ranked) {
+      if (containerWidth.value >= threshold && slots[name]) {
+        return name
+      }
+    }
+  }
+  return 'default'
+})
 </script>
 
 <template>
-  <td :class="breakpoint ? `monitoring-table-cell--breakpoint-${breakpoint}` : null">
-    <slot />
+  <td v-if="visible">
+    <slot :name="activeSlot" />
   </td>
 </template>
-
-<style scoped lang="scss">
-@use '@/assets/breakpoints' as bp;
-
-.monitoring-table-cell--breakpoint-s,
-.monitoring-table-cell--breakpoint-m,
-.monitoring-table-cell--breakpoint-l,
-.monitoring-table-cell--breakpoint-xl {
-  display: none;
-}
-
-@include bp.viewport-up(s) {
-  .monitoring-table-cell--breakpoint-s {
-    display: revert;
-  }
-}
-
-@include bp.viewport-up(m) {
-  .monitoring-table-cell--breakpoint-m {
-    display: revert;
-  }
-}
-
-@include bp.viewport-up(l) {
-  .monitoring-table-cell--breakpoint-l {
-    display: revert;
-  }
-}
-
-@include bp.viewport-up(xl) {
-  .monitoring-table-cell--breakpoint-xl {
-    display: revert;
-  }
-}
-</style>

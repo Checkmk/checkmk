@@ -16,7 +16,7 @@
 
 import pytest
 
-from cmk.legacy_checks import skype
+from cmk.plugins.skype.agent_based import skype
 from cmk.plugins.windows.agent_based.libwmi import parse_wmi_table
 
 

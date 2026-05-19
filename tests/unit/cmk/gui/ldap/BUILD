@@ -17,10 +17,9 @@ py_test(
     main = ":__test__.py",
     deps = [
         ":__test__",
+        "//cmk/gui:auth_core",
         "//cmk/gui:config",
-        "//cmk/gui:logged_in",
-        "//cmk/gui:type_defs",
-        "//cmk/gui:user_connection_config_types",
+        "//cmk/gui:core_toolkit",
         "//cmk/gui/ldap_integration",
         "//cmk/gui/userdb",
         "//cmk/gui/utils:security_log_events",

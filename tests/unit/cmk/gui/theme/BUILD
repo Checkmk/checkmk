@@ -16,7 +16,7 @@ py_test(
     main = ":__test__.py",
     deps = [
         ":__test__",
-        "//cmk/gui:theme",
+        "//cmk/gui:html_toolkit",
         requirement("pytest"),
     ],
 )

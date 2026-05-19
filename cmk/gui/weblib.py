@@ -13,11 +13,11 @@ from cmk.gui.utils.selection_id import SelectionId
 
 
 def register(page_registry: PageRegistry) -> None:
-    page_registry.register(PageEndpoint("tree_openclose", ajax_tree_openclose))
-    page_registry.register(PageEndpoint("ajax_set_rowselection", ajax_set_rowselection))
+    page_registry.register(PageEndpoint("tree_openclose", _ajax_tree_openclose))
+    page_registry.register(PageEndpoint("ajax_set_rowselection", _ajax_set_rowselection))
 
 
-def ajax_tree_openclose(ctx: PageContext) -> None:
+def _ajax_tree_openclose(ctx: PageContext) -> None:
     tree = request.get_str_input_mandatory("tree")
     name = request.get_str_input_mandatory("name")
 
@@ -43,7 +43,7 @@ def init_selection() -> None:
     user.cleanup_old_selections(active_config.selection_livetime)
 
 
-def ajax_set_rowselection(ctx: PageContext) -> None:
+def _ajax_set_rowselection(ctx: PageContext) -> None:
     ident = request.get_str_input_mandatory("id")
     action = request.get_str_input_mandatory("action", "set")
     if action not in ["add", "del", "set", "unset"]:

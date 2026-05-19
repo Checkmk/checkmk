@@ -31,7 +31,7 @@ py_library(
         "//tests:__subpackages__",
     ],
     deps = [
-        "//cmk/gui:i18n",
+        "//cmk/gui:core_toolkit",
     ],
 )
 
@@ -55,7 +55,7 @@ py_library(
         "//tests:__subpackages__",
     ],
     deps = [
-        "//cmk/gui:type_defs",
+        "//cmk/gui:core_toolkit",
         "//cmk/utils",
         "//packages/cmk-ccc:user",
     ],
@@ -69,10 +69,7 @@ py_library(
         "//cmk:__subpackages__",
         "//tests:__subpackages__",
     ],
-    deps = [
-        "//cmk/gui:exceptions",
-        "//cmk/gui:http",
-    ],
+    deps = ["//cmk/gui:core_toolkit"],
 )
 
 py_library(
@@ -86,8 +83,7 @@ py_library(
         "//tests:__subpackages__",
     ],
     deps = [
-        "//cmk/gui:ctx_stack",
-        "//cmk/gui:http",
+        "//cmk/gui:core_toolkit",
         "//cmk/utils",
         "//packages/cmk-ccc:user",
     ],
@@ -207,7 +203,7 @@ py_library(
         "//tests:__subpackages__",
     ],
     deps = [
-        "//cmk/gui:i18n",
+        "//cmk/gui:core_toolkit",
     ],
 )
 
@@ -230,7 +226,7 @@ py_library(
         "//tests:__subpackages__",
     ],
     deps = [
-        "//cmk/gui:num_split",
+        "//cmk/gui:core_toolkit",
     ],
 )
 
@@ -258,7 +254,7 @@ py_library(
         "//tests:__subpackages__",
     ],
     deps = [
-        "//cmk/gui:ctx_stack",
+        "//cmk/gui:core_toolkit",
         requirement("flask"),
     ],
 )
@@ -272,10 +268,7 @@ py_library(
         "//packages/cmk-backup:__pkg__",
         "//tests:__subpackages__",
     ],
-    deps = [
-        "//cmk/gui:ctx_stack",
-        "//cmk/gui:exceptions",
-    ],
+    deps = ["//cmk/gui:core_toolkit"],
 )
 
 py_library(
@@ -303,10 +296,7 @@ py_library(
         "//cmk:__subpackages__",
         "//tests:__subpackages__",
     ],
-    deps = [
-        "//cmk/gui:hooks",
-        "//cmk/gui:http",
-    ],
+    deps = ["//cmk/gui:core_toolkit"],
 )
 
 py_library(
@@ -317,24 +307,7 @@ py_library(
         "//cmk:__subpackages__",
         "//tests:__subpackages__",
     ],
-    deps = [
-        "//cmk/gui:ctx_stack",
-        "//cmk/gui:exceptions",
-        "//cmk/gui:i18n",
-    ],
-)
-
-py_library(
-    name = "language_cookie",
-    srcs = ["language_cookie.py"],
-    imports = ["../../.."],
-    visibility = [
-        "//cmk:__subpackages__",
-        "//tests:__subpackages__",
-    ],
-    deps = [
-        "//cmk/gui:http",
-    ],
+    deps = ["//cmk/gui:core_toolkit"],
 )
 
 py_library(
@@ -345,22 +318,22 @@ py_library(
         "//cmk:__subpackages__",
         "//tests:__subpackages__",
     ],
-    deps = [
-        "//cmk/gui:http",
-        "//cmk/gui:type_defs",
-    ],
+    deps = ["//cmk/gui:core_toolkit"],
 )
 
 py_library(
-    name = "user_frontend_settings_cookie",
-    srcs = ["user_frontend_settings_cookie.py"],
+    name = "cookies",
+    srcs = [
+        "language_cookie.py",
+        "user_frontend_settings_cookie.py",
+    ],
     imports = ["../../.."],
     visibility = [
         "//cmk:__subpackages__",
         "//tests:__subpackages__",
     ],
     deps = [
-        "//cmk/gui:http",
+        "//cmk/gui:core_toolkit",
         "//packages/cmk-ccc:site",
         "//packages/cmk-shared-typing:cmk_shared_typing_py",
     ],
@@ -394,8 +367,7 @@ py_library(
     deps = [
         ":html",
         ":output_funnel",
-        "//cmk/gui/htmllib:generator",
-        "//cmk/gui/htmllib:html",
+        "//cmk/gui:html_toolkit",
         "//packages/cmk-shared-typing:cmk_shared_typing_py",
     ],
 )
@@ -411,9 +383,8 @@ py_library(
     deps = [
         ":escaping",
         ":html",
-        "//cmk/gui:i18n",
-        "//cmk/gui/htmllib:generator",
-        "//cmk/gui/htmllib:html",
+        "//cmk/gui:core_toolkit",
+        "//cmk/gui:html_toolkit",
         "//cmk/utils",
     ],
 )
@@ -432,10 +403,8 @@ py_library(
         ":speaklater",
         ":transaction_manager",
         ":urls",
-        "//cmk/gui:http",
-        "//cmk/gui:i18n",
-        "//cmk/gui/htmllib:html",
-        "//cmk/gui/htmllib:type_defs",
+        "//cmk/gui:core_toolkit",
+        "//cmk/gui:html_toolkit",
     ],
 )
 
@@ -452,10 +421,7 @@ py_library(
     deps = [
         ":escaping",
         ":transaction_manager",
-        "//cmk/gui:exceptions",
-        "//cmk/gui:http",
-        "//cmk/gui:i18n",
-        "//cmk/gui:type_defs",
+        "//cmk/gui:core_toolkit",
         "//cmk/utils:paths",
         "//packages/cmk-ccc:version",
         requirement("flask"),
@@ -472,9 +438,7 @@ py_library(
         "//tests:__subpackages__",
     ],
     deps = [
-        "//cmk/gui:permissions",
-        "//cmk/gui:role_types",
-        "//cmk/gui:type_defs",
+        "//cmk/gui:core_toolkit",
         "//cmk/utils:paths",
         "//packages/cmk-ccc:store",
         "//packages/cmk-ccc:user",
@@ -491,10 +455,9 @@ py_library(
     ],
     deps = [
         ":urls",
-        "//cmk/gui:exceptions",
-        "//cmk/gui:i18n",
-        "//cmk/gui:logged_in",
-        "//cmk/gui/htmllib:html",
+        "//cmk/gui:auth_core",
+        "//cmk/gui:core_toolkit",
+        "//cmk/gui:html_toolkit",
     ],
 )
 
@@ -509,9 +472,8 @@ py_library(
         "//tests:__subpackages__",
     ],
     deps = [
-        "//cmk/gui:http",
-        "//cmk/gui:i18n",
-        "//cmk/gui:logged_in",
+        "//cmk/gui:auth_core",
+        "//cmk/gui:core_toolkit",
         "//cmk/utils",
         "//packages/cmk-ccc:exceptions",
         "//packages/cmk-ccc:user",
@@ -529,7 +491,7 @@ py_library(
     ],
     deps = [
         ":urls",
-        "//cmk/gui:type_defs",
+        "//cmk/gui:core_toolkit",
     ],
 )
 
@@ -543,9 +505,7 @@ py_library(
         "//tests:__subpackages__",
     ],
     deps = [
-        "//cmk/gui:exceptions",
-        "//cmk/gui:i18n",
-        "//cmk/gui:type_defs",
+        "//cmk/gui:core_toolkit",
         "//cmk/utils",
         "//packages/cmk-ccc:site",
         "//packages/cmk-livestatus-client",

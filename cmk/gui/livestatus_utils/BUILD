@@ -14,10 +14,9 @@ py_library(
         "//tests:__subpackages__",
     ],
     deps = [
-        "//cmk/gui:script_helpers",
-        "//cmk/gui:session",
+        "//cmk/gui:app",
+        "//cmk/gui:config",
         "//cmk/gui:session_context",
-        "//cmk/gui:sites",
         "//packages/cmk-ccc:site",
         "//packages/cmk-livestatus-client",
     ],

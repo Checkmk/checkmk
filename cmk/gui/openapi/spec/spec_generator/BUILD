@@ -19,8 +19,7 @@ py_library(
         "//tests:__subpackages__",
     ],
     deps = [
-        "//cmk/gui:http",
-        "//cmk/gui:permissions",
+        "//cmk/gui:core_toolkit",
         "//cmk/gui/openapi:openapi_init",
         "//cmk/gui/openapi:versioned_endpoint_map",
         "//cmk/gui/openapi/framework",
@@ -49,9 +48,7 @@ py_library(
     ],
     deps = [
         ":spec_generator",
-        "//cmk/gui:main_modules",
-        "//cmk/gui:script_helpers",
-        "//cmk/gui:session",
+        "//cmk/gui:app",
         "//cmk/gui:session_context",
         "//cmk/gui/openapi:versioned_endpoint_map",
         "//cmk/gui/openapi/framework",

@@ -20,7 +20,6 @@ py_test(
     main = ":__test__.py",
     deps = [
         ":__test__",
-        "//cmk/gui:session_context",
         "//cmk/gui/form_specs",
         "//cmk/gui/quick_setup",
         "//cmk/server_side_calls_backend",

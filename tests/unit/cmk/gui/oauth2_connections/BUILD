@@ -17,7 +17,6 @@ py_test(
     main = ":__test__.py",
     deps = [
         ":__test__",
-        "//cmk/gui:session",
         "//cmk/gui:session_context",
         "//cmk/gui/form_specs",
         "//cmk/gui/oauth2_connections",

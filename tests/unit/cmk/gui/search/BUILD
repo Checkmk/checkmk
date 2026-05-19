@@ -21,12 +21,8 @@ py_test(
     deps = [
         ":__test__",
         "//cmk/gui:config",
-        "//cmk/gui:http",
-        "//cmk/gui:i18n",
-        "//cmk/gui:logged_in",
-        "//cmk/gui:session",
+        "//cmk/gui:core_toolkit",
         "//cmk/gui:session_context",
-        "//cmk/gui:type_defs",
         "//cmk/gui/background_job/process",
         "//cmk/gui/search",
         "//cmk/gui/utils:roles",

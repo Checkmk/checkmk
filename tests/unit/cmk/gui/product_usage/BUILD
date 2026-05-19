@@ -18,9 +18,8 @@ py_test(
     deps = [
         ":__test__",
         "//cmk/gui:config",
-        "//cmk/gui:exceptions",
-        "//cmk/gui:http",
-        "//cmk/gui:pages",
+        "//cmk/gui:core_toolkit",
+        "//cmk/gui:page_toolkit",
         "//cmk/gui/product_usage_analytics",
         "//cmk/product_usage",
         "//tests/unit:conftest",

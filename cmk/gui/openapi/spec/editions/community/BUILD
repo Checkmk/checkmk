@@ -10,8 +10,8 @@ py_library(
         "//tests:__subpackages__",
     ],
     deps = [
-        "//cmk/gui:default_permissions",
-        "//cmk/gui:permissions",
+        "//cmk/gui:config",
+        "//cmk/gui:core_toolkit",
         "//cmk/gui/agent_registration",
         "//cmk/gui/availability",
         "//cmk/gui/background_job/wato",
@@ -43,7 +43,7 @@ py_binary(
     visibility = ["//:__subpackages__"],
     deps = [
         ":community",
-        "//cmk/gui:legacy_plugins",
+        "//cmk/gui:config",
         "//cmk/gui/openapi/spec/editions",
         "//cmk/gui/openapi/spec/spec_generator:_core",
         "//cmk/gui/plugins/wato/check_parameters:stub",

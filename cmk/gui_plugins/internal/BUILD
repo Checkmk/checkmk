@@ -9,7 +9,7 @@ py_library(
         "//tests:__subpackages__",
     ],
     deps = [
-        "//cmk/gui:autocompleters",
+        "//cmk/gui:general_pages",
         "//cmk/gui/graphing",
         "//cmk/gui/openapi/framework",
         "//cmk/gui/openapi/restful_objects",

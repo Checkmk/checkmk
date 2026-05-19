@@ -24,7 +24,7 @@ from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
 from cmk.ccc.version import Edition, edition
 from cmk.checkengine.plugins import CheckPluginName
-from cmk.gui import forms, hooks, userdb, weblib
+from cmk.gui import forms, hooks, userdb
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.generator import HTMLWriter

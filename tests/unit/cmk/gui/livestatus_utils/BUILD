@@ -20,11 +20,9 @@ py_test(
     main = ":__test__.py",
     deps = [
         ":__test__",
+        "//cmk/gui:app",
         "//cmk/gui:config",
-        "//cmk/gui:script_helpers",
-        "//cmk/gui:session",
         "//cmk/gui:session_context",
-        "//cmk/gui:sites",
         "//cmk/gui/livestatus_utils/commands",
         "//packages/cmk-ccc:hostaddress",
         "//packages/cmk-ccc:site",

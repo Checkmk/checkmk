@@ -21,8 +21,7 @@ py_test(
     deps = [
         ":__test__",
         "//cmk/gui:config",
-        "//cmk/gui:http",
-        "//cmk/gui:type_defs",
+        "//cmk/gui:core_toolkit",
         "//cmk/gui/inventory",
         "//cmk/gui/watolib:groups_io",
         "//cmk/inventory",

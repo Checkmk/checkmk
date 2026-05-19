@@ -18,9 +18,7 @@ py_test(
     deps = [
         ":__test__",
         "//cmk/gui:config",
-        "//cmk/gui:exceptions",
-        "//cmk/gui:type_defs",
-        "//cmk/gui:unit_formatter",
+        "//cmk/gui:core_toolkit",
         "//cmk/gui/dashboard",
         "//cmk/gui/graphing",
         "//cmk/gui/openapi/framework",

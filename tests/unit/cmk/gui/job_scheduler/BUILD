@@ -18,8 +18,7 @@ py_test(
     deps = [
         ":__test__",
         "//cmk/gui:config",
-        "//cmk/gui:cron",
-        "//cmk/gui:job_scheduler_client",
+        "//cmk/gui:core_toolkit",
         "//cmk/gui/background_job/job",
         "//cmk/gui/job_scheduler",
         "//tests/unit:conftest",

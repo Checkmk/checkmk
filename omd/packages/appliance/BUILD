@@ -87,9 +87,8 @@ py_library(
     ],
     deps = [
         "//cmk/gui:config",
-        "//cmk/gui:i18n",
-        "//cmk/gui/htmllib:html",
-        "//cmk/gui/htmllib:tag_rendering",
+        "//cmk/gui:core_toolkit",
+        "//cmk/gui:html_toolkit",
         "//cmk/gui/sidebar",
         "//packages/cmk-ccc:version",
     ],

@@ -19,6 +19,7 @@ import json
 from collections.abc import Mapping
 from typing import Any, cast
 
+from cmk.ccc.regex import REGEX_ID
 from cmk.ccc.site import omd_site, SiteId
 from cmk.ccc.user import UserId
 from cmk.ccc.version import Edition
@@ -614,6 +615,13 @@ class SimpleEditMode[T: Mapping[str, Any]](_SimpleWatoModeBase[T]):
                     custom_validate=(
                         form_specs.validators.LengthInRange(
                             min_value=1, error_msg=Message("Unique ID should not be empty.")
+                        ),
+                        form_specs.validators.MatchRegex(
+                            regex=REGEX_ID,
+                            error_msg=Message(
+                                "An identifier must only consist of letters, digits, dash and "
+                                "underscore and it must start with a letter or underscore."
+                            ),
                         ),
                     ),
                     field_size=FieldSize.LARGE,

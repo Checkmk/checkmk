@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
-
 # <<<win_license>>>
 #
 # Name: Windows(R) 7, Enterprise edition
@@ -15,17 +13,29 @@
 
 
 import re
+from collections.abc import Mapping
+from typing import Any
 
-from cmk.agent_based.legacy.v0_unstable import check_levels, LegacyCheckDefinition
-from cmk.agent_based.v2 import render
+from cmk.agent_based.v1 import check_levels as check_levels_v1
+from cmk.agent_based.v2 import (
+    AgentSection,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    render,
+    Result,
+    Service,
+    State,
+    StringTable,
+)
 
 TIME_LEFT_RE = re.compile(r"(\d+) minute")
 
-check_info = {}
+Section = dict[str, str | int]
 
 
-def parse_win_license(string_table):
-    parsed: dict[str, str | int] = {}
+def parse_win_license(string_table: StringTable) -> Section:
+    parsed: Section = {}
     for line in string_table:
         if len(line) == 0:
             continue
@@ -45,38 +55,36 @@ def parse_win_license(string_table):
     return parsed
 
 
-def discover_win_license(parsed):
-    if "License" in parsed:
-        return [(None, {})]
-    return []
+def discover_win_license(section: Section) -> DiscoveryResult:
+    if "License" in section:
+        yield Service()
 
 
-def check_win_license(_item, params, parsed):
-    if (sw_license := parsed.get("License")) is None:
+def check_win_license(params: Mapping[str, Any], section: Section) -> CheckResult:
+    if (sw_license := section.get("License")) is None:
         return
 
-    message = "Software is %s" % sw_license
+    message = f"Software is {sw_license}"
+    license_ok = sw_license in params["status"]
 
-    license_state = 0 if sw_license in params["status"] else 2
-
-    if license_state:
+    if not license_ok:
         message += " Required: " + " ".join(params["status"])
 
-    yield license_state, message
+    yield Result(state=State.OK if license_ok else State.CRIT, summary=message)
 
-    if (time_left := parsed.get("expiration_time")) is None:
+    if (time_left := section.get("expiration_time")) is None:
         return
+    assert isinstance(time_left, int)
 
     if time_left < 0:
-        yield 2, f"Licence expired {render.timespan(-time_left)} ago"
+        yield Result(state=State.CRIT, summary=f"Licence expired {render.timespan(-time_left)} ago")
         return
 
-    yield check_levels(
+    yield from check_levels_v1(
         time_left,
-        None,
-        (None, None) + params["expiration_time"],
-        human_readable_func=render.timespan,
-        infoname="Time until license expires",
+        levels_lower=params["expiration_time"],
+        render_func=render.timespan,
+        label="Time until license expires",
     )
 
 
@@ -85,9 +93,15 @@ DEFAULT_PARAMETERS = {
     "expiration_time": (14 * 24 * 60 * 60, 7 * 24 * 60 * 60),
 }
 
-check_info["win_license"] = LegacyCheckDefinition(
+
+agent_section_win_license = AgentSection(
     name="win_license",
     parse_function=parse_win_license,
+)
+
+
+check_plugin_win_license = CheckPlugin(
+    name="win_license",
     service_name="Windows License",
     discovery_function=discover_win_license,
     check_function=check_win_license,

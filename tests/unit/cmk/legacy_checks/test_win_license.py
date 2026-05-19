@@ -3,16 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="misc"
-# mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
-# mypy: disable-error-code="type-arg"
-
 from collections.abc import Sequence
 from typing import NamedTuple, TypedDict
 
 import pytest
 
+from cmk.agent_based.v2 import Result, State
 from cmk.legacy_checks.win_license import (
     check_win_license,
     DEFAULT_PARAMETERS,
@@ -75,7 +71,7 @@ License Status: Licensed""",
 ]
 
 
-def splitter(text):
+def splitter(text: str) -> list[list[str]]:
     return [line.split() for line in text.split("\n")]
 
 
@@ -86,7 +82,7 @@ class CheckParameters(TypedDict):
 
 class check_ref(NamedTuple):
     parameters: CheckParameters | None
-    check_output: list
+    check_output: list[Result]
 
 
 @pytest.mark.parametrize(
@@ -100,28 +96,25 @@ class check_ref(NamedTuple):
                         "status": ["Licensed", "Initial grace period"],
                         "expiration_time": (8 * 24 * 60 * 60, 5 * 24 * 60 * 60),
                     },
-                    (
-                        [
-                            (0, "Software is Initial grace period"),
-                            (0, "Time until license expires: 9 days 0 hours", []),
-                        ]
-                    ),
+                    [
+                        Result(state=State.OK, summary="Software is Initial grace period"),
+                        Result(
+                            state=State.OK, summary="Time until license expires: 9 days 0 hours"
+                        ),
+                    ],
                 ),
                 check_ref(
                     {
                         "status": ["Licensed", "Initial grace period"],
                         "expiration_time": (180 * 24 * 60 * 60, 90 * 24 * 60 * 60),
                     },
-                    (
-                        [
-                            (0, "Software is Licensed"),
-                            (
-                                1,
-                                "Time until license expires: 176 days 2 hours (warn/crit below 180 days 0 hours/90 days 0 hours)",
-                                [],
-                            ),
-                        ]
-                    ),
+                    [
+                        Result(state=State.OK, summary="Software is Licensed"),
+                        Result(
+                            state=State.WARN,
+                            summary="Time until license expires: 176 days 2 hours (warn/crit below 180 days 0 hours/90 days 0 hours)",
+                        ),
+                    ],
                 ),
                 check_ref(
                     {
@@ -129,11 +122,10 @@ class check_ref(NamedTuple):
                         "expiration_time": (360 * 24 * 60 * 60, 180 * 24 * 60 * 60),
                     },
                     [
-                        (0, "Software is Licensed"),
-                        (
-                            2,
-                            "Time until license expires: 174 days 9 hours (warn/crit below 360 days 0 hours/180 days 0 hours)",
-                            [],
+                        Result(state=State.OK, summary="Software is Licensed"),
+                        Result(
+                            state=State.CRIT,
+                            summary="Time until license expires: 174 days 9 hours (warn/crit below 360 days 0 hours/180 days 0 hours)",
                         ),
                     ],
                 ),
@@ -142,7 +134,7 @@ class check_ref(NamedTuple):
                         "status": ["Licensed", "Initial grace period"],
                         "expiration_time": (14 * 24 * 60 * 60, 7 * 24 * 60 * 60),
                     },
-                    [(0, "Software is Licensed")],
+                    [Result(state=State.OK, summary="Software is Licensed")],
                 ),
             ],
         )
@@ -157,15 +149,22 @@ class check_ref(NamedTuple):
                         "expiration_time": (8 * 24 * 60 * 60, 5 * 24 * 60 * 60),
                     },
                     [
-                        (2, "Software is Initial grace period Required: Registered"),
-                        (0, "Time until license expires: 9 days 0 hours", []),
+                        Result(
+                            state=State.CRIT,
+                            summary="Software is Initial grace period Required: Registered",
+                        ),
+                        Result(
+                            state=State.OK, summary="Time until license expires: 9 days 0 hours"
+                        ),
                     ],
                 ),
                 check_ref(
                     None,
                     [
-                        (0, "Software is Licensed"),
-                        (0, "Time until license expires: 176 days 2 hours", []),
+                        Result(state=State.OK, summary="Software is Licensed"),
+                        Result(
+                            state=State.OK, summary="Time until license expires: 176 days 2 hours"
+                        ),
                     ],
                 ),
             ],
@@ -177,7 +176,7 @@ def test_check_win_license(capture: str, result: check_ref) -> None:
     assert (
         list(
             check_win_license(
-                None, result.parameters or DEFAULT_PARAMETERS, parse_win_license(splitter(capture))
+                result.parameters or DEFAULT_PARAMETERS, parse_win_license(splitter(capture))
             )
         )
         == result.check_output

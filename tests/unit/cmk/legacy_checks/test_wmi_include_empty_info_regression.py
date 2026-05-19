@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="type-arg"
-
 # NOTE: This file has been created by an LLM (from something that was worse).
 # It mostly serves as test to ensure we don't accidentally break anything.
 # If you encounter something weird in here, do not hesitate to replace this
@@ -14,6 +12,7 @@ from collections.abc import Mapping
 
 import pytest
 
+from cmk.agent_based.v2 import Service
 from cmk.legacy_checks.wmi_webservices import (
     check_wmi_webservices,
     discover_wmi_webservices,
@@ -52,12 +51,12 @@ def test_discover_wmi_webservices_empty_data(parsed_data_empty: Mapping[str, WMI
     assert items == []
 
 
-def test_check_wmi_webservices_empty_data(parsed_data_empty: dict) -> None:
+def test_check_wmi_webservices_empty_data(parsed_data_empty: Mapping[str, WMITable]) -> None:
     """Test check function when no WMI web services data is available."""
     # The check function will raise a KeyError when trying to access parsed[""]
     # on empty data - this is the expected behavior for this edge case
     with pytest.raises(KeyError):
-        list(check_wmi_webservices("NonExistentService", {}, parsed_data_empty))
+        list(check_wmi_webservices("NonExistentService", parsed_data_empty))
 
 
 def test_check_wmi_webservices_with_valid_data() -> None:
@@ -75,11 +74,10 @@ def test_check_wmi_webservices_with_valid_data() -> None:
     items = list(discover_wmi_webservices(parsed))
     assert len(items) >= 1  # Should discover at least one service
 
-    # Test that items are properly formatted (item_name, params_dict)
+    # Test that items are properly formatted Service objects
     for item in items:
-        assert len(item) == 2
-        assert isinstance(item[0], str)  # item name
-        assert isinstance(item[1], dict)  # parameters
+        assert isinstance(item, Service)
+        assert isinstance(item.item, str)
 
 
 def test_check_wmi_webservices_nonexistent_item_valid_data() -> None:
@@ -92,5 +90,5 @@ def test_check_wmi_webservices_nonexistent_item_valid_data() -> None:
     parsed = parse_wmi_table(valid_string_table)
 
     # Check for non-existent service should return empty results
-    results = list(check_wmi_webservices("NonExistentService", {}, parsed))
+    results = list(check_wmi_webservices("NonExistentService", parsed))
     assert results == []

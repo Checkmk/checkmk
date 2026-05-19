@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="misc"
-
 # NOTE: This file has been created by an LLM (from something that was worse).
 # It mostly serves as test to ensure we don't accidentally break anything.
 # If you encounter something weird in here, do not hesitate to replace this
@@ -15,15 +13,9 @@ from typing import Any
 
 import pytest
 
+from cmk.agent_based.v2 import Metric, Result, State
 from cmk.legacy_checks import wmi_webservices
-from cmk.plugins.windows.agent_based import libwmi_legacy as wmi
 from cmk.plugins.windows.agent_based.libwmi import parse_wmi_table
-
-
-@pytest.fixture
-def empty_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
-    store: dict[str, object] = {}
-    monkeypatch.setattr(wmi, "get_value_store", lambda: store)
 
 
 @pytest.fixture(name="parsed")
@@ -77,40 +69,30 @@ def test_wmi_webservices_discovery(parsed: Mapping[str, Any]) -> None:
     # Should discover both web sites
     assert len(result) == 2
     expected_services = {"Default Web Site", "Exchange Back End"}
-    discovered_services = {item for item, _ in result}
+    discovered_services = {service.item for service in result}
     assert discovered_services == expected_services
 
 
-@pytest.mark.usefixtures("empty_value_store")
 def test_wmi_webservices_check_default_site(parsed: Mapping[str, Any]) -> None:
     """Test WMI Web Services check function for Default Web Site."""
     # Based on the original dataset, Default Web Site has 0 connections
-    result = list(wmi_webservices.check_wmi_webservices("Default Web Site", {}, parsed))
+    result = list(wmi_webservices.check_wmi_webservices("Default Web Site", parsed))
 
-    # Should have 1 result for connections
-    assert len(result) == 1
-
-    # Check the connection count result
-    assert result[0][0] == 0  # OK state
-    assert "Connections: 0" in result[0][1]
-    assert result[0][2][0][0] == "connections"
-    assert result[0][2][0][1] == 0
+    assert result == [
+        Result(state=State.OK, summary="Connections: 0"),
+        Metric("connections", 0),
+    ]
 
 
-@pytest.mark.usefixtures("empty_value_store")
 def test_wmi_webservices_check_exchange_backend(parsed: Mapping[str, Any]) -> None:
     """Test WMI Web Services check function for Exchange Back End."""
     # Based on the original dataset, Exchange Back End has 11 connections
-    result = list(wmi_webservices.check_wmi_webservices("Exchange Back End", {}, parsed))
+    result = list(wmi_webservices.check_wmi_webservices("Exchange Back End", parsed))
 
-    # Should have 1 result for connections
-    assert len(result) == 1
-
-    # Check the connection count result
-    assert result[0][0] == 0  # OK state
-    assert "Connections: 11" in result[0][1]
-    assert result[0][2][0][0] == "connections"
-    assert result[0][2][0][1] == 11
+    assert result == [
+        Result(state=State.OK, summary="Connections: 11"),
+        Metric("connections", 11),
+    ]
 
 
 def test_wmi_webservices_parse_function() -> None:

@@ -5,10 +5,6 @@
 
 import pytest
 
-from cmk.agent_based.v2 import StringTable
-
-from .checktestlib import Check
-
 pytestmark = pytest.mark.checks
 
 #   .--infos---------------------------------------------------------------.
@@ -102,15 +98,11 @@ info_msx_info_store_1 = [
 # .
 
 
-@pytest.mark.parametrize(
-    "check_name,info",
-    [
-        ("wmi_webservices", info_wmi_timeout),
-    ],
-)
-def test_wmi_cpu_load_no_discovery(check_name: str, info: StringTable) -> None:
-    check = Check(check_name)
-    assert not list(check.run_discovery(check.run_parse(info)))
+def test_wmi_webservices_no_discovery_on_timeout() -> None:
+    from cmk.legacy_checks.wmi_webservices import discover_wmi_webservices
+    from cmk.plugins.windows.agent_based.libwmi import parse_wmi_table
+
+    assert not list(discover_wmi_webservices(parse_wmi_table(info_wmi_timeout)))
 
 
 def test_dotnet_clrmemory_no_discovery_on_timeout() -> None:

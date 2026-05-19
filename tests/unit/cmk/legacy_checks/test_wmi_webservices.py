@@ -5,11 +5,10 @@
 
 # mypy: disable-error-code="misc"
 
-from typing import Any
 
 import pytest
 
-from cmk.agent_based.v2 import StringTable
+from cmk.agent_based.v2 import Metric, Result, Service, State, StringTable
 from cmk.legacy_checks.wmi_webservices import check_wmi_webservices, discover_wmi_webservices
 from cmk.plugins.windows.agent_based.libwmi import parse_wmi_table
 
@@ -315,14 +314,17 @@ _INFO = [
     "info, expected_discoveries",
     [
         # Test discovery with the full dataset
-        (_INFO, [("Default Web Site", {}), ("Exchange Back End", {})]),
+        (
+            _INFO,
+            [Service(item="Default Web Site"), Service(item="Exchange Back End")],
+        ),
         # Test discovery with single website
         (
             [
                 _INFO[0],  # Header
                 _INFO[1],  # Default Web Site data only
             ],
-            [("Default Web Site", {})],
+            [Service(item="Default Web Site")],
         ),
         # Test discovery with no data (empty)
         (
@@ -331,144 +333,46 @@ _INFO = [
         ),
     ],
 )
-def test_discover_wmi_webservices(
-    info: StringTable, expected_discoveries: list[tuple[str, dict[str, Any]]]
-) -> None:
+def test_discover_wmi_webservices(info: StringTable, expected_discoveries: list[Service]) -> None:
     """Test discovery function for wmi_webservices check."""
     parsed = parse_wmi_table(info)
     result = list(discover_wmi_webservices(parsed))
-    assert sorted(result) == sorted(expected_discoveries)
+    assert sorted(result, key=lambda s: s.item or "") == sorted(
+        expected_discoveries, key=lambda s: s.item or ""
+    )
 
 
 @pytest.mark.parametrize(
-    "item, params, info, expected_results",
+    "item, info, expected_results",
     [
         # Test Default Web Site with 0 connections
-        ("Default Web Site", {}, _INFO, [(0, "Connections: 0", [("connections", 0, None, None)])]),
+        (
+            "Default Web Site",
+            _INFO,
+            [
+                Result(state=State.OK, summary="Connections: 0"),
+                Metric("connections", 0),
+            ],
+        ),
         # Test Exchange Back End with 11 connections
         (
             "Exchange Back End",
-            {},
             _INFO,
-            [(0, "Connections: 11", [("connections", 11, None, None)])],
+            [
+                Result(state=State.OK, summary="Connections: 11"),
+                Metric("connections", 11),
+            ],
         ),
         # Test non-existent item
-        ("Non-existent Site", {}, _INFO, []),
-        # Test with different connection counts
-        (
-            "Default Web Site",
-            {},
-            [
-                _INFO[0],  # Header
-                [
-                    "44682",
-                    "388339380",
-                    "3109860488",
-                    "3498199868",
-                    "",
-                    "0",
-                    "141001",
-                    "0",
-                    "0",
-                    "0",
-                    "0",
-                    "0",
-                    "0",
-                    "0",
-                    "25",  # CurrentConnections = 25
-                    "0",
-                    "0",
-                    "0",
-                    "",
-                    "3",
-                    "0",
-                    "3",
-                    "0",
-                    "1953125",
-                    "10000000",
-                    "137000",
-                    "0",
-                    "0",
-                    "0",
-                    "0",
-                    "226055",
-                    "5",
-                    "0",
-                    "0",
-                    "0",
-                    "17",
-                    "0",
-                    "14",
-                    "0",
-                    "0",
-                    "0",
-                    "Default Web Site",
-                    "133797",
-                    "8",
-                    "0",
-                    "28836",
-                    "60246",
-                    "0",
-                    "0",
-                    "0",
-                    "0",
-                    "2778588",
-                    "0",
-                    "6743176430643",
-                    "130951777566120000",
-                    "0",
-                    "44682",
-                    "0",
-                    "0",
-                    "388339380",
-                    "3109860488",
-                    "3498199868",
-                    "0",
-                    "141001",
-                    "0",
-                    "0",
-                    "0",
-                    "0",
-                    "0",
-                    "3",
-                    "3",
-                    "137000",
-                    "0",
-                    "0",
-                    "0",
-                    "0",
-                    "226055",
-                    "226086",
-                    "226086",
-                    "0",
-                    "0",
-                    "133797",
-                    "8",
-                    "0",
-                    "28836",
-                    "60246",
-                    "0",
-                    "0",
-                    "0",
-                    "0",
-                    "0",
-                    "0",
-                    "0",
-                    "0",
-                    "0",
-                ],
-            ],
-            [(0, "Connections: 25", [("connections", 25, None, None)])],
-        ),
+        ("Non-existent Site", _INFO, []),
     ],
 )
 def test_check_wmi_webservices(
     item: str,
-    params: dict[str, Any],
     info: StringTable,
-    expected_results: list[tuple[int, str, list[tuple[str, int, None, None]]]],
+    expected_results: list[Result | Metric],
 ) -> None:
     """Test check function for wmi_webservices check."""
     parsed = parse_wmi_table(info)
-    result = list(check_wmi_webservices(item, params, parsed))
+    result = list(check_wmi_webservices(item, parsed))
     assert result == expected_results

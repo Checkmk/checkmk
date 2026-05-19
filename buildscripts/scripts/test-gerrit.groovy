@@ -167,6 +167,12 @@ void main() {
                         case "Package cmk-agent-receiver":  // Tries to start docker containers, CMK-29585
                             relative_job_name = "${branch_base_folder}/cv/test-gerrit-single-node";
                             break;
+                        case "GitHub actions":
+                            relative_job_name = "${branch_base_folder}/cv/test-github-actions";
+                            build_params = [
+                                CUSTOM_GIT_REF: GERRIT_PATCHSET_REVISION,
+                            ];
+                            break;
                         default:
                             break;
                     }

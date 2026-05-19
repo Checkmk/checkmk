@@ -516,6 +516,11 @@ STAGES:
       TEXT_ON_SKIP: "No cmk-plugins files changed"
       RESULT_CHECK_FILE_PATTERN: "results/plugins-consistency.html"
 
+    - NAME: "GitHub actions"
+      ONLY_WHEN_NOT_EMPTY: CHANGED_BAZEL_FILES
+      COMMAND: echo "Just have this line here, task is handled in test-gerrit.groovy"
+      BAZEL_LOCKS_AMOUNT: 1
+
     ########## packages ########################################################
 
     - NAME: "Package check-cert"

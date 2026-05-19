@@ -21,6 +21,7 @@ py_library(
         "//cmk/gui/inventory",
         "//cmk/gui/ldap_integration",
         "//cmk/gui/mkeventd",
+        "//cmk/gui/monitor/hosts",
         "//cmk/gui/openapi:openapi_init",
         "//cmk/gui/openapi:registration",
         "//cmk/gui/openapi/endpoints",

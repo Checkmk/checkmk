@@ -1907,6 +1907,7 @@ py_library(
         "//cmk/gui/form_specs",
         "//cmk/gui/inventory",
         "//cmk/gui/mobile",
+        "//cmk/gui/monitor/hosts",
         "//cmk/gui/nodevis",
         "//cmk/gui/oauth2_connections",
         "//cmk/gui/openapi:registration",

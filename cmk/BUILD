@@ -414,6 +414,7 @@ py_wheel(
         "//cmk/gui/livestatus_utils/commands",
         "//cmk/gui/mkeventd",
         "//cmk/gui/mobile",
+        "//cmk/gui/monitor/hosts",
         "//cmk/gui/nagvis",
         "//cmk/gui/nodevis",
         "//cmk/gui/nodevis:topology",

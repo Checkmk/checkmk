@@ -37,6 +37,9 @@ from cmk.gui.mkeventd.views import (
 from cmk.gui.mkeventd.wato import (
     register_permissions as mkeventd_wato_register_permissions,
 )
+from cmk.gui.monitor.hosts._api._registration import (
+    register_endpoints as monitor_hosts_register_endpoints,
+)
 from cmk.gui.openapi import (
     endpoint_family_registry,
     endpoint_registry,
@@ -90,6 +93,7 @@ def register_for_community() -> None:
     views_register_endpoints(endpoint_family_registry, versioned_endpoint_registry)
     inventory_register(endpoint_family_registry, versioned_endpoint_registry)
     dashboard_register_endpoints(endpoint_family_registry, versioned_endpoint_registry)
+    monitor_hosts_register_endpoints(endpoint_family_registry, versioned_endpoint_registry)
     bi_register(endpoint_registry)
     user_message_register_endpoints(endpoint_family_registry, versioned_endpoint_registry)
     agent_registration_register_endpoints(endpoint_family_registry, versioned_endpoint_registry)

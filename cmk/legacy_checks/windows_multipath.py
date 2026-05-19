@@ -3,34 +3,45 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
-
 # Agent output:
 # <<<windows_multipath>>>
 # 4
 # (yes, thats all)
 
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import StringTable
+from collections.abc import Mapping
+from typing import Any
 
-check_info = {}
+from cmk.agent_based.v2 import (
+    AgentSection,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Result,
+    Service,
+    State,
+    StringTable,
+)
 
 
-def discover_windows_multipath(info):
+def parse_windows_multipath(string_table: StringTable) -> StringTable:
+    return string_table
+
+
+def discover_windows_multipath(section: StringTable) -> DiscoveryResult:
     try:
-        num_active = int(info[0][0])
+        num_active = int(section[0][0])
     except (ValueError, IndexError):
         return
 
     if num_active > 0:
-        yield None, {"active_paths": num_active}
+        yield Service(parameters={"active_paths": num_active})
 
 
-def check_windows_multipath(item, params, info):
-    num_active = int(info[0][0])
+def check_windows_multipath(params: Mapping[str, Any], section: StringTable) -> CheckResult:
+    num_active = int(section[0][0])
 
-    yield 0, "Paths active: %s" % (num_active)
+    yield Result(state=State.OK, summary=f"Paths active: {num_active}")
 
     levels = params["active_paths"]
     if isinstance(levels, tuple):
@@ -38,29 +49,30 @@ def check_windows_multipath(item, params, info):
         warn_num = (warn / 100.0) * num_paths
         crit_num = (crit / 100.0) * num_paths
         if num_active < crit_num:
-            state = 2
+            state = State.CRIT
         elif num_active < warn_num:
-            state = 1
+            state = State.WARN
         else:
-            state = 0
+            state = State.OK
 
-        if state > 0:
-            yield state, "(warn/crit below %d/%d)" % (warn_num, crit_num)
+        if state is not State.OK:
+            yield Result(state=state, summary=f"(warn/crit below {warn_num:.0f}/{crit_num:.0f})")
     else:
-        yield 0, "Expected paths: %s" % levels
+        yield Result(state=State.OK, summary=f"Expected paths: {levels}")
         if num_active < levels:
-            yield 2, "(crit below %d)" % levels
+            yield Result(state=State.CRIT, summary=f"(crit below {levels})")
         elif num_active > levels:
-            yield 1, "(warn at %d)" % levels
+            yield Result(state=State.WARN, summary=f"(warn at {levels})")
 
 
-def parse_windows_multipath(string_table: StringTable) -> StringTable:
-    return string_table
-
-
-check_info["windows_multipath"] = LegacyCheckDefinition(
+agent_section_windows_multipath = AgentSection(
     name="windows_multipath",
     parse_function=parse_windows_multipath,
+)
+
+
+check_plugin_windows_multipath = CheckPlugin(
+    name="windows_multipath",
     service_name="Multipath",
     discovery_function=discover_windows_multipath,
     check_function=check_windows_multipath,

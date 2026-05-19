@@ -44,7 +44,7 @@ from omdlib.livestatus import (
 )
 from omdlib.site_paths import SitePaths
 from omdlib.sites import all_sites
-from omdlib.system_apache import set_apache_tcp_port
+from omdlib.system_apache import set_apache_tcp_addr, set_apache_tcp_port
 
 from cmk.ccc.exceptions import MKTerminate
 from cmk.ccc.version import edition
@@ -395,6 +395,13 @@ def _config_set(
     value = config[hook_name]
     output: str | None = None
     match hook_name:
+        case "APACHE_TCP_ADDR":
+            try:
+                port = config.get("APACHE_TCP_PORT", "0")
+                set_apache_tcp_addr(SitePaths.from_site_name(site.name).home, value, port)
+            except Exception:
+                traceback.print_exc()
+                return
         case "APACHE_TCP_PORT":
             site_configs = _build_site_configs(site.name, omd_path)
             _report_error("APACHE_TCP_PORT", site_configs.sites_with_unreadable_configs)

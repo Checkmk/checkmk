@@ -16,6 +16,7 @@ from omdlib.system_apache import (
     delete_apache_hook,
     is_apache_hook_up_to_date,
     register_with_system_apache,
+    set_apache_tcp_addr,
     set_apache_tcp_port,
     unregister_from_system_apache,
 )
@@ -139,6 +140,22 @@ def test_set_apache_tcp_port_ipv4(tmp_path: Path) -> None:
 def test_set_apache_tcp_port_ipv6(tmp_path: Path) -> None:
     (tmp_path / "etc/apache").mkdir(parents=True)
     set_apache_tcp_port(str(tmp_path), "[::1]", "5000")
+    content = (tmp_path / "etc/apache/listen-port.conf").read_text()
+    assert "Listen [::1]:5000" in content
+    assert "ServerName" not in content
+
+
+def test_set_apache_tcp_addr_ipv4(tmp_path: Path) -> None:
+    (tmp_path / "etc/apache").mkdir(parents=True)
+    set_apache_tcp_addr(str(tmp_path), "127.0.0.1", "5000")
+    content = (tmp_path / "etc/apache/listen-port.conf").read_text()
+    assert "Listen 127.0.0.1:5000" in content
+    assert "ServerName 127.0.0.1:5000" in content
+
+
+def test_set_apache_tcp_addr_ipv6(tmp_path: Path) -> None:
+    (tmp_path / "etc/apache").mkdir(parents=True)
+    set_apache_tcp_addr(str(tmp_path), "[::1]", "5000")
     content = (tmp_path / "etc/apache/listen-port.conf").read_text()
     assert "Listen [::1]:5000" in content
     assert "ServerName" not in content

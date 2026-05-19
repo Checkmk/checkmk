@@ -20,11 +20,17 @@ __all__ = [
     "unregister_from_system_apache",
     "delete_apache_hook",
     "is_apache_hook_up_to_date",
+    "set_apache_tcp_addr",
     "set_apache_tcp_port",
 ]
 
-_CONF_HEADER = (
+_CONF_HEADER_PORT = (
     "# This file is created by 'omd config set APACHE_TCP_PORT'.\n# Better do not edit manually\n"
+)
+_CONF_HEADER_ADDR = (
+    "# This file is managed by 'omd config set APACHE_TCP_PORT'"
+    " and 'omd config set APACHE_TCP_ADDR'.\n"
+    "# Better do not edit manually\n"
 )
 
 
@@ -32,9 +38,21 @@ def set_apache_tcp_port(omd_root: str, addr: str, port: str) -> None:
     conf_path = os.path.join(omd_root, "etc", "apache", "listen-port.conf")
 
     if addr.startswith("["):
-        content = f"{_CONF_HEADER}Listen {addr}:{port}\n"
+        content = f"{_CONF_HEADER_PORT}Listen {addr}:{port}\n"
     else:
-        content = f"{_CONF_HEADER}ServerName {addr}:{port}\nListen {addr}:{port}\n"
+        content = f"{_CONF_HEADER_PORT}ServerName {addr}:{port}\nListen {addr}:{port}\n"
+
+    with open(conf_path, "w") as f:
+        f.write(content)
+
+
+def set_apache_tcp_addr(omd_root: str, addr: str, port: str) -> None:
+    conf_path = os.path.join(omd_root, "etc", "apache", "listen-port.conf")
+
+    if addr.startswith("["):
+        content = f"{_CONF_HEADER_ADDR}Listen {addr}:{port}\n"
+    else:
+        content = f"{_CONF_HEADER_ADDR}Listen {addr}:{port}\nServerName {addr}:{port}\n"
 
     with open(conf_path, "w") as f:
         f.write(content)

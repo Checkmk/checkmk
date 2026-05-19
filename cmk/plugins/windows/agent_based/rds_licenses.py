@@ -17,7 +17,6 @@ from cmk.agent_based.v2 import (
     Service,
     State,
 )
-from cmk.legacy_includes.license import license_check_levels
 
 # <<<rds_licenses:sep(44)>>>
 # KeyPackId,Description,KeyPackType,ProductType,ProductVersion,ProductVersionID,TotalLicenses,IssuedLicenses,AvailableLicenses,ExpirationDate
@@ -65,6 +64,20 @@ def parse_rds_licenses(
     return parsed
 
 
+def _license_levels(
+    total: int, params: bool | Sequence[int | float] | None
+) -> tuple[float | None, float | None]:
+    if params is False:
+        return None, None
+    if not params:
+        return float(total), float(total)
+    if isinstance(params, Sequence) and isinstance(params[0], int):
+        return float(max(0, total - params[0])), float(max(0, total - params[1]))
+    if isinstance(params, Sequence):
+        return total * (1 - params[0] / 100.0), total * (1 - params[1] / 100.0)
+    return None, None
+
+
 def check_rds_licenses(
     item: str,
     params: Mapping[str, Any],
@@ -80,15 +93,29 @@ def check_rds_licenses(
         total += pack_total
         used += pack_issued
 
-    state, text, perfdata = license_check_levels(total, used, params["levels"][1])
-    yield Result(state=State(state), summary=text)
-    for name, value, warn, crit, mn, mx in perfdata:
-        yield Metric(
-            name,
-            float(value),
-            levels=(float(warn), float(crit)) if warn is not None and crit is not None else None,
-            boundaries=(float(mn), float(mx)),
-        )
+    warn, crit = _license_levels(total, params["levels"][1])
+
+    if used <= total:
+        summary = f"used {used} out of {total} licenses"
+    else:
+        summary = f"used {used} licenses, but you have only {total}"
+
+    state = State.OK
+    if warn is not None and crit is not None:
+        if used >= crit:
+            state = State.CRIT
+        elif used >= warn:
+            state = State.WARN
+        if state is not State.OK:
+            summary += f" (warn/crit at {int(warn)}/{int(crit)})"
+
+    yield Result(state=state, summary=summary)
+    yield Metric(
+        "licenses",
+        float(used),
+        levels=(warn, crit) if warn is not None and crit is not None else None,
+        boundaries=(0.0, float(total)),
+    )
 
 
 def discover_rds_licenses(

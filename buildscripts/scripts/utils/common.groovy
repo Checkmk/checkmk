@@ -88,9 +88,13 @@ withCredentialUsernamePasswordAtLocation = { Map args, Closure body ->
     def rm_cmd = onWindows ? "pwsh -c rm -Force" : "rm -f"
 
     try {
-        withCredentials([usernamePassword(credentialsId: args.credentialsId, usernameVariable: "USER", passwordVariable: "PASSWORD")]) {
+        withCredentials([usernamePassword(
+            credentialsId: args.credentialsId,
+            usernameVariable: "CRED_USER",
+            passwordVariable: "CRED_PASSWORD")
+        ]) {
             sh("""
-                echo "${USER}:${PASSWORD}" > ${args.location}
+                echo "${CRED_USER}:${CRED_PASSWORD}" > ${args.location}
             """);
             body();
         }

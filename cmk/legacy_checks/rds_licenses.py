@@ -4,13 +4,20 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from collections.abc import Iterable, Mapping, Sequence
+from collections.abc import Mapping, Sequence
 from typing import Any
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition, LegacyCheckResult
+from cmk.agent_based.v2 import (
+    AgentSection,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Metric,
+    Result,
+    Service,
+    State,
+)
 from cmk.legacy_includes.license import license_check_levels
-
-check_info = {}
 
 # <<<rds_licenses:sep(44)>>>
 # KeyPackId,Description,KeyPackType,ProductType,ProductVersion,ProductVersionID,TotalLicenses,IssuedLicenses,AvailableLicenses,ExpirationDate
@@ -61,9 +68,9 @@ def parse_rds_licenses(
 def check_rds_licenses(
     item: str,
     params: Mapping[str, Any],
-    parsed: Mapping[str, list[dict[str, str]]],
-) -> LegacyCheckResult:
-    if not (data := parsed.get(item)):
+    section: Mapping[str, list[dict[str, str]]],
+) -> CheckResult:
+    if not (data := section.get(item)):
         return
     total = 0
     used = 0
@@ -74,28 +81,30 @@ def check_rds_licenses(
         used += pack_issued
 
     state, text, perfdata = license_check_levels(total, used, params["levels"][1])
-    converted: list[
-        tuple[
-            str,
-            float,
-            float | int | None,
-            float | int | None,
-            float | int | None,
-            float | int | None,
-        ]
-    ] = [(n, float(v), w, c, float(mn), float(mx)) for n, v, w, c, mn, mx in perfdata]
-    yield state, text, converted
+    yield Result(state=State(state), summary=text)
+    for name, value, warn, crit, mn, mx in perfdata:
+        yield Metric(
+            name,
+            float(value),
+            levels=(float(warn), float(crit)) if warn is not None and crit is not None else None,
+            boundaries=(float(mn), float(mx)),
+        )
 
 
 def discover_rds_licenses(
     section: Mapping[str, list[dict[str, str]]],
-) -> Iterable[tuple[str, dict[str, Any]]]:
-    yield from ((item, {}) for item in section)
+) -> DiscoveryResult:
+    yield from (Service(item=item) for item in section)
 
 
-check_info["rds_licenses"] = LegacyCheckDefinition(
+agent_section_rds_licenses = AgentSection(
     name="rds_licenses",
     parse_function=parse_rds_licenses,
+)
+
+
+check_plugin_rds_licenses = CheckPlugin(
+    name="rds_licenses",
     service_name="RDS Licenses %s",
     discovery_function=discover_rds_licenses,
     check_function=check_rds_licenses,

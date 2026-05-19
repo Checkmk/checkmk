@@ -195,6 +195,11 @@ def _is_listening(process_def: ProcessDef) -> bool:
             " snmpsimd dead from the beginning (exit code %d)",
             exitcode,
         )
+
+        # stderr is piped to stdout, so we can rely on only showing stdout
+        for line in p.stdout or []:
+            logger.error(line)
+
     process = _snmpsimd_process(process_def)
     snmpsimd_proc_found = process is not None
 
@@ -206,31 +211,33 @@ def _is_listening(process_def: ProcessDef) -> bool:
 
     if not snmpsimd_died:
         pid = process.pid  # type: ignore[union-attr]
+        logger.debug("============================================= %d", pid)
         # Wait for snmpsimd to initialize the UDP sockets
         try:
-            logger.debug("============================================= %d", pid)
             os.system("ls -al /proc/%d/fd" % pid)
             os.system("ps -ef | grep %d" % pid)
-            for e in os.listdir("/proc/%d/fd" % pid):
+            socket_dir = Path("/proc/%d/fd" % pid)
+            for filename in os.listdir(socket_dir):
+                filepath = socket_dir / filename
                 try:
-                    if os.readlink("/proc/%d/fd/%s" % (pid, e)).startswith("socket:"):
+                    if os.readlink(filepath).startswith("socket:"):
                         num_sockets += 1
-                except OSError:
-                    pass
-        except OSError as e:
+                except OSError as socket_read_error:
+                    logger.debug("Failed to read %s: %s", filepath, socket_read_error)
+        except OSError as oserr:
             exitcode = p.poll()
             if exitcode is None:
                 raise
             snmpsimd_died = True
             logger.error(
-                "====================================snmpsimd dead OSError try-except %s", e
+                "====================================snmpsimd dead OSError try-except %s", oserr
             )
 
     if snmpsimd_died:
         # assert p.stdout is not None
         # output = p.stdout.read()
         output = "foobar"
-        raise Exception(f"snmpsimd died. Exit code: {exitcode}; output: {output}")
+        raise RuntimeError(f"snmpsimd died. Exit code: {exitcode}; output: {output}")
 
     logger.debug("snmpsimd is running")
 

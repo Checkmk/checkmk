@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Callable, Iterator
+from typing import Self
 
 
 class LazyString:
@@ -83,12 +84,12 @@ class LazyString:
     def __hash__(self) -> int:
         return hash(str(self))
 
-    def __mod__(self, other: object) -> "LazyString":
+    def __mod__(self, other: object) -> Self:
         self._args = other
         return self
 
     def __rmod__(self, other: str) -> str:
-        return other + str(self)
+        return other % str(self)
 
     def __json__(self) -> str:
         return self.to_json()
@@ -184,7 +185,7 @@ class LazyText:
         return str(self) % other
 
     def __rmod__(self, other: str) -> str:
-        return other + str(self)
+        return other % str(self)
 
     def __json__(self) -> str:
         return self.to_json()

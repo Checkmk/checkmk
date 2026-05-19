@@ -9,40 +9,9 @@
 #  After changing this variable, the man Apache webserver
 #  must be restarted.
 
-# Load other config options. This hook needs
-# APACHE_TCP_PORT.
-if [ -f $OMD_ROOT/etc/omd/site.conf ]; then
-    . $OMD_ROOT/etc/omd/site.conf
-else
-    CONFIG_APACHE_TCP_ADDR=${CONFIG_APACHE_TCP_ADDR:-127.0.0.1}
-fi
-
 case "$1" in
     choices)
         echo "@{APACHE_NETWORK_PORT}"
-        ;;
-    set)
-        PORT=$($OMD_ROOT/lib/omd/next_free_port APACHE_TCP_PORT $2)
-
-        # Tell the site apache on where to listen
-        if [[ "$CONFIG_APACHE_TCP_ADDR" == \[* ]]; then
-            cat <<EOF >"$OMD_ROOT/etc/apache/listen-port.conf"
-# This file is created by 'omd config set APACHE_TCP_PORT'.
-# Better do not edit manually
-Listen $CONFIG_APACHE_TCP_ADDR:$PORT
-EOF
-        else
-            cat <<EOF >"$OMD_ROOT/etc/apache/listen-port.conf"
-# This file is created by 'omd config set APACHE_TCP_PORT'.
-# Better do not edit manually
-ServerName $CONFIG_APACHE_TCP_ADDR:$PORT
-Listen $CONFIG_APACHE_TCP_ADDR:$PORT
-EOF
-        fi
-        if [ "$PORT" != "$2" ]; then
-            echo "Apache port $2 is in use. I've choosen $PORT instead." >&2
-            echo "$PORT"
-        fi
         ;;
     depends)
         [ "$CONFIG_APACHE_MODE" = own ]

@@ -44,6 +44,7 @@ from omdlib.livestatus import (
 )
 from omdlib.site_paths import SitePaths
 from omdlib.sites import all_sites
+from omdlib.system_apache import set_apache_tcp_port
 
 from cmk.ccc.exceptions import MKTerminate
 from cmk.ccc.version import edition
@@ -394,6 +395,23 @@ def _config_set(
     value = config[hook_name]
     output: str | None = None
     match hook_name:
+        case "APACHE_TCP_PORT":
+            site_configs = _build_site_configs(site.name, omd_path)
+            _report_error("APACHE_TCP_PORT", site_configs.sites_with_unreadable_configs)
+            try:
+                new_value = str(
+                    _next_free_port("APACHE_TCP_PORT", site.name, int(value), site_configs.configs)
+                )
+                addr = config.get("APACHE_TCP_ADDR", "127.0.0.1")
+                set_apache_tcp_port(SitePaths.from_site_name(site.name).home, addr, new_value)
+                if value != new_value:
+                    sys.stderr.write(
+                        f"Apache port {value} is in use. I've chosen {new_value} instead.\n"
+                    )
+                output = new_value
+            except Exception:
+                traceback.print_exc()
+                return
         case "AGENT_RECEIVER_PORT":
             site_configs = _build_site_configs(site.name, omd_path)
             _report_error("AGENT_RECEIVER_PORT", site_configs.sites_with_unreadable_configs)

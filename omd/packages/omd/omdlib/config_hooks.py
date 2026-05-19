@@ -394,6 +394,23 @@ def _config_set(
     value = config[hook_name]
     output: str | None = None
     match hook_name:
+        case "AGENT_RECEIVER_PORT":
+            site_configs = _build_site_configs(site.name, omd_path)
+            _report_error("AGENT_RECEIVER_PORT", site_configs.sites_with_unreadable_configs)
+            try:
+                new_value = str(
+                    _next_free_port(
+                        "AGENT_RECEIVER_PORT", site.name, int(value), site_configs.configs
+                    )
+                )
+                if value != new_value:
+                    sys.stderr.write(
+                        f"agent-receiver port {value} is in use. I've chosen {new_value} instead.\n"
+                    )
+                output = new_value
+            except Exception:
+                traceback.print_exc()
+                return
         case "LIVESTATUS_TCP":
             try:
                 output = set_livestatus_tcp(site.name, config, omd_path, value)

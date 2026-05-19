@@ -7,6 +7,7 @@
 import os
 from pathlib import Path
 
+from omdlib.config_api import Config
 from omdlib.init_scripts import check_status
 from omdlib.site_paths import SitePaths
 from omdlib.skel_permissions import (
@@ -14,7 +15,7 @@ from omdlib.skel_permissions import (
     Permissions,
     skel_permissions_file_path,
 )
-from omdlib.type_defs import Config, Replacements
+from omdlib.type_defs import Replacements
 from omdlib.version_utils import version_from_site_dir
 
 from cmk.ccc.exceptions import MKTerminate

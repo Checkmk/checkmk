@@ -6,10 +6,10 @@ import os
 import sys
 from pathlib import Path
 
+from omdlib.config_api import Config
 from omdlib.config_hooks import create_config_environment, load_config
 from omdlib.contexts import SiteContext
 from omdlib.site_paths import SitePaths
-from omdlib.type_defs import Config
 from omdlib.users_and_groups import KEEP, switch_to_site_user
 
 

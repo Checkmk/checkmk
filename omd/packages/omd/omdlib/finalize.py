@@ -11,6 +11,7 @@ from pathlib import Path
 from uuid import uuid4
 
 import omdlib
+from omdlib.config_api import Config
 from omdlib.config_hooks import (
     config_set_all,
     create_config_environment,
@@ -26,7 +27,6 @@ from omdlib.site_paths import SitePaths
 from omdlib.site_user import site_environment
 from omdlib.system_apache import register_with_system_apache
 from omdlib.tmpfs import prepare_and_populate_tmpfs
-from omdlib.type_defs import Config
 from omdlib.version_info import VersionInfo
 
 from cmk.ccc.site import SiteId

@@ -5,8 +5,8 @@
 
 from pathlib import Path
 
+from omdlib.config_api import Config
 from omdlib.site_paths import SitePaths
-from omdlib.type_defs import Config
 
 LIVESTATUS_CONFIG_HEADER = """# This file is managed by OMD
 # Do not change anything in this file. Use omd config instead.

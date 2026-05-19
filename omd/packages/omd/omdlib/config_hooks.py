@@ -26,6 +26,7 @@ from pathlib import Path
 from re import Pattern
 from typing import TYPE_CHECKING
 
+from omdlib.config_api import Config
 from omdlib.config_choices import (
     ApacheNetworkPortHasError,
     ApacheTCPAddrHasError,
@@ -43,7 +44,6 @@ from omdlib.livestatus import (
 )
 from omdlib.site_paths import SitePaths
 from omdlib.sites import all_sites
-from omdlib.type_defs import Config
 
 from cmk.ccc.exceptions import MKTerminate
 from cmk.ccc.version import edition

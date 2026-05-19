@@ -15,9 +15,10 @@ import tarfile
 import time
 from pathlib import Path
 
+from omdlib.config_api import Config
 from omdlib.console import ok
 from omdlib.skel_permissions import Permissions
-from omdlib.type_defs import Config, Replacements
+from omdlib.type_defs import Replacements
 from omdlib.users_and_groups import run_as_site_user
 from omdlib.utils import create_skeleton_files, delete_directory_contents, is_containerized
 from omdlib.version_info import VersionInfo

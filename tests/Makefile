@@ -31,6 +31,8 @@ RANDOM_TZ = $(shell printf "UTC%+d\n" $$(( $$RANDOM / 1261 - 11 )) )
 
 SYSTEM_TESTS := \
     test-integration \
+    test-integration-k8s \
+    test-integration-non-root \
     test-integration-redfish \
     test-integration-otel \
     test-composition \
@@ -238,6 +240,14 @@ test-gui-e2e-cloud:
 test-integration:
 	$(PYTEST) $(PYTEST_SYSTEM_TEST_ARGS) $(realpath integration) \
 	--session-timeout 7200
+
+test-integration-k8s:
+	$(PYTEST) $(PYTEST_SYSTEM_TEST_ARGS) $(realpath integration) \
+	-m "not requires_non_root_user" --session-timeout 7200
+
+test-integration-non-root:
+	$(PYTEST) $(PYTEST_SYSTEM_TEST_ARGS) $(realpath integration) \
+	-m requires_non_root_user --session-timeout 600
 
 test-integration-redfish:
 	$(PYTEST) $(PYTEST_SYSTEM_TEST_ARGS) \

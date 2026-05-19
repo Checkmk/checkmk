@@ -203,6 +203,11 @@ STAGES:
       BAZEL_LOCKS_AMOUNT: 1
       RESULT_CHECK_FILE_PATTERN: "results/agent-plugin-unit-junit.txt"
 
+    - NAME: "GitHub actions"
+      ONLY_WHEN_NOT_EMPTY: CHANGED_BAZEL_FILES
+      COMMAND: echo "Just have this line here, task is handled in test-gerrit.groovy"
+      BAZEL_LOCKS_AMOUNT: 1
+
     ########## packages ########################################################
 
     - NAME: "Package cmk-frontend-vue"

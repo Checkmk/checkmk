@@ -104,6 +104,15 @@ def _define_process(index, auth, tmp_path, snmp_data_dir, as_user: None | str) -
         command_prefix = ["sudo", "-u", as_user]
         shutil.chown(proc_tmp_path, as_user, as_user)
 
+    env_override = None
+    if os.geteuid() == 0:
+        # As a root user we have to pass a special flag to snmpsim in order to be able to run it as root.
+        # Hint: the SNMP Simulator changelog mentions the flag SNMP_ALLOW_ROOT, but the code actually checks for SNMPSIM_ALLOW_ROOT
+        env_override = {"SNMPSIM_ALLOW_ROOT": "true"}
+        # Extend the environment with variables required by snmpsim
+        env_override.update({key: os.environ[key] for key in ("HOME",)})
+        logger.debug(f"overriding snmpsim-command-responder process env with: {env_override!r}")
+
     return ProcessDef(
         with_sudo=bool(as_user),
         port=port,
@@ -132,6 +141,7 @@ def _define_process(index, auth, tmp_path, snmp_data_dir, as_user: None | str) -
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
             text=True,
+            env=env_override,
         ),
     )
 

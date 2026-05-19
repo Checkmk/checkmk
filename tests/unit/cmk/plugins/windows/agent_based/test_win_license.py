@@ -9,7 +9,7 @@ from typing import NamedTuple, TypedDict
 import pytest
 
 from cmk.agent_based.v2 import Result, State
-from cmk.legacy_checks.win_license import (
+from cmk.plugins.windows.agent_based.win_license import (
     check_win_license,
     DEFAULT_PARAMETERS,
     parse_win_license,

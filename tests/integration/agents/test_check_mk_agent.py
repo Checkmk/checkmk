@@ -31,6 +31,7 @@ def _write_config(runas_user: str, mk_confdir: Path, script_dir: Path) -> None:
     cfg_file.write_text(f"local {runas_user} {script_dir.as_posix()}", encoding="UTF-8")
 
 
+@pytest.mark.requires_non_root_user
 @pytest.mark.parametrize("runas_user", ["root", "user"])
 def test_cmk_agent_run_runas_executor(runas_user: str, tmp_path: Path) -> None:
     # the actual username

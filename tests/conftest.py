@@ -382,6 +382,10 @@ def pytest_configure(config: pytest.Config) -> None:
         "markers",
         "skip_if_faked_artifacts: skip test when --package-contains-faked-artifacts is set",
     )
+    config.addinivalue_line(
+        "markers",
+        "requires_non_root_user: Tests that require a non-root user to be executed.",
+    )
 
 
 def pytest_collection_modifyitems(items: list[pytest.Function], config: pytest.Config) -> None:

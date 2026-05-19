@@ -6,10 +6,6 @@
 #  If receiving traces is configured, you can customize the admin API port here.
 
 case "$1" in
-    default)
-        PORT=$("$OMD_ROOT"/lib/omd/next_free_port TRACE_JAEGER_ADMIN_PORT 14269)
-        echo "$PORT"
-        ;;
     choices)
         echo "@{NETWORK_PORT}"
         ;;

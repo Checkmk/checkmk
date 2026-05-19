@@ -10,8 +10,8 @@ colorama = "==0.4.6"    # Windows has to have some color output
 pyyaml = "==6.0.1"      # to support the agent config
 certifi= "==2023.11.17" # jolokia
 chardet = "==5.2.0"     # jolokia
-idna = "==3.6"          # jolokia
-requests = {extras = ["socks"], version = "2.32.4"}   # jolokia, cmk_update_agent
+idna = "==3.7"          # jolokia
+requests = {extras = ["socks"], version = "2.32.4"}   # jolokia cmk_update_agent
 urllib3 = "==2.5.0"     # jolokia
 pyopenssl = "~=24.0"    # cmk_update_agent
 pywin32 = "==311"       # logwatch

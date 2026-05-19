@@ -16,10 +16,12 @@ b) A edit mode which can be used to create and edit an object.
 import abc
 import copy
 import json
+import re
 from collections.abc import Mapping
 from typing import Any, cast
 
 import cmk.gui.watolib.changes as _changes
+from cmk.ccc.regex import regex, REGEX_ID
 from cmk.ccc.site import SiteId
 from cmk.ccc.user import UserId
 from cmk.gui import forms
@@ -593,6 +595,13 @@ class SimpleEditMode[T: Mapping[str, Any]](_SimpleWatoModeBase[T]):
                     custom_validate=(
                         form_specs.validators.LengthInRange(
                             min_value=1, error_msg=Message("Unique ID should not be empty.")
+                        ),
+                        form_specs.validators.MatchRegex(
+                            regex=regex(REGEX_ID, re.ASCII),
+                            error_msg=Message(
+                                "An identifier must only consist of letters, digits, dash and "
+                                "underscore and it must start with a letter or underscore."
+                            ),
                         ),
                     ),
                     field_size=FieldSize.LARGE,

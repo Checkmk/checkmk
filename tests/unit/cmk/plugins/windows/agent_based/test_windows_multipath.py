@@ -11,7 +11,7 @@ from typing import Any
 import pytest
 
 from cmk.agent_based.v2 import Result, Service, State
-from cmk.legacy_checks.windows_multipath import (
+from cmk.plugins.windows.agent_based.windows_multipath import (
     check_windows_multipath,
     discover_windows_multipath,
     parse_windows_multipath,

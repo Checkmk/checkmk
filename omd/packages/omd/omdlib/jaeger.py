@@ -6,6 +6,30 @@
 from pathlib import Path
 
 
+def write_jaeger_ui_port_conf(omd_root: str, site_name: str, port: str) -> None:
+    apache_content = f"""\
+# Written by TRACE_JAEGER_UI_PORT hook
+LoadModule proxy_module /omd/sites/{site_name}/lib/apache/modules/mod_proxy.so
+LoadModule proxy_http_module /omd/sites/{site_name}/lib/apache/modules/mod_proxy_http.so
+
+ProxyPass "/{site_name}/jaeger" "http://[::1]:{port}/{site_name}/jaeger" retry=0 timeout=120
+ProxyPassReverse "/{site_name}/jaeger"  "http://[::1]:{port}/{site_name}/jaeger"
+"""
+    with open(Path(omd_root, "etc", "jaeger", "apache.conf"), "w") as f:
+        f.write(apache_content)
+
+    query_content = f"""\
+# Written by TRACE_JAEGER_UI_PORT hook
+---
+extensions:
+    jaeger_query:
+        http:
+            endpoint: "[::1]:{port}"
+"""
+    with open(Path(omd_root, "etc", "jaeger", "omd-query-port.yaml"), "w") as f:
+        f.write(query_content)
+
+
 def write_jaeger_admin_port_conf(omd_root: str, port: str) -> None:
     content = f"""\
 # Written by TRACE_JAEGER_ADMIN_PORT hook

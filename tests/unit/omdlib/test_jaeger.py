@@ -5,7 +5,28 @@
 
 from pathlib import Path
 
-from omdlib.jaeger import write_jaeger_admin_port_conf, write_jaeger_ui_port_conf
+from omdlib.jaeger import (
+    write_jaeger_admin_port_conf,
+    write_jaeger_receiver_conf,
+    write_jaeger_ui_port_conf,
+)
+
+
+def test_write_jaeger_receiver_conf(tmp_path: Path) -> None:
+    (tmp_path / "etc/jaeger").mkdir(parents=True)
+    write_jaeger_receiver_conf(str(tmp_path), "localhost", "4417")
+    content = (tmp_path / "etc/jaeger/omd-grpc.yaml").read_text()
+    assert "# Written by TRACE_RECEIVE_ADDRESS or TRACE_RECEIVE_PORT hook" in content
+    assert 'endpoint: "localhost:4417"' in content
+
+
+def test_write_jaeger_receiver_conf_overwrites(tmp_path: Path) -> None:
+    (tmp_path / "etc/jaeger").mkdir(parents=True)
+    write_jaeger_receiver_conf(str(tmp_path), "localhost", "4417")
+    write_jaeger_receiver_conf(str(tmp_path), "127.0.0.1", "4418")
+    content = (tmp_path / "etc/jaeger/omd-grpc.yaml").read_text()
+    assert "4418" in content
+    assert "4417" not in content
 
 
 def test_write_jaeger_admin_port_conf(tmp_path: Path) -> None:

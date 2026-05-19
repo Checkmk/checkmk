@@ -6,6 +6,20 @@
 from pathlib import Path
 
 
+def write_jaeger_receiver_conf(omd_root: str, address: str, port: str) -> None:
+    content = f"""\
+# Written by TRACE_RECEIVE_ADDRESS or TRACE_RECEIVE_PORT hook
+---
+receivers:
+    otlp:
+        protocols:
+            grpc:
+                endpoint: "{address}:{port}"
+"""
+    with open(Path(omd_root, "etc", "jaeger", "omd-grpc.yaml"), "w") as f:
+        f.write(content)
+
+
 def write_jaeger_ui_port_conf(omd_root: str, site_name: str, port: str) -> None:
     apache_content = f"""\
 # Written by TRACE_JAEGER_UI_PORT hook

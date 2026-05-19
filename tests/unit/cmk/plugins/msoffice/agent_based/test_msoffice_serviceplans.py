@@ -8,7 +8,7 @@ from collections.abc import Mapping
 import pytest
 
 from cmk.agent_based.v2 import Result, State
-from cmk.legacy_checks.msoffice_serviceplans import (
+from cmk.plugins.msoffice.agent_based.msoffice_serviceplans import (
     check_msoffice_serviceplans,
     parse_msoffice_serviceplans,
 )

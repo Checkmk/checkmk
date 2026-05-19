@@ -202,6 +202,11 @@ def load_hook_dependencies(
     return config_hooks
 
 
+def _default_AGENT_RECEIVER_PORT(site_name: str, site_configs: _SiteConfigs) -> str:
+    _report_error("AGENT_RECEIVER_PORT", site_configs.sites_with_unreadable_configs)
+    return str(_next_free_port("AGENT_RECEIVER_PORT", site_name, 8000, site_configs.configs))
+
+
 def _default_APACHE_TCP_PORT(site_name: str, site_configs: _SiteConfigs) -> str:
     _report_error("APACHE_TCP_PORT", site_configs.sites_with_unreadable_configs)
     return str(_next_free_port("APACHE_TCP_PORT", site_name, 5000, site_configs.configs))
@@ -220,6 +225,8 @@ def load_config(site: "SiteContext", verbose: bool, omd_path: Path = Path("/omd/
         for hook_name in _sort_hooks(os.listdir(site.hook_dir)):
             if hook_name[0] != "." and hook_name not in config:
                 match hook_name:
+                    case "AGENT_RECEIVER_PORT":
+                        config[hook_name] = _default_AGENT_RECEIVER_PORT(site.name, site_configs)
                     case "APACHE_TCP_PORT":
                         config[hook_name] = _default_APACHE_TCP_PORT(site.name, site_configs)
                     case _:

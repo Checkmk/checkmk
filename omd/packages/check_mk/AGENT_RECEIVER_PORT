@@ -8,10 +8,6 @@
 #  available, the next available port will be chosen.
 
 case "$1" in
-    default)
-        PORT=$($OMD_ROOT/lib/omd/next_free_port AGENT_RECEIVER_PORT 8000)
-        echo "$PORT"
-        ;;
     choices)
         echo "[0-9]{1,5}"
         ;;

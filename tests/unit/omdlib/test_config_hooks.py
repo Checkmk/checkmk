@@ -9,6 +9,7 @@ import pytest
 
 from omdlib.config_hooks import (
     _build_site_configs,
+    _default_AGENT_RECEIVER_PORT,
     _default_APACHE_TCP_PORT,
     _next_free_port,
     _report_error,
@@ -61,6 +62,28 @@ def test_next_free_port_missing_config_current_site(tmp_path: Path) -> None:
 
     site_configs = _build_site_configs("newsite", tmp_path)
     assert _next_free_port("APACHE_TCP_PORT", "newsite", 5000, site_configs.configs) == 5000
+
+
+def test_default_AGENT_RECEIVER_PORT_cross_key_conflict(tmp_path: Path) -> None:
+    sites = tmp_path / "sites"
+    _make_site(sites, "other", "CONFIG_LIVESTATUS_TCP_PORT='8000'\n")
+    _make_site(sites, "mysite", "")
+
+    site_configs = _build_site_configs("mysite", tmp_path)
+    assert _default_AGENT_RECEIVER_PORT("mysite", site_configs) == "8001"
+
+
+def test_default_AGENT_RECEIVER_PORT_warns_on_unreadable_site(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    sites = tmp_path / "sites"
+    _make_site(sites, "mysite", "")
+    (sites / "ghost").mkdir(parents=True)
+
+    site_configs = _build_site_configs("mysite", tmp_path)
+    _default_AGENT_RECEIVER_PORT("mysite", site_configs)
+
+    assert "ghost" in capsys.readouterr().err
 
 
 def test_default_APACHE_TCP_PORT_cross_key_conflict(tmp_path: Path) -> None:

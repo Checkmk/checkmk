@@ -3,10 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import datetime
 from collections.abc import Mapping
 from typing import Final
+from zoneinfo import ZoneInfo
 
 import pytest
+import time_machine
 from pytest import MonkeyPatch
 
 import cmk.base.events
@@ -14,10 +17,11 @@ from cmk.base.events import (
     _update_enriched_context_from_notify_host_file,
     add_to_event_context,
     apply_matchers,
+    complete_raw_context,
     event_match_hosttags,
     raw_context_from_string,
 )
-from cmk.events.event_context import EnrichedEventContext, EventContext
+from cmk.events.event_context import EnrichedEventContext, EventContext, HostName
 from cmk.utils.http_proxy_config import (
     EnvironmentProxyConfig,
     HTTPProxySpec,
@@ -58,6 +62,58 @@ HTTP_PROXY: Final = EnvironmentProxyConfig()
 )
 def test_raw_context_from_string(context: str, expected: EventContext) -> None:
     assert raw_context_from_string(context) == expected
+
+
+@pytest.mark.parametrize(
+    "tz, expected_host, expected_service",
+    [
+        ("Australia/Brisbane", "2025-05-12 18:11:34 AEST", "2025-05-12 18:15:00 AEST"),
+        ("UTC", "2025-05-12 08:11:34 UTC", "2025-05-12 08:15:00 UTC"),
+    ],
+)
+def test_complete_raw_context_pre_formats_state_change_with_local_tz(
+    tz: str, expected_host: str, expected_service: str
+) -> None:
+    raw_context = EventContext(
+        HOSTNAME=HostName("heute"),
+        CONTACTS="cmkadmin",
+        MICROTIME="1747037494000000",
+        LASTHOSTSTATECHANGE="1747037494",
+        LASTSERVICESTATECHANGE="1747037700",
+    )
+
+    with time_machine.travel(datetime.datetime.now(tz=ZoneInfo(tz)), tick=False):
+        enriched = complete_raw_context(
+            raw_context,
+            ensure_nagios=lambda _msg: None,
+            with_dump=False,
+            contacts_needed=False,
+            analyse=False,
+        )
+
+    assert enriched["LASTHOSTSTATECHANGE_LOCAL"] == expected_host
+    assert enriched["LASTSERVICESTATECHANGE_LOCAL"] == expected_service
+
+
+def test_complete_raw_context_skips_local_field_for_host_notification() -> None:
+    raw_context = EventContext(
+        HOSTNAME=HostName("heute"),
+        CONTACTS="cmkadmin",
+        MICROTIME="1747037494000000",
+        LASTHOSTSTATECHANGE="1747037494",
+    )
+
+    with time_machine.travel(datetime.datetime.now(tz=ZoneInfo("UTC")), tick=False):
+        enriched = complete_raw_context(
+            raw_context,
+            ensure_nagios=lambda _msg: None,
+            with_dump=False,
+            contacts_needed=False,
+            analyse=False,
+        )
+
+    assert enriched["LASTHOSTSTATECHANGE_LOCAL"] == "2025-05-12 08:11:34 UTC"
+    assert "LASTSERVICESTATECHANGE_LOCAL" not in enriched
 
 
 def test_add_to_event_context_param_overrides_context() -> None:

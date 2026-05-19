@@ -34,9 +34,9 @@
         <td width="120" style="padding:5px 0;font-weight:600;line-height:1.4;">Event date:</td>
         <td style="padding:5px 0;line-height:1.4;">
             {% if service_notification %}
-                {{ data.get("LASTSERVICESTATECHANGE") | timestamp() if data.get('LASTSERVICESTATECHANGE') else 'N/A' }}
+                {{ data.LASTSERVICESTATECHANGE_LOCAL if data.get("LASTSERVICESTATECHANGE_LOCAL") else (data.LASTSERVICESTATECHANGE | timestamp() if data.get('LASTSERVICESTATECHANGE') else 'N/A') }}
             {% else %}
-                {{ data.get("LASTHOSTSTATECHANGE") | timestamp() if data.get('LASTHOSTSTATECHANGE') else 'N/A' }}
+                {{ data.LASTHOSTSTATECHANGE_LOCAL if data.get("LASTHOSTSTATECHANGE_LOCAL") else (data.LASTHOSTSTATECHANGE | timestamp() if data.get('LASTHOSTSTATECHANGE') else 'N/A') }}
             {% endif %}
         </td>
     </tr>

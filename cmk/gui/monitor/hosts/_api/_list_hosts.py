@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from typing import Annotated, Literal
 
+from cmk.gui.logged_in import user
 from cmk.gui.openapi.framework import QueryParam
 from cmk.gui.openapi.framework.api_config import APIVersion
 from cmk.gui.openapi.framework.model import api_field, api_model
@@ -14,6 +15,7 @@ from cmk.gui.openapi.framework.versioned_endpoint import (
     EndpointPermissions,
     VersionedEndpoint,
 )
+from cmk.gui.utils import permission_verification as permissions
 
 from ._family import MONITOR_HOSTS_FAMILY
 
@@ -56,6 +58,8 @@ type Limit = Annotated[int, QueryParam(description="Number of hosts to return", 
 
 def list_hosts(limit: Limit = 1000) -> HostsResponse:
     """List hosts to be consumed by the all host monitoring page."""
+    user.need_permission("general.see_all")
+
     return HostsResponse(
         hosts=[],
         meta=HostsPageMeta(limit=limit, total=0),
@@ -68,7 +72,19 @@ ENDPOINT_LIST_HOSTS = VersionedEndpoint(
         link_relation="cmk/list",
         method="get",
     ),
-    permissions=EndpointPermissions(),
+    permissions=EndpointPermissions(
+        required=permissions.Undocumented(
+            permissions.AnyPerm(
+                [
+                    permissions.Perm("general.see_all"),
+                    # NOTE: these two need to be included in order to make the REST API framework
+                    # happy. The "see_all" permission is the only one that is required to check.
+                    permissions.OkayToIgnorePerm("bi.see_all"),
+                    permissions.OkayToIgnorePerm("mkeventd.seeall"),
+                ]
+            )
+        )
+    ),
     doc=EndpointDoc(family=MONITOR_HOSTS_FAMILY.name),
     versions={APIVersion.INTERNAL: EndpointHandler(handler=list_hosts)},
 )

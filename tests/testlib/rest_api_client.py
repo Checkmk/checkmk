@@ -4234,6 +4234,26 @@ class ServiceAvailabilityClient(RestApiClient):
         )
 
 
+class MonitorHostsClient(RestApiClient):
+    default_version = APIVersion.INTERNAL
+
+    def list_all(
+        self,
+        limit: int,
+        expect_ok: bool = True,
+    ) -> Response:
+        return self.request(
+            "get",
+            url="/monitor/hosts",
+            query_params=_only_set_keys(
+                {
+                    "limit": limit,
+                }
+            ),
+            expect_ok=expect_ok,
+        )
+
+
 class DisabledEndpointStubClient(RestApiClient):
     """Test-only client for verifying the disabled_endpoint mechanism returns 403."""
 
@@ -4315,6 +4335,7 @@ class ClientRegistry:
     HostAvailability: HostAvailabilityClient
     ServiceAvailability: ServiceAvailabilityClient
     DisabledEndpointStub: DisabledEndpointStubClient
+    MonitorHosts: MonitorHostsClient
 
 
 def get_client_registry(request_handler: RequestHandler, url_prefix: str) -> ClientRegistry:
@@ -4378,4 +4399,5 @@ def get_client_registry(request_handler: RequestHandler, url_prefix: str) -> Cli
         HostAvailability=HostAvailabilityClient(request_handler, url_prefix),
         ServiceAvailability=ServiceAvailabilityClient(request_handler, url_prefix),
         DisabledEndpointStub=DisabledEndpointStubClient(request_handler, url_prefix),
+        MonitorHosts=MonitorHostsClient(request_handler, url_prefix),
     )

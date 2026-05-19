@@ -198,6 +198,7 @@ py_library(
         "omdlib/global_options.py",
         "omdlib/init_scripts.py",
         "omdlib/instance_id.py",
+        "omdlib/jaeger.py",
         "omdlib/livestatus.py",
         "omdlib/main.py",
         "omdlib/main_site_user.py",

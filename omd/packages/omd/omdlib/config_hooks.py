@@ -35,6 +35,7 @@ from omdlib.config_choices import (
     IpListenAddressHasError,
     NetworkPortHasError,
 )
+from omdlib.jaeger import write_jaeger_admin_port_conf
 from omdlib.livestatus import (
     set_livestatus_tcp,
     set_livestatus_tcp_instances,
@@ -481,6 +482,24 @@ def _config_set(
         case "LIVESTATUS_TCP_PER_SOURCE":
             try:
                 output = set_livestatus_tcp_per_source(site.name, config, omd_path, value)
+            except Exception:
+                traceback.print_exc()
+                return
+        case "TRACE_JAEGER_ADMIN_PORT":
+            site_configs = _build_site_configs(site.name, omd_path)
+            _report_error("TRACE_JAEGER_ADMIN_PORT", site_configs.sites_with_unreadable_configs)
+            try:
+                new_value = str(
+                    _next_free_port(
+                        "TRACE_JAEGER_ADMIN_PORT", site.name, int(value), site_configs.configs
+                    )
+                )
+                if value != new_value:
+                    sys.stderr.write(
+                        f"The port {value} is in use. I've chosen {new_value} instead.\n"
+                    )
+                output = new_value
+                write_jaeger_admin_port_conf(SitePaths.from_site_name(site.name).home, new_value)
             except Exception:
                 traceback.print_exc()
                 return

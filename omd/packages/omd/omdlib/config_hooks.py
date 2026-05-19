@@ -44,7 +44,7 @@ from omdlib.livestatus import (
 )
 from omdlib.site_paths import SitePaths
 from omdlib.sites import all_sites
-from omdlib.system_apache import set_apache_tcp_addr, set_apache_tcp_port
+from omdlib.system_apache import write_apache_listen_conf
 
 from cmk.ccc.exceptions import MKTerminate
 from cmk.ccc.version import edition
@@ -398,7 +398,7 @@ def _config_set(
         case "APACHE_TCP_ADDR":
             try:
                 port = config.get("APACHE_TCP_PORT", "0")
-                set_apache_tcp_addr(SitePaths.from_site_name(site.name).home, value, port)
+                write_apache_listen_conf(SitePaths.from_site_name(site.name).home, value, port)
             except Exception:
                 traceback.print_exc()
                 return
@@ -410,7 +410,7 @@ def _config_set(
                     _next_free_port("APACHE_TCP_PORT", site.name, int(value), site_configs.configs)
                 )
                 addr = config.get("APACHE_TCP_ADDR", "127.0.0.1")
-                set_apache_tcp_port(SitePaths.from_site_name(site.name).home, addr, new_value)
+                write_apache_listen_conf(SitePaths.from_site_name(site.name).home, addr, new_value)
                 if value != new_value:
                     sys.stderr.write(
                         f"Apache port {value} is in use. I've chosen {new_value} instead.\n"

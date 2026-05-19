@@ -189,13 +189,14 @@ export function createStatusBar(
       const watcher = vscode.workspace.createFileSystemWatcher(
         new vscode.RelativePattern(wsPath, pattern)
       )
+      const refresh = (): void => (onBuildComplete ? onBuildComplete() : refreshStatus())
       const handler = delay
         ? () =>
             setTimeout(() => {
-              refreshStatus()
+              refresh()
               if (branchSwitch) void notifyBranchSwitch()
             }, delay)
-        : () => refreshStatus()
+        : () => refresh()
       if (events.includes('change')) watcher.onDidChange(handler)
       if (events.includes('create')) watcher.onDidCreate(handler)
       if (events.includes('delete')) watcher.onDidDelete(handler)

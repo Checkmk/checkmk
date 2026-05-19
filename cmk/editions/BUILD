@@ -24,7 +24,7 @@ py_library(
         "//cmk/diagnostics",
         "//cmk/diskspace",
         "//cmk/fields",
-        "//cmk/gui",
+        "//cmk/gui:app",
         "//cmk/gui/openapi/spec/spec_generator:_core",
         "//cmk/inventory",
         "//cmk/inventory:cmk_inventory_main",

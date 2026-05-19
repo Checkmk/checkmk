@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import importlib
+import importlib.resources
 import re
 import sys
 from collections.abc import Generator
@@ -12,6 +13,7 @@ from pprint import pformat
 from types import ModuleType
 from typing import Final, get_args
 
+import cmk.base.core.nagios  # astrein: disable=cmk-module-layer-violation
 from cmk.base.core.nagios import HostCheckConfig  # astrein: disable=cmk-module-layer-violation
 from cmk.ccc.hostaddress import HostAddress, HostName  # astrein: disable=cmk-module-layer-violation
 from cmk.discover_plugins import PluginLocation  # astrein: disable=cmk-module-layer-violation
@@ -96,11 +98,6 @@ class NagiosCorePluginImport:
 
     def dump_host_check_file(self) -> None:
         """Creates a host check file which loads all agent based plugins"""
-
-        template_file: Path = (
-            self.omd_root / "lib/python3/cmk/base/core/nagios/_host_check_template.py"
-        )
-
         plugin_locations = [
             PluginLocation(module=module_name, name=plugin_name)
             for module_name, plugin_names in self.agent_based_plugins.items()
@@ -120,7 +117,9 @@ class NagiosCorePluginImport:
             ipv6addresses={},
             hostname=self.host_name,
         )
-        template_text = template_file.read_text(encoding="utf-8")
+        template_text = importlib.resources.read_text(
+            cmk.base.core.nagios, "_host_check_template.py", encoding="utf-8"
+        )
         startpos = template_text.find("CONFIG = HostCheckConfig(")
         endpos = template_text.find(")\n", startpos) + 1
         replacement = f"CONFIG = {pformat(host_check_config)}"

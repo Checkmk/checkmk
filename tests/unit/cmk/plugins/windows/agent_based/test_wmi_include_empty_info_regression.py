@@ -13,11 +13,11 @@ from collections.abc import Mapping
 import pytest
 
 from cmk.agent_based.v2 import Service
-from cmk.legacy_checks.wmi_webservices import (
+from cmk.plugins.windows.agent_based.libwmi import parse_wmi_table, WMITable
+from cmk.plugins.windows.agent_based.wmi_webservices import (
     check_wmi_webservices,
     discover_wmi_webservices,
 )
-from cmk.plugins.windows.agent_based.libwmi import parse_wmi_table, WMITable
 
 
 @pytest.fixture(name="string_table_empty")

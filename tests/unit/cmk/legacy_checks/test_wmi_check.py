@@ -99,8 +99,8 @@ info_msx_info_store_1 = [
 
 
 def test_wmi_webservices_no_discovery_on_timeout() -> None:
-    from cmk.legacy_checks.wmi_webservices import discover_wmi_webservices
     from cmk.plugins.windows.agent_based.libwmi import parse_wmi_table
+    from cmk.plugins.windows.agent_based.wmi_webservices import discover_wmi_webservices
 
     assert not list(discover_wmi_webservices(parse_wmi_table(info_wmi_timeout)))
 

@@ -9,8 +9,11 @@
 import pytest
 
 from cmk.agent_based.v2 import Metric, Result, Service, State, StringTable
-from cmk.legacy_checks.wmi_webservices import check_wmi_webservices, discover_wmi_webservices
 from cmk.plugins.windows.agent_based.libwmi import parse_wmi_table
+from cmk.plugins.windows.agent_based.wmi_webservices import (
+    check_wmi_webservices,
+    discover_wmi_webservices,
+)
 
 # Test data from the dataset - abbreviated version showing the key structure
 _INFO = [

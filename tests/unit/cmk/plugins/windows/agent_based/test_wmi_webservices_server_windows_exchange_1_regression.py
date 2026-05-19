@@ -14,7 +14,7 @@ from typing import Any
 import pytest
 
 from cmk.agent_based.v2 import Metric, Result, State
-from cmk.legacy_checks import wmi_webservices
+from cmk.plugins.windows.agent_based import wmi_webservices
 from cmk.plugins.windows.agent_based.libwmi import parse_wmi_table
 
 

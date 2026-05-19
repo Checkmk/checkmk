@@ -3009,14 +3009,12 @@ pysmi==1.6.3 \
     #   -c requirements.txt
     #   -r cmk/requirements.in
     #   -r packages/cmk-ec/requirements.in
-    #   snmpsim
 pysnmp==7.1.22 \
     --hash=sha256:37ac595c7f0c1c00514505939b4dcf5b4fd5a9ffe51b0349f60bb640c11b0f77 \
     --hash=sha256:57e704a6ba2bbf571d16cd5dc08b89bb3fa0ebeb5f4f26b87fececad3b3de7a6
     # via
     #   -c requirements.txt
     #   -r packages/cmk-ec/requirements.in
-    #   snmpsim
 pyspnego==0.12.0 \
     --hash=sha256:84cc8dae6ad21e04b37c50c1d3c743f05f193e39498f6010cc68ec1146afd007 \
     --hash=sha256:e1d9cd3520a87a1d6db8d68783b17edc4e1464eae3d51ead411a51c82dbaae67
@@ -3666,12 +3664,6 @@ smmap==5.0.2 \
     # via
     #   -c requirements.txt
     #   gitdb
-snmpsim==1.2.1 \
-    --hash=sha256:7464160d7c7c603b18780fd00758b71bee8022ace5f51264c09b2e019f33f317 \
-    --hash=sha256:c52998be6c72270ba510b30dd9d425fba3af9db80249a9c28c27df0db0831ca5
-    # via
-    #   -c requirements.txt
-    #   -r cmk/requirements.in
 starlette==0.52.1 \
     --hash=sha256:0029d43eb3d273bc4f83a08720b4912ea4b071087a3b48db01b7c839f7954d74 \
     --hash=sha256:834edd1b0a23167694292e94f597773bc3f89f362be6effee198165a35d62933

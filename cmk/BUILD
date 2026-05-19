@@ -152,7 +152,6 @@ py_wheel(
         "setproctitle",
         "setuptools",
         "setuptools-scm",
-        "snmpsim",
         "urllib3",
         "uvicorn",
         "watchdog",
@@ -615,7 +614,6 @@ _KNOWN_UNDECLARED = [
 _KNOWN_UNUSED = [
     "setuptools",  # pinned transitive dependency
     "setuptools-scm",
-    "snmpsim",
     "pysmi",  # used outside of cmk/ in omd/packages/net-snmp/compile_mibs.py
 ]
 

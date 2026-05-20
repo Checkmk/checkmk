@@ -50,7 +50,7 @@ pub struct Env {
     find_runtime: bool,
 
     /// filtering sections for sync/async, possible values are "sync", "async", "all"
-    execution: SectionFilter,
+    filter: SectionFilter,
 
     /// generate plugins and stop
     generate_plugins: Option<PathBuf>,
@@ -71,7 +71,7 @@ impl Env {
             disable_caching: args.no_spool,
             detect_sids: args.detect_sids,
             find_runtime: args.find_runtime,
-            execution: args.filter.clone().unwrap_or_default(),
+            filter: args.filter.unwrap_or_default(),
             generate_plugins: args.generate_plugins.clone(),
         }
     }
@@ -104,8 +104,8 @@ impl Env {
         self.generate_plugins.as_deref()
     }
 
-    pub fn execution(&self) -> SectionFilter {
-        self.execution.clone()
+    pub fn filter(&self) -> SectionFilter {
+        self.filter
     }
 
     fn build_dir(dir: &Option<PathBuf>, fallback: &Option<&Path>) -> Option<PathBuf> {

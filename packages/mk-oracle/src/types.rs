@@ -283,12 +283,13 @@ impl SqlQuery {
     }
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, Default)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
 pub enum SectionFilter {
     #[default]
     All,
     Sync,
-    Async,
+    AsyncAll,
+    AsyncBuiltinSections,
     AsyncCustomMetrics,
 }
 
@@ -297,7 +298,7 @@ impl From<&str> for SectionFilter {
         match s.to_lowercase().as_str() {
             "all" => SectionFilter::All,
             "sync" => SectionFilter::Sync,
-            "async" => SectionFilter::Async,
+            "async" => SectionFilter::AsyncBuiltinSections,
             "async-custom-metrics" => SectionFilter::AsyncCustomMetrics,
             _ => panic!("Invalid execution type: {}", s),
         }
@@ -369,7 +370,10 @@ mod tests {
     fn test_execution() {
         assert_eq!(SectionFilter::from("all"), SectionFilter::All);
         assert_eq!(SectionFilter::from("SYNC"), SectionFilter::Sync);
-        assert_eq!(SectionFilter::from("aSync"), SectionFilter::Async);
+        assert_eq!(
+            SectionFilter::from("aSync"),
+            SectionFilter::AsyncBuiltinSections
+        );
         assert_eq!(
             SectionFilter::from("aSync-custom-metrics"),
             SectionFilter::AsyncCustomMetrics

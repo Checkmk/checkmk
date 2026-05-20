@@ -19,7 +19,7 @@ use crate::emit::header;
 use crate::ora_sql::backend::{make_custom_spot, make_spot, ClosedSpot, Opened, OpenedSpot, Spot};
 use crate::ora_sql::section::Section;
 use crate::setup::{detect_runtime, Env};
-use crate::types::{InstanceName, SqlQuery, UseHostClient};
+use crate::types::{InstanceName, SectionFilter, SqlQuery, UseHostClient};
 use std::collections::HashSet;
 
 use crate::config::authentication::AuthType;
@@ -86,73 +86,92 @@ pub async fn generate_data(
     ora_sql: &config::ora_sql::Config,
     environment: &Env,
 ) -> Result<Vec<String>> {
-    // we need to set TNS_ADMIN for Oracle client for the case alias is used
-    add_tns_admin_to_env(ora_sql.conn());
+    if let Some(filter) = remap_filter(environment.filter(), ora_sql) {
+        // we need to set TNS_ADMIN for Oracle client for the case alias is used
+        add_tns_admin_to_env(ora_sql.conn());
 
-    // Set up wallet environment (creates sqlnet.ora with wallet location)
-    // Only if tns_admin is NOT explicitly set in config
-    let tns_admin_explicitly_set = ora_sql.conn().tns_admin().is_some();
-    if ora_sql.auth().auth_type() == &AuthType::Wallet && !tns_admin_explicitly_set {
-        if let Err(e) = setup_wallet_environment(None) {
-            log::error!("Failed to setup wallet environment: {}", e);
-            return Err(e).context("Failed to setup wallet environment");
-        }
-    }
-
-    // TODO: detect instances
-    // TODO: apply to config detected instances
-    // TODO: customize instances
-    // TODO: resulting in the list of endpoints
-
-    let all = calc_all_spots(vec![ora_sql.endpoint()], ora_sql.instances());
-    let all = filter_spots(all, ora_sql.discovery());
-
-    let sections = ora_sql
-        .product()
-        .sections()
-        .iter()
-        .filter_map(|s| {
-            if !s.is_allowed(environment.execution()) {
-                log::info!(
-                    "Skip section: {:?} not allowed in {:?}",
-                    s,
-                    environment.execution()
-                );
-                return None;
+        // Set up wallet environment (creates sqlnet.ora with wallet location)
+        // Only if tns_admin is NOT explicitly set in config
+        let tns_admin_explicitly_set = ora_sql.conn().tns_admin().is_some();
+        if ora_sql.auth().auth_type() == &AuthType::Wallet && !tns_admin_explicitly_set {
+            if let Err(e) = setup_wallet_environment(None) {
+                log::error!("Failed to setup wallet environment: {}", e);
+                return Err(e).context("Failed to setup wallet environment");
             }
-            let s = Section::new(s, ora_sql.product().cache_age());
-            Some(s)
-        })
-        .collect::<Vec<_>>();
-    let mut output: Vec<String> = sections
-        .iter()
-        .filter_map(|s| s.to_signaling_header())
-        .collect();
+        }
 
-    let (root_spots, root_errors) = connect_spots(all, None);
-    let (work_spots, work_errors) = make_spot_work_results(
-        root_spots,
-        sections,
-        ora_sql.instances(),
-        ora_sql.product().cache_age(),
-        ora_sql.params(),
-    );
-    let results = if ora_sql.options().threads() > 1 {
-        process_spot_works_para(work_spots, ora_sql.options().threads())
+        // TODO: detect instances
+        // TODO: apply to config detected instances
+        // TODO: customize instances
+        // TODO: resulting in the list of endpoints
+
+        let all = calc_all_spots(vec![ora_sql.endpoint()], ora_sql.instances());
+        let all = filter_spots(all, ora_sql.discovery());
+
+        let sections = ora_sql
+            .product()
+            .sections()
+            .iter()
+            .filter_map(|s| {
+                if s.is_allowed(filter) {
+                    Some(Section::new(s, ora_sql.product().cache_age()))
+                } else {
+                    log::info!("Skip section: {:?} not allowed in {:?}", s, filter);
+                    None
+                }
+            })
+            .collect::<Vec<_>>();
+        let mut output: Vec<String> = sections
+            .iter()
+            .filter_map(|s| s.to_signaling_header())
+            .collect();
+
+        let (root_spots, root_errors) = connect_spots(all, None);
+        let (work_spots, work_errors) = make_spot_work_results(
+            root_spots,
+            sections,
+            ora_sql.instances(),
+            ora_sql.product().cache_age(),
+            ora_sql.params(),
+        );
+        let results = if ora_sql.options().threads() > 1 {
+            process_spot_works_para(work_spots, ora_sql.options().threads())
+        } else {
+            process_spot_works(work_spots)
+        };
+        output.extend(results);
+
+        for error in root_errors {
+            output.push(header(names::INSTANCE, '|'));
+            output.push(format!("{}", error));
+        }
+        for (_closed, error) in work_errors {
+            output.push(header(names::INSTANCE, '|'));
+            output.push(format!("{}", error));
+        }
+        Ok(output)
     } else {
-        process_spot_works(work_spots)
-    };
-    output.extend(results);
+        log::debug!("Filter {:?} skips all sections", environment.filter());
+        Ok(vec![])
+    }
+}
 
-    for error in root_errors {
-        output.push(header(names::INSTANCE, '|'));
-        output.push(format!("{}", error));
+/// Remap filter according to the following rules:
+/// If filter is AsyncCustomMetrics and cache ages are equal,
+///     then it is remapped to None (skipped).
+/// If filter is AsyncBuiltinSections and cache ages are equal,
+///     then it is remapped to Some(AsyncAll).
+/// Otherwise filter is unchanged.
+fn remap_filter(filter: SectionFilter, ora_sql: &config::ora_sql::Config) -> Option<SectionFilter> {
+    if ora_sql.cache_age() != ora_sql.custom_metrics_cache_age() {
+        return Some(filter);
     }
-    for (_closed, error) in work_errors {
-        output.push(header(names::INSTANCE, '|'));
-        output.push(format!("{}", error));
+
+    match filter {
+        SectionFilter::AsyncCustomMetrics => None,
+        SectionFilter::AsyncBuiltinSections => Some(SectionFilter::AsyncAll),
+        _ => Some(filter),
     }
-    Ok(output)
 }
 
 fn process_spot_works(works: Vec<SpotWorks>) -> Vec<String> {
@@ -599,5 +618,81 @@ mod tests {
             vec!["A".to_string(), "B".to_string()], // ignored
         );
         assert_eq!(filter_spots(all.clone(), &d).len(), 0);
+    }
+
+    fn config_with_same_cache_age() -> config::ora_sql::Config {
+        config::ora_sql::Config::default()
+    }
+
+    fn config_with_different_cache_age() -> config::ora_sql::Config {
+        let yaml = r#"
+---
+oracle:
+  main:
+    authentication:
+      username: "foo"
+      password: "bar"
+      type: "standard"
+    cache_age: 600
+    custom_metrics_cache_age: 120
+"#;
+        config::ora_sql::Config::from_string(yaml).unwrap().unwrap()
+    }
+
+    #[test]
+    fn test_remap_filter_same_cache_age_skips_custom_metrics() {
+        let cfg = config_with_same_cache_age();
+        assert_eq!(remap_filter(SectionFilter::AsyncCustomMetrics, &cfg), None);
+    }
+
+    #[test]
+    fn test_remap_filter_same_cache_age_promotes_builtin_to_all() {
+        let cfg = config_with_same_cache_age();
+        assert_eq!(
+            remap_filter(SectionFilter::AsyncBuiltinSections, &cfg),
+            Some(SectionFilter::AsyncAll)
+        );
+    }
+
+    #[test]
+    fn test_remap_filter_same_cache_age_passes_others() {
+        let cfg = config_with_same_cache_age();
+        assert_eq!(
+            remap_filter(SectionFilter::All, &cfg),
+            Some(SectionFilter::All)
+        );
+        assert_eq!(
+            remap_filter(SectionFilter::Sync, &cfg),
+            Some(SectionFilter::Sync)
+        );
+        assert_eq!(
+            remap_filter(SectionFilter::AsyncAll, &cfg),
+            Some(SectionFilter::AsyncAll)
+        );
+    }
+
+    #[test]
+    fn test_remap_filter_different_cache_age_no_remapping() {
+        let cfg = config_with_different_cache_age();
+        assert_eq!(
+            remap_filter(SectionFilter::AsyncCustomMetrics, &cfg),
+            Some(SectionFilter::AsyncCustomMetrics)
+        );
+        assert_eq!(
+            remap_filter(SectionFilter::AsyncBuiltinSections, &cfg),
+            Some(SectionFilter::AsyncBuiltinSections)
+        );
+        assert_eq!(
+            remap_filter(SectionFilter::All, &cfg),
+            Some(SectionFilter::All)
+        );
+        assert_eq!(
+            remap_filter(SectionFilter::Sync, &cfg),
+            Some(SectionFilter::Sync)
+        );
+        assert_eq!(
+            remap_filter(SectionFilter::AsyncAll, &cfg),
+            Some(SectionFilter::AsyncAll)
+        );
     }
 }

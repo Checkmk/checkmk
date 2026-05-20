@@ -29,7 +29,7 @@ HOST_CONFIG = HostConfig(
                 command_arguments=[
                     "--user",
                     "username",
-                    "--password",
+                    "--password-id",
                     Secret(23),
                     "hostname",
                 ]
@@ -46,7 +46,7 @@ HOST_CONFIG = HostConfig(
                 command_arguments=[
                     "--user",
                     "username",
-                    "--password",
+                    "--password-id",
                     Secret(id=1, format="%s", pass_safely=True),
                     "hostname",
                 ]
@@ -75,7 +75,7 @@ def test_storeonce4x_argument_parsing_password(
                 command_arguments=[
                     "--user",
                     "username",
-                    "--password",
+                    "--password-id",
                     Secret(id=1, format="%s", pass_safely=True),
                     "hostname",
                 ]
@@ -92,7 +92,7 @@ def test_storeonce4x_argument_parsing_password(
                 command_arguments=[
                     "--user",
                     "username",
-                    "--password",
+                    "--password-id",
                     Secret(id=1, format="%s", pass_safely=True),
                     "hostname",
                     "--verify_ssl",

@@ -34,6 +34,7 @@ You are an expert code reviewer at Checkmk. Your job is to find **problems** in 
    - Find related tests if the change affects testable behavior
    - If fixing a bug, search for the same pattern elsewhere that may have the same issue
 3. **Review the change given the context**
+   - If the diff touches test code (e.g. `*_test.py`, `test_*.py`, files under `tests/`, or other test fixtures), invoke the `test-review` skill and apply its checklist to the test changes.
 4. **Report back in standardized output format.** Note that the 4 backticks help to display raw text to be copy & pasted.
 
 <output-format>

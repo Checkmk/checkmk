@@ -17,9 +17,10 @@
 // @callback: A groovy function callback to call after a may specified cmd
 //
 // Credentials specific patterns
-// @credentialsLocation: Target location of a credential as file
-// @credentialsFileId: Name of a Jenkins file credential to use, together with credentialsLocation
-// @credentialsUsernameId: Name of a Jenkins username/password credential to use, together with credentialsLocation
+// @creds_files: List of Maps, each map has to contain the keys location and credentialsId
+// @creds_usernames: List of Maps, each map has to contain the keys location and credentialsId
+// @location: Target location of a credential as file
+// @credentialsId: Name of a Jenkins username/password or file credential ID to use, together with location
 //
 void execute_test(Map config = [:]) {
     def artifacts_helper = load("${checkout_dir}/buildscripts/scripts/utils/upload_artifacts.groovy");
@@ -39,6 +40,8 @@ void execute_test(Map config = [:]) {
         output_file: "",
         container_name: "minimal-ubuntu-checkmk-${container_safe_branch_name}",
         disable_hot_cache: false,
+        creds_files: [],
+        creds_usernames: [],
     ] << config;
 
     stage("Run ${defaultDict.name}") {
@@ -69,20 +72,10 @@ void execute_test(Map config = [:]) {
                         ] + (env.MOUNT_SHARED_REPOSITORY_CACHE == "1" ? [] : ['WORKSPACE', 'MODULE.bazel.lock']),
                         disable_hot_cache: env.USE_STASHED_BAZEL_FOLDER == "0" || defaultDict.disable_hot_cache,
                     ]) {
-                        if (defaultDict.credentialsFileId) {
-                            withCredentialFileAtLocation(creds: [
-                                [credentialsId: defaultDict.credentialsFileId, location: defaultDict.credentialsLocation]
-                            ]) {
+                        withCredentialFileAtLocation(creds: defaultDict.creds_files) {
+                            withCredentialUsernamePasswordAtLocation(creds: defaultDict.creds_usernames) {
                                 run_this(defaultDict);
                             }
-                        } else if (defaultDict.credentialsUsernameId) {
-                            withCredentialUsernamePasswordAtLocation(creds: [
-                                [credentialsId: defaultDict.credentialsUsernameId, location: defaultDict.credentialsLocation]
-                            ]) {
-                                run_this(defaultDict);
-                            }
-                        } else {
-                            run_this(defaultDict);
                         }
                     }
                 }

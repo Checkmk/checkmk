@@ -68,6 +68,12 @@ provide_clone = { repo_name, credentials_id ->
 withCredentialFileAtLocation = { Map args, Closure body ->
     body.resolveStrategy = Closure.OWNER_FIRST;
     body.delegate = [:];
+
+    if (!args.creds) {
+        body();
+        return;
+    }
+
     def cp_cmd = onWindows ? "pwsh -c cp" : "cp"
     def rm_cmd = onWindows ? "pwsh -c rm -Force" : "rm -f"
 
@@ -98,6 +104,12 @@ withCredentialFileAtLocation = { Map args, Closure body ->
 withCredentialUsernamePasswordAtLocation = { Map args, Closure body ->
     body.resolveStrategy = Closure.OWNER_FIRST;
     body.delegate = [:];
+
+    if (!args.creds) {
+        body();
+        return;
+    }
+
     def rm_cmd = onWindows ? "pwsh -c rm -Force" : "rm -f"
 
     def bindings = [];

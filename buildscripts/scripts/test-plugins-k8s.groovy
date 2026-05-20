@@ -55,8 +55,9 @@ void main() {
             // test environment specific configs
             disable_hot_cache: true,
             prepare_fake_git_overlay: true,
-            credentialsUsernameId: "cmk-credentials",
-            credentialsLocation: "/etc/.cmk-credentials",
+            creds_usernames: [
+                [credentialsId: "cmk-credentials", location: "/etc/.cmk-credentials"],
+            ],
 
             // test specific configs
             result_path: "${checkout_dir}/test-results/${distro}",

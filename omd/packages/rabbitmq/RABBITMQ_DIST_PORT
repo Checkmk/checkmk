@@ -13,12 +13,4 @@ case "${1}" in
     choices)
         echo "[0-9]{1,5}"
         ;;
-    set)
-        PORT=$("${OMD_ROOT}/lib/omd/next_free_port" RABBITMQ_DIST_PORT "${2}")
-
-        if [ "${PORT}" != "${2}" ]; then
-            echo "RabbitMQ distribution port ${2} is in use. I've choosen ${PORT} instead." >&2
-            echo "${PORT}"
-        fi
-        ;;
 esac

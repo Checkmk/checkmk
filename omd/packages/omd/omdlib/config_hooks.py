@@ -548,6 +548,23 @@ def _config_set(
             except Exception:
                 traceback.print_exc()
                 return
+        case "RABBITMQ_DIST_PORT":
+            site_configs = _build_site_configs(site.name, omd_path)
+            _report_error("RABBITMQ_DIST_PORT", site_configs.sites_with_unreadable_configs)
+            try:
+                new_value = str(
+                    _next_free_port(
+                        "RABBITMQ_DIST_PORT", site.name, int(value), site_configs.configs
+                    )
+                )
+                if value != new_value:
+                    sys.stderr.write(
+                        f"RabbitMQ distribution port {value} is in use. I've chosen {new_value} instead.\n"
+                    )
+                output = new_value
+            except Exception:
+                traceback.print_exc()
+                return
         case _:
             exitcode, output = _call_hook(site, hook_name, ["set", value], verbose)
             if exitcode:

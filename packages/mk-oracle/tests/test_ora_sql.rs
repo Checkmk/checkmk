@@ -1376,7 +1376,11 @@ fn test_detect_host_runtime() {
         std::env::var("ORACLE_HOME").is_ok_and(|v| !v.is_empty())
     };
     if local_exists {
-        assert!(detect_host_runtime().is_some());
+        assert!(
+            detect_host_runtime().is_some(),
+            "{:?}",
+            SqlDbEndpoint::from_env(ORA_ENDPOINT_ENV_VAR_LOCAL)
+        );
     } else {
         assert!(detect_host_runtime().is_none());
     }

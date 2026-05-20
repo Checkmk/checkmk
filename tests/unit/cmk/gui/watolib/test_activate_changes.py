@@ -1035,19 +1035,23 @@ def _make_change_spec(
     user_id: str = "cmkadmin",
     has_been_activated: bool = False,
 ) -> ChangeSpec:
-    return {
-        "id": change_id,
-        "action_name": "edit-host",
-        "text": f"Changed host {change_id}",
-        "object": None,
-        "user_id": user_id,
-        "domains": ["check_mk"],
-        "time": 1720800176.0,
-        "need_sync": True,
-        "need_restart": True,
-        "has_been_activated": has_been_activated,
-        "prevent_discard_changes": False,
-    }
+    return ChangeSpec(
+        {
+            "id": change_id,
+            "action_name": "edit-host",
+            "text": f"Changed host {change_id}",
+            "object": None,
+            "user_id": UserId(user_id),
+            "domains": ["check_mk"],
+            "time": 1720800176.0,
+            "need_sync": True,
+            "need_restart": True,
+            "domain_settings": {},
+            "has_been_activated": has_been_activated,
+            "prevent_discard_changes": False,
+            "diff_text": None,
+        }
+    )
 
 
 class _NoLicenseEffect:

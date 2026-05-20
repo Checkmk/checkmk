@@ -1498,7 +1498,7 @@ class ActivateChanges:
                     PendingChangeSummary(
                         changeId=change["id"],
                         changeText=change["text"],
-                        user=change["user_id"],
+                        user=change["user_id"] or "",
                         time=change["time"],
                         foreignChange=is_foreign_change(change),
                         whichSites=["All sites"]
@@ -1527,7 +1527,7 @@ def prevent_discard_changes(change: ChangeSpec) -> bool:
 
 
 def is_foreign_change(change: ChangeSpec) -> bool:
-    return change["user_id"] and change["user_id"] != user.id
+    return bool(change["user_id"]) and change["user_id"] != user.id
 
 
 def affects_all_sites(sites: Sequence[SiteId], change: ChangeSpec) -> bool:
@@ -1918,11 +1918,11 @@ class ActivateChangesManager:
                 self._persisted_changes.append(
                     asdict(
                         ActivationChange(
-                            **{
-                                k: v
-                                for k, v in change.items()
-                                if k in ("id", "action_name", "text", "user_id", "time")
-                            }
+                            id=change["id"],
+                            action_name=change["action_name"],
+                            text=change["text"],
+                            user_id=change["user_id"],
+                            time=change["time"],
                         )
                     )
                 )
@@ -3848,7 +3848,7 @@ def _reintegrate_site_local_users(
 @dataclass
 class ActivationChange:
     id: str
-    user_id: UserId
+    user_id: UserId | None
     action_name: str
     text: str
     time: float

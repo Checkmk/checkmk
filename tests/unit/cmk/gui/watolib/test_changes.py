@@ -146,17 +146,23 @@ class TestSiteChanges:
 
     @pytest.fixture(name="entry")
     def fixture_entry(self) -> ChangeSpec:
-        return {
-            "id": "d60ca3d4-7201-4a89-b66f-2f156192cad2",
-            "action_name": "create-host",
-            "text": "Created new host node1.",
-            "object": ObjectRef(ObjectRefType.Host, "node1"),
-            "user_id": "cmkadmin",
-            "domains": ["check_mk"],
-            "time": 1605461248.786142,
-            "need_sync": True,
-            "need_restart": True,
-        }
+        return ChangeSpec(
+            {
+                "id": "d60ca3d4-7201-4a89-b66f-2f156192cad2",
+                "action_name": "create-host",
+                "text": "Created new host node1.",
+                "object": ObjectRef(ObjectRefType.Host, "node1"),
+                "user_id": UserId("cmkadmin"),
+                "domains": ["check_mk"],
+                "time": 1605461248.786142,
+                "need_sync": True,
+                "need_restart": True,
+                "domain_settings": {},
+                "prevent_discard_changes": False,
+                "diff_text": None,
+                "has_been_activated": False,
+            }
+        )
 
     def test_read_not_existing(self, store: SiteChanges) -> None:
         assert not store.exists()
@@ -170,7 +176,7 @@ class TestSiteChanges:
         store.append(entry)
         assert list(store.read()) == [entry]
 
-        entry2 = {**entry, "id": "1"}
+        entry2: ChangeSpec = {**entry, "id": "1"}
         with store.mutable_view() as mv:
             mv[:] = [entry2]
 

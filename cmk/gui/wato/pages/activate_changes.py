@@ -74,6 +74,7 @@ from cmk.gui.watolib.config_domain_name import ABCConfigDomain, DomainRequest, D
 from cmk.gui.watolib.hosts_and_folders import folder_preserving_link, folder_tree, Host
 from cmk.gui.watolib.mode import ModeRegistry, WatoMode
 from cmk.gui.watolib.objref import ObjectRef, ObjectRefType
+from cmk.gui.watolib.site_changes import ChangeSpec
 from cmk.licensing.registry import get_licensing_user_effect
 from cmk.licensing.usage import get_license_usage_report_validity, LicenseUsageReportValidity
 from cmk.utils import paths, render
@@ -285,7 +286,7 @@ class ModeRevertChanges(WatoMode):
 
 
 def _change_table(
-    activation_site_ids: Sequence[SiteId], changes: list[tuple[str, dict]], title: str
+    activation_site_ids: Sequence[SiteId], changes: list[tuple[str, ChangeSpec]], title: str
 ) -> None:
     with table_element(
         "changes",

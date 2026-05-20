@@ -115,6 +115,29 @@ OS_ORACLE_FILES: Sequence[tuple[OS, Sequence[OraclePluginFile]]] = (
     SOLARIS_ORACLE_FILES,
 )
 
+CUSTOM_METRICS_ASYNC_FILES: Mapping[OS, OraclePluginFile] = {
+    OS.LINUX: OraclePluginFile(
+        source=Path("oracle_unified_async_custom_metrics"),
+        target=Path("oracle_unified_async_custom_metrics"),
+        cached=True,
+    ),
+    OS.WINDOWS: OraclePluginFile(
+        source=Path("oracle_unified_async_custom_metrics.ps1"),
+        target=Path("oracle_unified_async_custom_metrics.ps1"),
+        cached=True,
+    ),
+    OS.AIX: OraclePluginFile(
+        source=Path("oracle_unified_async_custom_metrics.aix"),
+        target=Path("oracle_unified_async_custom_metrics.aix"),
+        cached=True,
+    ),
+    OS.SOLARIS: OraclePluginFile(
+        source=Path("oracle_unified_async_custom_metrics.solaris"),
+        target=Path("oracle_unified_async_custom_metrics.solaris"),
+        cached=True,
+    ),
+}
+
 GuiSectionOptions = Mapping[str, Literal["synchronous", "asynchronous", "disabled"]]
 
 
@@ -273,6 +296,9 @@ def get_oracle_plugin_files(confm: GuiConfig) -> FileGenerator:
         return
 
     config_lines = list(_get_oracle_yaml_lines(confm))
+    cache_age = confm.main.get_active_cache_age()
+    custom_metrics_cache_age = confm.main.get_active_custom_metrics_cache_age()
+    deploy_custom_metrics = cache_age != custom_metrics_cache_age
 
     for base_os, files in OS_ORACLE_FILES:
         for file in files:
@@ -280,7 +306,16 @@ def get_oracle_plugin_files(confm: GuiConfig) -> FileGenerator:
                 base_os=base_os,
                 target=file.target,
                 source=file.source,
-                interval=confm.main.get_active_cache_age() if file.cached else None,
+                interval=cache_age if file.cached else None,
+            )
+
+        if deploy_custom_metrics:
+            cm_file = CUSTOM_METRICS_ASYNC_FILES[base_os]
+            yield Plugin(
+                base_os=base_os,
+                target=cm_file.target,
+                source=cm_file.source,
+                interval=custom_metrics_cache_age,
             )
 
         yield PluginConfig(

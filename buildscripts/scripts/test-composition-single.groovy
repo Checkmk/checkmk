@@ -1,6 +1,6 @@
 #!groovy
 
-/// file: test-composition-single-f12less-k8s.groovy
+/// file: test-composition-single.groovy
 
 void main() {
     check_job_parameters([

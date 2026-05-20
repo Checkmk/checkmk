@@ -249,16 +249,22 @@ impl Section {
         &self.affinity
     }
 
-    pub fn is_allowed(&self, execution: SectionFilter) -> bool {
-        match self.kind {
-            SectionKind::Sync => {
-                execution == SectionFilter::All || execution == SectionFilter::Sync
+    pub fn is_allowed(&self, filter: SectionFilter) -> bool {
+        match filter {
+            SectionFilter::Sync => self.kind == SectionKind::Sync,
+            SectionFilter::AsyncAll => self.kind == SectionKind::Async,
+            SectionFilter::All => self.kind != SectionKind::Disabled,
+            SectionFilter::AsyncBuiltinSections => {
+                self.kind == SectionKind::Async && !self.is_custom_metric()
             }
-            SectionKind::Async => {
-                execution == SectionFilter::All || execution == SectionFilter::Async
+            SectionFilter::AsyncCustomMetrics => {
+                self.kind == SectionKind::Async && self.is_custom_metric()
             }
-            SectionKind::Disabled => false,
         }
+    }
+
+    pub fn is_custom_metric(&self) -> bool {
+        self.item_value.is_some()
     }
 }
 
@@ -424,23 +430,47 @@ mod tests {
     use std::collections::HashSet;
 
     #[test]
-    fn test_section_allowed() {
+    fn test_async_section_allowed() {
         let async_section = SectionBuilder::new("async").set_async(true).build();
         assert!(async_section.is_allowed(SectionFilter::All));
         assert!(!async_section.is_allowed(SectionFilter::Sync));
-        assert!(async_section.is_allowed(SectionFilter::Async));
+        assert!(async_section.is_allowed(SectionFilter::AsyncAll));
+        assert!(async_section.is_allowed(SectionFilter::AsyncBuiltinSections));
+        assert!(!async_section.is_allowed(SectionFilter::AsyncCustomMetrics));
+    }
 
+    #[test]
+    fn test_async_metric_allowed() {
+        let async_section = SectionBuilder::new("async")
+            .set_async(true)
+            .set_item_value(ItemValue::from("AAA".to_string()))
+            .build();
+        assert!(async_section.is_allowed(SectionFilter::All));
+        assert!(!async_section.is_allowed(SectionFilter::Sync));
+        assert!(async_section.is_allowed(SectionFilter::AsyncAll));
+        assert!(!async_section.is_allowed(SectionFilter::AsyncBuiltinSections));
+        assert!(async_section.is_allowed(SectionFilter::AsyncCustomMetrics));
+    }
+
+    #[test]
+    fn test_sync_section_allowed() {
         let sync_section = SectionBuilder::new("sync").set_async(false).build();
         assert!(sync_section.is_allowed(SectionFilter::All));
         assert!(sync_section.is_allowed(SectionFilter::Sync));
-        assert!(!sync_section.is_allowed(SectionFilter::Async));
+        assert!(!sync_section.is_allowed(SectionFilter::AsyncAll));
+        assert!(!sync_section.is_allowed(SectionFilter::AsyncBuiltinSections));
+        assert!(!sync_section.is_allowed(SectionFilter::AsyncCustomMetrics));
+    }
 
+    #[test]
+    fn test_disabled_section_allowed() {
         let disabled = SectionBuilder::new("disabled").set_disabled().build();
         assert!(!disabled.is_allowed(SectionFilter::All));
         assert!(!disabled.is_allowed(SectionFilter::Sync));
-        assert!(!disabled.is_allowed(SectionFilter::Async));
+        assert!(!disabled.is_allowed(SectionFilter::AsyncAll));
+        assert!(!disabled.is_allowed(SectionFilter::AsyncBuiltinSections));
+        assert!(!disabled.is_allowed(SectionFilter::AsyncCustomMetrics));
     }
-
     #[test]
     fn test_section_affinity() {
         assert_eq!(SectionAffinity::from_text("all"), SectionAffinity::All);

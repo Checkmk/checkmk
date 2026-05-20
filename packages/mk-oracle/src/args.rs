@@ -70,6 +70,7 @@ pub struct Args {
     /// Use `all` to run all sections.
     /// Use `sync` to run only synchronous sections.
     /// Use `async` to run only asynchronous sections
+    /// Use `async-custom-metrics` to run only asynchronous custom metrics
     #[arg(short, long)]
     pub filter: Option<SectionFilter>,
 

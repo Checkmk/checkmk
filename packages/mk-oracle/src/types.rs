@@ -289,6 +289,7 @@ pub enum SectionFilter {
     All,
     Sync,
     Async,
+    AsyncCustomMetrics,
 }
 
 impl From<&str> for SectionFilter {
@@ -297,6 +298,7 @@ impl From<&str> for SectionFilter {
             "all" => SectionFilter::All,
             "sync" => SectionFilter::Sync,
             "async" => SectionFilter::Async,
+            "async-custom-metrics" => SectionFilter::AsyncCustomMetrics,
             _ => panic!("Invalid execution type: {}", s),
         }
     }
@@ -368,6 +370,16 @@ mod tests {
         assert_eq!(SectionFilter::from("all"), SectionFilter::All);
         assert_eq!(SectionFilter::from("SYNC"), SectionFilter::Sync);
         assert_eq!(SectionFilter::from("aSync"), SectionFilter::Async);
+        assert_eq!(
+            SectionFilter::from("aSync-custom-metrics"),
+            SectionFilter::AsyncCustomMetrics
+        );
+    }
+
+    #[test]
+    #[should_panic(expected = "Invalid execution type")]
+    fn test_execution_invalid() {
+        let _ = SectionFilter::from("bogus");
     }
 
     #[test]

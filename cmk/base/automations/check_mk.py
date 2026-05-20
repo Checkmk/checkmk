@@ -40,6 +40,7 @@ import cmk.ccc.site
 import cmk.utils.password_store
 import cmk.utils.paths
 import cmk.utils.timeperiod
+from cmk import trace
 from cmk.agent_based.v1.value_store import set_value_store_manager
 from cmk.automations.results import (
     ActiveCheckResult,
@@ -258,6 +259,8 @@ from cmk.utils.servicename import Item, ServiceName
 
 HistoryFile = str
 HistoryFilePair = tuple[HistoryFile, HistoryFile]
+
+tracer = trace.get_tracer()
 
 
 def _schedule_discovery_check(
@@ -970,8 +973,8 @@ def _execute_discovery(
             autochecks_dir=autochecks_dir,
             discovered_host_labels_dir=discovered_host_labels_dir,
         )
-    return CheckPreview(
-        table={
+    with tracer.span("preview.active_checks", attributes={"cmk.host_name": host_name}):
+        table_with_active_checks = {
             h: [
                 *table,
                 *_active_check_preview_rows(
@@ -987,7 +990,9 @@ def _execute_discovery(
                 *config_cache.custom_check_preview_rows(h),
             ]
             for h, table in passive_check_preview.table.items()
-        },
+        }
+    return CheckPreview(
+        table=table_with_active_checks,
         labels=passive_check_preview.labels,
         source_results=passive_check_preview.source_results,
         kept_labels=passive_check_preview.kept_labels,

@@ -9,6 +9,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Literal
 
+from cmk import trace
 from cmk.ccc import tty
 from cmk.ccc.exceptions import OnError
 from cmk.ccc.hostaddress import HostAddress, HostName
@@ -56,6 +57,9 @@ from cmk.utils.log import console
 from cmk.utils.servicename import Item
 
 __all__ = ["CheckPreview", "CheckPreviewEntry", "get_check_preview"]
+
+
+tracer = trace.get_tracer()
 
 
 @dataclass(frozen=True)
@@ -116,8 +120,10 @@ def get_check_preview(
     all services if possible. Those are for example (only?) displayed in the UI discovery page
     """
 
-    fetched = fetcher(host_name, ip_address=ip_address)
-    host_sections = parser((f[0], f[1]) for f in fetched)
+    with tracer.span("preview.fetch", attributes={"cmk.host_name": host_name}):
+        fetched = fetcher(host_name, ip_address=ip_address)
+    with tracer.span("preview.parse", attributes={"cmk.host_name": host_name}):
+        host_sections = parser((f[0], f[1]) for f in fetched)
     host_sections_by_host = group_by_host(
         ((HostKey(s.hostname, s.source_type), r.ok) for s, r in host_sections if r.is_ok()),
         console.debug,
@@ -165,6 +171,10 @@ def get_check_preview(
         for line in result.details:
             console.warning(tty.format_warning(f"{line}"))
 
+    with tracer.span("preview.discover_services", attributes={"cmk.host_name": host_name}):
+        discovered_services = discovery_by_host(
+            cluster_nodes if is_cluster else (host_name,), providers, discovery_plugins, on_error
+        )
     grouped_services_by_host = get_host_services_by_host_name(
         host_name,
         existing_services=(
@@ -172,9 +182,7 @@ def get_check_preview(
             if is_cluster
             else {host_name: AutochecksStore(host_name, autochecks_dir).read()}
         ),
-        discovered_services=discovery_by_host(
-            cluster_nodes if is_cluster else (host_name,), providers, discovery_plugins, on_error
-        ),
+        discovered_services=discovered_services,
         is_cluster=is_cluster,
         cluster_nodes=cluster_nodes,
         autochecks_config=autochecks_config,

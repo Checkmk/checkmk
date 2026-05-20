@@ -16,7 +16,7 @@ void main() {
     def distro_medium_chain = "ubuntu-24.04";
 
     def job_names = [
-        "test-composition-single-f12less-k8s",
+        "test-composition-${edition_medium_chain}",
         // TODO: Switch to -k8s version
         "test-integration-single-f12less",
     ];

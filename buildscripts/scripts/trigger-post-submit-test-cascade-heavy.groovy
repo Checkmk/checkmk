@@ -13,9 +13,9 @@ void main() {
     def force_build = params.DISABLE_JENKINS_CACHE == true;
 
     def job_names = [
-        "test-composition-single-f12less-k8s",
-        "test-composition-single-f12less-community-k8s",
-        "test-composition-single-f12less-ultimatemt-k8s",
+        "test-composition-pro",
+        "test-composition-community",
+        "test-composition-ultimatemt",
         "test-gui-crawl-f12less",
         "test-gui-e2e-cloud",
         "test-gui-e2e-pro",

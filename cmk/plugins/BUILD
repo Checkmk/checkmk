@@ -154,6 +154,7 @@ filegroup(
         "mqtt/libexec/agent_mqtt",
         "oracle/.f12",
         "oracle/agents/oracle_unified_async",
+        "oracle/agents/oracle_unified_async_custom_metrics",
         "oracle/agents/oracle_unified_sync",
         "prometheus/libexec/agent_prometheus",
         "ruckus_spot/libexec/agent_ruckus_spot",

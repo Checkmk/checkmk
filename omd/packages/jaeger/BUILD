@@ -1,7 +1,7 @@
 load("@rules_pkg//pkg:mappings.bzl", "pkg_attributes", "pkg_files", "pkg_mklink", "strip_prefix")
 load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
 
-JAEGER_VERSION = "2.3.0"
+JAEGER_VERSION = "2.18.0"
 
 exports_files(["skel.permissions"])
 

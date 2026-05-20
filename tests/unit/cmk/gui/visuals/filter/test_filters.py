@@ -147,6 +147,11 @@ filter_tests = [
         request_vars=[("check_command", "blabla")],
         expected_filters="Filter: service_check_command ~ ^blabla(!.*)?\n",
     ),
+    FilterTest(
+        ident="check_command_exact",
+        request_vars=[("check_command_exact", "check_mk_active-http")],
+        expected_filters="Filter: service_check_command ~ ^check_mk_active-http(!.*)?\n",
+    ),
     # Testing base class FilterText
     FilterTest(
         ident="comment_author",

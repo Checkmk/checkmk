@@ -24,14 +24,24 @@ class ChangeSpec(TypedDict):
     user_id: UserId | None
     domains: Sequence[str]
     time: float
-    need_sync: bool
-    need_restart: bool
+    # Legacy fields written by ``add_change``; not produced by
+    # ``PendingChanges``. Removed in the follow-up commit that reroutes
+    # ``add_change`` through ``PendingChanges``; an update-config action
+    # rewrites stored records to the new schema before that.
+    need_sync: NotRequired[bool]
+    need_restart: NotRequired[bool]
+    has_been_activated: NotRequired[bool]
+    # New fields written by ``PendingChanges``; not produced by the legacy
+    # ``add_change`` shim. ``NotRequired`` only while the legacy producer
+    # still exists; the follow-up commit tightens these to ``Required``.
+    force_sync: NotRequired[bool | None]
+    force_restart: NotRequired[bool | None]
+    force_apache_reload: NotRequired[bool]
     # Values are ``cmk.gui.watolib.config_domain_name.SerializedSettings``;
     # the loose annotation avoids an import cycle.
     domain_settings: Mapping[str, Any]
     prevent_discard_changes: bool
     diff_text: str | None
-    has_been_activated: bool
     # Added in-memory by ``ActivateChanges.load``; never persisted.
     affected_sites: NotRequired[list[SiteId]]
 

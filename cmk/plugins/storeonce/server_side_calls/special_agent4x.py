@@ -25,7 +25,7 @@ def commands_function(
     command_arguments: list[str | Secret] = [
         "--user",
         params.user,
-        "--password",
+        "--password-id",
         params.password,
         host_config.name,
     ]

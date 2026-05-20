@@ -58,7 +58,7 @@ const { _t } = usei18n()
 const currentMode = ref<'guided' | 'overview'>('guided')
 const currentStep = ref(1)
 
-const configName = ref<string>('')
+const configName = ref<string>('opentelemetry_config_1')
 const siteId = ref<string | null>(null)
 
 const generalPropertiesRef =

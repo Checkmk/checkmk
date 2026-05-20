@@ -55,7 +55,13 @@ void execute_test(Map config = [:]) {
             }
 
             if (kubernetes_inherit_from == "UNSET") {
-                run_this(defaultDict);
+                withCredentialFileAtLocation(creds: defaultDict.creds_files) {
+                    withCredentialUsernamePasswordAtLocation(creds: defaultDict.creds_usernames) {
+                        withCredentialEnv(creds: defaultDict.creds_env) {
+                            run_this(defaultDict);
+                        }
+                    }
+                }
             } else {
                 container(defaultDict.container_name) {
                     println("'execute_test' is using k8s container '${defaultDict.container_name}'");

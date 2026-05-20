@@ -13,7 +13,15 @@ exports_files([
 
 py_library(
     name = "cmk-graphing-engine",
-    srcs = ["cmk/graphing_engine/__init__.py"],
+    srcs = [
+        "cmk/graphing_engine/__init__.py",
+        "cmk/graphing_engine/_discovery.py",
+        "cmk/graphing_engine/_explicit.py",
+        "cmk/graphing_engine/_fetch.py",
+        "cmk/graphing_engine/_objects.py",
+        "cmk/graphing_engine/_options.py",
+        "cmk/graphing_engine/_update.py",
+    ],
     data = [":py_typed"],
     imports = ["."],
     visibility = ["//visibility:public"],

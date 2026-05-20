@@ -644,6 +644,9 @@ allows = ["@ccc"]
 [components."cmk.graphing"]
 allows = []
 
+[components."cmk.graphing_engine"]
+allows = []
+
 [components."cmk.gui.main_modules"]
 allows = [
   "@ccc",

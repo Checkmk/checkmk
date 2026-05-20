@@ -233,23 +233,42 @@ def _test_service_ruleset(folder: Folder) -> Ruleset:
     return ruleset
 
 
-@pytest.mark.xfail(
-    strict=True,
-    raises=AttributeError,
-    reason="SUP-34616: helper does not exist yet; predefined_condition_id is dropped on save",
-)
-def test_get_predefined_condition_id_from_catalog_value_predefined() -> None:
-    helper = getattr(rulesets, "get_predefined_condition_id_from_catalog_value")
-    raw_conditions = {"conditions": {"type": ("predefined", "my_predef_id")}}
-    assert helper(raw_conditions) == "my_predef_id"
+def test_get_rule_options_from_catalog_value_predefined() -> None:
+    disk_value = {
+        "properties": {"description": "", "comment": "", "docu_url": "", "disabled": False},
+        "conditions": {"type": ("predefined", "my_predef_id")},
+    }
+    options = rulesets.get_rule_options_from_catalog_value(disk_value)
+    assert options.predefined_condition_id == "my_predef_id"
 
 
-@pytest.mark.xfail(
-    strict=True,
-    raises=AttributeError,
-    reason="SUP-34616: helper does not exist yet",
-)
-def test_get_predefined_condition_id_from_catalog_value_explicit() -> None:
-    helper = getattr(rulesets, "get_predefined_condition_id_from_catalog_value")
-    raw_conditions = {"conditions": {"type": ("explicit", {"folder_path": ""})}}
-    assert helper(raw_conditions) is None
+def test_get_rule_options_from_catalog_value_explicit() -> None:
+    disk_value = {
+        "properties": {"description": "", "comment": "", "docu_url": "", "disabled": False},
+        "conditions": {"type": ("explicit", {"folder_path": ""})},
+    }
+    options = rulesets.get_rule_options_from_catalog_value(disk_value)
+    assert options.predefined_condition_id is None
+
+
+def test_get_rule_options_from_catalog_value_not_a_dict() -> None:
+    with pytest.raises(TypeError):
+        rulesets.get_rule_options_from_catalog_value("not a dict")
+
+
+def test_get_rule_options_from_catalog_value_malformed_type_tuple() -> None:
+    disk_value = {
+        "properties": {"description": "", "comment": "", "docu_url": "", "disabled": False},
+        "conditions": {"type": "not-a-tuple"},
+    }
+    with pytest.raises(TypeError):
+        rulesets.get_rule_options_from_catalog_value(disk_value)
+
+
+def test_get_rule_options_from_catalog_value_unknown_type() -> None:
+    disk_value = {
+        "properties": {"description": "", "comment": "", "docu_url": "", "disabled": False},
+        "conditions": {"type": ("bogus", None)},
+    }
+    with pytest.raises(TypeError):
+        rulesets.get_rule_options_from_catalog_value(disk_value)

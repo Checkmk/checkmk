@@ -2494,12 +2494,21 @@ def get_rule_options_from_catalog_value(raw_value: object) -> RuleOptions:
     if not isinstance(raw_value, dict):
         raise TypeError(raw_value)
 
+    match raw_value["conditions"]["type"]:
+        case ("predefined", str() as predef_id):
+            predefined_condition_id: str | None = predef_id
+        case ("explicit", dict()):
+            predefined_condition_id = None
+        case _:
+            raise TypeError(raw_value)
+
     raw_properties = raw_value["properties"]
     return RuleOptions(
         description=raw_properties["description"],
         comment=raw_properties["comment"],
         docu_url=raw_properties["docu_url"],
         disabled=raw_properties["disabled"],
+        predefined_condition_id=predefined_condition_id,
     )
 
 
@@ -2564,16 +2573,12 @@ def parse_explicit_services_for_vue(value: HostOrServiceConditions) -> ExplicitH
 
 
 def get_rule_conditions_from_catalog_value(raw_value: object) -> RuleConditions:
-    if not isinstance(raw_value, dict):
-        raise TypeError(raw_value)
-
-    cond_type, raw_conditions = raw_value["conditions"]["type"]
-    match cond_type:
-        case "predefined":
+    match raw_value:
+        case {"conditions": {"type": ("predefined", str() as predef_id)}}:
             pre_store = PredefinedConditionStore()
             store_entries = pre_store.filter_usable_entries(pre_store.load_for_reading())
-            return RuleConditions(**store_entries[raw_conditions]["conditions"])
-        case "explicit":
+            return RuleConditions(**store_entries[predef_id]["conditions"])
+        case {"conditions": {"type": ("explicit", dict() as raw_conditions)}}:
             return RuleConditions(
                 host_folder=raw_conditions["folder_path"],
                 host_tags=raw_conditions.get("host_tags"),
@@ -2587,4 +2592,4 @@ def get_rule_conditions_from_catalog_value(raw_value: object) -> RuleConditions:
                 service_label_groups=raw_conditions.get("service_label_groups"),
             )
         case _:
-            raise ValueError(cond_type)
+            raise TypeError(raw_value)

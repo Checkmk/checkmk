@@ -2306,14 +2306,14 @@ class ABCEditRuleMode(WatoMode):
     ) -> _RuleValuesFromVars:
         value = self._ruleset.rulespec.valuespec.from_html_vars("ve")
         self._ruleset.rulespec.valuespec.validate_value(value, "ve")
+        raw_properties = parse_data_from_field_id(properties_catalog, "_vue_edit_rule_properties")
+        raw_conditions = parse_data_from_field_id(conditions_catalog, "_vue_edit_rule_conditions")
+        if not isinstance(raw_properties, dict) or not isinstance(raw_conditions, dict):
+            raise TypeError(raw_properties, raw_conditions)
         return _RuleValuesFromVars(
-            get_rule_options_from_catalog_value(
-                parse_data_from_field_id(properties_catalog, "_vue_edit_rule_properties")
-            ),
+            get_rule_options_from_catalog_value({**raw_properties, **raw_conditions}),
             value,
-            get_rule_conditions_from_catalog_value(
-                parse_data_from_field_id(conditions_catalog, "_vue_edit_rule_conditions")
-            ),
+            get_rule_conditions_from_catalog_value(raw_conditions),
         )
 
     def _get_rule_value_from_catalog_value(self, raw_value: object) -> object:

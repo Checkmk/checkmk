@@ -372,6 +372,18 @@ class SiteManagement:
             ),
         )
 
+    @staticmethod
+    def _distributed_saml_supported() -> bool:
+        """Whether per-site SAML authentication connections are available in this edition.
+
+        Disabled for Community and Cloud editions; available for Pro,
+        Ultimate, and Ultimate-MT.
+        """
+        return cmk_version.edition(paths.omd_root) not in (
+            cmk_version.Edition.COMMUNITY,
+            cmk_version.Edition.CLOUD,
+        )
+
     @classmethod
     def authentication_connections_form_spec(
         cls,
@@ -393,33 +405,44 @@ class SiteManagement:
             elements.append(
                 CascadingSingleChoiceElement(
                     name="central_site",
-                    title=Title("Use identity connectors from central site"),
+                    title=Title("Use same connections as the central site"),
                     parameter_form=cls._central_site_connections_readonly_form_spec(callback_url),
                 ),
             )
         elements.append(
             CascadingSingleChoiceElement(
                 name="list",
-                title=Title("Use following connections"),
+                title=Title("Use the following connections"),
                 parameter_form=cls._editable_connections_form_spec(),
             ),
         )
+
+        if cls._distributed_saml_supported():
+            help_text = Help(
+                "Select the connections that are available for login on this site. "
+                "Choose <i>Use same connections as the central site</i> to inherit "
+                "the central site's selection (changes made on the central site take "
+                "effect after the next configuration sync), or <i>Use the following "
+                "connections</i> to pick specific LDAP and SAML connections. Each "
+                "SAML entry may optionally override the SP entity ID, which is useful "
+                "when multiple sites share the same SAML connection but need to be "
+                "registered separately at the IdP."
+            )
+        else:
+            help_text = Help(
+                "Select the connections that are available for login on this site. "
+                "Choose <i>Use same connections as the central site</i> to inherit "
+                "the central site's selection (changes made on the central site take "
+                "effect after the next configuration sync), or <i>Use the following "
+                "connections</i> to pick specific LDAP connections."
+            )
 
         return TransformDataForLegacyFormatOrRecomposeFunction(
             wrapped_form_spec=CascadingSingleChoiceExtended(
                 title=Title("Authentication connections"),
                 elements=elements,
                 prefill=DefaultValue("list"),
-                help_text=Help(
-                    "Select the connections that are available for login on this site. "
-                    "Choose <i>Use identity connectors from central site</i> to inherit "
-                    "the central site's selection (changes made on the central site take "
-                    "effect after the next configuration sync), or <i>Use following "
-                    "connections</i> to pick specific LDAP and SAML connections. Each "
-                    "SAML entry may optionally override the SP entity ID, which is useful "
-                    "when multiple sites share the same SAML connection but need to be "
-                    "registered separately at the IdP."
-                ),
+                help_text=help_text,
                 layout=CascadingSingleChoiceLayout.vertical,
             ),
             from_disk=_auth_connections_from_disk,
@@ -461,49 +484,53 @@ class SiteManagement:
             )
             for id_, label in connection_choices()
         ]
-        saml_elements = [
-            SingleChoiceElementExtended(  # astrein: disable=localization-checker
-                name=id_,
-                title=Title(label),  # astrein: disable=localization-checker
-            )
-            for id_, label in saml_connection_choices()
+        connection_elements: list[CascadingSingleChoiceElement[Any]] = [
+            CascadingSingleChoiceElement(
+                name="ldap",
+                title=Title("LDAP connection"),
+                parameter_form=SingleChoiceExtended[str](
+                    title=Title("LDAP connection"),
+                    elements=ldap_elements,
+                ),
+            ),
         ]
+        if cls._distributed_saml_supported():
+            saml_elements = [
+                SingleChoiceElementExtended(  # astrein: disable=localization-checker
+                    name=id_,
+                    title=Title(label),  # astrein: disable=localization-checker
+                )
+                for id_, label in saml_connection_choices()
+            ]
+            connection_elements.append(
+                CascadingSingleChoiceElement(
+                    name="saml",
+                    title=Title("SAML connection"),
+                    parameter_form=Dictionary(
+                        elements={
+                            "connection_id": DictElement(
+                                required=True,
+                                parameter_form=SingleChoiceExtended[str](
+                                    title=Title("SAML connection"),
+                                    elements=saml_elements,
+                                ),
+                            ),
+                            "metadata_endpoint": DictElement(
+                                required=True,
+                                parameter_form=cls._saml_metadata_endpoint_widget(),
+                            ),
+                            "acs_endpoint": DictElement(
+                                required=True,
+                                parameter_form=cls._saml_acs_endpoint_widget(),
+                            ),
+                        },
+                    ),
+                ),
+            )
         return List(
             element_template=CascadingSingleChoice(
                 title=Title("Connection"),
-                elements=[
-                    CascadingSingleChoiceElement(
-                        name="ldap",
-                        title=Title("LDAP connection"),
-                        parameter_form=SingleChoiceExtended[str](
-                            title=Title("LDAP connection"),
-                            elements=ldap_elements,
-                        ),
-                    ),
-                    CascadingSingleChoiceElement(
-                        name="saml",
-                        title=Title("SAML connection"),
-                        parameter_form=Dictionary(
-                            elements={
-                                "connection_id": DictElement(
-                                    required=True,
-                                    parameter_form=SingleChoiceExtended[str](
-                                        title=Title("SAML connection"),
-                                        elements=saml_elements,
-                                    ),
-                                ),
-                                "metadata_endpoint": DictElement(
-                                    required=True,
-                                    parameter_form=cls._saml_metadata_endpoint_widget(),
-                                ),
-                                "acs_endpoint": DictElement(
-                                    required=True,
-                                    parameter_form=cls._saml_acs_endpoint_widget(),
-                                ),
-                            },
-                        ),
-                    ),
-                ],
+                elements=connection_elements,
             ),
             title=Title("Authentication"),
             add_element_label=Label("Add connection"),

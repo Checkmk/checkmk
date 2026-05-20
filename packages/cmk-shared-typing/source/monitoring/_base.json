@@ -1,0 +1,11 @@
+{
+  "$schema": "https://json-schema.org/draft/2019-09/schema",
+  "type": "object",
+  "title": "Monitoring - Base Structure",
+  "properties": {
+    "poll_interval_ms": {
+      "type": "number",
+      "default": 30000
+    }
+  }
+}

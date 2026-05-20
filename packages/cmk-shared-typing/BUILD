@@ -34,6 +34,7 @@ SOURCES_COMMON = [
     "main_menu.json",
     "mode_host.json",
     "mode_oauth2_connection.json",
+    "monitoring/all_hosts.json",
     "notifications.json",
     "setup.json",
     "icon.json",

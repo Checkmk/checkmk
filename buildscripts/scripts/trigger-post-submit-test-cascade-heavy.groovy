@@ -12,9 +12,9 @@ def main() {
     def branch_base_folder = package_helper.branch_base_folder(true);
 
     def job_names = [
-        "test-composition-single-f12less",
-        "test-composition-single-f12less-cme",
-        "test-composition-single-f12less-cre",
+        "test-composition-cee",
+        "test-composition-cme",
+        "test-composition-cre",
         "test-gui-crawl-f12less",
         "test-gui-e2e-cce",
         "test-gui-e2e-cee",

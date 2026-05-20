@@ -9,17 +9,9 @@ import pytest
 
 from omdlib.config_hooks import (
     _build_site_configs,
-    _default_AGENT_RECEIVER_PORT,
-    _default_APACHE_TCP_PORT,
-    _default_LIVESTATUS_TCP_PORT,
-    _default_OPENTELEMETRY_COLLECTOR_SELF_MONITORING_PORT,
-    _default_RABBITMQ_DIST_PORT,
-    _default_RABBITMQ_MANAGEMENT_PORT,
-    _default_RABBITMQ_PORT,
-    _default_TRACE_JAEGER_ADMIN_PORT,
-    _default_TRACE_JAEGER_UI_PORT,
-    _default_TRACE_RECEIVE_PORT,
+    _default_port,
     _next_free_port,
+    _PORT_DEFAULTS,
     _report_error,
 )
 
@@ -72,225 +64,25 @@ def test_next_free_port_missing_config_current_site(tmp_path: Path) -> None:
     assert _next_free_port("APACHE_TCP_PORT", "newsite", 5000, site_configs.configs) == 5000
 
 
-def test_default_AGENT_RECEIVER_PORT_cross_key_conflict(tmp_path: Path) -> None:
+@pytest.mark.parametrize("hook_name,default_port", list(_PORT_DEFAULTS.items()))
+def test_default_port_cross_key_conflict(tmp_path: Path, hook_name: str, default_port: int) -> None:
     sites = tmp_path / "sites"
-    _make_site(sites, "other", "CONFIG_LIVESTATUS_TCP_PORT='8000'\n")
+    _make_site(sites, "other", f"CONFIG_OTHER_KEY='{default_port}'\n")
     _make_site(sites, "mysite", "")
 
     site_configs = _build_site_configs("mysite", tmp_path)
-    assert _default_AGENT_RECEIVER_PORT("mysite", site_configs) == "8001"
+    assert _default_port(hook_name, "mysite", site_configs) == str(default_port + 1)
 
 
-def test_default_AGENT_RECEIVER_PORT_warns_on_unreadable_site(
-    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+@pytest.mark.parametrize("hook_name", list(_PORT_DEFAULTS))
+def test_default_port_warns_on_unreadable_site(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str], hook_name: str
 ) -> None:
     sites = tmp_path / "sites"
     _make_site(sites, "mysite", "")
     (sites / "ghost").mkdir(parents=True)
 
     site_configs = _build_site_configs("mysite", tmp_path)
-    _default_AGENT_RECEIVER_PORT("mysite", site_configs)
-
-    assert "ghost" in capsys.readouterr().err
-
-
-def test_default_LIVESTATUS_TCP_PORT_cross_key_conflict(tmp_path: Path) -> None:
-    sites = tmp_path / "sites"
-    _make_site(sites, "other", "CONFIG_APACHE_TCP_PORT='6557'\n")
-    _make_site(sites, "mysite", "")
-
-    site_configs = _build_site_configs("mysite", tmp_path)
-    assert _default_LIVESTATUS_TCP_PORT("mysite", site_configs) == "6558"
-
-
-def test_default_LIVESTATUS_TCP_PORT_warns_on_unreadable_site(
-    tmp_path: Path, capsys: pytest.CaptureFixture[str]
-) -> None:
-    sites = tmp_path / "sites"
-    _make_site(sites, "mysite", "")
-    (sites / "ghost").mkdir(parents=True)
-
-    site_configs = _build_site_configs("mysite", tmp_path)
-    _default_LIVESTATUS_TCP_PORT("mysite", site_configs)
-
-    assert "ghost" in capsys.readouterr().err
-
-
-def test_default_OPENTELEMETRY_COLLECTOR_SELF_MONITORING_PORT_cross_key_conflict(
-    tmp_path: Path,
-) -> None:
-    sites = tmp_path / "sites"
-    _make_site(sites, "other", "CONFIG_OPENTELEMETRY_COLLECTOR_SELF_MONITORING_PORT='14317'\n")
-    _make_site(sites, "mysite", "")
-
-    site_configs = _build_site_configs("mysite", tmp_path)
-    assert _default_OPENTELEMETRY_COLLECTOR_SELF_MONITORING_PORT("mysite", site_configs) == "14318"
-
-
-def test_default_OPENTELEMETRY_COLLECTOR_SELF_MONITORING_PORT_warns_on_unreadable_site(
-    tmp_path: Path, capsys: pytest.CaptureFixture[str]
-) -> None:
-    sites = tmp_path / "sites"
-    _make_site(sites, "mysite", "")
-    (sites / "ghost").mkdir(parents=True)
-
-    site_configs = _build_site_configs("mysite", tmp_path)
-    _default_OPENTELEMETRY_COLLECTOR_SELF_MONITORING_PORT("mysite", site_configs)
-
-    assert "ghost" in capsys.readouterr().err
-
-
-def test_default_RABBITMQ_DIST_PORT_cross_key_conflict(tmp_path: Path) -> None:
-    sites = tmp_path / "sites"
-    _make_site(sites, "other", "CONFIG_RABBITMQ_PORT='25672'\n")
-    _make_site(sites, "mysite", "")
-
-    site_configs = _build_site_configs("mysite", tmp_path)
-    assert _default_RABBITMQ_DIST_PORT("mysite", site_configs) == "25673"
-
-
-def test_default_RABBITMQ_DIST_PORT_warns_on_unreadable_site(
-    tmp_path: Path, capsys: pytest.CaptureFixture[str]
-) -> None:
-    sites = tmp_path / "sites"
-    _make_site(sites, "mysite", "")
-    (sites / "ghost").mkdir(parents=True)
-
-    site_configs = _build_site_configs("mysite", tmp_path)
-    _default_RABBITMQ_DIST_PORT("mysite", site_configs)
-
-    assert "ghost" in capsys.readouterr().err
-
-
-def test_default_RABBITMQ_MANAGEMENT_PORT_cross_key_conflict(tmp_path: Path) -> None:
-    sites = tmp_path / "sites"
-    _make_site(sites, "other", "CONFIG_RABBITMQ_PORT='15671'\n")
-    _make_site(sites, "mysite", "")
-
-    site_configs = _build_site_configs("mysite", tmp_path)
-    assert _default_RABBITMQ_MANAGEMENT_PORT("mysite", site_configs) == "15672"
-
-
-def test_default_RABBITMQ_MANAGEMENT_PORT_warns_on_unreadable_site(
-    tmp_path: Path, capsys: pytest.CaptureFixture[str]
-) -> None:
-    sites = tmp_path / "sites"
-    _make_site(sites, "mysite", "")
-    (sites / "ghost").mkdir(parents=True)
-
-    site_configs = _build_site_configs("mysite", tmp_path)
-    _default_RABBITMQ_MANAGEMENT_PORT("mysite", site_configs)
-
-    assert "ghost" in capsys.readouterr().err
-
-
-def test_default_RABBITMQ_PORT_cross_key_conflict(tmp_path: Path) -> None:
-    sites = tmp_path / "sites"
-    _make_site(sites, "other", "CONFIG_RABBITMQ_DIST_PORT='5672'\n")
-    _make_site(sites, "mysite", "")
-
-    site_configs = _build_site_configs("mysite", tmp_path)
-    assert _default_RABBITMQ_PORT("mysite", site_configs) == "5673"
-
-
-def test_default_RABBITMQ_PORT_warns_on_unreadable_site(
-    tmp_path: Path, capsys: pytest.CaptureFixture[str]
-) -> None:
-    sites = tmp_path / "sites"
-    _make_site(sites, "mysite", "")
-    (sites / "ghost").mkdir(parents=True)
-
-    site_configs = _build_site_configs("mysite", tmp_path)
-    _default_RABBITMQ_PORT("mysite", site_configs)
-
-    assert "ghost" in capsys.readouterr().err
-
-
-def test_default_TRACE_JAEGER_ADMIN_PORT_cross_key_conflict(tmp_path: Path) -> None:
-    sites = tmp_path / "sites"
-    _make_site(sites, "other", "CONFIG_TRACE_RECEIVE_PORT='14269'\n")
-    _make_site(sites, "mysite", "")
-
-    site_configs = _build_site_configs("mysite", tmp_path)
-    assert _default_TRACE_JAEGER_ADMIN_PORT("mysite", site_configs) == "14270"
-
-
-def test_default_TRACE_JAEGER_ADMIN_PORT_warns_on_unreadable_site(
-    tmp_path: Path, capsys: pytest.CaptureFixture[str]
-) -> None:
-    sites = tmp_path / "sites"
-    _make_site(sites, "mysite", "")
-    (sites / "ghost").mkdir(parents=True)
-
-    site_configs = _build_site_configs("mysite", tmp_path)
-    _default_TRACE_JAEGER_ADMIN_PORT("mysite", site_configs)
-
-    assert "ghost" in capsys.readouterr().err
-
-
-def test_default_TRACE_JAEGER_UI_PORT_cross_key_conflict(tmp_path: Path) -> None:
-    sites = tmp_path / "sites"
-    _make_site(sites, "other", "CONFIG_TRACE_JAEGER_ADMIN_PORT='16686'\n")
-    _make_site(sites, "mysite", "")
-
-    site_configs = _build_site_configs("mysite", tmp_path)
-    assert _default_TRACE_JAEGER_UI_PORT("mysite", site_configs) == "16687"
-
-
-def test_default_TRACE_JAEGER_UI_PORT_warns_on_unreadable_site(
-    tmp_path: Path, capsys: pytest.CaptureFixture[str]
-) -> None:
-    sites = tmp_path / "sites"
-    _make_site(sites, "mysite", "")
-    (sites / "ghost").mkdir(parents=True)
-
-    site_configs = _build_site_configs("mysite", tmp_path)
-    _default_TRACE_JAEGER_UI_PORT("mysite", site_configs)
-
-    assert "ghost" in capsys.readouterr().err
-
-
-def test_default_TRACE_RECEIVE_PORT_cross_key_conflict(tmp_path: Path) -> None:
-    sites = tmp_path / "sites"
-    _make_site(sites, "other", "CONFIG_TRACE_JAEGER_UI_PORT='4417'\n")
-    _make_site(sites, "mysite", "")
-
-    site_configs = _build_site_configs("mysite", tmp_path)
-    assert _default_TRACE_RECEIVE_PORT("mysite", site_configs) == "4418"
-
-
-def test_default_TRACE_RECEIVE_PORT_warns_on_unreadable_site(
-    tmp_path: Path, capsys: pytest.CaptureFixture[str]
-) -> None:
-    sites = tmp_path / "sites"
-    _make_site(sites, "mysite", "")
-    (sites / "ghost").mkdir(parents=True)
-
-    site_configs = _build_site_configs("mysite", tmp_path)
-    _default_TRACE_RECEIVE_PORT("mysite", site_configs)
-
-    assert "ghost" in capsys.readouterr().err
-
-
-def test_default_APACHE_TCP_PORT_cross_key_conflict(tmp_path: Path) -> None:
-    # Port 5000 is used by a different config key on another site.
-    sites = tmp_path / "sites"
-    _make_site(sites, "other", "CONFIG_LIVESTATUS_TCP_PORT='5000'\n")
-    _make_site(sites, "mysite", "")
-
-    site_configs = _build_site_configs("mysite", tmp_path)
-    assert _default_APACHE_TCP_PORT("mysite", site_configs) == "5001"
-
-
-def test_default_APACHE_TCP_PORT_warns_on_unreadable_site(
-    tmp_path: Path, capsys: pytest.CaptureFixture[str]
-) -> None:
-    # A site directory without a readable site.conf triggers a stderr warning.
-    sites = tmp_path / "sites"
-    _make_site(sites, "mysite", "")
-    (sites / "ghost").mkdir(parents=True)  # no site.conf
-
-    site_configs = _build_site_configs("mysite", tmp_path)
-    _default_APACHE_TCP_PORT("mysite", site_configs)
+    _default_port(hook_name, "mysite", site_configs)
 
     assert "ghost" in capsys.readouterr().err

@@ -209,63 +209,25 @@ def load_hook_dependencies(
     return config_hooks
 
 
-def _default_AGENT_RECEIVER_PORT(site_name: str, site_configs: _SiteConfigs) -> str:
-    _report_error("AGENT_RECEIVER_PORT", site_configs.sites_with_unreadable_configs)
-    return str(_next_free_port("AGENT_RECEIVER_PORT", site_name, 8000, site_configs.configs))
+_PORT_DEFAULTS: dict[str, int] = {
+    "AGENT_RECEIVER_PORT": 8000,
+    "APACHE_TCP_PORT": 5000,
+    "LIVESTATUS_TCP_PORT": 6557,
+    "OPENTELEMETRY_COLLECTOR_SELF_MONITORING_PORT": 14317,
+    "RABBITMQ_DIST_PORT": 25672,
+    "RABBITMQ_MANAGEMENT_PORT": 15671,
+    "RABBITMQ_PORT": 5672,
+    "TRACE_JAEGER_ADMIN_PORT": 14269,
+    "TRACE_JAEGER_UI_PORT": 16686,
+    "TRACE_RECEIVE_PORT": 4417,
+}
 
 
-def _default_APACHE_TCP_PORT(site_name: str, site_configs: _SiteConfigs) -> str:
-    _report_error("APACHE_TCP_PORT", site_configs.sites_with_unreadable_configs)
-    return str(_next_free_port("APACHE_TCP_PORT", site_name, 5000, site_configs.configs))
-
-
-def _default_LIVESTATUS_TCP_PORT(site_name: str, site_configs: _SiteConfigs) -> str:
-    _report_error("LIVESTATUS_TCP_PORT", site_configs.sites_with_unreadable_configs)
-    return str(_next_free_port("LIVESTATUS_TCP_PORT", site_name, 6557, site_configs.configs))
-
-
-def _default_OPENTELEMETRY_COLLECTOR_SELF_MONITORING_PORT(
-    site_name: str, site_configs: _SiteConfigs
-) -> str:
-    _report_error(
-        "OPENTELEMETRY_COLLECTOR_SELF_MONITORING_PORT",
-        site_configs.sites_with_unreadable_configs,
-    )
+def _default_port(hook_name: str, site_name: str, site_configs: _SiteConfigs) -> str:
+    _report_error(hook_name, site_configs.sites_with_unreadable_configs)
     return str(
-        _next_free_port(
-            "OPENTELEMETRY_COLLECTOR_SELF_MONITORING_PORT", site_name, 14317, site_configs.configs
-        )
+        _next_free_port(hook_name, site_name, _PORT_DEFAULTS[hook_name], site_configs.configs)
     )
-
-
-def _default_RABBITMQ_DIST_PORT(site_name: str, site_configs: _SiteConfigs) -> str:
-    _report_error("RABBITMQ_DIST_PORT", site_configs.sites_with_unreadable_configs)
-    return str(_next_free_port("RABBITMQ_DIST_PORT", site_name, 25672, site_configs.configs))
-
-
-def _default_RABBITMQ_MANAGEMENT_PORT(site_name: str, site_configs: _SiteConfigs) -> str:
-    _report_error("RABBITMQ_MANAGEMENT_PORT", site_configs.sites_with_unreadable_configs)
-    return str(_next_free_port("RABBITMQ_MANAGEMENT_PORT", site_name, 15671, site_configs.configs))
-
-
-def _default_RABBITMQ_PORT(site_name: str, site_configs: _SiteConfigs) -> str:
-    _report_error("RABBITMQ_PORT", site_configs.sites_with_unreadable_configs)
-    return str(_next_free_port("RABBITMQ_PORT", site_name, 5672, site_configs.configs))
-
-
-def _default_TRACE_JAEGER_ADMIN_PORT(site_name: str, site_configs: _SiteConfigs) -> str:
-    _report_error("TRACE_JAEGER_ADMIN_PORT", site_configs.sites_with_unreadable_configs)
-    return str(_next_free_port("TRACE_JAEGER_ADMIN_PORT", site_name, 14269, site_configs.configs))
-
-
-def _default_TRACE_JAEGER_UI_PORT(site_name: str, site_configs: _SiteConfigs) -> str:
-    _report_error("TRACE_JAEGER_UI_PORT", site_configs.sites_with_unreadable_configs)
-    return str(_next_free_port("TRACE_JAEGER_UI_PORT", site_name, 16686, site_configs.configs))
-
-
-def _default_TRACE_RECEIVE_PORT(site_name: str, site_configs: _SiteConfigs) -> str:
-    _report_error("TRACE_RECEIVE_PORT", site_configs.sites_with_unreadable_configs)
-    return str(_next_free_port("TRACE_RECEIVE_PORT", site_name, 4417, site_configs.configs))
 
 
 def load_config(site: "SiteContext", verbose: bool, omd_path: Path = Path("/omd/")) -> Config:
@@ -280,37 +242,12 @@ def load_config(site: "SiteContext", verbose: bool, omd_path: Path = Path("/omd/
     if site.hook_dir and os.path.exists(site.hook_dir):
         for hook_name in _sort_hooks(os.listdir(site.hook_dir)):
             if hook_name[0] != "." and hook_name not in config:
-                match hook_name:
-                    case "AGENT_RECEIVER_PORT":
-                        config[hook_name] = _default_AGENT_RECEIVER_PORT(site.name, site_configs)
-                    case "APACHE_TCP_PORT":
-                        config[hook_name] = _default_APACHE_TCP_PORT(site.name, site_configs)
-                    case "LIVESTATUS_TCP_PORT":
-                        config[hook_name] = _default_LIVESTATUS_TCP_PORT(site.name, site_configs)
-                    case "OPENTELEMETRY_COLLECTOR_SELF_MONITORING_PORT":
-                        config[hook_name] = _default_OPENTELEMETRY_COLLECTOR_SELF_MONITORING_PORT(
-                            site.name, site_configs
-                        )
-                    case "RABBITMQ_DIST_PORT":
-                        config[hook_name] = _default_RABBITMQ_DIST_PORT(site.name, site_configs)
-                    case "RABBITMQ_MANAGEMENT_PORT":
-                        config[hook_name] = _default_RABBITMQ_MANAGEMENT_PORT(
-                            site.name, site_configs
-                        )
-                    case "RABBITMQ_PORT":
-                        config[hook_name] = _default_RABBITMQ_PORT(site.name, site_configs)
-                    case "TRACE_JAEGER_ADMIN_PORT":
-                        config[hook_name] = _default_TRACE_JAEGER_ADMIN_PORT(
-                            site.name, site_configs
-                        )
-                    case "TRACE_JAEGER_UI_PORT":
-                        config[hook_name] = _default_TRACE_JAEGER_UI_PORT(site.name, site_configs)
-                    case "TRACE_RECEIVE_PORT":
-                        config[hook_name] = _default_TRACE_RECEIVE_PORT(site.name, site_configs)
-                    case _:
-                        config[hook_name] = _call_hook(
-                            site, hook_name, ["default", edition(Path(site_home)).long], verbose
-                        )[1]
+                if hook_name in _PORT_DEFAULTS:
+                    config[hook_name] = _default_port(hook_name, site.name, site_configs)
+                else:
+                    config[hook_name] = _call_hook(
+                        site, hook_name, ["default", edition(Path(site_home)).long], verbose
+                    )[1]
     return config
 
 
@@ -400,6 +337,20 @@ def config_set_all(
         _config_set(site, config, hook_name, verbose)
 
 
+_PORT_HOOK_MSG_PREFIX: dict[str, str] = {
+    "APACHE_TCP_PORT": "Apache port ",
+    "AGENT_RECEIVER_PORT": "agent-receiver port ",
+    "LIVESTATUS_TCP_PORT": "Livestatus port ",
+    "TRACE_RECEIVE_PORT": "Trace receiving port ",
+    "TRACE_JAEGER_UI_PORT": "The port ",
+    "TRACE_JAEGER_ADMIN_PORT": "The port ",
+    "RABBITMQ_PORT": "RabbitMQ port ",
+    "RABBITMQ_MANAGEMENT_PORT": "RabbitMQ management port ",
+    "RABBITMQ_DIST_PORT": "RabbitMQ distribution port ",
+    "OPENTELEMETRY_COLLECTOR_SELF_MONITORING_PORT": "Port ",
+}
+
+
 def _report_error(key: str, sites_with_unreadable_configs: Sequence[str]) -> None:
     if sites_with_unreadable_configs:
         sites_str = ",".join(sites_with_unreadable_configs)
@@ -418,6 +369,14 @@ def _config_set(
 ) -> None:
     value = config[hook_name]
     output: str | None = None
+    new_value = value
+    if hook_name in _PORT_HOOK_MSG_PREFIX:
+        site_configs = _build_site_configs(site.name, omd_path)
+        _report_error(hook_name, site_configs.sites_with_unreadable_configs)
+        new_value = str(_next_free_port(hook_name, site.name, int(value), site_configs.configs))
+        if value != new_value:
+            prefix = _PORT_HOOK_MSG_PREFIX[hook_name]
+            sys.stderr.write(f"{prefix}{value} is in use. I've chosen {new_value} instead.\n")
     match hook_name:
         case "APACHE_TCP_ADDR":
             try:
@@ -427,39 +386,15 @@ def _config_set(
                 traceback.print_exc()
                 return
         case "APACHE_TCP_PORT":
-            site_configs = _build_site_configs(site.name, omd_path)
-            _report_error("APACHE_TCP_PORT", site_configs.sites_with_unreadable_configs)
             try:
-                new_value = str(
-                    _next_free_port("APACHE_TCP_PORT", site.name, int(value), site_configs.configs)
-                )
                 addr = config.get("APACHE_TCP_ADDR", "127.0.0.1")
                 write_apache_listen_conf(SitePaths.from_site_name(site.name).home, addr, new_value)
-                if value != new_value:
-                    sys.stderr.write(
-                        f"Apache port {value} is in use. I've chosen {new_value} instead.\n"
-                    )
                 output = new_value
             except Exception:
                 traceback.print_exc()
                 return
         case "AGENT_RECEIVER_PORT":
-            site_configs = _build_site_configs(site.name, omd_path)
-            _report_error("AGENT_RECEIVER_PORT", site_configs.sites_with_unreadable_configs)
-            try:
-                new_value = str(
-                    _next_free_port(
-                        "AGENT_RECEIVER_PORT", site.name, int(value), site_configs.configs
-                    )
-                )
-                if value != new_value:
-                    sys.stderr.write(
-                        f"agent-receiver port {value} is in use. I've chosen {new_value} instead.\n"
-                    )
-                output = new_value
-            except Exception:
-                traceback.print_exc()
-                return
+            output = new_value
         case "LIVESTATUS_TCP":
             try:
                 output = set_livestatus_tcp(site.name, config, omd_path, value)
@@ -467,18 +402,7 @@ def _config_set(
                 traceback.print_exc()
                 return
         case "LIVESTATUS_TCP_PORT":
-            site_configs = _build_site_configs(site.name, omd_path)
-            _report_error("LIVESTATUS_TCP_PORT", site_configs.sites_with_unreadable_configs)
             try:
-                new_value = str(
-                    _next_free_port(
-                        "LIVESTATUS_TCP_PORT", site.name, int(value), site_configs.configs
-                    )
-                )
-                if value != new_value:
-                    sys.stderr.write(
-                        f"Livestatus port {value} is in use. I've chosen {new_value} instead.\n"
-                    )
                 output = set_livestatus_tcp_port(site.name, config, omd_path, new_value)
             except Exception:
                 traceback.print_exc()
@@ -509,18 +433,7 @@ def _config_set(
                 traceback.print_exc()
                 return
         case "TRACE_RECEIVE_PORT":
-            site_configs = _build_site_configs(site.name, omd_path)
-            _report_error("TRACE_RECEIVE_PORT", site_configs.sites_with_unreadable_configs)
             try:
-                new_value = str(
-                    _next_free_port(
-                        "TRACE_RECEIVE_PORT", site.name, int(value), site_configs.configs
-                    )
-                )
-                if value != new_value:
-                    sys.stderr.write(
-                        f"Trace receiving port {value} is in use. I've chosen {new_value} instead.\n"
-                    )
                 output = new_value
                 address = config.get("TRACE_RECEIVE_ADDRESS", "0")
                 write_jaeger_receiver_conf(
@@ -530,59 +443,28 @@ def _config_set(
                 traceback.print_exc()
                 return
         case "TRACE_JAEGER_UI_PORT":
-            site_configs = _build_site_configs(site.name, omd_path)
-            _report_error("TRACE_JAEGER_UI_PORT", site_configs.sites_with_unreadable_configs)
             try:
-                new_value = str(
-                    _next_free_port(
-                        "TRACE_JAEGER_UI_PORT", site.name, int(value), site_configs.configs
-                    )
-                )
-                if value != new_value:
-                    sys.stderr.write(
-                        f"The port {value} is in use. I've chosen {new_value} instead.\n"
-                    )
-                output = new_value
                 write_jaeger_ui_port_conf(
                     SitePaths.from_site_name(site.name).home, site.name, new_value
                 )
+                output = new_value
             except Exception:
                 traceback.print_exc()
                 return
         case "TRACE_JAEGER_ADMIN_PORT":
-            site_configs = _build_site_configs(site.name, omd_path)
-            _report_error("TRACE_JAEGER_ADMIN_PORT", site_configs.sites_with_unreadable_configs)
             try:
-                new_value = str(
-                    _next_free_port(
-                        "TRACE_JAEGER_ADMIN_PORT", site.name, int(value), site_configs.configs
-                    )
-                )
-                if value != new_value:
-                    sys.stderr.write(
-                        f"The port {value} is in use. I've chosen {new_value} instead.\n"
-                    )
-                output = new_value
                 write_jaeger_admin_port_conf(SitePaths.from_site_name(site.name).home, new_value)
+                output = new_value
             except Exception:
                 traceback.print_exc()
                 return
         case "RABBITMQ_PORT":
-            site_configs = _build_site_configs(site.name, omd_path)
-            _report_error("RABBITMQ_PORT", site_configs.sites_with_unreadable_configs)
             try:
-                new_value = str(
-                    _next_free_port("RABBITMQ_PORT", site.name, int(value), site_configs.configs)
-                )
-                if value != new_value:
-                    sys.stderr.write(
-                        f"RabbitMQ port {value} is in use. I've chosen {new_value} instead.\n"
-                    )
-                output = new_value
                 only_from = config.get("RABBITMQ_ONLY_FROM", ":: 0.0.0.0")
                 write_rabbitmq_default_conf(
                     SitePaths.from_site_name(site.name).home, only_from, new_value
                 )
+                output = new_value
             except Exception:
                 traceback.print_exc()
                 return
@@ -594,63 +476,18 @@ def _config_set(
                 traceback.print_exc()
                 return
         case "RABBITMQ_MANAGEMENT_PORT":
-            site_configs = _build_site_configs(site.name, omd_path)
-            _report_error("RABBITMQ_MANAGEMENT_PORT", site_configs.sites_with_unreadable_configs)
             try:
-                new_value = str(
-                    _next_free_port(
-                        "RABBITMQ_MANAGEMENT_PORT", site.name, int(value), site_configs.configs
-                    )
-                )
-                if value != new_value:
-                    sys.stderr.write(
-                        f"RabbitMQ management port {value} is in use. I've chosen {new_value} instead.\n"
-                    )
-                output = new_value
                 write_rabbitmq_management_port_conf(
                     SitePaths.from_site_name(site.name).home, new_value
                 )
+                output = new_value
             except Exception:
                 traceback.print_exc()
                 return
         case "RABBITMQ_DIST_PORT":
-            site_configs = _build_site_configs(site.name, omd_path)
-            _report_error("RABBITMQ_DIST_PORT", site_configs.sites_with_unreadable_configs)
-            try:
-                new_value = str(
-                    _next_free_port(
-                        "RABBITMQ_DIST_PORT", site.name, int(value), site_configs.configs
-                    )
-                )
-                if value != new_value:
-                    sys.stderr.write(
-                        f"RabbitMQ distribution port {value} is in use. I've chosen {new_value} instead.\n"
-                    )
-                output = new_value
-            except Exception:
-                traceback.print_exc()
-                return
+            output = new_value
         case "OPENTELEMETRY_COLLECTOR_SELF_MONITORING_PORT":
-            site_configs = _build_site_configs(site.name, omd_path)
-            _report_error(
-                "OPENTELEMETRY_COLLECTOR_SELF_MONITORING_PORT",
-                site_configs.sites_with_unreadable_configs,
-            )
-            try:
-                new_value = str(
-                    _next_free_port(
-                        "OPENTELEMETRY_COLLECTOR_SELF_MONITORING_PORT",
-                        site.name,
-                        int(value),
-                        site_configs.configs,
-                    )
-                )
-                if value != new_value:
-                    sys.stderr.write(f"Port {value} is in use. I've chosen {new_value} instead.\n")
-                output = new_value
-            except Exception:
-                traceback.print_exc()
-                return
+            output = new_value
         case _:
             exitcode, output = _call_hook(site, hook_name, ["set", value], verbose)
             if exitcode:

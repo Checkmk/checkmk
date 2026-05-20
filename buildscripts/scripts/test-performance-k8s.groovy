@@ -62,6 +62,8 @@ void main() {
             prepare_fake_git_overlay: true,
             creds_usernames: [
                 [credentialsId: "cmk-credentials", location: "/etc/.cmk-credentials"],
+            ],
+            creds_files: [
                 [credentialsId: "QA_POSTGRES_KEY_FILE", location: "${checkout_dir}/QA_POSTGRES_KEY"],
                 [credentialsId: "QA_POSTGRES_CERT_FILE", location: "${checkout_dir}/QA_POSTGRES_CERT"],
                 [credentialsId: "QA_ROOT_CERT_FILE", location: "${checkout_dir}/QA_ROOT_CERT"],

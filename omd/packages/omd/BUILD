@@ -205,6 +205,7 @@ py_library(
         "omdlib/options.py",
         "omdlib/options_legacy.py",
         "omdlib/package_manager.py",
+        "omdlib/rabbitmq.py",
         "omdlib/restore.py",
         "omdlib/scripts.py",
         "omdlib/site_name.py",

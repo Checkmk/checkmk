@@ -34,8 +34,8 @@ description:
  The service goes {WARN}/{CRIT} if the count of free pods is less than 10%/5% of the allocatable
  pods.
 
- Upper levels for {WARN}/{CRIT} can also be defined on the count of pods in the pending phase, to
- alert when too many pods are stuck pending at once.
+ Upper levels for {WARN}/{CRIT} can also be defined on the count of pods in the pending or failed
+ phases, to alert when too many pods are stuck in the phase at once.
 
  The levels for pending and free pods can be configured via the rule Kubernetes pod resources.
 

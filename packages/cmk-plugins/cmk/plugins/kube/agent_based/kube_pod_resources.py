@@ -132,6 +132,7 @@ VSResultPercent = (
 
 class PodPhaseCountLevels(TypedDict, total=False):
     pending: NotRequired[tuple[int, int]]
+    failed: NotRequired[tuple[int, int]]
 
 
 class Params(TypedDict):
@@ -171,13 +172,18 @@ def check_kube_pods(
                 details=f"{summary}{_view_pod_list(pod_names)}",
             )
         elif resource == "pending":
-            yield _check_pending(
+            yield _check_duration_and_count(
                 summary,
                 pod_count,
                 now,
                 value_store["pending"],
                 params["pending"],
                 phase_count_levels.get("pending"),
+                "Pending",
+            )
+        elif resource == "failed":
+            yield _check_duration_and_count(
+                summary, pod_count, now, {}, "no_levels", phase_count_levels.get("failed"), "Failed"
             )
         else:
             yield Result(
@@ -189,13 +195,14 @@ def check_kube_pods(
             yield Metric(name=f"kube_pod_{resource}", value=pod_count)
 
 
-def _check_pending(
+def _check_duration_and_count(
     summary: str,
     pod_count: int,
     now: float,
     resource_store: PodPhaseTimes,
     duration_param: VSResultAge,
     count_levels: tuple[int, int] | None,
+    label: str,
 ) -> Result:
     count_state = State.OK
     if count_levels is not None:
@@ -204,7 +211,7 @@ def _check_pending(
                 check_levels_v1(
                     value=pod_count,
                     levels_upper=count_levels,
-                    label="Pending",
+                    label=label,
                     render_func=lambda x: str(int(x)),
                     metric_name=None,
                 )

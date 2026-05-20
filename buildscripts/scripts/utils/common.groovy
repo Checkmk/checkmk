@@ -102,19 +102,30 @@ withCredentialUsernamePasswordAtLocation = { Map args, Closure body ->
     body.delegate = [:];
     def rm_cmd = onWindows ? "pwsh -c rm -Force" : "rm -f"
 
+    def bindings = [];
+    for (int i = 0; i < args.creds.size(); i++) {
+        bindings += usernamePassword(
+            credentialsId: args.creds.get(i).credentialsId,
+            usernameVariable: "CRED_USER_${i}",
+            passwordVariable: "CRED_PASSWORD_${i}",
+        );
+    }
+
     try {
-        withCredentials([usernamePassword(
-            credentialsId: args.credentialsId,
-            usernameVariable: "CRED_USER",
-            passwordVariable: "CRED_PASSWORD")
-        ]) {
-            sh("""
-                echo "${CRED_USER}:${CRED_PASSWORD}" > ${args.location}
-            """);
+        withCredentials(bindings) {
+            args.creds.eachWithIndex { entry, index ->
+                def this_user_name = "CRED_USER_${index}";
+                def this_password_name = "CRED_PASSWORD_${index}";
+                sh("""
+                    echo "\$${this_user_name}:\$${this_password_name}" > ${entry.location}
+                """);
+            }
             body();
         }
         return true;
     } finally {
-        cmd_output("${rm_cmd} ${args.location}");
+        args.creds.each { entry ->
+            cmd_output("${rm_cmd} ${entry.location}");
+        }
     }
 };

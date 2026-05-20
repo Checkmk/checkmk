@@ -55,27 +55,53 @@ def quick_setup_source_cell(table: Table, ident: GlobalIdent | None) -> None:
         html.write_text(None)
 
 
+_BUNDLE_GROUP_PRODUCT_NAMES: dict[str, str] = {}
+
+
+def register_bundle_group_product_name(bundle_group: str, product: str) -> None:
+    """Register the user-facing product name (e.g. "OpenTelemetry") shown in the
+    lock warning when a resource is locked by a bundle of this group."""
+    _BUNDLE_GROUP_PRODUCT_NAMES[bundle_group] = product
+
+
 def quick_setup_locked_warning(ident: GlobalIdent, type_name: str) -> None:
     """Creates a warning that the type is partially locked and managed by Quick setup.
     This assumes the `ident` is for a quick setup."""
+    bundle_id = BundleId(ident["instance_id"])
+    bundles = load_configuration_bundles()
+    bundle = bundles.get(bundle_id)
+    config_name = bundle["title"] if bundle is not None else ident["instance_id"]
+    product = _BUNDLE_GROUP_PRODUCT_NAMES.get(bundle["group"]) if bundle is not None else None
+
+    if product is not None:
+        body = _(
+            "This {type_name} is part of the {config_name} {product} configuration.<br>"
+            "To access further parts of the {product} configuration, "
+            "go to the related {product} configuration."
+        ).format(
+            type_name=type_name,
+            config_name=config_name,
+            product=product,
+        )
+    else:
+        body = _(
+            "This {type_name} is part of the {qs_name} configuration bundle.<br>"
+            "It contains further parts that are accessible and summarized in an overview page."
+        ).format(
+            qs_name=ident["instance_id"],
+            type_name=type_name,
+        )
+
     html.div(
         html.render_div(
             html.render_h2(
-                _("Part of Quick Setup: %s") % ident["instance_id"],
+                _("Part of Quick Setup: %s") % config_name,
                 class_=["heading"],
             )
-            + html.render_div(
-                _(
-                    "This {type_name} is part of the {qs_name} configuration bundle.<br>"
-                    "It contains further parts that are accessible and summarized in an overview page."
-                ).format(
-                    qs_name=ident["instance_id"],
-                    type_name=type_name,
-                ),
-            )
+            + html.render_div(body)
             + html.render_div(
                 html.render_a(
-                    html.render_b(_("Go to %s overview") % ident["instance_id"]),
+                    html.render_b(_("Go to %s overview") % config_name),
                     href=_quick_setup_link(ident),
                 ),
                 class_=["button-container"],

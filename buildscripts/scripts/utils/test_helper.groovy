@@ -76,10 +76,9 @@ void execute_test(Map config = [:]) {
                                 run_this(defaultDict);
                             }
                         } else if (defaultDict.credentialsUsernameId) {
-                            withCredentialUsernamePasswordAtLocation(
-                                credentialsId: defaultDict.credentialsUsernameId,
-                                location: defaultDict.credentialsLocation,
-                            ) {
+                            withCredentialUsernamePasswordAtLocation(creds: [
+                                [credentialsId: defaultDict.credentialsUsernameId, location: defaultDict.credentialsLocation]
+                            ]) {
                                 run_this(defaultDict);
                             }
                         } else {

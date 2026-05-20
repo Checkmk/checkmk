@@ -248,9 +248,9 @@ def register_host_and_service_basic_filters(filter_registry: FilterRegistry) -> 
             title=_l("Host check command (regex)"),
             sort_index=110,
             info="host",
-            query_filter=query_filters.CheckCommandQuery(
+            query_filter=query_filters.TextQuery(
                 ident="host_check_command",
-                op="~",
+                op="~~",
             ),
             description=_l("Check command of the host, regex match"),
         )
@@ -275,9 +275,9 @@ def register_host_and_service_basic_filters(filter_registry: FilterRegistry) -> 
             title=_l("Service check command (regex)"),
             sort_index=210,
             info="service",
-            query_filter=query_filters.CheckCommandQuery(
+            query_filter=query_filters.TextQuery(
                 ident="check_command",
-                op="~",
+                op="~~",
                 column="service_check_command",
             ),
             description=_l("Check command of the service, regex match"),

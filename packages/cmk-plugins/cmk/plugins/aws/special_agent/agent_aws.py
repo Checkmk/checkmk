@@ -1248,7 +1248,7 @@ class EC2Limits(AWSSectionLimits):
         return AWSColleagueContents(None, 0.0)
 
     def get_live_data(self, *args):
-        quota_list = list(self._iter_service_quotas("ec2"))
+        quota_list = list(self._iter_service_quotas("ec2")) + list(self._iter_service_quotas("vpc"))
         quota_dicts = [q.model_dump() for q in quota_list]
 
         response = self._client.describe_instances()
@@ -1298,19 +1298,19 @@ class EC2Limits(AWSSectionLimits):
         ) = raw_content.content
         instances = {inst["InstanceId"]: inst for res in reservations for inst in res["Instances"]}
         res_instances = {inst["ReservedInstancesId"]: inst for inst in reserved_instances}
+        quotas_by_name: dict[str, float] = {q["QuotaName"]: q["Value"] for q in quotas}
         EC2InstFamiliesquotas = {
-            q["QuotaName"]: q["Value"]
-            for q in quotas
-            if q["QuotaName"]
-            in {name.localize(lambda x: x) for name in AWS_EC2_INST_FAMILIES.values()}
+            name: int(quotas_by_name[name])
+            for name in {name.localize(lambda x: x) for name in AWS_EC2_INST_FAMILIES.values()}
+            if name in quotas_by_name
         }
 
         self._add_instance_limits(
             instances, res_instances, spot_inst_requests, EC2InstFamiliesquotas
         )
-        self._add_addresses_limits(addresses)
-        self._add_security_group_limits(security_groups)
-        self._add_interface_limits(interfaces)
+        self._add_addresses_limits(addresses, quotas_by_name)
+        self._add_security_group_limits(security_groups, quotas_by_name)
+        self._add_interface_limits(interfaces, quotas_by_name)
         self._add_spot_inst_limits(spot_inst_requests)
         self._add_spot_fleet_limits(spot_fleet_requests)
         return AWSComputedContent(reservations, raw_content.cache_timestamp)
@@ -1438,7 +1438,11 @@ class EC2Limits(AWSSectionLimits):
             )
         return res_limits
 
-    def _add_addresses_limits(self, addresses: Sequence[Mapping[str, object]]) -> None:
+    def _add_addresses_limits(
+        self,
+        addresses: Sequence[Mapping[str, object]],
+        quotas_by_name: Mapping[str, float],
+    ) -> None:
         # Global limits
         vpc_addresses = 0
         std_addresses = 0
@@ -1453,7 +1457,7 @@ class EC2Limits(AWSSectionLimits):
             AWSLimit(
                 "vpc_elastic_ip_addresses",
                 "VPC Elastic IP addresses",
-                5,
+                int(quotas_by_name.get("EC2-VPC Elastic IPs", 5)),
                 vpc_addresses,
             ),
         )
@@ -1467,13 +1471,17 @@ class EC2Limits(AWSSectionLimits):
             ),
         )
 
-    def _add_security_group_limits(self, security_groups: Sequence[Mapping]) -> None:
+    def _add_security_group_limits(
+        self,
+        security_groups: Sequence[Mapping],
+        quotas_by_name: Mapping[str, float],
+    ) -> None:
         self._add_limit(
             "",
             AWSLimit(
                 "vpc_sec_groups",
                 "VPC security groups",
-                2500,
+                int(quotas_by_name.get("VPC security groups per Region", 2500)),
                 len(security_groups),
             ),
         )
@@ -1492,9 +1500,14 @@ class EC2Limits(AWSSectionLimits):
                 ),
             )
 
-    def _add_interface_limits(self, interfaces: Sequence[Mapping]) -> None:
+    def _add_interface_limits(
+        self,
+        interfaces: Sequence[Mapping],
+        quotas_by_name: Mapping[str, float],
+    ) -> None:
         # since there can also be interfaces which are not attached to an instance, we add these
         # limits to the host running the agent instead of to individual instances
+        if_sec_group_limit = int(quotas_by_name.get("Security groups per network interface", 5))
         for iface in interfaces:
             self._add_limit(
                 "",
@@ -1502,7 +1515,7 @@ class EC2Limits(AWSSectionLimits):
                     "if_vpc_sec_group",
                     "VPC security groups of elastic network interface %s"
                     % iface["NetworkInterfaceId"],
-                    5,
+                    if_sec_group_limit,
                     len(iface["Groups"]),
                 ),
             )

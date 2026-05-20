@@ -3124,6 +3124,16 @@ class QuotaPaginator:
                         "Running On-Demand X instances",
                     ]
                 ]
+                + [
+                    {"QuotaName": "EC2-VPC Elastic IPs", "Value": 8.0},
+                ]
+            }
+        elif ServiceCode == "vpc":
+            yield {
+                "Quotas": [
+                    {"QuotaName": "VPC security groups per Region", "Value": 42.0},
+                    {"QuotaName": "Security groups per network interface", "Value": 13.0},
+                ]
             }
         elif ServiceCode == "ecs":
             yield {

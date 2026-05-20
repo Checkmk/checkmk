@@ -4,7 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from ._discovery import DiscoveredGraph
-from ._explicit import discover_explicit_graphs, ExplicitDiscoveryOptions, ExplicitOptions
+from ._explicit import (
+    discover_explicit_graphs,
+    ExplicitDiscoveryOptions,
+    ExplicitOptions,
+)
 from ._fetch import FetchRRD, RRDKey, Scalars, TimeSeries, TranslatedMetric
 from ._objects import (
     AutoPrecision,
@@ -45,6 +49,11 @@ from ._options import (
     ServiceRef,
     TemperatureUnit,
     TimeRange,
+)
+from ._template import (
+    discover_template_graphs,
+    TemplateDiscoveryOptions,
+    TemplateOptions,
 )
 from ._update import GraphRequest, update_graph_data
 
@@ -87,6 +96,8 @@ __all__ = [
     "StrictPrecision",
     "Sum",
     "TemperatureUnit",
+    "TemplateDiscoveryOptions",
+    "TemplateOptions",
     "TimeNotation",
     "TimeRange",
     "TimeSeries",
@@ -95,5 +106,6 @@ __all__ = [
     "VerticalRange",
     "WarningOf",
     "discover_explicit_graphs",
+    "discover_template_graphs",
     "update_graph_data",
 ]

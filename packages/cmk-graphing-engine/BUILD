@@ -20,6 +20,7 @@ py_library(
         "cmk/graphing_engine/_fetch.py",
         "cmk/graphing_engine/_objects.py",
         "cmk/graphing_engine/_options.py",
+        "cmk/graphing_engine/_template.py",
         "cmk/graphing_engine/_update.py",
     ],
     data = [":py_typed"],

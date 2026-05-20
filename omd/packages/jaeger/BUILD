@@ -1,4 +1,4 @@
-JAEGER_VERSION = "2.3.0"
+JAEGER_VERSION = "2.18.0"
 
 genrule(
     name = "fetch_package",

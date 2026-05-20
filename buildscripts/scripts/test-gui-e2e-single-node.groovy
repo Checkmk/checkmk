@@ -1,6 +1,6 @@
 #!groovy
 
-/// file: test-gui-e2e-f12less.groovy
+/// file: test-gui-e2e-single-node.groovy
 
 void main() {
     check_job_parameters([

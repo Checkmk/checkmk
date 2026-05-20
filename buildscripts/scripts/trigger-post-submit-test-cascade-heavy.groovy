@@ -17,9 +17,9 @@ void main() {
         "test-composition-single-f12less-community-k8s",
         "test-composition-single-f12less-ultimatemt-k8s",
         "test-gui-crawl-f12less",
-        "test-gui-e2e-f12less-cloud",
-        "test-gui-e2e-f12less-pro",
-        "test-gui-e2e-f12less-ultimate",
+        "test-gui-e2e-cloud",
+        "test-gui-e2e-pro",
+        "test-gui-e2e-ultimate",
         "test-integration-agent-plugin",
         "test-integration-single-f12less",
         "test-integration-single-f12less-community",
@@ -33,11 +33,6 @@ void main() {
         "test-update-single-f12less-pro-ultimatemt-k8s",
     ];
     job_names += env.USE_K8S_GUI_CRAWL_SYSTEMTESTS == "1" ? ["test-gui-crawl-f12less-k8s"] : [];
-    job_names += env.USE_K8S_GUI_E2E_SYSTEMTESTS == "1" ? [
-        "test-gui-e2e-f12less-cloud-k8s",
-        "test-gui-e2e-f12less-pro-k8s",
-        "test-gui-e2e-f12less-ultimate-k8s",
-    ] : [];
 
     // do keep running the non-k8s jobs due to I54b5b304b9ad2bdb5ef62d482406a3be6f7b011c
     job_names += env.USE_K8S_INTEGRATION_SYSTEMTESTS == "1" ? [

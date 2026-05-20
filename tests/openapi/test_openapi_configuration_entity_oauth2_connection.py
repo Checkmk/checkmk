@@ -7,11 +7,21 @@ from collections.abc import Iterable
 
 import pytest
 
+from cmk.ccc.site import omd_site
+from cmk.gui.config import active_config
 from cmk.gui.form_specs.visitors._utils import option_id
 from cmk.gui.oauth2_connections.watolib.store import save_oauth2_connection
+from cmk.gui.user_sites import activation_sites
 from cmk.gui.userdb import UserRolesConfigFile
 from cmk.gui.watolib import password_store
+from cmk.gui.watolib.audit_log import make_audit_log_change_hook
 from cmk.gui.watolib.passwords import save_password
+from cmk.gui.watolib.pending_changes import (
+    index_update_change_hook,
+    PendingChanges,
+    PendingChangesStore,
+)
+from cmk.gui.watolib.sidebar_reload import sidebar_reload_change_hook
 from cmk.gui.watolib.userroles import clone_role, get_all_roles, RoleID
 from cmk.shared_typing.configuration_entity import ConfigEntityType
 from cmk.utils.oauth2_connection import OAuth2Connection
@@ -94,7 +104,9 @@ def test_list_oauth2_connections_as_admin(
 ) -> None:
     # GIVEN
     for ident, details in OAUTH2_CONNECTION_CONTENT.items():
-        save_oauth2_connection(ident, details, user_id=None, pprint_value=False, use_git=False)
+        save_oauth2_connection(
+            ident, details, pprint_value=False, pending_changes=_default_pending_changes()
+        )
     _create_passwords_for_connection(OAUTH2_CONNECTION_CONTENT[MY_OAUTH2_CONNECTION_UUID])
     clients.ConfigurationEntity.set_credentials(with_admin[0], with_admin[1])
 
@@ -114,7 +126,9 @@ def test_create_already_existing_oauth2_connection(
 ) -> None:
     # GIVEN
     for ident, details in OAUTH2_CONNECTION_CONTENT.items():
-        save_oauth2_connection(ident, details, user_id=None, pprint_value=False, use_git=False)
+        save_oauth2_connection(
+            ident, details, pprint_value=False, pending_changes=_default_pending_changes()
+        )
     clients.ConfigurationEntity.set_credentials(with_admin[0], with_admin[1])
 
     # WHEN
@@ -150,7 +164,9 @@ def test_update_already_existing_oauth2_connection(
 ) -> None:
     # GIVEN
     for ident, details in OAUTH2_CONNECTION_CONTENT.items():
-        save_oauth2_connection(ident, details, user_id=None, pprint_value=False, use_git=False)
+        save_oauth2_connection(
+            ident, details, pprint_value=False, pending_changes=_default_pending_changes()
+        )
     clients.ConfigurationEntity.set_credentials(with_admin[0], with_admin[1])
 
     # WHEN
@@ -187,7 +203,9 @@ def test_create_non_existing_oauth2_connection(
 ) -> None:
     # GIVEN
     for ident, details in OAUTH2_CONNECTION_CONTENT.items():
-        save_oauth2_connection(ident, details, user_id=None, pprint_value=False, use_git=False)
+        save_oauth2_connection(
+            ident, details, pprint_value=False, pending_changes=_default_pending_changes()
+        )
     clients.ConfigurationEntity.set_credentials(with_admin[0], with_admin[1])
     my_new_uuid = str(uuid.uuid4())
 
@@ -232,7 +250,9 @@ def test_create_non_existing_oauth2_connection_without_permissions(
     clients.ConfigurationEntity.set_credentials("guest_user1", "supersecretish")
 
     for ident, details in OAUTH2_CONNECTION_CONTENT.items():
-        save_oauth2_connection(ident, details, user_id=None, pprint_value=False, use_git=False)
+        save_oauth2_connection(
+            ident, details, pprint_value=False, pending_changes=_default_pending_changes()
+        )
 
     my_new_uuid = str(uuid.uuid4())
 
@@ -268,7 +288,9 @@ def test_create_oauth2_connection_with_duplicate_title(
 ) -> None:
     # GIVEN
     for ident, details in OAUTH2_CONNECTION_CONTENT.items():
-        save_oauth2_connection(ident, details, user_id=None, pprint_value=False, use_git=False)
+        save_oauth2_connection(
+            ident, details, pprint_value=False, pending_changes=_default_pending_changes()
+        )
     clients.ConfigurationEntity.set_credentials(with_admin[0], with_admin[1])
     my_new_uuid = str(uuid.uuid4())
 
@@ -308,7 +330,9 @@ def test_update_oauth2_connection_keeping_same_title(
 ) -> None:
     # GIVEN
     for ident, details in OAUTH2_CONNECTION_CONTENT.items():
-        save_oauth2_connection(ident, details, user_id=None, pprint_value=False, use_git=False)
+        save_oauth2_connection(
+            ident, details, pprint_value=False, pending_changes=_default_pending_changes()
+        )
     clients.ConfigurationEntity.set_credentials(with_admin[0], with_admin[1])
 
     # WHEN
@@ -380,7 +404,9 @@ def test_update_oauth2_connection_to_existing_title(
 ) -> None:
     # GIVEN
     for ident, details in TWO_OAUTH2_CONNECTIONS_CONTENT.items():
-        save_oauth2_connection(ident, details, user_id=None, pprint_value=False, use_git=False)
+        save_oauth2_connection(
+            ident, details, pprint_value=False, pending_changes=_default_pending_changes()
+        )
     clients.ConfigurationEntity.set_credentials(with_admin[0], with_admin[1])
 
     # WHEN
@@ -414,6 +440,20 @@ def test_update_oauth2_connection_to_existing_title(
     assert "The title must be unique" in validation_errors[0]["message"]
 
 
+def _default_pending_changes() -> PendingChanges:
+    return PendingChanges(
+        activation_sites=activation_sites(active_config.sites),
+        local_site=omd_site(),
+        acting_user=None,
+        store=PendingChangesStore(),
+        hooks=(
+            make_audit_log_change_hook(use_git=False),
+            sidebar_reload_change_hook,
+            index_update_change_hook,
+        ),
+    )
+
+
 def _create_passwords_for_connection(
     connection: OAuth2Connection,
     *,
@@ -434,9 +474,8 @@ def _create_passwords_for_connection(
                 shared_with=shared_with or [],
             ),
             new_password=True,
-            user_id=None,
             pprint_value=False,
-            use_git=False,
+            pending_changes=_default_pending_changes(),
         )
 
 
@@ -447,7 +486,9 @@ def test_list_oauth2_connections_shows_all_as_admin(
     """List endpoint should only return connections whose passwords are accessible."""
     # GIVEN - two connections, but only the first has passwords in the store
     for ident, details in TWO_OAUTH2_CONNECTIONS_CONTENT.items():
-        save_oauth2_connection(ident, details, user_id=None, pprint_value=False, use_git=False)
+        save_oauth2_connection(
+            ident, details, pprint_value=False, pending_changes=_default_pending_changes()
+        )
     _create_passwords_for_connection(OAUTH2_CONNECTION_CONTENT[MY_OAUTH2_CONNECTION_UUID])
     _create_passwords_for_connection(
         TWO_OAUTH2_CONNECTIONS_CONTENT[SECOND_OAUTH2_CONNECTION_UUID],
@@ -473,7 +514,9 @@ def test_show_oauth2_connection_not_usable(
     """Show endpoint should return 404 for a connection whose passwords are not accessible."""
     # GIVEN - connection exists but without passwords in the store
     for ident, details in OAUTH2_CONNECTION_CONTENT.items():
-        save_oauth2_connection(ident, details, user_id=None, pprint_value=False, use_git=False)
+        save_oauth2_connection(
+            ident, details, pprint_value=False, pending_changes=_default_pending_changes()
+        )
     clients.ConfigurationEntity.set_credentials(with_admin[0], with_admin[1])
 
     # WHEN
@@ -517,7 +560,9 @@ def test_list_oauth2_connections_filtered_by_contact_group(
 
     # Create both connections with passwords
     for ident, details in TWO_OAUTH2_CONNECTIONS_CONTENT.items():
-        save_oauth2_connection(ident, details, user_id=None, pprint_value=False, use_git=False)
+        save_oauth2_connection(
+            ident, details, pprint_value=False, pending_changes=_default_pending_changes()
+        )
     _create_passwords_for_connection(
         OAUTH2_CONNECTION_CONTENT[MY_OAUTH2_CONNECTION_UUID],
         owned_by="my_group",
@@ -547,7 +592,9 @@ def test_list_oauth2_connections_editable_field_as_admin(
     """Admin should see all connections marked as editable."""
     # GIVEN - two connections with passwords owned by different groups
     for ident, details in TWO_OAUTH2_CONNECTIONS_CONTENT.items():
-        save_oauth2_connection(ident, details, user_id=None, pprint_value=False, use_git=False)
+        save_oauth2_connection(
+            ident, details, pprint_value=False, pending_changes=_default_pending_changes()
+        )
     _create_passwords_for_connection(
         OAUTH2_CONNECTION_CONTENT[MY_OAUTH2_CONNECTION_UUID],
         owned_by="my_group",
@@ -601,7 +648,9 @@ def test_list_oauth2_connections_editable_field_for_non_admin(
 
     # Create both connections
     for ident, details in TWO_OAUTH2_CONNECTIONS_CONTENT.items():
-        save_oauth2_connection(ident, details, user_id=None, pprint_value=False, use_git=False)
+        save_oauth2_connection(
+            ident, details, pprint_value=False, pending_changes=_default_pending_changes()
+        )
     # First connection: passwords owned by the user's group → editable
     _create_passwords_for_connection(
         OAUTH2_CONNECTION_CONTENT[MY_OAUTH2_CONNECTION_UUID],

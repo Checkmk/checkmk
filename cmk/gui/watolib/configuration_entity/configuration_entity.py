@@ -49,6 +49,7 @@ from cmk.gui.watolib.notification_parameter import (
     notification_parameter_registry,
     save_notification_parameter,
 )
+from cmk.gui.watolib.pending_changes import PendingChanges
 from cmk.gui.watolib.users import notification_script_title
 from cmk.rulesets.v1.form_specs import FormSpec
 from cmk.shared_typing import vue_formspec_components as shared_type_defs
@@ -74,6 +75,7 @@ def save_configuration_entity(
     user: LoggedInUser,
     pprint_value: bool,
     use_git: bool,
+    pending_changes: PendingChanges,
 ) -> ConfigurationEntityDescription:
     """Save a configuration entity.
 
@@ -103,7 +105,10 @@ def save_configuration_entity(
             )
         case ConfigEntityType.passwordstore_password:
             password = save_password_from_slidein_schema(
-                RawFrontendData(data), user=user, pprint_value=pprint_value, use_git=use_git
+                RawFrontendData(data),
+                user=user,
+                pprint_value=pprint_value,
+                pending_changes=pending_changes,
             )
             return ConfigurationEntityDescription(
                 ident=EntityId(password.id),
@@ -115,9 +120,8 @@ def save_configuration_entity(
             ident, oauth2_connection = save_oauth2_connection_and_passwords_from_slidein_schema(
                 RawFrontendData(data),
                 connector_type,
-                user=user,
                 pprint_value=pprint_value,
-                use_git=use_git,
+                pending_changes=pending_changes,
             )
             return ConfigurationEntityDescription(
                 ident=EntityId(ident), description=oauth2_connection["title"]
@@ -141,7 +145,7 @@ def update_configuration_entity(
     user: LoggedInUser,
     object_id: EntityId,
     pprint_value: bool,
-    use_git: bool,
+    pending_changes: PendingChanges,
 ) -> ConfigurationEntityDescription:
     """Update a configuration entity.
 
@@ -175,9 +179,8 @@ def update_configuration_entity(
             ident, oauth2_connection = update_oauth2_connection_and_passwords_from_slidein_schema(
                 RawFrontendData(data),
                 connector_type,
-                user=user,
                 pprint_value=pprint_value,
-                use_git=use_git,
+                pending_changes=pending_changes,
             )
             return ConfigurationEntityDescription(
                 ident=EntityId(ident), description=oauth2_connection["title"]

@@ -6,6 +6,7 @@ from typing import Annotated
 
 from pydantic import AfterValidator
 
+from cmk.ccc.site import omd_site
 from cmk.gui.logged_in import user
 from cmk.gui.openapi.framework import (
     ApiContext,
@@ -21,7 +22,15 @@ from cmk.gui.openapi.framework import (
 from cmk.gui.openapi.framework.model.converter import PasswordConverter
 from cmk.gui.openapi.framework.model.response import ApiResponse
 from cmk.gui.openapi.restful_objects.constructors import object_href
+from cmk.gui.user_sites import activation_sites
+from cmk.gui.watolib.audit_log import make_audit_log_change_hook
 from cmk.gui.watolib.passwords import load_password, load_password_to_modify, save_password
+from cmk.gui.watolib.pending_changes import (
+    index_update_change_hook,
+    PendingChanges,
+    PendingChangesStore,
+)
+from cmk.gui.watolib.sidebar_reload import sidebar_reload_change_hook
 
 from .endpoint_family import PASSWORD_FAMILY
 from .models.request_models import UpdatePassword
@@ -53,9 +62,18 @@ def update_password_v1(
         name,
         password_details,
         new_password=False,
-        user_id=user.id,
         pprint_value=api_context.config.wato_pprint_config,
-        use_git=api_context.config.wato_use_git,
+        pending_changes=PendingChanges(
+            activation_sites=activation_sites(api_context.config.sites),
+            local_site=omd_site(),
+            acting_user=user.id,
+            store=PendingChangesStore(),
+            hooks=(
+                make_audit_log_change_hook(use_git=api_context.config.wato_use_git),
+                sidebar_reload_change_hook,
+                index_update_change_hook,
+            ),
+        ),
     )
     password = load_password(name)
     return ApiResponse(

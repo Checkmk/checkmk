@@ -13,6 +13,7 @@ from dataclasses import asdict
 from typing import Any
 
 from cmk import fields
+from cmk.ccc.site import omd_site
 from cmk.gui.config import active_config
 from cmk.gui.form_specs import FormSpecValidationError
 from cmk.gui.http import Response
@@ -43,6 +44,8 @@ from cmk.gui.openapi.endpoints.configuration_entity.response_schemas import (
 from cmk.gui.openapi.restful_objects import constructors, Endpoint, response_schemas
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.openapi.utils import EXT, FIELDS, problem, serve_json
+from cmk.gui.user_sites import activation_sites
+from cmk.gui.watolib.audit_log import make_audit_log_change_hook
 from cmk.gui.watolib.configuration_entity.configuration_entity import (
     ConfigurationEntityDescription,
     EntityId,
@@ -51,6 +54,12 @@ from cmk.gui.watolib.configuration_entity.configuration_entity import (
     update_configuration_entity,
 )
 from cmk.gui.watolib.hosts_and_folders import folder_tree
+from cmk.gui.watolib.pending_changes import (
+    index_update_change_hook,
+    PendingChanges,
+    PendingChangesStore,
+)
+from cmk.gui.watolib.sidebar_reload import sidebar_reload_change_hook
 from cmk.shared_typing import vue_formspec_components as shared_type_defs
 from cmk.shared_typing.configuration_entity import ConfigEntityType
 
@@ -110,6 +119,17 @@ def _create_configuration_entity(params: Mapping[str, Any]) -> Response:
     entity_type_specifier = body["entity_type_specifier"]
     data = body["data"]
 
+    pending_changes = PendingChanges(
+        activation_sites=activation_sites(active_config.sites),
+        local_site=omd_site(),
+        acting_user=user.id,
+        store=PendingChangesStore(),
+        hooks=(
+            make_audit_log_change_hook(use_git=active_config.wato_use_git),
+            sidebar_reload_change_hook,
+            index_update_change_hook,
+        ),
+    )
     try:
         data = save_configuration_entity(
             entity_type,
@@ -119,6 +139,7 @@ def _create_configuration_entity(params: Mapping[str, Any]) -> Response:
             user=user,
             pprint_value=active_config.wato_pprint_config,
             use_git=active_config.wato_use_git,
+            pending_changes=pending_changes,
         )
     except FormSpecValidationError as exc:
         return _serve_validations(exc.messages)
@@ -143,6 +164,17 @@ def _update_configuration_entity(params: Mapping[str, Any]) -> Response:
     entity_id = EntityId(body["entity_id"])
     data = body["data"]
 
+    pending_changes = PendingChanges(
+        activation_sites=activation_sites(active_config.sites),
+        local_site=omd_site(),
+        acting_user=user.id,
+        store=PendingChangesStore(),
+        hooks=(
+            make_audit_log_change_hook(use_git=active_config.wato_use_git),
+            sidebar_reload_change_hook,
+            index_update_change_hook,
+        ),
+    )
     try:
         data = update_configuration_entity(
             entity_type,
@@ -151,7 +183,7 @@ def _update_configuration_entity(params: Mapping[str, Any]) -> Response:
             user=user,
             object_id=entity_id,
             pprint_value=active_config.wato_pprint_config,
-            use_git=active_config.wato_use_git,
+            pending_changes=pending_changes,
         )
     except FormSpecValidationError as exc:
         return _serve_validations(exc.messages)

@@ -23,6 +23,7 @@ from cmk.gui.watolib.configuration_bundle_store import BundleId, ConfigBundle, C
 from cmk.gui.watolib.host_attributes import HostAttributes
 from cmk.gui.watolib.hosts_and_folders import Folder, folder_tree, Host
 from cmk.gui.watolib.passwords import load_passwords, remove_password, save_password
+from cmk.gui.watolib.pending_changes import PendingChanges
 from cmk.gui.watolib.rulesets import AllRulesets, FolderRulesets, Rule, SingleRulesetRecursively
 from cmk.utils.global_ident_type import GlobalIdent, PROGRAM_ID_DCD, PROGRAM_ID_QUICK_SETUP
 from cmk.utils.password_store import PasswordConfig
@@ -33,6 +34,7 @@ IdentFinder = Callable[[GlobalIdent | None], str | None]
 Entity = Literal["host", "rule", "password", "dcd", "otel_collector"]
 Permission = Literal["hosts", "rulesets", "passwords", "dcd_connections", "otel_collector"]
 CreateFunction = Callable[[], None]
+
 
 # TODO: deduplicate with cmk/gui/cee/dcd/_store.py
 # NOTE: mypy does not allow DCDConnectionSpec to be Mapping here (see TODO for solution)
@@ -263,10 +265,10 @@ def _validate_and_prepare_create_calls(
     bundle_ident: GlobalIdent,
     entities: CreateBundleEntities,
     *,
-    user_id: UserId | None,
     pprint_value: bool,
     use_git: bool,
     debug: bool,
+    pending_changes: PendingChanges,
 ) -> list[CreateFunction]:
     create_functions = []
     if entities.passwords:
@@ -275,9 +277,8 @@ def _validate_and_prepare_create_calls(
                 bundle_ident,
                 entities.passwords,
                 load_passwords(),
-                user_id=user_id,
                 pprint_value=pprint_value,
-                use_git=use_git,
+                pending_changes=pending_changes,
             )
         )
     if entities.hosts:
@@ -313,10 +314,10 @@ def create_config_bundle(
     entities: CreateBundleEntities,
     *,
     user_permissions: UserPermissions,
-    user_id: UserId | None,
     pprint_value: bool,
     use_git: bool,
     debug: bool,
+    pending_changes: PendingChanges,
 ) -> None:
     bundle_ident = GlobalIdent(
         site_id=omd_site(), program_id=bundle["program_id"], instance_id=bundle_id
@@ -330,10 +331,10 @@ def create_config_bundle(
         create_functions = _validate_and_prepare_create_calls(
             bundle_ident,
             entities,
-            user_id=user_id,
             pprint_value=pprint_value,
             use_git=use_git,
             debug=debug,
+            pending_changes=pending_changes,
         )
     except Exception as e:
         raise MKGeneralException(
@@ -349,10 +350,10 @@ def create_config_bundle(
         delete_config_bundle(
             bundle_id,
             user_permissions=user_permissions,
-            user_id=user_id,
             pprint_value=pprint_value,
             use_git=use_git,
             debug=debug,
+            pending_changes=pending_changes,
         )
         raise MKGeneralException(f'Failed to create configuration bundle "{bundle_id}"') from e
 
@@ -395,10 +396,10 @@ def delete_config_bundle(
     bundle_id: BundleId,
     *,
     user_permissions: UserPermissions,
-    user_id: UserId | None,
     pprint_value: bool,
     use_git: bool,
     debug: bool,
+    pending_changes: PendingChanges,
 ) -> None:
     store = ConfigBundleStore()
     all_bundles = store.load_for_modification()
@@ -414,10 +415,10 @@ def delete_config_bundle(
     store.save(all_bundles, pprint_value)
     delete_config_bundle_objects(
         references,
-        user_id=user_id,
         pprint_value=pprint_value,
         use_git=use_git,
         debug=debug,
+        pending_changes=pending_changes,
     )
 
 
@@ -467,10 +468,10 @@ def _user_may_delete_config_bundle_objects(
 def delete_config_bundle_objects(
     references: BundleReferences,
     *,
-    user_id: UserId | None,
     pprint_value: bool,
     use_git: bool,
     debug: bool,
+    pending_changes: PendingChanges,
 ) -> None:
     # delete resources in inverse order to create, as rules may reference hosts for example
     if references.rules:
@@ -480,9 +481,8 @@ def delete_config_bundle_objects(
     if references.passwords:
         _delete_passwords(
             references.passwords,
-            user_id=user_id,
             pprint_value=pprint_value,
-            use_git=use_git,
+            pending_changes=pending_changes,
         )
     if references.dcd_connections:
         _delete_dcd_connections(
@@ -596,9 +596,8 @@ def _prepare_create_passwords(
     create_passwords: Collection[CreatePassword],
     all_passwords: Mapping[str, PasswordConfig],
     *,
-    user_id: UserId | None,
     pprint_value: bool,
-    use_git: bool,
+    pending_changes: PendingChanges,
 ) -> CreateFunction:
     for password in create_passwords:
         if password["id"] in all_passwords:
@@ -613,9 +612,8 @@ def _prepare_create_passwords(
                 pw["id"],
                 spec,
                 new_password=True,
-                user_id=user_id,
                 pprint_value=pprint_value,
-                use_git=use_git,
+                pending_changes=pending_changes,
             )
 
     return create
@@ -634,16 +632,14 @@ def _user_may_delete_passwords(
 def _delete_passwords(
     passwords: Iterable[tuple[str, PasswordConfig]],
     *,
-    user_id: UserId | None,
     pprint_value: bool,
-    use_git: bool,
+    pending_changes: PendingChanges,
 ) -> None:
     for password_id, _password in passwords:
         remove_password(
             password_id,
-            user_id=user_id,
             pprint_value=pprint_value,
-            use_git=use_git,
+            pending_changes=pending_changes,
         )
 
 

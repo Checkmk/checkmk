@@ -46,6 +46,8 @@ from cmk.gui.wato.pages._simple_modes import (
 from cmk.gui.watolib.changes import add_change
 from cmk.gui.watolib.config_domain_name import (
     ABCConfigDomain,
+    config_domain_registry,
+    ConfigDomainName,
     PasswordChange,
     SerializedSettings,
 )
@@ -202,7 +204,7 @@ class ModePasswords(SimpleListMode[PasswordConfig]):
     ) -> None:
         """Add a Setup change entry for this object type modifications"""
 
-        affected_domains: Sequence[ABCConfigDomain] = []
+        affected_domains: Sequence[ConfigDomainName] = []
         domain_settings = {}
         match action:
             case "delete":
@@ -210,7 +212,7 @@ class ModePasswords(SimpleListMode[PasswordConfig]):
                     return
                 affected_domains = password_change_effect_registry.affected_domains_delete
                 domain_settings = {
-                    domain.ident(): SerializedSettings(
+                    domain: SerializedSettings(
                         changed_passwords=[PasswordChange(change_type="DELETE", password_id=ident)]
                     )
                     for domain in password_change_effect_registry.affected_domains_delete
@@ -222,7 +224,7 @@ class ModePasswords(SimpleListMode[PasswordConfig]):
             action_name=f"{action}-{self._mode_type.type_name()}",
             text=text,
             user_id=user_id,
-            domains=affected_domains,
+            domains=[config_domain_registry[d] for d in affected_domains],
             domain_settings=domain_settings,
             sites=affected_sites,
             use_git=use_git,
@@ -382,13 +384,13 @@ class ModeEditPassword(SimpleEditMode[PasswordConfig]):
         if self._ident is None:
             return
 
-        affected_domains: Sequence[ABCConfigDomain] = []
+        affected_domains: Sequence[ConfigDomainName] = []
         domain_settings = None
         match action:
             case "add":
                 affected_domains = password_change_effect_registry.affected_domains_add
                 domain_settings = {
-                    domain.ident(): SerializedSettings(
+                    domain: SerializedSettings(
                         changed_passwords=[
                             PasswordChange(change_type="ADD", password_id=self._ident)
                         ]
@@ -398,7 +400,7 @@ class ModeEditPassword(SimpleEditMode[PasswordConfig]):
             case "edit":
                 affected_domains = password_change_effect_registry.affected_domains_edit
                 domain_settings = {
-                    domain.ident(): SerializedSettings(
+                    domain: SerializedSettings(
                         changed_passwords=[
                             PasswordChange(change_type="EDIT", password_id=self._ident)
                         ]
@@ -412,7 +414,7 @@ class ModeEditPassword(SimpleEditMode[PasswordConfig]):
             action_name=f"{action}-{self._mode_type.type_name()}",
             text=text,
             user_id=user_id,
-            domains=affected_domains,
+            domains=[config_domain_registry[d] for d in affected_domains],
             domain_settings=domain_settings,
             sites=affected_sites,
             use_git=use_git,

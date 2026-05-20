@@ -4,36 +4,36 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Sequence
+from typing import Literal
 
-from cmk.ccc.user import UserId
 from cmk.gui import userdb
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
-from cmk.gui.watolib.changes import add_change
-from cmk.gui.watolib.config_domain_name import (
-    ABCConfigDomain,
-    config_domain_registry,
+from cmk.utils.password_store import PasswordConfig
+
+from .config_domain_name import (
+    ConfigDomainName,
     CORE,
     PasswordChange,
     SerializedSettings,
 )
-from cmk.gui.watolib.groups_io import load_contact_group_information
-from cmk.gui.watolib.password_store import PasswordStore
-from cmk.utils.password_store import PasswordConfig
+from .groups_io import load_contact_group_information
+from .password_store import PasswordStore
+from .pending_changes import Change, ChangeScope, PendingChanges
 
 
 class PasswordChangeEffectRegistry:
     def __init__(self) -> None:
-        self.affected_domains_add: Sequence[ABCConfigDomain] = []
-        self.affected_domains_edit: Sequence[ABCConfigDomain] = []
-        self.affected_domains_delete: Sequence[ABCConfigDomain] = []
+        self.affected_domains_add: Sequence[ConfigDomainName] = []
+        self.affected_domains_edit: Sequence[ConfigDomainName] = []
+        self.affected_domains_delete: Sequence[ConfigDomainName] = []
 
     def register(
         self,
-        affected_domains_add: Sequence[ABCConfigDomain],
-        affected_domains_edit: Sequence[ABCConfigDomain],
-        affected_domains_delete: Sequence[ABCConfigDomain],
+        affected_domains_add: Sequence[ConfigDomainName],
+        affected_domains_edit: Sequence[ConfigDomainName],
+        affected_domains_delete: Sequence[ConfigDomainName],
     ) -> None:
         self.affected_domains_add = affected_domains_add
         self.affected_domains_edit = affected_domains_edit
@@ -45,9 +45,9 @@ password_change_effect_registry = PasswordChangeEffectRegistry()
 
 def register_password_change_effect() -> None:
     password_change_effect_registry.register(
-        affected_domains_add=[config_domain_registry[CORE]],
-        affected_domains_edit=[config_domain_registry[CORE]],
-        affected_domains_delete=[config_domain_registry[CORE]],
+        affected_domains_add=[CORE],
+        affected_domains_edit=[CORE],
+        affected_domains_delete=[CORE],
     )
 
 
@@ -70,57 +70,61 @@ def sorted_contact_group_choices(only_own: bool = False) -> list[tuple[str, str]
     return sorted(contact_group_choices(only_own), key=lambda x: x[1])
 
 
+def _domain_settings(
+    domains: Sequence[ConfigDomainName],
+    *,
+    change_type: Literal["ADD", "EDIT", "DELETE"],
+    password_id: str,
+) -> dict[ConfigDomainName, SerializedSettings]:
+    return {
+        domain: SerializedSettings(
+            changed_passwords=[PasswordChange(change_type=change_type, password_id=password_id)]
+        )
+        for domain in domains
+    }
+
+
 def save_password(
     ident: str,
     config: PasswordConfig,
     *,
     new_password: bool,
-    user_id: UserId | None,
     pprint_value: bool,
-    use_git: bool,
+    pending_changes: PendingChanges,
 ) -> None:
     password_store = PasswordStore()
     entries = password_store.load_for_modification()
     entries[ident] = config
     password_store.save(entries, pprint_value)
     if new_password:
-        add_change(
-            action_name="add-password",
-            text=f"Added the password {ident}",
-            user_id=user_id,
-            domains=password_change_effect_registry.affected_domains_add,
-            domain_settings={
-                domain.ident(): SerializedSettings(
-                    changed_passwords=[PasswordChange(change_type="ADD", password_id=ident)]
-                )
-                for domain in password_change_effect_registry.affected_domains_add
-            },
-            sites=None,
-            use_git=use_git,
+        domains = password_change_effect_registry.affected_domains_add
+        pending_changes.add(
+            Change(
+                action_name="add-password",
+                text=f"Added the password {ident}",
+                domains=domains,
+                domain_settings=_domain_settings(domains, change_type="ADD", password_id=ident),
+            ),
+            ChangeScope.all_activation_sites(),
         )
     else:
-        add_change(
-            action_name="edit-password",
-            text=f"Edited the password '{ident}'",
-            user_id=user_id,
-            domains=password_change_effect_registry.affected_domains_edit,
-            domain_settings={
-                domain.ident(): SerializedSettings(
-                    changed_passwords=[PasswordChange(change_type="EDIT", password_id=ident)]
-                )
-                for domain in password_change_effect_registry.affected_domains_edit
-            },
-            sites=None,
-            use_git=use_git,
+        domains = password_change_effect_registry.affected_domains_edit
+        pending_changes.add(
+            Change(
+                action_name="edit-password",
+                text=f"Edited the password '{ident}'",
+                domains=domains,
+                domain_settings=_domain_settings(domains, change_type="EDIT", password_id=ident),
+            ),
+            ChangeScope.all_activation_sites(),
         )
 
 
 def remove_password(
     ident: str,
     *,
-    user_id: UserId | None,
     pprint_value: bool,
-    use_git: bool,
+    pending_changes: PendingChanges,
 ) -> None:
     password_store = PasswordStore()
     entries = password_store.load_for_modification()
@@ -135,19 +139,15 @@ def remove_password(
 
     _e = entries.pop(ident)
     password_store.save(entries, pprint_value)
-    add_change(
-        action_name="delete-password",
-        text=f"Removed the password '{ident}'",
-        user_id=user_id,
-        domains=password_change_effect_registry.affected_domains_delete,
-        domain_settings={
-            domain.ident(): SerializedSettings(
-                changed_passwords=[PasswordChange(change_type="DELETE", password_id=ident)]
-            )
-            for domain in password_change_effect_registry.affected_domains_delete
-        },
-        sites=None,
-        use_git=use_git,
+    domains = password_change_effect_registry.affected_domains_delete
+    pending_changes.add(
+        Change(
+            action_name="delete-password",
+            text=f"Removed the password '{ident}'",
+            domains=domains,
+            domain_settings=_domain_settings(domains, change_type="DELETE", password_id=ident),
+        ),
+        ChangeScope.all_activation_sites(),
     )
 
 

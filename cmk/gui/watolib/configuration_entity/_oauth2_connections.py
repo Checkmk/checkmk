@@ -17,7 +17,6 @@ from cmk.gui.form_specs import (
 )
 from cmk.gui.form_specs.unstable.oauth2_connection_setup import OAuth2ConnectionSetup
 from cmk.gui.i18n import _
-from cmk.gui.logged_in import LoggedInUser
 from cmk.gui.oauth2_connections.watolib.store import (
     extract_password_store_entry,
     load_oauth2_connections,
@@ -27,6 +26,7 @@ from cmk.gui.oauth2_connections.watolib.store import (
     update_reference,
 )
 from cmk.gui.watolib.passwords import load_passwords
+from cmk.gui.watolib.pending_changes import PendingChanges
 from cmk.shared_typing import vue_formspec_components as shared_type_defs
 from cmk.utils.oauth2_connection import OAuth2Connection, OAuth2ConnectorType
 
@@ -56,9 +56,8 @@ def update_oauth2_connection_and_passwords_from_slidein_schema(
     data: RawFrontendData,
     connector_type: OAuth2ConnectorType,
     *,
-    user: LoggedInUser,
     pprint_value: bool,
-    use_git: bool,
+    pending_changes: PendingChanges,
 ) -> tuple[str, OAuth2Connection]:
     form_spec = OAuth2ConnectionSetup(connector_type=connector_type)
     visitor = get_visitor(form_spec, VisitorOptions(migrate_values=True, mask_values=False))
@@ -91,9 +90,8 @@ def update_oauth2_connection_and_passwords_from_slidein_schema(
         refresh_token=extract_password_store_entry(disk_data["refresh_token"]),
         owned_by=owned_by,
         shared_with=disk_data.get("shared_with", []),
-        user_id=user.id,
         pprint_value=pprint_value,
-        use_git=use_git,
+        pending_changes=pending_changes,
     )
 
     return update_reference(
@@ -104,9 +102,8 @@ def update_oauth2_connection_and_passwords_from_slidein_schema(
         authority=disk_data["authority"],
         sites=disk_data["sites"],
         connector_type=connector_type,
-        user_id=user.id,
         pprint_value=pprint_value,
-        use_git=use_git,
+        pending_changes=pending_changes,
     )
 
 
@@ -114,9 +111,8 @@ def save_oauth2_connection_and_passwords_from_slidein_schema(
     data: RawFrontendData,
     connector_type: OAuth2ConnectorType,
     *,
-    user: LoggedInUser,
     pprint_value: bool,
-    use_git: bool,
+    pending_changes: PendingChanges,
 ) -> tuple[str, OAuth2Connection]:
     form_spec = OAuth2ConnectionSetup(connector_type=connector_type)
     visitor = get_visitor(form_spec, VisitorOptions(migrate_values=True, mask_values=False))
@@ -152,9 +148,8 @@ def save_oauth2_connection_and_passwords_from_slidein_schema(
         refresh_token=extract_password_store_entry(disk_data["refresh_token"]),
         owned_by=owned_by,
         shared_with=disk_data.get("shared_with", []),
-        user_id=user.id,
         pprint_value=pprint_value,
-        use_git=use_git,
+        pending_changes=pending_changes,
     )
 
     return save_new_reference_to_config_file(
@@ -165,9 +160,8 @@ def save_oauth2_connection_and_passwords_from_slidein_schema(
         authority=disk_data["authority"],
         sites=disk_data["sites"],
         connector_type=connector_type,
-        user_id=user.id,
         pprint_value=pprint_value,
-        use_git=use_git,
+        pending_changes=pending_changes,
     )
 
 

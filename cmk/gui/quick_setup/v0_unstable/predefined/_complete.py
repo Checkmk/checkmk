@@ -36,8 +36,10 @@ from cmk.gui.quick_setup.v0_unstable.predefined._utils import (
 from cmk.gui.quick_setup.v0_unstable.setups import ProgressLogger, StepStatus
 from cmk.gui.quick_setup.v0_unstable.type_defs import ParsedFormData
 from cmk.gui.site_config import is_replication_enabled, site_is_local
+from cmk.gui.user_sites import activation_sites
 from cmk.gui.utils.roles import UserPermissions, UserPermissionSerializableConfig
 from cmk.gui.utils.urls import makeuri_contextless
+from cmk.gui.watolib.audit_log import make_audit_log_change_hook
 from cmk.gui.watolib.automations import (
     fetch_service_discovery_background_job_status,
     make_automation_config,
@@ -63,6 +65,11 @@ from cmk.gui.watolib.hosts_and_folders import (
     Host,
 )
 from cmk.gui.watolib.passwords import load_passwords
+from cmk.gui.watolib.pending_changes import (
+    index_update_change_hook,
+    PendingChanges,
+    PendingChangesStore,
+)
 from cmk.gui.watolib.services import (
     DiscoveryAction,
     DiscoveryResult,
@@ -70,6 +77,7 @@ from cmk.gui.watolib.services import (
     perform_fix_all,
     ServiceDiscoveryBackgroundJob,
 )
+from cmk.gui.watolib.sidebar_reload import sidebar_reload_change_hook
 from cmk.gui.watolib.sites import ReplicationStatusFetcher
 from cmk.password_store.v1_unstable import Secret
 from cmk.rulesets.v1.form_specs import Dictionary
@@ -312,6 +320,17 @@ def _create_and_save_special_agent_bundle(
         "create_config_bundle", "Create underlying configurations"
     )
     user_permissions = UserPermissions.from_config(active_config, permission_registry)
+    pending_changes = PendingChanges(
+        activation_sites=activation_sites(active_config.sites),
+        local_site=omd_site(),
+        acting_user=user.id,
+        store=PendingChangesStore(),
+        hooks=(
+            make_audit_log_change_hook(use_git=active_config.wato_use_git),
+            sidebar_reload_change_hook,
+            index_update_change_hook,
+        ),
+    )
     create_config_bundle(
         bundle_id=bundle_id,
         bundle=ConfigBundle(
@@ -343,10 +362,10 @@ def _create_and_save_special_agent_bundle(
             ),
         ),
         user_permissions=user_permissions,
-        user_id=user.id,
         pprint_value=active_config.wato_pprint_config,
         use_git=active_config.wato_use_git,
         debug=active_config.debug,
+        pending_changes=pending_changes,
     )
     progress_logger.update_progress_step_status("create_config_bundle", StepStatus.COMPLETED)
     if not _service_discovery_possible(
@@ -376,10 +395,10 @@ def _create_and_save_special_agent_bundle(
             delete_config_bundle(
                 BundleId(bundle_id),
                 user_permissions=user_permissions,
-                user_id=user.id,
                 pprint_value=active_config.wato_pprint_config,
                 use_git=active_config.wato_use_git,
                 debug=active_config.debug,
+                pending_changes=pending_changes,
             )
             progress_logger.update_progress_step_status(
                 "delete_config_bundle", StepStatus.COMPLETED

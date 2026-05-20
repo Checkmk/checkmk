@@ -21,6 +21,7 @@ from cmk.gui.watolib.passwords import (
     save_password,
     sorted_contact_group_choices,
 )
+from cmk.gui.watolib.pending_changes import PendingChanges
 from cmk.rulesets.internal.form_specs import SimplePassword
 from cmk.rulesets.v1 import Help, Label, Message, Title
 from cmk.rulesets.v1.form_specs import (
@@ -219,7 +220,11 @@ def _parse_fs(data: object) -> _ParsedPassword:
 
 
 def save_password_from_slidein_schema(
-    data: RawFrontendData, *, user: LoggedInUser, pprint_value: bool, use_git: bool
+    data: RawFrontendData,
+    *,
+    user: LoggedInUser,
+    pprint_value: bool,
+    pending_changes: PendingChanges,
 ) -> PasswordDescription:
     """Save a password from data returned from password slide in.
 
@@ -262,9 +267,8 @@ def save_password_from_slidein_schema(
             shared_with=parsed_data.password_props.share_with,
         ),
         new_password=True,
-        user_id=user.id,
         pprint_value=pprint_value,
-        use_git=use_git,
+        pending_changes=pending_changes,
     )
     return PasswordDescription(
         id=parsed_data.general_props.id, title=parsed_data.general_props.title

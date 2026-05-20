@@ -12,11 +12,14 @@ import cmk.gui.watolib.check_mk_automations
 from cmk.automations.results import DeleteHostsResult
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostName
+from cmk.ccc.site import omd_site
 from cmk.ccc.user import UserId
 from cmk.gui import login
-from cmk.gui.config import Config
+from cmk.gui.config import active_config, Config
 from cmk.gui.permissions import permission_registry
+from cmk.gui.user_sites import activation_sites
 from cmk.gui.utils.roles import UserPermissions
+from cmk.gui.watolib.audit_log import make_audit_log_change_hook
 from cmk.gui.watolib.configuration_bundle_store import BundleId, ConfigBundle
 from cmk.gui.watolib.configuration_bundles import (
     create_config_bundle,
@@ -30,7 +33,13 @@ from cmk.gui.watolib.configuration_bundles import (
 from cmk.gui.watolib.hosts_and_folders import folder_tree, Host
 from cmk.gui.watolib.password_store import PasswordStore
 from cmk.gui.watolib.passwords import load_passwords
+from cmk.gui.watolib.pending_changes import (
+    index_update_change_hook,
+    PendingChanges,
+    PendingChangesStore,
+)
 from cmk.gui.watolib.rulesets import SingleRulesetRecursively
+from cmk.gui.watolib.sidebar_reload import sidebar_reload_change_hook
 from cmk.utils.password_store import PasswordConfig
 from cmk.utils.rulesets.ruleset_matcher import RuleSpec
 from tests.testlib.gui.users import create_and_destroy_user
@@ -39,6 +48,20 @@ from tests.unit.cmk.gui.watolib.test_watolib_password_store import (  # noqa: F4
 )
 
 logger = logging.getLogger(__name__)
+
+
+def _pending_changes(user_id: UserId | None) -> PendingChanges:
+    return PendingChanges(
+        activation_sites=activation_sites(active_config.sites),
+        local_site=omd_site(),
+        acting_user=user_id,
+        store=PendingChangesStore(),
+        hooks=(
+            make_audit_log_change_hook(use_git=False),
+            sidebar_reload_change_hook,
+            index_update_change_hook,
+        ),
+    )
 
 
 def _make_bundle(
@@ -60,10 +83,10 @@ def test_create_config_bundle_empty(with_admin_login: UserId) -> None:
         bundle,
         CreateBundleEntities(),
         user_permissions=UserPermissions({}, {}, {}, []),
-        user_id=with_admin_login,
         pprint_value=False,
         use_git=False,
         debug=False,
+        pending_changes=_pending_changes(with_admin_login),
     )
     references = identify_single_bundle_references(bundle_id, bundle["group"])
 
@@ -80,10 +103,10 @@ def test_create_config_bundle_duplicate_id(with_admin_login: UserId) -> None:
         bundle,
         CreateBundleEntities(),
         user_permissions=UserPermissions({}, {}, {}, []),
-        user_id=with_admin_login,
         pprint_value=False,
         use_git=False,
         debug=False,
+        pending_changes=_pending_changes(with_admin_login),
     )
 
     with pytest.raises(MKGeneralException, match="already exists"):
@@ -92,10 +115,10 @@ def test_create_config_bundle_duplicate_id(with_admin_login: UserId) -> None:
             bundle,
             CreateBundleEntities(),
             user_permissions=UserPermissions({}, {}, {}, []),
-            user_id=with_admin_login,
             pprint_value=False,
             use_git=False,
             debug=False,
+            pending_changes=_pending_changes(with_admin_login),
         )
 
 
@@ -107,30 +130,31 @@ def test_delete_config_bundle_empty(with_admin_login: UserId) -> None:
         bundle,
         CreateBundleEntities(),
         user_permissions=UserPermissions({}, {}, {}, []),
-        user_id=with_admin_login,
         pprint_value=False,
         use_git=False,
         debug=False,
+        pending_changes=_pending_changes(with_admin_login),
     )
     delete_config_bundle(
         bundle_id,
         user_permissions=UserPermissions({}, {}, {}, []),
-        user_id=with_admin_login,
         pprint_value=False,
         use_git=False,
         debug=False,
+        pending_changes=_pending_changes(with_admin_login),
     )
 
 
+@pytest.mark.usefixtures("request_context")
 def test_delete_config_bundle_unknown_id() -> None:
     with pytest.raises(MKGeneralException, match="does not exist"):
         delete_config_bundle(
             BundleId("unknown"),
             user_permissions=UserPermissions({}, {}, {}, []),
-            user_id=UserId("harry"),
             pprint_value=False,
             use_git=False,
             debug=False,
+            pending_changes=_pending_changes(UserId("harry")),
         )
 
 
@@ -181,10 +205,10 @@ def test_create_and_delete_config_bundle_hosts(other_folder: str, with_admin_log
         bundle,
         CreateBundleEntities(hosts=hosts),
         user_permissions=UserPermissions({}, {}, {}, []),
-        user_id=with_admin_login,
         pprint_value=False,
         use_git=False,
         debug=False,
+        pending_changes=_pending_changes(with_admin_login),
     )
 
     references = identify_single_bundle_references(bundle_id, bundle["group"])
@@ -196,10 +220,10 @@ def test_create_and_delete_config_bundle_hosts(other_folder: str, with_admin_log
     delete_config_bundle(
         bundle_id,
         user_permissions=UserPermissions({}, {}, {}, []),
-        user_id=with_admin_login,
         pprint_value=False,
         use_git=False,
         debug=False,
+        pending_changes=_pending_changes(with_admin_login),
     )
     references_after_delete = identify_single_bundle_references(bundle_id, bundle["group"])
     assert references_after_delete.hosts is None
@@ -229,10 +253,10 @@ def test_create_and_delete_config_bundle_passwords(with_admin_login: UserId) -> 
         bundle,
         CreateBundleEntities(passwords=passwords),
         user_permissions=UserPermissions({}, {}, {}, []),
-        user_id=with_admin_login,
         pprint_value=False,
         use_git=False,
         debug=False,
+        pending_changes=_pending_changes(with_admin_login),
     )
     references = identify_single_bundle_references(bundle_id, bundle["group"])
 
@@ -243,10 +267,10 @@ def test_create_and_delete_config_bundle_passwords(with_admin_login: UserId) -> 
     delete_config_bundle(
         bundle_id,
         user_permissions=UserPermissions({}, {}, {}, []),
-        user_id=with_admin_login,
         pprint_value=False,
         use_git=False,
         debug=False,
+        pending_changes=_pending_changes(with_admin_login),
     )
     references_after_delete = identify_single_bundle_references(bundle_id, bundle["group"])
     assert references_after_delete.passwords is None
@@ -335,10 +359,10 @@ def test_delete_config_bundle_passwords_does_not_affect_other_passwords(
                     ]
                 ),
                 user_permissions=user_permissions,
-                user_id=user_id,
                 pprint_value=False,
                 use_git=False,
                 debug=False,
+                pending_changes=_pending_changes(user_id),
             )
 
             # Verify the raw store contains both passwords before deletion.
@@ -354,10 +378,10 @@ def test_delete_config_bundle_passwords_does_not_affect_other_passwords(
             delete_config_bundle(
                 bundle_id,
                 user_permissions=user_permissions,
-                user_id=user_id,
                 pprint_value=False,
                 use_git=False,
                 debug=False,
+                pending_changes=_pending_changes(user_id),
             )
 
     # Read the raw store to check what actually survived the deletion.
@@ -408,10 +432,10 @@ def test_create_and_delete_config_bundle_rules(other_folder: str, with_admin_log
         bundle,
         CreateBundleEntities(rules=rules),
         user_permissions=UserPermissions({}, {}, {}, []),
-        user_id=with_admin_login,
         pprint_value=False,
         use_git=False,
         debug=False,
+        pending_changes=_pending_changes(with_admin_login),
     )
     references = identify_single_bundle_references(bundle_id, bundle["group"])
 
@@ -422,10 +446,10 @@ def test_create_and_delete_config_bundle_rules(other_folder: str, with_admin_log
     delete_config_bundle(
         bundle_id,
         user_permissions=UserPermissions({}, {}, {}, []),
-        user_id=with_admin_login,
         pprint_value=False,
         use_git=False,
         debug=False,
+        pending_changes=_pending_changes(with_admin_login),
     )
     references_after_delete = identify_single_bundle_references(bundle_id, bundle["group"])
 

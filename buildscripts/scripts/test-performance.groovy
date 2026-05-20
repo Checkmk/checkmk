@@ -62,26 +62,17 @@ void main() {
                     variable: 'QA_JIRA_API_TOKEN'
                 ),
             ]) {
-                withCredentialFileAtLocation(
-                    credentialsId: "QA_POSTGRES_KEY_FILE",
-                    location: "${checkout_dir}/QA_POSTGRES_KEY",
-                ) {
-                    withCredentialFileAtLocation(
-                        credentialsId: "QA_POSTGRES_CERT_FILE",
-                        location: "${checkout_dir}/QA_POSTGRES_CERT",
-                    ) {
-                        withCredentialFileAtLocation(
-                            credentialsId: "QA_ROOT_CERT_FILE",
-                            location: "${checkout_dir}/QA_ROOT_CERT",
-                        ) {
-                            test_jenkins_helper.execute_test([
-                                name: make_target,
-                                cmd: "make -C tests ${make_target}",
-                                // output_file: "test-performance.txt",
-                                container_name: "this-distro-container",
-                            ]);
-                        }
-                    }
+                withCredentialFileAtLocation(creds: [
+                    [credentialsId: "QA_POSTGRES_KEY_FILE", location: "${checkout_dir}/QA_POSTGRES_KEY",],
+                    [credentialsId: "QA_POSTGRES_CERT_FILE", location: "${checkout_dir}/QA_POSTGRES_CERT",],
+                    [credentialsId: "QA_ROOT_CERT_FILE", location: "${checkout_dir}/QA_ROOT_CERT",],
+                ]) {
+                    test_jenkins_helper.execute_test([
+                        name: make_target,
+                        cmd: "make -C tests ${make_target}",
+                        // output_file: "test-performance.txt",
+                        container_name: "this-distro-container",
+                    ]);
                 }
             }
         }

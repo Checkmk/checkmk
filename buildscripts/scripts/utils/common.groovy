@@ -73,14 +73,27 @@ withCredentialFileAtLocation = { Map args, Closure body ->
     def cp_cmd = onWindows ? "pwsh -c cp" : "cp"
     def rm_cmd = onWindows ? "pwsh -c rm -Force" : "rm -f"
 
+    def bindings = [];
+    for (int i = 0; i < args.creds.size(); i++) {
+        bindings += file(
+            credentialsId: args.creds.get(i).credentialsId,
+            variable: "SECRET_LOCATION_${i}",
+        );
+    }
+
     try {
-        withCredentials([file(credentialsId: args.credentialsId, variable: "SECRET_LOCATION")]) {
-                cmd_output("${cp_cmd} ${SECRET_LOCATION} ${args.location}");
-                body();
+        withCredentials(bindings) {
+            args.creds.eachWithIndex { entry, index ->
+                def this_var_name = "SECRET_LOCATION_${index}";
+                cmd_output("${cp_cmd} \$${this_var_name} ${entry.location}");
+            };
+            body();
         }
         return true;
     } finally {
-        cmd_output("${rm_cmd} ${args.location}");
+        args.creds.each { entry ->
+            cmd_output("${rm_cmd} ${entry.location}");
+        };
     }
 };
 

@@ -70,10 +70,9 @@ void execute_test(Map config = [:]) {
                         disable_hot_cache: env.USE_STASHED_BAZEL_FOLDER == "0" || defaultDict.disable_hot_cache,
                     ]) {
                         if (defaultDict.credentialsFileId) {
-                            withCredentialFileAtLocation(
-                                credentialsId: defaultDict.credentialsFileId,
-                                location: defaultDict.credentialsLocation,
-                            ) {
+                            withCredentialFileAtLocation(creds: [
+                                [credentialsId: defaultDict.credentialsFileId, location: defaultDict.credentialsLocation]
+                            ]) {
                                 run_this(defaultDict);
                             }
                         } else if (defaultDict.credentialsUsernameId) {

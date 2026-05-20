@@ -13,6 +13,7 @@ import type { PasswordConfig } from '@/mode-otel/otel-configuration-steps/passwo
 import {
   POST_SAVE_ACTIONS,
   buildPrometheusFinalizeActions,
+  createOTelBundleAction,
   createOTelReceiverConfigAction,
   createPrometheusScrapeConfigAction
 } from '@/mode-otel/otel-configuration-steps/post_save_actions.ts'
@@ -64,7 +65,10 @@ describe('POST_SAVE_ACTIONS', () => {
 
   describe('enableCollector.execute', () => {
     test('PUTs to the collector update endpoint with the selected site', async () => {
-      const spy = vi.spyOn(cmkFetch, 'fetchRestAPI').mockResolvedValue(makeFetchResponse(204))
+      const spy = vi
+        .spyOn(cmkFetch, 'fetchRestAPI')
+        .mockResolvedValueOnce(makeFetchResponse(200, { activation: { mode: 'disabled' } }))
+        .mockResolvedValueOnce(makeFetchResponse(204))
 
       const action = POST_SAVE_ACTIONS.find((a) => a.key === 'enableCollector')!
       const result = await action.execute({ siteId: 'prod', configName: 'test-config' })
@@ -75,6 +79,42 @@ describe('POST_SAVE_ACTIONS', () => {
         'PUT',
         { site_id: 'prod', activation: { mode: 'enabled' } }
       )
+    })
+
+    test('returns no rollback when the collector was already enabled', async () => {
+      vi.spyOn(cmkFetch, 'fetchRestAPI')
+        .mockResolvedValueOnce(makeFetchResponse(200, { activation: { mode: 'enabled' } }))
+        .mockResolvedValueOnce(makeFetchResponse(204))
+
+      const action = POST_SAVE_ACTIONS.find((a) => a.key === 'enableCollector')!
+      const result = await action.execute({ siteId: 'prod', configName: 'test-config' })
+
+      expect(result.ok).toBe(true)
+      if (result.ok) {
+        expect(result.rollback).toBeUndefined()
+      }
+    })
+
+    test('returns a rollback that disables the collector when it was previously disabled', async () => {
+      const spy = vi
+        .spyOn(cmkFetch, 'fetchRestAPI')
+        .mockResolvedValueOnce(makeFetchResponse(200, { activation: { mode: 'disabled' } }))
+        .mockResolvedValueOnce(makeFetchResponse(204))
+        .mockResolvedValueOnce(makeFetchResponse(204))
+
+      const action = POST_SAVE_ACTIONS.find((a) => a.key === 'enableCollector')!
+      const result = await action.execute({ siteId: 'prod', configName: 'test-config' })
+
+      expect(result.ok).toBe(true)
+      if (result.ok) {
+        expect(result.rollback).toBeDefined()
+        await result.rollback!()
+        expect(spy).toHaveBeenLastCalledWith(
+          'api/internal/domain-types/otel_collector/actions/update/invoke',
+          'PUT',
+          { site_id: 'prod', activation: { mode: 'disabled' } }
+        )
+      }
     })
 
     test('returns a structured error when the endpoint returns a REST problem', async () => {
@@ -108,7 +148,10 @@ describe('POST_SAVE_ACTIONS', () => {
 
   describe('enableMetricBackend.execute', () => {
     test('PATCHes the metric backend update endpoint with the selected site', async () => {
-      const spy = vi.spyOn(cmkFetch, 'fetchRestAPI').mockResolvedValue(makeFetchResponse(204))
+      const spy = vi
+        .spyOn(cmkFetch, 'fetchRestAPI')
+        .mockResolvedValueOnce(makeFetchResponse(200, { type: 'disabled' }))
+        .mockResolvedValueOnce(makeFetchResponse(204))
 
       const action = POST_SAVE_ACTIONS.find((a) => a.key === 'enableMetricBackend')!
       const result = await action.execute({ siteId: 'prod', configName: 'test-config' })
@@ -119,6 +162,42 @@ describe('POST_SAVE_ACTIONS', () => {
         'PATCH',
         { site_id: 'prod', config: { type: 'enabled' } }
       )
+    })
+
+    test('returns no rollback when the metric backend was already enabled', async () => {
+      vi.spyOn(cmkFetch, 'fetchRestAPI')
+        .mockResolvedValueOnce(makeFetchResponse(200, { type: 'enabled' }))
+        .mockResolvedValueOnce(makeFetchResponse(204))
+
+      const action = POST_SAVE_ACTIONS.find((a) => a.key === 'enableMetricBackend')!
+      const result = await action.execute({ siteId: 'prod', configName: 'test-config' })
+
+      expect(result.ok).toBe(true)
+      if (result.ok) {
+        expect(result.rollback).toBeUndefined()
+      }
+    })
+
+    test('returns a rollback that disables the metric backend when it was previously disabled', async () => {
+      const spy = vi
+        .spyOn(cmkFetch, 'fetchRestAPI')
+        .mockResolvedValueOnce(makeFetchResponse(200, { type: 'disabled' }))
+        .mockResolvedValueOnce(makeFetchResponse(204))
+        .mockResolvedValueOnce(makeFetchResponse(204))
+
+      const action = POST_SAVE_ACTIONS.find((a) => a.key === 'enableMetricBackend')!
+      const result = await action.execute({ siteId: 'prod', configName: 'test-config' })
+
+      expect(result.ok).toBe(true)
+      if (result.ok) {
+        expect(result.rollback).toBeDefined()
+        await result.rollback!()
+        expect(spy).toHaveBeenLastCalledWith(
+          'api/internal/domain-types/metric_backend/actions/update/invoke',
+          'PATCH',
+          { site_id: 'prod', config: { type: 'disabled' } }
+        )
+      }
     })
 
     test('returns a structured error when the endpoint returns a REST problem', async () => {
@@ -384,6 +463,32 @@ describe('createOTelReceiverConfigAction', () => {
     }
   })
 
+  test('returns a rollback that DELETEs the receiver config on success', async () => {
+    const spy = vi
+      .spyOn(cmkFetch, 'fetchRestAPI')
+      .mockResolvedValueOnce(makeFetchResponse(200, {}))
+      .mockResolvedValueOnce(makeFetchResponse(204))
+
+    const action = createOTelReceiverConfigAction({
+      id: 'cfg1',
+      siteId: 'prod',
+      grpc: null,
+      http: null,
+      passwords: []
+    })
+    const result = await action.execute({ siteId: 'prod', configName: 'test-config' })
+
+    expect(result.ok).toBe(true)
+    if (result.ok) {
+      expect(result.rollback).toBeDefined()
+      await result.rollback!()
+      expect(spy).toHaveBeenLastCalledWith(
+        'api/internal/objects/otel_collector_config_receivers/cfg1',
+        'DELETE'
+      )
+    }
+  })
+
   describe('password store handling', () => {
     test('persists each pending password before the receiver POST', async () => {
       const fetchSpy = vi
@@ -567,6 +672,44 @@ describe('createPrometheusScrapeConfigAction', () => {
     if (!result.ok) {
       expect(result.error.title).toBe('Could not create the Prometheus scraper configuration')
       expect(result.error.detail).toBe('Network down')
+    }
+  })
+})
+
+describe('createOTelBundleAction', () => {
+  afterEach(() => {
+    vi.restoreAllMocks()
+  })
+
+  test('returns a rollback that DELETEs the bundle when the response contains a bundle_id', async () => {
+    const spy = vi
+      .spyOn(cmkFetch, 'fetchRestAPI')
+      .mockResolvedValueOnce(makeFetchResponse(200, { extensions: { bundle_id: 'bnd-42' } }))
+      .mockResolvedValueOnce(makeFetchResponse(204))
+
+    const action = createOTelBundleAction({ configName: 'my-cfg', siteId: 'prod', passwordIds: [] })
+    const result = await action.execute({ siteId: 'prod', configName: 'my-cfg' })
+
+    expect(result.ok).toBe(true)
+    if (result.ok) {
+      expect(result.rollback).toBeDefined()
+      await result.rollback!()
+      expect(spy).toHaveBeenLastCalledWith(
+        'api/internal/objects/otel_collector_config_bundles/bnd-42',
+        'DELETE'
+      )
+    }
+  })
+
+  test('returns no rollback when the response does not contain a bundle_id', async () => {
+    vi.spyOn(cmkFetch, 'fetchRestAPI').mockResolvedValueOnce(makeFetchResponse(200, {}))
+
+    const action = createOTelBundleAction({ configName: 'my-cfg', siteId: 'prod', passwordIds: [] })
+    const result = await action.execute({ siteId: 'prod', configName: 'my-cfg' })
+
+    expect(result.ok).toBe(true)
+    if (result.ok) {
+      expect(result.rollback).toBeUndefined()
     }
   })
 })

@@ -6,7 +6,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script lang="ts">
 export type FinalizeState = 'idle' | 'running' | 'success' | 'error'
 
-export type ItemState = 'pending' | 'running' | 'success' | 'error'
+export type ItemState = 'pending' | 'running' | 'success' | 'error' | 'reverted'
 
 export interface ActionItemStatus {
   key: string
@@ -56,6 +56,8 @@ const { _t } = usei18n()
 
 const state = ref<FinalizeState>('idle')
 const items = ref<ActionItemStatus[]>([])
+const isRollingBack = ref(false)
+const revertedOnError = ref(false)
 
 // Keep the rendered checklist in sync with `actions`. Wizards build their
 // per-run create-config action from refs that are still empty when this
@@ -111,6 +113,8 @@ async function runActions(): Promise<boolean> {
   const ctx: PostSaveContext = { siteId: props.siteId, configName: props.configName }
 
   // Reset any previous run state so retries start clean.
+  isRollingBack.value = false
+  revertedOnError.value = false
   items.value = props.actions.map((a) => ({
     key: a.key,
     label: a.label(),
@@ -118,16 +122,37 @@ async function runActions(): Promise<boolean> {
     hidden: a.hidden ?? false
   }))
 
+  const rollbacks: Array<{ fn: () => Promise<void>; itemIndex: number }> = []
+
   for (let i = 0; i < props.actions.length; i++) {
     const action = props.actions[i]!
     items.value[i]!.state = 'running'
     const result = await action.execute(ctx)
     if (result.ok) {
+      if (result.rollback) {
+        rollbacks.push({ fn: result.rollback, itemIndex: i })
+      }
       items.value[i]!.state = 'success'
       continue
     }
     items.value[i]!.state = 'error'
     items.value[i]!.error = result.error
+
+    // Roll back all previously completed actions in reverse order.
+    if (rollbacks.length > 0) {
+      isRollingBack.value = true
+      for (const { fn, itemIndex } of rollbacks.reverse()) {
+        try {
+          await fn()
+          items.value[itemIndex]!.state = 'reverted'
+        } catch (e) {
+          console.warn('Rollback step failed (ignored):', e)
+        }
+      }
+      isRollingBack.value = false
+      revertedOnError.value = true
+    }
+
     state.value = 'error'
     return false
   }
@@ -174,6 +199,12 @@ defineExpose({ runActions })
         <span class="mode-otel-finalize-configuration__item-icon">
           <CmkIcon v-if="item.state === 'success'" name="check" size="small" variant="inline" />
           <CmkIcon v-else-if="item.state === 'error'" name="error" size="small" variant="inline" />
+          <CmkIcon
+            v-else-if="item.state === 'reverted'"
+            name="undo"
+            size="small"
+            variant="inline"
+          />
           <CmkLoading v-else-if="item.state === 'running'" height="6px" />
           <span v-else class="mode-otel-finalize-configuration__item-bullet" />
         </span>
@@ -182,7 +213,7 @@ defineExpose({ runActions })
     </ul>
 
     <CmkAlertBox v-if="state === 'running'" variant="loading" size="small">
-      {{ runningText }}
+      {{ isRollingBack ? _t('Rolling back saved changes...') : runningText }}
     </CmkAlertBox>
     <template v-else-if="state === 'success'">
       <CmkAlertBox variant="success" size="small">
@@ -197,6 +228,9 @@ defineExpose({ runActions })
       :heading="firstError?.title ?? errorHeadingText"
     >
       {{ firstError?.detail ?? _t('An unexpected error occurred. Please try again.') }}
+      <span v-if="revertedOnError" class="mode-otel-finalize-configuration__revert-note">
+        {{ _t('Any changes that were already saved have been reverted.') }}
+      </span>
     </CmkAlertBox>
   </div>
 </template>
@@ -233,6 +267,18 @@ defineExpose({ runActions })
 
 .mode-otel-finalize-configuration__item--error {
   color: var(--color-danger);
+}
+
+.mode-otel-finalize-configuration__item--reverted {
+  color: var(--font-color-dimmed);
+  text-decoration: line-through;
+}
+
+.mode-otel-finalize-configuration__revert-note {
+  display: block;
+  margin-top: var(--dimension-1);
+  font-style: italic;
+  opacity: 0.8;
 }
 
 .mode-otel-finalize-configuration__item-icon {

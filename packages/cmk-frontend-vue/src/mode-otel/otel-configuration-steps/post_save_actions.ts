@@ -31,9 +31,14 @@ export interface PostSaveContext {
 
 /**
  * Result returned by a PostSaveAction. On failure the `error` is surfaced
- * to the user inline next to the corresponding checklist item.
+ * to the user inline next to the corresponding checklist item. On success,
+ * an optional `rollback` closure is returned that undoes the action — used
+ * by FinalizeConfiguration to revert previously completed steps when a
+ * later action fails.
  */
-export type PostSaveResult = { ok: true } | { ok: false; error: { title: string; detail: string } }
+export type PostSaveResult =
+  | { ok: true; rollback?: () => Promise<void> }
+  | { ok: false; error: { title: string; detail: string } }
 
 /**
  * A single verify-and-add-change step executed when the user finishes the
@@ -77,6 +82,36 @@ function errorFromUnknown(err: unknown, fallbackTitle: string): PostSaveResult {
 }
 
 /**
+ * Returns whether the OTel collector is currently enabled for a site.
+ * Throws on network or server errors so the calling action can fail cleanly
+ * before any mutation is made.
+ */
+async function isCollectorEnabled(siteId: string): Promise<boolean> {
+  const response = await fetchRestAPI(
+    `api/internal/domain-types/otel_collector/actions/get/invoke?site_id=${encodeURIComponent(siteId)}`,
+    'GET'
+  )
+  await response.raiseForStatus()
+  const body = (await response.json()) as { activation: { mode: string } }
+  return body.activation.mode === 'enabled'
+}
+
+/**
+ * Returns whether the metric backend is currently enabled for a site.
+ * Throws on network or server errors so the calling action can fail cleanly
+ * before any mutation is made.
+ */
+async function isMetricBackendEnabled(siteId: string): Promise<boolean> {
+  const response = await fetchRestAPI(
+    `api/internal/domain-types/metric_backend/actions/get/invoke?site_id=${encodeURIComponent(siteId)}`,
+    'GET'
+  )
+  await response.raiseForStatus()
+  const body = (await response.json()) as { type: string }
+  return body.type === 'enabled'
+}
+
+/**
  * If the POST fails for any reason we verify the folder exists via GET before
  * surfacing the error — a 200 on the GET means the folder is already there and
  * we can proceed. This action must run before createDCDConnectorAction because
@@ -109,13 +144,14 @@ async function createTelemetryFolderAction(): Promise<PostSaveResult> {
 
 async function createDCDConnector(ctx: PostSaveContext): Promise<PostSaveResult> {
   try {
+    const dcdId = `quick_setup_${ctx.configName}`
     const response = await fetchRestAPI(
       'api/internal/domain-types/dcd_metric_backend/collections/all',
       'POST',
       {
         title: ctx.configName,
         site: ctx.siteId,
-        dcd_id: `quick_setup_${ctx.configName}`,
+        dcd_id: dcdId,
         connector: {
           connector_type: 'metric_backend',
           host_name_resource_attribute_key: 'service.name',
@@ -127,7 +163,15 @@ async function createDCDConnector(ctx: PostSaveContext): Promise<PostSaveResult>
       return { ok: true }
     }
     await response.raiseForStatus()
-    return { ok: true }
+    return {
+      ok: true,
+      rollback: async () => {
+        await fetchRestAPI(
+          `api/internal/objects/dcd_metric_backend/${encodeURIComponent(dcdId)}`,
+          'DELETE'
+        )
+      }
+    }
   } catch (err) {
     return errorFromUnknown(err, _t('Could not create the metric backend connector'))
   }
@@ -156,17 +200,16 @@ export const createDCDConnectorAction: PostSaveAction = {
 /**
  * Action: enable the OpenTelemetry collector for the selected site.
  *
- * Hits the internal `otel_collector/actions/update/invoke` endpoint which
- * toggles the `site_opentelemetry_collector` config var and records an
- * activation change. Idempotent from the user's perspective: if the
- * collector is already enabled, the endpoint still returns 204 and the
- * resulting "change" collapses to a no-op on activation.
+ * Checks the current collector state first so that rollback only disables it
+ * if it was disabled before this save operation — preventing an unintended
+ * side-effect on an already-enabled collector.
  */
 export const enableCollectorAction: PostSaveAction = {
   key: 'enableCollector',
   label: () => _t('OpenTelemetry Collector activation'),
   execute: async (ctx) => {
     try {
+      const wasEnabled = await isCollectorEnabled(ctx.siteId)
       const response = await fetchRestAPI(
         'api/internal/domain-types/otel_collector/actions/update/invoke',
         'PUT',
@@ -176,7 +219,19 @@ export const enableCollectorAction: PostSaveAction = {
         }
       )
       await response.raiseForStatus()
-      return { ok: true }
+      if (wasEnabled) {
+        return { ok: true }
+      }
+      return {
+        ok: true,
+        rollback: async () => {
+          await fetchRestAPI(
+            'api/internal/domain-types/otel_collector/actions/update/invoke',
+            'PUT',
+            { site_id: ctx.siteId, activation: { mode: 'disabled' } }
+          )
+        }
+      }
     } catch (err) {
       return errorFromUnknown(err, _t('Could not enable the OpenTelemetry Collector'))
     }
@@ -186,17 +241,16 @@ export const enableCollectorAction: PostSaveAction = {
 /**
  * Action: enable the metric backend (ClickHouse) for the selected site.
  *
- * Hits the internal `metric_backend/actions/update/invoke` endpoint which
- * configures and enables the metric backend with default port settings for
- * the site. Idempotent: if the backend is already enabled the endpoint
- * still returns 204 and the resulting "change" collapses to a no-op on
- * activation.
+ * Checks the current metric backend state first so that rollback only disables
+ * it if it was disabled before this save operation — preventing an unintended
+ * side-effect on an already-enabled metric backend.
  */
 export const enableMetricBackendAction: PostSaveAction = {
   key: 'enableMetricBackend',
   label: () => _t('Metric backend connection'),
   execute: async (ctx) => {
     try {
+      const wasEnabled = await isMetricBackendEnabled(ctx.siteId)
       const response = await fetchRestAPI(
         'api/internal/domain-types/metric_backend/actions/update/invoke',
         'PATCH',
@@ -206,7 +260,19 @@ export const enableMetricBackendAction: PostSaveAction = {
         }
       )
       await response.raiseForStatus()
-      return { ok: true }
+      if (wasEnabled) {
+        return { ok: true }
+      }
+      return {
+        ok: true,
+        rollback: async () => {
+          await fetchRestAPI(
+            'api/internal/domain-types/metric_backend/actions/update/invoke',
+            'PATCH',
+            { site_id: ctx.siteId, config: { type: 'disabled' } }
+          )
+        }
+      }
     } catch (err) {
       return errorFromUnknown(err, _t('Could not enable the metric backend'))
     }
@@ -413,7 +479,15 @@ export function createOTelReceiverConfigAction(input: OTelReceiverConfigInput): 
         }
         const response = await fetchRestAPI(OTEL_RECEIVERS_COLLECTION, 'POST', body)
         await response.raiseForStatus()
-        return { ok: true }
+        return {
+          ok: true,
+          rollback: async () => {
+            await fetchRestAPI(
+              `api/internal/objects/otel_collector_config_receivers/${encodeURIComponent(input.id)}`,
+              'DELETE'
+            )
+          }
+        }
       } catch (err) {
         return errorFromUnknown(
           err,
@@ -470,7 +544,15 @@ export function createPrometheusScrapeConfigAction(
       try {
         const response = await fetchRestAPI(PROM_SCRAPE_COLLECTION, 'POST', body)
         await response.raiseForStatus()
-        return { ok: true }
+        return {
+          ok: true,
+          rollback: async () => {
+            await fetchRestAPI(
+              `api/internal/objects/otel_collector_config_prom_scrape/${encodeURIComponent(input.id)}`,
+              'DELETE'
+            )
+          }
+        }
       } catch (err) {
         return errorFromUnknown(err, _t('Could not create the Prometheus scraper configuration'))
       }
@@ -505,7 +587,20 @@ export function createOTelBundleAction(input: OTelBundleInput): PostSaveAction {
           password_ids: input.passwordIds
         })
         await response.raiseForStatus()
-        return { ok: true }
+        const body = (await response.json()) as { extensions?: { bundle_id?: string } }
+        const bundleId = body.extensions?.bundle_id
+        if (!bundleId) {
+          return { ok: true }
+        }
+        return {
+          ok: true,
+          rollback: async () => {
+            await fetchRestAPI(
+              `api/internal/objects/otel_collector_config_bundles/${encodeURIComponent(bundleId)}`,
+              'DELETE'
+            )
+          }
+        }
       } catch (err) {
         return errorFromUnknown(err, _t('Could not create the configuration bundle'))
       }

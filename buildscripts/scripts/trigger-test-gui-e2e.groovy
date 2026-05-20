@@ -2,7 +2,7 @@
 
 /// file: trigger-test-gui-e2e.groovy
 
-/// Runs `test-gui-e2e-f12less` for specified editions
+/// Runs `test-gui-e2e` for specified editions
 /// in separate builds paralelly
 import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
 import java.util.Base64
@@ -84,7 +84,7 @@ def main() {
                 smart_build(
                     // see global-defaults.yml, needs to run in minimal container
                     use_upstream_build: true,
-                    relative_job_name: "${branch_base_folder}/builders/test-gui-e2e-f12less",
+                    relative_job_name: "${branch_base_folder}/builders/test-gui-e2e",
                     build_params: [
                         CUSTOM_GIT_REF: effective_git_ref,
                         EDITION: edition,

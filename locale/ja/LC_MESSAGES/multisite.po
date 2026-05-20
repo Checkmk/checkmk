@@ -17666,6 +17666,10 @@ msgstr "カスタムMBean"
 msgid "Custom MIBs"
 msgstr "カスタムMIB"
 
+#, fuzzy
+msgid "Custom Metrics cache age"
+msgstr "カスタムサービス名"
+
 msgid "Custom SQL"
 msgstr "カスタムSQL"
 
@@ -19329,6 +19333,10 @@ msgstr "コメントを削除しますか？"
 msgid "Delete configuration %s"
 msgstr "デフォルト設定%s"
 
+#, fuzzy, python-format
+msgid "Delete configuration '%s'"
+msgstr "デフォルト設定%s"
+
 #, python-format
 msgid "Delete connection #%d"
 msgstr "接続 #%dを削除"
@@ -19517,10 +19525,6 @@ msgstr "このアイコンを削除します"
 msgid "Delete this MIB"
 msgstr "このMIBを削除する"
 
-#, fuzzy
-msgid "Delete this Prometheus configuration"
-msgstr "この接続を削除します"
-
 msgid "Delete this aggregation"
 msgstr "この集計を削除します"
 
@@ -19659,6 +19663,14 @@ msgstr "ID%sのBIルールを削除しました"
 msgid "Deleted MIB %s"
 msgstr "削除されたMIB%s"
 
+#, fuzzy, python-format
+msgid "Deleted OTel QuickSetup configuration bundle: '%s'"
+msgstr "デフォルト設定%s"
+
+#, fuzzy, python-format
+msgid "Deleted Prometheus QuickSetup configuration bundle: '%s'"
+msgstr "Prometheus スクレイプ構成"
+
 #, fuzzy, python-brace-format
 msgid "Deleted Quick Setup {bundle_id}"
 msgstr "クイックセットアップ {bundle_id} を削除しました"
@@ -19733,9 +19745,6 @@ msgstr "削除します"
 #, fuzzy, python-format
 msgid "Deleting %s..."
 msgstr "'%s'をフェッチしています..."
-
-msgid "Deleting will be available soon"
-msgstr ""
 
 msgid "Delimiter for file grouping"
 msgstr "ファイルグループ化のためのデリミタ"
@@ -23062,6 +23071,14 @@ msgstr "ユーザーが編集可能"
 msgid "Edited %d hosts"
 msgstr "編集された %d ホスト"
 
+#, fuzzy, python-format
+msgid "Edited OTel QuickSetup configuration bundle: '%s'"
+msgstr "Prometheus スクレイプ構成"
+
+#, fuzzy, python-format
+msgid "Edited Prometheus QuickSetup configuration bundle: '%s'"
+msgstr "Prometheus スクレイプ構成"
+
 #, python-format
 msgid "Edited host tag group %s (%s)"
 msgstr "編集されたホストタググループ%s(%s)"
@@ -23081,18 +23098,6 @@ msgstr "ルールセット内 \"%s\" フォルダー内 \"%s\"で編集された
 #, python-format
 msgid "Edited the %s '%s'"
 msgstr "%s '%s' を編集しました"
-
-#, fuzzy, python-format
-msgid "Edited the OpenTelemetry collector configuration: '%s'"
-msgstr "Open Telemetryコレクターの設定"
-
-#, fuzzy, python-format
-msgid "Edited the Prometheus configuration '%s'"
-msgstr "Prometheus スクレイプ構成"
-
-#, fuzzy, python-format
-msgid "Edited the connection '%s'"
-msgstr "接続 %s を追加"
 
 #, python-format
 msgid "Edited user profile for user %s"
@@ -27990,6 +27995,10 @@ msgstr "入力ファイルのグロブパターン"
 msgid "Go critical if all licenses are used"
 msgstr "すべてのライセンスが使用されている場合はクリティカルに変化します"
 
+#, fuzzy, python-format
+msgid "Go to %s"
+msgstr "%sに追加"
+
 #, python-format
 msgid "Go to %s overview"
 msgstr "%s概要へ"
@@ -31685,7 +31694,12 @@ msgstr ""
 msgid "How many days in the past Checkmk should evaluate the measurement data"
 msgstr "Checkmkが測定データを評価すべき過去の日数"
 
-msgid "How old (in minutes) the cache file is allowed to be."
+msgid ""
+"How old (in seconds) the cache file for builtin sections is allowed to be."
+msgstr ""
+
+msgid ""
+"How old (in seconds) the cache file for custom metrics is allowed to be."
 msgstr ""
 
 msgid ""
@@ -44847,11 +44861,19 @@ msgid "No Levels"
 msgstr "レベルなし"
 
 #, fuzzy
+msgid "No OTel configuration found for this bundle."
+msgstr "このメソッドには追加の設定オプションはありません。"
+
+#, fuzzy
 msgid "No OpenTelemetry configuration yet"
 msgstr "Open Telemetryコレクターの設定"
 
 msgid "No PNP templates using the deprecated API"
 msgstr "非推奨のAPIを使用するPNPテンプレートを使用しないでください"
+
+#, fuzzy
+msgid "No Prometheus configuration found for this bundle."
+msgstr "%sの設定はまだありません"
 
 #, fuzzy
 msgid "No Prometheus configuration yet"
@@ -47971,6 +47993,13 @@ msgid "OpenTelemetry RED Requests"
 msgstr "OpenTelemetry（実験的）"
 
 #, fuzzy
+msgid ""
+"OpenTelemetry configuration bundles are managed via the OpenTelemetry or "
+"Prometheus Quick Setup pages."
+msgstr ""
+"統合 OpenTelemetry コレクタPrometheusスクレイピングに関連するすべての設定。"
+
+#, fuzzy
 msgid "OpenTelemetry data"
 msgstr "OpenTelemetryメトリック名"
 
@@ -50148,6 +50177,14 @@ msgstr ""
 "てのノードを 親として設定しますが、手動で 親を設定しない場合に限ります。"
 "<br><br><b>分散設定:</b><br>ホストとそのすべての親が同じサイトで監視されてい"
 "ることを確認してください。"
+
+#, fuzzy
+msgid "Part of OpenTelemetry configuration:"
+msgstr "Open Telemetryコレクターの設定"
+
+#, fuzzy
+msgid "Part of Prometheus configuration:"
+msgstr "Prometheus スクレイプ構成"
 
 #, fuzzy, python-format
 msgid "Part of Quick Setup: %s"
@@ -66105,10 +66142,6 @@ msgstr ""
 "スとしてのラックサーバーのコンポーネントとしてのラックユニットのPCI Express"
 "カードIO使用率)。可能な範囲は0%から100%です"
 
-#, fuzzy
-msgid "The Prometheus configuration has been saved."
-msgstr "%sの設定はまだありません"
-
 msgid ""
 "The REST endpoint must begin with <tt>https://alert.victorops.com/"
 "integrations</tt>"
@@ -71276,6 +71309,13 @@ msgid "This ID is used as its unique identifier. It cannot be changed later."
 msgstr ""
 "このIDは、一意の識別子として使用されます。後で変更することはできません。"
 
+#, python-brace-format
+msgid ""
+"This OpenTelemetry Collector is part of the {config_name} OpenTelemetry "
+"configuration.<br>To access further parts of the OpenTelemetry "
+"configuration, go to the related OpenTelemetry configuration."
+msgstr ""
+
 #, fuzzy
 msgid "This OpenTelemetry configuration does not exist."
 msgstr "この集計は存在しません。"
@@ -71283,6 +71323,13 @@ msgstr "この集計は存在しません。"
 #, fuzzy
 msgid "This Prometheus configuration does not exist."
 msgstr "この集計は存在しません。"
+
+#, python-brace-format
+msgid ""
+"This Prometheus scraper is part of the {config_name} Prometheus "
+"configuration.<br>To access further parts of the Prometheus configuration, "
+"go to the related Prometheus configuration."
+msgstr ""
 
 msgid "This SLA has no computation plug-ins configured"
 msgstr "このSLAには計算プラグインは設定されていない"
@@ -95267,6 +95314,22 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Delete this Prometheus configuration"
+#~ msgstr "この接続を削除します"
+
+#, fuzzy, python-format
+#~ msgid "Edited the OpenTelemetry collector configuration: '%s'"
+#~ msgstr "Open Telemetryコレクターの設定"
+
+#, fuzzy, python-format
+#~ msgid "Edited the connection '%s'"
+#~ msgstr "接続 %s を追加"
+
+#, fuzzy
+#~ msgid "The Prometheus configuration has been saved."
+#~ msgstr "%sの設定はまだありません"
 
 #~ msgid "Clear & Delete"
 #~ msgstr "クリアと削除"

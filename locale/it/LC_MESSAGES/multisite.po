@@ -18325,6 +18325,10 @@ msgstr "MBeans personalizzati"
 msgid "Custom MIBs"
 msgstr "MIB personalizzate"
 
+#, fuzzy
+msgid "Custom Metrics cache age"
+msgstr "Nome del servizio personalizzato"
+
 msgid "Custom SQL"
 msgstr "SQL personalizzato"
 
@@ -20035,6 +20039,10 @@ msgstr "Cancellare i commenti?"
 msgid "Delete configuration %s"
 msgstr "Configurazione predefinita"
 
+#, fuzzy, python-format
+msgid "Delete configuration '%s'"
+msgstr "Configurazione predefinita"
+
 #, python-format
 msgid "Delete connection #%d"
 msgstr "Connessione LDAP cancellata #%d"
@@ -20225,10 +20233,6 @@ msgstr "Cancella questa icona"
 msgid "Delete this MIB"
 msgstr "Cancellare questa MIB"
 
-#, fuzzy
-msgid "Delete this Prometheus configuration"
-msgstr "Cancellare questa connessione"
-
 msgid "Delete this aggregation"
 msgstr "Cancellare questa aggregazione"
 
@@ -20371,6 +20375,14 @@ msgstr "Regola BI cancellata con ID %s"
 msgid "Deleted MIB %s"
 msgstr "MIB cancellato %s"
 
+#, fuzzy, python-format
+msgid "Deleted OTel QuickSetup configuration bundle: '%s'"
+msgstr "Configurazione predefinita"
+
+#, fuzzy, python-format
+msgid "Deleted Prometheus QuickSetup configuration bundle: '%s'"
+msgstr "Configurazione dello stile selezionato"
+
 #, python-brace-format
 msgid "Deleted Quick Setup {bundle_id}"
 msgstr ""
@@ -20445,9 +20457,6 @@ msgstr "Cancella"
 #, fuzzy, python-format
 msgid "Deleting %s..."
 msgstr "Recupero di '%s'..."
-
-msgid "Deleting will be available soon"
-msgstr ""
 
 msgid "Delimiter for file grouping"
 msgstr "Delimitatore per il raggruppamento dei file"
@@ -24046,6 +24055,14 @@ msgstr "Modificabile dagli utenti"
 msgid "Edited %d hosts"
 msgstr "Modificato %d host"
 
+#, fuzzy, python-format
+msgid "Edited OTel QuickSetup configuration bundle: '%s'"
+msgstr "Configurazione dello stile selezionato"
+
+#, fuzzy, python-format
+msgid "Edited Prometheus QuickSetup configuration bundle: '%s'"
+msgstr "Configurazione dello stile selezionato"
+
 #, python-format
 msgid "Edited host tag group %s (%s)"
 msgstr "Gruppo tag host modificato %s (%s)"
@@ -24065,18 +24082,6 @@ msgstr "Regola modificata nel ruleset \"%s\" nella cartella \"%s\""
 #, python-format
 msgid "Edited the %s '%s'"
 msgstr "Modificato il %s '%s'"
-
-#, fuzzy, python-format
-msgid "Edited the OpenTelemetry collector configuration: '%s'"
-msgstr "Configurazione della console eventi"
-
-#, fuzzy, python-format
-msgid "Edited the Prometheus configuration '%s'"
-msgstr "Configurazione dello stile selezionato"
-
-#, fuzzy, python-format
-msgid "Edited the connection '%s'"
-msgstr "Aggiunta la connessione '%s'"
 
 #, python-format
 msgid "Edited user profile for user %s"
@@ -29146,6 +29151,10 @@ msgid "Go critical if all licenses are used"
 msgstr "Diventa critico se tutte le licenze sono utilizzate"
 
 #, fuzzy, python-format
+msgid "Go to %s"
+msgstr "Aggiungi a %s"
+
+#, fuzzy, python-format
 msgid "Go to %s overview"
 msgstr "Panoramica dell'host"
 
@@ -33248,7 +33257,12 @@ msgstr ""
 msgid "How many days in the past Checkmk should evaluate the measurement data"
 msgstr "Quanti giorni nel passato Checkmk deve confrontare i dati misurati"
 
-msgid "How old (in minutes) the cache file is allowed to be."
+msgid ""
+"How old (in seconds) the cache file for builtin sections is allowed to be."
+msgstr ""
+
+msgid ""
+"How old (in seconds) the cache file for custom metrics is allowed to be."
 msgstr ""
 
 msgid ""
@@ -46996,12 +47010,20 @@ msgid "No Levels"
 msgstr "Nessun livello"
 
 #, fuzzy
+msgid "No OTel configuration found for this bundle."
+msgstr "Non è richiesta configurazione aggiuntiva per questo metodo."
+
+#, fuzzy
 msgid "No OpenTelemetry configuration yet"
 msgstr "Configurazione della console eventi"
 
 #, fuzzy
 msgid "No PNP templates using the deprecated API"
 msgstr "Nessun plugin di controllo che utilizza l'API deprecata"
+
+#, fuzzy
+msgid "No Prometheus configuration found for this bundle."
+msgstr "Configurazione dell'host"
 
 #, fuzzy
 msgid "No Prometheus configuration yet"
@@ -50251,6 +50273,14 @@ msgid "OpenTelemetry RED Requests"
 msgstr ""
 
 #, fuzzy
+msgid ""
+"OpenTelemetry configuration bundles are managed via the OpenTelemetry or "
+"Prometheus Quick Setup pages."
+msgstr ""
+"Aggiungere una configurazione di scraping per il collettore OpenTelemety di "
+"Prometheus"
+
+#, fuzzy
 msgid "OpenTelemetry data"
 msgstr "Intervallo per la raccolta dei dati"
 
@@ -52697,6 +52727,14 @@ msgstr ""
 "configurano manualmente i genitori.<br><br><b>Configurazione distribuita:</"
 "b><br>Assicurarsi che l'host e tutti i suoi genitori siano monitorati dallo "
 "stesso sito."
+
+#, fuzzy
+msgid "Part of OpenTelemetry configuration:"
+msgstr "Configurazione della console eventi"
+
+#, fuzzy
+msgid "Part of Prometheus configuration:"
+msgstr "Configurazione dello stile selezionato"
 
 #, fuzzy, python-format
 msgid "Part of Quick Setup: %s"
@@ -69455,10 +69493,6 @@ msgstr ""
 "possibile è da 0% a 100%"
 
 #, fuzzy
-msgid "The Prometheus configuration has been saved."
-msgstr "Configurazione dell'host"
-
-#, fuzzy
 msgid ""
 "The REST endpoint must begin with <tt>https://alert.victorops.com/"
 "integrations</tt>"
@@ -74815,6 +74849,13 @@ msgstr ""
 "Questo ID è usato come identificatore unico. Non può essere cambiato in "
 "seguito."
 
+#, python-brace-format
+msgid ""
+"This OpenTelemetry Collector is part of the {config_name} OpenTelemetry "
+"configuration.<br>To access further parts of the OpenTelemetry "
+"configuration, go to the related OpenTelemetry configuration."
+msgstr ""
+
 #, fuzzy
 msgid "This OpenTelemetry configuration does not exist."
 msgstr "Questa aggregazione non esiste."
@@ -74822,6 +74863,13 @@ msgstr "Questa aggregazione non esiste."
 #, fuzzy
 msgid "This Prometheus configuration does not exist."
 msgstr "Questa aggregazione non esiste."
+
+#, python-brace-format
+msgid ""
+"This Prometheus scraper is part of the {config_name} Prometheus "
+"configuration.<br>To access further parts of the Prometheus configuration, "
+"go to the related Prometheus configuration."
+msgstr ""
 
 #, fuzzy
 msgid "This SLA has no computation plug-ins configured"
@@ -100200,6 +100248,22 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Delete this Prometheus configuration"
+#~ msgstr "Cancellare questa connessione"
+
+#, fuzzy, python-format
+#~ msgid "Edited the OpenTelemetry collector configuration: '%s'"
+#~ msgstr "Configurazione della console eventi"
+
+#, fuzzy, python-format
+#~ msgid "Edited the connection '%s'"
+#~ msgstr "Aggiunta la connessione '%s'"
+
+#, fuzzy
+#~ msgid "The Prometheus configuration has been saved."
+#~ msgstr "Configurazione dell'host"
 
 #~ msgid "Clear & Delete"
 #~ msgstr "Cancellare e cancellare"

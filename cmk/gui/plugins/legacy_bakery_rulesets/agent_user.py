@@ -3,18 +3,24 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Mapping
 
-from cmk.gui.agent_bakery import RulespecGroupMonitoringAgentsLinuxUnixAgent
-from cmk.gui.i18n import _
-from cmk.gui.plugins.wato.utils import HostRulespec, rulespec_registry
-from cmk.gui.valuespec import ID, TextInput
-from cmk.utils.rulesets.definition import RuleGroup
+from cmk.rulesets.v1 import Help, Title
+from cmk.rulesets.v1.form_specs import DefaultValue, DictElement, Dictionary, String
+from cmk.rulesets.v1.rule_specs import AgentConfig, Topic
 
 
-def _valuespec_agent_config_agent_user() -> TextInput:
-    return ID(
-        title=_("Run agent as non-root user (Linux) (deprecated)"),
-        help=_(
+def migrate(value: object) -> Mapping[str, object]:
+    if isinstance(value, dict) and "user" in value:
+        return value
+    if isinstance(value, str):
+        return {"user": value}
+    raise ValueError(f"Unexpected value: {value!r}")
+
+
+def _form_spec() -> Dictionary:
+    return Dictionary(
+        help_text=Help(
             "This rule set will only set the agent user to the configured value."
             "<br>It will not take care of further needed permissions on the target system."
             "<br>Please use the new rule set <i>Customize agent package</i> instead, which offers"
@@ -22,17 +28,24 @@ def _valuespec_agent_config_agent_user() -> TextInput:
             "<br> When configuring <i>Customize agent package</i>, matching rules from"
             " this rule set will be ignored.<br>"
         ),
-        allow_empty=False,
-        label=_("Linux user:"),
-        default_value="root",
+        elements={
+            "user": DictElement(
+                required=True,
+                parameter_form=String(
+                    title=Title("Linux user"),
+                    prefill=DefaultValue("root"),
+                ),
+            ),
+        },
+        migrate=migrate,
     )
 
 
-rulespec_registry.register(
-    HostRulespec(
-        group=RulespecGroupMonitoringAgentsLinuxUnixAgent,
-        name=RuleGroup.AgentConfig("agent_user"),
-        valuespec=_valuespec_agent_config_agent_user,
-        deprecation_planned=True,
-    )
+rule_spec_agent_user = AgentConfig(
+    title=Title("Run agent as non-root user (Linux) (deprecated)"),
+    name="agent_user",
+    topic=Topic.OPERATING_SYSTEM,
+    parameter_form=_form_spec,
+    # was: 'deprecation_planned'. TODO CMK-35119
+    is_deprecated=True,
 )

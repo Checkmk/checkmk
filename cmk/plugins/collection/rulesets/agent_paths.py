@@ -96,5 +96,6 @@ rule_spec_agent_paths = AgentConfig(
     name="agent_paths",
     topic=Topic.OPERATING_SYSTEM,
     parameter_form=_form_spec,
+    # was: 'deprecation_planned'. TODO CMK-35119
     is_deprecated=True,
 )

@@ -11,10 +11,6 @@ void main() {
         "CIPARAM_OVERRIDE_DOCKER_TAG_BUILD",  // the docker tag to use for building and testing, forwarded to packages build job
     ]);
 
-    check_environment_variables([
-        "DOCKER_REGISTRY",
-    ]);
-
     def single_tests = load("${checkout_dir}/buildscripts/scripts/utils/single_tests.groovy");
     def helper = load("${checkout_dir}/buildscripts/scripts/utils/test_helper.groovy");
 

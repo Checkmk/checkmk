@@ -27,6 +27,7 @@ const footnote = _t('The hosts will be created in the "Telemetry" folder.')
 const entries = computed<SummaryEntry[]>(() => [
   { kind: 'row', label: _t('Configuration name'), value: props.configName },
   { kind: 'row', label: _t('Site'), value: props.siteId },
+  { kind: 'section', title: _t('Prometheus scraper:') },
   { kind: 'row', label: _t('Job name'), value: props.jobName },
   { kind: 'row', label: _t('Metrics path'), value: props.metricsPath },
   { kind: 'row', label: _t('IP address or host name'), value: props.address },

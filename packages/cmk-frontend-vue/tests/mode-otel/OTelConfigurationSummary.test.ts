@@ -40,8 +40,8 @@ interface RenderProps {
   httpEncryption?: boolean
   grpcEventConsole?: EventConsoleConfig | null
   httpEventConsole?: EventConsoleConfig | null
-  grpcPasswordIsNew?: boolean
-  httpPasswordIsNew?: boolean
+  grpcPasswordName?: string
+  httpPasswordName?: string
   endpointConfigAllowed?: boolean
   encryptionAllowed?: boolean
   eventConsoleAllowed?: boolean
@@ -61,8 +61,8 @@ function renderSummary(props: RenderProps = {}) {
     httpEncryption: false,
     grpcEventConsole: null,
     httpEventConsole: null,
-    grpcPasswordIsNew: false,
-    httpPasswordIsNew: false,
+    grpcPasswordName: '',
+    httpPasswordName: '',
     endpointConfigAllowed: true,
     encryptionAllowed: true,
     eventConsoleAllowed: true,
@@ -80,22 +80,22 @@ describe('OTelConfigurationSummary', () => {
     test('gRPC-only renders only the gRPC section', () => {
       renderSummary({ grpcEnabled: true, httpEnabled: false })
 
-      expect(screen.getByText(/gRPC protocol/)).toBeInTheDocument()
-      expect(screen.queryByText(/HTTP protocol/)).toBeNull()
+      expect(screen.getByText(/gRPC-based OTLP receiver/)).toBeInTheDocument()
+      expect(screen.queryByText(/HTTP-based OTLP receiver/)).toBeNull()
     })
 
     test('HTTP-only renders only the HTTP section', () => {
       renderSummary({ grpcEnabled: false, httpEnabled: true })
 
-      expect(screen.getByText(/HTTP protocol/)).toBeInTheDocument()
-      expect(screen.queryByText(/gRPC protocol/)).toBeNull()
+      expect(screen.getByText(/HTTP-based OTLP receiver/)).toBeInTheDocument()
+      expect(screen.queryByText(/gRPC-based OTLP receiver/)).toBeNull()
     })
 
     test('both enabled renders gRPC before HTTP', () => {
       renderSummary({ grpcEnabled: true, httpEnabled: true })
 
-      const grpcHeading = screen.getByText(/gRPC protocol/)
-      const httpHeading = screen.getByText(/HTTP protocol/)
+      const grpcHeading = screen.getByText(/gRPC-based OTLP receiver/)
+      const httpHeading = screen.getByText(/HTTP-based OTLP receiver/)
       expect(grpcHeading).toBeInTheDocument()
       expect(httpHeading).toBeInTheDocument()
       // gRPC comes before HTTP in the DOM order.
@@ -107,8 +107,8 @@ describe('OTelConfigurationSummary', () => {
     test('renders neither section when both are disabled', () => {
       renderSummary({ grpcEnabled: false, httpEnabled: false })
 
-      expect(screen.queryByText(/gRPC protocol/)).toBeNull()
-      expect(screen.queryByText(/HTTP protocol/)).toBeNull()
+      expect(screen.queryByText(/gRPC-based OTLP receiver/)).toBeNull()
+      expect(screen.queryByText(/HTTP-based OTLP receiver/)).toBeNull()
       // General fields still render.
       expect(screen.getByText(/Configuration name/)).toBeInTheDocument()
     })
@@ -122,26 +122,26 @@ describe('OTelConfigurationSummary', () => {
       expect(screen.queryByText(/Basic auth/)).toBeNull()
     })
 
-    test("'basicauth' with passwordIsNew=true renders 'newly created' marker", () => {
+    test("'basicauth' renders the password title", () => {
       renderSummary({
         grpcEnabled: true,
         grpcAuth: basicAuth('alice', 'quick_setup_password_1'),
-        grpcPasswordIsNew: true
+        grpcPasswordName: 'My new password'
       })
 
-      expect(screen.getByText(/Basic auth.*alice.*newly created/)).toBeInTheDocument()
+      expect(screen.getByText(/Basic auth.*alice.*My new password/)).toBeInTheDocument()
       // Never leak the password-store ID.
       expect(screen.queryByText(/quick_setup_password_/)).toBeNull()
     })
 
-    test("'basicauth' with passwordIsNew=false renders 'existing' marker", () => {
+    test("'basicauth' renders the existing password's title", () => {
       renderSummary({
         grpcEnabled: true,
         grpcAuth: basicAuth('alice', 'some_existing_id'),
-        grpcPasswordIsNew: false
+        grpcPasswordName: 'Existing pw label'
       })
 
-      expect(screen.getByText(/Basic auth.*alice.*existing/)).toBeInTheDocument()
+      expect(screen.getByText(/Basic auth.*alice.*Existing pw label/)).toBeInTheDocument()
       expect(screen.queryByText(/some_existing_id/)).toBeNull()
     })
   })
@@ -208,7 +208,7 @@ describe('OTelConfigurationSummary', () => {
         grpcEventConsole: { resourceAttribute: 'service.name' }
       })
 
-      expect(screen.queryByText(/Event Console/)).toBeNull()
+      expect(screen.queryByText(/Send log messages to event console/)).toBeNull()
       expect(screen.queryByText(/service\.name/)).toBeNull()
     })
   })
@@ -231,7 +231,7 @@ describe('OTelConfigurationSummary', () => {
     test('absent when eventConsole=null', () => {
       renderSummary({ grpcEnabled: true, grpcEventConsole: null })
 
-      expect(screen.queryByText(/Event Console/)).toBeNull()
+      expect(screen.queryByText(/Send log messages to event console/)).toBeNull()
     })
 
     test('renders the resource attribute when eventConsole is set', () => {
@@ -240,8 +240,8 @@ describe('OTelConfigurationSummary', () => {
         grpcEventConsole: { resourceAttribute: 'service.name' }
       })
 
-      expect(screen.getByText(/Event Console/)).toBeInTheDocument()
-      expect(screen.getByText(/service\.name/)).toBeInTheDocument()
+      expect(screen.getByText(/Send log messages to event console/)).toBeInTheDocument()
+      expect(screen.getByText(/Enabled .*Resource attribute: service\.name/)).toBeInTheDocument()
     })
   })
 

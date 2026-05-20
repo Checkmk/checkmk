@@ -8,6 +8,8 @@ import { defineComponent, ref } from 'vue'
 
 import * as cmkFetch from '@/lib/cmkFetch'
 
+import type { Suggestion } from '@/components/CmkSuggestions'
+
 import ConfigureCollector from '@/mode-otel/otel-configuration-steps/ConfigureCollector.vue'
 import type {
   AuthConfig,
@@ -62,6 +64,7 @@ function renderComponent(
   const grpcEventConsole = ref<EventConsoleConfig | null>(null)
   const httpEventConsole = ref<EventConsoleConfig | null>(null)
   const pendingPasswords = ref<Map<string, PasswordConfig>>(new Map())
+  const availablePasswords = ref<Suggestion[]>([])
   const compRef = ref<InstanceType<typeof ConfigureCollector>>()
 
   render(
@@ -79,6 +82,7 @@ function renderComponent(
         grpcEventConsole,
         httpEventConsole,
         pendingPasswords,
+        availablePasswords,
         compRef,
         noAuthAllowed,
         endpointConfigAllowed,
@@ -87,7 +91,7 @@ function renderComponent(
         grpcDefaultPort,
         httpDefaultPort
       }),
-      template: `<ConfigureCollector ref="compRef" :no-auth-allowed="noAuthAllowed" :endpoint-config-allowed="endpointConfigAllowed" :encryption-allowed="encryptionAllowed" :event-console-allowed="eventConsoleAllowed" :grpc-default-port="grpcDefaultPort" :http-default-port="httpDefaultPort" v-model:grpc-enabled="grpcEnabled" v-model:http-enabled="httpEnabled" v-model:grpc-auth="grpcAuth" v-model:http-auth="httpAuth" v-model:grpc-endpoint="grpcEndpoint" v-model:http-endpoint="httpEndpoint" v-model:grpc-encryption="grpcEncryption" v-model:http-encryption="httpEncryption" v-model:grpc-event-console="grpcEventConsole" v-model:http-event-console="httpEventConsole" v-model:pending-passwords="pendingPasswords" />`
+      template: `<ConfigureCollector ref="compRef" :no-auth-allowed="noAuthAllowed" :endpoint-config-allowed="endpointConfigAllowed" :encryption-allowed="encryptionAllowed" :event-console-allowed="eventConsoleAllowed" :grpc-default-port="grpcDefaultPort" :http-default-port="httpDefaultPort" v-model:grpc-enabled="grpcEnabled" v-model:http-enabled="httpEnabled" v-model:grpc-auth="grpcAuth" v-model:http-auth="httpAuth" v-model:grpc-endpoint="grpcEndpoint" v-model:http-endpoint="httpEndpoint" v-model:grpc-encryption="grpcEncryption" v-model:http-encryption="httpEncryption" v-model:grpc-event-console="grpcEventConsole" v-model:http-event-console="httpEventConsole" v-model:pending-passwords="pendingPasswords" v-model:available-passwords="availablePasswords" />`
     })
   )
 
@@ -103,6 +107,7 @@ function renderComponent(
     grpcEventConsole,
     httpEventConsole,
     pendingPasswords,
+    availablePasswords,
     compRef
   }
 }

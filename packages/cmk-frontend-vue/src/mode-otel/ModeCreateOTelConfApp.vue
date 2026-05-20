@@ -9,6 +9,7 @@ import { computed, ref, useTemplateRef, watch } from 'vue'
 
 import usei18n from '@/lib/i18n'
 
+import type { Suggestion } from '@/components/CmkSuggestions'
 import CmkWizard, {
   CmkWizardButton,
   CmkWizardModeToggle,
@@ -98,6 +99,7 @@ const httpEncryption = ref<boolean>(false)
 const grpcEventConsole = ref<EventConsoleConfig | null>(null)
 const httpEventConsole = ref<EventConsoleConfig | null>(null)
 const pendingPasswords = ref<Map<string, PasswordConfig>>(new Map())
+const availablePasswords = ref<Suggestion[]>([])
 
 // Pending passwords actually referenced by the configured auth methods. The
 // Step 2 slide-in lets users create passwords they may later swap out, and we
@@ -161,9 +163,16 @@ function narrowSocketAddress(endpoint: EndpointConfig): OTelSocketAddressInput |
   }
 }
 
-function isPasswordNew(auth: AuthConfig): boolean {
+function passwordTitle(auth: AuthConfig): string {
   const id = auth.credential?.password
-  return id !== null && id !== undefined && pendingPasswords.value.has(id)
+  if (!id) {
+    return ''
+  }
+  const pending = pendingPasswords.value.get(id)
+  if (pending) {
+    return pending.general_props.title
+  }
+  return availablePasswords.value.find((p) => p.name === id)?.title ?? id
 }
 
 function buildProtocolInput(
@@ -362,6 +371,7 @@ async function onSaveClick(): Promise<void> {
           v-model:grpc-event-console="grpcEventConsole"
           v-model:http-event-console="httpEventConsole"
           v-model:pending-passwords="pendingPasswords"
+          v-model:available-passwords="availablePasswords"
           :no-auth-allowed="no_auth_allowed"
           :endpoint-config-allowed="endpoint_config_allowed"
           :encryption-allowed="encryption_allowed"
@@ -439,8 +449,8 @@ async function onSaveClick(): Promise<void> {
               :http-encryption="httpEncryption"
               :grpc-event-console="grpcEventConsole"
               :http-event-console="httpEventConsole"
-              :grpc-password-is-new="isPasswordNew(grpcAuth)"
-              :http-password-is-new="isPasswordNew(httpAuth)"
+              :grpc-password-name="passwordTitle(grpcAuth)"
+              :http-password-name="passwordTitle(httpAuth)"
               :endpoint-config-allowed="endpoint_config_allowed"
               :encryption-allowed="encryption_allowed"
               :event-console-allowed="event_console_allowed"

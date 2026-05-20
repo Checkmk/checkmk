@@ -259,3 +259,25 @@ def _test_service_ruleset(folder: Folder) -> Ruleset:
         ),
     )
     return ruleset
+
+
+@pytest.mark.xfail(
+    strict=True,
+    raises=AttributeError,
+    reason="SUP-34616: helper does not exist yet; predefined_condition_id is dropped on save",
+)
+def test_get_predefined_condition_id_from_catalog_value_predefined() -> None:
+    helper = getattr(rulesets, "get_predefined_condition_id_from_catalog_value")
+    raw_conditions = {"conditions": {"type": ("predefined", "my_predef_id")}}
+    assert helper(raw_conditions) == "my_predef_id"
+
+
+@pytest.mark.xfail(
+    strict=True,
+    raises=AttributeError,
+    reason="SUP-34616: helper does not exist yet",
+)
+def test_get_predefined_condition_id_from_catalog_value_explicit() -> None:
+    helper = getattr(rulesets, "get_predefined_condition_id_from_catalog_value")
+    raw_conditions = {"conditions": {"type": ("explicit", {"folder_path": ""})}}
+    assert helper(raw_conditions) is None

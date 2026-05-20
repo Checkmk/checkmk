@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from ._adapter import FormSpecAdapter
 from ._utils import (
     create_validation_error_for_mk_user_error,
     DisplayMode,
@@ -43,6 +44,7 @@ __all__ = [
     "DEFAULT_VALUE",
     "DefaultValue",
     "DisplayMode",
+    "FormSpecAdapter",
     "FormSpecValidationError",
     "FormSpecVisitor",
     "get_prefill_default",

@@ -44,6 +44,7 @@ from cmk.gui.exceptions import FinalizeRequest, MKUserError
 from cmk.gui.form_specs import (
     create_validation_error_for_mk_user_error,
     DisplayMode,
+    FormSpecAdapter,
     parse_data_from_field_id,
     RawDiskData,
     read_data_from_frontend,
@@ -51,7 +52,6 @@ from cmk.gui.form_specs import (
 )
 from cmk.gui.form_specs.generators.dict_to_catalog import create_flat_catalog_from_dictionary
 from cmk.gui.form_specs.unstable.legacy_converter import (
-    TransformDataForLegacyFormatOrRecomposeFunction,
     Tuple,
 )
 from cmk.gui.htmllib.generator import HTMLWriter
@@ -202,24 +202,77 @@ def register(page_registry: PageRegistry, mode_registry: ModeRegistry) -> None:
     mode_registry.register(ModeSiteLivestatusEncryption)
 
 
-def _status_host_from_disk(value: object) -> tuple[str, object]:
-    """Translate the on-disk ``tuple[SiteId, str] | None`` into the cascading
-    choice tuple the form spec expects.
+class StatusHostFormSpecAdapter(FormSpecAdapter[tuple[SiteId, str] | None, CascadingSingleChoice]):
+    """Serialize the status host between its model and form representation.
+
+    The model (and on-disk) shape is ``tuple[SiteId, str] | None``; only the
+    form UI works with the cascading choice tuple ``("disabled", None)`` /
+    ``("enabled", (site_id, host_name))``.
     """
-    if value is None:
-        return "disabled", None
-    assert isinstance(value, tuple) and len(value) == 2
-    return "enabled", value
 
+    def __init__(self, configured_sites: SiteConfigurations) -> None:
+        self._configured_sites = configured_sites
 
-def _status_host_to_disk(value: object) -> object:
-    """Translate the cascading choice tuple back to the on-disk shape."""
-    assert isinstance(value, tuple) and len(value) == 2
-    choice, payload = value
-    if choice == "disabled":
-        return None
-    assert choice == "enabled"
-    return payload
+    def form_spec(self) -> CascadingSingleChoice:
+        status_host_docu_url = "https://checkmk.com/checkmk_multisite_statushost.html"
+        site_elements: list[SingleChoiceElementExtended[str]] = [
+            SingleChoiceElementExtended(  # astrein: disable=localization-checker
+                name=str(sk),
+                title=Title(si.get("alias", sk)),  # astrein: disable=localization-checker
+            )
+            for sk, si in self._configured_sites.items()
+        ]
+        return CascadingSingleChoice(
+            title=Title("Status host"),
+            elements=[
+                CascadingSingleChoiceElement(
+                    name="disabled",
+                    title=Title("No status host"),
+                    parameter_form=FixedValue(
+                        value=None, title=Title("No status host"), label=Label("")
+                    ),
+                ),
+                CascadingSingleChoiceElement(
+                    name="enabled",
+                    title=Title("Use the following status host"),
+                    parameter_form=Tuple(
+                        title=Title("Use the following status host"),
+                        layout="horizontal",
+                        elements=[
+                            SingleChoiceExtended[str](
+                                title=Title("Site:"),
+                                elements=site_elements,
+                            ),
+                            MonitoredHost(),
+                        ],
+                    ),
+                ),
+            ],
+            help_text=Help(  # astrein: disable=localization-checker
+                _(
+                    "By specifying a status host for each non-local connection "
+                    "you prevent graphical user interface (GUI) from running into timeouts when remote sites do not respond. "
+                    "You need to add the remote monitoring servers as hosts into your local monitoring "
+                    "site and use their host state as a reachability state of the remote site. Please "
+                    'refer to the <a href="%s" target="_blank">online documentation</a> for details.'
+                )
+                % status_host_docu_url
+            ),
+        )
+
+    def from_form_spec(self, data: object) -> tuple[SiteId, str] | None:
+        match data:
+            case ("disabled", None):
+                return None
+            case ("enabled", (site_id, host_name)):
+                return SiteId(str(site_id)), str(host_name)
+            case _:
+                raise ValueError(f"Invalid status host form data: {data!r}")
+
+    def to_form_spec(self, model: tuple[SiteId, str] | None) -> tuple[str, object]:
+        if model is None:
+            return "disabled", None
+        return "enabled", model
 
 
 class ModeEditSite(WatoMode):
@@ -261,6 +314,7 @@ class ModeEditSite(WatoMode):
             raise MKUserError(None, get_free_message())
 
         self._configured_sites = self._site_mgmt.load_sites()
+        self._status_host_adapter = StatusHostFormSpecAdapter(self._configured_sites)
 
         if self._clone_id:
             try:
@@ -334,6 +388,11 @@ class ModeEditSite(WatoMode):
         flat_catalog = self._flat_catalog(config)
         raw_site_spec = parse_data_from_field_id(flat_catalog, "_edit_site_id")
         assert isinstance(raw_site_spec, dict)
+
+        if "status_host" in raw_site_spec:
+            raw_site_spec["status_host"] = self._status_host_adapter.from_form_spec(
+                raw_site_spec["status_host"]
+            )
 
         # `authentication_connections` / `user_attribute_sync_connections`
         # may carry a `DropKeySentinel` value to mark "inherit from central"
@@ -447,15 +506,17 @@ class ModeEditSite(WatoMode):
     def _form_data_for_render(self) -> dict:
         """Build the form-input dict for the site-edit dialog.
 
-        Translates the on-disk shape of `authentication_connections`
-        (absent ↔ inherit from central, present ↔ explicit list) into the
-        cascading-choice tuple the form spec expects, and fills SAML
-        endpoint URLs / the central-site inherited summary so the read-only
-        display widgets show meaningful values.
+        Translates the on-disk shapes of `status_host` and
+        `authentication_connections` (absent ↔ inherit from central, present
+        ↔ explicit list) into the cascading-choice tuples the form spec
+        expects, and fills SAML endpoint URLs / the central-site inherited
+        summary so the read-only display widgets show meaningful values.
         """
         populated = populate_saml_site_endpoint_urls(self._site)
         data: dict = dict(populated)
         callback_url = populated.get("multisiteurl", "")
+        if "status_host" in data:
+            data["status_host"] = self._status_host_adapter.to_form_spec(data["status_host"])
         if "authentication_connections" in data:
             data["authentication_connections"] = ("list", data["authentication_connections"])
         else:
@@ -554,14 +615,6 @@ class ModeEditSite(WatoMode):
 
     def _livestatus_elements(self) -> dict[str, DictElement]:
         proxy_docu_url = "https://checkmk.com/checkmk_multisite_modproxy.html"
-        status_host_docu_url = "https://checkmk.com/checkmk_multisite_statushost.html"
-        site_elements: list[SingleChoiceElementExtended[str]] = [
-            SingleChoiceElementExtended(  # astrein: disable=localization-checker
-                name=str(sk),
-                title=Title(si.get("alias", sk)),  # astrein: disable=localization-checker
-            )
-            for sk, si in self._site_mgmt.load_sites().items()
-        ]
 
         return {
             "socket": DictElement(
@@ -622,47 +675,7 @@ class ModeEditSite(WatoMode):
                 ),
             ),
             "status_host": DictElement(
-                parameter_form=TransformDataForLegacyFormatOrRecomposeFunction(
-                    wrapped_form_spec=CascadingSingleChoice(
-                        title=Title("Status host"),
-                        elements=[
-                            CascadingSingleChoiceElement(
-                                name="disabled",
-                                title=Title("No status host"),
-                                parameter_form=FixedValue(
-                                    value=None, title=Title("No status host"), label=Label("")
-                                ),
-                            ),
-                            CascadingSingleChoiceElement(
-                                name="enabled",
-                                title=Title("Use the following status host"),
-                                parameter_form=Tuple(
-                                    title=Title("Use the following status host"),
-                                    layout="horizontal",
-                                    elements=[
-                                        SingleChoiceExtended[str](
-                                            title=Title("Site:"),
-                                            elements=site_elements,
-                                        ),
-                                        MonitoredHost(),
-                                    ],
-                                ),
-                            ),
-                        ],
-                        help_text=Help(  # astrein: disable=localization-checker
-                            _(
-                                "By specifying a status host for each non-local connection "
-                                "you prevent graphical user interface (GUI) from running into timeouts when remote sites do not respond. "
-                                "You need to add the remote monitoring servers as hosts into your local monitoring "
-                                "site and use their host state as a reachability state of the remote site. Please "
-                                'refer to the <a href="%s" target="_blank">online documentation</a> for details.'
-                            )
-                            % status_host_docu_url
-                        ),
-                    ),
-                    from_disk=_status_host_from_disk,
-                    to_disk=_status_host_to_disk,
-                ),
+                parameter_form=self._status_host_adapter.form_spec(),
             ),
             "disabled": DictElement(
                 parameter_form=BooleanChoice(

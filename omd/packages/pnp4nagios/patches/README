@@ -1,0 +1,9 @@
+Index of patches
+
+0001:
+  Prevent creation of invalid RRD files when the RRD filename exceeds the
+  filesystem PC_NAME_MAX limit. rrd_create.c appends "XXXXXX" to the filename
+  for a temp file, so the filename plus 6 bytes must fit within PC_NAME_MAX.
+  If the limit would be exceeded, data2rrd logs a warning and returns early
+  instead of letting the RRD backend fail silently or corrupt state.
+

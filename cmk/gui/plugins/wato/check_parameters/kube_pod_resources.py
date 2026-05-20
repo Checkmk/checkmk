@@ -65,6 +65,16 @@ def _parameter_valuespec_kube_pod_resources(help_text: str) -> Dictionary:
                                 ],
                             ),
                         ),
+                        (
+                            "failed",
+                            Tuple(
+                                title=_("Upper levels for failed pod count"),
+                                elements=[
+                                    Integer(title=_("Warning at"), default_value=5),
+                                    Integer(title=_("Critical at"), default_value=10),
+                                ],
+                            ),
+                        ),
                     ],
                 ),
             ),

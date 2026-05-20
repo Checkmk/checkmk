@@ -15,6 +15,7 @@ from cmk.plugins.kube.agent_based.kube_pod_resources import (
     _POD_RESOURCES_FIELDS,
     check_free_pods,
     Params,
+    PodPhaseCountLevels,
     ValueStore,
     VSResultPercent,
 )
@@ -671,6 +672,70 @@ def test_pending_count_and_duration_interaction(
     assert isinstance(pending_result, Result)
     assert pending_result.state == expected_state
     assert pending_result.summary == expected_summary
+    assert len(result) == 9
+
+
+@pytest.mark.parametrize(
+    "pod_count,count_levels,expected_state,expected_summary",
+    [
+        pytest.param(
+            2,
+            (10, 20),
+            State.OK,
+            "Failed: 2",
+            id="count_below_warn",
+        ),
+        pytest.param(
+            15,
+            (10, 20),
+            State.WARN,
+            "Failed: 15 (warn/crit at 10/20)",
+            id="count_warn_only",
+        ),
+        pytest.param(
+            25,
+            (10, 20),
+            State.CRIT,
+            "Failed: 25 (warn/crit at 10/20)",
+            id="count_crit_only",
+        ),
+        pytest.param(
+            25,
+            None,
+            State.OK,
+            "Failed: 25",
+            id="no_levels",
+        ),
+    ],
+)
+def test_failed_count(
+    pod_count: int,
+    count_levels: tuple[int, int] | None,
+    expected_state: State,
+    expected_summary: str,
+) -> None:
+    pods = [f"pod-{i}" for i in range(pod_count)]
+    now = 1000.0
+    pod_phase_count_levels: PodPhaseCountLevels = {}
+    if count_levels is not None:
+        pod_phase_count_levels["failed"] = count_levels
+    result = tuple(
+        _check_kube_pod_resources(
+            now,
+            {},
+            Params(
+                pending="no_levels",
+                free="no_levels",
+                pod_phase_count_levels=pod_phase_count_levels,
+            ),
+            PodResources(failed=pods),
+            None,
+        )
+    )
+    failed_result = result[6]
+    assert isinstance(failed_result, Result)
+    assert failed_result.state == expected_state
+    assert failed_result.summary == expected_summary
     assert len(result) == 9
 
 

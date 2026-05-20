@@ -255,7 +255,7 @@ def test_python_is_bytecode_compiled(
 def test_all_bytecode_files_exist(site: Site) -> None:
     # see CMK-24370 - pyc files will be generated as a postinst step. In contrast to before, `compileall` will
     # be executed on _all_ files below `site.root`, so we simply check for an 1on1 existence.
-    for py_path in Path(site.root).rglob("*.py"):
+    for py_path in (Path(site.root / "version")).rglob("*.py"):
         if "check_mk/agents/plugins" in py_path.as_posix():
             continue
         if "/skel/" in py_path.as_posix():

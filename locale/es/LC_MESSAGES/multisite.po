@@ -4812,10 +4812,6 @@ msgid "Address name"
 msgstr "Dirección"
 
 #, fuzzy
-msgid "Address pool name"
-msgstr "Dirección Nombre de la piscina"
-
-#, fuzzy
 msgid "Address type"
 msgstr "Tipo de dirección"
 
@@ -7164,14 +7160,6 @@ msgid "Application and Network Load Balancing (ELBv2)"
 msgstr "Equilibrio de carga de aplicaciones y redes (ELBv2)"
 
 #, fuzzy
-msgid "Application gateway"
-msgstr "Pasarela de aplicaciones"
-
-#, fuzzy
-msgid "Application gateways"
-msgstr "Pasarelas de aplicación"
-
-#, fuzzy
 msgid "Application load balancer certificates"
 msgstr "Certificados del equilibrador de carga de aplicaciones"
 
@@ -7557,10 +7545,6 @@ msgstr "Asignar al host de consulta"
 
 msgid "Assign via regular expressions"
 msgstr "Asignar mediante expresiones regulares"
-
-#, fuzzy
-msgid "Assigned to host"
-msgstr "Asignar al grupo"
 
 #, fuzzy
 msgid "Assignment mode"
@@ -9495,10 +9479,6 @@ msgstr "Grupos de fondo"
 msgid "Back-end port"
 msgstr "Puerto Backend"
 
-#, fuzzy
-msgid "Back-ends"
-msgstr "Backends"
-
 msgid "Background job acknowledged"
 msgstr "Reconocimiento del trabajo de fondo"
 
@@ -9989,10 +9969,6 @@ msgstr ""
 
 msgid "Bottom"
 msgstr "En el fondo"
-
-#, fuzzy
-msgid "Bottom level suite"
-msgstr "No hay niveles establecidos"
 
 msgid "Bounce buffers"
 msgstr "Topes de rebote"
@@ -23947,10 +23923,6 @@ msgstr "Entradas"
 
 msgid "Entry"
 msgstr "Entrada"
-
-#, fuzzy
-msgid "Env creation"
-msgstr "Creación"
 
 #, fuzzy
 msgid "Environment Metrics"
@@ -39080,12 +39052,6 @@ msgstr "Escuchar los mensajes entrantes a través de"
 msgid "Listen for spans on this local IP address"
 msgstr ""
 
-msgid "Listener"
-msgstr "Oyente"
-
-msgid "Listeners"
-msgstr "Oyentes"
-
 msgid "Listeners per load balancer"
 msgstr "Receptores por equilibrador de carga"
 
@@ -41681,10 +41647,6 @@ msgstr "Número máximo de peticiones RPC por segundo"
 
 msgid "Maximum number of access points"
 msgstr "Número máximo de puntos de acceso"
-
-#, fuzzy
-msgid "Maximum number of attempts"
-msgstr "Número máximo de intentos de entrega"
 
 #, fuzzy
 msgid ""
@@ -51532,12 +51494,6 @@ msgstr "Comunicación en texto plano"
 msgid "Plain text communication is enabled for %s"
 msgstr "La comunicación en texto plano está habilitada para %s"
 
-msgid "Plan ID"
-msgstr ""
-
-msgid "Plans"
-msgstr ""
-
 #, fuzzy
 msgid "Platform firmware level"
 msgstr "Plataforma Nivel de firmware"
@@ -56614,9 +56570,6 @@ msgstr "Unidades Rittal CMC-III: Corriente"
 msgid "Rittal CMC-III Units: Temperatures"
 msgstr "Unidades Rittal CMC-III: Temperaturas"
 
-msgid "Robot"
-msgstr ""
-
 msgid "Role"
 msgstr "Papel"
 
@@ -57946,16 +57899,8 @@ msgid "Scheduler"
 msgstr "Programador"
 
 #, fuzzy
-msgid "Scheduler interval"
-msgstr "Intervalo de caché"
-
-#, fuzzy
 msgid "Scheduler job name"
 msgstr "Nombre del trabajo del programador"
-
-#, fuzzy
-msgid "Scheduler plan configs"
-msgstr "Programar los tiempos de inactividad"
 
 #, python-format
 msgid "Scheduling report in background failed: %s"
@@ -64645,10 +64590,6 @@ msgstr "Mejoras en el rendimiento"
 msgid "Suggested tutorial videos"
 msgstr "Vídeos tutoriales sugeridos"
 
-#, fuzzy
-msgid "Suite name"
-msgstr "Nombre del sitio"
-
 msgid "Sum"
 msgstr "Suma"
 
@@ -65897,10 +65838,6 @@ msgstr "Prueba"
 #, fuzzy
 msgid "Testing notifications"
 msgstr "última notificación"
-
-#, fuzzy
-msgid "Tests"
-msgstr "Prueba"
 
 msgid "Text"
 msgstr "Texto"
@@ -76542,6 +76479,10 @@ msgstr ""
 "continuar con la siguiente instancia. Si no se establece, se utiliza el "
 "valor por defecto de ADO."
 
+#, fuzzy
+msgid "Time until alert, if ALLCONTAINERSRESTARTING condition is true"
+msgstr "Tiempo hasta la alerta, si la condición CONTAINERSREADY es falsa"
+
 msgid "Time until alert, if AVAILABLE condition is false"
 msgstr "Tiempo hasta la alerta, si la condición de AVAILABLE es falsa"
 
@@ -77061,10 +77002,6 @@ msgstr "Top application traffic: vista del último día"
 
 msgid "Top application traffic: last hour view"
 msgstr "Top application traffic: vista de la última hora"
-
-#, fuzzy
-msgid "Top level suite"
-msgstr "Nombre de seguridad"
 
 #, fuzzy
 msgid "Top list"
@@ -84394,10 +84331,6 @@ msgstr "Variable"
 
 msgid "Variables set in the site user's environment"
 msgstr "Variables establecidas en el entorno del usuario del sitio's"
-
-#, fuzzy
-msgid "Variant"
-msgstr "Variable"
 
 msgid "Various"
 msgstr "Varios"
@@ -96542,6 +96475,68 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Address pool name"
+#~ msgstr "Dirección Nombre de la piscina"
+
+#, fuzzy
+#~ msgid "Application gateway"
+#~ msgstr "Pasarela de aplicaciones"
+
+#, fuzzy
+#~ msgid "Application gateways"
+#~ msgstr "Pasarelas de aplicación"
+
+#, fuzzy
+#~ msgid "Assigned to host"
+#~ msgstr "Asignar al grupo"
+
+#, fuzzy
+#~ msgid "Back-ends"
+#~ msgstr "Backends"
+
+#, fuzzy
+#~ msgid "Bottom level suite"
+#~ msgstr "No hay niveles establecidos"
+
+#, fuzzy
+#~ msgid "Env creation"
+#~ msgstr "Creación"
+
+#~ msgid "Listener"
+#~ msgstr "Oyente"
+
+#~ msgid "Listeners"
+#~ msgstr "Oyentes"
+
+#, fuzzy
+#~ msgid "Maximum number of attempts"
+#~ msgstr "Número máximo de intentos de entrega"
+
+#, fuzzy
+#~ msgid "Scheduler interval"
+#~ msgstr "Intervalo de caché"
+
+#, fuzzy
+#~ msgid "Scheduler plan configs"
+#~ msgstr "Programar los tiempos de inactividad"
+
+#, fuzzy
+#~ msgid "Suite name"
+#~ msgstr "Nombre del sitio"
+
+#, fuzzy
+#~ msgid "Tests"
+#~ msgstr "Prueba"
+
+#, fuzzy
+#~ msgid "Top level suite"
+#~ msgstr "Nombre de seguridad"
+
+#, fuzzy
+#~ msgid "Variant"
+#~ msgstr "Variable"
 
 #~ msgid "Clear & Delete"
 #~ msgstr "Borrar & Suprimir"

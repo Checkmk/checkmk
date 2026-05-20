@@ -4788,10 +4788,6 @@ msgid "Address name"
 msgstr "Adres Naam"
 
 #, fuzzy
-msgid "Address pool name"
-msgstr "Adres Pool Naam"
-
-#, fuzzy
 msgid "Address type"
 msgstr "Adres Type"
 
@@ -7102,14 +7098,6 @@ msgid "Application and Network Load Balancing (ELBv2)"
 msgstr "Toepassing en netwerkbelasting balancering (ELBv2)"
 
 #, fuzzy
-msgid "Application gateway"
-msgstr "Toepassing Gateway"
-
-#, fuzzy
-msgid "Application gateways"
-msgstr "Toepassingsgateways"
-
-#, fuzzy
 msgid "Application load balancer certificates"
 msgstr "Application Load Balancer Certificaten"
 
@@ -7491,10 +7479,6 @@ msgstr "Toewijzen aan de vragende host"
 
 msgid "Assign via regular expressions"
 msgstr "Toewijzen via reguliere expressies"
-
-#, fuzzy
-msgid "Assigned to host"
-msgstr "Toewijzen aan groep"
 
 #, fuzzy
 msgid "Assignment mode"
@@ -9419,10 +9403,6 @@ msgstr "Backend-pools"
 msgid "Back-end port"
 msgstr "Achterpoort"
 
-#, fuzzy
-msgid "Back-ends"
-msgstr "Backends"
-
 msgid "Background job acknowledged"
 msgstr "Achtergrond baan erkend"
 
@@ -9909,10 +9889,6 @@ msgstr ""
 
 msgid "Bottom"
 msgstr "Bodem"
-
-#, fuzzy
-msgid "Bottom level suite"
-msgstr "Geen niveaus ingesteld"
 
 msgid "Bounce buffers"
 msgstr "Stuiterbuffers"
@@ -23763,10 +23739,6 @@ msgstr "Inzendingen"
 
 msgid "Entry"
 msgstr "Ingang"
-
-#, fuzzy
-msgid "Env creation"
-msgstr "Schepping"
 
 #, fuzzy
 msgid "Environment Metrics"
@@ -38795,12 +38767,6 @@ msgstr "Luister naar inkomende berichten via"
 msgid "Listen for spans on this local IP address"
 msgstr ""
 
-msgid "Listener"
-msgstr "Luisteraar"
-
-msgid "Listeners"
-msgstr "Luisteraars"
-
 msgid "Listeners per load balancer"
 msgstr "Luisteraars per load balancer"
 
@@ -41365,10 +41331,6 @@ msgstr "Maximum aantal RPC verzoeken per seconde"
 
 msgid "Maximum number of access points"
 msgstr "Maximum aantal toegangspunten"
-
-#, fuzzy
-msgid "Maximum number of attempts"
-msgstr "Maximum aantal leveringspogingen"
 
 #, fuzzy
 msgid ""
@@ -51141,12 +51103,6 @@ msgstr "Mededeling in gewone tekst"
 msgid "Plain text communication is enabled for %s"
 msgstr "Communicatie via platte tekst is ingeschakeld voor %s"
 
-msgid "Plan ID"
-msgstr ""
-
-msgid "Plans"
-msgstr ""
-
 #, fuzzy
 msgid "Platform firmware level"
 msgstr "Platform Firmware niveau"
@@ -56150,9 +56106,6 @@ msgstr "Rittal CMC-III units: Actueel"
 msgid "Rittal CMC-III Units: Temperatures"
 msgstr "Rittal CMC-III units: Temperaturen"
 
-msgid "Robot"
-msgstr ""
-
 msgid "Role"
 msgstr "Rol"
 
@@ -57469,16 +57422,8 @@ msgid "Scheduler"
 msgstr "Scheduler"
 
 #, fuzzy
-msgid "Scheduler interval"
-msgstr "Cache-interval"
-
-#, fuzzy
 msgid "Scheduler job name"
 msgstr "Taaknaam planner"
-
-#, fuzzy
-msgid "Scheduler plan configs"
-msgstr "Uitvaltijden plannen"
 
 #, python-format
 msgid "Scheduling report in background failed: %s"
@@ -64095,10 +64040,6 @@ msgstr "Prestatieverbeteringen"
 msgid "Suggested tutorial videos"
 msgstr "Voorgestelde instructievideo's"
 
-#, fuzzy
-msgid "Suite name"
-msgstr "Naam site"
-
 msgid "Sum"
 msgstr "Som"
 
@@ -65338,10 +65279,6 @@ msgstr "Test"
 #, fuzzy
 msgid "Testing notifications"
 msgstr "laatste mededeling"
-
-#, fuzzy
-msgid "Tests"
-msgstr "Test"
 
 msgid "Text"
 msgstr "Tekst"
@@ -75921,6 +75858,10 @@ msgstr ""
 "met de volgende instantie wordt begonnen. Indien niet ingesteld, wordt de "
 "standaardwaarde van ADO gebruikt."
 
+#, fuzzy
+msgid "Time until alert, if ALLCONTAINERSRESTARTING condition is true"
+msgstr "Tijd tot waarschuwing, indien CONTAINERSREADY voorwaarde vals is"
+
 msgid "Time until alert, if AVAILABLE condition is false"
 msgstr "Tijd tot waarschuwing, indien BESCHIKBAAR voorwaarde vals is"
 
@@ -76436,10 +76377,6 @@ msgstr "Top applicatie verkeer: laatste dag weergave"
 
 msgid "Top application traffic: last hour view"
 msgstr "Top applicatieverkeer: weergave laatste uur"
-
-#, fuzzy
-msgid "Top level suite"
-msgstr "Veiligheidsnaam"
 
 #, fuzzy
 msgid "Top list"
@@ -83719,10 +83656,6 @@ msgstr "Variabele"
 
 msgid "Variables set in the site user's environment"
 msgstr "Variabelen ingesteld in de omgeving van de sitegebruiker's"
-
-#, fuzzy
-msgid "Variant"
-msgstr "Variabele"
 
 msgid "Various"
 msgstr "Diverse"
@@ -95825,6 +95758,68 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Address pool name"
+#~ msgstr "Adres Pool Naam"
+
+#, fuzzy
+#~ msgid "Application gateway"
+#~ msgstr "Toepassing Gateway"
+
+#, fuzzy
+#~ msgid "Application gateways"
+#~ msgstr "Toepassingsgateways"
+
+#, fuzzy
+#~ msgid "Assigned to host"
+#~ msgstr "Toewijzen aan groep"
+
+#, fuzzy
+#~ msgid "Back-ends"
+#~ msgstr "Backends"
+
+#, fuzzy
+#~ msgid "Bottom level suite"
+#~ msgstr "Geen niveaus ingesteld"
+
+#, fuzzy
+#~ msgid "Env creation"
+#~ msgstr "Schepping"
+
+#~ msgid "Listener"
+#~ msgstr "Luisteraar"
+
+#~ msgid "Listeners"
+#~ msgstr "Luisteraars"
+
+#, fuzzy
+#~ msgid "Maximum number of attempts"
+#~ msgstr "Maximum aantal leveringspogingen"
+
+#, fuzzy
+#~ msgid "Scheduler interval"
+#~ msgstr "Cache-interval"
+
+#, fuzzy
+#~ msgid "Scheduler plan configs"
+#~ msgstr "Uitvaltijden plannen"
+
+#, fuzzy
+#~ msgid "Suite name"
+#~ msgstr "Naam site"
+
+#, fuzzy
+#~ msgid "Tests"
+#~ msgstr "Test"
+
+#, fuzzy
+#~ msgid "Top level suite"
+#~ msgstr "Veiligheidsnaam"
+
+#, fuzzy
+#~ msgid "Variant"
+#~ msgstr "Variabele"
 
 #~ msgid "Clear & Delete"
 #~ msgstr "Wis & Wis"

@@ -4798,10 +4798,6 @@ msgid "Address name"
 msgstr "Adresa Numele"
 
 #, fuzzy
-msgid "Address pool name"
-msgstr "Adresă Nume bazin"
-
-#, fuzzy
 msgid "Address type"
 msgstr "Tipul de adresă"
 
@@ -7117,14 +7113,6 @@ msgstr "Cheie de aplicație"
 msgid "Application and Network Load Balancing (ELBv2)"
 msgstr "Echilibrarea încărcării aplicațiilor și a rețelei (ELBv2)"
 
-#, fuzzy
-msgid "Application gateway"
-msgstr "Poarta de aplicații"
-
-#, fuzzy
-msgid "Application gateways"
-msgstr "Porți de aplicații"
-
 msgid "Application load balancer certificates"
 msgstr "Certificatele de echilibrare a încărcăturii aplicației"
 
@@ -7503,10 +7491,6 @@ msgstr "Alocarea la gazda care face interogarea"
 
 msgid "Assign via regular expressions"
 msgstr "Atribuirea prin expresii regulate"
-
-#, fuzzy
-msgid "Assigned to host"
-msgstr "Atribuiți grupului"
 
 #, fuzzy
 msgid "Assignment mode"
@@ -9419,10 +9403,6 @@ msgstr "Grupuri Backend"
 msgid "Back-end port"
 msgstr "Port backend"
 
-#, fuzzy
-msgid "Back-ends"
-msgstr "Backends"
-
 msgid "Background job acknowledged"
 msgstr "Recunoașterea muncii de fond"
 
@@ -9907,10 +9887,6 @@ msgstr ""
 
 msgid "Bottom"
 msgstr "Partea de jos"
-
-#, fuzzy
-msgid "Bottom level suite"
-msgstr "doua nivele"
 
 msgid "Bounce buffers"
 msgstr "Tampoane de ricoșeu"
@@ -23806,10 +23782,6 @@ msgstr "Intrări pe rând"
 
 msgid "Entry"
 msgstr "Intrare"
-
-#, fuzzy
-msgid "Env creation"
-msgstr "Creație"
 
 #, fuzzy
 msgid "Environment Metrics"
@@ -38870,12 +38842,6 @@ msgstr "Ascultați mesajele primite prin"
 msgid "Listen for spans on this local IP address"
 msgstr ""
 
-msgid "Listener"
-msgstr "Ascultător"
-
-msgid "Listeners"
-msgstr "Ascultători"
-
 msgid "Listeners per load balancer"
 msgstr "Ascultători pe load balancer"
 
@@ -41436,10 +41402,6 @@ msgstr "Numărul maxim de cereri RPC pe secundă"
 
 msgid "Maximum number of access points"
 msgstr "Numărul maxim de puncte de acces"
-
-#, fuzzy
-msgid "Maximum number of attempts"
-msgstr "Numărul maxim de încercări de livrare"
 
 #, fuzzy
 msgid ""
@@ -51201,12 +51163,6 @@ msgstr "Comunicarea în text simplu"
 msgid "Plain text communication is enabled for %s"
 msgstr "Comunicarea în text simplu este activată pentru %s."
 
-msgid "Plan ID"
-msgstr ""
-
-msgid "Plans"
-msgstr ""
-
 #, fuzzy
 msgid "Platform firmware level"
 msgstr "Platforma Nivelul firmware-ului"
@@ -56221,9 +56177,6 @@ msgstr "Unități Rittal CMC-III: Curent"
 msgid "Rittal CMC-III Units: Temperatures"
 msgstr "Unități Rittal CMC-III: Temperaturi"
 
-msgid "Robot"
-msgstr ""
-
 msgid "Role"
 msgstr "Rol"
 
@@ -57541,16 +57494,8 @@ msgid "Scheduler"
 msgstr "Programator"
 
 #, fuzzy
-msgid "Scheduler interval"
-msgstr "Intervalul de cache"
-
-#, fuzzy
 msgid "Scheduler job name"
 msgstr "Numele lucrării Scheduler"
-
-#, fuzzy
-msgid "Scheduler plan configs"
-msgstr "Programați o perioadă de pauză?"
 
 #, python-format
 msgid "Scheduling report in background failed: %s"
@@ -64214,10 +64159,6 @@ msgstr "Îmbunătățiri de performanță"
 msgid "Suggested tutorial videos"
 msgstr "Videoclipuri tutorial sugerate"
 
-#, fuzzy
-msgid "Suite name"
-msgstr "Numele sitului"
-
 msgid "Sum"
 msgstr "Suma"
 
@@ -65440,10 +65381,6 @@ msgstr "Testare"
 #, fuzzy
 msgid "Testing notifications"
 msgstr "Notificări de testare"
-
-#, fuzzy
-msgid "Tests"
-msgstr "Test"
 
 msgid "Text"
 msgstr "Text"
@@ -76090,6 +76027,11 @@ msgstr ""
 "de a continua cu următoarea instanță. Dacă nu este setată, se utilizează "
 "valoarea implicită de la ADO."
 
+#, fuzzy
+msgid "Time until alert, if ALLCONTAINERSRESTARTING condition is true"
+msgstr ""
+"Timpul până la alertă, în cazul în care condiția CONTAINERSREADY este falsă"
+
 msgid "Time until alert, if AVAILABLE condition is false"
 msgstr "Timpul până la alertă, dacă condiția DISPONIBIL este falsă"
 
@@ -76627,10 +76569,6 @@ msgstr "Traficul aplicațiilor de top: vizualizare în ultima zi"
 
 msgid "Top application traffic: last hour view"
 msgstr "Traficul aplicațiilor de top: vizualizarea ultimei ore"
-
-#, fuzzy
-msgid "Top level suite"
-msgstr "Numele suitei de nivel superior (%s)"
 
 msgid "Top list"
 msgstr "Lista de top"
@@ -83845,9 +83783,6 @@ msgstr "Variabilă"
 
 msgid "Variables set in the site user's environment"
 msgstr "Variabilele setate în mediul utilizatorului site-ului"
-
-msgid "Variant"
-msgstr "Varianta"
 
 msgid "Various"
 msgstr "Diverse"
@@ -95977,6 +95912,67 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Address pool name"
+#~ msgstr "Adresă Nume bazin"
+
+#, fuzzy
+#~ msgid "Application gateway"
+#~ msgstr "Poarta de aplicații"
+
+#, fuzzy
+#~ msgid "Application gateways"
+#~ msgstr "Porți de aplicații"
+
+#, fuzzy
+#~ msgid "Assigned to host"
+#~ msgstr "Atribuiți grupului"
+
+#, fuzzy
+#~ msgid "Back-ends"
+#~ msgstr "Backends"
+
+#, fuzzy
+#~ msgid "Bottom level suite"
+#~ msgstr "doua nivele"
+
+#, fuzzy
+#~ msgid "Env creation"
+#~ msgstr "Creație"
+
+#~ msgid "Listener"
+#~ msgstr "Ascultător"
+
+#~ msgid "Listeners"
+#~ msgstr "Ascultători"
+
+#, fuzzy
+#~ msgid "Maximum number of attempts"
+#~ msgstr "Numărul maxim de încercări de livrare"
+
+#, fuzzy
+#~ msgid "Scheduler interval"
+#~ msgstr "Intervalul de cache"
+
+#, fuzzy
+#~ msgid "Scheduler plan configs"
+#~ msgstr "Programați o perioadă de pauză?"
+
+#, fuzzy
+#~ msgid "Suite name"
+#~ msgstr "Numele sitului"
+
+#, fuzzy
+#~ msgid "Tests"
+#~ msgstr "Test"
+
+#, fuzzy
+#~ msgid "Top level suite"
+#~ msgstr "Numele suitei de nivel superior (%s)"
+
+#~ msgid "Variant"
+#~ msgstr "Varianta"
 
 #~ msgid "Clear & Delete"
 #~ msgstr "Ștergeți & Ștergeți"

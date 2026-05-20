@@ -4589,9 +4589,6 @@ msgstr "アドレス照合"
 msgid "Address name"
 msgstr "Address name"
 
-msgid "Address pool name"
-msgstr "アドレスプール名"
-
 msgid "Address type"
 msgstr "アドレスタイプ"
 
@@ -6724,12 +6721,6 @@ msgstr "アプリケーションタイプ"
 msgid "Application and Network Load Balancing (ELBv2)"
 msgstr "アプリケーションとネットワークの負荷分散(ELBv2)"
 
-msgid "Application gateway"
-msgstr "アプリケーションゲートウェイ"
-
-msgid "Application gateways"
-msgstr "アプリケーションゲートウェイ"
-
 msgid "Application load balancer certificates"
 msgstr "アプリケーションロードバランサー証明書"
 
@@ -7090,9 +7081,6 @@ msgstr "クエリを実行しているホストに割り当てます"
 
 msgid "Assign via regular expressions"
 msgstr "正規表現で割り当てる"
-
-msgid "Assigned to host"
-msgstr "ホストに割り当てる"
 
 msgid "Assignment mode"
 msgstr "割り当てモード"
@@ -8740,9 +8728,6 @@ msgstr "バックエンドプール"
 msgid "Back-end port"
 msgstr "バックエンドポート"
 
-msgid "Back-ends"
-msgstr "バックエンド"
-
 msgid "Background job acknowledged"
 msgstr "バックグラウンドジョブが承認されました"
 
@@ -9201,9 +9186,6 @@ msgstr "両方の条件が一致しなければならない（defensive）"
 
 msgid "Bottom"
 msgstr "ボトム"
-
-msgid "Bottom level suite"
-msgstr "最下層スイート"
 
 msgid "Bounce buffers"
 msgstr "バウンスバッファ"
@@ -22180,9 +22162,6 @@ msgstr "行あたりのエントリー"
 
 msgid "Entry"
 msgstr "エントリ"
-
-msgid "Env creation"
-msgstr "環境の作成"
 
 msgid "Environment Metrics"
 msgstr "環境メトリック"
@@ -36031,12 +36010,6 @@ msgstr "経由で着信メッセージを聞く"
 msgid "Listen for spans on this local IP address"
 msgstr "このローカルIPアドレスでスパンを監視してください"
 
-msgid "Listener"
-msgstr "リスナー"
-
-msgid "Listeners"
-msgstr "リスナー"
-
 msgid "Listeners per load balancer"
 msgstr "ロードバランサーごとのリスナー数"
 
@@ -38421,9 +38394,6 @@ msgstr "1秒あたりのRPCリクエストの最大数"
 
 msgid "Maximum number of access points"
 msgstr "最大アクセスポイント数"
-
-msgid "Maximum number of attempts"
-msgstr "最大試行回数"
 
 msgid ""
 "Maximum number of attempts to send the notification. Please note that the "
@@ -47249,12 +47219,6 @@ msgstr "プレーンテキストによる通信"
 msgid "Plain text communication is enabled for %s"
 msgstr "プレーンテキスト通信が %s で有効になっている"
 
-msgid "Plan ID"
-msgstr "Plan ID"
-
-msgid "Plans"
-msgstr "計画"
-
 msgid "Platform firmware level"
 msgstr "プラットフォームファームウェアレベル"
 
@@ -51887,9 +51851,6 @@ msgstr "Rittal CMC-IIIユニット: 現在"
 msgid "Rittal CMC-III Units: Temperatures"
 msgstr "Rittal CMC-IIIユニット:温度"
 
-msgid "Robot"
-msgstr "Robot"
-
 msgid "Role"
 msgstr "役割"
 
@@ -53094,14 +53055,8 @@ msgstr ""
 msgid "Scheduler"
 msgstr "スケジューラ"
 
-msgid "Scheduler interval"
-msgstr "スケジュール間隔"
-
 msgid "Scheduler job name"
 msgstr "スケジューラジョブ名"
-
-msgid "Scheduler plan configs"
-msgstr "スケジューラプラン設定"
 
 #, python-format
 msgid "Scheduling report in background failed: %s"
@@ -59287,9 +59242,6 @@ msgstr "製品の改善を提案する"
 msgid "Suggested tutorial videos"
 msgstr "推奨されるチュートリアルビデオ"
 
-msgid "Suite name"
-msgstr "スイート名"
-
 msgid "Sum"
 msgstr "和"
 
@@ -60411,9 +60363,6 @@ msgstr "テスト"
 
 msgid "Testing notifications"
 msgstr "テスト通知"
-
-msgid "Tests"
-msgstr "テスト"
 
 msgid "Text"
 msgstr "テキスト"
@@ -70518,6 +70467,10 @@ msgstr ""
 "次のインスタンスに進む前に、インスタンスへの接続が開くのを待つ時間。設定され"
 "ていない場合、ADOのデフォルト値が使用されます。"
 
+#, fuzzy
+msgid "Time until alert, if ALLCONTAINERSRESTARTING condition is true"
+msgstr "AVAILABLEがfalseの場合の、警告までの許容期間"
+
 msgid "Time until alert, if AVAILABLE condition is false"
 msgstr "AVAILABLEがfalseの場合、警告までの許容期間"
 
@@ -71052,9 +71005,6 @@ msgstr "アプリケーショントップトラフィック：最終日表示"
 
 msgid "Top application traffic: last hour view"
 msgstr "上位のアプリケーショントラフィック: 過去1時間のビュー"
-
-msgid "Top level suite"
-msgstr "トップレベルスイート"
 
 msgid "Top list"
 msgstr "トップリスト"
@@ -77332,9 +77282,6 @@ msgstr "変数"
 
 msgid "Variables set in the site user's environment"
 msgstr "サイト利用者の環境に設定される変数"
-
-msgid "Variant"
-msgstr "バリアント"
 
 msgid "Various"
 msgstr "いろいろ"
@@ -89017,6 +88964,63 @@ msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
 "後で「ヘルプ」＞「Checkmkの学習」＞「ウェルカムページ」からアクセスできます"
+
+#~ msgid "Address pool name"
+#~ msgstr "アドレスプール名"
+
+#~ msgid "Application gateway"
+#~ msgstr "アプリケーションゲートウェイ"
+
+#~ msgid "Application gateways"
+#~ msgstr "アプリケーションゲートウェイ"
+
+#~ msgid "Assigned to host"
+#~ msgstr "ホストに割り当てる"
+
+#~ msgid "Back-ends"
+#~ msgstr "バックエンド"
+
+#~ msgid "Bottom level suite"
+#~ msgstr "最下層スイート"
+
+#~ msgid "Env creation"
+#~ msgstr "環境の作成"
+
+#~ msgid "Listener"
+#~ msgstr "リスナー"
+
+#~ msgid "Listeners"
+#~ msgstr "リスナー"
+
+#~ msgid "Maximum number of attempts"
+#~ msgstr "最大試行回数"
+
+#~ msgid "Plan ID"
+#~ msgstr "Plan ID"
+
+#~ msgid "Plans"
+#~ msgstr "計画"
+
+#~ msgid "Robot"
+#~ msgstr "Robot"
+
+#~ msgid "Scheduler interval"
+#~ msgstr "スケジュール間隔"
+
+#~ msgid "Scheduler plan configs"
+#~ msgstr "スケジューラプラン設定"
+
+#~ msgid "Suite name"
+#~ msgstr "スイート名"
+
+#~ msgid "Tests"
+#~ msgstr "テスト"
+
+#~ msgid "Top level suite"
+#~ msgstr "トップレベルスイート"
+
+#~ msgid "Variant"
+#~ msgstr "バリアント"
 
 #~ msgid "Clear & Delete"
 #~ msgstr "クリアと削除"

@@ -150,8 +150,21 @@ def _wato_page_handler(config: Config, current_mode: str, mode: WatoMode[object]
             flashed=True,
         )
 
-    # Show content
-    mode.handle_page(config)
+    # Catch known user-input failures here so the matching wato_html_footer
+    # below still runs. wato_html_head opens `<div class="wato">` (and the
+    # surrounding main_navigation chrome via make_header); only the footer
+    # closes them. A bare-propagating user-input error would hand the
+    # response to the WSGI exception renderer, which assumes the page has
+    # not been opened yet and would leave .wato (and behind it content_area /
+    # main_page_content) unclosed.
+    try:
+        mode.handle_page(config)
+    except MKUserError as e:
+        html.user_error(e)
+    except MKAuthException as e:
+        html.user_error(MKUserError(None, e.args[0]))
+    except MKGeneralException as e:
+        html.show_error(str(e))
 
     if is_sidebar_reload_needed():
         html.reload_whole_page()

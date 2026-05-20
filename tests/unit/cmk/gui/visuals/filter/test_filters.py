@@ -139,11 +139,10 @@ filter_tests = [
         request_vars=[("address_family", "4")],
         expected_filters="Filter: tags = address_family ip-v4-only\n",
     ),
-    # Testing base class FilterQueryDropdown
     FilterTest(
         ident="check_command",
         request_vars=[("check_command", "blabla")],
-        expected_filters="Filter: service_check_command ~ ^blabla(!.*)?\n",
+        expected_filters="Filter: service_check_command ~~ blabla\n",
     ),
     FilterTest(
         ident="check_command_exact",

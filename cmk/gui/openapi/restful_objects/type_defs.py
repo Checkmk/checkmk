@@ -200,6 +200,7 @@ CmkEndpointName = Literal[
     "cmk/update_and_acknowledge",
     "cmk/upload_license_response",
     "cmk/change_state",
+    "cmk/get_state",
     "cmk/verify",
     "cmk/register",
     "cmk/register_token",

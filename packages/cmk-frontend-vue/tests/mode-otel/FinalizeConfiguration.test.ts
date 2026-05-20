@@ -15,7 +15,7 @@ import type { PostSaveAction } from '@/mode-otel/otel-configuration-steps/post_s
 function makeAction(
   key: string,
   result: 'ok' | { title: string; detail: string },
-  { delayMs = 0 }: { delayMs?: number } = {}
+  { delayMs = 0, rollback }: { delayMs?: number; rollback?: () => Promise<void> } = {}
 ): PostSaveAction {
   return {
     key,
@@ -24,7 +24,10 @@ function makeAction(
       if (delayMs) {
         await new Promise((r) => setTimeout(r, delayMs))
       }
-      return result === 'ok' ? { ok: true as const } : { ok: false as const, error: result }
+      if (result !== 'ok') {
+        return { ok: false as const, error: result }
+      }
+      return rollback ? { ok: true as const, rollback } : { ok: true as const }
     })
   }
 }
@@ -268,6 +271,74 @@ describe('FinalizeConfiguration', () => {
 
       expect(lastState.value).toBe('error')
       expect(screen.queryByTestId('summary')).toBeNull()
+    })
+  })
+
+  describe('rollback', () => {
+    test('completed items with rollbacks show reverted class after a later action fails', async () => {
+      const rollbackFn = vi.fn(async () => {})
+      const actionA = makeAction('a', 'ok', { rollback: rollbackFn })
+      const actionB = makeAction('b', { title: 'Boom', detail: 'broke' })
+      const { compRef } = renderWithActions([actionA, actionB])
+
+      await compRef.value!.runActions()
+
+      const itemA = screen.getByText('Action a').closest('li')
+      expect(itemA?.className).toContain('mode-otel-finalize-configuration__item--reverted')
+      expect(rollbackFn).toHaveBeenCalledTimes(1)
+    })
+
+    test('completed items without rollback closures stay in success state', async () => {
+      const actionA = makeAction('a', 'ok') // no rollback closure
+      const actionB = makeAction('b', { title: 'Boom', detail: 'broke' })
+      const { compRef } = renderWithActions([actionA, actionB])
+
+      await compRef.value!.runActions()
+
+      const itemA = screen.getByText('Action a').closest('li')
+      expect(itemA?.className).toContain('mode-otel-finalize-configuration__item--success')
+    })
+
+    test('shows the revert message in the error alert when rollbacks ran', async () => {
+      const rollbackFn = vi.fn(async () => {})
+      const actionA = makeAction('a', 'ok', { rollback: rollbackFn })
+      const actionB = makeAction('b', { title: 'Failed', detail: 'Network error' })
+      const { compRef } = renderWithActions([actionA, actionB])
+
+      await compRef.value!.runActions()
+
+      await screen.findByText(/Any changes that were already saved have been reverted\./)
+    })
+
+    test('does not show the revert message when no rollbacks ran', async () => {
+      const actionA = makeAction('a', { title: 'Failed', detail: 'Network error' })
+      const { compRef } = renderWithActions([actionA])
+
+      await compRef.value!.runActions()
+
+      expect(
+        screen.queryByText(/Any changes that were already saved have been reverted\./)
+      ).toBeNull()
+    })
+
+    test('rolls back in reverse order', async () => {
+      const order: string[] = []
+      const actionA = makeAction('a', 'ok', {
+        rollback: async () => {
+          order.push('a')
+        }
+      })
+      const actionB = makeAction('b', 'ok', {
+        rollback: async () => {
+          order.push('b')
+        }
+      })
+      const actionC = makeAction('c', { title: 'Boom', detail: 'broke' })
+      const { compRef } = renderWithActions([actionA, actionB, actionC])
+
+      await compRef.value!.runActions()
+
+      expect(order).toEqual(['b', 'a'])
     })
   })
 })

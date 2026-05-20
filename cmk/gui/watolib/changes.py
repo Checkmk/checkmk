@@ -2,28 +2,51 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-"""Functions for logging changes and keeping the "Activate Changes" state and finally activating changes."""
+"""Free functions for recording pending configuration changes.
 
-import time
-from collections.abc import Iterable, Iterator, Sequence
+``add_change`` and ``add_service_change`` build a request-scoped
+:class:`PendingChanges` on every call and delegate to it. New code should
+construct a :class:`PendingChanges` once at the request boundary and pass it
+down explicitly.
+"""
+
+from collections.abc import Iterator, Sequence
 from contextlib import contextmanager
 
-import cmk.gui.watolib.sidebar_reload
 from cmk.ccc.site import omd_site, SiteId
 from cmk.ccc.user import UserId
 from cmk.gui.config import active_config
-from cmk.gui.site_config import site_is_local
 from cmk.gui.user_sites import activation_sites
-from cmk.gui.utils import escaping
-from cmk.gui.utils.misc import gen_id
-from cmk.gui.watolib.audit_log import log_audit, LogMessage
-from cmk.gui.watolib.config_domain_name import (
-    ABCConfigDomain,
-    DomainSettings,
+
+from .audit_log import LogMessage, make_audit_log_change_hook
+from .config_domain_name import ABCConfigDomain, DomainSettings
+from .objref import ObjectRef
+from .pending_changes import (
+    Change,
+    ChangeHook,
+    ChangeScope,
+    index_update_change_hook,
+    NoopPendingChangesStore,
+    PendingChanges,
+    PendingChangesStore,
 )
-from cmk.gui.watolib.objref import ObjectRef
-from cmk.gui.watolib.site_changes import SiteChanges
-from cmk.utils.setup_search_index import request_index_update
+from .sidebar_reload import sidebar_reload_change_hook
+
+_RECORDING_ENABLED = True
+
+
+def _default_hooks(*, use_git: bool) -> tuple[ChangeHook, ...]:
+    return (
+        make_audit_log_change_hook(use_git=use_git),
+        sidebar_reload_change_hook,
+        index_update_change_hook,
+    )
+
+
+def _scope_from_sites(sites: Sequence[SiteId] | None) -> ChangeScope:
+    if sites is None:
+        return ChangeScope.all_activation_sites()
+    return ChangeScope.sites(sites)
 
 
 def add_change(
@@ -42,157 +65,36 @@ def add_change(
     domain_settings: DomainSettings | None = None,
     prevent_discard_changes: bool = False,
 ) -> None:
+    """Record a pending configuration change.
+
+    Builds a :class:`PendingChanges` from the current ``active_config``,
+    ``omd_site()``, and ``use_git`` flag, then delegates.
     """
-    config_domains:
-        list of config domains that are affected by this change
-    """
-    log_audit(
-        action=action_name,
-        message=text,
-        object_ref=object_ref,
-        user_id=user_id,
-        use_git=use_git,
-        diff_text=diff_text,
+    store: PendingChangesStore = (
+        PendingChangesStore() if _RECORDING_ENABLED else NoopPendingChangesStore()
     )
-    cmk.gui.watolib.sidebar_reload.need_sidebar_reload()
-
-    request_index_update(action_name)
-
-    ActivateChangesWriter().add_change(
-        action_name,
-        text,
-        object_ref,
-        user_id,
-        need_sync,
-        need_restart,
-        need_apache_reload,
-        domains,
-        sites,
-        domain_settings,
-        prevent_discard_changes,
-        diff_text=diff_text,
+    pending_changes = PendingChanges(
+        activation_sites=activation_sites(active_config.sites),
+        local_site=omd_site(),
+        acting_user=user_id,
+        store=store,
+        hooks=_default_hooks(use_git=use_git),
     )
-
-
-class ActivateChangesWriter:
-    _enabled = True
-
-    @classmethod
-    @contextmanager
-    def disable(cls) -> Iterator[None]:
-        cls._enabled = False
-        try:
-            yield
-        finally:
-            cls._enabled = True
-
-    def add_change(
-        self,
-        action_name: str,
-        text: LogMessage,
-        object_ref: ObjectRef | None,
-        user_id: UserId | None,
-        need_sync: bool | None,
-        need_restart: bool | None,
-        need_apache_reload: bool | None,
-        domains: Sequence[ABCConfigDomain],
-        sites: Iterable[SiteId] | None,
-        domain_settings: DomainSettings | None,
-        prevent_discard_changes: bool = False,
-        diff_text: str | None = None,
-    ) -> None:
-        if not ActivateChangesWriter._enabled:
-            return
-
-        # All replication sites in case no specific site is given
-        if sites is None:
-            changed_sites = set(activation_sites(active_config.sites).keys())
-        else:
-            # On a remote site, we might get invalid SiteID entries here
-            # Try to filter them out by only allowing sites that are part of the activation sites
-            valid_sites = set(activation_sites(active_config.sites).keys())
-
-            specified_sites = set(sites)  # Resolve iterable
-            changed_sites = {s for s in specified_sites if s in valid_sites}
-            if len(changed_sites) != len(specified_sites):
-                # Always include the local site if we have invalid site ids in the list
-                # of changed sites, otherwise we would not log the change at all
-                changed_sites.add(omd_site())
-
-        change_id = self._new_change_id()
-
-        for site_id in changed_sites:
-            self._add_change_to_site(
-                site_id,
-                change_id,
-                action_name,
-                text,
-                object_ref,
-                user_id,
-                need_sync,
-                need_restart,
-                need_apache_reload,
-                domains,
-                domain_settings,
-                prevent_discard_changes,
-                diff_text,
-            )
-
-    def _new_change_id(self) -> str:
-        return gen_id()
-
-    def _add_change_to_site(
-        self,
-        site_id: SiteId,
-        change_id: str,
-        action_name: str,
-        text: LogMessage,
-        object_ref: ObjectRef | None,
-        user_id: UserId | None,
-        need_sync: bool | None,
-        need_restart: bool | None,
-        need_apache_reload: bool | None,
-        domains: Sequence[ABCConfigDomain],
-        domain_settings: DomainSettings | None,
-        prevent_discard_changes: bool,
-        diff_text: str | None = None,
-    ) -> None:
-        # Individual changes may override the domain restart default value
-        if need_restart is None:
-            need_restart = any(d.needs_activation for d in domains)
-
-        if need_sync is None:
-            need_sync = any(d.needs_sync for d in domains)
-
-        # Only changes are currently capable of requesting an apache reload not the entire domain
-        if need_apache_reload is None:
-            need_apache_reload = False
-
-        # Using attrencode here is against our regular rule to do the escaping
-        # at the last possible time: When rendering. But this here is the last
-        # place where we can distinguish between HTML() encapsulated (already)
-        # escaped / allowed HTML and strings to be escaped.
-        text = escaping.escape_text(text)
-
-        SiteChanges(site_id).append(
-            {
-                "id": change_id,
-                "action_name": action_name,
-                "text": "%s" % text,
-                "object": object_ref,
-                "user_id": user_id,
-                "domains": [d.ident() for d in domains],
-                "time": time.time(),
-                "need_sync": need_sync,
-                "need_restart": need_restart,
-                "domain_settings": domain_settings or {},
-                "prevent_discard_changes": prevent_discard_changes,
-                "diff_text": diff_text,
-                "has_been_activated": site_is_local(active_config.sites[site_id])
-                and need_restart is False
-                and need_apache_reload is False,
-            }
-        )
+    pending_changes.add(
+        Change(
+            action_name=action_name,
+            text=text,
+            domains=[d.ident() for d in domains],
+            domain_settings=domain_settings or {},
+            object_ref=object_ref,
+            diff_text=diff_text,
+            force_sync=need_sync,
+            force_restart=need_restart,
+            force_apache_reload=bool(need_apache_reload),
+            prevent_discard_changes=prevent_discard_changes,
+        ),
+        _scope_from_sites(sites),
+    )
 
 
 def add_service_change(
@@ -220,3 +122,17 @@ def add_service_change(
         domain_settings=domain_settings,
         use_git=use_git,
     )
+
+
+class ActivateChangesWriter:
+    """Provides a ``disable()`` context manager that suppresses :func:`add_change` writes."""
+
+    @classmethod
+    @contextmanager
+    def disable(cls) -> Iterator[None]:
+        global _RECORDING_ENABLED
+        _RECORDING_ENABLED = False
+        try:
+            yield
+        finally:
+            _RECORDING_ENABLED = True

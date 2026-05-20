@@ -24,7 +24,6 @@ from livestatus import (
     SiteConfigurations,
 )
 
-import cmk.gui.watolib.utils
 import cmk.utils.paths
 from cmk.ccc import store as ccc_store
 from cmk.ccc.site import SiteId
@@ -1044,10 +1043,10 @@ def _make_change_spec(
             "user_id": UserId(user_id),
             "domains": ["check_mk"],
             "time": 1720800176.0,
-            "need_sync": True,
-            "need_restart": True,
+            "force_sync": True,
+            "force_restart": not has_been_activated,
+            "force_apache_reload": False,
             "domain_settings": {},
-            "has_been_activated": has_been_activated,
             "prevent_discard_changes": False,
             "diff_text": None,
         }
@@ -1376,3 +1375,41 @@ class TestGetAllDataRequiredForActivationPopout:
         result = ActivateChanges().get_all_data_required_for_activation_popout(sites, None)
 
         assert result.licenseIsBlocking is True
+
+
+class TestSiteHasForeignChanges:
+    SITE_ID = SiteId("foreign_changes_test_site")
+
+    def test_activated_foreign_change_does_not_count_as_foreign(
+        self, with_admin_login: UserId
+    ) -> None:
+        site_changes = SiteChanges(self.SITE_ID)
+        site_changes.append(
+            _make_change_spec(
+                "activated-by-other",
+                user_id="other_user",
+                has_been_activated=True,
+            )
+        )
+        try:
+            sites = SiteConfigurations({self.SITE_ID: _make_local_site_config(self.SITE_ID)})
+            changes = ActivateChanges()
+            changes.load([self.SITE_ID], sites)
+
+            assert changes.site_has_foreign_changes(self.SITE_ID) is False
+            by_id = {c["id"]: c for c in changes.changes_of_site(self.SITE_ID)}
+            assert by_id["activated-by-other"]["has_been_activated"] is True
+        finally:
+            site_changes.clear()
+
+    def test_pending_foreign_change_still_counts_as_foreign(self, with_admin_login: UserId) -> None:
+        site_changes = SiteChanges(self.SITE_ID)
+        site_changes.append(_make_change_spec("pending-by-other", user_id="other_user"))
+        try:
+            sites = SiteConfigurations({self.SITE_ID: _make_local_site_config(self.SITE_ID)})
+            changes = ActivateChanges()
+            changes.load([self.SITE_ID], sites)
+
+            assert changes.site_has_foreign_changes(self.SITE_ID) is True
+        finally:
+            site_changes.clear()

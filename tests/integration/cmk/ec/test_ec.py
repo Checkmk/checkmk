@@ -110,12 +110,12 @@ def _get_replication_change() -> ChangeSpec:
             "user_id": UserId("cmkadmin"),
             "domains": ["ec"],
             "time": 0,
-            "need_sync": True,
-            "need_restart": True,
+            "force_sync": True,
+            "force_restart": True,
+            "force_apache_reload": False,
             "domain_settings": {},
             "prevent_discard_changes": False,
             "diff_text": None,
-            "has_been_activated": False,
         }
     )
 

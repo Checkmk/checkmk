@@ -21,6 +21,7 @@
 // @creds_usernames: List of Maps, each map has to contain the keys location and credentialsId
 // @location: Target location of a credential as file
 // @credentialsId: Name of a Jenkins username/password or file credential ID to use, together with location
+// @creds_env: List of credential bindings, each has to contain the variable name and credentialsId
 //
 void execute_test(Map config = [:]) {
     def artifacts_helper = load("${checkout_dir}/buildscripts/scripts/utils/upload_artifacts.groovy");
@@ -40,6 +41,7 @@ void execute_test(Map config = [:]) {
         output_file: "",
         container_name: "minimal-ubuntu-checkmk-${container_safe_branch_name}",
         disable_hot_cache: false,
+        creds_env: [],
         creds_files: [],
         creds_usernames: [],
     ] << config;
@@ -74,7 +76,9 @@ void execute_test(Map config = [:]) {
                     ]) {
                         withCredentialFileAtLocation(creds: defaultDict.creds_files) {
                             withCredentialUsernamePasswordAtLocation(creds: defaultDict.creds_usernames) {
-                                run_this(defaultDict);
+                                withCredentialEnv(creds: defaultDict.creds_env) {
+                                    run_this(defaultDict);
+                                }
                             }
                         }
                     }

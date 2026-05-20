@@ -139,3 +139,17 @@ withCredentialUsernamePasswordAtLocation = { Map args, Closure body ->
         }
     }
 };
+
+withCredentialEnv = { Map args, Closure body ->
+    body.resolveStrategy = Closure.OWNER_FIRST;
+    body.delegate = [:];
+
+    if (!args.creds) {
+        body();
+        return;
+    }
+
+    withCredentials(args.creds) {
+        body();
+    }
+}

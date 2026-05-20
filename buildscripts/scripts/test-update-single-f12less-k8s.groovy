@@ -45,7 +45,6 @@ void main() {
     ]);
 
     check_environment_variables([
-        "DOCKER_REGISTRY",
         "EDITION",
         "CROSS_EDITION_TARGET",
         "OTEL_SDK_DISABLED",

@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="no-untyped-def"
 
 # Check has been developed using a Emerson Network Power Rack PDU Card
 # Agent App Firmware Version  4.840.0
@@ -39,13 +37,22 @@
 
 from collections.abc import Callable, Mapping
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import OIDEnd, SNMPTree, StringTable
+from cmk.agent_based.v1 import check_levels
+from cmk.agent_based.v2 import (
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    OIDEnd,
+    Result,
+    Service,
+    SimpleSNMPSection,
+    SNMPTree,
+    State,
+    StringTable,
+)
 from cmk.plugins.lgp.lib import DETECT_LGP
 
-check_info = {}
-
-lgp_pdu_aux_types = {
+_LGP_PDU_AUX_TYPES = {
     "0": "UNSPEC",
     "1": "TEMP",
     "2": "HUM",
@@ -53,7 +60,7 @@ lgp_pdu_aux_types = {
     "4": "CONTACT",
 }
 
-lgp_pdu_aux_states = [
+_LGP_PDU_AUX_STATES = [
     "not-specified",
     "open",
     "closed",
@@ -86,9 +93,9 @@ def saveint(i: str) -> int:
         return 0
 
 
-_lgp_pdu_aux_fields: Mapping[str, tuple[Callable[[str], str | float | int], str]] = {
+_LGP_PDU_AUX_FIELDS: Mapping[str, tuple[Callable[[str], str | float | int], str]] = {
     # Index, Type, Factor, ID
-    "10": (lambda x: lgp_pdu_aux_types.get(x, "UNHANDLED"), "Type"),
+    "10": (lambda x: _LGP_PDU_AUX_TYPES.get(x, "UNHANDLED"), "Type"),
     "15": (str, "SystemLabel"),
     "20": (str, "UserLabel"),
     "35": (str, "SerialNumber"),
@@ -107,15 +114,18 @@ _lgp_pdu_aux_fields: Mapping[str, tuple[Callable[[str], str | float | int], str]
 }
 
 
-def lgp_pdu_aux_fmt(info):
-    new_info = {}
-    for oid, value in info:
+Section = Mapping[str, Mapping[str, str | float | int]]
+
+
+def parse_lgp_pdu_aux(string_table: StringTable) -> Section:
+    new_info: dict[str, dict[str, str | float | int]] = {}
+    for oid, value in string_table:
         type_, id_ = oid.split(".", 1)
         if id_ not in new_info:
             new_info[id_] = {"TypeIndex": id_.split(".")[-1]}
 
         try:
-            converter, key = _lgp_pdu_aux_fields[type_]
+            converter, key = _LGP_PDU_AUX_FIELDS[type_]
         except KeyError:
             continue
 
@@ -124,88 +134,69 @@ def lgp_pdu_aux_fmt(info):
     return new_info
 
 
-def discover_lgp_pdu_aux(info):
-    info = lgp_pdu_aux_fmt(info)
-    inv = []
-    for pdu in info.values():
+def discover_lgp_pdu_aux(section: Section) -> DiscoveryResult:
+    for pdu in section.values():
         # Using SystemLabel as index. But it is not uniq in all cases.
         # Adding the Type-Index to prevent problems
-        inv.append((pdu["Type"] + "-" + pdu["SystemLabel"] + "-" + pdu["TypeIndex"], None))
-    return inv
+        yield Service(item=f"{pdu['Type']}-{pdu['SystemLabel']}-{pdu['TypeIndex']}")
 
 
-def check_lgp_pdu_aux(item, params, info):
-    info = lgp_pdu_aux_fmt(info)
-    for pdu in info.values():
-        if item == pdu["Type"] + "-" + pdu["SystemLabel"] + "-" + pdu["TypeIndex"]:
-            state = 0
-            output = []
-            perfdata = []
+def check_lgp_pdu_aux(item: str, section: Section) -> CheckResult:
+    for pdu in section.values():
+        if item != f"{pdu['Type']}-{pdu['SystemLabel']}-{pdu['TypeIndex']}":
+            continue
 
-            if pdu["UserLabel"] != "":
-                output.append("Label: {} ({})".format(pdu["UserLabel"], pdu["SystemLabel"]))
+        if pdu["UserLabel"] != "":
+            yield Result(
+                state=State.OK,
+                summary=f"Label: {pdu['UserLabel']} ({pdu['SystemLabel']})",
+            )
+        else:
+            yield Result(state=State.OK, summary=f"Label: {pdu['SystemLabel']}")
+
+        if pdu["Type"] == "TEMP":
+            yield from check_levels(
+                float(pdu["Temp"]),
+                levels_upper=(float(pdu["TempHighWarn"]), float(pdu["TempHighCrit"])),
+                levels_lower=(float(pdu["TempLowWarn"]), float(pdu["TempLowCrit"])),
+                metric_name="temp",
+                label="Temperature",
+                render_func=lambda v: f"{v:0.2f}C",
+            )
+        elif pdu["Type"] == "HUM":
+            yield from check_levels(
+                float(pdu["Hum"]),
+                levels_upper=(float(pdu["HumHighWarn"]), float(pdu["HumHighCrit"])),
+                levels_lower=(float(pdu["HumLowWarn"]), float(pdu["HumLowCrit"])),
+                metric_name="hum",
+                label="Humidity",
+                render_func=lambda v: f"{v:0.2f}%",
+            )
+        elif pdu["Type"] == "DOOR":
+            door_state = _LGP_PDU_AUX_STATES[int(pdu["DoorState"])]
+            # DoorConfig: 1 -> open, 0 -> disabled
+            if pdu["DoorConfig"] == 1 and door_state == "open":
+                yield Result(state=State.CRIT, summary=f"Door is {door_state} (!!)")
             else:
-                output.append("Label: " + pdu["SystemLabel"])
+                yield Result(state=State.OK, summary=f"Door is {door_state}")
+        return
 
-            def handle_type(ty, label, uom, pdu=pdu):
-                state = 0
-                perfdata = (
-                    ty.lower(),
-                    pdu[ty],
-                    "{:0.2f}:{:0.2f}".format(pdu[ty + "LowWarn"], pdu[ty + "HighWarn"]),
-                    "{:0.2f}:{:0.2f}".format(pdu[ty + "LowCrit"], pdu[ty + "HighCrit"]),
-                )
-                s_out = ""
-                if pdu[ty] >= pdu[ty + "HighCrit"]:
-                    state = 2
-                    s_out = " >= %0.2f (!!)" % pdu[ty + "HighCrit"]
-                elif pdu[ty] <= pdu[ty + "LowCrit"]:
-                    state = 2
-                    s_out = " <= %0.2f (!!)" % pdu[ty + "LowCrit"]
-                elif pdu[ty] >= pdu[ty + "HighWarn"]:
-                    state = 1
-                    s_out = " >= %0.2f (!)" % pdu[ty + "HighWarn"]
-                elif pdu[ty] <= pdu[ty + "LowWarn"]:
-                    state = 1
-                    s_out = " <= %0.2f (!)" % pdu[ty + "LowWarn"]
-
-                return state, f"{label}: {pdu[ty]:0.2f}{uom}{s_out}", perfdata
-
-            if pdu["Type"] == "TEMP":
-                state, out, perf = handle_type("Temp", "Temperature", "C")
-                output.append(out)
-                perfdata.append(perf)
-
-            elif pdu["Type"] == "HUM":
-                state, out, perf = handle_type("Hum", "Humidity", "%")
-                output.append(out)
-                perfdata.append(perf)
-
-            elif pdu["Type"] == "DOOR":
-                # DoorConfig: 1 -> open, 0 -> disabled
-                if pdu["DoorConfig"] == 1 and lgp_pdu_aux_states[pdu["DoorState"]] == "open":
-                    state = 2
-                    output.append("Door is %s (!!)" % lgp_pdu_aux_states[pdu["DoorState"]])
-                else:
-                    output.append("Door is %s" % lgp_pdu_aux_states[pdu["DoorState"]])
-
-            return (state, ", ".join(output), perfdata)
-
-    return (3, "Could not find given PDU.")
+    yield Result(state=State.UNKNOWN, summary="Could not find given PDU.")
 
 
-def parse_lgp_pdu_aux(string_table: StringTable) -> StringTable:
-    return string_table
-
-
-check_info["lgp_pdu_aux"] = LegacyCheckDefinition(
+snmp_section_lgp_pdu_aux = SimpleSNMPSection(
     name="lgp_pdu_aux",
-    parse_function=parse_lgp_pdu_aux,
     detect=DETECT_LGP,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.476.1.42.3.8.60.15",
         oids=[OIDEnd(), "1"],
     ),
+    parse_function=parse_lgp_pdu_aux,
+)
+
+
+check_plugin_lgp_pdu_aux = CheckPlugin(
+    name="lgp_pdu_aux",
     service_name="Liebert PDU AUX %s",
     discovery_function=discover_lgp_pdu_aux,
     check_function=check_lgp_pdu_aux,

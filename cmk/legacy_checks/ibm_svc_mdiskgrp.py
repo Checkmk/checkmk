@@ -3,17 +3,25 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="var-annotated"
 
-from collections.abc import Iterable, Mapping, Sequence
+from collections.abc import Mapping
 from typing import Any
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import render
-from cmk.legacy_includes.df import df_check_filesystem_list, FILESYSTEM_DEFAULT_PARAMS
-from cmk.legacy_includes.ibm_svc import parse_ibm_svc_with_header
-
-check_info = {}
+from cmk.agent_based.v2 import (
+    AgentSection,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    get_value_store,
+    Metric,
+    render,
+    Result,
+    Service,
+    State,
+    StringTable,
+)
+from cmk.plugins.ibm.lib_svc import parse_ibm_svc_with_header
+from cmk.plugins.lib.df import df_check_filesystem_single, FILESYSTEM_DEFAULT_PARAMS
 
 # Example output from agent:
 # <<<ibm_svc_mdiskgrp:sep(58)>>>
@@ -32,25 +40,24 @@ check_info = {}
 # 24:stp6_600G_01:online:3:2:6.54TB:256:512.00MB:6.54TB:6.54TB:6.54TB:99:80:auto:inactive:no:0.00MB:0.00MB:0.00MB
 
 
+Section = Mapping[str, Mapping[str, str]]
+
+
 def ibm_svc_mdiskgrp_to_mb(size: str) -> float:
     if size.endswith("MB"):
-        size_mb = float(size.replace("MB", ""))
-    elif size.endswith("GB"):
-        size_mb = float(size.replace("GB", "")) * 1024
-    elif size.endswith("TB"):
-        size_mb = float(size.replace("TB", "")) * 1024 * 1024
-    elif size.endswith("PB"):
-        size_mb = float(size.replace("PB", "")) * 1024 * 1024 * 1024
-    elif size.endswith("EB"):
-        size_mb = float(size.replace("EB", "")) * 1024 * 1024 * 1024 * 1024
-    else:
-        size_mb = float(size)
-    return size_mb
+        return float(size.replace("MB", ""))
+    if size.endswith("GB"):
+        return float(size.replace("GB", "")) * 1024
+    if size.endswith("TB"):
+        return float(size.replace("TB", "")) * 1024 * 1024
+    if size.endswith("PB"):
+        return float(size.replace("PB", "")) * 1024 * 1024 * 1024
+    if size.endswith("EB"):
+        return float(size.replace("EB", "")) * 1024 * 1024 * 1024 * 1024
+    return float(size)
 
 
-def parse_ibm_svc_mdiskgrp(
-    string_table: Sequence[Sequence[str]],
-) -> Mapping[str, Mapping[str, str]]:
+def parse_ibm_svc_mdiskgrp(string_table: StringTable) -> Section:
     dflt_header = [
         "id",
         "name",
@@ -81,7 +88,7 @@ def parse_ibm_svc_mdiskgrp(
         "site_id",
         "site_name",
     ]
-    parsed = {}
+    parsed: dict[str, Mapping[str, str]] = {}
     for rows in parse_ibm_svc_with_header(string_table, dflt_header).values():
         try:
             data = rows[0]
@@ -91,25 +98,18 @@ def parse_ibm_svc_mdiskgrp(
     return parsed
 
 
-def discover_ibm_svc_mdiskgrp(
-    parsed: Mapping[str, Mapping[str, str]],
-) -> Iterable[tuple[str, dict[str, object]]]:
-    for mdisk_name in parsed:
-        yield mdisk_name, {}
+def discover_ibm_svc_mdiskgrp(section: Section) -> DiscoveryResult:
+    yield from (Service(item=mdisk_name) for mdisk_name in section)
 
 
-def check_ibm_svc_mdiskgrp(
-    item: str, params: Mapping[str, Any], parsed: Mapping[str, Mapping[str, str]]
-) -> Iterable[tuple[int, str] | tuple[int, str, list[Any]]]:
-    if not (data := parsed.get(item)):
+def check_ibm_svc_mdiskgrp(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
+    if not (data := section.get(item)):
         return
     mgrp_status = data["status"]
 
     if mgrp_status != "online":
-        yield 2, "Status: %s" % mgrp_status
+        yield Result(state=State.CRIT, summary=f"Status: {mgrp_status}")
         return
-
-    fslist = []
 
     # Names of the fields are a bit confusing and not what you would
     # expect.
@@ -126,9 +126,16 @@ def check_ibm_svc_mdiskgrp(
     # Compute available (do not use free_capacity, it's something different)
     avail_mb = capacity - real_capacity
 
-    fslist.append((item, capacity, avail_mb, 0))
-    status, message, perfdata = df_check_filesystem_list(item, params, fslist)
-    yield status, message, perfdata
+    yield from df_check_filesystem_single(
+        value_store=get_value_store(),
+        mountpoint=item,
+        filesystem_size=capacity,
+        free_space=avail_mb,
+        reserved_space=0,
+        inodes_total=None,
+        inodes_avail=None,
+        params=params,
+    )
 
     mb = 1024 * 1024
 
@@ -137,34 +144,40 @@ def check_ibm_svc_mdiskgrp(
         return  # provisioning does not make sense when capacity is 0
 
     provisioning = 100.0 * virtual_capacity / capacity
-    infotext = "Provisioning: %s" % render.percent(provisioning)
-    state = 0
+    infotext = f"Provisioning: {render.percent(provisioning)}"
+    state = State.OK
+    warn_mb: float | None = None
+    crit_mb: float | None = None
     if "provisioning_levels" in params:
         warn, crit = params["provisioning_levels"]
         if provisioning >= crit:
-            state = 2
+            state = State.CRIT
         elif provisioning >= warn:
-            state = 1
-        if state:
+            state = State.WARN
+        if state is not State.OK:
             infotext += f" (warn/crit at {render.percent(warn)}/{render.percent(crit)})"
         warn_mb = capacity * mb * warn / 100
         crit_mb = capacity * mb * crit / 100
-    else:
-        warn_mb = None
-        crit_mb = None
 
+    yield Result(state=state, summary=infotext)
     # Note: Performance data is now (with new metric system) normed to
     # canonical units - i.e. 1 byte in this case.
-    yield (
-        state,
-        infotext,
-        [("fs_provisioning", virtual_capacity * mb, warn_mb, crit_mb, 0, capacity * mb)],
+    yield Metric(
+        "fs_provisioning",
+        virtual_capacity * mb,
+        levels=(warn_mb, crit_mb) if warn_mb is not None and crit_mb is not None else None,
+        boundaries=(0, capacity * mb),
     )
 
 
-check_info["ibm_svc_mdiskgrp"] = LegacyCheckDefinition(
+agent_section_ibm_svc_mdiskgrp = AgentSection(
     name="ibm_svc_mdiskgrp",
     parse_function=parse_ibm_svc_mdiskgrp,
+)
+
+
+check_plugin_ibm_svc_mdiskgrp = CheckPlugin(
+    name="ibm_svc_mdiskgrp",
     service_name="Pool Capacity %s",
     discovery_function=discover_ibm_svc_mdiskgrp,
     check_function=check_ibm_svc_mdiskgrp,

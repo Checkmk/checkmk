@@ -4,22 +4,20 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="misc"
-# mypy: disable-error-code="no-untyped-def"
 
 from collections.abc import Mapping, Sequence
 from typing import Any
 
 import pytest
 
-from cmk.agent_based.v2 import StringTable
+from cmk.agent_based.v2 import Metric, Result, Service, State, StringTable
 from cmk.legacy_checks import ibm_svc_mdiskgrp
-from cmk.legacy_includes import size_trend
 
 
 @pytest.fixture
 def empty_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
-    store = dict[str, object]()
-    monkeypatch.setattr(size_trend, "get_value_store", lambda: store)
+    store: dict[str, object] = {}
+    monkeypatch.setattr(ibm_svc_mdiskgrp, "get_value_store", lambda: store)
 
 
 @pytest.mark.parametrize(
@@ -302,30 +300,32 @@ def empty_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
                 ],
             ],
             [
-                ("Quorum_0", {}),
-                ("Quorum_1", {}),
-                ("Quorum_2", {}),
-                ("stp5_300G_01", {}),
-                ("stp5_450G_01", {}),
-                ("stp5_450G_02", {}),
-                ("stp5_450G_03", {}),
-                ("stp5_600G_01", {}),
-                ("stp6_300G_01", {}),
-                ("stp6_450G_01", {}),
-                ("stp6_450G_02", {}),
-                ("stp6_450G_03", {}),
-                ("stp6_600G_01", {}),
+                Service(item="Quorum_0"),
+                Service(item="Quorum_1"),
+                Service(item="Quorum_2"),
+                Service(item="stp5_300G_01"),
+                Service(item="stp5_450G_01"),
+                Service(item="stp5_450G_02"),
+                Service(item="stp5_450G_03"),
+                Service(item="stp5_600G_01"),
+                Service(item="stp6_300G_01"),
+                Service(item="stp6_450G_01"),
+                Service(item="stp6_450G_02"),
+                Service(item="stp6_450G_03"),
+                Service(item="stp6_600G_01"),
             ],
         ),
     ],
 )
 def test_discovery_ibm_svc_mdiskgrp(
-    string_table: StringTable, expected_discoveries: Sequence[tuple[str, Mapping[str, Any]]]
+    string_table: StringTable, expected_discoveries: Sequence[Service]
 ) -> None:
     """Test discovery function for ibm_svc_mdiskgrp check."""
     parsed = ibm_svc_mdiskgrp.parse_ibm_svc_mdiskgrp(string_table)
     result = list(ibm_svc_mdiskgrp.discover_ibm_svc_mdiskgrp(parsed))
-    assert sorted(result) == sorted(expected_discoveries)
+    assert sorted(result, key=lambda s: s.item or "") == sorted(
+        expected_discoveries, key=lambda s: s.item or ""
+    )
 
 
 @pytest.mark.usefixtures("empty_value_store")
@@ -338,8 +338,6 @@ def test_discovery_ibm_svc_mdiskgrp(
                 "levels": (80.0, 90.0),
                 "magic_normsize": 20,
                 "levels_low": (50.0, 60.0),
-                "trend_range": 24,
-                "trend_perfdata": True,
                 "show_levels": "onmagic",
                 "inodes_levels": (10.0, 5.0),
                 "show_inodes": "onlow",
@@ -621,22 +619,33 @@ def test_discovery_ibm_svc_mdiskgrp(
                 ],
             ],
             [
-                (
-                    0,
-                    "Used: 0% - 0 B of 512 MiB",
-                    [
-                        ("fs_used", 0.0, 409.5999994277954, 460.79999923706055, 0.0, 512.0),
-                        ("fs_free", 512.0, None, None, 0.0, None),
-                        ("fs_used_percent", 0.0, 79.99999988824129, 89.99999985098839, 0.0, 100.0),
-                        ("fs_size", 512.0, None, None, 0, None),
-                    ],
+                Metric(
+                    "fs_used",
+                    0.0,
+                    levels=(409.5999994277954, 460.79999923706055),
+                    boundaries=(0.0, 512.0),
                 ),
-                (0, "Provisioning: 0%", [("fs_provisioning", 0.0, None, None, 0, 536870912.0)]),
+                Metric("fs_free", 512.0, boundaries=(0.0, None)),
+                Metric(
+                    "fs_used_percent",
+                    0.0,
+                    levels=(79.99999988824129, 89.99999985098839),
+                    boundaries=(0.0, 100.0),
+                ),
+                Result(state=State.OK, summary="Used: 0% - 0 B of 512 MiB"),
+                Metric("fs_size", 512.0, boundaries=(0.0, None)),
+                Result(state=State.OK, summary="Provisioning: 0%"),
+                Metric("fs_provisioning", 0.0, boundaries=(0.0, 536870912.0)),
             ],
         ),
     ],
 )
-def test_check_ibm_svc_mdiskgrp(item, params, string_table, expected_results):
+def test_check_ibm_svc_mdiskgrp(
+    item: str,
+    params: Mapping[str, Any],
+    string_table: StringTable,
+    expected_results: Sequence[Result | Metric],
+) -> None:
     """Test check function for ibm_svc_mdiskgrp check."""
     parsed = ibm_svc_mdiskgrp.parse_ibm_svc_mdiskgrp(string_table)
     result = list(ibm_svc_mdiskgrp.check_ibm_svc_mdiskgrp(item, params, parsed))

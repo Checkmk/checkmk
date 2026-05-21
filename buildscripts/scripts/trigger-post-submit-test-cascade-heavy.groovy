@@ -15,7 +15,7 @@ def main() {
         "test-composition-cee",
         "test-composition-cme",
         "test-composition-cre",
-        "test-gui-crawl-f12less",
+        "test-gui-crawl-node",
         "test-gui-e2e-cce",
         "test-gui-e2e-cee",
         "test-gui-e2e-cse",

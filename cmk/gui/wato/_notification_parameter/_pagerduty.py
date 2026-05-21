@@ -6,7 +6,9 @@
 from typing import Literal
 
 from cmk.utils import password_store
+from cmk.utils.notify_types import PagerDutyWebhookURL
 
+from cmk.gui.form_specs.private import SingleChoiceElementExtended, SingleChoiceExtended
 from cmk.gui.form_specs.private.dictionary_extended import DictionaryExtended
 from cmk.gui.form_specs.vue.visitors.recomposers.unknown_form_spec import recompose
 from cmk.gui.http import request
@@ -15,6 +17,7 @@ from cmk.gui.watolib.notification_parameter import NotificationParameter
 
 from cmk.rulesets.v1 import Help, Label, Message, Title
 from cmk.rulesets.v1.form_specs import (
+    DefaultValue,
     DictElement,
     FixedValue,
     migrate_to_proxy,
@@ -24,6 +27,9 @@ from cmk.rulesets.v1.form_specs import (
 from cmk.rulesets.v1.form_specs.validators import LengthInRange
 
 from ._helpers import _get_url_prefix_setting
+
+_US_WEBHOOK_URL: PagerDutyWebhookURL = "https://events.pagerduty.com/v2/enqueue"
+_EU_WEBHOOK_URL: PagerDutyWebhookURL = "https://events.eu.pagerduty.com/v2/enqueue"
 
 
 class NotificationParameterPagerDuty(NotificationParameter):
@@ -55,9 +61,24 @@ class NotificationParameterPagerDuty(NotificationParameter):
                     required=True,
                 ),
                 "webhook_url": DictElement(
-                    parameter_form=FixedValue(
-                        title=Title("API endpoint from PagerDuty V2"),
-                        value="https://events.pagerduty.com/v2/enqueue",
+                    parameter_form=SingleChoiceExtended[PagerDutyWebhookURL](
+                        title=Title("PagerDuty region"),
+                        help_text=Help(
+                            "Choose the PagerDuty region your account belongs to. This selects "
+                            "the corresponding Events API v2 endpoint that Checkmk will post "
+                            "incidents to."
+                        ),
+                        elements=[
+                            SingleChoiceElementExtended(
+                                name=_US_WEBHOOK_URL,
+                                title=Title("US (events.pagerduty.com)"),
+                            ),
+                            SingleChoiceElementExtended(
+                                name=_EU_WEBHOOK_URL,
+                                title=Title("EU (events.eu.pagerduty.com)"),
+                            ),
+                        ],
+                        prefill=DefaultValue(_US_WEBHOOK_URL),
                     ),
                     required=True,
                 ),

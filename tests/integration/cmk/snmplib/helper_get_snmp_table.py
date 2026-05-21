@@ -26,7 +26,7 @@ from cmk.snmplib import (
 )
 
 if edition(cmk.utils.paths.omd_root) is not Edition.COMMUNITY:
-    from cmk.inline_snmp.inline import (  # type: ignore[import,unused-ignore] # astrein: disable=cmk-module-layer-violation
+    from cmk.snmp_backends.inline import (  # type: ignore[import,unused-ignore] # astrein: disable=cmk-module-layer-violation
         InlineSNMPBackend,
     )
 else:

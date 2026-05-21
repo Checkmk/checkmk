@@ -634,7 +634,7 @@ allows = [
   "@plugin_apis",
   "@relay_protocols",
   "cmk.helper_interface",
-  "cmk.inline_snmp",
+  "cmk.snmp_backends.inline",
   "cmk.snmp_backends.classic",
   "cmk.snmp_backends.stored_walk",
   "cmk.snmplib",
@@ -969,7 +969,7 @@ excludes = [
 [components."cmk.helper_interface"]
 allows = ["@ccc"]
 
-[components."cmk.inline_snmp"]
+[components."cmk.snmp_backends.inline"]
 allows = ["@ccc", "cmk.helper_interface", "cmk.snmplib"]
 
 [components."cmk.inventory"]

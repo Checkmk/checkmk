@@ -18,7 +18,7 @@ from cmk.snmplib import SNMPBackend, SNMPBackendEnum, SNMPHostConfig, SNMPVersio
 
 InlineSNMPBackend: type[SNMPBackend] | None = None
 try:
-    from cmk.inline_snmp.inline import (  # type: ignore[import,unused-ignore,no-redef]
+    from cmk.snmp_backends.inline import (  # type: ignore[import,unused-ignore,no-redef]
         InlineSNMPBackend,
     )
 except ImportError:
@@ -64,7 +64,7 @@ def test_factory_snmp_backend_inline_unavailable(
 ) -> None:
     import cmk.fetchers.snmp_backend as snmp_backend_module
 
-    monkeypatch.setattr(snmp_backend_module, "inline", None)
+    monkeypatch.setattr(snmp_backend_module, "InlineSNMPBackend", None)
     snmp_config = dataclasses.replace(snmp_config, snmp_backend=SNMPBackendEnum.INLINE)
     with pytest.raises(NotImplementedError, match="Unknown SNMP backend"):
         make_backend(snmp_config, logging.getLogger())

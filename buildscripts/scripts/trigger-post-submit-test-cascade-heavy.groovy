@@ -25,10 +25,10 @@ void main() {
         "test-integration-ultimatemt",
         "test-plugins",
         "test-plugins-piggyback-k8s",
-        "test-update-single-f12less-k8s",
-        "test-update-single-f12less-community-pro-k8s",
-        "test-update-single-f12less-pro-ultimate-k8s",
-        "test-update-single-f12less-pro-ultimatemt-k8s",
+        "test-update-pro",
+        "test-update-community-pro",
+        "test-update-pro-ultimate",
+        "test-update-pro-ultimatemt",
     ];
 
     // do keep running the non-k8s jobs due to I54b5b304b9ad2bdb5ef62d482406a3be6f7b011c

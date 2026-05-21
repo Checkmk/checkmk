@@ -568,6 +568,13 @@ def _config_set(
             except Exception:
                 traceback.print_exc()
                 return
+        case "RABBITMQ_ONLY_FROM":
+            try:
+                port = config.get("RABBITMQ_PORT", "5672")
+                write_rabbitmq_default_conf(SitePaths.from_site_name(site.name).home, value, port)
+            except Exception:
+                traceback.print_exc()
+                return
         case "RABBITMQ_MANAGEMENT_PORT":
             site_configs = _build_site_configs(site.name, omd_path)
             _report_error("RABBITMQ_MANAGEMENT_PORT", site_configs.sites_with_unreadable_configs)

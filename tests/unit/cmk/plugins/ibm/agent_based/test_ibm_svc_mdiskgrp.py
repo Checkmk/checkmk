@@ -11,7 +11,7 @@ from typing import Any
 import pytest
 
 from cmk.agent_based.v2 import Metric, Result, Service, State, StringTable
-from cmk.legacy_checks import ibm_svc_mdiskgrp
+from cmk.plugins.ibm.agent_based import ibm_svc_mdiskgrp
 
 
 @pytest.fixture

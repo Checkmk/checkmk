@@ -1423,23 +1423,15 @@ class HTMLGenerator(HTMLWriter):
     def icon_loading_button(
         self, url: str, title: str, icon: DynamicIcon | StaticIcon, waiting_message: str
     ) -> None:
-        # Disabling siblings prevents a race where the user fires multiple
-        # long-running actions in parallel before the first navigation completes.
         self.icon_button(
             url=None,
             title=title,
             icon=icon,
-            cssclass="icon_loading_button",
             onclick=(
-                "for (let b of document.getElementsByClassName('icon_loading_button')) {"
-                "b.onclick = function() { return false; };"
-                "b.style.pointerEvents = 'none';"
-                "if (b !== this) { b.style.opacity = '0.5'; }"
-                "}"
                 "let i = this.getElementsByTagName('img')[0];"
-                r"i.src = i.src.replace(/facelift\/images\/.+$/,'facelift/images/load_graph.png');"
-                f"cmk.forms.waiting_flash_message('page_menu_popups', '{waiting_message}');"
-                f"location.href='{url}';"
+                + r"i.src = i.src.replace(/facelift\/images\/.+$/,'facelift/images/load_graph.png');"
+                + f"cmk.forms.waiting_flash_message('page_menu_popups', '{waiting_message}');"
+                + f"location.href='{url}';this.onclick='return false;';"
             ),
         )
 

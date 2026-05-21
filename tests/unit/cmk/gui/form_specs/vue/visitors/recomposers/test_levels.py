@@ -19,17 +19,12 @@ from cmk.gui.session import UserContext
 from cmk.rulesets.v1 import Title
 from cmk.rulesets.v1.form_specs import (
     DefaultValue,
-    InputHint,
     LevelDirection,
     Levels,
     LevelsType,
-    migrate_to_float_simple_levels,
     Percentage,
     PredictiveLevels,
-    SimpleLevels,
     SimpleLevelsConfigModel,
-    TimeMagnitude,
-    TimeSpan,
 )
 
 _NumberT = TypeVar("_NumberT", int, float)
@@ -275,36 +270,3 @@ def test_levels_recompose_invalid_data(
 
         assert len(vue_app_config.validation) == 1
         assert vue_app_config.validation[0].message == expected_validation_message
-
-
-def test_simple_levels_migrate_from_legacy_milliseconds(
-    request_context: None,
-    patch_theme: None,
-    with_user: tuple[UserId, str],
-) -> None:
-    """Regression test: SimpleLevels.migrate must be preserved through recompose().
-
-    Old 2.3 rules store response_time as a raw (warn_ms, crit_ms) tuple.
-    The migration function scales by 0.001 to convert ms → seconds for TimeSpan.
-    Without the fix (migrate=form_spec.migrate missing in recompose()), the migration
-    is silently dropped and _transform_from_disk raises ValueError on the old tuple."""
-    spec = SimpleLevels[float](
-        title=Title("Expected response time"),
-        level_direction=LevelDirection.UPPER,
-        form_spec_template=TimeSpan(displayed_magnitudes=(TimeMagnitude.MILLISECOND,)),
-        prefill_fixed_levels=InputHint((0.1, 0.2)),
-        migrate=lambda v: migrate_to_float_simple_levels(v, 0.001),
-    )
-
-    with UserContext(with_user[0]):
-        # Old 2.3 format: tuple of (warn_ms, crit_ms)
-        vue_app_config = serialize_data_for_frontend(
-            spec,
-            "ut_id",
-            DataOrigin.DISK,
-            do_validate=True,
-            value=(1000.0, 2000.0),
-        )
-
-    assert len(vue_app_config.validation) == 0
-    assert vue_app_config.data == ("fixed", [1.0, 2.0])

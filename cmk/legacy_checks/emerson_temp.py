@@ -3,14 +3,21 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 
-
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import SNMPTree, startswith, StringTable
-from cmk.legacy_includes.temperature import check_temperature
-
-check_info = {}
+from cmk.agent_based.v2 import (
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    get_value_store,
+    Result,
+    Service,
+    SimpleSNMPSection,
+    SNMPTree,
+    startswith,
+    State,
+    StringTable,
+)
+from cmk.plugins.lib.temperature import check_temperature, TempParamType
 
 #
 # during inventory we are looking for all temperatures available,
@@ -23,21 +30,27 @@ check_info = {}
 # from a customer, its named "Emerson Energy Systems (EES) Power MIB"
 
 
-def discover_emerson_temp(info):
+def discover_emerson_temp(section: StringTable) -> DiscoveryResult:
     # Device appears to mark missing sensors by temperature value -999999
-    yield from ((str(nr), {}) for nr, line in enumerate(info) if int(line[0]) >= -273000)
+    yield from (Service(item=str(nr)) for nr, line in enumerate(section) if int(line[0]) >= -273000)
 
 
-def check_emerson_temp(item, params, info):
+def check_emerson_temp(item: str, params: TempParamType, section: StringTable) -> CheckResult:
     item_index = int(item)
-    if item_index >= len(info):
-        return None
+    if item_index >= len(section):
+        return
 
-    if int(info[item_index][0]) < -273000:
-        return 3, "Sensor offline"
+    if int(section[item_index][0]) < -273000:
+        yield Result(state=State.UNKNOWN, summary="Sensor offline")
+        return
 
-    temp = float(info[item_index][0]) / 1000.0
-    return check_temperature(temp, params, "emerson_temp_%s" % item)
+    temp = float(section[item_index][0]) / 1000.0
+    yield from check_temperature(
+        temp,
+        params,
+        unique_name=f"emerson_temp_{item}",
+        value_store=get_value_store(),
+    )
 
 
 def parse_emerson_temp(string_table: StringTable) -> StringTable:
@@ -46,14 +59,19 @@ def parse_emerson_temp(string_table: StringTable) -> StringTable:
     return string_table[:2]
 
 
-check_info["emerson_temp"] = LegacyCheckDefinition(
+snmp_section_emerson_temp = SimpleSNMPSection(
     name="emerson_temp",
-    parse_function=parse_emerson_temp,
     detect=startswith(".1.3.6.1.4.1.6302.2.1.1.1.0", "Emerson Network Power"),
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.6302.2.1.2",
         oids=["7"],
     ),
+    parse_function=parse_emerson_temp,
+)
+
+
+check_plugin_emerson_temp = CheckPlugin(
+    name="emerson_temp",
     service_name="Temperature %s",
     discovery_function=discover_emerson_temp,
     check_function=check_emerson_temp,

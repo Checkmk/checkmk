@@ -72,7 +72,7 @@ def main() {
         """.stripMargin());
 
     def build_for_parallel = [:];
-    def relative_job_name = "${branch_base_folder}/builders/test-update-single";
+    def relative_job_name = "${branch_base_folder}/builders/test-update-single-node";
 
     def test_stages = all_distros.collectEntries { distro -> [
         ("Test ${distro}") : {

@@ -53,7 +53,6 @@ Group={_SERVICE_NAME}
 StateDirectory={_SERVICE_NAME}
 ConfigurationDirectory={_SERVICE_NAME}
 RuntimeDirectory={_SERVICE_NAME}
-Environment=HOME=/var/lib/{_SERVICE_NAME}
 ExecStart={_VENV}/bin/python -m cmk.werk_ids_server serve
 ExecReload=/bin/kill -s HUP $MAINPID
 KillMode=mixed

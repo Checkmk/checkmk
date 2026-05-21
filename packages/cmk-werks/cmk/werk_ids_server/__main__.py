@@ -19,7 +19,8 @@ _START = 22_222
 
 class _Server(BaseApplication):
     def load_config(self) -> None:
-        pass
+        assert self.cfg is not None
+        self.cfg.set("control_socket_disable", True)
 
     def load(self) -> Flask:
         return app

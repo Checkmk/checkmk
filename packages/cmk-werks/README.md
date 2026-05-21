@@ -34,32 +34,34 @@ The secret is read from `/etc/cmk-werk-ids/secret` on every authenticated reques
 
 Prerequisites:
 
-- **Local**: `bazel` and `rsync` in `PATH`
+- **Local**: `bazel`, `rsync`, and `python3` in `PATH`
 - **Remote**: `python3` available
-- **Remote**: `deploy` user with passwordless `sudo` for `useradd`, `chown`, `chmod`, `tee`, `systemctl`
+- **Remote**: `root` user reachable via SSH (passwordless key auth)
 - **Remote**: `/etc/cmk-werk-ids/secret` must exist before running install
 
 ```sh
-bazel run //packages/cmk-werks:werk-ids-server-deploy -- install [user@host]
+python3 packages/cmk-werks/scripts/werk_ids_server.py install [user@host]
 ```
 
-Omitting `user@host` defaults to `deploy@werk-ids.lan.checkmk.net`.
+Omitting `user@host` defaults to `root@werk-ids.lan.checkmk.net`.
+
+The install step is idempotent: re-running it is safe and converges to the same end state.
 
 This command:
 
 1. Builds the server wheel and syncs it to the remote
-2. Creates the `cmk-werk-ids` system user
-3. Creates a virtualenv at `/opt/cmk-werk-ids/venv` and installs the wheel
+2. Creates the `cmk-werk-ids` system user (used by the systemd unit to run gunicorn)
+3. Installs `python3.12-venv` if missing, then creates a virtualenv at `/opt/cmk-werk-ids/venv` and installs the wheel
 4. Installs and enables the systemd socket and service
 
 The database is initialised automatically on first start of the service.
 
 ### Deploy (update existing installation)
 
-Prerequisites: `deploy` user with passwordless `sudo` for `systemctl`.
+Prerequisites: `root` user reachable via SSH (passwordless key auth).
 
 ```sh
-bazel run //packages/cmk-werks:werk-ids-server-deploy -- deploy [user@host]
+python3 packages/cmk-werks/scripts/werk_ids_server.py deploy [user@host]
 ```
 
 Rebuilds the wheel, syncs it, reinstalls into the existing virtualenv, and restarts the service.
@@ -69,8 +71,8 @@ Rebuilds the wheel, syncs it, reinstalls into the existing virtualenv, and resta
 Both commands accept `--dry-run` to print every SSH and rsync call without executing anything:
 
 ```sh
-bazel run //packages/cmk-werks:werk-ids-server-deploy -- --dry-run install
-bazel run //packages/cmk-werks:werk-ids-server-deploy -- --dry-run deploy [user@host]
+python3 packages/cmk-werks/scripts/werk_ids_server.py --dry-run install
+python3 packages/cmk-werks/scripts/werk_ids_server.py --dry-run deploy [user@host]
 ```
 
 ## Development

@@ -127,7 +127,6 @@ def fake_paths() -> None:
             {
                 "uap_url": "https://test.example.com",
                 "bug_tracker_url": "https://test.example.com",
-                "download_agent_user": "test",
                 "tenant_id": "test-tenant",
                 "otel_collector_receiver_activation_script_path": "/dev/null",
                 "enable_ai": False,

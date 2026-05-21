@@ -11,7 +11,7 @@ from typing import Any
 import pytest
 
 from cmk.agent_based.v2 import Result, Service, State, StringTable
-from cmk.legacy_checks.ibm_svc_mdisk import (
+from cmk.plugins.ibm.agent_based.ibm_svc_mdisk import (
     check_ibm_svc_mdisk,
     discover_ibm_svc_mdisk,
     parse_ibm_svc_mdisk,

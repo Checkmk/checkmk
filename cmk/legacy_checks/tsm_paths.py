@@ -3,34 +3,47 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 
-
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import StringTable
-
-check_info = {}
-
-
-def discover_tsm_paths(info):
-    return [(None, None)]
-
-
-def check_tsm_paths(item, _no_params, info):
-    count_pathes = len(info)
-    error_paths = [x[1] for x in info if x[2] != "YES"]
-    if len(error_paths) > 0:
-        return 2, "Paths with errors: %s" % ", ".join(error_paths)
-    return 0, " %d paths OK" % count_pathes
+from cmk.agent_based.v2 import (
+    AgentSection,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Result,
+    Service,
+    State,
+    StringTable,
+)
 
 
 def parse_tsm_paths(string_table: StringTable) -> StringTable:
     return string_table
 
 
-check_info["tsm_paths"] = LegacyCheckDefinition(
+def discover_tsm_paths(section: StringTable) -> DiscoveryResult:
+    if section:
+        yield Service()
+
+
+def check_tsm_paths(section: StringTable) -> CheckResult:
+    error_paths = [line[1] for line in section if line[2] != "YES"]
+    if error_paths:
+        yield Result(
+            state=State.CRIT,
+            summary=f"Paths with errors: {', '.join(error_paths)}",
+        )
+        return
+    yield Result(state=State.OK, summary=f"{len(section)} paths OK")
+
+
+agent_section_tsm_paths = AgentSection(
     name="tsm_paths",
     parse_function=parse_tsm_paths,
+)
+
+
+check_plugin_tsm_paths = CheckPlugin(
+    name="tsm_paths",
     service_name="TSM Paths",
     discovery_function=discover_tsm_paths,
     check_function=check_tsm_paths,

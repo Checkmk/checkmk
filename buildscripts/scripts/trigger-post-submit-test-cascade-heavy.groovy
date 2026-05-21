@@ -24,7 +24,7 @@ void main() {
         "test-integration-redfish",
         "test-integration-ultimatemt",
         "test-plugins",
-        "test-plugins-piggyback-k8s",
+        "test-plugins-piggyback",
         "test-update-pro",
         "test-update-community-pro",
         "test-update-pro-ultimate",

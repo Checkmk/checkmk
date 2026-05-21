@@ -9656,7 +9656,7 @@ msgid "Base URL for Docker API engine"
 msgstr "URL de base pour le moteur API de Docker"
 
 #, fuzzy
-msgid "Base directory for <tt>plug-ins</tt> and <tt>local</tt>"
+msgid "Base directory for plug-ins and local"
 msgstr "Répertoire de base pour les <tt>plugins</tt> et <tt>local</tt>"
 
 msgid "Base directory for variable data (caches, state files)"
@@ -35565,7 +35565,7 @@ msgid "Installation directories"
 msgstr "Audit de l'installation de l'agent Checkmk"
 
 #, fuzzy
-msgid "Installation paths for agent files (Linux, Unix) (deprecated)"
+msgid "Installation paths for agent files (Linux, Unix)"
 msgstr "Chemins d'installation des fichiers d'agent (Linux, UNIX)"
 
 msgid "Installed RAM"
@@ -51751,6 +51751,12 @@ msgid "Please enter a valid Webhook URL"
 msgstr "Veuillez entrer un numéro valide"
 
 msgid "Please enter a valid absolut pathname with / as a path separator."
+msgstr ""
+"Veuillez entrer un nom de chemin absolu valide avec / comme séparateur de "
+"chemin."
+
+#, fuzzy
+msgid "Please enter a valid absolute pathname with / as a path separator."
 msgstr ""
 "Veuillez entrer un nom de chemin absolu valide avec / comme séparateur de "
 "chemin."

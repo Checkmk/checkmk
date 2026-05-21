@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2026-05-19 17:53+0000\n"
+"PO-Revision-Date: 2026-05-20 17:53+0000\n"
 "Language-Team: Portuguese (Portugal) <https://translate.checkmk.com/projects/"
 "checkmk/dev/pt_PT/>\n"
 "Language: pt_PT\n"
@@ -9616,7 +9616,7 @@ msgid "Base URL for Docker API engine"
 msgstr "URL base para o motor API do docker"
 
 #, fuzzy
-msgid "Base directory for <tt>plug-ins</tt> and <tt>local</tt>"
+msgid "Base directory for plug-ins and local"
 msgstr "Diretório base para <tt>plugins</tt> e <tt>local</tt>"
 
 msgid "Base directory for variable data (caches, state files)"
@@ -35267,7 +35267,7 @@ msgid "Installation directories"
 msgstr "Auditoria de instalação do Checkmk Agent"
 
 #, fuzzy
-msgid "Installation paths for agent files (Linux, Unix) (deprecated)"
+msgid "Installation paths for agent files (Linux, Unix)"
 msgstr "Caminhos de instalação para arquivos de agentes (Linux, UNIX)"
 
 msgid "Installed RAM"
@@ -51325,6 +51325,12 @@ msgid "Please enter a valid Webhook URL"
 msgstr "Por favor, introduza um número válido"
 
 msgid "Please enter a valid absolut pathname with / as a path separator."
+msgstr ""
+"Por favor, introduza um caminho absoluto válido com / como separador de "
+"caminhos."
+
+#, fuzzy
+msgid "Please enter a valid absolute pathname with / as a path separator."
 msgstr ""
 "Por favor, introduza um caminho absoluto válido com / como separador de "
 "caminhos."

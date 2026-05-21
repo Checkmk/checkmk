@@ -8914,7 +8914,8 @@ msgstr "ベースOID"
 msgid "Base URL for Docker API engine"
 msgstr "Docker APIエンジンのベースURL"
 
-msgid "Base directory for <tt>plug-ins</tt> and <tt>local</tt>"
+#, fuzzy
+msgid "Base directory for plug-ins and local"
 msgstr "<tt>プラグイン</tt>および<tt>ローカル</tt>のベースディレクトリ"
 
 msgid "Base directory for variable data (caches, state files)"
@@ -32762,7 +32763,8 @@ msgstr "インストール"
 msgid "Installation directories"
 msgstr "インストールディレクトリ"
 
-msgid "Installation paths for agent files (Linux, Unix) (deprecated)"
+#, fuzzy
+msgid "Installation paths for agent files (Linux, Unix)"
 msgstr "エージェントファイルのインストールパス（Linux、Unix）（非推奨）"
 
 msgid "Installed RAM"
@@ -47432,6 +47434,11 @@ msgid "Please enter a valid Webhook URL"
 msgstr "有効なWebhook URLを入力してください"
 
 msgid "Please enter a valid absolut pathname with / as a path separator."
+msgstr ""
+"有効な絶対パス名を、パスの区切り文字として / を付けて入力してください。"
+
+#, fuzzy
+msgid "Please enter a valid absolute pathname with / as a path separator."
 msgstr ""
 "有効な絶対パス名を、パスの区切り文字として / を付けて入力してください。"
 

@@ -9599,7 +9599,7 @@ msgid "Base URL for Docker API engine"
 msgstr "Basis URL voor docker API engine"
 
 #, fuzzy
-msgid "Base directory for <tt>plug-ins</tt> and <tt>local</tt>"
+msgid "Base directory for plug-ins and local"
 msgstr "Basismap voor <tt>plugins</tt> en <tt>local</tt>"
 
 msgid "Base directory for variable data (caches, state files)"
@@ -35264,7 +35264,7 @@ msgid "Installation directories"
 msgstr "Checkmk Agent installatie auditing"
 
 #, fuzzy
-msgid "Installation paths for agent files (Linux, Unix) (deprecated)"
+msgid "Installation paths for agent files (Linux, Unix)"
 msgstr "Installatiepaden voor agentbestanden (Linux, UNIX)"
 
 msgid "Installed RAM"
@@ -51347,6 +51347,10 @@ msgid "Please enter a valid Webhook URL"
 msgstr "Voer een geldig nummer in"
 
 msgid "Please enter a valid absolut pathname with / as a path separator."
+msgstr "Voer een geldige absolute padnaam in met / als pad scheidingsteken."
+
+#, fuzzy
+msgid "Please enter a valid absolute pathname with / as a path separator."
 msgstr "Voer een geldige absolute padnaam in met / als pad scheidingsteken."
 
 #, fuzzy

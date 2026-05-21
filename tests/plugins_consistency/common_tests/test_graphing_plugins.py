@@ -17,7 +17,10 @@ from cmk.graphing.v1 import graphs as graphs_v1
 from cmk.graphing.v1 import metrics as metrics_v1
 from cmk.graphing.v1 import perfometers as perfometers_v1
 from cmk.graphing.v1 import translations as translations_api
+from cmk.graphing.v2_unstable import graphs as graphs_v2_unstable
 from cmk.graphing.v2_unstable import metrics as metrics_v2_unstable
+from cmk.graphing.v2_unstable import perfometers as perfometers_v2_unstable
+from cmk.gui.graphing import GraphFromAPI, PerfometerFromAPI
 from cmk.gui.graphing_main import _load_graphing_plugins
 
 
@@ -94,7 +97,7 @@ def _collect_metric_names_from_quantity(
 
 
 def _collect_metric_names_from_perfometer(
-    perfometer: perfometers_v1.Perfometer,
+    perfometer: perfometers_v1.Perfometer | perfometers_v2_unstable.Perfometer,
 ) -> Iterator[str]:
     if not isinstance(perfometer.focus_range.lower.value, int | float):
         yield from _collect_metric_names_from_quantity(perfometer.focus_range.lower.value)
@@ -104,7 +107,9 @@ def _collect_metric_names_from_perfometer(
         yield from _collect_metric_names_from_quantity(segment)
 
 
-def _collect_metric_names_from_graph(graph: graphs_v1.Graph) -> Iterator[str]:
+def _collect_metric_names_from_graph(
+    graph: graphs_v1.Graph | graphs_v2_unstable.Graph,
+) -> Iterator[str]:
     if graph.minimal_range:
         if not isinstance(graph.minimal_range.lower, int | float):
             yield from _collect_metric_names_from_quantity(graph.minimal_range.lower)
@@ -154,43 +159,37 @@ class _MetricNamesInModule:
     def add_from_plugin(
         self,
         plugin: (
-            metrics_v1.Metric
-            | perfometers_v1.Perfometer
-            | perfometers_v1.Bidirectional
-            | perfometers_v1.Stacked
-            | graphs_v1.Graph
-            | graphs_v1.Bidirectional
-            | translations_api.Translation
+            metrics_v1.Metric | PerfometerFromAPI | GraphFromAPI | translations_api.Translation
         ),
     ) -> None:
         match plugin:
             case metrics_v1.Metric():
                 self._from_metrics.add(plugin.name)
-            case perfometers_v1.Perfometer():
+            case perfometers_v1.Perfometer() | perfometers_v2_unstable.Perfometer():
                 self._from_perfometer_or_graph.setdefault(
                     ("perfometer", plugin.name),
                     set(_collect_metric_names_from_perfometer(plugin)),
                 )
-            case perfometers_v1.Bidirectional():
+            case perfometers_v1.Bidirectional() | perfometers_v2_unstable.Bidirectional():
                 self._from_perfometer_or_graph.setdefault(
                     ("perfometer", plugin.name),
                     set(_collect_metric_names_from_perfometer(plugin.left)).union(
                         _collect_metric_names_from_perfometer(plugin.right)
                     ),
                 )
-            case perfometers_v1.Stacked():
+            case perfometers_v1.Stacked() | perfometers_v2_unstable.Stacked():
                 self._from_perfometer_or_graph.setdefault(
                     ("perfometer", plugin.name),
                     set(_collect_metric_names_from_perfometer(plugin.lower)).union(
                         _collect_metric_names_from_perfometer(plugin.upper)
                     ),
                 )
-            case graphs_v1.Graph():
+            case graphs_v1.Graph() | graphs_v2_unstable.Graph():
                 self._from_perfometer_or_graph.setdefault(
                     ("graph", plugin.name),
                     set(_collect_metric_names_from_graph(plugin)),
                 )
-            case graphs_v1.Bidirectional():
+            case graphs_v1.Bidirectional() | graphs_v2_unstable.Bidirectional():
                 self._from_perfometer_or_graph.setdefault(
                     ("graph", plugin.name),
                     set(_collect_metric_names_from_graph(plugin.lower)).union(
@@ -274,13 +273,7 @@ def test__MetricNamesInModule_bundles(
 def _metric_names_by_module(
     plugins: Mapping[
         PluginLocation,
-        metrics_v1.Metric
-        | perfometers_v1.Perfometer
-        | perfometers_v1.Bidirectional
-        | perfometers_v1.Stacked
-        | graphs_v1.Graph
-        | graphs_v1.Bidirectional
-        | translations_api.Translation,
+        metrics_v1.Metric | PerfometerFromAPI | GraphFromAPI | translations_api.Translation,
     ],
 ) -> Mapping[str, _MetricNamesInModule]:
     metric_names_by_module: dict[str, _MetricNamesInModule] = {}
@@ -492,7 +485,13 @@ def test_duplicate_graph_titles_new() -> None:
     # CMK-26844
     graphs_by_title: dict[str, set[str]] = {}
     for plugin in _load_graphing_plugins().plugins.values():
-        if isinstance(plugin, graphs_v1.Graph | graphs_v1.Bidirectional):
+        if isinstance(
+            plugin,
+            graphs_v1.Graph
+            | graphs_v1.Bidirectional
+            | graphs_v2_unstable.Graph
+            | graphs_v2_unstable.Bidirectional,
+        ):
             graphs_by_title.setdefault(plugin.title.localize(str), set()).add(plugin.name)
 
     duplicate_graph_titles = {t: gps for t, gps in graphs_by_title.items() if len(gps) > 1}
@@ -515,7 +514,13 @@ def test_duplicate_graph_titles_fixed() -> None:
     # CMK-26844
     graphs_by_title: dict[str, set[str]] = {}
     for plugin in _load_graphing_plugins().plugins.values():
-        if isinstance(plugin, graphs_v1.Graph | graphs_v1.Bidirectional):
+        if isinstance(
+            plugin,
+            graphs_v1.Graph
+            | graphs_v1.Bidirectional
+            | graphs_v2_unstable.Graph
+            | graphs_v2_unstable.Bidirectional,
+        ):
             graphs_by_title.setdefault(plugin.title.localize(str), set()).add(plugin.name)
 
     duplicate_graph_titles = {t: gps for t, gps in graphs_by_title.items() if len(gps) > 1}

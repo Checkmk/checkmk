@@ -11,6 +11,8 @@ from cmk.ccc.plugin_registry import Registry
 from cmk.graphing.v1 import graphs as graphs_v1
 from cmk.graphing.v1 import metrics as metrics_v1
 from cmk.graphing.v1 import perfometers as perfometers_v1
+from cmk.graphing.v2_unstable import graphs as graphs_v2_unstable
+from cmk.graphing.v2_unstable import perfometers as perfometers_v2_unstable
 from cmk.gui.color import parse_color_from_api
 from cmk.gui.unit_formatter import AutoPrecision, StrictPrecision
 
@@ -90,23 +92,34 @@ class MetricsFromAPI(Registry[RegisteredMetric]):
 metrics_from_api = MetricsFromAPI()
 
 
-class PerfometersFromAPI(
-    Registry[perfometers_v1.Perfometer | perfometers_v1.Bidirectional | perfometers_v1.Stacked]
-):
-    def plugin_name(
-        self,
-        instance: (
-            perfometers_v1.Perfometer | perfometers_v1.Bidirectional | perfometers_v1.Stacked
-        ),
-    ) -> str:
+type PerfometerFromAPI = (
+    perfometers_v1.Perfometer
+    | perfometers_v1.Bidirectional
+    | perfometers_v1.Stacked
+    | perfometers_v2_unstable.Perfometer
+    | perfometers_v2_unstable.Bidirectional
+    | perfometers_v2_unstable.Stacked
+)
+
+
+class PerfometersFromAPI(Registry[PerfometerFromAPI]):
+    def plugin_name(self, instance: PerfometerFromAPI) -> str:
         return instance.name
 
 
 perfometers_from_api = PerfometersFromAPI()
 
 
-class GraphsFromAPI(Registry[graphs_v1.Graph | graphs_v1.Bidirectional]):
-    def plugin_name(self, instance: graphs_v1.Graph | graphs_v1.Bidirectional) -> str:
+type GraphFromAPI = (
+    graphs_v1.Graph
+    | graphs_v1.Bidirectional
+    | graphs_v2_unstable.Graph
+    | graphs_v2_unstable.Bidirectional
+)
+
+
+class GraphsFromAPI(Registry[GraphFromAPI]):
+    def plugin_name(self, instance: GraphFromAPI) -> str:
         return instance.name
 
 

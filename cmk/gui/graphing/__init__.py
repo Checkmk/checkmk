@@ -11,9 +11,11 @@ from ._artwork import (
 )
 from ._explicit_graphs import ExplicitGraphSpecification
 from ._from_api import (
+    GraphFromAPI,
     graphs_from_api,
     metrics_from_api,
     parse_metric_from_api,
+    PerfometerFromAPI,
     perfometers_from_api,
     RegisteredMetric,
 )
@@ -148,8 +150,10 @@ __all__ = [
     "MKCombinedGraphLimitExceededError",
     "MKGraphRecipeNotFoundError",
     "MKGraphWidgetTooSmallError",
+    "GraphFromAPI",
     "MetricName",
     "MetricSpec",
+    "PerfometerFromAPI",
     "RegisteredMetric",
     "TemplateGraphSpecification",
     "ScalarBounds",

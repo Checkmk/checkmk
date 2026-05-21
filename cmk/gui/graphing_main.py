@@ -25,17 +25,22 @@ from cmk.graphing.v1 import graphs as graphs_v1
 from cmk.graphing.v1 import metrics as metrics_v1
 from cmk.graphing.v1 import perfometers as perfometers_v1
 from cmk.graphing.v1 import translations as translations_v1
+from cmk.graphing.v2_unstable import entry_point_prefixes as entry_point_prefixes_v2_unstable
+from cmk.graphing.v2_unstable import graphs as graphs_v2_unstable
+from cmk.graphing.v2_unstable import perfometers as perfometers_v2_unstable
 from cmk.gui.graphing import (
     check_metrics,
     CheckMetricEntry,
     get_temperature_unit,
     GraphEnvironment,
+    GraphFromAPI,
     graphs_from_api,
     host_service_graph_popup_cmk,
     METRIC_BACKEND_KEY,
     metric_backend_registry,
     metrics_from_api,
     parse_metric_from_api,
+    PerfometerFromAPI,
     perfometers_from_api,
 )
 from cmk.gui.log import logger
@@ -59,25 +64,13 @@ from cmk.utils.servicename import ServiceName
 
 
 def _load_graphing_plugins() -> DiscoveredPlugins[
-    metrics_v1.Metric
-    | perfometers_v1.Perfometer
-    | perfometers_v1.Bidirectional
-    | perfometers_v1.Stacked
-    | graphs_v1.Graph
-    | graphs_v1.Bidirectional
-    | translations_v1.Translation
+    metrics_v1.Metric | PerfometerFromAPI | GraphFromAPI | translations_v1.Translation
 ]:
     discovered_plugins: DiscoveredPlugins[
-        metrics_v1.Metric
-        | perfometers_v1.Perfometer
-        | perfometers_v1.Bidirectional
-        | perfometers_v1.Stacked
-        | graphs_v1.Graph
-        | graphs_v1.Bidirectional
-        | translations_v1.Translation
+        metrics_v1.Metric | PerfometerFromAPI | GraphFromAPI | translations_v1.Translation
     ] = discover_all_plugins(
         PluginGroup.GRAPHING,
-        entry_point_prefixes_v1(),
+        dict(entry_point_prefixes_v1()) | dict(entry_point_prefixes_v2_unstable()),
         skip_wrong_types=False,
         raise_errors=cmk.ccc.debug.enabled(),
     )
@@ -142,13 +135,7 @@ def _parse_translation(
 
 def _add_graphing_plugins(
     plugins: DiscoveredPlugins[
-        metrics_v1.Metric
-        | perfometers_v1.Perfometer
-        | perfometers_v1.Bidirectional
-        | perfometers_v1.Stacked
-        | graphs_v1.Graph
-        | graphs_v1.Bidirectional
-        | translations_v1.Translation
+        metrics_v1.Metric | PerfometerFromAPI | GraphFromAPI | translations_v1.Translation
     ],
 ) -> None:
     for plugin in plugins.plugins.values():
@@ -164,11 +151,22 @@ def _add_graphing_plugins(
 
         elif isinstance(
             plugin,
-            perfometers_v1.Perfometer | perfometers_v1.Bidirectional | perfometers_v1.Stacked,
+            perfometers_v1.Perfometer
+            | perfometers_v1.Bidirectional
+            | perfometers_v1.Stacked
+            | perfometers_v2_unstable.Perfometer
+            | perfometers_v2_unstable.Bidirectional
+            | perfometers_v2_unstable.Stacked,
         ):
             perfometers_from_api.register(plugin)
 
-        elif isinstance(plugin, graphs_v1.Graph | graphs_v1.Bidirectional):
+        elif isinstance(
+            plugin,
+            graphs_v1.Graph
+            | graphs_v1.Bidirectional
+            | graphs_v2_unstable.Graph
+            | graphs_v2_unstable.Bidirectional,
+        ):
             graphs_from_api.register(plugin)
 
 

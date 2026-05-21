@@ -5,10 +5,10 @@
 
 from collections.abc import Mapping
 
-from cmk.graphing.v1 import perfometers as perfometers_v1
 from cmk.gui.config import Config
 from cmk.gui.graphing import (
     metrics_from_api,
+    PerfometerFromAPI,
     perfometers_from_api,
     RegisteredMetric,
 )
@@ -23,10 +23,7 @@ from .base import Perfometer
 
 def _sort_perfometer(
     registered_metrics: Mapping[str, RegisteredMetric],
-    registered_perfometers: Mapping[
-        str,
-        perfometers_v1.Perfometer | perfometers_v1.Bidirectional | perfometers_v1.Stacked,
-    ],
+    registered_perfometers: Mapping[str, PerfometerFromAPI],
     r1: Row,
     r2: Row,
     *,
@@ -55,10 +52,7 @@ class _SorterPerfometer(Sorter):
     def __init__(
         self,
         registered_metrics: Mapping[str, RegisteredMetric],
-        registered_perfometers: Mapping[
-            str,
-            perfometers_v1.Perfometer | perfometers_v1.Bidirectional | perfometers_v1.Stacked,
-        ],
+        registered_perfometers: Mapping[str, PerfometerFromAPI],
     ) -> None:
         super().__init__(
             "perfometer",

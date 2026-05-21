@@ -30,7 +30,7 @@ from ._evaluations_from_api import (
     evaluate_graph_plugin_scalars,
     evaluate_graph_plugin_title,
 )
-from ._from_api import RegisteredMetric
+from ._from_api import GraphFromAPI, RegisteredMetric
 from ._graph_metric_expressions import (
     AnnotatedHostName,
     create_graph_metric_expression_from_translated_metric,
@@ -60,8 +60,8 @@ class MKGraphNotFound(MKGeneralException): ...
 
 
 def sort_registered_graph_plugins(
-    registered_graphs: Mapping[str, graphs_v1.Graph | graphs_v1.Bidirectional],
-) -> list[tuple[str, graphs_v1.Graph | graphs_v1.Bidirectional]]:
+    registered_graphs: Mapping[str, GraphFromAPI],
+) -> list[tuple[str, GraphFromAPI]]:
     def _by_index(graph_name: str) -> int:
         try:
             return GRAPHS_ORDER.index(graph_name)
@@ -78,7 +78,7 @@ class GraphPluginChoice:
 
 
 def get_graph_plugin_choices(
-    registered_graphs: Mapping[str, graphs_v1.Graph | graphs_v1.Bidirectional],
+    registered_graphs: Mapping[str, GraphFromAPI],
 ) -> list[GraphPluginChoice]:
     return sorted(
         [
@@ -90,9 +90,9 @@ def get_graph_plugin_choices(
 
 
 def get_graph_plugin_from_id(
-    registered_graphs: Mapping[str, graphs_v1.Graph | graphs_v1.Bidirectional],
+    registered_graphs: Mapping[str, GraphFromAPI],
     graph_id: str,
-) -> graphs_v1.Graph | graphs_v1.Bidirectional:
+) -> GraphFromAPI:
     if graph_id.startswith("METRIC_"):
         metric_name = graph_id[7:]
         return graphs_v1.Graph(
@@ -112,7 +112,7 @@ def get_graph_plugin_from_id(
 
 def get_graph_plugin_and_single_metric_choices(
     registered_metrics: Mapping[str, RegisteredMetric],
-    sorted_graph_plugins: Sequence[tuple[str, graphs_v1.Graph | graphs_v1.Bidirectional]],
+    sorted_graph_plugins: Sequence[tuple[str, GraphFromAPI]],
     site_id: SiteId,
     host_name: HostName,
     service_name: ServiceName,
@@ -222,7 +222,7 @@ def _create_graph_recipe(
 
 def _evaluate_graph_plugins(
     registered_metrics: Mapping[str, RegisteredMetric],
-    sorted_graph_plugins: Sequence[tuple[str, graphs_v1.Graph | graphs_v1.Bidirectional]],
+    sorted_graph_plugins: Sequence[tuple[str, GraphFromAPI]],
     site_id: SiteId,
     host_name: HostName,
     service_name: ServiceName,

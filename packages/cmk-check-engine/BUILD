@@ -91,7 +91,7 @@ py_library(
         "cmk/fetchers/filecache/_agent.py",
         "cmk/fetchers/filecache/_cache.py",
         "cmk/fetchers/filecache/_snmp.py",
-        "cmk/fetchers/snmp_backend/__init__.py",
+        "cmk/fetchers/snmp_backend.py",
     ] + glob(
         [
             "cmk/fetchers/_utils/*.py",

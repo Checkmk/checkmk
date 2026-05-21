@@ -4,18 +4,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Iterator
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import pytest
 
 import cmk.utils.paths
-from cmk.ccc.version import Edition
-from cmk.gui.config import Config
-from cmk.gui.exceptions import MKAuthException
-from cmk.gui.http import Request
-from cmk.gui.pages import PageContext
 from cmk.gui.utils.roles import UserPermissions
-from cmk.gui.wato.pages.user_profile.change_password import UserChangePasswordPage
 from cmk.gui.wato.pages.user_profile.main_menu import default_user_menu_topics
 
 
@@ -46,14 +40,6 @@ def fixture_stub_user_menu_quick_entries() -> Iterator[None]:
         patch(f"{base}._get_sidebar_position", return_value="right"),
     ):
         yield
-
-
-@pytest.mark.usefixtures("with_admin_login", "remote_site")
-def test_change_password_page_blocked_on_remote_site(load_config: Config) -> None:
-    page = UserChangePasswordPage(Edition.COMMUNITY)
-    ctx = PageContext(config=load_config, request=MagicMock(spec=Request))
-    with pytest.raises(MKAuthException):
-        page.page(ctx)
 
 
 @pytest.mark.usefixtures("with_admin_login", "remote_site", "stub_user_menu_quick_entries")

@@ -192,8 +192,6 @@ class UserChangePasswordPage(Page):
             "general.change_password",
             ctx.config.wato_enabled,
         )
-        if is_distributed_setup_remote_site(ctx.config.sites):
-            raise MKAuthException(_("Changing your password is not allowed on remote sites."))
         title = self._page_title()
         breadcrumb = make_simple_page_breadcrumb(main_menu_registry.menu_user(), self._page_title())
         make_header(
@@ -212,6 +210,11 @@ class UserChangePasswordPage(Page):
             user_role_ids=user.role_ids,
         )
 
+        if is_distributed_setup_remote_site(ctx.config.sites):
+            self._show_remote_site_notice()
+            html.footer()
+            return
+
         if transactions.check_transaction():
             try:
                 self._action(ctx.request, ctx.config)
@@ -224,6 +227,21 @@ class UserChangePasswordPage(Page):
         html.show_user_errors()
 
         self._show_form(ctx.request, get_user_attributes(ctx.config.wato_user_attrs))
+
+    def _show_remote_site_notice(self) -> None:
+        assert user.id is not None
+        user_spec = userdb.load_user(user.id)
+        if user_spec.get("connector", "htpasswd") == "htpasswd":
+            html.show_warning(
+                _(
+                    "Your password can only be changed on the central site. "
+                    "Please log in to the central Checkmk site to change your password."
+                )
+            )
+        else:
+            html.show_warning(
+                _("Your password is managed by another system and cannot be changed in Checkmk.")
+            )
 
     def _show_form(
         self, request: Request, user_attributes: Sequence[tuple[str, UserAttribute]]

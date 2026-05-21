@@ -10,7 +10,7 @@ import pytest
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
 from cmk.graphing import v1 as graphing_api
-from cmk.graphing.v1 import graphs as graphs_api
+from cmk.graphing.v1 import graphs as graphs_v1
 from cmk.graphing.v1 import metrics as metrics_v1
 from cmk.gui.graphing._evaluations_from_api import (
     evaluate_graph_plugin_metrics,
@@ -84,7 +84,7 @@ def test_evaluate_graph_plugin_title(graph_plugin_title: str, expected: str) -> 
     "graph_plugin, expected",
     [
         pytest.param(
-            graphs_api.Graph(
+            graphs_v1.Graph(
                 name="graph",
                 title=graphing_api.Title("Graph"),
                 compound_lines=["metric"],
@@ -93,69 +93,69 @@ def test_evaluate_graph_plugin_title(graph_plugin_title: str, expected: str) -> 
             id="graph-no-range",
         ),
         pytest.param(
-            graphs_api.Graph(
+            graphs_v1.Graph(
                 name="graph",
                 title=graphing_api.Title("Graph"),
-                minimal_range=graphs_api.MinimalRange(1, 200),
+                minimal_range=graphs_v1.MinimalRange(1, 200),
                 compound_lines=["metric"],
             ),
             MinimalVerticalRange(min=1.0, max=200.0),
             id="graph-with-range-numbers",
         ),
         pytest.param(
-            graphs_api.Graph(
+            graphs_v1.Graph(
                 name="graph",
                 title=graphing_api.Title("Graph"),
-                minimal_range=graphs_api.MinimalRange(1, "metric"),
+                minimal_range=graphs_v1.MinimalRange(1, "metric"),
                 compound_lines=["metric"],
             ),
             MinimalVerticalRange(min=1.0, max=123.456),
             id="graph-with-range-upper-known-metric",
         ),
         pytest.param(
-            graphs_api.Graph(
+            graphs_v1.Graph(
                 name="graph",
                 title=graphing_api.Title("Graph"),
-                minimal_range=graphs_api.MinimalRange(1, "unknown_metric"),
+                minimal_range=graphs_v1.MinimalRange(1, "unknown_metric"),
                 compound_lines=["metric"],
             ),
             MinimalVerticalRange(min=1.0, max=None),
             id="graph-with-range-upper-metric",
         ),
         pytest.param(
-            graphs_api.Graph(
+            graphs_v1.Graph(
                 name="graph",
                 title=graphing_api.Title("Graph"),
-                minimal_range=graphs_api.MinimalRange("metric", 200),
+                minimal_range=graphs_v1.MinimalRange("metric", 200),
                 compound_lines=["metric"],
             ),
             MinimalVerticalRange(min=123.456, max=200),
             id="graph-with-range-lower-known-metric",
         ),
         pytest.param(
-            graphs_api.Graph(
+            graphs_v1.Graph(
                 name="graph",
                 title=graphing_api.Title("Graph"),
-                minimal_range=graphs_api.MinimalRange("unknown_metric", 200),
+                minimal_range=graphs_v1.MinimalRange("unknown_metric", 200),
                 compound_lines=["metric"],
             ),
             MinimalVerticalRange(min=None, max=200),
             id="graph-with-range-lower-metric",
         ),
         pytest.param(
-            graphs_api.Bidirectional(
+            graphs_v1.Bidirectional(
                 name="graph",
                 title=graphing_api.Title("Graph"),
-                upper=graphs_api.Graph(
+                upper=graphs_v1.Graph(
                     name="graph_upper",
                     title=graphing_api.Title("Graph upper"),
-                    minimal_range=graphs_api.MinimalRange("metric", 200),
+                    minimal_range=graphs_v1.MinimalRange("metric", 200),
                     compound_lines=["metric"],
                 ),
-                lower=graphs_api.Graph(
+                lower=graphs_v1.Graph(
                     name="graph_lower",
                     title=graphing_api.Title("Graph lower"),
-                    minimal_range=graphs_api.MinimalRange(0, "metric"),
+                    minimal_range=graphs_v1.MinimalRange(0, "metric"),
                     compound_lines=["metric"],
                 ),
             ),
@@ -163,19 +163,19 @@ def test_evaluate_graph_plugin_title(graph_plugin_title: str, expected: str) -> 
             id="bidirectional",
         ),
         pytest.param(
-            graphs_api.Bidirectional(
+            graphs_v1.Bidirectional(
                 name="graph",
                 title=graphing_api.Title("Graph"),
-                upper=graphs_api.Graph(
+                upper=graphs_v1.Graph(
                     name="graph_upper",
                     title=graphing_api.Title("Graph upper"),
-                    minimal_range=graphs_api.MinimalRange("metric1", 300),
+                    minimal_range=graphs_v1.MinimalRange("metric1", 300),
                     compound_lines=["metric"],
                 ),
-                lower=graphs_api.Graph(
+                lower=graphs_v1.Graph(
                     name="graph_lower",
                     title=graphing_api.Title("Graph lower"),
-                    minimal_range=graphs_api.MinimalRange(0, 200),
+                    minimal_range=graphs_v1.MinimalRange(0, 200),
                     compound_lines=["metric"],
                 ),
             ),
@@ -183,19 +183,19 @@ def test_evaluate_graph_plugin_title(graph_plugin_title: str, expected: str) -> 
             id="bidirectional-no-upper-min",
         ),
         pytest.param(
-            graphs_api.Bidirectional(
+            graphs_v1.Bidirectional(
                 name="graph",
                 title=graphing_api.Title("Graph"),
-                upper=graphs_api.Graph(
+                upper=graphs_v1.Graph(
                     name="graph_upper",
                     title=graphing_api.Title("Graph upper"),
-                    minimal_range=graphs_api.MinimalRange(0, "metric1"),
+                    minimal_range=graphs_v1.MinimalRange(0, "metric1"),
                     compound_lines=["metric"],
                 ),
-                lower=graphs_api.Graph(
+                lower=graphs_v1.Graph(
                     name="graph_lower",
                     title=graphing_api.Title("Graph lower"),
-                    minimal_range=graphs_api.MinimalRange(100, 300),
+                    minimal_range=graphs_v1.MinimalRange(100, 300),
                     compound_lines=["metric"],
                 ),
             ),
@@ -205,7 +205,7 @@ def test_evaluate_graph_plugin_title(graph_plugin_title: str, expected: str) -> 
     ],
 )
 def test_evaluate_graph_plugin_range(
-    graph_plugin: graphs_api.Graph | graphs_api.Bidirectional, expected: MinimalVerticalRange | None
+    graph_plugin: graphs_v1.Graph | graphs_v1.Bidirectional, expected: MinimalVerticalRange | None
 ) -> None:
     assert (
         evaluate_graph_plugin_range(
@@ -234,7 +234,7 @@ def test_evaluate_graph_plugin_range(
     "graph_plugin, expected",
     [
         pytest.param(
-            graphs_api.Graph(
+            graphs_v1.Graph(
                 name="graph",
                 title=graphing_api.Title("Graph"),
                 compound_lines=["metric"],
@@ -243,7 +243,7 @@ def test_evaluate_graph_plugin_range(
             id="graph-no-scalars",
         ),
         pytest.param(
-            graphs_api.Graph(
+            graphs_v1.Graph(
                 name="graph",
                 title=graphing_api.Title("Graph"),
                 compound_lines=["metric"],
@@ -256,7 +256,7 @@ def test_evaluate_graph_plugin_range(
             id="graph-with-scalars-no-values",
         ),
         pytest.param(
-            graphs_api.Graph(
+            graphs_v1.Graph(
                 name="graph",
                 title=graphing_api.Title("Graph"),
                 compound_lines=["metric"],
@@ -282,22 +282,22 @@ def test_evaluate_graph_plugin_range(
             id="graph-with-scalars-with-values",
         ),
         pytest.param(
-            graphs_api.Bidirectional(
+            graphs_v1.Bidirectional(
                 name="graph",
                 title=graphing_api.Title("Graph"),
-                upper=graphs_api.Graph(
+                upper=graphs_v1.Graph(
                     name="graph_upper",
                     title=graphing_api.Title("Graph upper"),
-                    minimal_range=graphs_api.MinimalRange("metric", 200),
+                    minimal_range=graphs_v1.MinimalRange("metric", 200),
                     compound_lines=["metric"],
                     simple_lines=[
                         metrics_v1.WarningOf("metric"),
                     ],
                 ),
-                lower=graphs_api.Graph(
+                lower=graphs_v1.Graph(
                     name="graph_lower",
                     title=graphing_api.Title("Graph lower"),
-                    minimal_range=graphs_api.MinimalRange(0, "metric"),
+                    minimal_range=graphs_v1.MinimalRange(0, "metric"),
                     compound_lines=["metric"],
                     simple_lines=[
                         metrics_v1.CriticalOf("metric"),
@@ -323,7 +323,7 @@ def test_evaluate_graph_plugin_range(
     ],
 )
 def test_evaluate_graph_plugin_scalars(
-    graph_plugin: graphs_api.Graph | graphs_api.Bidirectional, expected: Sequence[HorizontalRule]
+    graph_plugin: graphs_v1.Graph | graphs_v1.Bidirectional, expected: Sequence[HorizontalRule]
 ) -> None:
     assert (
         evaluate_graph_plugin_scalars(
@@ -353,7 +353,7 @@ def test_evaluate_graph_plugin_scalars(
     "graph_plugin, translated_metrics, expected",
     [
         pytest.param(
-            graphs_api.Graph(
+            graphs_v1.Graph(
                 name="graph",
                 title=graphing_api.Title("Graph"),
                 compound_lines=["metric1"],
@@ -376,7 +376,7 @@ def test_evaluate_graph_plugin_scalars(
             id="graph-no-graphed-metrics",
         ),
         pytest.param(
-            graphs_api.Graph(
+            graphs_v1.Graph(
                 name="graph",
                 title=graphing_api.Title("Graph"),
                 compound_lines=["metric"],
@@ -420,7 +420,7 @@ def test_evaluate_graph_plugin_scalars(
             id="graph-with-graphed-metrics-no-predictive",
         ),
         pytest.param(
-            graphs_api.Graph(
+            graphs_v1.Graph(
                 name="graph",
                 title=graphing_api.Title("Graph"),
                 compound_lines=["metric"],
@@ -522,15 +522,15 @@ def test_evaluate_graph_plugin_scalars(
             id="graph-with-graphed-metrics-with-predictive",
         ),
         pytest.param(
-            graphs_api.Bidirectional(
+            graphs_v1.Bidirectional(
                 name="graph",
                 title=graphing_api.Title("Graph"),
-                upper=graphs_api.Graph(
+                upper=graphs_v1.Graph(
                     name="graph_upper",
                     title=graphing_api.Title("Graph upper"),
                     compound_lines=["metric_upper"],
                 ),
-                lower=graphs_api.Graph(
+                lower=graphs_v1.Graph(
                     name="graph_lower",
                     title=graphing_api.Title("Graph lower"),
                     compound_lines=["metric_lower"],
@@ -606,7 +606,7 @@ def test_evaluate_graph_plugin_scalars(
     ],
 )
 def test_evaluate_graph_plugin_metrics(
-    graph_plugin: graphs_api.Graph | graphs_api.Bidirectional,
+    graph_plugin: graphs_v1.Graph | graphs_v1.Bidirectional,
     translated_metrics: Mapping[str, TranslatedMetric],
     expected: GraphedMetrics,
 ) -> None:

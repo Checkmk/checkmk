@@ -13,14 +13,13 @@ from pydantic import BaseModel
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.resulttype import Error, OK, Result
 from cmk.ccc.site import SiteId
-from cmk.graphing.v1 import graphs as graphs_api
 from cmk.graphing.v2_unstable import metrics as metrics_v2_unstable_api
 from cmk.gui.color import Color, parse_color_from_api
 from cmk.gui.i18n import _, translate_to_current_language
 from cmk.gui.utils.temperate_unit import TemperatureUnit
 from cmk.utils.servicename import ServiceName
 
-from ._api_types import metrics_v1
+from ._api_types import graphs_v1, metrics_v1
 from ._from_api import parse_unit_from_api, RegisteredMetric
 from ._graph_metric_expressions import (
     create_graph_metric_expression_from_translated_metric,
@@ -469,7 +468,7 @@ def _evaluate_boundary(
 
 def _evaluate_graph_range(
     registered_metrics: Mapping[str, RegisteredMetric],
-    graph: graphs_api.Graph,
+    graph: graphs_v1.Graph,
     translated_metrics: Mapping[str, TranslatedMetric],
 ) -> MinimalVerticalRange | None:
     if graph.minimal_range is None:
@@ -498,13 +497,13 @@ def _evaluate_graph_range(
 
 def evaluate_graph_plugin_range(
     registered_metrics: Mapping[str, RegisteredMetric],
-    graph_plugin: graphs_api.Graph | graphs_api.Bidirectional,
+    graph_plugin: graphs_v1.Graph | graphs_v1.Bidirectional,
     translated_metrics: Mapping[str, TranslatedMetric],
 ) -> MinimalVerticalRange | None:
     match graph_plugin:
-        case graphs_api.Graph():
+        case graphs_v1.Graph():
             return _evaluate_graph_range(registered_metrics, graph_plugin, translated_metrics)
-        case graphs_api.Bidirectional():
+        case graphs_v1.Bidirectional():
             min_ranges = []
             max_ranges = []
             if lower_range := _evaluate_graph_range(
@@ -553,19 +552,19 @@ def _is_scalar(quantity: Quantity) -> bool:
             return _is_scalar(quantity.dividend) and _is_scalar(quantity.divisor)
 
 
-def _collect_graph_metrics(graph: graphs_api.Graph) -> Sequence[Quantity]:
+def _collect_graph_metrics(graph: graphs_v1.Graph) -> Sequence[Quantity]:
     return [q for q in graph.compound_lines if not _is_scalar(q)] + [
         q for q in graph.simple_lines if not _is_scalar(q)
     ]
 
 
 def collect_graph_plugin_metrics(
-    graph_plugin: graphs_api.Graph | graphs_api.Bidirectional,
+    graph_plugin: graphs_v1.Graph | graphs_v1.Bidirectional,
 ) -> Sequence[Quantity]:
     match graph_plugin:
-        case graphs_api.Graph():
+        case graphs_v1.Graph():
             return _collect_graph_metrics(graph_plugin)
-        case graphs_api.Bidirectional():
+        case graphs_v1.Bidirectional():
             return list(_collect_graph_metrics(graph_plugin.upper)) + list(
                 _collect_graph_metrics(graph_plugin.lower)
             )
@@ -573,7 +572,7 @@ def collect_graph_plugin_metrics(
 
 def _evaluate_graph_scalars(
     registered_metrics: Mapping[str, RegisteredMetric],
-    graph: graphs_api.Graph,
+    graph: graphs_v1.Graph,
     translated_metrics: Mapping[str, TranslatedMetric],
     *,
     factor: Literal[1, -1],
@@ -606,13 +605,13 @@ def _evaluate_graph_scalars(
 
 def evaluate_graph_plugin_scalars(
     registered_metrics: Mapping[str, RegisteredMetric],
-    graph_plugin: graphs_api.Graph | graphs_api.Bidirectional,
+    graph_plugin: graphs_v1.Graph | graphs_v1.Bidirectional,
     translated_metrics: Mapping[str, TranslatedMetric],
     *,
     temperature_unit: TemperatureUnit,
 ) -> Sequence[HorizontalRule]:
     match graph_plugin:
-        case graphs_api.Graph():
+        case graphs_v1.Graph():
             return _evaluate_graph_scalars(
                 registered_metrics,
                 graph_plugin,
@@ -620,7 +619,7 @@ def evaluate_graph_plugin_scalars(
                 factor=1,
                 temperature_unit=temperature_unit,
             )
-        case graphs_api.Bidirectional():
+        case graphs_v1.Bidirectional():
             return list(
                 _evaluate_graph_scalars(
                     registered_metrics,
@@ -896,7 +895,7 @@ def _evaluate_graph_metrics(
     host_name: HostName,
     service_name: ServiceName,
     consolidation_function: GraphConsolidationFunction,
-    graph: graphs_api.Graph,
+    graph: graphs_v1.Graph,
     translated_metrics: Mapping[str, TranslatedMetric],
     *,
     mirrored: bool,
@@ -975,11 +974,11 @@ def evaluate_graph_plugin_metrics(
     host_name: HostName,
     service_name: ServiceName,
     consolidation_function: GraphConsolidationFunction,
-    graph_plugin: graphs_api.Graph | graphs_api.Bidirectional,
+    graph_plugin: graphs_v1.Graph | graphs_v1.Bidirectional,
     translated_metrics: Mapping[str, TranslatedMetric],
 ) -> GraphedMetrics:
     match graph_plugin:
-        case graphs_api.Graph():
+        case graphs_v1.Graph():
             graphed_metrics = _evaluate_graph_metrics(
                 registered_metrics,
                 site_id,
@@ -994,7 +993,7 @@ def evaluate_graph_plugin_metrics(
                 [gmwi.graph_metric for gmwi in graphed_metrics.graph_metrics],
                 sorted(graphed_metrics.metric_names),
             )
-        case graphs_api.Bidirectional():
+        case graphs_v1.Bidirectional():
             graphed_metrics_upper = _evaluate_graph_metrics(
                 registered_metrics,
                 site_id,
@@ -1032,12 +1031,12 @@ def evaluate_graph_plugin_metrics_with_ids(
     host_name: HostName,
     service_name: ServiceName,
     consolidation_function: GraphConsolidationFunction,
-    graph_plugin: graphs_api.Graph | graphs_api.Bidirectional,
+    graph_plugin: graphs_v1.Graph | graphs_v1.Bidirectional,
     translated_metrics: Mapping[str, TranslatedMetric],
 ) -> Sequence[GraphMetricWithId]:
     # TODO CMK-26857
     match graph_plugin:
-        case graphs_api.Graph():
+        case graphs_v1.Graph():
             return _evaluate_graph_metrics(
                 registered_metrics,
                 site_id,
@@ -1048,7 +1047,7 @@ def evaluate_graph_plugin_metrics_with_ids(
                 translated_metrics,
                 mirrored=False,
             ).graph_metrics
-        case graphs_api.Bidirectional():
+        case graphs_v1.Bidirectional():
             graph_metrics_upper = _evaluate_graph_metrics(
                 registered_metrics,
                 site_id,

@@ -16,7 +16,6 @@ import livestatus
 
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
-from cmk.graphing.v1 import graphs as graphs_api
 from cmk.gui import sites
 from cmk.gui.config import active_config, Config
 from cmk.gui.dashboard.exceptions import WidgetRenderError
@@ -34,6 +33,7 @@ from cmk.gui.graphing import (
     GraphPluginChoice,
     GraphRecipeWithOverrides,
     graphs_from_api,
+    graphs_v1,
     GraphSpecification,
     metrics_from_api,
     MKCombinedGraphLimitExceededError,
@@ -356,7 +356,7 @@ def _graph_templates_autocompleter_testable(
     value_entered_by_user: str,
     params: Mapping[str, Any],
     registered_metrics: Mapping[str, RegisteredMetric],
-    registered_graphs: Mapping[str, graphs_api.Graph | graphs_api.Bidirectional],
+    registered_graphs: Mapping[str, graphs_v1.Graph | graphs_v1.Bidirectional],
     debug: bool,
     temperature_unit: TemperatureUnit,
 ) -> Choices:
@@ -388,7 +388,7 @@ def _graph_templates_autocompleter_testable(
 def _graph_and_single_metric_templates_choices_for_context(
     context: VisualContext,
     registered_metrics: Mapping[str, RegisteredMetric],
-    registered_graphs: Mapping[str, graphs_api.Graph | graphs_api.Bidirectional],
+    registered_graphs: Mapping[str, graphs_v1.Graph | graphs_v1.Bidirectional],
     *,
     debug: bool,
     temperature_unit: TemperatureUnit,

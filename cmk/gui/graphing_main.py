@@ -21,7 +21,6 @@ from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
 from cmk.discover_plugins import discover_all_plugins, DiscoveredPlugins, PluginGroup
 from cmk.graphing.v1 import entry_point_prefixes
-from cmk.graphing.v1 import graphs as graphs_api
 from cmk.graphing.v1 import perfometers as perfometers_api
 from cmk.graphing.v1 import translations as translations_api
 from cmk.gui.graphing import (
@@ -30,6 +29,7 @@ from cmk.gui.graphing import (
     get_temperature_unit,
     GraphEnvironment,
     graphs_from_api,
+    graphs_v1,
     host_service_graph_popup_cmk,
     METRIC_BACKEND_KEY,
     metric_backend_registry,
@@ -63,8 +63,8 @@ def _load_graphing_plugins() -> DiscoveredPlugins[
     | perfometers_api.Perfometer
     | perfometers_api.Bidirectional
     | perfometers_api.Stacked
-    | graphs_api.Graph
-    | graphs_api.Bidirectional
+    | graphs_v1.Graph
+    | graphs_v1.Bidirectional
     | translations_api.Translation
 ]:
     discovered_plugins: DiscoveredPlugins[
@@ -72,8 +72,8 @@ def _load_graphing_plugins() -> DiscoveredPlugins[
         | perfometers_api.Perfometer
         | perfometers_api.Bidirectional
         | perfometers_api.Stacked
-        | graphs_api.Graph
-        | graphs_api.Bidirectional
+        | graphs_v1.Graph
+        | graphs_v1.Bidirectional
         | translations_api.Translation
     ] = discover_all_plugins(
         PluginGroup.GRAPHING,
@@ -146,8 +146,8 @@ def _add_graphing_plugins(
         | perfometers_api.Perfometer
         | perfometers_api.Bidirectional
         | perfometers_api.Stacked
-        | graphs_api.Graph
-        | graphs_api.Bidirectional
+        | graphs_v1.Graph
+        | graphs_v1.Bidirectional
         | translations_api.Translation
     ],
 ) -> None:
@@ -168,7 +168,7 @@ def _add_graphing_plugins(
         ):
             perfometers_from_api.register(plugin)
 
-        elif isinstance(plugin, graphs_api.Graph | graphs_api.Bidirectional):
+        elif isinstance(plugin, graphs_v1.Graph | graphs_v1.Bidirectional):
             graphs_from_api.register(plugin)
 
 

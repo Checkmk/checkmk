@@ -24,7 +24,6 @@ void main() {
 
     def download_dir = "package_download";
     def test_results_dir = "test-results";
-    // def make_target = "test-composition";
     def make_target = "test-gui-e2e-${edition}";
 
     def setup_values = single_tests.common_prepare(
@@ -75,7 +74,8 @@ void main() {
             version: setup_values.cmk_version,
             distro: distro,
             branch_name: setup_values.safe_branch_name,
-            make_target: "-C tests ${make_target}", // k8s does not allow dir()
+            bash_execution_tool: true,
+            make_target: "${make_target}",
             test_filter: params.TEST_FILTER,
             faked_artifacts: fake_artifacts,
             // can hit 150min during the heavy chain runs (without wait time)

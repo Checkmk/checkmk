@@ -8,7 +8,7 @@ void main() {
     dir("${checkout_dir}") {
         test_jenkins_helper.execute_test([
             name: "Check format",
-            cmd: "bazel run //:format.check",
+            cmd: "tests/run_tests.sh test-format",
         ]);
     }
 }

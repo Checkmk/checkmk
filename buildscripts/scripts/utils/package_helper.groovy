@@ -326,9 +326,10 @@ void test_package(Map args) {
     }
     try {
         sh("""
+            cd ${args.source_dir}
             PACKAGE_PATH=${args.package_path} \
             PYTEST_ADDOPTS='${pytest_addopts}' \
-            make -C '${args.source_dir}/tests' test-packaging
+            tests/run_tests.sh test-packaging
         """);
     } finally {
         step([

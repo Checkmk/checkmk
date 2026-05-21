@@ -66,19 +66,18 @@ void main() {
         ) {
             try {
                 stage("Run `make ${make_target}`") {
-                    dir("${checkout_dir}/tests") {
-                        single_tests.run_make_target(
-                            result_path: "${checkout_dir}/${result_dir}/${distro}",
-                            edition: edition,
-                            docker_tag: setup_values.docker_tag,
-                            version: setup_values.cmk_version,
-                            distro: distro,
-                            branch_name: setup_values.safe_branch_name,
-                            make_target: make_target,
-                            test_filter: params.TEST_FILTER,
-                            faked_artifacts: params.FAKE_ARTIFACTS,
-                        );
-                    }
+                    single_tests.run_make_target(
+                        result_path: "${checkout_dir}/${result_dir}/${distro}",
+                        edition: edition,
+                        docker_tag: setup_values.docker_tag,
+                        version: setup_values.cmk_version,
+                        distro: distro,
+                        branch_name: setup_values.safe_branch_name,
+                        bash_execution_tool: true,
+                        make_target: make_target,
+                        test_filter: params.TEST_FILTER,
+                        faked_artifacts: params.FAKE_ARTIFACTS,
+                    );
                 }
             } finally {
                 stage("Archive / process test reports") {

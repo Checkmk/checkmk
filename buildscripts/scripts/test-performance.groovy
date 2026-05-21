@@ -58,7 +58,7 @@ void main() {
         ) {
             test_jenkins_helper.execute_test([
                 name: make_target,
-                cmd: "make -C tests ${make_target}",
+                cmd: "tests/run_tests.sh ${make_target}",
                 // output_file: "test-performance.txt",
                 container_name: "this-distro-container",
 

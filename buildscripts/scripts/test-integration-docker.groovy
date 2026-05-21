@@ -137,13 +137,13 @@ void main() {
 
     // TODO: don't run make-test-docker but use docker.inside() instead
     stage('test cmk-docker integration') {
-        dir("${checkout_dir}/tests") {
+        dir("${checkout_dir}") {
             sh("""
-                make test-docker-docker \
-                    WORKSPACE='${checkout_dir}' \
-                    BRANCH='$branch_name' \
-                    EDITION='$EDITION' \
-                    VERSION='$cmk_version_rc_aware'
+                WORKSPACE='${checkout_dir}' \
+                BRANCH='${branch_name}' \
+                EDITION='${params.EDITION}' \
+                VERSION='${cmk_version_rc_aware}' \
+                tests/run_tests.sh test-docker-docker
             """);
         }
     }

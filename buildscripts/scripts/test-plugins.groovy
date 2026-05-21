@@ -66,7 +66,8 @@ void main() {
             version: setup_values.cmk_version,
             distro: distro,
             branch_name: setup_values.safe_branch_name,
-            make_target: "-C tests ${make_target}", // k8s does not allow dir()
+            bash_execution_tool: true,
+            make_target: "${make_target}",
             test_filter: params.TEST_FILTER,
             faked_artifacts: fake_artifacts,
             // can hit 20min during the heavy chain runs (without wait time)

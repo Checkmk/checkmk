@@ -7,6 +7,7 @@ py_library(
     imports = ["../.."],
     visibility = [
         "//cmk:__pkg__",
+        "//cmk/editions:__pkg__",
         "//cmk/legacy_checks:__pkg__",
         "//tests:__subpackages__",
     ],

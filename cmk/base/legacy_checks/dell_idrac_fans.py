@@ -34,6 +34,13 @@ def inventory_dell_idrac_fans(info):
             yield index, {}
 
 
+def _to_int_or_none(value: str) -> int | None:
+    try:
+        return int(value)
+    except ValueError:
+        return None
+
+
 def check_dell_idrac_fans(item, params, info):
     for index, status, value, name, warn_upper, crit_upper, warn_lower, crit_lower in info:
         if index == item:
@@ -44,9 +51,15 @@ def check_dell_idrac_fans(item, params, info):
 
             value = int(value)
             if not params:
-                params = {"lower": (int(warn_lower), int(crit_lower))}
-                if not warn_upper == "" and crit_upper == "":
-                    params["upper"] = (int(warn_upper), int(crit_upper))
+                # The iDRAC may report any subset of the four thresholds as an
+                # empty string; treat each empty value as "no threshold".
+                lower = (_to_int_or_none(warn_lower), _to_int_or_none(crit_lower))
+                upper = (_to_int_or_none(warn_upper), _to_int_or_none(crit_upper))
+                params = {}
+                if lower != (None, None):
+                    params["lower"] = lower
+                if upper != (None, None):
+                    params["upper"] = upper
 
             yield check_fan(value, params)
 

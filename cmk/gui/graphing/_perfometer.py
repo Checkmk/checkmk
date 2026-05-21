@@ -14,14 +14,13 @@ from dataclasses import dataclass
 from itertools import repeat
 from typing import assert_never, Self
 
-from cmk.graphing.v2_unstable import metrics as metrics_v2_unstable_api
 from cmk.gui.color import Color
 from cmk.gui.log import logger
 from cmk.gui.unit_formatter import AutoPrecision
 from cmk.gui.utils.temperate_unit import TemperatureUnit
 from cmk.gui.view_utils import get_themed_perfometer_bg_color
 
-from ._api_types import metrics_v1, perfometers_v1
+from ._api_types import metrics_v1, metrics_v2_unstable, perfometers_v1
 from ._evaluations_from_api import evaluate_quantity, EvaluatedQuantity, Quantity
 from ._from_api import RegisteredMetric
 from ._perfometer_superseding import PERFOMETER_SUPERSEDED_TO_SUPERSEDER
@@ -34,8 +33,8 @@ from ._utils import Linear
 class _MetricNamesOrScalars:
     _metric_names: list[str]
     _scalars: list[
-        metrics_v2_unstable_api.LowerWarningOf
-        | metrics_v2_unstable_api.LowerCriticalOf
+        metrics_v2_unstable.LowerWarningOf
+        | metrics_v2_unstable.LowerCriticalOf
         | metrics_v1.WarningOf
         | metrics_v1.CriticalOf
         | metrics_v1.MinimumOf
@@ -91,8 +90,8 @@ class _MetricNamesOrScalars:
     def scalars(
         self,
     ) -> Sequence[
-        metrics_v2_unstable_api.LowerWarningOf
-        | metrics_v2_unstable_api.LowerCriticalOf
+        metrics_v2_unstable.LowerWarningOf
+        | metrics_v2_unstable.LowerCriticalOf
         | metrics_v1.WarningOf
         | metrics_v1.CriticalOf
         | metrics_v1.MinimumOf
@@ -144,9 +143,9 @@ def _perfometer_plugin_matches(
 
         scalar_bounds = translated_metrics[scalar.metric_name].scalar
         match scalar:
-            case metrics_v2_unstable_api.LowerWarningOf():
+            case metrics_v2_unstable.LowerWarningOf():
                 scalar_value = scalar_bounds.warn_lower
-            case metrics_v2_unstable_api.LowerCriticalOf():
+            case metrics_v2_unstable.LowerCriticalOf():
                 scalar_value = scalar_bounds.crit_lower
             case metrics_v1.WarningOf():
                 scalar_value = scalar_bounds.warn

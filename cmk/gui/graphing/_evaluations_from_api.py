@@ -13,13 +13,12 @@ from pydantic import BaseModel
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.resulttype import Error, OK, Result
 from cmk.ccc.site import SiteId
-from cmk.graphing.v2_unstable import metrics as metrics_v2_unstable_api
 from cmk.gui.color import Color, parse_color_from_api
 from cmk.gui.i18n import _, translate_to_current_language
 from cmk.gui.utils.temperate_unit import TemperatureUnit
 from cmk.utils.servicename import ServiceName
 
-from ._api_types import graphs_v1, metrics_v1
+from ._api_types import graphs_v1, metrics_v1, metrics_v2_unstable
 from ._from_api import parse_unit_from_api, RegisteredMetric
 from ._graph_metric_expressions import (
     create_graph_metric_expression_from_translated_metric,
@@ -42,8 +41,8 @@ from ._unit import ConvertibleUnitSpecification, user_specific_unit
 type Quantity = (
     str
     | metrics_v1.Constant
-    | metrics_v2_unstable_api.LowerWarningOf
-    | metrics_v2_unstable_api.LowerCriticalOf
+    | metrics_v2_unstable.LowerWarningOf
+    | metrics_v2_unstable.LowerCriticalOf
     | metrics_v1.WarningOf
     | metrics_v1.CriticalOf
     | metrics_v1.MinimumOf
@@ -100,7 +99,7 @@ def evaluate_quantity(
                     value=quantity.value,
                 )
             )
-        case metrics_v2_unstable_api.LowerWarningOf():
+        case metrics_v2_unstable.LowerWarningOf():
             if not (translated_metric := translated_metrics.get(quantity.metric_name)):
                 return Error(
                     EvaluationError(
@@ -132,7 +131,7 @@ def evaluate_quantity(
                     value=warn_lower_value,
                 )
             )
-        case metrics_v2_unstable_api.LowerCriticalOf():
+        case metrics_v2_unstable.LowerCriticalOf():
             if not (translated_metric := translated_metrics.get(quantity.metric_name)):
                 return Error(
                     EvaluationError(
@@ -379,9 +378,9 @@ def _create_quantity_id(
             return f"Metric({quantity},{consolidation_function})"
         case metrics_v1.Constant():
             return f"Constant({quantity.value})"
-        case metrics_v2_unstable_api.LowerWarningOf():
+        case metrics_v2_unstable.LowerWarningOf():
             return f"LowerWarningOf({_create_quantity_id(quantity.metric_name, consolidation_function)})"
-        case metrics_v2_unstable_api.LowerCriticalOf():
+        case metrics_v2_unstable.LowerCriticalOf():
             return f"LowerCriticalOf({_create_quantity_id(quantity.metric_name, consolidation_function)})"
         case metrics_v1.WarningOf():
             return f"WarningOf({_create_quantity_id(quantity.metric_name, consolidation_function)})"

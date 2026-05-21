@@ -152,6 +152,12 @@ class GUIViewRenderer(ABCViewRenderer):
         if transactions.transaction_valid() and html.do_actions():
             html.browser_reload = 0.0
 
+        command_form = should_show_command_form(self.view.datasource)
+        if command_form:
+            weblib.init_selection()
+            if self.view.checkboxes_displayed:
+                SelectionId.from_request(request)
+
         # Show/hide the header with page title, MK logo, etc.
         if display_options.enabled(display_options.H):
             html.body_start(
@@ -181,10 +187,6 @@ class GUIViewRenderer(ABCViewRenderer):
 
         has_done_actions = False
         row_count = len(rows)
-
-        command_form = should_show_command_form(self.view.datasource)
-        if command_form:
-            weblib.init_selection()
 
         # Used this before. This does not looked like it's correct, replaced the logic
         # enable_commands = painter_options.painter_option_form_enabled()

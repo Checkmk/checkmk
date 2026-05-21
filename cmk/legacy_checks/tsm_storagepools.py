@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
-
 # <<<tsm_storagepool>>>
 # tsmfarm2      Bkup      LTOBACK               1399378.64
 # tsmfarm2      Arch      LTOARCHCOPY            157288.14
@@ -21,52 +19,62 @@
 # default                  DPC.GOLD.VE
 
 
-# mypy: disable-error-code="var-annotated"
+from collections.abc import Mapping
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import render
+from cmk.agent_based.v2 import (
+    AgentSection,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Metric,
+    render,
+    Result,
+    Service,
+    State,
+    StringTable,
+)
 
-check_info = {}
+Section = Mapping[str, Mapping[str, str]]
 
 
-def parse_tsm_storagepools(string_table):
-    parsed = {}
+def parse_tsm_storagepools(string_table: StringTable) -> Section:
+    parsed: dict[str, dict[str, str]] = {}
     for line in string_table:
         if len(line) < 4:
             continue
 
         inst, stype, name, size = line[:4]
-        if inst == "default":
-            item = name
-        else:
-            item = inst + " / " + name
+        item = name if inst == "default" else f"{inst} / {name}"
         parsed.setdefault(item, {"type": stype, "size": size.replace(",", ".")})
 
     return parsed
 
 
-def discover_tsm_storagepools(parsed):
-    for inst in parsed:
-        yield inst, None
+def discover_tsm_storagepools(section: Section) -> DiscoveryResult:
+    for item in section:
+        yield Service(item=item)
 
 
-def check_tsm_storagepools(item, _no_params, parsed):
-    if item not in parsed:
-        return 3, "no such storage pool"
+def check_tsm_storagepools(item: str, section: Section) -> CheckResult:
+    if (data := section.get(item)) is None:
+        return
 
-    data = parsed[item]
-    stype = data["type"]
     size = int(float(data["size"]) * 1024**2)
-    return (
-        0,
-        f"Used size: {render.disksize(size)}, Type: {stype}",
-        [("used_space", size)],
+    yield Result(
+        state=State.OK,
+        summary=f"Used size: {render.disksize(size)}, Type: {data['type']}",
     )
+    yield Metric("used_space", size)
 
 
-check_info["tsm_storagepools"] = LegacyCheckDefinition(
+agent_section_tsm_storagepools = AgentSection(
     name="tsm_storagepools",
     parse_function=parse_tsm_storagepools,
+)
+
+
+check_plugin_tsm_storagepools = CheckPlugin(
+    name="tsm_storagepools",
     service_name="TSM Storagepool %s",
     discovery_function=discover_tsm_storagepools,
     check_function=check_tsm_storagepools,

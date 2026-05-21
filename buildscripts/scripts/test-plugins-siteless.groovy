@@ -33,7 +33,7 @@ void main() {
 
     currentBuild.description += (
         """
-        |Run integration tests for packages<br>
+        |Run siteless plugin tests<br>
         |safe_branch_name: ${safe_branch_name}<br>
         |branch_version: ${branch_version}<br>
         |cmk_version: ${cmk_version}<br>

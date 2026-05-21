@@ -10,7 +10,6 @@ import { Api } from '@/lib/api-client'
 import usei18n from '@/lib/i18n'
 
 import CmkAlertBox from '@/components/CmkAlertBox.vue'
-import CmkDialog from '@/components/CmkDialog.vue'
 
 const { _t } = usei18n()
 
@@ -64,29 +63,29 @@ function goToFullPage() {
 }
 </script>
 <template>
-  <CmkDialog
+  <CmkAlertBox
     v-if="!currentChangesAction && !loading"
-    :title="_t('Working with a complex environment?')"
-    :message="
-      _t(
-        `In complex environments, activation issues are more common and may require closer review.\n` +
-          `The full \'Activation changes\' page gives you better visibility before activating.`
-      )
-    "
+    :heading="_t('Working with a complex environment?')"
+    :main-button="{
+      title: _t('Keep quick activation'),
+      onclick: () => setChangesAction('slideout')
+    }"
     :buttons="[
       {
-        title: _t('Keep quick activation'),
-        variant: 'optional',
-        onclick: () => setChangesAction('slideout')
-      },
-      {
         title: _t('Set full activation page as default'),
-        variant: 'optional',
+        variant: 'secondary',
         onclick: () => setChangesAction('full_page')
       }
     ]"
     class="mm-user-setting-dialog"
-  ></CmkDialog>
+  >
+    {{
+      _t(
+        `In complex environments, activation issues are more common and may require closer review.\n` +
+          `The full 'Activation changes' page gives you better visibility before activating.`
+      )
+    }}
+  </CmkAlertBox>
   <CmkAlertBox v-if="loading" variant="loading">{{ _t('Applying user setting...') }}</CmkAlertBox>
   <CmkAlertBox
     v-if="successSlideout"
@@ -98,16 +97,10 @@ function goToFullPage() {
     <br />
     {{ _t('You can change this at any time in your profile settings.') }}
   </CmkAlertBox>
-  <CmkDialog
+  <CmkAlertBox
     v-if="successFullPage"
     variant="success"
-    :title="_t('Preference saved.')"
-    :message="
-      _t(
-        `Clicking on 'Changes' will now open the full 'Activate changes' page.\n` +
-          `You can change this at any time in your profile settings.`
-      )
-    "
+    :heading="_t('Preference saved.')"
     :buttons="[
       {
         title: _t('Open full activation page'),
@@ -116,13 +109,15 @@ function goToFullPage() {
       }
     ]"
     class="mm-user-setting-dialog"
-  ></CmkDialog>
+  >
+    {{
+      _t(
+        `Clicking on 'Changes' will now open the full 'Activate changes' page.\n` +
+          `You can change this at any time in your profile settings.`
+      )
+    }}
+  </CmkAlertBox>
   <CmkAlertBox v-if="error" variant="error" :title="_t('Could not apply user setting.')">
     {{ error }}
   </CmkAlertBox>
 </template>
-<style scoped>
-.mm-user-setting-dialog {
-  display: flex;
-}
-</style>

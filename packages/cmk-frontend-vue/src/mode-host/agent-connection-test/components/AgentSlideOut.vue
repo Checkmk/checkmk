@@ -8,12 +8,12 @@ import { ref, watch } from 'vue'
 
 import usei18n from '@/lib/i18n'
 import type { TranslatedString } from '@/lib/i18nString'
+import { useDismissDialog } from '@/lib/useDismissDialog'
 import usePersistentRef from '@/lib/usePersistentRef'
 
 import CmkAlertBox from '@/components/CmkAlertBox.vue'
 import CmkButton from '@/components/CmkButton'
 import CmkCode from '@/components/CmkCode.vue'
-import CmkDialog from '@/components/CmkDialog.vue'
 import CmkIcon from '@/components/CmkIcon'
 import CmkLinkCard from '@/components/CmkLinkCard'
 import CmkTabs, { CmkTab, CmkTabContent } from '@/components/CmkTabs'
@@ -48,6 +48,8 @@ const emit = defineEmits(['close'])
 const close = () => {
   emit('close')
 }
+
+const { isShown: alertShown, dismiss: dismissAlert } = useDismissDialog('agent_slideout')
 
 const openedTab = ref<string>(sessionStorage.getItem('slideInTabState') || 'linux')
 
@@ -138,10 +140,18 @@ function getInitStep() {
     <CmkIcon name="frameurl" />
     {{ hostExists ? _t('View host agents') : _t('View all agents') }}
   </CmkButton>
-  <CmkDialog
-    :message="dialogMsg"
-    :dismissal-button="{ title: _t('Do not show again'), key: 'agent_slideout' }"
-  />
+  <CmkAlertBox
+    v-if="alertShown"
+    :buttons="[
+      {
+        title: _t('Do not show again'),
+        variant: 'optional',
+        onclick: dismissAlert
+      }
+    ]"
+  >
+    {{ dialogMsg }}
+  </CmkAlertBox>
   <CmkHeading type="h4" class="select-heading">
     {{ _t('Select the type of system you want to monitor') }}
   </CmkHeading>

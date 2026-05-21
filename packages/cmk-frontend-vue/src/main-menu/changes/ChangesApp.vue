@@ -19,11 +19,11 @@ import { Api } from '@/lib/api-client'
 import { CmkFetchError } from '@/lib/cmkFetch'
 import usei18n from '@/lib/i18n'
 import { untranslated } from '@/lib/i18n/i18n'
+import { useDismissDialog } from '@/lib/useDismissDialog'
 
 import CmkAlertBox from '@/components/CmkAlertBox.vue'
 import CmkButton from '@/components/CmkButton'
 import CmkButtonSubmit from '@/components/CmkButtonSubmit.vue'
-import CmkDialog from '@/components/CmkDialog.vue'
 import CmkHtml from '@/components/CmkHtml.vue'
 import CmkIcon from '@/components/CmkIcon'
 import CmkScrollContainer from '@/components/CmkScrollContainer.vue'
@@ -43,6 +43,8 @@ import SiteStatusList from './components/sites/SiteStatusList.vue'
 const { _t, _tn } = usei18n()
 const props = defineProps<ChangesProps>()
 const mainMenu = getInjectedMainMenu()
+
+const { isShown: changesInfoShown, dismiss: dismissChangesInfo } = useDismissDialog('changes-info')
 
 type RecentlyActivatedSite = readonly [siteId: string, status: string]
 
@@ -435,17 +437,21 @@ onMounted(async () => {
           :changes-action="props.navbar_changes_action ?? ''"
           :user-name="user_name"
         />
-        <CmkDialog
-          v-else
-          :message="
+        <CmkAlertBox
+          v-else-if="changesInfoShown"
+          :buttons="[
+            {
+              title: _t('Do not show again'),
+              variant: 'optional',
+              onclick: dismissChangesInfo
+            }
+          ]"
+        >
+          {{
             _t(`Changes are saved without affecting live monitoring, allowing you to review and adjust them safely.
                 Click 'Activate pending changes' to apply them.`)
-          "
-          :dismissal-button="{
-            title: _t('Do not show again'),
-            key: 'changes-info'
-          }"
-        />
+          }}
+        </CmkAlertBox>
         <CmkAlertBox v-if="showNotAllowedMessage" variant="warning" class="cmk-alert-box">
           {{ _t('Sorry, you are not allowed to activate changes of other users.') }}
         </CmkAlertBox>
@@ -484,23 +490,18 @@ onMounted(async () => {
           class="cmk-div-activation-result-container"
         >
         </ChangesActivationResult>
-        <CmkDialog
+        <CmkAlertBox
           v-if="
             sitesWithWarningsOrErrors &&
             !activateChangesInProgress &&
             showActivationResultWarningsErrors
           "
-          :title="_t('Problems detected during activation')"
-          :message="_t('Some things may not be monitored properly.')"
-          :buttons="[
-            {
-              title: _t('Open full view'),
-              variant: sitesWithErrors ? 'danger' : 'warning',
-              onclick: () => openActivateChangesPage()
-            }
-          ]"
+          :heading="_t('Problems detected during activation')"
+          :main-button="{ title: _t('Open full view'), onclick: () => openActivateChangesPage() }"
           :variant="sitesWithErrors ? 'error' : 'warning'"
-        />
+        >
+          {{ _t('Some things may not be monitored properly.') }}
+        </CmkAlertBox>
 
         <ChangesStatusBar
           v-if="!activateChangesInProgress"
@@ -535,10 +536,6 @@ onMounted(async () => {
 
 <style scoped>
 /* stylelint-disable checkmk/vue-bem-naming-convention */
-div.cmk-dialog {
-  width: 100%;
-}
-
 div.cmk-alert-box {
   box-sizing: border-box;
   width: 100%;

@@ -8,8 +8,9 @@ import type { Dialog, DialogAction } from 'cmk-shared-typing/typescript/dialog'
 import { computed } from 'vue'
 
 import type { TranslatedString } from '@/lib/i18nString'
+import { useDismissDialog } from '@/lib/useDismissDialog'
 
-import CmkDialog, { type CmkDialogProps } from '@/components/CmkDialog.vue'
+import CmkAlertBox, { type CmkAlertBoxProps } from '@/components/CmkAlertBox.vue'
 
 const props = defineProps<Dialog>()
 
@@ -22,28 +23,33 @@ function getDialogAction(action: DialogAction): () => void {
   throw new Error(`Unknown action: ${action.type}`)
 }
 
-const dialogProps = computed<CmkDialogProps>(() => {
-  const baseProps: CmkDialogProps = {
-    message: props.message as TranslatedString
-  }
+const { isShown: dismissalShown, dismiss: dismissAlert } = useDismissDialog(
+  props.dismissal_button?.key
+)
+
+const alertBoxProps = computed<CmkAlertBoxProps>(() => {
+  const baseProps: CmkAlertBoxProps = {}
 
   if (props.title) {
-    baseProps.title = props.title as TranslatedString
+    baseProps.heading = props.title
   }
 
-  if (props.buttons) {
-    baseProps.buttons = props.buttons.map((button) => ({
-      title: button.title as TranslatedString,
-      variant: button.variant,
-      onclick: getDialogAction(button.action)
-    }))
-  }
+  const allButtons = (props.buttons ?? []).map((button) => ({
+    title: button.title as TranslatedString,
+    variant: button.variant,
+    onclick: getDialogAction(button.action)
+  }))
 
   if (props.dismissal_button) {
-    baseProps.dismissalButton = {
+    allButtons.push({
       title: props.dismissal_button.title as TranslatedString,
-      key: props.dismissal_button.key
-    }
+      variant: 'optional' as const,
+      onclick: dismissAlert
+    })
+  }
+
+  if (allButtons.length) {
+    baseProps.buttons = allButtons
   }
 
   return baseProps
@@ -51,5 +57,5 @@ const dialogProps = computed<CmkDialogProps>(() => {
 </script>
 
 <template>
-  <CmkDialog v-bind="dialogProps" />
+  <CmkAlertBox v-if="dismissalShown" v-bind="alertBoxProps">{{ props.message }}</CmkAlertBox>
 </template>

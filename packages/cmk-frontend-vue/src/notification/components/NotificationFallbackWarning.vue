@@ -7,8 +7,9 @@ conditions defined in the file COPYING, which is part of this source code packag
 import type { NotificationFallbackWarning } from 'cmk-shared-typing/typescript/notifications'
 
 import { untranslated } from '@/lib/i18n'
+import { useDismissDialog } from '@/lib/useDismissDialog'
 
-import CmkDialog from '@/components/CmkDialog.vue'
+import CmkAlertBox from '@/components/CmkAlertBox.vue'
 
 const WARNING_KEY = 'notification_fallback'
 
@@ -16,25 +17,29 @@ const props = defineProps<{
   properties: NotificationFallbackWarning
 }>()
 
+const { isShown: dismissalShown, dismiss: dismissAlert } = useDismissDialog(WARNING_KEY)
+
 function openInSameTab(url: string) {
   window.open(url, '_self')
 }
 </script>
 
 <template>
-  <CmkDialog
-    :title="untranslated(props.properties['i18n']['title'])"
-    :message="untranslated(props.properties['i18n']['message'])"
+  <CmkAlertBox
+    v-if="dismissalShown"
+    :heading="untranslated(props.properties['i18n']['title'])"
+    :main-button="{
+      title: untranslated(properties['i18n']['setup_link_title']),
+      onclick: () => openInSameTab(properties['setup_link'])
+    }"
     :buttons="[
       {
-        title: untranslated(properties['i18n']['setup_link_title']),
-        variant: 'info',
-        onclick: () => openInSameTab(properties['setup_link'])
+        title: untranslated(properties['i18n']['do_not_show_again_title']),
+        variant: 'optional',
+        onclick: dismissAlert
       }
     ]"
-    :dismissal-button="{
-      title: untranslated(properties['i18n']['do_not_show_again_title']),
-      key: WARNING_KEY
-    }"
-  />
+  >
+    {{ untranslated(props.properties['i18n']['message']) }}
+  </CmkAlertBox>
 </template>

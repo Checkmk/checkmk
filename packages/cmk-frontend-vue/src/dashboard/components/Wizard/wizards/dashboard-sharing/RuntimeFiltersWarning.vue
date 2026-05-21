@@ -6,7 +6,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import usei18n from '@/lib/i18n'
 
-import CmkDialog from '@/components/CmkDialog.vue'
+import CmkAlertBox from '@/components/CmkAlertBox.vue'
 
 const { _t } = usei18n()
 
@@ -18,16 +18,15 @@ defineEmits<RuntimeFiltersWarningEmits>()
 </script>
 
 <template>
-  <CmkDialog
-    :title="_t('Public link can\'t be generated')"
-    :message="
+  <CmkAlertBox
+    :heading="_t('Public link can\'t be generated')"
+    :main-button="{ title: _t('Review filters'), onclick: () => $emit('reviewFilters') }"
+    variant="error"
+  >
+    {{
       _t(
-        'Public dashboards are view-only and don\'t support runtime filters.\nRemove runtime filters or convert them to default filters to continue.'
+        "Public dashboards are view-only and don't support runtime filters.\nRemove runtime filters or convert them to default filters to continue."
       )
-    "
-    :buttons="[
-      { title: _t('Review filters'), onclick: () => $emit('reviewFilters'), variant: 'danger' }
-    ]"
-    :variant="'error'"
-  />
+    }}
+  </CmkAlertBox>
 </template>

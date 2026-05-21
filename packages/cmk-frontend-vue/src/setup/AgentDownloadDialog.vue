@@ -11,8 +11,7 @@ import { ref } from 'vue'
 import type { TranslatedString } from '@/lib/i18nString'
 import usePersistentRef from '@/lib/usePersistentRef'
 
-import CmkDialog from '@/components/CmkDialog.vue'
-import CmkIcon from '@/components/CmkIcon'
+import CmkAlertBox from '@/components/CmkAlertBox.vue'
 import CmkSlideInDialog from '@/components/CmkSlideInDialog.vue'
 import CmkTooltip, {
   CmkTooltipContent,
@@ -26,7 +25,6 @@ interface Props {
   userId: string
   dialogTitle: TranslatedString
   dialogMessage: TranslatedString
-  dialogCloseIconTitle: TranslatedString
   slideInTitle: TranslatedString
   slideInButtonTitle: TranslatedString
   hideButtonTitle: TranslatedString
@@ -76,25 +74,16 @@ const triggerRescan = () => {
           :width="6"
           :height="6"
         />
-        <!-- eslint-disable-next-line vue/no-bare-strings-in-template -->
-        <CmkIcon
-          :title="dialogCloseIconTitle"
-          class="setup-agent-download-dialog__tooltip-close"
-          name="close"
-          size="small"
-          @click.stop="tooltipClosed = true"
-        ></CmkIcon>
-        <CmkDialog
-          :title="dialogTitle"
-          :message="dialogMessage"
+        <CmkAlertBox
+          :heading="dialogTitle"
+          :variant="noTlsProvided || isNotRegistered ? 'warning' : 'info'"
+          :main-button="{
+            title: slideInButtonTitle,
+            onclick: () => {
+              slideInOpen = true
+            }
+          }"
           :buttons="[
-            {
-              title: slideInButtonTitle,
-              onclick: () => {
-                slideInOpen = true
-              },
-              variant: noTlsProvided || isNotRegistered ? 'info' : 'optional'
-            },
             {
               title: hideButtonTitle,
               onclick: () => {
@@ -104,7 +93,9 @@ const triggerRescan = () => {
             }
           ]"
           class="setup-agent-download-dialog__dialog"
-        />
+        >
+          {{ dialogMessage }}
+        </CmkAlertBox>
       </CmkTooltipContent>
     </CmkTooltip>
   </CmkTooltipProvider>
@@ -141,16 +132,6 @@ const triggerRescan = () => {
 .setup-agent-download-dialog__dialog {
   position: relative;
   top: 25px;
-}
-
-.setup-agent-download-dialog__tooltip-close {
-  position: absolute;
-  top: 40px;
-  right: var(--spacing);
-  z-index: 1;
-  margin-right: 3px;
-  opacity: 0.6;
-  cursor: pointer;
 }
 </style>
 

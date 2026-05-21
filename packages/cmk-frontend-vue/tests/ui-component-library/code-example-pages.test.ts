@@ -48,7 +48,6 @@ import UclCmkLinkCardCodeExample from '@ucl/components/navigation/CmkLinkCard/Uc
 import UclCmkAlertBoxCodeExample from '@ucl/components/system-feedback/CmkAlertBox/UclCmkAlertBoxCodeExample.vue'
 import UclCmkCopyButtonCodeExample from '@ucl/components/system-feedback/CmkCopy/UclCmkCopyButtonCodeExample.vue'
 import UclCmkCopyCodeExample from '@ucl/components/system-feedback/CmkCopy/UclCmkCopyCodeExample.vue'
-import UclCmkDialogCodeExample from '@ucl/components/system-feedback/CmkDialog/UclCmkDialogCodeExample.vue'
 import UclCmkErrorBoundaryCodeExample from '@ucl/components/system-feedback/CmkErrorBoundary/UclCmkErrorBoundaryCodeExample.vue'
 import UclCmkHelpTextCodeExample from '@ucl/components/system-feedback/CmkHelpText/UclCmkHelpTextCodeExample.vue'
 import UclCmkInlineValidationCodeExample from '@ucl/components/system-feedback/CmkInlineValidation/UclCmkInlineValidationCodeExample.vue'
@@ -301,11 +300,6 @@ test('CmkCopyButton code example renders without errors', () => {
 
 test('CmkCopyIcon code example renders without errors', () => {
   const { container } = render(UclCmkCopyCodeExample)
-  expect(container.firstChild).toBeTruthy()
-})
-
-test('CmkDialog code example renders without errors', () => {
-  const { container } = render(UclCmkDialogCodeExample)
   expect(container.firstChild).toBeTruthy()
 })
 

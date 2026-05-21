@@ -14,12 +14,12 @@ import { onUnmounted, ref, toRaw } from 'vue'
 import { type SetDataResult } from '@/lib/configuration_entity_types'
 import usei18n from '@/lib/i18n'
 import type { TranslatedString } from '@/lib/i18nString'
+import { useDismissDialog } from '@/lib/useDismissDialog'
 import { immediateWatch } from '@/lib/watch'
 
 import CmkAlertBox from '@/components/CmkAlertBox.vue'
 import CmkButtonCancel from '@/components/CmkButtonCancel.vue'
 import CmkButtonSubmit from '@/components/CmkButtonSubmit.vue'
-import CmkDialog from '@/components/CmkDialog.vue'
 import { useCmkErrorBoundary } from '@/components/CmkErrorBoundary'
 import CmkIcon from '@/components/CmkIcon'
 import CmkSpace from '@/components/CmkSpace.vue'
@@ -47,6 +47,8 @@ export interface FormSingleChoiceEditableEditAsyncProps<ObjectIdent, Result> {
 
 const DISMISSAL_KEY = 'immediate_slideout_change'
 const { _t } = usei18n()
+
+const { isShown: alertShown, dismiss: dismissAlert } = useDismissDialog(DISMISSAL_KEY)
 
 const props = defineProps<FormSingleChoiceEditableEditAsyncProps<ObjectIdent, Result>>()
 
@@ -120,19 +122,24 @@ const { CmkErrorBoundary } = useCmkErrorBoundary()
 <template>
   <div class="form-edit-async__wrapper">
     <CmkErrorBoundary>
-      <CmkDialog
+      <CmkAlertBox
+        v-if="alertShown"
         class="form-edit-async__dialog"
-        :message="
+        :buttons="[
+          {
+            title: _t('Do not show again'),
+            variant: 'optional',
+            onclick: dismissAlert
+          }
+        ]"
+      >
+        {{
           props.permanentChoiceWarning ??
           _t(
             'Changes submitted through this form will be immediately applied to your configuration. However, you may still need to activate them for them to take effect.'
           )
-        "
-        :dismissal-button="{
-          title: _t('Do not show again'),
-          key: DISMISSAL_KEY
-        }"
-      />
+        }}
+      </CmkAlertBox>
       <div class="form-edit-async__buttons">
         <CmkButtonSubmit @click="save">
           {{

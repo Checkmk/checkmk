@@ -72,7 +72,6 @@ onMounted(async () => {
     :user-id="props.user_id"
     :dialog-title="dialogTitle"
     :dialog-message="dialogMessage"
-    :dialog-close-icon-title="_t('Close for now')"
     :slide-in-title="slideInTitle"
     :slide-in-button-title="slideInButtonTitle"
     :hide-button-title="hideButtonTitle"

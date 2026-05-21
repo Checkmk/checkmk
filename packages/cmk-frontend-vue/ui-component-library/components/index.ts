@@ -58,7 +58,6 @@ import UclArrowDown from './graphics/ArrowDown/UclArrowDown.vue'
 import UclCmkLinkCard from './navigation/CmkLinkCard/UclCmkLinkCard.vue'
 import UclCmkAlertBox from './system-feedback/CmkAlertBox/UclCmkAlertBox.vue'
 import UclCmkCopy from './system-feedback/CmkCopy/UclCmkCopy.vue'
-import UclCmkDialog from './system-feedback/CmkDialog/UclCmkDialog.vue'
 import UclCmkErrorBoundary from './system-feedback/CmkErrorBoundary/UclCmkErrorBoundary.vue'
 import UclCmkHelpText from './system-feedback/CmkHelpText/UclCmkHelpText.vue'
 import UclCmkInlineValidation from './system-feedback/CmkInlineValidation/UclCmkInlineValidation.vue'
@@ -133,7 +132,6 @@ const navigationPages = [new Page('CmkLinkCard', UclCmkLinkCard)]
 const systemFeedbackPages = [
   new Page('CmkAlertBox', UclCmkAlertBox),
   new Page('CmkCopy', UclCmkCopy),
-  new Page('CmkDialog', UclCmkDialog),
   new Page('CmkErrorBoundary', UclCmkErrorBoundary),
   new Page('CmkHelpText', UclCmkHelpText),
   new Page('CmkInlineValidation', UclCmkInlineValidation),

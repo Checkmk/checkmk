@@ -44,6 +44,7 @@ export const panelConfig = {
   shape: {
     type: 'list' as const,
     title: 'Shape',
+    help: '"Default" stretches to contain its content (pill/elongated). "Circle" clips overflow to maintain a fixed circular shape — max-width equals height.',
     options: [
       { title: 'Default', name: 'default' },
       { title: 'Circle', name: 'circle' }
@@ -85,7 +86,7 @@ const propState = new PanelStateCreator<typeof CmkBadge>().createRef(panelConfig
         :type="propState.type"
         :shape="propState.shape"
       >
-        99
+        99999
       </CmkBadge>
 
       <template #properties>

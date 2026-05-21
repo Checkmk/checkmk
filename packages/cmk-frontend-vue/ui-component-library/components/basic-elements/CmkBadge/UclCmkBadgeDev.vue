@@ -18,7 +18,8 @@ defineProps<{ screenshotMode: boolean }>()
         <th></th>
         <th>Fill</th>
         <th>Outline</th>
-        <th>Circle</th>
+        <th>Shape: Default</th>
+        <th>Shape: Circle</th>
       </tr>
     </thead>
     <tbody>
@@ -27,7 +28,7 @@ defineProps<{ screenshotMode: boolean }>()
         <td>
           <div class="ucl-cmk-badge-dev__container">
             <CmkBadge type="fill" size="small">1</CmkBadge>
-            <CmkBadge type="fill" size="small" color="success">99+</CmkBadge>
+            <CmkBadge type="fill" size="small" color="success">999+</CmkBadge>
             <CmkBadge type="fill" size="small" color="warning">1</CmkBadge>
             <CmkBadge type="fill" size="small" color="danger">1</CmkBadge>
           </div>
@@ -42,10 +43,18 @@ defineProps<{ screenshotMode: boolean }>()
         </td>
         <td>
           <div class="ucl-cmk-badge-dev__container">
-            <CmkBadge shape="circle" size="small">1</CmkBadge>
-            <CmkBadge shape="circle" size="small" color="success">1</CmkBadge>
-            <CmkBadge shape="circle" size="small" color="warning">1</CmkBadge>
-            <CmkBadge shape="circle" size="small" color="danger">1</CmkBadge>
+            <CmkBadge size="small">999+</CmkBadge>
+            <CmkBadge size="small" color="success">999+</CmkBadge>
+            <CmkBadge size="small" color="warning">999+</CmkBadge>
+            <CmkBadge size="small" color="danger">999+</CmkBadge>
+          </div>
+        </td>
+        <td>
+          <div class="ucl-cmk-badge-dev__container">
+            <CmkBadge shape="circle" size="small">999+</CmkBadge>
+            <CmkBadge shape="circle" size="small" color="success">999+</CmkBadge>
+            <CmkBadge shape="circle" size="small" color="warning">999+</CmkBadge>
+            <CmkBadge shape="circle" size="small" color="danger">999+</CmkBadge>
           </div>
         </td>
       </tr>
@@ -75,14 +84,18 @@ defineProps<{ screenshotMode: boolean }>()
         </td>
         <td>
           <div class="ucl-cmk-badge-dev__container">
-            <CmkBadge>1</CmkBadge>
-            <CmkBadge type="fill" shape="circle" color="success"
-              ><CmkIcon size="large" name="checkmark"></CmkIcon
-            ></CmkBadge>
-            <CmkBadge shape="circle" color="warning">a</CmkBadge>
-            <CmkBadge type="fill" shape="circle" color="danger"
-              ><CmkIcon size="small" name="check"></CmkIcon
-            ></CmkBadge>
+            <CmkBadge>999+</CmkBadge>
+            <CmkBadge color="success">999+</CmkBadge>
+            <CmkBadge color="warning">999+</CmkBadge>
+            <CmkBadge color="danger">999+</CmkBadge>
+          </div>
+        </td>
+        <td>
+          <div class="ucl-cmk-badge-dev__container">
+            <CmkBadge shape="circle">999+</CmkBadge>
+            <CmkBadge type="fill" shape="circle" color="success">999+</CmkBadge>
+            <CmkBadge shape="circle" color="warning">999+</CmkBadge>
+            <CmkBadge type="fill" shape="circle" color="danger">999+</CmkBadge>
           </div>
         </td>
       </tr>
@@ -108,12 +121,18 @@ defineProps<{ screenshotMode: boolean }>()
         </td>
         <td>
           <div class="ucl-cmk-badge-dev__container">
-            <CmkBadge shape="circle" size="large">1</CmkBadge>
-            <CmkBadge type="fill" shape="circle" size="large" color="success"
-              ><CmkIcon size="xxlarge" name="checkmark"></CmkIcon
-            ></CmkBadge>
-            <CmkBadge shape="circle" size="large" color="warning">2</CmkBadge>
-            <CmkBadge shape="circle" size="large" color="danger">33</CmkBadge>
+            <CmkBadge size="large">999+</CmkBadge>
+            <CmkBadge size="large" color="success">999+</CmkBadge>
+            <CmkBadge size="large" color="warning">999+</CmkBadge>
+            <CmkBadge size="large" color="danger">999+</CmkBadge>
+          </div>
+        </td>
+        <td>
+          <div class="ucl-cmk-badge-dev__container">
+            <CmkBadge shape="circle" size="large">999+</CmkBadge>
+            <CmkBadge type="fill" shape="circle" size="large" color="success">999+</CmkBadge>
+            <CmkBadge shape="circle" size="large" color="warning">999+</CmkBadge>
+            <CmkBadge shape="circle" size="large" color="danger">999+</CmkBadge>
           </div>
         </td>
       </tr>

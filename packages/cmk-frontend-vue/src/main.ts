@@ -29,6 +29,7 @@ import ModeRedirectOAuth2ConnectionAppCopy from './mode-oauth2-connection/ModeRe
 import ModeCreateOTelConfApp from './mode-otel/ModeCreateOTelConfApp.vue'
 import ModeCreatePrometheusConfApp from './mode-otel/ModeCreatePrometheusConfApp.vue'
 import ModeCreateRelayApp from './mode-relay/ModeCreateRelayApp.vue'
+import AllHostsApp from './monitoring/all-hosts/AllHostsApp.vue'
 import NotificationOverview from './notification/NotificationOverviewApp.vue'
 import ProductUsageAnalyticsApp from './product-usage-analytics/ProductUsageAnalyticsApp.vue'
 import QuickSetup from './quick-setup/QuickSetupApp.vue'
@@ -56,6 +57,7 @@ defineCmkComponent('cmk-mode-create-prometheus-conf', ModeCreatePrometheusConfAp
 defineCmkComponent('cmk-mode-create-relay', ModeCreateRelayApp)
 defineCmkComponent('cmk-mode-create-oauth2-connection', ModeCreateOAuth2ConnectionApp)
 defineCmkComponent('cmk-mode-redirect-oauth2-connection', ModeRedirectOAuth2ConnectionAppCopy)
+defineCmkComponent('cmk-monitoring-all-hosts', AllHostsApp)
 defineCmkComponent('cmk-sidebar', SidebarApp)
 defineCmkComponent('cmk-unified-search', UnifiedSearchApp)
 defineCmkComponent('cmk-welcome', WelcomeApp)

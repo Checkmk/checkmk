@@ -14,7 +14,6 @@ from dataclasses import dataclass
 from itertools import repeat
 from typing import assert_never, Self
 
-from cmk.graphing.v1 import metrics as metrics_api
 from cmk.graphing.v1 import perfometers as perfometers_api
 from cmk.graphing.v2_unstable import metrics as metrics_v2_unstable_api
 from cmk.gui.color import Color
@@ -23,6 +22,7 @@ from cmk.gui.unit_formatter import AutoPrecision
 from cmk.gui.utils.temperate_unit import TemperatureUnit
 from cmk.gui.view_utils import get_themed_perfometer_bg_color
 
+from ._api_types import metrics_v1
 from ._evaluations_from_api import evaluate_quantity, EvaluatedQuantity, Quantity
 from ._from_api import RegisteredMetric
 from ._perfometer_superseding import PERFOMETER_SUPERSEDED_TO_SUPERSEDER
@@ -37,38 +37,38 @@ class _MetricNamesOrScalars:
     _scalars: list[
         metrics_v2_unstable_api.LowerWarningOf
         | metrics_v2_unstable_api.LowerCriticalOf
-        | metrics_api.WarningOf
-        | metrics_api.CriticalOf
-        | metrics_api.MinimumOf
-        | metrics_api.MaximumOf
+        | metrics_v1.WarningOf
+        | metrics_v1.CriticalOf
+        | metrics_v1.MinimumOf
+        | metrics_v1.MaximumOf
     ]
 
     def collect_quantity_names(self, quantity: Quantity) -> None:
         match quantity:
             case str():
                 self._metric_names.append(quantity)
-            case metrics_api.WarningOf():
+            case metrics_v1.WarningOf():
                 self._metric_names.append(quantity.metric_name)
                 self._scalars.append(quantity)
-            case metrics_api.CriticalOf():
+            case metrics_v1.CriticalOf():
                 self._metric_names.append(quantity.metric_name)
                 self._scalars.append(quantity)
-            case metrics_api.MinimumOf():
+            case metrics_v1.MinimumOf():
                 self._metric_names.append(quantity.metric_name)
                 self._scalars.append(quantity)
-            case metrics_api.MaximumOf():
+            case metrics_v1.MaximumOf():
                 self._metric_names.append(quantity.metric_name)
                 self._scalars.append(quantity)
-            case metrics_api.Sum():
+            case metrics_v1.Sum():
                 for s in quantity.summands:
                     self.collect_quantity_names(s)
-            case metrics_api.Product():
+            case metrics_v1.Product():
                 for f in quantity.factors:
                     self.collect_quantity_names(f)
-            case metrics_api.Difference():
+            case metrics_v1.Difference():
                 self.collect_quantity_names(quantity.minuend)
                 self.collect_quantity_names(quantity.subtrahend)
-            case metrics_api.Fraction():
+            case metrics_v1.Fraction():
                 self.collect_quantity_names(quantity.dividend)
                 self.collect_quantity_names(quantity.divisor)
 
@@ -94,10 +94,10 @@ class _MetricNamesOrScalars:
     ) -> Sequence[
         metrics_v2_unstable_api.LowerWarningOf
         | metrics_v2_unstable_api.LowerCriticalOf
-        | metrics_api.WarningOf
-        | metrics_api.CriticalOf
-        | metrics_api.MinimumOf
-        | metrics_api.MaximumOf
+        | metrics_v1.WarningOf
+        | metrics_v1.CriticalOf
+        | metrics_v1.MinimumOf
+        | metrics_v1.MaximumOf
     ]:
         return self._scalars
 
@@ -149,13 +149,13 @@ def _perfometer_plugin_matches(
                 scalar_value = scalar_bounds.warn_lower
             case metrics_v2_unstable_api.LowerCriticalOf():
                 scalar_value = scalar_bounds.crit_lower
-            case metrics_api.WarningOf():
+            case metrics_v1.WarningOf():
                 scalar_value = scalar_bounds.warn
-            case metrics_api.CriticalOf():
+            case metrics_v1.CriticalOf():
                 scalar_value = scalar_bounds.crit
-            case metrics_api.MinimumOf():
+            case metrics_v1.MinimumOf():
                 scalar_value = scalar_bounds.min_
-            case metrics_api.MaximumOf():
+            case metrics_v1.MaximumOf():
                 scalar_value = scalar_bounds.max_
             case _:
                 assert_never(scalar)

@@ -14,7 +14,7 @@ import pytest
 
 from cmk.discover_plugins import PluginLocation
 from cmk.graphing.v1 import graphs as graphs_api
-from cmk.graphing.v1 import metrics as metrics_api
+from cmk.graphing.v1 import metrics as metrics_v1
 from cmk.graphing.v1 import perfometers as perfometers_api
 from cmk.graphing.v1 import translations as translations_api
 from cmk.gui.graphing_main import _load_graphing_plugins
@@ -51,37 +51,37 @@ def test_translations_to_be_standalone() -> None:
 def _collect_metric_names_from_quantity(
     quantity: (
         str
-        | metrics_api.Constant
-        | metrics_api.WarningOf
-        | metrics_api.CriticalOf
-        | metrics_api.MinimumOf
-        | metrics_api.MaximumOf
-        | metrics_api.Sum
-        | metrics_api.Product
-        | metrics_api.Difference
-        | metrics_api.Fraction
+        | metrics_v1.Constant
+        | metrics_v1.WarningOf
+        | metrics_v1.CriticalOf
+        | metrics_v1.MinimumOf
+        | metrics_v1.MaximumOf
+        | metrics_v1.Sum
+        | metrics_v1.Product
+        | metrics_v1.Difference
+        | metrics_v1.Fraction
     ),
 ) -> Iterator[str]:
     match quantity:
         case str():
             yield quantity
         case (
-            metrics_api.WarningOf()
-            | metrics_api.CriticalOf()
-            | metrics_api.MinimumOf()
-            | metrics_api.MaximumOf()
+            metrics_v1.WarningOf()
+            | metrics_v1.CriticalOf()
+            | metrics_v1.MinimumOf()
+            | metrics_v1.MaximumOf()
         ):
             yield quantity.metric_name
-        case metrics_api.Sum():
+        case metrics_v1.Sum():
             for summand in quantity.summands:
                 yield from _collect_metric_names_from_quantity(summand)
-        case metrics_api.Product():
+        case metrics_v1.Product():
             for factor in quantity.factors:
                 yield from _collect_metric_names_from_quantity(factor)
-        case metrics_api.Difference():
+        case metrics_v1.Difference():
             yield from _collect_metric_names_from_quantity(quantity.minuend)
             yield from _collect_metric_names_from_quantity(quantity.subtrahend)
-        case metrics_api.Fraction():
+        case metrics_v1.Fraction():
             yield from _collect_metric_names_from_quantity(quantity.dividend)
             yield from _collect_metric_names_from_quantity(quantity.divisor)
         case _:
@@ -149,7 +149,7 @@ class _MetricNamesInModule:
     def add_from_plugin(
         self,
         plugin: (
-            metrics_api.Metric
+            metrics_v1.Metric
             | perfometers_api.Perfometer
             | perfometers_api.Bidirectional
             | perfometers_api.Stacked
@@ -159,7 +159,7 @@ class _MetricNamesInModule:
         ),
     ) -> None:
         match plugin:
-            case metrics_api.Metric():
+            case metrics_v1.Metric():
                 self._from_metrics.add(plugin.name)
             case perfometers_api.Perfometer():
                 self._from_perfometer_or_graph.setdefault(
@@ -269,7 +269,7 @@ def test__MetricNamesInModule_bundles(
 def _metric_names_by_module(
     plugins: Mapping[
         PluginLocation,
-        metrics_api.Metric
+        metrics_v1.Metric
         | perfometers_api.Perfometer
         | perfometers_api.Bidirectional
         | perfometers_api.Stacked
@@ -430,7 +430,7 @@ def test_duplicate_metric_titles_new() -> None:
     # CMK-26844
     metric_names_by_title: dict[str, set[str]] = {}
     for plugin in _load_graphing_plugins().plugins.values():
-        if isinstance(plugin, metrics_api.Metric):
+        if isinstance(plugin, metrics_v1.Metric):
             metric_names_by_title.setdefault(plugin.title.localize(str), set()).add(plugin.name)
 
     duplicate_metric_titles = {t: mns for t, mns in metric_names_by_title.items() if len(mns) > 1}
@@ -452,7 +452,7 @@ def test_duplicate_metric_titles_fixed() -> None:
     # CMK-26844
     metric_names_by_title: dict[str, set[str]] = {}
     for plugin in _load_graphing_plugins().plugins.values():
-        if isinstance(plugin, metrics_api.Metric):
+        if isinstance(plugin, metrics_v1.Metric):
             metric_names_by_title.setdefault(plugin.title.localize(str), set()).add(plugin.name)
 
     duplicate_metric_titles = {t: mns for t, mns in metric_names_by_title.items() if len(mns) > 1}

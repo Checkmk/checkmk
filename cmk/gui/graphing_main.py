@@ -22,7 +22,6 @@ from cmk.ccc.site import SiteId
 from cmk.discover_plugins import discover_all_plugins, DiscoveredPlugins, PluginGroup
 from cmk.graphing.v1 import entry_point_prefixes
 from cmk.graphing.v1 import graphs as graphs_api
-from cmk.graphing.v1 import metrics as metrics_api
 from cmk.graphing.v1 import perfometers as perfometers_api
 from cmk.graphing.v1 import translations as translations_api
 from cmk.gui.graphing import (
@@ -35,6 +34,7 @@ from cmk.gui.graphing import (
     METRIC_BACKEND_KEY,
     metric_backend_registry,
     metrics_from_api,
+    metrics_v1,
     parse_metric_from_api,
     perfometers_from_api,
 )
@@ -59,7 +59,7 @@ from cmk.utils.servicename import ServiceName
 
 
 def _load_graphing_plugins() -> DiscoveredPlugins[
-    metrics_api.Metric
+    metrics_v1.Metric
     | perfometers_api.Perfometer
     | perfometers_api.Bidirectional
     | perfometers_api.Stacked
@@ -68,7 +68,7 @@ def _load_graphing_plugins() -> DiscoveredPlugins[
     | translations_api.Translation
 ]:
     discovered_plugins: DiscoveredPlugins[
-        metrics_api.Metric
+        metrics_v1.Metric
         | perfometers_api.Perfometer
         | perfometers_api.Bidirectional
         | perfometers_api.Stacked
@@ -142,7 +142,7 @@ def _parse_translation(
 
 def _add_graphing_plugins(
     plugins: DiscoveredPlugins[
-        metrics_api.Metric
+        metrics_v1.Metric
         | perfometers_api.Perfometer
         | perfometers_api.Bidirectional
         | perfometers_api.Stacked
@@ -152,7 +152,7 @@ def _add_graphing_plugins(
     ],
 ) -> None:
     for plugin in plugins.plugins.values():
-        if isinstance(plugin, metrics_api.Metric):
+        if isinstance(plugin, metrics_v1.Metric):
             metrics_from_api.register(parse_metric_from_api(plugin))
 
         elif isinstance(plugin, translations_api.Translation):

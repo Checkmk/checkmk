@@ -18,12 +18,12 @@ from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
 from cmk.graphing import v1 as graphing_api
 from cmk.graphing.v1 import graphs as graphs_api
-from cmk.graphing.v1 import metrics as metrics_api
 from cmk.gui.i18n import _, translate_to_current_language
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.temperate_unit import TemperatureUnit
 from cmk.utils.servicename import ServiceName
 
+from ._api_types import metrics_v1
 from ._evaluations_from_api import (
     evaluate_graph_plugin_metrics,
     evaluate_graph_plugin_range,
@@ -100,8 +100,8 @@ def get_graph_plugin_from_id(
             title=graphing_api.Title(""),
             compound_lines=[metric_name],
             simple_lines=[
-                metrics_api.WarningOf(metric_name),
-                metrics_api.CriticalOf(metric_name),
+                metrics_v1.WarningOf(metric_name),
+                metrics_v1.CriticalOf(metric_name),
             ],
         )
     for name, graph_plugin in sort_registered_graph_plugins(registered_graphs):

@@ -11,7 +11,7 @@ from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
 from cmk.graphing import v1 as graphing_api
 from cmk.graphing.v1 import graphs as graphs_api
-from cmk.graphing.v1 import metrics as metrics_api
+from cmk.graphing.v1 import metrics as metrics_v1
 from cmk.gui.graphing._evaluations_from_api import (
     evaluate_graph_plugin_metrics,
     evaluate_graph_plugin_range,
@@ -248,8 +248,8 @@ def test_evaluate_graph_plugin_range(
                 title=graphing_api.Title("Graph"),
                 compound_lines=["metric"],
                 simple_lines=[
-                    metrics_api.WarningOf("metric1"),
-                    metrics_api.CriticalOf("metric1"),
+                    metrics_v1.WarningOf("metric1"),
+                    metrics_v1.CriticalOf("metric1"),
                 ],
             ),
             [],
@@ -261,8 +261,8 @@ def test_evaluate_graph_plugin_range(
                 title=graphing_api.Title("Graph"),
                 compound_lines=["metric"],
                 simple_lines=[
-                    metrics_api.WarningOf("metric"),
-                    metrics_api.CriticalOf("metric"),
+                    metrics_v1.WarningOf("metric"),
+                    metrics_v1.CriticalOf("metric"),
                 ],
             ),
             [
@@ -291,7 +291,7 @@ def test_evaluate_graph_plugin_range(
                     minimal_range=graphs_api.MinimalRange("metric", 200),
                     compound_lines=["metric"],
                     simple_lines=[
-                        metrics_api.WarningOf("metric"),
+                        metrics_v1.WarningOf("metric"),
                     ],
                 ),
                 lower=graphs_api.Graph(
@@ -300,7 +300,7 @@ def test_evaluate_graph_plugin_range(
                     minimal_range=graphs_api.MinimalRange(0, "metric"),
                     compound_lines=["metric"],
                     simple_lines=[
-                        metrics_api.CriticalOf("metric"),
+                        metrics_v1.CriticalOf("metric"),
                     ],
                 ),
             ),

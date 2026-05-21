@@ -11,7 +11,7 @@ from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
 from cmk.graphing.v1 import graphs, metrics, Title
 from cmk.graphing.v1 import graphs as graphs_api
-from cmk.graphing.v1 import metrics as metrics_api
+from cmk.graphing.v1 import metrics as metrics_v1
 from cmk.gui.graphing._from_api import RegisteredMetric
 from cmk.gui.graphing._graph_metric_expressions import GraphMetricRRDSource
 from cmk.gui.graphing._graph_specification import (
@@ -78,8 +78,8 @@ _CPU_UTIL_GRAPHS = {
         compound_lines=["util"],
         simple_lines=[
             "util_average",
-            metrics_api.WarningOf("util"),
-            metrics_api.CriticalOf("util"),
+            metrics_v1.WarningOf("util"),
+            metrics_v1.CriticalOf("util"),
         ],
         conflicting=[
             "idle",
@@ -100,8 +100,8 @@ _CPU_UTIL_GRAPHS = {
         compound_lines=["util1"],
         simple_lines=[
             "util15",
-            metrics_api.WarningOf("util1"),
-            metrics_api.CriticalOf("util1"),
+            metrics_v1.WarningOf("util1"),
+            metrics_v1.CriticalOf("util1"),
         ],
     ),
     "cpu_utilization_3": graphs_api.Graph(
@@ -146,9 +146,9 @@ _CPU_UTIL_GRAPHS = {
         ],
         simple_lines=[
             "util_average",
-            metrics_api.Sum(
+            metrics_v1.Sum(
                 Title("Total"),
-                metrics_api.Color.GREEN,
+                metrics_v1.Color.GREEN,
                 [
                     "user",
                     "system",
@@ -179,8 +179,8 @@ _CPU_UTIL_GRAPHS = {
         simple_lines=[
             "util_average",
             "util",
-            metrics_api.WarningOf("util"),
-            metrics_api.CriticalOf("util"),
+            metrics_v1.WarningOf("util"),
+            metrics_v1.CriticalOf("util"),
         ],
         optional=["util_average"],
         conflicting=[
@@ -203,9 +203,9 @@ _CPU_UTIL_GRAPHS = {
         ],
         simple_lines=[
             "util_average",
-            metrics_api.Sum(
+            metrics_v1.Sum(
                 Title("Total"),
-                metrics_api.Color.GREEN,
+                metrics_v1.Color.GREEN,
                 [
                     "user",
                     "system",
@@ -236,8 +236,8 @@ _CPU_UTIL_GRAPHS = {
         simple_lines=[
             "util_average",
             "util",
-            metrics_api.WarningOf("util"),
-            metrics_api.CriticalOf("util"),
+            metrics_v1.WarningOf("util"),
+            metrics_v1.CriticalOf("util"),
         ],
         optional=["util_average"],
         conflicting=["cpu_util_guest"],
@@ -257,9 +257,9 @@ _CPU_UTIL_GRAPHS = {
         ],
         simple_lines=[
             "util_average",
-            metrics_api.Sum(
+            metrics_v1.Sum(
                 Title("Total"),
-                metrics_api.Color.GREEN,
+                metrics_v1.Color.GREEN,
                 [
                     "user",
                     "system",
@@ -287,8 +287,8 @@ _CPU_UTIL_GRAPHS = {
         simple_lines=[
             "util_average",
             "util",
-            metrics_api.WarningOf("util"),
-            metrics_api.CriticalOf("util"),
+            metrics_v1.WarningOf("util"),
+            metrics_v1.CriticalOf("util"),
         ],
         optional=["util_average"],
         conflicting=["cpu_util_steal"],
@@ -309,9 +309,9 @@ _CPU_UTIL_GRAPHS = {
         ],
         simple_lines=[
             "util_average",
-            metrics_api.Sum(
+            metrics_v1.Sum(
                 Title("Total"),
-                metrics_api.Color.GREEN,
+                metrics_v1.Color.GREEN,
                 [
                     "user",
                     "system",
@@ -341,8 +341,8 @@ _CPU_UTIL_GRAPHS = {
         simple_lines=[
             "util_average",
             "util",
-            metrics_api.WarningOf("util"),
-            metrics_api.CriticalOf("util"),
+            metrics_v1.WarningOf("util"),
+            metrics_v1.CriticalOf("util"),
         ],
         optional=["util_average"],
     ),
@@ -368,8 +368,8 @@ _CPU_UTIL_GRAPHS = {
         ),
         compound_lines=["util"],
         simple_lines=[
-            metrics_api.WarningOf("util"),
-            metrics_api.CriticalOf("util"),
+            metrics_v1.WarningOf("util"),
+            metrics_v1.CriticalOf("util"),
         ],
         conflicting=[
             "util_average",
@@ -400,8 +400,8 @@ _CPU_UTIL_GRAPHS = {
         ],
         simple_lines=[
             "util_numcpu_as_max",
-            metrics_api.WarningOf("util_numcpu_as_max"),
-            metrics_api.CriticalOf("util_numcpu_as_max"),
+            metrics_v1.WarningOf("util_numcpu_as_max"),
+            metrics_v1.CriticalOf("util_numcpu_as_max"),
         ],
         optional=[
             "user",
@@ -462,19 +462,19 @@ _MEM_GRAPHS = {
         title=Title("RAM used"),
         minimal_range=graphs_api.MinimalRange(
             0,
-            metrics_api.MaximumOf(
+            metrics_v1.MaximumOf(
                 "mem_used",
-                metrics_api.Color.GRAY,
+                metrics_v1.Color.GRAY,
             ),
         ),
         compound_lines=["mem_used"],
         simple_lines=[
-            metrics_api.MaximumOf(
+            metrics_v1.MaximumOf(
                 "mem_used",
-                metrics_api.Color.GRAY,
+                metrics_v1.Color.GRAY,
             ),
-            metrics_api.WarningOf("mem_used"),
-            metrics_api.CriticalOf("mem_used"),
+            metrics_v1.WarningOf("mem_used"),
+            metrics_v1.CriticalOf("mem_used"),
         ],
         conflicting=[
             "swap_used",
@@ -486,17 +486,17 @@ _MEM_GRAPHS = {
         title=Title("RAM + Swap used"),
         minimal_range=graphs_api.MinimalRange(
             0,
-            metrics_api.Sum(
+            metrics_v1.Sum(
                 Title(""),
-                metrics_api.Color.GRAY,
+                metrics_v1.Color.GRAY,
                 [
-                    metrics_api.MaximumOf(
+                    metrics_v1.MaximumOf(
                         "swap_used",
-                        metrics_api.Color.GRAY,
+                        metrics_v1.Color.GRAY,
                     ),
-                    metrics_api.MaximumOf(
+                    metrics_v1.MaximumOf(
                         "mem_used",
-                        metrics_api.Color.GRAY,
+                        metrics_v1.Color.GRAY,
                     ),
                 ],
             ),
@@ -506,23 +506,23 @@ _MEM_GRAPHS = {
             "swap_used",
         ],
         simple_lines=[
-            metrics_api.Sum(
+            metrics_v1.Sum(
                 Title("Total RAM + Swap installed"),
-                metrics_api.Color.DARK_CYAN,
+                metrics_v1.Color.DARK_CYAN,
                 [
-                    metrics_api.MaximumOf(
+                    metrics_v1.MaximumOf(
                         "swap_used",
-                        metrics_api.Color.GRAY,
+                        metrics_v1.Color.GRAY,
                     ),
-                    metrics_api.MaximumOf(
+                    metrics_v1.MaximumOf(
                         "mem_used",
-                        metrics_api.Color.GRAY,
+                        metrics_v1.Color.GRAY,
                     ),
                 ],
             ),
-            metrics_api.MaximumOf(
+            metrics_v1.MaximumOf(
                 "mem_used",
-                metrics_api.Color.GRAY,
+                metrics_v1.Color.GRAY,
             ),
         ],
         conflicting=["swap_total"],
@@ -548,8 +548,8 @@ _HEAP_MEM_GRAPH = {
         simple_lines=[
             "mem_heap_committed",
             "mem_heap",
-            metrics_api.WarningOf("mem_heap"),
-            metrics_api.CriticalOf("mem_heap"),
+            metrics_v1.WarningOf("mem_heap"),
+            metrics_v1.CriticalOf("mem_heap"),
         ],
     ),
     "non-heap_memory_usage": graphs_api.Graph(
@@ -558,11 +558,11 @@ _HEAP_MEM_GRAPH = {
         simple_lines=[
             "mem_nonheap_committed",
             "mem_nonheap",
-            metrics_api.WarningOf("mem_nonheap"),
-            metrics_api.CriticalOf("mem_nonheap"),
-            metrics_api.MaximumOf(
+            metrics_v1.WarningOf("mem_nonheap"),
+            metrics_v1.CriticalOf("mem_nonheap"),
+            metrics_v1.MaximumOf(
                 "mem_nonheap",
-                metrics_api.Color.GRAY,
+                metrics_v1.Color.GRAY,
             ),
         ],
     ),
@@ -1572,9 +1572,9 @@ def test__evaluate_graph_plugins_with_predictive_metrics(
                         "children_system_time",
                     ],
                     simple_lines=[
-                        metrics_api.Sum(
+                        metrics_v1.Sum(
                             Title("Total"),
-                            metrics_api.Color.DARK_BLUE,
+                            metrics_v1.Color.DARK_BLUE,
                             [
                                 "user_time",
                                 "children_user_time",
@@ -1614,9 +1614,9 @@ def test__evaluate_graph_plugins_with_predictive_metrics(
                         "children_system_time",
                     ],
                     simple_lines=[
-                        metrics_api.Sum(
+                        metrics_v1.Sum(
                             Title("Total"),
-                            metrics_api.Color.DARK_BLUE,
+                            metrics_v1.Color.DARK_BLUE,
                             [
                                 "user_time",
                                 "children_user_time",
@@ -1654,9 +1654,9 @@ def test__evaluate_graph_plugins_with_predictive_metrics(
                         "system_time",
                     ],
                     simple_lines=[
-                        metrics_api.Sum(
+                        metrics_v1.Sum(
                             Title("Total"),
-                            metrics_api.Color.GRAY,
+                            metrics_v1.Color.GRAY,
                             [
                                 "user_time",
                                 "system_time",
@@ -1680,9 +1680,9 @@ def test__evaluate_graph_plugins_with_predictive_metrics(
                         "system_time",
                     ],
                     simple_lines=[
-                        metrics_api.Sum(
+                        metrics_v1.Sum(
                             Title("Total"),
-                            metrics_api.Color.GRAY,
+                            metrics_v1.Color.GRAY,
                             [
                                 "user_time",
                                 "system_time",
@@ -1899,9 +1899,9 @@ def test__evaluate_graph_plugins_with_predictive_metrics(
                     title=Title("Size and used space"),
                     minimal_range=graphs_api.MinimalRange(
                         0,
-                        metrics_api.MaximumOf(
+                        metrics_v1.MaximumOf(
                             "fs_used",
-                            metrics_api.Color.GRAY,
+                            metrics_v1.Color.GRAY,
                         ),
                     ),
                     compound_lines=[
@@ -1910,8 +1910,8 @@ def test__evaluate_graph_plugins_with_predictive_metrics(
                     ],
                     simple_lines=[
                         "fs_size",
-                        metrics_api.WarningOf("fs_used"),
-                        metrics_api.CriticalOf("fs_used"),
+                        metrics_v1.WarningOf("fs_used"),
+                        metrics_v1.CriticalOf("fs_used"),
                     ],
                     conflicting=["reserved"],
                 )
@@ -1927,9 +1927,9 @@ def test__evaluate_graph_plugins_with_predictive_metrics(
                     title=Title("Size and used space"),
                     minimal_range=graphs_api.MinimalRange(
                         0,
-                        metrics_api.MaximumOf(
+                        metrics_v1.MaximumOf(
                             "fs_used",
-                            metrics_api.Color.GRAY,
+                            metrics_v1.Color.GRAY,
                         ),
                     ),
                     compound_lines=[
@@ -1938,8 +1938,8 @@ def test__evaluate_graph_plugins_with_predictive_metrics(
                     ],
                     simple_lines=[
                         "fs_size",
-                        metrics_api.WarningOf("fs_used"),
-                        metrics_api.CriticalOf("fs_used"),
+                        metrics_v1.WarningOf("fs_used"),
+                        metrics_v1.CriticalOf("fs_used"),
                     ],
                     conflicting=["reserved"],
                 )

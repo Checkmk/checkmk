@@ -14,13 +14,13 @@ from cmk.ccc.hostaddress import HostName
 from cmk.ccc.resulttype import Error, OK, Result
 from cmk.ccc.site import SiteId
 from cmk.graphing.v1 import graphs as graphs_api
-from cmk.graphing.v1 import metrics as metrics_api
 from cmk.graphing.v2_unstable import metrics as metrics_v2_unstable_api
 from cmk.gui.color import Color, parse_color_from_api
 from cmk.gui.i18n import _, translate_to_current_language
 from cmk.gui.utils.temperate_unit import TemperatureUnit
 from cmk.utils.servicename import ServiceName
 
+from ._api_types import metrics_v1
 from ._from_api import parse_unit_from_api, RegisteredMetric
 from ._graph_metric_expressions import (
     create_graph_metric_expression_from_translated_metric,
@@ -42,17 +42,17 @@ from ._unit import ConvertibleUnitSpecification, user_specific_unit
 
 type Quantity = (
     str
-    | metrics_api.Constant
+    | metrics_v1.Constant
     | metrics_v2_unstable_api.LowerWarningOf
     | metrics_v2_unstable_api.LowerCriticalOf
-    | metrics_api.WarningOf
-    | metrics_api.CriticalOf
-    | metrics_api.MinimumOf
-    | metrics_api.MaximumOf
-    | metrics_api.Sum
-    | metrics_api.Product
-    | metrics_api.Difference
-    | metrics_api.Fraction
+    | metrics_v1.WarningOf
+    | metrics_v1.CriticalOf
+    | metrics_v1.MinimumOf
+    | metrics_v1.MaximumOf
+    | metrics_v1.Sum
+    | metrics_v1.Product
+    | metrics_v1.Difference
+    | metrics_v1.Fraction
 )
 
 
@@ -92,7 +92,7 @@ def evaluate_quantity(
                     value=translated_metric.value,
                 )
             )
-        case metrics_api.Constant():
+        case metrics_v1.Constant():
             return OK(
                 EvaluatedQuantity(
                     title=str(quantity.title.localize(translate_to_current_language)),
@@ -165,7 +165,7 @@ def evaluate_quantity(
                     value=crit_lower_value,
                 )
             )
-        case metrics_api.WarningOf():
+        case metrics_v1.WarningOf():
             if not (translated_metric := translated_metrics.get(quantity.metric_name)):
                 return Error(
                     EvaluationError(
@@ -197,7 +197,7 @@ def evaluate_quantity(
                     value=warn_value,
                 )
             )
-        case metrics_api.CriticalOf():
+        case metrics_v1.CriticalOf():
             if not (translated_metric := translated_metrics.get(quantity.metric_name)):
                 return Error(
                     EvaluationError(
@@ -229,7 +229,7 @@ def evaluate_quantity(
                     value=crit_value,
                 )
             )
-        case metrics_api.MinimumOf():
+        case metrics_v1.MinimumOf():
             if not (translated_metric := translated_metrics.get(quantity.metric_name)):
                 return Error(
                     EvaluationError(
@@ -261,7 +261,7 @@ def evaluate_quantity(
                     value=min_value,
                 )
             )
-        case metrics_api.MaximumOf():
+        case metrics_v1.MaximumOf():
             if not (translated_metric := translated_metrics.get(quantity.metric_name)):
                 return Error(
                     EvaluationError(
@@ -293,7 +293,7 @@ def evaluate_quantity(
                     value=max_value,
                 )
             )
-        case metrics_api.Sum():
+        case metrics_v1.Sum():
             results = []
             for summand in quantity.summands:
                 if (
@@ -309,7 +309,7 @@ def evaluate_quantity(
                     value=sum(r.value for r in results),
                 )
             )
-        case metrics_api.Product():
+        case metrics_v1.Product():
             results = []
             for factor in quantity.factors:
                 if (
@@ -328,7 +328,7 @@ def evaluate_quantity(
                     value=product,
                 )
             )
-        case metrics_api.Difference():
+        case metrics_v1.Difference():
             if (
                 result_minuend := evaluate_quantity(
                     registered_metrics, quantity.minuend, translated_metrics
@@ -349,7 +349,7 @@ def evaluate_quantity(
                     value=result_minuend.ok.value - result_subtrahend.ok.value,
                 )
             )
-        case metrics_api.Fraction():
+        case metrics_v1.Fraction():
             if (
                 result_dividend := evaluate_quantity(
                     registered_metrics, quantity.dividend, translated_metrics
@@ -378,29 +378,29 @@ def _create_quantity_id(
     match quantity:
         case str():
             return f"Metric({quantity},{consolidation_function})"
-        case metrics_api.Constant():
+        case metrics_v1.Constant():
             return f"Constant({quantity.value})"
         case metrics_v2_unstable_api.LowerWarningOf():
             return f"LowerWarningOf({_create_quantity_id(quantity.metric_name, consolidation_function)})"
         case metrics_v2_unstable_api.LowerCriticalOf():
             return f"LowerCriticalOf({_create_quantity_id(quantity.metric_name, consolidation_function)})"
-        case metrics_api.WarningOf():
+        case metrics_v1.WarningOf():
             return f"WarningOf({_create_quantity_id(quantity.metric_name, consolidation_function)})"
-        case metrics_api.CriticalOf():
+        case metrics_v1.CriticalOf():
             return (
                 f"CriticalOf({_create_quantity_id(quantity.metric_name, consolidation_function)})"
             )
-        case metrics_api.MinimumOf():
+        case metrics_v1.MinimumOf():
             return f"MinimumOf({_create_quantity_id(quantity.metric_name, consolidation_function)})"
-        case metrics_api.MaximumOf():
+        case metrics_v1.MaximumOf():
             return f"MaximumOf({_create_quantity_id(quantity.metric_name, consolidation_function)})"
-        case metrics_api.Sum():
+        case metrics_v1.Sum():
             return f"Sum({','.join(_create_quantity_id(s, consolidation_function) for s in quantity.summands)})"
-        case metrics_api.Product():
+        case metrics_v1.Product():
             return f"Product({','.join(_create_quantity_id(f, consolidation_function) for f in quantity.factors)})"
-        case metrics_api.Difference():
+        case metrics_v1.Difference():
             return f"Difference({_create_quantity_id(quantity.minuend, consolidation_function)},{_create_quantity_id(quantity.subtrahend, consolidation_function)})"
-        case metrics_api.Fraction():
+        case metrics_v1.Fraction():
             return f"Fraction({_create_quantity_id(quantity.dividend, consolidation_function)},{_create_quantity_id(quantity.divisor, consolidation_function)})"
 
 
@@ -415,16 +415,16 @@ class _GraphTitleExpression(BaseModel, frozen=True):
 
 def _parse_graph_title_expression(
     expression: _GraphTitleExpression,
-) -> metrics_api.WarningOf | metrics_api.CriticalOf | metrics_api.MinimumOf | metrics_api.MaximumOf:
+) -> metrics_v1.WarningOf | metrics_v1.CriticalOf | metrics_v1.MinimumOf | metrics_v1.MaximumOf:
     match expression.scalar:
         case "warn":
-            return metrics_api.WarningOf(expression.metric)
+            return metrics_v1.WarningOf(expression.metric)
         case "crit":
-            return metrics_api.CriticalOf(expression.metric)
+            return metrics_v1.CriticalOf(expression.metric)
         case "min":
-            return metrics_api.MinimumOf(expression.metric, color=metrics_api.Color.BLACK)
+            return metrics_v1.MinimumOf(expression.metric, color=metrics_v1.Color.BLACK)
         case "max":
-            return metrics_api.MaximumOf(expression.metric, color=metrics_api.Color.BLACK)
+            return metrics_v1.MaximumOf(expression.metric, color=metrics_v1.Color.BLACK)
         case _:
             assert_never(expression.scalar)
 
@@ -536,20 +536,20 @@ def _is_scalar(quantity: Quantity) -> bool:
         case str():
             return False
         case (
-            metrics_api.Constant()
-            | metrics_api.WarningOf()
-            | metrics_api.CriticalOf()
-            | metrics_api.MinimumOf()
-            | metrics_api.MaximumOf()
+            metrics_v1.Constant()
+            | metrics_v1.WarningOf()
+            | metrics_v1.CriticalOf()
+            | metrics_v1.MinimumOf()
+            | metrics_v1.MaximumOf()
         ):
             return True
-        case metrics_api.Sum():
+        case metrics_v1.Sum():
             return all(_is_scalar(s) for s in quantity.summands)
-        case metrics_api.Product():
+        case metrics_v1.Product():
             return all(_is_scalar(f) for f in quantity.factors)
-        case metrics_api.Difference():
+        case metrics_v1.Difference():
             return _is_scalar(quantity.minuend) and _is_scalar(quantity.subtrahend)
-        case metrics_api.Fraction():
+        case metrics_v1.Fraction():
             return _is_scalar(quantity.dividend) and _is_scalar(quantity.divisor)
 
 
@@ -660,13 +660,13 @@ def _to_graph_metric_expression(
                 translated_metrics[quantity],
                 consolidation_function,
             )
-        case metrics_api.Constant():
+        case metrics_v1.Constant():
             return GraphMetricConstant(value=float(quantity.value))
         case (
-            metrics_api.WarningOf()
-            | metrics_api.CriticalOf()
-            | metrics_api.MinimumOf()
-            | metrics_api.MaximumOf()
+            metrics_v1.WarningOf()
+            | metrics_v1.CriticalOf()
+            | metrics_v1.MinimumOf()
+            | metrics_v1.MaximumOf()
         ):
             return (
                 GraphMetricConstant(value=result.ok.value)
@@ -675,7 +675,7 @@ def _to_graph_metric_expression(
                 ).is_ok()
                 else GraphMetricConstantNA()
             )
-        case metrics_api.Sum():
+        case metrics_v1.Sum():
             return GraphMetricOperation(
                 operator_name="+",
                 operands=[
@@ -691,7 +691,7 @@ def _to_graph_metric_expression(
                     for s in quantity.summands
                 ],
             )
-        case metrics_api.Product():
+        case metrics_v1.Product():
             return GraphMetricOperation(
                 operator_name="*",
                 operands=[
@@ -707,7 +707,7 @@ def _to_graph_metric_expression(
                     for f in quantity.factors
                 ],
             )
-        case metrics_api.Difference():
+        case metrics_v1.Difference():
             return GraphMetricOperation(
                 operator_name="-",
                 operands=[
@@ -731,7 +731,7 @@ def _to_graph_metric_expression(
                     ),
                 ],
             )
-        case metrics_api.Fraction():
+        case metrics_v1.Fraction():
             return GraphMetricOperation(
                 operator_name="/",
                 operands=[
@@ -761,25 +761,25 @@ def _extract_metric_names(quantity: Quantity) -> Iterator[str]:
     match quantity:
         case str():
             yield quantity
-        case metrics_api.Constant():
+        case metrics_v1.Constant():
             yield from ()
         case (
-            metrics_api.WarningOf()
-            | metrics_api.CriticalOf()
-            | metrics_api.MinimumOf()
-            | metrics_api.MaximumOf()
+            metrics_v1.WarningOf()
+            | metrics_v1.CriticalOf()
+            | metrics_v1.MinimumOf()
+            | metrics_v1.MaximumOf()
         ):
             yield from _extract_metric_names(quantity.metric_name)
-        case metrics_api.Sum():
+        case metrics_v1.Sum():
             for summand in quantity.summands:
                 yield from _extract_metric_names(summand)
-        case metrics_api.Product():
+        case metrics_v1.Product():
             for factor in quantity.factors:
                 yield from _extract_metric_names(factor)
-        case metrics_api.Difference():
+        case metrics_v1.Difference():
             yield from _extract_metric_names(quantity.minuend)
             yield from _extract_metric_names(quantity.subtrahend)
-        case metrics_api.Fraction():
+        case metrics_v1.Fraction():
             yield from _extract_metric_names(quantity.dividend)
             yield from _extract_metric_names(quantity.divisor)
 

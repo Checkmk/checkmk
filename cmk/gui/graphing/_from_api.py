@@ -9,11 +9,11 @@ from typing import assert_never
 
 from cmk.ccc.plugin_registry import Registry
 from cmk.graphing.v1 import graphs as graphs_api
-from cmk.graphing.v1 import metrics as metrics_api
 from cmk.graphing.v1 import perfometers as perfometers_api
 from cmk.gui.color import parse_color_from_api
 from cmk.gui.unit_formatter import AutoPrecision, StrictPrecision
 
+from ._api_types import metrics_v1
 from ._unit import (
     ConvertibleUnitSpecification,
     DecimalNotation,
@@ -33,7 +33,7 @@ class RegisteredMetric:
     color: str
 
 
-def parse_metric_from_api(metric_from_api: metrics_api.Metric) -> RegisteredMetric:
+def parse_metric_from_api(metric_from_api: metrics_v1.Metric) -> RegisteredMetric:
     return RegisteredMetric(
         name=metric_from_api.name,
         title_localizer=metric_from_api.title.localize,
@@ -42,7 +42,7 @@ def parse_metric_from_api(metric_from_api: metrics_api.Metric) -> RegisteredMetr
     )
 
 
-def parse_unit_from_api(unit_from_api: metrics_api.Unit) -> ConvertibleUnitSpecification:
+def parse_unit_from_api(unit_from_api: metrics_v1.Unit) -> ConvertibleUnitSpecification:
     notation: (
         DecimalNotation
         | SINotation
@@ -52,26 +52,26 @@ def parse_unit_from_api(unit_from_api: metrics_api.Unit) -> ConvertibleUnitSpeci
         | TimeNotation
     )
     match unit_from_api.notation:
-        case metrics_api.DecimalNotation(symbol):
+        case metrics_v1.DecimalNotation(symbol):
             notation = DecimalNotation(symbol=symbol)
-        case metrics_api.SINotation(symbol):
+        case metrics_v1.SINotation(symbol):
             notation = SINotation(symbol=symbol)
-        case metrics_api.IECNotation(symbol):
+        case metrics_v1.IECNotation(symbol):
             notation = IECNotation(symbol=symbol)
-        case metrics_api.StandardScientificNotation(symbol):
+        case metrics_v1.StandardScientificNotation(symbol):
             notation = StandardScientificNotation(symbol=symbol)
-        case metrics_api.EngineeringScientificNotation(symbol):
+        case metrics_v1.EngineeringScientificNotation(symbol):
             notation = EngineeringScientificNotation(symbol=symbol)
-        case metrics_api.TimeNotation():
+        case metrics_v1.TimeNotation():
             notation = TimeNotation(symbol=unit_from_api.notation.symbol)
         case _:
             assert_never(unit_from_api.notation)
 
     precision: AutoPrecision | StrictPrecision
     match unit_from_api.precision:
-        case metrics_api.AutoPrecision(digits):
+        case metrics_v1.AutoPrecision(digits):
             precision = AutoPrecision(digits=digits)
-        case metrics_api.StrictPrecision(digits):
+        case metrics_v1.StrictPrecision(digits):
             precision = StrictPrecision(digits=digits)
         case _:
             assert_never(unit_from_api.precision)

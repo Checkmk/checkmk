@@ -5,7 +5,7 @@
 
 from cmk.graphing import v1 as graphing_api
 from cmk.graphing.v1 import graphs as graphs_api
-from cmk.graphing.v1 import metrics as metrics_api
+from cmk.graphing.v1 import metrics as metrics_v1
 from cmk.gui.graphing._from_api import graphs_from_api, metrics_from_api
 from cmk.gui.graphing._graph_templates import get_graph_plugin_from_id
 from cmk.gui.graphing._legacy import check_metrics
@@ -58,7 +58,7 @@ def test_add_graphing_plugins() -> None:
         simple_lines=[
             "active_connections",
             "idle_connections",
-            metrics_api.WarningOf("active_connections"),
-            metrics_api.CriticalOf("active_connections"),
+            metrics_v1.WarningOf("active_connections"),
+            metrics_v1.CriticalOf("active_connections"),
         ],
     )

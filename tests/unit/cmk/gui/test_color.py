@@ -8,7 +8,7 @@ from collections.abc import Sequence
 import pytest
 
 from cmk.ccc.exceptions import MKGeneralException
-from cmk.graphing.v1 import metrics as metrics_api
+from cmk.graphing.v1 import metrics as metrics_v1
 from cmk.gui.color import (
     _COLOR_WHEEL_SIZE,
     _hex_color_to_rgb_color,
@@ -78,7 +78,7 @@ def test_indexed_color_sanity(idx: int, total: int) -> None:
     [
         pytest.param(
             [
-                metrics_api.Color.LIGHT_RED,
+                metrics_v1.Color.LIGHT_RED,
                 inventory_ui_api.BackgroundColor.LIGHT_RED,
                 inventory_ui_api.LabelColor.LIGHT_RED,
             ],
@@ -87,7 +87,7 @@ def test_indexed_color_sanity(idx: int, total: int) -> None:
         ),
         pytest.param(
             [
-                metrics_api.Color.RED,
+                metrics_v1.Color.RED,
                 inventory_ui_api.BackgroundColor.RED,
                 inventory_ui_api.LabelColor.RED,
             ],
@@ -96,7 +96,7 @@ def test_indexed_color_sanity(idx: int, total: int) -> None:
         ),
         pytest.param(
             [
-                metrics_api.Color.DARK_RED,
+                metrics_v1.Color.DARK_RED,
                 inventory_ui_api.BackgroundColor.DARK_RED,
                 inventory_ui_api.LabelColor.DARK_RED,
             ],
@@ -105,7 +105,7 @@ def test_indexed_color_sanity(idx: int, total: int) -> None:
         ),
         pytest.param(
             [
-                metrics_api.Color.LIGHT_ORANGE,
+                metrics_v1.Color.LIGHT_ORANGE,
                 inventory_ui_api.BackgroundColor.LIGHT_ORANGE,
                 inventory_ui_api.LabelColor.LIGHT_ORANGE,
             ],
@@ -114,7 +114,7 @@ def test_indexed_color_sanity(idx: int, total: int) -> None:
         ),
         pytest.param(
             [
-                metrics_api.Color.ORANGE,
+                metrics_v1.Color.ORANGE,
                 inventory_ui_api.BackgroundColor.ORANGE,
                 inventory_ui_api.LabelColor.ORANGE,
             ],
@@ -123,7 +123,7 @@ def test_indexed_color_sanity(idx: int, total: int) -> None:
         ),
         pytest.param(
             [
-                metrics_api.Color.DARK_ORANGE,
+                metrics_v1.Color.DARK_ORANGE,
                 inventory_ui_api.BackgroundColor.DARK_ORANGE,
                 inventory_ui_api.LabelColor.DARK_ORANGE,
             ],
@@ -132,7 +132,7 @@ def test_indexed_color_sanity(idx: int, total: int) -> None:
         ),
         pytest.param(
             [
-                metrics_api.Color.LIGHT_YELLOW,
+                metrics_v1.Color.LIGHT_YELLOW,
                 inventory_ui_api.BackgroundColor.LIGHT_YELLOW,
                 inventory_ui_api.LabelColor.LIGHT_YELLOW,
             ],
@@ -141,7 +141,7 @@ def test_indexed_color_sanity(idx: int, total: int) -> None:
         ),
         pytest.param(
             [
-                metrics_api.Color.YELLOW,
+                metrics_v1.Color.YELLOW,
                 inventory_ui_api.BackgroundColor.YELLOW,
                 inventory_ui_api.LabelColor.YELLOW,
             ],
@@ -150,7 +150,7 @@ def test_indexed_color_sanity(idx: int, total: int) -> None:
         ),
         pytest.param(
             [
-                metrics_api.Color.DARK_YELLOW,
+                metrics_v1.Color.DARK_YELLOW,
                 inventory_ui_api.BackgroundColor.DARK_YELLOW,
                 inventory_ui_api.LabelColor.DARK_YELLOW,
             ],
@@ -159,7 +159,7 @@ def test_indexed_color_sanity(idx: int, total: int) -> None:
         ),
         pytest.param(
             [
-                metrics_api.Color.LIGHT_GREEN,
+                metrics_v1.Color.LIGHT_GREEN,
                 inventory_ui_api.BackgroundColor.LIGHT_GREEN,
                 inventory_ui_api.LabelColor.LIGHT_GREEN,
             ],
@@ -168,7 +168,7 @@ def test_indexed_color_sanity(idx: int, total: int) -> None:
         ),
         pytest.param(
             [
-                metrics_api.Color.GREEN,
+                metrics_v1.Color.GREEN,
                 inventory_ui_api.BackgroundColor.GREEN,
                 inventory_ui_api.LabelColor.GREEN,
             ],
@@ -177,7 +177,7 @@ def test_indexed_color_sanity(idx: int, total: int) -> None:
         ),
         pytest.param(
             [
-                metrics_api.Color.DARK_GREEN,
+                metrics_v1.Color.DARK_GREEN,
                 inventory_ui_api.BackgroundColor.DARK_GREEN,
                 inventory_ui_api.LabelColor.DARK_GREEN,
             ],
@@ -186,7 +186,7 @@ def test_indexed_color_sanity(idx: int, total: int) -> None:
         ),
         pytest.param(
             [
-                metrics_api.Color.LIGHT_BLUE,
+                metrics_v1.Color.LIGHT_BLUE,
                 inventory_ui_api.BackgroundColor.LIGHT_BLUE,
                 inventory_ui_api.LabelColor.LIGHT_BLUE,
             ],
@@ -195,7 +195,7 @@ def test_indexed_color_sanity(idx: int, total: int) -> None:
         ),
         pytest.param(
             [
-                metrics_api.Color.BLUE,
+                metrics_v1.Color.BLUE,
                 inventory_ui_api.BackgroundColor.BLUE,
                 inventory_ui_api.LabelColor.BLUE,
             ],
@@ -204,7 +204,7 @@ def test_indexed_color_sanity(idx: int, total: int) -> None:
         ),
         pytest.param(
             [
-                metrics_api.Color.DARK_BLUE,
+                metrics_v1.Color.DARK_BLUE,
                 inventory_ui_api.BackgroundColor.DARK_BLUE,
                 inventory_ui_api.LabelColor.DARK_BLUE,
             ],
@@ -213,7 +213,7 @@ def test_indexed_color_sanity(idx: int, total: int) -> None:
         ),
         pytest.param(
             [
-                metrics_api.Color.LIGHT_CYAN,
+                metrics_v1.Color.LIGHT_CYAN,
                 inventory_ui_api.BackgroundColor.LIGHT_CYAN,
                 inventory_ui_api.LabelColor.LIGHT_CYAN,
             ],
@@ -222,7 +222,7 @@ def test_indexed_color_sanity(idx: int, total: int) -> None:
         ),
         pytest.param(
             [
-                metrics_api.Color.CYAN,
+                metrics_v1.Color.CYAN,
                 inventory_ui_api.BackgroundColor.CYAN,
                 inventory_ui_api.LabelColor.CYAN,
             ],
@@ -231,7 +231,7 @@ def test_indexed_color_sanity(idx: int, total: int) -> None:
         ),
         pytest.param(
             [
-                metrics_api.Color.DARK_CYAN,
+                metrics_v1.Color.DARK_CYAN,
                 inventory_ui_api.BackgroundColor.DARK_CYAN,
                 inventory_ui_api.LabelColor.DARK_CYAN,
             ],
@@ -240,7 +240,7 @@ def test_indexed_color_sanity(idx: int, total: int) -> None:
         ),
         pytest.param(
             [
-                metrics_api.Color.LIGHT_PURPLE,
+                metrics_v1.Color.LIGHT_PURPLE,
                 inventory_ui_api.BackgroundColor.LIGHT_PURPLE,
                 inventory_ui_api.LabelColor.LIGHT_PURPLE,
             ],
@@ -249,7 +249,7 @@ def test_indexed_color_sanity(idx: int, total: int) -> None:
         ),
         pytest.param(
             [
-                metrics_api.Color.PURPLE,
+                metrics_v1.Color.PURPLE,
                 inventory_ui_api.BackgroundColor.PURPLE,
                 inventory_ui_api.LabelColor.PURPLE,
             ],
@@ -258,7 +258,7 @@ def test_indexed_color_sanity(idx: int, total: int) -> None:
         ),
         pytest.param(
             [
-                metrics_api.Color.DARK_PURPLE,
+                metrics_v1.Color.DARK_PURPLE,
                 inventory_ui_api.BackgroundColor.DARK_PURPLE,
                 inventory_ui_api.LabelColor.DARK_PURPLE,
             ],
@@ -267,7 +267,7 @@ def test_indexed_color_sanity(idx: int, total: int) -> None:
         ),
         pytest.param(
             [
-                metrics_api.Color.LIGHT_PINK,
+                metrics_v1.Color.LIGHT_PINK,
                 inventory_ui_api.BackgroundColor.LIGHT_PINK,
                 inventory_ui_api.LabelColor.LIGHT_PINK,
             ],
@@ -276,7 +276,7 @@ def test_indexed_color_sanity(idx: int, total: int) -> None:
         ),
         pytest.param(
             [
-                metrics_api.Color.PINK,
+                metrics_v1.Color.PINK,
                 inventory_ui_api.BackgroundColor.PINK,
                 inventory_ui_api.LabelColor.PINK,
             ],
@@ -285,7 +285,7 @@ def test_indexed_color_sanity(idx: int, total: int) -> None:
         ),
         pytest.param(
             [
-                metrics_api.Color.DARK_PINK,
+                metrics_v1.Color.DARK_PINK,
                 inventory_ui_api.BackgroundColor.DARK_PINK,
                 inventory_ui_api.LabelColor.DARK_PINK,
             ],
@@ -294,7 +294,7 @@ def test_indexed_color_sanity(idx: int, total: int) -> None:
         ),
         pytest.param(
             [
-                metrics_api.Color.LIGHT_BROWN,
+                metrics_v1.Color.LIGHT_BROWN,
                 inventory_ui_api.BackgroundColor.LIGHT_BROWN,
                 inventory_ui_api.LabelColor.LIGHT_BROWN,
             ],
@@ -303,7 +303,7 @@ def test_indexed_color_sanity(idx: int, total: int) -> None:
         ),
         pytest.param(
             [
-                metrics_api.Color.BROWN,
+                metrics_v1.Color.BROWN,
                 inventory_ui_api.BackgroundColor.BROWN,
                 inventory_ui_api.LabelColor.BROWN,
             ],
@@ -312,7 +312,7 @@ def test_indexed_color_sanity(idx: int, total: int) -> None:
         ),
         pytest.param(
             [
-                metrics_api.Color.DARK_BROWN,
+                metrics_v1.Color.DARK_BROWN,
                 inventory_ui_api.BackgroundColor.DARK_BROWN,
                 inventory_ui_api.LabelColor.DARK_BROWN,
             ],
@@ -321,7 +321,7 @@ def test_indexed_color_sanity(idx: int, total: int) -> None:
         ),
         pytest.param(
             [
-                metrics_api.Color.LIGHT_GRAY,
+                metrics_v1.Color.LIGHT_GRAY,
                 inventory_ui_api.BackgroundColor.LIGHT_GRAY,
                 inventory_ui_api.LabelColor.LIGHT_GRAY,
             ],
@@ -330,7 +330,7 @@ def test_indexed_color_sanity(idx: int, total: int) -> None:
         ),
         pytest.param(
             [
-                metrics_api.Color.GRAY,
+                metrics_v1.Color.GRAY,
                 inventory_ui_api.BackgroundColor.GRAY,
                 inventory_ui_api.LabelColor.GRAY,
             ],
@@ -339,7 +339,7 @@ def test_indexed_color_sanity(idx: int, total: int) -> None:
         ),
         pytest.param(
             [
-                metrics_api.Color.DARK_GRAY,
+                metrics_v1.Color.DARK_GRAY,
                 inventory_ui_api.BackgroundColor.DARK_GRAY,
                 inventory_ui_api.LabelColor.DARK_GRAY,
             ],
@@ -348,7 +348,7 @@ def test_indexed_color_sanity(idx: int, total: int) -> None:
         ),
         pytest.param(
             [
-                metrics_api.Color.BLACK,
+                metrics_v1.Color.BLACK,
                 inventory_ui_api.BackgroundColor.BLACK,
                 inventory_ui_api.LabelColor.BLACK,
             ],
@@ -357,7 +357,7 @@ def test_indexed_color_sanity(idx: int, total: int) -> None:
         ),
         pytest.param(
             [
-                metrics_api.Color.WHITE,
+                metrics_v1.Color.WHITE,
                 inventory_ui_api.BackgroundColor.WHITE,
                 inventory_ui_api.LabelColor.WHITE,
             ],
@@ -368,7 +368,7 @@ def test_indexed_color_sanity(idx: int, total: int) -> None:
 )
 def test_color(
     colors_from_api: Sequence[
-        metrics_api.Color | inventory_ui_api.BackgroundColor | inventory_ui_api.LabelColor
+        metrics_v1.Color | inventory_ui_api.BackgroundColor | inventory_ui_api.LabelColor
     ],
     expected_hex_code_value: str,
 ) -> None:

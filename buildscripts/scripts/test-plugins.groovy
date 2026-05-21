@@ -6,119 +6,87 @@ void main() {
     check_job_parameters([
         ["EDITION", true],  // the testees package long edition string (e.g. 'pro')
         ["DISTRO", true],  // the testees package distro string (e.g. 'ubuntu-24.04')
+        "USE_CASE",
+        "VERSION",
+        "FAKE_ARTIFACTS",
         "TEST_FILTER",  // a filter string to select which tests to run
         "CIPARAM_OVERRIDE_DOCKER_TAG_BUILD",  // the docker tag to use for building and testing, forwarded to packages build job
-        // "DISABLE_CACHE",    // forwarded to package build job (todo)
-        "FAKE_ARTIFACTS",
-    ]);
-
-    check_environment_variables([
-        "DOCKER_REGISTRY",
     ]);
 
     def single_tests = load("${checkout_dir}/buildscripts/scripts/utils/single_tests.groovy");
-    def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
+    def helper = load("${checkout_dir}/buildscripts/scripts/utils/test_helper.groovy");
 
-    def safe_branch_name = versioning.safe_branch_name();
-    def branch_version = versioning.get_branch_version(checkout_dir);
-    def cmk_version = versioning.get_cmk_version(safe_branch_name, branch_version, "daily");
     def distro = params.DISTRO;
     def edition = params.EDITION;
     def fake_artifacts = params.FAKE_ARTIFACTS;
+    def use_case = (params.USE_CASE == "fips") ? params.USE_CASE : "daily_tests";
+    helper.assert_fips_testing(use_case, NODE_LABELS);
 
-    def make_target = "test-plugins-docker";
     def download_dir = "package_download";
-    def result_dir = "test-results";
+    def test_results_dir = "test-results";
+    def make_target = "test-plugins";
 
     def setup_values = single_tests.common_prepare(
-        version: "daily",
+        version: params.VERSION,
         make_target: make_target,
         docker_tag: params.CIPARAM_OVERRIDE_DOCKER_TAG_BUILD
     );
 
-    currentBuild.description += (
-        """
-        |Run plugin integration tests for packages<br>
-        |safe_branch_name: ${safe_branch_name}<br>
-        |branch_version: ${branch_version}<br>
-        |cmk_version: ${cmk_version}<br>
-        |docker_tag: ${setup_values.docker_tag}<br>
-        |edition: ${edition}<br>
-        |distro: ${distro}<br>
-        |make_target: ${make_target}<br>
-        """.stripMargin());
-
-    print(
-        """
-        |===== CONFIGURATION ===============================
-        |safe_branch_name:...... │${safe_branch_name}│
-        |branch_version:........ │${branch_version}│
-        |cmk_version:........... │${cmk_version}
-        |docker_tag:............ │${setup_values.docker_tag}│
-        |edition:............... │${edition}│
-        |distro:................ │${distro}│
-        |make_target:........... │${make_target}│
-        |===================================================
-        """.stripMargin());
-
-    // todo: add upstream project to description
-    // todo: add error to description
-    // todo: build progress mins?
-
     dir("${checkout_dir}") {
-        stage("Prepare workspace") {
-            sh("""
-                rm -rf ${result_dir} ${download_dir}
-                mkdir -p ${result_dir} ${download_dir}
-            """);
-        }
-
         stage("Fetch Checkmk package") {
             single_tests.fetch_package(
                 edition: edition,
                 distro: distro,
-                docker_tag: setup_values.docker_tag,
                 download_dir: download_dir,
                 bisect_comment: params.CIPARAM_BISECT_COMMENT,
                 fake_artifacts: fake_artifacts,
+                docker_tag: setup_values.docker_tag,
                 safe_branch_name: setup_values.safe_branch_name,
             );
         }
 
-        inside_container(
-            args: [
-                "--env HOME=/home/jenkins",
+        helper.execute_test([
+            // k8s specific configs
+            name: "${make_target}",
+            container_name: "this-distro-container",
+            callback: single_tests.&run_make_target_k8s,
+
+            // test environment specific configs
+            disable_hot_cache: true,
+            prepare_fake_git_overlay: true,
+            creds_usernames: [
+                [credentialsId: "cmk-credentials", location: "/etc/.cmk-credentials"],
             ],
-            set_docker_group_id: true,
-            ulimit_nofile: 1024,
-            mount_credentials: true,
-            privileged: true,
-        ) {
-            try {
-                stage("Run `make ${make_target}`") {
-                    dir("${checkout_dir}/tests") {
-                        single_tests.run_make_target(
-                            result_path: "${checkout_dir}/${result_dir}/${distro}",
-                            edition: edition,
-                            docker_tag: setup_values.docker_tag,
-                            version: setup_values.cmk_version,
-                            distro: distro,
-                            branch_name: setup_values.safe_branch_name,
-                            make_target: make_target,
-                            test_filter: params.TEST_FILTER,
-                            // can hit 20min during the heavy chain runs (without wait time)
-                            // using FoS of 3
-                            timeout: 60,
-                        );
-                    }
-                }
-            }
-            finally {
-                stage("Archive / process test reports") {
-                    single_tests.archive_and_process_reports(test_results: "${result_dir}/**");
-                }
-            }
-        }
+
+            // test specific configs
+            result_path: "${checkout_dir}/test-results/${distro}",
+            archive_pattern: "${test_results_dir}/**",
+            edition: edition,
+            docker_tag: setup_values.docker_tag,
+            version: setup_values.cmk_version,
+            distro: distro,
+            branch_name: setup_values.safe_branch_name,
+            make_target: "-C tests ${make_target}", // k8s does not allow dir()
+            test_filter: params.TEST_FILTER,
+            faked_artifacts: fake_artifacts,
+            // can hit 20min during the heavy chain runs (without wait time)
+            // using FoS of 3
+            timeout: 60,
+        ]);
+    }
+
+    stage("Process test reports") {
+        // In k8s the generated JUnit files need to be created on workspace level to avoid
+        // Cannot create directory '<JOB_NAME>/checkout/generatedJUnitFiles/<RANDOM_HASH>'
+        // See also Change-Id: Id7495a6bf311d77adec239d44be243aebb07b2cf
+        xunit([Custom(
+            customXSL: "${checkout_dir}/buildscripts/scripts/schema/pytest-xunit.xsl",
+            deleteOutputFiles: true,
+            failIfNotNew: false,
+            pattern: "checkout/test-results/**/junit.xml",
+            skipNoTestFiles: false,
+            stopProcessingIfError: true
+        )]);
     }
 }
 

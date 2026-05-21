@@ -1,7 +1,0 @@
-type = "Component"
-display_name = "Plugins: Checkmk"
-has_support_component = true
-members_required = 0
-description = """
-Plugins coupled to Checkmk internals (Checkmk agent, BI, livestatus, mkbackup, mkeventd, MRPE, local checks, host labels, ...). This set intentionally violates the plugin API contract in places and is kept in sync with backend changes — review carefully when modifying.
-"""

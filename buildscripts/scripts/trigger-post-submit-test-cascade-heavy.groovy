@@ -21,10 +21,10 @@ void main() {
         "test-gui-e2e-pro",
         "test-gui-e2e-ultimate",
         "test-integration-agent-plugin",
-        "test-integration-single-f12less",
-        "test-integration-single-f12less-community",
-        "test-integration-single-f12less-redfish",
-        "test-integration-single-f12less-ultimatemt",
+        "test-integration-redfish",
+        "test-integration-community",
+        "test-integration-pro",
+        "test-integration-ultimatemt",
         "test-plugins-k8s",
         "test-plugins-piggyback-k8s",
         "test-update-single-f12less-k8s",
@@ -33,14 +33,6 @@ void main() {
         "test-update-single-f12less-pro-ultimatemt-k8s",
     ];
     job_names += env.USE_K8S_GUI_CRAWL_SYSTEMTESTS == "1" ? ["test-gui-crawl-f12less-k8s"] : [];
-
-    // do keep running the non-k8s jobs due to I54b5b304b9ad2bdb5ef62d482406a3be6f7b011c
-    job_names += env.USE_K8S_INTEGRATION_SYSTEMTESTS == "1" ? [
-        "test-integration-single-f12less-k8s",
-        "test-integration-single-f12less-community-k8s",
-        "test-integration-single-f12less-redfish-k8s",
-        "test-integration-single-f12less-ultimatemt-k8s",
-    ] : [];
 
     def trigger_xss_crawl = false;
     // The time 2000 has been chosen to not collide with the CI maintenance window

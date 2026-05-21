@@ -1,6 +1,6 @@
 #!groovy
 
-/// file: test-integration-single-f12less-redfish-k8s.groovy
+/// file: test-integration-single.groovy
 
 void main() {
     check_job_parameters([
@@ -18,7 +18,7 @@ void main() {
     def edition = params.EDITION;
     def fake_artifacts = params.FAKE_ARTIFACTS;
 
-    def make_target = "test-integration-redfish";
+    def make_target = "test-integration-k8s";
     def download_dir = "package_download";
     def test_results_dir = "test-results";
 

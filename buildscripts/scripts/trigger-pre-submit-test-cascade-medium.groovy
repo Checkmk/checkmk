@@ -17,8 +17,7 @@ void main() {
 
     def job_names = [
         "test-composition-${edition_medium_chain}",
-        // TODO: Switch to -k8s version
-        "test-integration-single-f12less",
+        "test-integration-${edition_medium_chain}",
     ];
 
     print(

@@ -21,6 +21,9 @@ from cmk.agent_based.v2 import (
 )
 from cmk.plugins.lib.fan import check_fan
 
+MaybeInt = int | None
+
+
 DELL_IDRAC_FANS_STATE_MAP = {
     "1": (State.UNKNOWN, "OTHER"),
     "2": (State.UNKNOWN, "UNKNOWN"),
@@ -42,6 +45,13 @@ def discover_dell_idrac_fans(section: StringTable) -> DiscoveryResult:
             yield Service(item=index)
 
 
+def _to_int_or_none(value: str) -> MaybeInt:
+    try:
+        return int(value)
+    except ValueError:
+        return None
+
+
 def check_dell_idrac_fans(
     item: str, params: Mapping[str, Any], section: StringTable
 ) -> CheckResult:
@@ -53,12 +63,17 @@ def check_dell_idrac_fans(
                 return
 
             rpm = int(value)
-            if not params:
-                fan_params: Mapping[str, Any] = {"lower": (int(warn_lower), int(crit_lower))}
-                if not warn_upper == "" and crit_upper == "":
-                    fan_params = {**fan_params, "upper": (int(warn_upper), int(crit_upper))}
-            else:
-                fan_params = params
+            if params:
+                yield from check_fan(rpm, params)
+                return
+
+            fan_params: dict[str, tuple[MaybeInt, MaybeInt] | None] = {}
+            levels_lower = (_to_int_or_none(warn_lower), _to_int_or_none(crit_lower))
+            levels_upper = (_to_int_or_none(warn_upper), _to_int_or_none(crit_upper))
+            if levels_lower != (None, None):
+                fan_params["lower"] = levels_lower
+            if levels_upper != (None, None):
+                fan_params["upper"] = levels_upper
 
             yield from check_fan(rpm, fan_params)
 

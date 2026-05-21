@@ -26,8 +26,13 @@ from cmk.plugins.dell.agent_based.dell_idrac_fans import (
                 ["1", "1", "", "System Board Fan1A", "", "", "", ""],
                 ["2", "2", "", "System Board Fan1B", "", "", "", ""],
                 ["3", "10", "", "System Board Fan2A", "", "", "", ""],
+                # OK fan with only a subset of thresholds populated (upper warn + lower crit).
+                # Regression for a crash caused by int("") on the empty threshold columns.
+                ["4", "3", "7912", "FAN1A", "21500", "", "8000", ""],
+                # OK fan with no thresholds at all — exercises the empty-params branch.
+                ["5", "3", "7000", "FAN2A", "", "", "", ""],
             ],
-            [Service(item="3")],
+            [Service(item="3"), Service(item="4"), Service(item="5")],
         ),
     ],
 )
@@ -54,6 +59,33 @@ def test_discover_dell_idrac_fans(
                 ["3", "10", "", "System Board Fan2A", "", "", "", ""],
             ],
             [Result(state=State.CRIT, summary="Status: FAILED, Name: System Board Fan2A")],
+        ),
+        (
+            "4",
+            {},
+            [
+                # OK fan with only a subset of thresholds populated (upper warn + lower crit).
+                # Regression for a crash caused by int("") on the empty threshold columns.
+                ["4", "3", "7912", "FAN1A", "21500", "", "8000", ""],
+            ],
+            [
+                Result(state=State.OK, summary="Status: OK, Name: FAN1A"),
+                Result(
+                    state=State.WARN, summary="Speed: 7912 RPM (warn/crit below 8000 RPM/never)"
+                ),
+            ],
+        ),
+        (
+            "5",
+            {},
+            [
+                # OK fan with no thresholds at all — exercises the empty-params branch.
+                ["5", "3", "7000", "FAN2A", "", "", "", ""],
+            ],
+            [
+                Result(state=State.OK, summary="Status: OK, Name: FAN2A"),
+                Result(state=State.OK, summary="Speed: 7000 RPM"),
+            ],
         ),
     ],
 )

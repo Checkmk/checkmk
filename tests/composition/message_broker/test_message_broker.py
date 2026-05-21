@@ -169,12 +169,14 @@ class TestMessageBroker:
                 site_connection["configuration_connection"]["message_broker_port"]
             )
             assert site_connection_port == remote_site.message_broker_port
-            next_port = _next_free_port(remote_site, "RABBITMQ_PORT", str(site_connection_port + 1))
 
-            remote_site.set_config("RABBITMQ_PORT", str(next_port), with_restart=True)
+            remote_site.set_config(
+                "RABBITMQ_PORT", str(site_connection_port + 1), with_restart=True
+            )
             await_broker_ready(central_site, remote_site)
-
-            site_connection["configuration_connection"]["message_broker_port"] = str(next_port)
+            site_connection["configuration_connection"]["message_broker_port"] = (
+                remote_site.get_config("RABBITMQ_PORT")
+            )
             central_site.openapi.sites.update(remote_site.id, site_connection)
 
             # ensure changes are not in effect before activated

@@ -9,7 +9,4 @@ case "$1" in
     choices)
         echo "@{NETWORK_PORT}"
         ;;
-    depends)
-        [ "$CONFIG_TRACE_RECEIVE" = on ]
-        ;;
 esac

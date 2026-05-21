@@ -13,7 +13,4 @@ case "$1" in
     choices)
         echo "^[a-zA-Z0-9_\.-]*$"
         ;;
-    depends)
-        [ "$CONFIG_TRACE_SEND" = on ]
-        ;;
 esac

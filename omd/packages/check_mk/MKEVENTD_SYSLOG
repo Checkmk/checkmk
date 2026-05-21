@@ -19,7 +19,4 @@ case "$1" in
         echo "on: enable"
         echo "off: disable"
         ;;
-    depends)
-        [ "$CONFIG_MKEVENTD" = on ]
-        ;;
 esac

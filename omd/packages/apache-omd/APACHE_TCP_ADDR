@@ -19,7 +19,4 @@ case "$1" in
     choices)
         echo "@{APACHE_TCP_ADDR}"
         ;;
-    depends)
-        [ "$CONFIG_APACHE_MODE" = own ]
-        ;;
 esac

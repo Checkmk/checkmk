@@ -14,7 +14,4 @@ case "$1" in
     choices)
         echo "[0-9]+"
         ;;
-    depends)
-        [ "$CONFIG_CORE" != none -a "$CONFIG_LIVESTATUS_TCP" = on ]
-        ;;
 esac

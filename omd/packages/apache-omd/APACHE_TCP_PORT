@@ -13,7 +13,4 @@ case "$1" in
     choices)
         echo "@{APACHE_NETWORK_PORT}"
         ;;
-    depends)
-        [ "$CONFIG_APACHE_MODE" = own ]
-        ;;
 esac

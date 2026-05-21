@@ -1536,12 +1536,13 @@ omd config change        - change multiple at once. Provide newline separated
 
 
 def config_show(config: Config, config_hooks: ConfigHooks, args: Arguments) -> None:
+    active_map = load_hook_dependencies(config, config_hooks)
     hook: ConfigHook | None
     if len(args) == 0:
         hook_names = sorted(config_hooks.keys())
         for hook_name in hook_names:
             hook = config_hooks[hook_name]
-            if hook.unstructured["active"] and not hook.unstructured["deprecated"]:
+            if active_map[hook_name] and not hook.deprecated:
                 sys.stdout.write(f"{hook_name}: {config[hook_name]}\n")
     else:
         output = []
@@ -1557,8 +1558,12 @@ def config_show(config: Config, config_hooks: ConfigHooks, args: Arguments) -> N
 
 
 def config_configure(
-    site: SiteContext, config: Config, config_hooks: ConfigHooks, verbose: bool
+    site: SiteContext,
+    config: Config,
+    config_hooks: ConfigHooks,
+    verbose: bool,
 ) -> Iterator[str]:
+    active_map = load_hook_dependencies(config, config_hooks)
     hook_names = sorted(config_hooks.keys())
     current_hook_name: str | None = ""
     menu_open = False
@@ -1572,7 +1577,7 @@ def config_configure(
         menu: dict[str, list[tuple[str, str]]] = {}
         for hook_name in hook_names:
             hook = config_hooks[hook_name]
-            if hook.unstructured["active"] and not hook.unstructured["deprecated"]:
+            if active_map[hook_name] and not hook.deprecated:
                 mp = hook.menu
                 entries = menu.get(mp, [])
                 entries.append((hook_name, config[hook_name]))
@@ -1605,6 +1610,7 @@ def config_configure(
                     yield from config_configure_hook(
                         site, config, config_hooks, current_hook_name, verbose
                     )
+                    active_map = load_hook_dependencies(config, config_hooks)
                 except MKTerminate:
                     raise
                 except Exception as e:
@@ -1646,7 +1652,6 @@ def config_configure_hook(
     if change:
         config_set_value(site, site_home, config, hook.name, new_value, verbose)
         save_site_conf(site_home, config)
-        config_hooks = load_hook_dependencies(site, config_hooks, verbose)
         yield hook_name
 
 

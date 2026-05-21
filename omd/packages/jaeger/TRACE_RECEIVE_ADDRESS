@@ -15,7 +15,4 @@ case "$1" in
     choices)
         echo "@{IP_LISTEN_ADDRESS}"
         ;;
-    depends)
-        [ "$CONFIG_TRACE_RECEIVE" = on ]
-        ;;
 esac

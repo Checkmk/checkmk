@@ -15,7 +15,4 @@ case "$1" in
     choices)
         echo "^(local_site|https?://[^\:]+:[0-9]{4,5})$"
         ;;
-    depends)
-        [ "$CONFIG_TRACE_SEND" = on ]
-        ;;
 esac

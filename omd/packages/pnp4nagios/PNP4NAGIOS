@@ -54,8 +54,5 @@ case "$1" in
 pnp4nagios_enabled = $pnp4nagios_enabled
 EOF
         ;;
-    depends)
-        [ "$CONFIG_CORE" != cmc -a "$CONFIG_CORE" != none ]
-        ;;
 
 esac

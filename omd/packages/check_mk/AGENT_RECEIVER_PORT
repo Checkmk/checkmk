@@ -11,7 +11,4 @@ case "$1" in
     choices)
         echo "[0-9]{1,5}"
         ;;
-    depends)
-        [ "$CONFIG_AGENT_RECEIVER" = on ]
-        ;;
 esac

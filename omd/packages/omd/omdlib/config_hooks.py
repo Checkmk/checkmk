@@ -21,7 +21,7 @@ import re
 import subprocess
 import sys
 import traceback
-from collections.abc import Iterable, Mapping, Sequence
+from collections.abc import Callable, Iterable, Mapping, Sequence
 from pathlib import Path
 from re import Pattern
 from typing import TYPE_CHECKING
@@ -76,7 +76,7 @@ class ConfigHook:
     description: str
     alias: str
     menu: str
-    unstructured: dict[str, bool]
+    deprecated: bool
 
 
 ConfigHooks = dict[str, ConfigHook]
@@ -117,7 +117,6 @@ def load_config_hooks(site: "SiteContext", verbose: bool) -> ConfigHooks:
             raise
         except Exception:
             pass
-    config_hooks = load_hook_dependencies(site, config_hooks, verbose)
     return config_hooks
 
 
@@ -126,8 +125,6 @@ def _config_load_hook(
     hook_name: str,
     verbose: bool,
 ) -> ConfigHook:
-    unstructured = {"deprecated": False}
-
     if not site.hook_dir:
         # IMHO this should be unreachable...
         raise MKTerminate("Site has no version and therefore no hooks")
@@ -135,6 +132,7 @@ def _config_load_hook(
     alias = None
     description = ""
     menu = "Other"
+    deprecated = False
     description_active = False
     with Path(site.hook_dir, hook_name).open() as hook_file:
         for line in hook_file:
@@ -143,7 +141,7 @@ def _config_load_hook(
             elif line.startswith("# Menu:"):
                 menu = line[7:].strip()
             elif line.startswith("# Deprecated: yes"):
-                unstructured["deprecated"] = True
+                deprecated = True
             elif line.startswith("# Description:"):
                 description_active = True
             elif line.startswith("#  ") and description_active:
@@ -159,7 +157,7 @@ def _config_load_hook(
         alias=alias,
         menu=menu,
         description=description,
-        unstructured=unstructured,
+        deprecated=deprecated,
     )
 
 
@@ -196,17 +194,40 @@ def _parse_hook_choices(hook_info: str) -> ConfigHookChoices:
             return choices
 
 
-def load_hook_dependencies(
-    site: "SiteContext", config_hooks: ConfigHooks, verbose: bool
-) -> ConfigHooks:
-    for hook_name in _sort_hooks(list(config_hooks.keys())):
-        hook = config_hooks[hook_name]
-        exitcode, _content = _call_hook(site, hook_name, ["depends"], verbose)
-        if exitcode:
-            hook.unstructured["active"] = False
-        else:
-            hook.unstructured["active"] = True
-    return config_hooks
+_HOOK_DEPENDS: dict[str, Callable[[Config], bool]] = {
+    "AGENT_RECEIVER_PORT": lambda c: c.get("AGENT_RECEIVER") == "on",
+    "APACHE_TCP_ADDR": lambda c: c.get("APACHE_MODE") == "own",
+    "APACHE_TCP_PORT": lambda c: c.get("APACHE_MODE") == "own",
+    "LIVESTATUS_TCP": lambda c: c.get("CORE") != "none",
+    "LIVESTATUS_TCP_INSTANCES": lambda c: (
+        c.get("CORE") != "none" and c.get("LIVESTATUS_TCP") == "on"
+    ),
+    "LIVESTATUS_TCP_ONLY_FROM": lambda c: (
+        c.get("CORE") != "none" and c.get("LIVESTATUS_TCP") == "on"
+    ),
+    "LIVESTATUS_TCP_PER_SOURCE": lambda c: (
+        c.get("CORE") != "none" and c.get("LIVESTATUS_TCP") == "on"
+    ),
+    "LIVESTATUS_TCP_PORT": lambda c: c.get("CORE") != "none" and c.get("LIVESTATUS_TCP") == "on",
+    "LIVESTATUS_TCP_TLS": lambda c: c.get("CORE") != "none" and c.get("LIVESTATUS_TCP") == "on",
+    "MKEVENTD_SNMPTRAP": lambda c: c.get("MKEVENTD") == "on",
+    "MKEVENTD_SYSLOG": lambda c: c.get("MKEVENTD") == "on",
+    "MKEVENTD_SYSLOG_TCP": lambda c: c.get("MKEVENTD") == "on",
+    "PNP4NAGIOS": lambda c: c.get("CORE") not in ("cmc", "none"),
+    "TRACE_JAEGER_ADMIN_PORT": lambda c: c.get("TRACE_RECEIVE") == "on",
+    "TRACE_JAEGER_UI_PORT": lambda c: c.get("TRACE_RECEIVE") == "on",
+    "TRACE_RECEIVE_ADDRESS": lambda c: c.get("TRACE_RECEIVE") == "on",
+    "TRACE_RECEIVE_PORT": lambda c: c.get("TRACE_RECEIVE") == "on",
+    "TRACE_SEND_TARGET": lambda c: c.get("TRACE_SEND") == "on",
+    "TRACE_SERVICE_NAMESPACE": lambda c: c.get("TRACE_SEND") == "on",
+}
+
+
+def load_hook_dependencies(config: Config, config_hooks: ConfigHooks) -> dict[str, bool]:
+    return {
+        hook_name: _HOOK_DEPENDS[hook_name](config) if hook_name in _HOOK_DEPENDS else True
+        for hook_name in config_hooks
+    }
 
 
 def _default_port(site_name: str, port_hook: PortHook, site_configs: _SiteConfigs) -> str:

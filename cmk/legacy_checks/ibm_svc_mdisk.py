@@ -3,15 +3,21 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-def"
 
+from collections.abc import Mapping
+from typing import Any
 
-# mypy: disable-error-code="var-annotated"
-
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.legacy_includes.ibm_svc import parse_ibm_svc_with_header
-
-check_info = {}
+from cmk.agent_based.v2 import (
+    AgentSection,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    Result,
+    Service,
+    State,
+    StringTable,
+)
+from cmk.plugins.ibm.lib_svc import parse_ibm_svc_with_header
 
 # Example output from agent:
 # <<<ibm_svc_mdisk:sep(58)>>>
@@ -27,7 +33,10 @@ check_info = {}
 # 9:stp5_300G_01-04:online:managed:16:stp5_300G_01:1.1TB:0000000000000004:BLUBB5:600a0b80006e1dbc0000f7d051341cc000000000000000000000000000000000:generic_hdd
 
 
-def parse_ibm_svc_mdisk(string_table):
+Section = Mapping[str, Mapping[str, str]]
+
+
+def parse_ibm_svc_mdisk(string_table: StringTable) -> Section:
     dflt_header = [
         "id",
         "name",
@@ -46,7 +55,7 @@ def parse_ibm_svc_mdisk(string_table):
         "distributed",
         "dedupe",
     ]
-    parsed = {}
+    parsed: dict[str, Mapping[str, str]] = {}
     for rows in parse_ibm_svc_with_header(string_table, dflt_header).values():
         try:
             data = rows[0]
@@ -56,24 +65,34 @@ def parse_ibm_svc_mdisk(string_table):
     return parsed
 
 
-def discover_ibm_svc_mdisk(parsed):
-    for mdisk_name in parsed:
-        yield mdisk_name, {}
+def discover_ibm_svc_mdisk(section: Section) -> DiscoveryResult:
+    yield from (Service(item=mdisk_name) for mdisk_name in section)
 
 
-def check_ibm_svc_mdisk(item, params, parsed):
-    if not (data := parsed.get(item)):
+def check_ibm_svc_mdisk(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
+    if not (data := section.get(item)):
         return
     mdisk_status = data["status"]
-    yield params.get("%s_state" % mdisk_status, 1), "Status: %s" % mdisk_status
+    yield Result(
+        state=State(params.get(f"{mdisk_status}_state", 1)),
+        summary=f"Status: {mdisk_status}",
+    )
 
     mdisk_mode = data["mode"]
-    yield params.get("%s_mode" % mdisk_mode, 1), "Mode: %s" % mdisk_mode
+    yield Result(
+        state=State(params.get(f"{mdisk_mode}_mode", 1)),
+        summary=f"Mode: {mdisk_mode}",
+    )
 
 
-check_info["ibm_svc_mdisk"] = LegacyCheckDefinition(
+agent_section_ibm_svc_mdisk = AgentSection(
     name="ibm_svc_mdisk",
     parse_function=parse_ibm_svc_mdisk,
+)
+
+
+check_plugin_ibm_svc_mdisk = CheckPlugin(
+    name="ibm_svc_mdisk",
     service_name="MDisk %s",
     discovery_function=discover_ibm_svc_mdisk,
     check_function=check_ibm_svc_mdisk,

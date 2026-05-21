@@ -3,10 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="misc"
-# mypy: disable-error-code="no-any-return"
-# mypy: disable-error-code="no-untyped-call"
-
 # NOTE: This file has been created by an LLM (from something that was worse).
 # It mostly serves as test to ensure we don't accidentally break anything.
 # If you encounter something weird in here, do not hesitate to replace this
@@ -17,6 +13,7 @@ from typing import Any
 
 import pytest
 
+from cmk.agent_based.v2 import Result, Service, State
 from cmk.legacy_checks.ibm_svc_mdisk import (
     check_ibm_svc_mdisk,
     discover_ibm_svc_mdisk,
@@ -82,7 +79,7 @@ def test_discover_ibm_svc_mdisk_regression_2() -> None:
     }
 
     result = list(discover_ibm_svc_mdisk(mock_parsed))
-    assert result == [("mdisk_0", {})]
+    assert result == [Service(item="mdisk_0")]
 
 
 def test_check_ibm_svc_mdisk_regression_2_missing_item(parsed: Mapping[str, Any]) -> None:
@@ -112,17 +109,10 @@ def test_check_ibm_svc_mdisk_regression_2_with_proper_data() -> None:
 
     result = list(check_ibm_svc_mdisk("mdisk_0", params, mock_parsed))
 
-    assert len(result) == 2
-
-    # Check status result
-    status_result = result[0]
-    assert status_result[0] == 0  # OK state (online with params)
-    assert "Status: online" in status_result[1]
-
-    # Check mode result
-    mode_result = result[1]
-    assert mode_result[0] == 0  # OK state (array mode with params)
-    assert "Mode: array" in mode_result[1]
+    assert result == [
+        Result(state=State.OK, summary="Status: online"),
+        Result(state=State.OK, summary="Mode: array"),
+    ]
 
 
 def test_parse_ibm_svc_mdisk_regression_2_header_mismatch() -> None:

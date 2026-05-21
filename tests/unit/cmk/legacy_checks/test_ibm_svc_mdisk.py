@@ -4,14 +4,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # mypy: disable-error-code="misc"
-# mypy: disable-error-code="no-untyped-call"
 
 from collections.abc import Mapping, Sequence
 from typing import Any
 
 import pytest
 
-from cmk.agent_based.v2 import StringTable
+from cmk.agent_based.v2 import Result, Service, State, StringTable
 from cmk.legacy_checks.ibm_svc_mdisk import (
     check_ibm_svc_mdisk,
     discover_ibm_svc_mdisk,
@@ -156,27 +155,29 @@ from cmk.legacy_checks.ibm_svc_mdisk import (
                 ],
             ],
             [
-                ("Quorum_BLUBB3", {}),
-                ("Quorum_blubb5", {}),
-                ("Quorum_blubb6", {}),
-                ("stp5_300G_01-01", {}),
-                ("stp5_300G_01-02", {}),
-                ("stp5_300G_01-03", {}),
-                ("stp5_300G_01-04", {}),
-                ("stp6_300G_01-01", {}),
-                ("stp6_300G_01-02", {}),
-                ("stp6_300G_01-03", {}),
+                Service(item="Quorum_BLUBB3"),
+                Service(item="Quorum_blubb5"),
+                Service(item="Quorum_blubb6"),
+                Service(item="stp5_300G_01-01"),
+                Service(item="stp5_300G_01-02"),
+                Service(item="stp5_300G_01-03"),
+                Service(item="stp5_300G_01-04"),
+                Service(item="stp6_300G_01-01"),
+                Service(item="stp6_300G_01-02"),
+                Service(item="stp6_300G_01-03"),
             ],
         ),
     ],
 )
 def test_discover_ibm_svc_mdisk(
-    string_table: StringTable, expected_discoveries: Sequence[tuple[str, Mapping[str, Any]]]
+    string_table: StringTable, expected_discoveries: Sequence[Service]
 ) -> None:
     """Test discovery function for ibm_svc_mdisk check."""
     parsed = parse_ibm_svc_mdisk(string_table)
     result = list(discover_ibm_svc_mdisk(parsed))
-    assert sorted(result) == sorted(expected_discoveries)
+    assert sorted(result, key=lambda s: s.item or "") == sorted(
+        expected_discoveries, key=lambda s: s.item or ""
+    )
 
 
 @pytest.mark.parametrize(
@@ -326,7 +327,10 @@ def test_discover_ibm_svc_mdisk(
                     "generic_hdd",
                 ],
             ],
-            [(0, "Status: online"), (0, "Mode: managed")],
+            [
+                Result(state=State.OK, summary="Status: online"),
+                Result(state=State.OK, summary="Mode: managed"),
+            ],
         ),
         (
             "Quorum_blubb5",
@@ -472,7 +476,10 @@ def test_discover_ibm_svc_mdisk(
                     "generic_hdd",
                 ],
             ],
-            [(0, "Status: online"), (0, "Mode: managed")],
+            [
+                Result(state=State.OK, summary="Status: online"),
+                Result(state=State.OK, summary="Mode: managed"),
+            ],
         ),
         (
             "Quorum_blubb6",
@@ -618,7 +625,10 @@ def test_discover_ibm_svc_mdisk(
                     "generic_hdd",
                 ],
             ],
-            [(0, "Status: online"), (0, "Mode: managed")],
+            [
+                Result(state=State.OK, summary="Status: online"),
+                Result(state=State.OK, summary="Mode: managed"),
+            ],
         ),
         (
             "stp5_300G_01-01",
@@ -764,7 +774,10 @@ def test_discover_ibm_svc_mdisk(
                     "generic_hdd",
                 ],
             ],
-            [(0, "Status: online"), (0, "Mode: managed")],
+            [
+                Result(state=State.OK, summary="Status: online"),
+                Result(state=State.OK, summary="Mode: managed"),
+            ],
         ),
         (
             "stp5_300G_01-02",
@@ -910,7 +923,10 @@ def test_discover_ibm_svc_mdisk(
                     "generic_hdd",
                 ],
             ],
-            [(0, "Status: online"), (0, "Mode: managed")],
+            [
+                Result(state=State.OK, summary="Status: online"),
+                Result(state=State.OK, summary="Mode: managed"),
+            ],
         ),
         (
             "stp5_300G_01-03",
@@ -1056,7 +1072,10 @@ def test_discover_ibm_svc_mdisk(
                     "generic_hdd",
                 ],
             ],
-            [(0, "Status: online"), (0, "Mode: managed")],
+            [
+                Result(state=State.OK, summary="Status: online"),
+                Result(state=State.OK, summary="Mode: managed"),
+            ],
         ),
         (
             "stp5_300G_01-04",
@@ -1202,7 +1221,10 @@ def test_discover_ibm_svc_mdisk(
                     "generic_hdd",
                 ],
             ],
-            [(0, "Status: online"), (0, "Mode: managed")],
+            [
+                Result(state=State.OK, summary="Status: online"),
+                Result(state=State.OK, summary="Mode: managed"),
+            ],
         ),
         (
             "stp6_300G_01-01",
@@ -1348,7 +1370,10 @@ def test_discover_ibm_svc_mdisk(
                     "generic_hdd",
                 ],
             ],
-            [(0, "Status: online"), (0, "Mode: managed")],
+            [
+                Result(state=State.OK, summary="Status: online"),
+                Result(state=State.OK, summary="Mode: managed"),
+            ],
         ),
         (
             "stp6_300G_01-02",
@@ -1494,7 +1519,10 @@ def test_discover_ibm_svc_mdisk(
                     "generic_hdd",
                 ],
             ],
-            [(0, "Status: online"), (0, "Mode: managed")],
+            [
+                Result(state=State.OK, summary="Status: online"),
+                Result(state=State.OK, summary="Mode: managed"),
+            ],
         ),
         (
             "stp6_300G_01-03",
@@ -1640,12 +1668,18 @@ def test_discover_ibm_svc_mdisk(
                     "generic_hdd",
                 ],
             ],
-            [(0, "Status: online"), (0, "Mode: managed")],
+            [
+                Result(state=State.OK, summary="Status: online"),
+                Result(state=State.OK, summary="Mode: managed"),
+            ],
         ),
     ],
 )
 def test_check_ibm_svc_mdisk(
-    item: str, params: Mapping[str, Any], string_table: StringTable, expected_results: Sequence[Any]
+    item: str,
+    params: Mapping[str, Any],
+    string_table: StringTable,
+    expected_results: Sequence[Result],
 ) -> None:
     """Test check function for ibm_svc_mdisk check."""
     parsed = parse_ibm_svc_mdisk(string_table)

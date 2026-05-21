@@ -15,7 +15,6 @@ py_library(
         "//cmk/gui:auth_core",
         "//cmk/gui:config",
         "//cmk/gui:core_toolkit",
-        "//cmk/gui/livestatus_utils",
         "//cmk/gui/utils:roles",
         "//cmk/gui/watolib:password_store",
         "//cmk/plugins",

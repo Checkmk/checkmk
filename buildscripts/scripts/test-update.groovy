@@ -60,7 +60,7 @@ def main() {
         |===================================================
         """.stripMargin());
 
-    def relative_job_name = "${branch_base_folder}/builders/test-update-single-f12less";
+    def relative_job_name = "${branch_base_folder}/builders/test-update-single";
 
     def test_stages = all_distros.collectEntries { distro -> [
         ("Test ${distro}") : {

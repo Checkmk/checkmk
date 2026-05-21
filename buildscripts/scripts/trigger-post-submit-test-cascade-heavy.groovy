@@ -26,10 +26,10 @@ def main() {
         "test-integration-redfish",
         "test-plugins",
         "test-plugins-piggyback",
-        "test-update-single-f12less",
-        "test-update-single-f12less-cce",
-        "test-update-single-f12less-cme",
-        "test-update-single-f12less-cre",
+        "test-update-cee",
+        "test-update-cce",
+        "test-update-cme",
+        "test-update-cre",
     ];
 
     print(

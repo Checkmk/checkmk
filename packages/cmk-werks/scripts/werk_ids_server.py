@@ -93,8 +93,9 @@ def _build_wheel(runner: Runner) -> Path:
         capture_output=True,
         text=True,
     )
+    workspace = subprocess.check_output(["bazel", "info", "workspace"], text=True).strip()
     wheel_rel = next(p for p in result.stdout.splitlines() if p.endswith(".whl"))
-    return Path(wheel_rel).resolve()
+    return Path(workspace, wheel_rel).resolve()
 
 
 def _sync_wheel(remote: str, wheel: Path, runner: Runner) -> None:

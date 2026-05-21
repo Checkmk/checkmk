@@ -16,8 +16,8 @@ from typing import Any
 import pytest
 
 from cmk.agent_based.v2 import Metric, Result, Service, State
-from cmk.legacy_checks import ibm_svc_nodestats
-from cmk.legacy_checks.ibm_svc_nodestats import (
+from cmk.plugins.ibm.agent_based import ibm_svc_nodestats
+from cmk.plugins.ibm.agent_based.ibm_svc_nodestats import (
     check_ibm_svc_nodestats_cache,
     check_ibm_svc_nodestats_cpu,
     check_ibm_svc_nodestats_disk_latency,

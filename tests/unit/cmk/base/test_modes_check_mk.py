@@ -27,7 +27,9 @@ from cmk.fetchers import (
     PiggybackFetcher,
     PlainFetcherTrigger,
 )
-from cmk.fetchers.snmp_backend import ClassicSNMPBackend, make_backend, StoredWalkSNMPBackend
+from cmk.fetchers.snmp_backend import make_backend
+from cmk.snmp_backends.classic import ClassicSNMPBackend
+from cmk.snmp_backends.stored_walk import StoredWalkSNMPBackend
 from cmk.utils.tags import TagGroupID, TagID
 from tests.testlib.common.empty_config import EMPTY_CONFIG
 from tests.testlib.unit.base_configuration_scenario import Scenario

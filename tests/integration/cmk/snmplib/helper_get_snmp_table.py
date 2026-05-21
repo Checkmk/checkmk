@@ -12,8 +12,10 @@ from typing import Any
 
 import cmk.utils.paths
 from cmk.ccc.version import Edition, edition
-from cmk.fetchers.snmp_backend import (  # astrein: disable=cmk-module-layer-violation
+from cmk.snmp_backends.classic import (  # astrein: disable=cmk-module-layer-violation
     ClassicSNMPBackend,
+)
+from cmk.snmp_backends.stored_walk import (  # astrein: disable=cmk-module-layer-violation
     StoredWalkSNMPBackend,
 )
 from cmk.snmplib import (

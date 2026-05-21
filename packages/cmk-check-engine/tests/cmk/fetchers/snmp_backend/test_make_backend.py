@@ -13,7 +13,8 @@ from pathlib import Path
 import pytest
 
 from cmk.ccc.hostaddress import HostAddress, HostName
-from cmk.fetchers.snmp_backend import ClassicSNMPBackend, make_backend
+from cmk.fetchers.snmp_backend import make_backend
+from cmk.snmp_backends.classic import ClassicSNMPBackend
 from cmk.snmplib import SNMPBackend, SNMPBackendEnum, SNMPHostConfig, SNMPVersion
 
 InlineSNMPBackend: type[SNMPBackend] | None = None

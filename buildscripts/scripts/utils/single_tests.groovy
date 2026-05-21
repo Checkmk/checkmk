@@ -16,7 +16,7 @@ def common_prepare(Map args) {
 
     currentBuild.description += (
         """
-        |Run *-single-f12less test<br>
+        |Run *-single-node test<br>
         |safe_branch_name: ${safe_branch_name}<br>
         |branch_version: ${branch_version}<br>
         |cmk_version: ${cmk_version}<br>

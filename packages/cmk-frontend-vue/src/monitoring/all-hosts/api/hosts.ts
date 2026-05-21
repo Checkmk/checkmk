@@ -7,10 +7,12 @@ import client, { unwrap } from '@/lib/rest-api-client/client'
 
 import type { HostsRequest, HostsResponse } from '../../shared/api/types'
 
-export const getHosts = async (params?: HostsRequest): Promise<HostsResponse> => {
-  return unwrap(
-    await client.GET('monitor/hosts', {
-      params: params !== undefined ? { query: params } : {}
-    })
-  )
+export class HostApi {
+  public async fetchHosts(params?: HostsRequest): Promise<HostsResponse> {
+    return unwrap(
+      await client.GET('monitor/hosts', {
+        params: params !== undefined ? { query: params } : {}
+      })
+    )
+  }
 }

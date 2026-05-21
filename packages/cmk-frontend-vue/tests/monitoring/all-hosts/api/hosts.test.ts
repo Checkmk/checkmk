@@ -5,7 +5,7 @@
  */
 import { describe, expect, it, vi } from 'vitest'
 
-import { getHosts } from '@/monitoring/all-hosts/api/hosts'
+import { HostApi } from '@/monitoring/all-hosts/api/hosts'
 import type { HostEntry, HostsPageMeta, HostsResponse } from '@/monitoring/shared/api/types'
 
 const { mockGet } = vi.hoisted(() => ({ mockGet: vi.fn() }))
@@ -41,12 +41,12 @@ function makeHostsResponse(hosts: HostEntry[], meta: Partial<HostsPageMeta> = {}
   return { hosts, meta: { limit: 1000, total: hosts.length, ...meta } }
 }
 
-describe('getHosts', () => {
+describe('HostApi.fetchHosts', () => {
   it('calls GET monitor/hosts without query params when called with no arguments', async () => {
     const response = makeHostsResponse([makeHost()])
     mockGet.mockResolvedValueOnce({ data: response, response: new Response() })
 
-    const result = await getHosts()
+    const result = await new HostApi().fetchHosts()
 
     expect(mockGet).toHaveBeenCalledWith('monitor/hosts', { params: {} })
     expect(result).toEqual(response)
@@ -56,7 +56,7 @@ describe('getHosts', () => {
     const response = makeHostsResponse([])
     mockGet.mockResolvedValueOnce({ data: response, response: new Response() })
 
-    await getHosts({ limit: '50' })
+    await new HostApi().fetchHosts({ limit: '50' })
 
     expect(mockGet).toHaveBeenCalledWith('monitor/hosts', { params: { query: { limit: '50' } } })
   })
@@ -66,7 +66,7 @@ describe('getHosts', () => {
     const response = makeHostsResponse(hosts)
     mockGet.mockResolvedValueOnce({ data: response, response: new Response() })
 
-    const result = await getHosts()
+    const result = await new HostApi().fetchHosts()
 
     expect(result).toEqual(response)
   })

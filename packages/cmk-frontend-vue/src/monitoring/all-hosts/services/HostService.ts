@@ -9,19 +9,18 @@ import {
   type PagedResponse
 } from '@/monitoring/shared/services/MonitoringService'
 
-export interface HostApi {
-  fetchHosts(): Promise<PagedResponse<HostEntry>>
-}
+import type { HostApi } from '../api/hosts'
 
 export class HostService extends MonitoringService<HostEntry> {
-  private readonly api: HostApi
-
-  constructor(api: HostApi) {
-    super()
-    this.api = api
+  constructor(
+    private readonly api: HostApi,
+    pollIntervalMs?: number
+  ) {
+    super(pollIntervalMs)
   }
 
-  protected fetchBatch(): Promise<PagedResponse<HostEntry>> {
-    return this.api.fetchHosts()
+  protected async fetchBatch(): Promise<PagedResponse<HostEntry>> {
+    const response = await this.api.fetchHosts()
+    return { items: response.hosts, meta: response.meta }
   }
 }

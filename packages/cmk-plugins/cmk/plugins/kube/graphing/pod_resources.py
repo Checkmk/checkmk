@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.graphing.v1 import graphs, metrics, Title
+from cmk.graphing.v1 import graphs, metrics, perfometers, Title
 
 UNIT_COUNTER = metrics.Unit(metrics.DecimalNotation(""), metrics.StrictPrecision(2))
 
@@ -45,4 +45,15 @@ graph_kube_pod_resources = graphs.Graph(
         "kube_pod_free",
         "kube_pod_allocatable",
     ],
+)
+
+perfometer_kube_pod_resources = perfometers.Perfometer(
+    name="kube_pod_resources",
+    focus_range=perfometers.FocusRange(
+        perfometers.Closed(0),
+        # https://kubernetes.io/docs/setup/best-practices/cluster-large/
+        # 110 pods per node max
+        perfometers.Open(110),
+    ),
+    segments=["kube_pod_running"],
 )

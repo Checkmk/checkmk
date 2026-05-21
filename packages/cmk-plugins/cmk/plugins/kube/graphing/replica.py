@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.graphing.v1 import graphs, metrics, Title
+from cmk.graphing.v1 import graphs, metrics, perfometers, Title
 
 UNIT_COUNTER = metrics.Unit(metrics.DecimalNotation(""), metrics.StrictPrecision(2))
 
@@ -62,4 +62,13 @@ graph_kube_replica_terminating_state = graphs.Graph(
     title=Title("Replica terminating state"),
     compound_lines=["kube_terminating_replicas"],
     simple_lines=["kube_desired_replicas"],
+)
+
+perfometer_kube_ready_replicas = perfometers.Perfometer(
+    name="kube_ready_replicas",
+    focus_range=perfometers.FocusRange(
+        perfometers.Closed(0),
+        perfometers.Open(100),
+    ),
+    segments=["kube_ready_replicas"],
 )

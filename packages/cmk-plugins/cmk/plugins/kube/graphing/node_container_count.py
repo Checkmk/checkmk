@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.graphing.v1 import graphs, metrics, Title
+from cmk.graphing.v1 import graphs, metrics, perfometers, Title
 
 UNIT_COUNTER = metrics.Unit(metrics.DecimalNotation(""), metrics.StrictPrecision(2))
 
@@ -45,4 +45,19 @@ graph_kube_node_container_count = graphs.Graph(
         metrics.WarningOf("kube_node_container_count_total"),
         metrics.CriticalOf("kube_node_container_count_total"),
     ],
+)
+
+perfometer_kube_node_container_count_running = perfometers.Perfometer(
+    name="kube_node_container_count_running",
+    focus_range=perfometers.FocusRange(
+        perfometers.Closed(0),
+        # Rough estimate: Kubernetes' "large cluster" guidelines cap a cluster
+        # at 5000 nodes and 300000 containers, which evenly distributed is 60
+        # containers/node. Smaller clusters concentrate more containers per
+        # node, so we use a higher upper of 250 to keep the linear range useful
+        # there.
+        # https://kubernetes.io/docs/setup/best-practices/cluster-large/
+        perfometers.Open(250),
+    ),
+    segments=["kube_node_container_count_running"],
 )

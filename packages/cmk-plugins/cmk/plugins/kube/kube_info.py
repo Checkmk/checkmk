@@ -6,7 +6,15 @@
 from collections.abc import Callable, Mapping
 from typing import Any, Literal, NewType
 
-from cmk.agent_based.v2 import CheckResult, HostLabel, HostLabelGenerator, render, Result, State
+from cmk.agent_based.v2 import (
+    CheckResult,
+    HostLabel,
+    HostLabelGenerator,
+    Metric,
+    render,
+    Result,
+    State,
+)
 from cmk.plugins.kube.kube import kube_annotations_to_cmk_labels, kube_labels_to_cmk_labels
 from cmk.plugins.kube.schemata.section import (
     ControlChain,
@@ -36,6 +44,7 @@ def result_from_age(value: Age | None) -> CheckResult:
         state=State.OK,
         summary=f"Age: {render.timespan(value)}",
     )
+    yield Metric(name="kube_info_age", value=value)
 
 
 def result_from_control_chain(control_chain: ControlChain) -> CheckResult:

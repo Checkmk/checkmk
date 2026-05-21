@@ -9,7 +9,7 @@ from collections.abc import Sequence
 import pytest
 import pytest_mock
 
-from cmk.agent_based.v2 import Result, State
+from cmk.agent_based.v2 import Metric, Result, State
 from cmk.plugins.kube.agent_based.kube_node_info import check_kube_node_info
 from cmk.plugins.kube.schemata.api import NodeName, Timestamp
 from cmk.plugins.kube.schemata.section import FilteredAnnotations, NodeInfo
@@ -36,6 +36,7 @@ from cmk.plugins.kube.schemata.section import FilteredAnnotations, NodeInfo
             [
                 Result(state=State.OK, summary="Name: minikube"),
                 Result(state=State.OK, summary="Age: 1 second"),
+                Metric("kube_info_age", 1.0),
                 Result(state=State.OK, summary="OS: Ubuntu 20.04.2 LTS"),
                 Result(state=State.OK, summary="Container runtime: docker://20.10.8"),
                 Result(state=State.OK, notice="Architecture: amd64"),
@@ -73,6 +74,8 @@ from cmk.plugins.kube.schemata.section import FilteredAnnotations, NodeInfo
     ],
 )
 def test_check_kube_node_info(
-    section: NodeInfo, expected_check_result: Sequence[Result], mocker: pytest_mock.MockerFixture
+    section: NodeInfo,
+    expected_check_result: Sequence[Result | Metric],
+    mocker: pytest_mock.MockerFixture,
 ) -> None:
     assert list(check_kube_node_info(1600000001.0, section)) == expected_check_result

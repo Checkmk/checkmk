@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.agent_based.v2 import Result, State
+from cmk.agent_based.v2 import Metric, Result, State
 from cmk.plugins.kube.agent_based.kube_namespace_info import check_kube_namespace_info
 from cmk.plugins.kube.schemata.api import NamespaceName, Timestamp
 from cmk.plugins.kube.schemata.section import FilteredAnnotations, NamespaceInfo
@@ -23,6 +23,7 @@ def test_check_kube_namespace_info() -> None:
     assert list(check_result) == [
         Result(state=State.OK, summary="Name: namespace"),
         Result(state=State.OK, summary="Age: 1 second"),
+        Metric("kube_info_age", 1.0),
     ]
 
 

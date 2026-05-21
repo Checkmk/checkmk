@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.agent_based.v2 import Result, State
+from cmk.agent_based.v2 import Metric, Result, State
 from cmk.plugins.kube.agent_based.kube_cronjob_info import check_kube_cronjob_info
 from cmk.plugins.kube.schemata.api import ConcurrencyPolicy, NamespaceName, Timestamp
 from cmk.plugins.kube.schemata.section import CronJobInfo, FilteredAnnotations
@@ -30,6 +30,7 @@ def test_check_kube_cronjob_info() -> None:
         Result(state=State.OK, summary="Name: cronjob"),
         Result(state=State.OK, summary="Schedule: 0 * * * *"),
         Result(state=State.OK, summary="Age: 1 second"),
+        Metric("kube_info_age", 1.0),
         Result(state=State.OK, notice="Concurrency policy: ConcurrencyPolicy.Allow"),
         Result(state=State.OK, notice="Failed jobs history limit: 10"),
         Result(state=State.OK, notice="Successful jobs history limit: 10"),

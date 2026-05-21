@@ -6,7 +6,7 @@
 
 import pytest
 
-from cmk.agent_based.v2 import Result, State
+from cmk.agent_based.v2 import Metric, Result, State
 from cmk.plugins.kube.agent_based.kube_daemonset_info import check_kube_daemonset_info
 from cmk.plugins.kube.schemata.api import ContainerName, NamespaceName, Selector, Timestamp
 from cmk.plugins.kube.schemata.section import DaemonSetInfo, FilteredAnnotations, ThinContainers
@@ -33,6 +33,7 @@ from cmk.plugins.kube.schemata.section import DaemonSetInfo, FilteredAnnotations
                 Result(state=State.OK, summary="Name: oh-lord"),
                 Result(state=State.OK, summary="Namespace: have-mercy"),
                 Result(state=State.OK, summary="Age: 1 second"),
+                Metric("kube_info_age", 1.0),
             ),
             id="overall look of DaemonSet with age 1 second",
         ),
@@ -60,6 +61,6 @@ from cmk.plugins.kube.schemata.section import DaemonSetInfo, FilteredAnnotations
     ],
 )
 def test_check_kube_daemonset_info(
-    section: DaemonSetInfo, expected_check_result: tuple[Result, ...]
+    section: DaemonSetInfo, expected_check_result: tuple[Result | Metric, ...]
 ) -> None:
     assert tuple(check_kube_daemonset_info(1600000001.0, section)) == expected_check_result

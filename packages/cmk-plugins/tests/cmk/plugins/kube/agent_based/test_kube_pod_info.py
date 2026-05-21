@@ -6,7 +6,7 @@
 
 import pytest
 
-from cmk.agent_based.v2 import Result, State
+from cmk.agent_based.v2 import Metric, Result, State
 from cmk.plugins.kube.agent_based.kube_pod_info import check_kube_pod_info
 from cmk.plugins.kube.schemata.api import IpAddress, NamespaceName, PodUID, Timestamp
 from cmk.plugins.kube.schemata.section import FilteredAnnotations, PodInfo
@@ -38,6 +38,7 @@ from cmk.plugins.kube.schemata.section import FilteredAnnotations, PodInfo
                 Result(state=State.OK, summary="Node: None"),
                 Result(state=State.OK, summary="Namespace: default"),
                 Result(state=State.OK, summary="Age: 1 second"),
+                Metric("kube_info_age", 1.0),
                 Result(state=State.OK, summary="Controlled by: None"),
                 Result(state=State.OK, notice="QoS class: burstable"),
                 Result(state=State.OK, notice="UID: dd1019ca-c429-46af-b6b7-8aad47b6081a"),
@@ -77,5 +78,7 @@ from cmk.plugins.kube.schemata.section import FilteredAnnotations, PodInfo
         ),
     ],
 )
-def test_check_kube_pod_info(section: PodInfo, expected_check_result: tuple[Result, ...]) -> None:
+def test_check_kube_pod_info(
+    section: PodInfo, expected_check_result: tuple[Result | Metric, ...]
+) -> None:
     assert tuple(check_kube_pod_info(1600000001.0, section)) == expected_check_result

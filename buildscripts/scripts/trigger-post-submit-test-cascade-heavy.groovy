@@ -25,7 +25,7 @@ def main() {
         "test-integration-cre",
         "test-integration-redfish",
         "test-plugins-node",
-        "test-plugins-piggyback",
+        "test-plugins-piggyback-node",
         "test-update-cee",
         "test-update-cce",
         "test-update-cme",

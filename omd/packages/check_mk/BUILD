@@ -140,8 +140,6 @@ pkg_mkdirs(
     name = "empty_dirs",
     dirs = [
         "lib/nagios/plugins",
-        "lib/python3/cmk/gui/plugins/userdb",
-        "lib/python3/cmk/gui/plugins/watolib",
         "skel/local/lib/nagios/plugins",
         "skel/local/lib/python3/cmk/gui/plugins/dashboard",
         "skel/local/lib/python3/cmk/gui/plugins/views",

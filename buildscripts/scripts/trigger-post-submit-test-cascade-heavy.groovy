@@ -76,16 +76,16 @@ void main() {
         }]
     }
 
-    stages += [("test-xss-crawl-k8s") : {
+    stages += [("test-xss-crawl") : {
         smart_stage(
-            name: "Trigger test-xss-crawl-k8s",
+            name: "Trigger test-xss-crawl",
             condition: trigger_xss_crawl,
         ) {
             smart_build(
                 // see global-defaults.yml, needs to run in minimal container
                 use_upstream_build: true,
                 force_build: force_build,
-                relative_job_name: "${branch_base_folder}/heavy/test-xss-crawl-k8s",
+                relative_job_name: "${branch_base_folder}/heavy/test-xss-crawl",
                 build_params: [
                     CUSTOM_GIT_REF: effective_git_ref,
                 ],

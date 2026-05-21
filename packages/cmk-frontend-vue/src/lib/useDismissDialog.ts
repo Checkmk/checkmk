@@ -5,8 +5,7 @@
  */
 import { onMounted, ref } from 'vue'
 
-import { fetchRestAPI } from '@/lib/cmkFetch'
-import { isWarningDismissed } from '@/lib/userConfig'
+import { isWarningDismissed, persistWarningDismissal } from '@/lib/userConfig'
 
 import usePersistentRef from './usePersistentRef'
 
@@ -22,11 +21,7 @@ export function useDismissDialog(key: string | undefined) {
   async function dismiss() {
     isShown.value = false
     if (key) {
-      await fetchRestAPI(
-        'api/1.0/domain-types/user_config/actions/dismiss-warning/invoke',
-        'POST',
-        { warning: key }
-      )
+      await persistWarningDismissal(key)
     }
   }
 

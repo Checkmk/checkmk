@@ -27,10 +27,10 @@ void main() {
         "test-integration-ultimatemt",
         "test-plugins",
         "test-plugins-piggyback-k8s",
-        "test-update-single-f12less-k8s",
-        "test-update-single-f12less-community-pro-k8s",
-        "test-update-single-f12less-pro-ultimate-k8s",
-        "test-update-single-f12less-pro-ultimatemt-k8s",
+        "test-update-pro",
+        "test-update-community-pro",
+        "test-update-pro-ultimate",
+        "test-update-pro-ultimatemt",
     ];
 
     def trigger_xss_crawl = false;

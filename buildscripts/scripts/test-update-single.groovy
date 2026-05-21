@@ -1,6 +1,6 @@
 #!groovy
 
-/// file: test-update-single-f12less-k8s.groovy
+/// file: test-update-single.groovy
 
 String build_make_target(edition, cross_edition_target="") {
     switch (edition) {

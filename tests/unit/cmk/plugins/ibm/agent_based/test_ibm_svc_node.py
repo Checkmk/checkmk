@@ -10,7 +10,7 @@ from collections.abc import Sequence
 import pytest
 
 from cmk.agent_based.v2 import Result, Service, State, StringTable
-from cmk.legacy_checks.ibm_svc_node import (
+from cmk.plugins.ibm.agent_based.ibm_svc_node import (
     check_ibm_svc_node,
     discover_ibm_svc_node,
     parse_ibm_svc_node,

@@ -224,6 +224,20 @@ def _default_LIVESTATUS_TCP_PORT(site_name: str, site_configs: _SiteConfigs) -> 
     return str(_next_free_port("LIVESTATUS_TCP_PORT", site_name, 6557, site_configs.configs))
 
 
+def _default_OPENTELEMETRY_COLLECTOR_SELF_MONITORING_PORT(
+    site_name: str, site_configs: _SiteConfigs
+) -> str:
+    _report_error(
+        "OPENTELEMETRY_COLLECTOR_SELF_MONITORING_PORT",
+        site_configs.sites_with_unreadable_configs,
+    )
+    return str(
+        _next_free_port(
+            "OPENTELEMETRY_COLLECTOR_SELF_MONITORING_PORT", site_name, 14317, site_configs.configs
+        )
+    )
+
+
 def _default_RABBITMQ_DIST_PORT(site_name: str, site_configs: _SiteConfigs) -> str:
     _report_error("RABBITMQ_DIST_PORT", site_configs.sites_with_unreadable_configs)
     return str(_next_free_port("RABBITMQ_DIST_PORT", site_name, 25672, site_configs.configs))
@@ -273,6 +287,10 @@ def load_config(site: "SiteContext", verbose: bool, omd_path: Path = Path("/omd/
                         config[hook_name] = _default_APACHE_TCP_PORT(site.name, site_configs)
                     case "LIVESTATUS_TCP_PORT":
                         config[hook_name] = _default_LIVESTATUS_TCP_PORT(site.name, site_configs)
+                    case "OPENTELEMETRY_COLLECTOR_SELF_MONITORING_PORT":
+                        config[hook_name] = _default_OPENTELEMETRY_COLLECTOR_SELF_MONITORING_PORT(
+                            site.name, site_configs
+                        )
                     case "RABBITMQ_DIST_PORT":
                         config[hook_name] = _default_RABBITMQ_DIST_PORT(site.name, site_configs)
                     case "RABBITMQ_MANAGEMENT_PORT":

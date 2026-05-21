@@ -3,18 +3,26 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-call"
-# mypy: disable-error-code="var-annotated"
 
-from collections.abc import Iterable, Mapping
+import time
+from collections.abc import Mapping
 from typing import Any
 
-from cmk.agent_based.legacy.v0_unstable import LegacyCheckDefinition
-from cmk.agent_based.v2 import render, Service, StringTable
-from cmk.legacy_includes.cpu_util import check_cpu_util
-from cmk.legacy_includes.ibm_svc import parse_ibm_svc_with_header
-
-check_info: dict[str, Any] = {}
+from cmk.agent_based.v2 import (
+    AgentSection,
+    CheckPlugin,
+    CheckResult,
+    DiscoveryResult,
+    get_value_store,
+    Metric,
+    render,
+    Result,
+    Service,
+    State,
+    StringTable,
+)
+from cmk.plugins.ibm.lib_svc import parse_ibm_svc_with_header
+from cmk.plugins.lib.cpu_util import check_cpu_util
 
 Section = Mapping[str, Mapping[str, float]]
 
@@ -59,55 +67,8 @@ Section = Mapping[str, Mapping[str, float]]
 # 6:BLUBBSVC01:drive_w_io:0:0:230119164649
 # 6:BLUBBSVC01:drive_w_ms:0.000:0.000:230119164649
 
-# Old Example output from agent (only integer values):
-# <<<ibm_svc_nodestats:sep(58)>>>
-# 1:BLUBBSVC01:compression_cpu_pc:0:0:140325134931
-# 1:BLUBBSVC01:cpu_pc:1:3:140325134526
-# 1:BLUBBSVC01:fc_mb:35:530:140325134526
-# 1:BLUBBSVC01:fc_io:5985:11194:140325134751
-# 1:BLUBBSVC01:sas_mb:0:0:140325134931
-# 1:BLUBBSVC01:sas_io:0:0:140325134931
-# 1:BLUBBSVC01:iscsi_mb:0:0:140325134931
-# 1:BLUBBSVC01:iscsi_io:0:0:140325134931
-# 1:BLUBBSVC01:write_cache_pc:0:0:140325134931
-# 1:BLUBBSVC01:total_cache_pc:70:77:140325134716
-# 1:BLUBBSVC01:vdisk_mb:1:246:140325134526
-# 1:BLUBBSVC01:vdisk_io:130:1219:140325134501
-# 1:BLUBBSVC01:vdisk_ms:0:4:140325134531
-# 1:BLUBBSVC01:mdisk_mb:17:274:140325134526
-# 1:BLUBBSVC01:mdisk_io:880:1969:140325134526
-# 1:BLUBBSVC01:mdisk_ms:1:5:140325134811
-# 1:BLUBBSVC01:drive_mb:0:0:140325134931
-# 1:BLUBBSVC01:drive_io:0:0:140325134931
-# 1:BLUBBSVC01:drive_ms:0:0:140325134931
-# 1:BLUBBSVC01:vdisk_r_mb:0:244:140325134526
-# 1:BLUBBSVC01:vdisk_r_io:19:1022:140325134501
-# 1:BLUBBSVC01:vdisk_r_ms:2:8:140325134756
-# 1:BLUBBSVC01:vdisk_w_mb:0:2:140325134701
-# 1:BLUBBSVC01:vdisk_w_io:110:210:140325134901
-# 1:BLUBBSVC01:vdisk_w_ms:0:0:140325134931
-# 1:BLUBBSVC01:mdisk_r_mb:1:265:140325134526
-# 1:BLUBBSVC01:mdisk_r_io:15:1081:140325134526
-# 1:BLUBBSVC01:mdisk_r_ms:5:23:140325134616
-# 1:BLUBBSVC01:mdisk_w_mb:16:132:140325134751
-# 1:BLUBBSVC01:mdisk_w_io:865:1662:140325134736
-# 1:BLUBBSVC01:mdisk_w_ms:1:5:140325134811
-# 1:BLUBBSVC01:drive_r_mb:0:0:140325134931
-# 1:BLUBBSVC01:drive_r_io:0:0:140325134931
-# 1:BLUBBSVC01:drive_r_ms:0:0:140325134931
-# 1:BLUBBSVC01:drive_w_mb:0:0:140325134931
-# 1:BLUBBSVC01:drive_w_io:0:0:140325134931
-# 1:BLUBBSVC01:drive_w_ms:0:0:140325134931
-# 5:BLUBBSVC02:compression_cpu_pc:0:0:140325134930
-# 5:BLUBBSVC02:cpu_pc:1:2:140325134905
-# 5:BLUBBSVC02:fc_mb:141:293:140325134755
-# 5:BLUBBSVC02:fc_io:7469:12230:140325134750
-# 5:BLUBBSVC02:sas_mb:0:0:140325134930
-# 5:BLUBBSVC02:sas_io:0:0:140325134930
-# [...]
 
-
-def parse_ibm_svc_nodestats(info: StringTable) -> Section:
+def parse_ibm_svc_nodestats(string_table: StringTable) -> Section:
     dflt_header = [
         "node_id",
         "node_name",
@@ -116,8 +77,8 @@ def parse_ibm_svc_nodestats(info: StringTable) -> Section:
         "stat_peak",
         "stat_peak_time",
     ]
-    parsed = {}
-    for rows in parse_ibm_svc_with_header(info, dflt_header).values():
+    parsed: dict[str, dict[str, float]] = {}
+    for rows in parse_ibm_svc_with_header(string_table, dflt_header).values():
         for data in rows:
             node_name = data["node_name"]
             stat_name = data["stat_name"]
@@ -129,7 +90,7 @@ def parse_ibm_svc_nodestats(info: StringTable) -> Section:
                 "vdisk_r_ms",
                 "vdisk_w_ms",
             ):
-                item_name = "VDisks %s" % node_name
+                item_name = f"VDisks {node_name}"
                 stat_name = stat_name.replace("vdisk_", "")
             elif stat_name in (
                 "mdisk_r_mb",
@@ -139,7 +100,7 @@ def parse_ibm_svc_nodestats(info: StringTable) -> Section:
                 "mdisk_r_ms",
                 "mdisk_w_ms",
             ):
-                item_name = "MDisks %s" % node_name
+                item_name = f"MDisks {node_name}"
                 stat_name = stat_name.replace("mdisk_", "")
             elif stat_name in (
                 "drive_r_mb",
@@ -149,7 +110,7 @@ def parse_ibm_svc_nodestats(info: StringTable) -> Section:
                 "drive_r_ms",
                 "drive_w_ms",
             ):
-                item_name = "Drives %s" % node_name
+                item_name = f"Drives {node_name}"
                 stat_name = stat_name.replace("drive_", "")
             elif stat_name in ("write_cache_pc", "total_cache_pc", "cpu_pc"):
                 item_name = node_name
@@ -163,10 +124,11 @@ def parse_ibm_svc_nodestats(info: StringTable) -> Section:
     return parsed
 
 
-check_info["ibm_svc_nodestats"] = LegacyCheckDefinition(
+agent_section_ibm_svc_nodestats = AgentSection(
     name="ibm_svc_nodestats",
     parse_function=parse_ibm_svc_nodestats,
 )
+
 
 #   .--disk IO-------------------------------------------------------------.
 #   |                         _ _     _      ___ ___                       |
@@ -178,33 +140,30 @@ check_info["ibm_svc_nodestats"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 
-def discover_ibm_svc_nodestats_diskio(section: Section) -> list[tuple[str, None]]:
-    return [
-        (node_name, None)
+def discover_ibm_svc_nodestats_diskio(section: Section) -> DiscoveryResult:
+    yield from (
+        Service(item=node_name)
         for node_name, data in section.items()
         if "r_mb" in data and "w_mb" in data
-    ]
-
-
-def check_ibm_svc_nodestats_diskio(
-    item: str, _no_params: Mapping[str, Any], section: Section
-) -> tuple[int, str, list[tuple[str, float]]] | None:
-    data = section.get(item)
-    if data is None:
-        return None
-
-    read_bytes = data["r_mb"] * 1024 * 1024
-    write_bytes = data["w_mb"] * 1024 * 1024
-    perfdata = [("read", read_bytes), ("write", write_bytes)]
-
-    return (
-        0,
-        f"{render.iobandwidth(read_bytes)} read, {render.iobandwidth(write_bytes)} write",
-        perfdata,
     )
 
 
-check_info["ibm_svc_nodestats.diskio"] = LegacyCheckDefinition(
+def check_ibm_svc_nodestats_diskio(item: str, section: Section) -> CheckResult:
+    if (data := section.get(item)) is None:
+        return
+
+    read_bytes = data["r_mb"] * 1024 * 1024
+    write_bytes = data["w_mb"] * 1024 * 1024
+
+    yield Result(
+        state=State.OK,
+        summary=f"{render.iobandwidth(read_bytes)} read, {render.iobandwidth(write_bytes)} write",
+    )
+    yield Metric("read", read_bytes)
+    yield Metric("write", write_bytes)
+
+
+check_plugin_ibm_svc_nodestats_diskio = CheckPlugin(
     name="ibm_svc_nodestats_diskio",
     service_name="Disk IO %s",
     sections=["ibm_svc_nodestats"],
@@ -223,29 +182,27 @@ check_info["ibm_svc_nodestats.diskio"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 
-def discover_ibm_svc_nodestats_iops(section: Section) -> list[tuple[str, None]]:
-    return [
-        (node_name, None)
+def discover_ibm_svc_nodestats_iops(section: Section) -> DiscoveryResult:
+    yield from (
+        Service(item=node_name)
         for node_name, data in section.items()
         if "r_io" in data and "w_io" in data
-    ]
+    )
 
 
-def check_ibm_svc_nodestats_iops(
-    item: str, _no_params: Mapping[str, Any], section: Section
-) -> tuple[int, str, list[tuple[str, float]]] | None:
-    data = section.get(item)
-    if data is None:
-        return None
+def check_ibm_svc_nodestats_iops(item: str, section: Section) -> CheckResult:
+    if (data := section.get(item)) is None:
+        return
 
     read_iops = data["r_io"]
     write_iops = data["w_io"]
-    perfdata = [("read", read_iops), ("write", write_iops)]
 
-    return 0, f"{read_iops} IO/s read, {write_iops} IO/s write", perfdata
+    yield Result(state=State.OK, summary=f"{read_iops} IO/s read, {write_iops} IO/s write")
+    yield Metric("read", read_iops)
+    yield Metric("write", write_iops)
 
 
-check_info["ibm_svc_nodestats.iops"] = LegacyCheckDefinition(
+check_plugin_ibm_svc_nodestats_iops = CheckPlugin(
     name="ibm_svc_nodestats_iops",
     service_name="Disk IOPS %s",
     sections=["ibm_svc_nodestats"],
@@ -264,29 +221,30 @@ check_info["ibm_svc_nodestats.iops"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 
-def discover_ibm_svc_nodestats_disk_latency(section: Section) -> list[tuple[str, None]]:
-    return [
-        (node_name, None)
+def discover_ibm_svc_nodestats_disk_latency(section: Section) -> DiscoveryResult:
+    yield from (
+        Service(item=node_name)
         for node_name, data in section.items()
         if "r_ms" in data and "w_ms" in data
-    ]
+    )
 
 
-def check_ibm_svc_nodestats_disk_latency(
-    item: str, _no_params: Mapping[str, Any], section: Section
-) -> tuple[int, str, list[tuple[str, float]]] | None:
-    data = section.get(item)
-    if data is None:
-        return None
+def check_ibm_svc_nodestats_disk_latency(item: str, section: Section) -> CheckResult:
+    if (data := section.get(item)) is None:
+        return
 
     read_latency = data["r_ms"]
     write_latency = data["w_ms"]
-    perfdata = [("read_latency", read_latency), ("write_latency", write_latency)]
 
-    return 0, f"Latency is {read_latency} ms for read, {write_latency} ms for write", perfdata
+    yield Result(
+        state=State.OK,
+        summary=f"Latency is {read_latency} ms for read, {write_latency} ms for write",
+    )
+    yield Metric("read_latency", read_latency)
+    yield Metric("write_latency", write_latency)
 
 
-check_info["ibm_svc_nodestats.disk_latency"] = LegacyCheckDefinition(
+check_plugin_ibm_svc_nodestats_disk_latency = CheckPlugin(
     name="ibm_svc_nodestats_disk_latency",
     service_name="Disk Latency %s",
     sections=["ibm_svc_nodestats"],
@@ -306,18 +264,24 @@ check_info["ibm_svc_nodestats.disk_latency"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 
-def discover_ibm_svc_nodestats_cpu(section: Section) -> Iterable[Service]:
+def discover_ibm_svc_nodestats_cpu(section: Section) -> DiscoveryResult:
     yield from (Service(item=node_name) for node_name, data in section.items() if "cpu_pc" in data)
 
 
-def check_ibm_svc_nodestats_cpu(item: str, params: Mapping[str, Any], section: Section) -> Any:
-    data = section.get(item)
-    if data is None:
-        return None
-    return check_cpu_util(data["cpu_pc"], params)
+def check_ibm_svc_nodestats_cpu(
+    item: str, params: Mapping[str, Any], section: Section
+) -> CheckResult:
+    if (data := section.get(item)) is None:
+        return
+    yield from check_cpu_util(
+        util=data["cpu_pc"],
+        params=params,
+        value_store=get_value_store(),
+        this_time=time.time(),
+    )
 
 
-check_info["ibm_svc_nodestats.cpu_util"] = LegacyCheckDefinition(
+check_plugin_ibm_svc_nodestats_cpu_util = CheckPlugin(
     name="ibm_svc_nodestats_cpu_util",
     service_name="CPU utilization %s",
     sections=["ibm_svc_nodestats"],
@@ -338,36 +302,33 @@ check_info["ibm_svc_nodestats.cpu_util"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 
-def discover_ibm_svc_nodestats_cache(section: Section) -> list[tuple[str, None]]:
-    return [
-        (node_name, None)
+def discover_ibm_svc_nodestats_cache(section: Section) -> DiscoveryResult:
+    yield from (
+        Service(item=node_name)
         for node_name, data in section.items()
         if "write_cache_pc" in data and "total_cache_pc" in data
-    ]
-
-
-def check_ibm_svc_nodestats_cache(
-    item: str, _no_params: Mapping[str, Any], section: Section
-) -> tuple[int, str, list[Any]] | None:
-    data = section.get(item)
-    if data is None:
-        return None
-
-    write_cache_pc = data["write_cache_pc"]
-    total_cache_pc = data["total_cache_pc"]
-    perfdata = [
-        ("write_cache_pc", write_cache_pc, None, None, 0, 100),
-        ("total_cache_pc", total_cache_pc, None, None, 0, 100),
-    ]
-
-    return (
-        0,
-        "Write cache usage is %d %%, total cache usage is %d %%" % (write_cache_pc, total_cache_pc),
-        perfdata,
     )
 
 
-check_info["ibm_svc_nodestats.cache"] = LegacyCheckDefinition(
+def check_ibm_svc_nodestats_cache(item: str, section: Section) -> CheckResult:
+    if (data := section.get(item)) is None:
+        return
+
+    write_cache_pc = data["write_cache_pc"]
+    total_cache_pc = data["total_cache_pc"]
+
+    yield Result(
+        state=State.OK,
+        summary=(
+            f"Write cache usage is {int(write_cache_pc)} %, "
+            f"total cache usage is {int(total_cache_pc)} %"
+        ),
+    )
+    yield Metric("write_cache_pc", write_cache_pc, boundaries=(0, 100))
+    yield Metric("total_cache_pc", total_cache_pc, boundaries=(0, 100))
+
+
+check_plugin_ibm_svc_nodestats_cache = CheckPlugin(
     name="ibm_svc_nodestats_cache",
     service_name="Cache %s",
     sections=["ibm_svc_nodestats"],

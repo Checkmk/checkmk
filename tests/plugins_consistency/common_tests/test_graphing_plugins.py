@@ -15,7 +15,7 @@ import pytest
 from cmk.discover_plugins import PluginLocation
 from cmk.graphing.v1 import graphs as graphs_v1
 from cmk.graphing.v1 import metrics as metrics_v1
-from cmk.graphing.v1 import perfometers as perfometers_api
+from cmk.graphing.v1 import perfometers as perfometers_v1
 from cmk.graphing.v1 import translations as translations_api
 from cmk.gui.graphing_main import _load_graphing_plugins
 
@@ -89,7 +89,7 @@ def _collect_metric_names_from_quantity(
 
 
 def _collect_metric_names_from_perfometer(
-    perfometer: perfometers_api.Perfometer,
+    perfometer: perfometers_v1.Perfometer,
 ) -> Iterator[str]:
     if not isinstance(perfometer.focus_range.lower.value, int | float):
         yield from _collect_metric_names_from_quantity(perfometer.focus_range.lower.value)
@@ -150,9 +150,9 @@ class _MetricNamesInModule:
         self,
         plugin: (
             metrics_v1.Metric
-            | perfometers_api.Perfometer
-            | perfometers_api.Bidirectional
-            | perfometers_api.Stacked
+            | perfometers_v1.Perfometer
+            | perfometers_v1.Bidirectional
+            | perfometers_v1.Stacked
             | graphs_v1.Graph
             | graphs_v1.Bidirectional
             | translations_api.Translation
@@ -161,19 +161,19 @@ class _MetricNamesInModule:
         match plugin:
             case metrics_v1.Metric():
                 self._from_metrics.add(plugin.name)
-            case perfometers_api.Perfometer():
+            case perfometers_v1.Perfometer():
                 self._from_perfometer_or_graph.setdefault(
                     ("perfometer", plugin.name),
                     set(_collect_metric_names_from_perfometer(plugin)),
                 )
-            case perfometers_api.Bidirectional():
+            case perfometers_v1.Bidirectional():
                 self._from_perfometer_or_graph.setdefault(
                     ("perfometer", plugin.name),
                     set(_collect_metric_names_from_perfometer(plugin.left)).union(
                         _collect_metric_names_from_perfometer(plugin.right)
                     ),
                 )
-            case perfometers_api.Stacked():
+            case perfometers_v1.Stacked():
                 self._from_perfometer_or_graph.setdefault(
                     ("perfometer", plugin.name),
                     set(_collect_metric_names_from_perfometer(plugin.lower)).union(
@@ -270,9 +270,9 @@ def _metric_names_by_module(
     plugins: Mapping[
         PluginLocation,
         metrics_v1.Metric
-        | perfometers_api.Perfometer
-        | perfometers_api.Bidirectional
-        | perfometers_api.Stacked
+        | perfometers_v1.Perfometer
+        | perfometers_v1.Bidirectional
+        | perfometers_v1.Stacked
         | graphs_v1.Graph
         | graphs_v1.Bidirectional
         | translations_api.Translation,

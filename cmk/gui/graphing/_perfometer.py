@@ -14,7 +14,6 @@ from dataclasses import dataclass
 from itertools import repeat
 from typing import assert_never, Self
 
-from cmk.graphing.v1 import perfometers as perfometers_api
 from cmk.graphing.v2_unstable import metrics as metrics_v2_unstable_api
 from cmk.gui.color import Color
 from cmk.gui.log import logger
@@ -22,7 +21,7 @@ from cmk.gui.unit_formatter import AutoPrecision
 from cmk.gui.utils.temperate_unit import TemperatureUnit
 from cmk.gui.view_utils import get_themed_perfometer_bg_color
 
-from ._api_types import metrics_v1
+from ._api_types import metrics_v1, perfometers_v1
 from ._evaluations_from_api import evaluate_quantity, EvaluatedQuantity, Quantity
 from ._from_api import RegisteredMetric
 from ._perfometer_superseding import PERFOMETER_SUPERSEDED_TO_SUPERSEDER
@@ -73,7 +72,7 @@ class _MetricNamesOrScalars:
                 self.collect_quantity_names(quantity.divisor)
 
     @classmethod
-    def from_perfometers(cls, *perfometers_: perfometers_api.Perfometer) -> Self:
+    def from_perfometers(cls, *perfometers_: perfometers_v1.Perfometer) -> Self:
         instance = cls([], [])
         for perfometer in perfometers_:
             if not isinstance(perfometer.focus_range.lower.value, int | float):
@@ -104,18 +103,18 @@ class _MetricNamesOrScalars:
 
 def _extract_metric_names_or_scalars(
     perfometer_plugin: (
-        perfometers_api.Perfometer | perfometers_api.Bidirectional | perfometers_api.Stacked
+        perfometers_v1.Perfometer | perfometers_v1.Bidirectional | perfometers_v1.Stacked
     ),
 ) -> _MetricNamesOrScalars:
     match perfometer_plugin:
-        case perfometers_api.Perfometer():
+        case perfometers_v1.Perfometer():
             return _MetricNamesOrScalars.from_perfometers(perfometer_plugin)
-        case perfometers_api.Bidirectional():
+        case perfometers_v1.Bidirectional():
             return _MetricNamesOrScalars.from_perfometers(
                 perfometer_plugin.left,
                 perfometer_plugin.right,
             )
-        case perfometers_api.Stacked():
+        case perfometers_v1.Stacked():
             return _MetricNamesOrScalars.from_perfometers(
                 perfometer_plugin.lower,
                 perfometer_plugin.upper,
@@ -124,7 +123,7 @@ def _extract_metric_names_or_scalars(
 
 def _perfometer_plugin_matches(
     perfometer_plugin: (
-        perfometers_api.Perfometer | perfometers_api.Bidirectional | perfometers_api.Stacked
+        perfometers_v1.Perfometer | perfometers_v1.Bidirectional | perfometers_v1.Stacked
     ),
     translated_metrics: Mapping[str, TranslatedMetric],
 ) -> bool:
@@ -273,7 +272,7 @@ class _ProjectionParameters:
 
 def _make_projection(
     registered_metrics: Mapping[str, RegisteredMetric],
-    focus_range: perfometers_api.FocusRange,
+    focus_range: perfometers_v1.FocusRange,
     projection_parameters: _ProjectionParameters,
     translated_metrics: Mapping[str, TranslatedMetric],
     perfometer_name: str,
@@ -337,7 +336,7 @@ def _make_projection(
     # the related limit. With this the value is always visible, we don't have any execption and the
     # perfometer is not filled resp. completely filled.
     match focus_range.lower, focus_range.upper:
-        case perfometers_api.Closed(), perfometers_api.Closed():
+        case perfometers_v1.Closed(), perfometers_v1.Closed():
             return _ProjectionFromMetricValueToPerfFillLevel(
                 start_of_focus_range=lower_x,
                 end_of_focus_range=upper_x,
@@ -349,7 +348,7 @@ def _make_projection(
                 upper_end_projection=_Cutoff(),
             )
 
-        case perfometers_api.Open(), perfometers_api.Closed():
+        case perfometers_v1.Open(), perfometers_v1.Closed():
             linear = Linear.fit_to_two_points(
                 p_1=(lower_x, projection_parameters.lower_open_end),
                 p_2=(upper_x, projection_parameters.perfometer_full_at),
@@ -368,7 +367,7 @@ def _make_projection(
                 upper_end_projection=_Cutoff(),
             )
 
-        case perfometers_api.Closed(), perfometers_api.Open():
+        case perfometers_v1.Closed(), perfometers_v1.Open():
             linear = Linear.fit_to_two_points(
                 p_1=(lower_x, projection_parameters.perfometer_empty_at),
                 p_2=(upper_x, projection_parameters.upper_open_start),
@@ -387,7 +386,7 @@ def _make_projection(
                 ),
             )
 
-        case perfometers_api.Open(), perfometers_api.Open():
+        case perfometers_v1.Open(), perfometers_v1.Open():
             linear = Linear.fit_to_two_points(
                 p_1=(lower_x, projection_parameters.lower_open_end),
                 p_2=(upper_x, projection_parameters.upper_open_start),
@@ -503,7 +502,7 @@ class MetricometerRendererPerfometer(MetricometerRenderer):
     def __init__(
         self,
         registered_metrics: Mapping[str, RegisteredMetric],
-        perfometer: perfometers_api.Perfometer,
+        perfometer: perfometers_v1.Perfometer,
         translated_metrics: Mapping[str, TranslatedMetric],
         themed_perfometer_bg_color: str,
     ) -> None:
@@ -589,7 +588,7 @@ class MetricometerRendererBidirectional(MetricometerRenderer):
     def __init__(
         self,
         registered_metrics: Mapping[str, RegisteredMetric],
-        perfometer: perfometers_api.Bidirectional,
+        perfometer: perfometers_v1.Bidirectional,
         translated_metrics: Mapping[str, TranslatedMetric],
         themed_perfometer_bg_color: str,
     ) -> None:
@@ -609,8 +608,8 @@ class MetricometerRendererBidirectional(MetricometerRenderer):
         if left_projections := _project_segments(
             _make_projection(
                 self.registered_metrics,
-                perfometers_api.FocusRange(
-                    perfometers_api.Closed(0),
+                perfometers_v1.FocusRange(
+                    perfometers_v1.Closed(0),
                     self.perfometer.left.focus_range.upper,
                 ),
                 self._PROJECTION_PARAMETERS,
@@ -633,8 +632,8 @@ class MetricometerRendererBidirectional(MetricometerRenderer):
         if right_projections := _project_segments(
             _make_projection(
                 self.registered_metrics,
-                perfometers_api.FocusRange(
-                    perfometers_api.Closed(0),
+                perfometers_v1.FocusRange(
+                    perfometers_v1.Closed(0),
                     self.perfometer.right.focus_range.upper,
                 ),
                 self._PROJECTION_PARAMETERS,
@@ -688,7 +687,7 @@ class MetricometerRendererStacked(MetricometerRenderer):
     def __init__(
         self,
         registered_metrics: Mapping[str, RegisteredMetric],
-        perfometer: perfometers_api.Stacked,
+        perfometer: perfometers_v1.Stacked,
         translated_metrics: Mapping[str, TranslatedMetric],
     ) -> None:
         self.registered_metrics = registered_metrics
@@ -739,28 +738,28 @@ class MetricometerRendererStacked(MetricometerRenderer):
 def _get_renderer(
     registered_metrics: Mapping[str, RegisteredMetric],
     perfometer_plugin: (
-        perfometers_api.Perfometer | perfometers_api.Bidirectional | perfometers_api.Stacked
+        perfometers_v1.Perfometer | perfometers_v1.Bidirectional | perfometers_v1.Stacked
     ),
     translated_metrics: Mapping[str, TranslatedMetric],
 ) -> (
     MetricometerRendererPerfometer | MetricometerRendererBidirectional | MetricometerRendererStacked
 ):
     match perfometer_plugin:
-        case perfometers_api.Perfometer():
+        case perfometers_v1.Perfometer():
             return MetricometerRendererPerfometer(
                 registered_metrics,
                 perfometer_plugin,
                 translated_metrics,
                 get_themed_perfometer_bg_color(),
             )
-        case perfometers_api.Bidirectional():
+        case perfometers_v1.Bidirectional():
             return MetricometerRendererBidirectional(
                 registered_metrics,
                 perfometer_plugin,
                 translated_metrics,
                 get_themed_perfometer_bg_color(),
             )
-        case perfometers_api.Stacked():
+        case perfometers_v1.Stacked():
             return MetricometerRendererStacked(
                 registered_metrics,
                 perfometer_plugin,
@@ -772,7 +771,7 @@ def _get_first_matching_perfometer_testable(
     translated_metrics: Mapping[str, TranslatedMetric],
     registered_metrics: Mapping[str, RegisteredMetric],
     registered_perfometers: Mapping[
-        str, perfometers_api.Perfometer | perfometers_api.Bidirectional | perfometers_api.Stacked
+        str, perfometers_v1.Perfometer | perfometers_v1.Bidirectional | perfometers_v1.Stacked
     ],
     superseded_to_superseder: Mapping[str, str],
 ) -> (
@@ -802,7 +801,7 @@ def get_first_matching_perfometer(
     translated_metrics: Mapping[str, TranslatedMetric],
     registered_metrics: Mapping[str, RegisteredMetric],
     registered_perfometers: Mapping[
-        str, perfometers_api.Perfometer | perfometers_api.Bidirectional | perfometers_api.Stacked
+        str, perfometers_v1.Perfometer | perfometers_v1.Bidirectional | perfometers_v1.Stacked
     ],
 ) -> (
     MetricometerRendererPerfometer

@@ -21,7 +21,6 @@ from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
 from cmk.discover_plugins import discover_all_plugins, DiscoveredPlugins, PluginGroup
 from cmk.graphing.v1 import entry_point_prefixes
-from cmk.graphing.v1 import perfometers as perfometers_api
 from cmk.graphing.v1 import translations as translations_api
 from cmk.gui.graphing import (
     check_metrics,
@@ -37,6 +36,7 @@ from cmk.gui.graphing import (
     metrics_v1,
     parse_metric_from_api,
     perfometers_from_api,
+    perfometers_v1,
 )
 from cmk.gui.log import logger
 from cmk.gui.logged_in import user
@@ -60,18 +60,18 @@ from cmk.utils.servicename import ServiceName
 
 def _load_graphing_plugins() -> DiscoveredPlugins[
     metrics_v1.Metric
-    | perfometers_api.Perfometer
-    | perfometers_api.Bidirectional
-    | perfometers_api.Stacked
+    | perfometers_v1.Perfometer
+    | perfometers_v1.Bidirectional
+    | perfometers_v1.Stacked
     | graphs_v1.Graph
     | graphs_v1.Bidirectional
     | translations_api.Translation
 ]:
     discovered_plugins: DiscoveredPlugins[
         metrics_v1.Metric
-        | perfometers_api.Perfometer
-        | perfometers_api.Bidirectional
-        | perfometers_api.Stacked
+        | perfometers_v1.Perfometer
+        | perfometers_v1.Bidirectional
+        | perfometers_v1.Stacked
         | graphs_v1.Graph
         | graphs_v1.Bidirectional
         | translations_api.Translation
@@ -143,9 +143,9 @@ def _parse_translation(
 def _add_graphing_plugins(
     plugins: DiscoveredPlugins[
         metrics_v1.Metric
-        | perfometers_api.Perfometer
-        | perfometers_api.Bidirectional
-        | perfometers_api.Stacked
+        | perfometers_v1.Perfometer
+        | perfometers_v1.Bidirectional
+        | perfometers_v1.Stacked
         | graphs_v1.Graph
         | graphs_v1.Bidirectional
         | translations_api.Translation
@@ -164,7 +164,7 @@ def _add_graphing_plugins(
 
         elif isinstance(
             plugin,
-            perfometers_api.Perfometer | perfometers_api.Bidirectional | perfometers_api.Stacked,
+            perfometers_v1.Perfometer | perfometers_v1.Bidirectional | perfometers_v1.Stacked,
         ):
             perfometers_from_api.register(plugin)
 

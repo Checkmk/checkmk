@@ -8,11 +8,10 @@ from dataclasses import dataclass
 from typing import assert_never
 
 from cmk.ccc.plugin_registry import Registry
-from cmk.graphing.v1 import perfometers as perfometers_api
 from cmk.gui.color import parse_color_from_api
 from cmk.gui.unit_formatter import AutoPrecision, StrictPrecision
 
-from ._api_types import graphs_v1, metrics_v1
+from ._api_types import graphs_v1, metrics_v1, perfometers_v1
 from ._unit import (
     ConvertibleUnitSpecification,
     DecimalNotation,
@@ -90,12 +89,12 @@ metrics_from_api = MetricsFromAPI()
 
 
 class PerfometersFromAPI(
-    Registry[perfometers_api.Perfometer | perfometers_api.Bidirectional | perfometers_api.Stacked]
+    Registry[perfometers_v1.Perfometer | perfometers_v1.Bidirectional | perfometers_v1.Stacked]
 ):
     def plugin_name(
         self,
         instance: (
-            perfometers_api.Perfometer | perfometers_api.Bidirectional | perfometers_api.Stacked
+            perfometers_v1.Perfometer | perfometers_v1.Bidirectional | perfometers_v1.Stacked
         ),
     ) -> str:
         return instance.name

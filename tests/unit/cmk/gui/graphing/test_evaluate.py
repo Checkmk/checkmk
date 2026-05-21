@@ -8,7 +8,7 @@ from collections.abc import Mapping
 import pytest
 
 from cmk.graphing.v1 import metrics as metrics_v1
-from cmk.graphing.v1 import perfometers as perfometers_api
+from cmk.graphing.v1 import perfometers as perfometers_v1
 from cmk.graphing.v1 import Title
 from cmk.graphing.v2_unstable import metrics as metrics_v2_unstable_api
 from cmk.gui.graphing._evaluations_from_api import evaluate_quantity
@@ -24,12 +24,12 @@ from cmk.gui.unit_formatter import AutoPrecision
 UNIT = metrics_v1.Unit(metrics_v1.DecimalNotation(""))
 
 
-def _make_perfometer(name: str, start_idx: int) -> perfometers_api.Perfometer:
-    return perfometers_api.Perfometer(
+def _make_perfometer(name: str, start_idx: int) -> perfometers_v1.Perfometer:
+    return perfometers_v1.Perfometer(
         name=name,
-        focus_range=perfometers_api.FocusRange(
-            perfometers_api.Closed(f"metric-name{start_idx + 1}"),
-            perfometers_api.Closed(f"metric-name{start_idx + 2}"),
+        focus_range=perfometers_v1.FocusRange(
+            perfometers_v1.Closed(f"metric-name{start_idx + 1}"),
+            perfometers_v1.Closed(f"metric-name{start_idx + 2}"),
         ),
         segments=[
             metrics_v1.WarningOf(f"metric-name{start_idx + 3}"),
@@ -166,7 +166,7 @@ def test__perfometer_plugin_matches_no_translated_metrics() -> None:
             id="perfometer-does-not-match-shifted-metric-names",
         ),
         pytest.param(
-            perfometers_api.Bidirectional(
+            perfometers_v1.Bidirectional(
                 name="bidirectional",
                 left=_make_perfometer("left", 0),
                 right=_make_perfometer("right", 14),
@@ -208,7 +208,7 @@ def test__perfometer_plugin_matches_no_translated_metrics() -> None:
             id="bidirectional-matches",
         ),
         pytest.param(
-            perfometers_api.Stacked(
+            perfometers_v1.Stacked(
                 name="stacked",
                 lower=_make_perfometer("lower", 0),
                 upper=_make_perfometer("upper", 14),
@@ -253,7 +253,7 @@ def test__perfometer_plugin_matches_no_translated_metrics() -> None:
 )
 def test__perfometer_plugin_matches(
     perfometer_plugin: (
-        perfometers_api.Perfometer | perfometers_api.Bidirectional | perfometers_api.Stacked
+        perfometers_v1.Perfometer | perfometers_v1.Bidirectional | perfometers_v1.Stacked
     ),
     translated_metrics: Mapping[str, TranslatedMetric],
     result: bool,

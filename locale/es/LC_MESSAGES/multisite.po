@@ -5020,6 +5020,17 @@ msgstr "Etiquetas de agente adicionales para enviar durante el registro"
 msgid "Additional details"
 msgstr "Opciones adicionales"
 
+msgid ""
+"Additional filters appended to the ServiceNow lookup query "
+"(<tt>sysparm_query</tt>) used to find an existing incident or case for a "
+"given Checkmk problem ID. On large ServiceNow instances the unfiltered "
+"lookup can time out; restricting it (e.g. by <tt>company</tt> or "
+"<tt>assignment_group</tt>) narrows the search to the scope managed by "
+"Checkmk. All filters are AND-combined with the existing problem ID lookup. "
+"Only fields and values that are also set on the issue when it is created "
+"(e.g. via <i>Custom fields</i>) will match."
+msgstr ""
+
 msgid "Additional header lines"
 msgstr "Líneas de cabecera adicionales"
 
@@ -5049,6 +5060,10 @@ msgstr "Opciones adicionales"
 #, fuzzy
 msgid "Additional plug-in output"
 msgstr "Salida adicional de plugins"
+
+#, fuzzy
+msgid "Additional query filters"
+msgstr "Líneas de cabecera adicionales"
 
 #, fuzzy
 msgid "Additional responders"
@@ -18647,6 +18662,18 @@ msgstr "Límite de eventos personalizados"
 
 #, fuzzy
 msgid "Custom fields"
+msgstr "Personalizado"
+
+#, fuzzy
+msgid "Custom fields on acknowledgement"
+msgstr "Acuse de recibo interrumpido"
+
+#, fuzzy
+msgid "Custom fields on downtime"
+msgstr "El host está en tiempo de inactividad"
+
+#, fuzzy
+msgid "Custom fields on recovery"
 msgstr "Personalizado"
 
 msgid "Custom footer links"
@@ -38006,13 +38033,6 @@ msgid "Invalid credentials"
 msgstr "Credenciales no válidas"
 
 #, fuzzy
-msgid ""
-"Invalid custom field. Only the characters a-z, A-Z, 0-9, _ and - are allowed."
-msgstr ""
-"ID de etiqueta no válida. Sólo se permiten los caracteres a-z, A-Z, 0-9, _ y "
-"-."
-
-#, fuzzy
 msgid "Invalid data"
 msgstr "Identificación inválida"
 
@@ -38070,6 +38090,13 @@ msgstr "Llamada esperada no válida para %s en idx %d: %r"
 #, python-format
 msgid "Invalid extension type, supported types are: %s"
 msgstr ""
+
+#, fuzzy
+msgid ""
+"Invalid field name. Only the characters a-z, A-Z, 0-9, _ and - are allowed."
+msgstr ""
+"Nombre de carpeta no válido. Sólo se permiten los caracteres a-z, A-Z, 0-9, "
+"_ y -."
 
 msgid "Invalid file name"
 msgstr "Nombre de archivo no válido"
@@ -46740,6 +46767,11 @@ msgstr "Nombre del sitio de la OMD"
 msgid "Name of the PLC"
 msgstr "Nombre de la sociedad anónima"
 
+msgid ""
+"Name of the ServiceNow field to filter on, e.g. <tt>company</tt> or "
+"<tt>assignment_group</tt>."
+msgstr ""
+
 msgid "Name of the VM"
 msgstr "Nombre de la máquina virtual"
 
@@ -51010,6 +51042,37 @@ msgstr "Información general opcional"
 
 msgid "Optional login (if required)"
 msgstr "Inicio de sesión opcional (si es necesario)"
+
+msgid ""
+"Optional name/value pairs that are merged into the PUT request sent to "
+"ServiceNow when a downtime start/end/cancel notification fires. Names "
+"entered here override the plug-in's defaults (e.g. <tt>work_notes</tt> or "
+"<tt>state</tt>); fields not listed here keep their default values."
+msgstr ""
+
+msgid ""
+"Optional name/value pairs that are merged into the PUT request sent to "
+"ServiceNow when a recovery notification fires. Typical use is overriding "
+"<tt>close_code</tt> or supplying mandatory closure fields such as "
+"<tt>u_root_cause</tt> required by your ServiceNow workflow. Names entered "
+"here override the plug-in's defaults; fields not listed here keep their "
+"default values."
+msgstr ""
+
+msgid ""
+"Optional name/value pairs that are merged into the PUT request sent to "
+"ServiceNow when a recovery notification fires. Typical use is overriding "
+"<tt>resolution_code</tt> or supplying mandatory closure fields required by "
+"your ServiceNow workflow. Names entered here override the plug-in's "
+"defaults; fields not listed here keep their default values."
+msgstr ""
+
+msgid ""
+"Optional name/value pairs that are merged into the PUT request sent to "
+"ServiceNow when an acknowledgement notification fires. Names entered here "
+"override the plug-in's defaults (e.g. <tt>work_notes</tt> or <tt>state</"
+"tt>); fields not listed here keep their default values."
+msgstr ""
 
 msgid "Optional parameters"
 msgstr "Parámetros opcionales"
@@ -80824,6 +80887,10 @@ msgstr ""
 "continuar con la siguiente instancia. Si no se establece, se utiliza el "
 "valor por defecto de ADO."
 
+#, fuzzy
+msgid "Time until alert, if ALLCONTAINERSRESTARTING condition is true"
+msgstr "Tiempo hasta la alerta, si la condición CONTAINERSREADY es falsa"
+
 msgid "Time until alert, if AVAILABLE condition is false"
 msgstr "Tiempo hasta la alerta, si la condición de AVAILABLE es falsa"
 
@@ -101154,6 +101221,14 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid ""
+#~ "Invalid custom field. Only the characters a-z, A-Z, 0-9, _ and - are "
+#~ "allowed."
+#~ msgstr ""
+#~ "ID de etiqueta no válida. Sólo se permiten los caracteres a-z, A-Z, 0-9, "
+#~ "_ y -."
 
 #, fuzzy
 #~ msgid "Delete this Prometheus configuration"

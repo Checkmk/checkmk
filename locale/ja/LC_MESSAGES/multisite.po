@@ -4817,6 +4817,17 @@ msgstr "登録時に送信するエージェントラベルの追加"
 msgid "Additional details"
 msgstr "追加詳細"
 
+msgid ""
+"Additional filters appended to the ServiceNow lookup query "
+"(<tt>sysparm_query</tt>) used to find an existing incident or case for a "
+"given Checkmk problem ID. On large ServiceNow instances the unfiltered "
+"lookup can time out; restricting it (e.g. by <tt>company</tt> or "
+"<tt>assignment_group</tt>) narrows the search to the scope managed by "
+"Checkmk. All filters are AND-combined with the existing problem ID lookup. "
+"Only fields and values that are also set on the issue when it is created "
+"(e.g. via <i>Custom fields</i>) will match."
+msgstr ""
+
 msgid "Additional header lines"
 msgstr "追加のヘッダー行"
 
@@ -4850,6 +4861,10 @@ msgstr "追加オプション"
 
 msgid "Additional plug-in output"
 msgstr "追加のプラグイン出力"
+
+#, fuzzy
+msgid "Additional query filters"
+msgstr "追加のヘッダー行"
 
 #, fuzzy
 msgid "Additional responders"
@@ -17704,6 +17719,18 @@ msgid "Custom event limit"
 msgstr "カスタムイベント制限"
 
 msgid "Custom fields"
+msgstr "カスタマイズフィールド"
+
+#, fuzzy
+msgid "Custom fields on acknowledgement"
+msgstr "承認を停止しました"
+
+#, fuzzy
+msgid "Custom fields on downtime"
+msgstr "ホストがダウンタイム中"
+
+#, fuzzy
+msgid "Custom fields on recovery"
 msgstr "カスタマイズフィールド"
 
 msgid "Custom footer links"
@@ -35850,12 +35877,6 @@ msgstr "無効な構成ハッシュ"
 msgid "Invalid credentials"
 msgstr "無効な資格情報"
 
-msgid ""
-"Invalid custom field. Only the characters a-z, A-Z, 0-9, _ and - are allowed."
-msgstr ""
-"無効なカスタムフィールドです。文字a-z, A-Z, 0-9, _ および - のみが許可されま"
-"す。"
-
 msgid "Invalid data"
 msgstr "無効なデータ"
 
@@ -35911,6 +35932,12 @@ msgstr "%s の期待される呼び出し（idx %d） が無効です: %r"
 #, python-format
 msgid "Invalid extension type, supported types are: %s"
 msgstr "無効な拡張子タイプです：%s"
+
+#, fuzzy
+msgid ""
+"Invalid field name. Only the characters a-z, A-Z, 0-9, _ and - are allowed."
+msgstr ""
+"フォルダー名が無効です。文字 a-z, A-Z, 0-9, _ および - のみが許可されます。"
 
 msgid "Invalid file name"
 msgstr "無効なファイル名"
@@ -44099,6 +44126,11 @@ msgstr "OMDサイトの名前"
 msgid "Name of the PLC"
 msgstr "PLCの名前"
 
+msgid ""
+"Name of the ServiceNow field to filter on, e.g. <tt>company</tt> or "
+"<tt>assignment_group</tt>."
+msgstr ""
+
 msgid "Name of the VM"
 msgstr "VMの名前"
 
@@ -48145,6 +48177,37 @@ msgstr "オプションの一般情報"
 
 msgid "Optional login (if required)"
 msgstr "オプションのログイン(必要な場合)"
+
+msgid ""
+"Optional name/value pairs that are merged into the PUT request sent to "
+"ServiceNow when a downtime start/end/cancel notification fires. Names "
+"entered here override the plug-in's defaults (e.g. <tt>work_notes</tt> or "
+"<tt>state</tt>); fields not listed here keep their default values."
+msgstr ""
+
+msgid ""
+"Optional name/value pairs that are merged into the PUT request sent to "
+"ServiceNow when a recovery notification fires. Typical use is overriding "
+"<tt>close_code</tt> or supplying mandatory closure fields such as "
+"<tt>u_root_cause</tt> required by your ServiceNow workflow. Names entered "
+"here override the plug-in's defaults; fields not listed here keep their "
+"default values."
+msgstr ""
+
+msgid ""
+"Optional name/value pairs that are merged into the PUT request sent to "
+"ServiceNow when a recovery notification fires. Typical use is overriding "
+"<tt>resolution_code</tt> or supplying mandatory closure fields required by "
+"your ServiceNow workflow. Names entered here override the plug-in's "
+"defaults; fields not listed here keep their default values."
+msgstr ""
+
+msgid ""
+"Optional name/value pairs that are merged into the PUT request sent to "
+"ServiceNow when an acknowledgement notification fires. Names entered here "
+"override the plug-in's defaults (e.g. <tt>work_notes</tt> or <tt>state</"
+"tt>); fields not listed here keep their default values."
+msgstr ""
 
 msgid "Optional parameters"
 msgstr "オプションのパラメータ"
@@ -76334,6 +76397,10 @@ msgstr ""
 "次のインスタンスに進む前に、インスタンスへの接続が開くのを待つ時間。設定され"
 "ていない場合、ADOのデフォルト値が使用されます。"
 
+#, fuzzy
+msgid "Time until alert, if ALLCONTAINERSRESTARTING condition is true"
+msgstr "AVAILABLEがfalseの場合の、警告までの許容期間"
+
 msgid "Time until alert, if AVAILABLE condition is false"
 msgstr "AVAILABLEがfalseの場合、警告までの許容期間"
 
@@ -95314,6 +95381,13 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#~ msgid ""
+#~ "Invalid custom field. Only the characters a-z, A-Z, 0-9, _ and - are "
+#~ "allowed."
+#~ msgstr ""
+#~ "無効なカスタムフィールドです。文字a-z, A-Z, 0-9, _ および - のみが許可され"
+#~ "ます。"
 
 #, fuzzy
 #~ msgid "Delete this Prometheus configuration"

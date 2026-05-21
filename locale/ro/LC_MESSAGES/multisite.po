@@ -5007,6 +5007,17 @@ msgstr ""
 msgid "Additional details"
 msgstr "Opțiuni adiționale"
 
+msgid ""
+"Additional filters appended to the ServiceNow lookup query "
+"(<tt>sysparm_query</tt>) used to find an existing incident or case for a "
+"given Checkmk problem ID. On large ServiceNow instances the unfiltered "
+"lookup can time out; restricting it (e.g. by <tt>company</tt> or "
+"<tt>assignment_group</tt>) narrows the search to the scope managed by "
+"Checkmk. All filters are AND-combined with the existing problem ID lookup. "
+"Only fields and values that are also set on the issue when it is created "
+"(e.g. via <i>Custom fields</i>) will match."
+msgstr ""
+
 msgid "Additional header lines"
 msgstr "Linii de header adiționale"
 
@@ -5036,6 +5047,10 @@ msgstr "Opțiuni adiționale"
 #, fuzzy
 msgid "Additional plug-in output"
 msgstr "Output adițional de la Plugin"
+
+#, fuzzy
+msgid "Additional query filters"
+msgstr "Linii de header adiționale"
 
 #, fuzzy
 msgid "Additional responders"
@@ -18588,6 +18603,18 @@ msgstr "Limita evenimentului personalizat"
 
 #, fuzzy
 msgid "Custom fields"
+msgstr "Personalizat"
+
+#, fuzzy
+msgid "Custom fields on acknowledgement"
+msgstr "Recunoaștere oprită"
+
+#, fuzzy
+msgid "Custom fields on downtime"
+msgstr "Gazda este în timp de nefuncționare"
+
+#, fuzzy
+msgid "Custom fields on recovery"
 msgstr "Personalizat"
 
 msgid "Custom footer links"
@@ -37884,13 +37911,6 @@ msgid "Invalid credentials"
 msgstr "Acreditări invalide"
 
 #, fuzzy
-msgid ""
-"Invalid custom field. Only the characters a-z, A-Z, 0-9, _ and - are allowed."
-msgstr ""
-"ID-ul etichetei nu este valid. Sunt permise numai caracterele a-z, A-Z, 0-9, "
-"_ și -."
-
-#, fuzzy
 msgid "Invalid data"
 msgstr "Identificator invalid"
 
@@ -37948,6 +37968,12 @@ msgstr "Callable așteptat nevalabil pentru %s la idx %d: %r"
 #, fuzzy, python-format
 msgid "Invalid extension type, supported types are: %s"
 msgstr "Tip de fișier nevalabil așteptat %s primit '%s'"
+
+#, fuzzy
+msgid ""
+"Invalid field name. Only the characters a-z, A-Z, 0-9, _ and - are allowed."
+msgstr ""
+"Nume de dosar invalid. Sunt permise numai caracterele a-z, A-Z, 0-9, _ și -."
 
 msgid "Invalid file name"
 msgstr "Nume de fișier invalid"
@@ -46529,6 +46555,11 @@ msgstr "Denumirea site-ului OMD"
 msgid "Name of the PLC"
 msgstr "Denumirea PLC"
 
+msgid ""
+"Name of the ServiceNow field to filter on, e.g. <tt>company</tt> or "
+"<tt>assignment_group</tt>."
+msgstr ""
+
 msgid "Name of the VM"
 msgstr "Numele mașinii virtuale"
 
@@ -50775,6 +50806,37 @@ msgstr "Informații generale opționale"
 
 msgid "Optional login (if required)"
 msgstr "Autentificare opțională (dacă este necesar)"
+
+msgid ""
+"Optional name/value pairs that are merged into the PUT request sent to "
+"ServiceNow when a downtime start/end/cancel notification fires. Names "
+"entered here override the plug-in's defaults (e.g. <tt>work_notes</tt> or "
+"<tt>state</tt>); fields not listed here keep their default values."
+msgstr ""
+
+msgid ""
+"Optional name/value pairs that are merged into the PUT request sent to "
+"ServiceNow when a recovery notification fires. Typical use is overriding "
+"<tt>close_code</tt> or supplying mandatory closure fields such as "
+"<tt>u_root_cause</tt> required by your ServiceNow workflow. Names entered "
+"here override the plug-in's defaults; fields not listed here keep their "
+"default values."
+msgstr ""
+
+msgid ""
+"Optional name/value pairs that are merged into the PUT request sent to "
+"ServiceNow when a recovery notification fires. Typical use is overriding "
+"<tt>resolution_code</tt> or supplying mandatory closure fields required by "
+"your ServiceNow workflow. Names entered here override the plug-in's "
+"defaults; fields not listed here keep their default values."
+msgstr ""
+
+msgid ""
+"Optional name/value pairs that are merged into the PUT request sent to "
+"ServiceNow when an acknowledgement notification fires. Names entered here "
+"override the plug-in's defaults (e.g. <tt>work_notes</tt> or <tt>state</"
+"tt>); fields not listed here keep their default values."
+msgstr ""
 
 msgid "Optional parameters"
 msgstr "Parametrii opționali"
@@ -80547,6 +80609,11 @@ msgstr ""
 "de a continua cu următoarea instanță. Dacă nu este setată, se utilizează "
 "valoarea implicită de la ADO."
 
+#, fuzzy
+msgid "Time until alert, if ALLCONTAINERSRESTARTING condition is true"
+msgstr ""
+"Timpul până la alertă, în cazul în care condiția CONTAINERSREADY este falsă"
+
 msgid "Time until alert, if AVAILABLE condition is false"
 msgstr "Timpul până la alertă, dacă condiția DISPONIBIL este falsă"
 
@@ -100769,6 +100836,14 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid ""
+#~ "Invalid custom field. Only the characters a-z, A-Z, 0-9, _ and - are "
+#~ "allowed."
+#~ msgstr ""
+#~ "ID-ul etichetei nu este valid. Sunt permise numai caracterele a-z, A-Z, "
+#~ "0-9, _ și -."
 
 #, fuzzy
 #~ msgid "Delete this Prometheus configuration"

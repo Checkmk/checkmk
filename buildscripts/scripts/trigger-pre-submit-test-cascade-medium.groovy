@@ -77,7 +77,13 @@ void main() {
                         DISTRO: distro_medium_chain,
                         DISABLE_CACHE: params.DISABLE_CACHE,
                         FAKE_ARTIFACTS: true,
-                        TEST_FILTER: "-m medium_test_chain",
+                        // if there is a test filter specified on make target level, the last one in the list of pytest arguments will
+                        // overwrite all previous ones. Place all required test filters in one place and connect them with "and"
+                        // "TEST_FILTER" is prepended to the pytest call and thereby always the first source of settings and so it is
+                        // overruled if there is an additional test filter set later in the list of pytest args
+                        // Remember to quote a chain of filters to prevent word splitting
+                        // Setting "-m medium_test_chain" will cause special handling in "test-integration-single.groovy"
+                        TEST_FILTER: '-m medium_test_chain',
                     ],
                     build_params_no_check: [
                         CIPARAM_OVERRIDE_BUILD_NODE: params.CIPARAM_OVERRIDE_BUILD_NODE,

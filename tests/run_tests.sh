@@ -14,8 +14,11 @@ MAX_CHARS=1500000
 
 AGENT_PLUGIN_PYTHON_VERSIONS="3.4 3.5 3.6 3.7 3.8 3.9 3.10 3.11 3.12"
 
+# Re-evaluate TEST_FILTER as shell tokens so that shell-quoted expressions like
+# e.g. '-m "foo and bar"' split into proper arguments matching
+eval "_test_filter_args=(${TEST_FILTER:-})"
 PYTEST_SYSTEM_TEST_ARGS=(
-    ${TEST_FILTER:+"$TEST_FILTER"}
+    "${_test_filter_args[@]}"
     ${FAKED_ARTIFACTS:+"$FAKED_ARTIFACTS"}
     -p "no:cov"
     --log-cli-level=INFO
@@ -295,6 +298,7 @@ test-integration() {
         --session-timeout 7200
 }
 
+# keep this target in sync with test-integration-single.groovy
 test-integration-k8s() {
     _pytest "${PYTEST_SYSTEM_TEST_ARGS[@]}" \
         "$(realpath "$SCRIPT_DIR/integration")" \
@@ -623,6 +627,7 @@ test-find-modified-lock-files() {
 TESTS_MEDIUM_CHAIN_OUTFILE="tests_medium_chain_master.list"
 TEST_DIRS_MEDIUM_CHAIN=("$(realpath "$SCRIPT_DIR/integration")" "$(realpath "$SCRIPT_DIR/composition")")
 
+# keep this target in sync with test-integration-single.groovy
 test-medium-chain() {
     _pytest --log-cli-level=INFO -m medium_test_chain \
         "${TEST_DIRS_MEDIUM_CHAIN[@]}"

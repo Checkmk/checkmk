@@ -17,10 +17,32 @@ void main() {
     def distro = params.DISTRO;
     def edition = params.EDITION;
     def fake_artifacts = params.FAKE_ARTIFACTS;
+    def test_filter = params.TEST_FILTER;
 
-    def make_target = "test-integration-k8s";
+    def make_target = "test-integration";
     def download_dir = "package_download";
     def test_results_dir = "test-results";
+
+    if (test_filter.contains("-m medium_test_chain")) {
+        // This test filtering is special in this job.
+        // This job gets also triggered by the medium chain which is setting additional markers.
+        // As only one marker can be set no "-m 'a' -m 'b'" is allowed
+        // "TEST_FILTER" at single_test.groovy is single quoted, be carefull with the quotes used here for quoting
+        test_filter = test_filter.replaceAll("-m medium_test_chain", '-m "medium_test_chain and not requires_non_root_user"');
+
+        print(
+            """
+            Test filter changed as this job was triggered with '-m medium_test_chain'
+
+            |===== CONFIGURATION ===============================
+            |test_filter:.............. │${test_filter}│
+            |===================================================
+            """.stripMargin());
+    } else {
+        // Remember, the last "-m MARKER" is overruling all previous definitions
+        // "TEST_FILTER" is prepended to the pytest call and thereby always the first source of settings
+        make_target += "-k8s";
+    }
 
     def setup_values = single_tests.common_prepare(
         version: "daily",
@@ -64,7 +86,7 @@ void main() {
             distro: distro,
             branch_name: setup_values.safe_branch_name,
             make_target: "${make_target}",
-            test_filter: params.TEST_FILTER,
+            test_filter: test_filter,
             faked_artifacts: fake_artifacts,
             // ultimate can hit 120min during the nightly runs (without wait time)
             // runs of heavy chain are around 45-90min depending on the edition

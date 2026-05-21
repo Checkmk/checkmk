@@ -4,6 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import enum
 import logging
+import random
+import string
+from collections.abc import Mapping
 from logging import Logger
 from pathlib import Path
 from typing import Literal
@@ -13,23 +16,34 @@ from cmk.ccc.site import omd_site
 from cmk.utils.paths import omd_root, var_dir
 
 
+class AnonymizationError(Exception):
+    pass
+
+
 class ANONTYPE(enum.Enum):
+    TAG_ID = "tag_id"
+    AUX_TAG_ID = "aux_tag_id"
     SITE = "site"
     SITE_ALIAS = "site_alias"
     HOST = "host"
     HOST_ALIAS = "host_alias"
+    HOST_GROUP = "host_group"
+    HOST_GROUP_ALIAS = "host_group_alias"
     SERVICE_DESCRIPTION = "service_description"
     SERVICE_LABEL_KEY = "service_label_key"
     SERVICE_LABEL_VALUE = "service_label_value"
+    SERVICE_GROUP = "service_group"
+    SERVICE_GROUP_ALIAS = "service_group_alias"
     TAG_GROUP = "tag_group"
     TAG_VALUE = "tag_value"
-    LABEL_KEY = "label_key"
-    LABEL_VALUE = "label_value"
+    HOST_LABEL_KEY = "host_label_key"
+    HOST_LABEL_VALUE = "host_label_value"
     USER = "user"
     ITEM = "item"
     IPv4_ADDRESS = "ipv4_address"
     IPv6_ADDRESS = "ipv6_address"
     CONTACT_GROUP = "contact_group"
+    CONTACT_GROUP_ALIAS = "contact_group_alias"
     FOLDER_NAME = "folder"
     CUSTOM_HOST_ATTR_NAME = "custom_host_attr_name"
     CUSTOM_HOST_ATTR_VALUE = "custom_host_attr_value"
@@ -39,15 +53,20 @@ class ANONTYPE(enum.Enum):
     PASSWORD_ID = "password_id"
     LDAP_CONNECTION = "ldap_connection"
     UNIX_SOCKET = "unix_socket"
+    TAG_TOPIC = "tag_topic"
+    RULE_COMMENT = "comment"
 
 
 CustomAnon = str
 
 
 class AnonInterface:
-    def __init__(self, target_dirname: Path, logger: logging.Logger):
+    def __init__(
+        self, target_dirname: Path, rule_defaults: Mapping[str, object], logger: logging.Logger
+    ):
         self._site_id = omd_site()
         self._target_dir = var_dir / "anonymized" / target_dirname
+        self._rule_defaults = rule_defaults
         self._logger = logger
 
     _anon_mapping: dict[str, dict[str, str]] = {}
@@ -96,22 +115,27 @@ class AnonInterface:
     def get_service_description(self, original: str) -> str:
         return self._get_entry(original, ANONTYPE.SERVICE_DESCRIPTION)
 
+    def get_host_label_groups(self, key: str, value: str) -> tuple[str, str]:
+        return self._get_entry(key, ANONTYPE.HOST_LABEL_KEY), self._get_entry(
+            value, ANONTYPE.HOST_LABEL_VALUE
+        )
+
     def get_service_label_groups(self, key: str, value: str) -> tuple[str, str]:
         return self._get_entry(key, ANONTYPE.SERVICE_LABEL_KEY), self._get_entry(
             value, ANONTYPE.SERVICE_LABEL_VALUE
         )
 
     def get_tags(self, key: str, value: str) -> tuple[str, str]:
-        return self.get_tag_group(key), self.get_tag_value(value)
-
-    def get_labels(self, key: str, value: str) -> tuple[str, str]:
-        return self.get_label_key(key), self.get_label_value(value)
+        return self.get_id_of_tag_group(key), self.get_tag_value(value)
 
     def get_user(self, original: str) -> str:
         return self._get_entry(original, ANONTYPE.USER)
 
     def get_item(self, original: str) -> str:
         return self._get_entry(original, ANONTYPE.ITEM)
+
+    def get_rule_comment(self, original: str) -> str:
+        return "Rule has been anonymized and uses an example value"
 
     def get_generic_mapping(self, original: str, namespace: CustomAnon) -> str:
         if namespace in ANONTYPE:
@@ -121,22 +145,18 @@ class AnonInterface:
 
         return self._get_entry(original, namespace)
 
-    def get_tag_group(self, original: str) -> str:
+    def get_id_of_tag_group(self, original: str) -> str:
         return self._get_entry(original, ANONTYPE.TAG_GROUP)
 
     def get_tag_value(self, original: str) -> str:
         return self._get_entry(original, ANONTYPE.TAG_VALUE)
 
-    def get_label_key(self, original: str) -> str:
-        return self._get_entry(original, ANONTYPE.LABEL_KEY)
-
-    def get_label_value(self, original: str) -> str:
-        return self._get_entry(original, ANONTYPE.LABEL_VALUE)
-
     def get_contact_group(self, original: str) -> str:
         return self._get_entry(original, ANONTYPE.CONTACT_GROUP)
 
     def get_folder_path(self, original: str) -> str:
+        if original == "/":
+            return "/"
         assert original.startswith("/") and original.endswith("/"), (
             f"Folder '{original}' must start and end with '/'"
         )
@@ -154,6 +174,16 @@ class AnonInterface:
                 self._get_entry(folder_part, ANONTYPE.FOLDER_NAME) for folder_part in original_parts
             ]
         return f"/{'/'.join(anon_folder_parts)}/"
+
+    def get_rule_folder_path(self, original: str) -> str:
+        if not original:
+            return ""
+        original_parts = original.split("/")
+        # same folder conceptually as folder paths, but without leading and trailing slash
+        anon_folder_parts = [
+            self._get_entry(folder_part, ANONTYPE.FOLDER_NAME) for folder_part in original_parts
+        ]
+        return "/".join(anon_folder_parts)
 
     def get_custom_host_attr_name(self, original: str) -> str:
         return self._get_entry(original, ANONTYPE.CUSTOM_HOST_ATTR_NAME)
@@ -205,10 +235,76 @@ class AnonInterface:
                 raise ValueError(f"Invalid password format: {original}")
 
     def get_secret(self, original: str) -> str:
-        return self._get_entry(original, ANONTYPE.PASSWORD)
+        return "".join(random.choices(string.ascii_letters + string.digits, k=len(original)))
 
     def get_ldap_connection(self, original: str) -> str:
         return self._get_entry(original, ANONTYPE.LDAP_CONNECTION)
 
     def get_unix_socket(self, original: str) -> str:
         return "/anon_socket_path/run/" + self._get_entry(original, ANONTYPE.UNIX_SOCKET)
+
+    def get_id_of_aux_tag(self, original: str) -> str:
+        return self._get_entry(original, ANONTYPE.AUX_TAG_ID)
+
+    def get_tag_topic(self, original: str) -> str:
+        return self._get_entry(original, ANONTYPE.TAG_TOPIC)
+
+    def get_id_of_tag(self, original: str) -> str:
+        return self._get_entry(original, ANONTYPE.TAG_ID)
+
+    def get_host_group(self, original: str) -> str:
+        return self._get_entry(original, ANONTYPE.HOST_GROUP)
+
+    def get_host_group_alias(self, original: str) -> str:
+        return self._get_entry(original, ANONTYPE.HOST_GROUP_ALIAS)
+
+    def get_service_group(self, original: str) -> str:
+        return self._get_entry(original, ANONTYPE.SERVICE_GROUP)
+
+    def get_service_group_alias(self, original: str) -> str:
+        return self._get_entry(original, ANONTYPE.SERVICE_GROUP_ALIAS)
+
+    def get_contact_group_alias(self, original: str) -> str:
+        return self._get_entry(original, ANONTYPE.CONTACT_GROUP_ALIAS)
+
+    def get_ruleset_value(self, ruleset_name: str, original: object) -> object:
+        for host_or_service_ruleset, anonymizer_callable in (
+            ("clustered_services_mapping", self.get_host),
+            ("host_contactgroups", self.get_contact_group),
+            ("service_contactgroups", self.get_contact_group),
+            ("host_groups", self.get_host_group),
+            ("service_groups", self.get_service_group),
+        ):
+            if ruleset_name == host_or_service_ruleset:
+                assert isinstance(original, str)
+                return anonymizer_callable(original)
+
+        # these rulesets do not contain any information to be anonymized and the values are
+        # important enough to keep
+        if ruleset_name in (
+            "ignored_checks",
+            "ignored_services",
+            "extra_service_conf:max_check_attempts",
+            "extra_service_conf:check_interval",
+            "extra_service_conf:retry_interval",
+            "extra_host_conf:max_check_attempts",
+            "extra_host_conf:check_interval",
+            "extra_host_conf:retry_interval",
+            "periodic_discovery",
+            "snmp_check_interval",
+            "cmc_service_rrd_config",
+            "cmc_host_rrd_config",
+        ):
+            return original
+
+        group, _, name = ruleset_name.partition(":")
+        try:
+            rule_default_values = self._rule_defaults[group]
+            if not name:
+                assert isinstance(rule_default_values, list)
+                return rule_default_values[0]["value"]
+
+            assert isinstance(rule_default_values, dict)
+            return rule_default_values[name][0]["value"]
+        except (IndexError, KeyError):
+            raise AnonymizationError(f"No default value for rule {ruleset_name} found")

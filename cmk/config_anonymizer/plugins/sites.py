@@ -5,7 +5,9 @@
 import logging
 from typing import Literal
 
+from cmk.base.config import LoadingResult
 from cmk.ccc.site import SiteId
+from cmk.checkengine.plugins import AgentBasedPlugins
 from cmk.config_anonymizer.interface import AnonInterface
 from cmk.config_anonymizer.step import AnonymizeStep
 from cmk.gui.config import Config
@@ -30,6 +32,7 @@ from cmk.livestatus_client import (
     UnixSocketDetails,
     UnixSocketInfo,
 )
+from cmk.utils.labels import Labels
 from cmk.utils.paths import omd_root
 
 
@@ -41,24 +44,36 @@ def _anonymize_proxy_config(
 
     anon_proxy_config_params = None
     if (proxy_config_params := proxy_config.get("params")) is not None:
-        anon_proxy_config_params = ProxyConfigParams(
-            channels=proxy_config_params["channels"],
-            heartbeat=proxy_config_params["heartbeat"],
-            channel_timeout=proxy_config_params["channel_timeout"],
-            query_timeout=proxy_config_params["query_timeout"],
-            connect_retry=proxy_config_params["connect_retry"],
-            cache=proxy_config_params["cache"],
-        )
+        anon_proxy_config_params = ProxyConfigParams()
+        if "channels" in proxy_config_params:
+            anon_proxy_config_params["channels"] = proxy_config_params["channels"]
+        if "heartbeat" in proxy_config_params:
+            anon_proxy_config_params["heartbeat"] = proxy_config_params["heartbeat"]
+        if "channel_timeout" in proxy_config_params:
+            anon_proxy_config_params["channel_timeout"] = proxy_config_params["channel_timeout"]
+        if "query_timeout" in proxy_config_params:
+            anon_proxy_config_params["query_timeout"] = proxy_config_params["query_timeout"]
+        if "connect_retry" in proxy_config_params:
+            anon_proxy_config_params["connect_retry"] = proxy_config_params["connect_retry"]
+        if "cache" in proxy_config_params:
+            anon_proxy_config_params["cache"] = proxy_config_params["cache"]
 
-    anon_proxy_config = ProxyConfig(
-        cache=proxy_config["cache"],
-        params=anon_proxy_config_params,
-        tcp=ProxyConfigTcp(
-            port=proxy_config["tcp"]["port"],
-            only_from=[anon_interface.get_url(addr) for addr in proxy_config["tcp"]["only_from"]],
-            tls=proxy_config["tcp"]["tls"],
-        ),
-    )
+    anon_proxy_config = ProxyConfig()
+    if "cache" in proxy_config:
+        anon_proxy_config["cache"] = proxy_config["cache"]
+    if anon_proxy_config_params is not None:
+        anon_proxy_config["params"] = anon_proxy_config_params
+    if "tcp" in proxy_config:
+        anon_tcp = ProxyConfigTcp()
+        if "port" in proxy_config["tcp"]:
+            anon_tcp["port"] = proxy_config["tcp"]["port"]
+        if "only_from" in proxy_config["tcp"]:
+            anon_tcp["only_from"] = [
+                anon_interface.get_url(addr) for addr in proxy_config["tcp"]["only_from"]
+            ]
+        if "tls" in proxy_config["tcp"]:
+            anon_tcp["tls"] = proxy_config["tcp"]["tls"]
+        anon_proxy_config["tcp"] = anon_tcp
 
     return anon_proxy_config
 
@@ -141,7 +156,13 @@ def _anonymize_socket(
 
 class SitesSteps(AnonymizeStep):
     def run(
-        self, anon_interface: AnonInterface, active_config: Config, logger: logging.Logger
+        self,
+        anon_interface: AnonInterface,
+        active_config: Config,
+        loaded_config_result: LoadingResult,
+        all_plugins: AgentBasedPlugins,
+        builtin_host_labels: Labels,
+        logger: logging.Logger,
     ) -> None:
         logger.warning("Process sites")
 
@@ -189,8 +210,7 @@ class SitesSteps(AnonymizeStep):
             if (tls := site_config.get("tls")) is not None:
                 anon_site_config["tls"] = _anonymize_tls(anon_interface, tls)
 
-            # TODO for the future globals omitted on purpose here.
-            #  we will select important global settings in a separate step
+            # site-specific globals are omitted on purpose here since we cannot use them later on
             anon_sites_config[SiteId(anon_interface.get_site(site_id))] = anon_site_config
 
             _create_distributed_wato_file_for_base(

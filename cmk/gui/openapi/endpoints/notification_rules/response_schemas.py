@@ -826,6 +826,14 @@ class PagerDutyPluginResponse(PluginName):
     disable_ssl_cert_verification = DISABLE_SSL_CERT_VERIFICATION
     url_prefix_for_links_to_checkmk = URL_PREFIX_FOR_LINKS_TO_CHECKMK_RESPONSE
     http_proxy = HTTP_PROXY_RESPONSE
+    webhook_url = fields.String(
+        enum=[
+            "https://events.pagerduty.com/v2/enqueue",
+            "https://events.eu.pagerduty.com/v2/enqueue",
+        ],
+        description="PagerDuty Events API v2 endpoint matching the account region.",
+        example="https://events.pagerduty.com/v2/enqueue",
+    )
 
 
 # PushOver ----------------------------------------------------------

@@ -55,6 +55,7 @@ from cmk.events.notify_types import (
     OpsGeniePriorityPValueType,
     OpsGeniePriorityStrType,
     PagerdutyPluginName,
+    PagerDutyWebhookURL,
     PluginOptions,
     ProxyUrl,
     PushoverPluginName,
@@ -2958,6 +2959,7 @@ class API_PagerDutyData(TypedDict, total=False):
     disable_ssl_cert_verification: CheckboxStateType
     http_proxy: HttpProxyAPIValueType
     url_prefix_for_links_to_checkmk: CheckboxURLPrefixAPIValueType
+    webhook_url: PagerDutyWebhookURL
 
 
 class API_PushOverData(TypedDict, total=False):

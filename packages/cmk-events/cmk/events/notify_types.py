@@ -570,9 +570,15 @@ class JsmOperationsPluginModel(TypedDict, total=False):
     elements: list[OpsgenieElement]
 
 
+PagerDutyWebhookURL = Literal[
+    "https://events.pagerduty.com/v2/enqueue",
+    "https://events.eu.pagerduty.com/v2/enqueue",
+]
+
+
 class PagerDutyPluginModel(TypedDict):
     routing_key: tuple[Literal["routing_key", "store"], str]
-    webhook_url: Literal["https://events.pagerduty.com/v2/enqueue"]
+    webhook_url: PagerDutyWebhookURL
     ignore_ssl: NotRequired[Literal[True]]
     proxy_url: NotRequired[ProxyUrl]
     url_prefix: NotRequired[URLPrefix]

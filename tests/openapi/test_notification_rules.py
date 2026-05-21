@@ -1117,6 +1117,7 @@ plugin_test_data: list[PluginType] = [
             "state": "enabled",
             "value": {"option": "manual", "url": "http://klapp0084/heute/check_mk/"},
         },
+        "webhook_url": "https://events.pagerduty.com/v2/enqueue",
     },
     {
         "plugin_name": "pagerduty",
@@ -1135,6 +1136,7 @@ plugin_test_data: list[PluginType] = [
             "state": "enabled",
             "value": {"option": "manual", "url": "http://klapp0084/heute/check_mk/"},
         },
+        "webhook_url": "https://events.eu.pagerduty.com/v2/enqueue",
     },
     {
         "plugin_name": "pushover",

@@ -68,7 +68,7 @@ def list_hosts(limit: Limit = 1000) -> HostsResponse:
 
 ENDPOINT_LIST_HOSTS = VersionedEndpoint(
     metadata=EndpointMetadata(
-        path="monitor/hosts",
+        path="/monitor/hosts",
         link_relation="cmk/list",
         method="get",
     ),

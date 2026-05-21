@@ -10,7 +10,7 @@ import type { HostsRequest, HostsResponse } from '../../shared/api/types'
 export class HostApi {
   public async fetchHosts(params?: HostsRequest): Promise<HostsResponse> {
     return unwrap(
-      await client.GET('monitor/hosts', {
+      await client.GET('/monitor/hosts', {
         params: params !== undefined ? { query: params } : {}
       })
     )

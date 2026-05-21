@@ -48,7 +48,7 @@ describe('HostApi.fetchHosts', () => {
 
     const result = await new HostApi().fetchHosts()
 
-    expect(mockGet).toHaveBeenCalledWith('monitor/hosts', { params: {} })
+    expect(mockGet).toHaveBeenCalledWith('/monitor/hosts', { params: {} })
     expect(result).toEqual(response)
   })
 
@@ -58,7 +58,7 @@ describe('HostApi.fetchHosts', () => {
 
     await new HostApi().fetchHosts({ limit: '50' })
 
-    expect(mockGet).toHaveBeenCalledWith('monitor/hosts', { params: { query: { limit: '50' } } })
+    expect(mockGet).toHaveBeenCalledWith('/monitor/hosts', { params: { query: { limit: '50' } } })
   })
 
   it('returns the response data from the API', async () => {

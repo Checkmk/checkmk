@@ -135,6 +135,84 @@ def test_bi_rule(clients: ClientRegistry) -> None:
     clients.BiRule.delete(rule_id="some_rule", expect_ok=False).assert_status_code(404)
 
 
+def _rule_body(rule_id: str, pack_id: str) -> dict:
+    return {
+        "id": rule_id,
+        "pack_id": pack_id,
+        "nodes": [
+            {
+                "search": {"type": "empty"},
+                "action": {
+                    "type": "state_of_service",
+                    "host_regex": "$HOSTNAME$",
+                    "service_regex": "ASM|ORACLE|proc",
+                },
+            }
+        ],
+        "params": {"arguments": ["HOSTNAME"]},
+        "node_visualization": {"type": "none", "style_config": {}},
+        "properties": {
+            "title": "Some rule",
+            "comment": "",
+            "docu_url": "",
+            "icon": "",
+            "state_messages": {},
+        },
+        "aggregation_function": {"type": "worst", "count": 1, "restrict_state": 2},
+        "computation_options": {"disabled": False},
+    }
+
+
+def test_delete_bi_rule_denied_for_non_contact_user(
+    clients: ClientRegistry,
+    with_automation_user: tuple[str, str],
+    with_automation_user_not_admin: tuple[str, str],
+) -> None:
+    """A user who is not a contact of the rule's pack must not delete its rules.
+
+    Regression test for werk 16918 (CMK-34882): previously only ``wato.edit`` and
+    ``wato.bi_rules`` were checked, so any such user could delete rules in packs they
+    cannot even see. The non-admin automation user has role ``user`` (which grants
+    ``wato.edit`` + ``wato.bi_rules`` but not ``wato.bi_admin``) and contact group
+    ``all``. The pack below is not public and shares no contact group, so it is
+    filtered from the user's view and the rule must appear non-existent (404).
+    """
+    # As admin: create a private pack (not public, no shared contact groups) with a rule.
+    clients.BiPack.create(
+        pack_id="private_pack",
+        body={"title": "Private pack", "contact_groups": [], "public": False},
+    )
+    clients.BiRule.create(rule_id="private_rule", body=_rule_body("private_rule", "private_pack"))
+
+    # Switch to the non-admin user: the rule is in a pack they may not use -> 404.
+    clients.BiRule.set_credentials(*with_automation_user_not_admin)
+    clients.BiRule.delete(rule_id="private_rule", expect_ok=False).assert_status_code(404)
+
+    # Switch back to admin and verify the rule was not deleted.
+    clients.BiRule.set_credentials(*with_automation_user)
+    clients.BiRule.get(rule_id="private_rule").assert_status_code(200)
+
+
+def test_delete_bi_rule_allowed_for_contact_user(
+    clients: ClientRegistry,
+    with_automation_user_not_admin: tuple[str, str],
+) -> None:
+    """A user who may use the rule's pack may delete its rules.
+
+    Counterpart to ``test_delete_bi_rule_denied_for_non_contact_user``: the pack is public, so
+    ``may_use_rules_in_pack`` is satisfied and the non-admin user (role ``user``, no
+    ``wato.bi_admin``) may delete the rule.
+    """
+    clients.BiPack.create(
+        pack_id="public_pack",
+        body={"title": "Public pack", "contact_groups": [], "public": True},
+    )
+    clients.BiRule.create(rule_id="public_rule", body=_rule_body("public_rule", "public_pack"))
+
+    clients.BiRule.set_credentials(*with_automation_user_not_admin)
+    clients.BiRule.delete(rule_id="public_rule").assert_status_code(204)
+
+
 def test_bi_aggregation(clients: ClientRegistry) -> None:
     aggregation = {
         "aggregation_visualization": {

@@ -19,6 +19,7 @@ You can find an introduction to BI in the
 import http
 import http.client
 from collections.abc import Mapping
+from contextlib import suppress
 from typing import Any
 
 from cmk import fields
@@ -40,11 +41,14 @@ from cmk.bi.trees import BICompiledRule
 from cmk.gui import fields as gui_fields
 from cmk.gui.bi import BIManager, get_cached_bi_packs
 from cmk.gui.http import Response
+from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.openapi.restful_objects import constructors, Endpoint, response_schemas
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.openapi.utils import ProblemException, serve_json
 from cmk.gui.utils import permission_verification as permissions
+
+from .._valuespecs import may_use_rules_in_pack
 
 BI_RULE_ID = {
     "rule_id": fields.String(
@@ -114,6 +118,16 @@ RW_BI_ADMIN_PERMISSIONS = permissions.AllPerm(
     [
         *RW_BI_RULES_PERMISSION.perms,
         permissions.Perm("wato.bi_admin"),
+    ]
+)
+
+# `may_use_rules_in_pack` -> `is_contact_for_pack` calls `user.may("wato.bi_admin")`, so the
+# permission-verification framework needs that permission declared here (optional, since being a
+# contact of the pack is an equally valid way to satisfy the check).
+RW_BI_RULES_WITH_OPTIONAL_ADMIN_PERMISSION = permissions.AllPerm(
+    [
+        *RW_BI_RULES_PERMISSION.perms,
+        permissions.Optional(permissions.Perm("wato.bi_admin")),
     ]
 )
 
@@ -207,7 +221,7 @@ def _update_bi_rule(params: Mapping[str, Any], must_exist: bool) -> Response:
     path_params=[BI_RULE_ID],
     convert_response=False,
     output_empty=True,
-    permissions_required=RW_BI_RULES_PERMISSION,
+    permissions_required=RW_BI_RULES_WITH_OPTIONAL_ADMIN_PERMISSION,
     additional_status_codes=[409],
 )
 def delete_bi_rule(params: Mapping[str, Any]) -> Response:
@@ -216,13 +230,25 @@ def delete_bi_rule(params: Mapping[str, Any]) -> Response:
     user.need_permission("wato.bi_rules")
     bi_packs = get_cached_bi_packs()
     bi_packs.load_config()
-    try:
-        bi_rule = bi_packs.get_rule_mandatory(params["rule_id"])
-    except RuleNotFoundException:
-        raise _make_error("Unknown bi_rule: %s" % params["rule_id"])
 
+    def ensure_rule_accessible(rule_id: str) -> None:
+        # Return a 404 (rather than 403) when the rule does not exist or sits in a pack the user
+        # may not use, so we don't disclose the existence of rules in inaccessible packs.
+        with suppress(RuleNotFoundException):
+            if (bi_pack := bi_packs.get_pack_of_rule(rule_id)) and may_use_rules_in_pack(bi_pack):
+                bi_packs.get_rule_mandatory(rule_id)
+                return
+        raise _make_error(
+            _(
+                "Could not delete BI rule '%s'. It has to exist and you need either wato.bi_admin"
+                " permissions or permissions to modify the parent BI pack to delete a BI rule."
+            )
+            % rule_id
+        )
+
+    ensure_rule_accessible(params["rule_id"])
     try:
-        bi_packs.delete_rule(bi_rule.id)
+        bi_packs.delete_rule(params["rule_id"])
     except (DeleteErrorUsedByRule, DeleteErrorUsedByAggregation) as e:
         raise ProblemException(status=409, title=http.client.responses[409], detail=e.args[0])
     bi_packs.save_config()

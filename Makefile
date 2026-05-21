@@ -169,7 +169,7 @@ format:
 	bazel run //:format
 
 what-gerrit-makes:
-	$(MAKE)	-C tests what-gerrit-makes
+	tests/run_tests.sh what-gerrit-makes
 
 documentation:
 	echo Nothing to do here remove this target
@@ -206,5 +206,5 @@ check_python_requirements:
 test-github-actions:
 	EDITION=community bazel run //:format.check
 	EDITION=community bazel lint --fixes=false ...
-	EDITION=community make -C tests test-unit
+	EDITION=community tests/run_tests.sh test-unit
 	bazel build --config=mypy ...

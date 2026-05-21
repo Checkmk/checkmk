@@ -109,4 +109,4 @@ jobs:
               run: bazel build --config=mypy ...
             - name: Run unit tests
               if: ${{ !cancelled() }}
-              run: make -C tests test-unit
+              run: tests/run_tests.sh test-unit

@@ -10,9 +10,9 @@ Bazel is the primary build system for unit tests, linting, formatting, and type
 checking. Integration, composition, and GUI E2E tests use Make:
 
 ```
-make -C tests test-integration
-make -C tests test-composition
-make -C tests test-gui-e2e
+tests/run_tests.sh test-integration
+tests/run_tests.sh test-composition
+tests/run_tests.sh test-gui-e2e
 ```
 
 Always format, lint, and run tests after completing a task.

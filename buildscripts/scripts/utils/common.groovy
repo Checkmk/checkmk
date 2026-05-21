@@ -44,7 +44,7 @@ check_environment_variables = { param_list ->
 
 assert_no_modified_lock_files = { repo_root ->
     dir(repo_root) {
-        assert sh(script: "make -C tests/ test-find-modified-lock-files", returnStatus: true) == 0;
+        assert sh(script: "tests/run_tests.sh test-find-modified-lock-files", returnStatus: true) == 0;
     }
 }
 

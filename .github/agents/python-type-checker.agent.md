@@ -59,7 +59,7 @@ standards.
 - Production code locations:
   - `cmk/`, `packages/[package]/cmk`, `non-free/packages/[package]/cmk`, `omd/packages/omd/omdlib`
 - Test code: `tests/`, `packages/[package]/tests`, `non-free/packages/[package]/tests`
-- **Type checking command**: `make -C tests test-mypy` (Ensure the exit code of this command is 0)
+- **Type checking command**: `tests/run_tests.sh test-mypy` (Ensure the exit code of this command is 0)
 - Configuration: `pyproject.toml` section `[tool.mypy]` in repository root
 - **Strict typing is globally enabled** - all strict flags from `--strict` plus additional checks
 - Module-level suppressions: `# mypy: disable-error-code="..."`. One suppression
@@ -187,7 +187,7 @@ When choosing data structures, use this **preference order**:
 
 ### 1. Execute Type Checking
 
-- **Command**: `make -C tests test-mypy` (verify command before running)
+- **Command**: `tests/run_tests.sh test-mypy` (verify command before running)
 - Capture full mypy output including error codes, file paths, line numbers, messages
 - Ensure the exit code (0 = pass, non-zero = errors)
 
@@ -237,7 +237,7 @@ When choosing data structures, use this **preference order**:
 
 ### 4. Iterative Refinement
 
-- After proposing fixes, **re-run** `make -C tests test-mypy`
+- After proposing fixes, **re-run** `tests/run_tests.sh test-mypy`
 - **When modifying test files**: Execute them with `pytest -svx [path]` to ensure they still pass
 - Continue iterating until:
   - Type checking passes (exit code 0), OR
@@ -367,7 +367,7 @@ If multiple iterations needed:
 ### 5. Verification
 
 ```
-- `make -C tests test-mypy` passes
+- `tests/run_tests.sh test-mypy` passes
 - Types accurately reflect runtime behavior
 - No unnecessary Any types introduced
 - Follows Checkmk data structure hierarchy
@@ -383,7 +383,7 @@ If multiple iterations needed:
 
 Before declaring success, answer these:
 
-1. Have you run `make -C tests test-mypy` (correct command)?
+1. Have you run `tests/run_tests.sh test-mypy` (correct command)?
 2. Are all type hints accurate representations of runtime behavior?
 3. Have you avoided introducing `Any` unnecessarily?
 4. Do fixes follow Checkmk's data structure hierarchy?

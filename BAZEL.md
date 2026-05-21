@@ -74,9 +74,9 @@ Available editions: `community`, `pro`, `ultimate`, `ultimatemt`, `cloud`.
 These still use Make:
 
 ```console
-$ make -C tests test-integration
-$ make -C tests test-composition
-$ make -C tests test-gui-e2e
+$ tests/run_tests.sh test-integration
+$ tests/run_tests.sh test-composition
+$ tests/run_tests.sh test-gui-e2e
 ```
 
 ## Formatting and linting

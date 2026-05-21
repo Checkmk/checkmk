@@ -8,9 +8,9 @@ from pathlib import Path
 from omdlib.config_api import Config, PortHook
 
 
-def _write_jaeger_receiver_conf(_site_name: str, site_home: Path, config: Config) -> None:
+def write_jaeger_receiver_conf(_site_name: str, site_home: Path, config: Config) -> None:
     address = config.get("TRACE_RECEIVE_ADDRESS", "0")
-    port = config["TRACE_RECEIVE_PORT"]
+    port = config.get("TRACE_RECEIVE_PORT", "0")
     content = f"""\
 # Written by TRACE_RECEIVE_ADDRESS or TRACE_RECEIVE_PORT hook
 ---
@@ -87,5 +87,5 @@ TRACE_RECEIVE_PORT_HOOK = PortHook(
     name="TRACE_RECEIVE_PORT",
     display_name="Trace receiving port",
     default_port=4417,
-    activation=_write_jaeger_receiver_conf,
+    activation=write_jaeger_receiver_conf,
 )

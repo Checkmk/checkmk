@@ -7,14 +7,14 @@ from pathlib import Path
 
 from omdlib.jaeger import (
     _write_jaeger_admin_port_conf,
-    _write_jaeger_receiver_conf,
     _write_jaeger_ui_port_conf,
+    write_jaeger_receiver_conf,
 )
 
 
 def test_write_jaeger_receiver_conf(tmp_path: Path) -> None:
     (tmp_path / "etc/jaeger").mkdir(parents=True)
-    _write_jaeger_receiver_conf(
+    write_jaeger_receiver_conf(
         "_", tmp_path, {"TRACE_RECEIVE_ADDRESS": "localhost", "TRACE_RECEIVE_PORT": "4417"}
     )
     content = (tmp_path / "etc/jaeger/omd-grpc.yaml").read_text()
@@ -24,10 +24,10 @@ def test_write_jaeger_receiver_conf(tmp_path: Path) -> None:
 
 def test_write_jaeger_receiver_conf_overwrites(tmp_path: Path) -> None:
     (tmp_path / "etc/jaeger").mkdir(parents=True)
-    _write_jaeger_receiver_conf(
+    write_jaeger_receiver_conf(
         "_", tmp_path, {"TRACE_RECEIVE_ADDRESS": "localhost", "TRACE_RECEIVE_PORT": "4417"}
     )
-    _write_jaeger_receiver_conf(
+    write_jaeger_receiver_conf(
         "_", tmp_path, {"TRACE_RECEIVE_ADDRESS": "127.0.0.1", "TRACE_RECEIVE_PORT": "4418"}
     )
     content = (tmp_path / "etc/jaeger/omd-grpc.yaml").read_text()

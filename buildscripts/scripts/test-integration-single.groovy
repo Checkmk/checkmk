@@ -1,15 +1,15 @@
 #!groovy
 
-/// file: test-integration-single-f12less-redfish.groovy
+/// file: test-integration-single.groovy
 
 def main() {
     check_job_parameters([
         ["EDITION", true],  // the testees package long edition string (e.g. 'enterprise')
         ["DISTRO", true],  // the testees package distro string (e.g. 'ubuntu-22.04')
+        ["FAKE_ARTIFACTS", true],  // forwarded to package build job
+        "TEST_FILTER",  // a filter string to select which tests to run
         "CIPARAM_OVERRIDE_DOCKER_TAG_BUILD",  // the docker tag to use for building and testing, forwarded to packages build job
         // "DISABLE_CACHE",    // forwarded to package build job (todo)
-        "FAKE_ARTIFACTS",
-        "TEST_FILTER",  // a filter string to select which tests to run
     ]);
 
     check_environment_variables([
@@ -20,8 +20,9 @@ def main() {
 
     def distro = params.DISTRO;
     def edition = params.EDITION;
+    def fake_artifacts = params.FAKE_ARTIFACTS;
 
-    def make_target = "test-integration-redfish-docker";
+    def make_target = "test-integration-docker";
     def download_dir = "package_download";
 
     def setup_values = single_tests.common_prepare(version: "daily", make_target: make_target, docker_tag: params.CIPARAM_OVERRIDE_DOCKER_TAG_BUILD);
@@ -64,9 +65,10 @@ def main() {
                             branch_name: setup_values.safe_branch_name,
                             make_target: make_target,
                             test_filter: params.TEST_FILTER,
-                            // can hit 10min during the heavy chain runs (without wait time)
+                            // ultimate can hit 120min during the nightly runs (without wait time)
+                            // runs of heavy chain are around 45-90min depending on the edition
                             // using FoS of 3
-                            timeout: 30,
+                            timeout: 360,
                         );
                     }
                 }

@@ -1,6 +1,6 @@
 #!groovy
 
-/// file: test-integration-single-f12less-otel.groovy
+/// file: test-integration-otel.groovy
 
 def main() {
     check_job_parameters([

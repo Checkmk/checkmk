@@ -67,7 +67,7 @@ def main() {
         |===================================================
         """.stripMargin());
 
-    def relative_job_name = "${branch_base_folder}/builders/test-integration-single-f12less";
+    def relative_job_name = "${branch_base_folder}/builders/test-integration-single";
 
     /// avoid failures due to leftover artifacts from prior runs
     sh("rm -rf ${checkout_dir}/test-results");

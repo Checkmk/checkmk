@@ -16,9 +16,9 @@ def main() {
     def job_names = [
         "test-composition-cee",
         "test-composition-cre",
-        "test-integration-single-f12less",
-        "test-integration-single-f12less-cme",
-        "test-integration-single-f12less-cre",
+        "test-integration-cee",
+        "test-integration-cme",
+        "test-integration-cre",
         "test-gui-crawl-f12less",
         "test-gui-e2e",
         "test-update-single-f12less",

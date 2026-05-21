@@ -16,7 +16,7 @@ void main() {
         "test-composition-pro",
         "test-composition-community",
         "test-composition-ultimatemt",
-        "test-gui-crawl-f12less",
+        "test-gui-crawl",
         "test-gui-e2e-cloud",
         "test-gui-e2e-pro",
         "test-gui-e2e-ultimate",
@@ -32,7 +32,6 @@ void main() {
         "test-update-single-f12less-pro-ultimate-k8s",
         "test-update-single-f12less-pro-ultimatemt-k8s",
     ];
-    job_names += env.USE_K8S_GUI_CRAWL_SYSTEMTESTS == "1" ? ["test-gui-crawl-f12less-k8s"] : [];
 
     def trigger_xss_crawl = false;
     // The time 2000 has been chosen to not collide with the CI maintenance window

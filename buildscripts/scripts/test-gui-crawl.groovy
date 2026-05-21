@@ -1,6 +1,6 @@
 #!groovy
 
-/// file: test-gui-crawl-f12less-k8s.groovy
+/// file: test-gui-crawl.groovy
 
 void main() {
     check_job_parameters([

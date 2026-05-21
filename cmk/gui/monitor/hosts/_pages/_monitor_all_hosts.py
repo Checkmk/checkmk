@@ -2,6 +2,8 @@
 # Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from dataclasses import asdict
+
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem, make_topic_breadcrumb
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
@@ -22,6 +24,7 @@ from cmk.gui.top_heading import top_heading
 from cmk.gui.type_defs import IconNames, StaticIcon
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.urls import makeuri_contextless
+from cmk.shared_typing.monitoring.all_hosts import MonitoringAllHostsApp
 
 _PAGE_TITLE = _("All hosts (experimental)")
 
@@ -53,7 +56,14 @@ def page_monitor_all_hosts(ctx: PageContext) -> None:
     )
 
     html.begin_page_content()
-    # <cmk-all-hosts> will be embedded here once AllHostsApp.vue is implemented.
+    html.vue_component(
+        "cmk-monitoring-all-hosts",
+        data=asdict(
+            MonitoringAllHostsApp(
+                poll_interval_ms=ctx.config.view_option_refreshes[0] * 1000,
+            )
+        ),
+    )
     html.end_page_content()
 
     html.body_end()
